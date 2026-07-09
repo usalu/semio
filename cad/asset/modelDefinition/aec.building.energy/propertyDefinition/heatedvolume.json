@@ -1,20 +1,14 @@
 {
-	"schema": "spatial.property",
-	"id": "energy.heatedvolume",
-	"version": "1.0.0",
-	"label": "Heated Volume",
-	"description": "Derived heated volume for objects included in the energy model.",
-	"unit": "volume",
-	"sources": {
-		"typologies": [
-			"energy.energy.hull",
-			"energy.energy.baseplate",
-			"energy.energy.roof",
-			"energy.energy.externalwall",
-			"energy.energy.windows"
-		]
-	},
-	"output": {
-		"heatedvolume": 0.0
-	}
+  "schema": "spatial.property",
+  "id": "energy.heatedvolume",
+  "version": "1.0.0",
+  "label": "Heated Volume",
+  "description": "Derived heated volume for objects included in the energy model.",
+  "unit": "volume",
+  "sources": {
+    "typologies": ["energy.energy.hull", "energy.energy.baseplate", "energy.energy.roof", "energy.energy.externalwall", "energy.energy.windows"]
+  },
+  "output": {
+    "heatedvolume": 0.0
+  }
 }

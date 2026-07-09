@@ -79,9 +79,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_reopen"
-            ],
+            "matches": ["mcp__repo__ticket_reopen"],
             "query": "select:mcp__repo__ticket_reopen",
             "total_deferred_tools": 96
           },

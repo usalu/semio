@@ -1183,11 +1183,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\react\\vite.config.ts",
-              "c:\\git\\compose\\vitest.config.ts",
-              "c:\\git\\compose\\compose\\react\\package.json"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\react\\vite.config.ts", "c:\\git\\compose\\vitest.config.ts", "c:\\git\\compose\\compose\\react\\package.json"]
           },
           "tool_use_id": "call_nM8OgRPosbeNCQeAXKpOJnF1__vscode-1776699985151",
           "cwd": "c:\\git\\compose"
@@ -1213,11 +1209,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\react\\vite.config.ts",
-              "c:\\git\\compose\\vitest.config.ts",
-              "c:\\git\\compose\\compose\\react\\package.json"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\react\\vite.config.ts", "c:\\git\\compose\\vitest.config.ts", "c:\\git\\compose\\compose\\react\\package.json"]
           },
           "tool_use_id": "call_nM8OgRPosbeNCQeAXKpOJnF1__vscode-1776699985151",
           "cwd": "c:\\git\\compose"
@@ -1243,11 +1235,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\react\\vite.config.ts",
-              "c:\\git\\compose\\vitest.config.ts",
-              "c:\\git\\compose\\compose\\react\\package.json"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\react\\vite.config.ts", "c:\\git\\compose\\vitest.config.ts", "c:\\git\\compose\\compose\\react\\package.json"]
           },
           "tool_response": "",
           "tool_use_id": "call_nM8OgRPosbeNCQeAXKpOJnF1__vscode-1776699985151",
@@ -1274,11 +1262,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\react\\vite.config.ts",
-              "c:\\git\\compose\\vitest.config.ts",
-              "c:\\git\\compose\\compose\\react\\package.json"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\react\\vite.config.ts", "c:\\git\\compose\\vitest.config.ts", "c:\\git\\compose\\compose\\react\\package.json"]
           },
           "tool_response": "",
           "tool_use_id": "call_nM8OgRPosbeNCQeAXKpOJnF1__vscode-1776699985151",

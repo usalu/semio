@@ -13,10 +13,7 @@ await page.waitForTimeout(2000);
 const zipPath = path.resolve("/workspaces/semio/assets/compose/metabolism.zip");
 const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
 await fileInput.waitFor({ state: "attached", timeout: 10000 });
-const [fileChooser] = await Promise.all([
-  page.waitForEvent("filechooser", { timeout: 5000 }).catch(() => null),
-  fileInput.dispatchEvent("click"),
-]);
+const [fileChooser] = await Promise.all([page.waitForEvent("filechooser", { timeout: 5000 }).catch(() => null), fileInput.dispatchEvent("click")]);
 if (fileChooser) await fileChooser.setFiles(zipPath);
 else await fileInput.setInputFiles(zipPath);
 await page.getByText("Metabolism", { exact: true }).first().waitFor({ state: "visible", timeout: 60000 });
@@ -28,9 +25,11 @@ await page.waitForLoadState("networkidle");
 await page.waitForTimeout(3000);
 
 const designRowIds = await page.evaluate(() =>
-  Array.from(document.querySelectorAll("[data-row-id]")).map(el => el.getAttribute("data-row-id")).filter(id => id?.startsWith("design-"))
+  Array.from(document.querySelectorAll("[data-row-id]"))
+    .map((el) => el.getAttribute("data-row-id"))
+    .filter((id) => id?.startsWith("design-")),
 );
-const nakaginRowId = designRowIds.find(id => id?.includes("9a890dd4")) ?? designRowIds[designRowIds.length - 1];
+const nakaginRowId = designRowIds.find((id) => id?.includes("9a890dd4")) ?? designRowIds[designRowIds.length - 1];
 await page.evaluate((rowId) => {
   const row = document.querySelector(`[data-row-id="${rowId}"]`);
   if (row) row.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true, view: window }));
@@ -43,13 +42,23 @@ console.log(`Nodes: ${nodeCount}`);
 
 const leftPanelToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.leftSidePanel"]');
 if (await leftPanelToggle.isVisible().catch(() => false)) {
-  const open = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
-  if (open) { await leftPanelToggle.click(); await page.waitForTimeout(500); }
+  const open = await page
+    .locator('[data-panel="leftSidePanel"]')
+    .isVisible()
+    .catch(() => false);
+  if (open) {
+    await leftPanelToggle.click();
+    await page.waitForTimeout(500);
+  }
 }
 
 const firstNode = page.locator("#diagram .react-flow__node").first();
 const nb = await firstNode.boundingBox();
-if (!nb) { console.log("No node"); await browser.close(); process.exit(1); }
+if (!nb) {
+  console.log("No node");
+  await browser.close();
+  process.exit(1);
+}
 
 await page.mouse.move(nb.x + nb.width / 2, nb.y + nb.height / 2);
 await page.waitForTimeout(50);
@@ -81,7 +90,7 @@ console.log("\nTop functions during mouseup + 5s settle:");
 let totalHits = 0;
 for (const [, hits] of sorted) totalHits += hits;
 for (const [fn, hits] of sorted) {
-  const pct = (hits / totalHits * 100).toFixed(1);
+  const pct = ((hits / totalHits) * 100).toFixed(1);
   console.log(`  ${hits} hits (${pct}%): ${fn}`);
 }
 

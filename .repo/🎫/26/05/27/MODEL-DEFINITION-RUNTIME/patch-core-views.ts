@@ -129,10 +129,7 @@ export function selectionOperationUsesViewObjects(defn: Pick<SelectionOperationI
 }`,
 );
 
-s = s.replace(
-  `  const views = opts.views ?? (selectionOperationUsesViewObjects(defn) ? ExtensionViewService.forKernel(opts.kernel) : undefined);`,
-  `  const views = opts.views ?? undefined;`,
-);
+s = s.replace(`  const views = opts.views ?? (selectionOperationUsesViewObjects(defn) ? ExtensionViewService.forKernel(opts.kernel) : undefined);`, `  const views = opts.views ?? undefined;`);
 
 await Bun.write(path, s);
 console.log("patched core views");

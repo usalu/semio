@@ -1,290 +1,290 @@
 {
-    "id": "019eaa01-0000-7000-8000-abbauaufbau",
-    "name": "Abbau-Aufbau",
-    "version": "r26.06-1",
-    "createdAt": "2026-06-05T12:00:00.000Z",
-    "updatedAt": "2026-06-05T12:00:00.000Z",
-    "description": "🏗 Hexagonal cut concrete forest kit for abbau-aufbau.",
-    "unit": "m",
-    "tags": {
-        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-        "items": [
+  "id": "019eaa01-0000-7000-8000-abbauaufbau",
+  "name": "Abbau-Aufbau",
+  "version": "r26.06-1",
+  "createdAt": "2026-06-05T12:00:00.000Z",
+  "updatedAt": "2026-06-05T12:00:00.000Z",
+  "description": "🏗 Hexagonal cut concrete forest kit for abbau-aufbau.",
+  "unit": "m",
+  "tags": {
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "items": [
+      {
+        "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
+        "name": "representation/gltf-binary",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+        "name": "representation/vnd.3dm",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      }
+    ]
+  },
+  "folders": {
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "items": [
+      {
+        "id": "019eaa01-3000-7000-8000-represent",
+        "name": "representations",
+        "createdAt": "2026-06-05T12:00:00.000Z",
+        "updatedAt": "2026-06-05T12:00:00.000Z",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      }
+    ]
+  },
+  "files": {
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "items": [
+      {
+        "id": "019eaa01-4001-7000-8000-leftglb",
+        "name": "hexagonal-cut-concrete-forest-left.glb",
+        "folder": {
+          "id": "019eaa01-3000-7000-8000-represent",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "createdAt": "2026-06-05T12:00:00.000Z",
+        "updatedAt": "2026-06-05T12:00:00.000Z",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "019eaa01-4002-7000-8000-left3dm",
+        "name": "hexagonal-cut-concrete-forest-left.3dm",
+        "folder": {
+          "id": "019eaa01-3000-7000-8000-represent",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "createdAt": "2026-06-05T12:00:00.000Z",
+        "updatedAt": "2026-06-05T12:00:00.000Z",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "019eaa01-4003-7000-8000-rightglb",
+        "name": "hexagonal-cut-concrete-forest-right.glb",
+        "folder": {
+          "id": "019eaa01-3000-7000-8000-represent",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "createdAt": "2026-06-05T12:00:00.000Z",
+        "updatedAt": "2026-06-05T12:00:00.000Z",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "019eaa01-4004-7000-8000-right3dm",
+        "name": "hexagonal-cut-concrete-forest-right.3dm",
+        "folder": {
+          "id": "019eaa01-3000-7000-8000-represent",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "createdAt": "2026-06-05T12:00:00.000Z",
+        "updatedAt": "2026-06-05T12:00:00.000Z",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      }
+    ]
+  },
+  "families": {
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "items": [
+      {
+        "id": "019eaa01-2000-7000-8000-concrete01",
+        "name": "Concrete Forest",
+        "ports": {
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+          "items": [
             {
-                "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
-                "name": "representation/gltf-binary",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+              "id": "b-l",
+              "name": "b-l",
+              "compatiblePorts": {
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                "items": [
+                  {
+                    "id": "b-l",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  {
+                    "id": "b-l-m",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  {
+                    "id": "b-s",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  {
+                    "id": "b-s-m",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  }
+                ]
+              },
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
             },
             {
-                "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
-                "name": "representation/vnd.3dm",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            }
-        ]
-    },
-    "folders": {
-        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-        "items": [
-            {
-                "id": "019eaa01-3000-7000-8000-represent",
-                "name": "representations",
-                "createdAt": "2026-06-05T12:00:00.000Z",
-                "updatedAt": "2026-06-05T12:00:00.000Z",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            }
-        ]
-    },
-    "files": {
-        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-        "items": [
-            {
-                "id": "019eaa01-4001-7000-8000-leftglb",
-                "name": "hexagonal-cut-concrete-forest-left.glb",
-                "folder": {
-                    "id": "019eaa01-3000-7000-8000-represent",
+              "id": "b-l-m",
+              "name": "b-l-m",
+              "compatiblePorts": {
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                "items": [
+                  {
+                    "id": "b-l",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "createdAt": "2026-06-05T12:00:00.000Z",
-                "updatedAt": "2026-06-05T12:00:00.000Z",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  {
+                    "id": "b-l-m",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  {
+                    "id": "b-s",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  {
+                    "id": "b-s-m",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  }
+                ]
+              },
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
             },
             {
-                "id": "019eaa01-4002-7000-8000-left3dm",
-                "name": "hexagonal-cut-concrete-forest-left.3dm",
-                "folder": {
-                    "id": "019eaa01-3000-7000-8000-represent",
+              "id": "b-s",
+              "name": "b-s",
+              "compatiblePorts": {
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                "items": [
+                  {
+                    "id": "b-l",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "createdAt": "2026-06-05T12:00:00.000Z",
-                "updatedAt": "2026-06-05T12:00:00.000Z",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  {
+                    "id": "b-l-m",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  {
+                    "id": "b-s",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  {
+                    "id": "b-s-m",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  }
+                ]
+              },
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
             },
             {
-                "id": "019eaa01-4003-7000-8000-rightglb",
-                "name": "hexagonal-cut-concrete-forest-right.glb",
-                "folder": {
-                    "id": "019eaa01-3000-7000-8000-represent",
+              "id": "b-s-m",
+              "name": "b-s-m",
+              "compatiblePorts": {
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                "items": [
+                  {
+                    "id": "b-l",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "createdAt": "2026-06-05T12:00:00.000Z",
-                "updatedAt": "2026-06-05T12:00:00.000Z",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  {
+                    "id": "b-l-m",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  {
+                    "id": "b-s",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  {
+                    "id": "b-s-m",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  }
+                ]
+              },
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
             },
             {
-                "id": "019eaa01-4004-7000-8000-right3dm",
-                "name": "hexagonal-cut-concrete-forest-right.3dm",
-                "folder": {
-                    "id": "019eaa01-3000-7000-8000-represent",
+              "id": "c-b",
+              "name": "c-b",
+              "compatiblePorts": {
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                "items": [
+                  {
+                    "id": "c-t",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "createdAt": "2026-06-05T12:00:00.000Z",
-                "updatedAt": "2026-06-05T12:00:00.000Z",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            }
-        ]
-    },
-    "families": {
-        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-        "items": [
+                  }
+                ]
+              },
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
             {
-                "id": "019eaa01-2000-7000-8000-concrete01",
-                "name": "Concrete Forest",
-                "ports": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": [
-                        {
-                            "id": "b-l",
-                            "name": "b-l",
-                            "compatiblePorts": {
-                                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                                "items": [
-                                    {
-                                        "id": "b-l",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    },
-                                    {
-                                        "id": "b-l-m",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    },
-                                    {
-                                        "id": "b-s",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    },
-                                    {
-                                        "id": "b-s-m",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    }
-                                ]
-                            },
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        },
-                        {
-                            "id": "b-l-m",
-                            "name": "b-l-m",
-                            "compatiblePorts": {
-                                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                                "items": [
-                                    {
-                                        "id": "b-l",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    },
-                                    {
-                                        "id": "b-l-m",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    },
-                                    {
-                                        "id": "b-s",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    },
-                                    {
-                                        "id": "b-s-m",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    }
-                                ]
-                            },
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        },
-                        {
-                            "id": "b-s",
-                            "name": "b-s",
-                            "compatiblePorts": {
-                                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                                "items": [
-                                    {
-                                        "id": "b-l",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    },
-                                    {
-                                        "id": "b-l-m",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    },
-                                    {
-                                        "id": "b-s",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    },
-                                    {
-                                        "id": "b-s-m",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    }
-                                ]
-                            },
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        },
-                        {
-                            "id": "b-s-m",
-                            "name": "b-s-m",
-                            "compatiblePorts": {
-                                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                                "items": [
-                                    {
-                                        "id": "b-l",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    },
-                                    {
-                                        "id": "b-l-m",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    },
-                                    {
-                                        "id": "b-s",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    },
-                                    {
-                                        "id": "b-s-m",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    }
-                                ]
-                            },
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        },
-                        {
-                            "id": "c-b",
-                            "name": "c-b",
-                            "compatiblePorts": {
-                                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                                "items": [
-                                    {
-                                        "id": "c-t",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    }
-                                ]
-                            },
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        },
-                        {
-                            "id": "c-t",
-                            "name": "c-t",
-                            "compatiblePorts": {
-                                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                                "items": [
-                                    {
-                                        "id": "c-b",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    }
-                                ]
-                            },
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        }
-                    ]
-                },
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+              "id": "c-t",
+              "name": "c-t",
+              "compatiblePorts": {
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                "items": [
+                  {
+                    "id": "c-b",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  }
+                ]
+              },
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
             }
-        ]
-    },
-    "typologies": {
-        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-        "items": [
+          ]
+        },
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      }
+    ]
+  },
+  "typologies": {
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "items": [
+      {
+        "id": "typology-concrete-forest",
+        "name": "Concrete Forest",
+        "types": {
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+          "items": [
             {
-                "id": "typology-concrete-forest",
-                "name": "Concrete Forest",
-                "types": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": [
-                        {
-                            "id": "019eaa01-1001-7000-8000-forestleft",
-                            "name": "Hexagonal Cut Concrete Forest Left",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                            "createdAt": "2026-06-05T12:00:00.000Z",
-                            "updatedAt": "2026-06-05T12:00:00.000Z",
-                            "typology": {
-                                "id": "typology-concrete-forest"
-                            },
-                            "families": {
-                                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                                "items": [
-                                    {
-                                        "id": "019eaa01-2000-7000-8000-concrete01",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    }
-                                ]
-                            }
-                        },
-                        {
-                            "id": "019eaa01-1002-7000-8000-forestright",
-                            "name": "Hexagonal Cut Concrete Forest Right",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                            "createdAt": "2026-06-05T12:00:00.000Z",
-                            "updatedAt": "2026-06-05T12:00:00.000Z",
-                            "typology": {
-                                "id": "typology-concrete-forest"
-                            },
-                            "families": {
-                                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                                "items": [
-                                    {
-                                        "id": "019eaa01-2000-7000-8000-concrete01",
-                                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                                    }
-                                ]
-                            }
-                        }
-                    ]
-                },
-                "designs": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": []
-                },
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+              "id": "019eaa01-1001-7000-8000-forestleft",
+              "name": "Hexagonal Cut Concrete Forest Left",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+              "createdAt": "2026-06-05T12:00:00.000Z",
+              "updatedAt": "2026-06-05T12:00:00.000Z",
+              "typology": {
+                "id": "typology-concrete-forest"
+              },
+              "families": {
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                "items": [
+                  {
+                    "id": "019eaa01-2000-7000-8000-concrete01",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "019eaa01-1002-7000-8000-forestright",
+              "name": "Hexagonal Cut Concrete Forest Right",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+              "createdAt": "2026-06-05T12:00:00.000Z",
+              "updatedAt": "2026-06-05T12:00:00.000Z",
+              "typology": {
+                "id": "typology-concrete-forest"
+              },
+              "families": {
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                "items": [
+                  {
+                    "id": "019eaa01-2000-7000-8000-concrete01",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  }
+                ]
+              }
             }
-        ]
-    },
-    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+          ]
+        },
+        "designs": {
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+          "items": []
+        },
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      }
+    ]
+  },
+  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
 }

@@ -9,15 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 // #endregion 🔌Adapters
 
-import {
-  replaceScopes,
-  upsertClaim,
-  listConflicts,
-  replaceWarnings,
-  newId,
-  type Warning,
-  type Scope,
-} from "@/lib";
+import { replaceScopes, upsertClaim, listConflicts, replaceWarnings, newId, type Warning, type Scope } from "@/lib";
 import { requireAuth, isAuthError } from "@/lib";
 import { publishEvent } from "@/lib";
 import { parseUnifiedDiff, buildScopesForFile } from "@/lib";
@@ -30,9 +22,7 @@ const DiffIngestSchema = z.object({
   ticket_id: z.string().min(1),
   repo_id: z.string().default(""),
   patch: z.string().min(1),
-  snapshots: z
-    .array(z.object({ path: z.string(), content: z.string() }))
-    .default([]),
+  snapshots: z.array(z.object({ path: z.string(), content: z.string() })).default([]),
 });
 
 export async function POST(request: NextRequest) {
@@ -53,9 +43,7 @@ export async function POST(request: NextRequest) {
 
   const { ticket_id, patch, snapshots } = parsed.data;
   const diffFiles = parseUnifiedDiff(patch);
-  const changedFiles = [
-    ...new Set(diffFiles.map((f) => f.path).filter(Boolean)),
-  ];
+  const changedFiles = [...new Set(diffFiles.map((f) => f.path).filter(Boolean))];
 
   await publishEvent("DiffIngested", "repo-cli", {
     ticket_id,
@@ -88,17 +76,12 @@ export async function POST(request: NextRequest) {
   const claimedIds: string[] = [];
   for (const diffFile of diffFiles) {
     if (!diffFile.path) continue;
-    const fileScopes = allScopes.filter(
-      (s) => s.file_path === diffFile.path
-    );
+    const fileScopes = allScopes.filter((s) => s.file_path === diffFile.path);
     for (const hunk of diffFile.hunks) {
       if (hunk.newRange.end === 0) continue;
       for (const scope of fileScopes) {
         if (scope.start_line === 0 && scope.end_line === 0) continue;
-        if (
-          hunk.newRange.start <= scope.end_line &&
-          scope.start_line <= hunk.newRange.end
-        ) {
+        if (hunk.newRange.start <= scope.end_line && scope.start_line <= hunk.newRange.end) {
           if (scope.kind === "definition" || scope.kind === "section") {
             if (!claimedIds.includes(scope.id)) {
               claimedIds.push(scope.id);
@@ -125,9 +108,7 @@ export async function POST(request: NextRequest) {
   }));
   await replaceWarnings(warnings);
 
-  const blockers = warnings
-    .filter((w) => w.severity === "error")
-    .map((w) => w.message);
+  const blockers = warnings.filter((w) => w.severity === "error").map((w) => w.message);
 
   return NextResponse.json({
     changed_files: changedFiles,

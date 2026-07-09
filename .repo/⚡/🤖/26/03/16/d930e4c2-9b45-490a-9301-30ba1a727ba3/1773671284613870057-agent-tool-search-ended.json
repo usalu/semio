@@ -23,10 +23,7 @@
       },
       "tool_response": {
         "mode": "files_with_matches",
-        "filenames": [
-          "elements/ui/eslint.config.ts",
-          "elements/ui/vitest.config.ts"
-        ],
+        "filenames": ["elements/ui/eslint.config.ts", "elements/ui/vitest.config.ts"],
         "numFiles": 2
       },
       "tool_use_id": "toolu_011RbuRJgCvGtx96TYffa8gD"

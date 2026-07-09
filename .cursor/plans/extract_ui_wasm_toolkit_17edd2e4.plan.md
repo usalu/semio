@@ -2,24 +2,24 @@
 name: Extract ui wasm Toolkit
 overview: Extract the raw-wgpu UI toolkit (GPU pipelines, glyph atlas, layout, input, generic widgets) out of framework/renderer/wgpu into a new business-logic-free crate ui/wasm/rs (ui_wasm), then rebuild the framework wgpu renderer as a thin UiNode interpreter and shell on top of it.
 todos:
-  - id: scaffold-ui-wasm
-    content: Scaffold ui/wasm/rs crate (Cargo.toml, lib.rs, project.json, script.ts, workspace member)
-    status: completed
-  - id: move-core
-    content: Move geometry/theme, shaders, draw, text, layout, gpu into ui_wasm with wgpu kept private
-    status: completed
-  - id: generic-input
-    content: Generalize input/hit-testing in ui_wasm over event payload type E
-    status: completed
-  - id: generic-widgets
-    content: Build generic widget layer in ui_wasm with plain spec structs
-    status: completed
-  - id: rebuild-renderer
-    content: "Rebuild framework/renderer/wgpu on ui_wasm: interpreter, scenes, shell, boot; delete moved modules"
-    status: completed
-  - id: verify
-    content: Build wasm artifact, run ui_wasm cargo tests and vitest suites, verify wgpu dev server boots
-    status: completed
+ - id: scaffold-ui-wasm
+   content: Scaffold ui/wasm/rs crate (Cargo.toml, lib.rs, project.json, script.ts, workspace member)
+   status: completed
+ - id: move-core
+   content: Move geometry/theme, shaders, draw, text, layout, gpu into ui_wasm with wgpu kept private
+   status: completed
+ - id: generic-input
+   content: Generalize input/hit-testing in ui_wasm over event payload type E
+   status: completed
+ - id: generic-widgets
+   content: Build generic widget layer in ui_wasm with plain spec structs
+   status: completed
+ - id: rebuild-renderer
+   content: "Rebuild framework/renderer/wgpu on ui_wasm: interpreter, scenes, shell, boot; delete moved modules"
+   status: completed
+ - id: verify
+   content: Build wasm artifact, run ui_wasm cargo tests and vitest suites, verify wgpu dev server boots
+   status: completed
 isProject: false
 ---
 
@@ -68,8 +68,6 @@ flowchart LR
   Draw --> Gpu
 ```
 
-
-
 ## New crate: `ui/wasm/rs` (`ui_wasm`)
 
 Mirror the [ui/styling/rs](ui/styling/rs/project.json) bundle shape: `Cargo.toml`, `lib.rs` (+ module files), `project.json` (`@semio-tech/ui-wasm-rs`, test target), `script.ts` (cargo test router). Add `"ui/wasm/rs"` to the workspace [Cargo.toml](Cargo.toml).
@@ -105,4 +103,3 @@ JS side ([framework/renderer/wgpu/js/index.ts](framework/renderer/wgpu/js/index.
 - `bun ./script.ts wasm` in `framework/renderer/wgpu` regenerates `public/renderer-modules/wgpu/`.
 - Existing vitest suites (`framework/renderer/wgpu`, `framework/renderer/react`) still pass.
 - Dev server with `SEMIO_RENDERER=wgpu` serves and boots (`[DEBUG] wgpu renderer booted` on console).
-

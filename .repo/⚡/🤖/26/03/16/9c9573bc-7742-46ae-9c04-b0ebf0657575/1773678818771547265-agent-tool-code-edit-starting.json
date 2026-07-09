@@ -21,9 +21,7 @@
       "tool_use_id": "tool_6bfa8e2d-9dc3-48cb-96ad-cb97ac7fe13",
       "hook_event_name": "preToolUse",
       "cursor_version": "2.6.19",
-      "workspace_roots": [
-        "/workspaces/semio"
-      ],
+      "workspace_roots": ["/workspaces/semio"],
       "user_email": "ueli.saluz@posteo.de",
       "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
     }

@@ -100,11 +100,7 @@
             "max_results": 3
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__search",
-              "mcp__repo__ticket_open",
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__search", "mcp__repo__ticket_open", "mcp__repo__ticket_close"],
             "query": "select:mcp__repo__search,mcp__repo__ticket_open,mcp__repo__ticket_close",
             "total_deferred_tools": 86
           },
@@ -2673,9 +2669,7 @@
             "pattern": "elements/ui/tsconfig*.json"
           },
           "tool_response": {
-            "filenames": [
-              "/workspaces/semio/elements/ui/tsconfig.json"
-            ],
+            "filenames": ["/workspaces/semio/elements/ui/tsconfig.json"],
             "durationMs": 305,
             "numFiles": 1,
             "truncated": false
@@ -4258,10 +4252,7 @@
           "tool_input": {
             "path": "26/03/20/ADD-VEC-COMPONENT-TO-COMPOSE-ELEMENTS-UI",
             "summary": "Added Vec component to compose/ui with draggable SVG 2D vector input. Takes vec {u,v}, optional minU/maxU/minV/maxV domain bounds, showAxes, showOrigin, onVecChange callback. Added story with Default, NoAxes, NoOrigin, PositiveDomain, and Large variants. Both compose/ui and elements/ui typecheck clean.",
-            "files": [
-              "compose/ui/index.tsx",
-              "compose/ui/.storybook/stories/Vec.stories.tsx"
-            ],
+            "files": ["compose/ui/index.tsx", "compose/ui/.storybook/stories/Vec.stories.tsx"],
             "no_github": true
           },
           "tool_use_id": "toolu_01CbpSpKtzFv7cF9cbfm5X5e"
@@ -4300,10 +4291,7 @@
           "tool_input": {
             "path": "26/03/20/ADD-VEC-COMPONENT-TO-COMPOSE-ELEMENTS-UI",
             "summary": "Added Vec component to compose/ui with draggable SVG 2D vector input. Takes vec {u,v}, optional minU/maxU/minV/maxV domain bounds, showAxes, showOrigin, onVecChange callback. Added story with Default, NoAxes, NoOrigin, PositiveDomain, and Large variants. Both compose/ui and elements/ui typecheck clean.",
-            "files": [
-              "compose/ui/index.tsx",
-              "compose/ui/.storybook/stories/Vec.stories.tsx"
-            ],
+            "files": ["compose/ui/index.tsx", "compose/ui/.storybook/stories/Vec.stories.tsx"],
             "no_github": true
           },
           "tool_response": [

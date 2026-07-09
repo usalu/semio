@@ -5737,9 +5737,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/ee4a7fde-ce13-4276-8816-b51a0fb96421.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Fixed drag algorithm's connection u/v double-counting and incorrect offset calculation on release.\n\n**Root cause**: `applyConnectionDiff` uses ADDITIVE semantics (`result.u = base.u + diff.u`), but `dragPiecesInDesign` computes connection diffs as total offset from drag start. When `designStore.execute()` was called every drag tick, each tick's additive diff was applied on top of already-shifted values, causing double/triple/N-counting of connection u/v offsets.\n\n**Fix: Undo-before-apply pattern in onNodeDrag and onNodeDragStop**.\n\nBefore each tick's `designStore.execute()`, if the transaction stack already has an entry from a previous tick, call `designStore.undo()` first. This reverts the kit store back to the original pre-drag state. Then the new `designStore.execute()` applies the total diff from scratch against the clean original state. The transaction stack always holds exactly ONE entry whose `undo.kitDiff` is the inverse computed from the original state. On finalize (length=1), no squash is needed and undo/redo both work correctly for additive connection u/v AND replacement piece center semantics.\n\n**Trace**: Original conn.u=1.0. After drag with 3 ticks to final offset 0.196:\n- Old (broken): 1.0 → 1.065 → 1.196 → 1.392 (triple-counted)\n- New (fixed): 1.0 → undo→1.0 → 1.131 → undo→1.0 → 1.196 (correct)\n\nAlso fixed the fakeStore in the \"diff status helpers\" test (missing `draggingConnectionIds` field).\n\nTest results: 4/4 Playwright tests pass, 199/199 vitest tests pass."
           },
           "tool_use_id": "toolu_bdrk_01WfpiTYTsgpqM62tuTpaSCm__vscode-1776236858326",
@@ -5766,9 +5764,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/ee4a7fde-ce13-4276-8816-b51a0fb96421.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Fixed drag algorithm's connection u/v double-counting and incorrect offset calculation on release.\n\n**Root cause**: `applyConnectionDiff` uses ADDITIVE semantics (`result.u = base.u + diff.u`), but `dragPiecesInDesign` computes connection diffs as total offset from drag start. When `designStore.execute()` was called every drag tick, each tick's additive diff was applied on top of already-shifted values, causing double/triple/N-counting of connection u/v offsets.\n\n**Fix: Undo-before-apply pattern in onNodeDrag and onNodeDragStop**.\n\nBefore each tick's `designStore.execute()`, if the transaction stack already has an entry from a previous tick, call `designStore.undo()` first. This reverts the kit store back to the original pre-drag state. Then the new `designStore.execute()` applies the total diff from scratch against the clean original state. The transaction stack always holds exactly ONE entry whose `undo.kitDiff` is the inverse computed from the original state. On finalize (length=1), no squash is needed and undo/redo both work correctly for additive connection u/v AND replacement piece center semantics.\n\n**Trace**: Original conn.u=1.0. After drag with 3 ticks to final offset 0.196:\n- Old (broken): 1.0 → 1.065 → 1.196 → 1.392 (triple-counted)\n- New (fixed): 1.0 → undo→1.0 → 1.131 → undo→1.0 → 1.196 (correct)\n\nAlso fixed the fakeStore in the \"diff status helpers\" test (missing `draggingConnectionIds` field).\n\nTest results: 4/4 Playwright tests pass, 199/199 vitest tests pass."
           },
           "tool_use_id": "toolu_bdrk_01WfpiTYTsgpqM62tuTpaSCm__vscode-1776236858326",
@@ -5795,9 +5791,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/ee4a7fde-ce13-4276-8816-b51a0fb96421.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Fixed drag algorithm's connection u/v double-counting and incorrect offset calculation on release.\n\n**Root cause**: `applyConnectionDiff` uses ADDITIVE semantics (`result.u = base.u + diff.u`), but `dragPiecesInDesign` computes connection diffs as total offset from drag start. When `designStore.execute()` was called every drag tick, each tick's additive diff was applied on top of already-shifted values, causing double/triple/N-counting of connection u/v offsets.\n\n**Fix: Undo-before-apply pattern in onNodeDrag and onNodeDragStop**.\n\nBefore each tick's `designStore.execute()`, if the transaction stack already has an entry from a previous tick, call `designStore.undo()` first. This reverts the kit store back to the original pre-drag state. Then the new `designStore.execute()` applies the total diff from scratch against the clean original state. The transaction stack always holds exactly ONE entry whose `undo.kitDiff` is the inverse computed from the original state. On finalize (length=1), no squash is needed and undo/redo both work correctly for additive connection u/v AND replacement piece center semantics.\n\n**Trace**: Original conn.u=1.0. After drag with 3 ticks to final offset 0.196:\n- Old (broken): 1.0 → 1.065 → 1.196 → 1.392 (triple-counted)\n- New (fixed): 1.0 → undo→1.0 → 1.131 → undo→1.0 → 1.196 (correct)\n\nAlso fixed the fakeStore in the \"diff status helpers\" test (missing `draggingConnectionIds` field).\n\nTest results: 4/4 Playwright tests pass, 199/199 vitest tests pass."
           },
           "tool_response": "[🎫fixdragalgorithmandconnectionoffsetcalculation](repo://ticket/🎫fixdragalgorithmandconnectionoffsetcalculation) - `closed` - `closed now`\n",
@@ -5825,9 +5819,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/ee4a7fde-ce13-4276-8816-b51a0fb96421.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Fixed drag algorithm's connection u/v double-counting and incorrect offset calculation on release.\n\n**Root cause**: `applyConnectionDiff` uses ADDITIVE semantics (`result.u = base.u + diff.u`), but `dragPiecesInDesign` computes connection diffs as total offset from drag start. When `designStore.execute()` was called every drag tick, each tick's additive diff was applied on top of already-shifted values, causing double/triple/N-counting of connection u/v offsets.\n\n**Fix: Undo-before-apply pattern in onNodeDrag and onNodeDragStop**.\n\nBefore each tick's `designStore.execute()`, if the transaction stack already has an entry from a previous tick, call `designStore.undo()` first. This reverts the kit store back to the original pre-drag state. Then the new `designStore.execute()` applies the total diff from scratch against the clean original state. The transaction stack always holds exactly ONE entry whose `undo.kitDiff` is the inverse computed from the original state. On finalize (length=1), no squash is needed and undo/redo both work correctly for additive connection u/v AND replacement piece center semantics.\n\n**Trace**: Original conn.u=1.0. After drag with 3 ticks to final offset 0.196:\n- Old (broken): 1.0 → 1.065 → 1.196 → 1.392 (triple-counted)\n- New (fixed): 1.0 → undo→1.0 → 1.131 → undo→1.0 → 1.196 (correct)\n\nAlso fixed the fakeStore in the \"diff status helpers\" test (missing `draggingConnectionIds` field).\n\nTest results: 4/4 Playwright tests pass, 199/199 vitest tests pass."
           },
           "tool_response": "[🎫fixdragalgorithmandconnectionoffsetcalculation](repo://ticket/🎫fixdragalgorithmandconnectionoffsetcalculation) - `closed` - `closed now`\n",

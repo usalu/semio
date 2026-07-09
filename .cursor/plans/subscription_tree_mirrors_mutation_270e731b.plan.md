@@ -2,24 +2,24 @@
 name: Subscription tree mirrors mutation
 overview: Refactor `type Subscription` from a flat 95-field block into a scoped command tree that mirrors the new mutation document (`session → draft(id) → transaction(id) → kit → tag/concept/quality/type/design(id) → port/connector/piece(id)/pieces(ids)`). Every leaf is one event with a past-tense name and the existing concrete `Operation` result type as its return.
 todos:
-  - id: subscription_tree
-    content: Replace flat `type Subscription` with `Subscription { session }` + the SessionScopedSubscriptionInput / DraftScopedSubscriptionInput / TransactionScopedSubscriptionInput / KitScopedSubscriptionInput document.
-    status: pending
-  - id: scoped_subscriptions
-    content: Add Tag/Concept/Quality/Type/Port/Connector/Design/Piece/Pieces ScopedSubscriptionInput types mirroring each scope's mutation leaves with past-tense names returning the existing concrete Operation result types.
-    status: pending
-  - id: drop_plurals
-    content: Drop subscriptions for plural creates and addAttributes/addChildPieces variants that the mutation API no longer exposes (createdTags/Concepts/Qualities/Types/Ports/Designs, addedConnectors, addedAttributesTo*, addedChildPiecesWithParentConnections, addedHangingChildPiecesWithParentConnections).
-    status: pending
-  - id: add_missing_events
-    content: "Add four missing concrete Operation types: StartedSession, EndedSession, RenamedDesign, UpdatedDesignDescription (each with its *Scope and *Input child types, mirroring the RenamedTag/CreatedTag pattern)."
-    status: pending
-  - id: validate
-    content: Run `parse` + `buildSchema` to confirm `parse OK` / `build OK`, and check rg counts for the dropped fields.
-    status: pending
-  - id: ticket_update
-    content: Update .repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md with the subscription refactor problem, change set, and verification.
-    status: pending
+ - id: subscription_tree
+   content: Replace flat `type Subscription` with `Subscription { session }` + the SessionScopedSubscriptionInput / DraftScopedSubscriptionInput / TransactionScopedSubscriptionInput / KitScopedSubscriptionInput document.
+   status: pending
+ - id: scoped_subscriptions
+   content: Add Tag/Concept/Quality/Type/Port/Connector/Design/Piece/Pieces ScopedSubscriptionInput types mirroring each scope's mutation leaves with past-tense names returning the existing concrete Operation result types.
+   status: pending
+ - id: drop_plurals
+   content: Drop subscriptions for plural creates and addAttributes/addChildPieces variants that the mutation API no longer exposes (createdTags/Concepts/Qualities/Types/Ports/Designs, addedConnectors, addedAttributesTo*, addedChildPiecesWithParentConnections, addedHangingChildPiecesWithParentConnections).
+   status: pending
+ - id: add_missing_events
+   content: "Add four missing concrete Operation types: StartedSession, EndedSession, RenamedDesign, UpdatedDesignDescription (each with its *Scope and *Input child types, mirroring the RenamedTag/CreatedTag pattern)."
+   status: pending
+ - id: validate
+   content: Run `parse` + `buildSchema` to confirm `parse OK` / `build OK`, and check rg counts for the dropped fields.
+   status: pending
+ - id: ticket_update
+   content: Update .repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md with the subscription refactor problem, change set, and verification.
+   status: pending
 isProject: false
 ---
 
@@ -63,31 +63,31 @@ flowchart TB
 
 Replace the entire `type Subscription { … }` block (currently lines 6383–6501) with:
 
-1) Root + four navigation scopes (no events except `started`/`ended` + nav fields):
+1. Root + four navigation scopes (no events except `started`/`ended` + nav fields):
 
 ```graphql
 type Subscription {
-  session: SessionScopedSubscriptionInput!
+ session: SessionScopedSubscriptionInput!
 }
 
 type SessionScopedSubscriptionInput {
-  started: StartedSession!
-  ended: EndedSession!
-  draft(id: ID!): DraftScopedSubscriptionInput!
+ started: StartedSession!
+ ended: EndedSession!
+ draft(id: ID!): DraftScopedSubscriptionInput!
 }
 
 type DraftScopedSubscriptionInput {
-  transaction(id: ID!): TransactionScopedSubscriptionInput!
+ transaction(id: ID!): TransactionScopedSubscriptionInput!
 }
 
 type TransactionScopedSubscriptionInput {
-  kit: KitScopedSubscriptionInput!
+ kit: KitScopedSubscriptionInput!
 }
 ```
 
-2) `KitScopedSubscriptionInput` mirrors `KitScopedOperationInput` 1:1 (artifact + tag/concept/quality/type/design create-delete + scope navigator). Each per-entity scope (`Tag/Concept/Quality/Type/Port/Connector/Design/Piece/Pieces ScopedSubscriptionInput`) has exactly the same leaves as its mutation counterpart, but past-tense names returning the existing concrete operation result types (`RenamedTag`, `CreatedTag`, `AddedAttributeToTag`, `MovedPiece`, `DraggedPieces`, `ChangedPieceToType`, …).
+2. `KitScopedSubscriptionInput` mirrors `KitScopedOperationInput` 1:1 (artifact + tag/concept/quality/type/design create-delete + scope navigator). Each per-entity scope (`Tag/Concept/Quality/Type/Port/Connector/Design/Piece/Pieces ScopedSubscriptionInput`) has exactly the same leaves as its mutation counterpart, but past-tense names returning the existing concrete operation result types (`RenamedTag`, `CreatedTag`, `AddedAttributeToTag`, `MovedPiece`, `DraggedPieces`, `ChangedPieceToType`, …).
 
-3) Drop these subscriptions (mutation no longer exposes them):
+3. Drop these subscriptions (mutation no longer exposes them):
 
 - `createdTags`, `createdConcepts`, `createdQualities`, `createdTypes`, `createdPorts`, `addedConnectors`, `createdDesigns`
 - every `addedAttributesTo<Entity>` (Tag/Concept/Quality/Type/Port/Design/Piece)
@@ -95,7 +95,7 @@ type TransactionScopedSubscriptionInput {
 
 Keep delete-plural events (`tagsDeleted`, `conceptsDeleted`, `piecesDeleted`, …) because `deleteTags(ids: [ID!]!)` and similar remain in the mutation. Keep multi-piece transform events (`draggedPieces`, `movedPieces`, `fixedPieces`, `changedPiecesToType`) on `PiecesScopedSubscriptionInput`.
 
-4) Add four missing concrete operation types (next to the matching `Created*`/`Renamed*` blocks; modeled after `RenamedTag` and `CreatedTag` which are full `Operation & Entity` types with their own `*Scope`/`*Input` children — same pattern, no shortcuts):
+4. Add four missing concrete operation types (next to the matching `Created*`/`Renamed*` blocks; modeled after `RenamedTag` and `CreatedTag` which are full `Operation & Entity` types with their own `*Scope`/`*Input` children — same pattern, no shortcuts):
 
 - `StartedSession` + `StartedSessionScope` + `StartedSessionInput` (`session.started`)
 - `EndedSession` + `EndedSessionScope` + `EndedSessionInput` (`session.ended`)
@@ -108,10 +108,30 @@ These four are gaps even in the current schema: the mutation has `design.rename(
 
 ```graphql
 # new
-subscription { session { draft(id:"d") { transaction(id:"t") { kit { design(id:"des") { piece(id:"p") { moved { id } } } } } } } }
+subscription {
+ session {
+  draft(id: "d") {
+   transaction(id: "t") {
+    kit {
+     design(id: "des") {
+      piece(id: "p") {
+       moved {
+        id
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}
 
 # old (flat)
-subscription { movedPiece { id } }
+subscription {
+ movedPiece {
+  id
+ }
+}
 ```
 
 The new form lets clients narrow to one specific draft / transaction / design / piece; the old flat form is a firehose with no narrowing.

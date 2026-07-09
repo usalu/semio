@@ -1456,14 +1456,8 @@
     {
       "id": "bg_holz_fassade_botanique:bw_institut_botanique_ulg:0",
       "points": [
-        [
-          5.5755821,
-          50.5783177
-        ],
-        [
-          5.5818,
-          50.603
-        ]
+        [5.5755821, 50.5783177],
+        [5.5818, 50.603]
       ],
       "kind": "reuse",
       "label": "/ rückgewonnene Holzfass…"
@@ -1471,14 +1465,8 @@
     {
       "id": "bg_stahl_mehrere_lycee_profiles_canopy:bw_lycee_block_3000:0",
       "points": [
-        [
-          6.1136808,
-          49.6249025
-        ],
-        [
-          6.1267,
-          49.6094
-        ]
+        [6.1136808, 49.6249025],
+        [6.1267, 49.6094]
       ],
       "kind": "reuse",
       "label": "11,8 t Stahlprofile als…"
@@ -1486,14 +1474,8 @@
     {
       "id": "bg_stahl_mehrere_lycee_metal_ceiling_panels:bw_lycee_block_3000:0",
       "points": [
-        [
-          6.1136808,
-          49.6249025
-        ],
-        [
-          6.1267,
-          49.6094
-        ]
+        [6.1136808, 49.6249025],
+        [6.1267, 49.6094]
       ],
       "kind": "reuse",
       "label": "12 Metall-Deckenpaneele"
@@ -1501,14 +1483,8 @@
     {
       "id": "bg_stahlbeton_mehrere_plattenpalast_wbs70_wand_deckenelemente:bw_unbekannte_wbs70_plattenbauten:0",
       "points": [
-        [
-          13.3951309,
-          52.5173885
-        ],
-        [
-          13.4018775,
-          52.5390524
-        ]
+        [13.3951309, 52.5173885],
+        [13.4018775, 52.5390524]
       ],
       "kind": "reuse",
       "label": "13 WBS70-Wand- und…"
@@ -1516,14 +1492,8 @@
     {
       "id": "bg_stahlbeton_mehrere_plattenpalast_wbs70_wand_deckenelemente:bw_peter_behrens_halle_berlin:1",
       "points": [
-        [
-          13.3834015,
-          52.5419669
-        ],
-        [
-          13.4018775,
-          52.5390524
-        ]
+        [13.3834015, 52.5419669],
+        [13.4018775, 52.5390524]
       ],
       "kind": "reuse",
       "label": "13 WBS70-Wand- und…"
@@ -1531,14 +1501,8 @@
     {
       "id": "bg_beton_boden_lycee_paving_slabs:bw_lycee_block_3000:0",
       "points": [
-        [
-          6.1136808,
-          49.6249025
-        ],
-        [
-          6.1267,
-          49.6094
-        ]
+        [6.1136808, 49.6249025],
+        [6.1267, 49.6094]
       ],
       "kind": "reuse",
       "label": "135 m² wiederverwendete…"
@@ -1546,14 +1510,8 @@
     {
       "id": "bg_stahl_mehrere_hof_1930s_beams_to_tbc:bw_318_oxford_street_house_of_fraser:0",
       "points": [
-        [
-          -0.1463435,
-          51.5152626
-        ],
-        [
-          -0.1427,
-          51.5142
-        ]
+        [-0.1463435, 51.5152626],
+        [-0.1427, 51.5142]
       ],
       "kind": "reuse",
       "label": "1930er Stahlträger vom…"
@@ -1561,14 +1519,8 @@
     {
       "id": "bg_stahl_mehrere_juch_hagenholz_stahlstruktur:bw_hagenholz_recyclinghalle:0",
       "points": [
-        [
-          8.5636654,
-          47.415759
-        ],
-        [
-          8.4885,
-          47.393
-        ]
+        [8.5636654, 47.415759],
+        [8.4885, 47.393]
       ],
       "kind": "reuse",
       "label": "1:1 versetzte Stahlstruk…"
@@ -1576,14 +1528,8 @@
     {
       "id": "bg_stahlbeton_wand_mehrow_wbs70_slabs:bw_marzahn_wbs70_eleven_storey_donor:0",
       "points": [
-        [
-          13.676873,
-          52.5511184
-        ],
-        [
-          13.6177,
-          52.5724
-        ]
+        [13.676873, 52.5511184],
+        [13.6177, 52.5724]
       ],
       "kind": "reuse",
       "label": "22 wiederverwendete…"
@@ -1591,14 +1537,8 @@
     {
       "id": "bg_stahlbeton_mehrere_mehrow_wbs70_floor_slabs:bw_marzahn_wbs70_eleven_storey_donor:0",
       "points": [
-        [
-          13.676873,
-          52.5511184
-        ],
-        [
-          13.6177,
-          52.5724
-        ]
+        [13.676873, 52.5511184],
+        [13.6177, 52.5724]
       ],
       "kind": "reuse",
       "label": "27 wiederverwen… (Mehrow)"
@@ -1606,14 +1546,8 @@
     {
       "id": "bg_stahlbeton_mehrere_lokomotion_hollow_core_slabs:bw_tampere_1980s_office_donor:0",
       "points": [
-        [
-          23.7616372,
-          61.4977929
-        ],
-        [
-          23.6324,
-          61.4588
-        ]
+        [23.7616372, 61.4977929],
+        [23.6324, 61.4588]
       ],
       "kind": "reuse",
       "label": "27 wiederve… (Lokomotion)"
@@ -1621,14 +1555,8 @@
     {
       "id": "bg_beton_mehrere_lycee_precast_channels:bw_lycee_block_3000:0",
       "points": [
-        [
-          6.1136808,
-          49.6249025
-        ],
-        [
-          6.1267,
-          49.6094
-        ]
+        [6.1136808, 49.6249025],
+        [6.1267, 49.6094]
       ],
       "kind": "reuse",
       "label": "38 Fertigbetonelemente…"
@@ -1636,14 +1564,8 @@
     {
       "id": "bg_daemmstoff_mehrere_lycee_gypsum_acoustic_panels:bw_lycee_block_3000:0",
       "points": [
-        [
-          6.1136808,
-          49.6249025
-        ],
-        [
-          6.1267,
-          49.6094
-        ]
+        [6.1136808, 49.6249025],
+        [6.1267, 49.6094]
       ],
       "kind": "reuse",
       "label": "419 m² Gips-Akustikpanee…"
@@ -1651,14 +1573,8 @@
     {
       "id": "bg_stahl_mehrere_lycee_floor_sheet_metal_facade:bw_lycee_block_3000:0",
       "points": [
-        [
-          6.1136808,
-          49.6249025
-        ],
-        [
-          6.1267,
-          49.6094
-        ]
+        [6.1136808, 49.6249025],
+        [6.1267, 49.6094]
       ],
       "kind": "reuse",
       "label": "61 m² Bodenblech als…"
@@ -1666,14 +1582,8 @@
     {
       "id": "bg_stahlbeton_mehrere_melkinlaituri_hollow_core_slabs:bw_suutarila_community_centre_donor:0",
       "points": [
-        [
-          25.0064817,
-          60.283019
-        ],
-        [
-          24.9195,
-          60.1559
-        ]
+        [25.0064817, 60.283019],
+        [24.9195, 60.1559]
       ],
       "kind": "reuse",
       "label": "64 reused hollow-core…"
@@ -1681,14 +1591,8 @@
     {
       "id": "bg_stahl_mehrere_boulder_wide_flange_members:bw_boulder_community_hospital:0",
       "points": [
-        [
-          -105.270545,
-          40.0149856
-        ],
-        [
-          -105.270545,
-          40.0149856
-        ]
+        [-105.270545, 40.0149856],
+        [-105.270545, 40.0149856]
       ],
       "kind": "reuse",
       "label": "89 salvaged wide-flange…"
@@ -1696,14 +1600,8 @@
     {
       "id": "bg_ziegel_fassade_biopartner_5_abbruchschutt_gruene:bw_gorlaeus_hochhaus:0",
       "points": [
-        [
-          4.4609833,
-          52.1677621
-        ],
-        [
-          4.4502649,
-          52.1710283
-        ]
+        [4.4609833, 52.1677621],
+        [4.4502649, 52.1710283]
       ],
       "kind": "reuse",
       "label": "Abbruchschutt"
@@ -1711,14 +1609,8 @@
     {
       "id": "bg_keramik_mehrere_kamikatsu_old_tiles:bw_kamikatsu_local_houses:0",
       "points": [
-        [
-          134.4018864,
-          33.8889228
-        ],
-        [
-          134.2885,
-          33.896
-        ]
+        [134.4018864, 33.8889228],
+        [134.2885, 33.896]
       ],
       "kind": "reuse",
       "label": "Alte Fliesen als Mosaik-"
@@ -1726,14 +1618,8 @@
     {
       "id": "bg_mehrere_mehrere_kamikatsu_old_town_hall_wall_parts:bw_kamikatsu_old_town_hall:0",
       "points": [
-        [
-          134.4018864,
-          33.8889228
-        ],
-        [
-          134.2885,
-          33.896
-        ]
+        [134.4018864, 33.8889228],
+        [134.2885, 33.896]
       ],
       "kind": "reuse",
       "label": "Alte Rathauswandteile…"
@@ -1741,14 +1627,8 @@
     {
       "id": "bg_mehrere_mehrere_kamikatsu_shoji_glass_doors:bw_kamikatsu_local_houses:0",
       "points": [
-        [
-          134.4018864,
-          33.8889228
-        ],
-        [
-          134.2885,
-          33.896
-        ]
+        [134.4018864, 33.8889228],
+        [134.2885, 33.896]
       ],
       "kind": "reuse",
       "label": "Alte Shoji-Schirme und…"
@@ -1756,14 +1636,8 @@
     {
       "id": "bg_aluminium_fassade_trae_high_rise_aarhus_fassadenplatten:bw_herlev_dach_industrie_und_farmdaecher_als_aluminium_donor:0",
       "points": [
-        [
-          12.4294486,
-          55.7337528
-        ],
-        [
-          10.2048,
-          56.1539
-        ]
+        [12.4294486, 55.7337528],
+        [10.2048, 56.1539]
       ],
       "kind": "reuse",
       "label": "Aluminium-Fassadenplatten"
@@ -1771,14 +1645,8 @@
     {
       "id": "bg_mehrere_mehrere_boschgaard_alu_fassade:bw_stadskantoor_roosendaal:0",
       "points": [
-        [
-          4.4561276,
-          51.5331484
-        ],
-        [
-          5.3082,
-          51.6947
-        ]
+        [4.4561276, 51.5331484],
+        [5.3082, 51.6947]
       ],
       "kind": "reuse",
       "label": "Aluminium-Fassadensystem"
@@ -1786,14 +1654,8 @@
     {
       "id": "bg_aluminium_fassade_elys_trapezoidal_sheet:bw_elys_former_coop_distribution_center:0",
       "points": [
-        [
-          7.5734396,
-          47.573746
-        ],
-        [
-          7.6012,
-          47.5489
-        ]
+        [7.5734396, 47.573746],
+        [7.6012, 47.5489]
       ],
       "kind": "reuse",
       "label": "Aluminium-Trapezblech…"
@@ -1801,14 +1663,8 @@
     {
       "id": "bg_glas_mehrere_recyclinghaus_aluminiumfenster:bw_ehemaliges_haus_der_jugend_hannover:0",
       "points": [
-        [
-          9.7385532,
-          52.3744779
-        ],
-        [
-          9.8342,
-          52.3589
-        ]
+        [9.7385532, 52.3744779],
+        [9.8342, 52.3589]
       ],
       "kind": "reuse",
       "label": "Aluminiumfenster mit…"
@@ -1816,14 +1672,8 @@
     {
       "id": "bg_mehrere_mehrere_ithaka_kozijnen_fenster:bw_rws_districtskantoor_terneuzen:0",
       "points": [
-        [
-          3.8422044,
-          51.298843
-        ],
-        [
-          3.6645,
-          51.4479
-        ]
+        [3.8422044, 51.298843],
+        [3.6645, 51.4479]
       ],
       "kind": "reuse",
       "label": "Außenkozijnen"
@@ -1831,14 +1681,8 @@
     {
       "id": "bg_mehrere_mehrere_grande_halle_external_window_joinery:bw_colombelles_regional_donor_sources:0",
       "points": [
-        [
-          -0.3061681,
-          49.1916221
-        ],
-        [
-          -0.3061681,
-          49.1916221
-        ]
+        [-0.3061681, 49.1916221],
+        [-0.3061681, 49.1916221]
       ],
       "kind": "reuse",
       "label": "Außenschreinerei"
@@ -1846,14 +1690,8 @@
     {
       "id": "bg_holz_fassade_ithaka_azobe_shingles:bw_rws_districtskantoor_terneuzen:0",
       "points": [
-        [
-          3.8422044,
-          51.298843
-        ],
-        [
-          3.6645,
-          51.4479
-        ]
+        [3.8422044, 51.298843],
+        [3.6645, 51.4479]
       ],
       "kind": "reuse",
       "label": "Azobé-Hartholz-Shingles…"
@@ -1861,14 +1699,8 @@
     {
       "id": "bg_mehrere_mehrere_bestandsfundamente_und_erste_geschosse_blackfriars:bw_blackfriars_crown_court_bestand:0",
       "points": [
-        [
-          -0.0999825,
-          51.5024846
-        ],
-        [
-          -0.0999,
-          51.5025
-        ]
+        [-0.0999825, 51.5024846],
+        [-0.0999, 51.5025]
       ],
       "kind": "reuse",
       "label": "Bestandsfundamente und…"
@@ -1876,14 +1708,8 @@
     {
       "id": "bg_mehrere_mehrere_svanen_beton_recycling_zuschlag:bw_ehemalige_gladsaxe_school:0",
       "points": [
-        [
-          12.481879,
-          55.74061
-        ],
-        [
-          12.4033,
-          55.7346
-        ]
+        [12.481879, 55.74061],
+        [12.4033, 55.7346]
       ],
       "kind": "reuse",
       "label": "Beton als Recycling-Zusc…"
@@ -1891,14 +1717,8 @@
     {
       "id": "bg_stahlbeton_mehrere_juch_schellinghalle_pilzstuetzen:bw_schellinghalle_ruemlang:0",
       "points": [
-        [
-          8.5299122,
-          47.4507163
-        ],
-        [
-          8.4885,
-          47.393
-        ]
+        [8.5299122, 47.4507163],
+        [8.4885, 47.393]
       ],
       "kind": "reuse",
       "label": "Beton-Pilzstützen und…"
@@ -1906,14 +1726,8 @@
     {
       "id": "bg_beton_wand_bluecity_betonbloecke_trennwaende:bw_bluecity_tropicana_rotterdam:0",
       "points": [
-        [
-          4.5007164,
-          51.9196447
-        ],
-        [
-          4.5112,
-          51.9436
-        ]
+        [4.5007164, 51.9196447],
+        [4.5112, 51.9436]
       ],
       "kind": "reuse",
       "label": "Betonblöcke als Trennwän…"
@@ -1921,14 +1735,8 @@
     {
       "id": "bg_beton_fassade_ccn_parapets:bw_prinsenhof_a_arnhem_donor:0",
       "points": [
-        [
-          5.9114676,
-          51.9773561
-        ],
-        [
-          6.0286,
-          52.3917
-        ]
+        [5.9114676, 51.9773561],
+        [6.0286, 52.3917]
       ],
       "kind": "reuse",
       "label": "Betonbruestungen"
@@ -1936,14 +1744,8 @@
     {
       "id": "bg_beton_mehrere_bestandverplanzung_betonfertigteil_paneele:bw_olympisches_dorf_bungalows_muenchen:0",
       "points": [
-        [
-          11.5477603,
-          48.1803734
-        ],
-        [
-          11.5532,
-          48.1734
-        ]
+        [11.5477603, 48.1803734],
+        [11.5532, 48.1734]
       ],
       "kind": "reuse",
       "label": "Betonfertigteil-Paneele…"
@@ -1951,14 +1753,8 @@
     {
       "id": "bg_naturstein_mehrere_multi_blaustein_facade_slabs:bw_multi_brouckere_tower:0",
       "points": [
-        [
-          4.351774,
-          50.8507197
-        ],
-        [
-          4.3487,
-          50.8476
-        ]
+        [4.351774, 50.8507197],
+        [4.3487, 50.8476]
       ],
       "kind": "reuse",
       "label": "Blaustein-Fassadenblöcke…"
@@ -1966,14 +1762,8 @@
     {
       "id": "bg_stahl_traeger_boulder_hospital_stockpile:bw_boulder_community_hospital:0",
       "points": [
-        [
-          -105.270545,
-          40.0149856
-        ],
-        [
-          -105.270545,
-          40.0149856
-        ]
+        [-105.270545, 40.0149856],
+        [-105.270545, 40.0149856]
       ],
       "kind": "reuse",
       "label": "Boulder Community…"
@@ -1981,14 +1771,8 @@
     {
       "id": "bg_mehrere_tuer_moeoeslistrasse_brandschutztueren_lavater:bw_schulhaus_lavater:0",
       "points": [
-        [
-          8.5329258,
-          47.3610404
-        ],
-        [
-          8.5154,
-          47.3406
-        ]
+        [8.5329258, 47.3610404],
+        [8.5154, 47.3406]
       ],
       "kind": "reuse",
       "label": "Brandschutztüren aus…"
@@ -1996,14 +1780,8 @@
     {
       "id": "bg_holz_mehrere_brettschichtholzbogen_recypark_demets:bw_ehemalige_reithalle_bei_liege_bierset:0",
       "points": [
-        [
-          5.4512607,
-          50.6547149
-        ],
-        [
-          4.3206717,
-          50.8415883
-        ]
+        [5.4512607, 50.6547149],
+        [4.3206717, 50.8415883]
       ],
       "kind": "reuse",
       "label": "Brettschichtholzbögen…"
@@ -2011,14 +1789,8 @@
     {
       "id": "bg_mehrere_mehrere_kamikatsu_donated_facade_windows:bw_kamikatsu_local_houses:0",
       "points": [
-        [
-          134.4018864,
-          33.8889228
-        ],
-        [
-          134.2885,
-          33.896
-        ]
+        [134.4018864, 33.8889228],
+        [134.2885, 33.896]
       ],
       "kind": "reuse",
       "label": "Ca. 700 gespendete…"
@@ -2026,14 +1798,8 @@
     {
       "id": "bg_stahl_mehrere_christ_pavilion_roof_structure:bw_christus_pavillon_expo_hannover:0",
       "points": [
-        [
-          10.5676346,
-          51.2502813
-        ],
-        [
-          10.4567,
-          51.2067
-        ]
+        [10.5676346, 51.2502813],
+        [10.4567, 51.2067]
       ],
       "kind": "reuse",
       "label": "Dachtragwerk Christusraum"
@@ -2041,14 +1807,8 @@
     {
       "id": "bg_keramik_mehrere_svanen_dachziegel:bw_ehemalige_gladsaxe_school:0",
       "points": [
-        [
-          12.481879,
-          55.74061
-        ],
-        [
-          12.4033,
-          55.7346
-        ]
+        [12.481879, 55.74061],
+        [12.4033, 55.7346]
       ],
       "kind": "reuse",
       "label": "Dachziegel (Svanen)"
@@ -2056,14 +1816,8 @@
     {
       "id": "bg_mehrere_decke_plattenvereinigung_deckenelemente:bw_peter_behrens_halle_tu_berlin:0",
       "points": [
-        [
-          13.3834015,
-          52.5419669
-        ],
-        [
-          13.3892,
-          52.5408
-        ]
+        [13.3834015, 52.5419669],
+        [13.3892, 52.5408]
       ],
       "kind": "reuse",
       "label": "Deckenelemente"
@@ -2071,14 +1825,8 @@
     {
       "id": "bg_mehrere_decke_plattenvereinigung_deckenelemente:bw_olympisches_dorf_muenchen:1",
       "points": [
-        [
-          11.5477603,
-          48.1803734
-        ],
-        [
-          13.3892,
-          52.5408
-        ]
+        [11.5477603, 48.1803734],
+        [13.3892, 52.5408]
       ],
       "kind": "reuse",
       "label": "Deckenelemente"
@@ -2086,14 +1834,8 @@
     {
       "id": "bg_mehrere_decke_plattenvereinigung_deckenelemente:bw_ph12_punkthochhaus_frankfurt_oder:2",
       "points": [
-        [
-          14.534605,
-          52.3294882
-        ],
-        [
-          13.3892,
-          52.5408
-        ]
+        [14.534605, 52.3294882],
+        [13.3892, 52.5408]
       ],
       "kind": "reuse",
       "label": "Deckenelemente"
@@ -2101,14 +1843,8 @@
     {
       "id": "bg_holz_fenster_doppeltverglaste_holzfenster_resilience:bw_engie_baustelle_saint_denis:0",
       "points": [
-        [
-          2.3627508,
-          48.9383732
-        ],
-        [
-          2.3701218,
-          48.9500637
-        ]
+        [2.3627508, 48.9383732],
+        [2.3701218, 48.9500637]
       ],
       "kind": "reuse",
       "label": "Doppeltverglaste…"
@@ -2116,14 +1852,8 @@
     {
       "id": "bg_mehrere_mehrere_superlocal_beton_wohnungsteile:bw_hochhausflat_ursulastraat:0",
       "points": [
-        [
-          6.0666022,
-          50.8530372
-        ],
-        [
-          6.0618,
-          50.8534
-        ]
+        [6.0666022, 50.8530372],
+        [6.0618, 50.8534]
       ],
       "kind": "reuse",
       "label": "Drei Beton-Wohnungsteile"
@@ -2131,14 +1861,8 @@
     {
       "id": "bg_stahlbeton_mehrere_groeditz_dresden_type_precast_components:bw_school_type_dresden_donor:0",
       "points": [
-        [
-          13.3822343,
-          51.4232124
-        ],
-        [
-          13.4351,
-          51.4142
-        ]
+        [13.3822343, 51.4232124],
+        [13.4351, 51.4142]
       ],
       "kind": "reuse",
       "label": "Dresden-type precast…"
@@ -2146,14 +1870,8 @@
     {
       "id": "bg_mineralisch_stuetze_elementa_baufeld_c:bw_lysbueechel_garage_basel:0",
       "points": [
-        [
-          7.5738216,
-          47.5726315
-        ],
-        [
-          7.6125448,
-          47.5388275
-        ]
+        [7.5738216, 47.5726315],
+        [7.6125448, 47.5388275]
       ],
       "kind": "reuse",
       "label": "ELEMENTA Baufeld C"
@@ -2161,14 +1879,8 @@
     {
       "id": "bg_mineralisch_wand_elementa_baufeld_d:bw_lysbueechel_garage_basel:0",
       "points": [
-        [
-          7.5738216,
-          47.5726315
-        ],
-        [
-          7.6125448,
-          47.5388275
-        ]
+        [7.5738216, 47.5726315],
+        [7.6125448, 47.5388275]
       ],
       "kind": "reuse",
       "label": "ELEMENTA Baufeld D"
@@ -2176,14 +1888,8 @@
     {
       "id": "bg_holz_mehrere_einfachverglaste_holzfenster_resilience:bw_wohngebaude_sanierung_epinay_sur_seine:0",
       "points": [
-        [
-          2.3145039,
-          48.9525181
-        ],
-        [
-          2.3701218,
-          48.9500637
-        ]
+        [2.3145039, 48.9525181],
+        [2.3701218, 48.9500637]
       ],
       "kind": "reuse",
       "label": "Einfachverglaste…"
@@ -2191,14 +1897,8 @@
     {
       "id": "bg_stahl_mehrere_k118_external_stair:bw_orion_zuerich_donor:0",
       "points": [
-        [
-          8.5177021,
-          47.3917725
-        ],
-        [
-          8.7267,
-          47.4997
-        ]
+        [8.5177021, 47.3917725],
+        [8.7267, 47.4997]
       ],
       "kind": "reuse",
       "label": "Externe Stahltreppe"
@@ -2206,14 +1906,8 @@
     {
       "id": "bg_faserzement_fassade_recyclinghaus_faserzement:bw_ehemaliges_haus_der_jugend_hannover:0",
       "points": [
-        [
-          9.7385532,
-          52.3744779
-        ],
-        [
-          9.8342,
-          52.3589
-        ]
+        [9.7385532, 52.3744779],
+        [9.8342, 52.3589]
       ],
       "kind": "reuse",
       "label": "Faserzement-/Eternitplat…"
@@ -2221,14 +1915,8 @@
     {
       "id": "bg_ziegel_mehrere_thoravej_fassade_zu_boden:bw_thoravej_29:0",
       "points": [
-        [
-          12.526846,
-          55.706084
-        ],
-        [
-          12.526846,
-          55.706084
-        ]
+        [12.526846, 55.706084],
+        [12.526846, 55.706084]
       ],
       "kind": "reuse",
       "label": "Fassaden-/Ziegelüberschu…"
@@ -2236,14 +1924,8 @@
     {
       "id": "bg_mehrere_mehrere_plattenpalast_palast_fenster:bw_palast_der_republik_berlin:0",
       "points": [
-        [
-          13.4007352,
-          52.5172152
-        ],
-        [
-          13.4018775,
-          52.5390524
-        ]
+        [13.4007352, 52.5172152],
+        [13.4018775, 52.5390524]
       ],
       "kind": "reuse",
       "label": "Fenster und Rahmen aus…"
@@ -2251,14 +1933,8 @@
     {
       "id": "bg_mehrere_mehrere_superlocal_fenster_kozijnen:bw_hochhausflat_ursulastraat:0",
       "points": [
-        [
-          6.0666022,
-          50.8530372
-        ],
-        [
-          6.0618,
-          50.8534
-        ]
+        [6.0666022, 50.8530372],
+        [6.0618, 50.8534]
       ],
       "kind": "reuse",
       "label": "Fensterrahm… (Superlocal)"
@@ -2266,14 +1942,8 @@
     {
       "id": "bg_mehrere_mehrere_plp_feste_fitout_komponenten:bw_white_chapel_building_london:0",
       "points": [
-        [
-          -0.0729474,
-          51.5145623
-        ],
-        [
-          -0.0729102,
-          51.514434
-        ]
+        [-0.0729474, 51.5145623],
+        [-0.0729102, 51.514434]
       ],
       "kind": "reuse",
       "label": "Feste Fit-out-Komponente…"
@@ -2281,14 +1951,8 @@
     {
       "id": "bg_mehrere_mehrere_plp_feste_fitout_komponenten:bw_plp_previous_studio_london:1",
       "points": [
-        [
-          -0.0729474,
-          51.5145623
-        ],
-        [
-          -0.0729102,
-          51.514434
-        ]
+        [-0.0729474, 51.5145623],
+        [-0.0729102, 51.514434]
       ],
       "kind": "reuse",
       "label": "Feste Fit-out-Komponente…"
@@ -2296,14 +1960,8 @@
     {
       "id": "bg_mehrere_mehrere_superlocal_feste_kueche_installationen:bw_hochhausflat_ursulastraat:0",
       "points": [
-        [
-          6.0666022,
-          50.8530372
-        ],
-        [
-          6.0618,
-          50.8534
-        ]
+        [6.0666022, 50.8530372],
+        [6.0618, 50.8534]
       ],
       "kind": "reuse",
       "label": "Feste Küche und Installa…"
@@ -2311,14 +1969,8 @@
     {
       "id": "bg_keramik_boden_verbiest_charleroi:bw_palais_des_expositions_charleroi:0",
       "points": [
-        [
-          4.444528,
-          50.4116233
-        ],
-        [
-          4.315,
-          50.8503
-        ]
+        [4.444528, 50.4116233],
+        [4.315, 50.8503]
       ],
       "kind": "reuse",
       "label": "Fliesen aus Charleroi"
@@ -2326,14 +1978,8 @@
     {
       "id": "bg_stahl_gelaender_verbiest_charleroi:bw_palais_des_expositions_charleroi:0",
       "points": [
-        [
-          4.444528,
-          50.4116233
-        ],
-        [
-          4.315,
-          50.8503
-        ]
+        [4.444528, 50.4116233],
+        [4.315, 50.8503]
       ],
       "kind": "reuse",
       "label": "Geländer aus Charleroi"
@@ -2341,14 +1987,8 @@
     {
       "id": "bg_mehrere_mehrere_christ_pavilion_complete_ensemble:bw_christus_pavillon_expo_hannover:0",
       "points": [
-        [
-          10.5676346,
-          51.2502813
-        ],
-        [
-          10.4567,
-          51.2067
-        ]
+        [10.5676346, 51.2502813],
+        [10.4567, 51.2067]
       ],
       "kind": "reuse",
       "label": "Gesamtes transloziertes…"
@@ -2356,14 +1996,8 @@
     {
       "id": "bg_holz_fassade_hastings_outbuilding_cladding:bw_hastings_pier_fire_damaged_deck:0",
       "points": [
-        [
-          0.5725697,
-          50.8521015
-        ],
-        [
-          0.5792,
-          50.8567
-        ]
+        [0.5725697, 50.8521015],
+        [0.5792, 50.8567]
       ],
       "kind": "reuse",
       "label": "Gespaltene längere…"
@@ -2371,14 +2005,8 @@
     {
       "id": "bg_stahl_mehrere_elys_gratings_and_garage_door:bw_elys_former_coop_distribution_center:0",
       "points": [
-        [
-          7.5734396,
-          47.573746
-        ],
-        [
-          7.6012,
-          47.5489
-        ]
+        [7.5734396, 47.573746],
+        [7.6012, 47.5489]
       ],
       "kind": "reuse",
       "label": "Gitterroste"
@@ -2386,14 +2014,8 @@
     {
       "id": "bg_mehrere_boden_kamikatsu_glass_ceramic_terrazzo:bw_kamikatsu_local_houses:0",
       "points": [
-        [
-          134.4018864,
-          33.8889228
-        ],
-        [
-          134.2885,
-          33.896
-        ]
+        [134.4018864, 33.8889228],
+        [134.2885, 33.896]
       ],
       "kind": "reuse",
       "label": "Glas- und Keramikscherbe…"
@@ -2401,14 +2023,8 @@
     {
       "id": "bg_glas_mehrere_awm_partitions_doors:bw_behrensbau_duesseldorf_donor:0",
       "points": [
-        [
-          6.7680311,
-          51.2210197
-        ],
-        [
-          7.6356,
-          51.9359
-        ]
+        [6.7680311, 51.2210197],
+        [7.6356, 51.9359]
       ],
       "kind": "reuse",
       "label": "Glass partitions and…"
@@ -2416,14 +2032,8 @@
     {
       "id": "bg_naturstein_boden_granitpflaster_resilience:bw_stadt_paris_pflasterbestand:0",
       "points": [
-        [
-          2.320041,
-          48.8588897
-        ],
-        [
-          2.3701218,
-          48.9500637
-        ]
+        [2.320041, 48.8588897],
+        [2.3701218, 48.9500637]
       ],
       "kind": "reuse",
       "label": "Granitpflaster Résilience"
@@ -2431,14 +2041,8 @@
     {
       "id": "bg_mehrere_technik_superlocal_tga_heizkoerper_aluminiumrohre:bw_hochhausflat_ursulastraat:0",
       "points": [
-        [
-          6.0666022,
-          50.8530372
-        ],
-        [
-          6.0618,
-          50.8534
-        ]
+        [6.0666022, 50.8530372],
+        [6.0618, 50.8534]
       ],
       "kind": "reuse",
       "label": "Heizkörper und Aluminium…"
@@ -2446,14 +2050,8 @@
     {
       "id": "bg_stahlbeton_decke_ccn_hollow_core_slabs:bw_prinsenhof_a_arnhem_donor:0",
       "points": [
-        [
-          5.9114676,
-          51.9773561
-        ],
-        [
-          6.0286,
-          52.3917
-        ]
+        [5.9114676, 51.9773561],
+        [6.0286, 52.3917]
       ],
       "kind": "reuse",
       "label": "Hohlkoerperdecken"
@@ -2461,14 +2059,8 @@
     {
       "id": "bg_stahlbeton_decke_ka13_hollow_core_slabs:bw_regjeringsbygg_r4:0",
       "points": [
-        [
-          10.7389701,
-          59.9133301
-        ],
-        [
-          10.737562,
-          59.916806
-        ]
+        [10.7389701, 59.9133301],
+        [10.737562, 59.916806]
       ],
       "kind": "reuse",
       "label": "Hohlkörperdecken aus…"
@@ -2476,14 +2068,8 @@
     {
       "id": "bg_stahlbeton_decke_harmalanranta_hollow_core_slabs:bw_tampere_1980s_office_donor:0",
       "points": [
-        [
-          23.7616372,
-          61.4977929
-        ],
-        [
-          23.7493,
-          61.4808
-        ]
+        [23.7616372, 61.4977929],
+        [23.7493, 61.4808]
       ],
       "kind": "reuse",
       "label": "Hohlkörp… (Harmalanranta)"
@@ -2491,14 +2077,8 @@
     {
       "id": "bg_mehrere_mehrere_crclr_wood_aluminium_windows:bw_crclr_external_reuse_sources:0",
       "points": [
-        [
-          13.3951309,
-          52.5173885
-        ],
-        [
-          13.4357,
-          52.4764
-        ]
+        [13.3951309, 52.5173885],
+        [13.4357, 52.4764]
       ],
       "kind": "reuse",
       "label": "Holz-Alu-Fenster"
@@ -2506,14 +2086,8 @@
     {
       "id": "bg_holz_mehrere_svanen_dachbinder:bw_ehemalige_gladsaxe_school:0",
       "points": [
-        [
-          12.481879,
-          55.74061
-        ],
-        [
-          12.4033,
-          55.7346
-        ]
+        [12.481879, 55.74061],
+        [12.4033, 55.7346]
       ],
       "kind": "reuse",
       "label": "Holz-Dachbinder"
@@ -2521,14 +2095,8 @@
     {
       "id": "bg_holz_mehrere_boschgaard_dachspanten:bw_bibliothek_de_brenthof_sint_michielsgestel:0",
       "points": [
-        [
-          5.3652891,
-          51.6509141
-        ],
-        [
-          5.3082,
-          51.6947
-        ]
+        [5.3652891, 51.6509141],
+        [5.3082, 51.6947]
       ],
       "kind": "reuse",
       "label": "Holz-Dachspanten"
@@ -2536,14 +2104,8 @@
     {
       "id": "bg_holz_boden_trae_aarhus_holzboden_gellerup:bw_gellerupparken_rueckbau_wohnbloecke:0",
       "points": [
-        [
-          10.1332512,
-          56.1582601
-        ],
-        [
-          10.2048,
-          56.1539
-        ]
+        [10.1332512, 56.1582601],
+        [10.2048, 56.1539]
       ],
       "kind": "reuse",
       "label": "Holzböden aus alten…"
@@ -2551,14 +2113,8 @@
     {
       "id": "bg_holz_fassade_villa_welpeloo_enschede_holzfassade_aus_kabeltrommeln:bw_twente_tkf_kabelfabrik_materialquelle:0",
       "points": [
-        [
-          6.7933211,
-          52.3253541
-        ],
-        [
-          6.8814,
-          52.2283
-        ]
+        [6.7933211, 52.3253541],
+        [6.8814, 52.2283]
       ],
       "kind": "reuse",
       "label": "Holzfassade aus Kabeltro…"
@@ -2566,14 +2122,8 @@
     {
       "id": "bg_mehrere_boden_ithaka_holzfussboeden_klinker:bw_rws_districtskantoor_terneuzen:0",
       "points": [
-        [
-          3.8422044,
-          51.298843
-        ],
-        [
-          3.6645,
-          51.4479
-        ]
+        [3.8422044, 51.298843],
+        [3.6645, 51.4479]
       ],
       "kind": "reuse",
       "label": "Holzfußböden und…"
@@ -2581,14 +2131,8 @@
     {
       "id": "bg_holz_mehrere_crclr_recycled_gallery_interior:bw_crclr_external_reuse_sources:0",
       "points": [
-        [
-          13.3951309,
-          52.5173885
-        ],
-        [
-          13.4357,
-          52.4764
-        ]
+        [13.3951309, 52.5173885],
+        [13.4357, 52.4764]
       ],
       "kind": "reuse",
       "label": "Holzgalerie (Crclr)"
@@ -2596,14 +2140,8 @@
     {
       "id": "bg_holz_mehrere_recyclinghaus_saunabank_holzleisten:bw_sportzentrum_sauna_hannover:0",
       "points": [
-        [
-          9.7385532,
-          52.3744779
-        ],
-        [
-          9.8342,
-          52.3589
-        ]
+        [9.7385532, 52.3744779],
+        [9.8342, 52.3589]
       ],
       "kind": "reuse",
       "label": "Holzleisten aus alten…"
@@ -2611,14 +2149,8 @@
     {
       "id": "bg_holz_mehrere_grande_halle_purlins_access_parts:bw_colombelles_regional_donor_sources:0",
       "points": [
-        [
-          -0.3061681,
-          49.1916221
-        ],
-        [
-          -0.3061681,
-          49.1916221
-        ]
+        [-0.3061681, 49.1916221],
+        [-0.3061681, 49.1916221]
       ],
       "kind": "reuse",
       "label": "Holzpfetten"
@@ -2626,14 +2158,8 @@
     {
       "id": "bg_holz_mehrere_svanen_sparren:bw_ehemalige_gladsaxe_school:0",
       "points": [
-        [
-          12.481879,
-          55.74061
-        ],
-        [
-          12.4033,
-          55.7346
-        ]
+        [12.481879, 55.74061],
+        [12.4033, 55.7346]
       ],
       "kind": "reuse",
       "label": "Holzrafters"
@@ -2641,14 +2167,8 @@
     {
       "id": "bg_holz_mehrere_ithaka_holztraeger_balken:bw_rws_districtskantoor_terneuzen:0",
       "points": [
-        [
-          3.8422044,
-          51.298843
-        ],
-        [
-          3.6645,
-          51.4479
-        ]
+        [3.8422044, 51.298843],
+        [3.6645, 51.4479]
       ],
       "kind": "reuse",
       "label": "Holzträger"
@@ -2656,14 +2176,8 @@
     {
       "id": "bg_stahlbeton_mehrere_plauen_iw73_6_precast_components:bw_iw73_6_mass_housing_donor:0",
       "points": [
-        [
-          12.1346523,
-          50.4950632
-        ],
-        [
-          12.1247,
-          50.4876
-        ]
+        [12.1346523, 50.4950632],
+        [12.1247, 50.4876]
       ],
       "kind": "reuse",
       "label": "IW73/6 precast concrete…"
@@ -2671,14 +2185,8 @@
     {
       "id": "bg_holz_ausbau_ingersheim_clt_secondary:bw_stuttgart21_hauptbahnhof:0",
       "points": [
-        [
-          9.1833959,
-          48.7856099
-        ],
-        [
-          9.188568,
-          48.959324
-        ]
+        [9.1833959, 48.7856099],
+        [9.188568, 48.959324]
       ],
       "kind": "reuse",
       "label": "Ingersheim CLT-Ausbau"
@@ -2686,14 +2194,8 @@
     {
       "id": "bg_holz_mehrere_ingersheim_clt_structure:bw_stuttgart21_hauptbahnhof:0",
       "points": [
-        [
-          9.1833959,
-          48.7856099
-        ],
-        [
-          9.188568,
-          48.959324
-        ]
+        [9.1833959, 48.7856099],
+        [9.188568, 48.959324]
       ],
       "kind": "reuse",
       "label": "Ingersheim CLT-Bau"
@@ -2701,14 +2203,8 @@
     {
       "id": "bg_mehrere_mehrere_ithaka_innentueren_beschlaege:bw_rws_districtskantoor_terneuzen:0",
       "points": [
-        [
-          3.8422044,
-          51.298843
-        ],
-        [
-          3.6645,
-          51.4479
-        ]
+        [3.8422044, 51.298843],
+        [3.6645, 51.4479]
       ],
       "kind": "reuse",
       "label": "Innentüren mit Hang-…"
@@ -2716,14 +2212,8 @@
     {
       "id": "bg_stahlbeton_mehrere_big_dig_house_inverset_panels:bw_boston_big_dig_i_93_infrastructure:0",
       "points": [
-        [
-          -71.1191462,
-          42.3882451
-        ],
-        [
-          -71.2139,
-          42.2586
-        ]
+        [-71.1191462, 42.3882451],
+        [-71.2139, 42.2586]
       ],
       "kind": "reuse",
       "label": "Inverset-Stahlbetonpanee…"
@@ -2731,14 +2221,8 @@
     {
       "id": "bg_mehrere_mehrere_verbiest_karreveld_decken_leuchten:bw_karreveld_buerogebaeude_zu_schule_und_sportzentrum:0",
       "points": [
-        [
-          4.3155803,
-          50.8614034
-        ],
-        [
-          4.315,
-          50.8503
-        ]
+        [4.3155803, 50.8614034],
+        [4.315, 50.8503]
       ],
       "kind": "reuse",
       "label": "Karreveld abgehängte…"
@@ -2746,14 +2230,8 @@
     {
       "id": "bg_mehrere_mehrere_verbiest_karreveld_innenwand_modular:bw_karreveld_buerogebaeude_zu_schule_und_sportzentrum:0",
       "points": [
-        [
-          4.3155803,
-          50.8614034
-        ],
-        [
-          4.315,
-          50.8503
-        ]
+        [4.3155803, 50.8614034],
+        [4.315, 50.8503]
       ],
       "kind": "reuse",
       "label": "Karreveld modulares…"
@@ -2761,14 +2239,8 @@
     {
       "id": "bg_mehrere_mehrere_christ_pavilion_cloister_glass_facade:bw_christus_pavillon_expo_hannover:0",
       "points": [
-        [
-          10.5676346,
-          51.2502813
-        ],
-        [
-          10.4567,
-          51.2067
-        ]
+        [10.5676346, 51.2502813],
+        [10.4567, 51.2067]
       ],
       "kind": "reuse",
       "label": "Kreuzgang"
@@ -2776,14 +2248,8 @@
     {
       "id": "bg_mehrere_mehrere_thoravej_kunststofffenster_bestand:bw_thoravej_29:0",
       "points": [
-        [
-          12.526846,
-          55.706084
-        ],
-        [
-          12.526846,
-          55.706084
-        ]
+        [12.526846, 55.706084],
+        [12.526846, 55.706084]
       ],
       "kind": "reuse",
       "label": "Kunststofffenster im…"
@@ -2791,14 +2257,8 @@
     {
       "id": "bg_mehrere_technik_leuchten_resilience:bw_engie_baustelle_saint_denis:0",
       "points": [
-        [
-          2.3627508,
-          48.9383732
-        ],
-        [
-          2.3701218,
-          48.9500637
-        ]
+        [2.3627508, 48.9383732],
+        [2.3701218, 48.9500637]
       ],
       "kind": "reuse",
       "label": "Leuchten Résilience"
@@ -2806,14 +2266,8 @@
     {
       "id": "bg_mehrere_mehrere_christ_pavilion_marble_glass_wall:bw_christus_pavillon_expo_hannover:0",
       "points": [
-        [
-          10.5676346,
-          51.2502813
-        ],
-        [
-          10.4567,
-          51.2067
-        ]
+        [10.5676346, 51.2502813],
+        [10.4567, 51.2067]
       ],
       "kind": "reuse",
       "label": "Marmor-Glas-Wand…"
@@ -2821,14 +2275,8 @@
     {
       "id": "bg_mehrere_ausbau_plp_materialbibliothek_oberflaechen:bw_plp_previous_studio_london:0",
       "points": [
-        [
-          -0.0729474,
-          51.5145623
-        ],
-        [
-          -0.0729102,
-          51.514434
-        ]
+        [-0.0729474, 51.5145623],
+        [-0.0729102, 51.514434]
       ],
       "kind": "reuse",
       "label": "Materialbibliothek-Oberf…"
@@ -2836,14 +2284,8 @@
     {
       "id": "bg_metall_ausbau_medunicampus_bike_workshop:bw_meduni_campus_mariannengasse:0",
       "points": [
-        [
-          16.3460235,
-          48.2163314
-        ],
-        [
-          16.3492133,
-          48.2161081
-        ]
+        [16.3460235, 48.2163314],
+        [16.3492133, 48.2161081]
       ],
       "kind": "reuse",
       "label": "MedUni Fahrradwerkst."
@@ -2851,14 +2293,8 @@
     {
       "id": "bg_mehrere_technik_medunicampus_paternoster:bw_meduni_campus_mariannengasse:0",
       "points": [
-        [
-          16.3460235,
-          48.2163314
-        ],
-        [
-          16.3492133,
-          48.2161081
-        ]
+        [16.3460235, 48.2163314],
+        [16.3492133, 48.2161081]
       ],
       "kind": "reuse",
       "label": "MedUni Paternoster"
@@ -2866,14 +2302,8 @@
     {
       "id": "bg_metall_ausbau_medunicampus_heavy_shelves:bw_meduni_campus_mariannengasse:0",
       "points": [
-        [
-          16.3460235,
-          48.2163314
-        ],
-        [
-          16.3492133,
-          48.2161081
-        ]
+        [16.3460235, 48.2163314],
+        [16.3492133, 48.2161081]
       ],
       "kind": "reuse",
       "label": "MedUni Schwerlastreg."
@@ -2881,14 +2311,8 @@
     {
       "id": "bg_holz_wand_medunicampus_doors_as_cladding:bw_meduni_campus_mariannengasse:0",
       "points": [
-        [
-          16.3460235,
-          48.2163314
-        ],
-        [
-          16.3492133,
-          48.2161081
-        ]
+        [16.3460235, 48.2163314],
+        [16.3492133, 48.2161081]
       ],
       "kind": "reuse",
       "label": "MedUni Türen→Wand"
@@ -2896,14 +2320,8 @@
     {
       "id": "bg_stahl_traeger_grande_halle_metal:bw_colombelles_regional_donor_sources:0",
       "points": [
-        [
-          -0.3061681,
-          49.1916221
-        ],
-        [
-          -0.3061681,
-          49.1916221
-        ]
+        [-0.3061681, 49.1916221],
+        [-0.3061681, 49.1916221]
       ],
       "kind": "reuse",
       "label": "Metallträger"
@@ -2911,14 +2329,8 @@
     {
       "id": "bg_daemmstoff_daemmung_grande_halle_mineral_wool:bw_colombelles_regional_donor_sources:0",
       "points": [
-        [
-          -0.3061681,
-          49.1916221
-        ],
-        [
-          -0.3061681,
-          49.1916221
-        ]
+        [-0.3061681, 49.1916221],
+        [-0.3061681, 49.1916221]
       ],
       "kind": "reuse",
       "label": "Mineralwolle-Dämmung"
@@ -2926,14 +2338,8 @@
     {
       "id": "bg_stahl_stuetze_christ_pavilion_cross:bw_christus_pavillon_expo_hannover:0",
       "points": [
-        [
-          10.5676346,
-          51.2502813
-        ],
-        [
-          10.4567,
-          51.2067
-        ]
+        [10.5676346, 51.2502813],
+        [10.4567, 51.2067]
       ],
       "kind": "reuse",
       "label": "Neun kreuzfoermige…"
@@ -2941,14 +2347,8 @@
     {
       "id": "bg_beton_mehrere_plattenvereinigung_betonfertigteile:bw_peter_behrens_halle_tu_berlin:0",
       "points": [
-        [
-          13.3834015,
-          52.5419669
-        ],
-        [
-          13.3892,
-          52.5408
-        ]
+        [13.3834015, 52.5419669],
+        [13.3892, 52.5408]
       ],
       "kind": "reuse",
       "label": "Ost- und westdeutsche…"
@@ -2956,14 +2356,8 @@
     {
       "id": "bg_beton_mehrere_plattenvereinigung_betonfertigteile:bw_olympisches_dorf_muenchen:1",
       "points": [
-        [
-          11.5477603,
-          48.1803734
-        ],
-        [
-          13.3892,
-          52.5408
-        ]
+        [11.5477603, 48.1803734],
+        [13.3892, 52.5408]
       ],
       "kind": "reuse",
       "label": "Ost- und westdeutsche…"
@@ -2971,14 +2365,8 @@
     {
       "id": "bg_beton_mehrere_plattenvereinigung_betonfertigteile:bw_ph12_punkthochhaus_frankfurt_oder:2",
       "points": [
-        [
-          14.534605,
-          52.3294882
-        ],
-        [
-          13.3892,
-          52.5408
-        ]
+        [14.534605, 52.3294882],
+        [13.3892, 52.5408]
       ],
       "kind": "reuse",
       "label": "Ost- und westdeutsche…"
@@ -2986,14 +2374,8 @@
     {
       "id": "bg_naturstein_boden_biopartner_5_pflaster_bodenmaterial:bw_biopartner_gorlaeus_hochhaus:0",
       "points": [
-        [
-          4.4502649,
-          52.1710283
-        ],
-        [
-          4.4502649,
-          52.1710283
-        ]
+        [4.4502649, 52.1710283],
+        [4.4502649, 52.1710283]
       ],
       "kind": "reuse",
       "label": "Pflaster-"
@@ -3001,14 +2383,8 @@
     {
       "id": "bg_holz_mehrere_green_house_preused_holzdecke:bw_knoopkazerne_utrecht:0",
       "points": [
-        [
-          5.1079133,
-          52.0868182
-        ],
-        [
-          5.1172,
-          52.0867
-        ]
+        [5.1079133, 52.0868182],
+        [5.1172, 52.0867]
       ],
       "kind": "reuse",
       "label": "Pre-used wood Geschossde…"
@@ -3016,14 +2392,8 @@
     {
       "id": "bg_stahlbeton_mehrere_ccn_prefab_facade_elements:bw_prinsenhof_a_arnhem_donor:0",
       "points": [
-        [
-          5.9114676,
-          51.9773561
-        ],
-        [
-          6.0286,
-          52.3917
-        ]
+        [5.9114676, 51.9773561],
+        [6.0286, 52.3917]
       ],
       "kind": "reuse",
       "label": "Prefab-Fassadenelemente"
@@ -3031,14 +2401,8 @@
     {
       "id": "bg_glas_mehrere_recyclinghaus_profilbauglas:bw_alte_lackiererei_hannover:0",
       "points": [
-        [
-          9.832174,
-          52.3308126
-        ],
-        [
-          9.8342,
-          52.3589
-        ]
+        [9.832174, 52.3308126],
+        [9.8342, 52.3589]
       ],
       "kind": "reuse",
       "label": "Profilbauglas aus alter…"
@@ -3046,14 +2410,8 @@
     {
       "id": "bg_mehrere_technik_grande_halle_radiators:bw_colombelles_regional_donor_sources:0",
       "points": [
-        [
-          -0.3061681,
-          49.1916221
-        ],
-        [
-          -0.3061681,
-          49.1916221
-        ]
+        [-0.3061681, 49.1916221],
+        [-0.3061681, 49.1916221]
       ],
       "kind": "reuse",
       "label": "Radiatoren (Grande Halle)"
@@ -3061,14 +2419,8 @@
     {
       "id": "bg_mehrere_mehrere_big_dig_house_ramp_pier_roadway_components:bw_boston_big_dig_i_93_infrastructure:0",
       "points": [
-        [
-          -71.1191462,
-          42.3882451
-        ],
-        [
-          -71.2139,
-          42.2586
-        ]
+        [-71.1191462, 42.3882451],
+        [-71.2139, 42.2586]
       ],
       "kind": "reuse",
       "label": "Ramp-, Pier- und…"
@@ -3076,14 +2428,8 @@
     {
       "id": "bg_glas_mehrere_green_house_rauchglas_fassade:bw_knoopkazerne_utrecht:0",
       "points": [
-        [
-          5.1079133,
-          52.0868182
-        ],
-        [
-          5.1172,
-          52.0867
-        ]
+        [5.1079133, 52.0868182],
+        [5.1172, 52.0867]
       ],
       "kind": "reuse",
       "label": "Rauchglas-Fassadenpaneele"
@@ -3091,14 +2437,8 @@
     {
       "id": "bg_stahl_mehrere_hof_self_columns:bw_318_oxford_street_house_of_fraser:0",
       "points": [
-        [
-          -0.1463435,
-          51.5152626
-        ],
-        [
-          -0.1427,
-          51.5142
-        ]
+        [-0.1463435, 51.5152626],
+        [-0.1427, 51.5142]
       ],
       "kind": "reuse",
       "label": "Refabrizierte Stahlstütz…"
@@ -3106,14 +2446,8 @@
     {
       "id": "bg_mehrere_mehrere_moeoeslistrasse_sanitaer_kueche:bw_werkhof_moeoeslistrasse:0",
       "points": [
-        [
-          8.5284529,
-          47.3457808
-        ],
-        [
-          8.5154,
-          47.3406
-        ]
+        [8.5284529, 47.3457808],
+        [8.5154, 47.3406]
       ],
       "kind": "reuse",
       "label": "Sanitärapparate und…"
@@ -3121,14 +2455,8 @@
     {
       "id": "bg_keramik_technik_crclr_sanitary_objects:bw_crclr_external_reuse_sources:0",
       "points": [
-        [
-          13.3951309,
-          52.5173885
-        ],
-        [
-          13.4357,
-          52.4764
-        ]
+        [13.3951309, 52.5173885],
+        [13.4357, 52.4764]
       ],
       "kind": "reuse",
       "label": "Sanitärobjekte (Crclr)"
@@ -3136,14 +2464,8 @@
     {
       "id": "bg_mehrere_technik_grande_halle_sanitary_objects:bw_colombelles_regional_donor_sources:0",
       "points": [
-        [
-          -0.3061681,
-          49.1916221
-        ],
-        [
-          -0.3061681,
-          49.1916221
-        ]
+        [-0.3061681, 49.1916221],
+        [-0.3061681, 49.1916221]
       ],
       "kind": "reuse",
       "label": "Sanitärob… (Grande Halle)"
@@ -3151,14 +2473,8 @@
     {
       "id": "bg_beton_mehrere_christ_pavilion_fair_faced_parts:bw_christus_pavillon_expo_hannover:0",
       "points": [
-        [
-          10.5676346,
-          51.2502813
-        ],
-        [
-          10.4567,
-          51.2067
-        ]
+        [10.5676346, 51.2502813],
+        [10.4567, 51.2067]
       ],
       "kind": "reuse",
       "label": "Sichtbetonteile des…"
@@ -3166,14 +2482,8 @@
     {
       "id": "bg_stahl_mehrere_ka13:bw_ka13_existing_building:0",
       "points": [
-        [
-          10.737562,
-          59.916806
-        ],
-        [
-          10.737562,
-          59.916806
-        ]
+        [10.737562, 59.916806],
+        [10.737562, 59.916806]
       ],
       "kind": "reuse",
       "label": "Stahl in Bestand und…"
@@ -3181,14 +2491,8 @@
     {
       "id": "bg_stahlbeton_mehrere_haus_hos_floor_elements:bw_leinefelde_plattenbau_donor:0",
       "points": [
-        [
-          10.3212678,
-          51.3878458
-        ],
-        [
-          10.4526,
-          51.2089
-        ]
+        [10.3212678, 51.3878458],
+        [10.4526, 51.2089]
       ],
       "kind": "reuse",
       "label": "Stahlbeton-Deckenelemente"
@@ -3196,14 +2500,8 @@
     {
       "id": "bg_stahlbeton_treppe_haus_hos:bw_leinefelde_plattenbau_donor:0",
       "points": [
-        [
-          10.3212678,
-          51.3878458
-        ],
-        [
-          10.4526,
-          51.2089
-        ]
+        [10.3212678, 51.3878458],
+        [10.4526, 51.2089]
       ],
       "kind": "reuse",
       "label": "Stahlbeton-Treppen"
@@ -3211,14 +2509,8 @@
     {
       "id": "bg_stahlbeton_wand_haus_hos_elements:bw_leinefelde_plattenbau_donor:0",
       "points": [
-        [
-          10.3212678,
-          51.3878458
-        ],
-        [
-          10.4526,
-          51.2089
-        ]
+        [10.3212678, 51.3878458],
+        [10.4526, 51.2089]
       ],
       "kind": "reuse",
       "label": "Stahlbeton-Wandelemente"
@@ -3226,14 +2518,8 @@
     {
       "id": "bg_stahl_fassade_svanen_stahlfassadenelemente:bw_ehemalige_gladsaxe_school:0",
       "points": [
-        [
-          12.481879,
-          55.74061
-        ],
-        [
-          12.4033,
-          55.7346
-        ]
+        [12.481879, 55.74061],
+        [12.4033, 55.7346]
       ],
       "kind": "reuse",
       "label": "Stahlfassadenelemente"
@@ -3241,14 +2527,8 @@
     {
       "id": "bg_stahl_mehrere_lycee_facade_panels_railing:bw_lycee_block_3000:0",
       "points": [
-        [
-          6.1136808,
-          49.6249025
-        ],
-        [
-          6.1267,
-          49.6094
-        ]
+        [6.1136808, 49.6249025],
+        [6.1267, 49.6094]
       ],
       "kind": "reuse",
       "label": "Stahlfassadenpaneele…"
@@ -3256,14 +2536,8 @@
     {
       "id": "bg_mehrere_mehrere_moeoeslistrasse_stahlpergola_beschattung:bw_einkaufswagendepot_zuerich:0",
       "points": [
-        [
-          8.5410422,
-          47.3744489
-        ],
-        [
-          8.5154,
-          47.3406
-        ]
+        [8.5410422, 47.3744489],
+        [8.5154, 47.3406]
       ],
       "kind": "reuse",
       "label": "Stahlpergola"
@@ -3271,14 +2545,8 @@
     {
       "id": "bg_stahl_mehrere_biopartner_5_stuetzen_rahmen:bw_gorlaeus_hochhaus:0",
       "points": [
-        [
-          4.4609833,
-          52.1677621
-        ],
-        [
-          4.4502649,
-          52.1710283
-        ]
+        [4.4609833, 52.1677621],
+        [4.4502649, 52.1710283]
       ],
       "kind": "reuse",
       "label": "Stahlträger (Biopartner)"
@@ -3286,14 +2554,8 @@
     {
       "id": "bg_stahl_mehrere_geplante_stahltrager_roots:bw_1_broadgate_1_2_broadgate_donor_stahl:0",
       "points": [
-        [
-          -0.0888924,
-          51.5191859
-        ],
-        [
-          -0.0999,
-          51.5025
-        ]
+        [-0.0888924, 51.5191859],
+        [-0.0999, 51.5025]
       ],
       "kind": "reuse",
       "label": "Stahlträger (Geplante)"
@@ -3301,14 +2563,8 @@
     {
       "id": "bg_stahl_mehrere_timber_square_reception_girder:bw_timber_square_print_building:0",
       "points": [
-        [
-          -0.1000695,
-          51.5050972
-        ],
-        [
-          -0.1000695,
-          51.5050972
-        ]
+        [-0.1000695, 51.5050972],
+        [-0.1000695, 51.5050972]
       ],
       "kind": "reuse",
       "label": "Stahlträger als Empfangs…"
@@ -3316,14 +2572,8 @@
     {
       "id": "bg_stahl_mehrere_welpeloo_paternoster_textilmaschine:bw_paternoster_textilindustriemaschine_enschede:0",
       "points": [
-        [
-          6.8705957,
-          52.2233633
-        ],
-        [
-          6.8814,
-          52.2283
-        ]
+        [6.8705957, 52.2233633],
+        [6.8814, 52.2283]
       ],
       "kind": "reuse",
       "label": "Stahlträger aus Paternos…"
@@ -3331,14 +2581,8 @@
     {
       "id": "bg_stahl_mehrere_k118_structure:bw_elys_basel_donor:0",
       "points": [
-        [
-          7.5734396,
-          47.573746
-        ],
-        [
-          8.7267,
-          47.4997
-        ]
+        [7.5734396, 47.573746],
+        [8.7267, 47.4997]
       ],
       "kind": "reuse",
       "label": "Stahlträger und Stützen…"
@@ -3346,14 +2590,8 @@
     {
       "id": "bg_stahl_mehrere_big_dig_house:bw_boston_big_dig_i_93_infrastructure:0",
       "points": [
-        [
-          -71.1191462,
-          42.3882451
-        ],
-        [
-          -71.2139,
-          42.2586
-        ]
+        [-71.1191462, 42.3882451],
+        [-71.2139, 42.2586]
       ],
       "kind": "reuse",
       "label": "Stahlträger un… (Big Dig)"
@@ -3361,14 +2599,8 @@
     {
       "id": "bg_stahl_mehrere_55gss_external_core:bw_1_broadgate_london:0",
       "points": [
-        [
-          -0.0888924,
-          51.5191859
-        ],
-        [
-          -0.0789,
-          51.5018
-        ]
+        [-0.0888924, 51.5191859],
+        [-0.0789, 51.5018]
       ],
       "kind": "reuse",
       "label": "Steel profiles for…"
@@ -3376,14 +2608,8 @@
     {
       "id": "bg_naturstein_wand_verbiest_charleroi:bw_palais_des_expositions_charleroi:0",
       "points": [
-        [
-          4.444528,
-          50.4116233
-        ],
-        [
-          4.315,
-          50.8503
-        ]
+        [4.444528, 50.4116233],
+        [4.315, 50.8503]
       ],
       "kind": "reuse",
       "label": "Steine aus Charleroi"
@@ -3391,14 +2617,8 @@
     {
       "id": "bg_stahl_mehrere_bedzed_structural:bw_brighton_railway_station_donor:0",
       "points": [
-        [
-          -0.1411137,
-          50.8288719
-        ],
-        [
-          -0.1494,
-          51.3653
-        ]
+        [-0.1411137, 50.8288719],
+        [-0.1494, 51.3653]
       ],
       "kind": "reuse",
       "label": "Structural steel frame…"
@@ -3406,14 +2626,8 @@
     {
       "id": "bg_mehrere_mehrere_thoravej_tt_decken_zu_treppen:bw_thoravej_29:0",
       "points": [
-        [
-          12.526846,
-          55.706084
-        ],
-        [
-          12.526846,
-          55.706084
-        ]
+        [12.526846, 55.706084],
+        [12.526846, 55.706084]
       ],
       "kind": "reuse",
       "label": "TT-/Betondecken zu…"
@@ -3421,14 +2635,8 @@
     {
       "id": "bg_mehrere_technik_ithaka_tga_beleuchtung_installationen:bw_rws_districtskantoor_terneuzen:0",
       "points": [
-        [
-          3.8422044,
-          51.298843
-        ],
-        [
-          3.6645,
-          51.4479
-        ]
+        [3.8422044, 51.298843],
+        [3.6645, 51.4479]
       ],
       "kind": "reuse",
       "label": "Technische Bauteile"
@@ -3436,14 +2644,8 @@
     {
       "id": "bg_mehrere_mehrere_plp_terrazzo_arbeits_kuechenflaechen:bw_plp_previous_studio_london:0",
       "points": [
-        [
-          -0.0729474,
-          51.5145623
-        ],
-        [
-          -0.0729102,
-          51.514434
-        ]
+        [-0.0729474, 51.5145623],
+        [-0.0729102, 51.514434]
       ],
       "kind": "reuse",
       "label": "Terrazzo-/Spolia-Arbeits…"
@@ -3451,14 +2653,8 @@
     {
       "id": "bg_mehrere_treppe_plattenvereinigung_treppenelemente:bw_peter_behrens_halle_tu_berlin:0",
       "points": [
-        [
-          13.3834015,
-          52.5419669
-        ],
-        [
-          13.3892,
-          52.5408
-        ]
+        [13.3834015, 52.5419669],
+        [13.3892, 52.5408]
       ],
       "kind": "reuse",
       "label": "Treppenelemente"
@@ -3466,14 +2662,8 @@
     {
       "id": "bg_mehrere_treppe_plattenvereinigung_treppenelemente:bw_olympisches_dorf_muenchen:1",
       "points": [
-        [
-          11.5477603,
-          48.1803734
-        ],
-        [
-          13.3892,
-          52.5408
-        ]
+        [11.5477603, 48.1803734],
+        [13.3892, 52.5408]
       ],
       "kind": "reuse",
       "label": "Treppenelemente"
@@ -3481,14 +2671,8 @@
     {
       "id": "bg_mehrere_treppe_plattenvereinigung_treppenelemente:bw_ph12_punkthochhaus_frankfurt_oder:2",
       "points": [
-        [
-          14.534605,
-          52.3294882
-        ],
-        [
-          13.3892,
-          52.5408
-        ]
+        [14.534605, 52.3294882],
+        [13.3892, 52.5408]
       ],
       "kind": "reuse",
       "label": "Treppenelemente"
@@ -3496,14 +2680,8 @@
     {
       "id": "bg_holz_fassade_hastings_hardwood_cladding:bw_hastings_pier_fire_damaged_deck:0",
       "points": [
-        [
-          0.5725697,
-          50.8521015
-        ],
-        [
-          0.5792,
-          50.8567
-        ]
+        [0.5725697, 50.8521015],
+        [0.5792, 50.8567]
       ],
       "kind": "reuse",
       "label": "Tropische Hartholz-Deckb…"
@@ -3511,14 +2689,8 @@
     {
       "id": "bg_holz_tuer_grande_halle_fire:bw_colombelles_regional_donor_sources:0",
       "points": [
-        [
-          -0.3061681,
-          49.1916221
-        ],
-        [
-          -0.3061681,
-          49.1916221
-        ]
+        [-0.3061681, 49.1916221],
+        [-0.3061681, 49.1916221]
       ],
       "kind": "reuse",
       "label": "Türen und Brandschutztür…"
@@ -3526,14 +2698,8 @@
     {
       "id": "bg_holz_mehrere_thoravej_tueren_zu_tischplatten:bw_thoravej_29:0",
       "points": [
-        [
-          12.526846,
-          55.706084
-        ],
-        [
-          12.526846,
-          55.706084
-        ]
+        [12.526846, 55.706084],
+        [12.526846, 55.706084]
       ],
       "kind": "reuse",
       "label": "Türen zu Tischplatten"
@@ -3541,14 +2707,8 @@
     {
       "id": "bg_metall_tuer_umar_wabbes_handles:bw_generale_de_banque_brussels:0",
       "points": [
-        [
-          4.3604784,
-          50.8455758
-        ],
-        [
-          8.6114852,
-          47.4023749
-        ]
+        [4.3604784, 50.8455758],
+        [8.6114852, 47.4023749]
       ],
       "kind": "reuse",
       "label": "UMAR Wabbes Türgriffe"
@@ -3556,14 +2716,8 @@
     {
       "id": "bg_keramik_mehrere_verbiest_hanzinelle_fliesen:bw_altes_projekt_in_hanzinelle:0",
       "points": [
-        [
-          4.5607099,
-          50.2949873
-        ],
-        [
-          4.315,
-          50.8503
-        ]
+        [4.5607099, 50.2949873],
+        [4.315, 50.8503]
       ],
       "kind": "reuse",
       "label": "Verbiest dekorative…"
@@ -3571,14 +2725,8 @@
     {
       "id": "bg_mehrere_fassade_crclr_curtain_wall_sheet_glass:bw_crclr_external_reuse_sources:0",
       "points": [
-        [
-          13.3951309,
-          52.5173885
-        ],
-        [
-          13.4357,
-          52.4764
-        ]
+        [13.3951309, 52.5173885],
+        [13.4357, 52.4764]
       ],
       "kind": "reuse",
       "label": "Vorhangfassadenelemente"
@@ -3586,14 +2734,8 @@
     {
       "id": "bg_kunststoff_wand_awm_wc_partitions:bw_behrensbau_duesseldorf_donor:0",
       "points": [
-        [
-          6.7680311,
-          51.2210197
-        ],
-        [
-          7.6356,
-          51.9359
-        ]
+        [6.7680311, 51.2210197],
+        [7.6356, 51.9359]
       ],
       "kind": "reuse",
       "label": "WC partitions"
@@ -3601,14 +2743,8 @@
     {
       "id": "bg_beton_mehrere_plattenvereinigung_wand_fassadenelemente:bw_olympisches_dorf_muenchen:0",
       "points": [
-        [
-          11.5477603,
-          48.1803734
-        ],
-        [
-          13.3892,
-          52.5408
-        ]
+        [11.5477603, 48.1803734],
+        [13.3892, 52.5408]
       ],
       "kind": "reuse",
       "label": "Wand- und Fassadenelemen…"
@@ -3616,14 +2752,8 @@
     {
       "id": "bg_beton_mehrere_plattenvereinigung_wand_fassadenelemente:bw_ph12_punkthochhaus_frankfurt_oder:1",
       "points": [
-        [
-          14.534605,
-          52.3294882
-        ],
-        [
-          13.3892,
-          52.5408
-        ]
+        [14.534605, 52.3294882],
+        [13.3892, 52.5408]
       ],
       "kind": "reuse",
       "label": "Wand- und Fassadenelemen…"
@@ -3631,14 +2761,8 @@
     {
       "id": "bg_mehrere_mehrere_moeoeslistrasse_bestand_werkhof:bw_werkhof_moeoeslistrasse:0",
       "points": [
-        [
-          8.5284529,
-          47.3457808
-        ],
-        [
-          8.5154,
-          47.3406
-        ]
+        [8.5284529, 47.3457808],
+        [8.5154, 47.3406]
       ],
       "kind": "reuse",
       "label": "Werkhofstruktur und…"
@@ -3646,14 +2770,8 @@
     {
       "id": "bg_stahl_technik_multi_reinstalled_elevator_motors:bw_multi_brouckere_tower:0",
       "points": [
-        [
-          4.351774,
-          50.8507197
-        ],
-        [
-          4.3487,
-          50.8476
-        ]
+        [4.351774, 50.8507197],
+        [4.3487, 50.8476]
       ],
       "kind": "reuse",
       "label": "Wieder eingebaute…"
@@ -3661,14 +2779,8 @@
     {
       "id": "bg_ziegel_mehrere_svanen:bw_ehemalige_gladsaxe_school:0",
       "points": [
-        [
-          12.481879,
-          55.74061
-        ],
-        [
-          12.4033,
-          55.7346
-        ]
+        [12.481879, 55.74061],
+        [12.4033, 55.7346]
       ],
       "kind": "reuse",
       "label": "Ziegel"
@@ -3676,14 +2788,8 @@
     {
       "id": "bg_stahlbeton_mehrere_schildow_zugeschnittene_wbs70_betonfertigteile:bw_berlin_marzahn_wbs70_plattenbau:0",
       "points": [
-        [
-          13.676873,
-          52.5511184
-        ],
-        [
-          13.3833,
-          52.6333
-        ]
+        [13.676873, 52.5511184],
+        [13.3833, 52.6333]
       ],
       "kind": "reuse",
       "label": "Zugeschnittene WBS70-Sta…"

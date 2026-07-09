@@ -21970,9 +21970,7 @@
           "tool_input": {
             "path": ".repo/🎫/26/04/09/FIX-KIT-APP-DESIGN-ENTRY-IN-SKETCHPAD",
             "summary": "Fixed design entry in Kit app by resolving two issues:\n\n1. `useSyncDeep` returns a single value but was destructured as an array (`const [canUndo] = useSyncDeep(...)`) in KitToolbarSelection, DesignSelectSettings, and QualitySelectSettings (6 call sites total). This caused \"useSyncDeep is not a function or its return value is not iterable\" crash, breaking the Kit app's event handling chain including double-click navigation.\n\n2. Kit diagram (KitDiagramInner) was missing `onNodeDoubleClick` handler, so double-clicking nodes in the force-directed diagram view never navigated to the design.\n\nFixes applied:\n- Removed array destructuring on all 6 `useSyncDeep` calls → `const canUndo = useSyncDeep(...)`\n- Added `handleNodeDoubleClick` callback to KitDiagramInner that navigates to design/type/quality on double-click\n\nVerified with Playwright diagnostic: double-click on design row now navigates to `/kits/{kit}/designs/{design}`.\nAll tests pass: elements/ui (34/34), compose/js (174/174), root vitest (174/174).",
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_bdrk_01EgjTd4N7Hj7upRSxqqAkNq__vscode-1775736963614",
           "cwd": "/workspaces/semio"
@@ -22000,9 +21998,7 @@
           "tool_input": {
             "path": ".repo/🎫/26/04/09/FIX-KIT-APP-DESIGN-ENTRY-IN-SKETCHPAD",
             "summary": "Fixed design entry in Kit app by resolving two issues:\n\n1. `useSyncDeep` returns a single value but was destructured as an array (`const [canUndo] = useSyncDeep(...)`) in KitToolbarSelection, DesignSelectSettings, and QualitySelectSettings (6 call sites total). This caused \"useSyncDeep is not a function or its return value is not iterable\" crash, breaking the Kit app's event handling chain including double-click navigation.\n\n2. Kit diagram (KitDiagramInner) was missing `onNodeDoubleClick` handler, so double-clicking nodes in the force-directed diagram view never navigated to the design.\n\nFixes applied:\n- Removed array destructuring on all 6 `useSyncDeep` calls → `const canUndo = useSyncDeep(...)`\n- Added `handleNodeDoubleClick` callback to KitDiagramInner that navigates to design/type/quality on double-click\n\nVerified with Playwright diagnostic: double-click on design row now navigates to `/kits/{kit}/designs/{design}`.\nAll tests pass: elements/ui (34/34), compose/js (174/174), root vitest (174/174).",
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_bdrk_01EgjTd4N7Hj7upRSxqqAkNq__vscode-1775736963614",
           "cwd": "/workspaces/semio"
@@ -22253,9 +22249,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "path": "2026/04/09/FIX-KIT-APP-DESIGN-ENTRY-IN-SKETCHPAD",
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Fixed design entry in Kit app by resolving two issues:\n\n1. `useSyncDeep` returns a single value but was destructured as an array (`const [canUndo] = useSyncDeep(...)`) in KitToolbarSelection, DesignSelectSettings, and QualitySelectSettings (6 call sites total). This caused \"useSyncDeep is not a function or its return value is not iterable\" crash, breaking the Kit app's event handling chain including double-click navigation.\n\n2. Kit diagram (KitDiagramInner) was missing `onNodeDoubleClick` handler, so double-clicking nodes in the force-directed diagram view never navigated to the design.\n\nFixes applied:\n- Removed array destructuring on all 6 `useSyncDeep` calls → `const canUndo = useSyncDeep(...)`\n- Added `handleNodeDoubleClick` callback to KitDiagramInner that navigates to design/type/quality on double-click\n\nVerified with Playwright diagnostic: double-click on design row now navigates to `/kits/{kit}/designs/{design}`.\nAll tests pass: elements/ui (34/34), compose/js (174/174), root vitest (174/174)."
           },
           "tool_use_id": "toolu_bdrk_01LMKW4W5aEGAMcm5fLJpfTM__vscode-1775736963617",
@@ -22283,9 +22277,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "path": "2026/04/09/FIX-KIT-APP-DESIGN-ENTRY-IN-SKETCHPAD",
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Fixed design entry in Kit app by resolving two issues:\n\n1. `useSyncDeep` returns a single value but was destructured as an array (`const [canUndo] = useSyncDeep(...)`) in KitToolbarSelection, DesignSelectSettings, and QualitySelectSettings (6 call sites total). This caused \"useSyncDeep is not a function or its return value is not iterable\" crash, breaking the Kit app's event handling chain including double-click navigation.\n\n2. Kit diagram (KitDiagramInner) was missing `onNodeDoubleClick` handler, so double-clicking nodes in the force-directed diagram view never navigated to the design.\n\nFixes applied:\n- Removed array destructuring on all 6 `useSyncDeep` calls → `const canUndo = useSyncDeep(...)`\n- Added `handleNodeDoubleClick` callback to KitDiagramInner that navigates to design/type/quality on double-click\n\nVerified with Playwright diagnostic: double-click on design row now navigates to `/kits/{kit}/designs/{design}`.\nAll tests pass: elements/ui (34/34), compose/js (174/174), root vitest (174/174)."
           },
           "tool_use_id": "toolu_bdrk_01LMKW4W5aEGAMcm5fLJpfTM__vscode-1775736963617",
@@ -22313,9 +22305,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "path": "26/04/09/FIX-KIT-APP-DESIGN-ENTRY-IN-SKETCHPAD",
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Fixed design entry in Kit app by resolving two issues:\n\n1. `useSyncDeep` returns a single value but was destructured as an array (`const [canUndo] = useSyncDeep(...)`) in KitToolbarSelection, DesignSelectSettings, and QualitySelectSettings (6 call sites total). This caused \"useSyncDeep is not a function or its return value is not iterable\" crash, breaking the Kit app's event handling chain including double-click navigation.\n\n2. Kit diagram (KitDiagramInner) was missing `onNodeDoubleClick` handler, so double-clicking nodes in the force-directed diagram view never navigated to the design.\n\nFixes applied:\n- Removed array destructuring on all 6 `useSyncDeep` calls → `const canUndo = useSyncDeep(...)`\n- Added `handleNodeDoubleClick` callback to KitDiagramInner that navigates to design/type/quality on double-click\n\nVerified with Playwright diagnostic: double-click on design row now navigates to `/kits/{kit}/designs/{design}`.\nAll tests pass: elements/ui (34/34), compose/js (174/174), root vitest (174/174)."
           },
           "tool_use_id": "toolu_bdrk_016daz8wzkE2ErZ1DRAhfsny__vscode-1775736963618",
@@ -22343,9 +22333,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "path": "26/04/09/FIX-KIT-APP-DESIGN-ENTRY-IN-SKETCHPAD",
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Fixed design entry in Kit app by resolving two issues:\n\n1. `useSyncDeep` returns a single value but was destructured as an array (`const [canUndo] = useSyncDeep(...)`) in KitToolbarSelection, DesignSelectSettings, and QualitySelectSettings (6 call sites total). This caused \"useSyncDeep is not a function or its return value is not iterable\" crash, breaking the Kit app's event handling chain including double-click navigation.\n\n2. Kit diagram (KitDiagramInner) was missing `onNodeDoubleClick` handler, so double-clicking nodes in the force-directed diagram view never navigated to the design.\n\nFixes applied:\n- Removed array destructuring on all 6 `useSyncDeep` calls → `const canUndo = useSyncDeep(...)`\n- Added `handleNodeDoubleClick` callback to KitDiagramInner that navigates to design/type/quality on double-click\n\nVerified with Playwright diagnostic: double-click on design row now navigates to `/kits/{kit}/designs/{design}`.\nAll tests pass: elements/ui (34/34), compose/js (174/174), root vitest (174/174)."
           },
           "tool_use_id": "toolu_bdrk_016daz8wzkE2ErZ1DRAhfsny__vscode-1775736963618",
@@ -22373,9 +22361,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "path": "26/04/09/FIX-KIT-APP-DESIGN-ENTRY-IN-SKETCHPAD",
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Fixed design entry in Kit app by resolving two issues:\n\n1. `useSyncDeep` returns a single value but was destructured as an array (`const [canUndo] = useSyncDeep(...)`) in KitToolbarSelection, DesignSelectSettings, and QualitySelectSettings (6 call sites total). This caused \"useSyncDeep is not a function or its return value is not iterable\" crash, breaking the Kit app's event handling chain including double-click navigation.\n\n2. Kit diagram (KitDiagramInner) was missing `onNodeDoubleClick` handler, so double-clicking nodes in the force-directed diagram view never navigated to the design.\n\nFixes applied:\n- Removed array destructuring on all 6 `useSyncDeep` calls → `const canUndo = useSyncDeep(...)`\n- Added `handleNodeDoubleClick` callback to KitDiagramInner that navigates to design/type/quality on double-click\n\nVerified with Playwright diagnostic: double-click on design row now navigates to `/kits/{kit}/designs/{design}`.\nAll tests pass: elements/ui (34/34), compose/js (174/174), root vitest (174/174)."
           },
           "tool_response": "[🎫fixkitappdesignentryinsketchpad](repo://ticket/🎫fixkitappdesignentryinsketchpad) - `closed` - `closed now`\n",
@@ -22404,9 +22390,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "path": "26/04/09/FIX-KIT-APP-DESIGN-ENTRY-IN-SKETCHPAD",
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Fixed design entry in Kit app by resolving two issues:\n\n1. `useSyncDeep` returns a single value but was destructured as an array (`const [canUndo] = useSyncDeep(...)`) in KitToolbarSelection, DesignSelectSettings, and QualitySelectSettings (6 call sites total). This caused \"useSyncDeep is not a function or its return value is not iterable\" crash, breaking the Kit app's event handling chain including double-click navigation.\n\n2. Kit diagram (KitDiagramInner) was missing `onNodeDoubleClick` handler, so double-clicking nodes in the force-directed diagram view never navigated to the design.\n\nFixes applied:\n- Removed array destructuring on all 6 `useSyncDeep` calls → `const canUndo = useSyncDeep(...)`\n- Added `handleNodeDoubleClick` callback to KitDiagramInner that navigates to design/type/quality on double-click\n\nVerified with Playwright diagnostic: double-click on design row now navigates to `/kits/{kit}/designs/{design}`.\nAll tests pass: elements/ui (34/34), compose/js (174/174), root vitest (174/174)."
           },
           "tool_response": "[🎫fixkitappdesignentryinsketchpad](repo://ticket/🎫fixkitappdesignentryinsketchpad) - `closed` - `closed now`\n",

@@ -315,9 +315,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\23afe823-ec91-48cc-8a29-87d3197e30e9.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"]
           },
           "tool_use_id": "call_sg2YrmaN4WibcfgB3NgEuYdS__vscode-1779785585452",
           "cwd": "c:\\git\\compose"
@@ -371,9 +369,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\23afe823-ec91-48cc-8a29-87d3197e30e9.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_sg2YrmaN4WibcfgB3NgEuYdS__vscode-1779785585452",
@@ -459,9 +455,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\23afe823-ec91-48cc-8a29-87d3197e30e9.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_sg2YrmaN4WibcfgB3NgEuYdS__vscode-1779785585452",
@@ -627,9 +621,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\23afe823-ec91-48cc-8a29-87d3197e30e9.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"]
           },
           "tool_use_id": "call_9X2ZpFZwBTbXvoqXQcjOXjCY__vscode-1779785585454",
           "cwd": "c:\\git\\compose"
@@ -655,9 +647,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\23afe823-ec91-48cc-8a29-87d3197e30e9.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"]
           },
           "tool_use_id": "call_9X2ZpFZwBTbXvoqXQcjOXjCY__vscode-1779785585454",
           "cwd": "c:\\git\\compose"
@@ -2229,11 +2219,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\23afe823-ec91-48cc-8a29-87d3197e30e9.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\react\\scene\\index.tsx",
-              "c:\\git\\compose\\elements\\lib\\react\\scene\\play\\e2e\\scene.spec.ts",
-              "c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\react\\scene\\index.tsx", "c:\\git\\compose\\elements\\lib\\react\\scene\\play\\e2e\\scene.spec.ts", "c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"]
           },
           "tool_use_id": "call_sZHNH27f7gUar8IdYeZbioWL__vscode-1779785585469",
           "cwd": "c:\\git\\compose"
@@ -2287,11 +2273,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\23afe823-ec91-48cc-8a29-87d3197e30e9.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\react\\scene\\index.tsx",
-              "c:\\git\\compose\\elements\\lib\\react\\scene\\play\\e2e\\scene.spec.ts",
-              "c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\react\\scene\\index.tsx", "c:\\git\\compose\\elements\\lib\\react\\scene\\play\\e2e\\scene.spec.ts", "c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"]
           },
           "tool_use_id": "call_sZHNH27f7gUar8IdYeZbioWL__vscode-1779785585469",
           "cwd": "c:\\git\\compose"
@@ -2345,11 +2327,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\23afe823-ec91-48cc-8a29-87d3197e30e9.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\react\\scene\\index.tsx",
-              "c:\\git\\compose\\elements\\lib\\react\\scene\\play\\e2e\\scene.spec.ts",
-              "c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\react\\scene\\index.tsx", "c:\\git\\compose\\elements\\lib\\react\\scene\\play\\e2e\\scene.spec.ts", "c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_sZHNH27f7gUar8IdYeZbioWL__vscode-1779785585469",
@@ -2405,11 +2383,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\23afe823-ec91-48cc-8a29-87d3197e30e9.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\react\\scene\\index.tsx",
-              "c:\\git\\compose\\elements\\lib\\react\\scene\\play\\e2e\\scene.spec.ts",
-              "c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\react\\scene\\index.tsx", "c:\\git\\compose\\elements\\lib\\react\\scene\\play\\e2e\\scene.spec.ts", "c:\\git\\compose\\elements\\lib\\react\\topology\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_sZHNH27f7gUar8IdYeZbioWL__vscode-1779785585469",

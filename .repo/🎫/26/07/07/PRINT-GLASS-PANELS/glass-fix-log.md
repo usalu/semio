@@ -14,4 +14,5 @@
 - Glass shipout: `\fbox` border + PNG background; fallback `fcolorbox` only when glass step ran but PNG missing.
 - `renderPanelGlass`: stronger blur, frost noise (`soft-light`), per-jobname output dir.
 - Report demo: `y=5cm` so panel overlaps TOC content.
+
 5. **Saturation multiplier**: `modulate({ saturation: glassSaturate })` — was `* 100` causing neon color corruption on light and dark themes.

@@ -100,11 +100,7 @@
             "max_results": 3
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_open",
-              "mcp__repo__search",
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__ticket_open", "mcp__repo__search", "mcp__repo__ticket_close"],
             "query": "select:mcp__repo__ticket_open,mcp__repo__search,mcp__repo__ticket_close",
             "total_deferred_tools": 23
           },
@@ -731,11 +727,7 @@
             "pattern": "compose/desktop/vite.*.ts"
           },
           "tool_response": {
-            "filenames": [
-              "/workspaces/semio/compose/desktop/vite.renderer.config.ts",
-              "/workspaces/semio/compose/desktop/vite.main.config.ts",
-              "/workspaces/semio/compose/desktop/vite.preload.config.ts"
-            ],
+            "filenames": ["/workspaces/semio/compose/desktop/vite.renderer.config.ts", "/workspaces/semio/compose/desktop/vite.main.config.ts", "/workspaces/semio/compose/desktop/vite.preload.config.ts"],
             "durationMs": 402,
             "numFiles": 3,
             "truncated": false
@@ -767,9 +759,7 @@
             "pattern": "compose/desktop/forge.config.*"
           },
           "tool_response": {
-            "filenames": [
-              "/workspaces/semio/compose/desktop/forge.config.ts"
-            ],
+            "filenames": ["/workspaces/semio/compose/desktop/forge.config.ts"],
             "durationMs": 365,
             "numFiles": 1,
             "truncated": false
@@ -1578,9 +1568,7 @@
           "tool_name": "mcp__repo__ticket_close",
           "tool_input": {
             "summary": "Fixed desktop white screen caused by playwright-core being pulled into Vite's dependency optimization. The desktop renderer vite config scans ../sketchpad/index.ts for dependencies, which imports @playwright/test. Vite's dep optimizer tried to bundle playwright-core which failed on missing chromium-bidi, causing an infinite optimization loop that crashed Electron with ERR_INSUFFICIENT_RESOURCES. Added @playwright/test, playwright, and playwright-core to optimizeDeps.exclude in vite.renderer.config.ts.",
-            "files": [
-              "compose/desktop/vite.renderer.config.ts"
-            ]
+            "files": ["compose/desktop/vite.renderer.config.ts"]
           },
           "tool_use_id": "toolu_01BxRSdvjd27bL7f9gL7Gdmm"
         }
@@ -1617,9 +1605,7 @@
           "tool_name": "mcp__repo__ticket_close",
           "tool_input": {
             "summary": "Fixed desktop white screen caused by playwright-core being pulled into Vite's dependency optimization. The desktop renderer vite config scans ../sketchpad/index.ts for dependencies, which imports @playwright/test. Vite's dep optimizer tried to bundle playwright-core which failed on missing chromium-bidi, causing an infinite optimization loop that crashed Electron with ERR_INSUFFICIENT_RESOURCES. Added @playwright/test, playwright, and playwright-core to optimizeDeps.exclude in vite.renderer.config.ts.",
-            "files": [
-              "compose/desktop/vite.renderer.config.ts"
-            ]
+            "files": ["compose/desktop/vite.renderer.config.ts"]
           },
           "tool_use_id": "toolu_01BxRSdvjd27bL7f9gL7Gdmm",
           "error": "MCP error -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/00/ticket.json",
@@ -1659,9 +1645,7 @@
           "tool_input": {
             "path": "26/03/23/FIX-DESKTOP-WHITE-SCREEN-FROM-PLAYWRIGHT-CORE-BUNDLE-ERRORS",
             "summary": "Fixed desktop white screen caused by playwright-core being pulled into Vite dependency optimization. The desktop renderer vite config scans ../sketchpad/index.ts for dependencies, which imports @playwright/test. Vite dep optimizer tried to bundle playwright-core which failed on missing chromium-bidi, causing an infinite optimization loop crashing Electron with ERR_INSUFFICIENT_RESOURCES. Added @playwright/test, playwright, and playwright-core to optimizeDeps.exclude in vite.renderer.config.ts.",
-            "files": [
-              "compose/desktop/vite.renderer.config.ts"
-            ]
+            "files": ["compose/desktop/vite.renderer.config.ts"]
           },
           "tool_use_id": "toolu_018PcQDC1yh5DT18hxwSfazH"
         }
@@ -1699,9 +1683,7 @@
           "tool_input": {
             "path": "26/03/23/FIX-DESKTOP-WHITE-SCREEN-FROM-PLAYWRIGHT-CORE-BUNDLE-ERRORS",
             "summary": "Fixed desktop white screen caused by playwright-core being pulled into Vite dependency optimization. The desktop renderer vite config scans ../sketchpad/index.ts for dependencies, which imports @playwright/test. Vite dep optimizer tried to bundle playwright-core which failed on missing chromium-bidi, causing an infinite optimization loop crashing Electron with ERR_INSUFFICIENT_RESOURCES. Added @playwright/test, playwright, and playwright-core to optimizeDeps.exclude in vite.renderer.config.ts.",
-            "files": [
-              "compose/desktop/vite.renderer.config.ts"
-            ]
+            "files": ["compose/desktop/vite.renderer.config.ts"]
           },
           "tool_response": [
             {

@@ -2,21 +2,21 @@
 name: Fix dark PDF theme not applying
 overview: Dark PDFs are visually identical to light ones because the theme option never actually reaches the L3 keys system that drives all color switching — a `\keys_set:nn` call silently stores unexpanded macro tokens instead of the string "dark"/"light". Fix the expansion bug, then align the resulting dark chrome colors precisely with the OS app's dark theme tokens (navbar/canvas/border/foreground) so print truly matches the desktop UI.
 todos:
-  - id: fix-keys-set-expansion
-    content: "Fix print/tex/semio.cls: change \\keys_set:nn to \\keys_set:nx (drop redundant \\edef lines) so theme actually propagates to \\l_semio_theme_tl"
-    status: completed
-  - id: fix-navbar-shell-token
-    content: Replace semio-chrome-shell alias with semio-chrome-window directly in semio-core.sty/semio-window.sty to match OS navbar color
-    status: completed
-  - id: add-foreground-coltext
-    content: Add semio-chrome-foreground alias in semio-core.sty and apply as coltext on all tcolorbox window styles in semio-window.sty
-    status: completed
-  - id: theme-aware-emblem
-    content: Make semioemblem stroke color theme-aware via semio-chrome-border-emphasized in semio-logo.sty
-    status: completed
-  - id: verify-dark-rendering
-    content: Rebuild all templates and visually confirm dark PDFs now differ from light (page bg, navbar, text, emblem) and match OS dark tokens
-    status: completed
+ - id: fix-keys-set-expansion
+   content: "Fix print/tex/semio.cls: change \\keys_set:nn to \\keys_set:nx (drop redundant \\edef lines) so theme actually propagates to \\l_semio_theme_tl"
+   status: completed
+ - id: fix-navbar-shell-token
+   content: Replace semio-chrome-shell alias with semio-chrome-window directly in semio-core.sty/semio-window.sty to match OS navbar color
+   status: completed
+ - id: add-foreground-coltext
+   content: Add semio-chrome-foreground alias in semio-core.sty and apply as coltext on all tcolorbox window styles in semio-window.sty
+   status: completed
+ - id: theme-aware-emblem
+   content: Make semioemblem stroke color theme-aware via semio-chrome-border-emphasized in semio-logo.sty
+   status: completed
+ - id: verify-dark-rendering
+   content: Rebuild all templates and visually confirm dark PDFs now differ from light (page bg, navbar, text, emblem) and match OS dark tokens
+   status: completed
 isProject: false
 ---
 

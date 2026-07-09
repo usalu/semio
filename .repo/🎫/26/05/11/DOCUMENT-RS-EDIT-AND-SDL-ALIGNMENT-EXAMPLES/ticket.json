@@ -4,7 +4,5 @@
   "status": "open",
   "description": "Extend compose/rs/AGENTS.md and compose/rs/lib.rs crate or vcs module docs with short copy-pasteable examples: Transaction→Edit rename, OperationOwner::Edit, owner_edit Weak\u003cEdit\u003e, cross-reference compose/graphql/target.schema.graphql Edit/Change/Operation; note intentional Draft vs SDL Alternative gap. Run cargo test -p compose --lib.",
   "goal": "🎯r2602🎯updateddocs🎯updateddevdocs🎯updatedagentsmd",
-  "sessions": [
-    "⚪325cb3de60b24fb8a021818a457adfc2"
-  ]
+  "sessions": ["⚪325cb3de60b24fb8a021818a457adfc2"]
 }

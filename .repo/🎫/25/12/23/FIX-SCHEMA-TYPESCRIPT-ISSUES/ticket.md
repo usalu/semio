@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Schema validation reported 21 errors for missing C# entities. TypeScript compilation reported multiple errors including jsDoc property access, Sketchpad JSX component type, storybook stories with missing args and invalid level props.
@@ -59,4 +60,5 @@ Schema validation reported 21 errors for missing C# entities. TypeScript compila
 ## Log
 
 ## Summary
+
 # Summary

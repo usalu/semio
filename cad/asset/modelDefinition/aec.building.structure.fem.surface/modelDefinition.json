@@ -4,8 +4,5 @@
   "version": "1.0.0",
   "label": "Building Structure FEM Surface",
   "description": "Surface finite element structural model definition assets.",
-  "kinds": [
-    "transformation",
-    "typology"
-  ]
+  "kinds": ["transformation", "typology"]
 }

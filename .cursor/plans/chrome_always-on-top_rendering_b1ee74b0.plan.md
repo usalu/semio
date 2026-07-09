@@ -2,24 +2,24 @@
 name: Chrome always-on-top rendering
 overview: Fix procedural3d's missing navbar/footer/window-chrome by routing all "must always be on top" chrome through the same guaranteed-last compositing path already used successfully by the floating side panels, instead of the fragile plain backdrop layer that any window's raster content can silently paint over.
 todos:
-  - id: repro
-    content: Boot dev host, screenshot procedural3d and lowpoly before the fix to confirm exact missing chrome elements
-    status: completed
-  - id: chrome-sink
-    content: Add chrome_sink helper in framework/renderer/wgpu/rs/lib.rs and route render_navbar/render_footer through it
-    status: completed
-  - id: dock-chrome
-    content: Route DockState::paint_chrome border+cap call (render_main_window) through chrome_sink
-    status: completed
-  - id: rails
-    content: Route render_window_measures_rail and render_window_engagement_rail glass through chrome_sink
-    status: completed
-  - id: verify
-    content: Re-screenshot procedural3d/lowpoly/other component kinds, run cargo test for ui/wgpu and framework/renderer/wgpu
-    status: completed
-  - id: ticket
-    content: Update verify-log.md and close/reopen the PLAYGROUND-CHROME-RELIABILITY ticket via repo MCP with full file summary
-    status: completed
+ - id: repro
+   content: Boot dev host, screenshot procedural3d and lowpoly before the fix to confirm exact missing chrome elements
+   status: completed
+ - id: chrome-sink
+   content: Add chrome_sink helper in framework/renderer/wgpu/rs/lib.rs and route render_navbar/render_footer through it
+   status: completed
+ - id: dock-chrome
+   content: Route DockState::paint_chrome border+cap call (render_main_window) through chrome_sink
+   status: completed
+ - id: rails
+   content: Route render_window_measures_rail and render_window_engagement_rail glass through chrome_sink
+   status: completed
+ - id: verify
+   content: Re-screenshot procedural3d/lowpoly/other component kinds, run cargo test for ui/wgpu and framework/renderer/wgpu
+   status: completed
+ - id: ticket
+   content: Update verify-log.md and close/reopen the PLAYGROUND-CHROME-RELIABILITY ticket via repo MCP with full file summary
+   status: completed
 isProject: false
 ---
 
@@ -33,6 +33,7 @@ The wgpu compositor has two structurally different destinations for content, and
 - **Overlay `DrawList`**: composited strictly last, in `render_overlay` (`ui/wgpu/rs/lib.rs:3765-3827`), after the scene blit, after `draw`'s own glass regions/foreground, and after the overlay's own glass regions/foreground. This is the one truly-guaranteed-last destination in the whole pipeline.
 
 Today:
+
 - `render_navbar` (`framework/renderer/wgpu/rs/lib.rs:10293`) and `render_footer` (`:10492`) call `draw.push_solid(...)` / `chrome_text(...)` directly on the **backdrop** layer — no glass, no overlay. They are drawn from `render_chrome` at `:10105-10106`, using `draw`.
 - Floating left/right panels already correctly prefer the overlay list when available (`render_chrome`, `:10091-10104`): `if let Some(panel_draw) = overlay_slot.as_deref_mut() { render_left_panel(panel_draw, ...) } else { render_left_panel(draw, ...) }`. This is why the Document/Catalogue and Inspection panels render cleanly in the screenshot even though the main window's node-graph doesn't.
 - The dock window cap/border chrome (`DockState::paint_chrome` → `render_stack`, `framework/renderer/wgpu/rs/lib.rs:1226-1420`) already uses `ctx.draw.push_glass(..., GlassTier::Toolbar, ...)` + `begin_glass_content` for the tab/Focus/Close bar, so it composites via `draw`'s own glass-foreground phase (after `draw`'s own raster pass finishes) — safer than navbar/footer, but still tied to `draw` rather than the outer overlay.
@@ -52,6 +53,7 @@ fn chrome_sink<'a>(draw: &'a mut DrawList, overlay: &'a mut Option<&'a mut DrawL
 ```
 
 Route through it:
+
 1. `render_navbar` / `render_footer` calls in `render_chrome` (`:10105-10106`) — pass the overlay-backed sink instead of `draw`.
 2. The `DockState::paint_chrome(&mut dock_ctx, canvas, false)` call in `render_main_window` (`:10902-10912`) — build `dock_ctx.draw` from the sink so window border + cap/Focus/Close chrome also gets the guaranteed-last placement (currently only "safer", not fully guaranteed, since it still depends on `draw`'s own internal raster-vs-glass ordering).
 3. `render_window_measures_rail` / `render_window_engagement_rail` (`:11400s`/`:11700s`), which already receive both `draw` and `overlay` params but currently push their `GlassTier::WindowOptions` rail onto `draw` unconditionally (`:11471-11479`) — switch them to the sink too for consistency.

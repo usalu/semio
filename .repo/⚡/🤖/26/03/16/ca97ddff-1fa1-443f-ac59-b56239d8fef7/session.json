@@ -4058,10 +4058,7 @@
             "max_results": 2
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_open",
-              "mcp__repo__search"
-            ],
+            "matches": ["mcp__repo__ticket_open", "mcp__repo__search"],
             "query": "select:mcp__repo__ticket_open,mcp__repo__search",
             "total_deferred_tools": 96
           },
@@ -7957,10 +7954,7 @@
             "max_results": 2
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_open",
-              "mcp__repo__search"
-            ],
+            "matches": ["mcp__repo__ticket_open", "mcp__repo__search"],
             "query": "select:mcp__repo__ticket_open,mcp__repo__search",
             "total_deferred_tools": 96
           },
@@ -11038,11 +11032,7 @@
           },
           "tool_response": {
             "mode": "files_with_matches",
-            "filenames": [
-              "repo/vscode/extension.ts",
-              "repo/vscode/extension.test.ts",
-              "repo/vscode/package.json"
-            ],
+            "filenames": ["repo/vscode/extension.ts", "repo/vscode/extension.test.ts", "repo/vscode/package.json"],
             "numFiles": 3
           },
           "tool_use_id": "toolu_0157C4wHpbVA78SJmdgqWPBp"
@@ -13431,9 +13421,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_open"
-            ],
+            "matches": ["mcp__repo__ticket_open"],
             "query": "select:mcp__repo__ticket_open",
             "total_deferred_tools": 96
           },
@@ -13492,9 +13480,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__search"
-            ],
+            "matches": ["mcp__repo__search"],
             "query": "select:mcp__repo__search",
             "total_deferred_tools": 96
           },
@@ -13717,9 +13703,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "TodoWrite"
-            ],
+            "matches": ["TodoWrite"],
             "query": "select:TodoWrite",
             "total_deferred_tools": 96
           },
@@ -14254,15 +14238,7 @@
                 "oldLines": 6,
                 "newStart": 52,
                 "newLines": 7,
-                "lines": [
-                  "   \"strconv\"",
-                  "   \"strings\"",
-                  "   \"sync\"",
-                  "+  \"syscall\"",
-                  "   \"text/template\"",
-                  "   \"time\"",
-                  "   \"unicode/utf8\""
-                ]
+                "lines": ["   \"strconv\"", "   \"strings\"", "   \"sync\"", "+  \"syscall\"", "   \"text/template\"", "   \"time\"", "   \"unicode/utf8\""]
               }
             ],
             "userModified": false,
@@ -15466,16 +15442,7 @@
                 "oldLines": 6,
                 "newStart": 757,
                 "newLines": 8,
-                "lines": [
-                  "   } catch (error) {",
-                  "     logError(\"[runRepoCommandJson] error:\", error);",
-                  "     return null;",
-                  "+  } finally {",
-                  "+    releaseCliSlot();",
-                  "   }",
-                  " }",
-                  " "
-                ]
+                "lines": ["   } catch (error) {", "     logError(\"[runRepoCommandJson] error:\", error);", "     return null;", "+  } finally {", "+    releaseCliSlot();", "   }", " }", " "]
               }
             ],
             "userModified": false,
@@ -15697,16 +15664,7 @@
                 "oldLines": 6,
                 "newStart": 1030,
                 "newLines": 8,
-                "lines": [
-                  "     }",
-                  "   } catch (error) {",
-                  "     logError(\"[getTreeNodeCache] error:\", error);",
-                  "+  } finally {",
-                  "+    releaseCliSlot();",
-                  "   }",
-                  "   return treeNodeCache ?? new Map();",
-                  " }"
-                ]
+                "lines": ["     }", "   } catch (error) {", "     logError(\"[getTreeNodeCache] error:\", error);", "+  } finally {", "+    releaseCliSlot();", "   }", "   return treeNodeCache ?? new Map();", " }"]
               }
             ],
             "userModified": false,
@@ -16824,9 +16782,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__ticket_close"],
             "query": "select:mcp__repo__ticket_close",
             "total_deferred_tools": 96
           },
@@ -16856,10 +16812,7 @@
           "tool_input": {
             "path": "26/03/16/FIX-CLI-PERFORMANCE-CAUSING-SYSTEM-OVERLOAD",
             "summary": "Fixed CLI performance causing system overload (load avg 30-90+). Two root causes: (1) Multiple concurrent CLI processes each independently building the full monorepo tree via BuildMonorepoTreeCached, causing CPU spikes of 100-200% per process. Added file-based flock in BuildMonorepoTreeCached so only one process builds at a time while others wait and use the cache. (2) VSCode extension spawning unlimited concurrent CLI subprocesses for analyze/search/section-list/definition-list. Added a concurrency semaphore (limit=2) via acquireCliSlot/releaseCliSlot gating all execAsync CLI calls.",
-            "files": [
-              "repo/cli/main.go",
-              "repo/vscode/extension.ts"
-            ]
+            "files": ["repo/cli/main.go", "repo/vscode/extension.ts"]
           },
           "tool_use_id": "toolu_01TW8r68DAPY4t2b5eTWfuvr"
         }
@@ -16897,10 +16850,7 @@
           "tool_input": {
             "path": "26/03/16/FIX-CLI-PERFORMANCE-CAUSING-SYSTEM-OVERLOAD",
             "summary": "Fixed CLI performance causing system overload (load avg 30-90+). Two root causes: (1) Multiple concurrent CLI processes each independently building the full monorepo tree via BuildMonorepoTreeCached, causing CPU spikes of 100-200% per process. Added file-based flock in BuildMonorepoTreeCached so only one process builds at a time while others wait and use the cache. (2) VSCode extension spawning unlimited concurrent CLI subprocesses for analyze/search/section-list/definition-list. Added a concurrency semaphore (limit=2) via acquireCliSlot/releaseCliSlot gating all execAsync CLI calls.",
-            "files": [
-              "repo/cli/main.go",
-              "repo/vscode/extension.ts"
-            ]
+            "files": ["repo/cli/main.go", "repo/vscode/extension.ts"]
           },
           "tool_response": [
             {

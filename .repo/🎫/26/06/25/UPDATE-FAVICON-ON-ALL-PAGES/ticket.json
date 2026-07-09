@@ -8,10 +8,5 @@
     "issue": "https://github.com/usalu/semio/issues/1747"
   },
   "goal": "🎯asset",
-  "sessions": [
-    "⚪cc0b72c827304094802cfc039d544634",
-    "⚪a0c638aae2754d30a2cebf54919923d2",
-    "⚪3e3aed8f10154ca79151c7a63c71fcf5",
-    "⚪1d878ee469cc46e0bd4b5749d30eca5c"
-  ]
+  "sessions": ["⚪cc0b72c827304094802cfc039d544634", "⚪a0c638aae2754d30a2cebf54919923d2", "⚪3e3aed8f10154ca79151c7a63c71fcf5", "⚪1d878ee469cc46e0bd4b5749d30eca5c"]
 }

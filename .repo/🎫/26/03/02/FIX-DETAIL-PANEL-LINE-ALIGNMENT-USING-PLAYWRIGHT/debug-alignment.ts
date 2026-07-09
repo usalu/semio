@@ -7,13 +7,13 @@ async function measureTreeAlignment(page: any, label: string) {
     const results: any = { sections: [], items: [], lines: [], chevrons: [] };
 
     // Measure tree-section-row elements
-    document.querySelectorAll('[data-slot="tree-section-row"]').forEach(el => {
+    document.querySelectorAll('[data-slot="tree-section-row"]').forEach((el) => {
       const rect = el.getBoundingClientRect();
       const style = window.getComputedStyle(el);
       const labelEl = el.querySelector('[data-slot="tree-label"]');
-      const chevron = el.querySelector('svg');
+      const chevron = el.querySelector("svg");
       results.sections.push({
-        label: labelEl?.textContent || '?',
+        label: labelEl?.textContent || "?",
         paddingLeft: style.paddingLeft,
         rectX: rect.x,
         rectY: rect.y,
@@ -22,14 +22,14 @@ async function measureTreeAlignment(page: any, label: string) {
       });
     });
 
-    // Measure tree-item-row elements  
-    document.querySelectorAll('[data-slot="tree-item-row"]').forEach(el => {
+    // Measure tree-item-row elements
+    document.querySelectorAll('[data-slot="tree-item-row"]').forEach((el) => {
       const rect = el.getBoundingClientRect();
       const style = window.getComputedStyle(el);
       const labelEl = el.querySelector('[data-slot="tree-label"]');
-      const chevron = el.querySelector('svg');
+      const chevron = el.querySelector("svg");
       results.items.push({
-        label: labelEl?.textContent || '?',
+        label: labelEl?.textContent || "?",
         paddingLeft: style.paddingLeft,
         rectX: rect.x,
         rectY: rect.y,
@@ -39,16 +39,16 @@ async function measureTreeAlignment(page: any, label: string) {
     });
 
     // Measure vertical indentation lines
-    document.querySelectorAll('.bg-muted-foreground\\/40').forEach(el => {
+    document.querySelectorAll(".bg-muted-foreground\\/40").forEach((el) => {
       const rect = el.getBoundingClientRect();
       if (rect.height > 0 && rect.width === 1) {
-        const parentSlot = el.closest('[data-slot]');
+        const parentSlot = el.closest("[data-slot]");
         results.lines.push({
           x: rect.x,
           centerX: rect.x + 0.5,
           height: rect.height,
-          parentSlot: parentSlot?.getAttribute('data-slot') || 'unknown',
-          parentLabel: parentSlot?.querySelector('[data-slot="tree-label"]')?.textContent || '?',
+          parentSlot: parentSlot?.getAttribute("data-slot") || "unknown",
+          parentLabel: parentSlot?.querySelector('[data-slot="tree-label"]')?.textContent || "?",
         });
       }
     });
@@ -89,14 +89,14 @@ async function measureTreeAlignment(page: any, label: string) {
   data.items.forEach((i: any) => {
     if (i.chevronCenterX) chevronCenters.add(i.chevronCenterX.toFixed(1));
   });
-  console.log(`[DEBUG] Unique chevron center X positions: ${[...chevronCenters].join(', ')}`);
-  console.log(`[DEBUG] Unique line X positions: ${[...linesByX.keys()].join(', ')}`);
+  console.log(`[DEBUG] Unique chevron center X positions: ${[...chevronCenters].join(", ")}`);
+  console.log(`[DEBUG] Unique line X positions: ${[...linesByX.keys()].join(", ")}`);
 
   // Check alignment
   const lineXSet = new Set(linesByX.keys());
-  const misaligned = [...lineXSet].filter(x => !chevronCenters.has(x) && !chevronCenters.has((parseFloat(x) - 0.5).toFixed(1)) && !chevronCenters.has((parseFloat(x) + 0.5).toFixed(1)));
+  const misaligned = [...lineXSet].filter((x) => !chevronCenters.has(x) && !chevronCenters.has((parseFloat(x) - 0.5).toFixed(1)) && !chevronCenters.has((parseFloat(x) + 0.5).toFixed(1)));
   if (misaligned.length > 0) {
-    console.log(`[DEBUG] MISALIGNED lines at: ${misaligned.join(', ')}`);
+    console.log(`[DEBUG] MISALIGNED lines at: ${misaligned.join(", ")}`);
   } else {
     console.log(`[DEBUG] All lines ALIGNED with chevron centers`);
   }
@@ -124,11 +124,11 @@ async function main() {
 
   // Check what panels exist
   const panelData = await skPage.evaluate(() => {
-    const panels = document.querySelectorAll('[data-panel]');
-    return Array.from(panels).map(p => ({
-      panel: p.getAttribute('data-panel'),
+    const panels = document.querySelectorAll("[data-panel]");
+    return Array.from(panels).map((p) => ({
+      panel: p.getAttribute("data-panel"),
       visible: (p as HTMLElement).style.display,
-      childCount: p.children.length
+      childCount: p.children.length,
     }));
   });
   console.log("[DEBUG] Panels found:", JSON.stringify(panelData));
@@ -138,7 +138,7 @@ async function main() {
     sections: document.querySelectorAll('[data-slot="tree-section-row"]').length,
     items: document.querySelectorAll('[data-slot="tree-item-row"]').length,
     contents: document.querySelectorAll('[data-slot="tree-content"]').length,
-    lines: document.querySelectorAll('.bg-muted-foreground\\/40').length,
+    lines: document.querySelectorAll(".bg-muted-foreground\\/40").length,
   }));
   console.log("[DEBUG] Sketchpad tree elements:", JSON.stringify(treeCount));
 

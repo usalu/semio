@@ -23,11 +23,7 @@
       "passes": true,
       "notes": "",
       "dependsOn": [],
-      "labels": [
-        "assets",
-        "contracts",
-        "fixtures"
-      ],
+      "labels": ["assets", "contracts", "fixtures"],
       "completionNotes": "Completed by agent"
     },
     {
@@ -50,14 +46,8 @@
       "priority": 2,
       "passes": true,
       "notes": "",
-      "dependsOn": [
-        "US-001"
-      ],
-      "labels": [
-        "graphql",
-        "contracts",
-        "ipc"
-      ],
+      "dependsOn": ["US-001"],
+      "labels": ["graphql", "contracts", "ipc"],
       "completionNotes": "Completed by agent"
     },
     {
@@ -80,14 +70,8 @@
       "priority": 3,
       "passes": true,
       "notes": "",
-      "dependsOn": [
-        "US-002"
-      ],
-      "labels": [
-        "rust",
-        "core",
-        "async"
-      ],
+      "dependsOn": ["US-002"],
+      "labels": ["rust", "core", "async"],
       "completionNotes": "Completed by agent"
     },
     {
@@ -110,14 +94,8 @@
       "priority": 4,
       "passes": true,
       "notes": "",
-      "dependsOn": [
-        "US-003"
-      ],
-      "labels": [
-        "rust",
-        "persistence",
-        "backbone"
-      ],
+      "dependsOn": ["US-003"],
+      "labels": ["rust", "persistence", "backbone"],
       "completionNotes": "Completed by agent"
     },
     {
@@ -139,16 +117,8 @@
       "priority": 5,
       "passes": true,
       "notes": "",
-      "dependsOn": [
-        "US-002",
-        "US-003",
-        "US-004"
-      ],
-      "labels": [
-        "rust",
-        "graphql",
-        "async-graphql"
-      ],
+      "dependsOn": ["US-002", "US-003", "US-004"],
+      "labels": ["rust", "graphql", "async-graphql"],
       "completionNotes": "Completed by agent"
     },
     {
@@ -170,15 +140,8 @@
       "priority": 6,
       "passes": true,
       "notes": "",
-      "dependsOn": [
-        "US-005"
-      ],
-      "labels": [
-        "typescript",
-        "js",
-        "rxjs",
-        "facade"
-      ],
+      "dependsOn": ["US-005"],
+      "labels": ["typescript", "js", "rxjs", "facade"],
       "completionNotes": "Completed by agent"
     },
     {
@@ -202,15 +165,8 @@
       "priority": 7,
       "passes": true,
       "notes": "",
-      "dependsOn": [
-        "US-006"
-      ],
-      "labels": [
-        "typescript",
-        "react",
-        "hooks",
-        "useSyncExternalStore"
-      ],
+      "dependsOn": ["US-006"],
+      "labels": ["typescript", "react", "hooks", "useSyncExternalStore"],
       "completionNotes": "Completed by agent"
     },
     {
@@ -234,16 +190,8 @@
       "priority": 8,
       "passes": true,
       "notes": "",
-      "dependsOn": [
-        "US-004",
-        "US-007"
-      ],
-      "labels": [
-        "sketchpad",
-        "integration",
-        "ui",
-        "e2e"
-      ],
+      "dependsOn": ["US-004", "US-007"],
+      "labels": ["sketchpad", "integration", "ui", "e2e"],
       "completionNotes": "Completed by agent"
     }
   ],

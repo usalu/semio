@@ -1,10 +1,7 @@
 import fs from "node:fs";
 
 const idx = fs.readFileSync("compose/js/index.ts", "utf8");
-const chunk = fs.readFileSync(
-  ".repo/🎫/26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES/merged-wasm-chunk.txt",
-  "utf8",
-);
+const chunk = fs.readFileSync(".repo/🎫/26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES/merged-wasm-chunk.txt", "utf8");
 const startMark = "//#region 🧩WasmGraphNamespace";
 const endMark = "//#endregion 🧷WasmOnlyTypesReexport";
 const i0 = idx.indexOf(startMark);

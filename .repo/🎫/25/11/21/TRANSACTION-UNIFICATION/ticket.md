@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Transaction Pattern Unification - COMPLETED
 
 ## Summary
@@ -57,11 +58,11 @@ const { startTransaction, finalizeTransaction, abortTransaction } = useKitAppCom
 // Pattern 2 - Transaction object
 const { startTransaction, finalizeTransaction, abortTransaction } = kitCommands || {};
 <Input
-  transaction={{
-    start: () => startTransaction?.("id"),
-    finalize: () => finalizeTransaction?.("id"),
-    abort: () => abortTransaction?.("id"),
-  }}
+ transaction={{
+  start: () => startTransaction?.("id"),
+  finalize: () => finalizeTransaction?.("id"),
+  abort: () => abortTransaction?.("id"),
+ }}
 />;
 ```
 

@@ -7,6 +7,7 @@ goal: SKETCHPAD-PIECE-CREATION
 ## Summary
 
 Research complete: Documented full piece creation flow, model resolution, scene rendering, test structure, found 5 inconsistencies.
+
 ## Findings
 
 ### 1. Piece Creation Logic (addPiece / createPiece)
@@ -32,6 +33,7 @@ Research complete: Documented full piece creation flow, model resolution, scene 
    - Creates piece: `{ guid: guid(), type: { guid: type.guid }, center, plane }`
 
 **Command chain:**
+
 - `useDesignAppAddPiece()` → `Design.tsx:2580` → `store.execute("compose.designApp.addPiece", ...)`
 - `"compose.designApp.addPiece"` handler → `Design.tsx:785` → returns `kitDiff` with `pieces.added: [piece]`
 - `kitDiff` applied via `kitStore.change(result.kitDiff)` → `Design.tsx:1371-1372`
@@ -39,32 +41,38 @@ Research complete: Documented full piece creation flow, model resolution, scene 
 - `DesignStore.change()` at line 5270 calls `this.createPiece(piece)` for each `diff.pieces.added`
 
 **Alternate path: `compose.kit.addPiece`** — `Sketchpad.tsx:7984`
+
 - Lower-level command used by `kitStore.execute()`
 - Auto-adds default plane `{ origin: {0,0,0}, xAxis: {1,0,0}, yAxis: {0,1,0} }` if piece has no `plane` AND is not part of existing connections
 
 **Y.js persistence:**
+
 - `DesignStore.createPiece()` at `Sketchpad.tsx:5123-5128`
 - Creates `Y.Map` for piece, pushes to `yPieces` array
-- `PieceStore` constructor at `Sketchpad.tsx:3764-3827` stores: guid, id_, type, name, scale, isHidden, isLocked, color, description, plane, center, mirrorPlane, attributes
+- `PieceStore` constructor at `Sketchpad.tsx:3764-3827` stores: guid, id\_, type, name, scale, isHidden, isLocked, color, description, plane, center, mirrorPlane, attributes
 
 ### 2. Placement Data (Plane/Center) in Piece Creation
 
 **Plane** — 3D coordinate system placed on the piece:
+
 ```
 { origin: { x, y, z }, xAxis: { x, y, z }, yAxis: { x, y, z } }
 ```
 
 **Center** — 2D diagram coordinate:
+
 ```
 { u: number, v: number }
 ```
 
 **All three UI entry points provide BOTH plane and center:**
+
 - Diagram drop: `Design.tsx:7807-7813` — `plane` and `center` computed from viewport coords
 - Scene drop: `Design.tsx:9528-9530` — `plane` and `center` computed from camera ray
 - Workbench button: `Design.tsx:10353-10357` — `center={u:0,v:0}`, `plane` derived
 
 **Fallback plane for rendering** (`useFlatPiecePlane` at `Sketchpad.tsx:4150`):
+
 - Uses `piecesMetadata()` from `compose.ts:8171` which flattens the design via `flattenDesign(kit, designGuid)`
 - Falls back to `{ origin: {0,0,0}, xAxis: {1,0,0}, yAxis: {0,1,0} }`
 
@@ -73,6 +81,7 @@ Research complete: Documented full piece creation flow, model resolution, scene 
 ### 3. Scene Piece Rendering
 
 **Component document:**
+
 - `ModelDesign` (`Design.tsx:9370-9458`) — Top-level scene design renderer
   - Iterates `flatDesign.pieces` and wraps each in `PieceScopeProvider` + `ModelPiece`
 - `ModelPiece` (`Design.tsx:9190-9366`) — Individual piece 3D renderer
@@ -92,6 +101,7 @@ Research complete: Documented full piece creation flow, model resolution, scene 
 - `GLTFMesh`/`FBXMesh`/`OBJMesh` (`Design.tsx:8989-9097`) — Load, clone, apply rotation `toComposeRotation()`, apply plaster material, support highlight color
 
 **Scene container:**
+
 - `DesignAppScene` (`Design.tsx:9458+`) — Wraps scene with drop zone, camera sync, fullscreen toggle
 - Uses `<Scene>` from `elements.tsx:6516` (wraps `<Canvas>` from react-three-fiber)
 
@@ -108,12 +118,14 @@ Research complete: Documented full piece creation flow, model resolution, scene 
 5. **Supported formats**: `SUPPORTED_3D_EXTENSIONS` at `compose.ts:4159+`: gltf, glb, fbx, obj, dae, 3ds, stl, ply, usdz, vrm, ifc, 3mf, amf
 
 **In Type.tsx** (`Type.tsx:1617-1660`): More elaborate resolution considering:
+
 - Explicit `selectedModelGuid`
 - Manual `selectedModelTags`
 - Type concepts (`typeConcepts`)
 - Default/first fallback
 
 **In Design.tsx PieceMesh** (`Design.tsx:9121-9152`): Simpler resolution:
+
 - Uses `selectedModelTags` from `useDesignAppSelectedModelTags()`
 - Calls `selectBestModel(type.models, tagsForType)`
 
@@ -124,6 +136,7 @@ Research complete: Documented full piece creation flow, model resolution, scene 
 The `read_file` tool returns empty due to file size, but `sed`/`grep` confirm the content.
 
 **Key components in Design.tsx:**
+
 - `DesignDiagram` (line ~7428) — ReactFlow diagram view
 - `ModelPiece` (line ~9190) — 3D piece renderer
 - `ModelDesign` (line ~9370) — Scene design container
@@ -133,6 +146,7 @@ The `read_file` tool returns empty due to file size, but `sed`/`grep` confirm th
 - Command handlers (lines 674-1114)
 
 **Old files exist but are NOT used:**
+
 - `Desing.tsx.old` (typo in name) — 241 lines, old DesignEditor with dnd-kit
 - `Design.Details.tsx.old` — old details panel
 - `Design.Diagram.tsx.old` — old diagram
@@ -143,6 +157,7 @@ The `read_file` tool returns empty due to file size, but `sed`/`grep` confirm th
 **File**: `compose/js/sketchpad.test.ts` — **4,598 lines** (Playwright e2e tests)
 
 **Test sections:**
+
 - `test("Home", ...)` — line 873 (180s timeout)
 - `test("Kit", ...)` — line 1038 (180s timeout)
 - `test("Type", ...)` — line 1751 (120s timeout)
@@ -163,6 +178,7 @@ The `read_file` tool returns empty due to file size, but `sed`/`grep` confirm th
    - Asserts: piece count +1, typeGuid matches, plane not null, center = {u:0, v:0}, model resolution works
 
 **Test helpers:**
+
 - `getDesignPieces(page)` — line 608: evaluates store snapshot to get pieces with guid, name, plane, center, typeGuid
 - `getSceneModelResolutionForPiece(page, pieceGuid)` — line 635: evaluates store to check model resolution chain (type → model → file)
 

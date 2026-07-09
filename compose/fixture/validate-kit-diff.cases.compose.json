@@ -147,9 +147,7 @@
         "expectOk": false,
         "errorCodes": {
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-          "items": [
-            "kitdiff.update.missing-target"
-          ]
+          "items": ["kitdiff.update.missing-target"]
         },
         "warningCodes": {
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
@@ -179,9 +177,7 @@
         },
         "warningCodes": {
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-          "items": [
-            "kitdiff.remove.missing-target"
-          ]
+          "items": ["kitdiff.remove.missing-target"]
         },
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
       },
@@ -223,9 +219,7 @@
         "expectOk": false,
         "errorCodes": {
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-          "items": [
-            "kitdiff.ref.piece-type-missing"
-          ]
+          "items": ["kitdiff.ref.piece-type-missing"]
         },
         "warningCodes": {
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
@@ -268,9 +262,7 @@
         },
         "warningCodes": {
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-          "items": [
-            "kitdiff.cycle.noop-restore"
-          ]
+          "items": ["kitdiff.cycle.noop-restore"]
         },
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
       }

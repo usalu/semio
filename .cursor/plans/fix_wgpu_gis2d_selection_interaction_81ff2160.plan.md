@@ -2,30 +2,30 @@
 name: Fix wgpu gis2d selection interaction
 overview: Diagnose and restore premigration-parity feature selection (click, rectangle marquee, lasso marquee, with default/additive/subtractive/invertive modes and partial/inclusive coverage) in the wgpu-native gis2d map, which currently does not react to clicks or drag-rectangles even though hover already works correctly.
 todos:
-  - id: instrument
-    content: Add temporary [DEBUG] logs across pointer_down/up, query_map_feature_hits, command dispatch, plugin handle_command, sync_map_host
-    status: cancelled
-  - id: reproduce
-    content: Rebuild/serve wgpu gis2d playground and reproduce click, rectangle (both drag directions), lasso, modifier-merge selection while capturing logs
-    status: completed
-  - id: diagnose
-    content: Pinpoint exact stage where selection interaction breaks from captured logs
-    status: completed
-  - id: fix-modifiers
-    content: Swap modifiers.ctrl for modifiers.ctrl_or_meta() in gis_map_pointer_down call site for Cmd/Ctrl parity
-    status: completed
-  - id: fix-root-cause
-    content: Apply the fix for the diagnosed root cause of click/rectangle selection not reacting
-    status: completed
-  - id: verify-vocabulary
-    content: Manually verify full method/mode/coverage matrix (rectangle, lasso, default, additive, subtractive, invertive, partial, inclusive) matches premigration
-    status: completed
-  - id: cleanup-tests
-    content: Remove debug logs, extend existing gis2d-plugin/gis_2d tests, rebuild and re-verify with evidence
-    status: completed
-  - id: ticket
-    content: Reopen and close MAP-WGPU-RENDERER-PARITY ticket with summary of the selection-interaction fix
-    status: completed
+ - id: instrument
+   content: Add temporary [DEBUG] logs across pointer_down/up, query_map_feature_hits, command dispatch, plugin handle_command, sync_map_host
+   status: cancelled
+ - id: reproduce
+   content: Rebuild/serve wgpu gis2d playground and reproduce click, rectangle (both drag directions), lasso, modifier-merge selection while capturing logs
+   status: completed
+ - id: diagnose
+   content: Pinpoint exact stage where selection interaction breaks from captured logs
+   status: completed
+ - id: fix-modifiers
+   content: Swap modifiers.ctrl for modifiers.ctrl_or_meta() in gis_map_pointer_down call site for Cmd/Ctrl parity
+   status: completed
+ - id: fix-root-cause
+   content: Apply the fix for the diagnosed root cause of click/rectangle selection not reacting
+   status: completed
+ - id: verify-vocabulary
+   content: Manually verify full method/mode/coverage matrix (rectangle, lasso, default, additive, subtractive, invertive, partial, inclusive) matches premigration
+   status: completed
+ - id: cleanup-tests
+   content: Remove debug logs, extend existing gis2d-plugin/gis_2d tests, rebuild and re-verify with evidence
+   status: completed
+ - id: ticket
+   content: Reopen and close MAP-WGPU-RENDERER-PARITY ticket with summary of the selection-interaction fix
+   status: completed
 isProject: false
 ---
 

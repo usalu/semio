@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - Sketchpad root/canvas containers could render without a guaranteed base surface fill.
@@ -21,6 +22,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Restore base background for Sketchpad canvas

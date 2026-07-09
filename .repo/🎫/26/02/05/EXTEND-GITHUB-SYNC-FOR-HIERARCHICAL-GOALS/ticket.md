@@ -7,6 +7,7 @@ goal: AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI
 ## Summary
 
 Implemented three-tier hierarchical GitHub sync: root goals as milestones, first-gen children as issues with milestone, deeper goals as sub-issues without milestone. Fixed milestone lookup bug (gh CLI needs title not number). Migrated all existing goals, cleaned non-root goal.json files, deleted orphaned milestones.
+
 ## Changes
 
 - `GoalGithubData` struct: added `Issue` field for child goal issue URLs

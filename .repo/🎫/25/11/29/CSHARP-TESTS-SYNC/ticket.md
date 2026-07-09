@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The C# codebase was out of date compared to the JavaScript/TypeScript implementation. Schema mismatches existed in diff classes, and tests were not passing.
@@ -75,6 +76,7 @@ All 62 tests pass on both frameworks:
 ## Log
 
 ## Summary
+
 # Summary
 
 Sync C# unit tests with JS fixtures and fix all test failures

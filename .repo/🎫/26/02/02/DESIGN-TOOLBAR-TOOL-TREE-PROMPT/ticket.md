@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 - [x] Create a professional prompt for redesigning the toolbar into a clustered tool tree.
 - [x] Generate a cross-app implementation plan for clustering toolbar tools into a hierarchical tooltree with expandable subtools.
 - [x] Produce an extremely detailed execution plan for cross-app toolbar tooltree architecture and rollout.
@@ -10,6 +11,7 @@
 - [x] Add unit coverage for strategy snap points and anchor resolution, refresh Playwright shape/endpoint assertions, and update README/AGENTS with the finalized mechanism.
 
 ## Changes
+
 - Added a design prompt for a hierarchical toolbar-to-tooltree UX refactor with expandable subtools.
 - Added a phased cross-app design/implementation plan for moving from flat toolbar actions to clustered parent/subtool groups.
 - Expanded the plan into a full implementation blueprint with detailed inventory, canonical interaction behavior, filtering architecture, layout contract, phased execution, and measurable acceptance metrics.
@@ -34,15 +36,19 @@
 - Updated `README.md` (`# 📦 Bundles`) and `AGENTS.md` (`Business Logic -> Diagrams`, `UI/UX -> Sketchpad -> Kit Editor`, `# Codebase`) with strategy registry and snap-point routing ownership.
 
 ## Log
+
 ### User Request
+
 Generate a professional prompt to design a tooltree out of the toolbar where tools are currently spread across the toolbar and should be clustered and separated, with parent tool click revealing subtools such as filters.
 
 ### Response Draft
+
 Design a professional UX and interaction architecture that transforms the current flat toolbar into a hierarchical tool tree.  
 Current state: all tools are spread in one toolbar and difficult to scan.  
 Target state: tools are grouped into clear parent clusters, and selecting a parent tool reveals contextual subtools (for example: **Filter** → **Filter Design**, **Filter Type**, etc.).
 
 Deliverables:
+
 1. **Tool Tree Information Architecture**
    - Define parent tool groups and child subtools.
    - Propose intuitive naming and grouping logic.
@@ -69,6 +75,7 @@ Deliverables:
    - Fast interaction with no unnecessary steps.
 
 Please provide:
+
 - A proposed tooltree structure (parent → subtools)
 - A short user flow for common actions
 - A wireframe-level layout description
@@ -76,9 +83,11 @@ Please provide:
 - Rationale for why this structure improves usability over the current flat toolbar
 
 ### User Follow-up Request
+
 Generate a concrete plan to design a tooltree inside the existing toolbar across all apps. Current tools are spread across the toolbar; target is clustering and separation so clicking one tool opens subtools (example: Filter -> Filter Design, Filter Type).
 
 ### Response Plan
+
 1. Inventory all toolbar tools per app and normalize them into shared parent groups (Selection, Filter, Create, View, Actions).
 2. Define one canonical tooltree interaction model for all apps (expand/collapse triggers, keyboard navigation, active parent/subtool states, focus return).
 3. Specify the filtering branch as a dedicated parent with explicit subtools (Filter Design, Filter Type, Filter Status, Reset) and selected-state indicators.
@@ -87,9 +96,11 @@ Generate a concrete plan to design a tooltree inside the existing toolbar across
 6. Validate with acceptance metrics: fewer visible top-level tools, preserved feature parity, deterministic navigation, and improved scanability.
 
 ### User Follow-up Request
+
 Make an extremely detailed plan for all six workstreams: inventory/taxonomy, interaction model, filtering cluster, layout contract, phased implementation, and completion criteria.
 
 ### Response Plan (Extremely Detailed)
+
 1. Added scope and baseline constraints that preserve existing toolbar shell/panel behavior while moving internal controls to a parent/subtool tooltree.
 2. Built a per-app inventory with section ids, control behaviors, and state sources for Home, Kit, Design, Type, Feedback, plus Docs/Quality placeholders.
 3. Defined a canonical taxonomy (`Selection`, `Filter`, `Create`, `View`, `Actions`) and mapped every app’s current controls to that taxonomy.
@@ -100,9 +111,11 @@ Make an extremely detailed plan for all six workstreams: inventory/taxonomy, int
 8. Added measurable completion criteria for top-level density reduction, scanability improvement, deterministic keyboard behavior, accessibility compliance, and full feature parity.
 
 ### User Follow-up Request
+
 Start implementing the plan.
 
 ### Response Implementation (Phase Start)
+
 1. Added toolbar parent metadata support by extending `PanelSection` with `toolbarGroup` (`id`, `labelId`, `order`) in shared sketchpad types.
 2. Implemented grouped toolbar rendering in `Sketchpad.tsx`:
    - grouped sections by `toolbarGroup.id`
@@ -121,9 +134,11 @@ Start implementing the plan.
 7. Verified JSON locale validity and ran TypeScript compile check; compile currently fails due broad pre-existing repository type errors unrelated to this toolbar refactor.
 
 ### User Follow-up Request
+
 Create a plan to change the visual look of Kit editor diagram nodes and edges so each node shape exposes N snapping points and edges connect to the nearest snapping points. Required initial mapping: Design=circle (4 points), Type=rectangle (4 mid-edge points), File=triangle (3 points), all others=long rectangle (4 points), with a strategy architecture for future shapes.
 
 ### Response Plan
+
 1. Introduce a shape strategy contract and registry for kit diagram node kinds.
 2. Map current kinds to four initial shape strategies (circle, rectangle, triangle, long rectangle) with explicit snap-point definitions.
 3. Refactor node rendering to consume strategy shape output while preserving current interaction states.
@@ -133,9 +148,11 @@ Create a plan to change the visual look of Kit editor diagram nodes and edges so
 7. Update `README.md` and `AGENTS.md` after implementation to document the finalized mechanism.
 
 ### User Follow-up Request
+
 Implement the 10-step shape strategy and snap-point migration plan (geometry engine, registry, visuals, static/preview/proximity routing, tests, docs, and incremental delivery).
 
 ### Response Implementation (Completed)
+
 1. Implemented the shape strategy contract and registry in `js/compose/sketchpad/kitSelectionHelpers.ts`:
    - deterministic strategy ids (`circle`, `rectangle`, `triangle`, `long-rectangle`),
    - per-strategy frame dimensions and render payloads,

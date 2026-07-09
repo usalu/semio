@@ -106,11 +106,7 @@
             "max_results": 3
           },
           "tool_response": {
-            "matches": [
-              "ListMcpResourcesTool",
-              "ReadMcpResourceTool",
-              "mcp__repo__extract"
-            ],
+            "matches": ["ListMcpResourcesTool", "ReadMcpResourceTool", "mcp__repo__extract"],
             "query": "repo mcp tools",
             "total_deferred_tools": 69
           },
@@ -129,11 +125,7 @@
         "name": "ToolSearch",
         "parent": "",
         "response": {
-          "matches": [
-            "ListMcpResourcesTool",
-            "ReadMcpResourceTool",
-            "mcp__repo__extract"
-          ],
+          "matches": ["ListMcpResourcesTool", "ReadMcpResourceTool", "mcp__repo__extract"],
           "query": "repo mcp tools",
           "total_deferred_tools": 69
         },
@@ -194,10 +186,7 @@
             "max_results": 2
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__tree",
-              "mcp__repo__extract"
-            ],
+            "matches": ["mcp__repo__tree", "mcp__repo__extract"],
             "query": "repo tree",
             "total_deferred_tools": 69
           },
@@ -216,10 +205,7 @@
         "name": "ToolSearch",
         "parent": "",
         "response": {
-          "matches": [
-            "mcp__repo__tree",
-            "mcp__repo__extract"
-          ],
+          "matches": ["mcp__repo__tree", "mcp__repo__extract"],
           "query": "repo tree",
           "total_deferred_tools": 69
         },
@@ -436,10 +422,7 @@
           },
           "tool_response": {
             "mode": "files_with_matches",
-            "filenames": [
-              "repo/cli/main_test.go",
-              "repo/cli/main.go"
-            ],
+            "filenames": ["repo/cli/main_test.go", "repo/cli/main.go"],
             "numFiles": 2
           },
           "tool_use_id": "toolu_0164SdLMqGr1ZdFHvJXpyk5X"
@@ -919,9 +902,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅repo🗃️⛓️‍💥🗃️🧑‍💻🗃️26🗃️03🗃️08🗃️0f3901a546674f83bbd38c6f249ff3ac⚙️session📌1📌80"
-        ],
+        "ranges": ["🛅repo🗃️⛓️‍💥🗃️🧑‍💻🗃️26🗃️03🗃️08🗃️0f3901a546674f83bbd38c6f249ff3ac⚙️session📌1📌80"],
         "second": "🎆26🌙03☀️08⏰18⌚06⏱️54",
         "session": "⚪cdbede17ee644e89abbcc09aaf1ed210",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/cdbede17-ee64-4e89-abbc-c09aaf1ed210.jsonl"
@@ -955,9 +936,7 @@
         "error": "File does not exist. Note: your current working directory is /workspaces/semio.",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅repo🗃️⛓️‍💥🗃️🧑‍💻🗃️26🗃️03🗃️08🗃️0f3901a546674f83bbd38c6f249ff3ac⚙️session📌1📌80"
-        ],
+        "ranges": ["🛅repo🗃️⛓️‍💥🗃️🧑‍💻🗃️26🗃️03🗃️08🗃️0f3901a546674f83bbd38c6f249ff3ac⚙️session📌1📌80"],
         "second": "🎆26🌙03☀️08⏰18⌚07⏱️11",
         "session": "⚪cdbede17ee644e89abbcc09aaf1ed210",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/cdbede17-ee64-4e89-abbc-c09aaf1ed210.jsonl"
@@ -1110,9 +1089,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅repo🗃️⚡🗃️🤖🗃️26🗃️03🗃️08🗃️0f3901a546674f83bbd38c6f249ff3ac⚙️session📌1📌80"
-        ],
+        "ranges": ["🛅repo🗃️⚡🗃️🤖🗃️26🗃️03🗃️08🗃️0f3901a546674f83bbd38c6f249ff3ac⚙️session📌1📌80"],
         "second": "🎆26🌙03☀️08⏰18⌚07⏱️52",
         "session": "⚪cdbede17ee644e89abbcc09aaf1ed210",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/cdbede17-ee64-4e89-abbc-c09aaf1ed210.jsonl"
@@ -1153,9 +1130,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅repo🗃️⚡🗃️🤖🗃️26🗃️03🗃️08🗃️0f3901a546674f83bbd38c6f249ff3ac⚙️session📌1📌80"
-        ],
+        "ranges": ["🛅repo🗃️⚡🗃️🤖🗃️26🗃️03🗃️08🗃️0f3901a546674f83bbd38c6f249ff3ac⚙️session📌1📌80"],
         "second": "🎆26🌙03☀️08⏰18⌚08⏱️05",
         "session": "⚪cdbede17ee644e89abbcc09aaf1ed210",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/cdbede17-ee64-4e89-abbc-c09aaf1ed210.jsonl"
@@ -1515,9 +1490,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰repo⌨️cli💻main📌39359📌39558"
-        ],
+        "ranges": ["🧰repo⌨️cli💻main📌39359📌39558"],
         "second": "🎆26🌙03☀️08⏰18⌚10⏱️22",
         "session": "⚪cdbede17ee644e89abbcc09aaf1ed210",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/cdbede17-ee64-4e89-abbc-c09aaf1ed210.jsonl"
@@ -1597,9 +1570,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰repo⌨️cli💻main📌39359📌39558"
-        ],
+        "ranges": ["🧰repo⌨️cli💻main📌39359📌39558"],
         "second": "🎆26🌙03☀️08⏰18⌚10⏱️35",
         "session": "⚪cdbede17ee644e89abbcc09aaf1ed210",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/cdbede17-ee64-4e89-abbc-c09aaf1ed210.jsonl"
@@ -1735,9 +1706,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰repo📚go💻events📌1📌333"
-        ],
+        "ranges": ["🧰repo📚go💻events📌1📌333"],
         "second": "🎆26🌙03☀️08⏰18⌚11⏱️02",
         "session": "⚪cdbede17ee644e89abbcc09aaf1ed210",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/cdbede17-ee64-4e89-abbc-c09aaf1ed210.jsonl"
@@ -1883,9 +1852,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰repo📚go💻events📌1📌333"
-        ],
+        "ranges": ["🧰repo📚go💻events📌1📌333"],
         "second": "🎆26🌙03☀️08⏰18⌚11⏱️13",
         "session": "⚪cdbede17ee644e89abbcc09aaf1ed210",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/cdbede17-ee64-4e89-abbc-c09aaf1ed210.jsonl"
@@ -2216,9 +2183,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰repo⌨️cli💻main📌38300📌38399"
-        ],
+        "ranges": ["🧰repo⌨️cli💻main📌38300📌38399"],
         "second": "🎆26🌙03☀️08⏰18⌚13⏱️07",
         "session": "⚪cdbede17ee644e89abbcc09aaf1ed210",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/cdbede17-ee64-4e89-abbc-c09aaf1ed210.jsonl"
@@ -2266,9 +2231,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰repo⌨️cli💻main📌38300📌38399"
-        ],
+        "ranges": ["🧰repo⌨️cli💻main📌38300📌38399"],
         "second": "🎆26🌙03☀️08⏰18⌚13⏱️20",
         "session": "⚪cdbede17ee644e89abbcc09aaf1ed210",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/cdbede17-ee64-4e89-abbc-c09aaf1ed210.jsonl"
@@ -2377,9 +2340,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰repo⌨️cli💻main📌39255📌39354"
-        ],
+        "ranges": ["🧰repo⌨️cli💻main📌39255📌39354"],
         "second": "🎆26🌙03☀️08⏰18⌚14⏱️12",
         "session": "⚪cdbede17ee644e89abbcc09aaf1ed210",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/cdbede17-ee64-4e89-abbc-c09aaf1ed210.jsonl"
@@ -2427,9 +2388,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰repo⌨️cli💻main📌39255📌39354"
-        ],
+        "ranges": ["🧰repo⌨️cli💻main📌39255📌39354"],
         "second": "🎆26🌙03☀️08⏰18⌚14⏱️33",
         "session": "⚪cdbede17ee644e89abbcc09aaf1ed210",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/cdbede17-ee64-4e89-abbc-c09aaf1ed210.jsonl"
@@ -2613,9 +2572,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰repo⌨️cli💻main📌38234📌38313"
-        ],
+        "ranges": ["🧰repo⌨️cli💻main📌38234📌38313"],
         "second": "🎆26🌙03☀️08⏰18⌚16⏱️10",
         "session": "⚪cdbede17ee644e89abbcc09aaf1ed210",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/cdbede17-ee64-4e89-abbc-c09aaf1ed210.jsonl"
@@ -2667,9 +2624,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰repo⌨️cli💻main📌38234📌38313"
-        ],
+        "ranges": ["🧰repo⌨️cli💻main📌38234📌38313"],
         "second": "🎆26🌙03☀️08⏰18⌚16⏱️22",
         "session": "⚪cdbede17ee644e89abbcc09aaf1ed210",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/cdbede17-ee64-4e89-abbc-c09aaf1ed210.jsonl"
@@ -2798,10 +2753,7 @@
             "max_results": 2
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__extract",
-              "mcp__repo__fix"
-            ],
+            "matches": ["mcp__repo__extract", "mcp__repo__fix"],
             "query": "repo ticket_open",
             "total_deferred_tools": 69
           },
@@ -2820,10 +2772,7 @@
         "name": "ToolSearch",
         "parent": "",
         "response": {
-          "matches": [
-            "mcp__repo__extract",
-            "mcp__repo__fix"
-          ],
+          "matches": ["mcp__repo__extract", "mcp__repo__fix"],
           "query": "repo ticket_open",
           "total_deferred_tools": 69
         },
@@ -2884,9 +2833,7 @@
             "max_results": 2
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_open"
-            ],
+            "matches": ["mcp__repo__ticket_open"],
             "query": "select:mcp__repo__ticket_open",
             "total_deferred_tools": 69
           },
@@ -2905,9 +2852,7 @@
         "name": "ToolSearch",
         "parent": "",
         "response": {
-          "matches": [
-            "mcp__repo__ticket_open"
-          ],
+          "matches": ["mcp__repo__ticket_open"],
           "query": "select:mcp__repo__ticket_open",
           "total_deferred_tools": 69
         },
@@ -3922,9 +3867,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰repo⌨️cli💻main📌39567📌39606"
-        ],
+        "ranges": ["🧰repo⌨️cli💻main📌39567📌39606"],
         "second": "🎆26🌙03☀️08⏰18⌚23⏱️04",
         "session": "⚪cdbede17ee644e89abbcc09aaf1ed210",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/cdbede17-ee64-4e89-abbc-c09aaf1ed210.jsonl"
@@ -3976,9 +3919,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰repo⌨️cli💻main📌39567📌39606"
-        ],
+        "ranges": ["🧰repo⌨️cli💻main📌39567📌39606"],
         "second": "🎆26🌙03☀️08⏰18⌚23⏱️15",
         "session": "⚪cdbede17ee644e89abbcc09aaf1ed210",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/cdbede17-ee64-4e89-abbc-c09aaf1ed210.jsonl"

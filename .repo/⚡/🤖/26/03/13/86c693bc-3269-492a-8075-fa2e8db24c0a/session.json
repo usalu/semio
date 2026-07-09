@@ -15,9 +15,7 @@
           "content": "# 🧾 Specification\n\n## 🕸️ Systems\n\n### Project, Program,  Space,\n\n## 🛠️ Mechanisms\n\n## 📛 Concepts\n\n### Project\n\n### Program\n\n### SPace",
           "hook_event_name": "beforeTabFileRead",
           "cursor_version": "2.6.18",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": null
         }
@@ -29,9 +27,7 @@
         "kind": "agent.tool.search.starting",
         "llm": "tab",
         "parent": "",
-        "ranges": [
-          "🛅🗃️workspaces🗃️compose🗃️composecoda🗃️programming📃agents📌1"
-        ],
+        "ranges": ["🛅🗃️workspaces🗃️compose🗃️composecoda🗃️programming📃agents📌1"],
         "second": "🎆26🌙03☀️13⏰12⌚39⏱️25",
         "session": "⚪86c693bc3269492a8075fa2e8db24c0a"
       },

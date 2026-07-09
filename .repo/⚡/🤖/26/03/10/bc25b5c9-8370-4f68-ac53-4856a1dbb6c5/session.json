@@ -94,9 +94,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌9519📌9750"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌9519📌9750"],
         "second": "🎆26🌙03☀️10⏰00⌚26⏱️28",
         "session": "⚪bc25b5c983704f68ac534856a1dbb6c5"
       },
@@ -132,9 +130,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌9519📌9750"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌9519📌9750"],
         "second": "🎆26🌙03☀️10⏰00⌚26⏱️40",
         "session": "⚪bc25b5c983704f68ac534856a1dbb6c5"
       },
@@ -170,9 +166,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌9750📌9950"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌9750📌9950"],
         "second": "🎆26🌙03☀️10⏰00⌚26⏱️45",
         "session": "⚪bc25b5c983704f68ac534856a1dbb6c5"
       },
@@ -208,9 +202,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌9750📌9950"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌9750📌9950"],
         "second": "🎆26🌙03☀️10⏰00⌚26⏱️56",
         "session": "⚪bc25b5c983704f68ac534856a1dbb6c5"
       },
@@ -318,9 +310,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌9512📌9520"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌9512📌9520"],
         "second": "🎆26🌙03☀️10⏰00⌚27⏱️16",
         "session": "⚪bc25b5c983704f68ac534856a1dbb6c5"
       },
@@ -356,9 +346,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌9512📌9520"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌9512📌9520"],
         "second": "🎆26🌙03☀️10⏰00⌚27⏱️27",
         "session": "⚪bc25b5c983704f68ac534856a1dbb6c5"
       },

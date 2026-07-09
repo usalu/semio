@@ -25,9 +25,7 @@
           "session_id": "c79793bb-3b07-4f33-9696-8b3acd21944d",
           "hook_event_name": "sessionStart",
           "cursor_version": "3.0.13",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": null
         }

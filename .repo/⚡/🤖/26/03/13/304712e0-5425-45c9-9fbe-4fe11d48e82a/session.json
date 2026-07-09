@@ -69,9 +69,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻home📌600📌630"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻home📌600📌630"],
         "second": "🎆26🌙03☀️13⏰22⌚45⏱️52",
         "session": "⚪304712e0542545c99fbe4fe11d48e82a"
       },
@@ -143,9 +141,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻home📌600📌630"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻home📌600📌630"],
         "second": "🎆26🌙03☀️13⏰22⌚46⏱️03",
         "session": "⚪304712e0542545c99fbe4fe11d48e82a"
       },
@@ -315,9 +311,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻home📌40📌300"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻home📌40📌300"],
         "second": "🎆26🌙03☀️13⏰22⌚46⏱️19",
         "session": "⚪304712e0542545c99fbe4fe11d48e82a"
       },
@@ -415,9 +409,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻home📌40📌300"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻home📌40📌300"],
         "second": "🎆26🌙03☀️13⏰22⌚46⏱️25",
         "session": "⚪304712e0542545c99fbe4fe11d48e82a"
       },
@@ -591,9 +583,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻elements📌2340📌2410"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻elements📌2340📌2410"],
         "second": "🎆26🌙03☀️13⏰22⌚46⏱️38",
         "session": "⚪304712e0542545c99fbe4fe11d48e82a"
       },
@@ -665,9 +655,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻elements📌2340📌2410"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻elements📌2340📌2410"],
         "second": "🎆26🌙03☀️13⏰22⌚46⏱️49",
         "session": "⚪304712e0542545c99fbe4fe11d48e82a"
       },
@@ -713,9 +701,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻elements📌2290📌2350"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻elements📌2290📌2350"],
         "second": "🎆26🌙03☀️13⏰22⌚46⏱️52",
         "session": "⚪304712e0542545c99fbe4fe11d48e82a"
       },
@@ -761,9 +747,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻elements📌2290📌2350"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻elements📌2290📌2350"],
         "second": "🎆26🌙03☀️13⏰22⌚46⏱️59",
         "session": "⚪304712e0542545c99fbe4fe11d48e82a"
       },
@@ -835,9 +819,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻elements📌2360📌2400"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻elements📌2360📌2400"],
         "second": "🎆26🌙03☀️13⏰22⌚47⏱️05",
         "session": "⚪304712e0542545c99fbe4fe11d48e82a"
       },
@@ -909,9 +891,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻elements📌2360📌2400"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻elements📌2360📌2400"],
         "second": "🎆26🌙03☀️13⏰22⌚47⏱️15",
         "session": "⚪304712e0542545c99fbe4fe11d48e82a"
       },
@@ -953,9 +933,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌330📌360"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌330📌360"],
         "second": "🎆26🌙03☀️13⏰22⌚47⏱️18",
         "session": "⚪304712e0542545c99fbe4fe11d48e82a"
       },
@@ -997,9 +975,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌330📌360"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌330📌360"],
         "second": "🎆26🌙03☀️13⏰22⌚47⏱️24",
         "session": "⚪304712e0542545c99fbe4fe11d48e82a"
       },
@@ -1035,9 +1011,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js⚙️playwrightconfig📌1📌50"
-        ],
+        "ranges": ["👤compose📚js⚙️playwrightconfig📌1📌50"],
         "second": "🎆26🌙03☀️13⏰22⌚47⏱️25",
         "session": "⚪304712e0542545c99fbe4fe11d48e82a"
       },
@@ -1073,9 +1047,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻home📌663📌680"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻home📌663📌680"],
         "second": "🎆26🌙03☀️13⏰22⌚47⏱️29",
         "session": "⚪304712e0542545c99fbe4fe11d48e82a"
       },
@@ -1146,9 +1118,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻home📌663📌680"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻home📌663📌680"],
         "second": "🎆26🌙03☀️13⏰22⌚47⏱️42",
         "session": "⚪304712e0542545c99fbe4fe11d48e82a"
       },

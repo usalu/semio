@@ -44,9 +44,7 @@
       {
         "name": "selectA",
         "selection": {
-          "accept": [
-            "vertex"
-          ],
+          "accept": ["vertex"],
           "multiple": false,
           "prompt": "Pick first vertex"
         },
@@ -104,9 +102,7 @@
       {
         "name": "selectB",
         "selection": {
-          "accept": [
-            "vertex"
-          ],
+          "accept": ["vertex"],
           "multiple": false,
           "prompt": "Pick second vertex"
         },
@@ -183,9 +179,7 @@
   },
   "commit": {
     "when": "hasBothVertices",
-    "fromStates": [
-      "ready"
-    ],
+    "fromStates": ["ready"],
     "operation": {
       "kind": "action",
       "action": "measure.vertexDistance",

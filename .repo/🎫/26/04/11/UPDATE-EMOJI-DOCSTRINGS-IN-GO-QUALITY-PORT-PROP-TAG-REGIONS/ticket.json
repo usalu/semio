@@ -4,7 +4,5 @@
   "description": "Replace emoji+description on definition docstrings in Quality, Port, Prop and Tag regions of compose/go/main.go",
   "summary": "Replaced 20 emoji+description docstrings in Quality, Port, Prop and Tag regions of compose/go/main.go. All Go tests pass.",
   "goal": "🎯r2603",
-  "sessions": [
-    "⚪d47178df5a004de99ac96db411ff9c91"
-  ]
+  "sessions": ["⚪d47178df5a004de99ac96db411ff9c91"]
 }

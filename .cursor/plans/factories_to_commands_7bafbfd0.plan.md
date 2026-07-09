@@ -2,36 +2,36 @@
 name: factories to commands
 overview: Generalize `FactorySpec` to a `CommandSpec` with declarative selection inputs (raw + analytic topology kinds), per-state `selection.accept` filters, and `CommandResponse { ok, errors, warnings, infos, diff, data }` outputs (compose-style nullable `TopologyDiff`), letting read-only commands like Distance/Area participate in the same pipeline.
 todos:
-  - id: rename
-    content: Rename `factory` → `command` across core/stately/r3f/play + fixtures + schema string + preset keys
-    status: completed
-  - id: diff
-    content: "Add `🧮Diff` region: `EntityDiff`, `*RecordDiff`, `TopologyDiff`, `applyTopologyDiff`, `invertTopologyDiff`, `isEmptyTopologyDiff`"
-    status: completed
-  - id: response
-    content: "Add `📨Response` region: `CommandMessage`, `CommandResponse`, `EMPTY_COMMAND_RESPONSE`"
-    status: completed
-  - id: selection-spec
-    content: "Add `🪪Selection` region + per-state `selection: SelectionSpec` in `CommandSpec.machine.states[*]`; expose `listActiveSelectionAccept`"
-    status: completed
-  - id: kernel-diff
-    content: Extend `KernelAdapter` with `*Diff` writes + `vertexDistance`/`edgeLength`/`faceArea`/`cellVolume`; implement in `BrepjsKernel`
-    status: completed
-  - id: commit-rewrite
-    content: Rewrite `CommandRuntime.commit` to produce `CommandResponse`, apply diff to topology, record `DocumentCommand` with inverse diff; gate `selection.changed` by `selection.accept`
-    status: completed
-  - id: fixtures
-    content: Rename 3 fixtures to `*.command.json`, add `distance.command.json` + `area.command.json`, update `listSpatialCommandPresets` keys q/j/k/d/a
-    status: completed
-  - id: play-app
-    content: Update `play/main.tsx` to consume `CommandResponse` (display `data` for Distance/Area, apply `diff` for write commands), rename symbols
-    status: completed
-  - id: tests
-    content: Extend existing test regions in core/stately/kernel-brepjs to cover diff round-trip, selection filter, distance/area, parity
-    status: completed
-  - id: verify
-    content: "`bun nx run-many -t test -p @spatial/js-core @spatial/js-machine-stately @spatial/js-kernel-brepjs` + manual play-app smoke with `[DEBUG]` logs"
-    status: completed
+ - id: rename
+   content: Rename `factory` → `command` across core/stately/r3f/play + fixtures + schema string + preset keys
+   status: completed
+ - id: diff
+   content: "Add `🧮Diff` region: `EntityDiff`, `*RecordDiff`, `TopologyDiff`, `applyTopologyDiff`, `invertTopologyDiff`, `isEmptyTopologyDiff`"
+   status: completed
+ - id: response
+   content: "Add `📨Response` region: `CommandMessage`, `CommandResponse`, `EMPTY_COMMAND_RESPONSE`"
+   status: completed
+ - id: selection-spec
+   content: "Add `🪪Selection` region + per-state `selection: SelectionSpec` in `CommandSpec.machine.states[*]`; expose `listActiveSelectionAccept`"
+   status: completed
+ - id: kernel-diff
+   content: Extend `KernelAdapter` with `*Diff` writes + `vertexDistance`/`edgeLength`/`faceArea`/`cellVolume`; implement in `BrepjsKernel`
+   status: completed
+ - id: commit-rewrite
+   content: Rewrite `CommandRuntime.commit` to produce `CommandResponse`, apply diff to topology, record `DocumentCommand` with inverse diff; gate `selection.changed` by `selection.accept`
+   status: completed
+ - id: fixtures
+   content: Rename 3 fixtures to `*.command.json`, add `distance.command.json` + `area.command.json`, update `listSpatialCommandPresets` keys q/j/k/d/a
+   status: completed
+ - id: play-app
+   content: Update `play/main.tsx` to consume `CommandResponse` (display `data` for Distance/Area, apply `diff` for write commands), rename symbols
+   status: completed
+ - id: tests
+   content: Extend existing test regions in core/stately/kernel-brepjs to cover diff round-trip, selection filter, distance/area, parity
+   status: completed
+ - id: verify
+   content: "`bun nx run-many -t test -p @spatial/js-core @spatial/js-machine-stately @spatial/js-kernel-brepjs` + manual play-app smoke with `[DEBUG]` logs"
+   status: completed
 isProject: false
 ---
 
@@ -66,19 +66,19 @@ Add a new `🪪Selection` region (before `🗺️Expr`):
 
 ```ts
 export interface SelectionTarget {
-  readonly kind: TopologyEntityKind;
-  readonly id: string;
-  readonly editable: boolean;
-  readonly derivedFrom?: readonly { kind: EditableEntityKind; id: string }[];
+ readonly kind: TopologyEntityKind;
+ readonly id: string;
+ readonly editable: boolean;
+ readonly derivedFrom?: readonly { kind: EditableEntityKind; id: string }[];
 }
 export interface SelectionEvent extends CommandEvent {
-  readonly kind: "selection.changed";
-  readonly targets: readonly SelectionTarget[];
+ readonly kind: "selection.changed";
+ readonly targets: readonly SelectionTarget[];
 }
 export interface SelectionSpec {
-  readonly accept: readonly TopologyEntityKind[];
-  readonly multiple?: boolean;
-  readonly prompt?: string;
+ readonly accept: readonly TopologyEntityKind[];
+ readonly multiple?: boolean;
+ readonly prompt?: string;
 }
 export function filterSelectionTargets(spec: SelectionSpec, targets: readonly SelectionTarget[]): SelectionTarget[];
 export function selectionEventMatches(spec: SelectionSpec, ev: SelectionEvent): boolean;
@@ -88,23 +88,23 @@ Add a new `🧮Diff` region (after `🧱Topology`):
 
 ```ts
 export type VertexRecordDiff = Partial<Omit<VertexRecord, "id">> & { id: VertexRef };
-export type EdgeRecordDiff   = Partial<Omit<EdgeRecord,   "id">> & { id: EdgeRef };
+export type EdgeRecordDiff = Partial<Omit<EdgeRecord, "id">> & { id: EdgeRef };
 // + wire / face / shell / cell / cellComplex / cluster variants
 
 export interface EntityDiff<TAdded, TMod, TId extends string> {
-  readonly added?:    Record<TId, TAdded>;
-  readonly modified?: Record<TId, TMod>;
-  readonly removed?:  readonly TId[];
+ readonly added?: Record<TId, TAdded>;
+ readonly modified?: Record<TId, TMod>;
+ readonly removed?: readonly TId[];
 }
 export interface TopologyDiff {
-  readonly vertices?:      EntityDiff<VertexRecord,      VertexRecordDiff,     VertexRef>;
-  readonly edges?:         EntityDiff<EdgeRecord,        EdgeRecordDiff,       EdgeRef>;
-  readonly wires?:         EntityDiff<WireRecord,        WireRecordDiff,       WireRef>;
-  readonly faces?:         EntityDiff<FaceRecord,        FaceRecordDiff,       FaceRef>;
-  readonly shells?:        EntityDiff<ShellRecord,       ShellRecordDiff,      ShellRef>;
-  readonly cells?:         EntityDiff<CellRecord,        CellRecordDiff,       CellRef>;
-  readonly cellComplexes?: EntityDiff<CellComplexRecord, CellComplexRecordDiff,CellComplexRef>;
-  readonly clusters?:      EntityDiff<ClusterRecord,     ClusterRecordDiff,    ClusterRef>;
+ readonly vertices?: EntityDiff<VertexRecord, VertexRecordDiff, VertexRef>;
+ readonly edges?: EntityDiff<EdgeRecord, EdgeRecordDiff, EdgeRef>;
+ readonly wires?: EntityDiff<WireRecord, WireRecordDiff, WireRef>;
+ readonly faces?: EntityDiff<FaceRecord, FaceRecordDiff, FaceRef>;
+ readonly shells?: EntityDiff<ShellRecord, ShellRecordDiff, ShellRef>;
+ readonly cells?: EntityDiff<CellRecord, CellRecordDiff, CellRef>;
+ readonly cellComplexes?: EntityDiff<CellComplexRecord, CellComplexRecordDiff, CellComplexRef>;
+ readonly clusters?: EntityDiff<ClusterRecord, ClusterRecordDiff, ClusterRef>;
 }
 
 export const EMPTY_TOPOLOGY_DIFF: TopologyDiff;
@@ -116,14 +116,18 @@ export function isEmptyTopologyDiff(d: TopologyDiff): boolean;
 Add a new `📨Response` region (before `📜Command`):
 
 ```ts
-export interface CommandMessage { readonly code: string; readonly message: string; readonly path?: string }
+export interface CommandMessage {
+ readonly code: string;
+ readonly message: string;
+ readonly path?: string;
+}
 export interface CommandResponse<TData = unknown> {
-  readonly ok: boolean;
-  readonly errors:   readonly CommandMessage[];
-  readonly warnings: readonly CommandMessage[];
-  readonly infos:    readonly CommandMessage[];
-  readonly diff: TopologyDiff;
-  readonly data: TData | null;
+ readonly ok: boolean;
+ readonly errors: readonly CommandMessage[];
+ readonly warnings: readonly CommandMessage[];
+ readonly infos: readonly CommandMessage[];
+ readonly diff: TopologyDiff;
+ readonly data: TData | null;
 }
 export const EMPTY_COMMAND_RESPONSE: CommandResponse<null>;
 ```
@@ -143,14 +147,14 @@ Extend `KernelAdapter` in [`spatial/js/core/index.ts`](spatial/js/core/index.ts)
 
 ```ts
 export interface KernelAdapter {
-  // existing methods kept
-  createBoxFromCornersDiff?(input):   Promise<{ diff: TopologyDiff; cell: CellRef }>;
-  extrudeWireDiff?(input):            Promise<{ diff: TopologyDiff; cell: CellRef }>;
-  offsetFacesDiff?(input):            Promise<{ diff: TopologyDiff }>;
-  vertexDistance?(a: VertexRef, b: VertexRef): Promise<number>;
-  edgeLength?(e: EdgeRef): Promise<number>;
-  faceArea?(f: FaceRef):   Promise<number>;
-  cellVolume?(c: CellRef): Promise<number>;
+ // existing methods kept
+ createBoxFromCornersDiff?(input): Promise<{ diff: TopologyDiff; cell: CellRef }>;
+ extrudeWireDiff?(input): Promise<{ diff: TopologyDiff; cell: CellRef }>;
+ offsetFacesDiff?(input): Promise<{ diff: TopologyDiff }>;
+ vertexDistance?(a: VertexRef, b: VertexRef): Promise<number>;
+ edgeLength?(e: EdgeRef): Promise<number>;
+ faceArea?(f: FaceRef): Promise<number>;
+ cellVolume?(c: CellRef): Promise<number>;
 }
 ```
 

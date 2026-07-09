@@ -24,9 +24,7 @@
         },
         "kinds": {
           "kind": "const",
-          "value": [
-            "object"
-          ]
+          "value": ["object"]
         }
       },
       "assignTo": "result"

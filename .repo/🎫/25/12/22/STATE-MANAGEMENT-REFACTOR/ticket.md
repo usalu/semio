@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 # Plan
@@ -12,4 +13,5 @@
 ## Log
 
 ## Summary
+
 # Summary

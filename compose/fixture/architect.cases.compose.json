@@ -116,11 +116,7 @@
                         "theKit": {
                           "kit": {
                             "types": {
-                              "edges": [
-                                { "node": { "id": "ta", "hash": "ha", "name": "KindAlpha" } },
-                                { "node": { "id": "tb", "hash": "hb", "name": "KindBeta" } },
-                                { "node": { "id": "tg", "hash": "hg", "name": "KindGamma" } }
-                              ]
+                              "edges": [{ "node": { "id": "ta", "hash": "ha", "name": "KindAlpha" } }, { "node": { "id": "tb", "hash": "hb", "name": "KindBeta" } }, { "node": { "id": "tg", "hash": "hg", "name": "KindGamma" } }]
                             }
                           }
                         }
@@ -158,9 +154,7 @@
       "name": "memory_call_subscription_session",
       "tier": "memory",
       "query": "CALL subscription.session() YIELD session.id AS id",
-      "graphqlResponses": [
-        { "data": { "session": { "id": "s1", "hash": "h1" } } }
-      ],
+      "graphqlResponses": [{ "data": { "session": { "id": "s1", "hash": "h1" } } }],
       "expect": { "minRows": 1 }
     },
     {

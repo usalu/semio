@@ -4,13 +4,7 @@
   "version": "1.0.0",
   "label": "Plane",
   "description": "Typology produced by surface.plane.",
-  "actions": [
-    "command.finish"
-  ],
-  "interactions": [
-    "surface.plane"
-  ],
-  "primitiveKinds": [
-    "surface"
-  ]
+  "actions": ["command.finish"],
+  "interactions": ["surface.plane"],
+  "primitiveKinds": ["surface"]
 }

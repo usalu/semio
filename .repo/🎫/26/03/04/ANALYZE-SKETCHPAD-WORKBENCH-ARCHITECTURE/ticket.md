@@ -7,6 +7,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Comprehensive analysis of sketchpad workbench architecture. Documented panel system, toolbar, windows, app plugins. Compared with origin/ueli/latest: direct panels replaced by tabbed side panels. All workbench functionality preserved. 0 compilation errors.
+
 ## Analysis
 
 ### Current Architecture
@@ -37,6 +38,7 @@ Comprehensive analysis of sketchpad workbench architecture. Documented panel sys
 #### Layout (Sketchpad.tsx LayoutWrapper, lines 17317-18100)
 
 The `LayoutWrapper` uses `LayoutComponent` from elements.tsx with these props:
+
 - `navbar` — Navbar component with navigation buttons, search, focus, panel toggles, fullscreen
 - `footer` — Footer component
 - `bottomPanel` — console sections (if any)
@@ -62,15 +64,15 @@ Dual-zone: tools zone (left of seam) and settings zone (right of seam). Groups r
 
 #### Per-App Panel Configurations
 
-| App | Panels | Workbench Sections | Toolbar Groups |
-|-----|--------|--------------------|----------------|
-| **Home** | TOOLBAR, DETAILS | — | filter, create |
-| **Kit** | TOOLBAR, DETAILS | — | selection, filter, create |
-| **Design** | WORKBENCH, TOOLS, TOOLBAR, STATS, DETAILS | kit.pieces (types+designs tree), design.windows (WindowLibrary) | selection, filter |
-| **Type** | TOOLS, TOOLBAR, STATS, DETAILS | — | filter, selection, hand, create |
-| **Quality** | WORKBENCH, TOOLS, TOOLBAR, STATS, DETAILS | — | selection, view, actions |
-| **Docs** | WORKBENCH, DETAILS | — | — |
-| **Feedback** | TOOLBAR | — | actions |
+| App          | Panels                                    | Workbench Sections                                              | Toolbar Groups                  |
+| ------------ | ----------------------------------------- | --------------------------------------------------------------- | ------------------------------- |
+| **Home**     | TOOLBAR, DETAILS                          | —                                                               | filter, create                  |
+| **Kit**      | TOOLBAR, DETAILS                          | —                                                               | selection, filter, create       |
+| **Design**   | WORKBENCH, TOOLS, TOOLBAR, STATS, DETAILS | kit.pieces (types+designs tree), design.windows (WindowLibrary) | selection, filter               |
+| **Type**     | TOOLS, TOOLBAR, STATS, DETAILS            | —                                                               | filter, selection, hand, create |
+| **Quality**  | WORKBENCH, TOOLS, TOOLBAR, STATS, DETAILS | —                                                               | selection, view, actions        |
+| **Docs**     | WORKBENCH, DETAILS                        | —                                                               | —                               |
+| **Feedback** | TOOLBAR                                   | —                                                               | actions                         |
 
 #### Windows (Design.tsx)
 
@@ -83,12 +85,14 @@ Dual-zone: tools zone (left of seam) and settings zone (right of seam). Groups r
 #### Design App Workbench Sections (Design.tsx lines 10091-10107)
 
 Two workbench sections registered:
+
 1. `compose.sketchpad.app.kit.pieces` (specificity 20, order 1): PiecesWorkbenchContent — types tree and designs tree with drag-to-add-piece, create child type/design
 2. `compose.sketchpad.app.design.windows` (specificity 20, order 2): WindowLibrary — draggable window templates
 
 #### State Machine (Sketchpad.tsx)
 
 Central XState machine with:
+
 - Sketchpad Machine (line 8973): manages navigation, theme, language, device, expertise, mode, panel sizes, fullscreen, hotkey overrides
 - Per-app state contributed by plugins (designApp, kitApp, typeApp, qualityApp, etc.)
 - Sketchpad Selectors (line 9349): expose state via hooks
@@ -98,6 +102,7 @@ Central XState machine with:
 #### Layout Architecture Change
 
 **OLD code** (origin/ueli/latest): LayoutComponent had dedicated panel props:
+
 - `leftPanel` — direct section rendering for workbench OR tools (priority: tools > workbench)
 - `middlePanel` — direct section rendering for hud OR stats
 - `rightPanel` — direct section rendering for chat OR settings OR details
@@ -107,6 +112,7 @@ Central XState machine with:
 - `hudPanel` — separate HUD panel with its own tabs
 
 **CURRENT code**: LayoutComponent only uses:
+
 - `leftSidePanel` — tabbed side panel (workbench + tools become tabs)
 - `rightSidePanel` — tabbed side panel (details become tab; chat/settings are special modes)
 - `bottomPanel` — console

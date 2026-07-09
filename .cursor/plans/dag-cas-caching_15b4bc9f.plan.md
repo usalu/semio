@@ -2,21 +2,21 @@
 name: dag-cas-caching
 overview: Add in-process content-addressable (Merkle) caching to the neural DAG evaluator, persist it across edits in FlowHost (covering flow and procedural), unify it with reference-set brep-handle garbage collection, and memoize tessellation by handle+tolerance so unchanged branches skip both re-computation and re-meshing.
 todos:
-  - id: neural-cache
-    content: Add NeuralCache (epoch-bounded, thread-safe) + deterministic node_hash + cache-aware evaluate variants in neural/engine/lib.rs; wire into both parallel and sequential paths; extend tests.
-    status: completed
-  - id: flowhost-persist
-    content: Add persistent neural_cache to FlowHost; use cached evaluator in evaluate_internal with begin_epoch/sweep for flow + procedural.
-    status: completed
-  - id: brep-gc
-    content: Add BrepkitKernel::retain + flow_module_brep::retain_geometry_handles; collect live handles from FlowHost outputs and sweep orphaned brep shapes each evaluate.
-    status: completed
-  - id: tess-memo
-    content: Add handle+tolerance mesh memo in flow/module/brep tessellate_geometry_json, evicted together with handle GC (serves both worker paths).
-    status: completed
-  - id: tests
-    content: Extend existing test regions for neural cache, brep retain/mesh-memo, and FlowHost branch-recompute/sweep; run cargo + vitest and verify with temporary [DEBUG] logs.
-    status: completed
+ - id: neural-cache
+   content: Add NeuralCache (epoch-bounded, thread-safe) + deterministic node_hash + cache-aware evaluate variants in neural/engine/lib.rs; wire into both parallel and sequential paths; extend tests.
+   status: completed
+ - id: flowhost-persist
+   content: Add persistent neural_cache to FlowHost; use cached evaluator in evaluate_internal with begin_epoch/sweep for flow + procedural.
+   status: completed
+ - id: brep-gc
+   content: Add BrepkitKernel::retain + flow_module_brep::retain_geometry_handles; collect live handles from FlowHost outputs and sweep orphaned brep shapes each evaluate.
+   status: completed
+ - id: tess-memo
+   content: Add handle+tolerance mesh memo in flow/module/brep tessellate_geometry_json, evicted together with handle GC (serves both worker paths).
+   status: completed
+ - id: tests
+   content: Extend existing test regions for neural cache, brep retain/mesh-memo, and FlowHost branch-recompute/sweep; run cargo + vitest and verify with temporary [DEBUG] logs.
+   status: completed
 isProject: false
 ---
 
@@ -39,8 +39,6 @@ flowchart LR
   host --> gc["retain live brep handles + mesh memo"]
   ev --> tess["worker tessellate (handle+tol memo)"]
 ```
-
-
 
 ## Phase 1 - Neural CAS cache (`neural/engine/lib.rs`)
 
@@ -78,4 +76,3 @@ flowchart LR
 
 - The distributed/two-tier/speculative-prefetch ideas (Redis/S3, prefetch) target multi-machine build systems and do not apply to this single-process WASM worker; the in-process CAS cache + GC + mesh memo is the equivalent realistic win.
 - All edits stay in existing files using regions/subregions; no new files, no migrations.
-

@@ -2,21 +2,21 @@
 name: Expand Nakagin Jack Fixture
 overview: Expand `nakagin-capsule-tower.trinity.json` in place with richer graph data and Jack example queries covering all seven clauses (MATCH, WHERE, RETURN, CREATE, SET, DELETE, MERGE), while preserving existing nodes/ids used by Trinity Rewrite.
 todos:
-  - id: expand-nakagin-json
-    content: Add properties + jack_orphan/jack_prune/jack_spare nodes/edges to nakagin-capsule-tower.trinity.json (preserve existing ids)
-    status: completed
-  - id: preset-example-queries
-    content: Update fixture-slugs.ts default query + TRINITY_JACK_PLAY_EXAMPLE_QUERIES; wire catalogue in jack/play/index.ts
-    status: completed
-  - id: sync-editor-defaults
-    content: Replace hardcoded Jack editor placeholder/fallback in playground renderer with preset constant
-    status: completed
-  - id: extend-tests
-    content: Add jack/play vitest + jack/core DELETE/MERGE tests; verify rewrite/react tests still pass
-    status: completed
-  - id: browser-validate
-    content: Run Jack + Rewrite play in browser and confirm all example queries + rewrite label rule
-    status: completed
+ - id: expand-nakagin-json
+   content: Add properties + jack_orphan/jack_prune/jack_spare nodes/edges to nakagin-capsule-tower.trinity.json (preserve existing ids)
+   status: completed
+ - id: preset-example-queries
+   content: Update fixture-slugs.ts default query + TRINITY_JACK_PLAY_EXAMPLE_QUERIES; wire catalogue in jack/play/index.ts
+   status: completed
+ - id: sync-editor-defaults
+   content: Replace hardcoded Jack editor placeholder/fallback in playground renderer with preset constant
+   status: completed
+ - id: extend-tests
+   content: Add jack/play vitest + jack/core DELETE/MERGE tests; verify rewrite/react tests still pass
+   status: completed
+ - id: browser-validate
+   content: Run Jack + Rewrite play in browser and confirm all example queries + rewrite label rule
+   status: completed
 isProject: false
 ---
 
@@ -27,7 +27,6 @@ isProject: false
 The nakagin graph is the shared default for **Jack play** and **Trinity Rewrite** (`[trinity/fixture/nakagin-capsule-tower.trinity.json](trinity/fixture/nakagin-capsule-tower.trinity.json)` via `[TRINITY_DEFAULT_FIXTURE_JSON](trinity/react/index.tsx)`). Expand it so Jack can exercise every supported clause, without breaking rewrite's `MATCH (a:Piece) WHERE a.name = 'b' SET a.label = ...` flow.
 
 ## Jack feature checklist (in scope)
-
 
 | Feature                      | Example shape                                                                            |
 | ---------------------------- | ---------------------------------------------------------------------------------------- |
@@ -40,7 +39,6 @@ The nakagin graph is the shared default for **Jack play** and **Trinity Rewrite*
 | SET                          | `SET a.label = '...'`, `a.name`, `a.x`, `a.y`                                            |
 | DELETE                       | `MATCH (n:Piece) WHERE n.name = '...' DELETE n`                                          |
 | MERGE                        | `MERGE (a:Piece)-[:Connection]->(b:Piece)` (no-op when edge exists; creates when absent) |
-
 
 Out of scope: `WITH`, `ORDER BY`, `LIMIT`, kindless patterns, edge filters in WHERE.
 
@@ -81,8 +79,6 @@ flowchart TB
   jack_spare["jack_spare"]
 ```
 
-
-
 ## Default and example queries
 
 ### Default nakagin preset
@@ -99,7 +95,6 @@ RETURN a.name, b.name, b.label
 
 Add `TRINITY_JACK_PLAY_EXAMPLE_QUERIES` in `[trinity/jack/play/fixture-slugs.ts](trinity/jack/play/fixture-slugs.ts)` — labeled entries for each remaining clause:
 
-
 | Label        | Query purpose                                                                                                    |
 | ------------ | ---------------------------------------------------------------------------------------------------------------- |
 | Where Or     | `MATCH (a:Piece) WHERE a.name = 't_f0_b_c0' OR a.name = 't_f0_b_c1' RETURN a.name`                               |
@@ -110,7 +105,6 @@ Add `TRINITY_JACK_PLAY_EXAMPLE_QUERIES` in `[trinity/jack/play/fixture-slugs.ts]
 | Create Edge  | `CREATE (a:Piece)-[:Connection]->(b:Piece)` (after MATCH binds `jack_spare` / `jack_orphan` or standalone)       |
 | Delete Leaf  | `MATCH (n:Piece) WHERE n.name = 'jack_prune' DELETE n`                                                           |
 | Merge Edge   | `MERGE (a:Piece)-[:Connection]->(b:Piece)` with prior `MATCH` binding spare→orphan, or document as two-step demo |
-
 
 Wire catalogue in `[trinity/jack/play/index.ts](trinity/jack/play/index.ts)`:
 
@@ -139,4 +133,3 @@ Extend existing test files only:
 - **MERGE** matches structurally — example must use a pattern that is absent in the initial graph (spare→orphan edge) to show create behavior; when present, it is a no-op
 - **DELETE** mutates the fixture in Jack play session — example targets `jack_prune` only
 - Do not rename/remove `b` or existing edge topology — rewrite LHS `a.name = 'b'` depends on it
-

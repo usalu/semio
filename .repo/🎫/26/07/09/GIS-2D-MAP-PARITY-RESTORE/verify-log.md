@@ -29,6 +29,7 @@
 ## Browser smoke (manual, real GPU)
 
 Open GIS 2D app and confirm:
+
 - Raster + vector tiles visible
 - Pan (middle button), wheel zoom, marquee/lasso selection
 - Hover tooltip on positions

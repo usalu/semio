@@ -7,6 +7,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Added all 23 missing German translations to de.json to match en.json
+
 ## Changes
 
 ## Log

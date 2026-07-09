@@ -4,17 +4,7 @@ import { join } from "node:path";
 const root = join(import.meta.dirname, "../../../../../../");
 const dir = join(root, "repo/lib/js/src");
 
-const ORDER = [
-  "breach.ts",
-  "cli.ts",
-  "linter.ts",
-  "script.ts",
-  "dependency-boundary.ts",
-  "policy-runner.ts",
-  "policy-cli.ts",
-  "runner.ts",
-  "bundle-script.ts",
-] as const;
+const ORDER = ["breach.ts", "cli.ts", "linter.ts", "script.ts", "dependency-boundary.ts", "policy-runner.ts", "policy-cli.ts", "runner.ts", "bundle-script.ts"] as const;
 
 function stripFile(src: string, file: string): string {
   const lines = src.split(/\r?\n/);

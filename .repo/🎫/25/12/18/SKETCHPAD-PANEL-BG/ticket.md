@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - Panel containers were rendered without enforcing panel level context and background.
@@ -22,6 +23,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Ensure panels use panel background and panel level context

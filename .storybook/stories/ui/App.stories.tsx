@@ -41,9 +41,7 @@ export const Default: Story = {
             {
               id: "review",
               label: "Review",
-              children: (
-                <Mode windows={[{ id: "preview", children: <div className="flex h-full items-center justify-center">Review Preview</div> }]} activeWindowId="preview" />
-              ),
+              children: <Mode windows={[{ id: "preview", children: <div className="flex h-full items-center justify-center">Review Preview</div> }]} activeWindowId="preview" />,
             },
           ]}
           activeModeId={activeModeId}

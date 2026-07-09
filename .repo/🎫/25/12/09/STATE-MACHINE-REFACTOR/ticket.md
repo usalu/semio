@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 State management refactor started. Components use a mix of:
@@ -102,6 +103,7 @@ All 5 sketchpad tests pass:
 ## Log
 
 ## Summary
+
 # Summary
 
 Refactor state management to triadic hooks and proper state machine

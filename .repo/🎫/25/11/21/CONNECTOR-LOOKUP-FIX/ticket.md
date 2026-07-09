@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Connector Lookup Fix - Nov 21, 2025
 
 ## Problem

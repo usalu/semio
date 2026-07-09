@@ -5,7 +5,5 @@
   "description": "Investigate and fix why Rust tests are not appearing in the VSCode Test Explorer.",
   "summary": "Bulk close",
   "goal": "🎯aioptimizedrepo🎯sandboxedrepo🎯zerotouchdevcontainer",
-  "sessions": [
-    "⚪1a1a212aee684a078bc08dfcca485927"
-  ]
+  "sessions": ["⚪1a1a212aee684a078bc08dfcca485927"]
 }

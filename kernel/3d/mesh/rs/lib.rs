@@ -267,6 +267,24 @@ impl HalfedgeMesh {
         self.recompute_normals()
     }
 
+    pub fn from_indexed_triangles(positions: &[f32], indices: &[u32]) -> MeshResult<Self> {
+        if positions.len() % 3 != 0 {
+            return Err(MeshKernelError::InvalidInput("positions length must be a multiple of 3".into()));
+        }
+        if indices.len() % 3 != 0 {
+            return Err(MeshKernelError::InvalidInput("indices length must be a multiple of 3".into()));
+        }
+        let verts: Vec<[f32; 3]> = positions
+            .chunks_exact(3)
+            .map(|chunk| [chunk[0], chunk[1], chunk[2]])
+            .collect();
+        let faces: Vec<Vec<u32>> = indices
+            .chunks_exact(3)
+            .map(|tri| vec![tri[0], tri[1], tri[2]])
+            .collect();
+        Self::from_faces(&verts, &faces)
+    }
+
     pub fn from_faces(positions: &[[f32; 3]], faces: &[Vec<u32>]) -> MeshResult<Self> {
         let mut mesh = Self::empty();
         for p in positions {
@@ -1578,6 +1596,19 @@ mod tests {
     }
 
     #[test]
+    #[test]
+    fn from_indexed_triangles_builds_triangle_faces() {
+        let positions = vec![
+            0.0, 0.0, 0.0, //
+            1.0, 0.0, 0.0, //
+            0.0, 1.0, 0.0, //
+        ];
+        let indices = vec![0, 1, 2];
+        let mesh = HalfedgeMesh::from_indexed_triangles(&positions, &indices).unwrap();
+        assert_eq!(mesh.vertex_count(), 3);
+        assert_eq!(mesh.face_count(), 1);
+    }
+
     fn triangulate_produces_triangles_only() {
         let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
         mesh.triangulate().unwrap();

@@ -5,10 +5,7 @@
   "label": "ExtrudeCrv",
   "requires": {
     "kernel": {
-      "operations": [
-        "wire.extrudeToSolid",
-        "entity.tessellate"
-      ]
+      "operations": ["wire.extrudeToSolid", "entity.tessellate"]
     }
   },
   "guards": [
@@ -96,18 +93,10 @@
   ],
   "interaction": {
     "spatialGroundPick": true,
-    "pickDisabledStates": [
-      "idle",
-      "select_curves_to_extrude",
-      "committed"
-    ],
-    "groundPointerMoveStates": [
-      "pick_direction"
-    ],
+    "pickDisabledStates": ["idle", "select_curves_to_extrude", "committed"],
+    "groundPointerMoveStates": ["pick_direction"],
     "heightDragStates": [],
-    "verticalRodStates": [
-      "extrusion_distance"
-    ],
+    "verticalRodStates": ["extrusion_distance"],
     "heightConfirmState": null,
     "lengthEntry": [
       {
@@ -148,11 +137,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        0
-                      ]
+                      "value": [0, 0, 0]
                     }
                   },
                   {
@@ -196,10 +181,7 @@
       {
         "name": "select_curves_to_extrude",
         "selection": {
-          "accept": [
-            "wire",
-            "edge"
-          ],
+          "accept": ["wire", "edge"],
           "multiple": true,
           "prompt": "Select curves to extrude"
         },
@@ -300,11 +282,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        1
-                      ]
+                      "value": [0, 0, 1]
                     }
                   },
                   {
@@ -529,11 +507,7 @@
             "text": "Select curves to extrude",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -596,11 +570,7 @@
             "text": "Extrusion distance (Z default, d = direction)",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -723,11 +693,7 @@
             "text": "Pick extrusion direction",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           }
         ]
@@ -736,9 +702,7 @@
   },
   "commit": {
     "when": "hasExtrusionReady",
-    "fromStates": [
-      "committed"
-    ],
+    "fromStates": ["committed"],
     "operation": {
       "kind": "action",
       "action": "command.finish",

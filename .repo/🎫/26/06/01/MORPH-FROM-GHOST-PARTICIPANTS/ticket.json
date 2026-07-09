@@ -5,7 +5,5 @@
   "description": "When many participants morph into one, use morphFrom ghost slots per source participant instead of union group tiles. Framework expand + deck refactor.",
   "summary": "Many-to-one morphs use per-source ghost dispositions instead of union group tiles.\n\n- Core: `MorphFromSlot`, `Disposition.morphFrom`, `expandArrangementMorphFrom`, `splitTilesBoundingFrame`, `splitTilesUnionSourceCrop`, `DispositionSplit.morphParticipant`, `morphTargetId` for line targets.\n- Bridge expansion uses participant morph ids; final slide uses `targetLineIndex` for text line pairing.\n- Renderer: `morphParticipant` split renders dormant participant anchor + visible tiles; heading-block positioned labels.\n- Deck: column splits on Bauteilarten; single `catalogue-labels` participant with three `morphFrom` ghosts on Bauteilbeschriftungen.",
   "goal": "🎯framework",
-  "sessions": [
-    "⚪49e4f5c8802d413ba1edebf255921b1e"
-  ]
+  "sessions": ["⚪49e4f5c8802d413ba1edebf255921b1e"]
 }

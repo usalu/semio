@@ -919,11 +919,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/0b132f3b-de28-4feb-ab55-6a3de561aea2.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/sketchpad/sketchpad.test.ts",
-              "/workspaces/semio/compose/sketchpad/playwright.config.ts",
-              "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/compose/sketchpad/sketchpad.test.ts", "/workspaces/semio/compose/sketchpad/playwright.config.ts", "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx"]
           },
           "tool_use_id": "call_EL0vv65P71zB0yJPsZV4lyB7__vscode-1774098920331",
           "cwd": "/workspaces/semio"
@@ -949,11 +945,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/0b132f3b-de28-4feb-ab55-6a3de561aea2.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/sketchpad/sketchpad.test.ts",
-              "/workspaces/semio/compose/sketchpad/playwright.config.ts",
-              "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/compose/sketchpad/sketchpad.test.ts", "/workspaces/semio/compose/sketchpad/playwright.config.ts", "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_EL0vv65P71zB0yJPsZV4lyB7__vscode-1774098920331",
@@ -3682,11 +3674,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/0b132f3b-de28-4feb-ab55-6a3de561aea2.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/ui/index.tsx",
-              "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx",
-              "/workspaces/semio/compose/ui/.storybook/stories/Diagram.stories.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/compose/ui/index.tsx", "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx", "/workspaces/semio/compose/ui/.storybook/stories/Diagram.stories.tsx"]
           },
           "tool_use_id": "call_c8bffqwwbi9nySsqwsSxZuby__vscode-1774098920381",
           "cwd": "/workspaces/semio"
@@ -3712,11 +3700,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/0b132f3b-de28-4feb-ab55-6a3de561aea2.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/ui/index.tsx",
-              "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx",
-              "/workspaces/semio/compose/ui/.storybook/stories/Diagram.stories.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/compose/ui/index.tsx", "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx", "/workspaces/semio/compose/ui/.storybook/stories/Diagram.stories.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_c8bffqwwbi9nySsqwsSxZuby__vscode-1774098920381",
@@ -6522,10 +6506,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/0b132f3b-de28-4feb-ab55-6a3de561aea2.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
-              "/workspaces/semio/compose/sketchpad/sketchpad.test.ts"
-            ]
+            "filePaths": ["/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx", "/workspaces/semio/compose/sketchpad/sketchpad.test.ts"]
           },
           "tool_use_id": "call_o5B2UQwGav3EVwMdg8ykavsp__vscode-1774098920431",
           "cwd": "/workspaces/semio"
@@ -6551,10 +6532,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/0b132f3b-de28-4feb-ab55-6a3de561aea2.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
-              "/workspaces/semio/compose/sketchpad/sketchpad.test.ts"
-            ]
+            "filePaths": ["/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx", "/workspaces/semio/compose/sketchpad/sketchpad.test.ts"]
           },
           "tool_response": "",
           "tool_use_id": "call_o5B2UQwGav3EVwMdg8ykavsp__vscode-1774098920431",
@@ -8307,9 +8285,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/0b132f3b-de28-4feb-ab55-6a3de561aea2.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/sketchpad/sketchpad.test.ts"
-            ]
+            "filePaths": ["/workspaces/semio/compose/sketchpad/sketchpad.test.ts"]
           },
           "tool_use_id": "call_1yi0H0hCuqKtvLDXRzSGYRPK__vscode-1774098920462",
           "cwd": "/workspaces/semio"
@@ -8335,9 +8311,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/0b132f3b-de28-4feb-ab55-6a3de561aea2.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/sketchpad/sketchpad.test.ts"
-            ]
+            "filePaths": ["/workspaces/semio/compose/sketchpad/sketchpad.test.ts"]
           },
           "tool_response": "",
           "tool_use_id": "call_1yi0H0hCuqKtvLDXRzSGYRPK__vscode-1774098920462",
@@ -10147,9 +10121,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/0b132f3b-de28-4feb-ab55-6a3de561aea2.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/sketchpad/sketchpad.test.ts"
-            ]
+            "filePaths": ["/workspaces/semio/compose/sketchpad/sketchpad.test.ts"]
           },
           "tool_use_id": "call_BrW7BJisjws1nFpWE8LAHfqb__vscode-1774098920494",
           "cwd": "/workspaces/semio"
@@ -10175,9 +10147,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/0b132f3b-de28-4feb-ab55-6a3de561aea2.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/sketchpad/sketchpad.test.ts"
-            ]
+            "filePaths": ["/workspaces/semio/compose/sketchpad/sketchpad.test.ts"]
           },
           "tool_response": "",
           "tool_use_id": "call_BrW7BJisjws1nFpWE8LAHfqb__vscode-1774098920494",
@@ -11142,10 +11112,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "/workspaces/semio",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_use_id": "call_JEORp4pfG8fl0LNm2YzUaMFZ__vscode-1774098920511",
           "cwd": "/workspaces/semio"
@@ -11202,10 +11169,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "/workspaces/semio",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_response": "",
           "tool_use_id": "call_JEORp4pfG8fl0LNm2YzUaMFZ__vscode-1774098920511",
@@ -11661,11 +11625,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/0b132f3b-de28-4feb-ab55-6a3de561aea2.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/sketchpad/sketchpad/Home.tsx",
-              "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
-              "/workspaces/semio/compose/sketchpad/sketchpad.test.ts"
-            ]
+            "filePaths": ["/workspaces/semio/compose/sketchpad/sketchpad/Home.tsx", "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx", "/workspaces/semio/compose/sketchpad/sketchpad.test.ts"]
           },
           "tool_use_id": "call_hd86uUVHjwTlR1LFvMt4SZV4__vscode-1774098920526",
           "cwd": "/workspaces/semio"
@@ -11691,11 +11651,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/0b132f3b-de28-4feb-ab55-6a3de561aea2.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/sketchpad/sketchpad/Home.tsx",
-              "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx",
-              "/workspaces/semio/compose/sketchpad/sketchpad.test.ts"
-            ]
+            "filePaths": ["/workspaces/semio/compose/sketchpad/sketchpad/Home.tsx", "/workspaces/semio/compose/sketchpad/sketchpad/Sketchpad.tsx", "/workspaces/semio/compose/sketchpad/sketchpad.test.ts"]
           },
           "tool_response": "",
           "tool_use_id": "call_hd86uUVHjwTlR1LFvMt4SZV4__vscode-1774098920526",
@@ -12459,10 +12415,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "/workspaces/semio",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_use_id": "call_oZIISEfMe4yaY5EEpTqwOOI9__vscode-1774098920539",
           "cwd": "/workspaces/semio"
@@ -12489,10 +12442,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "/workspaces/semio",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_response": "",
           "tool_use_id": "call_oZIISEfMe4yaY5EEpTqwOOI9__vscode-1774098920539",

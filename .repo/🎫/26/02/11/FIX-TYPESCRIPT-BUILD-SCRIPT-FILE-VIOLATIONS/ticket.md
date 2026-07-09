@@ -7,6 +7,7 @@ goal: AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS
 ## Summary
 
 Added section regions around orphan code and summary+spec comments for definitions in 5 engine TypeScript files: build.ts (Build section, cwd/args defs), generate-schemas.ts (Schema Generation section), test.ts (Test Runner section), sqliteschema.ts (Schema Export section, dbPath/outputPath defs), post-build.ts (Post Build section, 6 path constant defs)
+
 ## Changes
 
 - compose/engine/build.ts: Wrapped orphan code in Build section, added summary+spec for `cwd` and `args` definitions

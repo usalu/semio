@@ -40,9 +40,6 @@ class PublishScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir)
-  .register("dev", DevScript)
-  .register("build", BuildScript)
-  .register("publish", PublishScript);
+const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("publish", PublishScript);
 
 await runBundleScriptMain(router, import.meta.url);

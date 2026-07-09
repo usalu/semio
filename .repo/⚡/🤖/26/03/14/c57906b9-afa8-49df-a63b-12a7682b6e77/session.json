@@ -53,9 +53,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅vscode⚙️launch📌1📌627"
-        ],
+        "ranges": ["🛅vscode⚙️launch📌1📌627"],
         "second": "🎆26🌙03☀️14⏰15⌚21⏱️41",
         "session": "⚪c57906b9afa849dfa63b12a7682b6e77"
       },
@@ -86,9 +84,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅vscode⚙️launch📌1📌627"
-        ],
+        "ranges": ["🛅vscode⚙️launch📌1📌627"],
         "second": "🎆26🌙03☀️14⏰15⌚22⏱️03",
         "session": "⚪c57906b9afa849dfa63b12a7682b6e77"
       },
@@ -119,9 +115,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui⚙️package📌1📌105"
-        ],
+        "ranges": ["🧩elements🛅ui⚙️package📌1📌105"],
         "second": "🎆26🌙03☀️14⏰15⌚22⏱️21",
         "session": "⚪c57906b9afa849dfa63b12a7682b6e77"
       },
@@ -152,9 +146,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui⚙️package📌1📌105"
-        ],
+        "ranges": ["🧩elements🛅ui⚙️package📌1📌105"],
         "second": "🎆26🌙03☀️14⏰15⌚22⏱️34",
         "session": "⚪c57906b9afa849dfa63b12a7682b6e77"
       },
@@ -235,9 +227,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js⚙️package📌1📌133"
-        ],
+        "ranges": ["👤compose📚js⚙️package📌1📌133"],
         "second": "🎆26🌙03☀️14⏰15⌚23⏱️41",
         "session": "⚪c57906b9afa849dfa63b12a7682b6e77"
       },
@@ -268,9 +258,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js⚙️package📌1📌133"
-        ],
+        "ranges": ["👤compose📚js⚙️package📌1📌133"],
         "second": "🎆26🌙03☀️14⏰15⌚23⏱️59",
         "session": "⚪c57906b9afa849dfa63b12a7682b6e77"
       },
@@ -301,9 +289,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "⚙️nx📌1📌50"
-        ],
+        "ranges": ["⚙️nx📌1📌50"],
         "second": "🎆26🌙03☀️14⏰15⌚24⏱️19",
         "session": "⚪c57906b9afa849dfa63b12a7682b6e77"
       },
@@ -334,9 +320,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "⚙️nx📌1📌50"
-        ],
+        "ranges": ["⚙️nx📌1📌50"],
         "second": "🎆26🌙03☀️14⏰15⌚24⏱️45",
         "session": "⚪c57906b9afa849dfa63b12a7682b6e77"
       },

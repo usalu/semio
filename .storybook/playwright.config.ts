@@ -15,34 +15,34 @@ import { defineConfig, devices } from "@playwright/test";
 const storybookDir = resolve(fileURLToPath(import.meta.url), "..");
 const storybookPort = process.env.STORYBOOK_PORT ?? "6010";
 function withTrailingSlash(url: string): string {
-	return url.endsWith("/") ? url : `${url}/`;
+  return url.endsWith("/") ? url : `${url}/`;
 }
 /** Trailing `/` so `page.goto("iframe.html")` resolves at the static server root. */
 const baseURL = withTrailingSlash(process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${storybookPort}/`);
 
 export default defineConfig({
-	testDir: storybookDir,
-	testMatch: ["puzzle-2d.spec.ts"],
-	fullyParallel: false,
-	forbidOnly: !!process.env.CI,
-	retries: process.env.CI ? 2 : 0,
-	timeout: 300000,
-	expect: { timeout: 120_000 },
-	workers: 1,
-	reporter: [["list"]],
-	use: {
-		baseURL,
-		trace: "on-first-retry",
-	},
-	projects: [
-		{
-			name: "chromium",
-			use: {
-				...devices["Desktop Chrome"],
-				launchOptions: {
-					args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
-				},
-			},
-		},
-	],
+  testDir: storybookDir,
+  testMatch: ["puzzle-2d.spec.ts"],
+  fullyParallel: false,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  timeout: 300000,
+  expect: { timeout: 120_000 },
+  workers: 1,
+  reporter: [["list"]],
+  use: {
+    baseURL,
+    trace: "on-first-retry",
+  },
+  projects: [
+    {
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        launchOptions: {
+          args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
+        },
+      },
+    },
+  ],
 });

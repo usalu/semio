@@ -2,36 +2,36 @@
 name: Raw wgpu Renderer
 overview: Build a second framework renderer written purely in Rust on raw wgpu (hand-rolled WGSL shaders, own glyph atlas, own tessellation), compiled to WASM and drawing on a fullscreen canvas in the existing os-dev host, with launch entries split into "dev s react" and "dev s wgpu".
 todos:
-  - id: ticket
-    content: Open ticket via repo MCP and associate with the right goal
-    status: completed
-  - id: scaffold
-    content: Scaffold framework/renderer/wgpu (Cargo crate, package.json, project.json, script.ts, js glue)
-    status: completed
-  - id: shared-loader
-    content: Move plugin module loader into framework/core/js and re-export from renderer/react
-    status: completed
-  - id: devhost
-    content: Add SEMIO_RENDERER switch to os-dev script.ts, vite.config.ts, js/index.ts and renderer wasm build step
-    status: completed
-  - id: launch
-    content: Rename launch entry to dev s react and add dev s wgpu
-    status: completed
-  - id: gpu
-    content: "GPU foundation: surface, frame loop, quad/SDF pipeline, glyph atlas, textures, clipping"
-    status: completed
-  - id: widgets
-    content: UiNode interpreter and all control widgets with input and command emission
-    status: completed
-  - id: shell
-    content: "Shell chrome parity: sessions, navbar, panels, layouts, studio mode"
-    status: completed
-  - id: scenes
-    content: "componentScene hosts: raster, table, canvas-2d, node-graph, flow-canvas, virtualFileSystem, text-editor, world-3d"
-    status: completed
-  - id: verify
-    content: Extend tests and verify s studio and draw single-plugin modes at runtime under wgpu
-    status: completed
+ - id: ticket
+   content: Open ticket via repo MCP and associate with the right goal
+   status: completed
+ - id: scaffold
+   content: Scaffold framework/renderer/wgpu (Cargo crate, package.json, project.json, script.ts, js glue)
+   status: completed
+ - id: shared-loader
+   content: Move plugin module loader into framework/core/js and re-export from renderer/react
+   status: completed
+ - id: devhost
+   content: Add SEMIO_RENDERER switch to os-dev script.ts, vite.config.ts, js/index.ts and renderer wasm build step
+   status: completed
+ - id: launch
+   content: Rename launch entry to dev s react and add dev s wgpu
+   status: completed
+ - id: gpu
+   content: "GPU foundation: surface, frame loop, quad/SDF pipeline, glyph atlas, textures, clipping"
+   status: completed
+ - id: widgets
+   content: UiNode interpreter and all control widgets with input and command emission
+   status: completed
+ - id: shell
+   content: "Shell chrome parity: sessions, navbar, panels, layouts, studio mode"
+   status: completed
+ - id: scenes
+   content: "componentScene hosts: raster, table, canvas-2d, node-graph, flow-canvas, virtualFileSystem, text-editor, world-3d"
+   status: completed
+ - id: verify
+   content: Extend tests and verify s studio and draw single-plugin modes at runtime under wgpu
+   status: completed
 isProject: false
 ---
 

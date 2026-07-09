@@ -5065,9 +5065,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fa0c9e8f-539e-40e0-b093-9959d5b97ce7.jsonl",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "repo://goals"
-            ],
+            "urls": ["repo://goals"],
             "query": "goals list"
           },
           "tool_use_id": "toolu_vrtx_013EbfET3L1ZUgyBXWFdUEwX__vscode-1776612599204",
@@ -5094,9 +5092,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fa0c9e8f-539e-40e0-b093-9959d5b97ce7.jsonl",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "repo://goals"
-            ],
+            "urls": ["repo://goals"],
             "query": "goals list"
           },
           "tool_use_id": "toolu_vrtx_013EbfET3L1ZUgyBXWFdUEwX__vscode-1776612599204",
@@ -5123,9 +5119,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fa0c9e8f-539e-40e0-b093-9959d5b97ce7.jsonl",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "repo://goals"
-            ],
+            "urls": ["repo://goals"],
             "query": "goals list"
           },
           "tool_response": "",
@@ -5153,9 +5147,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fa0c9e8f-539e-40e0-b093-9959d5b97ce7.jsonl",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "repo://goals"
-            ],
+            "urls": ["repo://goals"],
             "query": "goals list"
           },
           "tool_response": "",
@@ -30274,9 +30266,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fa0c9e8f-539e-40e0-b093-9959d5b97ce7.jsonl",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "repo://goals"
-            ],
+            "urls": ["repo://goals"],
             "query": "goals list"
           },
           "tool_use_id": "toolu_vrtx_01PrXVupmmGtvd5yZyKQcxdy__vscode-1776612599421",
@@ -30303,9 +30293,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fa0c9e8f-539e-40e0-b093-9959d5b97ce7.jsonl",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "repo://goals"
-            ],
+            "urls": ["repo://goals"],
             "query": "goals list"
           },
           "tool_use_id": "toolu_vrtx_01PrXVupmmGtvd5yZyKQcxdy__vscode-1776612599421",
@@ -30332,9 +30320,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fa0c9e8f-539e-40e0-b093-9959d5b97ce7.jsonl",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "repo://goals"
-            ],
+            "urls": ["repo://goals"],
             "query": "goals list"
           },
           "tool_response": "",
@@ -30362,9 +30348,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fa0c9e8f-539e-40e0-b093-9959d5b97ce7.jsonl",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "repo://goals"
-            ],
+            "urls": ["repo://goals"],
             "query": "goals list"
           },
           "tool_response": "",

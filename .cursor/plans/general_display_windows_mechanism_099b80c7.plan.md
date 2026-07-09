@@ -2,21 +2,21 @@
 name: General Display Windows Mechanism
 overview: Unify the Display panel so every window kind is itself a draggable row (templates optional), make `templateId` optional end-to-end, and route per-window state through `useShellWindowInstance().instanceId` so CAD play stops showing empty rows and Puzzle 2D drops visibly create independent windows, matching how Puzzle 3D already works.
 todos:
-  - id: general-drag
-    content: Make templateId optional in WindowTemplateDropPayload + Mode drop validation; emit draggable kind rows (plus optional template child rows) in buildDisplayWindowsTree and relax onDragStart validation.
-    status: completed
-  - id: instance-helper
-    content: "Establish the per-instance scoping rule: bodies key state by useShellWindowInstance().instanceId (fallback windowKindId); template command handlers honor instanceId."
-    status: completed
-  - id: puzzle2d
-    content: Fix Puzzle 2D templates/args, make setLodModeForPane instance-aware, scope camerasByPane/lodMode by instance id in Puzzle2dPlayPaneSurfaceHost, and resolve active pane from instance id.
-    status: completed
-  - id: cad
-    content: Scope CAD play camera/interaction by instance id (model-definition stays per pane); resolve pane from instance id in onActiveWindowChange; optionally add shared orbit view templates.
-    status: completed
-  - id: tests
-    content: Extend existing vitest blocks (platform renderer, puzzle 2d play, cad play) and re-run affected suites.
-    status: completed
+ - id: general-drag
+   content: Make templateId optional in WindowTemplateDropPayload + Mode drop validation; emit draggable kind rows (plus optional template child rows) in buildDisplayWindowsTree and relax onDragStart validation.
+   status: completed
+ - id: instance-helper
+   content: "Establish the per-instance scoping rule: bodies key state by useShellWindowInstance().instanceId (fallback windowKindId); template command handlers honor instanceId."
+   status: completed
+ - id: puzzle2d
+   content: Fix Puzzle 2D templates/args, make setLodModeForPane instance-aware, scope camerasByPane/lodMode by instance id in Puzzle2dPlayPaneSurfaceHost, and resolve active pane from instance id.
+   status: completed
+ - id: cad
+   content: Scope CAD play camera/interaction by instance id (model-definition stays per pane); resolve pane from instance id in onActiveWindowChange; optionally add shared orbit view templates.
+   status: completed
+ - id: tests
+   content: Extend existing vitest blocks (platform renderer, puzzle 2d play, cad play) and re-run affected suites.
+   status: completed
 isProject: false
 ---
 
@@ -81,11 +81,8 @@ flowchart LR
   Ctrl --> State
 ```
 
-
-
 ## Notes / decisions
 
 - Drag preview chrome is fully generic in `Mode`; no per-product preview work needed.
 - Default single-window behavior is preserved because default instance ids equal the window kind id.
 - Sticking to existing files and regions per repo rules; no new files.
-

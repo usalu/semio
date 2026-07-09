@@ -28412,13 +28412,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Fixed copy/paste design algorithm across all 5 languages (C#, TypeScript, Go, Rust, Python) and updated the Storybook story.\n\nChanges per language:\n- **CopyDesign**: Added `compose.center` attribute to external pieces using flatPieceMap (was already done for pp-excl-pc-incl pieces).\n- **PasteDesign**: Added `parent_connection_offset` logic when coord is given and connector matching succeeds (computes u/v offset from flat parent center, coord, anchor, and flat child center). Added \"original\" anchoring mode (anchor = {0,0}).\n- **Python**: Full new implementation of `copyDesignDict` and `pasteDesignDict` functions.\n- **Storybook**: Rewritten with WithoutCoord and WithCoord story variants, correct selection from JSON file, only diff display, \"original\" anchoring.\n- **Tests**: All languages now have copy, paste-without-coord, and paste-with-coord test cases verified against reference JSON.",
-            "files": [
-              "compose/go/main.go",
-              "compose/go/main_test.go",
-              "compose/rs/lib.rs",
-              "compose/py/main.py",
-              "compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx"
-            ]
+            "files": ["compose/go/main.go", "compose/go/main_test.go", "compose/rs/lib.rs", "compose/py/main.py", "compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx"]
           },
           "tool_use_id": "toolu_bdrk_01HwxpJYiAzqtCzHPuCJ3rXg__vscode-1775678183421",
           "cwd": "/workspaces/semio"
@@ -28445,13 +28439,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Fixed copy/paste design algorithm across all 5 languages (C#, TypeScript, Go, Rust, Python) and updated the Storybook story.\n\nChanges per language:\n- **CopyDesign**: Added `compose.center` attribute to external pieces using flatPieceMap (was already done for pp-excl-pc-incl pieces).\n- **PasteDesign**: Added `parent_connection_offset` logic when coord is given and connector matching succeeds (computes u/v offset from flat parent center, coord, anchor, and flat child center). Added \"original\" anchoring mode (anchor = {0,0}).\n- **Python**: Full new implementation of `copyDesignDict` and `pasteDesignDict` functions.\n- **Storybook**: Rewritten with WithoutCoord and WithCoord story variants, correct selection from JSON file, only diff display, \"original\" anchoring.\n- **Tests**: All languages now have copy, paste-without-coord, and paste-with-coord test cases verified against reference JSON.",
-            "files": [
-              "compose/go/main.go",
-              "compose/go/main_test.go",
-              "compose/rs/lib.rs",
-              "compose/py/main.py",
-              "compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx"
-            ]
+            "files": ["compose/go/main.go", "compose/go/main_test.go", "compose/rs/lib.rs", "compose/py/main.py", "compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx"]
           },
           "tool_use_id": "toolu_bdrk_01HwxpJYiAzqtCzHPuCJ3rXg__vscode-1775678183421",
           "cwd": "/workspaces/semio"
@@ -28478,13 +28466,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Fixed copy/paste design algorithm across all 5 languages (C#, TypeScript, Go, Rust, Python) and updated the Storybook story.\n\nChanges per language:\n- **CopyDesign**: Added `compose.center` attribute to external pieces using flatPieceMap (was already done for pp-excl-pc-incl pieces).\n- **PasteDesign**: Added `parent_connection_offset` logic when coord is given and connector matching succeeds (computes u/v offset from flat parent center, coord, anchor, and flat child center). Added \"original\" anchoring mode (anchor = {0,0}).\n- **Python**: Full new implementation of `copyDesignDict` and `pasteDesignDict` functions.\n- **Storybook**: Rewritten with WithoutCoord and WithCoord story variants, correct selection from JSON file, only diff display, \"original\" anchoring.\n- **Tests**: All languages now have copy, paste-without-coord, and paste-with-coord test cases verified against reference JSON.",
-            "files": [
-              "compose/go/main.go",
-              "compose/go/main_test.go",
-              "compose/rs/lib.rs",
-              "compose/py/main.py",
-              "compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx"
-            ]
+            "files": ["compose/go/main.go", "compose/go/main_test.go", "compose/rs/lib.rs", "compose/py/main.py", "compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx"]
           },
           "tool_response": "[🎫fixcopypastedesignalgorithmandstories](repo://ticket/🎫fixcopypastedesignalgorithmandstories) - `closed` - `closed now`\n",
           "tool_use_id": "toolu_bdrk_01HwxpJYiAzqtCzHPuCJ3rXg__vscode-1775678183421",
@@ -28512,13 +28494,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Fixed copy/paste design algorithm across all 5 languages (C#, TypeScript, Go, Rust, Python) and updated the Storybook story.\n\nChanges per language:\n- **CopyDesign**: Added `compose.center` attribute to external pieces using flatPieceMap (was already done for pp-excl-pc-incl pieces).\n- **PasteDesign**: Added `parent_connection_offset` logic when coord is given and connector matching succeeds (computes u/v offset from flat parent center, coord, anchor, and flat child center). Added \"original\" anchoring mode (anchor = {0,0}).\n- **Python**: Full new implementation of `copyDesignDict` and `pasteDesignDict` functions.\n- **Storybook**: Rewritten with WithoutCoord and WithCoord story variants, correct selection from JSON file, only diff display, \"original\" anchoring.\n- **Tests**: All languages now have copy, paste-without-coord, and paste-with-coord test cases verified against reference JSON.",
-            "files": [
-              "compose/go/main.go",
-              "compose/go/main_test.go",
-              "compose/rs/lib.rs",
-              "compose/py/main.py",
-              "compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx"
-            ]
+            "files": ["compose/go/main.go", "compose/go/main_test.go", "compose/rs/lib.rs", "compose/py/main.py", "compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx"]
           },
           "tool_response": "[🎫fixcopypastedesignalgorithmandstories](repo://ticket/🎫fixcopypastedesignalgorithmandstories) - `closed` - `closed now`\n",
           "tool_use_id": "toolu_bdrk_01HwxpJYiAzqtCzHPuCJ3rXg__vscode-1775678183421",

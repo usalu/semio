@@ -5,7 +5,5 @@
   "description": "Nakagin scene bake: use only Flat design piece planes (metabolism.kit.snapshot Flat design); match board nodes by label to piece name; remove board x/y paper fallback; optional compact fixture.",
   "summary": "Removed board x/y paper-plane fallback. Nakagin bake now loads compact `nakagin-flat-layout.planes.v1.json` (extracted from metabolism.kit.snapshot Flat design 019ab4e0…): piece `name` → authoring plane; board `label` matches piece name for placement; optional flat-planes/v1 still overrides by source piece id. Regenerated scene fixture. Vitest 18 + Playwright 5 green.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪42fe7a9ef2004a05853738471edab382"
-  ]
+  "sessions": ["⚪42fe7a9ef2004a05853738471edab382"]
 }

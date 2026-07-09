@@ -5,15 +5,8 @@
   "label": "Scale3D",
   "interaction": {
     "spatialGroundPick": true,
-    "pickDisabledStates": [
-      "idle",
-      "committed"
-    ],
-    "groundPointerMoveStates": [
-      "origin_point",
-      "scale_factor_or_first_reference_point",
-      "second_reference_point"
-    ],
+    "pickDisabledStates": ["idle", "committed"],
+    "groundPointerMoveStates": ["origin_point", "scale_factor_or_first_reference_point", "second_reference_point"],
     "heightDragStates": [],
     "verticalRodStates": [],
     "heightConfirmState": null
@@ -45,11 +38,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        0
-                      ]
+                      "value": [0, 0, 0]
                     }
                   },
                   {
@@ -93,14 +82,7 @@
       {
         "name": "select_objects_to_scale",
         "selection": {
-          "accept": [
-            "vertex",
-            "edge",
-            "wire",
-            "face",
-            "shell",
-            "solid"
-          ],
+          "accept": ["vertex", "edge", "wire", "face", "shell", "solid"],
           "multiple": true,
           "prompt": "Select objects to scale"
         },
@@ -424,11 +406,7 @@
             "text": "Select objects to scale",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -491,11 +469,7 @@
             "text": "Origin point",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -598,11 +572,7 @@
             "text": "Scale factor or first reference point",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -705,11 +675,7 @@
             "text": "Second reference point",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -805,9 +771,7 @@
     ]
   },
   "commit": {
-    "fromStates": [
-      "ready"
-    ],
+    "fromStates": ["ready"],
     "operation": {
       "kind": "action",
       "action": "transform.scale3d",

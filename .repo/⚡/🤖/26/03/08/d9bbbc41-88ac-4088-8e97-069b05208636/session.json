@@ -33,9 +33,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅composetests💻tests📌1📌100"
-        ],
+        "ranges": ["👤compose📚net🛅composetests💻tests📌1📌100"],
         "second": "🎆26🌙03☀️08⏰18⌚14⏱️02",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -81,9 +79,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚py💻compose📌9472📌9600"
-        ],
+        "ranges": ["👤compose📚py💻compose📌9472📌9600"],
         "second": "🎆26🌙03☀️08⏰18⌚14⏱️01",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -119,9 +115,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅composetests💻tests📌85📌150"
-        ],
+        "ranges": ["👤compose📚net🛅composetests💻tests📌85📌150"],
         "second": "🎆26🌙03☀️08⏰18⌚14⏱️09",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -157,9 +151,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼composetest📌160📌200"
-        ],
+        "ranges": ["👤compose📚js🥼composetest📌160📌200"],
         "second": "🎆26🌙03☀️08⏰18⌚14⏱️10",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -195,9 +187,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅composetests💻tests📌1📌100"
-        ],
+        "ranges": ["👤compose📚net🛅composetests💻tests📌1📌100"],
         "second": "🎆26🌙03☀️08⏰18⌚14⏱️13",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -243,9 +233,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚py💻compose📌9472📌9600"
-        ],
+        "ranges": ["👤compose📚py💻compose📌9472📌9600"],
         "second": "🎆26🌙03☀️08⏰18⌚14⏱️14",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -331,9 +319,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚py💻compose📌9470📌9880"
-        ],
+        "ranges": ["👤compose📚py💻compose📌9470📌9880"],
         "second": "🎆26🌙03☀️08⏰18⌚14⏱️20",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -455,9 +441,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚py💻compose📌9470📌9880"
-        ],
+        "ranges": ["👤compose📚py💻compose📌9470📌9880"],
         "second": "🎆26🌙03☀️08⏰18⌚14⏱️40",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -529,9 +513,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌8262📌8320"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌8262📌8320"],
         "second": "🎆26🌙03☀️08⏰18⌚14⏱️45",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -567,9 +549,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌8262📌8320"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌8262📌8320"],
         "second": "🎆26🌙03☀️08⏰18⌚14⏱️56",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -651,9 +631,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚py💻compose📌9472📌9560"
-        ],
+        "ranges": ["👤compose📚py💻compose📌9472📌9560"],
         "second": "🎆26🌙03☀️08⏰18⌚14⏱️58",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -689,9 +667,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌8670📌8800"
-        ],
+        "ranges": ["👤compose📚js💻compose📌8670📌8800"],
         "second": "🎆26🌙03☀️08⏰18⌚15⏱️00",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -733,9 +709,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚py💻compose📌9935📌9950"
-        ],
+        "ranges": ["👤compose📚py💻compose📌9935📌9950"],
         "second": "🎆26🌙03☀️08⏰18⌚15⏱️00",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -777,9 +751,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚py💻compose📌9935📌9950"
-        ],
+        "ranges": ["👤compose📚py💻compose📌9935📌9950"],
         "second": "🎆26🌙03☀️08⏰18⌚15⏱️08",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -815,9 +787,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌8670📌8800"
-        ],
+        "ranges": ["👤compose📚js💻compose📌8670📌8800"],
         "second": "🎆26🌙03☀️08⏰18⌚15⏱️08",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -875,9 +845,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚py💻compose📌9930📌10000"
-        ],
+        "ranges": ["👤compose📚py💻compose📌9930📌10000"],
         "second": "🎆26🌙03☀️08⏰18⌚15⏱️11",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -935,9 +903,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚py💻compose📌9930📌10000"
-        ],
+        "ranges": ["👤compose📚py💻compose📌9930📌10000"],
         "second": "🎆26🌙03☀️08⏰18⌚15⏱️24",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -1063,9 +1029,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚py💻compose📌9935📌10050"
-        ],
+        "ranges": ["👤compose📚py💻compose📌9935📌10050"],
         "second": "🎆26🌙03☀️08⏰18⌚15⏱️42",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -1119,9 +1083,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚py💻compose📌9935📌10050"
-        ],
+        "ranges": ["👤compose📚py💻compose📌9935📌10050"],
         "second": "🎆26🌙03☀️08⏰18⌚15⏱️58",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -1243,9 +1205,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚py💻compose📌9936📌9990"
-        ],
+        "ranges": ["👤compose📚py💻compose📌9936📌9990"],
         "second": "🎆26🌙03☀️08⏰18⌚16⏱️15",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },
@@ -1295,9 +1255,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚py💻compose📌9936📌9990"
-        ],
+        "ranges": ["👤compose📚py💻compose📌9936📌9990"],
         "second": "🎆26🌙03☀️08⏰18⌚16⏱️29",
         "session": "⚪d9bbbc4188ac40888e97069b05208636"
       },

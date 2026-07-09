@@ -29,9 +29,7 @@
           "final_status": "completed",
           "hook_event_name": "sessionEnd",
           "cursor_version": "2.6.19",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/ffca9157-1dcd-4495-8096-622ccdf92158/ffca9157-1dcd-4495-8096-622ccdf92158.jsonl"
         }
@@ -60,9 +58,7 @@
           "final_status": "completed",
           "hook_event_name": "sessionEnd",
           "cursor_version": "2.6.20",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/ffca9157-1dcd-4495-8096-622ccdf92158/ffca9157-1dcd-4495-8096-622ccdf92158.jsonl"
         }

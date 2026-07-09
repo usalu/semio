@@ -2,50 +2,29 @@
 
 ## Problem
 
-Window title bars rendered **below** box content instead of above it; cover titles could clip at the page top. Builds also appeared frozen when many orphaned `tectonic` processes were running.
+Window title bars in print showed empty chip slivers (no Titel / Aktenzeichen labels), a continuous top border (no U-shaped cutout), duplicate left hairlines, and a gap between the header row and the window body.
 
-## Root cause (title bar order)
+## Root causes
 
-`\semio@window@header@muted` wrapped the chip row + separator in `\vtop{...}` while working heading chips use `\vbox{...}` in `\semio@heading@row@wrap`.
+1. **Title/number never expanded in LaTeX mode** — `\tl_use:N` inside `\ExplSyntaxOff` in store/render paths left chip text empty even when token lists held the correct values.
+2. **Wrong gap segment** — `\semio@window@header@muted` used `\semio@window@gap@inbox` (top stroke first) instead of `\semio@window@gap` (OS cutout).
+3. **Redundant trailing rule** — extra full-width `\semio@window@stroke@h` after the chip row.
+4. **Empty number check** — `\if\relax\detokenize{#1}` tested the macro name, not its expansion.
 
-Per the TeX box model:
+## Fixes (`print/tex/semio-window.sty`)
 
-- `\vbox{A B}` — reference point at the bottom of the last item → header height is correct; `tcolorbox` body follows immediately after the separator.
-- `\vtop{A B}` — reference point at the bottom of the first item (chip row) → most of the header becomes **depth** below the baseline, so labels visually land under content and the cover title can clip at the top.
-
-## Additional fixes uncovered during verification
-
-1. **TeX hang / frozen builds** — `\semio_window_tier_header:nnn` used `\tl_set:Nn` with `{ \tl_use:N \l_semio_window_kind_title_tl }`, storing a self-referential token list. Combined with `\exp_args:Nx` in `\semio_window_header_store:`, this caused infinite expansion. Fixed with `\tl_set:Nx` for titles and `\exp_args:NNo` header store (number tokens deferred to LaTeX2e).
-2. **Cover page `\centering`** — global `\centering` in `\makecoverpages` put block-level `\vbox` headers in horizontal mode (`\prevdepth` errors / extreme slowdown). Removed page-level `\centering`; title text centers inside the Titel window body.
-3. **Header row wrap** — `\semio@window@header@row@wrap` guards `\par` / `\nointerlineskip` with `\ifvmode`.
-4. **Generic `Window`** — `breakable=false` for non-row cover/metadata windows.
-
-## Changes
-
-### `print/tex/semio-window.sty`
-
-- `\vtop` → `\vbox` in `\semio@window@header@muted`.
-- Removed abandoned inbox-header / double-hairline dead code.
-- `\semio_window_tier_header` title assignment uses `\tl_set:Nx`; number uses `\tl_set:Nn`.
-- `\semio_window_header_store` uses `\exp_args:NNo` + `\semio_window_header_store_aux` in `\ExplSyntaxOff`.
-- `\semio@window@header@row@wrap` vertical-mode guards.
-- Generic `Window` uses `breakable=false` when not `row`.
-
-### `print/tex/semio-components.sty`
-
-- `\makecoverpages` no longer applies global `\centering`; Titel window body uses local `\centering`.
+- **Store:** `\exp_args:Nxx \semio_window_header_store_set:nn` expands `\l_semio_window_number_tl` / `\l_semio_window_kind_title_tl` in expl3, then `\xdef`s globals for shipout reuse.
+- **Render:** `\exp_args:Nxx \semio_window_header_render_muted:nn` expands token lists in expl3 and calls `\semio@window@header@muted{#1}{#2}` inside `\ExplSyntaxOff`.
+- **Cutout:** `\semio@window@gap@inbox` → `\semio@window@gap`; removed trailing full-width stroke.
+- **Empty ctrl chip:** `\edef\semio@window@header@numval{#1}` + detokenize expansion check.
 
 ## Verification
 
 ```bash
-cd print/template/zukunftbau && tectonic --outdir ../../dist zwischenbericht.tex
-cd print/template/report && tectonic --outdir ../../dist report.tex
-cd .repo/🎫/26/07/09/PRINT-WINDOW-BORDER-GAP && bun rasterize.ts
+# Stop duplicate tectonic/watch processes first if builds hang or fail with no log.
+bun run build:mit-bestand:zwischenbericht
 ```
 
-Raster captures:
+TeX output on cover page (`\makecoverpages`) shows `Overfull \hbox (10.67674pt too wide) in paragraph` — confirms title chip text is rendered (empty slivers only produced 6pt overfull).
 
-- `zwischenbericht-p1-windows.png` — cover chips + separators above window bodies; title not clipped.
-- `report-p4-window.png` — in-body window chrome (report build succeeds end-to-end).
-
-Both templates build in ~3–4s single-pass after fixes (no infinite TeX loop).
+Rebuild `mit-bestand/bericht/zwischenbericht/dist/zwischenbericht.pdf` and check page 1: left chips show Titel, Aktenzeichen, Förderzeitraum, Berichtszeitraum, Beschreibung, etc.

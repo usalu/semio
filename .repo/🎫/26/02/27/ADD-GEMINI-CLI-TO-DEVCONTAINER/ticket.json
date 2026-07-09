@@ -5,7 +5,5 @@
   "description": "Add Gemini CLI into devcontainer image so gemini is available in dev shells.",
   "summary": "Install Gemini CLI via npm in devcontainer post-create script",
   "goal": "🎯infra🎯devcontainer",
-  "sessions": [
-    "⚪17722132532061728677558463931585524797"
-  ]
+  "sessions": ["⚪17722132532061728677558463931585524797"]
 }

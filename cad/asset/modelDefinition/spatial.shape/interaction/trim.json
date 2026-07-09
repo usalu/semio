@@ -5,10 +5,7 @@
   "label": "Trim",
   "interaction": {
     "spatialGroundPick": false,
-    "pickDisabledStates": [
-      "idle",
-      "committed"
-    ],
+    "pickDisabledStates": ["idle", "committed"],
     "groundPointerMoveStates": [],
     "heightDragStates": [],
     "verticalRodStates": [],
@@ -41,11 +38,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        0
-                      ]
+                      "value": [0, 0, 0]
                     }
                   },
                   {
@@ -89,11 +82,7 @@
       {
         "name": "select_cutting_objects",
         "selection": {
-          "accept": [
-            "edge",
-            "wire",
-            "face"
-          ],
+          "accept": ["edge", "wire", "face"],
           "multiple": true,
           "prompt": "Select cutting objects"
         },
@@ -155,11 +144,7 @@
       {
         "name": "select_object_to_trim",
         "selection": {
-          "accept": [
-            "edge",
-            "wire",
-            "face"
-          ],
+          "accept": ["edge", "wire", "face"],
           "multiple": true,
           "prompt": "Select object to trim"
         },
@@ -236,11 +221,7 @@
             "text": "Select cutting objects",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -303,11 +284,7 @@
             "text": "Select object to trim",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -363,9 +340,7 @@
     ]
   },
   "commit": {
-    "fromStates": [
-      "ready"
-    ],
+    "fromStates": ["ready"],
     "operation": {
       "kind": "action",
       "action": "command.finish",

@@ -1,28 +1,28 @@
 ---
 name: global-ghost-interaction
-overview: "Promote the panel \"ghost\" effect from panel-local to global: a single document-level interaction detector turns off (dims to 5% + click-through) all panels on any interaction anywhere, while the actively-manipulated element stays fully visible and interactive. This makes the effect fire for window drags in the GIS map and every other interaction, not just interactions started inside a panel."
+overview: 'Promote the panel "ghost" effect from panel-local to global: a single document-level interaction detector turns off (dims to 5% + click-through) all panels on any interaction anywhere, while the actively-manipulated element stays fully visible and interactive. This makes the effect fire for window drags in the GIS map and every other interaction, not just interactions started inside a panel.'
 todos:
-  - id: controller
-    content: Merge usePanelGhostController + usePanelGhostPointerRoot into a single global useGhostController with document capture-phase pointerdown/move(threshold)/up/cancel listeners, begin/end, and the setActiveInteraction bridge
-    status: completed
-  - id: provider
-    content: Add GhostProvider (PanelGhostContext + InteractionContext + ActiveInteractionContext) and mount it once wrapping the Layout root div (~3062)
-    status: completed
-  - id: regions
-    content: Add static data-ghost-region marker to PanelGhostRoot root; make begin set data-ghost on all panel roots and mark the active chain (nearest [data-dim] = data-active-interaction, ancestors = data-active-ancestor) within the region containing the target
-    status: completed
-  - id: panelroot
-    content: Refactor PanelGhostRoot to consume shared active state (data-ghost + root pointer-events:none when active) instead of owning per-panel state/detector; keep data-dim on chrome + rows
-    status: completed
-  - id: css
-    content: "Update globals-ui.css: dim non-active [data-dim] to 5% + pointer-events:none, keep data-active-ancestor bright, keep data-active-interaction bright + pointer-events:auto"
-    status: completed
-  - id: reroute
-    content: Verify Slider/Input/Stepper/Ring/tree DnD/resize hooks resolve to the global controller; keep explicit begin/end for HTML5 tree DnD
-    status: completed
-  - id: verify
-    content: Reopen the PANEL-GHOST-INTERACTION ticket, run nx typecheck/test, and manually verify GIS window drag, in-panel controls, map pan, and plain clicks; close ticket with summary
-    status: completed
+ - id: controller
+   content: Merge usePanelGhostController + usePanelGhostPointerRoot into a single global useGhostController with document capture-phase pointerdown/move(threshold)/up/cancel listeners, begin/end, and the setActiveInteraction bridge
+   status: completed
+ - id: provider
+   content: Add GhostProvider (PanelGhostContext + InteractionContext + ActiveInteractionContext) and mount it once wrapping the Layout root div (~3062)
+   status: completed
+ - id: regions
+   content: Add static data-ghost-region marker to PanelGhostRoot root; make begin set data-ghost on all panel roots and mark the active chain (nearest [data-dim] = data-active-interaction, ancestors = data-active-ancestor) within the region containing the target
+   status: completed
+ - id: panelroot
+   content: Refactor PanelGhostRoot to consume shared active state (data-ghost + root pointer-events:none when active) instead of owning per-panel state/detector; keep data-dim on chrome + rows
+   status: completed
+ - id: css
+   content: "Update globals-ui.css: dim non-active [data-dim] to 5% + pointer-events:none, keep data-active-ancestor bright, keep data-active-interaction bright + pointer-events:auto"
+   status: completed
+ - id: reroute
+   content: Verify Slider/Input/Stepper/Ring/tree DnD/resize hooks resolve to the global controller; keep explicit begin/end for HTML5 tree DnD
+   status: completed
+ - id: verify
+   content: Reopen the PANEL-GHOST-INTERACTION ticket, run nx typecheck/test, and manually verify GIS window drag, in-panel controls, map pan, and plain clicks; close ticket with summary
+   status: completed
 isProject: false
 ---
 
@@ -57,8 +57,6 @@ graph TD
   GP -->|"begin(target): set data-ghost on every [data-ghost-region]; mark active chain in the region containing target"| DOM
   Panels["SidePanel / Panel / MobilePanel roots (data-ghost-region)"]
 ```
-
-
 
 ### 1. Single controller + provider (Interaction Context region ~2271-2477)
 
@@ -124,4 +122,3 @@ These resolve `usePanelGhost()` / `useInteractionCommands()` to the global provi
 
 - This intentionally changes within-panel behavior so that ALL panels dim on any interaction (previously only the interacted panel). This is the simplest uniform rule that satisfies "for everything / every interaction"; if only-the-active-panel dimming is preferred for in-panel interactions, it is a small follow-up tweak.
 - Capture-phase document listeners are used so interactions that call `stopPropagation` (GIS map pan) still trigger the effect.
-

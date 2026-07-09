@@ -2,30 +2,30 @@
 name: Wgpu Shell Layout Parity
 overview: "Restructure the wgpu shell to mirror the React OS shell 1:1: the slim navbar (logo, title, spacer, panel-kind toggles, modes, fullscreen), a real Mode dock in the window space (layout tree with rows/columns/stacks, tab caps, U-shaped window frames, focus/close, resizable splits), panel-kind switching with framework Display/Settings tabs, footer action group, functional search/find palettes, and studio canvas bars."
 todos:
-  - id: dock-layout-tree
-    content: "DockNode layout tree in ShellState: parse default_layout, even-layout fallback, recursive row/column/stack rect solver"
-    status: completed
-  - id: dock-stack-chrome
-    content: Stack tab bar (pills, gap, Focus/Close controls cap), U-shaped cap/body frames, active-stack accent, maximize + close + tab-switch interactions
-    status: completed
-  - id: dock-split-resize
-    content: Draggable split resize between row/column children
-    status: completed
-  - id: navbar-rebuild
-    content: "Rebuild render_navbar to React slots: logo+title, spacer, panel-kind icon toggle group, mode button group, fullscreen toggle; drop breadcrumb/back/forward/S/F/theme"
-    status: completed
-  - id: panel-kinds
-    content: Panel kind switching (workbench/display left, details/settings right) + framework Display and Settings tabs (theme select moves here) + document fallback + tab icons
-    status: completed
-  - id: footer-studio-bars
-    content: Footer action-group styling with app icon; studio Home / Back-to-focused canvas bars above mode dock
-    status: completed
-  - id: palettes-hotkeys
-    content: Real Search/Find centered modals with item lists + keyboard nav; hotkeys mod+p/f/b/shift+b and history mod+[/]/up
-    status: completed
-  - id: verify-parity
-    content: Cargo tests incl. dock unit tests, wasm rebuild, 25-plugin E2E, side-by-side screenshot comparison vs React shell
-    status: completed
+ - id: dock-layout-tree
+   content: "DockNode layout tree in ShellState: parse default_layout, even-layout fallback, recursive row/column/stack rect solver"
+   status: completed
+ - id: dock-stack-chrome
+   content: Stack tab bar (pills, gap, Focus/Close controls cap), U-shaped cap/body frames, active-stack accent, maximize + close + tab-switch interactions
+   status: completed
+ - id: dock-split-resize
+   content: Draggable split resize between row/column children
+   status: completed
+ - id: navbar-rebuild
+   content: "Rebuild render_navbar to React slots: logo+title, spacer, panel-kind icon toggle group, mode button group, fullscreen toggle; drop breadcrumb/back/forward/S/F/theme"
+   status: completed
+ - id: panel-kinds
+   content: Panel kind switching (workbench/display left, details/settings right) + framework Display and Settings tabs (theme select moves here) + document fallback + tab icons
+   status: completed
+ - id: footer-studio-bars
+   content: Footer action-group styling with app icon; studio Home / Back-to-focused canvas bars above mode dock
+   status: completed
+ - id: palettes-hotkeys
+   content: Real Search/Find centered modals with item lists + keyboard nav; hotkeys mod+p/f/b/shift+b and history mod+[/]/up
+   status: completed
+ - id: verify-parity
+   content: Cargo tests incl. dock unit tests, wasm rebuild, 25-plugin E2E, side-by-side screenshot comparison vs React shell
+   status: completed
 isProject: false
 ---
 
@@ -33,7 +33,7 @@ isProject: false
 
 ## Current state vs React shell
 
-Styling tokens are now shared (previous ticket), but the *structure* diverges. The React OS shell ([framework/renderer/react/os-shell.tsx](framework/renderer/react/os-shell.tsx)) renders:
+Styling tokens are now shared (previous ticket), but the _structure_ diverges. The React OS shell ([framework/renderer/react/os-shell.tsx](framework/renderer/react/os-shell.tsx)) renders:
 
 ```mermaid
 flowchart TD
@@ -48,8 +48,6 @@ flowchart TD
     Root --> FooterSlot["Footer (h-large): app action group + studio undo/redo/checkpoint"]
     Root --> Palettes["UISearch (mod+p) / UIFind (mod+f) centered modals"]
 ```
-
-
 
 The wgpu shell ([framework/renderer/wgpu/rs/shell.rs](framework/renderer/wgpu/rs/shell.rs)) instead has: a navbar with back/forward/up + URI breadcrumb + S/F/L/R/theme buttons (all of which React **removed** from the navbar), a single flat window rect with plain-text kind tabs (no dock, no window chrome), one flat tab bar per panel (no kind switching, no framework Display/Settings tabs), and stub search/find palettes.
 
@@ -110,4 +108,3 @@ Replace the stub `render_palette` ([shell.rs](framework/renderer/wgpu/rs/shell.r
 4. Side-by-side screenshot comparison against the React shell (`?renderer=react` vs wgpu) for: navbar composition, window tab caps + U-frames, panel kind toggles, footer, search palette.
 
 ## Todos
-

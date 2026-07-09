@@ -2,27 +2,27 @@
 name: Systematic Pixel Sizing
 overview: Eliminate every hardcoded pixel sizing value across the monorepo by snapping DOM/CSS sizing onto the existing token/utility scale (extending the ramp only where it has no step) and wiring all canvas/3D/map render literals to the central tokens.json pipeline, then add an enforcement check so pixels can never creep back.
 todos:
-  - id: ticket-foundation
-    content: Read repo://goals, open ticket; extend ui.css (upward layout-size ramp + @utility, --stroke-hairline, rem glass-blur, touch overrides) and tokens.json (metrics.cad, 3D outline, strokes.mapRoad*, flow/label offsets, map wheel-zoom); run script.ts generate.
-    status: completed
-  - id: ui-react
-    content: "Refactor ui/react/index.tsx: all arbitrary [Npx] classes, inline-style px, and *Px constant layer -> utilities/tokens/resolved size constants; update colocated vitest [Npx] assertions; structure with regions."
-    status: completed
-  - id: css-files
-    content: Tokenize ui/react/globals-ui.css and framework presentation globals.css; update ui/styling/js/index.test.ts glass-blur expectation.
-    status: completed
-  - id: dom-renderers
-    content: Tokenize framework platform/playground/presentation renderers, cad floating UI widths/z-index, and flow/coda/infinite DOM overlay text sizes.
-    status: completed
-  - id: render-math
-    content: "Wire canvas/3D/map literals to STYLING_*/ui_styling:: across puzzle 2d/3d, flow react+core, gis map react+rs, cad three.js, infinite r3f, and mathematical/graph dag/normal."
-    status: completed
-  - id: enforcement
-    content: Add px-scan check/lint subcommand to script.ts (extend existing), register in launch.json and project.json.
-    status: completed
-  - id: validate-close
-    content: Run generate, typecheck, bun tests, cargo test -p ui_styling; verify runtime; close ticket with file list.
-    status: completed
+ - id: ticket-foundation
+   content: Read repo://goals, open ticket; extend ui.css (upward layout-size ramp + @utility, --stroke-hairline, rem glass-blur, touch overrides) and tokens.json (metrics.cad, 3D outline, strokes.mapRoad*, flow/label offsets, map wheel-zoom); run script.ts generate.
+   status: completed
+ - id: ui-react
+   content: "Refactor ui/react/index.tsx: all arbitrary [Npx] classes, inline-style px, and *Px constant layer -> utilities/tokens/resolved size constants; update colocated vitest [Npx] assertions; structure with regions."
+   status: completed
+ - id: css-files
+   content: Tokenize ui/react/globals-ui.css and framework presentation globals.css; update ui/styling/js/index.test.ts glass-blur expectation.
+   status: completed
+ - id: dom-renderers
+   content: Tokenize framework platform/playground/presentation renderers, cad floating UI widths/z-index, and flow/coda/infinite DOM overlay text sizes.
+   status: completed
+ - id: render-math
+   content: "Wire canvas/3D/map literals to STYLING_*/ui_styling:: across puzzle 2d/3d, flow react+core, gis map react+rs, cad three.js, infinite r3f, and mathematical/graph dag/normal."
+   status: completed
+ - id: enforcement
+   content: Add px-scan check/lint subcommand to script.ts (extend existing), register in launch.json and project.json.
+   status: completed
+ - id: validate-close
+   content: Run generate, typecheck, bun tests, cargo test -p ui_styling; verify runtime; close ticket with file list.
+   status: completed
 isProject: false
 ---
 
@@ -39,14 +39,12 @@ flowchart LR
   gen --> tsr["STYLING_* (TS) / ui_styling:: (Rust) / STYLING_* (Py)"]
 ```
 
-
-
 Base unit: `--ui-spacing` = `0.2rem` compact / `0.275rem` touch, so the scale auto-adjusts to root font size / resolution. Reference px (compact): single 3.2, double 6.4, tiny 9.6, small 16, workbench 24, medium 22.4, large 28.8, huge 35.2, mega 41.6, giga 48.
 
 ## Structural decisions (snap-first, per your choice)
 
 - Snap small DOM values to the nearest existing step: `h-[22px]`->`h-medium`, `h-[24px]`->`size-workbench`, `size-[12px]`/`[14px]`->`size-tiny`/`size-small`, `text-[10px]`->`text-2xs`, `text-[11px]`->`text-tiny`/`text-xs`, `gap-[6px]`->`gap-double`, `gap-[8px]`->`gap-tiny`, `px-[6px]`/`pl-[4px]`->`px-double`/`pl-single`, `py-[2px]`->`py-single`.
-- The scale has no step above ~48px, so large layout widths (`120px`..`800px` popovers/panels/decks) get a small upward extension of the *same* ramp (new named rem steps, e.g. `--size-tera`/`--size-peta` ... or a dedicated `--layout-`* ladder) in [ui/styling/js/ui.css](ui/styling/js/ui.css) with matching `@utility` + `min-w-*`/`max-w-*`. Still discrete, still rem/resolution-relative.
+- The scale has no step above ~48px, so large layout widths (`120px`..`800px` popovers/panels/decks) get a small upward extension of the _same_ ramp (new named rem steps, e.g. `--size-tera`/`--size-peta` ... or a dedicated `--layout-`_ ladder) in [ui/styling/js/ui.css](ui/styling/js/ui.css) with matching `@utility` + `min-w-_`/`max-w-\*`. Still discrete, still rem/resolution-relative.
 - 1px hairlines (borders/outlines/`padding:1px`) become a single systematic `--stroke-hairline` token referenced everywhere (kept at device-hairline, but no longer scattered literals).
 - Glass blur radii (`24/40/14px`) -> rem-based `--glass-*-blur` tokens; update the assertion in [ui/styling/js/index.test.ts](ui/styling/js/index.test.ts).
 - Radius/shape is out of scope: `rounded-[9999px]`/`rounded-full` (slider tracks, avatars, badges) are circular shape, not sizing; `rounded-[3px]` snaps to the (zero) radius scale `rounded-sm`.
@@ -86,4 +84,3 @@ Base unit: `--ui-spacing` = `0.2rem` compact / `0.275rem` touch, so the scale au
 ## Phase 7 - Validate + close
 
 - Run `script.ts generate`, typecheck, `bun` tests (incl. updated ui.css/index.test.ts assertions), and `cargo test -p ui_styling`. Confirm runtime visually where snaps shift layout. Close the ticket via `ticket_close` listing all touched files.
-

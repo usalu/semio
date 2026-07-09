@@ -2,30 +2,30 @@
 name: Link Compose Relative To Puzzle5d Absolute
 overview: "Make the sketchpad Design app a true Puzzle 5D view by implementing compose's relative->absolute flatten end-to-end: add connector geometry to the compose core, compute absolute piece planes/centers in compose/rs, expose them via GraphQL flatPosition, and consume those absolute positions in the Design app's 2D diagram + 3D scene fixtures."
 todos:
-  - id: ticket
-    content: Open/resume repo MCP ticket under the appropriate goal (read repo://goals) for linking compose relative->absolute to puzzle 5d.
-    status: completed
-  - id: connector-geometry-rs
-    content: Add connector/port geometry (point, direction, t) to compose/rs Port/Connector model + install/decode + DTO read resolvers (lib.rs L2896/L2966).
-    status: completed
-  - id: connector-geometry-gql
-    content: Mirror connector/port geometry in GraphQL golden schema (Connector L5230, Port L4568); align with schema.yaml port.position.
-    status: completed
-  - id: fixtures-geometry
-    content: Hand-update compose kit fixtures/assets so types carry connector geometry (no migration shims).
-    status: completed
-  - id: rs-flatten
-    content: Implement spanning forest + port computeChildPlane/FlattenDesignDiff into rs compute_flat_position/flat_position; implement flatten operation (lib.rs L3703/L3903/L17181).
-    status: completed
-  - id: sketchpad-read
-    content: Extend SKETCHPAD_KIT_READ_INNER to fetch flatPosition + connection gap/shift/rise/rotation/turn/tilt/u/v; retain on DTO in sketchpadKitDtoFromJsStore (index.ts L10979/L11060).
-    status: completed
-  - id: sketchpad-fixtures
-    content: Rework sketchpadPieceDiagramUv / sketchpadPieceSceneOrigin and design volume fixture to use absolute flatPosition (2D center, 3D origin+orientation from plane axes+scale) (index.ts L12762/L12779/L12914).
-    status: completed
-  - id: tests
-    content: Add rs flatten unit tests vs Go reference; extend sketchpad in-file fixture tests for connected pieces; run design-render e2e with [DEBUG] logs.
-    status: completed
+ - id: ticket
+   content: Open/resume repo MCP ticket under the appropriate goal (read repo://goals) for linking compose relative->absolute to puzzle 5d.
+   status: completed
+ - id: connector-geometry-rs
+   content: Add connector/port geometry (point, direction, t) to compose/rs Port/Connector model + install/decode + DTO read resolvers (lib.rs L2896/L2966).
+   status: completed
+ - id: connector-geometry-gql
+   content: Mirror connector/port geometry in GraphQL golden schema (Connector L5230, Port L4568); align with schema.yaml port.position.
+   status: completed
+ - id: fixtures-geometry
+   content: Hand-update compose kit fixtures/assets so types carry connector geometry (no migration shims).
+   status: completed
+ - id: rs-flatten
+   content: Implement spanning forest + port computeChildPlane/FlattenDesignDiff into rs compute_flat_position/flat_position; implement flatten operation (lib.rs L3703/L3903/L17181).
+   status: completed
+ - id: sketchpad-read
+   content: Extend SKETCHPAD_KIT_READ_INNER to fetch flatPosition + connection gap/shift/rise/rotation/turn/tilt/u/v; retain on DTO in sketchpadKitDtoFromJsStore (index.ts L10979/L11060).
+   status: completed
+ - id: sketchpad-fixtures
+   content: Rework sketchpadPieceDiagramUv / sketchpadPieceSceneOrigin and design volume fixture to use absolute flatPosition (2D center, 3D origin+orientation from plane axes+scale) (index.ts L12762/L12779/L12914).
+   status: completed
+ - id: tests
+   content: Add rs flatten unit tests vs Go reference; extend sketchpad in-file fixture tests for connected pieces; run design-render e2e with [DEBUG] logs.
+   status: completed
 isProject: false
 ---
 

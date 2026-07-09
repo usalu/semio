@@ -1,16 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 
-const EXCLUDE_DIRS = new Set([
-  ".git",
-  "node_modules",
-  "target",
-  ".nx",
-  "dist",
-  "temp",
-  "storybook-static",
-  "bin"
-]);
+const EXCLUDE_DIRS = new Set([".git", "node_modules", "target", ".nx", "dist", "temp", "storybook-static", "bin"]);
 
 function walk(dir: string, callback: (file: string) => void) {
   const files = fs.readdirSync(dir);
@@ -32,16 +23,7 @@ function runRenameAndBrand() {
 
   walk(".", (file) => {
     // Ignore binary/image/model files
-    if (
-      file.endsWith(".png") ||
-      file.endsWith(".ico") ||
-      file.endsWith(".zip") ||
-      file.endsWith(".jpg") ||
-      file.endsWith(".3dm") ||
-      file.endsWith(".gh") ||
-      file.endsWith(".wasm") ||
-      file.endsWith(".glb")
-    ) {
+    if (file.endsWith(".png") || file.endsWith(".ico") || file.endsWith(".zip") || file.endsWith(".jpg") || file.endsWith(".3dm") || file.endsWith(".gh") || file.endsWith(".wasm") || file.endsWith(".glb")) {
       return;
     }
 

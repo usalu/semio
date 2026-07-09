@@ -34,10 +34,7 @@ const CORE_UPDATES: Array<{ path: string; pkg: string; exportName: string }> = [
 for (const { path, pkg, exportName } of CORE_UPDATES) {
   const fullPath = join(REPO, path);
   let content = readFileSync(fullPath, "utf8");
-  const replaced = content.replace(
-    /\tbootRenderer: async \(pg\) => \{[\s\S]*?\n\t\},/,
-    `\tloadRenderer: async () => (await import("${pkg}/play")).${exportName},`,
-  );
+  const replaced = content.replace(/\tbootRenderer: async \(pg\) => \{[\s\S]*?\n\t\},/, `\tloadRenderer: async () => (await import("${pkg}/play")).${exportName},`);
   if (replaced === content) {
     console.log(`SKIP ${path}`);
     continue;

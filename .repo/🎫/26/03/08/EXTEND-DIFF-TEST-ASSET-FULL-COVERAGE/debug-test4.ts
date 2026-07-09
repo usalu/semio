@@ -1,8 +1,5 @@
 import { readFileSync } from "fs";
-import {
-  getKitDiff,
-  areKitDiffsEqual,
-} from "/workspaces/semio/compose/js/compose";
+import { getKitDiff, areKitDiffsEqual } from "/workspaces/semio/compose/js/compose";
 
 const ASSETS = "/workspaces/semio/assets/compose";
 const kitRaw = JSON.parse(readFileSync(`${ASSETS}/kit_metabolism.json`, "utf-8"));

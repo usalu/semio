@@ -1369,10 +1369,7 @@
           "session_id": "c69bcf61-db5e-491d-80b1-323a211e3794",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/rs/lib.rs",
-              "/workspaces/semio/compose/rs/Cargo.toml"
-            ]
+            "filePaths": ["/workspaces/semio/compose/rs/lib.rs", "/workspaces/semio/compose/rs/Cargo.toml"]
           },
           "tool_use_id": "call_Edomu48ytSwV1i9BGogqWNHB__vscode-1774398923270",
           "cwd": "/workspaces/semio"
@@ -1397,9 +1394,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "/workspaces/semio",
-            "sourceControlState": [
-              "unstaged"
-            ]
+            "sourceControlState": ["unstaged"]
           },
           "tool_use_id": "call_7wLp8jdngTJh8ucu1hZ1yhxK__vscode-1774398923271",
           "cwd": "/workspaces/semio"
@@ -1423,10 +1418,7 @@
           "session_id": "c69bcf61-db5e-491d-80b1-323a211e3794",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/rs/lib.rs",
-              "/workspaces/semio/compose/rs/Cargo.toml"
-            ]
+            "filePaths": ["/workspaces/semio/compose/rs/lib.rs", "/workspaces/semio/compose/rs/Cargo.toml"]
           },
           "tool_response": "",
           "tool_use_id": "call_Edomu48ytSwV1i9BGogqWNHB__vscode-1774398923270",
@@ -1452,9 +1444,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "/workspaces/semio",
-            "sourceControlState": [
-              "unstaged"
-            ]
+            "sourceControlState": ["unstaged"]
           },
           "tool_response": "",
           "tool_use_id": "call_7wLp8jdngTJh8ucu1hZ1yhxK__vscode-1774398923271",

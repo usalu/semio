@@ -995,9 +995,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx"
-              ],
+              "files": ["/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx"],
               "path": "🎫fixcomposealgorithmsdragdefaultselection",
               "summary": "Fixed the default selection in the drag algorithm story to only select the t_f1_b_c1 piece (GUID: 31be08e1-e75c-4024-86b4-c3c6d3939fbb) instead of the first 3 pieces."
             },
@@ -1078,9 +1076,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx"
-              ],
+              "files": ["/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx"],
               "path": "🎯r2603🎫fixcomposealgorithmsdragdefaultselection",
               "summary": "Fixed the default selection in the drag algorithm story to only select the t_f1_b_c1 piece (GUID: 31be08e1-e75c-4024-86b4-c3c6d3939fbb) instead of the first 3 pieces."
             },
@@ -1350,9 +1346,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx"
-              ],
+              "files": ["/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx"],
               "path": "26/03/30/FIX-COMPOSE-ALGORITHMS-DRAG-DEFAULT-SELECTION",
               "summary": "Fixed the default selection in the drag algorithm story to only select the t_f1_b_c1 piece (GUID: 31be08e1-e75c-4024-86b4-c3c6d3939fbb) instead of the first 3 pieces."
             },
@@ -1381,9 +1375,7 @@
             "mcp_result": "[🎫fixcomposealgorithmsdragdefaultselection](repo://ticket/🎫fixcomposealgorithmsdragdefaultselection) - `closed` - `closed now`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx"
-              ],
+              "files": ["/workspaces/semio/compose/algorithms/.storybook/stories/Drag.stories.tsx"],
               "path": "26/03/30/FIX-COMPOSE-ALGORITHMS-DRAG-DEFAULT-SELECTION",
               "summary": "Fixed the default selection in the drag algorithm story to only select the t_f1_b_c1 piece (GUID: 31be08e1-e75c-4024-86b4-c3c6d3939fbb) instead of the first 3 pieces."
             },

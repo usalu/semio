@@ -2,36 +2,36 @@
 name: True Full-LOC S Parity
 overview: Port the old S studio to the pure-Rust plugin framework at full fidelity and full scale (~100k LOC, matching the deleted code), so the new S looks, behaves, and measures like the old one, verified end-to-end in the browser.
 todos:
-  - id: baseline-audit
-    content: Extract old-S reference sources and behavior checklist into ticket folder; set up old-to-new LOC accounting
-    status: completed
-  - id: shell-full-port
-    content: Full port of platform+playground renderers (8k LOC) into os-shell/ui-interpreter and platform+playground core runtimes (5.4k) into framework/core/rs
-    status: completed
-  - id: os-core-full
-    content: Complete framework/product/os/core/rs to full os-core JS coverage (backbones, media export, catalog, alternatives)
-    status: completed
-  - id: s-plugin-exact
-    content: "Line-for-line S plugin port: SPlayController commands, applySOsUri, export download, exact S_PLAY_LAYOUT, all old vitest behaviors as Rust tests"
-    status: completed
-  - id: demo-tech-full
-    content: Full ports of draw, writer, raster, note plugins (~15k LOC) including all old react surface behavior as Rust scenes
-    status: completed
-  - id: graph-tech-full
-    content: Full ports of flow, dag, sequence, imperative, trinity-rewrite, mathematical dsl (~15k LOC)
-    status: completed
-  - id: tech-2d-full
-    content: Full ports of puzzle2d, gis2d, procedural2d, layout, reasoning-wires, forms, vcs (~38k LOC)
-    status: completed
-  - id: tech-3d-full
-    content: Full ports of cad, puzzle3d, puzzle5d, procedural3d, lowpoly, shooting (~53k LOC)
-    status: completed
-  - id: presentation-trinity
-    content: Full ports of presentation and trinity/jack plugins (~17k LOC)
-    status: completed
-  - id: e2e-loc-audit
-    content: Browser E2E on 6066 across all 25 programs with [DEBUG] runtime confirmation; final LOC audit vs old in ticket folder
-    status: completed
+ - id: baseline-audit
+   content: Extract old-S reference sources and behavior checklist into ticket folder; set up old-to-new LOC accounting
+   status: completed
+ - id: shell-full-port
+   content: Full port of platform+playground renderers (8k LOC) into os-shell/ui-interpreter and platform+playground core runtimes (5.4k) into framework/core/rs
+   status: completed
+ - id: os-core-full
+   content: Complete framework/product/os/core/rs to full os-core JS coverage (backbones, media export, catalog, alternatives)
+   status: completed
+ - id: s-plugin-exact
+   content: "Line-for-line S plugin port: SPlayController commands, applySOsUri, export download, exact S_PLAY_LAYOUT, all old vitest behaviors as Rust tests"
+   status: completed
+ - id: demo-tech-full
+   content: Full ports of draw, writer, raster, note plugins (~15k LOC) including all old react surface behavior as Rust scenes
+   status: completed
+ - id: graph-tech-full
+   content: Full ports of flow, dag, sequence, imperative, trinity-rewrite, mathematical dsl (~15k LOC)
+   status: completed
+ - id: tech-2d-full
+   content: Full ports of puzzle2d, gis2d, procedural2d, layout, reasoning-wires, forms, vcs (~38k LOC)
+   status: completed
+ - id: tech-3d-full
+   content: Full ports of cad, puzzle3d, puzzle5d, procedural3d, lowpoly, shooting (~53k LOC)
+   status: completed
+ - id: presentation-trinity
+   content: Full ports of presentation and trinity/jack plugins (~17k LOC)
+   status: completed
+ - id: e2e-loc-audit
+   content: Browser E2E on 6066 across all 25 programs with [DEBUG] runtime confirmation; final LOC audit vs old in ticket folder
+   status: completed
 isProject: false
 ---
 

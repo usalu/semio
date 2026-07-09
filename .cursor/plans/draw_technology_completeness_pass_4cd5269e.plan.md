@@ -2,27 +2,27 @@
 name: Draw Technology Completeness Pass
 overview: Close the remaining gaps in the Draw vector technology so all 7 layer kinds are fully modeled, renderable, hoverable and selectable, the document shows true nesting (including boolean references), the inspector exposes every editable property, and the canvas supports real authoring gestures for pen/shape/trace tools with selection mechanics matching the shared ui-react primitives used by raster (default/additive/subtractive/invertive merge, partial/full coverage).
 todos:
-  - id: selection-fix
-    content: Fix marqueeModeFromModifiers/marqueeCoverageFromGesture/selectionMergeIds/screenRectFromPoints signatures in draw/react; add selectLasso tool; wire kindHover; add shift/ctrl modified direct-click select
-    status: completed
-  - id: core-model
-    content: Add createDrawShapeLayer/createDrawTextLayer/createDrawImageLayer factories, ellipse/circle path segments, real text/image bounds, DrawSceneNode text/image fields, flatten image layers, boolean-child row id helpers, rgbaToHex
-    status: completed
-  - id: document-catalogue
-    content: Nest boolean children as read-only rows, distinct icons per kind, extend catalogue/add-layer to shape/text/image kinds with DnD
-    status: completed
-  - id: canvas-render
-    content: Add DrawTextShape/DrawImageShape renderers with hover/selection overlays in draw/react
-    status: completed
-  - id: inspector
-    content: Add fill/stroke/transform fields for all kinds plus shape geometry, text content/size, image readonly fields; wire new patchLayer cases
-    status: completed
-  - id: authoring-tools
-    content: Add commitDocument controller command + onCommit canvas prop; implement pen/shapeRect/shapeEllipse/shapeLine/shapePolygon/trace pointer gesture state machines in DrawCanvas
-    status: completed
-  - id: verify
-    content: Re-run all draw+kernel tests, extend runtime-check.mjs and preview-check.mjs in the ticket folder, reopen and close ticket 26/06/30/DRAW-VECTOR-TECHNOLOGY
-    status: completed
+ - id: selection-fix
+   content: Fix marqueeModeFromModifiers/marqueeCoverageFromGesture/selectionMergeIds/screenRectFromPoints signatures in draw/react; add selectLasso tool; wire kindHover; add shift/ctrl modified direct-click select
+   status: completed
+ - id: core-model
+   content: Add createDrawShapeLayer/createDrawTextLayer/createDrawImageLayer factories, ellipse/circle path segments, real text/image bounds, DrawSceneNode text/image fields, flatten image layers, boolean-child row id helpers, rgbaToHex
+   status: completed
+ - id: document-catalogue
+   content: Nest boolean children as read-only rows, distinct icons per kind, extend catalogue/add-layer to shape/text/image kinds with DnD
+   status: completed
+ - id: canvas-render
+   content: Add DrawTextShape/DrawImageShape renderers with hover/selection overlays in draw/react
+   status: completed
+ - id: inspector
+   content: Add fill/stroke/transform fields for all kinds plus shape geometry, text content/size, image readonly fields; wire new patchLayer cases
+   status: completed
+ - id: authoring-tools
+   content: Add commitDocument controller command + onCommit canvas prop; implement pen/shapeRect/shapeEllipse/shapeLine/shapePolygon/trace pointer gesture state machines in DrawCanvas
+   status: completed
+ - id: verify
+   content: Re-run all draw+kernel tests, extend runtime-check.mjs and preview-check.mjs in the ticket folder, reopen and close ticket 26/06/30/DRAW-VECTOR-TECHNOLOGY
+   status: completed
 isProject: false
 ---
 

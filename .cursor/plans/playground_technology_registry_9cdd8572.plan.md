@@ -2,27 +2,27 @@
 name: Playground Technology Registry
 overview: Eliminate duplicated, hand-maintained "which playground/technology kinds exist" lists (found in ~8 places, most acutely in `ui/styling/vite-elements-assets.ts`) by consolidating build/tooling metadata into the existing `repo/lib/js` playground registry, deriving every downstream consumer from it, and adding policy lints that enforce completeness instead of letting new hardcoded copies reappear.
 todos:
-  - id: phase1-registry
-    content: Extend repo/lib/js PLAYGROUND_TECHNOLOGIES registry (folderRoot, packages, rendererPuzzleKind, bootSubpath, hostMarker, sBundle flag, devSegments/nxProject) + regression tests
-    status: pending
-  - id: phase2-ui-styling
-    content: Migrate ui/styling/vite-elements-assets.ts to derive kind union/boot subpaths/host markers/resolve aliases from the registry instead of owning them
-    status: pending
-  - id: phase3-component-kind
-    content: Derive ComponentKind/CANVAS_COMPONENT_KINDS/EDGELESS_WINDOW_COMPONENT_KINDS in framework/product/platform/core from one annotated registry array
-    status: pending
-  - id: phase4-renderer-canvas-hosts
-    content: Derive PLAYGROUND_CANVAS_HOST_TYPES in framework/product/playground/renderer/react from platform-core's CANVAS_COMPONENT_KINDS
-    status: pending
-  - id: phase5-devscript
-    content: Simplify script.ts DevScript.run to look up PLAYGROUND_TECHNOLOGIES instead of ~18 hardcoded branches
-    status: pending
-  - id: phase6-policy-lints
-    content: Add policy lints enforcing registry <-> package.json exports and registry <-> launch.json consistency
-    status: pending
-  - id: phase7-tests
-    content: Extend existing vitest suites across all touched files for registry completeness and derived-value regression
-    status: pending
+ - id: phase1-registry
+   content: Extend repo/lib/js PLAYGROUND_TECHNOLOGIES registry (folderRoot, packages, rendererPuzzleKind, bootSubpath, hostMarker, sBundle flag, devSegments/nxProject) + regression tests
+   status: pending
+ - id: phase2-ui-styling
+   content: Migrate ui/styling/vite-elements-assets.ts to derive kind union/boot subpaths/host markers/resolve aliases from the registry instead of owning them
+   status: pending
+ - id: phase3-component-kind
+   content: Derive ComponentKind/CANVAS_COMPONENT_KINDS/EDGELESS_WINDOW_COMPONENT_KINDS in framework/product/platform/core from one annotated registry array
+   status: pending
+ - id: phase4-renderer-canvas-hosts
+   content: Derive PLAYGROUND_CANVAS_HOST_TYPES in framework/product/playground/renderer/react from platform-core's CANVAS_COMPONENT_KINDS
+   status: pending
+ - id: phase5-devscript
+   content: Simplify script.ts DevScript.run to look up PLAYGROUND_TECHNOLOGIES instead of ~18 hardcoded branches
+   status: pending
+ - id: phase6-policy-lints
+   content: Add policy lints enforcing registry <-> package.json exports and registry <-> launch.json consistency
+   status: pending
+ - id: phase7-tests
+   content: Extend existing vitest suites across all touched files for registry completeness and derived-value regression
+   status: pending
 isProject: false
 ---
 
@@ -32,7 +32,7 @@ isProject: false
 
 There is no canonical registry of "all playground/technology kinds." At least 8 places independently hardcode overlapping (and inconsistently named — `puzzle2d` vs `puzzle-2d` vs `2d` vs `puzzle.2d`) lists:
 
-1. `[ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts)` — `PlaygroundRendererPuzzleKind` (22-value union), `PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS` (22), `PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS` (22), `S_PLAYGROUND_HOST_MARKERS` (16), and `playgroundRendererResolveAliases()` (~73 hand-written `{find, replacement}` pairs). This is the worst offender the user pointed at — a *styling* package has no business owning per-technology Vite alias/tree-shaking knowledge.
+1. `[ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts)` — `PlaygroundRendererPuzzleKind` (22-value union), `PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS` (22), `PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS` (22), `S_PLAYGROUND_HOST_MARKERS` (16), and `playgroundRendererResolveAliases()` (~73 hand-written `{find, replacement}` pairs). This is the worst offender the user pointed at — a _styling_ package has no business owning per-technology Vite alias/tree-shaking knowledge.
 2. `[repo/lib/js/index.ts](repo/lib/js/index.ts)` (lines 1001-1066) — `PlaygroundHostKind` (27) + `PLAYGROUND_PORTS` — already the closest thing to a real registry, and already imported by (1).
 3. `[framework/product/platform/core/index.ts](framework/product/platform/core/index.ts)` (lines 307-311) — `ComponentKind` union (26) plus two hand-duplicated filtered arrays `CANVAS_COMPONENT_KINDS` (25) / `EDGELESS_WINDOW_COMPONENT_KINDS` (17) that must be kept in sync by hand.
 4. `[framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx)` — `PLAYGROUND_CANVAS_HOST_TYPES` (19), a hand copy of (3)'s canvas kinds.
@@ -66,8 +66,6 @@ flowchart TD
     componentKindRegistry --> platformDerived
     platformDerived --> playgroundRenderer
 ```
-
-
 
 ## Phase 1 — Extend the canonical build/tooling registry (`repo/lib/js`)
 
@@ -138,4 +136,3 @@ Using the existing `defineLint`/`BreachRecord`/policy-runner infra (`[repo/lib/j
 
 - Per `AGENTS.md`, this work must happen inside a repo-MCP ticket: read `repo://goals`, open (or reuse, if a fitting one already exists) a ticket under the appropriate goal, and close it with a full summary of touched files when done.
 - All edits go into existing files using `#region`/`#endregion` structuring per the repo convention; no new files beyond what's structurally unavoidable (none anticipated — every phase above extends an existing file).
-

@@ -1459,12 +1459,7 @@
             "max_results": 4
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_reopen",
-              "mcp__repo__search",
-              "mcp__repo__ticket_open",
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__ticket_reopen", "mcp__repo__search", "mcp__repo__ticket_open", "mcp__repo__ticket_close"],
             "query": "select:mcp__repo__ticket_reopen,mcp__repo__search,mcp__repo__ticket_open,mcp__repo__ticket_close",
             "total_deferred_tools": 23
           },
@@ -1760,9 +1755,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "TodoWrite"
-            ],
+            "matches": ["TodoWrite"],
             "query": "select:TodoWrite",
             "total_deferred_tools": 23
           },
@@ -3109,9 +3102,7 @@
             "pattern": "compose/studio/studio.*"
           },
           "tool_response": {
-            "filenames": [
-              "/workspaces/semio/compose/studio/studio.ts"
-            ],
+            "filenames": ["/workspaces/semio/compose/studio/studio.ts"],
             "durationMs": 432,
             "numFiles": 1,
             "truncated": false

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 No previous context.
@@ -57,6 +58,7 @@ Added comprehensive UI-based test `Kit Import Drag and Drop` that:
 ## Log
 
 ## Summary
+
 # Summary
 
 Create test for kit import drag and drop

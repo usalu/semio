@@ -264,7 +264,7 @@ Refactor and extend everything cleanly.
 
 We are splitting puzzle 2d into general reusable bundles.
 It must be extendable on multiple levels.
-every extension is just a rust file.@semio-tech/infinite-cavas-react-renderer/index.tsx @infinite/cavas/vello/lib.rs @infinite/cavas/AGENTS.md @infinite @infinite/cavas @semio-tech/infinite-cavas-react-renderer @infinite/cavas/vello @gis/map/AGENTS.md @gis/map/lib.rs @gis @gis/map @mathematical/graph/AGENTS.md @mathematical/graph/lib.rs @mathematical/graph @reasoning/mindmap/AGENTS.md @reasoning/mindmap/lib.rs @reasoning/mindmap 
+every extension is just a rust file.@semio-tech/infinite-cavas-react-renderer/index.tsx @infinite/cavas/vello/lib.rs @infinite/cavas/AGENTS.md @infinite @infinite/cavas @semio-tech/infinite-cavas-react-renderer @infinite/cavas/vello @gis/map/AGENTS.md @gis/map/lib.rs @gis @gis/map @mathematical/graph/AGENTS.md @mathematical/graph/lib.rs @mathematical/graph @reasoning/mindmap/AGENTS.md @reasoning/mindmap/lib.rs @reasoning/mindmap
 
 ---
 
@@ -444,6 +444,7 @@ All spacing must be equal between ui elements. e.g. the distance between navbar 
 On window interactions such as group selection etc all panels should be hidden. currently e.g. command is not hidden, the border of side panels are not hidden, vertical tree indentation lines are not hidden, etc Make sure they are all hidden (only exception is when a tree item from the tree is interacted with, then the tree item along with all parent tree items and indentation lines are shown)
 
 ---
+
 ‚
 Introduce a tree of buttons, toggles and collections which is displayed in a ribbon.
 e.g. toolbar on the bottom of the footer is a tree.
@@ -558,6 +559,7 @@ When fill engangement is an active then show a slider from 0 to 1000.
 The slider is the amount of nodes/objects that should be added.
 Extend it with the same princinple and distribution.
 Make sure the nodes/objects have new collision, Repeat the process until all objects have been added.
+
 1. Pick a free handle/vortex
 2. Pick a compatible (non colliding) node/object according distribution
 3. Repeat until all the amount of target objects have been filles or no more nodes/object can be added. Return also incomplete solutions.
@@ -584,13 +586,10 @@ The slot hitbox is a circle (default node size) that is offsetted by the flush d
 A compatible node is a node with at least one compatible handle with the source handle.
 The edge is created between the source handle and the closest compatible target handle from the compatible node.
 
-
-
 If the mouse cursor leaves the vortex then the suggested object is added to the puzzle 3d.
 The vortices have a direction. Make sure that the suggested object has the vortex exactly on the same point and the suggested object is rotated so that the direction of the of source vortex is the same as the opposite of the target vortex.
 While the mouse is still inside the vortex if tab is pressed then another compatible object is selected.
 If right click is pressed inside the vortex show the list of all compatible objects.
-
 
 ---
 
@@ -1002,9 +1001,9 @@ Extend everything with is, has, references is projection.
 By default it just includes the direct ones.
 Add a transitive one with Transitive suffix.
 Be thorough and clean. There were already small attempts.
-is* e.g. piece isTransitive type or design, 
+is* e.g. piece isTransitive type or design,
 references* e.g. side referencesPiece and referencesConnector, side referencesTypesTransitive over pieces, connection referencesPiecesTransitive and referencesConnectorsTransitive, etc
-has* e.g. design hasPieces, kit hasPiecesTransitive
+has\* e.g. design hasPieces, kit hasPiecesTransitive
 
 ---
 
@@ -2554,7 +2553,7 @@ the kit app uses WIRES for displaying the relationships.
 Make sure that the data is directly comming from the rust store.
 It is synchronized with the vfs.
 Every visible file node is shown as identity in wires.
-e.g. if a design  is collapsed and it has a transitive relationship to a type which is also shown then add it. if design is uncolapsed and the pieces are shown, then show instead of the transitive relations the direct relationsjip.
+e.g. if a design is collapsed and it has a transitive relationship to a type which is also shown then add it. if design is uncolapsed and the pieces are shown, then show instead of the transitive relations the direct relationsjip.
 
 ---
 
@@ -3018,11 +3017,11 @@ The two specific implemtations must be used:
 
 ---
 
-all frameworks must have a general toggle Display next to workbench. It is a left panel. 
+all frameworks must have a general toggle Display next to workbench. It is a left panel.
 It has two tabs: Windows, Layout
 Windows are the window kinds. every window kind can a set of templates (e.g. top, perspective, etc for 3d, or other kind of templates).
 Layout are reusable layouts (e.g. top view left top, north view left bottom, perspective right)
-This exists in all products such as platforms, playgrounds, etc 
+This exists in all products such as platforms, playgrounds, etc
 The mechanism must be general
 
 ---
@@ -3047,14 +3046,12 @@ etc
 
 ---
 
-
-
 ---
 
 We are building a new framework to create presentations such as temp/eg-ice-25.
 It as again pure decarlative typescript, render-independant.
 Make sure to implement the first render in react that uses reveal.js.
-As an example reimplemnt the intro (the first 5 slides of eg-ice-25) of the new mit-bestand/präsentation/33.projektetage  presentation. make sure to migrate it to have no react or reveal dependency and use the new framework.
+As an example reimplemnt the intro (the first 5 slides of eg-ice-25) of the new mit-bestand/präsentation/33.projektetage presentation. make sure to migrate it to have no react or reveal dependency and use the new framework.
 
 ---
 
@@ -3073,7 +3070,7 @@ in flow a component is using the most accurate channels (inputs outputs) if poss
 e.g. add takes 2 input channels and optionally more can be added and returns one output.
 e.g. constructVector takes three inputs x,y,z by default.
 
-Flows are just extensions of neural trees. in the json they keep separate keys, 
+Flows are just extensions of neural trees. in the json they keep separate keys,
 the flow part must be shakable without destroying the logic.
 
 ---
@@ -9639,7 +9636,6 @@ Make sure to integrate it with our ui system (shared, bidirectional and transiti
 Raster is an infinite canvas
 Create a sophisticated playground.
 
-
 ## imperative
 
 ## sequence
@@ -9656,7 +9652,7 @@ A program is a collection of apps.
 An app has different modes etc.
 The container units for data in semios are studios.
 A studio is always local first but optioanally an authorative backbone can be added.
-In semios nothing is edited with CRUD and all is based on CRQS event sourcing architecture with version control built in (see compose lib.rs) 
+In semios nothing is edited with CRUD and all is based on CRQS event sourcing architecture with version control built in (see compose lib.rs)
 Implement the embbedded studio with a single json first.
 semios generalizes sketchpad.
 sketchpad just becomes a program.

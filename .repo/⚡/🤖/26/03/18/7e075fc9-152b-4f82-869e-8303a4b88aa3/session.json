@@ -100,10 +100,7 @@
             "max_results": 2
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__search",
-              "mcp__repo__ticket_open"
-            ],
+            "matches": ["mcp__repo__search", "mcp__repo__ticket_open"],
             "query": "select:mcp__repo__search,mcp__repo__ticket_open",
             "total_deferred_tools": 86
           },
@@ -1011,9 +1008,7 @@
             "pattern": "elements/ui/index.{ts,tsx}"
           },
           "tool_response": {
-            "filenames": [
-              "/workspaces/elements/ui/index.ts"
-            ],
+            "filenames": ["/workspaces/elements/ui/index.ts"],
             "durationMs": 299,
             "numFiles": 1,
             "truncated": false
@@ -5824,9 +5819,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_reopen"
-            ],
+            "matches": ["mcp__repo__ticket_reopen"],
             "query": "select:mcp__repo__ticket_reopen",
             "total_deferred_tools": 86
           },

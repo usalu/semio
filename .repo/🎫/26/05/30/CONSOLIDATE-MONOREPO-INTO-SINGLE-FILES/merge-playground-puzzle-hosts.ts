@@ -24,12 +24,7 @@ function stripHeader(src: string): string {
 }
 
 function stripSelfImports(src: string): string {
-  return src
-    .replace(
-      /import\s+(?:type\s+)?[\s\S]*?\s+from\s+["']@framework\/playground\/renderer\/react\/(?:shell|boot)["'];?\s*\n/g,
-      "",
-    )
-    .trim();
+  return src.replace(/import\s+(?:type\s+)?[\s\S]*?\s+from\s+["']@framework\/playground\/renderer\/react\/(?:shell|boot)["'];?\s*\n/g, "").trim();
 }
 
 let index = readFileSync(indexPath, "utf8");

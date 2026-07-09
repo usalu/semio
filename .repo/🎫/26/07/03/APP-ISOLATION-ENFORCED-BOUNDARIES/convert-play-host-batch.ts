@@ -128,24 +128,12 @@ function stripBootTail(content: string): string {
 
 function fixImports(content: string, label: string): string {
   let c = content;
-  c = c.replace(
-    /\/\*\* @emoji 🛝 Playground play host for ([^—]+) — loaded only via `\.\/play` subpath\. \*\//,
-    `/** @emoji 🛝 ${label} app renderer contribution — loaded only via \`./play\` subpath. */`,
-  );
+  c = c.replace(/\/\*\* @emoji 🛝 Playground play host for ([^—]+) — loaded only via `\.\/play` subpath\. \*\//, `/** @emoji 🛝 ${label} app renderer contribution — loaded only via \`./play\` subpath. */`);
   if (!c.includes("AppRendererContribution")) {
-    c = c.replace(
-      /import type \{ ReactElement \} from "react";/,
-      `import type { ReactElement } from "react";\nimport type { AppRendererContribution } from "@semio-tech/framework-platform-core";`,
-    );
+    c = c.replace(/import type \{ ReactElement \} from "react";/, `import type { ReactElement } from "react";\nimport type { AppRendererContribution } from "@semio-tech/framework-platform-core";`);
   }
-  c = c.replace(
-    /import \{ type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, /,
-    "import { ",
-  );
-  c = c.replace(
-    /import \{ type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, /,
-    "import { ",
-  );
+  c = c.replace(/import \{ type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, /, "import { ");
+  c = c.replace(/import \{ type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, /, "import { ");
   c = c.replace(/, registerUi\w+SurfaceHost/g, "");
   c = c.replace(/registerUi\w+SurfaceHost, /g, "");
   c = c.replace(/,\s*register\w+PlayDeclarativeBodies/g, "");
@@ -154,11 +142,7 @@ function fixImports(content: string, label: string): string {
 }
 
 function appendExport(content: string, spec: Spec): string {
-  const lines = [
-    `/** @emoji 🛝 ${spec.exportName.replace(/AppRenderer$/, "")} app renderer for playground and OS shells. */`,
-    `export const ${spec.exportName}: AppRendererContribution = {`,
-    `  surfaceHosts: ${spec.surfaceHosts},`,
-  ];
+  const lines = [`/** @emoji 🛝 ${spec.exportName.replace(/AppRenderer$/, "")} app renderer for playground and OS shells. */`, `export const ${spec.exportName}: AppRendererContribution = {`, `  surfaceHosts: ${spec.surfaceHosts},`];
   if (spec.panelTabs) lines.push(`  panelTabs: ${spec.panelTabs},`);
   if (spec.tabIcons) lines.push(`  tabIcons: ${spec.tabIcons},`);
   if (spec.preload) lines.push(`  preload: ${spec.preload},`);
@@ -170,7 +154,7 @@ function appendExport(content: string, spec: Spec): string {
 for (const spec of SPECS) {
   const full = join(REPO, spec.path);
   let content = readFileSync(full, "utf8");
-  const label = spec.path.split("/")[0] === "procedural" ? spec.path.split("/")[1] === "3d" ? "Procedural" : "Procedural2d" : spec.path.split("/")[0];
+  const label = spec.path.split("/")[0] === "procedural" ? (spec.path.split("/")[1] === "3d" ? "Procedural" : "Procedural2d") : spec.path.split("/")[0];
   content = fixImports(content, label.charAt(0).toUpperCase() + label.slice(1));
   content = stripBootTail(content);
   content = appendExport(content, spec);

@@ -5,12 +5,5 @@
   "description": "Fix interactive resize on projektetage: content scales uniformly inside the frame (no text reflow overshoot); resize handles aligned with selection chrome.",
   "summary": "Flow intro selection: handles and fill now share one ink box.\n\nRoot cause: selection fill painted the full `__content` block while resize chrome used section-space fractions as % of that parent — wrong coordinate space, so handles sat away from the blue fill.\n\n- `measureDispositionBoundsInContainer` — ink bounds relative to the disposition wrapper.\n- When flow + selected/dragging: position `__content` with `transformFrameStyle(inkInWrapper)` so the primary fill wraps the ink; chrome stays `inset: 0` on that same box (handles on fill corners).\n- Wrapper `translate3d` still moves the whole unit on drag.\n\n49 renderer tests pass.",
   "goal": "🎯aioptimizedrepo",
-  "sessions": [
-    "⚪8e72685386be43deb606fd885b24412f",
-    "⚪26dabf1cc33f4be69c7d776b1ecdf060",
-    "⚪7c5329643fe54a5d8ed323e833eddf69",
-    "⚪09802a6a48e74937aa582b6121d0b639",
-    "⚪74482b1bd391428093ec4041178f8835",
-    "⚪3718017f4e884b298f2168b58b3b6770"
-  ]
+  "sessions": ["⚪8e72685386be43deb606fd885b24412f", "⚪26dabf1cc33f4be69c7d776b1ecdf060", "⚪7c5329643fe54a5d8ed323e833eddf69", "⚪09802a6a48e74937aa582b6121d0b639", "⚪74482b1bd391428093ec4041178f8835", "⚪3718017f4e884b298f2168b58b3b6770"]
 }

@@ -1,35 +1,30 @@
-# Puzzle 3D React Parity — Verify Log
+# PUZZLE-3D-REACT-PARITY verify log
 
-## Root cause (brush/fill)
+## Root cause (fill/brush broken in browser)
 
-- **Brush candidates:** `brush_candidates()` returns `{ free, unknownPending }` but d3 parsed the payload as a bare array — always empty. Fixed via `parse_brush_candidates_free()`.
-- **Brush preview:** `world_brush_preview_json` now uses `puzzle3d_brush_target_vortex` (selection + hovered-object fallback).
-- **Precompute:** `drive_precompute` increased; runs on example switch, brush/fill tool select, vortex hover, and `cycleBrushCandidate`.
-- **Runtime round trip:** `parse_envelope` now deserializes `Puzzle3dEnvelope` first so `runtime` (active tool, fill count, selection) is not dropped.
-- **Fill:** `setFillCount` accepts `{ value }` / `{ count }`; fill tool activates when count > 0.
+1. **Concurrent wasm plugin calls** — `refreshUi` used `Promise.all` for `render`/`tools`/`windowEngagements` while `registerBrushMesh`/`setHover` commands were in flight → `RefCell already borrowed` at `framework/plugin/rs/lib.rs:1281` → wasm abort poisoned the instance.
 
-## React / shell
+2. **WASI P2 + wasm-bindgen mismatch** — `puzzle/3d/rs` used `#[cfg(target_arch = "wasm32")]` for `js_sys::Date::now()` and `#[wasm_bindgen]` exports. The puzzle **plugin component** (`wasm32-wasip2`) hit `cannot call wasm-bindgen imported functions on non-wasm targets` during Concrete Forest precompute → abort before fill/brush could run.
 
-- **Example dedupe:** `exampleOptions` filters strictly on `example.appId === session.app.id` plus id de-duplication (manifest shows one Empty + one Concrete Forest for `puzzle3d-play`).
-- **Camera:** `parseCameraState` respects fixture `zoom`; autofit fallback when camera JSON has no `position`.
-- **Brush meshes:** `BrushMeshRegistrar` in `world-3d-host.tsx` dispatches `registerBrushMesh` when GLBs load (needed for collision-free brush candidates in the live app).
+## Fixes
 
-## Tests run
+| Layer                                   | Change                                                                                                |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `framework/core/js/index.ts`            | `withSerializedPluginWasmHandle`, per-module handle cache, busy retry                                 |
+| `framework/product/os/dev/script.ts`    | Generated bridge: module-level `runSerialized`, `createPluginApi` singleton                           |
+| `framework/plugin/rs/lib.rs`            | `InstanceGuard` — reject re-entrant instance access with `plugin instance busy` instead of panicking  |
+| `framework/renderer/react/os-shell.tsx` | Sequential `refreshUi` wasm reads                                                                     |
+| `puzzle/3d/rs/lib.rs`                   | `target_env = "p2"` cfgs: native precompute session for component wasm; js-sys only for web wasm-pack |
+| `puzzle/plugin/rs/d3/mod.rs`            | `setActiveTool` drives precompute for brush/fill                                                      |
 
-- `bun nx run @semio-tech/framework-renderer-react:test` — 24 passed
-- `cargo build -p puzzle-plugin --target wasm32-wasip2 --release` — ok
-- `bun ./.repo/🎫/26/07/09/PUZZLE-3D-REACT-PARITY/wasm-verify.ts` — fill slider round trip (select fill → value 4); manifest example scoping ok
-- `cargo test -p puzzle_3d brush` — ok
-- `cargo test -p puzzle-plugin` — blocked on native host by pre-existing `plugin_exports!` wasm-only macro in `puzzle/plugin/rs/lib.rs`
+## Verification (2026-07-09)
 
-## Live verification notes
+- `bun nx run @semio-tech/framework-renderer-react:test` — 27 passed
+- `.repo/🎫/26/07/09/PUZZLE-3D-REACT-PARITY/wasm-verify.ts` — fill round-trip value 4
+- Headless browser (playwright): Concrete Forest load **0** panics; fill engagement shows slider (`data-control-kind="slider"`)
+- Puzzle wasm rebuilt: `cargo build -p puzzle-plugin --target wasm32-wasip2 --release` + jco transpile + `script.ts build puzzle`
 
-- Puzzle 3D dev server: `http://127.0.0.1:6013/` (isolated from other `dev:puzzle:*` builds to avoid shared wasm-pack races).
-- Wasm API verification confirms fill command round trip; brush placement candidates require GLB collision meshes (`registerBrushMesh`) after assets load — headless wasm script without mesh fetch may still show zero brush candidates even when the parse/precompute path is correct.
-- Browser automation: fill tool button click works; engagement chrome may need the window focused/expanded before the slider appears in the overlay (wasm path does not depend on React engagement chrome).
+## Dev notes
 
-## Ticket scripts (temporary)
-
-- `wasm-verify.ts` — automated wasm fill + manifest dedupe check
-- `browser-verify.ts` — playwright smoke (run after dev server + wasm rebuild)
-- `manifest-check.ts`, `brush-debug.ts` — investigation helpers
+- Hard-refresh `http://127.0.0.1:6013/` after wasm rebuild (Vite does not always hot-swap `.wasm`).
+- Run puzzle-3d dev in isolation (`dev:puzzle:3d` only) to avoid wasm-pack races.

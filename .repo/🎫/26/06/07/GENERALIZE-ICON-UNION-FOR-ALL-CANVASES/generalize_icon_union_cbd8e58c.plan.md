@@ -2,36 +2,36 @@
 name: Generalize Icon Union
 overview: Introduce one canonical, structured Icon discriminated union (url, shortcode, data image, emoji, typst, text, plus inline svg / catalog) shared across TS and Rust, with a bidirectional string codec for the WASM wire form, and refactor every canvas, the UI chrome, the icon editor, and the compose domain to resolve icons through it — keeping puzzle 2d behavior identical.
 todos:
-  - id: ticket
-    content: Read repo://goals and open a repo ticket for the icon generalization, associated to the best goal
-    status: completed
-  - id: rust-union
-    content: Add canonical structured Icon enum (serde tag=kind) + encode_icon/decode_icon string codec in infinite/cavas/vello/icon_codec.rs; route board_resolve_icon_kind via decode
-    status: completed
-  - id: rust-newkinds
-    content: Implement text (default-font typst), shortcode (build-time emoji table from committed JSON asset), broaden data mime types (svg/webp/gif), and url->None sentinel
-    status: completed
-  - id: js-url-prefetch
-    content: "Add cached async url->data: prefetch in board React bridges (puzzle 2d / dag / flow) before WASM JSON sync"
-    status: completed
-  - id: ui-chrome
-    content: Replace IconSource with canonical Icon union in ui/react; render all kinds in the Icon component; export encodeIcon/decodeIcon
-    status: completed
-  - id: icon-editor
-    content: Generalize IconSelector into a shared editor for all Icon kinds; remove puzzle-specific classifier/mode
-    status: completed
-  - id: compose-domain
-    content: Adopt canonical icon-string grammar for compose domain icon fields and resolve via shared codec on render
-    status: completed
-  - id: wire-canvases
-    content: Route dag/flow/gis/reasoning node icons through the shared resolver; accept Icon union for r3f 2D markers via rasterized textures
-    status: completed
-  - id: tests
-    content: Extend existing Rust and TS test files for all 8 kinds and codec round-trips; verify puzzle 2d unchanged with [DEBUG] logs
-    status: completed
-  - id: close
-    content: Close the ticket with summary and file list
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open a repo ticket for the icon generalization, associated to the best goal
+   status: completed
+ - id: rust-union
+   content: Add canonical structured Icon enum (serde tag=kind) + encode_icon/decode_icon string codec in infinite/cavas/vello/icon_codec.rs; route board_resolve_icon_kind via decode
+   status: completed
+ - id: rust-newkinds
+   content: Implement text (default-font typst), shortcode (build-time emoji table from committed JSON asset), broaden data mime types (svg/webp/gif), and url->None sentinel
+   status: completed
+ - id: js-url-prefetch
+   content: "Add cached async url->data: prefetch in board React bridges (puzzle 2d / dag / flow) before WASM JSON sync"
+   status: completed
+ - id: ui-chrome
+   content: Replace IconSource with canonical Icon union in ui/react; render all kinds in the Icon component; export encodeIcon/decodeIcon
+   status: completed
+ - id: icon-editor
+   content: Generalize IconSelector into a shared editor for all Icon kinds; remove puzzle-specific classifier/mode
+   status: completed
+ - id: compose-domain
+   content: Adopt canonical icon-string grammar for compose domain icon fields and resolve via shared codec on render
+   status: completed
+ - id: wire-canvases
+   content: Route dag/flow/gis/reasoning node icons through the shared resolver; accept Icon union for r3f 2D markers via rasterized textures
+   status: completed
+ - id: tests
+   content: Extend existing Rust and TS test files for all 8 kinds and codec round-trips; verify puzzle 2d unchanged with [DEBUG] logs
+   status: completed
+ - id: close
+   content: Close the ticket with summary and file list
+   status: completed
 isProject: false
 ---
 
@@ -50,8 +50,6 @@ flowchart TD
   Resolve --> Paint["BoardResolvedIcon -> Vello GPU paint"]
   Encode --> Chrome["ui Icon component (url/data/svg/emoji/shortcode/text/catalog/node)"]
 ```
-
-
 
 Canonical string grammar (superset of today's prefixes, so puzzle 2d is unaffected):
 
@@ -120,4 +118,3 @@ Canonical string grammar (superset of today's prefixes, so puzzle 2d is unaffect
 - Persisted + WASM wire form stays a single string (`iconKind`) via the codec, so no board JSON schema churn and puzzle 2d stays identical.
 - URLs are resolved async in JS to `data:` (cached) since the Rust resolver is synchronous.
 - Shortcode table is build-time generated from a committed JSON asset (no runtime external library), honoring the "no direct external dependency" rule.
-

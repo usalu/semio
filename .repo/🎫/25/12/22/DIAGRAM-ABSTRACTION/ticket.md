@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 No prior work on this ticket.
@@ -36,4 +37,5 @@ No prior work on this ticket.
 ## Log
 
 ## Summary
+
 # Summary

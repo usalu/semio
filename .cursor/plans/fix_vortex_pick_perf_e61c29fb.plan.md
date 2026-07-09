@@ -38,8 +38,6 @@ flowchart TD
   cmp --> hover["set hover / select"]
 ```
 
-
-
 Three coordinated changes, all in [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx):
 
 ### 1. O(1) GPU depth occlusion (replaces the full-scene raycast)
@@ -70,4 +68,4 @@ Remove the obsolete full-scene raycast plumbing now unused for occlusion: `colle
 - Confirm vortex hover + click still select the correct vortex and respect occlusion (a vortex behind a foreground surface beyond `VORTEX_PICK_DEPTH_TOLERANCE` is not pickable) using the depth-buffer path.
 - Confirm antialiasing is unchanged after the render-target takeover.
 
-[{"id": "depth-capture", "content": "Add SceneDepthCapture: offscreen WebGLRenderTarget + DepthTexture, useFrame render takeover with fullscreen blit, and a SceneDepthContext exposing sampleDepthDistance(clientX, clientY) via a 1x1 packed depth readback converted to eye-space distance."}, {"id": "replace-raycast", "content": "In VortexScreenPick.pickAt, replace raycaster.intersectObjects(collectObjectGroups(), true) with depth.sampleDepthDistance(...); remove the now-unused Raycaster/ndc and collectObjectGroups usage."}, {"id": "coalesce-raf", "content": "Coalesce onPointerMove to one rAF-scheduled pick using the latest cursor coords; cancel pending frame on cleanup."}, {"id": "button-gate", "content": "Track pointer button state via pointerdown/up/cancel and skip picking while any button is held (covers pan/zoom/orbit/drag); fold in or remove the old busy check."}, {"id": "cleanup-debug", "content": "Remove the [DEBUG] window.__p3d* globals added with this feature and verify hover/click correctness, occlusion, and antialiasing."}]
+[{"id": "depth-capture", "content": "Add SceneDepthCapture: offscreen WebGLRenderTarget + DepthTexture, useFrame render takeover with fullscreen blit, and a SceneDepthContext exposing sampleDepthDistance(clientX, clientY) via a 1x1 packed depth readback converted to eye-space distance."}, {"id": "replace-raycast", "content": "In VortexScreenPick.pickAt, replace raycaster.intersectObjects(collectObjectGroups(), true) with depth.sampleDepthDistance(...); remove the now-unused Raycaster/ndc and collectObjectGroups usage."}, {"id": "coalesce-raf", "content": "Coalesce onPointerMove to one rAF-scheduled pick using the latest cursor coords; cancel pending frame on cleanup."}, {"id": "button-gate", "content": "Track pointer button state via pointerdown/up/cancel and skip picking while any button is held (covers pan/zoom/orbit/drag); fold in or remove the old busy check."}, {"id": "cleanup-debug", "content": "Remove the [DEBUG] window.\_\_p3d\* globals added with this feature and verify hover/click correctness, occlusion, and antialiasing."}]

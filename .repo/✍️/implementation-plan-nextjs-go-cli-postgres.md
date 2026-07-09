@@ -42,7 +42,7 @@ The new design must ensure that the **publicly accessible server only accepts re
 
 ### 2.2 Constraints inferred from the uploaded codebase
 
-- The current CLI already has extensive ticket, GraphQL, MCP, tree/search, and hook/session behavior and stores ticket state locally as JSON/files under repo metadata paths. This is visible in the CLI command wiring and ticket persistence helpers. The CLI currently persists tickets via `SaveTicket`, reads them via `ReadTicket`, and emits ticket lifecycle events. It also keeps drafts in a repo meta path. 
+- The current CLI already has extensive ticket, GraphQL, MCP, tree/search, and hook/session behavior and stores ticket state locally as JSON/files under repo metadata paths. This is visible in the CLI command wiring and ticket persistence helpers. The CLI currently persists tickets via `SaveTicket`, reads them via `ReadTicket`, and emits ticket lifecycle events. It also keeps drafts in a repo meta path.
 - The current server is a Go HTTP server with SQLite, bearer-token auth, event persistence, ticket endpoints, diff ingestion, indexing endpoints, GitHub webhook handling, and Discord webhook notifications.
 - The current server auth is only a single bearer token check and even allows unauthenticated access if no token is configured.
 - The spec treats tickets, sessions, interactions, commands, hooks, and events as first-class domain objects and explicitly models `.repo` event files as persisted history.
@@ -953,16 +953,16 @@ Create `repo/postgres/schema.sql` with:
 
 ```yaml
 services:
-  reverse-proxy:
-    image: caddy:latest
-  web:
-    build: ./apps/web
-  worker:
-    build: ./apps/web
-  postgres:
-    image: postgres:16
-  backup:
-    image: postgres:16
+ reverse-proxy:
+  image: caddy:latest
+ web:
+  build: ./apps/web
+ worker:
+  build: ./apps/web
+ postgres:
+  image: postgres:16
+ backup:
+  image: postgres:16
 ```
 
 Optional later:

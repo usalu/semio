@@ -37,21 +37,7 @@ type GqlWireObject = { readonly [k: string]: unknown };
 // #endregion 🧾GqlWire
 
 // #region 📤UiReExports
-export {
-  AlgorithmApp,
-  WindowKind,
-  createIpoAlgorithmLayout,
-  getKitPorts,
-  kitSurface,
-  useAlgorithm,
-  type AlgorithmAppProps,
-  type AlgorithmContextValue,
-  type AlgorithmWindowDef,
-  type DesignDiff,
-  type DesignPlain,
-  type MoveVector,
-  type VecValue,
-};
+export { AlgorithmApp, WindowKind, createIpoAlgorithmLayout, getKitPorts, kitSurface, useAlgorithm, type AlgorithmAppProps, type AlgorithmContextValue, type AlgorithmWindowDef, type DesignDiff, type DesignPlain, type MoveVector, type VecValue };
 // #endregion 📤UiReExports
 
 /** @emoji 📍 2D coordinate used by drag algorithms (`u`/`v` plane). */
@@ -272,12 +258,8 @@ export function selectionIdsFromWire(
 ): { pieceIds: string[]; connectionIds: string[] } {
   const omitP = new Set(options?.omitPieceIds ?? []);
   const omitC = new Set(options?.omitConnectionIds ?? []);
-  const pieceIds = Array.from(
-    new Set([...(wire.pieces ?? []).map((p) => String(p.id ?? "")).filter(Boolean), ...(options?.extraPieceIds ?? [])].filter((id) => !omitP.has(id))),
-  );
-  const connectionIds = Array.from(
-    new Set([...(wire.connections ?? []).map((c) => String(c.id ?? "")).filter(Boolean), ...(options?.extraConnectionIds ?? [])].filter((id) => !omitC.has(id))),
-  );
+  const pieceIds = Array.from(new Set([...(wire.pieces ?? []).map((p) => String(p.id ?? "")).filter(Boolean), ...(options?.extraPieceIds ?? [])].filter((id) => !omitP.has(id))));
+  const connectionIds = Array.from(new Set([...(wire.connections ?? []).map((c) => String(c.id ?? "")).filter(Boolean), ...(options?.extraConnectionIds ?? [])].filter((id) => !omitC.has(id))));
   return { pieceIds, connectionIds };
 }
 
@@ -321,19 +303,19 @@ function __toBootstrap(kit: unknown): GqlWireObject {
 }
 
 async function __withJsStore<T>(kit: unknown, fn: (store: JsStore) => Promise<T>): Promise<T> {
-	const session = await openSessionInMemory();
-	try {
-		const stores = await session.stores();
-		const store = stores[0];
-		if (!store) throw new Error("__withJsStore: session has no stores");
-		const installed = await store.installProjection(JSON.stringify(__toBootstrap(kit)));
-		if (!installed.ok) {
-			throw new Error(`__withJsStore: installProjection failed: ${installed.error?.message ?? "unknown"}`);
-		}
-		return await fn(store);
-	} finally {
-		await session.dispose();
-	}
+  const session = await openSessionInMemory();
+  try {
+    const stores = await session.stores();
+    const store = stores[0];
+    if (!store) throw new Error("__withJsStore: session has no stores");
+    const installed = await store.installProjection(JSON.stringify(__toBootstrap(kit)));
+    if (!installed.ok) {
+      throw new Error(`__withJsStore: installProjection failed: ${installed.error?.message ?? "unknown"}`);
+    }
+    return await fn(store);
+  } finally {
+    await session.dispose();
+  }
 }
 
 async function __readFlattenLayout(store: JsStore, designId: string): Promise<readonly { pieceId: string; plane: unknown; center: { u: number; v: number } }[]> {
@@ -621,16 +603,19 @@ export function useFlatDesignPreview(kit: unknown, designId: string) {
   const [diagramLayoutDiff, setDiagramLayoutDiff] = React.useState<DesignDiff | undefined>(undefined);
   const [loading, setLoading] = React.useState(true);
 
-  __useCancelledEffect(async (isCancelled) => {
-    setLoading(true);
-    setFlatInputDesign(null);
-    setDiagramLayoutDiff(undefined);
-    const bundle = await loadFlatDesignBundle(kit, designId);
-    if (isCancelled()) return;
-    setFlatInputDesign(bundle.flat);
-    setDiagramLayoutDiff(bundle.diagramLayoutDiff);
-    setLoading(bundle.flat === null);
-  }, [kit, designId]);
+  __useCancelledEffect(
+    async (isCancelled) => {
+      setLoading(true);
+      setFlatInputDesign(null);
+      setDiagramLayoutDiff(undefined);
+      const bundle = await loadFlatDesignBundle(kit, designId);
+      if (isCancelled()) return;
+      setFlatInputDesign(bundle.flat);
+      setDiagramLayoutDiff(bundle.diagramLayoutDiff);
+      setLoading(bundle.flat === null);
+    },
+    [kit, designId],
+  );
 
   return { flatInputDesign, diagramLayoutDiff, loading, ready: flatInputDesign !== null };
 }
@@ -642,18 +627,21 @@ export function useFlattenPreview(kit: unknown, designId: string) {
   const [flattenDiff, setFlattenDiff] = React.useState<DesignDiff | undefined>(undefined);
   const [loading, setLoading] = React.useState(true);
 
-  __useCancelledEffect(async (isCancelled) => {
-    setLoading(true);
-    setFlatPreview(null);
-    setFlattenedPreview(null);
-    setFlattenDiff(undefined);
-    const [flatResult, flattenedResult, flattenResult] = await Promise.all([flatDesign(kit, designId), flattenedDesign(kit, designId), flattenDesign(kit, designId)]);
-    if (isCancelled()) return;
-    setFlatPreview(flatResult);
-    setFlattenedPreview(flattenedResult);
-    setFlattenDiff(flattenResult.ok ? flattenResult.diff.forward : undefined);
-    setLoading(!flatResult || !flattenedResult || !flattenResult.ok);
-  }, [kit, designId]);
+  __useCancelledEffect(
+    async (isCancelled) => {
+      setLoading(true);
+      setFlatPreview(null);
+      setFlattenedPreview(null);
+      setFlattenDiff(undefined);
+      const [flatResult, flattenedResult, flattenResult] = await Promise.all([flatDesign(kit, designId), flattenedDesign(kit, designId), flattenDesign(kit, designId)]);
+      if (isCancelled()) return;
+      setFlatPreview(flatResult);
+      setFlattenedPreview(flattenedResult);
+      setFlattenDiff(flattenResult.ok ? flattenResult.diff.forward : undefined);
+      setLoading(!flatResult || !flattenedResult || !flattenResult.ok);
+    },
+    [kit, designId],
+  );
 
   return { flatPreview, flattenedPreview, flattenDiff, loading, ready: flatPreview !== null && flattenedPreview !== null && flattenDiff !== undefined };
 }
@@ -736,7 +724,11 @@ export function useCopyPastePreview(params: {
   const target = useFlatDesignPreview(params.kitWithTarget, params.targetDesignId);
   const ready = source.ready && target.ready;
   const hasSelection = params.selectedPieceIds.length > 0 || params.selectedConnectionIds.length > 0;
-  const { result: designDiff, loading: runLoading, error } = useAlgorithmAsyncRun(
+  const {
+    result: designDiff,
+    loading: runLoading,
+    error,
+  } = useAlgorithmAsyncRun(
     ready && hasSelection,
     async () => {
       if (!source.flatInputDesign) return undefined;

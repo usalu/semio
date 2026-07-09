@@ -1270,9 +1270,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚go💻compose📌1📌6182"
-        ],
+        "ranges": ["👤compose📚go💻compose📌1📌6182"],
         "second": "🎆26🌙03☀️08⏰17⌚53⏱️36"
       },
       "response": {

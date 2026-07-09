@@ -21,11 +21,11 @@ var PLUGIN_BUILD_TARGETS = [
   { pluginId: "shooting", cratePath: "shooting/plugin/rs", wasmOut: "shooting_plugin.wasm" },
   { pluginId: "trinity", cratePath: "trinity/plugin/rs", wasmOut: "trinity_plugin.wasm" },
   { pluginId: "vcs", cratePath: "vcs/plugin/rs", wasmOut: "vcs_plugin.wasm" },
-  { pluginId: "writer", cratePath: "writer/plugin/rs", wasmOut: "writer_plugin.wasm" }
+  { pluginId: "writer", cratePath: "writer/plugin/rs", wasmOut: "writer_plugin.wasm" },
 ];
 var PLUGIN_TARGETS = PLUGIN_BUILD_TARGETS.map((target) => ({
   pluginId: target.pluginId,
-  moduleUrl: `/plugin-modules/${target.pluginId}/${target.wasmOut.replace(/\.wasm$/, ".js")}`
+  moduleUrl: `/plugin-modules/${target.pluginId}/${target.wasmOut.replace(/\.wasm$/, ".js")}`,
 }));
 
 // js/boot.ts
@@ -48,7 +48,7 @@ class PluginWorkerClient {
   pluginId;
   moduleUrl;
   worker = null;
-  pending = new Map;
+  pending = new Map();
   constructor(pluginId, moduleUrl) {
     this.pluginId = pluginId;
     this.moduleUrl = moduleUrl;
@@ -61,8 +61,7 @@ class PluginWorkerClient {
     }
   }
   terminateWorker() {
-    if (!this.worker)
-      return;
+    if (!this.worker) return;
     this.worker.terminate();
     this.worker = null;
   }
@@ -70,11 +69,9 @@ class PluginWorkerClient {
     worker.onmessage = (event) => {
       const message = event.data;
       const requestId = message.requestId;
-      if (!requestId)
-        return;
+      if (!requestId) return;
       const entry = this.pending.get(requestId);
-      if (!entry)
-        return;
+      if (!entry) return;
       window.clearTimeout(entry.timer);
       this.pending.delete(requestId);
       if (message.type === "error") {
@@ -173,7 +170,7 @@ async function loadPluginModuleViaWorker(pluginId, moduleUrl) {
     renderWithDocument: async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState), documentJson)),
     tools: async (instanceId, viewState) => JSON.parse(await client.tools(instanceId, JSON.stringify(viewState))),
     windowEngagements: async (instanceId, viewState) => JSON.parse(await client.windowEngagements(instanceId, JSON.stringify(viewState))),
-    windowMeasures: async (instanceId, viewState) => JSON.parse(await client.windowMeasures(instanceId, JSON.stringify(viewState)))
+    windowMeasures: async (instanceId, viewState) => JSON.parse(await client.windowMeasures(instanceId, JSON.stringify(viewState))),
   };
 }
 function pluginHandleForBridge(handle) {
@@ -186,7 +183,7 @@ function pluginHandleForBridge(handle) {
     renderWithDocument: handle.renderWithDocument ? (instanceId, bodyKey, viewStateJson, documentJson) => handle.renderWithDocument(instanceId, bodyKey, JSON.parse(viewStateJson), documentJson).then((node) => JSON.stringify(node)) : undefined,
     tools: (instanceId, viewStateJson) => handle.tools(instanceId, JSON.parse(viewStateJson)).then((nodes) => JSON.stringify(nodes)),
     windowEngagements: (instanceId, viewStateJson) => handle.windowEngagements(instanceId, JSON.parse(viewStateJson)).then((engagements) => JSON.stringify(engagements)),
-    windowMeasures: (instanceId, viewStateJson) => handle.windowMeasures(instanceId, JSON.parse(viewStateJson)).then((measures) => JSON.stringify(measures))
+    windowMeasures: (instanceId, viewStateJson) => handle.windowMeasures(instanceId, JSON.parse(viewStateJson)).then((measures) => JSON.stringify(measures)),
   };
 }
 var pluginFromUrl = new URLSearchParams(location.search).get("plugin");
@@ -210,10 +207,12 @@ for (const entry of pluginTargets) {
 if (availableTargets.length === 0) {
   throw new Error(`[DEBUG] no wasm plugin modules found for filter ${pluginFilter}`);
 }
-var handles = await Promise.all(availableTargets.map(async (entry) => ({
-  pluginId: entry.pluginId,
-  handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl))
-})));
+var handles = await Promise.all(
+  availableTargets.map(async (entry) => ({
+    pluginId: entry.pluginId,
+    handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl)),
+  })),
+);
 var bindings = await new Promise((resolve, reject) => {
   const host = window;
   const finish = () => {
@@ -235,10 +234,8 @@ var bindings = await new Promise((resolve, reject) => {
   };
   window.addEventListener("TrunkApplicationStarted", done, { once: true });
   const poll = window.setInterval(() => {
-    if (host.wasmBindings)
-      done();
+    if (host.wasmBindings) done();
   }, 50);
 });
-if (!bindings.semioRendererBoot)
-  throw new Error("[DEBUG] missing semioRendererBoot");
+if (!bindings.semioRendererBoot) throw new Error("[DEBUG] missing semioRendererBoot");
 await bindings.semioRendererBoot(handles, pluginFilter);

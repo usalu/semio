@@ -2,33 +2,33 @@
 name: Wires Kit Relationship View
 overview: Replace the kit app's Diagram window with a Wires window whose identities are the currently-visible VFS file nodes and whose relationships come directly from the Rust store, with edges resolved to the closest relationship given VFS collapse/expand state (transitive design->type when collapsed, direct design->piece->type when expanded).
 todos:
-  - id: ticket
-    content: Read repo://goals and open/reopen a repo-MCP ticket for the Wires kit relationship view
-    status: completed
-  - id: window
-    content: Rename kit Diagram window/surface/component to Wires (manifest, constants, body registration, route/pane parsing, selection, instanceId helper)
-    status: completed
-  - id: visible-nodes
-    content: Add visibleVirtualFileSystemNodes(scope) to VirtualFileSystemController and expose the kit-scope visible set in the shell
-    status: completed
-  - id: reference-fetch
-    content: Add async Rust-backed reference fetching (referencesTypesTransitive/referencesDesignsTransitive, piece.blueprint) cached per kit
-    status: completed
-  - id: builder
-    content: "Implement sketchpadKitWiresFixture: identities from visible nodes, owns/has containment edges, is/references edges with collapse/expand bridging, kind catalogs, seed layout"
-    status: completed
-  - id: sync
-    content: Re-run wires topology sync on kit change, VFS expand toggle, children load, and route change (async upsert)
-    status: completed
-  - id: i18n
-    content: Update kit window labels/i18n from Diagram to Wires
-    status: completed
-  - id: tests
-    content: Extend existing tests for identity coverage and collapsed-transitive vs expanded-direct edge resolution
-    status: completed
-  - id: close
-    content: Verify at runtime via launch.json and close the repo-MCP ticket with a summary of changed files
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open/reopen a repo-MCP ticket for the Wires kit relationship view
+   status: completed
+ - id: window
+   content: Rename kit Diagram window/surface/component to Wires (manifest, constants, body registration, route/pane parsing, selection, instanceId helper)
+   status: completed
+ - id: visible-nodes
+   content: Add visibleVirtualFileSystemNodes(scope) to VirtualFileSystemController and expose the kit-scope visible set in the shell
+   status: completed
+ - id: reference-fetch
+   content: Add async Rust-backed reference fetching (referencesTypesTransitive/referencesDesignsTransitive, piece.blueprint) cached per kit
+   status: completed
+ - id: builder
+   content: "Implement sketchpadKitWiresFixture: identities from visible nodes, owns/has containment edges, is/references edges with collapse/expand bridging, kind catalogs, seed layout"
+   status: completed
+ - id: sync
+   content: Re-run wires topology sync on kit change, VFS expand toggle, children load, and route change (async upsert)
+   status: completed
+ - id: i18n
+   content: Update kit window labels/i18n from Diagram to Wires
+   status: completed
+ - id: tests
+   content: Extend existing tests for identity coverage and collapsed-transitive vs expanded-direct edge resolution
+   status: completed
+ - id: close
+   content: Verify at runtime via launch.json and close the repo-MCP ticket with a summary of changed files
+   status: completed
 isProject: false
 ---
 
@@ -40,7 +40,7 @@ The kit app's relationship view becomes a real WIRES graph. Every node currently
 
 - A node is shown only if it is visible in the VFS (root + expanded branches).
 - Containment is drawn parent -> child (matching the VFS tree).
-- Reference relationships are drawn at the *closest* granularity: a collapsed design shows its transitive `references` edge to a visible type; once expanded (pieces visible), that transitive edge is dropped and the direct chain `design --has--> piece --is--> type` is shown instead.
+- Reference relationships are drawn at the _closest_ granularity: a collapsed design shows its transitive `references` edge to a visible type; once expanded (pieces visible), that transitive edge is dropped and the direct chain `design --has--> piece --is--> type` is shown instead.
 
 ## Mechanism
 
@@ -59,13 +59,11 @@ flowchart LR
   BUILD --> WF --> P2D --> TOPO --> FIVE
 ```
 
-
-
 Edge resolution rule (generalized from the design/type example): a transitive reference edge `A -> C` is emitted only when no intermediate node on its path is visible; if the intermediate `B` is visible, emit `A -> B` and `B -> C` instead.
 
 ## Relationship-kind mapping (4 WIRES kinds)
 
-- `owns`: containment for kit/typology/folder -> child (kit->typology/folder/file/family, folder->*, typology->type/design).
+- `owns`: containment for kit/typology/folder -> child (kit->typology/folder/file/family, folder->\*, typology->type/design).
 - `has`: type -> representation/port/connector; design -> piece/connection; piece -> child piece/connection.
 - `is`: visible piece -> its blueprint type/design (`Piece.blueprint()`), drawn only when the blueprint node is also visible.
 - `references`: collapsed design -> visible type/design via `referencesTypesTransitive()` / `referencesDesignsTransitive()`; suppressed when the design is expanded.
@@ -81,7 +79,7 @@ Edge resolution rule (generalized from the design/type example): a transitive re
 
 ### 1. Window: rename Diagram -> Wires (sketchpad)
 
-- In the kit app manifest (~~14407-14418) replace the `diagram` window kind with `{ id: "wires", label: "Wires", bodyKey: SKETCHPAD_BODY_KIT_WIRES }`; update `createDefaultLayout([...])`, `SKETCHPAD_BODY_KIT_`* / `SKETCHPAD_SURFACE_KIT_*` constants (~~13089-13119), and body registration (~14466).
+- In the kit app manifest (~~14407-14418) replace the `diagram` window kind with `{ id: "wires", label: "Wires", bodyKey: SKETCHPAD_BODY_KIT_WIRES }`; update `createDefaultLayout([...])`, `SKETCHPAD_BODY_KIT_`_ / `SKETCHPAD*SURFACE_KIT*_` constants (~~13089-13119), and body registration (~14466).
 - Rename `SketchpadKitDiagram` (~13274) to `SketchpadKitWires` (still a `puzzle5d` flat `SketchpadRoutedComponent`); keep `presentation: "flat"`.
 - Update route/pane parsing (`parseSketchpadRouteScopeFromPath`, `kit-diagram` pane) and selection application (`sketchpadApplyPuzzle2dSelection`, `sketchpadPathFromDiagramNodeId`) and the `sketchpadKitDiagramInstanceId` -> `...WiresInstanceId` helper (~11590).
 
@@ -122,4 +120,3 @@ Edge resolution rule (generalized from the design/type example): a transitive re
 
 - Confirmed: rename Diagram -> Wires (no separate window), and all visible VFS node kinds become identities.
 - Rendering reuses the existing FiveD flat topology path (the current kit diagram already renders handle-less nodes + edges), so no new renderer is required beyond relationship-kind catalogs.
-

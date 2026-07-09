@@ -37,9 +37,7 @@ for (const target of targets) {
   try {
     await page.waitForTimeout(4000);
 
-    const metrics = await page.evaluate(() =>
-      [...document.querySelectorAll("canvas")].map((c) => ({ w: c.width, h: c.height }))
-    );
+    const metrics = await page.evaluate(() => [...document.querySelectorAll("canvas")].map((c) => ({ w: c.width, h: c.height })));
     const svgCount = await page.evaluate(() => document.querySelectorAll("svg").length);
     const validCanvases = metrics.filter((m) => m.w >= 2 && m.h >= 2).length;
     if (validCanvases < target.canvasMin) {

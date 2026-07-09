@@ -70,27 +70,27 @@ In `sketchpadMachine`:
 
 ```ts
 interface SketchpadContext {
-  yDoc: Y.Doc;
-  ySketchpad: Y.Map<any>;
+ yDoc: Y.Doc;
+ ySketchpad: Y.Map<any>;
 
-  // Pure in-memory UI state
-  theme: Theme;
-  language: string;
-  layout: Layout;
-  mode: Mode;
-  expertise: Expertise;
-  isFullscreen: boolean;
-  panelSizes: PanelSizes;
-  navigation: string;
-  navigationHistory: string[];
-  navigationHistoryIndex: number;
+ // Pure in-memory UI state
+ theme: Theme;
+ language: string;
+ layout: Layout;
+ mode: Mode;
+ expertise: Expertise;
+ isFullscreen: boolean;
+ panelSizes: PanelSizes;
+ navigation: string;
+ navigationHistory: string[];
+ navigationHistoryIndex: number;
 
-  // Per-app maps
-  homeApp: HomeAppState;
-  kitApps: Record<Guid, KitAppState>;
-  typeApps: Record<string, TypeAppState>;
-  designApps: Record<string, DesignAppState>;
-  qualityApps: Record<string, QualityAppState>;
+ // Per-app maps
+ homeApp: HomeAppState;
+ kitApps: Record<Guid, KitAppState>;
+ typeApps: Record<string, TypeAppState>;
+ designApps: Record<string, DesignAppState>;
+ qualityApps: Record<string, QualityAppState>;
 }
 ```
 
@@ -119,8 +119,8 @@ import { useSketchpadActor } from "./Sketchpad";
 import { useSelector } from "@xstate/react";
 
 export function useXTheme(): Theme {
-  const actor = useSketchpadActor();
-  return useSelector(actor, (s) => s.context.theme);
+ const actor = useSketchpadActor();
+ return useSelector(actor, (s) => s.context.theme);
 }
 ```
 
@@ -128,8 +128,8 @@ Then gradually migrate existing hooks to call these, e.g.:
 
 ```ts
 export function useTheme(): Theme {
-  // temporary bridge
-  return useXTheme();
+ // temporary bridge
+ return useXTheme();
 }
 ```
 
@@ -152,12 +152,12 @@ For each app, define machine events:
 
 ```ts
 type DesignAppEvent =
-  | { type: "DESIGN.INIT"; kitGuid: Guid; designGuid: Guid; state: DesignAppState }
-  | { type: "DESIGN.SYNC"; kitGuid: Guid; designGuid: Guid; state: DesignAppState }
-  | { type: "DESIGN.HOVER_PIECE"; kitGuid: Guid; designGuid: Guid; piece: Guid }
-  | { type: "DESIGN.CLEAR_HOVER"; kitGuid: Guid; designGuid: Guid }
-  | { type: "DESIGN.SELECT_ALL"; kitGuid: Guid; designGuid: Guid }
-  | { type: "DESIGN.DELETE_SELECTED"; kitGuid: Guid; designGuid: Guid };
+ | { type: "DESIGN.INIT"; kitGuid: Guid; designGuid: Guid; state: DesignAppState }
+ | { type: "DESIGN.SYNC"; kitGuid: Guid; designGuid: Guid; state: DesignAppState }
+ | { type: "DESIGN.HOVER_PIECE"; kitGuid: Guid; designGuid: Guid; piece: Guid }
+ | { type: "DESIGN.CLEAR_HOVER"; kitGuid: Guid; designGuid: Guid }
+ | { type: "DESIGN.SELECT_ALL"; kitGuid: Guid; designGuid: Guid }
+ | { type: "DESIGN.DELETE_SELECTED"; kitGuid: Guid; designGuid: Guid };
 // ...
 ```
 
@@ -241,18 +241,18 @@ Introduce a clean, typed XState-centric command layer:
 
 ```ts
 export function useSketchpadCommands() {
-  const actor = useSketchpadActor();
-  const navigate = useNavigate();
+ const actor = useSketchpadActor();
+ const navigate = useNavigate();
 
-  return {
-    setTheme: (origin: string, theme: Theme) => actor.send({ type: "SET_THEME", theme }),
-    navigateToKit: (kit: Guid, search?: string) => {
-      const path = `/kits/${kit}${search ? `?${search}` : ""}`;
-      actor.send({ type: "NAVIGATE", path });
-      navigate(path);
-    },
-    // ...
-  };
+ return {
+  setTheme: (origin: string, theme: Theme) => actor.send({ type: "SET_THEME", theme }),
+  navigateToKit: (kit: Guid, search?: string) => {
+   const path = `/kits/${kit}${search ? `?${search}` : ""}`;
+   actor.send({ type: "NAVIGATE", path });
+   navigate(path);
+  },
+  // ...
+ };
 }
 ```
 
@@ -280,9 +280,9 @@ You can then:
 
    ```ts
    export function useDesignAppState(kitGuid: Guid, designGuid: Guid) {
-     const actor = useSketchpadActor();
-     const key = `${kitGuid}:${designGuid}`;
-     return useSelector(actor, (s) => s.context.designApps[key] ?? createDefaultDesignAppState());
+    const actor = useSketchpadActor();
+    const key = `${kitGuid}:${designGuid}`;
+    return useSelector(actor, (s) => s.context.designApps[key] ?? createDefaultDesignAppState());
    }
    ```
 
@@ -397,17 +397,17 @@ In `machines.ts`, ensure `DesignAppState` there matches what you need (not the Y
 
 ```ts
 export interface DesignAppState {
-  panelVisibility: PanelVisibility;
-  selection?: DesignAppSelection;
-  hover?: DesignAppHover;
-  focusedPiece?: Guid;
-  selectedModelTags: Record<Guid, string[]>;
-  diagramCenter?: { x: number; y: number };
-  diagramScale?: number;
-  camera?: Camera;
-  activeTool: ToolKind;
-  fullscreenWindow: DesignAppFullscreenWindow;
-  windowLayout?: any;
+ panelVisibility: PanelVisibility;
+ selection?: DesignAppSelection;
+ hover?: DesignAppHover;
+ focusedPiece?: Guid;
+ selectedModelTags: Record<Guid, string[]>;
+ diagramCenter?: { x: number; y: number };
+ diagramScale?: number;
+ camera?: Camera;
+ activeTool: ToolKind;
+ fullscreenWindow: DesignAppFullscreenWindow;
+ windowLayout?: any;
 }
 ```
 
@@ -470,9 +470,9 @@ In `Design.tsx`, near `designAppCommands`, create a helper that **does NOT know 
 
 ```ts
 export function runDesignAppCommand(sketchpadStore: SketchpadStore, kitGuid: Guid, designGuid: Guid, command: string, origin: string, ...args: any[]): DesignAppCommandResult {
-  const designAppStore = sketchpadStore.designApp(kitGuid, designGuid) as DesignAppStore;
-  // Reuse its executeCommand, but we’ll intercept the result
-  return designAppStore.execute<DesignAppCommandResult>(command, origin, ...args);
+ const designAppStore = sketchpadStore.designApp(kitGuid, designGuid) as DesignAppStore;
+ // Reuse its executeCommand, but we’ll intercept the result
+ return designAppStore.execute<DesignAppCommandResult>(command, origin, ...args);
 }
 ```
 
@@ -538,9 +538,9 @@ Right now:
 
 ```ts
 export function useDesignAppSelection(id?: DesignAppId): DesignAppSelection {
-  const store = useDesignAppStore(identitySelector, id);
-  if (!store) return EMPTY_SELECTION;
-  return useSyncField(store as DesignAppStore, "selection", selectSelection);
+ const store = useDesignAppStore(identitySelector, id);
+ if (!store) return EMPTY_SELECTION;
+ return useSyncField(store as DesignAppStore, "selection", selectSelection);
 }
 ```
 
@@ -552,21 +552,21 @@ Similar to Type selectors you already have, add:
 
 ```ts
 export const createDesignAppSelector = (kitGuid: Guid, designGuid: Guid) => {
-  const key = `${kitGuid}:${designGuid}`;
-  return (state: { context: SketchpadContext }) => {
-    const app = state.context.designApps[key];
-    return app ?? createDefaultDesignAppState();
-  };
+ const key = `${kitGuid}:${designGuid}`;
+ return (state: { context: SketchpadContext }) => {
+  const app = state.context.designApps[key];
+  return app ?? createDefaultDesignAppState();
+ };
 };
 
 export const createDesignSelectionSelector = (kitGuid: Guid, designGuid: Guid) => {
-  const key = `${kitGuid}:${designGuid}`;
-  return (state: { context: SketchpadContext }) => state.context.designApps[key]?.selection ?? {};
+ const key = `${kitGuid}:${designGuid}`;
+ return (state: { context: SketchpadContext }) => state.context.designApps[key]?.selection ?? {};
 };
 
 export const createDesignActiveToolSelector = (kitGuid: Guid, designGuid: Guid) => {
-  const key = `${kitGuid}:${designGuid}`;
-  return (state: { context: SketchpadContext }) => state.context.designApps[key]?.activeTool ?? ToolKind.SELECTION_NORMAL;
+ const key = `${kitGuid}:${designGuid}`;
+ return (state: { context: SketchpadContext }) => state.context.designApps[key]?.activeTool ?? ToolKind.SELECTION_NORMAL;
 };
 
 // same for hover, fullscreenWindow, panelVisibility, camera, etc.
@@ -582,24 +582,24 @@ import { useSketchpadActor } from "./Sketchpad";
 import { createDesignSelectionSelector, createDesignActiveToolSelector } from "./machines";
 
 function resolveDesignIds(id?: DesignAppId) {
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
-  return {
-    kitGuid: kitScope?.guid ?? id?.kit,
-    designGuid: designScope?.guid ?? id?.design,
-  };
+ const kitScope = useKitScope();
+ const designScope = useDesignScope();
+ return {
+  kitGuid: kitScope?.guid ?? id?.kit,
+  designGuid: designScope?.guid ?? id?.design,
+ };
 }
 
 export function useDesignAppSelectionXState(id?: DesignAppId): DesignAppSelection {
-  const actor = useSketchpadActor();
-  const { kitGuid, designGuid } = resolveDesignIds(id);
-  return useSelector(actor, createDesignSelectionSelector(kitGuid!, designGuid!));
+ const actor = useSketchpadActor();
+ const { kitGuid, designGuid } = resolveDesignIds(id);
+ return useSelector(actor, createDesignSelectionSelector(kitGuid!, designGuid!));
 }
 
 export function useDesignAppActiveToolXState(id?: DesignAppId): ToolKind {
-  const actor = useSketchpadActor();
-  const { kitGuid, designGuid } = resolveDesignIds(id);
-  return useSelector(actor, createDesignActiveToolSelector(kitGuid!, designGuid!));
+ const actor = useSketchpadActor();
+ const { kitGuid, designGuid } = resolveDesignIds(id);
+ return useSelector(actor, createDesignActiveToolSelector(kitGuid!, designGuid!));
 }
 ```
 
@@ -607,11 +607,11 @@ Then **flip** the old hooks to delegate to the new ones:
 
 ```ts
 export function useDesignAppSelection(id?: DesignAppId): DesignAppSelection {
-  return useDesignAppSelectionXState(id);
+ return useDesignAppSelectionXState(id);
 }
 
 export function useDesignAppActiveTool(id?: DesignAppId): ToolKind {
-  return useDesignAppActiveToolXState(id);
+ return useDesignAppActiveToolXState(id);
 }
 ```
 
@@ -646,18 +646,18 @@ Replace them with:
 
    ```ts
    export function useDesignAppCommands(kitGuid: Guid, designGuid: Guid) {
-     const actor = useSketchpadActor();
+    const actor = useSketchpadActor();
 
-     return {
-       setActiveTool: (origin: string, tool: ToolKind) => actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, tool }),
-       hoverPiece: (origin: string, pieceGuid: Guid) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { pieces: [pieceGuid] } }),
-       clearHover: (origin: string) => actor.send({ type: "DESIGN.CLEAR_HOVER", kitGuid, designGuid }),
-       setSelection: (origin: string, selection: DesignAppSelection) => actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection }),
-       // For domain edits:
-       executeDomainCommand: (origin: string, command: string, ...args: any[]) => {
-         // either actor.send({ type: "DESIGN.EXECUTE_CMD", ... }) and/or call runDesignAppCommand
-       },
-     };
+    return {
+     setActiveTool: (origin: string, tool: ToolKind) => actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, tool }),
+     hoverPiece: (origin: string, pieceGuid: Guid) => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { pieces: [pieceGuid] } }),
+     clearHover: (origin: string) => actor.send({ type: "DESIGN.CLEAR_HOVER", kitGuid, designGuid }),
+     setSelection: (origin: string, selection: DesignAppSelection) => actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection }),
+     // For domain edits:
+     executeDomainCommand: (origin: string, command: string, ...args: any[]) => {
+      // either actor.send({ type: "DESIGN.EXECUTE_CMD", ... }) and/or call runDesignAppCommand
+     },
+    };
    }
    ```
 
@@ -806,23 +806,23 @@ Take the richer one from `Type.tsx`, but maybe trim presence if you prefer a sep
 ```ts
 // machines.ts
 export interface TypeAppState {
-  fullscreenWindow: TypeAppFullscreenWindow;
-  panelVisibility: PanelVisibility;
-  activeTool: ToolKind;
+ fullscreenWindow: TypeAppFullscreenWindow;
+ panelVisibility: PanelVisibility;
+ activeTool: ToolKind;
 
-  selection?: TypeAppSelection;
-  hover?: TypeAppHover;
+ selection?: TypeAppSelection;
+ hover?: TypeAppHover;
 
-  // Could keep presence here or move to a separate 'awareness' slice
-  presence?: TypeAppPresence;
-  others: TypeAppPresenceOther[];
+ // Could keep presence here or move to a separate 'awareness' slice
+ presence?: TypeAppPresence;
+ others: TypeAppPresenceOther[];
 
-  camera?: Camera;
-  focusedConnectorGuid?: Guid;
-  selectedModelGuid?: Guid;
-  selectedModelTags?: string[];
+ camera?: Camera;
+ focusedConnectorGuid?: Guid;
+ selectedModelGuid?: Guid;
+ selectedModelTags?: string[];
 
-  windowLayout?: any;
+ windowLayout?: any;
 }
 ```
 
@@ -1019,38 +1019,38 @@ Now build XState-powered hooks in `Type.tsx` (or a new `Type.xstate.ts` file):
 import { useSelector } from "@xstate/react";
 import { useSketchpadActor } from "./Sketchpad";
 import {
-  createTypeAppSelector,
-  createTypeSelectionSelector,
-  createTypePanelVisibilitySelector,
-  createTypeHoverSelector,
-  createTypeCameraSelector,
-  createTypeActiveToolSelector,
-  createTypeSelectedModelGuidSelector,
-  createTypeSelectedModelTagsSelector,
+ createTypeAppSelector,
+ createTypeSelectionSelector,
+ createTypePanelVisibilitySelector,
+ createTypeHoverSelector,
+ createTypeCameraSelector,
+ createTypeActiveToolSelector,
+ createTypeSelectedModelGuidSelector,
+ createTypeSelectedModelTagsSelector,
 } from "./machines";
 
 function resolveTypeIds(id?: TypeAppId) {
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
-  return {
-    kitGuid: kitScope?.guid ?? id?.kit,
-    typeGuid: typeScope?.guid ?? id?.type,
-  };
+ const kitScope = useKitScope();
+ const typeScope = useTypeScope();
+ return {
+  kitGuid: kitScope?.guid ?? id?.kit,
+  typeGuid: typeScope?.guid ?? id?.type,
+ };
 }
 
 export function useTypeAppXState<T = TypeAppState>(selector?: (state: TypeAppState) => T, id?: TypeAppId): T | TypeAppState | null {
-  const actor = useSketchpadActor();
-  const { kitGuid, typeGuid } = resolveTypeIds(id);
-  if (!kitGuid || !typeGuid) return null;
-  const baseSelector = createTypeAppSelector(kitGuid, typeGuid);
-  return useSelector(actor, (s) => (selector ? selector(baseSelector(s)) : baseSelector(s))) as T;
+ const actor = useSketchpadActor();
+ const { kitGuid, typeGuid } = resolveTypeIds(id);
+ if (!kitGuid || !typeGuid) return null;
+ const baseSelector = createTypeAppSelector(kitGuid, typeGuid);
+ return useSelector(actor, (s) => (selector ? selector(baseSelector(s)) : baseSelector(s))) as T;
 }
 
 export function useTypeAppSelectionXState(id?: TypeAppId): TypeAppSelection {
-  const actor = useSketchpadActor();
-  const { kitGuid, typeGuid } = resolveTypeIds(id);
-  if (!kitGuid || !typeGuid) return {};
-  return useSelector(actor, createTypeSelectionSelector(kitGuid, typeGuid));
+ const actor = useSketchpadActor();
+ const { kitGuid, typeGuid } = resolveTypeIds(id);
+ if (!kitGuid || !typeGuid) return {};
+ return useSelector(actor, createTypeSelectionSelector(kitGuid, typeGuid));
 }
 
 // repeat for panel visibility, hover, camera, focusedConnectorGuid, activeTool, selectedModelGuid, tags
@@ -1061,14 +1061,14 @@ Then **flip your existing hooks** to use these instead of Yjs:
 ```ts
 // Before:
 export function useTypeAppSelection(id?: TypeAppId): TypeAppSelection {
-  const store = useTypeAppStore(identitySelector, id);
-  if (!store) return EMPTY_TYPE_SELECTION;
-  return useSyncField<TypeAppState, TypeAppSelection>(store as TypeAppStore, "selection", selectTypeAppSelection);
+ const store = useTypeAppStore(identitySelector, id);
+ if (!store) return EMPTY_TYPE_SELECTION;
+ return useSyncField<TypeAppState, TypeAppSelection>(store as TypeAppStore, "selection", selectTypeAppSelection);
 }
 
 // After:
 export function useTypeAppSelection(id?: TypeAppId): TypeAppSelection {
-  return useTypeAppSelectionXState(id);
+ return useTypeAppSelectionXState(id);
 }
 ```
 
@@ -1103,72 +1103,72 @@ We want:
 
 ```ts
 export function useTypeAppCommands(id?: TypeAppId) {
-  const actor = useSketchpadActor();
-  const { kitGuid, typeGuid } = resolveTypeIds(id);
-  const noOp = () => {};
+ const actor = useSketchpadActor();
+ const { kitGuid, typeGuid } = resolveTypeIds(id);
+ const noOp = () => {};
 
-  if (!kitGuid || !typeGuid) {
-    return {
-      startTransaction: noOp,
-      finalizeTransaction: noOp,
-      abortTransaction: noOp,
-      undo: noOp,
-      redo: noOp,
-      togglePanel: noOp,
-      setCamera: noOp,
-      focusPort: noOp,
-      clearFocus: noOp,
-      setActiveTool: noOp,
-      selectConnector: noOp,
-      deselectConnector: noOp,
-      selectAll: noOp,
-      deselectAll: noOp,
-      setHover: noOp,
-      clearHover: noOp,
-      setSelectedModel: noOp,
-      addModelTag: noOp,
-      removeModelTag: noOp,
-      clearModelTags: noOp,
-      setModelTags: noOp,
-      execute: noOp,
-    };
-  }
-
+ if (!kitGuid || !typeGuid) {
   return {
-    // TODO: wire transactions separately (see below)
-    startTransaction: noOp,
-    finalizeTransaction: noOp,
-    abortTransaction: noOp,
-    undo: noOp,
-    redo: noOp,
-
-    togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
-      actor.send({ type: "TYPE.TOGGLE_PANEL", kitGuid, typeGuid, panel: panelKey });
-    },
-
-    setCamera: (origin: string, camera: Camera) => {
-      actor.send({ type: "TYPE.SET_CAMERA", kitGuid, typeGuid, camera });
-    },
-
-    focusPort: (origin: string, connectorGuid: Guid) => {
-      actor.send({ type: "TYPE.FOCUS_CONNECTOR", kitGuid, typeGuid, connectorGuid });
-    },
-
-    clearFocus: (origin: string) => {
-      actor.send({ type: "TYPE.FOCUS_CONNECTOR", kitGuid, typeGuid, connectorGuid: undefined });
-    },
-
-    setActiveTool: (origin: string, tool: ToolKind) => {
-      actor.send({ type: "TYPE.SET_ACTIVE_TOOL", kitGuid, typeGuid, tool });
-    },
-
-    selectConnector: (origin: string, connectorId: Guid) => {
-      // Compose the new selection based on current context, or later via a TYPE.SELECT_CONNECTOR event
-      // For now, get current selection via a selector and send TYPE.SET_SELECTION
-    },
-
-    // etc...
+   startTransaction: noOp,
+   finalizeTransaction: noOp,
+   abortTransaction: noOp,
+   undo: noOp,
+   redo: noOp,
+   togglePanel: noOp,
+   setCamera: noOp,
+   focusPort: noOp,
+   clearFocus: noOp,
+   setActiveTool: noOp,
+   selectConnector: noOp,
+   deselectConnector: noOp,
+   selectAll: noOp,
+   deselectAll: noOp,
+   setHover: noOp,
+   clearHover: noOp,
+   setSelectedModel: noOp,
+   addModelTag: noOp,
+   removeModelTag: noOp,
+   clearModelTags: noOp,
+   setModelTags: noOp,
+   execute: noOp,
   };
+ }
+
+ return {
+  // TODO: wire transactions separately (see below)
+  startTransaction: noOp,
+  finalizeTransaction: noOp,
+  abortTransaction: noOp,
+  undo: noOp,
+  redo: noOp,
+
+  togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
+   actor.send({ type: "TYPE.TOGGLE_PANEL", kitGuid, typeGuid, panel: panelKey });
+  },
+
+  setCamera: (origin: string, camera: Camera) => {
+   actor.send({ type: "TYPE.SET_CAMERA", kitGuid, typeGuid, camera });
+  },
+
+  focusPort: (origin: string, connectorGuid: Guid) => {
+   actor.send({ type: "TYPE.FOCUS_CONNECTOR", kitGuid, typeGuid, connectorGuid });
+  },
+
+  clearFocus: (origin: string) => {
+   actor.send({ type: "TYPE.FOCUS_CONNECTOR", kitGuid, typeGuid, connectorGuid: undefined });
+  },
+
+  setActiveTool: (origin: string, tool: ToolKind) => {
+   actor.send({ type: "TYPE.SET_ACTIVE_TOOL", kitGuid, typeGuid, tool });
+  },
+
+  selectConnector: (origin: string, connectorId: Guid) => {
+   // Compose the new selection based on current context, or later via a TYPE.SELECT_CONNECTOR event
+   // For now, get current selection via a selector and send TYPE.SET_SELECTION
+  },
+
+  // etc...
+ };
 }
 ```
 

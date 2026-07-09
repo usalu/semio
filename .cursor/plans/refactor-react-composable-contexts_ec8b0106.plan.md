@@ -2,45 +2,45 @@
 name: refactor-react-composable-contexts
 overview: Rewrite `compose/client/lib/react/index.tsx` as a sealed, schema-aligned context tree where every context carries only `{ id }`, every entity hook returns `EntityReadState` (no `compose/js` class leaks), every hook accepts at most one optional `id` argument — strictly that hook's own entity id — and all reads / commands are exposed exclusively as hooks. Parent scope is always from composed contexts, never extra optional ids on hooks.
 todos:
-  - id: open-ticket
-    content: "Open ticket under 🎯runningsketchpad goal: 'Refactor Compose React to Composable Schema-Aligned Contexts'."
-    status: completed
-  - id: types-region
-    content: "Add 🧬Types region: re-export only plain data types (Attribute, Benchmark, Coordinate, Plane, Point, Vector, Position, Offset, Place, Side, PositionInput, OffsetInput, SetResult, SetError, GraphRootKind, PieceBlueprint, ConnectionSide, KitReadPoint, …). NO compose/js entity classes are re-exported. Define a single `EntityReadState = FieldReadState<Readonly<{ id: string }>>` — same shape as FieldReadState<T> (value/loading/error/refresh) carrying the resolved `{ id }`. Used by every entity hook return; no per-entity aliases. Keep FieldReadState<T> and OperationStatus."
-    status: completed
-  - id: ids-region
-    content: "Add 🪪Ids region: one typed `Readonly<{ id: string }>` context per schema entity. Session is the only context whose value carries the JS Session reference (transport handle for internal use only — never returned by any exported hook). Add `PiecesBatchContext` with `{ pieceIds: readonly string[] }` (not a GraphQL entity id list on hooks — lives in context only)."
-    status: completed
-  - id: providers-region
-    content: "Add 🎭Providers region: `<XContextProvider id={…}>` for every entity. Each provider memoizes `{ id }` and renders Context.Provider. Graph tier is split into three sibling providers — WipContextProvider, StageContextProvider, AuthoritativeContextProvider (all singletons, no id). Workspace tier is split into TheKitContextProvider (singleton, no id) and AlternativeContextProvider({ id }). Backbone tier is split into three sibling providers each carrying `{ id }` — FileBackboneContextProvider, FolderBackboneContextProvider, WebsocketBackboneContextProvider. RemoteProviderContextProvider takes `id: <url>`. Add `PiecesBatchContextProvider` with `{ pieceIds: readonly string[] }` for batch piece operations (no hook params for parent design or id list). SessionContextProvider takes `session: Session`."
-    status: completed
-  - id: entity-hooks
-    content: "Add 🪝EntityHooks region: one `useX(id?: string): EntityReadState` per strong entity. At most one optional argument — **that entity's id only** (e.g. `useConnection(id?)`, never `designId`). If `id` is passed, it overrides only that entity's context id; parent entities are still resolved from composed contexts. If omitted, read the matching XContext; missing context with no arg throws. Weak-entity hooks (`usePosition`, `useFlatPosition`, `usePlane`, `useOrigin`) take **no** optional id — they resolve only through `PieceContext` + marker contexts."
-    status: pending
-  - id: field-hooks
-    content: "Add 🪝FieldHooks region: one `useX<Field>(id?: string): FieldReadState<T>` per (entity, field) pair across every entity in the schema — the optional `id` is **only** that field's owning entity id (same rule as entity hooks). Implementation lives in a private `useEntityField` helper which (a) resolves the JS entity from that single optional id + parent contexts, (b) subscribes to that entity's `on<Field>Changed` callback in compose/js, (c) falls back to a mount-time async read + bus-tick refetch when no field-level callback exists yet. The hook return is `{ value, loading, error, refresh }` — no JS class instance leaks."
-    status: pending
-  - id: operation-hooks
-    content: "Add 🪝OperationHooks region: one `useX<Op>(id?: string): readonly [(args) => Promise<SetResult>, OperationStatus]` per (entity, mutation) pair — the optional `id` is **only** the receiver entity's id (e.g. `useRenameDesign(id?)` for Design, `useDragPiece(id?)` for Piece). Batch `PiecesOperations` flows use `PiecesBatchContextProvider` with `{ pieceIds: readonly string[] }` under `DesignContext` (no extra hook params for design or piece list). Implementation lives in a private `useEntityOperation` helper; the consumer never sees the JS class."
-    status: pending
-  - id: list-hooks
-    content: "Add 🪝ListHooks region: id-list-stable readers like `useKitDesigns(id?: string)`, `useKitTypes(id?)`, …, `useDesignPieces(id?)`, `useDesignConnections(id?)`, `useTypePorts(id?)`, `useTypeConnectors(id?)`, `useTypeRepresentations(id?)`, `usePieceChildPieces(id?)`, `usePieceChildConnections(id?)` — each optional `id` is **only** the list owner's entity id (Kit, Design, Type, or Piece respectively). Output rows are plain `{ id }` records — consumers map them under the matching `<XContextProvider id={row.id}>`."
-    status: pending
-  - id: delete-legacy
-    content: "Delete: ShellHost block (ActiveKitTab*, KitWasmMountProvider, KitWasmHostContext, KitAlternativeSelection*, useKitAlternatives, SketchpadKitStoreFactory, SketchpadKitKindAvailability), context-row helpers (useDesignContextRow, useHasDesignContext, useResolvedDesign, useResolvedType, usePieceContextRead, useTypeContextRead, useQualityContextRead), selection-helper providers (PieceUnderActiveDesignProvider, ConnectionUnderActiveDesignProvider), legacy aggregate bundles (useDesigns, useTypes, usePieces), and the public bindFieldToReact / bindDefinedFieldToReact / bindKitFieldToReact / bindStoreFieldToReact / bindOperationToReact / bindStoreOperationToReact / bindPiecesOperationsOperationToReact exports. They become private internal helpers (useEntityField / useEntityOperation) — never exported."
-    status: completed
-  - id: seal-js
-    content: "Audit exports: ensure no compose/js entity class (Kit, Store, Graph, TheKit, Alternative, Session, Design, Type, Piece, Connection, Port, Connector, Representation, Quality, Tag, Concept, Author, Backbone, Provider, LocalProvider, RemoteProvider, Family, File, Folder, Layer, Group, Stat, Prop, Edit, Checkpoint, Change, Conflict, PiecesOperations) is re-exported from compose/react. Add a vitest banned-substring test that fails if any are."
-    status: pending
-  - id: vitest
-    content: "Update the 🧪Vitest region: (a) banned substrings extended to include `bindFieldToReact`, `bindOperationToReact`, `useSyncExternalStore`, plus a check that the public export list contains zero compose/js entity class names; (b) lightweight render test asserting `useDesign()` resolves `value.id` matching `DesignContextProvider` id (no class leak)."
-    status: completed
-  - id: verify
-    content: Run the package's lint + typecheck + vitest until green.
-    status: completed
-  - id: close-ticket
-    content: Close the ticket with summary and file list.
-    status: cancelled
+ - id: open-ticket
+   content: "Open ticket under 🎯runningsketchpad goal: 'Refactor Compose React to Composable Schema-Aligned Contexts'."
+   status: completed
+ - id: types-region
+   content: "Add 🧬Types region: re-export only plain data types (Attribute, Benchmark, Coordinate, Plane, Point, Vector, Position, Offset, Place, Side, PositionInput, OffsetInput, SetResult, SetError, GraphRootKind, PieceBlueprint, ConnectionSide, KitReadPoint, …). NO compose/js entity classes are re-exported. Define a single `EntityReadState = FieldReadState<Readonly<{ id: string }>>` — same shape as FieldReadState<T> (value/loading/error/refresh) carrying the resolved `{ id }`. Used by every entity hook return; no per-entity aliases. Keep FieldReadState<T> and OperationStatus."
+   status: completed
+ - id: ids-region
+   content: "Add 🪪Ids region: one typed `Readonly<{ id: string }>` context per schema entity. Session is the only context whose value carries the JS Session reference (transport handle for internal use only — never returned by any exported hook). Add `PiecesBatchContext` with `{ pieceIds: readonly string[] }` (not a GraphQL entity id list on hooks — lives in context only)."
+   status: completed
+ - id: providers-region
+   content: "Add 🎭Providers region: `<XContextProvider id={…}>` for every entity. Each provider memoizes `{ id }` and renders Context.Provider. Graph tier is split into three sibling providers — WipContextProvider, StageContextProvider, AuthoritativeContextProvider (all singletons, no id). Workspace tier is split into TheKitContextProvider (singleton, no id) and AlternativeContextProvider({ id }). Backbone tier is split into three sibling providers each carrying `{ id }` — FileBackboneContextProvider, FolderBackboneContextProvider, WebsocketBackboneContextProvider. RemoteProviderContextProvider takes `id: <url>`. Add `PiecesBatchContextProvider` with `{ pieceIds: readonly string[] }` for batch piece operations (no hook params for parent design or id list). SessionContextProvider takes `session: Session`."
+   status: completed
+ - id: entity-hooks
+   content: "Add 🪝EntityHooks region: one `useX(id?: string): EntityReadState` per strong entity. At most one optional argument — **that entity's id only** (e.g. `useConnection(id?)`, never `designId`). If `id` is passed, it overrides only that entity's context id; parent entities are still resolved from composed contexts. If omitted, read the matching XContext; missing context with no arg throws. Weak-entity hooks (`usePosition`, `useFlatPosition`, `usePlane`, `useOrigin`) take **no** optional id — they resolve only through `PieceContext` + marker contexts."
+   status: pending
+ - id: field-hooks
+   content: "Add 🪝FieldHooks region: one `useX<Field>(id?: string): FieldReadState<T>` per (entity, field) pair across every entity in the schema — the optional `id` is **only** that field's owning entity id (same rule as entity hooks). Implementation lives in a private `useEntityField` helper which (a) resolves the JS entity from that single optional id + parent contexts, (b) subscribes to that entity's `on<Field>Changed` callback in compose/js, (c) falls back to a mount-time async read + bus-tick refetch when no field-level callback exists yet. The hook return is `{ value, loading, error, refresh }` — no JS class instance leaks."
+   status: pending
+ - id: operation-hooks
+   content: "Add 🪝OperationHooks region: one `useX<Op>(id?: string): readonly [(args) => Promise<SetResult>, OperationStatus]` per (entity, mutation) pair — the optional `id` is **only** the receiver entity's id (e.g. `useRenameDesign(id?)` for Design, `useDragPiece(id?)` for Piece). Batch `PiecesOperations` flows use `PiecesBatchContextProvider` with `{ pieceIds: readonly string[] }` under `DesignContext` (no extra hook params for design or piece list). Implementation lives in a private `useEntityOperation` helper; the consumer never sees the JS class."
+   status: pending
+ - id: list-hooks
+   content: "Add 🪝ListHooks region: id-list-stable readers like `useKitDesigns(id?: string)`, `useKitTypes(id?)`, …, `useDesignPieces(id?)`, `useDesignConnections(id?)`, `useTypePorts(id?)`, `useTypeConnectors(id?)`, `useTypeRepresentations(id?)`, `usePieceChildPieces(id?)`, `usePieceChildConnections(id?)` — each optional `id` is **only** the list owner's entity id (Kit, Design, Type, or Piece respectively). Output rows are plain `{ id }` records — consumers map them under the matching `<XContextProvider id={row.id}>`."
+   status: pending
+ - id: delete-legacy
+   content: "Delete: ShellHost block (ActiveKitTab*, KitWasmMountProvider, KitWasmHostContext, KitAlternativeSelection*, useKitAlternatives, SketchpadKitStoreFactory, SketchpadKitKindAvailability), context-row helpers (useDesignContextRow, useHasDesignContext, useResolvedDesign, useResolvedType, usePieceContextRead, useTypeContextRead, useQualityContextRead), selection-helper providers (PieceUnderActiveDesignProvider, ConnectionUnderActiveDesignProvider), legacy aggregate bundles (useDesigns, useTypes, usePieces), and the public bindFieldToReact / bindDefinedFieldToReact / bindKitFieldToReact / bindStoreFieldToReact / bindOperationToReact / bindStoreOperationToReact / bindPiecesOperationsOperationToReact exports. They become private internal helpers (useEntityField / useEntityOperation) — never exported."
+   status: completed
+ - id: seal-js
+   content: "Audit exports: ensure no compose/js entity class (Kit, Store, Graph, TheKit, Alternative, Session, Design, Type, Piece, Connection, Port, Connector, Representation, Quality, Tag, Concept, Author, Backbone, Provider, LocalProvider, RemoteProvider, Family, File, Folder, Layer, Group, Stat, Prop, Edit, Checkpoint, Change, Conflict, PiecesOperations) is re-exported from compose/react. Add a vitest banned-substring test that fails if any are."
+   status: pending
+ - id: vitest
+   content: "Update the 🧪Vitest region: (a) banned substrings extended to include `bindFieldToReact`, `bindOperationToReact`, `useSyncExternalStore`, plus a check that the public export list contains zero compose/js entity class names; (b) lightweight render test asserting `useDesign()` resolves `value.id` matching `DesignContextProvider` id (no class leak)."
+   status: completed
+ - id: verify
+   content: Run the package's lint + typecheck + vitest until green.
+   status: completed
+ - id: close-ticket
+   content: Close the ticket with summary and file list.
+   status: cancelled
 isProject: false
 ---
 
@@ -52,7 +52,7 @@ Rewrite [compose/client/lib/react/index.tsx](compose/client/lib/react/index.tsx)
 - exposes one context per entity carrying only `{ id }`,
 - exposes one `useX(id?: string)` per strong entity (at most one optional argument — **that entity's id only**; parents come from context),
 - exposes one hook per field (`useDesignName`, `usePiecePosition`, …) and one hook per mutation (`useRenameDesign`, `useMovePiece`, …), each with the same rule: optional `id` is only the owning/receiver entity,
-- **never** leaks a `compose/js` class to consumers (no `Kit`, `Design`, `Piece`, `Position`, `Plane` *instance methods* on the React surface — only the plain value types pass through).
+- **never** leaks a `compose/js` class to consumers (no `Kit`, `Design`, `Piece`, `Position`, `Plane` _instance methods_ on the React surface — only the plain value types pass through).
 
 ## Sealed surface
 
@@ -62,8 +62,6 @@ graph LR
   ReactLib --> JsLib[compose/js]
   Consumer -.->|forbidden| JsLib
 ```
-
-
 
 Consumers import **only** `@semio-tech/compose-react`. compose/js is an implementation detail.
 
@@ -112,8 +110,6 @@ graph TD
   Plane --> Origin[OriginContext]
 ```
 
-
-
 The three graph-tier contexts (`WipContext`, `StageContext`, `AuthoritativeContext`) are mutually exclusive siblings under `StoreContext` — exactly one is mounted at a time. The two workspace-tier contexts (`TheKitContext`, `AlternativeContext`) are mutually exclusive siblings under whichever graph tier is mounted. The three backbone-tier contexts (`FileBackboneContext`, `FolderBackboneContext`, `WebsocketBackboneContext`) are mutually exclusive siblings under whichever provider tier is mounted — `FileBackboneContext` and `FolderBackboneContext` are legal children of `LocalProviderContext`; `WebsocketBackboneContext` is the legal child of `RemoteProviderContext`. Internally each resolves to the matching `compose/js` graph / workspace / backbone handle (`store.wip()`, `store.stage()`, `store.authoritative()`; `graph.theKit()`, `graph.alternative(id)`; `localProvider.fileBackbone(id)`, `localProvider.folderBackbone(id)`, `remoteProvider.websocketBackbone(id)`).
 
 `PiecesBatchContext` is optional under `DesignContext` — it carries `{ pieceIds: readonly string[] }` so `useDragPieces` / `useMovePieces` / `useFixPieces` / `useChangePiecesBlueprint` need **no** hook parameters beyond the mutation args (design scope comes from `DesignContext`).
@@ -124,18 +120,15 @@ The three graph-tier contexts (`WipContext`, `StageContext`, `AuthoritativeConte
 
 ```ts
 export type FieldReadState<T> = Readonly<{
-  value: T | undefined;
-  loading: boolean;
-  error: unknown;
-  refresh: () => Promise<void>;
+ value: T | undefined;
+ loading: boolean;
+ error: unknown;
+ refresh: () => Promise<void>;
 }>;
 
 export type EntityReadState = FieldReadState<Readonly<{ id: string }>>;
 
-export type OperationStatus =
-  | { readonly kind: "idle" }
-  | { readonly kind: "pending" }
-  | { readonly kind: "settled"; readonly result: SetResult };
+export type OperationStatus = { readonly kind: "idle" } | { readonly kind: "pending" } | { readonly kind: "settled"; readonly result: SetResult };
 ```
 
 `EntityReadState` has the **same shape** as `FieldReadState<T>` — it is just `FieldReadState` specialized to `{ id: string }`. Every entity hook returns `{ value: { id } | undefined, loading, error, refresh }`. A single `EntityReadState` is shared by every entity hook return — no per-entity aliases.
@@ -251,50 +244,54 @@ The full chain — `SessionContext -> StoreContext (+ optional LocalProviderCont
 
 ```tsx
 import {
-  SessionContextProvider,
-  StoreContextProvider,
-  LocalProviderContextProvider,        // optional sibling
-  FileBackboneContextProvider,         // optional — OR FolderBackboneContextProvider under LocalProvider; OR WebsocketBackboneContextProvider under RemoteProvider
-  WipContextProvider,                  // OR StageContextProvider, OR AuthoritativeContextProvider
-  TheKitContextProvider,               // OR AlternativeContextProvider
-  KitContextProvider,
-  DesignContextProvider,
-  PieceContextProvider,
-  PositionContextProvider,             // OR FlatPositionContextProvider
-  PlaneContextProvider,
-  OriginContextProvider,
-  useOrigin,
-  type EntityReadState,
+ SessionContextProvider,
+ StoreContextProvider,
+ LocalProviderContextProvider, // optional sibling
+ FileBackboneContextProvider, // optional — OR FolderBackboneContextProvider under LocalProvider; OR WebsocketBackboneContextProvider under RemoteProvider
+ WipContextProvider, // OR StageContextProvider, OR AuthoritativeContextProvider
+ TheKitContextProvider, // OR AlternativeContextProvider
+ KitContextProvider,
+ DesignContextProvider,
+ PieceContextProvider,
+ PositionContextProvider, // OR FlatPositionContextProvider
+ PlaneContextProvider,
+ OriginContextProvider,
+ useOrigin,
+ type EntityReadState,
 } from "@semio-tech/compose-react";
 
 function App({ session, storeId, kitId, designId, pieceId }: { session: Session; storeId: string; kitId: string; designId: string; pieceId: string }) {
-  return (
-    <SessionContextProvider session={session}>
-      <StoreContextProvider id={storeId}>
-        <LocalProviderContextProvider>                        {/* optional */}
-          <FileBackboneContextProvider id="file:default">     {/* optional — pick exactly one backbone kind */}
-            <WipContextProvider>
-              <TheKitContextProvider>
-                <KitContextProvider id={kitId}>
-                  <DesignContextProvider id={designId}>
-                    <PieceContextProvider id={pieceId}>
-                      <PositionContextProvider>
-                        <PlaneContextProvider>
-                          <OriginContextProvider>
-                            <PieceOriginReadout />
-                          </OriginContextProvider>
-                        </PlaneContextProvider>
-                      </PositionContextProvider>
-                    </PieceContextProvider>
-                  </DesignContextProvider>
-                </KitContextProvider>
-              </TheKitContextProvider>
-            </WipContextProvider>
-          </FileBackboneContextProvider>
-        </LocalProviderContextProvider>
-      </StoreContextProvider>
-    </SessionContextProvider>
-  );
+ return (
+  <SessionContextProvider session={session}>
+   <StoreContextProvider id={storeId}>
+    <LocalProviderContextProvider>
+     {" "}
+     {/* optional */}
+     <FileBackboneContextProvider id="file:default">
+      {" "}
+      {/* optional — pick exactly one backbone kind */}
+      <WipContextProvider>
+       <TheKitContextProvider>
+        <KitContextProvider id={kitId}>
+         <DesignContextProvider id={designId}>
+          <PieceContextProvider id={pieceId}>
+           <PositionContextProvider>
+            <PlaneContextProvider>
+             <OriginContextProvider>
+              <PieceOriginReadout />
+             </OriginContextProvider>
+            </PlaneContextProvider>
+           </PositionContextProvider>
+          </PieceContextProvider>
+         </DesignContextProvider>
+        </KitContextProvider>
+       </TheKitContextProvider>
+      </WipContextProvider>
+     </FileBackboneContextProvider>
+    </LocalProviderContextProvider>
+   </StoreContextProvider>
+  </SessionContextProvider>
+ );
 }
 
 // Swapping the graph tier — same tree, three valid mounts:
@@ -310,8 +307,8 @@ function App({ session, storeId, kitId, designId, pieceId }: { session: Session;
 //   <WebsocketBackboneContextProvider id={id}> … </WebsocketBackboneContextProvider> {/* under <RemoteProviderContextProvider> */}
 
 function PieceOriginReadout() {
-  const origin = useOrigin();                 // resolves through every provider above
-  return <span>{origin.value ? `${origin.value.x}, ${origin.value.y}, ${origin.value.z}` : "—"}</span>;
+ const origin = useOrigin(); // resolves through every provider above
+ return <span>{origin.value ? `${origin.value.x}, ${origin.value.y}, ${origin.value.z}` : "—"}</span>;
 }
 ```
 
@@ -320,15 +317,19 @@ function PieceOriginReadout() {
 ```tsx
 // (a) via the matching context — preferred for tree-driven UIs
 function NameInContext() {
-  const piece: EntityReadState = usePiece();      // { value: { id } | undefined, loading, error, refresh }
-  const { value: name } = usePieceName();         // walks PieceContext + DesignContext
-  return <span>{piece.value?.id}: {name}</span>;
+ const piece: EntityReadState = usePiece(); // { value: { id } | undefined, loading, error, refresh }
+ const { value: name } = usePieceName(); // walks PieceContext + DesignContext
+ return (
+  <span>
+   {piece.value?.id}: {name}
+  </span>
+ );
 }
 
 // (b) same read without mounting PieceContext — wrap Design + pass only the piece id
 function NameByPieceId({ pieceId }: { pieceId: string }) {
-  const { value } = usePieceName(pieceId);       // optional id is the Piece id only; Design still from DesignContext
-  return <span>{value}</span>;
+ const { value } = usePieceName(pieceId); // optional id is the Piece id only; Design still from DesignContext
+ return <span>{value}</span>;
 }
 ```
 
@@ -336,28 +337,28 @@ function NameByPieceId({ pieceId }: { pieceId: string }) {
 
 ```tsx
 function DesignPiecesList() {
-  const { value: pieces } = useDesignPieces();    // FieldReadState<readonly { id: string }[]>
-  return (
-    <ul>
-      {pieces?.map((p) => (
-        <li key={p.id}>
-          <PieceContextProvider id={p.id}>
-            <PieceRow />
-          </PieceContextProvider>
-        </li>
-      ))}
-    </ul>
-  );
+ const { value: pieces } = useDesignPieces(); // FieldReadState<readonly { id: string }[]>
+ return (
+  <ul>
+   {pieces?.map((p) => (
+    <li key={p.id}>
+     <PieceContextProvider id={p.id}>
+      <PieceRow />
+     </PieceContextProvider>
+    </li>
+   ))}
+  </ul>
+ );
 }
 
 function PieceRow() {
-  const { value: name } = usePieceName();
-  const [movePiece, status] = useMovePiece();     // resolves the piece via PieceContext
-  return (
-    <button disabled={status.kind === "pending"} onClick={() => void movePiece({ x: 0, y: 0 })}>
-      {name}
-    </button>
-  );
+ const { value: name } = usePieceName();
+ const [movePiece, status] = useMovePiece(); // resolves the piece via PieceContext
+ return (
+  <button disabled={status.kind === "pending"} onClick={() => void movePiece({ x: 0, y: 0 })}>
+   {name}
+  </button>
+ );
 }
 ```
 
@@ -391,4 +392,3 @@ In every example above the consumer never imports anything from `@semio-tech/com
 
 - Adding `on<Field>Changed` callbacks for every field on every `compose/js` entity class (only `Design.onDescriptionChanged` exists today). Until then the private `useEntityField` keeps the existing bus-tick refetch fallback.
 - Migrating `compose/client/lib/sketchpad/index.tsx`, storybook stories, `client/ui/desktop`, `client/ui/3dm`, `client/ui/vscode`, `site/play` off the deleted shell-host helpers and onto the new context tree — explicitly out of scope per the confirmed `react-only` choice.
-

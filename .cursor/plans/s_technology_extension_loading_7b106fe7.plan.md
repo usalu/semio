@@ -2,30 +2,30 @@
 name: S Technology Extension Loading
 overview: Convert S's technology catalog from a static, hardcoded array into a generalized dynamic extension-loading mechanism (generalizing the existing compose-sketchpad pattern), register every technology/playground in the repo (including 8 currently-missing ones) through it, and fix the embedding/wiring gaps in `SAppHostRouter` so every technology is a real, editable app inside S.
 todos:
-  - id: ext-phase1-registry
-    content: "s/core: replace TECHNOLOGY_PLAY_PROGRAMS static array + composeSketchpadProgramOverride with a generic Map-based extension registry; add mergeSProgramDefinition/registerSProgramDefinition; add TECHNOLOGY_APP_RESOURCE_BY_PROGRAM; add baselineSingleAppPlatformDefinition helper + missing ComponentKind values (lowpoly, trinityRewrite) in framework-platform-core"
-    status: completed
-  - id: ext-phase2-baseline-14
-    content: Add build<X>ProgramDefinition to the 14 baseline technologies (draw, writer, raster, flow, forms, puzzle.2d, puzzle.3d, trinity, gis.map, cad, dag, procedural.2d, procedural.3d, presentation) and move their metadata into TECHNOLOGY_APP_RESOURCE_BY_PROGRAM
-    status: completed
-  - id: ext-phase3-rich-topology
-    content: Migrate puzzle.5d, shooting, and compose.sketchpad to the generalized mergeSProgramDefinition call, removing mergeComposeSketchpadProgramDefinition
-    status: completed
-  - id: ext-phase4-new-technologies
-    content: "Wire up lowpoly, sequence, layout, imperative, vcs, trinity/jack, trinity/rewrite, and reasoning/mindmap (base) as S extensions: add missing AppVcsHandlers, resource map entries, and program definitions (gis/3d excluded, no implementation exists)"
-    status: completed
-  - id: ext-phase5-boot-loader
-    content: "s/play: add loadAllSProgramExtensions() that dynamically imports + registers every technology; await it before bootSPlay() in the browser boot IIFE and in Vitest setup"
-    status: completed
-  - id: ext-phase6-fix-router-wiring
-    content: "Fix SAppHostRouter embedding gaps: raster, flow, dag, trinity, map, puzzle2d, puzzle3d, puzzle5d (bug fix), cad, shooting, presentation, catalogue case, default fallback, delete dead forms/raster cases"
-    status: completed
-  - id: ext-phase7-new-hosts
-    content: Add SAppHostRouter cases/host components for lowpoly, layout, vcs, trinityRewrite; confirm sequence/imperative get real write-back
-    status: completed
-  - id: ext-phase8-tests
-    content: Extend s/play and per-technology core Vitest suites for registry completeness and new VCS handlers; manually verify a representative sample end-to-end
-    status: completed
+ - id: ext-phase1-registry
+   content: "s/core: replace TECHNOLOGY_PLAY_PROGRAMS static array + composeSketchpadProgramOverride with a generic Map-based extension registry; add mergeSProgramDefinition/registerSProgramDefinition; add TECHNOLOGY_APP_RESOURCE_BY_PROGRAM; add baselineSingleAppPlatformDefinition helper + missing ComponentKind values (lowpoly, trinityRewrite) in framework-platform-core"
+   status: completed
+ - id: ext-phase2-baseline-14
+   content: Add build<X>ProgramDefinition to the 14 baseline technologies (draw, writer, raster, flow, forms, puzzle.2d, puzzle.3d, trinity, gis.map, cad, dag, procedural.2d, procedural.3d, presentation) and move their metadata into TECHNOLOGY_APP_RESOURCE_BY_PROGRAM
+   status: completed
+ - id: ext-phase3-rich-topology
+   content: Migrate puzzle.5d, shooting, and compose.sketchpad to the generalized mergeSProgramDefinition call, removing mergeComposeSketchpadProgramDefinition
+   status: completed
+ - id: ext-phase4-new-technologies
+   content: "Wire up lowpoly, sequence, layout, imperative, vcs, trinity/jack, trinity/rewrite, and reasoning/mindmap (base) as S extensions: add missing AppVcsHandlers, resource map entries, and program definitions (gis/3d excluded, no implementation exists)"
+   status: completed
+ - id: ext-phase5-boot-loader
+   content: "s/play: add loadAllSProgramExtensions() that dynamically imports + registers every technology; await it before bootSPlay() in the browser boot IIFE and in Vitest setup"
+   status: completed
+ - id: ext-phase6-fix-router-wiring
+   content: "Fix SAppHostRouter embedding gaps: raster, flow, dag, trinity, map, puzzle2d, puzzle3d, puzzle5d (bug fix), cad, shooting, presentation, catalogue case, default fallback, delete dead forms/raster cases"
+   status: completed
+ - id: ext-phase7-new-hosts
+   content: Add SAppHostRouter cases/host components for lowpoly, layout, vcs, trinityRewrite; confirm sequence/imperative get real write-back
+   status: completed
+ - id: ext-phase8-tests
+   content: Extend s/play and per-technology core Vitest suites for registry completeness and new VCS handlers; manually verify a representative sample end-to-end
+   status: completed
 isProject: false
 ---
 
@@ -77,8 +77,6 @@ flowchart TD
     loader -->|await before boot| bootSPlay["bootSPlay(...)"]
 ```
 
-
-
 Every technology (baseline and rich) goes through the same `mergeSProgramDefinition` call; the difference is only how rich the `resourceMap` is (single output port vs. multi-port catalogue/mesh wiring like puzzle.5d/shooting today).
 
 ---
@@ -111,7 +109,6 @@ For each: add `build<X>ProgramDefinition(): PlatformDefinition` next to its exis
 
 ## Phase 4 — Wire up the 8 net-new technologies
 
-
 | Technology                 | Work needed                                                                                                                                                                     |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `lowpoly`                  | New `ComponentKind`; add `createLowpolyAppVcsHandler` in `lowpoly/core`; `build<X>ProgramDefinition`; resource map entry                                                        |
@@ -122,7 +119,6 @@ For each: add `build<X>ProgramDefinition(): PlatformDefinition` next to its exis
 | `trinity/jack`             | Register as an **additional app** on the existing `trinity` program (reuses `trinity.graph` handler + componentKind); host renders `TrinityCanvas` in jack-query mode           |
 | `trinity/rewrite`          | Additional app on `trinity` program with new `trinityRewrite` componentKind; composite host (before/after `TrinityCanvas`, LHS/RHS `Puzzle2dCanvas`, Writer for the jack query) |
 | `reasoning/mindmap` (base) | Register like `reasoning.wires`: reuse `puzzle.2d` handler + `puzzle2d` componentKind, `Puzzle2dCanvas` with `graphPortMode="normal"`                                           |
-
 
 `gis/3d` is excluded — it is an empty stub (`gis/3d/AGENTS.md` only, no schema/renderer/core), so there is nothing to translate into an extension yet.
 

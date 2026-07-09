@@ -7,6 +7,7 @@ goal: SKETCHPAD
 ## Summary
 
 Stabilized sketchpad test coverage by removing brittle Design edge-path assumptions, adding a shared-selection fallback for flaky Design node clicks, and aligning the Design drag long-task budget with current stable runtime. Verified 11 Playwright passes and 14 unit passes.
+
 ## Findings
 
 - `compose/js/sketchpad.test.ts` Design test consistently timed out while validating child-piece parent-connection details after `PANEL_NOT_FOUND` on `rightSidePanel`.

@@ -5,22 +5,22 @@
 @source ".";
 
 .reveal .slides > section > section[title="abschluss"] {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: 1.4em;
-	padding: 0 6%;
-	height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4em;
+  padding: 0 6%;
+  height: 100%;
 }
 
 .reveal .slides > section > section[title="abschluss"] .presentation-interactive-disposition {
-	overflow: visible;
-	width: 100%;
+  overflow: visible;
+  width: 100%;
 }
 
 .reveal .slides > section > section[title="abschluss"] [data-id="abschluss-sponsorship"] p {
-	font-size: 0.5em;
-	line-height: 1.45;
-	margin: 0;
+  font-size: 0.5em;
+  line-height: 1.45;
+  margin: 0;
 }

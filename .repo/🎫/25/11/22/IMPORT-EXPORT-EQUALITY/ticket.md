@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Import/Export Roundtrip Test - Status
 
 ## Goal
@@ -45,10 +46,10 @@ Created `mapOrUndefined` helper function (line 4369) and applied to all attribut
 
 ```typescript
 attributes: mapOrUndefined(someAttributes, (a: any) => ({
-  guid: a.guid,
-  key: a.key,
-  value: toUndefined(a.value),
-  definition: toUndefined(a.definition),
+ guid: a.guid,
+ key: a.key,
+ value: toUndefined(a.value),
+ definition: toUndefined(a.definition),
 }));
 ```
 

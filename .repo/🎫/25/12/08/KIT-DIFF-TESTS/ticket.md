@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Kit diff tests were failing in TypeScript and Python because:
@@ -54,6 +55,7 @@ Kit diff tests were failing in TypeScript and Python because:
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix kit diff tests and regenerate assets

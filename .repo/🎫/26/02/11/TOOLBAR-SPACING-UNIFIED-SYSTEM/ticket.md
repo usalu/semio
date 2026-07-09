@@ -16,12 +16,12 @@ Unified toolbar spacing and sizing system for the Sketchpad toolbar — analysis
 
 The toolbar renders three different component families — `Toggle` (via `ToggleGroup`), `Button` (via `ButtonGroup`), and raw HTML dividers — side by side in a `flex gap-single` container. Each family computes its own dimensions through independent cva variant paths:
 
-| Component | Height source | Width rule | Padding | Gap between items |
-|-----------|--------------|-----------|---------|------------------|
-| `Toggle` / `ToggleGroupItem` | `h-medium` (7×spacing = 1.4rem) from `toggleVariants` | `aspect-square` when icon-only; `w-auto` when text present | `p-single` | `gap-single` inside ToggleGroup; `gap-single` between sibling Toggles |
-| `Button` / `ButtonGroupItem` | `h-medium` from `buttonGroupItemVariants` | `aspect-square` when icon-only; `w-auto` when text present | `p-single` | `divide-x` inside ButtonGroup; `gap-single` between sibling Buttons |
-| `ActionGroup` / `ActionGroupItem` | `h-small` (5×spacing = 1.0rem) | `aspect-square` | `p-single` | `divide-x` inside ActionGroup |
-| Divider (`<div className="h-small w-px ...">`) | `h-small` | 1px | — | — |
+| Component                                      | Height source                                         | Width rule                                                 | Padding    | Gap between items                                                     |
+| ---------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------- | ---------- | --------------------------------------------------------------------- |
+| `Toggle` / `ToggleGroupItem`                   | `h-medium` (7×spacing = 1.4rem) from `toggleVariants` | `aspect-square` when icon-only; `w-auto` when text present | `p-single` | `gap-single` inside ToggleGroup; `gap-single` between sibling Toggles |
+| `Button` / `ButtonGroupItem`                   | `h-medium` from `buttonGroupItemVariants`             | `aspect-square` when icon-only; `w-auto` when text present | `p-single` | `divide-x` inside ButtonGroup; `gap-single` between sibling Buttons   |
+| `ActionGroup` / `ActionGroupItem`              | `h-small` (5×spacing = 1.0rem)                        | `aspect-square`                                            | `p-single` | `divide-x` inside ActionGroup                                         |
+| Divider (`<div className="h-small w-px ...">`) | `h-small`                                             | 1px                                                        | —          | —                                                                     |
 
 **Specific issues:**
 
@@ -40,6 +40,7 @@ The toolbar renders three different component families — `Toggle` (via `Toggle
 #### 2.1 Design Tokens (already exist, reuse)
 
 From `globals.css`:
+
 - `--spacing` (0.2rem compact / 0.275rem touch)
 - `--spacing-single` = 1×spacing
 - `--spacing-double` = 2×spacing
@@ -48,6 +49,7 @@ From `globals.css`:
 - `--size-medium` = 7×spacing (interactive element height)
 
 **New tokens to introduce** (in `globals.css`):
+
 - `--toolbar-item-height`: `var(--size-medium)` — canonical height for all toolbar interactive items
 - `--toolbar-gap`: `var(--spacing-single)` — gap between toolbar items within a group
 - `--toolbar-group-gap`: `var(--spacing-double)` — gap between toolbar groups (across dividers)
@@ -67,6 +69,7 @@ From `globals.css`:
 #### 2.3 Component Normalization
 
 All toolbar-rendered components already use `h-medium` = `var(--size-medium)`. The strategy is:
+
 1. Keep `h-medium` on all interactive elements (already consistent)
 2. Remove per-app wrapper divs and replace with `ToolbarGroup` / `ToolbarDivider`
 3. The outer zone container enforces the canonical height
@@ -76,6 +79,7 @@ All toolbar-rendered components already use `h-medium` = `var(--size-medium)`. T
 #### Phase 1: Extract shared toolbar layout components into `elements.tsx`
 
 Add a new region `// #region Toolbar` in `elements.tsx` with:
+
 - `ToolbarZone` component
 - `ToolbarGroup` component
 - `ToolbarDivider` component
@@ -86,20 +90,25 @@ These use the existing tokens, no new CSS variables needed initially — just co
 #### Phase 2: Refactor `Sketchpad.tsx` toolbar rendering
 
 Replace inline toolbar zone markup:
+
 ```tsx
 <div className="bg-panel flex h-full shrink-0 items-center gap-single border rounded-md px-single shadow-sm overflow-hidden">
 ```
+
 with `<ToolbarZone>` for both tools and settings zones.
 
 Replace the per-section wrapper:
+
 ```tsx
 <div key={section.id} className="shrink-0 flex items-center min-w-0">
 ```
+
 with `<ToolbarItem>`.
 
 #### Phase 3: Migrate app-specific toolbar content
 
 For each app (`Home.tsx`, `Kit.tsx`, `Design.tsx`, `Type.tsx`, `Quality.tsx`, `Feedback.tsx`):
+
 - Replace manual `<div className="flex shrink-0 items-center gap-single h-full px-single ...">` wrappers with `<ToolbarGroup>`.
 - Replace manual `<div className="h-small w-px bg-border my-auto" />` with `<ToolbarDivider />`.
 - Remove redundant CSS classes that are now handled by the zone container.
@@ -133,7 +142,7 @@ Add the token aliases to `globals.css` so future changes to toolbar spacing can 
 - [x] Migration strategy
 - [x] Edge cases
 - [x] Implement ToolbarZone/ToolbarGroup/ToolbarDivider/ToolbarItem in elements.tsx
-- [x] Add --toolbar-* tokens to globals.css
+- [x] Add --toolbar-\* tokens to globals.css
 - [x] Refactor Sketchpad.tsx toolbar rendering to use new primitives
 - [x] Migrate Home.tsx toolbar content
 - [x] Migrate Kit.tsx toolbar content

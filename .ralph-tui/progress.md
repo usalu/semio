@@ -23,6 +23,7 @@ after each iteration and it's included in prompts for context.
 - **Learnings:**
   - **Patterns discovered:** Prior US-002–004 already wired the schema export path; US-005 is primarily **verification + explicit compute/memo docs** so integrators do not assume hidden caches on fingerprints or diffs.
   - **Gotchas encountered:** `async_graphql` only exports types **reachable from the schema roots**; Rust-internal unions (e.g. `OperationInput` enums) that are never referenced from `Query`/`Mutation`/`SubscriptionRoot` do not appear in the emitted SDL — avoid assuming every `derive`d GraphQL type shows up in `schema.graphql`.
+
 ---
 
 ## 2026-05-06 - US-002
@@ -32,6 +33,7 @@ after each iteration and it's included in prompts for context.
 - **Learnings:**
   - **Patterns discovered:** Object-typed mutation payloads (`Command`) require selection sets in GraphQL documents—integration tests and clients must request `{ requestId kind }`. Enum variables (e.g. `KitGraphWorkspace`) flow through `async_graphql::value!` as string labels (`"WIP"`).
   - **Gotchas encountered:** `target.schema.graphql` remains a separate Relay-style design draft; runtime SDL is only what `gql::sdl()` emits—do not assume parity without an explicit codegen/link step.
+
 ---
 
 ## 2026-05-06 - US-003
@@ -41,6 +43,7 @@ after each iteration and it's included in prompts for context.
 - **Learnings:**
   - **Patterns discovered:** Treat **two `Arc<Graph>` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.
   - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.
+
 ---
 
 ## 2026-05-06 - US-004
@@ -50,6 +53,7 @@ after each iteration and it's included in prompts for context.
 - **Learnings:**
   - **Patterns discovered:** Keep **`apply_semantic_op_json`** as the single replay oracle; persisted rows are **`kind + input`** (plus draft/tx ids) so Dev JSON and SQLite stay aligned. **Attach** should **clear piece projections** before replay to avoid double-applying when reusing a live graph.
   - **Gotchas encountered:** **WASM** builds must not reference `rusqlite`; gate **backbone IO** with `#[cfg(not(target_arch = "wasm32"))]` and return **`ComposeError::invalid(...)`** on attach from wasm workers. **Detach URI** must **match** the mounted URI or integrators could think persistence stopped when it did not.
+
 ---
 
 ## 2026-05-06 - US-006
@@ -59,6 +63,7 @@ after each iteration and it's included in prompts for context.
 - **Learnings:**
   - **Patterns discovered:** **`KitStoreHandle.create` is Promise-shaped** in wasm-bindgen output—treat as async at every callsite (Vitest inline path and worker `init`). **`fullSnapshot`** is the single full-kit channel; mix targeted `theKit { … }` queries only where the SDL exposes fields.
   - **Gotchas encountered:** **Plane JSON** has two conventions: persisted / golden **snake_case** vs **camelCase** kit DTO / GraphQL field names—use **aliases** on serde and **explicit** snapshot JSON for `plane` keys so both tests and JS parse stay green.
+
 ---
 
 ## 2026-05-06 - US-007

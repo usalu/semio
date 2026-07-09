@@ -7,6 +7,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Bulk close
+
 ## Changes
 
 ## Log

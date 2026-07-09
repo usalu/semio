@@ -2,42 +2,43 @@
 name: Sketchpad Platform Refactor
 overview: Rename framework/platform's ProductRuntime to a declarative Platform class with a fixed component vocabulary (table, puzzle2d, puzzle3d, puzzle5d, cad, panel), make the React renderer depend on @puzzle/* and @cad/* to provide those components built-in, and rewrite sketchpad as a single clean declarative `new Platform({...})` instance — migrating home table, kit table, and kit diagram (puzzle2d) end-to-end as the reference slice while keeping the remaining apps working and tracked as follow-ups.
 todos:
-  - id: open-ticket
-    content: "Open repo MCP ticket: run search for prior sketchpad/platform tickets, read repo://goals to associate, reopen or ticket_open the platform-refactor ticket."
-    status: completed
-  - id: core-rename
-    content: Rename ProductRuntime->Platform (+ ProductDefinition->PlatformDefinition, ProductSubscriber, SurfaceRouter methods) and add declarative `new Platform(def)` constructor in framework/platform/core/index.ts.
-    status: completed
-  - id: core-components
-    content: Replace board/scene3d UiNode surface kinds with table/puzzle2d/puzzle3d/puzzle5d/cad/panel; update builders and isCanvasOnlyWindowBody/assertCanvasOnlyWindowBody.
-    status: completed
-  - id: renderer-components
-    content: Add @puzzle/* and @cad/* deps to the react renderer; replace per-surface host registries with a built-in componentKind->component map + registerSurfaceBinding adapter seam; rename ProductView->PlatformView and update UiRenderer.
-    status: completed
-  - id: sketchpad-platform
-    content: Replace ensureSketchpadDeclarativeShell/manifest/body/surface registration with buildSketchpadPlatform() returning new Platform({...}); render via PlatformView; update boot + Sketchpad export.
-    status: completed
-  - id: sketchpad-slice
-    content: "Migrate the vertical slice cleanly: home table (table), kit table (table), kit diagram (puzzle2d) with kit-state data adapters via @semio-tech/compose-react."
-    status: completed
-  - id: sketchpad-rest
-    content: Re-wire remaining apps (design/type/quality/doc/feedback) onto puzzle5d/cad/panel with thin adapters so they keep working; mark deep rewrites as follow-up tickets.
-    status: completed
-  - id: consumers-build
-    content: Update desktop/vscode consumers and fix sketchpad package.json exports (index.tsx->index.ts) and project.json cwd (react->js); grep+fix all stale ProductRuntime/board/scene3d references.
-    status: completed
-  - id: tests-run
-    content: Extend framework vitest inline tests and sketchpad embedded Playwright tests (no new files); run both and verify runtime with [DEBUG] logs.
-    status: completed
-  - id: close-ticket
-    content: Remove [DEBUG] logs, close the ticket with summary and all touched files; open follow-up tickets for deferred apps and the svelte renderer.
-    status: completed
+ - id: open-ticket
+   content: "Open repo MCP ticket: run search for prior sketchpad/platform tickets, read repo://goals to associate, reopen or ticket_open the platform-refactor ticket."
+   status: completed
+ - id: core-rename
+   content: Rename ProductRuntime->Platform (+ ProductDefinition->PlatformDefinition, ProductSubscriber, SurfaceRouter methods) and add declarative `new Platform(def)` constructor in framework/platform/core/index.ts.
+   status: completed
+ - id: core-components
+   content: Replace board/scene3d UiNode surface kinds with table/puzzle2d/puzzle3d/puzzle5d/cad/panel; update builders and isCanvasOnlyWindowBody/assertCanvasOnlyWindowBody.
+   status: completed
+ - id: renderer-components
+   content: Add @puzzle/* and @cad/* deps to the react renderer; replace per-surface host registries with a built-in componentKind->component map + registerSurfaceBinding adapter seam; rename ProductView->PlatformView and update UiRenderer.
+   status: completed
+ - id: sketchpad-platform
+   content: Replace ensureSketchpadDeclarativeShell/manifest/body/surface registration with buildSketchpadPlatform() returning new Platform({...}); render via PlatformView; update boot + Sketchpad export.
+   status: completed
+ - id: sketchpad-slice
+   content: "Migrate the vertical slice cleanly: home table (table), kit table (table), kit diagram (puzzle2d) with kit-state data adapters via @semio-tech/compose-react."
+   status: completed
+ - id: sketchpad-rest
+   content: Re-wire remaining apps (design/type/quality/doc/feedback) onto puzzle5d/cad/panel with thin adapters so they keep working; mark deep rewrites as follow-up tickets.
+   status: completed
+ - id: consumers-build
+   content: Update desktop/vscode consumers and fix sketchpad package.json exports (index.tsx->index.ts) and project.json cwd (react->js); grep+fix all stale ProductRuntime/board/scene3d references.
+   status: completed
+ - id: tests-run
+   content: Extend framework vitest inline tests and sketchpad embedded Playwright tests (no new files); run both and verify runtime with [DEBUG] logs.
+   status: completed
+ - id: close-ticket
+   content: Remove [DEBUG] logs, close the ticket with summary and all touched files; open follow-up tickets for deferred apps and the svelte renderer.
+   status: completed
 isProject: false
 ---
 
 # Sketchpad to Platform Refactor
 
 ## Locked decisions
+
 - `ProductRuntime` -> renamed to `Platform`; sketchpad becomes one declarative `new Platform({...})` instance. Core stays pure TS, render-agnostic. No legacy names kept.
 - React renderer (`@semio-tech/framework-platform-renderer-react`) depends on `@puzzle/2d|3d|5d/react` and `@semio-tech/cad-js-renderer` and registers them as built-in named component kinds.
 - Component kinds replace `board`/`scene3d`: `table`, `puzzle2d`, `puzzle3d`, `puzzle5d`, `cad`, `panel`.
@@ -82,6 +83,7 @@ flowchart TB
 ```
 
 ## A. framework/platform/core ([framework/platform/core/index.ts](framework/platform/core/index.ts))
+
 - Rename `ProductRuntime` -> `Platform` (class at 666-721) and all sibling names: `ProductSubscriber` -> `PlatformSubscriber`, `ProductDefinition` -> `PlatformDefinition`, `WindowBodyViewContext.runtime` type, etc. Update `SurfaceRouter.flattenFromProductDefinition` -> `flattenFromPlatformDefinition`/`flattenFromPlatformApps`.
 - Add a declarative constructor: `new Platform(def: PlatformDefinition)` that builds `AppRuntime`/`ModeRuntime`/`WindowKindRuntime` from data (reusing existing `PluginManifest`/`SurfaceRouter` machinery). Keep imperative `addApp` for plugins.
 - Replace `board`/`scene3d` surface node kinds in the `UiNode` union (93-101) with `puzzle2d`/`puzzle3d`/`puzzle5d`/`cad` (keep `table`, `panel`). Each carries `componentKind`, `surfaceId`, `controllerId`, optional `paneId`, and an opaque `props?: JsonValue`/binding id.
@@ -90,6 +92,7 @@ flowchart TB
 - All new code uses `//#region 🔖...` structuring per repo rules; docstrings start with an emoji.
 
 ## B. framework/platform/renderer/react ([framework/platform/renderer/react/index.tsx](framework/platform/renderer/react/index.tsx))
+
 - Add deps to its `package.json`: `@semio-tech/puzzle-2d-react`, `@semio-tech/puzzle-3d-react`, `@semio-tech/puzzle-5d-react`, `@semio-tech/cad-js-renderer`.
 - Replace the four `registerUi*SurfaceHost` registries + dispatch (1354-1413, 1490-1538) with a single component-kind model:
   - Built-in `componentRenderers: Record<ComponentKind, React.ComponentType<ComponentProps>>` wiring `table`->`@semio-tech/ui-react` `Table`, `puzzle2d`->`@semio-tech/puzzle-2d-react`, `puzzle3d`->`@semio-tech/puzzle-3d-react`, `puzzle5d`->`@semio-tech/puzzle-5d-react` `FiveD`, `cad`->`@semio-tech/cad-js-renderer`.
@@ -97,6 +100,7 @@ flowchart TB
 - Rename `ProductView` -> `PlatformView` and update `UiRenderer` (1587) to instantiate `componentRenderers[node.componentKind]` with adapter output; update `mountReactApp` references.
 
 ## C. sketchpad rewrite ([compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts))
+
 - Replace `ensureSketchpadDeclarativeShell()` + `buildSketchpadExtensionManifest()` + `registerSketchpadDeclarativeBodies()` + `registerSketchpadUiSurfaceHosts()` (~22081-22420) with a single `buildSketchpadPlatform(): Platform` returning `new Platform({...})` whose apps reference component kinds:
   - home: `home-main` -> `table`
   - kit: `table` -> `table`, `diagram` -> `puzzle2d`
@@ -106,6 +110,7 @@ flowchart TB
 - Render via `<PlatformView platform={...} />`. Update boot path and `Sketchpad` export. Reorganize regions so the file stays a single clean `index.ts`.
 
 ## D. consumers + build fixes
+
 - [compose/client/ui/desktop/renderer.tsx](compose/client/ui/desktop/renderer.tsx): update app-config registration (note: `qualityConfig` is referenced but not exported — fix to match real exports).
 - [compose/client/ui/vscode/webview.tsx](compose/client/ui/vscode/webview.tsx): update `ensureSketchpadDeclarativeShell` import to the new Platform entry.
 - [compose/client/lib/sketchpad/js/package.json](compose/client/lib/sketchpad/js/package.json): fix `exports` (`./index.tsx` -> `./index.ts`).
@@ -113,13 +118,16 @@ flowchart TB
 - Grep the repo for any other `ProductRuntime`/`ProductView`/`board`/`scene3d` references and update.
 
 ## E. tests + ticket
+
 - Extend framework vitest inline tests in core/renderer (no new files) to cover `Platform` construction from `PlatformDefinition` and the new component kinds/validation.
 - Extend the embedded Playwright tests in sketchpad `index.ts` (no new files) for home table, kit table, kit diagram. Run framework vitest and sketchpad Playwright; confirm runtime via console logs (`[DEBUG]` prefixed, removed after).
 
 ## Constraints / notes
+
 - Per repo rules, `AGENTS.md` files are not editable, so `framework/platform/AGENTS.md` ("WindowKind (table, board, scene)") will remain slightly stale after the rename; the code is the source of truth.
 - All work happens inside a repo MCP ticket; remaining-app clean rewrites become separate follow-up tickets.
 
 ## Follow-up tickets (deferred)
+
 - Clean-rewrite design app (`puzzle5d` flat + spatial), type app (`cad`), quality app, docs app, feedback app onto the Platform component model.
 - Svelte renderer (`@semio-tech/framework-platform/renderer/svelte`) implementing the same core + component map / surface-binding seam.

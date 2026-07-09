@@ -12,11 +12,11 @@ The launch.json was updated to only include valid targets. However, some package
 
 ### Available Targets by Project (Current)
 
-| Project           | dev | test | build | preflight   | publish | other                                                            |
-| ----------------- | --- | ---- | ----- | ----------- | ------- | ---------------------------------------------------------------- |
-| repo/go           | ✓   | ✓    | ✓     | ✓           | -       | -                                                                |
-| repo/server       | ✓   | ✓    | ✓     | ✓           | -       | -                                                                |
-| repo (vscode)     | ✓   | ✓    | ✓     | ✓           | -       | publish:vsix                                                     |
+| Project             | dev | test | build | preflight   | publish | other                                                            |
+| ------------------- | --- | ---- | ----- | ----------- | ------- | ---------------------------------------------------------------- |
+| repo/go             | ✓   | ✓    | ✓     | ✓           | -       | -                                                                |
+| repo/server         | ✓   | ✓    | ✓     | ✓           | -       | -                                                                |
+| repo (vscode)       | ✓   | ✓    | ✓     | ✓           | -       | publish:vsix                                                     |
 | compose/go          | -   | ✓    | ✓     | ✓           | -       | -                                                                |
 | compose/rs          | -   | ✓    | ✓     | ✓           | -       | -                                                                |
 | compose/py          | -   | ✓    | ✓     | ✓           | -       | -                                                                |
@@ -27,7 +27,7 @@ The launch.json was updated to only include valid targets. However, some package
 | compose/desktop     | ✓   | -    | ✓     | ✓           | ✓       | -                                                                |
 | compose/net         | -   | ✓    | ✓     | ✓           | -       | -                                                                |
 | compose/grasshopper | -   | ✓    | ✓     | ✓           | -       | -                                                                |
-| assets      | -   | -    | -     | ✓           | -       | -                                                                |
+| assets              | -   | -    | -     | ✓           | -       | -                                                                |
 | compose/logo        | ✓   | -    | ✓     | **MISSING** | -       | animate                                                          |
 | compose/icons       | -   | -    | ✓     | **MISSING** | -       | -                                                                |
 | compose/yak         | -   | -    | ✓     | **MISSING** | ✓       | -                                                                |

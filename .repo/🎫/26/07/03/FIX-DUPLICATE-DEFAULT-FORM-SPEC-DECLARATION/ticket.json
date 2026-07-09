@@ -5,7 +5,5 @@
   "description": "Fix Duplicate declaration defaultFormSpec in playground index.tsx",
   "summary": "Removed duplicate import of defaultFormSpec from @semio-tech/forms-core in playground index.tsx since it is already imported from @semio-tech/forms-react.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": [
-    "⚪9a73f8c98b964f988db741386fb32cdb"
-  ]
+  "sessions": ["⚪9a73f8c98b964f988db741386fb32cdb"]
 }

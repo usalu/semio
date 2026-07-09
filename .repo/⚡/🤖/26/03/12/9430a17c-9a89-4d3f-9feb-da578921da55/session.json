@@ -53,9 +53,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅vscode⚙️tasks📌1📌763"
-        ],
+        "ranges": ["🛅vscode⚙️tasks📌1📌763"],
         "second": "🎆26🌙03☀️12⏰12⌚33⏱️27",
         "session": "⚪9430a17c9a894d3f9febda578921da55"
       },
@@ -86,9 +84,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅vscode⚙️tasks📌1📌763"
-        ],
+        "ranges": ["🛅vscode⚙️tasks📌1📌763"],
         "second": "🎆26🌙03☀️12⏰12⌚33⏱️43",
         "session": "⚪9430a17c9a894d3f9febda578921da55"
       },

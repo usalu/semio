@@ -5,7 +5,5 @@
   "description": "Refactor CAD renderer DOM chrome to use @semio-tech/ui-react Tailwind design tokens instead of hardcoded hex inline styles; align selection overlays and attribute panels with playground UI.",
   "summary": "Aligned CAD renderer UI chrome and 3D scene materials with @semio-tech/ui-react design tokens: Tailwind classes for InteractionRepl overlays/aside, SelectionAttributesPanel/PropertiesPanel; spatialSceneColors() reads CSS variables for picks, previews, grid, and canvas.",
   "goal": "🎯cad",
-  "sessions": [
-    "⚪28a539362f174c25a334eeb410e6f71b"
-  ]
+  "sessions": ["⚪28a539362f174c25a334eeb410e6f71b"]
 }

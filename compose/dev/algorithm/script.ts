@@ -10,11 +10,7 @@ class DevScript extends BundleScript {
       WATCHPACK_POLLING: process.env.WATCHPACK_POLLING ?? "true",
       CHOKIDAR_USEPOLLING: process.env.CHOKIDAR_USEPOLLING ?? "true",
     });
-    spawnBunx(
-      ["storybook", "dev", "-c", ".storybook", "-p", port, "--exact-port", "--host", host, "--no-open", "--debug", ...segments],
-      this.repoRoot,
-      env,
-    );
+    spawnBunx(["storybook", "dev", "-c", ".storybook", "-p", port, "--exact-port", "--host", host, "--no-open", "--debug", ...segments], this.repoRoot, env);
   }
 }
 

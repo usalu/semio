@@ -18,12 +18,12 @@ Generic document version control: typed operations, replay materialization, chec
 
 ## Bundles
 
-| Bundle | Role |
-|--------|------|
-| `vcs/rs` | Rust/WASM engine (`vcs` crate) |
-| `vcs/core` | TypeScript mirror + `DocumentVcsStore` |
-| `vcs/react` | `HistoryTable` UI |
-| `vcs/play` | History playground demo |
+| Bundle      | Role                                   |
+| ----------- | -------------------------------------- |
+| `vcs/rs`    | Rust/WASM engine (`vcs` crate)         |
+| `vcs/core`  | TypeScript mirror + `DocumentVcsStore` |
+| `vcs/react` | `HistoryTable` UI                      |
+| `vcs/play`  | History playground demo                |
 
 ## Mechanisms
 

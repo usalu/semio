@@ -6,7 +6,8 @@ goal: AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY
 
 ## Summary
 
-Fixed MCP server GraphQL errors: added uri field to goalType, converted all MCP tool handlers from broken GraphQL mutations to direct Tool* calls, fixed 9 resource handler queries with wrong field names, fixed project detection for non-@ dirs, fixed emojiText U+FE0E, fixed ParseSections API compatibility, added 22 new MCP tool tests, updated dev docs
+Fixed MCP server GraphQL errors: added uri field to goalType, converted all MCP tool handlers from broken GraphQL mutations to direct Tool\* calls, fixed 9 resource handler queries with wrong field names, fixed project detection for non-@ dirs, fixed emojiText U+FE0E, fixed ParseSections API compatibility, added 22 new MCP tool tests, updated dev docs
+
 ## Changes
 
 - Added `uri` field to `goalType` GraphQL object definition with resolver calling `Goal.GetURI()`

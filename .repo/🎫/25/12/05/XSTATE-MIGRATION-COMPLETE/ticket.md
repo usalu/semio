@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - XState migration was started with `sketchpadMachine` in `machines.ts`
@@ -92,6 +93,7 @@ The test failures appear to be related to timing or state sync issues where kit 
 ## Log
 
 ## Summary
+
 # Summary
 
->-
+> -

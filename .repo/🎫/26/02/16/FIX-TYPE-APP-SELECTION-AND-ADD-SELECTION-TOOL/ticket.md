@@ -11,6 +11,7 @@ Successfully added missing selection tools (Hand, Lasso) to Type app and reorgan
 ## Changes
 
 ### Type.tsx
+
 - Added HandTool, LassoRectangularTool, and LassoFreeformTool tool definitions
 - Updated TypeSelectSettings to match Design app pattern (removed Normal mode, focused on Additive/Subtractive/Intersect toggles)
 - Added TypeHandSettings component that activates hand tool on mount
@@ -21,6 +22,7 @@ Successfully added missing selection tools (Hand, Lasso) to Type app and reorgan
 - Added DiagramIcon and SceneIcon imports for lasso tools
 
 ### locales/en.json
+
 - Added "lasso" to toolbar.parent section
 - Added "lasso" to toolbar.subtool section
 - Updated app.type.tools.select translations (changed beginner labels from "Create ..." to selection-focused)
@@ -29,6 +31,7 @@ Successfully added missing selection tools (Hand, Lasso) to Type app and reorgan
 - Added app.type.tools.connector translation
 
 ### locales/de.json
+
 - Added "lasso" to toolbar.parent section with German translation "Lasso"
 - Added "lasso" to toolbar.subtool section with German translation "Lasso"
 - Updated app.type.tools.select translations (changed from "erstellen" to selection-focused)

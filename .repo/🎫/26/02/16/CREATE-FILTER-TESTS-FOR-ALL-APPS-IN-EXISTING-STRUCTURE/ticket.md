@@ -7,6 +7,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Extended filter coverage in existing sketchpad test structure with full Home and Kit URL toggle cycles; Home+Kit targeted playwright runs pass.
+
 ## Changes
 
 - Updated `compose/js/sketchpad.test.ts` (existing file only):

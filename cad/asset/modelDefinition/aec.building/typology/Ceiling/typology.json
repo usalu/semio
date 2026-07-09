@@ -4,9 +4,7 @@
   "version": "1.0.0",
   "label": "Ceiling",
   "description": "Interior overhead planar element.",
-  "primitiveKinds": [
-    "surface"
-  ],
+  "primitiveKinds": ["surface"],
   "style": {
     "color": "#E8E4DC",
     "edgeColor": "#A8A49C",

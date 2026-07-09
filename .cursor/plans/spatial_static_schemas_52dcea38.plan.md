@@ -2,24 +2,24 @@
 name: spatial static schemas
 overview: Eliminate every dynamic property key in spatial schemas, fixtures, and TS runtime. Convert all id/name-keyed maps to typed arrays, turn Expr and commit/display payloads into discriminated unions, and replace free `Record<string, unknown>` with closed enums + tagged variants — end-to-end, no compatibility shims.
 todos:
-  - id: expr
-    content: Rewrite expression.json + Expr TS union + evalExpr switch; convert all guards in fixtures
-    status: completed
-  - id: topology
-    content: Convert topology.json + TopologyGraph (arrays + internal Map index) + TopologyDiff arrays + migration script for fixtures
-    status: completed
-  - id: machine
-    content: Convert factory.json machine/guards/display/state.on to arrays; rewrite applyTransition, resolveDisplay, listKeyedCommandTransitions, getActiveSelectionSpec
-    status: completed
-  - id: tagged-payloads
-    content: Tagged commit.operation, tagged display items, collapsed box.transform action; rewrite CommandRuntime.commit and renderer-r3f consumers
-    status: completed
-  - id: context
-    content: Add typed context.fields + structured action paths; rewrite getPath/setPath usages and box helpers
-    status: completed
-  - id: downstream
-    content: Update machine-stately adapter and kernel-brepjs; extend all vitest suites and run nx test until green
-    status: completed
+ - id: expr
+   content: Rewrite expression.json + Expr TS union + evalExpr switch; convert all guards in fixtures
+   status: completed
+ - id: topology
+   content: Convert topology.json + TopologyGraph (arrays + internal Map index) + TopologyDiff arrays + migration script for fixtures
+   status: completed
+ - id: machine
+   content: Convert factory.json machine/guards/display/state.on to arrays; rewrite applyTransition, resolveDisplay, listKeyedCommandTransitions, getActiveSelectionSpec
+   status: completed
+ - id: tagged-payloads
+   content: Tagged commit.operation, tagged display items, collapsed box.transform action; rewrite CommandRuntime.commit and renderer-r3f consumers
+   status: completed
+ - id: context
+   content: Add typed context.fields + structured action paths; rewrite getPath/setPath usages and box helpers
+   status: completed
+ - id: downstream
+   content: Update machine-stately adapter and kernel-brepjs; extend all vitest suites and run nx test until green
+   status: completed
 isProject: false
 ---
 
@@ -30,6 +30,7 @@ Greenfield sweep: every place where a JSON object uses a runtime value as a prop
 ## 1. New canonical shapes
 
 ### Topology — [spatial/schema/json/topology.json](spatial/schema/json/topology.json)
+
 Replace every id-keyed map with an array of records:
 
 ```json
@@ -47,13 +48,14 @@ Same for `TopologyDiff`:
 
 ```ts
 type EntityDiff<T, P, Id> = {
-  readonly added?: readonly T[];
-  readonly modified?: readonly P[];   // patches carry their own id
-  readonly removed?: readonly Id[];
+ readonly added?: readonly T[];
+ readonly modified?: readonly P[]; // patches carry their own id
+ readonly removed?: readonly Id[];
 };
 ```
 
 ### Expression — [spatial/schema/json/expression.json](spatial/schema/json/expression.json)
+
 Tagged union discriminated by `kind` (no more "the operator is the key"):
 
 ```json
@@ -76,6 +78,7 @@ Tagged union discriminated by `kind` (no more "the operator is the key"):
 `op` becomes a closed JSON Schema `enum`. `evalExpr` in [spatial/js/core/index.ts](spatial/js/core/index.ts) switches on `expr.kind`.
 
 ### Factory / Command — [spatial/schema/json/factory.json](spatial/schema/json/factory.json)
+
 Replace every name-keyed object:
 
 ```json
@@ -108,6 +111,7 @@ Replace every name-keyed object:
 `State.on` is `EventHandler[]` with `event` (closed enum) + `transitions` (always an array — drop the `T | T[]` union).
 
 ### Actions — closed discriminated union
+
 Replace `additionalProperties: true` with a strict per-op shape:
 
 ```json
@@ -128,6 +132,7 @@ Replace `additionalProperties: true` with a strict per-op shape:
 The `box.*` ops collapse into one `box.transform` action carrying a `transform` enum, eliminating the open `op: string` namespace.
 
 ### Commit operation — tagged per kind
+
 Replace `operation: { kind: string, params: object }` with a `oneOf` keyed by `kind`:
 
 ```json
@@ -142,6 +147,7 @@ Replace `operation: { kind: string, params: object }` with a `oneOf` keyed by `k
 `commit.when` references a guard `name` from the `guards[]` array (closed reference, not free key).
 
 ### Display — tagged per item kind — [spatial/schema/json/display.json](spatial/schema/json/display.json)
+
 Drop `params: object` + `additionalProperties: true`. Each `kind` defines its own fields:
 
 ```json
@@ -155,6 +161,7 @@ Drop `params: object` + `additionalProperties: true`. Each `kind` defines its ow
 ```
 
 ### Command context — typed
+
 Add a top-level `context` declaration to `CommandSpec` so action `path`s are not arbitrary strings:
 
 ```json
@@ -181,11 +188,12 @@ Action `path` becomes a typed reference (`{ field: "origin", axis?: "x"|"y"|"z" 
 - `resolveTemplate` is removed — `Expr` is the only template language; `evalExpr` covers every site (display item field, action `value`, commit operation arg).
 - `TopologyDiff` rewrites `added`/`modified` as arrays; `applyTopologyDiff` builds the inverse the same way. `meshFaceTopologyDiff` returns the new shape.
 - `parseCommandSpec` is replaced by a structural validator that walks the new arrays and rejects unknown enum values; no string-key iteration except inside the array loops it owns.
-- `CommandSnapshot.context` stays a `Record<string, unknown>` *internally* but is built by writing into named context fields declared by the spec — public reads go through `getContextField(name)`. Diagnostic / message records already use named fields.
+- `CommandSnapshot.context` stays a `Record<string, unknown>` _internally_ but is built by writing into named context fields declared by the spec — public reads go through `getContextField(name)`. Diagnostic / message records already use named fields.
 
 ## 3. Fixtures — all 14 files
 
 Rewrite to the new shapes:
+
 - [spatial/fixture/box.command.json](spatial/fixture/box.command.json), [extrude-wire.command.json](spatial/fixture/extrude-wire.command.json), [offset-surface.command.json](spatial/fixture/offset-surface.command.json), [distance.command.json](spatial/fixture/distance.command.json), [area.command.json](spatial/fixture/area.command.json), [extrude.factory.json](spatial/fixture/extrude.factory.json), [offset-surface.factory.json](spatial/fixture/offset-surface.factory.json), [factory.json](spatial/fixture/factory.json) → tagged Expr / array states / typed display / typed commit / `box.transform`.
 - [spatial/fixture/geometry.json](spatial/fixture/geometry.json), [geometry-routes.json](spatial/fixture/geometry-routes.json), [geometry-loom.json](spatial/fixture/geometry-loom.json), [small-building.topology.json](spatial/fixture/small-building.topology.json) (~1700 lines), [tall-building.topology.json](spatial/fixture/tall-building.topology.json), [large-building.topology.json](spatial/fixture/large-building.topology.json) → topology arrays. The large topology fixtures are mechanically converted by a one-off `spatial/js/core/script.ts migrate-fixtures` command (added once, kept in repo).
 
@@ -199,6 +207,7 @@ Rewrite to the new shapes:
 ## 5. JSON Schema rigor
 
 In every schema file:
+
 - `additionalProperties: false` everywhere; remove every `additionalProperties: <schemaRef>`.
 - All arrays-of-records get `"uniqueItems": true` enforced on the `id`/`name` field via `items.required`.
 - Every enum is closed: action `op`, expression `kind`, expression `binop.op`, display `kind`, commit `kind`, context-field `kind`, selection `accept` items, requires `editableEntities` items.

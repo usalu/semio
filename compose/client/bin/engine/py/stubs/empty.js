@@ -1,4 +1,4 @@
-const handler = { get: (_, prop) => prop === "__esModule" ? true : prop === "default" ? proxy : typeof prop === "symbol" ? undefined : noop };
+const handler = { get: (_, prop) => (prop === "__esModule" ? true : prop === "default" ? proxy : typeof prop === "symbol" ? undefined : noop) };
 const noop = () => proxy;
 noop.prototype = {};
 const proxy = new Proxy(noop, handler);
@@ -22,4 +22,4 @@ export const Matrix4 = noop;
 export const Quaternion = noop;
 export const Euler = noop;
 export const Color = noop;
-export const MathUtils = { degToRad: (v) => v * Math.PI / 180 };
+export const MathUtils = { degToRad: (v) => (v * Math.PI) / 180 };

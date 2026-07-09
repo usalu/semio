@@ -12,105 +12,75 @@
         {
           "id": "representation-a",
           "fileId": "file-a",
-          "tagIds": [
-            "tag-a"
-          ]
+          "tagIds": ["tag-a"]
         }
       ],
       "expectedId": "representation-default"
     },
     {
       "name": "exact_match_beats_partial_overlap",
-      "selectedTagIds": [
-        "tag-a",
-        "tag-b"
-      ],
+      "selectedTagIds": ["tag-a", "tag-b"],
       "representations": [
         {
           "id": "representation-a",
           "fileId": "file-a",
-          "tagIds": [
-            "tag-a"
-          ]
+          "tagIds": ["tag-a"]
         },
         {
           "id": "representation-ab",
           "fileId": "file-ab",
-          "tagIds": [
-            "tag-a",
-            "tag-b"
-          ]
+          "tagIds": ["tag-a", "tag-b"]
         },
         {
           "id": "representation-ac",
           "fileId": "file-ac",
-          "tagIds": [
-            "tag-a",
-            "tag-c"
-          ]
+          "tagIds": ["tag-a", "tag-c"]
         }
       ],
       "expectedId": "representation-ab"
     },
     {
       "name": "subset_filter_then_best_match",
-      "selectedTagIds": [
-        "tag-a"
-      ],
+      "selectedTagIds": ["tag-a"],
       "representations": [
         {
           "id": "representation-a",
           "fileId": "file-a",
-          "tagIds": [
-            "tag-a"
-          ]
+          "tagIds": ["tag-a"]
         },
         {
           "id": "representation-ab",
           "fileId": "file-ab",
-          "tagIds": [
-            "tag-a",
-            "tag-b"
-          ]
+          "tagIds": ["tag-a", "tag-b"]
         },
         {
           "id": "representation-b",
           "fileId": "file-b",
-          "tagIds": [
-            "tag-b"
-          ]
+          "tagIds": ["tag-b"]
         }
       ],
       "expectedId": "representation-a"
     },
     {
       "name": "no_representation_matches_all_selected_tags",
-      "selectedTagIds": [
-        "tag-z"
-      ],
+      "selectedTagIds": ["tag-z"],
       "representations": [
         {
           "id": "representation-a",
           "fileId": "file-a",
-          "tagIds": [
-            "tag-a"
-          ]
+          "tagIds": ["tag-a"]
         },
         {
           "id": "representation-b",
           "fileId": "file-b",
-          "tagIds": [
-            "tag-b"
-          ]
+          "tagIds": ["tag-b"]
         }
       ],
       "expectedId": null
     },
     {
       "name": "nakagin_capsule_tower_cast_case_selects_1to200",
-      "selectedTagIds": [
-        "14c03d58-6241-48e8-9ffe-89fc268124d2"
-      ],
+      "selectedTagIds": ["14c03d58-6241-48e8-9ffe-89fc268124d2"],
       "representations": [
         {
           "id": "nakagin-cast-default",
@@ -120,16 +90,12 @@
         {
           "id": "nakagin-cast-1to100",
           "fileId": "file-nakagin-cast-1to100",
-          "tagIds": [
-            "34b6308b-0600-4a8e-aff6-a70b9f27caac"
-          ]
+          "tagIds": ["34b6308b-0600-4a8e-aff6-a70b9f27caac"]
         },
         {
           "id": "nakagin-cast-1to200",
           "fileId": "file-nakagin-cast-1to200",
-          "tagIds": [
-            "14c03d58-6241-48e8-9ffe-89fc268124d2"
-          ]
+          "tagIds": ["14c03d58-6241-48e8-9ffe-89fc268124d2"]
         }
       ],
       "expectedId": "nakagin-cast-1to200"

@@ -2,21 +2,21 @@
 name: Configurable unpruned TOC depth
 overview: Decouple the Semio Table-window TOC's inclusion depth from `secnumdepth`, default it to "show everything" (all chapters/sections/subsections/paragraphs, including nested `SemioNest` paragraphs), and expose a way to configure a specific depth when pruning is wanted.
 todos:
-  - id: decouple-tocdepth
-    content: Add unlimited tocdepth default + \SemioTocDepth, remove secnumdepth coupling from \tableofcontents in semio-window.sty
-    status: completed
-  - id: maketoc-optional-depth
-    content: Give \maketableofcontents an optional depth argument in semio-components.sty
-    status: completed
-  - id: wrap-chapter-part
-    content: Add guarded \chapter and \part TOC-tracking wrap helpers in semio-window.sty
-    status: completed
-  - id: nest-depth-guard
-    content: Add tocdepth guard to \semio@nest@paragraph so nested SemioNest entries are prunable too
-    status: completed
-  - id: verify-build
-    content: Rebuild zwischenbericht + report/forschungsbericht templates, confirm unpruned default and working configurable depth
-    status: completed
+ - id: decouple-tocdepth
+   content: Add unlimited tocdepth default + \SemioTocDepth, remove secnumdepth coupling from \tableofcontents in semio-window.sty
+   status: completed
+ - id: maketoc-optional-depth
+   content: Give \maketableofcontents an optional depth argument in semio-components.sty
+   status: completed
+ - id: wrap-chapter-part
+   content: Add guarded \chapter and \part TOC-tracking wrap helpers in semio-window.sty
+   status: completed
+ - id: nest-depth-guard
+   content: Add tocdepth guard to \semio@nest@paragraph so nested SemioNest entries are prunable too
+   status: completed
+ - id: verify-build
+   content: Rebuild zwischenbericht + report/forschungsbericht templates, confirm unpruned default and working configurable depth
+   status: completed
 isProject: false
 ---
 
@@ -27,11 +27,13 @@ The TOC currently prunes entries via `\value{tocdepth}`, but `tocdepth` is force
 - [`print/tex/semio-components.sty`](print/tex/semio-components.sty) line 94-97: `\maketableofcontents` does `\setcounter{tocdepth}{\value{secnumdepth}}` before `\tableofcontents`.
 - [`print/tex/semio-window.sty`](print/tex/semio-window.sty) lines 1347-1351: the redefined `\tableofcontents` does the same thing again.
 
-`secnumdepth` is meant to control whether a heading *shows a number* in the body text (checked via `\if\relax\detokenize{\csname the#3\endcsname}\relax` in `\semio@heading@pair` / `\semio@koma@heading@block`), not whether it belongs in the TOC. Tying the two together means:
+`secnumdepth` is meant to control whether a heading _shows a number_ in the body text (checked via `\if\relax\detokenize{\csname the#3\endcsname}\relax` in `\semio@heading@pair` / `\semio@koma@heading@block`), not whether it belongs in the TOC. Tying the two together means:
+
 - Standard class default (`secnumdepth=3`, i.e. up to subsubsection) silently prunes all `\paragraph` entries from the TOC unless a document manually raises `secnumdepth` (as `zwischenbericht.tex` does with `\setcounter{secnumdepth}{4}`).
 - There is no way to show a TOC entry without also numbering it in the body, or vice versa.
 
 Additionally, two other gaps prevent "show everything" from actually being everything:
+
 - `\chapter` and `\part` are never wrapped for TOC tracking. `\semio@heading@wrap@install` (lines 1021-1026) only wraps `section`/`subsection`/`subsubsection`/`paragraph`. Templates that use `\chapter` (e.g. [`print/template/report/report.content.tex`](print/template/report/report.content.tex), [`print/template/zukunftbau/forschungsbericht.content.tex`](print/template/zukunftbau/forschungsbericht.content.tex)) never get chapter entries in the TOC at all, regardless of depth.
 - Nested `SemioNest` paragraphs are tracked unconditionally in `\semio@nest@paragraph` (line 1103-1108) — there is no depth check at all there, so they can't currently be pruned even if a document wanted a shallower TOC.
 
@@ -51,7 +53,8 @@ Introduce one depth counter (`tocdepth`, already a standard LaTeX counter) as th
 }
 ```
 
-  No argument -> keeps whatever depth is currently active (the unlimited default, unless something else set it). Explicit argument (e.g. `\maketableofcontents[2]`) -> prunes to that level.
+No argument -> keeps whatever depth is currently active (the unlimited default, unless something else set it). Explicit argument (e.g. `\maketableofcontents[2]`) -> prunes to that level.
+
 - Add a standalone public command for setting depth outside of `\maketableofcontents` (e.g. before a raw `\tableofcontents` call), matching existing naming conventions like `\SemioChromeIconSize`:
 
 ```latex
@@ -82,7 +85,7 @@ Introduce one depth counter (`tocdepth`, already a standard LaTeX counter) as th
 }
 ```
 
-   Update `\semio@heading@wrap@install` to call `\semio@heading@wrap@part` always, and `\semio@heading@wrap@chapter` only `\ifcsname chapter\endcsname` (hyperref never defines a real `\chapter` command on `scrartcl`, so this guard is safe and matches the existing pattern at line 496).
+Update `\semio@heading@wrap@install` to call `\semio@heading@wrap@part` always, and `\semio@heading@wrap@chapter` only `\ifcsname chapter\endcsname` (hyperref never defines a real `\chapter` command on `scrartcl`, so this guard is safe and matches the existing pattern at line 496).
 
 2. **SemioNest depth check** — guard the TOC-tracking call in `\semio@nest@paragraph` (currently unconditional) with the same `>\value{tocdepth}` check used everywhere else, using the nested effective level:
 
@@ -97,7 +100,7 @@ Introduce one depth counter (`tocdepth`, already a standard LaTeX counter) as th
 }
 ```
 
-   This only gates the TOC entry — the in-body heading chip (`\semio@heading@pair@muted@num`) always still renders, since depth only concerns TOC pruning, never body-heading visibility.
+This only gates the TOC entry — the in-body heading chip (`\semio@heading@pair@muted@num`) always still renders, since depth only concerns TOC pruning, never body-heading visibility.
 
 ## Files touched
 

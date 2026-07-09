@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The unit tests in `compose.test.ts` verify that flattened designs have correct planes and centers by comparing them against the "Flat" subdesigns stored in the metabolism kit asset. The E2E test (`sketchpad.test.ts`) was missing this verification - it only tested UI interactions but not the correctness of the computed piece metadata.
@@ -34,6 +35,7 @@ The unit tests in `compose.test.ts` verify that flattened designs have correct p
 ## Log
 
 ## Summary
+
 # Summary
 
->-
+> -

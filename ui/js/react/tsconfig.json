@@ -3,10 +3,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
+    "lib": ["DOM", "ESNext"],
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
@@ -17,22 +14,12 @@
     "allowJs": false,
     "incremental": false,
     "noEmit": true,
-    "types": [
-      "react",
-      "react-dom"
-    ],
+    "types": ["react", "react-dom"],
     "baseUrl": ".",
     "paths": {
-      "@semio-tech/ui-react": [
-        "./index.tsx"
-      ],
-      "@semio-tech/ui-react/*": [
-        "./*"
-      ],
+      "@semio-tech/ui-react": ["./index.tsx"],
+      "@semio-tech/ui-react/*": ["./*"]
     }
   },
-  "exclude": [
-    "node_modules",
-    "storybook-static"
-  ]
+  "exclude": ["node_modules", "storybook-static"]
 }

@@ -2,24 +2,24 @@
 name: gis-map-infinite-canvas
 overview: Extract the shared infinite-canvas engine (camera, Vello/WebGPU GPU session, raster tiles, pan/zoom, LOD) out of puzzle_2d into infinite_cavas, then build a new gis/map WASM crate + React renderer + playground on top of it, rendering OpenStreetMap raster tiles (via a dev tile proxy) with Position / Route / Region overlays and a default whole-world view.
 todos:
-  - id: extract-engine
-    content: Extract shared engine (Camera/transforms, LOD, raster cache, CanvasGpuSession, CanvasContent trait) from puzzle_2d into infinite/cavas/vello/lib.rs + Cargo.toml; extend its tests.
-    status: completed
-  - id: refactor-puzzle2d
-    content: Refactor puzzle_2d to consume the shared engine (BoardHost implements CanvasContent; BoardSessionInner wraps CanvasGpuSession) keeping BoardSession API stable; verify cargo tests + 2d play smoke.
-    status: completed
-  - id: map-rs
-    content: "Restructure gis/map -> gis/map/rs cdylib: mercator projection, tile math + raster store, MapHost (Position/Route/Region) implementing CanvasContent, MapSession wasm API, script.ts wasm build, update workspace member; extend tests."
-    status: completed
-  - id: map-react
-    content: "Create gis/map/react renderer: load gis_map wasm, MapRenderer + tile manager (fetch /osm tiles -> uploadTile), reconciler host + <MapCanvas>/<Position>/<Route>/<Region>, default whole-world camera."
-    status: completed
-  - id: map-play-proxy
-    content: Create gis/map/play harness + add osmTileProxyVitePlugin to vite-elements-assets.ts; extend renderer kind union/boot/host regions and buildMapWindowBody; seed fixture + toolbar; gate browser boot on map entry.
-    status: completed
-  - id: wire-validate
-    content: "Add nx project.json/package.json targets + launch.json entries; validate end-to-end (cargo tests, react vitest, play dev: tiles via proxy, world-fit default, overlays + pan/zoom) with console logs."
-    status: completed
+ - id: extract-engine
+   content: Extract shared engine (Camera/transforms, LOD, raster cache, CanvasGpuSession, CanvasContent trait) from puzzle_2d into infinite/cavas/vello/lib.rs + Cargo.toml; extend its tests.
+   status: completed
+ - id: refactor-puzzle2d
+   content: Refactor puzzle_2d to consume the shared engine (BoardHost implements CanvasContent; BoardSessionInner wraps CanvasGpuSession) keeping BoardSession API stable; verify cargo tests + 2d play smoke.
+   status: completed
+ - id: map-rs
+   content: "Restructure gis/map -> gis/map/rs cdylib: mercator projection, tile math + raster store, MapHost (Position/Route/Region) implementing CanvasContent, MapSession wasm API, script.ts wasm build, update workspace member; extend tests."
+   status: completed
+ - id: map-react
+   content: "Create gis/map/react renderer: load gis_map wasm, MapRenderer + tile manager (fetch /osm tiles -> uploadTile), reconciler host + <MapCanvas>/<Position>/<Route>/<Region>, default whole-world camera."
+   status: completed
+ - id: map-play-proxy
+   content: Create gis/map/play harness + add osmTileProxyVitePlugin to vite-elements-assets.ts; extend renderer kind union/boot/host regions and buildMapWindowBody; seed fixture + toolbar; gate browser boot on map entry.
+   status: completed
+ - id: wire-validate
+   content: "Add nx project.json/package.json targets + launch.json entries; validate end-to-end (cargo tests, react vitest, play dev: tiles via proxy, world-fit default, overlays + pan/zoom) with console logs."
+   status: completed
 isProject: false
 ---
 
@@ -58,8 +58,6 @@ flowchart TB
   end
   GM -->|"MapSession wasm"| MR
 ```
-
-
 
 ## Workflow note
 
@@ -128,4 +126,3 @@ New `gis/map/play/{index.ts,index.html,globals.css,vite.config.ts,package.json,p
 - Add nx targets for `@semio-tech/gis-map-play` (dev/build/test) and `@semio-tech/gis-map-react` (test) in their `project.json`/`package.json`; pick a free dev port (e.g. `GIS_MAP_PLAY_PORT=6040`).
 - Register the new commands in `[.vscode/launch.json](.vscode/launch.json)` following existing order/grouping; the rust test target already includes `gis_map`.
 - Validate end-to-end: `cargo test` for `infinite_cavas`/`gis_map`/`puzzle_2d`; `@semio-tech/gis-map-react` vitest; `@semio-tech/gis-map-play` dev → confirm (with console logs) tiles load through the proxy, the world fits by default, and Position/Route/Region render and pan/zoom.
-

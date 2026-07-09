@@ -46,8 +46,6 @@ flowchart TD
     template --> makeregisters
 ```
 
-
-
 ### 1. `print/tex/semio-core.sty` — plural kind-label maps
 
 Add a plural counterpart to the existing `semio_kind_label_de:n` / `_en:n` machinery (region `Kinds`, near line 99-159 and the registration block at line 211-254): `\semio@kind@label@plural@de@<kind>` / `@en@<kind>` for all 14 window kinds (e.g. `figure` → `Abbildungen`/`Figures`, `table` → `Tabellen`/`Tables`, `abbreviations` → `Abkürzungen`/`Abbreviations`, etc.), plus lookup helpers mirroring `\semio@kind@label`. These feed the list titles ("Verzeichnis der Abbildungen" / "List of Figures") and column headers ("Nr." / "Titel" / "Seite" vs "No." / "Title" / "Page", added once, language-driven like the rest of the doc).

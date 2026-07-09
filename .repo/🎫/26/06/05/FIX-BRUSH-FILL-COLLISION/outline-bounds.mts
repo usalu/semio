@@ -2,11 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { Box3, Group, Vector3 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import {
-  brushPreviewMeshFrameGroup,
-  styledMeshTemplate,
-  updateWorldMatrixChain,
-} from "/Users/ueli/Documents/compose/puzzle/3d/react/index.tsx";
+import { brushPreviewMeshFrameGroup, styledMeshTemplate, updateWorldMatrixChain } from "/Users/ueli/Documents/compose/puzzle/3d/react/index.tsx";
 
 const loader = new GLTFLoader();
 const meshDir = "/Users/ueli/Documents/compose/compose/fixtures/kit/folder/abbau-aufbau";

@@ -14,12 +14,12 @@ Extended puzzle 3d fill with persisted oriented-box **target volumes** that cons
 
 ## Tests
 
-| Package | Result |
-|---------|--------|
-| `@semio-tech/infinite-world-r3f` | 52 passed |
-| `@semio-tech/puzzle-3d-react` | 338 passed |
-| `@semio-tech/puzzle-3d-play` | 71 passed |
-| `@semio-tech/puzzle-3d-rs` | `world_volumes_contain_aabb_respects_oriented_box` ok |
+| Package                          | Result                                                |
+| -------------------------------- | ----------------------------------------------------- |
+| `@semio-tech/infinite-world-r3f` | 52 passed                                             |
+| `@semio-tech/puzzle-3d-react`    | 338 passed                                            |
+| `@semio-tech/puzzle-3d-play`     | 71 passed                                             |
+| `@semio-tech/puzzle-3d-rs`       | `world_volumes_contain_aabb_respects_oriented_box` ok |
 
 ## Runtime `[DEBUG]` hooks
 

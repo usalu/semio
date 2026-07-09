@@ -6,7 +6,8 @@ goal: HOOKS-VSCODE/FIX-HOOKS
 
 ## Summary
 
-Fixed 'Cannot read properties of undefined (reading hookSpecificOutput)' in VS Code Copilot Chat v0.37.6. Root cause: formatVSCodeHookOutput returned {} for UserPromptSubmit/PostToolUse/Stop/SubagentStop/PreCompact events. VS Code _toHookResult strips continue/stopReason/systemMessage leaving empty object → output=undefined. The UserPromptSubmit onSuccess callback accesses d.hookSpecificOutput without null-checking d. Fix: always include hookSpecificOutput for all VS Code hook events. Updated tests. All hook tests pass.
+Fixed 'Cannot read properties of undefined (reading hookSpecificOutput)' in VS Code Copilot Chat v0.37.6. Root cause: formatVSCodeHookOutput returned {} for UserPromptSubmit/PostToolUse/Stop/SubagentStop/PreCompact events. VS Code \_toHookResult strips continue/stopReason/systemMessage leaving empty object → output=undefined. The UserPromptSubmit onSuccess callback accesses d.hookSpecificOutput without null-checking d. Fix: always include hookSpecificOutput for all VS Code hook events. Updated tests. All hook tests pass.
+
 ## Plan
 
 Root cause (confirmed by reading VS Code Copilot Chat extension source at `/home/vscode/.vscode-server/extensions/github.copilot-chat-0.37.6/dist/extension.js`):
@@ -16,6 +17,7 @@ Root cause (confirmed by reading VS Code Copilot Chat extension source at `/home
 3. `JS({hookType:"UserPromptSubmit", onSuccess: u => { let d = u; let p = d.hookSpecificOutput?.additionalContext ... }})` crashes because `d` is `undefined` (no null check unlike SessionStart/PreToolUse callbacks)
 
 Fix in `formatVSCodeHookOutput`:
+
 - Always include `hookSpecificOutput` for ALL events that VS Code may access `.hookSpecificOutput` on
 - UserPromptSubmit: `{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit"}}` (+ additionalContext if message)
 - PostToolUse: always include `{"hookSpecificOutput": {"hookEventName": "PostToolUse"}}` (+ additionalContext if message)

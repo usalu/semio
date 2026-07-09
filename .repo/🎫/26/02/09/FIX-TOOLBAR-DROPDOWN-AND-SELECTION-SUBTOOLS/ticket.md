@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 - [x] Refresh toolbar tree context with `repo tree toolbar`.
 - [x] Reopen existing toolbar subtools ticket for this request.
 - [x] Refactor toolbar subtool handling to infrastructure-level group-agnostic logic.
@@ -10,6 +11,7 @@
 - [x] Run targeted verification commands.
 
 ## Changes
+
 - Updated `compose/js/sketchpad/Sketchpad.tsx` to make toolbar subtool mechanics group-agnostic while preserving current UI behavior:
   - Added infrastructure-level toolbar group ordering support including future `settings` group.
   - Added generic `groupSubTools` and `groupHasDropdown` derivation from section metadata.
@@ -26,12 +28,15 @@
   - Documented that subtool dropdown infrastructure is group-agnostic while preserving current selection behavior unless additional groups define multiple subtools.
 
 ## Log
+
 ### Key Decisions
+
 - No app section registrations were added for `settings` yet, so no new visible toolbar items are introduced by this change.
 - Infrastructure now supports future per-tool subtools uniformly without forcing current non-selection groups into dropdown UI.
 - Active subtool filtering in the right toolbar is now generic and no longer hardcoded to `selection`.
 
 ### Verification
+
 - `node -e "JSON.parse(...)"` validation passed for `compose/js/sketchpad/locales/en.json` and `compose/js/sketchpad/locales/de.json`.
 - `npx playwright test --config compose/js/playwright.config.ts sketchpad.test.ts --grep "Toolbar"` failed before test execution because `config.webServer` could not start in this environment.
 - `npx tsc -p compose/js/tsconfig.json --noEmit` reports existing unrelated baseline errors in `Design.tsx`, `Feedback.tsx`, `Type.tsx`, and `elements.tsx`; no additional parse/runtime errors were introduced by locale JSON edits.

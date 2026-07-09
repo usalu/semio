@@ -29,9 +29,7 @@
           "is_parallel_worker": false,
           "hook_event_name": "subagentStart",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": null
         }
@@ -64,9 +62,7 @@
           "description": "Explore toolbar UI code",
           "hook_event_name": "subagentStop",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": null,
           "agent_transcript_path": null
@@ -97,9 +93,7 @@
           "is_parallel_worker": false,
           "hook_event_name": "subagentStart",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": null
         }
@@ -132,9 +126,7 @@
           "description": "Verify toolbar icon consistency",
           "hook_event_name": "subagentStop",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": null,
           "agent_transcript_path": null

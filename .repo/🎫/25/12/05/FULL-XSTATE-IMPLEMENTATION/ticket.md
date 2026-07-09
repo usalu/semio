@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 See FULL-XSTATE-TRANSITION.md for detailed architecture plan.
@@ -186,6 +187,7 @@ Created new file with clean React hooks that use XState selectors:
 ## Log
 
 ## Summary
+
 # Summary
 
 Implement full XState transition - no Yjs in apps

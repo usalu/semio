@@ -2,24 +2,24 @@
 name: Puzzle 3D Brush Fill Context Menu Fix
 overview: Fix three confirmed root-cause bugs preventing the puzzle 3D brush tool, fill tool, and context menu from working, then add a net-new context menu (which never existed for any world-3d plugin) to reach premigration parity.
 todos:
-  - id: fix-fill
-    content: Fix setFillCount to accept both count and value keys (d3/mod.rs)
-    status: completed
-  - id: fix-brush-sync
-    content: Sync precompute session unconditionally at top of handle_command_patch_ops (d3/mod.rs)
-    status: completed
-  - id: context-menu-core
-    content: Add context_menu_json to World3dScene (core/rs, plugin/rs) and update 3 callers
-    status: completed
-  - id: context-menu-puzzle3d
-    content: Build context menu items + duplicateSelection/selectSameKindSelection handlers in d3/mod.rs
-    status: completed
-  - id: context-menu-react
-    content: Wire ContextMenuController + zoom-to-selection into world-3d-host.tsx and os-shell.tsx types
-    status: completed
-  - id: validate-close
-    content: Run vitest + cargo test, manual verify, update verify-log, reopen/close ticket
-    status: completed
+ - id: fix-fill
+   content: Fix setFillCount to accept both count and value keys (d3/mod.rs)
+   status: completed
+ - id: fix-brush-sync
+   content: Sync precompute session unconditionally at top of handle_command_patch_ops (d3/mod.rs)
+   status: completed
+ - id: context-menu-core
+   content: Add context_menu_json to World3dScene (core/rs, plugin/rs) and update 3 callers
+   status: completed
+ - id: context-menu-puzzle3d
+   content: Build context menu items + duplicateSelection/selectSameKindSelection handlers in d3/mod.rs
+   status: completed
+ - id: context-menu-react
+   content: Wire ContextMenuController + zoom-to-selection into world-3d-host.tsx and os-shell.tsx types
+   status: completed
+ - id: validate-close
+   content: Run vitest + cargo test, manual verify, update verify-log, reopen/close ticket
+   status: completed
 isProject: false
 ---
 

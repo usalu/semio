@@ -4,7 +4,5 @@
   "description": "Consolidate compose/go into main.go and main_test.go only; merge kit_sqlite into main; fold compose_benchmark into main_test as benchmarks; update references; run go test.",
   "summary": "Consolidated compose/go into two files: merged compose.go + kit_sqlite.go into main.go (single package compose, merged imports, SQLite region and repo links point at main.go); merged compose_test.go + former compose_benchmark scenarios into main_test.go as standard func Benchmark*(b *testing.B) plus helpers; removed compose.go, kit_sqlite.go, compose_benchmark.go, compose_test.go. Updated bundle README Summary. go test ./... and sample bench pass.",
   "goal": "🎯aioptimizedrepo🎯singlefilerepo",
-  "sessions": [
-    "⚪dff379881a31412c9106683510164112"
-  ]
+  "sessions": ["⚪dff379881a31412c9106683510164112"]
 }

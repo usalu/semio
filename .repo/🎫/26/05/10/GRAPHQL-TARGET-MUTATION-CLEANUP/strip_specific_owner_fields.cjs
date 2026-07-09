@@ -2,18 +2,15 @@
 //    leaving only the general interface fields (`ownerEntity`, `ownedEntities`).
 //    Run from repo root: `node .repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/strip_specific_owner_fields.js`.
 
-const fs = require('fs');
-const path = 'C:/git/compose/compose/graphql/target.schema.graphql';
+const fs = require("fs");
+const path = "C:/git/compose/compose/graphql/target.schema.graphql";
 
-const src = fs.readFileSync(path, 'utf8');
+const src = fs.readFileSync(path, "utf8");
 const lines = src.split(/\r?\n/);
 
 // 🚧 Whitelisted spine-reference field names. Only these are removed; everything else
 //    starting with `owner...:` (e.g. data fields like `ownerId: ID!`) stays untouched.
-const spineOwnerNames = new Set([
-  'ownerModifications',
-  'ownerDiffs',
-]);
+const spineOwnerNames = new Set(["ownerModifications", "ownerDiffs"]);
 
 const dropPatterns = [
   // specific union owner field on a type or interface, e.g. `owner: VectorOwner!` (any trailing comment or none).
@@ -45,5 +42,5 @@ for (const line of lines) {
   out.push(line);
 }
 
-fs.writeFileSync(path, out.join('\n'));
+fs.writeFileSync(path, out.join("\n"));
 console.log(`Removed ${removed} lines.`);

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Coordinate System Transformation Fix
 
 **Date:** 2025-12-03
@@ -50,16 +51,16 @@ import { toThreeRotation, toComposeRotation } from "../compose";
 ```typescript
 // Transform connector position from compose coordinate system to Three.js coordinate system
 const position = useMemo(() => {
-  const composePos = new THREE.Vector3(connector.point.x, connector.point.y, connector.point.z);
-  const threePos = composePos.applyMatrix4(toThreeRotation());
-  return [threePos.x, threePos.y, threePos.z] as [number, number, number];
+ const composePos = new THREE.Vector3(connector.point.x, connector.point.y, connector.point.z);
+ const threePos = composePos.applyMatrix4(toThreeRotation());
+ return [threePos.x, threePos.y, threePos.z] as [number, number, number];
 }, [connector.point]);
 
 // Transform connector direction from compose coordinate system to Three.js coordinate system
 const direction = useMemo(() => {
-  const composeDir = new THREE.Vector3(connector.direction.x, connector.direction.y, connector.direction.z);
-  const threeDir = composeDir.applyMatrix4(toThreeRotation()).normalize();
-  return [threeDir.x, threeDir.y, threeDir.z] as [number, number, number];
+ const composeDir = new THREE.Vector3(connector.direction.x, connector.direction.y, connector.direction.z);
+ const threeDir = composeDir.applyMatrix4(toThreeRotation()).normalize();
+ return [threeDir.x, threeDir.y, threeDir.z] as [number, number, number];
 }, [connector.direction]);
 ```
 
@@ -119,6 +120,7 @@ The changes ensure that:
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix coordinate system transformation for connectors and geometry

@@ -5,10 +5,5 @@
   "description": "Puzzle2d Node Kind Vortices From Kit",
   "summary": "Object-kind vortex templates from `meta.kindCatalogs` now appear as nested child rows under each object kind in the Puzzle 3D workbench Kinds catalog tab. Labels resolve through the vortex kind catalog; descriptions show local CAD position. Parent object rows stay draggable for palette placement; vortex child rows are read-only.",
   "goal": "🎯compose",
-  "sessions": [
-    "⚪499bc0efb77b4a9590ad8e574073e94c",
-    "⚪1cfd0e77d0c8474da8529a6ec9252d4c",
-    "⚪dc3adb29a2094fcf8e4c9b0ad017606f",
-    "⚪a32d86fd8ba047d59a614966f205f9d2"
-  ]
+  "sessions": ["⚪499bc0efb77b4a9590ad8e574073e94c", "⚪1cfd0e77d0c8474da8529a6ec9252d4c", "⚪dc3adb29a2094fcf8e4c9b0ad017606f", "⚪a32d86fd8ba047d59a614966f205f9d2"]
 }

@@ -2,19 +2,19 @@ import { readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 function inlineMods(libPath: string, modNames: string[]): void {
-	let lib = readFileSync(libPath, "utf8");
-	const dir = dirname(libPath);
-	for (const modName of modNames) {
-		const modPath = join(dir, `${modName}.rs`);
-		const body = readFileSync(modPath, "utf8").trimEnd();
-		const inline = `pub mod ${modName} {\n// #region ${modName}\n${body}\n// #endregion ${modName}\n}\n`;
-		const decl = `pub mod ${modName};`;
-		if (!lib.includes(decl)) throw new Error(`${libPath}: missing ${decl}`);
-		lib = lib.replace(decl, inline);
-		unlinkSync(modPath);
-	}
-	writeFileSync(libPath, lib);
-	console.log(`inlined ${modNames.join(", ")} in ${libPath}`);
+  let lib = readFileSync(libPath, "utf8");
+  const dir = dirname(libPath);
+  for (const modName of modNames) {
+    const modPath = join(dir, `${modName}.rs`);
+    const body = readFileSync(modPath, "utf8").trimEnd();
+    const inline = `pub mod ${modName} {\n// #region ${modName}\n${body}\n// #endregion ${modName}\n}\n`;
+    const decl = `pub mod ${modName};`;
+    if (!lib.includes(decl)) throw new Error(`${libPath}: missing ${decl}`);
+    lib = lib.replace(decl, inline);
+    unlinkSync(modPath);
+  }
+  writeFileSync(libPath, lib);
+  console.log(`inlined ${modNames.join(", ")} in ${libPath}`);
 }
 
 const root = join(import.meta.dirname, "../../../../../../");

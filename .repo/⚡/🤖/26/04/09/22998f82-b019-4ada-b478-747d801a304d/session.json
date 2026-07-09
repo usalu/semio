@@ -12688,10 +12688,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/22998f82-b019-4ada-b478-747d801a304d.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx",
-              "compose/js/index.ts"
-            ],
+            "files": ["compose/sketchpad/index.tsx", "compose/js/index.ts"],
             "summary": "Fixed bug in createKeyedTransactionHandlers and createSingleKeyTransactionHandlers where fresh-start TRANSACTION.START incorrectly cleared redoStack. Only commit/recordEdit should clear redo - matching PlainAppStore.startTransaction() behavior. Added 19 vitest unit tests for transaction undo/redo contract: single commit, multi-step merge, empty tx ignored, abort rollback, undo/redo movement, redo invalidation, boundaries, fresh start preserves redo, nested auto-finalize, symmetric cycles, kit diff roundtrip. All 174 tests pass."
           },
           "tool_use_id": "toolu_bdrk_01AGBu96SNwfkG7Ca85JKcJp__vscode-1775725642581",
@@ -12718,10 +12715,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/22998f82-b019-4ada-b478-747d801a304d.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx",
-              "compose/js/index.ts"
-            ],
+            "files": ["compose/sketchpad/index.tsx", "compose/js/index.ts"],
             "summary": "Fixed bug in createKeyedTransactionHandlers and createSingleKeyTransactionHandlers where fresh-start TRANSACTION.START incorrectly cleared redoStack. Only commit/recordEdit should clear redo - matching PlainAppStore.startTransaction() behavior. Added 19 vitest unit tests for transaction undo/redo contract: single commit, multi-step merge, empty tx ignored, abort rollback, undo/redo movement, redo invalidation, boundaries, fresh start preserves redo, nested auto-finalize, symmetric cycles, kit diff roundtrip. All 174 tests pass."
           },
           "tool_use_id": "toolu_bdrk_01AGBu96SNwfkG7Ca85JKcJp__vscode-1775725642581",
@@ -12984,10 +12978,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/22998f82-b019-4ada-b478-747d801a304d.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx",
-              "compose/js/index.ts"
-            ],
+            "files": ["compose/sketchpad/index.tsx", "compose/js/index.ts"],
             "summary": "Fixed bug in createKeyedTransactionHandlers and createSingleKeyTransactionHandlers where fresh-start TRANSACTION.START incorrectly cleared redoStack. Only commit/recordEdit should clear redo - matching PlainAppStore.startTransaction() behavior. Added 19 vitest unit tests for transaction undo/redo contract: single commit, multi-step merge, empty tx ignored, abort rollback, undo/redo movement, redo invalidation, boundaries, fresh start preserves redo, nested auto-finalize, symmetric cycles, kit diff roundtrip. All 174 tests pass.",
             "ticket": "2026/04/09/IMPLEMENT-UNDO-REDO-IN-SKETCHPAD-STORE"
           },
@@ -13015,10 +13006,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/22998f82-b019-4ada-b478-747d801a304d.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx",
-              "compose/js/index.ts"
-            ],
+            "files": ["compose/sketchpad/index.tsx", "compose/js/index.ts"],
             "summary": "Fixed bug in createKeyedTransactionHandlers and createSingleKeyTransactionHandlers where fresh-start TRANSACTION.START incorrectly cleared redoStack. Only commit/recordEdit should clear redo - matching PlainAppStore.startTransaction() behavior. Added 19 vitest unit tests for transaction undo/redo contract: single commit, multi-step merge, empty tx ignored, abort rollback, undo/redo movement, redo invalidation, boundaries, fresh start preserves redo, nested auto-finalize, symmetric cycles, kit diff roundtrip. All 174 tests pass.",
             "ticket": "2026/04/09/IMPLEMENT-UNDO-REDO-IN-SKETCHPAD-STORE"
           },
@@ -13047,10 +13035,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "path": "26/04/09/IMPLEMENT-UNDO-REDO-IN-SKETCHPAD-STORE",
-            "files": [
-              "compose/sketchpad/index.tsx",
-              "compose/js/index.ts"
-            ],
+            "files": ["compose/sketchpad/index.tsx", "compose/js/index.ts"],
             "no_github": true,
             "summary": "Fixed bug in createKeyedTransactionHandlers and createSingleKeyTransactionHandlers where fresh-start TRANSACTION.START incorrectly cleared redoStack. Only commit/recordEdit should clear redo - matching PlainAppStore.startTransaction() behavior. Added 19 vitest unit tests for transaction undo/redo contract: single commit, multi-step merge, empty tx ignored, abort rollback, undo/redo movement, redo invalidation, boundaries, fresh start preserves redo, nested auto-finalize, symmetric cycles, kit diff roundtrip. All 174 tests pass."
           },
@@ -13079,10 +13064,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "path": "26/04/09/IMPLEMENT-UNDO-REDO-IN-SKETCHPAD-STORE",
-            "files": [
-              "compose/sketchpad/index.tsx",
-              "compose/js/index.ts"
-            ],
+            "files": ["compose/sketchpad/index.tsx", "compose/js/index.ts"],
             "no_github": true,
             "summary": "Fixed bug in createKeyedTransactionHandlers and createSingleKeyTransactionHandlers where fresh-start TRANSACTION.START incorrectly cleared redoStack. Only commit/recordEdit should clear redo - matching PlainAppStore.startTransaction() behavior. Added 19 vitest unit tests for transaction undo/redo contract: single commit, multi-step merge, empty tx ignored, abort rollback, undo/redo movement, redo invalidation, boundaries, fresh start preserves redo, nested auto-finalize, symmetric cycles, kit diff roundtrip. All 174 tests pass."
           },
@@ -13111,10 +13093,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "path": "26/04/09/IMPLEMENT-UNDO-REDO-IN-SKETCHPAD-STORE",
-            "files": [
-              "compose/sketchpad/index.tsx",
-              "compose/js/index.ts"
-            ],
+            "files": ["compose/sketchpad/index.tsx", "compose/js/index.ts"],
             "no_github": true,
             "summary": "Fixed bug in createKeyedTransactionHandlers and createSingleKeyTransactionHandlers where fresh-start TRANSACTION.START incorrectly cleared redoStack. Only commit/recordEdit should clear redo - matching PlainAppStore.startTransaction() behavior. Added 19 vitest unit tests for transaction undo/redo contract: single commit, multi-step merge, empty tx ignored, abort rollback, undo/redo movement, redo invalidation, boundaries, fresh start preserves redo, nested auto-finalize, symmetric cycles, kit diff roundtrip. All 174 tests pass."
           },
@@ -13144,10 +13123,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "path": "26/04/09/IMPLEMENT-UNDO-REDO-IN-SKETCHPAD-STORE",
-            "files": [
-              "compose/sketchpad/index.tsx",
-              "compose/js/index.ts"
-            ],
+            "files": ["compose/sketchpad/index.tsx", "compose/js/index.ts"],
             "no_github": true,
             "summary": "Fixed bug in createKeyedTransactionHandlers and createSingleKeyTransactionHandlers where fresh-start TRANSACTION.START incorrectly cleared redoStack. Only commit/recordEdit should clear redo - matching PlainAppStore.startTransaction() behavior. Added 19 vitest unit tests for transaction undo/redo contract: single commit, multi-step merge, empty tx ignored, abort rollback, undo/redo movement, redo invalidation, boundaries, fresh start preserves redo, nested auto-finalize, symmetric cycles, kit diff roundtrip. All 174 tests pass."
           },

@@ -2,24 +2,24 @@
 name: BVH solid-overlap brush collision
 overview: Replace the AABB-based brush/fill collision (which is fundamentally inadequate for the ~13%-fill sparse lattice meshes) with exact three-mesh-bvh geometry collision behind an interface, and change the brush tolerance to a solid-overlap volume budget in cubic meters.
 todos:
-  - id: dep
-    content: Add three-mesh-bvh to @semio-tech/infinite-world-r3f (and resolve for @semio-tech/puzzle-3d-react) via bun
-    status: completed
-  - id: interface
-    content: "Add Collision region in infinite/world/r3f/index.tsx wrapping MeshBVH: collisionBodyFromObject, bodiesIntersect, solidOverlapVolume"
-    status: completed
-  - id: cache
-    content: Replace brushCollisionGltfScenes with CollisionBody cache keyed by meshUrl in puzzle/3d/react
-    status: completed
-  - id: probes
-    content: Rewrite brushPreviewCollides, fillPreviewCollidesAccumulated, brushCandidateCollidesAtPose, ghost and commit to use solidOverlapVolume > budget; include host
-    status: completed
-  - id: budget
-    content: Repurpose tolerance constants/props to solid-overlap volume budget (m3) in react + play UI
-    status: completed
-  - id: tests
-    content: Update react/play unit tests to volume semantics and add sparse-lattice regression; add ticket verification script and run test targets
-    status: completed
+ - id: dep
+   content: Add three-mesh-bvh to @semio-tech/infinite-world-r3f (and resolve for @semio-tech/puzzle-3d-react) via bun
+   status: completed
+ - id: interface
+   content: "Add Collision region in infinite/world/r3f/index.tsx wrapping MeshBVH: collisionBodyFromObject, bodiesIntersect, solidOverlapVolume"
+   status: completed
+ - id: cache
+   content: Replace brushCollisionGltfScenes with CollisionBody cache keyed by meshUrl in puzzle/3d/react
+   status: completed
+ - id: probes
+   content: Rewrite brushPreviewCollides, fillPreviewCollidesAccumulated, brushCandidateCollidesAtPose, ghost and commit to use solidOverlapVolume > budget; include host
+   status: completed
+ - id: budget
+   content: Repurpose tolerance constants/props to solid-overlap volume budget (m3) in react + play UI
+   status: completed
+ - id: tests
+   content: Update react/play unit tests to volume semantics and add sparse-lattice regression; add ticket verification script and run test targets
+   status: completed
 isProject: false
 ---
 

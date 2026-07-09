@@ -2,36 +2,36 @@
 name: World3d WGPU Full Interaction Parity
 overview: "Fix the actually-still-broken frustum plane extraction that empties every 3D viewport, then bring all world3d plugins (puzzle3d, puzzle5d, procedural3d, lowpoly, cad, shooting) to premigration interaction parity: orbit/pan/zoom with correct button mapping and persistence, hover, select, marquee, and a translate/rotate/scale gumball."
 todos:
-  - id: fix-frustum-planes
-    content: Correct frustum_planes rows 2-5 to use w-row base; add concrete-forest-camera regression tests
-    status: completed
-  - id: fix-orbit-reset
-    content: Only reset orbit in sync_world3d_state when camera_json itself changed
-    status: completed
-  - id: e2e-body-check
-    content: Wire assertBodyContent into smokePlugin so empty 3D bodies fail e2e
-    status: completed
-  - id: input-left-drag
-    content: Forward left-button drags and full modifiers to world3d handlers in lib.rs
-    status: completed
-  - id: camera-buttons
-    content: "Premigration button mapping: middle/shift+right pan, alt+right/right orbit, wheel zoom"
-    status: completed
-  - id: camera-persist
-    content: Emit setCamera on nav end; add/normalize setCamera handlers in all six 3d plugins
-    status: completed
-  - id: gumball-render
-    content: Render translate axes/planes + rotate rings gizmo at selection centroid via line/translucent draws
-    status: completed
-  - id: gumball-interact
-    content: Gizmo handle hit-testing, axis/plane drag projection, live preview, commit on release
-    status: completed
-  - id: plugin-transform-handlers
-    content: Add translateSelection/rotateSelection/scaleSelection handlers to all six 3d plugins
-    status: completed
-  - id: verify-all
-    content: cargo tests, WASM rebuild, body-checked e2e for all six plugins, manual browser check
-    status: completed
+ - id: fix-frustum-planes
+   content: Correct frustum_planes rows 2-5 to use w-row base; add concrete-forest-camera regression tests
+   status: completed
+ - id: fix-orbit-reset
+   content: Only reset orbit in sync_world3d_state when camera_json itself changed
+   status: completed
+ - id: e2e-body-check
+   content: Wire assertBodyContent into smokePlugin so empty 3D bodies fail e2e
+   status: completed
+ - id: input-left-drag
+   content: Forward left-button drags and full modifiers to world3d handlers in lib.rs
+   status: completed
+ - id: camera-buttons
+   content: "Premigration button mapping: middle/shift+right pan, alt+right/right orbit, wheel zoom"
+   status: completed
+ - id: camera-persist
+   content: Emit setCamera on nav end; add/normalize setCamera handlers in all six 3d plugins
+   status: completed
+ - id: gumball-render
+   content: Render translate axes/planes + rotate rings gizmo at selection centroid via line/translucent draws
+   status: completed
+ - id: gumball-interact
+   content: Gizmo handle hit-testing, axis/plane drag projection, live preview, commit on release
+   status: completed
+ - id: plugin-transform-handlers
+   content: Add translateSelection/rotateSelection/scaleSelection handlers to all six 3d plugins
+   status: completed
+ - id: verify-all
+   content: cargo tests, WASM rebuild, body-checked e2e for all six plugins, manual browser check
+   status: completed
 isProject: false
 ---
 

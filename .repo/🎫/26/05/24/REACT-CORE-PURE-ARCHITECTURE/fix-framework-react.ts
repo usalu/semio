@@ -8,16 +8,16 @@ const frPath = join(root, "elements/lib/framework/renderer/react/index.tsx");
 let shell = readFileSync(join(dir, "shell-extract.tsx"), "utf8");
 
 shell = shell
-	.replace(/^\/\/ Domain-neutral[\s\S]*?^export enum Mode \{[\s\S]*?^}\n\n/m, "")
-	.replace(/\bUIWindowLayoutWindowNode\b/g, "WindowLayoutWindowNode")
-	.replace(/\bUIWindowLayoutStackNode\b/g, "WindowLayoutStackNode")
-	.replace(/\bUIWindowLayoutAxisNode\b/g, "WindowLayoutAxisNode")
-	.replace(/\bUIWindowLayout\b/g, "WindowLayout")
-	.replace(/\bUIWindowLayoutNode\b/g, "WindowLayoutNode")
-	.replace(/export type LayoutNode = WindowLayout;/g, "export type LayoutNode = WindowLayout;")
-	.replace(/export type LayoutStack = WindowLayoutStackNode;/g, "export type LayoutStack = WindowLayoutStackNode;")
-	.replace(/export type LayoutRow = WindowLayoutAxisNode & \{ kind: "row" \};/g, 'export type LayoutRow = WindowLayoutAxisNode & { kind: "row" };')
-	.replace(/export type LayoutColumn = WindowLayoutAxisNode & \{ kind: "column" \};/g, 'export type LayoutColumn = WindowLayoutAxisNode & { kind: "column" };');
+  .replace(/^\/\/ Domain-neutral[\s\S]*?^export enum Mode \{[\s\S]*?^}\n\n/m, "")
+  .replace(/\bUIWindowLayoutWindowNode\b/g, "WindowLayoutWindowNode")
+  .replace(/\bUIWindowLayoutStackNode\b/g, "WindowLayoutStackNode")
+  .replace(/\bUIWindowLayoutAxisNode\b/g, "WindowLayoutAxisNode")
+  .replace(/\bUIWindowLayout\b/g, "WindowLayout")
+  .replace(/\bUIWindowLayoutNode\b/g, "WindowLayoutNode")
+  .replace(/export type LayoutNode = WindowLayout;/g, "export type LayoutNode = WindowLayout;")
+  .replace(/export type LayoutStack = WindowLayoutStackNode;/g, "export type LayoutStack = WindowLayoutStackNode;")
+  .replace(/export type LayoutRow = WindowLayoutAxisNode & \{ kind: "row" \};/g, 'export type LayoutRow = WindowLayoutAxisNode & { kind: "row" };')
+  .replace(/export type LayoutColumn = WindowLayoutAxisNode & \{ kind: "column" \};/g, 'export type LayoutColumn = WindowLayoutAxisNode & { kind: "column" };');
 
 const shellHeader = `/** @emoji 🖼 Golden-layout shell: window layout, canvas portals, toolbar, search, and find palettes. */
 `;
@@ -101,20 +101,11 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 `;
 
-const before = fr.slice(0, fr.indexOf('import {\n\tCommandBus,'));
+const before = fr.slice(0, fr.indexOf("import {\n\tCommandBus,"));
 const afterShell = fr.slice(end);
 const uiImport = fr.slice(fr.indexOf("import {\n\tBasicChatPanel"), fr.indexOf("//#region 📦shell-canvas.tsx"));
 
-const rebuilt =
-	before +
-	frameworkImport +
-	uiImport +
-	`\n//#region 📦shell-canvas.tsx\n\n` +
-	domBinding +
-	shellHeader +
-	shell +
-	`\n//#endregion 📦shell-canvas.tsx\n` +
-	afterShell;
+const rebuilt = before + frameworkImport + uiImport + `\n//#region 📦shell-canvas.tsx\n\n` + domBinding + shellHeader + shell + `\n//#endregion 📦shell-canvas.tsx\n` + afterShell;
 
 writeFileSync(frPath, rebuilt, "utf8");
 console.log("fixed framework-react");

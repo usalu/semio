@@ -2,39 +2,39 @@
 name: cad-generalize-modeldefs
 overview: "Remove all concrete model-definition identities (spatial.shape, aec.building, energy.*, structure.*) from the generic cad layers (core, kernel, renderer) by introducing a flow-style cad module system: a generic engine in @semio-tech/cad-js-core plus per-domain modules that self-register their assets and compute, wired by a runtime composition root."
 todos:
-  - id: core-registries
-    content: "Generalize core: remove asset glob, domain stat computers, property-derivation branch, transformation applier; add additive asset registration, registerPropertyComputer, registerImportProfile; export helpers; drive default typology from manifest."
-    status: completed
-  - id: module-shape
-    content: Create @semio-tech/cad-js-module-spatial-shape registering geometry stat + volume property computer.
-    status: completed
-  - id: module-building
-    content: Create @semio-tech/cad-js-module-aec-building registering building STEP import profile.
-    status: completed
-  - id: module-energy
-    content: Create @semio-tech/cad-js-module-aec-building-energy registering energy demand stat, heatedvolume property, energy import profile.
-    status: completed
-  - id: module-structure
-    content: Create @semio-tech/cad-js-module-aec-building-structure registering stability stat, building->structure transformation, structure import profiles.
-    status: completed
-  - id: kernel-generalize
-    content: Rewrite kernel STEP import to consume core importProfile registry; remove constants, layer maps, hardcoded defaults.
-    status: completed
-  - id: runtime
-    content: Create @semio-tech/cad-js-runtime composition root (asset glob + module register + bootstrapCadModules); wire workspaces, vite/vitest aliases, launch.json.
-    status: completed
-  - id: host-play
-    content: Bootstrap modules in play host; generalize transformation scoring and structure derivation; fix user-facing copy.
-    status: completed
-  - id: tests-validate
-    content: Migrate domain tests from core into modules/runtime; fix stately script; run all suites + play dev/build green.
-    status: completed
+ - id: core-registries
+   content: "Generalize core: remove asset glob, domain stat computers, property-derivation branch, transformation applier; add additive asset registration, registerPropertyComputer, registerImportProfile; export helpers; drive default typology from manifest."
+   status: completed
+ - id: module-shape
+   content: Create @semio-tech/cad-js-module-spatial-shape registering geometry stat + volume property computer.
+   status: completed
+ - id: module-building
+   content: Create @semio-tech/cad-js-module-aec-building registering building STEP import profile.
+   status: completed
+ - id: module-energy
+   content: Create @semio-tech/cad-js-module-aec-building-energy registering energy demand stat, heatedvolume property, energy import profile.
+   status: completed
+ - id: module-structure
+   content: Create @semio-tech/cad-js-module-aec-building-structure registering stability stat, building->structure transformation, structure import profiles.
+   status: completed
+ - id: kernel-generalize
+   content: Rewrite kernel STEP import to consume core importProfile registry; remove constants, layer maps, hardcoded defaults.
+   status: completed
+ - id: runtime
+   content: Create @semio-tech/cad-js-runtime composition root (asset glob + module register + bootstrapCadModules); wire workspaces, vite/vitest aliases, launch.json.
+   status: completed
+ - id: host-play
+   content: Bootstrap modules in play host; generalize transformation scoring and structure derivation; fix user-facing copy.
+   status: completed
+ - id: tests-validate
+   content: Migrate domain tests from core into modules/runtime; fix stately script; run all suites + play dev/build green.
+   status: completed
 isProject: false
 ---
 
 ## Goal
 
-The generic layers (`@semio-tech/cad-js-core`, `@semio-tech/cad-js-kernel-brepjs`, `@semio-tech/cad-js-renderer`) must contain zero concrete model-definition IDs. All domain knowledge moves into per-domain **cad modules** that self-register against generic core registries, mirroring `flow/core` + `flow/module/`* (each module depends only on the engine; the host composes them).
+The generic layers (`@semio-tech/cad-js-core`, `@semio-tech/cad-js-kernel-brepjs`, `@semio-tech/cad-js-renderer`) must contain zero concrete model-definition IDs. All domain knowledge moves into per-domain **cad modules** that self-register against generic core registries, mirroring `flow/core` + `flow/module/`\* (each module depends only on the engine; the host composes them).
 
 ## Current leaks (production code only)
 
@@ -70,8 +70,6 @@ flowchart TD
   play --> kernel
 ```
 
-
-
 Split rule: executable domain compute (stat formulas, volume property, transformation appliers) lives in module TS code self-registered via core registries; pure-data mappings (STEP layer→typology, fallback/base typologies) live in module `register()` code that populates generic core registries. Declarative JSON assets stay under `cad/asset/modelDefinition/` (consumed generically), so `cad/asset/AGENTS.md` stays accurate.
 
 ## Steps
@@ -106,7 +104,7 @@ Each is a new Nx/Bun package (`project.json` calls `script.ts test`, `package.js
 
 ### 8. Wire host + generalize play (`cad/js/renderer/play/index.tsx`)
 
-- Call `bootstrapCadModules()` at startup before mount. Keep `CAD_PLAY_`* pane constants as host config but source them from module-exported IDs; generalize `transformationSourceScore` to score by transformation source/target graph generically (drop the building→structure literal) and replace the `"aec.building.structure"` literal in `ensureCadPlayQuadModels` with the structure module's exported id. Fix the user-facing `spatial.shape` copy (2363) to use the active definition label.
+- Call `bootstrapCadModules()` at startup before mount. Keep `CAD_PLAY_`\* pane constants as host config but source them from module-exported IDs; generalize `transformationSourceScore` to score by transformation source/target graph generically (drop the building→structure literal) and replace the `"aec.building.structure"` literal in `ensureCadPlayQuadModels` with the structure module's exported id. Fix the user-facing `spatial.shape` copy (2363) to use the active definition label.
 
 ### 9. Migrate domain tests and validate
 
@@ -119,4 +117,3 @@ Each is a new Nx/Bun package (`project.json` calls `script.ts test`, `package.js
 - Work under a single repo ticket; add temp logs/scripts inside the ticket folder only.
 - Module granularity: four sibling modules (shape, building, energy, structure); structure module covers classic + fem variants since they share `structure.*` and the same transformation/import lineage.
 - Assets are not physically moved (keeps `cad/asset/AGENTS.md` accurate); modules own only code + registrations.
-

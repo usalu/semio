@@ -2555,11 +2555,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/7bea6b8f-b000-4df9-9e41-182a8d39ecc6.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              ".devcontainer/devcontainer.json",
-              ".devcontainer/gitkraken-launch.sh",
-              ".devcontainer/post-attach.sh"
-            ],
+            "files": [".devcontainer/devcontainer.json", ".devcontainer/gitkraken-launch.sh", ".devcontainer/post-attach.sh"],
             "summary": "Fixed GitKraken crashing in Linux devcontainer. Root cause: Docker defaults /dev/shm to 64MB which is insufficient for Electron/Chromium IPC. Fixes: (1) Added --shm-size=1gb to devcontainer.json runArgs for next container rebuild. (2) Added --disable-gpu and --disable-dev-shm-usage flags to gitkraken-launch.sh and post-attach.sh auto-start, making Chromium use /tmp instead of /dev/shm and skip GPU acceleration in headless Xvfb. (3) Simplified WSL/non-WSL branching in launch script since --no-sandbox is needed in both environments. Verified: GitKraken stays alive with 10 stable processes and no growing zombie count."
           },
           "tool_use_id": "toolu_bdrk_01TV9T3qjHndaQ14p1UXnM7E__vscode-1774601741608",
@@ -2696,11 +2692,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/7bea6b8f-b000-4df9-9e41-182a8d39ecc6.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              ".devcontainer/devcontainer.json",
-              ".devcontainer/gitkraken-launch.sh",
-              ".devcontainer/post-attach.sh"
-            ],
+            "files": [".devcontainer/devcontainer.json", ".devcontainer/gitkraken-launch.sh", ".devcontainer/post-attach.sh"],
             "summary": "Fixed GitKraken crashing in Linux devcontainer. Root cause: Docker defaults /dev/shm to 64MB which is insufficient for Electron/Chromium IPC. Fixes: (1) Added --shm-size=1gb to devcontainer.json runArgs for next container rebuild. (2) Added --disable-gpu and --disable-dev-shm-usage flags to gitkraken-launch.sh and post-attach.sh auto-start, making Chromium use /tmp instead of /dev/shm and skip GPU acceleration in headless Xvfb. (3) Simplified WSL/non-WSL branching in launch script since --no-sandbox is needed in both environments. Verified: GitKraken stays alive with 10 stable processes and no growing zombie count.",
             "ticket": "26/03/27/FIX-GITKRAKEN-CRASHING-IN-LINUX-DEVCONTAINER"
           },
@@ -2785,11 +2777,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/7bea6b8f-b000-4df9-9e41-182a8d39ecc6.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              ".devcontainer/devcontainer.json",
-              ".devcontainer/gitkraken-launch.sh",
-              ".devcontainer/post-attach.sh"
-            ],
+            "files": [".devcontainer/devcontainer.json", ".devcontainer/gitkraken-launch.sh", ".devcontainer/post-attach.sh"],
             "path": "26/03/27/FIX-GITKRAKEN-CRASHING-IN-LINUX-DEVCONTAINER",
             "summary": "Fixed GitKraken crashing in Linux devcontainer. Root cause: Docker defaults /dev/shm to 64MB which is insufficient for Electron/Chromium IPC. Fixes: (1) Added --shm-size=1gb to devcontainer.json runArgs for next container rebuild. (2) Added --disable-gpu and --disable-dev-shm-usage flags to gitkraken-launch.sh and post-attach.sh auto-start, making Chromium use /tmp instead of /dev/shm and skip GPU acceleration in headless Xvfb. (3) Simplified WSL/non-WSL branching in launch script since --no-sandbox is needed in both environments. Verified: GitKraken stays alive with 10 stable processes and no growing zombie count."
           },
@@ -2817,11 +2805,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/7bea6b8f-b000-4df9-9e41-182a8d39ecc6.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              ".devcontainer/devcontainer.json",
-              ".devcontainer/gitkraken-launch.sh",
-              ".devcontainer/post-attach.sh"
-            ],
+            "files": [".devcontainer/devcontainer.json", ".devcontainer/gitkraken-launch.sh", ".devcontainer/post-attach.sh"],
             "path": "26/03/27/FIX-GITKRAKEN-CRASHING-IN-LINUX-DEVCONTAINER",
             "summary": "Fixed GitKraken crashing in Linux devcontainer. Root cause: Docker defaults /dev/shm to 64MB which is insufficient for Electron/Chromium IPC. Fixes: (1) Added --shm-size=1gb to devcontainer.json runArgs for next container rebuild. (2) Added --disable-gpu and --disable-dev-shm-usage flags to gitkraken-launch.sh and post-attach.sh auto-start, making Chromium use /tmp instead of /dev/shm and skip GPU acceleration in headless Xvfb. (3) Simplified WSL/non-WSL branching in launch script since --no-sandbox is needed in both environments. Verified: GitKraken stays alive with 10 stable processes and no growing zombie count."
           },

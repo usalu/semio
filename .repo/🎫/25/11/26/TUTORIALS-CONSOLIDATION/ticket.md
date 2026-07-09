@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 ## Notes
 
 - Consolidated tutorial modules into `js/compose/sketchpad/Tutorials.tsx` with regions for types, store, commands, built-ins, and UI.
@@ -12,6 +13,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Consolidate tutorials into single file

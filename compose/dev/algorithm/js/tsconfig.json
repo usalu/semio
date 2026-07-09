@@ -3,10 +3,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
+    "lib": ["DOM", "ESNext"],
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
@@ -17,46 +14,19 @@
     "allowJs": false,
     "incremental": false,
     "noEmit": true,
-    "types": [
-      "node",
-      "react",
-      "react-dom",
-      "vitest/importMeta",
-      "vitest/globals"
-    ],
+    "types": ["node", "react", "react-dom", "vitest/importMeta", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@semio-tech/compose-algorithm": [
-        "./index.ts"
-      ],
-      "@semio-tech/compose-algorithm/*": [
-        "./*"
-      ],
-      "@compose/ui": [
-        "../ui/index.tsx"
-      ],
-      "@compose/ui/*": [
-        "../ui/*"
-      ],
-      "@semio-tech/compose-js": [
-        "../js/index.ts"
-      ],
-      "@semio-tech/compose-js/*": [
-        "../js/*"
-      ],
-      "@semio-tech/compose-rs-wasm": [
-        "../rs/pkg"
-      ],
-      "@semio-tech/compose-rs-wasm/*": [
-        "../rs/pkg/*"
-      ],
-      "@semio-tech/ui-react": [
-        "../../../ui/react/index.tsx"
-      ]
+      "@semio-tech/compose-algorithm": ["./index.ts"],
+      "@semio-tech/compose-algorithm/*": ["./*"],
+      "@compose/ui": ["../ui/index.tsx"],
+      "@compose/ui/*": ["../ui/*"],
+      "@semio-tech/compose-js": ["../js/index.ts"],
+      "@semio-tech/compose-js/*": ["../js/*"],
+      "@semio-tech/compose-rs-wasm": ["../rs/pkg"],
+      "@semio-tech/compose-rs-wasm/*": ["../rs/pkg/*"],
+      "@semio-tech/ui-react": ["../../../ui/react/index.tsx"]
     }
   },
-  "exclude": [
-    "node_modules",
-    "storybook-static"
-  ]
+  "exclude": ["node_modules", "storybook-static"]
 }

@@ -7,10 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const ticketDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(ticketDir, "../../../../../..");
-const validateScript = join(
-  repoRoot,
-  ".repo/🎫/26/06/07/EXTRACT-GENERIC-GRAPH-CANVAS-FROM-PUZZLE-2D-AND-ADD-DAG/validate-dag-runtime.mjs",
-);
+const validateScript = join(repoRoot, ".repo/🎫/26/06/07/EXTRACT-GENERIC-GRAPH-CANVAS-FROM-PUZZLE-2D-AND-ADD-DAG/validate-dag-runtime.mjs");
 
 async function isPortListening(port) {
   return new Promise((resolve) => {

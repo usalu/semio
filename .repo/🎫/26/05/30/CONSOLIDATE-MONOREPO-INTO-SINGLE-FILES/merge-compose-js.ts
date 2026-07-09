@@ -28,10 +28,7 @@ index = index
 const contract = stripHeader(readFileSync(join(dir, "graphql-contract.ts"), "utf8"));
 const kitSel = stripHeader(readFileSync(join(dir, "graphql-kit-selection.ts"), "utf8"));
 let wasm = stripHeader(readFileSync(join(dir, "rs-wasm-transport.ts"), "utf8"));
-wasm = wasm.replace(
-  /\/\/#region 🔌Adapters\r?\nimport \{ RS_WASM_EMPTY_STORE_URI \} from "\.\/graphql-contract";\r?\n\/\/#endregion 🔌Adapters\r?\n\r?\n/m,
-  "",
-);
+wasm = wasm.replace(/\/\/#region 🔌Adapters\r?\nimport \{ RS_WASM_EMPTY_STORE_URI \} from "\.\/graphql-contract";\r?\n\/\/#endregion 🔌Adapters\r?\n\r?\n/m, "");
 
 const block = `//#region 🌐GraphqlContract\n${contract}//#endregion 🌐GraphqlContract\n\n//#region 🌐GraphqlKitSelection\n${kitSel}//#endregion 🌐GraphqlKitSelection\n\n//#region 🌐RsWasmTransport\n${wasm}//#endregion 🌐RsWasmTransport\n\n`;
 
@@ -40,10 +37,7 @@ if (!index.includes("//#region 🌐GraphqlContract")) {
   throw new Error("merge failed: GraphqlContract region missing after insert");
 }
 
-index = index.replace(
-  /export \{\r?\n  assertRsJsSessionOpenUri,\r?\n  RS_WASM_EMPTY_STORE_URI,\r?\n  COMPOSE_GRAPHQL_GOLDEN_SCHEMA_PATH,\r?\n  type GraphqlWirePostBody,\r?\n\} from "\.\/graphql-contract";\r?\n\r?\n/m,
-  "",
-);
+index = index.replace(/export \{\r?\n  assertRsJsSessionOpenUri,\r?\n  RS_WASM_EMPTY_STORE_URI,\r?\n  COMPOSE_GRAPHQL_GOLDEN_SCHEMA_PATH,\r?\n  type GraphqlWirePostBody,\r?\n\} from "\.\/graphql-contract";\r?\n\r?\n/m, "");
 
 writeFileSync(indexPath, index);
 unlinkSync(join(dir, "graphql-kit-selection.ts"));

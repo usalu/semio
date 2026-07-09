@@ -35,10 +35,12 @@ Group Chat, Setting, and Right panel together in the navbar following the existi
 ### Implementation Details
 
 The PanelToggles component now renders two separate groups:
+
 1. Left Panel toggle in its own bordered container
 2. Chat, Settings, and Right Panel toggles grouped together in a shared bordered container with dividers
 
 This follows the existing UI structure using:
+
 - `gap-single` for spacing between groups
 - `border border-element` for group borders
 - `divide-x divide-element` for internal dividers within the grouped toggles

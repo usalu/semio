@@ -33,9 +33,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "postToolUse",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -65,9 +63,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "preToolUse",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -95,9 +91,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "beforeReadFile",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -129,9 +123,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "postToolUse",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -164,9 +156,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "preToolUse",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -194,9 +184,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "beforeShellExecution",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -225,9 +213,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "afterShellExecution",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -262,9 +248,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "postToolUse",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -295,9 +279,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "preToolUse",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -330,9 +312,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "postToolUse",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -363,9 +343,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "preToolUse",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -398,9 +376,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "postToolUse",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -433,9 +409,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "preToolUse",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -463,9 +437,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "beforeShellExecution",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -494,9 +466,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "afterShellExecution",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -531,9 +501,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "postToolUse",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -563,9 +531,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "afterAgentResponse",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -596,9 +562,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "stop",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -635,9 +599,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "beforeSubmitPrompt",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -664,9 +626,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -693,9 +653,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -722,9 +680,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -757,9 +713,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "preToolUse",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -787,9 +741,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "beforeShellExecution",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -818,9 +770,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "afterShellExecution",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -855,9 +805,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "postToolUse",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -884,9 +832,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -916,9 +862,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "afterAgentResponse",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }
@@ -949,9 +893,7 @@
           "session_id": "27793cb0-fa92-49ab-8d35-a7080cbce40d",
           "hook_event_name": "stop",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/Users/ueli/.cursor/projects/Users-ueli-Documents-compose/agent-transcripts/27793cb0-fa92-49ab-8d35-a7080cbce40d/27793cb0-fa92-49ab-8d35-a7080cbce40d.jsonl"
         }

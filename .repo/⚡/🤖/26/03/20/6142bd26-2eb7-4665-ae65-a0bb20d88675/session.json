@@ -120,9 +120,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__ticket_close"],
             "query": "select:mcp__repo__ticket_close",
             "total_deferred_tools": 86
           },
@@ -152,11 +150,7 @@
           "tool_input": {
             "path": "2026/03/20/FIX-CODA-CONFIG-DISPLAY-OBJECTS-AS-REACT-CHILDREN",
             "summary": "Fixed React error where category property values (objects with {id, name, description}) were rendered as string children. Updated Property interface to accept both string and object values. Updated PropertyView to render object values by displaying name with description as tooltip. Added property_kinds and correlation sections to ConfigPage with new MCP resources (coda://property-kinds, coda://correlation) in both coda.py backend and main.ts resource mapping.",
-            "files": [
-              "coda/desktop/renderer.tsx",
-              "coda/desktop/main.ts",
-              "coda/engine/coda.py"
-            ],
+            "files": ["coda/desktop/renderer.tsx", "coda/desktop/main.ts", "coda/engine/coda.py"],
             "no_github": true
           },
           "tool_use_id": "toolu_01SBL3Xwth28mJKJDXnKCMF7"
@@ -195,11 +189,7 @@
           "tool_input": {
             "path": "2026/03/20/FIX-CODA-CONFIG-DISPLAY-OBJECTS-AS-REACT-CHILDREN",
             "summary": "Fixed React error where category property values (objects with {id, name, description}) were rendered as string children. Updated Property interface to accept both string and object values. Updated PropertyView to render object values by displaying name with description as tooltip. Added property_kinds and correlation sections to ConfigPage with new MCP resources (coda://property-kinds, coda://correlation) in both coda.py backend and main.ts resource mapping.",
-            "files": [
-              "coda/desktop/renderer.tsx",
-              "coda/desktop/main.ts",
-              "coda/engine/coda.py"
-            ],
+            "files": ["coda/desktop/renderer.tsx", "coda/desktop/main.ts", "coda/engine/coda.py"],
             "no_github": true
           },
           "tool_use_id": "toolu_01SBL3Xwth28mJKJDXnKCMF7",
@@ -301,11 +291,7 @@
           "tool_input": {
             "path": "26/03/20/FIX-CODA-CONFIG-DISPLAY-OBJECTS-AS-REACT-CHILDREN",
             "summary": "Fixed React error where category property values (objects with {id, name, description}) were rendered as string children. Updated Property interface to accept both string and object values. Updated PropertyView to render object values by displaying name with description as tooltip. Added property_kinds and correlation sections to ConfigPage with new MCP resources (coda://property-kinds, coda://correlation) in both coda.py backend and main.ts resource mapping.",
-            "files": [
-              "coda/desktop/renderer.tsx",
-              "coda/desktop/main.ts",
-              "coda/engine/coda.py"
-            ],
+            "files": ["coda/desktop/renderer.tsx", "coda/desktop/main.ts", "coda/engine/coda.py"],
             "no_github": true
           },
           "tool_use_id": "toolu_01PVXqqhb17mYhMTagZMCb35"
@@ -344,11 +330,7 @@
           "tool_input": {
             "path": "26/03/20/FIX-CODA-CONFIG-DISPLAY-OBJECTS-AS-REACT-CHILDREN",
             "summary": "Fixed React error where category property values (objects with {id, name, description}) were rendered as string children. Updated Property interface to accept both string and object values. Updated PropertyView to render object values by displaying name with description as tooltip. Added property_kinds and correlation sections to ConfigPage with new MCP resources (coda://property-kinds, coda://correlation) in both coda.py backend and main.ts resource mapping.",
-            "files": [
-              "coda/desktop/renderer.tsx",
-              "coda/desktop/main.ts",
-              "coda/engine/coda.py"
-            ],
+            "files": ["coda/desktop/renderer.tsx", "coda/desktop/main.ts", "coda/engine/coda.py"],
             "no_github": true
           },
           "tool_response": [

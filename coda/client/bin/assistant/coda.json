@@ -1,32 +1,19 @@
 {
   "property_kinds": {
     "number": {
-      "measures": [
-        "increase",
-        "decrease"
-      ]
+      "measures": ["increase", "decrease"]
     },
     "level": {
-      "measures": [
-        "raise",
-        "lower"
-      ]
+      "measures": ["raise", "lower"]
     },
     "category": {
-      "measures": [
-        "change"
-      ]
+      "measures": ["change"]
     },
     "object": {
-      "measure": [
-        "change"
-      ]
+      "measure": ["change"]
     },
     "collection": {
-      "measures": [
-        "add_item",
-        "remove_item"
-      ]
+      "measures": ["add_item", "remove_item"]
     }
   },
   "properties": [
@@ -136,27 +123,11 @@
     }
   ],
   "correlation": {
-    "properties": [
-      "gross-floor-area",
-      "energy_demand",
-      "occupancy"
-    ],
+    "properties": ["gross-floor-area", "energy_demand", "occupancy"],
     "matrix": [
-      [
-        1.0,
-        0.42,
-        -0.18
-      ],
-      [
-        0.42,
-        1.0,
-        0.67
-      ],
-      [
-        -0.18,
-        0.67,
-        1.0
-      ]
+      [1.0, 0.42, -0.18],
+      [0.42, 1.0, 0.67],
+      [-0.18, 0.67, 1.0]
     ]
   },
   "platforms": [
@@ -259,16 +230,12 @@
             "target-area": "number",
             "actual-area": "number"
           },
-          "measures": [
-            "increase-gross-floor-area"
-          ]
+          "measures": ["increase-gross-floor-area"]
         },
         {
           "id": "too-much-program-area",
           "description": "Too much area for the program.",
-          "measures": [
-            "decrease-gross-floor-area"
-          ]
+          "measures": ["decrease-gross-floor-area"]
         }
       ]
     },
@@ -354,10 +321,7 @@
           "id": "building-class",
           "name": "Building Class",
           "kind": "level",
-          "measure_kinds": [
-            "raise",
-            "lower"
-          ],
+          "measure_kinds": ["raise", "lower"],
           "levels": [
             {
               "value": "1",
@@ -496,9 +460,7 @@
         {
           "id": "building-height-limit",
           "description": "The building height must be less than 21m.",
-          "measures": [
-            "remove-storey"
-          ]
+          "measures": ["remove-storey"]
         }
       ]
     }

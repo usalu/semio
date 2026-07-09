@@ -5,11 +5,5 @@
   "description": "Make procedural feature-complete: expose all brep kernel ops as flow nodes, add reparametrize/divide utilities, extend math/list flow modules with seeded random and series.",
   "summary": "Exposed 30+ missing brep flow nodes (bezier, bspline, reparametrize, divide curve, cutAll, split, import STEP/STL, etc.). Added kernel utilities divideCurveSync, reparametrizeCurveSync, reparametrizeSurfaceSync with brepjs Result unwrapping fixes for wire/face/filledFace/surfaceFromGrid. Extended math module with seeded random (splitmix64), remap, trig, and full arithmetic. Extended list module with range and reverse.",
   "goal": "🎯flow",
-  "files": [
-    "geometry/brep/js/index.ts",
-    "procedural/react/index.tsx",
-    "flow/modules/math/lib.rs",
-    "flow/modules/math/Cargo.toml",
-    "flow/modules/list/lib.rs"
-  ]
+  "files": ["geometry/brep/js/index.ts", "procedural/react/index.tsx", "flow/modules/math/lib.rs", "flow/modules/math/Cargo.toml", "flow/modules/list/lib.rs"]
 }

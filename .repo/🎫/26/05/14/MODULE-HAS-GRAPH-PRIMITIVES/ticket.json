@@ -3,10 +3,6 @@
   "description": "Ensure every Class, Interface, Scalar, and persisted FieldKind enum value is contained via `Module HAS` under the `graphql` module tree; remove duplicate `HAS` from schema-level `general`/`domain` modules; document sibling-unique module names in SDL.",
   "summary": "Relinked all interfaces from YAML `general` (entity family → `graphql`→`Entity`) and `domain`/`vcs` (workspace, diff, modification, operation, backbone, provider, command → the unique `General`→child modules under `graphql`). Moved scalars to `graphql`→`Scalar`. Added `Module` `FieldKind` under `graphql` with `Enum` nodes EMBEDDED, REFERENCE, COMPUTED, CACHED. Updated `compose/dev/schema/neo4j/schema.graphql` (`Enum` type, `Module.enums`) and `.repo/🛂/compose.cypher` (enum index, fulltext label set, idempotent `📦ModuleHasPrimitives` region). Live graph updated via Neo4j MCP write.",
   "goal": "🎯aioptimizedrepo🎯sandboxedrepo🎯zerotouchdevcontainer",
-  "touchedPaths": [
-    "compose/dev/schema/neo4j/schema.graphql",
-    ".repo/🛂/compose.cypher",
-    ".repo/🎫/26/05/14/MODULE-HAS-GRAPH-PRIMITIVES/ticket.json"
-  ],
+  "touchedPaths": ["compose/dev/schema/neo4j/schema.graphql", ".repo/🛂/compose.cypher", ".repo/🎫/26/05/14/MODULE-HAS-GRAPH-PRIMITIVES/ticket.json"],
   "status": "closed"
 }

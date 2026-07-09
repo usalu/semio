@@ -5,7 +5,42 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Button, borderNormalClass, canvasHostRootClass, cn, CanvasPickMenu, editorShellRootClass, ENGAGEMENT_USER, floatingFieldSurfaceClass, floatingMenuItemClass, floatingMenuSurfaceClass, floatingPanelAsideClass, floatingTagClass, floatingTagOffClass, floatingTagOnClass, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, marqueeCoverageFromGesture, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, sortCanvasPickTargetsGeneralFirst, UnifiedGumball, gumballPointerConsumesCanvasEventRef, type CanvasPickRequest, type CanvasPickTarget, type EngagementControl, type EngagementSpec, type GumballConfig, type GumballPose, type ThreeEvent } from "@semio-tech/ui-react";
+import {
+  Button,
+  borderNormalClass,
+  canvasHostRootClass,
+  cn,
+  CanvasPickMenu,
+  editorShellRootClass,
+  ENGAGEMENT_USER,
+  floatingFieldSurfaceClass,
+  floatingMenuItemClass,
+  floatingMenuSurfaceClass,
+  floatingPanelAsideClass,
+  floatingTagClass,
+  floatingTagOffClass,
+  floatingTagOnClass,
+  focusActiveEngagementInput,
+  humanizeEngagementStepId,
+  Input,
+  isUiTypingTarget,
+  marqueeCoverageFromGesture,
+  normalizeEngagementCommandText,
+  queryWindowEngagementInput,
+  reactHostPort,
+  sceneHostPort,
+  SelectionMarquee,
+  sortCanvasPickTargetsGeneralFirst,
+  UnifiedGumball,
+  gumballPointerConsumesCanvasEventRef,
+  type CanvasPickRequest,
+  type CanvasPickTarget,
+  type EngagementControl,
+  type EngagementSpec,
+  type GumballConfig,
+  type GumballPose,
+  type ThreeEvent,
+} from "@semio-tech/ui-react";
 import { canvasPickTargetKey } from "@semio-tech/framework-core";
 import { clearColorResolveCache, resolveSemanticColorHex, tokenHex } from "@semio-tech/ui-styling";
 import { Fragment, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
@@ -266,12 +301,7 @@ export function isRenderableMeshTransfer(mesh: MeshTransfer): boolean {
 }
 
 /** @emoji 🎞️ Tessellates every model solid through `SpatialKernel.tessellate` (worker-backed). */
-export function useDocumentMeshes(
-  kernel: SpatialKernel | null,
-  model: Model,
-  tolerance: number,
-  keepPreviousWhileLoading = false,
-): readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[] {
+export function useDocumentMeshes(kernel: SpatialKernel | null, model: Model, tolerance: number, keepPreviousWhileLoading = false): readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[] {
   const [meshes, setMeshes] = reactHostPort.useState<readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[]>([]);
   const revision = model.revision;
   const revisionRef = reactHostPort.useRef(revision);
@@ -1076,10 +1106,7 @@ export function collectGeometryEdgeSegments(buckets: ReturnType<typeof geometryB
 }
 
 /** @emoji 📐 B-rep edge segments limited to revealed factory-geometry members. */
-export function collectGeometryEdgeSegmentsForMembers(
-  buckets: ReturnType<typeof geometryBuckets>,
-  revealedMemberKeys: ReadonlySet<string>,
-): readonly (readonly [Vec3, Vec3])[] {
+export function collectGeometryEdgeSegmentsForMembers(buckets: ReturnType<typeof geometryBuckets>, revealedMemberKeys: ReadonlySet<string>): readonly (readonly [Vec3, Vec3])[] {
   const out: (readonly [Vec3, Vec3])[] = [];
   for (const edge of geometryRecords(buckets.edges)) {
     if (!revealedMemberKeys.has(`edge:${edge.id}`)) continue;
@@ -1280,9 +1307,7 @@ export function createSpatialPickTargets(geometry: SpatialPickGeometry | null | 
   const targets: SpatialPickTarget[] = [];
   if (entityKinds.has("object") && scopedObjects.length > 0) targets.push(...createModelObjectSpatialPickTargets(model, mdId));
   if (modelDefinitionUsesGeometryPicking(mdId)) {
-    const skipSolidIds = new Set(
-      scopedObjects.map((row) => objectPrimaryPrimitiveRef(row)).filter((primitiveRef): primitiveRef is string => typeof primitiveRef === "string" && primitiveRef.length > 0),
-    );
+    const skipSolidIds = new Set(scopedObjects.map((row) => objectPrimaryPrimitiveRef(row)).filter((primitiveRef): primitiveRef is string => typeof primitiveRef === "string" && primitiveRef.length > 0));
     appendPrimitiveSpatialPickTargets(targets, buckets, entityKinds, geometryTypologyIndex, skipSolidIds);
   }
   return targets;
@@ -1357,11 +1382,7 @@ function PointItem({ item }: { readonly item: DisplayItem }): ReactNode {
   return (
     <mesh position={pos} raycast={raycastNone}>
       <sphereGeometry args={[r, 16, 16]} />
-      <meshStandardMaterial
-        color={cursor ? palette.hovered : palette.construction}
-        emissive={cursor ? palette.hoveredEmissive : palette.constructionEmissive}
-        emissiveIntensity={cursor ? 0.45 : 0.35}
-      />
+      <meshStandardMaterial color={cursor ? palette.hovered : palette.construction} emissive={cursor ? palette.hoveredEmissive : palette.constructionEmissive} emissiveIntensity={cursor ? 0.45 : 0.35} />
     </mesh>
   );
 }
@@ -1750,20 +1771,10 @@ function gumballPoseToMatrixSnapshot(pose: GumballPose | GumballMatrixSnapshot):
 }
 
 /** @emoji 🎛 Applies a gumball world-matrix delta to vertices and nurbs poles on topology-selected targets. */
-export function transformGumballMatrixDiff(
-  model: Model,
-  targets: readonly SelectionTarget[],
-  before: GumballMatrixSnapshot,
-  after: GumballMatrixSnapshot,
-  pivot?: Vec3,
-): ModelDiff {
+export function transformGumballMatrixDiff(model: Model, targets: readonly SelectionTarget[], before: GumballMatrixSnapshot, after: GumballMatrixSnapshot, pivot?: Vec3): ModelDiff {
   const pivotPoint = pivot ?? before.position;
   const pivotV = new THREE.Vector3(pivotPoint[0], pivotPoint[1], pivotPoint[2]);
-  const mBefore = new THREE.Matrix4().compose(
-    pivotV,
-    new THREE.Quaternion(before.quaternion[0], before.quaternion[1], before.quaternion[2], before.quaternion[3]),
-    new THREE.Vector3(before.scale[0], before.scale[1], before.scale[2]),
-  );
+  const mBefore = new THREE.Matrix4().compose(pivotV, new THREE.Quaternion(before.quaternion[0], before.quaternion[1], before.quaternion[2], before.quaternion[3]), new THREE.Vector3(before.scale[0], before.scale[1], before.scale[2]));
   const mAfter = new THREE.Matrix4().compose(
     new THREE.Vector3(after.position[0], after.position[1], after.position[2]),
     new THREE.Quaternion(after.quaternion[0], after.quaternion[1], after.quaternion[2], after.quaternion[3]),
@@ -2188,17 +2199,7 @@ function HeightDragSurface({ origin, corner }: { readonly origin: Vec3; readonly
   return (
     <mesh position={[xPlane, corner[1], zMid]} rotation={[0, Math.PI / 2, 0]} raycast={raycastNone} renderOrder={2}>
       <planeGeometry args={[zSpan, ySpan]} />
-      <meshStandardMaterial
-        transparent
-        opacity={0.38}
-        color={spatialSceneColors().accent}
-        emissive={spatialSceneColors().accentEmissive}
-        emissiveIntensity={0.25}
-        roughness={0.88}
-        metalness={0.08}
-        depthWrite={false}
-        side={THREE.DoubleSide}
-      />
+      <meshStandardMaterial transparent opacity={0.38} color={spatialSceneColors().accent} emissive={spatialSceneColors().accentEmissive} emissiveIntensity={0.25} roughness={0.88} metalness={0.08} depthWrite={false} side={THREE.DoubleSide} />
     </mesh>
   );
 }
@@ -2407,13 +2408,7 @@ export function createSolidTypologyStyleResolver(model: Model, modelDefinitionId
   };
 }
 
-function targetStyle(
-  target: SpatialPickTarget,
-  hovered: boolean,
-  selected: boolean,
-  typologyStyle?: ResolvedTypologyStyle,
-  locked = false,
-): { color: string; emissive: string; opacity: number; lineWidth: number } {
+function targetStyle(target: SpatialPickTarget, hovered: boolean, selected: boolean, typologyStyle?: ResolvedTypologyStyle, locked = false): { color: string; emissive: string; opacity: number; lineWidth: number } {
   const palette = spatialSceneColors();
   if (selected) return { color: palette.selected, emissive: palette.selectedEmissive, opacity: target.kind === "vertex" ? 1 : 0.34, lineWidth: 9 };
   if (hovered) return { color: palette.hovered, emissive: palette.hoveredEmissive, opacity: target.kind === "vertex" ? 1 : 0.28, lineWidth: 8 };
@@ -2480,11 +2475,7 @@ export function spatialPickTargetMemberKey(target: SpatialPickTarget): string {
 }
 
 /** @emoji 👁️ Object ids whose factory primitives should draw (hover/selection on object or its topology). */
-export function revealedObjectIdsFromPickKeys(
-  objectIndex: ReadonlyMap<string, string>,
-  hoveredTargetKey: string | null | undefined,
-  selectedTargetKeys: ReadonlySet<string> = new Set(),
-): ReadonlySet<string> {
+export function revealedObjectIdsFromPickKeys(objectIndex: ReadonlyMap<string, string>, hoveredTargetKey: string | null | undefined, selectedTargetKeys: ReadonlySet<string> = new Set()): ReadonlySet<string> {
   const revealed = new Set<string>();
   const consider = (key: string | null | undefined): void => {
     if (!key) return;
@@ -2654,12 +2645,7 @@ function SpatialPickTargetNode({
               return (
                 <mesh key={`nurbs-pole-${i}`} position={[p[0], p[1], p[2]]} raycast={raycastNone} renderOrder={9}>
                   <sphereGeometry args={[0.04, 10, 10]} />
-                  <meshStandardMaterial
-                    color={palette.construction}
-                    emissive={palette.constructionEmissive}
-                    emissiveIntensity={0.35}
-                    depthTest={false}
-                  />
+                  <meshStandardMaterial color={palette.construction} emissive={palette.constructionEmissive} emissiveIntensity={0.35} depthTest={false} />
                 </mesh>
               );
             })
@@ -2680,15 +2666,7 @@ function SpatialPickTargetNode({
 }
 
 /** @emoji 🧵 Draws all geometry edges for imported factory geometry (one batched `lineSegments`). */
-function GeometryFactoryWireframeLayer({
-  geometry,
-  visible = true,
-  revealedMemberKeys,
-}: {
-  readonly geometry?: SpatialPickGeometry | null;
-  readonly visible?: boolean;
-  readonly revealedMemberKeys?: ReadonlySet<string> | null;
-}): ReactNode {
+function GeometryFactoryWireframeLayer({ geometry, visible = true, revealedMemberKeys }: { readonly geometry?: SpatialPickGeometry | null; readonly visible?: boolean; readonly revealedMemberKeys?: ReadonlySet<string> | null }): ReactNode {
   const segments = reactHostPort.useMemo(() => {
     if (!geometry) return [] as readonly (readonly [Vec3, Vec3])[];
     const buckets = geometryBuckets(geometry);
@@ -2755,11 +2733,7 @@ export function SpatialPickGeometryLayer({
 }): ReactNode {
   const modelRevision = geometry && typeof geometry === "object" && "revision" in geometry ? Number((geometry as { revision?: unknown }).revision) : 0;
   const resolvedEntityFlagsForId = reactHostPort.useCallback(
-    (entityId: string) =>
-      entityFlagsForId?.(entityId) ??
-      (geometry && typeof geometry === "object" && "metadata" in geometry
-        ? resolveSpatialEntityFlags(geometry as Model, activeModelDefinitionId ?? defaultModelDefinitionId(), entityId)
-        : {}),
+    (entityId: string) => entityFlagsForId?.(entityId) ?? (geometry && typeof geometry === "object" && "metadata" in geometry ? resolveSpatialEntityFlags(geometry as Model, activeModelDefinitionId ?? defaultModelDefinitionId(), entityId) : {}),
     [activeModelDefinitionId, entityFlagsForId, geometry, modelRevision],
   );
   const targets = reactHostPort.useMemo(() => createSpatialPickTargets(geometry, activeModelDefinitionId), [geometry, modelRevision, modelDefinitionRevision, activeModelDefinitionId]);
@@ -2958,10 +2932,7 @@ export function createTypologyStyledMaterial(style: ResolvedTypologyStyle): THRE
       shader.vertexShader = shader.vertexShader.replace("#include <common>", `#include <common>\n${TYPOLOGY_PATTERN_VERTEX_PREFIX}`);
       shader.vertexShader = shader.vertexShader.replace("#include <worldpos_vertex>", TYPOLOGY_PATTERN_VERTEX_INJECT);
       shader.fragmentShader = shader.fragmentShader.replace("#include <common>", `#include <common>\n${TYPOLOGY_PATTERN_FRAGMENT_PREFIX}`);
-      shader.fragmentShader = shader.fragmentShader.replace(
-        "#include <output_fragment>",
-        `${TYPOLOGY_PATTERN_FRAGMENT_BLEND}outgoingLight = applyTypologyPattern(outgoingLight, vTypologyWorldPos, normal);\n#include <output_fragment>`,
-      );
+      shader.fragmentShader = shader.fragmentShader.replace("#include <output_fragment>", `${TYPOLOGY_PATTERN_FRAGMENT_BLEND}outgoingLight = applyTypologyPattern(outgoingLight, vTypologyWorldPos, normal);\n#include <output_fragment>`);
     };
     material.customProgramCacheKey = () => key;
   }
@@ -2987,12 +2958,7 @@ export interface CommittedMeshVisibilityOptions {
   readonly filterKindToggles?: SpatialPickKindToggles;
 }
 
-function collectVisibleSolidRefsForObject(
-  model: Model,
-  row: SpatialObjectRecord,
-  flagsForId: (entityId: string) => SpatialEntityFlags,
-  out: Set<string>,
-): void {
+function collectVisibleSolidRefsForObject(model: Model, row: SpatialObjectRecord, flagsForId: (entityId: string) => SpatialEntityFlags, out: Set<string>): void {
   for (const [, primitiveRef] of objectPrimitiveEntries(row)) {
     if (resolvePrimitiveRefKind(model, primitiveRef) !== "solid") continue;
     const solidId = String(primitiveRef);
@@ -3001,12 +2967,7 @@ function collectVisibleSolidRefsForObject(
   }
 }
 
-function collectVisibleFaceRefsForObject(
-  model: Model,
-  row: SpatialObjectRecord,
-  flagsForId: (entityId: string) => SpatialEntityFlags,
-  out: Set<string>,
-): void {
+function collectVisibleFaceRefsForObject(model: Model, row: SpatialObjectRecord, flagsForId: (entityId: string) => SpatialEntityFlags, out: Set<string>): void {
   for (const [, primitiveRef] of objectPrimitiveEntries(row)) {
     if (resolvePrimitiveRefKind(model, primitiveRef) !== "face") continue;
     const faceId = String(primitiveRef);
@@ -3075,11 +3036,7 @@ export function buildPlanarFaceMeshTransfer(model: Model, faceId: string): MeshT
 }
 
 /** @emoji 👁️ Solid ids eligible for committed mesh draw under a model definition (object-scoped). */
-export function visibleSolidRefsForModelDefinition(
-  model: Model,
-  modelDefinitionId: string,
-  options: CommittedMeshVisibilityOptions = {},
-): ReadonlySet<string> {
+export function visibleSolidRefsForModelDefinition(model: Model, modelDefinitionId: string, options: CommittedMeshVisibilityOptions = {}): ReadonlySet<string> {
   const flagsForId = options.flagsForId ?? (() => ({}));
   const typologyToggles = options.typologyToggles ?? {};
   const objectVisible = options.filterKindToggles?.object !== false;
@@ -3105,11 +3062,7 @@ export function visibleSolidRefsForModelDefinition(
 }
 
 /** @emoji 👁️ Face ids eligible for factory surface shading under a model definition (typology surface primitives only). */
-export function visibleFaceRefsForModelDefinition(
-  model: Model,
-  modelDefinitionId: string,
-  options: CommittedMeshVisibilityOptions = {},
-): ReadonlySet<string> {
+export function visibleFaceRefsForModelDefinition(model: Model, modelDefinitionId: string, options: CommittedMeshVisibilityOptions = {}): ReadonlySet<string> {
   const flagsForId = options.flagsForId ?? (() => ({}));
   const typologyToggles = options.typologyToggles ?? {};
   const objectVisible = options.filterKindToggles?.object !== false;
@@ -3133,11 +3086,7 @@ export interface FactoryFaceMeshRow {
 }
 
 /** @emoji 🧊 Lists planar face meshes for typology-owned surface primitives (energy/structure panes). */
-export function listFactoryFaceMeshesForModelDefinition(
-  model: Model,
-  modelDefinitionId: string,
-  options: CommittedMeshVisibilityOptions = {},
-): readonly FactoryFaceMeshRow[] {
+export function listFactoryFaceMeshesForModelDefinition(model: Model, modelDefinitionId: string, options: CommittedMeshVisibilityOptions = {}): readonly FactoryFaceMeshRow[] {
   const allowed = visibleFaceRefsForModelDefinition(model, modelDefinitionId, options);
   if (allowed.size === 0) return [];
   const typologyIndex = buildGeometryTypologyIndex(model, modelDefinitionId);
@@ -3169,12 +3118,7 @@ export function resolveSpatialEntityFlags(model: Model, modelDefinitionId: strin
   if (direct.hidden === true || direct.locked === true) return direct;
   const objectIndex = buildGeometryObjectIndex(model, modelDefinitionId);
   const ownerId =
-    objectIndex.get(`object:${entityId}`) ??
-    objectIndex.get(`solid:${entityId}`) ??
-    objectIndex.get(`face:${entityId}`) ??
-    objectIndex.get(`edge:${entityId}`) ??
-    objectIndex.get(`vertex:${entityId}`) ??
-    objectIndex.get(`anchor:${entityId}`);
+    objectIndex.get(`object:${entityId}`) ?? objectIndex.get(`solid:${entityId}`) ?? objectIndex.get(`face:${entityId}`) ?? objectIndex.get(`edge:${entityId}`) ?? objectIndex.get(`vertex:${entityId}`) ?? objectIndex.get(`anchor:${entityId}`);
   if (!ownerId) return direct;
   const ownerFlags = model.getEntityFlags(ownerId);
   if (ownerFlags.hidden !== true && ownerFlags.locked !== true) return direct;
@@ -3320,15 +3264,7 @@ function ChunkedCommitMeshRow(
 }
 
 /** @emoji 🧊 Renders typology-owned planar face surfaces (energy/structure surface primitives). */
-export function FactoryFaceSurfaceLayer({
-  faces,
-  modelRevision,
-  visible = true,
-}: {
-  readonly faces: readonly FactoryFaceMeshRow[];
-  readonly modelRevision?: number;
-  readonly visible?: boolean;
-}): ReactNode {
+export function FactoryFaceSurfaceLayer({ faces, modelRevision, visible = true }: { readonly faces: readonly FactoryFaceMeshRow[]; readonly modelRevision?: number; readonly visible?: boolean }): ReactNode {
   if (!visible || faces.length === 0) return null;
   const rev = modelRevision ?? 0;
   return (
@@ -3801,10 +3737,7 @@ export function InteractionSpatialView({
   };
   const dirPos = resolvedTheme.directionalPosition ?? [12, 18, 10];
   const geometryRevision = geometry && typeof geometry === "object" && "revision" in geometry ? Number((geometry as { revision?: unknown }).revision) : 0;
-  const sceneVisibility = reactHostPort.useMemo(
-    () => resolveSpatialSceneVisibility(activeModelDefinitionId, sceneKindToggles ?? filterKindToggles),
-    [activeModelDefinitionId, sceneKindToggles, filterKindToggles],
-  );
+  const sceneVisibility = reactHostPort.useMemo(() => resolveSpatialSceneVisibility(activeModelDefinitionId, sceneKindToggles ?? filterKindToggles), [activeModelDefinitionId, sceneKindToggles, filterKindToggles]);
   const scenePickGeometry = geometry ?? pickGeometryProp;
   const pickGeometryRevision = scenePickGeometry && typeof scenePickGeometry === "object" && "revision" in scenePickGeometry ? Number((scenePickGeometry as { revision?: unknown }).revision) : 0;
   const styleForSolid = reactHostPort.useMemo(() => {
@@ -3824,17 +3757,7 @@ export function InteractionSpatialView({
           <SpatialAutoFit meshes={autoFitSources} geometry={geometry} behavior={autoFitBehavior} />
         </>
       ) : null}
-      <WorldLodBridge
-        lodRef={cadLodRef}
-        distanceReference={100}
-        gridFactor={DEFAULT_LOD_GRID_FACTOR}
-        gridSnapEnabled={false}
-        showLodGrid={false}
-        automaticLod={false}
-        depthVariableLod={false}
-        manualLod={DEFAULT_MANUAL_LOD}
-        gridDatum={[0, 0, 0]}
-      >
+      <WorldLodBridge lodRef={cadLodRef} distanceReference={100} gridFactor={DEFAULT_LOD_GRID_FACTOR} gridSnapEnabled={false} showLodGrid={false} automaticLod={false} depthVariableLod={false} manualLod={DEFAULT_MANUAL_LOD} gridDatum={[0, 0, 0]}>
         <WorldOrbitViewSnapGateProvider>
           {slots?.environment}
           {slots?.lights ?? (
@@ -3843,113 +3766,109 @@ export function InteractionSpatialView({
               <directionalLight position={dirPos} intensity={resolvedTheme.directionalIntensity ?? 1.1} />
             </>
           )}
-          {cameraView !== undefined && cameraViewSeedKey !== undefined ? (
-            <WorldOrbitCameraViewApplier view={cameraView} seedKey={cameraViewSeedKey} projectionOverride={orbitProjection} />
-          ) : null}
+          {cameraView !== undefined && cameraViewSeedKey !== undefined ? <WorldOrbitCameraViewApplier view={cameraView} seedKey={cameraViewSeedKey} projectionOverride={orbitProjection} /> : null}
           <WorldOrbitGated controlsKey={cameraViewSeedKey ?? "default"} onCameraNavigate={onCameraNavigate} projection={orbitProjection} />
-          {showOrbitViewGizmo ? (
-            <WorldOrbitViewControls onCameraChange={onOrbitCameraChange} onProjectionChange={onOrbitProjectionChange} />
-          ) : null}
-        <WorldLayer order={0} name="cad.grid">
-          <WorldLodGridHelper gridDatum={[0, 0, 0]} />
-        </WorldLayer>
-        <WorldLayer order={5} name="cad.references">
-          <WorldReferenceLayer
-            references={worldReferences}
-            selectedIds={selectedReferenceIds}
-            hoveredId={hoveredReferenceId}
-            revealedIds={revealedReferenceIds}
-            gumballConfig={transformGumballConfig ?? undefined}
-            relocateActive={referenceRelocateActive && cadGumballConfigVisible(transformGumballConfig ?? {})}
-            onSelect={onReferenceSelect}
-            onHover={onReferenceHover}
-            onRelocate={onReferenceRelocate}
-          />
-        </WorldLayer>
-        <WorldLayer order={10} name="cad.ground-pick">
-          <GroundPickPlane
-            enabled={pickPlaneEnabled}
-            onPick={onGroundPickEvent}
-            onContextPick={onGroundContextEvent}
-            onPointerMove={onScenePointerMoveEvent}
-            pointerMoveEnabled={groundMoveOn}
-            planeColor={resolvedTheme.groundPlaneColor ?? spatialSceneColors().groundPlane}
-            planeOpacity={resolvedTheme.groundPlaneOpacity}
-          />
-        </WorldLayer>
-        <WorldLayer order={20} name="cad.factory-wireframe">
-          <GeometryFactoryWireframeLayer geometry={scenePickGeometry} visible={sceneVisibility.showFactoryWireframe} />
-        </WorldLayer>
-        <WorldLayer order={30} name="cad.pick">
-          {showPickLayer ? (
-            <SpatialPickGeometryLayer
-              geometry={scenePickGeometry}
-              activeModelDefinitionId={activeModelDefinitionId}
-              modelDefinitionRevision={modelDefinitionRevision}
-              geometryPreviewTransform={geometryPreviewTransform}
-              selectionAccept={selectionAccept}
-              selectionKindToggles={selectionKindToggles}
-              filterKindToggles={filterKindToggles}
-              hoveredTargetKey={hoveredTargetKey}
-              selectedTargetKey={selectedTargetKey}
-              selectedTargetKeys={selectedTargetKeys}
-              hostSelectionEnabled={hostSelectionEnabled}
-              onSelectionRequest={onSelectionRequest}
+          {showOrbitViewGizmo ? <WorldOrbitViewControls onCameraChange={onOrbitCameraChange} onProjectionChange={onOrbitProjectionChange} /> : null}
+          <WorldLayer order={0} name="cad.grid">
+            <WorldLodGridHelper gridDatum={[0, 0, 0]} />
+          </WorldLayer>
+          <WorldLayer order={5} name="cad.references">
+            <WorldReferenceLayer
+              references={worldReferences}
+              selectedIds={selectedReferenceIds}
+              hoveredId={hoveredReferenceId}
+              revealedIds={revealedReferenceIds}
+              gumballConfig={transformGumballConfig ?? undefined}
+              relocateActive={referenceRelocateActive && cadGumballConfigVisible(transformGumballConfig ?? {})}
+              onSelect={onReferenceSelect}
+              onHover={onReferenceHover}
+              onRelocate={onReferenceRelocate}
             />
-          ) : null}
-        </WorldLayer>
-        <WorldLayer order={35} name="cad.interaction-drag">
-          {heightMoveOn && origin && corner ? <HeightDragSurface origin={origin} corner={corner} /> : null}
-          {zRodMoveOn && origin ? <VerticalZDragRod origin={origin} /> : null}
-          {origin && (heightMoveOn || zRodMoveOn) ? (
-            <SpatialConstrainedPointerBridge
-              mode={zRodMoveOn ? "vertical-z" : heightMoveOn ? "height-yz" : null}
-              origin={origin}
-              corner={corner}
-              enabled={heightMoveOn || zRodMoveOn}
+          </WorldLayer>
+          <WorldLayer order={10} name="cad.ground-pick">
+            <GroundPickPlane
+              enabled={pickPlaneEnabled}
+              onPick={onGroundPickEvent}
+              onContextPick={onGroundContextEvent}
               onPointerMove={onScenePointerMoveEvent}
-              onPointerDown={
-                zRodMoveOn
-                  ? (point) => {
-                      const event = createSpatialPickEvent("pointer.down", point, null);
-                      onInteractionEvent?.(event);
-                    }
-                  : undefined
-              }
+              pointerMoveEnabled={groundMoveOn}
+              planeColor={resolvedTheme.groundPlaneColor ?? spatialSceneColors().groundPlane}
+              planeOpacity={resolvedTheme.groundPlaneOpacity}
             />
-          ) : null}
-        </WorldLayer>
-        <WorldLayer order={40} name="cad.committed">
-          <CommittedMeshLayer
-            meshes={layerMeshes}
-            modelRevision={geometry?.revision ?? 0}
-            styleForSolid={styleForSolid}
-            pickable={committedMeshPickable}
-            showFaces={sceneVisibility.showCommittedFaces}
-            showEdges={sceneVisibility.showCommittedEdges}
-            onFacePointerDown={onCommittedFacePointerDown}
-            onFacePointerMove={onCommittedFacePointerMove}
-          />
-          <FactoryFaceSurfaceLayer faces={factoryFaceMeshes} modelRevision={geometry?.revision ?? 0} visible={sceneVisibility.showCommittedFaces} />
-        </WorldLayer>
-        <WorldLayer order={50} name="cad.display">
-          <InteractionDisplay geometry={geometry} model={displayModel ?? snapshot.display} renderItem={renderDisplayItem} />
-          {slots?.afterDisplay}
-        </WorldLayer>
-        <WorldLayer order={60} name="cad.gumball">
-          {slots?.afterCommitted}
-          {cadGumballConfigVisible(transformGumballConfig) && geometry && onTransformGumballCommit ? (
-            <SpatialTransformGumball
-              config={transformGumballConfig!}
-              model={transformGumballModel ?? geometry!}
-              targets={transformGumballTargets}
-              previewKernel={previewKernel}
-              onPreview={onTransformGumballPreview}
-              onPreviewEnd={onTransformGumballPreviewEnd}
-              onCommit={onTransformGumballCommit}
+          </WorldLayer>
+          <WorldLayer order={20} name="cad.factory-wireframe">
+            <GeometryFactoryWireframeLayer geometry={scenePickGeometry} visible={sceneVisibility.showFactoryWireframe} />
+          </WorldLayer>
+          <WorldLayer order={30} name="cad.pick">
+            {showPickLayer ? (
+              <SpatialPickGeometryLayer
+                geometry={scenePickGeometry}
+                activeModelDefinitionId={activeModelDefinitionId}
+                modelDefinitionRevision={modelDefinitionRevision}
+                geometryPreviewTransform={geometryPreviewTransform}
+                selectionAccept={selectionAccept}
+                selectionKindToggles={selectionKindToggles}
+                filterKindToggles={filterKindToggles}
+                hoveredTargetKey={hoveredTargetKey}
+                selectedTargetKey={selectedTargetKey}
+                selectedTargetKeys={selectedTargetKeys}
+                hostSelectionEnabled={hostSelectionEnabled}
+                onSelectionRequest={onSelectionRequest}
+              />
+            ) : null}
+          </WorldLayer>
+          <WorldLayer order={35} name="cad.interaction-drag">
+            {heightMoveOn && origin && corner ? <HeightDragSurface origin={origin} corner={corner} /> : null}
+            {zRodMoveOn && origin ? <VerticalZDragRod origin={origin} /> : null}
+            {origin && (heightMoveOn || zRodMoveOn) ? (
+              <SpatialConstrainedPointerBridge
+                mode={zRodMoveOn ? "vertical-z" : heightMoveOn ? "height-yz" : null}
+                origin={origin}
+                corner={corner}
+                enabled={heightMoveOn || zRodMoveOn}
+                onPointerMove={onScenePointerMoveEvent}
+                onPointerDown={
+                  zRodMoveOn
+                    ? (point) => {
+                        const event = createSpatialPickEvent("pointer.down", point, null);
+                        onInteractionEvent?.(event);
+                      }
+                    : undefined
+                }
+              />
+            ) : null}
+          </WorldLayer>
+          <WorldLayer order={40} name="cad.committed">
+            <CommittedMeshLayer
+              meshes={layerMeshes}
+              modelRevision={geometry?.revision ?? 0}
+              styleForSolid={styleForSolid}
+              pickable={committedMeshPickable}
+              showFaces={sceneVisibility.showCommittedFaces}
+              showEdges={sceneVisibility.showCommittedEdges}
+              onFacePointerDown={onCommittedFacePointerDown}
+              onFacePointerMove={onCommittedFacePointerMove}
             />
-          ) : null}
-        </WorldLayer>
+            <FactoryFaceSurfaceLayer faces={factoryFaceMeshes} modelRevision={geometry?.revision ?? 0} visible={sceneVisibility.showCommittedFaces} />
+          </WorldLayer>
+          <WorldLayer order={50} name="cad.display">
+            <InteractionDisplay geometry={geometry} model={displayModel ?? snapshot.display} renderItem={renderDisplayItem} />
+            {slots?.afterDisplay}
+          </WorldLayer>
+          <WorldLayer order={60} name="cad.gumball">
+            {slots?.afterCommitted}
+            {cadGumballConfigVisible(transformGumballConfig) && geometry && onTransformGumballCommit ? (
+              <SpatialTransformGumball
+                config={transformGumballConfig!}
+                model={transformGumballModel ?? geometry!}
+                targets={transformGumballTargets}
+                previewKernel={previewKernel}
+                onPreview={onTransformGumballPreview}
+                onPreviewEnd={onTransformGumballPreviewEnd}
+                onCommit={onTransformGumballCommit}
+              />
+            ) : null}
+          </WorldLayer>
         </WorldOrbitViewSnapGateProvider>
       </WorldLodBridge>
     </>
@@ -4147,13 +4066,7 @@ function replInteractionSuggestionOnSpace(query: string, matches: readonly ReplS
   return matches.find((suggestion) => suggestion.kind === "interaction") ?? null;
 }
 
-function replInteractionIdOnSpace(
-  query: string,
-  matches: readonly ReplSuggestion[],
-  all: readonly ReplSuggestion[],
-  lastFinalizedInteractionId: string,
-  repeatLastWhenIdle: boolean,
-): string | null {
+function replInteractionIdOnSpace(query: string, matches: readonly ReplSuggestion[], all: readonly ReplSuggestion[], lastFinalizedInteractionId: string, repeatLastWhenIdle: boolean): string | null {
   if (!query.trim()) return repeatLastWhenIdle ? lastFinalizedInteractionId || null : null;
   return replInteractionSuggestionOnSpace(query, matches, all)?.interactionId ?? null;
 }
@@ -4803,14 +4716,8 @@ export function InteractionRepl({
   );
   const documentArchivedBoxLayouts = reactHostPort.useMemo(() => archivedBoxesFromHistory(history), [history, snapshot.revision]);
   const allArchivedBoxLayouts = reactHostPort.useMemo(() => [...documentArchivedBoxLayouts, ...archivedBoxLayouts], [documentArchivedBoxLayouts, archivedBoxLayouts]);
-  const baseDisplay = reactHostPort.useMemo(
-    () => filterFootprintBoxPreviewDisplayItems(replBaseDisplayForHistory(snapshot), documentModel.model),
-    [snapshot, documentModel.model],
-  );
-  const mergedDisplay = reactHostPort.useMemo(
-    () => mergeDisplayWithArchivedBoxes(baseDisplay, allArchivedBoxLayouts, documentModel.model),
-    [baseDisplay, allArchivedBoxLayouts, documentModel.model],
-  );
+  const baseDisplay = reactHostPort.useMemo(() => filterFootprintBoxPreviewDisplayItems(replBaseDisplayForHistory(snapshot), documentModel.model), [snapshot, documentModel.model]);
+  const mergedDisplay = reactHostPort.useMemo(() => mergeDisplayWithArchivedBoxes(baseDisplay, allArchivedBoxLayouts, documentModel.model), [baseDisplay, allArchivedBoxLayouts, documentModel.model]);
   const chromeDefaults = reactHostPort.useMemo(() => defaultInteractionReplChromeState(), []);
   const [cmdLine, setCmdLine] = useHostState(cmdLineProp, onCmdLineChange, () => chromeDefaults.cmdLine);
   const [activeIndex, setActiveIndex] = useHostState(activeSuggestionIndexProp, onActiveSuggestionIndexChange, () => chromeDefaults.activeSuggestionIndex);
@@ -4885,15 +4792,10 @@ export function InteractionRepl({
     return filterSpatialPickTargetsForTypologyToggles(showPrimitives, filterTypologyToggles, activeTypologyIds);
   }, [scopedPickTargets, filterPrimitiveToggles, filterTypologyToggles, activeTypologyIds]);
   const viewFilterKindToggles = reactHostPort.useMemo(() => spatialPickKindTogglesFromTypologyFilteredTargets(activeModelDefinitionId, visiblePickTargets), [activeModelDefinitionId, visiblePickTargets]);
-  const sceneKindToggles = reactHostPort.useMemo(
-    () => spatialSceneKindTogglesForModelDefinition(activeModelDefinitionId, filterPrimitiveToggles),
-    [activeModelDefinitionId, filterPrimitiveToggles],
-  );
+  const sceneKindToggles = reactHostPort.useMemo(() => spatialSceneKindTogglesForModelDefinition(activeModelDefinitionId, filterPrimitiveToggles), [activeModelDefinitionId, filterPrimitiveToggles]);
   const entityFlagsForId = reactHostPort.useCallback(
     (entityId: string) =>
-      pickSourceGeometry && typeof pickSourceGeometry === "object" && "metadata" in pickSourceGeometry
-        ? resolveSpatialEntityFlags(pickSourceGeometry as Model, activeModelDefinitionId ?? defaultModelDefinitionId(), entityId)
-        : {},
+      pickSourceGeometry && typeof pickSourceGeometry === "object" && "metadata" in pickSourceGeometry ? resolveSpatialEntityFlags(pickSourceGeometry as Model, activeModelDefinitionId ?? defaultModelDefinitionId(), entityId) : {},
     [activeModelDefinitionId, pickSourceGeometry, pickSourceRevision],
   );
   const committedMeshesForView = reactHostPort.useMemo(() => {
@@ -5002,9 +4904,7 @@ export function InteractionRepl({
     const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
     const rendererSel = replRendererSelectionTargets(rendererSelectionByModelRef.current, mdId);
     const selSpec = getActiveSelectionSpec(spec, rt.getSnapshot().state);
-    const accepted = selSpec
-      ? expandSelectionTargetsForAccept(documentModel.model, selSpec, rendererSel)
-      : replSelectionAccepted(rt.listActiveSelectionAccept() as readonly ModelEntityKind[], rendererSel);
+    const accepted = selSpec ? expandSelectionTargetsForAccept(documentModel.model, selSpec, rendererSel) : replSelectionAccepted(rt.listActiveSelectionAccept() as readonly ModelEntityKind[], rendererSel);
     setInteractionSelectionByState({ [rt.getSnapshot().state]: [...accepted] });
     await rt.send(replStartEvent(accepted));
   }, [rt, spec, documentModel.model, activeModelDefinitionId, setInteractionSelectionByState]);
@@ -5443,12 +5343,7 @@ export function InteractionRepl({
     const state = snap.state;
     if (!interactionInNumericEntryState(spec, state)) return false;
     const parsed = parseNumericCommandLine(replCmdLineValue());
-    const value =
-      parsed !== null && parsed !== undefined
-        ? parsed
-        : parsed === null
-          ? interactionNumericEntryExplicitLockValue(spec, state, snap.context)
-          : null;
+    const value = parsed !== null && parsed !== undefined ? parsed : parsed === null ? interactionNumericEntryExplicitLockValue(spec, state, snap.context) : null;
     if (value == null) return false;
     const applyEv = interactionNumericEntryApplyEvent(spec, state, value);
     if (applyEv) await rt.send(applyEv);
@@ -5598,7 +5493,26 @@ export function InteractionRepl({
         return;
       }
     },
-    [cmdLine, allSuggestions, filtered, activeIndex, runSuggestion, trySubmitLine, tryCommitNumericEntry, tryConfirmOrNumericCommit, tryFinalizeInteractionStep, replCmdLineValue, handleEscapeKey, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, spec, rt, interactionId, repeatLastFinalizedInteraction],
+    [
+      cmdLine,
+      allSuggestions,
+      filtered,
+      activeIndex,
+      runSuggestion,
+      trySubmitLine,
+      tryCommitNumericEntry,
+      tryConfirmOrNumericCommit,
+      tryFinalizeInteractionStep,
+      replCmdLineValue,
+      handleEscapeKey,
+      lastFinalizedInteractionId,
+      runInteractionIdFromSpace,
+      confirmInteractionSelection,
+      spec,
+      rt,
+      interactionId,
+      repeatLastFinalizedInteraction,
+    ],
   );
 
   const submitEngagementLine = reactHostPort.useCallback(() => {
@@ -5670,7 +5584,25 @@ export function InteractionRepl({
         onRepeatLast: lastFinalizedInteractionId ? repeatLastFinalizedInteraction : undefined,
         onAbort: handleEscapeKey,
       }),
-    [showEngagement, engagementCommandMode, boundInteractionSession, engagementControl, transitionRows, scopedInteractions, runTransitionRow, interactionId, snapshot.state, snapshot.lastResponse, displayedSelectionTargets, cmdLine, setCmdLine, submitEngagementLine, handleEscapeKey, lastFinalizedInteractionId, repeatLastFinalizedInteraction],
+    [
+      showEngagement,
+      engagementCommandMode,
+      boundInteractionSession,
+      engagementControl,
+      transitionRows,
+      scopedInteractions,
+      runTransitionRow,
+      interactionId,
+      snapshot.state,
+      snapshot.lastResponse,
+      displayedSelectionTargets,
+      cmdLine,
+      setCmdLine,
+      submitEngagementLine,
+      handleEscapeKey,
+      lastFinalizedInteractionId,
+      repeatLastFinalizedInteraction,
+    ],
   );
 
   reactHostPort.useEffect(() => {
@@ -5826,7 +5758,34 @@ export function InteractionRepl({
     };
     window.addEventListener("keydown", onWinCapture, true);
     return () => window.removeEventListener("keydown", onWinCapture, true);
-  }, [captureGlobalKeys, rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, tryConfirmOrNumericCommit, tryFinalizeInteractionStep, handleEscapeKey, interactionId, interactionActive, boundInteractionSession, repeatLastFinalizedInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo, onDeleteSelection, focusReplCommandInput, replCommandInputElement, showAside, showEngagement, engagementCommandMode, submitEngagementLine]);
+  }, [
+    captureGlobalKeys,
+    rt,
+    spec,
+    cmdLine,
+    allSuggestions,
+    trySubmitLine,
+    tryCommitNumericEntry,
+    tryConfirmOrNumericCommit,
+    tryFinalizeInteractionStep,
+    handleEscapeKey,
+    interactionId,
+    interactionActive,
+    boundInteractionSession,
+    repeatLastFinalizedInteraction,
+    lastFinalizedInteractionId,
+    runInteractionIdFromSpace,
+    confirmInteractionSelection,
+    onUndo,
+    onRedo,
+    onDeleteSelection,
+    focusReplCommandInput,
+    replCommandInputElement,
+    showAside,
+    showEngagement,
+    engagementCommandMode,
+    submitEngagementLine,
+  ]);
 
   const onScenePointerMove = reactHostPort.useCallback(
     (p: Vec3) => {
@@ -5844,10 +5803,7 @@ export function InteractionRepl({
   const dragOverlayPoints = dragSelection && dragOverlayRect ? dragSelection.path.map((point) => ({ x: point.x - dragOverlayRect.left, y: point.y - dragOverlayRect.top })) : [];
 
   return (
-    <div
-      className={fillHost ? canvasHostRootClass : editorShellRootClass}
-      style={rootStyle}
-    >
+    <div className={fillHost ? canvasHostRootClass : editorShellRootClass} style={rootStyle}>
       <div className="relative min-h-0 min-w-0 flex-1">
         <InteractionCanvas
           {...canvasOverrides}
@@ -5855,14 +5811,7 @@ export function InteractionRepl({
           frameloop={canvasFrameloop}
           className={cn("bg-canvas", canvasOverrides?.className)}
           onCanvasReady={handleCanvasReady}
-          overlay={
-            spatialViewOverrides?.onOrbitProjectionChange ? (
-              <WorldOrbitProjectionSwitch
-                projection={spatialViewOverrides.orbitProjection ?? "perspective"}
-                onProjectionChange={spatialViewOverrides.onOrbitProjectionChange}
-              />
-            ) : null
-          }
+          overlay={spatialViewOverrides?.onOrbitProjectionChange ? <WorldOrbitProjectionSwitch projection={spatialViewOverrides.orbitProjection ?? "perspective"} onProjectionChange={spatialViewOverrides.onOrbitProjectionChange} /> : null}
         >
           <InteractionSelectionInvalidateBridge selectionKey={selectionInvalidateKey} />
           <InteractionSpatialView
@@ -5953,10 +5902,7 @@ export function InteractionRepl({
         ) : null}
       </div>
       {showAside ? (
-        <aside
-          className={cn(floatingPanelAsideClass, fillHost ? "max-h-[45%] w-full shrink-0 border-l-0 border-t" : "w-layout-cad-menu-lg shrink-0")}
-          style={asideStyle}
-        >
+        <aside className={cn(floatingPanelAsideClass, fillHost ? "max-h-[45%] w-full shrink-0 border-l-0 border-t" : "w-layout-cad-menu-lg shrink-0")} style={asideStyle}>
           <strong className="text-sm font-semibold">Editor</strong>
           <div className="flex flex-wrap gap-half">
             {transitionRows.map((row) => (
@@ -6002,7 +5948,10 @@ export function InteractionRepl({
               </div>
             ) : null}
             {interactionMenuOpen ? (
-              <div onPointerDown={(e) => e.stopPropagation()} className={cn("absolute top-[calc(100%+var(--spacing-double))] right-0 z-[3] max-h-layout-cad-menu-sm w-layout-cad-menu-md max-w-[calc(100vw-var(--size-xl))] overflow-y-auto p-single", floatingMenuSurfaceClass)}>
+              <div
+                onPointerDown={(e) => e.stopPropagation()}
+                className={cn("absolute top-[calc(100%+var(--spacing-double))] right-0 z-[3] max-h-layout-cad-menu-sm w-layout-cad-menu-md max-w-[calc(100vw-var(--size-xl))] overflow-y-auto p-single", floatingMenuSurfaceClass)}
+              >
                 {interactionMatches.length ? (
                   interactionMatches.map((suggestion) => (
                     <button key={`${suggestion.kind}:${suggestion.key}:${suggestion.detail}`} type="button" className={floatingMenuItemClass} onClick={() => runSuggestion(suggestion)}>
@@ -6347,7 +6296,7 @@ export function SelectionAttributesPanel({ model, activeModelDefinitionId, selec
                 if (!e.target.value) clearField(defn);
                 else setField(defn, e.target.value);
               }}
-                      className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}
+              className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}
             >
               <option value="">—</option>
               {options.map((option) => (
@@ -6476,9 +6425,7 @@ export function ModelStatsPanel({ model, kernel, activeModelDefinitionId, select
           ) : null}
           {statDefinitionAppliesToScope(defn, "selection") && selectionObjects.length > 0 ? (
             <div className="flex flex-col gap-half">
-              <span className="text-muted-foreground text-2xs">
-                Selection{count > 1 ? ` · ${count} selected` : ""}
-              </span>
+              <span className="text-muted-foreground text-2xs">Selection{count > 1 ? ` · ${count} selected` : ""}</span>
               <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-single gap-y-half">
                 {defn.outputs.map((output) => (
                   <Fragment key={`${defn.id}:selection:${output.key}`}>
@@ -7004,12 +6951,7 @@ if (import.meta.vitest) {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
       const solidId = Object.keys(model.solids)[0]!;
-      const diff = transformGumballMatrixDiff(
-        model,
-        [{ kind: "solid", id: solidId, editable: true }],
-        { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
-        { position: [2, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
-      );
+      const diff = transformGumballMatrixDiff(model, [{ kind: "solid", id: solidId, editable: true }], { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [2, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] });
       applyModelDiff(model, diff);
       for (const v of Object.values(model.vertices)) {
         expect(v.position[0]).toBeGreaterThanOrEqual(1.5);
@@ -7036,12 +6978,7 @@ if (import.meta.vitest) {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
       const solidId = Object.keys(model.solids)[0]!;
-      const diff = transformGumballMatrixDiff(
-        model,
-        [{ kind: "solid", id: solidId, editable: true }],
-        { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
-        { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [2, 2, 2] },
-      );
+      const diff = transformGumballMatrixDiff(model, [{ kind: "solid", id: solidId, editable: true }], { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [2, 2, 2] });
       applyModelDiff(model, diff);
       for (const v of Object.values(model.vertices)) {
         expect(v.position[0]).toBeGreaterThanOrEqual(0);
@@ -7231,7 +7168,11 @@ if (import.meta.vitest) {
       ];
       const flagsForId = (id: string) => ({ ...(id === "hidden" ? { hidden: true } : {}) });
       expect(resolveSpatialPickTargetsToRender(targets, {}, new Set(), flagsForId).map((row) => row.id)).toEqual(["visible"]);
-      expect(resolveSpatialPickTargetsToRender(targets, {}, new Set(["object:hidden"]), flagsForId).map((row) => row.id).sort()).toEqual(["hidden", "visible"]);
+      expect(
+        resolveSpatialPickTargetsToRender(targets, {}, new Set(["object:hidden"]), flagsForId)
+          .map((row) => row.id)
+          .sort(),
+      ).toEqual(["hidden", "visible"]);
     });
 
     it("resolveSpatialPickTargetsToRender draws all enabled kinds", () => {

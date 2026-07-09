@@ -147,7 +147,7 @@ s = s.replace(
 
 s = s.replaceAll("ExtensionViewService.forKernel(kernel)", "null");
 s = s.replaceAll("listExtensionViews()", "[]");
-s = s.replaceAll("qualifiedViewId(\"energy\", \"energy\")", "null");
+s = s.replaceAll('qualifiedViewId("energy", "energy")', "null");
 
 // Selection interaction tests -> headless actions
 s = s.replace(

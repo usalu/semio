@@ -7,6 +7,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Implemented connection details panel tree structure: converted Gap/Shift/Rise from Stepper to Slider, renamed Connector to Port labels, renamed U/V to X Offset/Y Offset in Diagram, updated both en/de translations, updated e2e test assertions. 0 TS errors, 13/13 unit tests pass.
+
 ## Changes
 
 - `compose/js/sketchpad/Design.tsx`: SingleConnectionInfo renamed connectingConnectorId → connectingPortId, connectedConnectorId → connectedPortId; SingleConnectionFields converted gap/shift/rise from Stepper to Slider with labels; renamed u/v steppers to x/y; same changes in ConnectionsSectionForm bulk editing section

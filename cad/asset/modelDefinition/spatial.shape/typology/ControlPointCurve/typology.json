@@ -4,13 +4,7 @@
   "version": "1.0.0",
   "label": "Control Point Curve",
   "description": "Typology produced by curve.control-point-curve.",
-  "actions": [
-    "command.finish"
-  ],
-  "interactions": [
-    "curve.controlPointCurve"
-  ],
-  "primitiveKinds": [
-    "curve"
-  ]
+  "actions": ["command.finish"],
+  "interactions": ["curve.controlPointCurve"],
+  "primitiveKinds": ["curve"]
 }

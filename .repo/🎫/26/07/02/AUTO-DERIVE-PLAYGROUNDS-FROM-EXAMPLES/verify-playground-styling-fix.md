@@ -19,12 +19,12 @@ Aligned `globals.css` with `cad/renderer/react/globals.css` and `.storybook/glob
 
 ## Verified (dev port 6185)
 
-| Check | Before | After |
-|-------|--------|-------|
-| `.flex` rule | false | true |
-| `.size-workbench` rule | false | true |
-| Navbar logo width | 1280px | 24px |
-| `#root > div` display | block | flex |
+| Check                  | Before | After |
+| ---------------------- | ------ | ----- |
+| `.flex` rule           | false  | true  |
+| `.size-workbench` rule | false  | true  |
+| Navbar logo width      | 1280px | 24px  |
+| `#root > div` display  | block  | flex  |
 
 ## Verified (preview E2E)
 

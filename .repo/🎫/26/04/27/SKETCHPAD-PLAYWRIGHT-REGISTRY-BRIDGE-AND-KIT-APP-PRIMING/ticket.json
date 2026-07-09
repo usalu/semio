@@ -5,8 +5,5 @@
   "description": "Test prompt",
   "summary": "React: emitKitRegistryListChanged on registry row add/remove; subscribeKitRegistryListChanged; useOpenKitShallows/useOpenKitGuids/useRegistryKitPersistenceKind read via getKitRegistryBridge so LayoutCanvas windows without KitRegistryContext still subscribe; clear list listeners on provider unmount; embedded test cleanup() before shell shallows assertion. Sketchpad: MultiWindowApp gates LayoutCanvas until hasKitApp; useKitAppYjsToXStateSync calls sketchpadStore.createKitApp synchronously (execute path was async and stranded Preparing); kit app store read without stale useMemo. JS: removed duplicate/orphan embedded-test tail that broke Vite parse. Playwright: last full run 16/20 (Home/Type/Design/Settings still fail on this host: kit artifact table often has no data-row-id, worker timeouts, design route React crash); Kit test passed after priming fix.",
   "goal": "🎯aioptimizedrepo",
-  "sessions": [
-    "⚪34ea516725f84aacaf1fa85bc28ba2ad",
-    "⚪06ad563fecc9450daa38b7bf93a55aa5"
-  ]
+  "sessions": ["⚪34ea516725f84aacaf1fa85bc28ba2ad", "⚪06ad563fecc9450daa38b7bf93a55aa5"]
 }

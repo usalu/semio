@@ -4,7 +4,5 @@
   "description": "Analyze and fix the mismatch between diagram diff coloring and the drag algorithm. Connections are not being colored as modified when they should be, and there may be other coloring mistakes.",
   "summary": "Bulk close",
   "goal": "🎯compose🎯ui",
-  "sessions": [
-    "⚪470ad3edffe6400fa25757253012f810"
-  ]
+  "sessions": ["⚪470ad3edffe6400fa25757253012f810"]
 }

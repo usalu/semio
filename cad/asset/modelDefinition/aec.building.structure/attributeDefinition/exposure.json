@@ -5,19 +5,12 @@
   "label": "Exposure",
   "description": "Marks whether a surface is internal or external.",
   "field": "exposure",
-  "targets": [
-    "face"
-  ],
+  "targets": ["face"],
   "value": {
     "kind": "string",
-    "options": [
-      "internal",
-      "external"
-    ]
+    "options": ["internal", "external"]
   },
   "geometrySelector": {
-    "kinds": [
-      "face"
-    ]
+    "kinds": ["face"]
   }
 }

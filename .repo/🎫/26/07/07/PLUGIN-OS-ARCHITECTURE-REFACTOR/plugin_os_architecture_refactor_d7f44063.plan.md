@@ -1,49 +1,49 @@
 ---
 name: Plugin OS Architecture Refactor
-overview: "Formalize semio's OS plugin architecture end-to-end: plugins become true \"collections of apps\" (fixing the puzzle/procedural/trinity split), surfaces become a closed compile-time set, plugins get a real wasmtime-hosted sandbox with capability-gated host imports (replacing native dlopen), hot-swap is wired through the existing `PluginHost`, and the plugin registry becomes single-sourced."
+overview: 'Formalize semio''s OS plugin architecture end-to-end: plugins become true "collections of apps" (fixing the puzzle/procedural/trinity split), surfaces become a closed compile-time set, plugins get a real wasmtime-hosted sandbox with capability-gated host imports (replacing native dlopen), hot-swap is wired through the existing `PluginHost`, and the plugin registry becomes single-sourced.'
 todos:
-  - id: ticket
-    content: Read repo://goals and open a ticket for this refactor
-    status: completed
-  - id: phase-a-puzzle
-    content: Consolidate puzzle 2d/3d/5d plugin crates into puzzle/plugin/rs with 3 apps; update Cargo.toml workspace
-    status: completed
-  - id: phase-a-procedural
-    content: Consolidate procedural 2d/3d plugin crates into procedural/plugin/rs with 2 apps
-    status: completed
-  - id: phase-a-trinity
-    content: Relocate+merge trinity jack/rewrite plugin crates into trinity/plugin/rs with 2 apps
-    status: completed
-  - id: phase-a-gis-reasoning
-    content: Relocate gis/2d/plugin and reasoning/mindmap/wires/plugin to technology-root plugin crates
-    status: completed
-  - id: phase-b-surface-kind
-    content: Add closed SurfaceKind enum in framework/core, replace stringly-typed component_kind, delete duplicate scaffold::SceneKind
-    status: completed
-  - id: phase-c-capability
-    content: Add Capability enum + PluginManifest.capabilities, declare on s plugin, add cargo-metadata capability lint
-    status: completed
-  - id: phase-d-abi
-    content: Unify plugin ABI (alloc/dealloc + ptr,len) replacing wasm-bindgen exports for plugins
-    status: in_progress
-  - id: phase-d-wasmtime-host
-    content: Build semio-framework-plugin-host wasmtime crate with capability-gated Linker imports
-    status: pending
-  - id: phase-d-relocate-backbone
-    content: Move s plugin's local-fs/sqlite OsBackbonePort implementations to the trusted host side
-    status: pending
-  - id: phase-d-retire-native-dlopen
-    content: Retire native_host dlopen path and SEMIO_NATIVE_PLUGINS dylib build
-    status: pending
-  - id: phase-e-hot-swap
-    content: Wire PluginHost::hot_swap_plugin into dev rebuild flow for both wasmtime and browser paths
-    status: pending
-  - id: phase-f-registry
-    content: Generate single-source plugin registry consumed by dev/js/index.ts and wgpu boot.ts
-    status: in_progress
-  - id: verify
-    content: Run full cargo/vitest suite, boot all plugins in studio mode, verify hot-swap and capability lint, close ticket
-    status: pending
+ - id: ticket
+   content: Read repo://goals and open a ticket for this refactor
+   status: completed
+ - id: phase-a-puzzle
+   content: Consolidate puzzle 2d/3d/5d plugin crates into puzzle/plugin/rs with 3 apps; update Cargo.toml workspace
+   status: completed
+ - id: phase-a-procedural
+   content: Consolidate procedural 2d/3d plugin crates into procedural/plugin/rs with 2 apps
+   status: completed
+ - id: phase-a-trinity
+   content: Relocate+merge trinity jack/rewrite plugin crates into trinity/plugin/rs with 2 apps
+   status: completed
+ - id: phase-a-gis-reasoning
+   content: Relocate gis/2d/plugin and reasoning/mindmap/wires/plugin to technology-root plugin crates
+   status: completed
+ - id: phase-b-surface-kind
+   content: Add closed SurfaceKind enum in framework/core, replace stringly-typed component_kind, delete duplicate scaffold::SceneKind
+   status: completed
+ - id: phase-c-capability
+   content: Add Capability enum + PluginManifest.capabilities, declare on s plugin, add cargo-metadata capability lint
+   status: completed
+ - id: phase-d-abi
+   content: Unify plugin ABI (alloc/dealloc + ptr,len) replacing wasm-bindgen exports for plugins
+   status: in_progress
+ - id: phase-d-wasmtime-host
+   content: Build semio-framework-plugin-host wasmtime crate with capability-gated Linker imports
+   status: pending
+ - id: phase-d-relocate-backbone
+   content: Move s plugin's local-fs/sqlite OsBackbonePort implementations to the trusted host side
+   status: pending
+ - id: phase-d-retire-native-dlopen
+   content: Retire native_host dlopen path and SEMIO_NATIVE_PLUGINS dylib build
+   status: pending
+ - id: phase-e-hot-swap
+   content: Wire PluginHost::hot_swap_plugin into dev rebuild flow for both wasmtime and browser paths
+   status: pending
+ - id: phase-f-registry
+   content: Generate single-source plugin registry consumed by dev/js/index.ts and wgpu boot.ts
+   status: in_progress
+ - id: verify
+   content: Run full cargo/vitest suite, boot all plugins in studio mode, verify hot-swap and capability lint, close ticket
+   status: pending
 isProject: false
 ---
 
@@ -128,7 +128,7 @@ This replaces `native_host::NativePluginLibrary` (dlopen) with a real sandbox, a
 1. **Unify the plugin ABI.** Collapse `wasm_plugin_exports!` (wasm-bindgen) and `native_plugin_exports!` (`extern "C"` dylib) in `framework/plugin/rs` into one ABI: exported `extern "C"` functions over `(ptr: u32, len: u32)` pairs in linear memory, plus `semio_plugin_alloc`/`semio_plugin_dealloc`. Every plugin now compiles once, to `wasm32-unknown-unknown`, for both hosts — no more wasm-bindgen dependency in plugin crates, no more separate native dylib build.
 2. **Browser host**: replace the wasm-bindgen-driven loader in `framework/renderer/wgpu/js/boot.ts` and `framework/product/os/dev/js/index.ts` with a small hand-written loader (`WebAssembly.instantiateStreaming`, manual UTF-8 read/write via `alloc`/`dealloc` + `memory`). No behavior change to `manifest()`/`createApp()`/`render()`/`handleCommand()` call shapes.
 3. **New `framework/plugin/host/rs` crate** (`semio-framework-plugin-host`, depends on `wasmtime`, `semio-framework-core`): a `WasmPluginHost` that instantiates a plugin's `.wasm` in its own `wasmtime::Store`, with a `Linker` that only ever provides `alloc`/`dealloc`/panic-hook imports — plus, **only when `LoadedPlugin.manifest.capabilities` declares it**, the specific host-import functions for that capability (e.g. `host_backbone_read`/`host_backbone_write` for `Capability::LocalBackboneStorage`). A plugin that doesn't declare a capability simply has no way to reach that host function, by construction (undeclared imports fail to link, or link to a function that always returns an error).
-4. **Relocate `s`'s local-fs/sqlite backbone out of the guest.** `NativeFileBackbonePort`/`SqliteFolderBackbonePort` (currently native code compiled *inside* `s/plugin/rs`, [lines 193-341](s/plugin/rs/lib.rs)) move to the trusted host side — either `framework/product/os/core/rs` or a small new `framework/product/os/host/rs` crate — implementing the existing `OsBackbonePort` trait ([vcs/rs/lib.rs:601](vcs/rs/lib.rs)) natively (this code is *not* sandboxed, by design: it's the kernel). The `s` guest instead calls the capability-gated `host_backbone_read`/`host_backbone_write` imports, which the host only links because `s`'s manifest declares `Capability::LocalBackboneStorage`.
+4. **Relocate `s`'s local-fs/sqlite backbone out of the guest.** `NativeFileBackbonePort`/`SqliteFolderBackbonePort` (currently native code compiled _inside_ `s/plugin/rs`, [lines 193-341](s/plugin/rs/lib.rs)) move to the trusted host side — either `framework/product/os/core/rs` or a small new `framework/product/os/host/rs` crate — implementing the existing `OsBackbonePort` trait ([vcs/rs/lib.rs:601](vcs/rs/lib.rs)) natively (this code is _not_ sandboxed, by design: it's the kernel). The `s` guest instead calls the capability-gated `host_backbone_read`/`host_backbone_write` imports, which the host only links because `s`'s manifest declares `Capability::LocalBackboneStorage`.
 5. **Retire `native_host` and `SEMIO_NATIVE_PLUGINS`** entirely once the wasmtime host covers the native dev/desktop path — delete `framework/plugin/rs`'s `native_host` module and the native dylib build step in `framework/product/os/dev/script.ts`.
 
 ## Phase E — Wire hot-swap through `PluginHost`

@@ -7838,9 +7838,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "AGENTS.md"
-            ],
+            "files": ["AGENTS.md"],
             "llm": "opus-4-6",
             "summary": "Wrongly reopened - closing immediately."
           },
@@ -7869,9 +7867,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "AGENTS.md"
-            ],
+            "files": ["AGENTS.md"],
             "llm": "opus-4-6",
             "summary": "Wrongly reopened - closing immediately."
           },
@@ -7900,9 +7896,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "AGENTS.md"
-            ],
+            "files": ["AGENTS.md"],
             "llm": "opus-4-6",
             "summary": "Wrongly reopened - closing immediately."
           },
@@ -7932,9 +7926,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "AGENTS.md"
-            ],
+            "files": ["AGENTS.md"],
             "llm": "opus-4-6",
             "summary": "Wrongly reopened - closing immediately."
           },
@@ -8082,9 +8074,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "AGENTS.md"
-            ],
+            "files": ["AGENTS.md"],
             "llm": "opus-4-6",
             "summary": "Wrongly reopened - closing immediately."
           },
@@ -8113,9 +8103,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "AGENTS.md"
-            ],
+            "files": ["AGENTS.md"],
             "llm": "opus-4-6",
             "summary": "Wrongly reopened - closing immediately."
           },
@@ -8144,9 +8132,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "AGENTS.md"
-            ],
+            "files": ["AGENTS.md"],
             "llm": "opus-4-6",
             "summary": "Wrongly reopened - closing immediately."
           },
@@ -8176,9 +8162,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "AGENTS.md"
-            ],
+            "files": ["AGENTS.md"],
             "llm": "opus-4-6",
             "summary": "Wrongly reopened - closing immediately."
           },

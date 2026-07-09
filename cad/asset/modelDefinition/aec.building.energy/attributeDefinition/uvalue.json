@@ -5,15 +5,11 @@
   "label": "U-Value",
   "description": "Authored thermal transmittance for surfaces.",
   "field": "uValue",
-  "targets": [
-    "object"
-  ],
+  "targets": ["object"],
   "value": {
     "kind": "string"
   },
   "geometrySelector": {
-    "kinds": [
-      "object"
-    ]
+    "kinds": ["object"]
   }
 }

@@ -7,15 +7,10 @@
     "skipLibCheck": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "rootDir": ".",
     "resolveJsonModule": true
   },
-  "include": [
-    "*.ts",
-    "bin/**/*.ts"
-  ],
+  "include": ["*.ts", "bin/**/*.ts"],
   "exclude": ["*.test.ts", "script.ts"]
 }

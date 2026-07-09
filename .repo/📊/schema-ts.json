@@ -1356,12 +1356,5 @@
     "TagId",
     "ConceptId"
   ],
-  "weakEntities": [
-    "Coord",
-    "Vec",
-    "Point",
-    "Vector",
-    "Plane",
-    "Side"
-  ]
+  "weakEntities": ["Coord", "Vec", "Point", "Vector", "Plane", "Side"]
 }

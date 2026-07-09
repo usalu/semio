@@ -1,5 +1,6 @@
 const elementUiTranslationBundles = {
-  de: { translation: JSON.parse(String.raw`{
+  de: {
+    translation: JSON.parse(String.raw`{
   "compose": {
     "label": {
       "normal": "",
@@ -4766,8 +4767,10 @@ const elementUiTranslationBundles = {
     }
   }
 }
-`) },
-  en: { translation: JSON.parse(String.raw`{
+`),
+  },
+  en: {
+    translation: JSON.parse(String.raw`{
   "compose": {
     "label": {
       "normal": "",
@@ -9509,5 +9512,6 @@ const elementUiTranslationBundles = {
     }
   }
 }
-`) },
+`),
+  },
 } as const;

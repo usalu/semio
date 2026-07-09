@@ -1,9 +1,9 @@
 - [ ] Update `js/compose/sketchpad/Sketchpad.tsx`:
-    - [ ] Import `HandIcon` from `@semio-tech/semio-assets`.
-    - [ ] Add `HandIcon` to `getGroupIcon` for "hand" group.
-    - [ ] Update toolbar group rendering loop to include "hand" group.
+  - [ ] Import `HandIcon` from `@semio-tech/semio-assets`.
+  - [ ] Add `HandIcon` to `getGroupIcon` for "hand" group.
+  - [ ] Update toolbar group rendering loop to include "hand" group.
 - [ ] Update `js/compose/sketchpad/Design.tsx`:
-    - [ ] Change `hand` tool registration to use `toolbarGroup: { id: "hand", ... }`.
+  - [ ] Change `hand` tool registration to use `toolbarGroup: { id: "hand", ... }`.
 - [ ] Run `scripts/i18n.ts` to update `en.json` and `de.json` with `compose.sketchpad.toolbar.parent.hand`.
 - [ ] Verify functionality (requires manual verification or e2e test if possible).
 - [ ] Run tests.

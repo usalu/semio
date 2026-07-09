@@ -5,14 +5,8 @@
   "label": "Mirror",
   "interaction": {
     "spatialGroundPick": true,
-    "pickDisabledStates": [
-      "idle",
-      "committed"
-    ],
-    "groundPointerMoveStates": [
-      "start_of_mirror_plane",
-      "end_of_mirror_plane"
-    ],
+    "pickDisabledStates": ["idle", "committed"],
+    "groundPointerMoveStates": ["start_of_mirror_plane", "end_of_mirror_plane"],
     "heightDragStates": [],
     "verticalRodStates": [],
     "heightConfirmState": null,
@@ -55,11 +49,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        0
-                      ]
+                      "value": [0, 0, 0]
                     }
                   },
                   {
@@ -103,14 +93,7 @@
       {
         "name": "select_objects_to_mirror",
         "selection": {
-          "accept": [
-            "vertex",
-            "edge",
-            "wire",
-            "face",
-            "shell",
-            "solid"
-          ],
+          "accept": ["vertex", "edge", "wire", "face", "shell", "solid"],
           "multiple": true,
           "prompt": "Select objects to mirror"
         },
@@ -329,11 +312,7 @@
             "text": "Select objects to mirror",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -396,11 +375,7 @@
             "text": "Start of mirror plane",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -503,11 +478,7 @@
             "text": "End of mirror plane",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -603,9 +574,7 @@
     ]
   },
   "commit": {
-    "fromStates": [
-      "ready"
-    ],
+    "fromStates": ["ready"],
     "operation": {
       "kind": "action",
       "action": "command.finish",

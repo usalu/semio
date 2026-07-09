@@ -30,9 +30,7 @@ function parseKindCompatibility(meta: Record<string, unknown> | undefined): read
   return Array.isArray(raw) ? (raw as KindCompatEntry[]) : [];
 }
 const meshDir = resolve(repoRoot, "compose/fixtures/kit/folder/abbau-aufbau");
-const fixtureJson = JSON.parse(
-  readFileSync(resolve(repoRoot, "puzzle/3d/fixture/concrete-forest.3d.json"), "utf8"),
-);
+const fixtureJson = JSON.parse(readFileSync(resolve(repoRoot, "puzzle/3d/fixture/concrete-forest.3d.json"), "utf8"));
 
 const loader = new GLTFLoader();
 function loadMesh(name: string): Promise<Group> {
@@ -49,19 +47,12 @@ const meshRootForUrl = (url: string) => {
   return meshes.get(name) ?? null;
 };
 
-function collisionBoxForObject(
-  obj: { objectKind?: string; origin: number[]; orientation: number[]; scale?: number },
-  catalogs: ReturnType<typeof parseKindCatalogs>,
-  fixture: NonNullable<ReturnType<typeof parseFixtureV1>>,
-) {
+function collisionBoxForObject(obj: { objectKind?: string; origin: number[]; orientation: number[]; scale?: number }, catalogs: ReturnType<typeof parseKindCatalogs>, fixture: NonNullable<ReturnType<typeof parseFixtureV1>>) {
   const url = resolveObjectKindMeshUrl(obj.objectKind, catalogs, fixture);
   if (!url) return null;
   const meshRoot = meshRootForUrl(url);
   if (!meshRoot) return null;
-  const probe = brushProbeGroupFromPreview(
-    { origin: obj.origin as [number, number, number], orientation: obj.orientation as [number, number, number, number], scale: obj.scale },
-    meshRoot,
-  );
+  const probe = brushProbeGroupFromPreview({ origin: obj.origin as [number, number, number], orientation: obj.orientation as [number, number, number, number], scale: obj.scale }, meshRoot);
   updateWorldMatrixChain(probe);
   const box = brushPreviewCollisionBox(probe, 0);
   return Number.isFinite(box.min.x) && !box.isEmpty() ? box : null;
@@ -75,11 +66,7 @@ function maxPenetration(a: Box3, b: Box3): number {
   return Math.min(ox, oy, oz);
 }
 
-function countPairCollisions(
-  objects: readonly { id: string; objectKind?: string; origin: number[]; orientation: number[]; scale?: number }[],
-  catalogs: ReturnType<typeof parseKindCatalogs>,
-  fixture: NonNullable<ReturnType<typeof parseFixtureV1>>,
-) {
+function countPairCollisions(objects: readonly { id: string; objectKind?: string; origin: number[]; orientation: number[]; scale?: number }[], catalogs: ReturnType<typeof parseKindCatalogs>, fixture: NonNullable<ReturnType<typeof parseFixtureV1>>) {
   const boxes: { id: string; box: Box3 }[] = [];
   for (const obj of objects) {
     const box = collisionBoxForObject(obj, catalogs, fixture);
@@ -175,5 +162,4 @@ for (let i = 0; i < boxes.length; i++) {
     overlapVol += ix * iy * iz;
   }
 }
-console.log(`[DEBUG] total overlap volume: ${overlapVol.toFixed(1)} (meshVol~${meshVol.toFixed(0)}) ratio~${(overlapVol / (meshVol * applied.objects.length) * 100).toFixed(1)}%`);
-
+console.log(`[DEBUG] total overlap volume: ${overlapVol.toFixed(1)} (meshVol~${meshVol.toFixed(0)}) ratio~${((overlapVol / (meshVol * applied.objects.length)) * 100).toFixed(1)}%`);

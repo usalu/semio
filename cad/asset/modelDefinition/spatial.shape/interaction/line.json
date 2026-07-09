@@ -5,14 +5,8 @@
   "label": "Line",
   "interaction": {
     "spatialGroundPick": true,
-    "pickDisabledStates": [
-      "idle",
-      "committed"
-    ],
-    "groundPointerMoveStates": [
-      "start_of_line",
-      "end_of_line"
-    ],
+    "pickDisabledStates": ["idle", "committed"],
+    "groundPointerMoveStates": ["start_of_line", "end_of_line"],
     "heightDragStates": [],
     "verticalRodStates": [],
     "heightConfirmState": null,
@@ -55,11 +49,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        0
-                      ]
+                      "value": [0, 0, 0]
                     }
                   },
                   {
@@ -234,10 +224,7 @@
                       },
                       "clearKeys": {
                         "kind": "const",
-                        "value": [
-                          "start",
-                          "end"
-                        ]
+                        "value": ["start", "end"]
                       }
                     }
                   }
@@ -309,11 +296,7 @@
             "text": "Start of line",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -416,11 +399,7 @@
             "text": "End of line",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -516,9 +495,7 @@
     ]
   },
   "commit": {
-    "fromStates": [
-      "committed"
-    ],
+    "fromStates": ["committed"],
     "operation": {
       "kind": "action",
       "action": "curve.line",

@@ -2,39 +2,39 @@
 name: Bun Nx Monorepo Setup
 overview: Migrate the polyglot monorepo to Bun as the single Node package manager + runtime, route every script (build/test/dev/lint/publish/setup) exclusively through Nx with full dependency caching across Bun, Cargo, Go, uv and dotnet, and reduce the devcontainer + native bootstrap to one zero-touch `bun nx run workspace:setup` entrypoint.
 todos:
-  - id: ticket
-    content: Open ticket .repo/🎫/26/05/11/bun-nx-monorepo-setup via repo/client/client
-    status: completed
-  - id: bun-swap
-    content: Swap npm/pnpm → Bun in root package.json, delete package-lock.json + .npmrc, add bunfig.toml, run bun install
-    status: completed
-  - id: scripts-rewrite
-    content: Replace every npm/pnpm/npx call (root + 32 workspaces + devcontainer + CI + .vscode) with bun/bunx; replace inline `node -e` blobs with bun TS scripts under each scripts/ folder
-    status: completed
-  - id: drop-helpers
-    content: Drop cross-env, tsx, jiti, concurrently from devDeps; verify nothing else needs them
-    status: completed
-  - id: project-jsons
-    content: "Add/align project.json for all buildable units: 32 Node workspaces, compose/hub crate, 9 Go modules, 4 .NET test/benchmark csprojs"
-    status: completed
-  - id: workspace-project
-    content: Add root `workspace` project.json with setup/lint/format/test/build/mcp-inspector/git-setup/depcruise targets
-    status: completed
-  - id: nx-json
-    content: "Refine nx.json: cli.packageManager=bun, per-toolchain namedInputs (cargo/go/uv/dotnet), targetDefaults caching for setup/build/test/lint/publish, outputs per project"
-    status: completed
-  - id: devcontainer
-    content: Shrink .devcontainer/post-create.sh, post-attach.sh, install-native.ps1 to OS prereqs + bun install + `bun nx run workspace:setup`; swap Node feature for Bun in Dockerfile
-    status: completed
-  - id: ci
-    content: Update .github/workflows/playwright.yml + gh-pages.yml to oven-sh/setup-bun + bun nx affected/run; add lockfile-keyed Nx cache
-    status: completed
-  - id: verify
-    content: "Cold bootstrap on Linux + Windows: rm caches, run `bun nx run workspace:setup`, then `bun nx run-many -t build/test`, confirm second run hits Nx cache everywhere"
-    status: completed
-  - id: close-ticket
-    content: Close ticket via repo/client/client with summary + file list
-    status: completed
+ - id: ticket
+   content: Open ticket .repo/🎫/26/05/11/bun-nx-monorepo-setup via repo/client/client
+   status: completed
+ - id: bun-swap
+   content: Swap npm/pnpm → Bun in root package.json, delete package-lock.json + .npmrc, add bunfig.toml, run bun install
+   status: completed
+ - id: scripts-rewrite
+   content: Replace every npm/pnpm/npx call (root + 32 workspaces + devcontainer + CI + .vscode) with bun/bunx; replace inline `node -e` blobs with bun TS scripts under each scripts/ folder
+   status: completed
+ - id: drop-helpers
+   content: Drop cross-env, tsx, jiti, concurrently from devDeps; verify nothing else needs them
+   status: completed
+ - id: project-jsons
+   content: "Add/align project.json for all buildable units: 32 Node workspaces, compose/hub crate, 9 Go modules, 4 .NET test/benchmark csprojs"
+   status: completed
+ - id: workspace-project
+   content: Add root `workspace` project.json with setup/lint/format/test/build/mcp-inspector/git-setup/depcruise targets
+   status: completed
+ - id: nx-json
+   content: "Refine nx.json: cli.packageManager=bun, per-toolchain namedInputs (cargo/go/uv/dotnet), targetDefaults caching for setup/build/test/lint/publish, outputs per project"
+   status: completed
+ - id: devcontainer
+   content: Shrink .devcontainer/post-create.sh, post-attach.sh, install-native.ps1 to OS prereqs + bun install + `bun nx run workspace:setup`; swap Node feature for Bun in Dockerfile
+   status: completed
+ - id: ci
+   content: Update .github/workflows/playwright.yml + gh-pages.yml to oven-sh/setup-bun + bun nx affected/run; add lockfile-keyed Nx cache
+   status: completed
+ - id: verify
+   content: "Cold bootstrap on Linux + Windows: rm caches, run `bun nx run workspace:setup`, then `bun nx run-many -t build/test`, confirm second run hits Nx cache everywhere"
+   status: completed
+ - id: close-ticket
+   content: Close ticket via repo/client/client with summary + file list
+   status: completed
 isProject: false
 ---
 
@@ -101,46 +101,42 @@ Refine [nx.json](nx.json):
 
 ```json
 {
-  "cli": { "packageManager": "bun" },
-  "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
-    "sharedGlobals": [
-      "{workspaceRoot}/package.json",
-      "{workspaceRoot}/bun.lock",
-      "{workspaceRoot}/bunfig.toml",
-      "{workspaceRoot}/nx.json",
-      "{workspaceRoot}/tsconfig*.json",
-      "{workspaceRoot}/Cargo.toml",
-      "{workspaceRoot}/Cargo.lock",
-      "{workspaceRoot}/rustfmt.toml",
-      "{workspaceRoot}/go.work",
-      "{workspaceRoot}/go.work.sum",
-      "{workspaceRoot}/pyproject.toml",
-      "{workspaceRoot}/uv.lock",
-      "{workspaceRoot}/Monorepo.sln",
-      "{workspaceRoot}/eslint.config.mjs",
-      "{workspaceRoot}/.dependency-cruiser.cjs"
-    ],
-    "production": [
-      "default",
-      "!{projectRoot}/**/?(*.)+(spec|test|e2e|integration|stories|story|mdx).[cmjtshx]?([sx])?(.snap)?",
-      "!{projectRoot}/.storybook/**"
-    ],
-    "cargo": ["{projectRoot}/**/*.rs", "{projectRoot}/Cargo.toml", "{workspaceRoot}/Cargo.lock"],
-    "go": ["{projectRoot}/**/*.go", "{projectRoot}/go.mod", "{projectRoot}/go.sum", "{workspaceRoot}/go.work*"],
-    "uv": ["{projectRoot}/**/*.py", "{projectRoot}/pyproject.toml", "{workspaceRoot}/uv.lock"],
-    "dotnet": ["{projectRoot}/**/*.cs", "{projectRoot}/*.csproj", "{workspaceRoot}/Monorepo.sln"]
-  },
-  "targetDefaults": {
-    "setup":   { "cache": true, "inputs": ["sharedGlobals"], "outputs": ["{workspaceRoot}/node_modules", "{projectRoot}/.venv", "{projectRoot}/target", "{projectRoot}/obj", "{projectRoot}/bin"] },
-    "build":   { "cache": true, "dependsOn": ["^build", "setup"], "inputs": ["production", "^production"] },
-    "test":    { "cache": true, "dependsOn": ["^test"],  "inputs": ["default", "^default"] },
-    "lint":    { "cache": true, "dependsOn": ["^lint"],  "inputs": ["default", "^default"] },
-    "publish": { "cache": true, "dependsOn": ["^publish", "build"] },
-    "dev":     { "cache": false },
-    "clean":   { "cache": false }
-  },
-  "plugins": [{ "plugin": "@nxlv/python", "options": {} }]
+ "cli": { "packageManager": "bun" },
+ "namedInputs": {
+  "default": ["{projectRoot}/**/*", "sharedGlobals"],
+  "sharedGlobals": [
+   "{workspaceRoot}/package.json",
+   "{workspaceRoot}/bun.lock",
+   "{workspaceRoot}/bunfig.toml",
+   "{workspaceRoot}/nx.json",
+   "{workspaceRoot}/tsconfig*.json",
+   "{workspaceRoot}/Cargo.toml",
+   "{workspaceRoot}/Cargo.lock",
+   "{workspaceRoot}/rustfmt.toml",
+   "{workspaceRoot}/go.work",
+   "{workspaceRoot}/go.work.sum",
+   "{workspaceRoot}/pyproject.toml",
+   "{workspaceRoot}/uv.lock",
+   "{workspaceRoot}/Monorepo.sln",
+   "{workspaceRoot}/eslint.config.mjs",
+   "{workspaceRoot}/.dependency-cruiser.cjs"
+  ],
+  "production": ["default", "!{projectRoot}/**/?(*.)+(spec|test|e2e|integration|stories|story|mdx).[cmjtshx]?([sx])?(.snap)?", "!{projectRoot}/.storybook/**"],
+  "cargo": ["{projectRoot}/**/*.rs", "{projectRoot}/Cargo.toml", "{workspaceRoot}/Cargo.lock"],
+  "go": ["{projectRoot}/**/*.go", "{projectRoot}/go.mod", "{projectRoot}/go.sum", "{workspaceRoot}/go.work*"],
+  "uv": ["{projectRoot}/**/*.py", "{projectRoot}/pyproject.toml", "{workspaceRoot}/uv.lock"],
+  "dotnet": ["{projectRoot}/**/*.cs", "{projectRoot}/*.csproj", "{workspaceRoot}/Monorepo.sln"]
+ },
+ "targetDefaults": {
+  "setup": { "cache": true, "inputs": ["sharedGlobals"], "outputs": ["{workspaceRoot}/node_modules", "{projectRoot}/.venv", "{projectRoot}/target", "{projectRoot}/obj", "{projectRoot}/bin"] },
+  "build": { "cache": true, "dependsOn": ["^build", "setup"], "inputs": ["production", "^production"] },
+  "test": { "cache": true, "dependsOn": ["^test"], "inputs": ["default", "^default"] },
+  "lint": { "cache": true, "dependsOn": ["^lint"], "inputs": ["default", "^default"] },
+  "publish": { "cache": true, "dependsOn": ["^publish", "build"] },
+  "dev": { "cache": false },
+  "clean": { "cache": false }
+ },
+ "plugins": [{ "plugin": "@nxlv/python", "options": {} }]
 }
 ```
 
@@ -151,6 +147,7 @@ Per-project `project.json` overrides `inputs`/`outputs` to the right toolchain (
 ## 6. Devcontainer + native bootstrap (zero-touch)
 
 [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json):
+
 - Replace `ghcr.io/devcontainers/features/node:1` with Bun install in [.devcontainer/Dockerfile](.devcontainer/Dockerfile) (`curl -fsSL https://bun.sh/install | bash` + symlink). Keep the Node feature only if Electron explicitly needs system Node — verify with a smoke build; if `bun --bun` runs `electron-forge`, drop Node entirely.
 - Keep all other features (Go, Python, uv, ruff, dotnet, Rust w/ wasm32 target, git, gh, sqlite, nx).
 - Update the `node_modules` mount label if naming changes (keep volume name).
@@ -171,6 +168,7 @@ bun nx run workspace:setup
 ```
 
 Per-toolchain build/install steps (uv sync, cargo wasm config, dotnet restore, go build, playwright install, vscode extension build, git hooks, antigravity MCP config, GitKraken install) all move into Nx targets:
+
 - Cargo wasm config writing → `compose/rs:setup` (writes `.cargo/config.toml` if missing)
 - Playwright browsers → `compose/sketchpad:setup`
 - VSCode extension build → `repo/vscode:build` (called by `workspace:setup`)
@@ -178,6 +176,7 @@ Per-toolchain build/install steps (uv sync, cargo wasm config, dotnet restore, g
 - GitKraken/Antigravity → keep as opt-in `.devcontainer/post-attach.sh` only
 
 [.devcontainer/install-native.ps1](.devcontainer/install-native.ps1):
+
 - `winget install Oven-sh.Bun` (drop `OpenJS.NodeJS.LTS` unless Electron requires it).
 - After all `winget`/`rustup`/`uv` baseline, end with `bun install; bun nx run workspace:setup`.
 - Delete the per-toolchain bootstrap helpers that Nx targets now own.
@@ -193,7 +192,7 @@ Per-toolchain build/install steps (uv sync, cargo wasm config, dotnet restore, g
   with: { bun-version: latest }
 - run: bun install --frozen-lockfile
 - run: bun nx run workspace:setup
-- run: bun nx affected -t test     # or run @semio-tech/compose-sketchpad-docs:build for pages
+- run: bun nx affected -t test # or run @semio-tech/compose-sketchpad-docs:build for pages
 ```
 
 Add Nx cache persistence via `actions/cache` keyed on `bun.lock`, `Cargo.lock`, `uv.lock`, `go.sum` aggregate hash.

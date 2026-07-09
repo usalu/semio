@@ -1,46 +1,46 @@
 {
-	"name": "@semio-tech/framework-os-dev",
-	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-	"targets": {
-		"dev": {
-			"executor": "nx:run-commands",
-			"options": {
-				"cwd": "framework/product/os/dev",
-				"command": "bun ./script.ts dev",
-				"forwardAllArgs": true
-			}
-		},
-		"build": {
-			"executor": "nx:run-commands",
-			"options": {
-				"cwd": "framework/product/os/dev",
-				"command": "bun ./script.ts build",
-				"forwardAllArgs": true
-			}
-		},
-		"test": {
-			"executor": "nx:run-commands",
-			"options": {
-				"cwd": "framework/product/os/dev",
-				"command": "bun ./script.ts test",
-				"forwardAllArgs": true
-			}
-		},
-		"verify": {
-			"executor": "nx:run-commands",
-			"options": {
-				"cwd": "framework/product/os/dev",
-				"command": "bun ./script.ts verify",
-				"forwardAllArgs": true
-			}
-		},
-		"plugin": {
-			"executor": "nx:run-commands",
-			"options": {
-				"cwd": "framework/product/os/dev",
-				"command": "bun ./script.ts plugin",
-				"forwardAllArgs": true
-			}
-		}
-	}
+  "name": "@semio-tech/framework-os-dev",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "framework/product/os/dev",
+        "command": "bun ./script.ts dev",
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "framework/product/os/dev",
+        "command": "bun ./script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "framework/product/os/dev",
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "verify": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "framework/product/os/dev",
+        "command": "bun ./script.ts verify",
+        "forwardAllArgs": true
+      }
+    },
+    "plugin": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "framework/product/os/dev",
+        "command": "bun ./script.ts plugin",
+        "forwardAllArgs": true
+      }
+    }
+  }
 }

@@ -10,10 +10,5 @@
   "target": {
     "modelDefinition": "aec.building.structure"
   },
-  "typologies": [
-    "structure.structure.reinforcedconcretecolumn",
-    "structure.structure.onewayreinforcedconcreteslab",
-    "structure.structure.reinforcedconcreteinternalwall",
-    "structure.structure.reinforcedconcreteexternalwall"
-  ]
+  "typologies": ["structure.structure.reinforcedconcretecolumn", "structure.structure.onewayreinforcedconcreteslab", "structure.structure.reinforcedconcreteinternalwall", "structure.structure.reinforcedconcreteexternalwall"]
 }

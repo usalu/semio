@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # UI ID System Analysis
 
 **Date:** 2025-11-24  
@@ -54,12 +55,12 @@ The ID system integrates with **7 major subsystems**:
 
 ```json
 {
-  "compose.sketchpad.navbar.panelToggle.workbench": {
-    "label": "Workbench",
-    "beginner": "Open the workbench panel to see available types",
-    "manual": "panels/workbench",
-    "hotkey": "Ctrl+J"
-  }
+ "compose.sketchpad.navbar.panelToggle.workbench": {
+  "label": "Workbench",
+  "beginner": "Open the workbench panel to see available types",
+  "manual": "panels/workbench",
+  "hotkey": "Ctrl+J"
+ }
 }
 ```
 
@@ -90,14 +91,14 @@ The ID system integrates with **7 major subsystems**:
 
 ```tsx
 function DescriptionTooltipContent({ id }: { id: string }) {
-  const { t } = useTranslation();
-  const mode = useTooltipMode();
+ const { t } = useTranslation();
+ const mode = useTooltipMode();
 
-  // Resolves:
-  // - Label from `${id}.label` or `${id}.beginner`
-  // - Manual link from `${id}.manual`
-  // - Tutorial link from `${id}.tutorial`
-  // - Hotkey from `${id}.hotkey`
+ // Resolves:
+ // - Label from `${id}.label` or `${id}.beginner`
+ // - Manual link from `${id}.manual`
+ // - Tutorial link from `${id}.tutorial`
+ // - Hotkey from `${id}.hotkey`
 }
 ```
 
@@ -154,11 +155,11 @@ useHotkeys("ctrl+j", () => togglePanel("workbench"));
 ```tsx
 // Click hotkey in tooltip to navigate to settings
 const handleHotkeyClick = () => {
-  window.dispatchEvent(
-    new CustomEvent("navigate-to-hotkey", {
-      detail: { path: id },
-    }),
-  );
+ window.dispatchEvent(
+  new CustomEvent("navigate-to-hotkey", {
+   detail: { path: id },
+  }),
+ );
 };
 ```
 
@@ -208,16 +209,16 @@ async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
 ```tsx
 // Button triggers command with origin
 <Button
-  id="compose.sketchpad.app.kit.createType"
-  onClick={() =>
-    executeCommand(
-      "compose.kitApp.addType",
-      "compose.sketchpad.app.kit.createType", // origin matches id
-      newTypeData,
-    )
-  }
+ id="compose.sketchpad.app.kit.createType"
+ onClick={() =>
+  executeCommand(
+   "compose.kitApp.addType",
+   "compose.sketchpad.app.kit.createType", // origin matches id
+   newTypeData,
+  )
+ }
 >
-  Create Type
+ Create Type
 </Button>
 ```
 
@@ -235,15 +236,15 @@ async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
 
 ```typescript
 interface TutorialRecordingEvent {
-  timestamp: number;
-  command: string;
-  origin: string; // UI element ID
-  parameters: any[];
+ timestamp: number;
+ command: string;
+ origin: string; // UI element ID
+ parameters: any[];
 }
 
 interface TutorialRecording {
-  events: TutorialRecordingEvent[];
-  milestones: TutorialMilestone[];
+ events: TutorialRecordingEvent[];
+ milestones: TutorialMilestone[];
 }
 ```
 
@@ -264,9 +265,9 @@ interface TutorialRecording {
 
 ```tsx
 const useTutorialCommandInterceptor = () => {
-  // Intercept executeCommand calls
-  // Record origin and parameters
-  // Validate against tutorial sequence
+ // Intercept executeCommand calls
+ // Record origin and parameters
+ // Validate against tutorial sequence
 };
 ```
 
@@ -284,22 +285,22 @@ const useTutorialCommandInterceptor = () => {
 
 ```typescript
 test("drag type from workbench to canvas", async ({ page }) => {
-  // Create temporary kit
-  await page.locator('[id="compose.sketchpad.app.home.createTemporary"]').click();
+ // Create temporary kit
+ await page.locator('[id="compose.sketchpad.app.home.createTemporary"]').click();
 
-  // Create type
-  await page.locator('[id="compose.sketchpad.app.kit.kitApp.createType"]').click();
+ // Create type
+ await page.locator('[id="compose.sketchpad.app.kit.kitApp.createType"]').click();
 
-  // Navigate back
-  await page.locator('[id="compose.sketchpad.navbar.back"]').click();
+ // Navigate back
+ await page.locator('[id="compose.sketchpad.navbar.back"]').click();
 
-  // Create design
-  await page.locator('[id="compose.sketchpad.app.kit.kitApp.createDesign"]').click();
+ // Create design
+ await page.locator('[id="compose.sketchpad.app.kit.kitApp.createDesign"]').click();
 
-  // Toggle workbench
-  await page.locator('[id="compose.sketchpad.navbar.panelToggle.workbench"]').click();
+ // Toggle workbench
+ await page.locator('[id="compose.sketchpad.navbar.panelToggle.workbench"]').click();
 
-  // ... drag and drop test
+ // ... drag and drop test
 });
 ```
 
@@ -326,9 +327,9 @@ console.log(`[DEBUG] [${origin}] Command: ${command}`, parameters);
 
 // Analytics event
 analytics.track("command_executed", {
-  command,
-  origin,
-  timestamp: Date.now(),
+ command,
+ origin,
+ timestamp: Date.now(),
 });
 ```
 
@@ -340,17 +341,17 @@ All input components support ID-based integration:
 
 ```tsx
 interface BaseInputProps {
-  id: string; // Required ID for i18n/hotkey/tooltip
-  showLabel?: boolean; // Auto-show label from i18n
-  // ... other props
+ id: string; // Required ID for i18n/hotkey/tooltip
+ showLabel?: boolean; // Auto-show label from i18n
+ // ... other props
 }
 
 // Usage
 <Input
-  id="compose.sketchpad.app.quality.name"
-  value={quality.name}
-  onChange={handleChange}
-  showLabel // Shows translated label
+ id="compose.sketchpad.app.quality.name"
+ value={quality.name}
+ onChange={handleChange}
+ showLabel // Shows translated label
 />;
 ```
 
@@ -370,16 +371,16 @@ interface BaseInputProps {
 
 ```tsx
 <Button
-  id="compose.sketchpad.navbar.back"
-  onClick={() =>
-    executeCommand(
-      "compose.sketchpad.navigate",
-      "compose.sketchpad.navbar.back", // origin = id
-      -1,
-    )
-  }
+ id="compose.sketchpad.navbar.back"
+ onClick={() =>
+  executeCommand(
+   "compose.sketchpad.navigate",
+   "compose.sketchpad.navbar.back", // origin = id
+   -1,
+  )
+ }
 >
-  {/* Icon/label auto-resolved from i18n */}
+ {/* Icon/label auto-resolved from i18n */}
 </Button>
 ```
 
@@ -575,14 +576,14 @@ executeCommand("compose.kitApp.addType", "compose.sketchpad.app.kit.toolbar.addT
 ```tsx
 // Before
 interface ButtonProps {
-  id?: string;
-  // ...
+ id?: string;
+ // ...
 }
 
 // After
 interface ButtonProps {
-  id: string; // Required
-  // ...
+ id: string; // Required
+ // ...
 }
 ```
 
@@ -595,18 +596,18 @@ interface ButtonProps {
 ```tsx
 // Standard pattern
 <Button
-  id="compose.sketchpad.app.kit.createType"
-  onClick={() => {
-    const origin = "compose.sketchpad.app.kit.createType";
-    executeCommand("compose.kitApp.addType", origin, typeData);
-  }}
+ id="compose.sketchpad.app.kit.createType"
+ onClick={() => {
+  const origin = "compose.sketchpad.app.kit.createType";
+  executeCommand("compose.kitApp.addType", origin, typeData);
+ }}
 />;
 
 // Helper hook
 const useCommandExecutor = (id: string) => {
-  return (command: string, ...args: any[]) => {
-    executeCommand(command, id, ...args);
-  };
+ return (command: string, ...args: any[]) => {
+  executeCommand(command, id, ...args);
+ };
 };
 
 // Usage
@@ -637,26 +638,26 @@ const execute = useCommandExecutor("compose.sketchpad.app.kit.createType");
 
 ```tsx
 interface MyComponentProps {
-  id: string; // Required
-  // ... other props
+ id: string; // Required
+ // ... other props
 }
 
 export function MyComponent({ id, ...props }: MyComponentProps) {
-  const label = useLabel(id);
-  const execute = useCommandExecutor(id);
+ const label = useLabel(id);
+ const execute = useCommandExecutor(id);
 
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button id={id} onClick={() => execute("my.command", data)}>
-          {label}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>
-        <DescriptionTooltipContent id={id} />
-      </TooltipContent>
-    </Tooltip>
-  );
+ return (
+  <Tooltip>
+   <TooltipTrigger asChild>
+    <Button id={id} onClick={() => execute("my.command", data)}>
+     {label}
+    </Button>
+   </TooltipTrigger>
+   <TooltipContent>
+    <DescriptionTooltipContent id={id} />
+   </TooltipContent>
+  </Tooltip>
+ );
 }
 ```
 
@@ -757,6 +758,7 @@ The compose Sketchpad UI ID system is a well-architected solution for integratin
 ## Log
 
 ## Summary
+
 # Summary
 
 ""

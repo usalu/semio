@@ -5,7 +5,5 @@
   "description": "Flip per-object GLB mesh correction from -90deg to +90deg X so assets face up.",
   "summary": "Per-object GLB frame correction changed from rotation −π/2 to +π/2 about local X (OBJECT_MESH_FRAME_Z_UP_TO_Y_UP) so kit meshes face up instead of down; Vitest green.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪993974438a8647a8b022639d4632d4a7"
-  ]
+  "sessions": ["⚪993974438a8647a8b022639d4632d4a7"]
 }

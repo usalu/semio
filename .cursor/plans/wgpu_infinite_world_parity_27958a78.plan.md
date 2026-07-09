@@ -2,27 +2,27 @@
 name: Wgpu Infinite World Parity
 overview: Port chunking/view-radius streaming, refcounted object pooling, distance-based LOD, and the progressive world grid from the premigration `@semio-tech/infinite-world-r3f` engine into the Rust wgpu world canvas (`infinite/world/rs`), as generic opt-in infrastructure usable by every `world-3d` plugin.
 todos:
-  - id: ticket
-    content: Open ticket via repo MCP under goal puzzle3d/puzzle3dplay
-    status: completed
-  - id: phase1-math
-    content: Port LOD + progressive-grid pure math and floating_origin_rebase into kernel/3d/scene/rs/lib.rs with tests
-    status: completed
-  - id: phase2-chunking
-    content: Add chunk-key bucketing + hysteresis visibility, wire into World3dState/sync_world3d_state/render_world_3d
-    status: completed
-  - id: phase3-pooling
-    content: Add refcounted mesh pool tied to chunk load/unload; evict meshes/GPU cache at refcount zero
-    status: completed
-  - id: phase4-lod-grid-render
-    content: Resolve per-mesh LOD URLs; generate progressive grid line draws anchored at orbit target, excluded from ray-pick
-    status: completed
-  - id: phase5-schema-wiring
-    content: Add WorldLodRecord/WorldChunkingRecord/WorldMeshLodEntry to framework/core World3dScene; wire puzzle3d + cad plugins
-    status: completed
-  - id: phase5-tests-verify
-    content: Extend existing test modules, run cargo tests + wasm build + smoke plays, verify via console logs, close ticket
-    status: in_progress
+ - id: ticket
+   content: Open ticket via repo MCP under goal puzzle3d/puzzle3dplay
+   status: completed
+ - id: phase1-math
+   content: Port LOD + progressive-grid pure math and floating_origin_rebase into kernel/3d/scene/rs/lib.rs with tests
+   status: completed
+ - id: phase2-chunking
+   content: Add chunk-key bucketing + hysteresis visibility, wire into World3dState/sync_world3d_state/render_world_3d
+   status: completed
+ - id: phase3-pooling
+   content: Add refcounted mesh pool tied to chunk load/unload; evict meshes/GPU cache at refcount zero
+   status: completed
+ - id: phase4-lod-grid-render
+   content: Resolve per-mesh LOD URLs; generate progressive grid line draws anchored at orbit target, excluded from ray-pick
+   status: completed
+ - id: phase5-schema-wiring
+   content: Add WorldLodRecord/WorldChunkingRecord/WorldMeshLodEntry to framework/core World3dScene; wire puzzle3d + cad plugins
+   status: completed
+ - id: phase5-tests-verify
+   content: Extend existing test modules, run cargo tests + wasm build + smoke plays, verify via console logs, close ticket
+   status: in_progress
 isProject: false
 ---
 

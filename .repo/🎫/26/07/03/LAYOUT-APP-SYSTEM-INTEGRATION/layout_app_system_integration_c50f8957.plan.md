@@ -5,7 +5,6 @@ todos: []
 isProject: false
 ---
 
-
 # Layout App System Integration
 
 ## Current state (confirmed by reading the code)
@@ -21,6 +20,7 @@ Draw ([`draw/core/js/index.ts`](draw/core/js/index.ts)) already implements the e
 ## 1. Document commands — [`layout/core/js/internal.ts`](layout/core/js/internal.ts)
 
 Extend `LayoutCommand` (line 189) with:
+
 - `add_page` / inverse `remove_page` (spreadId, page snapshot)
 - `add_frame` / inverse `remove_frame` (pageId, frame snapshot)
 - `patch_frame_props` (objectId, before/after partial frame fields: fill, stroke, storyId content passthrough, linkId, wrapMode, columns)
@@ -68,5 +68,5 @@ Add factory helpers (mirroring Draw's `catalogueLayerFromKind`): `createDefaultF
 
 - Rebuild the `layout-rs` WASM package (`layout/rs/script.ts` build) after the Rust changes so `layout/react` and the framework host pick up the new `setHoveredId` binding.
 - Work happens inside a repo ticket per workspace rules (`ticket_open`/`ticket_close`), associated with the most fitting existing goal.
-</plan>
-<parameter name="todos">[{"id":"commands","content":"Add add_page/add_frame/patch_frame_props/patch_page_props commands + factories + apply/invert in layout/core/js/internal.ts"},{"id":"catalogue-document","content":"Add buildLayoutPlayCatalogueTree, frame rows in document tree, document drag controller in layout/core/js/index.ts"},{"id":"editable-inspector","content":"Rewrite buildLayoutPlayInspectorTree with editable input/select fields wired to patchPage/patchFrame"},{"id":"controller-commands","content":"Add addPage/addFrame/patchFrame/patchPage/setHover handlers + getHoveredId to LayoutPlayController"},{"id":"react-hover","content":"Implement pointerMove hit-testing and onHover/hoveredId plumbing in layout/react/index.tsx"},{"id":"rust-hover","content":"Thread hovered_id through wasm_session.rs/display.rs/engine.rs and render distinct hover stroke"},{"id":"framework-wiring","content":"Add Catalogue workbench tab, attach drag controller to Document panel, wire bidirectional hover in framework playground LayoutPlayHost"},{"id":"tests","content":"Extend existing in-source vitest/Rust test suites for all new behavior and run them"}]
+  </plan>
+  <parameter name="todos">[{"id":"commands","content":"Add add_page/add_frame/patch_frame_props/patch_page_props commands + factories + apply/invert in layout/core/js/internal.ts"},{"id":"catalogue-document","content":"Add buildLayoutPlayCatalogueTree, frame rows in document tree, document drag controller in layout/core/js/index.ts"},{"id":"editable-inspector","content":"Rewrite buildLayoutPlayInspectorTree with editable input/select fields wired to patchPage/patchFrame"},{"id":"controller-commands","content":"Add addPage/addFrame/patchFrame/patchPage/setHover handlers + getHoveredId to LayoutPlayController"},{"id":"react-hover","content":"Implement pointerMove hit-testing and onHover/hoveredId plumbing in layout/react/index.tsx"},{"id":"rust-hover","content":"Thread hovered_id through wasm_session.rs/display.rs/engine.rs and render distinct hover stroke"},{"id":"framework-wiring","content":"Add Catalogue workbench tab, attach drag controller to Document panel, wire bidirectional hover in framework playground LayoutPlayHost"},{"id":"tests","content":"Extend existing in-source vitest/Rust test suites for all new behavior and run them"}]

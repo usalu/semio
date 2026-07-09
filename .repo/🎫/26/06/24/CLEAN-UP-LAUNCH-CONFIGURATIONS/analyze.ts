@@ -1,8 +1,8 @@
-import { readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, writeFileSync } from "fs";
+import { join } from "path";
 
-const launchJsonPath = join(process.cwd(), '.vscode', 'launch.json');
-const content = readFileSync(launchJsonPath, 'utf8');
+const launchJsonPath = join(process.cwd(), ".vscode", "launch.json");
+const content = readFileSync(launchJsonPath, "utf8");
 
 interface ConfigBlock {
   name: string;
@@ -17,13 +17,13 @@ const configs: ConfigBlock[] = [];
 // Parse character by character
 let idx = content.indexOf('"configurations"');
 if (idx === -1) {
-  console.error('Could not find configurations key in launch.json');
+  console.error("Could not find configurations key in launch.json");
   process.exit(1);
 }
 
-idx = content.indexOf('[', idx);
+idx = content.indexOf("[", idx);
 if (idx === -1) {
-  console.error('Could not find configurations opening [');
+  console.error("Could not find configurations opening [");
   process.exit(1);
 }
 
@@ -34,13 +34,13 @@ let inBlockComment = false;
 let currentBlockStart = -1;
 let cleanTextBuffer: string[] = [];
 
-let currentRegion = 'default';
+let currentRegion = "default";
 
 // Keep track of regions by reading lines leading up to configurations
-const linesBefore = content.substring(0, idx).split('\n');
+const linesBefore = content.substring(0, idx).split("\n");
 for (const line of linesBefore) {
   const trimmed = line.trim();
-  if (trimmed.startsWith('// #region')) {
+  if (trimmed.startsWith("// #region")) {
     currentRegion = trimmed;
   }
 }
@@ -48,15 +48,19 @@ for (const line of linesBefore) {
 let i = idx + 1;
 while (i < content.length) {
   const char = content[i];
-  const nextChar = content[i + 1] || '';
-  const prevChar = content[i - 1] || '';
+  const nextChar = content[i + 1] || "";
+  const prevChar = content[i - 1] || "";
 
   if (inLineComment) {
-    if (char === '\n') {
+    if (char === "\n") {
       inLineComment = false;
-      const lineText = content.substring(idx + 1, i).split('\n').pop() || '';
+      const lineText =
+        content
+          .substring(idx + 1, i)
+          .split("\n")
+          .pop() || "";
       const trimmedLine = lineText.trim();
-      if (trimmedLine.startsWith('// #region')) {
+      if (trimmedLine.startsWith("// #region")) {
         currentRegion = trimmedLine;
       }
     }
@@ -65,7 +69,7 @@ while (i < content.length) {
   }
 
   if (inBlockComment) {
-    if (char === '*' && nextChar === '/') {
+    if (char === "*" && nextChar === "/") {
       inBlockComment = false;
       i += 2;
       continue;
@@ -76,17 +80,17 @@ while (i < content.length) {
 
   if (inString) {
     if (braceDepth > 0) cleanTextBuffer.push(char);
-    if (char === '"' && prevChar !== '\\') inString = false;
+    if (char === '"' && prevChar !== "\\") inString = false;
     i++;
     continue;
   }
 
-  if (char === '/' && nextChar === '/') {
+  if (char === "/" && nextChar === "/") {
     inLineComment = true;
     i += 2;
     continue;
   }
-  if (char === '/' && nextChar === '*') {
+  if (char === "/" && nextChar === "*") {
     inBlockComment = true;
     i += 2;
     continue;
@@ -98,19 +102,19 @@ while (i < content.length) {
     continue;
   }
 
-  if (char === '{') {
+  if (char === "{") {
     if (braceDepth === 0) {
       currentBlockStart = i;
       cleanTextBuffer = [];
     }
     braceDepth++;
     cleanTextBuffer.push(char);
-  } else if (char === '}') {
+  } else if (char === "}") {
     cleanTextBuffer.push(char);
     braceDepth--;
     if (braceDepth === 0 && currentBlockStart !== -1) {
       const rawText = content.substring(currentBlockStart, i + 1);
-      const cleanJson = cleanTextBuffer.join('');
+      const cleanJson = cleanTextBuffer.join("");
       try {
         const parsed = JSON.parse(cleanJson);
         configs.push({
@@ -131,7 +135,7 @@ while (i < content.length) {
     }
   }
 
-  if (braceDepth === 0 && char === ']') break;
+  if (braceDepth === 0 && char === "]") break;
   i++;
 }
 
@@ -139,11 +143,11 @@ console.log(`Parsed ${configs.length} configurations.`);
 
 // Normalize commands to detect semantic duplicates
 const normalizeCommand = (cmd: string): string => {
-  if (!cmd) return '';
+  if (!cmd) return "";
   let normalized = cmd.trim();
-  normalized = normalized.replace(/^bun run dev --/, 'bun ./script.ts dev');
-  normalized = normalized.replace(/^bun run/, 'bun');
-  normalized = normalized.replace(/\.\/script\.ts/, 'script.ts');
+  normalized = normalized.replace(/^bun run dev --/, "bun ./script.ts dev");
+  normalized = normalized.replace(/^bun run/, "bun");
+  normalized = normalized.replace(/\.\/script\.ts/, "script.ts");
   return normalized;
 };
 
@@ -153,32 +157,22 @@ const seenNames = new Set<string>();
 const seenCommands = new Set<string>();
 
 for (const config of configs) {
-  const name = config.name || '';
-  const command = config.command || '';
+  const name = config.name || "";
+  const command = config.command || "";
   const normCommand = normalizeCommand(command);
-  
+
   // 1. Filter out tests / validations
-  if (
-    name.includes('🧪') ||
-    name.includes('validate') ||
-    name.toLowerCase().includes('test') ||
-    (command && (command.includes('test') || command.includes('validate')))
-  ) {
+  if (name.includes("🧪") || name.includes("validate") || name.toLowerCase().includes("test") || (command && (command.includes("test") || command.includes("validate")))) {
     continue;
   }
   // 2. Filter out extension / module specific setups
   if (
-    name.includes('🎗️vscode') ||
-    name.includes('vscodeintegrated') ||
-    (command && (
-      command.includes('vscode') ||
-      command.includes('flow-module') ||
-      command.includes('flow-core:wasm') ||
-      command.includes('dag-core:wasm')
-    )) ||
-    name.includes('flow🦀module') ||
-    name.includes('flow🦀rs') ||
-    name.includes('dag🦀rs')
+    name.includes("🎗️vscode") ||
+    name.includes("vscodeintegrated") ||
+    (command && (command.includes("vscode") || command.includes("flow-module") || command.includes("flow-core:wasm") || command.includes("dag-core:wasm"))) ||
+    name.includes("flow🦀module") ||
+    name.includes("flow🦀rs") ||
+    name.includes("dag🦀rs")
   ) {
     continue;
   }
@@ -203,16 +197,16 @@ const build: ConfigBlock[] = [];
 const publish: ConfigBlock[] = [];
 
 for (const config of toKeep) {
-  const name = config.name || '';
-  if (name.startsWith('⌨️')) {
+  const name = config.name || "";
+  if (name.startsWith("⌨️")) {
     keyboard.push(config);
-  } else if (name.startsWith('🖱️')) {
+  } else if (name.startsWith("🖱️")) {
     mouse.push(config);
-  } else if (name.startsWith('🛠️')) {
+  } else if (name.startsWith("🛠️")) {
     dev.push(config);
-  } else if (name.startsWith('📦')) {
+  } else if (name.startsWith("📦")) {
     build.push(config);
-  } else if (name.startsWith('⬆️')) {
+  } else if (name.startsWith("⬆️")) {
     publish.push(config);
   } else {
     dev.push(config);
@@ -222,8 +216,8 @@ for (const config of toKeep) {
 // Helper to strip emojis for clean alphabetical comparison
 const stripEmojis = (str: string): string => {
   return str
-    .replace(/[\u2000-\u32FF]|[\ud800-\udbff][\udc00-\udfff]/g, '')
-    .replace(/[^a-zA-Z0-9\s]/g, '')
+    .replace(/[\u2000-\u32FF]|[\ud800-\udbff][\udc00-\udfff]/g, "")
+    .replace(/[^a-zA-Z0-9\s]/g, "")
     .trim();
 };
 
@@ -231,7 +225,7 @@ const stripEmojis = (str: string): string => {
 const sortAlphabetically = (a: ConfigBlock, b: ConfigBlock) => {
   const nameA = stripEmojis(a.name);
   const nameB = stripEmojis(b.name);
-  return nameA.localeCompare(nameB, 'en', { sensitivity: 'base', numeric: true });
+  return nameA.localeCompare(nameB, "en", { sensitivity: "base", numeric: true });
 };
 
 keyboard.sort(sortAlphabetically);
@@ -256,35 +250,38 @@ const addRegion = (regionName: string, items: ConfigBlock[]) => {
     item.parsed.presentation.order = (index + 1) * 10;
 
     const stringified = JSON.stringify(item.parsed, null, 2);
-    const indented = stringified.split('\n').map(line => '    ' + line).join('\n');
-    formattedConfigs.push(indented + ',');
+    const indented = stringified
+      .split("\n")
+      .map((line) => "    " + line)
+      .join("\n");
+    formattedConfigs.push(indented + ",");
   });
-  formattedConfigs.push('    // #endregion');
+  formattedConfigs.push("    // #endregion");
 };
 
-addRegion('⌨️ Keyboard', keyboard);
-addRegion('🖱️ Mouse', mouse);
-addRegion('🛠️ Dev', dev);
-addRegion('📦 Build', build);
-addRegion('⬆️ Publish', publish);
+addRegion("⌨️ Keyboard", keyboard);
+addRegion("🖱️ Mouse", mouse);
+addRegion("🛠️ Dev", dev);
+addRegion("📦 Build", build);
+addRegion("⬆️ Publish", publish);
 
 // Join configurations and handle trailing commas
-let configsStr = formattedConfigs.join('\n');
+let configsStr = formattedConfigs.join("\n");
 
-const configLines = configsStr.split('\n');
+const configLines = configsStr.split("\n");
 for (let j = configLines.length - 1; j >= 0; j--) {
-  if (configLines[j].trim() === '}' || configLines[j].trim() === '},') {
-    if (configLines[j].endsWith(',')) {
+  if (configLines[j].trim() === "}" || configLines[j].trim() === "},") {
+    if (configLines[j].endsWith(",")) {
       configLines[j] = configLines[j].slice(0, -1);
     }
     break;
   }
 }
-configsStr = configLines.join('\n');
+configsStr = configLines.join("\n");
 
 const suffix = content.substring(i); // From the closing ']' to the end of the file
 
-const finalContent = prefix + '\n' + configsStr + '\n  ' + suffix;
+const finalContent = prefix + "\n" + configsStr + "\n  " + suffix;
 
-writeFileSync(launchJsonPath, finalContent, 'utf8');
-console.log('Successfully wrote updated launch.json.');
+writeFileSync(launchJsonPath, finalContent, "utf8");
+console.log("Successfully wrote updated launch.json.");

@@ -5,7 +5,5 @@
   "description": "Add handle semantic handleKind per handle and central ordered compatibility pairs (fromKind,toKind). Empty list = no restriction. WASM host filters link snap and commit for incompatible pairs. Wire through BoardCanvas and descriptor JSON.",
   "summary": "Added optional handleKind on handles (descriptor JSON handleKind, fixture handleKind/handle_kind) and host-level ordered compatibility pairs handle_link_compat_pairs. Empty pair list preserves prior unrestricted linking; non-empty list gates nearest_link_snap_handle_world and try_commit_link_edge. Exposed WASM setHandleLinkCompatJson, BoardRenderer.setHandleLinkCompatibility, and BoardCanvas handleLinkCompatibility prop. Rust host tests cover reject vs accept; Vitest covers declarative handleKind sync.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪020f9c73a10e4778b249856c9903f4e0"
-  ]
+  "sessions": ["⚪020f9c73a10e4778b249856c9903f4e0"]
 }

@@ -666,10 +666,7 @@
           "tool_input": {
             "__tool_use_purpose": "Close the ticket with summary of what was done",
             "summary": "Successfully opened ticket \"Finish Kiro CLI and MCP Setup for Devcontainer\" under goal aioptimizedrepo/sandboxedrepo/zerotouchdevcontainer with client kiro-cli and LLM sonnet-4-5. Ticket created at .repo/🎫/26/03/30/FINISH-KIRO-CLI-AND-MCP-SETUP-FOR-DEVCONTAINER with session ⚪b2754da88e7b49c3909eb59473da9529. Session tracked at .repo/⚡/🤖/26/03/30/kiro-92009/session.json with client kiro-cli and checkpoint 9f7fe6084ea2a4eccc2fd12cf7634adc769b1801.",
-            "files": [
-              ".repo/🎫/26/03/30/FINISH-KIRO-CLI-AND-MCP-SETUP-FOR-DEVCONTAINER/ticket.json",
-              ".repo/🎫/26/03/30/FINISH-KIRO-CLI-AND-MCP-SETUP-FOR-DEVCONTAINER/important.md"
-            ]
+            "files": [".repo/🎫/26/03/30/FINISH-KIRO-CLI-AND-MCP-SETUP-FOR-DEVCONTAINER/ticket.json", ".repo/🎫/26/03/30/FINISH-KIRO-CLI-AND-MCP-SETUP-FOR-DEVCONTAINER/important.md"]
           }
         }
       },
@@ -715,9 +712,7 @@
           "tool_input": {
             "__tool_use_purpose": "Close the ticket with the ticket.json as the file",
             "no_management": true,
-            "files": [
-              ".repo/🎫/26/03/30/FINISH-KIRO-CLI-AND-MCP-SETUP-FOR-DEVCONTAINER/ticket.json"
-            ],
+            "files": [".repo/🎫/26/03/30/FINISH-KIRO-CLI-AND-MCP-SETUP-FOR-DEVCONTAINER/ticket.json"],
             "summary": "Successfully opened ticket \"Finish Kiro CLI and MCP Setup for Devcontainer\" under goal aioptimizedrepo/sandboxedrepo/zerotouchdevcontainer with client kiro-cli and LLM sonnet-4-5. Ticket created at .repo/🎫/26/03/30/FINISH-KIRO-CLI-AND-MCP-SETUP-FOR-DEVCONTAINER with session ⚪b2754da88e7b49c3909eb59473da9529. Session tracked at .repo/⚡/🤖/26/03/30/kiro-92009/session.json."
           }
         }
@@ -795,9 +790,7 @@
           "tool_name": "@repo/ticket_close",
           "tool_input": {
             "__tool_use_purpose": "Close the ticket with proper file path format",
-            "files": [
-              ".devcontainer/post-create.sh"
-            ],
+            "files": [".devcontainer/post-create.sh"],
             "no_management": true,
             "summary": "Successfully opened and confirmed ticket \"Finish Kiro CLI and MCP Setup for Devcontainer\" under goal aioptimizedrepo/sandboxedrepo/zerotouchdevcontainer with client kiro-cli and LLM sonnet-4-5. Ticket path: .repo/🎫/26/03/30/FINISH-KIRO-CLI-AND-MCP-SETUP-FOR-DEVCONTAINER. Session: ⚪b2754da88e7b49c3909eb59473da9529."
           }
@@ -821,9 +814,7 @@
           "tool_name": "@repo/ticket_close",
           "tool_input": {
             "__tool_use_purpose": "Close the ticket with proper file path format",
-            "files": [
-              ".devcontainer/post-create.sh"
-            ],
+            "files": [".devcontainer/post-create.sh"],
             "no_management": true,
             "summary": "Successfully opened and confirmed ticket \"Finish Kiro CLI and MCP Setup for Devcontainer\" under goal aioptimizedrepo/sandboxedrepo/zerotouchdevcontainer with client kiro-cli and LLM sonnet-4-5. Ticket path: .repo/🎫/26/03/30/FINISH-KIRO-CLI-AND-MCP-SETUP-FOR-DEVCONTAINER. Session: ⚪b2754da88e7b49c3909eb59473da9529."
           },

@@ -37,7 +37,5 @@
     ".repo/🎫/26/05/14/NEO4J-DEVCONTAINER-SETUP/ticket.json"
   ],
   "goal": "🎯aioptimizedrepo🎯sandboxedrepo🎯zerotouchdevcontainer",
-  "sessions": [
-    "⚪codex-neo4j-devcontainer-setup"
-  ]
+  "sessions": ["⚪codex-neo4j-devcontainer-setup"]
 }

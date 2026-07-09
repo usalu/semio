@@ -16,11 +16,12 @@ Research of the Design app detail panel system in Sketchpad. Full analysis of ho
 
 ```tsx
 export const PiecesSection: FC = () => {
-  return <PiecesSectionForm />;
+ return <PiecesSectionForm />;
 };
 ```
 
 `PiecesSectionForm` (line 4628) does the heavy lifting:
+
 - Reads `useDesignAppSelection()` to get `selection.pieces`
 - Computes `knownSelectablePieceIds` from design pieces + included designs
 - Resolves `selectedPieceIds` via `resolveSelectionEntryGuidByKnownIds`
@@ -39,7 +40,7 @@ useEffect(() => {
   if (appType !== "design") return;
   // ... compute selection state
   removeSection("details", ...); // clear all previous sections
-  
+
   if (!hasSelection) {
     addSection("details", { id: "...design.properties", content: <DesignSection /> });
   } else if (hasPortSelected) {
@@ -59,6 +60,7 @@ useEffect(() => {
 ```
 
 Key behavior:
+
 - Sections are added/removed via `useAddPanelSection`/`useRemovePanelSection` from `PanelSectionProvider` context
 - The effect runs when `selection` changes (it's a dependency)
 - Each section is wrapped in `KitScopeProvider` + `DesignScopeProvider`
@@ -68,16 +70,16 @@ Key behavior:
 
 ```tsx
 const PanelTabContent: FC<{ sections: PanelSection[] }> = ({ sections }) => {
-  const sortedSections = [...sections].sort((a, b) => (a.order || 0) - (b.order || 0));
-  return (
-    <TreeStateProvider>
-      <Tree>
-        {sortedSections.map((section, index) => (
-          <PanelTabSectionItem key={section.id} section={section} defaultOpen={section.defaultOpen ?? index === 0} />
-        ))}
-      </Tree>
-    </TreeStateProvider>
-  );
+ const sortedSections = [...sections].sort((a, b) => (a.order || 0) - (b.order || 0));
+ return (
+  <TreeStateProvider>
+   <Tree>
+    {sortedSections.map((section, index) => (
+     <PanelTabSectionItem key={section.id} section={section} defaultOpen={section.defaultOpen ?? index === 0} />
+    ))}
+   </Tree>
+  </TreeStateProvider>
+ );
 };
 ```
 
@@ -86,6 +88,7 @@ const PanelTabContent: FC<{ sections: PanelSection[] }> = ({ sections }) => {
 ### 4. How the Detail Panel Becomes Visible (Sketchpad.tsx:17345-17410)
 
 In `LayoutWrapper`:
+
 - `detailsSections = usePanelSections("details")` reads all registered detail sections
 - `sectionsByKind[PanelKind.DETAILS] = detailsSections`
 - A `useEffect` maps `panelConfigs[appType]` panels to side panel tabs
@@ -96,6 +99,7 @@ In `LayoutWrapper`:
 ### 5. Is PiecesSection Conditionally Rendered?
 
 YES. `PiecesSection` is only added to the details panel when:
+
 - `appType === "design"` (the effect guards with `if (appType !== "design") return;`)
 - `hasPieces === true` (at least one piece GUID resolves to a known piece in the design)
 - `hasPortSelected === false` (if a port/connector is selected, ConnectorSection takes priority)
@@ -117,11 +121,13 @@ When pieces ARE selected, `PiecesSection` is added with `specificity: 30, order:
 ### 7. Potential Issues
 
 **A. No issues with visibility/rendering logic** — The wiring is correct. If a piece is selected:
+
 - The selection state updates
 - The useEffect adds a PiecesSection
 - The detail panel displays it
 
 **B. Possible data resolution issue** — `PiecesSectionForm` has complex fallback logic (lines 4643-4697) that could fail to resolve pieces if:
+
 - `usePiecesFromIds()` returns objects with `type.name === "unknown"`
 - The fallback to `directPiecesMap.get(pieceGuid)` fails because the piece isn't in `design.pieces`
 - This would cause `pieces` to be empty → form shows nothing or no data

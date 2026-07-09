@@ -26,9 +26,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "unstaged"
-            ]
+            "sourceControlState": ["unstaged"]
           },
           "tool_use_id": "call_I9g8SKtkBpk1pESa1nB5FQ8b__vscode-1776699985451",
           "cwd": "c:\\git\\compose"
@@ -165,9 +163,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "unstaged"
-            ]
+            "sourceControlState": ["unstaged"]
           },
           "tool_response": "",
           "tool_use_id": "call_I9g8SKtkBpk1pESa1nB5FQ8b__vscode-1776699985451",
@@ -195,9 +191,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "unstaged"
-            ]
+            "sourceControlState": ["unstaged"]
           },
           "tool_response": "",
           "tool_use_id": "call_I9g8SKtkBpk1pESa1nB5FQ8b__vscode-1776699985451",
@@ -895,9 +889,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0fd35d3c-7c9e-46ee-a633-aab0730f108c.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\rs\\src\\lib.rs"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\rs\\src\\lib.rs"]
           },
           "tool_use_id": "call_Rh5UxlI1aCy7N1Ks9ryMgtle__vscode-1776699985459",
           "cwd": "c:\\git\\compose"
@@ -951,9 +943,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0fd35d3c-7c9e-46ee-a633-aab0730f108c.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\rs\\src\\lib.rs"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\rs\\src\\lib.rs"]
           },
           "tool_response": "",
           "tool_use_id": "call_Rh5UxlI1aCy7N1Ks9ryMgtle__vscode-1776699985459",
@@ -1039,9 +1029,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0fd35d3c-7c9e-46ee-a633-aab0730f108c.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\rs\\src\\lib.rs"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\rs\\src\\lib.rs"]
           },
           "tool_response": "",
           "tool_use_id": "call_Rh5UxlI1aCy7N1Ks9ryMgtle__vscode-1776699985459",
@@ -3493,10 +3481,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Consolidated compose/rs into a single physical src/lib.rs file by inlining every former root module, io backend, wasm surface, and in-crate test module. Removed all superseded Rust source and test files so src/lib.rs is now the only Rust source file in the crate. Fixed the wasm promise return type in kitToJson and adjusted two test expectations to match current validation behavior. Verification completed with cargo check, cargo test (75 passed), and an isolated cargo check --target wasm32-unknown-unknown using a clean Cargo home to bypass a preexisting broken global wasm rustflags config.",
-            "files": [
-              "compose/rs/src/lib.rs",
-              "compose/rs/src"
-            ],
+            "files": ["compose/rs/src/lib.rs", "compose/rs/src"],
             "path": "26/04/21/CONSOLIDATE-COMPOSE-RS-SRC-INTO-SINGLE-LIB-FILE"
           },
           "tool_use_id": "call_rFSjqZv1TKPmMJZtzlqhtKPY__vscode-1776699985483",
@@ -3524,10 +3509,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Consolidated compose/rs into a single physical src/lib.rs file by inlining every former root module, io backend, wasm surface, and in-crate test module. Removed all superseded Rust source and test files so src/lib.rs is now the only Rust source file in the crate. Fixed the wasm promise return type in kitToJson and adjusted two test expectations to match current validation behavior. Verification completed with cargo check, cargo test (75 passed), and an isolated cargo check --target wasm32-unknown-unknown using a clean Cargo home to bypass a preexisting broken global wasm rustflags config.",
-            "files": [
-              "compose/rs/src/lib.rs",
-              "compose/rs/src"
-            ],
+            "files": ["compose/rs/src/lib.rs", "compose/rs/src"],
             "path": "26/04/21/CONSOLIDATE-COMPOSE-RS-SRC-INTO-SINGLE-LIB-FILE"
           },
           "tool_use_id": "call_rFSjqZv1TKPmMJZtzlqhtKPY__vscode-1776699985483",
@@ -3555,10 +3537,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Consolidated compose/rs into a single physical src/lib.rs file by inlining every former root module, io backend, wasm surface, and in-crate test module. Removed all superseded Rust source and test files so src/lib.rs is now the only Rust source file in the crate. Fixed the wasm promise return type in kitToJson and adjusted two test expectations to match current validation behavior. Verification completed with cargo check, cargo test (75 passed), and an isolated cargo check --target wasm32-unknown-unknown using a clean Cargo home to bypass a preexisting broken global wasm rustflags config.",
-            "files": [
-              "compose/rs/src/lib.rs",
-              "compose/rs/src"
-            ],
+            "files": ["compose/rs/src/lib.rs", "compose/rs/src"],
             "path": "26/04/21/CONSOLIDATE-COMPOSE-RS-SRC-INTO-SINGLE-LIB-FILE"
           },
           "tool_response": "[🎫consolidatecomposerssrcintosinglelibfile](repo://ticket/🎫consolidatecomposerssrcintosinglelibfile) - `closed` - `closed 1 hour from now`\n",
@@ -3587,10 +3566,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Consolidated compose/rs into a single physical src/lib.rs file by inlining every former root module, io backend, wasm surface, and in-crate test module. Removed all superseded Rust source and test files so src/lib.rs is now the only Rust source file in the crate. Fixed the wasm promise return type in kitToJson and adjusted two test expectations to match current validation behavior. Verification completed with cargo check, cargo test (75 passed), and an isolated cargo check --target wasm32-unknown-unknown using a clean Cargo home to bypass a preexisting broken global wasm rustflags config.",
-            "files": [
-              "compose/rs/src/lib.rs",
-              "compose/rs/src"
-            ],
+            "files": ["compose/rs/src/lib.rs", "compose/rs/src"],
             "path": "26/04/21/CONSOLIDATE-COMPOSE-RS-SRC-INTO-SINGLE-LIB-FILE"
           },
           "tool_response": "[🎫consolidatecomposerssrcintosinglelibfile](repo://ticket/🎫consolidatecomposerssrcintosinglelibfile) - `closed` - `closed 1 hour from now`\n",

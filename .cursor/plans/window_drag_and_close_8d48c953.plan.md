@@ -2,21 +2,21 @@
 name: window drag and close
 overview: Fix shared window-management so close removes the window instance (no errors / no revert) and drag-docking + template-drop splitting work consistently across all UIs (GIS map, CAD play, puzzle 3d), plus an empty-shell notice pointing to the Display panel for restore.
 todos:
-  - id: mode-close-intent
-    content: Add onWindowClose to ModeProps and call it from Mode.closeWindow; handle last-window active state (ui/react/index.tsx)
-    status: completed
-  - id: shell-remove-instance
-    content: Add handleWindowClose in ShellModeCanvas to filter instances + update shellLayout + active window; pass onWindowClose to Mode (framework renderer)
-    status: completed
-  - id: nullable-active
-    content: Widen onActiveWindowChange/activeWindowId to allow null through Mode, ShellModeCanvas, and platform handleActiveWindowChange
-    status: completed
-  - id: empty-notice
-    content: Render empty-shell notice in Mode pointing to Display panel restore + drag-in; add translation label
-    status: completed
-  - id: verify-all-uis
-    content: Verify close + drag-dock + Display template-drop splitting + layout restore behave identically in GIS map, CAD play, puzzle 3d; fix any per-instance binding gaps; remove [DEBUG] logs
-    status: completed
+ - id: mode-close-intent
+   content: Add onWindowClose to ModeProps and call it from Mode.closeWindow; handle last-window active state (ui/react/index.tsx)
+   status: completed
+ - id: shell-remove-instance
+   content: Add handleWindowClose in ShellModeCanvas to filter instances + update shellLayout + active window; pass onWindowClose to Mode (framework renderer)
+   status: completed
+ - id: nullable-active
+   content: Widen onActiveWindowChange/activeWindowId to allow null through Mode, ShellModeCanvas, and platform handleActiveWindowChange
+   status: completed
+ - id: empty-notice
+   content: Render empty-shell notice in Mode pointing to Display panel restore + drag-in; add translation label
+   status: completed
+ - id: verify-all-uis
+   content: Verify close + drag-dock + Display template-drop splitting + layout restore behave identically in GIS map, CAD play, puzzle 3d; fix any per-instance binding gaps; remove [DEBUG] logs
+   status: completed
 isProject: false
 ---
 
@@ -42,8 +42,6 @@ flowchart TD
   instances["instances UNCHANGED (still has closed id)"] --> reconcile
   reconcile --> readd["reconcileWindows re-adds closed window -> revert + errors"]
 ```
-
-
 
 ## Fix
 
@@ -91,4 +89,3 @@ Confirm runtime behaviour with temporary `[DEBUG]` logs in `closeWindow` / `hand
 
 - Work inside a repo MCP ticket (open or reopen) before editing; keep any temp artifacts under the ticket folder.
 - Edit existing files only, using regions; no new files.
-

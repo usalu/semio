@@ -5,11 +5,5 @@
   "description": "Implement proximity connect: when dragging a node with no incident edges, overlapping another node's bounds shows a wire between nearest compatible handles (normal/detail/micro LOD only); release commits edge. Disabled in minimap and overview LOD.",
   "summary": "Node-drag proximity connect was missing: only link-drag pointer-up could emit proximityConnect. BoardHost now tracks proximity_pair on DragNodes (normal/detail/micro LOD, single unconnected node): overlapping node bounds pick the nearest compatible free handle pair via handles_link_compatible_for_drag in either direction (same rule engine as indirect/link), preview rubber wire during drag, commit proximityConnect on pointer-up. Tests: board_host_node_drag_proximity_connect_overlapping_compatible_handles, board_host_node_drag_skips_proximity_when_moving_node_has_incident_edge. cargo test -p elements_board --lib: 78 passed; vitest @elements/board: 75 passed; wasm pkg rebuilt.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪e80ef43ea64e47c5a4b9b52a1b31e67b",
-    "⚪eeafb1b5e6ad42759a79bb86d7eacd26",
-    "⚪e1ca0b9d3a2543709d2f34d0ff0f5773",
-    "⚪12a36ed49c8146fd9d32a1b2c48b1bdf",
-    "⚪b3ae5bdeb20543aa953c4cc825c64283"
-  ]
+  "sessions": ["⚪e80ef43ea64e47c5a4b9b52a1b31e67b", "⚪eeafb1b5e6ad42759a79bb86d7eacd26", "⚪e1ca0b9d3a2543709d2f34d0ff0f5773", "⚪12a36ed49c8146fd9d32a1b2c48b1bdf", "⚪b3ae5bdeb20543aa953c4cc825c64283"]
 }

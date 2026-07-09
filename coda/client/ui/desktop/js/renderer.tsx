@@ -2529,9 +2529,7 @@ function buildCodaDocumentPanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
     type: "section",
     id: "coda.document.validations",
     label: "Validations",
-    children: validationItems.length
-      ? validationItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command }))
-      : [{ type: "text", value: "No validation report loaded" }],
+    children: validationItems.length ? validationItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command })) : [{ type: "text", value: "No validation report loaded" }],
   });
   const tree = uiDeclarativeSectionsToTree(sections);
   return { ...tree, selectedIds: snap.selection ? [snap.selection.id] : [] };
@@ -2559,17 +2557,13 @@ function buildCodaCataloguePanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
       type: "section",
       id: "coda.catalogue.frameworks",
       label: `Frameworks (${frameworkItems.length})`,
-      children: frameworkItems.length
-        ? frameworkItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command }))
-        : [{ type: "text", value: "(none)" }],
+      children: frameworkItems.length ? frameworkItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command })) : [{ type: "text", value: "(none)" }],
     },
     {
       type: "section",
       id: "coda.catalogue.properties",
       label: `Properties (${propertyItems.length})`,
-      children: propertyItems.length
-        ? propertyItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command }))
-        : [{ type: "text", value: "(none)" }],
+      children: propertyItems.length ? propertyItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command })) : [{ type: "text", value: "(none)" }],
     },
   ]);
 }
@@ -2626,9 +2620,7 @@ function buildCodaInspectionPanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
       },
     });
   }
-  return uiDeclarativeSectionsToTree([
-    { type: "section", id: "coda.inspection.selection", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children },
-  ]);
+  return uiDeclarativeSectionsToTree([{ type: "section", id: "coda.inspection.selection", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children }]);
 }
 
 /** @emoji 🎛 Coda shell controller: single selection, page routing, MCP tool bridge. */
@@ -2687,14 +2679,7 @@ function registerCodaShellBodies(): void {
 }
 
 function buildCodaAppRuntime(controller: CodaShellController): AppRuntime {
-  const app = new AppRuntime(
-    CODA_APP_ID,
-    "Coda",
-    undefined,
-    controller,
-    createTabStackLayout(["main"], ["Main"]) as never,
-    [new WindowKindRuntime("main", "Main", CODA_BODY_MAIN)],
-  );
+  const app = new AppRuntime(CODA_APP_ID, "Coda", undefined, controller, createTabStackLayout(["main"], ["Main"]) as never, [new WindowKindRuntime("main", "Main", CODA_BODY_MAIN)]);
   app.defaultModeId = "explore";
   app.addMode(new ModeRuntime("explore", "Explore"));
   app.panelTabs = [

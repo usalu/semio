@@ -5,14 +5,8 @@
   "label": "Circle",
   "interaction": {
     "spatialGroundPick": true,
-    "pickDisabledStates": [
-      "idle",
-      "committed"
-    ],
-    "groundPointerMoveStates": [
-      "center_of_circle",
-      "radius"
-    ],
+    "pickDisabledStates": ["idle", "committed"],
+    "groundPointerMoveStates": ["center_of_circle", "radius"],
     "heightDragStates": [],
     "verticalRodStates": [],
     "heightConfirmState": null,
@@ -55,11 +49,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        0
-                      ]
+                      "value": [0, 0, 0]
                     }
                   },
                   {
@@ -294,11 +284,7 @@
             "text": "Center of circle",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -401,11 +387,7 @@
             "text": "Radius",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -501,9 +483,7 @@
     ]
   },
   "commit": {
-    "fromStates": [
-      "committed"
-    ],
+    "fromStates": ["committed"],
     "operation": {
       "kind": "action",
       "action": "command.finish",

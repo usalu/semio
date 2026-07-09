@@ -445,9 +445,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/sites/play/vite.config.ts"
-              ],
+              "files": ["compose/sites/play/vite.config.ts"],
               "summary": "Fixed Vite dependency optimization errors in compose play site. Added `@playwright/test`, `playwright`, and `playwright-core` to `optimizeDeps.exclude` in `vite.config.ts`. The root cause was that `@semio-tech/compose-sketchpad/index.tsx` imports from `@playwright/test` (both type imports and dynamic test imports), causing Vite's esbuild pre-bundler to scan `playwright-core` which has unresolvable `chromium-bidi` imports."
             },
             "mcp_tool_name": "ticket_close"
@@ -537,9 +535,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/sites/play/vite.config.ts"
-              ],
+              "files": ["compose/sites/play/vite.config.ts"],
               "no_github": true,
               "path": "2026/03/23/FIX-PLAYWRIGHT-CORE-BUNDLE-ERRORS-IN-PLAY-SITE",
               "summary": "Fixed Vite dependency optimization errors in compose play site. Added `@playwright/test`, `playwright`, and `playwright-core` to `optimizeDeps.exclude` in `vite.config.ts`. Root cause: `@semio-tech/compose-sketchpad/index.tsx` imports from `@playwright/test` (type imports + dynamic test imports), causing Vite's esbuild pre-bundler to scan `playwright-core` which has unresolvable `chromium-bidi` imports. Verified dev server starts cleanly with no errors."
@@ -568,9 +564,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/sites/play/vite.config.ts"
-              ],
+              "files": ["compose/sites/play/vite.config.ts"],
               "no_github": true,
               "path": "26/03/23/FIX-PLAYWRIGHT-CORE-BUNDLE-ERRORS-IN-PLAY-SITE",
               "summary": "Fixed Vite dependency optimization errors in compose play site. Added `@playwright/test`, `playwright`, and `playwright-core` to `optimizeDeps.exclude` in `vite.config.ts`. Root cause: `@semio-tech/compose-sketchpad/index.tsx` imports from `@playwright/test` (type imports + dynamic test imports), causing Vite's esbuild pre-bundler to scan `playwright-core` which has unresolvable `chromium-bidi` imports. Verified dev server starts cleanly with no errors."
@@ -600,9 +594,7 @@
             "mcp_result": "[🎫fixplaywrightcorebundleerrorsinplaysite](repo://y/00/m/00/d/00/tk/FIX-PLAYWRIGHT-CORE-BUNDLE-ERRORS-IN-PLAY-SITE) - `closed` - `closed now`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/sites/play/vite.config.ts"
-              ],
+              "files": ["compose/sites/play/vite.config.ts"],
               "no_github": true,
               "path": "26/03/23/FIX-PLAYWRIGHT-CORE-BUNDLE-ERRORS-IN-PLAY-SITE",
               "summary": "Fixed Vite dependency optimization errors in compose play site. Added `@playwright/test`, `playwright`, and `playwright-core` to `optimizeDeps.exclude` in `vite.config.ts`. Root cause: `@semio-tech/compose-sketchpad/index.tsx` imports from `@playwright/test` (type imports + dynamic test imports), causing Vite's esbuild pre-bundler to scan `playwright-core` which has unresolvable `chromium-bidi` imports. Verified dev server starts cleanly with no errors."

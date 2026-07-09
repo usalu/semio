@@ -26,9 +26,7 @@
           "model": "default",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -57,9 +55,7 @@
           "tool_use_id": "tool_81583f8b-130c-4e38-a253-9a02a658993",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -86,9 +82,7 @@
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -119,9 +113,7 @@
           "tool_use_id": "tool_81583f8b-130c-4e38-a253-9a02a658993",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -147,9 +139,7 @@
           "model": "default",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -181,9 +171,7 @@
           "cwd": "",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -210,9 +198,7 @@
           "sandbox": false,
           "hook_event_name": "beforeShellExecution",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -240,9 +226,7 @@
           "sandbox": false,
           "hook_event_name": "afterShellExecution",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -276,9 +260,7 @@
           "cwd": "",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -304,9 +286,7 @@
           "model": "default",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -335,9 +315,7 @@
           "tool_use_id": "tool_a30aba80-5276-44e8-8f62-744aa9bc26d",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -364,9 +342,7 @@
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -397,9 +373,7 @@
           "tool_use_id": "tool_a30aba80-5276-44e8-8f62-744aa9bc26d",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -425,9 +399,7 @@
           "model": "default",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -453,9 +425,7 @@
           "model": "default",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -482,16 +452,12 @@
             "ticket": "diagramstorybookdesigndiffselectionstories",
             "client": "cursor-chat",
             "summary": "Added compose/Diagram stories: Design (no diff, selection off), Diff (previewDiff + diffEnabled), PieceSelection and ConnectionSelection using DiagramPieceSelection/DiagramConnectionSelection wrappers. Shared diagramFrame helper; removed duplicate PiecesOnlySelection/ConnectionsOnlySelection.",
-            "files": [
-              "compose/ui/.storybook/stories/Diagram.stories.tsx"
-            ]
+            "files": ["compose/ui/.storybook/stories/Diagram.stories.tsx"]
           },
           "tool_use_id": "fa10de92-30ad-4bd6-9e63-1259f5b03ef8",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -518,9 +484,7 @@
           "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -547,9 +511,7 @@
             "ticket": "diagramstorybookdesigndiffselectionstories",
             "client": "cursor-chat",
             "summary": "Added compose/Diagram stories: Design (no diff, selection off), Diff (previewDiff + diffEnabled), PieceSelection and ConnectionSelection using DiagramPieceSelection/DiagramConnectionSelection wrappers. Shared diagramFrame helper; removed duplicate PiecesOnlySelection/ConnectionsOnlySelection.",
-            "files": [
-              "compose/ui/.storybook/stories/Diagram.stories.tsx"
-            ]
+            "files": ["compose/ui/.storybook/stories/Diagram.stories.tsx"]
           },
           "error_message": "MCP error -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/00/ticket.json",
           "failure_type": "error",
@@ -558,9 +520,7 @@
           "is_interrupt": false,
           "hook_event_name": "postToolUseFailure",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -586,9 +546,7 @@
           "model": "default",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -615,16 +573,12 @@
             "ticket": "🎫diagramstorybookdesigndiffselectionstories",
             "client": "cursor-chat",
             "summary": "Added compose/Diagram stories: Design (no diff, selection off), Diff (previewDiff + diffEnabled), PieceSelection and ConnectionSelection using DiagramPieceSelection/DiagramConnectionSelection wrappers. Shared diagramFrame helper; removed duplicate PiecesOnlySelection/ConnectionsOnlySelection.",
-            "files": [
-              "compose/ui/.storybook/stories/Diagram.stories.tsx"
-            ]
+            "files": ["compose/ui/.storybook/stories/Diagram.stories.tsx"]
           },
           "tool_use_id": "b87d4f45-8055-45f3-8b96-a4356bbd029b",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -651,9 +605,7 @@
           "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -680,9 +632,7 @@
             "ticket": "🎫diagramstorybookdesigndiffselectionstories",
             "client": "cursor-chat",
             "summary": "Added compose/Diagram stories: Design (no diff, selection off), Diff (previewDiff + diffEnabled), PieceSelection and ConnectionSelection using DiagramPieceSelection/DiagramConnectionSelection wrappers. Shared diagramFrame helper; removed duplicate PiecesOnlySelection/ConnectionsOnlySelection.",
-            "files": [
-              "compose/ui/.storybook/stories/Diagram.stories.tsx"
-            ]
+            "files": ["compose/ui/.storybook/stories/Diagram.stories.tsx"]
           },
           "error_message": "MCP error -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/00/ticket.json",
           "failure_type": "error",
@@ -691,9 +641,7 @@
           "is_interrupt": false,
           "hook_event_name": "postToolUseFailure",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -719,9 +667,7 @@
           "model": "default",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -750,9 +696,7 @@
           "tool_use_id": "3b0a225c-3fed-4e56-8ee3-c05008c3afae",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -779,9 +723,7 @@
           "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -809,9 +751,7 @@
           "duration": 36038.042,
           "hook_event_name": "afterMCPExecution",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -842,9 +782,7 @@
           "tool_use_id": "3b0a225c-3fed-4e56-8ee3-c05008c3afae",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -870,9 +808,7 @@
           "model": "default",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -899,16 +835,12 @@
             "ticket": "🎯aioptimizedrepo🎫diagramstorybookdesigndiffselectionstories",
             "client": "cursor-chat",
             "summary": "Added compose/Diagram stories: Design (no diff, selection off), Diff (previewDiff + diffEnabled), PieceSelection and ConnectionSelection using DiagramPieceSelection/DiagramConnectionSelection wrappers. Shared diagramFrame helper; removed duplicate PiecesOnlySelection/ConnectionsOnlySelection.",
-            "files": [
-              "compose/ui/.storybook/stories/Diagram.stories.tsx"
-            ]
+            "files": ["compose/ui/.storybook/stories/Diagram.stories.tsx"]
           },
           "tool_use_id": "dfd6c091-106c-4f8a-a91a-577e58b0e0a7",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -935,9 +867,7 @@
           "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -964,9 +894,7 @@
             "ticket": "🎯aioptimizedrepo🎫diagramstorybookdesigndiffselectionstories",
             "client": "cursor-chat",
             "summary": "Added compose/Diagram stories: Design (no diff, selection off), Diff (previewDiff + diffEnabled), PieceSelection and ConnectionSelection using DiagramPieceSelection/DiagramConnectionSelection wrappers. Shared diagramFrame helper; removed duplicate PiecesOnlySelection/ConnectionsOnlySelection.",
-            "files": [
-              "compose/ui/.storybook/stories/Diagram.stories.tsx"
-            ]
+            "files": ["compose/ui/.storybook/stories/Diagram.stories.tsx"]
           },
           "error_message": "MCP error -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/00/ticket.json",
           "failure_type": "error",
@@ -975,9 +903,7 @@
           "is_interrupt": false,
           "hook_event_name": "postToolUseFailure",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -1003,9 +929,7 @@
           "model": "default",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -1030,9 +954,7 @@
           "text": "\nHere’s what was added to `compose/ui` Diagram Storybook.\n\n### New stories (`compose/Diagram`)\n\n1. **`Design`** — `ComposeDiagram` with **`diffEnabled: false`**, no `designDiff`, **`selectionEnabled: false`** so you only see the flattened design.\n2. **`Diff`** — same kit/design as elsewhere, with **`designDiff: previewDiff`**, **`diffEnabled: true`**, **`selectionEnabled: false`** so the story is about diff visualization only.\n3. **`PieceSelection`** — uses the **`PieceSelection`** wrapper (`DiagramPieceSelection` import) so **only pieces** are selectable; default selection is `modifiedPiece`.\n4. **`ConnectionSelection`** — uses the **`ConnectionSelection`** wrapper (`DiagramConnectionSelection` import) so **only connections** are selectable; default selection is `modifiedConnection`.\n\nShared layout is centralized in **`diagramFrame`**, and the old **`PiecesOnlySelection`** / **`ConnectionsOnlySelection`** stories were removed in favor of these wrappers so the stories match the real constrained APIs.\n\n```99:148:/workspaces/semio/compose/ui/.storybook/stories/Diagram.stories.tsx\n// #region 🔖DesignDiffSelectionVariants\n\n/** Renders the flat design only: no diff overlay, selection off. */\nexport const Design: Story = {\n  args: {\n    kit: metabolismKit,\n    designGuid: nakaginCapsuleTowerDesignGuid,\n    diffEnabled: false,\n    selectionEnabled: false,\n    title: \"Design\",\n  },\n  render: (args) =\u003e diagramFrame(\u003cDiagram {...args} /\u003e),\n};\n\n/** Shows added/removed/modified pieces and connections from `previewDiff`. */\nexport const Diff: Story = {\n  args: {\n    kit: metabolismKit,\n    designGuid: nakaginCapsuleTowerDesignGuid,\n    designDiff: previewDiff,\n    diffEnabled: true,\n    selectionEnabled: false,\n    title: \"Diff\",\n  },\n  render: (args) =\u003e diagramFrame(\u003cDiagram {...args} /\u003e),\n};\n\n/** Constrained `PieceSelection` wrapper: only pieces are selectable. */\nexport const PieceSelection: PieceSelectionStory = {\n  // ...\n};\n\n/** Constrained `ConnectionSelection` wrapper: only connections are selectable. */\nexport const ConnectionSelection: ConnectionSelectionStory = {\n  // ...\n};\n```\n\n**Checks:** IDE lints are clean for this file. An Nx Storybook build was attempted; it failed in **`@elements/ui`** with pre-existing “multiple exports named default” in a bundled `index.tsx`, not because of this Diagram stories change.\n\n**Ticket:** Opened via repo MCP as `🎯aioptimizedrepo🎫diagramstorybookdesigndiffselectionstories`. `ticket_close` returned “ticket not found” (likely a local `.repo/🎫/…` path mismatch in this environment), so you may need to close it manually in your repo tooling if it stays open.",
           "hook_event_name": "afterAgentResponse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -1058,9 +980,7 @@
           "loop_count": 0,
           "hook_event_name": "stop",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }
@@ -1089,9 +1009,7 @@
           "final_status": "completed",
           "hook_event_name": "sessionEnd",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/f24dba58-9c7d-4e06-af1d-e5c83e65d599/f24dba58-9c7d-4e06-af1d-e5c83e65d599.jsonl"
         }

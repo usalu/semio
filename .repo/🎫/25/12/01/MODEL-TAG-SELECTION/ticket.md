@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The design and type apps were rendering placeholder geometry (boxes) instead of actual 3D models. The model loading infrastructure existed (`TypeMesh` and `PieceMesh` components) but there was no UI for selecting model tags to filter which model variant is displayed.
@@ -42,6 +43,7 @@ The design and type apps were rendering placeholder geometry (boxes) instead of 
 ## Log
 
 ## Summary
+
 # Summary
 
 Add model tag selection in footer for design and type apps

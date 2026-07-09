@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - Sketchpad store workflows, design panels, and helper elements still emitted tactical console logging for uploads, downloads, special commands, viewport centering, and layout persistence, leaving a noisy runtime surface.
@@ -25,6 +26,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Cleanup logs for diagnostic traces

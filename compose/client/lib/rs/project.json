@@ -23,9 +23,7 @@
         "{workspaceRoot}/Cargo.toml",
         "{workspaceRoot}/Cargo.lock"
       ],
-      "outputs": [
-        "{projectRoot}/pkg"
-      ],
+      "outputs": ["{projectRoot}/pkg"],
       "options": {
         "cwd": "compose/client/lib/rs",
         "command": "bun ./script.ts wasm"
@@ -33,9 +31,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "wasm"
-      ],
+      "dependsOn": ["wasm"],
       "inputs": [
         "{projectRoot}/Cargo.toml",
         "{projectRoot}/Cargo.lock",
@@ -48,9 +44,7 @@
         "{workspaceRoot}/Cargo.toml",
         "{workspaceRoot}/Cargo.lock"
       ],
-      "outputs": [
-        "{projectRoot}/pkg"
-      ],
+      "outputs": ["{projectRoot}/pkg"],
       "options": {
         "cwd": "compose/client/lib/rs",
         "command": "bun ./script.ts build",

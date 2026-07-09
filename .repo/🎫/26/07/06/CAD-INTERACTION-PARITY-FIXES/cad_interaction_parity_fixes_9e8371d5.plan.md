@@ -1,40 +1,40 @@
 ---
 name: CAD Interaction Parity Fixes
-overview: "Fix the CAD plugin's incomplete premigration-parity work: viewport hover/selection are wired to commands the CAD plugin never implemented, world references are broken by a missing dev-server asset route and missing interactivity wiring, construction live-preview only covers 2 of 9 interaction types, and several other items marked \"completed\" in the prior parity ticket (primitive-level tree selection, browser file load, model-transformation live-data bypass) are actually stubs or broken."
+overview: 'Fix the CAD plugin''s incomplete premigration-parity work: viewport hover/selection are wired to commands the CAD plugin never implemented, world references are broken by a missing dev-server asset route and missing interactivity wiring, construction live-preview only covers 2 of 9 interaction types, and several other items marked "completed" in the prior parity ticket (primitive-level tree selection, browser file load, model-transformation live-data bypass) are actually stubs or broken.'
 todos:
-  - id: preview-all-interactions
-    content: Generalize preview_display_items in interaction.rs to cover all is_two_point_height/is_base_height interactions, extend tests
-    status: completed
-  - id: fix-cad-fixture-vite
-    content: Register cadFixtureVitePlugin in framework/product/os/dev/js/vite.config.ts so reference image stops 404ing
-    status: completed
-  - id: wire-reference-interactivity
-    content: Add opacity + hoveredId to world-3d-host types, wire WorldReferenceLayer onSelect/onHover to setReferenceSelection/referenceHover, fix setReferenceSelection to resolve model-definition-id from pane
-    status: completed
-  - id: add-sethover-handler
-    content: Add setHover command handler in cad/plugin/rs/lib.rs mirroring puzzle3d pattern
-    status: completed
-  - id: add-worldpick-handler
-    content: Add worldPick command handler resolving pane+index to object id, merging into selected_object_ids
-    status: completed
-  - id: fix-tree-selection-sync
-    content: Fix build_document_tree to compute correct per-pane selected_ids and highlighted_ids instead of hardcoded shape suffix / always-None
-    status: completed
-  - id: fix-primitive-selection
-    content: Add selected_primitive_id/kind to CadPlayRuntime, fix setPrimitiveSelection handler, surface in inspector
-    status: completed
-  - id: wire-request-file-open
-    content: Add requestFileOpen op handling in os-shell.tsx with browser file input helper
-    status: completed
-  - id: remove-transformation-bypass
-    content: Remove forest-example static bypass in apply_transformation_to_envelope, extend test to cover live-data transformation on forest example
-    status: completed
-  - id: inspector-rotation-field
-    content: Add rotation/orientation field to object inspector patch handling, extend multi-selection mixed-value test
-    status: completed
-  - id: verify-e2e
-    content: Rebuild cad wasm, cargo test, manual browser verification of all fixes on hexagonal-cut-concrete-forest-left example
-    status: completed
+ - id: preview-all-interactions
+   content: Generalize preview_display_items in interaction.rs to cover all is_two_point_height/is_base_height interactions, extend tests
+   status: completed
+ - id: fix-cad-fixture-vite
+   content: Register cadFixtureVitePlugin in framework/product/os/dev/js/vite.config.ts so reference image stops 404ing
+   status: completed
+ - id: wire-reference-interactivity
+   content: Add opacity + hoveredId to world-3d-host types, wire WorldReferenceLayer onSelect/onHover to setReferenceSelection/referenceHover, fix setReferenceSelection to resolve model-definition-id from pane
+   status: completed
+ - id: add-sethover-handler
+   content: Add setHover command handler in cad/plugin/rs/lib.rs mirroring puzzle3d pattern
+   status: completed
+ - id: add-worldpick-handler
+   content: Add worldPick command handler resolving pane+index to object id, merging into selected_object_ids
+   status: completed
+ - id: fix-tree-selection-sync
+   content: Fix build_document_tree to compute correct per-pane selected_ids and highlighted_ids instead of hardcoded shape suffix / always-None
+   status: completed
+ - id: fix-primitive-selection
+   content: Add selected_primitive_id/kind to CadPlayRuntime, fix setPrimitiveSelection handler, surface in inspector
+   status: completed
+ - id: wire-request-file-open
+   content: Add requestFileOpen op handling in os-shell.tsx with browser file input helper
+   status: completed
+ - id: remove-transformation-bypass
+   content: Remove forest-example static bypass in apply_transformation_to_envelope, extend test to cover live-data transformation on forest example
+   status: completed
+ - id: inspector-rotation-field
+   content: Add rotation/orientation field to object inspector patch handling, extend multi-selection mixed-value test
+   status: completed
+ - id: verify-e2e
+   content: Rebuild cad wasm, cargo test, manual browser verification of all fixes on hexagonal-cut-concrete-forest-left example
+   status: completed
 isProject: false
 ---
 
@@ -55,8 +55,6 @@ flowchart LR
     CadHandler -->|"worldHover: handled"| HoveredId[hovered_object_id]
     CadHandler -->|"setSelection: handled"| SelectedIds[selected_object_ids]
 ```
-
-
 
 Only the tree-driven commands (`worldHover`, `setSelection`) exist, so hovering/clicking directly on objects in the viewport is a complete no-op, while hovering/selecting via the Document tab works one-way (tree to 3D, not 3D to tree, since `build_document_tree` never reflects live selection/hover back into `selected_ids`/`highlighted_ids`).
 
@@ -92,7 +90,7 @@ Extend the existing `preview_display_items`/interaction tests in `cad/plugin/rs/
 
 Two independent bugs:
 
-**a) Reference image 404s in the dev server.** [ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts) defines `cadFixtureVitePlugin` (serves `cad/fixture/`* at `/cad-fixture/*`), but [framework/product/os/dev/js/vite.config.ts](framework/product/os/dev/js/vite.config.ts) (the config actually used by `bun run dev:cad`) never imports or spreads it into its `plugins` array - only `uiAssetsVitePlugin`/`puzzle3dMeshesVitePlugin` are included. `CAD_CONCRETE_FOREST_REFERENCE_URL` (`/cad-fixture/concrete-forest-reference.png`) therefore 404s, so the reference plane has no texture. Fix: import `cadFixtureVitePlugin` and add `...cadFixtureVitePlugin(repoRoot)` to the plugins array.
+**a) Reference image 404s in the dev server.** [ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts) defines `cadFixtureVitePlugin` (serves `cad/fixture/`_ at `/cad-fixture/_`), but [framework/product/os/dev/js/vite.config.ts](framework/product/os/dev/js/vite.config.ts) (the config actually used by `bun run dev:cad`) never imports or spreads it into its `plugins`array - only`uiAssetsVitePlugin`/`puzzle3dMeshesVitePlugin`are included.`CAD_CONCRETE_FOREST_REFERENCE_URL` (`/cad-fixture/concrete-forest-reference.png`) therefore 404s, so the reference plane has no texture. Fix: import `cadFixtureVitePlugin`and add`...cadFixtureVitePlugin(repoRoot)` to the plugins array.
 
 **b) References are non-interactive even when they load.** The shared `WorldReferenceLayer` (`infinite/world/r3f/index.tsx`) fully supports `selectedIds`, `hoveredId`, `onSelect`, `onHover`, `opacity` - but [world-3d-host.tsx](framework/renderer/react/components/world-3d-host.tsx) (~line 1740) only passes `references`, dropping `opacity` (not even in the `WorldReferenceRecord` type) and never wiring hover/select. CAD already has working handlers for this (`referenceHover` at `cad/plugin/rs/lib.rs:2541`, `setReferenceSelection` at `lib.rs:2528`) but nothing in the 3D view calls them.
 
@@ -135,13 +133,13 @@ Fix: use `cad_all_objects`/`cad_find_object_pane` to resolve each selected/hover
 
 Fix: add a browser-native file-open helper (hidden `<input type="file">` + `file.text()`, same tier of complexity as the existing `downloadMediaExport` anchor-download helper) and a case in the op loop that calls it, then re-dispatches `handleCommand` with `op.importCommand` and the file contents as args.
 
-*(Not in scope: the wasm32 `wgpu` native renderer's `request_file_open` stub at `framework/renderer/wgpu/rs/lib.rs:12946` still returns `None` - that's a different renderer target not used by the current CAD dev workflow; flagging for a follow-up ticket rather than bundling a second, differently-shaped async file-picker implementation here.)*
+_(Not in scope: the wasm32 `wgpu` native renderer's `request_file_open` stub at `framework/renderer/wgpu/rs/lib.rs:12946` still returns `None` - that's a different renderer target not used by the current CAD dev workflow; flagging for a follow-up ticket rather than bundling a second, differently-shaped async file-picker implementation here.)_
 
 ## 7. Model transformations ignore live pane data for the forest example
 
-`apply_transformation_to_envelope` (`lib.rs:627-689`) has a special case: when `active_example_id` is the forest example, it substitutes pre-baked static fixture objects for the target pane instead of deriving from the *current* source-pane objects via `run_derive_from_geometry`/`from_building`/`classic`. This means running a transfer on the flagship demo silently discards any live edits. Fix: remove the forest-example bypass so `applyTransformation` always calls the real derive functions using the live source pane, for every example. Extend `derive_transformation_populates_energy_pane` (or add a sibling test) to assert this against the forest example specifically (edit a Shape object, run `from_geometry`, assert the Energy pane reflects the edit rather than the static fixture).
+`apply_transformation_to_envelope` (`lib.rs:627-689`) has a special case: when `active_example_id` is the forest example, it substitutes pre-baked static fixture objects for the target pane instead of deriving from the _current_ source-pane objects via `run_derive_from_geometry`/`from_building`/`classic`. This means running a transfer on the flagship demo silently discards any live edits. Fix: remove the forest-example bypass so `applyTransformation` always calls the real derive functions using the live source pane, for every example. Extend `derive_transformation_populates_energy_pane` (or add a sibling test) to assert this against the forest example specifically (edit a Shape object, run `from_geometry`, assert the Energy pane reflects the edit rather than the static fixture).
 
-*(Not in scope: there is no Shape-to-Building transformation spec at all (`CAD_TRANSFORMATION_SPECS` only has `from_geometry`/`from_building`/`classic`), and adding one requires new geometric-classification design work comparable to `run_derive_from_geometry`. Recommend a dedicated follow-up ticket rather than speculative kernel work bundled here.)*
+_(Not in scope: there is no Shape-to-Building transformation spec at all (`CAD_TRANSFORMATION_SPECS` only has `from_geometry`/`from_building`/`classic`), and adding one requires new geometric-classification design work comparable to `run_derive_from_geometry`. Recommend a dedicated follow-up ticket rather than speculative kernel work bundled here.)_
 
 ## 8. Multi-selection inspector polish
 
@@ -162,4 +160,3 @@ Fix: add a browser-native file-open helper (hidden `<input type="file">` + `file
 - Rebuild CAD wasm plugin, restart `bun run dev:cad`.
 - Manual: load forest example, confirm reference image renders in all 4 panes; hover an object in viewport (tint changes) and confirm Document tree row highlights; click an object in viewport and confirm Document tree row selects (and vice versa); run each construct tool (Box, Wall, Slab, Column, External Wall) and confirm a live preview outline follows the cursor at every step; run "Load" toolbar action and confirm a native file picker opens and re-imports; run a transfer (e.g. "-> From Geometry") after editing a Shape object on the forest example and confirm the target pane reflects the edit.
 - Continue working inside ticket `26/07/06/CAD-WGPU-PREMIGRATION-PARITY` (reopen via `ticket_reopen`).
-

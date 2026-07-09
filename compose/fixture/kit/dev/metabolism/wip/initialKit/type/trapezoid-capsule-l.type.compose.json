@@ -1,337 +1,337 @@
 {
-    "id": "4cc5a1ea-0fde-4af4-81c5-afa069e6fef5",
-    "name": "Trapezoid Capsule L",
-    "representations": {
-        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-        "items": [
-            {
-                "id": "489f13d9-a1e0-452a-a929-1777cb4897be",
-                "name": "trapezoid-capsule_L",
-                "tags": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": [
-                        {
-                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        }
-                    ]
-                },
-                "file": {
-                    "id": "47c9485b-6532-4901-9e86-4321d1ef0d67",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            },
-            {
-                "id": "19a6854c-d456-4af7-8652-2f220c3d7a4e",
-                "name": "trapezoid-capsule_L",
-                "tags": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": [
-                        {
-                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        },
-                        {
-                            "id": "0ad9e8a0-03d1-4a8b-b32d-a402daab76e6",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        }
-                    ]
-                },
-                "file": {
-                    "id": "4911d33c-7fed-47ad-90f1-0fe247d71726",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            },
-            {
-                "id": "ab8d8553-cf71-429d-80c2-85a15417ccec",
-                "name": "trapezoid-capsule_L",
-                "tags": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": [
-                        {
-                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        },
-                        {
-                            "id": "14c03d58-6241-48e8-9ffe-89fc268124d2",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        }
-                    ]
-                },
-                "file": {
-                    "id": "80389eca-ce2b-4530-b9ca-f56ecacca8aa",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            },
-            {
-                "id": "7b8e2e57-6699-40ed-938e-8018dd9518f6",
-                "name": "b8c26ca1c9",
-                "tags": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": [
-                        {
-                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        },
-                        {
-                            "id": "0ad9e8a0-03d1-4a8b-b32d-a402daab76e6",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        },
-                        {
-                            "id": "7ac3ae3a-6a4d-4824-8c40-d315755fbb66",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        }
-                    ]
-                },
-                "file": {
-                    "id": "65a40426-58f8-4e60-88ad-67169551fbdb",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            },
-            {
-                "id": "eca73e2e-9483-428e-bf0e-a8b686d63707",
-                "name": "a6e1f7d736",
-                "tags": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": [
-                        {
-                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        },
-                        {
-                            "id": "14c03d58-6241-48e8-9ffe-89fc268124d2",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        },
-                        {
-                            "id": "7ac3ae3a-6a4d-4824-8c40-d315755fbb66",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        }
-                    ]
-                },
-                "file": {
-                    "id": "b3811fb5-ff47-4255-9b04-ee3d28757506",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            },
-            {
-                "id": "5d657ab5-f813-40dc-b0aa-86bff6d12cbc",
-                "name": "trapezoid-capsule_L",
-                "tags": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": [
-                        {
-                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        },
-                        {
-                            "id": "7181512a-ee78-493d-963f-d224ba8b2b91",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        }
-                    ]
-                },
-                "file": {
-                    "id": "a151f391-2454-49e9-9328-f608ef0a4293",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            }
-        ]
-    },
-    "connectors": {
-        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-        "items": [
-            {
-                "id": "89f82ae7-f4d8-4bb9-b0e6-21f294067b98",
-                "t": 0,
-                "point": {
-                    "x": -0.42,
-                    "y": 0,
-                    "z": 0
-                },
-                "direction": {
-                    "x": 0.14780942,
-                    "y": -0.9890159,
-                    "z": 0
-                },
-                "description": "🩼 The middle of the main entrance door of the upper entrance floor.",
-                "port": {
-                    "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "mandatory": false,
-                "props": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": [
-                        {
-                            "id": "ad52e3d4-5254-4887-bbf2-791566aa0177",
-                            "quality": {
-                                "id": "897d53c2-dcc3-598a-acb3-ff641af00dae",
-                                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                            },
-                            "value": "",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        }
-                    ]
-                },
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            }
-        ]
-    },
-    "props": {
-        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-        "items": [
-            {
-                "id": "b64118a6-d2cb-4188-8d9e-73f762f87270",
-                "quality": {
-                    "id": "897d53c2-dcc3-598a-acb3-ff641af00dae",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "value": "side",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            },
-            {
-                "id": "cb757cf1-38ad-433e-9d5b-bad8bd8a1d8b",
-                "quality": {
-                    "id": "2b8403af-d98f-5dee-8cd4-200f00259960",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "value": "front",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            },
-            {
-                "id": "8df9c08d-ed19-4094-86bd-e7b7057ed753",
-                "quality": {
-                    "id": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "value": "2.5",
-                "unit": "m",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            },
-            {
-                "id": "c55978e5-dff2-478e-9a8b-9359bcd9bc15",
-                "quality": {
-                    "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "value": "7.19",
-                "unit": "m²",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            },
-            {
-                "id": "2e76f551-0177-4b5f-ba2b-2e346b37f6fc",
-                "quality": {
-                    "id": "c3326230-4951-5e08-9752-d934dbc5a88f",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "value": "68272",
-                "unit": "€",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            },
-            {
-                "id": "acf33050-5161-484b-aab6-22c7d4ca5988",
-                "quality": {
-                    "id": "64cc900f-72ec-5e7b-91af-78251b681bde",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "value": "323",
-                "unit": "kWh/a",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            },
-            {
-                "id": "5626ca9b-44b2-4c9d-a7fa-ca9986e87643",
-                "quality": {
-                    "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "value": "216",
-                "unit": "kWh/a",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            },
-            {
-                "id": "5907e706-cc7a-4271-a39c-09d2deb88b7c",
-                "quality": {
-                    "id": "dba0671e-04a8-5545-a083-eb28b44d3453",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "value": "216",
-                "unit": "kWh/a",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            },
-            {
-                "id": "1a339475-bcb2-4660-acb0-eabf50ef9c9d",
-                "quality": {
-                    "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "value": "10780",
-                "unit": "€/a",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            },
-            {
-                "id": "e93c7c55-56be-43a0-a1a1-70cde937252a",
-                "quality": {
-                    "id": "8ba1a60d-25af-52f0-8dca-515239be5c77",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "value": "862",
-                "unit": "€/a",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            },
-            {
-                "id": "6ebbede0-4365-42e0-9c69-7d60e751e1ad",
-                "quality": {
-                    "id": "7ed15c6b-b191-5da7-94a8-4443649d3593",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "value": "7186.53",
-                "unit": "kgCO2e",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            },
-            {
-                "id": "6bdd6dbe-72b4-4aa4-85a7-69248bcef4e1",
-                "quality": {
-                    "id": "d275c0f3-ca32-5d4f-bb0a-b376c227696d",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                },
-                "value": "",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            }
-        ]
-    },
-    "stock": 2147483647,
-    "virtual": false,
-    "unit": "m",
-    "createdAt": "2025-11-23T01:10:21.236Z",
-    "updatedAt": "2025-11-23T01:10:21.236Z",
-    "authors": {
-        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-        "items": [
-            {
-                "id": "e7e73238-aba8-4c87-a6ef-39bc3b2b8d82",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            }
-        ]
-    },
-    "icon": "icons/trapezoid-capsule_L.svg",
-    "image": "images/trapezoid-capsule_L.png",
-    "description": "🔑 An apartment capsule of the variant L with a balcony for one person. It has the entrance on theside and has the view to the front. It is mirrored compared to the normal one.",
-    "families": {
-        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-        "items": [
-            {
-                "id": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            }
-        ]
-    },
+  "id": "4cc5a1ea-0fde-4af4-81c5-afa069e6fef5",
+  "name": "Trapezoid Capsule L",
+  "representations": {
     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-    "typology": {
-        "id": "typology-capsule"
-    }
+    "items": [
+      {
+        "id": "489f13d9-a1e0-452a-a929-1777cb4897be",
+        "name": "trapezoid-capsule_L",
+        "tags": {
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+          "items": [
+            {
+              "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+          ]
+        },
+        "file": {
+          "id": "47c9485b-6532-4901-9e86-4321d1ef0d67",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "19a6854c-d456-4af7-8652-2f220c3d7a4e",
+        "name": "trapezoid-capsule_L",
+        "tags": {
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+          "items": [
+            {
+              "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+              "id": "0ad9e8a0-03d1-4a8b-b32d-a402daab76e6",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+          ]
+        },
+        "file": {
+          "id": "4911d33c-7fed-47ad-90f1-0fe247d71726",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "ab8d8553-cf71-429d-80c2-85a15417ccec",
+        "name": "trapezoid-capsule_L",
+        "tags": {
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+          "items": [
+            {
+              "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+              "id": "14c03d58-6241-48e8-9ffe-89fc268124d2",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+          ]
+        },
+        "file": {
+          "id": "80389eca-ce2b-4530-b9ca-f56ecacca8aa",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "7b8e2e57-6699-40ed-938e-8018dd9518f6",
+        "name": "b8c26ca1c9",
+        "tags": {
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+          "items": [
+            {
+              "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+              "id": "0ad9e8a0-03d1-4a8b-b32d-a402daab76e6",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+              "id": "7ac3ae3a-6a4d-4824-8c40-d315755fbb66",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+          ]
+        },
+        "file": {
+          "id": "65a40426-58f8-4e60-88ad-67169551fbdb",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "eca73e2e-9483-428e-bf0e-a8b686d63707",
+        "name": "a6e1f7d736",
+        "tags": {
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+          "items": [
+            {
+              "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+              "id": "14c03d58-6241-48e8-9ffe-89fc268124d2",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+              "id": "7ac3ae3a-6a4d-4824-8c40-d315755fbb66",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+          ]
+        },
+        "file": {
+          "id": "b3811fb5-ff47-4255-9b04-ee3d28757506",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "5d657ab5-f813-40dc-b0aa-86bff6d12cbc",
+        "name": "trapezoid-capsule_L",
+        "tags": {
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+          "items": [
+            {
+              "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+              "id": "7181512a-ee78-493d-963f-d224ba8b2b91",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+          ]
+        },
+        "file": {
+          "id": "a151f391-2454-49e9-9328-f608ef0a4293",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      }
+    ]
+  },
+  "connectors": {
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "items": [
+      {
+        "id": "89f82ae7-f4d8-4bb9-b0e6-21f294067b98",
+        "t": 0,
+        "point": {
+          "x": -0.42,
+          "y": 0,
+          "z": 0
+        },
+        "direction": {
+          "x": 0.14780942,
+          "y": -0.9890159,
+          "z": 0
+        },
+        "description": "🩼 The middle of the main entrance door of the upper entrance floor.",
+        "port": {
+          "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "mandatory": false,
+        "props": {
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+          "items": [
+            {
+              "id": "ad52e3d4-5254-4887-bbf2-791566aa0177",
+              "quality": {
+                "id": "897d53c2-dcc3-598a-acb3-ff641af00dae",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+              },
+              "value": "",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+          ]
+        },
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      }
+    ]
+  },
+  "props": {
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "items": [
+      {
+        "id": "b64118a6-d2cb-4188-8d9e-73f762f87270",
+        "quality": {
+          "id": "897d53c2-dcc3-598a-acb3-ff641af00dae",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "value": "side",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "cb757cf1-38ad-433e-9d5b-bad8bd8a1d8b",
+        "quality": {
+          "id": "2b8403af-d98f-5dee-8cd4-200f00259960",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "value": "front",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "8df9c08d-ed19-4094-86bd-e7b7057ed753",
+        "quality": {
+          "id": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "value": "2.5",
+        "unit": "m",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "c55978e5-dff2-478e-9a8b-9359bcd9bc15",
+        "quality": {
+          "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "value": "7.19",
+        "unit": "m²",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "2e76f551-0177-4b5f-ba2b-2e346b37f6fc",
+        "quality": {
+          "id": "c3326230-4951-5e08-9752-d934dbc5a88f",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "value": "68272",
+        "unit": "€",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "acf33050-5161-484b-aab6-22c7d4ca5988",
+        "quality": {
+          "id": "64cc900f-72ec-5e7b-91af-78251b681bde",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "value": "323",
+        "unit": "kWh/a",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "5626ca9b-44b2-4c9d-a7fa-ca9986e87643",
+        "quality": {
+          "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "value": "216",
+        "unit": "kWh/a",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "5907e706-cc7a-4271-a39c-09d2deb88b7c",
+        "quality": {
+          "id": "dba0671e-04a8-5545-a083-eb28b44d3453",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "value": "216",
+        "unit": "kWh/a",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "1a339475-bcb2-4660-acb0-eabf50ef9c9d",
+        "quality": {
+          "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "value": "10780",
+        "unit": "€/a",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "e93c7c55-56be-43a0-a1a1-70cde937252a",
+        "quality": {
+          "id": "8ba1a60d-25af-52f0-8dca-515239be5c77",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "value": "862",
+        "unit": "€/a",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "6ebbede0-4365-42e0-9c69-7d60e751e1ad",
+        "quality": {
+          "id": "7ed15c6b-b191-5da7-94a8-4443649d3593",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "value": "7186.53",
+        "unit": "kgCO2e",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      },
+      {
+        "id": "6bdd6dbe-72b4-4aa4-85a7-69248bcef4e1",
+        "quality": {
+          "id": "d275c0f3-ca32-5d4f-bb0a-b376c227696d",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        },
+        "value": "",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      }
+    ]
+  },
+  "stock": 2147483647,
+  "virtual": false,
+  "unit": "m",
+  "createdAt": "2025-11-23T01:10:21.236Z",
+  "updatedAt": "2025-11-23T01:10:21.236Z",
+  "authors": {
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "items": [
+      {
+        "id": "e7e73238-aba8-4c87-a6ef-39bc3b2b8d82",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      }
+    ]
+  },
+  "icon": "icons/trapezoid-capsule_L.svg",
+  "image": "images/trapezoid-capsule_L.png",
+  "description": "🔑 An apartment capsule of the variant L with a balcony for one person. It has the entrance on theside and has the view to the front. It is mirrored compared to the normal one.",
+  "families": {
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "items": [
+      {
+        "id": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      }
+    ]
+  },
+  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+  "typology": {
+    "id": "typology-capsule"
+  }
 }

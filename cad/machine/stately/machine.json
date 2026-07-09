@@ -13,13 +13,7 @@
         {
           "id": "selectHost",
           "final": false,
-          "selectionAccept": [
-            "vertex",
-            "edge",
-            "wire",
-            "face",
-            "solid"
-          ]
+          "selectionAccept": ["vertex", "edge", "wire", "face", "solid"]
         },
         {
           "id": "placeAnchor",
@@ -1017,9 +1011,7 @@
         {
           "id": "selectWire",
           "final": false,
-          "selectionAccept": [
-            "wire"
-          ]
+          "selectionAccept": ["wire"]
         },
         {
           "id": "setDistance",
@@ -1095,9 +1087,7 @@
         {
           "id": "selectSurface",
           "final": false,
-          "selectionAccept": [
-            "face"
-          ]
+          "selectionAccept": ["face"]
         },
         {
           "id": "setDistance",
@@ -1173,16 +1163,12 @@
         {
           "id": "selectA",
           "final": false,
-          "selectionAccept": [
-            "vertex"
-          ]
+          "selectionAccept": ["vertex"]
         },
         {
           "id": "selectB",
           "final": false,
-          "selectionAccept": [
-            "vertex"
-          ]
+          "selectionAccept": ["vertex"]
         },
         {
           "id": "ready",
@@ -1248,9 +1234,7 @@
         {
           "id": "selectFace",
           "final": false,
-          "selectionAccept": [
-            "face"
-          ]
+          "selectionAccept": ["face"]
         },
         {
           "id": "ready",
@@ -1870,18 +1854,12 @@
         {
           "id": "select_first_curve_to_chamfer",
           "final": false,
-          "selectionAccept": [
-            "edge",
-            "wire"
-          ]
+          "selectionAccept": ["edge", "wire"]
         },
         {
           "id": "select_second_curve_to_chamfer",
           "final": false,
-          "selectionAccept": [
-            "edge",
-            "wire"
-          ]
+          "selectionAccept": ["edge", "wire"]
         },
         {
           "id": "committed",
@@ -1937,11 +1915,7 @@
         {
           "id": "select_objects_to_explode",
           "final": false,
-          "selectionAccept": [
-            "wire",
-            "shell",
-            "solid"
-          ]
+          "selectionAccept": ["wire", "shell", "solid"]
         },
         {
           "id": "committed",
@@ -2007,18 +1981,12 @@
         {
           "id": "select_first_curve_to_fillet",
           "final": false,
-          "selectionAccept": [
-            "edge",
-            "wire"
-          ]
+          "selectionAccept": ["edge", "wire"]
         },
         {
           "id": "select_second_curve_to_fillet",
           "final": false,
-          "selectionAccept": [
-            "edge",
-            "wire"
-          ]
+          "selectionAccept": ["edge", "wire"]
         },
         {
           "id": "committed",
@@ -2074,11 +2042,7 @@
         {
           "id": "select_object_for_join",
           "final": false,
-          "selectionAccept": [
-            "edge",
-            "wire",
-            "face"
-          ]
+          "selectionAccept": ["edge", "wire", "face"]
         },
         {
           "id": "committed",
@@ -2144,21 +2108,12 @@
         {
           "id": "select_objects_to_split",
           "final": false,
-          "selectionAccept": [
-            "edge",
-            "wire",
-            "face",
-            "solid"
-          ]
+          "selectionAccept": ["edge", "wire", "face", "solid"]
         },
         {
           "id": "select_cutting_objects",
           "final": false,
-          "selectionAccept": [
-            "edge",
-            "wire",
-            "face"
-          ]
+          "selectionAccept": ["edge", "wire", "face"]
         },
         {
           "id": "committed",
@@ -2254,20 +2209,12 @@
         {
           "id": "select_cutting_objects",
           "final": false,
-          "selectionAccept": [
-            "edge",
-            "wire",
-            "face"
-          ]
+          "selectionAccept": ["edge", "wire", "face"]
         },
         {
           "id": "select_object_to_trim",
           "final": false,
-          "selectionAccept": [
-            "edge",
-            "wire",
-            "face"
-          ]
+          "selectionAccept": ["edge", "wire", "face"]
         },
         {
           "id": "committed",
@@ -2363,18 +2310,12 @@
         {
           "id": "select_surfaces_or_polysurfaces_to_subtract_from",
           "final": false,
-          "selectionAccept": [
-            "shell",
-            "solid"
-          ]
+          "selectionAccept": ["shell", "solid"]
         },
         {
           "id": "select_surfaces_or_polysurfaces_to_subtract_with",
           "final": false,
-          "selectionAccept": [
-            "shell",
-            "solid"
-          ]
+          "selectionAccept": ["shell", "solid"]
         },
         {
           "id": "committed",
@@ -2470,18 +2411,12 @@
         {
           "id": "select_first_set_of_surfaces_or_polysurfaces",
           "final": false,
-          "selectionAccept": [
-            "shell",
-            "solid"
-          ]
+          "selectionAccept": ["shell", "solid"]
         },
         {
           "id": "select_second_set",
           "final": false,
-          "selectionAccept": [
-            "shell",
-            "solid"
-          ]
+          "selectionAccept": ["shell", "solid"]
         },
         {
           "id": "committed",
@@ -2577,10 +2512,7 @@
         {
           "id": "select_surfaces_or_polysurfaces_to_union",
           "final": false,
-          "selectionAccept": [
-            "shell",
-            "solid"
-          ]
+          "selectionAccept": ["shell", "solid"]
         },
         {
           "id": "committed",
@@ -2838,10 +2770,7 @@
         {
           "id": "select_curves_to_extrude",
           "final": false,
-          "selectionAccept": [
-            "wire",
-            "edge"
-          ]
+          "selectionAccept": ["wire", "edge"]
         },
         {
           "id": "extrusion_distance",
@@ -2937,10 +2866,7 @@
         {
           "id": "select_curves_to_loft",
           "final": false,
-          "selectionAccept": [
-            "wire",
-            "edge"
-          ]
+          "selectionAccept": ["wire", "edge"]
         },
         {
           "id": "adjust_curve_seams",
@@ -3054,10 +2980,7 @@
         {
           "id": "select_curves_in_network",
           "final": false,
-          "selectionAccept": [
-            "wire",
-            "edge"
-          ]
+          "selectionAccept": ["wire", "edge"]
         },
         {
           "id": "networksrf_options_dialog",
@@ -3208,18 +3131,12 @@
         {
           "id": "select_rail",
           "final": false,
-          "selectionAccept": [
-            "wire",
-            "edge"
-          ]
+          "selectionAccept": ["wire", "edge"]
         },
         {
           "id": "select_cross_section_curves",
           "final": false,
-          "selectionAccept": [
-            "wire",
-            "edge"
-          ]
+          "selectionAccept": ["wire", "edge"]
         },
         {
           "id": "adjust_seams",
@@ -3343,26 +3260,17 @@
         {
           "id": "select_first_rail",
           "final": false,
-          "selectionAccept": [
-            "wire",
-            "edge"
-          ]
+          "selectionAccept": ["wire", "edge"]
         },
         {
           "id": "select_second_rail",
           "final": false,
-          "selectionAccept": [
-            "wire",
-            "edge"
-          ]
+          "selectionAccept": ["wire", "edge"]
         },
         {
           "id": "select_cross_section_curves",
           "final": false,
-          "selectionAccept": [
-            "wire",
-            "edge"
-          ]
+          "selectionAccept": ["wire", "edge"]
         },
         {
           "id": "sweep2_options_dialog",
@@ -3462,14 +3370,7 @@
         {
           "id": "select_objects_to_copy",
           "final": false,
-          "selectionAccept": [
-            "vertex",
-            "edge",
-            "wire",
-            "face",
-            "shell",
-            "solid"
-          ]
+          "selectionAccept": ["vertex", "edge", "wire", "face", "shell", "solid"]
         },
         {
           "id": "point_to_copy_from",
@@ -3685,14 +3586,7 @@
         {
           "id": "select_objects_to_mirror",
           "final": false,
-          "selectionAccept": [
-            "vertex",
-            "edge",
-            "wire",
-            "face",
-            "shell",
-            "solid"
-          ]
+          "selectionAccept": ["vertex", "edge", "wire", "face", "shell", "solid"]
         },
         {
           "id": "start_of_mirror_plane",
@@ -3798,14 +3692,7 @@
         {
           "id": "select_objects_to_move",
           "final": false,
-          "selectionAccept": [
-            "vertex",
-            "edge",
-            "wire",
-            "face",
-            "shell",
-            "solid"
-          ]
+          "selectionAccept": ["vertex", "edge", "wire", "face", "shell", "solid"]
         },
         {
           "id": "point_to_move_from",
@@ -4031,14 +3918,7 @@
         {
           "id": "select_objects_to_rotate",
           "final": false,
-          "selectionAccept": [
-            "vertex",
-            "edge",
-            "wire",
-            "face",
-            "shell",
-            "solid"
-          ]
+          "selectionAccept": ["vertex", "edge", "wire", "face", "shell", "solid"]
         },
         {
           "id": "center_of_rotation",
@@ -4174,14 +4054,7 @@
         {
           "id": "select_objects_to_scale",
           "final": false,
-          "selectionAccept": [
-            "vertex",
-            "edge",
-            "wire",
-            "face",
-            "shell",
-            "solid"
-          ]
+          "selectionAccept": ["vertex", "edge", "wire", "face", "shell", "solid"]
         },
         {
           "id": "origin_point",
@@ -4317,14 +4190,7 @@
         {
           "id": "select_objects_to_scale",
           "final": false,
-          "selectionAccept": [
-            "vertex",
-            "edge",
-            "wire",
-            "face",
-            "shell",
-            "solid"
-          ]
+          "selectionAccept": ["vertex", "edge", "wire", "face", "shell", "solid"]
         },
         {
           "id": "origin_point",

@@ -10,7 +10,7 @@ Fixed the Design app select tool setting bar names. The DesignSelectSettings com
 
 ## Changes
 
-- `compose/js/sketchpad/Design.tsx`: 
+- `compose/js/sketchpad/Design.tsx`:
   - Added `IntersectIcon` import
   - Rewrote `DesignSelectSettings` with correct IDs: `mode.additive`, `mode.subtractive`, `mode.intersect`, `shape.rectangular`, `shape.lasso`, `navigation.hand`
   - Added missing Intersect, Rectangular, Lasso, and Hand toggles

@@ -20,12 +20,7 @@ if (exportIdx < 0) throw new Error("puzzle2dAppRenderer export not found");
 const head = current.slice(0, exportIdx).trimEnd();
 const tail = current.slice(exportIdx);
 
-const importsPatch = head.includes("PlaygroundView")
-  ? head
-  : head.replace(
-      'import { PureSidePanelTabDefinition',
-      'import { type Playground, mountPlaygroundApp, PlaygroundView, PureSidePanelTabDefinition',
-    );
+const importsPatch = head.includes("PlaygroundView") ? head : head.replace("import { PureSidePanelTabDefinition", "import { type Playground, mountPlaygroundApp, PlaygroundView, PureSidePanelTabDefinition");
 
 const merged = `${importsPatch}\n${innerBlock}
 

@@ -2,36 +2,36 @@
 name: App isolation and boundaries
 overview: Decouple every app from the others by replacing cross-package Vite/Vitest aliases with real workspace resolution, making playground app registration manifest-driven (open-closed), splitting the monolithic renderer into per-app hosts, and enforcing boundaries with dependency-cruiser plus repo tests.
 todos:
-  - id: canonical-names
-    content: Replace @compose/ui, @ui/react, @elements/* imports with canonical @semio-tech names across source and configs
-    status: completed
-  - id: complete-manifests
-    content: Complete all package.json deps (workspace:*) and exports subpaths (internal, css, wasm pkg, boot)
-    status: completed
-  - id: fix-relative-cross-imports
-    content: Fix cross-technology relative imports (kernel/3d/brep worker → @semio-tech/flow-module-brep)
-    status: completed
-  - id: shared-vite-base
-    content: Replace playgroundRendererResolveAliases with generic workspace-resolution base (dedupe, fs.allow, optimizeDeps) in vite-elements-assets.ts
-    status: completed
-  - id: strip-aliases
-    content: Remove cross-package aliases from all vite/vitest/storybook/tsconfig files (playground, OS, compose, coda, vscode, mit-bestand, per-package vitest)
-    status: completed
-  - id: renderer-split
-    content: Move each PlayHost region from monolithic playground renderer into the owning app's react package; slim framework renderer to generic primitives
-    status: completed
-  - id: manifest-registry
-    content: Add semio.playgroundApp package.json manifests; derive dev script maps and app-registry virtual module from them; delete the three hand-maintained registries and shell-entry slicing plugins
-    status: completed
-  - id: dependency-cruiser
-    content: Create root .dependency-cruiser.cjs with boundary rules and run it repo-wide from script.ts lint
-    status: completed
-  - id: repo-guard-tests
-    content: Extend repo/lib/js/index.test.ts with guards against escaping aliases/paths and undeclared imports
-    status: completed
-  - id: verify
-    content: "Verify: boot representative apps, run tests, build storybook and a play site, run lint"
-    status: completed
+ - id: canonical-names
+   content: Replace @compose/ui, @ui/react, @elements/* imports with canonical @semio-tech names across source and configs
+   status: completed
+ - id: complete-manifests
+   content: Complete all package.json deps (workspace:*) and exports subpaths (internal, css, wasm pkg, boot)
+   status: completed
+ - id: fix-relative-cross-imports
+   content: Fix cross-technology relative imports (kernel/3d/brep worker → @semio-tech/flow-module-brep)
+   status: completed
+ - id: shared-vite-base
+   content: Replace playgroundRendererResolveAliases with generic workspace-resolution base (dedupe, fs.allow, optimizeDeps) in vite-elements-assets.ts
+   status: completed
+ - id: strip-aliases
+   content: Remove cross-package aliases from all vite/vitest/storybook/tsconfig files (playground, OS, compose, coda, vscode, mit-bestand, per-package vitest)
+   status: completed
+ - id: renderer-split
+   content: Move each PlayHost region from monolithic playground renderer into the owning app's react package; slim framework renderer to generic primitives
+   status: completed
+ - id: manifest-registry
+   content: Add semio.playgroundApp package.json manifests; derive dev script maps and app-registry virtual module from them; delete the three hand-maintained registries and shell-entry slicing plugins
+   status: completed
+ - id: dependency-cruiser
+   content: Create root .dependency-cruiser.cjs with boundary rules and run it repo-wide from script.ts lint
+   status: completed
+ - id: repo-guard-tests
+   content: Extend repo/lib/js/index.test.ts with guards against escaping aliases/paths and undeclared imports
+   status: completed
+ - id: verify
+   content: "Verify: boot representative apps, run tests, build storybook and a play site, run lint"
+   status: completed
 isProject: false
 ---
 
@@ -65,8 +65,6 @@ flowchart LR
   FlowReact -->|depends on| PGRenderer
   PGDev -->|"discovers via package.json manifest (no static import)"| FlowCore
 ```
-
-
 
 Dependency direction inverts: apps depend on framework; framework never names a concrete app. Adding an app = changes inside the app's own folders only.
 
@@ -112,4 +110,3 @@ Dependency direction inverts: apps depend on framework; framework never names a 
 
 - Work happens inside a repo MCP ticket (open at execution start after reading `repo://goals`); no new files outside the ticket folder except the root `.dependency-cruiser.cjs`, which is already referenced by existing config.
 - No git-modifying commands; edits only.
-

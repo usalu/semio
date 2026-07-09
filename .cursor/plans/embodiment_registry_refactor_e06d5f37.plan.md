@@ -2,27 +2,27 @@
 name: Embodiment Registry Refactor
 overview: Restructure @semio-tech/framework-presentation so embodiments are a scoped sibling registry (not children of participants), dispositions bind participantId+embodimentId, participants/embodiments are available at every artifact level (presentation→slide), and tile/split become templates that produce figure embodiments+dispositions (removing DispositionSplit/SplitTile). Migrate the React renderer and the real 33.projektetage deck to the new model with all inline tests passing.
 todos:
-  - id: ticket
-    content: Open repo MCP ticket (read repo://goals, associate with presentation/framework goal); do not edit AGENTS.md.
-    status: completed
-  - id: core-model
-    content: "Core: Participant=identity, required unique Embodiment ids, Disposition binds participantId+embodimentId; remove DispositionSplit/SplitTile/morphParticipant/tileMorphId and split-only geometry helpers."
-    status: completed
-  - id: core-scope
-    content: "Core: add ArtifactScope to Presentation/Chapter/Sequence/Thought/Arrangement/SlideFile; add buildResolutionScope + rewrite resolveEmbodiment/resolveArrangement and traversal/expand helpers to thread the ancestor scope chain."
-    status: completed
-  - id: core-templates
-    content: "Core: add tile() and split() templates producing figure embodiments+dispositions; migrate intro() and analogy() to participant/embodiment registries with unique ids."
-    status: completed
-  - id: renderer
-    content: "Renderer: resolve via scope chain; delete tile/split/morphParticipant views and interaction branches; keep crop figure morph; clean globals.css dead rules."
-    status: completed
-  - id: deck
-    content: "Deck: split spec.ts into participants + embodiment registry, build catalogue via split(), columns via crop figure + label + generalized morph; update SlideFile registries, 4 media slides, Einleitung.ts, and index.ts merge."
-    status: completed
-  - id: tests
-    content: Extend core/renderer/deck inline vitest to the new model; run all nx test configs + live projektetage dev server check; close ticket with summary.
-    status: completed
+ - id: ticket
+   content: Open repo MCP ticket (read repo://goals, associate with presentation/framework goal); do not edit AGENTS.md.
+   status: completed
+ - id: core-model
+   content: "Core: Participant=identity, required unique Embodiment ids, Disposition binds participantId+embodimentId; remove DispositionSplit/SplitTile/morphParticipant/tileMorphId and split-only geometry helpers."
+   status: completed
+ - id: core-scope
+   content: "Core: add ArtifactScope to Presentation/Chapter/Sequence/Thought/Arrangement/SlideFile; add buildResolutionScope + rewrite resolveEmbodiment/resolveArrangement and traversal/expand helpers to thread the ancestor scope chain."
+   status: completed
+ - id: core-templates
+   content: "Core: add tile() and split() templates producing figure embodiments+dispositions; migrate intro() and analogy() to participant/embodiment registries with unique ids."
+   status: completed
+ - id: renderer
+   content: "Renderer: resolve via scope chain; delete tile/split/morphParticipant views and interaction branches; keep crop figure morph; clean globals.css dead rules."
+   status: completed
+ - id: deck
+   content: "Deck: split spec.ts into participants + embodiment registry, build catalogue via split(), columns via crop figure + label + generalized morph; update SlideFile registries, 4 media slides, Einleitung.ts, and index.ts merge."
+   status: completed
+ - id: tests
+   content: Extend core/renderer/deck inline vitest to the new model; run all nx test configs + live projektetage dev server check; close ticket with summary.
+   status: completed
 isProject: false
 ---
 
@@ -37,21 +37,23 @@ isProject: false
 Participant becomes identity-only; embodiments get required unique ids and move into scoped registries; dispositions bind both ids.
 
 ```ts
-interface Participant { readonly id: string; readonly name?: string; }
+interface Participant {
+ readonly id: string;
+ readonly name?: string;
+}
 
 // every Embodiment variant: `id` becomes REQUIRED (was optional)
-type Embodiment = TextEmbodiment | FigureEmbodiment | VideoEmbodiment
-  | PdfEmbodiment | BulletEmbodiment | AuthorsEmbodiment | AffiliationsEmbodiment;
+type Embodiment = TextEmbodiment | FigureEmbodiment | VideoEmbodiment | PdfEmbodiment | BulletEmbodiment | AuthorsEmbodiment | AffiliationsEmbodiment;
 
 interface Disposition {
-  readonly participantId: string;
-  readonly embodimentId: string;            // required; resolved against the scope registry
-  readonly emphasis: ParticipantEmphasis;
-  readonly position?: DispositionPosition;
-  readonly style?: DispositionStyle;
-  readonly morphFrom?: readonly MorphFromSlot[];   // keep generalized-morph machinery
-  readonly morphGhost?: boolean;
-  readonly morphTargetId?: string;
+ readonly participantId: string;
+ readonly embodimentId: string; // required; resolved against the scope registry
+ readonly emphasis: ParticipantEmphasis;
+ readonly position?: DispositionPosition;
+ readonly style?: DispositionStyle;
+ readonly morphFrom?: readonly MorphFromSlot[]; // keep generalized-morph machinery
+ readonly morphGhost?: boolean;
+ readonly morphTargetId?: string;
 }
 ```
 
@@ -63,8 +65,8 @@ Add an optional registry to every artifact and resolve nearest-wins down the cha
 
 ```ts
 interface ArtifactScope {
-  readonly participants?: readonly Participant[];
-  readonly embodiments?: readonly Embodiment[];
+ readonly participants?: readonly Participant[];
+ readonly embodiments?: readonly Embodiment[];
 }
 // Presentation, Chapter, Sequence, Thought, Arrangement, and SlideFile all extend ArtifactScope.
 ```

@@ -2,21 +2,18 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
 function extract2d(): void {
-	const indexPath = "c:/git/compose/puzzle/2d/react/index.tsx";
-	const c = readFileSync(indexPath, "utf8");
-	const marker = "\nconst NAKAGIN_BOARD_PLAY_KIND_CATALOGS";
-	const pos = c.indexOf(marker);
-	if (pos < 0) {
-		console.error("2d marker missing");
-		process.exit(1);
-	}
-	const head = c.slice(0, pos).replace(
-		/\nimport \{ Expertise[\s\S]*?from "\.\.\/play\/index\.ts";\n/,
-		"\n",
-	);
-	const tail = c.slice(pos);
-	const hostPath = "c:/git/compose/puzzle/2d/play/host.tsx";
-	const hostHeader = `/** @emoji 🛝 Board play React host — imported only from play/main.ts. */
+  const indexPath = "c:/git/compose/puzzle/2d/react/index.tsx";
+  const c = readFileSync(indexPath, "utf8");
+  const marker = "\nconst NAKAGIN_BOARD_PLAY_KIND_CATALOGS";
+  const pos = c.indexOf(marker);
+  if (pos < 0) {
+    console.error("2d marker missing");
+    process.exit(1);
+  }
+  const head = c.slice(0, pos).replace(/\nimport \{ Expertise[\s\S]*?from "\.\.\/play\/index\.ts";\n/, "\n");
+  const tail = c.slice(pos);
+  const hostPath = "c:/git/compose/puzzle/2d/play/host.tsx";
+  const hostHeader = `/** @emoji 🛝 Board play React host — imported only from play/main.ts. */
 import {
 	Button,
 	ContextMenuController,
@@ -111,9 +108,9 @@ const {
 } = BoardReact as Record<string, unknown>;
 
 `;
-	writeFileSync(indexPath, head.trimEnd() + "\n");
-	writeFileSync(hostPath, hostHeader + tail);
-	console.log("[extract] 2d split");
+  writeFileSync(indexPath, head.trimEnd() + "\n");
+  writeFileSync(hostPath, hostHeader + tail);
+  console.log("[extract] 2d split");
 }
 
 extract2d();

@@ -2,36 +2,36 @@
 name: Print LaTeX Technology
 overview: "Add a new independent top-level technology `print`: an expl3-based LaTeX framework compiled with Tectonic, sharing the semio design language (tokens, fonts, logo) through generated artifacts, with robust report/paper/flyer templates plus the full Zukunft Bau report family."
 todos:
-  - id: ticket
-    content: Open ticket via repo MCP (goal r2603)
-    status: completed
-  - id: scaffold
-    content: Scaffold print/ with script.ts, project.json, package.json
-    status: completed
-  - id: tokens
-    content: Implement generate command emitting semio-tokens.sty from ui/styling/tokens.json
-    status: completed
-  - id: fonts
-    content: Implement fonts command fetching TTFs into print/asset/font
-    status: completed
-  - id: core-cls
-    content: Write semio.cls + semio-core/fonts/components/logo .sty (expl3, l3keys, hooks)
-    status: completed
-  - id: generic-templates
-    content: Write report/paper/flyer templates on semio.cls
-    status: completed
-  - id: zukunftbau
-    content: Write zukunftbau.cls and the three Zukunft Bau templates
-    status: completed
-  - id: build-watch
-    content: Implement ensureTectonic, build, watch, test commands
-    status: completed
-  - id: register
-    content: Register in root package.json, launch.json, .gitignore
-    status: completed
-  - id: verify
-    content: Run test build for all templates and verify PDFs
-    status: completed
+ - id: ticket
+   content: Open ticket via repo MCP (goal r2603)
+   status: completed
+ - id: scaffold
+   content: Scaffold print/ with script.ts, project.json, package.json
+   status: completed
+ - id: tokens
+   content: Implement generate command emitting semio-tokens.sty from ui/styling/tokens.json
+   status: completed
+ - id: fonts
+   content: Implement fonts command fetching TTFs into print/asset/font
+   status: completed
+ - id: core-cls
+   content: Write semio.cls + semio-core/fonts/components/logo .sty (expl3, l3keys, hooks)
+   status: completed
+ - id: generic-templates
+   content: Write report/paper/flyer templates on semio.cls
+   status: completed
+ - id: zukunftbau
+   content: Write zukunftbau.cls and the three Zukunft Bau templates
+   status: completed
+ - id: build-watch
+   content: Implement ensureTectonic, build, watch, test commands
+   status: completed
+ - id: register
+   content: Register in root package.json, launch.json, .gitignore
+   status: completed
+ - id: verify
+   content: Run test build for all templates and verify PDFs
+   status: completed
 isProject: false
 ---
 

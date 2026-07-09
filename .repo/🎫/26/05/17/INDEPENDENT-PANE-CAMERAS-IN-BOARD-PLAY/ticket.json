@@ -5,7 +5,5 @@
   "description": "Board play: stop synchronizing all three pane cameras on wheel sync, redraw play chase, post-play ease, and nodes-redraw ease. Only the active pane updates toward bbox / viewport; other panes keep their own baseline. Play start preserves per-pane cameras (no triptych reset).",
   "summary": "Per-pane cameras in board play: viewport sync updates only the active pane baseline; redraw play start preserves all three panes; chase damps only the active pane toward bbox fit; post-play and nodes-redraw camera eases blend only the active pane toward triptych while other panes stay on their prior cameras. Removed unused blendTriptychCameras and dampTriptychCamerasLinear. Vitest 65 passed.",
   "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": [
-    "⚪f6aa9724a2784aa7b80871645b8e7165"
-  ]
+  "sessions": ["⚪f6aa9724a2784aa7b80871645b8e7165"]
 }

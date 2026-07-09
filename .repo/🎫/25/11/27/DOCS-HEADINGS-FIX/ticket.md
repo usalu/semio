@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The Docs app had an issue where the Details panel showed "No headings found" even when the page had headings. This was caused by the `HeadingsProvider` context being inside the App component while the Details panel was rendered through the `PanelSectionProvider` which is at the Sketchpad level - outside the HeadingsProvider's context.
@@ -28,6 +29,7 @@ Additionally, the MDX heading components were registering headings using `childr
 ## Log
 
 ## Summary
+
 # Summary
 
->-
+> -

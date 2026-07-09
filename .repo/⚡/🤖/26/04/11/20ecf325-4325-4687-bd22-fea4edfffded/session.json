@@ -26,10 +26,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_use_id": "call_Ntl8BN2SJInDPZq8DadUUZez__vscode-1775936680319",
           "cwd": "c:\\git\\compose"
@@ -113,10 +110,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_response": "",
           "tool_use_id": "call_Ntl8BN2SJInDPZq8DadUUZez__vscode-1775936680319",
@@ -3801,10 +3795,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_use_id": "call_cDk8O4egCPI6psEUIED5uMj7__vscode-1775936680361",
           "cwd": "c:\\git\\compose"
@@ -3831,10 +3822,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_use_id": "call_cDk8O4egCPI6psEUIED5uMj7__vscode-1775936680361",
           "cwd": "c:\\git\\compose"
@@ -3861,10 +3849,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_response": "",
           "tool_use_id": "call_cDk8O4egCPI6psEUIED5uMj7__vscode-1775936680361",
@@ -3892,10 +3877,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_response": "",
           "tool_use_id": "call_cDk8O4egCPI6psEUIED5uMj7__vscode-1775936680361",
@@ -4164,13 +4146,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Completed semantic section parity across compose implementations by applying canonical top-level ordering, fixing malformed nested region markers (Weak Entities and Coord) in TS/Python/C#, and validating balanced region nesting plus cross-language test/build passes.",
-            "files": [
-              "compose/go/main.go",
-              "compose/js/index.ts",
-              "compose/py/main.py",
-              "compose/net/Compose/Compose.cs",
-              "compose/rs/lib.rs"
-            ]
+            "files": ["compose/go/main.go", "compose/js/index.ts", "compose/py/main.py", "compose/net/Compose/Compose.cs", "compose/rs/lib.rs"]
           },
           "tool_use_id": "call_GwMs6EkNAlPJ0uzAWoIN91jD__vscode-1775936680363",
           "cwd": "c:\\git\\compose"
@@ -4197,13 +4173,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Completed semantic section parity across compose implementations by applying canonical top-level ordering, fixing malformed nested region markers (Weak Entities and Coord) in TS/Python/C#, and validating balanced region nesting plus cross-language test/build passes.",
-            "files": [
-              "compose/go/main.go",
-              "compose/js/index.ts",
-              "compose/py/main.py",
-              "compose/net/Compose/Compose.cs",
-              "compose/rs/lib.rs"
-            ]
+            "files": ["compose/go/main.go", "compose/js/index.ts", "compose/py/main.py", "compose/net/Compose/Compose.cs", "compose/rs/lib.rs"]
           },
           "tool_use_id": "call_GwMs6EkNAlPJ0uzAWoIN91jD__vscode-1775936680363",
           "cwd": "c:\\git\\compose"
@@ -4230,13 +4200,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Completed semantic section parity across compose implementations by applying canonical top-level ordering, fixing malformed nested region markers (Weak Entities and Coord) in TS/Python/C#, and validating balanced region nesting plus cross-language test/build passes.",
-            "files": [
-              "compose/go/main.go",
-              "compose/js/index.ts",
-              "compose/py/main.py",
-              "compose/net/Compose/Compose.cs",
-              "compose/rs/lib.rs"
-            ]
+            "files": ["compose/go/main.go", "compose/js/index.ts", "compose/py/main.py", "compose/net/Compose/Compose.cs", "compose/rs/lib.rs"]
           },
           "tool_response": "[🎫uniqueemojisanddescriptionsforalldefinitions](repo://ticket/🎫uniqueemojisanddescriptionsforalldefinitions) - `closed` - `closed 1 hour from now`\n",
           "tool_use_id": "call_GwMs6EkNAlPJ0uzAWoIN91jD__vscode-1775936680363",
@@ -4264,13 +4228,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Completed semantic section parity across compose implementations by applying canonical top-level ordering, fixing malformed nested region markers (Weak Entities and Coord) in TS/Python/C#, and validating balanced region nesting plus cross-language test/build passes.",
-            "files": [
-              "compose/go/main.go",
-              "compose/js/index.ts",
-              "compose/py/main.py",
-              "compose/net/Compose/Compose.cs",
-              "compose/rs/lib.rs"
-            ]
+            "files": ["compose/go/main.go", "compose/js/index.ts", "compose/py/main.py", "compose/net/Compose/Compose.cs", "compose/rs/lib.rs"]
           },
           "tool_response": "[🎫uniqueemojisanddescriptionsforalldefinitions](repo://ticket/🎫uniqueemojisanddescriptionsforalldefinitions) - `closed` - `closed 1 hour from now`\n",
           "tool_use_id": "call_GwMs6EkNAlPJ0uzAWoIN91jD__vscode-1775936680363",

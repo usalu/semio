@@ -215,10 +215,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/compose/engine/engine.py",
-                "/workspaces/semio/compose/engine/engine.test.py"
-              ],
+              "files": ["/workspaces/semio/compose/engine/engine.py", "/workspaces/semio/compose/engine/engine.test.py"],
               "no_github": true,
               "path": "26/03/13/REFACTOR-ENGINE-MCP-TOOL-SURFACE-AND-ADD-TRANSACTIONS",
               "summary": "Restricted engine MCP tool surface to allowed prefixes (start*, finish*, sum_qu*, finalize*, abort*) and implemented session-scoped single active transaction with rollback stack of kit forward/backward diffs via start_transaction/finalize_transaction/abort_transaction. Added MCP tests for surface and transaction lifecycle/rollback."
@@ -251,10 +248,7 @@
             "mcp_result": "[🎫refactorenginemcptoolsurfaceandaddtransactions](composerepo://y/00/m/00/d/00/tk/REFACTOR-ENGINE-MCP-TOOL-SURFACE-AND-ADD-TRANSACTIONS) - `closed` - `closed now`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/compose/engine/engine.py",
-                "/workspaces/semio/compose/engine/engine.test.py"
-              ],
+              "files": ["/workspaces/semio/compose/engine/engine.py", "/workspaces/semio/compose/engine/engine.test.py"],
               "no_github": true,
               "path": "26/03/13/REFACTOR-ENGINE-MCP-TOOL-SURFACE-AND-ADD-TRANSACTIONS",
               "summary": "Restricted engine MCP tool surface to allowed prefixes (start*, finish*, sum_qu*, finalize*, abort*) and implemented session-scoped single active transaction with rollback stack of kit forward/backward diffs via start_transaction/finalize_transaction/abort_transaction. Added MCP tests for surface and transaction lifecycle/rollback."

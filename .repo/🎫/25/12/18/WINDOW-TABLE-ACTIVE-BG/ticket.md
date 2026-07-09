@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - The kit app renders a table inside a multi-window layout, but there was no explicit active-window state for the app.
@@ -23,6 +24,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Use active window background for table

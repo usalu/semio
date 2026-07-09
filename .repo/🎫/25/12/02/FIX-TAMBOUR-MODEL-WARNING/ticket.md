@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The `sketchpad.test.ts` "Type" test was failing with the warning "No model available for type: Tambour". This prevented proper testing of the Type app.
@@ -36,11 +37,11 @@ import { writeFileSync } from "fs";
 import { join } from "path";
 
 async function main() {
-  const kit = MetabolismKit;
-  const files = new Map<string, Blob>();
-  const zipBlob = await exportKit(kit, files);
-  const buffer = Buffer.from(await zipBlob.arrayBuffer());
-  writeFileSync(join(__dirname, "..", "assets", "compose", "metabolism.zip"), buffer);
+ const kit = MetabolismKit;
+ const files = new Map<string, Blob>();
+ const zipBlob = await exportKit(kit, files);
+ const buffer = Buffer.from(await zipBlob.arrayBuffer());
+ writeFileSync(join(__dirname, "..", "assets", "compose", "metabolism.zip"), buffer);
 }
 ```
 
@@ -72,6 +73,7 @@ Tambour models after import: 6
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix Tambour model warning by regenerating metabolism.zip with models

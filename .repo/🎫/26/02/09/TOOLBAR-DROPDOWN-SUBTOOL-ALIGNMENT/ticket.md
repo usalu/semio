@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 - [x] Reopen ticket for 5-row Selection subtool request.
 - [x] Add three more Design Selection subtools (total five).
 - [x] Keep Selection dropdown list one-column stacked rows.
@@ -8,6 +9,7 @@
 - [x] Update README.md and AGENTS.md docs.
 
 ## Changes
+
 - Updated `js/compose/sketchpad/Design.tsx` to register 5 Selection subtools in Design toolbar group:
   - `select`
   - `hand`
@@ -19,6 +21,7 @@
 - Updated docs in `README.md` and `AGENTS.md` to specify five one-column stacked Selection subtools.
 
 ## Log
+
 - Reopened ticket with prompt: "add five selection subtools in selection dropdown as one column five rows".
 - Implemented by Design toolbar group section expansion; dropdown list row count follows unique `subToolId` entries.
 

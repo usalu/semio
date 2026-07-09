@@ -19,9 +19,7 @@
           "final_status": "completed",
           "hook_event_name": "sessionEnd",
           "cursor_version": "2.5.26",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6a89d08c-59cd-405b-bacd-e95d5375a43c/6a89d08c-59cd-405b-bacd-e95d5375a43c.jsonl"
         }
@@ -54,9 +52,7 @@
           "final_status": "completed",
           "hook_event_name": "sessionEnd",
           "cursor_version": "2.5.26",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6a89d08c-59cd-405b-bacd-e95d5375a43c/6a89d08c-59cd-405b-bacd-e95d5375a43c.jsonl"
         }
@@ -89,9 +85,7 @@
           "final_status": "completed",
           "hook_event_name": "sessionEnd",
           "cursor_version": "2.6.18",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6a89d08c-59cd-405b-bacd-e95d5375a43c/6a89d08c-59cd-405b-bacd-e95d5375a43c.jsonl"
         }
@@ -124,9 +118,7 @@
           "final_status": "completed",
           "hook_event_name": "sessionEnd",
           "cursor_version": "2.6.18",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/6a89d08c-59cd-405b-bacd-e95d5375a43c/6a89d08c-59cd-405b-bacd-e95d5375a43c.jsonl"
         }

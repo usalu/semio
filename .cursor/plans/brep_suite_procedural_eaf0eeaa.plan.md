@@ -2,45 +2,45 @@
 name: Brep Suite Procedural
 overview: Generalize the cad-free @semio-tech/geometry-brep-js kernel from solid-only to a full multi-type BREP suite (points, curves, wires, surfaces, faces, solids, 2D shapes), wrapping essentially the entire brepjs surface, then expose it exhaustively as categorized flow nodes in @semio-tech/procedural-react with a multi-type R3F viewport that renders points, lines, surfaces and solids.
 todos:
-  - id: contracts
-    content: "Expand contracts.ts: GeometryKind/GeometryRef, optional points on MeshTransfer, exhaustive BrepKernel interface"
-    status: completed
-  - id: kernel-registry
-    content: "kernel.ts: unified GeometryRef registry replacing solid-only map; handle encoding/helpers"
-    status: completed
-  - id: kernel-primitives
-    content: "kernel.ts: 2D + 3D primitives (box/sphere/cylinder/cone/torus/ellipsoid/polyhedron/polygon, draw*, sketch*)"
-    status: completed
-  - id: kernel-curves-surfaces
-    content: "kernel.ts: curves (line/circle/arc/bezier/bspline/helix/interpolate/wire) and surfaces/faces (face/filledFace/fill/surfaceFromGrid/offsetFace)"
-    status: completed
-  - id: kernel-solid-tools
-    content: "kernel.ts: solid tools (extrude/revolve/loft/sweep/fillet/chamfer/shell/offset/thicken/draft/hull/minkowski)"
-    status: completed
-  - id: kernel-bool-xform-intersect
-    content: "kernel.ts: booleans, transforms, patterns, intersections/section/split/slice, interference"
-    status: completed
-  - id: kernel-evaluate-measure
-    content: "kernel.ts: evaluate (curvePointAt/tangent/pointOnSurface/normalAt/uvBounds) + measurement + query/topology + repair + IO + gears"
-    status: completed
-  - id: kernel-tessellate
-    content: "kernel.ts + mesh.ts: generalized tessellateGeometry by kind (tris/edges/points) and points support"
-    status: completed
-  - id: kernel-tests
-    content: "index.ts: export new symbols + extend vitest with per-category tests"
-    status: completed
-  - id: flow-kinds
-    content: "procedural/react: full categorized BREP_FLOW_KINDS + point/vector constructor nodes + defaults"
-    status: completed
-  - id: flow-dispatch
-    content: "procedural/react: rewrite evaluateBrepFlowKind as category-dispatched switch + catalogue sections + manifest"
-    status: completed
-  - id: viewport
-    content: "procedural/react: multi-type BrepViewport (points/lines/surfaces/solids) + multi-handle extraction in ProceduralEditor"
-    status: completed
-  - id: play-tests
-    content: "procedural/play + tests: default fixture + assert multiple brep sections; run all three vitest suites"
-    status: completed
+ - id: contracts
+   content: "Expand contracts.ts: GeometryKind/GeometryRef, optional points on MeshTransfer, exhaustive BrepKernel interface"
+   status: completed
+ - id: kernel-registry
+   content: "kernel.ts: unified GeometryRef registry replacing solid-only map; handle encoding/helpers"
+   status: completed
+ - id: kernel-primitives
+   content: "kernel.ts: 2D + 3D primitives (box/sphere/cylinder/cone/torus/ellipsoid/polyhedron/polygon, draw*, sketch*)"
+   status: completed
+ - id: kernel-curves-surfaces
+   content: "kernel.ts: curves (line/circle/arc/bezier/bspline/helix/interpolate/wire) and surfaces/faces (face/filledFace/fill/surfaceFromGrid/offsetFace)"
+   status: completed
+ - id: kernel-solid-tools
+   content: "kernel.ts: solid tools (extrude/revolve/loft/sweep/fillet/chamfer/shell/offset/thicken/draft/hull/minkowski)"
+   status: completed
+ - id: kernel-bool-xform-intersect
+   content: "kernel.ts: booleans, transforms, patterns, intersections/section/split/slice, interference"
+   status: completed
+ - id: kernel-evaluate-measure
+   content: "kernel.ts: evaluate (curvePointAt/tangent/pointOnSurface/normalAt/uvBounds) + measurement + query/topology + repair + IO + gears"
+   status: completed
+ - id: kernel-tessellate
+   content: "kernel.ts + mesh.ts: generalized tessellateGeometry by kind (tris/edges/points) and points support"
+   status: completed
+ - id: kernel-tests
+   content: "index.ts: export new symbols + extend vitest with per-category tests"
+   status: completed
+ - id: flow-kinds
+   content: "procedural/react: full categorized BREP_FLOW_KINDS + point/vector constructor nodes + defaults"
+   status: completed
+ - id: flow-dispatch
+   content: "procedural/react: rewrite evaluateBrepFlowKind as category-dispatched switch + catalogue sections + manifest"
+   status: completed
+ - id: viewport
+   content: "procedural/react: multi-type BrepViewport (points/lines/surfaces/solids) + multi-handle extraction in ProceduralEditor"
+   status: completed
+ - id: play-tests
+   content: "procedural/play + tests: default fixture + assert multiple brep sections; run all three vitest suites"
+   status: completed
 isProject: false
 ---
 
@@ -61,8 +61,6 @@ flowchart LR
   viewport -->|"tessellate(handle)"| kernel
   kernel -->|"MeshTransfer (tris+edges+points)"| viewport
 ```
-
-
 
 Geometry flows through flow ports as **self-describing handle strings** (`solid-3`, `edge-7`, `wire-2`, `face-5`, `vertex-1`, `drawing-4`). The kernel registry maps each handle to its brepjs shape and `GeometryKind`. Every geometry-producing node outputs `{ geometry: <handle> }`; scalar/evaluation nodes output `{ point: [x,y,z] }`, `{ number: n }`, `{ vector: [...] }`. The viewport collects all `geometry` handles from outputs and renders each by kind.
 
@@ -117,4 +115,3 @@ Catalogue/extensions trees are already generic. Update the default fixture refer
 - Input ergonomics: bounded to `inputSlider`(0–10)/`inputNote` by the Rust flow core; handled via node defaults + `brep.point`/`brep.vector` rather than expanding `flow/core`. Adding typed `inputVec3`/`inputNumber` widgets would be a separate flow-core ticket.
 - `MeshTransfer.points` is optional to avoid touching `cad/js` MeshTransfer construction (different technology).
 - Validate at runtime with `[DEBUG]` logs and run the three vitest suites (`@semio-tech/geometry-brep-js`, `@semio-tech/procedural-react`, `@semio-tech/procedural-play`) before closing the ticket with the file list and summary.
-

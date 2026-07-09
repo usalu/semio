@@ -13,16 +13,16 @@ Work targeted: confirm all 24 registered playgrounds build and boot in the brows
 
 ## Root fixes landed
 
-| Area | Fix |
-|------|-----|
+| Area                                                    | Fix                                                                                                                  |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `framework/product/playground/renderer/react/index.tsx` | Import + re-export framework symbols used locally (`uiInspectorAllEqual`, etc.) so virtual host slices keep bindings |
-| `procedural/2d/react`, `procedural/3d/react` | Gate top-level WASM init with `typeof window !== "undefined"` |
-| `cad/js/runtime/index.ts` | Lazy `import.meta.glob` behind `typeof import.meta.glob === "function"` for Bun-safe load |
-| `framework/product/playground/core/index.ts` | Skip engagement enforcement when `engagement` is undefined |
-| `forms/react/index.tsx` | Fixture path `fixture/` → `example/` for hexagonal mushroom column |
-| `puzzle/2d/react`, `trinity/react` | Fixture path `fixture/` → `example/` |
-| Core `package.json` exports | Repaired invalid JSON / added `./playground` where missing (many packages) |
-| Core `index.ts` play regions | Removed duplicate `*_PLAY_APP_ID` declarations; hoisted `createPlaygroundApp` imports |
+| `procedural/2d/react`, `procedural/3d/react`            | Gate top-level WASM init with `typeof window !== "undefined"`                                                        |
+| `cad/js/runtime/index.ts`                               | Lazy `import.meta.glob` behind `typeof import.meta.glob === "function"` for Bun-safe load                            |
+| `framework/product/playground/core/index.ts`            | Skip engagement enforcement when `engagement` is undefined                                                           |
+| `forms/react/index.tsx`                                 | Fixture path `fixture/` → `example/` for hexagonal mushroom column                                                   |
+| `puzzle/2d/react`, `trinity/react`                      | Fixture path `fixture/` → `example/`                                                                                 |
+| Core `package.json` exports                             | Repaired invalid JSON / added `./playground` where missing (many packages)                                           |
+| Core `index.ts` play regions                            | Removed duplicate `*_PLAY_APP_ID` declarations; hoisted `createPlaygroundApp` imports                                |
 
 ## E2E harness
 

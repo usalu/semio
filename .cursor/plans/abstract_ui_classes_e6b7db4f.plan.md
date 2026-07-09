@@ -2,30 +2,30 @@
 name: Abstract UI Classes
 overview: Introduce a framework-free `@elements/ui` class library that models UI -> App -> Mode -> (WindowKind | Panel | Toolbar), Panel -> Tab -> Tree. Implement a single `ReactUI` renderer in `@elements/ui-react`, expose controllers for all interactions, and demo by re-implementing geometry play as a pure class. Other plays + sketchpad migrate in the same pass; the old `AppConfig`/`PureAppDefinition` data-config path is deleted.
 todos:
-  - id: ticket
-    content: Open/reopen ticket ELEMENTS-UI-CLASS-ABSTRACTION after listing repo://goals; pick best-fit goal
-    status: completed
-  - id: ui-classes
-    content: Add framework-free class document (UI, App, Mode, Toolbar/ToolGroup/ToolItem, Panel, Tab, Tree, WindowKind, WindowLayout, Controller, CommandBus, Observable, IconRegistry types) inside elements/client/lib/ui/ with regions
-    status: completed
-  - id: react-ui
-    content: "In elements/client/lib/react/index.tsx: add ReactUI renderer, IconRegistry impl, WindowKindRenderer registry; refactor Navbar/Toolbar/Window/Panel/Footer/Find to read from UI/App/Mode instances; delete AppConfig/AppModeConfig/AppDefinition/PureAppDefinition/AppSource/resolveAppConfig/mountReactApp/mountAsyncReactApp"
-    status: completed
-  - id: geometry-migrate
-    content: Rewrite geometry play index.tsx as pure GeometryPlayApp+GeometryPlayController classes; shrink play/react.tsx to register window body + lucide icons + extend tests
-    status: completed
-  - id: other-plays
-    content: Migrate board, scene, topology play bundles to the new App+Controller pattern (mirror geometry approach); update their react.tsx adapters and tests
-    status: completed
-  - id: sketchpad
-    content: "Migrate compose sketchpad: SketchpadApp extends App, SketchpadController, panel/tab/tree wiring; update compose/client/lib/react/rendering and storybook UI.stories.tsx"
-    status: pending
-  - id: verify
-    content: Run nx tests for all affected projects (elements/{ui,geometry,board,scene,topology}, compose/sketchpad) and Storybook build; iterate until green
-    status: completed
-  - id: close
-    content: Close ticket with summary + file list
-    status: pending
+ - id: ticket
+   content: Open/reopen ticket ELEMENTS-UI-CLASS-ABSTRACTION after listing repo://goals; pick best-fit goal
+   status: completed
+ - id: ui-classes
+   content: Add framework-free class document (UI, App, Mode, Toolbar/ToolGroup/ToolItem, Panel, Tab, Tree, WindowKind, WindowLayout, Controller, CommandBus, Observable, IconRegistry types) inside elements/client/lib/ui/ with regions
+   status: completed
+ - id: react-ui
+   content: "In elements/client/lib/react/index.tsx: add ReactUI renderer, IconRegistry impl, WindowKindRenderer registry; refactor Navbar/Toolbar/Window/Panel/Footer/Find to read from UI/App/Mode instances; delete AppConfig/AppModeConfig/AppDefinition/PureAppDefinition/AppSource/resolveAppConfig/mountReactApp/mountAsyncReactApp"
+   status: completed
+ - id: geometry-migrate
+   content: Rewrite geometry play index.tsx as pure GeometryPlayApp+GeometryPlayController classes; shrink play/react.tsx to register window body + lucide icons + extend tests
+   status: completed
+ - id: other-plays
+   content: Migrate board, scene, topology play bundles to the new App+Controller pattern (mirror geometry approach); update their react.tsx adapters and tests
+   status: completed
+ - id: sketchpad
+   content: "Migrate compose sketchpad: SketchpadApp extends App, SketchpadController, panel/tab/tree wiring; update compose/client/lib/react/rendering and storybook UI.stories.tsx"
+   status: pending
+ - id: verify
+   content: Run nx tests for all affected projects (elements/{ui,geometry,board,scene,topology}, compose/sketchpad) and Storybook build; iterate until green
+   status: completed
+ - id: close
+   content: Close ticket with summary + file list
+   status: pending
 isProject: false
 ---
 
@@ -56,8 +56,6 @@ flowchart LR
   Controller[GeometryPlayController] -->|drives| App
   WK -->|renders body via| RenderRegistry[WindowKindRenderer registry]
 ```
-
-
 
 ### New module: `elements/client/lib/ui/`
 
@@ -139,4 +137,3 @@ Per repo rules, extend existing test files; no new test files:
 - No backwards compatibility shims for `AppConfig` / `PureAppDefinition` — they are deleted.
 - No new test files; no new example files; no folder creation outside the ticket.
 - Storybook visuals stay the same; only the construction path changes.
-

@@ -2,30 +2,30 @@
 name: Unify CAD And Puzzle3D World
 overview: Migrate @semio-tech/infinite-world-r3f and puzzle/3d to a native z-up scene (dropping the CAD->Three remap), then rebuild cad/js/renderer's canvas/orbit/grid/scene on the same engine so both consume one infinite-world mechanism including chunking, view-radius, pooling, and LOD grid.
 todos:
-  - id: ticket
-    content: Open/reopen the infinite-world ticket via repo MCP and associate with the appropriate goal.
-    status: completed
-  - id: engine-zup
-    content: "Make @semio-tech/infinite-world-r3f native z-up: identity remap in Precision, rotate WorldLodGridHelper grids into XY plane, keep GLB mesh rotation; update engine tests."
-    status: completed
-  - id: engine-shell
-    content: "Generalize WorldCanvas into the shared shell: cameraUp/position/fov/near/far, dpr, shadows, gl, background, frameloop, onCanvasReady, host pointer callbacks, optional owned PerspectiveCamera."
-    status: completed
-  - id: puzzle-zup
-    content: "Adapt puzzle/3d to z-up: set camera up=[0,0,1], verify lights/grid/mesh standing, fix coordinate-dependent tests."
-    status: completed
-  - id: cad-canvas
-    content: Rebuild cad InteractionCanvas + SpatialOrbitControls on WorldCanvas + WorldOrbitGated; add @semio-tech/infinite-world-r3f dep and vite/vitest aliases.
-    status: completed
-  - id: cad-grid-layers
-    content: Replace cad fixed GridHelper with WorldLodGridHelper + LOD provider; compose InteractionSpatialView contents as ordered WorldLayers.
-    status: completed
-  - id: cad-chunk-pool
-    content: Adopt chunking + view-radius for committed meshes (keyed by origin) and asset pooling (createTemplatePool/createRefCountPool) in cad.
-    status: completed
-  - id: validate
-    content: Run world/puzzle/cad tests and smoke both plays (z-up grid, orbit, LOD, pick/gumball, chunk unload); confirm via console logs.
-    status: completed
+ - id: ticket
+   content: Open/reopen the infinite-world ticket via repo MCP and associate with the appropriate goal.
+   status: completed
+ - id: engine-zup
+   content: "Make @semio-tech/infinite-world-r3f native z-up: identity remap in Precision, rotate WorldLodGridHelper grids into XY plane, keep GLB mesh rotation; update engine tests."
+   status: completed
+ - id: engine-shell
+   content: "Generalize WorldCanvas into the shared shell: cameraUp/position/fov/near/far, dpr, shadows, gl, background, frameloop, onCanvasReady, host pointer callbacks, optional owned PerspectiveCamera."
+   status: completed
+ - id: puzzle-zup
+   content: "Adapt puzzle/3d to z-up: set camera up=[0,0,1], verify lights/grid/mesh standing, fix coordinate-dependent tests."
+   status: completed
+ - id: cad-canvas
+   content: Rebuild cad InteractionCanvas + SpatialOrbitControls on WorldCanvas + WorldOrbitGated; add @semio-tech/infinite-world-r3f dep and vite/vitest aliases.
+   status: completed
+ - id: cad-grid-layers
+   content: Replace cad fixed GridHelper with WorldLodGridHelper + LOD provider; compose InteractionSpatialView contents as ordered WorldLayers.
+   status: completed
+ - id: cad-chunk-pool
+   content: Adopt chunking + view-radius for committed meshes (keyed by origin) and asset pooling (createTemplatePool/createRefCountPool) in cad.
+   status: completed
+ - id: validate
+   content: Run world/puzzle/cad tests and smoke both plays (z-up grid, orbit, LOD, pick/gumball, chunk unload); confirm via console logs.
+   status: completed
 isProject: false
 ---
 

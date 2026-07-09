@@ -5,7 +5,5 @@
   "description": "Redesign elements IconSelector used in board play inspector: cramped TabsList caused overlapping tab labels and cluttered layout; replace mode picker with Select + single editor pane; fix action row so Clear/Import never clip.",
   "summary": "Replaced cramped four-column TabsList in IconSelector with a single full-width Select (Math, Data URL, Emoji, Catalog/SVG) so mode labels never overlap in the narrow board inspector. One Textarea bound to the active mode (keyed remount on mode change) replaces four Radix TabsContent panels so only one editor shows. Reordered to: mode, editor, preview, then a justify-between row with Import and Clear (whitespace-nowrap) so Clear is not clipped. SelectTrigger uses w-full min-w-0 and whitespace-normal. Ran nx @elements/board:test (Rust + Vitest + e2e smoke) successfully.",
   "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": [
-    "⚪2ec788adf0944e4b863a012932df01e8"
-  ]
+  "sessions": ["⚪2ec788adf0944e4b863a012932df01e8"]
 }

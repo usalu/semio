@@ -3,12 +3,12 @@
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
-	run(): void {
-		runCmd("cargo", ["test", "-p", "ui_wgpu"], { cwd: import.meta.dir });
-	}
+  run(): void {
+    runCmd("cargo", ["test", "-p", "ui_wgpu"], { cwd: import.meta.dir });
+  }
 }
 
 if (import.meta.main) {
-	const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
-	await runBundleScriptMain(router, import.meta.url);
+  const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+  await runBundleScriptMain(router, import.meta.url);
 }

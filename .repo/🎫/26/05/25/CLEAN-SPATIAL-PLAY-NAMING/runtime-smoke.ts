@@ -10,9 +10,7 @@ page.on("pageerror", (err) => messages.push(`pageerror: ${err.message}`));
 await page.goto("http://127.0.0.1:4213/", { waitUntil: "domcontentloaded" });
 await page.getByText("Spatial play").waitFor({ timeout: 10_000 });
 await page.getByPlaceholder("Filter or type an interaction…").focus();
-const rows = await page.locator("aside button").evaluateAll((buttons) =>
-	buttons.map((button) => (button.textContent ?? "").replace(/\s+/g, " ").trim()).filter(Boolean),
-);
+const rows = await page.locator("aside button").evaluateAll((buttons) => buttons.map((button) => (button.textContent ?? "").replace(/\s+/g, " ").trim()).filter(Boolean));
 console.log(`[DEBUG] rows=${JSON.stringify(rows.slice(0, 8))}`);
 console.log(`[DEBUG] console=${JSON.stringify(messages)}`);
 await browser.close();

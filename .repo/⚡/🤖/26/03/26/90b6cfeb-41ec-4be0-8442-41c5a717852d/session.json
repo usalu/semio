@@ -114,10 +114,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "/workspaces/semio",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_use_id": "call_fPxqFhUghrhGnRobJZeRWmfW__vscode-1774519724419",
           "cwd": "/workspaces/semio"
@@ -170,10 +167,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "/workspaces/semio",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_use_id": "call_fPxqFhUghrhGnRobJZeRWmfW__vscode-1774519724419",
           "cwd": "/workspaces/semio"
@@ -280,10 +274,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "/workspaces/semio",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_response": "",
           "tool_use_id": "call_fPxqFhUghrhGnRobJZeRWmfW__vscode-1774519724419",
@@ -311,10 +302,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "/workspaces/semio",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_response": "",
           "tool_use_id": "call_fPxqFhUghrhGnRobJZeRWmfW__vscode-1774519724419",
@@ -487,9 +475,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/90b6cfeb-41ec-4be0-8442-41c5a717852d.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/.vscode/launch.json"
-            ]
+            "filePaths": ["/workspaces/semio/.vscode/launch.json"]
           },
           "tool_use_id": "call_x1B2VN67i5mCUHygWqklxGUF__vscode-1774519724423",
           "cwd": "/workspaces/semio"
@@ -546,9 +532,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/90b6cfeb-41ec-4be0-8442-41c5a717852d.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/.vscode/launch.json"
-            ]
+            "filePaths": ["/workspaces/semio/.vscode/launch.json"]
           },
           "tool_use_id": "call_x1B2VN67i5mCUHygWqklxGUF__vscode-1774519724423",
           "cwd": "/workspaces/semio"
@@ -605,9 +589,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/90b6cfeb-41ec-4be0-8442-41c5a717852d.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/.vscode/launch.json"
-            ]
+            "filePaths": ["/workspaces/semio/.vscode/launch.json"]
           },
           "tool_response": "",
           "tool_use_id": "call_x1B2VN67i5mCUHygWqklxGUF__vscode-1774519724423",
@@ -634,9 +616,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/90b6cfeb-41ec-4be0-8442-41c5a717852d.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/.vscode/launch.json"
-            ]
+            "filePaths": ["/workspaces/semio/.vscode/launch.json"]
           },
           "tool_response": "",
           "tool_use_id": "call_x1B2VN67i5mCUHygWqklxGUF__vscode-1774519724423",
@@ -839,9 +819,7 @@
           "tool_input": {
             "path": "repo://ticket/🎫addkiroandgeminilaunchentries",
             "summary": "Added two VS Code launch entries in .vscode/launch.json for Kiro (`kiro-cli chat --trust-all-tools`) and Gemini (`gemini --yolo`) using node-terminal launchers, preserving existing local edits.",
-            "files": [
-              "/workspaces/semio/.vscode/launch.json"
-            ],
+            "files": ["/workspaces/semio/.vscode/launch.json"],
             "no_github": true
           },
           "tool_use_id": "call_esBGkkViGqaWWuXUvpeMV2cm__vscode-1774519724426",
@@ -868,9 +846,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/90b6cfeb-41ec-4be0-8442-41c5a717852d.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/.vscode/launch.json"
-            ]
+            "filePaths": ["/workspaces/semio/.vscode/launch.json"]
           },
           "tool_use_id": "call_fOpN1oe1cm2xEqdARWJkR1vr__vscode-1774519724425",
           "cwd": "/workspaces/semio"
@@ -898,9 +874,7 @@
           "tool_input": {
             "path": "repo://ticket/🎫addkiroandgeminilaunchentries",
             "summary": "Added two VS Code launch entries in .vscode/launch.json for Kiro (`kiro-cli chat --trust-all-tools`) and Gemini (`gemini --yolo`) using node-terminal launchers, preserving existing local edits.",
-            "files": [
-              "/workspaces/semio/.vscode/launch.json"
-            ],
+            "files": ["/workspaces/semio/.vscode/launch.json"],
             "no_github": true
           },
           "tool_use_id": "call_esBGkkViGqaWWuXUvpeMV2cm__vscode-1774519724426",
@@ -927,9 +901,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/90b6cfeb-41ec-4be0-8442-41c5a717852d.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/.vscode/launch.json"
-            ]
+            "filePaths": ["/workspaces/semio/.vscode/launch.json"]
           },
           "tool_use_id": "call_fOpN1oe1cm2xEqdARWJkR1vr__vscode-1774519724425",
           "cwd": "/workspaces/semio"
@@ -955,9 +927,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/90b6cfeb-41ec-4be0-8442-41c5a717852d.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/.vscode/launch.json"
-            ]
+            "filePaths": ["/workspaces/semio/.vscode/launch.json"]
           },
           "tool_response": "",
           "tool_use_id": "call_fOpN1oe1cm2xEqdARWJkR1vr__vscode-1774519724425",
@@ -984,9 +954,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/90b6cfeb-41ec-4be0-8442-41c5a717852d.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/.vscode/launch.json"
-            ]
+            "filePaths": ["/workspaces/semio/.vscode/launch.json"]
           },
           "tool_response": "",
           "tool_use_id": "call_fOpN1oe1cm2xEqdARWJkR1vr__vscode-1774519724425",
@@ -1471,9 +1439,7 @@
           "tool_input": {
             "path": "/workspaces/semio/.repo/🎫/26/03/26/ADD-KIRO-AND-GEMINI-LAUNCH-ENTRIES",
             "summary": "Added two VS Code launch entries in .vscode/launch.json for Kiro (`kiro-cli chat --trust-all-tools`) and Gemini (`gemini --yolo`) using node-terminal launchers, preserving existing local edits. Validated the file after editing; remaining diagnostics are unrelated pre-existing `console` schema warnings on other launch entries.",
-            "files": [
-              "/workspaces/semio/.vscode/launch.json"
-            ],
+            "files": ["/workspaces/semio/.vscode/launch.json"],
             "no_github": true
           },
           "tool_use_id": "call_8pHysjuc33U4WjiOilzysKW2__vscode-1774519724431",
@@ -1502,9 +1468,7 @@
           "tool_input": {
             "path": "/workspaces/semio/.repo/🎫/26/03/26/ADD-KIRO-AND-GEMINI-LAUNCH-ENTRIES",
             "summary": "Added two VS Code launch entries in .vscode/launch.json for Kiro (`kiro-cli chat --trust-all-tools`) and Gemini (`gemini --yolo`) using node-terminal launchers, preserving existing local edits. Validated the file after editing; remaining diagnostics are unrelated pre-existing `console` schema warnings on other launch entries.",
-            "files": [
-              "/workspaces/semio/.vscode/launch.json"
-            ],
+            "files": ["/workspaces/semio/.vscode/launch.json"],
             "no_github": true
           },
           "tool_use_id": "call_8pHysjuc33U4WjiOilzysKW2__vscode-1774519724431",
@@ -1533,9 +1497,7 @@
           "tool_input": {
             "path": "26/03/26/ADD-KIRO-AND-GEMINI-LAUNCH-ENTRIES",
             "summary": "Added two VS Code launch entries in .vscode/launch.json for Kiro (`kiro-cli chat --trust-all-tools`) and Gemini (`gemini --yolo`) using node-terminal launchers, preserving existing local edits. Validated the file after editing; remaining diagnostics are unrelated pre-existing `console` schema warnings on other launch entries.",
-            "files": [
-              "/workspaces/semio/.vscode/launch.json"
-            ],
+            "files": ["/workspaces/semio/.vscode/launch.json"],
             "no_github": true
           },
           "tool_use_id": "call_3YLsXUBGJ4LW069XyTQL0BhJ__vscode-1774519724432",
@@ -1564,9 +1526,7 @@
           "tool_input": {
             "path": "26/03/26/ADD-KIRO-AND-GEMINI-LAUNCH-ENTRIES",
             "summary": "Added two VS Code launch entries in .vscode/launch.json for Kiro (`kiro-cli chat --trust-all-tools`) and Gemini (`gemini --yolo`) using node-terminal launchers, preserving existing local edits. Validated the file after editing; remaining diagnostics are unrelated pre-existing `console` schema warnings on other launch entries.",
-            "files": [
-              "/workspaces/semio/.vscode/launch.json"
-            ],
+            "files": ["/workspaces/semio/.vscode/launch.json"],
             "no_github": true
           },
           "tool_use_id": "call_3YLsXUBGJ4LW069XyTQL0BhJ__vscode-1774519724432",
@@ -1595,9 +1555,7 @@
           "tool_input": {
             "path": "26/03/26/ADD-KIRO-AND-GEMINI-LAUNCH-ENTRIES",
             "summary": "Added two VS Code launch entries in .vscode/launch.json for Kiro (`kiro-cli chat --trust-all-tools`) and Gemini (`gemini --yolo`) using node-terminal launchers, preserving existing local edits. Validated the file after editing; remaining diagnostics are unrelated pre-existing `console` schema warnings on other launch entries.",
-            "files": [
-              "/workspaces/semio/.vscode/launch.json"
-            ],
+            "files": ["/workspaces/semio/.vscode/launch.json"],
             "no_github": true
           },
           "tool_response": "[🎫addkiroandgeminilaunchentries](repo://ticket/🎫addkiroandgeminilaunchentries) - `closed` - `closed now`\n",
@@ -1627,9 +1585,7 @@
           "tool_input": {
             "path": "26/03/26/ADD-KIRO-AND-GEMINI-LAUNCH-ENTRIES",
             "summary": "Added two VS Code launch entries in .vscode/launch.json for Kiro (`kiro-cli chat --trust-all-tools`) and Gemini (`gemini --yolo`) using node-terminal launchers, preserving existing local edits. Validated the file after editing; remaining diagnostics are unrelated pre-existing `console` schema warnings on other launch entries.",
-            "files": [
-              "/workspaces/semio/.vscode/launch.json"
-            ],
+            "files": ["/workspaces/semio/.vscode/launch.json"],
             "no_github": true
           },
           "tool_response": "[🎫addkiroandgeminilaunchentries](repo://ticket/🎫addkiroandgeminilaunchentries) - `closed` - `closed now`\n",

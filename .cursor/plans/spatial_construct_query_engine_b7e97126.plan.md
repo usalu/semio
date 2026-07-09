@@ -2,30 +2,30 @@
 name: spatial construct query engine
 overview: Introduce `@spatial/js-query` — a Cypher-inspired "construct" query language with a Chevrotain parser/AST, a topology-aware planner, and lazy generator iterators executing directly on `TopologyGraph` from `@spatial/js-core`. Extend core (entity metadata + `query()` entry point on `InteractionRuntime`) and the brepjs kernel to expose lateral adjacency hints.
 todos:
-  - id: scaffold
-    content: Scaffold spatial/js/query package files (package.json, project.json, tsconfig, vitest, script) and add to workspaces
-    status: completed
-  - id: lexer-parser
-    content: Implement Chevrotain lexer + parser + AST for the construct language in query/index.ts
-    status: completed
-  - id: index-traversers
-    content: Implement KernelIndex + TopologyTraverser generators (BOUNDED_BY, CONTAINS, SHARES, DERIVES, ADJACENT_TO, HAS_VERTEX)
-    status: completed
-  - id: planner-executor
-    content: Implement QueryPlanner + ConstructExecutor + CALL action bridge
-    status: completed
-  - id: core-metadata
-    content: Extend core with EntityMetadataStore on TopologyGraph and ConstructRunner provider hook on InteractionRuntime
-    status: completed
-  - id: kernel-adjacency
-    content: Add adjacentCells / sharedFacesBetween to BrepjsKernel
-    status: completed
-  - id: tests
-    content: Add in-file vitest cases (parser, executor read paths, adjacency, derived, CALL writes) in query, core, kernel-brepjs
-    status: completed
-  - id: ticket
-    content: Open repo ticket at start, close ticket at end with file list
-    status: completed
+ - id: scaffold
+   content: Scaffold spatial/js/query package files (package.json, project.json, tsconfig, vitest, script) and add to workspaces
+   status: completed
+ - id: lexer-parser
+   content: Implement Chevrotain lexer + parser + AST for the construct language in query/index.ts
+   status: completed
+ - id: index-traversers
+   content: Implement KernelIndex + TopologyTraverser generators (BOUNDED_BY, CONTAINS, SHARES, DERIVES, ADJACENT_TO, HAS_VERTEX)
+   status: completed
+ - id: planner-executor
+   content: Implement QueryPlanner + ConstructExecutor + CALL action bridge
+   status: completed
+ - id: core-metadata
+   content: Extend core with EntityMetadataStore on TopologyGraph and ConstructRunner provider hook on InteractionRuntime
+   status: completed
+ - id: kernel-adjacency
+   content: Add adjacentCells / sharedFacesBetween to BrepjsKernel
+   status: completed
+ - id: tests
+   content: Add in-file vitest cases (parser, executor read paths, adjacency, derived, CALL writes) in query, core, kernel-brepjs
+   status: completed
+ - id: ticket
+   content: Open repo ticket at start, close ticket at end with file list
+   status: completed
 isProject: false
 ---
 
@@ -77,8 +77,6 @@ flowchart LR
   Executor --> Reg[ActionRegistry CALL]
   Executor --> Out[ResultRows]
 ```
-
-
 
 Key components inside `index.ts`:
 

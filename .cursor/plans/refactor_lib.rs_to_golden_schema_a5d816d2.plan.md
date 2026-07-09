@@ -2,45 +2,45 @@
 name: refactor lib.rs to golden schema
 overview: Rewrite [compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs) so every GraphQL type in [compose/schema/graphql/schema.golden.graphql](compose/schema/graphql/schema.golden.graphql) (985 declarations) maps to exactly one Rust definition, generated through a small macro DSL, while preserving and rewiring the existing runtime (kit_backbone, worker, event bus, kit_graph_engine, wasm_bridge) against the new struct names with full resolver logic.
 todos:
-  - id: phase0-ticket
-    content: Open umbrella ticket; archive current lib.rs runtime to ticket folder; gut lib.rs to scalars + macro DSL + empty regions
-    status: completed
-  - id: phase1-foundation
-    content: Phase 1 — scalars + macro DSL + all 20 general interfaces (Node…Operation…Provider) with full 12-ladders
-    status: in_progress
-  - id: phase2-geom
-    content: "Phase 2 — Vector/Point/Coordinate/Offset/Plane/Position/Location: inputs + entities + 12-ladders"
-    status: pending
-  - id: phase3-meta
-    content: Phase 3 — Attribute + 12 meta artifacts (Place/Family/Folder/File/Author/Prop/Benchmark/Quality/Tag/Concept/Stat) with ladders — split across 2 subagents
-    status: pending
-  - id: phase4-type
-    content: Phase 4 — Port/Connector/Representation/Type with ladders
-    status: pending
-  - id: phase5-design
-    content: Phase 5 — Side/Piece/Connection/Design/Clump/Layer/Group + Blueprint union + PieceConnectionKind enum
-    status: pending
-  - id: phase6-kit
-    content: Phase 6 — Kit + ladder + full KitDiff/KitModification body matching golden
-    status: pending
-  - id: phase7-ops
-    content: Phase 7 — ~80 operation!() invocations (quality/tag/concept/port/type/connector/piece/design/kit) — parallel subagents per domain
-    status: pending
-  - id: phase8-vcs
-    content: Phase 8 — Edit/Change/Checkpoint/TheKit/Alternative/Version/Graph/Conflict/Session + Workspace interface
-    status: pending
-  - id: phase9-store-backbones
-    content: Phase 9 — Store/FileBackbone/WebsocketBackbone/LocalProvider/RemoteProvider + every command type
-    status: pending
-  - id: phase10-schema
-    content: Phase 10 — Query/Mutation/Subscription wired to runtime
-    status: pending
-  - id: phase11-runtime
-    content: Phase 11 — Port kit_graph_engine/kit_backbone/worker/event/wasm_bridge runtime onto the new struct names with full resolver logic
-    status: pending
-  - id: phase12-strict-gate
-    content: Phase 12 — Flip COMPOSE_GOLDEN_STRICT=1; fix every drift; run cargo test, schema export, nx build; close ticket
-    status: pending
+ - id: phase0-ticket
+   content: Open umbrella ticket; archive current lib.rs runtime to ticket folder; gut lib.rs to scalars + macro DSL + empty regions
+   status: completed
+ - id: phase1-foundation
+   content: Phase 1 — scalars + macro DSL + all 20 general interfaces (Node…Operation…Provider) with full 12-ladders
+   status: in_progress
+ - id: phase2-geom
+   content: "Phase 2 — Vector/Point/Coordinate/Offset/Plane/Position/Location: inputs + entities + 12-ladders"
+   status: pending
+ - id: phase3-meta
+   content: Phase 3 — Attribute + 12 meta artifacts (Place/Family/Folder/File/Author/Prop/Benchmark/Quality/Tag/Concept/Stat) with ladders — split across 2 subagents
+   status: pending
+ - id: phase4-type
+   content: Phase 4 — Port/Connector/Representation/Type with ladders
+   status: pending
+ - id: phase5-design
+   content: Phase 5 — Side/Piece/Connection/Design/Clump/Layer/Group + Blueprint union + PieceConnectionKind enum
+   status: pending
+ - id: phase6-kit
+   content: Phase 6 — Kit + ladder + full KitDiff/KitModification body matching golden
+   status: pending
+ - id: phase7-ops
+   content: Phase 7 — ~80 operation!() invocations (quality/tag/concept/port/type/connector/piece/design/kit) — parallel subagents per domain
+   status: pending
+ - id: phase8-vcs
+   content: Phase 8 — Edit/Change/Checkpoint/TheKit/Alternative/Version/Graph/Conflict/Session + Workspace interface
+   status: pending
+ - id: phase9-store-backbones
+   content: Phase 9 — Store/FileBackbone/WebsocketBackbone/LocalProvider/RemoteProvider + every command type
+   status: pending
+ - id: phase10-schema
+   content: Phase 10 — Query/Mutation/Subscription wired to runtime
+   status: pending
+ - id: phase11-runtime
+   content: Phase 11 — Port kit_graph_engine/kit_backbone/worker/event/wasm_bridge runtime onto the new struct names with full resolver logic
+   status: pending
+ - id: phase12-strict-gate
+   content: Phase 12 — Flip COMPOSE_GOLDEN_STRICT=1; fix every drift; run cargo test, schema export, nx build; close ticket
+   status: pending
 isProject: false
 ---
 
@@ -194,4 +194,3 @@ Each phase is a `ticket_open`/`ticket_close` cycle on its own ticket. Phases are
 - `bun nx run compose/client:build` and `:test` — green.
 - `rg -n "FixMe|TODO|todo!\\(|unimplemented!\\(|placeholder" compose/client/lib/rs/lib.rs` — empty.
 - The catalog count check: generated SDL contains exactly the 985 declarations enumerated in `c:/git/compose/.repo/all_type_names.txt`, no more, no less.
-

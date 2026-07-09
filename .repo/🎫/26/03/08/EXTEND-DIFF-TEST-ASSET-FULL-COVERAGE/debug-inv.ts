@@ -33,12 +33,15 @@ function newGuid(): string {
 
 // Apply all the same changes...
 // Kit scalars
-kitAfter.name = "Metabolism Modified"; kitAfter.version = "r25.08-1";
+kitAfter.name = "Metabolism Modified";
+kitAfter.version = "r25.08-1";
 kitAfter.description = "Modified version for comprehensive diff testing";
-kitAfter.icon = "modified-icon.svg"; kitAfter.image = "modified-image.png";
+kitAfter.icon = "modified-icon.svg";
+kitAfter.image = "modified-image.png";
 kitAfter.remote = "https://modified.example.com/archive.tar.gz";
 kitAfter.homepage = "https://modified.example.com";
-kitAfter.license = "MIT-Modified"; kitAfter.preview = "modified-preview.png";
+kitAfter.license = "MIT-Modified";
+kitAfter.preview = "modified-preview.png";
 
 // We don't need the full generator. Let me just test with smaller changes.
 // Computing the full diff and inverse, then apply inverse.
@@ -50,11 +53,11 @@ const appliedInverse = applyKitDiff(kitAfter, inverseDiff);
 console.log("[DEBUG] name eq:", kitBefore.name === appliedInverse.name, kitBefore.name, appliedInverse.name);
 
 // Check types
-const bt = (kitBefore.types ?? []).sort((a:any,b:any)=>a.guid.localeCompare(b.guid));
-const it = (appliedInverse.types ?? []).sort((a:any,b:any)=>a.guid.localeCompare(b.guid));
+const bt = (kitBefore.types ?? []).sort((a: any, b: any) => a.guid.localeCompare(b.guid));
+const it = (appliedInverse.types ?? []).sort((a: any, b: any) => a.guid.localeCompare(b.guid));
 console.log("[DEBUG] types count:", bt.length, "vs", it.length);
 
 // Check designs
-const bd = (kitBefore.designs ?? []).sort((a:any,b:any)=>a.guid.localeCompare(b.guid));
-const id = (appliedInverse.designs ?? []).sort((a:any,b:any)=>a.guid.localeCompare(b.guid));
+const bd = (kitBefore.designs ?? []).sort((a: any, b: any) => a.guid.localeCompare(b.guid));
+const id = (appliedInverse.designs ?? []).sort((a: any, b: any) => a.guid.localeCompare(b.guid));
 console.log("[DEBUG] designs count:", bd.length, "vs", id.length);

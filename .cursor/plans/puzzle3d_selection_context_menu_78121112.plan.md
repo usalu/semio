@@ -2,21 +2,21 @@
 name: puzzle3d selection context menu
 overview: Add a right-click context menu to puzzle3d viewport selections (objects, vortices, attractions) exposing Hide/Show, Lock/Unlock, Delete, Zoom, Duplicate, Select-same-kind, plus a vortex-only "Suggest objects" that reuses the existing brush compatible-non-colliding candidate list. Right-click replaces the selection with the entity under the cursor, then opens the menu.
 todos:
-  - id: library-menu
-    content: "puzzle/3d/react/index.tsx: add SelectionContextMenu region — puzzle3dSelectionMenuStore, puzzle3dSelectionActionsRef, buildPuzzle3dSelectionMenuItems, Puzzle3dSelectionContextMenu overlay, SelectionContextMenuBinder, new PlayCanvas callback props, add overlay to JSX"
-    status: completed
-  - id: library-suggest
-    content: "puzzle/3d/react/index.tsx: add puzzle3dOpenVortexSuggestionsRef in the brush vortex-pick host so 'Suggest objects' opens the compatible non-colliding candidate list for a vortex regardless of active tool"
-    status: completed
-  - id: renderer-wire
-    content: "framework/.../renderer/react/index.tsx (~L2092): wire new PlayCanvas callbacks to bus.dispatch (setSelectionFlag, deleteSelection, duplicateSelection, selectSameKind)"
-    status: completed
-  - id: play-commands
-    content: "puzzle/3d/play/index.ts: add run() cases setSelectionFlag, duplicateSelection, selectSameKind reusing existing fixture helpers; generalize toggleEntityFlag"
-    status: completed
-  - id: tests
-    content: Extend existing vitest blocks in puzzle/3d/react/index.tsx and puzzle/3d/play/index.ts for the new builder and commands; build play harness to verify
-    status: completed
+ - id: library-menu
+   content: "puzzle/3d/react/index.tsx: add SelectionContextMenu region — puzzle3dSelectionMenuStore, puzzle3dSelectionActionsRef, buildPuzzle3dSelectionMenuItems, Puzzle3dSelectionContextMenu overlay, SelectionContextMenuBinder, new PlayCanvas callback props, add overlay to JSX"
+   status: completed
+ - id: library-suggest
+   content: "puzzle/3d/react/index.tsx: add puzzle3dOpenVortexSuggestionsRef in the brush vortex-pick host so 'Suggest objects' opens the compatible non-colliding candidate list for a vortex regardless of active tool"
+   status: completed
+ - id: renderer-wire
+   content: "framework/.../renderer/react/index.tsx (~L2092): wire new PlayCanvas callbacks to bus.dispatch (setSelectionFlag, deleteSelection, duplicateSelection, selectSameKind)"
+   status: completed
+ - id: play-commands
+   content: "puzzle/3d/play/index.ts: add run() cases setSelectionFlag, duplicateSelection, selectSameKind reusing existing fixture helpers; generalize toggleEntityFlag"
+   status: completed
+ - id: tests
+   content: Extend existing vitest blocks in puzzle/3d/react/index.tsx and puzzle/3d/play/index.ts for the new builder and commands; build play harness to verify
+   status: completed
 isProject: false
 ---
 
@@ -42,8 +42,6 @@ flowchart LR
   rend --> ctrl["play controller commands"]
   sug --> brush["brush candidate menu (existing)"]
 ```
-
-
 
 ## 1. Library: `puzzle/3d/react/index.tsx`
 
@@ -92,4 +90,3 @@ Add cases to the `run()` switch (near `deleteSelection`, L2490) and reuse existi
 
 - Build `puzzle/3d/play` and `framework` renderer; run the puzzle3d/play vitest blocks for the new pure functions/commands.
 - Runtime: right-click object → Hide/Lock/Delete/Duplicate/Select-same-kind/Zoom work; right-click vortex → "Suggest objects" opens the same compatible non-colliding candidate list as a brush-click; confirm via `[DEBUG]` logs.
-

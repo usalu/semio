@@ -2,36 +2,36 @@
 name: Split Puzzle 2D Bundles
 overview: "Decompose the monolithic puzzle/2d Rust crate and React renderer into a crate-per-bundle, trait-extended stack: a generic infinite canvas base (Rust + React renderer), reusable Rust-only extension layers (graph, map, mindmap), and puzzle/2d re-homed on top, with puzzle/2d building and tests green on the new structure."
 todos:
-  - id: ticket
-    content: Read repo://goals, open/reopen a repo MCP ticket for the puzzle 2d bundle split under the most fitting goal.
-    status: completed
-  - id: cavas-rust
-    content: "Build infinite/cavas/vello crate: move vcompute, geom_sel, scene_json, svg_icon_vello09, canvas slice of board_host (camera/tiles/grid/LOD/Theme/vello scene/WebGPU session); define CanvasExtension trait + generic CanvasEngine; add Cargo.toml (rlib) + workspace member; migrate generic tests."
-    status: completed
-  - id: graph-rust
-    content: "Build mathematical/graph crate depending on cavas: GraphExtension trait, Node/Handle/Edge, force_graph/hierarchical_tree/redraw_layout, graph hit-test/render; Cargo.toml + tests."
-    status: completed
-  - id: puzzle-rust
-    content: "Re-home puzzle/2d/rs on graph: Puzzle2dExtension impl, keep elements palette/metabolism icons/codec + build.rs, kind catalogs, brush, fixtures, concrete BoardSession + board_* wasm exports; update Cargo.toml path deps."
-    status: completed
-  - id: map-mindmap-rust
-    content: "Implement gis/map (MapExtension: CanvasExtension) and reasoning/mindmap (MindmapExtension: GraphExtension, Topic/Relationship) as single-lib.rs extension crates with unit tests; add workspace members."
-    status: completed
-  - id: cavas-react
-    content: "Build @semio-tech/infinite-cavas-react-renderer: move Adapters, GpuWasmBridge, ReactCanvas reconciler/host/Scene Sync/Hooks; add package.json/project.json/script.ts/vitest/tsconfig; migrate generic React tests."
-    status: completed
-  - id: puzzle-react
-    content: "Re-home @semio-tech/puzzle-2d-react on the renderer: keep puzzle kinds/paint/store/objects/scene/fixtures; import @semio-tech/infinite-cavas-react-renderer; add workspace dependency."
-    status: completed
-  - id: wiring
-    content: Wire launch.json test/build entries for new crates and the react-renderer (following existing grouping/order); ensure each bundle has exactly one script.ts and project.json calls script.ts.
-    status: completed
-  - id: verify
-    content: Run cargo build/test per crate, both react vitest suites, the puzzle/2d wasm build, and dev:puzzle:2d runtime check; confirm map/mindmap compile + tests pass.
-    status: completed
-  - id: close
-    content: Close the ticket with summary and the full list of created/updated/removed files.
-    status: completed
+ - id: ticket
+   content: Read repo://goals, open/reopen a repo MCP ticket for the puzzle 2d bundle split under the most fitting goal.
+   status: completed
+ - id: cavas-rust
+   content: "Build infinite/cavas/vello crate: move vcompute, geom_sel, scene_json, svg_icon_vello09, canvas slice of board_host (camera/tiles/grid/LOD/Theme/vello scene/WebGPU session); define CanvasExtension trait + generic CanvasEngine; add Cargo.toml (rlib) + workspace member; migrate generic tests."
+   status: completed
+ - id: graph-rust
+   content: "Build mathematical/graph crate depending on cavas: GraphExtension trait, Node/Handle/Edge, force_graph/hierarchical_tree/redraw_layout, graph hit-test/render; Cargo.toml + tests."
+   status: completed
+ - id: puzzle-rust
+   content: "Re-home puzzle/2d/rs on graph: Puzzle2dExtension impl, keep elements palette/metabolism icons/codec + build.rs, kind catalogs, brush, fixtures, concrete BoardSession + board_* wasm exports; update Cargo.toml path deps."
+   status: completed
+ - id: map-mindmap-rust
+   content: "Implement gis/map (MapExtension: CanvasExtension) and reasoning/mindmap (MindmapExtension: GraphExtension, Topic/Relationship) as single-lib.rs extension crates with unit tests; add workspace members."
+   status: completed
+ - id: cavas-react
+   content: "Build @semio-tech/infinite-cavas-react-renderer: move Adapters, GpuWasmBridge, ReactCanvas reconciler/host/Scene Sync/Hooks; add package.json/project.json/script.ts/vitest/tsconfig; migrate generic React tests."
+   status: completed
+ - id: puzzle-react
+   content: "Re-home @semio-tech/puzzle-2d-react on the renderer: keep puzzle kinds/paint/store/objects/scene/fixtures; import @semio-tech/infinite-cavas-react-renderer; add workspace dependency."
+   status: completed
+ - id: wiring
+   content: Wire launch.json test/build entries for new crates and the react-renderer (following existing grouping/order); ensure each bundle has exactly one script.ts and project.json calls script.ts.
+   status: completed
+ - id: verify
+   content: Run cargo build/test per crate, both react vitest suites, the puzzle/2d wasm build, and dev:puzzle:2d runtime check; confirm map/mindmap compile + tests pass.
+   status: completed
+ - id: close
+   content: Close the ticket with summary and the full list of created/updated/removed files.
+   status: completed
 isProject: false
 ---
 
@@ -59,11 +59,13 @@ The React renderer splits the same way: the generic reconciler/`ReactCanvas`/`Gp
 ## Boundary map (from current regions)
 
 Rust `puzzle/2d/rs/lib.rs`:
+
 - To cavas: `vcompute` (geometry), `geom_sel` (selection predicates), `scene_json`, `svg_icon_vello09`, and the canvas slice of `board_host` (camera, tiles, grid, viewport, LOD, `Theme` struct, vello scene assembly, `BoardSessionInner`/WebGPU render loop). Generic deps `vello`, `vello_svg`, `typst*`, `image`, `fontdb`, `data-url`, `base64` move here.
 - To graph: `force_graph`, `hierarchical_tree`, `redraw_layout`, plus `Node`/`Handle`/`Edge` (lines ~7426-7730) and their hit-test/render in `board_host`.
 - Stays in puzzle/2d: `board_icon_assets`, `elements_board_palette` (build.rs include from `ui/styling/rs/board_vello_build.inc.rs`), `board_metabolism_icons`, `board_icon_codec`, concrete palette->`Theme` wiring (lines ~2737-2772), kind catalogs, brush, fixtures, `BoardSession` + `board_*` wasm exports. `build.rs` stays here (elements/metabolism specific).
 
 React `puzzle/2d/react/index.tsx`:
+
 - To cavas react-renderer: `Adapters`, `GpuWasmBridge`, generic `ReactCanvas` (regions ~9605-11421: Kinds/Context/Markers/Descriptor Build/Scene Sync/HostMountBridge/Canvas/Hooks) and the reconciler `Renderer` host plumbing (`HostKinds`/`PropApply`/`MountHelpers`/`HostMountInternals`).
 - Stays in puzzle/2d react: `IconSelectorMode`, puzzle `Kinds`, `ElementsUiPuzzle2dPaint`, `Stores`, `Objects`, `Scene`, `DirectedGraphObservation`, fixtures, the puzzle-specific paint inside `Renderer`.
 

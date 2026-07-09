@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Panel Section Document
 
 ## Analysis
@@ -55,12 +56,12 @@ Modify `PanelSection` interface to include:
 
 ```typescript
 enum SectionSpecificity {
-  SKETCHPAD = 0, // General sketchpad-level
-  KIT = 10, // Kit-level
-  QUALITY = 20, // Quality app
-  TYPE = 20, // Type app
-  DESIGN = 20, // Design app
-  SELECTION = 30, // Current selection (most specific)
+ SKETCHPAD = 0, // General sketchpad-level
+ KIT = 10, // Kit-level
+ QUALITY = 20, // Quality app
+ TYPE = 20, // Type app
+ DESIGN = 20, // Design app
+ SELECTION = 30, // Current selection (most specific)
 }
 ```
 

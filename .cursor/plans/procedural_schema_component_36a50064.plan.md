@@ -2,24 +2,24 @@
 name: Procedural Schema Component
 overview: Auto-generate a single tri-modal (construct / deconstruct / modify) component for every registered schema, driven by the schema's declared `fields`, with an explicit engine-level `null` emitted on error alongside an `errors` list.
 todos:
-  - id: "null"
-    content: "Add Atom::Null to neural/engine/lib.rs: serde round-trip, hashing, ValueType::matches, and treat null as cardinality-agnostic in validate_channel_value/validate_homogeneous_list"
-    status: completed
-  - id: component
-    content: Implement schema_component_info(&Schema) + SchemaComponent Operation (construct/deconstruct/modify/error modes) with field<->channel ValueType bridging helpers in neural/engine/lib.rs
-    status: completed
-  - id: register
-    content: Auto-register M.S component in Registry::finalize for non-core, fixed-field schemas (skip list/dictionary and existing ids)
-    status: completed
-  - id: replace
-    content: Remove math.constructVector/constructPoint; update brep operators tag, procedural fixture + react ids, and math tests to math.vector/math.point
-    status: completed
-  - id: ts-ui
-    content: Handle null channel values and render the errors list in flow/react/index.tsx
-    status: completed
-  - id: tests
-    content: Extend engine + math/brep/bim test modules; run Rust + vitest suites via existing nx/launch.json targets to confirm fixtures evaluate
-    status: completed
+ - id: "null"
+   content: "Add Atom::Null to neural/engine/lib.rs: serde round-trip, hashing, ValueType::matches, and treat null as cardinality-agnostic in validate_channel_value/validate_homogeneous_list"
+   status: completed
+ - id: component
+   content: Implement schema_component_info(&Schema) + SchemaComponent Operation (construct/deconstruct/modify/error modes) with field<->channel ValueType bridging helpers in neural/engine/lib.rs
+   status: completed
+ - id: register
+   content: Auto-register M.S component in Registry::finalize for non-core, fixed-field schemas (skip list/dictionary and existing ids)
+   status: completed
+ - id: replace
+   content: Remove math.constructVector/constructPoint; update brep operators tag, procedural fixture + react ids, and math tests to math.vector/math.point
+   status: completed
+ - id: ts-ui
+   content: Handle null channel values and render the errors list in flow/react/index.tsx
+   status: completed
+ - id: tests
+   content: Extend engine + math/brep/bim test modules; run Rust + vitest suites via existing nx/launch.json targets to confirm fixtures evaluate
+   status: completed
 isProject: false
 ---
 
@@ -53,8 +53,6 @@ flowchart LR
   comp -->|both| Mod["Modify: S + fields"]
   comp -->|failure| Err["null S + null fields + errors list"]
 ```
-
-
 
 ## 1. Explicit null in the engine — [neural/engine/lib.rs](neural/engine/lib.rs)
 
@@ -97,4 +95,3 @@ flowchart LR
 
 - "All schemas" = every non-core, fixed-field schema; core scalar/media primitives and the fixed-field-less `list`/`dictionary` are intentionally excluded (single-`value` leaves already have source/emitter ops).
 - Field inputs are all optional (`?`/`*`) by necessity so the one operator supports all three modes — the example's `+` markers describe the natural cardinality of the outputs, which is preserved on the output ports.
-

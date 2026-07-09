@@ -28,9 +28,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🏪assets🗃️compose⚙️kitmetabolismdiffed📌1📌125551"
-        ],
+        "ranges": ["👤compose🏪assets🗃️compose⚙️kitmetabolismdiffed📌1📌125551"],
         "second": "🎆26🌙03☀️12⏰07⌚48⏱️54",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -88,9 +86,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼composetest📌1📌375"
-        ],
+        "ranges": ["👤compose📚js🥼composetest📌1📌375"],
         "second": "🎆26🌙03☀️12⏰07⌚49⏱️46",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -121,9 +117,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼composetest📌1📌375"
-        ],
+        "ranges": ["👤compose📚js🥼composetest📌1📌375"],
         "second": "🎆26🌙03☀️12⏰07⌚49⏱️58",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -179,9 +173,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️12⏰07⌚51⏱️03",
         "session": "⚪c728d40bef084008acd3927886030112",
-        "tests": [
-          ""
-        ]
+        "tests": [""]
       },
       "response": {
         "allowed": true
@@ -210,9 +202,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌11235"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌11235"],
         "second": "🎆26🌙03☀️12⏰07⌚56⏱️40",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -243,9 +233,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌11235"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌11235"],
         "second": "🎆26🌙03☀️12⏰07⌚56⏱️40",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -276,9 +264,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌11235"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌11235"],
         "second": "🎆26🌙03☀️12⏰07⌚56⏱️56",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -309,9 +295,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌11235"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌11235"],
         "second": "🎆26🌙03☀️12⏰07⌚56⏱️56",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -342,9 +326,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌11235"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌11235"],
         "second": "🎆26🌙03☀️12⏰07⌚57⏱️13",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -375,9 +357,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌11235"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌11235"],
         "second": "🎆26🌙03☀️12⏰07⌚57⏱️25",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -408,9 +388,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅composetests💻tests📌1📌374"
-        ],
+        "ranges": ["👤compose📚net🛅composetests💻tests📌1📌374"],
         "second": "🎆26🌙03☀️12⏰07⌚57⏱️53",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -441,9 +419,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🛂sqlite💻schema📌1📌439"
-        ],
+        "ranges": ["👤compose🛂sqlite💻schema📌1📌439"],
         "second": "🎆26🌙03☀️12⏰07⌚58⏱️00",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -474,9 +450,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo🛂sqlite💻schema📌1📌244"
-        ],
+        "ranges": ["🧰composerepo🛂sqlite💻schema📌1📌244"],
         "second": "🎆26🌙03☀️12⏰07⌚58⏱️23",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -507,9 +481,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo🛂sqlite💻schema📌1📌244"
-        ],
+        "ranges": ["🧰composerepo🛂sqlite💻schema📌1📌244"],
         "second": "🎆26🌙03☀️12⏰07⌚58⏱️35",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -600,9 +572,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️12⏰07⌚59⏱️46",
         "session": "⚪c728d40bef084008acd3927886030112",
-        "tests": [
-          ""
-        ]
+        "tests": [""]
       },
       "response": {
         "allowed": true
@@ -625,16 +595,12 @@
         "checkpoint": "🔀60dfe07aee2143680c0313abaff78931f318b398",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "👤compose📚js🥼composetest"
-        ],
+        "files": ["👤compose📚js🥼composetest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️12⏰08⌚01⏱️44",
         "session": "⚪c728d40bef084008acd3927886030112",
-        "tests": [
-          ""
-        ]
+        "tests": [""]
       },
       "response": {
         "allowed": true
@@ -688,9 +654,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌1📌12030"
-        ],
+        "ranges": ["👤compose📚js💻compose📌1📌12030"],
         "second": "🎆26🌙03☀️12⏰08⌚03⏱️07",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -721,9 +685,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌1📌12030"
-        ],
+        "ranges": ["👤compose📚js💻compose📌1📌12030"],
         "second": "🎆26🌙03☀️12⏰08⌚03⏱️19",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -748,16 +710,12 @@
         "checkpoint": "🔀68ae08219bbd3a68d8a72d460e05c86376d98380",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "👤compose📚js🥼composetest"
-        ],
+        "files": ["👤compose📚js🥼composetest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️12⏰08⌚03⏱️40",
         "session": "⚪c728d40bef084008acd3927886030112",
-        "tests": [
-          "\"Json"
-        ]
+        "tests": ["\"Json"]
       },
       "response": {
         "allowed": true
@@ -786,9 +744,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌1📌12030"
-        ],
+        "ranges": ["👤compose📚js💻compose📌1📌12030"],
         "second": "🎆26🌙03☀️12⏰08⌚04⏱️29",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -819,9 +775,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌1📌12030"
-        ],
+        "ranges": ["👤compose📚js💻compose📌1📌12030"],
         "second": "🎆26🌙03☀️12⏰08⌚05⏱️00",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -852,9 +806,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌1📌12030"
-        ],
+        "ranges": ["👤compose📚js💻compose📌1📌12030"],
         "second": "🎆26🌙03☀️12⏰08⌚05⏱️30",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -885,9 +837,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌1📌12030"
-        ],
+        "ranges": ["👤compose📚js💻compose📌1📌12030"],
         "second": "🎆26🌙03☀️12⏰08⌚05⏱️37",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -972,9 +922,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌1📌12030"
-        ],
+        "ranges": ["👤compose📚js💻compose📌1📌12030"],
         "second": "🎆26🌙03☀️12⏰08⌚07⏱️06",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -1005,9 +953,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🏪assets🗃️compose💾kitmetabolismjson📌1📌158156"
-        ],
+        "ranges": ["👤compose🏪assets🗃️compose💾kitmetabolismjson📌1📌158156"],
         "second": "🎆26🌙03☀️12⏰08⌚07⏱️06",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -1038,9 +984,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌1📌12030"
-        ],
+        "ranges": ["👤compose📚js💻compose📌1📌12030"],
         "second": "🎆26🌙03☀️12⏰08⌚07⏱️17",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -1071,9 +1015,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🏪assets🗃️compose💾kitmetabolismjson📌1📌158156"
-        ],
+        "ranges": ["👤compose🏪assets🗃️compose💾kitmetabolismjson📌1📌158156"],
         "second": "🎆26🌙03☀️12⏰08⌚07⏱️18",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -1131,9 +1073,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🏪assets💻index📌1📌199"
-        ],
+        "ranges": ["👤compose🏪assets💻index📌1📌199"],
         "second": "🎆26🌙03☀️12⏰08⌚08⏱️11",
         "session": "⚪c728d40bef084008acd3927886030112"
       },
@@ -1164,9 +1104,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🏪assets💻index📌1📌199"
-        ],
+        "ranges": ["👤compose🏪assets💻index📌1📌199"],
         "second": "🎆26🌙03☀️12⏰08⌚08⏱️24",
         "session": "⚪c728d40bef084008acd3927886030112"
       },

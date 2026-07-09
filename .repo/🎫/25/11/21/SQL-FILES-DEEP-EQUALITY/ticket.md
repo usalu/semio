@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Kit Import/Export - Final Implementation
 
 ## Completion Summary
@@ -66,7 +67,7 @@ Updated `exportKit()` to include example files for Metabolism kit:
 ```typescript
 // If this is the Metabolism kit, add all files from examples/metabolism
 if (kit.guid === "01936dc9-60a3-7505-be05-f4ba83d10d73") {
-  // Includes: LICENSE.md, README.md, demo.gh, kit.gh
+ // Includes: LICENSE.md, README.md, demo.gh, kit.gh
 }
 ```
 
@@ -89,15 +90,15 @@ Each entity type has its own equality function:
 
 ```typescript
 const areAttributesEqual = (a?: Attribute[], b?: Attribute[]): boolean => {
-  // Normalize arrays
-  // Check lengths
-  // For each attribute: find by guid, compare all properties
-  // Return true only if all match
+ // Normalize arrays
+ // Check lengths
+ // For each attribute: find by guid, compare all properties
+ // Return true only if all match
 };
 
 const arePortsEqual = (a?: Connector[], b?: Connector[]): boolean => {
-  // Same pattern but compares point, direction, t, mandatory
-  // Also recursively compares attributes
+ // Same pattern but compares point, direction, t, mandatory
+ // Also recursively compares attributes
 };
 
 // ... similar functions for all entity types

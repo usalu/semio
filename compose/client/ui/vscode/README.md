@@ -6,9 +6,11 @@ summary: VS Code extension providing a sketchpad-based custom editor for compose
 ---
 
 ### Summary
+
 VS Code extension providing a sketchpad-based custom editor for compose kit JSON files.
 
 ### Specs
+
 - Registers a CustomTextEditorProvider for `*.kit.json`, `kit_*.json`, `kit-*.json`, and `**/.compose/kit.json`
 - Loads the built sketchpad app in a webview panel from bundled `sketchpad-dist` or sibling `../sketchpad/dist`
 - Bridges file read/write between VS Code filesystem and the sketchpad webview via postMessage

@@ -2,27 +2,27 @@
 name: Clean Up Raw/Analytic View Mechanism
 overview: ""
 todos:
-  - id: scope-display
-    content: Scope replDisplayedSelectionTargets and its call site to current pickViewKind
-    status: completed
-  - id: toggle-preserve
-    content: Remove selection-clearing and forced auto-switch when toggling view
-    status: completed
-  - id: derived-refresh
-    content: Refresh derived view service regardless of interaction/view
-    status: completed
-  - id: view-masked-toggles
-    content: Add view-masked toggle helpers and pass them into picking/scene/hover code paths
-    status: completed
-  - id: view-scoped-merge
-    content: Make commit/dispatch/snap-pick merge only within current-view entities and preserve out-of-view entries
-    status: completed
-  - id: tests
-    content: Extend tests for view-scoped display, view-scoped merge, and view-masked toggle helpers
-    status: completed
-  - id: ticket-close
-    content: Close ticket 2026/05/26/REFACTOR-SPATIAL-SELECTION via repo MCP
-    status: completed
+ - id: scope-display
+   content: Scope replDisplayedSelectionTargets and its call site to current pickViewKind
+   status: completed
+ - id: toggle-preserve
+   content: Remove selection-clearing and forced auto-switch when toggling view
+   status: completed
+ - id: derived-refresh
+   content: Refresh derived view service regardless of interaction/view
+   status: completed
+ - id: view-masked-toggles
+   content: Add view-masked toggle helpers and pass them into picking/scene/hover code paths
+   status: completed
+ - id: view-scoped-merge
+   content: Make commit/dispatch/snap-pick merge only within current-view entities and preserve out-of-view entries
+   status: completed
+ - id: tests
+   content: Extend tests for view-scoped display, view-scoped merge, and view-masked toggle helpers
+   status: completed
+ - id: ticket-close
+   content: Close ticket 2026/05/26/REFACTOR-SPATIAL-SELECTION via repo MCP
+   status: completed
 isProject: false
 ---
 
@@ -51,15 +51,10 @@ In [spatial/js/renderer-r3f/index.tsx](spatial/js/renderer-r3f/index.tsx) the `p
 Extend `replDisplayedSelectionTargets` to take `pickViewKind` and filter selection targets by `spatialPickViewKindSet(pickViewKind)`:
 
 ```ts
-export function replDisplayedSelectionTargets(
-  interactionActive: boolean,
-  pickViewKind: SpatialPickViewKind,
-  rendererSelection: readonly SelectionTarget[],
-  interactionSelection: readonly SelectionTarget[],
-): readonly SelectionTarget[] {
-  const layer = interactionActive ? interactionSelection : rendererSelection;
-  const allowed = spatialPickViewKindSet(pickViewKind);
-  return layer.filter((t) => allowed.has(t.kind as SpatialPickTargetKind));
+export function replDisplayedSelectionTargets(interactionActive: boolean, pickViewKind: SpatialPickViewKind, rendererSelection: readonly SelectionTarget[], interactionSelection: readonly SelectionTarget[]): readonly SelectionTarget[] {
+ const layer = interactionActive ? interactionSelection : rendererSelection;
+ const allowed = spatialPickViewKindSet(pickViewKind);
+ return layer.filter((t) => allowed.has(t.kind as SpatialPickTargetKind));
 }
 ```
 

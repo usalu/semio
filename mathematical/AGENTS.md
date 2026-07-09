@@ -2,5 +2,5 @@
 technology: mathematical
 emoji: 🧮
 ---
-# Mathematical
 
+# Mathematical

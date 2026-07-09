@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - Kit table row expansion triggered `compose.kitApp.toggleExpandedRow` but the UI never reflected the change, implying the machine-facing state was not updated by the interaction.
@@ -21,6 +22,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix kit table row expansion

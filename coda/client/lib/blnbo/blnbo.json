@@ -1,82 +1,82 @@
 {
-    "id": "ldrbmrtv.blnbo",
-    "name": "Berlin Building Code",
-    "description": "Bauordnung für Berlin (BauO Bln) - Berlin Building Code validator configuration.",
-    "source": "https://gesetze.berlin.de/perma?d=jlr-BauOBE2005rahmen",
-    "translation": {
-        "target_id": "ldrbmrtv.blnbo",
-        "properties": {
-            "height": {
-                "kind": "number",
-                "description": "Height is the distance from the average ground surface to the top edge of the finished floor of the highest storey in which a habitable room is possible."
-            },
-            "building_class": {
-                "kind": "level",
-                "description": "Building class (1-5) per BauO Bln §2(3).",
-                "values": ["1", "2", "3", "4", "5"]
-            },
-            "gross_floor_area": {
-                "kind": "number",
-                "description": "Total gross floor area of the building."
-            }
-        },
-        "usage_units": {
-            "description": "Usage units (Nutzungseinheiten) of the building.",
-            "properties": {
-                "id": { "kind": "string" },
-                "total_gross_floor_area": { "kind": "number" }
-            }
-        },
-        "storeys": {
-            "description": "Storeys (Geschosse) of the building.",
-            "properties": {
-                "id": { "kind": "string" },
-                "usage_unit_id": { "kind": "string" },
-                "escape_routes": { "kind": "array", "items": { "kind": "string" } }
-            }
-        },
-        "staircases": {
-            "description": "Staircases (Treppen) of the building.",
-            "properties": {
-                "id": { "kind": "string" },
-                "kind": { "kind": "string", "values": ["necessary", "convenience"] },
-                "external": { "kind": "boolean" },
-                "in_separate_stairwell": { "kind": "boolean" },
-                "separate_stairwell_id": { "kind": "string" },
-                "connects": { "kind": "array", "items": { "kind": "string" } }
-            }
-        }
+  "id": "ldrbmrtv.blnbo",
+  "name": "Berlin Building Code",
+  "description": "Bauordnung für Berlin (BauO Bln) - Berlin Building Code validator configuration.",
+  "source": "https://gesetze.berlin.de/perma?d=jlr-BauOBE2005rahmen",
+  "translation": {
+    "target_id": "ldrbmrtv.blnbo",
+    "properties": {
+      "height": {
+        "kind": "number",
+        "description": "Height is the distance from the average ground surface to the top edge of the finished floor of the highest storey in which a habitable room is possible."
+      },
+      "building_class": {
+        "kind": "level",
+        "description": "Building class (1-5) per BauO Bln §2(3).",
+        "values": ["1", "2", "3", "4", "5"]
+      },
+      "gross_floor_area": {
+        "kind": "number",
+        "description": "Total gross floor area of the building."
+      }
     },
-    "rules": [
+    "usage_units": {
+      "description": "Usage units (Nutzungseinheiten) of the building.",
+      "properties": {
+        "id": { "kind": "string" },
+        "total_gross_floor_area": { "kind": "number" }
+      }
+    },
+    "storeys": {
+      "description": "Storeys (Geschosse) of the building.",
+      "properties": {
+        "id": { "kind": "string" },
+        "usage_unit_id": { "kind": "string" },
+        "escape_routes": { "kind": "array", "items": { "kind": "string" } }
+      }
+    },
+    "staircases": {
+      "description": "Staircases (Treppen) of the building.",
+      "properties": {
+        "id": { "kind": "string" },
+        "kind": { "kind": "string", "values": ["necessary", "convenience"] },
+        "external": { "kind": "boolean" },
+        "in_separate_stairwell": { "kind": "boolean" },
+        "separate_stairwell_id": { "kind": "string" },
+        "connects": { "kind": "array", "items": { "kind": "string" } }
+      }
+    }
+  },
+  "rules": [
+    {
+      "id": "staircase-located",
+      "section": "§35",
+      "description": "Necessary staircases must be located in separate stairwells (eigene Treppenräume).",
+      "clauses": [
         {
-            "id": "staircase-located",
-            "section": "§35",
-            "description": "Necessary staircases must be located in separate stairwells (eigene Treppenräume).",
-            "clauses": [
-                {
-                    "id": "not-external-staircase",
-                    "description": "External staircases (Außentreppen) are exempt."
-                },
-                {
-                    "id": "not-in-building-classes-1-and-2",
-                    "description": "Buildings of building classes 1 and 2 are exempt."
-                },
-                {
-                    "id": "two-storey-small-usage-unit-exemption",
-                    "description": "Exempt if staircase connects exactly 2 storeys within same usage unit with total GFA ≤200m² and each storey has a reachable escape route."
-                }
-            ]
+          "id": "not-external-staircase",
+          "description": "External staircases (Außentreppen) are exempt."
         },
         {
-            "id": "building-height-limit",
-            "section": "§2",
-            "description": "Building height must not exceed 21m (high-rise threshold).",
-            "clauses": [
-                {
-                    "id": "height-below-21m",
-                    "description": "Height ≤ 21m."
-                }
-            ]
+          "id": "not-in-building-classes-1-and-2",
+          "description": "Buildings of building classes 1 and 2 are exempt."
+        },
+        {
+          "id": "two-storey-small-usage-unit-exemption",
+          "description": "Exempt if staircase connects exactly 2 storeys within same usage unit with total GFA ≤200m² and each storey has a reachable escape route."
         }
-    ]
+      ]
+    },
+    {
+      "id": "building-height-limit",
+      "section": "§2",
+      "description": "Building height must not exceed 21m (high-rise threshold).",
+      "clauses": [
+        {
+          "id": "height-below-21m",
+          "description": "Height ≤ 21m."
+        }
+      ]
+    }
+  ]
 }

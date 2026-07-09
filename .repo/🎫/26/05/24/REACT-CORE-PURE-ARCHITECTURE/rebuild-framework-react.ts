@@ -13,13 +13,13 @@ const mid = headLines.slice(midStart).join("\n");
 
 let shell = readFileSync(join(dir, "shell-extract.tsx"), "utf8");
 shell = shell
-	.replace(/^\/\/ Domain-neutral[\s\S]*?^export enum Mode \{[\s\S]*?^}\n\n/m, "")
-	.replace(/\bUIWindowLayoutWindowNode\b/g, "WindowLayoutWindowNode")
-	.replace(/\bUIWindowLayoutStackNode\b/g, "WindowLayoutStackNode")
-	.replace(/\bUIWindowLayoutAxisNode\b/g, "WindowLayoutAxisNode")
-	.replace(/\bUIWindowLayout\b/g, "WindowLayout")
-	.replace(/\bUIWindowLayoutNode\b/g, "WindowLayoutNode")
-	.replace(/new DOMEventBindingController\(\)/g, "createDOMEventBinding()");
+  .replace(/^\/\/ Domain-neutral[\s\S]*?^export enum Mode \{[\s\S]*?^}\n\n/m, "")
+  .replace(/\bUIWindowLayoutWindowNode\b/g, "WindowLayoutWindowNode")
+  .replace(/\bUIWindowLayoutStackNode\b/g, "WindowLayoutStackNode")
+  .replace(/\bUIWindowLayoutAxisNode\b/g, "WindowLayoutAxisNode")
+  .replace(/\bUIWindowLayout\b/g, "WindowLayout")
+  .replace(/\bUIWindowLayoutNode\b/g, "WindowLayoutNode")
+  .replace(/new DOMEventBindingController\(\)/g, "createDOMEventBinding()");
 
 const domBinding = `type DOMListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 

@@ -7,6 +7,7 @@ goal: AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION
 ## Summary
 
 Fixed sections, definitions, and navigation in VS Code extension tree view. Range type aligned, File.definitions resolver implemented, Definition.file/section resolvers added, and openFileAtLine now correctly converts 1-based line numbers to VS Code positions.
+
 ## Changes
 
 - Removed `Position` struct and `positionType` from Go schema builder since column was always hardcoded to 1

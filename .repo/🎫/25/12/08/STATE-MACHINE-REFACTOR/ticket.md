@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The codebase has a dual state management system:
@@ -271,6 +272,7 @@ All 5 playwright tests pass (30.9s).
 ## Log
 
 ## Summary
+
 # Summary
 
 Refactor sketchpad state machine for proper state transitions

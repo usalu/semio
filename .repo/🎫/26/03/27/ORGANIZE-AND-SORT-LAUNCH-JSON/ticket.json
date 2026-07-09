@@ -5,7 +5,5 @@
   "description": "The launch.json is messed up. Make sure it is organized and doesnt repeat. It should start with all the progrms, then all devs, etc. It should be sorted",
   "summary": "Organized and sorted .vscode/launch.json. Grouped configurations into Programs, Dev, Build, and Publish using regions. Fixed logical errors in coda MCP inspector uriFormat. Ensured unique and consistent naming.",
   "goal": "🎯r2603",
-  "sessions": [
-    "⚪6c6f44bfd7a54c7c9c90509aaf6dfd6a"
-  ]
+  "sessions": ["⚪6c6f44bfd7a54c7c9c90509aaf6dfd6a"]
 }

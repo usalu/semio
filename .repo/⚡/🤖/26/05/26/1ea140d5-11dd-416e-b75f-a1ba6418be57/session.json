@@ -691,9 +691,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\1ea140d5-11dd-416e-b75f-a1ba6418be57.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\board\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\board\\index.tsx"]
           },
           "tool_use_id": "call_1agJdqrS6qNEnV9dXADhdCJX__vscode-1779785585156",
           "cwd": "c:\\git\\compose"
@@ -719,9 +717,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\1ea140d5-11dd-416e-b75f-a1ba6418be57.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\board\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\board\\index.tsx"]
           },
           "tool_use_id": "call_1agJdqrS6qNEnV9dXADhdCJX__vscode-1779785585156",
           "cwd": "c:\\git\\compose"
@@ -747,9 +743,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\1ea140d5-11dd-416e-b75f-a1ba6418be57.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\board\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\board\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_1agJdqrS6qNEnV9dXADhdCJX__vscode-1779785585156",
@@ -776,9 +770,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\1ea140d5-11dd-416e-b75f-a1ba6418be57.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\board\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\board\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_1agJdqrS6qNEnV9dXADhdCJX__vscode-1779785585156",

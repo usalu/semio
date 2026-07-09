@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 User requested extending sketchpad tests for every app (Home, Kit, Type, Design, Docs) to use panel toggle in navbar and verify panel content.
@@ -77,6 +78,7 @@ Fixed `initHome` function - the application no longer auto-navigates after file 
 ## Log
 
 ## Summary
+
 # Summary
 
->-
+> -

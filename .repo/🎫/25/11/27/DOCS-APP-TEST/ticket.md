@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 No prior work on docs app E2E tests.
@@ -47,6 +48,7 @@ All 7 tests (2 existing + 5 new) pass with `npx playwright test --project=chromi
 ## Log
 
 ## Summary
+
 # Summary
 
->-
+> -

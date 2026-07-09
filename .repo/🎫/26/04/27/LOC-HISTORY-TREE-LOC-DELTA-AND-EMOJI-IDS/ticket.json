@@ -5,7 +5,5 @@
   "description": "`loc --history`: per-commit git tree scan for real LOC at each SHA; stamp since_prev_loc_percent vs prior history row; contributor history rows compose with scanned tree; display branch as ⛳wip, checkpoints as 🔀shortsha, contributors as 🧑‍💻alias; add Δ% column in text/markdown history tables.",
   "summary": "History now runs locGitSnapshotLocCounts at every included commit so LOC/% reflect the tree at that SHA (including --by-contributors rows, using lastScan with author cumulative pairs). locApplyHistoryLocSincePrev stamps since_prev_loc_percent vs the previous history row per category; markdown/text history tables add a Δ% column. Branch line uses locDisplayHistoryBranch (wip→⛳wip); commits use locHistoryCheckpointLabel (🔀+7hex); contributors use locContributorEmojiID in headings and contributor sections. Removed unused locIsLastCommitOfDayUTC and verbose param from locBuildHistory.",
   "goal": "🎯repoclient",
-  "sessions": [
-    "⚪3dba3ad348354a4ab8e144550d1d7095"
-  ]
+  "sessions": ["⚪3dba3ad348354a4ab8e144550d1d7095"]
 }

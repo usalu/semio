@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The kit_metabolism.json.old file contained the old schema with `representations` on types. The new kit_metabolism.json had the new schema with `models` but was missing the actual model data.
@@ -40,6 +41,7 @@ Some type names were simplified in the new schema:
 ## Log
 
 ## Summary
+
 # Summary
 
 Migrate models from kit_metabolism.json.old to kit_metabolism.json

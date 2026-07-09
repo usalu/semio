@@ -1,55 +1,55 @@
 ---
 name: Consolidate Monorepo Single Files
-overview: "Continue the existing \"Consolidate Monorepo Into Single Files\" effort: merge every remaining multi-file Rust crate and tightly-coupled TS/TSX module cluster into a single file per logical unit, using the repo's established `pub mod name { //#region ... }` (Rust) and `//#region 🔖name` (TS) inlining pattern, while leaving genuinely platform-mandated splits untouched."
+overview: 'Continue the existing "Consolidate Monorepo Into Single Files" effort: merge every remaining multi-file Rust crate and tightly-coupled TS/TSX module cluster into a single file per logical unit, using the repo''s established `pub mod name { //#region ... }` (Rust) and `//#region 🔖name` (TS) inlining pattern, while leaving genuinely platform-mandated splits untouched.'
 todos:
-  - id: reopen-ticket
-    content: Reopen CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES ticket
-    status: completed
-  - id: rust-ui-wgpu
-    content: Consolidate ui/wgpu/rs (12 files) into lib.rs, preserving uncommitted draw.rs/shaders.rs edits
-    status: completed
-  - id: rust-renderer-wgpu
-    content: Consolidate framework/renderer/wgpu/rs (7 files) into lib.rs, preserving uncommitted edits
-    status: completed
-  - id: rust-framework-core
-    content: Consolidate framework/core/rs (7 files) into lib.rs
-    status: completed
-  - id: rust-os-core
-    content: Consolidate framework/product/os/core/rs (7 files) into lib.rs
-    status: completed
-  - id: rust-framework-plugin
-    content: Consolidate framework/plugin/rs (6 files) into lib.rs
-    status: completed
-  - id: rust-layout
-    content: Consolidate layout/rs (6 files) into lib.rs
-    status: completed
-  - id: rust-graph-dsl
-    content: Consolidate mathematical/graph/dsl/rs (4 files, incl. include! jack_impl.rs) into lib.rs
-    status: completed
-  - id: rust-trinity-jack-core
-    content: Consolidate trinity/jack/core/rs (queryable.rs) into lib.rs
-    status: completed
-  - id: rust-writer
-    content: Consolidate writer/rs and writer/plugin/rs into their lib.rs files
-    status: completed
-  - id: ts-graph-canvas-triad
-    content: Merge flow-graph-canvas-host.tsx + graph-canvas-overlays.tsx into node-graph-host.tsx
-    status: completed
-  - id: ts-os-shell-satellites
-    content: Merge os-chrome-panels/ui-search-find/tool-tree/types/plugin-runtime/wasm-session-loader into os-shell.tsx
-    status: completed
-  - id: ts-storybook-kit-store
-    content: Merge .storybook kit-store 9-file cluster into one file
-    status: completed
-  - id: ts-small-pairs
-    content: Merge remaining small file pairs (plugin-registry, generate.neo4j.gen, storybook decorators, jack lsp protocol, sketchpad docs-mdx)
-    status: completed
-  - id: verify
-    content: Run cargo check/test per crate, TS build/typecheck, and visual dev-server smoke test
-    status: completed
-  - id: close-ticket
-    content: Update ticket summary and close it
-    status: completed
+ - id: reopen-ticket
+   content: Reopen CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES ticket
+   status: completed
+ - id: rust-ui-wgpu
+   content: Consolidate ui/wgpu/rs (12 files) into lib.rs, preserving uncommitted draw.rs/shaders.rs edits
+   status: completed
+ - id: rust-renderer-wgpu
+   content: Consolidate framework/renderer/wgpu/rs (7 files) into lib.rs, preserving uncommitted edits
+   status: completed
+ - id: rust-framework-core
+   content: Consolidate framework/core/rs (7 files) into lib.rs
+   status: completed
+ - id: rust-os-core
+   content: Consolidate framework/product/os/core/rs (7 files) into lib.rs
+   status: completed
+ - id: rust-framework-plugin
+   content: Consolidate framework/plugin/rs (6 files) into lib.rs
+   status: completed
+ - id: rust-layout
+   content: Consolidate layout/rs (6 files) into lib.rs
+   status: completed
+ - id: rust-graph-dsl
+   content: Consolidate mathematical/graph/dsl/rs (4 files, incl. include! jack_impl.rs) into lib.rs
+   status: completed
+ - id: rust-trinity-jack-core
+   content: Consolidate trinity/jack/core/rs (queryable.rs) into lib.rs
+   status: completed
+ - id: rust-writer
+   content: Consolidate writer/rs and writer/plugin/rs into their lib.rs files
+   status: completed
+ - id: ts-graph-canvas-triad
+   content: Merge flow-graph-canvas-host.tsx + graph-canvas-overlays.tsx into node-graph-host.tsx
+   status: completed
+ - id: ts-os-shell-satellites
+   content: Merge os-chrome-panels/ui-search-find/tool-tree/types/plugin-runtime/wasm-session-loader into os-shell.tsx
+   status: completed
+ - id: ts-storybook-kit-store
+   content: Merge .storybook kit-store 9-file cluster into one file
+   status: completed
+ - id: ts-small-pairs
+   content: Merge remaining small file pairs (plugin-registry, generate.neo4j.gen, storybook decorators, jack lsp protocol, sketchpad docs-mdx)
+   status: completed
+ - id: verify
+   content: Run cargo check/test per crate, TS build/typecheck, and visual dev-server smoke test
+   status: completed
+ - id: close-ticket
+   content: Update ticket summary and close it
+   status: completed
 isProject: false
 ---
 

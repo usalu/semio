@@ -2,18 +2,18 @@
 name: Auto-derive dark PDF
 overview: Stop hand-maintaining six `*-dark.tex` wrapper files and six duplicate `TEMPLATES` entries in `print/script.ts`. Instead, derive each dark PDF automatically at build time from its canonical (light) `.tex` file, and let logo/image assets optionally supply a `-dark` variant that is picked up by convention.
 todos:
-  - id: script-derive
-    content: Collapse TEMPLATES to 6 families and derive dark .tex/.pdf automatically in print/script.ts (build/watch/test)
-    status: completed
-  - id: remove-dark-files
-    content: Delete the 6 hand-written *-dark.tex wrapper files and add print/.gitignore for the regenerated artifact
-    status: completed
-  - id: logo-theme-variant
-    content: Add automatic light/dark image resolution by -dark suffix convention in semio-logo.sty
-    status: completed
-  - id: verify-build
-    content: Run print build/test to confirm all 12 PDFs still generate correctly
-    status: completed
+ - id: script-derive
+   content: Collapse TEMPLATES to 6 families and derive dark .tex/.pdf automatically in print/script.ts (build/watch/test)
+   status: completed
+ - id: remove-dark-files
+   content: Delete the 6 hand-written *-dark.tex wrapper files and add print/.gitignore for the regenerated artifact
+   status: completed
+ - id: logo-theme-variant
+   content: Add automatic light/dark image resolution by -dark suffix convention in semio-logo.sty
+   status: completed
+ - id: verify-build
+   content: Run print build/test to confirm all 12 PDFs still generate correctly
+   status: completed
 isProject: false
 ---
 
@@ -40,8 +40,8 @@ Today "dark" is configured, not derived:
 
 ```ts
 function deriveDarkTexSource(lightSource: string): string {
-	if (!/\btheme=light\b/.test(lightSource)) throw new Error("template missing theme=light; cannot derive dark variant");
-	return lightSource.replace(/\btheme=light\b/, "theme=dark");
+ if (!/\btheme=light\b/.test(lightSource)) throw new Error("template missing theme=light; cannot derive dark variant");
+ return lightSource.replace(/\btheme=light\b/, "theme=dark");
 }
 ```
 
@@ -54,6 +54,7 @@ function deriveDarkTexSource(lightSource: string): string {
 ### 2. Remove the hand-maintained dark wrapper files
 
 Delete the 6 currently-untracked wrapper files (they're regenerated automatically now):
+
 - `print/template/report/report-dark.tex`
 - `print/template/paper/paper-dark.tex`
 - `print/template/flyer/flyer-dark.tex`

@@ -79,11 +79,6 @@
       "Edit(js\\js\\components/**)"
     ],
     "ask": [],
-    "deny": [
-      "Read(./.env)",
-      "Read(./.env.*)",
-      "Read(./secrets/**)",
-      "Bash(git checkout)"
-    ]
+    "deny": ["Read(./.env)", "Read(./.env.*)", "Read(./secrets/**)", "Bash(git checkout)"]
   }
 }

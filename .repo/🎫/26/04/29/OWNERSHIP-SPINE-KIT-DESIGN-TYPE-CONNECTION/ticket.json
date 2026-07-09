@@ -5,7 +5,5 @@
   "description": "Align target.schema.graphql ownership spine: Kit owns catalog/containment (designs types concepts tags files folders families authors etc.), Design owns spatial graph (pieces connections layers groups), Connection owns sides; Type owns connectors representations nested types pieces; adjust Owned unions and owner narrowing fields; ConnectionOwned includes Side; PieceOwned excludes Connection; add Kit to catalog owners where Kit exposes fields; remove duplicate concepts/tags from Design fields.",
   "summary": "Aligned relay ownership spine: KitOwned expands catalog rows (designs, kinds, folders, files, families, concepts, tags, qualities/props/stats, authors, nested kits) plus new Family entity (Kit-owned) with Edge/Connection and aggregate unions. DesignOwned stays spatial (pieces, connections, layers, groups); removed kit-catalog concepts/tags fields from Design. TypeOwned unchanged for connectors/representations/nested kinds. ConnectionOwned now Side | Attribute; PieceOwned loses Connection (bridges owned by Design). Catalog owners: Concept/Tag Kit|Type; Stat Kit|Design|Type; Prop/Quality add Kit; Attribute(Modification)Owner gains Connection, Concept, Tag. Kit gains families field. Documented spine vs Diff/mod layering in comments.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪472257421f60429d84d0b0daa3bd1f7c"
-  ]
+  "sessions": ["⚪472257421f60429d84d0b0daa3bd1f7c"]
 }

@@ -1,28 +1,28 @@
 ---
 name: CAD Live Model Stats
-overview: "Add a general per-model-definition \"live stats\" mechanism to cad: a new spatial.stat/v1 asset kind shipped by each model definition, a TypeScript stat-computer registry in @semio-tech/cad-js-core that computes whole-model and per-selection KPIs live using the kernel, and a renderer panel that displays them. Ship three real example stats: shape geometry KPIs, energy demand, and structural stability."
+overview: 'Add a general per-model-definition "live stats" mechanism to cad: a new spatial.stat/v1 asset kind shipped by each model definition, a TypeScript stat-computer registry in @semio-tech/cad-js-core that computes whole-model and per-selection KPIs live using the kernel, and a renderer panel that displays them. Ship three real example stats: shape geometry KPIs, energy demand, and structural stability.'
 todos:
-  - id: schema
-    content: Add cad/schema/json/stat.json (spatial.stat/v1)
-    status: completed
-  - id: core-catalog
-    content: "Core: StatDefinitionSpec, parser, glob+registry, catalog, owner map, scope addition"
-    status: completed
-  - id: core-compute
-    content: "Core: stat compute registry + built-in shape/energy/structure computers"
-    status: completed
-  - id: assets
-    content: Add three statDefinition JSON assets + update modelDefinition.json kinds
-    status: completed
-  - id: renderer
-    content: Add ModelStatsPanel to renderer/index.tsx (model + selection scope, live compute)
-    status: completed
-  - id: play
-    content: Mount ModelStatsPanel in play CadPlayDetailsAside
-    status: completed
-  - id: tests
-    content: Extend inline core + renderer vitest suites
-    status: completed
+ - id: schema
+   content: Add cad/schema/json/stat.json (spatial.stat/v1)
+   status: completed
+ - id: core-catalog
+   content: "Core: StatDefinitionSpec, parser, glob+registry, catalog, owner map, scope addition"
+   status: completed
+ - id: core-compute
+   content: "Core: stat compute registry + built-in shape/energy/structure computers"
+   status: completed
+ - id: assets
+   content: Add three statDefinition JSON assets + update modelDefinition.json kinds
+   status: completed
+ - id: renderer
+   content: Add ModelStatsPanel to renderer/index.tsx (model + selection scope, live compute)
+   status: completed
+ - id: play
+   content: Mount ModelStatsPanel in play CadPlayDetailsAside
+   status: completed
+ - id: tests
+   content: Extend inline core + renderer vitest suites
+   status: completed
 isProject: false
 ---
 
@@ -43,8 +43,6 @@ flowchart LR
   panel -->|"scope: model | selection"| compute["computeStat(defn, ctx) -> kernel math"]
   compute --> panel
 ```
-
-
 
 ## 1. Schema: new `spatial.stat/v1`
 
@@ -109,4 +107,3 @@ In `[cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx)`, import `M
 - Execution starts by opening/reopening a repo-mcp ticket (per repo rules) and reading `repo://goals` to associate it.
 - No migrations/adapters; assets handcrafted. External kernel access stays behind the `SpatialKernel` interface.
 - Run the core + renderer vitest suites to confirm before closing the ticket.
-

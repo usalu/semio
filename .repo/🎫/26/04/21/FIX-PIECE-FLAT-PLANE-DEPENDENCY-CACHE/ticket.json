@@ -4,7 +4,5 @@
   "description": "Update compose/rs so PieceStore::flat_plane no longer reads DesignStore::flatten_map. Compute the flat plane directly from explicit dependencies, cache it with correct invalidation, and ensure design mutations update parent piece/connection references and invalidate derived caches when piece ancestry changes or pieces are removed.",
   "summary": "Moved piece flat-plane and flat-center derivation off DesignStore::flatten_map by introducing piece-level parent piece and parent connection references, rebuilding that ancestry on design hydration and structural graph edits, and adding regression tests for explicit child planes and deletion-driven parent rewiring.",
   "goal": "🎯r2603",
-  "sessions": [
-    "⚪28bdad1d552c4a0ea7f2ea721c1b4fa4"
-  ]
+  "sessions": ["⚪28bdad1d552c4a0ea7f2ea721c1b4fa4"]
 }

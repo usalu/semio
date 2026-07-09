@@ -1617,9 +1617,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "llm": "opus-4-6",
             "path": "26/03/25/SKETCHPAD-DESIGN-APP-SCENE-HOVER-PIECES-UPDATE",
             "summary": "Restored deleted hover fix code. All three changes re-applied: 1) Added useThree import and invalidate() calls in GLTFMesh/FBXMesh/OBJMesh useEffect after applyHighlightToLoadedScene (needed for demand frameloop), 2) Added store?.change({ hover }) in useDesignAppHover setter to sync DesignStore alongside XState (root cause fix), 3) Added stopPropagation and ThreeEvent typing to handlePointerEnter/handlePointerLeave in ModelPiece. Build verified successful."
@@ -1649,9 +1647,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "llm": "opus-4-6",
             "path": "26/03/25/SKETCHPAD-DESIGN-APP-SCENE-HOVER-PIECES-UPDATE",
             "summary": "Restored deleted hover fix code. All three changes re-applied: 1) Added useThree import and invalidate() calls in GLTFMesh/FBXMesh/OBJMesh useEffect after applyHighlightToLoadedScene (needed for demand frameloop), 2) Added store?.change({ hover }) in useDesignAppHover setter to sync DesignStore alongside XState (root cause fix), 3) Added stopPropagation and ThreeEvent typing to handlePointerEnter/handlePointerLeave in ModelPiece. Build verified successful."

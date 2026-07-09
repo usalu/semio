@@ -7,7 +7,9 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Fixed piece dragging by closing left side panel overlay. Fixed Radix slider interaction with XPath ancestor locator for dblclick edit mode. Fixed rotation eval bug. All Design E2E tests pass.
+
 ## Changes
+
 - Close left side panel before drag test to prevent overlay intercepting mouse events on diagram nodes
 - Replace Playwright `.fill()` on hidden Radix slider `<input type="range">` with dblclick on `slider-value` → fill `input[type="number"]` → Enter
 - Fix slider locator: use XPath `ancestor::div[@data-slot="slider-row"]` from `SliderPrimitive.Root` to find sibling `slider-value` span
@@ -18,6 +20,7 @@ Fixed piece dragging by closing left side panel overlay. Fixed Radix slider inte
 - Remove unused `gapSliderInput` variable
 
 ## Log
+
 - Investigating drag failure: nodeMovedInViewport=false, du=0, dv=0
 - ReactFlow nodes have draggable:true, nodesDraggable:true passed to ReactFlow
 - panOnDrag=[1,2] (middle/right click for panning), selectionOnDrag=true (left click on pane for lasso)
@@ -31,6 +34,7 @@ Fixed piece dragging by closing left side panel overlay. Fixed Radix slider inte
 - All tests pass: 1 passed (4.2m)
 
 ## Todos
+
 - [x] Diagnose drag failure root cause (left panel overlay)
 - [x] Fix diagram node drag behavior (close left panel)
 - [x] Fix slider interaction (dblclick edit mode + XPath ancestor locator)

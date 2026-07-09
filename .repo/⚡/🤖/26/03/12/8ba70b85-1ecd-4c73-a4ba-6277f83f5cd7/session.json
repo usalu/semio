@@ -78,9 +78,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃memory📌1"
-        ],
+        "ranges": ["🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃memory📌1"],
         "second": "🎆26🌙03☀️12⏰12⌚28⏱️05",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
@@ -120,9 +118,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃memory📌1"
-        ],
+        "ranges": ["🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃memory📌1"],
         "second": "🎆26🌙03☀️12⏰12⌚28⏱️21",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
@@ -152,9 +148,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃memory📌1"
-        ],
+        "ranges": ["🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃memory📌1"],
         "second": "🎆26🌙03☀️12⏰12⌚28⏱️39",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"
@@ -194,9 +188,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃memory📌1"
-        ],
+        "ranges": ["🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃memory📌1"],
         "second": "🎆26🌙03☀️12⏰12⌚28⏱️52",
         "session": "⚪8ba70b851ecd4c73a4ba6277f83f5cd7",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/8ba70b85-1ecd-4c73-a4ba-6277f83f5cd7.jsonl"

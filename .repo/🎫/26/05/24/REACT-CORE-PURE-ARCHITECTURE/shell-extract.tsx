@@ -1,4 +1,3 @@
-
 // Domain-neutral composite component providing a full application shell.
 // An app has window kinds (rendered with golden-layout) and registers
 // left/right side panel tabs and footer items.
@@ -347,11 +346,7 @@ const UIWindowControlsGroup: React.FC<{ controls: UIWindowControl[] }> = ({ cont
 // #region 🪟WindowMeasuresOverlay
 
 const UIWindowMeasureFloat: React.FC<{ measureId: string; label?: string; children: React.ReactNode }> = ({ measureId, label, children }) => (
-  <div
-    data-slot="window-measure-float"
-    data-measure-id={measureId}
-    className="border-element/80 bg-window/90 max-w-[11rem] min-w-0 rounded-md border px-single py-half shadow-md backdrop-blur-sm"
-  >
+  <div data-slot="window-measure-float" data-measure-id={measureId} className="border-element/80 bg-window/90 max-w-[11rem] min-w-0 rounded-md border px-single py-half shadow-md backdrop-blur-sm">
     {label ? <span className="text-muted-foreground mb-half block max-w-full truncate text-[10px] font-semibold uppercase tracking-wide">{label}</span> : null}
     <div className="min-w-0 w-full">{children}</div>
   </div>
@@ -378,11 +373,7 @@ export const UIWindowMeasures: React.FC<{ measures: UIWindowMeasure[] }> = ({ me
           );
         case "section":
           return (
-            <div
-              key={measure.id}
-              data-slot="window-measure-heading"
-              className="border-element/60 bg-window/85 max-w-[11rem] rounded-md border px-single py-tiny text-center shadow-sm backdrop-blur-sm"
-            >
+            <div key={measure.id} data-slot="window-measure-heading" className="border-element/60 bg-window/85 max-w-[11rem] rounded-md border px-single py-tiny text-center shadow-sm backdrop-blur-sm">
               <span className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wide">{measure.title}</span>
             </div>
           );
@@ -469,10 +460,7 @@ export const UIWindowMeasures: React.FC<{ measures: UIWindowMeasure[] }> = ({ me
                     key={item.value}
                     type="button"
                     data-slot="window-measure-radio-item"
-                    className={cn(
-                      "border-element/80 hover:bg-hover-window rounded border px-single py-half text-left text-xs transition-colors",
-                      measure.value === item.value && "bg-active-base text-active-foreground",
-                    )}
+                    className={cn("border-element/80 hover:bg-hover-window rounded border px-single py-half text-left text-xs transition-colors", measure.value === item.value && "bg-active-base text-active-foreground")}
                     onClick={() => measure.onChange?.(item.value)}
                   >
                     {item.label}
@@ -1078,14 +1066,7 @@ const UIToolbarItems: React.FC<{ items: readonly UIToolbarItem[] }> = ({ items }
         if (item.kind === "toggle") {
           return (
             <ToolbarItem key={item.id}>
-              <Toggle
-                kind={item.icon && !item.text && !item.label ? "icon" : "default"}
-                id={item.id}
-                pressed={item.pressed ?? false}
-                onPressedChange={(pressed) => item.onPressedChange?.(pressed)}
-                icon={item.icon}
-                text={item.text ?? item.label}
-              />
+              <Toggle kind={item.icon && !item.text && !item.label ? "icon" : "default"} id={item.id} pressed={item.pressed ?? false} onPressedChange={(pressed) => item.onPressedChange?.(pressed)} icon={item.icon} text={item.text ?? item.label} />
             </ToolbarItem>
           );
         }
@@ -1131,14 +1112,7 @@ const UIToolbar: React.FC<{
 
   return (
     <div className={cn("flex items-center justify-center pointer-events-none", className)}>
-      <div
-        role="toolbar"
-        id="ui.toolbar"
-        className={cn(
-          "pointer-events-auto flex max-w-full items-center gap-single",
-          showCategoryNav && "relative h-[var(--toolbar-item-height)] w-full max-w-[min(100%,48rem)] px-2",
-        )}
-      >
+      <div role="toolbar" id="ui.toolbar" className={cn("pointer-events-auto flex max-w-full items-center gap-single", showCategoryNav && "relative h-[var(--toolbar-item-height)] w-full max-w-[min(100%,48rem)] px-2")}>
         {showCategoryNav ? (
           <>
             <ToolbarZone id="ui.toolbar.zone.categories" className="shrink-0">

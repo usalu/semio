@@ -2,24 +2,24 @@
 name: Fill Slider Performance
 overview: Make the Puzzle 3D fill slider instant during live drag and prevent the multi-minute UI freeze by (A) deriving any prefix-N fixture in O(1) from append-only placements, (B) optimizing the collision hot path to drop per-probe mesh clones and re-scans, and (C) building the greedy fill sequence in chunked frames with a visible progress indicator.
 todos:
-  - id: ticket
-    content: Read repo://goals and open a repo ticket for fill slider performance
-    status: completed
-  - id: prefix-o1
-    content: Store appended objects/attractions in fill session; rewrite applyPuzzle3dFillCount to compose prefix in O(1) (puzzle/3d/play/index.ts)
-    status: completed
-  - id: collision-opt
-    content: Cache per-mesh local AABB and memoize brushCompatibleCandidates; drop per-probe clone(true) (puzzle/3d/react/index.tsx)
-    status: completed
-  - id: chunked-build
-    content: Refactor buildBrushFillSequence into a resumable stepper and drive it chunked across frames in preparePuzzle3dFillSession
-    status: completed
-  - id: progress-ui
-    content: Publish build progress and show it in the fill slider label; clamp applied count to computed-so-far while building
-    status: completed
-  - id: validate
-    content: Run 3D puzzle play, verify instant live drag + non-freezing build with [DEBUG] timing logs, then close ticket
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open a repo ticket for fill slider performance
+   status: completed
+ - id: prefix-o1
+   content: Store appended objects/attractions in fill session; rewrite applyPuzzle3dFillCount to compose prefix in O(1) (puzzle/3d/play/index.ts)
+   status: completed
+ - id: collision-opt
+   content: Cache per-mesh local AABB and memoize brushCompatibleCandidates; drop per-probe clone(true) (puzzle/3d/react/index.tsx)
+   status: completed
+ - id: chunked-build
+   content: Refactor buildBrushFillSequence into a resumable stepper and drive it chunked across frames in preparePuzzle3dFillSession
+   status: completed
+ - id: progress-ui
+   content: Publish build progress and show it in the fill slider label; clamp applied count to computed-so-far while building
+   status: completed
+ - id: validate
+   content: Run 3D puzzle play, verify instant live drag + non-freezing build with [DEBUG] timing logs, then close ticket
+   status: completed
 isProject: false
 ---
 
@@ -41,8 +41,6 @@ flowchart LR
   replay --> sync["patchFixture -> syncShell full rebuild"]
   enter[Enter Fill mode] --> build["buildBrushFillSequence: 1000 placements, mesh clone per probe"]
 ```
-
-
 
 ## Part A: O(1) prefix application (instant live drag)
 
@@ -74,4 +72,3 @@ Keep `onChange` wired (now cheap) for live preview; no `onCommit` debounce neede
 
 - Read `repo://goals`, then open a new repo ticket (e.g. "Optimize Puzzle 3D Fill Slider Performance") via the repo MCP; put any diagnostic scripts/logs under the ticket folder.
 - Edit existing files only; structure additions with `//#region`/`//#endregion`. Validate by running the 3D puzzle play, entering Fill, and confirming console timing logs (`[DEBUG]`) plus a responsive slider and progress indicator. Close the ticket with a summary on completion.
-

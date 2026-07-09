@@ -128,9 +128,7 @@
           "session_id": "61a48813-6d9e-46dc-9f72-d6f9a6d12db6",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "file:///workspaces/semio/repo/vscode/extension.ts"
-            ],
+            "urls": ["file:///workspaces/semio/repo/vscode/extension.ts"],
             "query": "parseUri function"
           },
           "tool_response": "",

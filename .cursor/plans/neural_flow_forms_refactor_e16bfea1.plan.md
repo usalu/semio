@@ -2,33 +2,33 @@
 name: Neural Flow Forms Refactor
 overview: Promote neural's boundary-neuron "tree as function" model to the top level so any flow evaluates headlessly (in-dict to out-dict), make flow's split document (computation tree vs UI roots) canonical with new output nodes and UI-only preview nodes, migrate procedural fixtures, and make forms aggregate a neural Dictionary from questions (including evaluated 3D data from procedural flows). Everything non-destructive.
 todos:
-  - id: ticket
-    content: Read repo://goals and reopen/open the governing ticket via repo MCP
-    status: completed
-  - id: neural-fn
-    content: "neural/engine: extract boundary seed/collect helpers and add top-level Evaluator::evaluate_function (in-dict -> out-dict) + tests"
-    status: completed
-  - id: neural-bridge
-    content: "flow/module/wasm: add evaluate_function_json headless bridge"
-    status: in_progress
-  - id: flow-core
-    content: "flow/core: make flow.document/v1 (tree + ui) canonical; delete FlowFixture/tree_from_fixture; add output boundary nodes + UI-only preview nodes; update DAG node mapping, ports, eval, Rust tests"
-    status: pending
-  - id: flow-ts
-    content: "flow/react + worker + play: replace FlowFixture types/default with FlowDocument, add output/preview node catalogue, headless evaluateFunction, fixtures + fixture-slugs, vitest"
-    status: pending
-  - id: procedural
-    content: "procedural 2d/3d: migrate all fixtures to flow.document/v1 with output + preview nodes; update react defaults, extractChannelPreviewItems, play controllers/slugs"
-    status: pending
-  - id: forms-core
-    content: "forms/core: form result is a neural Dictionary; flowDocumentToFormSpec + non-destructive apply; flow-backed question contributes evaluated out-dict via headless bridge; vitest"
-    status: pending
-  - id: forms-ui
-    content: "forms/react + play + framework renderer: flow3d control reads document + preview node; surface dictionary result; vitest"
-    status: pending
-  - id: verify
-    content: Run all touched nx test targets, ticket runtime-check.mjs, browser runtime verification with [DEBUG] logs, then close ticket
-    status: pending
+ - id: ticket
+   content: Read repo://goals and reopen/open the governing ticket via repo MCP
+   status: completed
+ - id: neural-fn
+   content: "neural/engine: extract boundary seed/collect helpers and add top-level Evaluator::evaluate_function (in-dict -> out-dict) + tests"
+   status: completed
+ - id: neural-bridge
+   content: "flow/module/wasm: add evaluate_function_json headless bridge"
+   status: in_progress
+ - id: flow-core
+   content: "flow/core: make flow.document/v1 (tree + ui) canonical; delete FlowFixture/tree_from_fixture; add output boundary nodes + UI-only preview nodes; update DAG node mapping, ports, eval, Rust tests"
+   status: pending
+ - id: flow-ts
+   content: "flow/react + worker + play: replace FlowFixture types/default with FlowDocument, add output/preview node catalogue, headless evaluateFunction, fixtures + fixture-slugs, vitest"
+   status: pending
+ - id: procedural
+   content: "procedural 2d/3d: migrate all fixtures to flow.document/v1 with output + preview nodes; update react defaults, extractChannelPreviewItems, play controllers/slugs"
+   status: pending
+ - id: forms-core
+   content: "forms/core: form result is a neural Dictionary; flowDocumentToFormSpec + non-destructive apply; flow-backed question contributes evaluated out-dict via headless bridge; vitest"
+   status: pending
+ - id: forms-ui
+   content: "forms/react + play + framework renderer: flow3d control reads document + preview node; surface dictionary result; vitest"
+   status: pending
+ - id: verify
+   content: Run all touched nx test targets, ticket runtime-check.mjs, browser runtime verification with [DEBUG] logs, then close ticket
+   status: pending
 isProject: false
 ---
 
@@ -49,8 +49,6 @@ flowchart TD
   fnEval -->|"out-dict (e.g. 3D geometry)"| forms
   ui -->|"preview node (interaction only)"| previewUI["live preview surface"]
 ```
-
-
 
 Core principle: a flow's `tree` is a neural function. INPUT boundary neurons name the in-dict keys; OUTPUT boundary nodes name the out-dict keys; preview nodes are UI-only and never part of the headless out-dict. All UI lives under a separate `ui` root so the `tree` alone is headlessly evaluable.
 
@@ -115,4 +113,3 @@ In [forms/play/index.ts](forms/play/index.ts) + [framework/product/playground/re
 - No `flow.fixture/v1` references remain anywhere (flow, procedural, forms, play, framework).
 - Validation per layer: extend Rust `#region Tests`, in-file vitest in each TS package, a `runtime-check.mjs` in the ticket folder, and browser runtime verification with `[DEBUG]`-prefixed logs before claiming success.
 - Repo MCP: read `repo://goals`, then reopen `26/06/30/FORMS-TECHNOLOGY-AND-GENERATE-MODE` (or open a new ticket) before implementing.
-

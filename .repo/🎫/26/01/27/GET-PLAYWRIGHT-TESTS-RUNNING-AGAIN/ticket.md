@@ -1,11 +1,13 @@
 # Ticket
 
 ## Todos
+
 # Plan
 
 ## Problem
 
 The Playwright tests were not running due to two issues:
+
 1. Port mismatch in `playwright.config.ts`: `baseURL` was set to `http://localhost:3000` but `webServer` was configured to run on port 5173
 2. Playwright browsers (chromium) were not installed
 

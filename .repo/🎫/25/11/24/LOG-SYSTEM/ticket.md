@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Log System Implementation
 
 **Date:** 2025-11-24
@@ -126,9 +127,9 @@ npx tsx scripts/log.ts list 2025 11
 import { createLog, listLogs } from "./scripts/log";
 
 const log = createLog({
-  slug: "MY-TASK",
-  summary: "Implement new feature",
-  content: "# Details\n\nImplementation notes...",
+ slug: "MY-TASK",
+ summary: "Implement new feature",
+ content: "# Details\n\nImplementation notes...",
 });
 
 const logs = listLogs({ year: 2025, month: 11 });
@@ -157,6 +158,7 @@ Potential improvements:
 ## Log
 
 ## Summary
+
 # Summary
 
->-
+> -

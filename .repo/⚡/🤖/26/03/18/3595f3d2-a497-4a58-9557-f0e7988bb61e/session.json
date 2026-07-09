@@ -1292,10 +1292,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/coda/desktop/main.ts",
-                "/workspaces/semio/coda/engine/pyproject.toml"
-              ],
+              "files": ["/workspaces/semio/coda/desktop/main.ts", "/workspaces/semio/coda/engine/pyproject.toml"],
               "path": "2026/03/18/FIX-CODA-DESKTOP-ENGINE-INTEGRATION",
               "summary": "Fixed coda desktop engine integration issues. Updated sidecar path from 'py' to 'engine' directory in main.ts, added missing Python dependencies (rdflib, owlready2) to pyproject.toml, and verified the sidecar integration works correctly. The desktop app was showing offline because it couldn't find the Python engine in the expected location."
             },
@@ -1376,10 +1373,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/coda/desktop/main.ts",
-                "/workspaces/semio/coda/engine/pyproject.toml"
-              ],
+              "files": ["/workspaces/semio/coda/desktop/main.ts", "/workspaces/semio/coda/engine/pyproject.toml"],
               "path": "repo://y/26/m/03/d/18/tk/FIX-CODA-DESKTOP-ENGINE-INTEGRATION",
               "summary": "Fixed coda desktop engine integration issues. Updated sidecar path from 'py' to 'engine' directory in main.ts, added missing Python dependencies (rdflib, owlready2) to pyproject.toml, and verified the sidecar integration works correctly. The desktop app was showing offline because it couldn't find the Python engine in the expected location."
             },
@@ -1561,10 +1555,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/coda/desktop/main.ts",
-                "/workspaces/semio/coda/engine/pyproject.toml"
-              ],
+              "files": ["/workspaces/semio/coda/desktop/main.ts", "/workspaces/semio/coda/engine/pyproject.toml"],
               "path": "26/03/18/FIX-CODA-DESKTOP-ENGINE-INTEGRATION",
               "summary": "Fixed coda desktop engine integration issues. Updated sidecar path from 'py' to 'engine' directory in main.ts, added missing Python dependencies (rdflib, owlready2) to pyproject.toml, and verified the sidecar integration works correctly. The desktop app was showing offline because it couldn't find the Python engine in the expected location."
             },
@@ -1593,10 +1584,7 @@
             "mcp_result": "[🎫fixcodadesktopengineintegration](repo://y/00/m/00/d/00/tk/FIX-CODA-DESKTOP-ENGINE-INTEGRATION) - `closed` - `closed now`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/coda/desktop/main.ts",
-                "/workspaces/semio/coda/engine/pyproject.toml"
-              ],
+              "files": ["/workspaces/semio/coda/desktop/main.ts", "/workspaces/semio/coda/engine/pyproject.toml"],
               "path": "26/03/18/FIX-CODA-DESKTOP-ENGINE-INTEGRATION",
               "summary": "Fixed coda desktop engine integration issues. Updated sidecar path from 'py' to 'engine' directory in main.ts, added missing Python dependencies (rdflib, owlready2) to pyproject.toml, and verified the sidecar integration works correctly. The desktop app was showing offline because it couldn't find the Python engine in the expected location."
             },

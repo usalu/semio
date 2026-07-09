@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Kit diagram had several issues:
@@ -52,6 +53,7 @@ Kit diagram had several issues:
 ## Log
 
 ## Summary
+
 # Summary
 
 "Kit diagram: sync icons, dragging, filtering, selection with table"

@@ -123,20 +123,12 @@
   "latex-workshop.latex.autoBuild.run": "onSave",
   "latex-workshop.latex.autoClean.run": "onFailed",
   "latex-workshop.latex.outDir": "%DIR%/dist",
-  "latex-workshop.latex.search.rootFiles.include": [
-    "mit-bestand/bericht/**/*.tex",
-    "print/template/**/*.tex"
-  ],
+  "latex-workshop.latex.search.rootFiles.include": ["mit-bestand/bericht/**/*.tex", "print/template/**/*.tex"],
   "latex-workshop.latex.tools": [
     {
       "name": "semio-tectonic",
       "command": "bun",
-      "args": [
-        "${workspaceFolder}/mit-bestand/bericht/script.ts",
-        "latex",
-        "%DOC%",
-        "%OUTDIR%"
-      ]
+      "args": ["${workspaceFolder}/mit-bestand/bericht/script.ts", "latex", "%DOC%", "%OUTDIR%"]
     }
   ],
   "latex-workshop.latex.recipes": [

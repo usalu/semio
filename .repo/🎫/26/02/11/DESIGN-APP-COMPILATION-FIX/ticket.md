@@ -7,6 +7,7 @@ goal: R26-02/RUNNING-SKETCHPAD
 ## Summary
 
 Bulk close
+
 ## Changes
 
 - `compose/js/package.json`: Remove `--strictPort` from `dev:sketchpad` so the dev server still starts when `5173` is occupied, while keeping `5173` as the preferred default port.

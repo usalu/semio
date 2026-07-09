@@ -2,48 +2,48 @@
 name: Rust Plugin Framework Migration
 overview: "Rebuild the framework technology as a Rust kernel with a WASM-Component plugin OS: apps become fully declarative Rust plugins with no DOM access, rendered by a single thin React renderer that implements a compile-time set of general-purpose UI components."
 todos:
-  - id: ticket
-    content: Read repo://goals, open ticket for the migration
-    status: completed
-  - id: wit
-    content: Define semio:framework WIT package (ui.wit, plugin.wit, component scenes)
-    status: completed
-  - id: kernel
-    content: Build framework/core/rs kernel (Platform, CommandBus, windows, UiTree)
-    status: completed
-  - id: os
-    content: Build framework/product/os/core/rs (plugin host, hot-swap, media graph, VCS store)
-    status: completed
-  - id: sdk
-    content: Build framework/plugin/rs SDK (declarative app builder, export_plugin! macro)
-    status: completed
-  - id: renderer
-    content: "Build framework/renderer/react (UiTree interpreter + compile-time components: canvas-2d, world-3d, node-graph, editor, table, raster)"
-    status: completed
-  - id: devhost
-    content: "Rework os/dev host: cargo component build + jco transpile + hot-swap watcher, launch.json entries"
-    status: completed
-  - id: pilot-draw
-    content: Migrate draw as pilot plugin (document, controller, canvas-2d scene), verify boot + hot-swap in browser
-    status: completed
-  - id: apps-2d
-    content: "Migrate 2D apps: note, writer, raster, forms, vcs, layout, puzzle2d, gis2d, procedural2d, reasoning-wires"
-    status: completed
-  - id: apps-graph
-    content: "Migrate graph apps: flow, dag, imperative, sequence, mathematical-dag"
-    status: completed
-  - id: apps-3d
-    content: "Migrate 3D apps: cad, puzzle3d, puzzle5d, shooting, lowpoly, procedural3d"
-    status: completed
-  - id: apps-rest
-    content: Migrate trinity, trinity-rewrite, s (OS studio), presentation
-    status: completed
-  - id: delete-ts
-    content: Delete TS framework packages, all <tech>/react packages, semio.app manifests, playground-manifest.ts, virtual module plugin
-    status: completed
-  - id: verify
-    content: "Full verification: kernel/plugin/renderer tests, browser boot of OS with all plugins, hot-swap check, close ticket"
-    status: completed
+ - id: ticket
+   content: Read repo://goals, open ticket for the migration
+   status: completed
+ - id: wit
+   content: Define semio:framework WIT package (ui.wit, plugin.wit, component scenes)
+   status: completed
+ - id: kernel
+   content: Build framework/core/rs kernel (Platform, CommandBus, windows, UiTree)
+   status: completed
+ - id: os
+   content: Build framework/product/os/core/rs (plugin host, hot-swap, media graph, VCS store)
+   status: completed
+ - id: sdk
+   content: Build framework/plugin/rs SDK (declarative app builder, export_plugin! macro)
+   status: completed
+ - id: renderer
+   content: "Build framework/renderer/react (UiTree interpreter + compile-time components: canvas-2d, world-3d, node-graph, editor, table, raster)"
+   status: completed
+ - id: devhost
+   content: "Rework os/dev host: cargo component build + jco transpile + hot-swap watcher, launch.json entries"
+   status: completed
+ - id: pilot-draw
+   content: Migrate draw as pilot plugin (document, controller, canvas-2d scene), verify boot + hot-swap in browser
+   status: completed
+ - id: apps-2d
+   content: "Migrate 2D apps: note, writer, raster, forms, vcs, layout, puzzle2d, gis2d, procedural2d, reasoning-wires"
+   status: completed
+ - id: apps-graph
+   content: "Migrate graph apps: flow, dag, imperative, sequence, mathematical-dag"
+   status: completed
+ - id: apps-3d
+   content: "Migrate 3D apps: cad, puzzle3d, puzzle5d, shooting, lowpoly, procedural3d"
+   status: completed
+ - id: apps-rest
+   content: Migrate trinity, trinity-rewrite, s (OS studio), presentation
+   status: completed
+ - id: delete-ts
+   content: Delete TS framework packages, all <tech>/react packages, semio.app manifests, playground-manifest.ts, virtual module plugin
+   status: completed
+ - id: verify
+   content: "Full verification: kernel/plugin/renderer tests, browser boot of OS with all plugins, hot-swap check, close ticket"
+   status: completed
 isProject: false
 ---
 
@@ -85,13 +85,11 @@ flowchart TB
   kernel -->|"document snapshots"| plugins
 ```
 
-
-
 Key design decisions (from your answers):
 
 - Renderer-independent core: the kernel and all plugins are pure Rust with zero renderer knowledge; exactly one React renderer is implemented now, others can follow.
 - Plugin mechanism: WASM Component Model. WIT interfaces define the plugin world; `cargo component` builds plugins; `jco` transpiles them for the browser host. Hot-swap = re-instantiate the component; all durable state (VCS op logs) lives in the kernel, so plugins are logic-only and swap losslessly.
-- Compile-time UI vocabulary: the per-app surface nodes (`UiDrawHostSurfaceNode`, `UiNoteHostSurfaceNode`, … 25+ kinds in `framework/product/platform/core/js/index.ts` lines 305–560) are replaced by a small set of general components any app can use: `infinite-canvas-2d`, `world-3d`, `node-graph`, `text-editor`, `table`, `raster-viewport`, `code-editor`, plus primitives (stack, text, button, tree, inspector, field, slider, …). Apps describe *scenes* for these components declaratively; they never contribute React code.
+- Compile-time UI vocabulary: the per-app surface nodes (`UiDrawHostSurfaceNode`, `UiNoteHostSurfaceNode`, … 25+ kinds in `framework/product/platform/core/js/index.ts` lines 305–560) are replaced by a small set of general components any app can use: `infinite-canvas-2d`, `world-3d`, `node-graph`, `text-editor`, `table`, `raster-viewport`, `code-editor`, plus primitives (stack, text, button, tree, inspector, field, slider, …). Apps describe _scenes_ for these components declaratively; they never contribute React code.
 
 ## New Structure
 
@@ -143,4 +141,3 @@ Migration order (each app boots and is verified in the new OS before the next): 
 - This is a very large migration (25+ apps, ~10 framework packages). The phased per-app order keeps the repo bootable throughout: old TS framework and new Rust OS coexist until the last app is migrated, then TS is deleted in one final sweep.
 - The generic `component-scene` types must cover today's bespoke canvases (e.g. draw's SVG features, note's math rendering, flow's WASM modules). Where a canvas already runs Rust/WASM (infinite/cavas, flow), the scene protocol routes data Rust-to-Rust and the React wrapper stays thin.
 - Browser Component Model support relies on jco transpilation (stable, used in production by Bytecode Alliance); native `wasmtime` hosting stays possible later because the kernel is renderer- and host-independent.
-

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Plan
 
 - [x] Analyze current ticket structure and Go implementation

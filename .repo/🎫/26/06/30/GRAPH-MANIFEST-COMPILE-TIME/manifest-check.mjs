@@ -2,14 +2,7 @@
 /** @emoji 🛡️ Runtime check: compile-time graph manifests load and validate sample fixtures. */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import {
-  MANIFEST_IDS,
-  manifestById,
-  nakaginManifestCatalogBundle,
-  puzzle2d_defaultManifestCatalogBundle,
-  WRITERLANGUAGES_LANGUAGE_IDS,
-  DRAWLAYERS_LAYER_IDS,
-} from "../../../../../../mathematical/graph/manifest/core/index.ts";
+import { MANIFEST_IDS, manifestById, nakaginManifestCatalogBundle, puzzle2d_defaultManifestCatalogBundle, WRITERLANGUAGES_LANGUAGE_IDS, DRAWLAYERS_LAYER_IDS } from "../../../../../../mathematical/graph/manifest/core/index.ts";
 
 const root = join(import.meta.dir, "../../../../../../");
 
@@ -22,7 +15,10 @@ assert(MANIFEST_IDS.includes("nakagin"), "nakagin manifest registered");
 assert(manifestById("nakagin")?.id === "nakagin", "manifestById nakagin");
 const nakaginCatalog = nakaginManifestCatalogBundle();
 assert((nakaginCatalog.nodes?.length ?? 0) > 40, "nakagin catalog nodes");
-assert(puzzle2d_defaultManifestCatalogBundle().handles?.some((h) => h.id === "port"), "default port handle");
+assert(
+  puzzle2d_defaultManifestCatalogBundle().handles?.some((h) => h.id === "port"),
+  "default port handle",
+);
 
 const trinityFixture = JSON.parse(readFileSync(join(root, "trinity/fixture/nakagin-capsule-tower.trinity.json"), "utf8"));
 assert(trinityFixture.manifestId === "nakagin", "trinity fixture manifestId");

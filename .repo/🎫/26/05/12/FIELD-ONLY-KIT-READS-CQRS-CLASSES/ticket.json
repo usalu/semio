@@ -5,8 +5,5 @@
   "description": "Complete field-only CQRS refactor phases 0-4: compose/js Kit+GraphQL, compose/react schema-1:1 hooks, compose/sketchpad migration off KitStore/snapshots, deletion sweep, depcruise+tsc+vitest+sketchpad dev.",
   "summary": "React: WasmGraph kitStoreFromKitStoreClient; CommandBuilder from @semio-tech/compose-js; findLive* any params; useTypes/useDesigns tuples + DtoType/DtoDesign + operationStatusToWriteStatus; public createType/createDesign signatures; useOpenKitShallows DtoKit[]; re-export kitStoreFromKitStoreClient; tests (OperationStatus, KitHostBinding, shallows ReturnType). JS: export DiffStatus + OperationResult flat. no-legacy-architecture.json added; important.md cleared for close. tsc js/react/sketchpad + sketchpad vite build OK.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪785898977b474f219997cae74d3faed3",
-    "⚪698761fdba0a4eb2955c07c3d024a29c"
-  ]
+  "sessions": ["⚪785898977b474f219997cae74d3faed3", "⚪698761fdba0a4eb2955c07c3d024a29c"]
 }

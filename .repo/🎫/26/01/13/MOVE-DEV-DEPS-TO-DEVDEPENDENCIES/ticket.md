@@ -1,12 +1,15 @@
 # Ticket
 
 ## Todos
+
 # Plan: Move Dev Dependencies to devDependencies
 
 ## Objective
+
 Move development-only packages from `dependencies` to `devDependencies` in `js/compose/package.json`.
 
 ## Packages to Move
+
 The following packages are development-only and should be in `devDependencies`:
 
 1. **Type definitions** (only needed for TypeScript compilation):
@@ -18,11 +21,13 @@ The following packages are development-only and should be in `devDependencies`:
    - `postcss-nesting`: "^13.0.2"
 
 ## Steps
+
 1. Remove the 4 packages from `dependencies` section
 2. Add the 4 packages to `devDependencies` section (maintaining alphabetical order)
 3. Verify the changes
 
 ## Expected Result
+
 - `dependencies` will have 4 fewer entries
 - `devDependencies` will have 4 more entries
 - Package functionality unchanged (these are build-time dependencies)
@@ -30,6 +35,7 @@ The following packages are development-only and should be in `devDependencies`:
 ## Changes
 
 ## Log
+
 # Log
 
 ## 2026-01-13
@@ -55,10 +61,12 @@ Analyzed `js/compose/package.json` and identified 4 packages in `dependencies` t
    - `postcss-nesting` placed after `postcss-load-config`
 
 ### Result
+
 - File: `js/compose/package.json` updated successfully
 - All 4 dev dependencies moved to their correct section
 
 ## Summary
+
 # Summary
 
 Moved 4 development-only packages from `dependencies` to `devDependencies` in `js/compose/package.json`:

@@ -2,15 +2,7 @@ import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 
-const EXCLUDE_DIRS = new Set([
-  ".git",
-  "node_modules",
-  "target",
-  ".nx",
-  "dist",
-  "temp",
-  "storybook-static"
-]);
+const EXCLUDE_DIRS = new Set([".git", "node_modules", "target", ".nx", "dist", "temp", "storybook-static"]);
 
 function walk(dir: string, callback: (file: string) => void) {
   const files = fs.readdirSync(dir);
@@ -51,9 +43,9 @@ for (const match of matches) {
     .replace(/compose/g, "compose")
     .replace(/Compose/g, "Compose")
     .replace(/COMPOSE/g, "COMPOSE");
-  
+
   if (newBase === base) continue;
-  
+
   const newPath = path.join(dir, newBase);
   console.log(`Renaming: ${match} -> ${newPath}`);
   try {

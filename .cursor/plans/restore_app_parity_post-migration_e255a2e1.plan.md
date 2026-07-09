@@ -5,20 +5,19 @@ todos: []
 isProject: false
 ---
 
-
 # Restore App Parity Post-Migration
 
 ## Root cause (applies to nearly every app)
 
 The Rust Plugin Framework Migration (`.repo/🎫/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION`) replaced each app's old TypeScript `PlayShellController` (rich commands, real canvas hosts, domain engines) with a new `<domain>/plugin/rs/lib.rs` that only implements a **scaffold**: declarative panels, a handful of CRUD commands, and a simplified scene (`canvas-2d`/`node-graph`/`world-3d`/`table`) that frequently **hardcodes placeholder geometry** (`"box"`, fixed rects, empty pixel buffers) instead of resolving real fixture data. Critically, the actual domain engines from before the migration are often **still present on disk but never called** by the new plugin:
 
-| Engine (still exists) | Consumed by new plugin? |
-|---|---|
-| `puzzle/3d/rs` (brush/fill precompute) | No |
-| `lowpoly/core/rs` (halfedge mesh + paint) | No |
-| `gis/2d/rs` (MapHost, tiles/routes) | No |
-| `cad/kernel`, `cad/renderer` | No |
-| `flow/core/rs` (`FlowSession` eval/worker) | No (plugin reimplements a subset) |
+| Engine (still exists)                                | Consumed by new plugin?                                 |
+| ---------------------------------------------------- | ------------------------------------------------------- |
+| `puzzle/3d/rs` (brush/fill precompute)               | No                                                      |
+| `lowpoly/core/rs` (halfedge mesh + paint)            | No                                                      |
+| `gis/2d/rs` (MapHost, tiles/routes)                  | No                                                      |
+| `cad/kernel`, `cad/renderer`                         | No                                                      |
+| `flow/core/rs` (`FlowSession` eval/worker)           | No (plugin reimplements a subset)                       |
 | `sequence/core/rs`, `dag/.../rs`, `trinity/*/engine` | Partially (compiled-DAG only, not full command surface) |
 
 This is the pattern to fix everywhere: **wire the plugin's `handle_command`/`render` to the existing engine**, port the dropped command handlers, and stop emitting placeholder data when real fixture/engine data exists. This is a native Rust re-port, not an adapter/shim (per repo "no compatibility layers" rule) — each plugin's internal structs gain the real fields/logic directly.
@@ -26,6 +25,7 @@ This is the pattern to fix everywhere: **wire the plugin's `handle_command`/`ren
 ## Severity triage (from the 5 parallel audits)
 
 **Tier 1 — Severe (core interaction/domain broken, user-visible immediately)**
+
 - `puzzle3d`: every object renders as a gray box (ignores `meshUrl`/orientation/kind catalog); brush/fill entirely unported (`puzzle/3d/plugin/rs/lib.rs`, precompute engine `puzzle/3d/rs/lib.rs` unwired)
 - `lowpoly`: paint completely non-functional (no paint commands at all); mesh editing commands (`extrude`/`inset`/`bevel`/...) are no-ops; real halfedge mesh from `lowpoly/core/rs` ignored; default fixture emptied
 - `flow`: no evaluation/compute pipeline (~90% of old `FlowSession` API dropped); undo/redo dead; catalogue trimmed to 5 widgets
@@ -40,6 +40,7 @@ This is the pattern to fix everywhere: **wire the plugin's `handle_command`/`ren
 - `trinity-rewrite`: LHS/RHS pattern graphs reverted to raw JSON text editors, cross-panel hover/select bridge gone
 
 **Tier 2 — Major (large functional gaps, less immediately obvious)**
+
 - `dag`: `renameDagNode` referenced but unimplemented (dead UI), no delete/disconnect, only 4/12+ node kinds, no undo
 - `raster`: composite view renders **empty pixels** (fixture image data never decoded), no paint/selection tools, masks/filters missing
 - `writer`: LSP entirely absent (diagnostics/completions/format/lint all no-ops), AST↔editor sync broken
@@ -48,6 +49,7 @@ This is the pattern to fix everywhere: **wire the plugin's `handle_command`/`ren
 - `reasoning-wires`: entire inherited Puzzle2d engine dropped; relationships/edges never rendered
 
 **Tier 3 — Moderate (structure present, editing/interaction incomplete)**
+
 - `draw`: canvas renders bounding boxes only (not real path/fill/boolean geometry), no pointer tools, no import/export
 - `note`: no patch/drag-reorder/undo/nudge, read-only inspector, missing snap/grid fields
 - `forms`: no example fixture loading, table-only UI instead of live builder/try-preview, several question kinds unsupported
@@ -56,9 +58,11 @@ This is the pattern to fix everywhere: **wire the plugin's `handle_command`/`ren
 - `presentation`: missing `setFrame`/`setActiveExample`/single-tile patch commands, canvas is geometry-only stub
 
 **Tier 4 — Mostly fine**
+
 - `s` (S Studio): studio command surface is essentially complete (navbar handled by separate `restore_old_s_navbar_parity` plan); only minor gaps (`compiledDagEngagementSubmit`, single example id)
 
 **Cross-cutting**
+
 - All plugins register `mod+z`/`mod+shift+z` keybindings but most never implement `undo`/`redo` in `handle_command` — dead shortcuts everywhere.
 - `connectMediaPorts` exists in flow/dag/sequence plugins but the WGPU node-graph renderer never dispatches it (out of scope per React-only decision, but confirms React is the right renderer target).
 - E2E (`.repo/🎫/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/verify-react-playgrounds-e2e.ts`) only asserts "shell visible" / canvas >8px — it cannot and did not catch any of the above, which is why migration "closed" with 25/25 green.
@@ -82,6 +86,7 @@ Per repo rules, each unit of work happens inside its own ticket (`ticket_open`, 
 Each wave ends with: `cargo test` for touched crates, plugin WASM rebuild, and a run of the strengthened E2E suite (Wave 0's output) before moving to the next wave.
 
 ## Todos
+
 </plan>
 <todos>
 [{"id":"wave0-e2e-infra","content":"Strengthen verify-react-playgrounds-e2e.ts with real functional/pixel/command-dispatch assertions per app (not just canvas-painted)"},{"id":"puzzle3d-full-port","content":"Puzzle3d: real GLB meshes+orientation from fixture/kind-catalog, full brush/fill tool port wired through puzzle/3d/rs precompute engine"},{"id":"lowpoly-paint-port","content":"Lowpoly: port paint commands (stroke/fill/layers) and mesh-edit commands (extrude/inset/bevel/etc.) by wiring lowpoly/core/rs halfedge+paint engine"},{"id":"flow-eval-port","content":"Flow: wire plugin to FlowSession evaluate/worker pipeline, restore widget catalogue, undo/redo, cluster/connect commands"},{"id":"sequence-nested-port","content":"Sequence: restore nested control/slot/collapse support, setStepParams, removeStep, disconnect, reorganize"},{"id":"procedural3d-brep-port","content":"Procedural3d: wire real brep evaluation/preview meshes, register example fixtures, restore selection/gumball/persistence commands"},{"id":"procedural2d-flow-port","content":"Procedural2d: replace revision-counter stub with real flow fixture model, restore generate mode and preview pipeline"},{"id":"gis2d-map-port","content":"Gis2d: wire real MapHost (tiles/positions/routes) from gis/2d/rs, register example fixture, fix undo/redo dispatch"},{"id":"cad-kernel-port","content":"Cad: wire cad/kernel BREP geometry and play fixtures, restore transform gumball and multi-pane quad"},{"id":"puzzle5d-brush-port","content":"Puzzle5d: restore brush/fill tools, real 3D meshes/orientation, 2D shape rendering, dropped fixture fields (grips/3d/fasteners)"},{"id":"puzzle2d-engine-port","content":"Puzzle2d: restore dropped command surface (tools/LOD/engagement/inspector patch), render edges/wires/handles"},{"id":"trinity-jack-port","content":"Trinity Jack: restore Trinity canvas (LOD/ports/force-layout), VCS undo/redo, graph query result rendering"},{"id":"trinity-rewrite-port","content":"Trinity Rewrite: restore visual LHS/RHS pattern graphs and cross-panel hover/select bridge"},{"id":"dag-fixes","content":"Dag: fix renameDagNode handler, add missing node kinds, delete/disconnect, undo/redo"},{"id":"raster-pixel-port","content":"Raster: decode+composite real pixel data, restore paint/selection tools, masks/filters, patchLayer(s)"},{"id":"writer-lsp-port","content":"Writer: wire LSP diagnostics/completions/format/lint, restore AST\u2194editor sync"},{"id":"shooting-render-port","content":"Shooting: load real GLB assets for model view, render real icon/SVG previews, restore export commands"},{"id":"layout-export-port","content":"Layout: restore editable inspector (patchPage/patchFrame), export pipeline, real canvas fill/stroke/story rendering, pointer interaction"},{"id":"wires-engine-port","content":"Reasoning-wires: restore inherited puzzle2d engine surface, render relationships/edges"},{"id":"tier3-fixes","content":"Draw/Note/Forms/Imperative/Vcs/Presentation: restore real canvas geometry, editable inspectors, dropped commands per audit"},{"id":"undo-redo-sweep","content":"Cross-cutting: implement undo/redo handlers wherever keybinding exists but handler is missing"},{"id":"final-e2e-verify","content":"Run full strengthened 25-plugin E2E suite and cargo test workspace-wide; confirm no regressions"}]

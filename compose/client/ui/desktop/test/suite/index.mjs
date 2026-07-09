@@ -37,10 +37,7 @@ export async function run(ctx) {
     if (hasRoot) break;
     await new Promise((r) => setTimeout(r, 400));
   }
-  assert.ok(
-    hasRoot,
-    "renderer #root still empty after 120s (white screen). Check devtools for ESM/CJS shim errors (e.g. use-sync-external-store).",
-  );
+  assert.ok(hasRoot, "renderer #root still empty after 120s (white screen). Check devtools for ESM/CJS shim errors (e.g. use-sync-external-store).");
   const unexpectedRendererMessages = consoleMessages.filter(({ level, message }) => {
     if (level < 2) return false;
     return (
@@ -49,11 +46,7 @@ export async function run(ctx) {
       message.includes("Failed to execute 'removeChild' on 'Node'")
     );
   });
-  assert.deepStrictEqual(
-    unexpectedRendererMessages,
-    [],
-    `renderer emitted fatal console messages: ${unexpectedRendererMessages.map(({ message }) => message).join(" | ")}`,
-  );
+  assert.deepStrictEqual(unexpectedRendererMessages, [], `renderer emitted fatal console messages: ${unexpectedRendererMessages.map(({ message }) => message).join(" | ")}`);
 
   const waitFor = async (label, predicate, timeoutMs = 30_000) => {
     const deadlineMs = Date.now() + timeoutMs;
@@ -134,22 +127,14 @@ export async function run(ctx) {
   assert.ok(loadedFolderKit.typeCount > 40, "folder-opened kit should expose types in session");
   assert.ok(loadedFolderKit.fileCount > 200, "folder-opened kit should expose files in session");
   const persistedAfterFolder = await readPersistedKits();
-  assert.deepStrictEqual(
-    persistedAfterFolder,
-    [],
-    "desktop must not persist folder kit snapshots to localStorage",
-  );
+  assert.deepStrictEqual(persistedAfterFolder, [], "desktop must not persist folder kit snapshots to localStorage");
 
   await clickById("compose.sketchpad.app.home.toolbar.openFile");
   const loadedFileKit = await waitFor("file kit loaded in session store", readMetabolismFileKitFromStore);
   assert.ok(loadedFileKit.hasRepresentationBlob, "file-opened kit should keep embedded representation blobs in session");
   assert.ok(loadedFileKit.fileCount > 200, "file-opened kit should expose files in session");
   const persistedAfterFile = await readPersistedKits();
-  assert.deepStrictEqual(
-    persistedAfterFile,
-    [],
-    "desktop must not persist file kit snapshots to localStorage",
-  );
+  assert.deepStrictEqual(persistedAfterFile, [], "desktop must not persist file kit snapshots to localStorage");
 
   console.log("[compose desktop integration] suite passed");
 }

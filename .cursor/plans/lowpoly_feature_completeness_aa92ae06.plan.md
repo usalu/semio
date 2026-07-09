@@ -2,27 +2,27 @@
 name: Lowpoly Feature Completeness
 overview: "Fix four confirmed gaps in the Lowpoly playground: paint mode renders nothing in 3D, the UV editor has no mapping helpers (grid/checker/seams), hover/selection colors resolve to undefined CSS tokens (falling back to plain gray, inconsistent with the rest of the app), and marquee/box-select has no live preview while dragging."
 todos:
-  - id: auto-unwrap-and-opaque-base
-    content: Auto-call unwrap_uv() in default_fixture()/add_primitive() (lowpoly/core/lib.rs) and initialize empty_paint_pixels() as opaque white instead of transparent
-    status: completed
-  - id: paint-all-objects-shared-session
-    content: Extend paintTexture to every scene object in Paint mode (lowpoly/react/index.tsx) and share a single LowpolySessionWasm between the 3D and UV surface hosts (framework/product/playground/renderer/react/index.tsx)
-    status: completed
-  - id: uv-edge-uv-seam-transfer
-    content: Extend MeshTransfer/tessellate() (kernel/3d/mesh/lib.rs) with edge_uvs + seam membership, and thread through lowpoly/core/lib.rs, lowpoly/core/index.ts
-    status: completed
-  - id: uv-canvas-mapping-helpers
-    content: Add checker/grid background, 0-1 unit square border, and edge/seam-based wireframe rendering to LowpolyUvCanvas.draw() (lowpoly/react/index.tsx)
-    status: completed
-  - id: fix-color-tokens
-    content: Replace undefined --accent-8/--dark-4/--primary-9/--primary-6/--dark-6 tokens with --panel/--border-normal-color/--active-base/--hover-base/--accent-secondary across lowpoly/react/index.tsx
-    status: completed
-  - id: live-marquee-preview
-    content: Add live hit-test preview during marquee drag in LowpolyMarqueeBridge/LowpolyCanvas (lowpoly/react/index.tsx), mirroring ProceduralPreviewMarqueeBridge's add/remove preview pattern
-    status: completed
-  - id: lowpoly-feature-tests-and-verification
-    content: Update Rust/Vitest tests for new transfer fields and auto-unwrap behavior; manually verify paint, UV helpers, colors, and live marquee preview in the browser
-    status: completed
+ - id: auto-unwrap-and-opaque-base
+   content: Auto-call unwrap_uv() in default_fixture()/add_primitive() (lowpoly/core/lib.rs) and initialize empty_paint_pixels() as opaque white instead of transparent
+   status: completed
+ - id: paint-all-objects-shared-session
+   content: Extend paintTexture to every scene object in Paint mode (lowpoly/react/index.tsx) and share a single LowpolySessionWasm between the 3D and UV surface hosts (framework/product/playground/renderer/react/index.tsx)
+   status: completed
+ - id: uv-edge-uv-seam-transfer
+   content: Extend MeshTransfer/tessellate() (kernel/3d/mesh/lib.rs) with edge_uvs + seam membership, and thread through lowpoly/core/lib.rs, lowpoly/core/index.ts
+   status: completed
+ - id: uv-canvas-mapping-helpers
+   content: Add checker/grid background, 0-1 unit square border, and edge/seam-based wireframe rendering to LowpolyUvCanvas.draw() (lowpoly/react/index.tsx)
+   status: completed
+ - id: fix-color-tokens
+   content: Replace undefined --accent-8/--dark-4/--primary-9/--primary-6/--dark-6 tokens with --panel/--border-normal-color/--active-base/--hover-base/--accent-secondary across lowpoly/react/index.tsx
+   status: completed
+ - id: live-marquee-preview
+   content: Add live hit-test preview during marquee drag in LowpolyMarqueeBridge/LowpolyCanvas (lowpoly/react/index.tsx), mirroring ProceduralPreviewMarqueeBridge's add/remove preview pattern
+   status: completed
+ - id: lowpoly-feature-tests-and-verification
+   content: Update Rust/Vitest tests for new transfer fields and auto-unwrap behavior; manually verify paint, UV helpers, colors, and live marquee preview in the browser
+   status: completed
 isProject: false
 ---
 
@@ -77,8 +77,6 @@ sequenceDiagram
     Canvas->>Mesh: preview cleared, committed selectColor applied
 ```
 
-
-
 ## Fix plan
 
 ### A. Make Paint mode actually paint (3D + UV)
@@ -125,4 +123,3 @@ In `[lowpoly/react/index.tsx](lowpoly/react/index.tsx)` (the `useState`/`resolve
   - UV window shows a checker/grid backdrop and real (non-collapsed) wireframe; marking a seam and re-opening highlights it distinctly.
   - Hover and selected states are visually distinct (gray vs primary) in Model and Paint modes, and match the marquee rectangle's primary color.
   - Dragging a marquee box over vertices/edges/faces/objects highlights the pending hits live, before mouse-up; releasing commits exactly what was previewed.
-

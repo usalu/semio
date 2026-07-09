@@ -2,21 +2,21 @@
 name: Play Document Tabs
 overview: Add a shared "Document" workbench tab on the left panel of every elements/spatial play host, built from nested `TreeDataItem` trees that mirror each site's composition (scene objects/vortices, board nodes/handles, spatial model space, topology paired fixtures).
 todos:
-  - id: scene-document
-    content: "Scene play: buildScenePlayDocumentSections + workbench tab + vitest; enable left panel"
-    status: completed
-  - id: board-document
-    content: "Board play: document tree from fixture graph (nodes/handles/edges/wires) + workbench tab + vitest"
-    status: completed
-  - id: topology-document
-    content: "Topology play: compose board+scene document builders; workbench tab + vitest"
-    status: completed
-  - id: spatial-document
-    content: "Spatial play: SpatialPlayChromeContext bridge, ModelSpace tree, SpatialPlayRoot tabs + vitest"
-    status: completed
-  - id: e2e-verify
-    content: Extend board-play e2e for document tab visibility; run nx tests for all four plays
-    status: completed
+ - id: scene-document
+   content: "Scene play: buildScenePlayDocumentSections + workbench tab + vitest; enable left panel"
+   status: completed
+ - id: board-document
+   content: "Board play: document tree from fixture graph (nodes/handles/edges/wires) + workbench tab + vitest"
+   status: completed
+ - id: topology-document
+   content: "Topology play: compose board+scene document builders; workbench tab + vitest"
+   status: completed
+ - id: spatial-document
+   content: "Spatial play: SpatialPlayChromeContext bridge, ModelSpace tree, SpatialPlayRoot tabs + vitest"
+   status: completed
+ - id: e2e-verify
+   content: Extend board-play e2e for document tab visibility; run nx tests for all four plays
+   status: completed
 isProject: false
 ---
 
@@ -28,14 +28,12 @@ Every play host under `@elements/playground` gets a **left workbench tab** (icon
 
 ## Current state
 
-
-| Play                                                           | Left workbench today  | Composition source (unused for UI trees)                                               |
-| -------------------------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------- |
+| Play                                                           | Left workbench today  | Composition source (unused for UI trees)                                             |
+| -------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------ |
 | [board/index.tsx](elements/lib/board/index.tsx)                | Library only          | `BoardFixture` nodes/handles/edges; graph via `computeBoardGraphObservationSnapshot` |
 | [scene/index.tsx](elements/lib/react/scene/index.tsx)          | None (left panel off) | `Fixture` + `SceneAttractionTree` (3D ownership only)                                |
-| [topology/index.tsx](elements/lib/react/topology/index.tsx)    | None                  | `TopologyPlaySnapshot.boardFixture` + `sceneFixture`                                   |
-| [spatial play/main.tsx](spatial/js/renderer-r3f/play/main.tsx) | None                  | `ModelSpace.models` + `objectPrimitiveEntries`                                         |
-
+| [topology/index.tsx](elements/lib/react/topology/index.tsx)    | None                  | `TopologyPlaySnapshot.boardFixture` + `sceneFixture`                                 |
+| [spatial play/main.tsx](spatial/js/renderer-r3f/play/main.tsx) | None                  | `ModelSpace.models` + `objectPrimitiveEntries`                                       |
 
 UI infrastructure already supports **nested** trees via `TreeDataItem.items` ([core/index.tsx](elements/lib/react/core/index.tsx) ~16365) and playground tabs via `PureSidePanelTabDefinition` + `StaticTreePanelDefinition` ([playground/react/index.tsx](elements/lib/playground/react/index.tsx)).
 
@@ -63,8 +61,6 @@ flowchart TD
     MS --> MD --> Obj2 --> P
   end
 ```
-
-
 
 **Scene** — flat objects under `Objects` (not attraction-nested; matches your sketch). Each object expands to `Vortices` → vortex leaves. `Attractions` is a sibling group with one item per `fixture.attractions[]`.
 
@@ -101,8 +97,6 @@ flowchart LR
   Tab --> Tree
 ```
 
-
-
 ### Shared conventions (each play file, not cross-tech packages)
 
 - Tab id: `{play}-document` (e.g. `scene-play-document`)
@@ -118,19 +112,17 @@ Wrap [SpatialPlayRoot](spatial/js/renderer-r3f/play/main.tsx) with a small `Spat
 
 ## Files to change
 
-
-| File                                                                                                     | Change                                                                                                                           |
-| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| File                                                                                                     | Change                                                                                                                         |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | [elements/lib/react/scene/index.tsx](elements/lib/react/scene/index.tsx)                                 | `buildScenePlayDocumentSections`, `ScenePlayDocumentPanelDefinition`, add to `augmentPanelTabs.workbench`, enable left panel   |
-| [elements/lib/react/scene/play/index.ts](elements/lib/react/scene/play/index.ts)                         | Vitest: document shape for sample fixture (objects → vortices, attractions group)                                               |
-| [elements/lib/board/index.tsx](elements/lib/board/index.tsx)                                             | `buildBoardPlayDocumentSections` (+ helper to build node subtree from fixture edges), panel + workbench tab                     |
-| [elements/lib/board/play/index.ts](elements/lib/board/play/index.ts)                                     | Vitest: root/child node nesting                                                                                                  |
-| [elements/lib/react/topology/index.tsx](elements/lib/react/topology/index.tsx)                           | Document tab composing board + scene builders; workbench + left panel on                                                        |
-| [elements/lib/react/topology/play/index.ts](elements/lib/react/topology/play/index.ts)                   | Vitest: paired tree has Board + Scene roots                                                                                      |
+| [elements/lib/react/scene/play/index.ts](elements/lib/react/scene/play/index.ts)                         | Vitest: document shape for sample fixture (objects → vortices, attractions group)                                              |
+| [elements/lib/board/index.tsx](elements/lib/board/index.tsx)                                             | `buildBoardPlayDocumentSections` (+ helper to build node subtree from fixture edges), panel + workbench tab                    |
+| [elements/lib/board/play/index.ts](elements/lib/board/play/index.ts)                                     | Vitest: root/child node nesting                                                                                                |
+| [elements/lib/react/topology/index.tsx](elements/lib/react/topology/index.tsx)                           | Document tab composing board + scene builders; workbench + left panel on                                                       |
+| [elements/lib/react/topology/play/index.ts](elements/lib/react/topology/play/index.ts)                   | Vitest: paired tree has Board + Scene roots                                                                                    |
 | [spatial/js/renderer-r3f/play/main.tsx](spatial/js/renderer-r3f/play/main.tsx)                           | `SpatialPlayChromeContext`, `buildSpatialPlayDocumentSections`, `SpatialPlayDocumentPanelDefinition`, update `SpatialPlayRoot` |
-| [spatial/js/renderer-r3f/play/index.ts](spatial/js/renderer-r3f/play/index.ts)                           | Vitest: model space → object → primitive items                                                                                   |
+| [spatial/js/renderer-r3f/play/index.ts](spatial/js/renderer-r3f/play/index.ts)                           | Vitest: model space → object → primitive items                                                                                 |
 | [elements/lib/board/play/e2e/board-play-gpu.spec.ts](elements/lib/board/play/e2e/board-play-gpu.spec.ts) | Assert `#scene-play-document` / `#board-play-document` tab visible when workbench open (extend existing spec pattern)          |
-
 
 Optional tiny helper in [playground/react/index.tsx](elements/lib/playground/react/index.tsx): `playDocumentTabId(playSlug)` — only if it reduces duplication; otherwise keep ids local per play.
 
@@ -159,4 +151,3 @@ Optional tiny helper in [playground/react/index.tsx](elements/lib/playground/rea
 - Full B-rep expansion under spatial primitives
 - Moving spatial `PlayModelSpacePanel` out of `InteractionRepl` aside (document is additive)
 - `@semio-tech/compose-sketchpad-play` sketchpad (different product; user asked playgrounds in elements/spatial)
-

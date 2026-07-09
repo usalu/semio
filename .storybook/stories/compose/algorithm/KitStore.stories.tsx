@@ -13,24 +13,24 @@ import { MetabolismKit as metabolismKit } from "@semio-tech/semio-asset";
 import { AlgorithmApp, NAKAGIN_CAPSULE_TOWER_DESIGN_ID, WindowKind, designFromKit, kitSurface, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio-tech/compose-algorithm";
 
 import {
-	ALL_CHANGE_KIT_ROOT_KEYS,
-	applyEntityPlaceholders,
-	CHANGE_TYPE_COMMAND_KEYS,
-	CommandForm,
-	DiffViewer,
-	EntityPicker,
-	EventsFeed,
-	HistoryControls,
-	KIT_STORE_COVERAGE_ROWS,
-	KitTreeGraph,
-	SnapshotViewer,
-	useKitStore,
+  ALL_CHANGE_KIT_ROOT_KEYS,
+  applyEntityPlaceholders,
+  CHANGE_TYPE_COMMAND_KEYS,
+  CommandForm,
+  DiffViewer,
+  EntityPicker,
+  EventsFeed,
+  HistoryControls,
+  KIT_STORE_COVERAGE_ROWS,
+  KitTreeGraph,
+  SnapshotViewer,
+  useKitStore,
 } from "../../../compose/algorithm/kit-store/index.tsx";
 
 const kitJson = metabolismKit;
 const seedDesignPlain = designFromKit(kitJson, NAKAGIN_CAPSULE_TOWER_DESIGN_ID);
 const kitTypes = kitSurface(kitJson)["types"];
-const typesItems = Array.isArray(kitTypes) ? kitTypes : Array.isArray((kitTypes as { items?: unknown[] } | undefined)?.items) ? ((kitTypes as { items: { id?: string }[] }).items) : [];
+const typesItems = Array.isArray(kitTypes) ? kitTypes : Array.isArray((kitTypes as { items?: unknown[] } | undefined)?.items) ? (kitTypes as { items: { id?: string }[] }).items : [];
 const firstTypeId = String(typesItems[0]?.id ?? "");
 const firstDesignId = String(seedDesignPlain?.id ?? "");
 

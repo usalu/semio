@@ -5,7 +5,5 @@
   "description": "When suggesting a new part in 2d then when finalized the edge is missing.",
   "summary": "Fix suggestion finalization edge missing issue in puzzle 5d",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
-  "sessions": [
-    "⚪cd12e552b5f44beb94f2c40cabfafa8a"
-  ]
+  "sessions": ["⚪cd12e552b5f44beb94f2c40cabfafa8a"]
 }

@@ -2,33 +2,33 @@
 name: Lint scripts JS facade
 overview: Replace the in-Go statute/breach mechanism with co-located `*.lint.script.ts` files driven by a new `@semio-tech/repo-lib` JS facade that spawns `client.exe` per call. An nx inferred plugin discovers every lint script and creates a cacheable per-entity target that writes `.repo/cache/breach/<entity-id>.json`.
 todos:
-  - id: scaffold_bundle
-    content: Scaffold repo/lib/js bundle (package.json, project.json, tsconfig, README)
-    status: completed
-  - id: core_facade
-    content: Implement cli.ts subprocess facade and Breach/Linter base types
-    status: completed
-  - id: six_linters
-    content: Implement TechnologyLinter, BundleLinter, FolderLinter, FileLinter, SectionLinter, DefinitionLinter
-    status: completed
-  - id: runner_bin
-    content: Implement script.ts defineLint helper and bin/lint.ts runner that writes .repo/cache/breach/<id>.json
-    status: completed
-  - id: nx_plugin
-    content: Implement and register nx inferred plugin that discovers *.lint.script.ts and creates cacheable per-entity targets
-    status: completed
-  - id: remove_legacy
-    content: Remove legacy policy/statute/CheckPolicies/Fix machinery from repo/client/cli/main.go and update main_test.go
-    status: completed
-  - id: rewire_analyze
-    content: Rewrite analyze command to read .repo/cache/breach/*.json with scope filtering
-    status: completed
-  - id: example_scripts
-    content: Add example lint scripts (one per linter kind) to validate the pipeline
-    status: completed
-  - id: verify
-    content: Run nx lint targets, confirm .repo/cache/breaches output and analyze command surfaces them
-    status: completed
+ - id: scaffold_bundle
+   content: Scaffold repo/lib/js bundle (package.json, project.json, tsconfig, README)
+   status: completed
+ - id: core_facade
+   content: Implement cli.ts subprocess facade and Breach/Linter base types
+   status: completed
+ - id: six_linters
+   content: Implement TechnologyLinter, BundleLinter, FolderLinter, FileLinter, SectionLinter, DefinitionLinter
+   status: completed
+ - id: runner_bin
+   content: Implement script.ts defineLint helper and bin/lint.ts runner that writes .repo/cache/breach/<id>.json
+   status: completed
+ - id: nx_plugin
+   content: Implement and register nx inferred plugin that discovers *.lint.script.ts and creates cacheable per-entity targets
+   status: completed
+ - id: remove_legacy
+   content: Remove legacy policy/statute/CheckPolicies/Fix machinery from repo/client/cli/main.go and update main_test.go
+   status: completed
+ - id: rewire_analyze
+   content: Rewrite analyze command to read .repo/cache/breach/*.json with scope filtering
+   status: completed
+ - id: example_scripts
+   content: Add example lint scripts (one per linter kind) to validate the pipeline
+   status: completed
+ - id: verify
+   content: Run nx lint targets, confirm .repo/cache/breaches output and analyze command surfaces them
+   status: completed
 isProject: false
 ---
 
@@ -72,14 +72,14 @@ In the runner:
 
 ```json
 {
-  "executor": "nx:run-commands",
-  "options": {
-    "command": "bun repo/lib/js/bin/lint.ts <scriptPath>",
-    "cwd": "{workspaceRoot}"
-  },
-  "inputs": ["{projectRoot}/<scriptPath>", "<targetEntityFiles>", "sharedGlobals"],
-  "outputs": ["{workspaceRoot}/.repo/cache/breach/<entity-id>.json"],
-  "cache": true
+ "executor": "nx:run-commands",
+ "options": {
+  "command": "bun repo/lib/js/bin/lint.ts <scriptPath>",
+  "cwd": "{workspaceRoot}"
+ },
+ "inputs": ["{projectRoot}/<scriptPath>", "<targetEntityFiles>", "sharedGlobals"],
+ "outputs": ["{workspaceRoot}/.repo/cache/breach/<entity-id>.json"],
+ "cache": true
 }
 ```
 
@@ -126,6 +126,3 @@ flowchart LR
   nxPlugin["nx inferred plugin"] -.discovers.-> scriptTs
   nxPlugin -.creates target.-> runner
 ```
-
-
-

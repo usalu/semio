@@ -2,33 +2,33 @@
 name: refactor kit name reads
 overview: "Introduce a clean, extendable kit-store mechanism in `compose/js` (`StoreField<T>`, `StoreCommand<TArgs>`, `RequestCorrelator`, `OperationRouter`, `mutateWithRequestId`) so any kit-store-backed value/command is a one-block declaration. Apply it first to the kit name: split the React surface into `useKitName(): string` + `useRenameKit(): [(name) => Promise<SetResult>, WriteStatus]` (both reduce to one-liners over generic `useStoreField` / `useStoreCommand` hooks), remove the kit-name triad mechanism entirely from sketchpad, keep Promise-based reads cacheless via GraphQL into rs, and feed sync mirrors only from the rs output event stream."
 todos:
-  - id: ticket_open
-    content: Open MCP ticket 'Refactor Kit Name Reads And Split Rename Hook' under appropriate goal.
-    status: cancelled
-  - id: move_writestatus
-    content: Move WriteStatus + SetError + SetResult + helpers (SCHEMA_HOOK_IDLE_STATUS, SCHEMA_HOOK_READONLY_STATUS, USE_KIT_NAME_PENDING_STATUS, writeStatusEquivalent) from compose/react/index.tsx into compose/js/index.ts and re-export.
-    status: pending
-  - id: generic_primitives
-    content: In compose/js/index.ts add StoreField<T>, StoreCommand<TArgs>, RequestCorrelator, OperationRouter, mutateWithRequestId helper, and a single startEventStreamLoop pumping operationSucceeded + operationFailed into router/correlator.
-    status: pending
-  - id: kitstore_refactor
-    content: In compose/js/index.ts drop renameStatus$/KitRenameStatus/KitRenameResult/renameResolvers/renamePendingEvents/dispatchKitRenameSubscription/startRenameSubscriptionLoop/seedLiveKitNameFromDto; declare kitName=StoreField<string>, renameKit=StoreCommand<string>; wireKitName() via OperationRouter; add cacheless readKitName(); seedFieldsFromDto() at open(); dispose disposes fields/commands/correlator.
-    status: completed
-  - id: split_hooks
-    content: In compose/react/index.tsx add generic useStoreField/useStoreCommand and useKitStore() helper; export useKitName=useStoreField(ks.kitName) and useRenameKit=useStoreCommand(ks.renameKit); drop runtime.store / schemaTriad fallbacks and switch to throwing useKitRuntime().
-    status: pending
-  - id: test_mocks
-    content: Update createTestKitClient stubs (lines ~17285 and ~17707) and rewrite the two affected tests against the split API.
-    status: completed
-  - id: sketchpad_kitform
-    content: In compose/sketchpad/index.tsx KitSectionForm import useRenameKit, drop the SketchpadTriadInputRow usage for the kit name, and inline the input row consuming kitName + renameKit + renameKitStatus directly (no triad).
-    status: pending
-  - id: validate
-    content: Run depcruise:layers, type-check, compose/react vitest, sketchpad rename smoke (spinner, error, success, long-name, timeout).
-    status: completed
-  - id: ticket_close
-    content: Close the MCP ticket with summary of files touched.
-    status: completed
+ - id: ticket_open
+   content: Open MCP ticket 'Refactor Kit Name Reads And Split Rename Hook' under appropriate goal.
+   status: cancelled
+ - id: move_writestatus
+   content: Move WriteStatus + SetError + SetResult + helpers (SCHEMA_HOOK_IDLE_STATUS, SCHEMA_HOOK_READONLY_STATUS, USE_KIT_NAME_PENDING_STATUS, writeStatusEquivalent) from compose/react/index.tsx into compose/js/index.ts and re-export.
+   status: pending
+ - id: generic_primitives
+   content: In compose/js/index.ts add StoreField<T>, StoreCommand<TArgs>, RequestCorrelator, OperationRouter, mutateWithRequestId helper, and a single startEventStreamLoop pumping operationSucceeded + operationFailed into router/correlator.
+   status: pending
+ - id: kitstore_refactor
+   content: In compose/js/index.ts drop renameStatus$/KitRenameStatus/KitRenameResult/renameResolvers/renamePendingEvents/dispatchKitRenameSubscription/startRenameSubscriptionLoop/seedLiveKitNameFromDto; declare kitName=StoreField<string>, renameKit=StoreCommand<string>; wireKitName() via OperationRouter; add cacheless readKitName(); seedFieldsFromDto() at open(); dispose disposes fields/commands/correlator.
+   status: completed
+ - id: split_hooks
+   content: In compose/react/index.tsx add generic useStoreField/useStoreCommand and useKitStore() helper; export useKitName=useStoreField(ks.kitName) and useRenameKit=useStoreCommand(ks.renameKit); drop runtime.store / schemaTriad fallbacks and switch to throwing useKitRuntime().
+   status: pending
+ - id: test_mocks
+   content: Update createTestKitClient stubs (lines ~17285 and ~17707) and rewrite the two affected tests against the split API.
+   status: completed
+ - id: sketchpad_kitform
+   content: In compose/sketchpad/index.tsx KitSectionForm import useRenameKit, drop the SketchpadTriadInputRow usage for the kit name, and inline the input row consuming kitName + renameKit + renameKitStatus directly (no triad).
+   status: pending
+ - id: validate
+   content: Run depcruise:layers, type-check, compose/react vitest, sketchpad rename smoke (spinner, error, success, long-name, timeout).
+   status: completed
+ - id: ticket_close
+   content: Close the MCP ticket with summary of files touched.
+   status: completed
 isProject: false
 ---
 
@@ -67,88 +67,121 @@ Replace with three small generic primitives in `compose/js/index.ts`. Each new f
 
 /** @emoji 📥 Sync mirror of one rs-owned value, fed by the rs event stream. */
 export class StoreField<T> {
-  private readonly value$: BehaviorSubject<T>;
-  constructor(initial: T) { this.value$ = new BehaviorSubject(initial); }
-  subscribe = (h: () => void): Unsubscribe => {
-    const s = this.value$.subscribe({ next: () => h() });
-    return () => s.unsubscribe();
-  };
-  getSnapshot = (): T => this.value$.getValue();
-  /** @internal Update from event-stream listeners. */
-  set(next: T): void { this.value$.next(next); }
-  dispose(): void { try { this.value$.complete(); } catch { /* ignore */ } }
+ private readonly value$: BehaviorSubject<T>;
+ constructor(initial: T) {
+  this.value$ = new BehaviorSubject(initial);
+ }
+ subscribe = (h: () => void): Unsubscribe => {
+  const s = this.value$.subscribe({ next: () => h() });
+  return () => s.unsubscribe();
+ };
+ getSnapshot = (): T => this.value$.getValue();
+ /** @internal Update from event-stream listeners. */
+ set(next: T): void {
+  this.value$.next(next);
+ }
+ dispose(): void {
+  try {
+   this.value$.complete();
+  } catch {
+   /* ignore */
+  }
+ }
 }
 
 /** @emoji 📝 Async kit-store command with bound runner + render-ready {@link WriteStatus}. */
 export class StoreCommand<TArgs> {
-  readonly status: StoreField<WriteStatus> = new StoreField<WriteStatus>(SCHEMA_HOOK_IDLE_STATUS);
-  private lastError: SetError | null = null;
-  constructor(private readonly exec: (args: TArgs) => Promise<SetResult>) {}
-  readonly run = async (args: TArgs): Promise<SetResult> => {
-    this.status.set(USE_KIT_NAME_PENDING_STATUS);
-    const r = await this.exec(args);
-    if (r.ok) {
-      this.lastError = null;
-      this.status.set(SCHEMA_HOOK_IDLE_STATUS);
-    } else {
-      const cached = this.lastError;
-      const lastError = cached && cached.kind === r.error.kind && cached.message === r.error.message ? cached : r.error;
-      this.lastError = lastError;
-      const cur = this.status.getSnapshot();
-      const next: WriteStatus = { kind: "error", pending: 0, lastError };
-      if (!writeStatusEquivalent(cur, next)) this.status.set(next);
-    }
-    return r;
-  };
-  dispose(): void { this.status.dispose(); }
+ readonly status: StoreField<WriteStatus> = new StoreField<WriteStatus>(SCHEMA_HOOK_IDLE_STATUS);
+ private lastError: SetError | null = null;
+ constructor(private readonly exec: (args: TArgs) => Promise<SetResult>) {}
+ readonly run = async (args: TArgs): Promise<SetResult> => {
+  this.status.set(USE_KIT_NAME_PENDING_STATUS);
+  const r = await this.exec(args);
+  if (r.ok) {
+   this.lastError = null;
+   this.status.set(SCHEMA_HOOK_IDLE_STATUS);
+  } else {
+   const cached = this.lastError;
+   const lastError = cached && cached.kind === r.error.kind && cached.message === r.error.message ? cached : r.error;
+   this.lastError = lastError;
+   const cur = this.status.getSnapshot();
+   const next: WriteStatus = { kind: "error", pending: 0, lastError };
+   if (!writeStatusEquivalent(cur, next)) this.status.set(next);
+  }
+  return r;
+ };
+ dispose(): void {
+  this.status.dispose();
+ }
 }
 
 /** @emoji 🚦 Generic request-id ↔ Promise-resolver correlator (no per-command duplication). */
 export class RequestCorrelator {
-  private readonly resolvers = new Map<string, (r: SetResult) => void>();
-  private readonly pending = new Map<string, SetResult>();
-  constructor(private readonly timeoutMs: number) {}
-  await(requestId: string): Promise<SetResult> {
-    const buffered = this.pending.get(requestId);
-    if (buffered) { this.pending.delete(requestId); return Promise.resolve(buffered); }
-    return new Promise<SetResult>((resolve) => {
-      const t = setTimeout(() => {
-        if (!this.resolvers.has(requestId)) return;
-        this.resolvers.delete(requestId);
-        resolve({ ok: false, error: { kind: "Timeout", message: `request ${requestId}: timed out` } });
-      }, this.timeoutMs);
-      this.resolvers.set(requestId, (r) => { clearTimeout(t); resolve(r); });
-    });
+ private readonly resolvers = new Map<string, (r: SetResult) => void>();
+ private readonly pending = new Map<string, SetResult>();
+ constructor(private readonly timeoutMs: number) {}
+ await(requestId: string): Promise<SetResult> {
+  const buffered = this.pending.get(requestId);
+  if (buffered) {
+   this.pending.delete(requestId);
+   return Promise.resolve(buffered);
   }
-  resolve(requestId: string, r: SetResult): void {
-    const fn = this.resolvers.get(requestId);
-    if (fn) { fn(r); this.resolvers.delete(requestId); return; }
-    this.pending.set(requestId, r);
-    setTimeout(() => { if (this.pending.get(requestId) === r) this.pending.delete(requestId); }, 10_000);
+  return new Promise<SetResult>((resolve) => {
+   const t = setTimeout(() => {
+    if (!this.resolvers.has(requestId)) return;
+    this.resolvers.delete(requestId);
+    resolve({ ok: false, error: { kind: "Timeout", message: `request ${requestId}: timed out` } });
+   }, this.timeoutMs);
+   this.resolvers.set(requestId, (r) => {
+    clearTimeout(t);
+    resolve(r);
+   });
+  });
+ }
+ resolve(requestId: string, r: SetResult): void {
+  const fn = this.resolvers.get(requestId);
+  if (fn) {
+   fn(r);
+   this.resolvers.delete(requestId);
+   return;
   }
-  disposeAll(reason = "KitStore disposed"): void {
-    for (const [rid, fn] of this.resolvers) fn({ ok: false, error: { kind: "Disposed", message: `${reason} (${rid})` } });
-    this.resolvers.clear();
-    this.pending.clear();
-  }
+  this.pending.set(requestId, r);
+  setTimeout(() => {
+   if (this.pending.get(requestId) === r) this.pending.delete(requestId);
+  }, 10_000);
+ }
+ disposeAll(reason = "KitStore disposed"): void {
+  for (const [rid, fn] of this.resolvers) fn({ ok: false, error: { kind: "Disposed", message: `${reason} (${rid})` } });
+  this.resolvers.clear();
+  this.pending.clear();
+ }
 }
 
 /** @emoji 🚌 Routes typed rs operation events to listeners; one demux for the whole store. */
-export interface OperationEvent<P = JsonObject> { readonly kind: string; readonly requestId: string | null; readonly payload: P }
+export interface OperationEvent<P = JsonObject> {
+ readonly kind: string;
+ readonly requestId: string | null;
+ readonly payload: P;
+}
 type OperationListener<P> = (ev: OperationEvent<P>) => void;
 export class OperationRouter {
-  private readonly listeners = new Map<string, Set<OperationListener<JsonObject>>>();
-  on<P extends JsonObject>(kind: string, l: OperationListener<P>): Unsubscribe {
-    let set = this.listeners.get(kind);
-    if (!set) { set = new Set(); this.listeners.set(kind, set); }
-    set.add(l as OperationListener<JsonObject>);
-    return () => { set!.delete(l as OperationListener<JsonObject>); };
+ private readonly listeners = new Map<string, Set<OperationListener<JsonObject>>>();
+ on<P extends JsonObject>(kind: string, l: OperationListener<P>): Unsubscribe {
+  let set = this.listeners.get(kind);
+  if (!set) {
+   set = new Set();
+   this.listeners.set(kind, set);
   }
-  emit<P extends JsonObject>(ev: OperationEvent<P>): void {
-    const set = this.listeners.get(ev.kind);
-    if (!set) return;
-    for (const l of set) l(ev as unknown as OperationEvent<JsonObject>);
-  }
+  set.add(l as OperationListener<JsonObject>);
+  return () => {
+   set!.delete(l as OperationListener<JsonObject>);
+  };
+ }
+ emit<P extends JsonObject>(ev: OperationEvent<P>): void {
+  const set = this.listeners.get(ev.kind);
+  if (!set) return;
+  for (const l of set) l(ev as unknown as OperationEvent<JsonObject>);
+ }
 }
 
 //#endregion
@@ -162,43 +195,45 @@ export class OperationRouter {
 
 ```typescript
 export class KitStore {
-  // ... existing fields ...
-  private readonly correlator = new RequestCorrelator(this.timeoutMs);
-  private readonly router = new OperationRouter();
+ // ... existing fields ...
+ private readonly correlator = new RequestCorrelator(this.timeoutMs);
+ private readonly router = new OperationRouter();
 
-  /** @emoji 🛠️ One-line helper for any kit-store mutation that returns a `requestId` and resolves on `operationSucceeded` / `operationFailed`. */
-  private async mutateWithRequestId(
-    inTx: boolean,
-    query: string,
-    variablesFor: (tx: { draftId: string; transactionId: string }) => GraphQlVariables,
-    extractRequestId: (data: JsonObject) => string,
-  ): Promise<SetResult> {
-    let tx: { draftId: string; transactionId: string };
-    try { tx = await this.ensureOpenKitWriteTransaction(); }
-    catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; }
-    let requestId: string;
-    try {
-      const data = kitGraphqlData(await this.gqlRun({ query, variables: variablesFor(tx) })) as JsonObject;
-      requestId = String(extractRequestId(data) ?? "");
-      if (requestId === "") throw new Error("mutation: empty requestId");
-    } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; }
-    const r = await this.correlator.await(requestId);
-    if (inTx) {
-      if (r.ok) await this.finalizeKitWriteTransaction().catch(() => undefined);
-      else      await this.abortKitWriteTransaction().catch(() => undefined);
-    }
-    return r;
+ /** @emoji 🛠️ One-line helper for any kit-store mutation that returns a `requestId` and resolves on `operationSucceeded` / `operationFailed`. */
+ private async mutateWithRequestId(inTx: boolean, query: string, variablesFor: (tx: { draftId: string; transactionId: string }) => GraphQlVariables, extractRequestId: (data: JsonObject) => string): Promise<SetResult> {
+  let tx: { draftId: string; transactionId: string };
+  try {
+   tx = await this.ensureOpenKitWriteTransaction();
+  } catch (e) {
+   return { ok: false, error: { kind: "Internal", message: String(e) } };
   }
-
-  /** @emoji 🚌 Single rs subscription loop pumping every operation event into {@link router} + {@link correlator}. */
-  private startEventStreamLoop(): void { /* one subscription on operationSucceeded + one on operationFailed; routes by event kind, resolves correlator by requestId */ }
-
-  private mapOperationFailedToSetError(kind: string, message: string): SetError {
-    const k = kind.trim();
-    if (k === "Invalid")  return { kind: "InvalidValue", message };
-    if (k === "NotFound") return { kind: "NotFound",     message };
-    return { kind: "Internal", message };
+  let requestId: string;
+  try {
+   const data = kitGraphqlData(await this.gqlRun({ query, variables: variablesFor(tx) })) as JsonObject;
+   requestId = String(extractRequestId(data) ?? "");
+   if (requestId === "") throw new Error("mutation: empty requestId");
+  } catch (e) {
+   return { ok: false, error: { kind: "Internal", message: String(e) } };
   }
+  const r = await this.correlator.await(requestId);
+  if (inTx) {
+   if (r.ok) await this.finalizeKitWriteTransaction().catch(() => undefined);
+   else await this.abortKitWriteTransaction().catch(() => undefined);
+  }
+  return r;
+ }
+
+ /** @emoji 🚌 Single rs subscription loop pumping every operation event into {@link router} + {@link correlator}. */
+ private startEventStreamLoop(): void {
+  /* one subscription on operationSucceeded + one on operationFailed; routes by event kind, resolves correlator by requestId */
+ }
+
+ private mapOperationFailedToSetError(kind: string, message: string): SetError {
+  const k = kind.trim();
+  if (k === "Invalid") return { kind: "InvalidValue", message };
+  if (k === "NotFound") return { kind: "NotFound", message };
+  return { kind: "Internal", message };
+ }
 }
 ```
 
@@ -268,11 +303,11 @@ In `compose/react/index.tsx`:
 
 ```typescript
 export function useStoreField<T>(field: StoreField<T>): T {
-  return React.useSyncExternalStore(field.subscribe, field.getSnapshot);
+ return React.useSyncExternalStore(field.subscribe, field.getSnapshot);
 }
 export function useStoreCommand<TArgs>(cmd: StoreCommand<TArgs>): readonly [(args: TArgs) => Promise<SetResult>, WriteStatus] {
-  const status = useStoreField(cmd.status);
-  return [cmd.run, status] as const;
+ const status = useStoreField(cmd.status);
+ return [cmd.run, status] as const;
 }
 
 // Per-field hooks become one-liners:
@@ -335,16 +370,16 @@ The full design and target code are in the **"Smell-free, extendable mechanism"*
 
 ```typescript
 export function useStoreField<T>(field: StoreField<T>): T {
-  return React.useSyncExternalStore(field.subscribe, field.getSnapshot);
+ return React.useSyncExternalStore(field.subscribe, field.getSnapshot);
 }
 export function useStoreCommand<TArgs>(cmd: StoreCommand<TArgs>): readonly [(args: TArgs) => Promise<SetResult>, WriteStatus] {
-  const status = useStoreField(cmd.status);
-  return [cmd.run, status] as const;
+ const status = useStoreField(cmd.status);
+ return [cmd.run, status] as const;
 }
 
 function useKitStore(): KitStore {
-  const { kitClient } = useKitRuntime();
-  return React.useMemo(() => kitStoreFromKitStoreClient(kitClient), [kitClient]);
+ const { kitClient } = useKitRuntime();
+ return React.useMemo(() => kitStoreFromKitStoreClient(kitClient), [kitClient]);
 }
 
 export const useKitName = (): string => useStoreField(useKitStore().kitName);

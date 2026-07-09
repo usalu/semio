@@ -30,9 +30,7 @@
       ],
       "hook_event_name": "afterFileEdit",
       "cursor_version": "2.6.19",
-      "workspace_roots": [
-        "/workspaces/semio"
-      ],
+      "workspace_roots": ["/workspaces/semio"],
       "user_email": "ueli.saluz@posteo.de",
       "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
     }

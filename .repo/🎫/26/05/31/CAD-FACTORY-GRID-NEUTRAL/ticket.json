@@ -5,7 +5,5 @@
   "description": "Remove chromatic/color styling from the CAD factory grid (GridHelper lines and ground pick plane overlay).",
   "summary": "Removed chromatic styling from the CAD factory grid: default ground pick plane opacity is 0 (no accent tint), groundPlane token uses --border-color instead of accent, grid minor lines use --muted-foreground instead of --muted fill token. Vitest 59 tests pass.",
   "goal": "🎯cad",
-  "sessions": [
-    "⚪7c26dc02c8d345c393450c6b034267b9"
-  ]
+  "sessions": ["⚪7c26dc02c8d345c393450c6b034267b9"]
 }

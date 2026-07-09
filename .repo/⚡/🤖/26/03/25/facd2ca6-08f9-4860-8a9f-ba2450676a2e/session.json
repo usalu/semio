@@ -995,12 +995,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "elements/ui/index.tsx",
-                "elements/ui/package.json",
-                "elements/ui/tsconfig.json",
-                "elements/ui/.storybook/main.ts"
-              ],
+              "files": ["elements/ui/index.tsx", "elements/ui/package.json", "elements/ui/tsconfig.json", "elements/ui/.storybook/main.ts"],
               "summary": "Removed all @compose and @coda imports from elements/ui. Replaced @semio-tech/compose-assets/icons import in index.tsx with direct lucide-react imports using the same semantic aliases. Replaced @semio-tech/compose-assets dependency with lucide-react in package.json. Removed @semio-tech/compose-assets path aliases from tsconfig.json. Removed @semio-tech/coda-desktop alias from .storybook/main.ts. TypeScript compilation passes cleanly with zero errors."
             },
             "mcp_tool_name": "ticket_close"
@@ -1027,12 +1022,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "elements/ui/index.tsx",
-                "elements/ui/package.json",
-                "elements/ui/tsconfig.json",
-                "elements/ui/.storybook/main.ts"
-              ],
+              "files": ["elements/ui/index.tsx", "elements/ui/package.json", "elements/ui/tsconfig.json", "elements/ui/.storybook/main.ts"],
               "path": "26/03/25/removecodaandcomposeimportsfromelementsui",
               "summary": "Removed all @compose and @coda imports from elements/ui. Replaced @semio-tech/compose-assets/icons import in index.tsx with direct lucide-react imports using the same semantic aliases. Replaced @semio-tech/compose-assets dependency with lucide-react in package.json. Removed @semio-tech/compose-assets path aliases from tsconfig.json. Removed @semio-tech/coda-desktop alias from .storybook/main.ts. TypeScript compilation passes cleanly with zero errors."
             },
@@ -1060,12 +1050,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "elements/ui/index.tsx",
-                "elements/ui/package.json",
-                "elements/ui/tsconfig.json",
-                "elements/ui/.storybook/main.ts"
-              ],
+              "files": ["elements/ui/index.tsx", "elements/ui/package.json", "elements/ui/tsconfig.json", "elements/ui/.storybook/main.ts"],
               "path": "26/03/25/REMOVE-CODA-AND-COMPOSE-IMPORTS-FROM-ELEMENTS-UI",
               "summary": "Removed all @compose and @coda imports from elements/ui. Replaced @semio-tech/compose-assets/icons import in index.tsx with direct lucide-react imports using the same semantic aliases. Replaced @semio-tech/compose-assets dependency with lucide-react in package.json. Removed @semio-tech/compose-assets path aliases from tsconfig.json. Removed @semio-tech/coda-desktop alias from .storybook/main.ts. TypeScript compilation passes cleanly with zero errors."
             },
@@ -1094,12 +1079,7 @@
             "mcp_result": "[🎫removecodaandcomposeimportsfromelementsui](repo://ticket/🎫removecodaandcomposeimportsfromelementsui) - `closed` - `closed now`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "elements/ui/index.tsx",
-                "elements/ui/package.json",
-                "elements/ui/tsconfig.json",
-                "elements/ui/.storybook/main.ts"
-              ],
+              "files": ["elements/ui/index.tsx", "elements/ui/package.json", "elements/ui/tsconfig.json", "elements/ui/.storybook/main.ts"],
               "path": "26/03/25/REMOVE-CODA-AND-COMPOSE-IMPORTS-FROM-ELEMENTS-UI",
               "summary": "Removed all @compose and @coda imports from elements/ui. Replaced @semio-tech/compose-assets/icons import in index.tsx with direct lucide-react imports using the same semantic aliases. Replaced @semio-tech/compose-assets dependency with lucide-react in package.json. Removed @semio-tech/compose-assets path aliases from tsconfig.json. Removed @semio-tech/coda-desktop alias from .storybook/main.ts. TypeScript compilation passes cleanly with zero errors."
             },

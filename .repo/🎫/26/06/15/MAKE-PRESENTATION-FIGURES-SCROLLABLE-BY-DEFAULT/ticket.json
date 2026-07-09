@@ -8,12 +8,5 @@
     "issue": "https://github.com/usalu/semio/issues/1694"
   },
   "goal": "🎯framework🎯presentation",
-  "sessions": [
-    "⚪bc3d9ddece7547ceb20665d2962d7246",
-    "⚪ba6052d29fe24428978404e314642ac7",
-    "⚪1ba397043ba24912afb440052531b278",
-    "⚪9b59aeb00ca94cbba620d6378e3b3e0a",
-    "⚪325058160d9041bd932a9604ba50d590",
-    "⚪06ced41fff1747b4a2001fc9445a5f23"
-  ]
+  "sessions": ["⚪bc3d9ddece7547ceb20665d2962d7246", "⚪ba6052d29fe24428978404e314642ac7", "⚪1ba397043ba24912afb440052531b278", "⚪9b59aeb00ca94cbba620d6378e3b3e0a", "⚪325058160d9041bd932a9604ba50d590", "⚪06ced41fff1747b4a2001fc9445a5f23"]
 }

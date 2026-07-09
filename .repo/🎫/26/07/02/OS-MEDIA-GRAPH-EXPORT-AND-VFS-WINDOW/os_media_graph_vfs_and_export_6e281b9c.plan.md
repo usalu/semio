@@ -29,8 +29,6 @@ flowchart TB
   flowExport["flow outputExport widget"] --> kernels["kernel/2d + kernel/3d/brep exporters"]
 ```
 
-
-
 ## 1. OS Media Export infrastructure — [framework/product/os/core/index.ts](framework/product/os/core/index.ts)
 
 New `#region 🔖MediaExport`:
@@ -59,7 +57,7 @@ New class in `os/core/index.ts`, `extends VirtualFileSystemController`:
 
 - Tree shape: root → one folder per `OsAppInstance` (named `"<label> (<programId>.<appId>)"`) containing:
   - `source.json` — raw instance source document; double-click navigates/opens the instance (mirrors `onOpenInstance`).
-  - `outputs/<portId>.<ext>` — one virtual file per output port per required export format (always present — this *is* the "always exportable" guarantee made visible in the VFS); double-click calls `exportOsAppInstanceMedia(...)` + `downloadOsMediaExportResult(...)`.
+  - `outputs/<portId>.<ext>` — one virtual file per output port per required export format (always present — this _is_ the "always exportable" guarantee made visible in the VFS); double-click calls `exportOsAppInstanceMedia(...)` + `downloadOsMediaExportResult(...)`.
   - `inputs/<portId>` — present when connected, `descriptorValues` shows `"← <sourceInstanceId>:<sourcePortId>"`; drag onto another instance's `outputs/<portId>` file to `connectMediaPorts`, delete to `disconnectMediaEdge`.
 - Mutations dispatch existing `OsCommand`s: `createNode` (top-level folder) → `spawnAppInstance`; `deleteNode` (instance folder) → `removeAppInstance`; `renameNode` (instance folder) → new `renameAppInstance` command (added to `OsStore`); `moveNode` on an `inputs/` file → `connectMediaPorts`/`disconnectMediaEdge`.
 - Because this reads/writes the same `OsStore` that `SMediaGraphCanvas` already uses (same CQRS pattern as `moveMediaNode`/`connectMediaPorts` in [framework/product/playground/renderer/react/index.tsx:12722-12737](framework/product/playground/renderer/react/index.tsx)), the two views are automatically bidirectionally consistent — no bespoke sync layer needed (unlike the one-way sketchpad Kit→VFS projection).
@@ -128,6 +126,5 @@ Add/extend a test that boots all `register*MediaExportHandlers()` and then calls
 9. Open the repo ticket (per `AGENTS.md`/`CLAUDE.md` workflow) at the start of implementation, associate with the most fitting goal, close with full summary of files touched.
 
 This is a large, multi-package change (Rust/WASM in `flow/core`, `mathematical/graph/port/directed/dag`, `kernel/3d/brep`, `lowpoly`, plus TS across 15 technology packages, `framework/product/os`, `framework/product/platform`, and `ui/react`). It will be executed as one continuous ticket, following the order above so each stage is independently verifiable (infra → VFS mutation plumbing → media-graph projection → flow widget → kernel bindings → per-tech handlers → enforcement test).
-
 
 [{"id": "os-media-export-infra", "content": "Add OsMediaExportFormat/registry/assertOsMediaExportCoverage/exportOsAppInstanceMedia to framework/product/os/core/index.ts plus shared download helper in framework/core"}, {"id": "vfs-controller-crud", "content": "Extend VirtualFileSystemController in framework/product/platform/core with create/rename/delete/persisted-move hooks, wire renderer callbacks and ui/react affordances"}, {"id": "media-graph-vfs-projection", "content": "Build OsMediaGraphVirtualFileSystemController projecting OsMediaGraph nodes/ports to a VFS tree with mutation commands, add renameAppInstance OsCommand"}, {"id": "vfs-window-s-studio", "content": "Wire a new VFS window kind into the S studio playground alongside SMediaGraphCanvas and verify bidirectional live sync via OsStore"}, {"id": "flow-output-export-widget", "content": "Add new outputExport widget kind end-to-end: flow/core/lib.rs, mathematical/graph/port/directed/dag/lib.rs, flow/react/index.tsx, flow/core/index.ts, playground host wiring, click-to-export trigger"}, {"id": "kernel-export-bindings", "content": "Add missing TS export wrappers: kernel/3d/brep/js obj/gltf, cad/js brepjs obj/glb, lowpoly exportGlbActive, shared rasterizeSvgToPngDataUrl port"}, {"id": "per-tech-export-handlers", "content": "Implement registerMediaExportHandlers for all 15 media resource kinds (draw, raster, gis, procedural2d, shooting, layout, note, presentation, cad, mesh, lowpoly, procedural3d, puzzle2d, puzzle3d, puzzle5d) and call centrally from s/core/internal.ts"}, {"id": "coverage-test", "content": "Add test asserting assertOsMediaExportCoverage() passes after all handlers are registered"}, {"id": "ticket-workflow", "content": "Open repo ticket associated with the right goal before implementation, close it with full summary and file list when done"}]

@@ -177,15 +177,119 @@ const PLATFORM_RENDERER_EXPORTS = [
   "createBrowserStoragePort",
 ];
 
-const UI_REACT_EXPORTS = ["reactHostPort", "cn", "Icon", "Button", "Toggle", "Select", "Tree", "LevelProvider", "getLevelBgClass", "useElementsSurfaceChrome", "bootstrapElementsSurfaceChromeDocument", "useMediaQuery", "useCommandHotkey", "createIconComponent", "ChromeAwareWindowScrollSurface", "PanelToggleGroup", "NavbarExampleSelect", "NAVBAR_NO_EXAMPLE_ID", "engagementCommandTokenEquals", "normalizeEngagementCommandText", "floatingFieldSurfaceClass", "floatingMenuSurfaceClass", "shellChromeSectionTitleClassName", "shellChromeTitleClassName", "interactiveActiveFillClass", "isCrossOriginIsolatedRuntime", "navbarFillItem", "readStoredComputeWorkerCount", "readStoredUiChromeCompact", "readStoredUiChromeExpertise", "readStoredUiChromeTheme", "writeStoredComputeWorkerCount", "writeStoredUiChromeCompact", "writeStoredUiChromeExpertise", "writeStoredUiChromeTheme", "renderControlIcon", "ButtonGroup", "ButtonGroupItem", "Input", "SelectContent", "SelectItem", "SelectTrigger", "SelectValue", "SemioLogo"];
+const UI_REACT_EXPORTS = [
+  "reactHostPort",
+  "cn",
+  "Icon",
+  "Button",
+  "Toggle",
+  "Select",
+  "Tree",
+  "LevelProvider",
+  "getLevelBgClass",
+  "useElementsSurfaceChrome",
+  "bootstrapElementsSurfaceChromeDocument",
+  "useMediaQuery",
+  "useCommandHotkey",
+  "createIconComponent",
+  "ChromeAwareWindowScrollSurface",
+  "PanelToggleGroup",
+  "NavbarExampleSelect",
+  "NAVBAR_NO_EXAMPLE_ID",
+  "engagementCommandTokenEquals",
+  "normalizeEngagementCommandText",
+  "floatingFieldSurfaceClass",
+  "floatingMenuSurfaceClass",
+  "shellChromeSectionTitleClassName",
+  "shellChromeTitleClassName",
+  "interactiveActiveFillClass",
+  "isCrossOriginIsolatedRuntime",
+  "navbarFillItem",
+  "readStoredComputeWorkerCount",
+  "readStoredUiChromeCompact",
+  "readStoredUiChromeExpertise",
+  "readStoredUiChromeTheme",
+  "writeStoredComputeWorkerCount",
+  "writeStoredUiChromeCompact",
+  "writeStoredUiChromeExpertise",
+  "writeStoredUiChromeTheme",
+  "renderControlIcon",
+  "ButtonGroup",
+  "ButtonGroupItem",
+  "Input",
+  "SelectContent",
+  "SelectItem",
+  "SelectTrigger",
+  "SelectValue",
+  "SemioLogo",
+];
 
 const FRAMEWORK_CORE_EXPORTS = ["downloadMediaExportResult", "NamedLayoutStore", "CANVAS_HOVER_SOURCE_CANVAS", "CANVAS_HOVER_SOURCE_CATALOG", "CANVAS_HOVER_SOURCE_DOCUMENT"];
 
-const PLAYGROUND_CORE_EXPORTS = ["SidePanelTabConfig", "TreePanelDefinition", "SidePanelTabDefinition", "TreePanelConfig", "TreeDataItem", "TreeDataSection", "SideTabSpec", "WindowEngagement", "WindowEngagementControl", "UiNode", "UiTreeNode", "UiSectionNode", "UiFieldNode", "UiInputNode", "UiSelectNode", "UiToggleNode", "UiTreeItemNode", "UiTreeSectionNode", "UiVec3Node", "UiKeyValueNode", "UiTableHostSurfaceNode", "UiPuzzle2dHostSurfaceNode", "UiPuzzle3dHostSurfaceNode"];
+const PLAYGROUND_CORE_EXPORTS = [
+  "SidePanelTabConfig",
+  "TreePanelDefinition",
+  "SidePanelTabDefinition",
+  "TreePanelConfig",
+  "TreeDataItem",
+  "TreeDataSection",
+  "SideTabSpec",
+  "WindowEngagement",
+  "WindowEngagementControl",
+  "UiNode",
+  "UiTreeNode",
+  "UiSectionNode",
+  "UiFieldNode",
+  "UiInputNode",
+  "UiSelectNode",
+  "UiToggleNode",
+  "UiTreeItemNode",
+  "UiTreeSectionNode",
+  "UiVec3Node",
+  "UiKeyValueNode",
+  "UiTableHostSurfaceNode",
+  "UiPuzzle2dHostSurfaceNode",
+  "UiPuzzle3dHostSurfaceNode",
+];
 
-const PLAYGROUND_RENDERER_TYPES = ["Playground", "PlaygroundChromeBoot", "PlaygroundContextValue", "PlaygroundViewProps", "PlaygroundPanelVisibility", "PlaygroundExampleCatalog", "ResolvedAppState", "SidePanelBodyViewContext", "WindowBodyViewContext", "CommandDescriptor", "PlaygroundKeybinding", "Store", "UIWindowKindDefinition", "UIWindowMeasure", "UiComponentHostSurfaceNode", "DisplayHostApi", "SettingsHostApi"];
+const PLAYGROUND_RENDERER_TYPES = [
+  "Playground",
+  "PlaygroundChromeBoot",
+  "PlaygroundContextValue",
+  "PlaygroundViewProps",
+  "PlaygroundPanelVisibility",
+  "PlaygroundExampleCatalog",
+  "ResolvedAppState",
+  "SidePanelBodyViewContext",
+  "WindowBodyViewContext",
+  "CommandDescriptor",
+  "PlaygroundKeybinding",
+  "Store",
+  "UIWindowKindDefinition",
+  "UIWindowMeasure",
+  "UiComponentHostSurfaceNode",
+  "DisplayHostApi",
+  "SettingsHostApi",
+];
 
-const PLATFORM_CORE_TYPES = ["UiFlowHostSurfaceNode", "UiFormsHostSurfaceNode", "UiWriterHostSurfaceNode", "UiDagHostSurfaceNode", "UiGisMapHostSurfaceNode", "UiImperativeHostSurfaceNode", "UiSequenceHostSurfaceNode", "UiLayoutHostSurfaceNode", "UiTrinityHostSurfaceNode", "UiShootingHostSurfaceNode", "UiRasterHostSurfaceNode", "UiDrawHostSurfaceNode", "UiNoteHostSurfaceNode", "UiVcsHostSurfaceNode", "UiEditorHostSurfaceNode", "UiSHostSurfaceNode"];
+const PLATFORM_CORE_TYPES = [
+  "UiFlowHostSurfaceNode",
+  "UiFormsHostSurfaceNode",
+  "UiWriterHostSurfaceNode",
+  "UiDagHostSurfaceNode",
+  "UiGisMapHostSurfaceNode",
+  "UiImperativeHostSurfaceNode",
+  "UiSequenceHostSurfaceNode",
+  "UiLayoutHostSurfaceNode",
+  "UiTrinityHostSurfaceNode",
+  "UiShootingHostSurfaceNode",
+  "UiRasterHostSurfaceNode",
+  "UiDrawHostSurfaceNode",
+  "UiNoteHostSurfaceNode",
+  "UiVcsHostSurfaceNode",
+  "UiEditorHostSurfaceNode",
+  "UiSHostSurfaceNode",
+];
 
 function extractRegion(source: string, regionName: string): string {
   const start = `//#region 🔖${regionName}`;
@@ -235,7 +339,33 @@ function buildFrameworkImports(region: string): string {
   if (region.includes("PlaygroundChromeBoot") && !allPgRenderer.includes("PlaygroundChromeBoot")) pgRendererTypes.push("PlaygroundChromeBoot");
   if (region.includes("ReactElement") || region.includes(": ReactElement")) pgRendererTypes.push("ReactElement");
 
-  const pgTypes = [...new Set(pgRendererTypes.filter((t) => ["Playground", "PlaygroundChromeBoot", "PlaygroundContextValue", "PlaygroundViewProps", "PlaygroundPanelVisibility", "PlaygroundExampleCatalog", "ResolvedAppState", "SidePanelBodyViewContext", "WindowBodyViewContext", "CommandDescriptor", "PlaygroundKeybinding", "Store", "UIWindowKindDefinition", "UIWindowMeasure", "UiComponentHostSurfaceNode", "DisplayHostApi", "SettingsHostApi", "ReactElement"].includes(t) || region.match(new RegExp(`\\b${t}\\b`))))];
+  const pgTypes = [
+    ...new Set(
+      pgRendererTypes.filter(
+        (t) =>
+          [
+            "Playground",
+            "PlaygroundChromeBoot",
+            "PlaygroundContextValue",
+            "PlaygroundViewProps",
+            "PlaygroundPanelVisibility",
+            "PlaygroundExampleCatalog",
+            "ResolvedAppState",
+            "SidePanelBodyViewContext",
+            "WindowBodyViewContext",
+            "CommandDescriptor",
+            "PlaygroundKeybinding",
+            "Store",
+            "UIWindowKindDefinition",
+            "UIWindowMeasure",
+            "UiComponentHostSurfaceNode",
+            "DisplayHostApi",
+            "SettingsHostApi",
+            "ReactElement",
+          ].includes(t) || region.match(new RegExp(`\\b${t}\\b`)),
+      ),
+    ),
+  ];
   const pgValues = [...new Set(pgRendererValues.filter((v) => !pgTypes.includes(v)))];
 
   const typeImports = pgTypes.filter((t) => t !== "ReactElement");
@@ -360,19 +490,8 @@ for (const { corePath, reactPkg, bootFn } of CORE_BOOT_UPDATES) {
 const rendererPkgPath = join(REPO, "framework/product/playground/renderer/react/package.json");
 const rendererPkg = JSON.parse(readFileSync(rendererPkgPath, "utf8"));
 rendererPkg.exports = { ".": "./index.tsx" };
-const keepDeps = new Set([
-  "@semio-tech/framework-platform-core",
-  "@semio-tech/framework-platform-renderer-react",
-  "@semio-tech/framework-playground-core",
-  "@semio-tech/ui-react",
-  "clsx",
-  "react",
-  "react-dom",
-  "tailwind-merge",
-]);
-rendererPkg.dependencies = Object.fromEntries(
-  Object.entries(rendererPkg.dependencies).filter(([k]) => keepDeps.has(k)),
-);
+const keepDeps = new Set(["@semio-tech/framework-platform-core", "@semio-tech/framework-platform-renderer-react", "@semio-tech/framework-playground-core", "@semio-tech/ui-react", "clsx", "react", "react-dom", "tailwind-merge"]);
+rendererPkg.dependencies = Object.fromEntries(Object.entries(rendererPkg.dependencies).filter(([k]) => keepDeps.has(k)));
 writeFileSync(rendererPkgPath, JSON.stringify(rendererPkg, null, 2) + "\n");
 console.log("Slimmed renderer package.json");
 
@@ -380,9 +499,7 @@ console.log("Slimmed renderer package.json");
 const corePkgPath = join(REPO, "framework/product/playground/core/package.json");
 const corePkg = JSON.parse(readFileSync(corePkgPath, "utf8"));
 const coreKeepDeps = new Set(["@semio-tech/framework-core", "@semio-tech/framework-platform-core"]);
-corePkg.dependencies = Object.fromEntries(
-  Object.entries(corePkg.dependencies).filter(([k]) => coreKeepDeps.has(k)),
-);
+corePkg.dependencies = Object.fromEntries(Object.entries(corePkg.dependencies).filter(([k]) => coreKeepDeps.has(k)));
 writeFileSync(corePkgPath, JSON.stringify(corePkg, null, 2) + "\n");
 console.log("Slimmed playground core package.json");
 

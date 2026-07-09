@@ -7,9 +7,5 @@
   "github": { "issue": "" },
   "goal": "",
   "sessions": [],
-  "files": [
-    "elements/client/lib/board/rs/lib.rs",
-    "elements/client/lib/board/index.ts",
-    "elements/client/lib/board/index.tsx"
-  ]
+  "files": ["elements/client/lib/board/rs/lib.rs", "elements/client/lib/board/index.ts", "elements/client/lib/board/index.tsx"]
 }

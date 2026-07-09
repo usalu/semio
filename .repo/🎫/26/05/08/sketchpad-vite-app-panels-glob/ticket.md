@@ -68,7 +68,7 @@
 
 ## Follow-up: Strip JS-side knowledge of the on-disk kit-store bundle envelope (Rust-owned format)
 
-**Constraint reaffirmed by the dev:** *"Everything kit state related MUST be only in compose/rs. The dev kit backbone (json file) is only interacted by rust."*
+**Constraint reaffirmed by the dev:** _"Everything kit state related MUST be only in compose/rs. The dev kit backbone (json file) is only interacted by rust."_
 
 ### Why this changed
 
@@ -79,7 +79,7 @@ in `JsonFileKitStore`, `FolderKitStore`, `importKitToDto`, and the sketchpad
 matching `assets/compose/metabolism.new.kit.compose.json`. That violated the
 layering: **JS reshaped/persisted the on-disk bundle** that is owned by `compose/rs`.
 
-In addition, the *real* dev-json backbone (Rust `DevJsonBackboneFile` in `compose/rs/lib.rs`)
+In addition, the _real_ dev-json backbone (Rust `DevJsonBackboneFile` in `compose/rs/lib.rs`)
 uses an entirely different on-disk shape — `kind` / `schema = "2026-05-06"` /
 `connectionUri` / `persistence` / `semanticOpLog[]` — so **the JS bundle envelope was
 both architecturally wrong and format-wrong.**
@@ -121,7 +121,7 @@ both architecturally wrong and format-wrong.**
 
 ## Follow-up: Rust dev-json backbone refactored to the metabolism.new shape
 
-**Constraint:** *"compose/rs MUST be refactored to have the shape assets/compose/metabolism.new.kit.compose.json"*
+**Constraint:** _"compose/rs MUST be refactored to have the shape assets/compose/metabolism.new.kit.compose.json"_
 
 ### What changed in `compose/rs/lib.rs`
 
@@ -179,7 +179,7 @@ cargo test   -p compose                                           → 17 / 17 pa
 
 ## Follow-up: Transaction lifecycle on every kit edit (focus → tx open → rename → commit / abort)
 
-**Constraint from the dev:** *"Every kit change operation must happen within a draft and a transaction. When clicking the input for kit name then a transaction is started and on enter rename operation is sent and on success the transaction is finalized."*
+**Constraint from the dev:** _"Every kit change operation must happen within a draft and a transaction. When clicking the input for kit name then a transaction is started and on enter rename operation is sent and on success the transaction is finalized."_
 
 ### Rust (`compose/rs/lib.rs`)
 
@@ -216,7 +216,7 @@ cargo test   -p compose                                           → 17 / 17 pa
   3. On success: `ks.finalizeKitWriteTransaction()` (commits the transaction, moves it to `finalizedTransactions`).
   4. On failure: `ks.abortKitWriteTransaction()` (drops the transaction, clears the active tx pointer).
 
-This satisfies the *"every kit change operation must happen within a draft and a transaction"* rule end-to-end, all the way from the React hook through the JS bridge into the rs `Graph` lifecycle. The on-disk bundle persistence of the lifecycle (so the metabolism file shows the same `wip.drafts[*].transactions[*]` rows) lands together with the future host file-adapter bridge.
+This satisfies the _"every kit change operation must happen within a draft and a transaction"_ rule end-to-end, all the way from the React hook through the JS bridge into the rs `Graph` lifecycle. The on-disk bundle persistence of the lifecycle (so the metabolism file shows the same `wip.drafts[*].transactions[*]` rows) lands together with the future host file-adapter bridge.
 
 ### Verification
 
@@ -231,7 +231,7 @@ cd compose/js && npm test -- --testNamePattern=rename                  → renam
 ### Out of scope (next ticket — does not block sketchpad UX today)
 
 - Generalize `BackboneNativeCell::record_*_if_attached` so `RenameKit` (and every other mutation) persists its forward step into `wip.drafts[draft_id].transactions[tx_id].forwards[*]` of the on-disk bundle. Today only `AddFixedPieceToDesign` records.
-- Tie `transactionOpen` to input *focus* instead of input *commit*. The current setter-managed lifecycle gives one transaction per logical edit; tying to focus needs `onFocus` / `onBlur` on the underlying `elements/ui` `Input`, which would mix technologies.
+- Tie `transactionOpen` to input _focus_ instead of input _commit_. The current setter-managed lifecycle gives one transaction per logical edit; tying to focus needs `onFocus` / `onBlur` on the underlying `elements/ui` `Input`, which would mix technologies.
 - Wire the JS `KitJsonFileAdapter` through to a Rust host hook so the bundle (and the lifecycle) is actually round-tripped to disk.
 
 ### Files
@@ -278,4 +278,3 @@ cd compose/js && npm test -- --testNamePattern=rename                  → renam
 - `compose/react/vite.config.ts`
 - `compose/react/package.json`
 - `.repo/🎫/26/05/08/sketchpad-vite-app-panels-glob/ticket.md`
-

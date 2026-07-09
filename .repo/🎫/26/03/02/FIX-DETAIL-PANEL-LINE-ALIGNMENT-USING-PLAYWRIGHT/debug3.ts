@@ -7,20 +7,20 @@ async function measureTreeAlignment(page: any, label: string) {
   const data = await page.evaluate(() => {
     const results: any[] = [];
 
-    document.querySelectorAll('[data-slot="tree-item-row"], [data-slot="tree-section-row"]').forEach(row => {
+    document.querySelectorAll('[data-slot="tree-item-row"], [data-slot="tree-section-row"]').forEach((row) => {
       const rowRect = row.getBoundingClientRect();
       const style = window.getComputedStyle(row);
-      const slot = row.getAttribute('data-slot');
-      const label = row.querySelector('[data-slot="tree-label"]')?.textContent || '?';
+      const slot = row.getAttribute("data-slot");
+      const label = row.querySelector('[data-slot="tree-label"]')?.textContent || "?";
 
       // Find ALL SVGs to identify chevrons specifically
       const allSvgs: any[] = [];
-      row.querySelectorAll(':scope > svg, :scope > button > svg, :scope > div > svg, :scope > span > svg, :scope > span svg').forEach((svg: any) => {
+      row.querySelectorAll(":scope > svg, :scope > button > svg, :scope > div > svg, :scope > span > svg, :scope > span svg").forEach((svg: any) => {
         const rect = svg.getBoundingClientRect();
         const parent = svg.parentElement;
         allSvgs.push({
           tag: parent?.tagName,
-          class: svg.getAttribute('class')?.substring(0, 40),
+          class: svg.getAttribute("class")?.substring(0, 40),
           x: rect.x,
           centerX: rect.x + rect.width / 2,
           width: rect.width,
@@ -30,10 +30,10 @@ async function measureTreeAlignment(page: any, label: string) {
       });
 
       // Find the first non-absolute positioned SVG (the chevron for expandable items)
-      const lineContainer = row.querySelector('.pointer-events-none');
+      const lineContainer = row.querySelector(".pointer-events-none");
       const lines: any[] = [];
       if (lineContainer) {
-        lineContainer.querySelectorAll('div > div').forEach((line: any) => {
+        lineContainer.querySelectorAll("div > div").forEach((line: any) => {
           const lineRect = line.getBoundingClientRect();
           if (lineRect.height > 0 && lineRect.width <= 2) {
             lines.push({
@@ -57,13 +57,13 @@ async function measureTreeAlignment(page: any, label: string) {
 
     // Also get tree-content elements
     const treeContents: any[] = [];
-    document.querySelectorAll('[data-slot="tree-content"]').forEach(el => {
+    document.querySelectorAll('[data-slot="tree-content"]').forEach((el) => {
       const rect = el.getBoundingClientRect();
       const style = window.getComputedStyle(el);
-      const lineContainer = el.querySelector('.pointer-events-none');
+      const lineContainer = el.querySelector(".pointer-events-none");
       const lines: any[] = [];
       if (lineContainer) {
-        lineContainer.querySelectorAll('div > div').forEach((line: any) => {
+        lineContainer.querySelectorAll("div > div").forEach((line: any) => {
           const lineRect = line.getBoundingClientRect();
           if (lineRect.height > 0 && lineRect.width <= 2) {
             lines.push({
@@ -84,15 +84,15 @@ async function measureTreeAlignment(page: any, label: string) {
   });
 
   for (const item of data.rows) {
-    const lineInfo = item.lines.length > 0 ? ` | lines at offsets: ${item.lines.map((l: any) => l.offsetFromRow.toFixed(1)).join(', ')}` : '';
-    const svgInfo = item.svgs.length > 0 ? ` | svgs: ${item.svgs.map((s: any) => `${s.tag}@${s.centerOffsetFromRow.toFixed(1)}(${s.width.toFixed(0)}px)`).join(', ')}` : '';
+    const lineInfo = item.lines.length > 0 ? ` | lines at offsets: ${item.lines.map((l: any) => l.offsetFromRow.toFixed(1)).join(", ")}` : "";
+    const svgInfo = item.svgs.length > 0 ? ` | svgs: ${item.svgs.map((s: any) => `${s.tag}@${s.centerOffsetFromRow.toFixed(1)}(${s.width.toFixed(0)}px)`).join(", ")}` : "";
     console.log(`  ${item.slot} "${item.label}" pl=${item.paddingLeft}${svgInfo}${lineInfo}`);
   }
 
   if (data.treeContents.length > 0) {
     console.log(`  tree-content elements: ${data.treeContents.length}`);
     for (const tc of data.treeContents) {
-      const lineInfo = tc.lines.length > 0 ? ` | lines: ${tc.lines.map((l: any) => l.offsetFromContent.toFixed(1)).join(', ')}` : '';
+      const lineInfo = tc.lines.length > 0 ? ` | lines: ${tc.lines.map((l: any) => l.offsetFromContent.toFixed(1)).join(", ")}` : "";
       console.log(`    pl=${tc.paddingLeft}${lineInfo}`);
     }
   }
@@ -119,8 +119,13 @@ async function main() {
   // Load metabolism kit
   const kitPath = path.resolve("/workspaces/semio/assets/compose/kit_metabolism.zip");
   const [fileChooser] = await Promise.all([
-    skPage.waitForEvent('filechooser', { timeout: 10000 }).catch(() => null),
-    skPage.locator('role=button').filter({ hasText: /open|load|import/i }).first().click({ timeout: 5000 }).catch(() => null)
+    skPage.waitForEvent("filechooser", { timeout: 10000 }).catch(() => null),
+    skPage
+      .locator("role=button")
+      .filter({ hasText: /open|load|import/i })
+      .first()
+      .click({ timeout: 5000 })
+      .catch(() => null),
   ]);
 
   console.log("\n[DEBUG] File chooser:", fileChooser ? "found" : "not found");

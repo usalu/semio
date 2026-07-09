@@ -120,15 +120,7 @@
     "risk_id": "risk_concrete_slab_001",
     "item_id": "item_concrete_slab_6840_1495",
     "risk_level": "high",
-    "hazard_flags": [
-      "chlorides",
-      "corrosion",
-      "moisture_damage",
-      "hydrocarbons",
-      "unknown_pollutants",
-      "structural_uncertainty",
-      "missing_certification"
-    ],
+    "hazard_flags": ["chlorides", "corrosion", "moisture_damage", "hydrocarbons", "unknown_pollutants", "structural_uncertainty", "missing_certification"],
     "pollutant_test_status": "partial_test",
     "structural_verification_required": true,
     "engineer_review_status": "required",
@@ -145,12 +137,7 @@
   },
   "derived_data": {
     "likely_use_cases": {
-      "value": [
-        "reuse_as_structural_floor_slab_after_review",
-        "reuse_as_non_structural_platform",
-        "reuse_as_landscape_or_infrastructure_element",
-        "reuse_as_heavy_precast_component"
-      ],
+      "value": ["reuse_as_structural_floor_slab_after_review", "reuse_as_non_structural_platform", "reuse_as_landscape_or_infrastructure_element", "reuse_as_heavy_precast_component"],
       "derived": true,
       "confidence": "medium",
       "reasoning_source": "category_rule",
@@ -164,39 +151,21 @@
       "review_required": true
     },
     "handling_requirements": {
-      "value": [
-        "crane_likely_required",
-        "heavy_transport_required",
-        "lifting_plan_required",
-        "storage_on_hard_surface_required"
-      ],
+      "value": ["crane_likely_required", "heavy_transport_required", "lifting_plan_required", "storage_on_hard_surface_required"],
       "derived": true,
       "confidence": "medium",
       "reasoning_source": "material_logic",
       "review_required": true
     },
     "likely_missing_data": {
-      "value": [
-        "final_availability_confirmation",
-        "reservation_status",
-        "exact_pickup_window",
-        "transport_cost",
-        "reuse_design_load_case",
-        "legal_release_for_third_party_use"
-      ],
+      "value": ["final_availability_confirmation", "reservation_status", "exact_pickup_window", "transport_cost", "reuse_design_load_case", "legal_release_for_third_party_use"],
       "derived": true,
       "confidence": "high",
       "reasoning_source": "source_context",
       "review_required": true
     },
     "reuse_barriers": {
-      "value": [
-        "structural_liability",
-        "pollutant_uncertainty",
-        "high_logistics_cost",
-        "dimensional_inflexibility",
-        "possible_deconstruction_damage"
-      ],
+      "value": ["structural_liability", "pollutant_uncertainty", "high_logistics_cost", "dimensional_inflexibility", "possible_deconstruction_damage"],
       "derived": true,
       "confidence": "high",
       "reasoning_source": "material_logic",
@@ -210,14 +179,7 @@
     "procurement_readiness": "not_ready",
     "design_readiness": "medium",
     "technical_readiness": "requires_engineering_review",
-    "recommended_next_action": [
-      "check_availability",
-      "contact_seller_or_owner",
-      "request_structural_review",
-      "request_pollutant_test",
-      "estimate_transport_and_crane_cost",
-      "verify_dwg_geometry"
-    ],
+    "recommended_next_action": ["check_availability", "contact_seller_or_owner", "request_structural_review", "request_pollutant_test", "estimate_transport_and_crane_cost", "verify_dwg_geometry"],
     "assessment_notes": "Good technical documentation, but not procurement-ready without availability, logistics and engineering confirmation."
   },
   "design_object": {
@@ -230,23 +192,8 @@
       "width_mm": 1495,
       "height_mm": 480
     },
-    "design_warnings": [
-      "fixed_dimensions",
-      "limited_quantity",
-      "structural_review_required",
-      "pollutant_review_required",
-      "heavy_lifting_required",
-      "availability_not_confirmed"
-    ],
-    "allowed_design_use": [
-      "conceptual_design",
-      "reuse_option_study",
-      "non_structural_design_placeholder"
-    ],
-    "blocked_until_verified": [
-      "final_structural_load_bearing_use",
-      "procurement_commitment",
-      "construction_documentation"
-    ]
+    "design_warnings": ["fixed_dimensions", "limited_quantity", "structural_review_required", "pollutant_review_required", "heavy_lifting_required", "availability_not_confirmed"],
+    "allowed_design_use": ["conceptual_design", "reuse_option_study", "non_structural_design_placeholder"],
+    "blocked_until_verified": ["final_structural_load_bearing_use", "procurement_commitment", "construction_documentation"]
   }
 }

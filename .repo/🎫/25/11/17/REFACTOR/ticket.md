@@ -50,10 +50,10 @@ registerDesignAppStoreFactory((parent, yMap, transact, id, state) => new DesignA
 
 // Kit, Type: Separate initialization function
 export function initializeKitAppStore() {
-  registerKitAppStoreFactory((parent, yMap, transact, id, state) => new KitAppStore(parent, yMap, transact, id, state));
+ registerKitAppStoreFactory((parent, yMap, transact, id, state) => new KitAppStore(parent, yMap, transact, id, state));
 }
 if (typeof window !== "undefined") {
-  setTimeout(() => initializeKitAppStore(), 0);
+ setTimeout(() => initializeKitAppStore(), 0);
 }
 
 // Home: Direct registration
@@ -134,8 +134,8 @@ type YDesignApps = Y.Map<Y.Map<YDesignApp>>;
 ```typescript
 // Design, Type: Lazy load KitSection from kit app
 const KitSectionLazy = React.lazy(async () => {
-  const module = await import("../kit/App");
-  return { default: module.KitSection };
+ const module = await import("../kit/App");
+ return { default: module.KitSection };
 });
 
 // Quality: No lazy loading
@@ -227,12 +227,12 @@ But scope providers are defined inconsistently:
 ```typescript
 // OLD: js/compose/sketchpad/apps/home/App.tsx
 export class HomeStore {
-  // Custom implementation
+ // Custom implementation
 }
 
 // NEW: js/compose/sketchpad/apps/home/App.tsx
 export class HomeStore extends AppStore<HomeState, HomeDiff, HomeSelectionDiff, HomeEdit, HomeCommandContext, HomeCommandResult> {
-  // Inherit transaction, undo/redo, selection from AppStore
+ // Inherit transaction, undo/redo, selection from AppStore
 }
 
 export interface HomeEdit extends AppEdit<HomeSelectionDiff> {}
@@ -258,7 +258,7 @@ export interface HomeEdit extends AppEdit<HomeSelectionDiff> {}
 
 ```typescript
 export class DocsAppStore extends AppStore<DocsState, DocsDiff, DocsSelectionDiff, DocsEdit, DocsCommandContext, DocsCommandResult> {
-  // Full implementation
+ // Full implementation
 }
 ```
 
@@ -458,7 +458,7 @@ apps/
 ```typescript
 // In App.tsx Tools region
 const toolModules = import.meta.glob<{ default: Tool<AppState> }>("./*Tool.tsx", {
-  eager: true,
+ eager: true,
 });
 
 const tools = Object.values(toolModules).map((m) => m.default);
@@ -474,7 +474,7 @@ const tools = Object.values(toolModules).map((m) => m.default);
 // design/App.tsx
 let kitAppModuleCache: any = null;
 if (typeof window !== "undefined" && (window as any).__KIT_APP_MODULE_CACHE__) {
-  kitAppModuleCache = (window as any).__KIT_APP_MODULE_CACHE__.kitAppModuleCache;
+ kitAppModuleCache = (window as any).__KIT_APP_MODULE_CACHE__.kitAppModuleCache;
 }
 ```
 
@@ -485,30 +485,30 @@ if (typeof window !== "undefined" && (window as any).__KIT_APP_MODULE_CACHE__) {
 
 // #region 🔖Module Cache
 const MODULE_CACHE = {
-  design: null as any,
-  type: null as any,
-  kit: null as any,
-  quality: null as any,
-  home: null as any,
-  docs: null as any,
+ design: null as any,
+ type: null as any,
+ kit: null as any,
+ quality: null as any,
+ home: null as any,
+ docs: null as any,
 };
 
 if (typeof window !== "undefined") {
-  (window as any).__SKETCHPAD_MODULE_CACHE__ = MODULE_CACHE;
+ (window as any).__SKETCHPAD_MODULE_CACHE__ = MODULE_CACHE;
 }
 
 export function getLazyModule(appName: keyof typeof MODULE_CACHE) {
-  if (!MODULE_CACHE[appName]) {
-    throw new Error(`Module ${appName} not loaded yet`);
-  }
-  return MODULE_CACHE[appName];
+ if (!MODULE_CACHE[appName]) {
+  throw new Error(`Module ${appName} not loaded yet`);
+ }
+ return MODULE_CACHE[appName];
 }
 
 export function setLazyModule(appName: keyof typeof MODULE_CACHE, module: any) {
-  MODULE_CACHE[appName] = module;
-  if (typeof window !== "undefined") {
-    (window as any).__SKETCHPAD_MODULE_CACHE__ = MODULE_CACHE;
-  }
+ MODULE_CACHE[appName] = module;
+ if (typeof window !== "undefined") {
+  (window as any).__SKETCHPAD_MODULE_CACHE__ = MODULE_CACHE;
+ }
 }
 // #endregion 🔖Module Cache
 ```
@@ -518,9 +518,9 @@ export function setLazyModule(appName: keyof typeof MODULE_CACHE, module: any) {
 ```typescript
 // design/App.tsx
 const KitSectionLazy = React.lazy(async () => {
-  const module = await import("../kit/App");
-  setLazyModule("kit", module);
-  return { default: module.KitSection };
+ const module = await import("../kit/App");
+ setLazyModule("kit", module);
+ return { default: module.KitSection };
 });
 ```
 
@@ -584,15 +584,15 @@ export const [app]Commands = {
 ```typescript
 // home/App.tsx
 export const homeCommands = {
-  "compose.home.selectKit": async (context: HomeCommandContext, kitId: Guid): Promise<HomeCommandResult> => {
-    return {
-      diff: {
-        selection: {
-          added: [kitId],
-        },
-      },
-    };
-  },
+ "compose.home.selectKit": async (context: HomeCommandContext, kitId: Guid): Promise<HomeCommandResult> => {
+  return {
+   diff: {
+    selection: {
+     added: [kitId],
+    },
+   },
+  };
+ },
 };
 ```
 
@@ -1228,10 +1228,10 @@ registerDesignAppStoreFactory((parent, yMap, transact, id, state) => new DesignA
 
 // Kit app - wrapper function
 export function initializeKitAppStore() {
-  registerKitAppStoreFactory((parent, yMap, transact, id, state) => new KitAppStore(parent, yMap, transact, id, state));
+ registerKitAppStoreFactory((parent, yMap, transact, id, state) => new KitAppStore(parent, yMap, transact, id, state));
 }
 if (typeof window !== "undefined") {
-  setTimeout(() => initializeKitAppStore(), 0);
+ setTimeout(() => initializeKitAppStore(), 0);
 }
 
 // Home app - direct

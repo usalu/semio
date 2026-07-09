@@ -187,9 +187,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅git💾config📌1📌47"
-        ],
+        "ranges": ["🛅git💾config📌1📌47"],
         "second": "🎆26🌙03☀️13⏰10⌚39⏱️41",
         "session": "⚪85ccc3404d134afcb93d81ed66cea1b9"
       },
@@ -220,9 +218,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅git💾config📌1📌47"
-        ],
+        "ranges": ["🛅git💾config📌1📌47"],
         "second": "🎆26🌙03☀️13⏰10⌚39⏱️50",
         "session": "⚪85ccc3404d134afcb93d81ed66cea1b9"
       },
@@ -253,9 +249,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅🛅🗃️home🗃️vscode💾📌1📌91"
-        ],
+        "ranges": ["🛅🛅🗃️home🗃️vscode💾📌1📌91"],
         "second": "🎆26🌙03☀️13⏰10⌚40⏱️06",
         "session": "⚪85ccc3404d134afcb93d81ed66cea1b9"
       },
@@ -286,9 +280,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅🛅🗃️home🗃️vscode💾📌1📌91"
-        ],
+        "ranges": ["🛅🛅🗃️home🗃️vscode💾📌1📌91"],
         "second": "🎆26🌙03☀️13⏰10⌚40⏱️18",
         "session": "⚪85ccc3404d134afcb93d81ed66cea1b9"
       },

@@ -1,10 +1,5 @@
 import { readFileSync } from "fs";
-import {
-  getKitDiff,
-  areKitDiffsEqual,
-  Kit,
-  KitDiff,
-} from "/workspaces/semio/compose/js/compose";
+import { getKitDiff, areKitDiffsEqual, Kit, KitDiff } from "/workspaces/semio/compose/js/compose";
 
 const ASSETS = "/workspaces/semio/assets/compose";
 
@@ -18,11 +13,11 @@ const ok = areKitDiffsEqual(computedDiff, kitDiff);
 console.log("areKitDiffsEqual:", ok);
 
 if (!ok) {
-  // Compare top-level keys 
+  // Compare top-level keys
   const cKeys = Object.keys(computedDiff);
   const aKeys = Object.keys(kitDiff);
   const allKeys = [...new Set([...cKeys, ...aKeys])];
-  
+
   for (const k of allKeys) {
     const cv = JSON.stringify((computedDiff as any)[k]);
     const av = JSON.stringify((kitDiff as any)[k]);

@@ -313,9 +313,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\662ed1a3-814e-4fca-9fb1-3c4daafde164.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\graphql\\target.schema.graphql"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\graphql\\target.schema.graphql"]
           },
           "tool_use_id": "call_hgHwyWS0gJ490DToSai9a64l__vscode-1778443899103",
           "cwd": "c:\\git\\compose"
@@ -341,9 +339,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\662ed1a3-814e-4fca-9fb1-3c4daafde164.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\graphql\\target.schema.graphql"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\graphql\\target.schema.graphql"]
           },
           "tool_response": "",
           "tool_use_id": "call_hgHwyWS0gJ490DToSai9a64l__vscode-1778443899103",
@@ -400,9 +396,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\662ed1a3-814e-4fca-9fb1-3c4daafde164.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\graphql\\target.schema.graphql"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\graphql\\target.schema.graphql"]
           },
           "tool_response": "",
           "tool_use_id": "call_hgHwyWS0gJ490DToSai9a64l__vscode-1778443899103",

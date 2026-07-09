@@ -2,24 +2,24 @@
 name: framework-product-plugins
 overview: Rebuild `elements/lib/framework` around `Product / App / Mode / WindowKind / Surface / Capability / ProductPlugin` instead of `Workbench / WorkbenchApp / WorkbenchMode / ShellExtension`. Pure framework layer only; Sketchpad migration is a separate follow-up ticket.
 todos:
-  - id: core-rewrite
-    content: Rewrite elements/lib/framework/core/index.ts with new abstractions (ProductDefinition, AppDefinition, ModeDefinition, WindowKindDefinition, SurfaceDefinition, Capability, SurfaceSelector, ContributionRoute, SurfaceRouter, ProductPlugin, PluginHost, PluginContext, SurfaceContext, ProductRuntime) and remove all Workbench*/Shell* names
-    status: completed
-  - id: renderer-rewire
-    content: Rewire elements/lib/framework/renderer/react/index.tsx onto ProductRuntime + SurfaceRouter; collapse declarative window/side-panel registrations into built-in framework.window/framework.panel surfaces
-    status: completed
-  - id: play-host-renames
-    content: Minimal symbol renames in elements/lib/react/*-play-host.tsx so playground builds against the new framework API
-    status: completed
-  - id: tests
-    content: "Extend the #region 🧪Tests block in core/index.ts to cover plugin lifecycle, surface routing (selector + capabilities), and the built-in window/panel surfaces"
-    status: completed
-  - id: agents-md
-    content: Update elements/lib/framework/AGENTS.md vocabulary line to Product/App/Mode/WindowKind/Surface/Capability/Plugin/Contribution
-    status: completed
-  - id: ticket
-    content: Open/reopen the framework ticket via repo MCP, run the work, close with summary on completion
-    status: completed
+ - id: core-rewrite
+   content: Rewrite elements/lib/framework/core/index.ts with new abstractions (ProductDefinition, AppDefinition, ModeDefinition, WindowKindDefinition, SurfaceDefinition, Capability, SurfaceSelector, ContributionRoute, SurfaceRouter, ProductPlugin, PluginHost, PluginContext, SurfaceContext, ProductRuntime) and remove all Workbench*/Shell* names
+   status: completed
+ - id: renderer-rewire
+   content: Rewire elements/lib/framework/renderer/react/index.tsx onto ProductRuntime + SurfaceRouter; collapse declarative window/side-panel registrations into built-in framework.window/framework.panel surfaces
+   status: completed
+ - id: play-host-renames
+   content: Minimal symbol renames in elements/lib/react/*-play-host.tsx so playground builds against the new framework API
+   status: completed
+ - id: tests
+   content: "Extend the #region 🧪Tests block in core/index.ts to cover plugin lifecycle, surface routing (selector + capabilities), and the built-in window/panel surfaces"
+   status: completed
+ - id: agents-md
+   content: Update elements/lib/framework/AGENTS.md vocabulary line to Product/App/Mode/WindowKind/Surface/Capability/Plugin/Contribution
+   status: completed
+ - id: ticket
+   content: Open/reopen the framework ticket via repo MCP, run the work, close with summary on completion
+   status: completed
 isProject: false
 ---
 
@@ -104,67 +104,85 @@ Region structure inside `core/index.ts`:
 ```ts
 export type Capability = string;
 
-export interface Disposable { dispose(): void; }
+export interface Disposable {
+ dispose(): void;
+}
 
 export interface SurfaceDefinition<TApi = unknown, TContrib = unknown> {
-  readonly id: string;
-  readonly appId: string;
-  readonly modeId: string;
-  readonly windowKindId: string;
-  readonly kind: "window" | "toolbar" | "panel" | "overlay" | "tool" | "menu" | "inspector" | "analysis" | string;
-  readonly capabilities: readonly Capability[];
-  createApi(ctx: SurfaceContext): TApi;
-  applyContribution(contribution: TContrib, ctx: SurfaceContext, api: TApi): Disposable;
+ readonly id: string;
+ readonly appId: string;
+ readonly modeId: string;
+ readonly windowKindId: string;
+ readonly kind: "window" | "toolbar" | "panel" | "overlay" | "tool" | "menu" | "inspector" | "analysis" | string;
+ readonly capabilities: readonly Capability[];
+ createApi(ctx: SurfaceContext): TApi;
+ applyContribution(contribution: TContrib, ctx: SurfaceContext, api: TApi): Disposable;
 }
 
 export interface WindowKindDefinition {
-  readonly id: string; readonly appId: string; readonly modeId: string;
-  readonly kind: "table" | "diagram" | "scene" | string;
-  readonly label: string;
-  readonly capabilities: readonly Capability[];
-  readonly surfaces: readonly SurfaceDefinition[];
-  readonly bodyKey?: string; // for window-kind built-in surface
-  readonly measures?: readonly ShellWindowMeasure[];
+ readonly id: string;
+ readonly appId: string;
+ readonly modeId: string;
+ readonly kind: "table" | "diagram" | "scene" | string;
+ readonly label: string;
+ readonly capabilities: readonly Capability[];
+ readonly surfaces: readonly SurfaceDefinition[];
+ readonly bodyKey?: string; // for window-kind built-in surface
+ readonly measures?: readonly ShellWindowMeasure[];
 }
 
 export interface ModeDefinition {
-  readonly id: string; readonly label: string; readonly iconId?: string;
-  readonly windowKinds: readonly WindowKindDefinition[];
-  readonly defaultLayout?: WindowLayout;
-  readonly tools?: AppTools;
-  readonly leftTabs?: readonly SideTabSpec[];
-  readonly rightTabs?: readonly SideTabSpec[];
+ readonly id: string;
+ readonly label: string;
+ readonly iconId?: string;
+ readonly windowKinds: readonly WindowKindDefinition[];
+ readonly defaultLayout?: WindowLayout;
+ readonly tools?: AppTools;
+ readonly leftTabs?: readonly SideTabSpec[];
+ readonly rightTabs?: readonly SideTabSpec[];
 }
 
 export interface AppDefinition {
-  readonly id: string; readonly label: string; readonly iconId?: string;
-  readonly controllerId: string;
-  readonly modes: readonly ModeDefinition[];
-  readonly defaultModeId?: string;
+ readonly id: string;
+ readonly label: string;
+ readonly iconId?: string;
+ readonly controllerId: string;
+ readonly modes: readonly ModeDefinition[];
+ readonly defaultModeId?: string;
 }
 
 export interface ProductDefinition<TProductApi = unknown, TSurfaceMap extends Record<string, SurfaceBinding<any, any>> = Record<string, SurfaceBinding<any, any>>> {
-  readonly id: string; readonly name: string; readonly apiVersion: string;
-  readonly apps: readonly AppDefinition[];
-  createProductApi(ctx: PluginContext): TProductApi;
+ readonly id: string;
+ readonly name: string;
+ readonly apiVersion: string;
+ readonly apps: readonly AppDefinition[];
+ createProductApi(ctx: PluginContext): TProductApi;
 }
 
-export interface SurfaceBinding<TApi, TContrib> { readonly api: TApi; readonly contributions: TContrib; }
+export interface SurfaceBinding<TApi, TContrib> {
+ readonly api: TApi;
+ readonly contributions: TContrib;
+}
 
 export interface SurfaceSelector {
-  product?: string; app?: string; mode?: string; windowKind?: string;
-  surface?: string; kind?: string; capabilities?: readonly Capability[];
-  when?: string;
+ product?: string;
+ app?: string;
+ mode?: string;
+ windowKind?: string;
+ surface?: string;
+ kind?: string;
+ capabilities?: readonly Capability[];
+ when?: string;
 }
 
 export interface ProductPlugin<TProductApi = unknown, TSurfaceMap extends Record<string, SurfaceBinding<any, any>> = Record<string, SurfaceBinding<any, any>>> {
-  readonly id: string;
-  readonly target: { product: string; api: string };
-  readonly manifest?: PluginManifest;
-  activate?(ctx: PluginContext, product: TProductApi): void | Promise<void>;
-  deactivate?(): void | Promise<void>;
-  surfaces?: { [K in keyof TSurfaceMap]?: (ctx: SurfaceContext<K & string>, surface: TSurfaceMap[K]["api"]) => Disposable | Promise<Disposable>; };
-  contributes?: { selectors?: readonly ContributionRoute[]; };
+ readonly id: string;
+ readonly target: { product: string; api: string };
+ readonly manifest?: PluginManifest;
+ activate?(ctx: PluginContext, product: TProductApi): void | Promise<void>;
+ deactivate?(): void | Promise<void>;
+ surfaces?: { [K in keyof TSurfaceMap]?: (ctx: SurfaceContext<K & string>, surface: TSurfaceMap[K]["api"]) => Disposable | Promise<Disposable> };
+ contributes?: { selectors?: readonly ContributionRoute[] };
 }
 ```
 

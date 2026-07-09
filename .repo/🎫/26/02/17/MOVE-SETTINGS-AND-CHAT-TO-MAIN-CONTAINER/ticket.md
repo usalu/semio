@@ -3,9 +3,11 @@
 ## Status: OPEN
 
 ## Goal
+
 Move Settings and Chat panels from right side panel into main canvas container as windows.
 
 ## Plan
+
 1. Gather context: shared.ts (PanelKind, WindowKind, panelKindConfigs), app files, Sketchpad.tsx, elements.tsx
 2. Remove SETTINGS and CHAT from PanelKind enum and panelKindConfigs
 3. Add SETTINGS and CHAT to WindowKind enum
@@ -16,6 +18,7 @@ Move Settings and Chat panels from right side panel into main canvas container a
 8. Verify build and tests pass
 
 ## TODOs
+
 - [ ] Gather context from key files
 - [ ] Remove Settings/Chat from panel system
 - [ ] Add Settings/Chat to window system
@@ -25,7 +28,9 @@ Move Settings and Chat panels from right side panel into main canvas container a
 - [ ] Verify everything works
 
 ## Changes
+
 (tracked as work progresses)
 
 ## Summary
+
 (filled on close)

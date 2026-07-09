@@ -3,16 +3,12 @@
     {
       "bundle": "framework/product/playground/dev",
       "lang": "js",
-      "files": [
-        "vite.config.ts"
-      ]
+      "files": ["vite.config.ts"]
     },
     {
       "bundle": "framework/product/os/dev",
       "lang": "js",
-      "files": [
-        "vite.config.ts"
-      ]
+      "files": ["vite.config.ts"]
     }
   ],
   "log": [

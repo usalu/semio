@@ -211,9 +211,7 @@
           "tool_input": {
             "title": "Introduce Piece Pose Container",
             "summary": "Refactored compose/rs pieces to own an explicit pose container for plane and center while keeping DTO/storage compatibility. Plane and center setters now update pose independently, emit pose-level field/hash events, bubble a piece-level pose update, and preserve design/kit hash plus flatten-derived invalidation. Updated the existing Rust event and flatten tests in compose/rs/src/lib.rs and verified with targeted cargo test filters plus the full compose/rs suite (95 tests passing).",
-            "files": [
-              "compose/rs/src/lib.rs"
-            ],
+            "files": ["compose/rs/src/lib.rs"],
             "no_management": true
           },
           "tool_use_id": "call_6ibDxc4NYwT9Jr13OlpZllqJ__vscode-1776809757037",
@@ -242,9 +240,7 @@
           "tool_input": {
             "title": "Introduce Piece Pose Container",
             "summary": "Refactored compose/rs pieces to own an explicit pose container for plane and center while keeping DTO/storage compatibility. Plane and center setters now update pose independently, emit pose-level field/hash events, bubble a piece-level pose update, and preserve design/kit hash plus flatten-derived invalidation. Updated the existing Rust event and flatten tests in compose/rs/src/lib.rs and verified with targeted cargo test filters plus the full compose/rs suite (95 tests passing).",
-            "files": [
-              "compose/rs/src/lib.rs"
-            ],
+            "files": ["compose/rs/src/lib.rs"],
             "no_management": true
           },
           "tool_use_id": "call_6ibDxc4NYwT9Jr13OlpZllqJ__vscode-1776809757037",
@@ -273,9 +269,7 @@
           "tool_input": {
             "title": "Introduce Piece Pose Container",
             "summary": "Refactored compose/rs pieces to own an explicit pose container for plane and center while keeping DTO/storage compatibility. Plane and center setters now update pose independently, emit pose-level field/hash events, bubble a piece-level pose update, and preserve design/kit hash plus flatten-derived invalidation. Updated the existing Rust event and flatten tests in compose/rs/src/lib.rs and verified with targeted cargo test filters plus the full compose/rs suite (95 tests passing).",
-            "files": [
-              "compose/rs/src/lib.rs"
-            ],
+            "files": ["compose/rs/src/lib.rs"],
             "no_management": true
           },
           "tool_response": "[🎫introducepieceposecontainer](repo://ticket/🎫introducepieceposecontainer) - `closed` - `closed 1 hour from now`\n",
@@ -305,9 +299,7 @@
           "tool_input": {
             "title": "Introduce Piece Pose Container",
             "summary": "Refactored compose/rs pieces to own an explicit pose container for plane and center while keeping DTO/storage compatibility. Plane and center setters now update pose independently, emit pose-level field/hash events, bubble a piece-level pose update, and preserve design/kit hash plus flatten-derived invalidation. Updated the existing Rust event and flatten tests in compose/rs/src/lib.rs and verified with targeted cargo test filters plus the full compose/rs suite (95 tests passing).",
-            "files": [
-              "compose/rs/src/lib.rs"
-            ],
+            "files": ["compose/rs/src/lib.rs"],
             "no_management": true
           },
           "tool_response": "[🎫introducepieceposecontainer](repo://ticket/🎫introducepieceposecontainer) - `closed` - `closed 1 hour from now`\n",
@@ -526,10 +518,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "staged",
-              "unstaged"
-            ]
+            "sourceControlState": ["staged", "unstaged"]
           },
           "tool_use_id": "call_5OBOzapPs4lkMBo7KbnryQ1F__vscode-1776809757040",
           "cwd": "c:\\git\\compose"
@@ -645,10 +634,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "staged",
-              "unstaged"
-            ]
+            "sourceControlState": ["staged", "unstaged"]
           },
           "tool_response": "",
           "tool_use_id": "call_5OBOzapPs4lkMBo7KbnryQ1F__vscode-1776809757040",
@@ -676,10 +662,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "staged",
-              "unstaged"
-            ]
+            "sourceControlState": ["staged", "unstaged"]
           },
           "tool_response": "",
           "tool_use_id": "call_5OBOzapPs4lkMBo7KbnryQ1F__vscode-1776809757040",

@@ -2,36 +2,36 @@
 name: Forms Blueprint Try Module Preview
 overview: Consolidate the forms wgpu/Rust plugin down to exactly two windows (Blueprint, Try), restore true pre-migration inline preview behavior, and replace the currently hardcoded buildingComponent/flow logic with a genuine runtime-loadable cross-plugin "question-kind module" mechanism so other technologies (starting with procedural) can contribute new form question kinds with their own preview, without forms-plugin depending on them at compile time.
 todos:
-  - id: ticket
-    content: Read repo://goals and open/reopen the forms ticket via repo MCP
-    status: completed
-  - id: framework-contribution-core
-    content: Add Contribution enum + PluginManifest.contributions + UiNode::ExternalSlot to framework/core/rs
-    status: completed
-  - id: framework-contribution-plugin
-    content: Add PluginBundle::contributes() builder to framework/plugin/rs
-    status: completed
-  - id: os-host-registry
-    content: Add live contribution registry derivation to PluginHost in framework/product/os/core/rs (load + hot-swap)
-    status: completed
-  - id: renderer-external-slot
-    content: Resolve UiNode::ExternalSlot (with recursion) in React ui-interpreter.tsx, wgpu interpreter.rs, and the browser host loader (boot.ts/dev loader)
-    status: completed
-  - id: forms-window-consolidation
-    content: Rename Edit window to Blueprint, delete the dedicated Preview window/mode/body in forms/plugin/rs/lib.rs
-    status: completed
-  - id: forms-registry-driven-extensions
-    content: Replace hardcoded buildingComponent logic in forms/plugin/rs with registry-driven ExternalSlot emission in Blueprint inspector + Try wizard; drop flow/kernel deps from forms/plugin/rs/Cargo.toml
-    status: completed
-  - id: forms-module-procedural
-    content: "Create forms/module/procedural/rs plugin crate: move evaluated_preview_payload/tessellation logic here, register params+preview render bodies, declare FormsQuestionKind contribution for buildingComponent"
-    status: completed
-  - id: build-registry-wiring
-    content: Add new crate to workspace Cargo.toml, regenerate plugin registry, wire into dev/js and wgpu boot.ts plugin target lists
-    status: completed
-  - id: verify
-    content: cargo check/test + wasm build for all touched/new crates, extend existing test modules only, run WGPU E2E screenshot diff for forms, manual runtime pass with [DEBUG] logs, close ticket
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open/reopen the forms ticket via repo MCP
+   status: completed
+ - id: framework-contribution-core
+   content: Add Contribution enum + PluginManifest.contributions + UiNode::ExternalSlot to framework/core/rs
+   status: completed
+ - id: framework-contribution-plugin
+   content: Add PluginBundle::contributes() builder to framework/plugin/rs
+   status: completed
+ - id: os-host-registry
+   content: Add live contribution registry derivation to PluginHost in framework/product/os/core/rs (load + hot-swap)
+   status: completed
+ - id: renderer-external-slot
+   content: Resolve UiNode::ExternalSlot (with recursion) in React ui-interpreter.tsx, wgpu interpreter.rs, and the browser host loader (boot.ts/dev loader)
+   status: completed
+ - id: forms-window-consolidation
+   content: Rename Edit window to Blueprint, delete the dedicated Preview window/mode/body in forms/plugin/rs/lib.rs
+   status: completed
+ - id: forms-registry-driven-extensions
+   content: Replace hardcoded buildingComponent logic in forms/plugin/rs with registry-driven ExternalSlot emission in Blueprint inspector + Try wizard; drop flow/kernel deps from forms/plugin/rs/Cargo.toml
+   status: completed
+ - id: forms-module-procedural
+   content: "Create forms/module/procedural/rs plugin crate: move evaluated_preview_payload/tessellation logic here, register params+preview render bodies, declare FormsQuestionKind contribution for buildingComponent"
+   status: completed
+ - id: build-registry-wiring
+   content: Add new crate to workspace Cargo.toml, regenerate plugin registry, wire into dev/js and wgpu boot.ts plugin target lists
+   status: completed
+ - id: verify
+   content: cargo check/test + wasm build for all touched/new crates, extend existing test modules only, run WGPU E2E screenshot diff for forms, manual runtime pass with [DEBUG] logs, close ticket
+   status: completed
 isProject: false
 ---
 
@@ -40,7 +40,7 @@ isProject: false
 - `git tag premigration` points at commit `f8376e848650...125`, the last commit before the repo-wide play-host deletion/Rust-only migration. At that point forms was `forms/core`+`forms/react` (TS), with an already-built extension mechanism: `FormsQuestionKindContribution` + `FormsExtensionHost` (registry, `activate`/`listQuestionKinds`), and inline `Flow3dQuestionControl` rendering (nested param sub-form + live 3D preview side-by-side) directly inside **both** Edit and Try surfaces — confirmed by `usesFlow3dQuestionSurface(question, "edit"|"try")` at `/tmp/premigration_forms_index.tsx:525-530` and the shared `Flow3dQuestionControl` at lines 532-614. This answers "check how premigrated forms handled preview placement": **inline, in both windows, not a separate dedicated preview surface.**
 - The whole repo has since migrated to Rust/wgpu-only plugins: `forms/react`/`forms/core`/`forms/play` are gone; `forms/rs` (domain) + `forms/plugin/rs` (app) are the only forms code left. `forms/rs/lib.rs` already carries the full pre-migration field set (`FormQuestion` with all fields, `FormExpr`, `eval_form_expr`, validation) plus `is_extension_question_kind`/`FORM_BUILTIN_KINDS` — domain-model parity is done.
 - `forms/plugin/rs/lib.rs` currently has **3 windows** (`forms-edit`/"Edit", `forms-try`/"Try", `forms-preview`/"Preview" — [forms/plugin/rs/lib.rs:44-46,2136-2160](forms/plugin/rs/lib.rs)) and hardcodes the one extension kind (`buildingComponent`) directly: it depends on `flow_core`, `flow_module_brep`, `kernel_3d_brepkit`, `kernel_3d_engine` in [forms/plugin/rs/Cargo.toml](forms/plugin/rs/Cargo.toml), and `evaluated_preview_payload`/`apply_flow_params`/`render_preview_body` ([forms/plugin/rs/lib.rs:766-865](forms/plugin/rs/lib.rs)) bake in flow-fixture evaluation + tessellation. This is a "mixing technologies" violation and the opposite of a module mechanism.
-- Every technology plugin is compiled to its **own separate `.wasm` file**, loaded independently by the browser host in a Web Worker ([framework/plugin/registry/script.ts](framework/plugin/registry/script.ts), [framework/renderer/wgpu/js/boot.ts:142-212](framework/renderer/wgpu/js/boot.ts)). Plugins do **not** share Rust statics, so `flow`'s compile-time `flow_registry()` pattern ([flow/plugin/rs/lib.rs:1350-1367](flow/plugin/rs/lib.rs), used by `flow_module_`* crates) is structurally incompatible with a *runtime*-loadable mechanism — confirming the dev's explicit choice of runtime over compile-time modules. The only place that can compose across independently-loaded plugin workers is the trusted JS host, which already parses each plugin's `manifest()` JSON at load time ([framework/renderer/wgpu/js/boot.ts:195](framework/renderer/wgpu/js/boot.ts)) and already calls `render(instanceId, bodyKey, viewState)` per app instance asynchronously.
+- Every technology plugin is compiled to its **own separate `.wasm` file**, loaded independently by the browser host in a Web Worker ([framework/plugin/registry/script.ts](framework/plugin/registry/script.ts), [framework/renderer/wgpu/js/boot.ts:142-212](framework/renderer/wgpu/js/boot.ts)). Plugins do **not** share Rust statics, so `flow`'s compile-time `flow_registry()` pattern ([flow/plugin/rs/lib.rs:1350-1367](flow/plugin/rs/lib.rs), used by `flow_module_`* crates) is structurally incompatible with a *runtime\*-loadable mechanism — confirming the dev's explicit choice of runtime over compile-time modules. The only place that can compose across independently-loaded plugin workers is the trusted JS host, which already parses each plugin's `manifest()` JSON at load time ([framework/renderer/wgpu/js/boot.ts:195](framework/renderer/wgpu/js/boot.ts)) and already calls `render(instanceId, bodyKey, viewState)` per app instance asynchronously.
 - There's an in-flight, unrelated `.repo/🎫/26/07/07/PLUGIN-OS-ARCHITECTURE-REFACTOR` (sandboxing/capability/hot-swap unification) — this plan does **not** depend on its still-pending phases (wasmtime sandbox, ABI unification); it only reuses the parts already real today (`PluginManifest`, `PluginHost` load/hot-swap tracking, per-plugin worker `render`).
 
 ## Architecture decision: runtime "Contribution" mechanism
@@ -55,8 +55,6 @@ flowchart LR
   interp -->|"await render(procModInstance, body_key, params_json)"| procMod
   interp -->|"splice returned UiNode inline"| tree["Rendered Blueprint/Try tree"]
 ```
-
-
 
 - `framework/core/rs`: new closed `pub enum Contribution { FormsQuestionKind { kind, label, icon, default_value_json, params_body_key, preview_body_key } }` + `PluginManifest.contributions: Vec<Contribution>` (mirrors the existing `Capability`/`capabilities` pattern at [framework/core/rs/lib.rs:2986-2994](framework/core/rs/lib.rs)). New `UiNode::ExternalSlot(UiExternalSlotNode { app_id, body_key, params_json })` variant next to `ComponentScene` ([framework/core/rs/lib.rs:2481-2528](framework/core/rs/lib.rs)) — a generic "render this app's own body here, inline" node.
 - `framework/plugin/rs`: `PluginBundle::contributes(mut self, Contribution) -> Self` builder (mirrors `.capability(...)` at [framework/plugin/rs/lib.rs:436-441](framework/plugin/rs/lib.rs)).
@@ -113,4 +111,3 @@ In [forms/plugin/rs/lib.rs](forms/plugin/rs/lib.rs):
 - Re-run/extend the WGPU playground E2E harness ([.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts](.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts)) for `forms`, screenshot-diffing wgpu vs React for Blueprint/Try with and without `forms-module-procedural` loaded.
 - Manual runtime pass with `[DEBUG]` logs: open Building Component form, confirm exactly 2 windows named Blueprint/Try, confirm the procedural params+mesh preview render inline in both, edit params and see the mesh update live, then simulate the module plugin not being loaded and confirm graceful fallback text.
 - Read `repo://goals`, open/reopen the appropriate ticket before implementation, close it with the full touched-files summary when done.
-

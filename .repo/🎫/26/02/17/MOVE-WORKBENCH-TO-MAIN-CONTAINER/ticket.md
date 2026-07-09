@@ -19,6 +19,7 @@ None (research only).
 #### apps/index.ts (compose/js/sketchpad/apps/index.ts, 23 lines)
 
 Re-exports from shared.ts:
+
 ```ts
 export { composePluginContributions, getAppPlugin, getAppPlugins, hasAppPlugin, registerAppPlugin } from "../shared";
 export type { AppMachineContribution, AppPlugin } from "../shared";
@@ -31,15 +32,17 @@ No panel/window definitions here. Just re-exports the plugin registration API.
 #### Home.tsx (compose/js/sketchpad/Home.tsx, 1791 lines)
 
 **WindowKind enum** (L96-100):
+
 ```ts
 export enum HomeAppWindowKind {
-  Table = "table",
-  Settings = "settings",
-  Chat = "chat",
+ Table = "table",
+ Settings = "settings",
+ Chat = "chat",
 }
 ```
 
 **windowConfig** (L1694-1725):
+
 ```ts
 const windowConfig: AppWindowConfig = useMemo(
   () => ({
@@ -58,6 +61,7 @@ const windowConfig: AppWindowConfig = useMemo(
 Single stack with 100% width containing Table, Settings, Chat.
 
 **getPanels** (L1779-1782):
+
 ```ts
 getPanels: (): PanelDefinition[] => [
   createPanelDefinition(PanelKind.TOOLBAR, "compose.sketchpad.navbar.panelToggle.toolbar.show"),
@@ -74,16 +78,18 @@ getPanels: (): PanelDefinition[] => [
 #### Kit.tsx (compose/js/sketchpad/Kit.tsx, 9117 lines)
 
 **WindowKind enum** (L381-386):
+
 ```ts
 export enum KitAppWindowKind {
-  Table = "table",
-  Diagram = "diagram",
-  Settings = "settings",
-  Chat = "chat",
+ Table = "table",
+ Diagram = "diagram",
+ Settings = "settings",
+ Chat = "chat",
 }
 ```
 
 **windowConfig** (L7941-7985):
+
 ```ts
 const windowConfig: AppWindowConfig = useMemo(
   () => ({
@@ -103,6 +109,7 @@ const windowConfig: AppWindowConfig = useMemo(
 Two stacks: 50% (Table, Settings, Chat) + 50% (Diagram).
 
 **getPanels** (L9105-9108):
+
 ```ts
 getPanels: (): PanelDefinition[] => [
   createPanelDefinition(PanelKind.TOOLBAR, "compose.sketchpad.navbar.panelToggle.toolbar.show"),
@@ -119,15 +126,17 @@ getPanels: (): PanelDefinition[] => [
 #### Type.tsx (compose/js/sketchpad/Type.tsx, 4065 lines)
 
 **WindowKind enum** (L161-165):
+
 ```ts
 export enum TypeAppWindowKind {
-  Scene = "scene",
-  Settings = "settings",
-  Chat = "chat",
+ Scene = "scene",
+ Settings = "settings",
+ Chat = "chat",
 }
 ```
 
 **windowConfig** (L3698-3735):
+
 ```ts
 const windowConfig: AppWindowConfig = useMemo(() => ({
   windowKinds: [
@@ -143,6 +152,7 @@ const windowConfig: AppWindowConfig = useMemo(() => ({
 Single stack 100% with Scene, Settings, Chat.
 
 **getPanels** (L4050-4056):
+
 ```ts
 getPanels: (): PanelDefinition[] => [
   createPanelDefinition(PanelKind.WORKBENCH, "compose.sketchpad.navbar.panelToggle.workbench.show"),
@@ -162,16 +172,18 @@ getPanels: (): PanelDefinition[] => [
 #### Design.tsx (compose/js/sketchpad/Design.tsx, 9821 lines)
 
 **WindowKind enum** (L306-311):
+
 ```ts
 export enum DesignAppWindowKind {
-  Diagram = "diagram",
-  Scene = "scene",
-  Settings = "settings",
-  Chat = "chat",
+ Diagram = "diagram",
+ Scene = "scene",
+ Settings = "settings",
+ Chat = "chat",
 }
 ```
 
 **windowConfig** (L9055-9097):
+
 ```ts
 const windowConfig: AppWindowConfig = useMemo(() => ({
   windowKinds: [
@@ -188,6 +200,7 @@ const windowConfig: AppWindowConfig = useMemo(() => ({
 Two stacks: 50% (Diagram, Settings, Chat) + 50% (Scene).
 
 **getPanels** (L9804-9810):
+
 ```ts
 getPanels: (): PanelDefinition[] => [
   createPanelDefinition(PanelKind.WORKBENCH, "compose.sketchpad.navbar.panelToggle.workbench.show"),
@@ -199,6 +212,7 @@ getPanels: (): PanelDefinition[] => [
 ```
 
 **WORKBENCH references** (extensive):
+
 - `workbenchTypes = useKitTypes()` (L8956)
 - `workbenchDesigns = useKitDesigns()` (L8957)
 - `PiecesWorkbenchContent` component (L9300) - main workbench UI with type/design trees, drag-and-drop
@@ -212,16 +226,18 @@ getPanels: (): PanelDefinition[] => [
 #### Quality.tsx (compose/js/sketchpad/Quality.tsx, 2363 lines)
 
 **WindowKind enum** (L148-153):
+
 ```ts
 export enum QualityAppWindowKind {
-  Formula = "formula",
-  Diagram = "diagram",
-  Settings = "settings",
-  Chat = "chat",
+ Formula = "formula",
+ Diagram = "diagram",
+ Settings = "settings",
+ Chat = "chat",
 }
 ```
 
 **windowConfig** (L2259-2302):
+
 ```ts
 const windowConfig: AppWindowConfig = useMemo(() => ({
   windowKinds: [
@@ -238,6 +254,7 @@ const windowConfig: AppWindowConfig = useMemo(() => ({
 Two stacks: width:20 (Formula) + width:80 (Diagram, Settings, Chat). Note: uses `componentType` instead of `componentName`.
 
 **getPanels** (L2348-2354):
+
 ```ts
 getPanels: (): PanelDefinition[] => [
   createPanelDefinition(PanelKind.WORKBENCH, "compose.sketchpad.navbar.panelToggle.workbench.show"),
@@ -249,6 +266,7 @@ getPanels: (): PanelDefinition[] => [
 ```
 
 **WORKBENCH references**:
+
 - `QualityWorkbench` component (L1723) - lists formula function nodes by category
 - `QualityWorkbenchQualities` component (L1837)
 - `addSection("workbench", ...)` for functions (L2121) and qualities (L2128)
@@ -261,15 +279,17 @@ getPanels: (): PanelDefinition[] => [
 #### Docs.tsx (compose/js/sketchpad/Docs.tsx, ~1600 lines)
 
 **WindowKind enum** (L1388-1392):
+
 ```ts
 export enum DocsAppWindowKind {
-  Page = "page",
-  Settings = "settings",
-  Chat = "chat",
+ Page = "page",
+ Settings = "settings",
+ Chat = "chat",
 }
 ```
 
 **windowConfig** (L1490-1540):
+
 ```ts
 const windowConfig: AppWindowConfig = useMemo(() => ({
   windowKinds: [
@@ -285,6 +305,7 @@ const windowConfig: AppWindowConfig = useMemo(() => ({
 Single stack 100% with Page, Settings, Chat.
 
 **getPanels** (L1572-1581):
+
 ```ts
 getPanels: (getLabelFn, getHotkeyFn) => [
   createPanelDefinition(PanelKind.WORKBENCH, "compose.sketchpad.navbar.panelToggle.workbench.show", getHotkeyFn("..."), { labelKey, manualPath }),
@@ -293,6 +314,7 @@ getPanels: (getLabelFn, getHotkeyFn) => [
 ```
 
 **WORKBENCH references**:
+
 - `Workbench` component (L1293) - displays docs sections navigation
 - `addSection("workbench", ...)` for docs (L1426) and overview (L1432)
 - panelVisibility defaults have `workbench: false` (L847, L1014)
@@ -308,6 +330,7 @@ getPanels: (getLabelFn, getHotkeyFn) => [
 **windowConfig**: None.
 
 **getPanels** (L550):
+
 ```ts
 getPanels: (): PanelDefinition[] => [createPanelDefinition(PanelKind.TOOLBAR, "compose.sketchpad.navbar.panelToggle.toolbar.show")],
 ```
@@ -326,16 +349,16 @@ No app config, no getPanels, no windowKinds, no WORKBENCH references. This is a 
 
 ### Summary Table
 
-| App      | WindowKinds                          | Panels (getPanels)               | WORKBENCH panel? | Workbench sections? | Uses LayoutCanvas? |
-|----------|--------------------------------------|----------------------------------|------------------|---------------------|-------------------|
-| Home     | Table, Settings, Chat                | TOOLBAR, DETAILS                 | No               | No                  | Yes               |
-| Kit      | Table, Diagram, Settings, Chat       | TOOLBAR, DETAILS                 | No               | No                  | Yes               |
-| Type     | Scene, Settings, Chat                | WORKBENCH, TOOLS, TOOLBAR, STATS, DETAILS | Yes    | No (not registered) | Yes               |
-| Design   | Diagram, Scene, Settings, Chat       | WORKBENCH, TOOLS, TOOLBAR, STATS, DETAILS | Yes    | Yes (pieces, windows) | Yes             |
-| Quality  | Formula, Diagram, Settings, Chat     | WORKBENCH, TOOLS, TOOLBAR, STATS, DETAILS | Yes    | Yes (functions, qualities) | Yes        |
-| Docs     | Page, Settings, Chat                 | WORKBENCH, DETAILS               | Yes              | Yes (docs, overview) | Yes              |
-| Feedback | (none)                               | TOOLBAR                          | No               | No                  | No (direct Canvas)|
-| Tutorials| (none)                               | (none)                           | No               | No                  | No (not an app)   |
+| App       | WindowKinds                      | Panels (getPanels)                        | WORKBENCH panel? | Workbench sections?        | Uses LayoutCanvas? |
+| --------- | -------------------------------- | ----------------------------------------- | ---------------- | -------------------------- | ------------------ |
+| Home      | Table, Settings, Chat            | TOOLBAR, DETAILS                          | No               | No                         | Yes                |
+| Kit       | Table, Diagram, Settings, Chat   | TOOLBAR, DETAILS                          | No               | No                         | Yes                |
+| Type      | Scene, Settings, Chat            | WORKBENCH, TOOLS, TOOLBAR, STATS, DETAILS | Yes              | No (not registered)        | Yes                |
+| Design    | Diagram, Scene, Settings, Chat   | WORKBENCH, TOOLS, TOOLBAR, STATS, DETAILS | Yes              | Yes (pieces, windows)      | Yes                |
+| Quality   | Formula, Diagram, Settings, Chat | WORKBENCH, TOOLS, TOOLBAR, STATS, DETAILS | Yes              | Yes (functions, qualities) | Yes                |
+| Docs      | Page, Settings, Chat             | WORKBENCH, DETAILS                        | Yes              | Yes (docs, overview)       | Yes                |
+| Feedback  | (none)                           | TOOLBAR                                   | No               | No                         | No (direct Canvas) |
+| Tutorials | (none)                           | (none)                                    | No               | No                         | No (not an app)    |
 
 ### Key Shared Types (shared.ts)
 

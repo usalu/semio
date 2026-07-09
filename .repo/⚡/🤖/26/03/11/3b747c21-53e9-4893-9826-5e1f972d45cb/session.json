@@ -115,9 +115,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine💻engine📌1📌1000"
-        ],
+        "ranges": ["👤compose📚engine💻engine📌1📌1000"],
         "second": "🎆26🌙03☀️11⏰13⌚58⏱️05",
         "session": "⚪3b747c2153e9489398265e1f972d45cb"
       },
@@ -158,9 +156,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine💻generateschemas📌1📌500"
-        ],
+        "ranges": ["👤compose📚engine💻generateschemas📌1📌500"],
         "second": "🎆26🌙03☀️11⏰13⌚58⏱️09",
         "session": "⚪3b747c2153e9489398265e1f972d45cb"
       },
@@ -201,9 +197,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine🥼test📌1📌500"
-        ],
+        "ranges": ["👤compose📚engine🥼test📌1📌500"],
         "second": "🎆26🌙03☀️11⏰13⌚58⏱️09",
         "session": "⚪3b747c2153e9489398265e1f972d45cb"
       },
@@ -244,9 +238,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine💻sqliteschema📌1📌500"
-        ],
+        "ranges": ["👤compose📚engine💻sqliteschema📌1📌500"],
         "second": "🎆26🌙03☀️11⏰13⌚58⏱️29",
         "session": "⚪3b747c2153e9489398265e1f972d45cb"
       },
@@ -287,9 +279,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine🥼test📌1📌500"
-        ],
+        "ranges": ["👤compose📚engine🥼test📌1📌500"],
         "second": "🎆26🌙03☀️11⏰13⌚58⏱️46",
         "session": "⚪3b747c2153e9489398265e1f972d45cb"
       },
@@ -330,9 +320,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine💻engine📌1000📌3000"
-        ],
+        "ranges": ["👤compose📚engine💻engine📌1000📌3000"],
         "second": "🎆26🌙03☀️11⏰13⌚58⏱️53",
         "session": "⚪3b747c2153e9489398265e1f972d45cb"
       },
@@ -373,9 +361,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine💻engine📌1000📌3000"
-        ],
+        "ranges": ["👤compose📚engine💻engine📌1000📌3000"],
         "second": "🎆26🌙03☀️11⏰13⌚59⏱️07",
         "session": "⚪3b747c2153e9489398265e1f972d45cb"
       },

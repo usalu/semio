@@ -9,7 +9,7 @@ isProject: false
 
 The current puzzle 2D React path (`canvas-2d-host.tsx`) re-parses a hand-rolled JSON layer list every animation frame and redraws it with plain `CanvasRenderingContext2D` calls. This is a from-scratch, partial reimplementation of rendering that already exists, fully-featured, in Rust:
 
-- `[puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs)` defines `BoardSession` (wasm-bindgen) whose `renderFrame()` is *purely* GPU:
+- `[puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs)` defines `BoardSession` (wasm-bindgen) whose `renderFrame()` is _purely_ GPU:
 
 ```554:558:puzzle/2d/rs/lib.rs
     #[wasm_bindgen(js_name = renderFrame)]
@@ -20,7 +20,7 @@ The current puzzle 2D React path (`canvas-2d-host.tsx`) re-parses a hand-rolled 
 
 `render_frame_gpu` calls `host.build_vector_scene()` (full LOD, theme colors, bezier edges, icons — the exact fidelity that's missing today) and presents it via `cavas::gpu_session::CanvasGpuSession` (a real `wgpu` WebGPU surface). This compiles to `@semio-tech/puzzle-2d-rs` (`puzzle/2d/rs/script.ts` → `bun script.ts wasm`) but **nothing in the framework currently imports it** — it's dead code.
 
-- The plugin (`puzzle/plugin/rs/d2/mod.rs`) instead serializes a crude flat `canvas_layers_json` (id/kind/color/xy/wh) every render, and the previous ticket's `canvasPointerDown/Move/Up/Wheel` handlers round-trip *every pointer event* through the WASM plugin boundary, replaying it against a second `BoardHost` and re-serializing the whole scene — this is the performance bottleneck and the reason styling can never match the Rust renderer's real fidelity.
+- The plugin (`puzzle/plugin/rs/d2/mod.rs`) instead serializes a crude flat `canvas_layers_json` (id/kind/color/xy/wh) every render, and the previous ticket's `canvasPointerDown/Move/Up/Wheel` handlers round-trip _every pointer event_ through the WASM plugin boundary, replaying it against a second `BoardHost` and re-serializing the whole scene — this is the performance bottleneck and the reason styling can never match the Rust renderer's real fidelity.
 
 This is exactly the situation GIS 2D was just in, and it was just fixed by mounting the real `MapSession` (`@semio-tech/gis-2d-rs`) directly via `[gis-map-host.tsx](framework/renderer/react/components/gis-map-host.tsx)`. Puzzle 2D needs the same treatment: mount `BoardSession` directly, let it own rendering + pointer/camera interaction at native GPU speed, and only sync discrete committed events back to the plugin's document.
 
@@ -43,8 +43,6 @@ flowchart LR
     Session -->|drainEventsJson: camera/select/nodeDragEnd/...| Host
     Host -->|dispatch "applyBoardEvents" eventsJson| Plugin
 ```
-
-
 
 Puzzle 2D renders 3 panes (Overview/Detail/Selection) from one fixture. Only Overview is interactive (`puzzle2d_pointer_pane_is_interactive` already encodes this); Detail/Selection mount their own `BoardSession` too (for real GPU fidelity) but skip pointer wiring — same as static "camera-framed previews" today, just GPU-rendered.
 
@@ -89,4 +87,3 @@ Puzzle 2D renders 3 panes (Overview/Detail/Selection) from one fixture. Only Ove
 - Rebuild `puzzle/2d/rs` wasm package, run `cargo test -p puzzle-plugin` (note pre-existing unrelated `component_export_anchor` macro error from the last ticket — re-check if still blocking) and the updated Vitest suite.
 - Manual check in the dev server: Overview pane pans/zooms/selects/drags at native frame rate with correct theme colors, LOD-driven detail, and bezier edges matching premigration; Detail/Selection panes render the same fidelity read-only.
 - Reopen ticket `2026/07/09/PUZZLE-2D-REACT-PARITY` (per AGENTS.md, same task) rather than opening a new one, and close it with a summary + full file list when done.
-

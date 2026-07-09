@@ -39,9 +39,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌7620📌7800"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻kit📌7620📌7800"],
         "second": "🎆26🌙03☀️14⏰18⌚51⏱️45",
         "session": "⚪d93b37d0aeb04b13bef88c168398c062"
       },
@@ -83,9 +81,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌7620📌7800"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻kit📌7620📌7800"],
         "second": "🎆26🌙03☀️14⏰18⌚52⏱️01",
         "session": "⚪d93b37d0aeb04b13bef88c168398c062"
       },
@@ -127,9 +123,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌7570📌7650"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻kit📌7570📌7650"],
         "second": "🎆26🌙03☀️14⏰18⌚52⏱️04",
         "session": "⚪d93b37d0aeb04b13bef88c168398c062"
       },
@@ -171,9 +165,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌7570📌7650"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻kit📌7570📌7650"],
         "second": "🎆26🌙03☀️14⏰18⌚52⏱️20",
         "session": "⚪d93b37d0aeb04b13bef88c168398c062"
       },
@@ -209,9 +201,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚examples🗃️metabolism📃readme📌1📌50"
-        ],
+        "ranges": ["👤compose📚examples🗃️metabolism📃readme📌1📌50"],
         "second": "🎆26🌙03☀️14⏰18⌚52⏱️23",
         "session": "⚪d93b37d0aeb04b13bef88c168398c062"
       },
@@ -247,9 +237,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚examples🗃️metabolism📃readme📌1📌50"
-        ],
+        "ranges": ["👤compose📚examples🗃️metabolism📃readme📌1📌50"],
         "second": "🎆26🌙03☀️14⏰18⌚52⏱️38",
         "session": "⚪d93b37d0aeb04b13bef88c168398c062"
       },

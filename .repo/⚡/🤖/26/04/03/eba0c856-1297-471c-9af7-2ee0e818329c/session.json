@@ -29,9 +29,7 @@
           "session_id": "eba0c856-1297-471c-9af7-2ee0e818329c",
           "hook_event_name": "sessionEnd",
           "cursor_version": "3.0.4",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }
@@ -60,9 +58,7 @@
           "session_id": "eba0c856-1297-471c-9af7-2ee0e818329c",
           "hook_event_name": "sessionEnd",
           "cursor_version": "3.0.9",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/eba0c856-1297-471c-9af7-2ee0e818329c/eba0c856-1297-471c-9af7-2ee0e818329c.jsonl"
         }

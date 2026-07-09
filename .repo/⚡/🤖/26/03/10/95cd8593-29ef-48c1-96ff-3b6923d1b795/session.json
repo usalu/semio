@@ -188,9 +188,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌5090📌5200"
-        ],
+        "ranges": ["👤compose📚js💻compose📌5090📌5200"],
         "second": "🎆26🌙03☀️10⏰13⌚13⏱️04",
         "session": "⚪95cd859329ef48c196ff3b6923d1b795"
       },
@@ -248,9 +246,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌5090📌5200"
-        ],
+        "ranges": ["👤compose📚js💻compose📌5090📌5200"],
         "second": "🎆26🌙03☀️10⏰13⌚13⏱️15",
         "session": "⚪95cd859329ef48c196ff3b6923d1b795"
       },

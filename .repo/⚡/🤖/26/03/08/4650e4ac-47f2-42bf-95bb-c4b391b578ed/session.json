@@ -105,9 +105,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌2322📌2340"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌2322📌2340"],
         "second": "🎆26🌙03☀️08⏰00⌚46⏱️51",
         "session": "⚪4650e4ac47f242bf95bbc4b391b578ed"
       },
@@ -157,9 +155,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚go💻compose📌122📌135"
-        ],
+        "ranges": ["👤compose📚go💻compose📌122📌135"],
         "second": "🎆26🌙03☀️08⏰00⌚46⏱️51",
         "session": "⚪4650e4ac47f242bf95bbc4b391b578ed"
       },
@@ -195,9 +191,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌2427📌2437"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌2427📌2437"],
         "second": "🎆26🌙03☀️08⏰00⌚46⏱️51",
         "session": "⚪4650e4ac47f242bf95bbc4b391b578ed"
       },
@@ -233,9 +227,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌2322📌2340"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌2322📌2340"],
         "second": "🎆26🌙03☀️08⏰00⌚46⏱️59",
         "session": "⚪4650e4ac47f242bf95bbc4b391b578ed"
       },
@@ -285,9 +277,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚go💻compose📌122📌135"
-        ],
+        "ranges": ["👤compose📚go💻compose📌122📌135"],
         "second": "🎆26🌙03☀️08⏰00⌚46⏱️59",
         "session": "⚪4650e4ac47f242bf95bbc4b391b578ed"
       },
@@ -323,9 +313,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌2427📌2437"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌2427📌2437"],
         "second": "🎆26🌙03☀️08⏰00⌚47⏱️02",
         "session": "⚪4650e4ac47f242bf95bbc4b391b578ed"
       },

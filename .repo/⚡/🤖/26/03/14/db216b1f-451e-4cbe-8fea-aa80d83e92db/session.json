@@ -184,9 +184,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🔬coda🖱️desktop⚙️package📌1📌49"
-        ],
+        "ranges": ["🔬coda🖱️desktop⚙️package📌1📌49"],
         "second": "🎆26🌙03☀️14⏰20⌚12⏱️55",
         "session": "⚪db216b1f451e4cbe8feaaa80d83e92db"
       },
@@ -217,9 +215,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🔬coda🖱️desktop⚙️package📌1📌49"
-        ],
+        "ranges": ["🔬coda🖱️desktop⚙️package📌1📌49"],
         "second": "🎆26🌙03☀️14⏰20⌚13⏱️10",
         "session": "⚪db216b1f451e4cbe8feaaa80d83e92db"
       },
@@ -481,11 +477,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/coda/desktop/renderer.tsx",
-                "/workspaces/semio/coda/desktop/globals.css",
-                "/workspaces/semio/coda/desktop/vite.renderer.config.ts"
-              ],
+              "files": ["/workspaces/semio/coda/desktop/renderer.tsx", "/workspaces/semio/coda/desktop/globals.css", "/workspaces/semio/coda/desktop/vite.renderer.config.ts"],
               "no_github": true,
               "path": "2026/03/14/REFACTOR-CODA-DESKTOP-TO-USE-elements-UI-SYSTEM",
               "summary": "Refactored the coda desktop renderer and globals to use elements tokens across cards, trees, pages, welcome flow, and app shell, and fixed the renderer Vite configuration so targeted TypeScript and renderer builds succeed."
@@ -517,11 +509,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/coda/desktop/renderer.tsx",
-                "/workspaces/semio/coda/desktop/globals.css",
-                "/workspaces/semio/coda/desktop/vite.renderer.config.ts"
-              ],
+              "files": ["/workspaces/semio/coda/desktop/renderer.tsx", "/workspaces/semio/coda/desktop/globals.css", "/workspaces/semio/coda/desktop/vite.renderer.config.ts"],
               "no_github": true,
               "path": "26/03/14/REFACTOR-CODA-DESKTOP-TO-USE-elements-UI-SYSTEM",
               "summary": "Refactored coda desktop UI styling to elements tokens across the renderer, removed desktop-specific theme overrides from globals, and fixed the renderer Vite config so targeted TypeScript and renderer build checks now pass."
@@ -554,11 +542,7 @@
             "mcp_result": "[🎫refactorcodadesktoptouseelementsuisystem](composerepo://y/00/m/00/d/00/tk/REFACTOR-CODA-DESKTOP-TO-USE-elements-UI-SYSTEM) - `closed` - `closed now`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/coda/desktop/renderer.tsx",
-                "/workspaces/semio/coda/desktop/globals.css",
-                "/workspaces/semio/coda/desktop/vite.renderer.config.ts"
-              ],
+              "files": ["/workspaces/semio/coda/desktop/renderer.tsx", "/workspaces/semio/coda/desktop/globals.css", "/workspaces/semio/coda/desktop/vite.renderer.config.ts"],
               "no_github": true,
               "path": "26/03/14/REFACTOR-CODA-DESKTOP-TO-USE-elements-UI-SYSTEM",
               "summary": "Refactored coda desktop UI styling to elements tokens across the renderer, removed desktop-specific theme overrides from globals, and fixed the renderer Vite config so targeted TypeScript and renderer build checks now pass."

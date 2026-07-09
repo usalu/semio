@@ -9,12 +9,12 @@ async function main() {
     const first = items[0];
     if (!first) return null;
     const rect = first.getBoundingClientRect();
-    const btn = first.querySelector('button');
-    const svg = btn?.querySelector('svg');
-    const lineDiv = first.querySelector('.pointer-events-none');
+    const btn = first.querySelector("button");
+    const svg = btn?.querySelector("svg");
+    const lineDiv = first.querySelector(".pointer-events-none");
     const lineDivChild = lineDiv?.firstElementChild;
     return {
-      svgClass: svg?.getAttribute('class'),
+      svgClass: svg?.getAttribute("class"),
       svgComputedWidth: svg ? getComputedStyle(svg).width : null,
       lineChildLeft: lineDivChild ? getComputedStyle(lineDivChild).left : null,
       paddingLeft: getComputedStyle(first).paddingLeft,

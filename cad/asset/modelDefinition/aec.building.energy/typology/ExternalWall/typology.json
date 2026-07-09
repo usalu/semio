@@ -4,17 +4,9 @@
   "version": "1.0.0",
   "label": "External Wall",
   "description": "Joined touching external surfaces of the same material with openings cut out.",
-  "actions": [
-    "energy.energy.constructExternalWallFrom2PointsAndHeight",
-    "energy.energy.constructExternalWallFromCurveAndHeight",
-    "energy.energy.constructExternalWallFromSurface"
-  ],
-  "interactions": [
-    "energy.energy.constructExternalWall"
-  ],
-  "primitiveKinds": [
-    "surface"
-  ],
+  "actions": ["energy.energy.constructExternalWallFrom2PointsAndHeight", "energy.energy.constructExternalWallFromCurveAndHeight", "energy.energy.constructExternalWallFromSurface"],
+  "interactions": ["energy.energy.constructExternalWall"],
+  "primitiveKinds": ["surface"],
   "style": {
     "color": "#C4785A",
     "edgeColor": "#8B4F38",

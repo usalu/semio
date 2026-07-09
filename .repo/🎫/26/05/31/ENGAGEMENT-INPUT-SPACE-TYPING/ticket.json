@@ -5,7 +5,5 @@
   "description": "Engagement input does not allow spaces; space acts like enter. Fix command input to preserve spaces in engagement mode.",
   "summary": "Fixed engagement command input treating Space like Enter. Engagement mode now preserves spaces in onChange (`replNormalizeCommandText`), routes Space into the draft instead of REPL submit/complete handlers, and keeps aside REPL space-stripping behavior unchanged. Added unit tests in CAD renderer and UI Engagement.",
   "goal": "🎯ui",
-  "sessions": [
-    "⚪1d82e1170d2e4c568a45d23e1ced400f"
-  ]
+  "sessions": ["⚪1d82e1170d2e4c568a45d23e1ced400f"]
 }

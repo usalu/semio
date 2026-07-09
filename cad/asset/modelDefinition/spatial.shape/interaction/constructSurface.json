@@ -1158,9 +1158,7 @@
       {
         "name": "pick_face",
         "selection": {
-          "accept": [
-            "face"
-          ],
+          "accept": ["face"],
           "multiple": false,
           "prompt": "Pick face"
         },
@@ -1565,11 +1563,7 @@
             "text": "Surface: 1=rectangle 2=pick 3=line+extrude 4=loft 5=sweep1 6=sweep2 7=network",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           }
         ]
@@ -1584,11 +1578,7 @@
             "text": "Pick a face",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           }
         ]
@@ -1603,11 +1593,7 @@
             "text": "Line drawn — confirm to extrude profile",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           }
         ]
@@ -1622,11 +1608,7 @@
             "text": "Curves ready — confirm to loft",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           }
         ]
@@ -1635,9 +1617,7 @@
   },
   "commit": {
     "when": "hasSurfaceResult",
-    "fromStates": [
-      "committed"
-    ],
+    "fromStates": ["committed"],
     "operation": {
       "kind": "action",
       "action": "command.finish",

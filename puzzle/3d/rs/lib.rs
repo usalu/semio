@@ -7,7 +7,7 @@ use parry3d::shape::{SharedShape, TriMesh, TriMeshFlags};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use wasm_bindgen::prelude::*;
 
 const DEFAULT_OVERLAP_BUDGET: f64 = 0.02;
@@ -1401,23 +1401,23 @@ fn uuid_simple() -> String {
     out
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
 fn js_sys_time_now() -> f64 {
     0.0
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 fn js_sys_time_now() -> f64 {
     js_sys::Date::now()
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 #[wasm_bindgen]
 pub struct Puzzle3dPrecomputeSession {
     engine: Puzzle3dEngine,
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 #[wasm_bindgen]
 impl Puzzle3dPrecomputeSession {
     #[wasm_bindgen(constructor)]
@@ -1473,7 +1473,7 @@ impl Puzzle3dPrecomputeSession {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
 pub struct Puzzle3dPrecomputeSession {
     engine: Puzzle3dEngine,
 }
@@ -1582,7 +1582,7 @@ mod tests {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
 impl Puzzle3dPrecomputeSession {
     pub fn new() -> Self {
         Self { engine: Puzzle3dEngine::new() }
@@ -1636,27 +1636,7 @@ impl Puzzle3dPrecomputeSession {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
-impl Puzzle3dPrecomputeSession {
-    pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, String> {
-        let payload: BrushPlacePayload = serde_json::from_str(payload_json).map_err(|e| e.to_string())?;
-        let fixture = self
-            .engine
-            .apply_brush_placement(&payload)
-            .ok_or_else(|| "brush placement rejected".to_string())?;
-        serde_json::to_string(&fixture).map_err(|e| e.to_string())
-    }
-
-    pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, String> {
-        let fixture = self
-            .engine
-            .apply_fill_count(count as usize)
-            .ok_or_else(|| "fill session unavailable".to_string())?;
-        serde_json::to_string(&fixture).map_err(|e| e.to_string())
-    }
-}
-
-// #region 🔖DocumentVcs
+//#region 🔖DocumentVcs
 use vcs::{
     create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
 };
@@ -1721,7 +1701,7 @@ pub fn empty_puzzle3d_projection() -> Puzzle3dDocument {
 }
 
 //#region 🔖WasmBridge
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 mod wasm_bridge {
     use super::*;
     use std::cell::RefCell;

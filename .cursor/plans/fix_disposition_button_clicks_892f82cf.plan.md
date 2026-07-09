@@ -2,18 +2,18 @@
 name: Fix Disposition Button Clicks
 overview: Fix enlarge/reset (and slide-reset) buttons on Projektetage doing nothing-but-deselect by making pointer hit-testing recognize SVG icon targets, then verify with a real mouse-click sequence instead of element.click().
 todos:
-  - id: fix-hittest
-    content: In framework/product/presentation/renderer/react/index.tsx isDispositionPointerTarget, change instanceof HTMLElement to instanceof Element (and optionally relax the onPointerDown target casts).
-    status: completed
-  - id: test
-    content: Extend the existing vitest block with a regression test dispatching a real pointerdown/pointerup/click whose target is the SVG icon inside the enlarge button, asserting selection retained and enlarged toggled.
-    status: completed
-  - id: verify
-    content: Add [DEBUG] logs, verify on localhost:6050 slide 10 using real browser_click (not element.click) for figure/video/pdf and slide reset, then remove logs.
-    status: completed
-  - id: suite
-    content: Run the presentation renderer test suite and confirm pass (excluding the known intermittent pdf-cover test).
-    status: completed
+ - id: fix-hittest
+   content: In framework/product/presentation/renderer/react/index.tsx isDispositionPointerTarget, change instanceof HTMLElement to instanceof Element (and optionally relax the onPointerDown target casts).
+   status: completed
+ - id: test
+   content: Extend the existing vitest block with a regression test dispatching a real pointerdown/pointerup/click whose target is the SVG icon inside the enlarge button, asserting selection retained and enlarged toggled.
+   status: completed
+ - id: verify
+   content: Add [DEBUG] logs, verify on localhost:6050 slide 10 using real browser_click (not element.click) for figure/video/pdf and slide reset, then remove logs.
+   status: completed
+ - id: suite
+   content: Run the presentation renderer test suite and confirm pass (excluding the known intermittent pdf-cover test).
+   status: completed
 isProject: false
 ---
 
@@ -44,8 +44,6 @@ flowchart TD
   chk -->|"after fix: true"| skip["skip background -> selection kept -> click runs"]
 ```
 
-
-
 ### Change 1 - the fix (one line, plus optional hardening)
 
 In `isDispositionPointerTarget` change `instanceof HTMLElement` to `instanceof Element` (`Element.closest` covers HTML and SVG). Optionally also relax the two `event.target as HTMLElement` casts in the disposition `onPointerDown` guards to `Element` for consistency (runtime already works since `.closest` is on `Element`).
@@ -70,4 +68,3 @@ In the existing `if (import.meta.vitest)` block of the same file, add a test und
 
 - The earlier CSS edits (slide-reset-host `pointer-events`, action `z-index`, media `pointer-events` until selected) are retained; they are compatible and the media-not-selected rule still helps first-click selection.
 - Per repo rules, do this inside a ticket via the repo MCP (reopen the existing presentation interaction ticket if present, else open one) and keep any temporary artifacts in the ticket folder.
-

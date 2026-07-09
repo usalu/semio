@@ -2,30 +2,30 @@
 name: Unified Store Abstraction
 overview: Introduce a single renderer-neutral, backend-agnostic abstract `Store<TSnapshot>` base in `@semio-tech/framework-core`, make `Controller`s own and expose the stores they provide, and unify all existing ad-hoc reactive mechanisms (`ObservableCell`, `AppPointerFocusStore`, `Component`, plus the sketchpad/compose-js and puzzle domain stores) onto it.
 todos:
-  - id: ticket
-    content: Open repo-MCP ticket (read repo://goals, associate, ticket_open) before any edits
-    status: completed
-  - id: core-store
-    content: Add abstract Store<TSnapshot> in @semio-tech/framework-core; refactor ObservableCell and AppPointerFocusStore to derive from it
-    status: completed
-  - id: controller-registry
-    content: Extend Controller with owned-store registry (provideStore/getStore/stores) and dispose owned stores
-    status: completed
-  - id: component-store
-    content: Make Component extend Store; rename getModel/buildModel/TModel to getSnapshot/buildSnapshot/TSnapshot; remove PlatformComponentEntry
-    status: completed
-  - id: renderer-hooks
-    content: Add useStore + useControllerStore hooks; replace useComponentModel and getModel call sites in renderers
-    status: completed
-  - id: sketchpad-store
-    content: Add ComposeKitStore (compose/js WASM worker) + local-state store, both provided by SketchpadShellController; remove KitHostStore bridge
-    status: completed
-  - id: puzzle-stores
-    content: Provide puzzle domain stores via play Controllers; rename getModel->getSnapshot in @puzzle/*/react stores
-    status: completed
-  - id: validate
-    content: Run affected vitest suites and confirm runtime dual-store behavior; close ticket with summary
-    status: completed
+ - id: ticket
+   content: Open repo-MCP ticket (read repo://goals, associate, ticket_open) before any edits
+   status: completed
+ - id: core-store
+   content: Add abstract Store<TSnapshot> in @semio-tech/framework-core; refactor ObservableCell and AppPointerFocusStore to derive from it
+   status: completed
+ - id: controller-registry
+   content: Extend Controller with owned-store registry (provideStore/getStore/stores) and dispose owned stores
+   status: completed
+ - id: component-store
+   content: Make Component extend Store; rename getModel/buildModel/TModel to getSnapshot/buildSnapshot/TSnapshot; remove PlatformComponentEntry
+   status: completed
+ - id: renderer-hooks
+   content: Add useStore + useControllerStore hooks; replace useComponentModel and getModel call sites in renderers
+   status: completed
+ - id: sketchpad-store
+   content: Add ComposeKitStore (compose/js WASM worker) + local-state store, both provided by SketchpadShellController; remove KitHostStore bridge
+   status: completed
+ - id: puzzle-stores
+   content: Provide puzzle domain stores via play Controllers; rename getModel->getSnapshot in @puzzle/*/react stores
+   status: completed
+ - id: validate
+   content: Run affected vitest suites and confirm runtime dual-store behavior; close ticket with summary
+   status: completed
 isProject: false
 ---
 
@@ -78,7 +78,7 @@ In [framework/core/index.ts](framework/core/index.ts):
 In [framework/product/platform/core/index.ts](framework/product/platform/core/index.ts):
 
 - `Component<TModel>` (lines ~288-320) → `Component<TSnapshot> extends Store<TSnapshot>`. Rename `getModel`→`getSnapshot`, `buildModel`→`buildSnapshot`, `TModel`→`TSnapshot`, drop the internal `modelCell` (the Component is the store), and update `refresh()`/`setModel` accordingly. This also removes the compose-forbidden term `model`.
-- Delete the now-redundant `PlatformComponentEntry` interface in `@semio-tech/framework-core` (Component already *is* a `Store`); update `Platform.registerComponent`/`componentsBySurfaceId` typing to `Store`-based entries (it only needs `surfaceId` + the store contract). Update the `Table`/`Puzzle2d`/`Puzzle3d`/`Puzzle5d`/`Cad`/`Panel` subclasses' `buildModel`→`buildSnapshot`.
+- Delete the now-redundant `PlatformComponentEntry` interface in `@semio-tech/framework-core` (Component already _is_ a `Store`); update `Platform.registerComponent`/`componentsBySurfaceId` typing to `Store`-based entries (it only needs `surfaceId` + the store contract). Update the `Table`/`Puzzle2d`/`Puzzle3d`/`Puzzle5d`/`Cad`/`Panel` subclasses' `buildModel`→`buildSnapshot`.
 
 ## 3. Renderers — bind through the controller/store
 

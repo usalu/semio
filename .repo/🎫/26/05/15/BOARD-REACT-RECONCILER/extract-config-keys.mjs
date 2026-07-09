@@ -5,7 +5,7 @@ const re = /([a-zA-Z0-9$]+) = \$\$\$config\.([a-zA-Z0-9]+)/g;
 const keys = new Set();
 let m;
 while ((m = re.exec(s))) {
-	keys.add(m[2]);
+  keys.add(m[2]);
 }
 console.log([...keys].sort().join("\n"));
 console.error("count", keys.size);

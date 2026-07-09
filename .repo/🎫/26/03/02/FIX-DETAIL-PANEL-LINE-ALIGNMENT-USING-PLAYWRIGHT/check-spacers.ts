@@ -7,11 +7,11 @@ async function run() {
   await page.waitForTimeout(2000);
   const result = await page.evaluate(() => {
     const leafRows = Array.from(document.querySelectorAll('[data-slot="tree-item-row"]'));
-    return leafRows.map(row => {
+    return leafRows.map((row) => {
       const label = row.querySelector('[data-slot="tree-label"]')?.textContent?.trim();
       const children = Array.from(row.children);
-      const hasButton = children.some(c => c.tagName === "BUTTON");
-      const nonAbsoluteDivs = children.filter(c => {
+      const hasButton = children.some((c) => c.tagName === "BUTTON");
+      const nonAbsoluteDivs = children.filter((c) => {
         if (c.tagName !== "DIV") return false;
         const cs = window.getComputedStyle(c);
         return cs.position !== "absolute";
@@ -21,7 +21,7 @@ async function run() {
         hasButton,
         nonAbsoluteDivCount: nonAbsoluteDivs.length,
         childCount: children.length,
-        childTags: children.map(c => c.tagName).join(","),
+        childTags: children.map((c) => c.tagName).join(","),
       };
     });
   });

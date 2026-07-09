@@ -4,13 +4,7 @@
   "version": "1.0.0",
   "label": "Network Surface",
   "description": "Typology produced by surface.network-srf.",
-  "actions": [
-    "command.finish"
-  ],
-  "interactions": [
-    "surface.networkSrf"
-  ],
-  "primitiveKinds": [
-    "surface"
-  ]
+  "actions": ["command.finish"],
+  "interactions": ["surface.networkSrf"],
+  "primitiveKinds": ["surface"]
 }

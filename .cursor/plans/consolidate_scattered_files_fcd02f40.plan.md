@@ -2,30 +2,30 @@
 name: Consolidate Scattered Files
 overview: Fold remaining scattered source/module files into their package's single god-file (index.ts(x) / lib.rs) using regions, strictly limited to module-internal splits so no bundle dependency or runtime behaviour changes.
 todos:
-  - id: reopen
-    content: Reopen ticket 2026/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES via ticket_reopen
-    status: completed
-  - id: ts-geometry
-    content: Fold geometry/brep/js contracts.ts, kernel.ts, mesh.ts into index.ts regions; delete files; fix imports
-    status: completed
-  - id: ts-repolib
-    content: Fold repo/lib/js/src commit/micro-commit/uloc-metrics into index.ts; delete shim files; repoint index.test.ts
-    status: completed
-  - id: ts-vscode
-    content: Fold repo/client/vscode codegen/*.ts into extension.ts regions; update internal import
-    status: completed
-  - id: rust-graph
-    content: Inline-fold mathematical/graph siblings (geometry, scene_json, types, board_host, fixture_layout) into respective lib.rs
-    status: completed
-  - id: rust-vello
-    content: Inline-fold infinite/cavas/vello icon_codec.rs (preserve include!) and theme.rs into lib.rs
-    status: completed
-  - id: py-test
-    content: Embed compose/client/lib/py store_test.py into main.py; delete store_test.py
-    status: completed
-  - id: verify
-    content: Run nx test/build, cargo check/test, pytest for affected packages; confirm no runtime/bundle change; close ticket
-    status: completed
+ - id: reopen
+   content: Reopen ticket 2026/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES via ticket_reopen
+   status: completed
+ - id: ts-geometry
+   content: Fold geometry/brep/js contracts.ts, kernel.ts, mesh.ts into index.ts regions; delete files; fix imports
+   status: completed
+ - id: ts-repolib
+   content: Fold repo/lib/js/src commit/micro-commit/uloc-metrics into index.ts; delete shim files; repoint index.test.ts
+   status: completed
+ - id: ts-vscode
+   content: Fold repo/client/vscode codegen/*.ts into extension.ts regions; update internal import
+   status: completed
+ - id: rust-graph
+   content: Inline-fold mathematical/graph siblings (geometry, scene_json, types, board_host, fixture_layout) into respective lib.rs
+   status: completed
+ - id: rust-vello
+   content: Inline-fold infinite/cavas/vello icon_codec.rs (preserve include!) and theme.rs into lib.rs
+   status: completed
+ - id: py-test
+   content: Embed compose/client/lib/py store_test.py into main.py; delete store_test.py
+   status: completed
+ - id: verify
+   content: Run nx test/build, cargo check/test, pytest for affected packages; confirm no runtime/bundle change; close ticket
+   status: completed
 isProject: false
 ---
 
@@ -43,8 +43,6 @@ flowchart TD
   Q -->|"worker / vite html / electron / vscode entry / pkg.json subpath export / build.rs / .inc.rs / bin-only crate / go _test.go / .NET test project"| Keep[Keep split - merging changes bundle or runtime]
   Q -->|"only relative-imported within its own package"| Merge[Fold into index.ts(x) / lib.rs region]
 ```
-
-
 
 ## Workstream 1 - TypeScript source folds
 

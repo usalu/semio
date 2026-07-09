@@ -34,7 +34,7 @@ Remove intersect and lasso from the Type sketchpad toolbar:
 ## Todos
 
 - [x] Remove intersect toggle from TypeSelectSettings
-- [x] Remove lasso toolbar section  
+- [x] Remove lasso toolbar section
 - [x] Remove SelectionIntersectTool definition
 - [x] Clean up imports
 - [x] Verify changes

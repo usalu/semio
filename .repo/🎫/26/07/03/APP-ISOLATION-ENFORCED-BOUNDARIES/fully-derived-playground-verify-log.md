@@ -2,13 +2,13 @@
 
 ## Tests
 
-| Package | Result |
-|---------|--------|
-| `repo-lib` playground static sites + manifest | 7 passed |
-| `framework-playground-renderer-react` | 25 passed |
-| `draw-core` | 6 passed (subagent) |
-| `ui-styling` | 12 passed (after lockedExampleFixtures path fix) |
-| dependency-cruiser (framework/playground, s/core, sketchpad, repo/lib) | no violations |
+| Package                                                                | Result                                           |
+| ---------------------------------------------------------------------- | ------------------------------------------------ |
+| `repo-lib` playground static sites + manifest                          | 7 passed                                         |
+| `framework-playground-renderer-react`                                  | 25 passed                                        |
+| `draw-core`                                                            | 6 passed (subagent)                              |
+| `ui-styling`                                                           | 12 passed (after lockedExampleFixtures path fix) |
+| dependency-cruiser (framework/playground, s/core, sketchpad, repo/lib) | no violations                                    |
 
 ## Architecture after refactor
 

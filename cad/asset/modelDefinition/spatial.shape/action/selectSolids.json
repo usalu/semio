@@ -24,9 +24,7 @@
         },
         "kinds": {
           "kind": "const",
-          "value": [
-            "solid"
-          ]
+          "value": ["solid"]
         }
       },
       "assignTo": "result"

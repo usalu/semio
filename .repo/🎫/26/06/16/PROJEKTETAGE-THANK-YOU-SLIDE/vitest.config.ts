@@ -7,17 +7,17 @@ const repoRoot = resolve(ticketRoot, "../../../../../..");
 const projektetageRoot = resolve(repoRoot, "mit-bestand/präsentation/33.projektetage");
 
 export default defineConfig({
-	root: projektetageRoot,
-	resolve: {
-		alias: [
-			{
-				find: "@semio-tech/framework-presentation-core",
-				replacement: resolve(repoRoot, "framework/product/presentation/core/index.ts"),
-			},
-		],
-	},
-	test: {
-		environment: "node",
-		include: ["index.ts"],
-	},
+  root: projektetageRoot,
+  resolve: {
+    alias: [
+      {
+        find: "@semio-tech/framework-presentation-core",
+        replacement: resolve(repoRoot, "framework/product/presentation/core/index.ts"),
+      },
+    ],
+  },
+  test: {
+    environment: "node",
+    include: ["index.ts"],
+  },
 });

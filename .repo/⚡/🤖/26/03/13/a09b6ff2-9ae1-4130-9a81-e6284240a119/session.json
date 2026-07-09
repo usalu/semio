@@ -53,9 +53,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅vscode⚙️launch📌1📌603"
-        ],
+        "ranges": ["🛅vscode⚙️launch📌1📌603"],
         "second": "🎆26🌙03☀️13⏰10⌚40⏱️23",
         "session": "⚪a09b6ff29ae141309a81e6284240a119"
       },
@@ -86,9 +84,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅vscode⚙️launch📌1📌603"
-        ],
+        "ranges": ["🛅vscode⚙️launch📌1📌603"],
         "second": "🎆26🌙03☀️13⏰10⌚40⏱️37",
         "session": "⚪a09b6ff29ae141309a81e6284240a119"
       },

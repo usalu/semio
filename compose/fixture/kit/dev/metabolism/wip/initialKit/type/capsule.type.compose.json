@@ -1,20 +1,20 @@
 {
-    "id": "71749140-9db9-43f6-bd81-d89011667b80",
-    "name": "Capsule",
-    "isAbstract": true,
-    "createdAt": "2025-11-23T01:10:21.293Z",
-    "updatedAt": "2025-11-23T01:10:21.293Z",
-    "families": {
-        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-        "items": [
-            {
-                "id": "2df6bbea-349b-4a91-8e12-cb734110e854",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-            }
-        ]
-    },
+  "id": "71749140-9db9-43f6-bd81-d89011667b80",
+  "name": "Capsule",
+  "isAbstract": true,
+  "createdAt": "2025-11-23T01:10:21.293Z",
+  "updatedAt": "2025-11-23T01:10:21.293Z",
+  "families": {
     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-    "typology": {
-        "id": "typology-capsule"
-    }
+    "items": [
+      {
+        "id": "2df6bbea-349b-4a91-8e12-cb734110e854",
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      }
+    ]
+  },
+  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+  "typology": {
+    "id": "typology-capsule"
+  }
 }

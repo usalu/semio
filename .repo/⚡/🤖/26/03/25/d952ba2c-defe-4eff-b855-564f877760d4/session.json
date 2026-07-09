@@ -79,12 +79,7 @@
             "max_results": 4
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__search",
-              "mcp__repo__ticket_open",
-              "mcp__repo__ticket_close",
-              "mcp__repo__ticket_reopen"
-            ],
+            "matches": ["mcp__repo__search", "mcp__repo__ticket_open", "mcp__repo__ticket_close", "mcp__repo__ticket_reopen"],
             "query": "select:mcp__repo__search,mcp__repo__ticket_open,mcp__repo__ticket_close,mcp__repo__ticket_reopen",
             "total_deferred_tools": 24
           },
@@ -1711,9 +1706,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "TodoWrite"
-            ],
+            "matches": ["TodoWrite"],
             "query": "select:TodoWrite",
             "total_deferred_tools": 24
           },
@@ -6919,10 +6912,7 @@
           "tool_name": "mcp__repo__ticket_close",
           "tool_input": {
             "summary": "Refactored all engine MCP tool return values to consistently return shallow entities instead of status-only dicts. Changed 17 MCP tools: start_working_in_local_kit, start_new_kit, start_working_in_remote_kit now return kitToShallow(kit). start_working_in_design, start_new_design, add_current_design_author/prop/piece/piece_with_plane/connection now return designToShallow(design). start_working_in_type returns typeToShallow(t). finish_working_in_design, finish_working_in_type, finish_working_in_kit return kitToShallow(kit). start_transaction, transaction_finalize, transaction_abort return kitToShallow when kit is available. set_current_selection returns the selection dict. clear_current_selection returns empty selection dict. Updated 10 test methods to match new return value structure. All 143 engine tests pass.",
-            "files": [
-              "compose/engine/main.py",
-              "compose/engine/engine.test.py"
-            ]
+            "files": ["compose/engine/main.py", "compose/engine/engine.test.py"]
           },
           "tool_use_id": "toolu_01DwnenUop2kUpwY2uFMbzN7"
         }
@@ -6959,10 +6949,7 @@
           "tool_name": "mcp__repo__ticket_close",
           "tool_input": {
             "summary": "Refactored all engine MCP tool return values to consistently return shallow entities instead of status-only dicts. Changed 17 MCP tools: start_working_in_local_kit, start_new_kit, start_working_in_remote_kit now return kitToShallow(kit). start_working_in_design, start_new_design, add_current_design_author/prop/piece/piece_with_plane/connection now return designToShallow(design). start_working_in_type returns typeToShallow(t). finish_working_in_design, finish_working_in_type, finish_working_in_kit return kitToShallow(kit). start_transaction, transaction_finalize, transaction_abort return kitToShallow when kit is available. set_current_selection returns the selection dict. clear_current_selection returns empty selection dict. Updated 10 test methods to match new return value structure. All 143 engine tests pass.",
-            "files": [
-              "compose/engine/main.py",
-              "compose/engine/engine.test.py"
-            ]
+            "files": ["compose/engine/main.py", "compose/engine/engine.test.py"]
           },
           "tool_use_id": "toolu_01DwnenUop2kUpwY2uFMbzN7",
           "error": "MCP error -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/00/ticket.json",
@@ -7080,10 +7067,7 @@
           "tool_input": {
             "path": "26/03/24/enginemcpshallowentityreturns",
             "summary": "Refactored all engine MCP tool return values to consistently return shallow entities instead of status-only dicts. Changed 17 MCP tools: start_working_in_local_kit, start_new_kit, start_working_in_remote_kit now return kitToShallow(kit). start_working_in_design, start_new_design, add_current_design_author/prop/piece/piece_with_plane/connection now return designToShallow(design). start_working_in_type returns typeToShallow(t). finish_working_in_design, finish_working_in_type, finish_working_in_kit return kitToShallow(kit). start_transaction, transaction_finalize, transaction_abort return kitToShallow when kit is available. set_current_selection returns the selection dict. clear_current_selection returns empty selection dict. Updated 10 test methods to match new return value structure. All 143 engine tests pass.",
-            "files": [
-              "compose/engine/main.py",
-              "compose/engine/engine.test.py"
-            ]
+            "files": ["compose/engine/main.py", "compose/engine/engine.test.py"]
           },
           "tool_use_id": "toolu_01E8L5KTw9yZ589W3Ad5JhDa"
         }
@@ -7121,10 +7105,7 @@
           "tool_input": {
             "path": "26/03/24/enginemcpshallowentityreturns",
             "summary": "Refactored all engine MCP tool return values to consistently return shallow entities instead of status-only dicts. Changed 17 MCP tools: start_working_in_local_kit, start_new_kit, start_working_in_remote_kit now return kitToShallow(kit). start_working_in_design, start_new_design, add_current_design_author/prop/piece/piece_with_plane/connection now return designToShallow(design). start_working_in_type returns typeToShallow(t). finish_working_in_design, finish_working_in_type, finish_working_in_kit return kitToShallow(kit). start_transaction, transaction_finalize, transaction_abort return kitToShallow when kit is available. set_current_selection returns the selection dict. clear_current_selection returns empty selection dict. Updated 10 test methods to match new return value structure. All 143 engine tests pass.",
-            "files": [
-              "compose/engine/main.py",
-              "compose/engine/engine.test.py"
-            ]
+            "files": ["compose/engine/main.py", "compose/engine/engine.test.py"]
           },
           "tool_use_id": "toolu_01E8L5KTw9yZ589W3Ad5JhDa",
           "error": "MCP error -32603: ticket not found: /workspaces/semio/.repo/🎫/26/03/24/enginemcpshallowentityreturns/ticket.json",
@@ -7346,10 +7327,7 @@
           "tool_input": {
             "path": "26/03/24/MCP-COMMANDS-RETURN-SHALLOW-ENTITIES",
             "summary": "Refactored all engine MCP tool return values to consistently return shallow entities instead of status-only dicts. Changed 17 MCP tools: start_working_in_local_kit, start_new_kit, start_working_in_remote_kit now return kitToShallow(kit). start_working_in_design, start_new_design, add_current_design_author/prop/piece/piece_with_plane/connection now return designToShallow(design). start_working_in_type returns typeToShallow(t). finish_working_in_design, finish_working_in_type, finish_working_in_kit return kitToShallow(kit). start_transaction, transaction_finalize, transaction_abort return kitToShallow when kit is available. set_current_selection returns the selection dict. clear_current_selection returns empty selection dict. Updated 10 test methods to match new return value structure. All 143 engine tests pass.",
-            "files": [
-              "compose/engine/main.py",
-              "compose/engine/engine.test.py"
-            ]
+            "files": ["compose/engine/main.py", "compose/engine/engine.test.py"]
           },
           "tool_use_id": "toolu_014DYSdwPshRivVTRPprQVee"
         }
@@ -7387,10 +7365,7 @@
           "tool_input": {
             "path": "26/03/24/MCP-COMMANDS-RETURN-SHALLOW-ENTITIES",
             "summary": "Refactored all engine MCP tool return values to consistently return shallow entities instead of status-only dicts. Changed 17 MCP tools: start_working_in_local_kit, start_new_kit, start_working_in_remote_kit now return kitToShallow(kit). start_working_in_design, start_new_design, add_current_design_author/prop/piece/piece_with_plane/connection now return designToShallow(design). start_working_in_type returns typeToShallow(t). finish_working_in_design, finish_working_in_type, finish_working_in_kit return kitToShallow(kit). start_transaction, transaction_finalize, transaction_abort return kitToShallow when kit is available. set_current_selection returns the selection dict. clear_current_selection returns empty selection dict. Updated 10 test methods to match new return value structure. All 143 engine tests pass.",
-            "files": [
-              "compose/engine/main.py",
-              "compose/engine/engine.test.py"
-            ]
+            "files": ["compose/engine/main.py", "compose/engine/engine.test.py"]
           },
           "tool_response": [
             {
@@ -8846,15 +8821,7 @@
                 "oldLines": 6,
                 "newStart": 148,
                 "newLines": 7,
-                "lines": [
-                  "     changeKeys,",
-                  "     changeToDict,",
-                  "     changeValues,",
-                  "+    connectionToMeta,",
-                  "     connectorToMeta,",
-                  "     createClusteredDesignDict,",
-                  "     decode,"
-                ]
+                "lines": ["     changeKeys,", "     changeToDict,", "     changeValues,", "+    connectionToMeta,", "     connectorToMeta,", "     createClusteredDesignDict,", "     decode,"]
               }
             ],
             "userModified": false,
@@ -9041,9 +9008,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__ticket_close"],
             "query": "select:mcp__repo__ticket_close",
             "total_deferred_tools": 24
           },
@@ -9073,10 +9038,7 @@
           "tool_input": {
             "path": "26/03/24/MCP-COMMANDS-RETURN-SHALLOW-ENTITIES",
             "summary": "Completed conversion of ALL MCP engine functions to return shallow entities instead of full entities. Three rounds of changes:\n\n1. All @mcp.tool() decorated functions now return shallow entities (kitToShallow, designToShallow, typeToShallow) instead of {\"ok\": True, ...} dicts.\n2. All non-decorated helper functions (flatten_design, apply_kit_diff, create_clustered_design, expand_design_pieces) now return shallow entities.\n3. All diff/change functions (get_kit_diff, inverse_kit_diff, get_kit_change, get_design_change, replace_cluster_with_design) now convert `added` arrays in collection diffs to shallow/meta using new helper functions (_shallowifyKitDiff, _shallowifyDesignDiff, _shallowifyChange, _shallowifyDesignChange, _shallowifyCollectionDiff, _shallowifyTypeDiff).\n\nAdded imports for all meta conversion functions (tagToMeta, conceptToMeta, portToMeta, fileToMeta, folderToMeta, qualityToMeta, authorToMeta, modelToMeta). All 145 engine tests pass.",
-            "files": [
-              "compose/engine/main.py",
-              "compose/engine/engine.test.py"
-            ]
+            "files": ["compose/engine/main.py", "compose/engine/engine.test.py"]
           },
           "tool_use_id": "toolu_012tHRGaf4qevD2m8B21hS3q"
         }
@@ -9114,10 +9076,7 @@
           "tool_input": {
             "path": "26/03/24/MCP-COMMANDS-RETURN-SHALLOW-ENTITIES",
             "summary": "Completed conversion of ALL MCP engine functions to return shallow entities instead of full entities. Three rounds of changes:\n\n1. All @mcp.tool() decorated functions now return shallow entities (kitToShallow, designToShallow, typeToShallow) instead of {\"ok\": True, ...} dicts.\n2. All non-decorated helper functions (flatten_design, apply_kit_diff, create_clustered_design, expand_design_pieces) now return shallow entities.\n3. All diff/change functions (get_kit_diff, inverse_kit_diff, get_kit_change, get_design_change, replace_cluster_with_design) now convert `added` arrays in collection diffs to shallow/meta using new helper functions (_shallowifyKitDiff, _shallowifyDesignDiff, _shallowifyChange, _shallowifyDesignChange, _shallowifyCollectionDiff, _shallowifyTypeDiff).\n\nAdded imports for all meta conversion functions (tagToMeta, conceptToMeta, portToMeta, fileToMeta, folderToMeta, qualityToMeta, authorToMeta, modelToMeta). All 145 engine tests pass.",
-            "files": [
-              "compose/engine/main.py",
-              "compose/engine/engine.test.py"
-            ]
+            "files": ["compose/engine/main.py", "compose/engine/engine.test.py"]
           },
           "tool_response": [
             {

@@ -2067,10 +2067,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\ca5afc92-7e55-455b-b69e-217553490565.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\framework\\core\\index.ts",
-              "c:\\git\\compose\\elements\\lib\\framework\\renderer\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\framework\\core\\index.ts", "c:\\git\\compose\\elements\\lib\\framework\\renderer\\react\\index.tsx"]
           },
           "tool_use_id": "call_qYfInWmiGinCPBxZYFCYTiy2__vscode-1779617654086",
           "cwd": "c:\\git\\compose"
@@ -2124,10 +2121,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\ca5afc92-7e55-455b-b69e-217553490565.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\framework\\core\\index.ts",
-              "c:\\git\\compose\\elements\\lib\\framework\\renderer\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\framework\\core\\index.ts", "c:\\git\\compose\\elements\\lib\\framework\\renderer\\react\\index.tsx"]
           },
           "tool_use_id": "call_qYfInWmiGinCPBxZYFCYTiy2__vscode-1779617654086",
           "cwd": "c:\\git\\compose"
@@ -2181,10 +2175,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\ca5afc92-7e55-455b-b69e-217553490565.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\framework\\core\\index.ts",
-              "c:\\git\\compose\\elements\\lib\\framework\\renderer\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\framework\\core\\index.ts", "c:\\git\\compose\\elements\\lib\\framework\\renderer\\react\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_qYfInWmiGinCPBxZYFCYTiy2__vscode-1779617654086",
@@ -2269,10 +2260,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\ca5afc92-7e55-455b-b69e-217553490565.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\lib\\framework\\core\\index.ts",
-              "c:\\git\\compose\\elements\\lib\\framework\\renderer\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\lib\\framework\\core\\index.ts", "c:\\git\\compose\\elements\\lib\\framework\\renderer\\react\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_qYfInWmiGinCPBxZYFCYTiy2__vscode-1779617654086",

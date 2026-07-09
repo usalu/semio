@@ -7,6 +7,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Bulk close
+
 ## Changes
 
 - Updated `compose/js/sketchpad/Kit.tsx` so zip-backed rows no longer render from both the standalone file tree and the folder document at the same time.

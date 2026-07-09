@@ -7,19 +7,19 @@ import { defineConfig } from "vitest/config";
 const root = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-	root,
-	resolve: {
-		alias: {
-			"@semio-tech/flow-module-brep": resolve(root, "../../flow/module/brep/pkg/flow_module_brep.js"),
-		},
-	},
-	assetsInclude: ["**/*.wasm"],
-	test: {
-		mode: "test",
-		environment: "node",
-		testTimeout: 120_000,
-		fileParallelism: false,
-		maxConcurrency: 1,
-		include: ["index.ts"],
-	},
+  root,
+  resolve: {
+    alias: {
+      "@semio-tech/flow-module-brep": resolve(root, "../../flow/module/brep/pkg/flow_module_brep.js"),
+    },
+  },
+  assetsInclude: ["**/*.wasm"],
+  test: {
+    mode: "test",
+    environment: "node",
+    testTimeout: 120_000,
+    fileParallelism: false,
+    maxConcurrency: 1,
+    include: ["index.ts"],
+  },
 });

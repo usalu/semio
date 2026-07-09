@@ -5,7 +5,5 @@
   "description": "Investigate and fix board scene freeze caused by selecting an object, which triggers a TransformControls/updateMatrixWorld stack overflow in the elements board scene. Validate the root cause in the scene implementation, apply a minimal fix in existing files, and run relevant tests.",
   "summary": "Fixed board scene selection freeze by moving scene object TransformControls out of the controlled object subtree via a portal to the scene root, which removes the recursive updateMatrixWorld loop. Added scene play harness hooks and extended the existing scene Playwright spec to cover programmatic activate-selection of relocate controls and assert the console stays free of stack-overflow/updateMatrixWorld regressions.",
   "goal": "🎯aioptimizedrepo",
-  "sessions": [
-    "⚪925619f6d52e4c368c626ad32bce5f16"
-  ]
+  "sessions": ["⚪925619f6d52e4c368c626ad32bce5f16"]
 }

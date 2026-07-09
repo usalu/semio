@@ -2,57 +2,57 @@
 name: Generalize Jack Graph DSL
 overview: Generalize the existing Trinity "Jack" query DSL down into the shared `mathematical/graph` foundation so every graph framework (flow, sequence, dag, puzzle/2d, puzzle/3d, puzzle/5d, wires, s) can run the same Cypher-like query language against its own graph; add a writer fixture proving it works on a non-Trinity domain; and give every graph playground a new "Jack" window kind with a rewrite-style bidirectional hover/selection bridge.
 todos:
-  - id: phase1-property-model
-    content: Elevate kind+properties onto GraphEngine<P,D> Node/Handle/Edge in mathematical/graph/lib.rs, preserving user_data through sync_descriptor
-    status: completed
-  - id: phase2-dsl-crate
-    content: Extract shared mathematical/graph/dsl crate with QueryableGraph trait + generalized Jack AST/parser/executor/LSP-helpers
-    status: completed
-  - id: phase2-graphengine-impl
-    content: Implement QueryableGraph once for GraphEngine<P,D>, covering flow/sequence/dag/puzzle2d/wires
-    status: completed
-  - id: phase2-trinity-thin
-    content: Shrink trinity/jack/core/lib.rs to a thin specialization re-exporting the shared DSL + trinity_ram QueryableGraph impl + TrinityGraphOp mutations
-    status: completed
-  - id: phase2-lsp-domain
-    content: Generalize trinity/jack/lsp to accept a graphDomain selector and dispatch to the right adapter
-    status: completed
-  - id: phase3-puzzle3d-adapter
-    content: Implement QueryableGraph adapter for puzzle/3d's manifest-driven entity model
-    status: completed
-  - id: phase3-s-adapter
-    content: Implement QueryableGraph adapter for s/core's SMediaGraph
-    status: completed
-  - id: phase4-writer-fixture
-    content: Add writer/fixture/dag.jack.writer.json demonstrating the DSL against a non-Trinity domain
-    status: completed
-  - id: phase5-shared-hub
-    content: Extract shared Jack hover/selection bridge helper for reuse across playground controllers
-    status: completed
-  - id: phase5-flow-jack
-    content: Add Jack window kind + hover bridge to flow/play
-    status: completed
-  - id: phase5-sequence-jack
-    content: Add Jack window kind + hover bridge to sequence/play
-    status: completed
-  - id: phase5-dag-jack
-    content: Add Jack window kind + hover bridge to mathematical/graph/port/directed/dag/play
-    status: completed
-  - id: phase5-puzzle2d-jack
-    content: Add Jack window kind + hover bridge to puzzle/2d/play (inherited by wires)
-    status: completed
-  - id: phase5-puzzle3d-jack
-    content: Add Jack window kind + hover bridge to puzzle/3d/play
-    status: completed
-  - id: phase5-puzzle5d-jack
-    content: Add Jack window kind + hover bridge to puzzle/5d/play
-    status: completed
-  - id: phase5-s-jack
-    content: Add Jack window kind + hover bridge to s/play
-    status: completed
-  - id: verify-regressions
-    content: Run existing trinity/jack, trinity/rewrite, and all touched playground test suites to confirm no regressions
-    status: completed
+ - id: phase1-property-model
+   content: Elevate kind+properties onto GraphEngine<P,D> Node/Handle/Edge in mathematical/graph/lib.rs, preserving user_data through sync_descriptor
+   status: completed
+ - id: phase2-dsl-crate
+   content: Extract shared mathematical/graph/dsl crate with QueryableGraph trait + generalized Jack AST/parser/executor/LSP-helpers
+   status: completed
+ - id: phase2-graphengine-impl
+   content: Implement QueryableGraph once for GraphEngine<P,D>, covering flow/sequence/dag/puzzle2d/wires
+   status: completed
+ - id: phase2-trinity-thin
+   content: Shrink trinity/jack/core/lib.rs to a thin specialization re-exporting the shared DSL + trinity_ram QueryableGraph impl + TrinityGraphOp mutations
+   status: completed
+ - id: phase2-lsp-domain
+   content: Generalize trinity/jack/lsp to accept a graphDomain selector and dispatch to the right adapter
+   status: completed
+ - id: phase3-puzzle3d-adapter
+   content: Implement QueryableGraph adapter for puzzle/3d's manifest-driven entity model
+   status: completed
+ - id: phase3-s-adapter
+   content: Implement QueryableGraph adapter for s/core's SMediaGraph
+   status: completed
+ - id: phase4-writer-fixture
+   content: Add writer/fixture/dag.jack.writer.json demonstrating the DSL against a non-Trinity domain
+   status: completed
+ - id: phase5-shared-hub
+   content: Extract shared Jack hover/selection bridge helper for reuse across playground controllers
+   status: completed
+ - id: phase5-flow-jack
+   content: Add Jack window kind + hover bridge to flow/play
+   status: completed
+ - id: phase5-sequence-jack
+   content: Add Jack window kind + hover bridge to sequence/play
+   status: completed
+ - id: phase5-dag-jack
+   content: Add Jack window kind + hover bridge to mathematical/graph/port/directed/dag/play
+   status: completed
+ - id: phase5-puzzle2d-jack
+   content: Add Jack window kind + hover bridge to puzzle/2d/play (inherited by wires)
+   status: completed
+ - id: phase5-puzzle3d-jack
+   content: Add Jack window kind + hover bridge to puzzle/3d/play
+   status: completed
+ - id: phase5-puzzle5d-jack
+   content: Add Jack window kind + hover bridge to puzzle/5d/play
+   status: completed
+ - id: phase5-s-jack
+   content: Add Jack window kind + hover bridge to s/play
+   status: completed
+ - id: verify-regressions
+   content: Run existing trinity/jack, trinity/rewrite, and all touched playground test suites to confirm no regressions
+   status: completed
 isProject: false
 ---
 
@@ -117,6 +117,7 @@ Replicate the `trinity/rewrite` pattern (`activeHoverVar`, `hoverEpoch`, `subscr
 To avoid duplicating the ~8-method hub boilerplate 7 times (flow, sequence, dag, puzzle/2d [wires inherits], puzzle/3d, puzzle/5d, s), extract a shared helper/mixin (e.g. `createJackHoverBridge()`) into `framework/product/platform/core/index.ts` or a new shared module, used by every controller.
 
 Per playground:
+
 - **flow** (`flow/play/index.ts`): add `flow-jack` window kind; map flow widget/node ids ↔ Jack vars.
 - **sequence** (`sequence/play/index.ts`): add `sequence-jack` window kind (replacing/joining the existing read-only "Compiled Script" plaintext window); map step ids ↔ vars.
 - **dag** (`mathematical/graph/port/directed/dag/play/index.ts`): add `dag-jack` window kind.

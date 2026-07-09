@@ -9,10 +9,7 @@
       "readTypeIds/readDesignIds/readAuthorIds/readQualityIds/readTagIds/readConceptIds",
       "__parseEntityConnectionIds helper"
     ],
-    "Design": [
-      "kitInnerPath/fieldRead/subscribeField/onDescriptionChanged",
-      "readId/readIcon/readImage/readUnit/readQualitySum/readPieceIds/readConnectionIds/readAttributeIds"
-    ],
+    "Design": ["kitInnerPath/fieldRead/subscribeField/onDescriptionChanged", "readId/readIcon/readImage/readUnit/readQualitySum/readPieceIds/readConnectionIds/readAttributeIds"],
     "factories": ["KIT_OPERATION_SPECS", "DESIGN_OPERATION_SPECS", "KIT_ARTIFACT_FIELD_SPECS", "DESIGN_ARTIFACT_FIELD_SPECS"]
   },
   "react": {

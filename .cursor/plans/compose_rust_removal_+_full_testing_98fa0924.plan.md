@@ -2,27 +2,26 @@
 name: Compose Rust Removal + Full Testing
 overview: Extend semios test coverage so every registered technology's projection is actually verified end-to-end, then port compose's entire Rust kit domain engine (compose/client/lib/rs/lib.rs) into a TypeScript AppVcsHandler inside the semios/framework stack, rewire every consumer onto it, and delete the Rust crate along with the Rust-only services that exist solely to front it.
 todos:
-  - id: part1-tests
-    content: Extend semios spawn test to assert real materialized projections for every technology; add per-handler-style fixture round-trips; fix forms.dictionary/v1 vs forms.form/v1 format mismatch
-    status: pending
-  - id: part2b-kit-engine
-    content: Design and implement TypeScript Kit Domain Engine (entity model, typed KitOp union, port compatibility, blueprint/transitive refs, VFS derivation) as a real compose.kit/v1 AppVcsHandler
-    status: pending
-  - id: part2c-rewire-sketchpad
-    content: Rewire ComposeJsKitStore, sketchpad kit factories, and SemiosSketchpadHost off compose-js/WASM onto the new TS engine; eliminate the nested Platform/duplicate store
-    status: pending
-  - id: part2d-retire-rust-consumers
-    content: Delete compose-store, detach compose-hub's vestigial Cargo dependency, resolve compose_query's native transport, retire compose/graphql schema export, rewrite Storybook kit-store stories
-    status: pending
-  - id: part2e-delete-crate
-    content: Delete compose/client/lib/rs entirely and clean up all Cargo/vite/tsconfig/launch.json references to it
-    status: pending
-  - id: part2f-regression
-    content: Run full test suites and manually verify dev:semios parity across all technologies and sketchpad kit/design/type apps
-    status: pending
+ - id: part1-tests
+   content: Extend semios spawn test to assert real materialized projections for every technology; add per-handler-style fixture round-trips; fix forms.dictionary/v1 vs forms.form/v1 format mismatch
+   status: pending
+ - id: part2b-kit-engine
+   content: Design and implement TypeScript Kit Domain Engine (entity model, typed KitOp union, port compatibility, blueprint/transitive refs, VFS derivation) as a real compose.kit/v1 AppVcsHandler
+   status: pending
+ - id: part2c-rewire-sketchpad
+   content: Rewire ComposeJsKitStore, sketchpad kit factories, and SemiosSketchpadHost off compose-js/WASM onto the new TS engine; eliminate the nested Platform/duplicate store
+   status: pending
+ - id: part2d-retire-rust-consumers
+   content: Delete compose-store, detach compose-hub's vestigial Cargo dependency, resolve compose_query's native transport, retire compose/graphql schema export, rewrite Storybook kit-store stories
+   status: pending
+ - id: part2e-delete-crate
+   content: Delete compose/client/lib/rs entirely and clean up all Cargo/vite/tsconfig/launch.json references to it
+   status: pending
+ - id: part2f-regression
+   content: Run full test suites and manually verify dev:semios parity across all technologies and sketchpad kit/design/type apps
+   status: pending
 isProject: false
 ---
-
 
 # Compose Rust Removal + Full Semios Technology Testing
 
@@ -82,6 +81,7 @@ flowchart TB
 ## Part 2 — Port the Rust kit domain engine to TypeScript
 
 ### B. Build the TypeScript Kit Domain Engine
+
 - New region (in `semios/core/index.ts`, or a new package if warranted) implementing the Kit entity model (`Type`, `Design`, `Piece`, `Port`, `Connection`, tags/attributes) matching the DTO shape sketchpad already consumes (`SketchpadKitSnapshot`).
 - Typed `KitOp` union (createDesign, renamePiece, connectPorts, createType, ...), replacing Rust's `Operation`/`KitDiff`/`apply_diff`, dispatched through `framework/core`'s existing `DocumentVcsStore` (no new VCS mechanism needed — that generalization is already done).
 - Port compatibility algorithm (from `Port::compatible_with`, `compose/client/lib/rs/lib.rs` ~3288-3340).
@@ -90,6 +90,7 @@ flowchart TB
 - Register `createComposeKitAppVcsHandler` for `compose.kit/v1`, replacing the current empty JSON-replace stub ([semios/core/index.ts:512](semios/core/index.ts)).
 
 ### C. Rewire sketchpad and other JS consumers off compose-js/WASM
+
 - Replace `ComposeJsKitStore`'s backend ([compose/client/lib/sketchpad/js/index.ts:10993](compose/client/lib/sketchpad/js/index.ts)) with a store backed directly by the new TS engine's `DocumentVcsStore`, dropping `jsStore`/GraphQL. Keep the `ComposeKitStore` snapshot contract so UI (`SketchpadRoutedComponent`, wires, VFS) changes stay minimal.
 - Replace `sketchpadFetchKitWiresReferences`, `fetchComposeFileSystemChildren`, and port-compat merge helpers with direct, synchronous calls into the new engine.
 - Update `importKit`, `sketchpadBrowserFileKitFactory`/`FolderKitFactory`, `SketchpadShellController.createTemporaryKit` to build the new TS-backed store instead of `Session.openInMemory()`.
@@ -98,6 +99,7 @@ flowchart TB
 - Update `compose/client/ui/desktop/renderer.tsx` and any other `compose-js` consumers, or retire them if they exist solely to front the Rust engine.
 
 ### D. Retire Rust-only consumers of the crate
+
 - Delete `compose/client/bin/store` (`compose-store`) — a pure HTTP wrapper with no purpose once the crate is gone.
 - Remove the vestigial `compose = { path = "../../client/lib/rs" }` dependency from `compose/server/hub/Cargo.toml` (hub's runtime never references `compose::` anything).
 - Drop or rework `compose/client/lib/query`'s native `ComposeTransport` (no shipped consumer today); decide whether the WASM `architect_compile`/`architect_run` surface survives without a Rust-backed transport.
@@ -105,12 +107,14 @@ flowchart TB
 - Rewrite `.storybook/compose/algorithm/kit-store/composeWasm.ts` and `KitStore.stories.tsx` to exercise the new TS engine directly instead of WASM `KitStoreHandle`.
 
 ### E. Delete the crate and clean up build wiring
+
 - Delete `compose/client/lib/rs/` entirely (`lib.rs`, `Cargo.toml`, `project.json`, `script.ts`, `pkg/`).
 - Remove it from the root `Cargo.toml` workspace members.
 - Remove all `@semio-tech/compose-rs-wasm` / `../rs/pkg` aliases from vite configs, tsconfigs, and `pw-loader.mjs` across sketchpad/js, sketchpad/play, engine, algorithm dev, and `.storybook/main.ts`.
 - Remove dead `.vscode/launch.json` entries and Nx `dependsOn` edges referencing `@semio-tech/compose-rs`.
 
 ### F. Regression pass
+
 - Run `semios/core`, `semios/play`, `compose/client/lib/sketchpad/js`, and `framework/product/playground/renderer/react` test suites.
 - Boot `dev:semios` and manually exercise every technology plus sketchpad's kit/design/type apps (create/rename, port connect, VFS browse, checkpoints/alternatives, undo/redo) to confirm behavioral parity.
 

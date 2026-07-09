@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The Go library (compose.go) had basic functionality but lacked feature parity with TypeScript (compose.ts) for validation result serialization and design flattening.
@@ -43,4 +44,5 @@ The Go library (compose.go) had basic functionality but lacked feature parity wi
 ## Log
 
 ## Summary
+
 # Summary

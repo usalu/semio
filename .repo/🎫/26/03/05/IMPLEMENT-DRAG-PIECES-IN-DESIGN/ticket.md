@@ -1,15 +1,19 @@
 # Implement Drag Pieces in Design
 
 ## Goal
+
 SKETCHPAD-IMPROVEMENTS
 
 ## Status
+
 closed
 
 ## Prompt
+
 Implement dragPiecesInDesign function across all programming languages (JS/TS, Python, Go, Rust, C#). Add Design/Drag tests using asset files. Update sketchpad to use the drag function for node dragging.
 
 ## Plan
+
 1. Read existing code in all languages to understand Design/DesignDiff/Piece structures
 2. Read asset files (design.json, pieces.json, offset.json, diff_design.json, diff_design_free.json) for test data
 3. Implement dragPiecesInDesign in JS/TS (compose.ts)
@@ -22,6 +26,7 @@ Implement dragPiecesInDesign function across all programming languages (JS/TS, P
 10. Run all tests and validate
 
 ## TODOs
+
 - [x] Read existing code structures
 - [x] Read asset files for test I/O
 - [x] Implement JS/TS dragPiecesInDesign
@@ -38,6 +43,7 @@ Implement dragPiecesInDesign function across all programming languages (JS/TS, P
 - [x] Run all tests
 
 ## Changes
+
 - assets/index.ts: Added drag asset exports (DragDesign, DragPieces, DragOffset, DragDiffDesign, DragDiffDesignFree)
 - assets/compose/drag/diff_design_free.json: Fixed empty file → `{}`
 - compose/js/compose.ts: Added `dragPiecesInDesign(design, pieces, offset): DesignDiff` before `#endregion Design`
@@ -57,6 +63,7 @@ Implement dragPiecesInDesign function across all programming languages (JS/TS, P
 ### Type Definitions in compose/js/compose.ts
 
 #### Coord (center type) — Line 1259
+
 ```typescript
 export const CoordSchema = z.object({ u: z.number(), v: z.number() });
 export type Coord = z.infer<typeof CoordSchema>;
@@ -65,123 +72,131 @@ export type CoordDiff = z.infer<typeof CoordDiffSchema>;
 ```
 
 #### Piece — Line 4900-4920
+
 ```typescript
 export const PieceSchema = z.object({
-  guid: z.string(),
-  name: z.string().optional(),
-  type: TypeIdSchema.optional(),
-  design: DesignIdSchema.optional(),
-  plane: PlaneSchema.optional(),
-  center: CoordSchema.optional(),
-  scale: z.number().optional(),
-  mirrorPlane: PlaneSchema.optional(),
-  isHidden: z.boolean().optional(),
-  isLocked: z.boolean().optional(),
-  color: z.string().optional(),
-  description: z.string().optional(),
-  props: z.array(PropSchema).optional(),
-  attributes: z.array(AttributeSchema).optional(),
+ guid: z.string(),
+ name: z.string().optional(),
+ type: TypeIdSchema.optional(),
+ design: DesignIdSchema.optional(),
+ plane: PlaneSchema.optional(),
+ center: CoordSchema.optional(),
+ scale: z.number().optional(),
+ mirrorPlane: PlaneSchema.optional(),
+ isHidden: z.boolean().optional(),
+ isLocked: z.boolean().optional(),
+ color: z.string().optional(),
+ description: z.string().optional(),
+ props: z.array(PropSchema).optional(),
+ attributes: z.array(AttributeSchema).optional(),
 });
 export type Piece = z.infer<typeof PieceSchema>;
 ```
 
 #### PieceDiff — Line 4943-4953
+
 ```typescript
 export const PieceDiffSchema = PieceSchema.partial().omit({ plane: true, props: true, attributes: true }).extend({
-  plane: PlaneDiffSchema.optional(),
-  props: PropsDiffSchema.optional(),
-  attributes: AttributesDiffSchema.optional(),
+ plane: PlaneDiffSchema.optional(),
+ props: PropsDiffSchema.optional(),
+ attributes: AttributesDiffSchema.optional(),
 });
 export type PieceDiff = z.infer<typeof PieceDiffSchema>;
 ```
 
 #### PiecesDiff — Line 5063-5073
+
 ```typescript
 export const PiecesDiffSchema = z.object({
-  removed: z.array(PieceIdSchema).optional(),
-  updated: z.array(z.object({ piece: PieceIdSchema, diff: PieceDiffSchema })).optional(),
-  added: z.array(PieceSchema).optional(),
+ removed: z.array(PieceIdSchema).optional(),
+ updated: z.array(z.object({ piece: PieceIdSchema, diff: PieceDiffSchema })).optional(),
+ added: z.array(PieceSchema).optional(),
 });
 export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
 ```
 
 #### Connection — Line 5468-5486
+
 ```typescript
 export const ConnectionSchema = z.object({
-  guid: z.string(),
-  connected: SideSchema,
-  connecting: SideSchema,
-  gap: z.number().optional(),
-  shift: z.number().optional(),
-  rise: z.number().optional(),
-  rotation: z.number().optional(),
-  turn: z.number().optional(),
-  tilt: z.number().optional(),
-  u: z.number().optional(),
-  v: z.number().optional(),
-  description: z.string().optional(),
-  attributes: z.array(AttributeSchema).optional(),
+ guid: z.string(),
+ connected: SideSchema,
+ connecting: SideSchema,
+ gap: z.number().optional(),
+ shift: z.number().optional(),
+ rise: z.number().optional(),
+ rotation: z.number().optional(),
+ turn: z.number().optional(),
+ tilt: z.number().optional(),
+ u: z.number().optional(),
+ v: z.number().optional(),
+ description: z.string().optional(),
+ attributes: z.array(AttributeSchema).optional(),
 });
 export type Connection = z.infer<typeof ConnectionSchema>;
 ```
 
 #### ConnectionDiff — Line 5493-5502
+
 ```typescript
 export const ConnectionDiffSchema = ConnectionSchema.partial().omit({ guid: true, connected: true, connecting: true, attributes: true }).extend({
-  connected: SideDiffSchema.optional(),
-  connecting: SideDiffSchema.optional(),
-  attributes: AttributesDiffSchema.optional(),
+ connected: SideDiffSchema.optional(),
+ connecting: SideDiffSchema.optional(),
+ attributes: AttributesDiffSchema.optional(),
 });
 export type ConnectionDiff = z.infer<typeof ConnectionDiffSchema>;
 ```
 
 #### Design — Line 5834-5864
+
 ```typescript
 export const DesignSchema = z.object({
-  guid: z.string(),
-  name: z.string(),
-  parent: DesignIdSchema.optional(),
-  isAbstract: z.boolean().optional(),
-  folder: z.string().optional(),
-  pieces: z.array(PieceSchema).optional(),
-  connections: z.array(ConnectionSchema).optional(),
-  stats: z.array(StatSchema).optional(),
-  props: z.array(PropSchema).optional(),
-  layers: z.array(LayerSchema).optional(),
-  activeLayer: LayerIdSchema.optional(),
-  groups: z.array(GroupSchema).optional(),
-  canScale: z.boolean().optional(),
-  canMirror: z.boolean().optional(),
-  unit: z.string().optional(),
-  location: LocationIdSchema.optional(),
-  authors: z.array(AuthorIdSchema).optional(),
-  concepts: z.array(ConceptIdSchema).optional(),
-  icon: z.string().optional(),
-  image: z.string().optional(),
-  description: z.string().optional(),
-  attributes: z.array(AttributeSchema).optional(),
-  createdAt: DateProperty(),
-  updatedAt: DateProperty(),
+ guid: z.string(),
+ name: z.string(),
+ parent: DesignIdSchema.optional(),
+ isAbstract: z.boolean().optional(),
+ folder: z.string().optional(),
+ pieces: z.array(PieceSchema).optional(),
+ connections: z.array(ConnectionSchema).optional(),
+ stats: z.array(StatSchema).optional(),
+ props: z.array(PropSchema).optional(),
+ layers: z.array(LayerSchema).optional(),
+ activeLayer: LayerIdSchema.optional(),
+ groups: z.array(GroupSchema).optional(),
+ canScale: z.boolean().optional(),
+ canMirror: z.boolean().optional(),
+ unit: z.string().optional(),
+ location: LocationIdSchema.optional(),
+ authors: z.array(AuthorIdSchema).optional(),
+ concepts: z.array(ConceptIdSchema).optional(),
+ icon: z.string().optional(),
+ image: z.string().optional(),
+ description: z.string().optional(),
+ attributes: z.array(AttributeSchema).optional(),
+ createdAt: DateProperty(),
+ updatedAt: DateProperty(),
 });
 export type Design = z.infer<typeof DesignSchema>;
 ```
 
 #### DesignDiff — Line 5916-5936
+
 ```typescript
 export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, authors: true, attributes: true }).partial().extend({
-  pieces: PiecesDiffSchema.optional(),
-  connections: ConnectionsDiffSchema.optional(),
-  stats: StatsDiffSchema.optional(),
-  props: PropsDiffSchema.optional(),
-  layers: LayersDiffSchema.optional(),
-  groups: GroupsDiffSchema.optional(),
-  authors: AuthorsDiffSchema.optional(),
-  attributes: AttributesDiffSchema.optional(),
+ pieces: PiecesDiffSchema.optional(),
+ connections: ConnectionsDiffSchema.optional(),
+ stats: StatsDiffSchema.optional(),
+ props: PropsDiffSchema.optional(),
+ layers: LayersDiffSchema.optional(),
+ groups: GroupsDiffSchema.optional(),
+ authors: AuthorsDiffSchema.optional(),
+ attributes: AttributesDiffSchema.optional(),
 });
 export type DesignDiff = z.infer<typeof DesignDiffSchema>;
 ```
 
 ### Region Structure
+
 - `// #region 🔖Design` starts at **line 5822**
 - `// #endregion 🔖Design` ends at **line 7099**
 - `flattenDesign` at **line 6425**
@@ -189,6 +204,7 @@ export type DesignDiff = z.infer<typeof DesignDiffSchema>;
 - Last function before `#endregion`: `findStaleConnectionsInDesign` ending at **line 7097**
 
 ### Existing Related Functions (no drag/move found)
+
 - `removePieceFromDesignDiff` (line 6071) — removes single piece from diff
 - `removePiecesFromDesignDiff` (line 6124) — removes multiple pieces from diff
 - `removePiecesAndConnectionsFromDesign` (line 6340) — returns DesignDiff removing pieces + connections
@@ -198,7 +214,9 @@ export type DesignDiff = z.infer<typeof DesignDiffSchema>;
 - `findStaleConnectionsInDesign` (line 7088) — finds orphaned connections
 
 ### Best Insertion Point for `dragPiecesInDesign`
+
 **Before `// #endregion 🔖Design` at line 7099**, after `findStaleConnectionsInDesign`. The function should:
+
 - Take `pieceIds: string[]` and a delta `{ du: number, dv: number }`
 - Return `DesignDiff` with `pieces.updated` containing `PieceDiff` entries that update `center`
 - Follow the same pattern as `removePiecesAndConnectionsFromDesign`

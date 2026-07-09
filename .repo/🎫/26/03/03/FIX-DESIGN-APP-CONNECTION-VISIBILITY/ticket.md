@@ -6,8 +6,10 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 ## Summary
 
-Reapplied the design connection visibility fix on the current file state by routing  back into the diagram and removing the mounted custom edge portal again. The existing Design filter test now validates rendered edge path metrics. Prior focused coverage logged visible path metrics () before a later unrelated hang, but fresh reruns on the final tree are currently blocked by a Chromium launch failure (, ).
+Reapplied the design connection visibility fix on the current file state by routing back into the diagram and removing the mounted custom edge portal again. The existing Design filter test now validates rendered edge path metrics. Prior focused coverage logged visible path metrics () before a later unrelated hang, but fresh reruns on the final tree are currently blocked by a Chromium launch failure (, ).
+
 ## Changes
+
 - Updated `compose/js/sketchpad/Design.tsx` `ConnectorHandle` styling to force visible pointer-enabled circular handles with centered placement and stronger contrast.
 - Extended the existing Design filter assertions in `compose/js/sketchpad.test.ts` to verify actual clickable connector handles (`.react-flow__handle[role="button"]`) are present and measurable.
 - Updated `compose/js/sketchpad/Design.tsx` so the `Diagram` receives the real `edges` array again and no longer mounts the fragile `CustomDesignEdgeLayer` viewport portal.

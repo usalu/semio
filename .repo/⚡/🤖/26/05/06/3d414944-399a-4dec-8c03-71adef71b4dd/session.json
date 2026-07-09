@@ -25,9 +25,7 @@
           "session_id": "3d414944-399a-4dec-8c03-71adef71b4dd",
           "hook_event_name": "sessionStart",
           "cursor_version": "2026.04.30-4edb302",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": null
         }
@@ -56,9 +54,7 @@
           "session_id": "3d414944-399a-4dec-8c03-71adef71b4dd",
           "hook_event_name": "sessionEnd",
           "cursor_version": "2026.04.30-4edb302",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3d414944-399a-4dec-8c03-71adef71b4dd/3d414944-399a-4dec-8c03-71adef71b4dd.jsonl"
         }

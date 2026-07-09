@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Tags were simple strings on models, and concepts were simple strings on types/designs/kits. Models referenced files via a string path/url.
@@ -84,6 +85,7 @@ Tags were simple strings on models, and concepts were simple strings on types/de
 ## Log
 
 ## Summary
+
 # Summary
 
 "Tags, Concepts become kit entities; Models link to files with guid"

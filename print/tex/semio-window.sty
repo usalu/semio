@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{semio-window}[2026/07/09 v1.1.0 semio OS window chrome]
+\ProvidesPackage{semio-window}[2026/07/09 v1.1.1 semio OS window chrome]
 
 \RequirePackage{expl3}
 \RequirePackage{xparse}
@@ -58,17 +58,18 @@
   \group_end:
 }
 
-\cs_new_protected:Npn \semio_window_register_body_add:Vxx #1#2#3 {
-  \tl_put_right:Nn \l_tmpa_tl { \semio@register@data {#1} {#2} {#3} }
-}
-
 \cs_new_protected:Npn \semio_window_register_body_materialize:n #1 {
   \tl_clear:N \l_tmpa_tl
-  \int_step_inline:nn { \seq_count:c { g_semio_register_ #1 _num_seq } } {
+  \int_step_inline:nn { 5 } {
     \tl_set:Nx \l_tmpb_tl { \seq_item:cn { g_semio_register_ #1 _num_seq } { ##1 } }
     \tl_set:Nx \l_tmpc_tl { \seq_item:cn { g_semio_register_ #1 _title_seq } { ##1 } }
     \str_set:Nx \l_tmpd_str { \seq_item:cn { g_semio_register_ #1 _label_seq } { ##1 } }
-    \semio_window_register_body_add:Vxx \l_tmpb_tl \l_tmpc_tl \l_tmpd_str
+    \tl_put_right:Nx \l_tmpa_tl {
+      \exp_not:n { \semio@register@data }
+        { \tl_use:N \l_tmpb_tl }
+        { \tl_use:N \l_tmpc_tl }
+        { \str_use:N \l_tmpd_str }
+    }
   }
   \exp_args:No \cs_gset_nopar:cpn { semio@register@body@#1 } { \tl_use:N \l_tmpa_tl }
 }
@@ -297,6 +298,12 @@
     after~skip=0pt,
     parbox=false,
   },
+  semio~window~table/.style={
+    semio~window,
+    left=0pt,
+    right=0pt,
+    bottom=0pt,
+  },
   semio~window~row/.style={
     semio~window,
     breakable=false,
@@ -319,8 +326,8 @@
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
-  \def\semio@window@header@number{#1}
-  \def\semio@window@header@title{#2}
+  \gdef\semio@window@header@number{#1}
+  \gdef\semio@window@header@title{#2}
   \makeatother
   \group_end:
 }
@@ -372,7 +379,9 @@
   \semio_window_header_muted_use:
   \semio_window_vskip_stroke_hairline:
   \noindent
-  \begin{tcolorbox}[semio~window~tier~#2]
+  \str_if_eq:nnTF {#1} { semiotable }
+    { \begin{tcolorbox}[semio~window~tier~#2, semio~window~table] }
+    { \begin{tcolorbox}[semio~window~tier~#2] }
 }
 
 \cs_new_protected:Npn \semio_window_kind_define:nnnnn #1 #2 #3 #4 #5 {
@@ -731,7 +740,7 @@
   \semio@register@window@open{\SemioTocTitle}%
   \SemioTableRegister{%
     \semio@register@table@header
-    \csname semio@register@body@toc\endcsname
+    \SemioTableRegisterRow{1}{Ergebnisse}{semio-toc-section-1}%
   }%
   \semio@register@window@close
   \clearpage
@@ -1276,9 +1285,9 @@
 }
 
 \newcommand{\semio@heading@installall}{%
-  \semio@heading@install{\section}{semio-primary}{section}%
+  \semio@heading@install{\section}{semio-tertiary}{section}%
   \semio@heading@install{\subsection}{semio-secondary}{subsection}%
-  \semio@heading@install{\subsubsection}{semio-tertiary}{subsubsection}%
+  \semio@heading@install{\subsubsection}{semio-primary}{subsubsection}%
   \titleformat{\paragraph}[block]{}{}{0pt}{%
     \semio@if@heading@chips
       {%
@@ -1386,8 +1395,9 @@
 
 \newcommand{\semio@window@header@muted}[2]{%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{#2}}%
+  \edef\semio@window@header@numval{#1}%
   \sbox{\semio@window@ctrl@box}{%
-    \if\relax\detokenize{#1}\relax
+    \if\relax\detokenize\expandafter{\semio@window@header@numval}\relax
       \hbox{}%
     \else
       \semio@heading@cap@muted@tab{#1}%
@@ -1397,17 +1407,10 @@
     \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
   }%
   \semio@window@header@row@wrap{%
-    \vbox{%
-      \nointerlineskip
-      \hbox to \linewidth{%
-        \usebox{\semio@window@tab@box}%
-        \semio@window@gap@inbox{semio-chrome-base}%
-        \usebox{\semio@window@ctrl@box}%
-      }%
-      \nointerlineskip
-      \hbox to \linewidth{%
-        \semio@window@stroke@h{semio-chrome-border-normal}{\linewidth}%
-      }%
+    \hbox to \linewidth{%
+      \usebox{\semio@window@tab@box}%
+      \semio@window@gap{semio-chrome-base}%
+      \usebox{\semio@window@ctrl@box}%
     }%
   }%
 }

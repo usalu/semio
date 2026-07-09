@@ -7,6 +7,7 @@ goal: R26-02/RUNNING-SKETCHPAD
 ## Summary
 
 Bulk close
+
 ## Changes
 
 ## Log

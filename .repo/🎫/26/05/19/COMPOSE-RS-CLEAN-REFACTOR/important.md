@@ -12,11 +12,11 @@ Module init: `gap_surface_family_name_list!(@apply_families);`
 
 ## Repair scripts
 
-| File | Purpose |
-|------|---------|
-| `gap_surface_names.json` | Canonical 196 family + 50 relay idents |
+| File                             | Purpose                                       |
+| -------------------------------- | --------------------------------------------- |
+| `gap_surface_names.json`         | Canonical 196 family + 50 relay idents        |
 | `rebuild_schema_gap_surfaces.py` | Replaces `schema_gap_surfaces` tail from JSON |
-| `fix_register_braces.py` | `{{ }}` on `@expand`; strips bad patterns |
+| `fix_register_braces.py`         | `{{ }}` on `@expand`; strips bad patterns     |
 
 Run both after any concurrent edit to `//#region schema_gap_surfaces`.
 

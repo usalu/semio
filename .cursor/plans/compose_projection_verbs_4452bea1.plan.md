@@ -2,27 +2,27 @@
 name: Compose projection verbs
 overview: Unify the partial, ad-hoc reference accessors on compose entities into three consistent projection verb families (is, has, references), each with a direct form (default) and a Transitive variant, on both the Rust canonical model/GraphQL surface and the TypeScript client.
 todos:
-  - id: ticket
-    content: Read repo://goals, open a ticket associated with the structural-consistency goal for the is/has/references projection unification
-    status: completed
-  - id: rust-accessors
-    content: "In lib.rs: add/rename in-memory accessors - Piece is_type/is_design + transitive, has_pieces/has_connections (+transitive); Side/Connection references_* (+transitive); Design/Type/Kit has_* containment + transitive rollups; normalize referenced_by_* to the Transitive convention"
-    status: completed
-  - id: rust-resolvers
-    content: "In lib.rs: expose each accessor as an async-graphql resolver field (is*, has*, references*, referencedBy* + *Transitive) on Piece, Side, Connection, Design, Type, Kit, Representation; remove the old types/allTypes/referencedBy/allReferencedByDesigns fields"
-    status: completed
-  - id: regen-schema
-    content: Regenerate schema.graphql via cargo test export_compose_graphql_schema_file and verify the unified field names with no stale allX fields
-    status: completed
-  - id: ts-client
-    content: "In index.ts: rename/add accessor specs (method + GraphQL selection) for the new fields on Kit, Design, Type, Piece, Side, Connection, Representation; remove old specs"
-    status: completed
-  - id: tests
-    content: Extend the existing Rust tests in lib.rs and the TS prototype/accessor tests in index.ts to cover direct and transitive forms for each verb; run cargo test and vitest until green
-    status: completed
-  - id: close-ticket
-    content: Close the ticket with a summary and the list of changed files
-    status: completed
+ - id: ticket
+   content: Read repo://goals, open a ticket associated with the structural-consistency goal for the is/has/references projection unification
+   status: completed
+ - id: rust-accessors
+   content: "In lib.rs: add/rename in-memory accessors - Piece is_type/is_design + transitive, has_pieces/has_connections (+transitive); Side/Connection references_* (+transitive); Design/Type/Kit has_* containment + transitive rollups; normalize referenced_by_* to the Transitive convention"
+   status: completed
+ - id: rust-resolvers
+   content: "In lib.rs: expose each accessor as an async-graphql resolver field (is*, has*, references*, referencedBy* + *Transitive) on Piece, Side, Connection, Design, Type, Kit, Representation; remove the old types/allTypes/referencedBy/allReferencedByDesigns fields"
+   status: completed
+ - id: regen-schema
+   content: Regenerate schema.graphql via cargo test export_compose_graphql_schema_file and verify the unified field names with no stale allX fields
+   status: completed
+ - id: ts-client
+   content: "In index.ts: rename/add accessor specs (method + GraphQL selection) for the new fields on Kit, Design, Type, Piece, Side, Connection, Representation; remove old specs"
+   status: completed
+ - id: tests
+   content: Extend the existing Rust tests in lib.rs and the TS prototype/accessor tests in index.ts to cover direct and transitive forms for each verb; run cargo test and vitest until green
+   status: completed
+ - id: close-ticket
+   content: Close the ticket with a summary and the list of changed files
+   status: completed
 isProject: false
 ---
 
@@ -44,8 +44,6 @@ flowchart LR
   Side -->|"references*"| Refs["Piece / Connector / Port"]
   Type -->|"referencedBy*"| Users["Pieces / Designs"]
 ```
-
-
 
 Scope: `compose/client/lib/rs/lib.rs` (canonical model + GraphQL resolvers) and `compose/client/lib/js/index.ts` (client accessors). `schema.graphql` is regenerated, not hand-edited. No backward compatibility kept.
 
@@ -106,4 +104,3 @@ Naming follows repo rules: `kind` not `type` in code identifiers; GraphQL field 
 - Regenerate `schema.graphql` and confirm the new fields/no stale `allX` names.
 - TS test suite (vitest) for `index.ts` must pass, including the prototype-accessor existence tests updated to the new names.
 - Open a repo ticket and associate it with the structural-consistency goal before starting; close it with the file list when done.
-

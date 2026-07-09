@@ -671,11 +671,7 @@
             "path": "26/03/22/INVESTIGATE-SKETCHPAD-ROOT-ROUTE-HOME-MOUNT-FAILURE",
             "no_github": true,
             "summary": "Researched sketchpad root route startup. Confirmed / routes to Home and HomeDropZone contains the import input, but Playwright root loads never surface the Home DOM. Evidence points to startup stalling before AppRouter/Home commit, likely from the consolidated monolith eagerly loading heavy modules and docs content.",
-            "files": [
-              "/workspaces/semio/compose/sketchpad/Sketchpad.tsx",
-              "/workspaces/semio/compose/sketchpad/index.tsx",
-              "/workspaces/semio/compose/sketchpad/sketchpad.test.ts"
-            ]
+            "files": ["/workspaces/semio/compose/sketchpad/Sketchpad.tsx", "/workspaces/semio/compose/sketchpad/index.tsx", "/workspaces/semio/compose/sketchpad/sketchpad.test.ts"]
           },
           "tool_use_id": "call_zH6zS9Z4GwrrSgpIjYsYW74e__vscode-1774133362580",
           "cwd": "/workspaces/semio"
@@ -702,11 +698,7 @@
             "path": "26/03/22/INVESTIGATE-SKETCHPAD-ROOT-ROUTE-HOME-MOUNT-FAILURE",
             "no_github": true,
             "summary": "Researched sketchpad root route startup. Confirmed / routes to Home and HomeDropZone contains the import input, but Playwright root loads never surface the Home DOM. Evidence points to startup stalling before AppRouter/Home commit, likely from the consolidated monolith eagerly loading heavy modules and docs content.",
-            "files": [
-              "/workspaces/semio/compose/sketchpad/Sketchpad.tsx",
-              "/workspaces/semio/compose/sketchpad/index.tsx",
-              "/workspaces/semio/compose/sketchpad/sketchpad.test.ts"
-            ]
+            "files": ["/workspaces/semio/compose/sketchpad/Sketchpad.tsx", "/workspaces/semio/compose/sketchpad/index.tsx", "/workspaces/semio/compose/sketchpad/sketchpad.test.ts"]
           },
           "tool_response": "[🎫investigatesketchpadrootroutehomemountfailure](repo://y/00/m/00/d/00/tk/INVESTIGATE-SKETCHPAD-ROOT-ROUTE-HOME-MOUNT-FAILURE) - `closed` - `closed now`\n",
           "tool_use_id": "call_zH6zS9Z4GwrrSgpIjYsYW74e__vscode-1774133362580",

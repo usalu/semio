@@ -2,33 +2,33 @@
 name: Full Virtual File System
 overview: Make the rs FileSystemNode GraphQL interface the single source of truth for the compose virtual file system, extend it to cover Type children (representations, ports, connectors) and a hasChildren signal, and rewire the sketchpad kit/design VFS surfaces to lazily load children over GraphQL through js/react instead of the divergent client-side builder.
 todos:
-  - id: ticket
-    content: Open repo MCP ticket (e.g. FULL-VIRTUAL-FILE-SYSTEM) under goal compose after reading repo://goals
-    status: completed
-  - id: rs
-    content: "Extend compose/rs FileSystemNode: add Representation/Port/Connector kinds+variants, Type children, fileSystemHasChildren, parent/path/name/node_for resolvers, interface impls for the three new types"
-    status: completed
-  - id: schema
-    content: "Update golden + working GraphQL schema: enum values, fileSystemHasChildren, implements FileSystemNode on Representation/Port/Connector"
-    status: completed
-  - id: js
-    content: Extend compose/js vfsKitFields (hasChildren + richer child selection), resolveFileSystemNode kinds, attach vfs fields to Representation/Port/Connector entities
-    status: completed
-  - id: react
-    content: Add compose/react fetchComposeFileSystemChildren / root helper over the js store
-    status: completed
-  - id: framework
-    content: Add async loadChildrenAsync support (in-flight dedupe + emit) to VirtualFileSystemController in framework platform core
-    status: completed
-  - id: sketchpad
-    content: Rewire sketchpad kit/design VFS to rs-driven loadChildrenAsync; extend schema fileNodeKinds+icons; kind/navigateUri/descriptor mapping; keep home client-side
-    status: completed
-  - id: ui
-    content: Add fallback kind icons in ui/react virtualFileSystemKindIcon
-    status: completed
-  - id: tests
-    content: Extend rs/js/react/framework/sketchpad test regions and the VirtualFileSystem story; validate runtime and close ticket
-    status: completed
+ - id: ticket
+   content: Open repo MCP ticket (e.g. FULL-VIRTUAL-FILE-SYSTEM) under goal compose after reading repo://goals
+   status: completed
+ - id: rs
+   content: "Extend compose/rs FileSystemNode: add Representation/Port/Connector kinds+variants, Type children, fileSystemHasChildren, parent/path/name/node_for resolvers, interface impls for the three new types"
+   status: completed
+ - id: schema
+   content: "Update golden + working GraphQL schema: enum values, fileSystemHasChildren, implements FileSystemNode on Representation/Port/Connector"
+   status: completed
+ - id: js
+   content: Extend compose/js vfsKitFields (hasChildren + richer child selection), resolveFileSystemNode kinds, attach vfs fields to Representation/Port/Connector entities
+   status: completed
+ - id: react
+   content: Add compose/react fetchComposeFileSystemChildren / root helper over the js store
+   status: completed
+ - id: framework
+   content: Add async loadChildrenAsync support (in-flight dedupe + emit) to VirtualFileSystemController in framework platform core
+   status: completed
+ - id: sketchpad
+   content: Rewire sketchpad kit/design VFS to rs-driven loadChildrenAsync; extend schema fileNodeKinds+icons; kind/navigateUri/descriptor mapping; keep home client-side
+   status: completed
+ - id: ui
+   content: Add fallback kind icons in ui/react virtualFileSystemKindIcon
+   status: completed
+ - id: tests
+   content: Extend rs/js/react/framework/sketchpad test regions and the VirtualFileSystem story; validate runtime and close ticket
+   status: completed
 isProject: false
 ---
 
@@ -100,6 +100,3 @@ flowchart LR
   sk --> ctrl["VirtualFileSystemController (async children)"]
   ctrl --> ui["ui/react VirtualFileSystem"]
 ```
-
-
-

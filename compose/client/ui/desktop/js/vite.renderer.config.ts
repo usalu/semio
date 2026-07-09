@@ -201,13 +201,13 @@ export default defineConfig(async ({ mode }) => {
   const reactRouterEntry = path.resolve(__dirname, "../../node_modules/react-router/dist/development/index.js");
   const repoRoot = path.resolve(__dirname, "../../../..");
   const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, [
-        { find: /^use-sync-external-store\/shim\/with-selector(\.js)?$/, replacement: shimWithSelector },
-        { find: /^use-sync-external-store\/shim(\/index\.js)?$/, replacement: shimMain },
-        { find: /^scheduler$/, replacement: schedulerEntry },
-        { find: /^html-parse-stringify$/, replacement: htmlParseStringifyEntry },
-        { find: /^react-i18next$/, replacement: reactI18nextEntry },
-        { find: /^react-router$/, replacement: reactRouterEntry },
-        { find: /^stats\.js$/, replacement: statsEntry },
+    { find: /^use-sync-external-store\/shim\/with-selector(\.js)?$/, replacement: shimWithSelector },
+    { find: /^use-sync-external-store\/shim(\/index\.js)?$/, replacement: shimMain },
+    { find: /^scheduler$/, replacement: schedulerEntry },
+    { find: /^html-parse-stringify$/, replacement: htmlParseStringifyEntry },
+    { find: /^react-i18next$/, replacement: reactI18nextEntry },
+    { find: /^react-router$/, replacement: reactRouterEntry },
+    { find: /^stats\.js$/, replacement: statsEntry },
   ]);
   return {
     server: {
@@ -224,7 +224,25 @@ export default defineConfig(async ({ mode }) => {
     },
     resolve: {
       ...workspaceResolve.resolve,
-      dedupe: ["three", "cookie", "dagre", "graphlib", "html-parse-stringify", "lodash", "react", "react-dom", "react-i18next", "react-router", "scheduler", "stats.js", "use-sync-external-store", "void-elements", "@react-three/fiber", "@react-three/drei", ...(workspaceResolve.resolve?.dedupe ?? [])],
+      dedupe: [
+        "three",
+        "cookie",
+        "dagre",
+        "graphlib",
+        "html-parse-stringify",
+        "lodash",
+        "react",
+        "react-dom",
+        "react-i18next",
+        "react-router",
+        "scheduler",
+        "stats.js",
+        "use-sync-external-store",
+        "void-elements",
+        "@react-three/fiber",
+        "@react-three/drei",
+        ...(workspaceResolve.resolve?.dedupe ?? []),
+      ],
       alias: workspaceResolve.resolve?.alias,
     },
     optimizeDeps: workspaceResolve.optimizeDeps,

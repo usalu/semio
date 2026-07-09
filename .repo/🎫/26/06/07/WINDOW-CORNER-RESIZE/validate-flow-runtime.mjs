@@ -15,7 +15,11 @@ page.on("console", (msg) => {
 });
 await page.goto(baseUrl, { waitUntil: "networkidle", timeout: 60_000 });
 await page.waitForTimeout(3000);
-const previewText = await page.locator("strong.tabular-nums").first().textContent().catch(() => null);
+const previewText = await page
+  .locator("strong.tabular-nums")
+  .first()
+  .textContent()
+  .catch(() => null);
 await browser.close();
 
 console.log("[validate-flow] debug logs:", debugLogs);

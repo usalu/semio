@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Performance issue identified: After importing the metabolism kit (~180 files, 9 types, 2 designs), expanding/collapsing type rows in Kit.tsx takes 4600-5000ms per operation.
@@ -81,6 +82,7 @@ Playwright test verifies UI interactions are responsive (<500ms per action).
 ## Log
 
 ## Summary
+
 # Summary
 
->-
+> -

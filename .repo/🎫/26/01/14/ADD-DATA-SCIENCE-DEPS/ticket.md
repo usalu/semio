@@ -1,9 +1,11 @@
 # Ticket
 
 ## Todos
+
 # Plan: Add Data Science Dependencies
 
 ## Objective
+
 Add pandas and other data science libraries to the dev dependencies of the main `.venv` to enable seamless Jupyter notebook execution.
 
 ## Steps
@@ -26,16 +28,19 @@ Add pandas and other data science libraries to the dev dependencies of the main 
    Run `uv sync` to install the new dependencies
 
 ## Files to modify
+
 - `pyproject.toml` - Add dependencies to `[dependency-groups]` dev section
 
 ## Changes
 
 ## Log
+
 # Log: Add Data Science Dependencies
 
 ## 2026-01-14
 
 ### Task
+
 Add pandas and other data science libraries to dev dependencies of the main .venv for Jupyter notebook support.
 
 ### Actions Taken
@@ -60,6 +65,7 @@ Add pandas and other data science libraries to dev dependencies of the main .ven
    - Also installed transitive dependencies: joblib, pytz, threadpoolctl
 
 ### Result
+
 Data science libraries are now available in the dev environment for Jupyter notebooks.
 
 ---
@@ -71,6 +77,7 @@ Data science libraries are now available in the dev environment for Jupyter note
 **Cause:** `uv sync` without flags doesn't include dev dependencies by default.
 
 **Fix:** Ran `uv sync --group dev` to install all dev dependencies including:
+
 - jupyter, notebook, ipykernel
 - pandas, numpy, matplotlib, seaborn, scipy, scikit-learn
 - ruff, black, debugpy, pre-commit
@@ -78,6 +85,7 @@ Data science libraries are now available in the dev environment for Jupyter note
 All packages now installed correctly.
 
 ## Summary
+
 # Summary: Add Data Science Dependencies
 
 Added the following data science libraries to the dev dependencies in `pyproject.toml`:

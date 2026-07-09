@@ -5,7 +5,5 @@
   "description": "Align `loc --by-contributors` text/markdown with spec: (1) contributor and history tables with zero tree LOC omit useless loc and tree-% columns, show wip% + churn sorted by edited; (2) history with --by-contributors carries only the commit author's cumulative row per step; (3) omit redundant inner contributor label when it matches the commit author alone.",
   "summary": "Contributor-only tables (Total.loc == 0) now use churn layout: Category | wip% | edited | added | removed, sorted by edited with Total last (locSortedRowKeysChurn). Full snapshot/history merged tables still show loc + tree % when Total.loc \u003e 0 (locUseFullTreeTable). With --history --by-contributors, each history entry's ByContributors map contains only the commit author's cumulative snapshot, removing duplicate per-commit blocks for every contributor. Markdown/text skip the redundant inner contributor line when there is a single row and its key matches entry.Author.",
   "goal": "🎯repoclient",
-  "sessions": [
-    "⚪c8fbcf817b0e4d2280c40787a41f55ca"
-  ]
+  "sessions": ["⚪c8fbcf817b0e4d2280c40787a41f55ca"]
 }

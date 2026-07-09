@@ -48,7 +48,7 @@ const seq = buildBrushFillSequence({
 console.log("[DEBUG] tiny mesh fill seq", seq.length);
 const applied = applyBrushFillPlacementsToFixture(f, seq, catalogs);
 
-function realBox(obj: typeof applied.objects[0]) {
+function realBox(obj: (typeof applied.objects)[0]) {
   const url = resolveObjectKindMeshUrl(obj.objectKind, catalogs, applied)!;
   const meshRoot = realMeshes.get(url.replace("/meshes/", ""))!;
   const probe = brushProbeGroupFromPreview({ origin: obj.origin, orientation: obj.orientation, scale: obj.scale }, meshRoot);
@@ -61,7 +61,8 @@ let maxPen = 0;
 const boxes = applied.objects.map((o) => ({ id: o.id, box: realBox(o) }));
 for (let i = 0; i < boxes.length; i++) {
   for (let j = i + 1; j < boxes.length; j++) {
-    const a = boxes[i]!; const b = boxes[j]!;
+    const a = boxes[i]!;
+    const b = boxes[j]!;
     if (boxesPenetrationExceeds(a.box, b.box, 0, 0)) {
       pairs++;
       const ox = Math.min(a.box.max.x, b.box.max.x) - Math.max(a.box.min.x, b.box.min.x);
@@ -76,11 +77,12 @@ const meshVol = 9.8 * 4.5 * 3;
 let overlapVol = 0;
 for (let i = 0; i < boxes.length; i++) {
   for (let j = i + 1; j < boxes.length; j++) {
-    const a = boxes[i]!; const b = boxes[j]!;
+    const a = boxes[i]!;
+    const b = boxes[j]!;
     const ix = Math.max(0, Math.min(a.box.max.x, b.box.max.x) - Math.max(a.box.min.x, b.box.min.x));
     const iy = Math.max(0, Math.min(a.box.max.y, b.box.max.y) - Math.max(a.box.min.y, b.box.min.y));
     const iz = Math.max(0, Math.min(a.box.max.z, b.box.max.z) - Math.max(a.box.min.z, b.box.min.z));
     overlapVol += ix * iy * iz;
   }
 }
-console.log(`[DEBUG] real-box pairs=${pairs} maxPen=${maxPen.toFixed(2)} overlapVolRatio=${(overlapVol/(meshVol*applied.objects.length)*100).toFixed(1)}%`);
+console.log(`[DEBUG] real-box pairs=${pairs} maxPen=${maxPen.toFixed(2)} overlapVolRatio=${((overlapVol / (meshVol * applied.objects.length)) * 100).toFixed(1)}%`);

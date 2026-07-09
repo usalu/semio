@@ -5,7 +5,5 @@
   "description": "Fix doubled gap between adjacent windows in the Mode canvas layout. Spacing between windows should match outer canvas inset, including when two window stacks approach each other horizontally.",
   "summary": "Fixed doubled gutter between adjacent Mode window stacks: canvas inset now lives only on mode-body (p-single), resizable panels no longer add per-side padding, and horizontal splitters remain the single w-single gutter between neighbors. Added regression test for one canvas inset and one inter-stack gutter; fixed multi-tab chrome column test to query grid slots instead of contents tabbar children.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
-  "sessions": [
-    "⚪34a3940e5146467dbb1ab8e52ff30b0e"
-  ]
+  "sessions": ["⚪34a3940e5146467dbb1ab8e52ff30b0e"]
 }

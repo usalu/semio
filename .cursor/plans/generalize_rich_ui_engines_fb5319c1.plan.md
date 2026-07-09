@@ -2,36 +2,36 @@
 name: Generalize Rich UI Engines
 overview: Restore full behavior parity for every app by generalizing the deleted FlowCanvas/WriterCanvas/dag UI into two framework-owned Rust engines (node-graph and text-editor) that both renderers consume, driven declaratively by plugins through an extended scene contract with framework hover/selection mechanisms.
 todos:
-  - id: ticket
-    content: Read repo://goals and reopen ticket 26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS
-    status: completed
-  - id: contract
-    content: Extend NodeGraphScene/TextEditorScene payloads and define generic command vocabulary in framework/core/rs/ui.rs, mirror in react types.ts and scaffold.rs
-    status: completed
-  - id: editor-engine
-    content: Relocate writer/rs to framework/editor/rs as generic EditorHost/EditorSession with display-list output; move WriterDocumentVcs to writer plugin
-    status: completed
-  - id: graph-engine
-    content: "Create framework/graph/rs from flow/core + dag canvas machinery: LOD, marquee, align chrome, spotlight, ghost, controls, clusters, note editing, progress, undo/redo, display list"
-    status: completed
-  - id: react-nodegraph
-    content: Rewrite React node-graph host on framework_graph wasm session, porting all flow/react + dag/react overlays and interactions payload-driven
-    status: completed
-  - id: react-texteditor
-    content: Rewrite React text-editor host on framework_editor wasm session, porting all writer/react behavior (occurrences, completions, rename, format)
-    status: completed
-  - id: wgpu-parity
-    content: Embed plain-Rust engine hosts in wgpu scenes.rs with display-list translation to ui/wgpu; fix wgpu renderer cargo check deps
-    status: completed
-  - id: plugins
-    content: "Update s, flow, writer, dag plugins: full payloads, command handling, Rust-side flow evaluation via module crates and jack tooling via trinity/jack/core"
-    status: completed
-  - id: cleanup
-    content: Delete obsolete flow worker JS and jack LSP JS if unreferenced; clean workspaces, aliases, wasm build scripts
-    status: completed
-  - id: verify
-    content: Run cargo/vitest tests, build os/dev, e2e all playgrounds on both renderers with screenshot comparison, close ticket
-    status: completed
+ - id: ticket
+   content: Read repo://goals and reopen ticket 26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS
+   status: completed
+ - id: contract
+   content: Extend NodeGraphScene/TextEditorScene payloads and define generic command vocabulary in framework/core/rs/ui.rs, mirror in react types.ts and scaffold.rs
+   status: completed
+ - id: editor-engine
+   content: Relocate writer/rs to framework/editor/rs as generic EditorHost/EditorSession with display-list output; move WriterDocumentVcs to writer plugin
+   status: completed
+ - id: graph-engine
+   content: "Create framework/graph/rs from flow/core + dag canvas machinery: LOD, marquee, align chrome, spotlight, ghost, controls, clusters, note editing, progress, undo/redo, display list"
+   status: completed
+ - id: react-nodegraph
+   content: Rewrite React node-graph host on framework_graph wasm session, porting all flow/react + dag/react overlays and interactions payload-driven
+   status: completed
+ - id: react-texteditor
+   content: Rewrite React text-editor host on framework_editor wasm session, porting all writer/react behavior (occurrences, completions, rename, format)
+   status: completed
+ - id: wgpu-parity
+   content: Embed plain-Rust engine hosts in wgpu scenes.rs with display-list translation to ui/wgpu; fix wgpu renderer cargo check deps
+   status: completed
+ - id: plugins
+   content: "Update s, flow, writer, dag plugins: full payloads, command handling, Rust-side flow evaluation via module crates and jack tooling via trinity/jack/core"
+   status: completed
+ - id: cleanup
+   content: Delete obsolete flow worker JS and jack LSP JS if unreferenced; clean workspaces, aliases, wasm build scripts
+   status: completed
+ - id: verify
+   content: Run cargo/vitest tests, build os/dev, e2e all playgrounds on both renderers with screenshot comparison, close ticket
+   status: completed
 isProject: false
 ---
 
@@ -74,8 +74,6 @@ flowchart LR
   wgpuHost -->|"hover/selection/edit commands"| plugins
   reactHost -->|"hover/selection/edit commands"| plugins
 ```
-
-
 
 ## Phase 0 — Ticket
 

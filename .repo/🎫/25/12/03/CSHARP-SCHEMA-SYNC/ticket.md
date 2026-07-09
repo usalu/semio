@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The C# schema in Compose.cs was out of date compared to the TypeScript compose.ts. Several entity reference types (IDs) were stored as strings in C# but as objects with `{ guid: string }` in TypeScript.
@@ -61,6 +62,7 @@ The C# schema in Compose.cs was out of date compared to the TypeScript compose.t
 ## Log
 
 ## Summary
+
 # Summary
 
 Sync C# schema with TypeScript compose.ts

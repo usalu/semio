@@ -4,13 +4,7 @@
   "version": "1.0.0",
   "label": "Sweep1",
   "description": "Typology produced by surface.sweep1.",
-  "actions": [
-    "command.finish"
-  ],
-  "interactions": [
-    "surface.sweep1"
-  ],
-  "primitiveKinds": [
-    "surface"
-  ]
+  "actions": ["command.finish"],
+  "interactions": ["surface.sweep1"],
+  "primitiveKinds": ["surface"]
 }

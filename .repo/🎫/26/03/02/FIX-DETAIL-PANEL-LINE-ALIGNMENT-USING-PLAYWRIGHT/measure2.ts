@@ -10,7 +10,10 @@ async function measure() {
   for (const row of rows) {
     const label = await row.locator('[data-slot="tree-label"]').textContent();
     const rowBox = await row.boundingBox();
-    if (!rowBox) { console.log(label + " - no box"); continue; }
+    if (!rowBox) {
+      console.log(label + " - no box");
+      continue;
+    }
     const paddingLeft = await row.evaluate((el: HTMLElement) => parseFloat(getComputedStyle(el).paddingLeft));
     const chevronCount = await row.locator("svg").count();
     let chevronCenterX: number | null = null;
@@ -44,7 +47,7 @@ async function measure() {
         }
       }
     }
-    console.log(JSON.stringify({ label, paddingLeft, elementCenter: elementCenter?.toFixed(1), linePositions: linePositions.map(p => p.toFixed(1)) }));
+    console.log(JSON.stringify({ label, paddingLeft, elementCenter: elementCenter?.toFixed(1), linePositions: linePositions.map((p) => p.toFixed(1)) }));
   }
   const contentRows = await page.locator('[data-slot="tree-content"]').all();
   console.log("Found " + contentRows.length + " tree-content rows");
@@ -56,8 +59,11 @@ async function measure() {
       const lineBox = await lw.locator("div").first().boundingBox();
       if (lineBox) linePositions.push(lineBox.x + lineBox.width / 2);
     }
-    console.log(JSON.stringify({ type: "content", paddingLeft, linePositions: linePositions.map(p => p.toFixed(1)) }));
+    console.log(JSON.stringify({ type: "content", paddingLeft, linePositions: linePositions.map((p) => p.toFixed(1)) }));
   }
   await browser.close();
 }
-measure().catch((e) => { console.error(e); process.exit(1); });
+measure().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

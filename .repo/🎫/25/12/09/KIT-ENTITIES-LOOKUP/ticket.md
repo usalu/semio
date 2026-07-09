@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - `assets/index.ts` already exports the Metabolism fixtures and helper constants but consumers still had to filter for specific entities.
@@ -21,6 +22,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Export individual kit entities

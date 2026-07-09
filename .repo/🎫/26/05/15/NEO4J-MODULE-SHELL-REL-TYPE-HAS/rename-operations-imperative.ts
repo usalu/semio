@@ -106,11 +106,7 @@ function loadPairsFromLog(logPath: string): { from: string; to: string }[] {
   return out;
 }
 
-const extraSyncPaths = [
-  join(REPO, "compose", "client", "schema", "graphql", "schema.graphql"),
-  join(REPO, "compose", "client", "lib", "js", "index.ts"),
-  join(REPO, "compose", "client", "lib", "rs", "lib.rs"),
-];
+const extraSyncPaths = [join(REPO, "compose", "client", "schema", "graphql", "schema.graphql"), join(REPO, "compose", "client", "lib", "js", "index.ts"), join(REPO, "compose", "client", "lib", "rs", "lib.rs")];
 
 function main(): void {
   const logPath = join(import.meta.dir, "rename-operations-imperative.log.txt");

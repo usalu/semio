@@ -5,7 +5,5 @@
   "description": "All MCP tool return values that currently return full entities (kit, design, type, lists of types/designs) must be changed to return shallow entities instead. This prevents returning heavy data (blobs, full nested collections) over MCP. Affected tools: read_current_kit, read_current_design, read_current_type, get_primitive_design, get_design_family, get_design_siblings, get_design_children, get_primitive_type, get_type_family, get_type_siblings, get_type_children, find_piece_type_in_design, find_replaceable_types_for_piece_in_design, find_replaceable_types_for_pieces_in_design, find_same_family_design_pieces.",
   "summary": "Completed conversion of ALL MCP engine functions to return shallow entities instead of full entities. Three rounds of changes:\n\n1. All @mcp.tool() decorated functions now return shallow entities (kitToShallow, designToShallow, typeToShallow) instead of {\"ok\": True, ...} dicts.\n2. All non-decorated helper functions (flatten_design, apply_kit_diff, create_clustered_design, expand_design_pieces) now return shallow entities.\n3. All diff/change functions (get_kit_diff, inverse_kit_diff, get_kit_change, get_design_change, replace_cluster_with_design) now convert `added` arrays in collection diffs to shallow/meta using new helper functions (_shallowifyKitDiff, _shallowifyDesignDiff, _shallowifyChange, _shallowifyDesignChange, _shallowifyCollectionDiff, _shallowifyTypeDiff).\n\nAdded imports for all meta conversion functions (tagToMeta, conceptToMeta, portToMeta, fileToMeta, folderToMeta, qualityToMeta, authorToMeta, modelToMeta). All 145 engine tests pass.",
   "goal": "🎯r2603",
-  "sessions": [
-    "⚪3d76525404814a8db53c8ef255bc0d20"
-  ]
+  "sessions": ["⚪3d76525404814a8db53c8ef255bc0d20"]
 }

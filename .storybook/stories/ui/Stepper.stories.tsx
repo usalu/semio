@@ -29,13 +29,13 @@ type Story = StoryObj<typeof meta>;
 const defaultArgs = {
   id: "stepper-default",
   value: 12,
-  onChange: () => { },
+  onChange: () => {},
   min: 1,
   max: 50,
   step: 1,
-  onPointerDown: () => { },
-  onPointerUp: () => { },
-  onPointerCancel: () => { },
+  onPointerDown: () => {},
+  onPointerUp: () => {},
+  onPointerCancel: () => {},
   interactionId: "stepper-interaction",
 };
 

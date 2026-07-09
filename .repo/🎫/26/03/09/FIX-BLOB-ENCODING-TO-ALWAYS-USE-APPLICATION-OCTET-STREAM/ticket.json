@@ -5,7 +5,5 @@
   "description": "Fix blob encoding across Go, C#, Python, and TypeScript implementations to always use application/octet-stream as the mediatype instead of the file's mime field. Also fix TypeScript importKit/exportKit to use kit.files[i].blob instead of a separate Map. Reconvert JSON assets to use the corrected encoding.",
   "summary": "Bulk close",
   "goal": "🎯addblobtofile",
-  "sessions": [
-    "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09⚪17730619566334083334329505215740177213"
-  ]
+  "sessions": ["🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09⚪17730619566334083334329505215740177213"]
 }

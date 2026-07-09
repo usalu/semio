@@ -2,33 +2,33 @@
 name: os framework and composable apps
 overview: Introduce a generic `os` product framework (peer of platform/playground/presentation) that generalizes S's existing composition model, make `s` a concrete instance of `os`, unify hover/selection into one contract every app implements, and collapse the 24+ per-domain `*/play` packages into one generic runner driven by an app definition exported from each domain's `index.ts`.
 todos:
-  - id: os-core-skeleton
-    content: Create framework/product/os/core + renderer/react generalizing StudioStore/SMediaGraph/SAppInstance/program registry/resolveAppHost out of s/core and s/play
-    status: completed
-  - id: interaction-contract
-    content: Formalize AppPointerFocusStore as the mandatory hover+selection contract on base Controller; migrate JackHoverBridge to adapt to it
-    status: completed
-  - id: s-as-os
-    content: Slim s/core to S-specific branding on top of os/core; rebuild s/play's SAppHostRouter using generic resolveAppHost
-    status: completed
-  - id: domain-app-definitions
-    content: Extend AppDefinition with createController/registerBodies/registerSurfaceHosts/devHost; fold each domain's play/index.ts logic into its core/index.ts as one exported AppDefinition
-    status: completed
-  - id: migrate-hover-selection
-    content: Migrate every domain (lowpoly, draw, flow, dag, puzzle 2d/3d/5d, procedural 2d/3d, gis/2d, trinity/jack, sequence, layout, imperative, vcs, writer, forms, raster, presentation, shooting, reasoning/mindmap, cad) off bespoke hover/selection onto the shared AppPointerFocusStore contract
-    status: completed
-  - id: generic-playground-runner
-    content: Build one generic framework/product/playground/dev runner (package.json/project.json/vite.config.ts/index.html/script.ts) that boots any domain's AppDefinition standalone via a runtime arg
-    status: completed
-  - id: root-config-fallout
-    content: Update root package.json workspaces/scripts, root script.ts DevScript router, PLAYGROUND_PORTS, .vscode/launch.json for the collapsed runner
-    status: completed
-  - id: delete-play-packages
-    content: Delete all ~24 per-domain */play packages after folding logic into core/index.ts; handle compose sketchpad, cad, reasoning/mindmap stub as special cases
-    status: completed
-  - id: tests-and-docs
-    content: Extend existing test files per touched package for the new contracts; add framework/product/os/AGENTS.md and update related AGENTS.md docs
-    status: completed
+ - id: os-core-skeleton
+   content: Create framework/product/os/core + renderer/react generalizing StudioStore/SMediaGraph/SAppInstance/program registry/resolveAppHost out of s/core and s/play
+   status: completed
+ - id: interaction-contract
+   content: Formalize AppPointerFocusStore as the mandatory hover+selection contract on base Controller; migrate JackHoverBridge to adapt to it
+   status: completed
+ - id: s-as-os
+   content: Slim s/core to S-specific branding on top of os/core; rebuild s/play's SAppHostRouter using generic resolveAppHost
+   status: completed
+ - id: domain-app-definitions
+   content: Extend AppDefinition with createController/registerBodies/registerSurfaceHosts/devHost; fold each domain's play/index.ts logic into its core/index.ts as one exported AppDefinition
+   status: completed
+ - id: migrate-hover-selection
+   content: Migrate every domain (lowpoly, draw, flow, dag, puzzle 2d/3d/5d, procedural 2d/3d, gis/2d, trinity/jack, sequence, layout, imperative, vcs, writer, forms, raster, presentation, shooting, reasoning/mindmap, cad) off bespoke hover/selection onto the shared AppPointerFocusStore contract
+   status: completed
+ - id: generic-playground-runner
+   content: Build one generic framework/product/playground/dev runner (package.json/project.json/vite.config.ts/index.html/script.ts) that boots any domain's AppDefinition standalone via a runtime arg
+   status: completed
+ - id: root-config-fallout
+   content: Update root package.json workspaces/scripts, root script.ts DevScript router, PLAYGROUND_PORTS, .vscode/launch.json for the collapsed runner
+   status: completed
+ - id: delete-play-packages
+   content: Delete all ~24 per-domain */play packages after folding logic into core/index.ts; handle compose sketchpad, cad, reasoning/mindmap stub as special cases
+   status: completed
+ - id: tests-and-docs
+   content: Extend existing test files per touched package for the new contracts; add framework/product/os/AGENTS.md and update related AGENTS.md docs
+   status: completed
 isProject: false
 ---
 
@@ -68,8 +68,6 @@ flowchart TD
     hostRouter -->|"embeds any app"| sInstance
     runner -->|"same appDef, standalone"| appDef
 ```
-
-
 
 Each domain's `AppDefinition` is consumed by two independent callers — the generic standalone runner and any `os` instance (`s` or future ones) — which is the concrete meaning of "composable: an app can run standalone as playground but also be part of os."
 
@@ -152,4 +150,3 @@ Special cases needing individual handling:
 
 - Per repo convention this work happens inside a ticket (goal `🎯platform`/`🎯s🎯platform`, or a new `🎯os` subgoal — confirm during ticket open by reading `repo://goals`). Given the "full big-bang" scope, expect this to be tracked as one ticket with the phases above as its todos, similar in shape to the prior `S-TECHNOLOGY-EXTENSION-LOADING` ticket (8 phases, ~24 technologies touched).
 - Phases 1-3 (os core + s-as-os) unblock Phase 4 (per-domain `AppDefinition`), which unblocks Phases 5-6 (runner + deletion). Phase 2 (interaction contract) can proceed in parallel with Phase 1.
-

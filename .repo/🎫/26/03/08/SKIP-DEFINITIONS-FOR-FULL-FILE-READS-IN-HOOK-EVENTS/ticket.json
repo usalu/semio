@@ -5,7 +5,5 @@
   "description": "When reading a complete file (no line range specified), the hook event should not expand all definitions with loc counts. Instead, it should just add the file ID. This avoids bloating session.json events with hundreds of definition entries when the agent reads a whole file.",
   "summary": "Modified buildDefinitionReads in main.go to detect full-file reads (lineSet covers all lines) and return just the file ID as a single HookSearchDefinition entry with no Loc, instead of expanding all individual definitions. Added TestBuildDefinitionReadsFullFileReturnsFileID to verify the behavior.",
   "goal": "🎯aioptimizedrepo🎯repoclient",
-  "sessions": [
-    "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1⚪17729941618255503216068204196174429416"
-  ]
+  "sessions": ["🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1⚪17729941618255503216068204196174429416"]
 }

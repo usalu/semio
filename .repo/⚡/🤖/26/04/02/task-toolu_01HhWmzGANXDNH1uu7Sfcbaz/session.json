@@ -24,9 +24,7 @@
           "model": "composer-2-fast",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": null
         }
@@ -51,9 +49,7 @@
           "model": "composer-2-fast",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": null
         }

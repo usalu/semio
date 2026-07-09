@@ -3,7 +3,5 @@
   "emoji": "🔧",
   "status": "closed",
   "summary": "Fixed 21 malformed JSDoc comments in extension.ts that caused esbuild to fail with \"Unexpected '*'\" error. Two patterns: (A) /** followed by // comment on next line — fixed by changing // to * ; (B) orphaned * lines without /** opener — fixed by adding /** before them. Build now succeeds.",
-  "sessions": [
-    "⚪17724220509973455698244097339762200554"
-  ]
+  "sessions": ["⚪17724220509973455698244097339762200554"]
 }

@@ -1,25 +1,25 @@
 ---
 name: Brush slot fixture sync
-overview: "Fix puzzle-2d brush so it only offers slots on handles that are genuinely free in the fixture, so placements finalize and previews mirror to all panes. Root cause: per-renderer authoritative edge suppressions strip fixture edges from each pane's scene/WASM, so the brush offers occupied slots and the fixture commit rejects every placement as \"unchanged\"."
+overview: 'Fix puzzle-2d brush so it only offers slots on handles that are genuinely free in the fixture, so placements finalize and previews mirror to all panes. Root cause: per-renderer authoritative edge suppressions strip fixture edges from each pane''s scene/WASM, so the brush offers occupied slots and the fixture commit rejects every placement as "unchanged".'
 todos:
-  - id: confirm
-    content: Add [DEBUG] logs to applyBrushPlacementToFixture rejection branch + driving renderer scene.edges.size / authoritativeStructuralSuppressions; reload and confirm suppressed fixture edges cause occupied-slot offers.
-    status: completed
-  - id: clear-suppressions
-    content: Add Puzzle2dRenderer.clearAuthoritativeStructuralSuppressionsFor(ids) and call it for all fixture node/edge ids inside puzzle2dSyncFixtureDescriptorToAllAuthoringPeers before reconciling edges.
-    status: completed
-  - id: sync-on-brush
-    content: Call puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture) when brush activates and when fixture changes while brush is active (Puzzle2dPlayInner effect).
-    status: completed
-  - id: verify-finalize
-    content: Reload, brush a free slot, leave; confirm no 'unchanged' log and node+edge persist across all three panes.
-    status: completed
-  - id: mirror-preview
-    content: If preview still missing on other panes, fix setBrushSession reentry/dedup ordering and evaluate the Minimap LOD gate for Overview.
-    status: completed
-  - id: tests-cleanup
-    content: Add regression tests (vitest + Rust), remove [DEBUG] logs, run test suites, rebuild WASM.
-    status: completed
+ - id: confirm
+   content: Add [DEBUG] logs to applyBrushPlacementToFixture rejection branch + driving renderer scene.edges.size / authoritativeStructuralSuppressions; reload and confirm suppressed fixture edges cause occupied-slot offers.
+   status: completed
+ - id: clear-suppressions
+   content: Add Puzzle2dRenderer.clearAuthoritativeStructuralSuppressionsFor(ids) and call it for all fixture node/edge ids inside puzzle2dSyncFixtureDescriptorToAllAuthoringPeers before reconciling edges.
+   status: completed
+ - id: sync-on-brush
+   content: Call puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture) when brush activates and when fixture changes while brush is active (Puzzle2dPlayInner effect).
+   status: completed
+ - id: verify-finalize
+   content: Reload, brush a free slot, leave; confirm no 'unchanged' log and node+edge persist across all three panes.
+   status: completed
+ - id: mirror-preview
+   content: If preview still missing on other panes, fix setBrushSession reentry/dedup ordering and evaluate the Minimap LOD gate for Overview.
+   status: completed
+ - id: tests-cleanup
+   content: Add regression tests (vitest + Rust), remove [DEBUG] logs, run test suites, rebuild WASM.
+   status: completed
 isProject: false
 ---
 
@@ -42,8 +42,6 @@ flowchart TB
   brush --> commit
   fixture -->|still has edge| commit
 ```
-
-
 
 ## Step 1 - Confirm at runtime (required before fixing)
 
@@ -81,4 +79,3 @@ With edges correct, verify the mirror path. If the preview still does not show o
 
 - Work continues under ticket `26/06/02/BRUSH-ENGAGEMENT-NO-SUGGESTIONS` (currently open).
 - Do not claim success without console-log confirmation per repo rules.
-

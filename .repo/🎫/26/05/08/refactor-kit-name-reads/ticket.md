@@ -17,7 +17,7 @@
 
 ### Validation run
 
-- `npm run depcruise:layers` (repo root): pass  
-- `compose/js`: `npx tsc --noEmit`, `npm test` (30 tests): pass  
-- `compose/react`: `npx tsc --noEmit`, `npm test` (16 tests): pass  
+- `npm run depcruise:layers` (repo root): pass
+- `compose/js`: `npx tsc --noEmit`, `npm test` (30 tests): pass
+- `compose/react`: `npx tsc --noEmit`, `npm test` (16 tests): pass
 - `compose/sketchpad` `tsc`: still reports missing Node/rs-wasm types when compiling against `../js` (pre-existing config gap); not introduced here.

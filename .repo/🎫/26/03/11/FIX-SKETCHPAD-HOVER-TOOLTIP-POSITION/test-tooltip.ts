@@ -8,7 +8,7 @@ async function testTooltipPositioning() {
   await page.waitForTimeout(3000);
   const zipPath = path.resolve("/workspaces/semio/assets/compose/metabolism.zip");
   const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
-  const isAttached = await fileInput.count() > 0;
+  const isAttached = (await fileInput.count()) > 0;
   console.log(`[DEBUG] importKit input attached: ${isAttached}`);
   if (isAttached) {
     await fileInput.setInputFiles(zipPath);

@@ -4,8 +4,5 @@
   "description": "Implement the first concrete kit-kind slice in compose/rs, with any minimal compose/hub changes only if strictly required later. Focus this ticket on Rust dev kits (full embedded JSON file) and local kits (.compose/kit.db SQLite snapshot plus regular files). Reuse the existing KitStore JSON and SQLite boundaries, add filesystem helpers for JSON-file load/save and folder-kit load/save, and extend the existing tests in compose/rs/src/lib.rs. Do not create new test files. This is the first implementation step of the broader kit architecture plan.",
   "summary": "Replaced the local `.compose/kit.db` snapshot hack with a normalized relational SQLite backend for the current Rust kit graph. Updated `compose/sqlite/schema.sql` to be the canonical schema, rewrote `compose/rs/src/lib.rs` SQLite save/load around real tables with explicit ordering and foreign keys, updated the SQLite README, and extended the Rust SQLite roundtrip test to assert normalized storage instead of `compose_kit_snapshot`. Revalidated with focused Rust persistence tests for SQLite roundtrip and local folder asset rehydration.",
   "goal": "🎯aioptimizedrepo",
-  "sessions": [
-    "⚪39b9c90692a94a1692753d95180ca990",
-    "⚪97a9bbb94a5a4209afcaa18d8e2055ca"
-  ]
+  "sessions": ["⚪39b9c90692a94a1692753d95180ca990", "⚪97a9bbb94a5a4209afcaa18d8e2055ca"]
 }

@@ -2,36 +2,36 @@
 name: Layout Canvas Pan Zoom Drag
 overview: Add real pan/zoom to both layout canvases, make catalogue drag-and-drop show a live preview and commit at the drop point on the canvas, and get panel-hide-on-interaction "for free" by switching the catalogue drag to the same pointer-driven palette-drag mechanism used by puzzle 2d / puzzle 3d / window-template.
 todos:
-  - id: rust-camera
-    content: Add camera + viewport + pan/zoom wasm-bindgen API to layout/rs/wasm_session.rs, reusing infinite_cavas::camera
-    status: completed
-  - id: rust-engine-camera
-    content: Make layout/rs/engine.rs scene transform and hit-test camera-aware (fix hit-test/zoom mismatch)
-    status: completed
-  - id: rust-drop-preview
-    content: Add setDropPreview/clearDropPreview WASM state + ghost rendering to layout/rs
-    status: completed
-  - id: js-session-panzoom
-    content: Wire pan (middle-drag)/zoom (wheel) through LayoutEngineSession in layout/react/index.tsx, seed camera once from document, enable pointer/wheel on preview pane too
-    status: completed
-  - id: graphwasmcanvas-wheel
-    content: Add wheel listener and button-aware pointerDown to GraphWasmCanvas in infinite/cavas/react-renderer/index.tsx
-    status: completed
-  - id: catalogue-pointer-drag
-    content: Replace native-only catalogue drag with pointerPaletteDrag-based controller + drag-session refs in layout/react/index.tsx
-    status: completed
-  - id: catalogue-drop-bridge
-    content: Add LayoutCatalogueDropBridge (live preview + commit-on-drop) and wire onCatalogueDrop through LayoutPlayPaneSurfaceHost
-    status: completed
-  - id: addframe-position
-    content: Extend createDefaultFrame/addFrame in layout/core/js to accept drop x/y, remove dead document drag controller
-    status: completed
-  - id: tests
-    content: Extend vitest coverage (Rust + layout-core + layout-react) for camera math, hit-test, drop preview, and pointer-drag controller
-    status: completed
-  - id: manual-verify
-    content: Run layout playground dev server and manually verify pan/zoom on both panes, live drop preview, drop commit, and panel hiding during drag
-    status: completed
+ - id: rust-camera
+   content: Add camera + viewport + pan/zoom wasm-bindgen API to layout/rs/wasm_session.rs, reusing infinite_cavas::camera
+   status: completed
+ - id: rust-engine-camera
+   content: Make layout/rs/engine.rs scene transform and hit-test camera-aware (fix hit-test/zoom mismatch)
+   status: completed
+ - id: rust-drop-preview
+   content: Add setDropPreview/clearDropPreview WASM state + ghost rendering to layout/rs
+   status: completed
+ - id: js-session-panzoom
+   content: Wire pan (middle-drag)/zoom (wheel) through LayoutEngineSession in layout/react/index.tsx, seed camera once from document, enable pointer/wheel on preview pane too
+   status: completed
+ - id: graphwasmcanvas-wheel
+   content: Add wheel listener and button-aware pointerDown to GraphWasmCanvas in infinite/cavas/react-renderer/index.tsx
+   status: completed
+ - id: catalogue-pointer-drag
+   content: Replace native-only catalogue drag with pointerPaletteDrag-based controller + drag-session refs in layout/react/index.tsx
+   status: completed
+ - id: catalogue-drop-bridge
+   content: Add LayoutCatalogueDropBridge (live preview + commit-on-drop) and wire onCatalogueDrop through LayoutPlayPaneSurfaceHost
+   status: completed
+ - id: addframe-position
+   content: Extend createDefaultFrame/addFrame in layout/core/js to accept drop x/y, remove dead document drag controller
+   status: completed
+ - id: tests
+   content: Extend vitest coverage (Rust + layout-core + layout-react) for camera math, hit-test, drop preview, and pointer-drag controller
+   status: completed
+ - id: manual-verify
+   content: Run layout playground dev server and manually verify pan/zoom on both panes, live drop preview, drop commit, and panel hiding during drag
+   status: completed
 isProject: false
 ---
 
@@ -56,8 +56,6 @@ flowchart TD
     bridge -->|"window pointerup over canvas"| commit["ctrl.run(addFrame/addPage, {kind,x,y})"]
     commit --> ghostOff["panelGhost.end() + sessionRef.active = false"]
 ```
-
-
 
 ## 1. Camera: real pan (middle-drag) + zoom (wheel), matching gis/2d & puzzle/2d conventions
 
@@ -115,4 +113,3 @@ Reuse `infinite_cavas::camera` (already a dependency of `layout_rs`, see [layout
 
 - Extend existing vitest blocks in `layout/rs` (Rust `#[cfg(test)]` in `engine.rs`), `layout/react/index.tsx`, and `layout/core/js/index.ts` to cover: camera seeding/pan/zoom math, camera-aware hit test, `createDefaultFrame` position override, and the catalogue pointer-drag controller (mirrors the existing `puzzle2dFixturePaletteTreeDragController toggles palette drag ref and drag session` test).
 - Manually verify in the layout playground dev server: wheel-zoom and middle-drag-pan on both blueprint and preview panes; dragging a catalogue item shows a live ghost that follows the cursor over the canvas and disappears off-canvas; dropping commits a frame/page at the cursor; the side panel visibly dims/hides for the whole duration of the catalogue drag, same as it does today for other apps.
-

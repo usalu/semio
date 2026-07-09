@@ -10,13 +10,7 @@
   "target": {
     "modelDefinition": "aec.building.energy"
   },
-  "typologies": [
-    "energy.energy.hull",
-    "energy.energy.baseplate",
-    "energy.energy.roof",
-    "energy.energy.externalwall",
-    "energy.energy.windows"
-  ],
+  "typologies": ["energy.energy.hull", "energy.energy.baseplate", "energy.energy.roof", "energy.energy.externalwall", "energy.energy.windows"],
   "derive": {
     "collect": {
       "sourceModelDefinition": "spatial.shape",

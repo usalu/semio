@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 # The UI “horizontal container” components existed in multiple competing forms inside `js/compose/sketchpad/elements.tsx`, causing type mismatches (and effectively preventing consistent usage).
@@ -36,6 +37,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Integrate UI system with fixed heights, bands/strips, and action text

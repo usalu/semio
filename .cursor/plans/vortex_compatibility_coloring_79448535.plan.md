@@ -2,27 +2,27 @@
 name: Vortex Compatibility Coloring
 overview: Color every puzzle 3d vortex by a compatibility group computed with Union-Find over the kind-compatibility graph, so compatible vortex kinds share one color; apply it only on idle vortices.
 todos:
-  - id: ticket
-    content: Open repo MCP ticket for puzzle 3d vortex compatibility coloring under the best-fit goal
-    status: in_progress
-  - id: unionfind
-    content: Add vortexCompatibilityGroups (Union-Find), hashStringToHue, and memoized vortexCompatibilityColor in the Compat region
-    status: pending
-  - id: vortex-apply
-    content: Compute idle group color in Vortex and pass it to the body only when idle
-    status: pending
-  - id: fallback-color
-    content: Add baseColor support to VortexFallbackMesh sphere material
-    status: pending
-  - id: glb-color
-    content: Thread optional base-color override through styledPoolKey/applyMeshStyleToObject3D/styledMeshTemplate/usePooledStyledMesh/MeshBody
-    status: pending
-  - id: tests
-    content: Extend inline vitest block with grouping and color tests; run vitest
-    status: pending
-  - id: validate-close
-    content: Runtime-validate coloring, remove [DEBUG] logs, close ticket
-    status: pending
+ - id: ticket
+   content: Open repo MCP ticket for puzzle 3d vortex compatibility coloring under the best-fit goal
+   status: in_progress
+ - id: unionfind
+   content: Add vortexCompatibilityGroups (Union-Find), hashStringToHue, and memoized vortexCompatibilityColor in the Compat region
+   status: pending
+ - id: vortex-apply
+   content: Compute idle group color in Vortex and pass it to the body only when idle
+   status: pending
+ - id: fallback-color
+   content: Add baseColor support to VortexFallbackMesh sphere material
+   status: pending
+ - id: glb-color
+   content: Thread optional base-color override through styledPoolKey/applyMeshStyleToObject3D/styledMeshTemplate/usePooledStyledMesh/MeshBody
+   status: pending
+ - id: tests
+   content: Extend inline vitest block with grouping and color tests; run vitest
+   status: pending
+ - id: validate-close
+   content: Runtime-validate coloring, remove [DEBUG] logs, close ticket
+   status: pending
 isProject: false
 ---
 
@@ -45,8 +45,6 @@ flowchart LR
   crb --- cct
   ccb --- crt
 ```
-
-
 
 ## Changes (all in `puzzle/3d/react/index.tsx`)
 
@@ -79,4 +77,3 @@ flowchart LR
 
 - Open a repo MCP ticket (e.g. "Puzzle 3d Vortex Compatibility Coloring") under the most appropriate goal before editing; close it with a summary and touched files when done.
 - Validate at runtime: temporary `[DEBUG]` log of kind->color map and visual check that idle vortices recolor per group and revert to highlight colors on hover/select.
-

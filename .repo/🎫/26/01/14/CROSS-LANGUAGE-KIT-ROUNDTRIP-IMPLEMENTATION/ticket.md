@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Plan: Cross-Language Kit Roundtrip Implementation
 
 ## Steps
@@ -17,6 +18,7 @@
 ## Changes
 
 ## Log
+
 # Log: Cross-Language Kit Roundtrip Implementation
 
 ## 2026-01-14
@@ -69,6 +71,7 @@
 - Python roundtrip - blocked by schema mismatch issues (separate ticket needed)
 
 ## Summary
+
 # Summary: Cross-Language Kit Roundtrip Implementation
 
 ## Completed

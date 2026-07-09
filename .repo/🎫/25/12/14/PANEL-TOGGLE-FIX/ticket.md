@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Previous log (2025/12/12/PANEL-TOGGLE-FIX-2) identified the root cause:
@@ -52,10 +53,10 @@ This matches how home and docs apps already worked via XState.
 
 ```typescript
 export const createQualityPanelVisibilitySelector = (kitGuid: Guid, qualityGuid: Guid) => {
-  return (snapshot: SketchpadSnapshot) => {
-    const appState = snapshot.context?.qualityApps?.[kitGuid]?.[qualityGuid];
-    return appState?.panelVisibility ?? defaultPanelVisibility;
-  };
+ return (snapshot: SketchpadSnapshot) => {
+  const appState = snapshot.context?.qualityApps?.[kitGuid]?.[qualityGuid];
+  return appState?.panelVisibility ?? defaultPanelVisibility;
+ };
 };
 ```
 
@@ -90,6 +91,7 @@ Both new tests pass:
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix navbar panel dropdown toggles to work independently for left/right groups

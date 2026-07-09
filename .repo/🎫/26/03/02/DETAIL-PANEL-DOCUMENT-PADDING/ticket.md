@@ -24,6 +24,7 @@ Implemented geometric paddingLeft formula for all detail panel tree components. 
 ## Todos
 
 ## Plan
+
 - Add `detailPanelIndentPx` helper: `10 * 1.5^level` px
 - Update TreeSection paddingLeft (2 locations: no-children and collapsible)
 - Update TreeContent paddingLeft

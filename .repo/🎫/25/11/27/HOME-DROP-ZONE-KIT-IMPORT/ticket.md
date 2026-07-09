@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 User requested two features:
@@ -23,7 +24,7 @@ Fixed the `handleDrop` function in `KitDropZone` component to skip files in the 
 ```typescript
 // Added condition: !path.startsWith(".compose/")
 if (!file.dir && !path.startsWith(".compose/")) {
-  // Extract file...
+ // Extract file...
 }
 ```
 
@@ -57,6 +58,7 @@ Added translations for the home dropzone UI:
 ## Log
 
 ## Summary
+
 # Summary
 
->-
+> -

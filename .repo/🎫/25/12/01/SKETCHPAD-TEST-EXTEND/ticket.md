@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Task: Extend/fix tests for Type app and Design app to verify:
@@ -106,6 +107,7 @@ All 5 tests pass:
 ## Log
 
 ## Summary
+
 # Summary
 
 Extend sketchpad tests for type app and design app panels

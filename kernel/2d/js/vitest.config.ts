@@ -7,16 +7,16 @@ import { defineConfig } from "vitest/config";
 const root = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-	root,
-	resolve: {
-		alias: {
-			"@semio-tech/flow-core": resolve(root, "../../../flow/core/rs/pkg/flow_core.js"),
-		},
-	},
-	test: {
-		mode: "test",
-		environment: "node",
-		include: ["index.ts"],
-		passWithNoTests: false,
-	},
+  root,
+  resolve: {
+    alias: {
+      "@semio-tech/flow-core": resolve(root, "../../../flow/core/rs/pkg/flow_core.js"),
+    },
+  },
+  test: {
+    mode: "test",
+    environment: "node",
+    include: ["index.ts"],
+    passWithNoTests: false,
+  },
 });

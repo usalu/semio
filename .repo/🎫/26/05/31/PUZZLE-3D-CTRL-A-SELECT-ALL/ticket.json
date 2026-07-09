@@ -5,7 +5,5 @@
   "description": "Implement ctrl+a (and meta+a on mac) to select all objects, vortices, and attractions in puzzle 3d play, respecting selectable/visible kind toggles.",
   "summary": "Added selectAllSelection command and puzzle3dPlayAllSelectionFromFixture helper so Ctrl/Cmd+A selects every object, vortex, and attraction in the fixture, respecting selectable and visible kind toggles. Registered ctrl+a,meta+a on Playground3d keybindings and wired declarative playground keybindings through PlaygroundView so shortcuts dispatch to the command bus. Tests cover fixture snapshot building and controller select-all behavior.",
   "goal": "🎯puzzle",
-  "sessions": [
-    "⚪a3cff16f5fcf4eda82332a6bc05cadc0"
-  ]
+  "sessions": ["⚪a3cff16f5fcf4eda82332a6bc05cadc0"]
 }

@@ -2,24 +2,24 @@
 name: Finish Jack Play
 overview: Complete Trinity Jack play by fixing results reactivity, extending Jack RETURN to produce graph fixtures when nodes/edges are returned, wiring full mathematical zoom/LOD on the Trinity canvas, and adding two demo fixtures (table + graph results).
 todos:
-  - id: reactivity
-    content: Add subscribeSnapshot to TrinityJackPlayController + useTrinityJackInteractionRevision in playground renderer; auto-run query on boot
-    status: completed
-  - id: jack-graph-return
-    content: Extend QueryResult with kind + graphFixture; implement Graph::subgraph_fixture and build_return graph detection + tests
-    status: completed
-  - id: query-sync
-    content: Add runJackJsonWithFixture WASM export; sync mutated fixtureJson to docStore; route Results host table vs TrinityCanvas
-    status: completed
-  - id: trinity-lod
-    content: Implement 6-band LOD, wheel_screen, real paint_scene tiers in TrinityHost; expose LOD helpers on TrinityCanvas
-    status: completed
-  - id: play-lod-fixtures
-    content: Add LOD mode to Jack play controller; fixture catalog with nakagin-table and branch-chain-graph presets + branch-chain.trinity.json
-    status: completed
-  - id: selection-validate
-    content: Wire canvas selection to controller; extend vitest/cargo tests; runtime verify on port 6054; remove DEBUG logs
-    status: completed
+ - id: reactivity
+   content: Add subscribeSnapshot to TrinityJackPlayController + useTrinityJackInteractionRevision in playground renderer; auto-run query on boot
+   status: completed
+ - id: jack-graph-return
+   content: Extend QueryResult with kind + graphFixture; implement Graph::subgraph_fixture and build_return graph detection + tests
+   status: completed
+ - id: query-sync
+   content: Add runJackJsonWithFixture WASM export; sync mutated fixtureJson to docStore; route Results host table vs TrinityCanvas
+   status: completed
+ - id: trinity-lod
+   content: Implement 6-band LOD, wheel_screen, real paint_scene tiers in TrinityHost; expose LOD helpers on TrinityCanvas
+   status: completed
+ - id: play-lod-fixtures
+   content: Add LOD mode to Jack play controller; fixture catalog with nakagin-table and branch-chain-graph presets + branch-chain.trinity.json
+   status: completed
+ - id: selection-validate
+   content: Wire canvas selection to controller; extend vitest/cargo tests; runtime verify on port 6054; remove DEBUG logs
+   status: completed
 isProject: false
 ---
 
@@ -29,7 +29,6 @@ isProject: false
 
 Jack language core and 3-pane layout exist ([trinity/jack/play/index.ts](trinity/jack/play/index.ts), prior [jack_editor plan](.cursor/plans/jack_editor_d8478103.plan.md)), but integration is still adhoc:
 
-
 | Area                   | Problem                                                                                                                                                                                                                                                                   |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Results pane**       | `TrinityJackPlayController.bump()` calls `emit()` → `runtime.notify()` (bumps `generation`), but `useTrinityJackController` only subscribes to `chromeGeneration`. Unlike DAG play (`useDagPlayInteractionRevision`), Jack surfaces never re-render after `runJackQuery`. |
@@ -37,7 +36,6 @@ Jack language core and 3-pane layout exist ([trinity/jack/play/index.ts](trinity
 | **Query → graph sync** | `runJackOnFixture` spins a throwaway WASM session; CREATE/SET/DELETE mutations never reach the canvas `docStore`.                                                                                                                                                         |
 | **Canvas / LOD**       | [trinity/rewrite/engine/lib.rs](trinity/rewrite/engine/lib.rs) stubs LOD (`draw_lod_label` → `"normal"`, single-band `lodScaleJson`), custom `paint_scene` ignores zoom tiers, no wheel handler in [trinity/react/index.tsx](trinity/react/index.tsx).                    |
 | **Fixtures**           | Only [nakagin-capsule-tower.trinity.json](trinity/fixture/nakagin-capsule-tower.trinity.json); no play fixture catalog or table/graph demos.                                                                                                                              |
-
 
 ```mermaid
 flowchart LR
@@ -53,8 +51,6 @@ flowchart LR
     GraphPane2 -->|wheel + LOD| BoardEngine
   end
 ```
-
-
 
 ## Architecture / boundaries
 
@@ -180,24 +176,25 @@ Wire in `TrinityJackPlaySurfaceHost` via `trinityLodCanvasProps(ctrl.lodModeForS
 
 ### Files
 
-
 | File                                                                                   | Purpose                                                           |
 | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
 | [trinity/fixture/branch-chain.trinity.json](trinity/fixture/branch-chain.trinity.json) | New small 3-node chain graph for graph-result demo                |
 | [trinity/jack/play/fixture-slugs.ts](trinity/jack/play/fixture-slugs.ts)               | Default id + slug aliases                                         |
 | Extend [trinity/jack/play/index.ts](trinity/jack/play/index.ts)                        | `import.meta.glob("../fixture/*.trinity.json")` + preset metadata |
 
-
 ### Two presets
 
 1. **Nakagin — Table** (`nakagin`)
-  - Graph: existing nakagin fixture
-  - Default query: `MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a.name, b.name`
-  - Results: table
+
+- Graph: existing nakagin fixture
+- Default query: `MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a.name, b.name`
+- Results: table
+
 2. **Branch — Graph** (`branch-chain`)
-  - Graph: new branch-chain fixture
-  - Default query: `MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b`
-  - Results: mini TrinityCanvas with returned subgraph
+
+- Graph: new branch-chain fixture
+- Default query: `MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b`
+- Results: mini TrinityCanvas with returned subgraph
 
 Implement `PlaygroundFixtureHost` on `TrinityJackPlayController` (fixture catalog command + `setActiveFixture` switching graph, query, auto `runJackQuery`).
 

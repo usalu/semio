@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The sketchpad has two state machines:
@@ -93,6 +94,7 @@ All 5 sketchpad tests pass:
 ## Log
 
 ## Summary
+
 # Summary
 
 Migrate sketchpad FSM to hierarchical states with proper constraints

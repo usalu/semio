@@ -5,6 +5,7 @@
 ### 1. Activity Bar Icon Not Showing
 
 **Root Cause**: The activity bar icon path in `js/vscode/package.json` line 37 is:
+
 ```json
 "icon": "../../assets/icons/semio_codeicon.svg"
 ```
@@ -12,6 +13,7 @@
 This path points to `/workspaces/semio/assets/icons/semio_codeicon.svg`, which is OUTSIDE the `js/vscode` package directory. When `vsce package` bundles the extension, it only includes files within the extension folder (or explicitly included).
 
 The `.vscodeignore` has:
+
 - Line 21: `assets/**` - excludes all assets
 - Line 35: `!assets/icons/**` - includes back, but this refers to `js/vscode/assets/icons/` which doesn't exist
 

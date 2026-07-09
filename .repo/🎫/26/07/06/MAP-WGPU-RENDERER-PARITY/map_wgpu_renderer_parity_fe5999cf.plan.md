@@ -2,33 +2,33 @@
 name: Map Wgpu Renderer Parity
 overview: Restore full premigration map (gis2d) functionality — real Vello-rendered cartography (tiles, styled land/water/roads/labels) and rich interaction (hover, rectangle+lasso multi-select with modes, middle-button pan, right-click context menu, layer weight sliders) — inside the new wgpu-native renderer, replacing the current placeholder-rectangle rendering and single-point selection.
 todos:
-  - id: core-scene
-    content: "framework/core/rs/lib.rs: add GisMapScene struct, UiComponentSceneNode.gis_map field, build_gis_map_scene() constructor"
-    status: completed
-  - id: engine-canvas-map
-    content: "framework/renderer/wgpu/rs/lib.rs engine_canvas: add GisMap region (MapHost registry, sync_map_host, paint_gis2d_map via render_vello_scene) and gis2d-map dispatch arms for wheel/pointer/render"
-    status: completed
-  - id: plugin-scene-switch
-    content: "gis/2d/plugin/rs/lib.rs: switch render_canvas to build_gis_map_scene, delete generic-rect helpers (map_canvas_layers, GisMapCanvasLayer, canvas_layers, default_map_layers)"
-    status: completed
-  - id: tile-fetch
-    content: Wire pending map tile fetch/upload through AppRuntime::frame asset-poll loop (wasm32 fetch); add native-bin HTTP fetch fallback
-    status: completed
-  - id: interaction-marquee-hover
-    content: "engine_canvas gis_map: real marquee (rect+lasso) drag with merge-mode from modifiers, middle-button pan, hover hit-test, right-click context menu via push_context_menu_item"
-    status: completed
-  - id: plugin-interaction-commands
-    content: "gis/2d/plugin/rs/lib.rs: extend Gis2dPlayRuntime + handle_command with setFeatureSelection(mode), setHover, setSelectionMethod, clearSelection, selectAll, deselect, focusFeature, openSource, setLayerStrokeScale"
-    status: completed
-  - id: focus-openurl
-    content: "gis/2d/rs/lib.rs: add MapHost::focus_feature if missing; add open_url helper (wasm32 window.open, native-bin best-effort)"
-    status: completed
-  - id: layer-weight-sliders
-    content: "gis/2d/plugin/rs/lib.rs inspector: add per-layer stroke-scale UiSliderNodes via layer_weight_slider_ids_json"
-    status: completed
-  - id: verify-close
-    content: Open repo MCP ticket under gis/map goal, rebuild + runtime-verify against premigration behavior, extend existing Rust tests, close ticket with summary
-    status: in_progress
+ - id: core-scene
+   content: "framework/core/rs/lib.rs: add GisMapScene struct, UiComponentSceneNode.gis_map field, build_gis_map_scene() constructor"
+   status: completed
+ - id: engine-canvas-map
+   content: "framework/renderer/wgpu/rs/lib.rs engine_canvas: add GisMap region (MapHost registry, sync_map_host, paint_gis2d_map via render_vello_scene) and gis2d-map dispatch arms for wheel/pointer/render"
+   status: completed
+ - id: plugin-scene-switch
+   content: "gis/2d/plugin/rs/lib.rs: switch render_canvas to build_gis_map_scene, delete generic-rect helpers (map_canvas_layers, GisMapCanvasLayer, canvas_layers, default_map_layers)"
+   status: completed
+ - id: tile-fetch
+   content: Wire pending map tile fetch/upload through AppRuntime::frame asset-poll loop (wasm32 fetch); add native-bin HTTP fetch fallback
+   status: completed
+ - id: interaction-marquee-hover
+   content: "engine_canvas gis_map: real marquee (rect+lasso) drag with merge-mode from modifiers, middle-button pan, hover hit-test, right-click context menu via push_context_menu_item"
+   status: completed
+ - id: plugin-interaction-commands
+   content: "gis/2d/plugin/rs/lib.rs: extend Gis2dPlayRuntime + handle_command with setFeatureSelection(mode), setHover, setSelectionMethod, clearSelection, selectAll, deselect, focusFeature, openSource, setLayerStrokeScale"
+   status: completed
+ - id: focus-openurl
+   content: "gis/2d/rs/lib.rs: add MapHost::focus_feature if missing; add open_url helper (wasm32 window.open, native-bin best-effort)"
+   status: completed
+ - id: layer-weight-sliders
+   content: "gis/2d/plugin/rs/lib.rs inspector: add per-layer stroke-scale UiSliderNodes via layer_weight_slider_ids_json"
+   status: completed
+ - id: verify-close
+   content: Open repo MCP ticket under gis/map goal, rebuild + runtime-verify against premigration behavior, extend existing Rust tests, close ticket with summary
+   status: in_progress
 isProject: false
 ---
 
@@ -53,8 +53,6 @@ flowchart LR
   mapHost -->|"hit_test / features_in_rect / features_in_polygon"| engineCanvas
   engineCanvas -->|"setSelection / setHover / setLayerStrokeScale / focusFeature"| plugin
 ```
-
-
 
 ## Phase 1 — Native Vello scene plumbing (visual foundation)
 
@@ -92,4 +90,3 @@ flowchart LR
 - Rebuild the `gis2d` native plugin + wgpu Trunk dev server (`SEMIO_PLUGIN=gis2d SEMIO_RENDERER=wgpu`), verify at runtime against premigration behavior: styled tile/vector map (not placeholder rects), hover highlight, rectangle+lasso multi-select in all 4 modes, middle-drag pan + wheel zoom, right-click context menu actions, layer visibility + weight sliders, undo/redo still functional.
 - Extend the existing Rust test modules in [gis/2d/plugin/rs/lib.rs](gis/2d/plugin/rs/lib.rs) (no new test files) for the new commands; run the full Rust + relevant vitest suites.
 - Close the ticket with a summary listing every file touched.
-

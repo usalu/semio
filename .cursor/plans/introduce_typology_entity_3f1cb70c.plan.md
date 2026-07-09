@@ -2,51 +2,51 @@
 name: Introduce Typology Entity
 overview: Introduce a new first-class `Typology` entity that owns `Type`s and `Design`s, making `Kit` own `Typology`s instead of directly owning types/designs. `Family` (port compatibility) stays at kit root, and type/design `families` references are unchanged. Refactor across Rust authority, GraphQL, all language clients, schemas, persistence, fixtures, and tests, leaving no legacy.
 todos:
-  - id: ticket
-    content: Open repo ticket (read repo://goals first); keep temp files in ticket folder
-    status: completed
-  - id: rust
-    content: "Add Typology entity in lib.rs: Kit owns typologies, Type/Design owner_typology, computed Kit.types/designs, diff ladder, VFS, hydration; re-export GraphQL SDL"
-    status: completed
-  - id: graphql
-    content: Update schema.golden.graphql (Typology type/connection/diff, Kit.typologies, Folder.typologies, owner->Typology); regenerate schema.graphql
-    status: completed
-  - id: json-openapi
-    content: "Update kit.json/type.json/design.json/context + openapi: add Typology/TypologyId/typologies, type/design owning typology"
-    status: completed
-  - id: sql
-    content: "Update sqlite + hub postgres + repo server postgres: typology tables, type/design owned by typology, keep family tables"
-    status: completed
-  - id: yaml
-    content: "Update schema.yaml conceptual model: typology anchor, kit owns typologies+families"
-    status: completed
-  - id: client-go
-    content: "Go main.go/kit_graph.go/main_test.go: Typology type, Kit.Typologies, owner, hashing/diff/sqlite"
-    status: completed
-  - id: client-py
-    content: "Python main.py + engine main.py: Typology model, owner, parse/serialize, helpers, tests"
-    status: completed
-  - id: client-net
-    content: "C# Compose.cs + Tests: Typology class, Kit.Typologies, owner, export snapshots"
-    status: completed
-  - id: client-ts
-    content: "TS js/index.ts (+ react, query): Typology class, Kit.typologies, computed types/designs, Folder.typologies"
-    status: completed
-  - id: client-rb
-    content: "Ruby compose.rb: mirror Typology"
-    status: completed
-  - id: sketchpad
-    content: Sketchpad VFS node kind + readers + kit-tree nesting under typologies; storybook command schema; embedded tests
-    status: completed
-  - id: fixtures
-    content: Add typologies and owning-typology to all kit fixtures, dev metabolism tree, assets metabolism + assets/index.ts lookups
-    status: completed
-  - id: grasshopper
-    content: "Grasshopper components.json: typology params/components"
-    status: cancelled
-  - id: validate
-    content: Regenerate schema; run Rust/Go/Python/C#/JS/sketchpad/algorithms tests; confirm metabolism round-trip with debug logs; close ticket
-    status: completed
+ - id: ticket
+   content: Open repo ticket (read repo://goals first); keep temp files in ticket folder
+   status: completed
+ - id: rust
+   content: "Add Typology entity in lib.rs: Kit owns typologies, Type/Design owner_typology, computed Kit.types/designs, diff ladder, VFS, hydration; re-export GraphQL SDL"
+   status: completed
+ - id: graphql
+   content: Update schema.golden.graphql (Typology type/connection/diff, Kit.typologies, Folder.typologies, owner->Typology); regenerate schema.graphql
+   status: completed
+ - id: json-openapi
+   content: "Update kit.json/type.json/design.json/context + openapi: add Typology/TypologyId/typologies, type/design owning typology"
+   status: completed
+ - id: sql
+   content: "Update sqlite + hub postgres + repo server postgres: typology tables, type/design owned by typology, keep family tables"
+   status: completed
+ - id: yaml
+   content: "Update schema.yaml conceptual model: typology anchor, kit owns typologies+families"
+   status: completed
+ - id: client-go
+   content: "Go main.go/kit_graph.go/main_test.go: Typology type, Kit.Typologies, owner, hashing/diff/sqlite"
+   status: completed
+ - id: client-py
+   content: "Python main.py + engine main.py: Typology model, owner, parse/serialize, helpers, tests"
+   status: completed
+ - id: client-net
+   content: "C# Compose.cs + Tests: Typology class, Kit.Typologies, owner, export snapshots"
+   status: completed
+ - id: client-ts
+   content: "TS js/index.ts (+ react, query): Typology class, Kit.typologies, computed types/designs, Folder.typologies"
+   status: completed
+ - id: client-rb
+   content: "Ruby compose.rb: mirror Typology"
+   status: completed
+ - id: sketchpad
+   content: Sketchpad VFS node kind + readers + kit-tree nesting under typologies; storybook command schema; embedded tests
+   status: completed
+ - id: fixtures
+   content: Add typologies and owning-typology to all kit fixtures, dev metabolism tree, assets metabolism + assets/index.ts lookups
+   status: completed
+ - id: grasshopper
+   content: "Grasshopper components.json: typology params/components"
+   status: cancelled
+ - id: validate
+   content: Regenerate schema; run Rust/Go/Python/C#/JS/sketchpad/algorithms tests; confirm metabolism round-trip with debug logs; close ticket
+   status: completed
 isProject: false
 ---
 
@@ -70,6 +70,7 @@ Note: `AGENTS.md` files (which contain the math/rank spec for `Kit = (T_K, D_K, 
 ## 1. Rust authority (source of truth)
 
 `compose/client/lib/rs/lib.rs`:
+
 - Add a `Typology` entity (mirror the `Family` macro shell at lines ~1450-1485): `id, name, description, icon, folder_id, owner_kit`, plus owned `types`/`designs` weak-id maps.
 - `Type` (~3183) and `Design` (~4006): replace `owner_kit: Weak<Kit>` with `owner_typology: Weak<Typology>`; resolver `owner` returns the typology.
 - `Kit` (~4734): remove stored `types`/`designs` vecs+maps; add `typologies: Vec<Arc<Typology>>` + id map. Add resolvers `typologies()`, `typology(id)`; make `types()`/`designs()` computed by flattening typologies. Keep `families` store and `snapshot_families_projection`.

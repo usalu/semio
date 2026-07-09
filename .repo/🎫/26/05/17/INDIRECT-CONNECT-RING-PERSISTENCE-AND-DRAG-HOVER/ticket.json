@@ -5,7 +5,5 @@
   "description": "Fix indirect connect: keep ghost handle ring visible during LinkAtSourceHandle/LinkDragSnap (selection grows past 1 id). Highlight compatible target nodes during drag; draw rings above nodes but below active link wire; wire color secondary/selected-node styling not selection_preview.",
   "summary": "Indirect ring: derive ring node from LinkAtSourceHandle/LinkDragSnap source handle so the ghost ring stays after merge_pick grows selection past one id. Added link_drag_compatible_target_node_highlight_id + node_has_any_free_link_compatible_handle to paint compatible target nodes with selected chrome during drag and in LinkTargetNode. Reordered draw: passive wires, indirect ring, then active link curve on top; active link uses node_stroke at 2.85px instead of selection_preview. Implemented handle_eligible_indirect_connect_ring (visible, no incident edge) for hit-test and ring draw. New host test board_host_indirect_ring_stays_hit_testable_after_starting_link.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪5aaf36eb8dd44f0a9c8917824d34552a"
-  ]
+  "sessions": ["⚪5aaf36eb8dd44f0a9c8917824d34552a"]
 }

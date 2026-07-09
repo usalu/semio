@@ -10,9 +10,9 @@ Every bundle or workspace router is a single `script.ts`. Implement commands as 
 import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "./src/bundle-script.ts";
 
 class TestScript extends BundleScript {
-  run(segments: string[]) {
-    runVitest(this.root, segments);
-  }
+ run(segments: string[]) {
+  runVitest(this.root, segments);
+ }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);

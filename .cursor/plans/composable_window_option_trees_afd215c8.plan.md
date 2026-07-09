@@ -2,24 +2,24 @@
 name: Composable Window Option Trees
 overview: Make window options a generic, recursively-composable tree in the framework `WindowMeasure` model, render it with a new ultra-compact collapsible rail, and reorganize every play app (3D/2D/5D/CAD) into grouped trees (e.g. Brush -> Tolerance + Distribution -> Objects/Vortices).
 todos:
-  - id: ticket
-    content: Read repo://goals and open ticket 'Composable Window Option Trees' under the best goal
-    status: cancelled
-  - id: core-model
-    content: Add WindowMeasureGroup to framework/core WindowMeasure union (recursive tree)
-    status: completed
-  - id: ui-render
-    content: Add UI group node + compact UIWindowMeasureGroup collapsible renderer + rail styles; recurse in UIWindowMeasures
-    status: completed
-  - id: mapping
-    content: Make windowMeasuresToGolden recurse into group children
-    status: completed
-  - id: producers
-    content: Reorganize 3d/2d/5d/cad windowMeasures builders into grouped trees (Brush->Tolerance+Distribution->Objects/Vortices)
-    status: completed
-  - id: tests
-    content: Extend inline vitest suites for tree producers + mapping recursion; runtime-verify compact rail
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open ticket 'Composable Window Option Trees' under the best goal
+   status: cancelled
+ - id: core-model
+   content: Add WindowMeasureGroup to framework/core WindowMeasure union (recursive tree)
+   status: completed
+ - id: ui-render
+   content: Add UI group node + compact UIWindowMeasureGroup collapsible renderer + rail styles; recurse in UIWindowMeasures
+   status: completed
+ - id: mapping
+   content: Make windowMeasuresToGolden recurse into group children
+   status: completed
+ - id: producers
+   content: Reorganize 3d/2d/5d/cad windowMeasures builders into grouped trees (Brush->Tolerance+Distribution->Objects/Vortices)
+   status: completed
+ - id: tests
+   content: Extend inline vitest suites for tree producers + mapping recursion; runtime-verify compact rail
+   status: completed
 isProject: false
 ---
 
@@ -49,11 +49,11 @@ In [framework/core/index.ts](framework/core/index.ts) `//#region 🔖WindowMeasu
 
 ```ts
 export interface WindowMeasureGroup {
-  readonly kind: "group";
-  readonly id: string;
-  readonly label: string;
-  readonly defaultOpen?: boolean;
-  readonly children: readonly WindowMeasure[];
+ readonly kind: "group";
+ readonly id: string;
+ readonly label: string;
+ readonly defaultOpen?: boolean;
+ readonly children: readonly WindowMeasure[];
 }
 export type WindowMeasure = WindowMeasureSelect | WindowMeasureSlider | WindowMeasureToggle | WindowMeasureGroup;
 ```

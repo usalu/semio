@@ -24,9 +24,7 @@
         },
         "kinds": {
           "kind": "const",
-          "value": [
-            "edge"
-          ]
+          "value": ["edge"]
         }
       },
       "assignTo": "result"

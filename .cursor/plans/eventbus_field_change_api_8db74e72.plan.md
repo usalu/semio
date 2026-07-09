@@ -2,42 +2,42 @@
 name: EventBus Field Change API
 overview: Extend the `EventBus` in `compose/js/index.ts` with a typed WIP/session tick fan-out and a `subscribeFieldChange` diff helper, then add `on${Field}Change(cb)` methods on every entity class (Kit, Design, Type, Port, Connector, Piece, Connection, Author, Quality, Tag, Concept, Representation, Family, FileEntity, FolderEntity, LayerEntity, GroupEntity, StatEntity, PropEntity) that mirror their existing `read${Field}` methods. Field-level events fire only when the parsed value actually changed; they are deliberately separate from operation-level events (e.g. `onRenamed`).
 todos:
-  - id: ticket_open
-    content: Read repo://goals, open ticket EventBus-Field-Change under the right goal
-    status: pending
-  - id: eventbus_core
-    content: "Rewrite EventBus: tickWip/tickSession, subscribeWipTick/subscribeSessionTick, subscribeFieldChange<T>; add eqIs/eqIdList/eqDeep helpers"
-    status: pending
-  - id: dispatcher_cleanup
-    content: Rewrite Kit.dispatchSubscriptionGraphqlData to call tickWip/tickSession; drop synthetic kitRenamed/changedDescription/event/operationSucceeded branches
-    status: pending
-  - id: field_specs_cleanup
-    content: Drop eventKind from FieldSpec/KIT_ARTIFACT_FIELD_SPECS/DESIGN_ARTIFACT_FIELD_SPECS; remove Design.subscribeField; rename Design.onDescriptionChanged → onDescriptionChange
-    status: pending
-  - id: kit_on_change
-    content: Add on*Change for Kit (Name/Description/Icon/Image/Preview/Remote/Homepage/License/Uri + *IdsChange for types/design/authors/qualities/tags/concepts)
-    status: pending
-  - id: design_on_change
-    content: Add on*Change for Design (Name/Description/Icon/Image/Unit/QualitySum + Piece/Connection/AttributeIdsChange)
-    status: pending
-  - id: type_port_connector_on_change
-    content: Add on*Change for Type, Port, Connector
-    status: pending
-  - id: piece_connection_on_change
-    content: Add on*Change for Piece (incl. Position/FlatPosition/Plane/Center/Blueprint/ChildIds/Depth/ConnectionKind) and Connection (geometry + sides + attributes)
-    status: pending
-  - id: leaf_entities_on_change
-    content: Add on*Change for Author, Quality, Tag, Concept, Representation, Family, FileEntity, FolderEntity, LayerEntity, GroupEntity, StatEntity, PropEntity
-    status: pending
-  - id: tests
-    content: "Extend embedded describe(\"compose/js field-only kit\") block: subscribeFieldChange unit, Kit/Design/Piece on*Change end-to-end, multi-listener, unsubscribe, no-op suppression"
-    status: pending
-  - id: validate
-    content: Run tsc --noEmit and vitest run in compose/js until green
-    status: pending
-  - id: ticket_close
-    content: ticket_close with summary and file list
-    status: pending
+ - id: ticket_open
+   content: Read repo://goals, open ticket EventBus-Field-Change under the right goal
+   status: pending
+ - id: eventbus_core
+   content: "Rewrite EventBus: tickWip/tickSession, subscribeWipTick/subscribeSessionTick, subscribeFieldChange<T>; add eqIs/eqIdList/eqDeep helpers"
+   status: pending
+ - id: dispatcher_cleanup
+   content: Rewrite Kit.dispatchSubscriptionGraphqlData to call tickWip/tickSession; drop synthetic kitRenamed/changedDescription/event/operationSucceeded branches
+   status: pending
+ - id: field_specs_cleanup
+   content: Drop eventKind from FieldSpec/KIT_ARTIFACT_FIELD_SPECS/DESIGN_ARTIFACT_FIELD_SPECS; remove Design.subscribeField; rename Design.onDescriptionChanged → onDescriptionChange
+   status: pending
+ - id: kit_on_change
+   content: Add on*Change for Kit (Name/Description/Icon/Image/Preview/Remote/Homepage/License/Uri + *IdsChange for types/design/authors/qualities/tags/concepts)
+   status: pending
+ - id: design_on_change
+   content: Add on*Change for Design (Name/Description/Icon/Image/Unit/QualitySum + Piece/Connection/AttributeIdsChange)
+   status: pending
+ - id: type_port_connector_on_change
+   content: Add on*Change for Type, Port, Connector
+   status: pending
+ - id: piece_connection_on_change
+   content: Add on*Change for Piece (incl. Position/FlatPosition/Plane/Center/Blueprint/ChildIds/Depth/ConnectionKind) and Connection (geometry + sides + attributes)
+   status: pending
+ - id: leaf_entities_on_change
+   content: Add on*Change for Author, Quality, Tag, Concept, Representation, Family, FileEntity, FolderEntity, LayerEntity, GroupEntity, StatEntity, PropEntity
+   status: pending
+ - id: tests
+   content: 'Extend embedded describe("compose/js field-only kit") block: subscribeFieldChange unit, Kit/Design/Piece on*Change end-to-end, multi-listener, unsubscribe, no-op suppression'
+   status: pending
+ - id: validate
+   content: Run tsc --noEmit and vitest run in compose/js until green
+   status: pending
+ - id: ticket_close
+   content: ticket_close with summary and file list
+   status: pending
 isProject: false
 ---
 
@@ -60,8 +60,6 @@ flowchart TD
   Entity[Kit / Design / Piece / …] -->|"on*Change wraps subscribeFieldChange"| FieldSub
 ```
 
-
-
 ## EventBus surface (`[compose/js/index.ts](compose/js/index.ts)` lines 222–249)
 
 Replace the current minimal bus with:
@@ -70,30 +68,25 @@ Replace the current minimal bus with:
 type Equals<T> = (a: T, b: T) => boolean;
 
 export class EventBus {
-  // legacy raw fan-out kept for the few callers that still inspect kind/payload (commandSucceeded, operationFailed)
-  private readonly raw = new Set<(ev: JsonValue) => void>();
-  private readonly wipListeners = new Set<(payload: JsonObject | null) => void>();
-  private readonly sessionListeners = new Set<(payload: JsonObject | null) => void>();
+ // legacy raw fan-out kept for the few callers that still inspect kind/payload (commandSucceeded, operationFailed)
+ private readonly raw = new Set<(ev: JsonValue) => void>();
+ private readonly wipListeners = new Set<(payload: JsonObject | null) => void>();
+ private readonly sessionListeners = new Set<(payload: JsonObject | null) => void>();
 
-  emit(ev: JsonValue): void;                      // unchanged signature, only used by legacy raw kinds
-  subscribe(handler): Unsubscribe;                // unchanged
-  subscribeKind(kind, handler): Unsubscribe;      // unchanged
+ emit(ev: JsonValue): void; // unchanged signature, only used by legacy raw kinds
+ subscribe(handler): Unsubscribe; // unchanged
+ subscribeKind(kind, handler): Unsubscribe; // unchanged
 
-  // new: typed transport demux entry points (called by Kit.dispatchSubscriptionGraphqlData)
-  tickWip(payload: JsonObject | null): void;
-  tickSession(payload: JsonObject | null): void;
+ // new: typed transport demux entry points (called by Kit.dispatchSubscriptionGraphqlData)
+ tickWip(payload: JsonObject | null): void;
+ tickSession(payload: JsonObject | null): void;
 
-  // new: typed fan-outs
-  subscribeWipTick(cb: (payload: JsonObject | null) => void): Unsubscribe;
-  subscribeSessionTick(cb: (payload: JsonObject | null) => void): Unsubscribe;
+ // new: typed fan-outs
+ subscribeWipTick(cb: (payload: JsonObject | null) => void): Unsubscribe;
+ subscribeSessionTick(cb: (payload: JsonObject | null) => void): Unsubscribe;
 
-  // new: field-change helper used by every on*Change method
-  subscribeFieldChange<T>(
-    read: () => Promise<T>,
-    equals: Equals<T>,
-    cb: (next: T) => void,
-    opts?: { readonly fireInitial?: boolean; readonly source?: "wip" | "session" | "both" },
-  ): Unsubscribe;
+ // new: field-change helper used by every on*Change method
+ subscribeFieldChange<T>(read: () => Promise<T>, equals: Equals<T>, cb: (next: T) => void, opts?: { readonly fireInitial?: boolean; readonly source?: "wip" | "session" | "both" }): Unsubscribe;
 }
 ```
 
@@ -219,4 +212,3 @@ Extend that block (no new files) with:
 
 - Operation-level event API (`onRenamed`, `onPieceMoved`, …) — separate ticket; will reuse `EventBus.subscribeKind` with a typed payload union.
 - Per-field server-side live queries — needs `op: "unsubscribe"` in the worker protocol and an `Unsubscribe` return from `WorkerStringTransport.subscribe`. Once landed, `subscribeFieldChange` can switch from "tick + refetch" to "one live subscription per leaf" without changing the public `on*Change` surface.
-

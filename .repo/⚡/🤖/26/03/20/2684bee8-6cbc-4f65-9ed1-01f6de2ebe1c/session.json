@@ -250,13 +250,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "elements/ui/components.json",
-                "elements/ui/index.ts",
-                "elements/ui/package.json",
-                "elements/ui/tailwind.config.ts",
-                "compose/sketchpad/components.json"
-              ],
+              "files": ["elements/ui/components.json", "elements/ui/index.ts", "elements/ui/package.json", "elements/ui/tailwind.config.ts", "compose/sketchpad/components.json"],
               "no_github": true,
               "path": "2026/03/20/MOVE-SHARED-SHADCN-SETUP-TO-ELEMENTS-UI",
               "summary": "Moved the canonical shadcn setup into elements/ui, exported the shared tailwindConfig from @elements/ui, exposed components.json from the shared package, redirected sketchpad's legacy shadcn config to generate into elements/ui, and validated both elements/ui and compose/sketchpad with TypeScript."
@@ -351,13 +345,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "elements/ui/components.json",
-                "elements/ui/index.ts",
-                "elements/ui/package.json",
-                "elements/ui/tailwind.config.ts",
-                "compose/sketchpad/components.json"
-              ],
+              "files": ["elements/ui/components.json", "elements/ui/index.ts", "elements/ui/package.json", "elements/ui/tailwind.config.ts", "compose/sketchpad/components.json"],
               "no_github": true,
               "path": "26/03/20/MOVE-SHARED-SHADCN-SETUP-TO-ELEMENTS-UI",
               "summary": "Moved the canonical shadcn setup into elements/ui, exported the shared tailwindConfig from @elements/ui, exposed components.json from the shared package, redirected sketchpad's legacy shadcn config to generate into elements/ui, and validated both elements/ui and compose/sketchpad with TypeScript."
@@ -387,13 +375,7 @@
             "mcp_result": "[🎫movesharedshadcnsetuptoelementsui](repo://y/00/m/00/d/00/tk/MOVE-SHARED-SHADCN-SETUP-TO-ELEMENTS-UI) - `closed` - `closed now`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "elements/ui/components.json",
-                "elements/ui/index.ts",
-                "elements/ui/package.json",
-                "elements/ui/tailwind.config.ts",
-                "compose/sketchpad/components.json"
-              ],
+              "files": ["elements/ui/components.json", "elements/ui/index.ts", "elements/ui/package.json", "elements/ui/tailwind.config.ts", "compose/sketchpad/components.json"],
               "no_github": true,
               "path": "26/03/20/MOVE-SHARED-SHADCN-SETUP-TO-ELEMENTS-UI",
               "summary": "Moved the canonical shadcn setup into elements/ui, exported the shared tailwindConfig from @elements/ui, exposed components.json from the shared package, redirected sketchpad's legacy shadcn config to generate into elements/ui, and validated both elements/ui and compose/sketchpad with TypeScript."

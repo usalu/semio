@@ -5,12 +5,12 @@ todos: []
 isProject: false
 ---
 
-
 # Insert Language-Tag Directories Under Every Bundle
 
 ## Goal
 
 Every implementation must start with its language tag as an immediate subdirectory of the bundle that owns it, e.g.:
+
 - [kernel/2d/engine/lib.rs](kernel/2d/engine/lib.rs) → `kernel/2d/engine/rs/lib.rs`
 - [trinity/jack/core/lib.rs](trinity/jack/core/lib.rs) → `trinity/jack/core/rs/lib.rs`
 - [note/core/index.ts](note/core/index.ts) → `note/core/js/index.ts`
@@ -44,6 +44,7 @@ Own directory name is already the language tag; leave exactly as-is:
 ## Dismantling the `cad/js/` umbrella (special case)
 
 Move every child up one level out of `cad/js/` into `cad/`, then insert `js/` locally in each:
+
 - `cad/js/core` → `cad/core/js`
 - `cad/js/runtime` → `cad/runtime/js`
 - `cad/js/query` → `cad/query/js`
@@ -62,6 +63,7 @@ Move every child up one level out of `cad/js/` into `cad/`, then insert `js/` lo
 ## Genuinely mixed-language bundles (need multiple language folders in one bundle)
 
 Confirmed by inspection — these have real source files of two languages directly co-located, not in separate nested bundles:
+
 - [flow/core](flow/core) — `index.ts` (real TS logic) + `lib.rs` (real Rust engine) → split into `flow/core/js/index.ts` and `flow/core/rs/{lib.rs,Cargo.toml}`; `package.json` stays at `flow/core/` with `exports` updated (`"." : "./js/index.ts"`, `"./pkg/flow_core.js"` → `"./rs/pkg/flow_core.js"`)
 - [coda/client/bin/assistant](coda/client/bin/assistant) — `main.py` (Python) + `mcp-app.tsx`/`vite.mcp-app.config.ts`/`mcp-app.html` (TS) → split into `.../py/{main.py,pyproject.toml,uv.lock}` and `.../js/{mcp-app.tsx,mcp-app.html,vite.mcp-app.config.ts}`
 - [compose/client/bin/engine](compose/client/bin/engine) — same pattern as above (`main.py` + `mcp-app.tsx`/vite config) → split into `py/` and `js/`
@@ -98,6 +100,6 @@ Everywhere else, a `Cargo.toml`/`package.json` pair in the same folder is just R
 4. After each batch: `bun install`, `cargo build --workspace`, `go build ./...` (where touched), relevant `vitest`/`uv` runs, and a check for dangling relative imports, before moving to the next batch.
 5. Close out with a full-repo `nx run-many` test sweep and a search for any remaining hardcoded old paths (docs, launch.json commands, dev server configs, playground registry).
 6. Close the ticket with a summary and the full list of touched files.
-</plan>
-<todos>
-[{"id":"ticket-open","content":"Open repo ticket for the language-tag restructuring after reviewing repo://goals"},{"id":"inventory-script","content":"Write ticket-scoped script to enumerate bundles, detected languages, and compute exact move-list"},{"id":"cad-js-dismantle","content":"Dismantle cad/js umbrella: relocate all 12 child bundles up a level and insert local js/ folders"},{"id":"mixed-bundles","content":"Split the 4 genuinely mixed-language bundles (flow/core, coda/client/bin/assistant, compose/client/bin/engine, repo/server/coordinator) into per-language subfolders"},{"id":"batch-kernel-trinity","content":"Restructure kernel/ and trinity/ bundles, update Cargo.toml members and path deps"},{"id":"batch-flow-mathematical","content":"Restructure flow/, mathematical/, imperative/, neural/, sequence/, lowpoly/ bundles"},{"id":"batch-framework-ui-repo","content":"Restructure framework/, ui/, repo/ bundles including go.work updates"},{"id":"batch-playground-tech","content":"Restructure remaining */core + */react playground technologies (draw, note, forms, gis, layout, procedural, puzzle, raster, reasoning, s, shooting, vcs, writer)"},{"id":"batch-compose-coda-mitbestand","content":"Restructure compose/, coda/, mit-bestand/ bundles including .csproj/.sln updates"},{"id":"update-config-surfaces","content":"Update root package.json workspaces, Cargo.toml, go.work, per-bundle package.json exports, script.ts paths, Monorepo.sln"},{"id":"verify-build","content":"Run bun install, cargo build --workspace, go build, vitest/uv sweeps per batch and fix dangling imports"},{"id":"ticket-close","content":"Close ticket with summary and full list of touched files"}]
+   </plan>
+   <todos>
+   [{"id":"ticket-open","content":"Open repo ticket for the language-tag restructuring after reviewing repo://goals"},{"id":"inventory-script","content":"Write ticket-scoped script to enumerate bundles, detected languages, and compute exact move-list"},{"id":"cad-js-dismantle","content":"Dismantle cad/js umbrella: relocate all 12 child bundles up a level and insert local js/ folders"},{"id":"mixed-bundles","content":"Split the 4 genuinely mixed-language bundles (flow/core, coda/client/bin/assistant, compose/client/bin/engine, repo/server/coordinator) into per-language subfolders"},{"id":"batch-kernel-trinity","content":"Restructure kernel/ and trinity/ bundles, update Cargo.toml members and path deps"},{"id":"batch-flow-mathematical","content":"Restructure flow/, mathematical/, imperative/, neural/, sequence/, lowpoly/ bundles"},{"id":"batch-framework-ui-repo","content":"Restructure framework/, ui/, repo/ bundles including go.work updates"},{"id":"batch-playground-tech","content":"Restructure remaining */core + */react playground technologies (draw, note, forms, gis, layout, procedural, puzzle, raster, reasoning, s, shooting, vcs, writer)"},{"id":"batch-compose-coda-mitbestand","content":"Restructure compose/, coda/, mit-bestand/ bundles including .csproj/.sln updates"},{"id":"update-config-surfaces","content":"Update root package.json workspaces, Cargo.toml, go.work, per-bundle package.json exports, script.ts paths, Monorepo.sln"},{"id":"verify-build","content":"Run bun install, cargo build --workspace, go build, vitest/uv sweeps per batch and fix dangling imports"},{"id":"ticket-close","content":"Close ticket with summary and full list of touched files"}]

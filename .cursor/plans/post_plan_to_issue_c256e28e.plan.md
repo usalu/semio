@@ -2,21 +2,21 @@
 name: Post Plan To Issue
 overview: When a ticket is opened or reopened with a bound plan (e.g. .cursor/plans for Cursor, and the equivalent for Claude/Codex/Copilot/Kiro), post the plan's markdown to the ticket's GitHub issue as a collapsible comment.
 todos:
-  - id: region
-    content: Add 📝TicketPlanComment region in main.go with stripPlanFrontmatter, formatPlanComment, and postTicketPlanComment helpers.
-    status: completed
-  - id: bodyfile
-    content: Update ghAddComment to use a temp --body-file for robustness with large plan bodies.
-    status: completed
-  - id: open
-    content: Call postTicketPlanComment in CreateTicket after issue creation, before SaveTicket.
-    status: completed
-  - id: reopen
-    content: Call postTicketPlanComment in ReopenTicket after the prompt comment, before SaveTicket.
-    status: completed
-  - id: validate
-    content: Rebuild the Cursor MCP binary and confirm the plan comment is posted on open and reopen with [DEBUG] logs, then remove the logs.
-    status: completed
+ - id: region
+   content: Add 📝TicketPlanComment region in main.go with stripPlanFrontmatter, formatPlanComment, and postTicketPlanComment helpers.
+   status: completed
+ - id: bodyfile
+   content: Update ghAddComment to use a temp --body-file for robustness with large plan bodies.
+   status: completed
+ - id: open
+   content: Call postTicketPlanComment in CreateTicket after issue creation, before SaveTicket.
+   status: completed
+ - id: reopen
+   content: Call postTicketPlanComment in ReopenTicket after the prompt comment, before SaveTicket.
+   status: completed
+ - id: validate
+   content: Rebuild the Cursor MCP binary and confirm the plan comment is posted on open and reopen with [DEBUG] logs, then remove the logs.
+   status: completed
 isProject: false
 ---
 
@@ -56,7 +56,8 @@ Add after the `📦MoveTicketPlan` region (after line 45349). Three helpers:
 </details>
 ```
 
-  Return empty string (no error) when there is no readable content.
+Return empty string (no error) when there is no readable content.
+
 - `postTicketPlanComment(ticket *Ticket, noManagement bool)` — guards (`noManagement`, `ticket.Plan == nil`, empty `Plan.Source`, missing `Management.Issue`), builds the body via `formatPlanComment`, and calls `GetManagementProvider().AddComment(issueURL, body)`. On error it prints a `Warning:` (same non-fatal pattern as the existing comment calls) so issue creation is never blocked.
 
 ### 2. Make `ghAddComment` robust for large bodies (line 22475)

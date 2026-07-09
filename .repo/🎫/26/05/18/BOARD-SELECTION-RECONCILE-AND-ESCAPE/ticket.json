@@ -5,7 +5,5 @@
   "description": "Fix selection-exit secondary highlight not visible: JSX syncBoardScene overwrote object.selected vs WASM selectionIds. Reconcile selected flags after scene sync. Add Escape: cancel in-flight area select (restore initial_ids) or restore previous selection snapshot; clear exit highlight on restore.",
   "summary": "Root cause: syncBoardScene applied JSX selected props and overwrote WASM-driven selectionIds on scene objects, so Rust still painted primary selected chrome and never exit-secondary. Added BoardRenderer.reconcileSceneSelectedWithSelectionIds() after syncBoardScene. Tracked selectionPreviousForEscape on each committed merge for one-step undo: Escape cancels in-flight area select via new WASM cancelAreaSelect (restores initial_ids) or restores the previous selection and clears exit highlights. Rust test board_host_cancel_area_select_restores_initial_selection.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪59b5832fc7124e33b1297c7e15dc57cc"
-  ]
+  "sessions": ["⚪59b5832fc7124e33b1297c7e15dc57cc"]
 }

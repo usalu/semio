@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Multiple Vitest tests were failing after schema changes:
@@ -68,6 +69,7 @@ Multiple Vitest tests were failing after schema changes:
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix Kit Serialization for Vitest Tests

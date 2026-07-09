@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 User requested extending the Design E2E test to:
@@ -26,8 +27,8 @@ Previous work in `log/tickets/2025/11/28/DRAG-DROP-FIX.md` fixed coordinate calc
 
 ```typescript
 if (!(event.activatorEvent instanceof PointerEvent)) {
-  console.warn("[DEBUG] [DND] Event is not a PointerEvent");
-  return;
+ console.warn("[DEBUG] [DND] Event is not a PointerEvent");
+ return;
 }
 ```
 
@@ -80,6 +81,7 @@ Changed approach to validate existing infrastructure:
 ## Log
 
 ## Summary
+
 # Summary
 
 Update Playwright drag-and-drop test for dnd-kit compatibility

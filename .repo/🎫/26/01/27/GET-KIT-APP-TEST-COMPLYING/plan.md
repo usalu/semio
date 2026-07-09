@@ -15,21 +15,24 @@ The Kit test in `js/compose/sketchpad.test.ts` is failing because:
 ## Solution
 
 ### 1. Add data-testid to Home.tsx row elements
+
 Add `data-testid={`home-kit-row-${row.id}`}` to the row div for reliable test targeting.
 
 ### 2. Fix the test to properly wait for kit loading
+
 - Wait for the loading spinner to disappear instead of "Loading" text
 - Wait for the row to not have `pointer-events-none` class
 - Or wait for the row to have `data-row-id` attribute
 
 ### 3. Fix the double-click targeting
+
 - Use the row element directly via data-testid instead of relying on text content
 - Ensure the click is on the row element itself, not a child with stopPropagation
 
 ## Tasks
 
 - [ ] Add data-testid to Home.tsx table rows
-- [ ] Update initHome() to wait for kit to finish loading properly  
+- [ ] Update initHome() to wait for kit to finish loading properly
 - [ ] Update initHome() to use data-testid for double-click
 - [ ] Test that Kit test passes
 - [ ] Test that Type and Design tests pass (they depend on initKit/initHome)

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Plan
 
 1. Add TomlLanguage struct with:
@@ -30,9 +31,11 @@
 ## Changes
 
 ## Log
+
 # Log
 
 ## Task
+
 Add Toml, Yaml, Sql, and Graphql language plugins to the repo CLI language registry.
 
 ## Implementation

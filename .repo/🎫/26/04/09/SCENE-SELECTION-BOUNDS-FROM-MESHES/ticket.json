@@ -4,7 +4,5 @@
   "description": "Bounds from Box3.setOnObject on registered piece/connection meshes; paste findMatchingConnector id fallback; hashKit determinism test fix.",
   "summary": "Scene selection bounds use THREE.Box3 from registered piece/connection model roots (SceneModelBoundsRegistryProvider, SceneSelectionBoundsFromModels). Diagram bounds unchanged (accent rect). Paste remapping: findMatchingConnector uses name or guid plus port compatibility. hashKit tests use cloned kits where needed. Type follow-up: File.description on FileSchema; connector match uses guid not id. Vitest: @semio-tech/compose-js 155, @compose/ui 232 passed.",
   "goal": "🎯composeui",
-  "sessions": [
-    "⚪41c424d7db604439b0c19be2b8c37bb9"
-  ]
+  "sessions": ["⚪41c424d7db604439b0c19be2b8c37bb9"]
 }

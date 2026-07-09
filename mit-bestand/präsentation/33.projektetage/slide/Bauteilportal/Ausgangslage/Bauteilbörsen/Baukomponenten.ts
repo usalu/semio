@@ -4,12 +4,12 @@ import { baukomponentenGridArtifacts } from "@semio-tech/mit-bestand-praesentati
 const { participants, embodiments, dispositions } = baukomponentenGridArtifacts();
 
 export default {
-	order: 0,
-	participants,
-	embodiments,
-	arrangement: {
-		id: "baukomponenten",
-		name: "Baukomponenten",
-		dispositions,
-	},
+  order: 0,
+  participants,
+  embodiments,
+  arrangement: {
+    id: "baukomponenten",
+    name: "Baukomponenten",
+    dispositions,
+  },
 } satisfies SlideFile;

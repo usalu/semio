@@ -21,19 +21,20 @@
 
 ## Tests
 
-| Package | Result |
-|---------|--------|
-| `@semio-tech/ui-styling:test` | 12/12 pass |
-| `@semio-tech/framework-playground-renderer-react:test` | 25/25 pass |
-| `@semio-tech/draw-core:test` | 6/6 pass |
-| `@semio-tech/note-core:test` | 11/11 pass |
-| `@semio-tech/forms-core:test` | FAIL — transitive import chain `forms → flow-react → procedural-2d-react` hits circular init (`FlowExtensionHost` undefined during vitest collection); pre-existing core↔react coupling, not play-host boot path |
-| `@semio-tech/framework-playground-core:test` | FAIL — pre-existing missing `@semio-tech/framework-core` vitest alias |
-| dependency-cruiser (draw, note, flow, playground) | clean |
+| Package                                                | Result                                                                                                                                                                                                           |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@semio-tech/ui-styling:test`                          | 12/12 pass                                                                                                                                                                                                       |
+| `@semio-tech/framework-playground-renderer-react:test` | 25/25 pass                                                                                                                                                                                                       |
+| `@semio-tech/draw-core:test`                           | 6/6 pass                                                                                                                                                                                                         |
+| `@semio-tech/note-core:test`                           | 11/11 pass                                                                                                                                                                                                       |
+| `@semio-tech/forms-core:test`                          | FAIL — transitive import chain `forms → flow-react → procedural-2d-react` hits circular init (`FlowExtensionHost` undefined during vitest collection); pre-existing core↔react coupling, not play-host boot path |
+| `@semio-tech/framework-playground-core:test`           | FAIL — pre-existing missing `@semio-tech/framework-core` vitest alias                                                                                                                                            |
+| dependency-cruiser (draw, note, flow, playground)      | clean                                                                                                                                                                                                            |
 
 ## Remaining play-host cleanup (follow-up)
 
 Merged the last 4 apps that still used `./play-host` subpath exports (cycle workaround):
+
 - flow, dag, procedural-3d, puzzle-3d
 
 All now export `*AppRenderer` from main `index.tsx` `//#region 🔖PlayHost` with async factory + lazy core import where core↔react cycles exist.

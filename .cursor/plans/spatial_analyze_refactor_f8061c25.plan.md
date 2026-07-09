@@ -2,24 +2,24 @@
 name: spatial analyze refactor
 overview: Rewrite the spatial analyzer so parts come from one N-way intersection and per-cell differences across all intersecting cells, faces are classified by containment / vertex orientation, and surfaces are returned as exactly four boolean-unioned views (internal/external × horizontal/vertical).
 todos:
-  - id: brep-decompose
-    content: Rewrite `decomposeCells` in `spatial/js/kernel-brepjs/index.ts` to cluster cells by interference, run one N-way `intersect` per cluster and one `cutAll` per touched cell, exploding results into AtomicParts.
-    status: completed
-  - id: brep-surfaces
-    content: Rewrite `surfaceViewsFromAtomics` to explode part faces, classify internal/external via point-in-other-part, classify stance via vertex Z orientation, then boolean-union per (stance, exposure) into exactly four SurfaceViews.
-    status: completed
-  - id: aabb-fallback
-    content: Apply the same intersect-then-per-cell-difference + face-classify + per-bucket-union pipeline to the AABB fallback (`computeBooleanPartRecordsFromAabbs` and `computeSurfaceViewsFromTopologyFacesWithParts`).
-    status: completed
-  - id: kernel-glue
-    content: Simplify `refreshDerivedViews` / `computeSurfaceViews` / `computePartViews` to return the new brep results directly (no topo-vs-brep heuristic fallback).
-    status: completed
-  - id: tests
-    content: Update existing surface/part tests in `spatial/js/core/index.ts` for the new four-bucket output, add a 3-box L-arrangement regression test, and run vitest until green.
-    status: completed
-  - id: ticket
-    content: Open a repo ticket via the repo MCP, do the work inside it, and close it with the file list + summary per AGENTS.md.
-    status: cancelled
+ - id: brep-decompose
+   content: Rewrite `decomposeCells` in `spatial/js/kernel-brepjs/index.ts` to cluster cells by interference, run one N-way `intersect` per cluster and one `cutAll` per touched cell, exploding results into AtomicParts.
+   status: completed
+ - id: brep-surfaces
+   content: Rewrite `surfaceViewsFromAtomics` to explode part faces, classify internal/external via point-in-other-part, classify stance via vertex Z orientation, then boolean-union per (stance, exposure) into exactly four SurfaceViews.
+   status: completed
+ - id: aabb-fallback
+   content: Apply the same intersect-then-per-cell-difference + face-classify + per-bucket-union pipeline to the AABB fallback (`computeBooleanPartRecordsFromAabbs` and `computeSurfaceViewsFromTopologyFacesWithParts`).
+   status: completed
+ - id: kernel-glue
+   content: Simplify `refreshDerivedViews` / `computeSurfaceViews` / `computePartViews` to return the new brep results directly (no topo-vs-brep heuristic fallback).
+   status: completed
+ - id: tests
+   content: Update existing surface/part tests in `spatial/js/core/index.ts` for the new four-bucket output, add a 3-box L-arrangement regression test, and run vitest until green.
+   status: completed
+ - id: ticket
+   content: Open a repo ticket via the repo MCP, do the work inside it, and close it with the file list + summary per AGENTS.md.
+   status: cancelled
 isProject: false
 ---
 

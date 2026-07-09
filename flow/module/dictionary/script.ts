@@ -12,12 +12,7 @@ class WasmScript extends BundleScript {
       wasmBaseName: "flow_module_dictionary",
       pkg: {
         name: "@semio-tech/flow-module-dictionary",
-        files: [
-          "flow_module_dictionary_bg.wasm",
-          "flow_module_dictionary.js",
-          "flow_module_dictionary.d.ts",
-          "flow_module_dictionary_bg.wasm.d.ts",
-        ],
+        files: ["flow_module_dictionary_bg.wasm", "flow_module_dictionary.js", "flow_module_dictionary.d.ts", "flow_module_dictionary_bg.wasm.d.ts"],
         main: "flow_module_dictionary.js",
         module: "flow_module_dictionary.js",
         types: "flow_module_dictionary.d.ts",

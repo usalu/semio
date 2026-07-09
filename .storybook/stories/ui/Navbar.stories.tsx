@@ -80,19 +80,19 @@ export const ToolbarDefault: Story = {
         <ToolbarZone>
           <ToolbarGroup>
             <ToolbarItem>
-              <Button id="toolbar-undo" variant="ghost" icon={<Undo className="size-tiny" />} onClick={() => { }} />
+              <Button id="toolbar-undo" variant="ghost" icon={<Undo className="size-tiny" />} onClick={() => {}} />
             </ToolbarItem>
             <ToolbarItem>
-              <Button id="toolbar-redo" variant="ghost" icon={<Redo className="size-tiny" />} onClick={() => { }} />
+              <Button id="toolbar-redo" variant="ghost" icon={<Redo className="size-tiny" />} onClick={() => {}} />
             </ToolbarItem>
           </ToolbarGroup>
           <ToolbarDivider />
           <ToolbarGroup>
             <ToolbarItem>
-              <Toggle id="toolbar-zoom-in" pressed={false} onPressedChange={() => { }} icon={<ZoomIn className="size-tiny" />} />
+              <Toggle id="toolbar-zoom-in" pressed={false} onPressedChange={() => {}} icon={<ZoomIn className="size-tiny" />} />
             </ToolbarItem>
             <ToolbarItem>
-              <Toggle id="toolbar-zoom-out" pressed={false} onPressedChange={() => { }} icon={<ZoomOut className="size-tiny" />} />
+              <Toggle id="toolbar-zoom-out" pressed={false} onPressedChange={() => {}} icon={<ZoomOut className="size-tiny" />} />
             </ToolbarItem>
           </ToolbarGroup>
           <ToolbarDivider />

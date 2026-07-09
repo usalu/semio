@@ -1,8 +1,5 @@
 import { readFileSync } from "fs";
-import {
-  getKitDiff,
-  areKitDiffsEqual,
-} from "/workspaces/semio/compose/js/compose";
+import { getKitDiff, areKitDiffsEqual } from "/workspaces/semio/compose/js/compose";
 
 const ASSETS = "/workspaces/semio/assets/compose";
 const kitRaw = JSON.parse(readFileSync(`${ASSETS}/kit_metabolism.json`, "utf-8"));
@@ -18,7 +15,7 @@ for (const k of topKeys) {
   const av = (kitDiff as any)[k];
   const cvj = JSON.stringify(cv);
   const avj = JSON.stringify(av);
-  
+
   if (cvj === avj) {
     console.log(`${k}: MATCH (JSON)`);
   } else if (cv === undefined && av === undefined) {
@@ -28,9 +25,9 @@ for (const k of topKeys) {
   } else {
     console.log(`${k}: DIFF`);
     // Show truncated diff
-    if (typeof cv !== 'object' || typeof av !== 'object') {
-      console.log(`  computed: ${cvj?.slice(0,200)}`);
-      console.log(`  asset:   ${avj?.slice(0,200)}`);
+    if (typeof cv !== "object" || typeof av !== "object") {
+      console.log(`  computed: ${cvj?.slice(0, 200)}`);
+      console.log(`  asset:   ${avj?.slice(0, 200)}`);
     } else {
       // For objects, find which sub-key differs
       const subKeys = [...new Set([...Object.keys(cv), ...Object.keys(av)])];
@@ -39,8 +36,8 @@ for (const k of topKeys) {
         const sav = JSON.stringify(av[sk]);
         if (scv !== sav) {
           console.log(`  sub-key "${sk}" differs:`);
-          console.log(`    computed: ${scv?.slice(0,300)}`);
-          console.log(`    asset:   ${sav?.slice(0,300)}`);
+          console.log(`    computed: ${scv?.slice(0, 300)}`);
+          console.log(`    asset:   ${sav?.slice(0, 300)}`);
         }
       }
     }

@@ -115,12 +115,7 @@ const pieceSection = panel.locator('[id="compose.sketchpad.app.design.panel.deta
 await pieceSection.waitFor({ state: "visible", timeout: 15000 });
 console.log("[measure] Piece details visible");
 
-for (const itemId of [
-  "compose.sketchpad.app.design.piece.plane",
-  "compose.sketchpad.app.design.piece.planeOrigin",
-  "compose.sketchpad.app.design.piece.planeXAxis",
-  "compose.sketchpad.app.design.piece.planeYAxis",
-]) {
+for (const itemId of ["compose.sketchpad.app.design.piece.plane", "compose.sketchpad.app.design.piece.planeOrigin", "compose.sketchpad.app.design.piece.planeXAxis", "compose.sketchpad.app.design.piece.planeYAxis"]) {
   const item = panel.locator(`[id="${itemId}"]`).first();
   if ((await item.count()) === 0) continue;
   await item.scrollIntoViewIfNeeded().catch(() => {});
@@ -132,11 +127,7 @@ for (const itemId of [
 }
 
 const spacing = await page.evaluate(() => {
-  const groupIds = [
-    "compose.sketchpad.app.design.piece.planeOrigin",
-    "compose.sketchpad.app.design.piece.planeXAxis",
-    "compose.sketchpad.app.design.piece.planeYAxis",
-  ];
+  const groupIds = ["compose.sketchpad.app.design.piece.planeOrigin", "compose.sketchpad.app.design.piece.planeXAxis", "compose.sketchpad.app.design.piece.planeYAxis"];
   const readPx = (value) => {
     const parsed = Number.parseFloat(value ?? "0");
     return Number.isFinite(parsed) ? parsed : 0;

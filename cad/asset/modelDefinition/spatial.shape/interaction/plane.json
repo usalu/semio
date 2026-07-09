@@ -5,14 +5,8 @@
   "label": "Plane",
   "interaction": {
     "spatialGroundPick": true,
-    "pickDisabledStates": [
-      "idle",
-      "committed"
-    ],
-    "groundPointerMoveStates": [
-      "first_corner_of_plane",
-      "other_corner_or_length"
-    ],
+    "pickDisabledStates": ["idle", "committed"],
+    "groundPointerMoveStates": ["first_corner_of_plane", "other_corner_or_length"],
     "heightDragStates": [],
     "verticalRodStates": [],
     "heightConfirmState": null,
@@ -55,11 +49,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        0
-                      ]
+                      "value": [0, 0, 0]
                     }
                   },
                   {
@@ -260,11 +250,7 @@
             "text": "First corner of plane",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -367,11 +353,7 @@
             "text": "Other corner or length",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -467,9 +449,7 @@
     ]
   },
   "commit": {
-    "fromStates": [
-      "ready"
-    ],
+    "fromStates": ["ready"],
     "operation": {
       "kind": "action",
       "action": "command.finish",

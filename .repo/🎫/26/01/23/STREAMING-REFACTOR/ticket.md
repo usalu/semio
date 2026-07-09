@@ -8,7 +8,7 @@ commit: HEAD
 # 🤖 Prompt
 
 Implement the plan.
-Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear. 
+Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear.
 Dont ask in between, no confirmations, no matter the issue. Figure it out.
 Be sure that it works everywhere before stopping.
 Make sure to open and close a ticket. Dont forget to add the plan.md, to track everything (todos, changes, summary, etc) in ticket.md
@@ -30,17 +30,19 @@ Make sure to open and close a ticket. Dont forget to add the plan.md, to track e
 
 - Ticket created.
 
-
 ## Todos
+
 # Streaming-Only Refactor Plan (CLI + VSCode + MCP)
 
-**Goal:** Make *every* command streaming-first and streaming-only (no request/response shaped APIs, no “batch response” output modes, no backwards compatibility).  
-**Adapters:**  
-1) **CLI** — colorful streaming CLI  
-2) **VSCode** — GraphQL-oriented streaming over stdio  
-3) **MCP** — MCP server adapter
+**Goal:** Make _every_ command streaming-first and streaming-only (no request/response shaped APIs, no “batch response” output modes, no backwards compatibility).  
+**Adapters:**
+
+1. **CLI** — colorful streaming CLI
+2. **VSCode** — GraphQL-oriented streaming over stdio
+3. **MCP** — MCP server adapter
 
 This plan assumes the current code already has a streaming event model (`Event{Kind,...}`) and multiple adapters, but still contains:
+
 - **Non-streaming output modes** (e.g. aggregating all events into one JSON array).
 - **Request/response-shaped internal APIs** (e.g. `Engine.Run(ctx, Request{...})` and a dedicated `CmdGraphQL` path).
 - **MCP tool handlers that aggregate** the stream into a single JSON response payload (cursor/limit wrapper).
@@ -67,7 +69,8 @@ type Runner interface {
 ```
 
 **Rules:**
-- Engine returns a **stream of `Event`** and *never returns a “result object”*.
+
+- Engine returns a **stream of `Event`** and _never returns a “result object”_.
 - A command is done when it emits **exactly one** `KindDone` event and closes the channel.
 - Every adapter maps its transport (CLI/stdin/stdout/MCP) to/from this stream.
 
@@ -88,6 +91,7 @@ Unify “GraphQL” into the same registry mechanism as everything else:
 Keep one event schema (already present) but tighten invariants:
 
 **Required invariants**
+
 - `KindStart` must be first (per command execution).
 - `KindDone` must be last and appear exactly once.
 - `KindError` must include `ErrPayload{Code, Message, Fatal}`.
@@ -95,6 +99,7 @@ Keep one event schema (already present) but tighten invariants:
 - Transport correlation is external (adapter adds request correlation fields, not the core event).
 
 **Event schema (canonical)**
+
 - `kind`: start|log|progress|item|result|artifact|error|done
 - `command`: command id (`internal.ping`, `section.list`, `graphql.query`, ...)
 - `message`, `progress`, `data`, `meta`, `artifact`, `error`, `done`
@@ -106,12 +111,14 @@ Keep one event schema (already present) but tighten invariants:
 ### 2.1 Delete the request/response shaped `Request` API
 
 **Remove:**
+
 - `type Request struct { Command Command; Args json.RawMessage; RepoRoot string; Verbose bool }`
 - `type Command string` enum (`CmdGraphQL`, `CmdInvoke`, …)
 - `Engine.Run(ctx, request)` entry point
 - any “emitDone(out, code, status)” paths that assume request-level routing
 
 **Add:**
+
 - `Engine.Stream(ctx, cmdID CommandID, input json.RawMessage) <-chan Event`
 
 **Why:** It makes “request” a transport concept (adapter-only), not an engine concept.
@@ -125,6 +132,7 @@ Currently the engine receives `RepoRoot` and `Verbose` through `Request`. That b
 - Ensure `Verbose` is stored on engine or passed through deps.
 
 **Implementation options (choose one):**
+
 1. Store `Verbose` in `Deps` / `Executor` so commands can access it.
 2. Store `Verbose` on `Engine` and inject into `Emitter`.
 
@@ -132,9 +140,10 @@ Currently the engine receives `RepoRoot` and `Verbose` through `Request`. That b
 
 Currently GraphQL returns `interface{}` and is then packed into one `result` event.
 
-Keep the event contract but make the executor *stream-ready* for future growth:
+Keep the event contract but make the executor _stream-ready_ for future growth:
 
 **Replace:**
+
 ```go
 type GraphQLExecutor interface {
     Execute(ctx context.Context, query string, variables map[string]interface{}) (interface{}, error)
@@ -142,6 +151,7 @@ type GraphQLExecutor interface {
 ```
 
 **With:**
+
 ```go
 type GraphQLExecutor interface {
     ExecuteJSON(ctx context.Context, query string, variables map[string]any) (json.RawMessage, error)
@@ -187,6 +197,7 @@ type GraphQLExecutor interface {
 - `KindArtifact`: yellow with `Type` + `URI`.
 
 **TTY considerations**
+
 - Detect if stderr/stdout is a TTY:
   - If TTY: enable colors and progress “in-place” updates.
   - If not TTY: no ANSI and print progress as regular lines.
@@ -201,6 +212,7 @@ Currently CLI commands call `runInvoke`/`runGraphQL` which build a `Request`. Re
 - Pipe to renderer
 
 **GraphQL CLI**
+
 - Keep `compose graphql` command if you want, but it calls the registry command `graphql.query`.
 - That keeps everything uniformly streaming.
 
@@ -208,21 +220,24 @@ Currently CLI commands call `runInvoke`/`runGraphQL` which build a `Request`. Re
 
 ## 4) VSCode adapter: streaming stdio protocol (NDJSON)
 
-The current VSCode adapter is already “streaming events out”, correlated by `id`. Keep that *shape* but remove any request/response semantics in your own protocol documentation and code.
+The current VSCode adapter is already “streaming events out”, correlated by `id`. Keep that _shape_ but remove any request/response semantics in your own protocol documentation and code.
 
 ### 4.1 Define the VSCode stdio protocol (v2)
 
 **Input (client → server):** one JSON object per line (NDJSON)
+
 ```json
-{"id":"req-123","command":"section.list","input":{"file":"README.md"}}
+{ "id": "req-123", "command": "section.list", "input": { "file": "README.md" } }
 ```
 
 **Cancel message:**
+
 ```json
-{"id":"req-123","cancel":true}
+{ "id": "req-123", "cancel": true }
 ```
 
 **Output (server → client):** one JSON object per line
+
 ```json
 {"id":"req-123","event":{"kind":"log","message":"..."}}
 {"id":"req-123","event":{"kind":"item","data":{...}}}
@@ -230,9 +245,10 @@ The current VSCode adapter is already “streaming events out”, correlated by 
 ```
 
 **Rules**
+
 - Server never emits a final “response” wrapper.
 - Completion is signaled only by `event.kind == "done"`.
-- Any parsing errors are emitted as `{"event":{kind:"error",...}}` *without* an `id` (or with a special `id:"_"`).
+- Any parsing errors are emitted as `{"event":{kind:"error",...}}` _without_ an `id` (or with a special `id:"_"`).
 
 ### 4.2 Engine call path
 
@@ -257,6 +273,7 @@ Most MCP SDKs require a final `CallToolResult`. That’s not “streaming result
 However MCP **does** support progress/log style notifications (and some transports support streaming patterns).
 
 **Therefore the refactor goal for MCP is:**
+
 - **Never** aggregate stream items/logs/errors into a big JSON response body.
 - Use MCP notifications (progress/log) while running.
 - Return a **minimal final result** (e.g. “done” status + optional artifact pointer).
@@ -266,6 +283,7 @@ This satisfies “commands defined only with streaming” inside your codebase: 
 ### 5.2 MCP v2 behavior
 
 For every MCP tool call:
+
 1. Start engine stream
 2. For each event:
    - `log` → MCP logging notification (or append as incremental text chunks if notification not available)
@@ -276,7 +294,7 @@ For every MCP tool call:
    - `artifact` → convert to MCP resource URI references if supported
    - `error` → emit MCP error/log notification
 3. When `done` arrives:
-   - Return `CallToolResult` containing *only*:
+   - Return `CallToolResult` containing _only_:
      - summary string
      - or a compact JSON `{"status":"ok","exit_code":0,"artifact":"file://..."}`
 
@@ -285,10 +303,12 @@ For every MCP tool call:
 The current MCP tool wrapper collects all items, logs, errors and returns a JSON object with `items`, `cursor`, etc. That is explicitly non-streaming.
 
 Delete:
+
 - `mcpCursorLimit`
 - the “collect items and return a big JSON” approach
 
 If pagination is required for client UX:
+
 - Implement it as separate commands that accept `cursor`/`limit` inputs and stream only that slice.
 - But **the transport still streams** (the engine controls pagination, not MCP adapter collecting).
 
@@ -314,15 +334,17 @@ type CommandHandler func(ctx context.Context, deps *Deps, input json.RawMessage,
 The codebase currently has some “ToolX returns ToolResult” style helpers for GraphQL resolvers and/or MCP.
 
 Refactor direction:
+
 - Keep pure functions for logic (e.g. parsing, file operations).
 - But **command outputs are events**, not return structs.
-- GraphQL resolvers can remain request/response (that’s GraphQL), but your *commands* should not expose non-streaming variants.
+- GraphQL resolvers can remain request/response (that’s GraphQL), but your _commands_ should not expose non-streaming variants.
 
 ---
 
 ## 7) Deletions checklist (explicit “no legacy”)
 
 ### 7.1 Remove entirely
+
 - `RenderJSON` (stream-to-array)
 - CLI `--format json`
 - Engine `Request` struct and `Command` enum routing
@@ -331,6 +353,7 @@ Refactor direction:
 - Any “compat” protocol versions in VSCode adapter (document only v2)
 
 ### 7.2 Remove references and dead code paths
+
 - Any helper that produces “complete result” objects solely for CLI formatting
 - Any “ToolResult” wrappers used only for old output modes
 
@@ -339,32 +362,38 @@ Refactor direction:
 ## 8) Implementation plan (phased, but no backwards compat)
 
 ### Phase 0 — Guardrails (same-day)
+
 - Add tests asserting:
   - every command emits exactly one `done`
   - `done` is last event
   - channel closes after `done`
 
 ### Phase 1 — Core engine API replacement
+
 - Introduce `Engine.Stream(ctx, cmdID, input)` and wire it to registry execution.
 - Move GraphQL execution into registry as `graphql.query`.
 - Delete `Request` and command enum routing.
 
 ### Phase 2 — CLI streaming-only + colors
+
 - Remove `RenderJSON` and CLI format option.
 - Implement colorful `RenderCompact` with TTY detection.
 - Keep `RenderJSONL` as machine mode.
 
 ### Phase 3 — VSCode adapter v2
+
 - Update adapter to call `engine.Stream` directly with `command` and raw input.
 - Document NDJSON protocol and cancellation behavior.
 - Remove any legacy wrappers (`InvokeArgs` usage inside adapter).
 
 ### Phase 4 — MCP adapter v2
+
 - Replace collector with a live event-forwarder using MCP progress/log capabilities.
 - Make tool results minimal and artifact-oriented.
 - Remove cursor/limit aggregation.
 
 ### Phase 5 — Cleanup & validation
+
 - Rip out now-unused types (`GraphQLArgs` can remain as input struct for the `graphql.query` command, but it’s no longer an engine request).
 - Ensure go vet / tests pass.
 - Add integration tests:
@@ -377,12 +406,14 @@ Refactor direction:
 ## 9) Test strategy
 
 ### 9.1 Unit tests
+
 - `TestEmitterDoneOnce`
 - `TestCommandAlwaysClosesChannel`
 - `TestRenderJSONLStreamingDoesNotBuffer`
 - `TestVSCodeAdapterCancelStopsStream`
 
 ### 9.2 Golden tests (output stability)
+
 - CLI `compact` snapshots for:
   - normal success (items + done)
   - fatal error
@@ -390,7 +421,9 @@ Refactor direction:
 - CLI `jsonl` snapshot: exact event ordering and JSON validity.
 
 ### 9.3 Contract tests (adapter-agnostic)
+
 A reusable “command contract harness”:
+
 - runs a command with a context + input
 - asserts invariants (start→…→done)
 - asserts `done.exit_code` mapping
@@ -400,12 +433,14 @@ A reusable “command contract harness”:
 ## 10) Deliverables / final state
 
 ### 10.1 Public contracts
+
 - **Event schema** (stable JSON fields)
 - **CLI formats**: `compact` (TTY colors) and `jsonl` only
 - **VSCode NDJSON protocol**: `{id, command, input}` → `{id, event}`
 - **MCP mapping**: stream → MCP notifications + minimal final result
 
 ### 10.2 Code layout (recommended)
+
 ```
 /engine
   engine.go        // Engine.Stream

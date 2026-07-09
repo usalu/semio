@@ -1,84 +1,112 @@
 #!/usr/bin/env bun
 /** 📜 `@semio-tech/plugin-registry` — single-source plugin registry codegen from workspace crates. */
+import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/index.ts";
+import { contributorPluginIdsFor, resolvePluginRegistryId } from "../../core/js/index.ts";
 
 //#region 🔖PluginRegistryEntry
 export type PluginRegistryEntry = {
-	readonly pluginId: string;
-	readonly cratePath: string;
-	readonly packageName: string;
-	readonly wasmOut: string;
+  readonly pluginId: string;
+  readonly cratePath: string;
+  readonly packageName: string;
+  readonly wasmOut: string;
 };
 
 function findPluginCargoFiles(root: string): string[] {
-	const out: string[] = [];
-	function walk(dir: string) {
-		for (const name of readdirSync(dir)) {
-			if (name === "node_modules" || name === "generated" || name === "target" || name === ".git") continue;
-			const path = join(dir, name);
-			let st: ReturnType<typeof statSync>;
-			try {
-				st = statSync(path);
-			} catch {
-				continue;
-			}
-			if (st.isDirectory()) {
-				walk(path);
-			} else if (name === "Cargo.toml" && !path.includes("/framework/plugin/rs/")) {
-				const isPluginCrate = path.endsWith("/plugin/rs/Cargo.toml");
-				const isFormsModuleCrate = path.includes("/forms/module/") && path.endsWith("/rs/Cargo.toml");
-				if (isPluginCrate || isFormsModuleCrate) {
-					out.push(path);
-				}
-			}
-		}
-	}
-	walk(root);
-	return out.sort();
+  const out: string[] = [];
+  function walk(dir: string) {
+    for (const name of readdirSync(dir)) {
+      if (name === "node_modules" || name === "generated" || name === "target" || name === ".git") continue;
+      const path = join(dir, name);
+      let st: ReturnType<typeof statSync>;
+      try {
+        st = statSync(path);
+      } catch {
+        continue;
+      }
+      if (st.isDirectory()) {
+        walk(path);
+      } else if (name === "Cargo.toml" && !path.includes("/framework/plugin/rs/")) {
+        const isPluginCrate = path.endsWith("/plugin/rs/Cargo.toml");
+        const isFormsModuleCrate = path.includes("/forms/module/") && path.endsWith("/rs/Cargo.toml");
+        if (isPluginCrate || isFormsModuleCrate) {
+          out.push(path);
+        }
+      }
+    }
+  }
+  walk(root);
+  return out.sort();
 }
 
 function parsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistryEntry {
-	const text = readFileSync(manifestPath, "utf8");
-	const packageName = text.match(/^name = "([^"]+)"/m)?.[1];
-	if (!packageName) throw new Error(`missing package name in ${manifestPath}`);
-	const componentPackage = text.match(/\[package\.metadata\.component\][\s\S]*?^package = "semio:([^"]+)"/m)?.[1];
-	if (!componentPackage) throw new Error(`missing [package.metadata.component].package in ${manifestPath}`);
-	const cratePath = relative(repoRoot, dirname(manifestPath));
-	const wasmOut = `${packageName.replace(/-/g, "_")}.wasm`;
-	return { pluginId: componentPackage, cratePath, packageName, wasmOut };
+  const text = readFileSync(manifestPath, "utf8");
+  const packageName = text.match(/^name = "([^"]+)"/m)?.[1];
+  if (!packageName) throw new Error(`missing package name in ${manifestPath}`);
+  const componentPackage = text.match(/\[package\.metadata\.component\][\s\S]*?^package = "semio:([^"]+)"/m)?.[1];
+  if (!componentPackage) throw new Error(`missing [package.metadata.component].package in ${manifestPath}`);
+  const cratePath = relative(repoRoot, dirname(manifestPath));
+  const wasmOut = `${packageName.replace(/-/g, "_")}.wasm`;
+  return { pluginId: componentPackage, cratePath, packageName, wasmOut };
+}
+
+export type GeneratePluginRegistryOptions = {
+  readonly filterPlaygroundPlugin?: string;
+};
+
+export function isStudioPluginFilter(pluginFilter?: string): boolean {
+  return !pluginFilter || pluginFilter === "s";
+}
+
+/** @emoji 🎯 Resolves wasm component ids to catalog for one playground dev session. */
+export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string): readonly string[] {
+  const registryId = resolvePluginRegistryId(filterPlaygroundPlugin);
+  const ids = new Set<string>([registryId]);
+  for (const extra of contributorPluginIdsFor(registryId)) ids.add(extra);
+  return [...ids];
+}
+
+function findPluginCargoPathsForIds(repoRoot: string, pluginIds: readonly string[]): string[] {
+  const paths: string[] = [];
+  for (const pluginId of pluginIds) {
+    const result = spawnSync("rg", ["-l", `package = "semio:${pluginId}"`, "--glob", "**/Cargo.toml", "-g", "!**/target/**", "-g", "!**/node_modules/**", "-g", "!**/framework/plugin/rs/**"], { cwd: repoRoot, encoding: "utf8" });
+    const hit = (result.stdout ?? "").trim().split("\n").filter(Boolean)[0];
+    if (hit) {
+      paths.push(join(repoRoot, hit));
+      continue;
+    }
+    console.warn(`[DEBUG] plugin registry catalog: no crate found for semio:${pluginId}`);
+  }
+  return paths;
 }
 
 function tryParsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistryEntry | undefined {
-	try {
-		return parsePluginCargo(manifestPath, repoRoot);
-	} catch (error) {
-		console.warn(
-			`[DEBUG] plugin registry catalog: skipping ${manifestPath}: ${error instanceof Error ? error.message : String(error)}`,
-		);
-		return undefined;
-	}
+  try {
+    return parsePluginCargo(manifestPath, repoRoot);
+  } catch (error) {
+    console.warn(`[DEBUG] plugin registry catalog: skipping ${manifestPath}: ${error instanceof Error ? error.message : String(error)}`);
+    return undefined;
+  }
 }
 
-export function generatePluginRegistry(repoRoot = getWorkspaceRoot()): PluginRegistryEntry[] {
-	const entries: PluginRegistryEntry[] = [];
-	for (const path of findPluginCargoFiles(repoRoot)) {
-		const entry = tryParsePluginCargo(path, repoRoot);
-		if (entry) entries.push(entry);
-	}
-	entries.sort((a, b) => a.pluginId.localeCompare(b.pluginId));
-	return entries;
+export function generatePluginRegistry(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): PluginRegistryEntry[] {
+  const filterPlaygroundPlugin = options.filterPlaygroundPlugin;
+  const filterIds = filterPlaygroundPlugin && !isStudioPluginFilter(filterPlaygroundPlugin) ? resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin) : undefined;
+  const manifestPaths = filterIds ? findPluginCargoPathsForIds(repoRoot, filterIds) : findPluginCargoFiles(repoRoot);
+  const entries: PluginRegistryEntry[] = [];
+  for (const path of manifestPaths) {
+    const entry = tryParsePluginCargo(path, repoRoot);
+    if (entry) entries.push(entry);
+  }
+  entries.sort((a, b) => a.pluginId.localeCompare(b.pluginId));
+  return entries;
 }
 
 function emitTypeScript(entries: PluginRegistryEntry[]): string {
-	const rows = entries
-		.map(
-			(entry) =>
-				`\t{ pluginId: ${JSON.stringify(entry.pluginId)}, cratePath: ${JSON.stringify(entry.cratePath)}, wasmOut: ${JSON.stringify(entry.wasmOut)} },`,
-		)
-		.join("\n");
-	return `/** @generated by framework/plugin/registry/script.ts — do not edit. */
+  const rows = entries.map((entry) => `\t{ pluginId: ${JSON.stringify(entry.pluginId)}, cratePath: ${JSON.stringify(entry.cratePath)}, wasmOut: ${JSON.stringify(entry.wasmOut)} },`).join("\n");
+  return `/** @generated by framework/plugin/registry/script.ts — do not edit. */
 export type PluginBuildTarget = {
 \treadonly pluginId: string;
 \treadonly cratePath: string;
@@ -100,19 +128,26 @@ export const pluginModuleUrl = (pluginId: string, fileName: string) =>
 }
 
 class GenerateScript extends BundleScript {
-	run(): void {
-		const repoRoot = getWorkspaceRoot();
-		const entries = generatePluginRegistry(repoRoot);
-		const outDir = join(this.root, "generated");
-		mkdirSync(outDir, { recursive: true });
-		writeFileSync(join(outDir, "plugins.json"), `${JSON.stringify(entries, null, 2)}\n`);
-		writeFileSync(join(outDir, "plugins.ts"), emitTypeScript(entries));
-		console.log(`[DEBUG] plugin registry catalog refreshed (${entries.length} known plugin crates) -> ${outDir}`);
-	}
+  run(segments: string[]): void {
+    const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND;
+    const studioMode = isStudioPluginFilter(filterPlugin);
+    const repoRoot = getWorkspaceRoot();
+    const entries = generatePluginRegistry(repoRoot, studioMode ? {} : { filterPlaygroundPlugin: filterPlugin });
+    const outDir = join(this.root, "generated");
+    mkdirSync(outDir, { recursive: true });
+    writeFileSync(join(outDir, "plugins.json"), `${JSON.stringify(entries, null, 2)}\n`);
+    writeFileSync(join(outDir, "plugins.ts"), emitTypeScript(entries));
+    if (studioMode) {
+      console.log(`[DEBUG] plugin registry catalog refreshed (${entries.length} plugin crates) -> ${outDir}`);
+    } else {
+      const ids = entries.map((entry) => entry.pluginId).join(", ") || "(none)";
+      console.log(`[DEBUG] plugin registry catalog: ${ids} -> ${outDir}`);
+    }
+  }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript);
 
 if (import.meta.main) {
-	await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });
+  await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });
 }

@@ -1213,9 +1213,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1📌60"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1📌60"],
         "second": "🎆26🌙03☀️14⏰13⌚01⏱️37",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -1295,9 +1293,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1📌60"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1📌60"],
         "second": "🎆26🌙03☀️14⏰13⌚01⏱️49",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -1915,9 +1911,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js⚙️package📌1📌30"
-        ],
+        "ranges": ["👤compose📚js⚙️package📌1📌30"],
         "second": "🎆26🌙03☀️14⏰13⌚03⏱️32",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -1955,9 +1949,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js⚙️package📌1📌30"
-        ],
+        "ranges": ["👤compose📚js⚙️package📌1📌30"],
         "second": "🎆26🌙03☀️14⏰13⌚03⏱️45",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -2067,9 +2059,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js⚙️playwrightconfig📌1📌50"
-        ],
+        "ranges": ["👤compose📚js⚙️playwrightconfig📌1📌50"],
         "second": "🎆26🌙03☀️14⏰13⌚04⏱️05",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -2107,9 +2097,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js⚙️playwrightconfig📌1📌50"
-        ],
+        "ranges": ["👤compose📚js⚙️playwrightconfig📌1📌50"],
         "second": "🎆26🌙03☀️14⏰13⌚04⏱️16",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -2147,9 +2135,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js⚙️playwrightconfig📌50📌70"
-        ],
+        "ranges": ["👤compose📚js⚙️playwrightconfig📌50📌70"],
         "second": "🎆26🌙03☀️14⏰13⌚04⏱️20",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -2187,9 +2173,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js⚙️playwrightconfig📌50📌70"
-        ],
+        "ranges": ["👤compose📚js⚙️playwrightconfig📌50📌70"],
         "second": "🎆26🌙03☀️14⏰13⌚04⏱️32",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -2831,9 +2815,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌332📌600"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌332📌600"],
         "second": "🎆26🌙03☀️14⏰13⌚15⏱️42",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -2909,9 +2891,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌332📌600"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌332📌600"],
         "second": "🎆26🌙03☀️14⏰13⌚16⏱️20",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -3231,9 +3211,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4340📌4400"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4340📌4400"],
         "second": "🎆26🌙03☀️14⏰13⌚22⏱️42",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -3281,9 +3259,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4340📌4400"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4340📌4400"],
         "second": "🎆26🌙03☀️14⏰13⌚22⏱️54",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -3479,9 +3455,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4750📌4890"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4750📌4890"],
         "second": "🎆26🌙03☀️14⏰13⌚23⏱️34",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -3525,9 +3499,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4750📌4890"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4750📌4890"],
         "second": "🎆26🌙03☀️14⏰13⌚23⏱️49",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -3571,9 +3543,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4690📌4760"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4690📌4760"],
         "second": "🎆26🌙03☀️14⏰13⌚23⏱️56",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -3617,9 +3587,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4690📌4760"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4690📌4760"],
         "second": "🎆26🌙03☀️14⏰13⌚24⏱️11",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -3737,9 +3705,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1050📌1142"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1050📌1142"],
         "second": "🎆26🌙03☀️14⏰13⌚24⏱️57",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -3777,9 +3743,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1050📌1142"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1050📌1142"],
         "second": "🎆26🌙03☀️14⏰13⌚25⏱️07",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -3979,9 +3943,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4775📌4810"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4775📌4810"],
         "second": "🎆26🌙03☀️14⏰13⌚25⏱️49",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -4025,9 +3987,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4775📌4810"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4775📌4810"],
         "second": "🎆26🌙03☀️14⏰13⌚26⏱️00",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -4071,9 +4031,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4838📌4860"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4838📌4860"],
         "second": "🎆26🌙03☀️14⏰13⌚26⏱️04",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -4117,9 +4075,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4838📌4860"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4838📌4860"],
         "second": "🎆26🌙03☀️14⏰13⌚26⏱️16",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -4315,9 +4271,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4887📌5120"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4887📌5120"],
         "second": "🎆26🌙03☀️14⏰13⌚26⏱️56",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -4361,9 +4315,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4887📌5120"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4887📌5120"],
         "second": "🎆26🌙03☀️14⏰13⌚27⏱️07",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -4407,9 +4359,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌5120📌5300"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌5120📌5300"],
         "second": "🎆26🌙03☀️14⏰13⌚27⏱️13",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -4453,9 +4403,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌5120📌5300"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌5120📌5300"],
         "second": "🎆26🌙03☀️14⏰13⌚27⏱️24",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -4507,9 +4455,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌6990📌7050"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌6990📌7050"],
         "second": "🎆26🌙03☀️14⏰13⌚27⏱️29",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -4561,9 +4507,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌6990📌7050"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌6990📌7050"],
         "second": "🎆26🌙03☀️14⏰13⌚27⏱️43",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -4635,9 +4579,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌7100📌7160"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌7100📌7160"],
         "second": "🎆26🌙03☀️14⏰13⌚27⏱️48",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -4709,9 +4651,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌7100📌7160"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌7100📌7160"],
         "second": "🎆26🌙03☀️14⏰13⌚28⏱️00",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -5067,9 +5007,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4780📌4800"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4780📌4800"],
         "second": "🎆26🌙03☀️14⏰13⌚29⏱️12",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -5113,9 +5051,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4780📌4800"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4780📌4800"],
         "second": "🎆26🌙03☀️14⏰13⌚29⏱️25",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -5557,9 +5493,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4847📌4870"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4847📌4870"],
         "second": "🎆26🌙03☀️14⏰13⌚30⏱️56",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -5603,9 +5537,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4847📌4870"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4847📌4870"],
         "second": "🎆26🌙03☀️14⏰13⌚31⏱️07",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -5649,9 +5581,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4783📌4795"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4783📌4795"],
         "second": "🎆26🌙03☀️14⏰13⌚31⏱️18",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -5695,9 +5625,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4783📌4795"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4783📌4795"],
         "second": "🎆26🌙03☀️14⏰13⌚31⏱️28",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -5901,9 +5829,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌7608📌7730"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌7608📌7730"],
         "second": "🎆26🌙03☀️14⏰13⌚32⏱️14",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -5947,9 +5873,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌7608📌7730"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌7608📌7730"],
         "second": "🎆26🌙03☀️14⏰13⌚32⏱️25",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -5993,9 +5917,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌7740📌7900"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌7740📌7900"],
         "second": "🎆26🌙03☀️14⏰13⌚32⏱️31",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -6039,9 +5961,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌7740📌7900"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌7740📌7900"],
         "second": "🎆26🌙03☀️14⏰13⌚32⏱️41",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -6161,9 +6081,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌7380📌7480"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌7380📌7480"],
         "second": "🎆26🌙03☀️14⏰13⌚33⏱️03",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -6207,9 +6125,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌7380📌7480"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌7380📌7480"],
         "second": "🎆26🌙03☀️14⏰13⌚33⏱️15",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -6253,9 +6169,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌7320📌7380"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌7320📌7380"],
         "second": "🎆26🌙03☀️14⏰13⌚33⏱️19",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -6299,9 +6213,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌7320📌7380"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌7320📌7380"],
         "second": "🎆26🌙03☀️14⏰13⌚33⏱️30",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -6345,9 +6257,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌7730📌7770"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌7730📌7770"],
         "second": "🎆26🌙03☀️14⏰13⌚33⏱️35",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -6391,9 +6301,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌7730📌7770"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌7730📌7770"],
         "second": "🎆26🌙03☀️14⏰13⌚33⏱️47",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -6513,9 +6421,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌6870📌6940"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌6870📌6940"],
         "second": "🎆26🌙03☀️14⏰13⌚34⏱️12",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -6559,9 +6465,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌6870📌6940"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌6870📌6940"],
         "second": "🎆26🌙03☀️14⏰13⌚34⏱️23",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -6689,9 +6593,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻sketchpad📌14610📌14640"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻sketchpad📌14610📌14640"],
         "second": "🎆26🌙03☀️14⏰13⌚34⏱️45",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -6743,9 +6645,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻sketchpad📌14610📌14640"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻sketchpad📌14610📌14640"],
         "second": "🎆26🌙03☀️14⏰13⌚34⏱️57",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -7301,9 +7201,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4780📌4870"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4780📌4870"],
         "second": "🎆26🌙03☀️14⏰13⌚38⏱️58",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -7347,9 +7245,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4780📌4870"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4780📌4870"],
         "second": "🎆26🌙03☀️14⏰13⌚39⏱️11",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -7393,9 +7289,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4870📌4960"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4870📌4960"],
         "second": "🎆26🌙03☀️14⏰13⌚39⏱️14",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -7439,9 +7333,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌4870📌4960"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌4870📌4960"],
         "second": "🎆26🌙03☀️14⏰13⌚39⏱️25",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -7485,9 +7377,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌5100📌5200"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌5100📌5200"],
         "second": "🎆26🌙03☀️14⏰13⌚39⏱️29",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -7531,9 +7421,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌5100📌5200"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌5100📌5200"],
         "second": "🎆26🌙03☀️14⏰13⌚39⏱️42",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -8200,9 +8088,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js⚙️playwrightconfig📌1📌60"
-        ],
+        "ranges": ["👤compose📚js⚙️playwrightconfig📌1📌60"],
         "second": "🎆26🌙03☀️14⏰13⌚46⏱️29",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -8245,9 +8131,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js⚙️playwrightconfig📌1📌60"
-        ],
+        "ranges": ["👤compose📚js⚙️playwrightconfig📌1📌60"],
         "second": "🎆26🌙03☀️14⏰13⌚46⏱️42",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -10099,9 +9983,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1053📌1250"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1053📌1250"],
         "second": "🎆26🌙03☀️14⏰14⌚11⏱️46",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -10139,9 +10021,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1053📌1250"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1053📌1250"],
         "second": "🎆26🌙03☀️14⏰14⌚11⏱️58",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -10179,9 +10059,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1082📌1090"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1082📌1090"],
         "second": "🎆26🌙03☀️14⏰14⌚12⏱️01",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -10219,9 +10097,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1082📌1090"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1082📌1090"],
         "second": "🎆26🌙03☀️14⏰14⌚12⏱️13",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -10575,9 +10451,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1140📌1150"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1140📌1150"],
         "second": "🎆26🌙03☀️14⏰14⌚17⏱️07",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -10615,9 +10489,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1140📌1150"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1140📌1150"],
         "second": "🎆26🌙03☀️14⏰14⌚17⏱️20",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -10669,9 +10541,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌330📌400"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌330📌400"],
         "second": "🎆26🌙03☀️14⏰14⌚17⏱️24",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -10723,9 +10593,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌330📌400"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌330📌400"],
         "second": "🎆26🌙03☀️14⏰14⌚17⏱️37",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -10843,9 +10711,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌836📌880"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌836📌880"],
         "second": "🎆26🌙03☀️14⏰14⌚18⏱️17",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -10883,9 +10749,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌836📌880"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌836📌880"],
         "second": "🎆26🌙03☀️14⏰14⌚18⏱️29",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -11639,9 +11503,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1370📌1420"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1370📌1420"],
         "second": "🎆26🌙03☀️14⏰14⌚24⏱️36",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -11679,9 +11541,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1370📌1420"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1370📌1420"],
         "second": "🎆26🌙03☀️14⏰14⌚24⏱️52",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -11805,9 +11665,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌8490📌8570"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌8490📌8570"],
         "second": "🎆26🌙03☀️14⏰14⌚25⏱️16",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -11855,9 +11713,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌8490📌8570"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌8490📌8570"],
         "second": "🎆26🌙03☀️14⏰14⌚25⏱️28",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -11977,9 +11833,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌8220📌8260"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌8220📌8260"],
         "second": "🎆26🌙03☀️14⏰14⌚26⏱️00",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -12023,9 +11877,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌8220📌8260"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌8220📌8260"],
         "second": "🎆26🌙03☀️14⏰14⌚26⏱️12",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -13063,9 +12915,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌155📌170"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌155📌170"],
         "second": "🎆26🌙03☀️14⏰14⌚31⏱️08",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -13103,9 +12953,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌155📌170"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌155📌170"],
         "second": "🎆26🌙03☀️14⏰14⌚31⏱️24",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -13143,9 +12991,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌1📌30"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌1📌30"],
         "second": "🎆26🌙03☀️14⏰14⌚31⏱️28",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -13183,9 +13029,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌1📌30"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌1📌30"],
         "second": "🎆26🌙03☀️14⏰14⌚31⏱️44",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -13223,9 +13067,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌28📌100"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌28📌100"],
         "second": "🎆26🌙03☀️14⏰14⌚31⏱️49",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -13263,9 +13105,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌28📌100"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌28📌100"],
         "second": "🎆26🌙03☀️14⏰14⌚32⏱️03",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -13303,9 +13143,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌100📌200"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌100📌200"],
         "second": "🎆26🌙03☀️14⏰14⌚32⏱️07",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -13343,9 +13181,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌100📌200"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌100📌200"],
         "second": "🎆26🌙03☀️14⏰14⌚32⏱️24",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -13383,9 +13219,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1053📌1090"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1053📌1090"],
         "second": "🎆26🌙03☀️14⏰14⌚32⏱️35",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -13423,9 +13257,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1053📌1090"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1053📌1090"],
         "second": "🎆26🌙03☀️14⏰14⌚32⏱️48",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -13712,9 +13544,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻sketchpad📌19255📌19290"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻sketchpad📌19255📌19290"],
         "second": "🎆26🌙03☀️14⏰14⌚33⏱️44",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -13758,9 +13588,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻sketchpad📌19255📌19290"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻sketchpad📌19255📌19290"],
         "second": "🎆26🌙03☀️14⏰14⌚34⏱️01",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -13798,9 +13626,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1380📌1410"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1380📌1410"],
         "second": "🎆26🌙03☀️14⏰14⌚34⏱️11",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -13838,9 +13664,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1380📌1410"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1380📌1410"],
         "second": "🎆26🌙03☀️14⏰14⌚34⏱️33",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -14280,9 +14104,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3440📌3540"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3440📌3540"],
         "second": "🎆26🌙03☀️14⏰14⌚37⏱️26",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -14330,9 +14152,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3440📌3540"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3440📌3540"],
         "second": "🎆26🌙03☀️14⏰14⌚37⏱️53",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -14852,9 +14672,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻sketchpad📌18950📌19000"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻sketchpad📌18950📌19000"],
         "second": "🎆26🌙03☀️14⏰14⌚46⏱️16",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -14898,9 +14716,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻sketchpad📌18950📌19000"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻sketchpad📌18950📌19000"],
         "second": "🎆26🌙03☀️14⏰14⌚46⏱️33",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -14944,9 +14760,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻sketchpad📌19180📌19260"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻sketchpad📌19180📌19260"],
         "second": "🎆26🌙03☀️14⏰14⌚46⏱️38",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -14990,9 +14804,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻sketchpad📌19180📌19260"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻sketchpad📌19180📌19260"],
         "second": "🎆26🌙03☀️14⏰14⌚47⏱️07",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -15036,9 +14848,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3478📌3530"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3478📌3530"],
         "second": "🎆26🌙03☀️14⏰14⌚47⏱️16",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -15082,9 +14892,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3478📌3530"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3478📌3530"],
         "second": "🎆26🌙03☀️14⏰14⌚47⏱️42",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -15288,9 +15096,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3278📌3302"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3278📌3302"],
         "second": "🎆26🌙03☀️14⏰14⌚48⏱️50",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -15338,9 +15144,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3278📌3302"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3278📌3302"],
         "second": "🎆26🌙03☀️14⏰14⌚49⏱️04",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -16182,9 +15986,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1408📌1425"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1408📌1425"],
         "second": "🎆26🌙03☀️14⏰15⌚12⏱️42",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -16222,9 +16024,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1408📌1425"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1408📌1425"],
         "second": "🎆26🌙03☀️14⏰15⌚12⏱️56",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -16500,9 +16300,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌2156📌2210"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌2156📌2210"],
         "second": "🎆26🌙03☀️14⏰15⌚16⏱️21",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -16540,9 +16338,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌2156📌2210"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌2156📌2210"],
         "second": "🎆26🌙03☀️14⏰15⌚16⏱️35",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -17078,9 +16874,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌935📌975"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌935📌975"],
         "second": "🎆26🌙03☀️14⏰15⌚22⏱️17",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -17124,9 +16918,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌935📌975"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌935📌975"],
         "second": "🎆26🌙03☀️14⏰15⌚22⏱️32",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -17246,9 +17038,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌1183📌1250"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌1183📌1250"],
         "second": "🎆26🌙03☀️14⏰15⌚23⏱️18",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -17292,9 +17082,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌1183📌1250"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌1183📌1250"],
         "second": "🎆26🌙03☀️14⏰15⌚23⏱️37",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -17502,9 +17290,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌230📌260"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌230📌260"],
         "second": "🎆26🌙03☀️14⏰15⌚24⏱️35",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -17560,9 +17346,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌230📌260"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌230📌260"],
         "second": "🎆26🌙03☀️14⏰15⌚25⏱️21",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -17838,9 +17622,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌400📌420"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌400📌420"],
         "second": "🎆26🌙03☀️14⏰15⌚27⏱️27",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -17888,9 +17670,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌400📌420"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌400📌420"],
         "second": "🎆26🌙03☀️14⏰15⌚27⏱️54",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -17934,9 +17714,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌225📌235"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌225📌235"],
         "second": "🎆26🌙03☀️14⏰15⌚28⏱️03",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -17980,9 +17758,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌225📌235"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌225📌235"],
         "second": "🎆26🌙03☀️14⏰15⌚28⏱️23",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -18344,9 +18120,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌2955📌2985"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌2955📌2985"],
         "second": "🎆26🌙03☀️14⏰15⌚31⏱️39",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -18390,9 +18164,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌2955📌2985"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌2955📌2985"],
         "second": "🎆26🌙03☀️14⏰15⌚31⏱️55",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -18512,9 +18284,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌3760📌3780"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌3760📌3780"],
         "second": "🎆26🌙03☀️14⏰15⌚32⏱️40",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -18558,9 +18328,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌3760📌3780"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌3760📌3780"],
         "second": "🎆26🌙03☀️14⏰15⌚32⏱️57",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -18604,9 +18372,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌3720📌3770"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌3720📌3770"],
         "second": "🎆26🌙03☀️14⏰15⌚33⏱️02",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -18650,9 +18416,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌3720📌3770"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌3720📌3770"],
         "second": "🎆26🌙03☀️14⏰15⌚33⏱️17",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -18932,9 +18696,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻sketchpad📌4520📌4560"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻sketchpad📌4520📌4560"],
         "second": "🎆26🌙03☀️14⏰15⌚34⏱️27",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -18982,9 +18744,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻sketchpad📌4520📌4560"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻sketchpad📌4520📌4560"],
         "second": "🎆26🌙03☀️14⏰15⌚34⏱️40",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -19190,9 +18950,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻sketchpad📌4500📌4550"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻sketchpad📌4500📌4550"],
         "second": "🎆26🌙03☀️14⏰15⌚35⏱️48",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -19248,9 +19006,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻sketchpad📌4500📌4550"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻sketchpad📌4500📌4550"],
         "second": "🎆26🌙03☀️14⏰15⌚36⏱️10",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -20946,9 +20702,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼sketchpadtest📌1📌10"
-        ],
+        "ranges": ["👤compose📚js🥼sketchpadtest📌1📌10"],
         "second": "🎆26🌙03☀️14⏰15⌚57⏱️34",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -23567,9 +23321,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌8886📌8960"
-        ],
+        "ranges": ["👤compose📚js💻compose📌8886📌8960"],
         "second": "🎆26🌙03☀️14⏰16⌚36⏱️01",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -23613,9 +23365,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌8886📌8960"
-        ],
+        "ranges": ["👤compose📚js💻compose📌8886📌8960"],
         "second": "🎆26🌙03☀️14⏰16⌚36⏱️15",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -23887,9 +23637,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌13320📌13340"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌13320📌13340"],
         "second": "🎆26🌙03☀️14⏰16⌚37⏱️10",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -23933,9 +23681,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌13320📌13340"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌13320📌13340"],
         "second": "🎆26🌙03☀️14⏰16⌚37⏱️24",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -24515,9 +24261,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌13076📌13130"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌13076📌13130"],
         "second": "🎆26🌙03☀️14⏰16⌚39⏱️23",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -24561,9 +24305,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌13076📌13130"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌13076📌13130"],
         "second": "🎆26🌙03☀️14⏰16⌚39⏱️34",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -24697,9 +24439,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6639📌6730"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6639📌6730"],
         "second": "🎆26🌙03☀️14⏰16⌚40⏱️14",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -24743,9 +24483,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6639📌6730"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6639📌6730"],
         "second": "🎆26🌙03☀️14⏰16⌚40⏱️26",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -24867,9 +24605,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6879📌6930"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6879📌6930"],
         "second": "🎆26🌙03☀️14⏰16⌚40⏱️53",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -24913,9 +24649,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6879📌6930"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6879📌6930"],
         "second": "🎆26🌙03☀️14⏰16⌚41⏱️05",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -24959,9 +24693,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6930📌6960"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6930📌6960"],
         "second": "🎆26🌙03☀️14⏰16⌚41⏱️17",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -25005,9 +24737,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6930📌6960"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6930📌6960"],
         "second": "🎆26🌙03☀️14⏰16⌚41⏱️30",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -25051,9 +24781,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌7073📌7170"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌7073📌7170"],
         "second": "🎆26🌙03☀️14⏰16⌚41⏱️35",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -25097,9 +24825,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌7073📌7170"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌7073📌7170"],
         "second": "🎆26🌙03☀️14⏰16⌚41⏱️47",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -25233,9 +24959,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3467📌3630"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3467📌3630"],
         "second": "🎆26🌙03☀️14⏰16⌚42⏱️17",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -25279,9 +25003,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3467📌3630"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3467📌3630"],
         "second": "🎆26🌙03☀️14⏰16⌚42⏱️29",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -25325,9 +25047,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3627📌3690"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3627📌3690"],
         "second": "🎆26🌙03☀️14⏰16⌚42⏱️34",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -25371,9 +25091,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3627📌3690"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3627📌3690"],
         "second": "🎆26🌙03☀️14⏰16⌚42⏱️45",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -27185,9 +26903,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6639📌6780"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6639📌6780"],
         "second": "🎆26🌙03☀️14⏰17⌚23⏱️18",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -27231,9 +26947,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6639📌6780"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6639📌6780"],
         "second": "🎆26🌙03☀️14⏰17⌚23⏱️35",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -27277,9 +26991,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6879📌6920"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6879📌6920"],
         "second": "🎆26🌙03☀️14⏰17⌚23⏱️42",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -27323,9 +27035,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6879📌6920"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌6879📌6920"],
         "second": "🎆26🌙03☀️14⏰17⌚23⏱️57",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -27369,9 +27079,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3467📌3560"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3467📌3560"],
         "second": "🎆26🌙03☀️14⏰17⌚24⏱️02",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -27415,9 +27123,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3467📌3560"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3467📌3560"],
         "second": "🎆26🌙03☀️14⏰17⌚24⏱️17",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -27461,9 +27167,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3620📌3700"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3620📌3700"],
         "second": "🎆26🌙03☀️14⏰17⌚24⏱️24",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -27507,9 +27211,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3620📌3700"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3620📌3700"],
         "second": "🎆26🌙03☀️14⏰17⌚24⏱️36",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -27553,9 +27255,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3190📌3270"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3190📌3270"],
         "second": "🎆26🌙03☀️14⏰17⌚24⏱️46",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -27599,9 +27299,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3190📌3270"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3190📌3270"],
         "second": "🎆26🌙03☀️14⏰17⌚24⏱️58",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -27657,9 +27355,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3160📌3200"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3160📌3200"],
         "second": "🎆26🌙03☀️14⏰17⌚25⏱️06",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -27715,9 +27411,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3160📌3200"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3160📌3200"],
         "second": "🎆26🌙03☀️14⏰17⌚25⏱️17",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -27773,9 +27467,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3290📌3410"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3290📌3410"],
         "second": "🎆26🌙03☀️14⏰17⌚25⏱️23",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -27831,9 +27523,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3290📌3410"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌3290📌3410"],
         "second": "🎆26🌙03☀️14⏰17⌚25⏱️36",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -27953,9 +27643,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1811📌1870"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1811📌1870"],
         "second": "🎆26🌙03☀️14⏰17⌚26⏱️02",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -27999,9 +27687,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1811📌1870"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1811📌1870"],
         "second": "🎆26🌙03☀️14⏰17⌚26⏱️16",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -28121,9 +27807,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌320📌370"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌320📌370"],
         "second": "🎆26🌙03☀️14⏰17⌚26⏱️48",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -28167,9 +27851,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌320📌370"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌320📌370"],
         "second": "🎆26🌙03☀️14⏰17⌚27⏱️00",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -28207,9 +27889,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1050📌1085"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1050📌1085"],
         "second": "🎆26🌙03☀️14⏰17⌚27⏱️14",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -28247,9 +27927,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1050📌1085"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1050📌1085"],
         "second": "🎆26🌙03☀️14⏰17⌚27⏱️33",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -28735,9 +28413,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌395📌470"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌395📌470"],
         "second": "🎆26🌙03☀️14⏰17⌚30⏱️26",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -28801,9 +28477,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌395📌470"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌395📌470"],
         "second": "🎆26🌙03☀️14⏰17⌚30⏱️38",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -28841,9 +28515,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1052📌1075"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1052📌1075"],
         "second": "🎆26🌙03☀️14⏰17⌚30⏱️50",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -28881,9 +28553,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1052📌1075"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1052📌1075"],
         "second": "🎆26🌙03☀️14⏰17⌚31⏱️02",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -28931,9 +28601,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌332📌395"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌332📌395"],
         "second": "🎆26🌙03☀️14⏰17⌚31⏱️12",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -28981,9 +28649,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌332📌395"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌332📌395"],
         "second": "🎆26🌙03☀️14⏰17⌚31⏱️23",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -29059,9 +28725,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1📌50"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1📌50"],
         "second": "🎆26🌙03☀️14⏰17⌚31⏱️35",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -29137,9 +28801,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1📌50"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1📌50"],
         "second": "🎆26🌙03☀️14⏰17⌚31⏱️46",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -29271,9 +28933,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌119📌170"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌119📌170"],
         "second": "🎆26🌙03☀️14⏰17⌚32⏱️08",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -29329,9 +28989,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌119📌170"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌119📌170"],
         "second": "🎆26🌙03☀️14⏰17⌚32⏱️19",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -29375,9 +29033,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌5630📌5660"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌5630📌5660"],
         "second": "🎆26🌙03☀️14⏰17⌚32⏱️50",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -29421,9 +29077,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌5630📌5660"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌5630📌5660"],
         "second": "🎆26🌙03☀️14⏰17⌚33⏱️02",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -29475,9 +29129,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌4140📌4230"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌4140📌4230"],
         "second": "🎆26🌙03☀️14⏰17⌚33⏱️07",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -29529,9 +29181,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌4140📌4230"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌4140📌4230"],
         "second": "🎆26🌙03☀️14⏰17⌚33⏱️18",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -29583,9 +29233,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1980📌2020"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1980📌2020"],
         "second": "🎆26🌙03☀️14⏰17⌚33⏱️26",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -29637,9 +29285,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1980📌2020"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1980📌2020"],
         "second": "🎆26🌙03☀️14⏰17⌚33⏱️38",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -29695,9 +29341,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1998📌2100"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1998📌2100"],
         "second": "🎆26🌙03☀️14⏰17⌚34⏱️03",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -29753,9 +29397,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1998📌2100"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1998📌2100"],
         "second": "🎆26🌙03☀️14⏰17⌚34⏱️16",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -30035,9 +29677,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌1770📌1810"
-        ],
+        "ranges": ["👤compose📚js💻compose📌1770📌1810"],
         "second": "🎆26🌙03☀️14⏰17⌚35⏱️24",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -30089,9 +29729,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌1770📌1810"
-        ],
+        "ranges": ["👤compose📚js💻compose📌1770📌1810"],
         "second": "🎆26🌙03☀️14⏰17⌚35⏱️35",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -30211,9 +29849,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1646📌1700"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1646📌1700"],
         "second": "🎆26🌙03☀️14⏰17⌚36⏱️14",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -30257,9 +29893,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1646📌1700"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1646📌1700"],
         "second": "🎆26🌙03☀️14⏰17⌚36⏱️28",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -30379,9 +30013,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌4983📌5060"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌4983📌5060"],
         "second": "🎆26🌙03☀️14⏰17⌚37⏱️08",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -30425,9 +30057,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌4983📌5060"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌4983📌5060"],
         "second": "🎆26🌙03☀️14⏰17⌚37⏱️30",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -30471,9 +30101,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌5660📌5700"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌5660📌5700"],
         "second": "🎆26🌙03☀️14⏰17⌚37⏱️35",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -30517,9 +30145,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌5660📌5700"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌5660📌5700"],
         "second": "🎆26🌙03☀️14⏰17⌚37⏱️53",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -30563,9 +30189,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌5510📌5545"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌5510📌5545"],
         "second": "🎆26🌙03☀️14⏰17⌚38⏱️00",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -30609,9 +30233,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌5510📌5545"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌5510📌5545"],
         "second": "🎆26🌙03☀️14⏰17⌚38⏱️16",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -30655,9 +30277,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌4340📌4420"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌4340📌4420"],
         "second": "🎆26🌙03☀️14⏰17⌚38⏱️22",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -30701,9 +30321,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌4340📌4420"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌4340📌4420"],
         "second": "🎆26🌙03☀️14⏰17⌚38⏱️36",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -30751,9 +30369,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1988📌2050"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1988📌2050"],
         "second": "🎆26🌙03☀️14⏰17⌚38⏱️43",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -30801,9 +30417,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1988📌2050"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1988📌2050"],
         "second": "🎆26🌙03☀️14⏰17⌚38⏱️59",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -30927,9 +30541,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1673📌1710"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1673📌1710"],
         "second": "🎆26🌙03☀️14⏰17⌚39⏱️41",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -30973,9 +30585,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1673📌1710"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻sketchpad📌1673📌1710"],
         "second": "🎆26🌙03☀️14⏰17⌚39⏱️56",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -31251,9 +30861,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌1910📌1920"
-        ],
+        "ranges": ["👤compose📚js💻compose📌1910📌1920"],
         "second": "🎆26🌙03☀️14⏰17⌚41⏱️04",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -31297,9 +30905,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌1910📌1920"
-        ],
+        "ranges": ["👤compose📚js💻compose📌1910📌1920"],
         "second": "🎆26🌙03☀️14⏰17⌚41⏱️15",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -31575,9 +31181,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1390📌1425"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1390📌1425"],
         "second": "🎆26🌙03☀️14⏰17⌚44⏱️58",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -31615,9 +31219,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1390📌1425"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1390📌1425"],
         "second": "🎆26🌙03☀️14⏰17⌚45⏱️09",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -31737,9 +31339,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌8500📌8550"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻kit📌8500📌8550"],
         "second": "🎆26🌙03☀️14⏰17⌚45⏱️32",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -31783,9 +31383,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌8500📌8550"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻kit📌8500📌8550"],
         "second": "🎆26🌙03☀️14⏰17⌚45⏱️44",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -31905,9 +31503,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3452📌3530"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3452📌3530"],
         "second": "🎆26🌙03☀️14⏰17⌚46⏱️08",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -31951,9 +31547,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3452📌3530"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3452📌3530"],
         "second": "🎆26🌙03☀️14⏰17⌚46⏱️18",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -31997,9 +31591,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3530📌3630"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3530📌3630"],
         "second": "🎆26🌙03☀️14⏰17⌚46⏱️22",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -32043,9 +31635,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3530📌3630"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3530📌3630"],
         "second": "🎆26🌙03☀️14⏰17⌚46⏱️34",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -32093,9 +31683,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3349📌3420"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3349📌3420"],
         "second": "🎆26🌙03☀️14⏰17⌚46⏱️44",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -32143,9 +31731,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3349📌3420"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3349📌3420"],
         "second": "🎆26🌙03☀️14⏰17⌚46⏱️54",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -32189,9 +31775,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3605📌3630"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3605📌3630"],
         "second": "🎆26🌙03☀️14⏰17⌚47⏱️24",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -32235,9 +31819,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3605📌3630"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3605📌3630"],
         "second": "🎆26🌙03☀️14⏰17⌚47⏱️36",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -32361,9 +31943,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3452📌3480"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3452📌3480"],
         "second": "🎆26🌙03☀️14⏰17⌚48⏱️02",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -32407,9 +31987,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3452📌3480"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3452📌3480"],
         "second": "🎆26🌙03☀️14⏰17⌚48⏱️16",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -32457,9 +32035,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3349📌3380"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3349📌3380"],
         "second": "🎆26🌙03☀️14⏰17⌚48⏱️24",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -32507,9 +32083,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3349📌3380"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3349📌3380"],
         "second": "🎆26🌙03☀️14⏰17⌚48⏱️36",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -32553,9 +32127,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3585📌3605"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3585📌3605"],
         "second": "🎆26🌙03☀️14⏰17⌚49⏱️32",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -32599,9 +32171,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3585📌3605"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3585📌3605"],
         "second": "🎆26🌙03☀️14⏰17⌚49⏱️43",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -32887,9 +32457,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3380📌3445"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3380📌3445"],
         "second": "🎆26🌙03☀️14⏰17⌚53⏱️04",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -32937,9 +32505,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3380📌3445"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3380📌3445"],
         "second": "🎆26🌙03☀️14⏰17⌚53⏱️15",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -34723,9 +34289,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3349📌3365"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3349📌3365"],
         "second": "🎆26🌙03☀️14⏰18⌚08⏱️22",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -34769,9 +34333,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3349📌3365"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3349📌3365"],
         "second": "🎆26🌙03☀️14⏰18⌚08⏱️34",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -34971,9 +34533,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌1546📌1575"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻kit📌1546📌1575"],
         "second": "🎆26🌙03☀️14⏰18⌚09⏱️19",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -35017,9 +34577,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌1546📌1575"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻kit📌1546📌1575"],
         "second": "🎆26🌙03☀️14⏰18⌚09⏱️30",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -35377,9 +34935,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3349📌3360"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3349📌3360"],
         "second": "🎆26🌙03☀️14⏰18⌚13⏱️19",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -35423,9 +34979,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3349📌3360"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3349📌3360"],
         "second": "🎆26🌙03☀️14⏰18⌚13⏱️31",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -37127,9 +36681,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3349📌3365"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3349📌3365"],
         "second": "🎆26🌙03☀️14⏰18⌚26⏱️40",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -37173,9 +36725,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3349📌3365"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3349📌3365"],
         "second": "🎆26🌙03☀️14⏰18⌚26⏱️52",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -38551,9 +38101,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3349📌3362"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3349📌3362"],
         "second": "🎆26🌙03☀️14⏰18⌚32⏱️45",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -38597,9 +38145,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧩elements🛅ui💻elements📌3349📌3362"
-        ],
+        "ranges": ["🧩elements🛅ui💻elements📌3349📌3362"],
         "second": "🎆26🌙03☀️14⏰18⌚32⏱️57",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -39824,9 +39370,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1600📌1650"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1600📌1650"],
         "second": "🎆26🌙03☀️14⏰18⌚41⏱️08",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -39864,9 +39408,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1600📌1650"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1600📌1650"],
         "second": "🎆26🌙03☀️14⏰18⌚41⏱️21",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -39991,9 +39533,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1143📌1200"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1143📌1200"],
         "second": "🎆26🌙03☀️14⏰18⌚44⏱️53",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -40031,9 +39571,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1143📌1200"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1143📌1200"],
         "second": "🎆26🌙03☀️14⏰18⌚45⏱️05",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -40071,9 +39609,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1100📌1145"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1100📌1145"],
         "second": "🎆26🌙03☀️14⏰18⌚45⏱️11",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -40111,9 +39647,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1100📌1145"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1100📌1145"],
         "second": "🎆26🌙03☀️14⏰18⌚45⏱️23",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -40151,9 +39685,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1560📌1640"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1560📌1640"],
         "second": "🎆26🌙03☀️14⏰18⌚45⏱️26",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -40191,9 +39723,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1560📌1640"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1560📌1640"],
         "second": "🎆26🌙03☀️14⏰18⌚45⏱️37",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -40333,9 +39863,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌395📌460"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌395📌460"],
         "second": "🎆26🌙03☀️14⏰18⌚46⏱️08",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -40399,9 +39927,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌395📌460"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌395📌460"],
         "second": "🎆26🌙03☀️14⏰18⌚46⏱️20",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -40439,9 +39965,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1050📌1080"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1050📌1080"],
         "second": "🎆26🌙03☀️14⏰18⌚46⏱️31",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -40479,9 +40003,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1050📌1080"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1050📌1080"],
         "second": "🎆26🌙03☀️14⏰18⌚46⏱️43",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -40519,9 +40041,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1080📌1100"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1080📌1100"],
         "second": "🎆26🌙03☀️14⏰18⌚46⏱️47",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -40559,9 +40079,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1080📌1100"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1080📌1100"],
         "second": "🎆26🌙03☀️14⏰18⌚46⏱️58",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -41001,9 +40519,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1070📌1085"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1070📌1085"],
         "second": "🎆26🌙03☀️14⏰18⌚54⏱️33",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"
@@ -41041,9 +40557,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌1070📌1085"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌1070📌1085"],
         "second": "🎆26🌙03☀️14⏰18⌚54⏱️45",
         "session": "⚪f811e805aff449c6b8e474be5f3c099c",
         "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/f811e805-aff4-49c6-b8e4-74be5f3c099c.jsonl"

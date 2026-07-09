@@ -5,7 +5,5 @@
   "description": "Post-redraw camera ease does not interpolate: fixture sync effect runs before ease and overwrites cameraBasisFixtureRef with latest fixture so from===to. Fix from source to pinned boardPlayPaneCamerasBaseline.",
   "summary": "Post-redraw ease used `from = triptych(cameraBasisFixtureRef.current)` but the `[fixture, boardRedrawPlaying]` effect runs first when play stops and sets `cameraBasisFixtureRef` to the latest fixture, so `from` and `to` were identical and only the final baseline rAF moved the camera. Ease `from` is now a shallow copy of `boardPlayPaneCamerasBaseline` (the pinned cameras shown during play). Vitest 58 passed.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪b6870f0f674f47b282478ea6decbbc0f"
-  ]
+  "sessions": ["⚪b6870f0f674f47b282478ea6decbbc0f"]
 }

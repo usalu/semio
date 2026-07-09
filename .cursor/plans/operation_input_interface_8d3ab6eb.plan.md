@@ -2,24 +2,24 @@
 name: Operation Input Interface
 overview: "Design a uniform Operation Input API in `compose/graphql/target.schema.graphql`: every operation that has real argument data gets a `<Op>Input implements Input` WeakEntity (hash-id) owned by the Operation; operations whose data is fully carried by `scope` drop their `*Input` type entirely and inherit nullable `input: Input` from the `Operation` interface."
 todos:
-  - id: input_interface
-    content: Sharpen `interface Input` (owner // Operation, owns empty)
-    status: completed
-  - id: input_connection
-    content: Add abstract `InputEdge` and `InputConnection`
-    status: completed
-  - id: operation_interface
-    content: Sharpen `interface Operation` input/owns comments
-    status: completed
-  - id: convert_inputs
-    content: Convert ~74 non-empty `*Input` types to `implements Input` (WeakEntity contract) and fix `CreatedFixedPieceInput.id`
-    status: completed
-  - id: drop_empty_inputs
-    content: Delete 35 empty `*Input` placeholder types and their operation `input:` fields
-    status: completed
-  - id: owns_unions
-    content: Update each operation's `owns` reference comment to include `<Op>Input` where applicable
-    status: completed
+ - id: input_interface
+   content: Sharpen `interface Input` (owner // Operation, owns empty)
+   status: completed
+ - id: input_connection
+   content: Add abstract `InputEdge` and `InputConnection`
+   status: completed
+ - id: operation_interface
+   content: Sharpen `interface Operation` input/owns comments
+   status: completed
+ - id: convert_inputs
+   content: Convert ~74 non-empty `*Input` types to `implements Input` (WeakEntity contract) and fix `CreatedFixedPieceInput.id`
+   status: completed
+ - id: drop_empty_inputs
+   content: Delete 35 empty `*Input` placeholder types and their operation `input:` fields
+   status: completed
+ - id: owns_unions
+   content: Update each operation's `owns` reference comment to include `<Op>Input` where applicable
+   status: completed
 isProject: false
 ---
 
@@ -46,14 +46,14 @@ All edits land in [compose/graphql/target.schema.graphql](compose/graphql/target
 
 ```graphql
 interface Input implements WeakEntity {
-  # Node
-  id: ID! # computed // hash
-  # Entity
-  hash: String! # cached
-  owner: Entity # reference // Operation
-  owns: EntityConnection # reference
-  # Input
-  # ARGUMENT: ARGUMENTTYPE
+ # Node
+ id: ID! # computed // hash
+ # Entity
+ hash: String! # cached
+ owner: Entity # reference // Operation
+ owns: EntityConnection # reference
+ # Input
+ # ARGUMENT: ARGUMENTTYPE
 }
 ```
 
@@ -65,14 +65,14 @@ Sit right under the `interface Input` block. We add ONLY the abstract pair (para
 
 ```graphql
 type InputEdge implements EntityEdge {
-  cursor: String! # computed
-  node: Input! # reference
+ cursor: String! # computed
+ node: Input! # reference
 }
 
 type InputConnection implements EntityConnection {
-  edges: [InputEdge!]! # computed
-  pageInfo: PageInfo! # computed
-  hash: String! # cached
+ edges: [InputEdge!]! # computed
+ pageInfo: PageInfo! # computed
+ hash: String! # cached
 }
 ```
 
@@ -80,17 +80,17 @@ type InputConnection implements EntityConnection {
 
 ```graphql
 interface Operation implements Entity { # implements StrongEntity
-  # Node
-  id: ID! # data // uuidv7
-  # Entity
-  hash: String! # cached
-  owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Input | <output entities>
-  # Operation
-  scope: Entity! # reference // Entity | Quality | Attribute | Tag | Concept | Port | Type | Connector | Design | Piece | Connection | Kit
-  input: Input # data // null when all operation data is carried by scope
-  modification: Modification! # computed
-  # Operation Output
+ # Node
+ id: ID! # data // uuidv7
+ # Entity
+ hash: String! # cached
+ owner: Entity # reference // Edit
+ owns: EntityConnection # reference // Input | <output entities>
+ # Operation
+ scope: Entity! # reference // Entity | Quality | Attribute | Tag | Concept | Port | Type | Connector | Design | Piece | Connection | Kit
+ input: Input # data // null when all operation data is carried by scope
+ modification: Modification! # computed
+ # Operation Output
 }
 ```
 
@@ -102,8 +102,8 @@ Pattern, applied uniformly. Before:
 
 ```graphql
 type RenamedQualityInput {
-  # RenamedQualityInput
-  key: String! # data
+ # RenamedQualityInput
+ key: String! # data
 }
 ```
 
@@ -111,15 +111,15 @@ After:
 
 ```graphql
 type RenamedQualityInput implements Input {
-  # Node
-  id: ID! # computed // hash
-  # Entity
-  hash: String! # cached
-  owner: Entity # reference // RenamedQuality
-  owns: EntityConnection # reference
-  # Input
-  # Arguments
-  key: String! # data
+ # Node
+ id: ID! # computed // hash
+ # Entity
+ hash: String! # cached
+ owner: Entity # reference // RenamedQuality
+ owns: EntityConnection # reference
+ # Input
+ # Arguments
+ key: String! # data
 }
 ```
 
@@ -169,11 +169,8 @@ flowchart LR
   Input -.->|references| Refs["Position / Attribute / Piece / ..."]
 ```
 
-
-
 ## Out of scope (intentionally not in this plan)
 
 - No regeneration of resolvers, codegen, or downstream TS/Rust/Python types — this is a schema-only design pass.
 - Per-`<Op>Input` `Edge`/`Connection` types are deliberately omitted.
 - The non-target [compose/graphql/schema.graphql](compose/graphql/schema.graphql) is left untouched; once the target shape is approved we can sync it in a follow-up.
-

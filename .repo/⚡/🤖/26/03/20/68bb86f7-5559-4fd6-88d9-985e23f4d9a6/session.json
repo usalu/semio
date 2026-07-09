@@ -100,11 +100,7 @@
             "max_results": 3
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__search",
-              "mcp__repo__ticket_open",
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__search", "mcp__repo__ticket_open", "mcp__repo__ticket_close"],
             "query": "select:mcp__repo__search,mcp__repo__ticket_open,mcp__repo__ticket_close",
             "total_deferred_tools": 86
           },
@@ -954,9 +950,7 @@
           },
           "tool_response": {
             "mode": "files_with_matches",
-            "filenames": [
-              "elements/ui/elements.tsx"
-            ],
+            "filenames": ["elements/ui/elements.tsx"],
             "numFiles": 1,
             "appliedLimit": 20
           },
@@ -2178,9 +2172,7 @@
           },
           "tool_response": {
             "mode": "files_with_matches",
-            "filenames": [
-              "elements/ui/elements.tsx"
-            ],
+            "filenames": ["elements/ui/elements.tsx"],
             "numFiles": 1
           },
           "tool_use_id": "toolu_01Din2Uc23Kson41dzDDaDX8"
@@ -2807,15 +2799,7 @@
                 "oldLines": 6,
                 "newStart": 9461,
                 "newLines": 7,
-                "lines": [
-                  " export interface UIWindowConfig {",
-                  "   windowKinds: UIWindowKindDefinition[];",
-                  "   defaultLayout?: any;",
-                  "+  wrapper?: React.ComponentType\u003c{ children: React.ReactNode }\u003e;",
-                  " }",
-                  " ",
-                  " /**"
-                ]
+                "lines": [" export interface UIWindowConfig {", "   windowKinds: UIWindowKindDefinition[];", "   defaultLayout?: any;", "+  wrapper?: React.ComponentType\u003c{ children: React.ReactNode }\u003e;", " }", " ", " /**"]
               }
             ],
             "userModified": false,
@@ -3375,15 +3359,7 @@
                 "oldLines": 6,
                 "newStart": 9720,
                 "newLines": 7,
-                "lines": [
-                  " ",
-                  "         return () =\u003e {",
-                  "           window.removeEventListener(\"resize\", handleResize);",
-                  "+          setPortals([]);",
-                  "           try {",
-                  "             layout.destroy();",
-                  "           } catch {}"
-                ]
+                "lines": [" ", "         return () =\u003e {", "           window.removeEventListener(\"resize\", handleResize);", "+          setPortals([]);", "           try {", "             layout.destroy();", "           } catch {}"]
               },
               {
                 "oldStart": 9743,
@@ -3504,15 +3480,7 @@
                 "oldLines": 7,
                 "newStart": 9461,
                 "newLines": 6,
-                "lines": [
-                  " export interface UIWindowConfig {",
-                  "   windowKinds: UIWindowKindDefinition[];",
-                  "   defaultLayout?: any;",
-                  "-  wrapper?: React.ComponentType\u003c{ children: React.ReactNode }\u003e;",
-                  " }",
-                  " ",
-                  " /**"
-                ]
+                "lines": [" export interface UIWindowConfig {", "   windowKinds: UIWindowKindDefinition[];", "   defaultLayout?: any;", "-  wrapper?: React.ComponentType\u003c{ children: React.ReactNode }\u003e;", " }", " ", " /**"]
               }
             ],
             "userModified": false,
@@ -3841,9 +3809,7 @@
             "pattern": "compose/algorithms/tsconfig*.json"
           },
           "tool_response": {
-            "filenames": [
-              "/workspaces/semio/compose/algorithms/tsconfig.json"
-            ],
+            "filenames": ["/workspaces/semio/compose/algorithms/tsconfig.json"],
             "durationMs": 357,
             "numFiles": 1,
             "truncated": false

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The existing `machines.ts` has a unified `sketchpadMachine` that handles:
@@ -41,6 +42,7 @@ However, the machine is "flat" - all events are handled at the root level withou
 ## Log
 
 ## Summary
+
 # Summary
 
 "Finish the UI state machine with proper states, guards, menus, and context"

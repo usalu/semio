@@ -4867,8 +4867,13 @@ dependencies = [
 name = "lowpoly_core"
 version = "0.1.0"
 dependencies = [
+ "cad_document",
  "js-sys",
+ "kernel_3d_brepkit",
+ "kernel_3d_engine",
  "kernel_3d_mesh",
+ "semio-framework-core",
+ "semio-framework-plugin",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -9794,6 +9799,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "thiserror 2.0.18",
+ "ureq",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",

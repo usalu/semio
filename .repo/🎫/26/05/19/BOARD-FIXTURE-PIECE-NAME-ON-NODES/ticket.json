@@ -4,7 +4,5 @@
   "status": "open",
   "description": "Nakagin capsule nodes show empty names in board play because parseBoardFixtureV1 drops cs_* labels; use kit piece names as node text/label.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯kit",
-  "sessions": [
-    "⚪dc522534b0ee456199e7d4a04819e17a"
-  ]
+  "sessions": ["⚪dc522534b0ee456199e7d4a04819e17a"]
 }

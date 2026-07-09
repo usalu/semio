@@ -7,6 +7,7 @@ goal: R26-02/UPDATED-SKETCHPAD
 ## Summary
 
 Unified toolbar button/toggle spacing by: (1) changing ToggleGroupItem from gap-0+ml-single to gap-single for icon-text gap consistency with ButtonGroupItem, (2) upgrading horizontal padding from p-single to py-single px-double for both ToggleGroupItem and ButtonGroupItem when text is present, giving buttons enough breathing room. No new TS errors introduced.
+
 ## Changes
 
 - `compose/js/sketchpad/elements.tsx`: Unified spacing mechanism between ToggleGroupItem and ButtonGroupItem
@@ -30,11 +31,13 @@ Unified toolbar button/toggle spacing by: (1) changing ToggleGroupItem from gap-
 ## Plan
 
 Root cause: `ToggleGroupItem` and `ButtonGroupItem` use different spacing mechanisms for icon+text:
+
 - ToggleGroupItem: `gap-0` on parent + `ml-single` on text span
 - ButtonGroupItem: `gap-single` on parent + no margin on text span
-Both items use `p-single` (0.2rem) horizontal padding when text is present, making buttons too narrow.
+  Both items use `p-single` (0.2rem) horizontal padding when text is present, making buttons too narrow.
 
 Fix:
+
 1. Unify ToggleGroupItem to use `gap-single` like ButtonGroupItem
 2. Remove `ml-single` from ToggleGroupItem text span
 3. Use `px-double` horizontal padding for items with text (both ToggleGroupItem and ButtonGroupItem)

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Store was overfetching and overrendering due to:
@@ -101,6 +102,7 @@ The user indicated "There is an alternative version that renders the same exampl
 ## Log
 
 ## Summary
+
 # Summary
 
 Optimize state management with granular Y.js subscriptions

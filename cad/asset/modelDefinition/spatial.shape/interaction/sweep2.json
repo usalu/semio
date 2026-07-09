@@ -5,10 +5,7 @@
   "label": "Sweep2",
   "interaction": {
     "spatialGroundPick": false,
-    "pickDisabledStates": [
-      "idle",
-      "committed"
-    ],
+    "pickDisabledStates": ["idle", "committed"],
     "groundPointerMoveStates": [],
     "heightDragStates": [],
     "verticalRodStates": [],
@@ -41,11 +38,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        0
-                      ]
+                      "value": [0, 0, 0]
                     }
                   },
                   {
@@ -89,10 +82,7 @@
       {
         "name": "select_first_rail",
         "selection": {
-          "accept": [
-            "wire",
-            "edge"
-          ],
+          "accept": ["wire", "edge"],
           "multiple": true,
           "prompt": "Select first rail"
         },
@@ -138,10 +128,7 @@
       {
         "name": "select_second_rail",
         "selection": {
-          "accept": [
-            "wire",
-            "edge"
-          ],
+          "accept": ["wire", "edge"],
           "multiple": true,
           "prompt": "Select second rail"
         },
@@ -187,10 +174,7 @@
       {
         "name": "select_cross_section_curves",
         "selection": {
-          "accept": [
-            "wire",
-            "edge"
-          ],
+          "accept": ["wire", "edge"],
           "multiple": true,
           "prompt": "Select cross-section curves"
         },
@@ -300,11 +284,7 @@
             "text": "Select first rail",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -367,11 +347,7 @@
             "text": "Select second rail",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -434,11 +410,7 @@
             "text": "Select cross-section curves",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -501,11 +473,7 @@
             "text": "Sweep2 options",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -561,9 +529,7 @@
     ]
   },
   "commit": {
-    "fromStates": [
-      "ready"
-    ],
+    "fromStates": ["ready"],
     "operation": {
       "kind": "action",
       "action": "command.finish",

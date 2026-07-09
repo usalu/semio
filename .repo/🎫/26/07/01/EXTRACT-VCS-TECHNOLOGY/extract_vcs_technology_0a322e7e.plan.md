@@ -2,72 +2,72 @@
 name: Extract VCS Technology
 overview: Extract the shared version-control engine (currently split across `framework/rs` and `framework/core/vcs-sync.ts`) into its own top-level `vcs` technology with a full Operation→Edit→Change→Checkpoint→Alternative model where every operation defines `diff()`+`backwards()`, then repoint every technology at it — including finishing the wasm packaging + play-controller rewiring that 14 technologies never got after their Rust `Operation` impls were written — and add a `vcs/play` playground with a 3-row chronological History table (labels / parent-avatars-and-track-lines / description).
 todos:
-  - id: vcs-scaffold
-    content: Create vcs/rs (move+rename framework/rs, crate `vcs`) and vcs/core (move framework/core/vcs-sync.ts) with script.ts/project.json/package.json following framework/rs's template
-    status: completed
-  - id: vcs-entity-model
-    content: Split DocumentChange into Edit/Change/Checkpoint(+Author)/Alternative in both vcs/rs and vcs/core; require diffOp+backwardsOp in TS store options; rewrite existing unit tests in place for the new shape
-    status: completed
-  - id: vcs-backbone-move
-    content: Move Backbone trait + DevJsonFileBackbone/SqliteFolderBackbone/RemoteHttpBackbone/resolve_backbone into vcs/rs unchanged
-    status: completed
-  - id: vcs-react-history-table
-    content: "Build HistoryTable in vcs/react: 3-row grid (labels / avatar-stack+track-lines / description), columns sorted chronologically, lane-assignment for alternatives, reusing ui/react Avatar/TableAvatar"
-    status: completed
-  - id: vcs-play
-    content: "Build vcs/play: demo projection + fixture with 2 authors and 2 forked alternatives, window hosting HistoryTable, apply/commit/branch engagement controls, script.ts/project.json/package.json/vite.config.ts"
-    status: completed
-  - id: retire-framework-vcs
-    content: Delete framework/rs and framework/core/vcs-sync.ts; drop the vcs-sync import from framework/core/index.ts
-    status: completed
-  - id: cargo-dep-rename
-    content: Rename the framework_vcs Cargo dependency to vcs across every crate's Cargo.toml (~20 files) and update `[workspace] members` path framework/rs -> vcs/rs
-    status: completed
-  - id: wire-draw
-    content: Package draw/rs (script.ts/project.json/package.json), register in root package.json, rewrite draw/play to dispatch real DrawOp via DrawDocumentVcs instead of local reducer + setDocument
-    status: completed
-  - id: wire-forms
-    content: Package forms/rs, register workspace, rewrite forms/play onto FormsDocumentVcs
-    status: completed
-  - id: wire-shooting
-    content: Package shooting/rs, register workspace, rewrite shooting/play onto ShootingDocumentVcs
-    status: completed
-  - id: wire-cad
-    content: Package cad/rs, register workspace, rewrite cad play surface onto CadDocumentVcs
-    status: completed
-  - id: wire-presentation
-    content: Package framework/product/presentation/rs, register workspace, rewrite presentation/play onto PresentationDocumentVcs
-    status: completed
-  - id: wire-gis
-    content: Add wasm_bindgen GisMapDocumentVcs wrapper to gis/2d/rs, package it, rewrite gis/2d/play
-    status: completed
-  - id: wire-puzzle3d5d
-    content: Add wasm wrapper to puzzle/3d/rs and puzzle/5d/rs, package both, rewrite puzzle/3d/play and puzzle/5d/play
-    status: completed
-  - id: wire-procedural
-    content: Add wasm wrapper to procedural/2d/rs and procedural/3d/rs, package both, rewrite procedural/2d/play and procedural/3d/play
-    status: completed
-  - id: wire-dag-flow
-    content: Add wasm wrapper to mathematical/graph/port/directed/dag, package it, rewrite dag/play and flow/play off commitFixture
-    status: completed
-  - id: wire-mindmap
-    content: Add wasm wrapper to reasoning/mindmap, package it, rewrite reasoning/mindmap/play and wires/play
-    status: completed
-  - id: wire-trinity
-    content: Add wasm wrapper to trinity/ram and trinity/rewrite/engine, package both, rewrite trinity/jack/play and trinity/rewrite/play off throwaway sessions
-    status: completed
-  - id: wire-already-packaged
-    content: Rewire writer/play (WriterOp), raster/play (RasterOp), and semios trinity residuals onto real dispatch (crates already packaged, only play/core logic needs fixing)
-    status: completed
-  - id: puzzle2d-testdemo
-    content: Update puzzle/2d/rs's internal test-only Puzzle2dOp/Puzzle2dProjection demo module onto vcs's new Operation/Edit types; leave production board engine untouched
-    status: completed
-  - id: root-wiring
-    content: Update root package.json workspaces, .vscode/launch.json entries (rename framework-vcs build entry, add vcs play + newly packaged crate build entries), vcs/AGENTS.md spec
-    status: completed
-  - id: tests-regression
-    content: cargo test across the whole workspace, nx test across every touched TS package, extend each migrated technology's core test file with an Apply/undo round-trip case, manually verify dev:semios and dev:vcs
-    status: completed
+ - id: vcs-scaffold
+   content: Create vcs/rs (move+rename framework/rs, crate `vcs`) and vcs/core (move framework/core/vcs-sync.ts) with script.ts/project.json/package.json following framework/rs's template
+   status: completed
+ - id: vcs-entity-model
+   content: Split DocumentChange into Edit/Change/Checkpoint(+Author)/Alternative in both vcs/rs and vcs/core; require diffOp+backwardsOp in TS store options; rewrite existing unit tests in place for the new shape
+   status: completed
+ - id: vcs-backbone-move
+   content: Move Backbone trait + DevJsonFileBackbone/SqliteFolderBackbone/RemoteHttpBackbone/resolve_backbone into vcs/rs unchanged
+   status: completed
+ - id: vcs-react-history-table
+   content: "Build HistoryTable in vcs/react: 3-row grid (labels / avatar-stack+track-lines / description), columns sorted chronologically, lane-assignment for alternatives, reusing ui/react Avatar/TableAvatar"
+   status: completed
+ - id: vcs-play
+   content: "Build vcs/play: demo projection + fixture with 2 authors and 2 forked alternatives, window hosting HistoryTable, apply/commit/branch engagement controls, script.ts/project.json/package.json/vite.config.ts"
+   status: completed
+ - id: retire-framework-vcs
+   content: Delete framework/rs and framework/core/vcs-sync.ts; drop the vcs-sync import from framework/core/index.ts
+   status: completed
+ - id: cargo-dep-rename
+   content: Rename the framework_vcs Cargo dependency to vcs across every crate's Cargo.toml (~20 files) and update `[workspace] members` path framework/rs -> vcs/rs
+   status: completed
+ - id: wire-draw
+   content: Package draw/rs (script.ts/project.json/package.json), register in root package.json, rewrite draw/play to dispatch real DrawOp via DrawDocumentVcs instead of local reducer + setDocument
+   status: completed
+ - id: wire-forms
+   content: Package forms/rs, register workspace, rewrite forms/play onto FormsDocumentVcs
+   status: completed
+ - id: wire-shooting
+   content: Package shooting/rs, register workspace, rewrite shooting/play onto ShootingDocumentVcs
+   status: completed
+ - id: wire-cad
+   content: Package cad/rs, register workspace, rewrite cad play surface onto CadDocumentVcs
+   status: completed
+ - id: wire-presentation
+   content: Package framework/product/presentation/rs, register workspace, rewrite presentation/play onto PresentationDocumentVcs
+   status: completed
+ - id: wire-gis
+   content: Add wasm_bindgen GisMapDocumentVcs wrapper to gis/2d/rs, package it, rewrite gis/2d/play
+   status: completed
+ - id: wire-puzzle3d5d
+   content: Add wasm wrapper to puzzle/3d/rs and puzzle/5d/rs, package both, rewrite puzzle/3d/play and puzzle/5d/play
+   status: completed
+ - id: wire-procedural
+   content: Add wasm wrapper to procedural/2d/rs and procedural/3d/rs, package both, rewrite procedural/2d/play and procedural/3d/play
+   status: completed
+ - id: wire-dag-flow
+   content: Add wasm wrapper to mathematical/graph/port/directed/dag, package it, rewrite dag/play and flow/play off commitFixture
+   status: completed
+ - id: wire-mindmap
+   content: Add wasm wrapper to reasoning/mindmap, package it, rewrite reasoning/mindmap/play and wires/play
+   status: completed
+ - id: wire-trinity
+   content: Add wasm wrapper to trinity/ram and trinity/rewrite/engine, package both, rewrite trinity/jack/play and trinity/rewrite/play off throwaway sessions
+   status: completed
+ - id: wire-already-packaged
+   content: Rewire writer/play (WriterOp), raster/play (RasterOp), and semios trinity residuals onto real dispatch (crates already packaged, only play/core logic needs fixing)
+   status: completed
+ - id: puzzle2d-testdemo
+   content: Update puzzle/2d/rs's internal test-only Puzzle2dOp/Puzzle2dProjection demo module onto vcs's new Operation/Edit types; leave production board engine untouched
+   status: completed
+ - id: root-wiring
+   content: Update root package.json workspaces, .vscode/launch.json entries (rename framework-vcs build entry, add vcs play + newly packaged crate build entries), vcs/AGENTS.md spec
+   status: completed
+ - id: tests-regression
+   content: cargo test across the whole workspace, nx test across every touched TS package, extend each migrated technology's core test file with an Apply/undo round-trip case, manually verify dev:semios and dev:vcs
+   status: completed
 isProject: false
 ---
 
@@ -76,10 +76,10 @@ isProject: false
 ## Current state (confirmed by reading the code, not the stale plan docs)
 
 - `framework/rs/lib.rs` already has a generic, typesafe engine: `Operation<P>` (`diff`, `backwards`), `OperationDiff<P>` (`apply`, `absorb`), `Edit`→ wait, no — today it only has `DocumentChange<Op>` (flat forwards/backwards), `DocumentCheckpoint`, `DocumentAlternative`, `DocumentVcsStore`, and a `Backbone` trait with `DevJsonFileBackbone`/`SqliteFolderBackbone`/`RemoteHttpBackbone`. Its own `package.json` is already named `@semio-tech/framework-vcs-rs` and `.vscode/launch.json:989` already calls it `📦build🗄️framework🔗vcs` — the extraction was anticipated but never done.
-- `framework/core/vcs-sync.ts` is a parallel **TS mirror** with the same shape but a weaker contract: `DocumentVcsStoreOptions.backwardsOp` is *optional*, so nothing forces a caller to define backwards.
+- `framework/core/vcs-sync.ts` is a parallel **TS mirror** with the same shape but a weaker contract: `DocumentVcsStoreOptions.backwardsOp` is _optional_, so nothing forces a caller to define backwards.
 - The Rust workspace ([`Cargo.toml`](Cargo.toml)) already lists every technology's crate (`draw/rs`, `forms/rs`, `shooting/rs`, `cad/rs`, `framework/product/presentation/rs`, `gis/2d/rs`, `puzzle/2d|3d|5d/rs`, `procedural/2d|3d/rs`, `mathematical/graph/port/directed/dag`, `reasoning/mindmap`, `trinity/ram`, `trinity/jack/*`, `trinity/rewrite/engine`, `writer/rs`, `raster/rs`, `semios/rs`), and each already has a real `Operation<P>`/`OperationDiff<P>` impl (`DrawOp`/`DrawDiff`, `FormOp`, `RasterOp`, `ShootingOp`, `CadOp`, `PresentationOp`, `Puzzle3dOp`, `Puzzle5dOp`, `GisMapOp`, `Procedural2dOp`/`3dOp`, `FlowDagOp`, `MindmapOp`, `TrinityGraphOp`, `WriterOp`) — confirmed via `impl Operation<` / `impl OperationDiff<` in every one of those `lib.rs` files.
 - Of those, `cad/rs`, `forms/rs`, `shooting/rs`, `framework/product/presentation/rs`, and `draw/rs` already export a `#[wasm_bindgen] pub struct XDocumentVcs` wrapper (constructor, `dispatchJson`, `projectionJson`, `envelopeJson`, `generation` — see [`draw/rs/lib.rs:484-528`](draw/rs/lib.rs)). None of the five have a `package.json`/`project.json`/`script.ts` (verified via glob — only `Cargo.toml`+`lib.rs`, or +`script.ts` for `draw/rs`), so wasm-pack never runs and nothing in the JS workspace can import them. `gis/2d/rs`, `puzzle/3d|5d/rs`, `procedural/2d|3d/rs`, `dag`, `reasoning/mindmap`, `trinity/ram`, `trinity/rewrite/engine` have **no** wasm wrapper struct at all yet.
-- Every one of these technologies' `*/play/index.ts` still constructs the **TS-mirror** `DocumentVcsStore<Doc, EditOp>` from `@semio-tech/framework-core`, runs a local TS reducer (`applyDrawEditOp`, etc.), and pushes the *entire resulting document* as one opaque `{ op: "setDocument", document: next }` into the store (e.g. [`draw/play/index.ts:1119`](draw/play/index.ts), same pattern in `forms/play`, `raster/play`, `writer/play`, `shooting/play`, `flow/play` (`commitFixture`), `gis/2d/play`, `procedural/2d|3d/play`, `puzzle/3d|5d/play`, `framework/product/presentation/play`, `mathematical/.../dag/play`). This is exactly what [`.repo/🎫/26/07/01/REPO-WIDE-CQRS-VIOLATION-AUDIT/audit.md`](.repo/🎫/26/07/01/REPO-WIDE-CQRS-VIOLATION-AUDIT/audit.md) flags as unresolved despite the prior ticket being marked "completed" — the real per-field ops and their `backwards()`/`diff()` are computed and then thrown away in favor of a whole-document snapshot.
+- Every one of these technologies' `*/play/index.ts` still constructs the **TS-mirror** `DocumentVcsStore<Doc, EditOp>` from `@semio-tech/framework-core`, runs a local TS reducer (`applyDrawEditOp`, etc.), and pushes the _entire resulting document_ as one opaque `{ op: "setDocument", document: next }` into the store (e.g. [`draw/play/index.ts:1119`](draw/play/index.ts), same pattern in `forms/play`, `raster/play`, `writer/play`, `shooting/play`, `flow/play` (`commitFixture`), `gis/2d/play`, `procedural/2d|3d/play`, `puzzle/3d|5d/play`, `framework/product/presentation/play`, `mathematical/.../dag/play`). This is exactly what [`.repo/🎫/26/07/01/REPO-WIDE-CQRS-VIOLATION-AUDIT/audit.md`](.repo/🎫/26/07/01/REPO-WIDE-CQRS-VIOLATION-AUDIT/audit.md) flags as unresolved despite the prior ticket being marked "completed" — the real per-field ops and their `backwards()`/`diff()` are computed and then thrown away in favor of a whole-document snapshot.
 - Compose's own canonical model (`compose/client/schema/graphql/schema.golden.graphql:9391-9567`) is 5 entities: **Operation** (stored) → **Edit** (`forwards`/`backwards` op lists, `sequenceNumber`, `startedAt`/`finishedAt`) → **Change** (`edits: EditConnection!`, checkpoint-scoped save unit) → **Checkpoint** (`changes`, `parent`, `authors`) → **Alternative**/`TheKit` (named track of Checkpoints). The generic engine today conflates Edit+Change into one `DocumentChange`.
 
 ## Target: the `vcs` technology

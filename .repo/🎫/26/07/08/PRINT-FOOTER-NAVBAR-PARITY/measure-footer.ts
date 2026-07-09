@@ -15,29 +15,29 @@ const chromeBase = { r: 247, g: 243, b: 227 };
 const canvasBg = { r: 240, g: 236, b: 221 };
 
 function chromeLeftEdge(data: Uint8ClampedArray, width: number, y: number): number {
-	for (let x = 0; x < width; x++) {
-		const i = (y * width + x) * 4;
-		const dr = Math.abs(data[i] - chromeBase.r);
-		const dg = Math.abs(data[i + 1] - chromeBase.g);
-		const db = Math.abs(data[i + 2] - chromeBase.b);
-		if (dr + dg + db < 30) return x;
-	}
-	return -1;
+  for (let x = 0; x < width; x++) {
+    const i = (y * width + x) * 4;
+    const dr = Math.abs(data[i] - chromeBase.r);
+    const dg = Math.abs(data[i + 1] - chromeBase.g);
+    const db = Math.abs(data[i + 2] - chromeBase.b);
+    if (dr + dg + db < 30) return x;
+  }
+  return -1;
 }
 
 function chromeBand(data: Uint8ClampedArray, width: number, height: number, yStart: number, yEnd: number): number {
-	for (let y = yStart; y < yEnd; y++) {
-		let chromePixels = 0;
-		for (let x = 0; x < width; x++) {
-			const i = (y * width + x) * 4;
-			const dr = Math.abs(data[i] - chromeBase.r);
-			const dg = Math.abs(data[i + 1] - chromeBase.g);
-			const db = Math.abs(data[i + 2] - chromeBase.b);
-			if (dr + dg + db < 30) chromePixels++;
-		}
-		if (chromePixels > width * 0.5) return y;
-	}
-	return -1;
+  for (let y = yStart; y < yEnd; y++) {
+    let chromePixels = 0;
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      const dr = Math.abs(data[i] - chromeBase.r);
+      const dg = Math.abs(data[i + 1] - chromeBase.g);
+      const db = Math.abs(data[i + 2] - chromeBase.b);
+      if (dr + dg + db < 30) chromePixels++;
+    }
+    if (chromePixels > width * 0.5) return y;
+  }
+  return -1;
 }
 
 const doc = await pdfjs.getDocument({ data: new Uint8Array(readFileSync(pdfPath)), useSystemFonts: true }).promise;
@@ -54,34 +54,34 @@ const footerY = chromeBand(data, width, height, Math.floor(height * 0.75), heigh
 const navbarLeft = navbarY >= 0 ? chromeLeftEdge(data, width, navbarY) : -1;
 const footerLeft = footerY >= 0 ? chromeLeftEdge(data, width, footerY) : -1;
 const footerBottom = (() => {
-	for (let y = height - 1; y >= Math.floor(height * 0.75); y--) {
-		let chromePixels = 0;
-		for (let x = 0; x < width; x++) {
-			const i = (y * width + x) * 4;
-			const dr = Math.abs(data[i] - chromeBase.r);
-			const dg = Math.abs(data[i + 1] - chromeBase.g);
-			const db = Math.abs(data[i + 2] - chromeBase.b);
-			if (dr + dg + db < 30) chromePixels++;
-		}
-		if (chromePixels > width * 0.5) return y;
-	}
-	return -1;
+  for (let y = height - 1; y >= Math.floor(height * 0.75); y--) {
+    let chromePixels = 0;
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      const dr = Math.abs(data[i] - chromeBase.r);
+      const dg = Math.abs(data[i + 1] - chromeBase.g);
+      const db = Math.abs(data[i + 2] - chromeBase.b);
+      if (dr + dg + db < 30) chromePixels++;
+    }
+    if (chromePixels > width * 0.5) return y;
+  }
+  return -1;
 })();
 
 let contentBottom = -1;
 for (let y = footerY - 1; y >= 0; y--) {
-	let contentPixels = 0;
-	for (let x = Math.floor(width * 0.1); x < Math.floor(width * 0.9); x++) {
-		const i = (y * width + x) * 4;
-		const dr = Math.abs(data[i] - canvasBg.r);
-		const dg = Math.abs(data[i + 1] - canvasBg.g);
-		const db = Math.abs(data[i + 2] - canvasBg.b);
-		if (dr + dg + db > 25) contentPixels++;
-	}
-	if (contentPixels > width * 0.05) {
-		contentBottom = y;
-		break;
-	}
+  let contentPixels = 0;
+  for (let x = Math.floor(width * 0.1); x < Math.floor(width * 0.9); x++) {
+    const i = (y * width + x) * 4;
+    const dr = Math.abs(data[i] - canvasBg.r);
+    const dg = Math.abs(data[i + 1] - canvasBg.g);
+    const db = Math.abs(data[i + 2] - canvasBg.b);
+    if (dr + dg + db > 25) contentPixels++;
+  }
+  if (contentPixels > width * 0.05) {
+    contentBottom = y;
+    break;
+  }
 }
 
 const pxPerPt = height / 842;

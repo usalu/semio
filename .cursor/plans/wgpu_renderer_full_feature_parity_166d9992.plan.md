@@ -2,42 +2,42 @@
 name: Wgpu Renderer Full Feature Parity
 overview: "Bring the wgpu renderer to full pre-migration feature parity across all six world3d plugins (cad, puzzle3d, puzzle5d, procedural3d, shooting, lowpoly): live dynamic tools/window-engagement bridging, full UV canvas rendering and interaction for lowpoly, component-level (vertex/edge/face) picking and marquee, component selection visuals, correct selection-JSON parsing, paint-on-mesh-surface in the 3D viewport, and gumball targeting fixes."
 todos:
-  - id: bridge-tools-engagements
-    content: Add tools()/window_engagements() to wgpu PluginBridgeEntry and cache them in ShellState.refresh_ui
-    status: completed
-  - id: footer-dynamic-tools
-    content: Render active_tools ToolNode tree in wgpu render_footer with collection expand/collapse state
-    status: completed
-  - id: engagement-rail-live
-    content: Use cached window_engagements over static kind.engagement in render_window_engagement_rail; wire engagementInput on_change
-    status: completed
-  - id: uv-canvas-layers
-    content: Extend CanvasLayer with dataUrl/points/seams and render paint texture image + dashed-seam UV wireframe + checkerboard in scenes.rs
-    status: completed
-  - id: uv-canvas-interaction
-    content: Fix UV canvas pointer coord mapping, wire paintStrokeBegin/End and canvasWheel, refresh_ui on mode switch
-    status: completed
-  - id: mesh-component-data
-    content: Extend Mesh3d with CPU-side face_ids/vertex_ids/edge_positions/edge_ids/uvs threaded through mesh ingestion
-    status: completed
-  - id: component-picking
-    content: Add pick_component_at + worldPick dispatch for vertex/edge/face granularity in world3d.rs
-    status: completed
-  - id: component-marquee
-    content: Extend marquee selection to project vertex/edge/face hits per granularity with live preview
-    status: completed
-  - id: component-overlays
-    content: Render wireframe/hover/selection overlays for components via line_draws/translucent_draws
-    status: completed
-  - id: selection-json-parity
-    content: Extend WorldSelectionRecord (granularity, componentIds, transformTool, interactionMode, gumballTarget) and fix transform-tool/mode field mixup and gumball centroid/mode commit
-    status: completed
-  - id: paint-on-mesh
-    content: Decode paint texture to wgpu texture, add UV-mapped textured mesh draw path, dispatch paintAt via ray-uv hit test with stroke begin/end
-    status: completed
-  - id: verify-wgpu-parity
-    content: Rust tests, wasm rebuild, wgpu e2e sweep for all six plugins, manual browser verification, update ticket
-    status: completed
+ - id: bridge-tools-engagements
+   content: Add tools()/window_engagements() to wgpu PluginBridgeEntry and cache them in ShellState.refresh_ui
+   status: completed
+ - id: footer-dynamic-tools
+   content: Render active_tools ToolNode tree in wgpu render_footer with collection expand/collapse state
+   status: completed
+ - id: engagement-rail-live
+   content: Use cached window_engagements over static kind.engagement in render_window_engagement_rail; wire engagementInput on_change
+   status: completed
+ - id: uv-canvas-layers
+   content: Extend CanvasLayer with dataUrl/points/seams and render paint texture image + dashed-seam UV wireframe + checkerboard in scenes.rs
+   status: completed
+ - id: uv-canvas-interaction
+   content: Fix UV canvas pointer coord mapping, wire paintStrokeBegin/End and canvasWheel, refresh_ui on mode switch
+   status: completed
+ - id: mesh-component-data
+   content: Extend Mesh3d with CPU-side face_ids/vertex_ids/edge_positions/edge_ids/uvs threaded through mesh ingestion
+   status: completed
+ - id: component-picking
+   content: Add pick_component_at + worldPick dispatch for vertex/edge/face granularity in world3d.rs
+   status: completed
+ - id: component-marquee
+   content: Extend marquee selection to project vertex/edge/face hits per granularity with live preview
+   status: completed
+ - id: component-overlays
+   content: Render wireframe/hover/selection overlays for components via line_draws/translucent_draws
+   status: completed
+ - id: selection-json-parity
+   content: Extend WorldSelectionRecord (granularity, componentIds, transformTool, interactionMode, gumballTarget) and fix transform-tool/mode field mixup and gumball centroid/mode commit
+   status: completed
+ - id: paint-on-mesh
+   content: Decode paint texture to wgpu texture, add UV-mapped textured mesh draw path, dispatch paintAt via ray-uv hit test with stroke begin/end
+   status: completed
+ - id: verify-wgpu-parity
+   content: Rust tests, wasm rebuild, wgpu e2e sweep for all six plugins, manual browser verification, update ticket
+   status: completed
 isProject: false
 ---
 

@@ -236,14 +236,14 @@ Reduce [`compose/react/index.tsx`](compose/react/index.tsx) (currently 635KB) an
 
 ### 4.1 Move out of react
 
-| Currently in react                                                                                                                                      | New home                                            | Rationale            |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | -------------------- | ----- | --------- | ----------------- |
-| `Coordinate`, `Vec`, `Plane`, `Point`, `Vector`, schemas                                                                                                | `@semio-tech/compose-js` (re-exported domain types)              | not React            |
-| `Kit`, `Type`, `Design`, `Piece`, `Connection`, `Port`, `Connector`, `Representation`, `Author`, `File`, `Folder`, `Concept`, `Quality`, `Tag`, schemas | `@semio-tech/compose-js` per-entity store DTOs                   | not React            |
-| `InMemoryKitStore`, `JsonFileKitStore`, `FolderKitStore`, `createSessionKitStore`                                                                       | `@semio-tech/compose-rs` backbones via `attachBackbone({memory   | dev                  | local | remote})` | persistence in rs |
-| `LiveKitRoot`, `ComposeKitLiveReadStore`, `ComposeKitViewStore`, `ComposeKitDesignReadStore`, `ComposeKitShallowListReadStore`                                  | folded into `KitStore`/`DesignStore` subscriptions  | reads in rs          |
-| `kitEventAffects*` predicates                                                                                                                           | rs ships per-event affected ids; JS just dispatches | classification in rs |
-| `diffSchemaPropertyEvents`, `applyKitClientSnapshotToLocalStore`, `importKitToPlain`, `acquireComposeKitCommandFacade`, `createKitCommandEngine*`         | delete (no consumer outside react/sketchpad)        | dead glue            |
+| Currently in react                                                                                                                                      | New home                                                       | Rationale            |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | -------------------- | ----- | --------- | ----------------- |
+| `Coordinate`, `Vec`, `Plane`, `Point`, `Vector`, schemas                                                                                                | `@semio-tech/compose-js` (re-exported domain types)            | not React            |
+| `Kit`, `Type`, `Design`, `Piece`, `Connection`, `Port`, `Connector`, `Representation`, `Author`, `File`, `Folder`, `Concept`, `Quality`, `Tag`, schemas | `@semio-tech/compose-js` per-entity store DTOs                 | not React            |
+| `InMemoryKitStore`, `JsonFileKitStore`, `FolderKitStore`, `createSessionKitStore`                                                                       | `@semio-tech/compose-rs` backbones via `attachBackbone({memory | dev                  | local | remote})` | persistence in rs |
+| `LiveKitRoot`, `ComposeKitLiveReadStore`, `ComposeKitViewStore`, `ComposeKitDesignReadStore`, `ComposeKitShallowListReadStore`                          | folded into `KitStore`/`DesignStore` subscriptions             | reads in rs          |
+| `kitEventAffects*` predicates                                                                                                                           | rs ships per-event affected ids; JS just dispatches            | classification in rs |
+| `diffSchemaPropertyEvents`, `applyKitClientSnapshotToLocalStore`, `importKitToPlain`, `acquireComposeKitCommandFacade`, `createKitCommandEngine*`       | delete (no consumer outside react/sketchpad)                   | dead glue            |
 
 ### 4.2 What compose/react keeps
 

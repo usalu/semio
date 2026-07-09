@@ -8,7 +8,7 @@ const srcPath = join(root, "cad/js/renderer/play/index.tsx");
 const lines = readFileSync(srcPath, "utf8").split("\n");
 
 function slice(start: number, end: number): string {
-	return lines.slice(start - 1, end).join("\n");
+  return lines.slice(start - 1, end).join("\n");
 }
 
 const coreDir = join(root, "cad/js/renderer/core");

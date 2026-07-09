@@ -5,7 +5,6 @@ todos: []
 isProject: false
 ---
 
-
 # Sequence Playground Parity + Styling Fix
 
 ## Root cause of "styling doesn't work"
@@ -89,17 +88,17 @@ Bring props in line with `DagCanvasProps`, delegating catalogue/inspector UI out
 
 ```typescript
 export interface SequenceCanvasProps {
-  readonly fixtureJson?: string;
-  readonly className?: string;
-  readonly reorganize?: SequenceReorganizeRequest; // { epoch, optionsJson }
-  readonly runRequest?: SequenceRunRequest; // { epoch }
-  readonly automaticLod?: boolean;
-  readonly lod?: DagDrawLodKind;
-  readonly selectedStepIds?: readonly string[];
-  readonly onFixtureChange?: (fixtureJson: string) => void;
-  readonly onSelectionChange?: (ids: readonly string[]) => void;
-  readonly onLodChange?: (lod: DagDrawLodKind) => void;
-  readonly onRunResult?: (result: RunResult) => void;
+ readonly fixtureJson?: string;
+ readonly className?: string;
+ readonly reorganize?: SequenceReorganizeRequest; // { epoch, optionsJson }
+ readonly runRequest?: SequenceRunRequest; // { epoch }
+ readonly automaticLod?: boolean;
+ readonly lod?: DagDrawLodKind;
+ readonly selectedStepIds?: readonly string[];
+ readonly onFixtureChange?: (fixtureJson: string) => void;
+ readonly onSelectionChange?: (ids: readonly string[]) => void;
+ readonly onLodChange?: (lod: DagDrawLodKind) => void;
+ readonly onRunResult?: (result: RunResult) => void;
 }
 ```
 
@@ -121,14 +120,12 @@ Mirror `DagPlayController` field-for-field where applicable, replacing DAG's `Do
 Toolbar (`buildSequencePlayToolbarTools`), mirroring `buildDagPlayToolbarTools`:
 
 ```typescript
-toolCollection("execution", "play", [
-  { kind: "button", id: "sequence.run", label: "Run", iconId: "play", controllerId, command: "run" },
-]),
-toolCollection("layout", "layout-grid", [
+(toolCollection("execution", "play", [{ kind: "button", id: "sequence.run", label: "Run", iconId: "play", controllerId, command: "run" }]),
+ toolCollection("layout", "layout-grid", [
   { kind: "button", id: "sequence.reorganize", label: "Reorganize", iconId: "refresh-cw", controllerId, command: "reorganize" },
   layoutToggle("sequence.orientation.lr", "Left to right", "leftRight"),
   layoutToggle("sequence.orientation.tb", "Top to bottom", "topBottom"),
-])
+ ]));
 ```
 
 ## 6. Document / Catalogue / Inspection tree builders (`sequence/play/index.ts`)

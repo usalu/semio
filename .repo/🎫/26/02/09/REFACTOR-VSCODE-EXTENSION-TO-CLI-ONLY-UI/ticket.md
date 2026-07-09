@@ -7,13 +7,16 @@ goal: AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION
 ## Summary
 
 Refactored VS Code extension to pure CLI UI. Removed all GraphQL/urql infrastructure. Extension now uses CLI tree output for Monrepo tree provider, filter values, bundle cache, and all commands. Fixed CLI file ID bug. Removed 5 unused GraphQL devDependencies. All 119 tests passing.
+
 ## Changes
 
 ### CLI (main.go)
+
 - Fixed file tree node IDs: `ID: f.Path` → `ID: f.GetID()` so file nodes get correct emoji-prefixed IDs
 - Fixed `contains()` → `slices.Contains()` compilation error
 
 ### Extension (extension.ts)
+
 - Removed all GraphQL/urql imports and infrastructure (urqlClient, resetUrqlClient, getUrqlClient, queryGraphQL)
 - Removed all GraphQL data fetching functions (fetchTicketsViaGraphQL, fetchContributorsViaGraphQL, etc.)
 - Added exported tree helper functions: extractLeadingEmoji, treeNodeDisplayLabel, treeNodeContextValue, treeNodeCommand, buildCliTreeArgs
@@ -26,11 +29,13 @@ Refactored VS Code extension to pure CLI UI. Removed all GraphQL/urql infrastruc
 - Exported RepoEvent and TreeNodeData types for tests
 
 ### Tests (extension.test.ts)
-- Removed dead test suites: getFileKindIcon, matchesSearch, passesTicketFilter, buildTicketItem, bundleKindEmoji 
+
+- Removed dead test suites: getFileKindIcon, matchesSearch, passesTicketFilter, buildTicketItem, bundleKindEmoji
 - Added new test suites: extractLeadingEmoji, treeNodeDisplayLabel, treeNodeContextValue, buildCliTreeArgs
 - Updated Monrepo Provider tests for CLI-tree-backed provider
 
 ### Package (package.json)
+
 - Removed build:codegen step from build script
 - Removed unused devDependencies: @graphql-codegen/cli, @graphql-codegen/client-preset, @graphql-typed-document-node/core, graphql, @urql/core
 

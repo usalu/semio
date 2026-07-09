@@ -22,9 +22,7 @@ function extractFirstNamesBlock(startLine, macroName) {
 
 const familyStart = lines.findIndex((l) => l.includes("macro_rules! gap_surface_family_name_list"));
 const relayStart = lines.findIndex((l) => l.includes("macro_rules! gap_surface_existing_relay_name_list"));
-const tailStart = lines.findIndex(
-  (l, i) => i > relayStart && l.includes("macro_rules! with_gap_surface_family_names")
-);
+const tailStart = lines.findIndex((l, i) => i > relayStart && l.includes("macro_rules! with_gap_surface_family_names"));
 
 const familyNames = extractFirstNamesBlock(familyStart, "gap_surface_family_name_list");
 const relayNames = extractFirstNamesBlock(relayStart, "gap_surface_existing_relay_name_list");

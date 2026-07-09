@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The drag-and-drop functionality was implemented but pieces were created at incorrect positions. The user reported that after dropping, the piece should appear where the mouse cursor was.
@@ -40,6 +41,7 @@ The drag-and-drop functionality was implemented but pieces were created at incor
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix drop coordinates for diagram and scene

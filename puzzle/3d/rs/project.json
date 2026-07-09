@@ -4,16 +4,8 @@
   "targets": {
     "wasm": {
       "executor": "nx:run-commands",
-      "inputs": [
-        "{projectRoot}/Cargo.toml",
-        "{projectRoot}/lib.rs",
-        "{projectRoot}/script.ts",
-        "{workspaceRoot}/Cargo.toml",
-        "{workspaceRoot}/Cargo.lock"
-      ],
-      "outputs": [
-        "{projectRoot}/pkg"
-      ],
+      "inputs": ["{projectRoot}/Cargo.toml", "{projectRoot}/lib.rs", "{projectRoot}/script.ts", "{workspaceRoot}/Cargo.toml", "{workspaceRoot}/Cargo.lock"],
+      "outputs": ["{projectRoot}/pkg"],
       "options": {
         "cwd": "puzzle/3d/rs",
         "command": "bun ./script.ts wasm"

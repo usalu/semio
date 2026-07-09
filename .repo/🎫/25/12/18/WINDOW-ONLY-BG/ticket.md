@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - Multiple UI elements and overlays painted their own backgrounds (panel/temporary/popover/window tokens), resulting in layered filled surfaces.
@@ -24,6 +25,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Make UI elements transparent; only windows paint background

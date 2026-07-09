@@ -7,6 +7,7 @@ goal: AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS
 ## Summary
 
 Added section regions and summary+spec comments to 20 config and small files: 5 PostCSS configs (desktop/docs/play/sketchpad/js), 4 Tailwind configs (desktop/docs/play/sketchpad), forge.config.ts, preload.ts, codegen.ts, test-search.ts, play/index.tsx, sketchpad/index.tsx, and 5 Vite configs (js/play/sketchpad/vscode/vscode-test). Each file now wraps all orphan code in a named section region with section-level and definition-level summary+spec comments.
+
 ## Plan
 
 - [x] Read all 20 files

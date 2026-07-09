@@ -16,9 +16,7 @@
           "model": "composer-1.5",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.6.18",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/e5004efa-532b-41b5-ab8d-586a85a17791/e5004efa-532b-41b5-ab8d-586a85a17791.jsonl"
         }
@@ -53,9 +51,7 @@
           "tool_use_id": "tool_ca889f87-2dbc-404e-92a6-21e82bf1d61",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.6.18",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/e5004efa-532b-41b5-ab8d-586a85a17791/e5004efa-532b-41b5-ab8d-586a85a17791.jsonl"
         }
@@ -72,9 +68,7 @@
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌11263"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌11263"],
         "second": "🎆26🌙03☀️14⏰15⌚50⏱️22",
         "session": "⚪e5004efa532b41b5ab8d586a85a17791",
         "transcript": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/e5004efa-532b-41b5-ab8d-586a85a17791/e5004efa-532b-41b5-ab8d-586a85a17791.jsonl"

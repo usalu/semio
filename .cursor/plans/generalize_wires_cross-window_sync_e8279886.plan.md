@@ -2,24 +2,24 @@
 name: Generalize Wires Cross-Window Sync
 overview: Route normal-graph (wires) scenes through the exact same JS scene + descriptor + authoring-peer + play-shell pipeline as puzzle 2d, so every non-window-local mechanism (live drag, drag-commit, selection, preselect/suggestions, hover, structural deletes, document, inspector, camera-fit) works identically. The `graphPortMode` axis only changes geometry/hit-test/handle-UI, never the sync architecture. Remove the `wasmFixtureJson` bypass.
 todos:
-  - id: scene-edge-endpoints
-    content: Generalize Puzzle2dSceneEdge.source/target to node-or-handle anchors; update computeEdgeBezier and syncPuzzle2dScene edge resolution to bind node-id edges.
-    status: completed
-  - id: drop-wasmfixture-path
-    content: Remove the wasmFixtureJson bypass (prop, setWasmFixtureJson, pushNormalWasmFixtureToSession, normal branches in pushSceneToWasmDriver/pushAuthoritativeDescriptorToWasmSession); normal graphs use descriptorJsonForWasmHost -> syncDescriptorJson with newNormal session.
-    status: completed
-  - id: wires-board-as-fixture
-    content: Make the WIRES layer emit a normal-shaped Puzzle2dFixture (empty handles, node-id edges); alias reasoning/mindmap types to the puzzle 2d fixture.
-    status: completed
-  - id: shell-normal-fixture
-    content: Feed the wires board into the play shell fixture state and re-enable declarativeSceneDescriptor + sceneMarkers + sceneAuthoringEpoch + onDragEnd patchFixture for wires; thread graphPortMode=normal; remove duplicate mindmap camera/wasm helpers.
-    status: completed
-  - id: document-no-empty-handles
-    content: Omit the per-node Handles subfolder in buildPuzzle2dPlayDocumentSections when a node has no handles.
-    status: completed
-  - id: validate-sync
-    content: Add Rust sync_descriptor normal-mode test and vitest peer-sync tests; verify cross-pane drag/hover/selection/preselect, document and inspector at runtime on :6015; update ticket.
-    status: completed
+ - id: scene-edge-endpoints
+   content: Generalize Puzzle2dSceneEdge.source/target to node-or-handle anchors; update computeEdgeBezier and syncPuzzle2dScene edge resolution to bind node-id edges.
+   status: completed
+ - id: drop-wasmfixture-path
+   content: Remove the wasmFixtureJson bypass (prop, setWasmFixtureJson, pushNormalWasmFixtureToSession, normal branches in pushSceneToWasmDriver/pushAuthoritativeDescriptorToWasmSession); normal graphs use descriptorJsonForWasmHost -> syncDescriptorJson with newNormal session.
+   status: completed
+ - id: wires-board-as-fixture
+   content: Make the WIRES layer emit a normal-shaped Puzzle2dFixture (empty handles, node-id edges); alias reasoning/mindmap types to the puzzle 2d fixture.
+   status: completed
+ - id: shell-normal-fixture
+   content: Feed the wires board into the play shell fixture state and re-enable declarativeSceneDescriptor + sceneMarkers + sceneAuthoringEpoch + onDragEnd patchFixture for wires; thread graphPortMode=normal; remove duplicate mindmap camera/wasm helpers.
+   status: completed
+ - id: document-no-empty-handles
+   content: Omit the per-node Handles subfolder in buildPuzzle2dPlayDocumentSections when a node has no handles.
+   status: completed
+ - id: validate-sync
+   content: Add Rust sync_descriptor normal-mode test and vitest peer-sync tests; verify cross-pane drag/hover/selection/preselect, document and inspector at runtime on :6015; update ticket.
+   status: completed
 isProject: false
 ---
 
@@ -48,8 +48,6 @@ flowchart LR
   scene --> peers[authoring-peer broadcasts: move/select/preselect/hover/delete]
   scene --> wasm["descriptorJsonForWasmHost -> syncDescriptorJson (GraphPortMode::Normal)"]
 ```
-
-
 
 ## Phase 1 - Generalize JS scene edge endpoints (node-or-handle)
 
@@ -80,4 +78,3 @@ flowchart LR
 - Vitest ([puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) test region): node-id edge binds in `syncPuzzle2dScene`; `puzzle2dBroadcastNodeMove`/`applyNodePositionSilent` and `applySelectionFromPeerSilent`/`syncPreselectionSilent` mirror across two normal-mode peers.
 - Runtime: wires play on :6015 - drag a topic in one pane, confirm live + committed move in the other two panes; confirm hover, selection, and preselect mirror; confirm document lists topics and inspector edits one.
 - Keep temp logs under `.repo/🎫/26/06/03/WIRES-NORMAL-GRAPH/`; reopen that ticket; close with file summary.
-

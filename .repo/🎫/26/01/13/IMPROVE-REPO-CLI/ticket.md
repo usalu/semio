@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 - [x] Update `GetGitAuthorGithub` to support name-based and email-based fallback lookups.
 - [x] Update `CreateTicket` to validate LLM model names against an allowed list and normalize string format.
 - [x] Simplify `Range` struct to use flat `Start`/`End` integer line numbers.
@@ -10,6 +11,7 @@
 ## Changes
 
 ## Log
+
 - Analyzed `repo.go` to understand current implementation of author lookup and ticket creation.
 - Modified `GetGitAuthorGithub` to implement new lookup logic: Git Config Name -> Email -> Contributor List.
 - Added `AllowedLLMs` list and validation logic in `CreateTicket`.
@@ -21,4 +23,5 @@
 - Verified all tests pass with `go test`.
 
 ## Summary
+
 Improved the repository CLI by implementing stricter LLM validation, simplifying range structures for easier parsing, and enhancing author attribution logic to robustly handle git configuration and contributor lookups.

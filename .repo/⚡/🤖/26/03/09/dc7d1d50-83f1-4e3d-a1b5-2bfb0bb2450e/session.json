@@ -106,9 +106,7 @@
             "max_results": 2
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__extract"
-            ],
+            "matches": ["mcp__repo__extract"],
             "query": "select:mcp__repo__extract",
             "total_deferred_tools": 72
           },
@@ -127,9 +125,7 @@
         "name": "ToolSearch",
         "parent": "",
         "response": {
-          "matches": [
-            "mcp__repo__extract"
-          ],
+          "matches": ["mcp__repo__extract"],
           "query": "select:mcp__repo__extract",
           "total_deferred_tools": 72
         },
@@ -190,10 +186,7 @@
             "max_results": 3
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_open",
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__ticket_open", "mcp__repo__ticket_close"],
             "query": "select:mcp__repo__ticket_open,mcp__repo__ticket_close",
             "total_deferred_tools": 72
           },
@@ -212,10 +205,7 @@
         "name": "ToolSearch",
         "parent": "",
         "response": {
-          "matches": [
-            "mcp__repo__ticket_open",
-            "mcp__repo__ticket_close"
-          ],
+          "matches": ["mcp__repo__ticket_open", "mcp__repo__ticket_close"],
           "query": "select:mcp__repo__ticket_open,mcp__repo__ticket_close",
           "total_deferred_tools": 72
         },
@@ -515,9 +505,7 @@
             "max_results": 2
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__tree"
-            ],
+            "matches": ["mcp__repo__tree"],
             "query": "select:mcp__repo__tree",
             "total_deferred_tools": 72
           },
@@ -536,9 +524,7 @@
         "name": "ToolSearch",
         "parent": "",
         "response": {
-          "matches": [
-            "mcp__repo__tree"
-          ],
+          "matches": ["mcp__repo__tree"],
           "query": "select:mcp__repo__tree",
           "total_deferred_tools": 72
         },
@@ -1370,9 +1356,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌905📌964"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌905📌964"],
         "second": "🎆26🌙03☀️09⏰11⌚56⏱️18",
         "session": "⚪dc7d1d5083f14e3da1b52bfb0bb2450e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/dc7d1d50-83f1-4e3d-a1b5-2bfb0bb2450e.jsonl"
@@ -1424,9 +1408,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌905📌964"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌905📌964"],
         "second": "🎆26🌙03☀️09⏰11⌚56⏱️28",
         "session": "⚪dc7d1d5083f14e3da1b52bfb0bb2450e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/dc7d1d50-83f1-4e3d-a1b5-2bfb0bb2450e.jsonl"
@@ -1464,9 +1446,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌965📌979"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌965📌979"],
         "second": "🎆26🌙03☀️09⏰11⌚56⏱️41",
         "session": "⚪dc7d1d5083f14e3da1b52bfb0bb2450e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/dc7d1d50-83f1-4e3d-a1b5-2bfb0bb2450e.jsonl"
@@ -1514,9 +1494,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌965📌979"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌965📌979"],
         "second": "🎆26🌙03☀️09⏰11⌚56⏱️52",
         "session": "⚪dc7d1d5083f14e3da1b52bfb0bb2450e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/dc7d1d50-83f1-4e3d-a1b5-2bfb0bb2450e.jsonl"
@@ -1766,9 +1744,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌838📌907"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌838📌907"],
         "second": "🎆26🌙03☀️09⏰11⌚58⏱️04",
         "session": "⚪dc7d1d5083f14e3da1b52bfb0bb2450e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/dc7d1d50-83f1-4e3d-a1b5-2bfb0bb2450e.jsonl"
@@ -1824,9 +1800,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌838📌907"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌838📌907"],
         "second": "🎆26🌙03☀️09⏰11⌚58⏱️17",
         "session": "⚪dc7d1d5083f14e3da1b52bfb0bb2450e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/dc7d1d50-83f1-4e3d-a1b5-2bfb0bb2450e.jsonl"
@@ -1868,9 +1842,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌695📌719"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌695📌719"],
         "second": "🎆26🌙03☀️09⏰11⌚58⏱️41",
         "session": "⚪dc7d1d5083f14e3da1b52bfb0bb2450e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/dc7d1d50-83f1-4e3d-a1b5-2bfb0bb2450e.jsonl"
@@ -1922,9 +1894,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌695📌719"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌695📌719"],
         "second": "🎆26🌙03☀️09⏰11⌚58⏱️53",
         "session": "⚪dc7d1d5083f14e3da1b52bfb0bb2450e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/dc7d1d50-83f1-4e3d-a1b5-2bfb0bb2450e.jsonl"
@@ -2062,9 +2032,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌2085📌2104"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌2085📌2104"],
         "second": "🎆26🌙03☀️09⏰11⌚59⏱️45",
         "session": "⚪dc7d1d5083f14e3da1b52bfb0bb2450e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/dc7d1d50-83f1-4e3d-a1b5-2bfb0bb2450e.jsonl"
@@ -2112,9 +2080,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌2085📌2104"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌2085📌2104"],
         "second": "🎆26🌙03☀️09⏰11⌚59⏱️57",
         "session": "⚪dc7d1d5083f14e3da1b52bfb0bb2450e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/dc7d1d50-83f1-4e3d-a1b5-2bfb0bb2450e.jsonl"
@@ -2289,9 +2255,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌844📌848"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌844📌848"],
         "second": "🎆26🌙03☀️09⏰12⌚01⏱️16",
         "session": "⚪dc7d1d5083f14e3da1b52bfb0bb2450e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/dc7d1d50-83f1-4e3d-a1b5-2bfb0bb2450e.jsonl"
@@ -2339,9 +2303,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌844📌848"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌844📌848"],
         "second": "🎆26🌙03☀️09⏰12⌚01⏱️28",
         "session": "⚪dc7d1d5083f14e3da1b52bfb0bb2450e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/dc7d1d50-83f1-4e3d-a1b5-2bfb0bb2450e.jsonl"
@@ -2379,9 +2341,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌700📌711"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌700📌711"],
         "second": "🎆26🌙03☀️09⏰12⌚01⏱️45",
         "session": "⚪dc7d1d5083f14e3da1b52bfb0bb2450e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/dc7d1d50-83f1-4e3d-a1b5-2bfb0bb2450e.jsonl"
@@ -2429,9 +2389,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌700📌711"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌700📌711"],
         "second": "🎆26🌙03☀️09⏰12⌚01⏱️58",
         "session": "⚪dc7d1d5083f14e3da1b52bfb0bb2450e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/dc7d1d50-83f1-4e3d-a1b5-2bfb0bb2450e.jsonl"
@@ -2540,9 +2498,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌676📌687"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌676📌687"],
         "second": "🎆26🌙03☀️09⏰12⌚02⏱️48",
         "session": "⚪dc7d1d5083f14e3da1b52bfb0bb2450e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/dc7d1d50-83f1-4e3d-a1b5-2bfb0bb2450e.jsonl"
@@ -2590,9 +2546,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌676📌687"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌676📌687"],
         "second": "🎆26🌙03☀️09⏰12⌚03⏱️00",
         "session": "⚪dc7d1d5083f14e3da1b52bfb0bb2450e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/dc7d1d50-83f1-4e3d-a1b5-2bfb0bb2450e.jsonl"
@@ -2758,16 +2712,7 @@
                 "oldLines": 7,
                 "newStart": 974,
                 "newLines": 7,
-                "lines": [
-                  "   return cmd",
-                  " }",
-                  " ",
-                  "-// #endregion 🔖Summarize Command",
-                  "+// #endregion 🔖Analyze Command",
-                  " ",
-                  " // #region 🔖Entity Emojis Command",
-                  " "
-                ]
+                "lines": ["   return cmd", " }", " ", "-// #endregion 🔖Summarize Command", "+// #endregion 🔖Analyze Command", " ", " // #region 🔖Entity Emojis Command", " "]
               }
             ],
             "userModified": false,

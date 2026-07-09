@@ -24,9 +24,7 @@
         },
         "kinds": {
           "kind": "const",
-          "value": [
-            "vertex"
-          ]
+          "value": ["vertex"]
         }
       },
       "assignTo": "result"

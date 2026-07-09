@@ -6,7 +6,5 @@
   "summary": "Removed Rust GraphQL DTO tier suffixes: *FullDto→*Full, *MetadataDto→*Metadata, *ShallowDto→*Shallow, *IdDto→*Ref; renamed to_*_dto helpers; ChangeKit replaceKitFromFull wire key; schema hygiene forbids old suffixes; regenerated compose/graphql/schema.graphql; JS kept Kit*Dto client types, updated replaceKitFromFull; storybook commandSchema + composeWasm path fixes; py import payload key.",
   "github": {},
   "goal": "🎯r2603",
-  "sessions": [
-    "⚪7354ebbcdcb84cd0be03000ee129e726"
-  ]
+  "sessions": ["⚪7354ebbcdcb84cd0be03000ee129e726"]
 }

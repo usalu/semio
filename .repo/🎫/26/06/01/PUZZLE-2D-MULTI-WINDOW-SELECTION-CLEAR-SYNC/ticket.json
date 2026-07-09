@@ -4,7 +4,5 @@
   "status": "open",
   "description": "Group selection syncs across puzzle 2d windows but background click and single-element pick do not clear/update selection on peer panes.",
   "goal": "🎯framework",
-  "sessions": [
-    "⚪7cb3609a5a9f4d03b5b27d3fabe10b3f"
-  ]
+  "sessions": ["⚪7cb3609a5a9f4d03b5b27d3fabe10b3f"]
 }

@@ -2,55 +2,57 @@
 name: Examples Contract + OCP Cleanup
 overview: Make example selection a first-class, declarative capability on AppRendererContribution (deleting the two bespoke navbar overrides), and finish removing the remaining hardcoded per-technology switches/maps/eager-import fan-outs from the generic playground renderer, OS layer, and repo tooling that the previous "App-Defined Apps, Fully Derived Shells" pass left behind.
 todos:
-  - id: contract
-    content: Add AppExampleOption/AppExampleContribution to platform-core; wire examples field through AppRendererContribution + PlaygroundMountProps
-    status: completed
-  - id: playground-view-examples
-    content: Replace PlaygroundView's slotNavbarCenter/duck-typed example catalog with the generic exampleContribution prop + controllerBackedExampleContribution helper
-    status: completed
-  - id: migrate-controller-apps
-    content: Migrate the ~13 controller-backed apps (draw, note, writer, forms, raster, gis, procedural-2d/3d, shooting, trinity-jack, puzzle-3d/5d, presentation) to declare examples via controllerBackedExampleContribution; fix S (no catalog wired) and writer (catalog shape / playgroundResolvedExampleId arity) bugs surfaced along the way
-    status: completed
-  - id: migrate-puzzle2d-cad
-    content: Migrate puzzle2d/wires and cad play-hosts off slotNavbarCenter onto the new exampleContribution prop; delete CadPlayExampleNavbarSelect and the puzzle2d local NavbarExampleSelect construction
-    status: completed
-  - id: ui-renderer-generic
-    content: Collapse UiRenderer's per-technology case list and PLAYGROUND_CANVAS_HOST_TYPES into a structural UiSurfaceHostNode check with a layout field
-    status: completed
-  - id: tree-drag-registry
-    content: Fix the broken FLOW_WIDGET_DRAG_MIME/PUZZLE_2D_FIXTURE_DRAG_MIME references by replacing buildUiTreeDragAndDropController with an AppRendererContribution.treeDragController registry
-    status: completed
-  - id: os-vcs-handlers
-    content: Move remaining per-format VCS handler factories out of framework/product/os/core into their owning app cores' OsProgramContribution.register(), removing eager top-level registerAppVcsHandler calls
-    status: completed
-  - id: os-media-export
-    content: Move registerAllMediaExportHandlers per-app calls into each app's own OsProgramContribution.register(); delete the s/core hardcoded fan-out
-    status: completed
-  - id: program-id-kind-map
-    content: Derive PROGRAM_ID_TO_PLAYGROUND_KIND from manifest programId scan instead of a hardcoded map; delete dead s/core/js/program-extensions.ts, puzzle5d-extension.ts, shooting-extension.ts
-    status: completed
-  - id: repo-lib-ports
-    content: Derive PLAYGROUND_PORTS/PLAYGROUND_SITE_HOSTS from manifest port field and simplify resolvePlaygroundDevAppFromManifests to rely purely on manifest aliases
-    status: completed
-  - id: vite-dead-code
-    content: Delete confirmed dead Vite renderer-stripping helpers and their tests/vitest.config wiring
-    status: completed
-  - id: dep-cruiser-npm
-    content: Extend dependency-cruiser rules to catch npm-resolved app-package imports, not just relative/local ones
-    status: completed
-  - id: verify
-    content: Run full test suite + lint for all touched packages; manually boot representative playground apps and S/OS studio to confirm examples and drag-and-drop work
-    status: completed
+ - id: contract
+   content: Add AppExampleOption/AppExampleContribution to platform-core; wire examples field through AppRendererContribution + PlaygroundMountProps
+   status: completed
+ - id: playground-view-examples
+   content: Replace PlaygroundView's slotNavbarCenter/duck-typed example catalog with the generic exampleContribution prop + controllerBackedExampleContribution helper
+   status: completed
+ - id: migrate-controller-apps
+   content: Migrate the ~13 controller-backed apps (draw, note, writer, forms, raster, gis, procedural-2d/3d, shooting, trinity-jack, puzzle-3d/5d, presentation) to declare examples via controllerBackedExampleContribution; fix S (no catalog wired) and writer (catalog shape / playgroundResolvedExampleId arity) bugs surfaced along the way
+   status: completed
+ - id: migrate-puzzle2d-cad
+   content: Migrate puzzle2d/wires and cad play-hosts off slotNavbarCenter onto the new exampleContribution prop; delete CadPlayExampleNavbarSelect and the puzzle2d local NavbarExampleSelect construction
+   status: completed
+ - id: ui-renderer-generic
+   content: Collapse UiRenderer's per-technology case list and PLAYGROUND_CANVAS_HOST_TYPES into a structural UiSurfaceHostNode check with a layout field
+   status: completed
+ - id: tree-drag-registry
+   content: Fix the broken FLOW_WIDGET_DRAG_MIME/PUZZLE_2D_FIXTURE_DRAG_MIME references by replacing buildUiTreeDragAndDropController with an AppRendererContribution.treeDragController registry
+   status: completed
+ - id: os-vcs-handlers
+   content: Move remaining per-format VCS handler factories out of framework/product/os/core into their owning app cores' OsProgramContribution.register(), removing eager top-level registerAppVcsHandler calls
+   status: completed
+ - id: os-media-export
+   content: Move registerAllMediaExportHandlers per-app calls into each app's own OsProgramContribution.register(); delete the s/core hardcoded fan-out
+   status: completed
+ - id: program-id-kind-map
+   content: Derive PROGRAM_ID_TO_PLAYGROUND_KIND from manifest programId scan instead of a hardcoded map; delete dead s/core/js/program-extensions.ts, puzzle5d-extension.ts, shooting-extension.ts
+   status: completed
+ - id: repo-lib-ports
+   content: Derive PLAYGROUND_PORTS/PLAYGROUND_SITE_HOSTS from manifest port field and simplify resolvePlaygroundDevAppFromManifests to rely purely on manifest aliases
+   status: completed
+ - id: vite-dead-code
+   content: Delete confirmed dead Vite renderer-stripping helpers and their tests/vitest.config wiring
+   status: completed
+ - id: dep-cruiser-npm
+   content: Extend dependency-cruiser rules to catch npm-resolved app-package imports, not just relative/local ones
+   status: completed
+ - id: verify
+   content: Run full test suite + lint for all touched packages; manually boot representative playground apps and S/OS studio to confirm examples and drag-and-drop work
+   status: completed
 isProject: false
 ---
 
 # Examples Contract + OCP Cleanup
 
 ## Confirmed scope (from user answers)
+
 - Keep the "playground" concept/package as-is; make it fully generic (no renaming/merging with OS).
 - Add `examples` as a first-class field on `AppRendererContribution`; delete the puzzle2d/wires and cad bespoke `slotNavbarCenter` example dropdowns so every app registers examples the same declarative way.
 
 ## Investigation highlights (grounding for the plan)
+
 - Today only `puzzle/2d/react/play-host.tsx` (lines 1520-1526, 2963-2995) and `cad/renderer/react/index.tsx` (`CadPlayExampleNavbarSelect`, lines 1618-1631, 1876-1884) bypass the generic dropdown via `PlaygroundViewProps.slotNavbarCenter` — every other app relies on the controller implementing an ad-hoc `PlaygroundExampleHost.getExampleCatalog()` duck-typed interface, detected at runtime in [`resolvePlaygroundExampleCatalog`](framework/product/playground/core/js/index.ts) (897-905).
 - `AppRendererContribution` ([framework/product/platform/core/js/index.ts](framework/product/platform/core/js/index.ts) 2367-2374) has no `examples` field — confirming the gap.
 - Found and will fix a real, pre-existing bug while doing this: [`buildUiTreeDragAndDropController`](framework/product/playground/renderer/react/index.tsx) (lines 475-492) references `FLOW_WIDGET_DRAG_MIME`, `flowWidgetPaletteTreeDragController`, `PUZZLE_2D_FIXTURE_DRAG_MIME`, `puzzle2dFixturePaletteTreeDragController`, `puzzle3dFixturePaletteTreeDragController` — **none of these are imported anywhere in the file** (verified via grep + package.json, which doesn't even list `flow-react`/`puzzle-2d-react`/`puzzle-3d-react` as dependencies). This is a live `ReferenceError` waiting to fire for any app with a non-empty tree drag source; it must be replaced with a generic, contribution-derived mechanism, not restored as-is.
@@ -78,14 +80,14 @@ Add to [framework/product/platform/core/js/index.ts](framework/product/platform/
 
 ```ts
 export interface AppExampleOption {
-  readonly id: string;
-  readonly label: string;
+ readonly id: string;
+ readonly label: string;
 }
 
 export interface AppExampleContribution {
-  readonly options: readonly AppExampleOption[];
-  readonly activeExampleId: (runtime: Platform) => string;
-  readonly onSelect: (exampleId: string, runtime: Platform) => void;
+ readonly options: readonly AppExampleOption[];
+ readonly activeExampleId: (runtime: Platform) => string;
+ readonly onSelect: (exampleId: string, runtime: Platform) => void;
 }
 ```
 
@@ -122,9 +124,11 @@ export interface AppExampleContribution {
 - Leave the live per-`playEntryKind` Vite plugin dispatch (mesh/tiles/sketchpad plugins) as a documented, pragmatic exception (Vite config must resolve plugins synchronously at startup); do not attempt to generalize it in this pass.
 
 ## Verification
+
 - Extend `.dependency-cruiser.cjs`'s `framework-no-app-packages` / `s-no-app-packages-except-flow-media` rules to also catch npm-resolved workspace package imports (not just `dependencyTypes: ["local"]`), since the broken `flow-react`/`puzzle-2d-react` references in Part 2 slipped through undetected.
 - Run the full test suite for touched packages (`framework-platform-core`, `framework-playground-core`, `framework-playground-renderer-react`, `framework-os-core`, `framework-os-renderer-react`, `s-core`, `s-react`, every migrated app's `*-core`/`*-react`, `repo-lib`, `ui-styling`) plus `bun nx run-many -t lint` for dependency-cruiser.
 - Manually boot at least 3 representative playground dev entries (a controller-backed one e.g. `draw`, puzzle2d/wires, cad) and the S/OS studio to confirm example dropdowns and drag-and-drop still work end to end.
 
 ## Work tracking
+
 - This continues the "App-Defined Apps, Fully Derived Shells" effort; reopen its existing ticket (or the in-progress `APP-ISOLATION-ENFORCED-BOUNDARIES` work already scaffolded under `.repo/🎫/26/07/03/`) rather than opening a new one, per the repo's ticket workflow.

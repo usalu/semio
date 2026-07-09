@@ -5,7 +5,5 @@
   "description": "Restore algorithm Storybook diagram boards: fix copyDesign value wiring, diagram centers from pose, run vitest.",
   "summary": "Restored algorithm Storybook diagram boards: fixed CopyAndPaste using copyRes.value instead of copyRes.diff; copyDesign now pulls connection endpoints and internal links for piece-only selections; ComposeDiagram resolves u/v from pose.center; drag story wires diagramLayoutDiff from flatten WASM; dragBySelection reads pose.center; vitest covers copy/paste clipboard flow (4/4 pass).",
   "goal": "🎯r2602/🎯runningsketchpad",
-  "sessions": [
-    "⚪19b68c30f7f746458ed8f824c0e5937a"
-  ]
+  "sessions": ["⚪19b68c30f7f746458ed8f824c0e5937a"]
 }

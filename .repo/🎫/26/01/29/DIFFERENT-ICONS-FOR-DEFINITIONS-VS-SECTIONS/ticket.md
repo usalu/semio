@@ -22,10 +22,10 @@
 
 ### New Icon Mapping
 
-| Tree Item Type | Old Icon | New Icon | Visual Distinction |
-|----------------|----------|----------|-------------------|
-| **Sections** | `symbol-class` / `symbol-namespace` | `symbol-folder` | Folder-like container icon |
-| **Definitions** | `symbol-method` / `symbol-function` | `symbol-variable` | Variable/definition icon |
+| Tree Item Type  | Old Icon                            | New Icon          | Visual Distinction         |
+| --------------- | ----------------------------------- | ----------------- | -------------------------- |
+| **Sections**    | `symbol-class` / `symbol-namespace` | `symbol-folder`   | Folder-like container icon |
+| **Definitions** | `symbol-method` / `symbol-function` | `symbol-variable` | Variable/definition icon   |
 
 ### Rationale
 

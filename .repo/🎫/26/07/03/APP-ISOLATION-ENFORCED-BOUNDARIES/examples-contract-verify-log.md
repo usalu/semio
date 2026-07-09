@@ -2,16 +2,16 @@
 
 ## Tests run
 
-| Package | Result |
-|---------|--------|
-| `framework-os-core` | 11 passed |
-| `framework-playground-renderer-react` | 25 passed (after vcs↔os circular import fix) |
-| `vcs-core` | 6 passed |
-| `forms-core` | 27 passed |
-| `draw-core` | pass (no tests) |
-| `repo/lib` playground static sites + manifest resolution | 7 passed |
-| `ui/styling` | 11 passed, 1 pre-existing fail (`puzzle3dLockedExampleMeshBasenames` fixture path) |
-| `framework-playground-core` | vitest alias missing `@semio-tech/framework-core` (pre-existing infra) |
+| Package                                                  | Result                                                                             |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `framework-os-core`                                      | 11 passed                                                                          |
+| `framework-playground-renderer-react`                    | 25 passed (after vcs↔os circular import fix)                                       |
+| `vcs-core`                                               | 6 passed                                                                           |
+| `forms-core`                                             | 27 passed                                                                          |
+| `draw-core`                                              | pass (no tests)                                                                    |
+| `repo/lib` playground static sites + manifest resolution | 7 passed                                                                           |
+| `ui/styling`                                             | 11 passed, 1 pre-existing fail (`puzzle3dLockedExampleMeshBasenames` fixture path) |
+| `framework-playground-core`                              | vitest alias missing `@semio-tech/framework-core` (pre-existing infra)             |
 
 ## Fixes during verify
 

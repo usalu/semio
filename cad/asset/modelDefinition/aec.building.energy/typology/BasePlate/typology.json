@@ -4,13 +4,7 @@
   "version": "1.0.0",
   "label": "Base Plate",
   "description": "Lowest external horizontal surface.",
-  "actions": [
-    "energy.energy.constructBasePlateFromSurface"
-  ],
-  "interactions": [
-    "energy.energy.constructBasePlate"
-  ],
-  "primitiveKinds": [
-    "surface"
-  ]
+  "actions": ["energy.energy.constructBasePlateFromSurface"],
+  "interactions": ["energy.energy.constructBasePlate"],
+  "primitiveKinds": ["surface"]
 }

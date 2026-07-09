@@ -2,30 +2,30 @@
 name: Engagement UI Controls
 overview: Extend the engagement overlay with an optional, generic UI control (slider, stepper, ring) that plays declare per-state, and wire it through the playground/golden bridge into CAD interactions (declarative via interaction JSON) and the puzzle plays.
 todos:
-  - id: ui-control
-    content: Add EngagementControl union + control? to EngagementSpec and render Slider/Stepper/Ring in the Engagement component (ui/react/index.tsx); add Storybook variant.
-    status: completed
-  - id: core-control
-    content: Add WindowEngagementControl + control? to WindowEngagement and fold it into windowEngagementDigest (playground core).
-    status: completed
-  - id: golden-control
-    content: Map control with bus-dispatch callbacks in windowEngagementToGolden (playground renderer).
-    status: completed
-  - id: cad-types-schema
-    content: Extend InteractionScalarEntrySpec/InteractionLengthEntrySpec + interaction.json schema with control/min/max/step/unit/default and add interactionControlForState helper.
-    status: completed
-  - id: cad-assets
-    content: Declare control params on the ~45 interaction JSON assets with scalarEntry/lengthEntry/heightDragStates (box, sphere, cylinder, rotate, scale, energy, structure, fem).
-    status: completed
-  - id: cad-build
-    content: Wire control into InteractionReplEngagementInputs/buildInteractionReplEngagement and compute it from runtime state in InteractionRepl, reusing the live numeric-entry path.
-    status: completed
-  - id: puzzle-controls
-    content: Add ring control to buildPuzzle3dPlayEngagement (+publisher), puzzle 2d windowEngagementForPane, and puzzle 5d where applicable.
-    status: completed
-  - id: tests
-    content: Extend existing test files for UI control rendering, golden mapping + digest, CAD and puzzle engagement builders.
-    status: completed
+ - id: ui-control
+   content: Add EngagementControl union + control? to EngagementSpec and render Slider/Stepper/Ring in the Engagement component (ui/react/index.tsx); add Storybook variant.
+   status: completed
+ - id: core-control
+   content: Add WindowEngagementControl + control? to WindowEngagement and fold it into windowEngagementDigest (playground core).
+   status: completed
+ - id: golden-control
+   content: Map control with bus-dispatch callbacks in windowEngagementToGolden (playground renderer).
+   status: completed
+ - id: cad-types-schema
+   content: Extend InteractionScalarEntrySpec/InteractionLengthEntrySpec + interaction.json schema with control/min/max/step/unit/default and add interactionControlForState helper.
+   status: completed
+ - id: cad-assets
+   content: Declare control params on the ~45 interaction JSON assets with scalarEntry/lengthEntry/heightDragStates (box, sphere, cylinder, rotate, scale, energy, structure, fem).
+   status: completed
+ - id: cad-build
+   content: Wire control into InteractionReplEngagementInputs/buildInteractionReplEngagement and compute it from runtime state in InteractionRepl, reusing the live numeric-entry path.
+   status: completed
+ - id: puzzle-controls
+   content: Add ring control to buildPuzzle3dPlayEngagement (+publisher), puzzle 2d windowEngagementForPane, and puzzle 5d where applicable.
+   status: completed
+ - id: tests
+   content: Extend existing test files for UI control rendering, golden mapping + digest, CAD and puzzle engagement builders.
+   status: completed
 isProject: false
 ---
 
@@ -48,8 +48,6 @@ flowchart LR
   JSON --> CadBuild --> Spec
   PuzBuild --> WinEng --> Golden --> Spec --> Comp
 ```
-
-
 
 ## Control type (generic, all kinds)
 

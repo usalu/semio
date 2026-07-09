@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The previous session attempted to extend panel tests to open each panel and verify content.
@@ -47,6 +48,7 @@ The issue requires further investigation in the application code.
 ## Log
 
 ## Summary
+
 # Summary
 
 Simplified panel tests to verify toggle existence

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The sketchpad state management was being refactored to use XState instead of Y.js for app state. The Type and Design app tests were failing because:
@@ -34,6 +35,7 @@ The sketchpad state management was being refactored to use XState instead of Y.j
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix XState actor context for GoldenLayout windows

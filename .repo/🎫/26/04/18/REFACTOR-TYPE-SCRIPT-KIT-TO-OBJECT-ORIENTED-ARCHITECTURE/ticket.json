@@ -4,8 +4,5 @@
   "description": "Refactor TypeScript Kit to OOP Architecture with Kit Class",
   "summary": "Continued the TypeScript OO/stateful migration in compose/js/index.ts. Moved diff, inverse diff, merge/apply, serialization, and projection behavior into class methods for geometry primitives and key graph entities, then reduced exported helpers to delegate into the class API. Added method-owned graph diff/apply APIs on Design, Type, Piece, and Kit and kept pointer-based object graph behavior for piece/type/design/kit relationships. Did not run tests or builds per instruction.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
-  "sessions": [
-    "⚪304390cd557940b2a03752920db8767d",
-    "⚪06f76238c6f24eb5adb724a62d6153bd"
-  ]
+  "sessions": ["⚪304390cd557940b2a03752920db8767d", "⚪06f76238c6f24eb5adb724a62d6153bd"]
 }

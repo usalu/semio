@@ -42,10 +42,7 @@ let body = "";
 for (const file of ORDER) {
   let chunk = stripFile(readFileSync(join(dir, file), "utf8"));
   if (file === "parsing.ts") {
-    chunk = chunk.replace(
-      /^\/\/ #region ⚙️Types\r?\n/,
-      "// #region ⚙️Types\n",
-    );
+    chunk = chunk.replace(/^\/\/ #region ⚙️Types\r?\n/, "// #region ⚙️Types\n");
   }
   body += `\n// #region 🔖${file.replace(".ts", "")}\n${chunk}\n// #endregion 🔖${file.replace(".ts", "")}\n`;
 }

@@ -5,7 +5,5 @@
   "description": "Fix XState actor context for GoldenLayout windows",
   "summary": "Fixed the sketchpad Design scene crash caused by ModelPiece referencing an undefined actor. Routed piece selection updates through the existing design-app selection hook, added an explicit regression assertion for the missing-actor runtime error in the embedded Design Playwright test, and verified the design route at runtime against the metabolism fixture with no console or page errors.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": [
-    "⚪e840fa4eca3f4d10adda4fb1e3233ee4"
-  ]
+  "sessions": ["⚪e840fa4eca3f4d10adda4fb1e3233ee4"]
 }

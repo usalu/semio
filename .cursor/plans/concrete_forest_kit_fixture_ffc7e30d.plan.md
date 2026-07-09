@@ -2,27 +2,27 @@
 name: Concrete Forest Kit Fixture
 overview: Author the new abbau-aufbau compose kit (typology "Concrete Forest" with the two hexagonal-cut-concrete-forest types), then add a matching Puzzle 3D fixture and wire it into the play so it boots and the fill tool works end-to-end.
 todos:
-  - id: ticket
-    content: Open repo MCP ticket (read repo://goals, associate, ticket_open)
-    status: completed
-  - id: kit-shell
-    content: Author abbau-aufbau kit.compose.json shell with Concrete Forest family (4 mutually-compatible ports) + typology stubs
-    status: completed
-  - id: type-files
-    content: Create the two …type.compose.json type files (2 reps + 7 connectors each) and index.compose.json; remove empty .json placeholders
-    status: completed
-  - id: p3d-fixture
-    content: Create puzzle/3d/fixture/concrete-forest.3d.json (vortex/object catalogs, all-compatible kindCompatibility, seed object, camera)
-    status: completed
-  - id: play-wire
-    content: Wire fixture into puzzle/3d/play (import, option, loadFixtureById, default active)
-    status: completed
-  - id: mesh-serving
-    content: Generalize /meshes middleware + build copy to also serve abbau-aufbau glbs; rename metabolism-specific helper + update callers/tests
-    status: completed
-  - id: verify
-    content: Update test, run puzzle 3d play + vitest, confirm fixture boots and fill places compatible pieces
-    status: completed
+ - id: ticket
+   content: Open repo MCP ticket (read repo://goals, associate, ticket_open)
+   status: completed
+ - id: kit-shell
+   content: Author abbau-aufbau kit.compose.json shell with Concrete Forest family (4 mutually-compatible ports) + typology stubs
+   status: completed
+ - id: type-files
+   content: Create the two …type.compose.json type files (2 reps + 7 connectors each) and index.compose.json; remove empty .json placeholders
+   status: completed
+ - id: p3d-fixture
+   content: Create puzzle/3d/fixture/concrete-forest.3d.json (vortex/object catalogs, all-compatible kindCompatibility, seed object, camera)
+   status: completed
+ - id: play-wire
+   content: Wire fixture into puzzle/3d/play (import, option, loadFixtureById, default active)
+   status: completed
+ - id: mesh-serving
+   content: Generalize /meshes middleware + build copy to also serve abbau-aufbau glbs; rename metabolism-specific helper + update callers/tests
+   status: completed
+ - id: verify
+   content: Update test, run puzzle 3d play + vitest, confirm fixture boots and fill places compatible pieces
+   status: completed
 isProject: false
 ---
 
@@ -48,8 +48,6 @@ flowchart LR
   mesh --> fill["Puzzle3d fill tool"]
 ```
 
-
-
 ## Part A - compose kit (typology "Concrete Forest")
 
 1. Write [kit.compose.json](compose/fixture/kit/dev/abbau-aufbau/wip/initialKit/kit.compose.json) shell modeled on metabolism but standalone: kit id/name ("Abbau-Aufbau"), unit `m`, `tags` (gltf-binary, vnd.3dm), one `families` entry "Concrete Forest" containing 4 ports (`b-l`, `b-l-m`, `b-s`, `b-s-m`) where every port's `compatiblePorts` lists the other three plus itself (all mutually compatible), and a `typologies` item "Concrete Forest" with two type stubs referencing the two type ids.
@@ -61,11 +59,12 @@ Left connectors: `b-p1-t-t1-c3-l`(b-l), `b-p1-t-t1-c3-r`(b-l-m), `b-p1-t-t2-c3-l
 ## Part B - Puzzle 3D fixture
 
 1. Create `puzzle/3d/fixture/concrete-forest.3d.json` (schema `puzzle.3d.fixture/v1`) with:
-  - `meta.kindCatalogs.vortices`: `b-l`, `b-l-m`, `b-s`, `b-s-m` (distinct colors, `defaultCableKind: cable.link`).
-  - `meta.kindCatalogs.objects`: `Hexagonal Cut Concrete Forest Left` / `… Right`, each with the 7 vortices (position=point, direction, radius 0.36) and `meshUrl: /mesh/hexagonal-cut-concrete-forest-{left,right}.glb`.
-  - `meta.kindCatalogs.cables` + `attractions`: reuse `cable.link` / `puzzle3d.attraction.link`.
-  - `meta.kindCompatibility`: all bidirectional pairs among the 4 vortex kinds (incl. self-pairs) so fill can attach any port to any port.
-  - top-level `objects`: one seed Left object at origin (with its vortices) so fill has a starting piece; empty `attractions`/`cables`; a sensible `camera`.
+
+- `meta.kindCatalogs.vortices`: `b-l`, `b-l-m`, `b-s`, `b-s-m` (distinct colors, `defaultCableKind: cable.link`).
+- `meta.kindCatalogs.objects`: `Hexagonal Cut Concrete Forest Left` / `… Right`, each with the 7 vortices (position=point, direction, radius 0.36) and `meshUrl: /mesh/hexagonal-cut-concrete-forest-{left,right}.glb`.
+- `meta.kindCatalogs.cables` + `attractions`: reuse `cable.link` / `puzzle3d.attraction.link`.
+- `meta.kindCompatibility`: all bidirectional pairs among the 4 vortex kinds (incl. self-pairs) so fill can attach any port to any port.
+- top-level `objects`: one seed Left object at origin (with its vortices) so fill has a starting piece; empty `attractions`/`cables`; a sensible `camera`.
 
 ## Part C - wire into play + mesh serving
 
@@ -87,4 +86,3 @@ Left connectors: `b-p1-t-t1-c3-l`(b-l), `b-p1-t-t1-c3-r`(b-l-m), `b-p1-t-t2-c3-l
 - "Add to puzzle 3d fixture" = a new selectable fixture that becomes the booted default (Nakagin retained). If you instead want Concrete Forest objectKinds merged into the Nakagin fixture, say so.
 - Both the compose dev kit JSON (Part A) and the puzzle 3d fixture (Part B/C) are authored. If you only want the puzzle 3d fixture, Part A can be dropped.
 - No `designs/*.design.compose.json` are created (none requested).
-

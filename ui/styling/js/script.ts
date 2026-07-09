@@ -10,20 +10,17 @@ class GenerateScript extends BundleScript {
 }
 
 class FontsScript extends BundleScript {
-	async run(): Promise<void> {
-		await fetchElementsFonts();
-	}
+  async run(): Promise<void> {
+    await fetchElementsFonts();
+  }
 }
 
 class TestScript extends BundleScript {
-	run(): void {
-		runCmd(process.execPath, ["test"], { cwd: this.root });
-	}
+  run(): void {
+    runCmd(process.execPath, ["test"], { cwd: this.root });
+  }
 }
 
-const router = new ScriptRouter(import.meta.dir)
-	.register("generate", GenerateScript)
-	.register("fonts", FontsScript)
-	.register("test", TestScript);
+const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("fonts", FontsScript).register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url);

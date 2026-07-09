@@ -2,21 +2,21 @@
 name: Brush Collision-Free Suggestions
 overview: "Complete the puzzle3d brush tool so every engagement suggestion and committed placement is collision-free: on vortex hover, try compatible catalog kinds in random order until a non-colliding pose is found; expose only collision-free kinds as possibles; commit nothing when no valid placement exists."
 todos:
-  - id: ticket
-    content: Reopen/open repo ticket; read repo://goals when MCP ready
-    status: completed
-  - id: pure-collision
-    content: Add shuffle + brushCollisionFreeCandidates + export brushPreviewCollides in Brush region
-    status: completed
-  - id: brush-session
-    content: "Refactor BrushSession: random try order, placement-only candidates, reconcile on mesh/collision, guarded commit"
-    status: completed
-  - id: engagement-ux
-    content: Update buildPuzzle3dPlayEngagement hints/status for empty collision-free set
-    status: completed
-  - id: tests-validate
-    content: Extend react vitest; run tests; manual play verification; close ticket
-    status: completed
+ - id: ticket
+   content: Reopen/open repo ticket; read repo://goals when MCP ready
+   status: completed
+ - id: pure-collision
+   content: Add shuffle + brushCollisionFreeCandidates + export brushPreviewCollides in Brush region
+   status: completed
+ - id: brush-session
+   content: "Refactor BrushSession: random try order, placement-only candidates, reconcile on mesh/collision, guarded commit"
+   status: completed
+ - id: engagement-ux
+   content: Update buildPuzzle3dPlayEngagement hints/status for empty collision-free set
+   status: completed
+ - id: tests-validate
+   content: Extend react vitest; run tests; manual play verification; close ticket
+   status: completed
 isProject: false
 ---
 
@@ -26,7 +26,6 @@ isProject: false
 
 The brush tool in `[puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx)` already has compatibility ranking (`brushCompatibleCandidates`), pose math (`computeBrushPlacementPose`), and scene AABB overlap (`brushPreviewCollides` + `boxesIntersect`). Engagement **suggestions** (`possibleEngagements` via `buildPuzzle3dPlayEngagement`) and commit behavior are **not** aligned with collision:
 
-
 | Area                 | Current behavior                                                  | Required                                                         |
 | -------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------- |
 | Engagement possibles | All compatibility matches from `brushCompatibleCandidates`        | Only collision-free placements                                   |
@@ -34,7 +33,6 @@ The brush tool in `[puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx)` alrea
 | Tab / Next           | Cycles full compatible list                                       | Cycles collision-free list only                                  |
 | Commit on leave      | Always commits current preview                                    | Skip commit when preview collides or no free candidate           |
 | Stack `… top`        | Skips auto-advance on collision                                   | Same collision rules (host still excluded via `excludeObjectId`) |
-
 
 Relevant code today:
 
@@ -67,8 +65,6 @@ flowchart TD
   leave -->|no preview or collides| skip[No placement]
 ```
 
-
-
 - **Collision target**: new mesh AABB vs all scene object groups except the host object at the vortex (`excludeObjectId` — already passed to `BrushPreviewGhost`).
 - **Random try order**: on each `enterTarget`, shuffle the compatible list once (e.g. Fisher–Yates in the `Brush` region), then walk that order for the first free placement and when building the free subset.
 - **No placement**: if no candidate is collision-free after mesh-backed checks, clear preview, publish empty `candidates`, do not call `onBrushPlace` on leave.
@@ -82,11 +78,11 @@ flowchart TD
 
 ### 2. Pure helpers in `//#region Brush` (`[puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx)`)
 
-- `**shuffleBrushCompatibleCandidates(candidates)`** — non-mutating random permutation (injectable RNG in tests).
+- `**shuffleBrushCompatibleCandidates(candidates)`\*\* — non-mutating random permutation (injectable RNG in tests).
 - **Export `brushPreviewCollides`** (or `brushPlacementCollides`) so vitest can cover it without React.
 - `**brushProbeGroupFromPreview(preview, meshRoot)**` — apply `applyObjectPose` + `updateWorldMatrixChain` on a disposable `Group` with a cloned mesh.
 - `**brushCandidateCollidesAtPose(reg, preview, excludeObjectId, meshRoot?)**` — uses `brushPreviewCollides`; if catalog GLB is not yet in `styledMeshTemplates` / pool, return `null` meaning **unknown** (not free).
-- `**brushCollisionFreeCandidates(args)`** — given shuffled compatible list + target world/context + `kindCatalogs`, returns `{ free, unknownPending }` by probing each candidate’s `brushPreviewFromCandidate` pose.
+- `**brushCollisionFreeCandidates(args)`\*\* — given shuffled compatible list + target world/context + `kindCatalogs`, returns `{ free, unknownPending }` by probing each candidate’s `brushPreviewFromCandidate` pose.
 
 Mesh probe source: reuse `**styledMeshTemplate(url, "highlighted", gltf.scene, false)**` when the URL is already pooled (same path as `MeshBody`); avoids mounting N ghosts. When `unknownPending`, keep reactive reconciliation (below).
 
@@ -97,7 +93,7 @@ Split refs:
 - `compatibleCandidatesRef` — full compatibility set (for re-probe when meshes load).
 - `placementCandidatesRef` — collision-free subset; **only this** is published to `puzzle3dBrushEngagementSourceRef.candidates` and stored on `BrushUiSnapshot.candidates`.
 
-`**enterTarget`:**
+`**enterTarget`:\*\*
 
 1. `compatible = brushCompatibleCandidates(...)`.
 2. `order = shuffleBrushCompatibleCandidates(compatible)`.
@@ -108,17 +104,17 @@ Split refs:
 
 **Remove** `collisionAdvanceCountRef` / `collisionHandledPreviewKeyRef` and the stack-top early-return in `onPreviewCollision` (replace with reconciliation).
 
-`**reconcilePlacementCandidates` (new):** called from `BrushPreviewGhost` when collision state or mesh load changes:
+`**reconcilePlacementCandidates` (new):\*\* called from `BrushPreviewGhost` when collision state or mesh load changes:
 
 - Re-run `brushCollisionFreeCandidates` over stored shuffled order.
 - Update `placementCandidatesRef`; if current preview’s candidate is no longer in `free`, switch to first free or clear.
 - `publishBrushEngagement()`.
 
-`**advanceCandidate` / `retreatCandidate` / `pickCandidate`:** index into `placementCandidatesRef` only.
+`**advanceCandidate` / `retreatCandidate` / `pickCandidate`:\*\* index into `placementCandidatesRef` only.
 
-`**commitCurrentPreview`:** guard with `previewCollidesRef` (maintained by ghost) **or** synchronous re-probe; abort if colliding or `placementCandidatesRef` empty.
+`**commitCurrentPreview`:** guard with `previewCollidesRef` (maintained by ghost) **or\*\* synchronous re-probe; abort if colliding or `placementCandidatesRef` empty.
 
-`**BrushPreviewGhost`:** on collision change, call `reconcilePlacementCandidates` instead of blind `advanceCandidate()`.
+`**BrushPreviewGhost`:\*\* on collision change, call `reconcilePlacementCandidates` instead of blind `advanceCandidate()`.
 
 ### 4. Engagement UX (`[buildPuzzle3dPlayEngagement](puzzle/3d/react/index.tsx)` ~5463)
 
@@ -142,17 +138,14 @@ Split refs:
 
 ## Files touched
 
-
 | File                                                                                                             | Change                                                                       |
 | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | `[puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx)`                                                         | Brush region helpers, `BrushSession`, `BrushPreviewGhost`, engagement status |
 | `[framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx)` | No change expected (already wires `brushSource.candidates`)                  |
 | `[puzzle/3d/play/index.ts](puzzle/3d/play/index.ts)`                                                             | Tests only if engagement empty-state behavior needs assertion                |
 
-
 ## Out of scope
 
 - Catalog AABB metadata (would avoid GLB load dependency; not needed if pool + reconcile handles async load).
 - Right-click context menu from the original brush plan (never landed in code).
 - Changes to compatibility ranking in `brushCompatibleCandidates` (shuffle happens after rank).
-

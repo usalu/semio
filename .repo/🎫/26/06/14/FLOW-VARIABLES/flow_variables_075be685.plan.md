@@ -1,43 +1,43 @@
 ---
 name: Flow Variables
-overview: "Introduce a \"variable\" widget/neuron to flow: a named, single-schema dictionary that acts as a typed relay, and that defines a cluster's named inputs/outputs when collapsing (auto-wrapping crossing edges, schema inferred with a picker override)."
+overview: 'Introduce a "variable" widget/neuron to flow: a named, single-schema dictionary that acts as a typed relay, and that defines a cluster''s named inputs/outputs when collapsing (auto-wrapping crossing edges, schema inferred with a picker override).'
 todos:
-  - id: ticket
-    content: Read repo://goals and open a repo ticket for the variables feature, associated with the most appropriate goal
-    status: completed
-  - id: engine
-    content: "neural/engine: add Registry::schema_ids()/schema metadata accessor for the picker"
-    status: completed
-  - id: core-op
-    content: "flow/module/core: register core.variable identity relay operator"
-    status: completed
-  - id: widget-enum
-    content: "flow/core: add Variable widget variant and fix all exhaustive match arms (io ports, size, dag node, id, label, chrome)"
-    status: completed
-  - id: tree-seed
-    content: "flow/core: map Variable in tree_from_fixture/widget_to_inner_neuron; skip seeding (relay)"
-    status: completed
-  - id: collapse
-    content: "flow/core: rewrite collapse_selection boundary logic so variables (and auto-wrapped crossing edges) become named/typed input/output contract neurons; update contract_boundary_params to take schema"
-    status: completed
-  - id: explode
-    content: "flow/core: rewrite explode_cluster to restore boundary neurons as Variable widgets and reconnect"
-    status: completed
-  - id: infer
-    content: "flow/core: add infer_port_schema helper from eval outputs to fill empty variable schemas"
-    status: completed
-  - id: wasm-session
-    content: "flow/core WasmSession + catalogue: schemasJson, setVariableName, setVariableSchema, variable descriptor add-widget, catalogue item"
-    status: completed
-  - id: react
-    content: "flow/react: add variable to FlowWidgetV1/chrome, spotlight+catalogue entry, inline name+schema editor wired to WASM"
-    status: completed
-  - id: tests
-    content: Extend existing tests (flow/core, flow/module/core, neural/engine) covering relay, collapse/explode contract, schema typing
-    status: completed
-  - id: build
-    content: Rebuild flow WASM module and run flow/core + module tests via nx/script.ts; close the ticket with a summary
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open a repo ticket for the variables feature, associated with the most appropriate goal
+   status: completed
+ - id: engine
+   content: "neural/engine: add Registry::schema_ids()/schema metadata accessor for the picker"
+   status: completed
+ - id: core-op
+   content: "flow/module/core: register core.variable identity relay operator"
+   status: completed
+ - id: widget-enum
+   content: "flow/core: add Variable widget variant and fix all exhaustive match arms (io ports, size, dag node, id, label, chrome)"
+   status: completed
+ - id: tree-seed
+   content: "flow/core: map Variable in tree_from_fixture/widget_to_inner_neuron; skip seeding (relay)"
+   status: completed
+ - id: collapse
+   content: "flow/core: rewrite collapse_selection boundary logic so variables (and auto-wrapped crossing edges) become named/typed input/output contract neurons; update contract_boundary_params to take schema"
+   status: completed
+ - id: explode
+   content: "flow/core: rewrite explode_cluster to restore boundary neurons as Variable widgets and reconnect"
+   status: completed
+ - id: infer
+   content: "flow/core: add infer_port_schema helper from eval outputs to fill empty variable schemas"
+   status: completed
+ - id: wasm-session
+   content: "flow/core WasmSession + catalogue: schemasJson, setVariableName, setVariableSchema, variable descriptor add-widget, catalogue item"
+   status: completed
+ - id: react
+   content: "flow/react: add variable to FlowWidgetV1/chrome, spotlight+catalogue entry, inline name+schema editor wired to WASM"
+   status: completed
+ - id: tests
+   content: Extend existing tests (flow/core, flow/module/core, neural/engine) covering relay, collapse/explode contract, schema typing
+   status: completed
+ - id: build
+   content: Rebuild flow WASM module and run flow/core + module tests via nx/script.ts; close the ticket with a summary
+   status: completed
 isProject: false
 ---
 
@@ -62,8 +62,6 @@ flowchart LR
   ext2[External] -->|"to port: width"| collapsed
 ```
 
-
-
 ## Design decision (contract representation)
 
 Reuse the existing `INPUT_KIND`/`OUTPUT_KIND` boundary-neuron contract inside cluster trees (so `Tree::contract` in [neural/engine/lib.rs](neural/engine/lib.rs) keeps working), but enrich each boundary neuron's `channel`/`operators` params from the variable's `name`/`schema`. A boundary-crossing `Variable` widget is converted to an input/output boundary neuron on collapse and back to a `Variable` widget on explode.
@@ -81,7 +79,7 @@ Reuse the existing `INPUT_KIND`/`OUTPUT_KIND` boundary-neuron contract inside cl
 
 - **Widget enum** (lines 25-61): add `Variable { id, name: String, schema: String }`. Rust exhaustiveness will flag every match site below.
 - **Exhaustive match arms**: `widget_chrome` (251), `widget_io_ports` (575) - one input `requires(name,[schema])` + one output `provides(name,[schema])`, `widget_node_size` (606), `widget_to_dag_node` (636), `widget_id_for` (2874), `widget_label`/`widget_display_meta` (label = name, icon e.g. `🔣`).
-- `**NodeChrome`** (132): add `Variable` variant for the inline name + schema editor; mirror in [flow/react/index.tsx](flow/react/index.tsx) `FlowNodeChromeV1`.
+- `**NodeChrome`\*\* (132): add `Variable` variant for the inline name + schema editor; mirror in [flow/react/index.tsx](flow/react/index.tsx) `FlowNodeChromeV1`.
 - `**tree_from_fixture**` (261): map `Variable` to `Neuron { kind: "core.variable", params: { name, schema } }`.
 - `**widget_to_inner_neuron**` (1229) / `**build_seeds**` (2135): variable maps to `core.variable`; it is not a source (skip seeding, optionally seed schema default when it has no incoming synapse).
 - `**contract_boundary_params**` (1251): change to `(channel_name, schema)` and set `operators` to the schema id instead of hardcoded `core.number`.
@@ -108,4 +106,3 @@ Reuse the existing `INPUT_KIND`/`OUTPUT_KIND` boundary-neuron contract inside cl
 
 - Open a repo ticket (associate with the most appropriate goal from `repo://goals`) before editing; keep any temp artifacts inside the ticket folder; close it with a summary when done.
 - Build/test via existing `nx`/`script.ts` commands and `launch.json` entries; rebuild the flow WASM module so the new widget kind and session methods are available to React.
-

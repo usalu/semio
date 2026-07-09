@@ -1,10 +1,10 @@
 ---
 technology: cad
 bundle:
-  name: asset
-  emoji: 📦
-  description: CAD builtin data — model definitions and play sample models.
-  kind: asset
+ name: asset
+ emoji: 📦
+ description: CAD builtin data — model definitions and play sample models.
+ kind: asset
 ---
 
 # 🧾 Specification

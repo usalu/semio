@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - Debug logging was still present in drag/drop collision helpers, kit and home dropzone import handlers, and the flatten design tests.
@@ -20,6 +21,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Remove debug diagnostics and temporary logs

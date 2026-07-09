@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The Python tests in `engine.test.py` were incomplete compared to the TypeScript tests in `compose.test.ts`. The TypeScript tests covered:
@@ -152,6 +153,7 @@ Single comprehensive test matching TypeScript exactly:
 ## Log
 
 ## Summary
+
 # Summary
 
 Complete Python engine tests to match TypeScript compose.test.ts functionality

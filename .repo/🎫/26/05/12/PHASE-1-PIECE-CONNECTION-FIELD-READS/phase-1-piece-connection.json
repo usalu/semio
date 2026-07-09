@@ -29,34 +29,9 @@
       "readChildConnectionIds",
       "readDepth"
     ],
-    "pieceMutations": [
-      "rename",
-      "changeDescription",
-      "drag",
-      "move",
-      "fix",
-      "changeBlueprint",
-      "addAttribute",
-      "removeAttribute",
-      "removeAttributes"
-    ],
+    "pieceMutations": ["rename", "changeDescription", "drag", "move", "fix", "changeBlueprint", "addAttribute", "removeAttribute", "removeAttributes"],
     "piecesOperationsMutations": ["drag", "move", "fix", "changeBlueprint"],
-    "connectionReads": [
-      "readName",
-      "readDescription",
-      "readIcon",
-      "readGap",
-      "readShift",
-      "readRise",
-      "readRotation",
-      "readTurn",
-      "readTilt",
-      "readU",
-      "readV",
-      "readConnected",
-      "readConnecting",
-      "readAttributes"
-    ],
+    "connectionReads": ["readName", "readDescription", "readIcon", "readGap", "readShift", "readRise", "readRotation", "readTurn", "readTilt", "readU", "readV", "readConnected", "readConnecting", "readAttributes"],
     "newExportedTypes": ["PieceBlueprintWire", "ConnectionSideWire"],
     "ancillaryFixForTsc": {
       "file": "compose/js/index.ts",
@@ -88,17 +63,7 @@
         "usePieceChildConnectionIds",
         "usePieceDepth"
       ],
-      "writes": [
-        "useRenamePiece",
-        "useChangePieceDescription",
-        "useDragPiece",
-        "useMovePiece",
-        "useFixPiece",
-        "useChangePieceBlueprint",
-        "useAddPieceAttribute",
-        "useRemovePieceAttribute",
-        "useRemovePieceAttributes"
-      ]
+      "writes": ["useRenamePiece", "useChangePieceDescription", "useDragPiece", "useMovePiece", "useFixPiece", "useChangePieceBlueprint", "useAddPieceAttribute", "useRemovePieceAttribute", "useRemovePieceAttributes"]
     },
     "piecesHooks": ["useDragPieces", "useMovePieces", "useFixPieces", "useChangePiecesBlueprint"],
     "connectionHooks": {
@@ -123,10 +88,7 @@
     }
   },
   "verification": {
-    "tsc": [
-      "npx tsc --noEmit -p compose/js/tsconfig.json",
-      "npx tsc --noEmit -p compose/react/tsconfig.json"
-    ],
+    "tsc": ["npx tsc --noEmit -p compose/js/tsconfig.json", "npx tsc --noEmit -p compose/react/tsconfig.json"],
     "tscExitCode": 0,
     "vitestReact": "compose/react — `npx vitest run` (1 test, passed)",
     "embeddedJsTests": "compose/js — guarded by COMPOSE_JS_RUN_EMBEDDED_TESTS=1; added Piece.readName + Connection.readConnected stub tests (not executed in default vitest run for index.ts)"

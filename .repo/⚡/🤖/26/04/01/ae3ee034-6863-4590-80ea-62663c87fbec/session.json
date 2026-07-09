@@ -11949,10 +11949,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/ae3ee034-6863-4590-80ea-62663c87fbec.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/elements/ui/index.tsx",
-              "/workspaces/semio/compose/sketchpad/index.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/elements/ui/index.tsx", "/workspaces/semio/compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_bdrk_01RkrYFXRL1BMuEgzuyRGozm__vscode-1775022551812",
           "cwd": "/workspaces/semio"
@@ -11978,10 +11975,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/ae3ee034-6863-4590-80ea-62663c87fbec.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/elements/ui/index.tsx",
-              "/workspaces/semio/compose/sketchpad/index.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/elements/ui/index.tsx", "/workspaces/semio/compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_bdrk_01RkrYFXRL1BMuEgzuyRGozm__vscode-1775022551812",
           "cwd": "/workspaces/semio"
@@ -12007,10 +12001,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/ae3ee034-6863-4590-80ea-62663c87fbec.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/elements/ui/index.tsx",
-              "/workspaces/semio/compose/sketchpad/index.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/elements/ui/index.tsx", "/workspaces/semio/compose/sketchpad/index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01RkrYFXRL1BMuEgzuyRGozm__vscode-1775022551812",
@@ -12037,10 +12028,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/ae3ee034-6863-4590-80ea-62663c87fbec.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/elements/ui/index.tsx",
-              "/workspaces/semio/compose/sketchpad/index.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/elements/ui/index.tsx", "/workspaces/semio/compose/sketchpad/index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01RkrYFXRL1BMuEgzuyRGozm__vscode-1775022551812",
@@ -12411,10 +12399,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/ae3ee034-6863-4590-80ea-62663c87fbec.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "summary": "Modified HelperRow in elements/ui to support a `propertyAligned` prop that renders content in the property-row value column using the same grid layout as Label (grid-cols-[96px_minmax(0,1fr)], TreeAlignedRow, detailPanelIndentPx offset). Replaced 17 raw-text-in-TreeRow patterns in compose/sketchpad with HelperRow propertyAligned, including: connected-piece info text + fix button, kit not available/not found, multiple types/ports/tags/designs selection messages, multiple connections editing, connector not found, select-only-pieces-or-connections prompt, and multiple artifacts summary. Added text-foreground to name list items to prevent muted-color inheritance. All 134 tests pass."
           },
           "tool_use_id": "toolu_bdrk_01BRoXoDTzyxbzD2yTpgE1zf__vscode-1775022551815",
@@ -12441,10 +12426,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/ae3ee034-6863-4590-80ea-62663c87fbec.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "summary": "Modified HelperRow in elements/ui to support a `propertyAligned` prop that renders content in the property-row value column using the same grid layout as Label (grid-cols-[96px_minmax(0,1fr)], TreeAlignedRow, detailPanelIndentPx offset). Replaced 17 raw-text-in-TreeRow patterns in compose/sketchpad with HelperRow propertyAligned, including: connected-piece info text + fix button, kit not available/not found, multiple types/ports/tags/designs selection messages, multiple connections editing, connector not found, select-only-pieces-or-connections prompt, and multiple artifacts summary. Added text-foreground to name list items to prevent muted-color inheritance. All 134 tests pass."
           },
           "tool_use_id": "toolu_bdrk_01BRoXoDTzyxbzD2yTpgE1zf__vscode-1775022551815",
@@ -12703,10 +12685,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/ae3ee034-6863-4590-80ea-62663c87fbec.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "summary": "Modified HelperRow in elements/ui to support a `propertyAligned` prop that renders content in the property-row value column using the same grid layout as Label (grid-cols-[96px_minmax(0,1fr)], TreeAlignedRow, detailPanelIndentPx offset). Replaced 17 raw-text-in-TreeRow patterns in compose/sketchpad with HelperRow propertyAligned, including: connected-piece info text + fix button, kit not available/not found, multiple types/ports/tags/designs selection messages, multiple connections editing, connector not found, select-only-pieces-or-connections prompt, and multiple artifacts summary. Added text-foreground to name list items to prevent muted-color inheritance. All 134 tests pass.",
             "ticket": "26/04/01/FIX-INFO-TEXT-PLACEMENT-IN-SKETCHPAD-DETAILS-PANEL"
           },
@@ -12734,10 +12713,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/ae3ee034-6863-4590-80ea-62663c87fbec.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "summary": "Modified HelperRow in elements/ui to support a `propertyAligned` prop that renders content in the property-row value column using the same grid layout as Label (grid-cols-[96px_minmax(0,1fr)], TreeAlignedRow, detailPanelIndentPx offset). Replaced 17 raw-text-in-TreeRow patterns in compose/sketchpad with HelperRow propertyAligned, including: connected-piece info text + fix button, kit not available/not found, multiple types/ports/tags/designs selection messages, multiple connections editing, connector not found, select-only-pieces-or-connections prompt, and multiple artifacts summary. Added text-foreground to name list items to prevent muted-color inheritance. All 134 tests pass.",
             "ticket": "26/04/01/FIX-INFO-TEXT-PLACEMENT-IN-SKETCHPAD-DETAILS-PANEL"
           },
@@ -12765,10 +12741,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/ae3ee034-6863-4590-80ea-62663c87fbec.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "no_github": true,
             "path": "26/04/01/FIX-INFO-TEXT-PLACEMENT-IN-SKETCHPAD-DETAILS-PANEL",
             "summary": "Modified HelperRow in elements/ui to support a `propertyAligned` prop that renders content in the property-row value column using the same grid layout as Label (grid-cols-[96px_minmax(0,1fr)], TreeAlignedRow, detailPanelIndentPx offset). Replaced 17 raw-text-in-TreeRow patterns in compose/sketchpad with HelperRow propertyAligned, including: connected-piece info text + fix button, kit not available/not found, multiple types/ports/tags/designs selection messages, multiple connections editing, connector not found, select-only-pieces-or-connections prompt, and multiple artifacts summary. Added text-foreground to name list items to prevent muted-color inheritance. All 134 tests pass."
@@ -12797,10 +12770,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/ae3ee034-6863-4590-80ea-62663c87fbec.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "no_github": true,
             "path": "26/04/01/FIX-INFO-TEXT-PLACEMENT-IN-SKETCHPAD-DETAILS-PANEL",
             "summary": "Modified HelperRow in elements/ui to support a `propertyAligned` prop that renders content in the property-row value column using the same grid layout as Label (grid-cols-[96px_minmax(0,1fr)], TreeAlignedRow, detailPanelIndentPx offset). Replaced 17 raw-text-in-TreeRow patterns in compose/sketchpad with HelperRow propertyAligned, including: connected-piece info text + fix button, kit not available/not found, multiple types/ports/tags/designs selection messages, multiple connections editing, connector not found, select-only-pieces-or-connections prompt, and multiple artifacts summary. Added text-foreground to name list items to prevent muted-color inheritance. All 134 tests pass."
@@ -12829,10 +12799,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/ae3ee034-6863-4590-80ea-62663c87fbec.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "no_github": true,
             "path": "26/04/01/FIX-INFO-TEXT-PLACEMENT-IN-SKETCHPAD-DETAILS-PANEL",
             "summary": "Modified HelperRow in elements/ui to support a `propertyAligned` prop that renders content in the property-row value column using the same grid layout as Label (grid-cols-[96px_minmax(0,1fr)], TreeAlignedRow, detailPanelIndentPx offset). Replaced 17 raw-text-in-TreeRow patterns in compose/sketchpad with HelperRow propertyAligned, including: connected-piece info text + fix button, kit not available/not found, multiple types/ports/tags/designs selection messages, multiple connections editing, connector not found, select-only-pieces-or-connections prompt, and multiple artifacts summary. Added text-foreground to name list items to prevent muted-color inheritance. All 134 tests pass."
@@ -12862,10 +12829,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/ae3ee034-6863-4590-80ea-62663c87fbec.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "no_github": true,
             "path": "26/04/01/FIX-INFO-TEXT-PLACEMENT-IN-SKETCHPAD-DETAILS-PANEL",
             "summary": "Modified HelperRow in elements/ui to support a `propertyAligned` prop that renders content in the property-row value column using the same grid layout as Label (grid-cols-[96px_minmax(0,1fr)], TreeAlignedRow, detailPanelIndentPx offset). Replaced 17 raw-text-in-TreeRow patterns in compose/sketchpad with HelperRow propertyAligned, including: connected-piece info text + fix button, kit not available/not found, multiple types/ports/tags/designs selection messages, multiple connections editing, connector not found, select-only-pieces-or-connections prompt, and multiple artifacts summary. Added text-foreground to name list items to prevent muted-color inheritance. All 134 tests pass."

@@ -10,7 +10,5 @@
   "target": {
     "modelDefinition": "aec.building.structure"
   },
-  "typologies": [
-    "structure.solidfem.solidelement"
-  ]
+  "typologies": ["structure.solidfem.solidelement"]
 }

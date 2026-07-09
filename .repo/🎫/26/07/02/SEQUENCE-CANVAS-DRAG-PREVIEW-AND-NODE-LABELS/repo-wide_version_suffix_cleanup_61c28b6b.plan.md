@@ -1,28 +1,28 @@
 ---
 name: Repo-wide Version Suffix Cleanup
-overview: "Remove all versioned/legacy/migration code across the entire monorepo: delete dead legacy-format bridges outright, migrate the handful of fixtures still on old shapes and delete their bridges, and strip the meaningless \"V1\" suffix from every type, schema string, and MIME constant since no V2 has ever existed alongside them."
+overview: 'Remove all versioned/legacy/migration code across the entire monorepo: delete dead legacy-format bridges outright, migrate the handful of fixtures still on old shapes and delete their bridges, and strip the meaningless "V1" suffix from every type, schema string, and MIME constant since no V2 has ever existed alongside them.'
 todos:
-  - id: phase1-dead-bridges
-    content: "Delete dead legacy bridges: Golden Layout conversion, image: prefix stripping, TrinityJackResultV1, deprecated brush budget aliases, deprecated IconSelector props, kindsCompatible test helper"
-    status: completed
-  - id: phase2-migrate-kit-fixtures
-    content: Migrate compose kit fixtures to block {hash,items} format and delete array-vs-block dual parsing branches
-    status: completed
-  - id: phase2-migrate-tree-onclick
-    content: "Migrate puzzle/2d, puzzle/5d, wires play hierarchies from onClick to command: descriptors; delete legacyActivate"
-    status: completed
-  - id: phase2-migrate-puzzle2d-fixture
-    content: Migrate concrete-forest.2d.json to manifestId + circle nodes; delete kindCatalogs fallback and rectangle normalization
-    status: completed
-  - id: phase3-strip-v1-types
-    content: Rename all ~90 V1-suffixed types/structs/functions/MIME constants across Rust and TS, regenerate wasm pkg bindings
-    status: completed
-  - id: phase4-strip-v1-schemas
-    content: Rename ~50 schema/play-surface strings to drop /v1 suffix; update all fixture JSON files embedding those strings
-    status: completed
-  - id: phase5-verify
-    content: Run cargo test and bun nx test for all touched crates/packages; browser-verify key playgrounds; close ticket(s) with summary
-    status: in_progress
+ - id: phase1-dead-bridges
+   content: "Delete dead legacy bridges: Golden Layout conversion, image: prefix stripping, TrinityJackResultV1, deprecated brush budget aliases, deprecated IconSelector props, kindsCompatible test helper"
+   status: completed
+ - id: phase2-migrate-kit-fixtures
+   content: Migrate compose kit fixtures to block {hash,items} format and delete array-vs-block dual parsing branches
+   status: completed
+ - id: phase2-migrate-tree-onclick
+   content: "Migrate puzzle/2d, puzzle/5d, wires play hierarchies from onClick to command: descriptors; delete legacyActivate"
+   status: completed
+ - id: phase2-migrate-puzzle2d-fixture
+   content: Migrate concrete-forest.2d.json to manifestId + circle nodes; delete kindCatalogs fallback and rectangle normalization
+   status: completed
+ - id: phase3-strip-v1-types
+   content: Rename all ~90 V1-suffixed types/structs/functions/MIME constants across Rust and TS, regenerate wasm pkg bindings
+   status: completed
+ - id: phase4-strip-v1-schemas
+   content: Rename ~50 schema/play-surface strings to drop /v1 suffix; update all fixture JSON files embedding those strings
+   status: completed
+ - id: phase5-verify
+   content: Run cargo test and bun nx test for all touched crates/packages; browser-verify key playgrounds; close ticket(s) with summary
+   status: in_progress
 isProject: false
 ---
 

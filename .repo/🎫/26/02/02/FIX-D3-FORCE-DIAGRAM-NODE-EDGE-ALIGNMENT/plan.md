@@ -28,18 +28,21 @@ Node avatars in the D3 Force diagram appear smaller than their edge connection c
 ## Implementation Plan
 
 ### Phase 1: Diagnostic Analysis
+
 1. Search for Avatar/node sizing in elements.tsx
 2. Search for edge endpoint calculation logic
 3. Identify all radius constants and calculations
 4. Map dimension flow through the system
 
 ### Phase 2: Playwright Test Creation
+
 1. Create visual regression test for node-edge alignment
 2. Measure actual rendered node dimensions
 3. Measure edge connection point positions
 4. Verify gaps/overlaps programmatically
 
 ### Phase 3: Fix Implementation
+
 1. Align Avatar size constant with edge calculation radius
 2. Ensure consistent radius usage across:
    - D3 force simulation node radius
@@ -49,6 +52,7 @@ Node avatars in the D3 Force diagram appear smaller than their edge connection c
 3. Verify DIAGRAM_UNIT coordinate system usage
 
 ### Phase 4: Validation
+
 1. Run Playwright tests to verify alignment
 2. Test across all diagram views (Kit, Design, Type)
 3. Verify no visual gaps or overlaps

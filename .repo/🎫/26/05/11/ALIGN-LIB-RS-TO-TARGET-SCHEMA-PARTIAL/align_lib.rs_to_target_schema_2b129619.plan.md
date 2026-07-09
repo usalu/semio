@@ -10,6 +10,7 @@ isProject: false
 The target schema is the spec, never a runtime input. Every concrete type, interface enum, edge, connection and input declared in [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql) MUST exist as a hand-written Rust type in [compose/rs/lib.rs](compose/rs/lib.rs) using `async-graphql`'s `#[derive(Object)]` / `#[derive(Interface)]` / `#[derive(SimpleObject)]` / `#[derive(Union)]` / `#[derive(InputObject)]`. The existing in-memory `Arc + RwLock` style is preserved.
 
 ## Ground rules
+
 - No `build.rs`, no `include_str!("../graphql/target.schema.graphql")`, no `Schema::parse_sdl(...)`, no `paste!` or `macro_rules!` for the new types — every struct, every field, every interface arm is typed by hand in the file.
 - Single-file: keep all changes inside [compose/rs/lib.rs](compose/rs/lib.rs) under the existing `//#region` taxonomy. Add new regions only when an entirely new bundle (e.g. `diff`, `modification`, `modifications`, `entity`) is introduced.
 - Preserve every existing public symbol used by `kit_graph_engine`, `kit_backbone`, `worker`, `gql`, `wasm_bridge`. Renames must be propagated to all call sites in the same file.
@@ -59,6 +60,7 @@ For every `# Entities` type in [compose/graphql/target.schema.graphql](compose/g
 - `pub struct <X>Connection { edges, page_info, hash }` with `#[derive(SimpleObject)]`
 
 Cover (in this order):
+
 - Geometry: `Vector`, `Point`, `Coordinate`, `Offset`, `Plane`, `Position`, `Location`, `Attribute`, `Place`
 - Authorship: `Family`, `Folder`, `File`, `Author`, `Prop`, `Benchmark`
 - Concepts: `Quality`, `Tag`, `Concept`, `Stat`
@@ -127,6 +129,7 @@ For every `type <X> implements Operation` in target.schema.graphql (~85) add:
 - A variant on `OperationIface`
 
 Cover the seven naming families enumerated in the schema:
+
 - Quality: `CreatedQuality`, `CreatedQualities`, `RenamedQuality`, `UpdatedQualityDescription`, `UpdatedQualityIcon`, `AddedAttributeToQuality`, `AddedAttributesToQuality`, `RemovedAttributeFromQuality`, `RemovedAttributesFromQuality`, `DeletedQuality`, `DeletedQualities`
 - Tag: same shape
 - Concept: same shape

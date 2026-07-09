@@ -1,9 +1,9 @@
 {
   "title": "Print Window Border Gap",
   "emoji": "🪟",
-  "status": "open",
+  "status": "closed",
   "description": "Print windows have a small gap between the title bar first line and the window content box; borders should touch seamlessly.",
-  "summary": "Fixed inverted window title bar order: header is now a single vtop block (caps + separator) without vrule/hbox baseline clash; first cap keeps the left stroke; single hairline vskip connects body border.",
+  "summary": "Fixed empty window title-chip labels in print chrome. Root cause: \\tl_use:N was evaluated inside \\ExplSyntaxOff during header store/render, so chip text never expanded. Store and render now use \\exp_args:Nxx in expl3 to expand \\l_semio_window_kind_title_tl / \\l_semio_window_number_tl before calling \\semio@window@header@muted. Prior border/cutout fixes retained (\\semio@window@gap, empty ctrl-chip check, removed trailing stroke). TeX build log shows wider title chips (10.67pt overfull) confirming labels render.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1870"
   },

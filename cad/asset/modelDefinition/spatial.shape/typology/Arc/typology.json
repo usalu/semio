@@ -4,13 +4,7 @@
   "version": "1.0.0",
   "label": "Arc",
   "description": "Typology produced by curve.arc.",
-  "actions": [
-    "command.finish"
-  ],
-  "interactions": [
-    "curve.arc"
-  ],
-  "primitiveKinds": [
-    "curve"
-  ]
+  "actions": ["command.finish"],
+  "interactions": ["curve.arc"],
+  "primitiveKinds": ["curve"]
 }

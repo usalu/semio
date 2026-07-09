@@ -4,7 +4,5 @@
   "description": "Gizmo is too fat/large in MCP app compared to compose/ui. Some pieces have different models than others. These visual differences must not exist - MCP app must be 100% identical to compose/ui.",
   "summary": "Bulk close",
   "goal": "🎯r2603",
-  "sessions": [
-    "⚪c5d430eda14d47738c8a7ba9c7aa3da2"
-  ]
+  "sessions": ["⚪c5d430eda14d47738c8a7ba9c7aa3da2"]
 }

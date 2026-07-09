@@ -269,9 +269,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌11030"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌11030"],
         "second": "🎆26🌙03☀️11⏰00⌚02⏱️52",
         "session": "⚪c99c15e882fa454c8fc3ced32d76d8d9"
       },
@@ -302,9 +300,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌11030"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌11030"],
         "second": "🎆26🌙03☀️11⏰00⌚03⏱️03",
         "session": "⚪c99c15e882fa454c8fc3ced32d76d8d9"
       },
@@ -605,9 +601,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌11030"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌11030"],
         "second": "🎆26🌙03☀️11⏰00⌚07⏱️03",
         "session": "⚪c99c15e882fa454c8fc3ced32d76d8d9"
       },
@@ -638,9 +632,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌11030"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌11030"],
         "second": "🎆26🌙03☀️11⏰00⌚07⏱️15",
         "session": "⚪c99c15e882fa454c8fc3ced32d76d8d9"
       },

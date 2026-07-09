@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 # Plan
@@ -57,11 +58,11 @@ Create a new region in `Sketchpad.tsx` with Y.js–XState bridge utilities.
 ```ts
 // Pattern: XState actor that syncs with Y.js Map
 const createYjsSyncActor = (yMap: Y.Map<any>) =>
-  fromCallback(({ sendBack }) => {
-    const observer = () => sendBack({ type: "Y_UPDATE", data: yMap.toJSON() });
-    yMap.observeDeep(observer);
-    return () => yMap.unobserveDeep(observer);
-  });
+ fromCallback(({ sendBack }) => {
+  const observer = () => sendBack({ type: "Y_UPDATE", data: yMap.toJSON() });
+  yMap.observeDeep(observer);
+  return () => yMap.unobserveDeep(observer);
+ });
 ```
 
 ## **1.3 Define Core Type System**
@@ -83,25 +84,25 @@ Replace `SketchpadStore` class with XState machine:
 
 ```ts
 const sketchpadMachine = createMachine({
-  id: "sketchpad",
-  context: ({ input }) => ({
-    navigation: "/",
-    navigationHistory: ["/"],
-    theme: Theme.SYSTEM,
-    language: "en",
-    expertise: Expertise.BEGINNER,
-    mode: Mode.USER,
-  }),
-  invoke: {
-    id: "yjsSync",
-    src: "yjsSyncActor",
-  },
-  on: {
-    NAVIGATE: { actions: "navigate" },
-    SET_THEME: { actions: "setTheme" },
-    SET_LANGUAGE: { actions: "setLanguage" },
-    SET_EXPERTISE: { actions: "setExpertise" },
-  },
+ id: "sketchpad",
+ context: ({ input }) => ({
+  navigation: "/",
+  navigationHistory: ["/"],
+  theme: Theme.SYSTEM,
+  language: "en",
+  expertise: Expertise.BEGINNER,
+  mode: Mode.USER,
+ }),
+ invoke: {
+  id: "yjsSync",
+  src: "yjsSyncActor",
+ },
+ on: {
+  NAVIGATE: { actions: "navigate" },
+  SET_THEME: { actions: "setTheme" },
+  SET_LANGUAGE: { actions: "setLanguage" },
+  SET_EXPERTISE: { actions: "setExpertise" },
+ },
 });
 ```
 
@@ -118,12 +119,12 @@ const sketchpadMachine = createMachine({
 
 ```ts
 actions: {
-  navigate: assign(({ event }) => {
-    ySketchpad.transact(() => {
-      ySketchpad.set("navigation", event.path);
-    });
-    return { navigation: event.path };
+ navigate: assign(({ event }) => {
+  ySketchpad.transact(() => {
+   ySketchpad.set("navigation", event.path);
   });
+  return { navigation: event.path };
+ });
 }
 ```
 
@@ -131,8 +132,8 @@ actions: {
 
 ```tsx
 export const SketchpadProvider = ({ children }) => {
-  const [snapshot, send, actorRef] = useActor(sketchpadMachine);
-  return <SketchpadContext.Provider value={{ snapshot, send, actorRef }}>{children}</SketchpadContext.Provider>;
+ const [snapshot, send, actorRef] = useActor(sketchpadMachine);
+ return <SketchpadContext.Provider value={{ snapshot, send, actorRef }}>{children}</SketchpadContext.Provider>;
 };
 ```
 
@@ -161,17 +162,17 @@ kitMachine
 
 ```ts
 on: {
-  CREATE_KIT: {
-    actions: assign(({ context, event, spawn }) => ({
-      kits: {
-        ...context.kits,
-        [event.kit.guid]: spawn(kitMachine, {
-          id: `kit-${event.kit.guid}`,
-          input: { kit: event.kit, yDoc: createYDoc() },
-        }),
-      },
-    }));
-  }
+ CREATE_KIT: {
+  actions: assign(({ context, event, spawn }) => ({
+   kits: {
+    ...context.kits,
+    [event.kit.guid]: spawn(kitMachine, {
+     id: `kit-${event.kit.guid}`,
+     input: { kit: event.kit, yDoc: createYDoc() },
+    }),
+   },
+  }));
+ }
 }
 ```
 
@@ -197,52 +198,52 @@ Access through machine selectors.
 
 ```ts
 const createAppMachine = <TState, TSelection>({ id, initialContext, actions, guards }) =>
-  createMachine({
-    id,
-    context: initialContext,
-    type: "parallel",
+ createMachine({
+  id,
+  context: initialContext,
+  type: "parallel",
+  states: {
+   transaction: {
+    initial: "idle",
     states: {
-      transaction: {
-        initial: "idle",
-        states: {
-          idle: { on: { START_TRANSACTION: "active" } },
-          active: {
-            on: {
-              FINALIZE_TRANSACTION: { target: "idle", actions: "finalizeTransaction" },
-              ABORT_TRANSACTION: { target: "idle", actions: "abortTransaction" },
-              UNDO: { actions: "undoInTransaction" },
-              REDO: { actions: "redoInTransaction" },
-            },
-          },
-        },
+     idle: { on: { START_TRANSACTION: "active" } },
+     active: {
+      on: {
+       FINALIZE_TRANSACTION: { target: "idle", actions: "finalizeTransaction" },
+       ABORT_TRANSACTION: { target: "idle", actions: "abortTransaction" },
+       UNDO: { actions: "undoInTransaction" },
+       REDO: { actions: "redoInTransaction" },
       },
-      selection: {
-        on: {
-          SELECT: { actions: "updateSelection" },
-          DESELECT: { actions: "clearSelection" },
-        },
-      },
-      panels: {
-        on: { TOGGLE_PANEL: { actions: "togglePanel" } },
-      },
+     },
     },
-  });
+   },
+   selection: {
+    on: {
+     SELECT: { actions: "updateSelection" },
+     DESELECT: { actions: "clearSelection" },
+    },
+   },
+   panels: {
+    on: { TOGGLE_PANEL: { actions: "togglePanel" } },
+   },
+  },
+ });
 ```
 
 ## **4.2 Convert KitDiffAppStore**
 
 ```ts
 const createKitDiffAppMachine = (config) =>
-  createAppMachine({
-    ...config,
-    states: {
-      ...config.states,
-      kitSync: {
-        invoke: { src: "kitSyncActor" },
-        on: { KIT_UPDATED: { actions: "syncKitState" } },
-      },
-    },
-  });
+ createAppMachine({
+  ...config,
+  states: {
+   ...config.states,
+   kitSync: {
+    invoke: { src: "kitSyncActor" },
+    on: { KIT_UPDATED: { actions: "syncKitState" } },
+   },
+  },
+ });
 ```
 
 ## **4.3 Migration Order**
@@ -278,8 +279,8 @@ const value = useSelector(actorRef, selector);
 
 ```ts
 export function useKitTypes(guid?: Guid): Type[] {
-  const kitRef = useKitActorRef(guid);
-  return useSelector(kitRef, (snap) => snap.context.types ?? EMPTY_TYPES);
+ const kitRef = useKitActorRef(guid);
+ return useSelector(kitRef, (snap) => snap.context.types ?? EMPTY_TYPES);
 }
 ```
 
@@ -291,28 +292,28 @@ export function useKitTypes(guid?: Guid): Type[] {
 
 ```ts
 const transactionMachine = createMachine({
-  context: {
-    currentEdits: [],
-    pastEdits: [],
-    redoEdits: [],
+ context: {
+  currentEdits: [],
+  pastEdits: [],
+  redoEdits: [],
+ },
+ states: {
+  idle: {
+   on: {
+    START: "active",
+    UNDO: { actions: "undoFromPast" },
+    REDO: { actions: "redoFromStack" },
+   },
   },
-  states: {
-    idle: {
-      on: {
-        START: "active",
-        UNDO: { actions: "undoFromPast" },
-        REDO: { actions: "redoFromStack" },
-      },
-    },
-    active: {
-      on: {
-        RECORD_EDIT: { actions: "pushToCurrentStack" },
-        UNDO: { actions: "undoFromCurrent" },
-        FINALIZE: { target: "idle", actions: "mergeToHistory" },
-        ABORT: { target: "idle", actions: "revertAllEdits" },
-      },
-    },
+  active: {
+   on: {
+    RECORD_EDIT: { actions: "pushToCurrentStack" },
+    UNDO: { actions: "undoFromCurrent" },
+    FINALIZE: { target: "idle", actions: "mergeToHistory" },
+    ABORT: { target: "idle", actions: "revertAllEdits" },
+   },
   },
+ },
 });
 ```
 
@@ -341,27 +342,27 @@ actions: {
 
 ```ts
 const tutorialMachine = createMachine({
-  states: {
-    idle: {},
-    playing: {
-      states: {
-        milestone: {
-          on: {
-            COMPLETE_MILESTONE: "checkingNext",
-            SKIP: "checkingNext",
-          },
-        },
-        checkingNext: {
-          always: [{ target: "milestone", guard: "hasMoreMilestones" }, { target: "#completed" }],
-        },
-      },
+ states: {
+  idle: {},
+  playing: {
+   states: {
+    milestone: {
+     on: {
+      COMPLETE_MILESTONE: "checkingNext",
+      SKIP: "checkingNext",
+     },
     },
-    paused: {},
-    completed: { id: "completed" },
-    recording: {
-      on: { RECORD_EVENT: { actions: "appendEvent" } },
+    checkingNext: {
+     always: [{ target: "milestone", guard: "hasMoreMilestones" }, { target: "#completed" }],
     },
+   },
   },
+  paused: {},
+  completed: { id: "completed" },
+  recording: {
+   on: { RECORD_EVENT: { actions: "appendEvent" } },
+  },
+ },
 });
 ```
 
@@ -388,8 +389,8 @@ UI tests remain unchanged.
 
 ```ts
 if (process.env.NODE_ENV === "development") {
-  const { inspect } = await import("@xstate/inspect");
-  inspect({ iframe: false });
+ const { inspect } = await import("@xstate/inspect");
+ inspect({ iframe: false });
 }
 ```
 
@@ -401,11 +402,11 @@ if (process.env.NODE_ENV === "development") {
 
 ```ts
 const useIsPieceSelected = (pieceId: string) =>
-  useSelector(
-    designAppRef,
-    (snap) => snap.context.selection.pieces?.includes(pieceId) ?? false,
-    (a, b) => a === b,
-  );
+ useSelector(
+  designAppRef,
+  (snap) => snap.context.selection.pieces?.includes(pieceId) ?? false,
+  (a, b) => a === b,
+ );
 ```
 
 ## **9.2 Maintain Dirty Flag Pattern**
@@ -854,11 +855,11 @@ Successfully migrated `useDesignAppPanelVisibility` to use XState selectors:
 
 ```typescript
 export function useDesignAppPanelVisibility(id?: DesignAppId): PanelVisibility {
-  const actor = useSketchpadActor();
-  const kitGuid = kitScope?.guid ?? id?.kit ?? "";
-  const designGuid = designScope?.guid ?? id?.design ?? "";
-  const selector = useMemo(() => createDesignPanelVisibilitySelector(kitGuid, designGuid), [kitGuid, designGuid]);
-  return useSelector(actor, selector);
+ const actor = useSketchpadActor();
+ const kitGuid = kitScope?.guid ?? id?.kit ?? "";
+ const designGuid = designScope?.guid ?? id?.design ?? "";
+ const selector = useMemo(() => createDesignPanelVisibilitySelector(kitGuid, designGuid), [kitGuid, designGuid]);
+ return useSelector(actor, selector);
 }
 ```
 
@@ -995,6 +996,7 @@ To fully eliminate stores and use XState as single source of truth:
 ## Log
 
 ## Summary
+
 # Summary
 
 Plan XState migration for Sketchpad state management

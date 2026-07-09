@@ -2,30 +2,30 @@
 name: S Studio Full Parity Port
 overview: Port the entire deleted TS studio experience (~110k lines at commit f8376e848) into the pure-Rust plugin framework so the new S looks and behaves exactly like the old one, by rebuilding the trusted React renderer on the surviving ui-react component library and porting all shell, OS, and app behavior into Rust.
 todos:
-  - id: ui-schema
-    content: Extend Rust UiTree/WIT/manifest to full old UiNode vocabulary (sections, fields, inspector groups, trees, toolbars, layouts, panel tabs, engagement, examples)
-    status: completed
-  - id: renderer-shell
-    content: Rebuild renderer shell to ProductShell parity on ui-react (navbar, window canvas with golden layout/tab stacks, side panels, footer, keybindings, URI history)
-    status: completed
-  - id: renderer-hosts
-    content: "Replace stub component hosts with real ones: xyflow node-graph, infinite canvas 2d, r3f world 3d, text editor, table, raster, VFS tree"
-    status: completed
-  - id: os-core-rs
-    content: "Port remaining os-core JS to Rust: programs, resources, parameters, media export, backbones, studio catalog, media-graph VFS"
-    status: completed
-  - id: s-plugin
-    content: "Full S plugin port: home studios VFS, studio media-graph/media-vfs/compiled-dag windows, catalogue/parameters/inspector, checkpoints, URI, export"
-    status: completed
-  - id: composition
-    content: "Host composition: spawn other plugins' apps as windows inside S layout with media-graph document flow"
-    status: completed
-  - id: tech-plugins
-    content: Port tech plugins to real logic/scenes, demo-studio apps first (draw, writer, raster), then all 25
-    status: completed
-  - id: verify
-    content: "Parity verification: Rust tests mirroring old s-core tests, browser run on port 6066, checklist vs old-S spec"
-    status: completed
+ - id: ui-schema
+   content: Extend Rust UiTree/WIT/manifest to full old UiNode vocabulary (sections, fields, inspector groups, trees, toolbars, layouts, panel tabs, engagement, examples)
+   status: completed
+ - id: renderer-shell
+   content: Rebuild renderer shell to ProductShell parity on ui-react (navbar, window canvas with golden layout/tab stacks, side panels, footer, keybindings, URI history)
+   status: completed
+ - id: renderer-hosts
+   content: "Replace stub component hosts with real ones: xyflow node-graph, infinite canvas 2d, r3f world 3d, text editor, table, raster, VFS tree"
+   status: completed
+ - id: os-core-rs
+   content: "Port remaining os-core JS to Rust: programs, resources, parameters, media export, backbones, studio catalog, media-graph VFS"
+   status: completed
+ - id: s-plugin
+   content: "Full S plugin port: home studios VFS, studio media-graph/media-vfs/compiled-dag windows, catalogue/parameters/inspector, checkpoints, URI, export"
+   status: completed
+ - id: composition
+   content: "Host composition: spawn other plugins' apps as windows inside S layout with media-graph document flow"
+   status: completed
+ - id: tech-plugins
+   content: Port tech plugins to real logic/scenes, demo-studio apps first (draw, writer, raster), then all 25
+   status: completed
+ - id: verify
+   content: "Parity verification: Rust tests mirroring old s-core tests, browser run on port 6066, checklist vs old-S spec"
+   status: completed
 isProject: false
 ---
 

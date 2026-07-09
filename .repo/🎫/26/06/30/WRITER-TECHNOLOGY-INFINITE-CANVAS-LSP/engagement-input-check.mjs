@@ -6,11 +6,7 @@ const { WriterPlayController, WRITER_PLAY_WINDOW_KIND } = await import(join(proc
 const { createWriterDocument, writerDocumentToJson } = await import(join(process.cwd(), "writer/core/index.ts"));
 
 const bus = new CommandBus();
-const ctrl = new WriterPlayController(
-	bus,
-	() => {},
-	writerDocumentToJson(createWriterDocument({ id: "jack", languageId: "jack", text: "MATCH (a:Piece) RETURN a" })),
-);
+const ctrl = new WriterPlayController(bus, () => {}, writerDocumentToJson(createWriterDocument({ id: "jack", languageId: "jack", text: "MATCH (a:Piece) RETURN a" })));
 const engagement = ctrl.mainMode.windowKinds.find((kind) => kind.id === WRITER_PLAY_WINDOW_KIND)?.engagement;
 enforcePlaygroundWindowEngagementInput(engagement, "Writer play window");
 if (!engagement?.input?.onSubmit) throw new Error("expected engagement input onSubmit");

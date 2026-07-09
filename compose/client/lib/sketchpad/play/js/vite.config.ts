@@ -42,10 +42,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PLAYWRIGHT_DEV_STUB_ID = "\0compose-sketchpad-play-playwright-dev-stub";
-const EMBEDDED_NODE_TEST_REGIONS = [
-  /\/\/#region 🧪Tests[\s\S]*?\/\/#endregion 🧪Tests\s*/,
-  /\/\/#region 🧪E2E[\s\S]*?\/\/#endregion 🧪E2E\s*/,
-];
+const EMBEDDED_NODE_TEST_REGIONS = [/\/\/#region 🧪Tests[\s\S]*?\/\/#endregion 🧪Tests\s*/, /\/\/#region 🧪E2E[\s\S]*?\/\/#endregion 🧪E2E\s*/];
 
 function isEmbeddedNodeTestIndexModule(id: string): boolean {
   const file = id.replace(/\\/g, "/");
@@ -103,9 +100,7 @@ export default defineConfig(async () => {
   const fs = await import("fs");
   const viteInternalFallback = path.resolve(__dirname, "../../../node_modules/vite/dist/node/index.js");
   const workspaceRoot = path.resolve(__dirname, "../../../../../");
-  const workspaceResolve = createWorkspaceViteResolveConfig(workspaceRoot, [
-        { find: "vite/internal", replacement: viteInternalFallback },
-  ]);
+  const workspaceResolve = createWorkspaceViteResolveConfig(workspaceRoot, [{ find: "vite/internal", replacement: viteInternalFallback }]);
   return {
     base: "./",
     define: {
@@ -160,10 +155,7 @@ export default defineConfig(async () => {
                     res.setHeader("Content-Type", "application/json");
                   }
                   const kitDir = path.dirname(filePath);
-                  if (
-                    requestedFixturePath.endsWith("/kit.compose.json") &&
-                    (fs.existsSync(path.join(kitDir, "type")) || fs.existsSync(path.join(kitDir, "types")))
-                  ) {
+                  if (requestedFixturePath.endsWith("/kit.compose.json") && (fs.existsSync(path.join(kitDir, "type")) || fs.existsSync(path.join(kitDir, "types")))) {
                     const assembled = readInitialKitFixtureFromPath(filePath);
                     res.end(JSON.stringify(assembled));
                     return;

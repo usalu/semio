@@ -133,25 +133,27 @@ impl Default for LowpolyFixture {
     }
 }
 
+const DEFAULT_MESH_JSON: &str = include_str!("../../example/concrete-forest-left.mesh.json");
+
 pub fn default_fixture() -> LowpolyFixture {
-    let mut mesh = HalfedgeMesh::ico_sphere_prim(1.0, 1).unwrap_or_else(|_| HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap());
-    let _ = mesh.extrude_faces(&[FaceId(0)], 0.3);
-    prepare_paint_mesh(&mut mesh);
-    let mesh_json = mesh.to_json().unwrap_or_else(|_| "{}".into());
+    fixture_from_mesh_json(DEFAULT_MESH_JSON, "obj-1", "Concrete Forest Left")
+}
+
+pub fn fixture_from_mesh_json(mesh_json: &str, object_id: &str, object_name: &str) -> LowpolyFixture {
     LowpolyFixture {
         schema: "lowpoly.fixture".into(),
         objects: vec![LowpolyObject {
-            id: "obj-1".into(),
-            name: "Rock".into(),
+            id: object_id.into(),
+            name: object_name.into(),
             transform: LowpolyTransform::default(),
             smooth_shading: false,
-            mesh_json,
+            mesh_json: mesh_json.into(),
             paint_layers: vec![LowpolyPaintLayer::new("Base")],
         }],
-        active_object_id: "obj-1".into(),
+        active_object_id: object_id.into(),
         selection: LowpolySelection {
             targets: LowpolySelectionTargets::default(),
-            keys: vec!["lowpoly:obj-1:0:mesh:0".into()],
+            keys: vec![format!("lowpoly:{object_id}:0:mesh:0")],
             mode: "mesh".into(),
             ids: vec![0],
         },
@@ -1054,11 +1056,11 @@ mod tests {
     }
 
     #[test]
-    pub fn default_fixture_has_rock_object() {
+    pub fn default_fixture_has_concrete_forest_left_object() {
         let fixture = default_fixture();
         assert_eq!(fixture.schema, "lowpoly.fixture");
         assert_eq!(fixture.objects.len(), 1);
-        assert_eq!(fixture.objects[0].name, "Rock");
+        assert_eq!(fixture.objects[0].name, "Concrete Forest Left");
     }
 
     #[test]

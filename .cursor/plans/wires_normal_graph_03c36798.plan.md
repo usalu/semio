@@ -33,8 +33,6 @@ flowchart TD
   reactmm --> wires
 ```
 
-
-
 ### Approach
 
 All graph logic and styling move to (or stay in) Rust; React only hosts the canvas, forwards a single fixture/theme JSON, and subscribes to events. The rich host is generalized over the existing port-model axis so the **same** Vello drawing/camera/LOD/theme/GPU pipeline serves both quadrants; Normal mode simply omits handles and anchors edges at node rims.
@@ -72,7 +70,7 @@ In [puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs) (or lifted into [mathematical/grap
 
 - Add a thin `reasoning/mindmap/react` (and `play`) that mounts the generic canvas host from `@semio-tech/infinite-cavas-react-renderer` against the Normal session, forwarding only `fixtureJson` + theme token values and subscribing to `drainEventsJson`. No `Handle` markers, no `syncPuzzle2dScene` handle path, no TS fixture parse for the normal path.
 - Move the still-needed parsing/catalog/theme-default/observation responsibilities into Rust so the wrapper stays thin (Rust owns `parse`, styling defaults, document).
-- Re-point [wires/react/index.ts](reasoning/mindmap/wires/react/index.ts) + [wires/play/index.ts](reasoning/mindmap/wires/play/index.ts) to the mindmap renderer instead of `@puzzle/2d/`*; update `bootWiresPlay` in [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) (~~4456) and the default-fixture switch (~~1950) to the normal path.
+- Re-point [wires/react/index.ts](reasoning/mindmap/wires/react/index.ts) + [wires/play/index.ts](reasoning/mindmap/wires/play/index.ts) to the mindmap renderer instead of `@puzzle/2d/`\*; update `bootWiresPlay` in [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) (~~4456) and the default-fixture switch (~~1950) to the normal path.
 
 ### Phase 5 - Wiring & validation
 

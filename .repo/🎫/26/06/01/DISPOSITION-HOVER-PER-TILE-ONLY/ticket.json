@@ -5,7 +5,5 @@
   "description": "Fix projektetage (presentation renderer): hovering a disposition should only highlight that disposition, not the entire visual row band.",
   "summary": "Fixed disposition hover highlighting entire visual row on split-tile slides (e.g. projektetage Bauteilkatalog).\n\nRoot cause: PresentationRowHoverContext set hoveredRowBandId on pointer enter for any tile or row-band hit target, applying presentation-interactive-disposition--row-hovered to all tiles sharing that row band (CSS showed primary tint on non-hovered siblings).\n\nFix: removed row-level hover state, pointer handlers, context provider, and row-hovered CSS. Per-tile :hover on each interactive disposition remains; row bands still support multi-tile selection on click.\n\n57 renderer tests pass.",
   "goal": "🎯presentation",
-  "sessions": [
-    "⚪6287af36aef14966b8cebc66b9037618"
-  ]
+  "sessions": ["⚪6287af36aef14966b8cebc66b9037618"]
 }

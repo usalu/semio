@@ -25,9 +25,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fad93f38-077c-4322-8706-fd8beea2a591.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\script.ts"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\script.ts"]
           },
           "tool_response": "",
           "tool_use_id": "call_E6bD8NhHPM9dnB8cBi95PnR4__vscode-1779542708975",

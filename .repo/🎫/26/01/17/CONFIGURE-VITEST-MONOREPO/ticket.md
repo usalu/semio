@@ -1,13 +1,17 @@
 # Ticket
 
 ## Todos
+
 # Plan: Configure Vitest Properly Across the Monorepo
 
 ## Problem
+
 The Vitest VSCode extension detects all `vite.config.*` files as potential vitest projects, causing the warning:
+
 > "Vitest found multiple projects. The extension will use only the first 5 due to performance concerns."
 
 ## Current State
+
 - Root `vitest.config.ts` - tests `repo.tests.ts`
 - `js/compose/vite.config.ts` - has test config for `compose.test.ts`
 - `js/vscode/vite.config.ts` - no test config (uses plain `vite`)
@@ -16,23 +20,28 @@ The Vitest VSCode extension detects all `vite.config.*` files as potential vites
 - `js/temp/vite.config.ts` - no test config (uses plain `vite`)
 
 ## Solution
+
 Create a `vitest.workspace.ts` file at the root that explicitly defines which projects have vitest tests. This tells the extension exactly which configs to use.
 
 ## Steps
+
 1. Create `vitest.workspace.ts` at root with explicit project definitions
 2. Verify the configuration works with `vitest --reporter=verbose`
 
 ## Files to Create/Modify
+
 - Create: `vitest.workspace.ts`
 
 ## Changes
 
 ## Log
+
 # Log
 
 ## Investigation
 
 Explored the monorepo structure:
+
 - Found 5 vite.config files in js/ folder: compose, vscode, play, sketchpad, temp
 - Found 1 vitest.config.ts at root
 - Only 2 have actual test configurations:
@@ -49,18 +58,18 @@ Updated `vitest.config.ts` to use the new `test.projects` configuration:
 
 ```typescript
 export default defineConfig({
-  test: {
-    projects: [
-      {
-        test: {
-          name: "repo",
-          include: ["repo.tests.ts"],
-          testTimeout: 60000,
-        },
-      },
-      "./js/compose/vite.config.ts",
-    ],
-  },
+ test: {
+  projects: [
+   {
+    test: {
+     name: "repo",
+     include: ["repo.tests.ts"],
+     testTimeout: 60000,
+    },
+   },
+   "./js/compose/vite.config.ts",
+  ],
+ },
 });
 ```
 
@@ -71,6 +80,7 @@ Also added `name: "compose"` to `js/compose/vite.config.ts` test configuration f
 ### Verification
 
 Both projects are now properly recognized:
+
 - `npx vitest run --project repo --passWithNoTests` → works
 - `npx vitest run --project compose --passWithNoTests` → works
 - `npx vitest run --passWithNoTests` → runs tests from both projects
@@ -78,6 +88,7 @@ Both projects are now properly recognized:
 ## Summary
 
 Bulk close
+
 ## Changes
 
 1. **vitest.config.ts** - Updated to use the new Vitest v4 `test.projects` configuration that explicitly defines which configs contain tests:

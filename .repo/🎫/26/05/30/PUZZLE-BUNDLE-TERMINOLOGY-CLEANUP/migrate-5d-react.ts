@@ -30,7 +30,7 @@ const pairs: [string, string][] = [
   ['domain: "tie"', 'domain: "fastener"'],
   ['case "tie"', 'case "fastener"'],
   ['kind: "tie"', 'kind: "fastener"'],
-  ["Puzzle5dKindHoverDomain = \"part\" | \"anchor\" | \"tie\"", "Puzzle5dKindHoverDomain = \"part\" | \"grip\" | \"fastener\""],
+  ['Puzzle5dKindHoverDomain = "part" | "anchor" | "tie"', 'Puzzle5dKindHoverDomain = "part" | "grip" | "fastener"'],
   ["readonly ties:", "readonly fasteners:"],
   ["model.ties", "model.fasteners"],
   ["snap.model.ties", "snap.model.fasteners"],
@@ -67,10 +67,7 @@ for (const [from, to] of pairs) {
 s = s.replace(/\bpuzzle2d\b/g, '"2d"');
 s = s.replace(/\bpuzzle3d\b/g, '"3d"');
 
-s = s.replace(
-  /specificity\?: "edge" \| "general" \| "handle" \| "node" \| "wire" \| "object" \| "attraction" \| "part" \| "grip" \| "fastener" \| "rope" \| "vortex" \| "cable"/,
-  'specificity?: "general" | "part" | "grip" | "fastener" | "rope"',
-);
+s = s.replace(/specificity\?: "edge" \| "general" \| "handle" \| "node" \| "wire" \| "object" \| "attraction" \| "part" \| "grip" \| "fastener" \| "rope" \| "vortex" \| "cable"/, 'specificity?: "general" | "part" | "grip" | "fastener" | "rope"');
 
 s = s.replace(
   /entry\.specificity === "general" \|\| entry\.specificity === "node" \|\| entry\.specificity === "edge" \|\| entry\.specificity === "handle" \|\| entry\.specificity === "wire" \|\| entry\.specificity === "object" \|\| entry\.specificity === "attraction" \|\| entry\.specificity === "part" \|\| entry\.specificity === "grip" \|\| entry\.specificity === "fastener" \|\| entry\.specificity === "rope" \|\| entry\.specificity === "vortex" \|\| entry\.specificity === "cable"/,

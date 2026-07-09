@@ -185,13 +185,7 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "uv",
-      "runtimeArgs": [
-        "--directory",
-        "coda/assistant",
-        "run",
-        "main.py",
-        "--mcp-stdio"
-      ],
+      "runtimeArgs": ["--directory", "coda/assistant", "run", "main.py", "--mcp-stdio"],
       "env": {
         "MCP_AUTO_OPEN_ENABLED": "false",
         "MCP_PROXY_AUTH_TOKEN": "repo-mcp-token"

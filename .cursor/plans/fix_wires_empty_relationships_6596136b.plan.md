@@ -2,24 +2,24 @@
 name: Fix Wires Empty Relationships
 overview: The kit Wires diagram renders identity nodes but no edges because (1) the visible-node enumerator omits the kit root, so every containment edge is dropped, and (2) a sync race leaves the VFS tree only partially expanded, so deep design/type/piece nodes and their Rust-backed reference edges never get built. Fix both so containment + Rust reference relationships render.
 todos:
-  - id: ticket
-    content: Read repo://goals and reopen ticket 26/06/03/WIRES-KIT-RELATIONSHIP-VIEW via repo MCP
-    status: completed
-  - id: root-node
-    content: Prepend kit root node (getRoot, parentId null) to the visible set in syncKitWiresTopology so kit->child containment edges render
-    status: completed
-  - id: prepare-race
-    content: Replace kitWiresVfsPreparedKitId guard with a memoized per-kit prepare promise; clear it in invalidateKitVirtualFileSystem and syncVirtualFileSystemRoute
-    status: completed
-  - id: verify
-    content: Run dev sketchpad, import a kit, confirm Wires shows containment + Rust reference/is edges (relationships.length > 0)
-    status: completed
-  - id: tests
-    content: Extend existing sketchpad wires tests for root-inclusion containment and fully-expanded reference/is edges
-    status: completed
-  - id: close
-    content: Close the repo MCP ticket with a summary of changed files
-    status: completed
+ - id: ticket
+   content: Read repo://goals and reopen ticket 26/06/03/WIRES-KIT-RELATIONSHIP-VIEW via repo MCP
+   status: completed
+ - id: root-node
+   content: Prepend kit root node (getRoot, parentId null) to the visible set in syncKitWiresTopology so kit->child containment edges render
+   status: completed
+ - id: prepare-race
+   content: Replace kitWiresVfsPreparedKitId guard with a memoized per-kit prepare promise; clear it in invalidateKitVirtualFileSystem and syncVirtualFileSystemRoute
+   status: completed
+ - id: verify
+   content: Run dev sketchpad, import a kit, confirm Wires shows containment + Rust reference/is edges (relationships.length > 0)
+   status: completed
+ - id: tests
+   content: Extend existing sketchpad wires tests for root-inclusion containment and fully-expanded reference/is edges
+   status: completed
+ - id: close
+   content: Close the repo MCP ticket with a summary of changed files
+   status: completed
 isProject: false
 ---
 
@@ -46,7 +46,7 @@ Edges are built in `sketchpadKitWiresFixtureFromVisible` ([compose/client/lib/sk
 	}
 ```
 
-In `pushRelationship` an edge is dropped unless both endpoints are in `visibleIds`. The kit's direct children (typologies/folders/files) all have `parentId = kitId`, but the kit node is not visible -> every `kit -> child` containment edge is discarded. The builder's own tests (~15747, ~15766) pass only because they *manually* include the kit root in `visible`, masking the runtime gap.
+In `pushRelationship` an edge is dropped unless both endpoints are in `visibleIds`. The kit's direct children (typologies/folders/files) all have `parentId = kitId`, but the kit node is not visible -> every `kit -> child` containment edge is discarded. The builder's own tests (~15747, ~15766) pass only because they _manually_ include the kit root in `visible`, masking the runtime gap.
 
 ### Bug 2 - sync race leaves the tree shallow
 
@@ -62,8 +62,6 @@ flowchart TB
   prep --> abortA["A aborts at generation check"]
   winB --> noedges["visible = first level only -> no edges, no rust refs"]
 ```
-
-
 
 ## Fix
 
@@ -96,4 +94,3 @@ Per repo rules: read `repo://goals`, reopen the existing ticket `26/06/03/WIRES-
 
 - [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) - prepend kit root to visible set; memoized prepare promise; clear memo on invalidate/route reset; extend tests.
 - [framework/product/platform/core/index.ts](framework/product/platform/core/index.ts) - unchanged behavior (decision: do not include root in the shared helper).
-

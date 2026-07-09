@@ -7767,9 +7767,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\09eb8728-9cbb-4ace-8cc9-25fa821adf38.jsonl",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "repo://goals"
-            ],
+            "urls": ["repo://goals"],
             "query": "goals"
           },
           "tool_use_id": "toolu_vrtx_019SB2i6bV4fNabaLCoYud4s__vscode-1776612600205",
@@ -7796,9 +7794,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\09eb8728-9cbb-4ace-8cc9-25fa821adf38.jsonl",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "repo://goals"
-            ],
+            "urls": ["repo://goals"],
             "query": "goals"
           },
           "tool_use_id": "toolu_vrtx_019SB2i6bV4fNabaLCoYud4s__vscode-1776612600205",
@@ -7825,9 +7821,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\09eb8728-9cbb-4ace-8cc9-25fa821adf38.jsonl",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "repo://goals"
-            ],
+            "urls": ["repo://goals"],
             "query": "goals"
           },
           "tool_response": "",
@@ -7855,9 +7849,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\09eb8728-9cbb-4ace-8cc9-25fa821adf38.jsonl",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "repo://goals"
-            ],
+            "urls": ["repo://goals"],
             "query": "goals"
           },
           "tool_response": "",

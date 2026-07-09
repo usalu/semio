@@ -5,24 +5,11 @@
   "mcpServers": {
     "repo": {
       "command": "bun",
-      "args": [
-        "./script.ts",
-        "dev",
-        "mcp",
-        "stdio",
-        "kiro"
-      ]
+      "args": ["./script.ts", "dev", "mcp", "stdio", "kiro"]
     }
   },
-  "tools": [
-    "*"
-  ],
-  "allowedTools": [
-    "read",
-    "write",
-    "shell",
-    "@repo"
-  ],
+  "tools": ["*"],
+  "allowedTools": ["read", "write", "shell", "@repo"],
   "toolsSettings": {
     "shell": {
       "allowedCommands": [
@@ -81,22 +68,13 @@
         "playwright *",
         "pytest *"
       ],
-      "deniedCommands": [
-        "git push --force*",
-        "git reset --hard*"
-      ]
+      "deniedCommands": ["git push --force*", "git reset --hard*"]
     },
     "write": {
-      "allowedPaths": [
-        "**"
-      ]
+      "allowedPaths": ["**"]
     }
   },
-  "resources": [
-    "file://../../AGENTS.md",
-    "file://../../CLAUDE.md",
-    "file://../../GEMINI.md"
-  ],
+  "resources": ["file://../../AGENTS.md", "file://../../CLAUDE.md", "file://../../GEMINI.md"],
   // Agent hooks disabled while logging is off — re-enable by uncommenting entries below.
   "hooks": {},
   // "hooks": {

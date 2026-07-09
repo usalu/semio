@@ -2,33 +2,33 @@
 name: Framework Core Abstraction
 overview: Extract the shared, render-independent primitives and runtime shell duplicated between the platform and playground product cores into a new @semio-tech/framework-core package, have both products specialize it, and fix the in-progress framework/product restructure wiring (workspaces, symlinks, stale paths) so all three cores install, typecheck and test green.
 todos:
-  - id: ticket
-    content: Open ticket .repo/🎫/26/05/30/FRAMEWORK-CORE-ABSTRACTION (goal AI-OPTIMIZED-REPO) on disk per convention
-    status: completed
-  - id: scaffold-core
-    content: Create framework/core package.json, project.json, script.ts, vitest.config.ts (name @semio-tech/framework-core, depth-2 relative paths)
-    status: completed
-  - id: write-core
-    content: Populate framework/core/index.ts with shared primitives + runtime shell base classes (CommandBus, Controller, ObservableCell, WindowKindRuntime/ModeRuntime/AppRuntime/ResolvedAppState bases, Platform shell, generic body registry) using //#region blocks + emoji docstrings
-    status: completed
-  - id: refactor-platform
-    content: Refactor @semio-tech/framework-platform-core to re-export from @semio-tech/framework-core and specialize runtime/UI-node/surface/plugin code; keep platform-specific tests
-    status: completed
-  - id: refactor-playground
-    content: Refactor @semio-tech/framework-playground-core to re-export from @semio-tech/framework-core, specialize WindowKindRuntime (engagement) and playground nodes/controllers; keep playground-specific tests
-    status: completed
-  - id: core-tests
-    content: Extend the in-source 🧪Tests region in framework/core/index.ts to cover layout factories, toolbar merge, mergeById, CommandBus, ObservableCell
-    status: completed
-  - id: wiring
-    content: Fix root workspaces, stale project.json/script.ts/package.json/vitest paths, add @semio-tech/framework-core deps, prune unused playground React deps, register launch.json entries
-    status: completed
-  - id: reinstall
-    content: Run bun install to regenerate correct @framework symlinks and remove broken ones
-    status: completed
-  - id: validate
-    content: Run vitest for all three cores, typecheck renderers, grep cores for React/DOM imports; close ticket with summary + touched files
-    status: completed
+ - id: ticket
+   content: Open ticket .repo/🎫/26/05/30/FRAMEWORK-CORE-ABSTRACTION (goal AI-OPTIMIZED-REPO) on disk per convention
+   status: completed
+ - id: scaffold-core
+   content: Create framework/core package.json, project.json, script.ts, vitest.config.ts (name @semio-tech/framework-core, depth-2 relative paths)
+   status: completed
+ - id: write-core
+   content: Populate framework/core/index.ts with shared primitives + runtime shell base classes (CommandBus, Controller, ObservableCell, WindowKindRuntime/ModeRuntime/AppRuntime/ResolvedAppState bases, Platform shell, generic body registry) using //#region blocks + emoji docstrings
+   status: completed
+ - id: refactor-platform
+   content: Refactor @semio-tech/framework-platform-core to re-export from @semio-tech/framework-core and specialize runtime/UI-node/surface/plugin code; keep platform-specific tests
+   status: completed
+ - id: refactor-playground
+   content: Refactor @semio-tech/framework-playground-core to re-export from @semio-tech/framework-core, specialize WindowKindRuntime (engagement) and playground nodes/controllers; keep playground-specific tests
+   status: completed
+ - id: core-tests
+   content: Extend the in-source 🧪Tests region in framework/core/index.ts to cover layout factories, toolbar merge, mergeById, CommandBus, ObservableCell
+   status: completed
+ - id: wiring
+   content: Fix root workspaces, stale project.json/script.ts/package.json/vitest paths, add @semio-tech/framework-core deps, prune unused playground React deps, register launch.json entries
+   status: completed
+ - id: reinstall
+   content: Run bun install to regenerate correct @framework symlinks and remove broken ones
+   status: completed
+ - id: validate
+   content: Run vitest for all three cores, typecheck renderers, grep cores for React/DOM imports; close ticket with summary + touched files
+   status: completed
 isProject: false
 ---
 

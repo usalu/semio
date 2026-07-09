@@ -3,9 +3,11 @@
 ## Status: In Progress
 
 ## Goal
+
 Fix the misalignment between indentation lines and tree elements (chevrons) in the sketchpad detail panel.
 
 ## Plan
+
 1. Use Playwright to measure actual rendered positions of chevrons and indentation lines
 2. Identify the root cause of misalignment
 3. Fix the CSS/layout in elements.tsx
@@ -13,6 +15,7 @@ Fix the misalignment between indentation lines and tree elements (chevrons) in t
 5. Run all tests
 
 ## TODOs
+
 - [ ] Measure alignment with Playwright
 - [ ] Identify root cause
 - [ ] Apply fix
@@ -20,7 +23,9 @@ Fix the misalignment between indentation lines and tree elements (chevrons) in t
 - [ ] Run tests
 
 ## Changes
+
 (tracked below)
 
 ## Summary
+
 (after completion)

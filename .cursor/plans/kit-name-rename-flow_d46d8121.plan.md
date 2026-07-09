@@ -2,30 +2,30 @@
 name: kit-name-rename-flow
 overview: "Implement the first canonical example of the new state-management architecture: an end-to-end, non-blocking kit-name rename flow where sketchpad's details panel input drives `useKitName()` -> `KitStore.rename()` -> GraphQL `renameKit` mutation -> rs validation/apply -> `kitRenamed` / `operationFailed` subscription events -> status fan-in to the input (idle / pending / success / error)."
 todos:
-  - id: rs_validate_emit
-    content: Add 256-char name validation, emit Event::RenamedKit with requestId, and move CommandSucceeded after apply in compose/rs/lib.rs
-    status: completed
-  - id: rs_subscription
-    content: Add Subscription.kitRenamed in compose/rs/lib.rs and ensure RenamedKit + ComposeError carry requestId
-    status: completed
-  - id: graphql_sdl
-    content: Regenerate compose/graphql/schema.graphql from gql::sdl()
-    status: completed
-  - id: js_kitstore_rename
-    content: Add KitStore.rename(name) + internal RxJS BehaviorSubjects for kitName / renameStatus + subscribe/get snapshot APIs in compose/js/index.ts
-    status: completed
-  - id: js_subscription_wire
-    content: Wire startSubscriptionLoop to dispatch kitRenamed/operationFailed into the new subjects, with requestId correlation
-    status: completed
-  - id: react_use_kit_name
-    content: Rewrite useKitName() in compose/react/index.tsx to use useSyncExternalStore against the KitStore subjects (return [name, rename, status])
-    status: completed
-  - id: sketchpad_input
-    content: Update KitSectionForm in compose/sketchpad/index.tsx to consume the triad and show inline Spinner (pending) + error text (error)
-    status: completed
-  - id: verify_runtime
-    content: Run sketchpad, edit kit name in details panel, verify success path (live name updates) and error path (>256 chars shows error inline, never blocks)
-    status: completed
+ - id: rs_validate_emit
+   content: Add 256-char name validation, emit Event::RenamedKit with requestId, and move CommandSucceeded after apply in compose/rs/lib.rs
+   status: completed
+ - id: rs_subscription
+   content: Add Subscription.kitRenamed in compose/rs/lib.rs and ensure RenamedKit + ComposeError carry requestId
+   status: completed
+ - id: graphql_sdl
+   content: Regenerate compose/graphql/schema.graphql from gql::sdl()
+   status: completed
+ - id: js_kitstore_rename
+   content: Add KitStore.rename(name) + internal RxJS BehaviorSubjects for kitName / renameStatus + subscribe/get snapshot APIs in compose/js/index.ts
+   status: completed
+ - id: js_subscription_wire
+   content: Wire startSubscriptionLoop to dispatch kitRenamed/operationFailed into the new subjects, with requestId correlation
+   status: completed
+ - id: react_use_kit_name
+   content: Rewrite useKitName() in compose/react/index.tsx to use useSyncExternalStore against the KitStore subjects (return [name, rename, status])
+   status: completed
+ - id: sketchpad_input
+   content: Update KitSectionForm in compose/sketchpad/index.tsx to consume the triad and show inline Spinner (pending) + error text (error)
+   status: completed
+ - id: verify_runtime
+   content: Run sketchpad, edit kit name in details panel, verify success path (live name updates) and error path (>256 chars shows error inline, never blocks)
+   status: completed
 isProject: false
 ---
 
@@ -161,18 +161,18 @@ Replace `useKitName` body (around line 8763). New implementation pulls the activ
 
 ```tsx
 export function useKitName(): readonly [string, (n: string) => Promise<SetResult>, WriteStatus] {
-  const store = useKitStore(); // existing helper that returns the active KitStore
-  const name = React.useSyncExternalStore(store.subscribeKitName, store.getKitNameSnapshot, store.getKitNameSnapshot);
-  const rename = React.useSyncExternalStore(store.subscribeRenameStatus, store.getRenameStatusSnapshot, store.getRenameStatusSnapshot);
-  const setter = React.useCallback(async (next: string) => {
-    const r = await store.rename(next);
-    return r.ok ? { ok: true } : { ok: false, error: r.error! };
-  }, [store]);
-  const status: WriteStatus =
-    rename.kind === "pending" ? { kind: "pending", pending: 1 } :
-    rename.kind === "error" ? { kind: "error", pending: 0, lastError: { kind: "Invalid", message: rename.message } } :
-    { kind: "idle", pending: 0 };
-  return [name, setter, status] as const;
+ const store = useKitStore(); // existing helper that returns the active KitStore
+ const name = React.useSyncExternalStore(store.subscribeKitName, store.getKitNameSnapshot, store.getKitNameSnapshot);
+ const rename = React.useSyncExternalStore(store.subscribeRenameStatus, store.getRenameStatusSnapshot, store.getRenameStatusSnapshot);
+ const setter = React.useCallback(
+  async (next: string) => {
+   const r = await store.rename(next);
+   return r.ok ? { ok: true } : { ok: false, error: r.error! };
+  },
+  [store],
+ );
+ const status: WriteStatus = rename.kind === "pending" ? { kind: "pending", pending: 1 } : rename.kind === "error" ? { kind: "error", pending: 0, lastError: { kind: "Invalid", message: rename.message } } : { kind: "idle", pending: 0 };
+ return [name, setter, status] as const;
 }
 ```
 

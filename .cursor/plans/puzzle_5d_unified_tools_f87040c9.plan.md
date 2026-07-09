@@ -2,24 +2,24 @@
 name: Puzzle 5d Unified Tools
 overview: Finish the combined puzzle 5d harness by adding full authoring-tool parity (select + brush + fill + the 2d/3d toolbars) that operates on the shared unified 5d model, so a single brush/fill action grows parts carrying both a 2d and 3d aspect and both surfaces update together.
 todos:
-  - id: ticket
-    content: Read repo://goals and open/reopen the repo-mcp ticket for puzzle 5d unified tools
-    status: completed
-  - id: phase1-core
-    content: "Add unified placement core to puzzle/5d/react: Puzzle5dBrushPlacement, synthesize2d/3d aspect helpers, applyBrushPlacementToModel, buildPuzzle5dFillSequence, Store.applyBrushPlacement + fill session; extend vitest block"
-    status: completed
-  - id: phase2-controller
-    content: "Extend Puzzle5dPlayShellController in puzzle/5d/play: activeTool, brush/fill settings + commands, merged full toolbar (2d+3d), tool/brush/fill engagement, host bridge ref, snapshot fields; extend vitest block"
-    status: completed
-  - id: phase3-hosts
-    content: Add 5d host bridge + chrome in framework renderer; wire Puzzle5d2dSurfaceHost/Puzzle5d3dSurfaceHost brush/fill props; extend FiveD/FiveD2d/FiveD3d to forward brush/fill to underlying canvases
-    status: completed
-  - id: phase4-slice-verify
-    content: Ensure vite 5d slice keeps both 2d+3d brush/fill host regions; run 5d play harness and confirm unified fill/brush at runtime; run nx tests
-    status: completed
-  - id: close
-    content: Close the repo-mcp ticket with summary and touched files
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open/reopen the repo-mcp ticket for puzzle 5d unified tools
+   status: completed
+ - id: phase1-core
+   content: "Add unified placement core to puzzle/5d/react: Puzzle5dBrushPlacement, synthesize2d/3d aspect helpers, applyBrushPlacementToModel, buildPuzzle5dFillSequence, Store.applyBrushPlacement + fill session; extend vitest block"
+   status: completed
+ - id: phase2-controller
+   content: "Extend Puzzle5dPlayShellController in puzzle/5d/play: activeTool, brush/fill settings + commands, merged full toolbar (2d+3d), tool/brush/fill engagement, host bridge ref, snapshot fields; extend vitest block"
+   status: completed
+ - id: phase3-hosts
+   content: Add 5d host bridge + chrome in framework renderer; wire Puzzle5d2dSurfaceHost/Puzzle5d3dSurfaceHost brush/fill props; extend FiveD/FiveD2d/FiveD3d to forward brush/fill to underlying canvases
+   status: completed
+ - id: phase4-slice-verify
+   content: Ensure vite 5d slice keeps both 2d+3d brush/fill host regions; run 5d play harness and confirm unified fill/brush at runtime; run nx tests
+   status: completed
+ - id: close
+   content: Close the repo-mcp ticket with summary and touched files
+   status: completed
 isProject: false
 ---
 
@@ -46,8 +46,6 @@ flowchart TB
   store --> p2["project2d"] --> c2["Puzzle2dCanvas"]
   store --> p3["project3d"] --> c3["Puzzle3dCanvas"]
 ```
-
-
 
 ## Phase 1 - Unified placement core (`puzzle/5d/react/index.tsx`)
 
@@ -89,4 +87,3 @@ In [framework/product/playground/renderer/react/index.tsx](framework/product/pla
 
 - Open/reopen the repo-mcp ticket and read `repo://goals` first; keep temp artifacts inside the ticket folder; close with a summary at the end.
 - Use regions/subregions; extend existing files only (no new files); no migrations/adapters; external libs stay behind interfaces.
-

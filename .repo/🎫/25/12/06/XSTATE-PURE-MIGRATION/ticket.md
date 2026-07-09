@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Previous migration added:
@@ -100,6 +101,7 @@ The problem is NOT with XState migration - it's that the test Kit data needs to 
 ## Log
 
 ## Summary
+
 # Summary
 
 Complete pure XState migration by removing all legacy controller code

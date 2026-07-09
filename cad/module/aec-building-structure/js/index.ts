@@ -115,10 +115,7 @@ function registerStructureImportProfile(modelDefinitionId: string): void {
 /** @emoji 📦 Registers structure stat, transformation, and STEP import profiles on the core engine. */
 export function register(): void {
   registerStatComputer(STRUCTURE_STABILITY_STAT_ID, computeStructureStabilityStat);
-  registerTransformationApplier(
-    qualifiedTransformationId(AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID, STRUCTURE_FROM_BUILDING_TRANSFORMATION_ID),
-    applyBuildingToStructureTransformation,
-  );
+  registerTransformationApplier(qualifiedTransformationId(AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID, STRUCTURE_FROM_BUILDING_TRANSFORMATION_ID), applyBuildingToStructureTransformation);
   registerStructureImportProfile(AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID);
   registerStructureImportProfile(AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID);
   registerStructureImportProfile(AEC_BUILDING_STRUCTURE_FEM_LINE_MODEL_DEFINITION_ID);
@@ -133,17 +130,7 @@ if (import.meta.vitest) {
   const { bootstrapCadModules } = await import("@semio-tech/cad-js-runtime");
   const { BrepjsKernel, preciseSpatialKernelMath } = await import("@semio-tech/cad-js-kernel-brepjs");
   const core = await import("@semio-tech/cad-js-core");
-  const {
-    Model,
-    applyModelDiff,
-    applyTransformation,
-    computeStat,
-    loadStatDefinition,
-    loadTransformation,
-    objectsForStatCompute,
-    qualifiedTransformationId,
-    solidRef,
-  } = core;
+  const { Model, applyModelDiff, applyTransformation, computeStat, loadStatDefinition, loadTransformation, objectsForStatCompute, qualifiedTransformationId, solidRef } = core;
   type ObjectRef = core.ObjectRef;
   type SpatialKernel = core.SpatialKernel;
   type TypologyRef = core.TypologyRef;
@@ -179,9 +166,7 @@ if (import.meta.vitest) {
         typology: "building.building.column" as TypologyRef,
         primitives: { solid: "solid-a" },
       };
-      const spec = loadTransformation(
-        qualifiedTransformationId(AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID, STRUCTURE_FROM_BUILDING_TRANSFORMATION_ID),
-      )!;
+      const spec = loadTransformation(qualifiedTransformationId(AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID, STRUCTURE_FROM_BUILDING_TRANSFORMATION_ID))!;
       const target = applyTransformation(spec, source, { fuseSolidsToExternalFaces: () => ({ hullSolid: solidRef("h"), externalFaces: [] }) } as never);
       expect(Object.values(target.objects)[0]?.typology).toBe("structure.structure.reinforcedconcretecolumn");
     });

@@ -38,7 +38,7 @@ const defaultArgs = {
   id: "combobox-default",
   options: types,
   value: "capsule",
-  onValueChange: () => { },
+  onValueChange: () => {},
   placeholder: "Select type...",
   placeholderId: "combobox.placeholder",
   emptyMessage: "No types match your search.",

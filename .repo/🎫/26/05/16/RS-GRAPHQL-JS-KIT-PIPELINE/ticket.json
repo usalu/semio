@@ -5,7 +5,5 @@
   "description": "Wire and verify RS in-memory kit → GraphQL (compose-store) → thin JS bridge (Session/Store) end-to-end: ensure store serves GraphQL, install flow works, JS can query/mutate. React/sketchpad deferred to follow-up.",
   "summary": "Fixed native Rust build by disabling zip xz (crc/lzma-rust2 clash). Rewired compose-store to ParentStore + gql::build_schema_for + gql::graphql_request_from_json_str; POST /install uses spawn_wip_overlay_from_initial_kit_projection_json; tests use session GraphQL rename. Added @semio-tech/compose-js Session.openHttp + HttpStringTransport for fetch POST /graphql. Verified cargo build/test -p compose-store; bunx tsc --noEmit and vitest in compose/client/lib/js.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯kitapp",
-  "sessions": [
-    "⚪e59ef7b461b745aaa57561730a58cb45"
-  ]
+  "sessions": ["⚪e59ef7b461b745aaa57561730a58cb45"]
 }

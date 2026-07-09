@@ -2689,9 +2689,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fc996465-f68f-43d4-8e48-37ea1a3f18d8.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_gK16k1xq0jEUtJk3hKsjuGcg__vscode-1779785584842",
@@ -2718,9 +2716,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fc996465-f68f-43d4-8e48-37ea1a3f18d8.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_gK16k1xq0jEUtJk3hKsjuGcg__vscode-1779785584842",
@@ -2747,9 +2743,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fc996465-f68f-43d4-8e48-37ea1a3f18d8.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=76 failed=1 /\u003e\n\u003ctestFailure name=\"-808641859_2_18\" path=\"C:/git/compose/spatial \u003e C:/git/compose/spatial/js \u003e C:/git/compose/spatial/js/renderer-r3f \u003e C:/git/compose/spatial/js/renderer-r3f/index.tsx \u003e -808641859_2\"\u003e\n\u003cexpectedOutput\u003e\n0\n\u003c/expectedOutput\u003e\n\u003cactualOutput\u003e\n1\n\u003c/actualOutput\u003e\n\u003cstackFrame path=\"c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx\" line=\"5764\" col=\"29\" /\u003e\n\u003clocation path=\"c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx\" line=\"5686\" col=\"4\" /\u003e\n\u003cexpectedOutput\u003e\n0\n\u003c/expectedOutput\u003e\n\u003cactualOutput\u003e\n1\n\u003c/actualOutput\u003e\n\u003cstackFrame path=\"c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx\" line=\"5764\" col=\"29\" /\u003e\n\u003clocation path=\"c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx\" line=\"5686\" col=\"4\" /\u003e\n\u003c/testFailure\u003e\n",
@@ -2777,9 +2771,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fc996465-f68f-43d4-8e48-37ea1a3f18d8.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=76 failed=1 /\u003e\n\u003ctestFailure name=\"-808641859_2_18\" path=\"C:/git/compose/spatial \u003e C:/git/compose/spatial/js \u003e C:/git/compose/spatial/js/renderer-r3f \u003e C:/git/compose/spatial/js/renderer-r3f/index.tsx \u003e -808641859_2\"\u003e\n\u003cexpectedOutput\u003e\n0\n\u003c/expectedOutput\u003e\n\u003cactualOutput\u003e\n1\n\u003c/actualOutput\u003e\n\u003cstackFrame path=\"c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx\" line=\"5764\" col=\"29\" /\u003e\n\u003clocation path=\"c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx\" line=\"5686\" col=\"4\" /\u003e\n\u003cexpectedOutput\u003e\n0\n\u003c/expectedOutput\u003e\n\u003cactualOutput\u003e\n1\n\u003c/actualOutput\u003e\n\u003cstackFrame path=\"c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx\" line=\"5764\" col=\"29\" /\u003e\n\u003clocation path=\"c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx\" line=\"5686\" col=\"4\" /\u003e\n\u003c/testFailure\u003e\n",
@@ -2807,9 +2799,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fc996465-f68f-43d4-8e48-37ea1a3f18d8.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"]
           },
           "tool_use_id": "call_gj7G85ARv4weXhZ3FA2tfkBy__vscode-1779785584846",
           "cwd": "c:\\git\\compose"
@@ -2863,9 +2853,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fc996465-f68f-43d4-8e48-37ea1a3f18d8.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"]
           },
           "tool_use_id": "call_gj7G85ARv4weXhZ3FA2tfkBy__vscode-1779785584846",
           "cwd": "c:\\git\\compose"
@@ -2919,9 +2907,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fc996465-f68f-43d4-8e48-37ea1a3f18d8.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_gj7G85ARv4weXhZ3FA2tfkBy__vscode-1779785584846",
@@ -2977,9 +2963,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\fc996465-f68f-43d4-8e48-37ea1a3f18d8.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_gj7G85ARv4weXhZ3FA2tfkBy__vscode-1779785584846",

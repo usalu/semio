@@ -4,7 +4,5 @@
   "description": "Create a new agent skill for merging commits in the monorepo",
   "summary": "Created a new agent skill for merging commits in the monorepo, following standardized commit message schemes and attribution rules.",
   "goal": "🎯r2603",
-  "sessions": [
-    "⚪311c7f0b7e6d4e7393371e5465f96791"
-  ]
+  "sessions": ["⚪311c7f0b7e6d4e7393371e5465f96791"]
 }

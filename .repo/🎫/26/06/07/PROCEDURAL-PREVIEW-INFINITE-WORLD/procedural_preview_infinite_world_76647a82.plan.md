@@ -2,18 +2,18 @@
 name: Procedural Preview Infinite World
 overview: "Upgrade the procedural play 3D preview pane (ProceduralPreview) from a minimal orbiting viewport into the full infinite-world canvas used by puzzle 3d and cad play: infinite LOD grid, viewport navigation gizmo, ortho/perspective projection switch, and camera view rig. No transform gumball."
 todos:
-  - id: imports
-    content: Extend @semio-tech/infinite-world-r3f import in procedural/react with WorldLodBridge, WorldOrbitViewSnapGateProvider, WorldOrbitCameraViewRig, WorldOrbitViewControls, WorldOrbitProjectionSwitch, WorldLayer, applyOrbitProjectionToCameraState, and camera types
-    status: completed
-  - id: preview-stack
-    content: Rewrite ProceduralPreview to compose the full infinite-world stack (grid bridge, snap-gate provider, camera rig, orbit gated, viewport gizmo, projection switch overlay) with component-local camera/projection state and seedKey
-    status: completed
-  - id: content-layer
-    content: Move the visibleHandles BrepGeometryLayer mapping into a WorldLayer order=10 inside the new stack, preserving selection/hover/preview behavior
-    status: completed
-  - id: tests
-    content: Extend the existing import.meta.vitest block in procedural/react for the upgraded viewport; run the procedural vitest suite and validate runtime behavior with temporary [DEBUG] logs
-    status: completed
+ - id: imports
+   content: Extend @semio-tech/infinite-world-r3f import in procedural/react with WorldLodBridge, WorldOrbitViewSnapGateProvider, WorldOrbitCameraViewRig, WorldOrbitViewControls, WorldOrbitProjectionSwitch, WorldLayer, applyOrbitProjectionToCameraState, and camera types
+   status: completed
+ - id: preview-stack
+   content: Rewrite ProceduralPreview to compose the full infinite-world stack (grid bridge, snap-gate provider, camera rig, orbit gated, viewport gizmo, projection switch overlay) with component-local camera/projection state and seedKey
+   status: completed
+ - id: content-layer
+   content: Move the visibleHandles BrepGeometryLayer mapping into a WorldLayer order=10 inside the new stack, preserving selection/hover/preview behavior
+   status: completed
+ - id: tests
+   content: Extend the existing import.meta.vitest block in procedural/react for the upgraded viewport; run the procedural vitest suite and validate runtime behavior with temporary [DEBUG] logs
+   status: completed
 isProject: false
 ---
 

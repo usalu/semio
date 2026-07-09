@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Table rows use the unit sizing system (`h-large` / `--size-large`) while the shared `Footer` component defaulted to a fixed `20px` height, so table rows and the footer bar did not match.
@@ -19,6 +20,7 @@ Unify the footer bar height with the unit sizing system and ensure table rows us
 ## Log
 
 ## Summary
+
 # Summary
 
 Unify table row and footer bar height

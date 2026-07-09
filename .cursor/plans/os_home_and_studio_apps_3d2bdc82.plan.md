@@ -2,33 +2,33 @@
 name: OS Home and Studio Apps
 overview: Restructure the S/OS shell so booting OS lands on a Home app that lists/creates/loads studios (mirroring sketchpad's old kit home), the media-graph experience becomes the Studio app at /studios/{id}, and sketchpad's own home app is removed.
 todos:
-  - id: ticket
-    content: Open/reopen repo ticket for OS home/studio app restructure
-    status: completed
-  - id: os-catalog
-    content: Add studio catalog primitives + OsHomeVirtualFileSystemController to framework/product/os/core
-    status: completed
-  - id: s-home-app
-    content: Add SHomeController and home AppRuntime with create/import/delete/open studio commands in s/core
-    status: completed
-  - id: s-studio-app
-    content: Rename play app to Studio app; add openStudio/goHome and per-studio store loading
-    status: completed
-  - id: routing
-    content: Wire applyUri/navigation on S runtime and useOsShellHistory hook in os renderer + s/react chrome
-    status: completed
-  - id: boot
-    content: Rework bootOsDev to boot home-first, seeding demo studio when storage empty
-    status: completed
-  - id: sketchpad-home-removal
-    content: Remove sketchpad home app; move kit lifecycle commands to kit app; fix routes, boot.tsx, and SKETCHPAD_APP_RESOURCE
-    status: completed
-  - id: tests
-    content: Extend s/core tests (catalog, routing, boot) and update sketchpad tests; run suites
-    status: completed
-  - id: runtime-verify
-    content: Boot OS dev in browser and verify home/studio flows with [DEBUG] logs
-    status: completed
+ - id: ticket
+   content: Open/reopen repo ticket for OS home/studio app restructure
+   status: completed
+ - id: os-catalog
+   content: Add studio catalog primitives + OsHomeVirtualFileSystemController to framework/product/os/core
+   status: completed
+ - id: s-home-app
+   content: Add SHomeController and home AppRuntime with create/import/delete/open studio commands in s/core
+   status: completed
+ - id: s-studio-app
+   content: Rename play app to Studio app; add openStudio/goHome and per-studio store loading
+   status: completed
+ - id: routing
+   content: Wire applyUri/navigation on S runtime and useOsShellHistory hook in os renderer + s/react chrome
+   status: completed
+ - id: boot
+   content: Rework bootOsDev to boot home-first, seeding demo studio when storage empty
+   status: completed
+ - id: sketchpad-home-removal
+   content: Remove sketchpad home app; move kit lifecycle commands to kit app; fix routes, boot.tsx, and SKETCHPAD_APP_RESOURCE
+   status: completed
+ - id: tests
+   content: Extend s/core tests (catalog, routing, boot) and update sketchpad tests; run suites
+   status: completed
+ - id: runtime-verify
+   content: Boot OS dev in browser and verify home/studio flows with [DEBUG] logs
+   status: completed
 isProject: false
 ---
 

@@ -3,6 +3,7 @@
 ## Rule refinement
 
 Bundle directory name is either:
+
 - **Language tag** (`js`, `rs`, …) — bundle root IS the tag; sources live at root
 - **Framework tag** (`react`, `r3f`, `react-renderer`) — framework implies implementation; no nested `js/`
 - **Role tag** (`core`, `engine`, `runtime`, …) — sources live under `<lang>/` (e.g. `core/js/`)

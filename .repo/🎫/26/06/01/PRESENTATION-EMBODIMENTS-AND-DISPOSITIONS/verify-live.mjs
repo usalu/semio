@@ -10,8 +10,8 @@ const introMorphCount = await page.locator('.slides > section > section[data-aut
 const mediaMorphCount = await page.locator('.slides > section > section[data-auto-animate-id="media"]').count();
 
 for (let i = 0; i < 7; i++) {
-	await page.keyboard.press("ArrowRight");
-	await page.waitForTimeout(400);
+  await page.keyboard.press("ArrowRight");
+  await page.waitForTimeout(400);
 }
 
 const visibleSlide = page.locator(".slides section.present");
@@ -25,12 +25,12 @@ const videoSrc = await mediaSlide.locator('[data-id="demo-video"] video').first(
 await mediaSlide.locator(".react-pdf__Document").first().waitFor({ timeout: 20000 });
 
 const result = {
-	introMorphCount,
-	mediaMorphCount,
-	catalogueSrc,
-	videoSrc,
-	hasPdf: (await mediaSlide.locator(".react-pdf__Page").count()) > 0,
-	positionedFramesOnMediaSlide: await mediaSlide.locator(".presentation-disposition-frame").count(),
+  introMorphCount,
+  mediaMorphCount,
+  catalogueSrc,
+  videoSrc,
+  hasPdf: (await mediaSlide.locator(".react-pdf__Page").count()) > 0,
+  positionedFramesOnMediaSlide: await mediaSlide.locator(".presentation-disposition-frame").count(),
 };
 console.log(JSON.stringify(result, null, 2));
 await browser.close();

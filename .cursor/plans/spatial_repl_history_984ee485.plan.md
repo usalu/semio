@@ -2,24 +2,24 @@
 name: spatial repl history
 overview: Turn `@spatial/js-renderer-r3f` into a full REPL by lifting the command palette + history controls out of `play/main.tsx` into the renderer package, and rebuild `DocumentHistory` + `CommandRuntime` around two diff‑based stacks where each modification stores the `CommandResponse` plus its backwards `TopologyDiff`. Readonly commands (empty diff) never enter the command stack; in‑command undo/redo walks per‑state snapshots, while out‑of‑command undo/redo applies the stored diffs.
 todos:
-  - id: history
-    content: Rebuild DocumentHistory around Modification = { result, backwardsDiff } with undo/redo stacks; drop function-based recordCommand
-    status: completed
-  - id: runtime
-    content: Add snapRedoStack + redo() to CommandRuntime; route undo/redo to in-command vs DocumentHistory based on active state; clear in-command stacks on commit/cancel; update canUndo/canRedo capabilities
-    status: completed
-  - id: commit
-    content: "Replace recordCommand call in commit() with history.record({ result, backwardsDiff: inverse }); skip when diff empty"
-    status: completed
-  - id: repl
-    content: Add CommandRepl + useDocumentHistory + useReplHistoryState in renderer-r3f/index.tsx; lift palette/input/shortcuts/history bar from play/main.tsx
-    status: completed
-  - id: play
-    content: Shrink play/main.tsx to geometry+preset selection plus <CommandRepl> consumption
-    status: completed
-  - id: tests
-    content: Extend core + renderer-r3f vitest suites for two-stack history, readonly skip, in-command redo, active/inactive routing, useReplHistoryState
-    status: completed
+ - id: history
+   content: Rebuild DocumentHistory around Modification = { result, backwardsDiff } with undo/redo stacks; drop function-based recordCommand
+   status: completed
+ - id: runtime
+   content: Add snapRedoStack + redo() to CommandRuntime; route undo/redo to in-command vs DocumentHistory based on active state; clear in-command stacks on commit/cancel; update canUndo/canRedo capabilities
+   status: completed
+ - id: commit
+   content: "Replace recordCommand call in commit() with history.record({ result, backwardsDiff: inverse }); skip when diff empty"
+   status: completed
+ - id: repl
+   content: Add CommandRepl + useDocumentHistory + useReplHistoryState in renderer-r3f/index.tsx; lift palette/input/shortcuts/history bar from play/main.tsx
+   status: completed
+ - id: play
+   content: Shrink play/main.tsx to geometry+preset selection plus <CommandRepl> consumption
+   status: completed
+ - id: tests
+   content: Extend core + renderer-r3f vitest suites for two-stack history, readonly skip, in-command redo, active/inactive routing, useReplHistoryState
+   status: completed
 isProject: false
 ---
 
@@ -31,11 +31,11 @@ Add a single record type the history persists:
 
 ```ts
 interface Modification {
-  readonly id: string;
-  readonly commandId: string;
-  readonly label: string;
-  readonly result: CommandResponse;   // includes forward diff + data
-  readonly backwardsDiff: TopologyDiff; // inverse computed at commit time
+ readonly id: string;
+ readonly commandId: string;
+ readonly label: string;
+ readonly result: CommandResponse; // includes forward diff + data
+ readonly backwardsDiff: TopologyDiff; // inverse computed at commit time
 }
 ```
 
@@ -58,7 +58,7 @@ private readonly snapUndoStack: { state: string; context: string }[] = [];
 private readonly snapRedoStack: { state: string; context: string }[] = [];
 ```
 
-- On `send(event)` that fires a non-transient transition not in `excludeEvents`: push the *before* snapshot to `snapUndoStack` and **clear `snapRedoStack`** (new branch invalidates redo).
+- On `send(event)` that fires a non-transient transition not in `excludeEvents`: push the _before_ snapshot to `snapUndoStack` and **clear `snapRedoStack`** (new branch invalidates redo).
 - `undo()` — pop `snapUndoStack`, push current onto `snapRedoStack`, restore.
 - `redo()` — pop `snapRedoStack`, push current onto `snapUndoStack`, restore.
 - `cancel()` clears both.
@@ -77,13 +77,13 @@ In `CommandRuntime.commit`, after the existing `const inverse = applyTopologyDif
 
 ```ts
 if (hist && !isEmptyTopologyDiff(diff)) {
-  hist.record({
-    id: `cmd-${this.spec.id}-${this.revision}`,
-    commandId: this.spec.id,
-    label: this.spec.label ?? this.spec.id,
-    result: res,            // built below, includes diff + data
-    backwardsDiff: inverse,
-  });
+ hist.record({
+  id: `cmd-${this.spec.id}-${this.revision}`,
+  commandId: this.spec.id,
+  label: this.spec.label ?? this.spec.id,
+  result: res, // built below, includes diff + data
+  backwardsDiff: inverse,
+ });
 }
 ```
 
@@ -95,8 +95,10 @@ Lift the REPL UI out of `play/main.tsx` into the renderer package under a new `�
 
 ```ts
 export function useDocumentHistory(): DocumentHistory; // memoized per host
-export function useReplHistoryState(rt, history): { canUndo, canRedo, undoLabel, redoLabel };
-export interface CommandReplProps { /* presets, geometry, hooks */ }
+export function useReplHistoryState(rt, history): { canUndo; canRedo; undoLabel; redoLabel };
+export interface CommandReplProps {
+ /* presets, geometry, hooks */
+}
 export function CommandRepl(props: CommandReplProps): ReactNode; // canvas + palette + history controls
 ```
 

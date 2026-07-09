@@ -8027,9 +8027,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/9bfdd0af-b67c-4154-95fc-22807c071658.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "/workspaces/semio/compose/ui/index.tsx"
-            ]
+            "files": ["/workspaces/semio/compose/ui/index.tsx"]
           },
           "tool_use_id": "toolu_vrtx_01AAHWWo3osvvYo2arqLLw2F__vscode-1774868615913",
           "cwd": "/workspaces/semio"
@@ -8055,9 +8053,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/9bfdd0af-b67c-4154-95fc-22807c071658.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "/workspaces/semio/compose/ui/index.tsx"
-            ]
+            "files": ["/workspaces/semio/compose/ui/index.tsx"]
           },
           "tool_use_id": "toolu_vrtx_01AAHWWo3osvvYo2arqLLw2F__vscode-1774868615913",
           "cwd": "/workspaces/semio"
@@ -8083,9 +8079,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/9bfdd0af-b67c-4154-95fc-22807c071658.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "/workspaces/semio/compose/ui/index.tsx"
-            ]
+            "files": ["/workspaces/semio/compose/ui/index.tsx"]
           },
           "tool_response": "No tests found in the files. Ensure the correct absolute paths are passed to the tool.",
           "tool_use_id": "toolu_vrtx_01AAHWWo3osvvYo2arqLLw2F__vscode-1774868615913",
@@ -8112,9 +8106,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/9bfdd0af-b67c-4154-95fc-22807c071658.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "/workspaces/semio/compose/ui/index.tsx"
-            ]
+            "files": ["/workspaces/semio/compose/ui/index.tsx"]
           },
           "tool_response": "No tests found in the files. Ensure the correct absolute paths are passed to the tool.",
           "tool_use_id": "toolu_vrtx_01AAHWWo3osvvYo2arqLLw2F__vscode-1774868615913",

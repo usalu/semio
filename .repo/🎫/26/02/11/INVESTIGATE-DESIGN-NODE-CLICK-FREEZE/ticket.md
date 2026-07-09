@@ -32,14 +32,14 @@ The `guardedSetter` (line 1582-1590) SHOULD stop this loop because `areDesignSel
 
 ```tsx
 const guardedSetter = useMemo(() => {
-    if (!setSelection) return undefined;
-    return (next: DesignAppSelection) => {
-      if (areDesignSelectionsEquivalent(selection, next)) {
-        return;
-      }
-      setSelection(next);
-    };
-  }, [selection, setSelection]);
+ if (!setSelection) return undefined;
+ return (next: DesignAppSelection) => {
+  if (areDesignSelectionsEquivalent(selection, next)) {
+   return;
+  }
+  setSelection(next);
+ };
+}, [selection, setSelection]);
 ```
 
 **Problem 1: guardedSetter depends on `selection` in its deps array.** Every time selection changes, `guardedSetter` gets a new identity. This means `onSelectionChange` (which depends on `setSelection`) also gets a new identity. React Flow re-registers the callback. This alone doesn't cause the loop but amplifies the churn.
@@ -51,7 +51,9 @@ const guardedSetter = useMemo(() => {
 ### Contributing Factors
 
 #### Factor A: Expensive Re-renders (3 sidepanels × 180+ items)
+
 The effect at line 8090 has `selection` in its deps:
+
 ```tsx
 useEffect(() => {
     // ...removes and re-adds ALL detail panel sections...
@@ -59,12 +61,15 @@ useEffect(() => {
     addSection("details", ...);    // multiple addSection calls
 }, [selection, addSection, removeSection, appType, t, design]);
 ```
+
 Every selection change causes panel sections to be torn down and rebuilt. With 3 sidepanels open (left: 139 items, HUD: 182 items, right: 3 items), this creates massive synchronous React tree teardown/rebuild.
 
 #### Factor B: No `useSelector` Equality Override
+
 The `useSelector(actor, granularSelector)` in `useDesignAppField` (line 1533) uses XState's default **referential equality** (`===`). Since the state machine handler always creates a new selection object, `useSelector` always detects a change even if the selection is semantically identical.
 
 #### Factor C: `arePortsCompatible` Change (line 6935) — NOT A CAUSE
+
 The `arePortsCompatible` at line 6935 is inside `onNodeDrag`, NOT `onNodeClick` or `onSelectionChange`. It only fires during drag operations. This cannot cause the click freeze.
 
 #
@@ -72,11 +77,13 @@ The `arePortsCompatible` at line 6935 is inside `onNodeDrag`, NOT `onNodeClick` 
 ## Summary
 
 Investigated Design.tsx node click freeze. Root cause: selection state is baked into baseNodes useMemo (line 5937), causing all 180 nodes to be recreated on every selection change, which triggers React Flow onSelectionChange again in a feedback loop. Contributing factors: XState handler always creates new state reference (no semantic equality), panel sections torn down/rebuilt on selection change (line 8090), and guardedSetter identity instability. The arePortsCompatible change at line 6935 is NOT related (only fires during drag). Recommended fixes documented in ticket.
+
 ## Changes
 
 No code changes made — investigation only.
 
 ## Log
+
 - Ran repo tree discovery
 - Opened ticket
 - Read `useDesignAppSelectionField` and `useDesignAppSelection` (lines 1547-1591)

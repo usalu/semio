@@ -2,21 +2,21 @@
 name: alternatives-context-footer
 overview: Add a `KitAlternativeSelection` context in `@semio-tech/compose-react` for switching between `the kit` and named alternatives (null = the kit), and render a left-most footer dropdown in the kit, design, and type apps that drives that selection. All kit state stays in `compose/rs` — JS only holds the user-visible selection and forwards it to the rs read/write scope.
 todos:
-  - id: react-context
-    content: Add KitAlternativeSelectionContext + Provider + useKitAlternativeSelection / useKitAlternatives hooks in compose/react/index.tsx (new 🌱KitAlternativeSelection region).
-    status: completed
-  - id: react-kitscope-wire
-    content: Inside KitScope, when caller omits kitReadScope, derive it from the selection (null → theKit, id → alternative); reset kitWriteScope on selection change so rs re-bootstraps.
-    status: completed
-  - id: sketchpad-selector
-    content: Add KitAlternativeFooterSelector component registering a footer item with order -1000 (left) and a Select dropdown of [the kit, ...alternatives].
-    status: completed
-  - id: sketchpad-mount-footers
-    content: Render <KitAlternativeFooterSelector /> inside KitAppFooter, DesignAppFooter, and TypeAppFooter only.
-    status: completed
-  - id: sketchpad-provider-wrap
-    content: Wrap the KitScope tab-shell wrapper with KitAlternativeSelectionProvider so the selector and KitScope share the selection state.
-    status: completed
+ - id: react-context
+   content: Add KitAlternativeSelectionContext + Provider + useKitAlternativeSelection / useKitAlternatives hooks in compose/react/index.tsx (new 🌱KitAlternativeSelection region).
+   status: completed
+ - id: react-kitscope-wire
+   content: Inside KitScope, when caller omits kitReadScope, derive it from the selection (null → theKit, id → alternative); reset kitWriteScope on selection change so rs re-bootstraps.
+   status: completed
+ - id: sketchpad-selector
+   content: Add KitAlternativeFooterSelector component registering a footer item with order -1000 (left) and a Select dropdown of [the kit, ...alternatives].
+   status: completed
+ - id: sketchpad-mount-footers
+   content: Render <KitAlternativeFooterSelector /> inside KitAppFooter, DesignAppFooter, and TypeAppFooter only.
+   status: completed
+ - id: sketchpad-provider-wrap
+   content: Wrap the KitScope tab-shell wrapper with KitAlternativeSelectionProvider so the selector and KitScope share the selection state.
+   status: completed
 isProject: false
 ---
 
@@ -37,8 +37,6 @@ flowchart LR
     Rs -->|alternatives list subscription| Hook[useKitAlternatives]
     Hook --> Dropdown
 ```
-
-
 
 ## compose/react ([compose/react/index.tsx](compose/react/index.tsx))
 
@@ -72,7 +70,7 @@ addFooterItem({
 });
 ```
 
-  Cleanup on unmount via `removeFooterItem("compose.sketchpad.footer.alternative")`.
+Cleanup on unmount via `removeFooterItem("compose.sketchpad.footer.alternative")`.
 
 Mount the selector inside the three kit-editing app footers only:
 
@@ -85,11 +83,7 @@ Each footer simply renders `<KitAlternativeFooterSelector />` once; the inner ad
 Wrap `KitScope` with `KitAlternativeSelectionProvider` at the single tab-shell wrapper ([compose/sketchpad/index.tsx](compose/sketchpad/index.tsx) lines 7307–7327):
 
 ```tsx
-return React.createElement(
-  KitAlternativeSelectionProvider,
-  null,
-  React.createElement(KitScope, { kitId, store: entry.store, kitClient: entry.kitClient, children })
-);
+return React.createElement(KitAlternativeSelectionProvider, null, React.createElement(KitScope, { kitId, store: entry.store, kitClient: entry.kitClient, children }));
 ```
 
 That places the provider above `KitScope` so `KitScope`'s effect can read the current selection, and so the selector renders inside the same provider tree.
@@ -98,4 +92,3 @@ That places the provider above `KitScope` so `KitScope`'s effect can read the cu
 
 - Auto-creating / promoting a draft on the alternative's last checkpoint when the user's first edit lands. Per `compose/rs` spec, "all kit state is only inside compose/rs" — the JS write-scope auto-bootstrap path already triggers a rs-side `newDraft` call; if rs needs a tweak to honor the new `alternativeId`, that's an rs ticket.
 - Rendering checkpoints/drafts inside an alternative (this plan only adds the alternative selector; deeper VCS UI stays where it is today).
-

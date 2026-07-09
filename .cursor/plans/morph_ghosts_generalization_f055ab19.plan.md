@@ -1,31 +1,31 @@
 ---
 name: Morph Ghosts Generalization
-overview: "Make both morph directions first-class and consistent with the updated spec: many-to-one uses target ghosts and one-to-many uses source ghosts, removing the deck-specific one-to-many hack (manual opacity-0 tiles + hardcoded `section[title=\"catalogue\"]` CSS) in favor of a symmetric, declarative core model and generic renderer classes."
+overview: 'Make both morph directions first-class and consistent with the updated spec: many-to-one uses target ghosts and one-to-many uses source ghosts, removing the deck-specific one-to-many hack (manual opacity-0 tiles + hardcoded `section[title="catalogue"]` CSS) in favor of a symmetric, declarative core model and generic renderer classes.'
 todos:
-  - id: core-model
-    content: "Core: unify ghost concept (GhostKind, ghost on Disposition/ResolvedDisposition replacing morphSource), add MorphToSlot + morphTo; rename isMorphSourceDisposition->isGhostDisposition."
-    status: completed
-  - id: core-expand
-    content: "Core: set ghost:\"target\" in morphFrom expansion; add expandArrangementMorphTo (source ghosts); expand both directions in expandThoughtSlides; generalize slideMorphParticipantIds and rest/layout visibility."
-    status: completed
-  - id: core-resolve-tests
-    content: "Core: update resolveArrangement morphId rules for both ghost kinds; extend inline vitest for one-to-many source ghosts and many-to-one target ghosts."
-    status: completed
-  - id: renderer-classes-css
-    content: "Renderer: rename classes (target-ghost, morph-target) and add source-ghost + morph-one; replace deck-specific section[title=...] and dormant/settle CSS with generic ghost-class + auto-animate-state CSS in globals.css."
-    status: completed
-  - id: renderer-logic
-    content: "Renderer: update matcher, ghost-anchor detection, presentationMorphGhostAutoAnimateCss, buildInteractiveSlideLayout revealMorphId, declaredDispositionRect, and MorphView/Figure props from morphSource to ghost; pair both morph directions, exclude the one."
-    status: completed
-  - id: deck
-    content: "Deck: add spec.ts morphTo helper; convert Bauteilkatalog to declarative morphTo (drop manual opacity-0 tiles); adjust Bauteilarten settle; verify Bauteilbeschriftungen many-to-one."
-    status: completed
-  - id: renderer-tests
-    content: "Renderer: update inline vitest + deck assertions to use new ghost classes and the generic one-to-many path instead of catalogue title selectors / dormant slots."
-    status: completed
-  - id: validate
-    content: Run core + renderer + deck tests via nx (existing launch.json tasks) and confirm slide 7->8 (one-to-many) and 8->9 (many-to-one) ghost behavior at runtime.
-    status: completed
+ - id: core-model
+   content: "Core: unify ghost concept (GhostKind, ghost on Disposition/ResolvedDisposition replacing morphSource), add MorphToSlot + morphTo; rename isMorphSourceDisposition->isGhostDisposition."
+   status: completed
+ - id: core-expand
+   content: 'Core: set ghost:"target" in morphFrom expansion; add expandArrangementMorphTo (source ghosts); expand both directions in expandThoughtSlides; generalize slideMorphParticipantIds and rest/layout visibility.'
+   status: completed
+ - id: core-resolve-tests
+   content: "Core: update resolveArrangement morphId rules for both ghost kinds; extend inline vitest for one-to-many source ghosts and many-to-one target ghosts."
+   status: completed
+ - id: renderer-classes-css
+   content: "Renderer: rename classes (target-ghost, morph-target) and add source-ghost + morph-one; replace deck-specific section[title=...] and dormant/settle CSS with generic ghost-class + auto-animate-state CSS in globals.css."
+   status: completed
+ - id: renderer-logic
+   content: "Renderer: update matcher, ghost-anchor detection, presentationMorphGhostAutoAnimateCss, buildInteractiveSlideLayout revealMorphId, declaredDispositionRect, and MorphView/Figure props from morphSource to ghost; pair both morph directions, exclude the one."
+   status: completed
+ - id: deck
+   content: "Deck: add spec.ts morphTo helper; convert Bauteilkatalog to declarative morphTo (drop manual opacity-0 tiles); adjust Bauteilarten settle; verify Bauteilbeschriftungen many-to-one."
+   status: completed
+ - id: renderer-tests
+   content: "Renderer: update inline vitest + deck assertions to use new ghost classes and the generic one-to-many path instead of catalogue title selectors / dormant slots."
+   status: completed
+ - id: validate
+   content: Run core + renderer + deck tests via nx (existing launch.json tasks) and confirm slide 7->8 (one-to-many) and 8->9 (many-to-one) ghost behavior at runtime.
+   status: completed
 isProject: false
 ---
 
@@ -47,8 +47,6 @@ flowchart LR
     sg["source ghosts @ source pos (slide N), opacity 0 -> 1 at morph start"] -->|FLIP into| tt["many targets @ spread pos (slide N+1)"]
   end
 ```
-
-
 
 - Unify the ghost concept. Replace `Disposition.morphSource?: boolean` / `ResolvedDisposition.morphSource` with `ghost?: GhostKind` where `GhostKind = "source" | "target"`.
   - `"target"` ghost = many-to-one (was `morphSource:true`).
@@ -94,4 +92,3 @@ flowchart LR
 ## Process (execution-time, not done in plan mode)
 
 - Read `repo://goals`, then open/reopen a repo MCP ticket (associate with the presentation/framework goal); keep all scratch files inside the ticket folder; close with summary + file list when done. Do not edit any `AGENTS.md`.
-

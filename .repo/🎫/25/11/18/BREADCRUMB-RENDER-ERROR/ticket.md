@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Diagnosis: Breadcrumb Render Error
 
 ## 1. Analysis [BREADCRUMB-RENDER]

@@ -56,16 +56,10 @@ export async function createStorybookKitGraphqlHandle(seedKit: unknown): Promise
   const handle = created instanceof Promise ? await created : created;
   const json = JSON.stringify(JSON.parse(JSON.stringify(seedKit)) as object);
   const stores = await sbGqlMut(handle, `query { session { stores { edges { node { id } } } } }`);
-  const edges = ((stores["session"] as Record<string, unknown> | undefined)?.["stores"] as Record<string, unknown> | undefined)?.[
-    "edges"
-  ] as readonly Record<string, unknown>[] | undefined;
+  const edges = ((stores["session"] as Record<string, unknown> | undefined)?.["stores"] as Record<string, unknown> | undefined)?.["edges"] as readonly Record<string, unknown>[] | undefined;
   const storeId = String((edges?.[0]?.["node"] as Record<string, unknown> | undefined)?.["id"] ?? "");
   if (storeId === "") throw new Error("createStorybookKitGraphqlHandle: no session store");
-  const installed = await sbGqlMut(
-    handle,
-    `mutation($storeId: ID!, $json: String!) { session { store(id: $storeId) { installProjection(json: $json) { ok errors { message } } } } } }`,
-    { storeId, json },
-  );
+  const installed = await sbGqlMut(handle, `mutation($storeId: ID!, $json: String!) { session { store(id: $storeId) { installProjection(json: $json) { ok errors { message } } } } } }`, { storeId, json });
   const ip = (installed["session"] as Record<string, unknown> | undefined)?.["store"] as Record<string, unknown> | undefined;
   const payload = ip?.["installProjection"] as Record<string, unknown> | undefined;
   if (payload?.["ok"] !== true) {
@@ -76,37 +70,25 @@ export async function createStorybookKitGraphqlHandle(seedKit: unknown): Promise
 }
 
 /** @emoji 🌐 Runs one GraphQL document over a handle; resolves with the **complete JSON** response. */
-export async function storybookKitGraphqlRun(
-  handle: Pick<KitStoreHandle, "execute">,
-  body: { query: string; variables?: Record<string, unknown>; operationName?: string },
-): Promise<unknown> {
+export async function storybookKitGraphqlRun(handle: Pick<KitStoreHandle, "execute">, body: { query: string; variables?: Record<string, unknown>; operationName?: string }): Promise<unknown> {
   const json = await handle.execute(JSON.stringify(body));
   return JSON.parse(json) as unknown;
 }
 
-export type StorybookKitStoreExecuteResult =
-  | { ok: true; result: unknown }
-  | { ok: false; error: { kind: string; message: string } };
+export type StorybookKitStoreExecuteResult = { ok: true; result: unknown } | { ok: false; error: { kind: string; message: string } };
 
 function str(v: unknown): string | undefined {
   return typeof v === "string" && v.length > 0 ? v : undefined;
 }
 
-function altIn(
-  payload: { alternativeId?: string | null },
-  draftBlock: { alternativeId?: string | null } | null,
-  newDraft: { alternativeId?: string | null } | null,
-): string {
+function altIn(payload: { alternativeId?: string | null }, draftBlock: { alternativeId?: string | null } | null, newDraft: { alternativeId?: string | null } | null): string {
   const a = str(payload.alternativeId) ?? str(draftBlock?.alternativeId) ?? str(newDraft?.alternativeId);
   if (!a) throw new Error("Storybook VCS: set Alternative id (drafts/transactions are alternative-scoped in GraphQL)");
   return a;
 }
 
 /** @emoji 🧾 Maps legacy `executeSessionCommands` / nested draft-transaction shapes to `Mutation.session` (no `kitStore.batch`). */
-async function storybookExecuteSessionCommands(
-  handle: StorybookKitGraphqlHandle,
-  value: Record<string, unknown>,
-): Promise<Record<string, unknown>> {
+async function storybookExecuteSessionCommands(handle: StorybookKitGraphqlHandle, value: Record<string, unknown>): Promise<Record<string, unknown>> {
   const commands = value["commands"];
   if (!Array.isArray(commands) || commands.length === 0) throw new Error("executeSessionCommands.commands");
   const results: unknown[] = [];
@@ -121,11 +103,7 @@ async function storybookExecuteSessionCommands(
       if (!nd) throw new Error("newDraft");
       const aid = altIn(value as { alternativeId?: string | null }, null, nd);
       const pcp = nd["checkpointId"] == null ? null : String(nd["checkpointId"]);
-      const d = await sbGqlMut(
-        handle,
-        `mutation($aid: KitAlternativeIdIn!, $pcp: String) { session { alternative(id: $aid) { createDraft(parentCheckpointId: $pcp) { id } } } }`,
-        { aid: { id: aid }, pcp: pcp && pcp.length > 0 ? pcp : null },
-      );
+      const d = await sbGqlMut(handle, `mutation($aid: KitAlternativeIdIn!, $pcp: String) { session { alternative(id: $aid) { createDraft(parentCheckpointId: $pcp) { id } } } }`, { aid: { id: aid }, pcp: pcp && pcp.length > 0 ? pcp : null });
       const session = d["session"] as Record<string, unknown> | undefined;
       const alt = session?.["alternative"] as Record<string, unknown> | undefined;
       const draft = alt?.["createDraft"] as Record<string, unknown> | undefined;
@@ -148,11 +126,7 @@ async function storybookExecuteSessionCommands(
         if (dk.length !== 1) throw new Error("single tagged draft command");
         const dt = dk[0]!;
         if (dt === "startTransaction") {
-          const d = await sbGqlMut(
-            handle,
-            `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { startTransaction { id } } } } }`,
-            { aid: { id: aid } },
-          );
+          const d = await sbGqlMut(handle, `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { startTransaction { id } } } } }`, { aid: { id: aid } });
           const sessionT = d["session"] as Record<string, unknown> | undefined;
           const altT = sessionT?.["alternative"] as Record<string, unknown> | undefined;
           const draftT = altT?.["draft"] as Record<string, unknown> | undefined;
@@ -163,11 +137,7 @@ async function storybookExecuteSessionCommands(
         }
         if (dt === "finalizeToKitCheckpoint") {
           const msg = str((dco["finalizeToKitCheckpoint"] as Record<string, unknown> | null)?.["message"]) ?? "checkpoint";
-          const d = await sbGqlMut(
-            handle,
-            `mutation($aid: KitAlternativeIdIn!, $msg: String!) { session { alternative(id: $aid) { draft { finalize(message: $msg) { id } } } } }`,
-            { aid: { id: aid }, msg },
-          );
+          const d = await sbGqlMut(handle, `mutation($aid: KitAlternativeIdIn!, $msg: String!) { session { alternative(id: $aid) { draft { finalize(message: $msg) { id } } } } }`, { aid: { id: aid }, msg });
           const sessionF = d["session"] as Record<string, unknown> | undefined;
           const altF = sessionF?.["alternative"] as Record<string, unknown> | undefined;
           const draftF = altF?.["draft"] as Record<string, unknown> | undefined;
@@ -184,11 +154,7 @@ async function storybookExecuteSessionCommands(
         if (dt === "undo" || dt === "redo") {
           const cnt = (dco[dt] as Record<string, unknown> | null)?.["count"];
           const count = typeof cnt === "number" ? cnt : 1;
-          const d = await sbGqlMut(
-            handle,
-            `mutation($aid: KitAlternativeIdIn!, $c: Int) { session { alternative(id: $aid) { draft { ${dt}(count: $c) } } } }`,
-            { aid: { id: aid }, c: count },
-          );
+          const d = await sbGqlMut(handle, `mutation($aid: KitAlternativeIdIn!, $c: Int) { session { alternative(id: $aid) { draft { ${dt}(count: $c) } } } }`, { aid: { id: aid }, c: count });
           const sessionU = d["session"] as Record<string, unknown> | undefined;
           const altU = sessionU?.["alternative"] as Record<string, unknown> | undefined;
           const draftU = altU?.["draft"] as Record<string, unknown> | undefined;
@@ -209,11 +175,7 @@ async function storybookExecuteSessionCommands(
             if (txk.length !== 1) throw new Error("single tagged tx command");
             const txt = txk[0]!;
             if (txt === "finalize") {
-              const d = await sbGqlMut(
-                handle,
-                `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { transaction { finalize { id } } } } } }`,
-                { aid: { id: aid } },
-              );
+              const d = await sbGqlMut(handle, `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { transaction { finalize { id } } } } } }`, { aid: { id: aid } });
               const sessionX = d["session"] as Record<string, unknown> | undefined;
               const altX = sessionX?.["alternative"] as Record<string, unknown> | undefined;
               const draftX = altX?.["draft"] as Record<string, unknown> | undefined;
@@ -235,11 +197,7 @@ async function storybookExecuteSessionCommands(
             if (txt === "undo" || txt === "redo") {
               const cnt = (txo[txt] as Record<string, unknown> | null)?.["count"];
               const count = typeof cnt === "number" ? cnt : 1;
-              const d = await sbGqlMut(
-                handle,
-                `mutation($aid: KitAlternativeIdIn!, $c: Int) { session { alternative(id: $aid) { draft { transaction { ${txt}(count: $c) } } } } }`,
-                { aid: { id: aid }, c: count },
-              );
+              const d = await sbGqlMut(handle, `mutation($aid: KitAlternativeIdIn!, $c: Int) { session { alternative(id: $aid) { draft { transaction { ${txt}(count: $c) } } } } }`, { aid: { id: aid }, c: count });
               const sessionTx = d["session"] as Record<string, unknown> | undefined;
               const altTx = sessionTx?.["alternative"] as Record<string, unknown> | undefined;
               const draftTx = altTx?.["draft"] as Record<string, unknown> | undefined;
@@ -252,11 +210,7 @@ async function storybookExecuteSessionCommands(
             }
             if (txt === "undoAll" || txt === "redoAll") {
               const gqlOp = txt === "undoAll" ? "undo" : "redo";
-              const d = await sbGqlMut(
-                handle,
-                `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { transaction { ${gqlOp}(count: 99) } } } } }`,
-                { aid: { id: aid } },
-              );
+              const d = await sbGqlMut(handle, `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { transaction { ${gqlOp}(count: 99) } } } } }`, { aid: { id: aid } });
               const sessionA = d["session"] as Record<string, unknown> | undefined;
               const altA = sessionA?.["alternative"] as Record<string, unknown> | undefined;
               const draftA = altA?.["draft"] as Record<string, unknown> | undefined;
@@ -281,10 +235,7 @@ async function storybookExecuteSessionCommands(
 }
 
 /** @emoji 🧾 Executes one tagged `KitStoreExecuteCommand` variant (session / batch) over GraphQL (Storybook). */
-export async function storybookKitGraphqlExecuteStoreCommand(
-  handle: StorybookKitGraphqlHandle,
-  cmd: unknown,
-): Promise<StorybookKitStoreExecuteResult> {
+export async function storybookKitGraphqlExecuteStoreCommand(handle: StorybookKitGraphqlHandle, cmd: unknown): Promise<StorybookKitStoreExecuteResult> {
   try {
     if (cmd == null || typeof cmd !== "object" || Array.isArray(cmd)) throw new Error("command object expected");
     const o = cmd as Record<string, unknown>;
@@ -303,11 +254,7 @@ export async function storybookKitGraphqlExecuteStoreCommand(
       case "newAlternative": {
         const v = value as { fromCheckpoint?: string | null; name: string } | null;
         if (v == null || typeof v.name !== "string") throw new Error("newAlternative");
-        const d = await sbGqlMut(
-          handle,
-          `mutation($input: CreateKitAlternativeInput!) { session { createAlternative(input: $input) { id name } } }`,
-          { input: { name: v.name, fromCheckpointId: v.fromCheckpoint ?? null } },
-        );
+        const d = await sbGqlMut(handle, `mutation($input: CreateKitAlternativeInput!) { session { createAlternative(input: $input) { id name } } }`, { input: { name: v.name, fromCheckpointId: v.fromCheckpoint ?? null } });
         const id = str(((d["session"] as Record<string, unknown> | undefined)?.["createAlternative"] as Record<string, unknown> | undefined)?.["id"]);
         data = { newAlternative: { id: id ?? "" } };
         break;
@@ -651,8 +598,6 @@ export const KIT_STORE_COVERAGE_ROWS: readonly { group: string; key: string }[] 
 //#region 🔖useKitStore
 import * as React from "react";
 
-
-
 // #region 🎨 RJV Theme
 // Tracks the `dark` class on <html> and maps it to a base-16 theme name
 // consumed by `@microlink/react-json-view` so JSON viewers track Storybook theme toggles.
@@ -706,12 +651,8 @@ export function useKitStore(seedKit: unknown) {
   const [msg, setMsg] = React.useState("checkpoint (story)");
 
   const [cmdMode, setCmdMode] = React.useState<"changeKit" | "readKit" | "execute">("changeKit");
-  const [changeJson, setChangeJson] = React.useState(
-    `{\n  "name": { "name": "Kit (story edit)" }\n}`,
-  );
-  const [readJson, setReadJson] = React.useState(
-    `{\n  "query": "query { session { wip { theKit { name } } } }"\n}`,
-  );
+  const [changeJson, setChangeJson] = React.useState(`{\n  "name": { "name": "Kit (story edit)" }\n}`);
+  const [readJson, setReadJson] = React.useState(`{\n  "query": "query { session { wip { theKit { name } } } }"\n}`);
   const [executeJson, setExecuteJson] = React.useState(`{ "newSession": null }`);
 
   const pushEvent = React.useCallback((payload: unknown) => {
@@ -767,11 +708,7 @@ export function useKitStore(seedKit: unknown) {
   const onCommandRun = React.useCallback(
     (o: { mode: "changeKit" | "readKit" | "execute"; forward: unknown; result?: unknown; error?: string; log: string }) => {
       pushEvent({ command: o.mode, log: o.log, forward: o.forward, result: o.result, error: o.error });
-      setLast(
-        o.error
-          ? { forward: o.forward, result: o.result, error: o.error, mode: o.mode }
-          : { forward: o.forward, result: o.result, mode: o.mode },
-      );
+      setLast(o.error ? { forward: o.forward, result: o.result, error: o.error, mode: o.mode } : { forward: o.forward, result: o.result, mode: o.mode });
     },
     [pushEvent],
   );
@@ -816,11 +753,7 @@ export function useKitStore(seedKit: unknown) {
 //#region 🔖HistoryControls
 import * as React from "react";
 
-import {
-  storybookKitGraphqlExecuteStoreCommand,
-  storybookKitGraphqlRun,
-  type StorybookKitGraphqlHandle,
-} from "./composeWasm";
+import { storybookKitGraphqlExecuteStoreCommand, storybookKitGraphqlRun, type StorybookKitGraphqlHandle } from "./composeWasm";
 
 type IdCallback = (s: string) => void;
 
@@ -843,8 +776,7 @@ export function applyKitStoreCommandResultIds(r: unknown, on: VcsIdCallbacks): v
   if (r == null || typeof r !== "object") return;
   const o = r as Record<string, unknown>;
 
-  const idOf = (x: unknown): string | undefined =>
-    x && typeof x === "object" && "id" in x && typeof (x as { id: unknown }).id === "string" ? (x as { id: string }).id : undefined;
+  const idOf = (x: unknown): string | undefined => (x && typeof x === "object" && "id" in x && typeof (x as { id: unknown }).id === "string" ? (x as { id: string }).id : undefined);
 
   const s = idOf(o.newSession);
   if (s) on.onSessionId?.(s);
@@ -940,10 +872,7 @@ export const HistoryControls: React.FC<{
     }
     void (async () => {
       try {
-        const payload: object =
-          "executeSessionCommands" in o && altId.trim()
-            ? { executeSessionCommands: { ...(o as { executeSessionCommands: Record<string, unknown> }).executeSessionCommands, alternativeId: altId.trim() } }
-            : o;
+        const payload: object = "executeSessionCommands" in o && altId.trim() ? { executeSessionCommands: { ...(o as { executeSessionCommands: Record<string, unknown> }).executeSessionCommands, alternativeId: altId.trim() } } : o;
         const r = await storybookKitGraphqlExecuteStoreCommand(gqlHandle(), payload);
         onLog(`execute ${label} → ${JSON.stringify(r).slice(0, 12_000)}`);
         applyKitStoreCommandResultIds(r.ok === true ? r.result : null, {
@@ -984,16 +913,13 @@ export const HistoryControls: React.FC<{
           {initErr}
         </div>
       ) : null}
-      {!initErr && !canVcs ? (
-        <div className="text-muted-foreground rounded border border-amber-600/50 bg-amber-50 p-1.5 text-[10px] dark:bg-amber-950/40">Loading WASM / KitStore… buttons stay disabled until ready.</div>
-      ) : null}
+      {!initErr && !canVcs ? <div className="text-muted-foreground rounded border border-amber-600/50 bg-amber-50 p-1.5 text-[10px] dark:bg-amber-950/40">Loading WASM / KitStore… buttons stay disabled until ready.</div> : null}
       <div className="text-muted-foreground font-medium">VCS (KitStoreCommand)</div>
       <p className="text-muted-foreground m-0 leading-snug">
         Pick a checkpoint and optional alt in <span className="text-foreground font-medium">Kit tree</span> (or paste ids). <span className="text-foreground">New draft</span> uses
-        <code className="bg-muted-foreground/10 rounded px-0.5">checkpoint</code> + <code className="bg-muted-foreground/10 rounded px-0.5">alt</code>; on the main line, cp defaults to
-        theKit HEAD. Read-only at any cp: <span className="text-foreground">Preview @ cp</span> → open <span className="text-foreground">Snapshot / theKit</span> →
-        <code className="bg-muted-foreground/10 rounded px-0.5">readAt</code>. To commit: use <span className="text-foreground">Close tx</span> first (no open tx), then{" "}
-        <span className="text-foreground">Finalize → cp</span>.
+        <code className="bg-muted-foreground/10 rounded px-0.5">checkpoint</code> + <code className="bg-muted-foreground/10 rounded px-0.5">alt</code>; on the main line, cp defaults to theKit HEAD. Read-only at any cp:{" "}
+        <span className="text-foreground">Preview @ cp</span> → open <span className="text-foreground">Snapshot / theKit</span> →<code className="bg-muted-foreground/10 rounded px-0.5">readAt</code>. To commit: use{" "}
+        <span className="text-foreground">Close tx</span> first (no open tx), then <span className="text-foreground">Finalize → cp</span>.
       </p>
       <div className="grid grid-cols-2 gap-1">
         <B disabled={!canVcs} onClick={() => ex("newSession", { newSession: null })}>
@@ -1015,10 +941,7 @@ export const HistoryControls: React.FC<{
         >
           Read kit full
         </B>
-        <B
-          onClick={() => ex("newAltFromCp", { newAlternative: { fromCheckpoint: cpId.trim(), name: "alt (from cp)" } })}
-          disabled={!canVcs || !cpId.trim()}
-        >
+        <B onClick={() => ex("newAltFromCp", { newAlternative: { fromCheckpoint: cpId.trim(), name: "alt (from cp)" } })} disabled={!canVcs || !cpId.trim()}>
           New alt (from cp)
         </B>
         <B onClick={() => ex("newAltRoot", { newAlternative: { name: "alt (initial, no cp)" } })} disabled={!canVcs}>
@@ -1059,9 +982,7 @@ export const HistoryControls: React.FC<{
               return;
             }
             onInspectCheckpoint(cpId.trim());
-            onLog(
-              `Snapshot window: "readAt" → ${cpId.trim() ? `checkpoint ${cpId.trim()}` : "empty = initial"}. Open that tab and click refresh.`,
-            );
+            onLog(`Snapshot window: "readAt" → ${cpId.trim() ? `checkpoint ${cpId.trim()}` : "empty = initial"}. Open that tab and click refresh.`);
           }}
           disabled={!canVcs}
         >
@@ -1086,9 +1007,7 @@ export const HistoryControls: React.FC<{
                   {
                     executeKitDraftCommands: {
                       id: draftId,
-                      commands: [
-                        { executeTransactionCommands: { id: txId, commands: [{ finalize: null }] } },
-                      ],
+                      commands: [{ executeTransactionCommands: { id: txId, commands: [{ finalize: null }] } }],
                     },
                   },
                 ],
@@ -1108,9 +1027,7 @@ export const HistoryControls: React.FC<{
                   {
                     executeKitDraftCommands: {
                       id: draftId,
-                      commands: [
-                        { executeTransactionCommands: { id: txId, commands: [{ abort: null }] } },
-                      ],
+                      commands: [{ executeTransactionCommands: { id: txId, commands: [{ abort: null }] } }],
                     },
                   },
                 ],
@@ -1225,10 +1142,7 @@ export const HistoryControls: React.FC<{
         >
           Finalize → cp
         </B>
-        <B
-          onClick={() => ex("abortDraft", { executeSessionCommands: { id: sessionId, commands: [{ executeKitDraftCommands: { id: draftId, commands: [{ abort: null }] } }] } })}
-          disabled={!canVcs || !sessionId.trim() || !draftId.trim()}
-        >
+        <B onClick={() => ex("abortDraft", { executeSessionCommands: { id: sessionId, commands: [{ executeKitDraftCommands: { id: draftId, commands: [{ abort: null }] } }] } })} disabled={!canVcs || !sessionId.trim() || !draftId.trim()}>
           Discard draft
         </B>
         <B onClick={() => ex("markRel", { executeKitCheckpointCommands: { id: cpId, commands: [{ markAsRelease: null }] } })} disabled={!canVcs || !cpId.trim()}>
@@ -1244,20 +1158,10 @@ export const HistoryControls: React.FC<{
         >
           Unify alt checkpoints
         </B>
-        <B
-          onClick={() =>
-            ex("draftUndo", { executeSessionCommands: { id: sessionId, commands: [{ executeKitDraftCommands: { id: draftId, commands: [{ undo: { count: 1 } }] } }] } })
-          }
-          disabled={!canVcs || !sessionId.trim() || !draftId.trim()}
-        >
+        <B onClick={() => ex("draftUndo", { executeSessionCommands: { id: sessionId, commands: [{ executeKitDraftCommands: { id: draftId, commands: [{ undo: { count: 1 } }] } }] } })} disabled={!canVcs || !sessionId.trim() || !draftId.trim()}>
           Draft undo
         </B>
-        <B
-          onClick={() =>
-            ex("draftRedo", { executeSessionCommands: { id: sessionId, commands: [{ executeKitDraftCommands: { id: draftId, commands: [{ redo: { count: 1 } }] } }] } })
-          }
-          disabled={!canVcs || !sessionId.trim() || !draftId.trim()}
-        >
+        <B onClick={() => ex("draftRedo", { executeSessionCommands: { id: sessionId, commands: [{ executeKitDraftCommands: { id: draftId, commands: [{ redo: { count: 1 } }] } }] } })} disabled={!canVcs || !sessionId.trim() || !draftId.trim()}>
           Draft redo
         </B>
       </div>
@@ -1283,12 +1187,7 @@ export const HistoryControls: React.FC<{
       </label>
       <label className="text-muted-foreground flex flex-col gap-0.5">
         <span>Message stored on the new checkpoint (Finalize → cp)</span>
-        <input
-          className="bg-background w-full"
-          value={msg}
-          placeholder="e.g. release-42 — required string on the command"
-          onChange={(e) => onMsg(e.target.value)}
-        />
+        <input className="bg-background w-full" value={msg} placeholder="e.g. release-42 — required string on the command" onChange={(e) => onMsg(e.target.value)} />
       </label>
     </div>
   );
@@ -1424,7 +1323,7 @@ function buildKitTreeRows(state: VcsStateDto): readonly KitTreeCheckpointRowMode
   return sorted.map((cp) => {
     const altIds = altMembership.get(cp.id) ?? [];
     const onTheKit = mainLine.has(cp.id);
-    const laneIndex = onTheKit ? 0 : altIds.length > 0 ? altLane.get(altIds[0]) ?? -1 : -1;
+    const laneIndex = onTheKit ? 0 : altIds.length > 0 ? (altLane.get(altIds[0]) ?? -1) : -1;
     return {
       checkpoint: cp,
       laneIndex,
@@ -1448,15 +1347,7 @@ export interface KitTreeGraphProps {
   readonly refreshToken?: number;
 }
 
-export const KitTreeGraph: React.FC<KitTreeGraphProps> = ({
-  handle,
-  selection,
-  selectedCheckpointId,
-  selectedAlternativeId,
-  selectedSessionId,
-  selectedDraftId,
-  refreshToken,
-}) => {
+export const KitTreeGraph: React.FC<KitTreeGraphProps> = ({ handle, selection, selectedCheckpointId, selectedAlternativeId, selectedSessionId, selectedDraftId, refreshToken }) => {
   const [state, setState] = React.useState<VcsStateDto | null>(null);
   const [errorText, setErrorText] = React.useState<string | null>(null);
   const [hoveredAltId, setHoveredAltId] = React.useState<string | null>(null);
@@ -1516,14 +1407,7 @@ export const KitTreeGraph: React.FC<KitTreeGraphProps> = ({
       </div>
       {errorText ? <div className="text-destructive border-b border-destructive/50 bg-destructive/5 p-1.5 text-[10px] wrap-break-word">vcsState failed: {errorText}</div> : null}
       <div className="flex min-h-0 flex-1">
-        <KitTreeAlternatives
-          alternatives={alternatives}
-          onHover={setHoveredAltId}
-          onSelect={selection.onAlternativeSelect}
-          selectedId={selectedAlternativeId}
-          theKitHead={state?.theKitHead ?? null}
-          theKitLineLength={state?.theKitLine.length ?? 0}
-        />
+        <KitTreeAlternatives alternatives={alternatives} onHover={setHoveredAltId} onSelect={selection.onAlternativeSelect} selectedId={selectedAlternativeId} theKitHead={state?.theKitHead ?? null} theKitLineLength={state?.theKitLine.length ?? 0} />
         <KitTreeCheckpoints
           rows={rows}
           theKitHead={state?.theKitHead ?? null}
@@ -1538,13 +1422,7 @@ export const KitTreeGraph: React.FC<KitTreeGraphProps> = ({
           onSessionSelect={selection.onSessionSelect}
         />
       </div>
-      <KitTreeOrphanDrafts
-        sessions={state?.sessions ?? []}
-        onSessionSelect={selection.onSessionSelect}
-        onDraftSelect={selection.onDraftSelect}
-        selectedSessionId={selectedSessionId}
-        selectedDraftId={selectedDraftId}
-      />
+      <KitTreeOrphanDrafts sessions={state?.sessions ?? []} onSessionSelect={selection.onSessionSelect} onDraftSelect={selection.onDraftSelect} selectedSessionId={selectedSessionId} selectedDraftId={selectedDraftId} />
     </div>
   );
 };
@@ -1591,8 +1469,7 @@ const KitTreeAlternatives: React.FC<{
             <div className="min-w-0 flex-1">
               <div className="truncate font-medium">{alt.name || "(unnamed)"}</div>
               <div className="text-muted-foreground truncate">
-                {alt.checkpoints.length} cp · root{" "}
-                {alt.root && alt.root.length > 0 ? kitTreeShortId(alt.root, 6) : "initial"}
+                {alt.checkpoints.length} cp · root {alt.root && alt.root.length > 0 ? kitTreeShortId(alt.root, 6) : "initial"}
               </div>
             </div>
           </button>
@@ -1788,11 +1665,7 @@ const KitTreeOrphanDrafts: React.FC<{
 //#region 🔖CommandForm
 import * as React from "react";
 
-import {
-  storybookKitGraphqlExecuteStoreCommand,
-  storybookKitGraphqlRun,
-  type StorybookKitGraphqlHandle,
-} from "./composeWasm";
+import { storybookKitGraphqlExecuteStoreCommand, storybookKitGraphqlRun, type StorybookKitGraphqlHandle } from "./composeWasm";
 
 type Mode = "changeKit" | "readKit" | "execute";
 
@@ -1815,14 +1688,7 @@ export const CommandForm: React.FC<{
     <div className="text-foreground flex h-full min-h-0 flex-col gap-1 p-2 text-xs">
       <div className="flex flex-wrap items-center gap-1">
         {(["changeKit", "readKit", "execute"] as const).map((m) => (
-          <button
-            key={m}
-            type="button"
-            className={
-              "rounded border px-1.5 py-0.5 text-[10px] " + (mode === m ? "border-violet-600 bg-violet-100 dark:bg-violet-950" : "border-zinc-300 dark:border-zinc-600")
-            }
-            onClick={() => onMode(m)}
-          >
+          <button key={m} type="button" className={"rounded border px-1.5 py-0.5 text-[10px] " + (mode === m ? "border-violet-600 bg-violet-100 dark:bg-violet-950" : "border-zinc-300 dark:border-zinc-600")} onClick={() => onMode(m)}>
             {m}
           </button>
         ))}
@@ -1872,12 +1738,7 @@ export const CommandForm: React.FC<{
         </div>
       ) : null}
 
-      <textarea
-        className="bg-background min-h-[8rem] flex-1 resize-y rounded border border-zinc-300 p-1 font-mono text-[10px] leading-tight dark:border-zinc-600"
-        spellCheck={false}
-        value={area}
-        onChange={(e) => setArea(e.target.value)}
-      />
+      <textarea className="bg-background min-h-[8rem] flex-1 resize-y rounded border border-zinc-300 p-1 font-mono text-[10px] leading-tight dark:border-zinc-600" spellCheck={false} value={area} onChange={(e) => setArea(e.target.value)} />
       <button
         type="button"
         className="rounded border border-violet-600 bg-violet-100 px-2 py-1 text-[11px] font-medium dark:bg-violet-950"
@@ -1924,7 +1785,6 @@ export const CommandForm: React.FC<{
 //#region 🔖EntityPicker
 import * as React from "react";
 
-
 export const EntityPicker: React.FC<{
   handle: KitStoreHandle | null;
   onApplyPlaceholders: (s: string) => string;
@@ -1964,11 +1824,7 @@ export const EntityPicker: React.FC<{
         <L sel={foi} set={setFoi} label="Folder" options={fo.map((x) => ({ id: x.id, n: x.id }))} onPick={onJsonChange} json={jsonForPlaceholders} ph="PLACEHOLDER_FOLDER_ID" />
         <L sel={ai} set={setAi} label="Author" options={a.map((x) => ({ id: x.id, n: x.id }))} onPick={onJsonChange} json={jsonForPlaceholders} ph="PLACEHOLDER_AUTHOR_ID" />
       </div>
-      <button
-        type="button"
-        className="mt-1 w-full rounded border border-cyan-600 px-1 py-0.5 text-[10px] text-cyan-800 dark:text-cyan-200"
-        onClick={() => onJsonChange(onApplyPlaceholders(jsonForPlaceholders))}
-      >
+      <button type="button" className="mt-1 w-full rounded border border-cyan-600 px-1 py-0.5 text-[10px] text-cyan-800 dark:text-cyan-200" onClick={() => onJsonChange(onApplyPlaceholders(jsonForPlaceholders))}>
         Replace all PLACEHOLDER_* in command JSON
       </button>
     </div>
@@ -2010,10 +1866,7 @@ const L: React.FC<{
 );
 
 /** Replace all known PLACEHOLDER_* in one pass. */
-export function applyEntityPlaceholders(
-  s: string,
-  ctx: { typeId: string; designId: string; fileId: string; folderId: string; authorId: string; pieceId: string; connectionId: string },
-): string {
+export function applyEntityPlaceholders(s: string, ctx: { typeId: string; designId: string; fileId: string; folderId: string; authorId: string; pieceId: string; connectionId: string }): string {
   return s
     .split("PLACEHOLDER_TYPE_ID")
     .join(ctx.typeId)
@@ -2035,7 +1888,6 @@ export function applyEntityPlaceholders(
 //#region 🔖EventsFeed
 import ReactJson from "@microlink/react-json-view";
 import * as React from "react";
-
 
 export interface LoggedEvent {
   readonly id: string;
@@ -2060,12 +1912,7 @@ export const EventsFeed: React.FC<{
       <div className="text-muted-foreground flex shrink-0 items-center justify-between gap-2">
         <span className="font-medium">Events ({rows.length})</span>
         <div className="flex items-center gap-1">
-          <input
-            className="bg-background w-32 rounded border border-zinc-300 px-1 py-0.5 text-[10px] dark:border-zinc-600"
-            placeholder="filter…"
-            value={filter}
-            onChange={(e) => onFilterChange(e.target.value)}
-          />
+          <input className="bg-background w-32 rounded border border-zinc-300 px-1 py-0.5 text-[10px] dark:border-zinc-600" placeholder="filter…" value={filter} onChange={(e) => onFilterChange(e.target.value)} />
           <button type="button" className="rounded border border-zinc-300 px-1.5 py-0.5 dark:border-zinc-600" onClick={onClear}>
             clear
           </button>
@@ -2073,11 +1920,7 @@ export const EventsFeed: React.FC<{
       </div>
       <ul className="min-h-0 flex-1 list-none space-y-1 overflow-auto p-0 font-mono text-[10px]">
         {rows.map((e) => (
-          <li
-            key={e.id}
-            className="border-b border-zinc-100 py-0.5 dark:border-zinc-900"
-            style={{ color: isErr(e.payload) ? "var(--destructive, #b91c1c)" : undefined }}
-          >
+          <li key={e.id} className="border-b border-zinc-100 py-0.5 dark:border-zinc-900" style={{ color: isErr(e.payload) ? "var(--destructive, #b91c1c)" : undefined }}>
             <div className="text-muted-foreground">
               {fmtTime(e.t)} {eventKind(e.payload)}
             </div>
@@ -2132,7 +1975,6 @@ function eventKind(p: unknown): string {
 //#region 🔖SnapshotViewer
 import ReactJson from "@microlink/react-json-view";
 import * as React from "react";
-
 
 type Tab = "live" | "theKit" | "mat" | "vcs";
 
@@ -2199,44 +2041,27 @@ export const SnapshotViewer: React.FC<{
             ["vcs", "vcsState()"],
           ] as const
         ).map(([k, lab]) => (
-          <button
-            key={k}
-            type="button"
-            className={
-              "rounded border px-1.5 py-0.5 text-[10px] " + (tab === k ? "border-cyan-600 bg-cyan-100 dark:bg-cyan-950" : "border-zinc-300 dark:border-zinc-600")
-            }
-            onClick={() => setTab(k)}
-          >
+          <button key={k} type="button" className={"rounded border px-1.5 py-0.5 text-[10px] " + (tab === k ? "border-cyan-600 bg-cyan-100 dark:bg-cyan-950" : "border-zinc-300 dark:border-zinc-600")} onClick={() => setTab(k)}>
             {lab}
           </button>
         ))}
-        <button
-          type="button"
-          className="ml-auto border border-zinc-300 px-1.5 py-0.5 text-[10px] dark:border-zinc-600"
-          onClick={load}
-        >
+        <button type="button" className="ml-auto border border-zinc-300 px-1.5 py-0.5 text-[10px] dark:border-zinc-600" onClick={load}>
           refresh
         </button>
       </div>
       {tab === "mat" ? (
         <div className="space-y-1">
           <p className="text-muted-foreground m-0 text-[10px] leading-snug">
-            Read-only: <code className="bg-muted-foreground/10 rounded px-0.5">KitFullDto</code> at the checkpoint (or initial when empty). Does not change the live store.
-            Use <span className="text-foreground font-medium">VCS → Preview @ cp</span> to jump here from a selected checkpoint.
+            Read-only: <code className="bg-muted-foreground/10 rounded px-0.5">KitFullDto</code> at the checkpoint (or initial when empty). Does not change the live store. Use <span className="text-foreground font-medium">VCS → Preview @ cp</span> to
+            jump here from a selected checkpoint.
           </p>
           <label className="text-muted-foreground flex items-center gap-1 text-[10px]">
             at (checkpoint id, empty = initial only)
-            <input
-              className="bg-background flex-1 rounded border border-zinc-300 px-1 py-0.5 font-mono dark:border-zinc-600"
-              value={matAt}
-              onChange={(e) => onMatAt(e.target.value)}
-            />
+            <input className="bg-background flex-1 rounded border border-zinc-300 px-1 py-0.5 font-mono dark:border-zinc-600" value={matAt} onChange={(e) => onMatAt(e.target.value)} />
           </label>
         </div>
       ) : null}
-      {errorText ? (
-        <pre className="text-destructive m-0 max-h-24 overflow-auto font-mono text-[10px] wrap-break-word whitespace-pre-wrap">{errorText}</pre>
-      ) : null}
+      {errorText ? <pre className="text-destructive m-0 max-h-24 overflow-auto font-mono text-[10px] wrap-break-word whitespace-pre-wrap">{errorText}</pre> : null}
       <div className="m-0 min-h-0 flex-1 overflow-auto rounded border border-zinc-200 bg-zinc-50 p-1 dark:border-zinc-800 dark:bg-zinc-950">
         <ReactJson
           src={srcObject}
@@ -2309,7 +2134,6 @@ if (snapshotViewerVitest) {
 import ReactJson from "@microlink/react-json-view";
 import * as React from "react";
 
-
 export const DiffViewer: React.FC<{
   last: { forward: unknown; result: unknown; error?: string } | null;
 }> = ({ last }) => {
@@ -2321,9 +2145,7 @@ export const DiffViewer: React.FC<{
         <div className="text-muted-foreground">(no commands run yet)</div>
       ) : (
         <div className="min-h-0 flex-1 space-y-2 overflow-auto font-mono text-[10px]">
-          {last.error ? (
-            <pre className="text-destructive m-0 wrap-break-word whitespace-pre-wrap">{last.error}</pre>
-          ) : null}
+          {last.error ? <pre className="text-destructive m-0 wrap-break-word whitespace-pre-wrap">{last.error}</pre> : null}
           <div>
             <div className="text-muted-foreground">forward</div>
             <div className="bg-muted/30 m-0 max-h-40 overflow-auto rounded p-1">

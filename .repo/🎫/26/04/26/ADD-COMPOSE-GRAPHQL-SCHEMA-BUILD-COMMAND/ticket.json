@@ -5,7 +5,5 @@
   "description": "compose/graphql: Add a build command that takes the schema from compose/rs and overwrites the schema.graphql file.",
   "summary": "Added a compose/graphql build target that regenerates schema.graphql from the compose/rs async-graphql schema. Exposed a Rust schema_sdl helper plus an ignored exporter test for the build command, added a sync test that verifies the checked-in schema matches compose/rs, regenerated schema.graphql, and aligned the existing engine schema validation with the Rust-generated GraphQL surface. Verified npx nx build compose/graphql, npm --workspace @semio-tech/compose-engine test, and cargo test --manifest-path compose/rs/Cargo.toml.",
   "goal": "🎯r2603",
-  "sessions": [
-    "⚪88b123f16af14a02ac458b8f3c375146"
-  ]
+  "sessions": ["⚪88b123f16af14a02ac458b8f3c375146"]
 }

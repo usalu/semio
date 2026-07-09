@@ -3,27 +3,27 @@
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
 
 class WasmScript extends BundleScript {
-	run(): void {
-		runWasmPackWebBuild({
-			rsDir: this.root,
-			skipEnvVar: "WRITER_RS_SKIP_WASM_BUILD",
-			logPrefix: "writer/rs",
-			wasmBaseName: "writer",
-			pkg: {
-				name: "@semio-tech/writer-rs",
-				files: ["writer_bg.wasm", "writer.js", "writer.d.ts", "writer_bg.wasm.d.ts"],
-				main: "writer.js",
-				module: "writer.js",
-				types: "writer.d.ts",
-			},
-		});
-	}
+  run(): void {
+    runWasmPackWebBuild({
+      rsDir: this.root,
+      skipEnvVar: "WRITER_RS_SKIP_WASM_BUILD",
+      logPrefix: "writer/rs",
+      wasmBaseName: "writer",
+      pkg: {
+        name: "@semio-tech/writer-rs",
+        files: ["writer_bg.wasm", "writer.js", "writer.d.ts", "writer_bg.wasm.d.ts"],
+        main: "writer.js",
+        module: "writer.js",
+        types: "writer.d.ts",
+      },
+    });
+  }
 }
 
 class TestScript extends BundleScript {
-	run(segments: string[]): void {
-		runCargo(["test", "-p", "writer", ...segments], this.repoRoot);
-	}
+  run(segments: string[]): void {
+    runCargo(["test", "-p", "writer", ...segments], this.repoRoot);
+  }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("test", TestScript);

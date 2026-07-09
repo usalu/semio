@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 ## Problem
 
 The design app Windows test was failing because the scene window was positioned at x=19 instead of between x=400-800 (expected for a 50/50 split).
@@ -39,6 +40,7 @@ Also changed window titles from "Diagram"/"Scene" to "diagram"/"scene" to match 
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix design app window layout to be 50% diagram | 50% scene

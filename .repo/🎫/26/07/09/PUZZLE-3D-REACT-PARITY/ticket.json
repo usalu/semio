@@ -1,9 +1,9 @@
 {
   "title": "Puzzle 3D React Parity",
   "emoji": "🧩",
-  "status": "open",
+  "status": "closed",
   "description": "Restore premigration parity for puzzle 3D in the React renderer: GLB coordinate frame, hover/select/gumball/marquee protocol, scene layers (vortices/attractions/target volumes/references/brush preview), and Select/Brush/Fill window engagements.",
-  "summary": "Fixed puzzle 3d brush/fill round trip: parse brush_candidates `.free`, brush target vortex fallback, stronger precompute + registerBrushMesh wiring, parse_envelope runtime preservation, fill slider `{value}` parity, example picker strict appId dedupe, camera zoom/autofit. Wasm verify: fill 0→4 works; react tests 24/24 pass.",
+  "summary": "Fixed puzzle 3D fill/brush failures caused by concurrent wasm plugin calls (RefCell panic) and puzzle_3d using wasm-bindgen/js-sys under wasm32-wasip2. Added JS serialization + instance guard in framework, sequential refreshUi, wasip2-safe precompute cfgs in puzzle/3d/rs, and rebuilt puzzle plugin wasm. Browser headless: Concrete Forest loads without panics; fill engagement shows slider.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1873"
   },
@@ -13,10 +13,5 @@
     "id": "c0683e18",
     "local": "puzzle_3d_react_parity_c0683e18.plan.md"
   },
-  "sessions": [
-    "⚪a96627df0fb248c3be63325d64f489fb",
-    "⚪996981b38f874a57a7bf71f5c9fc1741",
-    "⚪0faf10db782a4e19804f9b72bf1c9194",
-    "⚪c9c86e83cb984232b75b486c58216a3e"
-  ]
+  "sessions": ["⚪a96627df0fb248c3be63325d64f489fb", "⚪996981b38f874a57a7bf71f5c9fc1741", "⚪0faf10db782a4e19804f9b72bf1c9194", "⚪c9c86e83cb984232b75b486c58216a3e"]
 }

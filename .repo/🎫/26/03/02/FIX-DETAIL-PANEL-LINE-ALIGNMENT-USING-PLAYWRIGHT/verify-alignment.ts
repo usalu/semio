@@ -22,9 +22,7 @@ async function main() {
       const style = getComputedStyle(row);
       const paddingLeft = parseFloat(style.paddingLeft);
       const button = row.querySelector("button");
-      const svg = button
-        ? button.querySelector("svg")
-        : row.querySelector("svg");
+      const svg = button ? button.querySelector("svg") : row.querySelector("svg");
       let svgInfo: any = null;
       if (svg) {
         const svgRect = svg.getBoundingClientRect();
@@ -84,7 +82,7 @@ async function main() {
     const chevronCenter = row.svg?.relCenterX?.toFixed(1);
     const linePositions = row.lines.map((l: any) => l.left.toFixed(1)).join(", ");
     console.log(
-      `  Row ${row.idx} [${row.slot}] "${row.label}" | paddingLeft=${row.paddingLeft}px | hasButton=${row.hasButton} | svgClass="${row.svg?.class}" | svgWidth=${row.svg?.width?.toFixed(1)}px | chevronCenter=${chevronCenter}px | lines=[${linePositions}]`
+      `  Row ${row.idx} [${row.slot}] "${row.label}" | paddingLeft=${row.paddingLeft}px | hasButton=${row.hasButton} | svgClass="${row.svg?.class}" | svgWidth=${row.svg?.width?.toFixed(1)}px | chevronCenter=${chevronCenter}px | lines=[${linePositions}]`,
     );
     if (row.button) {
       console.log(`    Button: display=${row.button.display} width=${row.button.width?.toFixed(1)} padding="${row.button.padding}" border="${row.button.border}" boxSizing=${row.button.boxSizing}`);

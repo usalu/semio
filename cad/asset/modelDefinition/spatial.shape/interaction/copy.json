@@ -40,14 +40,8 @@
   ],
   "interaction": {
     "spatialGroundPick": true,
-    "pickDisabledStates": [
-      "idle",
-      "committed"
-    ],
-    "groundPointerMoveStates": [
-      "point_to_copy_from",
-      "point_to_copy_to"
-    ],
+    "pickDisabledStates": ["idle", "committed"],
+    "groundPointerMoveStates": ["point_to_copy_from", "point_to_copy_to"],
     "heightDragStates": [],
     "verticalRodStates": [],
     "heightConfirmState": null,
@@ -90,11 +84,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        0
-                      ]
+                      "value": [0, 0, 0]
                     }
                   },
                   {
@@ -158,11 +148,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        1
-                      ]
+                      "value": [0, 0, 1]
                     }
                   }
                 ]
@@ -174,14 +160,7 @@
       {
         "name": "select_objects_to_copy",
         "selection": {
-          "accept": [
-            "vertex",
-            "edge",
-            "wire",
-            "face",
-            "shell",
-            "solid"
-          ],
+          "accept": ["vertex", "edge", "wire", "face", "shell", "solid"],
           "multiple": true,
           "prompt": "Select objects to copy"
         },
@@ -559,10 +538,7 @@
                       },
                       "clearKeys": {
                         "kind": "const",
-                        "value": [
-                          "from",
-                          "to"
-                        ]
+                        "value": ["from", "to"]
                       }
                     }
                   }
@@ -634,11 +610,7 @@
             "text": "Select objects to copy",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -701,11 +673,7 @@
             "text": "Point to copy from",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -808,11 +776,7 @@
             "text": "Point to copy to",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -938,9 +902,7 @@
     ]
   },
   "commit": {
-    "fromStates": [
-      "committed"
-    ],
+    "fromStates": ["committed"],
     "operation": {
       "kind": "action",
       "action": "transform.copy",

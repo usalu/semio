@@ -29,9 +29,7 @@
           "session_id": "0ca21121-06de-4e38-9e73-e9d4859585bc",
           "hook_event_name": "sessionEnd",
           "cursor_version": "3.0.13",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/0ca21121-06de-4e38-9e73-e9d4859585bc/0ca21121-06de-4e38-9e73-e9d4859585bc.jsonl"
         }

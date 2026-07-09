@@ -2,33 +2,33 @@
 name: spatial step roundtrip
 overview: Add a metadata-aware attribute layer on top of brepjs and implement clean AP242 UDA STEP export/import in `@spatial/js-kernel-brepjs` so the spatial framework (ModelSpace / Model / Object / Primitive / Attribute / Property) roundtrips losslessly through `.stp` files.
 todos:
-  - id: ticket
-    content: Open ticket spatial-step-roundtrip via repo MCP after listing goals
-    status: completed
-  - id: core-step
-    content: "Add 🪜StepRoundtrip region to spatial/js/core/index.ts: writer helpers, AttributeStore.entries(), ModelJson metadata field"
-    status: completed
-  - id: kernel-export
-    content: Implement exportModelSpaceToStep / exportModelToStep in spatial/js/kernel-brepjs/index.ts using brepjs exportSTEPConfigured with id-rewriting and six-pillar mapping
-    status: completed
-  - id: kernel-import
-    content: Implement importStepToModelSpace in spatial/js/kernel-brepjs/index.ts using brepjs importSTEP and rebuild kernel geometry buckets
-    status: completed
-  - id: modelspace-share
-    content: "Dedupe primitives across linked models via hashSolidRecord so shared geometry uses the same STEP #id"
-    status: completed
-  - id: tests-core
-    content: Extend in-file vitest block in spatial/js/core/index.ts with helper + metadata roundtrip cases
-    status: completed
-  - id: tests-kernel
-    content: Extend in-file vitest block in spatial/js/kernel-brepjs/index.ts with full STEP roundtrip + dedupe + property re-derive + behavioral-absence cases
-    status: completed
-  - id: run-tests
-    content: Run bun nx test @spatial/js-core and @spatial/js-kernel-brepjs until green
-    status: completed
-  - id: ticket-close
-    content: Close ticket with summary and list of touched files
-    status: completed
+ - id: ticket
+   content: Open ticket spatial-step-roundtrip via repo MCP after listing goals
+   status: completed
+ - id: core-step
+   content: "Add 🪜StepRoundtrip region to spatial/js/core/index.ts: writer helpers, AttributeStore.entries(), ModelJson metadata field"
+   status: completed
+ - id: kernel-export
+   content: Implement exportModelSpaceToStep / exportModelToStep in spatial/js/kernel-brepjs/index.ts using brepjs exportSTEPConfigured with id-rewriting and six-pillar mapping
+   status: completed
+ - id: kernel-import
+   content: Implement importStepToModelSpace in spatial/js/kernel-brepjs/index.ts using brepjs importSTEP and rebuild kernel geometry buckets
+   status: completed
+ - id: modelspace-share
+   content: "Dedupe primitives across linked models via hashSolidRecord so shared geometry uses the same STEP #id"
+   status: completed
+ - id: tests-core
+   content: Extend in-file vitest block in spatial/js/core/index.ts with helper + metadata roundtrip cases
+   status: completed
+ - id: tests-kernel
+   content: Extend in-file vitest block in spatial/js/kernel-brepjs/index.ts with full STEP roundtrip + dedupe + property re-derive + behavioral-absence cases
+   status: completed
+ - id: run-tests
+   content: Run bun nx test @spatial/js-core and @spatial/js-kernel-brepjs until green
+   status: completed
+ - id: ticket-close
+   content: Close ticket with summary and list of touched files
+   status: completed
 isProject: false
 ---
 
@@ -46,14 +46,14 @@ Source spec: [.repo/✍️/spatial-step-export-import.md](.repo/%E2%9C%8D%EF%B8%
 
 ## Six-pillar STEP mapping (matches the spec)
 
-| Pillar | AP242 entity | Anchor in code |
-| --- | --- | --- |
-| ModelSpace | root `PRODUCT` + `PRODUCT_DEFINITION` (assembly) | `ModelSpace` |
-| Model | child `PRODUCT_DEFINITION` linked via `NEXT_ASSEMBLY_USAGE_OCCURRENCE` | `Model` |
-| Object | leaf `PRODUCT_DEFINITION` (`name = typologyId`) | `SpatialObjectRecord` |
-| Primitive | Part 42 topology written via brepjs `exportSTEP` of the cached `ValidSolid`, plus our `KernelGeometryJson` shadow records (for non-solid primitives that brepjs cannot author) | kernel `solids`, `Model.faces/edges/...` |
-| Attribute | `SHAPE_ASPECT` + `PROPERTY_DEFINITION` + `DESCRIPTIVE_REPRESENTATION_ITEM` pointing at the primitive entity id | `AttributeStore` |
-| Property | `PRODUCT_DEFINITION_SHAPE` + `PROPERTY_DEFINITION` + `REAL`/`DESCRIPTIVE_REPRESENTATION_ITEM` pointing at the Object | derived via `listApplicablePropertyDefinitions` |
+| Pillar     | AP242 entity                                                                                                                                                                   | Anchor in code                                  |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
+| ModelSpace | root `PRODUCT` + `PRODUCT_DEFINITION` (assembly)                                                                                                                               | `ModelSpace`                                    |
+| Model      | child `PRODUCT_DEFINITION` linked via `NEXT_ASSEMBLY_USAGE_OCCURRENCE`                                                                                                         | `Model`                                         |
+| Object     | leaf `PRODUCT_DEFINITION` (`name = typologyId`)                                                                                                                                | `SpatialObjectRecord`                           |
+| Primitive  | Part 42 topology written via brepjs `exportSTEP` of the cached `ValidSolid`, plus our `KernelGeometryJson` shadow records (for non-solid primitives that brepjs cannot author) | kernel `solids`, `Model.faces/edges/...`        |
+| Attribute  | `SHAPE_ASPECT` + `PROPERTY_DEFINITION` + `DESCRIPTIVE_REPRESENTATION_ITEM` pointing at the primitive entity id                                                                 | `AttributeStore`                                |
+| Property   | `PRODUCT_DEFINITION_SHAPE` + `PROPERTY_DEFINITION` + `REAL`/`DESCRIPTIVE_REPRESENTATION_ITEM` pointing at the Object                                                           | derived via `listApplicablePropertyDefinitions` |
 
 A `Spatial_Hash` `PROPERTY_DEFINITION` is appended per primitive root using the existing `hash*Record` family so the ModelSpace sync rule (same hash ⇒ same edit) is recoverable on import without trusting brepjs entity reuse.
 

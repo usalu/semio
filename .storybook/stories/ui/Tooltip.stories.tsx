@@ -27,7 +27,7 @@ const TooltipExamples = () => (
       </Tooltip>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="default" onClick={() => { }}>
+          <Button variant="default" onClick={() => {}}>
             <Settings />
           </Button>
         </TooltipTrigger>
@@ -37,7 +37,7 @@ const TooltipExamples = () => (
       </Tooltip>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="outline" onClick={() => { }}>
+          <Button variant="outline" onClick={() => {}}>
             <Trash2 />
           </Button>
         </TooltipTrigger>

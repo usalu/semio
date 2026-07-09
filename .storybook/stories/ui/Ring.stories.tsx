@@ -39,9 +39,9 @@ const defaultArgs = {
   orbs: defaultOrbs,
   radius: 40,
   size: 100,
-  onOrbChange: () => { },
-  onOrbSelect: () => { },
-  onOrbHoverChange: () => { },
+  onOrbChange: () => {},
+  onOrbSelect: () => {},
+  onOrbHoverChange: () => {},
   showLabel: true,
   className: "",
 };

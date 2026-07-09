@@ -26,9 +26,7 @@
           "composer_mode": "agent",
           "hook_event_name": "sessionStart",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": null
         }
@@ -58,9 +56,7 @@
           ],
           "hook_event_name": "beforeSubmitPrompt",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": null
         }
@@ -91,9 +87,7 @@
           "tool_use_id": "call_E9injyVmCzS73xBNHhxUk4i4\nfc_051730be1c6caef50169c55ec7fc488193a048ccd9fe282fa3",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": null
         }
@@ -123,9 +117,7 @@
           "tool_use_id": "call_d0aPSD0RYqwjP7v14XmTaGZ5\nfc_051730be1c6caef50169c55ec7fc5c8193b682de3c2988c602",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": null
         }
@@ -158,9 +150,7 @@
           "tool_use_id": "call_E9injyVmCzS73xBNHhxUk4i4\nfc_051730be1c6caef50169c55ec7fc488193a048ccd9fe282fa3",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": null
         }
@@ -192,9 +182,7 @@
           "tool_use_id": "call_d0aPSD0RYqwjP7v14XmTaGZ5\nfc_051730be1c6caef50169c55ec7fc5c8193b682de3c2988c602",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": null
         }
@@ -225,9 +213,7 @@
           "tool_use_id": "call_TjjO2CPJKrcXuJMxE3N3B3mW\nfc_051730be1c6caef50169c55ecb8e888193b3ec0ed56f79c4da",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
@@ -258,9 +244,7 @@
           "tool_use_id": "call_YC43fkFiTEMjKQmXNjxZalFL\nfc_051730be1c6caef50169c55ecb8e948193b6db6682d80759b3",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
@@ -289,9 +273,7 @@
           "tool_use_id": "call_U7HrMkj1e3ZTID5Ey3RU0Wjw\nfc_051730be1c6caef50169c55ecb8e9c81939dadf71109a8d7ca",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
@@ -324,9 +306,7 @@
           "tool_use_id": "call_TjjO2CPJKrcXuJMxE3N3B3mW\nfc_051730be1c6caef50169c55ecb8e888193b3ec0ed56f79c4da",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
@@ -359,9 +339,7 @@
           "tool_use_id": "call_YC43fkFiTEMjKQmXNjxZalFL\nfc_051730be1c6caef50169c55ecb8e948193b6db6682d80759b3",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
@@ -388,9 +366,7 @@
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
@@ -421,9 +397,7 @@
           "tool_use_id": "call_U7HrMkj1e3ZTID5Ey3RU0Wjw\nfc_051730be1c6caef50169c55ecb8e9c81939dadf71109a8d7ca",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
@@ -454,9 +428,7 @@
           "tool_use_id": "call_hi4wt9gjZFdO7aOxnVxyFxzQ\nfc_051730be1c6caef50169c55ecf1a0881938a1d0ac66fcf3104",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
@@ -489,9 +461,7 @@
           "tool_use_id": "call_hi4wt9gjZFdO7aOxnVxyFxzQ\nfc_051730be1c6caef50169c55ecf1a0881938a1d0ac66fcf3104",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
@@ -522,9 +492,7 @@
           ],
           "hook_event_name": "afterFileEdit",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
@@ -553,9 +521,7 @@
           "tool_use_id": "call_YljQOea1k51z2uJrcaw9HCcC\nctc_051730be1c6caef50169c55f0717ec8193aabf7d59be50a0ac",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
@@ -588,9 +554,7 @@
           "is_interrupt": false,
           "hook_event_name": "postToolUseFailure",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
@@ -620,9 +584,7 @@
           "tool_use_id": "call_YljQOea1k51z2uJrcaw9HCcC\nctc_051730be1c6caef50169c55f0717ec8193aabf7d59be50a0ac",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
@@ -653,9 +615,7 @@
           ],
           "hook_event_name": "afterFileEdit",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
@@ -687,9 +647,7 @@
           "tool_use_id": "call_YljQOea1k51z2uJrcaw9HCcC\nctc_051730be1c6caef50169c55f0717ec8193aabf7d59be50a0ac",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
@@ -714,9 +672,7 @@
           "text": "Implemented a new Compose UI `Vec3` component that supports selecting and/or displaying a 3D vector with the same controllable-state constraints used across Compose UI components.\n\n### What I changed\n\n- Added `Vec3` to `compose/ui/index.tsx`\n- Added Storybook stories in `compose/ui/.storybook/stories/Vec3.stories.tsx`\n\n### `Vec3` capabilities\n\n- **Full controlled mode**\n  - `vec` + `onVecChange`\n- **Full uncontrolled mode**\n  - `defaultVec`\n- **Partial controlled mode (per axis)**\n  - `u` / `onUChange`, `v` / `onVChange`, `w` / `onWChange`\n  - Can mix controlled and uncontrolled axes\n- **Partial/full select constraints**\n  - Global: `selectionEnabled`\n  - Per-axis: `uSelectionEnabled`, `vSelectionEnabled`, `wSelectionEnabled`\n- **Partial/full display constraints**\n  - Global: `displayEnabled`\n  - Per-axis: `uDisplayEnabled`, `vDisplayEnabled`, `wDisplayEnabled`\n- **Domain constraints**\n  - `minU/maxU`, `minV/maxV`, `minW/maxW`, `step`\n  - Values are clamped to bounds\n\n### Stories added\n\n- `FullControlled`\n- `FullUncontrolled`\n- `PartialAxisControl`\n- `PartialSelectionAndDisplay`\n\nNo linter errors were introduced in the edited files.\n\n",
           "hook_event_name": "afterAgentResponse",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }
@@ -742,9 +698,7 @@
           "loop_count": 0,
           "hook_event_name": "stop",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/3f9ece40-dc22-4d49-8d61-a4050e60e2e5/3f9ece40-dc22-4d49-8d61-a4050e60e2e5.jsonl"
         }

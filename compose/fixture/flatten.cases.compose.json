@@ -3,40 +3,27 @@
     {
       "name": "nakagin_capsule_tower",
       "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
-      "designPath": [
-        "Nakagin Capsule Tower"
-      ]
+      "designPath": ["Nakagin Capsule Tower"]
     },
     {
       "name": "nakagin_capsule_tower_slanted",
       "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
-      "designPath": [
-        "Nakagin Capsule Tower",
-        "Slanted"
-      ]
+      "designPath": ["Nakagin Capsule Tower", "Slanted"]
     },
     {
       "name": "nakagin_capsule_tower_twisted",
       "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
-      "designPath": [
-        "Nakagin Capsule Tower",
-        "Twisted"
-      ]
+      "designPath": ["Nakagin Capsule Tower", "Twisted"]
     },
     {
       "name": "nakagin_capsule_tower_dancing",
       "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
-      "designPath": [
-        "Nakagin Capsule Tower",
-        "Dancing"
-      ]
+      "designPath": ["Nakagin Capsule Tower", "Dancing"]
     },
     {
       "name": "capsule_dream",
       "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
-      "designPath": [
-        "Capsule Dream"
-      ]
+      "designPath": ["Capsule Dream"]
     }
   ]
 }

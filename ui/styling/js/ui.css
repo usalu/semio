@@ -195,7 +195,9 @@
       background-color: var(--scrollbar-thumb);
       border-radius: 0;
       opacity: 0;
-      transition: opacity 120ms ease, background-color 120ms ease;
+      transition:
+        opacity 120ms ease,
+        background-color 120ms ease;
     }
 
     [data-slot="scroll-area-scrollbar"]:hover [data-slot="scroll-area-thumb"] {
@@ -888,20 +890,8 @@
   border-top-color: var(--border-emphasized-color) !important;
 }
 
-[data-slot="navbar"] :is(
-  [data-slot="breadcrumb"],
-  [data-slot="button-group"],
-  [data-slot="toggle-group"],
-  [data-slot="action-group"],
-  [data-slot="app-panel-toggle-group"],
-  [data-slot="breadcrumb-item"],
-  [data-slot="breadcrumb-separator-control"]
-),
-[data-slot="footer"] :is(
-  [data-slot="button-group"],
-  [data-slot="toggle-group"],
-  [data-slot="action-group"]
-) {
+[data-slot="navbar"] :is([data-slot="breadcrumb"], [data-slot="button-group"], [data-slot="toggle-group"], [data-slot="action-group"], [data-slot="app-panel-toggle-group"], [data-slot="breadcrumb-item"], [data-slot="breadcrumb-separator-control"]),
+[data-slot="footer"] :is([data-slot="button-group"], [data-slot="toggle-group"], [data-slot="action-group"]) {
   border-color: var(--border-normal-color) !important;
 }
 
@@ -910,7 +900,9 @@
 [data-slot="footer"] [data-level]:not([data-state="on"]):not(:disabled),
 [data-slot="navbar"] [data-slot="breadcrumb-link"],
 [data-slot="navbar"] [data-slot="breadcrumb-separator-control"] {
-  transition: color 120ms ease, background-color 120ms ease;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease;
 }
 
 [data-slot="navbar"] [data-slot="toggle-group-item"][data-state="on"]:not(:disabled),

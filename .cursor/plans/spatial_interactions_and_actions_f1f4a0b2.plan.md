@@ -2,42 +2,42 @@
 name: spatial interactions and actions
 overview: "Generalize the spatial command mechanism: rename `Command*` → `Interaction*` across TS + JSON, introduce first-class registerable pure `Action`s (geometry-in/geometry-out, e.g. `createBoxFromCorners`, `measureFaceArea`, `aabbFromDiagonalCorners`), rename the existing transition-side-effect `ActionSpec` to `EffectSpec`, route commit + state effects through the new `ActionRegistry`, and make every state transition undoable."
 todos:
-  - id: ticket
-    content: Open `spatial-interactions-and-actions` ticket via repo MCP
-    status: completed
-  - id: core-rename
-    content: Rename Command*/ActionSpec symbols and regions in spatial/js/core/index.ts; remove legacy normalizer + excludeEvents
-    status: completed
-  - id: action-registry
-    content: Add ActionRegistry + built-in pure actions (geometry-in/out + 12 ex-box.transform helpers + createBoxFrom3Points) in core
-    status: completed
-  - id: interaction-registry
-    content: Add InteractionRegistry + withBuiltins loading the 5 fixtures in core
-    status: completed
-  - id: effect-action-routing
-    content: Replace box.transform op with EffectSpec {op:'action'}; collapse commit.operation to {kind:'action', action, params}; wire runtime through ActionRegistry
-    status: completed
-  - id: fixtures
-    content: Rename *.command.json -> *.interaction.json, bump schema to spatial.interaction/v1, rewrite actions->effects and commit.operation; delete orphaned factory.json variants
-    status: completed
-  - id: schema
-    content: Update spatial/schema/json/ schema files for the new field/schema names
-    status: completed
-  - id: stately
-    content: Mirror renames in spatial/js/machine-stately/index.ts (types + view docs)
-    status: completed
-  - id: renderer
-    content: Mirror renames in spatial/js/renderer-r3f/index.tsx (CommandRepl->InteractionRepl etc.)
-    status: completed
-  - id: play-cli
-    content: Update spatial/js/renderer-r3f/play/main.tsx and spatial/js/cli imports/symbols
-    status: completed
-  - id: tests
-    content: Extend existing vitest suites in core + stately + renderer-r3f to cover registries, effect/action routing, transition-undo-for-all-states, parity
-    status: completed
-  - id: verify-close
-    content: Run bun nx test/lint for the three packages, then ticket_close with summary
-    status: completed
+ - id: ticket
+   content: Open `spatial-interactions-and-actions` ticket via repo MCP
+   status: completed
+ - id: core-rename
+   content: Rename Command*/ActionSpec symbols and regions in spatial/js/core/index.ts; remove legacy normalizer + excludeEvents
+   status: completed
+ - id: action-registry
+   content: Add ActionRegistry + built-in pure actions (geometry-in/out + 12 ex-box.transform helpers + createBoxFrom3Points) in core
+   status: completed
+ - id: interaction-registry
+   content: Add InteractionRegistry + withBuiltins loading the 5 fixtures in core
+   status: completed
+ - id: effect-action-routing
+   content: Replace box.transform op with EffectSpec {op:'action'}; collapse commit.operation to {kind:'action', action, params}; wire runtime through ActionRegistry
+   status: completed
+ - id: fixtures
+   content: Rename *.command.json -> *.interaction.json, bump schema to spatial.interaction/v1, rewrite actions->effects and commit.operation; delete orphaned factory.json variants
+   status: completed
+ - id: schema
+   content: Update spatial/schema/json/ schema files for the new field/schema names
+   status: completed
+ - id: stately
+   content: Mirror renames in spatial/js/machine-stately/index.ts (types + view docs)
+   status: completed
+ - id: renderer
+   content: Mirror renames in spatial/js/renderer-r3f/index.tsx (CommandRepl->InteractionRepl etc.)
+   status: completed
+ - id: play-cli
+   content: Update spatial/js/renderer-r3f/play/main.tsx and spatial/js/cli imports/symbols
+   status: completed
+ - id: tests
+   content: Extend existing vitest suites in core + stately + renderer-r3f to cover registries, effect/action routing, transition-undo-for-all-states, parity
+   status: completed
+ - id: verify-close
+   content: Run bun nx test/lint for the three packages, then ticket_close with summary
+   status: completed
 isProject: false
 ---
 
@@ -61,8 +61,6 @@ flowchart LR
   Result --> Topology[TopologyGraph]
 ```
 
-
-
 ## 2. `spatial/js/core/index.ts` — TS surface rename + new registries
 
 Region renames + symbol renames (kept in same file per `AGENTS.md`):
@@ -82,23 +80,22 @@ New region `🧮ActionRegistry` (after `🪪Refs`):
 
 ```ts
 export interface ActionResult<TData = unknown> {
-  readonly diff?: TopologyDiff;
-  readonly data?: TData;
+ readonly diff?: TopologyDiff;
+ readonly data?: TData;
 }
-export type ActionFn<TParams = Record<string, unknown>, TData = unknown> =
-  (params: TParams, ctx: { kernel: KernelAdapter; topology: TopologyGraph }) => Promise<ActionResult<TData>> | ActionResult<TData>;
+export type ActionFn<TParams = Record<string, unknown>, TData = unknown> = (params: TParams, ctx: { kernel: KernelAdapter; topology: TopologyGraph }) => Promise<ActionResult<TData>> | ActionResult<TData>;
 
 export interface ActionDef<TParams = Record<string, unknown>, TData = unknown> {
-  readonly id: string;            // e.g. "primitive.createBoxFromCorners"
-  readonly label?: string;
-  readonly run: ActionFn<TParams, TData>;
+ readonly id: string; // e.g. "primitive.createBoxFromCorners"
+ readonly label?: string;
+ readonly run: ActionFn<TParams, TData>;
 }
 
 export class ActionRegistry {
-  register(def: ActionDef): void;
-  get(id: string): ActionDef | null;
-  list(): readonly ActionDef[];
-  static withBuiltins(): ActionRegistry;   // registers all built-ins below
+ register(def: ActionDef): void;
+ get(id: string): ActionDef | null;
+ list(): readonly ActionDef[];
+ static withBuiltins(): ActionRegistry; // registers all built-ins below
 }
 ```
 
@@ -111,10 +108,10 @@ New region `🧭InteractionRegistry`:
 
 ```ts
 export class InteractionRegistry {
-  register(spec: InteractionSpec): void;
-  get(id: string): InteractionSpec | null;
-  list(): readonly InteractionSpec[];
-  static withBuiltins(): InteractionRegistry;   // box / extrude / offsetSurface / distance / area from fixtures
+ register(spec: InteractionSpec): void;
+ get(id: string): InteractionSpec | null;
+ list(): readonly InteractionSpec[];
+ static withBuiltins(): InteractionRegistry; // box / extrude / offsetSurface / distance / area from fixtures
 }
 ```
 
@@ -123,7 +120,7 @@ export class InteractionRegistry {
 `commit.operation` collapses to a single tagged variant:
 
 ```ts
-type CommitOperationSpec = { kind: "action"; action: string; params?: Record<string, Expr>; outputDataPath?: PathTarget }
+type CommitOperationSpec = { kind: "action"; action: string; params?: Record<string, Expr>; outputDataPath?: PathTarget };
 ```
 
 All previous variants (`cell.createBox`, `wire.extrudeToCell`, `face.offset`, `measure.*`) become `{kind:"action", action:"…"}`.

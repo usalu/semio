@@ -7,6 +7,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Fixed piece position not persisting after manual drag. Root cause: flattenDesign() always recomputed child centers from parent+connection, overriding stored centers set by drag. Fix: childPiece.center ?? computedChildCenter in flattenDesign BFS. Removed 8 DEBUG logs. All 13 unit tests pass.
+
 ## Changes
 
 - `compose/js/compose.ts`: Changed `flattenDesign()` BFS child center computation to prefer stored center (`childPiece.center ?? computedChildCenter`) instead of always using computed center. This preserves manual drag positions while still computing centers for pieces without stored positions (null/undefined center).
@@ -34,6 +35,7 @@ Fixed piece position not persisting after manual drag. Root cause: flattenDesign
 ## Plan
 
 Root cause: In `flattenDesign()` (compose.ts line ~6644), the BFS traversal always computes child piece centers based on parent position + connection parameters:
+
 ```
 childCenter = computed from parentCenter + connectionOffsets
 flatChildPiece = { ...childPiece, center: childCenter }  // overwrites stored center
@@ -42,6 +44,7 @@ flatChildPiece = { ...childPiece, center: childCenter }  // overwrites stored ce
 This means after dragging, the reactive chain (metadata → baseNodes → useEffect) recomputes positions using the OLD computed center instead of the NEW stored center from drag.
 
 Fix: Use nullish coalescing to prefer stored center:
+
 ```
 const childCenter = childPiece.center ?? computedChildCenter;
 ```

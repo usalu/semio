@@ -270,9 +270,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine💻engine📌1📌2878"
-        ],
+        "ranges": ["👤compose📚engine💻engine📌1📌2878"],
         "second": "🎆26🌙03☀️13⏰13⌚31⏱️00",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
       },
@@ -303,9 +301,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine🥼enginetest📌1📌1450"
-        ],
+        "ranges": ["👤compose📚engine🥼enginetest📌1📌1450"],
         "second": "🎆26🌙03☀️13⏰13⌚31⏱️00",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
       },
@@ -336,9 +332,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine💻engine📌1📌2878"
-        ],
+        "ranges": ["👤compose📚engine💻engine📌1📌2878"],
         "second": "🎆26🌙03☀️13⏰13⌚31⏱️09",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
       },
@@ -402,9 +396,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine🥼enginetest📌1📌1450"
-        ],
+        "ranges": ["👤compose📚engine🥼enginetest📌1📌1450"],
         "second": "🎆26🌙03☀️13⏰13⌚32⏱️14",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
       },
@@ -435,9 +427,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine🥼enginetest📌1📌1450"
-        ],
+        "ranges": ["👤compose📚engine🥼enginetest📌1📌1450"],
         "second": "🎆26🌙03☀️13⏰13⌚32⏱️37",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
       },
@@ -524,16 +514,12 @@
         "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "👤compose📚engine🥼enginetest"
-        ],
+        "files": ["👤compose📚engine🥼enginetest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️13⏰13⌚33⏱️56",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3",
-        "tests": [
-          "\"mcp_tool_surface_keeps_only_allowed_prefixes"
-        ]
+        "tests": ["\"mcp_tool_surface_keeps_only_allowed_prefixes"]
       },
       "response": {
         "allowed": true
@@ -625,16 +611,12 @@
         "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "👤compose📚engine🥼enginetest"
-        ],
+        "files": ["👤compose📚engine🥼enginetest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️13⏰13⌚35⏱️12",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3",
-        "tests": [
-          "\"mcp_tool_surface_keeps_only_allowed_prefixes"
-        ]
+        "tests": ["\"mcp_tool_surface_keeps_only_allowed_prefixes"]
       },
       "response": {
         "allowed": true
@@ -704,10 +686,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/compose/engine/engine.py",
-                "/workspaces/semio/compose/engine/engine.test.py"
-              ],
+              "files": ["/workspaces/semio/compose/engine/engine.py", "/workspaces/semio/compose/engine/engine.test.py"],
               "no_github": true,
               "path": "2026/03/13/RESTRICT-ENGINE-MCP-TOOLS-TO-APPROVED-PREFIXES",
               "summary": "Restricted engine MCP exposed tool surface to the approved prefixes only: start*, finish*, transaction*, and sum_qu*. Updated MCP surface assertion test to match. Verified edit consistency; runtime tests are currently blocked by local Python import/environment setup."
@@ -777,9 +756,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine💻engine📌1📌2878"
-        ],
+        "ranges": ["👤compose📚engine💻engine📌1📌2878"],
         "second": "🎆26🌙03☀️13⏰13⌚37⏱️46",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
       },
@@ -810,9 +787,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine💻engine📌1📌2878"
-        ],
+        "ranges": ["👤compose📚engine💻engine📌1📌2878"],
         "second": "🎆26🌙03☀️13⏰13⌚38⏱️06",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
       },
@@ -1209,9 +1184,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine🥼enginetest📌1📌1450"
-        ],
+        "ranges": ["👤compose📚engine🥼enginetest📌1📌1450"],
         "second": "🎆26🌙03☀️13⏰13⌚40⏱️04",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
       },
@@ -1242,9 +1215,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine🥼enginetest📌1📌1450"
-        ],
+        "ranges": ["👤compose📚engine🥼enginetest📌1📌1450"],
         "second": "🎆26🌙03☀️13⏰13⌚40⏱️18",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
       },
@@ -1437,10 +1408,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/compose/engine/engine.py",
-                "/workspaces/semio/compose/engine/engine.test.py"
-              ],
+              "files": ["/workspaces/semio/compose/engine/engine.py", "/workspaces/semio/compose/engine/engine.test.py"],
               "no_github": true,
               "path": "y/26/m/03/d/13/tk/RESTRICT-ENGINE-MCP-TOOLS-TO-APPROVED-PREFIXES",
               "summary": "Cleaned MCP source registration to only expose start*, finish*, transaction*, and sum_qu* tools by removing disallowed @mcp.tool decorators and runtime pruning. Added transaction_* wrappers and tightened MCP surface test to exact expected tool names."
@@ -1472,10 +1440,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/compose/engine/engine.py",
-                "/workspaces/semio/compose/engine/engine.test.py"
-              ],
+              "files": ["/workspaces/semio/compose/engine/engine.py", "/workspaces/semio/compose/engine/engine.test.py"],
               "no_github": true,
               "path": "2026/03/13/restrictenginemcptoolstoapprovedprefixes",
               "summary": "Cleaned engine MCP source registrations to expose only approved tool prefixes (start*, finish*, transaction*, sum_qu*), removed runtime pruning, and tightened MCP surface test to exact exported tool names."
@@ -1624,10 +1589,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/compose/engine/engine.py",
-                "/workspaces/semio/compose/engine/engine.test.py"
-              ],
+              "files": ["/workspaces/semio/compose/engine/engine.py", "/workspaces/semio/compose/engine/engine.test.py"],
               "no_github": true,
               "path": "composerepo://y/26/m/03/d/13/tk/RESTRICT-ENGINE-MCP-TOOLS-TO-APPROVED-PREFIXES",
               "summary": "Cleaned engine MCP source registrations to expose only approved prefixes (start*, finish*, transaction*, sum_qu*), removed runtime pruning, and tightened MCP surface assertion test to exact exported names. Validated with targeted pytest for MCP surface."
@@ -1659,10 +1621,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/compose/engine/engine.py",
-                "/workspaces/semio/compose/engine/engine.test.py"
-              ],
+              "files": ["/workspaces/semio/compose/engine/engine.py", "/workspaces/semio/compose/engine/engine.test.py"],
               "no_github": true,
               "summary": "Cleaned engine MCP source registrations to expose only approved prefixes (start*, finish*, transaction*, sum_qu*), removed runtime pruning, and tightened MCP surface assertion test to exact exported names. Validated with targeted pytest for MCP surface."
             },
@@ -1706,9 +1665,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine💻engine📌1📌2842"
-        ],
+        "ranges": ["👤compose📚engine💻engine📌1📌2842"],
         "second": "🎆26🌙03☀️13⏰13⌚46⏱️20",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
       },
@@ -1739,9 +1696,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine🥼enginetest📌1📌1460"
-        ],
+        "ranges": ["👤compose📚engine🥼enginetest📌1📌1460"],
         "second": "🎆26🌙03☀️13⏰13⌚46⏱️20",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
       },
@@ -1772,9 +1727,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine💻engine📌1📌2842"
-        ],
+        "ranges": ["👤compose📚engine💻engine📌1📌2842"],
         "second": "🎆26🌙03☀️13⏰13⌚46⏱️26",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
       },
@@ -1805,9 +1758,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚engine🥼enginetest📌1📌1460"
-        ],
+        "ranges": ["👤compose📚engine🥼enginetest📌1📌1460"],
         "second": "🎆26🌙03☀️13⏰13⌚46⏱️32",
         "session": "⚪a1ab0da20dc942f4b17df003a653afd3"
       },

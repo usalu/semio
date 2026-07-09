@@ -1,22 +1,22 @@
 ---
 name: Figure Split Tiles
-overview: "Add a general \"split a figure into tiles\" mechanism to the presentation framework: a figure Disposition can carry a grid of crop-tiles, each independently positioned/scaled/hidden across arrangements, animated via reveal.js auto-animate. Demonstrate it in the projektetage deck by taking the catalogue figure apart into 3 rows of 5 tiles, scaling them down, then showing only a portion."
+overview: 'Add a general "split a figure into tiles" mechanism to the presentation framework: a figure Disposition can carry a grid of crop-tiles, each independently positioned/scaled/hidden across arrangements, animated via reveal.js auto-animate. Demonstrate it in the projektetage deck by taking the catalogue figure apart into 3 rows of 5 tiles, scaling them down, then showing only a portion.'
 todos:
-  - id: ticket
-    content: Read repo://goals and open a ticket for the figure-split feature
-    status: completed
-  - id: core
-    content: Add SplitTile/DispositionSplit, split on Disposition, tileMorphId, splitFigureGrid, resolve passthrough + core tests in framework/product/presentation/core/index.ts
-    status: completed
-  - id: renderer
-    content: Render split tiles (FigureTileView, MorphDispositionView, positioned check, re-exports) + CSS + renderer tests in renderer/react/index.tsx and globals.css
-    status: completed
-  - id: deck
-    content: Wire 3x5 split into projektetage (assembled, spread/scaled, partial), align catalogue frame, update deck tests in 33.projektetage/index.ts
-    status: completed
-  - id: verify
-    content: Run core/renderer/deck tests and visually verify split choreography in dev server; close ticket
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open a ticket for the figure-split feature
+   status: completed
+ - id: core
+   content: Add SplitTile/DispositionSplit, split on Disposition, tileMorphId, splitFigureGrid, resolve passthrough + core tests in framework/product/presentation/core/index.ts
+   status: completed
+ - id: renderer
+   content: Render split tiles (FigureTileView, MorphDispositionView, positioned check, re-exports) + CSS + renderer tests in renderer/react/index.tsx and globals.css
+   status: completed
+ - id: deck
+   content: Wire 3x5 split into projektetage (assembled, spread/scaled, partial), align catalogue frame, update deck tests in 33.projektetage/index.ts
+   status: completed
+ - id: verify
+   content: Run core/renderer/deck tests and visually verify split choreography in dev server; close ticket
+   status: completed
 isProject: false
 ---
 
@@ -32,8 +32,6 @@ flowchart LR
   SplitTile -->|"position (slide rect)"| Place[Placed + auto-animated]
 ```
 
-
-
 ## 1. Core model + helpers
 
 File: [framework/product/presentation/core/index.ts](framework/product/presentation/core/index.ts)
@@ -42,12 +40,12 @@ File: [framework/product/presentation/core/index.ts](framework/product/presentat
   - `SplitTile`: `{ key: string; crop: DispositionPosition; position: DispositionPosition; emphasis?: ParticipantEmphasis; style?: DispositionStyle }` (`crop` = normalized 0..1 source rectangle of the figure; `position` = normalized 0..1 slide rectangle).
   - `DispositionSplit`: `{ readonly tiles: readonly SplitTile[] }`.
   - Add `readonly split?: DispositionSplit` to `Disposition`.
-- In `//#region 🔖Morph`, add `tileMorphId(participantId, tileKey)` returning ``${participantId}--tile--${tileKey}`` (stable per-tile reveal `data-id`).
+- In `//#region 🔖Morph`, add `tileMorphId(participantId, tileKey)` returning `${participantId}--tile--${tileKey}` (stable per-tile reveal `data-id`).
 - New `//#region 🔖Split`:
   - `splitFigureGrid(spec)` where `spec = { rows, columns, frame: DispositionPosition, gap?: number, emphasis?, keyPrefix? }`. Returns `SplitTile[]` with one tile per cell:
     - `crop = { x: c/columns, y: r/rows, width: 1/columns, height: 1/rows }`
     - `key =` ${keyPrefix ?? "tile"}-r${r}-c${c}``
-    - `position` packs the cell into `frame` honoring `gap` (cellW = (frame.width - gap*(columns-1))/columns, etc.). With `gap = 0` the tiles reconstruct the image exactly; with a `gap` and a smaller `frame` they are "taken apart and scaled down".
+    - `position` packs the cell into `frame` honoring `gap` (cellW = (frame.width - gap\*(columns-1))/columns, etc.). With `gap = 0` the tiles reconstruct the image exactly; with a `gap` and a smaller `frame` they are "taken apart and scaled down".
   - Hiding tiles / "only a portion shows" needs no new API: filter the tile array for that arrangement's `split.tiles`.
 - Extend `ResolvedDisposition` (`//#region 🔖Resolved`) with `readonly split?: DispositionSplit`, and have `resolveArrangement` (`//#region 🔖Resolve`) pass `disposition.split` through.
 - Tests in `//#region 🧪Tests`: `splitFigureGrid` yields `rows*columns` tiles, correct crops/keys, reconstructs `frame` at `gap = 0`, respects `gap`; `resolveArrangement` surfaces `split`; `tileMorphId` format.
@@ -93,4 +91,3 @@ File: [mit-bestand/präsentation/33.projektetage/index.ts](mit-bestand/präsenta
 - Split is modeled on the `Disposition` (matches "a disposition of a figure can include splitting it up"), reusing the existing figure participant rather than creating 15 participants.
 - Hiding and "partial" states require no new API — they are just a filtered `tiles` array per arrangement; absent tiles fade out via reveal.
 - All transitions stay declarative target-slides only; reveal.js auto-animate does the motion (honoring renderer AGENTS rule).
-

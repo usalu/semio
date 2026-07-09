@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The sketchpad already contains a GoldenLayout-based multi-window renderer (`LayoutCanvas`), and some apps already persist a `windowLayout`.
@@ -277,6 +278,7 @@ Once all apps are on the unified system:
 ## Log
 
 ## Summary
+
 # Summary
 
 Refactor all apps to a unified multi-window system

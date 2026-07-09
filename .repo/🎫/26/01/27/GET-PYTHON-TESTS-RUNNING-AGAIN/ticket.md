@@ -1,16 +1,19 @@
 # Ticket
 
 ## Todos
+
 # Plan: Get Python Tests Running Again
 
 ## Problem Analysis
 
 The pytest discovery fails with:
+
 ```
 ImportError: libEGL.so.1: cannot open shared object file: No such file or directory
 ```
 
 This happens because `py/engine/engine.py` unconditionally imports PySide6 at the module level (lines 66-68):
+
 ```python
 import PySide6.QtCore
 import PySide6.QtGui
@@ -24,10 +27,12 @@ However, PySide6 is only used for system tray functionality at lines 1621-1675 -
 ## Solution
 
 Make the PySide6 imports lazy/conditional by:
+
 1. Removing the top-level PySide6 imports
 2. Importing PySide6 only inside the functions that actually need it (the system tray/GUI code)
 
 This allows:
+
 - Tests to run without PySide6/libEGL dependencies
 - The GUI functionality to still work when libEGL is available
 
@@ -52,6 +57,7 @@ Fixed pytest discovery failure caused by missing libEGL.so.1 system library requ
 **Root Cause:** The `engine.py` module imported PySide6 unconditionally at the module level, causing pytest to fail when importing the test module in headless environments where libEGL is not available.
 
 **Solution:** Made PySide6 imports lazy by:
+
 1. Removed top-level PySide6 imports from `engine.py` (lines 66-68)
 2. Added lazy imports inside `restart_engine()` and `run()` functions where PySide6 is actually used
 

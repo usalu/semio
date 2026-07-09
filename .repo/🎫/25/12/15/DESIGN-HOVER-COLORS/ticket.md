@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - Diagram hover state was being set, but the `Avatar` node used `ring-inset` so the hover/selection ring was visually hidden by the full-size `AvatarFallback` background.
@@ -26,6 +27,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix design piece hover/select colors

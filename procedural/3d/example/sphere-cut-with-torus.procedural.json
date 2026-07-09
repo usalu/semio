@@ -1,1 +1,27 @@
-{"schema":"flow.fixture","camera":{"x":236.23395167940356,"y":-84.58346179033974,"zoom":1.8417539215092311},"widgets":[{"kind":"inputSlider","id":"slider_2","value":2.2,"min":0.0,"max":10.0,"step":0.1},{"kind":"neuron","id":"brep_prim3d_sphere_3","neuronKind":"brep.prim3d.sphere","params":{},"input_ports":["radius"],"preview":false},{"kind":"neuron","id":"brep_prim3d_torus_4","neuronKind":"brep.prim3d.torus","params":{},"input_ports":["major","minor"],"preview":false},{"kind":"neuron","id":"brep_bool_cut_5","neuronKind":"brep.bool.cut","params":{},"input_ports":["a","b"],"preview":true},{"kind":"neuron","id":"brep_measure_volume_2","neuronKind":"brep.measure.volume","params":{},"input_ports":["geometry"],"preview":true},{"kind":"outputPreview","id":"preview_3","preview":{"$schema":"number","value":37.73359174067349},"expanded":[]}],"synapses":[{"id":"e100","from":"slider_2","to":"brep_prim3d_sphere_3","fromPort":"number","toPort":"radius"},{"id":"e101","from":"brep_prim3d_sphere_3","to":"brep_bool_cut_5","fromPort":"solid","toPort":"a"},{"id":"e102","from":"brep_prim3d_torus_4","to":"brep_bool_cut_5","fromPort":"solid","toPort":"b"},{"id":"e103","from":"brep_bool_cut_5","to":"brep_measure_volume_2","fromPort":"solid","toPort":"geometry"},{"id":"e108","from":"brep_measure_volume_2","to":"preview_3","fromPort":"volume","toPort":""}],"layout":{"brep_bool_cut_5":{"x":273.87672971964196,"y":-102.61212609570688},"brep_measure_volume_2":{"x":351.6308736946091,"y":-109.21856873190009},"brep_prim3d_sphere_3":{"x":185.31861712806045,"y":-119.2657196857918},"brep_prim3d_torus_4":{"x":186.8402671208016,"y":-79.66369132376984},"preview_3":{"x":426.7737428942639,"y":-99.84528083558972},"slider_2":{"x":105.90625,"y":-117.7890625}}}
+{
+  "schema": "flow.fixture",
+  "camera": { "x": 236.23395167940356, "y": -84.58346179033974, "zoom": 1.8417539215092311 },
+  "widgets": [
+    { "kind": "inputSlider", "id": "slider_2", "value": 2.2, "min": 0.0, "max": 10.0, "step": 0.1 },
+    { "kind": "neuron", "id": "brep_prim3d_sphere_3", "neuronKind": "brep.prim3d.sphere", "params": {}, "input_ports": ["radius"], "preview": false },
+    { "kind": "neuron", "id": "brep_prim3d_torus_4", "neuronKind": "brep.prim3d.torus", "params": {}, "input_ports": ["major", "minor"], "preview": false },
+    { "kind": "neuron", "id": "brep_bool_cut_5", "neuronKind": "brep.bool.cut", "params": {}, "input_ports": ["a", "b"], "preview": true },
+    { "kind": "neuron", "id": "brep_measure_volume_2", "neuronKind": "brep.measure.volume", "params": {}, "input_ports": ["geometry"], "preview": true },
+    { "kind": "outputPreview", "id": "preview_3", "preview": { "$schema": "number", "value": 37.73359174067349 }, "expanded": [] }
+  ],
+  "synapses": [
+    { "id": "e100", "from": "slider_2", "to": "brep_prim3d_sphere_3", "fromPort": "number", "toPort": "radius" },
+    { "id": "e101", "from": "brep_prim3d_sphere_3", "to": "brep_bool_cut_5", "fromPort": "solid", "toPort": "a" },
+    { "id": "e102", "from": "brep_prim3d_torus_4", "to": "brep_bool_cut_5", "fromPort": "solid", "toPort": "b" },
+    { "id": "e103", "from": "brep_bool_cut_5", "to": "brep_measure_volume_2", "fromPort": "solid", "toPort": "geometry" },
+    { "id": "e108", "from": "brep_measure_volume_2", "to": "preview_3", "fromPort": "volume", "toPort": "" }
+  ],
+  "layout": {
+    "brep_bool_cut_5": { "x": 273.87672971964196, "y": -102.61212609570688 },
+    "brep_measure_volume_2": { "x": 351.6308736946091, "y": -109.21856873190009 },
+    "brep_prim3d_sphere_3": { "x": 185.31861712806045, "y": -119.2657196857918 },
+    "brep_prim3d_torus_4": { "x": 186.8402671208016, "y": -79.66369132376984 },
+    "preview_3": { "x": 426.7737428942639, "y": -99.84528083558972 },
+    "slider_2": { "x": 105.90625, "y": -117.7890625 }
+  }
+}

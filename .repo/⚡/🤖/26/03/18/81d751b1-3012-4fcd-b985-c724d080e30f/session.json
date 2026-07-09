@@ -145,11 +145,7 @@
             "max_results": 3
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__search",
-              "mcp__repo__ticket_open",
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__search", "mcp__repo__ticket_open", "mcp__repo__ticket_close"],
             "query": "select:mcp__repo__search,mcp__repo__ticket_open,mcp__repo__ticket_close",
             "total_deferred_tools": 86
           },
@@ -2893,9 +2889,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "TodoWrite"
-            ],
+            "matches": ["TodoWrite"],
             "query": "select:TodoWrite",
             "total_deferred_tools": 86
           },

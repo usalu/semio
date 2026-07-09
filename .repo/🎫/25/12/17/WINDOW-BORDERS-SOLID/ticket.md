@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 GoldenLayout window borders were still missing on the bottom/right edges and dashed borders were not desired.
@@ -18,6 +19,7 @@ GoldenLayout stacks now render a continuous solid outline via inset box-shadow t
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix window borders and revert to solid style

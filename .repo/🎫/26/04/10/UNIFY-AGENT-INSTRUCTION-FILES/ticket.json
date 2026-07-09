@@ -4,8 +4,5 @@
   "description": "Setup main AGENTS.md as the single canonical instruction file, replace derived root files such as CLAUDE.md and GEMINI.md with symlinks to AGENTS.md, and set up git so symlinks work cross-platform on Windows, macOS, and Linux.",
   "summary": "Canonicalized root agent instructions in AGENTS.md, added cross-platform git setup with repo hook configuration plus alias recreation, and collapsed CLAUDE.md/GEMINI.md onto AGENTS.md via link setup with restricted-Windows hard-link fallback.",
   "goal": "🎯r2602🎯updateddocs🎯updateddevdocs🎯updatedagentsmd",
-  "sessions": [
-    "⚪7b66acb30bc9465296b7c541b8849704",
-    "⚪db511adbf45e44abb8e94e493ba193ee"
-  ]
+  "sessions": ["⚪7b66acb30bc9465296b7c541b8849704", "⚪db511adbf45e44abb8e94e493ba193ee"]
 }

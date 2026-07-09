@@ -1,6 +1,6 @@
-import { chromium } from 'playwright';
+import { chromium } from "playwright";
 
-const SKETCHPAD_URL = 'http://localhost:5173';
+const SKETCHPAD_URL = "http://localhost:5173";
 
 async function main() {
   const browser = await chromium.launch({ headless: true });
@@ -28,26 +28,29 @@ async function main() {
     observer.observe({ entryTypes: ["longtask"] });
   });
 
-  console.log('[DIAG] Navigating...');
-  await page.goto(SKETCHPAD_URL, { waitUntil: 'networkidle', timeout: 60000 });
+  console.log("[DIAG] Navigating...");
+  await page.goto(SKETCHPAD_URL, { waitUntil: "networkidle", timeout: 60000 });
 
-  const designNavItem = page.locator('text=Nakagin').first();
+  const designNavItem = page.locator("text=Nakagin").first();
   if (await designNavItem.isVisible({ timeout: 5000 }).catch(() => false)) {
     await designNavItem.click();
   }
 
-  console.log('[DIAG] Waiting for diagram...');
-  const diagramContainer = page.locator('#diagram .react-flow').first();
-  await diagramContainer.waitFor({ state: 'visible', timeout: 60000 });
-  const pieceNodes = diagramContainer.locator('.react-flow__node');
-  await pieceNodes.first().waitFor({ state: 'attached', timeout: 60000 });
+  console.log("[DIAG] Waiting for diagram...");
+  const diagramContainer = page.locator("#diagram .react-flow").first();
+  await diagramContainer.waitFor({ state: "visible", timeout: 60000 });
+  const pieceNodes = diagramContainer.locator(".react-flow__node");
+  await pieceNodes.first().waitFor({ state: "attached", timeout: 60000 });
   console.log(`[DIAG] Found ${await pieceNodes.count()} nodes`);
 
   await page.waitForTimeout(5000);
 
   const leftPanelToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.leftSidePanel"]');
   if (await leftPanelToggle.isVisible().catch(() => false)) {
-    const leftPanelOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
+    const leftPanelOpen = await page
+      .locator('[data-panel="leftSidePanel"]')
+      .isVisible()
+      .catch(() => false);
     if (leftPanelOpen) {
       await leftPanelToggle.click();
       await page.waitForTimeout(500);
@@ -63,11 +66,11 @@ async function main() {
 
   // Mark time before zoom
   await page.evaluate(() => {
-    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: 'before_zoom_in', time: performance.now() });
+    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: "before_zoom_in", time: performance.now() });
   });
 
   // Zoom in
-  const pane = diagramContainer.locator('.react-flow__pane').first();
+  const pane = diagramContainer.locator(".react-flow__pane").first();
   const paneBox = await pane.boundingBox();
   const cx = paneBox!.x + paneBox!.width / 2;
   const cy = paneBox!.y + paneBox!.height / 2;
@@ -76,7 +79,7 @@ async function main() {
   await page.waitForTimeout(500);
 
   await page.evaluate(() => {
-    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: 'after_zoom_in', time: performance.now() });
+    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: "after_zoom_in", time: performance.now() });
   });
 
   // Zoom out
@@ -84,7 +87,7 @@ async function main() {
   await page.waitForTimeout(500);
 
   await page.evaluate(() => {
-    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: 'after_zoom_out', time: performance.now() });
+    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: "after_zoom_out", time: performance.now() });
   });
 
   // Drag
@@ -99,19 +102,19 @@ async function main() {
   await page.waitForTimeout(50);
 
   await page.evaluate(() => {
-    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: 'before_drag', time: performance.now() });
+    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: "before_drag", time: performance.now() });
   });
 
   await page.mouse.move(startX + 100, startY, { steps: 20 });
 
   await page.evaluate(() => {
-    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: 'after_drag_move', time: performance.now() });
+    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: "after_drag_move", time: performance.now() });
   });
 
   await page.mouse.up();
 
   await page.evaluate(() => {
-    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: 'after_mouse_up', time: performance.now() });
+    (window as any).__COMPOSE_PERFORMANCE__.markers.push({ event: "after_mouse_up", time: performance.now() });
   });
 
   // Read immediately
@@ -123,20 +126,20 @@ async function main() {
     };
   });
 
-  console.log('\n[DIAG] === MARKERS ===');
+  console.log("\n[DIAG] === MARKERS ===");
   for (const m of result.markers) {
     console.log(`  ${m.event}: ${m.time.toFixed(1)}ms`);
   }
 
   const markerMap = new Map(result.markers.map((m: any) => [m.event, m.time]));
-  const beforeZoom = markerMap.get('before_zoom_in') || 0;
-  const afterZoomIn = markerMap.get('after_zoom_in') || 0;
-  const afterZoomOut = markerMap.get('after_zoom_out') || 0;
-  const beforeDrag = markerMap.get('before_drag') || 0;
-  const afterDragMove = markerMap.get('after_drag_move') || 0;
-  const afterMouseUp = markerMap.get('after_mouse_up') || 0;
+  const beforeZoom = markerMap.get("before_zoom_in") || 0;
+  const afterZoomIn = markerMap.get("after_zoom_in") || 0;
+  const afterZoomOut = markerMap.get("after_zoom_out") || 0;
+  const beforeDrag = markerMap.get("before_drag") || 0;
+  const afterDragMove = markerMap.get("after_drag_move") || 0;
+  const afterMouseUp = markerMap.get("after_mouse_up") || 0;
 
-  console.log('\n[DIAG] === LONG TASKS BY PHASE ===');
+  console.log("\n[DIAG] === LONG TASKS BY PHASE ===");
   const zoomTasks: any[] = [];
   const dragTasks: any[] = [];
   const postDragTasks: any[] = [];
@@ -175,7 +178,7 @@ async function main() {
     console.log(`    ${t.duration.toFixed(1)}ms @ ${t.startTime.toFixed(1)}ms`);
   }
 
-  const maxTask = result.longTasks.reduce((max: any, t: any) => t.duration > max.duration ? t : max, { duration: 0, startTime: 0 });
+  const maxTask = result.longTasks.reduce((max: any, t: any) => (t.duration > max.duration ? t : max), { duration: 0, startTime: 0 });
   console.log(`\n[DIAG] MAX TASK: ${maxTask.duration.toFixed(1)}ms @ ${maxTask.startTime.toFixed(1)}ms`);
   console.log(`[DIAG] TOTAL TASKS: ${result.longTasks.length}`);
 
@@ -185,7 +188,7 @@ async function main() {
     const store = (window as any).__COMPOSE_PERFORMANCE__;
     return store.longTasks;
   });
-  
+
   const newTasks = laterResult.filter((t: any) => t.startTime > afterMouseUp + 1000);
   console.log(`\n[DIAG] TASKS AFTER 1s+ post-mouseup (${newTasks.length}):`);
   for (const t of newTasks.sort((a: any, b: any) => b.duration - a.duration).slice(0, 10)) {

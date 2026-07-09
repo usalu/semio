@@ -2,33 +2,33 @@
 name: Strict Side Panel Tree API
 overview: Remove the last escape hatches (TreeDataSection.content, playgroundPanelSection/PlaygroundPanelBody) so every side panel is strictly Tab -> Tree -> TreeSection -> TreeItem -> typed control, migrate all offending panels (puzzle 2d inspector/settings, puzzle 5d status, CAD play catalog/details), and centralize all spacing inside ui/react.
 todos:
-  - id: ticket
-    content: Read repo://goals and reopen/open the repo-MCP ticket
-    status: completed
-  - id: ui-react
-    content: "ui/react: remove TreeDataSection.content, migrate BasicChatPanel + ControlTree off it, standardize property-row control slot"
-    status: completed
-  - id: control-kinds
-    content: Add UiSliderNode/UiNumberStepperNode/UiRingNode/UiIconSelectNode to UiControlNode and renderUiControl
-    status: completed
-  - id: escape-hatches
-    content: Delete playgroundPanelSection/PlaygroundPanelBody; playground tabs accept UiTreeNode only
-    status: completed
-  - id: puzzle2d
-    content: Migrate puzzle 2d inspector batches and settings panel to declarative control items
-    status: completed
-  - id: puzzle5d
-    content: Migrate puzzle 5d status panel to keyValue items
-    status: completed
-  - id: cad
-    content: Migrate CAD play catalog/details asides to declarative tree sections
-    status: completed
-  - id: audit-tests
-    content: Spacing audit, extend existing tests, runtime-verify all playground/platform panels
-    status: completed
-  - id: close
-    content: Close the ticket with summary and touched files
-    status: completed
+ - id: ticket
+   content: Read repo://goals and reopen/open the repo-MCP ticket
+   status: completed
+ - id: ui-react
+   content: "ui/react: remove TreeDataSection.content, migrate BasicChatPanel + ControlTree off it, standardize property-row control slot"
+   status: completed
+ - id: control-kinds
+   content: Add UiSliderNode/UiNumberStepperNode/UiRingNode/UiIconSelectNode to UiControlNode and renderUiControl
+   status: completed
+ - id: escape-hatches
+   content: Delete playgroundPanelSection/PlaygroundPanelBody; playground tabs accept UiTreeNode only
+   status: completed
+ - id: puzzle2d
+   content: Migrate puzzle 2d inspector batches and settings panel to declarative control items
+   status: completed
+ - id: puzzle5d
+   content: Migrate puzzle 5d status panel to keyValue items
+   status: completed
+ - id: cad
+   content: Migrate CAD play catalog/details asides to declarative tree sections
+   status: completed
+ - id: audit-tests
+   content: Spacing audit, extend existing tests, runtime-verify all playground/platform panels
+   status: completed
+ - id: close
+   content: Close the ticket with summary and touched files
+   status: completed
 isProject: false
 ---
 
@@ -52,8 +52,6 @@ flowchart LR
   SectionNode --> ItemNode["UiTreeItemNode"]
   ItemNode --> ControlNode["UiControlNode (slider, select, input, toggle, stepper, ring, iconSelect, button, keyValue, host surface)"]
 ```
-
-
 
 ## 1. Tighten `ui/react` primitives ([ui/react/index.tsx](ui/react/index.tsx))
 
@@ -92,4 +90,3 @@ All in [framework/product/playground/renderer/react/index.tsx](framework/product
 ## Repo process
 
 - Read `repo://goals`, reopen the matching ticket if one covers this (e.g. the earlier panel-enforcement ticket) or open a new one; keep temp artifacts in the ticket folder; close with summary + file list.
-

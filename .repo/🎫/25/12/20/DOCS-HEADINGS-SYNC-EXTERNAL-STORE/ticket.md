@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 # Plan
@@ -12,6 +13,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Refactor Docs useHeadings to use useSyncExternalStore instead of useState + subscribe

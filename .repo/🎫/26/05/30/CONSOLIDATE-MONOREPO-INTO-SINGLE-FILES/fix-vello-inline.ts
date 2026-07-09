@@ -15,15 +15,15 @@ pub mod theme;
 // #endregion 🔖IconCodec`;
 
 const neu =
-	"// #region 🔖IconCodec\n" +
-	"pub mod icon_codec {\n// #region icon_codec\n" +
-	iconCodec +
-	"\n// #endregion icon_codec\n}\n" +
-	"pub use icon_codec::{board_resolve_icon_kind, board_typst_markup_to_svg, decode_icon, encode_icon, BoardResolvedIcon, Icon, ThemedSvgLookup};\n" +
-	"pub mod theme {\n// #region theme\n" +
-	theme +
-	"\n// #endregion theme\n}\n" +
-	"// #endregion 🔖IconCodec";
+  "// #region 🔖IconCodec\n" +
+  "pub mod icon_codec {\n// #region icon_codec\n" +
+  iconCodec +
+  "\n// #endregion icon_codec\n}\n" +
+  "pub use icon_codec::{board_resolve_icon_kind, board_typst_markup_to_svg, decode_icon, encode_icon, BoardResolvedIcon, Icon, ThemedSvgLookup};\n" +
+  "pub mod theme {\n// #region theme\n" +
+  theme +
+  "\n// #endregion theme\n}\n" +
+  "// #endregion 🔖IconCodec";
 
 if (!lib.includes(old)) throw new Error("vello IconCodec block not found");
 writeFileSync(libPath, lib.replace(old, neu));

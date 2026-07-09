@@ -35,8 +35,6 @@ flowchart LR
   Main --> Raster --> Blur --> Blit --> Glass --> Fg --> Overlay
 ```
 
-
-
 ## Plan
 
 ### 1. Live repro and bisection (agent mode)
@@ -59,11 +57,11 @@ This is the structural fix for "mechanisms must enforce proper framework, plugin
 
 - **Engagement/measures rails**: `PluginApp::window_engagements()`/`window_measures()` default to empty (`framework/plugin/rs/lib.rs:388-401`), so a plugin that skips them (like `procedural`) gets a visibly different/absent rail with no framework fallback. Replace the silent-empty default with either (a) a framework-derived default rail built purely from `WindowKindDefinition` metadata already present in the manifest (no plugin code required), or (b) make these mandatory `AppBuilder` fields with a required, validated call so omission is a build-time/manifest-lint error rather than a runtime visual gap.
 - **Mode toolbar**: `procedural` declares `.mode("edit", ...)`/`.mode("generate", ...)` but never calls `.mode_tools(...)` (contrast `lowpoly/plugin/rs/lib.rs:2241-2242`), leaving the navbar tool strip empty. Either render a sane empty-but-consistent toolbar state (no layout shift) when omitted, or add manifest lint validation (the dev script already lints plugin manifests) that flags declared modes without registered tools.
-- `**SurfaceKind` is undeclared**: nothing in `WindowKindDefinition`/`WindowKindSpec` (`framework/core/rs/lib.rs:2893-2913`, `framework/plugin/rs/lib.rs:32-39`) declares which `SurfaceKind` a window kind is expected to render. Add an explicit `surface_kind` field to the window kind manifest, and validate at render time (alongside the existing `RenderPlanLimits`/`validate_ui_node` render-plan validation) that the `UiComponentSceneNode` a plugin returns for a given `body_key` matches its declared kind — on mismatch, render a framework-owned error placeholder instead of whatever the plugin produced, rather than letting mismatched/unexpected content flow through silently.
+- `**SurfaceKind` is undeclared\*\*: nothing in `WindowKindDefinition`/`WindowKindSpec` (`framework/core/rs/lib.rs:2893-2913`, `framework/plugin/rs/lib.rs:32-39`) declares which `SurfaceKind` a window kind is expected to render. Add an explicit `surface_kind` field to the window kind manifest, and validate at render time (alongside the existing `RenderPlanLimits`/`validate_ui_node` render-plan validation) that the `UiComponentSceneNode` a plugin returns for a given `body_key` matches its declared kind — on mismatch, render a framework-owned error placeholder instead of whatever the plugin produced, rather than letting mismatched/unexpected content flow through silently.
 
 ### 4. Harden plugin load resilience (secondary, found during investigation)
 
-- `os-shell.tsx:690` awaits `Promise.all(registry.map(loadPluginModule))` with no per-entry timeout or isolated error handling; one hung/failed plugin blocks the entire shell from ever rendering *any* app (observed live on the running `dev:procedural:3d` server, though not confirmed as the user's exact symptom). Replace with per-plugin `Promise.allSettled` + timeout, rendering a framework-owned per-app quarantine/error tile for the failed plugin while unaffected apps still load — consistent with the existing Rust-side plugin supervisor's crash-containment intent, just applied to the browser boot path too.
+- `os-shell.tsx:690` awaits `Promise.all(registry.map(loadPluginModule))` with no per-entry timeout or isolated error handling; one hung/failed plugin blocks the entire shell from ever rendering _any_ app (observed live on the running `dev:procedural:3d` server, though not confirmed as the user's exact symptom). Replace with per-plugin `Promise.allSettled` + timeout, rendering a framework-owned per-app quarantine/error tile for the failed plugin while unaffected apps still load — consistent with the existing Rust-side plugin supervisor's crash-containment intent, just applied to the browser boot path too.
 
 ## Todos to track
 

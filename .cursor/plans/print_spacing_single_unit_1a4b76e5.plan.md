@@ -2,27 +2,27 @@
 name: Print Spacing Single Unit
 overview: Refactor the `print` LaTeX chrome/typography system to use exactly one spacing unit everywhere (mirroring `ui`'s `--ui-spacing`/`--spacing-single`/`--spacing-double` pattern), fixing a dead-padding bug in window tab captions and replacing the unrelated "touch" value and a hardcoded `3pt` literal that currently make gaps inconsistent between horizontal/vertical and between navbar/box spacing.
 todos:
-  - id: ticket
-    content: Open a new ticket for the print spacing refactor via repo MCP
-    status: completed
-  - id: script-ts
-    content: Update print/script.ts to emit a single base unit + single/double multiples, drop tokens.spacing.touch usage
-    status: completed
-  - id: core-sty
-    content: Update print/tex/semio-core.sty public spacing aliases (SemioSpacingUnit/Double)
-    status: completed
-  - id: window-sty
-    content: Fix dead fboxsep bug in semio@window@cap and replace touch/3pt with unit multiples in semio-window.sty (headsep, footskip)
-    status: completed
-  - id: components-flyer
-    content: Replace touch vspace usages in semio-components.sty and flyer.content.tex with double-unit spacing
-    status: completed
-  - id: regen-verify
-    content: Regenerate tokens, rebuild all template PDFs, visually verify consistent spacing
-    status: completed
-  - id: close-ticket
-    content: Close the ticket with a summary of files touched
-    status: completed
+ - id: ticket
+   content: Open a new ticket for the print spacing refactor via repo MCP
+   status: completed
+ - id: script-ts
+   content: Update print/script.ts to emit a single base unit + single/double multiples, drop tokens.spacing.touch usage
+   status: completed
+ - id: core-sty
+   content: Update print/tex/semio-core.sty public spacing aliases (SemioSpacingUnit/Double)
+   status: completed
+ - id: window-sty
+   content: Fix dead fboxsep bug in semio@window@cap and replace touch/3pt with unit multiples in semio-window.sty (headsep, footskip)
+   status: completed
+ - id: components-flyer
+   content: Replace touch vspace usages in semio-components.sty and flyer.content.tex with double-unit spacing
+   status: completed
+ - id: regen-verify
+   content: Regenerate tokens, rebuild all template PDFs, visually verify consistent spacing
+   status: completed
+ - id: close-ticket
+   content: Close the ticket with a summary of files touched
+   status: completed
 isProject: false
 ---
 
@@ -30,7 +30,7 @@ isProject: false
 
 ## Root cause analysis
 
-`ui` defines exactly one base spacing variable, `--ui-spacing` (defaults to `--spacing-compact: 0.2rem`), and every other gap/padding/size is a clean multiple of it: `--spacing-single: calc(1 * var(--ui-spacing))`, `--spacing-double: calc(2 * ...)`, `--size-medium: calc(7 * ...)`, etc. (`ui/styling/js/ui.css:672-706`). `--spacing-touch` only replaces the *value* of `--ui-spacing` on touch devices (`.touch { --ui-spacing: var(--spacing-touch); }`, `ui/styling/js/ui.css:582-583`) — it is never a second, independently-used spacing token.
+`ui` defines exactly one base spacing variable, `--ui-spacing` (defaults to `--spacing-compact: 0.2rem`), and every other gap/padding/size is a clean multiple of it: `--spacing-single: calc(1 * var(--ui-spacing))`, `--spacing-double: calc(2 * ...)`, `--size-medium: calc(7 * ...)`, etc. (`ui/styling/js/ui.css:672-706`). `--spacing-touch` only replaces the _value_ of `--ui-spacing` on touch devices (`.touch { --ui-spacing: var(--spacing-touch); }`, `ui/styling/js/ui.css:582-583`) — it is never a second, independently-used spacing token.
 
 `print` currently has two disconnected literal tokens generated 1:1 from `tokens.spacing` (`print/tex/semio-tokens.sty:50-51`):
 

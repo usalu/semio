@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 User requested:
@@ -39,12 +40,12 @@ Created `ToolbarScopeWrapper` component that:
 
 ```tsx
 const ToolbarScopeWrapper: FC<{ children: ReactNode }> = ({ children }) => {
-  const location = useLocation();
-  const scopeGuids = useMemo(() => {
-    const pathMatch = location.pathname.match(/^\/kits\/([^/?]+)(?:\/(designs|types|qualities)\/([^/?]+))?/);
-    return { kit: pathMatch?.[1], itemType: pathMatch?.[2], item: pathMatch?.[3] };
-  }, [location.pathname]);
-  // ... wrap with appropriate scope providers
+ const location = useLocation();
+ const scopeGuids = useMemo(() => {
+  const pathMatch = location.pathname.match(/^\/kits\/([^/?]+)(?:\/(designs|types|qualities)\/([^/?]+))?/);
+  return { kit: pathMatch?.[1], itemType: pathMatch?.[2], item: pathMatch?.[3] };
+ }, [location.pathname]);
+ // ... wrap with appropriate scope providers
 };
 ```
 
@@ -88,6 +89,7 @@ Note: The test found duplicate IDs (container and button share same ID) - worked
 ## Log
 
 ## Summary
+
 # Summary
 
 Implement toolbar in apps and extend Type app E2E test for connector tool

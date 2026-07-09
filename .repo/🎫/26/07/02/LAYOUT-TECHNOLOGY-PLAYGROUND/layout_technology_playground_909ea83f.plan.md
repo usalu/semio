@@ -2,30 +2,30 @@
 name: Layout Technology Playground
 overview: "Build a new `layout` technology: a desktop-publishing style document engine (pages, parent pages, threaded text, styles, linked assets, preflight, packaging/export to PDF/SVG/PNG) rendered via WebGPU/vello, exposed through a 2-window (blueprint + preview) infinite-canvas playground built on the existing `framework/product/playground/core` shell."
 todos:
-  - id: bootstrap
-    content: "Scaffold layout/ technology: AGENTS.md, script.ts/project.json/package.json for core, rs, react, play; add layout/rs to root Cargo.toml workspace members; add launch.json dev entry"
-    status: completed
-  - id: core-model
-    content: "Build layout/core: Document/Page/Spread/ParentPage/Layer/Frame/TextStory/TextFrame/ImageLink/styles/GridSettings types, fixture JSON schema, command+undo/redo, parent-page inheritance resolver, style cascade resolver, snap resolver, linked-asset state machine, preflight validators, inline tests"
-    status: completed
-  - id: engine-text-render
-    content: "Build layout/rs engine core: bundled-font Parley+Swash text shaping/threading/pagination, Display List builder, CanvasContent impl (blueprint + preview chrome modes) on infinite/cavas, hit testing"
-    status: completed
-  - id: engine-export
-    content: "Build layout/rs export/package: PNG via GPU readback + image/png crate, SVG via hand-written XML serializer, PDF via printpdf, package archive via zip+sha2 with manifest/hashes"
-    status: completed
-  - id: react-bindings
-    content: "Build layout/react: LayoutEngineSession wasm wrapper and LayoutCanvas component (blueprint/preview modes, resize/DPR/pointer routing)"
-    status: completed
-  - id: play-app
-    content: "Build layout/play: Controller, 2-window (blueprint+preview) layout via createDefaultLayout, side panel tree (Document/Spreads/Pages/Parent Pages/Layers/Stories/Links/Styles/Preflight), toolbar tools, options window, preflight panel, export/package commands"
-    status: completed
-  - id: fixture-and-verify
-    content: Author sample fixture/manifest (parent page, threaded text, linked image, seeded preflight issue); run dev server, verify both windows render via WebGPU, undo/redo works, one export path succeeds, preflight panel surfaces the seeded issue
-    status: completed
-  - id: ticket
-    content: Read repo://goals, open/associate a repo ticket for this build, keep scratch files inside the ticket folder, close ticket with summary of all created/updated files
-    status: in_progress
+ - id: bootstrap
+   content: "Scaffold layout/ technology: AGENTS.md, script.ts/project.json/package.json for core, rs, react, play; add layout/rs to root Cargo.toml workspace members; add launch.json dev entry"
+   status: completed
+ - id: core-model
+   content: "Build layout/core: Document/Page/Spread/ParentPage/Layer/Frame/TextStory/TextFrame/ImageLink/styles/GridSettings types, fixture JSON schema, command+undo/redo, parent-page inheritance resolver, style cascade resolver, snap resolver, linked-asset state machine, preflight validators, inline tests"
+   status: completed
+ - id: engine-text-render
+   content: "Build layout/rs engine core: bundled-font Parley+Swash text shaping/threading/pagination, Display List builder, CanvasContent impl (blueprint + preview chrome modes) on infinite/cavas, hit testing"
+   status: completed
+ - id: engine-export
+   content: "Build layout/rs export/package: PNG via GPU readback + image/png crate, SVG via hand-written XML serializer, PDF via printpdf, package archive via zip+sha2 with manifest/hashes"
+   status: completed
+ - id: react-bindings
+   content: "Build layout/react: LayoutEngineSession wasm wrapper and LayoutCanvas component (blueprint/preview modes, resize/DPR/pointer routing)"
+   status: completed
+ - id: play-app
+   content: "Build layout/play: Controller, 2-window (blueprint+preview) layout via createDefaultLayout, side panel tree (Document/Spreads/Pages/Parent Pages/Layers/Stories/Links/Styles/Preflight), toolbar tools, options window, preflight panel, export/package commands"
+   status: completed
+ - id: fixture-and-verify
+   content: Author sample fixture/manifest (parent page, threaded text, linked image, seeded preflight issue); run dev server, verify both windows render via WebGPU, undo/redo works, one export path succeeds, preflight panel surfaces the seeded issue
+   status: completed
+ - id: ticket
+   content: Read repo://goals, open/associate a repo ticket for this build, keep scratch files inside the ticket folder, close ticket with summary of all created/updated files
+   status: in_progress
 isProject: false
 ---
 
@@ -54,8 +54,6 @@ flowchart TD
   Engine --> Vello
 ```
 
-
-
 Render pipeline (per spec section 9), implemented as a shared **Display List** IR that feeds both the live GPU canvas and every export target:
 
 ```mermaid
@@ -74,8 +72,6 @@ flowchart LR
   DL --> SVG
   DL --> PDF
 ```
-
-
 
 ## Package/crate layout (new top-level `layout/` technology, mirrors `puzzle/2d` and `sequence` conventions)
 
@@ -129,4 +125,3 @@ flowchart LR
 6. `layout/play` app: controller, 2-window layout, side panel tree, toolbar/options window, preflight panel, export/package commands wired to downloads.
 7. Sample fixture/manifest exercising parent pages, threading, styles, linked image, and a deliberate preflight issue.
 8. Wire up dev script + launch.json entry, run `nx dev` for `layout/play`, verify blueprint and preview windows both render via WebGPU, verify undo/redo, verify one export path end-to-end (e.g. PNG download) and the preflight panel surfaces the fixture's seeded issue.
-

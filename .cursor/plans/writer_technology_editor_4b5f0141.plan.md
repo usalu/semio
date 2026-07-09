@@ -33,8 +33,6 @@ flowchart TB
   CLIENT -->|"colors, squiggles, popups, format edits"| WASM
 ```
 
-
-
 ### Layer 1 - Jack language intelligence (Rust, in `trinity`)
 
 Extend [trinity/jack/core/lib.rs](trinity/jack/core/lib.rs) under a new `#region Language Service` with span-aware analysis (today `parse` returns `Result<Query,String>` with no spans):

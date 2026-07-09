@@ -1,7 +1,7 @@
 {
   "title": "TOC Semio Window Tables",
   "emoji": "🖨️",
-  "status": "closed",
+  "status": "open",
   "description": "LaTeX Table OS Style Parity",
   "summary": "Fixed empty Semio Table TOC body rows: `semio_window_register_body_materialize` used `\\exp_args:Ne`, which fully expanded `\\semio@register@data` / `\\SemioTableRegisterRow` during materialize (outside tabular), so only the Nr/Titel/Seite header rendered. Switched to `\\exp_args:No` so row tokens are stored and expanded inside `\\SemioTableRegister` when `.sctoc` is loaded on pass 2. Also added `\\renewcommand{\\semio@window@header@invoke}` after `\\semio@window@header@muted` to fix expl3 forward-reference tokenization for window chrome.",
   "github": {
@@ -16,6 +16,7 @@
     "⚪8f763ee957b04cb9a95a01afd440897b",
     "⚪d7f53c00e7d4480e9f17aa5f50794969",
     "⚪4d8271f8aa914c97b5b570e82de3fee5",
-    "⚪75d733eb98464c8fbaa23b7492ea846a"
+    "⚪75d733eb98464c8fbaa23b7492ea846a",
+    "⚪43b8c301446e4732a2b7f2cfac2d9c33"
   ]
 }

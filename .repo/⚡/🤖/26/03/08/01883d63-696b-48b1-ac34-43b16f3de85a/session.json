@@ -773,9 +773,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️server💻main📌1📌2308"
-        ],
+        "ranges": ["🧰composerepo⌨️server💻main📌1📌2308"],
         "second": "🎆26🌙03☀️08⏰00⌚15⏱️41",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -1267,9 +1265,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️server💻main📌1📌2308"
-        ],
+        "ranges": ["🧰composerepo⌨️server💻main📌1📌2308"],
         "second": "🎆26🌙03☀️08⏰00⌚15⏱️53",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -1295,9 +1291,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "⚙️mcp📌1📌18"
-        ],
+        "ranges": ["⚙️mcp📌1📌18"],
         "second": "🎆26🌙03☀️08⏰00⌚16⏱️10",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -1323,9 +1317,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "⚙️mcp📌1📌18"
-        ],
+        "ranges": ["⚙️mcp📌1📌18"],
         "second": "🎆26🌙03☀️08⏰00⌚16⏱️23",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -8333,9 +8325,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45694"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45694"],
         "second": "🎆26🌙03☀️08⏰00⌚16⏱️37",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -15343,9 +15333,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45694"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45694"],
         "second": "🎆26🌙03☀️08⏰00⌚16⏱️51",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -22353,9 +22341,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45694"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45694"],
         "second": "🎆26🌙03☀️08⏰00⌚17⏱️13",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -29363,9 +29349,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45694"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45694"],
         "second": "🎆26🌙03☀️08⏰00⌚17⏱️26",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -36373,9 +36357,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45694"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45694"],
         "second": "🎆26🌙03☀️08⏰00⌚17⏱️41",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -43383,9 +43365,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45694"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45694"],
         "second": "🎆26🌙03☀️08⏰00⌚17⏱️57",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -50447,9 +50427,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45694"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45694"],
         "second": "🎆26🌙03☀️08⏰00⌚18⏱️44",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -57457,9 +57435,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45694"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45694"],
         "second": "🎆26🌙03☀️08⏰00⌚18⏱️57",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -65125,9 +65101,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45687"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45687"],
         "second": "🎆26🌙03☀️08⏰00⌚24⏱️24",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -72135,9 +72109,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45687"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45687"],
         "second": "🎆26🌙03☀️08⏰00⌚24⏱️37",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -79270,9 +79242,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45716"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45716"],
         "second": "🎆26🌙03☀️08⏰00⌚28⏱️04",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -86284,9 +86254,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45716"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45716"],
         "second": "🎆26🌙03☀️08⏰00⌚28⏱️19",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -93453,9 +93421,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45708"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45708"],
         "second": "🎆26🌙03☀️08⏰00⌚31⏱️21",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -100467,9 +100433,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45708"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45708"],
         "second": "🎆26🌙03☀️08⏰00⌚31⏱️35",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -107481,9 +107445,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45708"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45708"],
         "second": "🎆26🌙03☀️08⏰00⌚32⏱️03",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -114495,9 +114457,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45708"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45708"],
         "second": "🎆26🌙03☀️08⏰00⌚32⏱️16",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -121509,9 +121469,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45708"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45708"],
         "second": "🎆26🌙03☀️08⏰00⌚32⏱️49",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -128523,9 +128481,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45708"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45708"],
         "second": "🎆26🌙03☀️08⏰00⌚33⏱️04",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -135630,9 +135586,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45699"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45699"],
         "second": "🎆26🌙03☀️08⏰00⌚35⏱️38",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -142644,9 +142598,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45699"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45699"],
         "second": "🎆26🌙03☀️08⏰00⌚35⏱️54",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -149658,9 +149610,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45699"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45699"],
         "second": "🎆26🌙03☀️08⏰00⌚37⏱️27",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -156672,9 +156622,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45699"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45699"],
         "second": "🎆26🌙03☀️08⏰00⌚37⏱️41",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -163748,9 +163696,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45692"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45692"],
         "second": "🎆26🌙03☀️08⏰00⌚39⏱️05",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -170762,9 +170708,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45692"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45692"],
         "second": "🎆26🌙03☀️08⏰00⌚39⏱️20",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -177838,9 +177782,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45693"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45693"],
         "second": "🎆26🌙03☀️08⏰00⌚40⏱️55",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -184852,9 +184794,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45718"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45718"],
         "second": "🎆26🌙03☀️08⏰00⌚41⏱️12",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -191866,9 +191806,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45718"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45718"],
         "second": "🎆26🌙03☀️08⏰00⌚42⏱️09",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -198880,9 +198818,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45718"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45718"],
         "second": "🎆26🌙03☀️08⏰00⌚42⏱️26",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -205894,9 +205830,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45718"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45718"],
         "second": "🎆26🌙03☀️08⏰00⌚46⏱️08",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -212908,9 +212842,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45718"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45718"],
         "second": "🎆26🌙03☀️08⏰00⌚46⏱️21",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -219922,9 +219854,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45718"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45718"],
         "second": "🎆26🌙03☀️08⏰00⌚46⏱️51",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -226936,9 +226866,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45718"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45718"],
         "second": "🎆26🌙03☀️08⏰00⌚47⏱️04",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -234012,9 +233940,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45700"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45700"],
         "second": "🎆26🌙03☀️08⏰00⌚48⏱️47",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -241026,9 +240952,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45700"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45700"],
         "second": "🎆26🌙03☀️08⏰00⌚48⏱️58",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -248040,9 +247964,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45700"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45700"],
         "second": "🎆26🌙03☀️08⏰00⌚49⏱️32",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -255054,9 +254976,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45700"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45700"],
         "second": "🎆26🌙03☀️08⏰00⌚49⏱️43",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -262068,9 +261988,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45700"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45700"],
         "second": "🎆26🌙03☀️08⏰00⌚50⏱️22",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -269082,9 +269000,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45700"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45700"],
         "second": "🎆26🌙03☀️08⏰00⌚50⏱️37",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -276096,9 +276012,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45700"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45700"],
         "second": "🎆26🌙03☀️08⏰00⌚54⏱️35",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -283110,9 +283024,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45700"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45700"],
         "second": "🎆26🌙03☀️08⏰00⌚54⏱️56",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -290124,9 +290036,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45700"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45700"],
         "second": "🎆26🌙03☀️08⏰00⌚55⏱️41",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -297138,9 +297048,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45700"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45700"],
         "second": "🎆26🌙03☀️08⏰00⌚55⏱️55",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -304152,9 +304060,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45700"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45700"],
         "second": "🎆26🌙03☀️08⏰00⌚56⏱️44",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -311166,9 +311072,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45700"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45700"],
         "second": "🎆26🌙03☀️08⏰00⌚57⏱️00",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -318180,9 +318084,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45710"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45710"],
         "second": "🎆26🌙03☀️08⏰00⌚58⏱️55",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -325194,9 +325096,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45710"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45710"],
         "second": "🎆26🌙03☀️08⏰00⌚59⏱️15",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -332208,9 +332108,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45710"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45710"],
         "second": "🎆26🌙03☀️08⏰01⌚00⏱️34",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -339222,9 +339120,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45710"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45710"],
         "second": "🎆26🌙03☀️08⏰01⌚01⏱️10",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -346236,9 +346132,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45710"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45710"],
         "second": "🎆26🌙03☀️08⏰01⌚02⏱️07",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -353250,9 +353144,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45710"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45710"],
         "second": "🎆26🌙03☀️08⏰01⌚02⏱️21",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -360264,9 +360156,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45710"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45710"],
         "second": "🎆26🌙03☀️08⏰01⌚04⏱️18",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -367278,9 +367168,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45710"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45710"],
         "second": "🎆26🌙03☀️08⏰01⌚04⏱️34",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -374292,9 +374180,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45710"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45710"],
         "second": "🎆26🌙03☀️08⏰01⌚05⏱️28",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -381306,9 +381192,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45710"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45710"],
         "second": "🎆26🌙03☀️08⏰01⌚05⏱️46",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -388320,9 +388204,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45710"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45710"],
         "second": "🎆26🌙03☀️08⏰01⌚08⏱️46",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -395334,9 +395216,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45710"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45710"],
         "second": "🎆26🌙03☀️08⏰01⌚08⏱️59",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -402348,9 +402228,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45710"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45710"],
         "second": "🎆26🌙03☀️08⏰01⌚09⏱️45",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -409362,9 +409240,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45710"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45710"],
         "second": "🎆26🌙03☀️08⏰01⌚09⏱️57",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -416438,9 +416314,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45713"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45713"],
         "second": "🎆26🌙03☀️08⏰01⌚11⏱️44",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -423452,9 +423326,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45713"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45713"],
         "second": "🎆26🌙03☀️08⏰01⌚11⏱️59",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -430466,9 +430338,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45718"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45718"],
         "second": "🎆26🌙03☀️08⏰01⌚12⏱️46",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -437480,9 +437350,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45718"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45718"],
         "second": "🎆26🌙03☀️08⏰01⌚13⏱️04",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -444696,9 +444564,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45723"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45723"],
         "second": "🎆26🌙03☀️08⏰01⌚18⏱️16",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -451710,9 +451576,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45723"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45723"],
         "second": "🎆26🌙03☀️08⏰01⌚18⏱️35",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -458724,9 +458588,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45723"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45723"],
         "second": "🎆26🌙03☀️08⏰01⌚19⏱️29",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -465738,9 +465600,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45723"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45723"],
         "second": "🎆26🌙03☀️08⏰01⌚19⏱️44",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -472752,9 +472612,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45723"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45723"],
         "second": "🎆26🌙03☀️08⏰01⌚20⏱️38",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -479766,9 +479624,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45723"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45723"],
         "second": "🎆26🌙03☀️08⏰01⌚20⏱️54",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -486780,9 +486636,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45723"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45723"],
         "second": "🎆26🌙03☀️08⏰01⌚21⏱️47",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },
@@ -493794,9 +493648,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌45723"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌45723"],
         "second": "🎆26🌙03☀️08⏰01⌚21⏱️59",
         "session": "⚪01883d63696b48b1ac3443b16f3de85a"
       },

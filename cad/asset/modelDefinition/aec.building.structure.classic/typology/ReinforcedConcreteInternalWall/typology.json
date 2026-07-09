@@ -8,10 +8,6 @@
     "structure.structure.constructReinforcedConcreteInternalWallFromCurveAndHeight",
     "structure.structure.constructReinforcedConcreteInternalWallFromSurface"
   ],
-  "interactions": [
-    "structure.structure.constructReinforcedConcreteInternalWall"
-  ],
-  "primitiveKinds": [
-    "curve"
-  ]
+  "interactions": ["structure.structure.constructReinforcedConcreteInternalWall"],
+  "primitiveKinds": ["curve"]
 }

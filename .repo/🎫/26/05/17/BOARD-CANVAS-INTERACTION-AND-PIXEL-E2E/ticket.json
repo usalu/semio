@@ -5,7 +5,5 @@
   "description": "Canvas still non-interactive for user; analyze Rust/JS/React pointer path and memory; add Playwright e2e that screenshots GPU canvas before vs after an action that must change pixels.",
   "summary": "Reviewed Rust pointer/wheel → WASM host, JS BoardRenderer listener routing + re-entry guards, React BoardCanvas event surface (no host DOM overlay). Confirmed dispose detaches window listeners before session.free (no listener leak). Added canvas dataset data-board-pointer-bridge (window|surface) for debugging. Extended board-play-gpu Playwright spec with a GPU-only test: after ready, wheel over canvas changes data-board-zoom and canvas.screenshot() bytes differ from pre-wheel buffer. Wrote ticket analysis.md. Ran bun nx run @elements/board:test --skip-nx-cache (exit 0); new e2e skips without WebGPU adapter like sibling GPU tests.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": [
-    "⚪af7d9cccd2894fe489ff9a4eff13911b"
-  ]
+  "sessions": ["⚪af7d9cccd2894fe489ff9a4eff13911b"]
 }

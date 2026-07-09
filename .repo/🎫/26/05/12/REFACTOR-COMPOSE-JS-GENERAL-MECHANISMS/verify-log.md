@@ -11,11 +11,11 @@
 
 ### Commands
 
-| Command | Exit |
-|--------|------|
-| `bunx tsc --noEmit` in `compose/js` | **0** |
-| `$env:COMPOSE_JS_RUN_EMBEDDED_TESTS='1'; bunx vitest run index.ts` in `compose/js` (PowerShell) | **0** (11 tests) |
-| `set COMPOSE_JS_RUN_EMBEDDED_TESTS=1&& bunx vitest run index.ts` (cmd-style) | **1** — env not propagated to Node on this runner (`No test suite found`); use PowerShell `$env:…` |
+| Command                                                                                         | Exit                                                                                               |
+| ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `bunx tsc --noEmit` in `compose/js`                                                             | **0**                                                                                              |
+| `$env:COMPOSE_JS_RUN_EMBEDDED_TESTS='1'; bunx vitest run index.ts` in `compose/js` (PowerShell) | **0** (11 tests)                                                                                   |
+| `set COMPOSE_JS_RUN_EMBEDDED_TESTS=1&& bunx vitest run index.ts` (cmd-style)                    | **1** — env not propagated to Node on this runner (`No test suite found`); use PowerShell `$env:…` |
 
 ### Files
 
@@ -34,11 +34,11 @@
 
 ### Commands
 
-| Command | Exit |
-|--------|------|
-| `bunx tsc --noEmit` in `compose/react` | **0** |
+| Command                                    | Exit  |
+| ------------------------------------------ | ----- |
+| `bunx tsc --noEmit` in `compose/react`     | **0** |
 | `bunx tsc --noEmit` in `compose/sketchpad` | **0** |
-| `bunx vitest run` in `compose/react` | **0** |
+| `bunx vitest run` in `compose/react`       | **0** |
 
 ### Notes
 
@@ -55,11 +55,11 @@
 
 ### Commands
 
-| Command | Exit |
-|--------|------|
-| `bunx tsc --noEmit` in `compose/react` | **0** |
+| Command                                    | Exit                                                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `bunx tsc --noEmit` in `compose/react`     | **0**                                                                                            |
 | `bunx tsc --noEmit` in `compose/sketchpad` | **0** (inherits js `include`; does not typecheck monolithic `index.tsx` unless explicitly added) |
-| `bunx vitest run` in `compose/react` | **0** |
+| `bunx vitest run` in `compose/react`       | **0**                                                                                            |
 
 ### Notes
 
@@ -97,17 +97,17 @@
 
 ### Commands (this pass)
 
-| Command | Exit |
-|--------|------|
-| `cargo check -p compose --target-dir target-ssel4` | **0** |
-| `cargo check -p compose --target wasm32-unknown-unknown --target-dir target-ssel4` | **0** |
-| `cargo test -p compose --target-dir target-ssel4 schema_matches_target_graphql_file` | **0** |
-| `cargo test -p compose --target-dir target-ssel4 no_deep_clone_on_traversal` | **0** |
+| Command                                                                                               | Exit                                                                                  |
+| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `cargo check -p compose --target-dir target-ssel4`                                                    | **0**                                                                                 |
+| `cargo check -p compose --target wasm32-unknown-unknown --target-dir target-ssel4`                    | **0**                                                                                 |
+| `cargo test -p compose --target-dir target-ssel4 schema_matches_target_graphql_file`                  | **0**                                                                                 |
+| `cargo test -p compose --target-dir target-ssel4 no_deep_clone_on_traversal`                          | **0**                                                                                 |
 | `cargo test -p compose --target-dir target-ssel4 kit_store_golden_ops_via__op_json_match_fingerprint` | **101** (fixture `kit-store.golden.operations` not found on this runner — `NotFound`) |
-| `bunx tsc --noEmit` in `compose/js` | **0** |
-| `bunx tsc --noEmit` in `compose/react` | **0** |
-| `bunx tsc --noEmit` in `compose/sketchpad` | **0** |
-| `npm run depcruise:layers` | **n/a** — script not present in workspace `package.json` |
+| `bunx tsc --noEmit` in `compose/js`                                                                   | **0**                                                                                 |
+| `bunx tsc --noEmit` in `compose/react`                                                                | **0**                                                                                 |
+| `bunx tsc --noEmit` in `compose/sketchpad`                                                            | **0**                                                                                 |
+| `npm run depcruise:layers`                                                                            | **n/a** — script not present in workspace `package.json`                              |
 
 ### remaining-work (plan checklist — ticket **closed** after Phase A2 append; reopen for next slice)
 
@@ -140,12 +140,12 @@
 
 ### Commands (`--target-dir c:\\git\\compose\\target-phaseA`)
 
-| Command | Exit |
-|--------|------|
-| `cargo check -p compose --target-dir c:\git\compose\target-phaseA` | **0** |
-| `cargo check -p compose --target wasm32-unknown-unknown --target-dir c:\git\compose\target-phaseA` | **0** |
-| `cargo test -p compose --target-dir c:\git\compose\target-phaseA schema_matches_target_graphql_file` | **0** |
-| `cargo test -p compose --target-dir c:\git\compose\target-phaseA no_deep_clone_on_traversal` | **0** |
+| Command                                                                                                                     | Exit  |
+| --------------------------------------------------------------------------------------------------------------------------- | ----- |
+| `cargo check -p compose --target-dir c:\git\compose\target-phaseA`                                                          | **0** |
+| `cargo check -p compose --target wasm32-unknown-unknown --target-dir c:\git\compose\target-phaseA`                          | **0** |
+| `cargo test -p compose --target-dir c:\git\compose\target-phaseA schema_matches_target_graphql_file`                        | **0** |
+| `cargo test -p compose --target-dir c:\git\compose\target-phaseA no_deep_clone_on_traversal`                                | **0** |
 | `cargo test -p compose --target-dir c:\git\compose\target-phaseA kit_store_bundle_serialize_hydrate_round_trip_via_graphql` | **0** |
 
 ### Files touched
@@ -172,8 +172,8 @@
 
 ### Commands
 
-| Command | Exit |
-|--------|------|
+| Command                             | Exit  |
+| ----------------------------------- | ----- |
 | `bunx tsc --noEmit` in `compose/js` | **0** |
 
 ### Files touched
@@ -207,13 +207,13 @@
 
 ### Commands (`--target-dir c:\git\compose\target-phaseA2`)
 
-| Command | Exit |
-|--------|------|
-| `cargo check -p compose --target-dir c:\git\compose\target-phaseA2` | **0** |
-| `cargo check -p compose --target wasm32-unknown-unknown --target-dir c:\git\compose\target-phaseA2` | **0** |
+| Command                                                                                               | Exit  |
+| ----------------------------------------------------------------------------------------------------- | ----- |
+| `cargo check -p compose --target-dir c:\git\compose\target-phaseA2`                                   | **0** |
+| `cargo check -p compose --target wasm32-unknown-unknown --target-dir c:\git\compose\target-phaseA2`   | **0** |
 | `cargo test -p compose --target-dir c:\git\compose\target-phaseA2 schema_matches_target_graphql_file` | **0** |
-| `cargo test -p compose --target-dir c:\git\compose\target-phaseA2 kit_store_bundle` | **0** |
-| `cargo test -p compose --target-dir c:\git\compose\target-phaseA2 no_deep_clone_on_traversal` | **0** |
+| `cargo test -p compose --target-dir c:\git\compose\target-phaseA2 kit_store_bundle`                   | **0** |
+| `cargo test -p compose --target-dir c:\git\compose\target-phaseA2 no_deep_clone_on_traversal`         | **0** |
 
 ### Files touched
 
@@ -237,14 +237,14 @@
 
 ### Commands (`--target-dir c:\git\compose\target-phaseA3`)
 
-| Command | Exit |
-|--------|------|
-| `cargo check -p compose --target-dir c:\git\compose\target-phaseA3` | **0** |
-| `cargo check -p compose --target wasm32-unknown-unknown --target-dir c:\git\compose\target-phaseA3` | **0** |
-| `cargo test -p compose --target-dir c:\git\compose\target-phaseA3 schema_matches_target_graphql_file` | **0** |
-| `cargo test -p compose --target-dir c:\git\compose\target-phaseA3 canonical_kit_diff_metabolism_fixture_json_round_trip` | **0** |
-| `cargo test -p compose --target-dir c:\git\compose\target-phaseA3 no_deep_clone_on_traversal` | **0** |
-| `cargo test -p compose --target-dir c:\git\compose\target-phaseA3 kit_store_bundle` | **0** (6 tests) |
+| Command                                                                                                                  | Exit            |
+| ------------------------------------------------------------------------------------------------------------------------ | --------------- |
+| `cargo check -p compose --target-dir c:\git\compose\target-phaseA3`                                                      | **0**           |
+| `cargo check -p compose --target wasm32-unknown-unknown --target-dir c:\git\compose\target-phaseA3`                      | **0**           |
+| `cargo test -p compose --target-dir c:\git\compose\target-phaseA3 schema_matches_target_graphql_file`                    | **0**           |
+| `cargo test -p compose --target-dir c:\git\compose\target-phaseA3 canonical_kit_diff_metabolism_fixture_json_round_trip` | **0**           |
+| `cargo test -p compose --target-dir c:\git\compose\target-phaseA3 no_deep_clone_on_traversal`                            | **0**           |
+| `cargo test -p compose --target-dir c:\git\compose\target-phaseA3 kit_store_bundle`                                      | **0** (6 tests) |
 
 ### Files touched
 
@@ -265,18 +265,18 @@
 
 ### Commands (`--target-dir c:\git\compose\target-phaseD` unless noted)
 
-| Command | Exit |
-|--------|------|
-| `cargo check -p compose --target-dir c:\git\compose\target-phaseD` | **0** |
-| `cargo check -p compose --target wasm32-unknown-unknown --target-dir c:\git\compose\target-phaseD` | **0** |
-| `cargo test -p compose --target-dir c:\git\compose\target-phaseD` | **0** (36 passed, 1 ignored) |
-| `bunx tsc --noEmit` in `compose/js` | **0** |
-| `bunx tsc --noEmit` in `compose/react` | **0** |
-| `bunx tsc --noEmit` in `compose/sketchpad` | **0** |
-| `bunx tsc --noEmit` in `compose/algorithms` | **0** |
-| `bun nx run workspace:depcruise` | **0** (after `project.json` fix; was **1** with `bunx dependency-cruiser@16` script-not-found) |
-| `npx --yes dependency-cruiser@16 compose/js compose/react compose/sketchpad --config .dependency-cruiser.cjs --output-type err` | **0** (same graph as Nx target) |
-| `bunx vitest run` in `compose/react` | **0** |
+| Command                                                                                                                         | Exit                                                                                           |
+| ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `cargo check -p compose --target-dir c:\git\compose\target-phaseD`                                                              | **0**                                                                                          |
+| `cargo check -p compose --target wasm32-unknown-unknown --target-dir c:\git\compose\target-phaseD`                              | **0**                                                                                          |
+| `cargo test -p compose --target-dir c:\git\compose\target-phaseD`                                                               | **0** (36 passed, 1 ignored)                                                                   |
+| `bunx tsc --noEmit` in `compose/js`                                                                                             | **0**                                                                                          |
+| `bunx tsc --noEmit` in `compose/react`                                                                                          | **0**                                                                                          |
+| `bunx tsc --noEmit` in `compose/sketchpad`                                                                                      | **0**                                                                                          |
+| `bunx tsc --noEmit` in `compose/algorithms`                                                                                     | **0**                                                                                          |
+| `bun nx run workspace:depcruise`                                                                                                | **0** (after `project.json` fix; was **1** with `bunx dependency-cruiser@16` script-not-found) |
+| `npx --yes dependency-cruiser@16 compose/js compose/react compose/sketchpad --config .dependency-cruiser.cjs --output-type err` | **0** (same graph as Nx target)                                                                |
+| `bunx vitest run` in `compose/react`                                                                                            | **0**                                                                                          |
 
 ### Files touched
 
@@ -292,28 +292,28 @@
 
 ### Removed / renamed (policy: align with `target.schema.graphql` input names + existing row patterns; no ad-hoc `*Wire`)
 
-| Before | After / action |
-|--------|----------------|
-| `operation::TypeModifiedWireRow` | **`TypeModifiedRow`** (same shape as `TagModifiedRow`; `diff` remains `serde_json::Value`) |
-| `operation::DesignModifiedWireRow` | **`DesignModifiedRow`** |
-| `operation::PieceDiffWire` | **removed** — `Kit::apply_design_piece_modified_json` reads `fixPiece` / `drag` / `pose` from `serde_json::Value` and deserializes **`OffsetInput`** / **`PositionInput`** only |
-| `WireReq` (WASM GraphQL JSON envelope) | **`GraphqlExecuteJson`** |
-| `request_from_wire` | **`graphql_execute_request_from_str`** |
-| `//#region 🔖canonical_kit_types_designs_wire` | **`//#region 🔖canonical_kit_types_designs_mod`** |
-| `compose/ui` **`KitPortWire`** | **`KitPortPlain`** (still `JsonObject` extension; naming matches `KitKindPlain`) |
-| Docstrings / tests mentioning “wire” for transport | Rephrased to JSON / SDL-aligned wording in **`compose/js/index.ts`**, **`compose/react/index.tsx`**, **`compose/ui/index.tsx`** |
+| Before                                             | After / action                                                                                                                                                                  |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `operation::TypeModifiedWireRow`                   | **`TypeModifiedRow`** (same shape as `TagModifiedRow`; `diff` remains `serde_json::Value`)                                                                                      |
+| `operation::DesignModifiedWireRow`                 | **`DesignModifiedRow`**                                                                                                                                                         |
+| `operation::PieceDiffWire`                         | **removed** — `Kit::apply_design_piece_modified_json` reads `fixPiece` / `drag` / `pose` from `serde_json::Value` and deserializes **`OffsetInput`** / **`PositionInput`** only |
+| `WireReq` (WASM GraphQL JSON envelope)             | **`GraphqlExecuteJson`**                                                                                                                                                        |
+| `request_from_wire`                                | **`graphql_execute_request_from_str`**                                                                                                                                          |
+| `//#region 🔖canonical_kit_types_designs_wire`     | **`//#region 🔖canonical_kit_types_designs_mod`**                                                                                                                               |
+| `compose/ui` **`KitPortWire`**                     | **`KitPortPlain`** (still `JsonObject` extension; naming matches `KitKindPlain`)                                                                                                |
+| Docstrings / tests mentioning “wire” for transport | Rephrased to JSON / SDL-aligned wording in **`compose/js/index.ts`**, **`compose/react/index.tsx`**, **`compose/ui/index.tsx`**                                                 |
 
 ### Commands (`--target-dir` under ticket folder)
 
-| Command | Exit |
-|--------|------|
+| Command                                                                                                             | Exit                         |
+| ------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
 | `cargo test -p compose --target-dir c:/git/compose/.repo/🎫/26/05/12/SINGLE-SOURCE-ENTITY-LAYERS/target-wire-audit` | **0** (36 passed, 1 ignored) |
-| `bunx tsc --noEmit -p compose/js/tsconfig.json` | **0** |
-| `bunx tsc --noEmit -p compose/react/tsconfig.json` | **0** |
-| `bunx tsc --noEmit -p compose/sketchpad/tsconfig.json` | **0** |
-| `bunx tsc --noEmit -p compose/algorithms/tsconfig.json` | **0** |
-| `bunx tsc --noEmit -p compose/ui/tsconfig.json` | **0** |
-| `bun nx run workspace:depcruise` | **0** |
+| `bunx tsc --noEmit -p compose/js/tsconfig.json`                                                                     | **0**                        |
+| `bunx tsc --noEmit -p compose/react/tsconfig.json`                                                                  | **0**                        |
+| `bunx tsc --noEmit -p compose/sketchpad/tsconfig.json`                                                              | **0**                        |
+| `bunx tsc --noEmit -p compose/algorithms/tsconfig.json`                                                             | **0**                        |
+| `bunx tsc --noEmit -p compose/ui/tsconfig.json`                                                                     | **0**                        |
+| `bun nx run workspace:depcruise`                                                                                    | **0**                        |
 
 ### Files touched
 
@@ -343,16 +343,16 @@
 
 ### Commands
 
-| Command | Exit |
-|--------|------|
-| `bunx tsc --noEmit -p compose/js/tsconfig.json` | **0** |
-| `bunx tsc --noEmit -p compose/react/tsconfig.json` | **0** |
-| `bunx tsc --noEmit -p compose/ui/tsconfig.json` | **0** |
-| `bunx tsc --noEmit -p compose/algorithms/tsconfig.json` | **0** |
-| `bunx tsc --noEmit -p compose/sketchpad/tsconfig.json` | **0** |
-| `$env:COMPOSE_JS_RUN_EMBEDDED_TESTS='1'; bunx vitest run index.ts` in `compose/js` | **0** (11 tests) |
-| `npx nx run workspace:depcruise` | **0** |
-| `cargo test -p compose` | **not completed** — blocked on global Cargo artifact directory file lock in this environment |
+| Command                                                                            | Exit                                                                                         |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `bunx tsc --noEmit -p compose/js/tsconfig.json`                                    | **0**                                                                                        |
+| `bunx tsc --noEmit -p compose/react/tsconfig.json`                                 | **0**                                                                                        |
+| `bunx tsc --noEmit -p compose/ui/tsconfig.json`                                    | **0**                                                                                        |
+| `bunx tsc --noEmit -p compose/algorithms/tsconfig.json`                            | **0**                                                                                        |
+| `bunx tsc --noEmit -p compose/sketchpad/tsconfig.json`                             | **0**                                                                                        |
+| `$env:COMPOSE_JS_RUN_EMBEDDED_TESTS='1'; bunx vitest run index.ts` in `compose/js` | **0** (11 tests)                                                                             |
+| `npx nx run workspace:depcruise`                                                   | **0**                                                                                        |
+| `cargo test -p compose`                                                            | **not completed** — blocked on global Cargo artifact directory file lock in this environment |
 
 ### Files
 

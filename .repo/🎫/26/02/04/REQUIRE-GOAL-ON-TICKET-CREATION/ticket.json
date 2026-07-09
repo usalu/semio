@@ -5,7 +5,5 @@
   "description": "Make goal a required field when creating a ticket. Update code and docs. This involves updating the CLI validation, the GraphQL schema, and the documentation in AGENTS.md and README.md.",
   "summary": "Bulk close",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism",
-  "sessions": [
-    "⚪9b57ce56af904029a6e9f3ff7d7669b9"
-  ]
+  "sessions": ["⚪9b57ce56af904029a6e9f3ff7d7669b9"]
 }

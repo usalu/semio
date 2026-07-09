@@ -2,27 +2,27 @@
 name: Finish V1 Cleanup and File Consolidation
 overview: Finish the incomplete V1/schema-version strip in the play "core" host layer (which was missed in the prior pass), remove remaining legacy aliases, and consolidate duplicated Metabolism kit fixture files and a few other cases of file creep.
 todos:
-  - id: phase1-strip-v1-types-core
-    content: Rename all remaining *V1 type identifiers in core/host layer files to unversioned names (writer, shooting, dag, sequence, presentation, trinity jack/rewrite, wires, s, flow+procedural, puzzle 2d/3d/5d, gis)
-    status: completed
-  - id: phase1-delete-aliases
-    content: Delete FlowWidgetV1/FlowFixtureV1 aliases in flow/react and SStudioDocumentV1 alias in s/core/internal.ts
-    status: completed
-  - id: phase2-strip-v1-schemas-core
-    content: Strip /v1 from all document/fixture schema strings and play-surface-id constants across core files, plus their tests, plus the one remaining example JSON fixture and the stale CAD renderer guard
-    status: completed
-  - id: phase3-remove-legacy-aliases
-    content: Delete RemoteJsonBackbone legacy alias and update its 2 usages; clean stale /v1 Rust doc comments and puzzle/2d react doc comment
-    status: completed
-  - id: phase4-consolidate-metabolism-kit
-    content: Regenerate metabolism.kit.light.compose.json directly from split source; delete snapshot and reference monoliths; rename metabolism.new.kit.compose.json; delete orphaned storybook board and kpi fixture; fix nakgin typo export; dedupe metabolism.svg
-    status: completed
-  - id: phase5-consolidate-itemsof-helper
-    content: Move fixtureItemsOf/__itemsOf duplicated helper into repo/lib/js and import from there in all three call sites
-    status: completed
-  - id: phase6-verify
-    content: Rebuild affected wasm packages, run cargo test and bun nx test for all touched packages, verify light kit regeneration output, grep-verify no remaining V1/v1 remnants, work inside and close a repo-mcp ticket
-    status: completed
+ - id: phase1-strip-v1-types-core
+   content: Rename all remaining *V1 type identifiers in core/host layer files to unversioned names (writer, shooting, dag, sequence, presentation, trinity jack/rewrite, wires, s, flow+procedural, puzzle 2d/3d/5d, gis)
+   status: completed
+ - id: phase1-delete-aliases
+   content: Delete FlowWidgetV1/FlowFixtureV1 aliases in flow/react and SStudioDocumentV1 alias in s/core/internal.ts
+   status: completed
+ - id: phase2-strip-v1-schemas-core
+   content: Strip /v1 from all document/fixture schema strings and play-surface-id constants across core files, plus their tests, plus the one remaining example JSON fixture and the stale CAD renderer guard
+   status: completed
+ - id: phase3-remove-legacy-aliases
+   content: Delete RemoteJsonBackbone legacy alias and update its 2 usages; clean stale /v1 Rust doc comments and puzzle/2d react doc comment
+   status: completed
+ - id: phase4-consolidate-metabolism-kit
+   content: Regenerate metabolism.kit.light.compose.json directly from split source; delete snapshot and reference monoliths; rename metabolism.new.kit.compose.json; delete orphaned storybook board and kpi fixture; fix nakgin typo export; dedupe metabolism.svg
+   status: completed
+ - id: phase5-consolidate-itemsof-helper
+   content: Move fixtureItemsOf/__itemsOf duplicated helper into repo/lib/js and import from there in all three call sites
+   status: completed
+ - id: phase6-verify
+   content: Rebuild affected wasm packages, run cargo test and bun nx test for all touched packages, verify light kit regeneration output, grep-verify no remaining V1/v1 remnants, work inside and close a repo-mcp ticket
+   status: completed
 isProject: false
 ---
 
@@ -79,8 +79,6 @@ flowchart LR
     snapshot -.->|old regenerate-metabolism-light input| light
 ```
 
-
-
 - Change `RegenerateMetabolismLightScript` in [compose/fixture/script.ts](compose/fixture/script.ts) to build directly from `assembleSplitInitialKitFromDirectory("kit/dev/metabolism/wip/initialKit")` instead of reading the hand-maintained `metabolism.kit.snapshot.compose.json`, then run the nx task to regenerate `metabolism.kit.light.compose.json` and verify the Rust (`compose/client/lib/rs/lib.rs`) and TS (`compose/client/lib/sketchpad/js/index.ts`) tests that read it still pass (they assert `nodeKind`/`handleKind` naming derived from type/port UUIDs, which stays stable since UUIDs don't change)
 - Delete `metabolism.kit.snapshot.compose.json` (58 MB) once no longer read by the script
 - Delete `metabolism.kit.reference.compose.json` (58 MB, zero active consumers)
@@ -105,4 +103,3 @@ flowchart LR
 - Run the `regenerate-metabolism-light` nx task and diff the output against the previous file to confirm `nodeKind`/`handleKind` values are unchanged (only intermediate snapshot dependency removed)
 - Grep-verify zero remaining `[A-Za-z]V1\b` identifiers and `/v1` schema/surface strings outside of `cad/js/core` (excluded) and `.repo/` ticket archives
 - Work inside a repo-mcp ticket per workspace rules; close it with a summary of every file touched
-

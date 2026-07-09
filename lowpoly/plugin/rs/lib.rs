@@ -88,7 +88,7 @@ impl Default for LowpolyWorldCamera {
 }
 
 fn default_world_cam_pos() -> [f64; 3] {
-    [4.0, -4.0, 3.0]
+    [18.0, -18.0, 12.0]
 }
 
 fn default_world_cam_fov() -> f64 {
@@ -2297,11 +2297,11 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn default_fixture_has_rock_object() {
+    fn default_fixture_has_concrete_forest_left_object() {
         let app = LowpolyPlayApp::default();
         let envelope: LowpolyPlayEnvelope = serde_json::from_str(&app.initial_document_json()).unwrap();
         assert_eq!(envelope.fixture.objects.len(), 1);
-        assert_eq!(envelope.fixture.objects[0].name, "Rock");
+        assert_eq!(envelope.fixture.objects[0].name, "Concrete Forest Left");
         let doc = LowpolyDocument::new(envelope.fixture).unwrap();
         assert!(doc.active_mesh().unwrap().face_count() > 0);
     }
@@ -2381,22 +2381,22 @@ mod tests {
         let ops = app.handle_command_patch_ops("addPrimitive", Some(&json!({ "kind": "plane" })), &document, &ViewState::default());
         let mut envelope: LowpolyPlayEnvelope = apply_ops(&parse_envelope(&document), &ops);
         let second_id = envelope.fixture.active_object_id.clone();
-        let rock_id = envelope
+        let forest_id = envelope
             .fixture
             .objects
             .iter()
-            .find(|object| object.name == "Rock")
+            .find(|object| object.name == "Concrete Forest Left")
             .map(|object| object.id.clone())
-            .expect("rock object");
+            .expect("concrete forest left object");
         let document = serde_json::to_string(&envelope).unwrap();
         let ops = app.handle_command_patch_ops(
             "setActiveObject",
-            Some(&json!({ "objectId": rock_id })),
+            Some(&json!({ "objectId": forest_id })),
             &document,
             &ViewState::default(),
         );
         envelope = apply_ops(&envelope, &ops);
-        assert_eq!(envelope.fixture.active_object_id, rock_id);
+        assert_eq!(envelope.fixture.active_object_id, forest_id);
         assert_ne!(envelope.fixture.active_object_id, second_id);
     }
 

@@ -7,6 +7,7 @@ goal: R26-02/UPDATED-SKETCHPAD
 ## Summary
 
 Fixed toolbar element sizing inconsistencies by changing Toggle action container from absolute sizing (w-small h-small = 1.0rem fixed) to relative sizing (aspect-square h-full) so it properly fills the parent's content height. All tests pass.
+
 ## Plan
 
 ### Root Cause Analysis
@@ -21,12 +22,13 @@ Toolbar elements (Toggle, Button) use `h-medium` (7× spacing = 1.4rem) as their
 2. **Icon sizing inconsistency**:
    - All toolbar icons use `size-small` via `[&_svg:not([class*='size-'])]:size-small`
    - Container height is `h-medium` (1.4rem)
-   - Icon size is `size-small` (1.0rem) 
+   - Icon size is `size-small` (1.0rem)
    - This creates 0.4rem of padding around icons
 
 ### Design System Document
 
 Current size tokens:
+
 ```
 --size-tiny:   0.6rem (3× spacing)
 --size-small:  1.0rem (5× spacing) ← Currently used for icons & action containers
@@ -39,19 +41,22 @@ The mismatch: using `size-small` (1.0rem) content inside `h-medium` (1.4rem) con
 ### Solution Strategy
 
 **Option A: Increase action container & icon sizes to match parent**
+
 - Change action container from `w-small h-small` to `w-medium h-medium` (but keep it square within a wider toggle)
 - Change icon sizing from `size-small` to `size-medium`
 - Pro: Content fills the height, more visually prominent
 - Con: May make icons too large
 
 **Option B: Keep current sizes but ensure consistent padding**
-- Keep action container at `w-small h-small` 
+
+- Keep action container at `w-small h-small`
 - Keep icons at `size-small`
 - Ensure padding is symmetric (currently is via flex centering)
 - Pro: Maintains current icon proportions
 - Con: Size mismatch remains
 
 **Option C (Recommended): Use proportional sizing**
+
 - Action containers: Use height that matches the toggle's content area (accounting for padding)
 - Since toggle has `p-single` (0.2rem), the content area is `h-medium - 2*p-single` = `1.4 - 0.4 = 1.0rem`
 - Action container should be `h-small` (1.0rem) - this is actually correct
@@ -62,15 +67,17 @@ The mismatch: using `size-small` (1.0rem) content inside `h-medium` (1.4rem) con
 ### Technical Fix
 
 Change action container from fixed `w-small h-small` to filling available height:
+
 ```tsx
 // Before:
-className="flex items-center justify-center w-small h-small"
+className = "flex items-center justify-center w-small h-small";
 
 // After:
-className="flex items-center justify-center aspect-square h-full"
+className = "flex items-center justify-center aspect-square h-full";
 ```
 
 This way:
+
 - The action container fills the toggle's content height (after padding)
 - Maintains aspect-square for consistent visual weight
 - Adapts if toggle padding or height changes

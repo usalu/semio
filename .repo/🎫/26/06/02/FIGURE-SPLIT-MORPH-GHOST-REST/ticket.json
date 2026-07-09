@@ -5,7 +5,5 @@
   "description": "Fix presentation framework 1-to-n figure-to-tiles morph: slide before split should show only the big figure with tile ghosts at opacity 0; on transition to split slide ghosts go full opacity then morph starts. Currently pre-split slide wrongly shows tiles instead of original figure.",
   "summary": "Fixed 1-to-n catalogue→focus morph rest state: Bauteilkatalog (#/0/7) now shows the full catalogue figure at rest with 15 dormant tile morph anchors (opacity 0); settleBeforeMorphTo catalogue-focus reveals tile ghosts before FLIP to Bauteilarten. declaredDispositionRect keeps positions for dormant anchors so reveal data-id stays on canvas wrappers. CSS hides the full figure during catalogue settled auto-animate. Renderer (73) and core (40) tests pass; projektetage deck assertions updated.",
   "goal": "🎯presentation",
-  "sessions": [
-    "⚪44b73e2872164fbd8dd095a47330accb"
-  ]
+  "sessions": ["⚪44b73e2872164fbd8dd095a47330accb"]
 }

@@ -7,7 +7,9 @@ goal: FEATURES/TYPE-APP
 ## Summary
 
 Removed intersect and lasso from Sketchpad tool settings bars across apps and updated e2e coverage.
+
 ## Changes
+
 - Updated selection settings UI in:
 - `compose/js/sketchpad/Design.tsx`
 - `compose/js/sketchpad/Kit.tsx`
@@ -17,6 +19,7 @@ Removed intersect and lasso from Sketchpad tool settings bars across apps and up
 - `compose/js/sketchpad.test.ts`
 
 ## Log
+
 - 2026-02-17: Located existing open ticket and continued work in this ticket.
 - 2026-02-17: Removed `intersect` toggle from Design, Kit, Type, and Quality selection settings components.
 - 2026-02-17: Removed `lasso` toggle from Design and Kit selection settings components.
@@ -24,6 +27,7 @@ Removed intersect and lasso from Sketchpad tool settings bars across apps and up
 - 2026-02-17: Ran `npm run test:e2e -- sketchpad.test.ts` in `compose/js`; result: 7 passed.
 
 ## Todos
+
 - [x] Locate all app-level selection settings bars in Sketchpad.
 - [x] Remove `intersect` from tool settings bar everywhere exposed.
 - [x] Remove `lasso` from tool settings bar everywhere exposed.
@@ -31,5 +35,6 @@ Removed intersect and lasso from Sketchpad tool settings bars across apps and up
 - [x] Run tests and confirm pass/fail.
 
 ## Plan
+
 - Scope: remove UI settings toggles only; keep tool kinds and behavior internals for later implementation.
 - Validation: run `compose/js/sketchpad.test.ts` and confirm no assertion still expects removed toggles.

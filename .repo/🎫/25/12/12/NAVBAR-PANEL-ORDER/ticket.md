@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - Navbar panel toggles in Sketchpad apps showed Settings before Details and Chat.
@@ -21,6 +22,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Enforce navbar panel order Details Chat Settings

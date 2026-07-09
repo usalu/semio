@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The Kit app became completely unresponsive after importing large kits like metabolism.zip. Expanding a type row took multiple seconds.
@@ -111,6 +112,7 @@ All 29 tests pass (2 skipped for REST API format mismatch):
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix Kit app performance after importing large kits

@@ -2,9 +2,7 @@
   "compilerOptions": {
     "module": "ESNext",
     "target": "ES2022",
-    "lib": [
-      "ES2022"
-    ],
+    "lib": ["ES2022"],
     "strict": true,
     "moduleResolution": "Bundler",
     "esModuleInterop": true,
@@ -12,27 +10,12 @@
     "resolveJsonModule": true,
     "noEmit": true,
     "paths": {
-      "@semio-tech/compose-js/*": [
-        "../../../compose/client/lib/js/*"
-      ],
-      "@semio-tech/compose-js": [
-        "../../../compose/client/lib/js/index.ts"
-      ],
-      "@semio-tech/semio-asset/*": [
-        "../../../asset/*"
-      ],
-      "@semio-tech/semio-asset": [
-        "../../../asset/index.ts"
-      ]
+      "@semio-tech/compose-js/*": ["../../../compose/client/lib/js/*"],
+      "@semio-tech/compose-js": ["../../../compose/client/lib/js/index.ts"],
+      "@semio-tech/semio-asset/*": ["../../../asset/*"],
+      "@semio-tech/semio-asset": ["../../../asset/index.ts"]
     }
   },
-  "include": [
-    "extension.test.ts",
-    "extension.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "out",
-    "test"
-  ]
+  "include": ["extension.test.ts", "extension.ts"],
+  "exclude": ["node_modules", "out", "test"]
 }

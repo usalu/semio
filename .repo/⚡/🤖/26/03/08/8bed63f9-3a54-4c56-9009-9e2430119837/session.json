@@ -47,9 +47,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌3576📌3593"
-        ],
+        "ranges": ["👤compose📚js💻compose📌3576📌3593"],
         "second": "🎆26🌙03☀️08⏰21⌚48⏱️57",
         "session": "⚪8bed63f93a544c5690099e2430119837"
       },
@@ -99,9 +97,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌4087📌4106"
-        ],
+        "ranges": ["👤compose📚js💻compose📌4087📌4106"],
         "second": "🎆26🌙03☀️08⏰21⌚49⏱️06",
         "session": "⚪8bed63f93a544c5690099e2430119837"
       },
@@ -137,9 +133,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌4694📌4720"
-        ],
+        "ranges": ["👤compose📚js💻compose📌4694📌4720"],
         "second": "🎆26🌙03☀️08⏰21⌚49⏱️06",
         "session": "⚪8bed63f93a544c5690099e2430119837"
       },
@@ -175,9 +169,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌4907📌4925"
-        ],
+        "ranges": ["👤compose📚js💻compose📌4907📌4925"],
         "second": "🎆26🌙03☀️08⏰21⌚49⏱️07",
         "session": "⚪8bed63f93a544c5690099e2430119837"
       },
@@ -213,9 +205,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌5058📌5080"
-        ],
+        "ranges": ["👤compose📚js💻compose📌5058📌5080"],
         "second": "🎆26🌙03☀️08⏰21⌚49⏱️07",
         "session": "⚪8bed63f93a544c5690099e2430119837"
       },
@@ -251,9 +241,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌5335📌5355"
-        ],
+        "ranges": ["👤compose📚js💻compose📌5335📌5355"],
         "second": "🎆26🌙03☀️08⏰21⌚49⏱️07",
         "session": "⚪8bed63f93a544c5690099e2430119837"
       },
@@ -289,9 +277,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌5465📌5640"
-        ],
+        "ranges": ["👤compose📚js💻compose📌5465📌5640"],
         "second": "🎆26🌙03☀️08⏰21⌚49⏱️07",
         "session": "⚪8bed63f93a544c5690099e2430119837"
       },
@@ -341,9 +327,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌4087📌4106"
-        ],
+        "ranges": ["👤compose📚js💻compose📌4087📌4106"],
         "second": "🎆26🌙03☀️08⏰21⌚49⏱️17",
         "session": "⚪8bed63f93a544c5690099e2430119837"
       },
@@ -379,9 +363,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌4694📌4720"
-        ],
+        "ranges": ["👤compose📚js💻compose📌4694📌4720"],
         "second": "🎆26🌙03☀️08⏰21⌚49⏱️17",
         "session": "⚪8bed63f93a544c5690099e2430119837"
       },
@@ -431,9 +413,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌3831📌3848"
-        ],
+        "ranges": ["👤compose📚js💻compose📌3831📌3848"],
         "second": "🎆26🌙03☀️08⏰21⌚49⏱️17",
         "session": "⚪8bed63f93a544c5690099e2430119837"
       },
@@ -469,9 +449,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌5058📌5080"
-        ],
+        "ranges": ["👤compose📚js💻compose📌5058📌5080"],
         "second": "🎆26🌙03☀️08⏰21⌚49⏱️18",
         "session": "⚪8bed63f93a544c5690099e2430119837"
       },
@@ -507,9 +485,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌4907📌4925"
-        ],
+        "ranges": ["👤compose📚js💻compose📌4907📌4925"],
         "second": "🎆26🌙03☀️08⏰21⌚49⏱️18",
         "session": "⚪8bed63f93a544c5690099e2430119837"
       },
@@ -545,9 +521,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌5335📌5355"
-        ],
+        "ranges": ["👤compose📚js💻compose📌5335📌5355"],
         "second": "🎆26🌙03☀️08⏰21⌚49⏱️22",
         "session": "⚪8bed63f93a544c5690099e2430119837"
       },
@@ -583,9 +557,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌5465📌5640"
-        ],
+        "ranges": ["👤compose📚js💻compose📌5465📌5640"],
         "second": "🎆26🌙03☀️08⏰21⌚49⏱️23",
         "session": "⚪8bed63f93a544c5690099e2430119837"
       },
@@ -621,9 +593,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌6047📌6095"
-        ],
+        "ranges": ["👤compose📚js💻compose📌6047📌6095"],
         "second": "🎆26🌙03☀️08⏰21⌚49⏱️31",
         "session": "⚪8bed63f93a544c5690099e2430119837"
       },
@@ -659,9 +629,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌6047📌6095"
-        ],
+        "ranges": ["👤compose📚js💻compose📌6047📌6095"],
         "second": "🎆26🌙03☀️08⏰21⌚49⏱️40",
         "session": "⚪8bed63f93a544c5690099e2430119837"
       },

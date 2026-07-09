@@ -2,24 +2,24 @@
 name: Tree Hover Perf Refactor
 overview: Make tree-item hover instant across cad play, puzzle 2d play, and puzzle 3d play by removing wasted per-row hover re-renders, coalescing the pointer-over path-highlight work, and decoupling hover highlight from section/tree rebuilds via a per-row TreeHighlightStore (mirroring the existing TreeSelectionStore).
 todos:
-  - id: ui-wasted-rerender
-    content: Remove unused isHovered/setIsHovered useState in TreeItem, SortableTreeItem, TreeSection, FileTreeItem; call onPointerEnter/onPointerLeave callbacks directly
-    status: completed
-  - id: ui-pointerover-coalesce
-    content: "Coalesce handleTreePointerOver: same-row short-circuit via ref + requestAnimationFrame batching; reset on pointerleave"
-    status: completed
-  - id: ui-highlight-store
-    content: Add TreeHighlightStore/Context/useTreeItemRowHighlighted + highlightedIds prop on Tree; consume per-row in TreeDataItemView
-    status: completed
-  - id: framework-thread-highlight
-    content: Add highlightedIds to TreePanelConfig, pass through SidePanelTreePane and panel definitions; wire puzzle 2d hoveredId -> highlightedIds + document onPointerEnter
-    status: completed
-  - id: cad-decouple-hover
-    content: Remove hoveredKey from chromeKey, build neutral memoized sections + highlightKey->itemIds map, feed hover as highlightedIds to cad document panel
-    status: completed
-  - id: ticket-validate
-    content: Open repo ticket; extend existing vitest files with hover render-isolation + highlightedIds tests; run package tests; runtime-verify; close ticket
-    status: completed
+ - id: ui-wasted-rerender
+   content: Remove unused isHovered/setIsHovered useState in TreeItem, SortableTreeItem, TreeSection, FileTreeItem; call onPointerEnter/onPointerLeave callbacks directly
+   status: completed
+ - id: ui-pointerover-coalesce
+   content: "Coalesce handleTreePointerOver: same-row short-circuit via ref + requestAnimationFrame batching; reset on pointerleave"
+   status: completed
+ - id: ui-highlight-store
+   content: Add TreeHighlightStore/Context/useTreeItemRowHighlighted + highlightedIds prop on Tree; consume per-row in TreeDataItemView
+   status: completed
+ - id: framework-thread-highlight
+   content: Add highlightedIds to TreePanelConfig, pass through SidePanelTreePane and panel definitions; wire puzzle 2d hoveredId -> highlightedIds + document onPointerEnter
+   status: completed
+ - id: cad-decouple-hover
+   content: Remove hoveredKey from chromeKey, build neutral memoized sections + highlightKey->itemIds map, feed hover as highlightedIds to cad document panel
+   status: completed
+ - id: ticket-validate
+   content: Open repo ticket; extend existing vitest files with hover render-isolation + highlightedIds tests; run package tests; runtime-verify; close ticket
+   status: completed
 isProject: false
 ---
 
@@ -33,8 +33,6 @@ flowchart TD
   move --> ui2["handleTreePointerOver: clear+reapply DOM path every event"]
   move --> cad["CAD only: pointerFocus.hover -> chromeKey -> rebuild all ~700 sections -> full Tree reconcile"]
 ```
-
-
 
 - `ui/react/index.tsx`: `TreeItem` (~~8202), `SortableTreeItem` (~~7857), `TreeSection` (~~7690), `FileTreeItem` (~~9404) each keep an `isHovered` `useState` that is set on every enter/leave but **never read** in the rendered classes (CSS `hover:bg-hover-panel` already does the visual). Pure wasted re-render per hover, every app.
 - `handleTreePointerOver` (~9241) runs `clearTreeHoverPath` + `applyTreeHoverPath` (DOM walk + attribute mutation) on **every** `pointerover`, including moves within the same row.
@@ -75,5 +73,4 @@ Per repo rules, open a repo MCP ticket (reuse goal `🎯compose`) and track all 
 - `ui/react` Tree test: hover changes do not re-render unaffected rows; `highlightedIds` flips only matching rows (add `[DEBUG]` render counters).
 - cad play test: hover no longer changes `chromeKey` / rebuilds sections; `highlightedIds` resolves the hovered target.
 - puzzle 2d test: canvas hover highlights the matching document row.
-Run affected package tests (`ui/react`, cad play, puzzle 2d) and runtime-verify with `[DEBUG]` logs that hovering a large document (e.g. cad play loaded model) is smooth. Close the ticket with a summary + file list.
-
+  Run affected package tests (`ui/react`, cad play, puzzle 2d) and runtime-verify with `[DEBUG]` logs that hovering a large document (e.g. cad play loaded model) is smooth. Close the ticket with a summary + file list.

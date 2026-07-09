@@ -2,45 +2,45 @@
 name: Feature-Complete Wgpu Renderer
 overview: "Bring the raw wgpu renderer to feature parity with the React OS shell: full chrome (navbar, footer, floating resizable side panels, window tabs, context menu), fully interactive widgets, and real implementations of all eight component scenes."
 todos:
-  - id: toolkit-clip-scroll
-    content: Scissor stack + scroll regions in ui/wgpu draw.rs/widgets.rs
-    status: completed
-  - id: toolkit-input
-    content: Hover/drag/focus state machine and full keyboard events in input.rs
-    status: completed
-  - id: toolkit-text
-    content: Text editing (cursor, commit) and word wrap in text.rs
-    status: completed
-  - id: toolkit-icons
-    content: "Icon atlas: JS SVG rasterization, upload, icon_uv lookup, draw in widgets"
-    status: completed
-  - id: toolkit-overlay
-    content: Overlay layer for dropdowns, context menus, drag ghosts
-    status: completed
-  - id: widgets-interactive
-    content: Interactive slider/ring/stepper/select/toggle/input/section/tree widgets
-    status: completed
-  - id: chrome-navbar-footer
-    content: Full navbar item set and new footer in shell.rs
-    status: completed
-  - id: chrome-panels
-    content: Floating resizable side panels with working tab switching and toggles
-    status: completed
-  - id: chrome-windows-menu
-    content: Window tab bar, context menu, keyboard shortcuts, unified input path
-    status: completed
-  - id: scene-raster-table
-    content: Raster textured quad + interactive scrollable table
-    status: completed
-  - id: scene-graph-flow
-    content: Node-graph and flow-canvas with pan/zoom/drag/select/connect
-    status: completed
-  - id: scene-canvas-text-vfs
-    content: Canvas-2d pointer commands, text-editor editing, VFS selection/routing
-    status: completed
-  - id: verify-e2e
-    content: Extend E2E with interaction smoke + zero-warning assertion, run 25-plugin suite
-    status: completed
+ - id: toolkit-clip-scroll
+   content: Scissor stack + scroll regions in ui/wgpu draw.rs/widgets.rs
+   status: completed
+ - id: toolkit-input
+   content: Hover/drag/focus state machine and full keyboard events in input.rs
+   status: completed
+ - id: toolkit-text
+   content: Text editing (cursor, commit) and word wrap in text.rs
+   status: completed
+ - id: toolkit-icons
+   content: "Icon atlas: JS SVG rasterization, upload, icon_uv lookup, draw in widgets"
+   status: completed
+ - id: toolkit-overlay
+   content: Overlay layer for dropdowns, context menus, drag ghosts
+   status: completed
+ - id: widgets-interactive
+   content: Interactive slider/ring/stepper/select/toggle/input/section/tree widgets
+   status: completed
+ - id: chrome-navbar-footer
+   content: Full navbar item set and new footer in shell.rs
+   status: completed
+ - id: chrome-panels
+   content: Floating resizable side panels with working tab switching and toggles
+   status: completed
+ - id: chrome-windows-menu
+   content: Window tab bar, context menu, keyboard shortcuts, unified input path
+   status: completed
+ - id: scene-raster-table
+   content: Raster textured quad + interactive scrollable table
+   status: completed
+ - id: scene-graph-flow
+   content: Node-graph and flow-canvas with pan/zoom/drag/select/connect
+   status: completed
+ - id: scene-canvas-text-vfs
+   content: Canvas-2d pointer commands, text-editor editing, VFS selection/routing
+   status: completed
+ - id: verify-e2e
+   content: Extend E2E with interaction smoke + zero-warning assertion, run 25-plugin suite
+   status: completed
 isProject: false
 ---
 

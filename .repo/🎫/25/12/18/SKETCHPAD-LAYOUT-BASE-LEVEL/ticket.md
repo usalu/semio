@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - Global Sketchpad chrome (Navbar/Footer) derives its background from `useLevel()`.
@@ -21,6 +22,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Wrap global Sketchpad layout in base LevelProvider

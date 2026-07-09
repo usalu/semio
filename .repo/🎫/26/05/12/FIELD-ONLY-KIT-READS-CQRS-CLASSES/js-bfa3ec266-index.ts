@@ -250,21 +250,7 @@ export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { event }` as const;
 
 //#endregion ­ƒîÉTransport
 
-export type SetErrorKind =
-  | "IllegalName"
-  | "NameTooLong"
-  | "InvalidUrl"
-  | "InvalidValue"
-  | "DuplicateId"
-  | "NotFound"
-  | "CyclicReference"
-  | "PortFamilyMismatch"
-  | "Readonly"
-  | "Disposed"
-  | "Timeout"
-  | "LockPoisoned"
-  | "Internal"
-  | "NotSupported";
+export type SetErrorKind = "IllegalName" | "NameTooLong" | "InvalidUrl" | "InvalidValue" | "DuplicateId" | "NotFound" | "CyclicReference" | "PortFamilyMismatch" | "Readonly" | "Disposed" | "Timeout" | "LockPoisoned" | "Internal" | "NotSupported";
 
 /** @emoji ­ƒº¥ Normalized set/mutation error from rs {@code SetError}. */
 export type SetError = { kind: SetErrorKind; message: string; field?: string; entity?: { kind: string; id: string } };
@@ -384,10 +370,7 @@ async function __readComposeWasmBytesFromMonorepoCandidates(): Promise<Uint8Arra
     const path = await import("node:path");
     const url = await import("node:url");
     const here = path.dirname(url.fileURLToPath(import.meta.url));
-    const candidates = [
-      path.resolve(here, "../../rs/pkg/compose_bg.wasm"),
-      path.resolve(here, "../../../compose/rs/pkg/compose_bg.wasm"),
-    ];
+    const candidates = [path.resolve(here, "../../rs/pkg/compose_bg.wasm"), path.resolve(here, "../../../compose/rs/pkg/compose_bg.wasm")];
     for (const p of candidates) {
       try {
         const buf = await fs.readFile(p);
@@ -530,10 +513,7 @@ export class Kit {
   async startAlternative(name?: string): Promise<SetResult> {
     this.ensureAlive();
     const env = await this.gqlRun({
-      query:
-        name == null
-          ? `mutation { session { startAlternative } }`
-          : `mutation { session { startAlternative(name: ${__gqlStr(name)}) } }`,
+      query: name == null ? `mutation { session { startAlternative } }` : `mutation { session { startAlternative(name: ${__gqlStr(name)}) } }`,
     });
     return gqlOkFromEnvelope(env);
   }
@@ -744,24 +724,14 @@ export class Kit {
     return this.mutateScoped(cid, `dcs: deleteConcepts(ids: ${__gqlIds(ids)})`);
   }
 
-  async createQuality(
-    key: string,
-    value?: string | null,
-    unit?: string | null,
-    definition?: string | null,
-    description?: string | null,
-    icon?: string | null,
-  ): Promise<SetResult> {
+  async createQuality(key: string, value?: string | null, unit?: string | null, definition?: string | null, description?: string | null, icon?: string | null): Promise<SetResult> {
     const cid = await this.ensureChangeId();
     const va = value == null ? "null" : __gqlStr(value);
     const un = unit == null ? "null" : __gqlStr(unit);
     const de = definition == null ? "null" : __gqlStr(definition);
     const ds = description == null ? "null" : __gqlStr(description);
     const ic = icon == null ? "null" : __gqlStr(icon);
-    return this.mutateScoped(
-      cid,
-      `cq: createQuality(key: ${__gqlStr(key)}, value: ${va}, unit: ${un}, definition: ${de}, description: ${ds}, icon: ${ic})`,
-    );
+    return this.mutateScoped(cid, `cq: createQuality(key: ${__gqlStr(key)}, value: ${va}, unit: ${un}, definition: ${de}, description: ${ds}, icon: ${ic})`);
   }
 
   async deleteQuality(id: string): Promise<SetResult> {
@@ -1527,9 +1497,7 @@ export class Representation extends Entity {
   }
 
   async readFileId(): Promise<string> {
-    const data = kitGraphqlData(
-      await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Representation { file { id } } } }`, variables: { id: this.id } }),
-    ) as JsonObject;
+    const data = kitGraphqlData(await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Representation { file { id } } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     const f = n?.["file"] as JsonObject | undefined;
     return String(f?.["id"] ?? "");
@@ -1562,9 +1530,7 @@ export class FileEntity extends Entity {
   }
 
   async readName(): Promise<string> {
-    const data = kitGraphqlData(
-      await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on File { name } } }`, variables: { id: this.id } }),
-    ) as JsonObject;
+    const data = kitGraphqlData(await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on File { name } } }`, variables: { id: this.id } })) as JsonObject;
     return String((data["node"] as JsonObject | undefined)?.["name"] ?? "");
   }
 }
@@ -1577,9 +1543,7 @@ export class FolderEntity extends Entity {
   }
 
   async readPath(): Promise<string> {
-    const data = kitGraphqlData(
-      await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Folder { path } } }`, variables: { id: this.id } }),
-    ) as JsonObject;
+    const data = kitGraphqlData(await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Folder { path } } }`, variables: { id: this.id } })) as JsonObject;
     return String((data["node"] as JsonObject | undefined)?.["path"] ?? "");
   }
 }
@@ -1636,9 +1600,7 @@ export class StatEntity extends Entity {
   }
 
   async readKey(): Promise<string> {
-    const data = kitGraphqlData(
-      await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Stat { key } } }`, variables: { id: this.id } }),
-    ) as JsonObject;
+    const data = kitGraphqlData(await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Stat { key } } }`, variables: { id: this.id } })) as JsonObject;
     return String((data["node"] as JsonObject | undefined)?.["key"] ?? "");
   }
 }
@@ -1651,9 +1613,7 @@ export class PropEntity extends Entity {
   }
 
   async readKey(): Promise<string> {
-    const data = kitGraphqlData(
-      await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Prop { key } } }`, variables: { id: this.id } }),
-    ) as JsonObject;
+    const data = kitGraphqlData(await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Prop { key } } }`, variables: { id: this.id } })) as JsonObject;
     return String((data["node"] as JsonObject | undefined)?.["key"] ?? "");
   }
 }

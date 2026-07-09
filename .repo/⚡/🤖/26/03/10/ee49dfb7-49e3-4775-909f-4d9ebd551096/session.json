@@ -288,9 +288,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌9953"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌9953"],
         "second": "🎆26🌙03☀️10⏰21⌚28⏱️35",
         "session": "⚪ee49dfb749e34775909f4d9ebd551096"
       },
@@ -321,9 +319,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌9953"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌9953"],
         "second": "🎆26🌙03☀️10⏰21⌚28⏱️45",
         "session": "⚪ee49dfb749e34775909f4d9ebd551096"
       },
@@ -354,9 +350,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌9953"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌9953"],
         "second": "🎆26🌙03☀️10⏰21⌚29⏱️18",
         "session": "⚪ee49dfb749e34775909f4d9ebd551096"
       },
@@ -387,9 +381,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌9953"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌9953"],
         "second": "🎆26🌙03☀️10⏰21⌚29⏱️31",
         "session": "⚪ee49dfb749e34775909f4d9ebd551096"
       },
@@ -420,9 +412,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌9953"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌9953"],
         "second": "🎆26🌙03☀️10⏰21⌚29⏱️46",
         "session": "⚪ee49dfb749e34775909f4d9ebd551096"
       },
@@ -453,9 +443,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌9953"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌9953"],
         "second": "🎆26🌙03☀️10⏰21⌚30⏱️00",
         "session": "⚪ee49dfb749e34775909f4d9ebd551096"
       },
@@ -486,9 +474,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌9953"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌9953"],
         "second": "🎆26🌙03☀️10⏰21⌚30⏱️16",
         "session": "⚪ee49dfb749e34775909f4d9ebd551096"
       },
@@ -519,9 +505,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌9953"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌9953"],
         "second": "🎆26🌙03☀️10⏰21⌚30⏱️31",
         "session": "⚪ee49dfb749e34775909f4d9ebd551096"
       },
@@ -681,9 +665,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshoppertests💻tests📌1📌290"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshoppertests💻tests📌1📌290"],
         "second": "🎆26🌙03☀️10⏰21⌚32⏱️06",
         "session": "⚪ee49dfb749e34775909f4d9ebd551096"
       },
@@ -714,9 +696,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshoppertests💻tests📌1📌290"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshoppertests💻tests📌1📌290"],
         "second": "🎆26🌙03☀️10⏰21⌚32⏱️22",
         "session": "⚪ee49dfb749e34775909f4d9ebd551096"
       },
@@ -806,9 +786,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️10⏰21⌚33⏱️19",
         "session": "⚪ee49dfb749e34775909f4d9ebd551096",
-        "tests": [
-          ""
-        ]
+        "tests": [""]
       },
       "response": {
         "allowed": true
@@ -860,9 +838,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️10⏰21⌚34⏱️25",
         "session": "⚪ee49dfb749e34775909f4d9ebd551096",
-        "tests": [
-          "\"ModelObjectToGroupComponentTests\""
-        ]
+        "tests": ["\"ModelObjectToGroupComponentTests\""]
       },
       "response": {
         "allowed": true
@@ -888,9 +864,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️10⏰21⌚35⏱️11",
         "session": "⚪ee49dfb749e34775909f4d9ebd551096",
-        "tests": [
-          "\"RegisterInputParams_ShouldUseListParamAccessAndModelObjectNickname\""
-        ]
+        "tests": ["\"RegisterInputParams_ShouldUseListParamAccessAndModelObjectNickname\""]
       },
       "response": {
         "allowed": true
@@ -942,9 +916,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️10⏰21⌚36⏱️04",
         "session": "⚪ee49dfb749e34775909f4d9ebd551096",
-        "tests": [
-          "\"ModelObjectToGroupComponentTests\""
-        ]
+        "tests": ["\"ModelObjectToGroupComponentTests\""]
       },
       "response": {
         "allowed": true
@@ -960,10 +932,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs",
-                "/workspaces/semio/compose/gh/Compose.Grasshopper.Tests/Tests.cs"
-              ],
+              "files": ["/workspaces/semio/compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs", "/workspaces/semio/compose/gh/Compose.Grasshopper.Tests/Tests.cs"],
               "path": "26/03/10/FIX-MOG-COMPONENT-MODEL-OBJECT-PARAMETER-NAMING",
               "summary": "Successfully fixed MOG component to use the same proper Model Object param as Import Model. Changed the input parameter nickname from \"Mo*\" to \"Mo\" in ModelObjectToGroupComponent to match the ImportModelComponent output. Updated the corresponding test to expect the correct nickname. Both components now use consistent parameter naming: \"Rhino ModelObject\" with nickname \"Mo\"."
             },
@@ -995,10 +964,7 @@
             "mcp_result": "[🎫fixmogcomponentmodelobjectparameternaming](composerepo://y/00/m/00/d/00/tk/FIX-MOG-COMPONENT-MODEL-OBJECT-PARAMETER-NAMING) - `closed` - `closed 1 second ago`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs",
-                "/workspaces/semio/compose/gh/Compose.Grasshopper.Tests/Tests.cs"
-              ],
+              "files": ["/workspaces/semio/compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs", "/workspaces/semio/compose/gh/Compose.Grasshopper.Tests/Tests.cs"],
               "path": "26/03/10/FIX-MOG-COMPONENT-MODEL-OBJECT-PARAMETER-NAMING",
               "summary": "Successfully fixed MOG component to use the same proper Model Object param as Import Model. Changed the input parameter nickname from \"Mo*\" to \"Mo\" in ModelObjectToGroupComponent to match the ImportModelComponent output. Updated the corresponding test to expect the correct nickname. Both components now use consistent parameter naming: \"Rhino ModelObject\" with nickname \"Mo\"."
             },

@@ -4,10 +4,7 @@ import { join } from "node:path";
 const sketchpad = join(import.meta.dirname, "../../../../../../compose/client/lib/sketchpad/react/index.tsx");
 let text = readFileSync(sketchpad, "utf8");
 
-text = text.replace(
-  "\n * buildKitDiagramData holds the data fields for a buildKitDiagramData record.\n **/",
-  "\n/**\n * buildKitDiagramData holds the data fields for a buildKitDiagramData record.\n **/",
-);
+text = text.replace("\n * buildKitDiagramData holds the data fields for a buildKitDiagramData record.\n **/", "\n/**\n * buildKitDiagramData holds the data fields for a buildKitDiagramData record.\n **/");
 
 text = text.replace(
   "const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: Edge[] } => {\n  const nodes: Node<KitDiagramNode>[] = [];\n  const edges: Edge[] = [];",
@@ -63,10 +60,7 @@ const edgeRefNew = `          edges.push({
           });`;
 text = text.replaceAll(edgeRef, edgeRefNew);
 
-text = text.replace(
-  "const sketchpadKitBoardNodeCenter = (node: Node<KitDiagramNode>): { x: number; y: number } => {",
-  "const sketchpadKitBoardNodeCenter = (node: KitDiagramLayoutNode): { x: number; y: number } => {",
-);
+text = text.replace("const sketchpadKitBoardNodeCenter = (node: Node<KitDiagramNode>): { x: number; y: number } => {", "const sketchpadKitBoardNodeCenter = (node: KitDiagramLayoutNode): { x: number; y: number } => {");
 text = text.replace(
   "const sketchpadKitBoardCameraFromNodes = (nodes: readonly Node<KitDiagramNode>[]): ElementsBoardCameraState => {",
   "const sketchpadKitBoardCameraFromNodes = (nodes: readonly KitDiagramLayoutNode[]): ElementsBoardCameraState => {",

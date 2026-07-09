@@ -9,13 +9,16 @@
 ## Changes
 
 ### CodebaseBundleItem
+
 - Changed from `bundle.id` to `bundle.name` to display without "bundle:" prefix
 - Updated tooltip to show `{name} ({root})`
 
 ### Codebase Tree Sorting
+
 - Bundles are now sorted alphabetically by name
 
 ### CLI Command Syntax
+
 - Changed `section list "path"` to `section list --file "path"`
 - Changed `definition list "path"` to `definition list --file "path"`
 - Fixed in: `getSectionListForFile()`, `loadFileContent()`, and command handlers

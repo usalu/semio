@@ -5,7 +5,5 @@
   "description": "Make tree-item hover instant across cad play, puzzle 2d play, and puzzle 3d play by removing wasted per-row hover re-renders, coalescing pointer-over path-highlight work, and decoupling hover highlight from section/tree rebuilds via TreeHighlightStore.",
   "summary": "Made tree-item hover fast across play apps: removed unused per-row isHovered React state in TreeItem/SortableTreeItem/TreeSection/FileTreeItem; coalesced tree hover-path DOM updates via same-row short-circuit + requestAnimationFrame; added TreeHighlightStore with highlightedIds prop for per-row highlight subscription (mirrors TreeSelectionStore); threaded highlightedIds through TreePanelConfig/CallbackTreePanelDefinition/SidePanelTreePane; puzzle 2d document wires setDocumentHover + highlightedIds cross-surface; cad play decouples hover from section rebuilds (neutral sections + highlightKeyToItemIds map, hoveredKey removed from chromeKey). Tests: ui/react 96, cad/js/renderer 66, puzzle/2d/play 10.",
   "goal": "🎯compose",
-  "sessions": [
-    "⚪9584a29cbdc942a7a34b17ada707852a"
-  ]
+  "sessions": ["⚪9584a29cbdc942a7a34b17ada707852a"]
 }

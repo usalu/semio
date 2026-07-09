@@ -18,6 +18,7 @@
 ## Manual visual check
 
 Run **Framework Renderer Wgpu Dev** from launch.json and confirm:
+
 1. Command / Window Options panels float over window canvas with glass blur
 2. Window content is not squeezed when panels are open
 3. Side panels still render above window chrome overlays

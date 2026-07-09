@@ -1847,11 +1847,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs",
-                "compose/gh/Compose.Grasshopper.Tests/Tests.cs",
-                "compose/net/Compose/Compose.cs"
-              ],
+              "files": ["compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs", "compose/gh/Compose.Grasshopper.Tests/Tests.cs", "compose/net/Compose/Compose.cs"],
               "path": "2026/03/20/EXPORT-DESIGN-TO-BLOCKS-COMPONENT",
               "summary": "Created ExportDesignToBlocksComponent in Compose.Grasshopper. The component takes a Kit, DesignId, and optional Tags as input. It resolves piece planes via BFS over connections using connector geometry (same algorithm as ExportDesignModel), creates a Rhino block definition per unique type (importing geometry from the type's model file blob), and outputs native InstanceReferenceGeometry block instances per piece positioned at their computed planes. Also made Kit.ExportFindMatchingModel public for reuse. Added 3 tests verifying param registration, GUID uniqueness, and metadata."
             },
@@ -1923,11 +1919,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs",
-                "compose/gh/Compose.Grasshopper.Tests/Tests.cs",
-                "compose/net/Compose/Compose.cs"
-              ],
+              "files": ["compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs", "compose/gh/Compose.Grasshopper.Tests/Tests.cs", "compose/net/Compose/Compose.cs"],
               "no_github": true,
               "path": "26/03/20/EXPORT-DESIGN-TO-BLOCKS-COMPONENT",
               "summary": "Created ExportDesignToBlocksComponent in Compose.Grasshopper. The component takes a Kit, DesignId, and optional Tags as input. It resolves piece planes via BFS over connections using connector geometry (same algorithm as ExportDesignModel), creates a Rhino block definition per unique type (importing geometry from the type's model file blob), and outputs native InstanceReferenceGeometry block instances per piece positioned at their computed planes. Also made Kit.ExportFindMatchingModel public for reuse. Added 3 tests verifying param registration, GUID uniqueness, and metadata."
@@ -1957,11 +1949,7 @@
             "mcp_result": "[🎫exportdesigntoblockscomponent](repo://y/00/m/00/d/00/tk/EXPORT-DESIGN-TO-BLOCKS-COMPONENT) - `closed` - `closed 1 second ago`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs",
-                "compose/gh/Compose.Grasshopper.Tests/Tests.cs",
-                "compose/net/Compose/Compose.cs"
-              ],
+              "files": ["compose/gh/Compose.Grasshopper/Compose.Grasshopper.cs", "compose/gh/Compose.Grasshopper.Tests/Tests.cs", "compose/net/Compose/Compose.cs"],
               "no_github": true,
               "path": "26/03/20/EXPORT-DESIGN-TO-BLOCKS-COMPONENT",
               "summary": "Created ExportDesignToBlocksComponent in Compose.Grasshopper. The component takes a Kit, DesignId, and optional Tags as input. It resolves piece planes via BFS over connections using connector geometry (same algorithm as ExportDesignModel), creates a Rhino block definition per unique type (importing geometry from the type's model file blob), and outputs native InstanceReferenceGeometry block instances per piece positioned at their computed planes. Also made Kit.ExportFindMatchingModel public for reuse. Added 3 tests verifying param registration, GUID uniqueness, and metadata."

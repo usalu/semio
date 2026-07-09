@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - GoldenLayout window stacks were framed using an outer border while the GoldenLayout root uses clipped layout containers.
@@ -24,6 +25,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix missing bottom/right window borders

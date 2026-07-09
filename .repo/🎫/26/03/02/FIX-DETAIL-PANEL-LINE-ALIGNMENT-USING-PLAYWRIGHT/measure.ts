@@ -12,7 +12,7 @@ async function measure() {
       const rowRect = row.getBoundingClientRect();
       const svgs = row.querySelectorAll("svg");
       const label = row.querySelector('[data-slot="tree-label"]');
-      const chevronSvg = Array.from(svgs).find(svg => {
+      const chevronSvg = Array.from(svgs).find((svg) => {
         const cls = svg.getAttribute("class") || "";
         return cls.includes("lucide-chevron") || cls.includes("size-");
       });
@@ -25,14 +25,14 @@ async function measure() {
           paddingLeft: window.getComputedStyle(row).paddingLeft,
           chevronLeft: chevRect.left - rowRect.left,
           chevronWidth: chevRect.width,
-          chevronCenter: chevRect.left + chevRect.width / 2 - rowRect.left
+          chevronCenter: chevRect.left + chevRect.width / 2 - rowRect.left,
         });
       } else {
         results.push({
           type: "TreeSection(noChevron)",
           label: label?.textContent?.trim(),
           rowLeft: rowRect.left,
-          paddingLeft: window.getComputedStyle(row).paddingLeft
+          paddingLeft: window.getComputedStyle(row).paddingLeft,
         });
       }
     });
@@ -42,7 +42,7 @@ async function measure() {
       const buttons = row.querySelectorAll("button");
       const label = row.querySelector('[data-slot="tree-label"]');
       let chevronInfo: any = null;
-      buttons.forEach(btn => {
+      buttons.forEach((btn) => {
         const svg = btn.querySelector("svg");
         if (svg) {
           const btnRect = btn.getBoundingClientRect();
@@ -58,7 +58,7 @@ async function measure() {
             btnBorderLeft: cs.borderLeftWidth,
             btnMarginLeft: cs.marginLeft,
             btnDisplay: cs.display,
-            btnBoxSizing: cs.boxSizing
+            btnBoxSizing: cs.boxSizing,
           };
         }
       });
@@ -67,7 +67,7 @@ async function measure() {
         label: label?.textContent?.trim(),
         rowLeft: rowRect.left,
         paddingLeft: window.getComputedStyle(row).paddingLeft,
-        ...(chevronInfo || {})
+        ...(chevronInfo || {}),
       });
     });
     const allRows = document.querySelectorAll('[data-slot="tree-section-row"], [data-slot="tree-item-row"]');
@@ -75,18 +75,18 @@ async function measure() {
     allRows.forEach((row) => {
       const rowRect = row.getBoundingClientRect();
       const label = row.querySelector('[data-slot="tree-label"]')?.textContent?.trim();
-      const lineContainer = row.querySelector('.absolute.left-0.top-0.bottom-0');
+      const lineContainer = row.querySelector(".absolute.left-0.top-0.bottom-0");
       if (lineContainer) {
-        const linePositioners = lineContainer.querySelectorAll('.absolute.top-0.bottom-0');
-        linePositioners.forEach(lp => {
+        const linePositioners = lineContainer.querySelectorAll(".absolute.top-0.bottom-0");
+        linePositioners.forEach((lp) => {
           const lpRect = lp.getBoundingClientRect();
-          const lineDiv = lp.querySelector('.w-px');
+          const lineDiv = lp.querySelector(".w-px");
           if (lineDiv) {
             lineData.push({
               rowLabel: label,
               lineRelLeft: lpRect.left - rowRect.left,
               style: lp.getAttribute("style"),
-              visible: lineDiv.getBoundingClientRect().width > 0
+              visible: lineDiv.getBoundingClientRect().width > 0,
             });
           }
         });
@@ -99,7 +99,9 @@ async function measure() {
     if (r.type === "TreeSection") {
       console.log(`${r.type} [${r.label}] padL=${r.paddingLeft} chevCenter=${r.chevronCenter?.toFixed(2)} chevW=${r.chevronWidth?.toFixed(1)}`);
     } else if (r.type === "TreeItem(folder)") {
-      console.log(`${r.type} [${r.label}] padL=${r.paddingLeft} svgCenter=${r.svgCenter?.toFixed(2)} svgW=${r.svgWidth?.toFixed(1)} btnRelLeft=${r.btnRelLeft?.toFixed(2)} btnW=${r.btnWidth?.toFixed(1)} btnPadL=${r.btnPadLeft} btnBorderL=${r.btnBorderLeft} btnDisplay=${r.btnDisplay}`);
+      console.log(
+        `${r.type} [${r.label}] padL=${r.paddingLeft} svgCenter=${r.svgCenter?.toFixed(2)} svgW=${r.svgWidth?.toFixed(1)} btnRelLeft=${r.btnRelLeft?.toFixed(2)} btnW=${r.btnWidth?.toFixed(1)} btnPadL=${r.btnPadLeft} btnBorderL=${r.btnBorderLeft} btnDisplay=${r.btnDisplay}`,
+      );
     } else {
       console.log(`${r.type} [${r.label}] padL=${r.paddingLeft}`);
     }

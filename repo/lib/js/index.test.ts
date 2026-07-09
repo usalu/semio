@@ -2,21 +2,10 @@ import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import {
-  NEO4J_GRAPH_DATABASE_NAMES,
-  getAllNeo4jGraphExportSpecs,
-  joinNeo4jGraphDatabaseName,
-  parseExtraNeo4jGraphDatabaseNamesFromEnv,
-  partitionNeo4jGraphCliArgv,
-} from "../../../script.ts";
+import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv } from "../../../script.ts";
 import { BundleScript, ScriptRouter, canReuseDevPort, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, isDevPortInUse, resolveDevPort, wgpuDevPlayUrl } from "./index.ts";
 import { defineLint, type FileLinter } from "./index.ts";
-import {
-  dependencyBoundaryBreachesForBundleDir,
-  dependencyBoundaryBreachesForFile,
-  isAdapterBoundaryFile,
-  parseTsImportSpecs,
-} from "./index.ts";
+import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "./index.ts";
 import {
   PLAYGROUND_PORTS,
   PLAYGROUND_SITE_DEV_PORTS,
@@ -90,9 +79,7 @@ describe("devServerUrl", () => {
 describe("wgpuDevPlayUrl", () => {
   test("builds root and legacy play urls", () => {
     expect(wgpuDevPlayUrl("127.0.0.1", 6178, "lowpoly")).toBe("http://127.0.0.1:6178/?plugin=lowpoly");
-    expect(wgpuDevPlayUrl("127.0.0.1", 6178, "lowpoly", "/renderer-modules/wgpu/")).toBe(
-      "http://127.0.0.1:6178/renderer-modules/wgpu/?plugin=lowpoly",
-    );
+    expect(wgpuDevPlayUrl("127.0.0.1", 6178, "lowpoly", "/renderer-modules/wgpu/")).toBe("http://127.0.0.1:6178/renderer-modules/wgpu/?plugin=lowpoly");
   });
 });
 
@@ -137,9 +124,11 @@ describe("bundle-script", () => {
     let ran = "";
     dispatchSubcommand(
       ["go", "x"],
-      { go: (rest) => {
-        ran = rest.join(",");
-      } },
+      {
+        go: (rest) => {
+          ran = rest.join(",");
+        },
+      },
       "unused",
     );
     expect(ran).toBe("x");
@@ -171,12 +160,7 @@ describe("dependency-boundary", () => {
   test("flags direct third-party import outside adapter", () => {
     const content = `import { z } from "zod";\nexport const a = 1;\n`;
     const file = "compose/client/lib/js/boundary-probe.ts";
-    const breachs = dependencyBoundaryBreachesForFile(
-      new URL("../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
-      file,
-      content,
-      file,
-    );
+    const breachs = dependencyBoundaryBreachesForFile(new URL("../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"), file, content, file);
     expect(breachs.length).toBeGreaterThan(0);
     expect(breachs[0]?.kind).toBe("dependency-boundary/import/direct-third-party");
   });
@@ -191,12 +175,7 @@ describe("dependency-boundary", () => {
   test("allows third-party import inside adapter region", () => {
     const content = `// #region 🔌Adapters\nimport { NextResponse } from "next/server";\n// #endregion 🔌Adapters\nexport async function GET() { return NextResponse.json({}); }\n`;
     const file = "repo/server/coordinator/app/api/v1/health/route.ts";
-    const breachs = dependencyBoundaryBreachesForFile(
-      new URL("../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"),
-      file,
-      content,
-      file,
-    );
+    const breachs = dependencyBoundaryBreachesForFile(new URL("../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"), file, content, file);
     expect(breachs).toEqual([]);
   });
 });
@@ -277,31 +256,15 @@ describe("micro-commit", () => {
   });
 
   test("formatMicroCommitMetricsLines uses compact loc and delta counts", async () => {
-    const {
-      formatMicroCommitMetricLine,
-      formatMicroCommitMetricsLines,
-      formatMetricLocCount,
-      MICRO_COMMIT_ULOC_HEADER,
-    } = await import("./index.ts");
+    const { formatMicroCommitMetricLine, formatMicroCommitMetricsLines, formatMetricLocCount, MICRO_COMMIT_ULOC_HEADER } = await import("./index.ts");
     expect(MICRO_COMMIT_ULOC_HEADER).toBe("📊uloc");
     expect(formatMetricLocCount(200_000)).toBe("200k");
     expect(formatMetricLocCount(500)).toBe("500");
-    expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚", code: 2000, edited: 0, added: 0, removed: 0 })).toBe(
-      "🐚2k",
-    );
-    expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚", code: 2000, edited: 2, added: 2, removed: 0 })).toBe(
-      "🐚2k➕2✏️2🟰4",
-    );
-    expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚", code: 2000, edited: 2, added: 0, removed: 2 })).toBe(
-      "🐚2k✏️2➖2🟰4",
-    );
-    const lines = formatMicroCommitMetricsLines([
-      { lang: "Rust", emoji: "🦀", code: 200_000, edited: 2220, added: 2000, removed: 500 },
-    ]);
-    expect(lines).toEqual([
-      "📊uloc➕2000✏️2220➖500🟰4720",
-      "🦀200k➕2000✏️2220➖500🟰4720",
-    ]);
+    expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚", code: 2000, edited: 0, added: 0, removed: 0 })).toBe("🐚2k");
+    expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚", code: 2000, edited: 2, added: 2, removed: 0 })).toBe("🐚2k➕2✏️2🟰4");
+    expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚", code: 2000, edited: 2, added: 0, removed: 2 })).toBe("🐚2k✏️2➖2🟰4");
+    const lines = formatMicroCommitMetricsLines([{ lang: "Rust", emoji: "🦀", code: 200_000, edited: 2220, added: 2000, removed: 500 }]);
+    expect(lines).toEqual(["📊uloc➕2000✏️2220➖500🟰4720", "🦀200k➕2000✏️2220➖500🟰4720"]);
   });
 
   test("formatMicroCommitMetricsLines totals all languages on the first row", async () => {
@@ -384,13 +347,7 @@ describe("micro-commit", () => {
     const staged = [".cursor/plans/brush_fix_cfd8a931.plan.md", "framework/product/playground/renderer/react/index.tsx"];
     expect(uncoveredStagedAreas(["🫡Only micro-commit skill wording"], staged)).toContain(".cursor/plans");
     expect(uncoveredStagedAreas(["🫡Only micro-commit skill wording"], staged)).toContain("product");
-    const ok = uncoveredStagedAreas(
-      [
-        "📋Plan brush edge resurrection guard and sync",
-        "🖌️Playground renderer restores brush placement after structural deletes",
-      ],
-      staged,
-    );
+    const ok = uncoveredStagedAreas(["📋Plan brush edge resurrection guard and sync", "🖌️Playground renderer restores brush placement after structural deletes"], staged);
     expect(ok).toEqual([]);
   });
 
@@ -407,8 +364,7 @@ describe("micro-commit", () => {
     });
     if (prev === undefined) delete process.env.REPO_ROOT;
     else process.env.REPO_ROOT = prev;
-    const stagedHasPresentation = spawnSync("git", ["diff", "--cached", "--name-only"], { cwd: root, encoding: "utf8" })
-      .stdout?.includes("presentation/");
+    const stagedHasPresentation = spawnSync("git", ["diff", "--cached", "--name-only"], { cwd: root, encoding: "utf8" }).stdout?.includes("presentation/");
     if (stagedHasPresentation) expect(r.status).not.toBe(0);
   });
 
@@ -489,11 +445,7 @@ describe("micro-commit", () => {
     const root = mkdtempSync(join(tmpdir(), "compose-micro-commit-tpl-"));
     try {
       expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8" }).status).toBe(0);
-      const msg = buildMicroCommitMessage(
-        root,
-        { alias: "ueli", emoji: "🐙", name: "Ueli", email: "u@example.com" },
-        ["🎆bullet"],
-      );
+      const msg = buildMicroCommitMessage(root, { alias: "ueli", emoji: "🐙", name: "Ueli", email: "u@example.com" }, ["🎆bullet"]);
       writeMicroCommitTemplates(root, msg);
       const gk = readdirSync(join(root, ".git")).filter((n) => n.startsWith("gkcommittemplate"));
       expect(gk).toEqual(["gkcommittemplate.txt"]);
@@ -642,9 +594,7 @@ describe("package boundary guards", () => {
     const shellSource = readFileSync(shellPath, "utf8");
     const interpreterSource = readFileSync(interpreterPath, "utf8");
     const combined = `${shellSource}\n${interpreterSource}`;
-    expect(combined).not.toMatch(
-      /registerUi(?:Draw|Flow|Layout|Note|Puzzle2d|Puzzle3d|Puzzle5d|Sequence|Writer|Raster|Forms|Trinity|Procedural|Shooting|Gis|Cad|Dag|Lowpoly|Imperative|S)SurfaceHost/,
-    );
+    expect(combined).not.toMatch(/registerUi(?:Draw|Flow|Layout|Note|Puzzle2d|Puzzle3d|Puzzle5d|Sequence|Writer|Raster|Forms|Trinity|Procedural|Shooting|Gis|Cad|Dag|Lowpoly|Imperative|S)SurfaceHost/);
     expect(shellSource).toContain("bootFrameworkOs");
   });
 });
@@ -663,9 +613,7 @@ function findNearestPackageDir(filePath: string, repoRoot: string): string | und
 describe("commit", () => {
   test("parseCommitBundleBody reads emoji scopes dates and bullets", async () => {
     const { parseCommitBundleBody } = await import("./index.ts");
-    const bundles = parseCommitBundleBody(
-      "🏘️compose✍️sketchpad\n🎆26🌙06☀️04\n🗺️Map work\n🎆26🌙06☀️03\n🧪Playground\n\n🖱️ui⚛️react\n🎆26🌙06☀️02\n🖥️Shell",
-    );
+    const bundles = parseCommitBundleBody("🏘️compose✍️sketchpad\n🎆26🌙06☀️04\n🗺️Map work\n🎆26🌙06☀️03\n🧪Playground\n\n🖱️ui⚛️react\n🎆26🌙06☀️02\n🖥️Shell");
     expect(bundles).toHaveLength(2);
     expect(bundles[0]?.label).toBe("🏘️compose✍️sketchpad");
     expect(bundles[0]?.dates).toHaveLength(2);
@@ -674,12 +622,8 @@ describe("commit", () => {
 
   test("parseCommitBundleBody rejects path prefixes and reserved emojis", async () => {
     const { parseCommitBundleBody } = await import("./index.ts");
-    expect(() =>
-      parseCommitBundleBody("compose/foo|🏘️compose\n🎆26🌙06☀️04\n🗺️Map work"),
-    ).toThrow();
-    expect(() =>
-      parseCommitBundleBody("🏘️compose🔀📊uloc\n🎆26🌙06☀️04\n🗺️Map work"),
-    ).toThrow();
+    expect(() => parseCommitBundleBody("compose/foo|🏘️compose\n🎆26🌙06☀️04\n🗺️Map work")).toThrow();
+    expect(() => parseCommitBundleBody("🏘️compose🔀📊uloc\n🎆26🌙06☀️04\n🗺️Map work")).toThrow();
     expect(() => parseCommitBundleBody("🗺️🧩🕸️\n🎆26🌙06☀️04\n🗺️Map work")).toThrow();
   });
 
@@ -729,9 +673,7 @@ describe("commit", () => {
 
   test("formatBundleDateLine appends per-day uloc suffix", async () => {
     const { formatBundleDateLine } = await import("./index.ts");
-    expect(formatBundleDateLine("🎆26🌙06☀️04", { added: 700, edited: 200, removed: 10 })).toBe(
-      "🎆26🌙06☀️04📊uloc➕700✏️200➖10🟰910",
-    );
+    expect(formatBundleDateLine("🎆26🌙06☀️04", { added: 700, edited: 200, removed: 10 })).toBe("🎆26🌙06☀️04📊uloc➕700✏️200➖10🟰910");
   });
 
   test("commitBundleBodyError rejects per-day uloc on stdin", async () => {
@@ -773,9 +715,7 @@ describe("commit", () => {
       writeFileSync(msg, "🐙ueli🎆26🌙06☀️01🚩001\n\n🎆26🌙06☀️04⏰12⌚00⏱️00\n🔧Work\n", "utf8");
       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-F", msg], { cwd: root });
       const bundles = parseCommitBundleBody("📚repo🔧js\n🎆26🌙06☀️04\n🔧Only repo");
-      expect(() => validateBundleCommitAttribution(root, wip, "HEAD", bundles)).toThrow(
-        /not attributed to any bundle|do not add up/,
-      );
+      expect(() => validateBundleCommitAttribution(root, wip, "HEAD", bundles)).toThrow(/not attributed to any bundle|do not add up/);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -798,19 +738,11 @@ describe("commit", () => {
       const wip = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).stdout?.trim()!;
       writeFileSync(join(root, "repo/js/a.ts"), "a\nb\nc\nd\ne\n", "utf8");
       spawnSync("git", ["add", "repo/js/a.ts"], { cwd: root });
-      writeFileSync(
-        join(root, "mc1.txt"),
-        "🐙ueli🎆26🌙06☀️01🚩001\n\n🎆26🌙06☀️03⏰12⌚00⏱️00\n🔧Add lines\n",
-        "utf8",
-      );
+      writeFileSync(join(root, "mc1.txt"), "🐙ueli🎆26🌙06☀️01🚩001\n\n🎆26🌙06☀️03⏰12⌚00⏱️00\n🔧Add lines\n", "utf8");
       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-F", join(root, "mc1.txt")], { cwd: root });
       writeFileSync(join(root, "repo/js/a.ts"), "a\n", "utf8");
       spawnSync("git", ["add", "repo/js/a.ts"], { cwd: root });
-      writeFileSync(
-        join(root, "mc2.txt"),
-        "🐙ueli🎆26🌙06☀️01🚩002\n\n🎆26🌙06☀️04⏰12⌚01⏱️00\n🔧Net fewer lines\n",
-        "utf8",
-      );
+      writeFileSync(join(root, "mc2.txt"), "🐙ueli🎆26🌙06☀️01🚩002\n\n🎆26🌙06☀️04⏰12⌚01⏱️00\n🔧Net fewer lines\n", "utf8");
       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-F", join(root, "mc2.txt")], { cwd: root });
       const bundles = parseCommitBundleBody("📚repo🔧js\n🎆26🌙06☀️04\n🔧Net\n🎆26🌙06☀️03\n🔧Add");
       expect(() => validateBundleCommitAttribution(root, wip, "HEAD", bundles)).toThrow(/does not add up/);
@@ -836,13 +768,9 @@ describe("commit", () => {
         ]),
       ],
     ]);
-    expect(() =>
-      validateBundleDayDeltasAttribution(bundles, [["repo/js"]], dateDeltas, [{ added: 2, edited: 0, removed: 0 }]),
-    ).toThrow(/missing from your bundle body/);
+    expect(() => validateBundleDayDeltasAttribution(bundles, [["repo/js"]], dateDeltas, [{ added: 2, edited: 0, removed: 0 }])).toThrow(/missing from your bundle body/);
     const dateDeltasOneDay = new Map([[0, new Map([["🎆26🌙06☀️04", { added: 2, edited: 0, removed: 0 }]])]]);
-    expect(() =>
-      validateBundleDayDeltasAttribution(bundles, [["repo/js"]], dateDeltasOneDay, [{ added: 7, edited: 0, removed: 0 }]),
-    ).toThrow(/does not add up/);
+    expect(() => validateBundleDayDeltasAttribution(bundles, [["repo/js"]], dateDeltasOneDay, [{ added: 7, edited: 0, removed: 0 }])).toThrow(/does not add up/);
   });
 
   test("buildCommitMessage appends per-day uloc from micro-commit dates", async () => {
@@ -863,20 +791,12 @@ describe("commit", () => {
       writeFileSync(join(root, "repo/js/a.ts"), "a\nb\n", "utf8");
       spawnSync("git", ["add", "repo/js/a.ts"], { cwd: root });
       const msg1 = join(tmpdir(), `compose-mc1-${Date.now()}.txt`);
-      writeFileSync(
-        msg1,
-        "🐙ueli🎆26🌙06☀️01🚩001\n\n🎆26🌙06☀️03⏰12⌚00⏱️00\n🔧Day three\n",
-        "utf8",
-      );
+      writeFileSync(msg1, "🐙ueli🎆26🌙06☀️01🚩001\n\n🎆26🌙06☀️03⏰12⌚00⏱️00\n🔧Day three\n", "utf8");
       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-F", msg1], { cwd: root });
       writeFileSync(join(root, "repo/js/a.ts"), "a\nb\nc\nd\n", "utf8");
       spawnSync("git", ["add", "repo/js/a.ts"], { cwd: root });
       const msg2 = join(tmpdir(), `compose-mc2-${Date.now()}.txt`);
-      writeFileSync(
-        msg2,
-        "🐙ueli🎆26🌙06☀️01🚩002\n\n🎆26🌙06☀️04⏰12⌚01⏱️00\n🔧Day four\n",
-        "utf8",
-      );
+      writeFileSync(msg2, "🐙ueli🎆26🌙06☀️01🚩002\n\n🎆26🌙06☀️04⏰12⌚01⏱️00\n🔧Day four\n", "utf8");
       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-F", msg2], { cwd: root });
       const contributor = { alias: "ueli", emoji: "🐙", name: "U", email: "u@e.com" };
       const bundles = parseCommitBundleBody("📚repo🔧js\n🎆26🌙06☀️04\n🔧Day four\n🎆26🌙06☀️03\n🔧Day three");
@@ -930,14 +850,7 @@ describe("commit", () => {
     const { buildCommitMessage, parseCommitBundleBody } = await import("./index.ts");
     const contributor = { alias: "ueli", emoji: "🐙", name: "Ueli Saluz", email: "ueli@semio-tech.com" };
     const bundles = parseCommitBundleBody("📚repo🔧js\n🎆26🌙06☀️04\n🔧Tooling");
-    const msg = buildCommitMessage(
-      process.cwd(),
-      contributor,
-      bundles,
-      "0000000000000000000000000000000000000000",
-      "0000000000000000000000000000000000000000",
-      { countRepoByLanguage: () => ({ TypeScript: 1000 }) },
-    );
+    const msg = buildCommitMessage(process.cwd(), contributor, bundles, "0000000000000000000000000000000000000000", "0000000000000000000000000000000000000000", { countRepoByLanguage: () => ({ TypeScript: 1000 }) });
     const lines = msg.trimEnd().split("\n");
     expect(lines[0]).toMatch(/🔀$/);
     expect(lines.some((l) => l.includes("📊uloc"))).toBe(true);
@@ -961,9 +874,7 @@ describe("commit", () => {
     });
     const blocks = out.trimEnd().split("\n\n");
     expect(blocks).toHaveLength(4);
-    expect(blocks[0]).toBe(
-      "```\ngit tag -s -m '🐙ueli🎆26🌙06☀️04🚩' '🐙ueli🎆26🌙06☀️04🚩' HEAD\n```",
-    );
+    expect(blocks[0]).toBe("```\ngit tag -s -m '🐙ueli🎆26🌙06☀️04🚩' '🐙ueli🎆26🌙06☀️04🚩' HEAD\n```");
   });
 
   test("formatCommitPrepareAgentReply ends with tag name and commit message blocks", async () => {

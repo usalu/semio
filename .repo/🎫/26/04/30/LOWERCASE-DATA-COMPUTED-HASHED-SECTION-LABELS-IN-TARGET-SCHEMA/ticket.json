@@ -4,7 +4,5 @@
   "status": "open",
   "description": "Normalize section comments in compose/graphql/target.schema.graphql: # Data Fields→# data, # Computed Fields→# computed, # Reference Fields→# reference, # WeakEntity→# hashed, # StrongEntity→# strong.",
   "goal": "🎯r2603",
-  "sessions": [
-    "⚪1978061cb8214459919c75a2b660b611"
-  ]
+  "sessions": ["⚪1978061cb8214459919c75a2b660b611"]
 }

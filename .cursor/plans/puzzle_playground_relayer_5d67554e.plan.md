@@ -2,24 +2,24 @@
 name: Puzzle Playground Relayer
 overview: Re-layer the puzzle and framework/playground packages so renderers are pure (puzzle/*-react depend only on @semio-tech/ui-react), the framework playground React renderer aggregates the puzzle renderers, and each puzzle play becomes its own package depending only on the renderer-neutral @semio-tech/framework-playground-core.
 todos:
-  - id: pure-renderers
-    content: Rename puzzle/{2d,3d,5d}/react to @puzzle/{2d,3d,5d}-react; drop @semio-tech/framework-playground-core deps and imports so they depend only on @semio-tech/ui-react (5d also on 2d/3d-react); fix project.json name/cwd and vitest aliases; rename @puzzle/board-wasm -> @puzzle/2d-wasm.
-    status: completed
-  - id: playground-renderer
-    content: Rename @semio-tech/framework-playground-core-react -> @semio-tech/framework-playground-core-renderer-react; add @puzzle/{2d,3d,5d}-react deps and register the puzzle canvases via registerUiBoardSurfaceHost/registerUiScene3DSurfaceHost; keep exporting renderPlayground.
-    status: completed
-  - id: playground-core
-    content: Move react-free helpers that play needs (e.g. playgroundTreePanelRootItems) from the renderer into @semio-tech/framework-playground-core core so play imports them from the neutral runtime.
-    status: completed
-  - id: play-packages
-    content: Create standalone @puzzle/{2d,3d,5d}-play packages (package.json + project.json + scripts) whose index.ts depends only on @semio-tech/framework-playground-core, with the single renderer line in main.ts; split out puzzle/<dim>/script.ts orchestration.
-    status: completed
-  - id: root-rewire
-    content: Update root package.json workspaces+scripts, script.ts dev mapping, .vscode/launch.json, .storybook/main.ts aliases; run bun install to regenerate bun.lock; sanity-check nx/eslint/sln.
-    status: completed
-  - id: verify
-    content: Grep for no stale @puzzle/board|scene|topology|@semio-tech/framework-playground-core-react; confirm play logic imports no react; run nx test per renamed/new package and one play dev server.
-    status: completed
+ - id: pure-renderers
+   content: Rename puzzle/{2d,3d,5d}/react to @puzzle/{2d,3d,5d}-react; drop @semio-tech/framework-playground-core deps and imports so they depend only on @semio-tech/ui-react (5d also on 2d/3d-react); fix project.json name/cwd and vitest aliases; rename @puzzle/board-wasm -> @puzzle/2d-wasm.
+   status: completed
+ - id: playground-renderer
+   content: Rename @semio-tech/framework-playground-core-react -> @semio-tech/framework-playground-core-renderer-react; add @puzzle/{2d,3d,5d}-react deps and register the puzzle canvases via registerUiBoardSurfaceHost/registerUiScene3DSurfaceHost; keep exporting renderPlayground.
+   status: completed
+ - id: playground-core
+   content: Move react-free helpers that play needs (e.g. playgroundTreePanelRootItems) from the renderer into @semio-tech/framework-playground-core core so play imports them from the neutral runtime.
+   status: completed
+ - id: play-packages
+   content: Create standalone @puzzle/{2d,3d,5d}-play packages (package.json + project.json + scripts) whose index.ts depends only on @semio-tech/framework-playground-core, with the single renderer line in main.ts; split out puzzle/<dim>/script.ts orchestration.
+   status: completed
+ - id: root-rewire
+   content: Update root package.json workspaces+scripts, script.ts dev mapping, .vscode/launch.json, .storybook/main.ts aliases; run bun install to regenerate bun.lock; sanity-check nx/eslint/sln.
+   status: completed
+ - id: verify
+   content: Grep for no stale @puzzle/board|scene|topology|@semio-tech/framework-playground-core-react; confirm play logic imports no react; run nx test per renamed/new package and one play dev server.
+   status: completed
 isProject: false
 ---
 
@@ -65,8 +65,6 @@ flowchart TB
   p3 -.entry-only.-> pgr
   p5 -.entry-only.-> pgr
 ```
-
-
 
 ## Name map (folders already in place)
 
@@ -127,4 +125,3 @@ For each of `puzzle/{2d,3d,5d}/play`:
 
 - `@semio-tech/framework-platform-core-react` is left as-is (rename to `-renderer-react` only if you later want symmetry).
 - `@semio-tech/framework-playground-core` keeps its current `@semio-tech/ui-react` dependency; making the runtime fully React-free is a possible follow-up (play already satisfies "no direct React dep" since it only imports `@semio-tech/framework-playground-core`).
-

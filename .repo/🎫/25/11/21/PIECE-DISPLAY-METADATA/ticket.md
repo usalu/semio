@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Piece Display Metadata
 
 ## Problem

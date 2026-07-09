@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Settings Panel Document
 
 ## App Document
@@ -101,17 +102,17 @@ Example from `Sketchpad.tsx`:
 
 ```typescript
 const addSection = useCallback((panelKey: PanelKey, section: PanelSection) => {
-  setSections((prev) => {
-    const updated = {
-      ...prev,
-      [panelKey]: [...prev[panelKey].filter((s) => s.id !== section.id), section].sort((a, b) => {
-        const specificityDiff = b.specificity - a.specificity; // Higher specificity first
-        if (specificityDiff !== 0) return specificityDiff;
-        return (a.order || 0) - (b.order || 0); // Lower order first
-      }),
-    };
-    return updated;
-  });
+ setSections((prev) => {
+  const updated = {
+   ...prev,
+   [panelKey]: [...prev[panelKey].filter((s) => s.id !== section.id), section].sort((a, b) => {
+    const specificityDiff = b.specificity - a.specificity; // Higher specificity first
+    if (specificityDiff !== 0) return specificityDiff;
+    return (a.order || 0) - (b.order || 0); // Lower order first
+   }),
+  };
+  return updated;
+ });
 }, []);
 ```
 
@@ -158,19 +159,19 @@ Example test structure:
 
 ```typescript
 test("Home app shows correct settings sections in order", async ({ page }) => {
-  await page.goto("/");
-  await openSettingsPanel(page);
+ await page.goto("/");
+ await openSettingsPanel(page);
 
-  const sections = await getSettingsSections(page);
+ const sections = await getSettingsSections(page);
 
-  // Verify sections exist
-  expect(sections).toContain("compose.sketchpad.app.home.settings");
-  expect(sections).toContain("compose.sketchpad.settings");
+ // Verify sections exist
+ expect(sections).toContain("compose.sketchpad.app.home.settings");
+ expect(sections).toContain("compose.sketchpad.settings");
 
-  // Verify order
-  const homeIndex = sections.indexOf("compose.sketchpad.app.home.settings");
-  const sketchpadIndex = sections.indexOf("compose.sketchpad.settings");
-  expect(homeIndex).toBeLessThan(sketchpadIndex);
+ // Verify order
+ const homeIndex = sections.indexOf("compose.sketchpad.app.home.settings");
+ const sketchpadIndex = sections.indexOf("compose.sketchpad.settings");
+ expect(homeIndex).toBeLessThan(sketchpadIndex);
 });
 ```
 
@@ -187,6 +188,7 @@ test("Home app shows correct settings sections in order", async ({ page }) => {
 ## Log
 
 ## Summary
+
 # Summary
 
 Implement settings panel document

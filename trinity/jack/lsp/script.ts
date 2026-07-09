@@ -4,27 +4,27 @@ import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } 
 import { join } from "node:path";
 
 class WasmScript extends BundleScript {
-	run(): void {
-		runWasmPackWebBuild({
-			rsDir: join(this.root, "rs"),
-			skipEnvVar: "TRINITY_JACK_LSP_SKIP_WASM_BUILD",
-			logPrefix: "trinity/jack/lsp",
-			wasmBaseName: "trinity_jack_lsp",
-			pkg: {
-				name: "@semio-tech/trinity-jack-lsp",
-				files: ["trinity_jack_lsp_bg.wasm", "trinity_jack_lsp.js", "trinity_jack_lsp.d.ts", "trinity_jack_lsp_bg.wasm.d.ts"],
-				main: "trinity_jack_lsp.js",
-				module: "trinity_jack_lsp.js",
-				types: "trinity_jack_lsp.d.ts",
-			},
-		});
-	}
+  run(): void {
+    runWasmPackWebBuild({
+      rsDir: join(this.root, "rs"),
+      skipEnvVar: "TRINITY_JACK_LSP_SKIP_WASM_BUILD",
+      logPrefix: "trinity/jack/lsp",
+      wasmBaseName: "trinity_jack_lsp",
+      pkg: {
+        name: "@semio-tech/trinity-jack-lsp",
+        files: ["trinity_jack_lsp_bg.wasm", "trinity_jack_lsp.js", "trinity_jack_lsp.d.ts", "trinity_jack_lsp_bg.wasm.d.ts"],
+        main: "trinity_jack_lsp.js",
+        module: "trinity_jack_lsp.js",
+        types: "trinity_jack_lsp.d.ts",
+      },
+    });
+  }
 }
 
 class TestScript extends BundleScript {
-	run(segments: string[]): void {
-		execFileSync("cargo", ["test", "-p", "trinity_jack_lsp", ...segments], { stdio: "inherit", cwd: this.repoRoot });
-	}
+  run(segments: string[]): void {
+    execFileSync("cargo", ["test", "-p", "trinity_jack_lsp", ...segments], { stdio: "inherit", cwd: this.repoRoot });
+  }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("test", TestScript);

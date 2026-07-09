@@ -10,11 +10,11 @@ mkdirSync(out, { recursive: true });
 const manifest = "panel-1;2;412.56499;471.78738;156.49014;230.99568";
 const [, page, xPt, yPt, wPt, hPt] = manifest.split(";");
 const entry = {
-	page: Number.parseInt(page!, 10),
-	xPt: Number.parseFloat(xPt!),
-	yPt: Number.parseFloat(yPt!),
-	wPt: Number.parseFloat(wPt!),
-	hPt: Number.parseFloat(hPt!),
+  page: Number.parseInt(page!, 10),
+  xPt: Number.parseFloat(xPt!),
+  yPt: Number.parseFloat(yPt!),
+  wPt: Number.parseFloat(wPt!),
+  hPt: Number.parseFloat(hPt!),
 };
 
 const PDF_PT_PER_INCH = 72;
@@ -47,10 +47,7 @@ console.log("[DEBUG] pagePt", pageWidthPt, pageHeightPt);
 console.log("[DEBUG] crop", { cropLeft, cropTop, cropWidth, cropHeight });
 
 const fullPng = canvas.toBuffer("image/png");
-const cropped = await sharp(fullPng)
-	.extract({ left: cropLeft, top: cropTop, width: cropWidth, height: cropHeight })
-	.png()
-	.toBuffer();
+const cropped = await sharp(fullPng).extract({ left: cropLeft, top: cropTop, width: cropWidth, height: cropHeight }).png().toBuffer();
 writeFileSync(join(out, "crop-raw.png"), cropped);
 
 const blurred = await sharp(cropped).blur(20).png().toBuffer();

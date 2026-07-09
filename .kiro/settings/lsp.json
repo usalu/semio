@@ -3,23 +3,10 @@
     "typescript": {
       "name": "typescript-language-server",
       "command": "typescript-language-server",
-      "args": [
-        "--stdio"
-      ],
-      "file_extensions": [
-        "ts",
-        "js",
-        "tsx",
-        "jsx"
-      ],
-      "project_patterns": [
-        "package.json",
-        "tsconfig.json"
-      ],
-      "exclude_patterns": [
-        "**/node_modules/**",
-        "**/dist/**"
-      ],
+      "args": ["--stdio"],
+      "file_extensions": ["ts", "js", "tsx", "jsx"],
+      "project_patterns": ["package.json", "tsconfig.json"],
+      "exclude_patterns": ["**/node_modules/**", "**/dist/**"],
       "multi_workspace": false,
       "initialization_options": {
         "preferences": {
@@ -31,24 +18,10 @@
     "python": {
       "name": "pyright",
       "command": "pyright-langserver",
-      "args": [
-        "--stdio"
-      ],
-      "file_extensions": [
-        "py"
-      ],
-      "project_patterns": [
-        "pyproject.toml",
-        "setup.py",
-        "requirements.txt",
-        "pyrightconfig.json"
-      ],
-      "exclude_patterns": [
-        "**/__pycache__/**",
-        "**/venv/**",
-        "**/.venv/**",
-        "**/.pytest_cache/**"
-      ],
+      "args": ["--stdio"],
+      "file_extensions": ["py"],
+      "project_patterns": ["pyproject.toml", "setup.py", "requirements.txt", "pyrightconfig.json"],
+      "exclude_patterns": ["**/__pycache__/**", "**/venv/**", "**/.venv/**", "**/.pytest_cache/**"],
       "multi_workspace": false,
       "initialization_options": {},
       "request_timeout_secs": 60
@@ -57,16 +30,9 @@
       "name": "gopls",
       "command": "gopls",
       "args": [],
-      "file_extensions": [
-        "go"
-      ],
-      "project_patterns": [
-        "go.mod",
-        "go.sum"
-      ],
-      "exclude_patterns": [
-        "**/vendor/**"
-      ],
+      "file_extensions": ["go"],
+      "project_patterns": ["go.mod", "go.sum"],
+      "exclude_patterns": ["**/vendor/**"],
       "multi_workspace": false,
       "initialization_options": {
         "usePlaceholders": true,
@@ -78,15 +44,9 @@
       "name": "rust-analyzer",
       "command": "rust-analyzer",
       "args": [],
-      "file_extensions": [
-        "rs"
-      ],
-      "project_patterns": [
-        "Cargo.toml"
-      ],
-      "exclude_patterns": [
-        "**/target/**"
-      ],
+      "file_extensions": ["rs"],
+      "project_patterns": ["Cargo.toml"],
+      "exclude_patterns": ["**/target/**"],
       "multi_workspace": false,
       "initialization_options": {
         "cargo": {

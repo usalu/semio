@@ -2,30 +2,30 @@
 name: Puzzle2d Brush Tool
 overview: Add a paint-style Brush tool to puzzle2d that, while active, detects free handles ("slots") via offset hitboxes, previews a compatible new node + parent edge at a configurable flush distance, and auto-flushes it into the fixture as the cursor sweeps between slots.
 todos:
-  - id: ticket
-    content: Open repo ticket and associate goal for the puzzle2d Brush tool
-    status: completed
-  - id: rust-catalog
-    content: Parse node-kind shape + handle templates into NodeKindDef in puzzle/2d/rs/lib.rs
-    status: completed
-  - id: rust-brush
-    content: Add ActiveTool, brush config/state, kinds-based compat helper, brush gesture, ghost paint, events, and wasm-bindgen API in lib.rs
-    status: completed
-  - id: react-canvas
-    content: Add brush props/event handling/Tab forwarding to Puzzle2dCanvas + Puzzle2dRenderer
-    status: completed
-  - id: playground-host
-    content: Add brush host state, canvas props, host-bridge commands (setActiveTool/setBrushFlushDistance/addBrushNode) and engagement candidate list
-    status: completed
-  - id: play-controller
-    content: Add Puzzle2dActiveTool, brush/select engagement possibles, and flush-distance WindowMeasure slider
-    status: completed
-  - id: build-test
-    content: Rebuild puzzle2d wasm, extend existing Rust/React/play tests, validate runtime with [DEBUG] logs
-    status: completed
-  - id: close-ticket
-    content: Close the ticket with summary and touched files
-    status: completed
+ - id: ticket
+   content: Open repo ticket and associate goal for the puzzle2d Brush tool
+   status: completed
+ - id: rust-catalog
+   content: Parse node-kind shape + handle templates into NodeKindDef in puzzle/2d/rs/lib.rs
+   status: completed
+ - id: rust-brush
+   content: Add ActiveTool, brush config/state, kinds-based compat helper, brush gesture, ghost paint, events, and wasm-bindgen API in lib.rs
+   status: completed
+ - id: react-canvas
+   content: Add brush props/event handling/Tab forwarding to Puzzle2dCanvas + Puzzle2dRenderer
+   status: completed
+ - id: playground-host
+   content: Add brush host state, canvas props, host-bridge commands (setActiveTool/setBrushFlushDistance/addBrushNode) and engagement candidate list
+   status: completed
+ - id: play-controller
+   content: Add Puzzle2dActiveTool, brush/select engagement possibles, and flush-distance WindowMeasure slider
+   status: completed
+ - id: build-test
+   content: Rebuild puzzle2d wasm, extend existing Rust/React/play tests, validate runtime with [DEBUG] logs
+   status: completed
+ - id: close-ticket
+   content: Close the ticket with summary and touched files
+   status: completed
 isProject: false
 ---
 
@@ -59,8 +59,6 @@ flowchart LR
   tab["Tab key"] -->|brushCycleCandidate| wasm
   measure["flush-distance slider + tool engagement"] -->|props| react --> wasm
 ```
-
-
 
 ## 1. Rust WASM core — [puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs)
 
@@ -102,7 +100,7 @@ Default flush distance `= 2 x PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX = 80`; slider 
 ## 6. Build, tests, validation
 
 - Rebuild the puzzle2d wasm via the existing nx/launch task (no new script files; extend `script.ts` if a flag is needed).
-- Extend existing tests only: Rust `#[cfg(test)]` in `lib.rs` (candidate compatibility, hitbox detection, closest-handle pick, `brushPlace` payload, tool gating); React/play tests in `puzzle/2d/react/index.tsx` and `puzzle/2d/play/index.ts` (tool toggle, flush-distance measure, `addBrushNode` fixture append). 
+- Extend existing tests only: Rust `#[cfg(test)]` in `lib.rs` (candidate compatibility, hitbox detection, closest-handle pick, `brushPlace` payload, tool gating); React/play tests in `puzzle/2d/react/index.tsx` and `puzzle/2d/play/index.ts` (tool toggle, flush-distance measure, `addBrushNode` fixture append).
 - Validate runtime with temporary `[DEBUG]` logs on `brushPreview`/`brushPlace` before removing them.
 
 ## Ticket

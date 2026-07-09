@@ -28,9 +28,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚go💻compose📌1📌8522"
-        ],
+        "ranges": ["👤compose📚go💻compose📌1📌8522"],
         "second": "🎆26🌙03☀️09⏰13⌚21⏱️32",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90"
       },
@@ -61,9 +59,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚go💻compose📌1📌8522"
-        ],
+        "ranges": ["👤compose📚go💻compose📌1📌8522"],
         "second": "🎆26🌙03☀️09⏰13⌚21⏱️51",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90"
       },
@@ -92,9 +88,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚22⏱️30",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90",
-        "tests": [
-          "\"FullyQualifiedName~Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior\""
-        ]
+        "tests": ["\"FullyQualifiedName~Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior\""]
       },
       "response": {
         "allowed": true
@@ -117,19 +111,12 @@
         "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "👤compose📚go🥼composetest"
-        ],
+        "files": ["👤compose📚go🥼composetest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚22⏱️30",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90",
-        "tests": [
-          "👤compose📚go🥼composetest🧪testroundtrip",
-          "👤compose📚go🥼composetest🧪testflatten",
-          "👤compose📚go🥼composetest🧪testchange",
-          "👤compose📚go🥼composetest🧪testvalidation"
-        ]
+        "tests": ["👤compose📚go🥼composetest🧪testroundtrip", "👤compose📚go🥼composetest🧪testflatten", "👤compose📚go🥼composetest🧪testchange", "👤compose📚go🥼composetest🧪testvalidation"]
       },
       "response": {
         "allowed": true
@@ -226,9 +213,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚23⏱️54",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90",
-        "tests": [
-          "\"FullyQualifiedName~Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior\""
-        ]
+        "tests": ["\"FullyQualifiedName~Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior\""]
       },
       "response": {
         "allowed": true
@@ -255,9 +240,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚24⏱️38",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90",
-        "tests": [
-          "\"FullyQualifiedName~Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior\""
-        ]
+        "tests": ["\"FullyQualifiedName~Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior\""]
       },
       "response": {
         "allowed": true
@@ -280,19 +263,12 @@
         "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "👤compose📚go🥼composetest"
-        ],
+        "files": ["👤compose📚go🥼composetest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚25⏱️27",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90",
-        "tests": [
-          "👤compose📚go🥼composetest🧪testroundtrip",
-          "👤compose📚go🥼composetest🧪testflatten",
-          "👤compose📚go🥼composetest🧪testchange",
-          "👤compose📚go🥼composetest🧪testvalidation"
-        ]
+        "tests": ["👤compose📚go🥼composetest🧪testroundtrip", "👤compose📚go🥼composetest🧪testflatten", "👤compose📚go🥼composetest🧪testchange", "👤compose📚go🥼composetest🧪testvalidation"]
       },
       "response": {
         "allowed": true
@@ -315,17 +291,12 @@
         "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "👤compose📚js🥼composetest",
-          "👤compose📚js🥼sketchpadtest"
-        ],
+        "files": ["👤compose📚js🥼composetest", "👤compose📚js🥼sketchpadtest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚25⏱️27",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90",
-        "tests": [
-          "--runInBand"
-        ]
+        "tests": ["--runInBand"]
       },
       "response": {
         "allowed": true
@@ -352,9 +323,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚26⏱️02",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90",
-        "tests": [
-          "\"FullyQualifiedName~Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior\""
-        ]
+        "tests": ["\"FullyQualifiedName~Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior\""]
       },
       "response": {
         "allowed": true
@@ -377,16 +346,12 @@
         "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "👤compose📚rs🥼composebenchmark"
-        ],
+        "files": ["👤compose📚rs🥼composebenchmark"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚26⏱️02",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90",
-        "tests": [
-          ""
-        ]
+        "tests": [""]
       },
       "response": {
         "allowed": true
@@ -409,9 +374,7 @@
         "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "🥼composetest"
-        ],
+        "files": ["🥼composetest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚26⏱️02",
@@ -491,9 +454,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️09⏰21⌚38⏱️00",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90",
-        "tests": [
-          "\"FullyQualifiedName~Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior\""
-        ]
+        "tests": ["\"FullyQualifiedName~Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior\""]
       },
       "response": {
         "allowed": true
@@ -516,16 +477,12 @@
         "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "👤compose📚go🥼composetest"
-        ],
+        "files": ["👤compose📚go🥼composetest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰21⌚38⏱️00",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90",
-        "tests": [
-          "👤compose📚go🥼composetest🧪testchange"
-        ]
+        "tests": ["👤compose📚go🥼composetest🧪testchange"]
       },
       "response": {
         "allowed": true
@@ -548,16 +505,12 @@
         "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "👤compose📚py🥼composetest"
-        ],
+        "files": ["👤compose📚py🥼composetest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰21⌚38⏱️00",
         "session": "⚪3c9178c1cf97452795d82a1c37ebab90",
-        "tests": [
-          "change"
-        ]
+        "tests": ["change"]
       },
       "response": {
         "allowed": true
@@ -580,9 +533,7 @@
         "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "🥼composetest"
-        ],
+        "files": ["🥼composetest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰21⌚38⏱️00",

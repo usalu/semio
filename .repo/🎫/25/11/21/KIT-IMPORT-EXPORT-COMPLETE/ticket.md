@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Kit Import/Export Implementation - Complete
 
 ## Summary
@@ -84,17 +85,17 @@ The key fix was updating `execResult()` to use prepared statements:
 
 ```typescript
 const execResult = (query: string, params?: any[]): any[] => {
-  const stmt = db.prepare(query);
-  if (params) {
-    stmt.bind(params);
-  }
-  const result: any[] = [];
-  while (stmt.step()) {
-    const row = stmt.getAsObject();
-    result.push(row);
-  }
-  stmt.free();
-  return result;
+ const stmt = db.prepare(query);
+ if (params) {
+  stmt.bind(params);
+ }
+ const result: any[] = [];
+ while (stmt.step()) {
+  const row = stmt.getAsObject();
+  result.push(row);
+ }
+ stmt.free();
+ return result;
 };
 ```
 

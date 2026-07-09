@@ -2,33 +2,33 @@
 name: Presentation Embodiments And Dispositions
 overview: "Reconcile @semio-tech/framework-presentation with presentation/AGENTS.md: add Video + Pdf (react-pdf) embodiments, rename ParticipantPlacement to a positioned/styled Disposition, add an Analogy template, and make every embodiment render and auto-animate in the React + reveal.js renderer, verified live in 33.projektetage with its real PDF/MP4/PNG assets."
 todos:
-  - id: ticket
-    content: Read repo://goals and open/reopen a repo MCP ticket under the framework goal
-    status: completed
-  - id: core-embodiments
-    content: Add VideoEmbodiment + PdfEmbodiment to core/index.ts and extend the Embodiment union
-    status: completed
-  - id: core-disposition
-    content: Rename ParticipantPlacement->Disposition (add position/style), Arrangement.placements->dispositions, ResolvedPlacement->ResolvedDisposition; update resolver + intro helpers
-    status: completed
-  - id: core-analogy
-    content: Add analogy() template + extend core inline vitest for renames, new embodiments, analogy
-    status: completed
-  - id: renderer-deps
-    content: Add react-pdf to renderer package.json and run bun install
-    status: completed
-  - id: renderer-views
-    content: Add Video + Pdf morph views (react-pdf, worker via import.meta.url), positioning/style wrapper, update switch + re-exports
-    status: completed
-  - id: renderer-tests
-    content: Extend renderer inline vitest + vitest.setup.ts jsdom polyfills for pdf/video/positioned dispositions
-    status: completed
-  - id: projektetage
-    content: Wire real public PDF/MP4/PNG assets into the projektetage deck and update its inline test
-    status: completed
-  - id: validate
-    content: Run core + renderer tests, verify projektetage dev server live (screenshots/CDP), close ticket
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open/reopen a repo MCP ticket under the framework goal
+   status: completed
+ - id: core-embodiments
+   content: Add VideoEmbodiment + PdfEmbodiment to core/index.ts and extend the Embodiment union
+   status: completed
+ - id: core-disposition
+   content: Rename ParticipantPlacement->Disposition (add position/style), Arrangement.placements->dispositions, ResolvedPlacement->ResolvedDisposition; update resolver + intro helpers
+   status: completed
+ - id: core-analogy
+   content: Add analogy() template + extend core inline vitest for renames, new embodiments, analogy
+   status: completed
+ - id: renderer-deps
+   content: Add react-pdf to renderer package.json and run bun install
+   status: completed
+ - id: renderer-views
+   content: Add Video + Pdf morph views (react-pdf, worker via import.meta.url), positioning/style wrapper, update switch + re-exports
+   status: completed
+ - id: renderer-tests
+   content: Extend renderer inline vitest + vitest.setup.ts jsdom polyfills for pdf/video/positioned dispositions
+   status: completed
+ - id: projektetage
+   content: Wire real public PDF/MP4/PNG assets into the projektetage deck and update its inline test
+   status: completed
+ - id: validate
+   content: Run core + renderer tests, verify projektetage dev server live (screenshots/CDP), close ticket
+   status: completed
 isProject: false
 ---
 
@@ -63,6 +63,7 @@ Constraints: no AGENTS.md edits; extend existing files only (no new files); add 
 ## 4. Live verification — [33.projektetage/index.ts](mit-bestand/präsentation/33.projektetage/index.ts)
 
 Wire the real assets in [public/](mit-bestand/präsentation/33.projektetage/public) into the deck (a second sequence/thought after `intro`) to confirm runtime rendering + morph:
+
 - Figure: `Screenshot-2023-05-24-at-22-11-19-component-catalogue.png`
 - Video: `bauen-mit-bestand.mp4`
 - Pdf: `bachelor-thesis-ueli-saluz.pdf`

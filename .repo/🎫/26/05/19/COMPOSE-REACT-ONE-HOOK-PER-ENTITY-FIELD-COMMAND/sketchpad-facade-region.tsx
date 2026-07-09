@@ -305,36 +305,33 @@ export function KitRegistryProvider(props: Readonly<{ children: ReactNode }>): R
   const [registryEpoch, bump] = React.useReducer((x: number) => x + 1, 0);
   const [activeKitId, setActiveKitId] = React.useState<string | undefined>(undefined);
 
-  const open = React.useCallback(
-    async (kitId: string, init: Readonly<{ store?: KitHostStore; kitClient?: unknown | null; initialKit?: unknown }>) => {
-      const cur = rowsRef.current.get(kitId);
-      if (cur) {
-        (cur as { refs: number }).refs += 1;
-        bump();
-        return;
-      }
-      if (init.store == null) {
-        throw new Error("KitRegistry.open requires init.store");
-      }
-      loadingRef.current.add(kitId);
-      errRef.current.delete(kitId);
+  const open = React.useCallback(async (kitId: string, init: Readonly<{ store?: KitHostStore; kitClient?: unknown | null; initialKit?: unknown }>) => {
+    const cur = rowsRef.current.get(kitId);
+    if (cur) {
+      (cur as { refs: number }).refs += 1;
       bump();
-      try {
-        const store = init.store;
-        const kitClient = init.kitClient ?? null;
-        const persistence: KitPersistenceInfo = { kind: store.name === "InMemoryKitStore" ? "temporary" : "file" };
-        rowsRef.current.set(kitId, { store, kitClient, refs: 1, persistence });
-        emitKitRegistryListChanged();
-      } catch (e) {
-        errRef.current.set(kitId, e instanceof Error ? e : new Error(String(e)));
-        throw e;
-      } finally {
-        loadingRef.current.delete(kitId);
-        bump();
-      }
-    },
-    [],
-  );
+      return;
+    }
+    if (init.store == null) {
+      throw new Error("KitRegistry.open requires init.store");
+    }
+    loadingRef.current.add(kitId);
+    errRef.current.delete(kitId);
+    bump();
+    try {
+      const store = init.store;
+      const kitClient = init.kitClient ?? null;
+      const persistence: KitPersistenceInfo = { kind: store.name === "InMemoryKitStore" ? "temporary" : "file" };
+      rowsRef.current.set(kitId, { store, kitClient, refs: 1, persistence });
+      emitKitRegistryListChanged();
+    } catch (e) {
+      errRef.current.set(kitId, e instanceof Error ? e : new Error(String(e)));
+      throw e;
+    } finally {
+      loadingRef.current.delete(kitId);
+      bump();
+    }
+  }, []);
 
   const close = React.useCallback((kitId: string) => {
     const row = rowsRef.current.get(kitId);

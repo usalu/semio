@@ -15,25 +15,25 @@ Update VSCode launch.json and tasks.json with:
 
 ## Package List
 
-| Package               | Name              |
-| --------------------- | ----------------- |
+| Package                 | Name                |
+| ----------------------- | ------------------- |
 | go/compose              | compose/go          |
-| ./repo/cli            | repo/go           |
-| go/server             | repo/server       |
+| ./repo/cli              | repo/go             |
+| go/server               | repo/server         |
 | rs/compose              | compose/rs          |
 | py/compose              | compose/py          |
-| py/engine             | compose/engine      |
+| py/engine               | compose/engine      |
 | js/compose              | compose/js          |
-| js/docs               | compose/docs        |
-| js/play               | compose/play        |
-| js/desktop            | compose/desktop     |
-| js/vscode             | repo/vscode       |
+| js/docs                 | compose/docs        |
+| js/play                 | compose/play        |
+| js/desktop              | compose/desktop     |
+| js/vscode               | repo/vscode         |
 | net/Compose             | compose/net         |
 | net/Compose.Grasshopper | compose/grasshopper |
-| assets                | assets      |
-| assets/logo           | compose/logo        |
-| assets/icons          | compose/icons       |
-| yak                   | compose/yak         |
+| assets                  | assets              |
+| assets/logo             | compose/logo        |
+| assets/icons            | compose/icons       |
+| yak                     | compose/yak         |
 
 ## New Naming Convention
 

@@ -2,24 +2,24 @@
 name: Delete Play-Host Layer
 overview: Delete every per-app play-host.tsx by making the framework derive runtime creation, renderer loading, controller subscriptions, panel tabs, file bridges, OS instance hosts, and example dropdowns from the app's core exports and manifest; only canvas surface components remain, living in each app's react index.
 todos:
-  - id: renderer-from-manifest
-    content: Add rendererPackage/rendererExport to manifest, emit playgroundRendererImports in virtual module, load contributions from it in bootPlaygroundApp + OS registry, delete loadRenderer from definitions and app cores, remove ./play exports
-    status: completed
-  - id: derived-runtime
-    content: Extend createPlaygroundApp to derive createRuntime from createController/layout/example spec; add generic usePlayController hook; delete per-app createRuntime, buildXxxPlayAppRuntime wrappers, and useXxxPlayController hooks
-    status: completed
-  - id: declarative-panel-tabs
-    content: Move all panel trees to core sidePanelBodies factories + SideTabSpec declarations (puzzle3d pattern); delete PureSidePanelTabDefinition/CallbackTreePanelDefinition usage in apps
-    status: completed
-  - id: generic-bridges-hosts
-    content: Add createFixtureFileBridge and createOsInstanceHost factories; auto-derive examples from PlaygroundExampleHost when contribution omits them
-    status: completed
-  - id: migrate-delete-playhosts
-    content: "Migrate all 23 apps: move canvas surface hosts + orchestration into react index.tsx PlayHost region, update manifests, delete every play-host.tsx and ./play export"
-    status: completed
-  - id: verify
-    content: Run tests for all touched packages + dependency-cruiser; boot draw, puzzle 2d, cad, gis 2d, S/OS studio and confirm derived runtime, tabs, examples, bridges via [DEBUG] logs
-    status: completed
+ - id: renderer-from-manifest
+   content: Add rendererPackage/rendererExport to manifest, emit playgroundRendererImports in virtual module, load contributions from it in bootPlaygroundApp + OS registry, delete loadRenderer from definitions and app cores, remove ./play exports
+   status: completed
+ - id: derived-runtime
+   content: Extend createPlaygroundApp to derive createRuntime from createController/layout/example spec; add generic usePlayController hook; delete per-app createRuntime, buildXxxPlayAppRuntime wrappers, and useXxxPlayController hooks
+   status: completed
+ - id: declarative-panel-tabs
+   content: Move all panel trees to core sidePanelBodies factories + SideTabSpec declarations (puzzle3d pattern); delete PureSidePanelTabDefinition/CallbackTreePanelDefinition usage in apps
+   status: completed
+ - id: generic-bridges-hosts
+   content: Add createFixtureFileBridge and createOsInstanceHost factories; auto-derive examples from PlaygroundExampleHost when contribution omits them
+   status: completed
+ - id: migrate-delete-playhosts
+   content: "Migrate all 23 apps: move canvas surface hosts + orchestration into react index.tsx PlayHost region, update manifests, delete every play-host.tsx and ./play export"
+   status: completed
+ - id: verify
+   content: Run tests for all touched packages + dependency-cruiser; boot draw, puzzle 2d, cad, gis 2d, S/OS studio and confirm derived runtime, tabs, examples, bridges via [DEBUG] logs
+   status: completed
 isProject: false
 ---
 
@@ -27,7 +27,7 @@ isProject: false
 
 ## Current state and target
 
-Investigation (23 `play-host.tsx` files, ~10,500 lines) shows ~54% is copy-paste identical structure and ~27% is panel wiring whose data already lives in core. Target: `**play-host.tsx` files and `./play` package exports cease to exist.** An app consists of:
+Investigation (23 `play-host.tsx` files, ~10,500 lines) shows ~54% is copy-paste identical structure and ~27% is panel wiring whose data already lives in core. Target: `**play-host.tsx` files and `./play` package exports cease to exist.\*\* An app consists of:
 
 1. `semio.app` manifest (now also naming its renderer package/export)
 2. Core: controller class, tree/window-body builders, playground spec (ids, layout, modes, examples)
@@ -44,8 +44,6 @@ flowchart LR
   Core --> Framework
   ReactIdx --> Virtual
 ```
-
-
 
 ## Part 1 — Renderer resolution from manifest (kills `loadRenderer`)
 

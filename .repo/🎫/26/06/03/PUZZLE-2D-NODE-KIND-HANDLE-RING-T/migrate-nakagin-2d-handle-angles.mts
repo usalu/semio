@@ -2,12 +2,7 @@
 /** @emoji 🧾 One-off: rewrite nakagin 2d kind-catalog + instance handle angles from compose connector ring `t`. */
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import {
-  puzzle2dHandleAngleFromRingT,
-  puzzle2dNodeKindHandlesFromKitConnectors,
-  puzzle2dNormalizeRingT,
-  type KitConnectorCadRow,
-} from "../../../../../../puzzle/2d/react/index.tsx";
+import { puzzle2dHandleAngleFromRingT, puzzle2dNodeKindHandlesFromKitConnectors, puzzle2dNormalizeRingT, type KitConnectorCadRow } from "../../../../../../puzzle/2d/react/index.tsx";
 
 const repoRoot = join(import.meta.dir, "..", "..", "..", "..", "..", "..");
 const kitPath = join(repoRoot, "compose/fixtures/nakagin-capsule-tower.filtered.kit.compose.json");
@@ -144,9 +139,7 @@ async function main(): Promise<void> {
   }
 
   writeFileSync(fixturePath, `${JSON.stringify(fixture, null, 2)}\n`);
-  console.log(
-    `[DEBUG] migrate-nakagin-2d-handle-angles wrote ${fixturePath} (${catalogAngles} catalog templates, ${instanceAngles} instance handles, ${instanceMiss} misses)`,
-  );
+  console.log(`[DEBUG] migrate-nakagin-2d-handle-angles wrote ${fixturePath} (${catalogAngles} catalog templates, ${instanceAngles} instance handles, ${instanceMiss} misses)`);
 }
 
 await main();

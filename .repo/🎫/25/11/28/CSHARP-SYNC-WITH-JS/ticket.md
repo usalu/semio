@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 C# codebase was out of date with JS schema. Key issues:
@@ -57,6 +58,7 @@ C# codebase was out of date with JS schema. Key issues:
 ## Log
 
 ## Summary
+
 # Summary
 
 Sync C# codebase with JS schema changes

@@ -2,36 +2,36 @@
 name: Forms Premigration Parity Both Renderers
 overview: Restore the `forms` plugin (plus its `flow`/`procedural 2d`/`procedural 3d` "Generate mode" siblings, which pre-migration shared forms-core) to full pre-migration feature parity, rendered identically by both the React and wgpu renderers via the shared `UiNode` protocol.
 todos:
-  - id: domain-model
-    content: Expand FormQuestion/FormExpr/validation in forms/rs/lib.rs to full pre-migration field set + condition evaluation + runtime helpers
-    status: completed
-  - id: wgpu-nested-scene-fix
-    content: Fix wgpu ComponentScene rendering to recurse at any nesting depth (interpreter.rs + widgets.rs), matching React parity
-    status: completed
-  - id: generic-widget-extensions
-    content: Extend React Input inputKind handling (longText/date/color/file) and confirm wgpu text-edit path covers all kinds
-    status: completed
-  - id: forms-edit-restoration
-    content: Restore full per-question-kind structural editing in forms Inspection panel (placeholder/min/max/step/unit/options/vector-fields/note/image/file/buildingComponent params)
-    status: completed
-  - id: forms-try-wizard
-    content: "Replace forms Try table with a real multi-step wizard: per-kind controls, step nav, validation, conditional visibility"
-    status: completed
-  - id: building-component-preview
-    content: Port procedural/3d's evaluate-tessellate pipeline into forms-plugin and add a dedicated live mesh Preview window for buildingComponent questions
-    status: completed
-  - id: forms-fixtures
-    content: Restore default/Contact and onboarding example fixtures with full field coverage and a conditional step
-    status: completed
-  - id: generate-mode-shared
-    content: Add flow_fixture_to_form_spec + apply_generation_values_to_fixture to flow_core and a shared generate-mode CRUD/render helper
-    status: completed
-  - id: generate-mode-wiring
-    content: Wire Generate mode (list+form+preview) into flow, procedural/2d, procedural/3d plugins with mode-specific layout
-    status: completed
-  - id: verify-all
-    content: Build native+wasm for all touched crates, run/extend E2E screenshot-diff for forms/flow/procedural2d/procedural3d, manual runtime pass with DEBUG logs, open/close repo ticket
-    status: in_progress
+ - id: domain-model
+   content: Expand FormQuestion/FormExpr/validation in forms/rs/lib.rs to full pre-migration field set + condition evaluation + runtime helpers
+   status: completed
+ - id: wgpu-nested-scene-fix
+   content: Fix wgpu ComponentScene rendering to recurse at any nesting depth (interpreter.rs + widgets.rs), matching React parity
+   status: completed
+ - id: generic-widget-extensions
+   content: Extend React Input inputKind handling (longText/date/color/file) and confirm wgpu text-edit path covers all kinds
+   status: completed
+ - id: forms-edit-restoration
+   content: Restore full per-question-kind structural editing in forms Inspection panel (placeholder/min/max/step/unit/options/vector-fields/note/image/file/buildingComponent params)
+   status: completed
+ - id: forms-try-wizard
+   content: "Replace forms Try table with a real multi-step wizard: per-kind controls, step nav, validation, conditional visibility"
+   status: completed
+ - id: building-component-preview
+   content: Port procedural/3d's evaluate-tessellate pipeline into forms-plugin and add a dedicated live mesh Preview window for buildingComponent questions
+   status: completed
+ - id: forms-fixtures
+   content: Restore default/Contact and onboarding example fixtures with full field coverage and a conditional step
+   status: completed
+ - id: generate-mode-shared
+   content: Add flow_fixture_to_form_spec + apply_generation_values_to_fixture to flow_core and a shared generate-mode CRUD/render helper
+   status: completed
+ - id: generate-mode-wiring
+   content: Wire Generate mode (list+form+preview) into flow, procedural/2d, procedural/3d plugins with mode-specific layout
+   status: completed
+ - id: verify-all
+   content: Build native+wasm for all touched crates, run/extend E2E screenshot-diff for forms/flow/procedural2d/procedural3d, manual runtime pass with DEBUG logs, open/close repo ticket
+   status: in_progress
 isProject: false
 ---
 
@@ -56,6 +56,7 @@ Compared pre-migration TypeScript (`git show 5ecbe3dbf^:forms/react/index.tsx`, 
 ## Phase 1 — Domain model (`forms/rs/lib.rs`)
 
 Expand `FormQuestion` to carry every pre-migration field (`required`, `description`, `placeholder`, `min`, `max`, `step`, `unit`, `fields: Vec<FormVectorField>`, `schema`, `src`, `accept`, `fixture_slug`, `params: Value`, `condition: Option<FormExpr>`). Add:
+
 - `FormVectorField { key, label, value }`.
 - `FormExpr` enum (`Const`/`Var`/`Eq`/`And`/`Or`/`Truthy`) + `eval_form_expr(expr, values) -> Value` + `is_question_visible(question, values) -> bool`, porting `evalFormExpr`/`isQuestionVisible` from `/tmp/forms_internal_premigration.ts` (lines ~900-961).
 - `default_value_for_question(question) -> Value`, `visible_questions(step, values)`, `step_errors(step, values) -> Vec<{question_id, message}>`, `can_advance(step, values) -> bool` — Rust port of `FormRuntime`'s validation (`getStepErrors`/`canAdvance`, same file lines 1004-1032): required + non-empty check, skipping `note`/`image`, treating `buildingComponent`-style extension questions as requiring a non-empty `params` object.

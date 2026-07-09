@@ -10,7 +10,5 @@
   "target": {
     "modelDefinition": "aec.building.structure.fem.surface"
   },
-  "typologies": [
-    "structure.surfacefem.surfaceelement"
-  ]
+  "typologies": ["structure.surfacefem.surfaceelement"]
 }

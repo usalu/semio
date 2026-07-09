@@ -2,27 +2,27 @@
 name: Wgpu Chrome Styling Parity
 overview: Bring the wgpu OS-shell chrome (navbar, footer, panels, buttons, hover/borders) to visual parity with the React shell by extending the existing `ui/styling/tokens.json` -> codegen pipeline with a new "chrome" theme/metrics group, then rewriting `ui/wgpu/rs/theme.rs` to consume the generated constants (light + dark, with real theme switching) instead of hand-authored gray/blue values.
 todos:
-  - id: tokens-json
-    content: Add chrome theme colors, chrome/typography metrics, chrome strokes+radii to ui/styling/tokens.json
-    status: completed
-  - id: codegen-script
-    content: Generalize theme-group loop in ui/styling/rs/script.ts to include chrome; regenerate artifacts
-    status: completed
-  - id: styling-lib-rs
-    content: Add ThemeName::chrome() accessor in ui/styling/rs/lib.rs; extend tests for chrome light/dark parity
-    status: completed
-  - id: wgpu-theme-rs
-    content: Rebuild ui/wgpu/rs/theme.rs Theme struct from generated chrome constants; add Theme::light()
-    status: completed
-  - id: theme-switching
-    content: Wire theme_id -> resolve_theme() (incl. system prefers-color-scheme) into AppRuntime.frame() in framework/renderer/wgpu/rs/lib.rs
-    status: completed
-  - id: shell-widgets-apply
-    content: Apply corrected radius/borders/hover/accent/spacing/typography across shell.rs and widgets.rs; add navbar/footer hover-border emphasis
-    status: completed
-  - id: verify-chrome
-    content: Run cargo tests, rebuild wasm, run 25-plugin E2E suite, visually verify navbar/footer/panel/button parity and theme switching
-    status: completed
+ - id: tokens-json
+   content: Add chrome theme colors, chrome/typography metrics, chrome strokes+radii to ui/styling/tokens.json
+   status: completed
+ - id: codegen-script
+   content: Generalize theme-group loop in ui/styling/rs/script.ts to include chrome; regenerate artifacts
+   status: completed
+ - id: styling-lib-rs
+   content: Add ThemeName::chrome() accessor in ui/styling/rs/lib.rs; extend tests for chrome light/dark parity
+   status: completed
+ - id: wgpu-theme-rs
+   content: Rebuild ui/wgpu/rs/theme.rs Theme struct from generated chrome constants; add Theme::light()
+   status: completed
+ - id: theme-switching
+   content: Wire theme_id -> resolve_theme() (incl. system prefers-color-scheme) into AppRuntime.frame() in framework/renderer/wgpu/rs/lib.rs
+   status: completed
+ - id: shell-widgets-apply
+   content: Apply corrected radius/borders/hover/accent/spacing/typography across shell.rs and widgets.rs; add navbar/footer hover-border emphasis
+   status: completed
+ - id: verify-chrome
+   content: Run cargo tests, rebuild wasm, run 25-plugin E2E suite, visually verify navbar/footer/panel/button parity and theme switching
+   status: completed
 isProject: false
 ---
 
@@ -32,16 +32,16 @@ isProject: false
 
 `ui/wgpu/rs/theme.rs` is a **hand-authored, standalone** `Theme::dark()` — never sourced from `ui/styling/tokens.json`. Meanwhile React's chrome (navbar/footer/panels/buttons) gets its tokens from `ui/styling/js/ui.css`, which is **also hand-authored** (unlike the board/map/canvas node-graph themes, which already flow through `tokens.json` → `ui/styling/rs/generated.rs` → `ThemeName::board()/map()/canvas()`). The two chrome systems drifted independently:
 
-| Aspect | React (`ui.css`) | wgpu (`theme.rs`) |
-|---|---|---|
-| Accent | primary red `#ff344f` | blue `#598CF2` |
-| Chrome radius | `0` everywhere | `6px` |
-| Navbar/footer height | `size-large` = 9 × 0.2rem ≈ 28.8px | `40px` / `36px` |
-| Control height | `size-medium` = 7 × 0.2rem ≈ 22.4px | `28px` |
-| Gap/padding | `spacing-single` = 0.2rem ≈ 3.2px | `8px` / `12px` |
-| Surfaces | level-based `base/canvas/window/panel` warm grays | flat `#1C1C1F`-ish |
-| Hover | gray fill + border emphasis | lighter gray fill only |
-| Theme switching | full light/dark/system via `.dark` class | `theme_id` stored (`"system"`/`"light"`/`"dark"` in [shell.rs](framework/renderer/wgpu/rs/shell.rs) line 116/1015/1569) but **never applied** — `AppRuntime.theme` is always `Theme::default()` ([lib.rs](framework/renderer/wgpu/rs/lib.rs) line 272) |
+| Aspect               | React (`ui.css`)                                  | wgpu (`theme.rs`)                                                                                                                                                                                                                                      |
+| -------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Accent               | primary red `#ff344f`                             | blue `#598CF2`                                                                                                                                                                                                                                         |
+| Chrome radius        | `0` everywhere                                    | `6px`                                                                                                                                                                                                                                                  |
+| Navbar/footer height | `size-large` = 9 × 0.2rem ≈ 28.8px                | `40px` / `36px`                                                                                                                                                                                                                                        |
+| Control height       | `size-medium` = 7 × 0.2rem ≈ 22.4px               | `28px`                                                                                                                                                                                                                                                 |
+| Gap/padding          | `spacing-single` = 0.2rem ≈ 3.2px                 | `8px` / `12px`                                                                                                                                                                                                                                         |
+| Surfaces             | level-based `base/canvas/window/panel` warm grays | flat `#1C1C1F`-ish                                                                                                                                                                                                                                     |
+| Hover                | gray fill + border emphasis                       | lighter gray fill only                                                                                                                                                                                                                                 |
+| Theme switching      | full light/dark/system via `.dark` class          | `theme_id` stored (`"system"`/`"light"`/`"dark"` in [shell.rs](framework/renderer/wgpu/rs/shell.rs) line 116/1015/1569) but **never applied** — `AppRuntime.theme` is always `Theme::default()` ([lib.rs](framework/renderer/wgpu/rs/lib.rs) line 272) |
 
 ## Approach: extend the existing single-source-of-truth pipeline
 

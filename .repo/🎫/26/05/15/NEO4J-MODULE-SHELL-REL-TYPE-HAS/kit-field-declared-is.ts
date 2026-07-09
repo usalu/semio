@@ -305,42 +305,18 @@ function buildRepairCypher(rows: readonly KitFieldDeclaredIsRow[]): string {
  * @emoji 🧷 Drops every `IS` from a type that is not listed under YAML `implements`, then `MERGE`s each declared edge (direct supertypes only).
  */
 export function buildTypeDeclaredIsRepairCypher(rows: readonly TypeDeclaredIsRow[]): string {
-  const lines: string[] = [
-    "// SPDX-License-Identifier: AGPL-3.0-only",
-    "// Class/Interface/Command: keep only direct schema.yaml `implements` as `IS` (strip transitive Entity/StrongEntity/… fan-out).",
-    "",
-  ];
+  const lines: string[] = ["// SPDX-License-Identifier: AGPL-3.0-only", "// Class/Interface/Command: keep only direct schema.yaml `implements` as `IS` (strip transitive Entity/StrongEntity/… fan-out).", ""];
   for (const row of rows) {
     const o = escapeLiteral(row.owner);
     if (row.targets.length === 0) {
-      lines.push(
-        `MATCH (owner:Class|Interface|Command)`,
-        `WHERE toLower(owner.name) = toLower('${o}')`,
-        `MATCH (owner)-[r:IS]->()`,
-        `DELETE r;`,
-        "",
-      );
+      lines.push(`MATCH (owner:Class|Interface|Command)`, `WHERE toLower(owner.name) = toLower('${o}')`, `MATCH (owner)-[r:IS]->()`, `DELETE r;`, "");
     } else {
       const inList = row.targets.map((t) => `'${escapeLiteral(t.toLowerCase())}'`).join(", ");
-      lines.push(
-        `MATCH (owner:Class|Interface|Command)`,
-        `WHERE toLower(owner.name) = toLower('${o}')`,
-        `MATCH (owner)-[r:IS]->(t)`,
-        `WHERE NOT toLower(t.name) IN [${inList}]`,
-        `DELETE r;`,
-        "",
-      );
+      lines.push(`MATCH (owner:Class|Interface|Command)`, `WHERE toLower(owner.name) = toLower('${o}')`, `MATCH (owner)-[r:IS]->(t)`, `WHERE NOT toLower(t.name) IN [${inList}]`, `DELETE r;`, "");
     }
     for (const t of row.targets) {
       const tl = escapeLiteral(t);
-      lines.push(
-        `MATCH (owner:Class|Interface|Command)`,
-        `WHERE toLower(owner.name) = toLower('${o}')`,
-        `MATCH (target:Class|Interface)`,
-        `WHERE toLower(target.name) = toLower('${tl}')`,
-        `MERGE (owner)-[:IS]->(target);`,
-        "",
-      );
+      lines.push(`MATCH (owner:Class|Interface|Command)`, `WHERE toLower(owner.name) = toLower('${o}')`, `MATCH (target:Class|Interface)`, `WHERE toLower(target.name) = toLower('${tl}')`, `MERGE (owner)-[:IS]->(target);`, "");
     }
   }
   return lines.join("\n");
@@ -382,24 +358,11 @@ function buildCypherEnv(): NodeJS.ProcessEnv {
 }
 
 function runCypherFile(repoRoot: string, shell: string, database: string, filePath: string): { ok: boolean; stderr: string } {
-  const result = spawnSync(
-    shell,
-    [
-      "-a",
-      process.env.NEO4J_URI || "bolt://localhost:7687",
-      "-u",
-      process.env.NEO4J_USERNAME || "neo4j",
-      "-p",
-      process.env.NEO4J_PASSWORD || "password",
-      "-d",
-      database,
-      "--format",
-      "plain",
-      "-f",
-      filePath,
-    ],
-    { encoding: "utf8", cwd: repoRoot, env: buildCypherEnv() },
-  );
+  const result = spawnSync(shell, ["-a", process.env.NEO4J_URI || "bolt://localhost:7687", "-u", process.env.NEO4J_USERNAME || "neo4j", "-p", process.env.NEO4J_PASSWORD || "password", "-d", database, "--format", "plain", "-f", filePath], {
+    encoding: "utf8",
+    cwd: repoRoot,
+    env: buildCypherEnv(),
+  });
   const stderr = typeof result.stderr === "string" ? result.stderr : String(result.stderr ?? "");
   return { ok: result.status === 0, stderr };
 }

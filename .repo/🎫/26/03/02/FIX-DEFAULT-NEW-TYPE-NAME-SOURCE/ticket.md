@@ -7,7 +7,9 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Reset lazy input state on field identity changes so creating a new Type cannot inherit a previously focused reference value, and added a passing Playwright regression.
+
 ## Changes
+
 - Updated `compose/js/sketchpad/elements.tsx` so lazy `Input` fields immediately reset `isEditing` and resync their local value when the input `id` changes.
 - Extended `compose/js/sketchpad.test.ts` with a regression that keeps a lazy resource-reference input focused, creates a new Type, and verifies the new Type name input shows the created name instead of the previously focused value.
 

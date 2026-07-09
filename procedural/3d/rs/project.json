@@ -8,9 +8,7 @@
         "cwd": "procedural/3d/rs",
         "command": "bun ./script.ts wasm"
       },
-      "outputs": [
-        "{projectRoot}/pkg"
-      ]
+      "outputs": ["{projectRoot}/pkg"]
     },
     "test": {
       "executor": "nx:run-commands",

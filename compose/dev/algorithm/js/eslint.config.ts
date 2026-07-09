@@ -12,22 +12,26 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 // #endregion 🔌Adapters
 
-export default tseslint.config({
-  ignores: ["node_modules/**", "storybook-static/**"],
-}, {
-  files: ["**/*.{ts,tsx}"],
-  languageOptions: {
-    parser: tseslint.parser,
-    ecmaVersion: "latest",
-    sourceType: "module",
-    globals: {
-      ...globals.browser,
-      ...globals.node,
-    },
-    parserOptions: {
-      ecmaFeatures: {
-        jsx: true,
+export default tseslint.config(
+  {
+    ignores: ["node_modules/**", "storybook-static/**"],
+  },
+  {
+    files: ["**/*.{ts,tsx}"],
+    languageOptions: {
+      parser: tseslint.parser,
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
       },
     },
   },
-}, storybook.configs["flat/recommended"]);
+  storybook.configs["flat/recommended"],
+);

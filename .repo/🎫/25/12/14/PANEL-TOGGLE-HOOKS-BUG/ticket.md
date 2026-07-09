@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 User reported React hooks order error when switching from details to settings panel in Kit app:
@@ -30,8 +31,8 @@ Example of bad pattern (in Kit.tsx useEffect):
 
 ```tsx
 const SettingsContent: FC = () => {
-  const [theme, setTheme] = useTheme(); // Hook inside inline component
-  // ...
+ const [theme, setTheme] = useTheme(); // Hook inside inline component
+ // ...
 };
 addSection("settings", { content: SettingsContent });
 ```
@@ -48,8 +49,8 @@ Updated useEffect registrations to use wrapper pattern:
 
 ```tsx
 addSection("settings", {
-  content: () => <KitSettingsContent />, // Wrapper function
-  // ...
+ content: () => <KitSettingsContent />, // Wrapper function
+ // ...
 });
 ```
 
@@ -71,6 +72,7 @@ Test passed in 2.0 minutes with no hooks errors detected.
 ## Log
 
 ## Summary
+
 # Summary
 
->-
+> -

@@ -2,36 +2,36 @@
 name: OS Studio Parameters
 overview: Introduce studio-level parameters in the OS core (numeric, categorical, toggle, text with constraints), a third "Parameters" workbench tab with a fully editable tree, port-only parameter input channels on app nodes in the media flow graph, and per-app bindable detail fields so apps consume parameter values instead of hardcoded ones.
 todos:
-  - id: ticket
-    content: Open repo ticket associated with the appropriate goal
-    status: completed
-  - id: resource-kind
-    content: Add parameter.value resource kind to s manifest and regenerate
-    status: completed
-  - id: core-model
-    content: OsParameter model, projection fields, commands/operations with undo in os-core
-    status: in_progress
-  - id: channels
-    content: Port-only parameter input channels on app nodes plus DAG fixture labels
-    status: pending
-  - id: value-flow
-    content: parameterValues in AppMaterializeContext with JSON-pointer overrides
-    status: pending
-  - id: parameter-fields
-    content: Declare parameterFields for every technology app registration
-    status: pending
-  - id: workbench-tab
-    content: "Parameters workbench tab: tree with add/remove and full constraint editing"
-    status: pending
-  - id: controller-commands
-    content: SPlayController commands for parameter CRUD and field binding
-    status: pending
-  - id: inspection-binding
-    content: Inspection panel parameter binding rows per declared field
-    status: pending
-  - id: fixtures-tests
-    content: Update all s fixtures, extend in-source tests, verify runtime in S playground
-    status: pending
+ - id: ticket
+   content: Open repo ticket associated with the appropriate goal
+   status: completed
+ - id: resource-kind
+   content: Add parameter.value resource kind to s manifest and regenerate
+   status: completed
+ - id: core-model
+   content: OsParameter model, projection fields, commands/operations with undo in os-core
+   status: in_progress
+ - id: channels
+   content: Port-only parameter input channels on app nodes plus DAG fixture labels
+   status: pending
+ - id: value-flow
+   content: parameterValues in AppMaterializeContext with JSON-pointer overrides
+   status: pending
+ - id: parameter-fields
+   content: Declare parameterFields for every technology app registration
+   status: pending
+ - id: workbench-tab
+   content: "Parameters workbench tab: tree with add/remove and full constraint editing"
+   status: pending
+ - id: controller-commands
+   content: SPlayController commands for parameter CRUD and field binding
+   status: pending
+ - id: inspection-binding
+   content: Inspection panel parameter binding rows per declared field
+   status: pending
+ - id: fixtures-tests
+   content: Update all s fixtures, extend in-source tests, verify runtime in S playground
+   status: pending
 isProject: false
 ---
 
@@ -54,8 +54,6 @@ flowchart LR
     projection -->|parameterValues in AppMaterializeContext| materialize[App projection materialization]
     materialize -->|JSON-pointer overrides| appOutput[App output resources]
 ```
-
-
 
 ## 1. Parameter model in OS core
 

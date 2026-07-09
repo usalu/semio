@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Previous session consolidated `uiMachine` into `sketchpadMachine` and moved event handlers to use wildcard `"*"` pattern in navigation states. However, the wildcard pattern in nested states wasn't triggering state changes - events were being sent but state wasn't updating.
@@ -77,6 +78,7 @@ Added three state-checking tests:
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix sketchpad state machine wildcard event handling

@@ -54,9 +54,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\ef5b0dc3-bda2-47ee-a975-a9b35caadf3e.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\js\\index.ts"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\js\\index.ts"]
           },
           "tool_response": "",
           "tool_use_id": "call_BAtlfCyKDUYvXdE54DtIKSLI__vscode-1778668219987",
@@ -113,9 +111,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\ef5b0dc3-bda2-47ee-a975-a9b35caadf3e.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\js\\index.ts"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\js\\index.ts"]
           },
           "tool_response": "",
           "tool_use_id": "call_BAtlfCyKDUYvXdE54DtIKSLI__vscode-1778668219987",
@@ -294,9 +290,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\ef5b0dc3-bda2-47ee-a975-a9b35caadf3e.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\compose\\js\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\compose\\js\\index.ts"],
             "summary": "Aligned the compose/js public surface in compose/js/index.ts with target.schema.graphql naming for Store, Kit, Graph, Session, Alternative, TheKit, Checkpoint, Change, Edit, and related embedded assertions. Removed the invalid Design.id() override, kept Entity.id as the schema id surface, hid leftover non-schema helpers, and revalidated with diagnostics plus embedded Vitest runs. Remaining Vitest failures are unchanged fixture-path ENOENT errors for missing compose asset JSON files.",
             "title": "Align Compose Js Surface With Graphql Schema"
           },
@@ -324,9 +318,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\ef5b0dc3-bda2-47ee-a975-a9b35caadf3e.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\compose\\js\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\compose\\js\\index.ts"],
             "summary": "Aligned the compose/js public surface in compose/js/index.ts with target.schema.graphql naming for Store, Kit, Graph, Session, Alternative, TheKit, Checkpoint, Change, Edit, and related embedded assertions. Removed the invalid Design.id() override, kept Entity.id as the schema id surface, hid leftover non-schema helpers, and revalidated with diagnostics plus embedded Vitest runs. Remaining Vitest failures are unchanged fixture-path ENOENT errors for missing compose asset JSON files.",
             "title": "Align Compose Js Surface With Graphql Schema"
           },
@@ -354,9 +346,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\ef5b0dc3-bda2-47ee-a975-a9b35caadf3e.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\compose\\js\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\compose\\js\\index.ts"],
             "summary": "Aligned the compose/js public surface in compose/js/index.ts with target.schema.graphql naming for Store, Kit, Graph, Session, Alternative, TheKit, Checkpoint, Change, Edit, and related embedded assertions. Removed the invalid Design.id() override, kept Entity.id as the schema id surface, hid leftover non-schema helpers, and revalidated with diagnostics plus embedded Vitest runs. Remaining Vitest failures are unchanged fixture-path ENOENT errors for missing compose asset JSON files.",
             "title": "Align Compose Js Surface With Graphql Schema"
           },
@@ -385,9 +375,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\ef5b0dc3-bda2-47ee-a975-a9b35caadf3e.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\compose\\js\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\compose\\js\\index.ts"],
             "summary": "Aligned the compose/js public surface in compose/js/index.ts with target.schema.graphql naming for Store, Kit, Graph, Session, Alternative, TheKit, Checkpoint, Change, Edit, and related embedded assertions. Removed the invalid Design.id() override, kept Entity.id as the schema id surface, hid leftover non-schema helpers, and revalidated with diagnostics plus embedded Vitest runs. Remaining Vitest failures are unchanged fixture-path ENOENT errors for missing compose asset JSON files.",
             "title": "Align Compose Js Surface With Graphql Schema"
           },

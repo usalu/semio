@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Task: Analyze the Sketchpad codebase and add missing IDs to all UI elements following the `compose.sketchpad.*` naming convention.
@@ -66,6 +67,7 @@ Task: Analyze the Sketchpad codebase and add missing IDs to all UI elements foll
 ## Log
 
 ## Summary
+
 # Summary
 
 Add missing IDs to all Sketchpad UI elements

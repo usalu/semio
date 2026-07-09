@@ -2,33 +2,33 @@
 name: i18n compile enforcement
 overview: Wrap i18next behind a typed I18n interface and make every UI's translation bundles type-checked so missing, wrong, extra keys, uncovered toolbar categories, and misconfigured languages all fail `tsc`, then add `typecheck` build gates so broken i18n cannot compile.
 todos:
-  - id: ticket
-    content: Open repo MCP ticket associated with the appropriate goal (read repo://goals)
-    status: completed
-  - id: port
-    content: Add typed I18n port wrapping i18next/react-i18next/LanguageDetector in ui/react/index.tsx; define UiTranslationSchema, UiLocale, UiTranslationKey
-    status: completed
-  - id: chrome-bundles
-    content: Replace JSON.parse bundles with typed literals (satisfies schema + Record<UiLocale>); type useLabel/resolveControlLabelId/resolveTranslationLabel/registerUiTranslationBundles
-    status: completed
-  - id: toolbar
-    content: Add ui.toolbar.parent.* keys for every AppToolCategory (en+de) and add compile-time toolbar-coverage assertion in framework/core
-    status: completed
-  - id: sketchpad
-    content: Type compose sketchpad bundle, fix en/de parity for toolbar.parent.*, type resolver, register via port
-    status: completed
-  - id: coda
-    content: Remove empty-resources i18next reinit in coda renderer; configure language via typed port
-    status: completed
-  - id: typecheck-targets
-    content: Add typecheck (bunx tsc --noEmit) targets to script.ts/project.json for ui/framework/sketchpad/cad/coda and register in launch.json
-    status: completed
-  - id: tests
-    content: Add type-level Expect assertions and extend existing vitest blocks for parity/coverage (no new test files)
-    status: completed
-  - id: validate-close
-    content: Run typecheck + affected tests, then close the ticket with summary and touched files
-    status: completed
+ - id: ticket
+   content: Open repo MCP ticket associated with the appropriate goal (read repo://goals)
+   status: completed
+ - id: port
+   content: Add typed I18n port wrapping i18next/react-i18next/LanguageDetector in ui/react/index.tsx; define UiTranslationSchema, UiLocale, UiTranslationKey
+   status: completed
+ - id: chrome-bundles
+   content: Replace JSON.parse bundles with typed literals (satisfies schema + Record<UiLocale>); type useLabel/resolveControlLabelId/resolveTranslationLabel/registerUiTranslationBundles
+   status: completed
+ - id: toolbar
+   content: Add ui.toolbar.parent.* keys for every AppToolCategory (en+de) and add compile-time toolbar-coverage assertion in framework/core
+   status: completed
+ - id: sketchpad
+   content: Type compose sketchpad bundle, fix en/de parity for toolbar.parent.*, type resolver, register via port
+   status: completed
+ - id: coda
+   content: Remove empty-resources i18next reinit in coda renderer; configure language via typed port
+   status: completed
+ - id: typecheck-targets
+   content: Add typecheck (bunx tsc --noEmit) targets to script.ts/project.json for ui/framework/sketchpad/cad/coda and register in launch.json
+   status: completed
+ - id: tests
+   content: Add type-level Expect assertions and extend existing vitest blocks for parity/coverage (no new test files)
+   status: completed
+ - id: validate-close
+   content: Run typecheck + affected tests, then close the ticket with summary and touched files
+   status: completed
 isProject: false
 ---
 
@@ -56,8 +56,6 @@ flowchart TB
   Calls --> Gate
   Toolbar --> Gate
 ```
-
-
 
 - Missing/wrong keys: bundle literal fails `satisfies UiTranslationSchema`; call sites fail because key not in `UiTranslationKey`.
 - Extra keys: object-literal excess-property check against the schema.
@@ -107,4 +105,3 @@ In [ui/react/index.tsx](ui/react/index.tsx) `🪁I18n Resources` region:
 
 - Open a ticket via repo MCP (`ticket_open`), after reading `repo://goals` to associate the right goal; close with `ticket_close` listing touched files. Temp artifacts only inside the ticket folder.
 - Validate by running each `typecheck` target and the affected `test` targets before closing.
-

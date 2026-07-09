@@ -13,14 +13,7 @@
 // #region 🔌Adapters
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import {
-  upsertTicket,
-  getTicket,
-  listTickets,
-  insertTicketFiles,
-  listClaimsByTicket,
-  type Ticket,
-} from "@/lib";
+import { upsertTicket, getTicket, listTickets, insertTicketFiles, listClaimsByTicket, type Ticket } from "@/lib";
 import { requireAuth, isAuthError } from "@/lib";
 import { publishEvent } from "@/lib";
 // #endregion 🔌Adapters
@@ -86,10 +79,7 @@ export async function POST(request: NextRequest) {
     case "open": {
       const parsed = TicketOpenSchema.safeParse(body);
       if (!parsed.success) {
-        return NextResponse.json(
-          { error: parsed.error.message },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: parsed.error.message }, { status: 400 });
       }
       const data = parsed.data;
       const now = new Date();
@@ -116,18 +106,12 @@ export async function POST(request: NextRequest) {
     case "close": {
       const parsed = TicketCloseSchema.safeParse(body);
       if (!parsed.success) {
-        return NextResponse.json(
-          { error: parsed.error.message },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: parsed.error.message }, { status: 400 });
       }
       const data = parsed.data;
       const ticket = await getTicket(data.ticket_id);
       if (!ticket) {
-        return NextResponse.json(
-          { error: "ticket not found" },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: "ticket not found" }, { status: 404 });
       }
       const now = new Date();
       ticket.status = "closed";
@@ -144,18 +128,12 @@ export async function POST(request: NextRequest) {
     case "reopen": {
       const parsed = TicketReopenSchema.safeParse(body);
       if (!parsed.success) {
-        return NextResponse.json(
-          { error: parsed.error.message },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: parsed.error.message }, { status: 400 });
       }
       const data = parsed.data;
       const ticket = await getTicket(data.ticket_id);
       if (!ticket) {
-        return NextResponse.json(
-          { error: "ticket not found" },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: "ticket not found" }, { status: 404 });
       }
       ticket.status = "open";
       ticket.prompt = data.prompt;

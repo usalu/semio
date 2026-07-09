@@ -19,9 +19,6 @@ const bodyText = await page.locator("body").innerText();
 const shot = join(ticketDir, "check-lowpoly-screenshot.png");
 await page.screenshot({ path: shot, fullPage: true });
 
-await Bun.write(
-	join(ticketDir, "check-lowpoly-console.txt"),
-	`${logs.join("\n")}\n\nrootLen=${rootHtml.length}\nrootPreview=${rootHtml.slice(0, 800)}\nbodyText=${bodyText.slice(0, 400)}\n`,
-);
+await Bun.write(join(ticketDir, "check-lowpoly-console.txt"), `${logs.join("\n")}\n\nrootLen=${rootHtml.length}\nrootPreview=${rootHtml.slice(0, 800)}\nbodyText=${bodyText.slice(0, 400)}\n`);
 console.log({ rootLen: rootHtml.length, errors: logs.filter((l) => l.includes("error") || l.includes("pageerror")), shot });
 await browser.close();

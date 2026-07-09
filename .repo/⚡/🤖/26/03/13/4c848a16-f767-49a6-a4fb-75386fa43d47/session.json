@@ -47,9 +47,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚py💻compose📌10387📌10410"
-        ],
+        "ranges": ["👤compose📚py💻compose📌10387📌10410"],
         "second": "🎆26🌙03☀️13⏰12⌚09⏱️16",
         "session": "⚪4c848a16f76749a6a4fb75386fa43d47"
       },
@@ -127,9 +125,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚go💻compose📌7217📌7320"
-        ],
+        "ranges": ["👤compose📚go💻compose📌7217📌7320"],
         "second": "🎆26🌙03☀️13⏰12⌚09⏱️16",
         "session": "⚪4c848a16f76749a6a4fb75386fa43d47"
       },
@@ -165,9 +161,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1974📌2100"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1974📌2100"],
         "second": "🎆26🌙03☀️13⏰12⌚09⏱️18",
         "session": "⚪4c848a16f76749a6a4fb75386fa43d47"
       },
@@ -203,9 +197,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1974📌2100"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1974📌2100"],
         "second": "🎆26🌙03☀️13⏰12⌚09⏱️31",
         "session": "⚪4c848a16f76749a6a4fb75386fa43d47"
       },
@@ -241,9 +233,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌100"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌100"],
         "second": "🎆26🌙03☀️13⏰12⌚09⏱️33",
         "session": "⚪4c848a16f76749a6a4fb75386fa43d47"
       },
@@ -316,9 +306,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️src💻compose📌1📌100"
-        ],
+        "ranges": ["👤compose📚js🗃️src💻compose📌1📌100"],
         "second": "🎆26🌙03☀️13⏰12⌚09⏱️37",
         "session": "⚪4c848a16f76749a6a4fb75386fa43d47"
       },
@@ -426,9 +414,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💾src📌1"
-        ],
+        "ranges": ["👤compose📚js💾src📌1"],
         "second": "🎆26🌙03☀️13⏰12⌚10⏱️08",
         "session": "⚪4c848a16f76749a6a4fb75386fa43d47"
       },

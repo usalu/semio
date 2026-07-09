@@ -2,27 +2,27 @@
 name: 3D component hover select fixes
 overview: Fix the vertex/edge/face hover and selection pipeline between the WGPU world engine and the lowpoly plugin (both WGPU and React renderers), and add an independent "Show Edges" window-option toggle.
 todos:
-  - id: fix-wire-format
-    content: "Make component ids numeric end-to-end: fix WorldSelectionRecord deserialization, pick_select_command id encoding, and marquee_select_command to emit setSelection"
-    status: completed
-  - id: add-component-hover
-    content: Add component hover picking to WGPU pick_hover_command via setHover command
-    status: completed
-  - id: add-vertex-face-overlays
-    content: Add vertex and face highlight overlay branches to append_component_overlays in infinite/world
-    status: completed
-  - id: add-show-edges-toggle
-    content: Add show_edges runtime flag, toggleShowEdges command, and Show Edges WindowEngagementOption to lowpoly plugin
-    status: completed
-  - id: wire-show-edges-renderers
-    content: Sync show_edges into WGPU World3dState/overlay condition and React WorldSelectionRecord/edge visibility gate
-    status: completed
-  - id: add-tests
-    content: Add regression tests in lowpoly and infinite/world for numeric id round-trip, overlays, and showEdges
-    status: completed
-  - id: verify
-    content: cargo test, rebuild WASM, rerun lowpoly e2e, manual browser verification of hover/select/edge-preview
-    status: completed
+ - id: fix-wire-format
+   content: "Make component ids numeric end-to-end: fix WorldSelectionRecord deserialization, pick_select_command id encoding, and marquee_select_command to emit setSelection"
+   status: completed
+ - id: add-component-hover
+   content: Add component hover picking to WGPU pick_hover_command via setHover command
+   status: completed
+ - id: add-vertex-face-overlays
+   content: Add vertex and face highlight overlay branches to append_component_overlays in infinite/world
+   status: completed
+ - id: add-show-edges-toggle
+   content: Add show_edges runtime flag, toggleShowEdges command, and Show Edges WindowEngagementOption to lowpoly plugin
+   status: completed
+ - id: wire-show-edges-renderers
+   content: Sync show_edges into WGPU World3dState/overlay condition and React WorldSelectionRecord/edge visibility gate
+   status: completed
+ - id: add-tests
+   content: Add regression tests in lowpoly and infinite/world for numeric id round-trip, overlays, and showEdges
+   status: completed
+ - id: verify
+   content: cargo test, rebuild WASM, rerun lowpoly e2e, manual browser verification of hover/select/edge-preview
+   status: completed
 isProject: false
 ---
 
@@ -45,6 +45,7 @@ Tracing the pipeline (`lowpoly` plugin -> selection JSON -> `infinite/world` WGP
 ### A. Make component ids numeric end-to-end (fixes 1-4)
 
 In [infinite/world/rs/lib.rs](infinite/world/rs/lib.rs):
+
 - Make `WorldSelectionRecord.component_ids` tolerant of numeric JSON (custom `deserialize_with`, coercing each element to `String` so the rest of the file's `Vec<String>` id-matching code is untouched).
 - Fix `hovered_component_id` extraction (982-987) to accept `.as_u64()` as well as `.as_str()`.
 - In `pick_select_command` (1636-1682), when in component mode, emit `worldPick.id` as a JSON **number** (parse the picked string id back with `.parse::<u64>()`), matching what lowpoly's `.as_u64()` expects.
@@ -58,6 +59,7 @@ In [infinite/world/rs/lib.rs](infinite/world/rs/lib.rs):
 ### C. Add vertex + face highlight overlays in WGPU (fixes 6)
 
 In `append_component_overlays` ([infinite/world/rs/lib.rs:369-454](infinite/world/rs/lib.rs)), add two branches parallel to the existing `granularity == "edge"` branch:
+
 - **Vertex**: for each selected/hovered/preview vertex id, draw a small 3-segment "jack" marker at the vertex's transformed position using the existing highlight/preview colors.
 - **Face**: for each selected/hovered/preview face id, resolve its triangle via `mesh.indices`/`face_ids` and draw its 3 edges in the highlight/preview color (same technique as the edge branch, sourced from the triangle instead of `mesh.edge_positions`).
 

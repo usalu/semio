@@ -14769,10 +14769,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/a736df10-9e10-41a9-a4a7-ccdab2189f3a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx",
-              "/workspaces/semio/compose/ui/index.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx", "/workspaces/semio/compose/ui/index.tsx"]
           },
           "tool_use_id": "toolu_bdrk_019av9myFiSd2LWtY8XUt5bk__vscode-1775692550174",
           "cwd": "/workspaces/semio"
@@ -14798,10 +14795,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/a736df10-9e10-41a9-a4a7-ccdab2189f3a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx",
-              "/workspaces/semio/compose/ui/index.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx", "/workspaces/semio/compose/ui/index.tsx"]
           },
           "tool_use_id": "toolu_bdrk_019av9myFiSd2LWtY8XUt5bk__vscode-1775692550174",
           "cwd": "/workspaces/semio"
@@ -14827,10 +14821,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/a736df10-9e10-41a9-a4a7-ccdab2189f3a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx",
-              "/workspaces/semio/compose/ui/index.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx", "/workspaces/semio/compose/ui/index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_019av9myFiSd2LWtY8XUt5bk__vscode-1775692550174",
@@ -14857,10 +14848,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/a736df10-9e10-41a9-a4a7-ccdab2189f3a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx",
-              "/workspaces/semio/compose/ui/index.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx", "/workspaces/semio/compose/ui/index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_019av9myFiSd2LWtY8XUt5bk__vscode-1775692550174",
@@ -15123,9 +15111,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/a736df10-9e10-41a9-a4a7-ccdab2189f3a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx"]
           },
           "tool_use_id": "toolu_bdrk_01PkgVKPss2c9HkYsBLffkWC__vscode-1775692550177",
           "cwd": "/workspaces/semio"
@@ -15151,9 +15137,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/a736df10-9e10-41a9-a4a7-ccdab2189f3a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx"]
           },
           "tool_use_id": "toolu_bdrk_01PkgVKPss2c9HkYsBLffkWC__vscode-1775692550177",
           "cwd": "/workspaces/semio"
@@ -15179,9 +15163,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/a736df10-9e10-41a9-a4a7-ccdab2189f3a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01PkgVKPss2c9HkYsBLffkWC__vscode-1775692550177",
@@ -15208,9 +15190,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/a736df10-9e10-41a9-a4a7-ccdab2189f3a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/compose/algorithms/.storybook/stories/CopyAndPaste.stories.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01PkgVKPss2c9HkYsBLffkWC__vscode-1775692550177",

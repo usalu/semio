@@ -312,9 +312,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚go💻compose📌5088📌5130"
-        ],
+        "ranges": ["👤compose📚go💻compose📌5088📌5130"],
         "second": "🎆26🌙03☀️09⏰14⌚13⏱️56",
         "session": "⚪7fe9453256824c9292a4996094e2c18f"
       },
@@ -428,9 +426,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚go💻compose📌5088📌5130"
-        ],
+        "ranges": ["👤compose📚go💻compose📌5088📌5130"],
         "second": "🎆26🌙03☀️09⏰14⌚14⏱️11",
         "session": "⚪7fe9453256824c9292a4996094e2c18f"
       },
@@ -584,9 +580,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚py💻compose📌8345📌8400"
-        ],
+        "ranges": ["👤compose📚py💻compose📌8345📌8400"],
         "second": "🎆26🌙03☀️09⏰14⌚14⏱️20",
         "session": "⚪7fe9453256824c9292a4996094e2c18f"
       },
@@ -740,9 +734,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚py💻compose📌8345📌8400"
-        ],
+        "ranges": ["👤compose📚py💻compose📌8345📌8400"],
         "second": "🎆26🌙03☀️09⏰14⌚14⏱️34",
         "session": "⚪7fe9453256824c9292a4996094e2c18f"
       },
@@ -820,9 +812,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚go💻compose📌5089📌5140"
-        ],
+        "ranges": ["👤compose📚go💻compose📌5089📌5140"],
         "second": "🎆26🌙03☀️09⏰14⌚14⏱️51",
         "session": "⚪7fe9453256824c9292a4996094e2c18f"
       },
@@ -858,9 +848,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🏪assets🗃️compose⚙️diffkitmetabolism📌60📌130"
-        ],
+        "ranges": ["👤compose🏪assets🗃️compose⚙️diffkitmetabolism📌60📌130"],
         "second": "🎆26🌙03☀️09⏰14⌚14⏱️51",
         "session": "⚪7fe9453256824c9292a4996094e2c18f"
       },
@@ -902,9 +890,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚go💻compose📌5089📌5140"
-        ],
+        "ranges": ["👤compose📚go💻compose📌5089📌5140"],
         "second": "🎆26🌙03☀️09⏰14⌚15⏱️01",
         "session": "⚪7fe9453256824c9292a4996094e2c18f"
       },
@@ -976,9 +962,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🏪assets🗃️compose⚙️diffkitmetabolism📌60📌130"
-        ],
+        "ranges": ["👤compose🏪assets🗃️compose⚙️diffkitmetabolism📌60📌130"],
         "second": "🎆26🌙03☀️09⏰14⌚15⏱️01",
         "session": "⚪7fe9453256824c9292a4996094e2c18f"
       },

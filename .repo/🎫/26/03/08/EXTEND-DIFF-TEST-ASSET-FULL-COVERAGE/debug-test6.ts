@@ -1,8 +1,5 @@
 import { readFileSync } from "fs";
-import {
-  getKitDiff,
-  areKitDiffsEqual,
-} from "/workspaces/semio/compose/js/compose";
+import { getKitDiff, areKitDiffsEqual } from "/workspaces/semio/compose/js/compose";
 
 const ASSETS = "/workspaces/semio/assets/compose";
 const kitRaw = JSON.parse(readFileSync(`${ASSETS}/kit_metabolism.json`, "utf-8"));
@@ -36,7 +33,7 @@ for (let i = 0; i < Math.max(addedC.length, addedA.length); i++) {
 }
 
 // Now test models sub-section isolation
-for (const sub of ['removed', 'updated', 'added']) {
+for (const sub of ["removed", "updated", "added"]) {
   const p1: any = { types: { updated: [{ type: { guid: td.__typeGuid || "277768b5-9220-4312-bf0d-ab82d9fb6a73" }, diff: { models: { [sub]: td.models?.[sub] } } }] } };
   const p2: any = { types: { updated: [{ type: { guid: "277768b5-9220-4312-bf0d-ab82d9fb6a73" }, diff: { models: { [sub]: ta.models?.[sub] } } }] } };
   console.log(`models.${sub} areKitDiffsEqual:`, areKitDiffsEqual(p1, p2));

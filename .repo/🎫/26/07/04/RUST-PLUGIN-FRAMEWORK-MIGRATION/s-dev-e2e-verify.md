@@ -3,6 +3,7 @@
 Date: 2026-07-04
 
 ## Command
+
 `SEMIO_PLUGIN=s bun nx run @semio-tech/framework-os-dev:dev`
 
 ## Result: PASS
@@ -16,6 +17,7 @@ Date: 2026-07-04
 - `@semio-tech/framework-renderer-react:test` passes
 
 ## Fixes applied for E2E
+
 - Studio mode (`SEMIO_PLUGIN=s`) loads all plugins, boots `s-play` shell
 - Full `s/plugin/rs` studio implementation with demo document
 - `wasm_bindgen(start)` forces `_PLUGIN_INIT` so manifests register

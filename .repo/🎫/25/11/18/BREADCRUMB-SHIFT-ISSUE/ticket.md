@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Diagnosis: Breadcrumb Shift Problem - RESOLVED
 
 ## Solution

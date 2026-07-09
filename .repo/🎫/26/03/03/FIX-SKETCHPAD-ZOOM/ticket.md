@@ -7,7 +7,9 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Added a wrapper-level wheel zoom fallback for the embedded design diagram and revalidated zoom plus fullscreen remount retention with focused Playwright coverage.
+
 ## Changes
+
 - `compose/js/sketchpad/Design.tsx`: Persist `diagramScale` alongside `diagramCenter` when viewport movement ends.
 - `compose/js/sketchpad/Design.tsx`: Persist viewport state from live React Flow move events and keep center-reset actions aligned with zoom state.
 - `compose/js/sketchpad/elements.tsx`: Forward React Flow `onMove` viewport updates through the shared `Diagram` wrapper.
@@ -16,6 +18,7 @@ Added a wrapper-level wheel zoom fallback for the embedded design diagram and re
 - `compose/js/sketchpad.test.ts`: Reworked the zoom regression to verify the user-facing behavior that zoom survives the existing diagram fullscreen toggle.
 
 ## Log
+
 - Confirmed the Design diagram already restores `savedDiagramScale` on mount, but never writes updated zoom back after user interaction.
 - Narrowed the bug to `DesignDiagram.onMoveEnd`, which only persisted `diagramCenter` and left `setDiagramScale` unused.
 - A direct actor-state assertion was unreliable in this harness, so the regression was moved to the visible fullscreen remount behavior the user can reproduce.
@@ -26,12 +29,14 @@ Added a wrapper-level wheel zoom fallback for the embedded design diagram and re
 - Revalidated with the same focused Playwright zoom test after the wheel fallback and the embedded design panel still zooms and retains scale across the fullscreen remount path.
 
 ## Todos
+
 - [x] Persist zoom changes on viewport move end.
 - [x] Extend the existing sketchpad test file to cover zoom state persistence.
 - [x] Run focused validation for the updated wheel interaction path.
 - [x] Close the ticket with the touched files.
 
 ## Plan
+
 - Update the existing viewport move-end persistence path in `compose/js/sketchpad/Design.tsx` to save both center and scale from the active React Flow viewport.
 - Add a focused design-app regression in `compose/js/sketchpad.test.ts` that zooms the diagram and asserts the stored Design app `diagramScale` tracks the viewport scale.
 - Execute the focused Playwright test and record the result before closing the ticket.

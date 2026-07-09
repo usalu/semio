@@ -51,43 +51,43 @@ flowchart TB
 
 The following are removed entirely:
 
-| Category | Examples |
-|---|---|
-| Domain logic classes | `KitImpl`, `KitEntity`, `KitEntityIndexes`, `KitEntityCaches`, `KitInteractionsApi`, `KitInteractionEntity`, `KitEntityType`, `KitEntityPiece`, `KitEntityDesign`, `KitDocument`, `KitBackboneBridge`, `KitTypesOps`, `KitDesignsOps`, `KitFamiliesOps`, `KitFilesOps`, `KitTagsOps`, `KitConceptsOps`, `KitAttributesOps`, `KitOps` |
-| Transaction/history | `KitTransactionsCoordinator`, `KitActiveTransactionSurface`, `Transaction`, `DiffComposer`, `recomputeTxNet`, `#historyDone`, `#historyUndone` |
-| Diff functions | All `get*Diff`, `apply*Diff`, `inverse*Diff`, `merge*Diff`, `applyCollectionDiff`, `getCollectionDiff`, `inverseCollectionDiff`, `mergeCollectionDiff`, `addPieceToDesignDiff`, `removePieceFromDesignDiff`, etc. |
-| Hash functions | `hashType`, `hashDesign`, `hashKit`, `hashPiece`, `hashConnection`, `HashWriter`, `sha256bytes`, `formatNumberForHash`, `hashPlaneRoot`, `hashPlaneChain`, `hashCenterRoot`, `hashCenterChain` |
-| Flatten/placement | `computeChildPlane`, `connectionPlacementTranslationBasis`, `flattenPlacementWalkDesignOrderRoots`, `buildFlattenPieceAdjacency`, `collectUndirectedComponentIds`, `moveTranslationWorldFromPiecePlane`, `childConnectorOriginWorld`, `solveConnectionOriginMinNorm`, `connectionDiffFromStructuralMoveVector` |
-| Caching | `#flattenMerkleByDesign`, `FlatMerkleCacheEntry`, `ensureFlattenGeometryCache`, `getFlattenMerkleCache`, `invalidateFlattenMerkleCaches`, `piecesMetadataCached`, `cachedSqlJs` |
-| Representation selection | `jaccard`, `selectBestRepresentation`, `filterRepresentationsByTagIds`, `getAvailableTagIdsForRepresentations`, `getAllTagIdsFromRepresentations` |
-| Geometry 3D math | `planeToMatrix`, `matrixToPlane`, `averagePlane`, `toThreeRotation`, `toComposeRotation`, `toThreeQuaternion`, `toComposeQuaternion`, `vectorToThree` |
-| Validation | `validateKitEntityDiff`, `kitEntityDiffIsBlocking`, `validationReportFromGraph`, `graphValidationFromLedgerReport` |
-| Semantic commands | `expandSemanticCommandToDiff`, `FlattenDesignCommand`, `DeletePieceCommand`, `ChangePieceTypeCommand` |
-| Wire projection | `kitWireProjectionFromImpl`, `kitDataFromWireDto`, `emptyKitWireDto`, `kitGraphToPlainData` |
-| Ledger diffs | `emptyLedgerDiff`, `normalizeLedgerDiff`, `squashLedgerChangesForward`, `squashLedgerChangesBackward`, `invertLedgerDiff`, `ledgerKitChangeFromGraph`, `graphKitChangeFromLedger` |
-| Free functions | `cn`, `id`, `normalize`, `round`, `deepEqual`, `arraysEqual`, `generateUniqueName`, all per-entity `serialize*`/`deserialize*`, `create*Id`/`areSame*Id`/`get*Id`, `asKitInstance`, `requireKit`, `duplicateKitForIsolation`, `stripNullsJsonClone`, `detachPieceForLocalMutation`, `detachConnectionForLocalMutation`, `detachDesignForLocalMutation`, `designWithDiff`, `createLocalBackbone`, `createDevBackbone`, `createRemoteBackbone`, `roundPlane`, `serializePlane`, `deserializePlane` |
-| Legacy stores | `InMemoryKitStore`, `KitStore` (the JS-side class) |
-| Connector compat | `arePortsCompatible`, `areConnectorsCompatible`, `unifyConnectorPortsAndCompatiblePortsForTypes` |
-| Clusterable groups | `getClusterableGroups`, `getIncludedDesigns` |
-| Copy/paste logic | `copyDesign`, `pasteDesign`, `mergeDesigns`, `orientDesign` |
-| Design mutation helpers | `deletePiecesAndConnectionsInDesign`, `removePiecesAndConnectionsFromDesign`, `fixPieceInDesign`, `buildDragMoveStructuralContext` |
+| Category                 | Examples                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Domain logic classes     | `KitImpl`, `KitEntity`, `KitEntityIndexes`, `KitEntityCaches`, `KitInteractionsApi`, `KitInteractionEntity`, `KitEntityType`, `KitEntityPiece`, `KitEntityDesign`, `KitDocument`, `KitBackboneBridge`, `KitTypesOps`, `KitDesignsOps`, `KitFamiliesOps`, `KitFilesOps`, `KitTagsOps`, `KitConceptsOps`, `KitAttributesOps`, `KitOps`                                                                                                                                                             |
+| Transaction/history      | `KitTransactionsCoordinator`, `KitActiveTransactionSurface`, `Transaction`, `DiffComposer`, `recomputeTxNet`, `#historyDone`, `#historyUndone`                                                                                                                                                                                                                                                                                                                                                   |
+| Diff functions           | All `get*Diff`, `apply*Diff`, `inverse*Diff`, `merge*Diff`, `applyCollectionDiff`, `getCollectionDiff`, `inverseCollectionDiff`, `mergeCollectionDiff`, `addPieceToDesignDiff`, `removePieceFromDesignDiff`, etc.                                                                                                                                                                                                                                                                                |
+| Hash functions           | `hashType`, `hashDesign`, `hashKit`, `hashPiece`, `hashConnection`, `HashWriter`, `sha256bytes`, `formatNumberForHash`, `hashPlaneRoot`, `hashPlaneChain`, `hashCenterRoot`, `hashCenterChain`                                                                                                                                                                                                                                                                                                   |
+| Flatten/placement        | `computeChildPlane`, `connectionPlacementTranslationBasis`, `flattenPlacementWalkDesignOrderRoots`, `buildFlattenPieceAdjacency`, `collectUndirectedComponentIds`, `moveTranslationWorldFromPiecePlane`, `childConnectorOriginWorld`, `solveConnectionOriginMinNorm`, `connectionDiffFromStructuralMoveVector`                                                                                                                                                                                   |
+| Caching                  | `#flattenMerkleByDesign`, `FlatMerkleCacheEntry`, `ensureFlattenGeometryCache`, `getFlattenMerkleCache`, `invalidateFlattenMerkleCaches`, `piecesMetadataCached`, `cachedSqlJs`                                                                                                                                                                                                                                                                                                                  |
+| Representation selection | `jaccard`, `selectBestRepresentation`, `filterRepresentationsByTagIds`, `getAvailableTagIdsForRepresentations`, `getAllTagIdsFromRepresentations`                                                                                                                                                                                                                                                                                                                                                |
+| Geometry 3D math         | `planeToMatrix`, `matrixToPlane`, `averagePlane`, `toThreeRotation`, `toComposeRotation`, `toThreeQuaternion`, `toComposeQuaternion`, `vectorToThree`                                                                                                                                                                                                                                                                                                                                            |
+| Validation               | `validateKitEntityDiff`, `kitEntityDiffIsBlocking`, `validationReportFromGraph`, `graphValidationFromLedgerReport`                                                                                                                                                                                                                                                                                                                                                                               |
+| Semantic commands        | `expandSemanticCommandToDiff`, `FlattenDesignCommand`, `DeletePieceCommand`, `ChangePieceTypeCommand`                                                                                                                                                                                                                                                                                                                                                                                            |
+| Wire projection          | `kitWireProjectionFromImpl`, `kitDataFromWireDto`, `emptyKitWireDto`, `kitGraphToPlainData`                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Ledger diffs             | `emptyLedgerDiff`, `normalizeLedgerDiff`, `squashLedgerChangesForward`, `squashLedgerChangesBackward`, `invertLedgerDiff`, `ledgerKitChangeFromGraph`, `graphKitChangeFromLedger`                                                                                                                                                                                                                                                                                                                |
+| Free functions           | `cn`, `id`, `normalize`, `round`, `deepEqual`, `arraysEqual`, `generateUniqueName`, all per-entity `serialize*`/`deserialize*`, `create*Id`/`areSame*Id`/`get*Id`, `asKitInstance`, `requireKit`, `duplicateKitForIsolation`, `stripNullsJsonClone`, `detachPieceForLocalMutation`, `detachConnectionForLocalMutation`, `detachDesignForLocalMutation`, `designWithDiff`, `createLocalBackbone`, `createDevBackbone`, `createRemoteBackbone`, `roundPlane`, `serializePlane`, `deserializePlane` |
+| Legacy stores            | `InMemoryKitStore`, `KitStore` (the JS-side class)                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Connector compat         | `arePortsCompatible`, `areConnectorsCompatible`, `unifyConnectorPortsAndCompatiblePortsForTypes`                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Clusterable groups       | `getClusterableGroups`, `getIncludedDesigns`                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Copy/paste logic         | `copyDesign`, `pasteDesign`, `mergeDesigns`, `orientDesign`                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Design mutation helpers  | `deletePiecesAndConnectionsInDesign`, `removePiecesAndConnectionsFromDesign`, `fixPieceInDesign`, `buildDragMoveStructuralContext`                                                                                                                                                                                                                                                                                                                                                               |
 
 ### What Stays
 
-| Category | Details |
-|---|---|
-| Zod schemas | All `*Schema`, `*DiffSchema`, `*MetaSchema`, `*ShallowSchema`, `*IdSchema` |
-| Kind aliases | All `type * = z.infer<typeof *Schema>` |
+| Category       | Details                                                                                                                                                                                                                                                                                                                |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Zod schemas    | All `*Schema`, `*DiffSchema`, `*MetaSchema`, `*ShallowSchema`, `*IdSchema`                                                                                                                                                                                                                                             |
+| Kind aliases   | All `type * = z.infer<typeof *Schema>`                                                                                                                                                                                                                                                                                 |
 | Entity classes | `Coordinate`, `Vec`, `Point`, `Vector`, `Plane`, `Camera`, `Attribute`, `Location`, `Author`, `File`, `Folder`, `Benchmark`, `Quality`, `Port`, `Family`, `Prop`, `Tag`, `Concept`, `Representation`, `Connector`, `Type`, `Piece`, `Connection`, `Design`, `Layer`, `Group`, `Side`, `Stat`, `Kit` (new thin wrapper) |
-| WASM bridge | `KitStoreClient` interface, `WorkerKitStoreClient`, `FallbackKitStoreClient`, `KitStoreClient.create()` static factory |
-| Worker API | `KitWorkerApi` class (renamed from `kitWorkerApi` object) |
-| Wire kinds | `SetResult`, `SetError`, `WriteStatus`, `HookTriad`, `KitStoreExecuteResult`, `KitStoreWireBackboneConfig`, `KitStoreWireConflictResolution`, `KitStoreWireBackboneStatus`, `KitStoreWireKitConflict` |
-| Read commands | `ReadCommandBatch`, `ReadCommandBatchResult`, all `Read*Command` / `Read*CommandOutput` kinds (generated) |
-| GraphQL wire | `KitGraphqlHandle`, `kitGraphqlRun`, `kitGraphqlExecuteRead`, `kitGraphqlExecuteStoreCommand`, `kitGraphqlSubscribeLoop`, `kitGraphqlKitDesignPiecesMetadata`, and other `kitGraphql*` query helpers |
-| Live facades | `LiveKitRoot`, `LiveDesignView`, `LiveTypeView`, `LivePieceView` |
-| Constants | `ICON_WIDTH`, `TOLERANCE` |
-| Generator | `Generator` class (random name/id generation) |
-| Embedded tests | Updated to use WASM bridge |
+| WASM bridge    | `KitStoreClient` interface, `WorkerKitStoreClient`, `FallbackKitStoreClient`, `KitStoreClient.create()` static factory                                                                                                                                                                                                 |
+| Worker API     | `KitWorkerApi` class (renamed from `kitWorkerApi` object)                                                                                                                                                                                                                                                              |
+| Wire kinds     | `SetResult`, `SetError`, `WriteStatus`, `HookTriad`, `KitStoreExecuteResult`, `KitStoreWireBackboneConfig`, `KitStoreWireConflictResolution`, `KitStoreWireBackboneStatus`, `KitStoreWireKitConflict`                                                                                                                  |
+| Read commands  | `ReadCommandBatch`, `ReadCommandBatchResult`, all `Read*Command` / `Read*CommandOutput` kinds (generated)                                                                                                                                                                                                              |
+| GraphQL wire   | `KitGraphqlHandle`, `kitGraphqlRun`, `kitGraphqlExecuteRead`, `kitGraphqlExecuteStoreCommand`, `kitGraphqlSubscribeLoop`, `kitGraphqlKitDesignPiecesMetadata`, and other `kitGraphql*` query helpers                                                                                                                   |
+| Live facades   | `LiveKitRoot`, `LiveDesignView`, `LiveTypeView`, `LivePieceView`                                                                                                                                                                                                                                                       |
+| Constants      | `ICON_WIDTH`, `TOLERANCE`                                                                                                                                                                                                                                                                                              |
+| Generator      | `Generator` class (random name/id generation)                                                                                                                                                                                                                                                                          |
+| Embedded tests | Updated to use WASM bridge                                                                                                                                                                                                                                                                                             |
 
 ## Components and Interfaces
 
@@ -97,69 +97,69 @@ The `KitStoreClient` interface remains the boundary contract consumed by `@semio
 
 ```typescript
 export interface KitStoreClient {
-  // State reads
-  getDto(): any;
-  getSnapshot(): Promise<any>;
+ // State reads
+ getDto(): any;
+ getSnapshot(): Promise<any>;
 
-  // Field-level mutations (ChangeKitCommand pipeline)
-  setField(kind: string, id: string, field: string, value: unknown): Promise<SetResult>;
-  addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult>;
-  removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult>;
+ // Field-level mutations (ChangeKitCommand pipeline)
+ setField(kind: string, id: string, field: string, value: unknown): Promise<SetResult>;
+ addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult>;
+ removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult>;
 
-  // Diff application
-  applyDesignDiff(designId: string, diff: unknown): Promise<SetResult>;
-  applyKitDiff(diff: unknown): Promise<SetResult>;
+ // Diff application
+ applyDesignDiff(designId: string, diff: unknown): Promise<SetResult>;
+ applyKitDiff(diff: unknown): Promise<SetResult>;
 
-  // Design operations (all delegate to KitStoreHandle)
-  clusterPieces(designId: string, pieceIds: string[], clusterName: string): Promise<SetResult>;
-  dragPieces(designId: string, pieceIds: string[], du: number, dv: number): Promise<SetResult>;
-  movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number): Promise<SetResult>;
-  fixPieces(designId: string, pieceIds: string[]): Promise<SetResult>;
-  flattenDesign(designId: string): Promise<SetResult>;
-  expandDesign(parentDesignId: string, nestedDesignId: string): Promise<SetResult>;
-  deleteConnection(designId: string, connectionId: string): Promise<SetResult>;
-  changePieceType(designId: string, pieceId: string, newTypeId: string): Promise<SetResult>;
-  pasteDesignSelection(designId: string, selection: unknown, plane: unknown): Promise<SetResult>;
-  createHangingPieces(designId: string, typeIds: string[], plane: unknown): Promise<SetResult>;
-  createConnectedPiece(designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string): Promise<SetResult>;
-  createFixedPiece(designId: string, typeId: string, plane: unknown): Promise<SetResult>;
+ // Design operations (all delegate to KitStoreHandle)
+ clusterPieces(designId: string, pieceIds: string[], clusterName: string): Promise<SetResult>;
+ dragPieces(designId: string, pieceIds: string[], du: number, dv: number): Promise<SetResult>;
+ movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number): Promise<SetResult>;
+ fixPieces(designId: string, pieceIds: string[]): Promise<SetResult>;
+ flattenDesign(designId: string): Promise<SetResult>;
+ expandDesign(parentDesignId: string, nestedDesignId: string): Promise<SetResult>;
+ deleteConnection(designId: string, connectionId: string): Promise<SetResult>;
+ changePieceType(designId: string, pieceId: string, newTypeId: string): Promise<SetResult>;
+ pasteDesignSelection(designId: string, selection: unknown, plane: unknown): Promise<SetResult>;
+ createHangingPieces(designId: string, typeIds: string[], plane: unknown): Promise<SetResult>;
+ createConnectedPiece(designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string): Promise<SetResult>;
+ createFixedPiece(designId: string, typeId: string, plane: unknown): Promise<SetResult>;
 
-  // Read operations
-  getPiecesMetadata(designId: string): Promise<any>;
-  getPieces(designId: string): Promise<any>;
-  getConnections(designId: string): Promise<any>;
-  getDesigns(): Promise<any>;
-  getTypes(): Promise<any>;
-  getAuthors(): Promise<any>;
-  getKitMetadata(): Promise<any>;
+ // Read operations
+ getPiecesMetadata(designId: string): Promise<any>;
+ getPieces(designId: string): Promise<any>;
+ getConnections(designId: string): Promise<any>;
+ getDesigns(): Promise<any>;
+ getTypes(): Promise<any>;
+ getAuthors(): Promise<any>;
+ getKitMetadata(): Promise<any>;
 
-  // Undo/redo (delegated to KitStoreHandle)
-  undo(): Promise<SetResult>;
-  redo(): Promise<SetResult>;
-  canUndo(): Promise<boolean>;
-  canRedo(): Promise<boolean>;
+ // Undo/redo (delegated to KitStoreHandle)
+ undo(): Promise<SetResult>;
+ redo(): Promise<SetResult>;
+ canUndo(): Promise<boolean>;
+ canRedo(): Promise<boolean>;
 
-  // Events
-  subscribe(cb: (ev: any) => void): () => void;
-  dispose(): void;
+ // Events
+ subscribe(cb: (ev: any) => void): () => void;
+ dispose(): void;
 
-  // GraphQL control plane
-  execute(cmd: unknown): Promise<KitStoreExecuteResult>;
-  executeRead(commands: ReadCommandBatch): Promise<ReadCommandBatchResult>;
-  kitGraphql(): KitGraphqlHandle;
+ // GraphQL control plane
+ execute(cmd: unknown): Promise<KitStoreExecuteResult>;
+ executeRead(commands: ReadCommandBatch): Promise<ReadCommandBatchResult>;
+ kitGraphql(): KitGraphqlHandle;
 
-  // VCS
-  vcsState(): Promise<any>;
-  theKitDto(): Promise<any>;
-  materializeAt(id: string): Promise<any>;
+ // VCS
+ vcsState(): Promise<any>;
+ theKitDto(): Promise<any>;
+ materializeAt(id: string): Promise<any>;
 
-  // Backbone
-  attachBackbone(cfg: KitStoreWireBackboneConfig): Promise<SetResult>;
-  detachBackbone(): Promise<SetResult>;
-  backboneStatus(): Promise<KitStoreWireBackboneStatus>;
-  listConflicts(): Promise<KitStoreWireKitConflict[]>;
-  resolveConflict(id: string, strategy: KitStoreWireConflictResolution): Promise<SetResult>;
-  syncNow(): Promise<SetResult>;
+ // Backbone
+ attachBackbone(cfg: KitStoreWireBackboneConfig): Promise<SetResult>;
+ detachBackbone(): Promise<SetResult>;
+ backboneStatus(): Promise<KitStoreWireBackboneStatus>;
+ listConflicts(): Promise<KitStoreWireKitConflict[]>;
+ resolveConflict(id: string, strategy: KitStoreWireConflictResolution): Promise<SetResult>;
+ syncNow(): Promise<SetResult>;
 }
 ```
 
@@ -169,23 +169,37 @@ Every entity class follows the same OO pattern. Domain logic methods (like `Piec
 
 ```typescript
 export class Type {
-  id!: string;
-  name!: string;
-  // ... fields from TypeSchema ...
+ id!: string;
+ name!: string;
+ // ... fields from TypeSchema ...
 
-  constructor(data: TypePlain) { Object.assign(this, data); }
+ constructor(data: TypePlain) {
+  Object.assign(this, data);
+ }
 
-  // Serialization
-  serialize(): string { return JSON.stringify(this.toPlain()); }
-  static deserialize(json: string): Type { return Type.fromPlain(JSON.parse(json)); }
+ // Serialization
+ serialize(): string {
+  return JSON.stringify(this.toPlain());
+ }
+ static deserialize(json: string): Type {
+  return Type.fromPlain(JSON.parse(json));
+ }
 
-  // Plain conversion
-  toPlain(): TypePlain { return TypeSchema.parse(this); }
-  static fromPlain(data: TypePlain): Type { return new Type(data); }
+ // Plain conversion
+ toPlain(): TypePlain {
+  return TypeSchema.parse(this);
+ }
+ static fromPlain(data: TypePlain): Type {
+  return new Type(data);
+ }
 
-  // ID factory
-  static createId(id: string): TypeId { return { id }; }
-  static areSameId(a: TypeId, b: TypeId): boolean { return a.id === b.id; }
+ // ID factory
+ static createId(id: string): TypeId {
+  return { id };
+ }
+ static areSameId(a: TypeId, b: TypeId): boolean {
+  return a.id === b.id;
+ }
 }
 ```
 
@@ -197,18 +211,32 @@ Entity classes that already have instance methods (`Coordinate`, `Vec`, `Point`,
 
 ```typescript
 export class Kit {
-  id!: string;
-  name!: string;
-  // ... all fields from KitSchema ...
+ id!: string;
+ name!: string;
+ // ... all fields from KitSchema ...
 
-  constructor(data: KitPlain) { Object.assign(this, data); }
+ constructor(data: KitPlain) {
+  Object.assign(this, data);
+ }
 
-  serialize(): string { return JSON.stringify(this.toPlain()); }
-  static deserialize(json: string): Kit { return Kit.fromPlain(JSON.parse(json)); }
-  toPlain(): KitPlain { return KitSchema.parse(this); }
-  static fromPlain(data: KitPlain): Kit { return new Kit(data); }
-  static createId(id: string): KitId { return { id }; }
-  static areSameId(a: KitId, b: KitId): boolean { return a.id === b.id; }
+ serialize(): string {
+  return JSON.stringify(this.toPlain());
+ }
+ static deserialize(json: string): Kit {
+  return Kit.fromPlain(JSON.parse(json));
+ }
+ toPlain(): KitPlain {
+  return KitSchema.parse(this);
+ }
+ static fromPlain(data: KitPlain): Kit {
+  return new Kit(data);
+ }
+ static createId(id: string): KitId {
+  return { id };
+ }
+ static areSameId(a: KitId, b: KitId): boolean {
+  return a.id === b.id;
+ }
 }
 ```
 
@@ -220,22 +248,38 @@ Free utility functions become static methods on a `Compose` class that delegates
 
 ```typescript
 export class Compose {
-  /** Delegates to composeNormalizeName in compose/rs. */
-  static normalizeName(s: string): string { return wasmModule.composeNormalizeName(s); }
-  /** Delegates to composeRound in compose/rs. */
-  static round(value: number, decimals: number): number { return wasmModule.composeRound(value, decimals); }
-  /** Delegates to generateId in compose/rs. */
-  static generateId(): string { return wasmModule.generateId(); }
-  /** Delegates to kitFromJson in compose/rs. */
-  static async kitFromJson(s: string): Promise<any> { return wasmModule.kitFromJson(s); }
-  /** Delegates to kitToJson in compose/rs. */
-  static async kitToJson(value: any): Promise<any> { return wasmModule.kitToJson(value); }
-  /** Delegates to kitValidate in compose/rs. */
-  static async kitValidate(value: any): Promise<any> { return wasmModule.kitValidate(value); }
-  /** Delegates to kitsAreEqual in compose/rs. */
-  static async kitsAreEqual(a: any, b: any): Promise<any> { return wasmModule.kitsAreEqual(a, b); }
-  /** Delegates to flattenDesign in compose/rs. */
-  static async flattenDesign(kit: any, designId: string): Promise<any> { return wasmModule.flattenDesign(kit, designId); }
+ /** Delegates to composeNormalizeName in compose/rs. */
+ static normalizeName(s: string): string {
+  return wasmModule.composeNormalizeName(s);
+ }
+ /** Delegates to composeRound in compose/rs. */
+ static round(value: number, decimals: number): number {
+  return wasmModule.composeRound(value, decimals);
+ }
+ /** Delegates to generateId in compose/rs. */
+ static generateId(): string {
+  return wasmModule.generateId();
+ }
+ /** Delegates to kitFromJson in compose/rs. */
+ static async kitFromJson(s: string): Promise<any> {
+  return wasmModule.kitFromJson(s);
+ }
+ /** Delegates to kitToJson in compose/rs. */
+ static async kitToJson(value: any): Promise<any> {
+  return wasmModule.kitToJson(value);
+ }
+ /** Delegates to kitValidate in compose/rs. */
+ static async kitValidate(value: any): Promise<any> {
+  return wasmModule.kitValidate(value);
+ }
+ /** Delegates to kitsAreEqual in compose/rs. */
+ static async kitsAreEqual(a: any, b: any): Promise<any> {
+  return wasmModule.kitsAreEqual(a, b);
+ }
+ /** Delegates to flattenDesign in compose/rs. */
+ static async flattenDesign(kit: any, designId: string): Promise<any> {
+  return wasmModule.flattenDesign(kit, designId);
+ }
 }
 ```
 
@@ -245,17 +289,27 @@ The `kitWorkerApi` plain object becomes a `KitWorkerApi` class:
 
 ```typescript
 export class KitWorkerApi {
-  private handle: KitStoreHandle | null = null;
-  private eventListeners = new Map<number, (ev: unknown) => void>();
-  private nextEventListenerId = 0;
-  private eventGqlStarted = false;
+ private handle: KitStoreHandle | null = null;
+ private eventListeners = new Map<number, (ev: unknown) => void>();
+ private nextEventListenerId = 0;
+ private eventGqlStarted = false;
 
-  async init(wasmSpecifier: string, dto: unknown): Promise<void> { /* ... */ }
-  snapshot(): any { /* ... */ }
-  async setField(kind: string, id: string, field: string, value: unknown): Promise<SetResult> { /* ... */ }
-  async addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult> { /* ... */ }
-  async removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult> { /* ... */ }
-  // ... all other methods that currently exist on kitWorkerApi ...
+ async init(wasmSpecifier: string, dto: unknown): Promise<void> {
+  /* ... */
+ }
+ snapshot(): any {
+  /* ... */
+ }
+ async setField(kind: string, id: string, field: string, value: unknown): Promise<SetResult> {
+  /* ... */
+ }
+ async addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult> {
+  /* ... */
+ }
+ async removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult> {
+  /* ... */
+ }
+ // ... all other methods that currently exist on kitWorkerApi ...
 }
 ```
 
@@ -266,24 +320,24 @@ The free `createKitStoreClient` function becomes a static method:
 ```typescript
 // On the KitStoreClient interface (or a companion namespace):
 export async function createKitStoreClient(opts: CreateKitStoreClientOptions): Promise<KitStoreClient> {
-  // JSON round-trip for wasm-bindgen compatibility
-  const dto = JSON.parse(JSON.stringify(opts.initialKit));
-  if (opts.forceFallback || typeof Worker === "undefined") {
-    const mod = await importWasmModule(wasmSpecifier);
-    await ensureComposeWasmInitialized(wasmSpecifier, mod, isNodeRuntime);
-    return new FallbackKitStoreClient(mod.KitStoreHandle.create(dto), dto, timeoutMs);
-  }
-  try {
-    const worker = opts.workerFactory?.() ?? new Worker(/* ... */);
-    const api = Comlink.wrap(worker);
-    await api.init(wasmSpecifier, dto);
-    return new WorkerKitStoreClient(worker, api, dto, timeoutMs);
-  } catch {
-    // Fallback to in-process
-    const mod = await importWasmModule(wasmSpecifier);
-    await ensureComposeWasmInitialized(wasmSpecifier, mod, isNodeRuntime);
-    return new FallbackKitStoreClient(mod.KitStoreHandle.create(dto), dto, timeoutMs);
-  }
+ // JSON round-trip for wasm-bindgen compatibility
+ const dto = JSON.parse(JSON.stringify(opts.initialKit));
+ if (opts.forceFallback || typeof Worker === "undefined") {
+  const mod = await importWasmModule(wasmSpecifier);
+  await ensureComposeWasmInitialized(wasmSpecifier, mod, isNodeRuntime);
+  return new FallbackKitStoreClient(mod.KitStoreHandle.create(dto), dto, timeoutMs);
+ }
+ try {
+  const worker = opts.workerFactory?.() ?? new Worker(/* ... */);
+  const api = Comlink.wrap(worker);
+  await api.init(wasmSpecifier, dto);
+  return new WorkerKitStoreClient(worker, api, dto, timeoutMs);
+ } catch {
+  // Fallback to in-process
+  const mod = await importWasmModule(wasmSpecifier);
+  await ensureComposeWasmInitialized(wasmSpecifier, mod, isNodeRuntime);
+  return new FallbackKitStoreClient(mod.KitStoreHandle.create(dto), dto, timeoutMs);
+ }
 }
 ```
 
@@ -292,6 +346,7 @@ Note: Since `KitImpl` is deleted, the `asKitInstance(opts.initialKit)` call is r
 ### FallbackKitStoreClient (simplified)
 
 The existing `FallbackKitStoreClient` is retained but simplified:
+
 - Removes any local validation logic (e.g., `validateRequiredName`, `validateOptionalDisplayName`) — validation is done by `KitStoreHandle` in Rust
 - Every method is a pure delegation to `this.handle.*` with `settleSetPromise` wrapping
 - No local DTO caching beyond what's needed for `getDto()` (a snapshot call)
@@ -299,10 +354,10 @@ The existing `FallbackKitStoreClient` is retained but simplified:
 ### WorkerKitStoreClient (simplified)
 
 The existing `WorkerKitStoreClient` is retained but simplified:
+
 - Removes local DTO refresh logic that called `KitImpl` methods
 - Every method delegates to `this.api.*` (Comlink proxy) with timeout wrapping
 - `getDto()` calls `this.api.snapshot()` instead of maintaining a local `KitImpl` mirror
-
 
 ## Data Models
 
@@ -327,42 +382,33 @@ All Zod schemas and their inferred TypeScript kind aliases are retained unchange
 ```typescript
 // Error kinds from Rust SetError
 export type SetError = {
-  kind: "IllegalName" | "NameTooLong" | "NotFound" | "Conflict" | "InvalidOperation" | "Internal";
-  message: string;
+ kind: "IllegalName" | "NameTooLong" | "NotFound" | "Conflict" | "InvalidOperation" | "Internal";
+ message: string;
 };
 
 export type SetResult = { ok: true } | { ok: false; error: SetError };
 
-export type KitStoreExecuteResult =
-  | { ok: true; result: unknown }
-  | { ok: false; error: SetError };
+export type KitStoreExecuteResult = { ok: true; result: unknown } | { ok: false; error: SetError };
 
-export type WriteStatus =
-  | { kind: "idle"; pending: 0; lastError?: undefined }
-  | { kind: "pending"; pending: number; lastError?: SetError };
+export type WriteStatus = { kind: "idle"; pending: 0; lastError?: undefined } | { kind: "pending"; pending: number; lastError?: SetError };
 
 export type HookTriad<T> = readonly [T, (next: T | ((prev: T) => T)) => Promise<SetResult>, WriteStatus];
 
-export type KitStoreWireBackboneConfig =
-  | { dev: { path: string } }
-  | { local: { folder: string } }
-  | { remote: { session: string } };
+export type KitStoreWireBackboneConfig = { dev: { path: string } } | { local: { folder: string } } | { remote: { session: string } };
 
-export type KitStoreWireConflictResolution =
-  | { dropWip: null }
-  | { forceOverwriteBackbone: null };
+export type KitStoreWireConflictResolution = { dropWip: null } | { forceOverwriteBackbone: null };
 
 export type KitStoreWireBackboneStatus = {
-  attached: boolean;
-  kind?: string | null;
-  tip?: string | null;
+ attached: boolean;
+ kind?: string | null;
+ tip?: string | null;
 };
 
 export type KitStoreWireKitConflict = {
-  id: string;
-  wipCheckpoint: unknown;
-  backboneCheckpoint: unknown;
-  message?: string;
+ id: string;
+ wipCheckpoint: unknown;
+ backboneCheckpoint: unknown;
+ message?: string;
 };
 ```
 
@@ -381,7 +427,7 @@ Where `ReadKitCommand` is a discriminated union of externally-tagged read comman
 
 ```typescript
 export type KitGraphqlHandle = {
-  execute(requestJson: string, onMessage: (line: string) => void): Promise<void>;
+ execute(requestJson: string, onMessage: (line: string) => void): Promise<void>;
 };
 ```
 
@@ -412,26 +458,25 @@ sequenceDiagram
     Client-->>Consumer: SetResult
 ```
 
-
 ## Correctness Properties
 
-*A property is a characteristic or behavior that should hold true across all valid executions of a system — essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+_A property is a characteristic or behavior that should hold true across all valid executions of a system — essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees._
 
 ### Property 1: Entity toPlain/fromPlain round-trip
 
-*For any* entity kind (Coordinate, Vec, Point, Vector, Plane, Camera, Attribute, Location, Author, File, Folder, Benchmark, Quality, Port, Family, Prop, Tag, Concept, Representation, Connector, Type, Piece, Connection, Side, Design, Layer, Group, Stat, Kit) and *for any* valid plain object conforming to that entity's Zod schema, calling `Entity.fromPlain(data).toPlain()` SHALL produce an object deeply equal to the original data.
+_For any_ entity kind (Coordinate, Vec, Point, Vector, Plane, Camera, Attribute, Location, Author, File, Folder, Benchmark, Quality, Port, Family, Prop, Tag, Concept, Representation, Connector, Type, Piece, Connection, Side, Design, Layer, Group, Stat, Kit) and _for any_ valid plain object conforming to that entity's Zod schema, calling `Entity.fromPlain(data).toPlain()` SHALL produce an object deeply equal to the original data.
 
 **Validates: Requirements 3.1, 7.2**
 
 ### Property 2: Entity serialize/deserialize round-trip
 
-*For any* entity kind and *for any* valid plain object conforming to that entity's Zod schema, constructing an entity instance, calling `entity.serialize()` to produce a JSON string, then calling `Entity.deserialize(json)` SHALL produce an entity whose `toPlain()` output is deeply equal to the original data.
+_For any_ entity kind and _for any_ valid plain object conforming to that entity's Zod schema, constructing an entity instance, calling `entity.serialize()` to produce a JSON string, then calling `Entity.deserialize(json)` SHALL produce an entity whose `toPlain()` output is deeply equal to the original data.
 
 **Validates: Requirements 7.1**
 
 ### Property 3: Entity ID factory and comparison
 
-*For any* entity kind that has ID operations and *for any* two arbitrary strings `a` and `b`, `Entity.createId(a)` SHALL produce `{ id: a }`, and `Entity.areSameId(Entity.createId(a), Entity.createId(b))` SHALL return `true` if and only if `a === b`.
+_For any_ entity kind that has ID operations and _for any_ two arbitrary strings `a` and `b`, `Entity.createId(a)` SHALL produce `{ id: a }`, and `Entity.areSameId(Entity.createId(a), Entity.createId(b))` SHALL return `true` if and only if `a === b`.
 
 **Validates: Requirements 3.2, 7.3, 7.4**
 
@@ -442,6 +487,7 @@ sequenceDiagram
 All errors from `KitStoreHandle` are surfaced as `SetResult` or `KitStoreExecuteResult` with structured `SetError` payloads. The thin client does not catch, transform, or suppress errors — it forwards them as-is.
 
 Error kinds from Rust:
+
 - `IllegalName` — name validation failed (empty, invalid characters)
 - `NameTooLong` — name exceeds maximum length
 - `NotFound` — entity not found by ID

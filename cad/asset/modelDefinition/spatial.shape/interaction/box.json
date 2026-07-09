@@ -6,30 +6,10 @@
   "key": "b",
   "interaction": {
     "spatialGroundPick": true,
-    "pickDisabledStates": [
-      "idle",
-      "ready",
-      "committed",
-      "first_corner_length_prompt"
-    ],
-    "groundPointerMoveStates": [
-      "first_corner",
-      "first_corner_other_or_length",
-      "diagonal_rubber",
-      "cube_diagonal_rubber",
-      "cube_other_corner",
-      "three_point_edge",
-      "three_point_width",
-      "vertical_width",
-      "center_corner",
-      "cube_center_corner"
-    ],
-    "heightDragStates": [
-      "first_corner_height"
-    ],
-    "verticalRodStates": [
-      "vertical_end"
-    ],
+    "pickDisabledStates": ["idle", "ready", "committed", "first_corner_length_prompt"],
+    "groundPointerMoveStates": ["first_corner", "first_corner_other_or_length", "diagonal_rubber", "cube_diagonal_rubber", "cube_other_corner", "three_point_edge", "three_point_width", "vertical_width", "center_corner", "cube_center_corner"],
+    "heightDragStates": ["first_corner_height"],
+    "verticalRodStates": ["vertical_end"],
     "heightConfirmState": "first_corner_height",
     "lengthEntry": [
       {
@@ -95,10 +75,7 @@
   },
   "requires": {
     "kernel": {
-      "operations": [
-        "solid.createBox",
-        "entity.tessellate"
-      ]
+      "operations": ["solid.createBox", "entity.tessellate"]
     }
   },
   "guards": [
@@ -383,11 +360,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        0
-                      ]
+                      "value": [0, 0, 0]
                     }
                   },
                   {
@@ -1744,11 +1717,7 @@
             "text": "Choose mode (panel), then click construction plane (XY @ Z=0)",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.45
-              ]
+              "value": [0, 0.25, 1.45]
             }
           }
         ]
@@ -1812,11 +1781,7 @@
             "text": "Send set.footprint {length,width} from host (numeric L/W along +X,+Y)",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -2264,11 +2229,7 @@
             "text": "Height (Z): drag teal wall, Apply height, click plane, or Accept",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -2310,11 +2271,7 @@
             "kind": "linear-handle",
             "id": "height-handle",
             "role": "handle",
-            "axis": [
-              0,
-              0,
-              1
-            ],
+            "axis": [0, 0, 1],
             "origin": {
               "kind": "path",
               "root": "context",
@@ -2412,9 +2369,7 @@
   },
   "commit": {
     "when": "hasValidBox",
-    "fromStates": [
-      "ready"
-    ],
+    "fromStates": ["ready"],
     "operation": {
       "kind": "action",
       "action": "primitive.createBoxFromCorners",

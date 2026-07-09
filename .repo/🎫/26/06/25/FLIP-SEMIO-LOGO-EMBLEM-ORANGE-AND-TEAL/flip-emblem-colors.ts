@@ -15,10 +15,7 @@ function swapOrangeTeal(content: string): string {
     return content;
   }
   const placeholder = "__SEMIO_SWAP__";
-  return content
-    .replaceAll(ORANGE, placeholder)
-    .replaceAll(tealInFile, ORANGE)
-    .replaceAll(placeholder, tealInFile);
+  return content.replaceAll(ORANGE, placeholder).replaceAll(tealInFile, ORANGE).replaceAll(placeholder, tealInFile);
 }
 
 function swapCompactEmblem(content: string): string {
@@ -43,9 +40,7 @@ function swapInkscapeLayers(content: string): string {
       continue;
     }
 
-    const replacement = label === "i"
-      ? TEALS.find((teal) => group.innerHTML.toLowerCase().includes(teal)) ?? TEALS[0]
-      : ORANGE;
+    const replacement = label === "i" ? (TEALS.find((teal) => group.innerHTML.toLowerCase().includes(teal)) ?? TEALS[0]) : ORANGE;
 
     for (const element of group.querySelectorAll("[style]")) {
       const style = element.getAttribute("style");
@@ -98,10 +93,7 @@ function swapKitHorizontal(content: string): string {
 }
 
 function swapReactLogo(content: string): string {
-  return content
-    .replace('fill="#fa9500"', 'fill="__SEMIO_SWAP__"')
-    .replace('fill="#34d1bf"', 'fill="#fa9500"')
-    .replace('fill="__SEMIO_SWAP__"', 'fill="#34d1bf"');
+  return content.replace('fill="#fa9500"', 'fill="__SEMIO_SWAP__"').replace('fill="#34d1bf"', 'fill="#fa9500"').replace('fill="__SEMIO_SWAP__"', 'fill="#34d1bf"');
 }
 
 const files: Array<{ relative: string; handler: (content: string) => string }> = [
@@ -159,15 +151,7 @@ for (const { svg, png, size } of pngSources) {
   const svgPath = path.join(repoRoot, svg);
   const pngPath = path.join(repoRoot, png);
   const tempDir = import.meta.dir;
-  const proc = Bun.spawnSync([
-    "qlmanage",
-    "-t",
-    "-s",
-    String(size),
-    "-o",
-    tempDir,
-    svgPath,
-  ]);
+  const proc = Bun.spawnSync(["qlmanage", "-t", "-s", String(size), "-o", tempDir, svgPath]);
   if (proc.exitCode !== 0) {
     console.error(`failed png export for ${png}`);
     continue;

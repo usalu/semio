@@ -5,7 +5,5 @@
   "description": "All file ids should not have the file extension part of the flat name. Modified GetArtifactID file case to strip extension before Flat(name), updated UriToId in 2 locations, updated all test expectations, fixture files, and annotation comments across the entire codebase.",
   "summary": "Removed file extensions from file IDs. Modified GetArtifactID, UriToId (2 locations). Updated tests, fixtures, and annotations across entire codebase. All tests pass.",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
-  "sessions": [
-    "⚪17722974550087122333119450305201667798"
-  ]
+  "sessions": ["⚪17722974550087122333119450305201667798"]
 }

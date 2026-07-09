@@ -3481,9 +3481,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-drag--default"
-            ],
+            "urls": ["http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-drag--default"],
             "query": "errors render content"
           },
           "tool_use_id": "toolu_vrtx_01WKGQ8ummRLG3j99pz8XSjf__vscode-1774623237748",
@@ -3510,9 +3508,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-drag--default"
-            ],
+            "urls": ["http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-drag--default"],
             "query": "errors render content"
           },
           "tool_use_id": "toolu_vrtx_01WKGQ8ummRLG3j99pz8XSjf__vscode-1774623237748",
@@ -3539,9 +3535,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-drag--default"
-            ],
+            "urls": ["http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-drag--default"],
             "query": "errors render content"
           },
           "tool_response": "",
@@ -3569,9 +3563,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115-1/GitHub.copilot-chat/transcripts/a14e54b2-5335-4952-b183-5ee306bbc9e8.jsonl",
           "tool_name": "fetch_webpage",
           "tool_input": {
-            "urls": [
-              "http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-drag--default"
-            ],
+            "urls": ["http://localhost:6007/iframe.html?viewMode=story\u0026id=compose-algorithms-drag--default"],
             "query": "errors render content"
           },
           "tool_response": "",

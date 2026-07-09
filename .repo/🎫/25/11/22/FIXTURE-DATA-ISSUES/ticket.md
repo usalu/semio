@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Metabolism Kit Fixture Data Problems
 
 ## Overview
@@ -60,9 +61,9 @@ Modified `SideSchema` to allow `connector` to be optional:
 
 ```typescript
 export const SideSchema = z.object({
-  piece: PieceIdSchema,
-  designPiece: PieceIdSchema.optional(),
-  connector: ConnectorIdSchema.optional(), // Changed from required
+ piece: PieceIdSchema,
+ designPiece: PieceIdSchema.optional(),
+ connector: ConnectorIdSchema.optional(), // Changed from required
 });
 ```
 
@@ -72,11 +73,11 @@ Added connection filtering in test setup:
 
 ```typescript
 const originalKit: Kit = {
-  ...parsedKit,
-  designs: parsedKit.designs?.map((d) => ({
-    ...d,
-    connections: d.connections?.filter((c) => c.connected?.connector && c.connecting?.connector && c.connected?.piece && c.connecting?.piece),
-  })),
+ ...parsedKit,
+ designs: parsedKit.designs?.map((d) => ({
+  ...d,
+  connections: d.connections?.filter((c) => c.connected?.connector && c.connecting?.connector && c.connected?.piece && c.connecting?.piece),
+ })),
 };
 ```
 
@@ -95,10 +96,10 @@ Changed Type import to only assign properties when they have values:
 
 ```typescript
 const type: any = {
-  guid: typeGuid,
-  name: row.name,
-  createdAt: row.created,
-  updatedAt: row.updated,
+ guid: typeGuid,
+ name: row.name,
+ createdAt: row.created,
+ updatedAt: row.updated,
 };
 if (row.is_abstract) type.isAbstract = true;
 if (row.folder) type.folder = row.folder;

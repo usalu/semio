@@ -942,11 +942,11 @@ The important constraint: **React never owns the hot path**. Pointer movement, h
 
 # Current workspace status (CPU reference vs WASM target)
 
-| Layer | Path | Role today | WASM target |
-| ----- | ---- | ---------- | ----------- |
-| React descriptors | `elements/client/lib/board/react/index.tsx` | Declarative `<BoardCanvas>` / `<Node>` / `<Handle>` / `<Edge>` markers; `syncBoardScene` preserves stable imperative instances | Same public JSX; optional future `react-reconciler` host |
-| Imperative API | `elements/client/lib/board/js/index.ts` | **Main-thread Canvas2D** renderer, hit testing, wheel zoom, optional **`worldRasterTiling: "world-clip"`** (world-space tiles drawn with per-tile clip + bounds cull — scheduler parity hook for Vello tiles) | Thin `wasm-bindgen` batch + event drain |
-| Rust engine | `elements/client/lib/board/rs/lib.rs` | Single-crate retained model, pointer + selection, `#[cfg(test)]` parity | `BoardEngine` export surface from §1 |
+| Layer             | Path                                        | Role today                                                                                                                                                                                                    | WASM target                                              |
+| ----------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| React descriptors | `elements/client/lib/board/react/index.tsx` | Declarative `<BoardCanvas>` / `<Node>` / `<Handle>` / `<Edge>` markers; `syncBoardScene` preserves stable imperative instances                                                                                | Same public JSX; optional future `react-reconciler` host |
+| Imperative API    | `elements/client/lib/board/js/index.ts`     | **Main-thread Canvas2D** renderer, hit testing, wheel zoom, optional **`worldRasterTiling: "world-clip"`** (world-space tiles drawn with per-tile clip + bounds cull — scheduler parity hook for Vello tiles) | Thin `wasm-bindgen` batch + event drain                  |
+| Rust engine       | `elements/client/lib/board/rs/lib.rs`       | Single-crate retained model, pointer + selection, `#[cfg(test)]` parity                                                                                                                                       | `BoardEngine` export surface from §1                     |
 
 Vello and wgpu are **not** wired in this repository slice yet; the CPU path exists so Storybook and unit tests can validate semantics before GPU stacks are enabled in CI.
 
@@ -956,13 +956,13 @@ Vello and wgpu are **not** wired in this repository slice yet; the CPU path exis
 
 The `<canvas>` inside `BoardCanvas` exposes stable `data-*` hooks refreshed each `render()`:
 
-| Attribute | Meaning |
-| --------- | ------- |
-| `data-board-raster` | `none` \| `world-clip` |
-| `data-board-lod` | `subgrid` \| `grid-only` \| `full` \| `fine` from `resolveBoardLodLabel(zoom)` |
-| `data-board-zoom` | Numeric zoom after clamp |
-| `data-board-camera` | `x,y` camera world center |
-| `data-board-selection` | Comma-separated sorted ids |
+| Attribute              | Meaning                                                                        |
+| ---------------------- | ------------------------------------------------------------------------------ |
+| `data-board-raster`    | `none` \| `world-clip`                                                         |
+| `data-board-lod`       | `subgrid` \| `grid-only` \| `full` \| `fine` from `resolveBoardLodLabel(zoom)` |
+| `data-board-zoom`      | Numeric zoom after clamp                                                       |
+| `data-board-camera`    | `x,y` camera world center                                                      |
+| `data-board-selection` | Comma-separated sorted ids                                                     |
 
 These exist for **Playwright** and debugging; gate or remove when a formal inspector ships.
 
@@ -978,11 +978,11 @@ bun run test:storybook
 
 `test.script.ts` builds Storybook, spawns `bun ./dev.script.ts storybook-static` (serving `storybook-static/` at the site root), waits for `index.html`, then runs Playwright with `PLAYWRIGHT_BASE_URL` — no second `webServer` in Playwright config. `testMatch` lists `monorepo.spec.ts` and `board.spec.ts` explicitly because `*.spec.ts` did not discover every spec on Windows here.
 
-| Automation | Story id | Covers |
-| ---------- | -------- | ------ |
-| `.storybook/board.spec.ts` | `elements-board--default` | Raster `none`, node selection, zoom-in → `fine` LOD, clear selection |
-| `.storybook/board.spec.ts` | `elements-board--default` | Zoom-out → `grid-only` LOD; wheel anchor keeps world point stable (`data-board-camera`) |
-| `.storybook/board.spec.ts` | `elements-board--world-tile-clip` | Raster `world-clip`, node + handle hit order |
+| Automation                 | Story id                          | Covers                                                                                  |
+| -------------------------- | --------------------------------- | --------------------------------------------------------------------------------------- |
+| `.storybook/board.spec.ts` | `elements-board--default`         | Raster `none`, node selection, zoom-in → `fine` LOD, clear selection                    |
+| `.storybook/board.spec.ts` | `elements-board--default`         | Zoom-out → `grid-only` LOD; wheel anchor keeps world point stable (`data-board-camera`) |
+| `.storybook/board.spec.ts` | `elements-board--world-tile-clip` | Raster `world-clip`, node + handle hit order                                            |
 
 Focused Vitest (board modules only):
 

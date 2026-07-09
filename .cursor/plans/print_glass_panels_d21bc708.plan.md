@@ -2,33 +2,33 @@
 name: Print Glass Panels
 overview: Add a `Panel` overlay construct to `print/` that can be positioned anywhere on the page (corner anchor + offset), floats above existing page content, and renders a pixel-perfect frosted-glass background by rasterizing the page, cropping the region behind the panel, and blurring/saturating/tinting it to match `ui-glass-panel` — via a two-pass Tectonic build with an image post-process step in between.
 todos:
-  - id: ticket
-    content: Read repo://goals, open a ticket for the print Panels feature
-    status: completed
-  - id: tokens
-    content: Add panel chrome color to CHROME_PAINT_KEYS in print/script.ts + alias in semio-core.sty
-    status: completed
-  - id: panel-latex
-    content: Add Panel environment (anchor/x/y/width positioning, eso-pic shipout draw, manifest write, glass-PNG-or-fallback background, border) as new region in semio-window.sty
-    status: completed
-  - id: deps
-    content: Promote pdfjs-dist, @napi-rs/canvas, sharp to direct deps in print/package.json
-    status: completed
-  - id: glass-step
-    content: "Implement renderPanelGlass() in print/script.ts: parse manifest, rasterize pages, crop/blur/saturate/tint, write PNGs"
-    status: completed
-  - id: two-pass-build
-    content: Make compilePrintDocument 2-pass-aware (pass 2 only when a non-empty .panels manifest exists)
-    status: completed
-  - id: gitignore
-    content: Ignore .semio-panel-glass/ and *.panels build artifacts
-    status: completed
-  - id: demo-usage
-    content: Add one Panel usage to each of the 6 template content.tex files
-    status: completed
-  - id: verify
-    content: Run bun print/script.ts test, spot-check PDFs and intermediate glass PNGs in both themes, close ticket
-    status: completed
+ - id: ticket
+   content: Read repo://goals, open a ticket for the print Panels feature
+   status: completed
+ - id: tokens
+   content: Add panel chrome color to CHROME_PAINT_KEYS in print/script.ts + alias in semio-core.sty
+   status: completed
+ - id: panel-latex
+   content: Add Panel environment (anchor/x/y/width positioning, eso-pic shipout draw, manifest write, glass-PNG-or-fallback background, border) as new region in semio-window.sty
+   status: completed
+ - id: deps
+   content: Promote pdfjs-dist, @napi-rs/canvas, sharp to direct deps in print/package.json
+   status: completed
+ - id: glass-step
+   content: "Implement renderPanelGlass() in print/script.ts: parse manifest, rasterize pages, crop/blur/saturate/tint, write PNGs"
+   status: completed
+ - id: two-pass-build
+   content: Make compilePrintDocument 2-pass-aware (pass 2 only when a non-empty .panels manifest exists)
+   status: completed
+ - id: gitignore
+   content: Ignore .semio-panel-glass/ and *.panels build artifacts
+   status: completed
+ - id: demo-usage
+   content: Add one Panel usage to each of the 6 template content.tex files
+   status: completed
+ - id: verify
+   content: Run bun print/script.ts test, spot-check PDFs and intermediate glass PNGs in both themes, close ticket
+   status: completed
 isProject: false
 ---
 
@@ -57,8 +57,6 @@ flowchart LR
   E --> F[".semio-panel-glass/id.png"]
   F --> G["Pass 2: tectonic compile\n(Panel embeds PNG as bg)"]
 ```
-
-
 
 1. **Pass 1** compiles the `.tex` as today. Each `Panel` writes one line per instance to a plain manifest file `\jobname.panels` (id, page, x/y/w/h in PDF bigpoints) and falls back to a flat translucent tier-panel tint (no blur) since no PNG exists yet.
 2. **Script step** ([print/script.ts](print/script.ts)): if the manifest is non-empty, rasterize each referenced page with `pdfjs-dist` + `@napi-rs/canvas` (already transitive deps — promote to direct deps of [print/package.json](print/package.json), alongside `sharp`, also already transitive). For each panel: crop the rect (flip y from PDF bottom-left to canvas top-left origin), then with `sharp`: `.blur()` (from `metrics.chrome.glassPanelBlurPx`, scaled to render DPI), `.modulate({ saturation: metrics.chrome.glassSaturate })`, composite a solid tint at `opacities.glassPanelAlpha` using the resolved theme `panel` color. Write to `<template-dir>/.semio-panel-glass/<id>.png`.
@@ -111,4 +109,3 @@ Add a small floating `Panel` (e.g. a short badge/tagline) into each of the 6 tem
 - Spot-check a couple of rendered PDFs (e.g. flyer, report) to visually confirm the panel shows genuinely blurred/tinted content behind it (not a flat tint) — open the generated PNGs in `.semio-panel-glass/` and the final PDF page to compare.
 - Confirm both light and dark themes render distinct correct panel tint colors.
 - Repo workflow: open a ticket under the appropriate goal (read `repo://goals` first) before implementing; close it with a summary + files touched when done.
-

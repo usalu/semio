@@ -29,14 +29,14 @@ type Story = StoryObj<typeof meta>;
 const defaultArgs = {
   id: "slider-default",
   value: [75] as number[],
-  onValueChange: () => { },
+  onValueChange: () => {},
   min: 50,
   max: 150,
   step: 5,
   showLabel: true,
-  onPointerDown: () => { },
-  onPointerUp: () => { },
-  onPointerCancel: () => { },
+  onPointerDown: () => {},
+  onPointerUp: () => {},
+  onPointerCancel: () => {},
   interactionId: "slider-interaction",
   className: "w-96",
 };

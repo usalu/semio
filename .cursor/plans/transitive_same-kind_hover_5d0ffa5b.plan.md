@@ -1,31 +1,31 @@
 ---
 name: Transitive same-kind hover
-overview: "Add transitive same-kind hover across puzzle 3D and 2D: hovering any instance (or a kind row in the tree) highlights all instances that share the same kind, in both the canvas and the document tree, driven by the existing instance to kind (\"is a\") relationships."
+overview: 'Add transitive same-kind hover across puzzle 3D and 2D: hovering any instance (or a kind row in the tree) highlights all instances that share the same kind, in both the canvas and the document tree, driven by the existing instance to kind ("is a") relationships.'
 todos:
-  - id: ticket
-    content: Read repo://goals and open a repo ticket for transitive same-kind hover; define shared HoverDomain + kind-aware hover concept.
-    status: completed
-  - id: 3d-registry
-    content: "Puzzle 3D RegistryProvider: add kindHover state, derive kind on setHover, add setKindHover/clearKindHover/isKindHovered, extend RegistryValue + useRegistryHover."
-    status: completed
-  - id: 3d-items
-    content: "Puzzle 3D items: compute transitive hovered (direct OR isKindHovered) for object, vortex, attraction feeding mesh/vortex/attraction styles."
-    status: completed
-  - id: 3d-shell
-    content: Puzzle 3D play shell + PlayCanvas controlled hover props; wire document + kinds-tab row onPointerEnter/Leave; transitive tree highlightedIds.
-    status: completed
-  - id: 2d-rust
-    content: "Puzzle 2D Rust engine: add hovered_kind, resolve element kind on hover, transitive hovered_style_kind, set_hovered_kind setter, emit kind in hover event."
-    status: completed
-  - id: 2d-shell
-    content: "Puzzle 2D: wire Puzzle2dPlayPaneCanvas controlled hover, kind-aware shell hover, transitive document highlightedIds, kinds-tab row hover handlers."
-    status: completed
-  - id: framework-hover
-    content: Upgrade shell hover model to kind-aware { id, kind } as single source for tree + canvas transitive derivation.
-    status: completed
-  - id: verify
-    content: "Runtime-verify in both playgrounds with [DEBUG] logs: hovering an instance and a kind row highlights all same-kind instances in canvas and tree."
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open a repo ticket for transitive same-kind hover; define shared HoverDomain + kind-aware hover concept.
+   status: completed
+ - id: 3d-registry
+   content: "Puzzle 3D RegistryProvider: add kindHover state, derive kind on setHover, add setKindHover/clearKindHover/isKindHovered, extend RegistryValue + useRegistryHover."
+   status: completed
+ - id: 3d-items
+   content: "Puzzle 3D items: compute transitive hovered (direct OR isKindHovered) for object, vortex, attraction feeding mesh/vortex/attraction styles."
+   status: completed
+ - id: 3d-shell
+   content: Puzzle 3D play shell + PlayCanvas controlled hover props; wire document + kinds-tab row onPointerEnter/Leave; transitive tree highlightedIds.
+   status: completed
+ - id: 2d-rust
+   content: "Puzzle 2D Rust engine: add hovered_kind, resolve element kind on hover, transitive hovered_style_kind, set_hovered_kind setter, emit kind in hover event."
+   status: completed
+ - id: 2d-shell
+   content: "Puzzle 2D: wire Puzzle2dPlayPaneCanvas controlled hover, kind-aware shell hover, transitive document highlightedIds, kinds-tab row hover handlers."
+   status: completed
+ - id: framework-hover
+   content: Upgrade shell hover model to kind-aware { id, kind } as single source for tree + canvas transitive derivation.
+   status: completed
+ - id: verify
+   content: "Runtime-verify in both playgrounds with [DEBUG] logs: hovering an instance and a kind row highlights all same-kind instances in canvas and tree."
+   status: completed
 isProject: false
 ---
 
@@ -51,8 +51,6 @@ flowchart LR
   kh --> canvas["Canvas: every element of kind paints hovered"]
   kh --> tree["Tree: every row of kind highlighted"]
 ```
-
-
 
 ## Puzzle 3D
 

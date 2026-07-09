@@ -16,7 +16,7 @@ const HoverCardExamples = () => (
   <div className="space-y-4">
     <HoverCard>
       <HoverCardTrigger asChild>
-        <Button variant="ghost" id="hovercard-trigger-default" onClick={() => { }}>
+        <Button variant="ghost" id="hovercard-trigger-default" onClick={() => {}}>
           Kisho Kurokawa
         </Button>
       </HoverCardTrigger>

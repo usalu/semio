@@ -2,45 +2,45 @@
 name: spatial doctrine refactor
 overview: Strip the brepjs `Vertex…Cluster` document and `topology` term from the public spatial framework, replace it with an extension-based `Model / Typology / Object / View / Action / Interaction / Attribute / Property` doctrine, add a new `typology` asset kind, and propagate the rename across schemas, fixtures, and all five JS packages.
 todos:
-  - id: phase1-ticket
-    content: Open ticket and read repo goals
-    status: completed
-  - id: phase1-spec
-    content: Update spatial/AGENTS.md to publish typology asset path; move legacy Vertex...Cluster notes under kernel-brepjs
-    status: completed
-  - id: phase1-schemas
-    content: Rename schema topology.json -> model.json, add typology.json/view.json/extension.json schemas, fix interaction.json enums
-    status: completed
-  - id: phase1-assets
-    content: Add typology/ asset folder per extension, rewrite interaction/attribute/property JSONs to drop topology-entity vocabulary
-    status: completed
-  - id: phase1-fixtures
-    content: Rename *.topology.json -> *.model.json and migrate fixture envelopes to spatial.model/v1
-    status: completed
-  - id: phase2-core
-    content: "Refactor spatial/js/core/index.ts: drop public Vertex...Cluster exports, add Model/Typology/Object/AttributeStore"
-    status: completed
-  - id: phase2-kernel
-    content: "Subagent: refactor kernel-brepjs to keep brepjs document private and rename topology-named exports"
-    status: completed
-  - id: phase2-query
-    content: "Subagent: rewrite query grammar around Object/Typology and view.<id>.<derived> CALLs"
-    status: completed
-  - id: phase2-machine
-    content: "Subagent: refactor machine-stately and regenerate machine.json"
-    status: completed
-  - id: phase2-renderer
-    content: "Subagent: refactor renderer-r3f index.tsx + play/main.tsx imports and SpatialPickViewKind"
-    status: completed
-  - id: phase3-tests
-    content: Extend existing test files; run nx test across all five packages
-    status: completed
-  - id: phase3-grep
-    content: Verify no residual Vertex|Edge|...|TopologyGraph|topology/v1 outside kernel-brepjs
-    status: in_progress
-  - id: phase3-close
-    content: ticket_close with summary and full file list
-    status: pending
+ - id: phase1-ticket
+   content: Open ticket and read repo goals
+   status: completed
+ - id: phase1-spec
+   content: Update spatial/AGENTS.md to publish typology asset path; move legacy Vertex...Cluster notes under kernel-brepjs
+   status: completed
+ - id: phase1-schemas
+   content: Rename schema topology.json -> model.json, add typology.json/view.json/extension.json schemas, fix interaction.json enums
+   status: completed
+ - id: phase1-assets
+   content: Add typology/ asset folder per extension, rewrite interaction/attribute/property JSONs to drop topology-entity vocabulary
+   status: completed
+ - id: phase1-fixtures
+   content: Rename *.topology.json -> *.model.json and migrate fixture envelopes to spatial.model/v1
+   status: completed
+ - id: phase2-core
+   content: "Refactor spatial/js/core/index.ts: drop public Vertex...Cluster exports, add Model/Typology/Object/AttributeStore"
+   status: completed
+ - id: phase2-kernel
+   content: "Subagent: refactor kernel-brepjs to keep brepjs document private and rename topology-named exports"
+   status: completed
+ - id: phase2-query
+   content: "Subagent: rewrite query grammar around Object/Typology and view.<id>.<derived> CALLs"
+   status: completed
+ - id: phase2-machine
+   content: "Subagent: refactor machine-stately and regenerate machine.json"
+   status: completed
+ - id: phase2-renderer
+   content: "Subagent: refactor renderer-r3f index.tsx + play/main.tsx imports and SpatialPickViewKind"
+   status: completed
+ - id: phase3-tests
+   content: Extend existing test files; run nx test across all five packages
+   status: completed
+ - id: phase3-grep
+   content: Verify no residual Vertex|Edge|...|TopologyGraph|topology/v1 outside kernel-brepjs
+   status: in_progress
+ - id: phase3-close
+   content: ticket_close with summary and full file list
+   status: pending
 isProject: false
 ---
 

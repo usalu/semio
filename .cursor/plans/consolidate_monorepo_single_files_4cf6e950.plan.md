@@ -2,33 +2,33 @@
 name: Consolidate Monorepo Single Files
 overview: Continue the existing open ticket "Consolidate Monorepo Into Single Files" (goal `🎯aioptimizedrepo🎯singlefilerepo`) to flatten stray `src/` folders, remove the one extra non-`script.ts` script file, merge remaining scattered same-bundle source files into their single entry file, fill in missing `package.json` script blocks, and normalize the remaining `project.json` targets that bypass `script.ts` by calling `cargo`/`go`/`dotnet`/`vite`/`uv` directly.
 todos:
-  - id: reopen-ticket
-    content: Reopen CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES ticket via ticket_reopen
-    status: completed
-  - id: flatten-repo-lib-js-src
-    content: Flatten repo/lib/js/src/ to repo/lib/js/ and rewrite all ~150 import references repo-wide
-    status: completed
-  - id: flatten-ui-styling-rs-src
-    content: Flatten ui/styling/rs/src/generated.rs to ui/styling/rs/generated.rs and update lib.rs path + generator
-    status: completed
-  - id: merge-yak-script
-    content: Merge Compose.Grasshopper/yak/script.ts commands into parent script.ts, delete yak/script.ts, fix project.json
-    status: completed
-  - id: merge-scattered-files
-    content: Merge remaining scattered same-bundle files into single entry files (ts/tsx/rs/py/go list in Phase 3)
-    status: completed
-  - id: investigate-graph-manifest-generated
-    content: Investigate mathematical/graph/manifest/generated/ for a generator before consolidating the 11 manifest documents
-    status: completed
-  - id: add-missing-package-scripts
-    content: Add missing package.json scripts blocks to sequence/core, sequence/react, imperative/core, imperative/react, framework/core
-    status: completed
-  - id: route-project-json-bypasses
-    content: Wrap remaining cargo/go/dotnet/vite/uv/bun-test project.json bypasses through script.ts using existing repo/lib/js helpers
-    status: completed
-  - id: validate-and-close
-    content: Run typecheck/build/test across all touched bundles and update/close the ticket
-    status: completed
+ - id: reopen-ticket
+   content: Reopen CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES ticket via ticket_reopen
+   status: completed
+ - id: flatten-repo-lib-js-src
+   content: Flatten repo/lib/js/src/ to repo/lib/js/ and rewrite all ~150 import references repo-wide
+   status: completed
+ - id: flatten-ui-styling-rs-src
+   content: Flatten ui/styling/rs/src/generated.rs to ui/styling/rs/generated.rs and update lib.rs path + generator
+   status: completed
+ - id: merge-yak-script
+   content: Merge Compose.Grasshopper/yak/script.ts commands into parent script.ts, delete yak/script.ts, fix project.json
+   status: completed
+ - id: merge-scattered-files
+   content: Merge remaining scattered same-bundle files into single entry files (ts/tsx/rs/py/go list in Phase 3)
+   status: completed
+ - id: investigate-graph-manifest-generated
+   content: Investigate mathematical/graph/manifest/generated/ for a generator before consolidating the 11 manifest documents
+   status: completed
+ - id: add-missing-package-scripts
+   content: Add missing package.json scripts blocks to sequence/core, sequence/react, imperative/core, imperative/react, framework/core
+   status: completed
+ - id: route-project-json-bypasses
+   content: Wrap remaining cargo/go/dotnet/vite/uv/bun-test project.json bypasses through script.ts using existing repo/lib/js helpers
+   status: completed
+ - id: validate-and-close
+   content: Run typecheck/build/test across all touched bundles and update/close the ticket
+   status: completed
 isProject: false
 ---
 
@@ -36,7 +36,7 @@ isProject: false
 
 ## Context
 
-This request maps directly onto an **already-open** ticket: [`.repo/🎫/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/ticket.json`](.repo/🎫/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/ticket.json) under goal `🎯aioptimizedrepo🎯singlefilerepo`. Its description: *"Consolidate monorepo source into single files where frameworks allow. Keep required separate entry points... Update imports and package exports. Run tests."* Prior sessions already merged `geometry-brep-js`, `repo/lib/js` (internal files only, not the `src/` wrapper itself), `repo/client/vscode` codegen, `mathematical/graph` Rust modules, `infinite/cavas` vello, and `compose/client/lib/py` tests. Per the repo workflow rule, this work continues by **reopening that ticket** rather than creating a new one.
+This request maps directly onto an **already-open** ticket: [`.repo/🎫/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/ticket.json`](.repo/🎫/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/ticket.json) under goal `🎯aioptimizedrepo🎯singlefilerepo`. Its description: _"Consolidate monorepo source into single files where frameworks allow. Keep required separate entry points... Update imports and package exports. Run tests."_ Prior sessions already merged `geometry-brep-js`, `repo/lib/js` (internal files only, not the `src/` wrapper itself), `repo/client/vscode` codegen, `mathematical/graph` Rust modules, `infinite/cavas` vello, and `compose/client/lib/py` tests. Per the repo workflow rule, this work continues by **reopening that ticket** rather than creating a new one.
 
 Only **2** real `src/` folders exist in the whole repo (`repo/lib/js/src/`, `ui/styling/rs/src/`) — both are documented as not-yet-flattened follow-ups in the ticket's own history.
 

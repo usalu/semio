@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The current architecture has performance issues:
@@ -119,16 +120,16 @@ Extend your base `Store` (or each concrete store) with:
 
 ```ts
 class Store<T> {
-  // existing:
-  // onChanged / onChangedDeep / onFieldChanged / snapshot / yMap ...
+ // existing:
+ // onChanged / onChangedDeep / onFieldChanged / snapshot / yMap ...
 
-  onPathChanged(path: YPath, subscribe: Subscribe): Disposable {
-    return createPathObserver(this.yMap, path, subscribe);
-  }
+ onPathChanged(path: YPath, subscribe: Subscribe): Disposable {
+  return createPathObserver(this.yMap, path, subscribe);
+ }
 
-  getPathSnapshot(path: YPath): any {
-    return getValueAtPath(this.yMap, path);
-  }
+ getPathSnapshot(path: YPath): any {
+  return getValueAtPath(this.yMap, path);
+ }
 }
 ```
 
@@ -144,63 +145,63 @@ Create a small generic module (no React):
 
 ```ts
 type BaseDependency = {
-  store: Store<any>;
-  path: YPath;
+ store: Store<any>;
+ path: YPath;
 };
 
 class DerivedNode<T> {
-  private deps: BaseDependency[];
-  private compute: () => T;
-  private value: T | undefined;
-  private subscribers = new Set<() => void>();
-  private unsubscribers: Disposable[] = [];
+ private deps: BaseDependency[];
+ private compute: () => T;
+ private value: T | undefined;
+ private subscribers = new Set<() => void>();
+ private unsubscribers: Disposable[] = [];
 
-  constructor(deps: BaseDependency[], compute: () => T) {
-    this.deps = deps;
-    this.compute = compute;
-    this.init();
-  }
+ constructor(deps: BaseDependency[], compute: () => T) {
+  this.deps = deps;
+  this.compute = compute;
+  this.init();
+ }
 
-  private init() {
-    this.unsubscribers = this.deps.map((d) =>
-      d.store.onPathChanged(d.path, (cb) => {
-        cb();
-        this.recompute();
-        return () => {};
-      }),
-    );
+ private init() {
+  this.unsubscribers = this.deps.map((d) =>
+   d.store.onPathChanged(d.path, (cb) => {
+    cb();
     this.recompute();
-  }
+    return () => {};
+   }),
+  );
+  this.recompute();
+ }
 
-  private recompute() {
-    const prev = this.value;
-    const next = this.compute();
-    if (!deepEqual(prev, next)) {
-      this.value = next;
-      this.subscribers.forEach((cb) => cb());
-    }
+ private recompute() {
+  const prev = this.value;
+  const next = this.compute();
+  if (!deepEqual(prev, next)) {
+   this.value = next;
+   this.subscribers.forEach((cb) => cb());
   }
+ }
 
-  snapshot(): T {
-    if (this.value === undefined) this.recompute();
-    return this.value!;
-  }
+ snapshot(): T {
+  if (this.value === undefined) this.recompute();
+  return this.value!;
+ }
 
-  subscribe(cb: () => void): () => void {
-    this.subscribers.add(cb);
-    return () => this.subscribers.delete(cb);
-  }
+ subscribe(cb: () => void): () => void {
+  this.subscribers.add(cb);
+  return () => this.subscribers.delete(cb);
+ }
 }
 
 class DerivedStore {
-  private nodes = new Map<string, DerivedNode<any>>();
+ private nodes = new Map<string, DerivedNode<any>>();
 
-  getOrCreate<T>(key: string, deps: BaseDependency[], compute: () => T): DerivedNode<T> {
-    if (!this.nodes.has(key)) {
-      this.nodes.set(key, new DerivedNode<T>(deps, compute));
-    }
-    return this.nodes.get(key)! as DerivedNode<T>;
+ getOrCreate<T>(key: string, deps: BaseDependency[], compute: () => T): DerivedNode<T> {
+  if (!this.nodes.has(key)) {
+   this.nodes.set(key, new DerivedNode<T>(deps, compute));
   }
+  return this.nodes.get(key)! as DerivedNode<T>;
+ }
 }
 ```
 
@@ -220,15 +221,15 @@ Using your existing `useSyncExternalStore` helpers as style reference :
 
 ```ts
 export function usePath<T>(store: Store<any>, path: YPath, selector: (value: any) => T = (v) => v as T): T {
-  return useSyncExternalStore(
-    (onChange) =>
-      store.onPathChanged(path, (cb) => {
-        cb();
-        onChange();
-        return () => {};
-      }),
-    () => selector(store.getPathSnapshot(path)),
-  );
+ return useSyncExternalStore(
+  (onChange) =>
+   store.onPathChanged(path, (cb) => {
+    cb();
+    onChange();
+    return () => {};
+   }),
+  () => selector(store.getPathSnapshot(path)),
+ );
 }
 ```
 
@@ -238,15 +239,15 @@ This gives you “subscribe to any nested raw field” right away.
 
 ```ts
 export function useDerived<T, TSelected = T>(derivedStore: DerivedStore, key: string, deps: BaseDependency[], compute: () => T, selector: (value: T) => TSelected = (v) => v as any): TSelected {
-  const node = useMemo(
-    () => derivedStore.getOrCreate(key, deps, compute),
-    [derivedStore, key], // assume deps are stable by construction
-  );
+ const node = useMemo(
+  () => derivedStore.getOrCreate(key, deps, compute),
+  [derivedStore, key], // assume deps are stable by construction
+ );
 
-  return useSyncExternalStore(
-    (onChange) => node.subscribe(onChange),
-    () => selector(node.snapshot()),
-  );
+ return useSyncExternalStore(
+  (onChange) => node.subscribe(onChange),
+  () => selector(node.snapshot()),
+ );
 }
 ```
 
@@ -278,7 +279,7 @@ For each `DesignStore`, attach a `DerivedStore`:
 
 ```ts
 class DesignStore extends Store<DesignShallow | Design> {
-  readonly derived = new DerivedStore();
+ readonly derived = new DerivedStore();
 }
 ```
 
@@ -286,8 +287,8 @@ Expose via context hook:
 
 ```ts
 export function useDesignDerivedStore(): DerivedStore {
-  const store = useDesignStore(identitySelector) as DesignStore;
-  return store.derived;
+ const store = useDesignStore(identitySelector) as DesignStore;
+ return store.derived;
 }
 ```
 
@@ -343,28 +344,28 @@ Notice:
 
 ```ts
 export function useFlatPiecePlane(id?: Guid): Plane {
-  const pieceScope = usePieceScope();
-  const pieceGuid = (id ?? (pieceScope as any)) as string;
+ const pieceScope = usePieceScope();
+ const pieceGuid = (id ?? (pieceScope as any)) as string;
 
-  const kitStore = useKitStore(identitySelector) as KitStore;
-  const designStore = useDesignStore(identitySelector) as DesignStore;
-  const derived = useDesignDerivedStore();
+ const kitStore = useKitStore(identitySelector) as KitStore;
+ const designStore = useDesignStore(identitySelector) as DesignStore;
+ const derived = useDesignDerivedStore();
 
-  const plane = useDerived(derived, `flatPiecePlane:${designStore.guid}:${pieceGuid}`, [], () => buildFlatPiecePlaneNode(derived, kitStore, designStore, designStore.guid, pieceGuid).snapshot());
+ const plane = useDerived(derived, `flatPiecePlane:${designStore.guid}:${pieceGuid}`, [], () => buildFlatPiecePlaneNode(derived, kitStore, designStore, designStore.guid, pieceGuid).snapshot());
 
-  // default if undefined
-  return (
-    plane ?? {
-      origin: { x: 0, y: 0, z: 0 },
-      xAxis: { x: 1, y: 0, z: 0 },
-      yAxis: { x: 0, y: 1, z: 0 },
-    }
-  );
+ // default if undefined
+ return (
+  plane ?? {
+   origin: { x: 0, y: 0, z: 0 },
+   xAxis: { x: 1, y: 0, z: 0 },
+   yAxis: { x: 0, y: 1, z: 0 },
+  }
+ );
 }
 
 export function useFlatPiecePlaneXAxisY(id?: Guid): number {
-  const plane = useFlatPiecePlane(id);
-  return plane.xAxis.y;
+ const plane = useFlatPiecePlane(id);
+ return plane.xAxis.y;
 }
 ```
 
@@ -542,6 +543,7 @@ Added React hooks:
 ## Log
 
 ## Summary
+
 # Summary
 
 Implement granular store architecture with YPath and DerivedStore

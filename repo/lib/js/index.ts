@@ -76,11 +76,7 @@ export function resolveCliBin(root = getWorkspaceRoot()): string {
 }
 
 /** 📡Runs repo client with `--json` and returns parsed GraphQL payload (`data` object). */
-export function runCliGraphql(
-  query: string,
-  variables: Record<string, unknown> = {},
-  options?: { cwd?: string; repoRoot?: string },
-): unknown {
+export function runCliGraphql(query: string, variables: Record<string, unknown> = {}, options?: { cwd?: string; repoRoot?: string }): unknown {
   const root = options?.repoRoot ?? getWorkspaceRoot();
   const cwd = options?.cwd ?? root;
   const bin = resolveCliBin(root);
@@ -189,7 +185,6 @@ export abstract class BaseLinter {
       scope: scope ?? this.entityId,
     };
   }
-
 }
 
 /** 🏗️TechnologyLinter queries a technology node by id. */
@@ -198,9 +193,7 @@ export class TechnologyLinter extends BaseLinter {
 
   private load(): GraphNode {
     if (!this.node) {
-      const data = this.gql<{ technologies: GraphNode[] }>(
-        `query T { technologies { id name kind root } }`
-      );
+      const data = this.gql<{ technologies: GraphNode[] }>(`query T { technologies { id name kind root } }`);
       const found = (data.technologies ?? []).find((t) => String(t.id) === this.entityId);
       if (!found) {
         throw new Error(`[TechnologyLinter] technology not found for id ${this.entityId}`);
@@ -224,9 +217,7 @@ export class TechnologyLinter extends BaseLinter {
 
   /** 📦Lists bundle rows for this technology. */
   bundles(): GraphNode[] {
-    const data = this.gql<{ bundles: GraphNode[] }>(
-      `query B { bundles { id name root kind } }`,
-    );
+    const data = this.gql<{ bundles: GraphNode[] }>(`query B { bundles { id name root kind } }`);
     const tech = this.name();
     return (data.bundles ?? []).filter((b) => String(b.name ?? "").split("/")[0] === tech);
   }
@@ -417,33 +408,21 @@ export class DefinitionLinter extends BaseLinter {
 /** 🔎Resolves folder path to folder graphql row (for script.ts policy placement). */
 export function resolveFolderByPath(repoRoot: string, folderPath: string): GraphNode {
   const rel = folderPath.replaceAll("\\", "/").replace(/^\/+/, "");
-  const data = runCliGraphql(
-    `query F($p: String!) { folder(path: $p) { __typename id path name } }`,
-    { p: rel },
-    { repoRoot },
-  ) as { folder: GraphNode };
+  const data = runCliGraphql(`query F($p: String!) { folder(path: $p) { __typename id path name } }`, { p: rel }, { repoRoot }) as { folder: GraphNode };
   if (!data.folder?.id) throw new Error(`[linter] folder not found for path ${rel}`);
   return data.folder;
 }
 
 /** 🔎Resolves bundle name like `repo/client` to bundle id. */
 export function resolveBundleByName(repoRoot: string, name: string): GraphNode {
-  const data = runCliGraphql(
-    `query B($n: String!) { bundle(name: $n) { __typename id name root kind } }`,
-    { n: name },
-    { repoRoot },
-  ) as { bundle: GraphNode };
+  const data = runCliGraphql(`query B($n: String!) { bundle(name: $n) { __typename id name root kind } }`, { n: name }, { repoRoot }) as { bundle: GraphNode };
   if (!data.bundle?.id) throw new Error(`[linter] bundle not found for name ${name}`);
   return data.bundle;
 }
 
 /** 🔎Resolves technology folder name (e.g. `repo`) to technology id. */
 export function resolveTechnologyByName(repoRoot: string, name: string): GraphNode {
-  const data = runCliGraphql(
-    `query T { technologies { id name root kind } }`,
-    {},
-    { repoRoot },
-  ) as { technologies: GraphNode[] };
+  const data = runCliGraphql(`query T { technologies { id name root kind } }`, {}, { repoRoot }) as { technologies: GraphNode[] };
   const hit = (data.technologies ?? []).find((t) => String(t.name ?? "") === name);
   if (!hit?.id) throw new Error(`[linter] technology not found for name ${name}`);
   return hit;
@@ -474,15 +453,7 @@ const ADAPTER_MARKERS = [
   "mod adapters ",
 ];
 
-const INTERNAL_PREFIXES = [
-  "@compose/",
-  "@ui/",
-  "@cad/",
-  "@puzzle/",
-  "@framework/",
-  "@repo/",
-  "@coda/",
-];
+const INTERNAL_PREFIXES = ["@compose/", "@ui/", "@cad/", "@puzzle/", "@framework/", "@repo/", "@coda/"];
 
 /** 🔌Returns true when the file path or content marks an adapter boundary. */
 export function isAdapterBoundaryFile(filePath: string, content: string): boolean {
@@ -566,12 +537,7 @@ function isThirdPartySpec(spec: string, deps: Set<string>): boolean {
 }
 
 /** 🔌Builds breach records for direct third-party imports outside adapter boundaries. */
-export function dependencyBoundaryBreachesForFile(
-  repoRoot: string,
-  filePath: string,
-  content: string,
-  scope: string,
-): BreachRecord[] {
+export function dependencyBoundaryBreachesForFile(repoRoot: string, filePath: string, content: string, scope: string): BreachRecord[] {
   if (shouldSkipDependencyBoundaryFile(filePath)) return [];
   if (isAdapterBoundaryFile(filePath, content)) return [];
   const deps = loadThirdPartyDeps(repoRoot, filePath);
@@ -589,8 +555,7 @@ export function dependencyBoundaryBreachesForFile(
         kind: "dependency-boundary/import/direct-third-party",
         priority: "high",
         reason: "Third-party packages must only be imported in adapter regions or adapter paths",
-        solution:
-          "Move the import into a //#region 🔌Adapter (or /adapters/) module and depend on a first-party port interface elsewhere",
+        solution: "Move the import into a //#region 🔌Adapter (or /adapters/) module and depend on a first-party port interface elsewhere",
         scope,
       });
     }
@@ -651,11 +616,7 @@ function norm(p: string): string {
   return p.replaceAll("\\", "/").replace(/\/+$/, "");
 }
 
-export type ResolvedLintEntity =
-  | { kind: "file"; id: string; path: string }
-  | { kind: "folder"; id: string }
-  | { kind: "bundle"; id: string }
-  | { kind: "technology"; id: string };
+export type ResolvedLintEntity = { kind: "file"; id: string; path: string } | { kind: "folder"; id: string } | { kind: "bundle"; id: string } | { kind: "technology"; id: string };
 
 /** 🔎Maps `script.ts` directory to bundle, technology, or folder entity id. */
 export function resolvePolicyScriptEntity(repoRoot: string, scriptPath: string): ResolvedLintEntity {
@@ -684,16 +645,16 @@ export function resolvePolicyScriptEntity(repoRoot: string, scriptPath: string):
   return { kind: "folder", id: String(folder.folder.id) };
 }
 
-export async function runPolicyScript(scriptPath: string, repoRoot = getWorkspaceRoot()): Promise<{
+export async function runPolicyScript(
+  scriptPath: string,
+  repoRoot = getWorkspaceRoot(),
+): Promise<{
   entityId: string;
   breachs: BreachRecord[];
   cachePath: string;
 }> {
   console.log("[DEBUG] runPolicyScript starting for", scriptPath);
-  const absScript =
-    scriptPath.includes(":") || scriptPath.startsWith("/") || /^[A-Za-z]:\\/.test(scriptPath)
-      ? scriptPath
-      : join(repoRoot, scriptPath);
+  const absScript = scriptPath.includes(":") || scriptPath.startsWith("/") || /^[A-Za-z]:\\/.test(scriptPath) ? scriptPath : join(repoRoot, scriptPath);
   const base = basename(absScript);
   if (base !== "script.ts") {
     throw new Error(`[policy-runner] expected script.ts, got ${base}`);
@@ -863,11 +824,7 @@ export async function runPolicyOnlyMain(scriptUrl: string): Promise<void> {
  * 🚪Bundle `script.ts` entry: handles optional `policy`, then routes remaining argv through `router`.
  * Export `policy` / `policyFile` from the same file when policy lint applies.
  */
-export async function runBundleScriptMain(
-  router: ScriptRouter,
-  scriptUrl: string,
-  opts: RunBundleScriptMainOptions = {},
-): Promise<void> {
+export async function runBundleScriptMain(router: ScriptRouter, scriptUrl: string, opts: RunBundleScriptMainOptions = {}): Promise<void> {
   let segments = process.argv.slice(2);
   if (await dispatchPolicyArgv(segments, scriptUrl)) return;
   if (opts.defaultCommand && segments.length === 0) {
@@ -889,12 +846,7 @@ export async function runWorkspaceScriptMain(router: ScriptRouter): Promise<void
  * 🧭Nested subcommand dispatch inside a `Script.run` implementation.
  * `handlers` keys are the first argv segment; `defaultKey` runs when argv is empty.
  */
-export function dispatchSubcommand(
-  segments: string[],
-  handlers: Record<string, (rest: string[]) => void | Promise<void>>,
-  usage: string,
-  defaultKey?: string,
-): void | Promise<void> {
+export function dispatchSubcommand(segments: string[], handlers: Record<string, (rest: string[]) => void | Promise<void>>, usage: string, defaultKey?: string): void | Promise<void> {
   const key = segments[0] ?? defaultKey;
   const handler = key ? handlers[key] : undefined;
   if (!handler) {
@@ -983,19 +935,11 @@ export function spawnBun(args: string[], cwd: string, env: NodeJS.ProcessEnv = p
 }
 
 /** ▶️Vite dev server with polling-friendly env defaults. */
-export function runViteDev(
-  bundleRoot: string,
-  segments: string[],
-  opts: { config: string; portEnv?: string; defaultPort?: string },
-): void {
+export function runViteDev(bundleRoot: string, segments: string[], opts: { config: string; portEnv?: string; defaultPort?: string }): void {
   const env = playPollingEnv();
   const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
   const port = process.env[opts.portEnv ?? "VITE_PORT"] ?? opts.defaultPort ?? "5173";
-  spawnBun(
-    ["run", "vite", "--config", opts.config, "--host", host, "--port", port, ...segments],
-    bundleRoot,
-    env,
-  );
+  spawnBun(["run", "vite", "--config", opts.config, "--host", host, "--port", port, ...segments], bundleRoot, env);
 }
 
 /** ▶️Vite production build. */
@@ -1010,77 +954,77 @@ export function runVitest(bundleRoot: string, segments: string[], config = "vite
 
 //#region 🔌PlaygroundDevPorts
 type PlaygroundPortSpec = {
-	readonly dev: number;
-	readonly test?: number;
-	readonly env: string;
+  readonly dev: number;
+  readonly test?: number;
+  readonly env: string;
 };
 
 /** @emoji 🔌 Builds playground port table from semio.app manifests plus non-app hosts. */
 function buildPlaygroundPortsFromManifests(): Record<string, PlaygroundPortSpec> {
-	return {
-		storybook: { dev: 6010, env: "STORYBOOK_PORT" },
-	};
+  return {
+    storybook: { dev: 6010, env: "STORYBOOK_PORT" },
+  };
 }
 
 let playgroundPortsCache: Record<string, PlaygroundPortSpec> | undefined;
 
 function resolvePlaygroundPorts(): Record<string, PlaygroundPortSpec> {
-	playgroundPortsCache ??= buildPlaygroundPortsFromManifests();
-	return playgroundPortsCache;
+  playgroundPortsCache ??= buildPlaygroundPortsFromManifests();
+  return playgroundPortsCache;
 }
 
 export const PLAYGROUND_PORTS: Record<string, PlaygroundPortSpec> = new Proxy({} as Record<string, PlaygroundPortSpec>, {
-	get(_target, prop: string) {
-		return resolvePlaygroundPorts()[prop];
-	},
-	ownKeys() {
-		return Reflect.ownKeys(resolvePlaygroundPorts());
-	},
-	getOwnPropertyDescriptor(_target, prop) {
-		const value = resolvePlaygroundPorts()[prop as string];
-		if (value === undefined) return undefined;
-		return { configurable: true, enumerable: true, value };
-	},
+  get(_target, prop: string) {
+    return resolvePlaygroundPorts()[prop];
+  },
+  ownKeys() {
+    return Reflect.ownKeys(resolvePlaygroundPorts());
+  },
+  getOwnPropertyDescriptor(_target, prop) {
+    const value = resolvePlaygroundPorts()[prop as string];
+    if (value === undefined) return undefined;
+    return { configurable: true, enumerable: true, value };
+  },
 });
 
 /** @emoji 🔌 Local dev port for a playground host. */
 export function playgroundDevPort(kind: PlaygroundHostKind): number {
-	const spec = resolvePlaygroundPorts()[kind];
-	if (!spec) throw new Error(`unknown playground host kind: ${kind}`);
-	return spec.dev;
+  const spec = resolvePlaygroundPorts()[kind];
+  if (!spec) throw new Error(`unknown playground host kind: ${kind}`);
+  return spec.dev;
 }
 
 /** @emoji 🔌 String dev port (vite `--port`, nx `env`). */
 export function playgroundDevPortString(kind: PlaygroundHostKind): string {
-	return String(playgroundDevPort(kind));
+  return String(playgroundDevPort(kind));
 }
 
 /** @emoji 🧪 Vitest/playwright port when set; otherwise `undefined`. */
 export function playgroundTestPort(kind: PlaygroundHostKind): number | undefined {
-	return resolvePlaygroundPorts()[kind]?.test;
+  return resolvePlaygroundPorts()[kind]?.test;
 }
 
 /** @emoji 🧪 String test port for nx `env` / playwright. */
 export function playgroundTestPortString(kind: PlaygroundHostKind): string | undefined {
-	const port = playgroundTestPort(kind);
-	return port === undefined ? undefined : String(port);
+  const port = playgroundTestPort(kind);
+  return port === undefined ? undefined : String(port);
 }
 
 /** @emoji 🔌 Process env var holding the dev port override. */
 export function playgroundPortEnv(kind: PlaygroundHostKind): string {
-	const spec = resolvePlaygroundPorts()[kind];
-	if (!spec) throw new Error(`unknown playground host kind: ${kind}`);
-	return spec.env;
+  const spec = resolvePlaygroundPorts()[kind];
+  if (!spec) throw new Error(`unknown playground host kind: ${kind}`);
+  return spec.env;
 }
 
 /** @emoji 🚧 Every assigned playground dev + test port (for strict binding). */
 export function allPlaygroundReservedPorts(): ReadonlySet<number> {
-	const ports = new Set<number>();
-	for (const spec of Object.values(resolvePlaygroundPorts())) {
-		ports.add(spec.dev);
-		if (spec.test !== undefined) ports.add(spec.test);
-	}
-	return ports;
+  const ports = new Set<number>();
+  for (const spec of Object.values(resolvePlaygroundPorts())) {
+    ports.add(spec.dev);
+    if (spec.test !== undefined) ports.add(spec.test);
+  }
+  return ports;
 }
 
 /** @emoji 🔌 OS hub service dev port. */
@@ -1096,23 +1040,20 @@ let playgroundEmbedSiteDevPortsCache: Readonly<Record<string, string>> | undefin
 
 /** @emoji 🌐 Builds embed-site dev port map from semio.app manifest `site.embedKind`. */
 function buildPlaygroundEmbedSiteDevPortsFromManifests(): Readonly<Record<string, string>> {
-	return {};
+  return {};
 }
 
 /** @emoji 🌐 Resolves iframe embed dev ports after manifest scan is available. */
 export function resolvePlaygroundEmbedSiteDevPorts(): Readonly<Record<string, string>> {
-	playgroundEmbedSiteDevPortsCache ??= buildPlaygroundEmbedSiteDevPortsFromManifests();
-	return playgroundEmbedSiteDevPortsCache;
+  playgroundEmbedSiteDevPortsCache ??= buildPlaygroundEmbedSiteDevPortsFromManifests();
+  return playgroundEmbedSiteDevPortsCache;
 }
 
-export const PLAYGROUND_EMBED_SITE_DEV_PORTS: Readonly<Record<string, string>> = new Proxy(
-	{} as Record<string, string>,
-	{
-		get(_target, prop: string) {
-			return resolvePlaygroundEmbedSiteDevPorts()[prop];
-		},
-	},
-);
+export const PLAYGROUND_EMBED_SITE_DEV_PORTS: Readonly<Record<string, string>> = new Proxy({} as Record<string, string>, {
+  get(_target, prop: string) {
+    return resolvePlaygroundEmbedSiteDevPorts()[prop];
+  },
+});
 
 export type PlaygroundSiteKind = string;
 
@@ -1121,36 +1062,36 @@ export const PLAYGROUND_LOCKED_EXAMPLE_ENV = "PLAYGROUND_LOCKED_EXAMPLE_ID";
 
 /** @emoji 🔒 Locked example id from process env, if any. */
 export function playgroundLockedExampleIdFromEnv(env: NodeJS.ProcessEnv = process.env): string | undefined {
-	const raw = env[PLAYGROUND_LOCKED_EXAMPLE_ENV]?.trim();
-	return raw || undefined;
+  const raw = env[PLAYGROUND_LOCKED_EXAMPLE_ENV]?.trim();
+  return raw || undefined;
 }
 
 /** @emoji 🔌 Vite `define` entries for playground play bundles. */
 export function playgroundPlayViteDefine(extra: Record<string, string> = {}): Record<string, string> {
-	return {
-		"import.meta.env.PLAYGROUND_LOCKED_EXAMPLE_ID": JSON.stringify(playgroundLockedExampleIdFromEnv() ?? ""),
-		"import.meta.vitest": "undefined",
-		...extra,
-	};
+  return {
+    "import.meta.env.PLAYGROUND_LOCKED_EXAMPLE_ID": JSON.stringify(playgroundLockedExampleIdFromEnv() ?? ""),
+    "import.meta.vitest": "undefined",
+    ...extra,
+  };
 }
 
 let playgroundSiteHostsCache: Readonly<Record<string, string>> | undefined;
 
 /** @emoji 🌐 Builds production iframe hostnames from semio.app manifest `site.host`. */
 function buildPlaygroundSiteHostsFromManifests(): Readonly<Record<string, string>> {
-	return {};
+  return {};
 }
 
 function resolvePlaygroundSiteHosts(): Readonly<Record<string, string>> {
-	playgroundSiteHostsCache ??= buildPlaygroundSiteHostsFromManifests();
-	return playgroundSiteHostsCache;
+  playgroundSiteHostsCache ??= buildPlaygroundSiteHostsFromManifests();
+  return playgroundSiteHostsCache;
 }
 
 /** @emoji 🌐 Latest-only GitHub Pages hostnames for iframe-embeddable playground static sites. */
 export const PLAYGROUND_SITE_HOSTS: Readonly<Record<string, string>> = new Proxy({} as Record<string, string>, {
-	get(_target, prop: string) {
-		return resolvePlaygroundSiteHosts()[prop];
-	},
+  get(_target, prop: string) {
+    return resolvePlaygroundSiteHosts()[prop];
+  },
 });
 
 /** @emoji 🔌 Local dev ports for iframe-embeddable playground static sites (from `playground-dev-ports.ts`). */
@@ -1158,99 +1099,99 @@ export const PLAYGROUND_SITE_DEV_PORTS = PLAYGROUND_EMBED_SITE_DEV_PORTS;
 
 /** @emoji 🌐 Playground iframe URL: localhost in dev, canonical host in production builds. */
 export function playgroundEmbedUrl(kind: PlaygroundSiteKind, isDev: boolean): string {
-	if (isDev) {
-		return `http://localhost:${PLAYGROUND_SITE_DEV_PORTS[kind]}`;
-	}
-	return `https://${PLAYGROUND_SITE_HOSTS[kind]}`;
+  if (isDev) {
+    return `http://localhost:${PLAYGROUND_SITE_DEV_PORTS[kind]}`;
+  }
+  return `https://${PLAYGROUND_SITE_HOSTS[kind]}`;
 }
 //#endregion 🔌PlaygroundDevPorts
 
 //#region 🖥️FrameworkOsPlaygroundDev
 /** @emoji 🧊 CLI alias segments → `SEMIO_PLUGIN` id for framework OS dev playgrounds. */
 export const FRAMEWORK_OS_PLAYGROUND_PLUGIN_ALIASES: Readonly<Record<string, string>> = {
-	s: "s",
-	draw: "draw",
-	note: "note",
-	writer: "writer",
-	raster: "raster",
-	forms: "forms",
-	vcs: "vcs",
-	flow: "flow",
-	dag: "dag",
-	imperative: "imperative",
-	sequence: "sequence",
-	layout: "layout",
-	lowpoly: "lowpoly",
-	shooting: "shooting",
-	"2d": "puzzle2d",
-	"3d": "puzzle3d",
-	"5d": "puzzle5d",
-	"gis 2d": "gis2d",
-	wires: "reasoning-wires",
-	cad: "cad",
-	"procedural 2d": "procedural2d",
-	"procedural 3d": "procedural3d",
-	"trinity jack": "trinity",
-	"trinity rewrite": "trinity-rewrite",
-	presentation: "presentation",
+  s: "s",
+  draw: "draw",
+  note: "note",
+  writer: "writer",
+  raster: "raster",
+  forms: "forms",
+  vcs: "vcs",
+  flow: "flow",
+  dag: "dag",
+  imperative: "imperative",
+  sequence: "sequence",
+  layout: "layout",
+  lowpoly: "lowpoly",
+  shooting: "shooting",
+  "2d": "puzzle2d",
+  "3d": "puzzle3d",
+  "5d": "puzzle5d",
+  "gis 2d": "gis2d",
+  wires: "reasoning-wires",
+  cad: "cad",
+  "procedural 2d": "procedural2d",
+  "procedural 3d": "procedural3d",
+  "trinity jack": "trinity",
+  "trinity rewrite": "trinity-rewrite",
+  presentation: "presentation",
 };
 
 /** @emoji 🔌 Legacy play-port env vars mapped to `S_OS_PORT` per plugin id. */
 export const FRAMEWORK_OS_PLAYGROUND_PORT_ENV: Readonly<Record<string, string>> = {
-	s: "S_OS_PORT",
-	draw: "S_OS_PORT",
-	note: "NOTE_PLAY_PORT",
-	writer: "WRITER_PLAY_PORT",
-	raster: "RASTER_PLAY_PORT",
-	forms: "FORMS_PLAY_PORT",
-	vcs: "VCS_PLAY_PORT",
-	flow: "FLOW_PLAY_PORT",
-	dag: "DAG_PLAY_PORT",
-	imperative: "IMPERATIVE_PLAY_PORT",
-	sequence: "SEQUENCE_PLAY_PORT",
-	layout: "LAYOUT_PLAY_PORT",
-	lowpoly: "LOWPOLY_PLAY_PORT",
-	puzzle2d: "PUZZLE_2D_PLAY_PORT",
-	puzzle3d: "PUZZLE_3D_PLAY_PORT",
-	puzzle5d: "PUZZLE_5D_PLAY_PORT",
-	gis2d: "GIS_2D_PLAY_PORT",
-	"reasoning-wires": "WIRES_PLAY_PORT",
-	cad: "CAD_JS_RENDERER_PLAY_PORT",
-	procedural2d: "PROCEDURAL_2D_PLAY_PORT",
-	procedural3d: "PROCEDURAL_3D_PLAY_PORT",
-	shooting: "SHOOTING_PLAY_PORT",
-	trinity: "TRINITY_JACK_PLAY_PORT",
-	"trinity-rewrite": "TRINITY_REWRITE_PLAY_PORT",
-	presentation: "PRESENTATION_PLAY_PORT",
+  s: "S_OS_PORT",
+  draw: "S_OS_PORT",
+  note: "NOTE_PLAY_PORT",
+  writer: "WRITER_PLAY_PORT",
+  raster: "RASTER_PLAY_PORT",
+  forms: "FORMS_PLAY_PORT",
+  vcs: "VCS_PLAY_PORT",
+  flow: "FLOW_PLAY_PORT",
+  dag: "DAG_PLAY_PORT",
+  imperative: "IMPERATIVE_PLAY_PORT",
+  sequence: "SEQUENCE_PLAY_PORT",
+  layout: "LAYOUT_PLAY_PORT",
+  lowpoly: "LOWPOLY_PLAY_PORT",
+  puzzle2d: "PUZZLE_2D_PLAY_PORT",
+  puzzle3d: "PUZZLE_3D_PLAY_PORT",
+  puzzle5d: "PUZZLE_5D_PLAY_PORT",
+  gis2d: "GIS_2D_PLAY_PORT",
+  "reasoning-wires": "WIRES_PLAY_PORT",
+  cad: "CAD_JS_RENDERER_PLAY_PORT",
+  procedural2d: "PROCEDURAL_2D_PLAY_PORT",
+  procedural3d: "PROCEDURAL_3D_PLAY_PORT",
+  shooting: "SHOOTING_PLAY_PORT",
+  trinity: "TRINITY_JACK_PLAY_PORT",
+  "trinity-rewrite": "TRINITY_REWRITE_PLAY_PORT",
+  presentation: "PRESENTATION_PLAY_PORT",
 };
 
 /** @emoji 🔌 Default dev ports (React and Wgpu) mapped per plugin id. */
 export const FRAMEWORK_OS_PLAYGROUND_DEFAULT_PORTS: Readonly<Record<string, { readonly react: number; readonly wgpu: number }>> = {
-	puzzle2d: { react: 6012, wgpu: 6112 },
-	puzzle3d: { react: 6013, wgpu: 6113 },
-	puzzle5d: { react: 6014, wgpu: 6114 },
-	"reasoning-wires": { react: 6015, wgpu: 6115 },
-	flow: { react: 6016, wgpu: 6116 },
-	dag: { react: 6017, wgpu: 6117 },
-	procedural3d: { react: 6018, wgpu: 6118 },
-	shooting: { react: 6019, wgpu: 6119 },
-	cad: { react: 6020, wgpu: 6120 },
-	procedural2d: { react: 6021, wgpu: 6121 },
-	gis2d: { react: 6040, wgpu: 6140 },
-	presentation: { react: 6051, wgpu: 6151 },
-	trinity: { react: 6054, wgpu: 6154 },
-	"trinity-rewrite": { react: 6056, wgpu: 6156 },
-	forms: { react: 6058, wgpu: 6158 },
-	raster: { react: 6060, wgpu: 6160 },
-	writer: { react: 6062, wgpu: 6162 },
-	draw: { react: 6064, wgpu: 6164 },
-	s: { react: 6070, wgpu: 6066 },
-	vcs: { react: 6075, wgpu: 6175 },
-	imperative: { react: 6076, wgpu: 6176 },
-	sequence: { react: 6077, wgpu: 6177 },
-	lowpoly: { react: 6078, wgpu: 6178 },
-	layout: { react: 6079, wgpu: 6179 },
-	note: { react: 6080, wgpu: 6180 },
+  puzzle2d: { react: 6012, wgpu: 6112 },
+  puzzle3d: { react: 6013, wgpu: 6113 },
+  puzzle5d: { react: 6014, wgpu: 6114 },
+  "reasoning-wires": { react: 6015, wgpu: 6115 },
+  flow: { react: 6016, wgpu: 6116 },
+  dag: { react: 6017, wgpu: 6117 },
+  procedural3d: { react: 6018, wgpu: 6118 },
+  shooting: { react: 6019, wgpu: 6119 },
+  cad: { react: 6020, wgpu: 6120 },
+  procedural2d: { react: 6021, wgpu: 6121 },
+  gis2d: { react: 6040, wgpu: 6140 },
+  presentation: { react: 6051, wgpu: 6151 },
+  trinity: { react: 6054, wgpu: 6154 },
+  "trinity-rewrite": { react: 6056, wgpu: 6156 },
+  forms: { react: 6058, wgpu: 6158 },
+  raster: { react: 6060, wgpu: 6160 },
+  writer: { react: 6062, wgpu: 6162 },
+  draw: { react: 6064, wgpu: 6164 },
+  s: { react: 6070, wgpu: 6066 },
+  vcs: { react: 6075, wgpu: 6175 },
+  imperative: { react: 6076, wgpu: 6176 },
+  sequence: { react: 6077, wgpu: 6177 },
+  lowpoly: { react: 6078, wgpu: 6178 },
+  layout: { react: 6079, wgpu: 6179 },
+  note: { react: 6080, wgpu: 6180 },
 };
 
 /** @emoji 🗺 Local tile proxy for wgpu gis2d dev (Trunk forwards `/osm` + `/vt` here). */
@@ -1261,60 +1202,49 @@ export const SEMIO_GIS_MAP_TILE_BASE_URL_ENV = "SEMIO_GIS_MAP_TILE_BASE_URL";
 
 /** @emoji 🔌 Resolves the default dev port for a given plugin and renderer. */
 export function frameworkOsPlaygroundDefaultPort(plugin: string, renderer: string): number {
-	const spec = FRAMEWORK_OS_PLAYGROUND_DEFAULT_PORTS[plugin];
-	if (!spec) return 6066;
-	return renderer === "wgpu" ? spec.wgpu : spec.react;
+  const spec = FRAMEWORK_OS_PLAYGROUND_DEFAULT_PORTS[plugin];
+  if (!spec) return 6066;
+  return renderer === "wgpu" ? spec.wgpu : spec.react;
 }
 
 /** @emoji 🎯 Resolves `bun ./script.ts dev …` segments to a framework OS plugin filter. */
-export function resolveFrameworkOsPlaygroundPlugin(
-	segments: readonly string[],
-): { readonly plugin: string; readonly rest: readonly string[] } | null {
-	if (segments.length === 0) return null;
-	for (let len = segments.length; len >= 1; len--) {
-		const alias = segments.slice(0, len).join(" ");
-		const plugin = FRAMEWORK_OS_PLAYGROUND_PLUGIN_ALIASES[alias];
-		if (plugin) {
-			return { plugin, rest: segments.slice(len) };
-		}
-	}
-	return null;
+export function resolveFrameworkOsPlaygroundPlugin(segments: readonly string[]): { readonly plugin: string; readonly rest: readonly string[] } | null {
+  if (segments.length === 0) return null;
+  for (let len = segments.length; len >= 1; len--) {
+    const alias = segments.slice(0, len).join(" ");
+    const plugin = FRAMEWORK_OS_PLAYGROUND_PLUGIN_ALIASES[alias];
+    if (plugin) {
+      return { plugin, rest: segments.slice(len) };
+    }
+  }
+  return null;
 }
 
 /** @emoji 🧊 Env for `@semio-tech/framework-os-dev:dev` with wgpu renderer and plugin filter. */
-export function frameworkOsPlaygroundDevEnv(
-	plugin: string,
-	extra: NodeJS.ProcessEnv = {},
-	env: NodeJS.ProcessEnv = process.env,
-): NodeJS.ProcessEnv {
-	const renderer = env.SEMIO_RENDERER ?? "react";
-	const portEnv = FRAMEWORK_OS_PLAYGROUND_PORT_ENV[plugin];
-	const defaultPort = frameworkOsPlaygroundDefaultPort(plugin, renderer);
-	const portVal = (portEnv && env[portEnv]) || String(defaultPort);
-	return devToolingEnv({
-		SEMIO_PLUGIN: plugin,
-		SEMIO_RENDERER: renderer,
-		S_OS_PORT: portVal,
-		...extra,
-	});
+export function frameworkOsPlaygroundDevEnv(plugin: string, extra: NodeJS.ProcessEnv = {}, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  const renderer = env.SEMIO_RENDERER ?? "react";
+  const portEnv = FRAMEWORK_OS_PLAYGROUND_PORT_ENV[plugin];
+  const defaultPort = frameworkOsPlaygroundDefaultPort(plugin, renderer);
+  const portVal = (portEnv && env[portEnv]) || String(defaultPort);
+  return devToolingEnv({
+    SEMIO_PLUGIN: plugin,
+    SEMIO_RENDERER: renderer,
+    S_OS_PORT: portVal,
+    ...extra,
+  });
 }
 //#endregion 🖥️FrameworkOsPlaygroundDev
 
 /** 🧰Play/vite dev env with optional file-watcher polling defaults. */
 export function playPollingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
   return devToolingEnv({
-    ...(process.env.WATCHPACK_POLLING !== undefined
-      ? {}
-      : { WATCHPACK_POLLING: "true", CHOKIDAR_USEPOLLING: "true" }),
+    ...(process.env.WATCHPACK_POLLING !== undefined ? {} : { WATCHPACK_POLLING: "true", CHOKIDAR_USEPOLLING: "true" }),
     ...extra,
   });
 }
 
 /** @emoji 🔒 Parses optional `example <id>` argv prefix for playground play scripts. */
-export function consumePlaygroundExampleArgv(
-  segments: string[],
-  resolveExampleId: (slug: string) => string | undefined,
-): { readonly segments: string[]; readonly exampleEnv: NodeJS.ProcessEnv } {
+export function consumePlaygroundExampleArgv(segments: string[], resolveExampleId: (slug: string) => string | undefined): { readonly segments: string[]; readonly exampleEnv: NodeJS.ProcessEnv } {
   if (segments[0] !== "example" || !segments[1]) {
     return { segments, exampleEnv: {} };
   }
@@ -1409,7 +1339,10 @@ process.stdout.write(match?.[1] ?? "");
 export function describeDevPortOccupant(port: number): string | undefined {
   if (process.platform === "win32") return undefined;
   const result = spawnSync("lsof", ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN"], { encoding: "utf8" });
-  const line = result.stdout?.trim().split("\n").find((row, index) => index > 0 && row.trim().length > 0);
+  const line = result.stdout
+    ?.trim()
+    .split("\n")
+    .find((row, index) => index > 0 && row.trim().length > 0);
   if (!line) return undefined;
   const parts = line.trim().split(/\s+/);
   return parts.length >= 2 ? `${parts[0]} (PID ${parts[1]})` : line.trim();
@@ -1427,12 +1360,7 @@ process.exit(res.ok ? 0 : 1);`;
 }
 
 /** @emoji 🔌 First free TCP port at or after `preferredPort` (up to `maxAttempts`), skipping `skipPorts`. */
-export function resolveDevPort(
-  host: string,
-  preferredPort: number,
-  maxAttempts = 20,
-  skipPorts: ReadonlySet<number> = new Set(),
-): number {
+export function resolveDevPort(host: string, preferredPort: number, maxAttempts = 20, skipPorts: ReadonlySet<number> = new Set()): number {
   for (let offset = 0; offset < maxAttempts; offset++) {
     const port = preferredPort + offset;
     if (skipPorts.has(port)) continue;
@@ -1471,14 +1399,10 @@ export function runViteBunxDev(
     const occupant = describeDevPortOccupant(preferredPort);
     const servedEntry = devServerPlayEntry(host, preferredPort);
     if (servedEntry && opts.expectedPlayEntry && servedEntry !== opts.expectedPlayEntry) {
-      console.error(
-        `[dev] Port ${preferredPort} is serving play entry "${servedEntry}" but "${opts.expectedPlayEntry}" was requested. Stop that process or set ${opts.portEnv ?? "VITE_PORT"}.`,
-      );
+      console.error(`[dev] Port ${preferredPort} is serving play entry "${servedEntry}" but "${opts.expectedPlayEntry}" was requested. Stop that process or set ${opts.portEnv ?? "VITE_PORT"}.`);
       process.exit(1);
     }
-    console.error(
-      `[dev] Port ${preferredPort} is already in use${occupant ? ` by ${occupant}` : ""}. Stop that process or set ${opts.portEnv ?? "VITE_PORT"}.`,
-    );
+    console.error(`[dev] Port ${preferredPort} is already in use${occupant ? ` by ${occupant}` : ""}. Stop that process or set ${opts.portEnv ?? "VITE_PORT"}.`);
     process.exit(1);
   }
   const port = (() => {
@@ -1528,15 +1452,15 @@ export type WasmPackWebPkg = {
 
 /** 📦Resolve wasm-bindgen CLI installed by wasm-pack. */
 function resolveWasmBindgenBin(): string {
-	const cacheRoot = join(process.env.HOME ?? "", "Library/Caches/.wasm-pack");
-	if (existsSync(cacheRoot)) {
-		const entries = readdirSync(cacheRoot)
-			.filter((name) => name.startsWith("wasm-bindgen-cargo-install-"))
-			.map((name) => join(cacheRoot, name, "wasm-bindgen"))
-			.filter((path) => existsSync(path));
-		if (entries.length > 0) return entries[entries.length - 1]!;
-	}
-	return "wasm-bindgen";
+  const cacheRoot = join(process.env.HOME ?? "", "Library/Caches/.wasm-pack");
+  if (existsSync(cacheRoot)) {
+    const entries = readdirSync(cacheRoot)
+      .filter((name) => name.startsWith("wasm-bindgen-cargo-install-"))
+      .map((name) => join(cacheRoot, name, "wasm-bindgen"))
+      .filter((path) => existsSync(path));
+    if (entries.length > 0) return entries[entries.length - 1]!;
+  }
+  return "wasm-bindgen";
 }
 
 /** 📦Collect wasm-bindgen snippet paths produced by threaded builds. */
@@ -1561,50 +1485,43 @@ function wasmPackSnippetFiles(pkgDir: string): string[] {
 
 /** 📦Collects Rust sources beneath a crate without descending into generated output. */
 function rustSourceInputs(root: string): string[] {
-	const out: string[] = [];
-	const walk = (dir: string) => {
-		for (const entry of readdirSync(dir, { withFileTypes: true })) {
-			if (entry.isDirectory() && !["target", "pkg", ".git"].includes(entry.name)) walk(join(dir, entry.name));
-			else if (entry.isFile() && entry.name.endsWith(".rs")) out.push(join(dir, entry.name));
-		}
-	};
-	walk(root);
-	return out;
+  const out: string[] = [];
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory() && !["target", "pkg", ".git"].includes(entry.name)) walk(join(dir, entry.name));
+      else if (entry.isFile() && entry.name.endsWith(".rs")) out.push(join(dir, entry.name));
+    }
+  };
+  walk(root);
+  return out;
 }
 
 /** 📦Collects sources and manifests from transitive `[dependencies]` path crates. */
 function wasmPackPathDependencyInputs(rsDir: string, visited = new Set<string>()): string[] {
-	const cargoToml = join(rsDir, "Cargo.toml");
-	const root = resolve(rsDir);
-	if (!existsSync(cargoToml) || visited.has(root)) return [];
-	visited.add(root);
-	const out: string[] = [];
-	for (const m of readFileSync(cargoToml, "utf8").matchAll(/path\s*=\s*"([^"]+)"/gu)) {
-		const depRoot = resolve(rsDir, m[1]!);
-		const depCargo = join(depRoot, "Cargo.toml");
-		if (!existsSync(depCargo)) continue;
-		out.push(depCargo, ...rustSourceInputs(depRoot), ...wasmPackPathDependencyInputs(depRoot, visited));
-	}
-	return [...new Set(out)];
+  const cargoToml = join(rsDir, "Cargo.toml");
+  const root = resolve(rsDir);
+  if (!existsSync(cargoToml) || visited.has(root)) return [];
+  visited.add(root);
+  const out: string[] = [];
+  for (const m of readFileSync(cargoToml, "utf8").matchAll(/path\s*=\s*"([^"]+)"/gu)) {
+    const depRoot = resolve(rsDir, m[1]!);
+    const depCargo = join(depRoot, "Cargo.toml");
+    if (!existsSync(depCargo)) continue;
+    out.push(depCargo, ...rustSourceInputs(depRoot), ...wasmPackPathDependencyInputs(depRoot, visited));
+  }
+  return [...new Set(out)];
 }
 
 /** 📦True when any wasm-pack input is newer than the built `.wasm` artifact. */
 function wasmPackInputsStale(rsDir: string, wasmPath: string): boolean {
-	if (!existsSync(wasmPath)) return true;
-	const wasmMtime = statSync(wasmPath).mtimeMs;
-	const repoRoot = getWorkspaceRoot();
-	const inputs = [
-		...rustSourceInputs(rsDir),
-		join(rsDir, "Cargo.toml"),
-		join(rsDir, "Cargo.lock"),
-		join(repoRoot, "Cargo.toml"),
-		join(repoRoot, "Cargo.lock"),
-		...wasmPackPathDependencyInputs(rsDir),
-	];
-	for (const input of inputs) {
-		if (existsSync(input) && statSync(input).mtimeMs > wasmMtime) return true;
-	}
-	return false;
+  if (!existsSync(wasmPath)) return true;
+  const wasmMtime = statSync(wasmPath).mtimeMs;
+  const repoRoot = getWorkspaceRoot();
+  const inputs = [...rustSourceInputs(rsDir), join(rsDir, "Cargo.toml"), join(rsDir, "Cargo.lock"), join(repoRoot, "Cargo.toml"), join(repoRoot, "Cargo.lock"), ...wasmPackPathDependencyInputs(rsDir)];
+  for (const input of inputs) {
+    if (existsSync(input) && statSync(input).mtimeMs > wasmMtime) return true;
+  }
+  return false;
 }
 
 /** 📦`wasm-pack build` for `--target web`, restores `pkg/package.json`, verifies wasm output. */
@@ -1652,39 +1569,16 @@ export function runWasmPackWebBuild(opts: {
       process.exit(1);
     }
     const cargoWasm = join(repoRoot, "target/wasm32-unknown-unknown/release", `${crateName.replace(/-/g, "_")}.wasm`);
-    const threadedCargoArgs = [
-      "build",
-      "--release",
-      "--target",
-      "wasm32-unknown-unknown",
-      "-Z",
-      "build-std=std,panic_abort",
-      ...cargoFeatures.flatMap((feature) => ["--features", feature]),
-    ];
+    const threadedCargoArgs = ["build", "--release", "--target", "wasm32-unknown-unknown", "-Z", "build-std=std,panic_abort", ...cargoFeatures.flatMap((feature) => ["--features", feature])];
     res = spawnSync("cargo", threadedCargoArgs, { cwd: rsDir, stdio: "inherit", env: { ...process.env } });
     if (res.status !== 0) {
       console.error(`[${logPrefix}] cargo threaded build failed`);
       process.exit(res.status ?? 1);
     }
     if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
-    res = spawnSync(
-      resolveWasmBindgenBin(),
-      [cargoWasm, "--out-dir", "pkg", "--typescript", "--target", "web", "--out-name", wasmBaseName],
-      { cwd: rsDir, stdio: "inherit", env: { ...process.env } },
-    );
+    res = spawnSync(resolveWasmBindgenBin(), [cargoWasm, "--out-dir", "pkg", "--typescript", "--target", "web", "--out-name", wasmBaseName], { cwd: rsDir, stdio: "inherit", env: { ...process.env } });
   } else {
-    const wasmPackArgs = [
-      "x",
-      "wasm-pack",
-      "build",
-      "--release",
-      "--target",
-      "web",
-      "--out-dir",
-      "pkg",
-      "--no-pack",
-      ...cargoFeatures.flatMap((feature) => ["--", "--features", feature]),
-    ];
+    const wasmPackArgs = ["x", "wasm-pack", "build", "--release", "--target", "web", "--out-dir", "pkg", "--no-pack", ...cargoFeatures.flatMap((feature) => ["--", "--features", feature])];
     res = spawnSync("bun", wasmPackArgs, { cwd: rsDir, stdio: "inherit", env: { ...process.env } });
   }
   if (res.status !== 0) {
@@ -1741,27 +1635,9 @@ export type UlocRunner = {
 //#endregion Types
 
 //#region Constants
-const METRICS_LOCK_FILES = new Set([
-  "package-lock.json",
-  "yarn.lock",
-  "pnpm-lock.yaml",
-  "go.sum",
-  "uv.lock",
-  "bun.lockb",
-  "cargo.lock",
-]);
+const METRICS_LOCK_FILES = new Set(["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "go.sum", "uv.lock", "bun.lockb", "cargo.lock"]);
 
-const METRICS_LICENSE_TEMPLATE_BASENAMES = new Set([
-  "LICENSE",
-  "LICENSE.md",
-  "LICENSE.txt",
-  "COPYING",
-  "COPYING.md",
-  "NOTICE",
-  "NOTICE.md",
-  "UNLICENSE",
-  "UNLICENSE.md",
-]);
+const METRICS_LICENSE_TEMPLATE_BASENAMES = new Set(["LICENSE", "LICENSE.md", "LICENSE.txt", "COPYING", "COPYING.md", "NOTICE", "NOTICE.md", "UNLICENSE", "UNLICENSE.md"]);
 
 const LANG_EMOJI: Record<string, string> = {
   TypeScript: "🟦",
@@ -1788,23 +1664,7 @@ const LANG_EMOJI: Record<string, string> = {
   Docker: "🐳",
 };
 
-const ULOC_EXCLUDE_DIRS = [
-  ".repo",
-  "node_modules",
-  "dist",
-  "build",
-  "target",
-  ".git",
-  ".nx",
-  "coverage",
-  ".cache",
-  ".turbo",
-  ".next",
-  "out",
-  "vendor",
-  "third_party",
-  "Carthage",
-];
+const ULOC_EXCLUDE_DIRS = [".repo", "node_modules", "dist", "build", "target", ".git", ".nx", "coverage", ".cache", ".turbo", ".next", "out", "vendor", "third_party", "Carthage"];
 
 const MAX_METRICS_FILE_BYTES = 8 * 1024 * 1024;
 //#endregion Constants
@@ -1941,10 +1801,7 @@ function gitTrackedPaths(root: string): string[] {
   const repoRoot = gitRepoRoot(root);
   const r = spawnSync("git", ["ls-files", "-z"], { cwd: repoRoot, maxBuffer: 256 * 1024 * 1024 });
   if (r.status !== 0) return [];
-  return (r.stdout ?? Buffer.alloc(0))
-    .toString("utf8")
-    .split("\0")
-    .filter(Boolean);
+  return (r.stdout ?? Buffer.alloc(0)).toString("utf8").split("\0").filter(Boolean);
 }
 //#endregion Path rules
 
@@ -2124,10 +1981,7 @@ export function createDefaultUlocRunner(): UlocRunner {
 
 //#region Git deltas
 /** ✂️Splits git numstat into replaced (edited), net added, and net removed lines. */
-export function splitGitNumstatDelta(
-  added: number,
-  removed: number,
-): { edited: number; added: number; removed: number } {
+export function splitGitNumstatDelta(added: number, removed: number): { edited: number; added: number; removed: number } {
   const a = Math.max(0, added);
   const r = Math.max(0, removed);
   const edited = Math.min(a, r);
@@ -2179,11 +2033,7 @@ export function gitRangeNumstat(root: string, base: string, head: string): { pat
 }
 
 /** ➕Accumulates per-language git deltas from numstat rows (optional path prefixes). */
-export function accumulateGitDeltasFromNumstat(
-  root: string,
-  rows: { path: string; added: number; removed: number }[],
-  pathPrefixes?: string[],
-): Map<string, { added: number; removed: number; edited: number }> {
+export function accumulateGitDeltasFromNumstat(root: string, rows: { path: string; added: number; removed: number }[], pathPrefixes?: string[]): Map<string, { added: number; removed: number; edited: number }> {
   const m = new Map<string, { added: number; removed: number; edited: number }>();
   for (const { path, added, removed } of rows) {
     if (shouldSkipPathForUloc(root, path)) continue;
@@ -2259,10 +2109,7 @@ function sortMetricLanguages(codeByLang: UlocByLanguage, deltas: Map<string, { e
   return [...langs].sort((a, b) => (codeByLang[b] ?? 0) - (codeByLang[a] ?? 0) || a.localeCompare(b));
 }
 
-function buildMicroCommitMetricsFromDeltas(
-  codeByLang: UlocByLanguage,
-  deltas: Map<string, { added: number; removed: number; edited: number }>,
-): MicroCommitLangMetrics[] {
+function buildMicroCommitMetricsFromDeltas(codeByLang: UlocByLanguage, deltas: Map<string, { added: number; removed: number; edited: number }>): MicroCommitLangMetrics[] {
   const rows: MicroCommitLangMetrics[] = [];
   for (const lang of sortMetricLanguages(codeByLang, deltas)) {
     const d = deltas.get(lang) ?? { added: 0, removed: 0, edited: 0 };
@@ -2289,13 +2136,7 @@ export function buildMicroCommitMetrics(root: string, ulocRunner: UlocRunner = c
 }
 
 /** 📊Builds uloc metrics for a git revision range (optional path prefixes). */
-export function buildMicroCommitMetricsForRange(
-  root: string,
-  base: string,
-  head = "HEAD",
-  pathPrefixes?: string[],
-  ulocRunner: UlocRunner = createDefaultUlocRunner(),
-): MicroCommitLangMetrics[] {
+export function buildMicroCommitMetricsForRange(root: string, base: string, head = "HEAD", pathPrefixes?: string[], ulocRunner: UlocRunner = createDefaultUlocRunner()): MicroCommitLangMetrics[] {
   const repoRoot = gitRepoRoot(root);
   const deltas = accumulateGitDeltasFromNumstat(repoRoot, gitRangeNumstat(repoRoot, base, head), pathPrefixes);
   const codeByLang = ulocRunner.countRepoByLanguage(repoRoot);
@@ -2341,10 +2182,7 @@ export function formatMicroCommitMetricsLines(metrics: MicroCommitLangMetrics[])
 }
 
 /** ✅Whether two git delta sums match on ➕ ✏️ ➖ (🟰 follows). */
-export function gitDeltaSumsEqual(
-  a: { added: number; removed: number; edited: number },
-  b: { added: number; removed: number; edited: number },
-): boolean {
+export function gitDeltaSumsEqual(a: { added: number; removed: number; edited: number }, b: { added: number; removed: number; edited: number }): boolean {
   return a.added === b.added && a.edited === b.edited && a.removed === b.removed;
 }
 
@@ -2476,11 +2314,7 @@ export function extractCounterFromSubject(subject: string): { nnn: number; line1
 }
 
 /** 🎆Bumps counter from recent `…🚩NNN` subjects (newest first). */
-export function bumpCounterFromHistory(
-  subjectsNewestFirst: string[],
-  contributor: Contributor,
-  now = new Date(),
-): { line1Base: string; nnn: string } {
+export function bumpCounterFromHistory(subjectsNewestFirst: string[], contributor: Contributor, now = new Date()): { line1Base: string; nnn: string } {
   const yy = pad2(now.getFullYear() % 100);
   const mm = pad2(now.getMonth() + 1);
   const dd = pad2(now.getDate());
@@ -2497,11 +2331,7 @@ export function bumpCounterFromHistory(
   return { line1Base: fresh, nnn: "001" };
 }
 
-export function bumpCounterFromSubject(
-  subject: string,
-  contributor: Contributor,
-  now = new Date(),
-): { line1Base: string; nnn: string } {
+export function bumpCounterFromSubject(subject: string, contributor: Contributor, now = new Date()): { line1Base: string; nnn: string } {
   return bumpCounterFromHistory([subject], contributor, now);
 }
 
@@ -2542,8 +2372,7 @@ export function formatMicroCommitBulletLine(line: string): string {
   return body.replace(new RegExp(`^${EMOJI_LEAD_RE.source}\\s+`, "u"), "$1");
 }
 
-const MICRO_COMMIT_ULOC_ROW_RE =
-  /^[\p{Extended_Pictographic}][\dk]+(?:➕\d+)?(?:✏️\d+)?(?:➖\d+)?(?:🟰\d+)?$/u;
+const MICRO_COMMIT_ULOC_ROW_RE = /^[\p{Extended_Pictographic}][\dk]+(?:➕\d+)?(?:✏️\d+)?(?:➖\d+)?(?:🟰\d+)?$/u;
 
 function isMicroCommitUlocLine(line: string): boolean {
   const t = line.trim();
@@ -2622,7 +2451,14 @@ function isInsignificantStagedPath(path: string): boolean {
 
 /** 🔤Path tokens used to check whether bullets mention a staged file. */
 export function pathTokensForBulletCoverage(filePath: string): string[] {
-  return [...new Set(filePath.toLowerCase().split(/[/._-]+/).filter((s) => s.length >= 4))];
+  return [
+    ...new Set(
+      filePath
+        .toLowerCase()
+        .split(/[/._-]+/)
+        .filter((s) => s.length >= 4),
+    ),
+  ];
 }
 
 function bulletsMentionPathTokens(text: string, paths: string[]): boolean {
@@ -2695,12 +2531,7 @@ function ticketBullets(root: string): string[] {
   return bullets;
 }
 
-export function buildMicroCommitMessage(
-  root: string,
-  contributor: Contributor,
-  diffBullets: string[] = [],
-  ulocRunner?: UlocRunner,
-): string {
+export function buildMicroCommitMessage(root: string, contributor: Contributor, diffBullets: string[] = [], ulocRunner?: UlocRunner): string {
   root = gitRepoRoot(root);
   const { line1Base, nnn } = nextCounter(root, contributor);
   const now = new Date();
@@ -2829,18 +2660,16 @@ export function resolveMicroCommitBunBin(root: string): string {
   const win = process.platform === "win32";
   const home = process.env.HOME ?? process.env.USERPROFILE ?? "";
   const bunInstall = process.env.BUN_INSTALL ?? join(home, ".bun");
-  const candidates = [
-    join(root, "node_modules", ".bin", win ? "bun.cmd" : "bun"),
-    join(root, "node_modules", ".bin", "bun.exe"),
-    join(bunInstall, "bin", win ? "bun.exe" : "bun"),
-    join(bunInstall, "bin", "bun"),
-  ];
+  const candidates = [join(root, "node_modules", ".bin", win ? "bun.cmd" : "bun"), join(root, "node_modules", ".bin", "bun.exe"), join(bunInstall, "bin", win ? "bun.exe" : "bun"), join(bunInstall, "bin", "bun")];
   for (const c of candidates) {
     if (c && existsSync(c)) return c;
   }
   const which = spawnSync(win ? "where" : "which", ["bun"], { encoding: "utf8", shell: win });
   if (which.status === 0) {
-    const first = (which.stdout ?? "").split(/\r?\n/).map((l) => l.trim()).find(Boolean);
+    const first = (which.stdout ?? "")
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .find(Boolean);
     if (first && existsSync(first)) return first;
   }
   return win ? "bun.exe" : "bun";
@@ -2924,25 +2753,17 @@ const MICRO_COMMIT_RESOLVE_BUN_SH = `compose_resolve_bun() {
 }`;
 
 /** 🪝Renders a portable `sh` git hook (LF, inline wipe; Bun only when needed). */
-export function renderMicroCommitGitHook(
-  name: "prepare-commit-msg" | (typeof MICRO_COMMIT_POST_WIPE_HOOKS)[number],
-): string {
+export function renderMicroCommitGitHook(name: "prepare-commit-msg" | (typeof MICRO_COMMIT_POST_WIPE_HOOKS)[number]): string {
   const isPostWipe = (MICRO_COMMIT_POST_WIPE_HOOKS as readonly string[]).includes(name);
   const lines = [
     "#!/usr/bin/env sh",
     isPostWipe ? MICRO_COMMIT_WIPE_FULL_SH : MICRO_COMMIT_SEED_EMPTY_GK_SH,
-    'ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0',
+    "ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0",
     'cd "$ROOT" || exit 0',
-    'GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || exit 0',
+    "GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || exit 0",
   ];
   if (isPostWipe) {
-    lines.push(
-      MICRO_COMMIT_RESOLVE_BUN_SH,
-      'BUN=$(compose_resolve_bun "$ROOT")',
-      '[ -n "$BUN" ] && "$BUN" ./script.ts micro-commit reset 2>/dev/null || true',
-      "compose_micro_commit_wipe",
-      "exit 0",
-    );
+    lines.push(MICRO_COMMIT_RESOLVE_BUN_SH, 'BUN=$(compose_resolve_bun "$ROOT")', '[ -n "$BUN" ] && "$BUN" ./script.ts micro-commit reset 2>/dev/null || true', "compose_micro_commit_wipe", "exit 0");
   } else {
     lines.push(
       MICRO_COMMIT_RESOLVE_BUN_SH,
@@ -3039,9 +2860,7 @@ export function runMicroCommit(root: string, segments: string[]): void {
     process.exit(0);
   }
   if (cmd !== "prepare") {
-    console.error(
-      "[micro-commit] usage: bun ./script.ts micro-commit <stage|diff|prepare> [level tokens…] [-- bullets.txt]",
-    );
+    console.error("[micro-commit] usage: bun ./script.ts micro-commit <stage|diff|prepare> [level tokens…] [-- bullets.txt]");
     process.exit(1);
   }
 
@@ -3064,9 +2883,7 @@ export function runMicroCommit(root: string, segments: string[]): void {
     console.error("");
     const patch = git(root, ["diff", "--cached"]);
     if (patch.out) console.error(patch.out);
-    console.error(
-      "\nmicro-commit: analyze the staged paths and diff above; pass 1–8 bullets on stdin (`{emoji}{description}` — pick the emoji that best matches each line, no leading `-`, no space after emoji; never 🎆 📊 🔢 🚩)",
-    );
+    console.error("\nmicro-commit: analyze the staged paths and diff above; pass 1–8 bullets on stdin (`{emoji}{description}` — pick the emoji that best matches each line, no leading `-`, no space after emoji; never 🎆 📊 🔢 🚩)");
     process.exit(1);
   }
 
@@ -3106,11 +2923,7 @@ export function runMicroCommit(root: string, segments: string[]): void {
 //#endregion 🔖micro-commit
 
 //#region 🔖commit
-export type CommitLevel =
-  | "prepare-only"
-  | "prepare-and-tag"
-  | "prepare-and-tag-and-squash"
-  | "prepare-and-tag-and-squash-and-push";
+export type CommitLevel = "prepare-only" | "prepare-and-tag" | "prepare-and-tag-and-squash" | "prepare-and-tag-and-squash-and-push";
 
 export type CommitSteps = { tag: boolean; squash: boolean; push: boolean };
 
@@ -3152,12 +2965,7 @@ function loadCommitSteps(root: string, contributor: Contributor, segments: strin
   const path = join(root, ".repo", "🧑‍💻", contributor.alias, "commit.json");
   if (existsSync(path)) {
     const j = JSON.parse(readFileSync(path, "utf8")) as { level?: string };
-    const allowed: CommitLevel[] = [
-      "prepare-only",
-      "prepare-and-tag",
-      "prepare-and-tag-and-squash",
-      "prepare-and-tag-and-squash-and-push",
-    ];
+    const allowed: CommitLevel[] = ["prepare-only", "prepare-and-tag", "prepare-and-tag-and-squash", "prepare-and-tag-and-squash-and-push"];
     if (allowed.includes(j.level as CommitLevel)) return commitStepsFromLevel(j.level as CommitLevel);
   }
   return { tag: false, squash: false, push: false };
@@ -3185,11 +2993,7 @@ export function formatGitSignedTagCommand(tagName: string, head = "HEAD"): strin
 }
 
 /** 📋Four copy-paste ``` blocks: signed tag, squash, push, all-in-one. */
-export function formatCommitPrepareCommands(opts: {
-  tagName: string;
-  wipSha: string;
-  messageFile?: string;
-}): string {
+export function formatCommitPrepareCommands(opts: { tagName: string; wipSha: string; messageFile?: string }): string {
   const msg = opts.messageFile ?? ".git/compose-commit-message";
   const tag = formatGitSignedTagCommand(opts.tagName);
   const squash = `git reset --soft ${opts.wipSha} && git commit -S -F ${shSingleQuote(msg)}`;
@@ -3199,12 +3003,7 @@ export function formatCommitPrepareCommands(opts: {
 }
 
 /** 📋Prepare-only agent reply: four `git` blocks, then tag name, then full commit message. */
-export function formatCommitPrepareAgentReply(opts: {
-  tagName: string;
-  wipSha: string;
-  messageFile?: string;
-  commitMessage: string;
-}): string {
+export function formatCommitPrepareAgentReply(opts: { tagName: string; wipSha: string; messageFile?: string; commitMessage: string }): string {
   const commands = formatCommitPrepareCommands({
     tagName: opts.tagName,
     wipSha: opts.wipSha,
@@ -3279,7 +3078,10 @@ export function normalizeBundleScopeLabel(line: string): string {
 
 /** 🏷️ASCII tokens from a bundle emoji label (for matching git paths internally). */
 export function labelPathTokens(label: string): string[] {
-  const text = normalizeBundleScopeLabel(label).replace(/\p{Extended_Pictographic}/gu, " ").trim().toLowerCase();
+  const text = normalizeBundleScopeLabel(label)
+    .replace(/\p{Extended_Pictographic}/gu, " ")
+    .trim()
+    .toLowerCase();
   return text.split(/[^a-z0-9]+/).filter((t) => t.length >= 2 && !LABEL_TOKEN_BLOCKLIST.has(t));
 }
 
@@ -3325,13 +3127,7 @@ function longestCommonPathPrefix(paths: string[]): string {
 }
 
 /** 📂Infers repo path prefixes for a bundle label from the revision range (not shown in messages). */
-export function inferPathPrefixesForBundleLabel(
-  root: string,
-  base: string,
-  head: string,
-  label: string,
-  assignedPaths?: string[],
-): string[] {
+export function inferPathPrefixesForBundleLabel(root: string, base: string, head: string, label: string, assignedPaths?: string[]): string[] {
   const tokens = labelPathTokens(label);
   if (tokens.length === 0) return [];
   const pool = assignedPaths ?? changedPathsInRange(root, base, head);
@@ -3361,12 +3157,7 @@ function assignPathToBundleIndex(bundles: CommitBundleSection[], path: string): 
   return best;
 }
 
-function assignChangedPathsToBundles(
-  root: string,
-  base: string,
-  head: string,
-  bundles: CommitBundleSection[],
-): string[][] {
+function assignChangedPathsToBundles(root: string, base: string, head: string, bundles: CommitBundleSection[]): string[][] {
   const paths = changedPathsInRange(root, base, head);
   const assigned = bundles.map(() => [] as string[]);
   for (const p of paths) {
@@ -3436,12 +3227,7 @@ export function pathsFromNumstatRow(pathField: string): string[] {
 }
 
 /** 📂Prefix set for a bundle: all range paths, inferred roots, and token-matching parents (renames). */
-export function buildBundlePathPrefixSets(
-  root: string,
-  base: string,
-  head: string,
-  bundles: CommitBundleSection[],
-): string[][] {
+export function buildBundlePathPrefixSets(root: string, base: string, head: string, bundles: CommitBundleSection[]): string[][] {
   const assignments = assignChangedPathsToBundles(root, base, head, bundles);
   return bundles.map((bundle, i) => {
     const assigned = assignments[i] ?? [];
@@ -3463,12 +3249,7 @@ export function buildBundlePathPrefixSets(
 }
 
 /** 📂Whether a path belongs to a bundle (assigned path prefixes, else label token scoring). */
-export function pathMatchesBundleIndex(
-  path: string,
-  bundleIndex: number,
-  prefixSets: string[][],
-  bundles: CommitBundleSection[],
-): boolean {
+export function pathMatchesBundleIndex(path: string, bundleIndex: number, prefixSets: string[][], bundles: CommitBundleSection[]): boolean {
   const prefixes = prefixSets[bundleIndex] ?? [];
   if (prefixes.length > 0) return pathUnderPrefixes(path, prefixes);
   return assignPathToBundleIndex(bundles, path) === bundleIndex;
@@ -3476,7 +3257,10 @@ export function pathMatchesBundleIndex(
 
 /** 🧹Strips hand-written per-day uloc from a date section line. */
 export function normalizeBundleDateLine(line: string): string {
-  return line.trim().replace(/📊uloc.*$/u, "").trim();
+  return line
+    .trim()
+    .replace(/📊uloc.*$/u, "")
+    .trim();
 }
 
 /** 🎆Bundle squash only: `🎆YY🌙MM☀️DD` + per-day git delta suffix (micro-commit uses timestamp + footer uloc only). */
@@ -3492,16 +3276,8 @@ function gitCommitShasInRange(root: string, base: string, head: string): string[
   return r.out.split("\n").filter(Boolean);
 }
 
-function addNumstatRowToBundleDateMap(
-  map: BundleDateDeltasMap,
-  row: { path: string; added: number; removed: number },
-  dateLine: string,
-  bi: number,
-  root: string,
-): void {
-  const chunk = sumGitLangDeltas(
-    accumulateGitDeltasFromNumstat(root, [{ path: row.path, added: row.added, removed: row.removed }]),
-  );
+function addNumstatRowToBundleDateMap(map: BundleDateDeltasMap, row: { path: string; added: number; removed: number }, dateLine: string, bi: number, root: string): void {
+  const chunk = sumGitLangDeltas(accumulateGitDeltasFromNumstat(root, [{ path: row.path, added: row.added, removed: row.removed }]));
   if (gitDeltaLineTotal(chunk) === 0) return;
   const bundleMap = map.get(bi)!;
   const prev = bundleMap.get(dateLine) ?? { added: 0, removed: 0, edited: 0 };
@@ -3509,12 +3285,7 @@ function addNumstatRowToBundleDateMap(
 }
 
 /** 📊Per-bundle per-day git deltas: sum each micro-commit parent..sha row on its body 🎆 day (sums to range partition). */
-export function buildBundleDateDeltasMap(
-  root: string,
-  base: string,
-  head: string,
-  bundles: CommitBundleSection[],
-): BundleDateDeltasMap {
+export function buildBundleDateDeltasMap(root: string, base: string, head: string, bundles: CommitBundleSection[]): BundleDateDeltasMap {
   root = gitRepoRoot(root);
   const map: BundleDateDeltasMap = new Map();
   for (let i = 0; i < bundles.length; i++) map.set(i, new Map());
@@ -3530,9 +3301,7 @@ export function buildBundleDateDeltasMap(
       if (rowPaths.length === 0 || rowPaths.every((p) => shouldSkipPathForUloc(root, p))) continue;
       const owners = resolveBundleIndicesForNumstatRow(row.path, prefixSets, bundles);
       if (owners.length === 0) {
-        throw new Error(
-          `commit: changed path is not attributed to any bundle — ${row.path}; add a bundle scope or fix labels`,
-        );
+        throw new Error(`commit: changed path is not attributed to any bundle — ${row.path}; add a bundle scope or fix labels`);
       }
       if (owners.length > 1) {
         const names = owners.map((i) => bundles[i]!.label).join(", ");
@@ -3544,17 +3313,9 @@ export function buildBundleDateDeltasMap(
   return map;
 }
 
-function bundleGitDeltasForPaths(
-  root: string,
-  base: string,
-  head: string,
-  pathPrefixes: string[],
-): { added: number; removed: number; edited: number } {
+function bundleGitDeltasForPaths(root: string, base: string, head: string, pathPrefixes: string[]): { added: number; removed: number; edited: number } {
   const rows = gitRangeNumstat(root, base, head);
-  const assigned =
-    pathPrefixes.length > 0
-      ? rows.filter((r) => pathsFromNumstatRow(r.path).some((p) => pathUnderPrefixes(p, pathPrefixes)))
-      : [];
+  const assigned = pathPrefixes.length > 0 ? rows.filter((r) => pathsFromNumstatRow(r.path).some((p) => pathUnderPrefixes(p, pathPrefixes))) : [];
   return sumGitLangDeltas(accumulateGitDeltasFromNumstat(root, assigned));
 }
 
@@ -3563,13 +3324,7 @@ function formatBundleHeaderLine(label: string, total: GitDeltaSum): string {
 }
 
 /** 📊Orders bundles by descending 🟰 (➕+✏️+➖) from assigned path diffs. */
-export function sortCommitBundlesByEditTotal(
-  root: string,
-  base: string,
-  head: string,
-  bundles: CommitBundleSection[],
-  pathAssignments: string[][],
-): { bundles: CommitBundleSection[]; pathAssignments: string[][]; pathPrefixSets: string[][] } {
+export function sortCommitBundlesByEditTotal(root: string, base: string, head: string, bundles: CommitBundleSection[], pathAssignments: string[][]): { bundles: CommitBundleSection[]; pathAssignments: string[][]; pathPrefixSets: string[][] } {
   const prefixSets = buildBundlePathPrefixSets(root, base, head, bundles);
   const ranked = bundles.map((bundle, i) => ({
     bundle,
@@ -3599,7 +3354,12 @@ export function isBundleScopeLine(line: string): boolean {
 
 /** 🚫Validates stdin is bundle body only, not a full commit message. */
 export function commitBundleBodyError(text: string): string | null {
-  const first = text.trim().split("\n").find((l) => l.trim().length > 0)?.trim() ?? "";
+  const first =
+    text
+      .trim()
+      .split("\n")
+      .find((l) => l.trim().length > 0)
+      ?.trim() ?? "";
   if (BUNDLE_WIP_SUBJECT_RE.test(first)) {
     return "commit: stdin must not include the bundle subject (…🔀) — script adds it";
   }
@@ -3698,11 +3458,7 @@ function assertGitDeltaSumsEqual(a: GitDeltaSum, b: GitDeltaSum, message: string
 }
 
 /** 📂Bundle indices that own a numstat row (0 or 1 after validation). */
-export function resolveBundleIndicesForNumstatRow(
-  pathField: string,
-  prefixSets: string[][],
-  bundles: CommitBundleSection[],
-): number[] {
+export function resolveBundleIndicesForNumstatRow(pathField: string, prefixSets: string[][], bundles: CommitBundleSection[]): number[] {
   const matched = new Set<number>();
   for (const path of pathsFromNumstatRow(pathField)) {
     for (let bi = 0; bi < bundles.length; bi++) {
@@ -3717,28 +3473,18 @@ function rangeGitDeltaTotal(root: string, base: string, head: string): GitDeltaS
 }
 
 /** 📊Partition WIP-range numstat across bundles (one bundle per row). */
-export function partitionRangeDeltasByBundle(
-  root: string,
-  base: string,
-  head: string,
-  bundles: CommitBundleSection[],
-  prefixSets: string[][],
-): { bundleTotals: GitDeltaSum[]; rangeTotal: GitDeltaSum } {
+export function partitionRangeDeltasByBundle(root: string, base: string, head: string, bundles: CommitBundleSection[], prefixSets: string[][]): { bundleTotals: GitDeltaSum[]; rangeTotal: GitDeltaSum } {
   const bundleTotals = bundles.map(() => ({ added: 0, removed: 0, edited: 0 }));
   let rangeTotal: GitDeltaSum = { added: 0, removed: 0, edited: 0 };
   for (const row of gitRangeNumstat(root, base, head)) {
     const rowPaths = pathsFromNumstatRow(row.path);
     if (rowPaths.length === 0 || rowPaths.every((p) => shouldSkipPathForUloc(root, p))) continue;
-    const chunk = sumGitLangDeltas(
-      accumulateGitDeltasFromNumstat(root, [{ path: row.path, added: row.added, removed: row.removed }]),
-    );
+    const chunk = sumGitLangDeltas(accumulateGitDeltasFromNumstat(root, [{ path: row.path, added: row.added, removed: row.removed }]));
     if (gitDeltaLineTotal(chunk) === 0) continue;
     rangeTotal = addGitDeltaSums(rangeTotal, chunk);
     const owners = resolveBundleIndicesForNumstatRow(row.path, prefixSets, bundles);
     if (owners.length === 0) {
-      throw new Error(
-        `commit: changed path is not attributed to any bundle — ${row.path}; add a bundle scope or fix labels`,
-      );
+      throw new Error(`commit: changed path is not attributed to any bundle — ${row.path}; add a bundle scope or fix labels`);
     }
     if (owners.length > 1) {
       const names = owners.map((i) => bundles[i]!.label).join(", ");
@@ -3751,12 +3497,7 @@ export function partitionRangeDeltasByBundle(
 }
 
 /** 🚫Per-day uloc must sum to bundle header totals; missing/extra dates imply attribution mistakes. */
-export function validateBundleDayDeltasAttribution(
-  bundles: CommitBundleSection[],
-  prefixSets: string[][],
-  dateDeltas: BundleDateDeltasMap,
-  bundleTotals: GitDeltaSum[],
-): void {
+export function validateBundleDayDeltasAttribution(bundles: CommitBundleSection[], prefixSets: string[][], dateDeltas: BundleDateDeltasMap, bundleTotals: GitDeltaSum[]): void {
   for (let bi = 0; bi < bundles.length; bi++) {
     const bundle = bundles[bi]!;
     const total = bundleTotals[bi] ?? { added: 0, removed: 0, edited: 0 };
@@ -3771,31 +3512,17 @@ export function validateBundleDayDeltasAttribution(
       for (const [dateLine, d] of perDay) {
         if (listedDates.has(dateLine)) continue;
         if (gitDeltaLineTotal(d) === 0) continue;
-        throw new Error(
-          `commit: ${bundle.label} has micro-commit changes on ${dateLine} (${formatGitDeltaSumBrief(d)}) but that day is missing from your bundle body — add a 🎆 section or fix attribution`,
-        );
+        throw new Error(`commit: ${bundle.label} has micro-commit changes on ${dateLine} (${formatGitDeltaSumBrief(d)}) but that day is missing from your bundle body — add a 🎆 section or fix attribution`);
       }
     }
-    if (
-      daySum.added !== total.added ||
-      daySum.edited !== total.edited ||
-      daySum.removed !== total.removed
-    ) {
-      throw new Error(
-        `commit: per-day 📊uloc for ${bundle.label} does not add up to the bundle total — days ${formatGitDeltaSumBrief(daySum)} vs bundle ${formatGitDeltaSumBrief(total)}; re-read log + diff and fix bundle/date attribution`,
-      );
+    if (daySum.added !== total.added || daySum.edited !== total.edited || daySum.removed !== total.removed) {
+      throw new Error(`commit: per-day 📊uloc for ${bundle.label} does not add up to the bundle total — days ${formatGitDeltaSumBrief(daySum)} vs bundle ${formatGitDeltaSumBrief(total)}; re-read log + diff and fix bundle/date attribution`);
     }
   }
 }
 
 /** 🚫All bundle-commit uloc constraints (days→bundle, bundles→range, languages→range). */
-export function validateBundleCommitAttribution(
-  root: string,
-  base: string,
-  head: string,
-  bundles: CommitBundleSection[],
-  ulocRunner?: UlocRunner,
-): void {
+export function validateBundleCommitAttribution(root: string, base: string, head: string, bundles: CommitBundleSection[], ulocRunner?: UlocRunner): void {
   root = gitRepoRoot(root);
   const prefixSets = buildBundlePathPrefixSets(root, base, head, bundles);
   const { bundleTotals: partitioned, rangeTotal } = partitionRangeDeltasByBundle(root, base, head, bundles, prefixSets);
@@ -3807,38 +3534,18 @@ export function validateBundleCommitAttribution(
     if (perDay) {
       for (const d of perDay.values()) allDays = addGitDeltaSums(allDays, d);
     }
-    assertGitDeltaSumsEqual(
-      allDays,
-      partitioned[bi] ?? { added: 0, removed: 0, edited: 0 },
-      `commit: all micro-commit days for ${bundles[bi]!.label} do not add up to the bundle total`,
-    );
+    assertGitDeltaSumsEqual(allDays, partitioned[bi] ?? { added: 0, removed: 0, edited: 0 }, `commit: all micro-commit days for ${bundles[bi]!.label} do not add up to the bundle total`);
   }
   let bundleSum: GitDeltaSum = { added: 0, removed: 0, edited: 0 };
   for (const t of partitioned) bundleSum = addGitDeltaSums(bundleSum, t);
-  assertGitDeltaSumsEqual(
-    bundleSum,
-    rangeTotal,
-    "commit: all bundle header totals do not add up to the WIP range 📊uloc — fix bundle attribution",
-  );
+  assertGitDeltaSumsEqual(bundleSum, rangeTotal, "commit: all bundle header totals do not add up to the WIP range 📊uloc — fix bundle attribution");
   const metrics = buildMicroCommitMetricsForRange(root, base, head, undefined, ulocRunner);
   validateMicroCommitLangMetricsDeltaSum(metrics);
   const langTotal = sumMicroCommitLangMetrics(metrics);
-  assertGitDeltaSumsEqual(
-    { added: langTotal.added, edited: langTotal.edited, removed: langTotal.removed },
-    rangeTotal,
-    "commit: footer per-language 📊uloc does not add up to the WIP range total",
-  );
+  assertGitDeltaSumsEqual({ added: langTotal.added, edited: langTotal.edited, removed: langTotal.removed }, rangeTotal, "commit: footer per-language 📊uloc does not add up to the WIP range total");
 }
 
-export function buildCommitMessage(
-  root: string,
-  contributor: Contributor,
-  bundles: CommitBundleSection[],
-  wipSha: string,
-  head = "HEAD",
-  ulocRunner?: UlocRunner,
-  now = new Date(),
-): string {
+export function buildCommitMessage(root: string, contributor: Contributor, bundles: CommitBundleSection[], wipSha: string, head = "HEAD", ulocRunner?: UlocRunner, now = new Date()): string {
   root = gitRepoRoot(root);
   const pathAssignments = assignChangedPathsToBundles(root, wipSha, head, bundles);
   const sorted = sortCommitBundlesByEditTotal(root, wipSha, head, bundles, pathAssignments);
@@ -3940,9 +3647,7 @@ export function validateBundleBulletsFresh(root: string, base: string, head: str
     for (const section of bundle.dates) {
       for (const bullet of section.bullets) {
         if (bulletMatchesCommitHistory(bullet, history)) {
-          throw new Error(
-            `commit: bullet copies a prior commit message line — rewrite from git diff only: ${bullet}`,
-          );
+          throw new Error(`commit: bullet copies a prior commit message line — rewrite from git diff only: ${bullet}`);
         }
       }
     }
@@ -3950,18 +3655,10 @@ export function validateBundleBulletsFresh(root: string, base: string, head: str
 }
 
 function emitCommitBundleAttributionNote(): void {
-  console.error(
-    "commit: bundles and file→bundle mapping are NOT automatic — folder layout and bundle boundaries change between WIPs",
-  );
-  console.error(
-    "commit: you must (1) read log for last bundle/WIP state, (2) read diff --stat + full diff for every path, (3) decide scopes/dates/bullets, then prepare stdin",
-  );
-  console.error(
-    "commit: script only adds subject, uloc suffixes, sort order, footer, Signed-off-by — never invents bundles or bullets",
-  );
-  console.error(
-    "commit: prepare/check fail unless days→bundle, bundles→range, and languages→range (all ➕✏️➖🟰); run: bun ./script.ts commit check",
-  );
+  console.error("commit: bundles and file→bundle mapping are NOT automatic — folder layout and bundle boundaries change between WIPs");
+  console.error("commit: you must (1) read log for last bundle/WIP state, (2) read diff --stat + full diff for every path, (3) decide scopes/dates/bullets, then prepare stdin");
+  console.error("commit: script only adds subject, uloc suffixes, sort order, footer, Signed-off-by — never invents bundles or bullets");
+  console.error("commit: prepare/check fail unless days→bundle, bundles→range, and languages→range (all ➕✏️➖🟰); run: bun ./script.ts commit check");
 }
 
 function emitCommitAnalysisHint(): void {
@@ -4208,11 +3905,7 @@ export function runCommit(root: string, segments: string[]): void {
 
 //#region 📻SVG Export
 /** 📻Exports an animated SVG to MP4 using Playwright and FFmpeg */
-export async function exportAnimatedSvgToMp4(
-  inputSvgPath: string,
-  outputMp4Path: string,
-  options?: { fps?: number; durationSeconds?: number; width?: number; height?: number }
-): Promise<void> {
+export async function exportAnimatedSvgToMp4(inputSvgPath: string, outputMp4Path: string, options?: { fps?: number; durationSeconds?: number; width?: number; height?: number }): Promise<void> {
   const fps = options?.fps ?? 60;
   let durationSeconds = options?.durationSeconds;
   const { readFileSync } = await import("node:fs");
@@ -4231,7 +3924,7 @@ export async function exportAnimatedSvgToMp4(
   const { chromium } = await import("playwright");
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
-  
+
   const svgUrl = `file://${resolve(inputSvgPath)}`;
   await page.goto(svgUrl);
   await page.waitForSelector("svg");
@@ -4239,9 +3932,9 @@ export async function exportAnimatedSvgToMp4(
   const bbox = await page.evaluate(() => {
     const svg = document.querySelector("svg");
     if (!svg) return { width: 1920, height: 1080 };
-    return { 
-      width: svg.viewBox.baseVal?.width || svg.width.baseVal?.value || 1920, 
-      height: svg.viewBox.baseVal?.height || svg.height.baseVal?.value || 1080 
+    return {
+      width: svg.viewBox.baseVal?.width || svg.width.baseVal?.value || 1920,
+      height: svg.viewBox.baseVal?.height || svg.height.baseVal?.value || 1080,
     };
   });
 
@@ -4252,7 +3945,7 @@ export async function exportAnimatedSvgToMp4(
   const h = height % 2 === 0 ? height : height + 1;
 
   await page.setViewportSize({ width: w, height: h });
-  
+
   await page.evaluate(() => {
     const svg = document.querySelector("svg") as any;
     if (svg && svg.pauseAnimations) svg.pauseAnimations();
@@ -4261,16 +3954,7 @@ export async function exportAnimatedSvgToMp4(
   const totalFrames = fps * durationSeconds;
 
   const { spawn } = await import("node:child_process");
-  const ffmpeg = spawn("ffmpeg", [
-    "-y",
-    "-f", "image2pipe",
-    "-vcodec", "png",
-    "-r", fps.toString(),
-    "-i", "-",
-    "-c:v", "libx264",
-    "-pix_fmt", "yuv420p",
-    outputMp4Path
-  ]);
+  const ffmpeg = spawn("ffmpeg", ["-y", "-f", "image2pipe", "-vcodec", "png", "-r", fps.toString(), "-i", "-", "-c:v", "libx264", "-pix_fmt", "yuv420p", outputMp4Path]);
 
   for (let i = 0; i <= totalFrames; i++) {
     const time = i / fps;
@@ -4290,7 +3974,7 @@ export async function exportAnimatedSvgToMp4(
     });
     ffmpeg.on("error", reject);
   });
-  
+
   await browser.close();
 }
 //#endregion 📻SVG Export

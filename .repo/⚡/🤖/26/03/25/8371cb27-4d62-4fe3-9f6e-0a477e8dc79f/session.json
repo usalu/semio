@@ -456,10 +456,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/ui/.storybook/stories/Scene.stories.tsx",
-                "compose/ui/.storybook/stories/Design.stories.tsx"
-              ],
+              "files": ["compose/ui/.storybook/stories/Scene.stories.tsx", "compose/ui/.storybook/stories/Design.stories.tsx"],
               "path": "🎫updatescenestoriestousenakagincapsuletowerdesign",
               "summary": "Successfully updated all Scene stories to use Nakagin Capsule Tower design. Updated both Scene.stories.tsx and Design.stories.tsx files to use the Nakagin Capsule Tower design GUID (9a890dd4-0a9c-48ac-920a-9e62666465ef) instead of the Flat design. All story variants now showcase the Nakagin Capsule Tower, including the main scene, selection variants, grid/gizmo controls, and split view designs. Also fixed Tailwind CSS warnings by replacing w-[48rem] with w-3xl."
             },

@@ -53,9 +53,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🔬coda📚programming⚙️programming📌1📌167"
-        ],
+        "ranges": ["🔬coda📚programming⚙️programming📌1📌167"],
         "second": "🎆26🌙03☀️13⏰15⌚18⏱️34",
         "session": "⚪37740b490ed44299966dfde8ed2bf99a"
       },
@@ -86,9 +84,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🔬coda📚examples🗃️composeblnboroomprogram🛅progam⚙️config📌1📌39"
-        ],
+        "ranges": ["🔬coda📚examples🗃️composeblnboroomprogram🛅progam⚙️config📌1📌39"],
         "second": "🎆26🌙03☀️13⏰15⌚18⏱️34",
         "session": "⚪37740b490ed44299966dfde8ed2bf99a"
       },
@@ -119,9 +115,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🔬coda📚programming⚙️programming📌1📌167"
-        ],
+        "ranges": ["🔬coda📚programming⚙️programming📌1📌167"],
         "second": "🎆26🌙03☀️13⏰15⌚18⏱️45",
         "session": "⚪37740b490ed44299966dfde8ed2bf99a"
       },

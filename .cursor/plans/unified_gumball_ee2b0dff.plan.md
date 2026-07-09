@@ -2,30 +2,30 @@
 name: Unified Gumball
 overview: Build a shared Rhino-style "everything at once" gumball in ui/react that exposes per-axis move/rotate/scale plus plane move handles, and wire it into both Puzzle 3D and CAD, replacing their single-mode drei TransformControls.
 todos:
-  - id: ticket
-    content: Read repo://goals and open a repo MCP ticket associated with the best goal for the unified gumball work
-    status: completed
-  - id: component
-    content: Add UnifiedGumball component + GumballPose/GumballConfig/handle-kind types and pure handle-math helpers in a new region of ui/react/index.tsx, built on sceneHostPort
-    status: completed
-  - id: handles
-    content: Implement all handle meshes (3 move axes, 3 move planes, 3 rotate rings, 3 scale axes, 1 uniform scale), screen-constant sizing via useFrame, hover highlight, and OrbitControls disable during drag
-    status: completed
-  - id: puzzle3d
-    content: Replace TransformControls in puzzle/3d ObjectTransformControls with UnifiedGumball; derive RelocatePayload.mode from dragged handle kind; keep grid snap and marquee suppression
-    status: completed
-  - id: puzzle3d-toolbar
-    content: Repurpose puzzle/3d/play relocate toolbar into GumballConfig group-visibility toggles (default all on)
-    status: completed
-  - id: cad
-    content: Replace TransformControls in CAD SpatialTransformGumball with UnifiedGumball; route before/after pose through transformGumballMatrixDiff; widen CAD transform mode to GumballConfig and drop cadTransformGumballModeToControlsMode
-    status: completed
-  - id: tests
-    content: "Extend existing in-source test blocks: handle-math in ui/react, rotate/scale diff in cad renderer, mode derivation in puzzle/3d"
-    status: completed
-  - id: verify
-    content: Run nx lint+test for ui/react, puzzle/3d, cad via launch.json-registered tasks; register any new executable commands in launch.json; close ticket with summary and touched files
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open a repo MCP ticket associated with the best goal for the unified gumball work
+   status: completed
+ - id: component
+   content: Add UnifiedGumball component + GumballPose/GumballConfig/handle-kind types and pure handle-math helpers in a new region of ui/react/index.tsx, built on sceneHostPort
+   status: completed
+ - id: handles
+   content: Implement all handle meshes (3 move axes, 3 move planes, 3 rotate rings, 3 scale axes, 1 uniform scale), screen-constant sizing via useFrame, hover highlight, and OrbitControls disable during drag
+   status: completed
+ - id: puzzle3d
+   content: Replace TransformControls in puzzle/3d ObjectTransformControls with UnifiedGumball; derive RelocatePayload.mode from dragged handle kind; keep grid snap and marquee suppression
+   status: completed
+ - id: puzzle3d-toolbar
+   content: Repurpose puzzle/3d/play relocate toolbar into GumballConfig group-visibility toggles (default all on)
+   status: completed
+ - id: cad
+   content: Replace TransformControls in CAD SpatialTransformGumball with UnifiedGumball; route before/after pose through transformGumballMatrixDiff; widen CAD transform mode to GumballConfig and drop cadTransformGumballModeToControlsMode
+   status: completed
+ - id: tests
+   content: "Extend existing in-source test blocks: handle-math in ui/react, rotate/scale diff in cad renderer, mode derivation in puzzle/3d"
+   status: completed
+ - id: verify
+   content: Run nx lint+test for ui/react, puzzle/3d, cad via launch.json-registered tasks; register any new executable commands in launch.json; close ticket with summary and touched files
+   status: completed
 isProject: false
 ---
 
@@ -57,8 +57,6 @@ flowchart LR
   Emit --> P3D["Puzzle3D: RelocatePayload -> patchRelocate"]
   Emit --> CAD["CAD: transformGumballMatrixDiff -> ModelDiff"]
 ```
-
-
 
 ## 1. New shared component in `ui/react/index.tsx`
 
@@ -93,7 +91,7 @@ This file already has in-source vitest at line 16481; tests go there.
 
 Replace the `<TransformControls>` inside `ObjectTransformControls` (lines 4535-4600) with `<UnifiedGumball target={props.object} ... />`.
 
-- `onDragEnd(kind, before, after)` builds the existing `RelocatePayload` (line 4573); set `payload.mode` from the dragged handle kind (move* -> `translate`, rotate* -> `rotate`, scale* -> `scale`) so `relocateAffectedObjectIds` (line 2159) keeps moving attracted descendants only on translate.
+- `onDragEnd(kind, before, after)` builds the existing `RelocatePayload` (line 4573); set `payload.mode` from the dragged handle kind (move* -> `translate`, rotate* -> `rotate`, scale\* -> `scale`) so `relocateAffectedObjectIds` (line 2159) keeps moving attracted descendants only on translate.
 - Keep `puzzle3dRelocateDragActiveRef` / `cancelPuzzle3dMarqueeGesture` wiring via `onDraggingChanged`.
 - Keep translate grid snap (`translationSnap`) by passing `config.translationSnap` (line 4708 logic).
 - The `relocateMode` toolbar in [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) becomes group-visibility toggles (multi-select) mapped to `GumballConfig`; default all groups on.
@@ -122,4 +120,3 @@ Replace the `<TransformControls>` inside `SpatialTransformGumball` (lines 1659-1
 - Default config shows every handle group at once (matches "everything at once").
 - Pivot for both domains stays at their current origin (object group for Puzzle 3D, selection bbox center for CAD).
 - Toolbars repurposed from single-mode radios to multi-toggle visibility; `none`/all-off hides the gumball.
-

@@ -6,7 +6,7 @@
 absolute planes and 2D centers along each connection. The computation per piece
 is:
 
-- `plane(piece)` depends only on the *placement chain* from the nearest fixed
+- `plane(piece)` depends only on the _placement chain_ from the nearest fixed
   ancestor: fixed plane of the component root and, for each edge in the chain,
   the parent connector geometry, the child connector geometry and the
   `gap / shift / rise / rotation / turn / tilt` of the connection.

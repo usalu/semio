@@ -2,24 +2,24 @@
 name: Per-Kind Object Styling
 overview: Give every object kind (typology) a visually distinct appearance, with all of its primitives (faces, edges, vertices) inheriting that kind's style. Styling is deterministic-by-default (every kind differs out of the box) with optional rich per-typology overrides (fill color, edge color, opacity, and patterns/hatching such as directional hatch for a one-way slab).
 todos:
-  - id: schema
-    content: Add optional style object to cad/schema/json/typology.json (color, edgeColor, opacity, pattern)
-    status: completed
-  - id: core
-    content: Extend TypologySpec + parseTypology and add memoized resolveTypologyStyle with deterministic hash fallback in cad/js/core/index.ts
-    status: completed
-  - id: renderer-style
-    content: Add typologyStyleToMaterialProps + procedural hatch/crosshatch/dots factory in cad/js/renderer/index.tsx
-    status: completed
-  - id: renderer-wire
-    content: Thread per-solid style into TessellatedCommitMesh/CommittedEdgeOverlay/CommittedMeshLayer and resolve via geometry typology index in the canvas host
-    status: completed
-  - id: assets
-    content: Author explicit style overrides for OneWayReinforcedConcreteSlab (directional hatch), ReinforcedConcreteExternalWall (crosshatch), and a couple energy typologies
-    status: completed
-  - id: tests
-    content: Extend existing core + renderer embedded tests for resolveTypologyStyle and style material/index mapping
-    status: completed
+ - id: schema
+   content: Add optional style object to cad/schema/json/typology.json (color, edgeColor, opacity, pattern)
+   status: completed
+ - id: core
+   content: Extend TypologySpec + parseTypology and add memoized resolveTypologyStyle with deterministic hash fallback in cad/js/core/index.ts
+   status: completed
+ - id: renderer-style
+   content: Add typologyStyleToMaterialProps + procedural hatch/crosshatch/dots factory in cad/js/renderer/index.tsx
+   status: completed
+ - id: renderer-wire
+   content: Thread per-solid style into TessellatedCommitMesh/CommittedEdgeOverlay/CommittedMeshLayer and resolve via geometry typology index in the canvas host
+   status: completed
+ - id: assets
+   content: Author explicit style overrides for OneWayReinforcedConcreteSlab (directional hatch), ReinforcedConcreteExternalWall (crosshatch), and a couple energy typologies
+   status: completed
+ - id: tests
+   content: Extend existing core + renderer embedded tests for resolveTypologyStyle and style material/index mapping
+   status: completed
 isProject: false
 ---
 
@@ -40,8 +40,6 @@ flowchart LR
   host --> layer["CommittedMeshLayer styleForSolid"]
   layer --> mesh["TessellatedCommitMesh (fill/opacity/edge/hatch)"]
 ```
-
-
 
 ## 1. Schema: add optional `style` to typology
 
@@ -92,4 +90,3 @@ Extend existing embedded test sections (no new files, per repo rules):
 - "Object kind" == object `typology`; relevant typologies already exist as assets.
 - Patterns use procedural shader injection on top of the existing THREE usage in the renderer (THREE is already used directly there).
 - The repo MCP (ticket workflow) is not available in this environment, so no ticket will be opened/closed; I'll edit existing files in place using regions as the repo conventions require.
-

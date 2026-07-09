@@ -2,21 +2,21 @@
 name: fix board wasm reentrant borrow
 overview: Stop `pushSceneToWasmDriver` from being called while another `&mut BoardSession` borrow is outstanding (during async `attach_canvas`), which throws `borrow_fail` and freezes the canvas. Guard the unconditional push commit 379 introduced, and re-invalidate when the borrow is released so the canvas paints again.
 todos:
-  - id: guard-push
-    content: Guard pushSceneToWasmDriver against wasmSessionBorrowDepth/wasmGpuFrameDepth and mark invalidated for retry.
-    status: completed
-  - id: reinvalidate-attach
-    content: Re-invalidate from initGpuSurfaceOnce finally block when borrow depth returns to zero.
-    status: completed
-  - id: drop-sync-render
-    content: Drop synchronous renderer.render() from applySize in index.tsx.
-    status: cancelled
-  - id: verify
-    content: Run board vitest + playwright + manual play app sanity check (pan/zoom/select).
-    status: pending
-  - id: e2e-honest
-    content: Document why Vitest does not cover main-thread WebGPU; add/adjust real-browser checks (Playwright+Chrome or manual script).
-    status: pending
+ - id: guard-push
+   content: Guard pushSceneToWasmDriver against wasmSessionBorrowDepth/wasmGpuFrameDepth and mark invalidated for retry.
+   status: completed
+ - id: reinvalidate-attach
+   content: Re-invalidate from initGpuSurfaceOnce finally block when borrow depth returns to zero.
+   status: completed
+ - id: drop-sync-render
+   content: Drop synchronous renderer.render() from applySize in index.tsx.
+   status: cancelled
+ - id: verify
+   content: Run board vitest + playwright + manual play app sanity check (pan/zoom/select).
+   status: pending
+ - id: e2e-honest
+   content: Document why Vitest does not cover main-thread WebGPU; add/adjust real-browser checks (Playwright+Chrome or manual script).
+   status: pending
 isProject: false
 ---
 
@@ -75,12 +75,12 @@ In [`elements/client/lib/board/index.ts`](elements/client/lib/board/index.ts) `i
 this.wasmSessionBorrowDepth += 1;
 this.cachedWasmGpuReady = false;
 try {
-    await this.session.attach_canvas(this.canvas, lw, lh, dpr);
+ await this.session.attach_canvas(this.canvas, lw, lh, dpr);
 } finally {
-    this.wasmSessionBorrowDepth = Math.max(0, this.wasmSessionBorrowDepth - 1);
-    if (this.wasmSessionBorrowDepth === 0) {
-        this.invalidate();
-    }
+ this.wasmSessionBorrowDepth = Math.max(0, this.wasmSessionBorrowDepth - 1);
+ if (this.wasmSessionBorrowDepth === 0) {
+  this.invalidate();
+ }
 }
 ```
 
@@ -90,9 +90,9 @@ In [`elements/client/lib/board/index.tsx`](elements/client/lib/board/index.tsx) 
 
 ```tsx
 const applySize = (): void => {
-    const nextWidth = width ?? container.clientWidth ?? 1;
-    const nextHeight = height ?? container.clientHeight ?? 1;
-    renderer.setSize(nextWidth, nextHeight, globalThis.devicePixelRatio || 1);
+ const nextWidth = width ?? container.clientWidth ?? 1;
+ const nextHeight = height ?? container.clientHeight ?? 1;
+ renderer.setSize(nextWidth, nextHeight, globalThis.devicePixelRatio || 1);
 };
 ```
 
@@ -146,15 +146,15 @@ Introduce **`wasmSessionCallBlockedForReentry()`** (`wasmSessionBorrowDepth > 0 
 
 ### 6.5 Outcomes table (update as you verify)
 
-| Approach | Result |
-|----------|--------|
-| Guard `pushSceneToWasmDriver` only | Reduced `setSize` races; **user still hit `borrow_fail`** |
-| Fence **all** `session` entry points during attach / `renderFrame` | **Implemented** in `index.ts` (`wasmSessionCallBlockedForReentry`); verify locally with WebGPU + optional `BOARD_PLAYWRIGHT_CHANNEL=chrome` |
-| Playwright resize-stress + console capture | **Automated regression signal** |
-| **`setPointerCapture` before WASM re-entry guard** | **Likely root of “no mouse after init”**: if `pointerdown` ran while GPU attach borrowed the session, we returned early **after** capturing the pointer, so the canvas kept capture while WASM never saw `pointerDown` — **permanent broken input**. **Fix:** `releasePointerCapture` on the blocked early-return path. |
-| Flex `h-full` in nested flex (Golden Layout) | **Hypothesis for “canvas cut at bottom”**: inner stack used `h-full` without establishing a flex column chain; **Fix:** `flex flex-1 min-h-0 flex-col` on container + inner + `flex-1 min-h-0` on canvases. |
-| **Commit `369` (`c3889ca27`) dual canvas in `BoardCanvas`** | **First DOM divergence after `368`:** second stacked canvas (`textOverlayRef`) + inner wrapper around the WebGPU canvas (`elements/client/lib/board/index.tsx`). **`368`** used a **single** canvas as the flex child measured by `ResizeObserver`. Dual layer risks flex height, compositor quirks, and hit-testing. **Mitigation (2026-05-16):** revert to **one canvas** (GPU captions skipped until overlay is reintroduced safely). |
-| `BoardRenderer.activeRenderer` removed from constructor (`369` `index.ts`) | **Low** for pan/zoom; affects **Delete/Backspace** (`handleWindowKeyDown` checks `activeRenderer`). |
+| Approach                                                                   | Result                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Guard `pushSceneToWasmDriver` only                                         | Reduced `setSize` races; **user still hit `borrow_fail`**                                                                                                                                                                                                                                                                                                                                                                                |
+| Fence **all** `session` entry points during attach / `renderFrame`         | **Implemented** in `index.ts` (`wasmSessionCallBlockedForReentry`); verify locally with WebGPU + optional `BOARD_PLAYWRIGHT_CHANNEL=chrome`                                                                                                                                                                                                                                                                                              |
+| Playwright resize-stress + console capture                                 | **Automated regression signal**                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **`setPointerCapture` before WASM re-entry guard**                         | **Likely root of “no mouse after init”**: if `pointerdown` ran while GPU attach borrowed the session, we returned early **after** capturing the pointer, so the canvas kept capture while WASM never saw `pointerDown` — **permanent broken input**. **Fix:** `releasePointerCapture` on the blocked early-return path.                                                                                                                  |
+| Flex `h-full` in nested flex (Golden Layout)                               | **Hypothesis for “canvas cut at bottom”**: inner stack used `h-full` without establishing a flex column chain; **Fix:** `flex flex-1 min-h-0 flex-col` on container + inner + `flex-1 min-h-0` on canvases.                                                                                                                                                                                                                              |
+| **Commit `369` (`c3889ca27`) dual canvas in `BoardCanvas`**                | **First DOM divergence after `368`:** second stacked canvas (`textOverlayRef`) + inner wrapper around the WebGPU canvas (`elements/client/lib/board/index.tsx`). **`368`** used a **single** canvas as the flex child measured by `ResizeObserver`. Dual layer risks flex height, compositor quirks, and hit-testing. **Mitigation (2026-05-16):** revert to **one canvas** (GPU captions skipped until overlay is reintroduced safely). |
+| `BoardRenderer.activeRenderer` removed from constructor (`369` `index.ts`) | **Low** for pan/zoom; affects **Delete/Backspace** (`handleWindowKeyDown` checks `activeRenderer`).                                                                                                                                                                                                                                                                                                                                      |
 
 ## 7 Hypotheses (ordered — update as disproven)
 

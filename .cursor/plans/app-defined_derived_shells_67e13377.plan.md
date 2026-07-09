@@ -2,30 +2,30 @@
 name: App-defined derived shells
 overview: "Invert ownership: each app exports one complete self-describing definition (runtime + renderer contribution + OS program registration), and both the playground and the OS shell become fully generic hosts that derive everything from registered definitions — no per-app boot functions, no per-technology framework APIs, no hardcoded S registries."
 todos:
-  - id: contract
-    content: Define AppRendererContribution + generic UiSurfaceHostNode in platform-core; replace bootRenderer/PlaygroundChromeBoot with loadRenderer in playground-core
-    status: completed
-  - id: app-contributions
-    content: Convert all 23 app play-host.tsx files to declarative AppRendererContribution exports; wire loadRenderer in each app core definition
-    status: completed
-  - id: generic-playground
-    content: Implement generic bootPlaygroundApp; delete 19 registerUiXxxSurfaceHost functions, typed maps, and UiRenderer per-technology switch; update playground dev entry
-    status: completed
-  - id: os-derived
-    content: "Derive S/OS from registry: delete registerSPlaySurfaceHosts fan-out, replace SAppHostRouter switch with contribution.instanceHost lookup"
-    status: completed
-  - id: os-programs
-    content: Move TECHNOLOGY_APP_RESOURCE_BY_PROGRAM rows and per-format VCS handlers into owning app cores as program contributions; derive program registration from manifests
-    status: completed
-  - id: manifest-virtual
-    content: Extend semio.app manifest + scanner + virtual module plugin to expose program exports
-    status: completed
-  - id: enforcement
-    content: Tighten dependency-cruiser (framework/s must not import app packages) and repo guard tests
-    status: completed
-  - id: verify
-    content: "Verify: boot playground apps and OS studio (spawn + open instances), run tests, run lint"
-    status: completed
+ - id: contract
+   content: Define AppRendererContribution + generic UiSurfaceHostNode in platform-core; replace bootRenderer/PlaygroundChromeBoot with loadRenderer in playground-core
+   status: completed
+ - id: app-contributions
+   content: Convert all 23 app play-host.tsx files to declarative AppRendererContribution exports; wire loadRenderer in each app core definition
+   status: completed
+ - id: generic-playground
+   content: Implement generic bootPlaygroundApp; delete 19 registerUiXxxSurfaceHost functions, typed maps, and UiRenderer per-technology switch; update playground dev entry
+   status: completed
+ - id: os-derived
+   content: "Derive S/OS from registry: delete registerSPlaySurfaceHosts fan-out, replace SAppHostRouter switch with contribution.instanceHost lookup"
+   status: completed
+ - id: os-programs
+   content: Move TECHNOLOGY_APP_RESOURCE_BY_PROGRAM rows and per-format VCS handlers into owning app cores as program contributions; derive program registration from manifests
+   status: completed
+ - id: manifest-virtual
+   content: Extend semio.app manifest + scanner + virtual module plugin to expose program exports
+   status: completed
+ - id: enforcement
+   content: Tighten dependency-cruiser (framework/s must not import app packages) and repo guard tests
+   status: completed
+ - id: verify
+   content: "Verify: boot playground apps and OS studio (spawn + open instances), run tests, run lint"
+   status: completed
 isProject: false
 ---
 
@@ -62,19 +62,17 @@ flowchart LR
   OS -->|"applyContribution + instanceHost"| Core
 ```
 
-
-
 ## Phase 1 — App contract
 
 In [framework/product/platform/core/js/index.ts](framework/product/platform/core/js/index.ts) (type-only React imports):
 
 ```ts
 export interface AppRendererContribution {
-  readonly surfaceHosts: Readonly<Record<string, SurfaceHostComponent>>;
-  readonly panelTabs?: readonly SidePanelTabContribution[];   // group + definition
-  readonly tabIcons?: Readonly<Record<string, IconRef>>;
-  readonly instanceHost?: AppInstanceHostComponent;           // OS drill-in render
-  readonly preload?: () => Promise<void>;                     // wasm init etc.
+ readonly surfaceHosts: Readonly<Record<string, SurfaceHostComponent>>;
+ readonly panelTabs?: readonly SidePanelTabContribution[]; // group + definition
+ readonly tabIcons?: Readonly<Record<string, IconRef>>;
+ readonly instanceHost?: AppInstanceHostComponent; // OS drill-in render
+ readonly preload?: () => Promise<void>; // wasm init etc.
 }
 ```
 
@@ -121,4 +119,3 @@ Each app core's definition points at it: `loadRenderer: async () => (await impor
 
 - Work inside the existing repo MCP ticket (reopen `APP-ISOLATION-ENFORCED-BOUNDARIES` or open a follow-up after reading `repo://goals`); no modifying git commands.
 - The `play-host.tsx` files remain the home for each contribution — content changes from imperative boot code to a declarative export.
-

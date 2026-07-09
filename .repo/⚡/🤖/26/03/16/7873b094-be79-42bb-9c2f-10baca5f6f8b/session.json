@@ -100,11 +100,7 @@
             "max_results": 3
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__search",
-              "mcp__repo__ticket_open",
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__search", "mcp__repo__ticket_open", "mcp__repo__ticket_close"],
             "query": "select:mcp__repo__search,mcp__repo__ticket_open,mcp__repo__ticket_close",
             "total_deferred_tools": 96
           },
@@ -3293,9 +3289,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "TodoWrite"
-            ],
+            "matches": ["TodoWrite"],
             "query": "select:TodoWrite",
             "total_deferred_tools": 96
           },
@@ -4444,10 +4438,7 @@
           "tool_input": {
             "path": "26/03/16/VIOLATION-TREE-WITNESS-ALTERNATIVES",
             "summary": "Modified ValidationTreeNodeView to use tree branch navigation (\u003c 1/N \u003e) when a node has multiple witness children. Non-witness children render normally while witnesses are navigable via alternatives. Added MultipleWitnessAlternatives story with 3 witnesses. Type-check, vitest (22/22), and storybook build all pass.",
-            "files": [
-              "coda/desktop/renderer.tsx",
-              "elements/ui/.storybook/stories/ValidationTree.stories.tsx"
-            ]
+            "files": ["coda/desktop/renderer.tsx", "elements/ui/.storybook/stories/ValidationTree.stories.tsx"]
           },
           "tool_use_id": "toolu_014NtaohVe9Er1sPnx4dCtf8"
         }
@@ -4485,10 +4476,7 @@
           "tool_input": {
             "path": "26/03/16/VIOLATION-TREE-WITNESS-ALTERNATIVES",
             "summary": "Modified ValidationTreeNodeView to use tree branch navigation (\u003c 1/N \u003e) when a node has multiple witness children. Non-witness children render normally while witnesses are navigable via alternatives. Added MultipleWitnessAlternatives story with 3 witnesses. Type-check, vitest (22/22), and storybook build all pass.",
-            "files": [
-              "coda/desktop/renderer.tsx",
-              "elements/ui/.storybook/stories/ValidationTree.stories.tsx"
-            ]
+            "files": ["coda/desktop/renderer.tsx", "elements/ui/.storybook/stories/ValidationTree.stories.tsx"]
           },
           "tool_response": [
             {

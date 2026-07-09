@@ -4,14 +4,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../../../../../..");
 const coreUrl = pathToFileURL(join(root, "forms/core/index.ts")).href;
-const {
-	formsExtensionHost,
-	parseFormSpec,
-	flowFixtureToFormSpec,
-	applyGenerationValuesToFixture,
-	registerFormsFlowFixtureResolver,
-	defaultValueForQuestion,
-} = await import(coreUrl);
+const { formsExtensionHost, parseFormSpec, flowFixtureToFormSpec, applyGenerationValuesToFixture, registerFormsFlowFixtureResolver, defaultValueForQuestion } = await import(coreUrl);
 
 const fixtureJson = readFileSync(join(root, "forms/fixture/building-component.forms.json"), "utf8");
 const flowJson = readFileSync(join(root, "procedural/3d/fixture/hexagonal-mushroom-column.procedural.json"), "utf8");

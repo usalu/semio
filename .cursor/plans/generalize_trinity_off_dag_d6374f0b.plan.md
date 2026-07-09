@@ -2,21 +2,21 @@
 name: Generalize Trinity Off DAG
 overview: Trinity is documented as a general directed property port graph technology, but its canvas host copy-pasted DAG-only assumptions. Fix the concrete DAG leaks in trinity, and generalize the shared layout math so it is no longer gated to a hardcoded per-technology allowlist.
 todos:
-  - id: remove-enforce-acyclic
-    content: Remove enforce_acyclic=true from TrinityHost::rebuild_engine in trinity/rewrite/engine/lib.rs
-    status: completed
-  - id: generalize-schema-allowlist
-    content: Replace fixture_schema_ok's hardcoded 2-item match in mathematical/graph/normal/undirected/lib.rs with a compile-time schema array including trinity.graph/v1
-    status: completed
-  - id: trinity-force-reorganize
-    content: Implement real force-directed reorganize() in trinity/rewrite/engine/lib.rs via an adapter into mathematical_graph_port_directed::force_graph
-    status: completed
-  - id: generalize-recompute-derived
-    content: Generalize recompute_derived in trinity/ram/lib.rs to multi-source traversal covering all weakly-connected components, add disconnected-component test
-    status: completed
-  - id: validate-and-ticket
-    content: Run cargo tests across affected crates, verify TS playgrounds still build, and do the work inside a repo ticket (reopen or open new) closed with a summary
-    status: completed
+ - id: remove-enforce-acyclic
+   content: Remove enforce_acyclic=true from TrinityHost::rebuild_engine in trinity/rewrite/engine/lib.rs
+   status: completed
+ - id: generalize-schema-allowlist
+   content: Replace fixture_schema_ok's hardcoded 2-item match in mathematical/graph/normal/undirected/lib.rs with a compile-time schema array including trinity.graph/v1
+   status: completed
+ - id: trinity-force-reorganize
+   content: Implement real force-directed reorganize() in trinity/rewrite/engine/lib.rs via an adapter into mathematical_graph_port_directed::force_graph
+   status: completed
+ - id: generalize-recompute-derived
+   content: Generalize recompute_derived in trinity/ram/lib.rs to multi-source traversal covering all weakly-connected components, add disconnected-component test
+   status: completed
+ - id: validate-and-ticket
+   content: Run cargo tests across affected crates, verify TS playgrounds still build, and do the work inside a repo ticket (reopen or open new) closed with a summary
+   status: completed
 isProject: false
 ---
 

@@ -4207,9 +4207,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d5544b66-e79d-4976-b741-e39c1e4ad0ca.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/ui/index.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/compose/ui/index.tsx"]
           },
           "tool_use_id": "toolu_vrtx_01DGa6Zns4VAqLLtnJJQwW4t__vscode-1774398923033",
           "cwd": "/workspaces/semio"
@@ -4235,9 +4233,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d5544b66-e79d-4976-b741-e39c1e4ad0ca.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/ui/index.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/compose/ui/index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01DGa6Zns4VAqLLtnJJQwW4t__vscode-1774398923033",
@@ -4695,11 +4691,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "compose/engine/main.py",
-              "compose/engine/engine.test.py",
-              "compose/ui/index.tsx"
-            ],
+            "files": ["compose/engine/main.py", "compose/engine/engine.test.py", "compose/ui/index.tsx"],
             "llm": "opus-4-6",
             "summary": "Extended compose engine MCP server with full app support: (1) Added ConnectionSelection component to compose/ui as constrained ComposeDiagram wrapper for connection-only selection. (2) Added session-scoped selection and camera state (_mcp_session_selection, _mcp_session_camera). (3) Added 3 selection tools (read_current_selection, set_current_selection, clear_current_selection). (4) Added 8 MCP app tools (show_design, show_diagram, show_scene, show_diff, show_diagram_diff, select_pieces, select_connections, select_pieces_and_connections) all returning structuredContent with mode and _meta with full kit/design payload. (5) Added sandboxed iframe HTML widget at /api/app/design-viewer with postMessage-based communication (compose:init, compose:update, compose:selectionChange, compose:ready), CSP headers allowing iframe embedding, and interactive piece/connection selection. (6) Added 23 new tests covering selection state, all 8 app tools, session isolation, and the app HTML endpoint. All 162 engine tests pass (excluding pre-existing nakagin test), all 99 JS/UI tests pass."
           },
@@ -4850,11 +4842,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "compose/engine/main.py",
-              "compose/engine/engine.test.py",
-              "compose/ui/index.tsx"
-            ],
+            "files": ["compose/engine/main.py", "compose/engine/engine.test.py", "compose/ui/index.tsx"],
             "llm": "opus-4-6",
             "summary": "Extended compose engine MCP server with full app support: (1) Added ConnectionSelection component to compose/ui as constrained ComposeDiagram wrapper for connection-only selection. (2) Added session-scoped selection and camera state (_mcp_session_selection, _mcp_session_camera). (3) Added 3 selection tools (read_current_selection, set_current_selection, clear_current_selection). (4) Added 8 MCP app tools (show_design, show_diagram, show_scene, show_diff, show_diagram_diff, select_pieces, select_connections, select_pieces_and_connections) all returning structuredContent with mode and _meta with full kit/design payload. (5) Added sandboxed iframe HTML widget at /api/app/design-viewer with postMessage-based communication (compose:init, compose:update, compose:selectionChange, compose:ready), CSP headers allowing iframe embedding, and interactive piece/connection selection. (6) Added 23 new tests covering selection state, all 8 app tools, session isolation, and the app HTML endpoint. All 162 engine tests pass (excluding pre-existing nakagin test), all 99 JS/UI tests pass.",
             "ticket": "26/03/25/COMPOSE-ENGINE-MCP-APPS-WITH-SANDBOXED-IFRAME-UI"
@@ -4944,11 +4932,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d5544b66-e79d-4976-b741-e39c1e4ad0ca.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/engine/main.py",
-              "compose/engine/engine.test.py",
-              "compose/ui/index.tsx"
-            ],
+            "files": ["compose/engine/main.py", "compose/engine/engine.test.py", "compose/ui/index.tsx"],
             "path": ".repo/🎫/26/03/25/COMPOSE-ENGINE-MCP-APPS-WITH-SANDBOXED-IFRAME-UI",
             "summary": "Extended compose engine MCP server with full app support: (1) Added ConnectionSelection component to compose/ui as constrained ComposeDiagram wrapper for connection-only selection. (2) Added session-scoped selection and camera state (_mcp_session_selection, _mcp_session_camera). (3) Added 3 selection tools (read_current_selection, set_current_selection, clear_current_selection). (4) Added 8 MCP app tools (show_design, show_diagram, show_scene, show_diff, show_diagram_diff, select_pieces, select_connections, select_pieces_and_connections) all returning structuredContent with mode and _meta with full kit/design payload. (5) Added sandboxed iframe HTML widget at /api/app/design-viewer with postMessage-based communication, CSP headers allowing iframe embedding, and interactive piece/connection selection. (6) Added 23 new tests covering selection state, all 8 app tools, session isolation, and the app HTML endpoint."
           },
@@ -4976,11 +4960,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d5544b66-e79d-4976-b741-e39c1e4ad0ca.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/engine/main.py",
-              "compose/engine/engine.test.py",
-              "compose/ui/index.tsx"
-            ],
+            "files": ["compose/engine/main.py", "compose/engine/engine.test.py", "compose/ui/index.tsx"],
             "path": "26/03/25/COMPOSE-ENGINE-MCP-APPS-WITH-SANDBOXED-IFRAME-UI",
             "summary": "Extended compose engine MCP server with full app support: (1) Added ConnectionSelection component to compose/ui as constrained ComposeDiagram wrapper for connection-only selection. (2) Added session-scoped selection and camera state. (3) Added 3 selection tools. (4) Added 8 MCP app tools. (5) Added sandboxed iframe HTML widget at /api/app/design-viewer. (6) Added 23 new tests."
           },
@@ -5008,11 +4988,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d5544b66-e79d-4976-b741-e39c1e4ad0ca.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/engine/main.py",
-              "compose/engine/engine.test.py",
-              "compose/ui/index.tsx"
-            ],
+            "files": ["compose/engine/main.py", "compose/engine/engine.test.py", "compose/ui/index.tsx"],
             "path": "26/03/25/COMPOSE-ENGINE-MCP-APPS-WITH-SANDBOXED-IFRAME-UI",
             "summary": "Extended compose engine MCP server with full app support: (1) Added ConnectionSelection component to compose/ui as constrained ComposeDiagram wrapper for connection-only selection. (2) Added session-scoped selection and camera state. (3) Added 3 selection tools. (4) Added 8 MCP app tools. (5) Added sandboxed iframe HTML widget at /api/app/design-viewer. (6) Added 23 new tests."
           },

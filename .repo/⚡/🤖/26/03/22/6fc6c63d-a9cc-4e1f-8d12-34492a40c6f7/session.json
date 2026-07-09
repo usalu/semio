@@ -100,11 +100,7 @@
             "max_results": 3
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__search",
-              "mcp__repo__ticket_open",
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__search", "mcp__repo__ticket_open", "mcp__repo__ticket_close"],
             "query": "select:mcp__repo__search,mcp__repo__ticket_open,mcp__repo__ticket_close",
             "total_deferred_tools": 23
           },
@@ -789,9 +785,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "TodoWrite"
-            ],
+            "matches": ["TodoWrite"],
             "query": "select:TodoWrite",
             "total_deferred_tools": 23
           },
@@ -9833,9 +9827,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__ticket_close"],
             "query": "select:mcp__repo__ticket_close",
             "total_deferred_tools": 23
           },
@@ -9865,11 +9857,7 @@
           "tool_input": {
             "path": "26/03/22/REMOVE-WELCOME-PAGE-AND-ADD-TOOLBAR-OPEN-CATEGORY",
             "summary": "Removed the StartPage welcome screen from compose desktop renderer.tsx. The app now renders the Sketchpad directly with a folderKitStoreFactory for local kit persistence. Added a new HomeToolbarOpen component to the sketchpad home app toolbar with three actions: Open Folder (creates a local kit via folder selection dialog), Open File (triggers the existing .compose.zip file import input), and Open Remote (prompts for a URL and imports the kit). Registered the \"open\" toolbar group (order 10, before filter and create) in the Home component. Added the open group icon to getToolbarGroupIcon. Updated tests to verify the open toolbar group is visible.",
-            "files": [
-              "compose/desktop/renderer.tsx",
-              "compose/sketchpad/index.tsx",
-              "compose/sketchpad/tests.ts"
-            ],
+            "files": ["compose/desktop/renderer.tsx", "compose/sketchpad/index.tsx", "compose/sketchpad/tests.ts"],
             "no_github": true
           },
           "tool_use_id": "toolu_015Fkr7xTE7gZbZd1o2h2wkp"
@@ -9908,11 +9896,7 @@
           "tool_input": {
             "path": "26/03/22/REMOVE-WELCOME-PAGE-AND-ADD-TOOLBAR-OPEN-CATEGORY",
             "summary": "Removed the StartPage welcome screen from compose desktop renderer.tsx. The app now renders the Sketchpad directly with a folderKitStoreFactory for local kit persistence. Added a new HomeToolbarOpen component to the sketchpad home app toolbar with three actions: Open Folder (creates a local kit via folder selection dialog), Open File (triggers the existing .compose.zip file import input), and Open Remote (prompts for a URL and imports the kit). Registered the \"open\" toolbar group (order 10, before filter and create) in the Home component. Added the open group icon to getToolbarGroupIcon. Updated tests to verify the open toolbar group is visible.",
-            "files": [
-              "compose/desktop/renderer.tsx",
-              "compose/sketchpad/index.tsx",
-              "compose/sketchpad/tests.ts"
-            ],
+            "files": ["compose/desktop/renderer.tsx", "compose/sketchpad/index.tsx", "compose/sketchpad/tests.ts"],
             "no_github": true
           },
           "tool_response": [

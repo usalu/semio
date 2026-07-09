@@ -1,15 +1,18 @@
 # Ticket
 
 ## Todos
+
 # Plan: Make VSCode Extension Compatible with Windsurf
 
 ## Problem Analysis
 
 Windsurf is a VSCode-based IDE fork. From the screenshot:
+
 - Windsurf Version: 1.13.9
 - VSCode OSS Version: **1.106.0**
 
 The current extension's `package.json` specifies:
+
 ```json
 "engines": {
   "vscode": "^1.106.1"
@@ -44,6 +47,7 @@ This means the extension requires VSCode 1.106.1 or higher, but Windsurf is base
 ## Changes
 
 ## Log
+
 # Log
 
 ## 2026-01-17
@@ -51,6 +55,7 @@ This means the extension requires VSCode 1.106.1 or higher, but Windsurf is base
 ### Analysis
 
 User provided screenshot showing Windsurf IDE info:
+
 - Windsurf Version: 1.13.9
 - Windsurf Extension Version: 1.48.2
 - VSCode OSS Version: 1.106.0
@@ -60,6 +65,7 @@ The VSCode extension currently requires `^1.106.1` which excludes Windsurf's bas
 ### Solution
 
 Lowering the engine version from `^1.106.1` to `^1.106.0` will make the extension compatible with both:
+
 - VSCode 1.106.0+ (including Windsurf)
 - VSCode 1.106.1+ (original requirement)
 
@@ -81,6 +87,7 @@ All changes completed successfully.
 ## Summary
 
 Bulk close
+
 ## Changes
 
 - **js/vscode/package.json**: Updated engine requirement to `^1.106.0`

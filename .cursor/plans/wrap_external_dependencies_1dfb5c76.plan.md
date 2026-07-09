@@ -2,30 +2,30 @@
 name: Wrap External Dependencies
 overview: "Establish a repo-wide ports-and-adapters discipline so no package imports a third-party library directly: every external dependency is reached only through a first-party interface (port) plus a thin adapter, enforced by a new repo policy and linter statutes across all languages."
 todos:
-  - id: policy
-    content: Add `dependency-boundary` policy + per-language statutes to .repo/📊/policies.json and implement import-boundary detection in repo/lib/js linter and Go CLI analyze (using language plugin extractImports)
-    status: completed
-  - id: rust-compose
-    content: Wrap third-party deps in the Rust `compose` crate (nalgebra, rusqlite, ureq, zip, async-graphql, wasm web-sys/js-sys) behind traits + adapter regions
-    status: completed
-  - id: transport
-    content: Normalize the GraphQL/transport boundary end-to-end across Rust architect, @semio-tech/compose-js, .NET StoreClient, and Python store wire onto explicit ports
-    status: completed
-  - id: ui-react-3d
-    content: Port @semio-tech/ui-react (Radix, R3F/three, XYFlow, dnd-kit, xstate, i18next, motion, cmdk, fuse.js) and shared three/R3F usage in puzzle scene/topology and cad renderer behind interfaces + adapters
-    status: completed
-  - id: dotnet
-    content: Wrap Compose.cs third-party deps (Newtonsoft.Json, FluentValidation, QuikGraph, SharpGLTF, Svg, Refit) behind C# interfaces + adapters
-    status: completed
-  - id: python
-    content: Wrap Python deps in compose py + engine (sqlalchemy/sqlmodel, ifcopenshell, trimesh, graphene, pydantic, networkx) and coda assistant (rdflib, owlready2, fastmcp, starlette/uvicorn) behind Protocols + adapters
-    status: completed
-  - id: go
-    content: Wrap repo/client/cli deps (cobra, bleve, graphql-go, mcp-go, sqlite, yaml.v3, sprig) and coordinator deps behind Go interfaces + adapters
-    status: completed
-  - id: hosts
-    content: Wrap host-specific SDKs last (RhinoCommon, Grasshopper, WebView2, Electron, Next coordinator) behind adapters at their natural boundaries
-    status: completed
+ - id: policy
+   content: Add `dependency-boundary` policy + per-language statutes to .repo/📊/policies.json and implement import-boundary detection in repo/lib/js linter and Go CLI analyze (using language plugin extractImports)
+   status: completed
+ - id: rust-compose
+   content: Wrap third-party deps in the Rust `compose` crate (nalgebra, rusqlite, ureq, zip, async-graphql, wasm web-sys/js-sys) behind traits + adapter regions
+   status: completed
+ - id: transport
+   content: Normalize the GraphQL/transport boundary end-to-end across Rust architect, @semio-tech/compose-js, .NET StoreClient, and Python store wire onto explicit ports
+   status: completed
+ - id: ui-react-3d
+   content: Port @semio-tech/ui-react (Radix, R3F/three, XYFlow, dnd-kit, xstate, i18next, motion, cmdk, fuse.js) and shared three/R3F usage in puzzle scene/topology and cad renderer behind interfaces + adapters
+   status: completed
+ - id: dotnet
+   content: Wrap Compose.cs third-party deps (Newtonsoft.Json, FluentValidation, QuikGraph, SharpGLTF, Svg, Refit) behind C# interfaces + adapters
+   status: completed
+ - id: python
+   content: Wrap Python deps in compose py + engine (sqlalchemy/sqlmodel, ifcopenshell, trimesh, graphene, pydantic, networkx) and coda assistant (rdflib, owlready2, fastmcp, starlette/uvicorn) behind Protocols + adapters
+   status: completed
+ - id: go
+   content: Wrap repo/client/cli deps (cobra, bleve, graphql-go, mcp-go, sqlite, yaml.v3, sprig) and coordinator deps behind Go interfaces + adapters
+   status: completed
+ - id: hosts
+   content: Wrap host-specific SDKs last (RhinoCommon, Grasshopper, WebView2, Electron, Next coordinator) behind adapters at their natural boundaries
+   status: completed
 isProject: false
 ---
 
@@ -50,8 +50,6 @@ flowchart LR
   adapter -->|"only place that imports"| lib[Third-party library]
   bootstrap[Package bootstrap] -->|injects adapter into| domain
 ```
-
-
 
 ## Existing anchors to use as templates
 
@@ -91,4 +89,3 @@ Add a repo policy `dependency-boundary` to [.repo/📊/policies.json](.repo/📊
 - Work inside repo tickets: open one ticket per phase/package via `ticket_open`, associate with the appropriate goal, close with `ticket_close` listing touched files. No goals opened/closed without your instruction — recommend you open a new goal (e.g. "Wrapped Dependencies") to parent these tickets, or name an existing one.
 - No backwards-compat/legacy shims; edit existing files and use regions; extend existing test files (don't add new ones) to assert domain code compiles against ports with fake adapters.
 - `reuse` (empty vault) and `elements` (already migrated) need no work.
-

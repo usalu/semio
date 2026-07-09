@@ -1590,11 +1590,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"]
           },
           "tool_use_id": "call_0fuH0CW1F3yEQ8cA4Fw13a3y__vscode-1779555796537",
           "cwd": "c:\\git\\compose"
@@ -1620,11 +1616,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"]
           },
           "tool_use_id": "call_0fuH0CW1F3yEQ8cA4Fw13a3y__vscode-1779555796537",
           "cwd": "c:\\git\\compose"
@@ -1650,11 +1642,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_0fuH0CW1F3yEQ8cA4Fw13a3y__vscode-1779555796537",
@@ -1681,10 +1669,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_OohCs6jOc8vdWGE2n1p6cay0__vscode-1779555796538",
@@ -1711,11 +1696,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_0fuH0CW1F3yEQ8cA4Fw13a3y__vscode-1779555796537",
@@ -1742,10 +1723,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_OohCs6jOc8vdWGE2n1p6cay0__vscode-1779555796538",
@@ -1772,10 +1750,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=6 failed=0 /\u003e\n",
@@ -1803,10 +1778,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=6 failed=0 /\u003e\n",
@@ -2179,10 +2151,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx"]
           },
           "tool_use_id": "call_jScVvV9H6up0BAJG0bn6FapF__vscode-1779555796543",
           "cwd": "c:\\git\\compose"
@@ -2208,10 +2177,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx"]
           },
           "tool_use_id": "call_jScVvV9H6up0BAJG0bn6FapF__vscode-1779555796543",
           "cwd": "c:\\git\\compose"
@@ -2237,10 +2203,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_jScVvV9H6up0BAJG0bn6FapF__vscode-1779555796543",
@@ -2267,10 +2230,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_yjqBOdFkZZqX3Iya2F8CA87o__vscode-1779555796544",
@@ -2297,10 +2257,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_jScVvV9H6up0BAJG0bn6FapF__vscode-1779555796543",
@@ -2327,10 +2284,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_yjqBOdFkZZqX3Iya2F8CA87o__vscode-1779555796544",
@@ -2357,10 +2311,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=1 failed=0 /\u003e\n",
@@ -2388,10 +2339,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=1 failed=0 /\u003e\n",
@@ -5841,10 +5789,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"]
           },
           "tool_use_id": "call_ELHmRQIUboCxqLoJoNPYWV2c__vscode-1779555796585",
           "cwd": "c:\\git\\compose"
@@ -5870,10 +5815,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"]
           },
           "tool_use_id": "call_ELHmRQIUboCxqLoJoNPYWV2c__vscode-1779555796585",
           "cwd": "c:\\git\\compose"
@@ -5899,10 +5841,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_ZZipQbOd2zSnW9uvOP3bQ91V__vscode-1779555796586",
@@ -5929,10 +5868,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_ELHmRQIUboCxqLoJoNPYWV2c__vscode-1779555796585",
@@ -5959,10 +5895,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_ZZipQbOd2zSnW9uvOP3bQ91V__vscode-1779555796586",
@@ -5989,10 +5922,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=6 failed=0 /\u003e\n",
@@ -6020,10 +5950,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\index.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=6 failed=0 /\u003e\n",
@@ -6740,11 +6667,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\scene\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"]
           },
           "tool_use_id": "call_9hCnZnBoIEGML0pG5ZNMG8M0__vscode-1779555796596",
           "cwd": "c:\\git\\compose"
@@ -6770,11 +6693,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\scene\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"]
           },
           "tool_use_id": "call_9hCnZnBoIEGML0pG5ZNMG8M0__vscode-1779555796596",
           "cwd": "c:\\git\\compose"
@@ -6800,11 +6719,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\scene\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_9hCnZnBoIEGML0pG5ZNMG8M0__vscode-1779555796596",
@@ -6831,11 +6746,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\index.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\scene\\index.tsx", "c:\\git\\compose\\elements\\client\\lib\\react\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_9hCnZnBoIEGML0pG5ZNMG8M0__vscode-1779555796596",
@@ -6862,10 +6773,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_vt1HAweowVuSxBBih6THxtBp__vscode-1779555796597",
@@ -6892,10 +6800,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=1 failed=0 /\u003e\n",
@@ -6923,10 +6828,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\index.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=1 failed=0 /\u003e\n",
@@ -7431,10 +7333,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\topology\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\index.tsx"]
           },
           "tool_use_id": "call_BCji7nO1NcaeRVTi3grs0IYb__vscode-1779555796604",
           "cwd": "c:\\git\\compose"
@@ -7460,10 +7359,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\topology\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\index.tsx"]
           },
           "tool_use_id": "call_BCji7nO1NcaeRVTi3grs0IYb__vscode-1779555796604",
           "cwd": "c:\\git\\compose"
@@ -7489,10 +7385,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\topology\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\index.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_XFMN726Ozio33dnIMCZFvD7e__vscode-1779555796605",
@@ -7519,10 +7412,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\client\\lib\\topology\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_BCji7nO1NcaeRVTi3grs0IYb__vscode-1779555796604",
@@ -7549,10 +7439,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\topology\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\index.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_XFMN726Ozio33dnIMCZFvD7e__vscode-1779555796605",
@@ -7579,10 +7466,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\topology\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\index.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=3 failed=0 /\u003e\n",
@@ -7610,10 +7494,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\topology\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\index.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=3 failed=0 /\u003e\n",
@@ -7933,11 +7814,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\757d49b6-bd6b-4bb5-b386-5343269244f1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx",
-              "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\react.tsx"
-            ],
+            "files": ["c:\\git\\compose\\elements\\client\\lib\\geometry\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\scene\\play\\react.tsx", "c:\\git\\compose\\elements\\client\\lib\\topology\\play\\react.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_AG6DytJd7X3diwgRFI7WkgUp__vscode-1779555796610",

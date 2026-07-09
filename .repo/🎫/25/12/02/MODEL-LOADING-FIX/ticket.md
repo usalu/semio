@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 When opening a type (e.g., Tambour) in the Type app, the model was not displayed and console warnings appeared:
@@ -47,6 +48,7 @@ The Kit test passes, confirming the import flow works correctly. The Type test v
 ## Log
 
 ## Summary
+
 # Summary
 
->-
+> -

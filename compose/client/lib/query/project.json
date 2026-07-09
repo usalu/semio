@@ -12,22 +12,11 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "inputs": [
-        "{projectRoot}/Cargo.toml",
-        "{projectRoot}/lib.rs",
-        "{projectRoot}/script.ts",
-        "{workspaceRoot}/Cargo.toml",
-        "{workspaceRoot}/Cargo.lock"
-      ],
-      "outputs": [
-        "{projectRoot}/pkg"
-      ],
+      "inputs": ["{projectRoot}/Cargo.toml", "{projectRoot}/lib.rs", "{projectRoot}/script.ts", "{workspaceRoot}/Cargo.toml", "{workspaceRoot}/Cargo.lock"],
+      "outputs": ["{projectRoot}/pkg"],
       "options": {
         "cwd": "compose/client/lib/query",
-        "commands": [
-          "bun ./script.ts wasm",
-          "bun ./script.ts build"
-        ],
+        "commands": ["bun ./script.ts wasm", "bun ./script.ts build"],
         "parallel": false
       }
     },

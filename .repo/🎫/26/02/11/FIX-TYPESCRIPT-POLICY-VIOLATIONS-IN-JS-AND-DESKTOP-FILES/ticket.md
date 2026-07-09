@@ -13,6 +13,7 @@ goal: AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS
 ## Todos
 
 ## Plan
+
 1. compose/js/dev.ts - Wrap orphan code in `Dev` section, add summary+spec to `isWindows`, `npmCmd`, `vite`, `storybook` defs
 2. compose/js/i18n.ts - Wrap orphan code in `I18n` section, add summary+spec to `Expertise`, `getExpertiseFunction`, `setExpertiseProvider`, `useLabel`, `useHotkey` defs
 3. compose/js/index.ts - Wrap orphan code in `Exports` section (only re-exports, no defs needing comments)

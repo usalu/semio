@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Only Type and Design apps had working toolbars with selection tools. Other apps (Home, Kit, Feedback) did not have toolbar functionality.
@@ -96,6 +97,7 @@ Only Type and Design apps had working toolbars with selection tools. Other apps 
 ## Log
 
 ## Summary
+
 # Summary
 
 Improve and extend toolbar mechanism across all sketchpad apps

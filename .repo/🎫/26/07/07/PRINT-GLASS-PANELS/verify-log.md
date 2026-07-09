@@ -45,11 +45,11 @@ Minor `Overfull \hbox (5.87991pt too wide)` on panel shipout — fbox border/pad
 
 Pass-1 crop from `debug-out/pass1.pdf` at manifest coords:
 
-| Stage | File | Result |
-|---|---|---|
-| Raw crop | `pass1-crop-raw.png` | Dark bg + red TOC chips/lines visible |
-| Blur + sat 1.45 | `pass1-crop-blur-fixed.png` | Subtle frosted red blurs on dark bg ✓ |
-| Blur + sat 145 | `pass1-crop-blur-bad.png` | Neon cyan + magenta blobs (reproduces user bug) |
+| Stage           | File                        | Result                                          |
+| --------------- | --------------------------- | ----------------------------------------------- |
+| Raw crop        | `pass1-crop-raw.png`        | Dark bg + red TOC chips/lines visible           |
+| Blur + sat 1.45 | `pass1-crop-blur-fixed.png` | Subtle frosted red blurs on dark bg ✓           |
+| Blur + sat 145  | `pass1-crop-blur-bad.png`   | Neon cyan + magenta blobs (reproduces user bug) |
 
 Rebuild: `bun ./script.ts build kompaktbericht` — light/dark PDFs built successfully.
 

@@ -222,10 +222,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\go\\main_test.go",
-              "c:\\git\\compose\\compose\\postgres\\schema.sql"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\go\\main_test.go", "c:\\git\\compose\\compose\\postgres\\schema.sql"]
           },
           "tool_use_id": "call_7ETVibi2sa4iApDcCVMSrXXt__vscode-1776879023250",
           "cwd": "c:\\git\\compose"
@@ -251,10 +248,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\go\\main_test.go",
-              "c:\\git\\compose\\compose\\postgres\\schema.sql"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\go\\main_test.go", "c:\\git\\compose\\compose\\postgres\\schema.sql"]
           },
           "tool_use_id": "call_7ETVibi2sa4iApDcCVMSrXXt__vscode-1776879023250",
           "cwd": "c:\\git\\compose"
@@ -280,10 +274,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\go\\main_test.go",
-              "c:\\git\\compose\\compose\\postgres\\schema.sql"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\go\\main_test.go", "c:\\git\\compose\\compose\\postgres\\schema.sql"]
           },
           "tool_response": "",
           "tool_use_id": "call_7ETVibi2sa4iApDcCVMSrXXt__vscode-1776879023250",
@@ -310,12 +301,8 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\compose\\go\\main_test.go"
-            ],
-            "testNames": [
-              "Kit/Postgres schema: includes normalized snapshots and VCS tables"
-            ],
+            "files": ["c:\\git\\compose\\compose\\go\\main_test.go"],
+            "testNames": ["Kit/Postgres schema: includes normalized snapshots and VCS tables"],
             "mode": "run"
           },
           "tool_use_id": "call_QTPiXhfBOKOElGauBrxzxomD__vscode-1776879023251",
@@ -342,10 +329,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\go\\main_test.go",
-              "c:\\git\\compose\\compose\\postgres\\schema.sql"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\go\\main_test.go", "c:\\git\\compose\\compose\\postgres\\schema.sql"]
           },
           "tool_response": "",
           "tool_use_id": "call_7ETVibi2sa4iApDcCVMSrXXt__vscode-1776879023250",
@@ -372,12 +356,8 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\compose\\go\\main_test.go"
-            ],
-            "testNames": [
-              "Kit/Postgres schema: includes normalized snapshots and VCS tables"
-            ],
+            "files": ["c:\\git\\compose\\compose\\go\\main_test.go"],
+            "testNames": ["Kit/Postgres schema: includes normalized snapshots and VCS tables"],
             "mode": "run"
           },
           "tool_use_id": "call_QTPiXhfBOKOElGauBrxzxomD__vscode-1776879023251",
@@ -404,12 +384,8 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\compose\\go\\main_test.go"
-            ],
-            "testNames": [
-              "Kit/Postgres schema: includes normalized snapshots and VCS tables"
-            ],
+            "files": ["c:\\git\\compose\\compose\\go\\main_test.go"],
+            "testNames": ["Kit/Postgres schema: includes normalized snapshots and VCS tables"],
             "mode": "run"
           },
           "tool_response": "No tests found in the files. Ensure the correct absolute paths are passed to the tool.",
@@ -437,12 +413,8 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\compose\\go\\main_test.go"
-            ],
-            "testNames": [
-              "Kit/Postgres schema: includes normalized snapshots and VCS tables"
-            ],
+            "files": ["c:\\git\\compose\\compose\\go\\main_test.go"],
+            "testNames": ["Kit/Postgres schema: includes normalized snapshots and VCS tables"],
             "mode": "run"
           },
           "tool_response": "No tests found in the files. Ensure the correct absolute paths are passed to the tool.",
@@ -1253,10 +1225,7 @@
             "no_management": true,
             "title": "Implement Kit Vcs Postgres Schema",
             "summary": "Implemented the compose-side PostgreSQL schema in compose/postgres/schema.sql instead of repo/postgres. Added normalized snapshot-scoped kit graph tables for families, ports, folders, files, authors, tags, concepts, qualities, benchmarks, kinds, designs, props, attributes, pieces, groups, connections, and stats, plus kit version-control tables for checkpoints, alternatives, releases, sessions, drafts, transactions, and transaction changes. Extended the existing Go test file to assert the new schema surface exists and verified the new Postgres-schema subtest passes in compose/go.",
-            "files": [
-              "compose/postgres/schema.sql",
-              "compose/go/main_test.go"
-            ]
+            "files": ["compose/postgres/schema.sql", "compose/go/main_test.go"]
           },
           "tool_use_id": "call_1JbfAto2qPW4L22AEPFUH8Yv__vscode-1776879023258",
           "cwd": "c:\\git\\compose"
@@ -1286,10 +1255,7 @@
             "no_management": true,
             "title": "Implement Kit Vcs Postgres Schema",
             "summary": "Implemented the compose-side PostgreSQL schema in compose/postgres/schema.sql instead of repo/postgres. Added normalized snapshot-scoped kit graph tables for families, ports, folders, files, authors, tags, concepts, qualities, benchmarks, kinds, designs, props, attributes, pieces, groups, connections, and stats, plus kit version-control tables for checkpoints, alternatives, releases, sessions, drafts, transactions, and transaction changes. Extended the existing Go test file to assert the new schema surface exists and verified the new Postgres-schema subtest passes in compose/go.",
-            "files": [
-              "compose/postgres/schema.sql",
-              "compose/go/main_test.go"
-            ]
+            "files": ["compose/postgres/schema.sql", "compose/go/main_test.go"]
           },
           "tool_use_id": "call_1JbfAto2qPW4L22AEPFUH8Yv__vscode-1776879023258",
           "cwd": "c:\\git\\compose"
@@ -1319,10 +1285,7 @@
             "no_management": true,
             "title": "Implement Kit Vcs Postgres Schema",
             "summary": "Implemented the compose-side PostgreSQL schema in compose/postgres/schema.sql instead of repo/postgres. Added normalized snapshot-scoped kit graph tables for families, ports, folders, files, authors, tags, concepts, qualities, benchmarks, kinds, designs, props, attributes, pieces, groups, connections, and stats, plus kit version-control tables for checkpoints, alternatives, releases, sessions, drafts, transactions, and transaction changes. Extended the existing Go test file to assert the new schema surface exists and verified the new Postgres-schema subtest passes in compose/go.",
-            "files": [
-              "compose/postgres/schema.sql",
-              "compose/go/main_test.go"
-            ]
+            "files": ["compose/postgres/schema.sql", "compose/go/main_test.go"]
           },
           "tool_response": "[🎫implementkitvcspostgresschema](repo://ticket/🎫implementkitvcspostgresschema) - `closed` - `closed 1 hour from now`\n",
           "tool_use_id": "call_1JbfAto2qPW4L22AEPFUH8Yv__vscode-1776879023258",
@@ -1353,10 +1316,7 @@
             "no_management": true,
             "title": "Implement Kit Vcs Postgres Schema",
             "summary": "Implemented the compose-side PostgreSQL schema in compose/postgres/schema.sql instead of repo/postgres. Added normalized snapshot-scoped kit graph tables for families, ports, folders, files, authors, tags, concepts, qualities, benchmarks, kinds, designs, props, attributes, pieces, groups, connections, and stats, plus kit version-control tables for checkpoints, alternatives, releases, sessions, drafts, transactions, and transaction changes. Extended the existing Go test file to assert the new schema surface exists and verified the new Postgres-schema subtest passes in compose/go.",
-            "files": [
-              "compose/postgres/schema.sql",
-              "compose/go/main_test.go"
-            ]
+            "files": ["compose/postgres/schema.sql", "compose/go/main_test.go"]
           },
           "tool_response": "[🎫implementkitvcspostgresschema](repo://ticket/🎫implementkitvcspostgresschema) - `closed` - `closed 1 hour from now`\n",
           "tool_use_id": "call_1JbfAto2qPW4L22AEPFUH8Yv__vscode-1776879023258",

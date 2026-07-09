@@ -243,7 +243,8 @@ export type KitHostGraphOperation =
   | { op: "addKitChildDesigns"; bodies: readonly DesignPlain[] }
   | { op: "removeKitDesign"; id: DesignIdDto }
   | { op: "removeKitDesigns"; ids: readonly DesignIdDto[] }
-  | { op: "setEntityPatch"; entity: "Type"; id: TypeIdDto; patch: TypeDiff } | { op: "setEntityPatch"; entity: "Design"; id: DesignIdDto; patch: DesignDiff }
+  | { op: "setEntityPatch"; entity: "Type"; id: TypeIdDto; patch: TypeDiff }
+  | { op: "setEntityPatch"; entity: "Design"; id: DesignIdDto; patch: DesignDiff }
   | { op: "patchTypes"; updates: readonly { type: TypeIdDto; diff: TypeDiff }[] }
   | { op: "patchDesigns"; updates: readonly { design: DesignIdDto; diff: DesignDiff }[] }
   | { op: "addDesignPiece"; designId: DesignIdDto; piece: PiecePlain }
@@ -617,8 +618,7 @@ export async function executeComposeKitCommand(store: KitHostStore, command: str
 /** @emoji 🧾 Memoized kit string-command engine for legacy callers (sketchpad). */
 export function createKitCommandEngineExplicitOrigin(store: KitHostStore): { execute: (...args: unknown[]) => Promise<unknown> } {
   return {
-    execute: async (command: unknown, origin: unknown, ...rest: unknown[]) =>
-      executeComposeKitCommand(store, String(command), String(origin ?? ""), ...rest),
+    execute: async (command: unknown, origin: unknown, ...rest: unknown[]) => executeComposeKitCommand(store, String(command), String(origin ?? ""), ...rest),
   };
 }
 
@@ -629,24 +629,11 @@ export function createKitCommandEngine(store: KitHostStore): ReturnType<typeof c
 // #endregion 🔖KitHostCommandDispatch
 
 export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadPoint, KitWriteScope, RenameKitCommandArgs, SetError, SetResult, WriteStatus } from "@semio-tech/compose-js";
-export {
-  WRITE_STATUS_IDLE,
-  WRITE_STATUS_READONLY,
-  WRITE_STATUS_PENDING,
-  writeStatusEquivalent,
-  StoreField,
-  StoreCommand,
-} from "@semio-tech/compose-js";
+export { WRITE_STATUS_IDLE, WRITE_STATUS_READONLY, WRITE_STATUS_PENDING, writeStatusEquivalent, StoreField, StoreCommand } from "@semio-tech/compose-js";
 export { getKitClientReadPoint, kitReadPointKey, kitStoreFromKitStoreClient, theKitReadPoint } from "@semio-tech/compose-js";
 export type { KitBinaryStore, KitFileState } from "@semio-tech/compose-js";
 export type { KitHostStore, KitHostStoreSnapshot } from "@semio-tech/compose-js";
-export type {
-  KitStoreExecuteResult,
-  KitDesignReadKind,
-  KitShallowListKind,
-  KitStoreReadSnap,
-  KitViewCatalogKey,
-} from "@semio-tech/compose-js";
+export type { KitStoreExecuteResult, KitDesignReadKind, KitShallowListKind, KitStoreReadSnap, KitViewCatalogKey } from "@semio-tech/compose-js";
 export { DesignStore, TypeStore, PieceStore, ConnectionStore, FamilyStore, FileStore, FolderStore, KitEntityStore } from "@semio-tech/compose-js";
 export {
   ComposeKitDesignReadStore,
@@ -874,11 +861,7 @@ const NEVER_WRITABLE_FIELDS = new Set([
 // #region ⚛️Utilities
 
 /** @emoji 🧾 `useSyncExternalStore` with a derived snapshot and a custom equality for fewer rerenders. */
-export function useComposeStoreSelector<T, S>(
-  store: { getSnapshot(): T; subscribe(onChange: () => void): () => void },
-  select: (snap: T) => S,
-  isEqual: (a: S, b: S) => boolean = (a, b) => Object.is(a, b),
-): S {
+export function useComposeStoreSelector<T, S>(store: { getSnapshot(): T; subscribe(onChange: () => void): () => void }, select: (snap: T) => S, isEqual: (a: S, b: S) => boolean = (a, b) => Object.is(a, b)): S {
   const last = React.useRef<{ snap: T; out: S } | null>(null);
   const get = React.useCallback((): S => {
     const snap = store.getSnapshot();
@@ -1577,7 +1560,7 @@ export function KitAlternativeSelectionProvider(props: { readonly kitId?: string
 
   React.useEffect(() => subscribeKitRegistryListChanged(() => setRegistryTick((t) => t + 1)), []);
 
-  const kitClient = React.useMemo(() => (kitId && registry ? registry.get(kitId)?.kitClient ?? null : null), [kitId, registry, registryTick]);
+  const kitClient = React.useMemo(() => (kitId && registry ? (registry.get(kitId)?.kitClient ?? null) : null), [kitId, registry, registryTick]);
 
   React.useEffect(() => {
     if (!kitClient) {
@@ -1725,7 +1708,9 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
           delete (row.store as any).__composeKitBridgeUnsub;
           delete (row.store as any).__composeKitBridge;
           delete (row.store as any).__composeKitClient;
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
         row.kitClient.dispose();
         rowsRef.current.delete(kitId);
         setActiveKitId((cur) => (cur === kitId ? undefined : cur));
@@ -2032,16 +2017,9 @@ const EMPTY_KIT_READ_SNAP: KitStoreReadSnap = Object.freeze({
  * @emoji 📌 `useSyncExternalStore` on a `getSnapshot`/`subscribe` pair with a stable server snapshot.
  * Pairs with {@link getComposeKitLiveReadStore} from `@semio-tech/compose-js` and {@link getComposeKitDesignReadStore} / {@link getComposeKitShallowListReadStore}.
  */
-export function useComposeReadSnap<T extends KitStoreReadSnap>(
-  subscribe: (onStoreChange: () => void) => () => void,
-  getSnapshot: () => T,
-  getServerSnapshot: () => T = getSnapshot,
-): T {
+export function useComposeReadSnap<T extends KitStoreReadSnap>(subscribe: (onStoreChange: () => void) => () => void, getSnapshot: () => T, getServerSnapshot: () => T = getSnapshot): T {
   return React.useSyncExternalStore(
-    React.useCallback(
-      (onChange) => subscribe(onChange),
-      [subscribe],
-    ),
+    React.useCallback((onChange) => subscribe(onChange), [subscribe]),
     getSnapshot,
     getServerSnapshot,
   );
@@ -2114,12 +2092,7 @@ export function useTypesIds(explicitKitId?: string): KitFieldBinding<readonly st
   }, [runtime.kitClient, runtime.kitId, resolved, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = Array.isArray(snap.data) ? (snap.data as readonly string[]) : EMPTY_KIT_TYPE_IDS;
-  const status: WriteStatus =
-    !runtime.kitClient || !resolved || runtime.kitId !== resolved
-      ? { kind: "readonly", pending: 0 }
-      : snap.pending > 0
-        ? { kind: "pending", pending: snap.pending }
-        : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, noopAsyncSet, status] as const;
 }
 
@@ -2156,12 +2129,7 @@ export function useTypesMetadata(explicitKitId?: string): KitFieldBinding<readon
   }, [runtime.kitClient, runtime.kitId, resolved, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = Array.isArray(snap.data) ? snap.data : EMPTY_KIT_TYPES_METADATA;
-  const status: WriteStatus =
-    !runtime.kitClient || !resolved || runtime.kitId !== resolved
-      ? { kind: "readonly", pending: 0 }
-      : snap.pending > 0
-        ? { kind: "pending", pending: snap.pending }
-        : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, noopAsyncSet, status] as const;
 }
 
@@ -2198,12 +2166,7 @@ export function useDesignsIds(explicitKitId?: string): KitFieldBinding<readonly 
   }, [runtime.kitClient, runtime.kitId, resolved, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = Array.isArray(snap.data) ? (snap.data as readonly string[]) : EMPTY_KIT_DESIGN_IDS;
-  const status: WriteStatus =
-    !runtime.kitClient || !resolved || runtime.kitId !== resolved
-      ? { kind: "readonly", pending: 0 }
-      : snap.pending > 0
-        ? { kind: "pending", pending: snap.pending }
-        : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, noopAsyncSet, status] as const;
 }
 
@@ -2240,12 +2203,7 @@ export function useDesignsMetadata(explicitKitId?: string): KitFieldBinding<read
   }, [runtime.kitClient, runtime.kitId, resolved, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = Array.isArray(snap.data) ? snap.data : EMPTY_KIT_DESIGNS_METADATA;
-  const status: WriteStatus =
-    !runtime.kitClient || !resolved || runtime.kitId !== resolved
-      ? { kind: "readonly", pending: 0 }
-      : snap.pending > 0
-        ? { kind: "pending", pending: snap.pending }
-        : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, noopAsyncSet, status] as const;
 }
 
@@ -2289,12 +2247,7 @@ export function useTypesFull(explicitKitId?: string): KitFieldBinding<any[]> {
   const s = useComposeReadSnap(subscribe, getSnap, getSnap);
   const raw = s.data;
   const value = Array.isArray(raw) ? raw : EMPTY_KIT_ENTITY_LIST;
-  const status: WriteStatus =
-    !runtime.kitClient || !resolved || runtime.kitId !== resolved
-      ? { kind: "readonly", pending: 0 }
-      : s.pending > 0
-        ? { kind: "pending", pending: s.pending }
-        : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : s.pending > 0 ? { kind: "pending", pending: s.pending } : { kind: "idle", pending: 0 };
   return [value, noopAsyncSet, status] as const;
 }
 
@@ -2336,12 +2289,7 @@ export function useDesignsFull(explicitKitId?: string): KitFieldBinding<any[]> {
   const s = useComposeReadSnap(subscribe, getSnap, getSnap);
   const raw = s.data;
   const value = Array.isArray(raw) ? raw : EMPTY_KIT_ENTITY_LIST;
-  const status: WriteStatus =
-    !runtime.kitClient || !resolved || runtime.kitId !== resolved
-      ? { kind: "readonly", pending: 0 }
-      : s.pending > 0
-        ? { kind: "pending", pending: s.pending }
-        : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : s.pending > 0 ? { kind: "pending", pending: s.pending } : { kind: "idle", pending: 0 };
   return [value, noopAsyncSet, status] as const;
 }
 
@@ -2383,12 +2331,7 @@ export function useFilesFull(explicitKitId?: string): KitFieldBinding<any[]> {
   const s = useComposeReadSnap(subscribe, getSnap, getSnap);
   const raw = s.data;
   const value = Array.isArray(raw) ? raw : EMPTY_KIT_ENTITY_LIST;
-  const status: WriteStatus =
-    !runtime.kitClient || !resolved || runtime.kitId !== resolved
-      ? { kind: "readonly", pending: 0 }
-      : s.pending > 0
-        ? { kind: "pending", pending: s.pending }
-        : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : s.pending > 0 ? { kind: "pending", pending: s.pending } : { kind: "idle", pending: 0 };
   return [value, noopAsyncSet, status] as const;
 }
 
@@ -2430,12 +2373,7 @@ export function useTagsFull(explicitKitId?: string): KitFieldBinding<any[]> {
   const s = useComposeReadSnap(subscribe, getSnap, getSnap);
   const raw = s.data;
   const value = Array.isArray(raw) ? raw : EMPTY_KIT_ENTITY_LIST;
-  const status: WriteStatus =
-    !runtime.kitClient || !resolved || runtime.kitId !== resolved
-      ? { kind: "readonly", pending: 0 }
-      : s.pending > 0
-        ? { kind: "pending", pending: s.pending }
-        : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : s.pending > 0 ? { kind: "pending", pending: s.pending } : { kind: "idle", pending: 0 };
   return [value, noopAsyncSet, status] as const;
 }
 
@@ -2612,20 +2550,22 @@ export function KitScope({
       if (!isKitCommandLifecycleEvent(event)) return;
       const command = event.composeKitCommand;
       if (command.error) pushSetRejection(command.error);
-      setRecentEvents((existing) => [
-        ...existing,
-        {
-          key: `KitCommand:${command.requestId}:${command.phase}`,
-          typeName: "KitCommand",
-          fieldName: command.phase,
-          id: command.requestId,
-          previous: undefined,
-          current: command.error ?? command.commandKind,
-          requestId: command.requestId,
-          commandKind: command.commandKind,
-          phase: command.phase,
-        },
-      ].slice(-500));
+      setRecentEvents((existing) =>
+        [
+          ...existing,
+          {
+            key: `KitCommand:${command.requestId}:${command.phase}`,
+            typeName: "KitCommand",
+            fieldName: command.phase,
+            id: command.requestId,
+            previous: undefined,
+            current: command.error ?? command.commandKind,
+            requestId: command.requestId,
+            commandKind: command.commandKind,
+            phase: command.phase,
+          },
+        ].slice(-500),
+      );
     });
   }, [kitClient, pushSetRejection]);
 
@@ -2733,11 +2673,7 @@ export function KitScope({
     [store, snapshot, state, recentEvents, recentSetRejections, pushSetRejection, activeKitId, backbone, kitClient, setFieldValue, setObjectValue],
   );
 
-  return React.createElement(
-    ComposeKitScopedViewContext.Provider,
-    { value: composeKitScopedView },
-    React.createElement(KitRuntimeContext.Provider, { value }, children),
-  );
+  return React.createElement(ComposeKitScopedViewContext.Provider, { value: composeKitScopedView }, React.createElement(KitRuntimeContext.Provider, { value }, children));
 }
 
 type EntityScopeProps = { id?: string; children: ReactNode };
@@ -3797,11 +3733,7 @@ export function useCanUndo(): KitFieldBinding<boolean> {
   }, [runtime.kitClient]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const v = snap.data === true;
-  const st: WriteStatus = !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const st: WriteStatus = !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [v, noopAsyncSet, st] as const;
 }
 
@@ -3824,11 +3756,7 @@ export function useCanRedo(): KitFieldBinding<boolean> {
   }, [runtime.kitClient]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const v = snap.data === true;
-  const st: WriteStatus = !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const st: WriteStatus = !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [v, noopAsyncSet, st] as const;
 }
 
@@ -4756,11 +4684,7 @@ export function usePiecesMetadataMap(designId?: string): HookRead<ReadonlyMap<st
   }, [runtime.kitClient, designId, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = __composePiecesPlacementMapFromReadSnap(snap.data);
-  const status: WriteStatus = !designId || !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !designId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
@@ -4796,11 +4720,7 @@ export function useKitPieces(designId?: string): HookRead<any[]> {
   }, [runtime.kitClient, designId, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = Array.isArray(snap.data) ? snap.data : [];
-  const status: WriteStatus = !designId || !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !designId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
@@ -4836,11 +4756,7 @@ export function useKitConnections(designId?: string): HookRead<any[]> {
   }, [runtime.kitClient, designId, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = Array.isArray(snap.data) ? snap.data : [];
-  const status: WriteStatus = !designId || !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !designId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
@@ -4875,11 +4791,7 @@ export function useKitDesignsShallow(): HookRead<any[]> {
   }, [runtime.kitClient, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = Array.isArray(snap.data) ? snap.data : [];
-  const status: WriteStatus = !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
@@ -4914,11 +4826,7 @@ export function useKitTypesShallow(): HookRead<any[]> {
   }, [runtime.kitClient, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = Array.isArray(snap.data) ? snap.data : [];
-  const status: WriteStatus = !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
@@ -4953,11 +4861,7 @@ export function useKitAuthorsShallow(): HookRead<any[]> {
   }, [runtime.kitClient, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = Array.isArray(snap.data) ? snap.data : [];
-  const status: WriteStatus = !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
@@ -5150,11 +5054,7 @@ export function usePieceFlatPlane(designId?: string, pieceId?: string): HookRead
     return getComposeKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient, designId, pieceId, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
-  const status: WriteStatus = !designId || !pieceId || !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !designId || !pieceId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [snap.data, status] as const;
 }
 
@@ -5190,11 +5090,7 @@ export function usePieceFlatCenter(designId?: string, pieceId?: string): HookRea
     return getComposeKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient, designId, pieceId, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
-  const status: WriteStatus = !designId || !pieceId || !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !designId || !pieceId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [snap.data, status] as const;
 }
 
@@ -5253,11 +5149,7 @@ export function usePieceParentConnection(designId?: string, pieceId?: string): H
     return getComposeKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient, designId, pieceId, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
-  const status: WriteStatus = !designId || !pieceId || !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !designId || !pieceId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [snap.data, status] as const;
 }
 
@@ -5292,11 +5184,7 @@ export function useIncludedDesigns(designId?: string): HookRead<any[]> {
   }, [runtime.kitClient, designId, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = Array.isArray(snap.data) ? snap.data : [];
-  const status: WriteStatus = !designId || !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !designId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
@@ -5336,11 +5224,7 @@ export function useDesignClusterableGroups(designId?: string, selection?: Readon
   }, [runtime.kitClient, designId, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = (Array.isArray(snap.data) ? snap.data : []) as ReadonlyArray<ReadonlyArray<{ readonly id: string }>>;
-  const status: WriteStatus = !designId || !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !designId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
@@ -5378,11 +5262,7 @@ export function useDesignQualitySum(designId?: string, qualityId?: string): Hook
   }, [runtime.kitClient, designId, qualityId, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = typeof snap.data === "number" && !Number.isNaN(snap.data) ? snap.data : 0;
-  const status: WriteStatus = !designId || !qualityId || !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !designId || !qualityId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
@@ -5422,11 +5302,7 @@ export function useTypeBestRepresentation(typeId?: string, tagIds?: ReadonlyArra
     return getComposeKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient, typeId, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
-  const status: WriteStatus = !typeId || !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !typeId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [snap.data, status] as const;
 }
 
@@ -5441,12 +5317,7 @@ export function useKitColoredConnectors(): HookRead<ReadonlyArray<unknown>> {
         return () => {};
       }
       const c = runtime.kitClient;
-      return getComposeKitLiveReadStore(c).subscribe(
-        key,
-        () => c.readColoredConnectors().then((v) => (Array.isArray(v) ? v : [])),
-        kitEventAffectsKitColoredConnectorsRead,
-        onChange,
-      );
+      return getComposeKitLiveReadStore(c).subscribe(key, () => c.readColoredConnectors().then((v) => (Array.isArray(v) ? v : [])), kitEventAffectsKitColoredConnectorsRead, onChange);
     },
     [runtime.kitClient],
   );
@@ -5456,11 +5327,7 @@ export function useKitColoredConnectors(): HookRead<ReadonlyArray<unknown>> {
   }, [runtime.kitClient]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = (Array.isArray(snap.data) ? snap.data : []) as ReadonlyArray<unknown>;
-  const status: WriteStatus = !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
@@ -5498,11 +5365,7 @@ export function useReplacableTypes(designId?: string, pieceIds?: string[]): Hook
   }, [runtime.kitClient, designId, key, pieceKey]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = (Array.isArray(snap.data) ? snap.data : []) as string[];
-  const status: WriteStatus = !designId || !pieceIds?.length || !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !designId || !pieceIds?.length || !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
@@ -5540,11 +5403,7 @@ export function useReplacableDesigns(designId?: string, pieceIds?: string[]): Ho
   }, [runtime.kitClient, designId, key, pieceKey]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = (Array.isArray(snap.data) ? snap.data : []) as string[];
-  const status: WriteStatus = !designId || !pieceIds?.length || !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !designId || !pieceIds?.length || !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
@@ -5579,11 +5438,7 @@ export function useExplodeableDesignNodes(designId?: string): HookRead<string[]>
   }, [runtime.kitClient, designId, key]);
   const snap = useComposeReadSnap(subscribe, getSnap, getSnap);
   const value = (Array.isArray(snap.data) ? snap.data : []) as string[];
-  const status: WriteStatus = !designId || !runtime.kitClient
-    ? { kind: "readonly", pending: 0 }
-    : snap.pending > 0
-      ? { kind: "pending", pending: snap.pending }
-      : { kind: "idle", pending: 0 };
+  const status: WriteStatus = !designId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
@@ -6060,10 +5915,7 @@ export function useSchemaFieldMutation(typeName: string, fieldName: string, idVa
   const runtime = useKitRuntimeSafe();
   const scope = React.useContext(SchemaScopeContext);
   const schemaScanWritable = !!runtime && runtime.canWrite && isWritableField(runtime.state, typeName, fieldName, idValue, scope);
-  const rustTarget = React.useMemo(
-    () => (runtime ? resolveRustFieldTarget(runtime, typeName, fieldName, idValue, scope) : null),
-    [runtime?.kitClient, runtime?.snapshot.kit.id, runtime?.canWrite, typeName, fieldName, idValue, scope],
-  );
+  const rustTarget = React.useMemo(() => (runtime ? resolveRustFieldTarget(runtime, typeName, fieldName, idValue, scope) : null), [runtime?.kitClient, runtime?.snapshot.kit.id, runtime?.canWrite, typeName, fieldName, idValue, scope]);
   const [pending, setPending] = React.useState(0);
   const [lastErr, setLastErr] = React.useState<SetError | undefined>(undefined);
 
@@ -6204,14 +6056,7 @@ export {
 } from "@semio-tech/compose-js";
 export { KitStore } from "@semio-tech/compose-js";
 export type { ChangeId } from "@semio-tech/compose-js";
-export {
-  AlternativeCommandNav,
-  CommandBuilder,
-  KitOperationNav,
-  SessionCommandNav,
-  UnsavedChangeCommandNav,
-  VersionCommandNav,
-} from "@semio-tech/compose-js";
+export { AlternativeCommandNav, CommandBuilder, KitOperationNav, SessionCommandNav, UnsavedChangeCommandNav, VersionCommandNav } from "@semio-tech/compose-js";
 export type {
   AuthorIdDto,
   ConnectionDiff,
@@ -17502,19 +17347,12 @@ if (shouldRunReactEmbeddedTests) {
             (kit as { name: string }).name = nm;
             pushKitName(nm);
           }
-          if ("description" in c && c.description && typeof c.description === "object")
-            (kit as { description?: string }).description =
-              (c.description as { description?: string | null }).description ?? undefined;
-          if ("icon" in c && c.icon && typeof c.icon === "object")
-            (kit as { icon?: string }).icon = (c.icon as { icon?: string | null }).icon ?? undefined;
-          if ("image" in c && c.image && typeof c.image === "object")
-            (kit as { image?: string }).image = (c.image as { image?: string | null }).image ?? undefined;
-          if ("version" in c && c.version && typeof c.version === "object")
-            (kit as { version?: string }).version = (c.version as { version?: string | null }).version ?? undefined;
-          if ("homepage" in c && c.homepage && typeof c.homepage === "object")
-            (kit as { homepage?: string }).homepage = (c.homepage as { homepage?: string | null }).homepage ?? undefined;
-          if ("license" in c && c.license && typeof c.license === "object")
-            (kit as { license?: string }).license = (c.license as { license?: string | null }).license ?? undefined;
+          if ("description" in c && c.description && typeof c.description === "object") (kit as { description?: string }).description = (c.description as { description?: string | null }).description ?? undefined;
+          if ("icon" in c && c.icon && typeof c.icon === "object") (kit as { icon?: string }).icon = (c.icon as { icon?: string | null }).icon ?? undefined;
+          if ("image" in c && c.image && typeof c.image === "object") (kit as { image?: string }).image = (c.image as { image?: string | null }).image ?? undefined;
+          if ("version" in c && c.version && typeof c.version === "object") (kit as { version?: string }).version = (c.version as { version?: string | null }).version ?? undefined;
+          if ("homepage" in c && c.homepage && typeof c.homepage === "object") (kit as { homepage?: string }).homepage = (c.homepage as { homepage?: string | null }).homepage ?? undefined;
+          if ("license" in c && c.license && typeof c.license === "object") (kit as { license?: string }).license = (c.license as { license?: string | null }).license ?? undefined;
         }
         store.replace(asKitInstance(kit));
         return { ok: true };
@@ -17560,11 +17398,11 @@ if (shouldRunReactEmbeddedTests) {
       canUndo: async () => false,
       canRedo: async () => false,
       backboneStatus: async () => ({ attached: false, kind: null, backboneTip: null, pendingWipCheckpoints: 0 }),
-      attachBackbone: async () => ({ ok: true } as const),
-      detachBackbone: async () => ({ ok: true } as const),
+      attachBackbone: async () => ({ ok: true }) as const,
+      detachBackbone: async () => ({ ok: true }) as const,
       listConflicts: async () => [] as const,
-      resolveConflict: async () => ({ ok: true } as const),
-      syncNow: async () => ({ ok: true } as const),
+      resolveConflict: async () => ({ ok: true }) as const,
+      syncNow: async () => ({ ok: true }) as const,
       kitName: kitNameField,
       renameKit: renameKitCmd,
       readKitName: async () => String((kitJsonFromStore(store) as KitFullDto).name ?? ""),
@@ -17718,12 +17556,7 @@ if (shouldRunReactEmbeddedTests) {
         return null;
       }
 
-      render(
-        React.createElement(
-          KitScope,
-          { store, kitClient, children: React.createElement(React.Fragment, null, React.createElement(Piece1), React.createElement(Piece2)) },
-        ),
-      );
+      render(React.createElement(KitScope, { store, kitClient, children: React.createElement(React.Fragment, null, React.createElement(Piece1), React.createElement(Piece2)) }));
 
       await waitFor(() => {
         expect(renders.p1).toBeGreaterThan(0);
@@ -17994,11 +17827,11 @@ if (shouldRunReactEmbeddedTests) {
         canUndo: async () => false,
         canRedo: async () => false,
         backboneStatus: async () => ({ attached: false, kind: null, backboneTip: null, pendingWipCheckpoints: 0 }),
-        attachBackbone: async () => ({ ok: true } as const),
-        detachBackbone: async () => ({ ok: true } as const),
+        attachBackbone: async () => ({ ok: true }) as const,
+        detachBackbone: async () => ({ ok: true }) as const,
         listConflicts: async () => [],
-        resolveConflict: async () => ({ ok: true } as const),
-        syncNow: async () => ({ ok: true } as const),
+        resolveConflict: async () => ({ ok: true }) as const,
+        syncNow: async () => ({ ok: true }) as const,
         kitName: new StoreField<string>(""),
         renameKit: new StoreCommand<import("@semio-tech/compose-js").RenameKitCommandArgs>(async () => ({
           ok: false,

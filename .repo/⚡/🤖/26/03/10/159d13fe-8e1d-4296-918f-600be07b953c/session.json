@@ -294,9 +294,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌47428"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌47428"],
         "second": "🎆26🌙03☀️10⏰23⌚45⏱️18",
         "session": "⚪159d13fe8e1d4296918f600be07b953c"
       },
@@ -327,9 +325,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌21881"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌21881"],
         "second": "🎆26🌙03☀️10⏰23⌚45⏱️24",
         "session": "⚪159d13fe8e1d4296918f600be07b953c"
       },
@@ -360,9 +356,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌47428"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌47428"],
         "second": "🎆26🌙03☀️10⏰23⌚45⏱️24",
         "session": "⚪159d13fe8e1d4296918f600be07b953c"
       },
@@ -753,9 +747,7 @@
         "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "🧰composerepo⌨️cli🥼maintest"
-        ],
+        "files": ["🧰composerepo⌨️cli🥼maintest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️10⏰23⌚49⏱️43",
@@ -1309,10 +1301,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "repo/cli/main.go",
-                "repo/cli/main_test.go"
-              ],
+              "files": ["repo/cli/main.go", "repo/cli/main_test.go"],
               "no_github": true,
               "path": "26/03/10/RENAME-FILE-SEARCH-AGENT-EVENTS-TO-FILE-READ",
               "summary": "Renamed neutral agent event slugs from agent.file.search.starting/ended to agent.file.read.starting/ended in CLI hook constants, help text, and all related tests. Verified no remaining agent.file.search references in repo."
@@ -1345,10 +1334,7 @@
             "mcp_result": "[🎫renamefilesearchagenteventstofileread](composerepo://y/00/m/00/d/00/tk/RENAME-FILE-SEARCH-AGENT-EVENTS-TO-FILE-READ) - `closed` - `closed 1 second ago`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "repo/cli/main.go",
-                "repo/cli/main_test.go"
-              ],
+              "files": ["repo/cli/main.go", "repo/cli/main_test.go"],
               "no_github": true,
               "path": "26/03/10/RENAME-FILE-SEARCH-AGENT-EVENTS-TO-FILE-READ",
               "summary": "Renamed neutral agent event slugs from agent.file.search.starting/ended to agent.file.read.starting/ended in CLI hook constants, help text, and all related tests. Verified no remaining agent.file.search references in repo."

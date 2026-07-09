@@ -10,18 +10,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { within } from "storybook/test";
 import * as React from "react";
 
-import {
-  AlgorithmApp,
-  WindowKind,
-  mergeKitDesigns,
-  movePieces,
-  pieceIdsFromWire,
-  useAlgorithmAsyncRun,
-  useFlatDesignPreview,
-  useReconciledPieceSelection,
-  type AlgorithmContextValue,
-  type AlgorithmWindowDef,
-} from "@semio-tech/compose-algorithm";
+import { AlgorithmApp, WindowKind, mergeKitDesigns, movePieces, pieceIdsFromWire, useAlgorithmAsyncRun, useFlatDesignPreview, useReconciledPieceSelection, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio-tech/compose-algorithm";
 
 import { MetabolismKit as metabolismKit } from "@semio-tech/semio-asset";
 import { DragPieces, MoveStoryDesign, MoveVector } from "@semio-tech/compose-fixture";
@@ -42,11 +31,7 @@ function MoveFrame() {
   const { flatInputDesign, diagramLayoutDiff, loading: flatLoading, ready } = useFlatDesignPreview(kit, rawDesign.id);
   const { selectedPieceIds, setSelectedPieceIds } = useReconciledPieceSelection(defaultPieceIds, rawDesign, defaultPieceIds, ready);
 
-  const { result, loading: runLoading, error } = useAlgorithmAsyncRun(
-    ready && selectedPieceIds.length > 0,
-    () => movePieces(kit, rawDesign as Design, selectedPieceIds, vector),
-    [kit, selectedPieceIds, vector.gap, vector.shift, vector.rise],
-  );
+  const { result, loading: runLoading, error } = useAlgorithmAsyncRun(ready && selectedPieceIds.length > 0, () => movePieces(kit, rawDesign as Design, selectedPieceIds, vector), [kit, selectedPieceIds, vector.gap, vector.shift, vector.rise]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({

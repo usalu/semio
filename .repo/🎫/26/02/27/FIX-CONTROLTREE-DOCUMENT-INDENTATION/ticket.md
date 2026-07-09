@@ -7,6 +7,7 @@ goal: SKETCHPAD-UI/CONTROLTREE
 ## Summary
 
 Fixed ControlTree document indentation: leaf controls now wrapped in TreeItem+TreeContent matching Design.tsx pattern. Fixed missing TreeItem/TreeContent imports in Sketchpad.tsx chat panel. Zero TypeScript errors.
+
 ## Changes
 
 - `compose/js/sketchpad/elements.tsx`: Fixed `ControlTreeFolder` — removed wrapping `<TreeContent>` around all children, each leaf now individually wrapped in `<TreeItem><TreeContent><div data-slot="control-tree-leaf">...</div></TreeContent></TreeItem>`.

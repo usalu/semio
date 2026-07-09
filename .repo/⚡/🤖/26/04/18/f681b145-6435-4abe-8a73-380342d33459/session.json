@@ -22282,9 +22282,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f681b145-6435-4abe-8a73-380342d33459.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\js\\index.ts"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\js\\index.ts"]
           },
           "tool_use_id": "toolu_vrtx_01PbgMVsofjLo1Un9aBi3ic6__vscode-1776438195508",
           "cwd": "c:\\git\\compose"
@@ -22310,9 +22308,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f681b145-6435-4abe-8a73-380342d33459.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\js\\index.ts"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\js\\index.ts"]
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01PbgMVsofjLo1Un9aBi3ic6__vscode-1776438195508",
@@ -22339,9 +22335,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\f681b145-6435-4abe-8a73-380342d33459.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\js\\index.ts"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\js\\index.ts"]
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01PbgMVsofjLo1Un9aBi3ic6__vscode-1776438195508",

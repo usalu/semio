@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Design app had severe performance issues with hovering/selection. With 180 pieces in Nakagin Capsule Tower, hover operations took 3-5 seconds due to cascade re-renders.
@@ -62,6 +63,7 @@ Root causes identified:
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix hover and selection state overfetching for performance

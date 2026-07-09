@@ -5,24 +5,12 @@
   "label": "Bondable",
   "description": "Marks geometry that may be unified with matching contacts.",
   "field": "bondable",
-  "targets": [
-    "edge",
-    "wire",
-    "face",
-    "solid"
-  ],
+  "targets": ["edge", "wire", "face", "solid"],
   "value": {
     "kind": "boolean",
-    "allowedValues": [
-      true
-    ]
+    "allowedValues": [true]
   },
   "geometrySelector": {
-    "kinds": [
-      "edge",
-      "wire",
-      "face",
-      "solid"
-    ]
+    "kinds": ["edge", "wire", "face", "solid"]
   }
 }

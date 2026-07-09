@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 ## Investigation
@@ -90,6 +91,7 @@ All Playwright tests pass:
 ## Log
 
 ## Summary
+
 # Summary
 
 Finish drag and drop functionality for pieces in diagram and scene

@@ -1,58 +1,58 @@
 {
-    "building": {
-        "id": "building-1",
+  "building": {
+    "id": "building-1",
+    "gross-floor-area": {
+      "value": 200,
+      "unit": "m²"
+    },
+    "energy_demand": {
+      "value": 150,
+      "unit": "kWh/m²a"
+    },
+    "storeys": [
+      {
+        "id": "storey-1",
+        "floor_height": {
+          "value": 3,
+          "unit": "m"
+        },
         "gross-floor-area": {
-            "value": 200,
-            "unit": "m²"
+          "value": 100,
+          "unit": "m²"
         },
-        "energy_demand": {
-            "value": 150,
-            "unit": "kWh/m²a"
+        "volume": {
+          "value": 300,
+          "unit": "m³"
         },
-        "storeys": [
-            {
-                "id": "storey-1",
-                "floor_height": {
-                    "value": 3,
-                    "unit": "m"
-                },
-                "gross-floor-area": {
-                    "value": 100,
-                    "unit": "m²"
-                },
-                "volume": {
-                    "value": 300,
-                    "unit": "m³"
-                },
-                "occupancy": {
-                    "value": 10,
-                    "unit": "people"
-                },
-                "spaces": [
-                    {
-                        "id": "space-1",
-                        "gross-floor-area": {
-                            "value": 50,
-                            "unit": "m²"
-                        },
-                        "occupancy": {
-                            "value": 5,
-                            "unit": "people"
-                        }
-                    },
-                    {
-                        "id": "space-2",
-                        "gross-floor-area": {
-                            "value": 50,
-                            "unit": "m²"
-                        },
-                        "occupancy": {
-                            "value": 5,
-                            "unit": "people"
-                        }
-                    }
-                ]
+        "occupancy": {
+          "value": 10,
+          "unit": "people"
+        },
+        "spaces": [
+          {
+            "id": "space-1",
+            "gross-floor-area": {
+              "value": 50,
+              "unit": "m²"
+            },
+            "occupancy": {
+              "value": 5,
+              "unit": "people"
             }
+          },
+          {
+            "id": "space-2",
+            "gross-floor-area": {
+              "value": 50,
+              "unit": "m²"
+            },
+            "occupancy": {
+              "value": 5,
+              "unit": "people"
+            }
+          }
         ]
-    }
+      }
+    ]
+  }
 }

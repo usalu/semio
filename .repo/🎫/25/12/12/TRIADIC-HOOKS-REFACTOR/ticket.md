@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Components in Design.tsx were directly using `useDesignAppCommands()` hook and destructuring transaction methods (`startTransaction`, `finalizeTransaction`, `abortTransaction`) and kit mutation methods (`addPiece`, `updatePiece`, etc.) for use in components. This violated the intended architecture where:
@@ -112,6 +113,7 @@ The `sharedCommandsRef = commands` pattern in DesignDiagram is preserved. This i
 ## Log
 
 ## Summary
+
 # Summary
 
->-
+> -

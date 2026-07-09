@@ -7,6 +7,7 @@ goal: unassigned
 ## Summary
 
 Fixed two failing tests and a dead-code bug: (1) JSDoc test content changed to place JSDoc NOT above a definition so it is no longer exempted as definition docstring, (2) inline test content changed to place comment AFTER code so it is no longer the first comment block after section start (section doc exemption), (3) fixed brace nesting bug in TypeScript ScanComments where IsDefinitionDocLine was unreachable dead code inside the IsSectionDocLine block
+
 ## Changes
 
 1. Fixed test content in both tests to avoid exemption triggers

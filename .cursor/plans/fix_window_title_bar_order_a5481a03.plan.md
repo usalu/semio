@@ -2,21 +2,21 @@
 name: Fix window title bar order
 overview: Root-cause the window title-bar ordering bug (chips/rule rendering below the box content instead of above it) and unfreeze the stuck TeX build.
 todos:
-  - id: kill-stuck-tectonic
-    content: Terminate orphaned tectonic processes blocking the watch build
-    status: completed
-  - id: fix-vtop-to-vbox
-    content: Change \vtop to \vbox in \semio@window@header@muted (print/tex/semio-window.sty)
-    status: completed
-  - id: remove-dead-inbox-code
-    content: Remove unused inbox-header/double-hairline leftovers from an abandoned attempt
-    status: completed
-  - id: rebuild-and-rasterize
-    content: Rebuild zwischenbericht/report and rasterize to confirm chip row now renders above box content and cover title isn't clipped
-    status: completed
-  - id: update-ticket
-    content: Update verify-log.md and close ticket PRINT-WINDOW-BORDER-GAP with the corrected root cause
-    status: completed
+ - id: kill-stuck-tectonic
+   content: Terminate orphaned tectonic processes blocking the watch build
+   status: completed
+ - id: fix-vtop-to-vbox
+   content: Change \vtop to \vbox in \semio@window@header@muted (print/tex/semio-window.sty)
+   status: completed
+ - id: remove-dead-inbox-code
+   content: Remove unused inbox-header/double-hairline leftovers from an abandoned attempt
+   status: completed
+ - id: rebuild-and-rasterize
+   content: Rebuild zwischenbericht/report and rasterize to confirm chip row now renders above box content and cover title isn't clipped
+   status: completed
+ - id: update-ticket
+   content: Update verify-log.md and close ticket PRINT-WINDOW-BORDER-GAP with the corrected root cause
+   status: completed
 isProject: false
 ---
 
@@ -30,6 +30,7 @@ isProject: false
 - [print/tex/semio-window.sty:1355](print/tex/semio-window.sty) `\semio@window@header@muted` (used for `Window` title bars, which are broken) wraps the same kind of content — chip row `\hbox`, then separator-rule `\hbox` — in `\vtop{ ... }` instead.
 
 This is the actual bug. Per the TeXbook box model:
+
 - `\vbox{A B}` sets the box's reference point (baseline) at the bottom of the **last** item `B` → depth stays near zero (rule has no depth), height carries almost the whole block. Inserted into the vertical list, the current point lands right after the separator rule, exactly where the `tcolorbox` body should begin. This is why headings work.
 - `\vtop{A B}` sets the reference point at the bottom of the **first** item `A` (the chip row) instead. That flips the height/depth split: most of the visible content (chip glyphs) ends up counted as **depth**, hanging below the reference point. When this box is the very first thing on a page (the cover-page `Titel` window), that depth region pokes above the usable page area and gets clipped at the top. Further down the page, it causes the chip/rule row to visually land **after** the box content instead of before it, matching both screenshots.
 

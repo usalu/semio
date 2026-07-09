@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 1. Inspect repo ticket GitHub integration for reopen and close behavior.
 2. Add prompt and summary heading handling in reopen/close flows.
 3. Update README.md and AGENTS.md documentation for the new heading behavior.
@@ -9,6 +10,7 @@
 ## Changes
 
 ## Log
+
 Updated FinishTicket to prepend the # 🔍 Summary heading in GitHub comments and keep metrics block intact.
 Updated ReopenTicket to add a # 🤖 Prompt comment after reopening GitHub issues.
 Documented GitHub prompt/summary heading behavior in README.md bundle signals and AGENTS.md SRS/codebase entries.
@@ -34,6 +36,7 @@ User requested continuation with the previously completed GitHub heading and doc
 User asked to continue after tasks were completed; ticket already closed.
 
 ## Summary
+
 Implemented GitHub ticket heading consistency: reopen now posts a # 🤖 Prompt comment and close comments prepend # 🔍 Summary alongside metrics.
 Documented prompt/summary heading behavior in README.md bundle signals and AGENTS.md SRS/codebase entries.
 Continuation request received with no additional code changes needed beyond the completed updates.

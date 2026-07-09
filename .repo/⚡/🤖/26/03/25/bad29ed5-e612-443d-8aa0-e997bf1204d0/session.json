@@ -436,10 +436,7 @@
           "session_id": "bad29ed5-e612-443d-8aa0-e997bf1204d0",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/net/Compose/Compose.cs",
-              "/workspaces/semio/compose/net/Compose.Tests/Tests.cs"
-            ]
+            "filePaths": ["/workspaces/semio/compose/net/Compose/Compose.cs", "/workspaces/semio/compose/net/Compose.Tests/Tests.cs"]
           },
           "tool_use_id": "call_p88gJFwmLwzdFxJOuVKzlg93__vscode-1774398923244",
           "cwd": "/workspaces/semio"
@@ -516,10 +513,7 @@
           "session_id": "bad29ed5-e612-443d-8aa0-e997bf1204d0",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/compose/net/Compose/Compose.cs",
-              "/workspaces/semio/compose/net/Compose.Tests/Tests.cs"
-            ]
+            "filePaths": ["/workspaces/semio/compose/net/Compose/Compose.cs", "/workspaces/semio/compose/net/Compose.Tests/Tests.cs"]
           },
           "tool_response": "",
           "tool_use_id": "call_p88gJFwmLwzdFxJOuVKzlg93__vscode-1774398923244",

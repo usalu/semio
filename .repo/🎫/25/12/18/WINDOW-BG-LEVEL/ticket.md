@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - Window backgrounds were still using base-level styling in some window contexts, so window surfaces did not visually separate from the canvas.
@@ -22,6 +23,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix window background colors via useLevel

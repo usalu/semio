@@ -25,8 +25,6 @@ flowchart TB
   delete --> emit --> queue --> filter --> drop --> fixtureStale --> brush --> resync --> reappear
 ```
 
-
-
 ## Fix
 
 ### 1. Stop dropping authoritative user deletes
@@ -47,7 +45,7 @@ In the `filterPuzzle2dPlayStructuralDeleteBatch` describe block in [puzzle/2d/pl
 - mass node deletes (e.g. all 3 nodes) are kept
 - sequential/mass edge deletes are kept
 - paired edge deletes on a nakagin-scale (>20 edge) fixture are kept
-Keep the existing dedup and ghost-id-drop tests, and keep the `flushPuzzle2dPlayStructuralDeleteBatch` test.
+  Keep the existing dedup and ghost-id-drop tests, and keep the `flushPuzzle2dPlayStructuralDeleteBatch` test.
 
 ## Verification
 

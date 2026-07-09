@@ -7,21 +7,27 @@ goal: clean-code/sketchpad
 ## Summary
 
 Fixed Kit designs toggle deselection by adding unstable_useTransitions={false} to BrowserRouter and MemoryRouter in Sketchpad.tsx. Root cause: React Router 7 wraps history listener state updates in React.startTransition by default, causing useSearchParams to return stale values when a second click fires before the transition commits. Setting unstable_useTransitions={false} makes navigation state updates synchronous, ensuring the component re-renders with fresh state between clicks.
+
 ## Root Cause
 
 In React Router 7 (`BrowserRouter` / `MemoryRouter`):
+
 ```js
-let setState = React.useCallback((newState) => {
+let setState = React.useCallback(
+ (newState) => {
   if (unstable_useTransitions === false) {
-    setStateImpl(newState);
+   setStateImpl(newState);
   } else {
-    React.startTransition(() => setStateImpl(newState)); // DEFAULT: deferred!
+   React.startTransition(() => setStateImpl(newState)); // DEFAULT: deferred!
   }
-}, [unstable_useTransitions]);
+ },
+ [unstable_useTransitions],
+);
 React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 ```
 
 Chain of events:
+
 1. Click 1 → `toggleKind("designs")` → `searchParams` has no `kind` → appends `kind=designs` → `setSearchParams(newParams)` → `navigate("?kind=designs")` → `history.push` → URL changes immediately
 2. History listener fires → `startTransition(() => setStateImpl(newLocation))` → React **schedules** state update as low-priority transition
 3. Playwright's `waitForURL(/kind=designs/)` resolves (URL already changed)

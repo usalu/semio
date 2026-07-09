@@ -2,24 +2,24 @@
 name: fix brush upside-down flip
 overview: Fix puzzle3d brush predictions flipping upside down by handling the anti-parallel edge case of THREE.Quaternion.setFromUnitVectors with a deterministic 180-degree rotation, mirroring the existing Rhino/Grasshopper fix.
 todos:
-  - id: ticket
-    content: Read repo://goals and open/reopen a ticket for the brush upside-down flip fix
-    status: completed
-  - id: helpers
-    content: Add vec3Dot and vec3Cross helpers (with emoji docstrings) near normalizeVec3Cad in puzzle/3d/react/index.tsx
-    status: completed
-  - id: fix
-    content: Add anti-parallel edge-case guard in computeBrushPlacementPose with deterministic 180-degree rotation (Z axis when horizontal, cross(Z,dir) otherwise)
-    status: completed
-  - id: tests
-    content: Extend existing computeBrushPlacementPose tests with horizontal and vertical collinear cases proving no upside-down flip
-    status: completed
-  - id: validate
-    content: Run puzzle3d react vitest suite and confirm green
-    status: completed
-  - id: close
-    content: Close the ticket with summary of changed files
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open/reopen a ticket for the brush upside-down flip fix
+   status: completed
+ - id: helpers
+   content: Add vec3Dot and vec3Cross helpers (with emoji docstrings) near normalizeVec3Cad in puzzle/3d/react/index.tsx
+   status: completed
+ - id: fix
+   content: Add anti-parallel edge-case guard in computeBrushPlacementPose with deterministic 180-degree rotation (Z axis when horizontal, cross(Z,dir) otherwise)
+   status: completed
+ - id: tests
+   content: Extend existing computeBrushPlacementPose tests with horizontal and vertical collinear cases proving no upside-down flip
+   status: completed
+ - id: validate
+   content: Run puzzle3d react vitest suite and confirm green
+   status: completed
+ - id: close
+   content: Close the ticket with summary of changed files
+   status: completed
 isProject: false
 ---
 
@@ -58,13 +58,11 @@ const targetDir = normalizeVec3Cad(args.targetWorldDirectionCad);
 const desiredWorldDir = negateVec3Cad(targetDir);
 let orientation: Quat;
 if (vec3Dot(localDir, desiredWorldDir) < -1 + 1e-6) {
-  const axis = Math.abs(targetDir[2]) < 1e-6
-    ? ([0, 0, 1] as Vec3)
-    : normalizeVec3Cad(vec3Cross([0, 0, 1], targetDir));
-  orientation = [axis[0], axis[1], axis[2], 0];
+ const axis = Math.abs(targetDir[2]) < 1e-6 ? ([0, 0, 1] as Vec3) : normalizeVec3Cad(vec3Cross([0, 0, 1], targetDir));
+ orientation = [axis[0], axis[1], axis[2], 0];
 } else {
-  const q = new Quaternion().setFromUnitVectors(new Vector3(...localDir), new Vector3(...desiredWorldDir));
-  orientation = [q.x, q.y, q.z, q.w];
+ const q = new Quaternion().setFromUnitVectors(new Vector3(...localDir), new Vector3(...desiredWorldDir));
+ orientation = [q.x, q.y, q.z, q.w];
 }
 ```
 
@@ -84,4 +82,3 @@ Extend the existing test block in [puzzle/3d/react/index.tsx](puzzle/3d/react/in
 ## Repo workflow
 
 - Read `repo://goals`, open/reopen a ticket for this fix before editing, and close it with a summary of touched files when done (only `puzzle/3d/react/index.tsx` is expected to change).
-

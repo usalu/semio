@@ -2,21 +2,21 @@
 name: Unified 5D Topology Component
 overview: Refactor puzzle/5d into a single neutral source-of-truth topology model (Part/Anchor/Bond/Sketch) with a shared cross-instance store and one mode-switchable <FiveD> component, and extend puzzle/2d (WASM+React) and puzzle/3d to support live cross-surface connect gestures so an interaction started in one surface previews and terminates in any other.
 todos:
-  - id: ticket-contract
-    content: Read repo://goals, open ticket, and define neutral TopologyV1/Part/Anchor/Bond/ConnectSession + projection/reducer/store contract in puzzle/5d/react/index.tsx regions
-    status: completed
-  - id: model-store-component
-    content: Implement parseTopologyV1, projectFlat/projectSpatial, reverse reducers, shared TopologyStore + provider, and the <FiveD mode> component
-    status: completed
-  - id: puzzle2d-gestures
-    content: "puzzle/2d: drain+props for onLinkCompatibleNodes/onLinkTargetRing; WASM ExternalLinkPreview interaction + linkSession prop + commit-from-elsewhere; extend vitest + Rust tests"
-    status: completed
-  - id: puzzle3d-gestures
-    content: "puzzle/3d: add controllable attractionSession preview prop with cross-surface commit; keep neutral boundary; extend inline vitest"
-    status: completed
-  - id: consumers-fixtures-tests
-    content: Migrate playground renderer + sketchpad to <FiveD>+shared store, unify the Nakagin fixture as single source of truth, update e2e/unit tests, remove old dual-surface exports, run all suites, close ticket
-    status: completed
+ - id: ticket-contract
+   content: Read repo://goals, open ticket, and define neutral TopologyV1/Part/Anchor/Bond/ConnectSession + projection/reducer/store contract in puzzle/5d/react/index.tsx regions
+   status: completed
+ - id: model-store-component
+   content: Implement parseTopologyV1, projectFlat/projectSpatial, reverse reducers, shared TopologyStore + provider, and the <FiveD mode> component
+   status: completed
+ - id: puzzle2d-gestures
+   content: "puzzle/2d: drain+props for onLinkCompatibleNodes/onLinkTargetRing; WASM ExternalLinkPreview interaction + linkSession prop + commit-from-elsewhere; extend vitest + Rust tests"
+   status: completed
+ - id: puzzle3d-gestures
+   content: "puzzle/3d: add controllable attractionSession preview prop with cross-surface commit; keep neutral boundary; extend inline vitest"
+   status: completed
+ - id: consumers-fixtures-tests
+   content: Migrate playground renderer + sketchpad to <FiveD>+shared store, unify the Nakagin fixture as single source of truth, update e2e/unit tests, remove old dual-surface exports, run all suites, close ticket
+   status: completed
 isProject: false
 ---
 
@@ -53,8 +53,6 @@ flowchart TB
   store -->|"connectSession -> linkSession / attractionSession preview props"| flat
   store -->|"connectSession -> preview props"| spatial
 ```
-
-
 
 ### Phase 0 - Ticket + contract (do first; blocks the parallel work)
 
@@ -98,4 +96,3 @@ Large (multi-hour) effort; after Phase 0 contract is fixed, run Phases 1/2/3 by 
 
 - Mode values `"flat" | "spatial"` chosen as neutral (not "2d"/"3d", not compose-forbidden terms). Component named `FiveD`.
 - Per-surface camera and layout (flat x,y vs spatial transform) are independent presentation aspects of the same Part and both persist in the model; only topology/kinds/selection/gestures sync conceptually.
-

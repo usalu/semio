@@ -2,36 +2,36 @@
 name: Note Infinite Canvas App
 overview: Create a new fully-featured S technology app "note" — an infinite canvas with text, image, table, math, and pencil-ink blocks — fully integrated with hover/selection/document/window options, VCS persistence, playground dev host, and S program registration.
 todos:
-  - id: ticket
-    content: Read repo://goals and open ticket via ticket_open
-    status: completed
-  - id: core-model
-    content: Create note/core with NoteDocument model, blocks, edit ops, VCS handler, tests
-    status: completed
-  - id: core-playground
-    content: Implement NotePlayController, windows, tools, measures, engagement, panel trees, notePlayAppDefinition
-    status: completed
-  - id: react-canvas
-    content: Create note/react NoteCanvas with pan/zoom, block editing, pencil, selection/hover, math renderer interface
-    status: completed
-  - id: platform
-    content: Add note ComponentKind, UiNoteHostSurfaceNode, buildNoteWindowBody to platform core
-    status: completed
-  - id: renderer-boot
-    content: Add bootNotePlay, surface host, side panels to playground renderer react
-    status: completed
-  - id: registry-ports
-    content: Register note in app-registry, dev script, PLAYGROUND_PORTS
-    status: completed
-  - id: s-integration
-    content: Add S resource kind, program definition merge, VCS handler registration
-    status: completed
-  - id: commands
-    content: Add dev:note/test:note scripts and launch.json entry
-    status: completed
-  - id: verify
-    content: Run tests, boot dev:note and dev:s, verify runtime with debug logs, close ticket
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open ticket via ticket_open
+   status: completed
+ - id: core-model
+   content: Create note/core with NoteDocument model, blocks, edit ops, VCS handler, tests
+   status: completed
+ - id: core-playground
+   content: Implement NotePlayController, windows, tools, measures, engagement, panel trees, notePlayAppDefinition
+   status: completed
+ - id: react-canvas
+   content: Create note/react NoteCanvas with pan/zoom, block editing, pencil, selection/hover, math renderer interface
+   status: completed
+ - id: platform
+   content: Add note ComponentKind, UiNoteHostSurfaceNode, buildNoteWindowBody to platform core
+   status: completed
+ - id: renderer-boot
+   content: Add bootNotePlay, surface host, side panels to playground renderer react
+   status: completed
+ - id: registry-ports
+   content: Register note in app-registry, dev script, PLAYGROUND_PORTS
+   status: completed
+ - id: s-integration
+   content: Add S resource kind, program definition merge, VCS handler registration
+   status: completed
+ - id: commands
+   content: Add dev:note/test:note scripts and launch.json entry
+   status: completed
+ - id: verify
+   content: Run tests, boot dev:note and dev:s, verify runtime with debug logs, close ticket
+   status: completed
 isProject: false
 ---
 

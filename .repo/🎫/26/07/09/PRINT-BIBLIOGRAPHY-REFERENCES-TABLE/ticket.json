@@ -1,8 +1,9 @@
 {
   "title": "Print Bibliography References Table",
   "emoji": "📚",
-  "status": "open",
+  "status": "closed",
   "description": "Generalize biblatex citation support from kompaktbericht-only hack into shared semio.cls, make citation style configurable per document, and render bibliography as chrome-styled references table in appendix/registers section.",
+  "summary": "Generalized biblatex into semio.cls with configurable citestyle option (numeric default; alphabetic for paper; authoryear for kompaktbericht). Added SemioReferencesTitle, reference kind labels, SemioTableReference/SemioTableReferenceRow, and collect-then-render bibliography table in semio-window.sty wired into makeregisters. Updated all six templates with references.bib, citations, and registers (flyer keeps capability only). Fixed print/script.ts TEXINPUTS recursive search and biblatex reruns. Verified all 12 PDFs (6 templates × light/dark) via bun ./script.ts test.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1877"
   },
@@ -10,9 +11,7 @@
   "plan": {
     "client": "cursor",
     "id": "1273cc32",
-    "source": "/Users/ueli/Documents/semio/.cursor/plans/print_bibliography_references_table_1273cc32.plan.md"
+    "local": "print_bibliography_references_table_1273cc32.plan.md"
   },
-  "sessions": [
-    "⚪a3ee9a3a41444056a48abf8a7efb6a11"
-  ]
+  "sessions": ["⚪a3ee9a3a41444056a48abf8a7efb6a11"]
 }

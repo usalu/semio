@@ -512,11 +512,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "repo/go/main.go",
-                "repo/go/emit.go",
-                "repo/go/events.go"
-              ],
+              "files": ["repo/go/main.go", "repo/go/emit.go", "repo/go/events.go"],
               "summary": "Consolidated repo/go/emit.go and repo/go/events.go into a single repo/go/main.go. Deleted the two original files. All repo URI references updated from emit.go/events.go to main.go. Downstream consumers (repo/cli, repo/server) build successfully."
             },
             "mcp_tool_name": "ticket_close"
@@ -543,11 +539,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "repo/go/main.go",
-                "repo/go/emit.go",
-                "repo/go/events.go"
-              ],
+              "files": ["repo/go/main.go", "repo/go/emit.go", "repo/go/events.go"],
               "path": "2026/03/23/CONSOLIDATE-REPO-GO-EMIT-AND-EVENTS-INTO-MAIN",
               "summary": "Consolidated repo/go/emit.go and repo/go/events.go into a single repo/go/main.go. Deleted the two original files. All repo URI references updated from emit.go/events.go to main.go. Downstream consumers (repo/cli, repo/server) build successfully."
             },
@@ -663,11 +655,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "repo/go/main.go",
-                "repo/go/emit.go",
-                "repo/go/events.go"
-              ],
+              "files": ["repo/go/main.go", "repo/go/emit.go", "repo/go/events.go"],
               "path": "26/03/23/CONSOLIDATE-REPO-GO-EMIT-AND-EVENTS-INTO-MAIN",
               "summary": "Consolidated repo/go/emit.go and repo/go/events.go into a single repo/go/main.go. Deleted the two original files. All repo URI references updated from emit.go/events.go to main.go. Downstream consumers (repo/cli, repo/server) build successfully."
             },
@@ -696,11 +684,7 @@
             "mcp_result": "[🎫consolidaterepogoemitandeventsintomain](repo://y/00/m/00/d/00/tk/CONSOLIDATE-REPO-GO-EMIT-AND-EVENTS-INTO-MAIN) - `closed` - `closed now`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "repo/go/main.go",
-                "repo/go/emit.go",
-                "repo/go/events.go"
-              ],
+              "files": ["repo/go/main.go", "repo/go/emit.go", "repo/go/events.go"],
               "path": "26/03/23/CONSOLIDATE-REPO-GO-EMIT-AND-EVENTS-INTO-MAIN",
               "summary": "Consolidated repo/go/emit.go and repo/go/events.go into a single repo/go/main.go. Deleted the two original files. All repo URI references updated from emit.go/events.go to main.go. Downstream consumers (repo/cli, repo/server) build successfully."
             },

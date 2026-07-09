@@ -1,4 +1,4 @@
 {
-    "name": "repo/graphql",
-    "bundleKind": "schema"
+  "name": "repo/graphql",
+  "bundleKind": "schema"
 }

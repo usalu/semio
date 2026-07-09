@@ -5,7 +5,5 @@
   "description": "Make sure that every presentation is split into slide/\u003cchapter\u003e/\u003csequence\u003e/\u003cthought\u003e/\u003cslide\u003e.ts files and folders. The name of the files and folders are the names. They are titleized, contain white spaces and are directly in the target language.",
   "summary": "Added slide-file assembly to @semio-tech/framework-presentation-core: SlideFile, parsePresentationSlideFilePath, presentationSlideFilePath, assembleThoughtFromSlideFiles, assembleChapterFromSlideFiles, loadPresentationFromSlideGlob, introSlideFiles. Refactored intro() to assemble from slide modules. Split 33. Projektetage into slide/Hauptteil/Einführung/{Einleitung,Medien}/\u003cSlide\u003e.ts with German titleized folder and file names. Tests: core 37 pass, react renderer 22 pass, projektetage vite build succeeds.",
   "goal": "🎯framework",
-  "sessions": [
-    "⚪03d54fe0ce3c4516a77034a8984c5312"
-  ]
+  "sessions": ["⚪03d54fe0ce3c4516a77034a8984c5312"]
 }

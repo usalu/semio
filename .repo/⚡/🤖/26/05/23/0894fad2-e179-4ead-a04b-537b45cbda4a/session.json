@@ -162,9 +162,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0894fad2-e179-4ead-a04b-537b45cbda4a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\spatial"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\spatial"]
           },
           "tool_use_id": "call_uAZDxvSPvmFnKwHaRhByNb5t__vscode-1779579251360",
           "cwd": "c:\\git\\compose"
@@ -218,9 +216,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0894fad2-e179-4ead-a04b-537b45cbda4a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\spatial"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\spatial"]
           },
           "tool_use_id": "call_uAZDxvSPvmFnKwHaRhByNb5t__vscode-1779579251360",
           "cwd": "c:\\git\\compose"
@@ -274,9 +270,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0894fad2-e179-4ead-a04b-537b45cbda4a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\spatial"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\spatial"]
           },
           "tool_response": "",
           "tool_use_id": "call_uAZDxvSPvmFnKwHaRhByNb5t__vscode-1779579251360",
@@ -361,9 +355,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0894fad2-e179-4ead-a04b-537b45cbda4a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\spatial"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\spatial"]
           },
           "tool_response": "",
           "tool_use_id": "call_uAZDxvSPvmFnKwHaRhByNb5t__vscode-1779579251360",
@@ -2276,12 +2268,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0894fad2-e179-4ead-a04b-537b45cbda4a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\spatial\\play\\host.tsx",
-              "c:\\git\\compose\\elements\\spatial\\play\\index.ts",
-              "c:\\git\\compose\\elements\\spatial\\react\\index.tsx",
-              "c:\\git\\compose\\elements\\spatial\\js\\index.ts"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\spatial\\play\\host.tsx", "c:\\git\\compose\\elements\\spatial\\play\\index.ts", "c:\\git\\compose\\elements\\spatial\\react\\index.tsx", "c:\\git\\compose\\elements\\spatial\\js\\index.ts"]
           },
           "tool_use_id": "call_3RDRYu43Sj4T9zFkKE9IspAq__vscode-1779579251385",
           "cwd": "c:\\git\\compose"
@@ -2307,12 +2294,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0894fad2-e179-4ead-a04b-537b45cbda4a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\spatial\\play\\host.tsx",
-              "c:\\git\\compose\\elements\\spatial\\play\\index.ts",
-              "c:\\git\\compose\\elements\\spatial\\react\\index.tsx",
-              "c:\\git\\compose\\elements\\spatial\\js\\index.ts"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\spatial\\play\\host.tsx", "c:\\git\\compose\\elements\\spatial\\play\\index.ts", "c:\\git\\compose\\elements\\spatial\\react\\index.tsx", "c:\\git\\compose\\elements\\spatial\\js\\index.ts"]
           },
           "tool_response": "",
           "tool_use_id": "call_3RDRYu43Sj4T9zFkKE9IspAq__vscode-1779579251385",
@@ -2743,10 +2725,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0894fad2-e179-4ead-a04b-537b45cbda4a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\spatial",
-              "c:\\git\\compose\\package.json"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\spatial", "c:\\git\\compose\\package.json"]
           },
           "tool_use_id": "call_qi7S0RQMwHqFSlwyBb2Lffoz__vscode-1779579251390",
           "cwd": "c:\\git\\compose"
@@ -2772,10 +2751,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0894fad2-e179-4ead-a04b-537b45cbda4a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\spatial",
-              "c:\\git\\compose\\package.json"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\spatial", "c:\\git\\compose\\package.json"]
           },
           "tool_use_id": "call_qi7S0RQMwHqFSlwyBb2Lffoz__vscode-1779579251390",
           "cwd": "c:\\git\\compose"
@@ -2801,10 +2777,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0894fad2-e179-4ead-a04b-537b45cbda4a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\spatial",
-              "c:\\git\\compose\\package.json"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\spatial", "c:\\git\\compose\\package.json"]
           },
           "tool_response": "",
           "tool_use_id": "call_qi7S0RQMwHqFSlwyBb2Lffoz__vscode-1779579251390",
@@ -2862,10 +2835,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0894fad2-e179-4ead-a04b-537b45cbda4a.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\elements\\spatial",
-              "c:\\git\\compose\\package.json"
-            ]
+            "filePaths": ["c:\\git\\compose\\elements\\spatial", "c:\\git\\compose\\package.json"]
           },
           "tool_response": "",
           "tool_use_id": "call_qi7S0RQMwHqFSlwyBb2Lffoz__vscode-1779579251390",

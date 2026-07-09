@@ -8,12 +8,8 @@
     "structure.structure.constructReinforcedConcreteExternalWallFromCurveAndHeight",
     "structure.structure.constructReinforcedConcreteExternalWallFromSurface"
   ],
-  "interactions": [
-    "structure.structure.constructReinforcedConcreteExternalWall"
-  ],
-  "primitiveKinds": [
-    "surface"
-  ],
+  "interactions": ["structure.structure.constructReinforcedConcreteExternalWall"],
+  "primitiveKinds": ["surface"],
   "style": {
     "color": "#6B8E9F",
     "edgeColor": "#3D5560",

@@ -2,21 +2,21 @@
 name: WIRES terminology and UI
 overview: Align WIRES with its own domain vocabulary (Identity, IdentityKind, four relationship kinds) and make the canvas, catalogs, and play shell visibly express four distinct relationship styles plus per-identity-kind shapes—by extending puzzle 2d kind-catalog paint and adding a WIRES-native fixture/UI layer on top of the existing normal-graph pipeline.
 todos:
-  - id: terminology-wires
-    content: Rename wires fixture/types to Identity/IdentityKind/RelationshipKind; add mapping helpers + AGENTS glossary; fix mindmap AGENTS typo
-    status: completed
-  - id: catalog-paint
-    content: Extend puzzle 2d EdgeKindDef/NodeKindDef ingest + WASM paint (color, stroke, dash) with interaction overlay
-    status: completed
-  - id: fixture-board
-    content: Update metabolism fixture + wiresFixtureBoard to derive edgeKind/shape from kinds; distinct identity kind shapes in demo
-    status: completed
-  - id: play-ui
-    content: WIRES document (Identities/Relationships) and inspector labels using relationship kind display names
-    status: completed
-  - id: validate
-    content: Rust + vitest tests; runtime check on wires play; ticket close via repo MCP
-    status: completed
+ - id: terminology-wires
+   content: Rename wires fixture/types to Identity/IdentityKind/RelationshipKind; add mapping helpers + AGENTS glossary; fix mindmap AGENTS typo
+   status: completed
+ - id: catalog-paint
+   content: Extend puzzle 2d EdgeKindDef/NodeKindDef ingest + WASM paint (color, stroke, dash) with interaction overlay
+   status: completed
+ - id: fixture-board
+   content: Update metabolism fixture + wiresFixtureBoard to derive edgeKind/shape from kinds; distinct identity kind shapes in demo
+   status: completed
+ - id: play-ui
+   content: WIRES document (Identities/Relationships) and inspector labels using relationship kind display names
+   status: completed
+ - id: validate
+   content: Rust + vitest tests; runtime check on wires play; ticket close via repo MCP
+   status: completed
 isProject: false
 ---
 
@@ -52,14 +52,14 @@ flowchart TB
 
 ## Current gaps (validated)
 
-| Area | Today | Problem |
-|------|--------|---------|
-| Terminology | `topics`, `topicId`, `nodeKind`, mindmap “Topic” | Conflicts with WIRES-native **Identity** / **IdentityKind** |
-| Fixture meta | `kindCatalogs.nodes` / `.edges` | Correct data ([metabolism.wires.json](reasoning/mindmap/wires/fixture/metabolism.wires.json) colors per `wires.*`) but wires-facing names are wrong |
-| Canvas edges | [`append_edges_wires_and_link`](puzzle/2d/rs/lib.rs) uses theme chrome only | All relationships look identical despite `edgeKind` + catalog colors |
-| Canvas nodes | Instance `shape` only; catalog `shape`/`color` ignored at paint | Every identity renders as theme rectangles |
-| Play shell | Generic [`buildPuzzle2dPlayDocumentSections`](puzzle/2d/play/index.ts) (“Nodes”, “Edges”, `A → B`) | Does not surface relationship kind; [`wiresPlayRelationshipEdgeLabel`](reasoning/mindmap/wires/play/index.ts) unused in UI |
-| Docs | [mindmap/AGENTS.md](reasoning/mindmap/AGENTS.md) says relationship is a “Node” | Wrong link target |
+| Area         | Today                                                                                              | Problem                                                                                                                                             |
+| ------------ | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Terminology  | `topics`, `topicId`, `nodeKind`, mindmap “Topic”                                                   | Conflicts with WIRES-native **Identity** / **IdentityKind**                                                                                         |
+| Fixture meta | `kindCatalogs.nodes` / `.edges`                                                                    | Correct data ([metabolism.wires.json](reasoning/mindmap/wires/fixture/metabolism.wires.json) colors per `wires.*`) but wires-facing names are wrong |
+| Canvas edges | [`append_edges_wires_and_link`](puzzle/2d/rs/lib.rs) uses theme chrome only                        | All relationships look identical despite `edgeKind` + catalog colors                                                                                |
+| Canvas nodes | Instance `shape` only; catalog `shape`/`color` ignored at paint                                    | Every identity renders as theme rectangles                                                                                                          |
+| Play shell   | Generic [`buildPuzzle2dPlayDocumentSections`](puzzle/2d/play/index.ts) (“Nodes”, “Edges”, `A → B`) | Does not surface relationship kind; [`wiresPlayRelationshipEdgeLabel`](reasoning/mindmap/wires/play/index.ts) unused in UI                          |
+| Docs         | [mindmap/AGENTS.md](reasoning/mindmap/AGENTS.md) says relationship is a “Node”                     | Wrong link target                                                                                                                                   |
 
 Cross-window sync is already on the shared normal-graph path ([prior plan](.cursor/plans/generalize_wires_cross-window_sync_e8279886.plan.md)); this work does **not** reopen that architecture.
 
@@ -69,11 +69,11 @@ Cross-window sync is already on the shared normal-graph path ([prior plan](.curs
 
 Establish a glossary in [reasoning/mindmap/wires/AGENTS.md](reasoning/mindmap/wires/AGENTS.md) and use it in wires-layer **public** names only (mindmap/puzzle keep their internal graph vocabulary behind adapters).
 
-| WIRES term | Meaning | Puzzle adapter field |
-|------------|---------|----------------------|
-| **Identity** | One vertex in the WIRES graph | board node (`id`, position, `text`) |
-| **IdentityKind** | Registered kind (shape, color, icon) | `nodeKind` + `kindCatalogs.nodes[]` row |
-| **Relationship** | One directed link between identities | board edge (`id`, `source`, `target`) |
+| WIRES term           | Meaning                                  | Puzzle adapter field                                                     |
+| -------------------- | ---------------------------------------- | ------------------------------------------------------------------------ |
+| **Identity**         | One vertex in the WIRES graph            | board node (`id`, position, `text`)                                      |
+| **IdentityKind**     | Registered kind (shape, color, icon)     | `nodeKind` + `kindCatalogs.nodes[]` row                                  |
+| **Relationship**     | One directed link between identities     | board edge (`id`, `source`, `target`)                                    |
 | **RelationshipKind** | One of `Owns`, `Is`, `References`, `Has` | semantic `kind` + catalog `edgeKind` `wires.{owns\|is\|references\|has}` |
 
 **Rename in wires crate (greenfield, no compat layer):**
@@ -106,11 +106,11 @@ Extend catalog ingest and paint so fixture metadata actually drives appearance.
 **Default relationship visuals** (fixture + catalog seeds):
 
 | RelationshipKind | Suggested stroke | Catalog color (existing) |
-|------------------|------------------|---------------------------|
-| Owns | solid, medium | `#64748b` |
-| Is | solid, heavier | `#0ea5e9` |
-| References | dashed | `#a855f7` |
-| Has | dotted | `#22c55e` |
+| ---------------- | ---------------- | ------------------------ |
+| Owns             | solid, medium    | `#64748b`                |
+| Is               | solid, heavier   | `#0ea5e9`                |
+| References       | dashed           | `#a855f7`                |
+| Has              | dotted           | `#22c55e`                |
 
 Implement dash/dot via Vello stroke style (add small helper; no dash usage in repo yet).
 

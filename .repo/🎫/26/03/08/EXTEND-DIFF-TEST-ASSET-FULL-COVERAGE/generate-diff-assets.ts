@@ -7,20 +7,11 @@
 // These fields ARE exercised on ADDED entities instead.
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
-import {
-  getKitDiff,
-  inverseKitDiff,
-  applyKitDiff,
-  areKitDiffsEqual,
-  areKitsEqual,
-  Kit,
-} from "/workspaces/semio/compose/js/compose";
+import { getKitDiff, inverseKitDiff, applyKitDiff, areKitDiffsEqual, areKitsEqual, Kit } from "/workspaces/semio/compose/js/compose";
 
 const ASSETS_DIR = "/workspaces/semio/assets/compose";
 
-const kitRaw: Kit = JSON.parse(
-  readFileSync(join(ASSETS_DIR, "kit_metabolism.json"), "utf-8")
-);
+const kitRaw: Kit = JSON.parse(readFileSync(join(ASSETS_DIR, "kit_metabolism.json"), "utf-8"));
 
 // Filter out designs with parent (matches the test setup)
 const kitBefore: Kit = {
@@ -58,15 +49,11 @@ kitAfter.preview = "modified-preview.png";
 const types = kitAfter.types!;
 
 // REMOVED: Capsule type
-const typeToRemoveIdx = types.findIndex(
-  (t: any) => t.guid === "71749140-9db9-43f6-bd81-d89011667b80"
-);
+const typeToRemoveIdx = types.findIndex((t: any) => t.guid === "71749140-9db9-43f6-bd81-d89011667b80");
 if (typeToRemoveIdx >= 0) types.splice(typeToRemoveIdx, 1);
 
 // UPDATED: Type "Base" (2 connectors + 6 models)
-const typeToUpdate = types.find(
-  (t: any) => t.guid === "277768b5-9220-4312-bf0d-ab82d9fb6a73"
-) as any;
+const typeToUpdate = types.find((t: any) => t.guid === "277768b5-9220-4312-bf0d-ab82d9fb6a73") as any;
 if (typeToUpdate) {
   // Scalar fields
   typeToUpdate.name = "Base Modified";
@@ -84,14 +71,10 @@ if (typeToUpdate) {
   // parent: skipped (original is undefined)
 
   // MODELS nested: remove 1, update 1, add 1
-  const modelsToRemoveIdx = typeToUpdate.models.findIndex(
-    (m: any) => m.guid === "c1b9624e-51ed-459c-8f9c-497e39768cc3"
-  );
+  const modelsToRemoveIdx = typeToUpdate.models.findIndex((m: any) => m.guid === "c1b9624e-51ed-459c-8f9c-497e39768cc3");
   if (modelsToRemoveIdx >= 0) typeToUpdate.models.splice(modelsToRemoveIdx, 1);
 
-  const modelToUpdate = typeToUpdate.models.find(
-    (m: any) => m.guid === "c2aded58-7995-4ea5-b990-91bd44482bcb"
-  );
+  const modelToUpdate = typeToUpdate.models.find((m: any) => m.guid === "c2aded58-7995-4ea5-b990-91bd44482bcb");
   if (modelToUpdate) {
     modelToUpdate.name = "base_1to500_modified";
     // description: skipped (original is undefined)
@@ -109,14 +92,10 @@ if (typeToUpdate) {
   });
 
   // CONNECTORS nested: remove 1, update 1, add 1
-  const connToRemoveIdx = typeToUpdate.connectors.findIndex(
-    (c: any) => c.guid === "c5465220-19ba-4443-8f1d-617c832dd13c"
-  );
+  const connToRemoveIdx = typeToUpdate.connectors.findIndex((c: any) => c.guid === "c5465220-19ba-4443-8f1d-617c832dd13c");
   if (connToRemoveIdx >= 0) typeToUpdate.connectors.splice(connToRemoveIdx, 1);
 
-  const connToUpdate = typeToUpdate.connectors.find(
-    (c: any) => c.guid === "d25a91ed-b124-4e5b-8e7e-af832541c953"
-  );
+  const connToUpdate = typeToUpdate.connectors.find((c: any) => c.guid === "d25a91ed-b124-4e5b-8e7e-af832541c953");
   if (connToUpdate) {
     connToUpdate.name = "c1-modified";
     connToUpdate.t = 0.75;
@@ -126,10 +105,7 @@ if (typeToUpdate) {
     connToUpdate.port = { guid: kitBefore.ports![2].guid };
     connToUpdate.mandatory = true;
     // props: skipped (original is undefined)
-    connToUpdate.attributes = [
-      ...(connToUpdate.attributes || []),
-      { guid: newGuid(), key: "conn.meta", value: "test", definition: "Connector attribute" },
-    ];
+    connToUpdate.attributes = [...(connToUpdate.attributes || []), { guid: newGuid(), key: "conn.meta", value: "test", definition: "Connector attribute" }];
   }
 
   typeToUpdate.connectors.push({
@@ -148,9 +124,7 @@ if (typeToUpdate) {
   // props: skipped (original is undefined)
 
   // TYPE ATTRIBUTES
-  typeToUpdate.attributes = [
-    { guid: newGuid(), key: "type.meta", value: "test-value", definition: "Type attribute" },
-  ];
+  typeToUpdate.attributes = [{ guid: newGuid(), key: "type.meta", value: "test-value", definition: "Type attribute" }];
 }
 
 // ADDED: New type with all features
@@ -205,15 +179,11 @@ types.push({
 const designs = kitAfter.designs!;
 
 // REMOVED: Nakagin Capsule Tower
-const designToRemoveIdx = designs.findIndex(
-  (d: any) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef"
-);
+const designToRemoveIdx = designs.findIndex((d: any) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef");
 if (designToRemoveIdx >= 0) designs.splice(designToRemoveIdx, 1);
 
 // UPDATED: Capsule Dream
-const designToUpdate = designs.find(
-  (d: any) => d.guid === "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8"
-) as any;
+const designToUpdate = designs.find((d: any) => d.guid === "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8") as any;
 if (designToUpdate) {
   // Scalar fields
   designToUpdate.name = "Capsule Dream Modified";
@@ -247,11 +217,7 @@ if (designToUpdate) {
     // attributes: skipped (original is undefined)
 
     // Remove connections referencing removed piece
-    designToUpdate.connections = connections.filter(
-      (c: any) =>
-        c.connected?.piece?.guid !== pieceRemoved.guid &&
-        c.connecting?.piece?.guid !== pieceRemoved.guid
-    );
+    designToUpdate.connections = connections.filter((c: any) => c.connected?.piece?.guid !== pieceRemoved.guid && c.connecting?.piece?.guid !== pieceRemoved.guid);
   }
 
   // Add new piece WITH center, mirrorPlane, plane (all features)
@@ -304,9 +270,7 @@ if (designToUpdate) {
       connected: {
         piece: { guid: piecesForConn[0].guid },
         designPiece: { guid: piecesForConn[1].guid },
-        connector: typeToUpdate?.connectors?.[0]
-          ? { guid: typeToUpdate.connectors[0].guid }
-          : undefined,
+        connector: typeToUpdate?.connectors?.[0] ? { guid: typeToUpdate.connectors[0].guid } : undefined,
       },
       connecting: {
         piece: { guid: piecesForConn[piecesForConn.length - 1].guid },
@@ -423,8 +387,7 @@ if (tagToUpdate) {
   // description, icon, attributes: skipped (original is undefined)
 }
 
-tags.push({ guid: newGuid(), name: "New Test Tag", description: "New tag", icon: "test-tag.svg",
-  attributes: [{ guid: newGuid(), key: "tag.source", value: "generator" }] } as any);
+tags.push({ guid: newGuid(), name: "New Test Tag", description: "New tag", icon: "test-tag.svg", attributes: [{ guid: newGuid(), key: "tag.source", value: "generator" }] } as any);
 
 // ============================================================
 // CONCEPTS - removed, updated, added
@@ -456,8 +419,7 @@ if (portToUpdate) {
   // attributes: skipped (original is undefined)
 }
 
-ports.push({ guid: newGuid(), name: "New Port", description: "New", icon: "port.svg",
-  compatiblePorts: [{ guid: kitBefore.ports![4].guid }], attributes: [] } as any);
+ports.push({ guid: newGuid(), name: "New Port", description: "New", icon: "port.svg", compatiblePorts: [{ guid: kitBefore.ports![4].guid }], attributes: [] } as any);
 
 // qualities: skipped (original is undefined - qualities are on ADDED type/design instead)
 
@@ -490,10 +452,15 @@ if (fileToUpdate) {
 }
 
 files.push({
-  guid: newGuid(), name: "new-file.txt", mime: "text/plain",
-  remote: "https://example.com/new-file.txt", size: 42, hash: "sha256:newfilehash",
+  guid: newGuid(),
+  name: "new-file.txt",
+  mime: "text/plain",
+  remote: "https://example.com/new-file.txt",
+  size: 42,
+  hash: "sha256:newfilehash",
   folder: { guid: kitBefore.folders![0].guid },
-  createdAt: "2025-12-23T13:40:58.750Z", updatedAt: "2025-12-23T13:40:58.750Z",
+  createdAt: "2025-12-23T13:40:58.750Z",
+  updatedAt: "2025-12-23T13:40:58.750Z",
 } as any);
 
 // ============================================================
@@ -507,8 +474,11 @@ if (folderToUpdate) {
 }
 
 folders.push({
-  guid: newGuid(), name: "test-folder", description: "New folder",
-  parent: { guid: kitBefore.folders![0].guid }, attributes: [],
+  guid: newGuid(),
+  name: "test-folder",
+  description: "New folder",
+  parent: { guid: kitBefore.folders![0].guid },
+  attributes: [],
   createdAt: "2025-12-23T13:40:58.750Z",
 } as any);
 

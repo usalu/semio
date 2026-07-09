@@ -2,33 +2,33 @@
 name: elements context menu mechanism
 overview: Add a unified, prop-based context menu mechanism across `@elements/ui`, `@elements/board`, and the windowing layer so any element can declare `contextMenu={[…]}`. Built on `@radix-ui/react-context-menu` with a single shared `ContextMenuItem` schema and a board-event bridge for non-DOM scene primitives.
 todos:
-  - id: ticket
-    content: Open repo ticket for the elements context menu mechanism
-    status: completed
-  - id: schema
-    content: Add ContextMenuItem type + ContextMenu wrapper + ContextMenuController + useContextMenuItems in elements/client/lib/react/index.tsx; add @radix-ui/react-context-menu to package.json
-    status: completed
-  - id: ui-adopt
-    content: Add contextMenu prop to Card and DiagramNode as canonical examples
-    status: completed
-  - id: windows
-    content: Add contextMenu to UIWindowKindDefinition and wrap window panes in UICanvas registerComponent
-    status: completed
-  - id: board-event
-    content: Add contextmenu to BoardEventMap and emit it from BoardRenderer with WASM hit-test results
-    status: completed
-  - id: board-react
-    content: Thread contextMenu through Node/Edge/Handle descriptors; render ContextMenuController in BoardCanvas; add background contextMenu prop
-    status: completed
-  - id: play
-    content: Wire example contextMenu on a node, edge, and BoardCanvas background in board/play/index.tsx
-    status: completed
-  - id: tests
-    content: Extend existing vitest + Playwright tests to cover DOM, window, and board context menus
-    status: completed
-  - id: close
-    content: Close the ticket via repo mcp with summary and file list
-    status: completed
+ - id: ticket
+   content: Open repo ticket for the elements context menu mechanism
+   status: completed
+ - id: schema
+   content: Add ContextMenuItem type + ContextMenu wrapper + ContextMenuController + useContextMenuItems in elements/client/lib/react/index.tsx; add @radix-ui/react-context-menu to package.json
+   status: completed
+ - id: ui-adopt
+   content: Add contextMenu prop to Card and DiagramNode as canonical examples
+   status: completed
+ - id: windows
+   content: Add contextMenu to UIWindowKindDefinition and wrap window panes in UICanvas registerComponent
+   status: completed
+ - id: board-event
+   content: Add contextmenu to BoardEventMap and emit it from BoardRenderer with WASM hit-test results
+   status: completed
+ - id: board-react
+   content: Thread contextMenu through Node/Edge/Handle descriptors; render ContextMenuController in BoardCanvas; add background contextMenu prop
+   status: completed
+ - id: play
+   content: Wire example contextMenu on a node, edge, and BoardCanvas background in board/play/index.tsx
+   status: completed
+ - id: tests
+   content: Extend existing vitest + Playwright tests to cover DOM, window, and board context menus
+   status: completed
+ - id: close
+   content: Close the ticket via repo mcp with summary and file list
+   status: completed
 isProject: false
 ---
 
@@ -48,16 +48,16 @@ Add to [elements/client/lib/react/index.tsx](elements/client/lib/react/index.tsx
 
 ```ts
 export interface ContextMenuItem {
-  id: string;
-  label?: string;
-  icon?: LucideIcon | string;
-  shortcut?: string;
-  disabled?: boolean;
-  separator?: boolean;
-  checked?: boolean;
-  destructive?: boolean;
-  onSelect?: (event: Event) => void;
-  children?: ContextMenuItem[];
+ id: string;
+ label?: string;
+ icon?: LucideIcon | string;
+ shortcut?: string;
+ disabled?: boolean;
+ separator?: boolean;
+ checked?: boolean;
+ destructive?: boolean;
+ onSelect?: (event: Event) => void;
+ children?: ContextMenuItem[];
 }
 ```
 
@@ -85,8 +85,8 @@ Extend the interface in [elements/client/lib/react/index.tsx](elements/client/li
 
 ```ts
 export interface UIWindowKindDefinition {
-  // ...existing fields...
-  contextMenu?: ContextMenuItem[];
+ // ...existing fields...
+ contextMenu?: ContextMenuItem[];
 }
 ```
 
@@ -111,7 +111,13 @@ In [elements/client/lib/board/index.tsx](elements/client/lib/board/index.tsx) ex
 In [elements/client/lib/board/index.ts](elements/client/lib/board/index.ts) extend `BoardEventMap`:
 
 ```ts
-contextmenu: { id: string | null; x: number; y: number; clientX: number; clientY: number };
+contextmenu: {
+ id: string | null;
+ x: number;
+ y: number;
+ clientX: number;
+ clientY: number;
+}
 ```
 
 `BoardRenderer` adds a DOM `contextmenu` listener on its canvas: `event.preventDefault()`, convert client coords → world via existing camera math, call the existing WASM hit-test (the same one used by `hover`/`select`), and dispatch the event.
@@ -144,8 +150,6 @@ flowchart LR
     Content --> OnSelect["item.onSelect"]
 ```
 
-
-
 ## Conventions
 
 - All new code lives in existing files inside `//#region ContextMenu` (and a subregion in board files), per AGENTS.md.
@@ -158,4 +162,3 @@ flowchart LR
 - Extend the existing vitest in [elements/client/lib/react/vitest.config.ts](elements/client/lib/react/vitest.config.ts) target (the project's existing test file) with cases: empty items renders no menu; nested children render submenu; `onSelect` fires; shortcut and icon render.
 - Extend the existing board vitest target: `contextmenu` event dispatch with id resolves to correct items; background fallback when id is null.
 - Playwright e2e under [elements/client/lib/board/play/e2e](elements/client/lib/board/play/e2e) is extended (not duplicated): right-click a node and assert the menu opens with the expected item label.
-

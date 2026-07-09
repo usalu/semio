@@ -13,9 +13,7 @@
       "y": 0,
       "width": 88,
       "height": 40,
-      "ports": [
-        { "id": "out-a", "kind": "Connector", "direction": "out" }
-      ]
+      "ports": [{ "id": "out-a", "kind": "Connector", "direction": "out" }]
     },
     {
       "id": "branch-mid",
@@ -38,9 +36,7 @@
       "y": 0,
       "width": 88,
       "height": 40,
-      "ports": [
-        { "id": "in-b", "kind": "Connector", "direction": "in" }
-      ]
+      "ports": [{ "id": "in-b", "kind": "Connector", "direction": "in" }]
     }
   ],
   "edges": [

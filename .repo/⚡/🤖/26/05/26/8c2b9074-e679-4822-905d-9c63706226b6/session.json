@@ -542,9 +542,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\8c2b9074-e679-4822-905d-9c63706226b6.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_ZEomOe4jk81VaMxEaPssA0zJ__vscode-1779785584554",
@@ -571,9 +569,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\8c2b9074-e679-4822-905d-9c63706226b6.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_ZEomOe4jk81VaMxEaPssA0zJ__vscode-1779785584554",
@@ -600,9 +596,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\8c2b9074-e679-4822-905d-9c63706226b6.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=51 failed=0 /\u003e\n",
@@ -630,9 +624,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\8c2b9074-e679-4822-905d-9c63706226b6.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=51 failed=0 /\u003e\n",
@@ -770,9 +762,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\8c2b9074-e679-4822-905d-9c63706226b6.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_4qHFcExcjjNNZ3qq3RJgICyA__vscode-1779785584556",
@@ -799,9 +789,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\8c2b9074-e679-4822-905d-9c63706226b6.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_4qHFcExcjjNNZ3qq3RJgICyA__vscode-1779785584556",
@@ -828,9 +816,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\8c2b9074-e679-4822-905d-9c63706226b6.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=51 failed=0 /\u003e\n",
@@ -858,9 +844,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\8c2b9074-e679-4822-905d-9c63706226b6.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=51 failed=0 /\u003e\n",

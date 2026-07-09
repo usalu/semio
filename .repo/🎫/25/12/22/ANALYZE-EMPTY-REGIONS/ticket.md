@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 No existing empty-region checks in the code hook.
@@ -18,4 +19,5 @@ Add empty region detection and fix handling in hooks/code.ts, then document the 
 ## Log
 
 ## Summary
+
 # Summary

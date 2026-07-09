@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 - Review existing repo tooling and plan requirements.
 - Implement go/server/main.go with config, SQLite schema, event bus, diff ingestion, indexing, claims, warnings, and HTTP endpoints.
 - Add go/server module metadata and update go/go.work.
@@ -11,6 +12,7 @@
 ## Changes
 
 ## Log
+
 - Implemented Go repo dev server in go/server/main.go with config, SQLite schema, event bus, diff ingestion, indexing, claims, warnings, webhooks, and HTTP API.
 - Added go/server module (go.mod/go.sum) and included it in go/go.work.
 - Documented repo dev server in README.md bundles section and AGENTS.md SRS + codebase tree.
@@ -20,4 +22,5 @@
 - User follow-up received with no additional work requested; closed ticket after logging.
 
 ## Summary
+
 Implemented the Go repo dev server with SQLite persistence, diff ingestion, indexing, claims, warnings, webhooks, and HTTP API. Added the server module to the Go workspace, plus module metadata and dependencies. Documented the server in README bundles and AGENTS SRS/codebase sections.

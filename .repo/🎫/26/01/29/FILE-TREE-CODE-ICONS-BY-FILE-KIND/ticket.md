@@ -3,7 +3,7 @@
 ## Todos
 
 - [x] Create file kind detection utility function for VSCode extension
-- [x] Update ContributorFileItem to use file kind icons  
+- [x] Update ContributorFileItem to use file kind icons
 - [x] Check for other file tree items that need updating
 - [x] Update ticket documentation with implementation details
 
@@ -26,15 +26,15 @@
 
 ### File Kind Categories and Icons
 
-| File Kind | Icon | Examples |
-|-----------|------|----------|
-| **code** | `symbol-misc` | .ts, .js, .go, .rs, .py, .cs, etc. |
-| **script** | `terminal` | .sh, .bash, .ps1, .bat, .sql, etc. |
-| **config** | `gear` | .json, .yaml, .toml, .env, .gitignore, etc. |
-| **test** | `beaker` | .test, .spec, .e2e, .playwright, etc. |
-| **docs** | `book` | .md, .txt, .pdf, README, CHANGELOG, etc. |
-| **resource** | `file-media` | .png, .css, .html, .zip, .db, etc. |
-| **license** | `shield` | LICENSE, LICENCE files |
+| File Kind    | Icon          | Examples                                    |
+| ------------ | ------------- | ------------------------------------------- |
+| **code**     | `symbol-misc` | .ts, .js, .go, .rs, .py, .cs, etc.          |
+| **script**   | `terminal`    | .sh, .bash, .ps1, .bat, .sql, etc.          |
+| **config**   | `gear`        | .json, .yaml, .toml, .env, .gitignore, etc. |
+| **test**     | `beaker`      | .test, .spec, .e2e, .playwright, etc.       |
+| **docs**     | `book`        | .md, .txt, .pdf, README, CHANGELOG, etc.    |
+| **resource** | `file-media`  | .png, .css, .html, .zip, .db, etc.          |
+| **license**  | `shield`      | LICENSE, LICENCE files                      |
 
 ### Implementation Details
 

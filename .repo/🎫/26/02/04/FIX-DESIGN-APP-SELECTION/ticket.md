@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 - [x] Open ticket `FIX-DESIGN-APP-SELECTION` and write `plan.md`.
 - [x] Diagnose scene model selection regression (reopened again).
 - [x] Implement and validate scene model selection fix (reopened again).
@@ -8,6 +9,7 @@
 - [x] Finalize summary and close ticket with touched files.
 
 ## Changes
+
 - Updated `js/compose/sketchpad/Design.tsx` so panning pointer-guard activation is limited to non-primary mouse buttons, keeping primary click/Shift/lasso selection flow available to React Flow selection sync.
 - Updated `js/compose/sketchpad/Design.tsx` `onNodesChangeReactFlow` to apply React Flow node-change deltas (including selection changes), not only position changes.
 - Updated `js/compose/sketchpad/Design.tsx` diagram selection extraction to use node payload piece guids instead of truncating node ids.
@@ -17,6 +19,7 @@
 - Updated `AGENTS.md` SRS/UI + Codebase docs with Design scene identity resolution and wrapper metadata constraints.
 
 ## Log
+
 - Reopened with prompt: "selection is stil not working on the model in the scene window".
 - Reopened with prompt: "i still cant select either in the diagram nor in the scene in the design app".
 - Prompt: "fix the selection in the design app".

@@ -2,27 +2,27 @@
 name: Debug 3D Hover Select
 overview: Three prior blind fix attempts have not resolved "no hover/selection for edges, vertices, faces, mesh" in the lowpoly plugin. Add temporary runtime instrumentation across the full pointer-to-pixel pipeline, gather real evidence from the live dev server, then fix the confirmed root cause(s) instead of guessing again.
 todos:
-  - id: instrument-wgpu
-    content: Add temporary [DEBUG] logging across infinite/world/rs/lib.rs and framework/renderer/wgpu/rs/lib.rs pointer-to-command-to-state pipeline
-    status: completed
-  - id: instrument-plugin
-    content: Add temporary [DEBUG] logging to lowpoly/plugin/rs/lib.rs command handlers and world_instances_json/world_selection_json_for
-    status: completed
-  - id: rebuild-and-capture
-    content: Rebuild wgpu wasm and lowpoly plugin, drive the live dev server via browser automation to capture real console evidence for vertex/edge/face/mesh hover and select
-    status: completed
-  - id: fix-draw-flags
-    content: Fix apply_runtime_draw_flags to stop discarding plugin-authoritative selected/hovered flags (remove divergent index-map, OR local overrides instead of replacing)
-    status: completed
-  - id: fix-root-cause
-    content: Apply targeted fix(es) for whatever the captured evidence identifies as the actual blocker
-    status: completed
-  - id: react-parity
-    content: Re-verify and align the React renderer (world-3d-host.tsx) against the same confirmed fix, with its own runtime evidence
-    status: completed
-  - id: cleanup-and-verify
-    content: Remove temporary [DEBUG] logs, rerun cargo test/vitest, and do final manual browser verification (screenshots) for both renderers
-    status: completed
+ - id: instrument-wgpu
+   content: Add temporary [DEBUG] logging across infinite/world/rs/lib.rs and framework/renderer/wgpu/rs/lib.rs pointer-to-command-to-state pipeline
+   status: completed
+ - id: instrument-plugin
+   content: Add temporary [DEBUG] logging to lowpoly/plugin/rs/lib.rs command handlers and world_instances_json/world_selection_json_for
+   status: completed
+ - id: rebuild-and-capture
+   content: Rebuild wgpu wasm and lowpoly plugin, drive the live dev server via browser automation to capture real console evidence for vertex/edge/face/mesh hover and select
+   status: completed
+ - id: fix-draw-flags
+   content: Fix apply_runtime_draw_flags to stop discarding plugin-authoritative selected/hovered flags (remove divergent index-map, OR local overrides instead of replacing)
+   status: completed
+ - id: fix-root-cause
+   content: Apply targeted fix(es) for whatever the captured evidence identifies as the actual blocker
+   status: completed
+ - id: react-parity
+   content: Re-verify and align the React renderer (world-3d-host.tsx) against the same confirmed fix, with its own runtime evidence
+   status: completed
+ - id: cleanup-and-verify
+   content: Remove temporary [DEBUG] logs, rerun cargo test/vitest, and do final manual browser verification (screenshots) for both renderers
+   status: completed
 isProject: false
 ---
 
@@ -63,7 +63,7 @@ fn apply_runtime_draw_flags(state: &mut World3dState) {
 }
 ```
 
-This runs on **every** frame after `sync_world3d_state` and unconditionally recomputes `instance.selected`/`instance.hovered`, discarding whatever `sync_world3d_state` just parsed from the plugin's authoritative `instances_json` (`world_instances_json` in `lowpoly/plugin/rs/lib.rs`, which already computes the same flags correctly, including `fixture.selection.mode == "mesh"` object-index matching). Its own `index_map` is built by flattening `state.draws` (grouped **by mesh key**, see `grouped.entry(mesh_id).or_default().push(...)` around line 1173), which is not guaranteed to match the plugin's `fixture.objects.iter().enumerate()` ordering whenever more than one distinct mesh is present. This is real duplicated/divergent logic and should be removed or corrected, but I cannot yet prove it's *the* cause of a total failure (it wouldn't explain vertex/edge/face component overlays failing, since those go through a separate code path, `append_component_overlays`, driven directly by `state.hovered_component_id`/`state.component_ids`).
+This runs on **every** frame after `sync_world3d_state` and unconditionally recomputes `instance.selected`/`instance.hovered`, discarding whatever `sync_world3d_state` just parsed from the plugin's authoritative `instances_json` (`world_instances_json` in `lowpoly/plugin/rs/lib.rs`, which already computes the same flags correctly, including `fixture.selection.mode == "mesh"` object-index matching). Its own `index_map` is built by flattening `state.draws` (grouped **by mesh key**, see `grouped.entry(mesh_id).or_default().push(...)` around line 1173), which is not guaranteed to match the plugin's `fixture.objects.iter().enumerate()` ordering whenever more than one distinct mesh is present. This is real duplicated/divergent logic and should be removed or corrected, but I cannot yet prove it's _the_ cause of a total failure (it wouldn't explain vertex/edge/face component overlays failing, since those go through a separate code path, `append_component_overlays`, driven directly by `state.hovered_component_id`/`state.component_ids`).
 
 ## Plan: instrument, observe, then fix
 
@@ -82,9 +82,7 @@ flowchart TD
     drawFlags --> render["render_world_3d draw call"]
 ```
 
-
-
-I will add temporary `[DEBUG]`  prefixed `web_sys::console::log_1` calls (WGPU/infinite-world side) and equivalent plugin-side logging at each numbered node above, rebuild the wasm, then drive the already-confirmed-working browser automation (Cursor's browser MCP: navigate to `http://127.0.0.1:6178/`, inject a persistent `Page.addScriptToEvaluateOnNewDocument` console-capture shim, then use `browser_mouse_click_xy`) against the live lowpoly scene to capture real evidence for:
+I will add temporary `[DEBUG]` prefixed `web_sys::console::log_1` calls (WGPU/infinite-world side) and equivalent plugin-side logging at each numbered node above, rebuild the wasm, then drive the already-confirmed-working browser automation (Cursor's browser MCP: navigate to `http://127.0.0.1:6178/`, inject a persistent `Page.addScriptToEvaluateOnNewDocument` console-capture shim, then use `browser_mouse_click_xy`) against the live lowpoly scene to capture real evidence for:
 
 1. Hovering/clicking a vertex, an edge, a face, and the whole mesh (each granularity toggle).
 2. Confirming whether `handle_world3d_pointer_button`/`pick_hover_command` even fire, what command they produce, whether `apply_world_command_preview` mutates state as expected, whether the plugin handler receives and processes the command, and what `world_instances_json`/`world_selection_json_for` emit back.
@@ -101,4 +99,3 @@ I will add temporary `[DEBUG]`  prefixed `web_sys::console::log_1` calls (WGPU/i
 
 - `cargo test` for `infinite_world` and `lowpoly-plugin`, `vitest` for the React renderer.
 - Rebuild the WGPU wasm module and manually verify in the live browser (screenshots + console evidence) that hovering and selecting each of vertex/edge/face/mesh produces the correct overlay/highlight, that the "Show Edges" toggle works, and that clicking empty space clears selection — for both the WGPU and React renderers.
-

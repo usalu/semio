@@ -4,7 +4,5 @@
   "description": "Fix the sketchpad crash after clicking the chat tab in the navbar by resolving the SidePanel hook-order violation and validate the affected path.",
   "summary": "Stabilized the Design route by removing redundant fallback Design-store creation from the Design transaction/details hooks and updated the inline sketchpad navbar regression helper so Design explicitly expects the shared navbar chat/settings toggles to remain present. Validated test discovery with Playwright --list; focused Design/settings Playwright executions still fail earlier in the existing harness because the sketchpad store is not available on window and the Design page can crash during heavy fixture initialization.",
   "goal": "🎯sketchpadimprovements",
-  "sessions": [
-    "⚪4f9413c65fb94d329c10e58caf7b3d11"
-  ]
+  "sessions": ["⚪4f9413c65fb94d329c10e58caf7b3d11"]
 }

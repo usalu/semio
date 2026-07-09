@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Opening the Design app and Type app after importing a kit in the sketchpad tests caused:
@@ -76,6 +77,7 @@ Updated to include actual model files from `examples/metabolism/`:
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix infinite loop in DesignAppFooter and TypeAppFooter useEffect dependencies

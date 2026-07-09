@@ -8,14 +8,14 @@ const root = dirname(fileURLToPath(import.meta.url));
 
 /** @emoji 🧪 Vitest for `@semio-tech/ui-react` (inline tests in index.tsx). */
 export default defineConfig({
-	root,
-	resolve: {
-		alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "index.tsx") }],
-	},
-	test: {
-		environment: "jsdom",
-		includeSource: ["index.tsx"],
-		passWithNoTests: true,
-		setupFiles: [resolve(root, "vitest.setup.ts")],
-	},
+  root,
+  resolve: {
+    alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "index.tsx") }],
+  },
+  test: {
+    environment: "jsdom",
+    includeSource: ["index.tsx"],
+    passWithNoTests: true,
+    setupFiles: [resolve(root, "vitest.setup.ts")],
+  },
 });

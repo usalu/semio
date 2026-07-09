@@ -10,7 +10,7 @@ const secondTestsStart = lines.findIndex((l, i) => i > reactStart && l === "//#r
 const playgroundHostStart = lines.findIndex((l) => l === "//#region 🔖PlaygroundHost");
 
 if ([headlessEnd, firstTestsStart, reactStart, secondTestsStart, playgroundHostStart].some((i) => i < 0)) {
-	throw new Error("failed to locate section boundaries");
+  throw new Error("failed to locate section boundaries");
 }
 
 const headless = lines.slice(0, headlessEnd + 1);
@@ -19,23 +19,13 @@ const reactMiddle = lines.slice(reactStart, secondTestsStart);
 const mainTests = lines.slice(secondTestsStart, playgroundHostStart);
 const playgroundHost = lines.slice(playgroundHostStart);
 
-const treeImport =
-	'import type { TreeDataItem, TreeDataSection } from "@semio-tech/ui-react";\nimport { playgroundTreePanelRootItems } from "@semio-tech/framework-playground-renderer-react";\n';
+const treeImport = 'import type { TreeDataItem, TreeDataSection } from "@semio-tech/ui-react";\nimport { playgroundTreePanelRootItems } from "@semio-tech/framework-playground-renderer-react";\n';
 
 const reactWithImports = [...reactMiddle];
 const globalsIdx = reactWithImports.findIndex((l) => l.startsWith('import "./globals.css"'));
 reactWithImports.splice(globalsIdx + 1, 0, treeImport);
 
-const merged = [
-	...headless,
-	"",
-	...reactWithImports,
-	...playgroundHost,
-	"",
-	...indexTests.slice(0, -1),
-	"",
-	...mainTests,
-].join("\n");
+const merged = [...headless, "", ...reactWithImports, ...playgroundHost, "", ...indexTests.slice(0, -1), "", ...mainTests].join("\n");
 
 writeFileSync(path, merged);
 console.log("fixed cad play main.tsx section order");

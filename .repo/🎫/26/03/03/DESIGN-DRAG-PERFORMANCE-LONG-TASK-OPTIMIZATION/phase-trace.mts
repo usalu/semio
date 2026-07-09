@@ -1,6 +1,6 @@
 import { chromium } from "playwright";
 import path from "path";
-const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+const browser = await chromium.launch({ headless: true, args: ["--no-sandbox"] });
 const page = await browser.newPage();
 await page.addInitScript(() => {
   (window as any).__COMPOSE_PERFORMANCE__ = { longTaskSupported: false, longTasks: [] };
@@ -24,13 +24,15 @@ await page.waitForLoadState("domcontentloaded");
 await page.waitForTimeout(2000);
 const zipPath = path.resolve(process.cwd(), "assets/compose/metabolism.zip");
 const fileInput = page.locator('[id="compose.sketchpad.app.home.importKit"]');
-await fileInput.waitFor({ state: 'attached', timeout: 10000 });
-const [fc] = await Promise.all([
-  page.waitForEvent("filechooser", { timeout: 5000 }).catch(() => null),
-  fileInput.dispatchEvent("click")
-]);
+await fileInput.waitFor({ state: "attached", timeout: 10000 });
+const [fc] = await Promise.all([page.waitForEvent("filechooser", { timeout: 5000 }).catch(() => null), fileInput.dispatchEvent("click")]);
 if (fc) await fc.setFiles(zipPath);
-else { await fileInput.setInputFiles(zipPath); await fileInput.evaluate((el) => { el.dispatchEvent(new Event("change", { bubbles: true })); }); }
+else {
+  await fileInput.setInputFiles(zipPath);
+  await fileInput.evaluate((el) => {
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+}
 await page.getByText("Metabolism", { exact: true }).first().waitFor({ state: "visible", timeout: 60000 });
 await page.waitForTimeout(500);
 const tableRow = page.locator("tr[data-row-id]").filter({ hasText: "Metabolism" }).first();
@@ -38,17 +40,26 @@ await tableRow.dblclick({ force: true });
 await page.waitForURL(/.*kits\/.+/, { timeout: 30000 });
 await page.waitForLoadState("networkidle");
 await page.waitForTimeout(2000);
-const designRowIds = await page.evaluate(() => Array.from(document.querySelectorAll('[data-row-id^="design-"]')).map(el => el.getAttribute("data-row-id")));
-const nakaginRowId = designRowIds.find(id => id?.includes("9a890dd4")) ?? designRowIds[designRowIds.length - 1];
+const designRowIds = await page.evaluate(() => Array.from(document.querySelectorAll('[data-row-id^="design-"]')).map((el) => el.getAttribute("data-row-id")));
+const nakaginRowId = designRowIds.find((id) => id?.includes("9a890dd4")) ?? designRowIds[designRowIds.length - 1];
 if (nakaginRowId) {
-  await page.evaluate((rowId) => { const row = document.querySelector(`[data-row-id="${rowId}"]`); if (row) row.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true, view: window })); }, nakaginRowId);
+  await page.evaluate((rowId) => {
+    const row = document.querySelector(`[data-row-id="${rowId}"]`);
+    if (row) row.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true, view: window }));
+  }, nakaginRowId);
 }
 await page.waitForLoadState("networkidle");
 await page.waitForTimeout(10000);
 const leftPanelToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.leftSidePanel"]');
 if (await leftPanelToggle.isVisible().catch(() => false)) {
-  const leftPanelOpen = await page.locator('[data-panel="leftSidePanel"]').isVisible().catch(() => false);
-  if (leftPanelOpen) { await leftPanelToggle.click(); await page.waitForTimeout(500); }
+  const leftPanelOpen = await page
+    .locator('[data-panel="leftSidePanel"]')
+    .isVisible()
+    .catch(() => false);
+  if (leftPanelOpen) {
+    await leftPanelToggle.click();
+    await page.waitForTimeout(500);
+  }
 }
 await page.waitForTimeout(3000);
 // Stabilize
@@ -57,14 +68,15 @@ await page.evaluate(() => {
   store.longTasks = [];
   (window as any).__phases = [];
 });
-const getVT = async () => await page.evaluate(() => {
-  const vp = document.querySelector("#diagram .react-flow__viewport") as HTMLElement | null;
-  const t = vp?.style.transform ?? "";
-  const m = t.match(/translate\(([-0-9.]+)px,\s*([-0-9.]+)px\)\s*scale\(([-0-9.]+)\)/);
-  if (!m) return { x: 0, y: 0, scale: 1 };
-  return { x: Number(m[1]), y: Number(m[2]), scale: Number(m[3]) };
-});
-const pane = page.locator('#diagram .react-flow__pane').first();
+const getVT = async () =>
+  await page.evaluate(() => {
+    const vp = document.querySelector("#diagram .react-flow__viewport") as HTMLElement | null;
+    const t = vp?.style.transform ?? "";
+    const m = t.match(/translate\(([-0-9.]+)px,\s*([-0-9.]+)px\)\s*scale\(([-0-9.]+)\)/);
+    if (!m) return { x: 0, y: 0, scale: 1 };
+    return { x: Number(m[1]), y: Number(m[2]), scale: Number(m[3]) };
+  });
+const pane = page.locator("#diagram .react-flow__pane").first();
 const paneBox = await pane.boundingBox();
 const cx = paneBox!.x + paneBox!.width / 2;
 const cy = paneBox!.y + paneBox!.height / 2;
@@ -77,7 +89,7 @@ await page.evaluate(() => (window as any).__markPhase("ZOOM_OUT_START"));
 await page.mouse.wheel(0, 600);
 await page.waitForTimeout(500);
 // Get node for drag
-const diag = page.locator('#diagram .react-flow').first();
+const diag = page.locator("#diagram .react-flow").first();
 const firstNode = diag.locator(".react-flow__node").first();
 const nodeBox = await firstNode.boundingBox();
 const startX = nodeBox!.x + nodeBox!.width / 2;
@@ -122,6 +134,6 @@ for (const t of result.tasks) {
   }
   console.log(`${t.duration.toFixed(0)}ms @ ${t.startTime.toFixed(0)} - ${end.toFixed(0)} [${phase}]`);
 }
-const maxDur = result.tasks.length > 0 ? Math.max(...result.tasks.map(t => t.duration)) : 0;
+const maxDur = result.tasks.length > 0 ? Math.max(...result.tasks.map((t) => t.duration)) : 0;
 console.log(`\nTotal: ${result.tasks.length} tasks, Max: ${maxDur.toFixed(0)}ms, Pass: ${maxDur <= 50}`);
 await browser.close();

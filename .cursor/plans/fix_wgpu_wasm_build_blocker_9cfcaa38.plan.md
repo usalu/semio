@@ -2,18 +2,18 @@
 name: Fix wgpu wasm build blocker
 overview: The edge/face hover/select/highlight fixes from previous sessions are already implemented and covered by passing unit tests in Rust, but the wasm bundle that the browser actually loads has never rebuilt successfully with them, because an unrelated Cargo dependency-gating bug breaks the entire wasm32 build of the renderer.
 todos:
-  - id: fix-cargo-toml
-    content: Move semio-framework-plugin-host dependency to the wasm32-excluded target section in framework/renderer/wgpu/rs/Cargo.toml
-    status: completed
-  - id: cargo-check
-    content: cargo check the renderer crate for both wasm32 and native targets to confirm the fix and no regressions
-    status: completed
-  - id: rebuild-wasm
-    content: Rebuild the wgpu renderer wasm bundle via bun framework/renderer/wgpu/script.ts wasm and confirm trunk succeeds with fresh artifacts
-    status: completed
-  - id: reverify-browser
-    content: Reload the dev:lowpoly server/browser and re-verify vertex/edge/face hover, select, and highlight behavior
-    status: completed
+ - id: fix-cargo-toml
+   content: Move semio-framework-plugin-host dependency to the wasm32-excluded target section in framework/renderer/wgpu/rs/Cargo.toml
+   status: completed
+ - id: cargo-check
+   content: cargo check the renderer crate for both wasm32 and native targets to confirm the fix and no regressions
+   status: completed
+ - id: rebuild-wasm
+   content: Rebuild the wgpu renderer wasm bundle via bun framework/renderer/wgpu/script.ts wasm and confirm trunk succeeds with fresh artifacts
+   status: completed
+ - id: reverify-browser
+   content: Reload the dev:lowpoly server/browser and re-verify vertex/edge/face hover, select, and highlight behavior
+   status: completed
 isProject: false
 ---
 
@@ -22,6 +22,7 @@ isProject: false
 The wasm build of the `semio-framework-renderer-wgpu` crate is currently broken, which means the browser is running a stale build from `Jul 7 20:17` that predates every edge/face fix made in this ticket (both today's regression fix and the earlier round). This explains why vertices still look correct (older, already-deployed behavior) while edges/faces look unchanged (fixes never shipped).
 
 Evidence:
+
 - The dev server terminal running `bun run dev:lowpoly` (terminal `16.txt`) shows a hard build failure ending in:
 
 ```
@@ -45,7 +46,7 @@ semio-framework-plugin = { path = "../../../plugin/rs" }
 semio-framework-plugin-host = { path = "../../../plugin/host/rs" }
 ```
 
-  so Cargo still tries to compile `semio-framework-plugin-host` (and transitively `wasmtime`/`zstd-sys`) for `wasm32-unknown-unknown` even though nothing on that target path uses it. `semio-framework-plugin-host` has exactly one consumer in the whole workspace (verified via grep across all `Cargo.toml` files), so this is safe to move.
+so Cargo still tries to compile `semio-framework-plugin-host` (and transitively `wasmtime`/`zstd-sys`) for `wasm32-unknown-unknown` even though nothing on that target path uses it. `semio-framework-plugin-host` has exactly one consumer in the whole workspace (verified via grep across all `Cargo.toml` files), so this is safe to move.
 
 ## Fix
 
@@ -57,6 +58,7 @@ semio-framework-plugin-host = { path = "../../../plugin/host/rs" }
 ## Re-verify the original bug report
 
 Once a real, current build is deployed:
+
 - Vertex mode: confirm hover/select/highlight still work (regression check).
 - Edge mode: hover under cursor, click-select, and rectangle marquee preview/commit all highlight the correct edge.
 - Face mode: hover under cursor, click-select, and rectangle marquee preview/commit all highlight the correct face (fill + outline).

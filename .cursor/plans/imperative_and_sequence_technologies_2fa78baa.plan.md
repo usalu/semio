@@ -2,51 +2,51 @@
 name: Imperative and Sequence Technologies
 overview: "Add two new technologies that mirror the neural/flow relationship but for ordered side-effects instead of pure computation: `imperative` is a headless engine that executes a linear `Path` of `Step`s (not a DAG), and `sequence` is its canvas UI that renders steps as boxes connected by a single execution-flow wire, and can compile that path into one line of text per step."
 todos:
-  - id: ticket
-    content: Open repo ticket for this work and associate it with the most fitting goal (read repo://goals first)
-    status: completed
-  - id: imperative-engine
-    content: "Implement imperative/engine: Path, Step, Executor (ordered scope-threaded execution), EffectLogEntry, compile_to_text, depending on neural_engine"
-    status: completed
-  - id: imperative-module-core
-    content: "Implement imperative/module/core: LogPrint, StateSet, StateIncrement, WaitDelay Operation impls + register()"
-    status: completed
-  - id: imperative-core
-    content: "Implement imperative/core: wasm-bindgen ImperativeSession/ImperativeHost + index.ts (VCS doc type, performImperativeEffects runtime)"
-    status: completed
-  - id: imperative-react
-    content: "Implement imperative/react: step list, param form, effect log components/hooks"
-    status: completed
-  - id: imperative-play
-    content: "Implement imperative/play: PlaygroundImperative step-list editor app with dev/build/test/validate targets"
-    status: completed
-  - id: sequence-core
-    content: "Implement sequence/core: SequenceFixture + SequenceHost wrapping DagHost with single-path connect validation + SequenceSession wasm (compileText/run)"
-    status: completed
-  - id: sequence-react
-    content: "Implement sequence/react: SequenceCanvas (attach/render/pointer), catalogue palette, inspector, compiled-text & effect-log panels"
-    status: completed
-  - id: sequence-play
-    content: "Implement sequence/play: PlaygroundSequence canvas app with dev/build/test/validate targets"
-    status: completed
-  - id: root-wiring
-    content: Wire root Cargo.toml members, package.json workspaces/scripts, script.ts dev dispatch for both technologies
-    status: completed
-  - id: launch-json
-    content: Add dev launch.json entries for imperative (6076) and sequence (6077) in group 3_dev
-    status: completed
-  - id: renderer-registry
-    content: Register imperative/sequence kinds in ui/styling/vite-elements-assets.ts and framework/product/playground/renderer/react (host regions, switches, package exports/deps)
-    status: completed
-  - id: agents-md
-    content: Write imperative/AGENTS.md and sequence/AGENTS.md (+ crate-level AGENTS.md) mirroring neural/flow/dag doc style
-    status: completed
-  - id: tests-verify
-    content: Add inline tests across new files and run cargo test + bun test + nx build/dev smoke checks for both stacks
-    status: completed
-  - id: ticket-close
-    content: Close the ticket with a summary and full list of created/updated files
-    status: completed
+ - id: ticket
+   content: Open repo ticket for this work and associate it with the most fitting goal (read repo://goals first)
+   status: completed
+ - id: imperative-engine
+   content: "Implement imperative/engine: Path, Step, Executor (ordered scope-threaded execution), EffectLogEntry, compile_to_text, depending on neural_engine"
+   status: completed
+ - id: imperative-module-core
+   content: "Implement imperative/module/core: LogPrint, StateSet, StateIncrement, WaitDelay Operation impls + register()"
+   status: completed
+ - id: imperative-core
+   content: "Implement imperative/core: wasm-bindgen ImperativeSession/ImperativeHost + index.ts (VCS doc type, performImperativeEffects runtime)"
+   status: completed
+ - id: imperative-react
+   content: "Implement imperative/react: step list, param form, effect log components/hooks"
+   status: completed
+ - id: imperative-play
+   content: "Implement imperative/play: PlaygroundImperative step-list editor app with dev/build/test/validate targets"
+   status: completed
+ - id: sequence-core
+   content: "Implement sequence/core: SequenceFixture + SequenceHost wrapping DagHost with single-path connect validation + SequenceSession wasm (compileText/run)"
+   status: completed
+ - id: sequence-react
+   content: "Implement sequence/react: SequenceCanvas (attach/render/pointer), catalogue palette, inspector, compiled-text & effect-log panels"
+   status: completed
+ - id: sequence-play
+   content: "Implement sequence/play: PlaygroundSequence canvas app with dev/build/test/validate targets"
+   status: completed
+ - id: root-wiring
+   content: Wire root Cargo.toml members, package.json workspaces/scripts, script.ts dev dispatch for both technologies
+   status: completed
+ - id: launch-json
+   content: Add dev launch.json entries for imperative (6076) and sequence (6077) in group 3_dev
+   status: completed
+ - id: renderer-registry
+   content: Register imperative/sequence kinds in ui/styling/vite-elements-assets.ts and framework/product/playground/renderer/react (host regions, switches, package exports/deps)
+   status: completed
+ - id: agents-md
+   content: Write imperative/AGENTS.md and sequence/AGENTS.md (+ crate-level AGENTS.md) mirroring neural/flow/dag doc style
+   status: completed
+ - id: tests-verify
+   content: Add inline tests across new files and run cargo test + bun test + nx build/dev smoke checks for both stacks
+   status: completed
+ - id: ticket-close
+   content: Close the ticket with a summary and full list of created/updated files
+   status: completed
 isProject: false
 ---
 
@@ -73,15 +73,13 @@ flowchart LR
   end
 ```
 
+Key distinction driving the whole design: `**imperative` has no edges at all** — a `Path` is just an ordered `Vec<Step>`, order = position, like statements in a script. `**sequence`has real execution-flow edges** on an infinite canvas (reusing`mathematical_graph_port_directed_dag`'s `DagHost`), but constrained so every node has at most one outgoing and one incoming "flow" connection. Because that constraint guarantees the visual graph is always reducible to a single total order, `sequence`can deterministically flatten itself into an`imperative::Path` and compile that into text, one line per node.
 
-
-Key distinction driving the whole design: `**imperative` has no edges at all** — a `Path` is just an ordered `Vec<Step>`, order = position, like statements in a script. `**sequence` has real execution-flow edges** on an infinite canvas (reusing `mathematical_graph_port_directed_dag`'s `DagHost`), but constrained so every node has at most one outgoing and one incoming "flow" connection. Because that constraint guarantees the visual graph is always reducible to a single total order, `sequence` can deterministically flatten itself into an `imperative::Path` and compile that into text, one line per node.
-
-Both exist to **trigger side effects in a consistent, ordered sequence** (contrast with neural/flow, whose goal is pure computational logic). Concretely: `imperative/module/core` ships 4 real side-effecting actions — `log.print` (writes to an ordered effect log / console), `state.set`, `state.increment` (mutate a running scope dictionary threaded step-to-step), `wait.delay` (records a real timing gap). Rust stays synchronous and deterministic (it only decides *what* happens *in what order*); the React layer (`performImperativeEffects` in `imperative/core/index.ts`) actually *performs* the effects (console.log, real `await sleep(ms)`, state UI updates) by replaying the ordered effect log — a clean CQRS split, and it avoids needing async Rust/WASM.
+Both exist to **trigger side effects in a consistent, ordered sequence** (contrast with neural/flow, whose goal is pure computational logic). Concretely: `imperative/module/core` ships 4 real side-effecting actions — `log.print` (writes to an ordered effect log / console), `state.set`, `state.increment` (mutate a running scope dictionary threaded step-to-step), `wait.delay` (records a real timing gap). Rust stays synchronous and deterministic (it only decides _what_ happens _in what order_); the React layer (`performImperativeEffects` in `imperative/core/index.ts`) actually _performs_ the effects (console.log, real `await sleep(ms)`, state UI updates) by replaying the ordered effect log — a clean CQRS split, and it avoids needing async Rust/WASM.
 
 ## Why reuse `mathematical_graph_port_directed_dag` for sequence
 
-`DagHost` already gives us, for free, an infinite pannable/zoomable canvas, boxes with left/right channel rows, bezier edge painting, `would_create_cycle`, and a `DagNodeKind::Computation { inputs, outputs }` kind whose channels already support `cardinality: "!"` metadata. A step node is just a `Computation` node with exactly one input channel (`prev`) and one output channel (`next`). The base port-graph engine (`mathematical/graph/lib.rs`) already replaces any existing incoming edge on a target handle (`try_connect_handles`, [mathematical/graph/lib.rs:1846](mathematical/graph/lib.rs)), so "at most one incoming" is free. The one thing `sequence/core` must add on top (mirroring `flow/core`'s `connect_ports`, [flow/core/lib.rs:1821](flow/core/lib.rs)) is a check that the *source* `next` port doesn't already have an outgoing edge, plus the existing `would_create_cycle` check — no changes to the shared `dag` crate are needed at all.
+`DagHost` already gives us, for free, an infinite pannable/zoomable canvas, boxes with left/right channel rows, bezier edge painting, `would_create_cycle`, and a `DagNodeKind::Computation { inputs, outputs }` kind whose channels already support `cardinality: "!"` metadata. A step node is just a `Computation` node with exactly one input channel (`prev`) and one output channel (`next`). The base port-graph engine (`mathematical/graph/lib.rs`) already replaces any existing incoming edge on a target handle (`try_connect_handles`, [mathematical/graph/lib.rs:1846](mathematical/graph/lib.rs)), so "at most one incoming" is free. The one thing `sequence/core` must add on top (mirroring `flow/core`'s `connect_ports`, [flow/core/lib.rs:1821](flow/core/lib.rs)) is a check that the _source_ `next` port doesn't already have an outgoing edge, plus the existing `would_create_cycle` check — no changes to the shared `dag` crate are needed at all.
 
 ## New directories
 
@@ -156,7 +154,7 @@ Mirrors `flow/module/math`'s `Operation` + `register()` pattern ([flow/module/ma
 - `LogPrint` — reads `key`/`message` from scope+params, output unchanged; the log entry itself is the effect.
 - `StateSet` — `output = channel_output(key, value)`, merges into scope.
 - `StateIncrement` — reads current scope value for `key`, outputs `key -> current + by`.
-- `WaitDelay` — `params.ms`, pass-through dictionary; the delay is *performed* later by `performImperativeEffects` in TS.
+- `WaitDelay` — `params.ms`, pass-through dictionary; the delay is _performed_ later by `performImperativeEffects` in TS.
 - `pub fn register(registry: &mut Registry)` — registers schemas + all 4 operators + `registry.finalize()`.
 
 ## `imperative/core` (wasm binding + TS runtime)
@@ -167,15 +165,15 @@ Mirrors `flow/module/math`'s `Operation` + `register()` pattern ([flow/module/ma
 
 ```typescript
 export interface EffectSink {
-  readonly onLog?: (message: string) => void;
-  readonly onStateChange?: (key: string, value: unknown) => void;
+ readonly onLog?: (message: string) => void;
+ readonly onStateChange?: (key: string, value: unknown) => void;
 }
 export async function performImperativeEffects(entries: readonly EffectLogEntry[], sink: EffectSink): Promise<void> {
-  for (const entry of entries) {
-    if (entry.kind === "log.print") sink.onLog?.(String(entry.output?.message ?? ""));
-    else if (entry.kind === "wait.delay") await new Promise((r) => setTimeout(r, Number(entry.input.ms ?? 0)));
-    else if (entry.kind.startsWith("state.")) sink.onStateChange?.(entry.step_id, entry.output);
-  }
+ for (const entry of entries) {
+  if (entry.kind === "log.print") sink.onLog?.(String(entry.output?.message ?? ""));
+  else if (entry.kind === "wait.delay") await new Promise((r) => setTimeout(r, Number(entry.input.ms ?? 0)));
+  else if (entry.kind.startsWith("state.")) sink.onStateChange?.(entry.step_id, entry.output);
+ }
 }
 ```
 

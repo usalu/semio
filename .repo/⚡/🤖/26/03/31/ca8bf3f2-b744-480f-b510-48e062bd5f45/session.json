@@ -24,9 +24,7 @@
           "content": "# 🔳 TODOs\n",
           "hook_event_name": "beforeTabFileRead",
           "cursor_version": "2.6.22",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": null
         }

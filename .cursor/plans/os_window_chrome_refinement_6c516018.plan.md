@@ -1,22 +1,22 @@
 ---
 name: OS Window Chrome Refinement
-overview: "Rebuild the print window chrome to match the real OS \"U-cutout\" shape (split header: name-tab left, hierarchy-number-tab right, open canvas gap between), always show hierarchy numbers (even for previously-starred headings), and add permanent dark-theme template variants with exact spacing/color parity to `ui/styling/tokens.json`."
+overview: 'Rebuild the print window chrome to match the real OS "U-cutout" shape (split header: name-tab left, hierarchy-number-tab right, open canvas gap between), always show hierarchy numbers (even for previously-starred headings), and add permanent dark-theme template variants with exact spacing/color parity to `ui/styling/tokens.json`.'
 todos:
-  - id: chrome-metrics
-    content: Emit exact chrome metric/length macros (title bar height, padding, font sizes) in print/script.ts from tokens.metrics.chrome
-    status: completed
-  - id: u-header
-    content: Rebuild semio-window.sty header as 3-segment U-shape (name tab, canvas gap, number tab) using tcolorbox per-side rules
-    status: completed
-  - id: always-numbered
-    content: Remove starred/unstarred distinction so chapter/section always show hierarchy numbers; drop now-redundant manual addcontentsline calls
-    status: completed
-  - id: dark-templates
-    content: Split each of the 6 templates into content.tex + light/dark wrapper entries; register dark entries in print/script.ts TEMPLATES
-    status: completed
-  - id: verify-refined
-    content: Regenerate tokens, rebuild all 12 template PDFs + mit-bestand zwischenbericht, visually verify U-shape, numbering, and dark parity
-    status: completed
+ - id: chrome-metrics
+   content: Emit exact chrome metric/length macros (title bar height, padding, font sizes) in print/script.ts from tokens.metrics.chrome
+   status: completed
+ - id: u-header
+   content: Rebuild semio-window.sty header as 3-segment U-shape (name tab, canvas gap, number tab) using tcolorbox per-side rules
+   status: completed
+ - id: always-numbered
+   content: Remove starred/unstarred distinction so chapter/section always show hierarchy numbers; drop now-redundant manual addcontentsline calls
+   status: completed
+ - id: dark-templates
+   content: Split each of the 6 templates into content.tex + light/dark wrapper entries; register dark entries in print/script.ts TEMPLATES
+   status: completed
+ - id: verify-refined
+   content: Regenerate tokens, rebuild all 12 template PDFs + mit-bestand zwischenbericht, visually verify U-shape, numbering, and dark parity
+   status: completed
 isProject: false
 ---
 
@@ -45,8 +45,8 @@ Add `metrics` to the `Tokens` type and read `tokens.metrics.chrome`. In `emitSem
 const compactFactor = parseFloat(tokens.spacing.compact); // "0.2rem" -> 0.2
 const chrome = tokens.metrics?.chrome;
 if (chrome) {
-  lines.push(`\\newcommand{\\semio@chrome@titlebar@height}{${compactFactor * chrome.controlHeightUiSpacing}em}`);
-  lines.push(`\\newcommand{\\semio@chrome@padding}{${compactFactor * chrome.paddingStandardUiSpacing}em}`);
+ lines.push(`\\newcommand{\\semio@chrome@titlebar@height}{${compactFactor * chrome.controlHeightUiSpacing}em}`);
+ lines.push(`\\newcommand{\\semio@chrome@padding}{${compactFactor * chrome.paddingStandardUiSpacing}em}`);
 }
 ```
 
@@ -125,8 +125,6 @@ flowchart TD
     inspect --> compare["Compare header shape, hierarchy numbers, dark colors against OS tokens"]
 ```
 
-
-
 - Rebuild all templates (light+dark) and the mit-bestand zwischenbericht.
 - Visually confirm: header has the open-gap "U" look (not a solid rectangle), name is left, number is right, numbers appear even on former `\chapter*`/`\section*` calls (e.g. forschungsbericht's "Kurzbeschreibung / Abstract" now shows a chapter number), and dark-themed PDFs use `#07181d`/`#0c1c21`/`#f7f3e3` chrome colors with correctly inverted page background.
 
@@ -137,4 +135,3 @@ flowchart TD
 - [print/tex/semio-components.sty](print/tex/semio-components.sty) — drop redundant `\addcontentsline`
 - [print/template/zukunftbau/forschungsbericht.tex](print/template/zukunftbau/forschungsbericht.tex) — drop redundant `\addcontentsline`, split into `.content.tex` + light/dark wrappers
 - `report.tex`, `paper.tex`, `flyer.tex`, `zwischenbericht.tex`, `kompaktbericht.tex` under [print/template/](print/template/) — same content-file split, each gains a `-dark.tex` sibling
-

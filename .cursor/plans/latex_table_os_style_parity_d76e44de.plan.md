@@ -2,24 +2,24 @@
 name: LaTeX Table OS Style Parity
 overview: Add a new semio-table LaTeX package that gives print/tex tables the same visual language as the React Table component (`ui/js/react/index.tsx`) used by the OS product — hairline horizontal row dividers only, shaded header row, matching row heights/spacing/fonts — then migrate the one existing tabular call site in `print/` to use it.
 todos:
-  - id: ticket
-    content: Open a ticket for the LaTeX table styling work
-    status: completed
-  - id: semio-table-sty
-    content: Create print/tex/semio-table.sty with SemioTable environment, SemioTableHeaderRow/SemioTableRow, using existing spacing/stroke/color tokens
-    status: completed
-  - id: register-package
-    content: Register semio-table in print/tex/semio.cls
-    status: completed
-  - id: migrate-callsite
-    content: Migrate the tabular block in print/template/zukunftbau/zwischenbericht.content.tex to SemioTable
-    status: completed
-  - id: build-verify
-    content: Run bun print/script.ts test and visually check the workpackages table in the built PDFs (light + dark)
-    status: completed
-  - id: close-ticket
-    content: Close the ticket with a summary and list of touched files
-    status: completed
+ - id: ticket
+   content: Open a ticket for the LaTeX table styling work
+   status: completed
+ - id: semio-table-sty
+   content: Create print/tex/semio-table.sty with SemioTable environment, SemioTableHeaderRow/SemioTableRow, using existing spacing/stroke/color tokens
+   status: completed
+ - id: register-package
+   content: Register semio-table in print/tex/semio.cls
+   status: completed
+ - id: migrate-callsite
+   content: Migrate the tabular block in print/template/zukunftbau/zwischenbericht.content.tex to SemioTable
+   status: completed
+ - id: build-verify
+   content: Run bun print/script.ts test and visually check the workpackages table in the built PDFs (light + dark)
+   status: completed
+ - id: close-ticket
+   content: Close the ticket with a summary and list of touched files
+   status: completed
 isProject: false
 ---
 
@@ -38,7 +38,7 @@ isProject: false
 }
 ```
 
-`Table` (defined in [print/tex/semio-window.sty](print/tex/semio-window.sty)) is only the OS-style window *chrome* (tcolorbox frame + title chip) that wraps arbitrary content — it does not style the `tabular` grid inside it. Meanwhile the OS UI's canonical `Table` component in [ui/js/react/index.tsx](ui/js/react/index.tsx) (lines ~18736-18847) has a well-defined look:
+`Table` (defined in [print/tex/semio-window.sty](print/tex/semio-window.sty)) is only the OS-style window _chrome_ (tcolorbox frame + title chip) that wraps arbitrary content — it does not style the `tabular` grid inside it. Meanwhile the OS UI's canonical `Table` component in [ui/js/react/index.tsx](ui/js/react/index.tsx) (lines ~18736-18847) has a well-defined look:
 
 - No vertical rules, no outer frame, no striping — **horizontal hairline dividers only**, one under the header and one under every body row (`borderNormalBottomClass` = `border-b !border-normal`)
 - Header row: `bg-window` shaded background, `font-medium`, height `h-large` (9 spacing units)

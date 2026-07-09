@@ -7,14 +7,17 @@ goal: AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI
 ## Summary
 
 Fixed inconsistent CLI error messages: added status guards to FinishTicket, GoalClose, GoalReopen; extended wrong-args tests for all commands (todo, section delete/extract/integrate, goal change, top-level move/extract/integrate); added TestCliWrongArgs_ErrorMessages with 36 error message verification cases; added wrong-lifecycle checks to E2E ticket/goal lifecycle tests; extended TestCliJsonErrorsToStderr from 4 to 22 cases
+
 ## Changes
 
 ### main.go
+
 - Added status guard to `FinishTicket`: rejects closing non-open tickets with "ticket is not open" (before file/summary validation)
 - Added status guard to `GoalClose`: rejects closing already-closed goals with "goal is already closed"
 - Added status guard to `GoalReopen`: rejects reopening already-open goals with "goal is already open"
 
 ### main_test.go
+
 - Extended `TestCliWrongArgs_SectionOperations`: added delete, extract, integrate missing-args cases
 - Added `TestCliWrongArgs_GoalChange`: validates cobra.ExactArgs(1) enforcement
 - Added `TestCliWrongArgs_TodoOperations`: create (missing parent/name), change (missing id), delete (missing id)
@@ -38,7 +41,7 @@ Fixed inconsistent CLI error messages: added status guards to FinishTicket, Goal
 ## Todos
 
 - [x] Add status guards to FinishTicket (reject closing non-open tickets)
-- [x] Add status guards to GoalClose (reject closing non-open goals) 
+- [x] Add status guards to GoalClose (reject closing non-open goals)
 - [x] Add status guards to GoalReopen (reject reopening non-closed goals)
 - [x] Fix ticket close error message order (status check before file validation)
 - [x] Extend tests for wrong args on all commands

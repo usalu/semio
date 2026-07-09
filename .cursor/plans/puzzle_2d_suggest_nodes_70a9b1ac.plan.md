@@ -1,28 +1,28 @@
 ---
 name: Puzzle 2D Suggest Nodes
-overview: "Add \"Suggest nodes\" context-menu parity to puzzle 2d: right-clicking a free handle opens an anchored brush-candidate menu (same API shape as puzzle 3d's vortex \"Suggest objects\"), reusing the existing WASM brush slot/preview/place pipeline."
+overview: 'Add "Suggest nodes" context-menu parity to puzzle 2d: right-clicking a free handle opens an anchored brush-candidate menu (same API shape as puzzle 3d''s vortex "Suggest objects"), reusing the existing WASM brush slot/preview/place pipeline.'
 todos:
-  - id: reopen-ticket
-    content: Reopen ticket 26/06/11/PUZZLE-2D-CONTEXT-MENU
-    status: completed
-  - id: wasm-slot-api
-    content: Add brush_open_slot / brush_commit_slot / brush_cancel_slot to engine and wasm exports
-    status: completed
-  - id: renderer-api
-    content: Add Puzzle2dRenderer brushOpenSlot/brushCommitSlot/brushCancelSlot methods
-    status: completed
-  - id: menu-ui
-    content: Add puzzle2dOpenSlotSuggestionsRef, brush menu store, Puzzle2dBrushCandidateMenu portal
-    status: completed
-  - id: menu-item
-    content: Add onSuggest param to buildPuzzle2dSelectionMenuItems and wire free-handle gating in canvas contextmenu effect
-    status: completed
-  - id: tests
-    content: Extend Rust host tests and vitest menu tests; run cargo + vitest
-    status: completed
-  - id: close-ticket
-    content: Close ticket with updated summary and files
-    status: completed
+ - id: reopen-ticket
+   content: Reopen ticket 26/06/11/PUZZLE-2D-CONTEXT-MENU
+   status: completed
+ - id: wasm-slot-api
+   content: Add brush_open_slot / brush_commit_slot / brush_cancel_slot to engine and wasm exports
+   status: completed
+ - id: renderer-api
+   content: Add Puzzle2dRenderer brushOpenSlot/brushCommitSlot/brushCancelSlot methods
+   status: completed
+ - id: menu-ui
+   content: Add puzzle2dOpenSlotSuggestionsRef, brush menu store, Puzzle2dBrushCandidateMenu portal
+   status: completed
+ - id: menu-item
+   content: Add onSuggest param to buildPuzzle2dSelectionMenuItems and wire free-handle gating in canvas contextmenu effect
+   status: completed
+ - id: tests
+   content: Extend Rust host tests and vitest menu tests; run cargo + vitest
+   status: completed
+ - id: close-ticket
+   content: Close ticket with updated summary and files
+   status: completed
 isProject: false
 ---
 
@@ -43,8 +43,6 @@ flowchart LR
   ui -->|click| commit["renderer.brushCommitSlot -> brushPlace event"]
   commit --> play["existing puzzle2dCommitBrushPlacementToPlay pipeline"]
 ```
-
-
 
 ## 1. WASM engine ([mathematical/graph/port/directed/normal/lib.rs](mathematical/graph/port/directed/normal/lib.rs))
 

@@ -2,24 +2,24 @@
 name: Canvas Renderer Interface
 overview: Make `infinite_cavas` the only crate that knows vello exists by introducing a repo-owned canvas-renderer interface (geometry, paint, scene, GPU session, SVG), migrating all ~16 consumer crates onto it, and renaming every vello-named API in Rust and TypeScript.
 todos:
-  - id: renderer-interface
-    content: Add repo-owned Renderer interface region (geometry, paint, Scene, SvgDocument, GPU signatures) with VelloBackend subregion in infinite/cavas/rs/lib.rs; remove vello re-exports
-    status: completed
-  - id: migrate-graph-crates
-    content: Migrate mathematical/graph crates (core, port, directed, normal, dag) off cavas::vello onto the interface
-    status: completed
-  - id: migrate-canvas-crates
-    content: Migrate layout, gis/2d, raster, writer, puzzle/2d, flow/core, sequence/core, trinity/rewrite off vello; drop vello deps from their Cargo.tomls
-    status: completed
-  - id: rename-rust-apis
-    content: Rename VelloThemePalette, set_vello_theme_json, setVelloThemeJson, svg_icon_vello09 to canvas-neutral names across Rust crates
-    status: completed
-  - id: rename-ts-apis
-    content: Rename Vello-named TS APIs in ui/styling and ui/react and update all react consumers
-    status: completed
-  - id: verify
-    content: Run cargo check/test, wasm builds, bun tests; grep-gate that vello only appears in the cavas backend region
-    status: completed
+ - id: renderer-interface
+   content: Add repo-owned Renderer interface region (geometry, paint, Scene, SvgDocument, GPU signatures) with VelloBackend subregion in infinite/cavas/rs/lib.rs; remove vello re-exports
+   status: completed
+ - id: migrate-graph-crates
+   content: Migrate mathematical/graph crates (core, port, directed, normal, dag) off cavas::vello onto the interface
+   status: completed
+ - id: migrate-canvas-crates
+   content: Migrate layout, gis/2d, raster, writer, puzzle/2d, flow/core, sequence/core, trinity/rewrite off vello; drop vello deps from their Cargo.tomls
+   status: completed
+ - id: rename-rust-apis
+   content: Rename VelloThemePalette, set_vello_theme_json, setVelloThemeJson, svg_icon_vello09 to canvas-neutral names across Rust crates
+   status: completed
+ - id: rename-ts-apis
+   content: Rename Vello-named TS APIs in ui/styling and ui/react and update all react consumers
+   status: completed
+ - id: verify
+   content: Run cargo check/test, wasm builds, bun tests; grep-gate that vello only appears in the cavas backend region
+   status: completed
 isProject: false
 ---
 

@@ -194,9 +194,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js⚙️package📌1📌100"
-        ],
+        "ranges": ["👤compose📚js⚙️package📌1📌100"],
         "second": "🎆26🌙03☀️11⏰13⌚42⏱️16",
         "session": "⚪d9b3893787994612b79780c78589da1d"
       },
@@ -300,9 +298,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js⚙️package📌1📌100"
-        ],
+        "ranges": ["👤compose📚js⚙️package📌1📌100"],
         "second": "🎆26🌙03☀️11⏰13⌚42⏱️30",
         "session": "⚪d9b3893787994612b79780c78589da1d"
       },
@@ -343,9 +339,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻index📌1📌200"
-        ],
+        "ranges": ["👤compose📚js💻index📌1📌200"],
         "second": "🎆26🌙03☀️11⏰13⌚42⏱️33",
         "session": "⚪d9b3893787994612b79780c78589da1d"
       },
@@ -399,9 +393,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼composetest📌1📌200"
-        ],
+        "ranges": ["👤compose📚js🥼composetest📌1📌200"],
         "second": "🎆26🌙03☀️11⏰13⌚42⏱️33",
         "session": "⚪d9b3893787994612b79780c78589da1d"
       },
@@ -442,9 +434,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻index📌1📌200"
-        ],
+        "ranges": ["👤compose📚js💻index📌1📌200"],
         "second": "🎆26🌙03☀️11⏰13⌚42⏱️46",
         "session": "⚪d9b3893787994612b79780c78589da1d"
       },
@@ -498,9 +488,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼composetest📌1📌200"
-        ],
+        "ranges": ["👤compose📚js🥼composetest📌1📌200"],
         "second": "🎆26🌙03☀️11⏰13⌚42⏱️59",
         "session": "⚪d9b3893787994612b79780c78589da1d"
       },
@@ -1182,9 +1170,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌300📌1800"
-        ],
+        "ranges": ["👤compose📚js💻compose📌300📌1800"],
         "second": "🎆26🌙03☀️11⏰13⌚43⏱️02",
         "session": "⚪d9b3893787994612b79780c78589da1d"
       },
@@ -1866,9 +1852,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌300📌1800"
-        ],
+        "ranges": ["👤compose📚js💻compose📌300📌1800"],
         "second": "🎆26🌙03☀️11⏰13⌚43⏱️21",
         "session": "⚪d9b3893787994612b79780c78589da1d"
       },
@@ -2410,9 +2394,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌1800📌3500"
-        ],
+        "ranges": ["👤compose📚js💻compose📌1800📌3500"],
         "second": "🎆26🌙03☀️11⏰13⌚43⏱️23",
         "session": "⚪d9b3893787994612b79780c78589da1d"
       },
@@ -2954,9 +2936,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌1800📌3500"
-        ],
+        "ranges": ["👤compose📚js💻compose📌1800📌3500"],
         "second": "🎆26🌙03☀️11⏰13⌚43⏱️43",
         "session": "⚪d9b3893787994612b79780c78589da1d"
       },
@@ -3610,9 +3590,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌3550📌5500"
-        ],
+        "ranges": ["👤compose📚js💻compose📌3550📌5500"],
         "second": "🎆26🌙03☀️11⏰13⌚44⏱️02",
         "session": "⚪d9b3893787994612b79780c78589da1d"
       },
@@ -4194,9 +4172,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌3550📌5500"
-        ],
+        "ranges": ["👤compose📚js💻compose📌3550📌5500"],
         "second": "🎆26🌙03☀️11⏰13⌚44⏱️21",
         "session": "⚪d9b3893787994612b79780c78589da1d"
       },
@@ -4638,9 +4614,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌5500📌7500"
-        ],
+        "ranges": ["👤compose📚js💻compose📌5500📌7500"],
         "second": "🎆26🌙03☀️11⏰13⌚44⏱️25",
         "session": "⚪d9b3893787994612b79780c78589da1d"
       },
@@ -5082,9 +5056,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌5500📌7500"
-        ],
+        "ranges": ["👤compose📚js💻compose📌5500📌7500"],
         "second": "🎆26🌙03☀️11⏰13⌚44⏱️38",
         "session": "⚪d9b3893787994612b79780c78589da1d"
       },

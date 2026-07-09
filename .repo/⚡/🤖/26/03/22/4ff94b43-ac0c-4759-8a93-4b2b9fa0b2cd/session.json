@@ -4276,11 +4276,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4ff94b43-ac0c-4759-8a93-4b2b9fa0b2cd.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/Sketchpad.tsx",
-              "compose/sketchpad/index.tsx",
-              "compose/js/index.ts"
-            ],
+            "files": ["compose/sketchpad/Sketchpad.tsx", "compose/sketchpad/index.tsx", "compose/js/index.ts"],
             "summary": "Added auto-save to SketchpadStore.registerKitStore() with 300ms debounce. Every kit store registered with the sketchpad (injected, created via factory, or loaded from persistence) now automatically saves when its dirty flag becomes true and status is ready. This ensures all entry points (desktop Electron with FolderKitStore, VS Code webview with JsonFileKitStore, standalone web) automatically persist kit edits to disk. Removed redundant per-entry-point auto-save from index.tsx (VS Code adapter). Added 4 unit tests: auto-save on apply, debounce of rapid changes, skip when status is not ready, auto-save of injected desktop kitStore. All 83 tests pass.",
             "ticket": "26/03/22/COLLABORATIVE-AUTO-SAVE-KIT-STORES"
           },
@@ -4607,11 +4603,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4ff94b43-ac0c-4759-8a93-4b2b9fa0b2cd.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/Sketchpad.tsx",
-              "compose/sketchpad/index.tsx",
-              "compose/js/index.ts"
-            ],
+            "files": ["compose/sketchpad/Sketchpad.tsx", "compose/sketchpad/index.tsx", "compose/js/index.ts"],
             "no_github": true,
             "path": "26/03/22/COLLABORATIVE-AUTO-SAVE-KIT-STORES",
             "summary": "Added auto-save to SketchpadStore.registerKitStore() with 300ms debounce. Every kit store registered with the sketchpad (injected, created via factory, or loaded from persistence) now automatically saves when its dirty flag becomes true and status is ready. This ensures all entry points (desktop Electron with FolderKitStore, VS Code webview with JsonFileKitStore, standalone web) automatically persist kit edits to disk. Removed redundant per-entry-point auto-save from index.tsx (VS Code adapter). Added 4 unit tests: auto-save on apply, debounce of rapid changes, skip when status is not ready, auto-save of injected desktop kitStore. All 83 tests pass."
@@ -4640,11 +4632,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4ff94b43-ac0c-4759-8a93-4b2b9fa0b2cd.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/Sketchpad.tsx",
-              "compose/sketchpad/index.tsx",
-              "compose/js/index.ts"
-            ],
+            "files": ["compose/sketchpad/Sketchpad.tsx", "compose/sketchpad/index.tsx", "compose/js/index.ts"],
             "no_github": true,
             "path": "26/03/22/COLLABORATIVE-AUTO-SAVE-KIT-STORES",
             "summary": "Added auto-save to SketchpadStore.registerKitStore() with 300ms debounce. Every kit store registered with the sketchpad (injected, created via factory, or loaded from persistence) now automatically saves when its dirty flag becomes true and status is ready. This ensures all entry points (desktop Electron with FolderKitStore, VS Code webview with JsonFileKitStore, standalone web) automatically persist kit edits to disk. Removed redundant per-entry-point auto-save from index.tsx (VS Code adapter). Added 4 unit tests: auto-save on apply, debounce of rapid changes, skip when status is not ready, auto-save of injected desktop kitStore. All 83 tests pass."

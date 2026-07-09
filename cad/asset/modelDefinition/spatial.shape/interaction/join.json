@@ -5,10 +5,7 @@
   "label": "Join",
   "interaction": {
     "spatialGroundPick": false,
-    "pickDisabledStates": [
-      "idle",
-      "committed"
-    ],
+    "pickDisabledStates": ["idle", "committed"],
     "groundPointerMoveStates": [],
     "heightDragStates": [],
     "verticalRodStates": [],
@@ -41,11 +38,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        0
-                      ]
+                      "value": [0, 0, 0]
                     }
                   },
                   {
@@ -89,11 +82,7 @@
       {
         "name": "select_object_for_join",
         "selection": {
-          "accept": [
-            "edge",
-            "wire",
-            "face"
-          ],
+          "accept": ["edge", "wire", "face"],
           "multiple": true,
           "prompt": "Select object for join"
         },
@@ -170,11 +159,7 @@
             "text": "Select object for join",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -230,9 +215,7 @@
     ]
   },
   "commit": {
-    "fromStates": [
-      "ready"
-    ],
+    "fromStates": ["ready"],
     "operation": {
       "kind": "action",
       "action": "command.finish",

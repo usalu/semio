@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 When importing a zipped kit in the home app, thousands of console warnings appeared:
@@ -54,7 +55,7 @@ Added Y.js warning detection to the E2E test in `sketchpad.test.ts`:
 ```typescript
 const yjsWarnings: string[] = [];
 page.on("console", (msg) => {
-  if (msg.type() === "warning" && msg.text().includes("Invalid access")) yjsWarnings.push(msg.text());
+ if (msg.type() === "warning" && msg.text().includes("Invalid access")) yjsWarnings.push(msg.text());
 });
 // ... test imports metabolism.zip ...
 expect(yjsWarnings).toHaveLength(0);
@@ -73,6 +74,7 @@ Y.js warnings count: 0
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix Y.js Invalid access warnings when importing kits

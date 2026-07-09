@@ -2,24 +2,24 @@
 name: Folder Structure Migration
 overview: "Complete the in-progress monorepo restructure for the ui, framework, cad and puzzle technologies: the code already physically sits in the new top-level folders, so this migration renames package scopes to match folders (folder = technology = scope) and rewires all stale tooling paths. compose and coda are deferred."
 todos:
-  - id: ticket-ui
-    content: "Open ticket; rename ui technology: @elements/ui->@semio-tech/ui-react, @elements/styling->@semio-tech/ui-styling (+ Nx @semio-tech/ui-styling-tokens). Fix ui/react and ui/styling package.json name/repository.directory/deps and project.json cwd. Update intra-package imports."
-    status: completed
-  - id: ticket-framework
-    content: "Open ticket; rename framework technology: @elements/framework->@semio-tech/framework-platform-core, @elements/framework-react->@semio-tech/framework-platform-core-react, @elements/playground->@semio-tech/framework-playground-core; split playground renderer into @semio-tech/framework-playground-core-react with proper package.json/exports; implement/export renderPlayground. Fix cwd, repository.directory, and intra-imports."
-    status: completed
-  - id: ticket-puzzle
-    content: "Open ticket; rename puzzle technology: @elements/board->@puzzle/board (+ board-wasm, crate elements_board->puzzle_board), @elements/scene->@puzzle/scene, @elements/topology->@puzzle/topology. Fix project.json cwd, repository.directory, and imports of @elements/ui/@elements/playground -> @semio-tech/ui-react/@semio-tech/framework-playground-core(-react)."
-    status: completed
-  - id: ticket-cad
-    content: Open ticket; rename cad packages @spatial/js-*->@semio-tech/cad-js-*. Fix all cad/js/*/project.json cwd (spatial/js->cad/js), package.json name/repository.directory/deps, and renderer-r3f vite aliases/imports to @semio-tech/framework-playground-core + @semio-tech/ui-react.
-    status: completed
-  - id: ticket-root-rewire
-    content: Open consolidating ticket; rewire root package.json workspaces + scripts (dev:spatial->dev:cad, storybook ids), script.ts dev mapping, .vscode/launch.json, .storybook/main.ts + stories, nx.json/eslint/Monorepo.sln. Run bun install to regenerate bun.lock.
-    status: completed
-  - id: verify
-    content: "Verify: grep shows no remaining @elements/*/@spatial/* workspace refs in scope; run bun nx build/test per renamed package and dev:cad/board/scene/storybook:ui to confirm runtime resolution. Close tickets with file summaries."
-    status: completed
+ - id: ticket-ui
+   content: "Open ticket; rename ui technology: @elements/ui->@semio-tech/ui-react, @elements/styling->@semio-tech/ui-styling (+ Nx @semio-tech/ui-styling-tokens). Fix ui/react and ui/styling package.json name/repository.directory/deps and project.json cwd. Update intra-package imports."
+   status: completed
+ - id: ticket-framework
+   content: "Open ticket; rename framework technology: @elements/framework->@semio-tech/framework-platform-core, @elements/framework-react->@semio-tech/framework-platform-core-react, @elements/playground->@semio-tech/framework-playground-core; split playground renderer into @semio-tech/framework-playground-core-react with proper package.json/exports; implement/export renderPlayground. Fix cwd, repository.directory, and intra-imports."
+   status: completed
+ - id: ticket-puzzle
+   content: "Open ticket; rename puzzle technology: @elements/board->@puzzle/board (+ board-wasm, crate elements_board->puzzle_board), @elements/scene->@puzzle/scene, @elements/topology->@puzzle/topology. Fix project.json cwd, repository.directory, and imports of @elements/ui/@elements/playground -> @semio-tech/ui-react/@semio-tech/framework-playground-core(-react)."
+   status: completed
+ - id: ticket-cad
+   content: Open ticket; rename cad packages @spatial/js-*->@semio-tech/cad-js-*. Fix all cad/js/*/project.json cwd (spatial/js->cad/js), package.json name/repository.directory/deps, and renderer-r3f vite aliases/imports to @semio-tech/framework-playground-core + @semio-tech/ui-react.
+   status: completed
+ - id: ticket-root-rewire
+   content: Open consolidating ticket; rewire root package.json workspaces + scripts (dev:spatial->dev:cad, storybook ids), script.ts dev mapping, .vscode/launch.json, .storybook/main.ts + stories, nx.json/eslint/Monorepo.sln. Run bun install to regenerate bun.lock.
+   status: completed
+ - id: verify
+   content: "Verify: grep shows no remaining @elements/*/@spatial/* workspace refs in scope; run bun nx build/test per renamed package and dev:cad/board/scene/storybook:ui to confirm runtime resolution. Close tickets with file summaries."
+   status: completed
 isProject: false
 ---
 

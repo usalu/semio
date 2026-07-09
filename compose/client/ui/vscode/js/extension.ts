@@ -109,7 +109,7 @@ type WebviewToExtensionMessage = { kind: "kit.save"; content: string } | { kind:
 class KitEditorProvider implements vscode.CustomTextEditorProvider {
   public static readonly viewType = "compose.kitEditor";
 
-  constructor(private readonly context: vscode.ExtensionContext) { }
+  constructor(private readonly context: vscode.ExtensionContext) {}
 
   public async resolveCustomTextEditor(document: vscode.TextDocument, webviewPanel: vscode.WebviewPanel, _token: vscode.CancellationToken): Promise<void> {
     const sketchpadDistPath = resolveSketchpadDistPath(this.context.extensionPath);
@@ -232,5 +232,5 @@ export function activate(context: vscode.ExtensionContext) {
 /**
  * Deactivates the compose VS Code extension.
  **/
-export function deactivate() { }
+export function deactivate() {}
 // #endregion 🏷️Activation

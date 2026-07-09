@@ -17,12 +17,12 @@ showEntity("Type: Base", base);
 
 // Base connectors
 for (const c of base.connectors ?? []) {
-  showEntity(`  Connector: ${c.guid.slice(0,8)} (${c.name})`, c);
+  showEntity(`  Connector: ${c.guid.slice(0, 8)} (${c.name})`, c);
 }
 
 // Base models
 for (const m of base.models ?? []) {
-  showEntity(`  Model: ${m.guid.slice(0,8)} (${m.name})`, m);
+  showEntity(`  Model: ${m.guid.slice(0, 8)} (${m.name})`, m);
 }
 
 // Capsule Dream design (37ba7ec4)
@@ -31,12 +31,12 @@ showEntity("Design: Capsule Dream", capsuleDream);
 
 // First few pieces
 for (const p of (capsuleDream.pieces ?? []).slice(0, 3)) {
-  showEntity(`  Piece: ${p.guid.slice(0,8)} (${p.name})`, p);
+  showEntity(`  Piece: ${p.guid.slice(0, 8)} (${p.name})`, p);
 }
 
 // First few connections
 for (const c of (capsuleDream.connections ?? []).slice(0, 3)) {
-  showEntity(`  Connection: ${c.guid.slice(0,8)}`, c);
+  showEntity(`  Connection: ${c.guid.slice(0, 8)}`, c);
   showEntity(`    Connected side`, c.connected);
   showEntity(`    Connecting side`, c.connecting);
 }

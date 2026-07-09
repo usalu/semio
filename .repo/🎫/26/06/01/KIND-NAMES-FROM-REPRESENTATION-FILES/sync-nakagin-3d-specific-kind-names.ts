@@ -144,6 +144,4 @@ for (const row of objects) {
 fixture3d.objects = objects;
 
 writeFileSync(fixture3dPath, `${JSON.stringify(fixture3d, null, 2)}\n`, "utf8");
-console.log(
-  `[sync-nakagin-3d] catalog rows ${newCatalogObjects.length}, object kind updates ${objectUpdates}, sample placed ${puzzle3dPreferSpecificMetabolismKindName("Capsule J", availableKindNames)}`,
-);
+console.log(`[sync-nakagin-3d] catalog rows ${newCatalogObjects.length}, object kind updates ${objectUpdates}, sample placed ${puzzle3dPreferSpecificMetabolismKindName("Capsule J", availableKindNames)}`);

@@ -4,13 +4,7 @@
   "version": "1.0.0",
   "label": "Cylinder",
   "description": "Typology produced by solid.cylinder.",
-  "actions": [
-    "command.finish"
-  ],
-  "interactions": [
-    "solid.cylinder"
-  ],
-  "primitiveKinds": [
-    "solid"
-  ]
+  "actions": ["command.finish"],
+  "interactions": ["solid.cylinder"],
+  "primitiveKinds": ["solid"]
 }

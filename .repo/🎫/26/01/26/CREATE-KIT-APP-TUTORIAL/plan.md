@@ -1,9 +1,11 @@
 # Plan: Create Kit App Tutorial
 
 ## Objective
+
 Create a comprehensive, beginner-friendly tutorial for the Kit App in `js/compose/sketchpad/kit-tutorial.md`. The tutorial will cover the architecture, state management (XState/Y.js), and a line-by-line commented version of `js/compose/sketchpad/Kit.tsx`.
 
 ## Steps
+
 1. **Analyze `js/compose/sketchpad/Kit.tsx`**: Understand the `KitStore`, `kitAppPlugin`, and how it interacts with the triadic hooks.
 2. **Structure Documentation**: Follow the requested 10-section format.
 3. **Draft "The Big Picture" & "Architecture"**: Explain high-level concepts (Notepad vs. Rulebook).

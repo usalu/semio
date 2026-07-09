@@ -1,13 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import {
-  extractBundleDateLineFromCommit,
-  formatBundleDateLine,
-  formatBundleSubject,
-  normalizeBundleScopeLabel,
-  pathsFromNumstatRow,
-  labelPathTokens,
-} from "../../../../../../repo/lib/js/src/commit.ts";
+import { extractBundleDateLineFromCommit, formatBundleDateLine, formatBundleSubject, normalizeBundleScopeLabel, pathsFromNumstatRow, labelPathTokens } from "../../../../../../repo/lib/js/src/commit.ts";
 import {
   gitRangeNumstat,
   shouldSkipPathForUloc,
@@ -31,10 +24,22 @@ type BundleDef = { label: string; keywords: string[]; pathTokens: string[] };
 const BUNDLE_DEFS: BundleDef[] = [
   { label: "🏘️compose🗃️fixtures", keywords: ["metabolism", "fixture", "initialkit", "kit diff", "neo4j", "validation snapshot", "hash cases", "diff corpora", "meshurl", "palette fixture"], pathTokens: ["fixtures", "metabolism"] },
   { label: "🏘️compose✍️sketchpad", keywords: ["sketchpad", "design diagram", "diagram replacement", "boot.tsx", "us-00", "store workflow"], pathTokens: ["sketchpad"] },
-  { label: "🏘️compose", keywords: ["compose rust", "compose js", "compose/react", "graphql", "target schema", "golden-schema", "typology", "subscription", "kit store", "grasshopper", "rhino", "family entity", "lib.rs", "compose/client", "compose/rs", "compose/site"], pathTokens: ["compose"] },
+  {
+    label: "🏘️compose",
+    keywords: ["compose rust", "compose js", "compose/react", "graphql", "target schema", "golden-schema", "typology", "subscription", "kit store", "grasshopper", "rhino", "family entity", "lib.rs", "compose/client", "compose/rs", "compose/site"],
+    pathTokens: ["compose"],
+  },
   { label: "🎬presentation📽️", keywords: ["presentation", "projektetage", "reveal", "disposition", "morph", "slide", "chapter", "fullscreen tile", "embodiment"], pathTokens: ["presentation"] },
-  { label: "🧩puzzle🎮play", keywords: ["puzzle", "board play", "board→puzzle", "marquee", "vortex", "topology board", "5d topology", "peer sync", "brush tool", "nakagin 2d", "nakagin 3d", "puzzle2d", "fill brush", "wires 5d"], pathTokens: ["puzzle"] },
-  { label: "📐cad🪟spatial", keywords: ["cad", "spatial", "brep", "curve", "extrude", "scene package", "construct query", "model-definition", "elements scene", "elements geometry", "topologic", "spatial play", "spatial doctrine", "cell-complex", "chevrotain"], pathTokens: ["cad"] },
+  {
+    label: "🧩puzzle🎮play",
+    keywords: ["puzzle", "board play", "board→puzzle", "marquee", "vortex", "topology board", "5d topology", "peer sync", "brush tool", "nakagin 2d", "nakagin 3d", "puzzle2d", "fill brush", "wires 5d"],
+    pathTokens: ["puzzle"],
+  },
+  {
+    label: "📐cad🪟spatial",
+    keywords: ["cad", "spatial", "brep", "curve", "extrude", "scene package", "construct query", "model-definition", "elements scene", "elements geometry", "topologic", "spatial play", "spatial doctrine", "cell-complex", "chevrotain"],
+    pathTokens: ["cad"],
+  },
   { label: "🥅framework", keywords: ["@framework", "framework/", "playground", "platform shell", "playgroundcontroller", "uinode", "product/base"], pathTokens: ["framework"] },
   { label: "🖱️ui⚛️react", keywords: ["@semio-tech/ui-react", "ui/react", "engagement", "ghost", "golden layout", "window fill", "storybook", "scrollbar", "selection/hover", "context-menu", "platform settings"], pathTokens: ["ui", "react"] },
   { label: "🖱️ui🎨assets", keywords: ["svg icon", "ui/assets", "ui/styling", "vite-elements", "globals-ui"], pathTokens: ["ui", "assets"] },
@@ -186,11 +191,7 @@ function compareDaysDesc(a: string, b: string): number {
   return a < b ? 1 : a > b ? -1 : 0;
 }
 
-function reconcileListedDayUloc(
-  listedDays: string[],
-  header: GitDeltaSum,
-  raw: Map<string, GitDeltaSum>,
-): Map<string, GitDeltaSum> {
+function reconcileListedDayUloc(listedDays: string[], header: GitDeltaSum, raw: Map<string, GitDeltaSum>): Map<string, GitDeltaSum> {
   if (listedDays.length === 0) return new Map();
   const weights = listedDays.map((d) => Math.max(1, gitDeltaLineTotal(raw.get(d) ?? { added: 0, removed: 0, edited: 0 })));
   const totalW = weights.reduce((a, b) => a + b, 0);
@@ -221,9 +222,7 @@ function reconcileListedDayUloc(
 const rawMsg = readFileSync("/tmp/head-msg.txt", "utf8");
 const footerIdx = rawMsg.indexOf("📊uloc➕42518");
 const legacyPart = footerIdx > 0 ? rawMsg.slice(0, footerIdx) : rawMsg.split("Signed-off-by:")[0]!;
-const chronPart = rawMsg.includes("🎆26🌙06☀️02\n- ")
-  ? rawMsg.slice(rawMsg.indexOf("🎆26🌙06☀️02\n- "))
-  : rawMsg.slice(footerIdx > 0 ? footerIdx : 0);
+const chronPart = rawMsg.includes("🎆26🌙06☀️02\n- ") ? rawMsg.slice(rawMsg.indexOf("🎆26🌙06☀️02\n- ")) : rawMsg.slice(footerIdx > 0 ? footerIdx : 0);
 
 const chronology = parseChronology(chronPart);
 const legacy = parseLegacyBundles(legacyPart);
@@ -241,9 +240,7 @@ const dateDeltas: Map<string, GitDeltaSum>[] = BUNDLE_DEFS.map(() => new Map());
 for (const row of gitRangeNumstat(root, wip, head)) {
   const rowPaths = pathsFromNumstatRow(row.path);
   if (!rowPaths.length || rowPaths.every((p) => shouldSkipPathForUloc(root, p))) continue;
-  const chunk = sumGitLangDeltas(
-    accumulateGitDeltasFromNumstat(root, [{ path: row.path, added: row.added, removed: row.removed }]),
-  );
+  const chunk = sumGitLangDeltas(accumulateGitDeltasFromNumstat(root, [{ path: row.path, added: row.added, removed: row.removed }]));
   if (gitDeltaLineTotal(chunk) === 0) continue;
   const bi = assignPathToBundle(rowPaths[0] ?? row.path);
   headers[bi] = add(headers[bi]!, chunk);

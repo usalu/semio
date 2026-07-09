@@ -3,18 +3,22 @@
 ## Problem Analysis
 
 ### Root Cause: Wrong CLI Flag
+
 The extension uses `--format jsonl` flag but the repo binary expects `--json`:
+
 - Current: `["--format", "jsonl", "graphql", query]`
 - Expected: `["--json", "graphql", query]`
 
 This causes the repo binary to output human-readable format with emoji characters like "→ found 33 bundles" which cannot be parsed as JSON.
 
 ### Secondary Issue: No Lazy Loading
+
 The CodebaseProvider currently tries to load the entire codebase tree at once via the `CodebaseDocument` GraphQL query, which fetches all bundles, folders, files, sections, and definitions in a single request.
 
 ## Solution
 
 ### 1. Fix the CLI Flag (Critical)
+
 Change `["--format", "jsonl", "graphql", query]` to `["--json", "graphql", query]` in the urql client fetch function at line 120.
 
 ### 2. Implement Lazy Loading Architecture
@@ -39,12 +43,14 @@ Root Level (no element)
 ### 3. Provider Updates
 
 #### CodebaseProvider Changes
+
 - Remove dependency on `getCodebase()` for the entire tree
 - Root `getChildren()` calls `fetchBundlesViaGraphQL()`
 - Bundle/Folder expansion calls `fetchFolderContent(path)`
 - File expansion calls new `fetchFileContent(path)` for sections/definitions
 
 #### Other Providers
+
 - TicketsProvider, PoliciesProvider, ContributorsProvider should use their dedicated queries directly instead of relying on the codebase cache
 - This ensures they work independently even if codebase loading fails
 

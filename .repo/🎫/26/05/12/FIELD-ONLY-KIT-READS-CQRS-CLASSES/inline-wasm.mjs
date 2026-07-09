@@ -57,9 +57,5 @@ ${lines.join("\n")}
 //#endregion 🧷WasmGraphFlatReexports
 `;
 
-fs.writeFileSync(
-  ".repo/🎫/26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES/merged-wasm-chunk.txt",
-  block,
-  "utf8",
-);
+fs.writeFileSync(".repo/🎫/26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES/merged-wasm-chunk.txt", block, "utf8");
 console.log("export import count", lines.length, "chunk bytes", block.length);

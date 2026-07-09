@@ -4097,11 +4097,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/05615c82-396e-4035-908c-0c75e9a5ef18.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/py/compose.py",
-              "compose/py/compose.test.py",
-              "compose/py/pyproject.toml"
-            ],
+            "files": ["compose/py/compose.py", "compose/py/compose.test.py", "compose/py/pyproject.toml"],
             "summary": "Extended export_design_model with IFC exporter using ifcopenshell. Added .ifc to EXPORT_MODEL_FORMATS. Implemented _glb_bytes_to_vertices_faces to extract mesh data from GLB for IFC representation. Created _export_ifc_from_dict for dict-based kit data and _export_ifc_from_entities for entity-based kit data. Maps Kit→IfcProject (+Site/Building/Storey), Design→IfcElementAssembly, Type→IfcBuildingElementProxyType with shared mesh geometry, Piece→IfcBuildingElementProxy with world placement, Connector→IfcDistributionPort with local placement, Connection→IfcRelConnectsPorts+IfcRelConnectsElements. Persists attributes, metadata and solver params as IfcPropertySets. Added ifcopenshell\u003e=0.8.0 dependency. Added 6 new tests: valid IFC structure, type/occurrence presence, mesh geometry, ports/connections, full ifcopenshell roundtrip verification, report output. All 23 tests pass.",
             "ticket": "2026/03/20/EXTEND-EXPORT-DESIGN-MODEL-WITH-IFC-EXPORTER"
           },
@@ -4312,11 +4308,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/05615c82-396e-4035-908c-0c75e9a5ef18.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/py/compose.py",
-              "compose/py/compose.test.py",
-              "compose/py/pyproject.toml"
-            ],
+            "files": ["compose/py/compose.py", "compose/py/compose.test.py", "compose/py/pyproject.toml"],
             "summary": "Extended export_design_model with IFC exporter using ifcopenshell. Added .ifc to EXPORT_MODEL_FORMATS. Implemented _glb_bytes_to_vertices_faces to extract mesh data from GLB for IFC representation. Created _export_ifc_from_dict for dict-based kit data and _export_ifc_from_entities for entity-based kit data. Maps Kit→IfcProject (+Site/Building/Storey), Design→IfcElementAssembly, Type→IfcBuildingElementProxyType with shared mesh geometry, Piece→IfcBuildingElementProxy with world placement, Connector→IfcDistributionPort with local placement, Connection→IfcRelConnectsPorts+IfcRelConnectsElements. Persists attributes, metadata and solver params as IfcPropertySets. Added ifcopenshell\u003e=0.8.0 dependency. Added 6 new tests: valid IFC structure, type/occurrence presence, mesh geometry, ports/connections, full ifcopenshell roundtrip verification, report output. All 23 tests pass.",
             "ticket": "26/03/20/EXTEND-EXPORT-DESIGN-MODEL-WITH-IFC-EXPORTER"
           },

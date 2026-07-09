@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # SQL Schema Compliance with TypeScript (2025-11-22)
 
 ## Goal
@@ -245,15 +246,15 @@ stats: stats.map((s: any) => ({
 ```typescript
 // Export design props
 if (design.props) {
-  for (const prop of design.props) {
-    db.run("INSERT INTO prop (guid, key, value, unit, quality_guid) VALUES (?, ?, ?, ?, ?)", [prop.guid, prop.key, prop.value, prop.unit ?? null, prop.quality?.guid ?? null]);
-    db.run("INSERT INTO design_prop (design_guid, prop_guid) VALUES (?, ?)", [design.guid, prop.guid]);
-    if (prop.attributes) {
-      for (const attr of prop.attributes) {
-        db.run("INSERT INTO attribute (guid, key, value, definition, prop_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value ?? null, attr.definition ?? null, prop.guid]);
-      }
-    }
+ for (const prop of design.props) {
+  db.run("INSERT INTO prop (guid, key, value, unit, quality_guid) VALUES (?, ?, ?, ?, ?)", [prop.guid, prop.key, prop.value, prop.unit ?? null, prop.quality?.guid ?? null]);
+  db.run("INSERT INTO design_prop (design_guid, prop_guid) VALUES (?, ?)", [design.guid, prop.guid]);
+  if (prop.attributes) {
+   for (const attr of prop.attributes) {
+    db.run("INSERT INTO attribute (guid, key, value, definition, prop_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value ?? null, attr.definition ?? null, prop.guid]);
+   }
   }
+ }
 }
 ```
 
@@ -266,10 +267,10 @@ if (design.props) {
 ```typescript
 // Export design authors
 if (design.authors) {
-  for (let i = 0; i < design.authors.length; i++) {
-    const authorId = design.authors[i];
-    db.run("INSERT INTO design_author (design_guid, author_guid, rank) VALUES (?, ?, ?)", [design.guid, authorId.guid, i]);
-  }
+ for (let i = 0; i < design.authors.length; i++) {
+  const authorId = design.authors[i];
+  db.run("INSERT INTO design_author (design_guid, author_guid, rank) VALUES (?, ?, ?)", [design.guid, authorId.guid, i]);
+ }
 }
 ```
 
@@ -287,24 +288,24 @@ if (design.authors) {
 
 ```typescript
 ("INSERT INTO design (guid, name, parent_guid, is_abstract, folder, unit, location_guid, active_layer_guid, can_scale, can_mirror, description, icon, image, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-  [
-    design.guid,
-    design.name,
-    design.parent?.guid ?? null,
-    design.isAbstract ? 1 : 0,
-    design.folder ?? null,
-    design.unit ?? null,
-    design.location?.guid ?? null,
-    design.activeLayer?.guid ?? null,
-    design.canScale ? 1 : 0,
-    design.canMirror ? 1 : 0,
-    design.description ?? null,
-    design.icon ?? null,
-    design.image ?? null,
-    design.createdAt.toISOString(),
-    design.updatedAt.toISOString(),
-    kit.guid,
-  ]);
+ [
+  design.guid,
+  design.name,
+  design.parent?.guid ?? null,
+  design.isAbstract ? 1 : 0,
+  design.folder ?? null,
+  design.unit ?? null,
+  design.location?.guid ?? null,
+  design.activeLayer?.guid ?? null,
+  design.canScale ? 1 : 0,
+  design.canMirror ? 1 : 0,
+  design.description ?? null,
+  design.icon ?? null,
+  design.image ?? null,
+  design.createdAt.toISOString(),
+  design.updatedAt.toISOString(),
+  kit.guid,
+ ]);
 ```
 
 ### 9. Fix `kitToSqlite` - Update Stat INSERT

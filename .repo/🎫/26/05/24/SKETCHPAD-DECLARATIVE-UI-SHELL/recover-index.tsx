@@ -131,15 +131,7 @@ import {
   type OperationStatus,
   useWriteIndicator,
 } from "@semio-tech/compose-react";
-import {
-  layoutBoardFixtureForceGraph,
-  type BoardEdgeLinkPayload,
-  type BoardFixtureV1,
-  type BoardForceGraphLayoutOptions,
-  type BoardHoverPayload,
-  type BoardSelectionSnapshot,
-  type CameraState as ElementsBoardCameraState,
-} from "@elements/board";
+import { layoutBoardFixtureForceGraph, type BoardEdgeLinkPayload, type BoardFixtureV1, type BoardForceGraphLayoutOptions, type BoardHoverPayload, type BoardSelectionSnapshot, type CameraState as ElementsBoardCameraState } from "@elements/board";
 import {
   DEFAULT_DOMAIN,
   PLACEHOLDER_MESH_URL,
@@ -571,10 +563,11 @@ export function getIncludedDesigns(allDesigns: readonly Design[], design: Design
     out.push(d);
     for (const p of (d as { pieces?: readonly { includedInDesigns?: string[] }[] }).pieces ?? []) {
       const ins = p.includedInDesigns;
-      if (ins) for (const childId of ins) {
-        const d2 = findDesignInKit(allDesigns, childId);
-        if (d2) visit(d2);
-      }
+      if (ins)
+        for (const childId of ins) {
+          const d2 = findDesignInKit(allDesigns, childId);
+          if (d2) visit(d2);
+        }
     }
   };
   visit(design);
@@ -7207,21 +7200,14 @@ function KitWasmRuntimeBridge(props: { kitId: string; children: React.ReactNode 
     const branch = React.createElement(KitWasmMountProvider, { kitId, store, children });
     const alt = React.createElement(KitAlternativeSelectionProvider, { kitId }, branch);
     if (gql == null) return alt;
-    return React.createElement(
-      ComposeWasmKitLineHost,
-      { session: gql.session, storeId: gql.jsStoreId, kitContextId: kitId },
-      alt,
-    );
+    return React.createElement(ComposeWasmKitLineHost, { session: gql.session, storeId: gql.jsStoreId, kitContextId: kitId }, alt);
   };
 
   if (registry) {
     const status = registry.status(kitId);
     const entry = registry.get(kitId);
     if (status === "ready" && entry) {
-      const gql =
-        entry.session != null
-          ? { session: entry.session, jsStoreId: entry.jsStoreId }
-          : undefined;
+      const gql = entry.session != null ? { session: entry.session, jsStoreId: entry.jsStoreId } : undefined;
       return mount(entry.store, gql);
     }
   }
@@ -12918,7 +12904,6 @@ const AppContent: FC = () => {
             console.warn(`Cannot reparent design "${design.name}" to "${targetParentId}": would violate same-family constraint for design pieces`);
             return;
           }
-
         }
       } else if (targetFolderId === undefined && (design.parent || design.folder)) {
         if (design.folder) {
@@ -14158,10 +14143,7 @@ const sketchpadKitBuildBoardFixture = (nodes: readonly KitDiagramLayoutNode[], e
       const targetKind = targetNode.data.kind;
       const sourceFrame = getKitDiagramNodeFrameForKind(sourceKind);
       const targetFrame = getKitDiagramNodeFrameForKind(targetKind);
-      const anchors = resolveKitDiagramAnchorPair(
-        { kind: sourceKind, position: sourceNode.position, frame: sourceFrame },
-        { kind: targetKind, position: targetNode.position, frame: targetFrame },
-      );
+      const anchors = resolveKitDiagramAnchorPair({ kind: sourceKind, position: sourceNode.position, frame: sourceFrame }, { kind: targetKind, position: targetNode.position, frame: targetFrame });
       return {
         id: edge.id,
         source: topologyBoardCompoundId(edge.source, anchors.source.localPoint.side),
@@ -14171,9 +14153,7 @@ const sketchpadKitBuildBoardFixture = (nodes: readonly KitDiagramLayoutNode[], e
     .filter((edge): edge is NonNullable<typeof edge> => edge !== null);
   return {
     schema: "elements.board.fixture/v1",
-    camera: topologyBoardCameraFromCenters(
-      nodes.map((node) => topologyBoardCenterFromTopLeft(node.position, getKitDiagramNodeFrameForKind(node.data.kind))),
-    ),
+    camera: topologyBoardCameraFromCenters(nodes.map((node) => topologyBoardCenterFromTopLeft(node.position, getKitDiagramNodeFrameForKind(node.data.kind)))),
     nodes: boardNodes,
     edges: boardEdges,
   };
@@ -14457,20 +14437,11 @@ const KitDiagramInner: FC = () => {
   const boardFixture = useMemo(() => sketchpadKitBuildBoardFixture(diagramNodes, diagramEdges), [diagramNodes, diagramEdges]);
   const selectedBoardIds = useMemo(() => sketchpadKitSelectionToBoardIds(selection), [selection]);
   const lockedBoardNodeIds = useMemo(() => (isHandTool ? new Set(diagramNodes.map((node) => node.id)) : new Set<string>()), [isHandTool, diagramNodes]);
-  const [boardCamera, setBoardCamera] = useState<ElementsBoardCameraState>(() =>
-    topologyBoardCameraFromCenters(
-      diagramNodes.map((node) => topologyBoardCenterFromTopLeft(node.position, getKitDiagramNodeFrameForKind(node.data.kind))),
-    ),
-  );
+  const [boardCamera, setBoardCamera] = useState<ElementsBoardCameraState>(() => topologyBoardCameraFromCenters(diagramNodes.map((node) => topologyBoardCenterFromTopLeft(node.position, getKitDiagramNodeFrameForKind(node.data.kind)))));
 
   useEffect(() => {
-    setBoardCamera(
-      topologyBoardCameraFromCenters(
-        diagramNodes.map((node) => topologyBoardCenterFromTopLeft(node.position, getKitDiagramNodeFrameForKind(node.data.kind))),
-      ),
-    );
+    setBoardCamera(topologyBoardCameraFromCenters(diagramNodes.map((node) => topologyBoardCenterFromTopLeft(node.position, getKitDiagramNodeFrameForKind(node.data.kind)))));
   }, [baseNodeIdsKey]);
-
 
   const commitDiagramNodes = useCallback((nextNodes: KitDiagramLayoutNode[]) => {
     diagramNodesRef.current = nextNodes;
@@ -14492,11 +14463,7 @@ const KitDiagramInner: FC = () => {
     if (diagramNodesRef.current.length === 0) return;
     const fixture = sketchpadKitBuildBoardFixture(diagramNodesRef.current, diagramEdgesRef.current);
     const laid = layoutBoardFixtureForceGraph(fixture, topologyDiagramForceGraphOptions(diagramForceConfig));
-    commitDiagramNodes(
-      topologyApplyBoardFixtureCentersToTopLeft(diagramNodesRef.current, laid, (node) =>
-        getKitDiagramNodeFrameForKind(node.data.kind),
-      ),
-    );
+    commitDiagramNodes(topologyApplyBoardFixtureCentersToTopLeft(diagramNodesRef.current, laid, (node) => getKitDiagramNodeFrameForKind(node.data.kind)));
   }, [baseEdgeIdsKey, baseNodeIdsKey, commitDiagramNodes, diagramForceConfig]);
 
   const onBoardDrag = useCallback(
@@ -14520,9 +14487,7 @@ const KitDiagramInner: FC = () => {
         nextNodes = nodes.map((entry) => {
           const pinned = selectedPositions.get(entry.id);
           if (!pinned) return entry;
-          return entry.id === node.id
-            ? { ...entry, position }
-            : { ...entry, position: { x: pinned.x + deltaX, y: pinned.y + deltaY } };
+          return entry.id === node.id ? { ...entry, position } : { ...entry, position: { x: pinned.x + deltaX, y: pinned.y + deltaY } };
         });
       } else {
         nextNodes = nodes.map((entry) => (entry.id === payload.id ? { ...entry, position } : entry));
@@ -14605,13 +14570,7 @@ const KitDiagramInner: FC = () => {
 
   return (
     <div ref={boardWrapper} className="w-full h-full" data-testid="kit-diagram" tabIndex={0} onPointerDown={() => boardWrapper.current?.focus()}>
-      <TopologyBoardPane
-        fixture={boardFixture}
-        bindings={kitBoardBindings}
-        selectedIds={selectedBoardIds}
-        lockedIds={lockedBoardNodeIds}
-        board={{ camera: boardCamera, onDrag: onBoardDrag, onNodeChange: onBoardNodeChange }}
-      />
+      <TopologyBoardPane fixture={boardFixture} bindings={kitBoardBindings} selectedIds={selectedBoardIds} lockedIds={lockedBoardNodeIds} board={{ camera: boardCamera, onDrag: onBoardDrag, onNodeChange: onBoardNodeChange }} />
     </div>
   );
 };
@@ -17195,13 +17154,7 @@ export class SketchpadStore {
     return { store: kitStore, session: wasmSession, jsStoreId: stores[0]?.id };
   };
 
-  private openKitInRegistry = async (
-    kitId: string,
-    init: Parameters<KitRegistryValue["open"]>[1],
-    kind: KitKind,
-    source?: InitialStateKit["source"],
-    wasmSession?: Session,
-  ): Promise<void> => {
+  private openKitInRegistry = async (kitId: string, init: Parameters<KitRegistryValue["open"]>[1], kind: KitKind, source?: InitialStateKit["source"], wasmSession?: Session): Promise<void> => {
     const reg = getKitRegistryBridge();
     if (!reg) {
       throw new Error("[sketchpad] KitStoreProvider / KitRegistryProvider required (getKitRegistryBridge is null).");
@@ -17209,10 +17162,7 @@ export class SketchpadStore {
     if (reg.get(kitId)) {
       return;
     }
-    const merged =
-      wasmSession != null && init.store != null
-        ? await this.registryOpenInit(init.store, wasmSession)
-        : init;
+    const merged = wasmSession != null && init.store != null ? await this.registryOpenInit(init.store, wasmSession) : init;
     try {
       await reg.open(kitId, merged);
     } catch (e) {
@@ -21261,7 +21211,9 @@ const PanelToggles: FC = ({}) => {
     <div className="flex items-stretch gap-single">
       {(hasLeftTabs || hasRightTabs) && (
         <div className="flex items-stretch border border-element overflow-hidden h-medium divide-x divide-element">
-          {hasLeftTabs && <Toggle kind="icon" id="compose.sketchpad.navbar.panelToggle.leftSidePanel" pressed={isLeftOpen} onPressedChange={handleLeftToggle} className="!border-0" icon={LeftIcon ? <LeftIcon size={16} /> : <LayoutIcon size={16} />} />}
+          {hasLeftTabs && (
+            <Toggle kind="icon" id="compose.sketchpad.navbar.panelToggle.leftSidePanel" pressed={isLeftOpen} onPressedChange={handleLeftToggle} className="!border-0" icon={LeftIcon ? <LeftIcon size={16} /> : <LayoutIcon size={16} />} />
+          )}
           {hasRightTabs && (
             <Toggle kind="icon" id="compose.sketchpad.navbar.panelToggle.rightSidePanel" pressed={isRightOpen} onPressedChange={handleRightToggle} className="!border-0" icon={RightIcon ? <RightIcon size={16} /> : <DocumentIcon size={16} />} />
           )}
@@ -34067,17 +34019,10 @@ const sketchpadTopologyCameraResetSignature = (pieces: readonly Piece[], placeme
     })
     .join("|");
 
-const sketchpadTopologyBoardCameraEquals = (a: ElementsBoardCameraState, b: ElementsBoardCameraState): boolean =>
-  a.x === b.x && a.y === b.y && a.zoom === b.zoom;
+const sketchpadTopologyBoardCameraEquals = (a: ElementsBoardCameraState, b: ElementsBoardCameraState): boolean => a.x === b.x && a.y === b.y && a.zoom === b.zoom;
 
 const sketchpadTopologySceneCameraEquals = (a: ElementsSceneCameraState, b: ElementsSceneCameraState): boolean =>
-  a.zoom === b.zoom &&
-  a.position[0] === b.position[0] &&
-  a.position[1] === b.position[1] &&
-  a.position[2] === b.position[2] &&
-  a.target[0] === b.target[0] &&
-  a.target[1] === b.target[1] &&
-  a.target[2] === b.target[2];
+  a.zoom === b.zoom && a.position[0] === b.position[0] && a.position[1] === b.position[1] && a.position[2] === b.position[2] && a.target[0] === b.target[0] && a.target[1] === b.target[1] && a.target[2] === b.target[2];
 
 const sketchpadTopologyBuildBoardFixture = (args: {
   readonly pieces: readonly Piece[];
@@ -34112,23 +34057,24 @@ const sketchpadTopologyBuildBoardFixture = (args: {
       })
     : [];
 
-  const edges = args.showPieces && args.showConnections
-    ? args.connections
-        .map((connection) => {
-          const sourcePieceId = readSketchpadEntityId(connection.connecting?.piece);
-          const targetPieceId = readSketchpadEntityId(connection.connected?.piece);
-          const sourceConnectorId = readSketchpadEntityId(connection.connecting?.connector);
-          const targetConnectorId = readSketchpadEntityId(connection.connected?.connector);
-          if (!sourcePieceId || !targetPieceId || !sourceConnectorId || !targetConnectorId) return null;
-          return {
-            id: connection.id,
-            source: topologyBoardCompoundId(sourcePieceId, sourceConnectorId),
-            target: topologyBoardCompoundId(targetPieceId, targetConnectorId),
-            edgeKind: "compose.connection",
-          };
-        })
-        .filter((edge): edge is NonNullable<typeof edge> => edge !== null)
-    : [];
+  const edges =
+    args.showPieces && args.showConnections
+      ? args.connections
+          .map((connection) => {
+            const sourcePieceId = readSketchpadEntityId(connection.connecting?.piece);
+            const targetPieceId = readSketchpadEntityId(connection.connected?.piece);
+            const sourceConnectorId = readSketchpadEntityId(connection.connecting?.connector);
+            const targetConnectorId = readSketchpadEntityId(connection.connected?.connector);
+            if (!sourcePieceId || !targetPieceId || !sourceConnectorId || !targetConnectorId) return null;
+            return {
+              id: connection.id,
+              source: topologyBoardCompoundId(sourcePieceId, sourceConnectorId),
+              target: topologyBoardCompoundId(targetPieceId, targetConnectorId),
+              edgeKind: "compose.connection",
+            };
+          })
+          .filter((edge): edge is NonNullable<typeof edge> => edge !== null)
+      : [];
 
   return {
     schema: "elements.board.fixture/v1",
@@ -34138,12 +34084,7 @@ const sketchpadTopologyBuildBoardFixture = (args: {
   };
 };
 
-const sketchpadTopologyResolvePieceMeshFileId = (
-  piece: Piece,
-  typeById: Map<string, Type>,
-  files: readonly { id: string }[] | undefined,
-  selectedRepresentationTags: Record<string, string[]>,
-): string | null => {
+const sketchpadTopologyResolvePieceMeshFileId = (piece: Piece, typeById: Map<string, Type>, files: readonly { id: string }[] | undefined, selectedRepresentationTags: Record<string, string[]>): string | null => {
   const typeId = readSketchpadEntityId(piece.type);
   if (!typeId) return null;
   const representations = typeById.get(typeId)?.representations ?? [];
@@ -34242,8 +34183,14 @@ const sketchpadTopologyBuildConnection = (args: {
   const targetCenter = sketchpadTopologyPieceCenter(targetPiece, args.placementByPiece);
   const sourceConnectors = args.connectorRowsByPieceId.get(args.sourcePieceId) ?? [];
   const targetConnectors = args.connectorRowsByPieceId.get(args.targetPieceId) ?? [];
-  const sourceIndex = Math.max(0, sourceConnectors.findIndex((connector) => connector.id === args.sourceConnectorId));
-  const targetIndex = Math.max(0, targetConnectors.findIndex((connector) => connector.id === args.targetConnectorId));
+  const sourceIndex = Math.max(
+    0,
+    sourceConnectors.findIndex((connector) => connector.id === args.sourceConnectorId),
+  );
+  const targetIndex = Math.max(
+    0,
+    targetConnectors.findIndex((connector) => connector.id === args.targetConnectorId),
+  );
   const sourceOffset = sketchpadTopologyBoardHandleOffset(sourceIndex, sourceConnectors.length || 1);
   const targetOffset = sketchpadTopologyBoardHandleOffset(targetIndex, targetConnectors.length || 1);
   const sourceX = sourceCenter.u * ICON_WIDTH + sourceOffset.x;
@@ -34290,32 +34237,15 @@ const useDesignTopologyAdapter = () => {
   const typeById = useMemo(() => new Map(kitTypes.map((type) => [type.id, type])), [kitTypes]);
   const designById = useMemo(() => new Map(kitDesigns.map((entry) => [entry.id, entry])), [kitDesigns]);
   const pieceById = useMemo(() => new Map(pieces.map((piece) => [piece.id, piece])), [pieces]);
-  const connectorRowsByPieceId = useMemo(
-    () => new Map(pieces.map((piece) => [piece.id, sketchpadTopologyResolvePieceConnectors(piece, typeById)])),
-    [pieces, typeById],
-  );
-  const selectedPieceIds = useMemo(
-    () => new Set((selection?.pieces ?? []).map((entry) => resolveSelectionEntryId(entry)).filter((entry): entry is Id => typeof entry === "string" && entry.length > 0)),
-    [selection?.pieces],
-  );
-  const selectedConnectionIds = useMemo(
-    () => new Set((selection?.connections ?? []).map((entry) => resolveSelectionEntryId(entry)).filter((entry): entry is Id => typeof entry === "string" && entry.length > 0)),
-    [selection?.connections],
-  );
+  const connectorRowsByPieceId = useMemo(() => new Map(pieces.map((piece) => [piece.id, sketchpadTopologyResolvePieceConnectors(piece, typeById)])), [pieces, typeById]);
+  const selectedPieceIds = useMemo(() => new Set((selection?.pieces ?? []).map((entry) => resolveSelectionEntryId(entry)).filter((entry): entry is Id => typeof entry === "string" && entry.length > 0)), [selection?.pieces]);
+  const selectedConnectionIds = useMemo(() => new Set((selection?.connections ?? []).map((entry) => resolveSelectionEntryId(entry)).filter((entry): entry is Id => typeof entry === "string" && entry.length > 0)), [selection?.connections]);
   const files = useKitFiles();
   const fileUrls = useFileUrls();
   const [selectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
   const [hover, setDesignHover] = useDesignAppHover();
   const [clearDesignHover] = useDesignAppClearHover();
-  const hoveredPieceIds = useMemo(
-    () =>
-      new Set(
-        (hover?.pieces ?? [])
-          .map((entry) => resolveSelectionEntryId(entry))
-          .filter((entry): entry is Id => typeof entry === "string" && entry.length > 0),
-      ),
-    [hover?.pieces],
-  );
+  const hoveredPieceIds = useMemo(() => new Set((hover?.pieces ?? []).map((entry) => resolveSelectionEntryId(entry)).filter((entry): entry is Id => typeof entry === "string" && entry.length > 0)), [hover?.pieces]);
 
   const boardFixture = useMemo(
     () =>
@@ -34345,18 +34275,7 @@ const useDesignTopologyAdapter = () => {
         files: files as readonly { id: string }[] | undefined,
         selectedRepresentationTags: selectedRepresentationTags ?? {},
       }),
-    [
-      pieces,
-      connections,
-      placementByPiece,
-      typeById,
-      designById,
-      designFilters.showPieces,
-      designFilters.showConnections,
-      fileUrls,
-      files,
-      selectedRepresentationTags,
-    ],
+    [pieces, connections, placementByPiece, typeById, designById, designFilters.showPieces, designFilters.showConnections, fileUrls, files, selectedRepresentationTags],
   );
 
   const initialBoardCamera = useMemo(() => sketchpadTopologyBoardCameraFromPieces(pieces, placementByPiece), [pieces, placementByPiece]);
@@ -34609,12 +34528,7 @@ const DesignTopologyBoardWindow = memo(() => {
 });
 DesignTopologyBoardWindow.displayName = "DesignTopologyBoardWindow";
 
-const sketchpadSceneDropRayHitGround = (
-  sceneCamera: ElementsSceneCameraState,
-  dropZoneBounds: DOMRect,
-  localX: number,
-  localY: number,
-): { plane: Plane; center: Coordinate } | null => {
+const sketchpadSceneDropRayHitGround = (sceneCamera: ElementsSceneCameraState, dropZoneBounds: DOMRect, localX: number, localY: number): { plane: Plane; center: Coordinate } | null => {
   const ndcX = (localX / dropZoneBounds.width) * 2 - 1;
   const ndcY = -(localY / dropZoneBounds.height) * 2 + 1;
   const camPos = { x: sceneCamera.position[0], y: sceneCamera.position[1], z: sceneCamera.position[2] };
@@ -34623,11 +34537,7 @@ const sketchpadSceneDropRayHitGround = (
   if (fwdLen < 1e-6) return null;
   const fwd = { x: (target.x - camPos.x) / fwdLen, y: (target.y - camPos.y) / fwdLen, z: (target.z - camPos.z) / fwdLen };
   const worldUp = { x: 0, y: 1, z: 0 };
-  const rightLen = Math.hypot(
-    worldUp.y * fwd.z - worldUp.z * fwd.y,
-    worldUp.z * fwd.x - worldUp.x * fwd.z,
-    worldUp.x * fwd.y - worldUp.y * fwd.x,
-  );
+  const rightLen = Math.hypot(worldUp.y * fwd.z - worldUp.z * fwd.y, worldUp.z * fwd.x - worldUp.x * fwd.z, worldUp.x * fwd.y - worldUp.y * fwd.x);
   if (rightLen < 1e-6) return null;
   const right = {
     x: (worldUp.y * fwd.z - worldUp.z * fwd.y) / rightLen,
@@ -34726,13 +34636,7 @@ const DesignTopologySceneWindow = memo(() => {
           Scale
         </Button>
       </div>
-      <TopologyScenePane
-        fixture={topology.sceneFixture}
-        bindings={topology.bindings}
-        relocateMode={topology.relocateMode}
-        selectedObjectId={selectedObjectId}
-        scene={topology.scenePaneProps}
-      />
+      <TopologyScenePane fixture={topology.sceneFixture} bindings={topology.bindings} relocateMode={topology.relocateMode} selectedObjectId={selectedObjectId} scene={topology.scenePaneProps} />
     </div>
   );
 });
@@ -37286,7 +37190,6 @@ export const TypeDetails: FC = () => {
   return isInTypeContext ? <TypeDetailsForm /> : null;
 };
 
-
 const TypeRepresentationTreeItem: FC<{
   representationId: string;
   isSelected: boolean;
@@ -37571,7 +37474,6 @@ export const AttributesSection: FC = () => {
 const AttributesSectionForm: FC = () => {
   const typeAttributes = useTypeAttributes();
   const { run: typeRunAttr } = useTypeCommand();
-
 
   return (
     <TreeItem
@@ -37971,7 +37873,13 @@ export const TypeConnectorSettings: FC = () => {
 
   return (
     <ToolbarGroup>
-      <Toggle id="compose.sketchpad.app.type.tools.connector" pressed={activeTool === ToolKind.CONNECTOR} onPressedChange={() => setActiveTool && setActiveTool(ToolKind.CONNECTOR)} icon={<ConnectorIcon className="size-tiny" />} text={connectorLabel} />
+      <Toggle
+        id="compose.sketchpad.app.type.tools.connector"
+        pressed={activeTool === ToolKind.CONNECTOR}
+        onPressedChange={() => setActiveTool && setActiveTool(ToolKind.CONNECTOR)}
+        icon={<ConnectorIcon className="size-tiny" />}
+        text={connectorLabel}
+      />
     </ToolbarGroup>
   );
 };
@@ -44581,7 +44489,13 @@ const FeedbackForm: FC = () => {
             <label htmlFor="compose.sketchpad.app.feedback.form.email" className="text-sm font-medium">
               {emailLabel}
             </label>
-            <Input id="compose.sketchpad.app.feedback.form.email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("compose.sketchpad.app.feedback.form.emailPlaceholder.label.normal", "your@email.com (optional)")} />
+            <Input
+              id="compose.sketchpad.app.feedback.form.email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={t("compose.sketchpad.app.feedback.form.emailPlaceholder.label.normal", "your@email.com (optional)")}
+            />
           </div>
         </div>
       </div>
@@ -47086,213 +47000,249 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         // #endregion ­ƒº©Diagram Node Dragging
 
         // #region ­ƒÉ╣Diagram Table Selection Sync
-            console.log("[Kit] Verifying selection sync between table and diagram");
-            const tambourTypeSync = page.getByRole("button", { name: "Tambour" }).first();
-            const isTypeSyncVisible = await tambourTypeSync.isVisible({ timeout: 10000 }).catch(() => false);
-            console.log(`[Kit] Tambour type visible in table: ${isTypeSyncVisible}`);
+        console.log("[Kit] Verifying selection sync between table and diagram");
+        const tambourTypeSync = page.getByRole("button", { name: "Tambour" }).first();
+        const isTypeSyncVisible = await tambourTypeSync.isVisible({ timeout: 10000 }).catch(() => false);
+        console.log(`[Kit] Tambour type visible in table: ${isTypeSyncVisible}`);
 
-            if (isTypeSyncVisible) {
-              await tambourTypeSync.click();
-              await page.waitForTimeout(500);
+        if (isTypeSyncVisible) {
+          await tambourTypeSync.click();
+          await page.waitForTimeout(500);
 
-              const selectionStateSync = await page.evaluate(() => {
-                const actor = (window as any).__COMPOSE_ACTOR__;
-                if (!actor) return null;
-                const snapshot = actor.getSnapshot();
-                const url = window.location.pathname;
-                const kitIdMatch = url.match(/\/kits\/([^/]+)/);
-                const kitId = kitIdMatch?.[1];
-                return snapshot?.context?.kitApps?.[kitId || ""]?.selection;
-              });
-              console.log(`[Kit] Selection state after table click: ${JSON.stringify(selectionStateSync)}`);
+          const selectionStateSync = await page.evaluate(() => {
+            const actor = (window as any).__COMPOSE_ACTOR__;
+            if (!actor) return null;
+            const snapshot = actor.getSnapshot();
+            const url = window.location.pathname;
+            const kitIdMatch = url.match(/\/kits\/([^/]+)/);
+            const kitId = kitIdMatch?.[1];
+            return snapshot?.context?.kitApps?.[kitId || ""]?.selection;
+          });
+          console.log(`[Kit] Selection state after table click: ${JSON.stringify(selectionStateSync)}`);
 
-              const selectedTypesSync = selectionStateSync?.types || [];
-              console.log(`[Kit] Selected types count: ${selectedTypesSync.length}`);
-            }
-            console.log("[Kit] Diagram table selection sync test complete");
-            // #endregion ­ƒÉ╣Diagram Table Selection Sync
+          const selectedTypesSync = selectionStateSync?.types || [];
+          console.log(`[Kit] Selected types count: ${selectedTypesSync.length}`);
+        }
+        console.log("[Kit] Diagram table selection sync test complete");
+        // #endregion ­ƒÉ╣Diagram Table Selection Sync
 
-            // #region ­ƒô£Diagram Table File Sync
-            console.log("[Kit] Verifying diagram file/folder nodes match table file/folder rows");
-            {
-              const syncData = await page.evaluate(() => {
-                const store = (window as any).__COMPOSE_STORE__;
-                if (!store) return null;
-                const url = window.location.pathname;
-                const kitIdMatch = url.match(/\/kits\/([^/]+)/);
-                const kitId = kitIdMatch?.[1];
-                if (!kitId || !store.hasKit(kitId)) return null;
-                const kitStore = store.kit(kitId);
-                const kit = kitStore.getSnapshot().kit;
-                if (!kit) return null;
-                const fileUrls = kitStore.fileUrls as Map<string, string>;
-                const importedFilePaths = new Set<string>();
-                fileUrls.forEach((_url: string, path: string) => {
-                  const normalizedPath = path.replace(/^\.?\//, "").replace(/\/+$/, "");
-                  if (normalizedPath) importedFilePaths.add(normalizedPath);
-                });
-                const importedFolderPaths = new Set<string>();
-                importedFilePaths.forEach((filePath: string) => {
-                  const segments = filePath.split("/").filter(Boolean);
-                  for (let i = 1; i < segments.length; i++) {
-                    importedFolderPaths.add(segments.slice(0, i).join("/"));
-                  }
-                });
-                const foldersById = new Map((kit.folders ?? []).map((f: any) => [f.id, f]));
-                const getFolderPath = (folderId?: string): string => {
-                  if (!folderId) return "";
-                  const folder = foldersById.get(folderId);
-                  if (!folder) return "";
-                  const parentPath = getFolderPath(folder.parent?.id);
-                  return parentPath ? `${parentPath}/${folder.name}` : folder.name;
-                };
-                const visibleFiles = (kit.files ?? []).filter((f: any) => {
-                  if (foldersById.has(f.id)) return false;
-                  const parentPath = getFolderPath(f.folder?.id);
-                  const storagePath = parentPath ? `${parentPath}/${f.name}` : f.name;
-                  if (importedFolderPaths.has(storagePath)) return false;
-                  return importedFilePaths.has(storagePath);
-                });
-                const visibleFolders = (kit.folders ?? []).filter((f: any) => importedFolderPaths.has(getFolderPath(f.id)));
-                return {
-                  totalFiles: kit.files?.length || 0,
-                  totalFolders: kit.folders?.length || 0,
-                  visibleFiles: visibleFiles.length,
-                  visibleFolders: visibleFolders.length,
-                  importedFilePathCount: importedFilePaths.size,
-                };
-              });
-              console.log(`[Kit] File sync data: ${JSON.stringify(syncData)}`);
-              if (syncData) {
-                console.log(`[Kit] Diagram file/folder nodes render on elements board canvas (no react-flow DOM nodes)`);
-                console.log(`[Kit] Store visible files: ${syncData.visibleFiles}, visible folders: ${syncData.visibleFolders}`);
-                // Diagram nodes are filtered by row visibility, search, and kind selection.
-                // The store-level visible count may exceed diagram node count due to additional
-                // rendering filters (expandedRows, selectedKinds, importedFilePaths matching).
-                // Verify store consistency instead.
-                expect(syncData.visibleFiles).toBeGreaterThanOrEqual(0);
-                expect(syncData.visibleFolders).toBeGreaterThanOrEqual(0);
-                expect(syncData.visibleFiles).toBeLessThanOrEqual(syncData.totalFiles);
-                expect(syncData.visibleFolders).toBeLessThanOrEqual(syncData.totalFolders);
-                if (syncData.visibleFiles < syncData.totalFiles) {
-                  console.log(`[Kit] File filtering active: ${syncData.visibleFiles}/${syncData.totalFiles} files shown (${syncData.totalFiles - syncData.visibleFiles} metadata-only files hidden)`);
-                }
+        // #region ­ƒô£Diagram Table File Sync
+        console.log("[Kit] Verifying diagram file/folder nodes match table file/folder rows");
+        {
+          const syncData = await page.evaluate(() => {
+            const store = (window as any).__COMPOSE_STORE__;
+            if (!store) return null;
+            const url = window.location.pathname;
+            const kitIdMatch = url.match(/\/kits\/([^/]+)/);
+            const kitId = kitIdMatch?.[1];
+            if (!kitId || !store.hasKit(kitId)) return null;
+            const kitStore = store.kit(kitId);
+            const kit = kitStore.getSnapshot().kit;
+            if (!kit) return null;
+            const fileUrls = kitStore.fileUrls as Map<string, string>;
+            const importedFilePaths = new Set<string>();
+            fileUrls.forEach((_url: string, path: string) => {
+              const normalizedPath = path.replace(/^\.?\//, "").replace(/\/+$/, "");
+              if (normalizedPath) importedFilePaths.add(normalizedPath);
+            });
+            const importedFolderPaths = new Set<string>();
+            importedFilePaths.forEach((filePath: string) => {
+              const segments = filePath.split("/").filter(Boolean);
+              for (let i = 1; i < segments.length; i++) {
+                importedFolderPaths.add(segments.slice(0, i).join("/"));
               }
+            });
+            const foldersById = new Map((kit.folders ?? []).map((f: any) => [f.id, f]));
+            const getFolderPath = (folderId?: string): string => {
+              if (!folderId) return "";
+              const folder = foldersById.get(folderId);
+              if (!folder) return "";
+              const parentPath = getFolderPath(folder.parent?.id);
+              return parentPath ? `${parentPath}/${folder.name}` : folder.name;
+            };
+            const visibleFiles = (kit.files ?? []).filter((f: any) => {
+              if (foldersById.has(f.id)) return false;
+              const parentPath = getFolderPath(f.folder?.id);
+              const storagePath = parentPath ? `${parentPath}/${f.name}` : f.name;
+              if (importedFolderPaths.has(storagePath)) return false;
+              return importedFilePaths.has(storagePath);
+            });
+            const visibleFolders = (kit.folders ?? []).filter((f: any) => importedFolderPaths.has(getFolderPath(f.id)));
+            return {
+              totalFiles: kit.files?.length || 0,
+              totalFolders: kit.folders?.length || 0,
+              visibleFiles: visibleFiles.length,
+              visibleFolders: visibleFolders.length,
+              importedFilePathCount: importedFilePaths.size,
+            };
+          });
+          console.log(`[Kit] File sync data: ${JSON.stringify(syncData)}`);
+          if (syncData) {
+            console.log(`[Kit] Diagram file/folder nodes render on elements board canvas (no react-flow DOM nodes)`);
+            console.log(`[Kit] Store visible files: ${syncData.visibleFiles}, visible folders: ${syncData.visibleFolders}`);
+            // Diagram nodes are filtered by row visibility, search, and kind selection.
+            // The store-level visible count may exceed diagram node count due to additional
+            // rendering filters (expandedRows, selectedKinds, importedFilePaths matching).
+            // Verify store consistency instead.
+            expect(syncData.visibleFiles).toBeGreaterThanOrEqual(0);
+            expect(syncData.visibleFolders).toBeGreaterThanOrEqual(0);
+            expect(syncData.visibleFiles).toBeLessThanOrEqual(syncData.totalFiles);
+            expect(syncData.visibleFolders).toBeLessThanOrEqual(syncData.totalFolders);
+            if (syncData.visibleFiles < syncData.totalFiles) {
+              console.log(`[Kit] File filtering active: ${syncData.visibleFiles}/${syncData.totalFiles} files shown (${syncData.totalFiles - syncData.visibleFiles} metadata-only files hidden)`);
             }
-            console.log("[Kit] Diagram table file sync test complete");
-            // #endregion ­ƒô£Diagram Table File Sync
+          }
+        }
+        console.log("[Kit] Diagram table file sync test complete");
+        // #endregion ­ƒô£Diagram Table File Sync
 
-            // #region ­ƒñûDiagram Node Click Selection
-            console.log("[Kit] Verifying clicking diagram node updates selection");
+        // #region ­ƒñûDiagram Node Click Selection
+        console.log("[Kit] Verifying clicking diagram node updates selection");
 
-            const diagramContainerForClick = page.locator('[data-testid="kit-diagram"] [data-testid="board-canvas"]').first();
-            const isDiagramVisibleForClick = await diagramContainerForClick.isVisible().catch(() => false);
-            console.log(`[Kit] Diagram container visible for click test: ${isDiagramVisibleForClick}`);
+        const diagramContainerForClick = page.locator('[data-testid="kit-diagram"] [data-testid="board-canvas"]').first();
+        const isDiagramVisibleForClick = await diagramContainerForClick.isVisible().catch(() => false);
+        console.log(`[Kit] Diagram container visible for click test: ${isDiagramVisibleForClick}`);
 
-            if (!isDiagramVisibleForClick) {
-              console.log("[Kit] Diagram not visible, checking for golden layout windows...");
-              const windowCount = await page.locator(".lm_content").count();
-              console.log(`[Kit] Golden layout windows: ${windowCount}`);
-            }
+        if (!isDiagramVisibleForClick) {
+          console.log("[Kit] Diagram not visible, checking for golden layout windows...");
+          const windowCount = await page.locator(".lm_content").count();
+          console.log(`[Kit] Golden layout windows: ${windowCount}`);
+        }
 
-            const kitBoardForClick = page.locator('[data-testid="kit-diagram"] [data-testid="board-canvas"]');
-            const hasKitBoardForClick = await kitBoardForClick.isVisible({ timeout: 5000 }).catch(() => false);
-            console.log(`[Kit] Board canvas visible for click test: ${hasKitBoardForClick}`);
+        const kitBoardForClick = page.locator('[data-testid="kit-diagram"] [data-testid="board-canvas"]');
+        const hasKitBoardForClick = await kitBoardForClick.isVisible({ timeout: 5000 }).catch(() => false);
+        console.log(`[Kit] Board canvas visible for click test: ${hasKitBoardForClick}`);
 
-            if (hasKitBoardForClick) {
-              await waitForDiagramStabilization(page);
-              const boardBoxClick = await kitBoardForClick.boundingBox();
-              if (boardBoxClick) {
-                await page.mouse.click(boardBoxClick.x + boardBoxClick.width / 2, boardBoxClick.y + boardBoxClick.height / 2);
-              }
-              await page.waitForTimeout(500);
+        if (hasKitBoardForClick) {
+          await waitForDiagramStabilization(page);
+          const boardBoxClick = await kitBoardForClick.boundingBox();
+          if (boardBoxClick) {
+            await page.mouse.click(boardBoxClick.x + boardBoxClick.width / 2, boardBoxClick.y + boardBoxClick.height / 2);
+          }
+          await page.waitForTimeout(500);
 
-              const afterClickSelection = await page.evaluate(() => {
-                const actor = (window as any).__COMPOSE_ACTOR__;
-                if (!actor) return null;
-                const snapshot = actor.getSnapshot();
-                const url = window.location.pathname;
-                const kitIdMatch = url.match(/\/kits\/([^/]+)/);
-                const kitId = kitIdMatch?.[1];
-                return snapshot?.context?.kitApps?.[kitId || ""]?.selection;
-              });
-              console.log(`[Kit] Selection after node click: ${JSON.stringify(afterClickSelection)}`);
+          const afterClickSelection = await page.evaluate(() => {
+            const actor = (window as any).__COMPOSE_ACTOR__;
+            if (!actor) return null;
+            const snapshot = actor.getSnapshot();
+            const url = window.location.pathname;
+            const kitIdMatch = url.match(/\/kits\/([^/]+)/);
+            const kitId = kitIdMatch?.[1];
+            return snapshot?.context?.kitApps?.[kitId || ""]?.selection;
+          });
+          console.log(`[Kit] Selection after node click: ${JSON.stringify(afterClickSelection)}`);
 
-              const selectedTypesClick = afterClickSelection?.types || [];
-              const selectedDesignsClick = afterClickSelection?.designs || [];
-              const selectedFoldersClick = afterClickSelection?.folders || [];
-              const selectedQualitiesClick = afterClickSelection?.qualities || [];
-              const selectedPortsClick = afterClickSelection?.ports || [];
-              const selectedTagsClick = afterClickSelection?.tags || [];
-              const selectedConceptsClick = afterClickSelection?.concepts || [];
-              const selectedFilesClick = afterClickSelection?.files || [];
-              const selectedAuthorsClick = afterClickSelection?.authors || [];
-              const totalSelected =
-                selectedTypesClick.length +
-                selectedDesignsClick.length +
-                selectedFoldersClick.length +
-                selectedQualitiesClick.length +
-                selectedPortsClick.length +
-                selectedTagsClick.length +
-                selectedConceptsClick.length +
-                selectedFilesClick.length +
-                selectedAuthorsClick.length;
-              console.log(`[Kit] Total selected: ${totalSelected} (types: ${selectedTypesClick.length}, designs: ${selectedDesignsClick.length}, folders: ${selectedFoldersClick.length})`);
-              expect(totalSelected).toBeGreaterThan(0);
-              console.log("[Kit] Diagram node click selection test complete");
-            } else {
-              console.log("[Kit] No diagram nodes found for click test, skipping selection verification");
-            }
-            // #endregion ­ƒñûDiagram Node Click Selection
+          const selectedTypesClick = afterClickSelection?.types || [];
+          const selectedDesignsClick = afterClickSelection?.designs || [];
+          const selectedFoldersClick = afterClickSelection?.folders || [];
+          const selectedQualitiesClick = afterClickSelection?.qualities || [];
+          const selectedPortsClick = afterClickSelection?.ports || [];
+          const selectedTagsClick = afterClickSelection?.tags || [];
+          const selectedConceptsClick = afterClickSelection?.concepts || [];
+          const selectedFilesClick = afterClickSelection?.files || [];
+          const selectedAuthorsClick = afterClickSelection?.authors || [];
+          const totalSelected =
+            selectedTypesClick.length +
+            selectedDesignsClick.length +
+            selectedFoldersClick.length +
+            selectedQualitiesClick.length +
+            selectedPortsClick.length +
+            selectedTagsClick.length +
+            selectedConceptsClick.length +
+            selectedFilesClick.length +
+            selectedAuthorsClick.length;
+          console.log(`[Kit] Total selected: ${totalSelected} (types: ${selectedTypesClick.length}, designs: ${selectedDesignsClick.length}, folders: ${selectedFoldersClick.length})`);
+          expect(totalSelected).toBeGreaterThan(0);
+          console.log("[Kit] Diagram node click selection test complete");
+        } else {
+          console.log("[Kit] No diagram nodes found for click test, skipping selection verification");
+        }
+        // #endregion ­ƒñûDiagram Node Click Selection
 
-            // #region ­ƒÉÿDiagram Hover Sync
-            console.log("[Kit] Verifying hover sync between table and diagram");
-            const kitBoardHover = page.locator('[data-testid="kit-diagram"] [data-testid="board-canvas"]');
-            const hasKitBoardHover = await kitBoardHover.isVisible({ timeout: 5000 }).catch(() => false);
-            console.log(`[Kit] Board canvas visible for hover test: ${hasKitBoardHover}`);
-            if (hasKitBoardHover) {
-              const nodeBoxHover = await kitBoardHover.boundingBox();
-              expect(nodeBoxHover).not.toBeNull();
+        // #region ­ƒÉÿDiagram Hover Sync
+        console.log("[Kit] Verifying hover sync between table and diagram");
+        const kitBoardHover = page.locator('[data-testid="kit-diagram"] [data-testid="board-canvas"]');
+        const hasKitBoardHover = await kitBoardHover.isVisible({ timeout: 5000 }).catch(() => false);
+        console.log(`[Kit] Board canvas visible for hover test: ${hasKitBoardHover}`);
+        if (hasKitBoardHover) {
+          const nodeBoxHover = await kitBoardHover.boundingBox();
+          expect(nodeBoxHover).not.toBeNull();
 
-              const centerXHover = nodeBoxHover!.x + nodeBoxHover!.width / 2;
-              const centerYHover = nodeBoxHover!.y + nodeBoxHover!.height / 2;
+          const centerXHover = nodeBoxHover!.x + nodeBoxHover!.width / 2;
+          const centerYHover = nodeBoxHover!.y + nodeBoxHover!.height / 2;
 
-              await page.mouse.move(centerXHover, centerYHover);
-              await page.waitForTimeout(300);
+          await page.mouse.move(centerXHover, centerYHover);
+          await page.waitForTimeout(300);
 
-              const hoverState = await page.evaluate(() => {
-                const actor = (window as any).__COMPOSE_ACTOR__;
-                if (!actor) return null;
-                const snapshot = actor.getSnapshot();
-                const url = window.location.pathname;
-                const kitIdMatch = url.match(/\/kits\/([^/]+)/);
-                const kitId = kitIdMatch?.[1];
-                return snapshot?.context?.kitApps?.[kitId || ""]?.hover;
-              });
-              console.log(`[Kit] Hover state after mouse enter: ${JSON.stringify(hoverState)}`);
+          const hoverState = await page.evaluate(() => {
+            const actor = (window as any).__COMPOSE_ACTOR__;
+            if (!actor) return null;
+            const snapshot = actor.getSnapshot();
+            const url = window.location.pathname;
+            const kitIdMatch = url.match(/\/kits\/([^/]+)/);
+            const kitId = kitIdMatch?.[1];
+            return snapshot?.context?.kitApps?.[kitId || ""]?.hover;
+          });
+          console.log(`[Kit] Hover state after mouse enter: ${JSON.stringify(hoverState)}`);
 
-              await page.mouse.move(0, 0);
-              await page.waitForTimeout(300);
+          await page.mouse.move(0, 0);
+          await page.waitForTimeout(300);
 
-              const hoverStateAfter = await page.evaluate(() => {
-                const actor = (window as any).__COMPOSE_ACTOR__;
-                if (!actor) return null;
-                const snapshot = actor.getSnapshot();
-                const url = window.location.pathname;
-                const kitIdMatch = url.match(/\/kits\/([^/]+)/);
-                const kitId = kitIdMatch?.[1];
-                return snapshot?.context?.kitApps?.[kitId || ""]?.hover;
-              });
-              console.log(`[Kit] Hover state after mouse leave: ${JSON.stringify(hoverStateAfter)}`);
-              console.log("[Kit] Diagram hover sync test complete");
-            } else {
-              console.log("[Kit] No diagram nodes found for hover test, skipping");
-            }
-            // #endregion ­ƒÉÿDiagram Hover Sync
+          const hoverStateAfter = await page.evaluate(() => {
+            const actor = (window as any).__COMPOSE_ACTOR__;
+            if (!actor) return null;
+            const snapshot = actor.getSnapshot();
+            const url = window.location.pathname;
+            const kitIdMatch = url.match(/\/kits\/([^/]+)/);
+            const kitId = kitIdMatch?.[1];
+            return snapshot?.context?.kitApps?.[kitId || ""]?.hover;
+          });
+          console.log(`[Kit] Hover state after mouse leave: ${JSON.stringify(hoverStateAfter)}`);
+          console.log("[Kit] Diagram hover sync test complete");
+        } else {
+          console.log("[Kit] No diagram nodes found for hover test, skipping");
+        }
+        // #endregion ­ƒÉÿDiagram Hover Sync
 
-            // #region ­ƒÄïDiagram Filter Sync
-            console.log("[Kit] Verifying filter sync between table and diagram");
-            const initialNodeCountFilter = await page.evaluate(() => {
+        // #region ­ƒÄïDiagram Filter Sync
+        console.log("[Kit] Verifying filter sync between table and diagram");
+        const initialNodeCountFilter = await page.evaluate(() => {
+          const store = (window as any).__COMPOSE_STORE__;
+          if (!store) return 0;
+          const kitId = window.location.pathname.match(/\/kits\/([^/]+)/)?.[1];
+          if (!kitId || !store.hasKit(kitId)) return 0;
+          const kit = store.kit(kitId).getSnapshot().kit;
+          return (kit?.types?.length ?? 0) + (kit?.designs?.length ?? 0) + (kit?.qualities?.length ?? 0);
+        });
+        console.log(`[Kit] Initial diagram node count: ${initialNodeCountFilter}`);
+        if (initialNodeCountFilter > 0) {
+          const searchInput = page.locator('[id="compose.sketchpad.app.kit.filter.search"] input').first();
+          const hasSearchInput = await searchInput.isVisible({ timeout: 5000 }).catch(() => false);
+          console.log(`[Kit] Search input visible: ${hasSearchInput}`);
+
+          if (hasSearchInput) {
+            await searchInput.fill("Tambour");
+            await page.waitForTimeout(1500);
+
+            const filteredNodeCount = await page.evaluate(() => {
+              const store = (window as any).__COMPOSE_STORE__;
+              if (!store) return 0;
+              const kitId = window.location.pathname.match(/\/kits\/([^/]+)/)?.[1];
+              if (!kitId || !store.hasKit(kitId)) return 0;
+              const kit = store.kit(kitId).getSnapshot().kit;
+              const tambourTypes = (kit?.types ?? []).filter((type: any) => (type.name ?? "").toLowerCase().includes("tambour")).length;
+              const tambourDesigns = (kit?.designs ?? []).filter((design: any) => (design.name ?? "").toLowerCase().includes("tambour")).length;
+              return tambourTypes + tambourDesigns;
+            });
+            console.log(`[Kit] Filtered artifact count after search: ${filteredNodeCount}`);
+
+            expect(filteredNodeCount).toBeLessThanOrEqual(initialNodeCountFilter);
+            console.log(`[Kit] Filter reduced nodes from ${initialNodeCountFilter} to ${filteredNodeCount}`);
+
+            await searchInput.clear();
+            await page.waitForTimeout(1500);
+
+            const restoredNodeCount = await page.evaluate(() => {
               const store = (window as any).__COMPOSE_STORE__;
               if (!store) return 0;
               const kitId = window.location.pathname.match(/\/kits\/([^/]+)/)?.[1];
@@ -47300,151 +47250,115 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
               const kit = store.kit(kitId).getSnapshot().kit;
               return (kit?.types?.length ?? 0) + (kit?.designs?.length ?? 0) + (kit?.qualities?.length ?? 0);
             });
-            console.log(`[Kit] Initial diagram node count: ${initialNodeCountFilter}`);
-            if (initialNodeCountFilter > 0) {
-              const searchInput = page.locator('[id="compose.sketchpad.app.kit.filter.search"] input').first();
-              const hasSearchInput = await searchInput.isVisible({ timeout: 5000 }).catch(() => false);
-              console.log(`[Kit] Search input visible: ${hasSearchInput}`);
+            console.log(`[Kit] Diagram node count after clearing filter: ${restoredNodeCount}`);
+            expect(restoredNodeCount).toBeGreaterThanOrEqual(filteredNodeCount);
+          }
+          console.log("[Kit] Diagram filter sync test complete");
+        } else {
+          console.log("[Kit] No diagram nodes found for filter test, skipping");
+        }
+        console.log("[Kit] Diagram filter sync test complete");
+        // #endregion ­ƒÄïDiagram Filter Sync
 
-              if (hasSearchInput) {
-                await searchInput.fill("Tambour");
-                await page.waitForTimeout(1500);
-
-                const filteredNodeCount = await page.evaluate(() => {
-                  const store = (window as any).__COMPOSE_STORE__;
-                  if (!store) return 0;
-                  const kitId = window.location.pathname.match(/\/kits\/([^/]+)/)?.[1];
-                  if (!kitId || !store.hasKit(kitId)) return 0;
-                  const kit = store.kit(kitId).getSnapshot().kit;
-                  const tambourTypes = (kit?.types ?? []).filter((type: any) => (type.name ?? "").toLowerCase().includes("tambour")).length;
-                  const tambourDesigns = (kit?.designs ?? []).filter((design: any) => (design.name ?? "").toLowerCase().includes("tambour")).length;
-                  return tambourTypes + tambourDesigns;
-                });
-                console.log(`[Kit] Filtered artifact count after search: ${filteredNodeCount}`);
-
-                expect(filteredNodeCount).toBeLessThanOrEqual(initialNodeCountFilter);
-                console.log(`[Kit] Filter reduced nodes from ${initialNodeCountFilter} to ${filteredNodeCount}`);
-
-                await searchInput.clear();
-                await page.waitForTimeout(1500);
-
-                const restoredNodeCount = await page.evaluate(() => {
-                  const store = (window as any).__COMPOSE_STORE__;
-                  if (!store) return 0;
-                  const kitId = window.location.pathname.match(/\/kits\/([^/]+)/)?.[1];
-                  if (!kitId || !store.hasKit(kitId)) return 0;
-                  const kit = store.kit(kitId).getSnapshot().kit;
-                  return (kit?.types?.length ?? 0) + (kit?.designs?.length ?? 0) + (kit?.qualities?.length ?? 0);
-                });
-                console.log(`[Kit] Diagram node count after clearing filter: ${restoredNodeCount}`);
-                expect(restoredNodeCount).toBeGreaterThanOrEqual(filteredNodeCount);
-              }
-              console.log("[Kit] Diagram filter sync test complete");
-            } else {
-              console.log("[Kit] No diagram nodes found for filter test, skipping");
-            }
-            console.log("[Kit] Diagram filter sync test complete");
-            // #endregion ­ƒÄïDiagram Filter Sync
-
-            // #region ­ƒÉìDiagram All Artifact Types
-            console.log("[Kit] Verifying all artifact types are visible as nodes");
-            const nodeCountAll = await page.evaluate(() => {
-              const store = (window as any).__COMPOSE_STORE__;
-              if (!store) return 0;
-              const kitId = window.location.pathname.match(/\/kits\/([^/]+)/)?.[1];
-              if (!kitId || !store.hasKit(kitId)) return 0;
-              const kit = store.kit(kitId).getSnapshot().kit;
-              return (kit?.types?.length ?? 0) + (kit?.designs?.length ?? 0) + (kit?.qualities?.length ?? 0) + (kit?.ports?.length ?? 0);
+        // #region ­ƒÉìDiagram All Artifact Types
+        console.log("[Kit] Verifying all artifact types are visible as nodes");
+        const nodeCountAll = await page.evaluate(() => {
+          const store = (window as any).__COMPOSE_STORE__;
+          if (!store) return 0;
+          const kitId = window.location.pathname.match(/\/kits\/([^/]+)/)?.[1];
+          if (!kitId || !store.hasKit(kitId)) return 0;
+          const kit = store.kit(kitId).getSnapshot().kit;
+          return (kit?.types?.length ?? 0) + (kit?.designs?.length ?? 0) + (kit?.qualities?.length ?? 0) + (kit?.ports?.length ?? 0);
+        });
+        console.log(`[Kit] Total diagram nodes: ${nodeCountAll}`);
+        if (nodeCountAll > 0) {
+          const kitData = await page.evaluate(() => {
+            const store = (window as any).__COMPOSE_STORE__;
+            if (!store) return null;
+            const url = window.location.pathname;
+            const kitIdMatch = url.match(/\/kits\/([^/]+)/);
+            const kitId = kitIdMatch?.[1];
+            if (!kitId || !store.hasKit(kitId)) return null;
+            const kitStore = store.kit(kitId);
+            const kit = kitStore.getSnapshot().kit;
+            if (!kit) return null;
+            const fileUrls = kitStore.fileUrls as Map<string, string>;
+            const importedFilePaths = new Set<string>();
+            fileUrls.forEach((_url: string, path: string) => {
+              const normalizedPath = path.replace(/^\.?\//, "").replace(/\/+$/, "");
+              if (normalizedPath) importedFilePaths.add(normalizedPath);
             });
-            console.log(`[Kit] Total diagram nodes: ${nodeCountAll}`);
-            if (nodeCountAll > 0) {
-              const kitData = await page.evaluate(() => {
-                const store = (window as any).__COMPOSE_STORE__;
-                if (!store) return null;
-                const url = window.location.pathname;
-                const kitIdMatch = url.match(/\/kits\/([^/]+)/);
-                const kitId = kitIdMatch?.[1];
-                if (!kitId || !store.hasKit(kitId)) return null;
-                const kitStore = store.kit(kitId);
-                const kit = kitStore.getSnapshot().kit;
-                if (!kit) return null;
-                const fileUrls = kitStore.fileUrls as Map<string, string>;
-                const importedFilePaths = new Set<string>();
-                fileUrls.forEach((_url: string, path: string) => {
-                  const normalizedPath = path.replace(/^\.?\//, "").replace(/\/+$/, "");
-                  if (normalizedPath) importedFilePaths.add(normalizedPath);
-                });
-                const importedFolderPaths = new Set<string>();
-                importedFilePaths.forEach((filePath: string) => {
-                  const segments = filePath.split("/").filter(Boolean);
-                  for (let i = 1; i < segments.length; i++) {
-                    importedFolderPaths.add(segments.slice(0, i).join("/"));
-                  }
-                });
-                const foldersById = new Map((kit.folders ?? []).map((f: any) => [f.id, f]));
-                const getFolderPath = (folderId?: string): string => {
-                  if (!folderId) return "";
-                  const folder = foldersById.get(folderId);
-                  if (!folder) return "";
-                  const parentPath = getFolderPath(folder.parent?.id);
-                  return parentPath ? `${parentPath}/${folder.name}` : folder.name;
-                };
-                const visibleFileCount = (kit.files ?? []).filter((f: any) => {
-                  if (foldersById.has(f.id)) return false;
-                  const parentPath = getFolderPath(f.folder?.id);
-                  const storagePath = parentPath ? `${parentPath}/${f.name}` : f.name;
-                  if (importedFolderPaths.has(storagePath)) return false;
-                  return importedFilePaths.has(storagePath);
-                }).length;
-                const visibleFolderCount = (kit.folders ?? []).filter((f: any) => importedFolderPaths.has(getFolderPath(f.id))).length;
-                return {
-                  types: kit.types?.length || 0,
-                  designs: kit.designs?.length || 0,
-                  qualities: kit.qualities?.length || 0,
-                  ports: getKitPorts(kit).length || 0,
-                  tags: kit.tags?.length || 0,
-                  concepts: kit.concepts?.length || 0,
-                  files: visibleFileCount,
-                  folders: visibleFolderCount,
-                  authors: kit.authors?.length || 0,
-                  totalFiles: kit.files?.length || 0,
-                  totalFolders: kit.folders?.length || 0,
-                };
-              });
-              console.log(`[Kit] Kit data: ${JSON.stringify(kitData)}`);
-
-              if (kitData) {
-                const totalArtifacts = kitData.types + kitData.designs + kitData.qualities + kitData.ports + kitData.tags + kitData.concepts + kitData.files + kitData.folders + kitData.authors;
-                console.log(`[Kit] Expected total visible artifacts: ${totalArtifacts} (files: ${kitData.files}/${kitData.totalFiles}, folders: ${kitData.folders}/${kitData.totalFolders})`);
-                // Diagram node count depends on active kind filters, search, and expanded rows.
-                // Previous filter tests may have left certain kinds active. Only verify the
-                // diagram is rendering some subset of the total artifacts.
-                expect(nodeCountAll).toBeGreaterThan(0);
-                expect(nodeCountAll).toBeLessThanOrEqual(totalArtifacts);
+            const importedFolderPaths = new Set<string>();
+            importedFilePaths.forEach((filePath: string) => {
+              const segments = filePath.split("/").filter(Boolean);
+              for (let i = 1; i < segments.length; i++) {
+                importedFolderPaths.add(segments.slice(0, i).join("/"));
               }
-              console.log("[Kit] Diagram all artifact types test complete");
-              // #endregion ­ƒÉìDiagram All Artifact Types
+            });
+            const foldersById = new Map((kit.folders ?? []).map((f: any) => [f.id, f]));
+            const getFolderPath = (folderId?: string): string => {
+              if (!folderId) return "";
+              const folder = foldersById.get(folderId);
+              if (!folder) return "";
+              const parentPath = getFolderPath(folder.parent?.id);
+              return parentPath ? `${parentPath}/${folder.name}` : folder.name;
+            };
+            const visibleFileCount = (kit.files ?? []).filter((f: any) => {
+              if (foldersById.has(f.id)) return false;
+              const parentPath = getFolderPath(f.folder?.id);
+              const storagePath = parentPath ? `${parentPath}/${f.name}` : f.name;
+              if (importedFolderPaths.has(storagePath)) return false;
+              return importedFilePaths.has(storagePath);
+            }).length;
+            const visibleFolderCount = (kit.folders ?? []).filter((f: any) => importedFolderPaths.has(getFolderPath(f.id))).length;
+            return {
+              types: kit.types?.length || 0,
+              designs: kit.designs?.length || 0,
+              qualities: kit.qualities?.length || 0,
+              ports: getKitPorts(kit).length || 0,
+              tags: kit.tags?.length || 0,
+              concepts: kit.concepts?.length || 0,
+              files: visibleFileCount,
+              folders: visibleFolderCount,
+              authors: kit.authors?.length || 0,
+              totalFiles: kit.files?.length || 0,
+              totalFolders: kit.folders?.length || 0,
+            };
+          });
+          console.log(`[Kit] Kit data: ${JSON.stringify(kitData)}`);
 
-              // #region ­ƒôÉDiagram Edges
-              console.log("[Kit] Verifying edges connect nodes properly");
-              const edgeCount = await page.evaluate(() => {
-                const store = (window as any).__COMPOSE_STORE__;
-                if (!store) return 0;
-                const kitId = window.location.pathname.match(/\/kits\/([^/]+)/)?.[1];
-                if (!kitId || !store.hasKit(kitId)) return 0;
-                const kit = store.kit(kitId).getSnapshot().kit;
-                const designs = kit?.designs ?? [];
-                return designs.reduce((sum: number, design: any) => sum + (design.pieces?.length ?? 0), 0);
-              });
-              console.log(`[Kit] Store-backed edge proxy count: ${edgeCount}`);
-              expect(edgeCount).toBeGreaterThanOrEqual(0);
-              console.log("[Kit] Diagram edges test complete (elements board renders edges on WASM canvas)");
-              // #endregion ­ƒôÉDiagram Edges
-            } else {
-              console.log("[Kit] No diagram nodes found for artifact types test, skipping");
-            }
-            console.log("[Kit] Diagram all artifact types test complete");
-            // #endregion ­ƒôÉDiagram All Artifact Types
+          if (kitData) {
+            const totalArtifacts = kitData.types + kitData.designs + kitData.qualities + kitData.ports + kitData.tags + kitData.concepts + kitData.files + kitData.folders + kitData.authors;
+            console.log(`[Kit] Expected total visible artifacts: ${totalArtifacts} (files: ${kitData.files}/${kitData.totalFiles}, folders: ${kitData.folders}/${kitData.totalFolders})`);
+            // Diagram node count depends on active kind filters, search, and expanded rows.
+            // Previous filter tests may have left certain kinds active. Only verify the
+            // diagram is rendering some subset of the total artifacts.
+            expect(nodeCountAll).toBeGreaterThan(0);
+            expect(nodeCountAll).toBeLessThanOrEqual(totalArtifacts);
+          }
+          console.log("[Kit] Diagram all artifact types test complete");
+          // #endregion ­ƒÉìDiagram All Artifact Types
+
+          // #region ­ƒôÉDiagram Edges
+          console.log("[Kit] Verifying edges connect nodes properly");
+          const edgeCount = await page.evaluate(() => {
+            const store = (window as any).__COMPOSE_STORE__;
+            if (!store) return 0;
+            const kitId = window.location.pathname.match(/\/kits\/([^/]+)/)?.[1];
+            if (!kitId || !store.hasKit(kitId)) return 0;
+            const kit = store.kit(kitId).getSnapshot().kit;
+            const designs = kit?.designs ?? [];
+            return designs.reduce((sum: number, design: any) => sum + (design.pieces?.length ?? 0), 0);
+          });
+          console.log(`[Kit] Store-backed edge proxy count: ${edgeCount}`);
+          expect(edgeCount).toBeGreaterThanOrEqual(0);
+          console.log("[Kit] Diagram edges test complete (elements board renders edges on WASM canvas)");
+          // #endregion ­ƒôÉDiagram Edges
+        } else {
+          console.log("[Kit] No diagram nodes found for artifact types test, skipping");
+        }
+        console.log("[Kit] Diagram all artifact types test complete");
+        // #endregion ­ƒôÉDiagram All Artifact Types
 
         const infiniteLoopErrors = errors.filter((e) => e.includes("Maximum update depth exceeded"));
         expect(infiniteLoopErrors).toHaveLength(0);
@@ -47825,7 +47739,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         }
 
         const diagramContainer = page.locator('[data-topology-board-root] [data-testid="board-canvas"]').first();
-        const sceneCanvas = page.locator('[data-topology-scene-root] canvas, [data-scene-root] canvas').first();
+        const sceneCanvas = page.locator("[data-topology-scene-root] canvas, [data-scene-root] canvas").first();
 
         let hasDiagram = false;
         let hasScene = false;
@@ -50765,10 +50679,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
               centerBeforeDrag = centersBeforeDrag[pieceIdFromData];
 
               const pieceNodeBoxAfterDrag = await firstPieceNodeDrag.boundingBox();
-              const nodeMovedInViewport =
-                pieceNodeBoxAfterDrag &&
-                labelBoxBeforeDrag &&
-                (Math.abs(pieceNodeBoxAfterDrag.x - labelBoxBeforeDrag.x) > 2 || Math.abs(pieceNodeBoxAfterDrag.y - labelBoxBeforeDrag.y) > 2);
+              const nodeMovedInViewport = pieceNodeBoxAfterDrag && labelBoxBeforeDrag && (Math.abs(pieceNodeBoxAfterDrag.x - labelBoxBeforeDrag.x) > 2 || Math.abs(pieceNodeBoxAfterDrag.y - labelBoxBeforeDrag.y) > 2);
               const firstViewportDeltaX = pieceNodeBoxAfterDrag && labelBoxBeforeDrag ? pieceNodeBoxAfterDrag.x - labelBoxBeforeDrag.x : 0;
               const firstViewportDeltaY = pieceNodeBoxAfterDrag && labelBoxBeforeDrag ? pieceNodeBoxAfterDrag.y - labelBoxBeforeDrag.y : 0;
               console.log(`[Design] Piece label moved in viewport: ${nodeMovedInViewport}`);

@@ -2,42 +2,42 @@
 name: Centralized Styling Tokens
 overview: Make ui/styling/tokens.json the single source for all visual and metric constants (colors, themes, strokes, radii, opacities, layout metrics, fonts), generate a real styling library per ecosystem (rs, js, net, py) from it, and remove every hardcoded color/stroke/metric from the Rust render libraries.
 todos:
-  - id: tokens-schema
-    content: Extend ui/styling/tokens.json with themes(light/dark), strokes, radii, opacities, metrics, canvasFonts using existing concrete defaults from the inventory
-    status: completed
-  - id: generator
-    content: Rewrite ui/styling/script.ts into a unified multi-target generator (JS, C#, Rust, Python); delete the two *.inc.rs and update adapters.manifest.json
-    status: completed
-  - id: rs-crate
-    content: Create framework-neutral ui/styling/rs crate (Cargo.toml, lib.rs, generated.rs, project.json); add to root Cargo workspace members
-    status: completed
-  - id: py-lib
-    content: Create ui/styling/py library (generated module + script.ts + project.json)
-    status: completed
-  - id: net-extend
-    content: Extend net generator output (Palette.g.cs) with strokes/metrics/themes
-    status: completed
-  - id: js-bridge
-    content: Extend tokens.generated.ts and rewrite serializeGraphVelloThemePaletteJson()/ui.css to derive from token themes
-    status: completed
-  - id: migrate-vello
-    content: Migrate infinite/cavas/vello (clear color, camera limits, label metrics, Typst sizes, insets, fonts, BLACK/WHITE) to ui_styling
-    status: completed
-  - id: migrate-graph
-    content: Migrate mathematical/graph port/directed (VelloThemePalette->Theme), normal, dag, and graph lib stroke/radius/opacity constants to ui_styling
-    status: completed
-  - id: migrate-map
-    content: Migrate gis/map/rs to ui_styling map paints + tokenized scales/bands; remove build.rs color include
-    status: completed
-  - id: migrate-flow-puzzle
-    content: Migrate flow/core and puzzle/2d/rs; remove board .inc.rs include from puzzle build.rs
-    status: completed
-  - id: wiring
-    content: Wire nx generate target for all ecosystems and register commands in launch.json
-    status: completed
-  - id: validate
-    content: Generate, build/test all affected crates+packages, extend existing tests, validate runtime light/dark via [DEBUG] logs
-    status: completed
+ - id: tokens-schema
+   content: Extend ui/styling/tokens.json with themes(light/dark), strokes, radii, opacities, metrics, canvasFonts using existing concrete defaults from the inventory
+   status: completed
+ - id: generator
+   content: Rewrite ui/styling/script.ts into a unified multi-target generator (JS, C#, Rust, Python); delete the two *.inc.rs and update adapters.manifest.json
+   status: completed
+ - id: rs-crate
+   content: Create framework-neutral ui/styling/rs crate (Cargo.toml, lib.rs, generated.rs, project.json); add to root Cargo workspace members
+   status: completed
+ - id: py-lib
+   content: Create ui/styling/py library (generated module + script.ts + project.json)
+   status: completed
+ - id: net-extend
+   content: Extend net generator output (Palette.g.cs) with strokes/metrics/themes
+   status: completed
+ - id: js-bridge
+   content: Extend tokens.generated.ts and rewrite serializeGraphVelloThemePaletteJson()/ui.css to derive from token themes
+   status: completed
+ - id: migrate-vello
+   content: Migrate infinite/cavas/vello (clear color, camera limits, label metrics, Typst sizes, insets, fonts, BLACK/WHITE) to ui_styling
+   status: completed
+ - id: migrate-graph
+   content: Migrate mathematical/graph port/directed (VelloThemePalette->Theme), normal, dag, and graph lib stroke/radius/opacity constants to ui_styling
+   status: completed
+ - id: migrate-map
+   content: Migrate gis/map/rs to ui_styling map paints + tokenized scales/bands; remove build.rs color include
+   status: completed
+ - id: migrate-flow-puzzle
+   content: Migrate flow/core and puzzle/2d/rs; remove board .inc.rs include from puzzle build.rs
+   status: completed
+ - id: wiring
+   content: Wire nx generate target for all ecosystems and register commands in launch.json
+   status: completed
+ - id: validate
+   content: Generate, build/test all affected crates+packages, extend existing tests, validate runtime light/dark via [DEBUG] logs
+   status: completed
 isProject: false
 ---
 
@@ -68,6 +68,7 @@ Use the existing concrete defaults from the inventory as the `light` theme value
 ## 2. Unified generator: `ui/styling/script.ts`
 
 Rewrite [ui/styling/script.ts](ui/styling/script.ts) so `generate` emits **all** targets from tokens:
+
 - JS: `js/palette.css`, `js/tokens.generated.ts` (add `STYLING_STROKES`, `STYLING_RADII`, `STYLING_METRICS`, `STYLING_THEMES`).
 - C#: extend `Palette.g.cs` with strokes/metrics/theme constants.
 - Rust: emit a checked-in `ui/styling/rs/src/generated.rs` (replaces the build-time `.inc.rs` include flow). Reuse the existing sRGB->linear conversion (`srgb_byte_to_linear_u8`).
@@ -78,6 +79,7 @@ Delete [ui/styling/rs/board_vello_build.inc.rs](ui/styling/rs/board_vello_build.
 ## 3. New `ui/styling/rs` crate (the canonical model)
 
 Create a real framework-neutral crate (no vello/peniko dependency, per styling-core "framework-neutral" note):
+
 - `ui/styling/rs/Cargo.toml` (crate `ui_styling`), `ui/styling/rs/lib.rs`, generated `ui/styling/rs/src/generated.rs`, `ui/styling/rs/project.json`.
 - Expose colors as linear-sRGB `[f32; 4]` consts + numeric `f64` strokes/radii/opacities/metrics, plus `Theme` structs `LIGHT`/`DARK` covering all semantic paints.
 - Add `ui/styling/rs` to `[workspace].members` in [Cargo.toml](Cargo.toml).

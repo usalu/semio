@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The state management used `useSyncDeep` which subscribes to the entire Y.Map with `observeDeep`, causing unnecessary re-renders when ANY nested field changes, even if the selected data hasn't changed.
@@ -63,6 +64,7 @@ Updated hooks to use granular subscriptions:
 ## Log
 
 ## Summary
+
 # Summary
 
 "Refine state management: granular Yjs subscriptions for selectors"

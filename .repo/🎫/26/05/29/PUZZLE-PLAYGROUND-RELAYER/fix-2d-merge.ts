@@ -7,8 +7,8 @@ const start = c.indexOf("/** @emoji 🛝 Board play React host");
 const endMarker = "} = Board;\n\n";
 const end = c.indexOf(endMarker, start);
 if (start < 0 || end < 0) {
-	console.error("[fix-2d] block not found");
-	process.exit(1);
+  console.error("[fix-2d] block not found");
+  process.exit(1);
 }
 c = c.slice(0, start) + c.slice(end + endMarker.length);
 
@@ -56,12 +56,12 @@ import {
 const anchor = '} from "@semio-tech/ui-react";\n';
 const pos = c.indexOf(anchor);
 if (pos < 0) {
-	console.error("[fix-2d] ui/react anchor missing");
-	process.exit(1);
+  console.error("[fix-2d] ui/react anchor missing");
+  process.exit(1);
 }
 c = c.slice(0, pos + anchor.length) + "\n" + inject + c.slice(pos + anchor.length);
-c = c.replace('type ReactElement } from "react";', "type ReactElement, type ReactNode } from \"react\";");
-c = c.replace(/\nimport type \{ ReactElement \} from "react";\nimport React from "react";/, "\nimport React from \"react\";");
+c = c.replace('type ReactElement } from "react";', 'type ReactElement, type ReactNode } from "react";');
+c = c.replace(/\nimport type \{ ReactElement \} from "react";\nimport React from "react";/, '\nimport React from "react";');
 
 writeFileSync(path, c);
 console.log("[fix-2d] cleaned");

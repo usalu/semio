@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 # Plan
@@ -407,4 +408,5 @@ A tiny utility hook to reduce copy/paste bugs:
 ## Log
 
 ## Summary
+
 # Summary

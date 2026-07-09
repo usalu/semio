@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The Grasshopper components were tightly coupled with the Compose.cs schema via reflection. A `Meta` class in `Compose.Grasshopper.cs` dynamically generated input/output parameters by reflecting on compose model types. This meant:
@@ -91,6 +92,7 @@ All serialize and deserialize components use default `ModelName` and `ModelNickn
 ## Log
 
 ## Summary
+
 # Summary
 
 Remove reflection from Grasshopper components and hardcode inputs/outputs

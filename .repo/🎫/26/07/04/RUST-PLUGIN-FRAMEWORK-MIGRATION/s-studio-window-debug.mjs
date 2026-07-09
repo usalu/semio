@@ -15,15 +15,15 @@ await page.keyboard.press("Meta+n");
 await page.waitForTimeout(5000);
 
 const diag = await page.evaluate(() => {
-	const missing = document.body.innerText.match(/Missing window: [^\n]+/g) ?? [];
-	const flow = document.querySelector(".semio-flow-canvas-host");
-	const windowKinds = [...document.querySelectorAll("[data-window-kind-id]")].map((el) => el.getAttribute("data-window-kind-id"));
-	return {
-		missing,
-		flowCount: flow ? 1 : 0,
-		windowKinds,
-		bodySnippet: document.body.innerText.slice(0, 800),
-	};
+  const missing = document.body.innerText.match(/Missing window: [^\n]+/g) ?? [];
+  const flow = document.querySelector(".semio-flow-canvas-host");
+  const windowKinds = [...document.querySelectorAll("[data-window-kind-id]")].map((el) => el.getAttribute("data-window-kind-id"));
+  return {
+    missing,
+    flowCount: flow ? 1 : 0,
+    windowKinds,
+    bodySnippet: document.body.innerText.slice(0, 800),
+  };
 });
 
 console.log(JSON.stringify(diag, null, 2));

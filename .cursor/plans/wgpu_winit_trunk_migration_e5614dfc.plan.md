@@ -2,36 +2,36 @@
 name: wgpu winit trunk migration
 overview: Migrate the shared raw-wgpu renderer stack (used by the OS and all playgrounds via the single SEMIO_RENDERER=wgpu switch) from browser-only wasm-bindgen/web-sys to a winit-driven windowing/input layer that runs both natively and on the web via trunk, plus a native, hot-swappable plugin host.
 todos:
-  - id: ticket
-    content: Open/reopen MCP ticket under the framework/playground goal lineage
-    status: completed
-  - id: ui-wgpu-winit
-    content: "ui/wgpu: add winit dep, replace GpuContext::from_canvas with from_window, replace attach_dom_listeners with a winit ApplicationHandler-based host module"
-    status: completed
-  - id: renderer-web-winit
-    content: "framework/renderer/wgpu: winit-owned canvas creation for web (replace manual <canvas> creation in js/index.ts), move icon atlas rasterization into Rust"
-    status: completed
-  - id: renderer-native-bin
-    content: "framework/renderer/wgpu: add native [[bin]] target with winit EventLoop + native window"
-    status: completed
-  - id: native-plugin-host
-    content: Add native cdylib export path per plugin crate + libloading-based NativePluginHost with hot-swap file watcher
-    status: completed
-  - id: trunk-build
-    content: Replace framework/renderer/wgpu/script.ts wasm-bindgen pipeline with trunk build/serve; add index.html + Trunk.toml
-    status: completed
-  - id: dev-host-wiring
-    content: Rewire framework/product/os/dev script.ts + js/index.ts so SEMIO_RENDERER=wgpu runs trunk instead of Vite dynamic import
-    status: completed
-  - id: launch-json
-    content: Add native launch.json entries for s + representative playgrounds
-    status: completed
-  - id: infinite-world-native
-    content: Add native (non-wasm32) equivalents for infinite/world's web_sys fetch usage
-    status: completed
-  - id: verify
-    content: Verify web (trunk) and native builds boot s studio and a single-plugin app, confirm native plugin hot-swap works, run existing test suites
-    status: completed
+ - id: ticket
+   content: Open/reopen MCP ticket under the framework/playground goal lineage
+   status: completed
+ - id: ui-wgpu-winit
+   content: "ui/wgpu: add winit dep, replace GpuContext::from_canvas with from_window, replace attach_dom_listeners with a winit ApplicationHandler-based host module"
+   status: completed
+ - id: renderer-web-winit
+   content: "framework/renderer/wgpu: winit-owned canvas creation for web (replace manual <canvas> creation in js/index.ts), move icon atlas rasterization into Rust"
+   status: completed
+ - id: renderer-native-bin
+   content: "framework/renderer/wgpu: add native [[bin]] target with winit EventLoop + native window"
+   status: completed
+ - id: native-plugin-host
+   content: Add native cdylib export path per plugin crate + libloading-based NativePluginHost with hot-swap file watcher
+   status: completed
+ - id: trunk-build
+   content: Replace framework/renderer/wgpu/script.ts wasm-bindgen pipeline with trunk build/serve; add index.html + Trunk.toml
+   status: completed
+ - id: dev-host-wiring
+   content: Rewire framework/product/os/dev script.ts + js/index.ts so SEMIO_RENDERER=wgpu runs trunk instead of Vite dynamic import
+   status: completed
+ - id: launch-json
+   content: Add native launch.json entries for s + representative playgrounds
+   status: completed
+ - id: infinite-world-native
+   content: Add native (non-wasm32) equivalents for infinite/world's web_sys fetch usage
+   status: completed
+ - id: verify
+   content: Verify web (trunk) and native builds boot s studio and a single-plugin app, confirm native plugin hot-swap works, run existing test suites
+   status: completed
 isProject: false
 ---
 

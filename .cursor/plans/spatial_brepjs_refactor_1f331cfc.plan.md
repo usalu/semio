@@ -2,39 +2,39 @@
 name: spatial brepjs refactor
 overview: "Refactor `spatial/js/kernel-brepjs` and `spatial/js/renderer-r3f` to match the official brepjs playground architecture: kernel runs in a Web Worker with `using`/`DisposalScope` memory management, ships zero-copy grouped buffer geometry + face/edge groups to the main thread, and the R3F renderer consumes those outputs through a thin geometry layer with demand-frameloop and content-keyed caches. Single-file per package, organized with regions."
 todos:
-  - id: ticket
-    content: Open/reopen ticket 2026/05/25/SPATIAL-BREPJS-REFACTOR via repo MCP.
-    status: completed
-  - id: core-types
-    content: Replace MeshPreview with MeshTransfer (+ FaceGroup, EdgeGroup, FaceInfo, EdgeInfo) in spatial/js/core/index.ts; update SpatialKernel.tessellate to return Promise<MeshTransfer>.
-    status: completed
-  - id: kernel-worker
-    content: "In spatial/js/kernel-brepjs/index.ts: add Worker entry + protocol regions; move WASM init, brepjs builders, and tessellation into worker; wrap every brepjs handle in using/DisposalScope; remove brepjsScratch shared mutable buffers."
-    status: completed
-  - id: kernel-client
-    content: Add main-thread BrepjsKernel client (same SpatialKernel API) that posts to the worker, awaits MeshTransfer, owns the content-keyed LRU cache.
-    status: completed
-  - id: renderer-mesh
-    content: Rewrite TessellatedCommitMesh in renderer-r3f/index.tsx to build BufferGeometry from MeshTransfer (position/normal/index + addGroup per faceGroup, polygonOffset) and dispose on unmount.
-    status: completed
-  - id: renderer-edges
-    content: Add EdgeOverlay LineSegments from MeshTransfer.edges (replace ad-hoc wireframe).
-    status: completed
-  - id: renderer-pick
-    content: Switch topology picking to event.faceIndex + faceGroups binary search; keep raycast=none on visuals; preserve existing camera-perf fixes (demand frameloop, DOM hover, deferred derived refresh).
-    status: completed
-  - id: renderer-worker-hook
-    content: Add useTessellation hook that requests through the worker client, debounces via rAF, swaps geometries with proper dispose.
-    status: completed
-  - id: tests
-    content: Extend existing vitest blocks (kernel-brepjs, renderer-r3f, core) to cover MeshTransfer, faceGroups mapping, cache invalidation, geometry disposal accounting.
-    status: completed
-  - id: validate
-    content: Run nx tests, manual REPL freeze + heap-growth smoke (50x box commit loop, log usedJSHeapSize), strip [DEBUG] logs.
-    status: completed
-  - id: ticket-close
-    content: Close ticket via repo MCP with summary + touched files.
-    status: completed
+ - id: ticket
+   content: Open/reopen ticket 2026/05/25/SPATIAL-BREPJS-REFACTOR via repo MCP.
+   status: completed
+ - id: core-types
+   content: Replace MeshPreview with MeshTransfer (+ FaceGroup, EdgeGroup, FaceInfo, EdgeInfo) in spatial/js/core/index.ts; update SpatialKernel.tessellate to return Promise<MeshTransfer>.
+   status: completed
+ - id: kernel-worker
+   content: "In spatial/js/kernel-brepjs/index.ts: add Worker entry + protocol regions; move WASM init, brepjs builders, and tessellation into worker; wrap every brepjs handle in using/DisposalScope; remove brepjsScratch shared mutable buffers."
+   status: completed
+ - id: kernel-client
+   content: Add main-thread BrepjsKernel client (same SpatialKernel API) that posts to the worker, awaits MeshTransfer, owns the content-keyed LRU cache.
+   status: completed
+ - id: renderer-mesh
+   content: Rewrite TessellatedCommitMesh in renderer-r3f/index.tsx to build BufferGeometry from MeshTransfer (position/normal/index + addGroup per faceGroup, polygonOffset) and dispose on unmount.
+   status: completed
+ - id: renderer-edges
+   content: Add EdgeOverlay LineSegments from MeshTransfer.edges (replace ad-hoc wireframe).
+   status: completed
+ - id: renderer-pick
+   content: Switch topology picking to event.faceIndex + faceGroups binary search; keep raycast=none on visuals; preserve existing camera-perf fixes (demand frameloop, DOM hover, deferred derived refresh).
+   status: completed
+ - id: renderer-worker-hook
+   content: Add useTessellation hook that requests through the worker client, debounces via rAF, swaps geometries with proper dispose.
+   status: completed
+ - id: tests
+   content: Extend existing vitest blocks (kernel-brepjs, renderer-r3f, core) to cover MeshTransfer, faceGroups mapping, cache invalidation, geometry disposal accounting.
+   status: completed
+ - id: validate
+   content: Run nx tests, manual REPL freeze + heap-growth smoke (50x box commit loop, log usedJSHeapSize), strip [DEBUG] logs.
+   status: completed
+ - id: ticket-close
+   content: Close ticket via repo MCP with summary + touched files.
+   status: completed
 isProject: false
 ---
 
@@ -65,12 +65,14 @@ Single-file, regions:
 
 ```ts
 type MeshTransfer = {
-  position: Float32Array; normal: Float32Array; index: Uint32Array;
-  edges: Float32Array;
-  faceGroups: { start: number; count: number; faceId: number }[];
-  edgeGroups: { start: number; count: number; edgeId: number }[];
-  faceInfos: { faceId: number; surfaceType: string; area: number; normal: [number,number,number] }[];
-  edgeInfos: { edgeId: number; curveType: string; length: number }[];
+ position: Float32Array;
+ normal: Float32Array;
+ index: Uint32Array;
+ edges: Float32Array;
+ faceGroups: { start: number; count: number; faceId: number }[];
+ edgeGroups: { start: number; count: number; edgeId: number }[];
+ faceInfos: { faceId: number; surfaceType: string; area: number; normal: [number, number, number] }[];
+ edgeInfos: { edgeId: number; curveType: string; length: number }[];
 };
 ```
 
@@ -81,6 +83,7 @@ Re-export this from `@spatial/js-core` and remove `MeshPreview`.
 - `🧮PreciseSpatialKernelMath` stays main-thread (pure math, no WASM). `R3FPreviewKernel` move to renderer file (it belongs to the R3F host).
 
 Memory rules applied throughout:
+
 - All `mesh()`, `meshEdges()`, `getFaces()`, `getEdges()`, `castShape()`, boolean ops wrapped in `using` or `scope.register`.
 - Drop `brepjsScratch` aliasing — it currently mutates shared `Vec3[]` arrays across calls, which causes the "jankiness" when two operations interleave. Use scope-registered locals instead.
 - `meshPreviewFromBrep` → `meshTransferFromBrep(solid, tolerance)` that builds grouped + line data.

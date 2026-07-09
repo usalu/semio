@@ -7,34 +7,43 @@ goal: AI-OPTIMIZED-REPO/REPO-CLIENT
 ## Summary
 
 Fixed all TypeScript compilation errors (300 to 0) across 10 files with 11/11 tests passing. Key fixes: ToggleStandardProps kind union, react-resizable-panels v3 exports, glob overloads, JSX namespace, camera type, generic indexing, toValidationResult fallback
+
 ## Changes
 
 ### compose/js/sketchpad/elements.tsx
+
 - Extended ToggleStandardProps kind to "default" | "icon" | "single" and made icon optional
 - Replaced ResizablePrimitive.PanelGroup/PanelResizeHandle with Group/Separator to match react-resizable-panels v3 exports
 
 ### compose/js/vite-env.d.ts
+
 - Made import.meta.glob non-optional
 - Added overloaded glob type: eager:true returns Record<string, T>, default returns Record<string, () => Promise<T>>
 
 ### compose/js/sketchpad/Sketchpad.tsx
+
 - Changed JSX.Element to React.JSX.Element
 - Changed inline camera type to Camera import from compose.ts
 
 ### compose/js/sketchpad/Home.tsx
+
 - Added ?? "" fallback to 3 generateUniqueName calls
 
 ### compose/js/sketchpad/Quality.tsx
+
 - Cast store to any in useSyncDeep call
 
 ### compose/js/sketchpad/Design.tsx
+
 - Cast connector/otherPort to any in arePortsCompatible call
 
 ### compose/js/sketchpad/shared.ts
+
 - Added toolbarPlaceholder to PanelSection interface
 - Cast app to any in createAppPropertySelectorFactory
 
 ### compose/js/compose.ts
+
 - Added optional chaining in toValidationResult for flat problem structures
 
 ## Log

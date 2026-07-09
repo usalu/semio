@@ -5,7 +5,5 @@
   "description": "Rename AttributeDiffPatchConnection to DiffAttributesConnection (no patch terminology). Fix duplicate PieceOwner/PieceOwned before Connection (use ConnectionOwner/ConnectionOwned). Implement Entity + Owner unions + Edge + Connection for Prop Benchmark Quality Tag Concept Stat Layer Group Side Conflict ReadVersion WriteVersion. Extend EntityEdge EntityConnection OwnerEntity OwnedEntityConnection. Align AttributesDiff comment on diffs field.",
   "summary": "Implemented Relay naming without patch terminology: DiffAttributesConnection lists AttributeEdge rows; AttributeDiffConnection correctly uses AttributeDiffEdge. Fixed mistaken second PieceOwner/PieceOwned by introducing ConnectionOwner (Design) and ConnectionOwned (Attribute) on Connection. Extended catalog types (Prop, Benchmark, Quality, Tag, Concept, Stat, Layer, Group, Side) with StrongEntity-style blocks, owner unions, and Edge/Connection pairs; VCS snapshots ReadVersion and WriteVersion as WeakEntity with Conflict owner back-links; Conflict implements StrongEntity with Session|Graph ownership and ConflictOwned ReadVersion|WriteVersion. Expanded DesignOwned to Layer|Group. Refreshed EntityEdge, EntityConnection, OwnerEntity, and OwnedEntityConnection unions (sorted). Verified graphql-core parse of SDL and cargo test in compose/rs.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪acb7c5669c9c4f2cb5a63ad96a45c46b"
-  ]
+  "sessions": ["⚪acb7c5669c9c4f2cb5a63ad96a45c46b"]
 }

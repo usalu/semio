@@ -29,9 +29,7 @@
           "final_status": "completed",
           "hook_event_name": "sessionEnd",
           "cursor_version": "2.6.21",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/079c0164-b0ba-42bd-813a-af59662fcb1f/079c0164-b0ba-42bd-813a-af59662fcb1f.jsonl"
         }

@@ -3,27 +3,27 @@
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, runWasmPackWebBuild } from "../../../repo/lib/js/index.ts";
 
 class WasmScript extends BundleScript {
-	run(): void {
-		runWasmPackWebBuild({
-			rsDir: this.root,
-			skipEnvVar: "FRAMEWORK_EDITOR_RS_SKIP_WASM_BUILD",
-			logPrefix: "framework/editor/rs",
-			wasmBaseName: "framework_editor",
-			pkg: {
-				name: "@semio-tech/framework-editor-rs",
-				files: ["framework_editor_bg.wasm", "framework_editor.js", "framework_editor.d.ts", "framework_editor_bg.wasm.d.ts"],
-				main: "framework_editor.js",
-				module: "framework_editor.js",
-				types: "framework_editor.d.ts",
-			},
-		});
-	}
+  run(): void {
+    runWasmPackWebBuild({
+      rsDir: this.root,
+      skipEnvVar: "FRAMEWORK_EDITOR_RS_SKIP_WASM_BUILD",
+      logPrefix: "framework/editor/rs",
+      wasmBaseName: "framework_editor",
+      pkg: {
+        name: "@semio-tech/framework-editor-rs",
+        files: ["framework_editor_bg.wasm", "framework_editor.js", "framework_editor.d.ts", "framework_editor_bg.wasm.d.ts"],
+        main: "framework_editor.js",
+        module: "framework_editor.js",
+        types: "framework_editor.d.ts",
+      },
+    });
+  }
 }
 
 class TestScript extends BundleScript {
-	run(segments: string[]): void {
-		runCargo(["test", "-p", "framework_editor", ...segments], this.repoRoot);
-	}
+  run(segments: string[]): void {
+    runCargo(["test", "-p", "framework_editor", ...segments], this.repoRoot);
+  }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("test", TestScript);

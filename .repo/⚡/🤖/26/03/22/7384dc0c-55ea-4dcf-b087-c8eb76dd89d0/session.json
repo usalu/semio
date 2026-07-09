@@ -624,9 +624,7 @@
           },
           "tool_response": {
             "mode": "files_with_matches",
-            "filenames": [
-              "compose/sketchpad/sketchpad.test.ts"
-            ],
+            "filenames": ["compose/sketchpad/sketchpad.test.ts"],
             "numFiles": 1
           },
           "tool_use_id": "toolu_01JZd4x63VDZKCPw16ep92L9"
@@ -760,9 +758,7 @@
           },
           "tool_response": {
             "mode": "files_with_matches",
-            "filenames": [
-              "compose/sketchpad/vite.config.ts"
-            ],
+            "filenames": ["compose/sketchpad/vite.config.ts"],
             "numFiles": 1
           },
           "tool_use_id": "toolu_01NHqXL3FBSRia1qFLBL8h9y"
@@ -5192,15 +5188,7 @@
                 "oldLines": 6,
                 "newStart": 13697,
                 "newLines": 7,
-                "lines": [
-                  " });",
-                  " // #endregion 🔖SketchpadStore Kit Store Factory Tests",
-                  " ",
-                  "+} // end vitest guard",
-                  " // #endregion 🔖Tests",
-                  " ",
-                  " // #region 🔖Benchmarks"
-                ]
+                "lines": [" });", " // #endregion 🔖SketchpadStore Kit Store Factory Tests", " ", "+} // end vitest guard", " // #endregion 🔖Tests", " ", " // #region 🔖Benchmarks"]
               }
             ],
             "userModified": false,

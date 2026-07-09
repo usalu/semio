@@ -2,15 +2,7 @@
   "date": "2026-05-12",
   "planId": "09fc9816",
   "phase": 1,
-  "scope": [
-    "Author",
-    "Quality",
-    "Tag",
-    "Concept",
-    "Representation",
-    "W-BulkyExtras",
-    "WeakEntities"
-  ],
+  "scope": ["Author", "Quality", "Tag", "Concept", "Representation", "W-BulkyExtras", "WeakEntities"],
   "js": {
     "file": "compose/js/index.ts",
     "wireParsers": "🧬Entity/🧩WireParsers — shared parseAttributeConnectionUnder for tag/concept/quality/representation attributes edges",

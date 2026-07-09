@@ -20,10 +20,6 @@
     "primitive.createBoxFrom3Points",
     "primitive.createBoxFromCorners"
   ],
-  "interactions": [
-    "primitive.box"
-  ],
-  "primitiveKinds": [
-    "solid"
-  ]
+  "interactions": ["primitive.box"],
+  "primitiveKinds": ["solid"]
 }

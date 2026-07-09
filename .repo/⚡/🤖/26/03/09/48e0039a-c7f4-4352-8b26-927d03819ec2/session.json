@@ -106,9 +106,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__search"
-            ],
+            "matches": ["mcp__repo__search"],
             "query": "select:mcp__repo__search",
             "total_deferred_tools": 64
           },
@@ -127,9 +125,7 @@
         "name": "ToolSearch",
         "parent": "",
         "response": {
-          "matches": [
-            "mcp__repo__search"
-          ],
+          "matches": ["mcp__repo__search"],
           "query": "select:mcp__repo__search",
           "total_deferred_tools": 64
         },
@@ -631,9 +627,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌100"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌100"],
         "second": "🎆26🌙03☀️09⏰17⌚28⏱️19",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -674,9 +668,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌100"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌100"],
         "second": "🎆26🌙03☀️09⏰17⌚28⏱️33",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -968,9 +960,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌122📌321"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌122📌321"],
         "second": "🎆26🌙03☀️09⏰17⌚30⏱️35",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -1012,9 +1002,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌122📌321"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌122📌321"],
         "second": "🎆26🌙03☀️09⏰17⌚30⏱️47",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -1046,9 +1034,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌320📌419"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌320📌419"],
         "second": "🎆26🌙03☀️09⏰17⌚31⏱️00",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -1090,9 +1076,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌320📌419"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌320📌419"],
         "second": "🎆26🌙03☀️09⏰17⌚31⏱️14",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -1322,9 +1306,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻composeext📌1📌654"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻composeext📌1📌654"],
         "second": "🎆26🌙03☀️09⏰17⌚33⏱️15",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -1369,9 +1351,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻composeext📌1📌654"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻composeext📌1📌654"],
         "second": "🎆26🌙03☀️09⏰17⌚33⏱️28",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -1662,9 +1642,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅composetests💻tests📌1📌325"
-        ],
+        "ranges": ["👤compose📚net🛅composetests💻tests📌1📌325"],
         "second": "🎆26🌙03☀️09⏰17⌚36⏱️14",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -1709,9 +1687,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅composetests💻tests📌1📌325"
-        ],
+        "ranges": ["👤compose📚net🛅composetests💻tests📌1📌325"],
         "second": "🎆26🌙03☀️09⏰17⌚36⏱️25",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -1746,9 +1722,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅composebenchmark💻program📌1📌137"
-        ],
+        "ranges": ["👤compose📚net🛅composebenchmark💻program📌1📌137"],
         "second": "🎆26🌙03☀️09⏰17⌚36⏱️52",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -1793,9 +1767,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅composebenchmark💻program📌1📌137"
-        ],
+        "ranges": ["👤compose📚net🛅composebenchmark💻program📌1📌137"],
         "second": "🎆26🌙03☀️09⏰17⌚37⏱️04",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2040,9 +2012,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1510📌1529"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1510📌1529"],
         "second": "🎆26🌙03☀️09⏰17⌚38⏱️35",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2090,9 +2060,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1510📌1529"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1510📌1529"],
         "second": "🎆26🌙03☀️09⏰17⌚38⏱️46",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2130,9 +2098,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1480📌1524"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1480📌1524"],
         "second": "🎆26🌙03☀️09⏰17⌚38⏱️59",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2180,9 +2146,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1480📌1524"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1480📌1524"],
         "second": "🎆26🌙03☀️09⏰17⌚39⏱️10",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2214,9 +2178,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌5594📌5713"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌5594📌5713"],
         "second": "🎆26🌙03☀️09⏰17⌚39⏱️49",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2258,9 +2220,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌5594📌5713"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌5594📌5713"],
         "second": "🎆26🌙03☀️09⏰17⌚40⏱️00",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2292,9 +2252,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌4806📌4985"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌4806📌4985"],
         "second": "🎆26🌙03☀️09⏰17⌚40⏱️29",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2336,9 +2294,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌4806📌4985"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌4806📌4985"],
         "second": "🎆26🌙03☀️09⏰17⌚40⏱️41",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2370,9 +2326,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌4631📌4710"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌4631📌4710"],
         "second": "🎆26🌙03☀️09⏰17⌚40⏱️57",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2414,9 +2368,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌4631📌4710"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌4631📌4710"],
         "second": "🎆26🌙03☀️09⏰17⌚41⏱️08",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2513,9 +2465,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌5204📌5273"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌5204📌5273"],
         "second": "🎆26🌙03☀️09⏰17⌚43⏱️01",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2557,9 +2507,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌5204📌5273"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌5204📌5273"],
         "second": "🎆26🌙03☀️09⏰17⌚43⏱️12",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2674,9 +2622,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌916📌935"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌916📌935"],
         "second": "🎆26🌙03☀️09⏰17⌚44⏱️41",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2724,9 +2670,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌916📌935"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌916📌935"],
         "second": "🎆26🌙03☀️09⏰17⌚44⏱️52",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2764,9 +2708,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌900📌919"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌900📌919"],
         "second": "🎆26🌙03☀️09⏰17⌚45⏱️07",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2814,9 +2756,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌900📌919"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌900📌919"],
         "second": "🎆26🌙03☀️09⏰17⌚45⏱️18",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2913,9 +2853,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌6118📌6177"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌6118📌6177"],
         "second": "🎆26🌙03☀️09⏰17⌚46⏱️21",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2957,9 +2895,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌6118📌6177"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌6118📌6177"],
         "second": "🎆26🌙03☀️09⏰17⌚46⏱️29",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -2991,9 +2927,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌6176📌6295"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌6176📌6295"],
         "second": "🎆26🌙03☀️09⏰17⌚46⏱️50",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -3035,9 +2969,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌6176📌6295"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌6176📌6295"],
         "second": "🎆26🌙03☀️09⏰17⌚47⏱️03",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -3069,9 +3001,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌6295📌6384"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌6295📌6384"],
         "second": "🎆26🌙03☀️09⏰17⌚47⏱️19",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -3113,9 +3043,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌6295📌6384"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌6295📌6384"],
         "second": "🎆26🌙03☀️09⏰17⌚47⏱️30",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -3147,9 +3075,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌5880📌5959"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌5880📌5959"],
         "second": "🎆26🌙03☀️09⏰17⌚47⏱️45",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -3191,9 +3117,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌5880📌5959"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌5880📌5959"],
         "second": "🎆26🌙03☀️09⏰17⌚47⏱️58",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -3290,9 +3214,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌5959📌6038"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌5959📌6038"],
         "second": "🎆26🌙03☀️09⏰17⌚49⏱️50",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -3334,9 +3256,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌5959📌6038"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌5959📌6038"],
         "second": "🎆26🌙03☀️09⏰17⌚50⏱️01",
         "session": "⚪48e0039ac7f443528b26927d03819ec2",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/48e0039a-c7f4-4352-8b26-927d03819ec2.jsonl"
@@ -3394,9 +3314,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_open"
-            ],
+            "matches": ["mcp__repo__ticket_open"],
             "query": "select:mcp__repo__ticket_open",
             "total_deferred_tools": 64
           },
@@ -3415,9 +3333,7 @@
         "name": "ToolSearch",
         "parent": "",
         "response": {
-          "matches": [
-            "mcp__repo__ticket_open"
-          ],
+          "matches": ["mcp__repo__ticket_open"],
           "query": "select:mcp__repo__ticket_open",
           "total_deferred_tools": 64
         },

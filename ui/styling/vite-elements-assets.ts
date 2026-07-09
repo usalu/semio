@@ -108,14 +108,16 @@ function playgroundWasmStubKeyDecode(key: string): string {
 
 const PLAYGROUND_WASM_JS_STUB = `const wasmMissing = () => { throw new Error("wasm pkg not built — run the matching nx wasm target"); };
 const wasmJson = () => "{}";
-const dagLodScaleJson = () => ${JSON.stringify(JSON.stringify([
-  { id: "minimap", name: "Minimap", description: "Whole-graph silhouette; fill only.", maxZoom: 0.4 },
-  { id: "overview", name: "Overview", description: "Node icons only.", maxZoom: 0.6 },
-  { id: "compact", name: "Compact", description: "Horizontal abbreviations.", maxZoom: 0.8 },
-  { id: "normal", name: "Normal", description: "Vertical names with sections; channel abbreviations on ports.", maxZoom: 1.5 },
-  { id: "detail", name: "Detail", description: "Channel names on ports, port handles, and control text.", maxZoom: 2.75 },
-  { id: "micro", name: "Micro", description: "Full channel names on ports and maximum node fidelity.", maxZoom: Number.MAX_VALUE },
-]))};
+const dagLodScaleJson = () => ${JSON.stringify(
+  JSON.stringify([
+    { id: "minimap", name: "Minimap", description: "Whole-graph silhouette; fill only.", maxZoom: 0.4 },
+    { id: "overview", name: "Overview", description: "Node icons only.", maxZoom: 0.6 },
+    { id: "compact", name: "Compact", description: "Horizontal abbreviations.", maxZoom: 0.8 },
+    { id: "normal", name: "Normal", description: "Vertical names with sections; channel abbreviations on ports.", maxZoom: 1.5 },
+    { id: "detail", name: "Detail", description: "Channel names on ports, port handles, and control text.", maxZoom: 2.75 },
+    { id: "micro", name: "Micro", description: "Full channel names on ports and maximum node fidelity.", maxZoom: Number.MAX_VALUE },
+  ]),
+)};
 export default async function initWasm() {}
 export const initSync = () => {};
 export class FlowSession { lodScaleJson() { return dagLodScaleJson(); } }
@@ -156,10 +158,7 @@ export function playgroundFlowWasmDevStubPlugin(repoRoot: string): Plugin {
     resolveId(id, importer) {
       if (!importer || id.startsWith(PLAYGROUND_WASM_STUB_PREFIX)) return undefined;
       const cleanId = id.split("?", 1)[0] ?? id;
-      const isWasmPkg =
-        cleanId.includes("/pkg/") ||
-        cleanId.endsWith(".wasm") ||
-        cleanId === "@semio-tech/flow-core/pkg/flow_core.js";
+      const isWasmPkg = cleanId.includes("/pkg/") || cleanId.endsWith(".wasm") || cleanId === "@semio-tech/flow-core/pkg/flow_core.js";
       if (!isWasmPkg) return undefined;
       const abs = cleanId.startsWith(".")
         ? resolve(dirname(importer), cleanId)
@@ -273,10 +272,7 @@ export function playgroundComposeSketchpadVitePlugins(repoRoot: string, enableSk
       },
     ];
   }
-  return [
-    playgroundComposeSketchpadStubPlugin(repoRoot),
-    ...mdxStubPlugins,
-  ];
+  return [playgroundComposeSketchpadStubPlugin(repoRoot), ...mdxStubPlugins];
 }
 
 /** @emoji 🧱 Stubs Playwright when test-only regions are pulled into the browser graph. */
@@ -374,10 +370,7 @@ function createUiAssetsMiddleware(assetsRoot: string): Connect.NextHandleFunctio
 
 /** @emoji 📂 Kit fixture GLB roots for puzzle 3d `/mesh/*` URLs. */
 export function puzzle3dKitMeshRoots(repoRoot: string): { readonly meshRoots: readonly string[]; readonly placeholderMesh: string } {
-  const metabolismMeshCandidates = [
-    resolve(repoRoot, "asset/metabolism/representation"),
-    resolve(repoRoot, "asset/metabolism/representations"),
-  ];
+  const metabolismMeshCandidates = [resolve(repoRoot, "asset/metabolism/representation"), resolve(repoRoot, "asset/metabolism/representations")];
   const metabolismMeshRoot = metabolismMeshCandidates.find((candidate) => existsSync(candidate)) ?? metabolismMeshCandidates[0]!;
   return {
     meshRoots: [metabolismMeshRoot, resolve(repoRoot, "asset/abbau-aufbau")],
@@ -566,8 +559,7 @@ export function playgroundPlayBootHtmlPlugin(): Plugin {
 }
 
 /** @emoji 🔖 Canonical semio emblem favicon `<link>` tags for playground and app `index.html` heads. */
-export const SEMIO_FAVICON_HEAD_HTML =
-  `<link rel="icon" href="./favicon.svg" type="image/svg+xml" />\n    <link rel="icon" href="./favicon.ico" sizes="any" />`;
+export const SEMIO_FAVICON_HEAD_HTML = `<link rel="icon" href="./favicon.svg" type="image/svg+xml" />\n    <link rel="icon" href="./favicon.ico" sizes="any" />`;
 
 /** @emoji 🔖 Repo-root paths for the round dark emblem SVG and ICO fallback (matches {@link SemioLogo}). */
 export function semioFaviconSources(repoRoot: string): { readonly svg: string; readonly ico: string } {
@@ -700,7 +692,10 @@ function namedImportSpecifiersForModule(source: string, moduleId: string): strin
     for (const part of match[1].split(",")) {
       const trimmed = part.trim();
       if (!trimmed) continue;
-      const name = trimmed.replace(/^type\s+/, "").split(/\s+as\s+/)[0]?.trim();
+      const name = trimmed
+        .replace(/^type\s+/, "")
+        .split(/\s+as\s+/)[0]
+        ?.trim();
       if (name) names.push(name);
     }
   }
@@ -970,10 +965,7 @@ export async function prefetchMapTiles(options: PrefetchMapTilesOptions): Promis
         return true;
       })
     : jobs;
-  log(
-    `[gis/2d/play] prefetch ${jobs.length} tiles ${zoomLabel}` +
-      (skipExisting ? ` (${skipped} cached, ${pending.length} to fetch)` : ""),
-  );
+  log(`[gis/2d/play] prefetch ${jobs.length} tiles ${zoomLabel}` + (skipExisting ? ` (${skipped} cached, ${pending.length} to fetch)` : ""));
   if (pending.length === 0) {
     log(`[gis/2d/play] prefetch done: downloaded=0 skipped=${skipped} failed=0`);
     return { downloaded: 0, skipped, failed: 0 };
@@ -986,10 +978,7 @@ export async function prefetchMapTiles(options: PrefetchMapTilesOptions): Promis
     await Promise.all(
       batch.map(async (job) => {
         const cacheRoot = job.kind === "osm" ? osm : vt;
-        const ok =
-          job.kind === "osm"
-            ? await fetchOsmTileToCache(cacheRoot, job.z, job.x, job.y)
-            : await fetchVtTileToCache(cacheRoot, job.z, job.x, job.y);
+        const ok = job.kind === "osm" ? await fetchOsmTileToCache(cacheRoot, job.z, job.x, job.y) : await fetchVtTileToCache(cacheRoot, job.z, job.x, job.y);
         if (ok) {
           downloaded++;
         } else {
@@ -1089,12 +1078,7 @@ function createVtTileMiddleware(cacheRoot: string, mode: GisMapTileServeMode): C
 }
 
 /** @emoji 🗺 Standalone HTTP server for GIS map raster/vector tiles (wgpu Trunk / native-bin dev). */
-export function startGisMapTileProxyServer(
-  repoRoot: string,
-  port: number,
-  mode: GisMapTileServeMode = "fetch",
-  host = "127.0.0.1",
-): Server {
+export function startGisMapTileProxyServer(repoRoot: string, port: number, mode: GisMapTileServeMode = "fetch", host = "127.0.0.1"): Server {
   const { osm, vt } = mapTileCacheRoots(repoRoot);
   const serveOsm = createOsmTileMiddleware(osm, mode);
   const serveVt = createVtTileMiddleware(vt, mode);
@@ -1206,10 +1190,7 @@ export const FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE = [
 ] as const;
 
 /** @emoji 🧭 Workspace Vite resolve preset: dedupe, fs.allow, optimizeDeps.exclude, scene-host aliases. */
-export function createWorkspaceViteResolveConfig(
-  repoRoot: string,
-  extraAliases: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> = [],
-): Pick<UserConfig, "resolve" | "server" | "optimizeDeps"> {
+export function createWorkspaceViteResolveConfig(repoRoot: string, extraAliases: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> = []): Pick<UserConfig, "resolve" | "server" | "optimizeDeps"> {
   return {
     resolve: {
       alias: [...extraAliases],
@@ -1405,9 +1386,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
       plugins: () => workerStubPlugins,
     },
     define: {
-      ...playgroundPlayViteDefine(
-        playEntryKind ? { "import.meta.env.PLAYGROUND_APP_KIND": JSON.stringify(playEntryKind) } : {},
-      ),
+      ...playgroundPlayViteDefine(playEntryKind ? { "import.meta.env.PLAYGROUND_APP_KIND": JSON.stringify(playEntryKind) } : {}),
     },
     plugins: [
       playgroundPlayBootHtmlPlugin(),

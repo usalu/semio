@@ -2,30 +2,30 @@
 name: spatial selection refactor
 overview: Refactor the renderer-r3f selection so the renderer always owns a single canonical selection, every interaction has its own private selection seeded from that canonical one, and interactions only contribute back to the renderer when they explicitly archive a result.
 todos:
-  - id: rename-state
-    content: Rename selectedSelectionTargets/interactionSelectionTargets to rendererSelection/interactionSelection across state, props, callbacks, defaults and Omit lists
-    status: completed
-  - id: drop-union
-    content: Delete mergeReplSelectionLayers and make displayedSelectionTargets pick rendererSelection or interactionSelection based on interactionActive
-    status: completed
-  - id: simplify-finalize
-    content: Simplify replFinalizeSelection to use archive.targets when present, else keep rendererSelection unchanged
-    status: completed
-  - id: seed-on-start
-    content: Seed interactionSelection from accepted subset of rendererSelection inside startRuntime
-    status: completed
-  - id: single-commit
-    content: Collapse the commit/dispatch helpers into one commitSelection that routes by interactionActive
-    status: completed
-  - id: lifecycle-resets
-    content: Adjust interactionId/cancel/geometry effects so cancel preserves rendererSelection and only id-invalidating resets clear both
-    status: completed
-  - id: tests
-    content: Extend existing test block to cover privacy of interaction selection, finalize with/without archive, start seeding, and display routing
-    status: completed
-  - id: ticket
-    content: Open and close repo ticket 2026/05/26/REFACTOR-SPATIAL-SELECTION under runningsketchpad goal
-    status: completed
+ - id: rename-state
+   content: Rename selectedSelectionTargets/interactionSelectionTargets to rendererSelection/interactionSelection across state, props, callbacks, defaults and Omit lists
+   status: completed
+ - id: drop-union
+   content: Delete mergeReplSelectionLayers and make displayedSelectionTargets pick rendererSelection or interactionSelection based on interactionActive
+   status: completed
+ - id: simplify-finalize
+   content: Simplify replFinalizeSelection to use archive.targets when present, else keep rendererSelection unchanged
+   status: completed
+ - id: seed-on-start
+   content: Seed interactionSelection from accepted subset of rendererSelection inside startRuntime
+   status: completed
+ - id: single-commit
+   content: Collapse the commit/dispatch helpers into one commitSelection that routes by interactionActive
+   status: completed
+ - id: lifecycle-resets
+   content: Adjust interactionId/cancel/geometry effects so cancel preserves rendererSelection and only id-invalidating resets clear both
+   status: completed
+ - id: tests
+   content: Extend existing test block to cover privacy of interaction selection, finalize with/without archive, start seeding, and display routing
+   status: completed
+ - id: ticket
+   content: Open and close repo ticket 2026/05/26/REFACTOR-SPATIAL-SELECTION under runningsketchpad goal
+   status: completed
 isProject: false
 ---
 
@@ -63,12 +63,9 @@ This is the fix for the "buggy" behaviour: during an interaction the user sees o
 Replace `replFinalizeSelection` (line 3186) with:
 
 ```ts
-function replFinalizeSelection(
-  rendererSelection: readonly SelectionTarget[],
-  result: InteractionSnapshot["lastResponse"],
-): readonly SelectionTarget[] {
-  const archived = interactionArchiveTargets(result);
-  return archived.length > 0 ? archived : rendererSelection;
+function replFinalizeSelection(rendererSelection: readonly SelectionTarget[], result: InteractionSnapshot["lastResponse"]): readonly SelectionTarget[] {
+ const archived = interactionArchiveTargets(result);
+ return archived.length > 0 ? archived : rendererSelection;
 }
 ```
 
@@ -91,12 +88,15 @@ await rt.send(replStartEvent(accepted));
 Replace `commitGeneralSelectionState`, `commitInteractionSelectionState`, `commitSelectionState` with a single `commitSelection`:
 
 ```ts
-const commitSelection = useCallback((next: readonly SelectionTarget[]) => {
+const commitSelection = useCallback(
+ (next: readonly SelectionTarget[]) => {
   setSelectionMenu(null);
   setHoveredPickKey(null);
   if (interactionActive) setInteractionSelection([...next]);
   else setRendererSelection([...next]);
-}, [interactionActive]);
+ },
+ [interactionActive],
+);
 ```
 
 Rewrite `dispatchSelectionTargets` (line 3714) and the snap-pick branch in `onSpatialInteractionEvent` (line 3801) to read `currentSelection = interactionActive ? interactionSelection : rendererSelection` from one place and commit through `commitSelection`. The runtime `selection.changed` send stays gated on `interactionActive`.

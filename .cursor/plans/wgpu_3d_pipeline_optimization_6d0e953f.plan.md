@@ -2,30 +2,30 @@
 name: Wgpu 3D Pipeline Optimization
 overview: Fix the per-pass camera uniform bug with dynamic offsets, eliminate per-frame GPU buffer allocation with persistent grow-only buffers, cache scene parsing, add AABB culling/early-out to picking and rendering, and raise device limits to full WebGPU defaults.
 todos:
-  - id: dynamic-uniforms
-    content: "Dynamic-offset world globals buffer: one aligned slot per scene pass, fixes multi-viewport camera bug"
-    status: completed
-  - id: persistent-buffers
-    content: Persistent grow-only vertex buffers for world instances, UI instances, vector vertices; single combined instance upload per frame
-    status: completed
-  - id: device-limits
-    content: Request full WebGPU default limits instead of downlevel webgl2 defaults
-    status: completed
-  - id: scene-cache
-    content: Cache scene JSON hashes on World3dState, skip re-parse when unchanged; fix triple mesh_from_kind; content-versioned MeshGpuStore
-    status: completed
-  - id: picking-aabb
-    content: AABB slab early-out in ray picking and projected-AABB pre-test in marquee selection
-    status: completed
-  - id: frustum-culling
-    content: Frustum plane extraction + per-instance AABB culling before building ScenePass3d draws
-    status: completed
-  - id: safe-glb-fetch
-    content: Replace unsafe raw-pointer GLB polling with Rc<RefCell> spawn_local pattern
-    status: completed
-  - id: cleanup-verify
-    content: Remove dead fields/imports, run cargo tests, wasm build, browser verification with puzzle3d and puzzle5d
-    status: completed
+ - id: dynamic-uniforms
+   content: "Dynamic-offset world globals buffer: one aligned slot per scene pass, fixes multi-viewport camera bug"
+   status: completed
+ - id: persistent-buffers
+   content: Persistent grow-only vertex buffers for world instances, UI instances, vector vertices; single combined instance upload per frame
+   status: completed
+ - id: device-limits
+   content: Request full WebGPU default limits instead of downlevel webgl2 defaults
+   status: completed
+ - id: scene-cache
+   content: Cache scene JSON hashes on World3dState, skip re-parse when unchanged; fix triple mesh_from_kind; content-versioned MeshGpuStore
+   status: completed
+ - id: picking-aabb
+   content: AABB slab early-out in ray picking and projected-AABB pre-test in marquee selection
+   status: completed
+ - id: frustum-culling
+   content: Frustum plane extraction + per-instance AABB culling before building ScenePass3d draws
+   status: completed
+ - id: safe-glb-fetch
+   content: Replace unsafe raw-pointer GLB polling with Rc<RefCell> spawn_local pattern
+   status: completed
+ - id: cleanup-verify
+   content: Remove dead fields/imports, run cargo tests, wasm build, browser verification with puzzle3d and puzzle5d
+   status: completed
 isProject: false
 ---
 
@@ -46,6 +46,7 @@ wgpu 27 scope note: mesh shaders, `multi_draw_indirect`, and `PipelineCache` are
 ## 1. Dynamic-offset world globals (fixes multi-viewport camera bug)
 
 In [ui/wgpu/rs/draw.rs](ui/wgpu/rs/draw.rs):
+
 - Make the world globals bind group layout use `has_dynamic_offset: true` with `min_binding_size` = size of `World3dGlobals`.
 - Allocate a grow-only uniform buffer with one 256-byte-aligned slot per scene pass (alignment from `device.limits().min_uniform_buffer_offset_alignment`).
 - Before encoding, write all pass globals in one loop; during encoding bind with `set_bind_group(0, &bg, &[offset])` per pass.
@@ -53,6 +54,7 @@ In [ui/wgpu/rs/draw.rs](ui/wgpu/rs/draw.rs):
 ## 2. Persistent grow-only vertex buffers
 
 Add a small `FrameBuffers` struct owned by `GpuContext` (world instances, UI instances, vector vertices):
+
 - Each is a `wgpu::Buffer` with `VERTEX | COPY_DST`, grown (power-of-two) only when the frame's data exceeds capacity, otherwise reused via `queue.write_buffer`.
 - World instances: build one combined `Vec<World3dGpuInstance>` for all passes/draws before encoding; each draw call records its `(offset, count)` range and uses `set_vertex_buffer(1, buffer.slice(range))`. One upload per frame, zero allocations in steady state.
 - Same pattern replaces the per-frame `ui_instances` and `vector_vertices` `create_buffer_init` calls.
@@ -64,6 +66,7 @@ In [ui/wgpu/rs/gpu.rs](ui/wgpu/rs/gpu.rs): request `wgpu::Limits::default()` cla
 ## 4. Scene sync caching in the world-3d host
 
 In [framework/renderer/wgpu/rs/world3d.rs](framework/renderer/wgpu/rs/world3d.rs):
+
 - Store content hashes (or the raw strings) of `camera_json` / `meshes_json` / `instances_json` / `selection_json` on `World3dState`; skip `sync_world3d_state` parsing entirely when unchanged (the common case at 60fps). Camera changes stay renderer-local through the orbit controller.
 - Fix the triple `mesh_from_kind` call: generate the primitive once and insert.
 - `MeshGpuStore::ensure_mesh` keyed by `(id, version)` where version is a hash of the inline mesh data, so plugin-side mesh edits re-upload instead of being ignored.
@@ -71,6 +74,7 @@ In [framework/renderer/wgpu/rs/world3d.rs](framework/renderer/wgpu/rs/world3d.rs
 ## 5. AABB early-out for picking and marquee
 
 In [ui/wgpu/rs/scene3d.rs](ui/wgpu/rs/scene3d.rs), all pure and unit-tested:
+
 - `ray_pick_instance`: transform the ray into local space (restore inverse-transform path), slab-test against `aabb_min`/`aabb_max`, and only then run Moller-Trumbore over triangles. Keep returning world-space distance.
 - `screen_select_instances`: project the 8 AABB corners first; if the projected AABB misses the marquee polygon/rect bounding box, skip the instance without touching triangles.
 

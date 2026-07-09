@@ -32,14 +32,7 @@ const TARGETS: Array<{ path: string; pkg: string }> = [
 
 const WRITER_IMPORT = `import { createWriterDocument } from "@semio-tech/writer-core";\nimport { WriterCanvas } from "@semio-tech/writer-react";\n`;
 
-const NEEDS_WRITER = new Set([
-  "flow/react/index.tsx",
-  "puzzle/2d/react/index.tsx",
-  "puzzle/5d/react/index.tsx",
-  "sequence/react/index.tsx",
-  "mathematical/graph/port/directed/dag/react/index.tsx",
-  "s/react/index.tsx",
-]);
+const NEEDS_WRITER = new Set(["flow/react/index.tsx", "puzzle/2d/react/index.tsx", "puzzle/5d/react/index.tsx", "sequence/react/index.tsx", "mathematical/graph/port/directed/dag/react/index.tsx", "s/react/index.tsx"]);
 
 function extractPlayHostRegion(content: string): { before: string; region: string; after: string } | null {
   const marker = content.match(/\/\/#region 🔖\w+PlayHost/);
@@ -58,18 +51,17 @@ function extractPlayHostRegion(content: string): { before: string; region: strin
 
 function removeSelfImports(region: string, pkg: string): string {
   const importRe = /^import\s+(?:type\s+)?\{([^}]+)\}\s+from\s+["']@semio-tech\/[^"']+["'];?\s*$/gm;
-  return region.replace(importRe, (full, inner: string) => {
-    const fromMatch = full.match(/from\s+["']([^"']+)["']/);
-    if (!fromMatch || fromMatch[1] !== pkg) return full;
-    return "";
-  }).replace(/\n{3,}/g, "\n\n");
+  return region
+    .replace(importRe, (full, inner: string) => {
+      const fromMatch = full.match(/from\s+["']([^"']+)["']/);
+      if (!fromMatch || fromMatch[1] !== pkg) return full;
+      return "";
+    })
+    .replace(/\n{3,}/g, "\n\n");
 }
 
 function removeLocalShootingRegister(region: string): string {
-  return region.replace(
-    /\nexport function registerUiShootingSurfaceHost[\s\S]*?\n\}\n/,
-    "\n",
-  );
+  return region.replace(/\nexport function registerUiShootingSurfaceHost[\s\S]*?\n\}\n/, "\n");
 }
 
 function fixShootingImport(region: string): string {
@@ -85,10 +77,7 @@ function addWriterImports(region: string): string {
 }
 
 function fixCadSelfImport(region: string): string {
-  return region.replace(
-    /import \{ CadPlayRoot, registerCadPlaySurfaceHosts \} from "@semio-tech\/cad-js-renderer-react";\n/,
-    "",
-  );
+  return region.replace(/import \{ CadPlayRoot, registerCadPlaySurfaceHosts \} from "@semio-tech\/cad-js-renderer-react";\n/, "");
 }
 
 for (const { path, pkg } of TARGETS) {

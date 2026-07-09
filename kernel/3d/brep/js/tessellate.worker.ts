@@ -5,9 +5,7 @@ import brepWasmUrl from "@semio-tech/flow-module-brep/pkg/flow_module_brep_bg.wa
 
 type TessellateWorkerRequest = { readonly op: "tessellate"; readonly reqId: number; readonly handle: string; readonly tolerance: number };
 
-type TessellateWorkerResponse =
-  | { readonly op: "result"; readonly reqId: number; readonly json: string }
-  | { readonly op: "error"; readonly reqId: number; readonly message: string };
+type TessellateWorkerResponse = { readonly op: "result"; readonly reqId: number; readonly json: string } | { readonly op: "error"; readonly reqId: number; readonly message: string };
 
 let ready: Promise<void> | null = null;
 

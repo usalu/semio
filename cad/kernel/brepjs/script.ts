@@ -15,8 +15,6 @@ class FixtureScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir)
-  .register("test", TestScript)
-  .register("fixture", FixtureScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("fixture", FixtureScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

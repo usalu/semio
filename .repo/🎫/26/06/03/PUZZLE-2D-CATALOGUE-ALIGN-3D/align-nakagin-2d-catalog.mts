@@ -1,7 +1,10 @@
 import { writeFileSync } from "node:fs";
 
 const d3 = (await Bun.file("puzzle/3d/fixture/nakagin-capsule-tower.3d.json").json()) as {
-  meta: { kindCatalogs: { vortices: { id: string; name?: string; label?: string; color?: string }[]; objects: { id: string; name?: string; label?: string }[] }; kindCompatibility: { source: string; target: string; specificity?: string; bidirectional?: boolean }[] };
+  meta: {
+    kindCatalogs: { vortices: { id: string; name?: string; label?: string; color?: string }[]; objects: { id: string; name?: string; label?: string }[] };
+    kindCompatibility: { source: string; target: string; specificity?: string; bidirectional?: boolean }[];
+  };
 };
 const d2 = (await Bun.file("puzzle/2d/fixture/nakagin-capsule-tower.2d.json").json()) as {
   meta: { kindCatalogs: { handles: { id: string; name: string }[]; nodes: { id: string; name: string; handles?: { handleKind: string; angle: number; radius?: number }[] }[] }; kindCompatibility: unknown[] };

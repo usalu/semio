@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - The shared `Panel` component did not enforce the panel level background, so panels could appear as border-only.
@@ -23,6 +24,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Ensure all panels paint panel background

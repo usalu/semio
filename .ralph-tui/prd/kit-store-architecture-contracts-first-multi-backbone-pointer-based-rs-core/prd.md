@@ -29,9 +29,12 @@ This PRD is **contracts-first**: finalize contracts (assets + GraphQL) before lo
 These commands must pass for **every** user story:
 
 **JavaScript/TypeScript monorepo gates (repo root):**
+
 - ```bash
-pnpm typecheck && pnpm lint
-```
+  pnpm typecheck && pnpm lint
+  ```
+
+````
 
 **Tooling prerequisite (must be true before claiming any story is complete):**
 - The repository root MUST define `pnpm typecheck` and `pnpm lint` such that they typecheck and lint **all packages/files touched by the story** (this epic may introduce/adjust root pnpm workspace config + scripts so the above invocation is real and reproducible).
@@ -40,22 +43,28 @@ pnpm typecheck && pnpm lint
 - ```bash
 cargo test --manifest-path compose/rs/Cargo.toml
 cargo clippy --manifest-path compose/rs/Cargo.toml --all-targets -- -D warnings
-```
+````
 
 **GraphQL schema drift gate when the GraphQL contract changes:**
+
 - ```bash
-pnpm exec nx build compose/graphql
-```
+  pnpm exec nx build compose/graphql
+  ```
+
+````
 
 **Embedded/unit tests when behavior changes in TS layers (run when the story touches that package):**
 - ```bash
 pnpm --filter @semio-tech/compose-js test
 pnpm --filter @semio-tech/compose-react test
-```
+````
 
 **Sketchpad build gate when sketchpad changes:**
+
 - ```bash
-pnpm --filter @semio-tech/compose-sketchpad build
+  pnpm --filter @semio-tech/compose-sketchpad build
+  ```
+
 ```
 
 For **UI / sketchpad** stories, also include:
@@ -180,3 +189,4 @@ As a reviewer, I want `compose/sketchpad` to prove checkpoints/drafts/transactio
 ## Open Questions
 
 - Exact **promotion pipeline** details between `wip.db` and `staged.db` (batching, atomicity, and how conflicts route into `conflicts.db`)—to be specified in the RS backbone module docs during US-004.
+```

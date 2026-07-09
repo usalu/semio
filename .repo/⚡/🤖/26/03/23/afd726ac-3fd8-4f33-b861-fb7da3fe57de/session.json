@@ -603,11 +603,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/3dm/ui/src/index.tsx",
-                "compose/3dm/ui/src/bridge.ts",
-                "compose/3dm/ui/src/RhinoPanel.tsx"
-              ],
+              "files": ["compose/3dm/ui/src/index.tsx", "compose/3dm/ui/src/bridge.ts", "compose/3dm/ui/src/RhinoPanel.tsx"],
               "path": "2026/03/23/CONSOLIDATE-3DM-UI-SOURCE-FILES-INTO-SINGLE-INDEX",
               "summary": "Consolidated all three source files (bridge.ts, RhinoPanel.tsx, index.tsx) into a single index.tsx with proper region markers. Removed useEffect import (unused). Updated all repo URIs from per-file paths to index.tsx paths. Deleted bridge.ts and RhinoPanel.tsx. The index.html entry point still references ./index.tsx so no changes needed there."
             },
@@ -635,11 +631,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/3dm/ui/src/index.tsx",
-                "compose/3dm/ui/src/bridge.ts",
-                "compose/3dm/ui/src/RhinoPanel.tsx"
-              ],
+              "files": ["compose/3dm/ui/src/index.tsx", "compose/3dm/ui/src/bridge.ts", "compose/3dm/ui/src/RhinoPanel.tsx"],
               "path": "26/03/23/CONSOLIDATE-3DM-UI-SOURCE-FILES-INTO-SINGLE-INDEX",
               "summary": "Consolidated all three source files (bridge.ts, RhinoPanel.tsx, index.tsx) into a single index.tsx with proper region markers. Updated all repo URIs from per-file paths to index.tsx paths. Deleted bridge.ts and RhinoPanel.tsx. The index.html entry point still references ./index.tsx so no changes needed there."
             },
@@ -668,11 +660,7 @@
             "mcp_result": "[🎫consolidate3dmuisourcefilesintosingleindex](repo://y/00/m/00/d/00/tk/CONSOLIDATE-3DM-UI-SOURCE-FILES-INTO-SINGLE-INDEX) - `closed` - `closed now`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/3dm/ui/src/index.tsx",
-                "compose/3dm/ui/src/bridge.ts",
-                "compose/3dm/ui/src/RhinoPanel.tsx"
-              ],
+              "files": ["compose/3dm/ui/src/index.tsx", "compose/3dm/ui/src/bridge.ts", "compose/3dm/ui/src/RhinoPanel.tsx"],
               "path": "26/03/23/CONSOLIDATE-3DM-UI-SOURCE-FILES-INTO-SINGLE-INDEX",
               "summary": "Consolidated all three source files (bridge.ts, RhinoPanel.tsx, index.tsx) into a single index.tsx with proper region markers. Updated all repo URIs from per-file paths to index.tsx paths. Deleted bridge.ts and RhinoPanel.tsx. The index.html entry point still references ./index.tsx so no changes needed there."
             },

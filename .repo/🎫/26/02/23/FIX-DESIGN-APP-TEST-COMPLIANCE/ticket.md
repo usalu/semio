@@ -24,7 +24,7 @@ Fixed 2 TS compilation errors caused by invalid `id_` property in Piece object l
 
 - [x] Run Design test to identify failures
 - [x] Fix dev server availability on port 5173
-- [x] Fix TS compilation errors (id_ property)
+- [x] Fix TS compilation errors (id\_ property)
 - [x] Run full test suite verification
 - [x] Close ticket
 

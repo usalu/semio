@@ -1,43 +1,43 @@
 {
-	"name": "@semio-tech/ui-styling-tokens",
-	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
-	"targets": {
-		"generate": {
-			"executor": "nx:run-commands",
-			"options": {
-				"cwd": "ui/styling",
-				"command": "bun ./script.ts generate",
-				"forwardAllArgs": true
-			}
-		},
-		"fonts": {
-			"executor": "nx:run-commands",
-			"options": {
-				"cwd": "ui/styling",
-				"command": "bun ./script.ts fonts",
-				"forwardAllArgs": true
-			}
-		},
-		"check-no-px": {
-			"executor": "nx:run-commands",
-			"options": {
-				"cwd": "ui/styling",
-				"command": "bun ./script.ts check-no-px"
-			}
-		},
-		"test-rs": {
-			"executor": "nx:run-commands",
-			"options": {
-				"cwd": "ui/styling/rs",
-				"command": "bun ./script.ts test"
-			}
-		},
-		"test-py": {
-			"executor": "nx:run-commands",
-			"options": {
-				"cwd": "ui/styling/py",
-				"command": "bun ./script.ts test"
-			}
-		}
-	}
+  "name": "@semio-tech/ui-styling-tokens",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "ui/styling",
+        "command": "bun ./script.ts generate",
+        "forwardAllArgs": true
+      }
+    },
+    "fonts": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "ui/styling",
+        "command": "bun ./script.ts fonts",
+        "forwardAllArgs": true
+      }
+    },
+    "check-no-px": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "ui/styling",
+        "command": "bun ./script.ts check-no-px"
+      }
+    },
+    "test-rs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "ui/styling/rs",
+        "command": "bun ./script.ts test"
+      }
+    },
+    "test-py": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "ui/styling/py",
+        "command": "bun ./script.ts test"
+      }
+    }
+  }
 }

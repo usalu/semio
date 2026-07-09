@@ -7,8 +7,8 @@ const oldNames = Object.keys(mappings);
 // Get tracked files from git
 const files = execSync("git ls-files", { encoding: "utf8" })
   .split("\n")
-  .map(f => f.trim())
-  .filter(f => f && !f.includes("mappings.json") && !f.includes("scan_references.ts") && !f.includes("find_and_map.ts"));
+  .map((f) => f.trim())
+  .filter((f) => f && !f.includes("mappings.json") && !f.includes("scan_references.ts") && !f.includes("find_and_map.ts"));
 
 const filesWithReferences: Record<string, string[]> = {};
 

@@ -1,28 +1,28 @@
 ---
 name: S Chrome Spawned Window Parity
-overview: "Restore two concrete premigration-parity regressions in the unified React renderer: (1) plugin windows spawned inside the Studio (\"s\") shell never receive their command line, window-measures rail, or toolbar tools, and (2) the footer toolbar lost the premigration ribbon behavior (drill-down collection picker, sorting, button/toggle batching)."
+overview: 'Restore two concrete premigration-parity regressions in the unified React renderer: (1) plugin windows spawned inside the Studio ("s") shell never receive their command line, window-measures rail, or toolbar tools, and (2) the footer toolbar lost the premigration ribbon behavior (drill-down collection picker, sorting, button/toggle batching).'
 todos:
-  - id: spawn-fetch
-    content: Fetch plugin.tools()/windowEngagements()/windowMeasures() for spawned Studio apps (boot + post-command refresh), not just plugin.render()
-    status: completed
-  - id: spawn-wire
-    content: Attach engagement/measures to the spawned-window modeWindows descriptor; ensure footer toolbar reflects spawned app's tools
-    status: completed
-  - id: spawn-tests
-    content: "Add index.test.ts coverage: spawned window shows engagement/measures/tools after spawn and after a command"
-    status: completed
-  - id: toolbar-ribbon
-    content: Port buildToolbarRibbonSegments/reconcileViewToolPath/sortViewToolNodes ribbon behavior into ToolTree, replacing independent per-collection expand/collapse
-    status: completed
-  - id: toolbar-batching
-    content: Batch consecutive buttons/toggles into ButtonGroup/ToggleGroup runs (UIToolbarItems port) with ToolbarDivider on separators
-    status: completed
-  - id: toolbar-tests
-    content: "Add index.test.ts coverage: sibling-collection picker drill-down, order sorting, toggle batching"
-    status: completed
-  - id: validate
-    content: Run renderer tests; manual smoke test spawned CAD/puzzle/lowpoly window in Studio for command line, measures, and toolbar
-    status: completed
+ - id: spawn-fetch
+   content: Fetch plugin.tools()/windowEngagements()/windowMeasures() for spawned Studio apps (boot + post-command refresh), not just plugin.render()
+   status: completed
+ - id: spawn-wire
+   content: Attach engagement/measures to the spawned-window modeWindows descriptor; ensure footer toolbar reflects spawned app's tools
+   status: completed
+ - id: spawn-tests
+   content: "Add index.test.ts coverage: spawned window shows engagement/measures/tools after spawn and after a command"
+   status: completed
+ - id: toolbar-ribbon
+   content: Port buildToolbarRibbonSegments/reconcileViewToolPath/sortViewToolNodes ribbon behavior into ToolTree, replacing independent per-collection expand/collapse
+   status: completed
+ - id: toolbar-batching
+   content: Batch consecutive buttons/toggles into ButtonGroup/ToggleGroup runs (UIToolbarItems port) with ToolbarDivider on separators
+   status: completed
+ - id: toolbar-tests
+   content: "Add index.test.ts coverage: sibling-collection picker drill-down, order sorting, toggle batching"
+   status: completed
+ - id: validate
+   content: Run renderer tests; manual smoke test spawned CAD/puzzle/lowpoly window in Studio for command line, measures, and toolbar
+   status: completed
 isProject: false
 ---
 
@@ -50,12 +50,10 @@ flowchart TD
   DirectPath["Direct play session refreshUi (os-shell.tsx:802-865)"] -->|"fetches all four"| Window
 ```
 
-
-
 ### Fix
 
 1. `**framework/renderer/react/os-shell.tsx:876-900**` (spawn boot effect): alongside `plugin.render(...)`, also call `plugin.tools(activeSpawned.instanceId, viewState)`, `plugin.windowEngagements(activeSpawned.instanceId, viewState)`, `plugin.windowMeasures(activeSpawned.instanceId, viewState)` for the spawned app, and store results in new state (`spawnedWindowEngagements`, `spawnedWindowMeasures`, and feed `activeToolNodes` the same way `refreshUi` does at `:850-852`, falling back to the spawned app's static mode tools).
-2. Re-run this fetch whenever `onCommand` dispatches to a spawned app and `processPluginOps` completes (currently `refreshUi(nextSession)` at `:1090` already recomputes these correctly *if* `nextSession` is the spawned app's pseudo-session built at `:1160-1172` — verify this path also updates the new spawned-specific state instead of (or in addition to) the shared `windowEngagementsByKind`/`windowMeasuresByKind`, since window-kind IDs could collide between the top-level "s" app and spawned apps).
+2. Re-run this fetch whenever `onCommand` dispatches to a spawned app and `processPluginOps` completes (currently `refreshUi(nextSession)` at `:1090` already recomputes these correctly _if_ `nextSession` is the spawned app's pseudo-session built at `:1160-1172` — verify this path also updates the new spawned-specific state instead of (or in addition to) the shared `windowEngagementsByKind`/`windowMeasuresByKind`, since window-kind IDs could collide between the top-level "s" app and spawned apps).
 3. `**framework/renderer/react/os-shell.tsx:1719-1737**` (spawned `modeWindows` branch): add `engagement: windowEngagementToSpec(resolveWindowEngagement(spawnedWindowKind, spawnedWindowEngagements), onCommand)` and `measures: windowMeasuresOverlay(spawnedWindowMeasures[...], onCommand)`, mirroring `:1745-1746`.
 4. `**framework/renderer/react/os-shell.tsx:1714-1717**` (`footerToolbar`): when a spawned app is active, prefer its tools (already merged into `activeToolNodes` per step 1) — confirm no other code path overwrites `activeToolNodes` back to the "s" shell's own tools after the spawned fetch.
 5. Add/extend `framework/renderer/react/index.test.ts` with a test that spawns a plugin instance in studio mode, dispatches a command, and asserts the resulting window descriptor carries non-empty `engagement`/`measures` and that `activeToolNodes` reflects the spawned app's tools.
@@ -88,4 +86,3 @@ This plan targets the two concrete regressions the user reported (spawned-window
 - `bun nx run @semio-tech/framework-renderer-react:test` (or the project's configured test target) for the new/updated tests in `framework/renderer/react/index.test.ts`.
 - Manual smoke test: boot the dev studio, open a plugin app (e.g. CAD) as a spawned Studio program, confirm the command-line input + possible-engagements list appear and accept a command, confirm the window-measures rail appears, and confirm the footer toolbar shows the plugin's tools with ribbon drill-down for nested collections — using temporary `[DEBUG]`-prefixed console logs while verifying, removed before finishing.
 - Work inside a repo-mcp ticket per workspace rules (check `repo://goals` first; this continues the `GIS-2D-MAP-PARITY-RESTORE` line of parity-restoration work but is a distinct regression, so open a new ticket unless an existing open ticket already covers spawned-window chrome specifically).
-

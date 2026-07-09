@@ -1,14 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import {
-  parseCommitBundleBody,
-  labelPathTokens,
-  extractBundleDateLineFromCommit,
-  formatBundleDateLine,
-  formatBundleSubject,
-  normalizeBundleScopeLabel,
-  pathsFromNumstatRow,
-} from "../../../../../../repo/lib/js/src/commit.ts";
+import { parseCommitBundleBody, labelPathTokens, extractBundleDateLineFromCommit, formatBundleDateLine, formatBundleSubject, normalizeBundleScopeLabel, pathsFromNumstatRow } from "../../../../../../repo/lib/js/src/commit.ts";
 import {
   gitRangeNumstat,
   shouldSkipPathForUloc,
@@ -119,9 +111,7 @@ const dateDeltas: Map<string, GitDeltaSum>[] = bundles.map(() => new Map());
 for (const row of gitRangeNumstat(root, wip, head)) {
   const rowPaths = pathsFromNumstatRow(row.path);
   if (!rowPaths.length || rowPaths.every((p) => shouldSkipPathForUloc(root, p))) continue;
-  const chunk = sumGitLangDeltas(
-    accumulateGitDeltasFromNumstat(root, [{ path: row.path, added: row.added, removed: row.removed }]),
-  );
+  const chunk = sumGitLangDeltas(accumulateGitDeltasFromNumstat(root, [{ path: row.path, added: row.added, removed: row.removed }]));
   if (gitDeltaLineTotal(chunk) === 0) continue;
   const bi = assignPrimary(bundles, rowPaths[0] ?? row.path, remainderIdx);
   headers[bi] = add(headers[bi]!, chunk);
@@ -160,9 +150,7 @@ for (let bi = 0; bi < bundles.length; bi++) {
   }
 }
 
-const ranked = bundles
-  .map((bundle, i) => ({ bundle, i, total: gitDeltaLineTotal(headers[i]!) }))
-  .sort((a, b) => b.total - a.total);
+const ranked = bundles.map((bundle, i) => ({ bundle, i, total: gitDeltaLineTotal(headers[i]!) })).sort((a, b) => b.total - a.total);
 bundles = ranked.map((r) => r.bundle);
 const sortedHeaders = ranked.map((r) => headers[r.i]!);
 const sortedDateDeltas = ranked.map((r) => dateDeltas[r.i]!);

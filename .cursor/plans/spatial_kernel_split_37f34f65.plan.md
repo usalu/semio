@@ -2,33 +2,33 @@
 name: spatial kernel split
 overview: Pull every math operation out of `spatial/js/core` into a unified `SpatialKernel` interface (precise) plus a `SpatialPreviewKernel` subset (fast). `BrepjsKernel` implements the precise interface; a new `R3FPreviewKernel` inside the renderer implements the fast subset. The play app gets a `Fast | Precise` toggle that decides which kernel feeds previews/derived views, while committed geometry always lands in the precise kernel.
 todos:
-  - id: iface
-    content: Add `SpatialPreviewKernel` + `SpatialKernel` interfaces in core (folding in `KernelAdapter`).
-    status: completed
-  - id: strip-core
-    content: Delete all math implementations from `spatial/js/core/index.ts`; rewire callers (DerivedViewService, evalExpr, InteractionRuntime) to use kernel methods.
-    status: completed
-  - id: runtime-mode
-    content: "Add `previewKernel` + `mode: 'fast' | 'precise'` to `InteractionRuntimeOptions` and route preview vs commit math accordingly in `InteractionRuntime`."
-    status: completed
-  - id: brepjs
-    content: Make `BrepjsKernel` implement the full `SpatialKernel` by absorbing the math functions removed from core.
-    status: completed
-  - id: r3f-preview
-    content: Add `R3FPreviewKernel` (+ exported singleton) implementing `SpatialPreviewKernel` inside `spatial/js/renderer-r3f/index.tsx`; convert existing local preview math to methods.
-    status: completed
-  - id: play-toggle
-    content: Add `Fast | Precise` segmented control to `spatial/js/renderer-r3f/play/main.tsx` and wire it into `rtOpts`.
-    status: completed
-  - id: tests
-    content: Update/extend vitest suites in core, kernel-brepjs, and renderer-r3f for the new boundaries; run `bun nx test` for all three.
-    status: completed
+ - id: iface
+   content: Add `SpatialPreviewKernel` + `SpatialKernel` interfaces in core (folding in `KernelAdapter`).
+   status: completed
+ - id: strip-core
+   content: Delete all math implementations from `spatial/js/core/index.ts`; rewire callers (DerivedViewService, evalExpr, InteractionRuntime) to use kernel methods.
+   status: completed
+ - id: runtime-mode
+   content: "Add `previewKernel` + `mode: 'fast' | 'precise'` to `InteractionRuntimeOptions` and route preview vs commit math accordingly in `InteractionRuntime`."
+   status: completed
+ - id: brepjs
+   content: Make `BrepjsKernel` implement the full `SpatialKernel` by absorbing the math functions removed from core.
+   status: completed
+ - id: r3f-preview
+   content: Add `R3FPreviewKernel` (+ exported singleton) implementing `SpatialPreviewKernel` inside `spatial/js/renderer-r3f/index.tsx`; convert existing local preview math to methods.
+   status: completed
+ - id: play-toggle
+   content: Add `Fast | Precise` segmented control to `spatial/js/renderer-r3f/play/main.tsx` and wire it into `rtOpts`.
+   status: completed
+ - id: tests
+   content: Update/extend vitest suites in core, kernel-brepjs, and renderer-r3f for the new boundaries; run `bun nx test` for all three.
+   status: completed
 isProject: false
 ---
 
 ## Goal
 
-- `spatial/js/core` keeps types, refs, topology data, expr/path/state/runtime plumbing, JSON parse/apply diff. **Zero `Math.`* calls, zero numeric geometry.**
+- `spatial/js/core` keeps types, refs, topology data, expr/path/state/runtime plumbing, JSON parse/apply diff. **Zero `Math.`\* calls, zero numeric geometry.**
 - All math lives behind two interfaces, declared in core, implemented elsewhere:
   - `SpatialKernel` (precise, exact, may be async) — full superset.
   - `SpatialPreviewKernel` (fast, sync, approximate) — subset used for live drag/hover/snap.
@@ -127,7 +127,8 @@ export interface SpatialKernel extends SpatialPreviewKernel, KernelAdapter {
 - Plumb into `useInteractionRuntime` via `rtOpts`:
 
 ```tsx
-const rtOpts = useMemo((): InteractionRuntimeOptions => ({
+const rtOpts = useMemo(
+ (): InteractionRuntimeOptions => ({
   kernel,
   previewKernel: r3fPreviewKernel,
   mode,
@@ -136,7 +137,9 @@ const rtOpts = useMemo((): InteractionRuntimeOptions => ({
   stateEngine: statelyStateEngineProvider,
   query: defaultConstructRunner,
   derived,
-}), [kernel, mode, documentModel, history, derived]);
+ }),
+ [kernel, mode, documentModel, history, derived],
+);
 ```
 
 - Mode change triggers a runtime re-instantiation (already keyed off `rtOpts`).
@@ -154,8 +157,6 @@ flowchart LR
   brep --> topo[(TopologyGraph)]
 ```
 
-
-
 ## Validation
 
 - `bun nx test @spatial/js-core` — core has no Math, tests still pass via the kernel-driven paths (any core tests that hit removed helpers get rewritten to call through a kernel instance, using `BrepjsKernel` as the reference).
@@ -167,4 +168,3 @@ flowchart LR
 
 - No changes to schema, fixtures, machine-stately, or query packages.
 - No precision parity tests between fast and precise (documented as approximation).
-

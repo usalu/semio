@@ -2,11 +2,7 @@
   "compilerOptions": {
     "module": "ESNext",
     "target": "ES2022",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
     "strict": true,
     "moduleResolution": "Bundler",
@@ -16,40 +12,16 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@semio-tech/compose-sketchpad": [
-        "../sketchpad"
-      ],
-      "@semio-tech/compose-sketchpad/*": [
-        "../sketchpad/*"
-      ],
-      "@semio-tech/compose-js": [
-        "../js"
-      ],
-      "@semio-tech/compose-js/*": [
-        "../js/*"
-      ],
-      "@semio-tech/ui-react": [
-        "../../../ui/react"
-      ],
-      "@semio-tech/ui-react/*": [
-        "../../../ui/react/*"
-      ],
-      "@semio-tech/semio-asset": [
-        "../../../../asset"
-      ],
-      "@semio-tech/semio-asset/*": [
-        "../../../../asset/*"
-      ]
+      "@semio-tech/compose-sketchpad": ["../sketchpad"],
+      "@semio-tech/compose-sketchpad/*": ["../sketchpad/*"],
+      "@semio-tech/compose-js": ["../js"],
+      "@semio-tech/compose-js/*": ["../js/*"],
+      "@semio-tech/ui-react": ["../../../ui/react"],
+      "@semio-tech/ui-react/*": ["../../../ui/react/*"],
+      "@semio-tech/semio-asset": ["../../../../asset"],
+      "@semio-tech/semio-asset/*": ["../../../../asset/*"]
     },
-    "types": [
-      "node",
-      "react",
-      "react-dom",
-      "vite/client"
-    ]
+    "types": ["node", "react", "react-dom", "vite/client"]
   },
-  "include": [
-    "extension.ts",
-    "webview.tsx"
-  ]
+  "include": ["extension.ts", "webview.tsx"]
 }

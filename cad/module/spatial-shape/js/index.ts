@@ -75,16 +75,7 @@ if (import.meta.vitest) {
   const { bootstrapCadModules } = await import("@semio-tech/cad-js-runtime");
   const { BrepjsKernel, preciseSpatialKernelMath } = await import("@semio-tech/cad-js-kernel-brepjs");
   const core = await import("@semio-tech/cad-js-core");
-  const {
-    Model,
-    applyModelDiff,
-    computeStat,
-    defaultModelDefinitionId,
-    derivePropertyValue,
-    loadPropertyDefinition,
-    loadStatDefinition,
-    objectsForStatCompute,
-  } = core;
+  const { Model, applyModelDiff, computeStat, defaultModelDefinitionId, derivePropertyValue, loadPropertyDefinition, loadStatDefinition, objectsForStatCompute } = core;
   type ObjectRef = core.ObjectRef;
   type SpatialKernel = core.SpatialKernel;
   type TypologyRef = core.TypologyRef;

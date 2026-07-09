@@ -80,9 +80,7 @@ function walkJsonFiles(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-const targets = [
-  ...walkJsonFiles(join(ROOT, "compose/fixtures")),
-];
+const targets = [...walkJsonFiles(join(ROOT, "compose/fixtures"))];
 const metabolismAssets = join(ROOT, "assets/compose/metabolism");
 try {
   targets.push(...walkJsonFiles(metabolismAssets));

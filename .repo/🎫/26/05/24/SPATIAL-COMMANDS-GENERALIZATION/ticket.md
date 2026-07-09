@@ -15,4 +15,3 @@
 - `play/main.tsx`: `CommandResponse` from `commit()`, `listActiveSelectionAccept` routing via `onSpatialCommandEvent`, preset keys text `d`/`a`, renames `commandId` / `onCommandId`.
 - Removed obsolete `spatial/fixtures/extrude.factory.json`, `offset-surface.factory.json`.
 - Verified: `bun nx run-many -t test -p @spatial/js-core @spatial/js-machine-stately @spatial/js-kernel-brepjs @spatial/js-renderer-r3f` — all pass.
-

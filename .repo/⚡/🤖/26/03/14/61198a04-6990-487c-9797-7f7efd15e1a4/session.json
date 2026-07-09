@@ -112,9 +112,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅cursor⚙️hooks📌1📌105"
-        ],
+        "ranges": ["🛅cursor⚙️hooks📌1📌105"],
         "second": "🎆26🌙03☀️14⏰23⌚18⏱️54",
         "session": "⚪61198a046990487c97977f7efd15e1a4"
       },
@@ -145,9 +143,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅cursor⚙️hooks📌1📌105"
-        ],
+        "ranges": ["🛅cursor⚙️hooks📌1📌105"],
         "second": "🎆26🌙03☀️14⏰23⌚19⏱️45",
         "session": "⚪61198a046990487c97977f7efd15e1a4"
       },

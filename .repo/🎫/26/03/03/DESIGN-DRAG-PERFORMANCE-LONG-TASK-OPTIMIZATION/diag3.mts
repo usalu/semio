@@ -33,9 +33,12 @@ if (await row.isVisible().catch(() => false)) {
   await row.dblclick();
 } else {
   const rows = page.locator("tr[data-row-id]");
-  for (let i = 0; i < await rows.count(); i++) {
+  for (let i = 0; i < (await rows.count()); i++) {
     const rid = await rows.nth(i).getAttribute("data-row-id");
-    if (rid && rid.includes("f042c2a4")) { await rows.nth(i).dblclick(); break; }
+    if (rid && rid.includes("f042c2a4")) {
+      await rows.nth(i).dblclick();
+      break;
+    }
   }
 }
 await page.waitForTimeout(2000);
@@ -53,11 +56,16 @@ await page.waitForTimeout(3000);
 const patched = await page.evaluate(() => (window as any).__COMPOSE_ZUSTAND_PATCHED__);
 console.log(`Zustand patched: ${patched}`);
 
-await page.evaluate(() => { (window as any).__COMPOSE_PERFORMANCE__.longTasks = []; });
+await page.evaluate(() => {
+  (window as any).__COMPOSE_PERFORMANCE__.longTasks = [];
+});
 
 const pane = page.locator("#diagram .react-flow__pane").first();
 const box = await pane.boundingBox();
-if (!box) { console.log("No pane box"); process.exit(1); }
+if (!box) {
+  console.log("No pane box");
+  process.exit(1);
+}
 
 console.log("Zooming in...");
 await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -78,15 +86,19 @@ await page.waitForTimeout(500);
 const afterZoomOutTasks = await page.evaluate(() => {
   const s = (window as any).__COMPOSE_PERFORMANCE__;
   return s.longTasks.map((t: any) => t.duration);
-
 });
 console.log(`After zoom out: ${afterZoomOutTasks.length} long tasks, max ${afterZoomOutTasks.length ? Math.max(...afterZoomOutTasks).toFixed(0) : 0}ms`);
 
-await page.evaluate(() => { (window as any).__COMPOSE_PERFORMANCE__.longTasks = []; });
+await page.evaluate(() => {
+  (window as any).__COMPOSE_PERFORMANCE__.longTasks = [];
+});
 
 const firstNode = page.locator("#diagram .react-flow__node").first();
 const nb = await firstNode.boundingBox();
-if (!nb) { console.log("No node box"); process.exit(1); }
+if (!nb) {
+  console.log("No node box");
+  process.exit(1);
+}
 const sx = nb.x + nb.width / 2;
 const sy = nb.y + nb.height / 2;
 

@@ -2,24 +2,24 @@
 name: Trinity Rewrite 6-Window Playground
 overview: Replace trinity rewrite's single ad-hoc graph+JSON window with six dedicated windows (LHS, RHS, Jack, Parameters, Before, After), backed by a real parametric-rewrite engine feature (RHS-declared parameters substituted into SET values) so the Parameters form actually drives the generated Jack query and the After graph preview.
 todos:
-  - id: engine-params
-    content: Add ParameterSpec/ParameterKind + Rhs.parameters, refactor apply_rule into pure build_rule_query, add bindings param, new rule_query_json + wasm export, update/add cargo tests
-    status: completed
-  - id: wasm-rebuild
-    content: Rebuild trinity_rewrite wasm package
-    status: completed
-  - id: trinity-react-bridge
-    content: Update applyRewriteOnFixture signature, add ruleQueryOnFixture helper and RuleParameter TS types
-    status: completed
-  - id: controller-rework
-    content: "Rework TrinityRewritePlayController: split lhs/rhs/parameter state, derived jack/after getters, subscribeSnapshot, 6 window kinds, new layout, drop old engagement"
-    status: completed
-  - id: renderer-hosts
-    content: Add 6 surface hosts (lhs/rhs writer, jack writer, parameters forms, before/after trinity canvases), fix side-panel controller ref bug, register all surfaces
-    status: completed
-  - id: tests-verify
-    content: Update inline vitest suites, run cargo+vitest, boot dev:trinity:rewrite and manually verify all 6 panes and live reactivity
-    status: completed
+ - id: engine-params
+   content: Add ParameterSpec/ParameterKind + Rhs.parameters, refactor apply_rule into pure build_rule_query, add bindings param, new rule_query_json + wasm export, update/add cargo tests
+   status: completed
+ - id: wasm-rebuild
+   content: Rebuild trinity_rewrite wasm package
+   status: completed
+ - id: trinity-react-bridge
+   content: Update applyRewriteOnFixture signature, add ruleQueryOnFixture helper and RuleParameter TS types
+   status: completed
+ - id: controller-rework
+   content: "Rework TrinityRewritePlayController: split lhs/rhs/parameter state, derived jack/after getters, subscribeSnapshot, 6 window kinds, new layout, drop old engagement"
+   status: completed
+ - id: renderer-hosts
+   content: Add 6 surface hosts (lhs/rhs writer, jack writer, parameters forms, before/after trinity canvases), fix side-panel controller ref bug, register all surfaces
+   status: completed
+ - id: tests-verify
+   content: Update inline vitest suites, run cargo+vitest, boot dev:trinity:rewrite and manually verify all 6 panes and live reactivity
+   status: completed
 isProject: false
 ---
 
@@ -27,7 +27,7 @@ isProject: false
 
 ## Current state (confirmed by reading the code)
 
-`trinity/rewrite/play/index.ts` today has exactly **one** window (`trinity-rewrite-main`, a `TrinityCanvas`) plus a floating `WindowEngagement` textbox holding the *entire* rule as one JSON blob. `apply_rule` in `trinity/rewrite/engine/lib.rs` mutates the graph in place — there is no LHS/RHS split, no parameters, and no before/after comparison. The side panels (document/catalogue/inspector) are also wired to `trinityJackControllerRef` instead of the rewrite controller — a pre-existing bug.
+`trinity/rewrite/play/index.ts` today has exactly **one** window (`trinity-rewrite-main`, a `TrinityCanvas`) plus a floating `WindowEngagement` textbox holding the _entire_ rule as one JSON blob. `apply_rule` in `trinity/rewrite/engine/lib.rs` mutates the graph in place — there is no LHS/RHS split, no parameters, and no before/after comparison. The side panels (document/catalogue/inspector) are also wired to `trinityJackControllerRef` instead of the rewrite controller — a pre-existing bug.
 
 Reference pattern: `trinity/jack/play/index.ts` already shows the established 3-window convention (`buildTrinityWindowBody` / `buildWriterWindowBody` / `buildTableWindowBody` + `registerWindowBody` + nested `WindowLayout` row/column/stack). `forms/play/index.ts` shows the `buildFormsWindowBody(..., "preview")` + `FormRenderer` pattern for a live, fillable form — exactly what "previewed form for parameters" means.
 
@@ -52,8 +52,6 @@ flowchart TB
     BEFORE --> AFTER
 ```
 
-
-
 LHS constructs `MATCH`, RHS derives `CREATE`/`DELETE`/`SET`/`MERGE` (per `trinity/rewrite/AGENTS.md`). Parameters is a live `FormRenderer` preview of values declared by RHS. Jack shows the literal generated query (placeholders resolved). Before is the editable source graph (today's single canvas). After is a non-mutating computed preview of Before with the rule applied — recomputed automatically whenever LHS/RHS/Parameters/Before change (no manual "Apply" step needed).
 
 ## Engine: real parameters (root fix, not a TS hack)
@@ -63,7 +61,7 @@ LHS constructs `MATCH`, RHS derives `CREATE`/`DELETE`/`SET`/`MERGE` (per `trinit
 - Add `ParameterKind { String, Number, Boolean }` and `ParameterSpec { name, kind, default: PropertyValue }`.
 - Add `parameters: Vec<ParameterSpec>` (serde default) to `Rhs` — parameters are declared where they're consumed (mutations), matching AGENTS.md wording exactly.
 - Any `AssignmentJson.value` that is `PropertyValue::String(s)` starting with `$` is a parameter reference (e.g. `"$label"`), resolved through a `bindings: &HashMap<String, PropertyValue>` map, falling back to the parameter's `default`.
-- Extract pure `build_rule_query(rule: &Rule, bindings: &HashMap<String, PropertyValue>) -> String` (the query-string assembly, unchanged logic) out of `apply_rule`, so it can be called *without* a graph — needed to show live query text in the Jack window.
+- Extract pure `build_rule_query(rule: &Rule, bindings: &HashMap<String, PropertyValue>) -> String` (the query-string assembly, unchanged logic) out of `apply_rule`, so it can be called _without_ a graph — needed to show live query text in the Jack window.
 - `apply_rule(graph, rule, bindings)` and `apply_rule_json(graph, rule_json, bindings_json)` gain the `bindings` parameter.
 - New pure `rule_query_json(rule_json, bindings_json) -> Result<String, String>` (`{ query: String }`), no graph required.
 - `TrinityHost::apply_rewrite_json(&mut self, rule_json, bindings_json)` updated signature.
@@ -111,4 +109,3 @@ In the `TrinityPlayHost` region:
 - `bun nx run @semio-tech/trinity-rewrite-play:test` (vitest) and the renderer package's vitest.
 - Boot `dev:trinity:rewrite` (launch config `🛠️dev🔺trinity♻️rewrite`, port 6056) and confirm all 6 panes render, editing the RHS parameter's default in the Parameters form updates Jack text and the After graph live while Before stays static.
 - Work happens under a new ticket (`ticket_open`) per repo workflow; no `launch.json` changes needed since the dev entry already exists.
-

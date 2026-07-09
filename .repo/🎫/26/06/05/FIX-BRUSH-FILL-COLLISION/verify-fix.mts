@@ -50,7 +50,8 @@ const boxes = applied.objects.map((obj) => {
   const probe = brushProbeGroupFromPreview({ origin: obj.origin, orientation: obj.orientation, scale: obj.scale }, root);
   return brushPreviewCollisionBox(probe, 0);
 });
-for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
-  if (boxesPenetrationExceeds(boxes[i]!, boxes[j]!, 0, brushCollisionContactEpsilon(0))) pairs++;
-}
+for (let i = 0; i < boxes.length; i++)
+  for (let j = i + 1; j < boxes.length; j++) {
+    if (boxesPenetrationExceeds(boxes[i]!, boxes[j]!, 0, brushCollisionContactEpsilon(0))) pairs++;
+  }
 console.log("[DEBUG] real fill pairs at tol=0:", pairs);

@@ -6,12 +6,7 @@
   "key": "o",
   "interaction": {
     "spatialGroundPick": false,
-    "pickDisabledStates": [
-      "idle",
-      "selectSurface",
-      "setDistance",
-      "committed"
-    ],
+    "pickDisabledStates": ["idle", "selectSurface", "setDistance", "committed"],
     "groundPointerMoveStates": [],
     "heightDragStates": [],
     "verticalRodStates": [],
@@ -19,11 +14,7 @@
   },
   "requires": {
     "kernel": {
-      "operations": [
-        "face.resolveIds",
-        "face.offset",
-        "entity.tessellate"
-      ]
+      "operations": ["face.resolveIds", "face.offset", "entity.tessellate"]
     }
   },
   "guards": [
@@ -84,9 +75,7 @@
       {
         "name": "selectSurface",
         "selection": {
-          "accept": [
-            "face"
-          ],
+          "accept": ["face"],
           "multiple": false,
           "prompt": "Pick face"
         },
@@ -271,10 +260,7 @@
   },
   "commit": {
     "when": "hasSurfaceAndDistance",
-    "fromStates": [
-      "setDistance",
-      "committed"
-    ],
+    "fromStates": ["setDistance", "committed"],
     "operation": {
       "kind": "action",
       "action": "feature.offsetFaces",

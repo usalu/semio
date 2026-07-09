@@ -3,6 +3,7 @@
 Ticket work: elements board play page, UI shell, fixture DnD, `setSelectionIds`, dev command.
 
 ## Files
+
 - `elements/client/lib/board/js/index.ts` — fixture types/parser, `fixtureDrop` event, drag MIME + codec, `setSelectionIds`
 - `elements/client/lib/board/react/index.tsx` — `BoardCanvas` file drop + ring affordance
 - `elements/client/lib/board/play/*` — Vite play app, triptych layout, Nakagin fixture

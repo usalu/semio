@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 User reported that pressing the panel toggle (left and right panel group) in the apps doesn't work.
@@ -55,6 +56,7 @@ The test documents the known issue with store initialization and doesn't assert 
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix panel toggle signature mismatch and investigate store issue

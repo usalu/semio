@@ -5,7 +5,5 @@
   "description": "Clean OWNS tree so only Module{name:Schema} has no incoming OWNS among module roots; remove duplicate domain-module vs class ownership of Module(operation); retype Module(operation)-Command to HAS; enforce OWNS shape (Module→Module only; Class→Class|Command|Data|Derived|Reference|Method; Command→Data only with optional Method exception documented); add apoc.util.validate checks at end of migrations.",
   "summary": "Reparented domain operation commands under the domain `Module` folder (`Module`→`OWNS`→`Module(operation)`→`HAS`→`Command`), removed kit `Class`/`Interface` `OWNS` to `Module(operation)`, retyped all `Module`→`Command` containment from `OWNS` to `HAS`, merged duplicate `Module(operation)` rows per folder, and anchored `Workspace` under `Domain` with a single incoming `OWNS`. Extended legacy `HAS`→`OWNS` relabel exclusions and `PART_OF`→`HAS` sweep to include `Command`. Added `AssertOwnsContainmentShape` (APOC) for module roots, module/class/interface/command `OWNS` target kinds, and documented rules in `compose/dev/schema/neo4j/schema.graphql`. Updated `migrate:neo4j` script path in `package.json` and flipped the post-migrate probe to expect non-zero structural `HAS` edges.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪9fa11f31ef1a42fd8814c7d7e10fdb42"
-  ]
+  "sessions": ["⚪9fa11f31ef1a42fd8814c7d7e10fdb42"]
 }

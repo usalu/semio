@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 - [x] Identify root cause of VS Code browser attach failure.
 - [x] Replace browser-attach launch profiles with attach-free dev launch profiles.
 - [x] Keep one-click URL open from Run and Debug.
@@ -8,6 +9,7 @@
 - [x] Validate launch target and URL patterns.
 
 ## Changes
+
 - Converted app browser-launch configs in `.vscode/launch.json` to attach-free Node launches:
   - `@semio-tech/compose-js dev`
   - `@semio-tech/compose-js dev:storybook`
@@ -21,6 +23,7 @@
 - Added ticket plans in `plan_1.md`, `plan_2.md`, and `plan_3.md`.
 
 ## Log
+
 - Reopened ticket after repeated `Unable to attach browser` reports.
 - Removed browser debugger launch dependency from affected dev profiles.
 - Replaced with Node launches and server-ready URL opening.

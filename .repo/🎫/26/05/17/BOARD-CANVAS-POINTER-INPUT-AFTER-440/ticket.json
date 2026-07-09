@@ -5,7 +5,5 @@
   "description": "Board play canvas accepts no interaction (pan/zoom/select). Last known good commit 440 (141c14850). Fix root cause without repo search tool; validate ContextMenuController document listeners and board event surface.",
   "summary": "Board canvas was unresponsive because ContextMenuController registered a document pointerdown listener in the capture phase, which ran before the board eventSurface bubble handlers. Kept the fixed-viewport portal menu (exact clientX/clientY for Playwright) but: (1) only attach dismiss listeners when open, items.length, and position are all set; (2) use bubble-phase pointerdown/keydown on document so the board receives pointer events first; (3) restore renderFixedContextMenuItems for the portal surface.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪ab4291fddfda4638b9b3d140545b3b55"
-  ]
+  "sessions": ["⚪ab4291fddfda4638b9b3d140545b3b55"]
 }

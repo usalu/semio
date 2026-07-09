@@ -53,9 +53,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅vscode⚙️launch📌1📌633"
-        ],
+        "ranges": ["🛅vscode⚙️launch📌1📌633"],
         "second": "🎆26🌙03☀️12⏰18⌚31⏱️01",
         "session": "⚪8caf360099fc45508008c832ae45cc19"
       },
@@ -86,9 +84,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅vscode⚙️launch📌1📌633"
-        ],
+        "ranges": ["🛅vscode⚙️launch📌1📌633"],
         "second": "🎆26🌙03☀️12⏰18⌚31⏱️22",
         "session": "⚪8caf360099fc45508008c832ae45cc19"
       },
@@ -219,9 +215,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🔬coda🖱️desktop⚙️package📌1📌50"
-        ],
+        "ranges": ["🔬coda🖱️desktop⚙️package📌1📌50"],
         "second": "🎆26🌙03☀️12⏰18⌚32⏱️49",
         "session": "⚪8caf360099fc45508008c832ae45cc19"
       },
@@ -252,9 +246,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🔬coda🖱️desktop⚙️package📌1📌50"
-        ],
+        "ranges": ["🔬coda🖱️desktop⚙️package📌1📌50"],
         "second": "🎆26🌙03☀️12⏰18⌚33⏱️00",
         "session": "⚪8caf360099fc45508008c832ae45cc19"
       },
@@ -285,9 +277,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "⚙️nx📌1📌50"
-        ],
+        "ranges": ["⚙️nx📌1📌50"],
         "second": "🎆26🌙03☀️12⏰18⌚33⏱️24",
         "session": "⚪8caf360099fc45508008c832ae45cc19"
       },
@@ -318,9 +308,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "⚙️nx📌1📌50"
-        ],
+        "ranges": ["⚙️nx📌1📌50"],
         "second": "🎆26🌙03☀️12⏰18⌚33⏱️38",
         "session": "⚪8caf360099fc45508008c832ae45cc19"
       },

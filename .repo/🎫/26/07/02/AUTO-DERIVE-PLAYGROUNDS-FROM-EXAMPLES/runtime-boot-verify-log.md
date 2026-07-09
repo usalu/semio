@@ -6,10 +6,10 @@ Date: 2026-07-02
 
 Command: load each playground app, `createPlayground().createRuntime()`.
 
-| Result | Count |
-|--------|-------|
-| OK | 22 |
-| FAIL (WASM in Node only) | 2 |
+| Result                   | Count |
+| ------------------------ | ----- |
+| OK                       | 22    |
+| FAIL (WASM in Node only) | 2     |
 
 ### Failures (expected in Node)
 

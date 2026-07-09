@@ -100,11 +100,7 @@
             "max_results": 3
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__search",
-              "mcp__repo__ticket_open",
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__search", "mcp__repo__ticket_open", "mcp__repo__ticket_close"],
             "query": "select:mcp__repo__search,mcp__repo__ticket_open,mcp__repo__ticket_close",
             "total_deferred_tools": 96
           },
@@ -1406,10 +1402,7 @@
           },
           "tool_response": {
             "mode": "files_with_matches",
-            "filenames": [
-              "elements/ui/eslint.config.ts",
-              "elements/ui/vitest.config.ts"
-            ],
+            "filenames": ["elements/ui/eslint.config.ts", "elements/ui/vitest.config.ts"],
             "numFiles": 2
           },
           "tool_use_id": "toolu_011RbuRJgCvGtx96TYffa8gD"
@@ -1853,11 +1846,7 @@
             "max_results": 3
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_open",
-              "mcp__repo__ticket_close",
-              "TodoWrite"
-            ],
+            "matches": ["mcp__repo__ticket_open", "mcp__repo__ticket_close", "TodoWrite"],
             "query": "select:mcp__repo__ticket_open,mcp__repo__ticket_close,TodoWrite",
             "total_deferred_tools": 96
           },

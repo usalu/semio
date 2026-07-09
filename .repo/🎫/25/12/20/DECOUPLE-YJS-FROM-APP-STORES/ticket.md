@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 All app stores (Design, Type, Quality, Docs, Home, Feedback) were entangled with yjs through:
@@ -36,6 +37,7 @@ Only Kit store (`KitStore` in Kit.tsx) retains Y.js for state persistence via th
 ## Log
 
 ## Summary
+
 # Summary
 
 Decoupled yjs from all app stores except Kit. Only KitStore uses yjs for state persistence. Design, Type, Quality, Docs, Home, and Feedback apps use PlainAppStore/PlainKitDiffAppStore.

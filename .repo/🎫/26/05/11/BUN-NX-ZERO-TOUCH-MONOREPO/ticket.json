@@ -5,7 +5,5 @@
   "description": "Implement Bun as sole package manager, Nx-only script entrypoints, polyglot setup targets, devcontainer+CI.",
   "summary": "Bun+Nx monorepo migration delivered; NX_WORKSPACE_DATA_DIRECTORY split for CLI vs IDE; Utility.DeserializeKit normalizes workspace kit JSON (wip.initialKit, hash/items buckets, updatedAt); StoreKitIO and tests use DeserializeKit; repo CLI built from repo/mcp. Full Compose.Tests still blocked by missing compose-store and asset/test drift (see VERIFICATION.md).",
   "goal": "🎯aioptimizedrepo",
-  "sessions": [
-    "⚪49f30613c80f4d8baab22f994f69ae1c"
-  ]
+  "sessions": ["⚪49f30613c80f4d8baab22f994f69ae1c"]
 }

@@ -9,11 +9,7 @@ class DevMcpScript extends BundleScript {
   run(): void {
     const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
     execSync("bunx vite build --config compose/client/bin/engine/vite.mcp-app.config.ts", { cwd: this.repoRoot, stdio: "inherit", shell: true });
-    const child = spawn(
-      "npx",
-      ["--yes", "@mcpjam/inspector@latest", "uv", "--directory", this.root, "run", "main.py", "--mcp-stdio"],
-      { stdio: "inherit", shell: true, env: { ...process.env, HOST: host }, cwd: this.repoRoot },
-    );
+    const child = spawn("npx", ["--yes", "@mcpjam/inspector@latest", "uv", "--directory", this.root, "run", "main.py", "--mcp-stdio"], { stdio: "inherit", shell: true, env: { ...process.env, HOST: host }, cwd: this.repoRoot });
     child.on("exit", (c) => process.exit(c ?? 0));
   }
 }
@@ -107,25 +103,11 @@ class TestScript extends BundleScript {
     };
     const disallowed = "leg" + "acy";
     assertSchema(!graphqlSchema.includes(disallowed), "semio GraphQL schema MUST NOT add compatibility-only field names in identifiers or generated descriptions");
-    for (const definition of [
-      "type Graph",
-      "type Kit",
-      "type Query",
-      "type Mutation",
-      "type Subscription",
-      "type Type",
-      "type Design",
-      "type Piece",
-      "type Connection",
-      "input KitReadPointInput",
-    ]) {
+    for (const definition of ["type Graph", "type Kit", "type Query", "type Mutation", "type Subscription", "type Type", "type Design", "type Piece", "type Connection", "input KitReadPointInput"]) {
       definitionBody(definition);
     }
     const graphBody = definitionBody("type Graph");
-    assertSchema(
-      graphBody.includes("theKit(at: KitReadPointInput): Kit") && !graphBody.includes("kitReadScope"),
-      "Graph MUST expose theKit(at:) materialized reads gated by KitReadPointInput",
-    );
+    assertSchema(graphBody.includes("theKit(at: KitReadPointInput): Kit") && !graphBody.includes("kitReadScope"), "Graph MUST expose theKit(at:) materialized reads gated by KitReadPointInput");
     const kitReadPointBody = definitionBody("input KitReadPointInput");
     for (const field of ["theKit:", "checkpointId:", "checkpointChangeId:", "checkpointOperationId:", "alternativeId:", "draftAlternativeId:", "draftId:", "draftChangeId:", "draftTransactionId:", "draftOperationId:"]) {
       assertSchema(kitReadPointBody.includes(field), `KitReadPointInput MUST expose ${field}`);
@@ -134,15 +116,12 @@ class TestScript extends BundleScript {
     assertSchema(mutationBody.includes("renameKit("), "Mutation MUST expose renameKit");
     assertSchema(mutationBody.includes("addFixedPieceToDesign(") && mutationBody.includes("dragPieceInDesign("), "Mutation MUST expose flat draft/transaction-scoped kit mutators");
     const subscriptionBody = definitionBody("type Subscription");
-    assertSchema(
-      subscriptionBody.includes("commandSucceeded: Command!") && subscriptionBody.includes("operationSucceeded: OperationKind!"),
-      "Subscription MUST expose Rust command/operation streams",
-    );
-    execFileSync(
-      pythonCommand,
-      ["-c", "from pathlib import Path; from ariadne import gql, make_executable_schema; s=Path('../graphql/schema.graphql').read_text(encoding='utf-8'); make_executable_schema(gql(s))"],
-      { cwd: this.root, env, stdio: "inherit" },
-    );
+    assertSchema(subscriptionBody.includes("commandSucceeded: Command!") && subscriptionBody.includes("operationSucceeded: OperationKind!"), "Subscription MUST expose Rust command/operation streams");
+    execFileSync(pythonCommand, ["-c", "from pathlib import Path; from ariadne import gql, make_executable_schema; s=Path('../graphql/schema.graphql').read_text(encoding='utf-8'); make_executable_schema(gql(s))"], {
+      cwd: this.root,
+      env,
+      stdio: "inherit",
+    });
     const openapiSchema = JSON.parse(readFileSync(join(this.root, "..", "openapi", "schema.json"), "utf8"));
     assertSchema(Boolean(openapiSchema.paths?.["/api/graphql"]?.post), "semio OpenAPI schema MUST expose the GraphQL store endpoint");
     assertSchema(Boolean(openapiSchema.components?.schemas?.GraphqlStoreRequest), "semio OpenAPI schema MUST define GraphqlStoreRequest");
@@ -152,9 +131,6 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir)
-  .register("dev", DevScript)
-  .register("build", BuildScript)
-  .register("test", TestScript);
+const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url);

@@ -2,33 +2,33 @@
 name: Derived reference properties
 overview: "Add computed derived-reference properties to the compose kit graph (Rust source of truth + golden GraphQL schema + JS wrapper): Type→files, and Design→types/design/files with both direct (one-hop over pieces) and transitive (recursive through nested Design blueprints) variants, plus implementing the existing referencedBy inverse."
 todos:
-  - id: ticket
-    content: Read repo://goals and open a repo MCP ticket for derived reference computed properties
-    status: completed
-  - id: rs-type-files
-    content: Add Type.files resolver (distinct files across representations) in lib.rs
-    status: completed
-  - id: rs-design-direct
-    content: Add Design.types/design/files direct resolvers + dedup helpers; remove references stub
-    status: completed
-  - id: rs-design-transitive
-    content: Add Design.allTypes/allDesigns/allFiles transitive resolvers with cycle guard
-    status: completed
-  - id: rs-referencedby
-    content: Implement Design.referencedBy inverse over owner kit pieces
-    status: completed
-  - id: golden-schema
-    content: Update golden + companion GraphQL SDL with new computed fields
-    status: completed
-  - id: js-wrapper
-    content: Add Type/Design facade accessors and field specs in js/index.ts
-    status: completed
-  - id: tests
-    content: Extend Rust mod tests and JS embedded tests; run rust + vitest and confirm pass
-    status: completed
-  - id: close
-    content: Remove debug logs and close the ticket with summary
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open a repo MCP ticket for derived reference computed properties
+   status: completed
+ - id: rs-type-files
+   content: Add Type.files resolver (distinct files across representations) in lib.rs
+   status: completed
+ - id: rs-design-direct
+   content: Add Design.types/design/files direct resolvers + dedup helpers; remove references stub
+   status: completed
+ - id: rs-design-transitive
+   content: Add Design.allTypes/allDesigns/allFiles transitive resolvers with cycle guard
+   status: completed
+ - id: rs-referencedby
+   content: Implement Design.referencedBy inverse over owner kit pieces
+   status: completed
+ - id: golden-schema
+   content: Update golden + companion GraphQL SDL with new computed fields
+   status: completed
+ - id: js-wrapper
+   content: Add Type/Design facade accessors and field specs in js/index.ts
+   status: completed
+ - id: tests
+   content: Extend Rust mod tests and JS embedded tests; run rust + vitest and confirm pass
+   status: completed
+ - id: close
+   content: Remove debug logs and close the ticket with summary
+   status: completed
 isProject: false
 ---
 
@@ -87,8 +87,6 @@ flowchart TD
   Designs -->|recurse| Files
 ```
 
-
-
 ## Implementation
 
 ### 1. Rust resolvers + helpers ([compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs))
@@ -121,5 +119,4 @@ flowchart TD
 
 ## Process (repo rules)
 
-- Before editing: read `repo://goals` and open a ticket via the repo MCP (`ticket_open`) for this work; keep any temp/log files inside the ticket folder. Add `[DEBUG]`  prefixed logs only if needed to confirm runtime behavior, then remove. Close the ticket (`ticket_close`) with a summary and file list when done.
-
+- Before editing: read `repo://goals` and open a ticket via the repo MCP (`ticket_open`) for this work; keep any temp/log files inside the ticket folder. Add `[DEBUG]` prefixed logs only if needed to confirm runtime behavior, then remove. Close the ticket (`ticket_close`) with a summary and file list when done.

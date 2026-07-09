@@ -2,36 +2,36 @@
 name: Flow Channel Cardinality
 overview: Add a mandatory cardinality (! ? * + or exact digit) to every flow channel, render it in front of the port label, treat collection cardinalities as homogeneous lists, and enforce list homogeneity at runtime evaluation.
 todos:
-  - id: ticket
-    content: Read repo://goals and open a ticket under the appropriate flow goal
-    status: completed
-  - id: cardinality-enum
-    content: Add Cardinality enum (symbol serde, is_collection, accepts, count_range) and ChannelSpec.cardinality field + builder in neural/engine/lib.rs
-    status: completed
-  - id: runtime-enforce
-    content: Enforce cardinality + list homogeneity in collect_neuron_input/evaluate with new EvalError variants
-    status: completed
-  - id: ioport
-    content: Add IoPortSpec.cardinality + label_with_cardinality, prefix overlay rows and layout widths in dag/lib.rs
-    status: completed
-  - id: bridge
-    content: Copy cardinality symbol into IoPortSpec in flow/core/lib.rs bridge functions
-    status: completed
-  - id: ts
-    content: Add cardinality to FlowChannelSpec and cardinality-aware logic in flowChannelCompatible
-    status: completed
-  - id: modules
-    content: Assign collection cardinalities to list-carrying channels across all flow/module/*/lib.rs
-    status: completed
-  - id: fixtures
-    content: Hand-update committed dag/flow fixtures to include cardinality
-    status: completed
-  - id: tests
-    content: Extend existing neural/dag/list/flow-react test regions for cardinality + homogeneity
-    status: completed
-  - id: close
-    content: Validate builds/tests, then ticket_close with summary and touched files
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open a ticket under the appropriate flow goal
+   status: completed
+ - id: cardinality-enum
+   content: Add Cardinality enum (symbol serde, is_collection, accepts, count_range) and ChannelSpec.cardinality field + builder in neural/engine/lib.rs
+   status: completed
+ - id: runtime-enforce
+   content: Enforce cardinality + list homogeneity in collect_neuron_input/evaluate with new EvalError variants
+   status: completed
+ - id: ioport
+   content: Add IoPortSpec.cardinality + label_with_cardinality, prefix overlay rows and layout widths in dag/lib.rs
+   status: completed
+ - id: bridge
+   content: Copy cardinality symbol into IoPortSpec in flow/core/lib.rs bridge functions
+   status: completed
+ - id: ts
+   content: Add cardinality to FlowChannelSpec and cardinality-aware logic in flowChannelCompatible
+   status: completed
+ - id: modules
+   content: Assign collection cardinalities to list-carrying channels across all flow/module/*/lib.rs
+   status: completed
+ - id: fixtures
+   content: Hand-update committed dag/flow fixtures to include cardinality
+   status: completed
+ - id: tests
+   content: Extend existing neural/dag/list/flow-react test regions for cardinality + homogeneity
+   status: completed
+ - id: close
+   content: Validate builds/tests, then ticket_close with summary and touched files
+   status: completed
 isProject: false
 ---
 
@@ -105,6 +105,3 @@ flowchart LR
   Manifest --> TS["FlowChannelSpec + flowChannelCompatible"]
   ChannelSpec --> Runtime["collect_neuron_input: enforce count + homogeneous list"]
 ```
-
-
-

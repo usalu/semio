@@ -2,30 +2,30 @@
 name: Flow Double-Click Add
 overview: Add a double-click "spotlight" on the flow canvas to search functions, preview the candidate as a highlighted ghost node painted on the canvas, and insert the top/hovered suggestion on Enter or click, with a chevron to expand the full list.
 todos:
-  - id: ticket
-    content: Read repo://goals and open a repo ticket for the flow double-click add-node feature
-    status: completed
-  - id: dag-ghost-paint
-    content: Add DagHost::paint_ghost_node in mathematical/graph/port/directed/dag/lib.rs (accent rect + name, LOD-independent)
-    status: completed
-  - id: flow-ghost-host
-    content: Add ghost_node state + widget_from_descriptor + set/clear_ghost_widget to FlowHost; paint ghost in paint_scene
-    status: completed
-  - id: flow-wasm-bindings
-    content: Expose setGhostWidget/clearGhostWidget on FlowSession and rebuild @semio-tech/flow-core wasm pkg
-    status: completed
-  - id: rank-helper
-    content: Add pure flowRankCatalogueSuggestions in flow/react Catalogue region
-    status: completed
-  - id: spotlight-ui
-    content: Add double-click handler + FlowSpotlight overlay (search, chevron expand, hover/arrow preview, Enter/click insert, Esc close) in FlowCanvas
-    status: completed
-  - id: tests
-    content: Extend flow/core Rust tests and flow/react vitest for ghost widget and suggestion ranking
-    status: completed
-  - id: verify
-    content: Run flow core Rust tests + flow react vitest; close ticket with summary
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open a repo ticket for the flow double-click add-node feature
+   status: completed
+ - id: dag-ghost-paint
+   content: Add DagHost::paint_ghost_node in mathematical/graph/port/directed/dag/lib.rs (accent rect + name, LOD-independent)
+   status: completed
+ - id: flow-ghost-host
+   content: Add ghost_node state + widget_from_descriptor + set/clear_ghost_widget to FlowHost; paint ghost in paint_scene
+   status: completed
+ - id: flow-wasm-bindings
+   content: Expose setGhostWidget/clearGhostWidget on FlowSession and rebuild @semio-tech/flow-core wasm pkg
+   status: completed
+ - id: rank-helper
+   content: Add pure flowRankCatalogueSuggestions in flow/react Catalogue region
+   status: completed
+ - id: spotlight-ui
+   content: Add double-click handler + FlowSpotlight overlay (search, chevron expand, hover/arrow preview, Enter/click insert, Esc close) in FlowCanvas
+   status: completed
+ - id: tests
+   content: Extend flow/core Rust tests and flow/react vitest for ghost widget and suggestion ranking
+   status: completed
+ - id: verify
+   content: Run flow core Rust tests + flow react vitest; close ticket with summary
+   status: completed
 isProject: false
 ---
 
@@ -48,8 +48,6 @@ flowchart LR
   enter --> add["addWidget(descriptor, world) + evaluate + persist"]
   add --> close["clearGhostWidget + close"]
 ```
-
-
 
 ## Where it lives
 
@@ -112,4 +110,3 @@ Per repo rules, before editing: read `repo://goals`, then `ticket_open` a new ti
 - Double-click anywhere on the canvas opens the spotlight; the node is placed at the cursor world point (mirrors drag-drop). No auto-connect.
 - Highlight color = theme `wire_stroke_highlighted` at reduced fill alpha.
 - Top match is auto-active so Enter immediately adds it.
-

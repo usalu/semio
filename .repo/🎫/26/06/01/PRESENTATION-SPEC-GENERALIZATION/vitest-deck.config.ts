@@ -7,16 +7,16 @@ const repoRoot = resolve(ticketRoot, "../../../../../../");
 const deckRoot = resolve(repoRoot, "mit-bestand/präsentation/33.projektetage");
 
 export default defineConfig({
-	root: deckRoot,
-	resolve: {
-		alias: {
-			"@semio-tech/framework-presentation-core": resolve(repoRoot, "framework/product/presentation/core/index.ts"),
-			"@semio-tech/framework-presentation-renderer-react": resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx"),
-		},
-	},
-	test: {
-		environment: "node",
-		include: ["index.ts"],
-		passWithNoTests: false,
-	},
+  root: deckRoot,
+  resolve: {
+    alias: {
+      "@semio-tech/framework-presentation-core": resolve(repoRoot, "framework/product/presentation/core/index.ts"),
+      "@semio-tech/framework-presentation-renderer-react": resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx"),
+    },
+  },
+  test: {
+    environment: "node",
+    include: ["index.ts"],
+    passWithNoTests: false,
+  },
 });

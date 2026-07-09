@@ -53,12 +53,7 @@ const replacements: [string, string][] = [
   ["elements/client/lib/board/rs", "puzzle/2d/rs"],
 ];
 
-const files = [
-  "puzzle/2d/react/index.tsx",
-  "framework/product/playground/renderer/react/index.tsx",
-  ".storybook/puzzle-2d.spec.ts",
-  ".storybook/playwright.config.ts",
-].map((p) => resolve(repoRoot, p));
+const files = ["puzzle/2d/react/index.tsx", "framework/product/playground/renderer/react/index.tsx", ".storybook/puzzle-2d.spec.ts", ".storybook/playwright.config.ts"].map((p) => resolve(repoRoot, p));
 
 for (const file of files) {
   let text: string;

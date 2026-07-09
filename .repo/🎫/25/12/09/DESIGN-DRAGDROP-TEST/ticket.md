@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The existing Design test verifies:
@@ -49,6 +50,7 @@ No drag and drop functionality was tested previously.
 ## Log
 
 ## Summary
+
 # Summary
 
->-
+> -

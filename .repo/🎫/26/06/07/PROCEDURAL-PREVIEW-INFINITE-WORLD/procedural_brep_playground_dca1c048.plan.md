@@ -2,54 +2,54 @@
 name: Procedural Brep Playground
 overview: Extract the brepjs kernel into a reusable cad-free `@semio-tech/geometry-brep-js` bundle, then build the `@semio-tech/procedural-react` flow-based brep editor (FlowCanvas node graph + brep nodes + R3F preview), and a `@semio-tech/procedural-play` playground mirroring the flow/dag split pattern.
 todos:
-  - id: ticket
-    content: Read repo://goals and open a ticket for the procedural brep playground work
-    status: completed
-  - id: geo-scaffold
-    content: Scaffold @semio-tech/geometry-brep-js bundle (package.json, project.json, script.ts, tsconfig, vitest.config) mirroring cad/js/kernel/brepjs
-    status: completed
-  - id: geo-move-impl
-    content: Move generic brepjs engine/worker/bridge/preview-math/model-free kernel ops + pure STEP I/O into geometry/brep/js
-    status: completed
-  - id: geo-move-contracts
-    content: Move generic brep contracts (kernelGeometry, Vec3/EdgeCurve, MeshTransfer family) + define BrepKernel/BrepPreviewKernel + buildBufferGeometryFromMeshTransfer in geometry/brep/js
-    status: completed
-  - id: cad-slim-core
-    content: "Slim @semio-tech/cad-js-core: import moved contracts from @semio-tech/geometry-brep-js, redefine SpatialKernel extends BrepKernel"
-    status: completed
-  - id: cad-slim-kernel
-    content: Slim @semio-tech/cad-js-kernel-brepjs into a cad SpatialKernel adapter wrapping geometry BrepjsKernel + Model sync + STEP-UDA/typology; fix embedded tests
-    status: completed
-  - id: cad-renderer-imports
-    content: Update @semio-tech/cad-js-renderer + play imports to new geometry/cad locations
-    status: completed
-  - id: geo-wire-config
-    content: "Wire @semio-tech/geometry-brep-js: root workspaces, vite aliases, tsconfig paths, vitest aliases, launch.json; validate cad tests + viewport"
-    status: completed
-  - id: proc-react-scaffold
-    content: Scaffold @semio-tech/procedural-react bundle (index.tsx, script.ts, package.json, project.json, vitest.config)
-    status: completed
-  - id: proc-brep-module
-    content: Implement JS brep flow module (manifest + sync evaluate calling @semio-tech/geometry-brep-js, solids by id) and register with flow extension host
-    status: completed
-  - id: flow-eval-outputs
-    content: Extend flow/react FlowCanvas with onEvalOutputs callback exposing full session.evaluate() outputs
-    status: completed
-  - id: proc-viewport
-    content: Build BrepViewport (infinite/world/r3f + buildBufferGeometryFromMeshTransfer) and ProceduralEditor composing FlowCanvas + viewport; add inlined tests
-    status: completed
-  - id: proc-play-scaffold
-    content: Scaffold @semio-tech/procedural-play (index.html, index.ts, script.ts, package.json, project.json, vite.config, vitest.config, globals.css)
-    status: completed
-  - id: proc-framework-renderer
-    content: Add procedural to PlaygroundRendererPuzzleKind + ProceduralPlaySurfaceHost + bootProceduralPlay in framework renderer
-    status: completed
-  - id: proc-registration
-    content: "Register procedural: ports (6018/6031), root workspaces, dev:procedural script+route, vite-elements aliases, launch.json"
-    status: completed
-  - id: proc-validate
-    content: Validate dev:procedural on 6018 (box->extrude->union renders in viewport), run react+play tests, close ticket
-    status: in_progress
+ - id: ticket
+   content: Read repo://goals and open a ticket for the procedural brep playground work
+   status: completed
+ - id: geo-scaffold
+   content: Scaffold @semio-tech/geometry-brep-js bundle (package.json, project.json, script.ts, tsconfig, vitest.config) mirroring cad/js/kernel/brepjs
+   status: completed
+ - id: geo-move-impl
+   content: Move generic brepjs engine/worker/bridge/preview-math/model-free kernel ops + pure STEP I/O into geometry/brep/js
+   status: completed
+ - id: geo-move-contracts
+   content: Move generic brep contracts (kernelGeometry, Vec3/EdgeCurve, MeshTransfer family) + define BrepKernel/BrepPreviewKernel + buildBufferGeometryFromMeshTransfer in geometry/brep/js
+   status: completed
+ - id: cad-slim-core
+   content: "Slim @semio-tech/cad-js-core: import moved contracts from @semio-tech/geometry-brep-js, redefine SpatialKernel extends BrepKernel"
+   status: completed
+ - id: cad-slim-kernel
+   content: Slim @semio-tech/cad-js-kernel-brepjs into a cad SpatialKernel adapter wrapping geometry BrepjsKernel + Model sync + STEP-UDA/typology; fix embedded tests
+   status: completed
+ - id: cad-renderer-imports
+   content: Update @semio-tech/cad-js-renderer + play imports to new geometry/cad locations
+   status: completed
+ - id: geo-wire-config
+   content: "Wire @semio-tech/geometry-brep-js: root workspaces, vite aliases, tsconfig paths, vitest aliases, launch.json; validate cad tests + viewport"
+   status: completed
+ - id: proc-react-scaffold
+   content: Scaffold @semio-tech/procedural-react bundle (index.tsx, script.ts, package.json, project.json, vitest.config)
+   status: completed
+ - id: proc-brep-module
+   content: Implement JS brep flow module (manifest + sync evaluate calling @semio-tech/geometry-brep-js, solids by id) and register with flow extension host
+   status: completed
+ - id: flow-eval-outputs
+   content: Extend flow/react FlowCanvas with onEvalOutputs callback exposing full session.evaluate() outputs
+   status: completed
+ - id: proc-viewport
+   content: Build BrepViewport (infinite/world/r3f + buildBufferGeometryFromMeshTransfer) and ProceduralEditor composing FlowCanvas + viewport; add inlined tests
+   status: completed
+ - id: proc-play-scaffold
+   content: Scaffold @semio-tech/procedural-play (index.html, index.ts, script.ts, package.json, project.json, vite.config, vitest.config, globals.css)
+   status: completed
+ - id: proc-framework-renderer
+   content: Add procedural to PlaygroundRendererPuzzleKind + ProceduralPlaySurfaceHost + bootProceduralPlay in framework renderer
+   status: completed
+ - id: proc-registration
+   content: "Register procedural: ports (6018/6031), root workspaces, dev:procedural script+route, vite-elements aliases, launch.json"
+   status: completed
+ - id: proc-validate
+   content: Validate dev:procedural on 6018 (box->extrude->union renders in viewport), run react+play tests, close ticket
+   status: in_progress
 isProject: false
 ---
 

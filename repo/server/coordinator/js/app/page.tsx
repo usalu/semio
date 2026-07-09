@@ -11,8 +11,12 @@ export default function DashboardPage() {
       <p>Monorepo management server</p>
       <nav>
         <ul>
-          <li><a href="/dashboard">Dashboard</a></li>
-          <li><a href="/admin/developers">Admin: Developers</a></li>
+          <li>
+            <a href="/dashboard">Dashboard</a>
+          </li>
+          <li>
+            <a href="/admin/developers">Admin: Developers</a>
+          </li>
         </ul>
       </nav>
     </main>

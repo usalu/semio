@@ -1,8 +1,8 @@
 ---
 name: micro-commit
 description: >-
-  Instant WIP micro-commit. Triggers g, go, c, commit, +1, bump — execute immediately, no reasoning.
-  Default level from micro-commit.json (prepare-only). Reply with commit message only in one ``` fence; preserve every newline from stdout.
+ Instant WIP micro-commit. Triggers g, go, c, commit, +1, bump — execute immediately, no reasoning.
+ Default level from micro-commit.json (prepare-only). Reply with commit message only in one ``` fence; preserve every newline from stdout.
 ---
 
 # Micro Commit
@@ -45,10 +45,10 @@ EOF
 
 ## Your reply
 
-| Result | Reply |
-|--------|-------|
+| Result           | Reply                                                                                                                                                                                                                                                    |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `prepare` exit 0 | **Only** one fenced block with **stdout alone** (subject, timestamp, bullets, blank lines, **📊uloc** block, Signed-off-by). **No** title, **no** `##` headers, **no** `[micro-commit]` lines, **no** staged path lists, **no** prose outside the fence. |
-| exit non-zero | Re-run `prepare` **without** `2>/dev/null` if needed; reply with **only** one ` ``` ` fence around the error text. No headers or commentary. |
+| exit non-zero    | Re-run `prepare` **without** `2>/dev/null` if needed; reply with **only** one ` ``` ` fence around the error text. No headers or commentary.                                                                                                             |
 
 ### Newlines (required — GitKraken / `git commit` need them)
 
@@ -82,7 +82,7 @@ Signed-off-by: Name <email@example.com>
 - **Order by impact (required):** line 1 = biggest user or system effect; each next line = strictly lower impact. A new **`.cursor/plans/*.plan.md`** often belongs in the top 1–2 bullets when it defines the approach for the rest of the diff.
 - New tickets: script adds `{emoji}{title}` from `ticket.json` — do not duplicate.
 - Format: `{emoji}{summary}` — each line **starts with the emoji** (no leading `-`), **no space** after the emoji (words inside the summary may use spaces). Example: `🗺️Fix north-up tile affine`, not `- 🗺️ Fix …` or `🗺️ Fix …`.
-- **Emoji choice:** one leading emoji per bullet — the **most accurate** for *that* description (read the diff; vary emojis across lines). There is **no** approved list.
+- **Emoji choice:** one leading emoji per bullet — the **most accurate** for _that_ description (read the diff; vary emojis across lines). There is **no** approved list.
 - **Reserved (never on bullets):** `🎆` (calendar timestamp line only), `📊` / `🔢` (uloc block), `🚩` (subject counter). Do not paste `🎆YY🌙MM☀️DD…` date patterns into bullets.
 
 ## Script (deterministic)

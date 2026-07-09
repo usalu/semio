@@ -23,35 +23,35 @@ This element matches the Radix Avatar fallback in [js/compose/sketchpad/elements
 Tailwind/class → CSS properties (effective intent):
 
 - `flex`
-	- `display: flex;`
+  - `display: flex;`
 - `size-full`
-	- `width: 100%;`
-	- `height: 100%;`
+  - `width: 100%;`
+  - `height: 100%;`
 - `items-center`
-	- `align-items: center;`
+  - `align-items: center;`
 - `justify-center`
-	- `justify-content: center;`
+  - `justify-content: center;`
 - `rounded-full`
-	- `border-radius: 9999px;`
+  - `border-radius: 9999px;`
 - `text-xs`
-	- `font-size: var(--text-xs);`
-	- `line-height: var(--text-xs--line-height);`
-	- Note: `--text-xs` / `--text-xs--line-height` are defined in [js/compose/globals.css](js/compose/globals.css#L280-L310).
+  - `font-size: var(--text-xs);`
+  - `line-height: var(--text-xs--line-height);`
+  - Note: `--text-xs` / `--text-xs--line-height` are defined in [js/compose/globals.css](js/compose/globals.css#L280-L310).
 - `bg-muted`
-	- `background-color: var(--muted);`
+  - `background-color: var(--muted);`
 - `bg-[color:var(--active-base)]`
-	- `background-color: var(--active-base);` (overrides `bg-muted` when present)
+  - `background-color: var(--active-base);` (overrides `bg-muted` when present)
 - `text-[color:var(--active-foreground)]`
-	- `color: var(--active-foreground);`
+  - `color: var(--active-foreground);`
 
 CSS variables used:
 
 - Light theme values in [js/compose/globals.css](js/compose/globals.css#L320-L356)
-	- `--active-base: var(--color-primary);`
-	- `--active-foreground: var(--color-dark);`
+  - `--active-base: var(--color-primary);`
+  - `--active-foreground: var(--color-dark);`
 - Dark theme values in [js/compose/globals.css](js/compose/globals.css#L572-L606)
-	- `--active-base: var(--color-primary);`
-	- `--active-foreground: var(--color-light);`
+  - `--active-base: var(--color-primary);`
+  - `--active-foreground: var(--color-light);`
 
 What I cannot truthfully “show” from repo alone:
 
@@ -80,15 +80,15 @@ Edge color is primarily driven by inline style props passed to `BaseEdge`:
 Tailwind/class → CSS properties (the part contributed by Tailwind):
 
 - `transition-colors`
-	- `transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;`
-	- `transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);` (Tailwind default)
+  - `transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;`
+  - `transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);` (Tailwind default)
 - `duration-200`
-	- `transition-duration: 200ms;`
+  - `transition-duration: 200ms;`
 
 Repo override (only if an ancestor has class `temp`):
 
 - [js/compose/globals.css](js/compose/globals.css#L541-L551)
-	- `.temp .react-flow__edge-path { stroke: #e98787; stroke-dasharray: 5 5; }`
+  - `.temp .react-flow__edge-path { stroke: #e98787; stroke-dasharray: 5 5; }`
 
 ### Element: `div` (no classes provided)
 

@@ -2,30 +2,30 @@
 name: Playground Window Mode Completeness
 overview: "Bring every playground's windows and modes up to the same completeness bar already met by puzzle/2d, puzzle/3d, puzzle/5d and shooting: every `WindowKindRuntime` gets a populated `measures` rail (window options) and a `WindowEngagement` (commands), and every `ModeRuntime` gets a populated `tools` footer toolbar — then add a runtime auditor so this stays enforced."
 todos:
-  - id: phase1-tools
-    content: "Add missing Mode.tools footer toolbars: flow (both modes), semios, trinity/jack, trinity/rewrite, mathematical/dag"
-    status: completed
-  - id: phase2-editors
-    content: Add window measures+engagement to draw, forms, raster (all windows currently bare)
-    status: completed
-  - id: phase2-semios
-    content: Add window measures+engagement to all 4 semios windows
-    status: completed
-  - id: phase2-trinity
-    content: Add window measures+engagement to trinity/jack (Jack Query, Results) and trinity/rewrite (LHS/RHS/Jack/Parameters, plus engagement on Before/After)
-    status: completed
-  - id: phase2-generate
-    content: Add measures+engagement to generate-mode windows in flow, procedural/2d, procedural/3d
-    status: completed
-  - id: phase2-writer
-    content: Replace writer's empty measures [] with real editor-settings measures
-    status: completed
-  - id: phase3-auditor
-    content: Extend framework/product/playground/core/script.ts with an audit command asserting measures/engagement/tools completeness across all playgrounds; wire into nx/launch.json
-    status: in_progress
-  - id: ticketing
-    content: Open/reopen one ticket per technology cluster per repo MCP workflow, in the worst-first order above
-    status: completed
+ - id: phase1-tools
+   content: "Add missing Mode.tools footer toolbars: flow (both modes), semios, trinity/jack, trinity/rewrite, mathematical/dag"
+   status: completed
+ - id: phase2-editors
+   content: Add window measures+engagement to draw, forms, raster (all windows currently bare)
+   status: completed
+ - id: phase2-semios
+   content: Add window measures+engagement to all 4 semios windows
+   status: completed
+ - id: phase2-trinity
+   content: Add window measures+engagement to trinity/jack (Jack Query, Results) and trinity/rewrite (LHS/RHS/Jack/Parameters, plus engagement on Before/After)
+   status: completed
+ - id: phase2-generate
+   content: Add measures+engagement to generate-mode windows in flow, procedural/2d, procedural/3d
+   status: completed
+ - id: phase2-writer
+   content: Replace writer's empty measures [] with real editor-settings measures
+   status: completed
+ - id: phase3-auditor
+   content: Extend framework/product/playground/core/script.ts with an audit command asserting measures/engagement/tools completeness across all playgrounds; wire into nx/launch.json
+   status: in_progress
+ - id: ticketing
+   content: Open/reopen one ticket per technology cluster per repo MCP workflow, in the worst-first order above
+   status: completed
 isProject: false
 ---
 

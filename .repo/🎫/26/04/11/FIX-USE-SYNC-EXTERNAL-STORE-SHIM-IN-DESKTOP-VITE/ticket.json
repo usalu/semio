@@ -4,7 +4,5 @@
   "description": "Resolve CJS/ESM use-sync-external-store/shim under Vite Electron renderer (useSyncExternalStore import error).",
   "summary": "Desktop renderer crashed: use-sync-external-store/shim is CJS; Vite served it as ESM so useSyncExternalStore named import failed. Aliased use-sync-external-store/shim to react (React 19 exports the hook). Dedupe react/react-dom/use-sync-external-store; prebundle with-selector paths.",
   "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": [
-    "⚪889675758dfb4f999311055c136dc3e8"
-  ]
+  "sessions": ["⚪889675758dfb4f999311055c136dc3e8"]
 }

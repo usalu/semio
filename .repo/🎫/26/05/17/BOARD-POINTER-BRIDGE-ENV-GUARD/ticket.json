@@ -5,7 +5,5 @@
   "description": "Canvas renders but pointer interaction fails when the window pointer bridge is disabled because process.env.VITEST or other env leaks into Vite/Playwright browser runs. Tighten boardRendererUsesWindowPointerCaptureBridge to use compile-time import.meta.env.MODE===test (with vitest config mode:test) and drop fragile process.env.VITEST checks.",
   "summary": "Pointer bridge used `process.env.VITEST === \"true\"` to stay off under Vitest; that env leaks into Playwright’s Vite webServer (`env: { ...process.env }`), disabling the window capture bridge in real Chrome while document-capture listeners still win—canvas paints but gestures never reach WASM. Replaced with `import.meta.env.MODE === \"test\"` via shared `boardSourceRunsAsVitestUnitBundle` (WASM init + bridge) and set `test.mode: \"test\"` in board vitest.config. Ran `bun nx run @elements/board:test --skip-nx-cache` (exit 0).",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": [
-    "⚪f0a133e0c757494e8d1db9a19f3c63f4"
-  ]
+  "sessions": ["⚪f0a133e0c757494e8d1db9a19f3c63f4"]
 }

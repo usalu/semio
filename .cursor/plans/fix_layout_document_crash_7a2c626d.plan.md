@@ -2,21 +2,21 @@
 name: Fix Layout Document Crash
 overview: Fix the field-naming bug that crashes the Layout playground's document panel, add regression coverage, and verify the Layout technology is fully wired end-to-end (playground + OS/S integration).
 todos:
-  - id: fix-document-bug
-    content: Fix snake_case/camelCase field bugs in buildLayoutPlayDocumentTree and buildLayoutPlayInspectorTree (layout/core/js/index.ts)
-    status: completed
-  - id: add-regression-test
-    content: Extend existing vitest block in layout/core/js/index.ts to cover buildLayoutPlayDocumentTree
-    status: completed
-  - id: run-tests
-    content: Run layout-core vitest suite and confirm pass
-    status: completed
-  - id: verify-playground
-    content: Launch layout playground dev server and manually verify document/inspector/preflight panels, undo/redo, and exports work without console errors
-    status: completed
-  - id: verify-os-integration
-    content: Boot S studio dev host, host a layout app instance, confirm blueprint canvas renders and media export/VCS wiring works
-    status: completed
+ - id: fix-document-bug
+   content: Fix snake_case/camelCase field bugs in buildLayoutPlayDocumentTree and buildLayoutPlayInspectorTree (layout/core/js/index.ts)
+   status: completed
+ - id: add-regression-test
+   content: Extend existing vitest block in layout/core/js/index.ts to cover buildLayoutPlayDocumentTree
+   status: completed
+ - id: run-tests
+   content: Run layout-core vitest suite and confirm pass
+   status: completed
+ - id: verify-playground
+   content: Launch layout playground dev server and manually verify document/inspector/preflight panels, undo/redo, and exports work without console errors
+   status: completed
+ - id: verify-os-integration
+   content: Boot S studio dev host, host a layout app instance, confirm blueprint canvas renders and media export/VCS wiring works
+   status: completed
 isProject: false
 ---
 

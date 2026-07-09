@@ -100,11 +100,7 @@
             "max_results": 3
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__search",
-              "mcp__repo__ticket_open",
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__search", "mcp__repo__ticket_open", "mcp__repo__ticket_close"],
             "query": "select:mcp__repo__search,mcp__repo__ticket_open,mcp__repo__ticket_close",
             "total_deferred_tools": 86
           },
@@ -3372,9 +3368,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "TodoWrite"
-            ],
+            "matches": ["TodoWrite"],
             "query": "select:TodoWrite",
             "total_deferred_tools": 86
           },
@@ -7976,11 +7970,7 @@
                 "oldLines": 2,
                 "newStart": 1,
                 "newLines": 2,
-                "lines": [
-                  "-@import \"../../elements/ui/globals.css\";",
-                  "+@import \"../ui/globals.css\";",
-                  " @import \"@xyflow/react/dist/style.css\";"
-                ]
+                "lines": ["-@import \"../../elements/ui/globals.css\";", "+@import \"../ui/globals.css\";", " @import \"@xyflow/react/dist/style.css\";"]
               }
             ],
             "userModified": false,
@@ -10954,16 +10944,7 @@
                 "oldLines": 7,
                 "newStart": 6,
                 "newLines": 7,
-                "lines": [
-                  " ---",
-                  " ",
-                  " {/* prettier-ignore */}",
-                  "-{/* import { GrasshopperCatalogue } from \"../../../../../elements/ui\"; */}",
-                  "+{/* import { GrasshopperCatalogue } from \"@compose/ui\"; */}",
-                  " ",
-                  " ## Components",
-                  " "
-                ]
+                "lines": [" ---", " ", " {/* prettier-ignore */}", "-{/* import { GrasshopperCatalogue } from \"../../../../../elements/ui\"; */}", "+{/* import { GrasshopperCatalogue } from \"@compose/ui\"; */}", " ", " ## Components", " "]
               }
             ],
             "userModified": false,

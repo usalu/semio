@@ -1,9 +1,11 @@
 # Fix Hook Mapping Spec
 
 ## Goal
+
 Update hook event mapping to match exact specification for all native clients.
 
 ## Changes
+
 1. Renamed `tool.calling` → `tool.starting` (HookToolCalling → HookToolStarting)
 2. Removed `notification` event (HookNotification)
 3. Added new events: `task.plan`, `task.starting`, `task.ended`, `terminal.starting`, `terminal.ended`
@@ -15,11 +17,13 @@ Update hook event mapping to match exact specification for all native clients.
 9. Updated hookCommand help text
 
 ## Summary
+
 - 15 hook events: commit.starting, commit.ended, agent.starting, agent.ended, prompt.submit, compacting, tool.starting, tool.ended, task.plan, task.starting, task.ended, code.reading, code.edited, terminal.starting, terminal.ended
 - All 32+ tests pass
 - CLI properly rejects old event names (tool.calling, notification)
 
 ## Status
+
 - [x] Read current implementation
 - [x] Update HookEvent constants and AllHookEvents
 - [x] Update dispatchHook, vsCodeEventFromHookEvent, formatVSCodeHookOutput

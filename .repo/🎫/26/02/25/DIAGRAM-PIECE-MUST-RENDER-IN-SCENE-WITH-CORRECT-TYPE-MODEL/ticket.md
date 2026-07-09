@@ -7,6 +7,7 @@ goal: SKETCHPAD/DESIGNIMPLEMENTATION
 ## Summary
 
 Bulk close
+
 ## Changes
 
 ## Log

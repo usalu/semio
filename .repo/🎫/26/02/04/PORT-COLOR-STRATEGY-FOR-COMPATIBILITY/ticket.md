@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 - [x] Open ticket `PORT-COLOR-STRATEGY-FOR-COMPATIBILITY` and create `plan.md`.
 - [x] Audit current port rendering and compatibility behavior across Kit, Type, and Design apps.
 - [x] Implement a shared port color strategy keyed by ports and compatibility.
@@ -16,6 +17,7 @@
 - [x] Revalidate tests/build and close ticket.
 
 ## Changes
+
 - Added `js/compose/sketchpad/portColor.ts` with deterministic compatibility-family port tones, connector port guid helpers, and compatibility-state resolution.
 - Updated `js/compose/sketchpad/Design.tsx` connector handles to consume shared port tones and show compatibility/incompatibility emphasis while a source connector is selected.
 - Updated `js/compose/sketchpad/Type.tsx` connector scene visuals to use shared port tones and normalized connector port/compatible port editing paths.
@@ -27,6 +29,7 @@
 - Changed default visual treatment so ungrouped ports remain distinctly colorized by per-port identity.
 
 ## Log
+
 - Prompt: "create a color strategy for ports to enhance UX including compatible ports and different port types, refactor as needed, and ensure ticket plan/log/summary workflow."
 - Opened ticket via `repo ticket open` and initialized `plan.md`.
 - Implemented shared port color strategy and integrated it into Kit, Type, and Design rendering paths.

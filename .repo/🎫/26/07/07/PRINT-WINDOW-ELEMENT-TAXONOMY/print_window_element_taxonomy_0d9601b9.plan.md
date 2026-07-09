@@ -1,34 +1,34 @@
 ---
 name: Print Window Element Taxonomy
-overview: "Restrict the semio print \"window\" chrome (currently auto-applied to every chapter/section of body text) to a fixed set of 14 special document elements, grouped into three tiers — Visual, Logical, Structural — each rendered with its own border color and name/number chip fill: primary, secondary, tertiary respectively."
+overview: 'Restrict the semio print "window" chrome (currently auto-applied to every chapter/section of body text) to a fixed set of 14 special document elements, grouped into three tiers — Visual, Logical, Structural — each rendered with its own border color and name/number chip fill: primary, secondary, tertiary respectively.'
 todos:
-  - id: remove-chapter-section-window
-    content: Remove chapter/section auto-windowing (booleans, open/close macros, chapter/section overrides, chapter/section/inner tcolorbox styles) from semio-window.sty
-    status: completed
-  - id: tier-registry
-    content: Add tier color mapping (visual/logical/structural -> primary/secondary/tertiary) and tcolorbox tier styles
-    status: completed
-  - id: parametrize-header-chip
-    content: Parametrize semio@window@cap/tab/ctrl/header/stroke macros to take fill+border color instead of hardcoded chrome-canvas/border-normal
-    status: completed
-  - id: kind-registry
-    content: Add semio_window_kind_new factory and define the 14 kind environments (Image, Photo, Figure, Table, Listing, Pseudocode, Theorem, Lemma, Proof, Equation, Glossary, Abbreviations, Blockquote, Epigraph) with counters and optional title override
-    status: completed
-  - id: retire-semiobox
-    content: Remove the public Semiobox environment
-    status: completed
-  - id: migrate-components
-    content: Migrate semio-components.sty (makefundingacknowledgement -> Blockquote, makeworkpackages -> Table)
-    status: completed
-  - id: migrate-templates
-    content: Migrate report.content.tex and flyer.content.tex Semiobox usages to Blockquote
-    status: completed
-  - id: migrate-mit-bestand
-    content: Migrate zwischenbericht.tex's 3 highlight boxes to Blockquote
-    status: completed
-  - id: build-verify
-    content: Run bun print/script.ts test and build mit-bestand zwischenbericht to verify all templates compile with the new taxonomy
-    status: completed
+ - id: remove-chapter-section-window
+   content: Remove chapter/section auto-windowing (booleans, open/close macros, chapter/section overrides, chapter/section/inner tcolorbox styles) from semio-window.sty
+   status: completed
+ - id: tier-registry
+   content: Add tier color mapping (visual/logical/structural -> primary/secondary/tertiary) and tcolorbox tier styles
+   status: completed
+ - id: parametrize-header-chip
+   content: Parametrize semio@window@cap/tab/ctrl/header/stroke macros to take fill+border color instead of hardcoded chrome-canvas/border-normal
+   status: completed
+ - id: kind-registry
+   content: Add semio_window_kind_new factory and define the 14 kind environments (Image, Photo, Figure, Table, Listing, Pseudocode, Theorem, Lemma, Proof, Equation, Glossary, Abbreviations, Blockquote, Epigraph) with counters and optional title override
+   status: completed
+ - id: retire-semiobox
+   content: Remove the public Semiobox environment
+   status: completed
+ - id: migrate-components
+   content: Migrate semio-components.sty (makefundingacknowledgement -> Blockquote, makeworkpackages -> Table)
+   status: completed
+ - id: migrate-templates
+   content: Migrate report.content.tex and flyer.content.tex Semiobox usages to Blockquote
+   status: completed
+ - id: migrate-mit-bestand
+   content: Migrate zwischenbericht.tex's 3 highlight boxes to Blockquote
+   status: completed
+ - id: build-verify
+   content: Run bun print/script.ts test and build mit-bestand zwischenbericht to verify all templates compile with the new taxonomy
+   status: completed
 isProject: false
 ---
 

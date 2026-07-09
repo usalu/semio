@@ -159,9 +159,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅devcontainer⚙️dockerfile📌1📌82"
-        ],
+        "ranges": ["🛅devcontainer⚙️dockerfile📌1📌82"],
         "second": "🎆26🌙03☀️13⏰13⌚30⏱️53",
         "session": "⚪b3406ceae16d41dbb461bc8ed1f73837"
       },
@@ -192,9 +190,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅devcontainer⚙️dockerfile📌1📌82"
-        ],
+        "ranges": ["🛅devcontainer⚙️dockerfile📌1📌82"],
         "second": "🎆26🌙03☀️13⏰13⌚31⏱️08",
         "session": "⚪b3406ceae16d41dbb461bc8ed1f73837"
       },

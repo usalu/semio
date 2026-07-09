@@ -18,10 +18,7 @@ import {
 
 const repo = "/Users/ueli/Documents/compose";
 const loader = new GLTFLoader();
-const load = (n: string) =>
-  new Promise<Group>((res, rej) =>
-    loader.parse(readFileSync(resolve(repo, "compose/fixtures/kit/folder/abbau-aufbau", n)).buffer.slice(0), "", (g) => res(g.scene), rej),
-  );
+const load = (n: string) => new Promise<Group>((res, rej) => loader.parse(readFileSync(resolve(repo, "compose/fixtures/kit/folder/abbau-aufbau", n)).buffer.slice(0), "", (g) => res(g.scene), rej));
 
 clearBrushCollisionGltfScenes();
 registerBrushCollisionGltfScene("/meshes/hexagonal-cut-concrete-forest-left.glb", await load("hexagonal-cut-concrete-forest-left.glb"));

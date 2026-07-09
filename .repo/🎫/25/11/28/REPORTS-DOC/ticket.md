@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - AGENTS.md outlined the CI/CD reports but never documented the `reports/` folder or its README.
@@ -18,6 +19,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Document reports folder in AGENTS

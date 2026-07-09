@@ -5,8 +5,5 @@
   "description": "Node click selection takes up to 4s especially in another active window. Fix selection hot path.",
   "summary": "Fixed runtime crash: `Puzzle2dPlayPaneCanvas` called `usePuzzle2dPlaySelection` but only the document side panel was wrapped in `Puzzle2dPlaySelectionContext` after the applyCanvasSelection refactor. Selection context now wraps the full play shell (canvases + panels). Removed redundant per-panel provider from document tab definition.\n\nReduced duplicate Three.js warning for 2d play dev: aligned `puzzle/2d/play/vite.config.ts` with 3d play (single `three` alias + resolve.dedupe + optimizeDeps).\n\nTests: framework/playground/renderer/react 15/15; puzzle/2d/play 9/9.",
   "goal": "🎯compose",
-  "sessions": [
-    "⚪2eaafa6b386c43b098f3380033028ef5",
-    "⚪59440967ffd043488b12f791ec4a172e"
-  ]
+  "sessions": ["⚪2eaafa6b386c43b098f3380033028ef5", "⚪59440967ffd043488b12f791ec4a172e"]
 }

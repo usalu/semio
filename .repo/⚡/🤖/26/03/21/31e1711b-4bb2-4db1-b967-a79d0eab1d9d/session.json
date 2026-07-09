@@ -1957,9 +1957,7 @@
           "tool_input": {
             "path": "2026/03/21/FIX-DUPLICATE-TOP-LEVEL-DECLARATIONS-IN-SKETCHPAD-TSX",
             "summary": "Fixed 6 duplicate top-level declarations in Sketchpad.tsx: (1) Synchronizable [1350,1433] — removed identical second copy; (2) AppTransactionState [3305,7920] — removed identical second copy; (3) AppMachineInput [1866,9692] — renamed legacy version to LegacyAppMachineInput; (4) AppMachineContext [1728,9700] — renamed legacy version to LegacyAppMachineContext; (5) SketchpadState [1229,9894] — removed unused SketchpadState$ type alias (false positive from detection script, identifier was SketchpadState$ not SketchpadState); (6) TutorialContext [4691,8030] — renamed interface to TutorialMachineContext, updated its single reference in SketchpadContext.",
-            "files": [
-              "compose/sketchpad/sketchpad/Sketchpad.tsx"
-            ],
+            "files": ["compose/sketchpad/sketchpad/Sketchpad.tsx"],
             "no_github": true
           },
           "tool_use_id": "toolu_vrtx_013J6XF55ohGBoY5QYyvTcpH__vscode-1774041162683",
@@ -2041,9 +2039,7 @@
           "session_id": "31e1711b-4bb2-4db1-b967-a79d0eab1d9d",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/sketchpad/Sketchpad.tsx"
-            ],
+            "files": ["compose/sketchpad/sketchpad/Sketchpad.tsx"],
             "no_github": true,
             "path": "26/03/21/FIX-DUPLICATE-TOP-LEVEL-DECLARATIONS-IN-SKETCHPAD-TSX",
             "summary": "Fixed 6 duplicate top-level declarations in Sketchpad.tsx: (1) Synchronizable — removed identical second copy; (2) AppTransactionState — removed identical second copy; (3) AppMachineInput — renamed legacy version to LegacyAppMachineInput; (4) AppMachineContext — renamed legacy version to LegacyAppMachineContext; (5) SketchpadState$ — removed unused dead type alias (false positive); (6) TutorialContext interface — renamed to TutorialMachineContext, updated reference in SketchpadContext."
@@ -2070,9 +2066,7 @@
           "session_id": "31e1711b-4bb2-4db1-b967-a79d0eab1d9d",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/sketchpad/Sketchpad.tsx"
-            ],
+            "files": ["compose/sketchpad/sketchpad/Sketchpad.tsx"],
             "no_github": true,
             "path": "26/03/21/FIX-DUPLICATE-TOP-LEVEL-DECLARATIONS-IN-SKETCHPAD-TSX",
             "summary": "Fixed 6 duplicate top-level declarations in Sketchpad.tsx: (1) Synchronizable — removed identical second copy; (2) AppTransactionState — removed identical second copy; (3) AppMachineInput — renamed legacy version to LegacyAppMachineInput; (4) AppMachineContext — renamed legacy version to LegacyAppMachineContext; (5) SketchpadState$ — removed unused dead type alias (false positive); (6) TutorialContext interface — renamed to TutorialMachineContext, updated reference in SketchpadContext."

@@ -1,9 +1,11 @@
 # Ticket
 
 ## 🤖 Prompt
+
 Create a comprehensive, detailed "User Manual" style tutorial for `js/compose/sketchpad/Kit.tsx`. Focus on architecture, internals, and provide a line-by-line commented version of the source code for beginners.
 
 ## Todos
+
 - [/] Write Plan
 - [ ] Analyze Codebase
 - [ ] Write Manual Content
@@ -13,6 +15,7 @@ Create a comprehensive, detailed "User Manual" style tutorial for `js/compose/sk
 ## Changes
 
 ## Log
+
 - [2026-01-26] Started mission. Analyzed `Kit.tsx`. Created plan.
 
 ## Summary

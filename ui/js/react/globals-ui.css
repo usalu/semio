@@ -95,20 +95,8 @@
 }
 
 [data-tree-hover-path="branch"] > [data-slot="tree-guide"] [data-tree-guide-line],
-:is(
-    [data-slot="tree-section-content"],
-    [data-slot="tree-item-content"],
-    [data-slot="tree-property-content"],
-    [data-slot="control-tree-folder-content"],
-    [data-slot="window-measure-tree-content"]
-  ):has(
-    :is(
-        [data-slot="tree-item-row"],
-        [data-slot="tree-section-row"],
-        [data-slot="tree-property-item"],
-        [data-slot="control-tree-row"],
-        [data-slot="window-measure-tree-row"]
-      ):hover
+:is([data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"], [data-slot="window-measure-tree-content"]):has(
+    :is([data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="control-tree-row"], [data-slot="window-measure-tree-row"]):hover
   )
   > [data-slot="tree-guide"]
   [data-tree-guide-line] {
@@ -128,17 +116,8 @@
   width: calc(1.5 * var(--stroke-hairline)) !important;
 }
 
-:is([data-tree-hover-path="row"], [data-tree-selection-path="row"]) :is(
-    [data-slot="tree-label"],
-    [data-slot="tree-icon"],
-    [data-slot="tree-header-actions"],
-    [data-slot="tree-gutter-slot"]
-  ),
-:is([data-tree-hover-path="row"], [data-tree-selection-path="row"]) :is(
-    [data-slot="tree-gutter-slot"] svg,
-    [data-slot="tree-icon"] svg,
-    [data-slot="tree-header-actions"] svg
-  ) {
+:is([data-tree-hover-path="row"], [data-tree-selection-path="row"]) :is([data-slot="tree-label"], [data-slot="tree-icon"], [data-slot="tree-header-actions"], [data-slot="tree-gutter-slot"]),
+:is([data-tree-hover-path="row"], [data-tree-selection-path="row"]) :is([data-slot="tree-gutter-slot"] svg, [data-slot="tree-icon"] svg, [data-slot="tree-header-actions"] svg) {
   color: var(--border-emphasized-color);
 }
 /* #endregion 🎃TreeHoverPath */
@@ -184,7 +163,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;  /* IE and Edge */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
 [data-slot="navbar"] > div::-webkit-scrollbar,
@@ -192,4 +171,3 @@
   display: none; /* Chrome, Safari and Opera */
 }
 /* #endregion */
-

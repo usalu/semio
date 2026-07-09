@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Side as Weak Entity - Schema Change
 
 ## Status: ✅ IMPLEMENTED

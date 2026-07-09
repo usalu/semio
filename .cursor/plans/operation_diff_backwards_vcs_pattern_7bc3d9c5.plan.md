@@ -2,69 +2,69 @@
 name: Operation Diff Backwards VCS Pattern
 overview: Generalize compose's real Operation→Diff→centralized-mutation pattern (stored operations, computed sparse diffs, one apply_diff per projection, computed backwards) into framework_vcs, migrate every technology onto it, and rewire compose itself onto the shared engine.
 todos:
-  - id: phase1-framework-core
-    content: "Rework framework_vcs: add Operation<P>/OperationDiff<P> traits + CollectionDiff/ItemPatch helpers, rewrite DocumentVcsStore/DocumentVcsCommand::Apply to auto-compute backwards via op.backwards()/op.diff().apply(), remove ApplyOp trait entirely, update core unit tests"
-    status: completed
-  - id: phase2-semios
-    content: Migrate semios/rs StudioOp to Operation<SemiosStudioProjection>/StudioDiff pattern
-    status: completed
-  - id: phase2-draw
-    content: Migrate draw/rs DrawOp to Operation<DrawDocument>/DrawDiff pattern, including id/path-addressed layer tree diff
-    status: completed
-  - id: phase2-forms
-    content: Migrate forms/rs FormOp to Operation<FormSpec>/FormDiff pattern
-    status: completed
-  - id: phase2-shooting
-    content: Migrate shooting/rs ShootingOp to Operation<ShootingScene>/ShootingDiff pattern
-    status: completed
-  - id: phase2-cad
-    content: Migrate cad/rs CadOp to Operation<CadScene>/CadDiff pattern
-    status: completed
-  - id: phase2-presentation
-    content: Migrate framework/product/presentation/rs PresentationOp to Operation<PresentationDeck>/PresentationDiff pattern
-    status: completed
-  - id: phase2-writer
-    content: Migrate writer/rs WriterOp to Operation<WriterProjection>/WriterDiff pattern
-    status: completed
-  - id: phase2-raster
-    content: Migrate raster/rs RasterOp to Operation<RasterProjection>/RasterDiff pattern
-    status: completed
-  - id: phase2-puzzle2d-demo
-    content: Update puzzle/2d/rs test demo (Puzzle2dOp/Puzzle2dApplier) to the new Operation/Diff pattern
-    status: completed
-  - id: phase3-flow
-    content: Create Rust crate for flow with Operation/Diff pattern, replace TS applyFlowEditOp reducer with WASM client
-    status: completed
-  - id: phase3-dag
-    content: Port mathematical/graph/port/directed/dag onto framework_vcs Operation/Diff pattern
-    status: completed
-  - id: phase3-gis-map
-    content: Port gis/map/rs onto framework_vcs Operation/Diff pattern
-    status: completed
-  - id: phase3-reasoning-mindmap
-    content: Port reasoning/mindmap/rs onto framework_vcs Operation/Diff pattern
-    status: completed
-  - id: phase3-trinity
-    content: Create Rust crates for trinity/rewrite and trinity/jack graph documents on the Operation/Diff pattern
-    status: completed
-  - id: phase3-puzzle3d
-    content: Port puzzle/3d/rs onto framework_vcs Operation/Diff pattern
-    status: completed
-  - id: phase3-puzzle5d-procedural
-    content: Create Rust crates for puzzle/5d, procedural/2d, procedural/3d on the Operation/Diff pattern
-    status: completed
-  - id: phase3-retire-ts-mirror
-    content: Retire framework/core/vcs-sync.ts TS mirror and semios/core ad-hoc typed handlers once every technology is Rust-backed
-    status: completed
-  - id: phase4-compose-traits
-    content: Introduce KitSnapshot projection value; implement framework_vcs::Operation<KitSnapshot> and OperationDiff<KitSnapshot> wrapping compose's existing to_diff/to_backwards/apply_diff/absorb
-    status: completed
-  - id: phase4-compose-store
-    content: Rewire compose's Workspace/Edit/Change/Checkpoint/Alternative bookkeeping onto framework_vcs::DocumentVcsStore<KitSnapshot, Operation>; rebuild materialized_kit_for_workspace to hydrate the live Kit view from the engine projection; keep GraphQL schema/resolvers as thin views
-    status: completed
-  - id: phase5-regression
-    content: Run cargo test + nx test across all touched crates/packages; manually verify undo/redo, checkpoint/alternative switching, and backbone round-trip for a representative technology, semios_studio, and compose
-    status: completed
+ - id: phase1-framework-core
+   content: "Rework framework_vcs: add Operation<P>/OperationDiff<P> traits + CollectionDiff/ItemPatch helpers, rewrite DocumentVcsStore/DocumentVcsCommand::Apply to auto-compute backwards via op.backwards()/op.diff().apply(), remove ApplyOp trait entirely, update core unit tests"
+   status: completed
+ - id: phase2-semios
+   content: Migrate semios/rs StudioOp to Operation<SemiosStudioProjection>/StudioDiff pattern
+   status: completed
+ - id: phase2-draw
+   content: Migrate draw/rs DrawOp to Operation<DrawDocument>/DrawDiff pattern, including id/path-addressed layer tree diff
+   status: completed
+ - id: phase2-forms
+   content: Migrate forms/rs FormOp to Operation<FormSpec>/FormDiff pattern
+   status: completed
+ - id: phase2-shooting
+   content: Migrate shooting/rs ShootingOp to Operation<ShootingScene>/ShootingDiff pattern
+   status: completed
+ - id: phase2-cad
+   content: Migrate cad/rs CadOp to Operation<CadScene>/CadDiff pattern
+   status: completed
+ - id: phase2-presentation
+   content: Migrate framework/product/presentation/rs PresentationOp to Operation<PresentationDeck>/PresentationDiff pattern
+   status: completed
+ - id: phase2-writer
+   content: Migrate writer/rs WriterOp to Operation<WriterProjection>/WriterDiff pattern
+   status: completed
+ - id: phase2-raster
+   content: Migrate raster/rs RasterOp to Operation<RasterProjection>/RasterDiff pattern
+   status: completed
+ - id: phase2-puzzle2d-demo
+   content: Update puzzle/2d/rs test demo (Puzzle2dOp/Puzzle2dApplier) to the new Operation/Diff pattern
+   status: completed
+ - id: phase3-flow
+   content: Create Rust crate for flow with Operation/Diff pattern, replace TS applyFlowEditOp reducer with WASM client
+   status: completed
+ - id: phase3-dag
+   content: Port mathematical/graph/port/directed/dag onto framework_vcs Operation/Diff pattern
+   status: completed
+ - id: phase3-gis-map
+   content: Port gis/map/rs onto framework_vcs Operation/Diff pattern
+   status: completed
+ - id: phase3-reasoning-mindmap
+   content: Port reasoning/mindmap/rs onto framework_vcs Operation/Diff pattern
+   status: completed
+ - id: phase3-trinity
+   content: Create Rust crates for trinity/rewrite and trinity/jack graph documents on the Operation/Diff pattern
+   status: completed
+ - id: phase3-puzzle3d
+   content: Port puzzle/3d/rs onto framework_vcs Operation/Diff pattern
+   status: completed
+ - id: phase3-puzzle5d-procedural
+   content: Create Rust crates for puzzle/5d, procedural/2d, procedural/3d on the Operation/Diff pattern
+   status: completed
+ - id: phase3-retire-ts-mirror
+   content: Retire framework/core/vcs-sync.ts TS mirror and semios/core ad-hoc typed handlers once every technology is Rust-backed
+   status: completed
+ - id: phase4-compose-traits
+   content: Introduce KitSnapshot projection value; implement framework_vcs::Operation<KitSnapshot> and OperationDiff<KitSnapshot> wrapping compose's existing to_diff/to_backwards/apply_diff/absorb
+   status: completed
+ - id: phase4-compose-store
+   content: Rewire compose's Workspace/Edit/Change/Checkpoint/Alternative bookkeeping onto framework_vcs::DocumentVcsStore<KitSnapshot, Operation>; rebuild materialized_kit_for_workspace to hydrate the live Kit view from the engine projection; keep GraphQL schema/resolvers as thin views
+   status: completed
+ - id: phase5-regression
+   content: Run cargo test + nx test across all touched crates/packages; manually verify undo/redo, checkpoint/alternative switching, and backbone round-trip for a representative technology, semios_studio, and compose
+   status: completed
 isProject: false
 ---
 
@@ -75,7 +75,7 @@ isProject: false
 Compose's actual architecture is richer than what `framework_vcs` currently offers. From [compose/client/schema/graphql/schema.golden.graphql](compose/client/schema/graphql/schema.golden.graphql) and [compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs):
 
 - `**Operation**` (schema.golden.graphql:414) is stored data: `scope` + `input`, nothing else. It is never mutated in place.
-- `**Operation::to_diff(&self, kit) -> KitDiff**` (e.g. lib.rs:9605-9645) is pure and reads pre-state to compute a *sparse* patch: `Option<field>` per changed scalar, and `XCollectionDiff { removed: Vec<IdRef>, modified: Vec<XModified>, added: Vec<X> }` per changed collection (schema.golden.graphql `KitDiff` type at line 9121, Rust `CanonicalKitDiff` at lib.rs:9184).
+- `**Operation::to_diff(&self, kit) -> KitDiff**` (e.g. lib.rs:9605-9645) is pure and reads pre-state to compute a _sparse_ patch: `Option<field>` per changed scalar, and `XCollectionDiff { removed: Vec<IdRef>, modified: Vec<XModified>, added: Vec<X> }` per changed collection (schema.golden.graphql `KitDiff` type at line 9121, Rust `CanonicalKitDiff` at lib.rs:9184).
 - `**Operation::to_backwards(&self, kit) -> Vec<Operation>**` (lib.rs:10041) is pure and reads pre-state to compute the inverse operation(s) — this is stored once (`Edit.backwards`, schema.golden.graphql:9404) and never recomputed.
 - `**Kit::apply_diff(&self, diff: &KitDiff)**` (lib.rs:5867) is the single centralized mutation entry point for the whole `Kit` projection: it walks every optional field/collection generically. No other code mutates `Kit` fields directly from operation logic.
 - `**Edit**` (forwards+backwards operations), `**Change**` (groups saved Edits), `**Checkpoint**` (chain of Changes, computes `kit`), `**Alternative**`/`TheKit` (`Workspace`: `checkpoint`, `savedChanges`, `unsavedChanges`, `kit`) are the storage/branching shell around this.
@@ -94,8 +94,6 @@ flowchart TD
     Change --> Checkpoint["DocumentCheckpoint"]
     Checkpoint --> Alternative["DocumentAlternative"]
 ```
-
-
 
 ### New `framework_vcs` traits ([framework/rs/lib.rs](framework/rs/lib.rs))
 

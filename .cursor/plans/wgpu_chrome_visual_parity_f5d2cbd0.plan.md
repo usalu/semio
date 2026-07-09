@@ -2,30 +2,30 @@
 name: Wgpu Chrome Visual Parity
 overview: "Close four concrete parity gaps between the wgpu shell and the React shell: wrong default font, invisible SVG icons, icon-only controls missing their text labels, and an incomplete Tree widget. Ship full wire-protocol parity for Tree (data model, rendering, interaction, and drag/drop where the shared `UiTreeNode` protocol supports it)."
 todos:
-  - id: font-anta
-    content: Swap embedded/fetched boot font from Kelly Slab to Anta in framework/renderer/wgpu/rs/lib.rs
-    status: completed
-  - id: icon-uv-fix
-    content: Fix icon atlas UV normalization to use fixed 2048 GPU texture size instead of packed atlas dimensions (JS + shared constant), verify semio logo and all icons render
-    status: completed
-  - id: chrome-labels-audit
-    content: Audit all render_chrome_group/render_cap_button call sites in shell.rs and dock.rs; add explicit text labels to panel toggles, fullscreen toggle, and dock focus/close buttons to match React
-    status: completed
-  - id: tree-data-model
-    content: Expand TreeItem/TreeSection structs in ui/wgpu/rs/widgets.rs and interpreter.rs mapping to carry description, icon_id, default_open, control, actions, draggable/drag_data, is_hidden, highlighted_ids/selected_ids/selection_change
-    status: completed
-  - id: tree-render
-    content: "Rewrite render_tree/render_tree_item geometry: theme-driven row height/indent, default+custom icons, clickable chevron hit target, guide lines, selection/hover/highlight/hidden styling, description text, inline control rows, action icons, correct scroll height"
-    status: completed
-  - id: tree-interaction
-    content: Wire handle_shell_hit for tree/section expand-collapse, label click command dispatch, hover/unhover commands, action clicks, and selection_change dispatch
-    status: completed
-  - id: tree-dnd
-    content: Implement pointer-based drag for draggable tree items with drop-position indicator and payload-drop dispatch to matching targets
-    status: completed
-  - id: verify-parity
-    content: Rebuild wasm, run cargo tests, run E2E for a tree-bearing plugin, and screenshot-diff against the React shell to confirm font/icon/label/tree parity
-    status: completed
+ - id: font-anta
+   content: Swap embedded/fetched boot font from Kelly Slab to Anta in framework/renderer/wgpu/rs/lib.rs
+   status: completed
+ - id: icon-uv-fix
+   content: Fix icon atlas UV normalization to use fixed 2048 GPU texture size instead of packed atlas dimensions (JS + shared constant), verify semio logo and all icons render
+   status: completed
+ - id: chrome-labels-audit
+   content: Audit all render_chrome_group/render_cap_button call sites in shell.rs and dock.rs; add explicit text labels to panel toggles, fullscreen toggle, and dock focus/close buttons to match React
+   status: completed
+ - id: tree-data-model
+   content: Expand TreeItem/TreeSection structs in ui/wgpu/rs/widgets.rs and interpreter.rs mapping to carry description, icon_id, default_open, control, actions, draggable/drag_data, is_hidden, highlighted_ids/selected_ids/selection_change
+   status: completed
+ - id: tree-render
+   content: "Rewrite render_tree/render_tree_item geometry: theme-driven row height/indent, default+custom icons, clickable chevron hit target, guide lines, selection/hover/highlight/hidden styling, description text, inline control rows, action icons, correct scroll height"
+   status: completed
+ - id: tree-interaction
+   content: Wire handle_shell_hit for tree/section expand-collapse, label click command dispatch, hover/unhover commands, action clicks, and selection_change dispatch
+   status: completed
+ - id: tree-dnd
+   content: Implement pointer-based drag for draggable tree items with drop-position indicator and payload-drop dispatch to matching targets
+   status: completed
+ - id: verify-parity
+   content: Rebuild wasm, run cargo tests, run E2E for a tree-bearing plugin, and screenshot-diff against the React shell to confirm font/icon/label/tree parity
+   status: completed
 isProject: false
 ---
 
@@ -59,7 +59,7 @@ Root cause is a UV/texture-size mismatch, not a missing atlas or stale reference
 entries[item.id] = [ox / width, oy / height, (ox + ICON_SIZE) / width, (oy + ICON_SIZE) / height];
 ```
 
-  This makes every icon UV sample the wrong texel region of the 2048x2048 texture (mostly empty/transparent), so icons silently fail to draw even though `icon_uv()` returns `Some(...)`.
+This makes every icon UV sample the wrong texel region of the 2048x2048 texture (mostly empty/transparent), so icons silently fail to draw even though `icon_uv()` returns `Some(...)`.
 
 - Fix: compute entries as fractions of the fixed GPU texture size (`2048`) instead of the packed atlas `width`/`height`. Add a shared constant (e.g. `ICON_ATLAS_TEXTURE_SIZE = 2048`) used both when creating the GPU texture in Rust and when normalizing UVs in JS, so the two can never drift again.
 - Secondary (cosmetic) race: `start_frame_loop` runs before JS calls `uploadIconAtlas` (`framework/renderer/wgpu/rs/lib.rs:334`), so the first frame(s) paint with an empty atlas. This self-heals next frame; leave as-is unless a visible flash is confirmed after the UV fix.
@@ -83,11 +83,13 @@ Both renderers share one declarative wire type, `UiTreeNode`/`UiTreeSectionNode`
 Wgpu's current `TreeItem`/`TreeSection`/`render_tree` ([ui/wgpu/rs/widgets.rs:36-88, 611-663](ui/wgpu/rs/widgets.rs)) and the interpreter mapping ([framework/renderer/wgpu/rs/interpreter.rs:108-191](framework/renderer/wgpu/rs/interpreter.rs)) only carry `id`, `label`, `selected`, `command`, `children` - dropping everything else, and rendering is flat text rows with a non-clickable unicode chevron and no working expand/collapse (no `handle_shell_hit` branch for `tree.*`/`section.*`).
 
 ### 4.1 Data model
+
 - Extend `TreeItem<E>` / `TreeSection<E>` in `ui/wgpu/rs/widgets.rs` to carry: `description`, `icon_id`, `default_open`, `control: Option<Box<WidgetNode<E>>>`, `hover_event`/`unhover_event`, `actions: Vec<TreeItemAction<E>>` (icon, label, command, reveal_on_hover), `draggable`, `drag_data: HashMap<String,String>`, `is_hidden`. Add `id`/`default_open` to `TreeSection`.
 - Add `highlighted_ids`, `selected_ids`, `selection_change` to the top-level tree widget node so multi-select and highlight paths are representable.
 - Update `tree_item_to_widget`/`tree_section_to_widget` in `framework/renderer/wgpu/rs/interpreter.rs` to map every field 1:1 with `ui-interpreter.tsx`'s mapping, so both renderers stay in sync from one source of truth.
 
 ### 4.2 Rendering (match React geometry in `render_tree`/`render_tree_item`)
+
 - Row height and indent from theme tokens instead of magic `22.0`/`12.0` (mirror `ui/styling/tokens.json` tree tokens: ~24px row, ~10px indent/level + ~14px toggle slot).
 - Default icons: `"folder"` for expandable items/sections, `"file-text"` for leaves, overridable by `icon_id`.
 - Clickable chevron as its own hit target (toggle collapse) separate from the label hit target (fires `command`), matching React's split between gutter chevron button and content click.
@@ -98,16 +100,19 @@ Wgpu's current `TreeItem`/`TreeSection`/`render_tree` ([ui/wgpu/rs/widgets.rs:36
 - Fix scroll-content height measurement to recurse into expanded children instead of the current flat `items.len() * 22` estimate.
 
 ### 4.3 Interaction wiring
+
 - Add `tree.*`/`section.*` branches to `handle_shell_hit` in `framework/renderer/wgpu/rs/shell.rs` to toggle `collapsed_sections` on chevron/row click, matching `default_open` initial state.
 - Dispatch `item.command` on label click, `hover_command`/`unhover_command` on pointer enter/leave, and `action.command` on action-icon click.
 - Implement `selection_change` dispatch: clicking a row updates the tracked `selected_ids` set and fires the tree's `selection_change` command with the new id list (single-select by default; extend for modifier-key multi-select if `InputState` exposes modifier keys - otherwise ship single-select and note range/multi-select as a documented follow-up limitation, since wgpu's input layer may not currently expose shift/meta state to hit-testing).
 
 ### 4.4 Drag and drop
+
 - For items with `draggable`/`drag_data` set, add pointer-based drag support (press-and-move threshold on the row) using the existing `InputState` drag primitives already used for split-resize in `dock.rs`, generalized to carry an arbitrary string payload.
 - Render a drop-position indicator (thin insertion line before/after a target row, or a highlighted rect for "inside") while dragging, matching React's `TreeReorderDropPreview` visual language.
 - On release over a valid drop target, dispatch the same command path the row's drag payload implies (this targets the practical existing use - dragging catalogue/palette rows onto a canvas or inspector drop target with their `drag_data` payload; there is no generic "reorder" wire command in `UiTreeNode` today, since React's in-tree reordering is handled by host-local `TreeDragAndDropController` callbacks rather than the wire protocol - wgpu will support payload-drop-to-target, not intra-tree row reordering, since the latter has no wire representation to dispatch).
 
 ## 5. Verification
+
 - `cargo test` (including any new dock/tree unit tests), rebuild wasm bindings for `ui_wgpu` + `semio-framework-renderer-wgpu`.
 - Run the wgpu E2E harness for at least one plugin with a real document/catalogue tree panel, confirm: Anta font renders, semio logo + navbar/footer icons are visible, panel toggle and fullscreen controls show text labels, dock focus/close show text labels, and the tree panel shows correct indentation/icons/chevrons/expand-collapse/selection.
 - Side-by-side screenshot diff against the equivalent React shell view for the same plugin to confirm visual parity, same approach as the prior layout-parity verification pass.

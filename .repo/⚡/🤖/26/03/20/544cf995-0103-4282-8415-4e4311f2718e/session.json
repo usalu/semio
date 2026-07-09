@@ -758,11 +758,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                ".vscode/launch.json",
-                ".vscode/tasks.json",
-                "compose/vscode/package.json"
-              ],
+              "files": [".vscode/launch.json", ".vscode/tasks.json", "compose/vscode/package.json"],
               "no_github": true,
               "path": "2026/03/20/FIX-VS-CODE-COMPOSE-DEV-ENVIRONMENT",
               "summary": "Fixed VS Code launch-task wiring for Compose and repo extension development. Repaired invalid preLaunchTask labels in .vscode/launch.json, corrected the repo VS Code dev task target in .vscode/tasks.json, and changed compose/vscode dev watching to use a shell-based parallel Vite command without an undeclared concurrently dependency."
@@ -888,11 +884,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                ".vscode/launch.json",
-                ".vscode/tasks.json",
-                "compose/vscode/package.json"
-              ],
+              "files": [".vscode/launch.json", ".vscode/tasks.json", "compose/vscode/package.json"],
               "no_github": true,
               "path": "repo://y/26/m/03/d/20/tk/FIX-VS-CODE-COMPOSE-DEV-ENVIRONMENT",
               "summary": "Fixed VS Code launch-task wiring for Compose and repo extension development. Repaired invalid preLaunchTask labels in .vscode/launch.json, corrected the repo VS Code dev task target in .vscode/tasks.json, and changed compose/vscode dev watching to use a shell-based parallel Vite command without an undeclared concurrently dependency."
@@ -921,11 +913,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                ".vscode/launch.json",
-                ".vscode/tasks.json",
-                "compose/vscode/package.json"
-              ],
+              "files": [".vscode/launch.json", ".vscode/tasks.json", "compose/vscode/package.json"],
               "no_github": true,
               "path": "26/03/20/FIX-VS-CODE-COMPOSE-DEV-ENVIRONMENT",
               "summary": "Fixed VS Code launch-task wiring for Compose and repo extension development. Repaired invalid preLaunchTask labels in .vscode/launch.json, corrected the repo VS Code dev task target in .vscode/tasks.json, and changed compose/vscode dev watching to use a shell-based parallel Vite command without an undeclared concurrently dependency."
@@ -955,11 +943,7 @@
             "mcp_result": "[🎫fixvscodecomposedevenvironment](repo://y/00/m/00/d/00/tk/FIX-VS-CODE-COMPOSE-DEV-ENVIRONMENT) - `closed` - `closed now`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                ".vscode/launch.json",
-                ".vscode/tasks.json",
-                "compose/vscode/package.json"
-              ],
+              "files": [".vscode/launch.json", ".vscode/tasks.json", "compose/vscode/package.json"],
               "no_github": true,
               "path": "26/03/20/FIX-VS-CODE-COMPOSE-DEV-ENVIRONMENT",
               "summary": "Fixed VS Code launch-task wiring for Compose and repo extension development. Repaired invalid preLaunchTask labels in .vscode/launch.json, corrected the repo VS Code dev task target in .vscode/tasks.json, and changed compose/vscode dev watching to use a shell-based parallel Vite command without an undeclared concurrently dependency."

@@ -7,7 +7,9 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Fixed all TS compilation errors across compose/js (4→0), compose/play (14→0), compose/sketchpad (19→0) with minimal type-level fixes: arrow function wrappers in Design.tsx, ReactNode cast in elements.tsx, any[] cast in sketchpad.test.ts, @semio-tech/compose-js path mapping in tsconfig.json, vite/client types in play+sketchpad tsconfigs. 14/14 unit tests pass, both dev servers return 200.
+
 ## Changes
+
 - Design.tsx: Wrapped FC components in arrow functions for `content` field type compatibility
 - elements.tsx: Cast `activeTab.content` as `React.ReactNode` in SidePanel fallback branch
 - sketchpad.test.ts: Added `as any[]` cast for `Object.values(typeApps)` activeTool access
@@ -16,6 +18,7 @@ Fixed all TS compilation errors across compose/js (4→0), compose/play (14→0)
 - tsconfig.json (compose/sketchpad): Added `vite/client` types for Vite-specific globals
 
 ## Log
+
 - compose/js: 4 errors → 0 errors
 - compose/play: 2 (+12 inherited) errors → 0 errors
 - compose/sketchpad: 19 errors → 0 errors
@@ -24,6 +27,7 @@ Fixed all TS compilation errors across compose/js (4→0), compose/play (14→0)
 - Unit tests: 14/14 pass ✓
 
 ## Todos
+
 - [x] Fix Design.tsx FC type errors
 - [x] Fix elements.tsx i18n type error
 - [x] Fix sketchpad.test.ts activeTool error
@@ -33,4 +37,5 @@ Fixed all TS compilation errors across compose/js (4→0), compose/play (14→0)
 - [x] Run tests to verify nothing broken (14/14 pass)
 
 ## Plan
+
 Minimal type-level fixes only: casts, arrow function wrappers, and tsconfig path/type additions. No functional changes.

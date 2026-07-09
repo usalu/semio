@@ -5,8 +5,5 @@
   "description": "Fix UI where all keyboard input is routed into the window engagement command field instead of the focused control. Align typing-target detection with replIsQueryTypingTarget and stop Engagement auto-focus from stealing focus from other inputs while active.",
   "summary": "Made shared window input and geometry semantic. ARIA textbox editors such as Writer now retain keyboard input instead of routing printable keys to engagement commands. Declarative window bodies now identify framed versus edgeless layout: tables and editors reserve the chrome row, while 2D/3D and other canvas surfaces remain full bleed. Added focused regression coverage, verified the UI/core/renderers through Nx, built Storybook successfully, and confirmed Writer focus behavior live with no console warnings or errors.",
   "goal": "🎯ui",
-  "sessions": [
-    "⚪32a5aeb5e17b48a5af6c6a4e925a8f69",
-    "⚪dc36cdbd9ae54eceb9f9a5eca5004d4d"
-  ]
+  "sessions": ["⚪32a5aeb5e17b48a5af6c6a4e925a8f69", "⚪dc36cdbd9ae54eceb9f9a5eca5004d4d"]
 }

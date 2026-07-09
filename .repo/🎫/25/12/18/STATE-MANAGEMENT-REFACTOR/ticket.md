@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Analysis of js/compose/sketchpad state management revealed:
@@ -102,6 +103,7 @@ Analysis of js/compose/sketchpad state management revealed:
 ## Log
 
 ## Summary
+
 # Summary
 
 Refactor js/compose state management to triadic hooks pattern

@@ -1517,9 +1517,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "⚙️package📌1📌108"
-        ],
+        "ranges": ["⚙️package📌1📌108"],
         "second": "🎆26🌙03☀️13⏰09⌚01⏱️35",
         "session": "⚪9430a17c9a894d3f9febda578921da55"
       },
@@ -1550,9 +1548,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "⚙️package📌1📌108"
-        ],
+        "ranges": ["⚙️package📌1📌108"],
         "second": "🎆26🌙03☀️13⏰09⌚01⏱️46",
         "session": "⚪9430a17c9a894d3f9febda578921da55"
       },
@@ -1583,9 +1579,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "⚙️package📌1📌108"
-        ],
+        "ranges": ["⚙️package📌1📌108"],
         "second": "🎆26🌙03☀️13⏰09⌚01⏱️58",
         "session": "⚪9430a17c9a894d3f9febda578921da55"
       },
@@ -1616,9 +1610,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "⚙️package📌1📌108"
-        ],
+        "ranges": ["⚙️package📌1📌108"],
         "second": "🎆26🌙03☀️13⏰09⌚02⏱️10",
         "session": "⚪9430a17c9a894d3f9febda578921da55"
       },
@@ -2010,9 +2002,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅vscode⚙️launch📌1📌682"
-        ],
+        "ranges": ["🛅vscode⚙️launch📌1📌682"],
         "second": "🎆26🌙03☀️13⏰09⌚20⏱️08",
         "session": "⚪9430a17c9a894d3f9febda578921da55"
       },
@@ -2043,9 +2033,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅vscode⚙️launch📌1📌682"
-        ],
+        "ranges": ["🛅vscode⚙️launch📌1📌682"],
         "second": "🎆26🌙03☀️13⏰09⌚20⏱️25",
         "session": "⚪9430a17c9a894d3f9febda578921da55"
       },
@@ -3056,9 +3044,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅vscode⚙️launch📌1📌682"
-        ],
+        "ranges": ["🛅vscode⚙️launch📌1📌682"],
         "second": "🎆26🌙03☀️13⏰09⌚51⏱️08",
         "session": "⚪9430a17c9a894d3f9febda578921da55"
       },
@@ -3089,9 +3075,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅vscode⚙️launch📌1📌682"
-        ],
+        "ranges": ["🛅vscode⚙️launch📌1📌682"],
         "second": "🎆26🌙03☀️13⏰09⌚51⏱️20",
         "session": "⚪9430a17c9a894d3f9febda578921da55"
       },
@@ -3435,9 +3419,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅vscode⚙️launch📌1📌682"
-        ],
+        "ranges": ["🛅vscode⚙️launch📌1📌682"],
         "second": "🎆26🌙03☀️13⏰09⌚51⏱️08",
         "session": "⚪9430a17c9a894d3f9febda578921da55"
       },
@@ -3468,9 +3450,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅vscode⚙️launch📌1📌682"
-        ],
+        "ranges": ["🛅vscode⚙️launch📌1📌682"],
         "second": "🎆26🌙03☀️13⏰09⌚51⏱️20",
         "session": "⚪9430a17c9a894d3f9febda578921da55"
       },

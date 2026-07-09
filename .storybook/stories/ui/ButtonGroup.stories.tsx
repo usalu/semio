@@ -38,9 +38,9 @@ export const Default: Story = {
   },
   render: (args) => (
     <ButtonGroup {...args}>
-      <ButtonGroupItem id="button-group-default-model" icon={<Box />} onClick={() => { }} />
-      <ButtonGroupItem id="button-group-default-diagram" icon={<Network />} onClick={() => { }} />
-      <ButtonGroupItem id="button-group-default-details" icon={<List />} onClick={() => { }} />
+      <ButtonGroupItem id="button-group-default-model" icon={<Box />} onClick={() => {}} />
+      <ButtonGroupItem id="button-group-default-diagram" icon={<Network />} onClick={() => {}} />
+      <ButtonGroupItem id="button-group-default-details" icon={<List />} onClick={() => {}} />
     </ButtonGroup>
   ),
 };

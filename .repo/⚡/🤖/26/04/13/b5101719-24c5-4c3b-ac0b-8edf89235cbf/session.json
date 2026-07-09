@@ -29,9 +29,7 @@
           "session_id": "b5101719-24c5-4c3b-ac0b-8edf89235cbf",
           "hook_event_name": "sessionEnd",
           "cursor_version": "3.0.13",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/b5101719-24c5-4c3b-ac0b-8edf89235cbf/b5101719-24c5-4c3b-ac0b-8edf89235cbf.jsonl"
         }

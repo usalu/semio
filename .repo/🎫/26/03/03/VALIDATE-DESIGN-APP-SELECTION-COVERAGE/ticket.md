@@ -7,7 +7,9 @@ goal: R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-DESIGN-APP
 ## Summary
 
 Expanded Design node hit testing from stroke-only to full-node clicks and revalidated the focused Design suite.
+
 ## Changes
+
 - Updated `compose/js/sketchpad/Design.tsx` so Design diagram nodes render an explicit invisible circular hit target matching the node body, allowing center clicks to select the node while preserving the visible ring styling.
 - Extended `compose/js/sketchpad.test.ts` inside the existing `Design` flow to detect visible Design-node renderers and assert center-click selection when one is available, while keeping the existing node-center selection regression active for visible diagram nodes.
 - Inspecting the existing `Design` Playwright flow and Design selection handlers to extend coverage for selection synchronization and mode behavior without adding a new test file.
@@ -17,6 +19,7 @@ Expanded Design node hit testing from stroke-only to full-node clicks and revali
 - Refactored the existing multi-connection batch-edit assertions to use deterministic `compose.kit.updateDesign` updates instead of brittle DOM editing against slider controls, so the full `Design` flow remains stable after the selection assertions.
 
 ## Log
+
 - Reopened the ticket for the follow-up request to make Design node selection use the full visible node hit area instead of stroke-only clicks.
 - Traced the current Design diagram selection path and narrowed the issue to the Design-specific SVG node renderer, where the circular node needs an explicit fill hit target for center clicks.
 - Patched the Design-node SVG renderer with a dedicated circular hit target and widened the existing Design Playwright helper so it searches more visible nodes for an SVG-backed Design node before asserting center-click selection.
@@ -33,6 +36,7 @@ Expanded Design node hit testing from stroke-only to full-node clicks and revali
 - Final verification result: `1 passed (5.5m)` on 2026-03-03.
 
 ## Todos
+
 - [x] Update the Design SVG node renderer so pointer hits cover the node interior and outline.
 - [x] Extend the existing `Design` Playwright flow with a center-click regression for visible Design nodes.
 - [x] Run the focused Design Playwright suite after the hit-area change.
@@ -43,6 +47,7 @@ Expanded Design node hit testing from stroke-only to full-node clicks and revali
 - [x] Finalize the summary and close the ticket with all touched files.
 
 ## Plan
+
 - Patch the Design diagram node SVG with an explicit interactive circular hit target so center clicks resolve to the same node selection path as stroke clicks.
 - Extend the existing `Design` Playwright scenario to find a visible Design node and assert that a center click selects it.
 - Re-run the focused Design suite, then update this ticket with the final summary and touched files.

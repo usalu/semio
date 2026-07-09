@@ -108,10 +108,10 @@ const schemaReplacements: [string, string][] = [
   ['"compose.sketchpad.surface.design.diagram/v1"', '"compose.sketchpad.surface.design.diagram"'],
   ['"compose.sketchpad.surface.type.scene/v1"', '"compose.sketchpad.surface.type.scene"'],
   ["ShootingSunV1", "ShootingSun"],
-  ['application/x-semio-sequence-step-v1', 'application/x-semio-sequence-step'],
-  ['application/x-flow-widget-v1', 'application/x-flow-widget'],
-  ['application/x-puzzle-2d-fixture-v1', 'application/x-puzzle-2d-fixture'],
-  ['application/x-puzzle-3d-fixture-v1', 'application/x-puzzle-3d-fixture'],
+  ["application/x-semio-sequence-step-v1", "application/x-semio-sequence-step"],
+  ["application/x-flow-widget-v1", "application/x-flow-widget"],
+  ["application/x-puzzle-2d-fixture-v1", "application/x-puzzle-2d-fixture"],
+  ["application/x-puzzle-3d-fixture-v1", "application/x-puzzle-3d-fixture"],
 ];
 
 const identifierReplacements: [string, string][] = [

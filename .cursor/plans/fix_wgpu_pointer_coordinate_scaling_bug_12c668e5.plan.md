@@ -2,21 +2,21 @@
 name: Fix WGPU pointer coordinate scaling bug
 overview: "Found a concrete, confirmed root cause: the WGPU renderer's winit pointer-coordinate conversion double-applies the device pixel ratio, which silently breaks all fine-grained pointer targeting (3D hover/select bounds checks) on any HiDPI display. Fix it, then verify live with real console/runtime evidence before declaring it resolved."
 todos:
-  - id: fix-pointer-coords
-    content: Remove the double scale-factor multiplication in pointer_coords(window, position) in ui/wgpu/rs/lib.rs
-    status: completed
-  - id: remove-dead-dom-listeners
-    content: Remove unused attach_dom_listeners and its canvas-based pointer_coords helper/re-export
-    status: completed
-  - id: rebuild-wgpu
-    content: Rebuild the WGPU wasm renderer and lowpoly plugin artifacts
-    status: completed
-  - id: instrument-verify
-    content: Add temporary [DEBUG] logs around CursorMoved position, pointer_coords output, and World3dState bounds; drive dev server and capture real console/screenshot evidence of hover+select working for mesh/vertex/edge/face with all selection targets on
-    status: completed
-  - id: cleanup-tests
-    content: Remove temporary debug logs, rerun cargo test, report concrete verified results
-    status: completed
+ - id: fix-pointer-coords
+   content: Remove the double scale-factor multiplication in pointer_coords(window, position) in ui/wgpu/rs/lib.rs
+   status: completed
+ - id: remove-dead-dom-listeners
+   content: Remove unused attach_dom_listeners and its canvas-based pointer_coords helper/re-export
+   status: completed
+ - id: rebuild-wgpu
+   content: Rebuild the WGPU wasm renderer and lowpoly plugin artifacts
+   status: completed
+ - id: instrument-verify
+   content: Add temporary [DEBUG] logs around CursorMoved position, pointer_coords output, and World3dState bounds; drive dev server and capture real console/screenshot evidence of hover+select working for mesh/vertex/edge/face with all selection targets on
+   status: completed
+ - id: cleanup-tests
+   content: Remove temporary debug logs, rerun cargo test, report concrete verified results
+   status: completed
 isProject: false
 ---
 
@@ -73,10 +73,11 @@ Because the same doubled coordinates also feed general UI widget hit-testing (`s
 
 ## Verification (must produce real runtime evidence, not just "should work now")
 
-3. Add temporary `[DEBUG]`-prefixed logging (ticket-scoped, removed at the end) at the two or three critical points: raw `CursorMoved` position received, computed `pointer_coords` output, and `state.bounds` for the active `World3dState`, plus whether `pick_hover_command`/`pick_select_command` produce a command. 
+3. Add temporary `[DEBUG]`-prefixed logging (ticket-scoped, removed at the end) at the two or three critical points: raw `CursorMoved` position received, computed `pointer_coords` output, and `state.bounds` for the active `World3dState`, plus whether `pick_hover_command`/`pick_select_command` produce a command.
 4. Launch the WGPU dev server and drive it with browser automation (or ask the user to reproduce) with the four selection-target toggles on, capturing actual console output and a screenshot showing hover highlight and a click producing a visible selection highlight for at least: mesh, vertex, edge, and face.
 5. Only once that evidence is captured, remove the temporary debug logs, rerun `cargo test` for `infinite/world` and `ui/wgpu`, and report back with the concrete evidence (not an assumption).
 
 ## Files touched
+
 - `ui/wgpu/rs/lib.rs` — fix `pointer_coords(window, position)`; remove dead `attach_dom_listeners` path.
 - Possibly none else — this is intentionally a narrow, surgical fix given four prior fix rounds already touched `apply_runtime_draw_flags`, `apply_ops`/`refresh_ui`, and the React renderer without resolving the WGPU symptom.

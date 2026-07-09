@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 GoldenLayout windows touched the canvas edge and splitters used a fixed pixel width, so spacing between windows and the canvas was not aligned to the unit sizing system. Window borders were applied inconsistently between GoldenLayout and Canvas-based layouts.
@@ -24,6 +25,7 @@ GoldenLayout windows touched the canvas edge and splitters used a fixed pixel wi
 ## Log
 
 ## Summary
+
 # Summary
 
 Sketchpad windows have 1-unit margins and continuous borders

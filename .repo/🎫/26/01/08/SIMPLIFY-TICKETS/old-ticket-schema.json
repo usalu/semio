@@ -30,11 +30,7 @@
                 "column": 0
               }
             },
-            "definitions": [
-              "BuildCodebaseBundles",
-              "BuildCodebaseTickets",
-              "result"
-            ],
+            "definitions": ["BuildCodebaseBundles", "BuildCodebaseTickets", "result"],
             "lines": {
               "added": 20,
               "removed": 0
@@ -51,11 +47,7 @@
                 "column": 0
               }
             },
-            "definitions": [
-              "TicketClose",
-              "ToolTicketClose",
-              "exportTickets"
-            ],
+            "definitions": ["TicketClose", "ToolTicketClose", "exportTickets"],
             "lines": {
               "added": 28,
               "removed": 0
@@ -72,9 +64,7 @@
                 "column": 0
               }
             },
-            "definitions": [
-              "exportTickets"
-            ],
+            "definitions": ["exportTickets"],
             "lines": {
               "added": 14,
               "removed": 0
@@ -91,9 +81,7 @@
                 "column": 0
               }
             },
-            "definitions": [
-              "ListContributors"
-            ],
+            "definitions": ["ListContributors"],
             "lines": {
               "added": 9,
               "removed": 0
@@ -110,14 +98,7 @@
                 "column": 0
               }
             },
-            "definitions": [
-              "TicketSectionMetrics",
-              "TicketFileMetricsEntry",
-              "TicketFilesResult",
-              "GetSummary",
-              "GetFiles",
-              "TicketCloseInput"
-            ],
+            "definitions": ["TicketSectionMetrics", "TicketFileMetricsEntry", "TicketFilesResult", "GetSummary", "GetFiles", "TicketCloseInput"],
             "lines": {
               "added": 26,
               "removed": 0
@@ -134,9 +115,7 @@
                 "column": 0
               }
             },
-            "definitions": [
-              "TicketCloseInput"
-            ],
+            "definitions": ["TicketCloseInput"],
             "lines": {
               "added": 6,
               "removed": 0
@@ -153,10 +132,7 @@
                 "column": 0
               }
             },
-            "definitions": [
-              "buildSchema",
-              "files"
-            ],
+            "definitions": ["buildSchema", "files"],
             "lines": {
               "added": 12,
               "removed": 0
@@ -173,13 +149,7 @@
                 "column": 0
               }
             },
-            "definitions": [
-              "CreateTicket",
-              "ComputeTicketFiles",
-              "computeAffectedSections",
-              "affectedDefs",
-              "FinishTicket"
-            ],
+            "definitions": ["CreateTicket", "ComputeTicketFiles", "computeAffectedSections", "affectedDefs", "FinishTicket"],
             "lines": {
               "added": 110,
               "removed": 0
@@ -196,9 +166,7 @@
                 "column": 0
               }
             },
-            "definitions": [
-              "TicketData"
-            ],
+            "definitions": ["TicketData"],
             "lines": {
               "added": 10,
               "removed": 0
@@ -224,9 +192,7 @@
                 "column": 0
               }
             },
-            "definitions": [
-              "TicketCloseInput"
-            ],
+            "definitions": ["TicketCloseInput"],
             "lines": {
               "added": 2,
               "removed": 0
@@ -252,11 +218,7 @@
                 "column": 0
               }
             },
-            "definitions": [
-              "ticketListCmd",
-              "ticketCloseCmd",
-              "init"
-            ],
+            "definitions": ["ticketListCmd", "ticketCloseCmd", "init"],
             "lines": {
               "added": 16,
               "removed": 0
@@ -273,11 +235,7 @@
                 "column": 0
               }
             },
-            "definitions": [
-              "ticketListCmd",
-              "ticketCloseCmd",
-              "init"
-            ],
+            "definitions": ["ticketListCmd", "ticketCloseCmd", "init"],
             "lines": {
               "added": 16,
               "removed": 0
@@ -303,9 +261,7 @@
                 "column": 0
               }
             },
-            "definitions": [
-              "ticketClose"
-            ],
+            "definitions": ["ticketClose"],
             "lines": {
               "added": 9,
               "removed": 0
@@ -331,12 +287,7 @@
                 "column": 0
               }
             },
-            "definitions": [
-              "registerCommands",
-              "resolvedTicket",
-              "summary",
-              "fileUris"
-            ],
+            "definitions": ["registerCommands", "resolvedTicket", "summary", "fileUris"],
             "lines": {
               "added": 15,
               "removed": 0
@@ -353,10 +304,7 @@
                 "column": 0
               }
             },
-            "definitions": [
-              "loadCodebase",
-              "query"
-            ],
+            "definitions": ["loadCodebase", "query"],
             "lines": {
               "added": 1,
               "removed": 0

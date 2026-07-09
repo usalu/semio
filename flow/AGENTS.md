@@ -2,7 +2,6 @@
 
 flow is a gui for the [neural engine](../neural/engine/AGENTS.md#engine).
 
-
 # Flow
 
 A flow is a graphical [directed acyclic graph](../mathematical/graph/port/directed/dag) [neural tree](../neural/AGENTS.md#tree) along with sources and sinks.
@@ -31,7 +30,7 @@ An source is a component that interactively produces a dictionary.
 A slider is component for creating a single number dictionary.
 
 ```json
-{"number":3.1}
+{ "number": 3.1 }
 ```
 
 ### Note
@@ -39,7 +38,7 @@ A slider is component for creating a single number dictionary.
 A note is a component for creating a single text dictionary.
 
 ```json
-{"text":"Some text"}
+{ "text": "Some text" }
 ```
 
 ## Sink

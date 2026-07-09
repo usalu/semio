@@ -13,7 +13,7 @@ import { MetabolismKit as metabolismKit } from "@semio-tech/semio-asset";
 
 // #region 🖥️Data
 
-const rawKind = (metabolismKit.types ?? []).find((kind) => kind.name === 'Tambour')! as ComposeKind;
+const rawKind = (metabolismKit.types ?? []).find((kind) => kind.name === "Tambour")! as ComposeKind;
 const storyKind: ComposeKind = {
   ...rawKind,
   representations: (rawKind.representations ?? []).slice(0, 1),

@@ -5,7 +5,5 @@
   "description": "Finish aligning gql command structs with target.schema.graphql: Rust struct names match GraphQL *CommandInput / *OperationInput types (Type, Port, Connector, Design, Piece, Pieces). Mutation.session returns SessionCommandInput. Ensure gql::sdl() skips empty SDL_FRAGMENT entries so schema_matches_target_graphql_file passes. No parallel Nav types; single owner on operations via OwnerEntity.",
   "summary": "Renamed gql nested operation structs to match SDL (*OperationInput). Fixed Mutation.session to return SessionCommandInput (removed stale SessionCommandNav). Restored sdl() behavior: skip empty SDL_FRAGMENT strings so fragment registry does not prefix hundreds of newlines and schema_matches_target_graphql_file passes. cargo test -p compose --lib and wasm32 check succeeded.",
   "goal": "🎯runningsketchpad",
-  "sessions": [
-    "⚪e98852a175524791963b3b25d9223387"
-  ]
+  "sessions": ["⚪e98852a175524791963b3b25d9223387"]
 }

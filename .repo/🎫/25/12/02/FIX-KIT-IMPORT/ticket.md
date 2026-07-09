@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Playwright test for Design app was timing out when importing the metabolism kit. The test failed at `page.waitForURL` because:
@@ -46,6 +47,7 @@ Playwright test for Design app was timing out when importing the metabolism kit.
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix kit import and design app infinite loop

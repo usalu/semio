@@ -26,9 +26,7 @@
           "composer_mode": "agent",
           "hook_event_name": "sessionStart",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": null
         }
@@ -62,9 +60,7 @@
           ],
           "hook_event_name": "beforeSubmitPrompt",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": null
         }
@@ -89,9 +85,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": null
         }
@@ -119,9 +113,7 @@
           "tool_use_id": "fd580cad-492d-4a6b-bb33-768e9fbdf12d",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": null
         }
@@ -147,9 +139,7 @@
           "command": "compose-repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": null
         }
@@ -179,9 +169,7 @@
           "tool_use_id": "toolu_01FQDKhpGvLBfpWzScfUAjgR",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": null
         }
@@ -213,9 +201,7 @@
           "tool_use_id": "toolu_01FQDKhpGvLBfpWzScfUAjgR",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": null
         }
@@ -243,9 +229,7 @@
           "duration": 30777.426,
           "hook_event_name": "afterMCPExecution",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -276,9 +260,7 @@
           "tool_use_id": "fd580cad-492d-4a6b-bb33-768e9fbdf12d",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -309,9 +291,7 @@
           "tool_use_id": "toolu_01N44Z3ryah2sDPRLcCK7s16",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -344,9 +324,7 @@
           "tool_use_id": "toolu_01N44Z3ryah2sDPRLcCK7s16",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -372,9 +350,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -404,9 +380,7 @@
           "tool_use_id": "toolu_01T1MJaMm1ecRM4qsGWudcb9",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -438,9 +412,7 @@
           "tool_use_id": "toolu_01T1MJaMm1ecRM4qsGWudcb9",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -470,9 +442,7 @@
           "tool_use_id": "toolu_01WRzbvp8Z5gYwTp65dRB4uF",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -504,9 +474,7 @@
           "tool_use_id": "toolu_01WRzbvp8Z5gYwTp65dRB4uF",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -536,9 +504,7 @@
           "tool_use_id": "toolu_01Ssq6wDujFF99RXMFxuMBfz",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -570,9 +536,7 @@
           "tool_use_id": "toolu_01Ssq6wDujFF99RXMFxuMBfz",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -598,9 +562,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -631,9 +593,7 @@
           "tool_use_id": "toolu_018666oN8BbFXtCt7c7qzD98",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -664,9 +624,7 @@
           "tool_use_id": "toolu_01P5zk2hzY76J7g2Se3F6LHt",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -699,9 +657,7 @@
           "tool_use_id": "toolu_018666oN8BbFXtCt7c7qzD98",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -734,9 +690,7 @@
           "tool_use_id": "toolu_01P5zk2hzY76J7g2Se3F6LHt",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -766,9 +720,7 @@
           "tool_use_id": "toolu_013PNbNayr9ms2JJ136TJqB4",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -800,9 +752,7 @@
           "tool_use_id": "toolu_013PNbNayr9ms2JJ136TJqB4",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -833,9 +783,7 @@
           "tool_use_id": "toolu_01Kt9bb26XbdtvTBrxggyU4K",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -868,9 +816,7 @@
           "tool_use_id": "toolu_01Kt9bb26XbdtvTBrxggyU4K",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -896,9 +842,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -932,9 +876,7 @@
           "tool_use_id": "fc883e00-3b05-429c-ba44-2803b06ac0eb",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -961,9 +903,7 @@
           "command": "compose-repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -991,9 +931,7 @@
           "duration": 5332.309,
           "hook_event_name": "afterMCPExecution",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1029,9 +967,7 @@
           "tool_use_id": "fc883e00-3b05-429c-ba44-2803b06ac0eb",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1063,9 +999,7 @@
           "cwd": "",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1092,9 +1026,7 @@
           "sandbox": false,
           "hook_event_name": "beforeShellExecution",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1122,9 +1054,7 @@
           "sandbox": false,
           "hook_event_name": "afterShellExecution",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1158,9 +1088,7 @@
           "cwd": "",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1186,9 +1114,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1218,9 +1144,7 @@
           "tool_use_id": "toolu_01H9RkhC3ZEMzvLxUhbYXQVN",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1252,9 +1176,7 @@
           "tool_use_id": "toolu_01H9RkhC3ZEMzvLxUhbYXQVN",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1280,9 +1202,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "hook_event_name": "afterAgentThought",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1312,9 +1232,7 @@
           "tool_use_id": "toolu_01324AtN5qAucRFA3G8UKiiV",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1346,9 +1264,7 @@
           "tool_use_id": "toolu_01324AtN5qAucRFA3G8UKiiV",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1378,9 +1294,7 @@
           "tool_use_id": "toolu_01Fhp5U15o1R9UEXw5F2Fvw5",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1412,9 +1326,7 @@
           "tool_use_id": "toolu_01Fhp5U15o1R9UEXw5F2Fvw5",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1444,9 +1356,7 @@
           "tool_use_id": "toolu_013tJhLP68XdyJNRuCDKWEGF",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1478,9 +1388,7 @@
           "tool_use_id": "toolu_013tJhLP68XdyJNRuCDKWEGF",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1510,9 +1418,7 @@
           "tool_use_id": "toolu_01UxgKrZH95X1RzUuPEyPyVb",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1544,9 +1450,7 @@
           "tool_use_id": "toolu_01UxgKrZH95X1RzUuPEyPyVb",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1575,9 +1479,7 @@
           "tool_use_id": "toolu_01937t1DFYJchfy44pRHDzNV",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1606,9 +1508,7 @@
           "tool_use_id": "toolu_01JCGfgNrFfAdcyRyeQaAJFF",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1639,9 +1539,7 @@
           "tool_use_id": "toolu_01937t1DFYJchfy44pRHDzNV",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1672,9 +1570,7 @@
           "tool_use_id": "toolu_01JCGfgNrFfAdcyRyeQaAJFF",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1703,9 +1599,7 @@
           "tool_use_id": "toolu_015VQrmcWm9rtn2KqNWHxZer",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1736,9 +1630,7 @@
           "tool_use_id": "toolu_015VQrmcWm9rtn2KqNWHxZer",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1767,9 +1659,7 @@
           "tool_use_id": "toolu_01A5rZB6Rfo9NGTxmKXc4ndL",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1800,9 +1690,7 @@
           "tool_use_id": "toolu_01A5rZB6Rfo9NGTxmKXc4ndL",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1832,9 +1720,7 @@
           "tool_use_id": "toolu_01Dd1tbwhfaaUSdsSrkdJqVK",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1866,9 +1752,7 @@
           "tool_use_id": "toolu_01Dd1tbwhfaaUSdsSrkdJqVK",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1898,9 +1782,7 @@
           "tool_use_id": "toolu_01Hz2YuaKLm2WMoJ8gP5Pk7B",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1932,9 +1814,7 @@
           "tool_use_id": "toolu_01Hz2YuaKLm2WMoJ8gP5Pk7B",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1964,9 +1844,7 @@
           "tool_use_id": "toolu_01N3epkXKWHB8T7ewMMQgvtd",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -1998,9 +1876,7 @@
           "tool_use_id": "toolu_01N3epkXKWHB8T7ewMMQgvtd",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2030,9 +1906,7 @@
           "tool_use_id": "toolu_01VKXoUWHS8a1U9c5nCVHFzv",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2064,9 +1938,7 @@
           "tool_use_id": "toolu_01VKXoUWHS8a1U9c5nCVHFzv",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2096,9 +1968,7 @@
           "tool_use_id": "toolu_01WbJwewic8YfXnzh57PptuR",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2130,9 +2000,7 @@
           "tool_use_id": "toolu_01WbJwewic8YfXnzh57PptuR",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2162,9 +2030,7 @@
           "tool_use_id": "toolu_01Ga8qAPt8ovAb3ybDMdee8i",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2196,9 +2062,7 @@
           "tool_use_id": "toolu_01Ga8qAPt8ovAb3ybDMdee8i",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2224,18 +2088,13 @@
           "tool_input": {
             "title": "Remove Sub Tool Dropdown from Sketchbar Toolbar",
             "summary": "Removed all sub-tool dropdown/toggle UI from the sketchbar toolbar since no tools currently have sub-tools. Removed subToolId/subToolLabelId/subToolIcon fields from PanelSection interface, removed activeSubToolByGroup state and setSubTool callback, replaced selection group's dropdown Toggle with a simple single Toggle (consistent with all other groups), removed sub-tool filtering in the settings toolbar zone, cleaned up all addSection calls in both Kit and Type apps, removed subtool i18n translation blocks from both German and English translations, and updated the areToolbarGroupsEquivalent comparison.",
-            "files": [
-              "compose/sketchpad/index.tsx",
-              "elements/ui/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx", "elements/ui/index.tsx"],
             "no_github": true
           },
           "tool_use_id": "6b072a38-7654-4c54-a9e1-744a219ad041",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2262,9 +2121,7 @@
           "command": "compose-repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2290,10 +2147,7 @@
           "tool_input": {
             "title": "Remove Sub Tool Dropdown from Sketchbar Toolbar",
             "summary": "Removed all sub-tool dropdown/toggle UI from the sketchbar toolbar since no tools currently have sub-tools. Removed subToolId/subToolLabelId/subToolIcon fields from PanelSection interface, removed activeSubToolByGroup state and setSubTool callback, replaced selection group's dropdown Toggle with a simple single Toggle (consistent with all other groups), removed sub-tool filtering in the settings toolbar zone, cleaned up all addSection calls in both Kit and Type apps, removed subtool i18n translation blocks from both German and English translations, and updated the areToolbarGroupsEquivalent comparison.",
-            "files": [
-              "compose/sketchpad/index.tsx",
-              "elements/ui/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx", "elements/ui/index.tsx"],
             "no_github": true
           },
           "error_message": "MCP error -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/00/ticket.json",
@@ -2303,9 +2157,7 @@
           "is_interrupt": false,
           "hook_event_name": "postToolUseFailure",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2336,9 +2188,7 @@
           "tool_use_id": "toolu_01BwmAdPd1DBGNvzxpqANmVo",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2371,9 +2221,7 @@
           "tool_use_id": "toolu_01BwmAdPd1DBGNvzxpqANmVo",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2405,9 +2253,7 @@
           "cwd": "",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2434,9 +2280,7 @@
           "sandbox": false,
           "hook_event_name": "beforeShellExecution",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2464,9 +2308,7 @@
           "sandbox": false,
           "hook_event_name": "afterShellExecution",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2500,9 +2342,7 @@
           "cwd": "",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2529,18 +2369,13 @@
             "path": "26/04/02/REMOVE-SUB-TOOL-DROPDOWN-FROM-SKETCHBAR-TOOLBAR",
             "title": "Remove Sub Tool Dropdown from Sketchbar Toolbar",
             "summary": "Removed all sub-tool dropdown/toggle UI from the sketchbar toolbar since no tools currently have sub-tools. Removed subToolId/subToolLabelId/subToolIcon fields from PanelSection interface, removed activeSubToolByGroup state and setSubTool callback, replaced selection group's dropdown Toggle with a simple single Toggle (consistent with all other groups), removed sub-tool filtering in the settings toolbar zone, cleaned up all addSection calls in both Kit and Type apps, removed subtool i18n translation blocks from both German and English translations, and updated areToolbarGroupsEquivalent comparison.",
-            "files": [
-              "compose/sketchpad/index.tsx",
-              "elements/ui/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx", "elements/ui/index.tsx"],
             "no_github": true
           },
           "tool_use_id": "851f460b-5b07-40ed-b8c4-1d68584ccad0",
           "hook_event_name": "preToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2567,9 +2402,7 @@
           "command": "compose-repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2597,9 +2430,7 @@
           "duration": 8337.803,
           "hook_event_name": "afterMCPExecution",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2626,10 +2457,7 @@
             "path": "26/04/02/REMOVE-SUB-TOOL-DROPDOWN-FROM-SKETCHBAR-TOOLBAR",
             "title": "Remove Sub Tool Dropdown from Sketchbar Toolbar",
             "summary": "Removed all sub-tool dropdown/toggle UI from the sketchbar toolbar since no tools currently have sub-tools. Removed subToolId/subToolLabelId/subToolIcon fields from PanelSection interface, removed activeSubToolByGroup state and setSubTool callback, replaced selection group's dropdown Toggle with a simple single Toggle (consistent with all other groups), removed sub-tool filtering in the settings toolbar zone, cleaned up all addSection calls in both Kit and Type apps, removed subtool i18n translation blocks from both German and English translations, and updated areToolbarGroupsEquivalent comparison.",
-            "files": [
-              "compose/sketchpad/index.tsx",
-              "elements/ui/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx", "elements/ui/index.tsx"],
             "no_github": true
           },
           "tool_output": "{\"content\":[{\"type\":\"text\",\"text\":\"[🎫removesubtooldropdownfromsketchbartoolbar](repo://ticket/🎫removesubtooldropdownfromsketchbartoolbar) - `closed` - `closed now`\\n\"}],\"isError\":false}",
@@ -2637,9 +2465,7 @@
           "tool_use_id": "851f460b-5b07-40ed-b8c4-1d68584ccad0",
           "hook_event_name": "postToolUse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2664,9 +2490,7 @@
           "text": "Done. Here's a summary of all changes made:\n\n**`compose/sketchpad/index.tsx`:**\n- Removed `subToolId`, `subToolLabelId`, `subToolIcon` fields from the `PanelSection` interface (already done by another agent, but all usages remained)\n- Removed `activeSubToolByGroup` state and `setSubTool` callback that managed sub-tool state\n- Replaced the entire selection group special-case rendering (which had a `kind=\"dropdown\"` Toggle with sub-tool items) with a simple `kind=\"single\"` Toggle -- now consistent with all other toolbar groups\n- Removed sub-tool filtering logic in the settings toolbar zone that was hiding non-active sub-tool sections\n- Removed `subToolId`/`subToolLabelId`/`subToolIcon` from the Kit app's selection toolbar section\n- Removed `subToolId`/`subToolLabelId`/`subToolIcon` from the Type app's hand and connector toolbar sections (preserved `onActivate` on connector)\n- Updated `areToolbarGroupsEquivalent` to no longer compare sub-tool fields\n- Updated comment referencing \"toolbar sub-tool configurations\"\n\n**`elements/ui/index.tsx`:**\n- Removed the entire `\"subtool\"` i18n translation block from German translations\n- Removed the entire `\"subtool\"` i18n translation block from English translations",
           "hook_event_name": "afterAgentResponse",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2692,9 +2516,7 @@
           "loop_count": 0,
           "hook_event_name": "stop",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }
@@ -2723,9 +2545,7 @@
           "final_status": "completed",
           "hook_event_name": "sessionEnd",
           "cursor_version": "2.4.31",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "kinan.sarak@gmail.com",
           "transcript_path": "/home/vscode/.cursor/projects/workspaces-compose/agent-transcripts/73d9c190-9796-496e-a6e5-199cabc5c578.txt"
         }

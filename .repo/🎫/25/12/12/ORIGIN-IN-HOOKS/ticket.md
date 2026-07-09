@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The codebase has hooks that expose `origin` as a parameter in their returned action functions. Per AGENTS.md, hooks should internally use `useOrigin()` to get the origin automatically instead of exposing it as a parameter.
@@ -39,6 +40,7 @@ Correct pattern (as seen in `useKitAppTransaction`):
 ## Log
 
 ## Summary
+
 # Summary
 
 Hooks auto-inject command origins via useOrigin

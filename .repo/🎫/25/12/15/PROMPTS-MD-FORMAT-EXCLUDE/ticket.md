@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 `log/prompts.md` was formatted by Prettier (preflight + VS Code format on save).
@@ -20,6 +21,7 @@ Exclude `**/prompts.md` via `.prettierignore` and ensure VS Code Prettier uses t
 ## Log
 
 ## Summary
+
 # Summary
 
 Exclude prompts.md from formatting

@@ -12,12 +12,7 @@ class WasmScript extends BundleScript {
       wasmBaseName: "mathematical_graph_port_directed_dag",
       pkg: {
         name: "@semio-tech/dag-core",
-        files: [
-          "mathematical_graph_port_directed_dag_bg.wasm",
-          "mathematical_graph_port_directed_dag.js",
-          "mathematical_graph_port_directed_dag.d.ts",
-          "mathematical_graph_port_directed_dag_bg.wasm.d.ts",
-        ],
+        files: ["mathematical_graph_port_directed_dag_bg.wasm", "mathematical_graph_port_directed_dag.js", "mathematical_graph_port_directed_dag.d.ts", "mathematical_graph_port_directed_dag_bg.wasm.d.ts"],
         main: "mathematical_graph_port_directed_dag.js",
         module: "mathematical_graph_port_directed_dag.js",
         types: "mathematical_graph_port_directed_dag.d.ts",

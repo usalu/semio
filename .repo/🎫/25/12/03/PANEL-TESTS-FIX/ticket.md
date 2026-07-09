@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The panel system in the sketchpad had a broken bottomPanel implementation that was incorrectly tied to `panelVisibility.chat` but showing `consoleSections` which are never populated.
@@ -75,6 +76,7 @@ Individual panel items (e.g., `compose.sketchpad.navbar.panelToggle.settings.sho
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix broken panel code and extend sketchpad tests for all panel types

@@ -7,6 +7,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Revalidated the restored Type toolbar tool-sync fix and confirmed the matching Type Playwright coverage passes against a live sketchpad dev server.
+
 ## Changes
 
 - `compose/js/sketchpad/Type.tsx`: selecting the type-app selection toolbar group now forces `selection-normal` when the current tool is not a selection mode, and the create toolbar group now forces `connector` while it is active.

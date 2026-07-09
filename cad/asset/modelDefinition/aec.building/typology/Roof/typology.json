@@ -4,9 +4,7 @@
   "version": "1.0.0",
   "label": "Roof",
   "description": "Top enclosure or covering element.",
-  "primitiveKinds": [
-    "surface"
-  ],
+  "primitiveKinds": ["surface"],
   "style": {
     "color": "#7A9E6E",
     "edgeColor": "#4A6342",

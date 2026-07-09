@@ -62,7 +62,7 @@ export const DiagramNodeDefault: Story = {
       <DiagramNode content="Selected" selected />
       <DiagramNode content="Hovered" hovered />
       <DiagramNode content="Placeholder" isPlaceholder />
-      <DiagramNode content="Clickable" onClick={() => { }} />
+      <DiagramNode content="Clickable" onClick={() => {}} />
     </div>
   ),
 };

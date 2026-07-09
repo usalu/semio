@@ -8984,10 +8984,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/44fdb169-f23c-4ec7-bba2-1920f8fd0de8.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/elements/ui/index.tsx",
-              "/workspaces/semio/compose/sketchpad/index.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/elements/ui/index.tsx", "/workspaces/semio/compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_vrtx_01LgdmyNJHXoy2K2EtRnh2iN__vscode-1774519724793",
           "cwd": "/workspaces/semio"
@@ -9013,10 +9010,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/44fdb169-f23c-4ec7-bba2-1920f8fd0de8.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/elements/ui/index.tsx",
-              "/workspaces/semio/compose/sketchpad/index.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/elements/ui/index.tsx", "/workspaces/semio/compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_vrtx_01LgdmyNJHXoy2K2EtRnh2iN__vscode-1774519724793",
           "cwd": "/workspaces/semio"
@@ -9042,10 +9036,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/44fdb169-f23c-4ec7-bba2-1920f8fd0de8.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/elements/ui/index.tsx",
-              "/workspaces/semio/compose/sketchpad/index.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/elements/ui/index.tsx", "/workspaces/semio/compose/sketchpad/index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01LgdmyNJHXoy2K2EtRnh2iN__vscode-1774519724793",
@@ -9072,10 +9063,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/44fdb169-f23c-4ec7-bba2-1920f8fd0de8.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "/workspaces/semio/elements/ui/index.tsx",
-              "/workspaces/semio/compose/sketchpad/index.tsx"
-            ]
+            "filePaths": ["/workspaces/semio/elements/ui/index.tsx", "/workspaces/semio/compose/sketchpad/index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "toolu_vrtx_01LgdmyNJHXoy2K2EtRnh2iN__vscode-1774519724793",
@@ -10412,10 +10400,7 @@
           "tool_input": {
             "filesCreated": [],
             "filesRemoved": [],
-            "filesUpdated": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "filesUpdated": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene.",
             "ticketId": "2026/03/26/addselectionboxformultiselectinsceneanddiagram"
           },
@@ -10445,10 +10430,7 @@
           "tool_input": {
             "filesCreated": [],
             "filesRemoved": [],
-            "filesUpdated": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "filesUpdated": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene.",
             "ticketId": "2026/03/26/addselectionboxformultiselectinsceneanddiagram"
           },
@@ -10808,10 +10790,7 @@
           "tool_input": {
             "filesCreated": [],
             "filesRemoved": [],
-            "filesUpdated": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "filesUpdated": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene.",
             "ticketId": "ADD-SELECTION-BOX-FOR-MULTI-SELECT-IN-SCENE-AND-DIAGRAM"
           },
@@ -10841,10 +10820,7 @@
           "tool_input": {
             "filesCreated": [],
             "filesRemoved": [],
-            "filesUpdated": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "filesUpdated": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene.",
             "ticketId": "ADD-SELECTION-BOX-FOR-MULTI-SELECT-IN-SCENE-AND-DIAGRAM"
           },
@@ -10988,10 +10964,7 @@
           "tool_input": {
             "filesCreated": [],
             "filesRemoved": [],
-            "filesUpdated": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "filesUpdated": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene.",
             "ticketId": "26/03/26/ADD-SELECTION-BOX-FOR-MULTI-SELECT-IN-SCENE-AND-DIAGRAM"
           },
@@ -11021,10 +10994,7 @@
           "tool_input": {
             "filesCreated": [],
             "filesRemoved": [],
-            "filesUpdated": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "filesUpdated": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene.",
             "ticketId": "26/03/26/ADD-SELECTION-BOX-FOR-MULTI-SELECT-IN-SCENE-AND-DIAGRAM"
           },
@@ -11054,10 +11024,7 @@
           "tool_input": {
             "path": ".repo/🎫/26/03/26/ADD-SELECTION-BOX-FOR-MULTI-SELECT-IN-SCENE-AND-DIAGRAM",
             "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene.",
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_vrtx_01FiRq63qqSxcgRBzhi2NfVr__vscode-1774519724809",
           "cwd": "/workspaces/semio"
@@ -11085,10 +11052,7 @@
           "tool_input": {
             "path": ".repo/🎫/26/03/26/ADD-SELECTION-BOX-FOR-MULTI-SELECT-IN-SCENE-AND-DIAGRAM",
             "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene.",
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_vrtx_01FiRq63qqSxcgRBzhi2NfVr__vscode-1774519724809",
           "cwd": "/workspaces/semio"
@@ -11114,10 +11078,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/44fdb169-f23c-4ec7-bba2-1920f8fd0de8.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "path": "/workspaces/semio/.repo/🎫/26/03/26/ADD-SELECTION-BOX-FOR-MULTI-SELECT-IN-SCENE-AND-DIAGRAM",
             "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene."
           },
@@ -11145,10 +11106,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/44fdb169-f23c-4ec7-bba2-1920f8fd0de8.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "path": "/workspaces/semio/.repo/🎫/26/03/26/ADD-SELECTION-BOX-FOR-MULTI-SELECT-IN-SCENE-AND-DIAGRAM",
             "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene."
           },
@@ -11176,10 +11134,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/44fdb169-f23c-4ec7-bba2-1920f8fd0de8.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene."
           },
           "tool_use_id": "toolu_vrtx_01WEAKZLSLAiUNZKoLqaMyhA__vscode-1774519724811",
@@ -11206,10 +11161,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/44fdb169-f23c-4ec7-bba2-1920f8fd0de8.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene."
           },
           "tool_use_id": "toolu_vrtx_01WEAKZLSLAiUNZKoLqaMyhA__vscode-1774519724811",
@@ -11238,10 +11190,7 @@
           "tool_input": {
             "path": "26/03/26/ADD-SELECTION-BOX-FOR-MULTI-SELECT-IN-SCENE-AND-DIAGRAM",
             "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene.",
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_vrtx_01ReNJZyKUjH2tnvGixMMq7m__vscode-1774519724812",
           "cwd": "/workspaces/semio"
@@ -11269,10 +11218,7 @@
           "tool_input": {
             "path": "26/03/26/ADD-SELECTION-BOX-FOR-MULTI-SELECT-IN-SCENE-AND-DIAGRAM",
             "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene.",
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_vrtx_01ReNJZyKUjH2tnvGixMMq7m__vscode-1774519724812",
           "cwd": "/workspaces/semio"
@@ -11300,10 +11246,7 @@
           "tool_input": {
             "path": "26/03/26/ADD-SELECTION-BOX-FOR-MULTI-SELECT-IN-SCENE-AND-DIAGRAM",
             "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene.",
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"]
           },
           "tool_response": "[🎫addselectionboxformultiselectinsceneanddiagram](repo://ticket/🎫addselectionboxformultiselectinsceneanddiagram) - `closed` - `closed now`\n",
           "tool_use_id": "toolu_vrtx_01ReNJZyKUjH2tnvGixMMq7m__vscode-1774519724812",
@@ -11332,10 +11275,7 @@
           "tool_input": {
             "path": "26/03/26/ADD-SELECTION-BOX-FOR-MULTI-SELECT-IN-SCENE-AND-DIAGRAM",
             "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene.",
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"]
           },
           "tool_response": "[🎫addselectionboxformultiselectinsceneanddiagram](repo://ticket/🎫addselectionboxformultiselectinsceneanddiagram) - `closed` - `closed now`\n",
           "tool_use_id": "toolu_vrtx_01ReNJZyKUjH2tnvGixMMq7m__vscode-1774519724812",

@@ -2,21 +2,21 @@
 name: Fix Vector Tile Zoom Flicker
 overview: "Apply the same tile-pyramid fallback used for raster tiles to the vector tile path: render all cached vector tiles coarse-to-fine with correct per-tile coordinates, and retain ancestor + previous-frame vector tiles so coverage never drops to the background during zoom-level changes."
 todos:
-  - id: rename-helper
-    content: Rename tiles::raster_retention_keys to tile_retention_keys; update the raster call site and any test reference.
-    status: completed
-  - id: vector-retention
-    content: Add last_vector_visible field to MapHost (init empty); retain vector visible + ancestors + previous-frame keys in prepare_visible_tiles, clearing last_vector_visible on the unavailable cutoff.
-    status: completed
-  - id: vector-pyramid
-    content: Rewrite append_vector_tiles to iterate cached vector tiles, cull by viewport, sort coarse-to-fine, render polygons with each tile's own coordinates, and draw labels only at the exact vector zoom level.
-    status: completed
-  - id: vector-tests
-    content: "Extend the tests module: helper rename fix and a vector ancestor-retained-after-zoom test using upload_vector_tile(0,0,0,&[])."
-    status: completed
-  - id: vector-verify
-    content: Run the gis/map/play test task, then verify in the dev server (Vector mode) that zoom shows no flicker and no squashed coarse tiles.
-    status: completed
+ - id: rename-helper
+   content: Rename tiles::raster_retention_keys to tile_retention_keys; update the raster call site and any test reference.
+   status: completed
+ - id: vector-retention
+   content: Add last_vector_visible field to MapHost (init empty); retain vector visible + ancestors + previous-frame keys in prepare_visible_tiles, clearing last_vector_visible on the unavailable cutoff.
+   status: completed
+ - id: vector-pyramid
+   content: Rewrite append_vector_tiles to iterate cached vector tiles, cull by viewport, sort coarse-to-fine, render polygons with each tile's own coordinates, and draw labels only at the exact vector zoom level.
+   status: completed
+ - id: vector-tests
+   content: "Extend the tests module: helper rename fix and a vector ancestor-retained-after-zoom test using upload_vector_tile(0,0,0,&[])."
+   status: completed
+ - id: vector-verify
+   content: Run the gis/map/play test task, then verify in the dev server (Vector mode) that zoom shows no flicker and no squashed coarse tiles.
+   status: completed
 isProject: false
 ---
 
@@ -53,8 +53,6 @@ flowchart TD
     Sort --> Lbl["draw labels only when tz == exact z"]
 ```
 
-
-
 ## 1. Shared retention helper (tiles module)
 
 Rename `raster_retention_keys` (it has no raster-specific logic) to `tile_retention_keys` and reuse it for both raster and vector. Update the existing raster call at line 908 and the test that references it.
@@ -88,4 +86,3 @@ Raster path is unchanged beyond the helper rename. Vector availability cutoff be
 
 - `gis/map/play` `test` task (runs `cargo test -p gis_map`, rebuilds wasm, vitest).
 - `gis/map/play` `dev` (port 6040), set render mode to Vector, and zoom across z boundaries: vector land must stay covered by coarser tiles with no background flash and no squashed/repeated coarse geometry. Hard-refresh so the new wasm loads.
-

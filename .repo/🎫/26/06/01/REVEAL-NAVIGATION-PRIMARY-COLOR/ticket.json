@@ -5,7 +5,5 @@
   "description": "Style Reveal.js presentation navigation controls with primary theme color instead of foreground.",
   "summary": "Reveal.js navigation controls (arrows) now use the theme primary color: updated `--r-controls-color` and `.reveal .controls` rules in presentation renderer globals.css to `var(--color-primary)` instead of `var(--foreground)`, matching progress bar and links. All @semio-tech/framework-presentation-renderer-react tests pass (11).",
   "goal": "🎯presentation",
-  "sessions": [
-    "⚪5c2fef65099e4e519dc349ef019af9a2"
-  ]
+  "sessions": ["⚪5c2fef65099e4e519dc349ef019af9a2"]
 }

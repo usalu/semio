@@ -6,10 +6,10 @@
 
 After thorough review of both files:
 
-| File | Lines | Status |
-|------|-------|--------|
-| `The-programming&systems-mind-atlas.md.old` | 9,335 | Original generic version |
-| `The-programming&systems-mind-atlas.md` | 14,483 | Already fully merged |
+| File                                        | Lines  | Status                   |
+| ------------------------------------------- | ------ | ------------------------ |
+| `The-programming&systems-mind-atlas.md.old` | 9,335  | Original generic version |
+| `The-programming&systems-mind-atlas.md`     | 14,483 | Already fully merged     |
 
 ## Key Findings
 

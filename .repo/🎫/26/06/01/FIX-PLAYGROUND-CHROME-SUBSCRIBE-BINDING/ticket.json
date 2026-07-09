@@ -5,7 +5,5 @@
   "description": "Fix TypeError: Cannot read properties of undefined (reading 'chromeListeners') at subscribeChrome when PlaygroundView uses useSyncExternalStore with unbound runtime.subscribeChrome.",
   "summary": "Fixed PlaygroundView crash: useSyncExternalStore was passed unbound `runtime.subscribe` and `runtime.subscribeChrome`, so `this` was undefined inside Platform methods. Wrapped both in arrow functions so listeners register on the correct Platform instance.",
   "goal": "🎯ui🎯playground",
-  "sessions": [
-    "⚪85e26c05c6634aca9d92d9b14093f532"
-  ]
+  "sessions": ["⚪85e26c05c6634aca9d92d9b14093f532"]
 }

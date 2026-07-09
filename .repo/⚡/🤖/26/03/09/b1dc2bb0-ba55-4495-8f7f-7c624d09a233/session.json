@@ -432,9 +432,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻composeext📌1📌623"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻composeext📌1📌623"],
         "second": "🎆26🌙03☀️09⏰11⌚41⏱️50",
         "session": "⚪b1dc2bb0ba5544958f7f7c624d09a233"
       },
@@ -515,9 +513,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻composeext📌1📌623"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻composeext📌1📌623"],
         "second": "🎆26🌙03☀️09⏰11⌚42⏱️02",
         "session": "⚪b1dc2bb0ba5544958f7f7c624d09a233"
       },
@@ -548,9 +544,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅composetests💻tests📌1📌280"
-        ],
+        "ranges": ["👤compose📚net🛅composetests💻tests📌1📌280"],
         "second": "🎆26🌙03☀️09⏰11⌚42⏱️17",
         "session": "⚪b1dc2bb0ba5544958f7f7c624d09a233"
       },
@@ -581,9 +575,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼composetest📌1📌231"
-        ],
+        "ranges": ["👤compose📚js🥼composetest📌1📌231"],
         "second": "🎆26🌙03☀️09⏰11⌚42⏱️23",
         "session": "⚪b1dc2bb0ba5544958f7f7c624d09a233"
       },
@@ -614,9 +606,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌1📌11917"
-        ],
+        "ranges": ["👤compose📚js💻compose📌1📌11917"],
         "second": "🎆26🌙03☀️09⏰11⌚42⏱️42",
         "session": "⚪b1dc2bb0ba5544958f7f7c624d09a233"
       },
@@ -647,9 +637,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌1📌11917"
-        ],
+        "ranges": ["👤compose📚js💻compose📌1📌11917"],
         "second": "🎆26🌙03☀️09⏰11⌚42⏱️54",
         "session": "⚪b1dc2bb0ba5544958f7f7c624d09a233"
       },
@@ -680,9 +668,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌9898"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌9898"],
         "second": "🎆26🌙03☀️09⏰11⌚43⏱️46",
         "session": "⚪b1dc2bb0ba5544958f7f7c624d09a233"
       },
@@ -713,9 +699,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌9898"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌9898"],
         "second": "🎆26🌙03☀️09⏰11⌚43⏱️57",
         "session": "⚪b1dc2bb0ba5544958f7f7c624d09a233"
       },
@@ -746,9 +730,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌9898"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌9898"],
         "second": "🎆26🌙03☀️09⏰11⌚44⏱️27",
         "session": "⚪b1dc2bb0ba5544958f7f7c624d09a233"
       },
@@ -779,9 +761,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌9898"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌9898"],
         "second": "🎆26🌙03☀️09⏰11⌚44⏱️37",
         "session": "⚪b1dc2bb0ba5544958f7f7c624d09a233"
       },
@@ -974,9 +954,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️09⏰11⌚46⏱️19",
         "session": "⚪b1dc2bb0ba5544958f7f7c624d09a233",
-        "tests": [
-          "\"Nakagin_Capsule_Tower_Kit_FlattenDesignDiff_Apply_Flat"
-        ]
+        "tests": ["\"Nakagin_Capsule_Tower_Kit_FlattenDesignDiff_Apply_Flat"]
       },
       "response": {
         "allowed": true
@@ -1065,9 +1043,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️09⏰11⌚48⏱️56",
         "session": "⚪b1dc2bb0ba5544958f7f7c624d09a233",
-        "tests": [
-          "\"Nakagin_Capsule_Tower_Kit_FlattenDesignDiff_Apply_Flat"
-        ]
+        "tests": ["\"Nakagin_Capsule_Tower_Kit_FlattenDesignDiff_Apply_Flat"]
       },
       "response": {
         "allowed": true
@@ -1094,9 +1070,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️09⏰11⌚50⏱️47",
         "session": "⚪b1dc2bb0ba5544958f7f7c624d09a233",
-        "tests": [
-          "\"Nakagin_Capsule_Tower_Kit_FlattenDesignDiff_Apply_Flat"
-        ]
+        "tests": ["\"Nakagin_Capsule_Tower_Kit_FlattenDesignDiff_Apply_Flat"]
       },
       "response": {
         "allowed": true

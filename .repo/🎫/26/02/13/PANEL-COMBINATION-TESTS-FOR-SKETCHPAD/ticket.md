@@ -7,6 +7,7 @@ goal: test/js
 ## Summary
 
 Fixed right side panel default tab selection so selected Design elements show properties; extended Design e2e coverage and verified full sketchpad e2e suite passes.
+
 ## Changes
 
 - `compose/js/sketchpad/Sketchpad.tsx`: Stabilized side panel tab ordering and added active-tab fallback logic; right side now defaults to `details` when no active tab exists, so right panel opens with properties content.
@@ -100,38 +101,46 @@ Fixed right side panel default tab selection so selected Design elements show pr
 ### Infrastructure (shared.ts + Sketchpad.tsx)
 
 #### PanelKind enum
+
 - `WORKBENCH`, `TOOLS`, `TOOLBAR`, `HUD`, `STATS`, `DETAILS`, `CHAT`, `SETTINGS`, `PARAMS`, `CONSOLE`
 
 #### PanelKey type
+
 - `"details"`, `"workbench"`, `"tools"`, `"hud"`, `"stats"`, `"console"`, `"chat"`, `"settings"`, `"toolbar"`, `"leftSidePanel"`, `"rightSidePanel"`, `"hudPanel"`
 
 #### PanelPosition enum
+
 - `LEFT`, `RIGHT`, `MIDDLE`, `BOTTOM`
 
 #### Panel Position Mapping (panelKindConfigs)
-| PanelKind | Position | Group | Hotkey |
-|-----------|----------|-------|--------|
-| WORKBENCH | LEFT | workbench | ctrl+j |
-| TOOLS | LEFT | workbench | ctrl+j |
-| TOOLBAR | BOTTOM | — | — |
-| HUD | MIDDLE | hud | ctrl+k |
-| STATS | MIDDLE | hud | ctrl+k |
-| DETAILS | RIGHT | right | ctrl+l |
-| CHAT | RIGHT | right | ctrl+l |
-| SETTINGS | RIGHT | right | ctrl+l |
-| PARAMS | RIGHT | right | ctrl+l |
-| CONSOLE | BOTTOM | — | ctrl+k |
+
+| PanelKind | Position | Group     | Hotkey |
+| --------- | -------- | --------- | ------ |
+| WORKBENCH | LEFT     | workbench | ctrl+j |
+| TOOLS     | LEFT     | workbench | ctrl+j |
+| TOOLBAR   | BOTTOM   | —         | —      |
+| HUD       | MIDDLE   | hud       | ctrl+k |
+| STATS     | MIDDLE   | hud       | ctrl+k |
+| DETAILS   | RIGHT    | right     | ctrl+l |
+| CHAT      | RIGHT    | right     | ctrl+l |
+| SETTINGS  | RIGHT    | right     | ctrl+l |
+| PARAMS    | RIGHT    | right     | ctrl+l |
+| CONSOLE   | BOTTOM   | —         | ctrl+k |
 
 #### PanelSections keys
+
 - `details`, `workbench`, `tools`, `hud`, `stats`, `console`, `chat`, `settings`, `toolbar`, `leftSidePanel`, `rightSidePanel`, `hudPanel`
 
 #### PanelVisibility keys
+
 - `toolbar?`, `leftSidePanel?`, `rightSidePanel?`, `hudPanel?`, `workbench?`, `tools?`, `hud?`, `stats?`, `details?`, `chat?`, `settings?`, `params?`, `console?`
 
 #### Default PanelVisibility
+
 - All false: `{ toolbar: false, workbench: false, details: false, chat: false, settings: false }`
 
 #### Panel Composition (Sketchpad.tsx ~L15355)
+
 - Panels from `getPanels()` are mapped by `PanelPosition`:
   - `LEFT` → registered as left side panel tab via `addSidePanelTab("left", tab)`
   - `RIGHT` → registered as right side panel tab via `addSidePanelTab("right", tab)`
@@ -143,16 +152,18 @@ Fixed right side panel default tab selection so selected Design elements show pr
 ### Home App (`Home.tsx`)
 
 #### Config
+
 - **id**: `"home"`
 - **order**: 0
 
 #### getPanels
-| PanelKind | Panel Toggle ID |
-|-----------|----------------|
-| TOOLBAR | `compose.sketchpad.navbar.panelToggle.toolbar.show` |
-| DETAILS | `compose.sketchpad.navbar.panelToggle.details.show` |
-| CHAT | `compose.sketchpad.navbar.panelToggle.chat.show` |
-| SETTINGS | `compose.sketchpad.navbar.panelToggle.settings.show` |
+
+| PanelKind | Panel Toggle ID                                      |
+| --------- | ---------------------------------------------------- |
+| TOOLBAR   | `compose.sketchpad.navbar.panelToggle.toolbar.show`  |
+| DETAILS   | `compose.sketchpad.navbar.panelToggle.details.show`  |
+| CHAT      | `compose.sketchpad.navbar.panelToggle.chat.show`     |
+| SETTINGS  | `compose.sketchpad.navbar.panelToggle.settings.show` |
 
 #### Panel Sections (addSection calls)
 
@@ -184,16 +195,18 @@ Fixed right side panel default tab selection so selected Design elements show pr
 ### Kit App (`Kit.tsx`)
 
 #### Config
+
 - **id**: `"kit"`
 - **order**: 10
 
 #### getPanels
-| PanelKind | Panel Toggle ID |
-|-----------|----------------|
-| TOOLBAR | `compose.sketchpad.navbar.panelToggle.toolbar.show` |
-| DETAILS | `compose.sketchpad.navbar.panelToggle.details.show` |
-| CHAT | `compose.sketchpad.navbar.panelToggle.chat.show` |
-| SETTINGS | `compose.sketchpad.navbar.panelToggle.settings.show` |
+
+| PanelKind | Panel Toggle ID                                      |
+| --------- | ---------------------------------------------------- |
+| TOOLBAR   | `compose.sketchpad.navbar.panelToggle.toolbar.show`  |
+| DETAILS   | `compose.sketchpad.navbar.panelToggle.details.show`  |
+| CHAT      | `compose.sketchpad.navbar.panelToggle.chat.show`     |
+| SETTINGS  | `compose.sketchpad.navbar.panelToggle.settings.show` |
 
 #### Panel Sections (addSection calls)
 
@@ -235,20 +248,22 @@ Fixed right side panel default tab selection so selected Design elements show pr
 ### Design App (`Design.tsx`)
 
 #### Config
+
 - **id**: `"design"`
 - **order**: 20
 
 #### getPanels
-| PanelKind | Panel Toggle ID |
-|-----------|----------------|
+
+| PanelKind | Panel Toggle ID                                       |
+| --------- | ----------------------------------------------------- |
 | WORKBENCH | `compose.sketchpad.navbar.panelToggle.workbench.show` |
-| TOOLS | `compose.sketchpad.navbar.panelToggle.tools.show` |
-| TOOLBAR | `compose.sketchpad.navbar.panelToggle.toolbar.show` |
-| HUD | `compose.sketchpad.navbar.panelToggle.hud.show` |
-| STATS | `compose.sketchpad.navbar.panelToggle.stats.show` |
-| DETAILS | `compose.sketchpad.navbar.panelToggle.details.show` |
-| CHAT | `compose.sketchpad.navbar.panelToggle.chat.show` |
-| SETTINGS | `compose.sketchpad.navbar.panelToggle.settings.show` |
+| TOOLS     | `compose.sketchpad.navbar.panelToggle.tools.show`     |
+| TOOLBAR   | `compose.sketchpad.navbar.panelToggle.toolbar.show`   |
+| HUD       | `compose.sketchpad.navbar.panelToggle.hud.show`       |
+| STATS     | `compose.sketchpad.navbar.panelToggle.stats.show`     |
+| DETAILS   | `compose.sketchpad.navbar.panelToggle.details.show`   |
+| CHAT      | `compose.sketchpad.navbar.panelToggle.chat.show`      |
+| SETTINGS  | `compose.sketchpad.navbar.panelToggle.settings.show`  |
 
 #### Panel Sections (addSection calls)
 
@@ -292,18 +307,20 @@ Fixed right side panel default tab selection so selected Design elements show pr
 ### Type App (`Type.tsx`)
 
 #### Config
+
 - **id**: `"type"` (inferred from pattern)
 - **order**: 30
 
 #### getPanels
-| PanelKind | Panel Toggle ID |
-|-----------|----------------|
-| TOOLBAR | `compose.sketchpad.navbar.panelToggle.toolbar.show` |
-| HUD | `compose.sketchpad.navbar.panelToggle.hud.show` |
-| STATS | `compose.sketchpad.navbar.panelToggle.stats.show` |
-| DETAILS | `compose.sketchpad.navbar.panelToggle.details.show` |
-| CHAT | `compose.sketchpad.navbar.panelToggle.chat.show` |
-| SETTINGS | `compose.sketchpad.navbar.panelToggle.settings.show` |
+
+| PanelKind | Panel Toggle ID                                      |
+| --------- | ---------------------------------------------------- |
+| TOOLBAR   | `compose.sketchpad.navbar.panelToggle.toolbar.show`  |
+| HUD       | `compose.sketchpad.navbar.panelToggle.hud.show`      |
+| STATS     | `compose.sketchpad.navbar.panelToggle.stats.show`    |
+| DETAILS   | `compose.sketchpad.navbar.panelToggle.details.show`  |
+| CHAT      | `compose.sketchpad.navbar.panelToggle.chat.show`     |
+| SETTINGS  | `compose.sketchpad.navbar.panelToggle.settings.show` |
 
 #### Panel Sections (addSection calls)
 
@@ -329,6 +346,7 @@ Fixed right side panel default tab selection so selected Design elements show pr
 | `compose.sketchpad.app.type.tools.connector` | 20 | 10 | `{ id: "create", labelId: "compose.sketchpad.toolbar.parent.create", order: 10, subToolId: ToolKind.CONNECTOR, subToolLabelId: "compose.sketchpad.toolbar.subtool.connector" }` |
 
 #### Initial PanelVisibility (from useTypeAppInitialize)
+
 - `{ toolbar: true, workbench: false, details: false, chat: false, settings: false }`
 
 ---
@@ -336,15 +354,17 @@ Fixed right side panel default tab selection so selected Design elements show pr
 ### Docs App (`Docs.tsx`)
 
 #### Config
+
 - **id**: `"docs"`
 - **order**: 5
 
 #### getPanels
-| PanelKind | Panel Toggle ID | Hotkey | Tooltip |
-|-----------|----------------|--------|---------|
+
+| PanelKind | Panel Toggle ID                                       | Hotkey           | Tooltip                                                                |
+| --------- | ----------------------------------------------------- | ---------------- | ---------------------------------------------------------------------- |
 | WORKBENCH | `compose.sketchpad.navbar.panelToggle.workbench.show` | from getHotkeyFn | `{ labelKey: "...", manualPath: "/docs/manuals/sketchpad#workbench" }` |
-| DETAILS | `compose.sketchpad.navbar.panelToggle.details.show` | from getHotkeyFn | `{ labelKey: "...", manualPath: "/docs/manuals/sketchpad#details" }` |
-| SETTINGS | `compose.sketchpad.navbar.panelToggle.settings.show` | from getHotkeyFn | `{ labelKey: "...", manualPath: "/docs/manuals/sketchpad#settings" }` |
+| DETAILS   | `compose.sketchpad.navbar.panelToggle.details.show`   | from getHotkeyFn | `{ labelKey: "...", manualPath: "/docs/manuals/sketchpad#details" }`   |
+| SETTINGS  | `compose.sketchpad.navbar.panelToggle.settings.show`  | from getHotkeyFn | `{ labelKey: "...", manualPath: "/docs/manuals/sketchpad#settings" }`  |
 
 #### Panel Sections (addSection calls)
 
@@ -374,13 +394,15 @@ Fixed right side panel default tab selection so selected Design elements show pr
 ### Feedback App (`Feedback.tsx`)
 
 #### Config
+
 - **id**: `"feedback"`
 - **order**: 10
 
 #### getPanels
-| PanelKind | Panel Toggle ID |
-|-----------|----------------|
-| TOOLBAR | `compose.sketchpad.navbar.panelToggle.toolbar.show` |
+
+| PanelKind | Panel Toggle ID                                     |
+| --------- | --------------------------------------------------- |
+| TOOLBAR   | `compose.sketchpad.navbar.panelToggle.toolbar.show` |
 
 #### Panel Sections (addSection calls)
 
@@ -393,42 +415,44 @@ Fixed right side panel default tab selection so selected Design elements show pr
 
 ### Summary of All Toolbar Groups Across Apps
 
-| App | Group ID | Group labelId | Group Order |
-|-----|----------|---------------|-------------|
-| Home | `filter` | `compose.sketchpad.toolbar.parent.filter` | 20 |
-| Home | `create` | `compose.sketchpad.toolbar.parent.create` | 30 |
-| Kit | `selection` | `compose.sketchpad.toolbar.parent.selection` | 10 |
-| Kit | `filter` | `compose.sketchpad.toolbar.parent.filter` | 20 |
-| Kit | `create` | `compose.sketchpad.toolbar.parent.create` | 30 |
-| Design | `selection` | `compose.sketchpad.toolbar.parent.selection` | 10 |
-| Type | `selection` | `compose.sketchpad.toolbar.parent.selection` | 10 |
-| Type | `create` | `compose.sketchpad.toolbar.parent.create` | 10 |
-| Feedback | `actions` | `compose.sketchpad.toolbar.parent.actions` | 50 |
-| Docs | — (placeholder) | — | — |
+| App      | Group ID        | Group labelId                                | Group Order |
+| -------- | --------------- | -------------------------------------------- | ----------- |
+| Home     | `filter`        | `compose.sketchpad.toolbar.parent.filter`    | 20          |
+| Home     | `create`        | `compose.sketchpad.toolbar.parent.create`    | 30          |
+| Kit      | `selection`     | `compose.sketchpad.toolbar.parent.selection` | 10          |
+| Kit      | `filter`        | `compose.sketchpad.toolbar.parent.filter`    | 20          |
+| Kit      | `create`        | `compose.sketchpad.toolbar.parent.create`    | 30          |
+| Design   | `selection`     | `compose.sketchpad.toolbar.parent.selection` | 10          |
+| Type     | `selection`     | `compose.sketchpad.toolbar.parent.selection` | 10          |
+| Type     | `create`        | `compose.sketchpad.toolbar.parent.create`    | 10          |
+| Feedback | `actions`       | `compose.sketchpad.toolbar.parent.actions`   | 50          |
+| Docs     | — (placeholder) | —                                            | —           |
 
 ### Summary of All Panel Toggle IDs (navbar buttons)
 
-| ID | Used By Apps |
-|----|-------------|
-| `compose.sketchpad.navbar.panelToggle.toolbar.show` | Home, Kit, Design, Type, Feedback |
-| `compose.sketchpad.navbar.panelToggle.details.show` | Home, Kit, Design, Type, Docs |
-| `compose.sketchpad.navbar.panelToggle.chat.show` | Home, Kit, Design, Type |
-| `compose.sketchpad.navbar.panelToggle.settings.show` | Home, Kit, Design, Type, Docs |
-| `compose.sketchpad.navbar.panelToggle.workbench.show` | Design, Docs |
-| `compose.sketchpad.navbar.panelToggle.tools.show` | Design |
-| `compose.sketchpad.navbar.panelToggle.hud.show` | Design, Type |
-| `compose.sketchpad.navbar.panelToggle.stats.show` | Design, Type |
+| ID                                                    | Used By Apps                      |
+| ----------------------------------------------------- | --------------------------------- |
+| `compose.sketchpad.navbar.panelToggle.toolbar.show`   | Home, Kit, Design, Type, Feedback |
+| `compose.sketchpad.navbar.panelToggle.details.show`   | Home, Kit, Design, Type, Docs     |
+| `compose.sketchpad.navbar.panelToggle.chat.show`      | Home, Kit, Design, Type           |
+| `compose.sketchpad.navbar.panelToggle.settings.show`  | Home, Kit, Design, Type, Docs     |
+| `compose.sketchpad.navbar.panelToggle.workbench.show` | Design, Docs                      |
+| `compose.sketchpad.navbar.panelToggle.tools.show`     | Design                            |
+| `compose.sketchpad.navbar.panelToggle.hud.show`       | Design, Type                      |
+| `compose.sketchpad.navbar.panelToggle.stats.show`     | Design, Type                      |
 
 ---
 
 ## 2026-02-16 Follow-up: Remove Create Tools From Design App
 
 ### Plan
+
 - Remove Design app toolbar create section registration and cleanup.
 - Remove Design app create toolbar component implementation.
 - Extend existing sketchpad e2e test coverage to assert Design does not expose create toolbar group.
 
 ### Changes
+
 - Updated `compose/js/sketchpad/Design.tsx`:
   - Removed `DesignToolbarCreate` component.
   - Removed `compose.sketchpad.app.design.toolbar.create` section registration.
@@ -439,6 +463,7 @@ Fixed right side panel default tab selection so selected Design elements show pr
   - Added explicit assertion in Panels/Design combination test that create group remains hidden.
 
 ### Verification
+
 - Ran: `npm run test:e2e -- sketchpad.test.ts` in `compose/js`
   - Result: failed (1 passed, 6 failed).
   - Primary failures were environment instability / server connection failures (`ERR_CONNECTION_REFUSED`) and unrelated existing assertions in Kit/Type flow.
@@ -448,11 +473,13 @@ Fixed right side panel default tab selection so selected Design elements show pr
 ## 2026-02-16 Follow-up 2: Remove Design Toolbar Create Group
 
 ### Plan
+
 - Remove Design toolbar create section from section registration.
 - Remove Design toolbar create section cleanup.
 - Verify Design app toolbar no longer exposes create group.
 
 ### Changes
+
 - Updated `compose/js/sketchpad/Design.tsx`:
   - Removed `DesignToolbarCreate` component.
   - Removed `compose.sketchpad.app.design.toolbar.create` `addSection` registration.
@@ -460,6 +487,7 @@ Fixed right side panel default tab selection so selected Design elements show pr
   - Updated toolbar section summary comment from filter/create to filter-only.
 
 ### Verification
+
 - Ran: `npm run test:e2e -- sketchpad.test.ts -g "Design"` in `compose/js`
   - Result: failed (1 failed).
   - Confirmed behavior from logs: `[Design] Create group toggle visible: false`.
@@ -468,12 +496,14 @@ Fixed right side panel default tab selection so selected Design elements show pr
 ## 2026-02-16 Follow-up 3: Design Right Panel Selection Properties
 
 ### Plan
+
 - Restore Design canvas click-selection behavior for pieces and connections to drive right panel details.
 - Align connection identifier handling with real edge IDs.
 - Extend existing `sketchpad.test.ts` Design coverage for piece/connection details visibility.
 - Stabilize flaky panel/navigation checks in the existing test file without creating new tests.
 
 ### Changes
+
 - Updated `compose/js/sketchpad/Design.tsx`:
   - Kept node/edge click handlers updating selection state and clearing connector selection.
   - Fixed connection ID extraction in selection/click paths to use full edge IDs (`edge.id`) instead of truncated `split("-").pop()` IDs.
@@ -485,6 +515,7 @@ Fixed right side panel default tab selection so selected Design elements show pr
 - Restored `compose/js/playwright.config.ts` from `HEAD` after concurrent deletion in worktree so e2e runner remains configured.
 
 ### Verification
+
 - Ran: `npm run test:e2e -- sketchpad.test.ts -g "Design"` in `compose/js`
   - Result: passed (1 passed).
 - Ran: `npm run test:e2e -- sketchpad.test.ts` in `compose/js`

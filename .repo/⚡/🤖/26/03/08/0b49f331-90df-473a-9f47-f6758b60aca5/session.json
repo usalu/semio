@@ -33,9 +33,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌5966📌6050"
-        ],
+        "ranges": ["👤compose📚js💻compose📌5966📌6050"],
         "second": "🎆26🌙03☀️08⏰22⌚14⏱️23",
         "session": "⚪0b49f33190df473a9f47f6758b60aca5"
       },
@@ -71,9 +69,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js💻compose📌5966📌6050"
-        ],
+        "ranges": ["👤compose📚js💻compose📌5966📌6050"],
         "second": "🎆26🌙03☀️08⏰22⌚14⏱️35",
         "session": "⚪0b49f33190df473a9f47f6758b60aca5"
       },

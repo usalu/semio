@@ -126,18 +126,21 @@ if (await workbenchToggle.count()) {
   }
 }
 
-await page.waitForFunction(() => {
-  const labels = [...document.querySelectorAll("[data-tree-item-label], .tree-item-label, button, span")].map((el) => el.textContent?.trim() ?? "");
-  return (
-    labels.some((t) => /dictionary/i.test(t)) &&
-    labels.some((t) => /list/i.test(t)) &&
-    labels.some((t) => /math/i.test(t)) &&
-    labels.some((t) => /text/i.test(t)) &&
-    labels.some((t) => /logic/i.test(t)) &&
-    labels.some((t) => /inputs/i.test(t)) &&
-    labels.some((t) => /outputs/i.test(t))
-  );
-}, { timeout: 60_000 });
+await page.waitForFunction(
+  () => {
+    const labels = [...document.querySelectorAll("[data-tree-item-label], .tree-item-label, button, span")].map((el) => el.textContent?.trim() ?? "");
+    return (
+      labels.some((t) => /dictionary/i.test(t)) &&
+      labels.some((t) => /list/i.test(t)) &&
+      labels.some((t) => /math/i.test(t)) &&
+      labels.some((t) => /text/i.test(t)) &&
+      labels.some((t) => /logic/i.test(t)) &&
+      labels.some((t) => /inputs/i.test(t)) &&
+      labels.some((t) => /outputs/i.test(t))
+    );
+  },
+  { timeout: 60_000 },
+);
 
 const sectionLabels = await page.locator("body").innerText();
 const hasDictionary = /dictionary/i.test(sectionLabels);
@@ -200,20 +203,23 @@ await addRow.waitFor({ timeout: 60_000 });
 await paletteDragToCanvas(page, addRow, canvas, { x: 200, y: 200 });
 
 await page.evaluate(() => {
-  localStorage.setItem("flow.fixture/v1", JSON.stringify({
-    schema: "flow.fixture/v1",
-    camera: { x: 0, y: 0, zoom: 1 },
-    widgets: [
-      { kind: "inputSlider", id: "slider", value: 7 },
-      { kind: "neuron", id: "add", neuronKind: "math.add", params: {} },
-      { kind: "outputPreview", id: "preview", preview: {} },
-    ],
-    synapses: [
-      { id: "s1", from: "slider", to: "add" },
-      { id: "s2", from: "add", to: "preview" },
-    ],
-    layout: { slider: { x: -200, y: 0 }, add: { x: 0, y: 0 }, preview: { x: 200, y: 0 } },
-  }));
+  localStorage.setItem(
+    "flow.fixture/v1",
+    JSON.stringify({
+      schema: "flow.fixture/v1",
+      camera: { x: 0, y: 0, zoom: 1 },
+      widgets: [
+        { kind: "inputSlider", id: "slider", value: 7 },
+        { kind: "neuron", id: "add", neuronKind: "math.add", params: {} },
+        { kind: "outputPreview", id: "preview", preview: {} },
+      ],
+      synapses: [
+        { id: "s1", from: "slider", to: "add" },
+        { id: "s2", from: "add", to: "preview" },
+      ],
+      layout: { slider: { x: -200, y: 0 }, add: { x: 0, y: 0 }, preview: { x: 200, y: 0 } },
+    }),
+  );
 });
 await page.reload({ waitUntil: "domcontentloaded", timeout: 120_000 });
 await canvas.waitFor({ timeout: 60_000 });

@@ -110,9 +110,7 @@ function removeAbsentWindowsFromLayout(layout: WindowLayoutNode, allowed: Readon
   }
   return {
     ...layout,
-    children: layout.children
-      .map((child) => removeAbsentWindowsFromLayout(child as WindowLayoutNode, allowed))
-      .filter((child) => child.kind !== "stack" || child.children.length > 0) as (WindowLayoutAxisNode | WindowLayoutStackNode)[],
+    children: layout.children.map((child) => removeAbsentWindowsFromLayout(child as WindowLayoutNode, allowed)).filter((child) => child.kind !== "stack" || child.children.length > 0) as (WindowLayoutAxisNode | WindowLayoutStackNode)[],
   };
 }
 
@@ -125,9 +123,7 @@ function removeWindowFromLayout(layout: WindowLayoutNode, windowId: string): Win
     const activeId = layout.activeId === windowId ? children[0]?.id : layout.activeId;
     return { ...layout, children, activeId };
   }
-  const children = layout.children
-    .map((child) => removeWindowFromLayout(child as WindowLayoutNode, windowId))
-    .filter((child): child is WindowLayoutAxisNode | WindowLayoutStackNode => child !== null);
+  const children = layout.children.map((child) => removeWindowFromLayout(child as WindowLayoutNode, windowId)).filter((child): child is WindowLayoutAxisNode | WindowLayoutStackNode => child !== null);
   if (children.length === 0) return null;
   return collapseLayout({ ...layout, children });
 }
@@ -195,17 +191,17 @@ function setActiveWindowInLayout(layout: WindowLayoutNode, windowId: string): Wi
 
 function resolveModeLayout(windows: readonly ModeWindowDescriptor[], layout?: WindowLayoutNode): WindowLayoutNode {
   const base = layout ?? createEvenWindowLayout(windows.map((window) => window.id));
-  return reconcileWindows(base, windows.map((window) => window.id));
+  return reconcileWindows(
+    base,
+    windows.map((window) => window.id),
+  );
 }
 
 //#endregion 🧭ModeLayoutUtils
 
 //#region 🧭ModeDockDrag
 
-type ModeDropZone =
-  | { kind: "tab"; stackPath: ModeLayoutPath; index: number }
-  | { kind: "split"; stackPath: ModeLayoutPath; side: ModeDockSide }
-  | { kind: "root-split"; side: ModeDockSide };
+type ModeDropZone = { kind: "tab"; stackPath: ModeLayoutPath; index: number } | { kind: "split"; stackPath: ModeLayoutPath; side: ModeDockSide } | { kind: "root-split"; side: ModeDockSide };
 
 interface ModeDragState {
   windowId: string;
@@ -322,12 +318,7 @@ const ModeDockTabBar: React.FC<ModeDockTabBarProps> = ({ stackPath, tabs, active
         ))}
       </div>
       <div data-slot="mode-dock-stack-controls" className="flex shrink-0 items-stretch border-l border-element">
-        <button
-          type="button"
-          data-slot="mode-dock-maximize"
-          className="flex size-medium items-center justify-center hover:bg-hover-window"
-          onClick={() => dock?.toggleMaximize(stackPath)}
-        >
+        <button type="button" data-slot="mode-dock-maximize" className="flex size-medium items-center justify-center hover:bg-hover-window" onClick={() => dock?.toggleMaximize(stackPath)}>
           {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
         </button>
       </div>
@@ -366,16 +357,16 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
     <div ref={stackRef} data-slot="mode-dock-stack" data-stack-path={stackPath} className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
       <ModeDockTabBar stackPath={stackPath} tabs={tabs} activeId={activeId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} />
       <div data-slot="mode-dock-stack-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        {activeDescriptor ? (
-          (() => {
-            const { children, engagement, ...windowProps } = activeDescriptor;
-            return (
-              <Window {...windowProps} engagement={engagement} active={activeWindowId === activeId} onActivate={() => dock?.activateWindow(activeId!)}>
-                {children}
-              </Window>
-            );
-          })()
-        ) : null}
+        {activeDescriptor
+          ? (() => {
+              const { children, engagement, ...windowProps } = activeDescriptor;
+              return (
+                <Window {...windowProps} engagement={engagement} active={activeWindowId === activeId} onActivate={() => dock?.activateWindow(activeId!)}>
+                  {children}
+                </Window>
+              );
+            })()
+          : null}
       </div>
     </div>
   );
@@ -407,13 +398,7 @@ function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: M
     );
   });
   return (
-    <ResizablePanelGroup
-      key={path || "root-axis"}
-      id={`mode-axis-${path || "root"}`}
-      orientation={orientation}
-      onLayoutChanged={(sizes) => ctx.onAxisLayoutChanged(path, sizes)}
-      className="h-full min-h-0 w-full min-w-0"
-    >
+    <ResizablePanelGroup key={path || "root-axis"} id={`mode-axis-${path || "root"}`} orientation={orientation} onLayoutChanged={(sizes) => ctx.onAxisLayoutChanged(path, sizes)} className="h-full min-h-0 w-full min-w-0">
       {panels}
     </ResizablePanelGroup>
   );
@@ -484,15 +469,12 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     setMaximizedStackPath((prev) => (prev === stackPath ? null : stackPath));
   }, []);
 
-  const refreshDropZone = React.useCallback(
-    (clientX: number, clientY: number) => {
-      const rects = new Map<ModeLayoutPath, DOMRect>();
-      stackElementsRef.current.forEach((element, path) => rects.set(path, element.getBoundingClientRect()));
-      const modeRect = modeBodyRef.current?.getBoundingClientRect() ?? null;
-      setDropZone(computeModeDropZone(clientX, clientY, rects, modeRect));
-    },
-    [],
-  );
+  const refreshDropZone = React.useCallback((clientX: number, clientY: number) => {
+    const rects = new Map<ModeLayoutPath, DOMRect>();
+    stackElementsRef.current.forEach((element, path) => rects.set(path, element.getBoundingClientRect()));
+    const modeRect = modeBodyRef.current?.getBoundingClientRect() ?? null;
+    setDropZone(computeModeDropZone(clientX, clientY, rects, modeRect));
+  }, []);
 
   const finishDrag = React.useCallback(
     (drag: ModeDragState, zone: ModeDropZone | null) => {
@@ -579,11 +561,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       <div ref={modeBodyRef} data-slot="mode-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {body}
         {dragState ? (
-          <div
-            data-slot="mode-dock-ghost"
-            className="pointer-events-none fixed z-panel rounded border border-accent bg-window px-single py-half text-xs shadow-md"
-            style={{ left: dragState.x + 12, top: dragState.y + 12 }}
-          >
+          <div data-slot="mode-dock-ghost" className="pointer-events-none fixed z-panel rounded border border-accent bg-window px-single py-half text-xs shadow-md" style={{ left: dragState.x + 12, top: dragState.y + 12 }}>
             {dragState.ghostLabel}
           </div>
         ) : null}

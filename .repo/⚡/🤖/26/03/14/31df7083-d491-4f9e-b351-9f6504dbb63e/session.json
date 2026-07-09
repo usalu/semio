@@ -28,9 +28,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌43912"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌43912"],
         "second": "🎆26🌙03☀️14⏰23⌚18⏱️26",
         "session": "⚪31df7083d4914f9eb3519f6504dbb63e"
       },
@@ -61,9 +59,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌43912"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌43912"],
         "second": "🎆26🌙03☀️14⏰23⌚20⏱️45",
         "session": "⚪31df7083d4914f9eb3519f6504dbb63e"
       },
@@ -94,9 +90,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌43912"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌43912"],
         "second": "🎆26🌙03☀️14⏰23⌚21⏱️35",
         "session": "⚪31df7083d4914f9eb3519f6504dbb63e"
       },
@@ -267,11 +261,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "repo/cli/main.go",
-                "repo/cli/main_test.go",
-                ".devcontainer/post-attach.sh"
-              ],
+              "files": ["repo/cli/main.go", "repo/cli/main_test.go", ".devcontainer/post-attach.sh"],
               "path": "2026/03/14/FIX-TYPE-SCRIPT-SECTION-REGION-FORMATTING",
               "summary": "Fixed TypeScript section policy scanning so nested region markers no longer consume parent section metadata, added regression coverage for nested section identification and nested section header ids, and normalized the devcontainer post-attach script line endings to unblock its hook test. Focused CLI tests for the TypeScript formatting change passed; broader CLI test/build failures remain in unrelated pre-existing missing-symbol areas of main.go and unrelated failing tests."
             },
@@ -352,11 +342,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "repo/cli/main.go",
-                "repo/cli/main_test.go",
-                ".devcontainer/post-attach.sh"
-              ],
+              "files": ["repo/cli/main.go", "repo/cli/main_test.go", ".devcontainer/post-attach.sh"],
               "path": "/workspaces/semio/.repo/🎫/26/03/14/FIX-TYPE-SCRIPT-SECTION-REGION-FORMATTING",
               "summary": "Fixed TypeScript section policy scanning so nested region markers no longer consume parent section metadata, added regression coverage for nested section identification and nested section header ids, and normalized the devcontainer post-attach script line endings to unblock its hook test. Focused CLI tests for the TypeScript formatting change passed; broader CLI test/build failures remain in unrelated pre-existing missing-symbol areas of main.go and unrelated failing tests."
             },

@@ -4,7 +4,5 @@
   "description": "repo cli: Get it running again",
   "summary": "Restored repo CLI build/runtime by adding missing Sketchpad state statute metadata, accepting string-slice GraphQL file inputs for ticket close, isolating the lifecycle regression test, and rebuilding cli.exe.",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
-  "sessions": [
-    "⚪236197ac68264ac38d0a4204428c7171"
-  ]
+  "sessions": ["⚪236197ac68264ac38d0a4204428c7171"]
 }

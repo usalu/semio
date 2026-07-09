@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The Kit app was extended to a multi-window layout (KIT-MULTI-WINDOW) with table and diagram views. The current diagram implementation uses ReactFlow with a static row-based layout:
@@ -8,11 +9,11 @@ The Kit app was extended to a multi-window layout (KIT-MULTI-WINDOW) with table 
 ```typescript
 // Current layout in buildKitDiagramData (Kit.tsx:5204-5327)
 for (const kind of kindGroups) {
-  let x = 0;
-  for (const item of items) {
-    const position = { x, y: globalY };
-    // Nodes positioned in grid: x += 180, y += 100 per kind group
-  }
+ let x = 0;
+ for (const item of items) {
+  const position = { x, y: globalY };
+  // Nodes positioned in grid: x += 180, y += 100 per kind group
+ }
 }
 ```
 
@@ -66,31 +67,31 @@ d3-force provides simulation, ReactFlow provides rendering. The pattern:
 
 ```typescript
 import {
-  forceSimulation, // Main simulation
-  forceManyBody, // Node repulsion (chargeStrength)
-  forceLink, // Edge spring force (linkDistance)
-  forceCenter, // Pull to center (centerStrength)
-  forceCollide, // Prevent overlap (collideRadius)
-  SimulationNodeDatum,
-  SimulationLinkDatum,
+ forceSimulation, // Main simulation
+ forceManyBody, // Node repulsion (chargeStrength)
+ forceLink, // Edge spring force (linkDistance)
+ forceCenter, // Pull to center (centerStrength)
+ forceCollide, // Prevent overlap (collideRadius)
+ SimulationNodeDatum,
+ SimulationLinkDatum,
 } from "d3-force";
 
 // Node type for simulation
 interface ForceNode extends SimulationNodeDatum {
-  id: string;
-  x?: number;
-  y?: number;
-  fx?: number | null; // Fixed x (when dragging)
-  fy?: number | null; // Fixed y (when dragging)
-  kind: DiagramNodeKind;
-  // ... other KitDiagramNode fields
+ id: string;
+ x?: number;
+ y?: number;
+ fx?: number | null; // Fixed x (when dragging)
+ fy?: number | null; // Fixed y (when dragging)
+ kind: DiagramNodeKind;
+ // ... other KitDiagramNode fields
 }
 
 // Link type for simulation
 interface ForceLink extends SimulationLinkDatum<ForceNode> {
-  source: string | ForceNode;
-  target: string | ForceNode;
-  relationship: "part-of" | "reference";
+ source: string | ForceNode;
+ target: string | ForceNode;
+ relationship: "part-of" | "reference";
 }
 ```
 
@@ -102,15 +103,15 @@ In `js/compose/sketchpad/Kit.tsx` (line ~259):
 
 ```typescript
 export interface DiagramForceSettings {
-  chargeStrength: number; // Node repulsion (-500 to 0), default -150
-  linkDistance: number; // Edge length (50 to 300), default 100
-  collideRadius: number; // Collision radius (10 to 100), default 30
-  centerStrength: number; // Center pull (0 to 1), default 0.05
+ chargeStrength: number; // Node repulsion (-500 to 0), default -150
+ linkDistance: number; // Edge length (50 to 300), default 100
+ collideRadius: number; // Collision radius (10 to 100), default 30
+ centerStrength: number; // Center pull (0 to 1), default 0.05
 }
 
 export interface KitAppState {
-  // ... existing fields
-  diagramForce: DiagramForceSettings;
+ // ... existing fields
+ diagramForce: DiagramForceSettings;
 }
 ```
 
@@ -118,8 +119,8 @@ export interface KitAppState {
 
 ```typescript
 export interface KitAppDiff {
-  // ... existing fields
-  diagramForce?: Partial<DiagramForceSettings>;
+ // ... existing fields
+ diagramForce?: Partial<DiagramForceSettings>;
 }
 ```
 
@@ -129,15 +130,15 @@ In `js/compose/sketchpad/Sketchpad.tsx` (createDefaultKitAppState ~8119):
 
 ```typescript
 export function createDefaultKitAppState(): KitAppState {
-  return {
-    // ... existing fields
-    diagramForce: {
-      chargeStrength: -150,
-      linkDistance: 100,
-      collideRadius: 30,
-      centerStrength: 0.05,
-    },
-  };
+ return {
+  // ... existing fields
+  diagramForce: {
+   chargeStrength: -150,
+   linkDistance: 100,
+   collideRadius: 30,
+   centerStrength: 0.05,
+  },
+ };
 }
 ```
 
@@ -147,17 +148,17 @@ Add to `js/compose/sketchpad/Kit.tsx` (after line ~1030):
 
 ```typescript
 registerRuntimeAction("kitSetDiagramForce", (context: any, event: any) => {
-  if (event.type !== "KIT.SET_DIAGRAM_FORCE") return {};
-  const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
-  return {
-    kitApps: {
-      ...context.kitApps,
-      [event.kitGuid]: {
-        ...app,
-        diagramForce: { ...app.diagramForce, ...event.settings },
-      },
-    },
-  };
+ if (event.type !== "KIT.SET_DIAGRAM_FORCE") return {};
+ const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+ return {
+  kitApps: {
+   ...context.kitApps,
+   [event.kitGuid]: {
+    ...app,
+    diagramForce: { ...app.diagramForce, ...event.settings },
+   },
+  },
+ };
 });
 ```
 
@@ -167,23 +168,23 @@ Add after existing hooks (~line 1100):
 
 ```typescript
 export function useKitAppDiagramForce(): HookResult<DiagramForceSettings> {
-  const kitScope = useKitScope();
-  const actor = useSketchpadActor();
-  const kitGuid = kitScope?.guid ?? "";
-  const state = useKitApp(identitySelector);
-  const force = (state as KitAppState).diagramForce ?? defaultDiagramForce;
+ const kitScope = useKitScope();
+ const actor = useSketchpadActor();
+ const kitGuid = kitScope?.guid ?? "";
+ const state = useKitApp(identitySelector);
+ const force = (state as KitAppState).diagramForce ?? defaultDiagramForce;
 
-  const setForce = useMemo(() => {
-    return (settings: Partial<DiagramForceSettings>) => {
-      actor.send({
-        type: "KIT.SET_DIAGRAM_FORCE",
-        kitGuid,
-        settings,
-      });
-    };
-  }, [actor, kitGuid]);
+ const setForce = useMemo(() => {
+  return (settings: Partial<DiagramForceSettings>) => {
+   actor.send({
+    type: "KIT.SET_DIAGRAM_FORCE",
+    kitGuid,
+    settings,
+   });
+  };
+ }, [actor, kitGuid]);
 
-  return [force, setForce, true];
+ return [force, setForce, true];
 }
 ```
 
@@ -247,110 +248,110 @@ Replace `KitDiagram` (line ~5331-5365):
 
 ```typescript
 const KitDiagram: FC<KitDiagramProps> = () => {
-  const kit = useKit() as Kit | undefined;
-  const kitCommands = useKitAppCommands();
-  const [forceSettings] = useKitAppDiagramForce();
-  const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const simulationRef = useRef<d3.Simulation<ForceNode, ForceLink> | null>(null);
+ const kit = useKit() as Kit | undefined;
+ const kitCommands = useKitAppCommands();
+ const [forceSettings] = useKitAppDiagramForce();
+ const reactFlowWrapper = useRef<HTMLDivElement>(null);
+ const simulationRef = useRef<d3.Simulation<ForceNode, ForceLink> | null>(null);
 
-  // Convert kit to force nodes/links
-  const { forceNodes, forceLinks } = useMemo(() => {
-    if (!kit) return { forceNodes: [], forceLinks: [] };
-    return buildForceGraphData(kit);
-  }, [kit]);
+ // Convert kit to force nodes/links
+ const { forceNodes, forceLinks } = useMemo(() => {
+  if (!kit) return { forceNodes: [], forceLinks: [] };
+  return buildForceGraphData(kit);
+ }, [kit]);
 
-  // ReactFlow state
-  const [nodes, setNodes] = useNodesState([]);
-  const [edges, setEdges] = useEdgesState([]);
+ // ReactFlow state
+ const [nodes, setNodes] = useNodesState([]);
+ const [edges, setEdges] = useEdgesState([]);
 
-  // Initialize simulation
-  useEffect(() => {
-    if (forceNodes.length === 0) return;
+ // Initialize simulation
+ useEffect(() => {
+  if (forceNodes.length === 0) return;
 
-    const simulation = forceSimulation<ForceNode>(forceNodes)
-      .force("charge", forceManyBody().strength(forceSettings.chargeStrength))
-      .force(
-        "link",
-        forceLink<ForceNode, ForceLink>(forceLinks)
-          .id((d) => d.id)
-          .distance(forceSettings.linkDistance),
-      )
-      .force("center", forceCenter(0, 0).strength(forceSettings.centerStrength))
-      .force("collide", forceCollide<ForceNode>(forceSettings.collideRadius));
+  const simulation = forceSimulation<ForceNode>(forceNodes)
+   .force("charge", forceManyBody().strength(forceSettings.chargeStrength))
+   .force(
+    "link",
+    forceLink<ForceNode, ForceLink>(forceLinks)
+     .id((d) => d.id)
+     .distance(forceSettings.linkDistance),
+   )
+   .force("center", forceCenter(0, 0).strength(forceSettings.centerStrength))
+   .force("collide", forceCollide<ForceNode>(forceSettings.collideRadius));
 
-    simulation.on("tick", () => {
-      setNodes((nodes) =>
-        nodes.map((node) => {
-          const simNode = simulation.nodes().find((n) => n.id === node.id);
-          if (simNode) {
-            return { ...node, position: { x: simNode.x ?? 0, y: simNode.y ?? 0 } };
-          }
-          return node;
-        }),
-      );
-    });
+  simulation.on("tick", () => {
+   setNodes((nodes) =>
+    nodes.map((node) => {
+     const simNode = simulation.nodes().find((n) => n.id === node.id);
+     if (simNode) {
+      return { ...node, position: { x: simNode.x ?? 0, y: simNode.y ?? 0 } };
+     }
+     return node;
+    }),
+   );
+  });
 
-    simulationRef.current = simulation;
+  simulationRef.current = simulation;
 
-    return () => {
-      simulation.stop();
-    };
-  }, [forceNodes, forceLinks]);
+  return () => {
+   simulation.stop();
+  };
+ }, [forceNodes, forceLinks]);
 
-  // Update forces when settings change
-  useEffect(() => {
-    const sim = simulationRef.current;
-    if (!sim) return;
+ // Update forces when settings change
+ useEffect(() => {
+  const sim = simulationRef.current;
+  if (!sim) return;
 
-    sim.force("charge", forceManyBody().strength(forceSettings.chargeStrength));
-    sim.force(
-      "link",
-      forceLink<ForceNode, ForceLink>(forceLinks)
-        .id((d) => d.id)
-        .distance(forceSettings.linkDistance),
-    );
-    sim.force("center", forceCenter(0, 0).strength(forceSettings.centerStrength));
-    sim.force("collide", forceCollide<ForceNode>(forceSettings.collideRadius));
-    sim.alpha(0.3).restart();
-  }, [forceSettings, forceLinks]);
+  sim.force("charge", forceManyBody().strength(forceSettings.chargeStrength));
+  sim.force(
+   "link",
+   forceLink<ForceNode, ForceLink>(forceLinks)
+    .id((d) => d.id)
+    .distance(forceSettings.linkDistance),
+  );
+  sim.force("center", forceCenter(0, 0).strength(forceSettings.centerStrength));
+  sim.force("collide", forceCollide<ForceNode>(forceSettings.collideRadius));
+  sim.alpha(0.3).restart();
+ }, [forceSettings, forceLinks]);
 
-  // Node drag handlers
-  const onNodeDragStart = useCallback((event: any, node: Node) => {
-    const sim = simulationRef.current;
-    if (sim) {
-      sim.alphaTarget(0.3).restart();
-      const simNode = sim.nodes().find((n) => n.id === node.id);
-      if (simNode) {
-        simNode.fx = node.position.x;
-        simNode.fy = node.position.y;
-      }
-    }
-  }, []);
+ // Node drag handlers
+ const onNodeDragStart = useCallback((event: any, node: Node) => {
+  const sim = simulationRef.current;
+  if (sim) {
+   sim.alphaTarget(0.3).restart();
+   const simNode = sim.nodes().find((n) => n.id === node.id);
+   if (simNode) {
+    simNode.fx = node.position.x;
+    simNode.fy = node.position.y;
+   }
+  }
+ }, []);
 
-  const onNodeDrag = useCallback((event: any, node: Node) => {
-    const sim = simulationRef.current;
-    if (sim) {
-      const simNode = sim.nodes().find((n) => n.id === node.id);
-      if (simNode) {
-        simNode.fx = node.position.x;
-        simNode.fy = node.position.y;
-      }
-    }
-  }, []);
+ const onNodeDrag = useCallback((event: any, node: Node) => {
+  const sim = simulationRef.current;
+  if (sim) {
+   const simNode = sim.nodes().find((n) => n.id === node.id);
+   if (simNode) {
+    simNode.fx = node.position.x;
+    simNode.fy = node.position.y;
+   }
+  }
+ }, []);
 
-  const onNodeDragStop = useCallback((event: any, node: Node) => {
-    const sim = simulationRef.current;
-    if (sim) {
-      sim.alphaTarget(0);
-      const simNode = sim.nodes().find((n) => n.id === node.id);
-      if (simNode) {
-        simNode.fx = null;
-        simNode.fy = null;
-      }
-    }
-  }, []);
+ const onNodeDragStop = useCallback((event: any, node: Node) => {
+  const sim = simulationRef.current;
+  if (sim) {
+   sim.alphaTarget(0);
+   const simNode = sim.nodes().find((n) => n.id === node.id);
+   if (simNode) {
+    simNode.fx = null;
+    simNode.fy = null;
+   }
+  }
+ }, []);
 
-  // ... render ReactFlow with nodes, edges, handlers
+ // ... render ReactFlow with nodes, edges, handlers
 };
 ```
 
@@ -441,14 +442,14 @@ Add corresponding entries to `de.json`.
 
 ## 10. File Changes Summary
 
-| File                                 | Changes                                                                                                                                                                                        |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| File                                   | Changes                                                                                                                                                                                        |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `js/compose/package.json`              | Add d3-force, @types/d3-force                                                                                                                                                                  |
 | `js/compose/sketchpad/Kit.tsx`         | KitAppState, DiagramForceSettings interface, registerRuntimeAction, useKitAppDiagramForce hook, KitArtifactNode circular redesign, KitDiagram d3-force integration, KitSettingsContent sliders |
 | `js/compose/sketchpad/Sketchpad.tsx`   | createDefaultKitAppState add diagramForce defaults                                                                                                                                             |
 | `js/compose/sketchpad/locales/en.json` | Add diagram force labels                                                                                                                                                                       |
 | `js/compose/sketchpad/locales/de.json` | Add diagram force labels                                                                                                                                                                       |
-| `AGENTS.md`                          | Document diagram force settings                                                                                                                                                                |
+| `AGENTS.md`                            | Document diagram force settings                                                                                                                                                                |
 
 ## 11. Implementation Order
 
@@ -472,6 +473,7 @@ Add corresponding entries to `de.json`.
 ## Log
 
 ## Summary
+
 # Summary
 
 Implement d3-force layout for kit diagram with configurable simulation parameters

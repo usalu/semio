@@ -5,7 +5,5 @@
   "description": "Indirect connect: if a node has only one free eligible handle, skip ghost ring and treat as direct link (node-body hit starts wire; drop on target with sole compatible handle commits edge immediately).",
   "summary": "Indirect connect sole-handle shortcut: ghost ring only when a node has \u003e1 eligible free handles; sole handle uses node-body hit (idle) and LinkTarget sole-body hit; pointer_up on a target with exactly one free compatible handle commits edge immediately (skip LinkTargetNode). Added helpers (eligible count, sole ids, point-in-node, node_sole_free_link_compatible_handle) and scene fixtures for two-free tests. Updated host tests for new UX.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪cd29c203a30541a8a28e3dcf95b15856"
-  ]
+  "sessions": ["⚪cd29c203a30541a8a28e3dcf95b15856"]
 }

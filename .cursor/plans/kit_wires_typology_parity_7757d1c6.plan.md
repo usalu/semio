@@ -2,24 +2,24 @@
 name: Kit Wires Typology Parity
 overview: Fix the sketchpad Kit app so the wires diagram identities stay in sync with the virtual file system rows when a typology is unfolded, by awaiting all expanded VFS branches before rebuilding the wires topology.
 todos:
-  - id: ticket
-    content: Open/reopen repo MCP ticket for kit wires typology parity
-    status: completed
-  - id: prepare
-    content: Rework prepareKitWiresVfsForTopology to await root + all expanded branches, drop root-only memoization
-    status: completed
-  - id: cleanup
-    content: Remove kitWiresVfsPreparePromises field, clearKitWiresVfsPrepare method and its call sites
-    status: completed
-  - id: invalidate
-    content: Call syncKitWiresTopology from invalidateKitVirtualFileSystem for parity on mutations
-    status: completed
-  - id: test
-    content: Extend topology vitest block with typology expand -> wires identity parity test
-    status: completed
-  - id: validate
-    content: Run sketchpad js tests via nx and confirm parity test passes; close ticket
-    status: completed
+ - id: ticket
+   content: Open/reopen repo MCP ticket for kit wires typology parity
+   status: completed
+ - id: prepare
+   content: Rework prepareKitWiresVfsForTopology to await root + all expanded branches, drop root-only memoization
+   status: completed
+ - id: cleanup
+   content: Remove kitWiresVfsPreparePromises field, clearKitWiresVfsPrepare method and its call sites
+   status: completed
+ - id: invalidate
+   content: Call syncKitWiresTopology from invalidateKitVirtualFileSystem for parity on mutations
+   status: completed
+ - id: test
+   content: Extend topology vitest block with typology expand -> wires identity parity test
+   status: completed
+ - id: validate
+   content: Run sketchpad js tests via nx and confirm parity test passes; close ticket
+   status: completed
 isProject: false
 ---
 
@@ -57,8 +57,6 @@ sequenceDiagram
   Note over Wires: never re-syncs -> stale
 ```
 
-
-
 ## Fix
 
 Make the wires sync await **all currently-expanded branches** (not just root) before reading visible nodes, so the visible set is fully materialized and matches the VFS table.
@@ -88,4 +86,3 @@ In the embedded vitest `describe("SketchpadShellController topology", ...)` bloc
 ## Notes
 
 - All edits stay within the `compose` technology (sketchpad js + the shared framework VFS controller is only read, not changed). No changes to `elements`/`coda`/`mit-bestand`.
-

@@ -5,7 +5,5 @@
   "description": "Narrow down hanging or excessively slow tests in repo/client (go test). Cap overall test duration at 2 minutes.",
   "summary": "Identified unscoped GraphQL breachs as full compose Analyze (~110s). Scoped breachs in TestBreachsNonEmpty and TestNodesAndEdges*. Optimized ToolGoalList, ToolTicketList, ToolPolicyList to avoid monorepo tree build for listing. Ticket close tests use small package.json instead of huge main.go. Tree tests use BuildMonorepoTreeCached; TestMermaidLoc skips under -short. Fixed locComposeLocReportSnapshot test arity. package.json: test -timeout 120s, test:quick with -short. Full default suite can still exceed 2min when tree cache misses repeatedly (e.g. TestListCommands).",
   "goal": "🎯aioptimizedrepo🎯repoclient",
-  "sessions": [
-    "⚪326adda782084c489167c8854e6b32c7"
-  ]
+  "sessions": ["⚪326adda782084c489167c8854e6b32c7"]
 }

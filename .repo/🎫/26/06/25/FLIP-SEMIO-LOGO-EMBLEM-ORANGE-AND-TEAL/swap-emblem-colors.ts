@@ -14,10 +14,7 @@ function swapOrangeTeal(content: string): string {
     return content;
   }
   const placeholder = "__SEMIO_SWAP__";
-  return content
-    .replaceAll(ORANGE, placeholder)
-    .replaceAll(tealInFile, ORANGE)
-    .replaceAll(placeholder, tealInFile);
+  return content.replaceAll(ORANGE, placeholder).replaceAll(tealInFile, ORANGE).replaceAll(placeholder, tealInFile);
 }
 
 function swapCompactEmblem(content: string): string {
@@ -72,10 +69,7 @@ function swapInkscapeLayers(content: string): string {
 }
 
 function swapReactLogo(content: string): string {
-  return content
-    .replace('fill="#fa9500"', 'fill="__SEMIO_SWAP__"')
-    .replace('fill="#34d1bf"', 'fill="#fa9500"')
-    .replace('fill="__SEMIO_SWAP__"', 'fill="#34d1bf"');
+  return content.replace('fill="#fa9500"', 'fill="__SEMIO_SWAP__"').replace('fill="#34d1bf"', 'fill="#fa9500"').replace('fill="__SEMIO_SWAP__"', 'fill="#34d1bf"');
 }
 
 const files: Array<{ relative: string; handler: (content: string) => string }> = [

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Ticket creation required a summary even though the summary is only needed when the ticket is finished.
@@ -22,6 +23,7 @@ Ticket creation required a summary even though the summary is only needed when t
 ## Log
 
 ## Summary
+
 # Summary
 
 Require summary only when finishing tickets

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The design app was experiencing performance issues during operations like panning and hovering. Analysis revealed that:
@@ -48,6 +49,7 @@ The Design test was already failing before these changes were applied. The failu
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix store overfetching and overrendering in design app

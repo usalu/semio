@@ -3,11 +3,5 @@
   "title": "Finalize Compose GraphQL Contract For Kit Store",
   "status": "closed",
   "summary": "US-002: extended async-graphql schema in compose/rs, regenerated compose/graphql/schema.graphql, documented graphqlSurface on kit-store contract, root typecheck runs nx build compose/graphql.",
-  "files": [
-    "compose/rs/lib.rs",
-    "compose/graphql/schema.graphql",
-    "assets/compose/kit-store.contract.compose.json",
-    "package.json",
-    ".ralph-tui/progress.md"
-  ]
+  "files": ["compose/rs/lib.rs", "compose/graphql/schema.graphql", "assets/compose/kit-store.contract.compose.json", "package.json", ".ralph-tui/progress.md"]
 }

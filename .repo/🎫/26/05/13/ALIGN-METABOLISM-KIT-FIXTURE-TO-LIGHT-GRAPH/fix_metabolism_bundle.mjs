@@ -6,21 +6,8 @@
 import fs from "fs";
 import path from "path";
 
-const STUB =
-  "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262";
-const root = path.resolve(
-  import.meta.dirname,
-  "..",
-  "..",
-  "..",
-  "..",
-  "..",
-  "..",
-  "compose",
-  "assets",
-  "fixtures",
-  "metabolism.kit.compose.json",
-);
+const STUB = "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262";
+const root = path.resolve(import.meta.dirname, "..", "..", "..", "..", "..", "..", "compose", "assets", "fixtures", "metabolism.kit.compose.json");
 const raw = fs.readFileSync(root, "utf8");
 const doc = JSON.parse(raw);
 

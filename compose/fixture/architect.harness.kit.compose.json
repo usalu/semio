@@ -1,145 +1,145 @@
 {
-    "id": "a1000000-0000-4000-8000-000000000001",
-    "name": "Architect Harness",
-    "version": "harness-1",
-    "description": "Minimal kit for architect query memory and e2e suites.",
-    "typologies": {
-        "hash": "typology-migration-stub",
-        "items": [
+  "id": "a1000000-0000-4000-8000-000000000001",
+  "name": "Architect Harness",
+  "version": "harness-1",
+  "description": "Minimal kit for architect query memory and e2e suites.",
+  "typologies": {
+    "hash": "typology-migration-stub",
+    "items": [
+      {
+        "id": "typology-tower",
+        "name": "Tower",
+        "types": {
+          "hash": "typology-migration-stub",
+          "items": []
+        },
+        "designs": {
+          "hash": "typology-migration-stub",
+          "items": [
             {
-                "id": "typology-tower",
-                "name": "Tower",
-                "types": {
-                    "hash": "typology-migration-stub",
-                    "items": []
-                },
-                "designs": {
-                    "hash": "typology-migration-stub",
-                    "items": [
-                        {
-                            "id": "c3000000-0000-4000-8000-000000000001",
-                            "name": "Nakagin Capsule Tower",
-                            "hash": "des-tower-h",
-                            "pieces": {
-                                "hash": "pieces-tower-h",
-                                "items": [
-                                    {
-                                        "id": "d4000000-0000-4000-8000-000000000001",
-                                        "name": "tower-capsule-a",
-                                        "type": {
-                                            "id": "b2000000-0000-4000-8000-000000000001"
-                                        },
-                                        "hash": "piece-tower-1-h"
-                                    },
-                                    {
-                                        "id": "d4000000-0000-4000-8000-000000000002",
-                                        "name": "tower-capsule-b",
-                                        "type": {
-                                            "id": "b2000000-0000-4000-8000-000000000002"
-                                        },
-                                        "hash": "piece-tower-2-h"
-                                    }
-                                ]
-                            },
-                            "connections": {
-                                "hash": "conn-tower-h",
-                                "items": []
-                            },
-                            "typology": {
-                                "id": "typology-tower"
-                            }
-                        }
-                    ]
-                }
-            },
-            {
-                "id": "typology-capsule",
-                "name": "Capsule",
-                "types": {
-                    "hash": "typology-migration-stub",
-                    "items": [
-                        {
-                            "id": "b2000000-0000-4000-8000-000000000001",
-                            "name": "KindAlpha",
-                            "hash": "type-a-h",
-                            "families": {
-                                "hash": "fam-h",
-                                "items": []
-                            },
-                            "typology": {
-                                "id": "typology-capsule"
-                            }
-                        },
-                        {
-                            "id": "b2000000-0000-4000-8000-000000000002",
-                            "name": "KindBeta",
-                            "hash": "type-b-h",
-                            "families": {
-                                "hash": "fam-h",
-                                "items": []
-                            },
-                            "typology": {
-                                "id": "typology-capsule"
-                            }
-                        }
-                    ]
-                },
-                "designs": {
-                    "hash": "typology-migration-stub",
-                    "items": []
-                }
-            },
-            {
-                "id": "typology-base",
-                "name": "Base",
-                "types": {
-                    "hash": "typology-migration-stub",
-                    "items": [
-                        {
-                            "id": "b2000000-0000-4000-8000-000000000003",
-                            "name": "KindGamma",
-                            "hash": "type-c-h",
-                            "families": {
-                                "hash": "fam-h",
-                                "items": []
-                            },
-                            "typology": {
-                                "id": "typology-base"
-                            }
-                        }
-                    ]
-                },
-                "designs": {
-                    "hash": "typology-migration-stub",
-                    "items": [
-                        {
-                            "id": "c3000000-0000-4000-8000-000000000002",
-                            "name": "Other Pavilion",
-                            "hash": "des-other-h",
-                            "pieces": {
-                                "hash": "pieces-other-h",
-                                "items": [
-                                    {
-                                        "id": "d4000000-0000-4000-8000-000000000003",
-                                        "name": "pavilion-slab",
-                                        "type": {
-                                            "id": "b2000000-0000-4000-8000-000000000003"
-                                        },
-                                        "hash": "piece-other-1-h"
-                                    }
-                                ]
-                            },
-                            "connections": {
-                                "hash": "conn-other-h",
-                                "items": []
-                            },
-                            "typology": {
-                                "id": "typology-base"
-                            }
-                        }
-                    ]
-                }
+              "id": "c3000000-0000-4000-8000-000000000001",
+              "name": "Nakagin Capsule Tower",
+              "hash": "des-tower-h",
+              "pieces": {
+                "hash": "pieces-tower-h",
+                "items": [
+                  {
+                    "id": "d4000000-0000-4000-8000-000000000001",
+                    "name": "tower-capsule-a",
+                    "type": {
+                      "id": "b2000000-0000-4000-8000-000000000001"
+                    },
+                    "hash": "piece-tower-1-h"
+                  },
+                  {
+                    "id": "d4000000-0000-4000-8000-000000000002",
+                    "name": "tower-capsule-b",
+                    "type": {
+                      "id": "b2000000-0000-4000-8000-000000000002"
+                    },
+                    "hash": "piece-tower-2-h"
+                  }
+                ]
+              },
+              "connections": {
+                "hash": "conn-tower-h",
+                "items": []
+              },
+              "typology": {
+                "id": "typology-tower"
+              }
             }
-        ]
-    }
+          ]
+        }
+      },
+      {
+        "id": "typology-capsule",
+        "name": "Capsule",
+        "types": {
+          "hash": "typology-migration-stub",
+          "items": [
+            {
+              "id": "b2000000-0000-4000-8000-000000000001",
+              "name": "KindAlpha",
+              "hash": "type-a-h",
+              "families": {
+                "hash": "fam-h",
+                "items": []
+              },
+              "typology": {
+                "id": "typology-capsule"
+              }
+            },
+            {
+              "id": "b2000000-0000-4000-8000-000000000002",
+              "name": "KindBeta",
+              "hash": "type-b-h",
+              "families": {
+                "hash": "fam-h",
+                "items": []
+              },
+              "typology": {
+                "id": "typology-capsule"
+              }
+            }
+          ]
+        },
+        "designs": {
+          "hash": "typology-migration-stub",
+          "items": []
+        }
+      },
+      {
+        "id": "typology-base",
+        "name": "Base",
+        "types": {
+          "hash": "typology-migration-stub",
+          "items": [
+            {
+              "id": "b2000000-0000-4000-8000-000000000003",
+              "name": "KindGamma",
+              "hash": "type-c-h",
+              "families": {
+                "hash": "fam-h",
+                "items": []
+              },
+              "typology": {
+                "id": "typology-base"
+              }
+            }
+          ]
+        },
+        "designs": {
+          "hash": "typology-migration-stub",
+          "items": [
+            {
+              "id": "c3000000-0000-4000-8000-000000000002",
+              "name": "Other Pavilion",
+              "hash": "des-other-h",
+              "pieces": {
+                "hash": "pieces-other-h",
+                "items": [
+                  {
+                    "id": "d4000000-0000-4000-8000-000000000003",
+                    "name": "pavilion-slab",
+                    "type": {
+                      "id": "b2000000-0000-4000-8000-000000000003"
+                    },
+                    "hash": "piece-other-1-h"
+                  }
+                ]
+              },
+              "connections": {
+                "hash": "conn-other-h",
+                "items": []
+              },
+              "typology": {
+                "id": "typology-base"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
 }

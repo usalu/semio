@@ -1113,10 +1113,7 @@ function __scopedKitMutationBody(changeId: string, kitSelection: string): { read
 }
 
 /** @emoji 🧾 One scoped mutation for a legacy {@link ChangeKitCommand}, or `null` when unsupported on `KitOperationInput`. */
-function buildScopedChangeKitMutation(
-  changeId: string,
-  cmd: ChangeKitCommand,
-): { readonly query: string; readonly variables: GraphQlVariables } | null {
+function buildScopedChangeKitMutation(changeId: string, cmd: ChangeKitCommand): { readonly query: string; readonly variables: GraphQlVariables } | null {
   if ("name" in cmd && cmd.name != null && typeof cmd.name === "object" && "name" in cmd.name) {
     const n = String((cmd.name as { name?: string | null }).name ?? "");
     return __scopedKitMutationBody(changeId, `r: rename(newName: ${__gqlStr(n)})`);
@@ -1128,10 +1125,7 @@ function buildScopedChangeKitMutation(
 
   if ("addType" in cmd && cmd.addType != null && typeof cmd.addType === "object" && "type" in cmd.addType) {
     const t = (cmd.addType as { type: TypeDto }).type;
-    return __scopedKitMutationBody(
-      changeId,
-      `r: createType(name: ${__gqlStr(t.name)}, description: ${__gqlStr(t.description ?? "")}, icon: ${__gqlStr(t.icon ?? "")}, image: ${__gqlStr(t.image ?? "")}, unit: ${__gqlStr(t.unit ?? "")})`,
-    );
+    return __scopedKitMutationBody(changeId, `r: createType(name: ${__gqlStr(t.name)}, description: ${__gqlStr(t.description ?? "")}, icon: ${__gqlStr(t.icon ?? "")}, image: ${__gqlStr(t.image ?? "")}, unit: ${__gqlStr(t.unit ?? "")})`);
   }
   if ("removeType" in cmd && cmd.removeType != null) {
     const id = String((cmd.removeType as { typeId: KitIdDto }).typeId.id);
@@ -1140,10 +1134,7 @@ function buildScopedChangeKitMutation(
 
   if ("addDesign" in cmd && cmd.addDesign != null) {
     const d = (cmd.addDesign as { design: DesignDto }).design;
-    return __scopedKitMutationBody(
-      changeId,
-      `r: createDesign(name: ${__gqlStr(d.name)}, description: ${__gqlStr(d.description ?? "")}, icon: ${__gqlStr(d.icon ?? "")}, image: ${__gqlStr(d.image ?? "")}, unit: ${__gqlStr(d.unit ?? "")})`,
-    );
+    return __scopedKitMutationBody(changeId, `r: createDesign(name: ${__gqlStr(d.name)}, description: ${__gqlStr(d.description ?? "")}, icon: ${__gqlStr(d.icon ?? "")}, image: ${__gqlStr(d.image ?? "")}, unit: ${__gqlStr(d.unit ?? "")})`);
   }
   if ("removeDesign" in cmd && cmd.removeDesign != null) {
     const id = String((cmd.removeDesign as { designId: KitIdDto }).designId.id);
@@ -1152,17 +1143,11 @@ function buildScopedChangeKitMutation(
 
   if ("dragPieces" in cmd && cmd.dragPieces != null) {
     const x = cmd.dragPieces as { designId: KitIdDto; pieceIds: readonly string[]; du: number; dv: number };
-    return __scopedKitMutationBody(
-      changeId,
-      `r: design(id: ${__gqlStr(x.designId.id)}) { pieces(ids: ${__gqlIds(x.pieceIds)}) { d: drag(offset: { u: ${x.du}, v: ${x.dv} }) } }`,
-    );
+    return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(x.designId.id)}) { pieces(ids: ${__gqlIds(x.pieceIds)}) { d: drag(offset: { u: ${x.du}, v: ${x.dv} }) } }`);
   }
   if ("movePieces" in cmd && cmd.movePieces != null) {
     const x = cmd.movePieces as { designId: KitIdDto; pieceIds: readonly string[]; gap: number; shift: number; rise: number };
-    return __scopedKitMutationBody(
-      changeId,
-      `r: design(id: ${__gqlStr(x.designId.id)}) { pieces(ids: ${__gqlIds(x.pieceIds)}) { m: move(offset: { u: ${x.gap}, v: ${x.shift} }) } }`,
-    );
+    return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(x.designId.id)}) { pieces(ids: ${__gqlIds(x.pieceIds)}) { m: move(offset: { u: ${x.gap}, v: ${x.shift} }) } }`);
   }
   if ("fixPieces" in cmd && cmd.fixPieces != null) {
     const x = cmd.fixPieces as { designId: KitIdDto; pieceIds: readonly string[] };
@@ -1182,40 +1167,22 @@ function buildScopedChangeKitMutation(
       return __scopedKitMutationBody(changeId, `r: type(id: ${__gqlStr(tid)}) { n: rename(newName: ${__gqlStr(String((c0.name as { name: string }).name))}) }`);
     }
     if ("description" in c0 && c0.description != null) {
-      return __scopedKitMutationBody(
-        changeId,
-        `r: type(id: ${__gqlStr(tid)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0.description as { description?: string | null }).description ?? ""))}) }`,
-      );
+      return __scopedKitMutationBody(changeId, `r: type(id: ${__gqlStr(tid)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0.description as { description?: string | null }).description ?? ""))}) }`);
     }
     if ("icon" in c0 && c0.icon != null) {
-      return __scopedKitMutationBody(
-        changeId,
-        `r: type(id: ${__gqlStr(tid)}) { i: changeIcon(newIcon: ${__gqlStr(String((c0.icon as { icon?: string | null }).icon ?? ""))}) }`,
-      );
+      return __scopedKitMutationBody(changeId, `r: type(id: ${__gqlStr(tid)}) { i: changeIcon(newIcon: ${__gqlStr(String((c0.icon as { icon?: string | null }).icon ?? ""))}) }`);
     }
     if ("image" in c0 && c0.image != null) {
-      return __scopedKitMutationBody(
-        changeId,
-        `r: type(id: ${__gqlStr(tid)}) { i: changeIcon(newIcon: ${__gqlStr(String((c0.image as { image?: string | null }).image ?? ""))}) }`,
-      );
+      return __scopedKitMutationBody(changeId, `r: type(id: ${__gqlStr(tid)}) { i: changeIcon(newIcon: ${__gqlStr(String((c0.image as { image?: string | null }).image ?? ""))}) }`);
     }
     if ("unit" in c0 && c0.unit != null) {
-      return __scopedKitMutationBody(
-        changeId,
-        `r: type(id: ${__gqlStr(tid)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0.unit as { unit?: string | null }).unit ?? ""))}) }`,
-      );
+      return __scopedKitMutationBody(changeId, `r: type(id: ${__gqlStr(tid)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0.unit as { unit?: string | null }).unit ?? ""))}) }`);
     }
     if ("stock" in c0 && c0.stock != null) {
-      return __scopedKitMutationBody(
-        changeId,
-        `r: type(id: ${__gqlStr(tid)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0.stock as { stock?: number | null }).stock ?? ""))}) }`,
-      );
+      return __scopedKitMutationBody(changeId, `r: type(id: ${__gqlStr(tid)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0.stock as { stock?: number | null }).stock ?? ""))}) }`);
     }
     if ("typeVirtual" in c0 && c0.typeVirtual != null) {
-      return __scopedKitMutationBody(
-        changeId,
-        `r: type(id: ${__gqlStr(tid)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0.typeVirtual as { value?: boolean | null }).value ?? false))}) }`,
-      );
+      return __scopedKitMutationBody(changeId, `r: type(id: ${__gqlStr(tid)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0.typeVirtual as { value?: boolean | null }).value ?? false))}) }`);
     }
     return null;
   }
@@ -1229,15 +1196,11 @@ function buildScopedChangeKitMutation(
       return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(did)}) { n: rename(newName: ${__gqlStr(String((d0.name as { name: string }).name))}) }`);
     }
     if ("description" in d0 && d0.description != null) {
-      return __scopedKitMutationBody(
-        changeId,
-        `r: design(id: ${__gqlStr(did)}) { d: changeDescription(newDescription: ${__gqlStr(String((d0.description as { description?: string | null }).description ?? ""))}) }`,
-      );
+      return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(did)}) { d: changeDescription(newDescription: ${__gqlStr(String((d0.description as { description?: string | null }).description ?? ""))}) }`);
     }
     if ("addPiece" in d0 && d0.addPiece != null) {
       const piece = (d0.addPiece as { piece: PieceDto }).piece;
-      const bp =
-        typeof piece.type === "object" && piece.type != null && "id" in piece.type ? String((piece.type as { id: string }).id) : String(piece.type);
+      const bp = typeof piece.type === "object" && piece.type != null && "id" in piece.type ? String((piece.type as { id: string }).id) : String(piece.type);
       const pl = __kitPlaneToBatchInput(piece.plane);
       const c = piece.center;
       if (!pl || !isJsonObjectNode(c)) return null;
@@ -1256,26 +1219,17 @@ function buildScopedChangeKitMutation(
     }
     if ("removeConnection" in d0 && d0.removeConnection != null) {
       const cid = String((d0.removeConnection as { connectionId: KitIdDto }).connectionId.id);
-      return __scopedKitMutationBody(
-        changeId,
-        `r: design(id: ${__gqlStr(did)}) { dc: deletePiecesAndConnections(pieceIds: [], connectionIds: [${__gqlStr(cid)}]) }`,
-      );
+      return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(did)}) { dc: deletePiecesAndConnections(pieceIds: [], connectionIds: [${__gqlStr(cid)}]) }`);
     }
     if ("changePieceCommands" in d0 && d0.changePieceCommands != null) {
       const pid = String(d0.changePieceCommands.pieceId.id);
       const p0 = d0.changePieceCommands.commands[0];
       if (!p0) return null;
       if ("name" in p0 && p0.name != null) {
-        return __scopedKitMutationBody(
-          changeId,
-          `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { n: rename(newName: ${__gqlStr(String((p0.name as { name?: string | null }).name ?? ""))}) } }`,
-        );
+        return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { n: rename(newName: ${__gqlStr(String((p0.name as { name?: string | null }).name ?? ""))}) } }`);
       }
       if ("description" in p0 && p0.description != null) {
-        return __scopedKitMutationBody(
-          changeId,
-          `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { d: changeDescription(newDescription: ${__gqlStr(String((p0.description as { description?: string | null }).description ?? ""))}) } }`,
-        );
+        return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { d: changeDescription(newDescription: ${__gqlStr(String((p0.description as { description?: string | null }).description ?? ""))}) } }`);
       }
       if ("plane" in p0 && p0.plane != null) {
         const pl = __kitPlaneToBatchInput((p0.plane as { plane?: KitJsonTreeDto }).plane);
@@ -1293,28 +1247,16 @@ function buildScopedChangeKitMutation(
         return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { mv: move(position: ${posInl}) } }`);
       }
       if ("scale" in p0 && p0.scale != null) {
-        return __scopedKitMutationBody(
-          changeId,
-          `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { d: changeDescription(newDescription: ${__gqlStr(String((p0.scale as { scale?: number | null }).scale ?? ""))}) } }`,
-        );
+        return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { d: changeDescription(newDescription: ${__gqlStr(String((p0.scale as { scale?: number | null }).scale ?? ""))}) } }`);
       }
       if ("color" in p0 && p0.color != null) {
-        return __scopedKitMutationBody(
-          changeId,
-          `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { d: changeDescription(newDescription: ${__gqlStr(String((p0.color as { color?: string | null }).color ?? ""))}) } }`,
-        );
+        return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { d: changeDescription(newDescription: ${__gqlStr(String((p0.color as { color?: string | null }).color ?? ""))}) } }`);
       }
       if ("hidden" in p0 && p0.hidden != null) {
-        return __scopedKitMutationBody(
-          changeId,
-          `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { d: changeDescription(newDescription: ${__gqlStr(String((p0.hidden as { hidden?: boolean | null }).hidden ?? false))}) } }`,
-        );
+        return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { d: changeDescription(newDescription: ${__gqlStr(String((p0.hidden as { hidden?: boolean | null }).hidden ?? false))}) } }`);
       }
       if ("locked" in p0 && p0.locked != null) {
-        return __scopedKitMutationBody(
-          changeId,
-          `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { d: changeDescription(newDescription: ${__gqlStr(String((p0.locked as { locked?: boolean | null }).locked ?? false))}) } }`,
-        );
+        return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { d: changeDescription(newDescription: ${__gqlStr(String((p0.locked as { locked?: boolean | null }).locked ?? false))}) } }`);
       }
       if ("type" in p0 && p0.type != null) {
         const t = (p0.type as { typeId?: KitIdDto }).typeId?.id;
@@ -1331,11 +1273,7 @@ function buildScopedChangeKitMutation(
     const c0 = b.commands[0];
     if (!c0) return null;
     if ("name" in c0) return __scopedKitMutationBody(changeId, `r: tag(id: ${__gqlStr(id)}) { n: rename(newName: ${__gqlStr(String((c0 as { name: { name: string } }).name.name))}) }`);
-    if ("order" in c0)
-      return __scopedKitMutationBody(
-        changeId,
-        `r: tag(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { order: { order?: number | null } }).order.order ?? ""))}) }`,
-      );
+    if ("order" in c0) return __scopedKitMutationBody(changeId, `r: tag(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { order: { order?: number | null } }).order.order ?? ""))}) }`);
     return null;
   }
   if ("changeConceptCommands" in cmd && cmd.changeConceptCommands != null) {
@@ -1345,15 +1283,8 @@ function buildScopedChangeKitMutation(
     if (!c0) return null;
     if ("name" in c0) return __scopedKitMutationBody(changeId, `r: concept(id: ${__gqlStr(id)}) { n: rename(newName: ${__gqlStr(String((c0 as { name: { name: string } }).name.name))}) }`);
     if ("description" in c0)
-      return __scopedKitMutationBody(
-        changeId,
-        `r: concept(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { description: { description?: string | null } }).description.description ?? ""))}) }`,
-      );
-    if ("order" in c0)
-      return __scopedKitMutationBody(
-        changeId,
-        `r: concept(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { order: { order?: number | null } }).order.order ?? ""))}) }`,
-      );
+      return __scopedKitMutationBody(changeId, `r: concept(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { description: { description?: string | null } }).description.description ?? ""))}) }`);
+    if ("order" in c0) return __scopedKitMutationBody(changeId, `r: concept(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { order: { order?: number | null } }).order.order ?? ""))}) }`);
     return null;
   }
   if ("changeKitQualityCommands" in cmd && cmd.changeKitQualityCommands != null) {
@@ -1362,26 +1293,11 @@ function buildScopedChangeKitMutation(
     const c0 = b.commands[0];
     if (!c0) return null;
     if ("key" in c0) return __scopedKitMutationBody(changeId, `r: quality(id: ${__gqlStr(id)}) { k: rename(newKey: ${__gqlStr(String((c0 as { key: { key: string } }).key.key))}) }`);
-    if ("value" in c0)
-      return __scopedKitMutationBody(
-        changeId,
-        `r: quality(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { value: { value?: string | null } }).value.value ?? ""))}) }`,
-      );
-    if ("unit" in c0)
-      return __scopedKitMutationBody(
-        changeId,
-        `r: quality(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { unit: { unit?: string | null } }).unit.unit ?? ""))}) }`,
-      );
-    if ("definition" in c0)
-      return __scopedKitMutationBody(
-        changeId,
-        `r: quality(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { definition: { definition?: string | null } }).definition.definition ?? ""))}) }`,
-      );
+    if ("value" in c0) return __scopedKitMutationBody(changeId, `r: quality(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { value: { value?: string | null } }).value.value ?? ""))}) }`);
+    if ("unit" in c0) return __scopedKitMutationBody(changeId, `r: quality(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { unit: { unit?: string | null } }).unit.unit ?? ""))}) }`);
+    if ("definition" in c0) return __scopedKitMutationBody(changeId, `r: quality(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { definition: { definition?: string | null } }).definition.definition ?? ""))}) }`);
     if ("description" in c0)
-      return __scopedKitMutationBody(
-        changeId,
-        `r: quality(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { description: { description?: string | null } }).description.description ?? ""))}) }`,
-      );
+      return __scopedKitMutationBody(changeId, `r: quality(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { description: { description?: string | null } }).description.description ?? ""))}) }`);
     return null;
   }
 
@@ -1395,10 +1311,7 @@ function buildScopedChangeKitMutation(
 
   if ("changePieceKind" in cmd && cmd.changePieceKind != null) {
     const x = cmd.changePieceKind as { designId: KitIdDto; pieceId: KitIdDto; newTypeId: KitIdDto };
-    return __scopedKitMutationBody(
-      changeId,
-      `r: design(id: ${__gqlStr(x.designId.id)}) { piece(id: ${__gqlStr(x.pieceId.id)}) { cb: changeBlueprint(blueprintId: ${__gqlStr(x.newTypeId.id)}) } }`,
-    );
+    return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(x.designId.id)}) { piece(id: ${__gqlStr(x.pieceId.id)}) { cb: changeBlueprint(blueprintId: ${__gqlStr(x.newTypeId.id)}) } }`);
   }
 
   return null;
@@ -1574,13 +1487,10 @@ function __normalizeTypeOrDesignMetadataRow(row: JsonObject | KitJsonObjectDto):
 }
 
 //#region 🔌KitGraphqlReadSelections
-const KIT_GQL_TYPE_SHALLOW_FIELDS =
-  "id hash name description icon image unit created updated connectors { edges { node { id } } }";
-const KIT_GQL_DESIGN_SHALLOW_FIELDS =
-  "id hash name description icon image unit created updated pieces { edges { node { id } } } connections { edges { node { id } } }";
+const KIT_GQL_TYPE_SHALLOW_FIELDS = "id hash name description icon image unit created updated connectors { edges { node { id } } }";
+const KIT_GQL_DESIGN_SHALLOW_FIELDS = "id hash name description icon image unit created updated pieces { edges { node { id } } } connections { edges { node { id } } }";
 const KIT_GQL_TYPE_METADATA_FIELDS = "id hash name description icon image unit created updated";
-const KIT_GQL_DESIGN_METADATA_FIELDS =
-  "id hash name description icon image unit created updated pieces { edges { node { id } } } connections { edges { node { id } } }";
+const KIT_GQL_DESIGN_METADATA_FIELDS = "id hash name description icon image unit created updated pieces { edges { node { id } } } connections { edges { node { id } } }";
 /** @emoji 🧾 Relay `Kit.types { edges { node { … } } }` fragment body (fields live on {@link Type} nodes). */
 function kitGqlKitTypesRelay(innerOnTypeNode: string): string {
   return `types { edges { node { ${innerOnTypeNode} } } }`;
@@ -1938,11 +1848,7 @@ export type KitGraphqlDataKitScopedFullDto = Readonly<{
 //#region 🧱StorePrimitives
 
 /** @emoji 📛 Write lane status for {@link StoreCommand} (stable object identities for triads). */
-export type WriteStatus =
-  | { kind: "readonly"; pending: 0; lastError?: SetError }
-  | { kind: "idle"; pending: 0; lastError?: SetError }
-  | { kind: "pending"; pending: number; lastError?: SetError }
-  | { kind: "error"; pending: 0; lastError: SetError };
+export type WriteStatus = { kind: "readonly"; pending: 0; lastError?: SetError } | { kind: "idle"; pending: 0; lastError?: SetError } | { kind: "pending"; pending: number; lastError?: SetError } | { kind: "error"; pending: 0; lastError: SetError };
 
 /** @emoji 🧾 Frozen idle — stable identity for `useSyncExternalStore` snapshots. */
 export const WRITE_STATUS_IDLE: WriteStatus = Object.freeze({ kind: "idle", pending: 0 });
@@ -2235,9 +2141,7 @@ export class KitStore {
     } catch (e) {
       const base = e instanceof Error ? e.message : String(e);
       const net = /Failed to fetch|fetch|ERR_CONNECTION_REFUSED|LOAD_FAILED|network/i.test(base);
-      const hint = net
-        ? " The Vite dev server may have stopped (restore with `npm run dev` in compose/sketchpad, then hard-refresh)."
-        : "";
+      const hint = net ? " The Vite dev server may have stopped (restore with `npm run dev` in compose/sketchpad, then hard-refresh)." : "";
       throw new Error(`Failed to load @semio-tech/compose-rs-wasm (inline path): ${base}.${hint}`);
     }
     if (typeof mod.default === "function") {
@@ -2394,9 +2298,7 @@ export class KitStore {
     this.dispatchCommandSucceededPayload(data?.commandSucceeded ?? null);
   }
 
-  private dispatchOperationFailed(data: {
-    readonly operationFailed?: { readonly kind?: string; readonly message?: string; readonly requestId?: string | null } | null;
-  }): void {
+  private dispatchOperationFailed(data: { readonly operationFailed?: { readonly kind?: string; readonly message?: string; readonly requestId?: string | null } | null }): void {
     const failed = data.operationFailed;
     if (failed == null || typeof failed !== "object") return;
     const ridRaw = failed.requestId;
@@ -2514,9 +2416,7 @@ export class KitStore {
   async readKitSnapshotForReadPoint(scope: KitReadPoint): Promise<KitFullDto> {
     this.ensureAlive();
     const { query, variables } = kitSessionWipStoreSelect(scope, "fullSnapshot");
-    const data = kitGraphqlData(
-      await kitGraphqlRunTyped<JsonValue>(this.graphqlHandle(), { query, variables }, this.timeoutMs),
-    ) as JsonValue;
+    const data = kitGraphqlData(await kitGraphqlRunTyped<JsonValue>(this.graphqlHandle(), { query, variables }, this.timeoutMs)) as JsonValue;
     const raw = gqlDataSessionWipKitStore(data, scope)?.["fullSnapshot"] as JsonValue | undefined;
     const j: JsonValue = typeof raw === "string" ? parseJsonValue(raw) : raw == null ? null : (raw as JsonValue);
     if (j == null || typeof j !== "object" || Array.isArray(j)) {
@@ -2563,7 +2463,7 @@ export class KitStore {
   private scopedTransactionInnerFromControl(commandKind: string, variables: JsonObject): JsonObject | null {
     const v = variables;
     const kid = (s: string): KitIdDto => ({ id: s });
-    const one = (cmd: ChangeKitCommand): JsonObject => ({ changeKitCommands: { commands: [cmd] } } as JsonObject);
+    const one = (cmd: ChangeKitCommand): JsonObject => ({ changeKitCommands: { commands: [cmd] } }) as JsonObject;
     switch (commandKind) {
       case "changeKitCommands":
         return { changeKitCommands: { commands: (v["commands"] as readonly ChangeKitCommand[] | undefined) ?? [] } } as GraphQlVariables;
@@ -2775,14 +2675,7 @@ export class KitStore {
     try {
       if (kind === "attachBackbone") {
         const c = (variables.config as BackboneConfig | null | undefined) ?? { Memory: null };
-        const cfg: JsonObject =
-          "Memory" in c
-            ? { memory: { confirm: true } }
-            : "Dev" in c
-              ? { dev: { path: c.Dev.path } }
-              : "Local" in c
-                ? { local: { folder: c.Local.folder } }
-                : { remote: { url: c.Remote.url, sessionId: c.Remote.sessionId } };
+        const cfg: JsonObject = "Memory" in c ? { memory: { confirm: true } } : "Dev" in c ? { dev: { path: c.Dev.path } } : "Local" in c ? { local: { folder: c.Local.folder } } : { remote: { url: c.Remote.url, sessionId: c.Remote.sessionId } };
         kitGraphqlData(await this.gqlRun({ query: `mutation($c: BackboneConfigInput!) { session { backbone { attach(config: $c) { attached } } } } }`, variables: { c: cfg } }));
         return { ok: true };
       }
@@ -2813,14 +2706,10 @@ export class KitStore {
   private async runBackboneBatchTypedRead<T>(kind: "listConflicts" | "backboneStatus"): Promise<T> {
     this.ensureAlive();
     if (kind === "listConflicts") {
-      const data = kitGraphqlData(
-        await this.gqlRun({ query: `query { session { conflicts { id reason createdAt wipCheckpoint { id } backboneTip { id } } } }` }),
-      ) as { session?: { conflicts?: readonly ConflictBatchRecord[] } };
+      const data = kitGraphqlData(await this.gqlRun({ query: `query { session { conflicts { id reason createdAt wipCheckpoint { id } backboneTip { id } } } }` })) as { session?: { conflicts?: readonly ConflictBatchRecord[] } };
       return ((data.session?.conflicts as readonly ConflictBatchRecord[] | undefined) ?? []) as T;
     }
-    const data = kitGraphqlData(
-      await this.gqlRun({ query: `mutation { session { backbone { status { attached kind kindOther tip } } } }` }),
-    ) as { session?: { backbone?: { status?: Partial<BackboneStatusDto> & { tip?: string | null } } } };
+    const data = kitGraphqlData(await this.gqlRun({ query: `mutation { session { backbone { status { attached kind kindOther tip } } } }` })) as { session?: { backbone?: { status?: Partial<BackboneStatusDto> & { tip?: string | null } } } };
     const br = data.session?.backbone?.status ?? {};
     return {
       attached: br.attached ?? false,
@@ -3027,9 +2916,7 @@ export class KitStore {
     if ("readKitTypesMetadataCommand" in c && c.readKitTypesMetadataCommand === null) {
       const row = await this.gqlKitReadOnlyScope(scope, kitGqlKitTypesRelay(KIT_GQL_TYPE_METADATA_FIELDS));
       const metas = kitGraphqlJsonToReadonlyArray((row.types as KitJsonTreeDto | undefined) ?? []);
-      const parsed = metas.map((raw) =>
-        typeof raw === "object" && raw != null ? TypeMetadataDtoSchema.parse(__coerceTypeMetadataGqlRow(raw as JsonObject)) : null,
-      );
+      const parsed = metas.map((raw) => (typeof raw === "object" && raw != null ? TypeMetadataDtoSchema.parse(__coerceTypeMetadataGqlRow(raw as JsonObject)) : null));
       return {
         readKitTypesMetadataCommand: {
           types: parsed.filter((x) => x !== null) as readonly TypeMetadataDto[],
@@ -3039,9 +2926,7 @@ export class KitStore {
     if ("readKitDesignsMetadataCommand" in c && c.readKitDesignsMetadataCommand === null) {
       const row = await this.gqlKitReadOnlyScope(scope, kitGqlKitDesignsRelay(KIT_GQL_DESIGN_METADATA_FIELDS));
       const metas = kitGraphqlJsonToReadonlyArray((row.designs as KitJsonTreeDto | undefined) ?? []);
-      const parsed = metas.map((raw) =>
-        typeof raw === "object" && raw != null ? DesignMetadataDtoSchema.parse(__stripTopLevelJsonNulls(raw as JsonObject) as KitJsonTreeDto) : null,
-      );
+      const parsed = metas.map((raw) => (typeof raw === "object" && raw != null ? DesignMetadataDtoSchema.parse(__stripTopLevelJsonNulls(raw as JsonObject) as KitJsonTreeDto) : null));
       return {
         readKitDesignsMetadataCommand: {
           designs: parsed.filter((x) => x !== null) as readonly DesignMetadataDto[],
@@ -3180,11 +3065,7 @@ export class KitStore {
   }
 
   async getPiecesMetadata(scope: KitReadPoint, designId: string): Promise<ReadonlyMap<string, PiecePlacementRowDto>> {
-    const d = await this.gqlRunSessionWipStore(
-      scope,
-      `design(id: $id) { pieces { id depth flatPosition { plane { origin { x y z } xAxis { x y z } yAxis { x y z } } center { u v } } path { id } parentPiece { id } } }`,
-      { id: designId },
-    );
+    const d = await this.gqlRunSessionWipStore(scope, `design(id: $id) { pieces { id depth flatPosition { plane { origin { x y z } xAxis { x y z } yAxis { x y z } } center { u v } } path { id } parentPiece { id } } }`, { id: designId });
     const rawPieces = (gqlDataSessionWipKitStore(d, scope)?.["design"] as JsonObject | undefined)?.["pieces"];
     const rows = Array.isArray(rawPieces) ? rawPieces : [];
     const normalized = rows.map((p: JsonObject) => {
@@ -6099,18 +5980,16 @@ export const DesignSchema = z.object({
 });
 export type DesignDto = ReadonlyDto<z.infer<typeof DesignSchema>>;
 
-export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, authors: true, attributes: true })
-  .partial()
-  .extend({
-    pieces: PiecesDiffSchema.optional(),
-    connections: ConnectionsDiffSchema.optional(),
-    stats: StatsDiffSchema.optional(),
-    props: PropsDiffSchema.optional(),
-    layers: LayersDiffSchema.optional(),
-    groups: GroupsDiffSchema.optional(),
-    authors: AuthorsDiffSchema.optional(),
-    attributes: AttributesDiffSchema.optional(),
-  });
+export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, authors: true, attributes: true }).partial().extend({
+  pieces: PiecesDiffSchema.optional(),
+  connections: ConnectionsDiffSchema.optional(),
+  stats: StatsDiffSchema.optional(),
+  props: PropsDiffSchema.optional(),
+  layers: LayersDiffSchema.optional(),
+  groups: GroupsDiffSchema.optional(),
+  authors: AuthorsDiffSchema.optional(),
+  attributes: AttributesDiffSchema.optional(),
+});
 export type DesignDiff = ReadonlyDto<z.infer<typeof DesignDiffSchema>>;
 export const DesignsDiffSchema = z.object({ removed: z.array(DesignIdSchema).optional(), updated: z.array(z.object({ design: DesignIdSchema, diff: DesignDiffSchema })).optional(), added: z.array(z.any()).optional() });
 export type DesignsDiff = ReadonlyDto<z.infer<typeof DesignsDiffSchema>>;
@@ -7900,11 +7779,7 @@ export class FolderStore {
 // #endregion 🧩KitWasmBridgeMerged
 
 // #region 🧪EmbeddedTests
-if (
-  typeof process !== "undefined" &&
-  !!process.env &&
-  process.env["COMPOSE_JS_RUN_EMBEDDED_TESTS"] === "1"
-) {
+if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_RUN_EMBEDDED_TESTS"] === "1") {
   const { describe, it, expect } = await import("vitest");
 
   describe("compose-js KitStore", () => {
@@ -7919,28 +7794,28 @@ if (
     });
 
     describe("wasm GraphQL integration (KitStoreHandle over GraphQL)", () => {
-    it("opens dedicated worker wasm and returns typed full kit DTO from GraphQL", async () => {
-      const minimalKit: KitFullDto = {
-        id: "test-kit",
-        name: "TestKit",
-        createdAt: "2020-01-01T00:00:00.000Z",
-        updatedAt: "2020-01-01T00:00:00.000Z",
-        types: [{ id: "type-1", name: "Wall", connectors: [] }],
-        designs: [{ id: "design-1", name: "Floor1", pieces: [], connections: [] }],
-      };
-      const ks = await KitStore.open(minimalKit);
-      const snap = await ks.theKit();
-      expect(snap.id).toBe("test-kit");
-      expect(snap.name).toBe("TestKit");
-      const typeStores = await ks.types();
-      expect(typeStores.map((t) => t.id)).toEqual(["type-1"]);
-      const designStores = await ks.designs();
-      expect(designStores.map((d) => d.id)).toEqual(["design-1"]);
-      const meta = await ks.type("type-1").metadata();
-      expect(meta.id).toBe("type-1");
-      expect(meta.name).toBe("Wall");
-      await ks.dispose();
-    });
+      it("opens dedicated worker wasm and returns typed full kit DTO from GraphQL", async () => {
+        const minimalKit: KitFullDto = {
+          id: "test-kit",
+          name: "TestKit",
+          createdAt: "2020-01-01T00:00:00.000Z",
+          updatedAt: "2020-01-01T00:00:00.000Z",
+          types: [{ id: "type-1", name: "Wall", connectors: [] }],
+          designs: [{ id: "design-1", name: "Floor1", pieces: [], connections: [] }],
+        };
+        const ks = await KitStore.open(minimalKit);
+        const snap = await ks.theKit();
+        expect(snap.id).toBe("test-kit");
+        expect(snap.name).toBe("TestKit");
+        const typeStores = await ks.types();
+        expect(typeStores.map((t) => t.id)).toEqual(["type-1"]);
+        const designStores = await ks.designs();
+        expect(designStores.map((d) => d.id)).toEqual(["design-1"]);
+        const meta = await ks.type("type-1").metadata();
+        expect(meta.id).toBe("type-1");
+        expect(meta.name).toBe("Wall");
+        await ks.dispose();
+      });
     });
 
     it("kitReadPointKey normalizes the main line scope for cache keys", () => {
@@ -7995,232 +7870,234 @@ if (
     });
 
     describe("wasm GraphQL integration · KitStore.read / vcs", () => {
-    it("read batch returns typed rows", async () => {
-      const minimalKit: KitFullDto = {
-        id: "read-kit",
-        name: "R",
-        createdAt: "2020-01-01T00:00:00.000Z",
-        updatedAt: "2020-01-01T00:00:00.000Z",
-        types: [],
-        designs: [],
-      };
-      const ks = await KitStore.open(minimalKit);
-      const batch: ReadBatch = [{ readKitTypesShallowCommand: null }, { readKitTypeIdsCommand: null }];
-      const res = await ks.read(theKitReadPoint, batch);
-      expect(res.length).toBe(2);
-      await ks.dispose();
-    });
+      it("read batch returns typed rows", async () => {
+        const minimalKit: KitFullDto = {
+          id: "read-kit",
+          name: "R",
+          createdAt: "2020-01-01T00:00:00.000Z",
+          updatedAt: "2020-01-01T00:00:00.000Z",
+          types: [],
+          designs: [],
+        };
+        const ks = await KitStore.open(minimalKit);
+        const batch: ReadBatch = [{ readKitTypesShallowCommand: null }, { readKitTypeIdsCommand: null }];
+        const res = await ks.read(theKitReadPoint, batch);
+        expect(res.length).toBe(2);
+        await ks.dispose();
+      });
 
-    it("designRowIds and kindRowIds align with design() and type() factory lists", async () => {
-      const minimalKit: KitFullDto = {
-        id: "row-ids-kit",
-        name: "R",
-        createdAt: "2020-01-01T00:00:00.000Z",
-        updatedAt: "2020-01-01T00:00:00.000Z",
-        types: [{ id: "ta", name: "A", connectors: [] }],
-        designs: [{ id: "da", name: "D", pieces: [], connections: [] }],
-      };
-      const ks = await KitStore.open(minimalKit);
-      expect(await ks.designRowIds()).toEqual((await ks.designs()).map((d) => d.id));
-      expect(await ks.kindRowIds()).toEqual((await ks.types()).map((t) => t.id));
-      await ks.dispose();
-    });
+      it("designRowIds and kindRowIds align with design() and type() factory lists", async () => {
+        const minimalKit: KitFullDto = {
+          id: "row-ids-kit",
+          name: "R",
+          createdAt: "2020-01-01T00:00:00.000Z",
+          updatedAt: "2020-01-01T00:00:00.000Z",
+          types: [{ id: "ta", name: "A", connectors: [] }],
+          designs: [{ id: "da", name: "D", pieces: [], connections: [] }],
+        };
+        const ks = await KitStore.open(minimalKit);
+        expect(await ks.designRowIds()).toEqual((await ks.designs()).map((d) => d.id));
+        expect(await ks.kindRowIds()).toEqual((await ks.types()).map((t) => t.id));
+        await ks.dispose();
+      });
 
-    it("PieceStore readFlatPlane is defined on the owning store (delegates to live read dto)", async () => {
-      const minimalKit: KitFullDto = {
-        id: "piece-flat-kit",
-        name: "P",
-        createdAt: "2020-01-01T00:00:00.000Z",
-        updatedAt: "2020-01-01T00:00:00.000Z",
-        types: [{ id: "t1", name: "T", connectors: [] }],
-        designs: [
-          {
-            id: "d1",
-            name: "D",
-            pieces: [
-              {
-                id: "p1",
-                name: "Piece1",
-                type: { id: "t1" },
-                plane: { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } },
-                center: { u: 0, v: 0 },
-                scale: 1,
-                color: "#000000",
-                props: [],
-                attributes: [],
-              },
-            ],
-            connections: [],
+      it("PieceStore readFlatPlane is defined on the owning store (delegates to live read dto)", async () => {
+        const minimalKit: KitFullDto = {
+          id: "piece-flat-kit",
+          name: "P",
+          createdAt: "2020-01-01T00:00:00.000Z",
+          updatedAt: "2020-01-01T00:00:00.000Z",
+          types: [{ id: "t1", name: "T", connectors: [] }],
+          designs: [
+            {
+              id: "d1",
+              name: "D",
+              pieces: [
+                {
+                  id: "p1",
+                  name: "Piece1",
+                  type: { id: "t1" },
+                  plane: { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } },
+                  center: { u: 0, v: 0 },
+                  scale: 1,
+                  color: "#000000",
+                  props: [],
+                  attributes: [],
+                },
+              ],
+              connections: [],
+            },
+          ],
+        };
+        const ks = await KitStore.open(minimalKit);
+        expect(typeof ks.piece("d1", "p1").readFlatPlane).toBe("function");
+        expect(typeof ks.design("d1").readClusterableGroups).toBe("function");
+        expect(typeof ks.type("t1").readBestRepresentation).toBe("function");
+        await ks.dispose();
+      });
+
+      it("rejects theKit() after dispose", async () => {
+        const minimalKit: KitFullDto = {
+          id: "dispose-kit",
+          name: "D",
+          createdAt: "2020-01-01T00:00:00.000Z",
+          updatedAt: "2020-01-01T00:00:00.000Z",
+          types: [],
+          designs: [],
+        };
+        const ks = await KitStore.open(minimalKit);
+        await ks.dispose();
+        await expect(ks.theKit()).rejects.toThrow(/disposed/i);
+      });
+
+      it("subscribe returns Unsubscribe and does not expose events$", async () => {
+        const minimalKit: KitFullDto = {
+          id: "sub-kit",
+          name: "S",
+          createdAt: "2020-01-01T00:00:00.000Z",
+          updatedAt: "2020-01-01T00:00:00.000Z",
+          types: [],
+          designs: [],
+        };
+        const ks = await KitStore.open(minimalKit);
+        let n = 0;
+        const off = ks.subscribe(() => {
+          n += 1;
+        });
+        expect(typeof off).toBe("function");
+        off();
+        await ks.dispose();
+        type KitStorePublicKeys = keyof KitStore;
+        type MustNotIncludeEvents = "events$" extends KitStorePublicKeys ? never : true;
+        const _compileAssert: MustNotIncludeEvents = true;
+        expect(_compileAssert).toBe(true);
+        expect(n).toBeGreaterThanOrEqual(0);
+      });
+
+      it("subscribeFiltered and subscribeComposeKitCommandLifecycle return Unsubscribe (RxJS internal; no events$ on KitStore)", async () => {
+        const minimalKit: KitFullDto = {
+          id: "sub-filter-kit",
+          name: "Sf",
+          createdAt: "2020-01-01T00:00:00.000Z",
+          updatedAt: "2020-01-01T00:00:00.000Z",
+          types: [],
+          designs: [],
+        };
+        const ks = await KitStore.open(minimalKit);
+        const offFiltered = ks.subscribeFiltered(
+          () => false,
+          () => {
+            /* noop */
           },
-        ],
-      };
-      const ks = await KitStore.open(minimalKit);
-      expect(typeof ks.piece("d1", "p1").readFlatPlane).toBe("function");
-      expect(typeof ks.design("d1").readClusterableGroups).toBe("function");
-      expect(typeof ks.type("t1").readBestRepresentation).toBe("function");
-      await ks.dispose();
-    });
-
-    it("rejects theKit() after dispose", async () => {
-      const minimalKit: KitFullDto = {
-        id: "dispose-kit",
-        name: "D",
-        createdAt: "2020-01-01T00:00:00.000Z",
-        updatedAt: "2020-01-01T00:00:00.000Z",
-        types: [],
-        designs: [],
-      };
-      const ks = await KitStore.open(minimalKit);
-      await ks.dispose();
-      await expect(ks.theKit()).rejects.toThrow(/disposed/i);
-    });
-
-    it("subscribe returns Unsubscribe and does not expose events$", async () => {
-      const minimalKit: KitFullDto = {
-        id: "sub-kit",
-        name: "S",
-        createdAt: "2020-01-01T00:00:00.000Z",
-        updatedAt: "2020-01-01T00:00:00.000Z",
-        types: [],
-        designs: [],
-      };
-      const ks = await KitStore.open(minimalKit);
-      let n = 0;
-      const off = ks.subscribe(() => {
-        n += 1;
+        );
+        const offLifecycle = ks.subscribeComposeKitCommandLifecycle(() => {
+          /* noop */
+        });
+        expect(typeof offFiltered).toBe("function");
+        expect(typeof offLifecycle).toBe("function");
+        offFiltered();
+        offLifecycle();
+        await ks.dispose();
       });
-      expect(typeof off).toBe("function");
-      off();
-      await ks.dispose();
-      type KitStorePublicKeys = keyof KitStore;
-      type MustNotIncludeEvents = "events$" extends KitStorePublicKeys ? never : true;
-      const _compileAssert: MustNotIncludeEvents = true;
-      expect(_compileAssert).toBe(true);
-      expect(n).toBeGreaterThanOrEqual(0);
-    });
 
-    it("subscribeFiltered and subscribeComposeKitCommandLifecycle return Unsubscribe (RxJS internal; no events$ on KitStore)", async () => {
-      const minimalKit: KitFullDto = {
-        id: "sub-filter-kit",
-        name: "Sf",
-        createdAt: "2020-01-01T00:00:00.000Z",
-        updatedAt: "2020-01-01T00:00:00.000Z",
-        types: [],
-        designs: [],
-      };
-      const ks = await KitStore.open(minimalKit);
-      const offFiltered = ks.subscribeFiltered(() => false, () => {
-        /* noop */
+      it("theKit, vcsState, readAt root, and undo/redo flags round-trip", async () => {
+        const minimalKit: KitFullDto = {
+          id: "vcs-kit",
+          name: "V",
+          createdAt: "2020-01-01T00:00:00.000Z",
+          updatedAt: "2020-01-01T00:00:00.000Z",
+          types: [],
+          designs: [],
+        };
+        const ks = await KitStore.open(minimalKit);
+        const snap = await ks.theKit();
+        const snap2 = await ks.theKit();
+        expect(snap2.id).toBe(snap.id);
+        const vcs = await ks.vcsState();
+        expect(vcs != null && typeof vcs === "object").toBe(true);
+        const mat = await ks.readAt("");
+        expect(mat.id).toBe(snap.id);
+        expect(typeof (await ks.canUndo())).toBe("boolean");
+        expect(typeof (await ks.canRedo())).toBe("boolean");
+        await ks.dispose();
       });
-      const offLifecycle = ks.subscribeComposeKitCommandLifecycle(() => {
-        /* noop */
+
+      it("createAlternativeFromTip adds an alternative on wip", async () => {
+        const minimalKit: KitFullDto = {
+          id: "alt-create-kit",
+          name: "A",
+          createdAt: "2020-01-01T00:00:00.000Z",
+          updatedAt: "2020-01-01T00:00:00.000Z",
+          types: [],
+          designs: [],
+        };
+        const ks = await KitStore.open(minimalKit);
+        await ks.kitStoreInitializeDefaults();
+        const aid = await ks.createAlternativeFromTip("branch-one", null);
+        expect(aid.length).toBeGreaterThan(8);
+        const vcs = await ks.vcsState();
+        const wip = vcs["wip"] as { alternatives?: readonly { id?: string }[] } | undefined;
+        const alts = wip?.alternatives;
+        expect(Array.isArray(alts)).toBe(true);
+        expect((alts as readonly { id?: string }[]).some((a) => String(a?.id) === aid)).toBe(true);
+        await ks.dispose();
       });
-      expect(typeof offFiltered).toBe("function");
-      expect(typeof offLifecycle).toBe("function");
-      offFiltered();
-      offLifecycle();
-      await ks.dispose();
-    });
 
-    it("theKit, vcsState, readAt root, and undo/redo flags round-trip", async () => {
-      const minimalKit: KitFullDto = {
-        id: "vcs-kit",
-        name: "V",
-        createdAt: "2020-01-01T00:00:00.000Z",
-        updatedAt: "2020-01-01T00:00:00.000Z",
-        types: [],
-        designs: [],
-      };
-      const ks = await KitStore.open(minimalKit);
-      const snap = await ks.theKit();
-      const snap2 = await ks.theKit();
-      expect(snap2.id).toBe(snap.id);
-      const vcs = await ks.vcsState();
-      expect(vcs != null && typeof vcs === "object").toBe(true);
-      const mat = await ks.readAt("");
-      expect(mat.id).toBe(snap.id);
-      expect(typeof (await ks.canUndo())).toBe("boolean");
-      expect(typeof (await ks.canRedo())).toBe("boolean");
-      await ks.dispose();
-    });
-
-    it("createAlternativeFromTip adds an alternative on wip", async () => {
-      const minimalKit: KitFullDto = {
-        id: "alt-create-kit",
-        name: "A",
-        createdAt: "2020-01-01T00:00:00.000Z",
-        updatedAt: "2020-01-01T00:00:00.000Z",
-        types: [],
-        designs: [],
-      };
-      const ks = await KitStore.open(minimalKit);
-      await ks.kitStoreInitializeDefaults();
-      const aid = await ks.createAlternativeFromTip("branch-one", null);
-      expect(aid.length).toBeGreaterThan(8);
-      const vcs = await ks.vcsState();
-      const wip = vcs["wip"] as { alternatives?: readonly { id?: string }[] } | undefined;
-      const alts = wip?.alternatives;
-      expect(Array.isArray(alts)).toBe(true);
-      expect((alts as readonly { id?: string }[]).some((a) => String(a?.id) === aid)).toBe(true);
-      await ks.dispose();
-    });
-
-    it("serializes a fresh dev-json bundle with three graphs, a seed checkpoint, and an open unsaved change", async () => {
-      const minimalKit: KitFullDto = {
-        id: "dev-json-kit",
-        name: "the kit",
-        createdAt: "2020-01-01T00:00:00.000Z",
-        updatedAt: "2020-01-01T00:00:00.000Z",
-        types: [],
-        designs: [],
-      };
-      const ks = await KitStore.open(minimalKit);
-      await ks.kitStoreInitializeDefaults();
-      const raw = await ks.serializeKitStoreBundleJson();
-      const bundle = JSON.parse(raw) as JsonObject;
-      expect(bundle["schema"]).toBe("🎆26🌙06⬆️1");
-      for (const key of ["wip", "authoritative", "stage"]) {
-        expect(bundle[key] != null && typeof bundle[key] === "object").toBe(true);
-        expect(((bundle[key] as JsonObject)["initialKit"] as JsonObject | undefined)?.["name"]).toBe("the kit");
-      }
-      const wip = bundle["wip"] as JsonObject;
-      expect((((wip["checkpoints"] as JsonObject)["items"] as readonly unknown[]) ?? []).length).toBe(1);
-      expect(wip["drafts"]).toBeUndefined();
-      expect(wip["transactions"]).toBeUndefined();
-      expect(wip["savedChanges"]).toBeUndefined();
-      expect(wip["unsavedChanges"]).toBeUndefined();
-      const theKit = wip["theKit"] as JsonObject;
-      const changes = ((theKit["unsavedChanges"] as JsonObject)["items"] as readonly JsonObject[]) ?? [];
-      expect(changes.length).toBe(1);
-      const edits = ((changes[0]["edits"] as JsonObject)["items"] as readonly unknown[]) ?? [];
-      expect(edits.length).toBe(0);
-      await ks.dispose();
-    });
-
-    it("persists the initial RS bundle into an empty JsonFileKitStore", async () => {
-      let fileJson = "";
-      const store = await createJsonFileKitStore({
-        read: async () => fileJson,
-        write: async (nextJson: string) => {
-          fileJson = nextJson;
-        },
+      it("serializes a fresh dev-json bundle with three graphs, a seed checkpoint, and an open unsaved change", async () => {
+        const minimalKit: KitFullDto = {
+          id: "dev-json-kit",
+          name: "the kit",
+          createdAt: "2020-01-01T00:00:00.000Z",
+          updatedAt: "2020-01-01T00:00:00.000Z",
+          types: [],
+          designs: [],
+        };
+        const ks = await KitStore.open(minimalKit);
+        await ks.kitStoreInitializeDefaults();
+        const raw = await ks.serializeKitStoreBundleJson();
+        const bundle = JSON.parse(raw) as JsonObject;
+        expect(bundle["schema"]).toBe("🎆26🌙06⬆️1");
+        for (const key of ["wip", "authoritative", "stage"]) {
+          expect(bundle[key] != null && typeof bundle[key] === "object").toBe(true);
+          expect(((bundle[key] as JsonObject)["initialKit"] as JsonObject | undefined)?.["name"]).toBe("the kit");
+        }
+        const wip = bundle["wip"] as JsonObject;
+        expect((((wip["checkpoints"] as JsonObject)["items"] as readonly unknown[]) ?? []).length).toBe(1);
+        expect(wip["drafts"]).toBeUndefined();
+        expect(wip["transactions"]).toBeUndefined();
+        expect(wip["savedChanges"]).toBeUndefined();
+        expect(wip["unsavedChanges"]).toBeUndefined();
+        const theKit = wip["theKit"] as JsonObject;
+        const changes = ((theKit["unsavedChanges"] as JsonObject)["items"] as readonly JsonObject[]) ?? [];
+        expect(changes.length).toBe(1);
+        const edits = ((changes[0]["edits"] as JsonObject)["items"] as readonly unknown[]) ?? [];
+        expect(edits.length).toBe(0);
+        await ks.dispose();
       });
-      const client = await createKitStoreClient({ initialKit: store.getSnapshot().kit.toJSON() });
-      await applyKitClientSnapshotToLocalStore(client, store);
-      const bundle = JSON.parse(fileJson) as JsonObject;
-      expect(bundle["schema"]).toBe("🎆26🌙06⬆️1");
-      expect(((bundle["wip"] as JsonObject)["initialKit"] as JsonObject)["name"]).toBe("the kit");
-      expect((((bundle["wip"] as JsonObject)["checkpoints"] as JsonObject)["items"] as readonly unknown[]).length).toBe(1);
-      expect((bundle["wip"] as JsonObject)["drafts"]).toBeUndefined();
-      expect((bundle["wip"] as JsonObject)["savedChanges"]).toBeUndefined();
-      expect((bundle["wip"] as JsonObject)["unsavedChanges"]).toBeUndefined();
-      const theKit = (bundle["wip"] as JsonObject)["theKit"] as JsonObject;
-      const changes = (((theKit["unsavedChanges"] as JsonObject)["items"] as readonly JsonObject[]) ?? []);
-      expect(changes).toHaveLength(1);
-      expect(((changes[0]["edits"] as JsonObject)["items"] as readonly unknown[])).toHaveLength(0);
-      client.dispose();
-    });
 
+      it("persists the initial RS bundle into an empty JsonFileKitStore", async () => {
+        let fileJson = "";
+        const store = await createJsonFileKitStore({
+          read: async () => fileJson,
+          write: async (nextJson: string) => {
+            fileJson = nextJson;
+          },
+        });
+        const client = await createKitStoreClient({ initialKit: store.getSnapshot().kit.toJSON() });
+        await applyKitClientSnapshotToLocalStore(client, store);
+        const bundle = JSON.parse(fileJson) as JsonObject;
+        expect(bundle["schema"]).toBe("🎆26🌙06⬆️1");
+        expect(((bundle["wip"] as JsonObject)["initialKit"] as JsonObject)["name"]).toBe("the kit");
+        expect((((bundle["wip"] as JsonObject)["checkpoints"] as JsonObject)["items"] as readonly unknown[]).length).toBe(1);
+        expect((bundle["wip"] as JsonObject)["drafts"]).toBeUndefined();
+        expect((bundle["wip"] as JsonObject)["savedChanges"]).toBeUndefined();
+        expect((bundle["wip"] as JsonObject)["unsavedChanges"]).toBeUndefined();
+        const theKit = (bundle["wip"] as JsonObject)["theKit"] as JsonObject;
+        const changes = ((theKit["unsavedChanges"] as JsonObject)["items"] as readonly JsonObject[]) ?? [];
+        expect(changes).toHaveLength(1);
+        expect((changes[0]["edits"] as JsonObject)["items"] as readonly unknown[]).toHaveLength(0);
+        client.dispose();
+      });
     });
 
     it("compile-time: KitStore public surface excludes rxjs-style stream fields", () => {
@@ -8302,8 +8179,7 @@ if (
         schema: "2026-05-06",
         connectionUri: "file:///tmp/example.dev-kit.json",
         persistence: {
-          atomic_rewrite:
-            "Serialize full JSON to sibling path ending in .tmp.compose-write, fsync, then rename(2) over the canonical file.",
+          atomic_rewrite: "Serialize full JSON to sibling path ending in .tmp.compose-write, fsync, then rename(2) over the canonical file.",
           crash_safety: "Readers only observe the last renamed complete document; orphaned temp tails are harmless.",
         },
         semanticOpLog: [] as { changeId: string; kind: string; input: Record<string, unknown> }[],
@@ -8346,24 +8222,24 @@ if (
 
   describe("compose-js entity stores", () => {
     describe("wasm KitStoreHandle · entity stores", () => {
-    it("TypeStore metadata and shallow read paths resolve", async () => {
-      const minimalKit: KitFullDto = {
-        id: "meta-type-kit",
-        name: "K",
-        createdAt: "2020-01-01T00:00:00.000Z",
-        updatedAt: "2020-01-01T00:00:00.000Z",
-        types: [{ id: "type-z", name: "Zed", connectors: [] }],
-        designs: [],
-      };
-      const ks = await KitStore.open(minimalKit);
-      const t = ks.type("type-z");
-      const meta = await t.metadata();
-      expect(meta.id).toBe("type-z");
-      expect(meta.name).toBe("Zed");
-      const sh = await t.shallow();
-      expect(sh.id).toBe("type-z");
-      await ks.dispose();
-    });
+      it("TypeStore metadata and shallow read paths resolve", async () => {
+        const minimalKit: KitFullDto = {
+          id: "meta-type-kit",
+          name: "K",
+          createdAt: "2020-01-01T00:00:00.000Z",
+          updatedAt: "2020-01-01T00:00:00.000Z",
+          types: [{ id: "type-z", name: "Zed", connectors: [] }],
+          designs: [],
+        };
+        const ks = await KitStore.open(minimalKit);
+        const t = ks.type("type-z");
+        const meta = await t.metadata();
+        expect(meta.id).toBe("type-z");
+        expect(meta.name).toBe("Zed");
+        const sh = await t.shallow();
+        expect(sh.id).toBe("type-z");
+        await ks.dispose();
+      });
     });
   });
 

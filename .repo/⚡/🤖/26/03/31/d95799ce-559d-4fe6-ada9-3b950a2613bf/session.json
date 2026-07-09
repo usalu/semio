@@ -2980,9 +2980,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d95799ce-559d-4fe6-ada9-3b950a2613bf.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Removed all concept UI from the Kit app in sketchpad. 3 edits in compose/sketchpad/index.tsx:\\n\\n1. **Table row concept chips** — Removed concept Action buttons from both mobile and desktop Kit table rows. Concepts were rendered as clickable chips (with toggleConcept/selectedConcepts) next to artifact names.\\n\\n2. **Concept-based table filtering** — Removed the selectedConcepts filter that hid design rows not matching selected concept GUIDs. Designs now show regardless of concept associations.\\n\\n3. **useKitAppSelectAll** — Removed concepts from the select-all action so concepts are never programmatically selected in the Kit app.\\n\\nAlready clean (from previous work): KitDiagramNodeKind, ArtifactKind, KitKindToggles, KitCreateActions, buildKitDiagramData kindGroups, visibleGuids, diagram hover/selection handlers, detail panel sections, artifactKinds breadcrumb, isKitDiagramNodeKind guard.\\n\\nInternal concept infrastructure preserved: useKitConcepts, concept selection hooks/commands, ConceptSection/ConceptFilter component definitions (not rendered), concept data on table rows (used by Home app), concept hover state.\\n\\nAll 105 unit tests pass, 21 elements/ui tests pass, Vite production build succeeds.",
             "ticketId": "🎫hideconceptsfromsketchpadkitappui"
           },
@@ -3122,9 +3120,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d95799ce-559d-4fe6-ada9-3b950a2613bf.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Removed all concept UI from the Kit app in sketchpad. 3 edits in compose/sketchpad/index.tsx: (1) Removed concept Action chips from both mobile and desktop Kit table rows. (2) Removed selectedConcepts-based table filtering that hid design rows not matching concept GUIDs. (3) Removed concepts from useKitAppSelectAll so concepts are never programmatically selected. Already clean from previous work: KitDiagramNodeKind, ArtifactKind, KitKindToggles, KitCreateActions, buildKitDiagramData kindGroups, visibleGuids, diagram hover/selection handlers, detail panel sections, artifactKinds breadcrumb, isKitDiagramNodeKind guard. Internal concept infrastructure preserved for data management. All 105 unit tests pass, 21 elements/ui tests pass, Vite production build succeeds.",
             "ticketId": "26/03/31/HIDE-CONCEPTS-FROM-SKETCHPAD-KIT-APP-UI"
           },
@@ -3152,9 +3148,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d95799ce-559d-4fe6-ada9-3b950a2613bf.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "path": "26/03/31/HIDE-CONCEPTS-FROM-SKETCHPAD-KIT-APP-UI",
             "summary": "Removed all concept UI from the Kit app in sketchpad. 3 edits in compose/sketchpad/index.tsx: (1) Removed concept Action chips from both mobile and desktop Kit table rows. (2) Removed selectedConcepts-based table filtering that hid design rows not matching concept GUIDs. (3) Removed concepts from useKitAppSelectAll so concepts are never programmatically selected. Already clean from previous work: KitDiagramNodeKind, ArtifactKind, KitKindToggles, KitCreateActions, buildKitDiagramData kindGroups, visibleGuids, diagram hover/selection handlers, detail panel sections, artifactKinds breadcrumb, isKitDiagramNodeKind guard. Internal concept infrastructure preserved for data management. All 105 unit tests pass, 21 elements/ui tests pass, Vite production build succeeds."
           },
@@ -3182,9 +3176,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d95799ce-559d-4fe6-ada9-3b950a2613bf.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "path": "26/03/31/HIDE-CONCEPTS-FROM-SKETCHPAD-KIT-APP-UI",
             "summary": "Removed all concept UI from the Kit app in sketchpad. 3 edits in compose/sketchpad/index.tsx: (1) Removed concept Action chips from both mobile and desktop Kit table rows. (2) Removed selectedConcepts-based table filtering that hid design rows not matching concept GUIDs. (3) Removed concepts from useKitAppSelectAll so concepts are never programmatically selected. Already clean from previous work: KitDiagramNodeKind, ArtifactKind, KitKindToggles, KitCreateActions, buildKitDiagramData kindGroups, visibleGuids, diagram hover/selection handlers, detail panel sections, artifactKinds breadcrumb, isKitDiagramNodeKind guard. Internal concept infrastructure preserved for data management. All 105 unit tests pass, 21 elements/ui tests pass, Vite production build succeeds."
           },

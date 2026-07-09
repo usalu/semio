@@ -2,36 +2,36 @@
 name: Neural Schemas And Operators
 overview: Introduce first-class schemas (with a reserved $schema field) and schema-dispatched operators into the neural engine, replacing the NeuronKindInfo/Function model, then make flow consume accurate per-channel ports and persist an authoritative tree with a strippable flow layer.
 todos:
-  - id: neural-schema
-    content: Add Schema/FieldSpec/ValueType + $schema reserved key and helpers to neural/engine/lib.rs (#region Schema), with validate/default_dictionary.
-    status: completed
-  - id: neural-operator
-    content: Replace NeuronKindInfo/Function/InputSpec with Operator/OperatorInfo/ChannelSpec/Operation + OperatorImpl and a schema-dispatching Registry in neural/engine/lib.rs.
-    status: completed
-  - id: neural-eval
-    content: Update Evaluator (operator_infos, channel wiring, inject_channel_defaults, $schema on outputs) and extend neural tests (dispatch, validation, variadic).
-    status: completed
-  - id: wasm-glue
-    content: "Update flow/module/wasm: manifest gains schemas + operators, evaluate_json uses registry.dispatch + channel defaults."
-    status: completed
-  - id: core-module
-    content: "Create flow/module/core crate: core schemas (number/text/boolean/list/dictionary/image) + value operators core.number/core.text/core.image; wire Cargo.toml + launch.json + react defaults."
-    status: completed
-  - id: math-module
-    content: "math: register point/vector schemas; multi-impl add/subtract (number/point/vector) + variadic; add constructVector/constructPoint/move; remove channel fallback hacks; update tests."
-    status: completed
-  - id: other-modules
-    content: Convert list/logic/text/dictionary to operators + their schema, accurate channels, keep variadics, update tests.
-    status: completed
-  - id: flow-core-doc
-    content: Replace FlowFixture with FlowDocument {flow, tree}; inputs become value neurons; previews GUI-only; build_tree returns stored tree; drop build_seeds; accurate channel layout; add shakability test.
-    status: completed
-  - id: flow-react
-    content: Mirror FlowDocument/OperatorInfo/Schema in flow/react; render chrome/ports/previews from new model; load module-core; update vitest.
-    status: completed
-  - id: validate-all
-    content: Run neural/module/flow tests + flow/react vitest and verify ports, schema dispatch, and flow-strip behavior in the play app.
-    status: in_progress
+ - id: neural-schema
+   content: Add Schema/FieldSpec/ValueType + $schema reserved key and helpers to neural/engine/lib.rs (#region Schema), with validate/default_dictionary.
+   status: completed
+ - id: neural-operator
+   content: Replace NeuronKindInfo/Function/InputSpec with Operator/OperatorInfo/ChannelSpec/Operation + OperatorImpl and a schema-dispatching Registry in neural/engine/lib.rs.
+   status: completed
+ - id: neural-eval
+   content: Update Evaluator (operator_infos, channel wiring, inject_channel_defaults, $schema on outputs) and extend neural tests (dispatch, validation, variadic).
+   status: completed
+ - id: wasm-glue
+   content: "Update flow/module/wasm: manifest gains schemas + operators, evaluate_json uses registry.dispatch + channel defaults."
+   status: completed
+ - id: core-module
+   content: "Create flow/module/core crate: core schemas (number/text/boolean/list/dictionary/image) + value operators core.number/core.text/core.image; wire Cargo.toml + launch.json + react defaults."
+   status: completed
+ - id: math-module
+   content: "math: register point/vector schemas; multi-impl add/subtract (number/point/vector) + variadic; add constructVector/constructPoint/move; remove channel fallback hacks; update tests."
+   status: completed
+ - id: other-modules
+   content: Convert list/logic/text/dictionary to operators + their schema, accurate channels, keep variadics, update tests.
+   status: completed
+ - id: flow-core-doc
+   content: Replace FlowFixture with FlowDocument {flow, tree}; inputs become value neurons; previews GUI-only; build_tree returns stored tree; drop build_seeds; accurate channel layout; add shakability test.
+   status: completed
+ - id: flow-react
+   content: Mirror FlowDocument/OperatorInfo/Schema in flow/react; render chrome/ports/previews from new model; load module-core; update vitest.
+   status: completed
+ - id: validate-all
+   content: Run neural/module/flow tests + flow/react vitest and verify ports, schema dispatch, and flow-strip behavior in the play app.
+   status: in_progress
 isProject: false
 ---
 
@@ -40,6 +40,7 @@ isProject: false
 ## Goal
 
 Make `flow` a thin GUI over `neural`, where:
+
 1. Every dictionary carries a reserved `$schema`; schemas declare the fields a dictionary must have (e.g. `point` = x,y,z; `vector` = x,y,z).
 2. Neuron kinds become **operators** that dispatch on input `$schema` (`add` works on number/point/vector; `move` works on point/vector).
 3. Components expose **accurate named channels** (not generic in/out): `add` has `a`,`b` (+ variadic), `constructVector` has `x`,`y`,`z`.

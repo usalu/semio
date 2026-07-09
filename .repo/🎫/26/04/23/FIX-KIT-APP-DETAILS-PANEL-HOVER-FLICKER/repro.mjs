@@ -13,38 +13,46 @@ const context = await browser.newContext();
 const page = await context.newPage();
 
 page.on("console", async (msg) => {
-    const t = msg.type();
-    if (t !== "error" && t !== "warning") return;
-    const args = await Promise.all(msg.args().map(async (a) => {
-        try { return await a.jsonValue(); } catch { return msg.text(); }
-    }));
-    errors.push(`[console.${t}] ${JSON.stringify(args).slice(0, 2000)}`);
+  const t = msg.type();
+  if (t !== "error" && t !== "warning") return;
+  const args = await Promise.all(
+    msg.args().map(async (a) => {
+      try {
+        return await a.jsonValue();
+      } catch {
+        return msg.text();
+      }
+    }),
+  );
+  errors.push(`[console.${t}] ${JSON.stringify(args).slice(0, 2000)}`);
 });
 page.on("pageerror", (err) => {
-    pageErrors.push(`[pageerror] ${err.message}\n${err.stack ?? ""}`);
+  pageErrors.push(`[pageerror] ${err.message}\n${err.stack ?? ""}`);
 });
 
 await page.addInitScript(() => {
-    const origError = console.error.bind(console);
-    console.error = (...args) => {
-        try {
-            const serialized = args.map((a) => {
-                if (a instanceof Error) return `Error: ${a.message}\n${a.stack ?? ""}`;
-                if (typeof a === "object") return JSON.stringify(a, null, 0);
-                return String(a);
-            }).join(" ");
-            origError("[captured]", serialized.slice(0, 4000));
-        } catch (e) {
-            origError(...args);
-        }
-    };
-    window.addEventListener("unhandledrejection", (ev) => {
-        const err = ev.reason;
-        console.error("[unhandledrejection]", err?.message ?? String(err), err?.stack ?? "");
-    });
-    window.addEventListener("error", (ev) => {
-        console.error("[window.error]", ev.error?.message ?? ev.message, ev.error?.stack ?? "");
-    });
+  const origError = console.error.bind(console);
+  console.error = (...args) => {
+    try {
+      const serialized = args
+        .map((a) => {
+          if (a instanceof Error) return `Error: ${a.message}\n${a.stack ?? ""}`;
+          if (typeof a === "object") return JSON.stringify(a, null, 0);
+          return String(a);
+        })
+        .join(" ");
+      origError("[captured]", serialized.slice(0, 4000));
+    } catch (e) {
+      origError(...args);
+    }
+  };
+  window.addEventListener("unhandledrejection", (ev) => {
+    const err = ev.reason;
+    console.error("[unhandledrejection]", err?.message ?? String(err), err?.stack ?? "");
+  });
+  window.addEventListener("error", (ev) => {
+    console.error("[window.error]", ev.error?.message ?? ev.message, ev.error?.stack ?? "");
+  });
 });
 
 await page.goto(TARGET_URL);
@@ -59,18 +67,18 @@ const metabolismZipBytes = await readFile(metabolismZipPath);
 const zipB64 = metabolismZipBytes.toString("base64");
 
 const kitId = await page.evaluate(async (b64) => {
-    const store = window.__COMPOSE_STORE__;
-    if (!store) return null;
-    const bin = atob(b64);
-    const buf = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-    const mod = await import("/@fs/C:/git/compose/compose/js/index.ts");
-    const { kit } = await mod.importArchiveKit(buf);
-    await store.execute?.("compose.sketchpad.createKit", "compose.sketchpad.test.repro", kit, false, false);
-    // SPA navigate via history
-    window.history.pushState({}, "", `/kits/${kit.id}`);
-    window.dispatchEvent(new PopStateEvent("popstate"));
-    return kit.id;
+  const store = window.__COMPOSE_STORE__;
+  if (!store) return null;
+  const bin = atob(b64);
+  const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  const mod = await import("/@fs/C:/git/compose/compose/js/index.ts");
+  const { kit } = await mod.importArchiveKit(buf);
+  await store.execute?.("compose.sketchpad.createKit", "compose.sketchpad.test.repro", kit, false, false);
+  // SPA navigate via history
+  window.history.pushState({}, "", `/kits/${kit.id}`);
+  window.dispatchEvent(new PopStateEvent("popstate"));
+  return kit.id;
 }, zipB64);
 console.log("kitId=", kitId);
 console.log("waiting 5s after SPA navigation...");
@@ -86,12 +94,12 @@ console.log("url after =", url);
 // Open details panel if not open.
 const rightToggle = page.locator('[id="compose.sketchpad.navbar.panelToggle.rightSidePanel"]');
 if (await rightToggle.count()) {
-    const rightPanelExists = await page.locator('[data-panel="rightSidePanel"]').count();
-    console.log("rightPanelExists=", rightPanelExists);
-    if (rightPanelExists === 0) {
-        await rightToggle.click();
-        await page.waitForTimeout(500);
-    }
+  const rightPanelExists = await page.locator('[data-panel="rightSidePanel"]').count();
+  console.log("rightPanelExists=", rightPanelExists);
+  if (rightPanelExists === 0) {
+    await rightToggle.click();
+    await page.waitForTimeout(500);
+  }
 }
 
 // Hover over the details panel — move mouse over it
@@ -103,9 +111,9 @@ console.log("detailsPanel box=", box);
 // Click the details tab button
 const detailsTab = page.locator('[id="compose.sketchpad.navbar.panelToggle.details.show"]').first();
 if (await detailsTab.count()) {
-    await detailsTab.click();
-    await page.waitForTimeout(500);
-    console.log("clicked details tab");
+  await detailsTab.click();
+  await page.waitForTimeout(500);
+  console.log("clicked details tab");
 }
 
 // Debug: dump details panel HTML
@@ -117,14 +125,14 @@ console.log("table rows count=", tableHtml);
 
 // Try selecting a row in the table - use store to programmatically select a type.
 await page.evaluate(async (kitId) => {
-    const store = window.__COMPOSE_STORE__;
-    if (!store || !store.hasKitApp?.({ kit: kitId })) return;
-    const kitApp = store.kitApp(kitId);
-    const kit = store.kit(kitId).getSnapshot().kit;
-    const firstType = kit.types?.[0];
-    if (firstType) {
-        kitApp.change({ selection: { types: [firstType.id], designs: [], ports: [], tags: [], files: [], folders: [], authors: [], qualities: [] } });
-    }
+  const store = window.__COMPOSE_STORE__;
+  if (!store || !store.hasKitApp?.({ kit: kitId })) return;
+  const kitApp = store.kitApp(kitId);
+  const kit = store.kit(kitId).getSnapshot().kit;
+  const firstType = kit.types?.[0];
+  if (firstType) {
+    kitApp.change({ selection: { types: [firstType.id], designs: [], ports: [], tags: [], files: [], folders: [], authors: [], qualities: [] } });
+  }
 }, kitId);
 await page.waitForTimeout(500);
 console.log("after selection, details HTML length=", (await detailsPanel.innerHTML().catch(() => "")).length);
@@ -134,11 +142,11 @@ const pageErrorsBeforeHover = pageErrors.length;
 console.log("before hover: errors=", errorsBeforeHover, "pageErrors=", pageErrorsBeforeHover);
 
 if (box) {
-    // Move mouse a few times to trigger hover
-    for (let i = 0; i < 40; i++) {
-        await page.mouse.move(box.x + 50 + i * 3, box.y + 50 + i * 5);
-        await page.waitForTimeout(50);
-    }
+  // Move mouse a few times to trigger hover
+  for (let i = 0; i < 40; i++) {
+    await page.mouse.move(box.x + 50 + i * 3, box.y + 50 + i * 5);
+    await page.waitForTimeout(50);
+  }
 }
 
 await page.waitForTimeout(1000);
@@ -154,5 +162,5 @@ for (const err of pageErrors) console.log(err);
 await browser.close();
 
 if (pageErrors.length > 0 || errors.some((e) => e.includes("Reflect.get"))) {
-    process.exit(1);
+  process.exit(1);
 }

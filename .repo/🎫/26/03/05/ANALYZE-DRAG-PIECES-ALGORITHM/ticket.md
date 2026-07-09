@@ -7,6 +7,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Bulk close
+
 ## Plan
 
 1. Map out all pieces and connections from design.json
@@ -22,40 +23,42 @@ Bulk close
 ### Data Model
 
 In compose, connections define parent-child relationships:
+
 - **connecting** piece = parent
 - **connected** piece = child
 - The connection's `u`/`v` encode the child's relative diagram position to its parent
 
 ### Piece Inventory (design.json)
 
-| GUID (short) | Name | Has Center? |
-|---|---|---|
-| `e2faf536` | b0 | Yes (u:4.82, v:0.18) |
-| `e72975ab` | t_fs_b0_c0 | No |
-| `ade12a05` | t_b0_c0 | No |
-| `ed7b6b3c` | ci_bs_b0_c0 | No |
-| `a7a6c527` | t_fs_b0_c1 | No |
-| `3910be91` | b1 | Yes (u:12.75, v:0.04) |
-| `f0b8dd4a` | b2 | Yes (u:11.11, v:4.11) |
-| `b6aff18a` | t_fs_b2_c0 | No |
-| `91b889a0` | b3 | Yes |
-| `c52879d5` | t_f0_b0_c0 | No |
-| `d885ae2c` | b4 | Yes |
-| `99969c34` | t_fs_b4_c1 | No |
+| GUID (short) | Name        | Has Center?           |
+| ------------ | ----------- | --------------------- |
+| `e2faf536`   | b0          | Yes (u:4.82, v:0.18)  |
+| `e72975ab`   | t_fs_b0_c0  | No                    |
+| `ade12a05`   | t_b0_c0     | No                    |
+| `ed7b6b3c`   | ci_bs_b0_c0 | No                    |
+| `a7a6c527`   | t_fs_b0_c1  | No                    |
+| `3910be91`   | b1          | Yes (u:12.75, v:0.04) |
+| `f0b8dd4a`   | b2          | Yes (u:11.11, v:4.11) |
+| `b6aff18a`   | t_fs_b2_c0  | No                    |
+| `91b889a0`   | b3          | Yes                   |
+| `c52879d5`   | t_f0_b0_c0  | No                    |
+| `d885ae2c`   | b4          | Yes                   |
+| `99969c34`   | t_fs_b4_c1  | No                    |
 
 ### Connection Tree (parent → child)
 
-| Connection GUID | Child | Parent |
-|---|---|---|
-| `7296fbd8` | t_fs_b0_c0 | **b0** |
-| `8f3dd453` | t_b0_c0 | t_fs_b0_c0 |
-| `1fc6cbb2` | ci_bs_b0_c0 | t_b0_c0 |
-| `23886666` | t_fs_b0_c1 | **b0** |
-| `b9c2feb0` | t_fs_b2_c0 | **b2** |
-| `cd1fa979` | t_f0_b0_c0 | t_b0_c0 |
-| `7f946e5e` | t_fs_b4_c1 | **b4** |
+| Connection GUID | Child       | Parent     |
+| --------------- | ----------- | ---------- |
+| `7296fbd8`      | t_fs_b0_c0  | **b0**     |
+| `8f3dd453`      | t_b0_c0     | t_fs_b0_c0 |
+| `1fc6cbb2`      | ci_bs_b0_c0 | t_b0_c0    |
+| `23886666`      | t_fs_b0_c1  | **b0**     |
+| `b9c2feb0`      | t_fs_b2_c0  | **b2**     |
+| `cd1fa979`      | t_f0_b0_c0  | t_b0_c0    |
+| `7f946e5e`      | t_fs_b4_c1  | **b4**     |
 
 This gives the following subtrees:
+
 ```
 b0
 ├── t_fs_b0_c0
@@ -109,6 +112,7 @@ For each root mover, emit a piece update with center offset `{u: -1, v: 2}`.
 The moving set = all pieces that will change absolute position as a result of the drag.
 
 This includes:
+
 1. Root movers themselves (b0, b1)
 2. All descendants of root movers in the connection tree
 
@@ -122,19 +126,20 @@ Pieces NOT in the moving set: {b2, t_fs_b2_c0, b3, b4, t_fs_b4_c1}
 #### Step 4: Find Connections that Need Adjustment
 
 For each **selected** piece that is NOT already in the moving set:
+
 - Find its "parent connection" (the connection where this piece is the `connected`/child)
 - Offset that connection's `u`/`v` by the drag offset
 
 Trace each selected piece:
 
-| Selected Piece | In Moving Set? | Action |
-|---|---|---|
-| **b0** | Yes (root mover) | Skip — center already offset |
-| ci_bs_b0_c0 | Yes (descendant of b0) | Skip — moves implicitly with b0 |
-| t_fs_b0_c1 | Yes (descendant of b0) | Skip — moves implicitly with b0 |
-| **b1** | Yes (root mover) | Skip — center already offset |
-| **t_fs_b2_c0** | **No** | **Adjust parent connection** |
-| t_f0_b0_c0 | Yes (descendant of b0) | Skip — moves implicitly with b0 |
+| Selected Piece | In Moving Set?         | Action                          |
+| -------------- | ---------------------- | ------------------------------- |
+| **b0**         | Yes (root mover)       | Skip — center already offset    |
+| ci_bs_b0_c0    | Yes (descendant of b0) | Skip — moves implicitly with b0 |
+| t_fs_b0_c1     | Yes (descendant of b0) | Skip — moves implicitly with b0 |
+| **b1**         | Yes (root mover)       | Skip — center already offset    |
+| **t_fs_b2_c0** | **No**                 | **Adjust parent connection**    |
+| t_f0_b0_c0     | Yes (descendant of b0) | Skip — moves implicitly with b0 |
 
 Only **t_fs_b2_c0** needs connection adjustment. Its parent connection is `b9c2feb0` (parent=b2, which is NOT selected and NOT moving).
 

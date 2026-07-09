@@ -2,24 +2,24 @@
 name: Tree Row Remount Fix
 overview: Eliminate the Ctrl+A ~2s 3D freeze by fixing the shared Tree component so its per-row renderers stop being redefined on every render, which currently forces React to unmount and remount all ~700 workbench document rows whenever selection changes.
 todos:
-  - id: context
-    content: Add module-level TreeDataContext in ui/react carrying row maps, resolvedSelectedIds, dragAndDropController, and all row handlers
-    status: completed
-  - id: hoist
-    content: Move DataItemView and DataSectionView to module scope (memoized), consuming TreeDataContext and keeping per-row useTreeOpenState/branch/effect hooks
-    status: completed
-  - id: provider
-    content: In Tree, build memoized context value and wrap sections render in TreeDataContext.Provider
-    status: completed
-  - id: tests
-    content: Run @semio-tech/ui-react:test, @semio-tech/puzzle-3d-react:test, @semio-tech/puzzle-3d-play:test; fix any breaks
-    status: completed
-  - id: runtime
-    content: "Runtime-verify Ctrl+A on Nakagin: instant 3D highlight, working expand/collapse + drag"
-    status: completed
-  - id: ticket
-    content: Reopen and close ticket 26/06/01/PUZZLE3D-SELECTION-PERF with summary and files
-    status: completed
+ - id: context
+   content: Add module-level TreeDataContext in ui/react carrying row maps, resolvedSelectedIds, dragAndDropController, and all row handlers
+   status: completed
+ - id: hoist
+   content: Move DataItemView and DataSectionView to module scope (memoized), consuming TreeDataContext and keeping per-row useTreeOpenState/branch/effect hooks
+   status: completed
+ - id: provider
+   content: In Tree, build memoized context value and wrap sections render in TreeDataContext.Provider
+   status: completed
+ - id: tests
+   content: Run @semio-tech/ui-react:test, @semio-tech/puzzle-3d-react:test, @semio-tech/puzzle-3d-play:test; fix any breaks
+   status: completed
+ - id: runtime
+   content: "Runtime-verify Ctrl+A on Nakagin: instant 3D highlight, working expand/collapse + drag"
+   status: completed
+ - id: ticket
+   content: Reopen and close ticket 26/06/01/PUZZLE3D-SELECTION-PERF with summary and files
+   status: completed
 isProject: false
 ---
 

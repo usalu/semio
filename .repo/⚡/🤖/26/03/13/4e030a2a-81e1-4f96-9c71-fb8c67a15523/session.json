@@ -382,9 +382,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻home📌1📌100"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻home📌1📌100"],
         "second": "🎆26🌙03☀️13⏰22⌚43⏱️09",
         "session": "⚪4e030a2a81e14f969c71fb8c67a15523"
       },
@@ -426,9 +424,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻home📌1📌100"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻home📌1📌100"],
         "second": "🎆26🌙03☀️13⏰22⌚43⏱️21",
         "session": "⚪4e030a2a81e14f969c71fb8c67a15523"
       },
@@ -464,9 +460,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻home📌600📌660"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻home📌600📌660"],
         "second": "🎆26🌙03☀️13⏰22⌚43⏱️24",
         "session": "⚪4e030a2a81e14f969c71fb8c67a15523"
       },
@@ -502,9 +496,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻home📌600📌660"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻home📌600📌660"],
         "second": "🎆26🌙03☀️13⏰22⌚43⏱️30",
         "session": "⚪4e030a2a81e14f969c71fb8c67a15523"
       },
@@ -540,9 +532,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻home📌660📌700"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻home📌660📌700"],
         "second": "🎆26🌙03☀️13⏰22⌚43⏱️32",
         "session": "⚪4e030a2a81e14f969c71fb8c67a15523"
       },

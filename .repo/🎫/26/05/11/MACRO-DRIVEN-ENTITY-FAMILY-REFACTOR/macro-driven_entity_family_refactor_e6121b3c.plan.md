@@ -2,45 +2,45 @@
 name: Macro-Driven Entity Family Refactor
 overview: Replace ~7,000 lines of hand-rolled GraphQL schema and ~3,000 lines of repetitive Rust shell code with a single `entity_family!` macro per entity that emits the full 12-type ladder (entity + Edge/Connection + Diff/DiffEdge/DiffConnection + Modification/ModificationEdge/ModificationConnection + Modifications/ModificationsEdge/ModificationsConnection) as real Rust types with hashing, owner unions, Object impls, and SDL fragments. Make `gql::sdl()` truly code-first and regenerate `target.schema.graphql` as a golden. Fix all schema inconsistencies along the way.
 todos:
-  - id: bootstrap
-    content: "Coordinator: read `repo://goals`, open ticket via repo MCP `ticket_open`, snapshot baseline `cargo check`, inject `//#region 🧬 entity_dsl` and `//#region 🤖 W1`..`//#region 🤖 W8` markers into [compose/rs/lib.rs](compose/rs/lib.rs)."
-    status: completed
-  - id: w0-foundation
-    content: "W0 (serial, ~60 min): fill `entity_dsl` region with all macros from blueprints §1-§14 + `__autoresolved_owner!` covering every entity in the roster; rewrite `gql::sdl()` per §14; delete legacy `simple_conn_*` / `entity_full_family!` / `entity_relay!` / `entity_diffs!` / `entity_owner!`."
-    status: pending
-  - id: w1-geometry
-    content: "W1 (parallel wave 2, ~45 min): convert geometry entities (Vector/Point/Coordinate/Offset/Plane/Position/Location/Place) to `entity_family!` + `entity_input!`; delete hand-written `*Node` structs in `pub mod geom::entity` AND the iface-mod `#[Object]` impls (`6273:6457:compose/rs/lib.rs`)."
-    status: pending
-  - id: w2-meta
-    content: "W2 (parallel wave 2, ~60 min): convert meta entities (Attribute/Author/File/Folder/Prop/Benchmark/Quality/Tag/Concept/Stat/Layer/Group/Family) to `entity_family!` + `entity_input!`; collapse `Tag`/`Concept`/`Quality` Object impls and all `compute_entity_hash` impls."
-    status: pending
-  - id: w3-type-tree
-    content: "W3 (parallel wave 2, ~45 min): convert type-tree entities (Type/Port/Connector/Representation) to `entity_family!` + `entity_input!`."
-    status: pending
-  - id: w4-design-tree
-    content: "W4 (parallel wave 2, ~45 min): convert design-tree entities (Design/Piece/Side/Connection/Clump) to `entity_family!` + `entity_input!`."
-    status: pending
-  - id: w5-kit-root
-    content: "W5 (parallel wave 2, ~30 min): convert Kit root struct to `entity_family!` + `entity_input!`; remove hand-rolled Kit relay shells."
-    status: pending
-  - id: w6-vcs
-    content: "W6 (parallel wave 2, ~60 min): convert VCS entities (Edit/Change/Checkpoint/TheKit/Alternative/Graph/Session/Conflict) to `entity_family!`."
-    status: pending
-  - id: w7-operations
-    content: "W7 (serial wave 3, ~90 min, depends on W1-W6): apply `kit_operation_enum!` / `scope_enum!` / `input_enum!` to derive the central `KitOperation`/`OperationKind`/`OperationIface`/`Scope`/`Input` enums; convert every operation (CreatedDesign, RenamedKit, MovedPiece/MovedPieces, AddedAttributeTo*, RemovedAttributeFrom*, Deleted*, FixedPiece/FixedPieces, FlattenedDesign, AddedChildPieceWithParentConnection*, …) to `operation_family!` blocks; replace hand-written per-op `apply_to(kit)` skeletons."
-    status: pending
-  - id: w8-command-navs
-    content: "W8 (serial wave 4, ~45 min, depends on W7): replace every `*OperationNav` struct + `#[Object]` block (`9499:9700:compose/rs/lib.rs` and `Tag`/`Concept`/`Quality`/`Type`/`Port`/`Connector`/`Design`/`Piece`/`Pieces` navs) with `command_nav!` invocations."
-    status: pending
-  - id: integrate
-    content: "Integrator (coordinator, ~30 min): write the bottom-of-file `register_entities! { ... }` and `register_operations! { ... }` rosters, apply schema fixes that aren't derivable from individual entity declarations, regenerate [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql) via `cargo test export_compose_graphql_schema_file -- --ignored`."
-    status: in_progress
-  - id: sweep
-    content: "Coordinator (~30 min): run full `cargo test` (37 tests); fix any field-name/resolver regressions; verify `schema_matches_target_graphql_file` passes the real round-trip; verify WASM build (`cargo check --target wasm32-unknown-unknown`); run global grep guardrails."
-    status: cancelled
-  - id: ticket-close
-    content: "Coordinator: `ticket_close` summarizing changed files and net LOC delta (~−3,000 lines in lib.rs, schema fully derived)."
-    status: cancelled
+ - id: bootstrap
+   content: "Coordinator: read `repo://goals`, open ticket via repo MCP `ticket_open`, snapshot baseline `cargo check`, inject `//#region 🧬 entity_dsl` and `//#region 🤖 W1`..`//#region 🤖 W8` markers into [compose/rs/lib.rs](compose/rs/lib.rs)."
+   status: completed
+ - id: w0-foundation
+   content: "W0 (serial, ~60 min): fill `entity_dsl` region with all macros from blueprints §1-§14 + `__autoresolved_owner!` covering every entity in the roster; rewrite `gql::sdl()` per §14; delete legacy `simple_conn_*` / `entity_full_family!` / `entity_relay!` / `entity_diffs!` / `entity_owner!`."
+   status: pending
+ - id: w1-geometry
+   content: "W1 (parallel wave 2, ~45 min): convert geometry entities (Vector/Point/Coordinate/Offset/Plane/Position/Location/Place) to `entity_family!` + `entity_input!`; delete hand-written `*Node` structs in `pub mod geom::entity` AND the iface-mod `#[Object]` impls (`6273:6457:compose/rs/lib.rs`)."
+   status: pending
+ - id: w2-meta
+   content: "W2 (parallel wave 2, ~60 min): convert meta entities (Attribute/Author/File/Folder/Prop/Benchmark/Quality/Tag/Concept/Stat/Layer/Group/Family) to `entity_family!` + `entity_input!`; collapse `Tag`/`Concept`/`Quality` Object impls and all `compute_entity_hash` impls."
+   status: pending
+ - id: w3-type-tree
+   content: "W3 (parallel wave 2, ~45 min): convert type-tree entities (Type/Port/Connector/Representation) to `entity_family!` + `entity_input!`."
+   status: pending
+ - id: w4-design-tree
+   content: "W4 (parallel wave 2, ~45 min): convert design-tree entities (Design/Piece/Side/Connection/Clump) to `entity_family!` + `entity_input!`."
+   status: pending
+ - id: w5-kit-root
+   content: "W5 (parallel wave 2, ~30 min): convert Kit root struct to `entity_family!` + `entity_input!`; remove hand-rolled Kit relay shells."
+   status: pending
+ - id: w6-vcs
+   content: "W6 (parallel wave 2, ~60 min): convert VCS entities (Edit/Change/Checkpoint/TheKit/Alternative/Graph/Session/Conflict) to `entity_family!`."
+   status: pending
+ - id: w7-operations
+   content: "W7 (serial wave 3, ~90 min, depends on W1-W6): apply `kit_operation_enum!` / `scope_enum!` / `input_enum!` to derive the central `KitOperation`/`OperationKind`/`OperationIface`/`Scope`/`Input` enums; convert every operation (CreatedDesign, RenamedKit, MovedPiece/MovedPieces, AddedAttributeTo*, RemovedAttributeFrom*, Deleted*, FixedPiece/FixedPieces, FlattenedDesign, AddedChildPieceWithParentConnection*, …) to `operation_family!` blocks; replace hand-written per-op `apply_to(kit)` skeletons."
+   status: pending
+ - id: w8-command-navs
+   content: "W8 (serial wave 4, ~45 min, depends on W7): replace every `*OperationNav` struct + `#[Object]` block (`9499:9700:compose/rs/lib.rs` and `Tag`/`Concept`/`Quality`/`Type`/`Port`/`Connector`/`Design`/`Piece`/`Pieces` navs) with `command_nav!` invocations."
+   status: pending
+ - id: integrate
+   content: "Integrator (coordinator, ~30 min): write the bottom-of-file `register_entities! { ... }` and `register_operations! { ... }` rosters, apply schema fixes that aren't derivable from individual entity declarations, regenerate [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql) via `cargo test export_compose_graphql_schema_file -- --ignored`."
+   status: in_progress
+ - id: sweep
+   content: "Coordinator (~30 min): run full `cargo test` (37 tests); fix any field-name/resolver regressions; verify `schema_matches_target_graphql_file` passes the real round-trip; verify WASM build (`cargo check --target wasm32-unknown-unknown`); run global grep guardrails."
+   status: cancelled
+ - id: ticket-close
+   content: "Coordinator: `ticket_close` summarizing changed files and net LOC delta (~−3,000 lines in lib.rs, schema fully derived)."
+   status: cancelled
 isProject: false
 ---
 
@@ -92,8 +92,6 @@ flowchart TD
     SdlFn --> Golden["compose/graphql/target.schema.graphql (regenerated golden)"]
     SdlFn --> Test["schema_matches_target_graphql_file (real round-trip)"]
 ```
-
-
 
 ## Key files
 
@@ -660,7 +658,6 @@ __simple_relay!(TagModificationsEdge, TagModificationsConnection, TagModificatio
 
 The `@class` annotation per field controls what's emitted:
 
-
 | Annotation                      | GraphQL type   | Hash contribution            | Resolver                                             |
 | ------------------------------- | -------------- | ---------------------------- | ---------------------------------------------------- |
 | `String @data`                  | `String!`      | raw value                    | `read().await.clone()`                               |
@@ -674,7 +671,6 @@ The `@class` annotation per field controls what's emitted:
 | `Arc<X> @entity`                | `X!`           | child `compute_hash().await` | clone Arc                                            |
 | `Option<Arc<X>> @entity`        | `X`            | child hash if present        | clone Arc                                            |
 | `Vec<Id> @ids`                  | `[ID!]!`       | sorted id strings            | clone                                                |
-
 
 ```rust
 #[doc(hidden)]
@@ -1914,73 +1910,88 @@ command_nav! {
 
 ```graphql
 type Tag implements Artifact {
-  id: ID!
-  hash: String!
-  owner: Entity
-  owns: EntityConnection
-  name: String!
-  description: String
-  icon: String
-  order: Int
-  attributes: AttributeConnection!
+ id: ID!
+ hash: String!
+ owner: Entity
+ owns: EntityConnection
+ name: String!
+ description: String
+ icon: String
+ order: Int
+ attributes: AttributeConnection!
 }
 
 type TagEdge implements EntityEdge {
-  cursor: String!
-  node: Tag!
+ cursor: String!
+ node: Tag!
 }
 
 type TagConnection implements EntityConnection {
-  edges: [TagEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
+ edges: [TagEdge!]!
+ pageInfo: PageInfo!
+ hash: String!
 }
 
 type TagDiff implements Diff {
-  id: ID!
-  hash: String!
-  owner: Entity
-  owns: EntityConnection
-  name: String
-  description: String
-  icon: String
-  order: Int
-  attributes: AttributeConnection
+ id: ID!
+ hash: String!
+ owner: Entity
+ owns: EntityConnection
+ name: String
+ description: String
+ icon: String
+ order: Int
+ attributes: AttributeConnection
 }
 
-type TagDiffEdge implements EntityEdge { cursor: String!  node: TagDiff! }
+type TagDiffEdge implements EntityEdge {
+ cursor: String!
+ node: TagDiff!
+}
 type TagDiffConnection implements EntityConnection {
-  edges: [TagDiffEdge!]!  pageInfo: PageInfo!  hash: String!
+ edges: [TagDiffEdge!]!
+ pageInfo: PageInfo!
+ hash: String!
 }
 
 type TagModification implements Modification {
-  id: ID!
-  hash: String!
-  owner: Entity
-  owns: EntityConnection
-  before: Entity!
-  diff: Diff!
-  after: Entity!
+ id: ID!
+ hash: String!
+ owner: Entity
+ owns: EntityConnection
+ before: Entity!
+ diff: Diff!
+ after: Entity!
 }
 
-type TagModificationEdge implements EntityEdge { cursor: String!  node: TagModification! }
+type TagModificationEdge implements EntityEdge {
+ cursor: String!
+ node: TagModification!
+}
 type TagModificationConnection implements EntityConnection {
-  edges: [TagModificationEdge!]!  pageInfo: PageInfo!  hash: String!
+ edges: [TagModificationEdge!]!
+ pageInfo: PageInfo!
+ hash: String!
 }
 
 type TagModifications implements WeakEntity {
-  id: ID!
-  hash: String!
-  owner: Entity
-  owns: EntityConnection
-  removed: EntityConnection
-  modifications: TagModificationConnection
-  added: EntityConnection
+ id: ID!
+ hash: String!
+ owner: Entity
+ owns: EntityConnection
+ removed: EntityConnection
+ modifications: TagModificationConnection
+ added: EntityConnection
 }
 
-type TagModificationsEdge implements EntityEdge { cursor: String!  node: TagModifications! }
+type TagModificationsEdge implements EntityEdge {
+ cursor: String!
+ node: TagModifications!
+}
 type TagModificationsConnection implements EntityConnection {
-  edges: [TagModificationsEdge!]!  pageInfo: PageInfo!  hash: String!
+ edges: [TagModificationsEdge!]!
+ pageInfo: PageInfo!
+ hash: String!
 }
 ```
 
@@ -2037,7 +2048,7 @@ fn export_compose_graphql_schema_file() {
 ### Phase 5 — Operations + central enums (single agent)
 
 - Wire `kit_operation_enum!` / `scope_enum!` / `input_enum!` macros (blueprint §7). Replace hand-written `KitOperation`, `OperationKind`, `OperationIface`, `Scope`, `Input` in `pub mod operation`.
-- Convert every operation (CreatedDesign, RenamedKit, MovedPiece, AddedAttributeToX, RemovedAttributeFromX, Deleted*, FixedPiece, FixedPieces, …) to `operation_family!` invocations from blueprint §16.
+- Convert every operation (CreatedDesign, RenamedKit, MovedPiece, AddedAttributeToX, RemovedAttributeFromX, Deleted\*, FixedPiece, FixedPieces, …) to `operation_family!` invocations from blueprint §16.
 - Replace the per-op `apply_to(kit)` skeletons in `pub mod operation` (currently hand-coded match arms) with the unified `kit_op_apply!` arm-per-variant pattern.
 
 ### Phase 6 — Mutation command nav (single agent)
@@ -2109,19 +2120,19 @@ flowchart TD
 
 ### Worker manifest
 
-| ID | Role | Region in [compose/rs/lib.rs](compose/rs/lib.rs) | Wave | Depends on | Est. budget |
-|---|---|---|---|---|---|
-| W0 | Foundation | new `//#region 🧬 entity_dsl` (top of file, after `pub mod hash`) | 1 | bootstrap | 60 min |
-| W1 | Geometry  | `pub mod geom` (`150:510`) + iface-mod geom Object impls (`6273:6457`) | 2 | W0 | 45 min |
-| W2 | Meta      | `pub mod meta` (`1101:1730`) + meta-graphql block (`4472:4638`) | 2 | W0 | 60 min |
-| W3 | Type tree | `pub mod kit::r#type` inside `pub mod kit` | 2 | W0 | 45 min |
-| W4 | Design tree | `pub mod kit::design` inside `pub mod kit` | 2 | W0 | 45 min |
-| W5 | Kit root  | `pub mod kit` root structs (Kit + KitOperationInput receivers) | 2 | W0, W2, W3, W4 (soft) | 30 min |
-| W6 | VCS       | `pub mod vcs` (`4726:6110`) | 2 | W0 | 60 min |
-| W7 | Operations | `pub mod operation` (`6462:8224`) | 3 | W1-W6 | 90 min |
-| W8 | Command navs | `pub mod gql` mutation region (`9497:9700` and below) | 4 | W7 | 45 min |
-| Integrator | (coordinator) | bottom-of-file `register_entities!` + `register_operations!` + golden regen | 5 | W8 | 30 min |
-| Sweep | (coordinator) | tests + WASM check | 6 | Integrator | 30 min |
+| ID         | Role          | Region in [compose/rs/lib.rs](compose/rs/lib.rs)                            | Wave | Depends on            | Est. budget |
+| ---------- | ------------- | --------------------------------------------------------------------------- | ---- | --------------------- | ----------- |
+| W0         | Foundation    | new `//#region 🧬 entity_dsl` (top of file, after `pub mod hash`)           | 1    | bootstrap             | 60 min      |
+| W1         | Geometry      | `pub mod geom` (`150:510`) + iface-mod geom Object impls (`6273:6457`)      | 2    | W0                    | 45 min      |
+| W2         | Meta          | `pub mod meta` (`1101:1730`) + meta-graphql block (`4472:4638`)             | 2    | W0                    | 60 min      |
+| W3         | Type tree     | `pub mod kit::r#type` inside `pub mod kit`                                  | 2    | W0                    | 45 min      |
+| W4         | Design tree   | `pub mod kit::design` inside `pub mod kit`                                  | 2    | W0                    | 45 min      |
+| W5         | Kit root      | `pub mod kit` root structs (Kit + KitOperationInput receivers)              | 2    | W0, W2, W3, W4 (soft) | 30 min      |
+| W6         | VCS           | `pub mod vcs` (`4726:6110`)                                                 | 2    | W0                    | 60 min      |
+| W7         | Operations    | `pub mod operation` (`6462:8224`)                                           | 3    | W1-W6                 | 90 min      |
+| W8         | Command navs  | `pub mod gql` mutation region (`9497:9700` and below)                       | 4    | W7                    | 45 min      |
+| Integrator | (coordinator) | bottom-of-file `register_entities!` + `register_operations!` + golden regen | 5    | W8                    | 30 min      |
+| Sweep      | (coordinator) | tests + WASM check                                                          | 6    | Integrator            | 30 min      |
 
 Total wall-clock with 6-way parallelism in wave 2: roughly 60 + 60 + 90 + 45 + 30 + 30 = **~5 hours**, vs ~10 hours sequential.
 
@@ -2286,7 +2297,7 @@ Operation interface conformance:
 
 Naming normalization:
 
-- `Created`* reserved for "new artifact creation"; `Added`* reserved for "adding existing entity to a collection"; `Removed*` for collection removal; `Deleted*` for artifact deletion. `AddedConnector` stays (adds existing connector to type), `CreatedPort` stays (creates new port). `FixedPieces` gains `FixedPiecesInput` for symmetry with `MovedPieces`.
+- `Created`_ reserved for "new artifact creation"; `Added`_ reserved for "adding existing entity to a collection"; `Removed*` for collection removal; `Deleted*` for artifact deletion. `AddedConnector` stays (adds existing connector to type), `CreatedPort` stays (creates new port). `FixedPieces` gains `FixedPiecesInput` for symmetry with `MovedPieces`.
 - Long names like `AddedHangingChildPiecesWithParentConnectionsConnection` are unavoidable given the operation name pattern; left as-is.
 
 Out of scope (intentionally not changed):
@@ -2296,8 +2307,8 @@ Out of scope (intentionally not changed):
 
 ## Risks and mitigations
 
-- **37 GraphQL execution tests** (`graphql_`* in tests module) depend on field names. Macros must preserve every field name and resolver behavior exactly. Mitigation: phase 6 runs the full test suite; macros take optional `#[graphql(name = "...")]` overrides per field.
-- `**OwnerEntity` / `OwnedEntity` unions** in `pub mod iface` are partial. Macros will register variants automatically into a generated mega-union via `inventory`-style collection or, as fallback, a single hand-curated `entity_owner_unions!` invocation that lists all entities once.
+- **37 GraphQL execution tests** (`graphql_`\* in tests module) depend on field names. Macros must preserve every field name and resolver behavior exactly. Mitigation: phase 6 runs the full test suite; macros take optional `#[graphql(name = "...")]` overrides per field.
+- `**OwnerEntity` / `OwnedEntity` unions\*\* in `pub mod iface` are partial. Macros will register variants automatically into a generated mega-union via `inventory`-style collection or, as fallback, a single hand-curated `entity_owner_unions!` invocation that lists all entities once.
 - **The schema test guard** (`single_emit_event_in_codebase`) does substring checks on `lib.rs`. Won't break unless we touch `emit_event`.
 - **WASM build** must keep working (`#[cfg(target_arch = "wasm32")]` paths). Macros must not introduce native-only deps.
 - **Wave-2 cross-region duplicate definitions**: two parallel workers might both emit `impl Owns<X> for Y`. Mitigation: `__autoresolved_owner!` fallback table emitted by W0 + integrator's pass that drops fallback arms only after every wave-2 worker has landed.
@@ -2346,4 +2357,3 @@ New behaviors:
 - Adding a new entity is one `entity_family!` block + one line in `register_entities!`; nothing else.
 - Adding a new operation is one `operation_family!` block + one line in `register_operations!` + one method line in the relevant `command_nav!` block.
 - Owner / OwnedEntity / Node / Entity / Edge / Connection unions auto-grow with the roster — no more "I added an entity but forgot to extend the union" bugs.
-

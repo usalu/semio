@@ -54,7 +54,10 @@ seedGroup.scale.copy(seedProbe.scale);
 
 const scene: BrushSceneCollisionSource = { collectObjectGroups: () => [seedGroup] };
 const tol = 0;
-let free = 0, hostOverlap = 0, otherOverlap = 0, proposed = 0;
+let free = 0,
+  hostOverlap = 0,
+  otherOverlap = 0,
+  proposed = 0;
 
 for (const target of enumerateBrushFillVortexTargets(f)) {
   const host = f.objects.find((o) => o.id === target.objectId);

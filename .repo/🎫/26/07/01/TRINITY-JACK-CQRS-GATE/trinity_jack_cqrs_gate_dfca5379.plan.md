@@ -1,22 +1,22 @@
 ---
 name: Trinity Jack CQRS Gate
-overview: "Audit confirms the repo-wide CQRS/event-sourcing rule is followed everywhere except trinity: Jack's query executor and TrinityHost mutate the graph directly with zero Operation/Diff recording. Wire all trinity graph mutations (Jack CREATE/SET/DELETE/MERGE, rewrite rules, drag-commit, force layout) through one real, manifest-validated, semantic op catalog dispatched through a single store — trinity's missing \"central gate\" — and delete the redundant/dead VCS stubs and duplicated TS shims that currently fake it."
+overview: 'Audit confirms the repo-wide CQRS/event-sourcing rule is followed everywhere except trinity: Jack''s query executor and TrinityHost mutate the graph directly with zero Operation/Diff recording. Wire all trinity graph mutations (Jack CREATE/SET/DELETE/MERGE, rewrite rules, drag-commit, force layout) through one real, manifest-validated, semantic op catalog dispatched through a single store — trinity''s missing "central gate" — and delete the redundant/dead VCS stubs and duplicated TS shims that currently fake it.'
 todos:
-  - id: trinity-graph-op
-    content: Add real TrinityGraphOp catalog (CreateNode/DeleteNode/CreateEdge/DeleteEdge/Rename/Reposition/SetDataProperty) with Operation<GraphFixtureV1>/OperationDiff impls in trinity/ram/lib.rs, manifest-validated with clean errors
-    status: completed
-  - id: jack-execute-emits-ops
-    content: Change trinity_jack::execute() to be read-only over &Graph and emit Vec<TrinityGraphOp> instead of mutating; delete dead TrinityFixtureOp/TrinityFixtureStore stub
-    status: completed
-  - id: trinity-host-gate
-    content: Give TrinityHost a TrinityGraphStore field + dispatch(); route run_jack*, apply_rewrite_json, drag-commit (sync_positions_from_engine), and reorganize() through it; delete dead TrinityGraphOp::SetNodes stub; add undo/redo/commit_checkpoint_json wasm methods
-    status: completed
-  - id: remove-ts-shims
-    content: Delete duplicated TrinityFixtureEditOp/applyTrinityFixtureEditOp/local DocumentVcsStore from trinity/jack/play/index.ts and trinity/rewrite/play/index.ts; wire undo/redo/checkpoint UI to the new WASM methods
-    status: completed
-  - id: validate-trinity-gate
-    content: Extend cargo tests (unknown kind, derived-property SET, undo/redo) + vitest for jack/rewrite play; rebuild WASM; verify dev servers; do the work inside a repo ticket closed with a summary
-    status: completed
+ - id: trinity-graph-op
+   content: Add real TrinityGraphOp catalog (CreateNode/DeleteNode/CreateEdge/DeleteEdge/Rename/Reposition/SetDataProperty) with Operation<GraphFixtureV1>/OperationDiff impls in trinity/ram/lib.rs, manifest-validated with clean errors
+   status: completed
+ - id: jack-execute-emits-ops
+   content: Change trinity_jack::execute() to be read-only over &Graph and emit Vec<TrinityGraphOp> instead of mutating; delete dead TrinityFixtureOp/TrinityFixtureStore stub
+   status: completed
+ - id: trinity-host-gate
+   content: Give TrinityHost a TrinityGraphStore field + dispatch(); route run_jack*, apply_rewrite_json, drag-commit (sync_positions_from_engine), and reorganize() through it; delete dead TrinityGraphOp::SetNodes stub; add undo/redo/commit_checkpoint_json wasm methods
+   status: completed
+ - id: remove-ts-shims
+   content: Delete duplicated TrinityFixtureEditOp/applyTrinityFixtureEditOp/local DocumentVcsStore from trinity/jack/play/index.ts and trinity/rewrite/play/index.ts; wire undo/redo/checkpoint UI to the new WASM methods
+   status: completed
+ - id: validate-trinity-gate
+   content: Extend cargo tests (unknown kind, derived-property SET, undo/redo) + vitest for jack/rewrite play; rebuild WASM; verify dev servers; do the work inside a repo ticket closed with a summary
+   status: completed
 isProject: false
 ---
 
@@ -40,7 +40,7 @@ Clause::Set(items) => { ... graph.set_property(EntityRef::Node(node_id.clone()),
 
 `execute()` calls `Graph::add_node`/`remove_node`/`set_property`/`add_edge` directly — no `Operation`/`Diff` is ever computed. [trinity/rewrite/engine/lib.rs](trinity/rewrite/engine/lib.rs) `TrinityHost` does the same for every other mutation path (`sync_positions_from_engine` drag-commit, `apply_force_layout_to_trinity_graph`, `apply_rule`/rewrite rules) — `self.graph.*` is written directly throughout the file; there is not one `store.dispatch(...)` call in it.
 
-Both files *do* contain VCS scaffolding (`TrinityFixtureOp::SetDocument`, `TrinityGraphOp::SetNodes` — lines 1661-1759 of `trinity/jack/core/lib.rs`, lines 1152-1239 of `trinity/rewrite/engine/lib.rs`), but it's dead code: nothing in `execute()` or `TrinityHost` ever constructs or dispatches these ops. On top of that, [trinity/jack/play/index.ts](trinity/jack/play/index.ts) and [trinity/rewrite/play/index.ts](trinity/rewrite/play/index.ts) each hand-roll their **own** redundant, disconnected `TrinityFixtureEditOp = { op: "setDocument"; document }` + `applyTrinityFixtureEditOp` + local `DocumentVcsStore`, duplicated verbatim between the two files, instead of using any of the above.
+Both files _do_ contain VCS scaffolding (`TrinityFixtureOp::SetDocument`, `TrinityGraphOp::SetNodes` — lines 1661-1759 of `trinity/jack/core/lib.rs`, lines 1152-1239 of `trinity/rewrite/engine/lib.rs`), but it's dead code: nothing in `execute()` or `TrinityHost` ever constructs or dispatches these ops. On top of that, [trinity/jack/play/index.ts](trinity/jack/play/index.ts) and [trinity/rewrite/play/index.ts](trinity/rewrite/play/index.ts) each hand-roll their **own** redundant, disconnected `TrinityFixtureEditOp = { op: "setDocument"; document }` + `applyTrinityFixtureEditOp` + local `DocumentVcsStore`, duplicated verbatim between the two files, instead of using any of the above.
 
 Separately (flagged only, **not** touched by this plan): the shared TS mirror `framework/core/vcs-sync.ts` and the broader "retire the TS mirror once every tech is Rust-backed" migration (`.repo/🎫/26/06/30/TYPESAFE-RUST-VCS-ENGINE/`) is itself marked `completed` but still used by ~20 `*/play` files — a pre-existing, separately tracked inconsistency, out of scope here.
 
@@ -55,8 +55,6 @@ flowchart LR
   Store -->|"Operation::diff / backwards"| Projection["materialized GraphFixtureV1"]
   Projection --> Graph["TrinityHost.graph cache + rebuild_engine"]
 ```
-
-
 
 Manifest-driven validation already exists and is currently only used at load time — reuse it for every op instead of adding a new ad hoc check:
 
@@ -107,4 +105,3 @@ In [trinity/ram/lib.rs](trinity/ram/lib.rs) (co-located with `Graph`, reused by 
 - `nx test` (vitest) for `trinity/jack/play`, `trinity/rewrite/play` after removing the local shim.
 - Rebuild trinity WASM; smoke-check `🛠️dev🖥️trinity🃏jack🎛️play` and `🛠️dev🖥️trinity♻️rewrite🎛️play` dev entries.
 - Work happens inside a `.repo/🎫` ticket (reopen `GENERALIZE-TRINITY-DIRECTED-PORT-GRAPH` or `IMPLEMENT-TRINITY-TECHNOLOGY` if still applicable, else open new) closed with a summary listing every touched file.
-

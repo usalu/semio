@@ -1,9 +1,11 @@
 # Detail Panel Tree Layout System
 
 ## Goal
+
 R26-02/RUNNING-SKETCHPAD
 
 ## Status
+
 CLOSED
 
 ## Plan
@@ -22,6 +24,7 @@ CLOSED
 ## Changes
 
 ### elements.tsx
+
 - Added `TreeRow` component: convenience wrapper combining `TreeItem` + `TreeContent`
 - Added `HelperRow` component: informational text row with muted styling
 - Added `flex flex-col gap-y-[2px]` vertical spacing wrappers in:
@@ -31,21 +34,26 @@ CLOSED
 - TreeRow accepts: children, className, id, onClick, onDoubleClick, actions
 
 ### Design.tsx
+
 - Migrated 90 `<TreeItem><TreeContent>...</TreeContent></TreeItem>` patterns to `<TreeRow>...</TreeRow>`
 - Added TreeRow and HelperRow imports
 
 ### Kit.tsx
+
 - Migrated 6 `<TreeItem key={...}><TreeContent>...</TreeContent></TreeItem>` patterns to `<TreeRow key={...}>...</TreeRow>`
 - Added TreeRow import
 
 ### Quality.tsx
+
 - Migrated 16 `<TreeItem id="..."><TreeContent>...</TreeContent></TreeItem>` patterns to `<TreeRow id="...">...</TreeRow>`
 - Preserved structural TreeItem+TreeContent pairs in QualityTree component
 - Fixed closing tag mismatch in QualityTree collapsible node
 
 ### Type.tsx, Home.tsx, Docs.tsx
+
 - Migrated all bare `<TreeItem><TreeContent>...</TreeContent></TreeItem>` patterns to `<TreeRow>...</TreeRow>`
 - Added TreeRow imports
 
 ## Summary
+
 Implemented TreeRow and HelperRow convenience components in elements.tsx, migrated 100+ TreeItem+TreeContent patterns to TreeRow across 6 files (Design.tsx, Kit.tsx, Quality.tsx, Type.tsx, Home.tsx, Docs.tsx), added consistent vertical spacing to tree containers, and updated TreeRow to support id/onClick/onDoubleClick/actions props. All TypeScript compilation passes (only 3 pre-existing errors) and all 13 tests pass.

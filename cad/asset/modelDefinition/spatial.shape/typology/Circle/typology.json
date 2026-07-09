@@ -4,13 +4,7 @@
   "version": "1.0.0",
   "label": "Circle",
   "description": "Typology produced by curve.circle.",
-  "actions": [
-    "command.finish"
-  ],
-  "interactions": [
-    "curve.circle"
-  ],
-  "primitiveKinds": [
-    "curve"
-  ]
+  "actions": ["command.finish"],
+  "interactions": ["curve.circle"],
+  "primitiveKinds": ["curve"]
 }

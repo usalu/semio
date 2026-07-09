@@ -2,36 +2,36 @@
 name: Map Vector Tiles
 overview: Extend the GIS map (currently OSM raster-only) with keyless MapLibre demotiles MVT vector tiles (decoded and styled in Rust/WASM, including place-name labels), and add an Image / Vector / Combined chooser to the map window using the existing window-engagement option infrastructure.
 todos:
-  - id: ticket
-    content: Read repo://goals and open/reopen a repo-mcp ticket for map vector tiles
-    status: completed
-  - id: proxy
-    content: Add mapLibreVectorTileProxyVitePlugin (/vt/{z}/{x}/{y}.pbf) in ui/styling/vite-elements-assets.ts and wire into map play config
-    status: completed
-  - id: text
-    content: Add sans label font asset + text module (append_label) to infinite/cavas/vello/lib.rs
-    status: completed
-  - id: mvt
-    content: Add prost dep + vector_tiles MVT decode interface module in gis/map/rs/lib.rs
-    status: completed
-  - id: host
-    content: "MapHost: vector tile store, render mode enum, vector zoom/overzoom, append_vector_tiles + labels, mode-aware build_vector_scene, wasm bindings"
-    status: completed
-  - id: react
-    content: "MapRenderer/MapCanvas: renderMode + vector template props, refreshVectorTiles, uploadVectorTile, mode-driven fetch"
-    status: completed
-  - id: chooser
-    content: "MapPlayController: renderMode state, snapshot store, engagement options (Image/Vector/Combined), setRenderMode command"
-    status: completed
-  - id: host-mode
-    content: MapPlayPaneSurfaceHost reads controller snapshot and passes renderMode to MapCanvas
-    status: completed
-  - id: tests
-    content: Extend existing rs/react/play test blocks for decode, modes, and chooser
-    status: completed
-  - id: verify
-    content: Rebuild wasm, run dev gisMap, confirm vector tiles + chooser via [DEBUG] logs
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open/reopen a repo-mcp ticket for map vector tiles
+   status: completed
+ - id: proxy
+   content: Add mapLibreVectorTileProxyVitePlugin (/vt/{z}/{x}/{y}.pbf) in ui/styling/vite-elements-assets.ts and wire into map play config
+   status: completed
+ - id: text
+   content: Add sans label font asset + text module (append_label) to infinite/cavas/vello/lib.rs
+   status: completed
+ - id: mvt
+   content: Add prost dep + vector_tiles MVT decode interface module in gis/map/rs/lib.rs
+   status: completed
+ - id: host
+   content: "MapHost: vector tile store, render mode enum, vector zoom/overzoom, append_vector_tiles + labels, mode-aware build_vector_scene, wasm bindings"
+   status: completed
+ - id: react
+   content: "MapRenderer/MapCanvas: renderMode + vector template props, refreshVectorTiles, uploadVectorTile, mode-driven fetch"
+   status: completed
+ - id: chooser
+   content: "MapPlayController: renderMode state, snapshot store, engagement options (Image/Vector/Combined), setRenderMode command"
+   status: completed
+ - id: host-mode
+   content: MapPlayPaneSurfaceHost reads controller snapshot and passes renderMode to MapCanvas
+   status: completed
+ - id: tests
+   content: Extend existing rs/react/play test blocks for decode, modes, and chooser
+   status: completed
+ - id: verify
+   content: Rebuild wasm, run dev gisMap, confirm vector tiles + chooser via [DEBUG] logs
+   status: completed
 isProject: false
 ---
 
@@ -51,8 +51,6 @@ flowchart LR
   canvas -->|uploadTile / uploadVectorTile / setRenderMode| wasm[MapHost wasm]
   wasm --> scene["vello Scene (raster + vector + labels)"]
 ```
-
-
 
 ## Data source
 
@@ -115,4 +113,3 @@ flowchart LR
 ## Ticket
 
 - First (execution): read `repo://goals`, then open/reopen a repo-mcp ticket for this work; keep any scratch under the ticket folder.
-

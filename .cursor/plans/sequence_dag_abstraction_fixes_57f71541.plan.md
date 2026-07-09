@@ -26,8 +26,6 @@ flowchart TB
     DagReact --> SequenceReact
 ```
 
-
-
 ## Phase 1 — Extract shared overlay primitives into `@semio-tech/dag-react`
 
 In [mathematical/graph/port/directed/dag/react/index.tsx](mathematical/graph/port/directed/dag/react/index.tsx), add (moved/generalized from `flow/react/index.tsx`, renaming `Flow*` to `Dag*`):
@@ -90,4 +88,4 @@ In [mathematical/graph/port/directed/dag/lib.rs](mathematical/graph/port/directe
 - Browser-verify: sequence playground shows node/port labels, a visible selection highlight + bounds box, triangle-shaped execution ports, and sharp S/Z-shaped execution edges; flow playground is visually unchanged (bezier curves, semicircle ports) as a regression check.
 - Work inside the existing `IMPERATIVE-AND-SEQUENCE-TECHNOLOGIES` ticket (reopen via `ticket_reopen` since it already covers sequence work) and close it with a summary listing all touched files.
 
-Extract label overlay, selection-bounds, and marquee primitives from flow/react into @semio-tech/dag-react; refactor flow/react to consume themAdd labelOverlayPaintStateJson/hoveredNodeId/preselectNodeIdsJson/selectionPreview*/selectionUnionBoundsScreenJson/setSelectionOptions to SequenceSession; fix rebuild_dag to preserve selectionMount text-overlay canvas + selection bounds box in sequence/react using the new dag-react primitivesAdd PortShape enum + triangle cap geometry in mathematical/graph crate; thread through DagHost paint/peak lookup; tag sequence prev/next ports as TriangleAdd EdgeRouteStyle enum + sharp S/Z path geometry; generalize edge_curve/paint/hit-test; tag sequence edges as SharpSzExtend Rust/Vitest tests, run cargo test + bun nx test, browser-verify sequence and flow, reopen/close ticket
+Extract label overlay, selection-bounds, and marquee primitives from flow/react into @semio-tech/dag-react; refactor flow/react to consume themAdd labelOverlayPaintStateJson/hoveredNodeId/preselectNodeIdsJson/selectionPreview\*/selectionUnionBoundsScreenJson/setSelectionOptions to SequenceSession; fix rebuild_dag to preserve selectionMount text-overlay canvas + selection bounds box in sequence/react using the new dag-react primitivesAdd PortShape enum + triangle cap geometry in mathematical/graph crate; thread through DagHost paint/peak lookup; tag sequence prev/next ports as TriangleAdd EdgeRouteStyle enum + sharp S/Z path geometry; generalize edge_curve/paint/hit-test; tag sequence edges as SharpSzExtend Rust/Vitest tests, run cargo test + bun nx test, browser-verify sequence and flow, reopen/close ticket

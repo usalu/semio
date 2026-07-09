@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - Sketchpad runtime components still emitted persistent `console.log` output for settings panels and model selection paths.
@@ -23,6 +24,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Cleanup diagnostic artifacts

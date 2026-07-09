@@ -2,18 +2,18 @@
 name: Fix UI float precision
 overview: Add one canonical number-display formatter in the `@semio-tech/ui-react` design system that strips IEEE-754 float artifacts (e.g. `-2.5999999999999996` to `-2.6`) without losing legitimate precision, and route every shared numeric display component (`Input`, `Stepper`, `Slider`) through it so the bug is fixed generally across puzzle 3d/2d, CAD, platform and playground UIs.
 todos:
-  - id: formatter
-    content: Add exported formatNumber helper (toPrecision(12) + parseFloat) in a region in ui/react/index.tsx
-    status: completed
-  - id: components
-    content: Route Input (type=number, unfocused), Stepper (not editing), and Slider value display through formatNumber
-    status: completed
-  - id: play-text
-    content: Format multi-select vortex position text in puzzle/3d/play via formatNumber and add @semio-tech/ui-react dependency
-    status: completed
-  - id: tests
-    content: Extend @semio-tech/ui-react test file with formatNumber cases and run affected nx test targets
-    status: completed
+ - id: formatter
+   content: Add exported formatNumber helper (toPrecision(12) + parseFloat) in a region in ui/react/index.tsx
+   status: completed
+ - id: components
+   content: Route Input (type=number, unfocused), Stepper (not editing), and Slider value display through formatNumber
+   status: completed
+ - id: play-text
+   content: Format multi-select vortex position text in puzzle/3d/play via formatNumber and add @semio-tech/ui-react dependency
+   status: completed
+ - id: tests
+   content: Extend @semio-tech/ui-react test file with formatNumber cases and run affected nx test targets
+   status: completed
 isProject: false
 ---
 
@@ -45,10 +45,10 @@ In [ui/react/index.tsx](ui/react/index.tsx), add an exported pure helper inside 
 //#region Number formatting
 /** 🔢 Strip IEEE-754 float artifacts for display without losing real precision. */
 export function formatNumber(value: number | string): string {
-  const n = typeof value === "string" ? Number(value) : value;
-  if (typeof value === "string" && !Number.isFinite(n)) return value; // leave non-numeric text untouched
-  if (!Number.isFinite(n)) return "";
-  return Number.parseFloat(n.toPrecision(12)).toString();
+ const n = typeof value === "string" ? Number(value) : value;
+ if (typeof value === "string" && !Number.isFinite(n)) return value; // leave non-numeric text untouched
+ if (!Number.isFinite(n)) return "";
+ return Number.parseFloat(n.toPrecision(12)).toString();
 }
 //#endregion
 ```

@@ -5,7 +5,5 @@
   "description": "Add Meta and Shallow Type Definitions to Compose JS",
   "summary": "Added Meta and Shallow type definitions for all 19 entities. Updated existing TypeShallow, DesignShallow, KitShallow to use Meta schemas. Added conversion functions.",
   "goal": "🎯r2603",
-  "sessions": [
-    "⚪04ad67b04c864cb0b938dd356d985356"
-  ]
+  "sessions": ["⚪04ad67b04c864cb0b938dd356d985356"]
 }

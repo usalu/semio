@@ -4,13 +4,7 @@
   "version": "1.0.0",
   "label": "Line",
   "description": "Typology produced by curve.line.",
-  "actions": [
-    "curve.line"
-  ],
-  "interactions": [
-    "curve.line"
-  ],
-  "primitiveKinds": [
-    "curve"
-  ]
+  "actions": ["curve.line"],
+  "interactions": ["curve.line"],
+  "primitiveKinds": ["curve"]
 }

@@ -80,11 +80,7 @@ const WINDOWS_WITHOUT: AlgorithmWindowDef[] = [
   { id: "cp-out", kind: WindowKind.DESIGN_OUTPUT, label: "Output" },
 ];
 
-const WINDOWS_WITH: AlgorithmWindowDef[] = [
-  ...WINDOWS_WITHOUT.slice(0, 3),
-  { id: "cp-vec", kind: WindowKind.VEC_INPUT, label: "Coordinate" },
-  ...WINDOWS_WITHOUT.slice(3),
-];
+const WINDOWS_WITH: AlgorithmWindowDef[] = [...WINDOWS_WITHOUT.slice(0, 3), { id: "cp-vec", kind: WindowKind.VEC_INPUT, label: "Coordinate" }, ...WINDOWS_WITHOUT.slice(3)];
 
 const LAYOUT_WITHOUT = {
   root: {

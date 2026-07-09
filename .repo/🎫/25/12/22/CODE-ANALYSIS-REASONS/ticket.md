@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - New ticket opend for extending code analysis issue metadata.
@@ -22,4 +23,5 @@
 ## Log
 
 ## Summary
+
 # Summary

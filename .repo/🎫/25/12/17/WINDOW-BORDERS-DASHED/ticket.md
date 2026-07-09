@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 GoldenLayout window borders were clipped on the outer edges (bottom/right) and window borders were not visually distinct enough for the intended “window boundary” semantics.
@@ -18,6 +19,7 @@ GoldenLayout items now use border-box sizing and stacks render a dashed border s
 ## Log
 
 ## Summary
+
 # Summary
 
 Sketchpad windows have continuous dashed borders

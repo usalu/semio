@@ -31,12 +31,20 @@ const main = async () => {
 
     const kitGuid = await page.evaluate(async (fixture) => {
       const store = window.__COMPOSE_STORE__;
-      const existing = (store.kitShallows?.() ?? []).find((kit) => String(kit?.name ?? "").toLowerCase().includes("metabolism"));
+      const existing = (store.kitShallows?.() ?? []).find((kit) =>
+        String(kit?.name ?? "")
+          .toLowerCase()
+          .includes("metabolism"),
+      );
       if (existing?.guid) {
         return existing.guid;
       }
       await store.execute("compose.sketchpad.createKit", "compose.sketchpad.ticket.verifyKitDiagramTableSync", fixture, false, false);
-      const created = (store.kitShallows?.() ?? []).find((kit) => String(kit?.name ?? "").toLowerCase().includes("metabolism"));
+      const created = (store.kitShallows?.() ?? []).find((kit) =>
+        String(kit?.name ?? "")
+          .toLowerCase()
+          .includes("metabolism"),
+      );
       return created?.guid ?? null;
     }, kitFixture);
 
@@ -45,7 +53,7 @@ const main = async () => {
     }
 
     await page.goto(`/kits/${kitGuid}`);
-    await page.locator('tbody tr[data-row-id]').first().waitFor({ timeout: 30000 });
+    await page.locator("tbody tr[data-row-id]").first().waitFor({ timeout: 30000 });
     await page.locator('[data-testid="kit-diagram"]').waitFor({ timeout: 30000 });
 
     const filesToggle = page.locator('[id="compose.sketchpad.app.kit.toolbar.showFiles"]');

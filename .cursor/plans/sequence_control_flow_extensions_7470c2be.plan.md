@@ -2,39 +2,39 @@
 name: Sequence Control Flow Extensions
 overview: Elevate `sequence`/`imperative` from a flat, single-chain action list into a full imperative language with branches, loops, math and logic operators — with branch/loop bodies authored as collapsible nested node groups directly on the sequence canvas, and execution moved off the main UI thread into a dedicated worker.
 todos:
-  - id: engine-recursive-model
-    content: Extend imperative/engine Step/Path with bodies map; rewrite Executor to recurse for control.if/while/repeat with depth+iteration safety caps; update compile_to_text for nested blocks
-    status: completed
-  - id: module-math
-    content: Create imperative/module/math crate (add/subtract/multiply/divide/modulo/power/min/max/round/floor/ceil) writing results into scope via `into` key
-    status: completed
-  - id: module-logic
-    content: Create imperative/module/logic crate (compare with operator param, and/or/not) writing boolean results into scope via `into` key
-    status: completed
-  - id: module-control
-    content: Create imperative/module/control catalogue-only crate describing control.if/control.while/control.repeat
-    status: completed
-  - id: wire-modules
-    content: Register all 5 modules in imperative_module_registry()/imperative_catalogue_json(), add crates to root Cargo.toml, extend IMPERATIVE_INSTALLED_MODULE_IDS and ImperativeExtensionHost catalogue sections in imperative/core/index.ts
-    status: completed
-  - id: sequence-slot-model
-    content: Add slot/collapsed fields to SequenceStep; make connect_steps/add_step/remove_step slot-scoped with cascade delete; make build_path recursive to populate Step.bodies
-    status: completed
-  - id: sequence-canvas-ui
-    content: Add setStepCollapsed WASM export, hide/show slot members in build_dag_fixture, extend reorganize to fan out expanded slots, add collapse/expand click affordance and slot-aware drag-drop in sequence/react
-    status: completed
-  - id: sequence-inspector-catalogue
-    content: Update sequence/play catalogue tree grouping by module (math/logic/control) and inspector fields for control step params (condition key, operator, count)
-    status: completed
-  - id: worker-execution
-    content: Create sequence.worker.ts hosting headless imperative_core WASM run(); wire SequencePlayController run/stop commands through worker with terminate-based cancellation
-    status: completed
-  - id: imperative-play-parity
-    content: Refactor imperative/react into a recursive StepListEditor with path-scoped session ops for nested bodies; route run() through the same worker pattern
-    status: completed
-  - id: tests-verification
-    content: Extend Rust and Vitest test suites across all touched crates/packages; run cargo test and bun nx test; browser-verify both dev servers including a long-loop Stop scenario; open/close repo ticket
-    status: completed
+ - id: engine-recursive-model
+   content: Extend imperative/engine Step/Path with bodies map; rewrite Executor to recurse for control.if/while/repeat with depth+iteration safety caps; update compile_to_text for nested blocks
+   status: completed
+ - id: module-math
+   content: Create imperative/module/math crate (add/subtract/multiply/divide/modulo/power/min/max/round/floor/ceil) writing results into scope via `into` key
+   status: completed
+ - id: module-logic
+   content: Create imperative/module/logic crate (compare with operator param, and/or/not) writing boolean results into scope via `into` key
+   status: completed
+ - id: module-control
+   content: Create imperative/module/control catalogue-only crate describing control.if/control.while/control.repeat
+   status: completed
+ - id: wire-modules
+   content: Register all 5 modules in imperative_module_registry()/imperative_catalogue_json(), add crates to root Cargo.toml, extend IMPERATIVE_INSTALLED_MODULE_IDS and ImperativeExtensionHost catalogue sections in imperative/core/index.ts
+   status: completed
+ - id: sequence-slot-model
+   content: Add slot/collapsed fields to SequenceStep; make connect_steps/add_step/remove_step slot-scoped with cascade delete; make build_path recursive to populate Step.bodies
+   status: completed
+ - id: sequence-canvas-ui
+   content: Add setStepCollapsed WASM export, hide/show slot members in build_dag_fixture, extend reorganize to fan out expanded slots, add collapse/expand click affordance and slot-aware drag-drop in sequence/react
+   status: completed
+ - id: sequence-inspector-catalogue
+   content: Update sequence/play catalogue tree grouping by module (math/logic/control) and inspector fields for control step params (condition key, operator, count)
+   status: completed
+ - id: worker-execution
+   content: Create sequence.worker.ts hosting headless imperative_core WASM run(); wire SequencePlayController run/stop commands through worker with terminate-based cancellation
+   status: completed
+ - id: imperative-play-parity
+   content: Refactor imperative/react into a recursive StepListEditor with path-scoped session ops for nested bodies; route run() through the same worker pattern
+   status: completed
+ - id: tests-verification
+   content: Extend Rust and Vitest test suites across all touched crates/packages; run cargo test and bun nx test; browser-verify both dev servers including a long-loop Stop scenario; open/close repo ticket
+   status: completed
 isProject: false
 ---
 
@@ -46,7 +46,7 @@ isProject: false
 - `sequence/core/lib.rs` enforces a strict single chain: `connect_steps` rejects a second outgoing edge (`sequence/core/lib.rs:202-204`) and rejects cycles via the shared `would_create_cycle` (also used by `flow`, `trinity`, `puzzle`). `build_path()` (`sequence/core/lib.rs:260-300`) linearizes that single chain into a flat `imperative_engine::Path` — there is no representation of a step having more than one "next".
 - Only two operator modules exist: `imperative/module/core` (`log.print`, `state.set`, `state.increment`, `wait.delay`) and `imperative/module/text` (`text.concat`, `text.uppercase`, `text.length`), composed in `imperative_module_registry()`/`imperative_catalogue_json()` (`imperative/engine/lib.rs:166-190`) and merged client-side by `ImperativeExtensionHost` (`imperative/core/index.ts`).
 - `session.run()` executes synchronously on the main thread today (`sequence/core/lib.rs:445-447`, called from `sequence/react/index.tsx:375-381`). Flow already proves the pattern of moving heavy WASM work into a worker: `flow/worker.ts` + `flow/worker-client.ts` load a second WASM instance and message-pass `evaluate()` results back — but flow keeps rendering/pointer handling on the main thread and only offloads `evaluate()`, never a runaway loop scenario.
-- The DAG crate's `Cluster` node kind (`mathematical/graph/port/directed/dag/lib.rs:564-567`) is a *collapsed placeholder with an explode-to-flatten affordance*, not an inline nested viewport — `flow/core/lib.rs:2701-2857` shows collapse embeds a `Widget::Cluster{ tree, flow }` and explode restores original nodes back onto the *same top-level canvas*; nothing in the repo renders a live nested sub-canvas inside a node's bounding box. Per your choice, sequence will get its own lighter-weight **expand/collapse slot** mechanism modeled on this collapse/explode idea, scoped to sequence only (no shared DAG/cycle-code changes).
+- The DAG crate's `Cluster` node kind (`mathematical/graph/port/directed/dag/lib.rs:564-567`) is a _collapsed placeholder with an explode-to-flatten affordance_, not an inline nested viewport — `flow/core/lib.rs:2701-2857` shows collapse embeds a `Widget::Cluster{ tree, flow }` and explode restores original nodes back onto the _same top-level canvas_; nothing in the repo renders a live nested sub-canvas inside a node's bounding box. Per your choice, sequence will get its own lighter-weight **expand/collapse slot** mechanism modeled on this collapse/explode idea, scoped to sequence only (no shared DAG/cycle-code changes).
 - A second, independent playground `imperative/react` + `imperative/play` (port 6076) already exists as a flat HTML step-list editor with no nesting support at all — it needs the same recursive model for parity since it shares the same engine.
 
 ## Target architecture
@@ -81,8 +81,6 @@ flowchart TB
     end
     engineLayer --> ImpReact --> ImpWorker
 ```
-
-
 
 ## 1. Recursive control-flow engine (`imperative/engine/lib.rs`)
 
@@ -130,4 +128,3 @@ Both new modules follow the `imperative/module/core` pattern (`imperative/module
 - TypeScript: extend `imperative/core/index.ts` and `sequence/play/index.ts` Vitest suites for the new catalogue sections, worker message contracts, and recursive tree building.
 - Run `cargo test` across all touched crates, `bun nx run` test targets for touched TS packages, and browser-verify both dev servers (`sequence` play, `imperative` play at port 6076) for: dragging math/logic/control items from the catalogue, building an if/while/repeat with nested bodies, collapsing/expanding a control step, running with an intentionally long loop and confirming the UI stays responsive with a working Stop button.
 - Open a new ticket via the repo MCP for this work, closing it with a summary of all created/changed files once verified.
-

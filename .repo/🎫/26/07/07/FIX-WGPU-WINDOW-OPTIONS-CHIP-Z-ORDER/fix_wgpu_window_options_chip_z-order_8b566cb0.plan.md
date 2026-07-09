@@ -1,22 +1,22 @@
 ---
 name: Fix WGPU Window Options Chip Z-Order
-overview: "Fix the folded \"Window Options\" and \"Command\" chip buttons in the wgpu renderer so they render below the glassy side panels, matching the intended layer order: windows < window panel (command/window options) < side panel < temporary panel."
+overview: 'Fix the folded "Window Options" and "Command" chip buttons in the wgpu renderer so they render below the glassy side panels, matching the intended layer order: windows < window panel (command/window options) < side panel < temporary panel.'
 todos:
-  - id: open-ticket
-    content: Open a repo ticket for the wgpu chrome z-order fix under the Running Sketchpad goal
-    status: completed
-  - id: fix-measures-chip
-    content: Render folded Window Options chip to `draw` instead of `overlay` in render_window_measures_rail
-    status: completed
-  - id: fix-engagement-chip
-    content: Render folded Command chip to `draw` instead of `overlay` in render_window_engagement_rail
-    status: completed
-  - id: verify
-    content: cargo check and manually verify chip renders below side panel glass, hit-testing still correct
-    status: completed
-  - id: close-ticket
-    content: Close the ticket with a summary of the root cause and fix
-    status: completed
+ - id: open-ticket
+   content: Open a repo ticket for the wgpu chrome z-order fix under the Running Sketchpad goal
+   status: completed
+ - id: fix-measures-chip
+   content: Render folded Window Options chip to `draw` instead of `overlay` in render_window_measures_rail
+   status: completed
+ - id: fix-engagement-chip
+   content: Render folded Command chip to `draw` instead of `overlay` in render_window_engagement_rail
+   status: completed
+ - id: verify
+   content: cargo check and manually verify chip renders below side panel glass, hit-testing still correct
+   status: completed
+ - id: close-ticket
+   content: Close the ticket with a summary of the root cause and fix
+   status: completed
 isProject: false
 ---
 
@@ -37,9 +37,7 @@ flowchart TB
     drawList -->|"composited to swapchain first"| overlayList
 ```
 
-
-
-For `draw`, backdrop content is baked into the scene texture *before* any glass compositing, so anything glassy in `draw` correctly sits visually above plain `draw` content. But for `overlay`, `composite_to_swapchain` (`ui/wgpu/rs/lib.rs:3235-3293`) always runs `composite_glass_regions(overlay)` and `render_glass_foreground(overlay)` **before** the final `render_overlay(overlay)` backdrop pass — regardless of push order. This means *any* plain ("backdrop") content pushed to `overlay` unconditionally renders on top of *all* glass in `overlay` (side panels included).
+For `draw`, backdrop content is baked into the scene texture _before_ any glass compositing, so anything glassy in `draw` correctly sits visually above plain `draw` content. But for `overlay`, `composite_to_swapchain` (`ui/wgpu/rs/lib.rs:3235-3293`) always runs `composite_glass_regions(overlay)` and `render_glass_foreground(overlay)` **before** the final `render_overlay(overlay)` backdrop pass — regardless of push order. This means _any_ plain ("backdrop") content pushed to `overlay` unconditionally renders on top of _all_ glass in `overlay` (side panels included).
 
 This quirk is actually relied upon elsewhere for correctness: `render_floating_panel` ([framework/renderer/wgpu/rs/lib.rs:10317-10429](framework/renderer/wgpu/rs/lib.rs:10317-10429)) pushes its own glass then draws its border hairlines as plain backdrop afterward, expecting them to render crisply on top of its own tint. `render_command_list` (search/find/palette, `framework/renderer/wgpu/rs/lib.rs:10963-11081`) does the same for its title/rows. So a global reorder of the overlay pipeline would break these. The bug is specifically that the **window-options/command fold chips don't belong in `overlay` at all** — they are window-panel tier and must stay below the side panel, like their unfolded rail counterpart already does.
 
@@ -59,7 +57,7 @@ In `render_window_measures_rail` (folded "Window Options" chip) and `render_wind
 
 Since `render_chrome` ([framework/renderer/wgpu/rs/lib.rs:9759](framework/renderer/wgpu/rs/lib.rs:9759)) always passes a `Some(overlay)`, the `overlay` branch is the one that always executes today, so both fold chips always land in `overlay`'s backdrop tier — which (per the diagram above) always paints on top of the side panels' glass. This exactly matches the reported symptom, and matches the default state (`measures_folded` defaults to `true`, `engagement_activated` defaults to `false`), so it's visible out of the box.
 
-The unfolded rail (the expanded glass card) already does the right thing — it uses `draw.push_glass(..., GlassTier::WindowOptions, ...)` directly on `draw` (`framework/renderer/wgpu/rs/lib.rs:11187` and `:11511`), which correctly composites *before* `overlay`'s side panels. Only the folded chip is inconsistent with this.
+The unfolded rail (the expanded glass card) already does the right thing — it uses `draw.push_glass(..., GlassTier::WindowOptions, ...)` directly on `draw` (`framework/renderer/wgpu/rs/lib.rs:11187` and `:11511`), which correctly composites _before_ `overlay`'s side panels. Only the folded chip is inconsistent with this.
 
 ## Fix
 

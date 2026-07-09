@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # CI/CD Automation and Canonical Commands
 
 ## Context
@@ -24,6 +25,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 CI/CD automation and canonical commands

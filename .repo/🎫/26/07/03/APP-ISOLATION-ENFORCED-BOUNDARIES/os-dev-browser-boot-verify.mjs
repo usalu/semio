@@ -7,38 +7,41 @@ const logs = [];
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage();
 page.on("requestfailed", (request) => {
-	errors.push(`request failed: ${request.url()} ${request.failure()?.errorText ?? ""}`);
+  errors.push(`request failed: ${request.url()} ${request.failure()?.errorText ?? ""}`);
 });
 page.on("console", (msg) => {
-	const text = msg.text();
-	logs.push(`[${msg.type()}] ${text}`);
-	if (msg.type() === "error") errors.push(text);
+  const text = msg.text();
+  logs.push(`[${msg.type()}] ${text}`);
+  if (msg.type() === "error") errors.push(text);
 });
 page.on("pageerror", (error) => errors.push(`${error.message}\n${error.stack ?? ""}`));
 
 await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120_000 });
-	try {
-		await page.waitForFunction(
-			() => {
-				const root = document.getElementById("root");
-				const styled = document.documentElement.dataset.semioStyled === "ready";
-				return styled && Boolean(root && root.childElementCount > 0);
-			},
-			{ timeout: 180_000 },
-		);
-	} catch (error) {
-		errors.push(`root mount timeout: ${error}`);
-	}
+try {
+  await page.waitForFunction(
+    () => {
+      const root = document.getElementById("root");
+      const styled = document.documentElement.dataset.semioStyled === "ready";
+      return styled && Boolean(root && root.childElementCount > 0);
+    },
+    { timeout: 180_000 },
+  );
+} catch (error) {
+  errors.push(`root mount timeout: ${error}`);
+}
 await page.waitForTimeout(3000);
 
 const childProcessError = errors.find((e) => e.includes("node:child_process") || e.includes("child_process"));
 const bootFailed = errors.find((e) => e.includes("os-dev boot failed"));
-const root = await page.locator("#root").innerHTML().catch(() => "");
+const root = await page
+  .locator("#root")
+  .innerHTML()
+  .catch(() => "");
 const diagnostics = await page.evaluate(() => ({
-	styled: document.documentElement.dataset.semioStyled ?? "",
-	rootChildren: document.getElementById("root")?.childElementCount ?? 0,
-	rootHtmlLength: document.getElementById("root")?.innerHTML.length ?? 0,
-	pathname: window.location.pathname,
+  styled: document.documentElement.dataset.semioStyled ?? "",
+  rootChildren: document.getElementById("root")?.childElementCount ?? 0,
+  rootHtmlLength: document.getElementById("root")?.innerHTML.length ?? 0,
+  pathname: window.location.pathname,
 }));
 
 console.log("[DEBUG] url", url);
@@ -53,7 +56,7 @@ if (debugLogs.length) console.log("[DEBUG] console logs", debugLogs.slice(0, 20)
 await browser.close();
 if (childProcessError || bootFailed) process.exit(1);
 if (diagnostics.rootChildren < 1 && diagnostics.rootHtmlLength < 10) {
-	console.error("[DEBUG] root appears empty");
-	process.exit(1);
+  console.error("[DEBUG] root appears empty");
+  process.exit(1);
 }
 console.log("[DEBUG] os-dev browser boot verify passed");

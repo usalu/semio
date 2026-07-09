@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Flatten Design Diagnosis
 
 ## Date

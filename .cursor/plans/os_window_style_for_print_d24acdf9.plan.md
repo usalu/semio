@@ -2,24 +2,24 @@
 name: OS Window Style for Print
 overview: Port the semio OS desktop window chrome (title bar + hairline border + window/canvas fill, sharp corners, Anta font) into the print LaTeX framework as a single shared tcolorbox style, and make chapters and sections render as these OS-style windows across all print templates.
 todos:
-  - id: tokens
-    content: Add chrome color resolver + emission to print/script.ts (light+dark)
-    status: completed
-  - id: theme-alias
-    content: Add theme-resolved chrome color aliases in semio-core.sty
-    status: completed
-  - id: window-sty
-    content: Create print/tex/semio-window.sty with base style + chapter/section auto-windowing + Semiobox migration
-    status: completed
-  - id: cls-wire
-    content: Require semio-window.sty from semio.cls; remove old semio box style from semio-components.sty
-    status: completed
-  - id: template-fixes
-    content: Fix kompaktbericht.tex Titelblatt/maketitle and bibliography heading
-    status: completed
-  - id: verify
-    content: Regenerate tokens, rebuild all print templates and mit-bestand zwischenbericht, visually verify chrome styling
-    status: completed
+ - id: tokens
+   content: Add chrome color resolver + emission to print/script.ts (light+dark)
+   status: completed
+ - id: theme-alias
+   content: Add theme-resolved chrome color aliases in semio-core.sty
+   status: completed
+ - id: window-sty
+   content: Create print/tex/semio-window.sty with base style + chapter/section auto-windowing + Semiobox migration
+   status: completed
+ - id: cls-wire
+   content: Require semio-window.sty from semio.cls; remove old semio box style from semio-components.sty
+   status: completed
+ - id: template-fixes
+   content: Fix kompaktbericht.tex Titelblatt/maketitle and bibliography heading
+   status: completed
+ - id: verify
+   content: Regenerate tokens, rebuild all print templates and mit-bestand zwischenbericht, visually verify chrome styling
+   status: completed
 isProject: false
 ---
 
@@ -43,6 +43,7 @@ From [ui/js/react/index.tsx](ui/js/react/index.tsx) (`ModeDockTabBar`/`ModeDockS
 ## 1. Emit chrome colors as LaTeX tokens
 
 In [print/script.ts](print/script.ts) `emitSemioTokensSty()`:
+
 - Add a small paint resolver (mirrors `resolvePaint`/`blendHex` in [ui/styling/script.ts](ui/styling/script.ts)) to resolve `tokens.themes.light.chrome` and `tokens.themes.dark.chrome` entries (`{ token }` / `{ mix }` refs) against `tokens.colors`.
 - Emit per-theme colors into `semio-tokens.sty`: `semio-chrome-light-window`, `semio-chrome-light-canvas`, `semio-chrome-light-border-normal`, `semio-chrome-light-border-emphasized`, `semio-chrome-light-active-base`, `semio-chrome-light-active-foreground`, and the `-dark-` equivalents.
 - Prefer `tokens.strokes.chromeBorderHairline` (falls back to current `gridLarge` heuristic) for `\semio@stroke@hairline`, since this is now the semantically correct source for window borders.
@@ -58,6 +59,7 @@ In [print/tex/semio-core.sty](print/tex/semio-core.sty) `semio_theme_apply:`, af
 \colorlet{semio-chrome-border-emphasized}{semio-chrome-\l_semio_theme_tl-border-emphasized}
 \colorlet{semio-chrome-active-base}{semio-chrome-\l_semio_theme_tl-active-base}
 ```
+
 (expanded via `\edef`/`\str_use:N` since `\l_semio_theme_tl` is a token list, not directly usable in a command name — resolved with `\exp_args:Nc`/similar expl3 expansion).
 
 ## 3. New shared style: `semio-window.sty`
@@ -65,6 +67,7 @@ In [print/tex/semio-core.sty](print/tex/semio-core.sty) `semio_theme_apply:`, af
 New file, required by [print/tex/semio.cls](print/tex/semio.cls) after `semio-components`:
 
 **Base tcolorbox style `semio window`:**
+
 ```
 \tcbset{
   semio window/.style={
@@ -85,9 +88,11 @@ New file, required by [print/tex/semio.cls](print/tex/semio.cls) after `semio-co
 ```
 
 **`Semiobox` becomes sugar for this same style** (replaces the current separate "semio box" style in [print/tex/semio-components.sty](print/tex/semio-components.sty)):
+
 ```
 \NewDocumentEnvironment{Semiobox}{O{}}{\begin{tcolorbox}[semio window,#1]}{\end{tcolorbox}}
 ```
+
 This is what makes report/paper/flyer/zukunftbau share one literal style definition for every box, whether auto-generated (chapter/section) or hand-written (funding acknowledgement, work packages, flyer tiles).
 
 **Auto-windowing of `\chapter`/`\section`:**
@@ -102,7 +107,7 @@ This is what makes report/paper/flyer/zukunftbau share one literal style definit
 - Hook `\appendix`: `\let\semio@koma@appendix\appendix` then redefine to call `\semio_window_close_section:\semio_window_close_chapter:` before `\semio@koma@appendix`.
 - Hook `\AddToHook{enddocument/before}{\semio_window_close_section:\semio_window_close_chapter:}` so a dangling open window never breaks compilation.
 
-**Design note on nesting (technical constraint):** tcolorbox's `breakable` boxes have limited support for true nesting across page breaks. Because a chapter window is only closed when the *next* chapter starts (or at `\appendix`/end-of-document), any sections opened in between are lexically nested inside the still-open chapter box. This plan keeps that real nesting (both levels use `breakable`), which is supported by the tcolorbox version Tectonic bundles for the simple case here (no watermarks/second skins). If build verification (step 6) shows breakable-nesting failures, the fallback is to make the chapter box a short **non-breakable title band** (just the heading, immediately closed) with section windows following as independent top-level siblings — same visual read, zero nesting risk. This fallback will be applied automatically during implementation if needed, without changing the plan's visual outcome.
+**Design note on nesting (technical constraint):** tcolorbox's `breakable` boxes have limited support for true nesting across page breaks. Because a chapter window is only closed when the _next_ chapter starts (or at `\appendix`/end-of-document), any sections opened in between are lexically nested inside the still-open chapter box. This plan keeps that real nesting (both levels use `breakable`), which is supported by the tcolorbox version Tectonic bundles for the simple case here (no watermarks/second skins). If build verification (step 6) shows breakable-nesting failures, the fallback is to make the chapter box a short **non-breakable title band** (just the heading, immediately closed) with section windows following as independent top-level siblings — same visual read, zero nesting risk. This fallback will be applied automatically during implementation if needed, without changing the plan's visual outcome.
 
 ## 4. Template content fixes (no structural rewrites)
 

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - TypeScript has `validateComposeKit()` returning `ValidationResult` with `issues: Problem[]`
@@ -80,6 +81,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 "Unify validation mechanism across TypeScript, Python and C#"

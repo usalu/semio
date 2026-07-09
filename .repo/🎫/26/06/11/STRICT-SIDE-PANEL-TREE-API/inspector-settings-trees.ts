@@ -9,12 +9,12 @@ function buildPuzzle2dPlayInspectorTree(fixture: Puzzle2dFixtureV1, selectionIds
       type: "section",
       id: "puzzle-2d-play-inspector.empty",
       label: "Detail",
-      children: [{
-        type: "text",
-        value: PUZZLE_2D_PLAY_IS_WIRES
-          ? "No selection. Click the graph or pick an identity or relationship in the document."
-          : "No selection. Click the graph or pick a row in the document.",
-      }],
+      children: [
+        {
+          type: "text",
+          value: PUZZLE_2D_PLAY_IS_WIRES ? "No selection. Click the graph or pick an identity or relationship in the document." : "No selection. Click the graph or pick a row in the document.",
+        },
+      ],
     });
     return uiDeclarativeSectionsToTree(sections);
   }

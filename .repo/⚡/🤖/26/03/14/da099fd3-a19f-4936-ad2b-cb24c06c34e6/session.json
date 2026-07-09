@@ -28,9 +28,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌22238"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌22238"],
         "second": "🎆26🌙03☀️14⏰15⌚08⏱️39",
         "session": "⚪da099fd3a19f4936ad2bcb24c06c34e6"
       },
@@ -61,9 +59,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌47650"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌47650"],
         "second": "🎆26🌙03☀️14⏰15⌚08⏱️39",
         "session": "⚪da099fd3a19f4936ad2bcb24c06c34e6"
       },
@@ -119,9 +115,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌47650"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌47650"],
         "second": "🎆26🌙03☀️14⏰15⌚09⏱️57",
         "session": "⚪da099fd3a19f4936ad2bcb24c06c34e6"
       },
@@ -152,9 +146,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌22238"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌22238"],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️09",
         "session": "⚪da099fd3a19f4936ad2bcb24c06c34e6"
       },
@@ -185,9 +177,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌47650"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌47650"],
         "second": "🎆26🌙03☀️14⏰15⌚10⏱️09",
         "session": "⚪da099fd3a19f4936ad2bcb24c06c34e6"
       },
@@ -348,9 +338,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️14⏰15⌚12⏱️52",
         "session": "⚪da099fd3a19f4936ad2bcb24c06c34e6",
-        "tests": [
-          ""
-        ]
+        "tests": [""]
       },
       "response": {
         "allowed": true
@@ -373,16 +361,12 @@
         "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "🧰composerepo⌨️cli🥼maintest"
-        ],
+        "files": ["🧰composerepo⌨️cli🥼maintest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️14⏰15⌚12⏱️52",
         "session": "⚪da099fd3a19f4936ad2bcb24c06c34e6",
-        "tests": [
-          "🧰composerepo⌨️cli🥼maintest🧪testconfiguregithooks"
-        ]
+        "tests": ["🧰composerepo⌨️cli🥼maintest🧪testconfiguregithooks"]
       },
       "response": {
         "allowed": true

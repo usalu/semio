@@ -2,36 +2,36 @@
 name: Enforce Panel Tab Tree Section
 overview: "Enforce a single strict UI containment model across the framework and every product/app: each side Panel has Tabs, each Tab has exactly one Tree, each Tree has Sections, and Sections contain only declarative tree Items (controls live inside items, never as free-form content). Remove all escape hatches and divergent mechanisms."
 todos:
-  - id: ticket
-    content: Open repo-MCP ticket (read repo://goals, associate with a goal) before editing
-    status: completed
-  - id: core-model
-    content: Add UiControlNode + UiTreeItemNode.control; remove SidePanelBodyMount/mount bifurcation; assert side-panel bodies are type:tree; unify the duplicated registerSidePanelBody across platform+playground core
-    status: completed
-  - id: ui-primitives
-    content: "ui/react: make SidePanelTabConfig.tree required (drop panel escape hatch), remove TreeDataSection.content, add TreeDataItem.control rendering, always render the tab strip"
-    status: completed
-  - id: unified-converter
-    content: Replace platform + playground converters with one shared sideTabsToPanelTabs mapping UiTreeNode->TreePanelConfig; delete playgroundPanelSection and DeclarativeTreeWorkbenchPanel; map item.control in uiTreeSectionsToTreeData
-    status: completed
-  - id: display-panel
-    content: Rebuild DisplayPanel as a declarative tree with Windows and Layout tabs (template drag items + layout action items)
-    status: completed
-  - id: migrate-puzzle
-    content: Migrate puzzle 2d/3d/5d inspector/setting/status bodies to trees with control items
-    status: completed
-  - id: migrate-others
-    content: Migrate presentation details, cad catalog/details, and playground template workbench/details bodies to trees with control items
-    status: completed
-  - id: migrate-sketchpad
-    content: Migrate sketchpad windows/workbench/details stack bodies to trees of items
-    status: completed
-  - id: tests
-    content: Extend existing test files for core/ui/renderers/apps and verify each panel at runtime via launch.json
-    status: completed
-  - id: close-ticket
-    content: Close the repo-MCP ticket with a summary of all files touched
-    status: completed
+ - id: ticket
+   content: Open repo-MCP ticket (read repo://goals, associate with a goal) before editing
+   status: completed
+ - id: core-model
+   content: Add UiControlNode + UiTreeItemNode.control; remove SidePanelBodyMount/mount bifurcation; assert side-panel bodies are type:tree; unify the duplicated registerSidePanelBody across platform+playground core
+   status: completed
+ - id: ui-primitives
+   content: "ui/react: make SidePanelTabConfig.tree required (drop panel escape hatch), remove TreeDataSection.content, add TreeDataItem.control rendering, always render the tab strip"
+   status: completed
+ - id: unified-converter
+   content: Replace platform + playground converters with one shared sideTabsToPanelTabs mapping UiTreeNode->TreePanelConfig; delete playgroundPanelSection and DeclarativeTreeWorkbenchPanel; map item.control in uiTreeSectionsToTreeData
+   status: completed
+ - id: display-panel
+   content: Rebuild DisplayPanel as a declarative tree with Windows and Layout tabs (template drag items + layout action items)
+   status: completed
+ - id: migrate-puzzle
+   content: Migrate puzzle 2d/3d/5d inspector/setting/status bodies to trees with control items
+   status: completed
+ - id: migrate-others
+   content: Migrate presentation details, cad catalog/details, and playground template workbench/details bodies to trees with control items
+   status: completed
+ - id: migrate-sketchpad
+   content: Migrate sketchpad windows/workbench/details stack bodies to trees of items
+   status: completed
+ - id: tests
+   content: Extend existing test files for core/ui/renderers/apps and verify each panel at runtime via launch.json
+   status: completed
+ - id: close-ticket
+   content: Close the repo-MCP ticket with a summary of all files touched
+   status: completed
 isProject: false
 ---
 
@@ -47,8 +47,6 @@ flowchart LR
   Sections --> Items["Items (UiTreeItemNode)"]
   Items --> Control["optional inline control on the item"]
 ```
-
-
 
 Strict means: no `SidePanelTabConfig.panel` escape hatch, no `TreeDataSection.content`, no `mount: nested` bodies, no `playgroundPanelSection`. Form controls (input/select/toggle/vec3/button/keyValue) become a `control` slot on a tree item, so inspector/setting/details panels are real trees.
 
@@ -111,4 +109,3 @@ Each becomes `UiTreeNode` with sections whose items carry controls:
 - Single-tab panels still render the tab strip (enforces "every panel has tabs" visibly).
 - Form controls are modeled as an optional `control` on a tree item (rather than allowing section `content`).
 - GIS map keeps having no side panel (nothing to enforce where no panel exists).
-

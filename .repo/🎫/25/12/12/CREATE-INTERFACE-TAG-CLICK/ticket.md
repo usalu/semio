@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Create actions in the Kit app are triggered via filter-strip `Toggle` action buttons.
@@ -18,6 +19,7 @@ Updated Kit app create actions for ports/tags (and aligned concepts/folders) to 
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix create port/tag buttons doing nothing

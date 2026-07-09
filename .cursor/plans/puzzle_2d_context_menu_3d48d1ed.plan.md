@@ -2,36 +2,36 @@
 name: Puzzle 2D Context Menu
 overview: Replicate puzzle3d's viewport selection context menu and document tree context menu in puzzle2d, with full hidden/locked flag parity across fixture, renderer, WASM hit-testing, and play controller.
 todos:
-  - id: ticket
-    content: Read repo://goals and open ticket via repo MCP
-    status: completed
-  - id: flags-react
-    content: Add hidden/locked to 2d fixture types, scene objects, marker props, descriptor build
-    status: completed
-  - id: locked-wasm
-    content: Add locked to Rust descriptor structs and exclude locked from hover/select/marquee/drag
-    status: completed
-  - id: menu-region
-    content: Add 🖱️SelectionContextMenu region with store, actions ref, buildPuzzle2dSelectionMenuItems, zoom-to-selection
-    status: completed
-  - id: canvas-wiring
-    content: Commit selection on right-click and merge selection items into existing ContextMenuController flow
-    status: completed
-  - id: play-commands
-    content: Add setSelectionFlag, deleteSelection, duplicateSelection, selectSameKind, toggleEntityFlag controller commands
-    status: completed
-  - id: document-chrome
-    content: Add puzzle2dPlayDocumentEntityChrome with contextMenu/actions/isHidden on tree rows
-    status: completed
-  - id: playground-wiring
-    content: Wire playground renderer dispatches for 2d selection actions and document toggles
-    status: completed
-  - id: tests
-    content: Extend vitest and Rust test regions; run nx vitest and cargo tests
-    status: completed
-  - id: close-ticket
-    content: Close ticket with summary and touched files
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open ticket via repo MCP
+   status: completed
+ - id: flags-react
+   content: Add hidden/locked to 2d fixture types, scene objects, marker props, descriptor build
+   status: completed
+ - id: locked-wasm
+   content: Add locked to Rust descriptor structs and exclude locked from hover/select/marquee/drag
+   status: completed
+ - id: menu-region
+   content: Add 🖱️SelectionContextMenu region with store, actions ref, buildPuzzle2dSelectionMenuItems, zoom-to-selection
+   status: completed
+ - id: canvas-wiring
+   content: Commit selection on right-click and merge selection items into existing ContextMenuController flow
+   status: completed
+ - id: play-commands
+   content: Add setSelectionFlag, deleteSelection, duplicateSelection, selectSameKind, toggleEntityFlag controller commands
+   status: completed
+ - id: document-chrome
+   content: Add puzzle2dPlayDocumentEntityChrome with contextMenu/actions/isHidden on tree rows
+   status: completed
+ - id: playground-wiring
+   content: Wire playground renderer dispatches for 2d selection actions and document toggles
+   status: completed
+ - id: tests
+   content: Extend vitest and Rust test regions; run nx vitest and cargo tests
+   status: completed
+ - id: close-ticket
+   content: Close ticket with summary and touched files
+   status: completed
 isProject: false
 ---
 
@@ -58,8 +58,6 @@ flowchart LR
   actionsRef -->|bus.dispatch| playCtrl["Puzzle2dPlayShellController commands"]
   playCtrl -->|"fixture patch + resync"| renderer["Renderer / WASM descriptor"]
 ```
-
-
 
 ## 1. Hidden/locked flags on fixture and scene ([puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx))
 
@@ -121,4 +119,3 @@ New commands on `Puzzle2dPlayShellController` (region `🔖Controller`, ~742):
 ## Process
 
 - Read `repo://goals`, then open a ticket via repo MCP (`ticket_open`) before edits; close it with a summary when done. All temporary artifacts go in the ticket folder.
-

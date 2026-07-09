@@ -24,9 +24,7 @@ import { createWorkspaceViteResolveConfig, semioFaviconVitePlugin } from "../../
 // #endregion 🔌Adapters
 
 const repoRoot = path.resolve(__dirname, "../../../..");
-const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, [
-  { find: "@semio-tech/coda-desktop", replacement: path.resolve(__dirname, ".") },
-]);
+const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, [{ find: "@semio-tech/coda-desktop", replacement: path.resolve(__dirname, ".") }]);
 const configuration: UserConfig = {
   server: {
     ...workspaceResolve.server,
@@ -93,15 +91,11 @@ const configuration: UserConfig = {
       "tailwind-merge",
       "three",
       "three/addons/loaders/OBJLoader.js",
-      "xstate"
+      "xstate",
     ],
   },
   resolve: workspaceResolve.resolve,
-  plugins: [
-    ...semioFaviconVitePlugin(repoRoot),
-    ...(tailwindcss() as unknown as NonNullable<UserConfig["plugins"]>),
-    react() as unknown as NonNullable<UserConfig["plugins"]>[number],
-  ],
+  plugins: [...semioFaviconVitePlugin(repoRoot), ...(tailwindcss() as unknown as NonNullable<UserConfig["plugins"]>), react() as unknown as NonNullable<UserConfig["plugins"]>[number]],
 };
 
 export default configuration;

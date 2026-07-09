@@ -4,24 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
-const cargo = spawnSync(
-  "cargo",
-  [
-    "test",
-    "-p",
-    "neural_engine",
-    "-p",
-    "flow_core",
-    "-p",
-    "flow_module_dictionary",
-    "-p",
-    "mathematical_graph_port_directed_dag",
-    "variadic",
-    "--",
-    "--nocapture",
-  ],
-  { cwd: repoRoot, encoding: "utf8" },
-);
+const cargo = spawnSync("cargo", ["test", "-p", "neural_engine", "-p", "flow_core", "-p", "flow_module_dictionary", "-p", "mathematical_graph_port_directed_dag", "variadic", "--", "--nocapture"], { cwd: repoRoot, encoding: "utf8" });
 
 process.stdout.write(cargo.stdout ?? "");
 process.stderr.write(cargo.stderr ?? "");

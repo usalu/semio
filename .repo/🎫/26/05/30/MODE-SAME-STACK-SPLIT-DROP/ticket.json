@@ -5,7 +5,5 @@
   "description": "Fix Mode dock drag-drop: when dragging a tab within the same stack and dropping on left/right/top/bottom split zones, preview is correct but release leaves window in tab. applyModeDrop incorrectly no-ops when zone.stackPath === sourcePath for split kind.",
   "summary": "Fixed Mode dock drop: same-stack split zones (left/right/top/bottom) now call splitWithWindow on release instead of no-op. Added applyModeDrop unit test and export for coverage. All @semio-tech/ui-react tests pass (53).",
   "goal": "🎯r26-02/🎯runningsketchpad",
-  "sessions": [
-    "⚪780efcc4b2e24c7b9dcae7df6caece01"
-  ]
+  "sessions": ["⚪780efcc4b2e24c7b9dcae7df6caece01"]
 }

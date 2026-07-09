@@ -1,37 +1,37 @@
 ---
 name: WGPU Renderer Chrome Parity
-overview: "Bring the WGPU/Rust renderer's OS chrome to full functional parity with the React reference renderer: a real command palette and find dialog, per-window \"Command\" (engagement) and \"Window Options\" (measures) rails, and the restored navbar (example picker, 4-icon panel toggle group, mode switcher) — all using data that already flows through the shared Rust core, with no WIT/protocol changes needed."
+overview: 'Bring the WGPU/Rust renderer''s OS chrome to full functional parity with the React reference renderer: a real command palette and find dialog, per-window "Command" (engagement) and "Window Options" (measures) rails, and the restored navbar (example picker, 4-icon panel toggle group, mode switcher) — all using data that already flows through the shared Rust core, with no WIT/protocol changes needed.'
 todos:
-  - id: shell-state-plumbing
-    content: "Add ShellState fields: panel kinds, active example/mode, rail fold/expand/width maps, search/find item caches"
-    status: completed
-  - id: navbar-restore
-    content: "Rewrite render_navbar: example dropdown, 4-icon panel toggle group, mode buttons; remove history/breadcrumb/inline-theme/visible search-find buttons"
-    status: completed
-  - id: framework-panels
-    content: Add Display/Settings tabs and Document auto-injection to WGPU side panels, wired to active panel kind
-    status: completed
-  - id: command-palette
-    content: "Implement real Search overlay: item list from panel tabs/windows/keybindings, substring filter, keyboard nav, dispatch"
-    status: completed
-  - id: find-dialog
-    content: Implement real Find overlay + node-graph scene find-item registration and select-on-choose callback
-    status: completed
-  - id: window-command-rail
-    content: "Implement WindowEngagementChrome-equivalent rail: fold/unfold, options/input/control(s)/status/possibleEngagements"
-    status: completed
-  - id: window-options-rail
-    content: "Implement WindowMeasuresChrome-equivalent rail: fold/unfold/focus, measure tree (group/select/slider/toggle), resize"
-    status: completed
-  - id: keyboard-shortcuts
-    content: Wire Mod+P/Mod+F/history/panel-toggle keybindings and palette arrow/enter/escape routing in lib.rs/input.rs
-    status: completed
-  - id: context-menu-items
-    content: Replace context menu no-ops with real scene-contributed items (node-graph first)
-    status: completed
-  - id: verify-e2e
-    content: Extend verify-wgpu-playgrounds-e2e.ts with palette/find/rail assertions; cargo test; rebuild wasm; run full 25-plugin suites both renderers; screenshot s and draw
-    status: completed
+ - id: shell-state-plumbing
+   content: "Add ShellState fields: panel kinds, active example/mode, rail fold/expand/width maps, search/find item caches"
+   status: completed
+ - id: navbar-restore
+   content: "Rewrite render_navbar: example dropdown, 4-icon panel toggle group, mode buttons; remove history/breadcrumb/inline-theme/visible search-find buttons"
+   status: completed
+ - id: framework-panels
+   content: Add Display/Settings tabs and Document auto-injection to WGPU side panels, wired to active panel kind
+   status: completed
+ - id: command-palette
+   content: "Implement real Search overlay: item list from panel tabs/windows/keybindings, substring filter, keyboard nav, dispatch"
+   status: completed
+ - id: find-dialog
+   content: Implement real Find overlay + node-graph scene find-item registration and select-on-choose callback
+   status: completed
+ - id: window-command-rail
+   content: "Implement WindowEngagementChrome-equivalent rail: fold/unfold, options/input/control(s)/status/possibleEngagements"
+   status: completed
+ - id: window-options-rail
+   content: "Implement WindowMeasuresChrome-equivalent rail: fold/unfold/focus, measure tree (group/select/slider/toggle), resize"
+   status: completed
+ - id: keyboard-shortcuts
+   content: Wire Mod+P/Mod+F/history/panel-toggle keybindings and palette arrow/enter/escape routing in lib.rs/input.rs
+   status: completed
+ - id: context-menu-items
+   content: Replace context menu no-ops with real scene-contributed items (node-graph first)
+   status: completed
+ - id: verify-e2e
+   content: Extend verify-wgpu-playgrounds-e2e.ts with palette/find/rail assertions; cargo test; rebuild wasm; run full 25-plugin suites both renderers; screenshot s and draw
+   status: completed
 isProject: false
 ---
 
@@ -41,7 +41,7 @@ All 25 playground apps can boot in two renderer modes via `SEMIO_RENDERER=react|
 
 - Global command palette (Mod+P) and find-in-window (Mod+F): `[render_palette](framework/renderer/wgpu/rs/shell.rs)` draws a title + empty input box, no item list, no filtering, no keyboard nav, no dispatch.
 - Per-window **Command** rail (engagement) and **Window Options** rail (measures): not implemented at all in `shell.rs`, even though `WindowKindDefinition.measures` / `.engagement` ([framework/core/rs/ui.rs:913-923](framework/core/rs/ui.rs)) are already populated by the `s` and `draw` plugins ([s/plugin/rs/lib.rs](s/plugin/rs/lib.rs), [draw/plugin/rs/lib.rs](draw/plugin/rs/lib.rs)) and already deserialized into `ActiveSession.app` on the WGPU side via `PluginBridgeEntry` — this is a pure rendering/interaction gap, not a data gap.
-- Navbar: currently shows back/forward/up + breadcrumb + inline theme dropdown + visible Search/Find toggle buttons (the *old*, now-superseded React navbar shape). React has since been restored to: logo/title → example dropdown → fill → 4-icon panel toggle group (display/workbench/details/settings) → mode button group, with theme moved into a Settings panel tab and history/breadcrumb/search/find kept only as keybindings.
+- Navbar: currently shows back/forward/up + breadcrumb + inline theme dropdown + visible Search/Find toggle buttons (the _old_, now-superseded React navbar shape). React has since been restored to: logo/title → example dropdown → fill → 4-icon panel toggle group (display/workbench/details/settings) → mode button group, with theme moved into a Settings panel tab and history/breadcrumb/search/find kept only as keybindings.
 - Framework side-panel tabs (Display/Workbench/Details/Settings, Document auto-injection) exist in React (`framework/renderer/react/os-chrome-panels.tsx`) but have no WGPU equivalent — panels only show raw plugin tabs.
 - Keyboard: `on_key` in [framework/renderer/wgpu/rs/lib.rs:333-346](framework/renderer/wgpu/rs/lib.rs) only appends characters into a focused input; there is no Mod+P/Mod+F/history/Escape/Arrow routing.
 
@@ -57,8 +57,6 @@ flowchart LR
     core --> bridge --> shellState --> chrome
     widgets --> chrome
 ```
-
-
 
 ## Changes
 
@@ -134,4 +132,3 @@ Replace the generic Copy/Paste no-ops with scene-contributed items (starting wit
 - `cargo test -p ui_wgpu` for widget/layout units touched; rebuild the WGPU wasm bundle (`framework/renderer/wgpu/script.ts wasm`).
 - Run the full 25-plugin suite for both `verify-react-playgrounds-e2e.ts` and `verify-wgpu-playgrounds-e2e.ts` to confirm no regressions, plus a manual screenshot comparison of `s` and `draw` in both renderers.
 - All work stays in existing files using region/subregion comments per repo convention — no new script files.
-

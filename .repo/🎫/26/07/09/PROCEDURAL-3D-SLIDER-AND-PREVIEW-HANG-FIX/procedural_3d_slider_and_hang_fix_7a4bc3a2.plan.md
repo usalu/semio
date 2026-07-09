@@ -1,37 +1,37 @@
 ---
 name: Procedural 3D Slider and Hang Fix
-overview: "Restore functional parity for the procedural 3D react renderer by fixing two concretely diagnosed root causes: sliders cannot be edited at all (Inspector control never renders, no in-canvas slider drag), and any BREP-boolean preview (e.g. Sphere Cut With Torus) re-runs full CSG evaluation synchronously on every UI event, causing the reported \"infinite hang\"."
+overview: 'Restore functional parity for the procedural 3D react renderer by fixing two concretely diagnosed root causes: sliders cannot be edited at all (Inspector control never renders, no in-canvas slider drag), and any BREP-boolean preview (e.g. Sphere Cut With Torus) re-runs full CSG evaluation synchronously on every UI event, causing the reported "infinite hang".'
 todos:
-  - id: fix-tree-defaultopen
-    content: Fix ui/js/react/index.tsx Tree defaultOpen regression so leaf property controls always render
-    status: completed
-  - id: tree-regression-test
-    content: Extend Tree tests to cover leaf property-control visibility through TreeDataItemView
-    status: completed
-  - id: dag-slider-overlay-state
-    content: Add slider_overlay_state_json to dag crate + FlowHost + wasm export
-    status: completed
-  - id: flowsession-ts-iface
-    content: Add sliderOverlayStateJson to FlowWasmSession TS interface in os-shell.tsx
-    status: completed
-  - id: graph-slider-overlays
-    content: Add parseDagSliderOverlays + GraphSliderOverlays to node-graph-host.tsx wired to setSliderValue
-    status: completed
-  - id: slider-overlay-test
-    content: Extend framework/renderer/react/index.test.ts for slider drag behavior
-    status: completed
-  - id: preview-cache
-    content: Add fixture-signature-gated preview cache to procedural/plugin/rs/app_3d.rs (main + generate preview)
-    status: completed
-  - id: preview-cache-test
-    content: Extend procedural-plugin tests to assert cache hit/miss behavior
-    status: completed
-  - id: kernel-extreme-range-test
-    content: Add kernel_3d_brepkit test for radius=10 sphere cut torus at slider max
-    status: completed
-  - id: e2e-verify
-    content: Re-verify in browser + run all affected test suites; open/close repo ticket
-    status: in_progress
+ - id: fix-tree-defaultopen
+   content: Fix ui/js/react/index.tsx Tree defaultOpen regression so leaf property controls always render
+   status: completed
+ - id: tree-regression-test
+   content: Extend Tree tests to cover leaf property-control visibility through TreeDataItemView
+   status: completed
+ - id: dag-slider-overlay-state
+   content: Add slider_overlay_state_json to dag crate + FlowHost + wasm export
+   status: completed
+ - id: flowsession-ts-iface
+   content: Add sliderOverlayStateJson to FlowWasmSession TS interface in os-shell.tsx
+   status: completed
+ - id: graph-slider-overlays
+   content: Add parseDagSliderOverlays + GraphSliderOverlays to node-graph-host.tsx wired to setSliderValue
+   status: completed
+ - id: slider-overlay-test
+   content: Extend framework/renderer/react/index.test.ts for slider drag behavior
+   status: completed
+ - id: preview-cache
+   content: Add fixture-signature-gated preview cache to procedural/plugin/rs/app_3d.rs (main + generate preview)
+   status: completed
+ - id: preview-cache-test
+   content: Extend procedural-plugin tests to assert cache hit/miss behavior
+   status: completed
+ - id: kernel-extreme-range-test
+   content: Add kernel_3d_brepkit test for radius=10 sphere cut torus at slider max
+   status: completed
+ - id: e2e-verify
+   content: Re-verify in browser + run all affected test suites; open/close repo ticket
+   status: completed
 isProject: false
 ---
 
@@ -56,7 +56,7 @@ I reproduced both bugs directly (booted `dev:procedural:3d` on :6018, used a liv
   const propertyExpandable = hasControl ? hasNestedTreeItems : isExpandable;
 ```
 
-  Commit `263740dd69` ("Default All Panels to Hidden or Folded") flipped `defaultOpen` from `true` to `false` for control-bearing property rows. For a leaf property row with a control but **no nested tree items** (e.g. any single Inspector field: slider value, number, text, toggle…), `propertyExpandable` is `false`, so there is **no chevron and no click affordance to ever open it** (see [ui/js/react/index.tsx](ui/js/react/index.tsx) lines 11290-11381: the control only mounts inside `{open ? <TreeBranchContent>{children}</TreeBranchContent> : <div data-slot="tree-property-content" />}`). The control is permanently unreachable. This is a **global regression**, not procedural3d-specific — it silently breaks every single-field Inspector control app-wide.
+Commit `263740dd69` ("Default All Panels to Hidden or Folded") flipped `defaultOpen` from `true` to `false` for control-bearing property rows. For a leaf property row with a control but **no nested tree items** (e.g. any single Inspector field: slider value, number, text, toggle…), `propertyExpandable` is `false`, so there is **no chevron and no click affordance to ever open it** (see [ui/js/react/index.tsx](ui/js/react/index.tsx) lines 11290-11381: the control only mounts inside `{open ? <TreeBranchContent>{children}</TreeBranchContent> : <div data-slot="tree-property-content" />}`). The control is permanently unreachable. This is a **global regression**, not procedural3d-specific — it silently breaks every single-field Inspector control app-wide.
 
 - Separately, even if the Inspector worked, there is **no in-canvas slider drag** at all today. `node-graph-host.tsx` wires `GraphParamOverlays` (→ `session.setNeuronParams`) and `GraphStepperOverlays` (→ `session.setStepperFieldValue`) but has no `GraphSliderOverlays` counterpart. The Rust/WASM side is actually half-ported already: `flow/core/rs/lib.rs` has a working `FlowHost::set_slider_value` / `#[wasm_bindgen(js_name = setSliderValue)]` export, and `os-shell.tsx`'s `FlowWasmSession` TS interface already declares `setSliderValue(...)`, but nothing calls it. What's missing is the overlay-geometry accessor: `dag`/`flow_core` has `stepper_overlay_state_json()` (used by `GraphStepperOverlays`) but no `slider_overlay_state_json()` counterpart, even though the underlying geometry helpers (`slider_track_bounds`, `slider_track_center` in [mathematical/graph/port/directed/dag/rs/lib.rs](mathematical/graph/port/directed/dag/rs/lib.rs)) already exist and are covered by existing tests (`canvas_slider_hit_adjusts_value*`, `widget_slider_track_screen_point`).
 
@@ -70,15 +70,16 @@ fn evaluated_preview_payload(fixture: &FlowFixture, runtime: &Procedural3dRuntim
     let eval_json = host.evaluate().unwrap_or_default();
 ```
 
-  This throws away `FlowHost`'s own signature-gated eval cache (`flow/core/rs/lib.rs` `evaluate_internal`, which only recomputes when `tree_signature(...)` changes) because a fresh `FlowHost` never has a cached signature. For the sphere/torus example, evaluation runs `brep.bool.cut`, which — because a torus surface is involved and the bounds overlap — takes the expensive **mesh-based boolean path** in `kernel/3d/brep/rs/lib.rs`'s `boolean_mesh_sync` (tessellate both solids → `mesh_boolean` → re-import). This full recompute is expensive and pays no attention to whether the fixture actually changed.
+This throws away `FlowHost`'s own signature-gated eval cache (`flow/core/rs/lib.rs` `evaluate_internal`, which only recomputes when `tree_signature(...)` changes) because a fresh `FlowHost` never has a cached signature. For the sphere/torus example, evaluation runs `brep.bool.cut`, which — because a torus surface is involved and the bounds overlap — takes the expensive **mesh-based boolean path** in `kernel/3d/brep/rs/lib.rs`'s `boolean_mesh_sync` (tessellate both solids → `mesh_boolean` → re-import). This full recompute is expensive and pays no attention to whether the fixture actually changed.
+
 - `render()` is invoked for **every window body on every single command** via [os-shell.tsx](framework/renderer/react/os-shell.tsx) `refreshUi` (`nextSession.app.windowKinds.map((kind) => plugin.render(...))`, called unconditionally after any command's ops are applied). Crucially, `nodeGraphViewport` (flow-graph pan/zoom) is dispatched **unthrottled on every wheel event** (`node-graph-host.tsx` `onWheel` handler calls `dispatch(nodeGraphCommands.viewport, ...)` directly, no debounce), and it mutates `envelope.fixture.camera`, which is enough to trigger another `set_document_op` → `refreshUi` → full `render()` → full CSG recompute.
-- Net effect: with Sphere Cut With Torus loaded, **any interaction** (scroll-zoom, pan, hover, selection) re-triggers the full sphere∩torus mesh-boolean computation synchronously on the single UI thread, with no caching and no debounce — a burst of pointer/wheel events queues an ever-growing backlog of expensive recomputations, which is exactly what a user would perceive as "infinitely hangs" (worse in a non-release/debug wasm build). This reproduces the report even though a single, isolated `render()` call for this fixture completes in well under a second in an optimized build — it's not one call that's slow, it's the *lack of caching combined with unthrottled re-triggering* that compounds.
+- Net effect: with Sphere Cut With Torus loaded, **any interaction** (scroll-zoom, pan, hover, selection) re-triggers the full sphere∩torus mesh-boolean computation synchronously on the single UI thread, with no caching and no debounce — a burst of pointer/wheel events queues an ever-growing backlog of expensive recomputations, which is exactly what a user would perceive as "infinitely hangs" (worse in a non-release/debug wasm build). This reproduces the report even though a single, isolated `render()` call for this fixture completes in well under a second in an optimized build — it's not one call that's slow, it's the _lack of caching combined with unthrottled re-triggering_ that compounds.
 
 ## Fix Plan
 
 ### 1. Fix the global Tree "closed by default" regression
 
-- [ui/js/react/index.tsx](ui/js/react/index.tsx): change `const defaultOpen = hasControl ? false : getTreeItemDefaultOpen(item);` so that leaf property rows with a control and **no nested tree items** always default open (there is no other way to reveal their control), while rows that *do* have nested children keep respecting the "default all folded" intent. Concretely: `const defaultOpen = hasControl ? !hasNestedTreeItems || getTreeItemDefaultOpen(item) : getTreeItemDefaultOpen(item);` (or equivalent — leaf-control rows must always render their control).
+- [ui/js/react/index.tsx](ui/js/react/index.tsx): change `const defaultOpen = hasControl ? false : getTreeItemDefaultOpen(item);` so that leaf property rows with a control and **no nested tree items** always default open (there is no other way to reveal their control), while rows that _do_ have nested children keep respecting the "default all folded" intent. Concretely: `const defaultOpen = hasControl ? !hasNestedTreeItems || getTreeItemDefaultOpen(item) : getTreeItemDefaultOpen(item);` (or equivalent — leaf-control rows must always render their control).
 - Extend the existing Tree tests in `ui/js/react/index.tsx` (the `data-slot="tree-property-content"` / `data-slot="property-control"` test block) with a case asserting a leaf property-item's control is present in the rendered markup **without** any explicit `open`/click interaction, through the actual `TreeDataItemView` production path (not just the low-level `TreeItem` primitive with `defaultOpen` forced true), so this regression can't reappear silently.
 
 ### 2. Wire up real in-canvas slider dragging (parity feature, not just unblocking the Inspector)

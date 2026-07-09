@@ -31,11 +31,11 @@ await page.waitForTimeout(5000);
 await page.getByText("Metabolism").waitFor({ timeout: 30000 });
 console.log("Kit uploaded");
 
-const kitRow = page.locator('[data-row-id]').filter({ hasText: "Metabolism" }).first();
+const kitRow = page.locator("[data-row-id]").filter({ hasText: "Metabolism" }).first();
 if (await kitRow.isVisible({ timeout: 5000 }).catch(() => false)) {
   await kitRow.dblclick();
 } else {
-  const allRows = page.locator('[data-row-id]');
+  const allRows = page.locator("[data-row-id]");
   const count = await allRows.count();
   for (let i = 0; i < count; i++) {
     const rowId = await allRows.nth(i).getAttribute("data-row-id");
@@ -51,12 +51,12 @@ console.log(`URL after kit nav: ${page.url()}`);
 
 const designRowIds = await page.evaluate(() => {
   return Array.from(document.querySelectorAll("[data-row-id]"))
-    .map(el => el.getAttribute("data-row-id"))
-    .filter(id => id?.startsWith("design-"));
+    .map((el) => el.getAttribute("data-row-id"))
+    .filter((id) => id?.startsWith("design-"));
 });
 console.log(`Design rows: ${JSON.stringify(designRowIds)}`);
 
-const nakaginRowId = designRowIds.find(id => id?.includes("9a890dd4")) ?? designRowIds[designRowIds.length - 1];
+const nakaginRowId = designRowIds.find((id) => id?.includes("9a890dd4")) ?? designRowIds[designRowIds.length - 1];
 console.log(`Double-clicking design: ${nakaginRowId}`);
 await page.evaluate((rowId) => {
   const row = document.querySelector(`[data-row-id="${rowId}"]`);
@@ -75,10 +75,16 @@ console.log(`Zustand patched: ${patched}`);
 
 await page.waitForTimeout(5000);
 
-await page.evaluate(() => { (window as any).__COMPOSE_PERFORMANCE__.longTasks = []; });
+await page.evaluate(() => {
+  (window as any).__COMPOSE_PERFORMANCE__.longTasks = [];
+});
 
 const diagramBox = await page.locator("#diagram .react-flow__pane").first().boundingBox();
-if (!diagramBox) { console.log("No diagram pane"); await browser.close(); process.exit(1); }
+if (!diagramBox) {
+  console.log("No diagram pane");
+  await browser.close();
+  process.exit(1);
+}
 
 console.log("\n--- PHASE 1: ZOOM ---");
 await page.mouse.move(diagramBox.x + diagramBox.width / 2, diagramBox.y + diagramBox.height / 2);
@@ -99,7 +105,11 @@ for (const t of tasks) console.log(`  ${(t as any).duration.toFixed(0)}ms @ ${(t
 console.log("\n--- PHASE 2: MOUSEDOWN ON NODE ---");
 const firstNode = page.locator("#diagram .react-flow__node").first();
 const nb = await firstNode.boundingBox();
-if (!nb) { console.log("No node box"); await browser.close(); process.exit(1); }
+if (!nb) {
+  console.log("No node box");
+  await browser.close();
+  process.exit(1);
+}
 await page.mouse.move(nb.x + nb.width / 2, nb.y + nb.height / 2);
 await page.waitForTimeout(50);
 

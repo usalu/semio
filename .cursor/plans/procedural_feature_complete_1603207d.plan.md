@@ -2,27 +2,27 @@
 name: Procedural Feature Complete
 overview: Make the procedural/flow utility set feature-complete by exposing every existing brep kernel operation as a flow node, adding new geometry utilities (reparametrize curve/surface, divide curve), and extending the Rust flow modules with the missing generic utilities (seeded random, fuller math, list range), each placed where it architecturally belongs.
 todos:
-  - id: ticket
-    content: Read repo://goals and open/reopen a repo ticket for the procedural feature-complete work
-    status: completed
-  - id: kernel
-    content: Add divideCurve/reparametrizeCurve/reparametrizeSurface to geometry/brep/js/index.ts (interface + impl + tests); delete stale kernel.ts
-    status: completed
-  - id: brep-nodes
-    content: Expose all missing kernel ops + new utilities as BREP_FLOW_KINDS/handlers in procedural/react/index.tsx with tests; bump manifest version
-    status: completed
-  - id: math
-    content: Add math.random (seeded + entropy fallback) and fuller arithmetic/trig/remap to flow/module/math/lib.rs; add js_sys to Cargo.toml; extend tests
-    status: completed
-  - id: list
-    content: Add list.range and list.reverse to flow/module/list/lib.rs with tests
-    status: completed
-  - id: build-verify
-    content: Rebuild math/list wasm pkgs via nx; run brep/procedural vitest and Rust cargo tests; confirm nodes evaluate at runtime
-    status: completed
-  - id: close
-    content: Close the ticket with summary and file list
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open/reopen a repo ticket for the procedural feature-complete work
+   status: completed
+ - id: kernel
+   content: Add divideCurve/reparametrizeCurve/reparametrizeSurface to geometry/brep/js/index.ts (interface + impl + tests); delete stale kernel.ts
+   status: completed
+ - id: brep-nodes
+   content: Expose all missing kernel ops + new utilities as BREP_FLOW_KINDS/handlers in procedural/react/index.tsx with tests; bump manifest version
+   status: completed
+ - id: math
+   content: Add math.random (seeded + entropy fallback) and fuller arithmetic/trig/remap to flow/module/math/lib.rs; add js_sys to Cargo.toml; extend tests
+   status: completed
+ - id: list
+   content: Add list.range and list.reverse to flow/module/list/lib.rs with tests
+   status: completed
+ - id: build-verify
+   content: Rebuild math/list wasm pkgs via nx; run brep/procedural vitest and Rust cargo tests; confirm nodes evaluate at runtime
+   status: completed
+ - id: close
+   content: Close the ticket with summary and file list
+   status: completed
 isProject: false
 ---
 
@@ -45,8 +45,6 @@ flowchart LR
   host --> editor["ProceduralFlowEditor"]
   catalogue --> editor
 ```
-
-
 
 ## 1. Kernel: new geometry utilities + dedupe
 
@@ -102,4 +100,3 @@ Per repo rules: read `repo://goals`, then `ticket_open` (reuse `CLEAN-PROCEDURAL
 
 - `reparametrize` = resampling onto a clean unit domain (curve) / `uvBounds`-spanned grid (surface), since brepjs already normalizes curve params. If you intended pure domain-metadata only, flag it.
 - `random` lives in the Rust `math` module as a `number` producer; seedless evaluation is intentionally fresh.
-

@@ -2,27 +2,27 @@
 name: scene-open-lod
 overview: Replace the 6-tier domain-driven scene LOD with an open, domain-neutral float scale (denominator/numerator of a scale ratio). Add automatic zoom-driven LOD, depth-variable per-object LOD, a manual log slider, and closest-LOD fallback for representations.
 todos:
-  - id: core
-    content: Replace LodKind/thresholds with numeric LOD + helpers (lodFromCameraDistance, pickClosestLod, lodGridStepWorld, lodHandlePrimaryVisible, lodHandlePickProxy) in elements/lib/react/scene/index.tsx
-    status: completed
-  - id: context
-    content: Rewrite LodContextValue, LodFrameRunner, LodBridge, and CanvasProps to expose numeric scene LOD + depth-variable per-object lookup
-    status: completed
-  - id: mesh
-    content: Update MeshBody and VortexHandle to use pickClosestMeshUrl with depth-variable path; add ObjectProps.meshByLod and rewrite handleMeshByLod as a list
-    status: completed
-  - id: fixture
-    content: Rewrite parseFixture / parseHandleMeshByLod for the new list-based meshByLod shape
-    status: completed
-  - id: framework
-    content: Extend WindowMeasure with slider + toggle kinds in elements/lib/framework/core/index.ts and bridge them in elements/lib/framework/renderer/react/index.tsx
-    status: completed
-  - id: play
-    content: Rewrite scene play controller to publish auto toggle, depth toggle, and log-scale LOD slider; remove tier menu
-    status: completed
-  - id: tests
-    content: Rewrite in-file unit tests and update scene play e2e expectations for numeric LOD
-    status: completed
+ - id: core
+   content: Replace LodKind/thresholds with numeric LOD + helpers (lodFromCameraDistance, pickClosestLod, lodGridStepWorld, lodHandlePrimaryVisible, lodHandlePickProxy) in elements/lib/react/scene/index.tsx
+   status: completed
+ - id: context
+   content: Rewrite LodContextValue, LodFrameRunner, LodBridge, and CanvasProps to expose numeric scene LOD + depth-variable per-object lookup
+   status: completed
+ - id: mesh
+   content: Update MeshBody and VortexHandle to use pickClosestMeshUrl with depth-variable path; add ObjectProps.meshByLod and rewrite handleMeshByLod as a list
+   status: completed
+ - id: fixture
+   content: Rewrite parseFixture / parseHandleMeshByLod for the new list-based meshByLod shape
+   status: completed
+ - id: framework
+   content: Extend WindowMeasure with slider + toggle kinds in elements/lib/framework/core/index.ts and bridge them in elements/lib/framework/renderer/react/index.tsx
+   status: completed
+ - id: play
+   content: Rewrite scene play controller to publish auto toggle, depth toggle, and log-scale LOD slider; remove tier menu
+   status: completed
+ - id: tests
+   content: Rewrite in-file unit tests and update scene play e2e expectations for numeric LOD
+   status: completed
 isProject: false
 ---
 
@@ -41,7 +41,10 @@ All work lives in [elements/lib/react/scene/index.tsx](elements/lib/react/scene/
 ## Representation lookup
 
 ```ts
-export interface LodMeshEntry { readonly lod: number; readonly url: string; }
+export interface LodMeshEntry {
+ readonly lod: number;
+ readonly url: string;
+}
 export function pickClosestLod(available: readonly number[], desired: number): number | null;
 ```
 
@@ -78,10 +81,10 @@ readonly gridSnapEnabled: boolean;
 
 ```ts
 export function lodGridStepWorld(lod: number, gridFactor: number): number | null {
-  if (!Number.isFinite(lod) || lod <= 0) return null;
-  // Round to nearest power-of-10 step scaled by gridFactor; null when step > some cap (replaces minimap "no grid").
-  const raw = lod * 0.05 * gridFactor; // tuned so old 1:100 normal => ~5*gridFactor
-  return raw > 50 * gridFactor ? null : raw;
+ if (!Number.isFinite(lod) || lod <= 0) return null;
+ // Round to nearest power-of-10 step scaled by gridFactor; null when step > some cap (replaces minimap "no grid").
+ const raw = lod * 0.05 * gridFactor; // tuned so old 1:100 normal => ~5*gridFactor
+ return raw > 50 * gridFactor ? null : raw;
 }
 ```
 
@@ -94,8 +97,12 @@ export function lodGridStepWorld(lod: number, gridFactor: number): number | null
 Continuous replacements:
 
 ```ts
-export function lodHandlePrimaryVisible(lod: number): boolean { return lod <= 200; }
-export function lodHandlePickProxy(lod: number): boolean { return lod > 200 && lod <= 1000; }
+export function lodHandlePrimaryVisible(lod: number): boolean {
+ return lod <= 200;
+}
+export function lodHandlePickProxy(lod: number): boolean {
+ return lod > 200 && lod <= 1000;
+}
 ```
 
 Thresholds chosen so the architecture defaults map: normal/detail/micro (lod <= ~200) keep handle visuals; compact/overview (200..1000) use pick proxies; minimap (>1000) shows nothing — matching prior behavior.
@@ -112,8 +119,24 @@ Thresholds chosen so the architecture defaults map: normal/detail/micro (lod <= 
 Extend [elements/lib/framework/core/index.ts](elements/lib/framework/core/index.ts) `WindowMeasure` union with `WindowMeasureSlider` and `WindowMeasureToggle`:
 
 ```ts
-export interface WindowMeasureSlider { kind: "slider"; id: string; label?: string; value: number; min: number; max: number; step?: number; onChange: CommandDescriptor; }
-export interface WindowMeasureToggle { kind: "toggle"; id: string; label?: string; pressed: boolean; text?: string; onChange: CommandDescriptor; }
+export interface WindowMeasureSlider {
+ kind: "slider";
+ id: string;
+ label?: string;
+ value: number;
+ min: number;
+ max: number;
+ step?: number;
+ onChange: CommandDescriptor;
+}
+export interface WindowMeasureToggle {
+ kind: "toggle";
+ id: string;
+ label?: string;
+ pressed: boolean;
+ text?: string;
+ onChange: CommandDescriptor;
+}
 export type WindowMeasure = WindowMeasureSelect | WindowMeasureSlider | WindowMeasureToggle;
 ```
 
@@ -160,6 +183,3 @@ flowchart LR
   PerObj --> MeshPick
   MeshPick --> Glb["chosen .glb"]
 ```
-
-
-

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The Design app panning was extremely slow (4+ seconds) due to overfetching in React hooks. Multiple components were using `useKit()` which subscribes to the entire kit, causing unnecessary re-renders on every state change.
@@ -55,6 +56,7 @@ The Design app panning was extremely slow (4+ seconds) due to overfetching in Re
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix design app panning performance

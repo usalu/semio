@@ -4,7 +4,5 @@
   "description": "Update Emoji Docstrings in Go Concept Model Connector Type Regions",
   "summary": "Replaced 21 emoji+description docstrings in Concept, Model, Connector and Type regions of compose/go/main.go. All Go tests pass.",
   "goal": "🎯r2603",
-  "sessions": [
-    "⚪39ed9412bea5449583458cdbb1755efd"
-  ]
+  "sessions": ["⚪39ed9412bea5449583458cdbb1755efd"]
 }

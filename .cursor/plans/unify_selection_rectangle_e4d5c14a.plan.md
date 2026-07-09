@@ -2,24 +2,24 @@
 name: Unify Selection Rectangle
 overview: "Introduce one canonical selection-rectangle (marquee) primitive and convention in the shared UI layer, then refactor CAD, puzzle 3D, puzzle 2D (Vello/Rust), and presentation/Projektetage to use it: primary color everywhere, dashed border on partial selection, and a single drag-direction convention (drag right-to-left = partial)."
 todos:
-  - id: shared
-    content: Add canonical .selection-marquee CSS in ui/styling/js/ui.css and SelectionMarquee component (rect/polygon SVG, coverage partial/full) in ui/react/index.tsx; export it
-    status: completed
-  - id: cad
-    content: Refactor CAD selection overlay (cad/js/renderer/index.tsx ~5063-5088) to use SelectionMarquee
-    status: completed
-  - id: p3d
-    content: Refactor Puzzle3dMarqueeOverlay (puzzle/3d/react/index.tsx ~7568-7603) to use SelectionMarquee, unify lasso to polygon
-    status: completed
-  - id: pres
-    content: "Presentation: flip marqueeSelectionRule to canonical, use SelectionMarquee in InteractionLayer, remove old globals.css marquee rules, update in-file tests"
-    status: completed
-  - id: p2d
-    content: "Puzzle 2D Vello: align token alphas (board_vello_build.inc.rs) and add dashed-on-crossing stroke + crossing flag in puzzle/2d/rs/lib.rs"
-    status: completed
-  - id: verify
-    content: Open repo ticket; verify runtime in each play app and run presentation tests; close ticket
-    status: completed
+ - id: shared
+   content: Add canonical .selection-marquee CSS in ui/styling/js/ui.css and SelectionMarquee component (rect/polygon SVG, coverage partial/full) in ui/react/index.tsx; export it
+   status: completed
+ - id: cad
+   content: Refactor CAD selection overlay (cad/js/renderer/index.tsx ~5063-5088) to use SelectionMarquee
+   status: completed
+ - id: p3d
+   content: Refactor Puzzle3dMarqueeOverlay (puzzle/3d/react/index.tsx ~7568-7603) to use SelectionMarquee, unify lasso to polygon
+   status: completed
+ - id: pres
+   content: "Presentation: flip marqueeSelectionRule to canonical, use SelectionMarquee in InteractionLayer, remove old globals.css marquee rules, update in-file tests"
+   status: completed
+ - id: p2d
+   content: "Puzzle 2D Vello: align token alphas (board_vello_build.inc.rs) and add dashed-on-crossing stroke + crossing flag in puzzle/2d/rs/lib.rs"
+   status: completed
+ - id: verify
+   content: Open repo ticket; verify runtime in each play app and run presentation tests; close ticket
+   status: completed
 isProject: false
 ---
 
@@ -38,8 +38,6 @@ flowchart TD
   react --> p3d["puzzle 3D overlay"]
   react --> pres["presentation InteractionLayer"]
 ```
-
-
 
 ## 1. Shared primitive + tokens (the enforcement mechanism)
 
@@ -76,4 +74,3 @@ flowchart TD
 
 - Open a repo ticket (read `repo://goals`, associate, `ticket_open`) before editing; close with summary when done.
 - Verify each play app at runtime (CAD play, puzzle 3D play, puzzle 2D play, presentation/Projektetage deck): rectangle + lasso show primary fill/stroke, dashed only when dragging right-to-left, solid otherwise. Run the presentation renderer test suite for the updated convention.
-

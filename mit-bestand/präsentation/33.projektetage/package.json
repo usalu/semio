@@ -32,12 +32,17 @@
   "semio": {
     "app": {
       "kind": "projektetage",
-      "aliases": ["projektetage"],
+      "aliases": [
+        "projektetage"
+      ],
       "packageRoot": "mit-bestand/präsentation/33.projektetage",
       "corePackage": "@semio-tech/mit-bestand-praesentation-projektetage",
       "definitionExport": "projektetagePlayAppDefinition",
       "hostKind": "projektetage",
-      "port": { "dev": 6050, "env": "PRAESENTATION_PROJEKTETAGE_PORT" }
+      "port": {
+        "dev": 6050,
+        "env": "PRAESENTATION_PROJEKTETAGE_PORT"
+      }
     }
   }
 }

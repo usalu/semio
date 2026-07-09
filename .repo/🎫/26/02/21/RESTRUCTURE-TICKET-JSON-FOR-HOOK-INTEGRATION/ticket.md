@@ -7,6 +7,7 @@ goal: 🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli
 ## Summary
 
 Restructured ticket.json format: renamed Prompt to Description, added Sessions with TicketSessionPlanStep/Plan/Event/Prompt types, removed TicketSessionInteraction and TicketSessionReads, rewrote trackHookInOpenTicket to create TicketSessionEvent entries in session prompts, replaced applyHookPathToReads with session-level applyHookPathToSessionDiffModified, added Sections/Definitions to TicketSessionDiff, updated all getter methods with Sessions fallback, updated CreateTicket/ReopenTicket to create Sessions, fixed all TicketNode.Prompt to Description refs, fixed HookResultJSONFields test, all ticket and hook tests pass.
+
 ## Changes
 
 ## Log
@@ -14,6 +15,7 @@ Restructured ticket.json format: renamed Prompt to Description, added Sessions w
 ## Todos
 
 ## Plan
+
 1. Define new session types: TicketSessionPlanStep, TicketSessionPlan, TicketSessionEventSectionRef, TicketSessionEventCodeBlock, TicketSessionEvent, TicketSessionPrompt
 2. Restructure TicketSession: replace Interactions with LLM, Transcript, Query, Plan, Prompts, Diff
 3. Update TicketSessionDiff: add Sections and Definitions categories

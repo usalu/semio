@@ -2,30 +2,30 @@
 name: Canvas Pick Disambiguation
 overview: Introduce a shared infinite-canvas pick protocol and DOM pick menu across all canvas apps. Canvas hover uses the single most-specific hit; click with multiple hits opens a general-first DOM list whose item hovers drive transitive canvas/tree highlights via one unified hover-focus model.
 todos:
-  - id: protocol
-    content: Add CanvasPickTarget, CanvasPickRequest, CanvasHoverFocus, sort/pick helpers, and extend AppPointerFocusStore in framework/core
-    status: completed
-  - id: ui-hook
-    content: Extract CanvasPickMenu + useCanvasPickInteraction in ui/react with tests
-    status: completed
-  - id: draw-raster
-    content: Implement resolve*PickTargetsAt* in draw/core and raster/core; wire draw/react + raster/react through shared hook
-    status: completed
-  - id: graph-rust
-    content: Add hit_test_all + WASM pickTargetsAtScreenJson in mathematical/graph, flow, puzzle/2d
-    status: completed
-  - id: flow-puzzle2d
-    content: Wire FlowCanvas and Puzzle2dRenderer to shared pick menu + hover focus
-    status: completed
-  - id: writer-puzzle3d
-    content: Add multi-hit resolvers and shared pick menu to writer and puzzle3d react surfaces
-    status: completed
-  - id: cad-refactor
-    content: Replace CAD inline selectionMenu with shared CanvasPickMenu; general-first menu ordering
-    status: completed
-  - id: playground
-    content: Unify playground pane hosts and play controllers on CanvasHoverFocus + source arbitration
-    status: completed
+ - id: protocol
+   content: Add CanvasPickTarget, CanvasPickRequest, CanvasHoverFocus, sort/pick helpers, and extend AppPointerFocusStore in framework/core
+   status: completed
+ - id: ui-hook
+   content: Extract CanvasPickMenu + useCanvasPickInteraction in ui/react with tests
+   status: completed
+ - id: draw-raster
+   content: Implement resolve*PickTargetsAt* in draw/core and raster/core; wire draw/react + raster/react through shared hook
+   status: completed
+ - id: graph-rust
+   content: Add hit_test_all + WASM pickTargetsAtScreenJson in mathematical/graph, flow, puzzle/2d
+   status: completed
+ - id: flow-puzzle2d
+   content: Wire FlowCanvas and Puzzle2dRenderer to shared pick menu + hover focus
+   status: completed
+ - id: writer-puzzle3d
+   content: Add multi-hit resolvers and shared pick menu to writer and puzzle3d react surfaces
+   status: completed
+ - id: cad-refactor
+   content: Replace CAD inline selectionMenu with shared CanvasPickMenu; general-first menu ordering
+   status: completed
+ - id: playground
+   content: Unify playground pane hosts and play controllers on CanvasHoverFocus + source arbitration
+   status: completed
 isProject: false
 ---
 
@@ -71,13 +71,13 @@ flowchart TB
 
 Add a new `#region CanvasPick` beside existing `#region AppPointerFocus`:
 
-| Type | Purpose |
-|------|---------|
-| `CanvasPickTarget` | `{ domain, id, generality, label?, meta? }` — stable `canvasPickTargetKey(target) => "${domain}:${id}"` |
-| `CanvasPickRequest` | `{ targets, client, modifiers, world? }` |
-| `CanvasHoverFocus` | `{ targetKey: string \| null, kindHover: { domain, kindId } \| null, sourceId: string \| null }` |
-| `sortCanvasPickTargetsGeneralFirst` | Sort by ascending `generality`, tie-break domain/id |
-| `pickMostSpecificCanvasTarget` | Sort by descending `generality` (or explicit `specificity` rank) for canvas move hover |
+| Type                                | Purpose                                                                                                 |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `CanvasPickTarget`                  | `{ domain, id, generality, label?, meta? }` — stable `canvasPickTargetKey(target) => "${domain}:${id}"` |
+| `CanvasPickRequest`                 | `{ targets, client, modifiers, world? }`                                                                |
+| `CanvasHoverFocus`                  | `{ targetKey: string \| null, kindHover: { domain, kindId } \| null, sourceId: string \| null }`        |
+| `sortCanvasPickTargetsGeneralFirst` | Sort by ascending `generality`, tie-break domain/id                                                     |
+| `pickMostSpecificCanvasTarget`      | Sort by descending `generality` (or explicit `specificity` rank) for canvas move hover                  |
 
 Extend `AppPointerFocusStore<TKey>` (or add thin `CanvasHoverFocusStore`) with:
 
@@ -87,14 +87,14 @@ Extend `AppPointerFocusStore<TKey>` (or add thin `CanvasHoverFocusStore`) with:
 
 **Domain generality tables** (each technology exports constants used by hit resolvers):
 
-| App | General → specific domains |
-|-----|---------------------------|
-| Draw | `group` → `boolean`/`trace`/`shape`/`path`/`text`/`image` → `controlPoint` |
-| Raster | `group` → `adjustment`/`mask` → `pixel` |
-| Flow / Puzzle2D (graph) | `node` → `edge`/`wire` → `handle` |
-| Puzzle3D | `object` → `attraction` → `vortex` |
-| Writer | `document` → `block`/`line` → `token`/`caret` |
-| CAD (existing) | `object` → `face` → `edge` → `vertex` |
+| App                     | General → specific domains                                                 |
+| ----------------------- | -------------------------------------------------------------------------- |
+| Draw                    | `group` → `boolean`/`trace`/`shape`/`path`/`text`/`image` → `controlPoint` |
+| Raster                  | `group` → `adjustment`/`mask` → `pixel`                                    |
+| Flow / Puzzle2D (graph) | `node` → `edge`/`wire` → `handle`                                          |
+| Puzzle3D                | `object` → `attraction` → `vortex`                                         |
+| Writer                  | `document` → `block`/`line` → `token`/`caret`                              |
+| CAD (existing)          | `object` → `face` → `edge` → `vertex`                                      |
 
 ## Layer 2 — Shared DOM UI (`ui/react`)
 
@@ -184,14 +184,14 @@ Open repo ticket (MCP was unavailable during planning) e.g. `26/07/01/CANVAS-PIC
 
 ## Key files to touch
 
-| Area | Files |
-|------|-------|
-| Shared protocol | [framework/core/index.ts](framework/core/index.ts) |
-| Shared UI + hook | [ui/react/index.tsx](ui/react/index.tsx) |
-| Draw | [draw/core/index.ts](draw/core/index.ts), [draw/react/index.tsx](draw/react/index.tsx), [draw/play/index.ts](draw/play/index.ts) |
-| Raster | [raster/core/index.ts](raster/core/index.ts), [raster/react/index.tsx](raster/react/index.tsx) |
+| Area                    | Files                                                                                                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Shared protocol         | [framework/core/index.ts](framework/core/index.ts)                                                                                                           |
+| Shared UI + hook        | [ui/react/index.tsx](ui/react/index.tsx)                                                                                                                     |
+| Draw                    | [draw/core/index.ts](draw/core/index.ts), [draw/react/index.tsx](draw/react/index.tsx), [draw/play/index.ts](draw/play/index.ts)                             |
+| Raster                  | [raster/core/index.ts](raster/core/index.ts), [raster/react/index.tsx](raster/react/index.tsx)                                                               |
 | Graph / Flow / Puzzle2D | [mathematical/graph/lib.rs](mathematical/graph/lib.rs), [flow/react/index.tsx](flow/react/index.tsx), [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) |
-| Writer | [writer/rs/lib.rs](writer/rs/lib.rs), [writer/react/index.tsx](writer/react/index.tsx) |
-| Puzzle3D | [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) |
-| CAD | [cad/js/renderer/index.tsx](cad/js/renderer/index.tsx) |
-| Playground wiring | [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) |
+| Writer                  | [writer/rs/lib.rs](writer/rs/lib.rs), [writer/react/index.tsx](writer/react/index.tsx)                                                                       |
+| Puzzle3D                | [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx)                                                                                                       |
+| CAD                     | [cad/js/renderer/index.tsx](cad/js/renderer/index.tsx)                                                                                                       |
+| Playground wiring       | [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx)                                               |

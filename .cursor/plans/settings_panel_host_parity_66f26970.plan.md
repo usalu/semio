@@ -1,34 +1,34 @@
 ---
 name: Settings Panel Host Parity
-overview: "Promote the existing settings panel kind to full parity with the display mechanism: a framework-provided settings host, a navbar toggle that already sits right after details, wired across all framework products plus sketchpad, and migrate scattered app/chrome-level options into it. No new \"options\" kind is added (options == settings)."
+overview: 'Promote the existing settings panel kind to full parity with the display mechanism: a framework-provided settings host, a navbar toggle that already sits right after details, wired across all framework products plus sketchpad, and migrate scattered app/chrome-level options into it. No new "options" kind is added (options == settings).'
 todos:
-  - id: ticket
-    content: Read repo://goals and open/reopen the repo ticket for the settings-panel-host work
-    status: completed
-  - id: i18n
-    content: Add settings.tab i18n namespace (en+de) in ui/react/index.tsx mirroring display.tab
-    status: completed
-  - id: host
-    content: Add SettingsHostApi/Context/hook + buildSettingsTree + createFrameworkSettingsPanelTabs in platform renderer, auto-merge into resolveAppPanelTabsByKind, and plumb onSettingsHostReady + provider
-    status: completed
-  - id: migrate-chrome
-    content: Migrate mode/expertise/compact chrome controls into the settings host; remove duplicated footer compact toggle
-    status: completed
-  - id: playground
-    content: Add activeRightPanelKind switching + settings navbar toggle after details + SettingsHost wiring in playground renderer
-    status: completed
-  - id: sketchpad
-    content: Register panel:settings tabs + settings toggle label in the ./compose sketchpad navbar
-    status: completed
-  - id: apps
-    content: Audit framework apps and move app-level option controls under panel:settings
-    status: completed
-  - id: tests
-    content: Extend existing navbar/panel-toggle and tree-build test blocks to cover settings
-    status: completed
-  - id: validate
-    content: Build, run tests, confirm runtime toggle behavior, then ticket_close with summary + touched files
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open/reopen the repo ticket for the settings-panel-host work
+   status: completed
+ - id: i18n
+   content: Add settings.tab i18n namespace (en+de) in ui/react/index.tsx mirroring display.tab
+   status: completed
+ - id: host
+   content: Add SettingsHostApi/Context/hook + buildSettingsTree + createFrameworkSettingsPanelTabs in platform renderer, auto-merge into resolveAppPanelTabsByKind, and plumb onSettingsHostReady + provider
+   status: completed
+ - id: migrate-chrome
+   content: Migrate mode/expertise/compact chrome controls into the settings host; remove duplicated footer compact toggle
+   status: completed
+ - id: playground
+   content: Add activeRightPanelKind switching + settings navbar toggle after details + SettingsHost wiring in playground renderer
+   status: completed
+ - id: sketchpad
+   content: Register panel:settings tabs + settings toggle label in the ./compose sketchpad navbar
+   status: completed
+ - id: apps
+   content: Audit framework apps and move app-level option controls under panel:settings
+   status: completed
+ - id: tests
+   content: Extend existing navbar/panel-toggle and tree-build test blocks to cover settings
+   status: completed
+ - id: validate
+   content: Build, run tests, confirm runtime toggle behavior, then ticket_close with summary + touched files
+   status: completed
 isProject: false
 ---
 
@@ -62,8 +62,6 @@ flowchart LR
   resolve --> playgroundNav["Playground navbar (hard-coded toggles)"]
   resolve --> sketchpadNav["Sketchpad navbar"]
 ```
-
-
 
 ## Implementation
 
@@ -114,4 +112,3 @@ flowchart LR
 - Migrated chrome options = mode, expertise, compact. Window/layout stay in `display`.
 - Single framework `settings` tab (`general`) holding the migrated controls, extensible later; apps still add their own `panel: "settings"` tabs.
 - Including the `./compose` sketchpad is intended (per "everything").
-

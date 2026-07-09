@@ -5,9 +5,5 @@
   "description": "Extend EngagementSpec with possibleEngagements list and render autocomplete in Engagement UI when Space or Enter are pressed. Wire CAD play idle interaction repl to expose all interactions as possibleEngagements.",
   "summary": "Engagement typing shows muted inline completion suffix in the input only (no popover). The possibles popover list opens solely via the chevron. Added engagementCompletionSuffix helpers, Tab accepts inline suffix, arrows cycle matches; Escape closes the chevron list.",
   "goal": "🎯ui",
-  "sessions": [
-    "⚪eac2b0e1e50043ef9a08d74717cd32a7",
-    "⚪eada16544c8f4f2280ff9ae7f6e79a5d",
-    "⚪78385740c30041b7be29e54118c77fd7"
-  ]
+  "sessions": ["⚪eac2b0e1e50043ef9a08d74717cd32a7", "⚪eada16544c8f4f2280ff9ae7f6e79a5d", "⚪78385740c30041b7be29e54118c77fd7"]
 }

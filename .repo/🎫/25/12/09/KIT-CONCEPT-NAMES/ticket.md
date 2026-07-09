@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 # Concept rows in the kit app rendered GUIDs because KitStore snapshots only kept `{guid, name: guid}` placeholders and ignored concept diffs, so names never flowed through UI consumers.
@@ -30,6 +31,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Display concept names in kit app rows

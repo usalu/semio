@@ -32,12 +32,7 @@ function get(obj, keyPath) {
 const sketch = fs.readFileSync(sketchPath, "utf8");
 const keys = new Set();
 
-for (const re of [
-  /useLabel\("(compose\.sketchpad[^"]+)"/g,
-  /t\("(compose\.sketchpad[^"]+)"/g,
-  /useLabel\("(compose\.file[^"]+)"/g,
-  /useLabel\("(compose\.folder[^"]+)"/g,
-]) {
+for (const re of [/useLabel\("(compose\.sketchpad[^"]+)"/g, /t\("(compose\.sketchpad[^"]+)"/g, /useLabel\("(compose\.file[^"]+)"/g, /useLabel\("(compose\.folder[^"]+)"/g]) {
   let m;
   while ((m = re.exec(sketch))) keys.add(m[1]);
 }

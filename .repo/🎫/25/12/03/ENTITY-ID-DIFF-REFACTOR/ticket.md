@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The diff schemas in `compose.ts` used plain string IDs:
@@ -90,6 +91,7 @@ This made it unclear which entity was being referenced and was inconsistent with
 ## Log
 
 ## Summary
+
 # Summary
 
 Refactor EntityId and Diff Schemas

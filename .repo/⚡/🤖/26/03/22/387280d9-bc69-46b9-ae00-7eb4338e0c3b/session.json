@@ -100,11 +100,7 @@
             "max_results": 3
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__search",
-              "mcp__repo__ticket_open",
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__search", "mcp__repo__ticket_open", "mcp__repo__ticket_close"],
             "query": "select:mcp__repo__search,mcp__repo__ticket_open,mcp__repo__ticket_close",
             "total_deferred_tools": 23
           },
@@ -3722,9 +3718,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "TodoWrite"
-            ],
+            "matches": ["TodoWrite"],
             "query": "select:TodoWrite",
             "total_deferred_tools": 23
           },
@@ -4842,9 +4836,7 @@
             "pattern": "compose/sketchpad/vite.config.*"
           },
           "tool_response": {
-            "filenames": [
-              "/workspaces/semio/compose/sketchpad/vite.config.ts"
-            ],
+            "filenames": ["/workspaces/semio/compose/sketchpad/vite.config.ts"],
             "durationMs": 407,
             "numFiles": 1,
             "truncated": false
@@ -5977,9 +5969,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "TaskOutput"
-            ],
+            "matches": ["TaskOutput"],
             "query": "select:TaskOutput",
             "total_deferred_tools": 23
           },
@@ -6406,12 +6396,7 @@
           "tool_input": {
             "path": "26/03/22/FIX-SKETCHPAD-OPENING-FOR-KIT-JSON-IN-VSCODE",
             "summary": "Fixed sketchpad not opening for kit JSON files in VS Code. Three issues resolved: (1) Extension looked for index.html but vite build produces webview.html - updated all references. (2) Webview build OOM'd due to 50MB+ benchmark JSON assets (kit_metabolism etc.) being bundled via @semio-tech/compose-js barrel imports - added rollup externalization for benchmark assets. (3) Module-level window access in sketchpad/index.tsx caused test failures in Node.js - guarded with globalThis check and conditional boot().",
-            "files": [
-              "compose/vscode/extension.ts",
-              "compose/vscode/vite.config.ts",
-              "compose/sketchpad/index.tsx",
-              "repo/vscode/extension.test.ts"
-            ]
+            "files": ["compose/vscode/extension.ts", "compose/vscode/vite.config.ts", "compose/sketchpad/index.tsx", "repo/vscode/extension.test.ts"]
           },
           "tool_use_id": "toolu_01VRmGHgr87WrhzKESGqGeb3"
         }
@@ -6449,12 +6434,7 @@
           "tool_input": {
             "path": "26/03/22/FIX-SKETCHPAD-OPENING-FOR-KIT-JSON-IN-VSCODE",
             "summary": "Fixed sketchpad not opening for kit JSON files in VS Code. Three issues resolved: (1) Extension looked for index.html but vite build produces webview.html - updated all references. (2) Webview build OOM'd due to 50MB+ benchmark JSON assets (kit_metabolism etc.) being bundled via @semio-tech/compose-js barrel imports - added rollup externalization for benchmark assets. (3) Module-level window access in sketchpad/index.tsx caused test failures in Node.js - guarded with globalThis check and conditional boot().",
-            "files": [
-              "compose/vscode/extension.ts",
-              "compose/vscode/vite.config.ts",
-              "compose/sketchpad/index.tsx",
-              "repo/vscode/extension.test.ts"
-            ]
+            "files": ["compose/vscode/extension.ts", "compose/vscode/vite.config.ts", "compose/sketchpad/index.tsx", "repo/vscode/extension.test.ts"]
           },
           "tool_response": [
             {

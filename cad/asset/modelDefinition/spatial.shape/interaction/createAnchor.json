@@ -6,12 +6,8 @@
   "key": "cr",
   "interaction": {
     "spatialGroundPick": false,
-    "pickDisabledStates": [
-      "committed"
-    ],
-    "groundPointerMoveStates": [
-      "placeAnchor"
-    ],
+    "pickDisabledStates": ["committed"],
+    "groundPointerMoveStates": ["placeAnchor"],
     "heightDragStates": [],
     "verticalRodStates": [],
     "heightConfirmState": null
@@ -83,13 +79,7 @@
       {
         "name": "selectHost",
         "selection": {
-          "accept": [
-            "vertex",
-            "edge",
-            "wire",
-            "face",
-            "solid"
-          ],
+          "accept": ["vertex", "edge", "wire", "face", "solid"],
           "multiple": false,
           "prompt": "Pick anchor host"
         },
@@ -381,9 +371,7 @@
   },
   "commit": {
     "when": "hasHostAndHitPoint",
-    "fromStates": [
-      "committed"
-    ],
+    "fromStates": ["committed"],
     "operation": {
       "kind": "action",
       "action": "entity.createAnchor",

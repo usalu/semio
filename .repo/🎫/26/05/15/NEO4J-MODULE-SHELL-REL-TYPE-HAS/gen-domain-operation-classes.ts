@@ -53,10 +53,7 @@ function escapeRe(s: string): string {
 
 /** @emoji 🧭 Golden `type Op implements Operation` carries `input: OpInput!` only when the operation has a typed argument bag. */
 function operationUsesSpecificInputType(golden: string, pastOp: string): boolean {
-  const re = new RegExp(
-    `type ${escapeRe(pastOp)} implements Operation[\\s\\S]*?\\binput:\\s*${escapeRe(pastOp)}Input!`,
-    "m",
-  );
+  const re = new RegExp(`type ${escapeRe(pastOp)} implements Operation[\\s\\S]*?\\binput:\\s*${escapeRe(pastOp)}Input!`, "m");
   return re.test(golden);
 }
 
@@ -246,13 +243,7 @@ function buildCommandArgumentDataCypher(golden: string, pastOps: readonly string
   }
   for (const [cmd, fields] of cmdsByCmdFields) {
     const inList = fields.map((f) => `'${esc(f.name)}'`).join(", ");
-    lines.push(
-      `MATCH (cmd:Command {name: '${esc(cmd)}'})`,
-      `OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)`,
-      `WHERE pivot.name IN [${inList}]`,
-      `DELETE r;`,
-      "",
-    );
+    lines.push(`MATCH (cmd:Command {name: '${esc(cmd)}'})`, `OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)`, `WHERE pivot.name IN [${inList}]`, `DELETE r;`, "");
   }
   lines.push(
     "// Drop detached kit `Data` (no `OWNS` parent) that still carry `IS` — stale shared argument rows after `soleOwnerKey` split.",
@@ -297,14 +288,8 @@ const block = uniqueImperative.map((p) => `      ${toYamlKey(p)}:\n${opFieldBloc
 
 let s = readFileSync(schemaPath, "utf8");
 const before = s;
-s = s.replace(
-  /      command: &command\n        implements: \[\*weakEntity]\n        fields:\n          computed:\n            response: \*response\n/,
-  "",
-);
-s = s.replace(
-  /        operation: &operation\n          implements: \[\*strongEntity]/,
-  "        operation: &operation\n          implements: [*response, *strongEntity]",
-);
+s = s.replace(/      command: &command\n        implements: \[\*weakEntity]\n        fields:\n          computed:\n            response: \*response\n/, "");
+s = s.replace(/        operation: &operation\n          implements: \[\*strongEntity]/, "        operation: &operation\n          implements: [*response, *strongEntity]");
 const startMarker = "          startedAt: *timestamp\n";
 const endMarker = "\n    vcs: &vcs";
 const si = s.indexOf(startMarker);
@@ -328,13 +313,7 @@ const imperativePairs = pastOps
 const renameUnwindBody =
   imperativePairs.length === 0
     ? "// (no past→imperative command renames; skip name sync)"
-    : [
-        "UNWIND [",
-        imperativePairs.map((r) => `{from: ${JSON.stringify(r.from)}, to: ${JSON.stringify(r.to)}}`).join(", "),
-        "] AS row",
-        "MATCH (c:Command {name: row.from})",
-        "SET c.name = row.to;",
-      ].join("\n");
+    : ["UNWIND [", imperativePairs.map((r) => `{from: ${JSON.stringify(r.from)}, to: ${JSON.stringify(r.to)}}`).join(", "), "] AS row", "MATCH (c:Command {name: row.from})", "SET c.name = row.to;"].join("\n");
 
 const headDiskNote =
   headDiskPairs.length === 0

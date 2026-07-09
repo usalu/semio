@@ -2,33 +2,33 @@
 name: Unify Graph DSL Syntax
 overview: Unify sigils across Jack and a new compact "wire literal" notation (`:` kind, `.` property, `@` port, `->` directed edge, `-` undirected edge); make flow, sequence, puzzle/2d (wires), and s media graph all compile their fixtures into an enriched, semantically-complete DAG with a read-only writer window; and give neural a real adapter that consumes that compiled DAG as flow's actual execution input, replacing flow's bespoke tree builder.
 todos:
-  - id: jack-ports-undirected
-    content: Extend Jack grammar (jack_impl.rs) with @port pattern syntax and undirected - edges, including executor matching and completions/hover
-    status: completed
-  - id: wire-literal-notation
-    content: Add new wire.rs module to mathematical/graph/dsl with wire-literal printer/parser (WireNode/WireEdge), plus TS tokenizer in writer/core for a new "wire" languageId
-    status: completed
-  - id: dag-fixture-schema
-    content: Add operator_kind + properties (PropertyBag) fields to DagNodeSpec and DagFixtureEdge in mathematical/graph/port/directed/dag/lib.rs, and a dag_fixture_to_wire_literal helper
-    status: completed
-  - id: flow-compile-dag-window
-    content: Populate operator_kind/properties in flow's build_dag_fixture_v1, add compiled_wire_literal(), and a flow-compiled-dag writer window in flow/play
-    status: completed
-  - id: neural-dag-adapter
-    content: Create neural/dag crate with tree_from_dag() adapter; switch flow/core evaluate_internal() to use it instead of tree_from_fixture(), with output-parity regression tests
-    status: completed
-  - id: sequence-compiled-dag-window
-    content: Add operator_kind/properties to sequence's build_dag_fixture() and a sequence-compiled-dag writer window
-    status: completed
-  - id: puzzle2d-compiled-dag-window
-    content: Add a 2d-compiled-dag writer window to puzzle/2d/play (inherited by wires)
-    status: completed
-  - id: s-compiled-dag-window
-    content: Add an s-compiled-dag writer window to s/play showing the media graph as wire-literal text
-    status: completed
-  - id: verify-regressions-v2
-    content: Run full regression suite (Rust + vitest) and manual flow evaluate() parity check before/after neural adapter swap
-    status: completed
+ - id: jack-ports-undirected
+   content: Extend Jack grammar (jack_impl.rs) with @port pattern syntax and undirected - edges, including executor matching and completions/hover
+   status: completed
+ - id: wire-literal-notation
+   content: Add new wire.rs module to mathematical/graph/dsl with wire-literal printer/parser (WireNode/WireEdge), plus TS tokenizer in writer/core for a new "wire" languageId
+   status: completed
+ - id: dag-fixture-schema
+   content: Add operator_kind + properties (PropertyBag) fields to DagNodeSpec and DagFixtureEdge in mathematical/graph/port/directed/dag/lib.rs, and a dag_fixture_to_wire_literal helper
+   status: completed
+ - id: flow-compile-dag-window
+   content: Populate operator_kind/properties in flow's build_dag_fixture_v1, add compiled_wire_literal(), and a flow-compiled-dag writer window in flow/play
+   status: completed
+ - id: neural-dag-adapter
+   content: Create neural/dag crate with tree_from_dag() adapter; switch flow/core evaluate_internal() to use it instead of tree_from_fixture(), with output-parity regression tests
+   status: completed
+ - id: sequence-compiled-dag-window
+   content: Add operator_kind/properties to sequence's build_dag_fixture() and a sequence-compiled-dag writer window
+   status: completed
+ - id: puzzle2d-compiled-dag-window
+   content: Add a 2d-compiled-dag writer window to puzzle/2d/play (inherited by wires)
+   status: completed
+ - id: s-compiled-dag-window
+   content: Add an s-compiled-dag writer window to s/play showing the media graph as wire-literal text
+   status: completed
+ - id: verify-regressions-v2
+   content: Run full regression suite (Rust + vitest) and manual flow evaluate() parity check before/after neural adapter swap
+   status: completed
 isProject: false
 ---
 
@@ -52,7 +52,7 @@ If this narrower execution scope is wrong, correct it before implementation star
 ## Current state (confirmed by exploration)
 
 - **Jack grammar** ([mathematical/graph/dsl/jack_impl.rs](mathematical/graph/dsl/jack_impl.rs)): `(var:Kind)-[var:Kind]->(var:Kind)` only. No `@` token, no undirected edges (`PatternEdge.directed` always `true`).
-- **Port ID formats already in use are inconsistent**: trinity/DAG/S use `nodeId:portId` (colon), puzzle/2d mixes `.`/`:`. Introducing `@` as the port sigil in the new syntax avoids colliding with Jack's existing `:Kind` usage, but the *runtime* `nodeId:portId` convention is untouched by this plan (only the new DSL text notation uses `@`).
+- **Port ID formats already in use are inconsistent**: trinity/DAG/S use `nodeId:portId` (colon), puzzle/2d mixes `.`/`:`. Introducing `@` as the port sigil in the new syntax avoids colliding with Jack's existing `:Kind` usage, but the _runtime_ `nodeId:portId` convention is untouched by this plan (only the new DSL text notation uses `@`).
 - **Neural** ([neural/engine/lib.rs](neural/engine/lib.rs)): `Tree { neurons, synapses }`, `Neuron { id, kind, params, tree }`, `Synapse { id, from, to, from_port, to_port }`. `Neuron.kind` is dispatched verbatim as an operator id via `Registry::dispatch`. `neural_engine`'s `Cargo.toml` has **no** dependency on any graph/DAG/manifest crate today.
 - **Flow execution** ([flow/core/lib.rs](flow/core/lib.rs)): `tree_from_fixture()` hand-builds a neural `Tree` from `FlowFixture.widgets`/`.synapses`, with widget-kind-specific match arms (`Widget::Neuron` -> `neuronKind` verbatim, `Widget::InputSlider` -> `"core.number"`, etc.). Separately, `build_dag_fixture_v1()` projects the same fixture into `dag.fixture` for canvas display only — it does **not** carry the operator kind or params needed to reconstruct execution (`DagNodeKind::Computation` has ports but no operator id field).
 - **`DagNodeSpec`** ([mathematical/graph/port/directed/dag/lib.rs](mathematical/graph/port/directed/dag/lib.rs) line 665): `{ id, name, abbreviation, icon, x, y, width, height, kind: DagNodeKind }` — `DagNodeKind` is a purely visual enum (`Computation`, `Slider`, `Note`, `Cluster`, ...). No `properties`/operator-kind field exists yet. This is the concrete gap that must close for neural to import the DAG.

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The documentation was structured with:
@@ -53,6 +54,7 @@ Moved framework-specific implementation details from SRS to Codebase:
 ## Log
 
 ## Summary
+
 # Summary
 
 Restructure documentation to four-layer system

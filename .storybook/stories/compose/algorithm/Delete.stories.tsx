@@ -66,13 +66,7 @@ function DeleteFrame() {
       designDiff,
       diffDesign: (flatInputDesign ?? rawDesign) as Design,
       outputDesign: outputDesign as Design,
-      error: flatLoading
-        ? "Loading delete preview…"
-        : !hasSelection
-          ? "Select at least one piece or connection to delete."
-          : runLoading
-            ? "Loading delete result…"
-            : undefined,
+      error: flatLoading ? "Loading delete preview…" : !hasSelection ? "Select at least one piece or connection to delete." : runLoading ? "Loading delete result…" : undefined,
     }),
     [kit, flatInputDesign, diagramLayoutDiff, selectedPieceIds, selectedConnectionIds, designDiff, outputDesign, flatLoading, hasSelection, runLoading],
   );

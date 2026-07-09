@@ -1,11 +1,13 @@
 # Ticket
 
 ## Todos
+
 - [x] Register five placeholder sub-tools in Kit Selection toolbar dropdown.
 - [x] Keep deterministic toolbar ordering and cleanup removals for all new sub-tool sections.
 - [x] Update developer documentation in `README.md` and `AGENTS.md`.
 
 ## Changes
+
 - Added `kitToolbarSelectionSubTools` in `js/compose/sketchpad/Kit.tsx` with five Selection sub-tool entries: `select`, `hand`, `additive`, `subtractive`, `intersect`.
 - Replaced single Selection toolbar registration with iterative registrations across the five sub-tool section ids.
 - Updated toolbar cleanup to remove all five Selection sub-tool section ids.
@@ -13,6 +15,7 @@
 - Documented requirement and implementation references in `AGENTS.md` (`# Software Requirements Specification` and `# Codebase`).
 
 ## Log
+
 - Opened ticket `KIT-SELECTION-PLACEHOLDER-SUBTOOLS`.
 - Created `plan.md` with implementation steps.
 - Implemented Kit Selection dropdown placeholder sub-tool registration.
@@ -22,12 +25,15 @@
 ## Summary
 
 Planning ticket updated with cross-app selection composition implementation plan.
+
 ## Plan (2026-02-12)
 
 ### Goal
+
 Implement a reusable selection composition mechanism that supports `additive`, `subtractive`, and `intersect` modes and works consistently across Sketchpad apps (`Design`, `Kit`, `Type`) while keeping app-specific hit resolution separate from selection math.
 
 ### Scope
+
 - Selection behavior + state contracts in shared app/plugin layer.
 - Toolbar mode wiring for all apps.
 - Event pipeline integration (click, marquee/lasso, keyboard modifiers).
@@ -35,6 +41,7 @@ Implement a reusable selection composition mechanism that supports `additive`, `
 - Documentation/spec updates in existing READMEs and relevant file-level specs.
 
 ### Architecture Decisions
+
 - Canonical selection mode enum-like union: `replace | additive | subtractive | intersect`.
 - Canonical operation signature:
   - `applySelectionComposition(previousIds: string[], incomingIds: string[], mode: SelectionCompositionKind): string[]`
@@ -48,7 +55,9 @@ Implement a reusable selection composition mechanism that supports `additive`, `
   - `setCurrentSelectedIds(ids: string[]): void`
 
 ### Implementation Phases
+
 1. Shared Selection Composition Core
+
 - Add shared pure helpers in Sketchpad shared logic (same existing file/module where selection helpers live):
   - `toUniqueIds(ids)`
   - `composeReplace(previous, incoming)`
@@ -59,16 +68,19 @@ Implement a reusable selection composition mechanism that supports `additive`, `
 - Keep stable deterministic ordering using current selection order first, then first-seen incoming order for additive paths.
 
 2. Shared Mode Resolution
+
 - Implement `resolveSelectionCompositionMode(baseMode, keyboardState)` in shared selection pipeline.
 - Ensure identical mode behavior for all selection entry points (single click, node click, scene pick, tree select, marquee/lasso).
 
 3. App Integration (Design, Kit, Type)
+
 - Replace app-local ad-hoc selection merge/remove logic with the shared composition core.
 - Keep app-specific ID resolution local; only pass ID arrays into shared composition.
 - Wire toolbar sub-tools (`select`, `additive`, `subtractive`, `intersect`) to update base composition mode in each app state.
 - Preserve `hand` behavior as non-selection mode and ensure it bypasses composition logic.
 
 4. Interaction Rules
+
 - `replace`: result = incoming.
 - `additive`: result = union(previous, incoming).
 - `subtractive`: result = previous - incoming.
@@ -80,6 +92,7 @@ Implement a reusable selection composition mechanism that supports `additive`, `
   - `intersect` => clears selection.
 
 5. Tests (Existing File Only)
+
 - Extend `compose/js/sketchpad.test.ts` with a dedicated selection composition region that covers one unit (selection composition) using multiple tests:
   - Pure composition function tests for all four modes.
   - Mode override tests (toolbar mode + modifier combinations).
@@ -87,6 +100,7 @@ Implement a reusable selection composition mechanism that supports `additive`, `
   - Regression tests for duplicate IDs, ordering stability, and empty incoming behavior.
 
 6. Specs/Docs Update
+
 - Update existing relevant `README.md` specs sections:
   - Root and `compose/js/README.md` selection mechanism spec.
   - `compose/js/sketchpad/README.md` app/plugin integration spec.
@@ -96,6 +110,7 @@ Implement a reusable selection composition mechanism that supports `additive`, `
   - Modifier precedence.
 
 ### Delivery Sequence
+
 1. Refactor shared composition core + tests.
 2. Migrate Kit app to core and verify tests.
 3. Migrate Design app to core and verify tests.
@@ -103,6 +118,7 @@ Implement a reusable selection composition mechanism that supports `additive`, `
 5. Final docs/spec synchronization and full targeted test run.
 
 ### Risks and Mitigations
+
 - Risk: Existing app-specific edge cases diverge silently.
   - Mitigation: Add parity tests against shared expected outputs before each app migration.
 - Risk: Selection ordering regressions affect UI detail panes.

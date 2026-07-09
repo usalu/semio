@@ -12,23 +12,17 @@
     {
       "name": "type_include_capsule",
       "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
-      "typeInclude": [
-        "Capsule*"
-      ]
+      "typeInclude": ["Capsule*"]
     },
     {
       "name": "type_exclude_capsule",
       "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
-      "typeExclude": [
-        "Capsule*"
-      ]
+      "typeExclude": ["Capsule*"]
     },
     {
       "name": "design_include_nakagin",
       "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
-      "designInclude": [
-        "Nakagin*"
-      ]
+      "designInclude": ["Nakagin*"]
     },
     {
       "name": "empty_filter",
@@ -38,9 +32,7 @@
       "name": "combined_design_and_type_exclude",
       "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
       "designName": "Nakagin Capsule Tower",
-      "typeExclude": [
-        "Cylindric*"
-      ],
+      "typeExclude": ["Cylindric*"],
       "designFamilies": []
     }
   ],
@@ -108,9 +100,7 @@
       "name": "include_only_exact",
       "input": "Wall",
       "filter": {
-        "include": [
-          "Wall"
-        ]
+        "include": ["Wall"]
       },
       "expected": true
     },
@@ -118,9 +108,7 @@
       "name": "include_only_no_match",
       "input": "Column",
       "filter": {
-        "include": [
-          "Wall"
-        ]
+        "include": ["Wall"]
       },
       "expected": false
     },
@@ -128,10 +116,7 @@
       "name": "include_multiple_first",
       "input": "Wall",
       "filter": {
-        "include": [
-          "W*",
-          "C*"
-        ]
+        "include": ["W*", "C*"]
       },
       "expected": true
     },
@@ -139,10 +124,7 @@
       "name": "include_multiple_second",
       "input": "Column",
       "filter": {
-        "include": [
-          "W*",
-          "C*"
-        ]
+        "include": ["W*", "C*"]
       },
       "expected": true
     },
@@ -150,10 +132,7 @@
       "name": "include_multiple_none",
       "input": "Beam",
       "filter": {
-        "include": [
-          "W*",
-          "C*"
-        ]
+        "include": ["W*", "C*"]
       },
       "expected": false
     },
@@ -161,9 +140,7 @@
       "name": "exclude_only_match",
       "input": "Wall",
       "filter": {
-        "exclude": [
-          "Wall"
-        ]
+        "exclude": ["Wall"]
       },
       "expected": false
     },
@@ -171,9 +148,7 @@
       "name": "exclude_only_no_match",
       "input": "Column",
       "filter": {
-        "exclude": [
-          "Wall"
-        ]
+        "exclude": ["Wall"]
       },
       "expected": true
     },
@@ -181,9 +156,7 @@
       "name": "exclude_only_wildcard",
       "input": "Wall",
       "filter": {
-        "exclude": [
-          "*all"
-        ]
+        "exclude": ["*all"]
       },
       "expected": false
     },
@@ -191,12 +164,8 @@
       "name": "include_and_exclude_blocked",
       "input": "Wall",
       "filter": {
-        "include": [
-          "W*"
-        ],
-        "exclude": [
-          "Wall"
-        ]
+        "include": ["W*"],
+        "exclude": ["Wall"]
       },
       "expected": false
     },
@@ -204,12 +173,8 @@
       "name": "include_and_exclude_passed",
       "input": "Window",
       "filter": {
-        "include": [
-          "W*"
-        ],
-        "exclude": [
-          "Wall"
-        ]
+        "include": ["W*"],
+        "exclude": ["Wall"]
       },
       "expected": true
     },

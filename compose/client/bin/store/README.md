@@ -20,9 +20,9 @@ Binary: `target/release/compose-store` (or `compose-store.exe` on Windows).
 
 ## Environment
 
-| Variable                 | Description                                                                 |
-| ------------------------ | ----------------------------------------------------------------------------- |
-| `RUST_LOG`               | `tracing` filter (e.g. `info`, `compose_store=debug`)                      |
-| `COMPOSE_STORE_PORT`     | TCP port (default `4000`; use `0` to bind an ephemeral port)                |
+| Variable             | Description                                                  |
+| -------------------- | ------------------------------------------------------------ |
+| `RUST_LOG`           | `tracing` filter (e.g. `info`, `compose_store=debug`)        |
+| `COMPOSE_STORE_PORT` | TCP port (default `4000`; use `0` to bind an ephemeral port) |
 
 See [`AGENTS.md`](AGENTS.md) for architecture notes.

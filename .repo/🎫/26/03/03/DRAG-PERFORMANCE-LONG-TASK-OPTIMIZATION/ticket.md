@@ -7,6 +7,7 @@ goal: SKETCHPAD/PERFORMANCE
 ## Summary
 
 Bulk close
+
 ## Changes
 
 ## Log

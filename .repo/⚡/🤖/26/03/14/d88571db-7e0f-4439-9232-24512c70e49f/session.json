@@ -39,9 +39,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌6210📌6230"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻kit📌6210📌6230"],
         "second": "🎆26🌙03☀️14⏰18⌚48⏱️39",
         "session": "⚪d88571db7e0f4439923224512c70e49f"
       },
@@ -83,9 +81,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌7730📌7765"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻kit📌7730📌7765"],
         "second": "🎆26🌙03☀️14⏰18⌚48⏱️44",
         "session": "⚪d88571db7e0f4439923224512c70e49f"
       },
@@ -127,9 +123,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌7730📌7765"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻kit📌7730📌7765"],
         "second": "🎆26🌙03☀️14⏰18⌚48⏱️56",
         "session": "⚪d88571db7e0f4439923224512c70e49f"
       },

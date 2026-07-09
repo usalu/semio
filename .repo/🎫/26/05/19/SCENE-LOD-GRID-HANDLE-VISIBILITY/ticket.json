@@ -5,8 +5,5 @@
   "description": "Scene package: same LOD concept as board, grid progression, handle visibility per LOD, optional per-LOD handle meshes from user.",
   "summary": "Scene mirrors sketch-board LOD: default zoom thresholds, pseudo-zoom from orbit distance (lodDistanceReference), gridFactor-driven world steps for snap + optional GridHelper (showLodGrid). Shell exposes data-scene-lod and onLodChange. Link snap disabled in minimap; vortex handles visible in normal/detail/micro, overview uses invisible pick proxies, linger visuals during active link gestures; handleMeshByLod in props and fixture JSON. Play: showLodGrid, gridSnapEnabled, LOD toolbar tag. Vitest 13 tests pass; Playwright not verified green in this sandbox.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": [
-    "⚪4854f5151158476c9d33f5d9ecf4a88b",
-    "⚪c7560fc654b3463e92643dc6f10fe324"
-  ]
+  "sessions": ["⚪4854f5151158476c9d33f5d9ecf4a88b", "⚪c7560fc654b3463e92643dc6f10fe324"]
 }

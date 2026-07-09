@@ -5,14 +5,7 @@
 import { spawnSync } from "child_process";
 import { mkdirSync, watch } from "fs";
 import { join } from "path";
-import {
-  BundleScript,
-  ScriptRouter,
-  getWorkspaceRoot,
-  runBundleScriptMain,
-  runVitest,
-  runViteBunxDev
-} from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, getWorkspaceRoot, runBundleScriptMain, runVitest, runViteBunxDev } from "../../../../repo/lib/js/index.ts";
 import { PLUGIN_BUILD_TARGETS } from "./js/plugin-registry.ts";
 var repoRoot = getWorkspaceRoot();
 var wasmTarget = "wasm32-unknown-unknown";
@@ -26,15 +19,13 @@ function ensureWasmTarget() {
 async function readPackageName(cratePath) {
   const content = await Bun.file(join(repoRoot, cratePath, "Cargo.toml")).text();
   const match = content.match(/^name = "([^"]+)"/m);
-  if (!match)
-    throw new Error(`missing package name in ${cratePath}/Cargo.toml`);
+  if (!match) throw new Error(`missing package name in ${cratePath}/Cargo.toml`);
   return match[1];
 }
 async function buildPlugin(target) {
   const packageName = await readPackageName(target.cratePath);
   const build = spawnSync("cargo", ["build", "-p", packageName, "--target", wasmTarget, "--release"], { cwd: repoRoot, stdio: "inherit" });
-  if (build.status !== 0)
-    throw new Error(`plugin build failed: ${target.pluginId}`);
+  if (build.status !== 0) throw new Error(`plugin build failed: ${target.pluginId}`);
   const artifact = join(repoRoot, "target", wasmTarget, "release", `${packageName.replace(/-/g, "_")}.wasm`);
   const outDir = join(pluginOutRoot, target.pluginId);
   mkdirSync(outDir, { recursive: true });
@@ -43,8 +34,7 @@ async function buildPlugin(target) {
     spawnSync("cargo", ["install", "wasm-bindgen-cli", "--locked"], { stdio: "inherit" });
   }
   const bindgen = spawnSync("wasm-bindgen", ["--target", "web", "--out-dir", outDir, "--out-name", target.wasmOut.replace(/\.wasm$/, ""), artifact], { cwd: repoRoot, stdio: "inherit" });
-  if (bindgen.status !== 0)
-    throw new Error(`wasm-bindgen failed: ${target.pluginId}`);
+  if (bindgen.status !== 0) throw new Error(`wasm-bindgen failed: ${target.pluginId}`);
   console.log(`[DEBUG] built plugin ${target.pluginId} -> ${outDir}`);
 }
 
@@ -82,8 +72,8 @@ class DevScript extends BundleScript {
       defaultPort: "6066",
       fixedPort: true,
       env: {
-        SEMIO_PLUGIN: plugin
-      }
+        SEMIO_PLUGIN: plugin,
+      },
     });
   }
 }
@@ -93,7 +83,7 @@ class BuildScript extends BundleScript {
     await new PluginBuildScript(this.root).run([]);
     spawnSync("bun", ["run", "vite", "build", "--config", "vite.config.ts", ...segments], {
       cwd: this.root,
-      stdio: "inherit"
+      stdio: "inherit",
     });
   }
 }
@@ -103,12 +93,18 @@ class TestScript extends BundleScript {
     runVitest(this.root, segments, "vitest.config.ts");
   }
 }
-var router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("test", TestScript).register("plugin", class extends BundleScript {
-  async run(segments) {
-    const sub = segments[0];
-    if (sub === "watch")
-      return new PluginWatchScript(this.root).run(segments.slice(1));
-    return new PluginBuildScript(this.root).run(segments.slice(1));
-  }
-});
+var router = new ScriptRouter(import.meta.dir)
+  .register("dev", DevScript)
+  .register("build", BuildScript)
+  .register("test", TestScript)
+  .register(
+    "plugin",
+    class extends BundleScript {
+      async run(segments) {
+        const sub = segments[0];
+        if (sub === "watch") return new PluginWatchScript(this.root).run(segments.slice(1));
+        return new PluginBuildScript(this.root).run(segments.slice(1));
+      }
+    },
+  );
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "dev" });

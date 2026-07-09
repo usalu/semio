@@ -2,33 +2,33 @@
 name: Generalize Graphs
 overview: "Refactor the single monolithic mathematical/graph/port/directed crate into a generic, compile-time graph engine (core math primitives + a base engine parameterized over two axes: Normal/Ported and Directed/Undirected), realize all four quadrant crates as thin specializations, and re-point mindmap (=normal directed graph) and puzzle 2d (=port directed graph) onto them, adding the WIRES crate as a mindmap specialization."
 todos:
-  - id: ticket
-    content: Read repo://goals and ticket_open a ticket for graph generalization, binding this plan id.
-    status: completed
-  - id: core
-    content: "Implement mathematical/core (Cargo.toml + lib.rs): NodeId/EdgeId/HandleId, Directedness (Directed/Undirected) and PortModel (Normal/Ported) marker traits/types, generic Edge<Endpoint>, and geometry-free force + tree layout math; in-file tests."
-    status: completed
-  - id: base
-    content: "Create base crate mathematical/graph (Cargo.toml + lib.rs): generalize current Engine into GraphEngine<P,D> with P::HandleStore/P::Endpoint, hit-test/drag/selection/render snapshot, Camera/Node/Handle/RenderSnapshot/BoardEvent/InteractionMode, and GraphExtension; depend on mathematical_core + infinite_cavas; in-file tests."
-    status: completed
-  - id: quadrants
-    content: Implement the four quadrant crates (normal/undirected, normal/directed, port/undirected, port/directed) as thin specializations with concrete type aliases; keep puzzle.2d fixture layouts (force/hierarchical/redraw) in port/directed; add per-crate tests.
-    status: completed
-  - id: mindmap
-    content: Re-point reasoning/mindmap to mathematical_graph_normal_directed (Cargo.toml + lib.rs alias); verify TopicId/RelationshipId/MindmapExtension and the existing test.
-    status: completed
-  - id: wires
-    content: "Implement reasoning/mindmap/wires crate (Cargo.toml + lib.rs): WiresExtension: MindmapExtension, WireRelationship { Owns, Is, References, Has }, fixed topic-set validation, in-file tests."
-    status: completed
-  - id: puzzle
-    content: Re-point puzzle/2d/rs to mathematical_graph_port_directed (Cargo.toml path/name + single `pub use ... as graph` line); ensure BoardEngine/layout exports and Puzzle2dExtension compile.
-    status: completed
-  - id: wiring
-    content: Update root Cargo.toml workspace members (add core/base/4 quadrants/wires, drop orphan undirected) and .vscode/launch.json cargo test -p list following existing order/grouping.
-    status: completed
-  - id: validate
-    content: Run cargo test across all new graph crates + reasoning_mindmap + reasoning_mindmap_wires + puzzle_2d; fix failures; close ticket with file summary.
-    status: completed
+ - id: ticket
+   content: Read repo://goals and ticket_open a ticket for graph generalization, binding this plan id.
+   status: completed
+ - id: core
+   content: "Implement mathematical/core (Cargo.toml + lib.rs): NodeId/EdgeId/HandleId, Directedness (Directed/Undirected) and PortModel (Normal/Ported) marker traits/types, generic Edge<Endpoint>, and geometry-free force + tree layout math; in-file tests."
+   status: completed
+ - id: base
+   content: "Create base crate mathematical/graph (Cargo.toml + lib.rs): generalize current Engine into GraphEngine<P,D> with P::HandleStore/P::Endpoint, hit-test/drag/selection/render snapshot, Camera/Node/Handle/RenderSnapshot/BoardEvent/InteractionMode, and GraphExtension; depend on mathematical_core + infinite_cavas; in-file tests."
+   status: completed
+ - id: quadrants
+   content: Implement the four quadrant crates (normal/undirected, normal/directed, port/undirected, port/directed) as thin specializations with concrete type aliases; keep puzzle.2d fixture layouts (force/hierarchical/redraw) in port/directed; add per-crate tests.
+   status: completed
+ - id: mindmap
+   content: Re-point reasoning/mindmap to mathematical_graph_normal_directed (Cargo.toml + lib.rs alias); verify TopicId/RelationshipId/MindmapExtension and the existing test.
+   status: completed
+ - id: wires
+   content: "Implement reasoning/mindmap/wires crate (Cargo.toml + lib.rs): WiresExtension: MindmapExtension, WireRelationship { Owns, Is, References, Has }, fixed topic-set validation, in-file tests."
+   status: completed
+ - id: puzzle
+   content: Re-point puzzle/2d/rs to mathematical_graph_port_directed (Cargo.toml path/name + single `pub use ... as graph` line); ensure BoardEngine/layout exports and Puzzle2dExtension compile.
+   status: completed
+ - id: wiring
+   content: Update root Cargo.toml workspace members (add core/base/4 quadrants/wires, drop orphan undirected) and .vscode/launch.json cargo test -p list following existing order/grouping.
+   status: completed
+ - id: validate
+   content: Run cargo test across all new graph crates + reasoning_mindmap + reasoning_mindmap_wires + puzzle_2d; fix failures; close ticket with file summary.
+   status: completed
 isProject: false
 ---
 
@@ -60,8 +60,6 @@ flowchart TD
   mm --> wires
   pd --> puzzle
 ```
-
-
 
 ### Design: two independent compile-time axes
 
@@ -99,4 +97,3 @@ Each quadrant `lib.rs` only: `pub use mathematical_graph::*;` + a concrete alias
 - AGENTS.md files are NOT edited or created (workspace rule); the empty quadrant `AGENTS.md` stubs and the stale doc links in [reasoning/mindmap/AGENTS.md](reasoning/mindmap/AGENTS.md) are left as-is.
 - All work happens inside a repo MCP ticket: at execution start read `repo://goals`, `ticket_open` (associating this plan id), keep any temp logs under the ticket folder, and `ticket_close` with the file summary when done.
 - No new files beyond the required `Cargo.toml`/`lib.rs` per crate; new tests extend the existing in-file `#[cfg(test)]` modules; permanent scripts (none expected here) would go in `script.ts`.
-

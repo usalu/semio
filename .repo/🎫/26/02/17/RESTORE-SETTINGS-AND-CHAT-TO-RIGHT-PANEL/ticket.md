@@ -24,13 +24,13 @@ Migrated Chat and Settings to be accessible as separate toggle buttons in the na
 ## Changes
 
 - `compose/js/sketchpad/shared.ts`: Added `chat` and `settings` to `PanelVisibility`, added `chatWidth` and `settingsWidth` to `PanelSizes`, updated `EMPTY_PANEL_VISIBILITY`
-- `compose/js/sketchpad/Sketchpad.tsx`: 
+- `compose/js/sketchpad/Sketchpad.tsx`:
   - Added default sizes for `chatWidth` and `settingsWidth` (280px each)
   - Updated `PanelToggles` component to add Settings and Chat toggle buttons with handlers
   - **Implemented mutual exclusivity**: When one panel is opened, the other two are automatically closed
   - Imported `ChatIcon` and `SettingsIcon` from assets
   - Modified `rightSidePanel` rendering logic to show chat/settings panels when toggled (overriding normal side panel tabs)
-- `compose/js/sketchpad/Home.tsx`: 
+- `compose/js/sketchpad/Home.tsx`:
   - Added `ChatIcon` and `SettingsIcon` imports
   - Added `useAddSidePanelTab` and `useRemoveSidePanelTab` imports
   - Registered settings/chat as side panel tabs (content providers for when buttons are toggled)
@@ -38,6 +38,7 @@ Migrated Chat and Settings to be accessible as separate toggle buttons in the na
 ## Architecture
 
 The solution implements a **mutually exclusive**, priority-based rendering for the right panel position:
+
 1. **Chat toggled**: Shows chat content only (no tabs), closes Settings and Right Panel
 2. **Settings toggled**: Shows settings content only (no tabs), closes Chat and Right Panel
 3. **Right panel toggled**: Shows normal side panel with all registered tabs (workbench, details, etc.), closes Chat and Settings
@@ -48,6 +49,7 @@ Each app registers its settings/chat content as side panel tabs, which are then 
 ## Mutual Exclusivity Implementation
 
 Each toggle handler checks if the other panels are open and closes them before opening the target panel:
+
 - `handleRightToggle`: Closes chat and settings when opening right panel
 - `handleChatToggle`: Closes right panel and settings when opening chat
 - `handleSettingsToggle`: Closes right panel and chat when opening settings

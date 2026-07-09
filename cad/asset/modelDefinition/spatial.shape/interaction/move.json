@@ -56,14 +56,8 @@
   ],
   "interaction": {
     "spatialGroundPick": true,
-    "pickDisabledStates": [
-      "idle",
-      "committed"
-    ],
-    "groundPointerMoveStates": [
-      "point_to_move_from",
-      "point_to_move_to"
-    ],
+    "pickDisabledStates": ["idle", "committed"],
+    "groundPointerMoveStates": ["point_to_move_from", "point_to_move_to"],
     "heightDragStates": [],
     "verticalRodStates": [],
     "heightConfirmState": null,
@@ -106,11 +100,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        0
-                      ]
+                      "value": [0, 0, 0]
                     }
                   },
                   {
@@ -174,11 +164,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        1
-                      ]
+                      "value": [0, 0, 1]
                     }
                   }
                 ]
@@ -190,14 +176,7 @@
       {
         "name": "select_objects_to_move",
         "selection": {
-          "accept": [
-            "vertex",
-            "edge",
-            "wire",
-            "face",
-            "shell",
-            "solid"
-          ],
+          "accept": ["vertex", "edge", "wire", "face", "shell", "solid"],
           "multiple": true,
           "prompt": "Select objects to move"
         },
@@ -587,10 +566,7 @@
                       },
                       "clearKeys": {
                         "kind": "const",
-                        "value": [
-                          "from",
-                          "to"
-                        ]
+                        "value": ["from", "to"]
                       }
                     }
                   }
@@ -662,11 +638,7 @@
             "text": "Select objects to move (Enter or Space to finish)",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -729,11 +701,7 @@
             "text": "Point to move from (Enter = selection center; n/v/f = Normal/Vertical/Free)",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -811,11 +779,7 @@
             "text": "Point to move to (u = undo pick; n/v/f = Normal/Vertical/Free)",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -941,9 +905,7 @@
     ]
   },
   "commit": {
-    "fromStates": [
-      "committed"
-    ],
+    "fromStates": ["committed"],
     "operation": {
       "kind": "action",
       "action": "transform.move",

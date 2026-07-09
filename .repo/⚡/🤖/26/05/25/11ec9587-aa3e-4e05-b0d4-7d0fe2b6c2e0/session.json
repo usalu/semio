@@ -193,11 +193,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\11ec9587-aa3e-4e05-b0d4-7d0fe2b6c2e0.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\.vscode\\launch.json",
-              "c:\\git\\compose\\project.json",
-              "c:\\git\\compose\\package.json"
-            ]
+            "filePaths": ["c:\\git\\compose\\.vscode\\launch.json", "c:\\git\\compose\\project.json", "c:\\git\\compose\\package.json"]
           },
           "tool_use_id": "call_CrjMkXpazRxmkMg4cat1Svoo__vscode-1779617654300",
           "cwd": "c:\\git\\compose"
@@ -252,11 +248,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\11ec9587-aa3e-4e05-b0d4-7d0fe2b6c2e0.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\.vscode\\launch.json",
-              "c:\\git\\compose\\project.json",
-              "c:\\git\\compose\\package.json"
-            ]
+            "filePaths": ["c:\\git\\compose\\.vscode\\launch.json", "c:\\git\\compose\\project.json", "c:\\git\\compose\\package.json"]
           },
           "tool_use_id": "call_CrjMkXpazRxmkMg4cat1Svoo__vscode-1779617654300",
           "cwd": "c:\\git\\compose"
@@ -342,11 +334,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\11ec9587-aa3e-4e05-b0d4-7d0fe2b6c2e0.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\.vscode\\launch.json",
-              "c:\\git\\compose\\project.json",
-              "c:\\git\\compose\\package.json"
-            ]
+            "filePaths": ["c:\\git\\compose\\.vscode\\launch.json", "c:\\git\\compose\\project.json", "c:\\git\\compose\\package.json"]
           },
           "tool_response": "",
           "tool_use_id": "call_CrjMkXpazRxmkMg4cat1Svoo__vscode-1779617654300",

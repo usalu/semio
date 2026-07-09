@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The user wants a script similar to the i18n script that extracts schema from multiple sources:
@@ -160,6 +161,7 @@ Grasshopper: 23 components, 60 params, 60 goos
 ## Log
 
 ## Summary
+
 # Summary
 
 Schema extraction and synchronization script

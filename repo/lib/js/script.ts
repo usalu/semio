@@ -3,15 +3,15 @@
 import { BundleScript, ScriptRouter, runBundleScriptMain, runBunx, runCmd } from "./index.ts";
 
 class LintScript extends BundleScript {
-	run(): void {
-		runBunx(["tsc", "-p", "tsconfig.json", "--noEmit"], this.root);
-	}
+  run(): void {
+    runBunx(["tsc", "-p", "tsconfig.json", "--noEmit"], this.root);
+  }
 }
 
 class TestScript extends BundleScript {
-	run(): void {
-		runCmd(process.execPath, ["test", "./index.test.ts"], { cwd: this.root });
-	}
+  run(): void {
+    runCmd(process.execPath, ["test", "./index.test.ts"], { cwd: this.root });
+  }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("lint", LintScript).register("test", TestScript);

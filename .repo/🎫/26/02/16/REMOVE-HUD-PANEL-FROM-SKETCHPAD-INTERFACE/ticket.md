@@ -11,7 +11,7 @@ Removing the HUD panel from the Sketchpad interface as it will be implemented in
 ## Changes
 
 - Removed HUD panel definition from Design.tsx getPanels method
-- Removed HUD panel definition from Type.tsx getPanels method  
+- Removed HUD panel definition from Type.tsx getPanels method
 - Removed HUD panel definition from Quality.tsx getPanels method
 - Removed PanelKind.HUD from shared.ts enum
 - Removed HUD config from panelKindConfigs in shared.ts

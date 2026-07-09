@@ -4,8 +4,5 @@
   "description": "Refactor remaining hardcoded test data in compose/js/index.ts test section to load from shared JSON asset files. The previous refactoring ticket covered Hash, QualitySum, DesignWithDiff, FilterKit data-driven tests, FindReplaceableTypes, Flatten, and ExportDesignModel. Remaining work: (1) globMatch unit tests still use hardcoded patterns, (2) \"Nakagin Capsule Tower\" design name hardcoded in 20+ places, (3) mock UUID in heal test, (4) hardcoded GUID in Meta test, (5) piece/connection GUIDs in CopyAndPaste tests, (6) Delete/CopyPaste design names not loaded from their case files.",
   "summary": "Created 7 shared JSON asset files under assets/compose/ to externalize hardcoded test data (GUIDs, expected hash values, design names, piece names, glob patterns, expected counts) from all 5 language test suites (Go, Rust, Python, C#, JS/TS). Added barrel exports in assets/index.ts. Refactored Python and TypeScript tests to load from shared assets. All tests pass across all languages: Go (all pass), Rust (74/74), Python (83/83), C# (170/170), JS/TS (217/217).",
   "goal": "🎯aioptimizedrepo",
-  "sessions": [
-    "⚪22383e899df24b628d3554b45ee8b251",
-    "⚪85de02c32b004730bdd98a427401b719"
-  ]
+  "sessions": ["⚪22383e899df24b628d3554b45ee8b251", "⚪85de02c32b004730bdd98a427401b719"]
 }

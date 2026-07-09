@@ -15,10 +15,7 @@
   "compilerOptions": {
     "target": "ESNext", // Must be present for MarkDoc, value must be >= es2015
     "module": "ESNext",
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
+    "lib": ["DOM", "ESNext"],
     "moduleResolution": "bundler", // Don't change. Needed for Vite
     "jsx": "preserve", // Don't change. Needed for Nextjs
     "strict": true, // Must be present for Nextjs, value optional
@@ -33,50 +30,20 @@
     "allowImportingTsExtensions": true,
     // "verbatimModuleSyntax": true, // Recommended for astro to avoid bundling issues, value optional
     // "sourceMap": true,
-    "types": [
-      "node",
-      "react",
-      "react-dom",
-      "vitest/globals"
-    ],
+    "types": ["node", "react", "react-dom", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@semio-tech/compose-rs-wasm": [
-        "../rs/pkg/compose.d.ts"
-      ],
-      "@semio-tech/compose-js": [
-        "."
-      ],
-      "@semio-tech/compose-js/*": [
-        "./*"
-      ],
-      "@semio-tech/ui-react": [
-        "../../../ui/react"
-      ],
-      "@semio-tech/ui-react/*": [
-        "../../../ui/react/*"
-      ],
-      "@semio-tech/semio-asset": [
-        "../../../../asset"
-      ],
-      "@semio-tech/semio-asset/*": [
-        "../../../../asset/*"
-      ],
-      "@semio-tech/compose-sketchpad": [
-        "../client/ui/sketchpad"
-      ],
-      "@semio-tech/compose-sketchpad/*": [
-        "../client/ui/sketchpad/*"
-      ]
+      "@semio-tech/compose-rs-wasm": ["../rs/pkg/compose.d.ts"],
+      "@semio-tech/compose-js": ["."],
+      "@semio-tech/compose-js/*": ["./*"],
+      "@semio-tech/ui-react": ["../../../ui/react"],
+      "@semio-tech/ui-react/*": ["../../../ui/react/*"],
+      "@semio-tech/semio-asset": ["../../../../asset"],
+      "@semio-tech/semio-asset/*": ["../../../../asset/*"],
+      "@semio-tech/compose-sketchpad": ["../client/ui/sketchpad"],
+      "@semio-tech/compose-sketchpad/*": ["../client/ui/sketchpad/*"]
     }
   },
-  "include": [
-    "index.ts",
-    "kit-store.worker.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "_debug_diff.ts",
-    "debug_design.cjs"
-  ]
+  "include": ["index.ts", "kit-store.worker.ts"],
+  "exclude": ["node_modules", "_debug_diff.ts", "debug_design.cjs"]
 }

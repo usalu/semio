@@ -2,27 +2,27 @@
 name: Introduce Semios Technology
 overview: "Introduce `semios/` as the top-level designer OS technology: studios (local-first, dev JSON backbone), CQRS event-sourced state, programs (sketchpad becomes one), resource-typed apps, and a per-studio media DAG — with a unified `semios/play` shell hosting all existing technology canvases."
 todos:
-  - id: skeleton
-    content: Create semios/ technology skeleton (core, react, play, fixture, AGENTS.md, workspace + nx registration)
-    status: completed
-  - id: studio-vcs
-    content: Implement semios.studio/v1 schema, StudioStore CQRS (Session/Graph/Change/Checkpoint), DevJsonBackbone single-file persistence
-    status: completed
-  - id: resource-catalog
-    content: Add semios resource kinds to graph-manifest and ProgramRegistry mapping all playground technologies + source formats
-    status: completed
-  - id: media-graph
-    content: Implement semios.media-graph/v1 engine (validation, resource propagation) and react canvas UI
-    status: completed
-  - id: unified-play
-    content: Build PlaygroundSemios + bootSemiosPlay wiring all technology surface hosts; register launch.json dev entry
-    status: completed
-  - id: sketchpad-program
-    content: Expose compose.sketchpad as a ProgramDefinition and host it from semios shell (sketchpad generalizes to program)
-    status: completed
-  - id: fixture-tests
-    content: Add demo.semios.json fixture and core/play tests for load → edit → checkpoint → save JSON round-trip
-    status: completed
+ - id: skeleton
+   content: Create semios/ technology skeleton (core, react, play, fixture, AGENTS.md, workspace + nx registration)
+   status: completed
+ - id: studio-vcs
+   content: Implement semios.studio/v1 schema, StudioStore CQRS (Session/Graph/Change/Checkpoint), DevJsonBackbone single-file persistence
+   status: completed
+ - id: resource-catalog
+   content: Add semios resource kinds to graph-manifest and ProgramRegistry mapping all playground technologies + source formats
+   status: completed
+ - id: media-graph
+   content: Implement semios.media-graph/v1 engine (validation, resource propagation) and react canvas UI
+   status: completed
+ - id: unified-play
+   content: Build PlaygroundSemios + bootSemiosPlay wiring all technology surface hosts; register launch.json dev entry
+   status: completed
+ - id: sketchpad-program
+   content: Expose compose.sketchpad as a ProgramDefinition and host it from semios shell (sketchpad generalizes to program)
+   status: completed
+ - id: fixture-tests
+   content: Add demo.semios.json fixture and core/play tests for load → edit → checkpoint → save JSON round-trip
+   status: completed
 isProject: false
 ---
 
@@ -88,13 +88,13 @@ flowchart TB
 
 ### Domain document
 
-| Concept | Role | Initial location |
-|---------|------|------------------|
-| **Studio** | Persistence + collaboration unit; owns VCS graph + media graph | `semios/core` |
-| **Program** | Named collection of apps (sketchpad = one program) | `semios/core` registry |
-| **App** | Runnable unit with modes/windows; yields one **resource**; owns a **source format** | wraps existing `AppRuntime` / `PlatformDefinition` |
-| **Resource** | Typed interface; same kind = interchangeable in media graph | `semios/core` + `@semio-tech/graph-manifest` extension |
-| **MediaGraph** | Studio-scoped DAG: app-instance nodes, resource-typed ports, edges | `semios/core` + `semios/react` canvas |
+| Concept        | Role                                                                                | Initial location                                       |
+| -------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **Studio**     | Persistence + collaboration unit; owns VCS graph + media graph                      | `semios/core`                                          |
+| **Program**    | Named collection of apps (sketchpad = one program)                                  | `semios/core` registry                                 |
+| **App**        | Runnable unit with modes/windows; yields one **resource**; owns a **source format** | wraps existing `AppRuntime` / `PlatformDefinition`     |
+| **Resource**   | Typed interface; same kind = interchangeable in media graph                         | `semios/core` + `@semio-tech/graph-manifest` extension |
+| **MediaGraph** | Studio-scoped DAG: app-instance nodes, resource-typed ports, edges                  | `semios/core` + `semios/react` canvas                  |
 
 ### Layering (mirror compose discipline)
 
@@ -116,20 +116,21 @@ Single JSON file (dev backbone) is the first persistence target:
 
 ```json
 {
-  "schema": "semios.studio/v1",
-  "id": "demo-studio",
-  "name": "Demo Studio",
-  "vcs": {
-    "initialProjection": { "programs": [], "appInstances": [], "mediaGraph": { "schema": "semios.media-graph/v1", "nodes": [], "edges": [] } },
-    "operations": [],
-    "checkpoints": [],
-    "alternatives": []
-  },
-  "backbone": { "kind": "dev", "uri": "dev://studio.json" }
+ "schema": "semios.studio/v1",
+ "id": "demo-studio",
+ "name": "Demo Studio",
+ "vcs": {
+  "initialProjection": { "programs": [], "appInstances": [], "mediaGraph": { "schema": "semios.media-graph/v1", "nodes": [], "edges": [] } },
+  "operations": [],
+  "checkpoints": [],
+  "alternatives": []
+ },
+ "backbone": { "kind": "dev", "uri": "dev://studio.json" }
 }
 ```
 
 Key design points:
+
 - **`initialProjection`**: materialized studio snapshot (like compose `initialKit`).
 - **`operations[]`**: forward/backward op pairs (like compose `Change.forwards/backwards`); replay via pure reducers — no in-place mutation.
 - **`appInstances[]`**: `{ id, programId, appId, sourceDocument: { format, payloadRef | inline } }`.
@@ -143,16 +144,16 @@ Fixture: [`semios/fixture/demo.semios.json`](semios/fixture/demo.semios.json) wi
 
 Model directly after compose `vcs` ([`lib.rs:7231+`](compose/client/lib/rs/lib.rs)):
 
-| Compose entity | Semios equivalent |
-|----------------|-------------------|
-| `Session` | `StudioSession` |
-| `Graph` | `StudioGraph` |
-| `TheKit` / workspace | `StudioWorkspace` (live WIP projection) |
-| `Change` | `StudioChange` (forward/backward `StudioOperation[]`) |
-| `Edit` | `StudioEdit` (undo/redo stack) |
-| `Checkpoint` | `StudioCheckpoint` |
-| `Alternative` | `StudioAlternative` |
-| `Conflict` | `StudioConflict` (WIP vs backbone; stub until remote backbone) |
+| Compose entity       | Semios equivalent                                              |
+| -------------------- | -------------------------------------------------------------- |
+| `Session`            | `StudioSession`                                                |
+| `Graph`              | `StudioGraph`                                                  |
+| `TheKit` / workspace | `StudioWorkspace` (live WIP projection)                        |
+| `Change`             | `StudioChange` (forward/backward `StudioOperation[]`)          |
+| `Edit`               | `StudioEdit` (undo/redo stack)                                 |
+| `Checkpoint`         | `StudioCheckpoint`                                             |
+| `Alternative`        | `StudioAlternative`                                            |
+| `Conflict`           | `StudioConflict` (WIP vs backbone; stub until remote backbone) |
 
 Public API surface in [`semios/core/index.ts`](semios/core/index.ts):
 
@@ -169,24 +170,24 @@ Start in **TypeScript** for MVP (fast iteration, single JSON). Structure types/r
 
 Add semios resource kinds to [`mathematical/graph/manifest`](mathematical/graph/manifest) (compile-time catalog, same pattern as `flow_dag` / `drawLayers`):
 
-| Resource kind | Source format | Technology / canvas |
-|---------------|---------------|---------------------|
-| `2d.drawing` | `draw.document/v1` | `@semio-tech/draw-react` |
-| `2d.raster` | `raster.document/v1` | `@semio-tech/raster-react` |
-| `2d.map` | gis map schema | `@semio-tech/gis-map-react` |
-| `2d.procedural` | procedural-2d schema | procedural play hosts |
-| `2d.shooting` | shooting schema | shooting play hosts |
-| `2d.puzzle` | `puzzle.2d/v1` | `@semio-tech/puzzle-2d-react` |
-| `3d.puzzle` | `puzzle.3d/v1` | `@semio-tech/puzzle-3d-react` |
-| `5d.puzzle` | `puzzle.5d/v1` | `@semio-tech/puzzle-5d-react` |
-| `3d.procedural` | procedural-3d schema | procedural-3d hosts |
-| `3d.cad` | cad schema | cad renderer |
-| `computation.flow` | flow `{ flow, tree }` | `@semio-tech/flow-react` |
-| `graph.trinity` | `trinity.graph/v1` | `@semio-tech/trinity-react` |
-| `graph.dag` | flow DAG scene | dag hosts |
-| `text.document` | `writer.document/v1` | `@semio-tech/writer-react` |
-| `form.dictionary` | forms schema | forms hosts |
-| `kit.compose` | compose kit projection | compose-sketchpad program |
+| Resource kind      | Source format          | Technology / canvas           |
+| ------------------ | ---------------------- | ----------------------------- |
+| `2d.drawing`       | `draw.document/v1`     | `@semio-tech/draw-react`      |
+| `2d.raster`        | `raster.document/v1`   | `@semio-tech/raster-react`    |
+| `2d.map`           | gis map schema         | `@semio-tech/gis-map-react`   |
+| `2d.procedural`    | procedural-2d schema   | procedural play hosts         |
+| `2d.shooting`      | shooting schema        | shooting play hosts           |
+| `2d.puzzle`        | `puzzle.2d/v1`         | `@semio-tech/puzzle-2d-react` |
+| `3d.puzzle`        | `puzzle.3d/v1`         | `@semio-tech/puzzle-3d-react` |
+| `5d.puzzle`        | `puzzle.5d/v1`         | `@semio-tech/puzzle-5d-react` |
+| `3d.procedural`    | procedural-3d schema   | procedural-3d hosts           |
+| `3d.cad`           | cad schema             | cad renderer                  |
+| `computation.flow` | flow `{ flow, tree }`  | `@semio-tech/flow-react`      |
+| `graph.trinity`    | `trinity.graph/v1`     | `@semio-tech/trinity-react`   |
+| `graph.dag`        | flow DAG scene         | dag hosts                     |
+| `text.document`    | `writer.document/v1`   | `@semio-tech/writer-react`    |
+| `form.dictionary`  | forms schema           | forms hosts                   |
+| `kit.compose`      | compose kit projection | compose-sketchpad program     |
 
 **Interchangeability rule:** media graph edge validation checks **resource kind equality** (not app identity). Two `2d.drawing` outputs can feed any `2d.drawing` input.
 
@@ -244,14 +245,14 @@ Each bundle: `index.ts(x)`, `package.json`, `project.json`, `script.ts` (`dev|bu
 
 Touchpoints (same checklist as draw/writer):
 
-| File | Change |
-|------|--------|
-| [`package.json`](package.json) workspaces | register `semios/*` bundles |
-| [`framework/product/platform/core/index.ts`](framework/product/platform/core/index.ts) | add `ComponentKind: "semios"`, `UiSemiosHostSurfaceNode`, `buildSemiosWindowBody` |
-| [`framework/product/playground/renderer/react/index.tsx`](framework/product/playground/renderer/react/index.tsx) | `semiosSurfaceHosts`, `registerSemiosPlaySurfaceHosts`, `bootSemiosPlay` — delegates to all existing `boot*Play` surface host registrations |
-| [`framework/product/playground/renderer/react/package.json`](framework/product/playground/renderer/react/package.json) | subpath `"./semios"`, deps on all `*-play`/`*-react` packages |
-| [`ui/styling/vite-elements-assets.ts`](ui/styling/vite-elements-assets.ts) | extend `PlaygroundRendererPuzzleKind` with `"semios"` |
-| [`.vscode/launch.json`](.vscode/launch.json) | `🛠️dev🖥️semios🎛️play` dev entry |
+| File                                                                                                                   | Change                                                                                                                                      |
+| ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`package.json`](package.json) workspaces                                                                              | register `semios/*` bundles                                                                                                                 |
+| [`framework/product/platform/core/index.ts`](framework/product/platform/core/index.ts)                                 | add `ComponentKind: "semios"`, `UiSemiosHostSurfaceNode`, `buildSemiosWindowBody`                                                           |
+| [`framework/product/playground/renderer/react/index.tsx`](framework/product/playground/renderer/react/index.tsx)       | `semiosSurfaceHosts`, `registerSemiosPlaySurfaceHosts`, `bootSemiosPlay` — delegates to all existing `boot*Play` surface host registrations |
+| [`framework/product/playground/renderer/react/package.json`](framework/product/playground/renderer/react/package.json) | subpath `"./semios"`, deps on all `*-play`/`*-react` packages                                                                               |
+| [`ui/styling/vite-elements-assets.ts`](ui/styling/vite-elements-assets.ts)                                             | extend `PlaygroundRendererPuzzleKind` with `"semios"`                                                                                       |
+| [`.vscode/launch.json`](.vscode/launch.json)                                                                           | `🛠️dev🖥️semios🎛️play` dev entry                                                                                                             |
 
 `semios/play/vite.config.ts`: `playEntryKind: "semios"`, aliases to all technology packages needed for unified hosting.
 
@@ -272,28 +273,34 @@ Compose kit apps inside sketchpad program continue using compose CQRS (`@semio-t
 ## Implementation sequence
 
 ### 1. Foundation
+
 - Create `semios/` bundles + AGENTS.md + workspace registration.
 - Define `semios.studio/v1`, `semios.media-graph/v1`, VCS types, `StudioStore`, `DevJsonBackbone`.
 - Unit tests in `semios/core` (parse fixture, command replay, checkpoint round-trip, JSON backbone save/load).
 
 ### 2. Catalogs
+
 - Resource kinds in graph-manifest.
 - `ProgramRegistry` with all technology programs + sketchpad program definition.
 - `demo.semios.json` fixture wiring draw, writer, sketchpad instances.
 
 ### 3. React shell
+
 - `SemiosStudioProvider`, projection hooks, media graph canvas, program/app launcher panels.
 - Window bodies for system program (graph, history, backbone status).
 
 ### 4. Unified play
+
 - `PlaygroundSemios` + `bootSemiosPlay` registering all technology surface hosts.
 - Launch via `launch.json`; verify runtime: open studio from fixture, spawn apps, connect media edges, undo/redo checkpoint, save dev JSON.
 
 ### 5. Sketchpad as program
+
 - Export sketchpad manifest as `compose.sketchpad` program; open from semios shell with kit route preserved.
 - Document in semios AGENTS.md that sketchpad is no longer the top-level product — semios is.
 
 ### 6. Deferred (explicitly out of MVP code, designed in)
+
 - `semios/rs` native store + GraphQL (when TS store bottlenecks).
 - Local/remote backbone kinds (compose `local://`, `remote://` parity).
 - Live collaboration transport.
@@ -302,12 +309,12 @@ Compose kit apps inside sketchpad program continue using compose CQRS (`@semio-t
 
 ## Risks and mitigations
 
-| Risk | Mitigation |
-|------|------------|
-| Unified play bundle size / Vite cold start | Lazy-import program boot regions per `programId`; reuse existing playground renderer strip logic |
-| Dual VCS (studio + compose kit) | Clear scope: studio VCS = OS metadata + media graph; kit VCS = compose domain only |
-| Technology mixing violations | Resources are the only cross-technology wire; no fixture leakage outside studio JSON + test fixtures |
-| CRQS typo in spec | Implement standard **CQRS** (compose model); event sourcing via forward/backward op logs |
+| Risk                                       | Mitigation                                                                                           |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Unified play bundle size / Vite cold start | Lazy-import program boot regions per `programId`; reuse existing playground renderer strip logic     |
+| Dual VCS (studio + compose kit)            | Clear scope: studio VCS = OS metadata + media graph; kit VCS = compose domain only                   |
+| Technology mixing violations               | Resources are the only cross-technology wire; no fixture leakage outside studio JSON + test fixtures |
+| CRQS typo in spec                          | Implement standard **CQRS** (compose model); event sourcing via forward/backward op logs             |
 
 ---
 

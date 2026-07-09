@@ -2,36 +2,36 @@
 name: Core Kernel Decoupling
 overview: Strip all model-definition assets and geometry/transformation logic out of cad/js/core code so the core only defines interfaces, calls the kernel, and consumes pure-data assets through a registry. The brepjs kernel implements every geometry primitive; transformations become declarative data.
 todos:
-  - id: ticket
-    content: Read repo://goals and open a ticket associated with the best goal before editing.
-    status: completed
-  - id: registry
-    content: Replace ModelDefinitionAssets import.meta.glob in core/index.ts with a registry + registerModelDefinitionAssets API; accessors read the registry; clear owner/folder caches on register.
-    status: completed
-  - id: assets-file
-    content: Create cad/js/core/assets.ts with the import.meta.glob blocks calling registerModelDefinitionAssets; add to core tsconfig include; side-effect import from kernel, query, play apps, renderer, and the core Tests region.
-    status: completed
-  - id: geometry-kernel
-    content: Add geometry primitives (faceNormal/Centroid/areaEstimate, solidFaceIds, fuseSolidsToExternalFaces, projectPointOnScalarAxis, scalarTopOnAxis, clampPointAlongDirection) to SpatialPreviewKernel; move implementations into brepjs kernel; replace core call sites with preview.*.
-    status: completed
-  - id: transformation-schema
-    content: Extend spatial.transformation/v1 with a declarative derive block (fuse/hull/rules/opening/ensure) in schema + core parser; encode energy from_geometry rules in its transformation.json.
-    status: completed
-  - id: transformation-engine
-    content: Replace applyEnergyFromGeometryTransformation + classify/role helpers + applyTransformation special-casing with one generic runTransformation engine that calls kernel primitives; remove all energy/shape literals from core code.
-    status: completed
-  - id: thread-kernel
-    content: Thread preview kernel through applyTransformation, ModelSpace.transform, and query runTransformationCall.
-    status: completed
-  - id: dehardcode-ids
-    content: Derive default model-definition from a manifest flag; move primitiveKinds/kernel-typology mapping into assets; remove energy/structure substring heuristics and SHAPE_MODEL_DEFINITION_ID/defaultGeometryKernelTypologyIds literals.
-    status: completed
-  - id: tests
-    content: Extend core and kernel Tests regions for registry loading, kernel geometry primitives, and data-driven energy transformation; run vitest for core/kernel/query and confirm green.
-    status: completed
-  - id: close-ticket
-    content: Close the ticket with a summary and all touched files.
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open a ticket associated with the best goal before editing.
+   status: completed
+ - id: registry
+   content: Replace ModelDefinitionAssets import.meta.glob in core/index.ts with a registry + registerModelDefinitionAssets API; accessors read the registry; clear owner/folder caches on register.
+   status: completed
+ - id: assets-file
+   content: Create cad/js/core/assets.ts with the import.meta.glob blocks calling registerModelDefinitionAssets; add to core tsconfig include; side-effect import from kernel, query, play apps, renderer, and the core Tests region.
+   status: completed
+ - id: geometry-kernel
+   content: Add geometry primitives (faceNormal/Centroid/areaEstimate, solidFaceIds, fuseSolidsToExternalFaces, projectPointOnScalarAxis, scalarTopOnAxis, clampPointAlongDirection) to SpatialPreviewKernel; move implementations into brepjs kernel; replace core call sites with preview.*.
+   status: completed
+ - id: transformation-schema
+   content: Extend spatial.transformation/v1 with a declarative derive block (fuse/hull/rules/opening/ensure) in schema + core parser; encode energy from_geometry rules in its transformation.json.
+   status: completed
+ - id: transformation-engine
+   content: Replace applyEnergyFromGeometryTransformation + classify/role helpers + applyTransformation special-casing with one generic runTransformation engine that calls kernel primitives; remove all energy/shape literals from core code.
+   status: completed
+ - id: thread-kernel
+   content: Thread preview kernel through applyTransformation, ModelSpace.transform, and query runTransformationCall.
+   status: completed
+ - id: dehardcode-ids
+   content: Derive default model-definition from a manifest flag; move primitiveKinds/kernel-typology mapping into assets; remove energy/structure substring heuristics and SHAPE_MODEL_DEFINITION_ID/defaultGeometryKernelTypologyIds literals.
+   status: completed
+ - id: tests
+   content: Extend core and kernel Tests regions for registry loading, kernel geometry primitives, and data-driven energy transformation; run vitest for core/kernel/query and confirm green.
+   status: completed
+ - id: close-ticket
+   content: Close the ticket with a summary and all touched files.
+   status: completed
 isProject: false
 ---
 

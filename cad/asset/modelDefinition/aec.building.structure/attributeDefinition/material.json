@@ -5,12 +5,7 @@
   "label": "Material",
   "description": "Authored material metadata attachable to curve, surface, or solid geometry.",
   "field": "material",
-  "targets": [
-    "edge",
-    "wire",
-    "face",
-    "solid"
-  ],
+  "targets": ["edge", "wire", "face", "solid"],
   "value": {
     "kind": "oneOf",
     "variants": [
@@ -29,11 +24,6 @@
     ]
   },
   "geometrySelector": {
-    "kinds": [
-      "edge",
-      "wire",
-      "face",
-      "solid"
-    ]
+    "kinds": ["edge", "wire", "face", "solid"]
   }
 }

@@ -3,6 +3,7 @@
 ## Summary
 
 Test completed - assignment works correctly
+
 ## Changes
 
 ## Log

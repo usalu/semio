@@ -1,8 +1,8 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync } from "fs";
+import { join } from "path";
 
-const launchJsonPath = join(process.cwd(), '.vscode', 'launch.json');
-const content = readFileSync(launchJsonPath, 'utf8');
+const launchJsonPath = join(process.cwd(), ".vscode", "launch.json");
+const content = readFileSync(launchJsonPath, "utf8");
 
 interface ConfigBlock {
   name: string;
@@ -14,7 +14,7 @@ interface ConfigBlock {
 const configs: ConfigBlock[] = [];
 
 let idx = content.indexOf('"configurations"');
-idx = content.indexOf('[', idx);
+idx = content.indexOf("[", idx);
 
 let braceDepth = 0;
 let inString = false;
@@ -26,16 +26,16 @@ let cleanTextBuffer: string[] = [];
 let i = idx + 1;
 while (i < content.length) {
   const char = content[i];
-  const nextChar = content[i + 1] || '';
-  const prevChar = content[i - 1] || '';
+  const nextChar = content[i + 1] || "";
+  const prevChar = content[i - 1] || "";
 
   if (inLineComment) {
-    if (char === '\n') inLineComment = false;
+    if (char === "\n") inLineComment = false;
     i++;
     continue;
   }
   if (inBlockComment) {
-    if (char === '*' && nextChar === '/') {
+    if (char === "*" && nextChar === "/") {
       inBlockComment = false;
       i += 2;
       continue;
@@ -45,16 +45,16 @@ while (i < content.length) {
   }
   if (inString) {
     if (braceDepth > 0) cleanTextBuffer.push(char);
-    if (char === '"' && prevChar !== '\\') inString = false;
+    if (char === '"' && prevChar !== "\\") inString = false;
     i++;
     continue;
   }
-  if (char === '/' && nextChar === '/') {
+  if (char === "/" && nextChar === "/") {
     inLineComment = true;
     i += 2;
     continue;
   }
-  if (char === '/' && nextChar === '*') {
+  if (char === "/" && nextChar === "*") {
     inBlockComment = true;
     i += 2;
     continue;
@@ -65,19 +65,19 @@ while (i < content.length) {
     i++;
     continue;
   }
-  if (char === '{') {
+  if (char === "{") {
     if (braceDepth === 0) {
       currentBlockStart = i;
       cleanTextBuffer = [];
     }
     braceDepth++;
     cleanTextBuffer.push(char);
-  } else if (char === '}') {
+  } else if (char === "}") {
     cleanTextBuffer.push(char);
     braceDepth--;
     if (braceDepth === 0 && currentBlockStart !== -1) {
       const rawText = content.substring(currentBlockStart, i + 1);
-      const cleanJson = cleanTextBuffer.join('');
+      const cleanJson = cleanTextBuffer.join("");
       try {
         const parsed = JSON.parse(cleanJson);
         configs.push({
@@ -92,36 +92,26 @@ while (i < content.length) {
   } else {
     if (braceDepth > 0) cleanTextBuffer.push(char);
   }
-  if (braceDepth === 0 && char === ']') break;
+  if (braceDepth === 0 && char === "]") break;
   i++;
 }
 
 // Apply filtering
 const filteredConfigs: ConfigBlock[] = [];
 for (const config of configs) {
-  const name = config.name || '';
-  const command = config.command || '';
+  const name = config.name || "";
+  const command = config.command || "";
 
-  if (
-    name.includes('🧪') ||
-    name.includes('validate') ||
-    name.toLowerCase().includes('test') ||
-    (command && (command.includes('test') || command.includes('validate')))
-  ) {
+  if (name.includes("🧪") || name.includes("validate") || name.toLowerCase().includes("test") || (command && (command.includes("test") || command.includes("validate")))) {
     continue;
   }
   if (
-    name.includes('🎗️vscode') ||
-    name.includes('vscodeintegrated') ||
-    (command && (
-      command.includes('vscode') ||
-      command.includes('flow-module') ||
-      command.includes('flow-core:wasm') ||
-      command.includes('dag-core:wasm')
-    )) ||
-    name.includes('flow🦀module') ||
-    name.includes('flow🦀rs') ||
-    name.includes('dag🦀rs')
+    name.includes("🎗️vscode") ||
+    name.includes("vscodeintegrated") ||
+    (command && (command.includes("vscode") || command.includes("flow-module") || command.includes("flow-core:wasm") || command.includes("dag-core:wasm"))) ||
+    name.includes("flow🦀module") ||
+    name.includes("flow🦀rs") ||
+    name.includes("dag🦀rs")
   ) {
     continue;
   }
@@ -130,14 +120,14 @@ for (const config of configs) {
 
 // Let's normalize commands to detect semantic duplicates
 const normalizeCommand = (cmd: string): string => {
-  if (!cmd) return '';
+  if (!cmd) return "";
   let normalized = cmd.trim();
   // replace "bun run dev --" with "bun ./script.ts dev" or equivalent
-  normalized = normalized.replace(/^bun run dev --/, 'bun ./script.ts dev');
+  normalized = normalized.replace(/^bun run dev --/, "bun ./script.ts dev");
   // replace "bun run" with "bun"
-  normalized = normalized.replace(/^bun run/, 'bun');
+  normalized = normalized.replace(/^bun run/, "bun");
   // replace "./script.ts" with "script.ts"
-  normalized = normalized.replace(/\.\/script\.ts/, 'script.ts');
+  normalized = normalized.replace(/\.\/script\.ts/, "script.ts");
   return normalized;
 };
 
@@ -146,7 +136,7 @@ const seenNames = new Map<string, ConfigBlock[]>();
 
 for (const config of filteredConfigs) {
   const name = config.name;
-  const cmd = config.command || '';
+  const cmd = config.command || "";
   const norm = normalizeCommand(cmd);
 
   if (!seenNames.has(name)) seenNames.set(name, []);
@@ -158,7 +148,7 @@ for (const config of filteredConfigs) {
   }
 }
 
-console.log('--- Duplicate Names (in Kept Configs) ---');
+console.log("--- Duplicate Names (in Kept Configs) ---");
 for (const [name, list] of seenNames.entries()) {
   if (list.length > 1) {
     console.log(`Name: ${name}`);
@@ -168,7 +158,7 @@ for (const [name, list] of seenNames.entries()) {
   }
 }
 
-console.log('\n--- Duplicate / Equivalent Commands (in Kept Configs) ---');
+console.log("\n--- Duplicate / Equivalent Commands (in Kept Configs) ---");
 for (const [norm, list] of seenNormalized.entries()) {
   if (list.length > 1) {
     console.log(`Normalized command: "${norm}"`);

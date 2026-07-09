@@ -79,24 +79,11 @@ function runCypherFile(filePath: string): { ok: boolean; stderr: string } {
     return { ok: false, stderr: "cypher-shell not found" };
   }
 
-  const result = spawnSync(
-    shell,
-    [
-      "-a",
-      process.env.NEO4J_URI || "bolt://localhost:7687",
-      "-u",
-      process.env.NEO4J_USERNAME || "neo4j",
-      "-p",
-      process.env.NEO4J_PASSWORD || "password",
-      "-d",
-      DATABASE,
-      "--format",
-      "plain",
-      "-f",
-      filePath,
-    ],
-    { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
-  );
+  const result = spawnSync(shell, ["-a", process.env.NEO4J_URI || "bolt://localhost:7687", "-u", process.env.NEO4J_USERNAME || "neo4j", "-p", process.env.NEO4J_PASSWORD || "password", "-d", DATABASE, "--format", "plain", "-f", filePath], {
+    encoding: "utf8",
+    cwd: REPO_ROOT,
+    env: buildCypherEnv(),
+  });
 
   const stderr = typeof result.stderr === "string" ? result.stderr : String(result.stderr ?? "");
   return { ok: result.status === 0, stderr };
@@ -144,19 +131,7 @@ function main(): void {
 
   const probe = spawnSync(
     shell,
-    [
-      "-a",
-      process.env.NEO4J_URI || "bolt://localhost:7687",
-      "-u",
-      process.env.NEO4J_USERNAME || "neo4j",
-      "-p",
-      process.env.NEO4J_PASSWORD || "password",
-      "-d",
-      DATABASE,
-      "--format",
-      "plain",
-      "MATCH (f:Field) RETURN count(f) AS fieldNodes;",
-    ],
+    ["-a", process.env.NEO4J_URI || "bolt://localhost:7687", "-u", process.env.NEO4J_USERNAME || "neo4j", "-p", process.env.NEO4J_PASSWORD || "password", "-d", DATABASE, "--format", "plain", "MATCH (f:Field) RETURN count(f) AS fieldNodes;"],
     { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
   );
 
@@ -353,19 +328,7 @@ function main(): void {
 
   const probeStructuralHas = spawnSync(
     shell,
-    [
-      "-a",
-      process.env.NEO4J_URI || "bolt://localhost:7687",
-      "-u",
-      process.env.NEO4J_USERNAME || "neo4j",
-      "-p",
-      process.env.NEO4J_PASSWORD || "password",
-      "-d",
-      DATABASE,
-      "--format",
-      "plain",
-      "MATCH ()-[r:HAS]->() RETURN count(r) AS hasRelCount;",
-    ],
+    ["-a", process.env.NEO4J_URI || "bolt://localhost:7687", "-u", process.env.NEO4J_USERNAME || "neo4j", "-p", process.env.NEO4J_PASSWORD || "password", "-d", DATABASE, "--format", "plain", "MATCH ()-[r:HAS]->() RETURN count(r) AS hasRelCount;"],
     { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
   );
 
@@ -531,9 +494,7 @@ function main(): void {
       DATABASE,
       "--format",
       "plain",
-      "OPTIONAL MATCH (sub:Class)-[:OWNS]->(f:Data|Derived|Reference) " +
-        "WHERE sub.name IN ['LocalProvider','RemoteProvider'] AND f.name IN ['backbone','backbones'] " +
-        "RETURN count(f) AS subclassOwnsBackboneKitMembers;",
+      "OPTIONAL MATCH (sub:Class)-[:OWNS]->(f:Data|Derived|Reference) " + "WHERE sub.name IN ['LocalProvider','RemoteProvider'] AND f.name IN ['backbone','backbones'] " + "RETURN count(f) AS subclassOwnsBackboneKitMembers;",
     ],
     { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
   );
@@ -551,9 +512,7 @@ function main(): void {
   const pbLast = pbTail[pbTail.length - 1] ?? "";
   const subclassOwnsBackboneKitMembers = Number.parseInt(pbLast.trim(), 10);
   if (!Number.isFinite(subclassOwnsBackboneKitMembers) || subclassOwnsBackboneKitMembers !== 0) {
-    console.error(
-      `[migrate:neo4j] expected LocalProvider/RemoteProvider to not OWNS backbone/backbones kit members (Provider does); verify output:\n${probeProviderSubclassBackboneOwns.stdout}`,
-    );
+    console.error(`[migrate:neo4j] expected LocalProvider/RemoteProvider to not OWNS backbone/backbones kit members (Provider does); verify output:\n${probeProviderSubclassBackboneOwns.stdout}`);
     process.exit(1);
   }
 
@@ -570,9 +529,7 @@ function main(): void {
       DATABASE,
       "--format",
       "plain",
-      "OPTIONAL MATCH (op:Class|Interface)-[:OWNS]->(f:Data|Derived|Reference) " +
-        "WHERE toLower(op.name) = 'operation' AND f.name IN ['connector','connectors'] " +
-        "RETURN count(f) AS operationOwnsConnectorKitMembers;",
+      "OPTIONAL MATCH (op:Class|Interface)-[:OWNS]->(f:Data|Derived|Reference) " + "WHERE toLower(op.name) = 'operation' AND f.name IN ['connector','connectors'] " + "RETURN count(f) AS operationOwnsConnectorKitMembers;",
     ],
     { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
   );
@@ -590,9 +547,7 @@ function main(): void {
   const ocLast = ocTail[ocTail.length - 1] ?? "";
   const operationOwnsConnectorKitMembers = Number.parseInt(ocLast.trim(), 10);
   if (!Number.isFinite(operationOwnsConnectorKitMembers) || operationOwnsConnectorKitMembers !== 0) {
-    console.error(
-      `[migrate:neo4j] expected Operation to not OWNS connector/connectors kit members (Type does); verify output:\n${probeOperationOwnsConnectorKit.stdout}`,
-    );
+    console.error(`[migrate:neo4j] expected Operation to not OWNS connector/connectors kit members (Type does); verify output:\n${probeOperationOwnsConnectorKit.stdout}`);
     process.exit(1);
   }
 
@@ -609,10 +564,7 @@ function main(): void {
       DATABASE,
       "--format",
       "plain",
-      "OPTIONAL MATCH (m:Module {name:'Command'}) " +
-        "WITH count(m) AS moduleCommand " +
-        "OPTIONAL MATCH (ic:Interface {name:'Command'}) " +
-        "RETURN moduleCommand, count(ic) AS interfaceCommand;",
+      "OPTIONAL MATCH (m:Module {name:'Command'}) " + "WITH count(m) AS moduleCommand " + "OPTIONAL MATCH (ic:Interface {name:'Command'}) " + "RETURN moduleCommand, count(ic) AS interfaceCommand;",
     ],
     { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
   );
@@ -632,9 +584,7 @@ function main(): void {
   const moduleCommand = Number.parseInt(ncParts[0] ?? "", 10);
   const interfaceCommand = Number.parseInt(ncParts[1] ?? "", 10);
   if (!Number.isFinite(moduleCommand) || moduleCommand !== 0 || !Number.isFinite(interfaceCommand) || interfaceCommand !== 0) {
-    console.error(
-      `[migrate:neo4j] expected no Module or Interface named Command after consolidation; verify output:\n${probeNoCommandModuleOrInterface.stdout}`,
-    );
+    console.error(`[migrate:neo4j] expected no Module or Interface named Command after consolidation; verify output:\n${probeNoCommandModuleOrInterface.stdout}`);
     process.exit(1);
   }
 
@@ -669,9 +619,7 @@ function main(): void {
   const voLast = voTail[voTail.length - 1] ?? "";
   const vcsOwnsOps = Number.parseInt(voLast.trim(), 10);
   if (!Number.isFinite(vcsOwnsOps) || vcsOwnsOps < 1) {
-    console.error(
-      `[migrate:neo4j] expected VCS to OWNS Module Operations; verify output:\n${probeVcsOwnsOperationsModule.stdout}`,
-    );
+    console.error(`[migrate:neo4j] expected VCS to OWNS Module Operations; verify output:\n${probeVcsOwnsOperationsModule.stdout}`);
     process.exit(1);
   }
 
@@ -688,8 +636,7 @@ function main(): void {
       DATABASE,
       "--format",
       "plain",
-      "MATCH (:Command {name: 'CreateConcept'})-[:OWNS]->(d:Data {name: 'concept', soleOwnerKey: 'CreateConcept'}) " +
-        "RETURN count(d) AS createConceptArgChain;",
+      "MATCH (:Command {name: 'CreateConcept'})-[:OWNS]->(d:Data {name: 'concept', soleOwnerKey: 'CreateConcept'}) " + "RETURN count(d) AS createConceptArgChain;",
     ],
     { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
   );
@@ -707,9 +654,7 @@ function main(): void {
   const poLast = poTail[poTail.length - 1] ?? "";
   const createConceptArgChain = Number.parseInt(poLast.trim(), 10);
   if (!Number.isFinite(createConceptArgChain) || createConceptArgChain < 1) {
-    console.error(
-      `[migrate:neo4j] expected CreateConcept Command→Data(concept); verify output:\n${probeCommandArgumentData.stdout}`,
-    );
+    console.error(`[migrate:neo4j] expected CreateConcept Command→Data(concept); verify output:\n${probeCommandArgumentData.stdout}`);
     process.exit(1);
   }
 

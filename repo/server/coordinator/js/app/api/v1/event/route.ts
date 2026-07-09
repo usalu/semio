@@ -45,10 +45,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.message }, { status: 400 });
   }
 
-  const event = await publishEvent(
-    parsed.data.kind,
-    parsed.data.source,
-    parsed.data.payload
-  );
+  const event = await publishEvent(parsed.data.kind, parsed.data.source, parsed.data.payload);
   return NextResponse.json({ status: "ok", event_id: event.id });
 }

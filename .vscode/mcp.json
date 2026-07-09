@@ -1,43 +1,43 @@
 {
-	"inputs": [],
-	"servers": {
-		"repo": {
-			"type": "stdio",
-			"command": "bun",
-			"args": ["script.ts", "dev", "mcp", "stdio", "copilot"]
-		},
-		"neo4j-compose": {
-			"type": "stdio",
-			"command": "bun",
-			"args": ["script.ts", "dev", "mcp", "neo4j", "compose"]
-		},
-		"neo4j-elements": {
-			"type": "stdio",
-			"command": "bun",
-			"args": ["script.ts", "dev", "mcp", "neo4j", "elements"]
-		},
-		"neo4j-coda": {
-			"type": "stdio",
-			"command": "bun",
-			"args": ["script.ts", "dev", "mcp", "neo4j", "coda"]
-		},
-		"neo4j-reuse": {
-			"type": "stdio",
-			"command": "bun",
-			"args": ["script.ts", "dev", "mcp", "neo4j", "reuse"]
-		},
-		"neo4j-metabolism": {
-			"type": "stdio",
-			"command": "bun",
-			"args": ["script.ts", "dev", "mcp", "neo4j", "metabolism"]
-		},
-		"neo4j-extra": {
-			"type": "stdio",
-			"command": "bun",
-			"args": ["script.ts", "dev", "mcp", "neo4j"],
-			"env": {
-				"NEO4J_DATABASE": "${env:NEO4J_EXTRA_GRAPH_DATABASE}"
-			}
-		}
-	}
+  "inputs": [],
+  "servers": {
+    "repo": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["script.ts", "dev", "mcp", "stdio", "copilot"]
+    },
+    "neo4j-compose": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["script.ts", "dev", "mcp", "neo4j", "compose"]
+    },
+    "neo4j-elements": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["script.ts", "dev", "mcp", "neo4j", "elements"]
+    },
+    "neo4j-coda": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["script.ts", "dev", "mcp", "neo4j", "coda"]
+    },
+    "neo4j-reuse": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["script.ts", "dev", "mcp", "neo4j", "reuse"]
+    },
+    "neo4j-metabolism": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["script.ts", "dev", "mcp", "neo4j", "metabolism"]
+    },
+    "neo4j-extra": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["script.ts", "dev", "mcp", "neo4j"],
+      "env": {
+        "NEO4J_DATABASE": "${env:NEO4J_EXTRA_GRAPH_DATABASE}"
+      }
+    }
+  }
 }

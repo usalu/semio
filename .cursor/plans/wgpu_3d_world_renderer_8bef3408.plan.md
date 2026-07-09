@@ -2,33 +2,33 @@
 name: Wgpu 3D World Renderer
 overview: Implement a real 3D pipeline in the wgpu renderer (meshes, camera, depth, instancing) with mesh loading (inline + GLB), OBJ/GLB export, and hover/click/rectangle/lasso selection — driven by a richer World3dScene protocol shared with the React/r3f renderer so lowpoly, procedural 3d, puzzle 3d/5d, cad, shooting (and later design/type) apps all work in both renderers.
 todos:
-  - id: mesh-core
-    content: "Add mesh module to framework/core/rs: MeshData, primitives, obj/glb encode/decode with tests"
-    status: completed
-  - id: protocol
-    content: Extend World3dScene (meshes, instances, selection) in core rs, TS types, WIT
-    status: completed
-  - id: toolkit-3d
-    content: "ui_wgpu scene3d: camera/orbit, Mesh3d, instanced depth-tested 3D pipeline, MeshStore, picking + lasso math"
-    status: completed
-  - id: input
-    content: "Extend ui_wgpu input: wheel, buttons, modifiers, drag tracking"
-    status: completed
-  - id: wgpu-host
-    content: "Rewrite wgpu render_world_3d with World3dState: orbit, hover, pick, marquee, async GLB loading"
-    status: completed
-  - id: export
-    content: Handle downloadMediaExport op in wgpu shell (Blob download)
-    status: completed
-  - id: plugins
-    content: "Update lowpoly, procedural3d, puzzle3d, puzzle5d, cad, shooting plugins: real meshes, selection commands, obj/glb export handlers"
-    status: completed
-  - id: react-parity
-    content: "Update React World3dHost to new protocol: meshes, GLB, raycast select/hover, lasso marquee"
-    status: completed
-  - id: verify
-    content: Cargo tests, wasm build, browser verification for wgpu and react renderers
-    status: completed
+ - id: mesh-core
+   content: "Add mesh module to framework/core/rs: MeshData, primitives, obj/glb encode/decode with tests"
+   status: completed
+ - id: protocol
+   content: Extend World3dScene (meshes, instances, selection) in core rs, TS types, WIT
+   status: completed
+ - id: toolkit-3d
+   content: "ui_wgpu scene3d: camera/orbit, Mesh3d, instanced depth-tested 3D pipeline, MeshStore, picking + lasso math"
+   status: completed
+ - id: input
+   content: "Extend ui_wgpu input: wheel, buttons, modifiers, drag tracking"
+   status: completed
+ - id: wgpu-host
+   content: "Rewrite wgpu render_world_3d with World3dState: orbit, hover, pick, marquee, async GLB loading"
+   status: completed
+ - id: export
+   content: Handle downloadMediaExport op in wgpu shell (Blob download)
+   status: completed
+ - id: plugins
+   content: "Update lowpoly, procedural3d, puzzle3d, puzzle5d, cad, shooting plugins: real meshes, selection commands, obj/glb export handlers"
+   status: completed
+ - id: react-parity
+   content: "Update React World3dHost to new protocol: meshes, GLB, raycast select/hover, lasso marquee"
+   status: completed
+ - id: verify
+   content: Cargo tests, wasm build, browser verification for wgpu and react renderers
+   status: completed
 isProject: false
 ---
 

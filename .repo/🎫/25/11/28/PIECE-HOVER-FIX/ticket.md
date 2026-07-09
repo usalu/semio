@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 ````markdown
 ---
 date: "2025-11-28T18:49:22.576Z"
@@ -30,7 +31,7 @@ Added CSS policy to disable pointer events on React Flow's viewport portal conta
 
 ```css
 .react-flow__viewport-portal {
-  pointer-events: none !important;
+ pointer-events: none !important;
 }
 ```
 ````
@@ -65,6 +66,7 @@ Removed temporary `[DEBUG] [PIECE-HOVER-FIX]` console.log statements from:
 ## Log
 
 ## Summary
+
 # Summary
 
 ""

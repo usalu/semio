@@ -2,33 +2,33 @@
 name: Wgpu Full Widget Parity
 overview: "Bring every framework-used UI component in the wgpu renderer to full visual and interaction parity with React: all 16 declarative widgets (Section collapse, working Select/Input/Slider/Ring/Stepper, icons on Button/Toggle, editable Vec3, Field/KeyValue layout), remaining Tree gaps, and the ComponentScene Table and VirtualFileSystem specializations (row chrome, selection, document, icons, multi-select, double-click)."
 todos:
-  - id: interpreter-fields
-    content: "Carry all dropped wire fields through interpreter.rs and widget structs: button/toggle icon_id, input kind/commit/on_change, slider/stepper step/uniform/on_delta, ring disabled, section default_open"
-    status: completed
-  - id: section-select-input
-    content: Wire Section collapse (hit branch + default_open + atlas chevrons), Select dropdown open/close/pick with on_change dispatch, Input focus_input seeding + commit dispatch
-    status: completed
-  - id: slider-ring-stepper
-    content: Implement Slider/Ring drag-to-value with step and on_change dispatch, NumberStepper on_delta minus/plus + editable center + bordered 3-segment chrome
-    status: completed
-  - id: misc-widgets
-    content: Button icon_id, Toggle icon + pressed args, editable Vec3 triple input, KeyValue grid alignment, Field gap tokens, Text wrapping, Separator measure, IconSelect icon rendering
-    status: completed
-  - id: tree-leftovers
-    content: "Tree: skip is_hidden rows, content-driven measure width, hovered action labels"
-    status: completed
-  - id: table-parity
-    content: "Table scene: remove zebra + column separators, hairline row borders, React row heights/padding, empty message, single-click double-fire guard"
-    status: completed
-  - id: vfs-parity
-    content: "VFS scene: expand/collapse document with visibility filtering + chevrons, glyph icons, schema column labels + 32% name column, typed descriptor formatting, shift/meta multi-select, selected text emphasis, drag affordance, empty message"
-    status: completed
-  - id: text-editor-commands
-    content: "Text editor scene: rename setDocument to textEdit, add submit (Cmd+Enter) and formatDocument (Cmd+S) dispatch"
-    status: completed
-  - id: verify-all
-    content: Build native+wasm, rebuild bindings, run E2E for s/forms/draw/flow, screenshot-diff vs React shell
-    status: completed
+ - id: interpreter-fields
+   content: "Carry all dropped wire fields through interpreter.rs and widget structs: button/toggle icon_id, input kind/commit/on_change, slider/stepper step/uniform/on_delta, ring disabled, section default_open"
+   status: completed
+ - id: section-select-input
+   content: Wire Section collapse (hit branch + default_open + atlas chevrons), Select dropdown open/close/pick with on_change dispatch, Input focus_input seeding + commit dispatch
+   status: completed
+ - id: slider-ring-stepper
+   content: Implement Slider/Ring drag-to-value with step and on_change dispatch, NumberStepper on_delta minus/plus + editable center + bordered 3-segment chrome
+   status: completed
+ - id: misc-widgets
+   content: Button icon_id, Toggle icon + pressed args, editable Vec3 triple input, KeyValue grid alignment, Field gap tokens, Text wrapping, Separator measure, IconSelect icon rendering
+   status: completed
+ - id: tree-leftovers
+   content: "Tree: skip is_hidden rows, content-driven measure width, hovered action labels"
+   status: completed
+ - id: table-parity
+   content: "Table scene: remove zebra + column separators, hairline row borders, React row heights/padding, empty message, single-click double-fire guard"
+   status: completed
+ - id: vfs-parity
+   content: "VFS scene: expand/collapse document with visibility filtering + chevrons, glyph icons, schema column labels + 32% name column, typed descriptor formatting, shift/meta multi-select, selected text emphasis, drag affordance, empty message"
+   status: completed
+ - id: text-editor-commands
+   content: "Text editor scene: rename setDocument to textEdit, add submit (Cmd+Enter) and formatDocument (Cmd+S) dispatch"
+   status: completed
+ - id: verify-all
+   content: Build native+wasm, rebuild bindings, run E2E for s/forms/draw/flow, screenshot-diff vs React shell
+   status: completed
 isProject: false
 ---
 
@@ -41,7 +41,8 @@ The framework wire protocol ([framework/core/rs/ui.rs](framework/core/rs/ui.rs))
 ## 1. Interpreter: stop dropping wire fields
 
 `ui_node_to_widget`/`control_to_widget` in [framework/renderer/wgpu/rs/interpreter.rs](framework/renderer/wgpu/rs/interpreter.rs) currently drop:
-- `UiButtonNode.icon_id` (Button renders icon by looking up the *label* string in the atlas - wrong)
+
+- `UiButtonNode.icon_id` (Button renders icon by looking up the _label_ string in the atlas - wrong)
 - `UiToggleNode.icon_id` (Toggle renders no icon at all; React always shows icon + optional text)
 - `UiInputNode.input_kind`, `commit`, `on_change`
 - `UiSliderNode.step`, `UiNumberStepperNode.step`/`uniform`/`on_delta`
@@ -82,7 +83,7 @@ React `VirtualFileSystem` ([ui/js/react/index.tsx](ui/js/react/index.tsx) ~19396
 
 - **Document**: maintain an `expanded_ids` set in scene state (client-side, like React - expand/collapse is not a wire command); build visible rows by filtering children of collapsed nodes (port `buildVirtualFileSystemVisibleRows` logic); render a clickable chevron (`chevron-right`/`chevron-down`) per row that has children, indent by `level * 14`.
 - **Icons**: port the glyph mapping (schema `iconId` → kind → file-extension fallback) and draw a 14px atlas icon before the name.
-- **Columns**: use schema column *labels* for headers (not raw ids), Name column fixed ~32% width, descriptor columns share the rest; format time-kind descriptor values like React does.
+- **Columns**: use schema column _labels_ for headers (not raw ids), Name column fixed ~32% width, descriptor columns share the rest; format time-kind descriptor values like React does.
 - **Selection**: selected fill + emphasized text; multi-select with shift (range from anchor) and meta/ctrl (additive) using `InputState.modifiers`, dispatching `selectRows { surfaceId, ids }` with the full computed set (command name/args already match React).
 - **Row chrome**: drop zebra, hairline bottom borders, `theme.control_height` rows.
 - **Click semantics**: suppress the single-click `selectRows` when a double-click fires (currently both fire); double-click command routing (`openInstance`/`exportMedia`/`navigateVirtualFileSystemNode`) already matches React and stays.

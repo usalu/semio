@@ -10,10 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getTicket, listClaimsByTicket, requireAuth, isAuthError } from "@/lib";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(request);
   if (isAuthError(auth)) return auth;
 

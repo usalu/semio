@@ -44,7 +44,7 @@ migrateFile("puzzle/5d/react/index.tsx", (s) => {
     ["puzzle5dModelStructureEpoch(model: V1)", "puzzle5dModelStructureEpoch(model: Model)"],
     ["readonly baseModel: V1", "readonly baseModel: Model"],
     ["readonly model: V1", "readonly model: Model"],
-    ["| { readonly kind: \"placed\"; readonly model: V1", "| { readonly kind: \"placed\"; readonly model: Model"],
+    ['| { readonly kind: "placed"; readonly model: V1', '| { readonly kind: "placed"; readonly model: Model'],
     [": V1 | null", ": Model | null"],
     [": V1):", ": Model):"],
     ["JSON.parse(JSON.stringify(model)) as V1", "JSON.parse(JSON.stringify(model)) as Model"],

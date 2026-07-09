@@ -2,21 +2,21 @@
 name: strict-read-write-hooks
 overview: Promote every read on KitStoreClient to a StoreField and every write to a StoreCommand, then collapse all React hooks to one-line wrappers around useStoreField / useStoreCommand. Operations finalize the open transaction (applied=true on success, applied=false on failure); saving (draft -> checkpoint) is a separate workspace command. Delete every legacy abstraction (HookTriad, HookRead, useDraft, useOptimistic, schema-state generators, writeKitStoreClientSchemaField, kitReadonlyTriad, useComposeReadSnap, SketchpadTriadInputRow / SketchpadTriadToggleRow). Reads and writes never share a hook surface; nothing in the new surface uses a "Row" suffix.
 todos:
-  - id: ticket_open
-    content: Open MCP ticket 'Strict Read Write Hooks' under .repo/🎫/26/05/08/strict-read-write-hooks/
-    status: in_progress
-  - id: phase1_storefields_storecommands
-    content: "compose/js: rename SCHEMA_HOOK_IDLE_STATUS/SCHEMA_HOOK_READONLY_STATUS/USE_KIT_NAME_PENDING_STATUS to WRITE_STATUS_IDLE/WRITE_STATUS_READONLY/WRITE_STATUS_PENDING; rebuild StoreField (no public set; values pushed via constructor source callback); rebuild StoreCommand status using same source pattern (no kit/schema constants in the generic class); add KitStore.query<T>(body, parse, initial) read helper + KitStore.operation<TArgs>(name, vars, body, toVars) transactional kit-modifying helper (one per SDL OperationKind variant: RenameKit, DraggedPiece, AddedType, ...) + KitStore.command<TArgs>(...) non-transactional helper for workspace writes (attachBackbone, syncNow, importKit, ...); wire operationSucceeded -> correlator + invalidations.next() and operationFailed -> correlator; delete OperationRouter, seedFieldsFromDto, dispatchCorrelationEnvelope typed-kind branch, kitRenamed subscription, fieldCache; privatize submitChangeKitCommands and fetchFullKit; extend embedded tests"
-    status: pending
-  - id: phase2_react_hooks
-    content: "compose/react: rewrite every read hook as useStoreField (static) or useGraphqlField (parameterized, disposes per dep change) and every write hook as useStoreCommand; delete HookTriad/HookRead/useDraft/useOptimistic/useSchemaObjectState/useSchemaFieldState + auto-generated wrappers/useComposeReadSnap/useKitSync/useWriteQueue/useSetErrors; update embedded tests"
-    status: pending
-  - id: phase3_sketchpad
-    content: "compose/sketchpad: introduce SketchpadInput / SketchpadToggle (no Row suffix anywhere) with separated value+status+onCommit; migrate every consumer (kit/type/design/folder/file panels, footer, navbar) to SDL-backed StoreCommand or WRITE_STATUS_READONLY; drop SketchpadTriadInputRow/SketchpadTriadToggleRow and HookTriad import"
-    status: pending
-  - id: phase4_validate_close
-    content: Run depcruise:layers, tsc --noEmit (js/react/sketchpad), js + react vitest, ripgrep audit for legacy symbols, manual sketchpad smoke; update ticket.md and close
-    status: pending
+ - id: ticket_open
+   content: Open MCP ticket 'Strict Read Write Hooks' under .repo/🎫/26/05/08/strict-read-write-hooks/
+   status: in_progress
+ - id: phase1_storefields_storecommands
+   content: "compose/js: rename SCHEMA_HOOK_IDLE_STATUS/SCHEMA_HOOK_READONLY_STATUS/USE_KIT_NAME_PENDING_STATUS to WRITE_STATUS_IDLE/WRITE_STATUS_READONLY/WRITE_STATUS_PENDING; rebuild StoreField (no public set; values pushed via constructor source callback); rebuild StoreCommand status using same source pattern (no kit/schema constants in the generic class); add KitStore.query<T>(body, parse, initial) read helper + KitStore.operation<TArgs>(name, vars, body, toVars) transactional kit-modifying helper (one per SDL OperationKind variant: RenameKit, DraggedPiece, AddedType, ...) + KitStore.command<TArgs>(...) non-transactional helper for workspace writes (attachBackbone, syncNow, importKit, ...); wire operationSucceeded -> correlator + invalidations.next() and operationFailed -> correlator; delete OperationRouter, seedFieldsFromDto, dispatchCorrelationEnvelope typed-kind branch, kitRenamed subscription, fieldCache; privatize submitChangeKitCommands and fetchFullKit; extend embedded tests"
+   status: pending
+ - id: phase2_react_hooks
+   content: "compose/react: rewrite every read hook as useStoreField (static) or useGraphqlField (parameterized, disposes per dep change) and every write hook as useStoreCommand; delete HookTriad/HookRead/useDraft/useOptimistic/useSchemaObjectState/useSchemaFieldState + auto-generated wrappers/useComposeReadSnap/useKitSync/useWriteQueue/useSetErrors; update embedded tests"
+   status: pending
+ - id: phase3_sketchpad
+   content: "compose/sketchpad: introduce SketchpadInput / SketchpadToggle (no Row suffix anywhere) with separated value+status+onCommit; migrate every consumer (kit/type/design/folder/file panels, footer, navbar) to SDL-backed StoreCommand or WRITE_STATUS_READONLY; drop SketchpadTriadInputRow/SketchpadTriadToggleRow and HookTriad import"
+   status: pending
+ - id: phase4_validate_close
+   content: Run depcruise:layers, tsc --noEmit (js/react/sketchpad), js + react vitest, ripgrep audit for legacy symbols, manual sketchpad smoke; update ticket.md and close
+   status: pending
 isProject: false
 ---
 
@@ -24,15 +24,15 @@ isProject: false
 
 ## Vocabulary
 
-- **Read**     = a `StoreField<T>` fed by one GraphQL query. No side-effects. No public mutator.
-- **Command**  = a `StoreCommand<TArgs>` -- the only side-effect carrier in the system. Every write is a command.
-- **Operation** = a *kit-modifying* command. Operations correspond 1:1 to the SDL `Mutation` fields backed by `union OperationKind` (`renameKit`, `dragPiecesInDesign`, `changeDescription`, `addFixedPieceToDesign`, `fixPieceInDesign`, ...). Operations are always scoped inside a draft + transaction and complete asynchronously through the rs operation stream (correlated by `requestId`).
-- **Scope** = the ids that pinpoint *where* an operation runs (`draftId`, `transactionId`, plus operation-specific addressing such as `entityId`, `designId`, `pieceId`, `tagId`, `ownerId`, `tagIds`). Every operation takes a `scope: <Op>Scope!` GraphQL variable. Caller-side, the user-facing `scope` excludes `draftId` and `transactionId`; the `operation<...>` helper opens the draft + transaction itself and merges those ids in before dispatch.
+- **Read** = a `StoreField<T>` fed by one GraphQL query. No side-effects. No public mutator.
+- **Command** = a `StoreCommand<TArgs>` -- the only side-effect carrier in the system. Every write is a command.
+- **Operation** = a _kit-modifying_ command. Operations correspond 1:1 to the SDL `Mutation` fields backed by `union OperationKind` (`renameKit`, `dragPiecesInDesign`, `changeDescription`, `addFixedPieceToDesign`, `fixPieceInDesign`, ...). Operations are always scoped inside a draft + transaction and complete asynchronously through the rs operation stream (correlated by `requestId`).
+- **Scope** = the ids that pinpoint _where_ an operation runs (`draftId`, `transactionId`, plus operation-specific addressing such as `entityId`, `designId`, `pieceId`, `tagId`, `ownerId`, `tagIds`). Every operation takes a `scope: <Op>Scope!` GraphQL variable. Caller-side, the user-facing `scope` excludes `draftId` and `transactionId`; the `operation<...>` helper opens the draft + transaction itself and merges those ids in before dispatch.
 - **Input** = the data the operation needs to perform its change (`name`, `description`, `offset`, `position`, `tag`, `tags`, `concept`, `quality`, `blueprintId`, ...). Every operation takes an `input: <Op>Input!` GraphQL variable. Empty inputs are still passed (`input: {}`) for uniformity.
 - **Finalize** = the act of closing a transaction. The operation helper finalizes the transaction with `applied: true` after `operationSucceeded` arrives (the SDL term used in `Draft.finalizedTransactions` and the existing `KitStore.finalizeKitWriteTransaction()`); on failure it finalizes with `applied: false`. There is no separate "commit" or "abort" verb.
 - **Save** = the act of turning the current draft into a checkpoint. `Save` belongs to the workspace command tier (built via `command<TArgs>`), not the operation tier. Inside an SDL operation we never "save" -- we only "finalize the open transaction".
 
-Every operation has the *same* GraphQL signature: `<fieldName>(scope: <Op>Scope!, input: <Op>Input!): Id!`. The TypeScript signature mirrors it: `StoreCommand<{ scope: TScope; input: TInput }>` where `TScope` is the operation-specific scope (no `draftId` / `transactionId` -- those are auto-supplied) and `TInput` is the operation-specific input. This is the only shape any operation ever carries.
+Every operation has the _same_ GraphQL signature: `<fieldName>(scope: <Op>Scope!, input: <Op>Input!): Id!`. The TypeScript signature mirrors it: `StoreCommand<{ scope: TScope; input: TInput }>` where `TScope` is the operation-specific scope (no `draftId` / `transactionId` -- those are auto-supplied) and `TInput` is the operation-specific input. This is the only shape any operation ever carries.
 
 Operations are a strict subset of commands. The `operation<TScope, TInput>` helper builds a kit-modifying `StoreCommand` (transactional, finalized per call); the `command<TArgs>` helper builds a non-transactional `StoreCommand` (e.g. save draft -> checkpoint, backbone attach, sync now, file import / export). Both produce the same `StoreCommand<...>` public type; consumers never need to care which kind they hold.
 
@@ -76,8 +76,6 @@ graph LR
   end
 ```
 
-
-
 The new contract is:
 
 - A read hook returns the value only: `useTypeName(typeId): string`. No `WriteStatus`, no setter.
@@ -89,61 +87,65 @@ The new contract is:
 The primitives are domain-agnostic. Nothing in here mentions kit, kit name, schema hooks, or any other consumer concept.
 
 ```ts
-export type WriteStatus =
-  | { kind: "readonly"; pending: 0; lastError?: SetError }
-  | { kind: "idle";     pending: 0; lastError?: SetError }
-  | { kind: "pending";  pending: number; lastError?: SetError }
-  | { kind: "error";    pending: 0; lastError: SetError };
+export type WriteStatus = { kind: "readonly"; pending: 0; lastError?: SetError } | { kind: "idle"; pending: 0; lastError?: SetError } | { kind: "pending"; pending: number; lastError?: SetError } | { kind: "error"; pending: 0; lastError: SetError };
 
 /** @emoji 🧊 Stable frozen identities for `useSyncExternalStore` snapshots. */
-export const WRITE_STATUS_IDLE:     WriteStatus = Object.freeze({ kind: "idle",     pending: 0 });
+export const WRITE_STATUS_IDLE: WriteStatus = Object.freeze({ kind: "idle", pending: 0 });
 export const WRITE_STATUS_READONLY: WriteStatus = Object.freeze({ kind: "readonly", pending: 0 });
-export const WRITE_STATUS_PENDING:  WriteStatus = Object.freeze({ kind: "pending",  pending: 1 });
+export const WRITE_STATUS_PENDING: WriteStatus = Object.freeze({ kind: "pending", pending: 1 });
 
 /** @emoji 📥 Read-only typed mirror. Values are pushed in by the `source` callback at construction; consumers cannot mutate. */
 export class StoreField<T> {
-  constructor(initial: T, source: (push: (next: T) => void) => Unsubscribe) {
-    this.subject = new BehaviorSubject<T>(initial);
-    this.unsubSource = source((next) => this.subject.next(next));
-  }
-  subscribe(h: () => void): Unsubscribe { /* BehaviorSubject -> handler */ }
-  getSnapshot(): T { return this.subject.getValue(); }
-  dispose(): void { this.unsubSource(); /* try { this.subject.complete(); } catch {} */ }
-  // NOTE: no `set` method. The only path that writes a value is the `push` closure handed to `source`.
+ constructor(initial: T, source: (push: (next: T) => void) => Unsubscribe) {
+  this.subject = new BehaviorSubject<T>(initial);
+  this.unsubSource = source((next) => this.subject.next(next));
+ }
+ subscribe(h: () => void): Unsubscribe {
+  /* BehaviorSubject -> handler */
+ }
+ getSnapshot(): T {
+  return this.subject.getValue();
+ }
+ dispose(): void {
+  this.unsubSource(); /* try { this.subject.complete(); } catch {} */
+ }
+ // NOTE: no `set` method. The only path that writes a value is the `push` closure handed to `source`.
 }
 
 /** @emoji 📝 The only side-effect carrier. Generic over `TArgs`; knows nothing about kit / kit-name / schema hooks. */
 export class StoreCommand<TArgs> {
-  readonly status: StoreField<WriteStatus>;
-  constructor(exec: (args: TArgs) => Promise<SetResult>) {
-    this.status = new StoreField<WriteStatus>(WRITE_STATUS_IDLE, (push) => {
-      this.pushStatus = push;
-      return () => {};
-    });
-    this.exec = exec;
-  }
-  readonly run = async (args: TArgs): Promise<SetResult> => {
-    this.pushStatus(WRITE_STATUS_PENDING);
-    const r = await this.exec(args);
-    this.pushStatus(r.ok ? WRITE_STATUS_IDLE : { kind: "error", pending: 0, lastError: r.error });
-    return r;
-  };
-  dispose(): void { this.status.dispose(); }
-  private pushStatus!: (next: WriteStatus) => void;
-  private readonly exec: (args: TArgs) => Promise<SetResult>;
+ readonly status: StoreField<WriteStatus>;
+ constructor(exec: (args: TArgs) => Promise<SetResult>) {
+  this.status = new StoreField<WriteStatus>(WRITE_STATUS_IDLE, (push) => {
+   this.pushStatus = push;
+   return () => {};
+  });
+  this.exec = exec;
+ }
+ readonly run = async (args: TArgs): Promise<SetResult> => {
+  this.pushStatus(WRITE_STATUS_PENDING);
+  const r = await this.exec(args);
+  this.pushStatus(r.ok ? WRITE_STATUS_IDLE : { kind: "error", pending: 0, lastError: r.error });
+  return r;
+ };
+ dispose(): void {
+  this.status.dispose();
+ }
+ private pushStatus!: (next: WriteStatus) => void;
+ private readonly exec: (args: TArgs) => Promise<SetResult>;
 }
 
 /** @emoji 🚦 request-id <-> Promise resolver. Used inside the shared mutation executor only. */
 export class RequestCorrelator {
-  await(requestId: string): Promise<SetResult>;
-  resolve(requestId: string, r: SetResult): void;
-  disposeAll(reason?: string): void;
+ await(requestId: string): Promise<SetResult>;
+ resolve(requestId: string, r: SetResult): void;
+ disposeAll(reason?: string): void;
 }
 ```
 
 Renamed across the codebase as part of Phase 1 (none of these names embed a consumer-specific concept like "kit name" or "schema hook"):
 
-- `SCHEMA_HOOK_IDLE_STATUS`     -> `WRITE_STATUS_IDLE`
+- `SCHEMA_HOOK_IDLE_STATUS` -> `WRITE_STATUS_IDLE`
 - `SCHEMA_HOOK_READONLY_STATUS` -> `WRITE_STATUS_READONLY`
 - `USE_KIT_NAME_PENDING_STATUS` -> `WRITE_STATUS_PENDING`
 
@@ -152,13 +154,11 @@ Deleted in the same `#region 🧱StorePrimitives`: `OperationRouter`, `Operation
 ```tsx
 // React-side primitives (kept; no surface change).
 export function useStoreField<T>(field: StoreField<T>): T {
-  return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
+ return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
 }
-export function useStoreCommand<TArgs>(
-  cmd: StoreCommand<TArgs>,
-): readonly [(args: TArgs) => Promise<SetResult>, WriteStatus] {
-  const status = useStoreField(cmd.status);
-  return [cmd.run, status] as const;
+export function useStoreCommand<TArgs>(cmd: StoreCommand<TArgs>): readonly [(args: TArgs) => Promise<SetResult>, WriteStatus] {
+ const status = useStoreField(cmd.status);
+ return [cmd.run, status] as const;
 }
 ```
 
@@ -334,7 +334,7 @@ typeName(typeId: string): StoreField<string> {
 
 ### Defining operations (kit-modifying, transactional)
 
-One declaration per SDL `Mutation` field. Every operation has the *same* shape: `<name>(scope: <Op>Scope!, input: <Op>Input!): Id!`. The helper takes `(fieldName, scopeTypeName, inputTypeName)` and the TS type params declare the user-facing scope (no draft/tx -- those are auto-supplied) and input.
+One declaration per SDL `Mutation` field. Every operation has the _same_ shape: `<name>(scope: <Op>Scope!, input: <Op>Input!): Id!`. The helper takes `(fieldName, scopeTypeName, inputTypeName)` and the TS type params declare the user-facing scope (no draft/tx -- those are auto-supplied) and input.
 
 ```ts
 // compose/js/index.ts -- KitStore constructor.
@@ -353,7 +353,7 @@ readonly createConcept         = this.operation<{ ownerId: string },            
 readonly createQuality         = this.operation<{ ownerId: string },                               { quality: QualityInput }>                         ("createQuality",         "CreateQualityScope",         "CreateQualityInput");
 ```
 
-Allocation rule between scope and input: ids that *address* the operation belong to scope; everything else (data the operation acts with) belongs to input. `dragPiecesInDesign` puts `pieceIds` in scope (target set) and `offset` in input (data). `deleteTags` puts `tagIds` in scope (the targets) with an empty input. Whole-kit operations (`renameKit`) have an empty scope and a single input field. Empty objects (`{}`) are passed explicitly so every call has the same shape.
+Allocation rule between scope and input: ids that _address_ the operation belong to scope; everything else (data the operation acts with) belongs to input. `dragPiecesInDesign` puts `pieceIds` in scope (target set) and `offset` in input (data). `deleteTags` puts `tagIds` in scope (the targets) with an empty input. Whole-kit operations (`renameKit`) have an empty scope and a single input field. Empty objects (`{}`) are passed explicitly so every call has the same shape.
 
 ### Defining commands (non-transactional, non-kit)
 
@@ -386,48 +386,48 @@ client.createQuality         : StoreCommand<{ scope: { ownerId: string };       
 ```ts
 // BEFORE -- compose/js/index.ts
 export interface KitStoreClient {
-  readonly kitName: StoreField<string>;
-  readonly renameKit: StoreCommand<string>;
-  readKitName(): Promise<string>;
-  fetchFullKit(): Promise<KitFullDto>;                                  // remove
-  submitChangeKitCommands(commands: readonly ChangeKitCommand[]): Promise<SetResult>; // remove
+ readonly kitName: StoreField<string>;
+ readonly renameKit: StoreCommand<string>;
+ readKitName(): Promise<string>;
+ fetchFullKit(): Promise<KitFullDto>; // remove
+ submitChangeKitCommands(commands: readonly ChangeKitCommand[]): Promise<SetResult>; // remove
 }
 
 // AFTER -- one StoreField per read, one StoreCommand per write, factories for parameterized reads.
 export interface KitStoreClient {
-  // Static reads.
-  readonly kitName:        StoreField<string>;
-  readonly typesIds:       StoreField<readonly string[]>;
-  readonly typesShallow:   StoreField<readonly TypeShallow[]>;
-  readonly typesMetadata:  StoreField<readonly TypeMetadataDto[]>;
-  readonly designsIds:     StoreField<readonly string[]>;
-  readonly designsShallow: StoreField<readonly DesignShallow[]>;
-  readonly designsMetadata:StoreField<readonly DesignMetadataDto[]>;
-  readonly kitSnapshot:    StoreField<KitFullDto | undefined>;
-  // ... rest of static fields ...
+ // Static reads.
+ readonly kitName: StoreField<string>;
+ readonly typesIds: StoreField<readonly string[]>;
+ readonly typesShallow: StoreField<readonly TypeShallow[]>;
+ readonly typesMetadata: StoreField<readonly TypeMetadataDto[]>;
+ readonly designsIds: StoreField<readonly string[]>;
+ readonly designsShallow: StoreField<readonly DesignShallow[]>;
+ readonly designsMetadata: StoreField<readonly DesignMetadataDto[]>;
+ readonly kitSnapshot: StoreField<KitFullDto | undefined>;
+ // ... rest of static fields ...
 
-  // Parameterized reads. Each call returns a fresh, single-purpose StoreField; React disposes via useGraphqlField.
-  kitFileUrl(fileId: string | undefined): StoreField<string | null>;
-  pieceMetadata(designId: string, pieceId: string): StoreField<PiecePlacementRowDto | undefined>;
-  typeName(typeId: string): StoreField<string>;
-  // ... rest of factories ...
+ // Parameterized reads. Each call returns a fresh, single-purpose StoreField; React disposes via useGraphqlField.
+ kitFileUrl(fileId: string | undefined): StoreField<string | null>;
+ pieceMetadata(designId: string, pieceId: string): StoreField<PiecePlacementRowDto | undefined>;
+ typeName(typeId: string): StoreField<string>;
+ // ... rest of factories ...
 
-  // Operations (kit-modifying; built via KitStore.operation<TScope, TInput>; exactly one per SDL Mutation field; uniform { scope, input } TArgs).
-  readonly renameKit:             StoreCommand<{ scope: {};                                                input: { name: string } }>;
-  readonly changeDescription:     StoreCommand<{ scope: { entityId: string };                              input: { description: string } }>;
-  readonly addFixedPieceToDesign: StoreCommand<{ scope: { designId: string };                              input: { blueprintId: string; position: PositionInput } }>;
-  readonly fixPieceInDesign:      StoreCommand<{ scope: { designId: string; pieceId: string };             input: {} }>;
-  readonly dragPieceInDesign:     StoreCommand<{ scope: { designId: string; pieceId: string };             input: { offset: { u: number; v: number } } }>;
-  readonly dragPiecesInDesign:    StoreCommand<{ scope: { designId: string; pieceIds: readonly string[] }; input: { offset: { u: number; v: number } } }>;
-  readonly createTag:             StoreCommand<{ scope: { ownerId: string };                               input: { tag: TagInput } }>;
-  readonly createTags:            StoreCommand<{ scope: { ownerId: string };                               input: { tags: readonly TagInput[] } }>;
-  readonly renameTag:             StoreCommand<{ scope: { tagId: string };                                 input: { name: string } }>;
-  readonly deleteTag:             StoreCommand<{ scope: { tagId: string };                                 input: {} }>;
-  readonly deleteTags:            StoreCommand<{ scope: { tagIds: readonly string[] };                     input: {} }>;
-  readonly createConcept:         StoreCommand<{ scope: { ownerId: string };                               input: { concept: ConceptInput } }>;
-  readonly createQuality:         StoreCommand<{ scope: { ownerId: string };                               input: { quality: QualityInput } }>;
+ // Operations (kit-modifying; built via KitStore.operation<TScope, TInput>; exactly one per SDL Mutation field; uniform { scope, input } TArgs).
+ readonly renameKit: StoreCommand<{ scope: {}; input: { name: string } }>;
+ readonly changeDescription: StoreCommand<{ scope: { entityId: string }; input: { description: string } }>;
+ readonly addFixedPieceToDesign: StoreCommand<{ scope: { designId: string }; input: { blueprintId: string; position: PositionInput } }>;
+ readonly fixPieceInDesign: StoreCommand<{ scope: { designId: string; pieceId: string }; input: {} }>;
+ readonly dragPieceInDesign: StoreCommand<{ scope: { designId: string; pieceId: string }; input: { offset: { u: number; v: number } } }>;
+ readonly dragPiecesInDesign: StoreCommand<{ scope: { designId: string; pieceIds: readonly string[] }; input: { offset: { u: number; v: number } } }>;
+ readonly createTag: StoreCommand<{ scope: { ownerId: string }; input: { tag: TagInput } }>;
+ readonly createTags: StoreCommand<{ scope: { ownerId: string }; input: { tags: readonly TagInput[] } }>;
+ readonly renameTag: StoreCommand<{ scope: { tagId: string }; input: { name: string } }>;
+ readonly deleteTag: StoreCommand<{ scope: { tagId: string }; input: {} }>;
+ readonly deleteTags: StoreCommand<{ scope: { tagIds: readonly string[] }; input: {} }>;
+ readonly createConcept: StoreCommand<{ scope: { ownerId: string }; input: { concept: ConceptInput } }>;
+ readonly createQuality: StoreCommand<{ scope: { ownerId: string }; input: { quality: QualityInput } }>;
 
-  // Commands: empty until SDL exposes non-transactional mutations (saveDraft -> checkpoint, attachBackbone, syncNow, importKit, ...).
+ // Commands: empty until SDL exposes non-transactional mutations (saveDraft -> checkpoint, attachBackbone, syncNow, importKit, ...).
 }
 ```
 
@@ -444,7 +444,7 @@ Embedded tests in [compose/js/index.ts](compose/js/index.ts) get one new `descri
 
 - Keep `useStoreField`, `useStoreCommand`, `useKitName`, `useRenameKit` as primitives.
 - Add `useGraphqlField<T>(make, deps): T` for parameterized reads. The hook memoizes the `StoreField` over `deps` and **disposes** it on dep change / unmount (no caching anywhere else).
-- Delete bulk schema generators (`useActor`*, `useUser`*, ..., `useKitTags`, `useKitVersion`, `useKitId`, `useKitHash` -- all `useSchemaFieldState` / `useSchemaObjectState` callers).
+- Delete bulk schema generators (`useActor`_, `useUser`_, ..., `useKitTags`, `useKitVersion`, `useKitId`, `useKitHash` -- all `useSchemaFieldState` / `useSchemaObjectState` callers).
 - Keep `useWriteIndicator(status)` as the only `WriteStatus` UI helper; reads no longer carry status.
 - Delete `useDraft`, `useOptimistic`, `useComposeReadSnap`, `useComposeStoreSelector`, `useKitSync`, `useWriteQueue`, `useSetErrors` (subsumed by per-command `WriteStatus.lastError`).
 
@@ -453,9 +453,9 @@ Embedded tests in [compose/js/index.ts](compose/js/index.ts) get one new `descri
 ```tsx
 // compose/react/index.tsx
 export function useGraphqlField<T>(make: () => StoreField<T>, deps: React.DependencyList): T {
-  const field = React.useMemo(make, deps);
-  React.useEffect(() => () => field.dispose(), [field]);
-  return useStoreField(field);
+ const field = React.useMemo(make, deps);
+ React.useEffect(() => () => field.dispose(), [field]);
+ return useStoreField(field);
 }
 ```
 
@@ -486,15 +486,15 @@ export function useTypesIds(): readonly string[] {
 // Parameterized read -- BEFORE: HookTriad<string | null>, ~80 lines.
 // AFTER:
 export function useKitFileUrl(fileId: string | undefined): string | null {
-  const client = useKitStoreClient();
-  if (!client) throw new Error("useKitFileUrl: kit client required inside KitScope");
-  return useGraphqlField(() => client.kitFileUrl(fileId), [client, fileId]);
+ const client = useKitStoreClient();
+ if (!client) throw new Error("useKitFileUrl: kit client required inside KitScope");
+ return useGraphqlField(() => client.kitFileUrl(fileId), [client, fileId]);
 }
 
 export function usePieceMetadata(designId?: string, pieceId?: string): PiecePlacementRowDto | undefined {
-  const client = useKitStoreClient();
-  if (!client) throw new Error("usePieceMetadata: kit client required inside KitScope");
-  return useGraphqlField(() => client.pieceMetadata(designId ?? "", pieceId ?? ""), [client, designId, pieceId]);
+ const client = useKitStoreClient();
+ if (!client) throw new Error("usePieceMetadata: kit client required inside KitScope");
+ return useGraphqlField(() => client.pieceMetadata(designId ?? "", pieceId ?? ""), [client, designId, pieceId]);
 }
 ```
 
@@ -503,28 +503,28 @@ export function usePieceMetadata(designId?: string, pieceId?: string): PiecePlac
 ```tsx
 // BEFORE (lines ~3404-3431) -- useDragPieces with manual useState<WriteStatus> and hand-built ChangeKitCommand.
 export function useDragPieces(): {
-  run: (designId: string, pieceIds: readonly string[], offset: { u: number; v: number }) => Promise<SetResult>;
-  status: WriteStatus;
+ run: (designId: string, pieceIds: readonly string[], offset: { u: number; v: number }) => Promise<SetResult>;
+ status: WriteStatus;
 } {
-  const client = useKitStoreClient();
-  const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
-  const run = React.useCallback(async (designId, pieceIds, offset) => {
-    setStatus({ kind: "pending", pending: 1 });
-    const r = await client!.submitChangeKitCommands(/* hand-built ChangeKitCommand */);
-    setStatus(r.ok ? { kind: "idle", pending: 0 } : { kind: "error", pending: 0, lastError: r.error });
-    return r;
-  }, [client]);
-  return { run, status };
+ const client = useKitStoreClient();
+ const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+ const run = React.useCallback(
+  async (designId, pieceIds, offset) => {
+   setStatus({ kind: "pending", pending: 1 });
+   const r = await client!.submitChangeKitCommands(/* hand-built ChangeKitCommand */);
+   setStatus(r.ok ? { kind: "idle", pending: 0 } : { kind: "error", pending: 0, lastError: r.error });
+   return r;
+  },
+  [client],
+ );
+ return { run, status };
 }
 
 // AFTER -- one line; tuple shape; named SDL operation; uniform { scope, input } TArgs.
-export function useDragPiecesInDesign(): readonly [
-  (args: { scope: { designId: string; pieceIds: readonly string[] }; input: { offset: { u: number; v: number } } }) => Promise<SetResult>,
-  WriteStatus,
-] {
-  const client = useKitStoreClient();
-  if (!client) throw new Error("useDragPiecesInDesign: kit client required inside KitScope");
-  return useStoreCommand(client.dragPiecesInDesign);
+export function useDragPiecesInDesign(): readonly [(args: { scope: { designId: string; pieceIds: readonly string[] }; input: { offset: { u: number; v: number } } }) => Promise<SetResult>, WriteStatus] {
+ const client = useKitStoreClient();
+ if (!client) throw new Error("useDragPiecesInDesign: kit client required inside KitScope");
+ return useStoreCommand(client.dragPiecesInDesign);
 }
 ```
 
@@ -534,35 +534,34 @@ Hooks for legacy generic writes (`useUpdateType`, `useUpdateDesign`, `useUpdateA
 
 ```tsx
 it("useTypesIds returns readonly string[] only (no WriteStatus)", async () => {
-  const { result } = renderHook(() => useTypesIds(), { wrapper: KitScopeWrapper });
-  expect(Array.isArray(result.current)).toBe(true);
+ const { result } = renderHook(() => useTypesIds(), { wrapper: KitScopeWrapper });
+ expect(Array.isArray(result.current)).toBe(true);
 });
 
 it("useDragPieces returns [run, WriteStatus] tuple", async () => {
-  const { result } = renderHook(() => useDragPieces(), { wrapper: KitScopeWrapper });
-  const [run, status] = result.current;
-  expect(typeof run).toBe("function");
-  expect(status.kind).toBe("idle");
+ const { result } = renderHook(() => useDragPieces(), { wrapper: KitScopeWrapper });
+ const [run, status] = result.current;
+ expect(typeof run).toBe("function");
+ expect(status.kind).toBe("idle");
 });
 
 it("useGraphqlField disposes the previous field on dep change", () => {
-  const disposed: string[] = [];
-  const make = (id: string) =>
-    new StoreField<string>(id, (_push) => () => { disposed.push(id); });
-  const { rerender } = renderHook(
-    ({ id }: { id: string }) => useGraphqlField(() => make(id), [id]),
-    { initialProps: { id: "a" } },
-  );
-  rerender({ id: "b" });
-  expect(disposed).toEqual(["a"]);
+ const disposed: string[] = [];
+ const make = (id: string) =>
+  new StoreField<string>(id, (_push) => () => {
+   disposed.push(id);
+  });
+ const { rerender } = renderHook(({ id }: { id: string }) => useGraphqlField(() => make(id), [id]), { initialProps: { id: "a" } });
+ rerender({ id: "b" });
+ expect(disposed).toEqual(["a"]);
 });
 
 it("StoreField has no public set / mutation surface", () => {
-  const f = new StoreField<number>(0, () => () => {});
-  expect((f as unknown as { set?: unknown }).set).toBeUndefined();
-  expect(typeof f.subscribe).toBe("function");
-  expect(typeof f.getSnapshot).toBe("function");
-  expect(typeof f.dispose).toBe("function");
+ const f = new StoreField<number>(0, () => () => {});
+ expect((f as unknown as { set?: unknown }).set).toBeUndefined();
+ expect(typeof f.subscribe).toBe("function");
+ expect(typeof f.getSnapshot).toBe("function");
+ expect(typeof f.dispose).toBe("function");
 });
 ```
 
@@ -574,78 +573,59 @@ it("StoreField has no public set / mutation surface", () => {
 // compose/sketchpad/index.tsx -- replaces SketchpadTriadInputRow / SketchpadTriadToggleRow.
 // "Row" is gone from every name; the binding component is just a value+status+onCommit widget.
 function SketchpadInput<T = string>(props: {
-  id: string;
-  value: T;
-  status: WriteStatus;
-  onCommit: (next: T) => Promise<SetResult>;
-  placeholder?: string;
-  placeholderId?: string;
-  mapCommit?: (raw: string) => T;          // default: identity for T = string
+ id: string;
+ value: T;
+ status: WriteStatus;
+ onCommit: (next: T) => Promise<SetResult>;
+ placeholder?: string;
+ placeholderId?: string;
+ mapCommit?: (raw: string) => T; // default: identity for T = string
 }): React.ReactElement {
-  const { disabled, spinning, error } = useWriteIndicator(props.status);
-  const [draft, setDraft] = React.useState<T | null>(null);
-  const display = (draft ?? props.value) as T;
-  const finalize = React.useCallback(async () => {
-    if (draft === null) return;
-    const r = await props.onCommit(draft);
-    if (r.ok) setDraft(null);
-  }, [draft, props.onCommit]);
-  return (
-    <TreeRow id={props.id}>
-      <Input
-        value={String(display ?? "")}
-        disabled={disabled}
-        placeholder={props.placeholder}
-        onChange={(e) => setDraft((props.mapCommit ?? ((s) => s as unknown as T))(e.target.value))}
-        onBlur={finalize}
-      />
-      {spinning ? <Spinner /> : null}
-      {error ? <ErrorLine message={error.message} /> : null}
-    </TreeRow>
-  );
+ const { disabled, spinning, error } = useWriteIndicator(props.status);
+ const [draft, setDraft] = React.useState<T | null>(null);
+ const display = (draft ?? props.value) as T;
+ const finalize = React.useCallback(async () => {
+  if (draft === null) return;
+  const r = await props.onCommit(draft);
+  if (r.ok) setDraft(null);
+ }, [draft, props.onCommit]);
+ return (
+  <TreeRow id={props.id}>
+   <Input value={String(display ?? "")} disabled={disabled} placeholder={props.placeholder} onChange={(e) => setDraft((props.mapCommit ?? ((s) => s as unknown as T))(e.target.value))} onBlur={finalize} />
+   {spinning ? <Spinner /> : null}
+   {error ? <ErrorLine message={error.message} /> : null}
+  </TreeRow>
+ );
 }
 
-function SketchpadToggle(props: {
-  id: string;
-  value: boolean | undefined | null;
-  status: WriteStatus;
-  onCommit: (next: boolean) => Promise<SetResult>;
-  icon?: React.ReactNode;
-}): React.ReactElement {
-  const { disabled, spinning, error } = useWriteIndicator(props.status);
-  return (
-    <TreeRow id={props.id} icon={props.icon}>
-      <Toggle checked={!!props.value} disabled={disabled} onChange={(next) => void props.onCommit(next)} />
-      {spinning ? <Spinner /> : null}
-      {error ? <ErrorLine message={error.message} /> : null}
-    </TreeRow>
-  );
+function SketchpadToggle(props: { id: string; value: boolean | undefined | null; status: WriteStatus; onCommit: (next: boolean) => Promise<SetResult>; icon?: React.ReactNode }): React.ReactElement {
+ const { disabled, spinning, error } = useWriteIndicator(props.status);
+ return (
+  <TreeRow id={props.id} icon={props.icon}>
+   <Toggle checked={!!props.value} disabled={disabled} onChange={(next) => void props.onCommit(next)} />
+   {spinning ? <Spinner /> : null}
+   {error ? <ErrorLine message={error.message} /> : null}
+  </TreeRow>
+ );
 }
 ```
 
-`SketchpadInput` and `SketchpadToggle` are the *only* binding components. `TreeRow` stays as the layout primitive but is never wrapped under a "Row"-suffixed semantic name.
+`SketchpadInput` and `SketchpadToggle` are the _only_ binding components. `TreeRow` stays as the layout primitive but is never wrapped under a "Row"-suffixed semantic name.
 
 ### Call site migration -- kit name
 
 ```tsx
 // BEFORE -- legacy triad input.
 function KitSectionForm() {
-  const nameTriad = useKitName();   // legacy: returned [name, setName, status] before this ticket
-  return <SketchpadTriadInputRow triad={nameTriad} id="...name" />;
+ const nameTriad = useKitName(); // legacy: returned [name, setName, status] before this ticket
+ return <SketchpadTriadInputRow triad={nameTriad} id="...name" />;
 }
 
 // AFTER -- strict split; uniform { scope, input }.
 function KitSectionForm() {
-  const name = useKitName();                                 // read: string
-  const [renameKit, status] = useRenameKit();                // write: [run, WriteStatus]
-  return (
-    <SketchpadInput
-      id="compose.sketchpad.app.kit.panel.details.section.kit.name"
-      value={name}
-      status={status}
-      onCommit={(next) => renameKit({ scope: {}, input: { name: next } })}
-    />
-  );
+ const name = useKitName(); // read: string
+ const [renameKit, status] = useRenameKit(); // write: [run, WriteStatus]
+ return <SketchpadInput id="compose.sketchpad.app.kit.panel.details.section.kit.name" value={name} status={status} onCommit={(next) => renameKit({ scope: {}, input: { name: next } })} />;
 }
 ```
 
@@ -654,23 +634,16 @@ function KitSectionForm() {
 ```tsx
 // BEFORE -- auto-generated generic-field hook routed through legacy submitChangeKitCommands.
 function TypeSection({ id }: { id: string }) {
-  const descTriad = useTypeDescription(id);                  // HookTriad<string>
-  return <SketchpadTriadInputRow triad={descTriad} id="...type.description" />;
+ const descTriad = useTypeDescription(id); // HookTriad<string>
+ return <SketchpadTriadInputRow triad={descTriad} id="...type.description" />;
 }
 
 // AFTER -- paired read + write, no caching, fresh StoreField per typeId, actual SDL operation.
 function TypeSection({ id }: { id: string }) {
-  const client = useKitStoreClient()!;
-  const description = useGraphqlField(() => client.entityDescription(id), [client, id]);
-  const [changeDescription, status] = useStoreCommand(client.changeDescription);
-  return (
-    <SketchpadInput
-      id="compose.sketchpad.app.type.panel.details.section.type.description"
-      value={description}
-      status={status}
-      onCommit={(next) => changeDescription({ scope: { entityId: id }, input: { description: next } })}
-    />
-  );
+ const client = useKitStoreClient()!;
+ const description = useGraphqlField(() => client.entityDescription(id), [client, id]);
+ const [changeDescription, status] = useStoreCommand(client.changeDescription);
+ return <SketchpadInput id="compose.sketchpad.app.type.panel.details.section.type.description" value={description} status={status} onCommit={(next) => changeDescription({ scope: { entityId: id }, input: { description: next } })} />;
 }
 ```
 
@@ -679,16 +652,11 @@ function TypeSection({ id }: { id: string }) {
 ```tsx
 // AFTER -- read still works; finalize short-circuits with WRITE_STATUS_READONLY until SDL exposes a `changeTypeIcon` operation.
 function TypeIcon({ id }: { id: string }) {
-  const client = useKitStoreClient()!;
-  const icon = useGraphqlField(() => client.typeIcon(id), [client, id]);
-  return (
-    <SketchpadInput
-      id="compose.sketchpad.app.type.panel.details.section.type.icon"
-      value={icon}
-      status={WRITE_STATUS_READONLY}
-      onCommit={async () => ({ ok: false, error: { kind: "Readonly", message: "icon edits not yet supported by SDL" } })}
-    />
-  );
+ const client = useKitStoreClient()!;
+ const icon = useGraphqlField(() => client.typeIcon(id), [client, id]);
+ return (
+  <SketchpadInput id="compose.sketchpad.app.type.panel.details.section.type.icon" value={icon} status={WRITE_STATUS_READONLY} onCommit={async () => ({ ok: false, error: { kind: "Readonly", message: "icon edits not yet supported by SDL" } })} />
+ );
 }
 ```
 

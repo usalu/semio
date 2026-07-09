@@ -82,22 +82,22 @@ Key functions:
 
 ### 4. Current Go CLI ID formats (for reference)
 
-| Entity      | Current `GetID()` format             | Example                               |
-| ----------- | ------------------------------------ | ------------------------------------- |
-| Project     | `{kindEmoji}@{name}`                 | `👤@compose`                            |
-| Bundle      | `{kindEmoji}{name}`                  | `📚compose/js`                          |
-| Folder      | `{kindEmoji}{path}`                  | `🗃️compose/js`                          |
+| Entity      | Current `GetID()` format             | Example                                   |
+| ----------- | ------------------------------------ | ----------------------------------------- |
+| Project     | `{kindEmoji}@{name}`                 | `👤@compose`                              |
+| Bundle      | `{kindEmoji}{name}`                  | `📚compose/js`                            |
+| Folder      | `{kindEmoji}{path}`                  | `🗃️compose/js`                            |
 | File        | `{kindEmoji}{path}`                  | `💻compose/go/compose.go`                 |
 | Section     | `🔖{file}#{name}`                    | `🔖compose/js/compose.ts#Entity IDs`      |
 | Definition  | `{kindEmoji}{file}#{section}§{name}` | `🛠️compose/js/compose.ts#Kit§validateKit` |
-| Ticket      | `🎫{YYYY}/{MM}/{DD}/{slug}`          | `🎫2026/02/14/MY-TICKET`              |
-| Goal        | `🎯{id}`                             | `🎯R26-02/RUNNING-SKETCHPAD`          |
-| Draft       | `✍{id}`                              | `✍MY-DRAFT`                           |
-| Todo        | `📝{id}`                             | `📝FIX-BUG`                           |
-| Policy      | `🛡️/{id}`                            | `🛡️/code`                             |
-| Statute     | `🚫{path}`                           | `🚫Code#Header#Missing Region`        |
-| Contributor | `👤{github}`                         | `👤usalu`                             |
-| Commit      | `🔀{sha}`                            | `🔀abc123`                            |
+| Ticket      | `🎫{YYYY}/{MM}/{DD}/{slug}`          | `🎫2026/02/14/MY-TICKET`                  |
+| Goal        | `🎯{id}`                             | `🎯R26-02/RUNNING-SKETCHPAD`              |
+| Draft       | `✍{id}`                              | `✍MY-DRAFT`                               |
+| Todo        | `📝{id}`                             | `📝FIX-BUG`                               |
+| Policy      | `🛡️/{id}`                            | `🛡️/code`                                 |
+| Statute     | `🚫{path}`                           | `🚫Code#Header#Missing Region`            |
+| Contributor | `👤{github}`                         | `👤usalu`                                 |
+| Commit      | `🔀{sha}`                            | `🔀abc123`                                |
 
 ### 5. What needs updating for new ID format
 

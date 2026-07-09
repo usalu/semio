@@ -2,30 +2,30 @@
 name: Procedural 2D Split
 overview: Split procedural into parallel `2d` and `3d` packages, add a full 2D vector-graphics flow kernel/module, render the 2D procedural preview on the infinite canvas (cavas) while 3D keeps the infinite world, and add SVG/PDF/PNG exporters behind interfaces.
 todos:
-  - id: ticket
-    content: Open repo ticket and associate the most appropriate goal (read repo://goals first).
-    status: completed
-  - id: split
-    content: "Stage 1: Rename procedural packages to -3d, fix stale cwd paths, delete legacy procedural/play, add procedural-2d ports."
-    status: completed
-  - id: kernel
-    content: "Stage 2: Build geometry/drawing Rust kernel + @semio-tech/geometry-drawing-js bridge (paths/beziers, fills, strokes, gradients, text, layers, clipping, booleans; drawing-* handles)."
-    status: completed
-  - id: module
-    content: "Stage 3: Build flow/module/draw WASM module, register module id 'draw' in flow loaders + vite aliases."
-    status: completed
-  - id: react2d
-    content: "Stage 4: Create @semio-tech/procedural-2d-react with Procedural2dExtensionHost and Procedural2dPreview on infinite-cavas."
-    status: completed
-  - id: play2d
-    content: "Stage 5: Create @semio-tech/procedural-2d-play, register cavas preview surface host + fixtures."
-    status: completed
-  - id: exporters
-    content: "Stage 6: Implement SVG/PDF/PNG exporters behind interfaces and wire toolbar export buttons."
-    status: completed
-  - id: wiring
-    content: "Stage 7: Register launch.json commands, extend tests, validate at runtime, close ticket."
-    status: completed
+ - id: ticket
+   content: Open repo ticket and associate the most appropriate goal (read repo://goals first).
+   status: completed
+ - id: split
+   content: "Stage 1: Rename procedural packages to -3d, fix stale cwd paths, delete legacy procedural/play, add procedural-2d ports."
+   status: completed
+ - id: kernel
+   content: "Stage 2: Build geometry/drawing Rust kernel + @semio-tech/geometry-drawing-js bridge (paths/beziers, fills, strokes, gradients, text, layers, clipping, booleans; drawing-* handles)."
+   status: completed
+ - id: module
+   content: "Stage 3: Build flow/module/draw WASM module, register module id 'draw' in flow loaders + vite aliases."
+   status: completed
+ - id: react2d
+   content: "Stage 4: Create @semio-tech/procedural-2d-react with Procedural2dExtensionHost and Procedural2dPreview on infinite-cavas."
+   status: completed
+ - id: play2d
+   content: "Stage 5: Create @semio-tech/procedural-2d-play, register cavas preview surface host + fixtures."
+   status: completed
+ - id: exporters
+   content: "Stage 6: Implement SVG/PDF/PNG exporters behind interfaces and wire toolbar export buttons."
+   status: completed
+ - id: wiring
+   content: "Stage 7: Register launch.json commands, extend tests, validate at runtime, close ticket."
+   status: completed
 isProject: false
 ---
 
@@ -103,6 +103,3 @@ flowchart LR
   FlowCanvas --> host3d
   FlowCanvas --> host2d
 ```
-
-
-

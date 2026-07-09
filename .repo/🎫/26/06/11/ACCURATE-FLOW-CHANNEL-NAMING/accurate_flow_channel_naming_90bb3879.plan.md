@@ -2,27 +2,27 @@
 name: Accurate Flow Channel Naming
 overview: Refactor neural engine, all flow modules, flow GUI, and procedural fixtures so operations return channel-keyed dictionaries and every channel carries four naming levels (Code, Abbreviation, Name, FullName), eliminating the magic "out"/"in" ports.
 todos:
-  - id: engine
-    content: "neural/engine: four-level ChannelSpec, drop out/in magic, keyed output routing"
-    status: completed
-  - id: modules
-    content: "All flow modules: keyed output dicts + four-level channel specs (core, math, text, logic, list, dictionary, bim, brep, wasm)"
-    status: completed
-  - id: flowcore
-    content: "flow/core + dag crate: source channels, output ports from dict keys, IoPortSpec naming levels, cluster IO, builtin test kinds"
-    status: completed
-  - id: flowreact
-    content: "flow/react + flow/play: named ports in fixtures, tests, fallbacks"
-    status: completed
-  - id: procedural
-    content: procedural react/play + hand-fix all fixtures with named ports (incl. mushroom planarFaceWire)
-    status: completed
-  - id: tests
-    content: Run cargo + vitest suites, verify runtime previews with [DEBUG] logs, fix fallout
-    status: completed
-  - id: close
-    content: Close ticket with summary and touched files
-    status: completed
+ - id: engine
+   content: "neural/engine: four-level ChannelSpec, drop out/in magic, keyed output routing"
+   status: completed
+ - id: modules
+   content: "All flow modules: keyed output dicts + four-level channel specs (core, math, text, logic, list, dictionary, bim, brep, wasm)"
+   status: completed
+ - id: flowcore
+   content: "flow/core + dag crate: source channels, output ports from dict keys, IoPortSpec naming levels, cluster IO, builtin test kinds"
+   status: completed
+ - id: flowreact
+   content: "flow/react + flow/play: named ports in fixtures, tests, fallbacks"
+   status: completed
+ - id: procedural
+   content: procedural react/play + hand-fix all fixtures with named ports (incl. mushroom planarFaceWire)
+   status: completed
+ - id: tests
+   content: Run cargo + vitest suites, verify runtime previews with [DEBUG] logs, fix fallout
+   status: completed
+ - id: close
+   content: Close ticket with summary and touched files
+   status: completed
 isProject: false
 ---
 
@@ -100,7 +100,7 @@ Each module wraps its payload under the output channel name and declares four-le
 
 ## 6. Verification
 
-- `cargo test` across neural/engine, flow/modules/*, flow/core, dag.
+- `cargo test` across neural/engine, flow/modules/\*, flow/core, dag.
 - Vitest for flow/react, flow/play, procedural/react, procedural/play via nx.
 - Load procedural plays headlessly and confirm evaluated previews (volume value present) via `[DEBUG]` logs, then remove the logs.
 - Close ticket `2026/06/11/ACCURATEFLOWCHANNELNAMING` with summary and file list.

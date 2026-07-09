@@ -2,36 +2,36 @@
 name: Wgpu Panel Glass Blur
 overview: Restore real frosted-glass panels in the wgpu renderer (side panel, context menus/dropdowns, window measures/engagement rails) by adding a genuine GPU backdrop-blur + saturate + tint composite, replacing the current opaque flat-fill approximations, to match the premigration React `ui.css` glass utilities.
 todos:
-  - id: tokens
-    content: Add glassMenuAlpha/glassWindowOptionsAlpha + blur/saturate metrics to tokens.json; regenerate rs/py/ts codegen
-    status: completed
-  - id: theme-rs
-    content: "Rework ui/wgpu/rs/theme.rs: replace opaque glass_panel_fill bake with per-tier tint/alpha/blur constants; update tests"
-    status: completed
-  - id: shaders
-    content: Add BLUR_DOWNSAMPLE_SHADER and GLASS_SHADER WGSL to ui/wgpu/rs/shaders.rs
-    status: completed
-  - id: gpu-offscreen
-    content: Add offscreen mip-chained scene_color_texture + sampler to GpuContext (gpu.rs), recreated on resize
-    status: completed
-  - id: draw-pipeline
-    content: Retarget main+raster passes to scene_color_texture in draw.rs; add downsample sub-pass, blit pass, and glass-composite pass consuming DrawList.glass_regions before the existing overlay pass
-    status: completed
-  - id: drawlist-api
-    content: Add GlassRegion/GlassTier + DrawList::push_glass API
-    status: completed
-  - id: migrate-shell
-    content: Migrate side panel, context menu/dropdown/palette/theme-dropdown, and measures/engagement rails in shell.rs to push_glass
-    status: completed
-  - id: migrate-widgets
-    content: Migrate select/dropdown popup in ui/wgpu/rs/widgets.rs to push_glass(Menu)
-    status: completed
-  - id: cleanup
-    content: Remove now-dead overlay_bg opaque token/field if fully superseded
-    status: completed
-  - id: verify
-    content: cargo test, wasm rebuild, E2E rerun, visual check of real blur/saturate/tint on side panel, context menu, and window-options rails in both themes
-    status: completed
+ - id: tokens
+   content: Add glassMenuAlpha/glassWindowOptionsAlpha + blur/saturate metrics to tokens.json; regenerate rs/py/ts codegen
+   status: completed
+ - id: theme-rs
+   content: "Rework ui/wgpu/rs/theme.rs: replace opaque glass_panel_fill bake with per-tier tint/alpha/blur constants; update tests"
+   status: completed
+ - id: shaders
+   content: Add BLUR_DOWNSAMPLE_SHADER and GLASS_SHADER WGSL to ui/wgpu/rs/shaders.rs
+   status: completed
+ - id: gpu-offscreen
+   content: Add offscreen mip-chained scene_color_texture + sampler to GpuContext (gpu.rs), recreated on resize
+   status: completed
+ - id: draw-pipeline
+   content: Retarget main+raster passes to scene_color_texture in draw.rs; add downsample sub-pass, blit pass, and glass-composite pass consuming DrawList.glass_regions before the existing overlay pass
+   status: completed
+ - id: drawlist-api
+   content: Add GlassRegion/GlassTier + DrawList::push_glass API
+   status: completed
+ - id: migrate-shell
+   content: Migrate side panel, context menu/dropdown/palette/theme-dropdown, and measures/engagement rails in shell.rs to push_glass
+   status: completed
+ - id: migrate-widgets
+   content: Migrate select/dropdown popup in ui/wgpu/rs/widgets.rs to push_glass(Menu)
+   status: completed
+ - id: cleanup
+   content: Remove now-dead overlay_bg opaque token/field if fully superseded
+   status: completed
+ - id: verify
+   content: cargo test, wasm rebuild, E2E rerun, visual check of real blur/saturate/tint on side panel, context menu, and window-options rails in both themes
+   status: completed
 isProject: false
 ---
 
@@ -47,13 +47,11 @@ None of wgpu's "glass" surfaces are actually translucent/blurred today — they'
 
 Premigration React (`ui/styling/js/ui.css`) instead uses real `backdrop-filter: blur(...) saturate(1.45)` + a translucent `color-mix` background for each tier:
 
-
 | Tier                                               | CSS utility               | Alpha                 | Blur            |
 | -------------------------------------------------- | ------------------------- | --------------------- | --------------- |
 | panel (side panel)                                 | `ui-glass-panel`          | 0.58 of `--panel`     | 2.5rem (40px)   |
 | menu (context menu/dropdown/select/command/dialog) | `ui-glass-menu`           | 0.36 of `--temporary` | 1.5rem (24px)   |
 | windowOptions (measures rail, engagement rail)     | `ui-glass-window-options` | 0.22 of `--panel`     | 0.875rem (14px) |
-
 
 (`toolbar` tier exists in the CSS/React glass-tier enum but has no active `GlassTierProvider` usage today — out of scope.)
 
@@ -72,8 +70,6 @@ flowchart TB
   Blit --> Glass
   Glass --> Overlay
 ```
-
-
 
 WebGPU can't sample a texture it is currently rendering into, so the main + raster passes must target a new offscreen `scene_color_texture` instead of the swapchain `view` directly; a cheap blit + per-region glass composite pass then produces the final `view`, and the existing overlay pass (crisp UI) still draws on top unchanged.
 
@@ -114,4 +110,3 @@ WebGPU can't sample a texture it is currently rendering into, so the main + rast
 - Rebuild wasm (`bun ./framework/renderer/wgpu/script.ts wasm`).
 - Re-run the wgpu E2E suite; visually confirm in the browser that moving a docked 3D/2D window under the side panel, a context menu, or a window-options rail shows a genuinely blurred/saturated/tinted glimpse of that content (not a flat opaque box), in both light and dark themes, matching the React reference glass look.
 - Repo workflow: open/reopen a ticket under the appropriate goal (read `repo://goals` first), keep temp artifacts in the ticket folder, close with a summary listing all touched files.
-

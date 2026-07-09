@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Investigating Design app performance issues. The test `sketchpad.test.ts` expects pan operations with 180 pieces (Metabolism design) to complete in <100ms.
@@ -60,6 +61,7 @@ The test expectation of <100ms for operations with 180 nodes appears unrealistic
 ## Log
 
 ## Summary
+
 # Summary
 
 Design App Pan Performance Investigation

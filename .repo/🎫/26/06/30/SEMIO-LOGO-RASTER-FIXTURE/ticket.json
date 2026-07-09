@@ -10,9 +10,5 @@
     "id": "ff8a1f6f",
     "local": "single_side_panel_tree_mechanism_ff8a1f6f.plan.md"
   },
-  "files": [
-    "framework/product/platform/renderer/react/index.tsx",
-    ".repo/🎫/26/06/30/SINGLE-SIDE-PANEL-TREE-MECHANISM/ticket.json",
-    ".repo/🎫/26/06/30/SINGLE-SIDE-PANEL-TREE-MECHANISM/verify_side_panel_trees.tsx"
-  ]
+  "files": ["framework/product/platform/renderer/react/index.tsx", ".repo/🎫/26/06/30/SINGLE-SIDE-PANEL-TREE-MECHANISM/ticket.json", ".repo/🎫/26/06/30/SINGLE-SIDE-PANEL-TREE-MECHANISM/verify_side_panel_trees.tsx"]
 }

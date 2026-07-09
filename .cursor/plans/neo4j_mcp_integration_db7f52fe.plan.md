@@ -2,21 +2,21 @@
 name: neo4j mcp integration
 overview: Wire up the official Neo4j MCP server (`uvx mcp-neo4j-cypher`) once per technology (compose, elements, coda, reuse) into every MCP client config, and make the connection to the dev's native Neo4j Desktop 2 zero-touch on devcontainer, Windows, macOS, and Linux.
 todos:
-  - id: mcp_configs
-    content: Add 4 neo4j-<tech> MCP entries to .mcp.json, .cursor/mcp.json, .windsurf/mcp.json, .kiro/settings/mcp.json
-    status: completed
-  - id: devcontainer
-    content: "Update .devcontainer/devcontainer.json: containerEnv, runArgs host-gateway, port 7687 forward"
-    status: completed
-  - id: install_native_ps1
-    content: "Extend .devcontainer/install-native.ps1: winget Neo4j Desktop + persisted user env vars"
-    status: completed
-  - id: install_native_sh
-    content: "Create .devcontainer/install-native.sh: macOS + Linux zero-touch (Neo4j Desktop install, env, uv, workspace setup)"
-    status: completed
-  - id: workspace_setup
-    content: Add uvx prefetch of mcp-neo4j-cypher to scripts/workspace-setup.script.ts
-    status: completed
+ - id: mcp_configs
+   content: Add 4 neo4j-<tech> MCP entries to .mcp.json, .cursor/mcp.json, .windsurf/mcp.json, .kiro/settings/mcp.json
+   status: completed
+ - id: devcontainer
+   content: "Update .devcontainer/devcontainer.json: containerEnv, runArgs host-gateway, port 7687 forward"
+   status: completed
+ - id: install_native_ps1
+   content: "Extend .devcontainer/install-native.ps1: winget Neo4j Desktop + persisted user env vars"
+   status: completed
+ - id: install_native_sh
+   content: "Create .devcontainer/install-native.sh: macOS + Linux zero-touch (Neo4j Desktop install, env, uv, workspace setup)"
+   status: completed
+ - id: workspace_setup
+   content: Add uvx prefetch of mcp-neo4j-cypher to scripts/workspace-setup.script.ts
+   status: completed
 isProject: false
 ---
 
@@ -131,8 +131,6 @@ flowchart LR
   Desktop --> dbReuse[(reuse)]
 ```
 
-
-
 URI resolution per environment:
 
 - Native Win/Mac/Linux: `bolt://localhost:7687` (from user env).
@@ -142,4 +140,3 @@ URI resolution per environment:
 
 - Auto-creating the four databases in Neo4j Desktop 2 — Desktop 2 owns DBMS lifecycle; we document one-time db creation in the devcontainer README during ticket cleanup.
 - The actual schemas (per-technology GraphQL/Cypher schemas) — this ticket only delivers the connection plumbing.
-

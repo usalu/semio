@@ -5,7 +5,5 @@
   "description": "One-shot Redraw nodes snapped camera because WASM fixture JSON carried an updated camera and shell had no ease. Preserve fixture camera from previous state on redraw patch; after fixture commit, ease boardPlayPaneCamerasBaseline from mirror toward triptychCamerasFromFixture with same third-hold two-thirds blend as post-play (shorter total). Cancel nodes RAF on redraw play start and when post-play override ease starts.",
   "summary": "Implemented explicit per-LOD board interaction mechanisms across the TS renderer and Rust host. Minimap now disables individual picks and drag while preserving area selection; overview uses indirect handle rings and two-step indirect target selection; normal exposes direct handle linking and rendering; detail and micro keep handle selection with proximity-capable link targeting. The TS overlay path now derives node and handle captions from kind catalogs so detail can show abbreviated handle labels and node-kind fallbacks. Verified with the focused Vitest board suite and the full Rust board crate tests.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪14da4d2484c0453e9b76c6c0d4bc28a8"
-  ]
+  "sessions": ["⚪14da4d2484c0453e9b76c6c0d4bc28a8"]
 }

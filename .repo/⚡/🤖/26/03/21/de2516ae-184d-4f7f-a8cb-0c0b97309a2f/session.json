@@ -1592,9 +1592,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/de2516ae-184d-4f7f-a8cb-0c0b97309a2f.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/sketchpad.test.ts"
-            ],
+            "files": ["compose/sketchpad/sketchpad.test.ts"],
             "summary": "All 6 sketchpad Playwright tests already pass without changes: Home (2.9m), Kit (42.1s), Type (57.8s), Design (2.0m), Docs (10.8s), Feedback (23.4s). Total 7.2 minutes, 6 passed, 0 failed. No functionality removed.",
             "ticket": "2026/03/21/FIX-SKETCHPAD-PLAYWRIGHT-TESTS-COMPLIANCE"
           },
@@ -1746,9 +1744,7 @@
           "tool_input": {
             "path": "26/03/21/FIX-SKETCHPAD-PLAYWRIGHT-TESTS-COMPLIANCE",
             "summary": "All 6 sketchpad Playwright tests pass without any changes needed: Home (2.9m), Kit (42.1s), Type (57.8s), Design (2.0m), Docs (10.8s), Feedback (23.4s). Total 7.2 minutes, 6 passed, 0 failed. No functionality removed.",
-            "files": [
-              "compose/sketchpad/sketchpad.test.ts"
-            ]
+            "files": ["compose/sketchpad/sketchpad.test.ts"]
           },
           "tool_use_id": "toolu_vrtx_0126w1xGqA5nsf9W4wQGFjxw__vscode-1774098920569",
           "cwd": "/workspaces/semio"
@@ -1776,9 +1772,7 @@
           "tool_input": {
             "path": "26/03/21/FIX-SKETCHPAD-PLAYWRIGHT-TESTS-COMPLIANCE",
             "summary": "All 6 sketchpad Playwright tests pass without any changes needed: Home (2.9m), Kit (42.1s), Type (57.8s), Design (2.0m), Docs (10.8s), Feedback (23.4s). Total 7.2 minutes, 6 passed, 0 failed. No functionality removed.",
-            "files": [
-              "compose/sketchpad/sketchpad.test.ts"
-            ]
+            "files": ["compose/sketchpad/sketchpad.test.ts"]
           },
           "tool_response": "[🎫fixsketchpadplaywrighttestscompliance](repo://y/00/m/00/d/00/tk/FIX-SKETCHPAD-PLAYWRIGHT-TESTS-COMPLIANCE) - `closed` - `closed now`\n",
           "tool_use_id": "toolu_vrtx_0126w1xGqA5nsf9W4wQGFjxw__vscode-1774098920569",

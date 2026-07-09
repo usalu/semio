@@ -4,9 +4,7 @@
   "version": "1.0.0",
   "label": "Foundation",
   "description": "Substructure bearing element.",
-  "primitiveKinds": [
-    "surface"
-  ],
+  "primitiveKinds": ["surface"],
   "style": {
     "color": "#8B6914",
     "edgeColor": "#5C460D",

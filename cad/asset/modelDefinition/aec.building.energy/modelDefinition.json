@@ -4,11 +4,5 @@
   "version": "1.0.0",
   "label": "Building Energy",
   "description": "Energy analysis model definition assets.",
-  "kinds": [
-    "attribute",
-    "property",
-    "stat",
-    "transformation",
-    "typology"
-  ]
+  "kinds": ["attribute", "property", "stat", "transformation", "typology"]
 }

@@ -2,9 +2,9 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-	test: {
-		environment: "node",
-		include: ["audit-playground-completeness.test.ts"],
-		passWithNoTests: false,
-	},
+  test: {
+    environment: "node",
+    include: ["audit-playground-completeness.test.ts"],
+    passWithNoTests: false,
+  },
 });

@@ -5,8 +5,5 @@
   "description": "Fix wrong event mapping where search events are classified as code edit; should be search.",
   "summary": "Fixed three related bugs in event classification: (1) classifyCommandKind now returns ToolKindCodeSearch for sed/awk without -i flag, ToolKindCodeEdit only for sed -i; (2) shouldExecuteSearchCommand passes full segment with flags to classifyCommandKind instead of just binary name; (3) extractToolNameFromStdin now supports wrapped Cursor event format data.event.tool_name/name and data.event.input.command.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪17721968697292139305243266741731143627",
-    "⚪019ca047133475c2ac82b9118a4b8e99"
-  ]
+  "sessions": ["⚪17721968697292139305243266741731143627", "⚪019ca047133475c2ac82b9118a4b8e99"]
 }

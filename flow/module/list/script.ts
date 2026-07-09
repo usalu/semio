@@ -12,12 +12,7 @@ class WasmScript extends BundleScript {
       wasmBaseName: "flow_module_list",
       pkg: {
         name: "@semio-tech/flow-module-list",
-        files: [
-          "flow_module_list_bg.wasm",
-          "flow_module_list.js",
-          "flow_module_list.d.ts",
-          "flow_module_list_bg.wasm.d.ts",
-        ],
+        files: ["flow_module_list_bg.wasm", "flow_module_list.js", "flow_module_list.d.ts", "flow_module_list_bg.wasm.d.ts"],
         main: "flow_module_list.js",
         module: "flow_module_list.js",
         types: "flow_module_list.d.ts",

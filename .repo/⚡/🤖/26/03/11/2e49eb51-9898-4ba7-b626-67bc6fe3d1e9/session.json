@@ -618,16 +618,12 @@
         "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "🧰composerepo⌨️cli🥼maintest"
-        ],
+        "files": ["🧰composerepo⌨️cli🥼maintest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️11⏰13⌚58⏱️23",
         "session": "⚪2e49eb5198984ba7b62667bc6fe3d1e9",
-        "tests": [
-          "'TestClassifyTool"
-        ]
+        "tests": ["'TestClassifyTool"]
       },
       "response": {
         "allowed": true
@@ -818,9 +814,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅devcontainer📃readme📌1📌62"
-        ],
+        "ranges": ["🛅devcontainer📃readme📌1📌62"],
         "second": "🎆26🌙03☀️11⏰14⌚01⏱️12",
         "session": "⚪2e49eb5198984ba7b62667bc6fe3d1e9"
       },
@@ -851,9 +845,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅devcontainer⚙️dockerfile📌1📌77"
-        ],
+        "ranges": ["🛅devcontainer⚙️dockerfile📌1📌77"],
         "second": "🎆26🌙03☀️11⏰14⌚01⏱️12",
         "session": "⚪2e49eb5198984ba7b62667bc6fe3d1e9"
       },
@@ -884,9 +876,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌47326"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌47326"],
         "second": "🎆26🌙03☀️11⏰14⌚01⏱️12",
         "session": "⚪2e49eb5198984ba7b62667bc6fe3d1e9"
       },
@@ -917,9 +907,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌21885"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌21885"],
         "second": "🎆26🌙03☀️11⏰14⌚01⏱️12",
         "session": "⚪2e49eb5198984ba7b62667bc6fe3d1e9"
       },
@@ -950,9 +938,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌21885"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌21885"],
         "second": "🎆26🌙03☀️11⏰14⌚01⏱️12",
         "session": "⚪2e49eb5198984ba7b62667bc6fe3d1e9"
       },
@@ -983,9 +969,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌47326"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌47326"],
         "second": "🎆26🌙03☀️11⏰14⌚01⏱️12",
         "session": "⚪2e49eb5198984ba7b62667bc6fe3d1e9"
       },
@@ -1016,9 +1000,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅devcontainer⚙️dockerfile📌1📌77"
-        ],
+        "ranges": ["🛅devcontainer⚙️dockerfile📌1📌77"],
         "second": "🎆26🌙03☀️11⏰14⌚01⏱️37",
         "session": "⚪2e49eb5198984ba7b62667bc6fe3d1e9"
       },
@@ -1049,9 +1031,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌21885"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌21885"],
         "second": "🎆26🌙03☀️11⏰14⌚01⏱️37",
         "session": "⚪2e49eb5198984ba7b62667bc6fe3d1e9"
       },
@@ -1082,9 +1062,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌47326"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌47326"],
         "second": "🎆26🌙03☀️11⏰14⌚01⏱️37",
         "session": "⚪2e49eb5198984ba7b62667bc6fe3d1e9"
       },
@@ -1115,9 +1093,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌47326"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌47326"],
         "second": "🎆26🌙03☀️11⏰14⌚01⏱️42",
         "session": "⚪2e49eb5198984ba7b62667bc6fe3d1e9"
       },
@@ -1148,9 +1124,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌21885"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌21885"],
         "second": "🎆26🌙03☀️11⏰14⌚01⏱️42",
         "session": "⚪2e49eb5198984ba7b62667bc6fe3d1e9"
       },
@@ -1181,9 +1155,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌21885"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌21885"],
         "second": "🎆26🌙03☀️11⏰14⌚01⏱️44",
         "session": "⚪2e49eb5198984ba7b62667bc6fe3d1e9"
       },
@@ -1214,9 +1186,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌47326"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌47326"],
         "second": "🎆26🌙03☀️11⏰14⌚01⏱️45",
         "session": "⚪2e49eb5198984ba7b62667bc6fe3d1e9"
       },

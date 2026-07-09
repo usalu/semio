@@ -2,24 +2,24 @@
 name: Flow Wgpu Rich Rendering Parity
 overview: Restore premigration-parity rendering for the Flow node graph (edges, port channels, node chrome, LOD, and labels) by fixing a canvas-theme sync regression and an incorrect label-overlay positioning algorithm introduced during the framework migration.
 todos:
-  - id: wgpu-theme-host-methods
-    content: Add set_canvas_theme_dark to FlowHost (flow/core/rs/lib.rs) and GraphHost (framework/graph/rs/lib.rs)
-    status: completed
-  - id: wgpu-theme-sync-call
-    content: Derive dark/light from ctx.theme in engine_canvas.rs and call set_canvas_theme_dark for both Flow and Dag branches, diff-gated in NodeGraphSyncCache
-    status: completed
-  - id: react-theme-fix
-    content: Replace JSON.stringify({}) stub in flow-graph-canvas-host.tsx with syncSessionCanvasTheme(session) from @semio-tech/ui-styling
-    status: completed
-  - id: react-label-overlay-rewrite
-    content: Rewrite paintDagLabelOverlays/parseDagLabelRows in graph-canvas-overlays.tsx to match premigration dagWorldToScreen + textAlign + shrink-to-fit font clamp + interaction chrome
-    status: completed
-  - id: wgpu-label-overlay-rewrite
-    content: Rewrite paint_label_overlay_row in engine_canvas.rs to use direct anchor + measured text alignment + shrink-to-fit sizing + real hover/selection/preselect chrome from host accessors
-    status: completed
-  - id: verify-build-and-visual
-    content: Run cargo tests, rebuild wgpu wasm, and visually verify in browser (default zoom, zoomed LOD, selection) against React reference for flow and one other DAG playground
-    status: completed
+ - id: wgpu-theme-host-methods
+   content: Add set_canvas_theme_dark to FlowHost (flow/core/rs/lib.rs) and GraphHost (framework/graph/rs/lib.rs)
+   status: completed
+ - id: wgpu-theme-sync-call
+   content: Derive dark/light from ctx.theme in engine_canvas.rs and call set_canvas_theme_dark for both Flow and Dag branches, diff-gated in NodeGraphSyncCache
+   status: completed
+ - id: react-theme-fix
+   content: Replace JSON.stringify({}) stub in flow-graph-canvas-host.tsx with syncSessionCanvasTheme(session) from @semio-tech/ui-styling
+   status: completed
+ - id: react-label-overlay-rewrite
+   content: Rewrite paintDagLabelOverlays/parseDagLabelRows in graph-canvas-overlays.tsx to match premigration dagWorldToScreen + textAlign + shrink-to-fit font clamp + interaction chrome
+   status: completed
+ - id: wgpu-label-overlay-rewrite
+   content: Rewrite paint_label_overlay_row in engine_canvas.rs to use direct anchor + measured text alignment + shrink-to-fit sizing + real hover/selection/preselect chrome from host accessors
+   status: completed
+ - id: verify-build-and-visual
+   content: Run cargo tests, rebuild wgpu wasm, and visually verify in browser (default zoom, zoomed LOD, selection) against React reference for flow and one other DAG playground
+   status: completed
 isProject: false
 ---
 
@@ -34,7 +34,7 @@ Tracing `mathematical/graph/port/directed/dag/rs/lib.rs::paint_scene` (this file
 - Node fill is only painted when a node is "chrome" (dimmed/selected/highlighted/hovered) — plain nodes are stroke-only by design (`dag_node_paint_fill`, `mathematical/graph/port/directed/dag/rs/lib.rs:1552-1563`).
 - All stroke/fill/handle colors come from `self.canvas_theme: CanvasThemePalette` (`mathematical/graph/port/directed/dag/rs/lib.rs:1780`), which defaults to `CanvasThemePalette::from_board_theme(&ui_styling::BOARD_LIGHT)` (`mathematical/graph/port/directed/rs/lib.rs:680-684`) — a **dark-stroke-on-light-canvas** palette.
 - The only way to replace this default is `FlowHost::set_canvas_theme_from_json` / `GraphHost`'s wasm `setCanvasThemeJson` (`flow/core/rs/lib.rs:2928`, `framework/graph/rs/lib.rs:478`).
-- **`framework/renderer/wgpu/rs/engine_canvas.rs` never calls this at all.** Meanwhile the actual canvas clear color comes from a *different*, correctly dark-mode-aware theme: `vello_clear(ctx.theme)` uses `ui_wgpu::Theme.canvas_clear` (`engine_canvas.rs:17-20`, `321`).
+- **`framework/renderer/wgpu/rs/engine_canvas.rs` never calls this at all.** Meanwhile the actual canvas clear color comes from a _different_, correctly dark-mode-aware theme: `vello_clear(ctx.theme)` uses `ui_wgpu::Theme.canvas_clear` (`engine_canvas.rs:17-20`, `321`).
 - Net effect: canvas background is dark (correct app theme) but node/edge/handle strokes are the dark BOARD_LIGHT colors meant for a light canvas → near-zero contrast → invisible. Only `node_fill_selected`/`node_stroke_selected` are theme-independent bright red, which is why clicking/selecting is the only thing that shows anything.
 - Confirmed against the `premigration` git tag: `flow/react/index.tsx:3021` called `syncSessionCanvasTheme(sessionRef.current)` (from `ui/styling/js/index.ts:386`) which pushes the real, live app-theme-derived `CanvasThemePalette` JSON into the session every time the document theme changes. This call was dropped from the wgpu renderer entirely, and even the ported React host (`framework/renderer/react/components/flow-graph-canvas-host.tsx:352-353`) now stubs it out with `setCanvasThemeJson(JSON.stringify({}))` (a no-op that resets to the same default light palette), so this is a general regression from the migration, not something unique to wgpu — it's just more visible there. There is a matching closed ticket `.repo/🎫/26/06/07/DAG-AND-FLOW-UI-THEME-SYNC` documenting the original correct behavior.
 

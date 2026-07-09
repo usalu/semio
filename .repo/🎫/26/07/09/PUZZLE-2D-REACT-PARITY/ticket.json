@@ -1,9 +1,9 @@
 {
   "title": "Puzzle 2D React Parity",
   "emoji": "🧩",
-  "status": "open",
+  "status": "closed",
   "description": "Restore premigration parity for puzzle 2D in the React renderer: fix camera transform sign bug, sync BoardHost pointer hit-testing with rendered frame, and add shape/color/selection fidelity to Canvas2d layers.",
-  "summary": "Restored Puzzle 2D premigration performance and visual fidelity by mounting the real WASM/WebGPU BoardSession directly in React instead of the slow JSON-layers Canvas2D reimplementation.\n\n- Added SurfaceKind::Puzzle2dBoard + Puzzle2dBoardScene + build_puzzle2d_board_scene in framework core\n- New Puzzle2dBoardHost React component: attach_canvas, RAF renderFrame, theme sync, interactive pointer/wheel, drainEventsJson → applyBoardEvents\n- Puzzle 2D plugin now emits puzzle2d-board scenes; removed canvas_layers_json and per-frame canvasPointer* round-trips\n- Wired @semio-tech/puzzle-2d-rs workspace package and dev wasm build for puzzle/puzzle2d plugins\n\nValidation: puzzle_2d wasm rebuilt; cargo check core+wgpu ok; vitest 23 passed. cargo test -p puzzle-plugin still blocked by pre-existing component_export_anchor macro error.",
+  "summary": "Fixed print window title-bar chrome to match OS UI: title/number persist via xdef store and expanded tmp macros in muted_use; gap uses semio@window@gap for U-cutout; removed duplicate trailing stroke; fixed empty-number ctrl chip. Verified on mit-bestand zwischenbericht cover (zwischenbericht-p1-windows.png).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1876"
   },

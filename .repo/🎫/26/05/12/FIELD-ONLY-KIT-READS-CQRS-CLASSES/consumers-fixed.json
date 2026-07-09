@@ -1,12 +1,6 @@
 {
   "ticket": "FIELD-ONLY-KIT-READS-CQRS-CLASSES",
   "phaseReference": "phase-0-1-js-done.json",
-  "files": [
-    "assets/index.ts",
-    "compose/algorithms/tsconfig.json",
-    "compose/ui/index.tsx",
-    "compose/ui/tsconfig.json",
-    "compose/ui/tailwind.config.ts"
-  ],
+  "files": ["assets/index.ts", "compose/algorithms/tsconfig.json", "compose/ui/index.tsx", "compose/ui/tsconfig.json", "compose/ui/tailwind.config.ts"],
   "summary": "compose/ui: plain JSON diagram/scene types (Piece/Connection/KitKindPlain/SceneCamera), kitSurface + kitJsRows, pickPreferredRepresentation, JsonObject-based MCP diagramDesign, tests and algorithm panel fixes; imports wire types from @semio-tech/compose-js. compose/ui + compose/algorithms tsconfig: vitest/globals for compose/js embedded tests in tsc graph. assets: stricter Metabolism kit row access + readonly-friendly buildLookup. compose/algorithms/index.ts may show in workspace diff from parallel work (openKit path)."
 }

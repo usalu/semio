@@ -54,7 +54,7 @@ async function initDesign(page: Page) {
   await page.goto("http://127.0.0.1:5173");
   await page.waitForLoadState("networkidle");
   const fileInput = page.locator('input[type="file"]');
-  if (await fileInput.count() > 0) {
+  if ((await fileInput.count()) > 0) {
     await fileInput.setInputFiles("/workspaces/semio/assets/compose/metabolism.zip");
     await page.waitForTimeout(3000);
   }
@@ -77,7 +77,7 @@ test("Diagnose Long Tasks", async ({ page }) => {
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(3000);
 
-  const diagramContainer = page.locator('#diagram .react-flow').first();
+  const diagramContainer = page.locator("#diagram .react-flow").first();
   await diagramContainer.isVisible({ timeout: 30000 }).catch(() => false);
   const pieceNodes = diagramContainer.locator(".react-flow__node");
   await pieceNodes.first().waitFor({ state: "attached", timeout: 60000 });
@@ -88,7 +88,9 @@ test("Diagnose Long Tasks", async ({ page }) => {
   console.log(`[DEBUG] Render count before: ${renderCountBefore}`);
 
   // Clear long task log
-  await page.evaluate(() => { (globalThis as any).__DEBUG_LONG_TASK_LOG__ = []; });
+  await page.evaluate(() => {
+    (globalThis as any).__DEBUG_LONG_TASK_LOG__ = [];
+  });
 
   // Phase 1: Zoom
   const pane = diagramContainer.locator(".react-flow__pane").first();
@@ -102,7 +104,9 @@ test("Diagnose Long Tasks", async ({ page }) => {
   const renderCountAfterZoomIn = await page.evaluate(() => (globalThis as any).__DEBUG_PIECE_RENDER_COUNT__ ?? 0);
   const zoomInLogs = await page.evaluate(() => JSON.stringify((globalThis as any).__DEBUG_LONG_TASK_LOG__ ?? []));
   console.log(`[DEBUG] After zoom-in: renders=${renderCountAfterZoomIn}, longTasks=${zoomInLogs}`);
-  await page.evaluate(() => { (globalThis as any).__DEBUG_LONG_TASK_LOG__ = []; });
+  await page.evaluate(() => {
+    (globalThis as any).__DEBUG_LONG_TASK_LOG__ = [];
+  });
 
   await page.mouse.wheel(0, 600);
   await page.waitForTimeout(500);
@@ -110,7 +114,9 @@ test("Diagnose Long Tasks", async ({ page }) => {
   const renderCountAfterZoomOut = await page.evaluate(() => (globalThis as any).__DEBUG_PIECE_RENDER_COUNT__ ?? 0);
   const zoomOutLogs = await page.evaluate(() => JSON.stringify((globalThis as any).__DEBUG_LONG_TASK_LOG__ ?? []));
   console.log(`[DEBUG] After zoom-out: renders=${renderCountAfterZoomOut}, longTasks=${zoomOutLogs}`);
-  await page.evaluate(() => { (globalThis as any).__DEBUG_LONG_TASK_LOG__ = []; });
+  await page.evaluate(() => {
+    (globalThis as any).__DEBUG_LONG_TASK_LOG__ = [];
+  });
 
   // Phase 2: Drag
   const firstNode = pieceNodes.first();
@@ -126,7 +132,9 @@ test("Diagnose Long Tasks", async ({ page }) => {
 
   const renderCountBeforeDrag = await page.evaluate(() => (globalThis as any).__DEBUG_PIECE_RENDER_COUNT__ ?? 0);
   console.log(`[DEBUG] Before drag: renders=${renderCountBeforeDrag}`);
-  await page.evaluate(() => { (globalThis as any).__DEBUG_LONG_TASK_LOG__ = []; });
+  await page.evaluate(() => {
+    (globalThis as any).__DEBUG_LONG_TASK_LOG__ = [];
+  });
 
   // Mouse down
   await page.mouse.down();
@@ -135,7 +143,9 @@ test("Diagnose Long Tasks", async ({ page }) => {
   const renderCountAfterDown = await page.evaluate(() => (globalThis as any).__DEBUG_PIECE_RENDER_COUNT__ ?? 0);
   const downLogs = await page.evaluate(() => JSON.stringify((globalThis as any).__DEBUG_LONG_TASK_LOG__ ?? []));
   console.log(`[DEBUG] After mouse.down: renders=${renderCountAfterDown}, longTasks=${downLogs}`);
-  await page.evaluate(() => { (globalThis as any).__DEBUG_LONG_TASK_LOG__ = []; });
+  await page.evaluate(() => {
+    (globalThis as any).__DEBUG_LONG_TASK_LOG__ = [];
+  });
 
   // Drag move
   await page.mouse.move(targetX, targetY, { steps: 20 });

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Flatten Design Implementation
 
 ## Date
@@ -15,18 +16,18 @@ Implement and test the `flattenDesign` function that converts a design with conn
 
 ### Implemented
 
-1.  `applyPieceDiff` - Properly applies piece diffs including:
+1. `applyPieceDiff` - Properly applies piece diffs including:
 
 - Handles both full Plane objects and PlaneDiffs
 - Applies center, scale, attributes, etc.
 
-2.  `applyDesignDiff` - Properly applies design diffs including:
+2. `applyDesignDiff` - Properly applies design diffs including:
 
 - Applies pieces changes (added, removed, updated)
 - Applies connections changes (added, removed, updated)
 - Applies other design properties
 
-3.  Test created in `compose.test.ts`:
+3. Test created in `compose.test.ts`:
 
 - Loads metabolism kit dynamically
 - Tests Nakagin Capsule Tower design

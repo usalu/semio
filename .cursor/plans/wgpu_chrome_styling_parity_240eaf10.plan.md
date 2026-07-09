@@ -2,30 +2,30 @@
 name: Wgpu Chrome Styling Parity
 overview: Make the wgpu shell chrome pixel-consistent with the React shell by fixing a colorspace (gamma) bug that darkens every chrome color, restoring the borders that item fills currently overpaint, and aligning the remaining surface/state color mappings (panel glass fill, dock caps, default control fill/text, navbar item order).
 todos:
-  - id: ticket
-    content: Read repo://goals and reopen/open the chrome-parity ticket
-    status: completed
-  - id: srgb-surface
-    content: "Fix colorspace: sRGB swapchain view + pipelines, Srgb icon/raster texture formats, update draw.rs pixel tests"
-    status: completed
-  - id: group-borders
-    content: Fix render_chrome_group draw order so borders/separators survive item fills; dedupe mode-switcher copy
-    status: completed
-  - id: cap-buttons
-    content: Give dock Focus/Close cap buttons a bordered ActionGroup treatment with h-small sizing
-    status: completed
-  - id: widget-borders
-    content: Border the icon-select button in widgets.rs like other controls
-    status: completed
-  - id: glass-panel
-    content: Add glassPanelAlpha token, regenerate, paint wgpu panels as 0.58-alpha glass over canvas
-    status: completed
-  - id: mapping-fixes
-    content: Align dock cap fill to window, default control fill/text to transparent+gray, navbar Fullscreen order, verify footer color
-    status: completed
-  - id: verify
-    content: cargo tests, wasm rebuild, wgpu E2E with pixel-parity assertions vs React screenshots
-    status: completed
+ - id: ticket
+   content: Read repo://goals and reopen/open the chrome-parity ticket
+   status: completed
+ - id: srgb-surface
+   content: "Fix colorspace: sRGB swapchain view + pipelines, Srgb icon/raster texture formats, update draw.rs pixel tests"
+   status: completed
+ - id: group-borders
+   content: Fix render_chrome_group draw order so borders/separators survive item fills; dedupe mode-switcher copy
+   status: completed
+ - id: cap-buttons
+   content: Give dock Focus/Close cap buttons a bordered ActionGroup treatment with h-small sizing
+   status: completed
+ - id: widget-borders
+   content: Border the icon-select button in widgets.rs like other controls
+   status: completed
+ - id: glass-panel
+   content: Add glassPanelAlpha token, regenerate, paint wgpu panels as 0.58-alpha glass over canvas
+   status: completed
+ - id: mapping-fixes
+   content: Align dock cap fill to window, default control fill/text to transparent+gray, navbar Fullscreen order, verify footer color
+   status: completed
+ - id: verify
+   content: cargo tests, wasm rebuild, wgpu E2E with pixel-parity assertions vs React screenshots
+   status: completed
 isProject: false
 ---
 
@@ -35,9 +35,10 @@ Both renderers already share one token source (`ui/styling/tokens.json` → gene
 
 ## Root cause 1: colorspace bug — every wgpu chrome color renders too dark
 
-Pixel-sampled proof from the E2E screenshots: wgpu navbar renders `#d4ceb1`, which is exactly the *linear-encoded* bytes of the correct token `light-6-7` `#ebe8d9` that React shows. The theme constants are linearized (`rgba8_to_linear`), but the swapchain is non-sRGB on the web (WebGPU canvases only expose non-sRGB formats, so the `is_srgb()` probe in [ui/wgpu/rs/gpu.rs](ui/wgpu/rs/gpu.rs) lines 52–58 falls through), so linear values are written out as raw sRGB bytes.
+Pixel-sampled proof from the E2E screenshots: wgpu navbar renders `#d4ceb1`, which is exactly the _linear-encoded_ bytes of the correct token `light-6-7` `#ebe8d9` that React shows. The theme constants are linearized (`rgba8_to_linear`), but the swapchain is non-sRGB on the web (WebGPU canvases only expose non-sRGB formats, so the `is_srgb()` probe in [ui/wgpu/rs/gpu.rs](ui/wgpu/rs/gpu.rs) lines 52–58 falls through), so linear values are written out as raw sRGB bytes.
 
 Fix in `ui/wgpu/rs/gpu.rs` + `ui/wgpu/rs/draw.rs`:
+
 - Configure the surface with `view_formats: vec![format.add_srgb_suffix()]`, create the per-frame texture view with the sRGB format, and build `UiPipelines` against that sRGB target format. GPU then encodes linear→sRGB on write and the navbar comes out `#ebe8d9` exactly.
 - Switch textures that hold sRGB pixel data to `*Srgb` formats so they aren't double-brightened: icon atlas (`draw.rs:1012`) and the canvas2d raster store (`draw.rs:746`). Glyph atlas (`R8Unorm` alpha mask) stays.
 - Fix the existing readback pixel tests in `draw.rs` (~line 1889+) for the new encoding, and run `cargo test -p ui_wgpu`.
@@ -51,6 +52,7 @@ Fix in `ui/wgpu/rs/gpu.rs` + `ui/wgpu/rs/draw.rs`:
 ## Root cause 3: mapping mismatches vs React semantics
 
 From the React shell audit (`ui/js/react/index.tsx`, `ui/styling/js/ui.css`):
+
 - **Side panel fill is frosted glass, not opaque**: React uses `ui-glass-panel` = panel color at `--glass-panel-alpha: 0.58` over the canvas (sampled `#d8d5c6`), while wgpu paints opaque `theme.panel` `#c9c8bd`. Add a `glassPanelAlpha: 0.58` token to `tokens.json` `opacities` (regenerate; keep `ui.css` value identical) and paint the wgpu panel body with `theme.panel.with_alpha(glass alpha)`.
 - **Dock window cap**: React `windowCapFrameClass` is `bg-window`; wgpu uses `theme.panel` (dock.rs ~525). Change cap fill to the window color.
 - **Default control state**: React chrome items are transparent with gray `text-element` text, hover = gray fill + foreground text, active = primary fill. Wgpu (`item_bg`/`item_text` in [ui/wgpu/rs/chrome.rs](ui/wgpu/rs/chrome.rs) and `render_chrome_group`) uses window fill + foreground text by default. Align: default bg transparent (let the surface show through), default text `text_muted`-gray, hover/active unchanged.

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 - [x] Inspect Sketchpad HUD layout implementation and Design app panel registration
 - [x] Reproduce current test state for Design app HUD behavior
 - [x] Refactor HUD panel layout positioning to align with panel system behavior
@@ -8,9 +9,11 @@
 - [x] Extend existing `compose/js/sketchpad.test.ts` coverage for HUD layout and tree visibility
 - [x] Run relevant tests and capture outcome
 - [x] Summarize changes and close ticket
+
 # Previously
 
 # Plan
+
 - Diagnose both failure modes: layout docking and empty HUD tree content.
 - Fix HUD panel positioning in `elements.tsx` so the middle panel uses stable top docking and bounded viewport height.
 - Add concrete Design app sections for `hud` and `stats` in `Design.tsx` to guarantee visible tree items and functional content.
@@ -20,6 +23,7 @@
 # Changes
 
 ## Changes
+
 - Reopened existing ticket for HUD/sidepanel refactor context.
 - Baseline test command attempted:
   - `npx playwright test compose/js/sketchpad.test.ts -g "Design" --reporter=line`

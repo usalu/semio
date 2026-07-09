@@ -5,7 +5,5 @@
   "description": "Rename window options to window measures; add read-only measure kinds; update Window/UIWindowKindDefinition/UICanvas and board play + e2e selectors.",
   "summary": "Renamed UIWindowOption→UIWindowMeasure, options→measures on UIWindowKindDefinition, Window prop measures, overlay slots window-measures-overlay/stack/stack-inner, float window-measure-float. UIWindowOptionsRail→UIWindowMeasures. Added measure kinds display (ReactNode) and reading (string, optional monospace). Combobox measure uses choices[] (maps to Combobox options prop). Board play uses measures + measuresForPane; Playwright targets window-measures-overlay.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪593573d55968432fa93308cc7b68fd16"
-  ]
+  "sessions": ["⚪593573d55968432fa93308cc7b68fd16"]
 }

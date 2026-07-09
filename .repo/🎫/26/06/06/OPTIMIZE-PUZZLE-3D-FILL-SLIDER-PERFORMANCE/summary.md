@@ -3,20 +3,24 @@
 ## Problem
 
 The fill slider blocked the UI for minutes because:
+
 1. `buildBrushFillSequence` ran synchronously (up to 1000 greedy placements with mesh clone + AABB probes per candidate).
 2. Each slider tick replayed all N placements via `applyBrushFillPlacementsToFixture` → `buildSnapshot` per step.
 
 ## Solution
 
 ### Part A — O(1) prefix application
+
 - Extended `Puzzle3dFillSessionState` with `appendedObjects` and `appendedAttractions` captured during build.
 - `applyPuzzle3dFillCount` now composes `{ base + slice(appended*) }` instead of replaying placements.
 
 ### Part B — Collision hot path
+
 - Cached per-`meshUrl` local-space AABB (`brushMeshLocalCollisionBox`); posed world box via matrix transform (no per-probe `clone(true)`).
 - Memoized `brushCompatibleCandidates` per `(objectKind, vortexKind)` within each build pass.
 
 ### Part C — Chunked build + progress UI
+
 - `createBrushFillSequenceStepper` yields placements in chunks (`PUZZLE_3D_FILL_BUILD_CHUNK_BUDGET = 8`) via `setTimeout(0)`.
 - `puzzle3dFillBuildProgressRef` drives slider label `Fill N (building X/1000)` and caps slider max while building.
 - Playground host clamps `onFillCount` to computed-so-far during build.

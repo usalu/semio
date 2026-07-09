@@ -7,6 +7,7 @@ goal: SKETCHPAD-FIXES
 ## Summary
 
 Fixed Type Editor toolbar labels to match Design and Kit app patterns. Updated subtool label from 'selection' to 'select' and added missing 'connector' subtool translations in both English and German locale files. Also completed German locale with all missing subtool entries.
+
 ## Changes
 
 - /workspaces/semio/compose/js/sketchpad/Type.tsx

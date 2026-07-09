@@ -27,9 +27,7 @@
           "session_id": "bc1045ac-fa76-4315-9e69-203f5d002faa",
           "hook_event_name": "sessionEnd",
           "cursor_version": "3.0.12",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@posteo.de",
           "transcript_path": null
         }

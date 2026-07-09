@@ -1,13 +1,33 @@
 /* default styles for extension "tx_form" */
-    .captcha { margin-bottom: .5rem; }
-    .captcha a { margin-left: .5rem; }
-    .captcha--reloading img { opacity: 0.5; }
-    .captcha--reloading a { cursor: auto; }
-    .captcha--spin .captcha__reload svg { animation: spin 0.8s infinite linear; }
-    .captcha__audio__mute { display: none; }
-    .captcha--playing .captcha__audio__mute { display: inherit; }
-    .captcha--playing .captcha__audio__sound { display: none; }
-    @keyframes spin {
-      from {transform:rotate(359deg);}
-      to {transform:rotate(0deg);}
-    }
+.captcha {
+  margin-bottom: 0.5rem;
+}
+.captcha a {
+  margin-left: 0.5rem;
+}
+.captcha--reloading img {
+  opacity: 0.5;
+}
+.captcha--reloading a {
+  cursor: auto;
+}
+.captcha--spin .captcha__reload svg {
+  animation: spin 0.8s infinite linear;
+}
+.captcha__audio__mute {
+  display: none;
+}
+.captcha--playing .captcha__audio__mute {
+  display: inherit;
+}
+.captcha--playing .captcha__audio__sound {
+  display: none;
+}
+@keyframes spin {
+  from {
+    transform: rotate(359deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}

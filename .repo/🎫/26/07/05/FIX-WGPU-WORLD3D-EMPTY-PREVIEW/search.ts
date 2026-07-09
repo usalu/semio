@@ -5,12 +5,12 @@ const libFile = "/Users/ueli/Documents/semio/repo/lib/js/index.ts";
 const content = readFileSync(libFile, "utf8");
 
 function findLine(query: string) {
-	const lines = content.split("\n");
-	lines.forEach((line, index) => {
-		if (line.includes(query)) {
-			console.log(`${index + 1}: ${line}`);
-		}
-	});
+  const lines = content.split("\n");
+  lines.forEach((line, index) => {
+    if (line.includes(query)) {
+      console.log(`${index + 1}: ${line}`);
+    }
+  });
 }
 
 console.log("=== resolveFrameworkOsPlaygroundPlugin ===");

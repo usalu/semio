@@ -2,42 +2,42 @@
 name: Extend GraphQL Operations Per Entity
 overview: Extend `compose/graphql/target.schema.graphql` so every entity region (Tag, Concept, Port, Quality, Type, Connector, Design, Piece, Kit) carries its own `#region Operations` sub-region with strongly-typed input + operation types for the full action list, plus per-entity operation unions and updated global unions/mutations/subscriptions.
 todos:
-  - id: field-ext
-    content: Add description/icon fields to Tag, Concept, Port, Quality, Connector entities and their Modifications
-    status: completed
-  - id: tag-ops
-    content: Add Tag operations subregion + TagOperation union
-    status: completed
-  - id: concept-ops
-    content: Add Concept operations subregion + ConceptOperation union
-    status: completed
-  - id: port-ops
-    content: Add Port operations subregion + PortOperation union
-    status: completed
-  - id: quality-ops
-    content: Add Quality operations subregion + QualityOperation union
-    status: completed
-  - id: type-ops
-    content: Add Type operations + Connector operations subregions and unions
-    status: completed
-  - id: design-ops
-    content: Add Design operations subregion + DesignOperation union
-    status: completed
-  - id: piece-ops
-    content: Extend Piece operations subregion with full action set, rename existing ops, add PieceOperation union
-    status: completed
-  - id: kit-ops
-    content: Add KitOperation union and any kit-level ops not yet captured
-    status: completed
-  - id: global-unions
-    content: Extend Input, ChangeOwned, DiffOwner, DiffsOwner, OwnerEntity, AggregateEntityEdge, EntityConnection, OwnedEntityConnection, every <X>DiffsOwner; add AnyOperation union
-    status: completed
-  - id: queries
-    content: Add pieceInDesign and alternativePieceKind Query fields for the read-only actions
-    status: completed
-  - id: mutations-subs
-    content: Add Mutation and Subscription fields per new operation
-    status: completed
+ - id: field-ext
+   content: Add description/icon fields to Tag, Concept, Port, Quality, Connector entities and their Modifications
+   status: completed
+ - id: tag-ops
+   content: Add Tag operations subregion + TagOperation union
+   status: completed
+ - id: concept-ops
+   content: Add Concept operations subregion + ConceptOperation union
+   status: completed
+ - id: port-ops
+   content: Add Port operations subregion + PortOperation union
+   status: completed
+ - id: quality-ops
+   content: Add Quality operations subregion + QualityOperation union
+   status: completed
+ - id: type-ops
+   content: Add Type operations + Connector operations subregions and unions
+   status: completed
+ - id: design-ops
+   content: Add Design operations subregion + DesignOperation union
+   status: completed
+ - id: piece-ops
+   content: Extend Piece operations subregion with full action set, rename existing ops, add PieceOperation union
+   status: completed
+ - id: kit-ops
+   content: Add KitOperation union and any kit-level ops not yet captured
+   status: completed
+ - id: global-unions
+   content: Extend Input, ChangeOwned, DiffOwner, DiffsOwner, OwnerEntity, AggregateEntityEdge, EntityConnection, OwnedEntityConnection, every <X>DiffsOwner; add AnyOperation union
+   status: completed
+ - id: queries
+   content: Add pieceInDesign and alternativePieceKind Query fields for the read-only actions
+   status: completed
+ - id: mutations-subs
+   content: Add Mutation and Subscription fields per new operation
+   status: completed
 isProject: false
 ---
 
@@ -67,6 +67,7 @@ The action list references fields that don't yet exist on a few entities. Add th
 Each list below becomes a fresh `#region Operations` subregion at the bottom of the entity's region (mirroring the existing `#region Operations` inside `Piece` at [target.schema.graphql:3692](compose/graphql/target.schema.graphql:3692)).
 
 ### Tag (inside `#region Tag`)
+
 - `CreatedTagInput { kitOwnerId: ID, typeOwnerId: ID, representationOwnerId: ID, name: String!, description: String, icon: String, order: Int }` → `CreatedTag` (`tag: Tag!`).
 - `CreatedTagsInput { ownerId: ID!, tags: [CreatedTagInput!]! }` → `CreatedTags` (`tags: TagConnection!`).
 - `RenamedTagInput { tagId: ID!, name: String! }` → `RenamedTag`.
@@ -81,19 +82,24 @@ Each list below becomes a fresh `#region Operations` subregion at the bottom of 
 - `union TagOperation = CreatedTag | CreatedTags | RenamedTag | UpdatedTagDescription | UpdatedTagIcon | AddedAttributeToTag | AddedAttributesToTag | RemovedAttributeFromTag | RemovedAttributesFromTag | DeletedTag | DeletedTags`.
 
 ### Concept (inside `#region Concept`)
+
 Same shape as Tag: `CreatedConcept`, `CreatedConcepts`, `RenamedConcept`, `UpdatedConceptDescription`, `UpdatedConceptIcon`, `AddedAttributeToConcept`, `AddedAttributesToConcept`, `RemovedAttributeFromConcept`, `RemovedAttributesFromConcept`, `DeletedConcept`, `DeletedConcepts`. Add `union ConceptOperation`.
 
 ### Port (inside `#region Port`)
+
 Same shape: `CreatedPort`, `CreatedPorts`, `RenamedPort`, `UpdatedPortDescription`, `UpdatedPortIcon`, `AddedAttributeToPort`, `AddedAttributesToPort`, `RemovedAttributeFromPort`, `RemovedAttributesFromPort`, `DeletedPort`, `DeletedPorts`. Add `union PortOperation`.
 
 ### Quality (inside `#region Quality`)
+
 Same shape: `CreatedQuality`, `CreatedQualities`, `RenamedQuality`, `UpdatedQualityDescription`, `UpdatedQualityIcon`, `AddedAttributeToQuality`, `AddedAttributesToQuality`, `RemovedAttributeFromQuality`, `RemovedAttributesFromQuality`, `DeletedQuality`, `DeletedQualities`. Add `union QualityOperation`.
 
 ### Type (inside `#region Type`, before connector ops)
+
 - `CreatedType`, `CreatedTypes`, `RenamedType`, `UpdatedTypeDescription`, `UpdatedTypeIcon`, `AddedAttributeToType`, `AddedAttributesToType`, `RemovedAttributeFromType`, `RemovedAttributesFromType`, `DeletedType`, `DeletedTypes`.
 - `union TypeOperation`.
 
 ### Connector (own subregion `#region Operations` inside `#region Type`)
+
 - `AddedConnectorToTypeInput { typeId: ID!, connector: ConnectorInput! }` → `AddedConnectorToType` (`connector: Connector!`).
 - `AddedConnectorsToTypeInput { typeId: ID!, connectors: [ConnectorInput!]! }` → `AddedConnectorsToType`.
 - `RenamedConnectorInTypeInput { connectorId: ID!, code: String! }` → `RenamedConnectorInType` (rename = change `code` since Connector has no `name`).
@@ -103,6 +109,7 @@ Same shape: `CreatedQuality`, `CreatedQualities`, `RenamedQuality`, `UpdatedQual
 - Note: a new `input ConnectorInput { code: String!, description: String, icon: String, portId: ID }` is added near `AttributeInput` ([target.schema.graphql:1065](compose/graphql/target.schema.graphql:1065)).
 
 ### Design (inside `#region Design`, replaces the orphaned ops emitted today only at kit level)
+
 - `CreatedDesign`, `CreatedDesigns`, `DeletedDesign`, `DeletedDesigns`, `FlattenedDesign` (`FlattenedDesignInput { designId: ID! }`).
 - `AddedAttributeToDesign`, `AddedAttributesToDesign`, `RemovedAttributeFromDesign`, `RemovedAttributesFromDesign`.
 - `union DesignOperation`.
@@ -125,6 +132,7 @@ Keep the three existing ones (`CreatedFixedPiece`, `FixedPiece`, `DraggedPiece`)
 - The two read-only commands from the list (`READ_PIECE_FROM_DESIGN`, `GET_ALTERNATIVE_PIECE_KIND_FOR_PIECE_IN_DESIGN`) do **not** fit the `Operation` interface (which requires `diff: Diff!`); they become **Query fields**: `pieceInDesign(designId: ID!, pieceId: ID!): Piece` and `alternativePieceKind(designId: ID!, pieceId: ID!): Blueprint`.
 
 ### Kit (extend the existing `#region Operations` at [target.schema.graphql:4238](compose/graphql/target.schema.graphql:4238))
+
 Keep `RenamedKit`, `ChangedDescription`. Add `union KitOperation = RenamedKit` and a roll-up `union DescriptionChangeOperation = ChangedDescription` (or fold `ChangedDescription` into the per-entity update ops above and remove it — but per the workspace rule "do not remove functionality" we keep `ChangedDescription` and instead reference it from the relevant per-entity unions where appropriate).
 
 ## Global / cross-cutting unions

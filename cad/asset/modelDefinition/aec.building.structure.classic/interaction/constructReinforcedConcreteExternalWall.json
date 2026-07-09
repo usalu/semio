@@ -6,18 +6,9 @@
   "key": "r",
   "interaction": {
     "spatialGroundPick": true,
-    "pickDisabledStates": [
-      "choose_mode",
-      "committed"
-    ],
-    "groundPointerMoveStates": [
-      "two_points_first",
-      "two_points_second"
-    ],
-    "heightDragStates": [
-      "two_points_height",
-      "curve_height"
-    ],
+    "pickDisabledStates": ["choose_mode", "committed"],
+    "groundPointerMoveStates": ["two_points_first", "two_points_second"],
+    "heightDragStates": ["two_points_height", "curve_height"],
     "verticalRodStates": [],
     "heightConfirmState": "two_points_height"
   },
@@ -563,9 +554,7 @@
       {
         "name": "curve_wire",
         "selection": {
-          "accept": [
-            "wire"
-          ],
+          "accept": ["wire"],
           "multiple": false,
           "prompt": "Pick path wire"
         },
@@ -669,11 +658,7 @@
             "text": "Construct Reinforced Concrete External Wall: 1=2pts+height 2=curve+height 3=surface",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           }
         ]
@@ -688,11 +673,7 @@
             "text": "Construct Reinforced Concrete External Wall: click first footprint corner",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -722,11 +703,7 @@
             "text": "Construct Reinforced Concrete External Wall: click opposite footprint corner",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -825,11 +802,7 @@
             "text": "Construct Reinforced Concrete External Wall: height (Z) — drag teal wall, Apply height, or Accept",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -879,11 +852,7 @@
             "text": "Construct Reinforced Concrete External Wall: pick path wire",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           }
         ]
@@ -898,11 +867,7 @@
             "text": "Construct Reinforced Concrete External Wall: set height (Apply height or Accept)",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           }
         ]
@@ -917,11 +882,7 @@
             "text": "Construct Reinforced Concrete External Wall: Accept to create",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.2,
-                1.55
-              ]
+              "value": [0, 0.2, 1.55]
             }
           },
           {
@@ -965,9 +926,7 @@
   },
   "commit": {
     "when": "hasConstructMode",
-    "fromStates": [
-      "committed"
-    ],
+    "fromStates": ["committed"],
     "operation": {
       "kind": "action",
       "action": "structure.structure.constructReinforcedConcreteExternalWallFrom2PointsAndHeight",

@@ -2,24 +2,24 @@
 name: Vector Figure-Ground Styles
 overview: Add a per-window "Style" sub-option (Colored / Figure-Ground / Inverted-Figure) that applies in Vector and Combined render modes, painting an LOD-aware black/white figure-ground silhouette using theme tokens.
 todos:
-  - id: rust-core
-    content: Add MapVectorStyle enum, MapHost.vector_style field + set_vector_style/vector_style_str, and WASM setVectorStyle binding in gis/map/rs/lib.rs
-    status: completed
-  - id: rust-paint
-    content: Refactor append_vector_tiles to dispatch on vector_style; add LOD-aware figure-ground painting (ink=label_fill, paper=surface_clear, swapped for inverted) and extend inline tests
-    status: completed
-  - id: react
-    content: Add MapVectorStyle type, MapRenderer.setVectorStyle, MapCanvas vectorStyle prop + effects in gis/map/react/index.tsx
-    status: completed
-  - id: play
-    content: Add vector style modes, snapshot fields, controller command/getter, and the Style select measure (vector/combined only) in gis/map/play/index.ts
-    status: completed
-  - id: playground
-    content: Resolve and pass vectorStyle to MapCanvas in the playground MapPlayPaneSurfaceHost
-    status: completed
-  - id: wasm-build
-    content: Rebuild gis_map WASM and verify figure-ground/inverted at city and world zoom in the play app
-    status: completed
+ - id: rust-core
+   content: Add MapVectorStyle enum, MapHost.vector_style field + set_vector_style/vector_style_str, and WASM setVectorStyle binding in gis/map/rs/lib.rs
+   status: completed
+ - id: rust-paint
+   content: Refactor append_vector_tiles to dispatch on vector_style; add LOD-aware figure-ground painting (ink=label_fill, paper=surface_clear, swapped for inverted) and extend inline tests
+   status: completed
+ - id: react
+   content: Add MapVectorStyle type, MapRenderer.setVectorStyle, MapCanvas vectorStyle prop + effects in gis/map/react/index.tsx
+   status: completed
+ - id: play
+   content: Add vector style modes, snapshot fields, controller command/getter, and the Style select measure (vector/combined only) in gis/map/play/index.ts
+   status: completed
+ - id: playground
+   content: Resolve and pass vectorStyle to MapCanvas in the playground MapPlayPaneSurfaceHost
+   status: completed
+ - id: wasm-build
+   content: Rebuild gis_map WASM and verify figure-ground/inverted at city and world zoom in the play app
+   status: completed
 isProject: false
 ---
 
@@ -50,8 +50,6 @@ flowchart LR
   session --> rs["MapHost.vector_style"]
   rs --> paint[append_vector_tiles dispatch]
 ```
-
-
 
 ## 1. Rust core — [gis/map/rs/lib.rs](gis/map/rs/lib.rs)
 
@@ -93,4 +91,3 @@ flowchart LR
 
 - Work proceeds inside a repo MCP ticket; structure additions with the existing `#region` markers in `lib.rs`.
 - No new files; all changes extend existing `lib.rs`, `react/index.tsx`, `play/index.ts`, and the playground host.
-

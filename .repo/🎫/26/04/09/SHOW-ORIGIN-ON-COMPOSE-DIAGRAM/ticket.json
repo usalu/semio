@@ -4,7 +4,5 @@
   "description": "ComposeDiagram SVG: show u=0,v=0 origin marker (crosshair), behind edges/nodes, pointer-events none; optional prop to hide; extend vitest in compose/ui index.",
   "summary": "ComposeDiagram: crosshair at diagram origin (u=0,v=0) using same toPixel* as nodes; muted-foreground strokes, pointer-events none, drawn under edges/nodes. New prop showOrigin (default true). Helper resolveComposeDiagramOriginPixels + vitest. Files: compose/ui/index.tsx only.",
   "goal": "🎯uipolish",
-  "sessions": [
-    "⚪bc25f9f1229b43759da822b439cd4560"
-  ]
+  "sessions": ["⚪bc25f9f1229b43759da822b439cd4560"]
 }

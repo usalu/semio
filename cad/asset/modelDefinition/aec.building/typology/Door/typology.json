@@ -4,9 +4,7 @@
   "version": "1.0.0",
   "label": "Door",
   "description": "Operable opening panel.",
-  "primitiveKinds": [
-    "surface"
-  ],
+  "primitiveKinds": ["surface"],
   "style": {
     "color": "#8B5A2B",
     "edgeColor": "#5C3C1C",

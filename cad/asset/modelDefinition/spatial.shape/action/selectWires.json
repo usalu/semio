@@ -24,9 +24,7 @@
         },
         "kinds": {
           "kind": "const",
-          "value": [
-            "wire"
-          ]
+          "value": ["wire"]
         }
       },
       "assignTo": "result"

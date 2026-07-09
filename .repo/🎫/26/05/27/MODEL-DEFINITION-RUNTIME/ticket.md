@@ -53,13 +53,13 @@
 
 ## Final verification
 
-| Package | Tests |
-|---------|-------|
-| `@spatial/js-core` | 264 |
-| `@spatial/js-query` | 34 |
-| `@spatial/js-kernel-brepjs` | 19 |
-| `@spatial/js-machine-stately` | 4 |
-| `@spatial/js-renderer-r3f` | 8 |
-| Playground `bun ./script.ts build` | OK |
+| Package                            | Tests |
+| ---------------------------------- | ----- |
+| `@spatial/js-core`                 | 264   |
+| `@spatial/js-query`                | 34    |
+| `@spatial/js-kernel-brepjs`        | 19    |
+| `@spatial/js-machine-stately`      | 4     |
+| `@spatial/js-renderer-r3f`         | 8     |
+| Playground `bun ./script.ts build` | OK    |
 
 **Repo MCP:** unavailable (no `ticket_close`).

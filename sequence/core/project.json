@@ -1,21 +1,21 @@
 {
-	"name": "@semio-tech/sequence-core",
-	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
-	"targets": {
-		"wasm": {
-			"executor": "nx:run-commands",
-			"options": {
-				"cwd": "sequence/core",
-				"command": "bun ./script.ts wasm"
-			}
-		},
-		"test": {
-			"executor": "nx:run-commands",
-			"options": {
-				"cwd": "sequence/core",
-				"command": "bun ./script.ts test",
-				"forwardAllArgs": true
-			}
-		}
-	}
+  "name": "@semio-tech/sequence-core",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "sequence/core",
+        "command": "bun ./script.ts wasm"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "sequence/core",
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
 }

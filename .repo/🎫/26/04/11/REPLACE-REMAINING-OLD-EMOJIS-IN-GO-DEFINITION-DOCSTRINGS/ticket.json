@@ -4,7 +4,5 @@
   "description": "Replace Remaining Old Emojis in Go Definition Docstrings",
   "summary": "Replaced 20 old emoji docstrings with domain-appropriate emojis across definition comments in compose/go/main.go. Skipped 1 region marker.",
   "goal": "🎯26🎯04🎯11🎯replaceremainingoldemojisingodefinitiondocstrings",
-  "sessions": [
-    "⚪8fd691cf57244212a4e4b59c57b20bcc"
-  ]
+  "sessions": ["⚪8fd691cf57244212a4e4b59c57b20bcc"]
 }

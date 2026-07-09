@@ -163,11 +163,7 @@ export function jackVarForBoardNodeId(fixtureJson: string, query: string, nodeId
   return null;
 }
 
-export function runJackOnMediaGraph(
-  graph: { readonly nodes: readonly { readonly id: string; readonly instanceId: string }[] },
-  instances: readonly { readonly id: string; readonly programId: string }[],
-  query: string,
-): JackRunResult {
+export function runJackOnMediaGraph(graph: { readonly nodes: readonly { readonly id: string; readonly instanceId: string }[] }, instances: readonly { readonly id: string; readonly programId: string }[], query: string): JackRunResult {
   const instanceById = new Map(instances.map((row) => [row.id, row]));
   const fixtureJson = JSON.stringify({
     nodes: graph.nodes.map((node) => {
@@ -180,10 +176,7 @@ export function runJackOnMediaGraph(
   return runJackOnBoardFixture(fixtureJson, query);
 }
 
-export function mediaGraphFixtureJson(
-  graph: { readonly nodes: readonly { readonly id: string; readonly instanceId: string }[] },
-  instances: readonly { readonly id: string; readonly programId: string }[],
-): string {
+export function mediaGraphFixtureJson(graph: { readonly nodes: readonly { readonly id: string; readonly instanceId: string }[] }, instances: readonly { readonly id: string; readonly programId: string }[]): string {
   const instanceById = new Map(instances.map((row) => [row.id, row]));
   return JSON.stringify({
     nodes: graph.nodes.map((node) => {
@@ -227,7 +220,9 @@ function formatWirePropertyValue(value: unknown): string {
 
 function formatWireProperties(properties: Readonly<Record<string, unknown>> | undefined): string {
   if (!properties || Object.keys(properties).length === 0) return "";
-  const inner = Object.entries(properties).map(([key, value]) => `${key}: ${formatWirePropertyValue(value)}`).join(", ");
+  const inner = Object.entries(properties)
+    .map(([key, value]) => `${key}: ${formatWirePropertyValue(value)}`)
+    .join(", ");
   return `{${inner}}`;
 }
 
@@ -248,14 +243,7 @@ function splitWireEndpoint(endpoint: string): { readonly node: string; readonly 
 }
 
 function dagNodeKind(row: Record<string, unknown>): string {
-  return (
-    readString(row.operatorKind) ??
-    readString(row.operator_kind) ??
-    readString(row.programId) ??
-    readString(row.nodeKind) ??
-    readString(row.kind) ??
-    "node"
-  );
+  return readString(row.operatorKind) ?? readString(row.operator_kind) ?? readString(row.programId) ?? readString(row.nodeKind) ?? readString(row.kind) ?? "node";
 }
 
 /** @emoji 🔌 Render a DAG fixture JSON document as wire-literal compiled text. */
@@ -285,11 +273,7 @@ export function wireLiteralFromDagFixtureJson(fixtureJson: string): string {
     const to = splitWireEndpoint(target);
     const fromKind = nodes.find((node) => node.id === from.node)?.kind ?? "node";
     const toKind = nodes.find((node) => node.id === to.node)?.kind ?? "node";
-    const props = formatWireProperties(
-      (row as Record<string, unknown>).properties && typeof (row as Record<string, unknown>).properties === "object"
-        ? ((row as Record<string, unknown>).properties as Record<string, unknown>)
-        : undefined,
-    );
+    const props = formatWireProperties((row as Record<string, unknown>).properties && typeof (row as Record<string, unknown>).properties === "object" ? ((row as Record<string, unknown>).properties as Record<string, unknown>) : undefined);
     lines.push(`${from.node}:${fromKind}@${from.port}->${to.node}:${toKind}@${to.port}${props}`);
   }
   return lines.join("\n");
@@ -332,9 +316,7 @@ export type WireEndpointRef = {
   readonly direction: "in" | "out";
 };
 
-export type WireHoverTarget =
-  | { readonly kind: "node"; readonly nodeId: string }
-  | { readonly kind: "endpoint"; readonly widgetId: string; readonly port: string; readonly direction: "in" | "out" };
+export type WireHoverTarget = { readonly kind: "node"; readonly nodeId: string } | { readonly kind: "endpoint"; readonly widgetId: string; readonly port: string; readonly direction: "in" | "out" };
 
 function wireLineBounds(text: string, offset: number): { readonly start: number; readonly end: number; readonly line: string; readonly lineOffset: number } {
   const start = text.lastIndexOf("\n", offset - 1) + 1;
@@ -350,19 +332,11 @@ function parseWireEndpointSegment(segment: string): { readonly widgetId: string;
 }
 
 /** @emoji 📍 Highlight spans for a port token on wire edge endpoints. */
-export function wireEndpointOccurrences(
-  text: string,
-  widgetId: string,
-  port: string,
-  direction: "in" | "out",
-): readonly { readonly start: number; readonly end: number }[] {
+export function wireEndpointOccurrences(text: string, widgetId: string, port: string, direction: "in" | "out"): readonly { readonly start: number; readonly end: number }[] {
   if (!widgetId || !port) return [];
   const escapedId = escapeWireRegex(widgetId);
   const escapedPort = escapeWireRegex(port);
-  const pattern =
-    direction === "out"
-      ? `(?:^|[\\n\\r])${escapedId}:[^@\\n\\r]+@(${escapedPort})(?=->)`
-      : `->${escapedId}:[^@\\n\\r]+@(${escapedPort})(?=[{\\s]|$)`;
+  const pattern = direction === "out" ? `(?:^|[\\n\\r])${escapedId}:[^@\\n\\r]+@(${escapedPort})(?=->)` : `->${escapedId}:[^@\\n\\r]+@(${escapedPort})(?=[{\\s]|$)`;
   const re = new RegExp(pattern, "gm");
   const out: { start: number; end: number }[] = [];
   let match: RegExpExecArray | null;

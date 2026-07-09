@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The Grasshopper components in `Compose.Grasshopper.cs` were missing several entity types (Folder, Tag, Concept, Port) and the Layer entity used outdated schema (Name instead of Path/Guid).
@@ -35,6 +36,7 @@ The Grasshopper components in `Compose.Grasshopper.cs` were missing several enti
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix Grasshopper entity components to match compose.ts schema

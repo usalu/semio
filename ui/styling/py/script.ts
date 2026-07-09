@@ -4,22 +4,18 @@ import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../.
 import { generateStylingArtifacts } from "../script.ts";
 
 class GenerateScript extends BundleScript {
-	run(): void {
-		generateStylingArtifacts();
-	}
+  run(): void {
+    generateStylingArtifacts();
+  }
 }
 
 class TestScript extends BundleScript {
-	run(): void {
-		runCmd(
-			"uv",
-			["run", "python", "-c", "from styling.generated import BOARD_LIGHT, STYLING_TOKENS; assert STYLING_TOKENS['primary']"],
-			{ cwd: import.meta.dir },
-		);
-	}
+  run(): void {
+    runCmd("uv", ["run", "python", "-c", "from styling.generated import BOARD_LIGHT, STYLING_TOKENS; assert STYLING_TOKENS['primary']"], { cwd: import.meta.dir });
+  }
 }
 
 if (import.meta.main) {
-	const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("test", TestScript);
-	await runBundleScriptMain(router, import.meta.url);
+  const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("test", TestScript);
+  await runBundleScriptMain(router, import.meta.url);
 }

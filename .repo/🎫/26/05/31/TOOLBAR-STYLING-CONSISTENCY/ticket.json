@@ -5,8 +5,5 @@
   "description": "Unify toolbar styling (categories, items, actions) so height and spacing are consistent across all toolbar elements.",
   "summary": "Added border-element border on ToolbarZone; introduced --toolbar-footer-offset (2× --spacing-double, matching Mode canvas inset) and toolbar-anchor slot for Layout/Ui; toolbar now sits twice the window offset above the footer.",
   "goal": "🎯ui",
-  "sessions": [
-    "⚪73f8d2a77adc4930b428e45d87da951b",
-    "⚪140266aa60a349a2bfcce850a0db1c3e"
-  ]
+  "sessions": ["⚪73f8d2a77adc4930b428e45d87da951b", "⚪140266aa60a349a2bfcce850a0db1c3e"]
 }

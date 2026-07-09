@@ -4,18 +4,18 @@
  */
 import { spawn, spawnSync } from "node:child_process";
 import {
-	Script,
-	ScriptRouter,
-	devToolingEnv,
-	dispatchSubcommand,
-	frameworkOsPlaygroundDevEnv,
-	resolveFrameworkOsPlaygroundPlugin,
-	runCmd,
-	installMicroCommitGitHooks,
-	runCommit,
-	runMicroCommit,
-	runWorkspaceScriptMain,
-	tryRun,
+  Script,
+  ScriptRouter,
+  devToolingEnv,
+  dispatchSubcommand,
+  frameworkOsPlaygroundDevEnv,
+  resolveFrameworkOsPlaygroundPlugin,
+  runCmd,
+  installMicroCommitGitHooks,
+  runCommit,
+  runMicroCommit,
+  runWorkspaceScriptMain,
+  tryRun,
 } from "./repo/lib/js/index.ts";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -30,16 +30,16 @@ const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "repo", "native", "bootstrap")
 export { Script };
 
 function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; readonly rest: string[] } | null {
-	const resolved = resolveFrameworkOsPlaygroundPlugin(segments);
-	if (!resolved) return null;
-	return { app: resolved.plugin, rest: [...resolved.rest] };
+  const resolved = resolveFrameworkOsPlaygroundPlugin(segments);
+  if (!resolved) return null;
+  return { app: resolved.plugin, rest: [...resolved.rest] };
 }
 
 function runFrameworkOsPlaygroundDev(plugin: string, rest: string[] = []): void {
-	runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", ...rest], {
-		cwd: WORKSPACE_ROOT,
-		env: frameworkOsPlaygroundDevEnv(plugin),
-	});
+  runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", ...rest], {
+    cwd: WORKSPACE_ROOT,
+    env: frameworkOsPlaygroundDevEnv(plugin),
+  });
 }
 
 //#region 🔖NativeOsScript
@@ -86,10 +86,7 @@ function ensureSccache(): void {
     return;
   }
 
-  const binDir =
-    process.platform === "win32"
-      ? join(process.env.LOCALAPPDATA ?? join(homedir(), "AppData", "Local"), "bin")
-      : join(homedir(), ".local", "bin");
+  const binDir = process.platform === "win32" ? join(process.env.LOCALAPPDATA ?? join(homedir(), "AppData", "Local"), "bin") : join(homedir(), ".local", "bin");
   const binName = process.platform === "win32" ? "sccache.exe" : "sccache";
   const dest = join(binDir, binName);
   if (existsSync(dest)) return;
@@ -126,21 +123,15 @@ function ensureSccache(): void {
 
 function sccacheReleaseAsset(): string | null {
   if (process.platform === "darwin") {
-    return process.arch === "arm64"
-      ? `sccache-v${SCCACHE_VERSION}-aarch64-apple-darwin.tar.gz`
-      : `sccache-v${SCCACHE_VERSION}-x86_64-apple-darwin.tar.gz`;
+    return process.arch === "arm64" ? `sccache-v${SCCACHE_VERSION}-aarch64-apple-darwin.tar.gz` : `sccache-v${SCCACHE_VERSION}-x86_64-apple-darwin.tar.gz`;
   }
   if (process.platform === "linux") {
     const report = process.report?.getReport?.() as { header?: { glibcVersionRuntime?: string } } | undefined;
     const libc = report?.header?.glibcVersionRuntime ? "gnu" : "musl";
-    return process.arch === "arm64"
-      ? `sccache-v${SCCACHE_VERSION}-aarch64-unknown-linux-${libc}.tar.gz`
-      : `sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-${libc}.tar.gz`;
+    return process.arch === "arm64" ? `sccache-v${SCCACHE_VERSION}-aarch64-unknown-linux-${libc}.tar.gz` : `sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-${libc}.tar.gz`;
   }
   if (process.platform === "win32") {
-    return process.arch === "arm64"
-      ? `sccache-v${SCCACHE_VERSION}-aarch64-pc-windows-msvc.zip`
-      : `sccache-v${SCCACHE_VERSION}-x86_64-pc-windows-msvc.zip`;
+    return process.arch === "arm64" ? `sccache-v${SCCACHE_VERSION}-aarch64-pc-windows-msvc.zip` : `sccache-v${SCCACHE_VERSION}-x86_64-pc-windows-msvc.zip`;
   }
   return null;
 }
@@ -537,27 +528,7 @@ export class LintScript extends Script {
       return;
     }
     runCmd("bun", ["nx", "run-many", "-t", "lint", "--all", "--exclude", "workspace"], { cwd: this.root });
-    runCmd(
-      "bunx",
-      [
-        "dependency-cruiser@16",
-        "compose",
-        "framework",
-        "flow",
-        "layout",
-        "puzzle",
-        "ui",
-        "draw",
-        "note",
-        "sequence",
-        "s",
-        "--config",
-        ".dependency-cruiser.cjs",
-        "--output-type",
-        "err",
-      ],
-      { cwd: this.root, shell: true },
-    );
+    runCmd("bunx", ["dependency-cruiser@16", "compose", "framework", "flow", "layout", "puzzle", "ui", "draw", "note", "sequence", "s", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
   }
 }
 //#endregion 🔖LintScript
@@ -1063,33 +1034,16 @@ export class Neo4jCypherExport {
     writeFileSync(queryPath, `${cypher.trim()}\n`, "utf8");
 
     try {
-      const result = spawnSync(
-        shell,
-        [
-          "-a",
-          process.env.NEO4J_URI || "bolt://localhost:7687",
-          "-u",
-          process.env.NEO4J_USERNAME || "neo4j",
-          "-p",
-          process.env.NEO4J_PASSWORD || "password",
-          "-d",
-          database,
-          "--format",
-          "plain",
-          "-f",
-          queryPath,
-        ],
-        {
-          cwd: this.repoRoot,
-          encoding: "utf8",
-          env: this.buildCypherEnv(),
-        },
-      );
+      const result = spawnSync(shell, ["-a", process.env.NEO4J_URI || "bolt://localhost:7687", "-u", process.env.NEO4J_USERNAME || "neo4j", "-p", process.env.NEO4J_PASSWORD || "password", "-d", database, "--format", "plain", "-f", queryPath], {
+        cwd: this.repoRoot,
+        encoding: "utf8",
+        env: this.buildCypherEnv(),
+      });
 
       return {
         ok: result.status === 0,
-        stdout: typeof result.stdout === "string" ? result.stdout : result.stdout?.toString() ?? "",
-        stderr: typeof result.stderr === "string" ? result.stderr : result.stderr?.toString() ?? "",
+        stdout: typeof result.stdout === "string" ? result.stdout : (result.stdout?.toString() ?? ""),
+        stderr: typeof result.stderr === "string" ? result.stderr : (result.stderr?.toString() ?? ""),
       };
     } finally {
       try {
@@ -1119,8 +1073,7 @@ export class Neo4jCypherExport {
     if (!ok) {
       return {
         ok: false,
-        message: `${stderr || stdout || "unknown error"}\n` +
-          "Ensure APOC is installed, apoc.export.file.enabled=true, and Neo4j may write this absolute path (set apoc.import.file.use_neo4j_config=false on Desktop — see setup scripts).",
+        message: `${stderr || stdout || "unknown error"}\n` + "Ensure APOC is installed, apoc.export.file.enabled=true, and Neo4j may write this absolute path (set apoc.import.file.use_neo4j_config=false on Desktop — see setup scripts).",
       };
     }
     return { ok: true, message: stdout.trim() };
@@ -1146,17 +1099,11 @@ export class Neo4jCypherExport {
       console.error(`[generate:neo4j] unexpected extra arguments (use only graph name segments before any -flags): ${JSON.stringify(passthrough)}`);
       return false;
     }
-    const joined =
-      nameParts.length > 0 ? joinNeo4jGraphDatabaseName(nameParts) : (process.env.NEO4J_DATABASE ?? "compose");
+    const joined = nameParts.length > 0 ? joinNeo4jGraphDatabaseName(nameParts) : (process.env.NEO4J_DATABASE ?? "compose");
     const allowed = neo4jExportDatabaseNameSet(process.env);
     if (!allowed.has(joined)) {
-      const hint =
-        parseExtraNeo4jGraphDatabaseNamesFromEnv(process.env).length === 0
-          ? ` Set ${NEO4J_EXTRA_GRAPH_DATABASES_ENV} to a comma-separated list of extra Bolt graph names (e.g. metabolism,mydb).`
-          : "";
-      console.error(
-        `[generate:neo4j] graph database must be one of: ${[...allowed].sort().join(", ")} (got ${JSON.stringify(joined)}; argv segments ${JSON.stringify(nameParts)}).${hint}`,
-      );
+      const hint = parseExtraNeo4jGraphDatabaseNamesFromEnv(process.env).length === 0 ? ` Set ${NEO4J_EXTRA_GRAPH_DATABASES_ENV} to a comma-separated list of extra Bolt graph names (e.g. metabolism,mydb).` : "";
+      console.error(`[generate:neo4j] graph database must be one of: ${[...allowed].sort().join(", ")} (got ${JSON.stringify(joined)}; argv segments ${JSON.stringify(nameParts)}).${hint}`);
       return false;
     }
 

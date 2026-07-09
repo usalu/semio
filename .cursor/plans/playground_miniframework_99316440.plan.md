@@ -2,33 +2,33 @@
 name: Playground Miniframework
 overview: Turn @elements/playground into a self-contained miniframework (its own react-neutral runtime + its own React renderer that depends only on @elements/ui), enforce that every side-panel tab is a Tree with sections and items via declarative classes, migrate elements scene play onto it (replacing the ad-hoc JSON details panel), and decouple @elements/board from @elements/playground.
 todos:
-  - id: ticket
-    content: Open a repo ticket (repo MCP), read repo://goals, associate with the most appropriate goal.
-    status: completed
-  - id: pg-core
-    content: Add playground's own react-neutral runtime core (CommandBus, Controller, ProductRuntime, AppRuntime, ModeRuntime, WindowKindRuntime, layout helpers, window/side-panel body registries, buildScene3dWindowBody, UiNode/WindowLayout/ToolItem/*ViewContext types); remove @elements/framework import and dependency.
-    status: completed
-  - id: pg-renderer
-    content: Add playground's own React renderer (PlaygroundView, mountPlaygroundApp, useApp, side-panel registry, scene3d/table surface hosts, minimal canvas) depending only on @elements/ui; expose ./react export and deps.
-    status: completed
-  - id: pg-tree-classes
-    content: Add declarative PureSidePanelTabDefinition + StaticTreePanelDefinition in playground and enforce every side-panel tab resolves to a Tree of sections+items (no content-only/JSON fallback).
-    status: completed
-  - id: scene-controller
-    content: Retarget ScenePlayShellController and buildScenePlayAppRuntime in scene/play/index.ts to the playground core.
-    status: completed
-  - id: scene-panels
-    content: Replace ad-hoc scene inspector/settings React panels with declarative Tree panel definitions (sections + items) for selected Objects/Vortices/Attractions and scene lists.
-    status: completed
-  - id: scene-render
-    content: Render scene play via playground PlaygroundView (not framework-react ProductView); remove the always-on JSON details tab; convert remaining scene React.Component classes to function components.
-    status: completed
-  - id: board-decouple
-    content: Decouple @elements/board from @elements/playground (use framework registerSidePanelBody, drop dependency + vitest aliases).
-    status: completed
-  - id: validate
-    content: Extend existing vitest regions and run playground/scene/board suites; runtime-verify the tree details panel and absence of the JSON snippet; close the ticket with a summary.
-    status: completed
+ - id: ticket
+   content: Open a repo ticket (repo MCP), read repo://goals, associate with the most appropriate goal.
+   status: completed
+ - id: pg-core
+   content: Add playground's own react-neutral runtime core (CommandBus, Controller, ProductRuntime, AppRuntime, ModeRuntime, WindowKindRuntime, layout helpers, window/side-panel body registries, buildScene3dWindowBody, UiNode/WindowLayout/ToolItem/*ViewContext types); remove @elements/framework import and dependency.
+   status: completed
+ - id: pg-renderer
+   content: Add playground's own React renderer (PlaygroundView, mountPlaygroundApp, useApp, side-panel registry, scene3d/table surface hosts, minimal canvas) depending only on @elements/ui; expose ./react export and deps.
+   status: completed
+ - id: pg-tree-classes
+   content: Add declarative PureSidePanelTabDefinition + StaticTreePanelDefinition in playground and enforce every side-panel tab resolves to a Tree of sections+items (no content-only/JSON fallback).
+   status: completed
+ - id: scene-controller
+   content: Retarget ScenePlayShellController and buildScenePlayAppRuntime in scene/play/index.ts to the playground core.
+   status: completed
+ - id: scene-panels
+   content: Replace ad-hoc scene inspector/settings React panels with declarative Tree panel definitions (sections + items) for selected Objects/Vortices/Attractions and scene lists.
+   status: completed
+ - id: scene-render
+   content: Render scene play via playground PlaygroundView (not framework-react ProductView); remove the always-on JSON details tab; convert remaining scene React.Component classes to function components.
+   status: completed
+ - id: board-decouple
+   content: Decouple @elements/board from @elements/playground (use framework registerSidePanelBody, drop dependency + vitest aliases).
+   status: completed
+ - id: validate
+   content: Extend existing vitest regions and run playground/scene/board suites; runtime-verify the tree details panel and absence of the JSON snippet; close the ticket with a summary.
+   status: completed
 isProject: false
 ---
 
@@ -55,8 +55,6 @@ graph TD
   board --> fwk
   fwk --> ui
 ```
-
-
 
 Key rule confirmed with user: `@elements/ui` stays 100% pure React (no classes); `@elements/framework` and `@elements/playground` are the react-neutral abstraction layers. Playground gets its OWN copies of what it needs (no shared code with framework), its OWN renderer, and board drops its playground import.
 
@@ -103,4 +101,3 @@ Add a renderer module to the playground package (e.g. `elements/lib/playground/r
 ## Out of scope / follow-up
 
 - Board's own undefined `PureSidePanelTabDefinition`/`StaticTreePanelDefinition` references (currently in [elements/lib/board/index.tsx](elements/lib/board/index.tsx) lines 8516-8553) are a pre-existing framework-side gap; converting board's panels to the framework's tree mechanism is a separate effort unless you want it folded in.
-

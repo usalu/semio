@@ -5,7 +5,5 @@
   "description": "Define designWithDiff(design: Design, designDiff: DesignDiff): Design in every compose language port. Semantics: keep all old pieces/connections and old parameters, apply only status attributes from diff updates, do not physically remove deleted items but mark them deleted, add new pieces/connections, add a Design/WithDiff test using the Nakagin Capsule Tower diff asset, add the nakagin-capsule-tower.with-diff.design.compose.json asset, and run the relevant tests for all languages until they pass.",
   "summary": "Successfully opened and confirmed ticket \"Finish Kiro CLI and MCP Setup for Devcontainer\" under goal aioptimizedrepo/sandboxedrepo/zerotouchdevcontainer with client kiro-cli and LLM sonnet-4-5. Ticket path: .repo/🎫/26/03/30/FINISH-KIRO-CLI-AND-MCP-SETUP-FOR-DEVCONTAINER. Session: ⚪b2754da88e7b49c3909eb59473da9529.",
   "goal": "🎯sketchpadimprovements",
-  "sessions": [
-    "⚪eac2fceb05fd4ab4a3d4d4a86b4908fc"
-  ]
+  "sessions": ["⚪eac2fceb05fd4ab4a3d4d4a86b4908fc"]
 }

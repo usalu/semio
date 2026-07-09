@@ -9,563 +9,516 @@ const WHEEL_ZOOM_IN_FACTOR = 1.1;
 const WHEEL_ZOOM_OUT_FACTOR = 0.9;
 
 export type CanvasCamera = {
-	x: number;
-	y: number;
-	zoom: number;
+  x: number;
+  y: number;
+  zoom: number;
 };
 
 export function clampCanvasZoom(zoom: number): number {
-	return Math.min(CANVAS_CAMERA_ZOOM_MAX, Math.max(CANVAS_CAMERA_ZOOM_MIN, zoom));
+  return Math.min(CANVAS_CAMERA_ZOOM_MAX, Math.max(CANVAS_CAMERA_ZOOM_MIN, zoom));
 }
 
 /** 🧭 Maps world coordinates to logical (CSS-pixel) screen space — matches `infinite_cavas::camera::world_to_screen`. */
-export function worldToScreenLogical(
-	worldX: number,
-	worldY: number,
-	camera: CanvasCamera,
-	viewportWidth: number,
-	viewportHeight: number,
-): { readonly x: number; readonly y: number } {
-	const zoom = camera.zoom || 1;
-	return {
-		x: (worldX - camera.x) * zoom + viewportWidth * 0.5,
-		y: (worldY - camera.y) * zoom + viewportHeight * 0.5,
-	};
+export function worldToScreenLogical(worldX: number, worldY: number, camera: CanvasCamera, viewportWidth: number, viewportHeight: number): { readonly x: number; readonly y: number } {
+  const zoom = camera.zoom || 1;
+  return {
+    x: (worldX - camera.x) * zoom + viewportWidth * 0.5,
+    y: (worldY - camera.y) * zoom + viewportHeight * 0.5,
+  };
 }
 
 /** 🧭 Maps logical (CSS-pixel) screen space to world coordinates — matches `infinite_cavas::camera::screen_to_world`. */
-export function screenToWorldLogical(
-	screenX: number,
-	screenY: number,
-	camera: CanvasCamera,
-	viewportWidth: number,
-	viewportHeight: number,
-): { readonly x: number; readonly y: number } {
-	const zoom = camera.zoom || 1;
-	return {
-		x: (screenX - viewportWidth * 0.5) / zoom + camera.x,
-		y: (screenY - viewportHeight * 0.5) / zoom + camera.y,
-	};
+export function screenToWorldLogical(screenX: number, screenY: number, camera: CanvasCamera, viewportWidth: number, viewportHeight: number): { readonly x: number; readonly y: number } {
+  const zoom = camera.zoom || 1;
+  return {
+    x: (screenX - viewportWidth * 0.5) / zoom + camera.x,
+    y: (screenY - viewportHeight * 0.5) / zoom + camera.y,
+  };
 }
 
 /** 🔍 Cursor-anchored wheel zoom — matches `infinite_cavas::camera::wheel_screen`. */
-export function wheelCameraAtScreen(
-	camera: CanvasCamera,
-	screenX: number,
-	screenY: number,
-	deltaY: number,
-	viewportWidth: number,
-	viewportHeight: number,
-): CanvasCamera {
-	const zoomFactor = deltaY < 0 ? WHEEL_ZOOM_IN_FACTOR : WHEEL_ZOOM_OUT_FACTOR;
-	const nextZoom = clampCanvasZoom((camera.zoom || 1) * zoomFactor);
-	const worldBefore = screenToWorldLogical(screenX, screenY, camera, viewportWidth, viewportHeight);
-	return {
-		x: worldBefore.x - (screenX - viewportWidth * 0.5) / nextZoom,
-		y: worldBefore.y - (screenY - viewportHeight * 0.5) / nextZoom,
-		zoom: nextZoom,
-	};
+export function wheelCameraAtScreen(camera: CanvasCamera, screenX: number, screenY: number, deltaY: number, viewportWidth: number, viewportHeight: number): CanvasCamera {
+  const zoomFactor = deltaY < 0 ? WHEEL_ZOOM_IN_FACTOR : WHEEL_ZOOM_OUT_FACTOR;
+  const nextZoom = clampCanvasZoom((camera.zoom || 1) * zoomFactor);
+  const worldBefore = screenToWorldLogical(screenX, screenY, camera, viewportWidth, viewportHeight);
+  return {
+    x: worldBefore.x - (screenX - viewportWidth * 0.5) / nextZoom,
+    y: worldBefore.y - (screenY - viewportHeight * 0.5) / nextZoom,
+    zoom: nextZoom,
+  };
 }
 //#endregion CanvasCameraMath
 
 //#region JsonLayersCanvasSession
 type CanvasLayerRecord = {
-	readonly id?: string;
-	readonly kind?: string;
-	readonly role?: string;
-	readonly name?: string;
-	readonly color?: string;
-	readonly selected?: boolean;
-	readonly x?: number;
-	readonly y?: number;
-	readonly width?: number;
-	readonly height?: number;
-	readonly x0?: number;
-	readonly y0?: number;
-	readonly y1?: number;
-	readonly x1?: number;
-	readonly dataUrl?: string;
-	readonly points?: readonly (readonly [number, number])[];
-	readonly seams?: readonly number[];
-	readonly base?: { readonly name?: string; readonly x?: number; readonly y?: number; readonly width?: number; readonly height?: number };
-	readonly transform?: readonly number[];
-	readonly segments?: readonly {
-		readonly kind?: string;
-		readonly to?: readonly [number, number];
-		readonly ctrl?: readonly [number, number];
-		readonly ctrl1?: readonly [number, number];
-		readonly ctrl2?: readonly [number, number];
-		readonly rx?: number;
-		readonly ry?: number;
-		readonly rotation?: number;
-		readonly largeArc?: boolean;
-		readonly sweep?: boolean;
-	}[];
-	readonly fill?: { readonly kind?: string; readonly color?: readonly number[] };
-	readonly stroke?: { readonly color?: readonly number[]; readonly width?: number; readonly dash?: readonly number[] };
-	readonly opacity?: number;
-	readonly visible?: boolean;
-	readonly text?: { readonly content?: string; readonly size?: number };
-	readonly image?: { readonly src?: string; readonly width?: number; readonly height?: number };
+  readonly id?: string;
+  readonly kind?: string;
+  readonly role?: string;
+  readonly name?: string;
+  readonly color?: string;
+  readonly selected?: boolean;
+  readonly x?: number;
+  readonly y?: number;
+  readonly width?: number;
+  readonly height?: number;
+  readonly x0?: number;
+  readonly y0?: number;
+  readonly y1?: number;
+  readonly x1?: number;
+  readonly dataUrl?: string;
+  readonly points?: readonly (readonly [number, number])[];
+  readonly seams?: readonly number[];
+  readonly base?: { readonly name?: string; readonly x?: number; readonly y?: number; readonly width?: number; readonly height?: number };
+  readonly transform?: readonly number[];
+  readonly segments?: readonly {
+    readonly kind?: string;
+    readonly to?: readonly [number, number];
+    readonly ctrl?: readonly [number, number];
+    readonly ctrl1?: readonly [number, number];
+    readonly ctrl2?: readonly [number, number];
+    readonly rx?: number;
+    readonly ry?: number;
+    readonly rotation?: number;
+    readonly largeArc?: boolean;
+    readonly sweep?: boolean;
+  }[];
+  readonly fill?: { readonly kind?: string; readonly color?: readonly number[] };
+  readonly stroke?: { readonly color?: readonly number[]; readonly width?: number; readonly dash?: readonly number[] };
+  readonly opacity?: number;
+  readonly visible?: boolean;
+  readonly text?: { readonly content?: string; readonly size?: number };
+  readonly image?: { readonly src?: string; readonly width?: number; readonly height?: number };
 };
 
 function rgbaToCss(color: readonly number[] | undefined, opacity = 1): string {
-	if (!color || color.length < 3) return `rgba(148, 163, 184, ${opacity})`;
-	const alpha = (color[3] ?? 1) * opacity;
-	return `rgba(${color[0]! * 255}, ${color[1]! * 255}, ${color[2]! * 255}, ${alpha})`;
+  if (!color || color.length < 3) return `rgba(148, 163, 184, ${opacity})`;
+  const alpha = (color[3] ?? 1) * opacity;
+  return `rgba(${color[0]! * 255}, ${color[1]! * 255}, ${color[2]! * 255}, ${alpha})`;
 }
 
 function layerColorCss(layer: CanvasLayerRecord, fallbackHue: number, opacity = 1): string {
-	if (layer.color) {
-		if (layer.color.startsWith("#") || layer.color.startsWith("hsl")) {
-			if (layer.color.startsWith("hsl") && opacity < 1) {
-				return layer.color.replace(")", ` / ${opacity})`).replace("hsl(", "hsla(");
-			}
-			return layer.color;
-		}
-	}
-	return `hsla(${fallbackHue}, 70%, 55%, ${opacity})`;
+  if (layer.color) {
+    if (layer.color.startsWith("#") || layer.color.startsWith("hsl")) {
+      if (layer.color.startsWith("hsl") && opacity < 1) {
+        return layer.color.replace(")", ` / ${opacity})`).replace("hsl(", "hsla(");
+      }
+      return layer.color;
+    }
+  }
+  return `hsla(${fallbackHue}, 70%, 55%, ${opacity})`;
 }
 
 function applySceneTransform(ctx: CanvasRenderingContext2D, transform: readonly number[] | undefined): void {
-	if (!transform || transform.length < 6) return;
-	const [a, b, c, d, e, f] = transform;
-	ctx.transform(a ?? 1, b ?? 0, c ?? 0, d ?? 1, e ?? 0, f ?? 0);
+  if (!transform || transform.length < 6) return;
+  const [a, b, c, d, e, f] = transform;
+  ctx.transform(a ?? 1, b ?? 0, c ?? 0, d ?? 1, e ?? 0, f ?? 0);
 }
 
 function traceScenePath(ctx: CanvasRenderingContext2D, segments: CanvasLayerRecord["segments"]): void {
-	if (!segments?.length) return;
-	for (const segment of segments) {
-		const kind = segment.kind ?? "line";
-		if (kind === "move" && segment.to) {
-			ctx.moveTo(segment.to[0]!, segment.to[1]!);
-		} else if (kind === "line" && segment.to) {
-			ctx.lineTo(segment.to[0]!, segment.to[1]!);
-		} else if (kind === "quad" && segment.ctrl && segment.to) {
-			ctx.quadraticCurveTo(segment.ctrl[0]!, segment.ctrl[1]!, segment.to[0]!, segment.to[1]!);
-		} else if (kind === "cubic" && segment.ctrl1 && segment.ctrl2 && segment.to) {
-			ctx.bezierCurveTo(
-				segment.ctrl1[0]!,
-				segment.ctrl1[1]!,
-				segment.ctrl2[0]!,
-				segment.ctrl2[1]!,
-				segment.to[0]!,
-				segment.to[1]!,
-			);
-		} else if (kind === "arc" && segment.to) {
-			ctx.arcTo(segment.to[0]!, segment.to[1]!, segment.to[0]!, segment.to[1]!, 0);
-		} else if (kind === "close") {
-			ctx.closePath();
-		}
-	}
+  if (!segments?.length) return;
+  for (const segment of segments) {
+    const kind = segment.kind ?? "line";
+    if (kind === "move" && segment.to) {
+      ctx.moveTo(segment.to[0]!, segment.to[1]!);
+    } else if (kind === "line" && segment.to) {
+      ctx.lineTo(segment.to[0]!, segment.to[1]!);
+    } else if (kind === "quad" && segment.ctrl && segment.to) {
+      ctx.quadraticCurveTo(segment.ctrl[0]!, segment.ctrl[1]!, segment.to[0]!, segment.to[1]!);
+    } else if (kind === "cubic" && segment.ctrl1 && segment.ctrl2 && segment.to) {
+      ctx.bezierCurveTo(segment.ctrl1[0]!, segment.ctrl1[1]!, segment.ctrl2[0]!, segment.ctrl2[1]!, segment.to[0]!, segment.to[1]!);
+    } else if (kind === "arc" && segment.to) {
+      ctx.arcTo(segment.to[0]!, segment.to[1]!, segment.to[0]!, segment.to[1]!, 0);
+    } else if (kind === "close") {
+      ctx.closePath();
+    }
+  }
 }
 
-function drawSceneNode(
-	ctx: CanvasRenderingContext2D,
-	layer: CanvasLayerRecord,
-	zoom: number,
-	imageCache: ReadonlyMap<string, HTMLImageElement>,
-): void {
-	if (layer.visible === false) return;
-	const opacity = layer.opacity ?? 1;
-	ctx.save();
-	applySceneTransform(ctx, layer.transform);
-	if (layer.segments?.length) {
-		ctx.beginPath();
-		traceScenePath(ctx, layer.segments);
-		if (layer.fill?.color) {
-			ctx.fillStyle = rgbaToCss(layer.fill.color, opacity);
-			ctx.fill();
-		}
-		if (layer.stroke) {
-			ctx.strokeStyle = rgbaToCss(layer.stroke.color, opacity);
-			ctx.lineWidth = Math.max((layer.stroke.width ?? 1) / zoom, 1 / zoom);
-			ctx.setLineDash(layer.stroke.dash?.map((value) => value / zoom) ?? []);
-			ctx.stroke();
-			ctx.setLineDash([]);
-		} else if (!layer.fill?.color) {
-			ctx.strokeStyle = rgbaToCss([0.58, 0.64, 0.72, 0.95], opacity);
-			ctx.lineWidth = Math.max(1 / zoom, 1);
-			ctx.stroke();
-		}
-	}
-	if (layer.text?.content) {
-		ctx.fillStyle = rgbaToCss([0.9, 0.93, 0.97, 1], opacity);
-		ctx.font = `${(layer.text.size ?? 14) / zoom}px ui-sans-serif, system-ui, sans-serif`;
-		ctx.fillText(layer.text.content, 0, 0);
-	}
-	if (layer.image?.src) {
-		const width = layer.image.width ?? layer.width ?? 64;
-		const height = layer.image.height ?? layer.height ?? 64;
-		const image = imageCache.get(layer.image.src);
-		if (image?.complete) {
-			ctx.drawImage(image, 0, 0, width, height);
-		}
-	}
-	ctx.restore();
+function drawSceneNode(ctx: CanvasRenderingContext2D, layer: CanvasLayerRecord, zoom: number, imageCache: ReadonlyMap<string, HTMLImageElement>): void {
+  if (layer.visible === false) return;
+  const opacity = layer.opacity ?? 1;
+  ctx.save();
+  applySceneTransform(ctx, layer.transform);
+  if (layer.segments?.length) {
+    ctx.beginPath();
+    traceScenePath(ctx, layer.segments);
+    if (layer.fill?.color) {
+      ctx.fillStyle = rgbaToCss(layer.fill.color, opacity);
+      ctx.fill();
+    }
+    if (layer.stroke) {
+      ctx.strokeStyle = rgbaToCss(layer.stroke.color, opacity);
+      ctx.lineWidth = Math.max((layer.stroke.width ?? 1) / zoom, 1 / zoom);
+      ctx.setLineDash(layer.stroke.dash?.map((value) => value / zoom) ?? []);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else if (!layer.fill?.color) {
+      ctx.strokeStyle = rgbaToCss([0.58, 0.64, 0.72, 0.95], opacity);
+      ctx.lineWidth = Math.max(1 / zoom, 1);
+      ctx.stroke();
+    }
+  }
+  if (layer.text?.content) {
+    ctx.fillStyle = rgbaToCss([0.9, 0.93, 0.97, 1], opacity);
+    ctx.font = `${(layer.text.size ?? 14) / zoom}px ui-sans-serif, system-ui, sans-serif`;
+    ctx.fillText(layer.text.content, 0, 0);
+  }
+  if (layer.image?.src) {
+    const width = layer.image.width ?? layer.width ?? 64;
+    const height = layer.image.height ?? layer.height ?? 64;
+    const image = imageCache.get(layer.image.src);
+    if (image?.complete) {
+      ctx.drawImage(image, 0, 0, width, height);
+    }
+  }
+  ctx.restore();
 }
 
 function layerBounds(layer: CanvasLayerRecord): { readonly x: number; readonly y: number; readonly width: number; readonly height: number } | null {
-	const x = layer.x ?? layer.base?.x;
-	const y = layer.y ?? layer.base?.y;
-	const width = layer.width ?? layer.base?.width;
-	const height = layer.height ?? layer.base?.height;
-	if (x == null || y == null || width == null || height == null) return null;
-	return { x, y, width, height };
+  const x = layer.x ?? layer.base?.x;
+  const y = layer.y ?? layer.base?.y;
+  const width = layer.width ?? layer.base?.width;
+  const height = layer.height ?? layer.base?.height;
+  if (x == null || y == null || width == null || height == null) return null;
+  return { x, y, width, height };
 }
 
 function layerLabel(layer: CanvasLayerRecord): string {
-	return layer.name ?? layer.base?.name ?? layer.kind ?? layer.id ?? "layer";
+  return layer.name ?? layer.base?.name ?? layer.kind ?? layer.id ?? "layer";
 }
 
 function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number): void {
-	const r = Math.min(radius, width * 0.5, height * 0.5);
-	ctx.beginPath();
-	ctx.moveTo(x + r, y);
-	ctx.lineTo(x + width - r, y);
-	ctx.quadraticCurveTo(x + width, y, x + width, y + r);
-	ctx.lineTo(x + width, y + height - r);
-	ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
-	ctx.lineTo(x + r, y + height);
-	ctx.quadraticCurveTo(x, y + height, x, y + height - r);
-	ctx.lineTo(x, y + r);
-	ctx.quadraticCurveTo(x, y, x + r, y);
-	ctx.closePath();
+  const r = Math.min(radius, width * 0.5, height * 0.5);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 
-function drawBoundsLayer(
-	ctx: CanvasRenderingContext2D,
-	layer: CanvasLayerRecord,
-	bounds: { readonly x: number; readonly y: number; readonly width: number; readonly height: number },
-	label: string,
-	hue: number,
-	zoom: number,
-): void {
-	const isHandle = layer.role === "handle";
-	const isSelected = layer.selected === true;
-	const fillOpacity = isHandle ? 0.35 : isSelected ? 0.42 : 0.22;
-	const strokeOpacity = isSelected ? 1 : isHandle ? 0.7 : 0.85;
-	const fillColor = layerColorCss(layer, hue, fillOpacity);
-	const strokeColor = isSelected ? "rgba(251, 191, 36, 0.95)" : layerColorCss(layer, hue, strokeOpacity);
-	const lineWidth = Math.max((isSelected ? 2.5 : 1) / zoom, 1 / zoom);
-	if (isSelected) {
-		ctx.strokeStyle = "rgba(251, 191, 36, 0.28)";
-		ctx.lineWidth = Math.max(5 / zoom, 2 / zoom);
-		if (layer.kind === "circle") {
-			const cx = bounds.x + bounds.width * 0.5;
-			const cy = bounds.y + bounds.height * 0.5;
-			const radius = Math.min(bounds.width, bounds.height) * 0.5 + 4 / zoom;
-			ctx.beginPath();
-			ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-			ctx.stroke();
-		} else {
-			drawRoundedRect(ctx, bounds.x - 4 / zoom, bounds.y - 4 / zoom, bounds.width + 8 / zoom, bounds.height + 8 / zoom, 6 / zoom);
-			ctx.stroke();
-		}
-	}
-	ctx.fillStyle = fillColor;
-	ctx.strokeStyle = strokeColor;
-	ctx.lineWidth = lineWidth;
-	if (layer.kind === "circle") {
-		const cx = bounds.x + bounds.width * 0.5;
-		const cy = bounds.y + bounds.height * 0.5;
-		const radius = Math.min(bounds.width, bounds.height) * 0.5;
-		ctx.beginPath();
-		ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-		ctx.fill();
-		ctx.stroke();
-	} else {
-		drawRoundedRect(ctx, bounds.x, bounds.y, bounds.width, bounds.height, 4 / zoom);
-		ctx.fill();
-		ctx.stroke();
-	}
-	if (!isHandle && label) {
-		ctx.fillStyle = "rgba(226, 232, 240, 0.92)";
-		ctx.font = `${12 / zoom}px ui-monospace, monospace`;
-		ctx.fillText(label, bounds.x + 4, bounds.y + 14 / zoom);
-	}
+function drawBoundsLayer(ctx: CanvasRenderingContext2D, layer: CanvasLayerRecord, bounds: { readonly x: number; readonly y: number; readonly width: number; readonly height: number }, label: string, hue: number, zoom: number): void {
+  const isHandle = layer.role === "handle";
+  const isSelected = layer.selected === true;
+  const fillOpacity = isHandle ? 0.35 : isSelected ? 0.42 : 0.22;
+  const strokeOpacity = isSelected ? 1 : isHandle ? 0.7 : 0.85;
+  const fillColor = layerColorCss(layer, hue, fillOpacity);
+  const strokeColor = isSelected ? "rgba(251, 191, 36, 0.95)" : layerColorCss(layer, hue, strokeOpacity);
+  const lineWidth = Math.max((isSelected ? 2.5 : 1) / zoom, 1 / zoom);
+  if (isSelected) {
+    ctx.strokeStyle = "rgba(251, 191, 36, 0.28)";
+    ctx.lineWidth = Math.max(5 / zoom, 2 / zoom);
+    if (layer.kind === "circle") {
+      const cx = bounds.x + bounds.width * 0.5;
+      const cy = bounds.y + bounds.height * 0.5;
+      const radius = Math.min(bounds.width, bounds.height) * 0.5 + 4 / zoom;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.stroke();
+    } else {
+      drawRoundedRect(ctx, bounds.x - 4 / zoom, bounds.y - 4 / zoom, bounds.width + 8 / zoom, bounds.height + 8 / zoom, 6 / zoom);
+      ctx.stroke();
+    }
+  }
+  ctx.fillStyle = fillColor;
+  ctx.strokeStyle = strokeColor;
+  ctx.lineWidth = lineWidth;
+  if (layer.kind === "circle") {
+    const cx = bounds.x + bounds.width * 0.5;
+    const cy = bounds.y + bounds.height * 0.5;
+    const radius = Math.min(bounds.width, bounds.height) * 0.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  } else {
+    drawRoundedRect(ctx, bounds.x, bounds.y, bounds.width, bounds.height, 4 / zoom);
+    ctx.fill();
+    ctx.stroke();
+  }
+  if (!isHandle && label) {
+    ctx.fillStyle = "rgba(226, 232, 240, 0.92)";
+    ctx.font = `${12 / zoom}px ui-monospace, monospace`;
+    ctx.fillText(label, bounds.x + 4, bounds.y + 14 / zoom);
+  }
 }
 
 function drawCheckerboard(ctx: CanvasRenderingContext2D, width: number, height: number, zoom: number): void {
-	const cell = 16 / Math.max(zoom, 0.25);
-	const cols = Math.ceil(width / cell) + 1;
-	const rows = Math.ceil(height / cell) + 1;
-	for (let row = 0; row < rows; row += 1) {
-		for (let col = 0; col < cols; col += 1) {
-			ctx.fillStyle = (row + col) % 2 === 0 ? "#2a2d34" : "#1f2228";
-			ctx.fillRect(col * cell - width / 2, row * cell - height / 2, cell, cell);
-		}
-	}
+  const cell = 16 / Math.max(zoom, 0.25);
+  const cols = Math.ceil(width / cell) + 1;
+  const rows = Math.ceil(height / cell) + 1;
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
+      ctx.fillStyle = (row + col) % 2 === 0 ? "#2a2d34" : "#1f2228";
+      ctx.fillRect(col * cell - width / 2, row * cell - height / 2, cell, cell);
+    }
+  }
 }
 
 class JsonLayersCanvasSession implements GraphWasmSession {
-	private canvas: HTMLCanvasElement | null = null;
-	private ctx: CanvasRenderingContext2D | null = null;
-	private logicalWidth = 1;
-	private logicalHeight = 1;
-	private dpr = 1;
-	private readonly imageCache = new Map<string, HTMLImageElement>();
-	private panning = false;
-	private panStart = { x: 0, y: 0 };
-	private panCameraStart = { x: 0, y: 0 };
+  private canvas: HTMLCanvasElement | null = null;
+  private ctx: CanvasRenderingContext2D | null = null;
+  private logicalWidth = 1;
+  private logicalHeight = 1;
+  private dpr = 1;
+  private readonly imageCache = new Map<string, HTMLImageElement>();
+  private panning = false;
+  private panStart = { x: 0, y: 0 };
+  private panCameraStart = { x: 0, y: 0 };
 
-	constructor(
-		private readonly layersJson: string,
-		private camera: CanvasCamera,
-		private readonly onCameraChange: (camera: CanvasCamera) => void,
-		private readonly onPointer?: (command: string, args?: Record<string, unknown>) => void,
-	) {}
+  constructor(
+    private readonly layersJson: string,
+    private camera: CanvasCamera,
+    private readonly onCameraChange: (camera: CanvasCamera) => void,
+    private readonly onPointer?: (command: string, args?: Record<string, unknown>) => void,
+  ) {}
 
-	async attachCanvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown> {
-		this.canvas = canvas;
-		this.ctx = canvas.getContext("2d");
-		this.logicalWidth = logicalW;
-		this.logicalHeight = logicalH;
-		this.dpr = dpr;
-		await this.preloadImages();
-		this.renderFrame();
-		return undefined;
-	}
+  async attachCanvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown> {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
+    this.logicalWidth = logicalW;
+    this.logicalHeight = logicalH;
+    this.dpr = dpr;
+    await this.preloadImages();
+    this.renderFrame();
+    return undefined;
+  }
 
-	setSize(width: number, height: number, dpr: number): void {
-		this.logicalWidth = width;
-		this.logicalHeight = height;
-		this.dpr = dpr;
-	}
+  setSize(width: number, height: number, dpr: number): void {
+    this.logicalWidth = width;
+    this.logicalHeight = height;
+    this.dpr = dpr;
+  }
 
-	updateCamera(camera: CanvasCamera): void {
-		this.camera = camera;
-	}
+  updateCamera(camera: CanvasCamera): void {
+    this.camera = camera;
+  }
 
-	private parseLayers(): CanvasLayerRecord[] {
-		try {
-			return JSON.parse(this.layersJson) as CanvasLayerRecord[];
-		} catch {
-			return [];
-		}
-	}
+  private parseLayers(): CanvasLayerRecord[] {
+    try {
+      return JSON.parse(this.layersJson) as CanvasLayerRecord[];
+    } catch {
+      return [];
+    }
+  }
 
-	private async preloadImages(): Promise<void> {
-		const layers = this.parseLayers();
-		const urls = new Set<string>();
-		for (const layer of layers) {
-			if (layer.kind === "image" && layer.dataUrl) urls.add(layer.dataUrl);
-			if (layer.image?.src) urls.add(layer.image.src);
-		}
-		await Promise.all(
-			[...urls].map(async (key) => {
-				if (this.imageCache.has(key)) return;
-				const image = new Image();
-				image.decoding = "async";
-				image.src = key;
-				await image.decode().catch(() => undefined);
-				this.imageCache.set(key, image);
-			}),
-		);
-	}
+  private async preloadImages(): Promise<void> {
+    const layers = this.parseLayers();
+    const urls = new Set<string>();
+    for (const layer of layers) {
+      if (layer.kind === "image" && layer.dataUrl) urls.add(layer.dataUrl);
+      if (layer.image?.src) urls.add(layer.image.src);
+    }
+    await Promise.all(
+      [...urls].map(async (key) => {
+        if (this.imageCache.has(key)) return;
+        const image = new Image();
+        image.decoding = "async";
+        image.src = key;
+        await image.decode().catch(() => undefined);
+        this.imageCache.set(key, image);
+      }),
+    );
+  }
 
-	renderFrame(): void {
-		const ctx = this.ctx;
-		const canvas = this.canvas;
-		if (!ctx || !canvas) return;
-		const deviceWidth = canvas.width;
-		const deviceHeight = canvas.height;
-		const logicalWidth = this.logicalWidth;
-		const logicalHeight = this.logicalHeight;
-		const dpr = this.dpr;
-		const zoom = this.camera.zoom || 1;
-		ctx.setTransform(1, 0, 0, 1, 0, 0);
-		ctx.clearRect(0, 0, deviceWidth, deviceHeight);
-		ctx.fillStyle = "#111318";
-		ctx.fillRect(0, 0, deviceWidth, deviceHeight);
-		const layers = this.parseLayers();
-		ctx.save();
-		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-		ctx.translate(logicalWidth * 0.5 - this.camera.x * zoom, logicalHeight * 0.5 - this.camera.y * zoom);
-		ctx.scale(zoom, zoom);
-		drawCheckerboard(ctx, logicalWidth, logicalHeight, zoom);
-		for (const [index, layer] of layers.entries()) {
-			if (layer.segments?.length || layer.text || layer.image?.src) {
-				drawSceneNode(ctx, layer, zoom, this.imageCache);
-				continue;
-			}
-			if (layer.kind === "image" && layer.dataUrl) {
-				const bounds = layerBounds(layer);
-				const image = this.imageCache.get(layer.dataUrl);
-				if (bounds && image && image.complete) {
-					ctx.drawImage(image, bounds.x, bounds.y, bounds.width, bounds.height);
-				}
-				continue;
-			}
-			if (layer.kind === "polyline" && layer.points?.length) {
-				const seams = layer.seams ?? [];
-				for (let segment = 0; segment + 1 < layer.points.length; segment += 2) {
-					const [x0, y0] = layer.points[segment]!;
-					const [x1, y1] = layer.points[segment + 1]!;
-					const seamIndex = segment / 2;
-					ctx.strokeStyle = layerColorCss(layer, (index * 47) % 360, 0.95);
-					ctx.lineWidth = Math.max(1 / zoom, 1);
-					ctx.setLineDash(seams[seamIndex] ? [6 / zoom, 4 / zoom] : []);
-					ctx.beginPath();
-					ctx.moveTo(x0, y0);
-					ctx.lineTo(x1, y1);
-					ctx.stroke();
-				}
-				ctx.setLineDash([]);
-				continue;
-			}
-			const bounds = layerBounds(layer);
-			const label = layerLabel(layer);
-			const hue = (index * 47) % 360;
-			if (layer.kind === "line" || layer.x0 != null) {
-				const x0 = layer.x0 ?? layer.x ?? 0;
-				const y0 = layer.y0 ?? layer.y ?? 0;
-				const x1 = layer.x1 ?? (layer.x ?? 0) + (layer.width ?? 0);
-				const y1 = layer.y1 ?? (layer.y ?? 0) + (layer.height ?? 0);
-				const isWire = layer.role === "wire";
-				ctx.strokeStyle = layerColorCss(layer, hue, 0.9);
-				ctx.lineWidth = Math.max((isWire ? 1.25 : 2) / zoom, 1 / zoom);
-				ctx.setLineDash(isWire ? [6 / zoom, 4 / zoom] : []);
-				ctx.beginPath();
-				ctx.moveTo(x0, y0);
-				ctx.lineTo(x1, y1);
-				ctx.stroke();
-				ctx.setLineDash([]);
-				continue;
-			}
-			if (bounds) {
-				drawBoundsLayer(ctx, layer, bounds, label, hue, zoom);
-			} else {
-				ctx.fillStyle = "rgba(226, 232, 240, 0.75)";
-				ctx.font = `${12 / zoom}px ui-monospace, monospace`;
-				ctx.fillText(label, -logicalWidth / 2 + 16, -logicalHeight / 2 + 20 + index * 18);
-			}
-		}
-		if (layers.length === 0) {
-			ctx.fillStyle = "rgba(148, 163, 184, 0.7)";
-			ctx.font = `${12 / zoom}px ui-monospace, monospace`;
-			ctx.fillText("Empty canvas", -36, 0);
-		}
-		ctx.restore();
-	}
+  renderFrame(): void {
+    const ctx = this.ctx;
+    const canvas = this.canvas;
+    if (!ctx || !canvas) return;
+    const deviceWidth = canvas.width;
+    const deviceHeight = canvas.height;
+    const logicalWidth = this.logicalWidth;
+    const logicalHeight = this.logicalHeight;
+    const dpr = this.dpr;
+    const zoom = this.camera.zoom || 1;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, deviceWidth, deviceHeight);
+    ctx.fillStyle = "#111318";
+    ctx.fillRect(0, 0, deviceWidth, deviceHeight);
+    const layers = this.parseLayers();
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.translate(logicalWidth * 0.5 - this.camera.x * zoom, logicalHeight * 0.5 - this.camera.y * zoom);
+    ctx.scale(zoom, zoom);
+    drawCheckerboard(ctx, logicalWidth, logicalHeight, zoom);
+    for (const [index, layer] of layers.entries()) {
+      if (layer.segments?.length || layer.text || layer.image?.src) {
+        drawSceneNode(ctx, layer, zoom, this.imageCache);
+        continue;
+      }
+      if (layer.kind === "image" && layer.dataUrl) {
+        const bounds = layerBounds(layer);
+        const image = this.imageCache.get(layer.dataUrl);
+        if (bounds && image && image.complete) {
+          ctx.drawImage(image, bounds.x, bounds.y, bounds.width, bounds.height);
+        }
+        continue;
+      }
+      if (layer.kind === "polyline" && layer.points?.length) {
+        const seams = layer.seams ?? [];
+        for (let segment = 0; segment + 1 < layer.points.length; segment += 2) {
+          const [x0, y0] = layer.points[segment]!;
+          const [x1, y1] = layer.points[segment + 1]!;
+          const seamIndex = segment / 2;
+          ctx.strokeStyle = layerColorCss(layer, (index * 47) % 360, 0.95);
+          ctx.lineWidth = Math.max(1 / zoom, 1);
+          ctx.setLineDash(seams[seamIndex] ? [6 / zoom, 4 / zoom] : []);
+          ctx.beginPath();
+          ctx.moveTo(x0, y0);
+          ctx.lineTo(x1, y1);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        continue;
+      }
+      const bounds = layerBounds(layer);
+      const label = layerLabel(layer);
+      const hue = (index * 47) % 360;
+      if (layer.kind === "line" || layer.x0 != null) {
+        const x0 = layer.x0 ?? layer.x ?? 0;
+        const y0 = layer.y0 ?? layer.y ?? 0;
+        const x1 = layer.x1 ?? (layer.x ?? 0) + (layer.width ?? 0);
+        const y1 = layer.y1 ?? (layer.y ?? 0) + (layer.height ?? 0);
+        const isWire = layer.role === "wire";
+        ctx.strokeStyle = layerColorCss(layer, hue, 0.9);
+        ctx.lineWidth = Math.max((isWire ? 1.25 : 2) / zoom, 1 / zoom);
+        ctx.setLineDash(isWire ? [6 / zoom, 4 / zoom] : []);
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        continue;
+      }
+      if (bounds) {
+        drawBoundsLayer(ctx, layer, bounds, label, hue, zoom);
+      } else {
+        ctx.fillStyle = "rgba(226, 232, 240, 0.75)";
+        ctx.font = `${12 / zoom}px ui-monospace, monospace`;
+        ctx.fillText(label, -logicalWidth / 2 + 16, -logicalHeight / 2 + 20 + index * 18);
+      }
+    }
+    if (layers.length === 0) {
+      ctx.fillStyle = "rgba(148, 163, 184, 0.7)";
+      ctx.font = `${12 / zoom}px ui-monospace, monospace`;
+      ctx.fillText("Empty canvas", -36, 0);
+    }
+    ctx.restore();
+  }
 
-	pointerDown(x: number, y: number, button: number, extend: boolean): void {
-		if (button === 1) {
-			this.panning = true;
-			this.panStart = { x, y };
-			this.panCameraStart = { x: this.camera.x, y: this.camera.y };
-			return;
-		}
-		this.onPointer?.("canvasPointerDown", {
-			x,
-			y,
-			button,
-			extend,
-			width: this.logicalWidth,
-			height: this.logicalHeight,
-		});
-	}
+  pointerDown(x: number, y: number, button: number, extend: boolean): void {
+    if (button === 1) {
+      this.panning = true;
+      this.panStart = { x, y };
+      this.panCameraStart = { x: this.camera.x, y: this.camera.y };
+      return;
+    }
+    this.onPointer?.("canvasPointerDown", {
+      x,
+      y,
+      button,
+      extend,
+      width: this.logicalWidth,
+      height: this.logicalHeight,
+    });
+  }
 
-	pointerMove(x: number, y: number): void {
-		if (this.panning) {
-			const zoom = this.camera.zoom || 1;
-			const next = {
-				...this.camera,
-				x: this.panCameraStart.x - (x - this.panStart.x) / zoom,
-				y: this.panCameraStart.y - (y - this.panStart.y) / zoom,
-			};
-			this.camera = next;
-			this.onCameraChange(next);
-			this.renderFrame();
-			return;
-		}
-		this.onPointer?.("canvasPointerMove", {
-			x,
-			y,
-			width: this.logicalWidth,
-			height: this.logicalHeight,
-		});
-	}
+  pointerMove(x: number, y: number): void {
+    if (this.panning) {
+      const zoom = this.camera.zoom || 1;
+      const next = {
+        ...this.camera,
+        x: this.panCameraStart.x - (x - this.panStart.x) / zoom,
+        y: this.panCameraStart.y - (y - this.panStart.y) / zoom,
+      };
+      this.camera = next;
+      this.onCameraChange(next);
+      this.renderFrame();
+      return;
+    }
+    this.onPointer?.("canvasPointerMove", {
+      x,
+      y,
+      width: this.logicalWidth,
+      height: this.logicalHeight,
+    });
+  }
 
-	pointerUp(x: number, y: number): void {
-		if (this.panning) {
-			this.panning = false;
-			return;
-		}
-		this.onPointer?.("canvasPointerUp", {
-			x,
-			y,
-			width: this.logicalWidth,
-			height: this.logicalHeight,
-		});
-	}
+  pointerUp(x: number, y: number): void {
+    if (this.panning) {
+      this.panning = false;
+      return;
+    }
+    this.onPointer?.("canvasPointerUp", {
+      x,
+      y,
+      width: this.logicalWidth,
+      height: this.logicalHeight,
+    });
+  }
 
-	wheel(x: number, y: number, deltaY: number): void {
-		const next = wheelCameraAtScreen(this.camera, x, y, deltaY, this.logicalWidth, this.logicalHeight);
-		this.camera = next;
-		this.onCameraChange(next);
-		this.renderFrame();
-		this.onPointer?.("canvasWheel", { x, y, deltaY, width: this.logicalWidth, height: this.logicalHeight });
-	}
+  wheel(x: number, y: number, deltaY: number): void {
+    const next = wheelCameraAtScreen(this.camera, x, y, deltaY, this.logicalWidth, this.logicalHeight);
+    this.camera = next;
+    this.onCameraChange(next);
+    this.renderFrame();
+    this.onPointer?.("canvasWheel", { x, y, deltaY, width: this.logicalWidth, height: this.logicalHeight });
+  }
 }
 //#endregion JsonLayersCanvasSession
 
 //#region Canvas2dHost
-export function Canvas2dHost({
-	node,
-	onCommand,
-}: {
-	readonly node: UiComponentSceneNode;
-	readonly onCommand: (command: CommandDescriptor) => void;
-}) {
-	const scene = node.canvas2d;
-	const initialCamera = useMemo(
-		() => ({ x: scene?.cameraX ?? 0, y: scene?.cameraY ?? 0, zoom: scene?.zoom ?? 1 }),
-		[scene?.cameraX, scene?.cameraY, scene?.zoom],
-	);
-	const cameraRef = useRef<CanvasCamera>(initialCamera);
-	cameraRef.current = initialCamera;
-	const sessionRef = useRef<JsonLayersCanvasSession | null>(null);
-	const dispatch = useCallback(
-		(command: string, args?: Record<string, unknown>) => {
-			onCommand({
-				controllerId: node.controllerId,
-				command,
-				args: { surfaceId: node.surfaceId, ...args },
-			});
-		},
-		[node.controllerId, node.surfaceId, onCommand],
-	);
-	const sessionFactory = useMemo(() => {
-		return () => {
-			const session = new JsonLayersCanvasSession(
-				scene?.layersJson ?? "[]",
-				cameraRef.current,
-				(next) => {
-					cameraRef.current = next;
-					sessionRef.current?.updateCamera(next);
-				},
-				(command, args) => {
-					if (command === "canvasPointerDown" && args?.button === 0) {
-						dispatch("paintStrokeBegin");
-					}
-					if (command === "canvasPointerUp") {
-						dispatch("paintStrokeEnd");
-					}
-					dispatch(command, args);
-				},
-			);
-			sessionRef.current = session;
-			return session;
-		};
-	}, [dispatch, scene?.layersJson]);
+export function Canvas2dHost({ node, onCommand }: { readonly node: UiComponentSceneNode; readonly onCommand: (command: CommandDescriptor) => void }) {
+  const scene = node.canvas2d;
+  const initialCamera = useMemo(() => ({ x: scene?.cameraX ?? 0, y: scene?.cameraY ?? 0, zoom: scene?.zoom ?? 1 }), [scene?.cameraX, scene?.cameraY, scene?.zoom]);
+  const cameraRef = useRef<CanvasCamera>(initialCamera);
+  cameraRef.current = initialCamera;
+  const sessionRef = useRef<JsonLayersCanvasSession | null>(null);
+  const dispatch = useCallback(
+    (command: string, args?: Record<string, unknown>) => {
+      onCommand({
+        controllerId: node.controllerId,
+        command,
+        args: { surfaceId: node.surfaceId, ...args },
+      });
+    },
+    [node.controllerId, node.surfaceId, onCommand],
+  );
+  const sessionFactory = useMemo(() => {
+    return () => {
+      const session = new JsonLayersCanvasSession(
+        scene?.layersJson ?? "[]",
+        cameraRef.current,
+        (next) => {
+          cameraRef.current = next;
+          sessionRef.current?.updateCamera(next);
+        },
+        (command, args) => {
+          if (command === "canvasPointerDown" && args?.button === 0) {
+            dispatch("paintStrokeBegin");
+          }
+          if (command === "canvasPointerUp") {
+            dispatch("paintStrokeEnd");
+          }
+          dispatch(command, args);
+        },
+      );
+      sessionRef.current = session;
+      return session;
+    };
+  }, [dispatch, scene?.layersJson]);
 
-	if (!scene) return <div className="semio-canvas-2d-empty">No canvas scene</div>;
+  if (!scene) return <div className="semio-canvas-2d-empty">No canvas scene</div>;
 
-	return (
-		<div className="semio-canvas-2d-host h-full min-h-[24rem] w-full bg-canvas" data-controller-id={node.controllerId} data-surface-id={node.surfaceId}>
-			<GraphWasmCanvas className="h-full w-full" sessionFactory={sessionFactory} />
-		</div>
-	);
+  return (
+    <div className="semio-canvas-2d-host h-full min-h-[24rem] w-full bg-canvas" data-controller-id={node.controllerId} data-surface-id={node.surfaceId}>
+      <GraphWasmCanvas className="h-full w-full" sessionFactory={sessionFactory} />
+    </div>
+  );
 }
 //#endregion Canvas2dHost

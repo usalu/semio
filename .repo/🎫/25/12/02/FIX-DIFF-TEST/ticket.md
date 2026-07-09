@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The diff test was failing at line 60: `areKitDiffsEqual(computedInverseDiff, kitDiffInverted)` returns false.
@@ -38,6 +39,7 @@ Root cause: The schema changed. `concepts` in Kit is now `Concept[]` (array of o
 ## Log
 
 ## Summary
+
 # Summary
 
 "Fix diff test - schema changed, concepts now objects"

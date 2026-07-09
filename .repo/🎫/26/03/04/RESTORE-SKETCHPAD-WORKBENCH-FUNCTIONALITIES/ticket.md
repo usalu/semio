@@ -1,9 +1,11 @@
 # Restore Sketchpad Workbench Functionalities
 
 ## Goal
+
 SKETCHPAD-IMPROVEMENTS
 
 ## Status
+
 CLOSED
 
 ## Plan

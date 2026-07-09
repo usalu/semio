@@ -2,36 +2,36 @@
 name: Spatial Query Raw Vs Analytic
 overview: Refactor the spatial `construct` query language so raw topology is reached via `MATCH` and all analytic/computed views (Surface, Part, Volume) are reached only through explicit `CALL view.*()` + `UNWIND`. Make every registered action callable with a complete `YIELD <key>` binding mechanism.
 todos:
-  - id: lexer_parser
-    content: Add UNWIND/AS tokens, unwindClause rule, and yieldItem aliases to the query parser
-    status: completed
-  - id: ast_planner
-    content: Extend AST/Planner with UnwindClauseAst + generic yield-key binding
-    status: completed
-  - id: executor
-    content: Implement UNWIND executor step and generic ActionResult key resolution
-    status: completed
-  - id: parse_guard
-    content: Reject MATCH on Surface/Part/Volume at parse time with actionable error
-    status: completed
-  - id: index_cleanup
-    content: Remove implicit Surface/Part computation from KernelIndex and drop DERIVES relation
-    status: completed
-  - id: volume_view
-    content: Add VolumeView type, brand, DerivedViewService.computeVolumes, SpatialKernel.computeVolumeViews
-    status: completed
-  - id: view_actions
-    content: Register view.surfaces / view.parts / view.volumes built-in actions
-    status: completed
-  - id: kernel_brepjs
-    content: Implement BrepjsKernel.computeVolumeViews via boolean union
-    status: completed
-  - id: docs
-    content: "Update spatial/AGENTS.md: drop Skin, add Volume, document analytic-via-CALL rule"
-    status: completed
-  - id: tests
-    content: Extend existing test regions to cover parse rejection, CALL+UNWIND analytic flow, multi-key YIELD, and computeVolumes
-    status: completed
+ - id: lexer_parser
+   content: Add UNWIND/AS tokens, unwindClause rule, and yieldItem aliases to the query parser
+   status: completed
+ - id: ast_planner
+   content: Extend AST/Planner with UnwindClauseAst + generic yield-key binding
+   status: completed
+ - id: executor
+   content: Implement UNWIND executor step and generic ActionResult key resolution
+   status: completed
+ - id: parse_guard
+   content: Reject MATCH on Surface/Part/Volume at parse time with actionable error
+   status: completed
+ - id: index_cleanup
+   content: Remove implicit Surface/Part computation from KernelIndex and drop DERIVES relation
+   status: completed
+ - id: volume_view
+   content: Add VolumeView type, brand, DerivedViewService.computeVolumes, SpatialKernel.computeVolumeViews
+   status: completed
+ - id: view_actions
+   content: Register view.surfaces / view.parts / view.volumes built-in actions
+   status: completed
+ - id: kernel_brepjs
+   content: Implement BrepjsKernel.computeVolumeViews via boolean union
+   status: completed
+ - id: docs
+   content: "Update spatial/AGENTS.md: drop Skin, add Volume, document analytic-via-CALL rule"
+   status: completed
+ - id: tests
+   content: Extend existing test regions to cover parse rejection, CALL+UNWIND analytic flow, multi-key YIELD, and computeVolumes
+   status: completed
 isProject: false
 ---
 
@@ -52,6 +52,7 @@ flowchart LR
 ```
 
 Derived facts (from clarification):
+
 - **Surface**: derived face = `Exposure × Stance` (shape-invariant repartition of faces).
 - **Part**: derived closed shell = `Overlap (none|difference|intersection)` (shape-invariant repartition of closed shells).
 - **Volume**: derived closed shell = boolean union of all closed shells in a cell group.

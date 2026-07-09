@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The `sketchpad.test.ts` had a nested structure with `test.describe` blocks:
@@ -39,6 +40,7 @@ This structure caused unnecessary test isolation and didn't reflect the app docu
 ## Log
 
 ## Summary
+
 # Summary
 
 Restructure sketchpad tests to one test per app with parent initialization

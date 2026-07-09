@@ -360,30 +360,30 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 
 - Configurations: Debug, Release, UnitTest
 
-| Project                   | Target Frameworks | Key Dependencies                                                                                     |
-| ------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------- |
+| Project                     | Target Frameworks | Key Dependencies                                                                                     |
+| --------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------- |
 | `Compose`                   | net8.0; net48     | FluentValidation, Humanizer, Newtonsoft.Json, QuikGraph, Refit, Svg, UnitsNet, Microsoft.Data.Sqlite |
-| `Compose.Grasshopper`       | net7.0; net48     | Grasshopper (Rhino), System.Drawing.Common → references `Compose`                                      |
-| `Compose.Tests`             | net8.0; net48     | xunit, Microsoft.NET.Test.Sdk → references `Compose`                                                   |
-| `Compose.Grasshopper.Tests` | net7.0; net48     | xunit → references `Compose.Grasshopper` + `Compose`                                                     |
-| `Compose.Benchmark`         | net8.0            | Newtonsoft.Json → references `Compose`                                                                 |
+| `Compose.Grasshopper`       | net7.0; net48     | Grasshopper (Rhino), System.Drawing.Common → references `Compose`                                    |
+| `Compose.Tests`             | net8.0; net48     | xunit, Microsoft.NET.Test.Sdk → references `Compose`                                                 |
+| `Compose.Grasshopper.Tests` | net7.0; net48     | xunit → references `Compose.Grasshopper` + `Compose`                                                 |
+| `Compose.Benchmark`         | net8.0            | Newtonsoft.Json → references `Compose`                                                               |
 
 #### `@semio-tech/compose-net` (compose/net/Compose) — npm wrapper
 
-| Script      | Command                                         | Behavior                         |
-| ----------- | ----------------------------------------------- | -------------------------------- |
-| `build`     | `tsx ./build.ts`                                | TypeScript build script for .NET |
+| Script      | Command                                             | Behavior                         |
+| ----------- | --------------------------------------------------- | -------------------------------- |
+| `build`     | `tsx ./build.ts`                                    | TypeScript build script for .NET |
 | `test`      | `dotnet test ../Compose.Tests/Compose.Tests.csproj` | Run xunit tests                  |
-| `preflight` | `dotnet build`                                  | Build .NET solution              |
+| `preflight` | `dotnet build`                                      | Build .NET solution              |
 
 **Dev deps:** `@semio-tech/semio-assets`
 
 ### 3.6 Schema-only Workspaces (no scripts)
 
-| Workspace      | Name            | Type   |
-| -------------- | --------------- | ------ |
+| Workspace        | Name                         | Type   |
+| ---------------- | ---------------------------- | ------ |
 | `compose/sqlite` | `@semio-tech/compose-sqlite` | schema |
-| `repo/sqlite`  | `@semio-tech/repo-sqlite`  | schema |
+| `repo/sqlite`    | `@semio-tech/repo-sqlite`    | schema |
 
 ## 4. Dependency Graph
 
@@ -460,12 +460,12 @@ Other chains build independently in parallel:
 
 ## 6. Dev Modes
 
-| Label                    | Command                  | Background | Port     |
-| ------------------------ | ------------------------ | ---------- | -------- |
-| `dev` (aggregate)        | `npx nx run-many -t dev` | Yes        | Multiple |
-| `repo/cli dev`           | `go run`                 | No         | —        |
-| `repo/server dev`        | `go run main.go`         | No         | —        |
-| `repo/vscode dev`        | `vite build --watch`     | Yes        | —        |
+| Label                      | Command                  | Background | Port     |
+| -------------------------- | ------------------------ | ---------- | -------- |
+| `dev` (aggregate)          | `npx nx run-many -t dev` | Yes        | Multiple |
+| `repo/cli dev`             | `go run`                 | No         | —        |
+| `repo/server dev`          | `go run main.go`         | No         | —        |
+| `repo/vscode dev`          | `vite build --watch`     | Yes        | —        |
 | `compose/engine dev`       | `uv run engine.py`       | Yes        | —        |
 | `compose/js dev`           | `tsx dev.ts`             | Yes        | —        |
 | `compose/js dev:storybook` | `storybook dev -p 6006`  | Yes        | 6006     |
@@ -477,25 +477,25 @@ Other chains build independently in parallel:
 
 ## 7. Preflight Behaviors per Workspace
 
-| Workspace          | Preflight Command                     | Effect                    |
-| ------------------ | ------------------------------------- | ------------------------- |
-| `@semio-tech/semio-logo`      | `tsc --noEmit`                        | TypeScript type-check     |
-| `@semio-tech/semio-icons`     | `echo` (no-op)                        | —                         |
-| `@semio-tech/semio-assets`    | `echo` (no-op)                        | —                         |
-| `@semio-tech/compose-py`        | `ruff format . && ruff check --fix .` | Python format + lint      |
-| `@semio-tech/compose-engine`    | `ruff format . && ruff check --fix .` | Python format + lint      |
-| `@semio-tech/compose-js`        | `prettier --write . && tsc --noEmit`  | JS format + TS type-check |
-| `@semio-tech/compose-sketchpad-docs`      | `echo` (no-op)                        | —                         |
-| `@semio-tech/compose-sketchpad-play`      | `echo` (no-op)                        | —                         |
-| `@semio-tech/compose-sketchpad` | `echo` (no-op)                        | —                         |
-| `@semio-tech/compose-desktop`   | `echo` (no-op)                        | —                         |
-| `repo` (vscode)    | `tsc --noEmit`                        | TypeScript type-check     |
-| `@semio-tech/compose-net`       | `dotnet build`                        | .NET build                |
-| `@semio-tech/compose-go`        | `go vet ./...`                        | Go vet                    |
-| `@repo/cli`        | `go vet ./...`                        | Go vet                    |
-| `@repo/server`     | `go vet ./...`                        | Go vet                    |
-| `@semio-tech/compose-rs`        | `cargo fmt --check && cargo clippy`   | Rust format check + lint  |
-| `@coda/engine`     | `ruff format . && ruff check --fix .` | Python format + lint      |
+| Workspace                            | Preflight Command                     | Effect                    |
+| ------------------------------------ | ------------------------------------- | ------------------------- |
+| `@semio-tech/semio-logo`             | `tsc --noEmit`                        | TypeScript type-check     |
+| `@semio-tech/semio-icons`            | `echo` (no-op)                        | —                         |
+| `@semio-tech/semio-assets`           | `echo` (no-op)                        | —                         |
+| `@semio-tech/compose-py`             | `ruff format . && ruff check --fix .` | Python format + lint      |
+| `@semio-tech/compose-engine`         | `ruff format . && ruff check --fix .` | Python format + lint      |
+| `@semio-tech/compose-js`             | `prettier --write . && tsc --noEmit`  | JS format + TS type-check |
+| `@semio-tech/compose-sketchpad-docs` | `echo` (no-op)                        | —                         |
+| `@semio-tech/compose-sketchpad-play` | `echo` (no-op)                        | —                         |
+| `@semio-tech/compose-sketchpad`      | `echo` (no-op)                        | —                         |
+| `@semio-tech/compose-desktop`        | `echo` (no-op)                        | —                         |
+| `repo` (vscode)                      | `tsc --noEmit`                        | TypeScript type-check     |
+| `@semio-tech/compose-net`            | `dotnet build`                        | .NET build                |
+| `@semio-tech/compose-go`             | `go vet ./...`                        | Go vet                    |
+| `@repo/cli`                          | `go vet ./...`                        | Go vet                    |
+| `@repo/server`                       | `go vet ./...`                        | Go vet                    |
+| `@semio-tech/compose-rs`             | `cargo fmt --check && cargo clippy`   | Rust format check + lint  |
+| `@coda/engine`                       | `ruff format . && ruff check --fix .` | Python format + lint      |
 
 ## 8. Update Mechanism
 

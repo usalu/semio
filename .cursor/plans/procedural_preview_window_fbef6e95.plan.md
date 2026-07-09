@@ -1,28 +1,28 @@
 ---
 name: Procedural Preview Window
-overview: "Turn the procedural 3D preview into its own infinite-world playground window that renders geometry from all nodes, with first-class node preview/selection/hover state in flow-core that is painted on the DAG and synchronized bidirectionally with the 3D view, plus a per-window \"show: everything | selected\" option."
+overview: 'Turn the procedural 3D preview into its own infinite-world playground window that renders geometry from all nodes, with first-class node preview/selection/hover state in flow-core that is painted on the DAG and synchronized bidirectionally with the 3D view, plus a per-window "show: everything | selected" option.'
 todos:
-  - id: dag-core
-    content: "DAG lib.rs: capture SelectionChanged/HoverChanged in process_engine_events; add selected/hover getters+setters via node_id_map; add dimmed set; paint selection/hover/dim in paint_scene"
-    status: completed
-  - id: flow-core
-    content: "flow/core lib.rs: add Neuron.preview field; FlowHost selection/hover/preview pass-throughs; WASM FlowSession bindings (selectedWidgetIds, hoveredWidgetId, setSelection, setHover, setPreviewOff, togglePreview)"
-    status: completed
-  - id: flow-react
-    content: "flow/react: extend FlowCanvasProps with onSelectionChange/onHoverChange + controlled selectedNodeIds/hoveredNodeId/previewOffNodeIds; emit after pointer events; apply controlled props to session"
-    status: completed
-  - id: procedural-react
-    content: "procedural/react: extractGeometryHandles (all nodes); split into ProceduralFlowEditor + multi-mesh ProceduralPreview using worldEntityRenderMode, showMode filter, and 3D pointer hover/select callbacks"
-    status: completed
-  - id: procedural-play
-    content: "procedural/play: preview window kind/body/surface ids; two-pane createDefaultLayout; controller state+commands (setEvalOutputs/setSelection/setHover/togglePreview/setShowMode); preview ring Show engagement; register panel body"
-    status: completed
-  - id: renderer
-    content: "playground renderer: flow host mounts ProceduralFlowEditor wired to controller; add ProceduralPreviewSurfaceHost panel host; register panel surface; controller revision hook for re-render"
-    status: completed
-  - id: tests
-    content: Extend vitest (procedural/play, procedural/react, flow/react) + Rust tests (flow/core, dag) for sync; rebuild flow WASM and validate with [DEBUG] logs
-    status: completed
+ - id: dag-core
+   content: "DAG lib.rs: capture SelectionChanged/HoverChanged in process_engine_events; add selected/hover getters+setters via node_id_map; add dimmed set; paint selection/hover/dim in paint_scene"
+   status: completed
+ - id: flow-core
+   content: "flow/core lib.rs: add Neuron.preview field; FlowHost selection/hover/preview pass-throughs; WASM FlowSession bindings (selectedWidgetIds, hoveredWidgetId, setSelection, setHover, setPreviewOff, togglePreview)"
+   status: completed
+ - id: flow-react
+   content: "flow/react: extend FlowCanvasProps with onSelectionChange/onHoverChange + controlled selectedNodeIds/hoveredNodeId/previewOffNodeIds; emit after pointer events; apply controlled props to session"
+   status: completed
+ - id: procedural-react
+   content: "procedural/react: extractGeometryHandles (all nodes); split into ProceduralFlowEditor + multi-mesh ProceduralPreview using worldEntityRenderMode, showMode filter, and 3D pointer hover/select callbacks"
+   status: completed
+ - id: procedural-play
+   content: "procedural/play: preview window kind/body/surface ids; two-pane createDefaultLayout; controller state+commands (setEvalOutputs/setSelection/setHover/togglePreview/setShowMode); preview ring Show engagement; register panel body"
+   status: completed
+ - id: renderer
+   content: "playground renderer: flow host mounts ProceduralFlowEditor wired to controller; add ProceduralPreviewSurfaceHost panel host; register panel surface; controller revision hook for re-render"
+   status: completed
+ - id: tests
+   content: Extend vitest (procedural/play, procedural/react, flow/react) + Rust tests (flow/core, dag) for sync; rebuild flow WASM and validate with [DEBUG] logs
+   status: completed
 isProject: false
 ---
 
@@ -52,8 +52,6 @@ flowchart LR
   ctrl -->|"controlled selected/hover/previewOff"| flowCanvas
   flowCanvas -->|"session.setSelection/setHover/setPreviewOff"| session
 ```
-
-
 
 ## 1. DAG core — [mathematical/graph/port/directed/dag/lib.rs](mathematical/graph/port/directed/dag/lib.rs)
 
@@ -110,4 +108,3 @@ Widget ids equal DAG node ids (see `sync_from_dag`, line ~891).
 - `preview` persists in the fixture (`Neuron.preview`); selection/hover stay transient engine/host state.
 - 3D selection uses R3F mesh pointer handlers tagged by widget id (Puzzle 3D pattern); no new generic picker in the world engine.
 - Loop-guarding: both directions diff before applying to avoid feedback between FlowCanvas controlled props and 3D callbacks.
-

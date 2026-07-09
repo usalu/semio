@@ -2,12 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { Box3, Group, Vector3 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import {
-  brushPreviewCollisionBox,
-  brushProbeGroupFromPreview,
-  parseFixtureV1,
-  updateWorldMatrixChain,
-} from "/Users/ueli/Documents/compose/puzzle/3d/react/index.tsx";
+import { brushPreviewCollisionBox, brushProbeGroupFromPreview, parseFixtureV1, updateWorldMatrixChain } from "/Users/ueli/Documents/compose/puzzle/3d/react/index.tsx";
 
 const loader = new GLTFLoader();
 const meshDir = "/Users/ueli/Documents/compose/compose/fixtures/kit/folder/abbau-aufbau";
@@ -19,10 +14,7 @@ const meshRoot = gltf.scene as Group;
 const f = parseFixtureV1(JSON.parse(readFileSync("/Users/ueli/Documents/compose/puzzle/3d/fixture/concrete-forest.3d.json", "utf8")));
 const obj = f!.objects[0]!;
 
-const probe = brushProbeGroupFromPreview(
-  { origin: obj.origin as [number,number,number], orientation: obj.orientation as [number,number,number,number] },
-  meshRoot,
-);
+const probe = brushProbeGroupFromPreview({ origin: obj.origin as [number, number, number], orientation: obj.orientation as [number, number, number, number] }, meshRoot);
 const without = brushPreviewCollisionBox(probe, 0);
 updateWorldMatrixChain(probe);
 const withChain = brushPreviewCollisionBox(probe, 0);

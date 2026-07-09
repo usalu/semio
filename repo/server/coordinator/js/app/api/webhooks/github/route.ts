@@ -20,10 +20,7 @@ import { removeContributorWorkForCheckpoint } from "@/lib";
 const GITHUB_SECRET = process.env.GITHUB_WEBHOOK_SECRET || "";
 
 // 💬In-memory comment cache (same as Go server)
-const commentCache = new Map<
-  string,
-  { body: string; actor: string; repo: string; issue: number; time: Date }
->();
+const commentCache = new Map<string, { body: string; actor: string; repo: string; issue: number; time: Date }>();
 
 function verifySignature(body: string, signature: string): boolean {
   if (!GITHUB_SECRET) return true;

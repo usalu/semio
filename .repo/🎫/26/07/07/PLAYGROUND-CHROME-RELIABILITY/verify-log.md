@@ -11,6 +11,7 @@ Dock tab caps partially survived because they used `push_glass` + `begin_glass_c
 Added `with_chrome_sink()` in `framework/renderer/wgpu/rs/lib.rs`: a single helper that routes chrome draws to the overlay `DrawList` (composited strictly last via `render_overlay`) whenever one is available, mirroring the existing left/right floating panel pattern.
 
 Routed through `with_chrome_sink`:
+
 - `render_navbar` / `render_footer` in `render_chrome`
 - `DockState::paint_chrome` in `render_main_window` (`body_fill: false` — caps/borders only, no opaque body fill)
 - `render_window_measures_rail` (folded chips + glass Window Options rail)

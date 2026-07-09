@@ -4,7 +4,5 @@
   "status": "open",
   "description": "When clicking and directly dragging a disposition it should only drag the new selected disposition. Instead it also moves the old selection. Fix drag group resolution to use pointer-down selection intent before async selectIds updates.",
   "goal": "🎯presentation",
-  "sessions": [
-    "⚪2e775e60ed2e41a3aff3ff5a0758001f"
-  ]
+  "sessions": ["⚪2e775e60ed2e41a3aff3ff5a0758001f"]
 }

@@ -7,6 +7,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Restored functional Design navbar utility settings/chat panels by adding Design utility tab registration and shell-level utility fallbacks; added focused Playwright coverage for navbar settings availability.
+
 ## Plan
 
 1. Reproduce the navbar settings unavailability in Design and trace the utility tab resolution path.
@@ -26,6 +27,7 @@ Restored functional Design navbar utility settings/chat panels by adding Design 
 - [x] Run `npx playwright test compose/js/sketchpad.test.ts --grep "Design Navbar Settings Is Available" --reporter=line`
 
 ## Changes
+
 - Updated `compose/js/sketchpad/Design.tsx`:
   - Added Design-specific right-side utility tab registration for `compose.sketchpad.app.design.settings` and `compose.sketchpad.app.design.chat`.
   - Added `DesignSettingsContent` with toolbar/workbench/windows/details visibility toggles.
@@ -39,6 +41,7 @@ Restored functional Design navbar utility settings/chat panels by adding Design 
   - Added assertions for navbar settings availability and no fallback utility-unavailable text when toggling settings/chat.
 
 ## Log
+
 - Reopened on 2026-02-27 to finish the migration: `Docs`, `Kit`, `Type`, and `Quality` still exposed `settings` and `chat` as window tabs, and `Design` still carried legacy tab-migration references.
 - Reopened again on 2026-02-27 to remove chat/settings from the details panel only.
 - Reopened again on 2026-02-27 to fix the navbar chat runtime crash caused by inline side-panel tab callback invocation in the shared renderer.

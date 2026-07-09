@@ -5,23 +5,23 @@ async function run() {
   await page.goto("http://localhost:6006/iframe.html?id=elements-aggregation-tree--panel&viewMode=story");
   await page.waitForLoadState("domcontentloaded");
   await page.waitForTimeout(5000);
-  const treeContainer = page.locator('.border.p-4').first();
+  const treeContainer = page.locator(".border.p-4").first();
   await treeContainer.screenshot({ path: "/tmp/storybook-tree-panel.png" });
   console.log("Panel story screenshot saved");
   await page.goto("http://localhost:6006/iframe.html?id=elements-aggregation-tree--default&viewMode=story");
   await page.waitForLoadState("domcontentloaded");
   await page.waitForTimeout(3000);
-  const defaultContainer = page.locator('.border.p-4').first();
+  const defaultContainer = page.locator(".border.p-4").first();
   await defaultContainer.screenshot({ path: "/tmp/storybook-tree-default.png" });
   console.log("Default story screenshot saved");
   const data = await page.evaluate(() => {
     const rows = document.querySelectorAll('[data-slot="tree-section-row"], [data-slot="tree-item-row"]');
     const result: any[] = [];
-    rows.forEach(row => {
+    rows.forEach((row) => {
       const rect = row.getBoundingClientRect();
       const label = row.querySelector('[data-slot="tree-label"]')?.textContent?.trim();
       const slot = row.getAttribute("data-slot");
-      const children = Array.from(row.children).map(c => {
+      const children = Array.from(row.children).map((c) => {
         const cr = c.getBoundingClientRect();
         const cs = window.getComputedStyle(c);
         return {
@@ -31,7 +31,7 @@ async function run() {
           width: cr.width,
           height: cr.height,
           position: cs.position,
-          display: cs.display
+          display: cs.display,
         };
       });
       result.push({ slot, label, paddingLeft: window.getComputedStyle(row).paddingLeft, children });

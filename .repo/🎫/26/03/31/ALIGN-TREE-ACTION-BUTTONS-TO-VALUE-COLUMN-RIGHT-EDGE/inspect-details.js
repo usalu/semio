@@ -20,7 +20,11 @@ async function main() {
   const importedKitGuid = await page.evaluate(async () => {
     const store = window.__COMPOSE_STORE__;
     if (!store) throw new Error("no store");
-    const existing = (store.kitShallows?.() ?? []).find((kit) => String(kit?.name ?? "").toLowerCase().includes("metabolism"));
+    const existing = (store.kitShallows?.() ?? []).find((kit) =>
+      String(kit?.name ?? "")
+        .toLowerCase()
+        .includes("metabolism"),
+    );
     if (existing?.guid) return existing.guid;
 
     const kitModule = await import("/@fs/workspaces/semio/assets/compose/kit_metabolism.json");
@@ -28,7 +32,11 @@ async function main() {
     await store.execute("compose.sketchpad.createKit", "compose.sketchpad.test.ensureMetabolismKitLoaded", kit, false, false);
 
     for (let attempt = 0; attempt < 30; attempt += 1) {
-      const match = (store.kitShallows?.() ?? []).find((candidate) => String(candidate?.name ?? "").toLowerCase().includes("metabolism"));
+      const match = (store.kitShallows?.() ?? []).find((candidate) =>
+        String(candidate?.name ?? "")
+          .toLowerCase()
+          .includes("metabolism"),
+      );
       if (match?.guid) return match.guid;
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
@@ -69,7 +77,10 @@ async function main() {
 
   const rightPanel = page.locator('[data-panel="rightSidePanel"]').first();
   for (const labelText of ["Location", "Attributes"]) {
-    const row = rightPanel.locator('[data-slot="tree-item-row"]').filter({ has: rightPanel.getByText(labelText, { exact: true }) }).first();
+    const row = rightPanel
+      .locator('[data-slot="tree-item-row"]')
+      .filter({ has: rightPanel.getByText(labelText, { exact: true }) })
+      .first();
     const actionButton = row.locator('[data-slot="tooltip-trigger"]').first();
     if ((await row.isVisible().catch(() => false)) && (await actionButton.isVisible().catch(() => false))) {
       await actionButton.click({ force: true }).catch(() => undefined);

@@ -14,16 +14,7 @@ try {
             : label === "design"
               ? await kit.createDesign(`layout-${label}`)
               : await kit.createType(`kind-${label}`);
-    const list =
-      label === "tag"
-        ? await kit.tags()
-        : label === "concept"
-          ? await kit.concepts()
-          : label === "quality"
-            ? await kit.qualities()
-            : label === "design"
-              ? await kit.designs()
-              : await kit.types();
+    const list = label === "tag" ? await kit.tags() : label === "concept" ? await kit.concepts() : label === "quality" ? await kit.qualities() : label === "design" ? await kit.designs() : await kit.types();
     console.log("[DEBUG]", label, "mutate", r, "listLen", list.length);
     if (list.length) console.log("[DEBUG]", label, "firstId", list[0].id);
   }

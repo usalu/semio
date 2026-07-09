@@ -2,24 +2,24 @@
 name: Tree Operator Clusters
 overview: Make neural trees act as operators again via recursive sub-tree evaluation, introduce special contract-channel boundary neurons in flow, and add a cluster DAG node with a cluster symbol plus collapse/explode UI, keeping procedural working.
 todos:
-  - id: neural-tree-operator
-    content: "neural/engine: add Neuron.tree, reserved INPUT_KIND/OUTPUT_KIND, Tree::contract(), cluster_operator_info(), and recursive evaluation in evaluate_channels_with; extend tests (cluster run, contract derivation, shakability)."
-    status: completed
-  - id: dag-cluster-node
-    content: "dag: add DagNodeKind::Cluster + constructor, sizing, painting with cluster symbol + explode hit-rect helper; serde + hit-rect tests."
-    status: completed
-  - id: flow-core-cluster
-    content: "flow/core: Widget::Cluster across all match sites, tree_from_fixture mapping to cluster neuron, contract catalogue section, cluster ports from contract, collapse()/explode() host commands + history, WasmSession exports; extend tests."
-    status: completed
-  - id: flow-react-ui
-    content: "flow/react: mirror Cluster widget + DagNodeKind, add collapse/explode canvasCommands, wire explode hit-rect + collapse menu action, contract catalogue icons; extend tests."
-    status: completed
-  - id: procedural-verify
-    content: "procedural: ensure react/play build and evaluate with clusters + contract channels; no brep leakage into flow."
-    status: completed
-  - id: validate-all
-    content: Run neural/dag/flow-core/flow-react/procedural tests and manually verify collapse, evaluate, explode, and flow-strip shakability in the play app.
-    status: completed
+ - id: neural-tree-operator
+   content: "neural/engine: add Neuron.tree, reserved INPUT_KIND/OUTPUT_KIND, Tree::contract(), cluster_operator_info(), and recursive evaluation in evaluate_channels_with; extend tests (cluster run, contract derivation, shakability)."
+   status: completed
+ - id: dag-cluster-node
+   content: "dag: add DagNodeKind::Cluster + constructor, sizing, painting with cluster symbol + explode hit-rect helper; serde + hit-rect tests."
+   status: completed
+ - id: flow-core-cluster
+   content: "flow/core: Widget::Cluster across all match sites, tree_from_fixture mapping to cluster neuron, contract catalogue section, cluster ports from contract, collapse()/explode() host commands + history, WasmSession exports; extend tests."
+   status: completed
+ - id: flow-react-ui
+   content: "flow/react: mirror Cluster widget + DagNodeKind, add collapse/explode canvasCommands, wire explode hit-rect + collapse menu action, contract catalogue icons; extend tests."
+   status: completed
+ - id: procedural-verify
+   content: "procedural: ensure react/play build and evaluate with clusters + contract channels; no brep leakage into flow."
+   status: completed
+ - id: validate-all
+   content: Run neural/dag/flow-core/flow-react/procedural tests and manually verify collapse, evaluate, explode, and flow-strip shakability in the play app.
+   status: completed
 isProject: false
 ---
 
@@ -42,8 +42,6 @@ flowchart TB
   end
   C -. evaluates .-> inner
 ```
-
-
 
 - Contract channels = reserved boundary neuron kinds in neural: `INPUT_KIND` and `OUTPUT_KIND`. An input boundary neuron's `params.channel` (default = its id) + `params.schema` define one input channel; an output boundary neuron defines one output channel.
 - A cluster is a neuron carrying a nested `Tree`. Its `OperatorInfo` (ports) is derived from the inner contract neurons, so it renders accurate named ports on both sides.

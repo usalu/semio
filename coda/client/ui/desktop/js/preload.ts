@@ -26,21 +26,23 @@ contextBridge.exposeInMainWorld("os", {
 });
 
 contextBridge.exposeInMainWorld("coda", {
-  call: (method: string, params: Record<string, unknown> = {}) =>
-    ipcRenderer.invoke("coda-call", method, params),
+  call: (method: string, params: Record<string, unknown> = {}) => ipcRenderer.invoke("coda-call", method, params),
   fetch: (uri: string) => ipcRenderer.invoke("coda-fetch", uri),
-  tool: (name: string, args: Record<string, unknown>) =>
-    ipcRenderer.invoke("coda-tool", name, args),
+  tool: (name: string, args: Record<string, unknown>) => ipcRenderer.invoke("coda-tool", name, args),
   getConnectionStatus: () => ipcRenderer.invoke("coda-connection-status"),
   onEvent: (callback: (event: { event: string; data: Record<string, unknown>; timestamp: number }) => void) => {
     const handler = (_ipcEvent: Electron.IpcRendererEvent, evt: { event: string; data: Record<string, unknown>; timestamp: number }) => callback(evt);
     ipcRenderer.on("coda-event", handler);
-    return () => { ipcRenderer.removeListener("coda-event", handler); };
+    return () => {
+      ipcRenderer.removeListener("coda-event", handler);
+    };
   },
   onConnectionStatus: (callback: (connected: boolean) => void) => {
     const handler = (_ipcEvent: Electron.IpcRendererEvent, connected: boolean) => callback(connected);
     ipcRenderer.on("coda-connection-status", handler);
-    return () => { ipcRenderer.removeListener("coda-connection-status", handler); };
+    return () => {
+      ipcRenderer.removeListener("coda-connection-status", handler);
+    };
   },
 });
 

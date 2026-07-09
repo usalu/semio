@@ -2000,9 +2000,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d4b609e0-58f3-4396-937e-1c404264aa88.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Moved the useEffect for auto-importing kits from after the conditional early return (if !persistedKitsReady return null) to before it, fixing the React Rules of Hooks violation. The effect now guards internally with persistedKitsReady and looks up the store from the module-level stores Map. All 3 useEffects now run unconditionally in consistent order on every render."
           },
           "tool_use_id": "toolu_bdrk_01MChgRmf5fM8RAEjNNcJbyj__vscode-1774610804317",
@@ -2084,9 +2082,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d4b609e0-58f3-4396-937e-1c404264aa88.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Moved the useEffect for auto-importing kits from after the conditional early return (if !persistedKitsReady return null) to before it, fixing the React Rules of Hooks violation. The effect now guards internally with persistedKitsReady and looks up the store from the module-level stores Map. All 3 useEffects now run unconditionally in consistent order on every render.",
             "ticket": "2026/03/27/FIX-SKETCHPAD-HOOKS-ORDER-ERROR"
           },
@@ -2171,9 +2167,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d4b609e0-58f3-4396-937e-1c404264aa88.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "path": ".repo/🎫/26/03/27/FIX-SKETCHPAD-HOOKS-ORDER-ERROR",
             "summary": "Moved the useEffect for auto-importing kits from after the conditional early return (if !persistedKitsReady return null) to before it, fixing the React Rules of Hooks violation. The effect now guards internally with persistedKitsReady and looks up the store from the module-level stores Map. All 3 useEffects now run unconditionally in consistent order on every render."
           },
@@ -2201,9 +2195,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d4b609e0-58f3-4396-937e-1c404264aa88.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "path": "/workspaces/semio/.repo/🎫/26/03/27/FIX-SKETCHPAD-HOOKS-ORDER-ERROR",
             "summary": "Moved the useEffect for auto-importing kits from after the conditional early return (if !persistedKitsReady return null) to before it, fixing the React Rules of Hooks violation. The effect now guards internally with persistedKitsReady and looks up the store from the module-level stores Map. All 3 useEffects now run unconditionally in consistent order on every render."
           },
@@ -2231,9 +2223,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d4b609e0-58f3-4396-937e-1c404264aa88.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "no_github": true,
             "path": "26/03/27/FIX-SKETCHPAD-HOOKS-ORDER-ERROR",
             "summary": "Moved the useEffect for auto-importing kits from after the conditional early return (if !persistedKitsReady return null) to before it, fixing the React Rules of Hooks violation. The effect now guards internally with persistedKitsReady and looks up the store from the module-level stores Map. All 3 useEffects now run unconditionally in consistent order on every render."
@@ -2262,9 +2252,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/d4b609e0-58f3-4396-937e-1c404264aa88.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "no_github": true,
             "path": "26/03/27/FIX-SKETCHPAD-HOOKS-ORDER-ERROR",
             "summary": "Moved the useEffect for auto-importing kits from after the conditional early return (if !persistedKitsReady return null) to before it, fixing the React Rules of Hooks violation. The effect now guards internally with persistedKitsReady and looks up the store from the module-level stores Map. All 3 useEffects now run unconditionally in consistent order on every render."

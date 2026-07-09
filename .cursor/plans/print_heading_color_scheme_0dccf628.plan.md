@@ -2,24 +2,24 @@
 name: Print Heading Color Scheme
 overview: Give `\part`/`\chapter`/`\section`/`\subsection`/`\subsubsection`/`\paragraph` bordered/filled title banners that reuse the UI's actual color tiers (primary/secondary/tertiary/normal) and reserve the theme's "emphasized" text color for headings only, instead of the current situation where ordinary default styling already looks like the UI's hover/emphasis state.
 todos:
-  - id: ticket
-    content: Open repo ticket under goal 🎯r2602 for the print heading color scheme work
-    status: completed
-  - id: heading-styles
-    content: "Add %region Headings to print/tex/semio-window.sty: titlesec require, semio~heading~base tcbset style, per-level tier color definitions"
-    status: completed
-  - id: titleformat
-    content: Wire \titleformat/\titlespacing for \part, \chapter (guarded), \section, \subsection, \subsubsection, \paragraph to render each inside its tcolorbox tier style with SemioSans
-    status: completed
-  - id: template-demo
-    content: Extend print/template/report/report.content.tex to exercise section/subsection/subsubsection/paragraph under an existing chapter
-    status: completed
-  - id: build-verify
-    content: Run bun ./script.ts build in print/, rasterize resulting PDFs to images, visually verify colors/contrast in light+dark themes across report/paper/flyer
-    status: completed
-  - id: close-ticket
-    content: Close the ticket with summary and list of touched files
-    status: completed
+ - id: ticket
+   content: Open repo ticket under goal 🎯r2602 for the print heading color scheme work
+   status: completed
+ - id: heading-styles
+   content: "Add %region Headings to print/tex/semio-window.sty: titlesec require, semio~heading~base tcbset style, per-level tier color definitions"
+   status: completed
+ - id: titleformat
+   content: Wire \titleformat/\titlespacing for \part, \chapter (guarded), \section, \subsection, \subsubsection, \paragraph to render each inside its tcolorbox tier style with SemioSans
+   status: completed
+ - id: template-demo
+   content: Extend print/template/report/report.content.tex to exercise section/subsection/subsubsection/paragraph under an existing chapter
+   status: completed
+ - id: build-verify
+   content: Run bun ./script.ts build in print/, rasterize resulting PDFs to images, visually verify colors/contrast in light+dark themes across report/paper/flyer
+   status: completed
+ - id: close-ticket
+   content: Close the ticket with summary and list of touched files
+   status: completed
 isProject: false
 ---
 
@@ -34,14 +34,14 @@ Confirmed by exploring [print/tex/semio-window.sty](print/tex/semio-window.sty),
 
 ## Target mapping
 
-| Level | Fill | Border | Text |
-|---|---|---|---|
-| Part | `semio-primary` | `semio-primary` | `semio-chrome-foreground` (emphasized) |
-| Chapter | `semio-secondary` | `semio-secondary` | `semio-chrome-foreground` (emphasized) |
-| Section | `semio-tertiary` | `semio-tertiary` | `semio-chrome-foreground` (emphasized) |
-| Subsection | `semio-secondary` | `semio-secondary` | `semio-chrome-foreground` (emphasized) |
-| Subsubsection | `semio-chrome-border-normal` (gray) | `semio-chrome-border-normal` | `semio-chrome-foreground` (emphasized) |
-| Paragraph | `semio-chrome-canvas` (i.e. no visible fill, blends with page) | `semio-chrome-border-normal` (normal) | `semio-chrome-border-normal` (normal, gray) |
+| Level         | Fill                                                           | Border                                | Text                                        |
+| ------------- | -------------------------------------------------------------- | ------------------------------------- | ------------------------------------------- |
+| Part          | `semio-primary`                                                | `semio-primary`                       | `semio-chrome-foreground` (emphasized)      |
+| Chapter       | `semio-secondary`                                              | `semio-secondary`                     | `semio-chrome-foreground` (emphasized)      |
+| Section       | `semio-tertiary`                                               | `semio-tertiary`                      | `semio-chrome-foreground` (emphasized)      |
+| Subsection    | `semio-secondary`                                              | `semio-secondary`                     | `semio-chrome-foreground` (emphasized)      |
+| Subsubsection | `semio-chrome-border-normal` (gray)                            | `semio-chrome-border-normal`          | `semio-chrome-foreground` (emphasized)      |
+| Paragraph     | `semio-chrome-canvas` (i.e. no visible fill, blends with page) | `semio-chrome-border-normal` (normal) | `semio-chrome-border-normal` (normal, gray) |
 
 Border color mirrors fill color for the 5 filled levels (same convention already used by the window-element tier boxes: `colframe` = tier color). All six levels get the same bordered-banner treatment (confirmed with user) — Paragraph just has no accent fill and normal (not emphasized) text, so it reads as the lowest-emphasis / "default" level.
 

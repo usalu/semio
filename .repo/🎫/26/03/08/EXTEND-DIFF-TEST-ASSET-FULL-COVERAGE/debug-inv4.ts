@@ -1,10 +1,5 @@
 import { readFileSync } from "fs";
-import {
-  KitSchema,
-  getKitDiff,
-  inverseKitDiff,
-  areKitDiffsEqual,
-} from "/workspaces/semio/compose/js/compose";
+import { KitSchema, getKitDiff, inverseKitDiff, areKitDiffsEqual } from "/workspaces/semio/compose/js/compose";
 
 const kitBeforeRaw = JSON.parse(readFileSync("/workspaces/semio/assets/compose/kit_metabolism.json", "utf-8"));
 const kitBefore = KitSchema.parse({

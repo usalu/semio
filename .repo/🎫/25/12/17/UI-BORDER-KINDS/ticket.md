@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - UI borders used a single border color token for both interactive elements and window frames.
@@ -25,6 +26,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Semantic border kinds (element/window)

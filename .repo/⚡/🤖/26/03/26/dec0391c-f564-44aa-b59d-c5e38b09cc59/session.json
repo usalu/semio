@@ -4951,15 +4951,7 @@
           "tool_input": {
             "path": "2026/03/26/GENERALIZE-FILTER-KIT-FUNCTION-WITH-GLOB-SUPPORT",
             "summary": "Generalized filterKitWithDesign to filterKit across all 5 languages (TypeScript, Go, Rust, Python, C#). Added GlobFilter (include/exclude string[] patterns) and KitFilter (designGuid, modelTags, plus GlobFilter per entity kind: designs, types, ports, files, tags, concepts, qualities, authors, folders). Implemented globMatch (supports * and ? wildcards, case-insensitive) and matchesGlobFilter helpers. Fixed vitest guard condition that prevented test discovery (removed stale cwd check). Fixed incorrect test assertion for W??l pattern. All tests pass: TS (125/125), Go (7/7), Rust (27/27), Python (6/6), C# filter tests (2/2).",
-            "files": [
-              "compose/js/index.ts",
-              "compose/go/compose.go",
-              "compose/go/compose_test.go",
-              "compose/rs/lib.rs",
-              "compose/py/main.py",
-              "compose/net/Compose/Compose.cs",
-              "compose/net/Compose.Tests/Tests.cs"
-            ]
+            "files": ["compose/js/index.ts", "compose/go/compose.go", "compose/go/compose_test.go", "compose/rs/lib.rs", "compose/py/main.py", "compose/net/Compose/Compose.cs", "compose/net/Compose.Tests/Tests.cs"]
           },
           "tool_use_id": "toolu_vrtx_0175CJMXBCPZUuuytUnDWCUf__vscode-1774519725151",
           "cwd": "/workspaces/semio"
@@ -4987,15 +4979,7 @@
           "tool_input": {
             "path": "2026/03/26/GENERALIZE-FILTER-KIT-FUNCTION-WITH-GLOB-SUPPORT",
             "summary": "Generalized filterKitWithDesign to filterKit across all 5 languages (TypeScript, Go, Rust, Python, C#). Added GlobFilter (include/exclude string[] patterns) and KitFilter (designGuid, modelTags, plus GlobFilter per entity kind: designs, types, ports, files, tags, concepts, qualities, authors, folders). Implemented globMatch (supports * and ? wildcards, case-insensitive) and matchesGlobFilter helpers. Fixed vitest guard condition that prevented test discovery (removed stale cwd check). Fixed incorrect test assertion for W??l pattern. All tests pass: TS (125/125), Go (7/7), Rust (27/27), Python (6/6), C# filter tests (2/2).",
-            "files": [
-              "compose/js/index.ts",
-              "compose/go/compose.go",
-              "compose/go/compose_test.go",
-              "compose/rs/lib.rs",
-              "compose/py/main.py",
-              "compose/net/Compose/Compose.cs",
-              "compose/net/Compose.Tests/Tests.cs"
-            ]
+            "files": ["compose/js/index.ts", "compose/go/compose.go", "compose/go/compose_test.go", "compose/rs/lib.rs", "compose/py/main.py", "compose/net/Compose/Compose.cs", "compose/net/Compose.Tests/Tests.cs"]
           },
           "tool_use_id": "toolu_vrtx_0175CJMXBCPZUuuytUnDWCUf__vscode-1774519725151",
           "cwd": "/workspaces/semio"
@@ -5137,15 +5121,7 @@
           "tool_input": {
             "path": "26/03/26/GENERALIZE-FILTER-KIT-FUNCTION-WITH-GLOB-SUPPORT",
             "summary": "Generalized filterKitWithDesign to filterKit across all 5 languages (TypeScript, Go, Rust, Python, C#). Added GlobFilter (include/exclude string[] patterns) and KitFilter (designGuid, modelTags, plus GlobFilter per entity kind: designs, types, ports, files, tags, concepts, qualities, authors, folders). Implemented globMatch (supports * and ? wildcards, case-insensitive) and matchesGlobFilter helpers. Fixed vitest guard condition that prevented test discovery (removed stale cwd check). Fixed incorrect test assertion for W??l pattern. All tests pass: TS (125/125), Go (7/7), Rust (27/27), Python (6/6), C# filter tests (2/2).",
-            "files": [
-              "compose/js/index.ts",
-              "compose/go/compose.go",
-              "compose/go/compose_test.go",
-              "compose/rs/lib.rs",
-              "compose/py/main.py",
-              "compose/net/Compose/Compose.cs",
-              "compose/net/Compose.Tests/Tests.cs"
-            ]
+            "files": ["compose/js/index.ts", "compose/go/compose.go", "compose/go/compose_test.go", "compose/rs/lib.rs", "compose/py/main.py", "compose/net/Compose/Compose.cs", "compose/net/Compose.Tests/Tests.cs"]
           },
           "tool_use_id": "toolu_vrtx_017GB7ZDkTpsZ6LcD6z1qvaG__vscode-1774519725153",
           "cwd": "/workspaces/semio"
@@ -5173,15 +5149,7 @@
           "tool_input": {
             "path": "26/03/26/GENERALIZE-FILTER-KIT-FUNCTION-WITH-GLOB-SUPPORT",
             "summary": "Generalized filterKitWithDesign to filterKit across all 5 languages (TypeScript, Go, Rust, Python, C#). Added GlobFilter (include/exclude string[] patterns) and KitFilter (designGuid, modelTags, plus GlobFilter per entity kind: designs, types, ports, files, tags, concepts, qualities, authors, folders). Implemented globMatch (supports * and ? wildcards, case-insensitive) and matchesGlobFilter helpers. Fixed vitest guard condition that prevented test discovery (removed stale cwd check). Fixed incorrect test assertion for W??l pattern. All tests pass: TS (125/125), Go (7/7), Rust (27/27), Python (6/6), C# filter tests (2/2).",
-            "files": [
-              "compose/js/index.ts",
-              "compose/go/compose.go",
-              "compose/go/compose_test.go",
-              "compose/rs/lib.rs",
-              "compose/py/main.py",
-              "compose/net/Compose/Compose.cs",
-              "compose/net/Compose.Tests/Tests.cs"
-            ]
+            "files": ["compose/js/index.ts", "compose/go/compose.go", "compose/go/compose_test.go", "compose/rs/lib.rs", "compose/py/main.py", "compose/net/Compose/Compose.cs", "compose/net/Compose.Tests/Tests.cs"]
           },
           "tool_use_id": "toolu_vrtx_017GB7ZDkTpsZ6LcD6z1qvaG__vscode-1774519725153",
           "cwd": "/workspaces/semio"
@@ -5209,15 +5177,7 @@
           "tool_input": {
             "path": "26/03/26/GENERALIZE-FILTER-KIT-FUNCTION-WITH-GLOB-SUPPORT",
             "summary": "Generalized filterKitWithDesign to filterKit across all 5 languages (TypeScript, Go, Rust, Python, C#). Added GlobFilter (include/exclude string[] patterns) and KitFilter (designGuid, modelTags, plus GlobFilter per entity kind: designs, types, ports, files, tags, concepts, qualities, authors, folders). Implemented globMatch (supports * and ? wildcards, case-insensitive) and matchesGlobFilter helpers. Fixed vitest guard condition that prevented test discovery (removed stale cwd check). Fixed incorrect test assertion for W??l pattern. All tests pass: TS (125/125), Go (7/7), Rust (27/27), Python (6/6), C# filter tests (2/2).",
-            "files": [
-              "compose/js/index.ts",
-              "compose/go/compose.go",
-              "compose/go/compose_test.go",
-              "compose/rs/lib.rs",
-              "compose/py/main.py",
-              "compose/net/Compose/Compose.cs",
-              "compose/net/Compose.Tests/Tests.cs"
-            ]
+            "files": ["compose/js/index.ts", "compose/go/compose.go", "compose/go/compose_test.go", "compose/rs/lib.rs", "compose/py/main.py", "compose/net/Compose/Compose.cs", "compose/net/Compose.Tests/Tests.cs"]
           },
           "tool_response": "[🎫generalizefilterkitfunctionwithglobsupport](repo://ticket/🎫generalizefilterkitfunctionwithglobsupport) - `closed` - `closed now`\n",
           "tool_use_id": "toolu_vrtx_017GB7ZDkTpsZ6LcD6z1qvaG__vscode-1774519725153",
@@ -5246,15 +5206,7 @@
           "tool_input": {
             "path": "26/03/26/GENERALIZE-FILTER-KIT-FUNCTION-WITH-GLOB-SUPPORT",
             "summary": "Generalized filterKitWithDesign to filterKit across all 5 languages (TypeScript, Go, Rust, Python, C#). Added GlobFilter (include/exclude string[] patterns) and KitFilter (designGuid, modelTags, plus GlobFilter per entity kind: designs, types, ports, files, tags, concepts, qualities, authors, folders). Implemented globMatch (supports * and ? wildcards, case-insensitive) and matchesGlobFilter helpers. Fixed vitest guard condition that prevented test discovery (removed stale cwd check). Fixed incorrect test assertion for W??l pattern. All tests pass: TS (125/125), Go (7/7), Rust (27/27), Python (6/6), C# filter tests (2/2).",
-            "files": [
-              "compose/js/index.ts",
-              "compose/go/compose.go",
-              "compose/go/compose_test.go",
-              "compose/rs/lib.rs",
-              "compose/py/main.py",
-              "compose/net/Compose/Compose.cs",
-              "compose/net/Compose.Tests/Tests.cs"
-            ]
+            "files": ["compose/js/index.ts", "compose/go/compose.go", "compose/go/compose_test.go", "compose/rs/lib.rs", "compose/py/main.py", "compose/net/Compose/Compose.cs", "compose/net/Compose.Tests/Tests.cs"]
           },
           "tool_response": "[🎫generalizefilterkitfunctionwithglobsupport](repo://ticket/🎫generalizefilterkitfunctionwithglobsupport) - `closed` - `closed now`\n",
           "tool_use_id": "toolu_vrtx_017GB7ZDkTpsZ6LcD6z1qvaG__vscode-1774519725153",

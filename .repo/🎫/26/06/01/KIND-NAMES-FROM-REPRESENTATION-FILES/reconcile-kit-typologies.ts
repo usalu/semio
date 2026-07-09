@@ -104,13 +104,7 @@ export function typologyIdFromRepresentationFile(fileName: string): string | nul
   const n = fileName.toLowerCase();
   if (!n) return null;
   if (n.includes("tambour") && !n.includes("capsule")) return "typology-tambour";
-  if (
-    n.includes("ellipsoid-capsule") ||
-    n.includes("trapezoid-capsule") ||
-    n.includes("capsule-with-balcony") ||
-    /^capsule[_-]/.test(n) ||
-    (n.includes("capsule") && !n.includes("tambour"))
-  ) {
+  if (n.includes("ellipsoid-capsule") || n.includes("trapezoid-capsule") || n.includes("capsule-with-balcony") || /^capsule[_-]/.test(n) || (n.includes("capsule") && !n.includes("tambour"))) {
     return "typology-capsule";
   }
   if (n.includes("capital")) return "typology-capital";
@@ -167,11 +161,7 @@ function renameTypeRow(row: Record<string, unknown>, files: Map<string, string>)
   syncRepresentationNames(row, files);
 }
 
-function intendedTypologyIdForType(
-  row: Record<string, unknown>,
-  files: Map<string, string>,
-  families: Map<string, string>,
-): string {
+function intendedTypologyIdForType(row: Record<string, unknown>, files: Map<string, string>, families: Map<string, string>): string {
   const primary = namingSourceForType(row, files);
   if (primary) {
     renameTypeRow(row, files);

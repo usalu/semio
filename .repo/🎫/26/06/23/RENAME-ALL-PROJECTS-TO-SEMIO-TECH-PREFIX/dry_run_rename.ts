@@ -8,15 +8,9 @@ const oldNames = Object.keys(mappings).sort((a, b) => b.length - a.length);
 
 const files = execSync("git ls-files", { encoding: "utf8" })
   .split("\n")
-  .map(f => f.trim())
-  .filter(f => {
-    return f &&
-      !f.includes("mappings.json") &&
-      !f.includes("scan_references.json") &&
-      !f.includes("references.json") &&
-      !f.includes("find_and_map.ts") &&
-      !f.includes("scan_references.ts") &&
-      !f.includes("dry_run_rename.ts");
+  .map((f) => f.trim())
+  .filter((f) => {
+    return f && !f.includes("mappings.json") && !f.includes("scan_references.json") && !f.includes("references.json") && !f.includes("find_and_map.ts") && !f.includes("scan_references.ts") && !f.includes("dry_run_rename.ts");
   });
 
 const diffs: Record<string, string> = {};
@@ -35,7 +29,7 @@ for (const file of files) {
     // 1. Replace scoped package names
     for (const oldName of oldNames) {
       if (oldName === "repo") continue; // Handle "repo" separately to avoid destroying text
-      
+
       // We want to replace the exact package name.
       // Since scoped package names start with '@' and are unique, we can safely replace them.
       // We also replace references in imports, nx tasks, etc.
@@ -47,7 +41,7 @@ for (const file of files) {
     if (file === "repo/client/vscode/package.json") {
       content = content.replace('"name": "repo"', '"name": "@semio-tech/repo-vscode"');
     }
-    
+
     // In launch.json, replace command lines containing "repo" project name
     if (file === ".vscode/launch.json") {
       content = content.replaceAll("nx dev repo", "nx dev @semio-tech/repo-vscode");

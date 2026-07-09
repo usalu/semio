@@ -2,30 +2,30 @@
 name: Brepjs CellComplex Parts Surfaces
 overview: "Replace the adhoc AABB-based part/surface derivation in `spatial/js/kernel-brepjs/index.ts` with a topologic-inspired BRep pipeline: build a CellComplex-like decomposition using brepjs `split`, classify atomic pieces by which source cells contain them, derive surfaces from atomic face adjacency, and augment the `TopologyGraph` with merged intersection vertices/edges/faces so all view points reference real topology vertex ids."
 todos:
-  - id: ticket
-    content: Open a new repo ticket Brepjs CellComplex Parts and Surfaces under the appropriate goal
-    status: completed
-  - id: decompose
-    content: Implement decomposeCells using brepjs split + per-piece containment tagging in a new region
-    status: completed
-  - id: selfmerge
-    content: Implement selfMergeTopologyDiff with deterministic, idempotent ids for vertices/edges/wires/faces
-    status: completed
-  - id: views
-    content: Implement partViewsFromAtomics and surfaceViewsFromAtomics (face-adjacency exposure)
-    status: completed
-  - id: wire
-    content: Rewire BrepjsKernel.computeSurfaceViews / computePartViews to use the new pipeline and apply the merge diff
-    status: completed
-  - id: cleanup
-    content: Delete superseded helpers (computeBooleanPartRecordsFromSolids, computeSurfaceViewsFromPartRecords, point-probe exposure helpers); keep AABB fallback only for the no-solid path
-    status: completed
-  - id: tests
-    content: Extend the kernel-brepjs vitest spec with overlap, triple-pairwise, and SelfMerge idempotency cases
-    status: completed
-  - id: close
-    content: Close the ticket via ticket_close with summary and changed files
-    status: completed
+ - id: ticket
+   content: Open a new repo ticket Brepjs CellComplex Parts and Surfaces under the appropriate goal
+   status: completed
+ - id: decompose
+   content: Implement decomposeCells using brepjs split + per-piece containment tagging in a new region
+   status: completed
+ - id: selfmerge
+   content: Implement selfMergeTopologyDiff with deterministic, idempotent ids for vertices/edges/wires/faces
+   status: completed
+ - id: views
+   content: Implement partViewsFromAtomics and surfaceViewsFromAtomics (face-adjacency exposure)
+   status: completed
+ - id: wire
+   content: Rewire BrepjsKernel.computeSurfaceViews / computePartViews to use the new pipeline and apply the merge diff
+   status: completed
+ - id: cleanup
+   content: Delete superseded helpers (computeBooleanPartRecordsFromSolids, computeSurfaceViewsFromPartRecords, point-probe exposure helpers); keep AABB fallback only for the no-solid path
+   status: completed
+ - id: tests
+   content: Extend the kernel-brepjs vitest spec with overlap, triple-pairwise, and SelfMerge idempotency cases
+   status: completed
+ - id: close
+   content: Close the ticket via ticket_close with summary and changed files
+   status: completed
 isProject: false
 ---
 
@@ -60,11 +60,11 @@ Atomic record shape:
 
 ```ts
 type AtomicPart = {
-  readonly id: PartRef;
-  readonly sourceCellIds: readonly CellRef[]; // = S, sorted
-  readonly overlap: "none" | "difference" | "intersection";
-  readonly solid: ValidSolid;
-  readonly volume: number;
+ readonly id: PartRef;
+ readonly sourceCellIds: readonly CellRef[]; // = S, sorted
+ readonly overlap: "none" | "difference" | "intersection";
+ readonly solid: ValidSolid;
+ readonly volume: number;
 };
 ```
 
@@ -78,7 +78,7 @@ In a new `#region 🪡SelfMergeDiff`:
   - Walk every atomic part's faces; for each `Face` collect ordered loop vertices via `getVertices`/`vertexPosition`.
   - Snap each BRep vertex to an existing `topo.vertices` (quantized bucket map). If no snap, mint a new `VertexRecord` with a deterministic id `merge-v-<quantizedKey>`.
   - Build deterministic `EdgeRecord`/`WireRecord`/`FaceRecord` ids from sorted endpoint vertex ids and orientation (`merge-e-<va>-<vb>`, `merge-w-<faceHash>`, `merge-f-<faceHash>`). Determinism makes the diff idempotent across reruns.
-  - Emit a single `TopologyDiff` containing only the *added* entities not yet present (existing topology entities are kept).
+  - Emit a single `TopologyDiff` containing only the _added_ entities not yet present (existing topology entities are kept).
 
 `BrepjsKernel.computePartViews` / `computeSurfaceViews` apply this diff via `applyTopologyDiff(topo, diff)` before deriving views. Idempotent: a second refresh on the same `topo` finds all merge ids already present and produces an empty diff.
 

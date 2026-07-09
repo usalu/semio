@@ -28,9 +28,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚rs⚙️package📌1📌18"
-        ],
+        "ranges": ["👤compose📚rs⚙️package📌1📌18"],
         "second": "🎆26🌙03☀️12⏰12⌚41⏱️08",
         "session": "⚪1115ec01af5441f18afa7136e5263dab"
       },
@@ -482,16 +480,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "package.json",
-                ".vscode/tasks.json",
-                "compose/rs/package.json",
-                "compose/sketchpad/package.json",
-                "README.md",
-                "compose/js/README.md",
-                "compose/DOCS.md",
-                "repo/DOCS.md"
-              ],
+              "files": ["package.json", ".vscode/tasks.json", "compose/rs/package.json", "compose/sketchpad/package.json", "README.md", "compose/js/README.md", "compose/DOCS.md", "repo/DOCS.md"],
               "path": "26/03/12/REMOVE-PREFLIGHT-FROM-COMPOSE-REPO-AND-MONOREPO-SETUP",
               "summary": "Successfully removed all preflight-related functionality from repo and monorepo setup:\n\n1. ✅ Removed preflight script from root package.json\n2. ✅ Updated all package.json scripts that used preflight to use nx directly (test, build, publish:test, publish)\n3. ✅ Removed entire preflight section from .vscode/tasks.json (16 individual preflight tasks)\n4. ✅ Removed preflight scripts from individual package.json files (compose/rs, compose/sketchpad)\n5. ✅ Updated documentation to remove preflight references:\n   - README.md build instructions and automation commands description\n   - compose/js/README.md preflight section\n   - compose/DOCS.md preflight section  \n   - repo/DOCS.md preflight command documentation\n\nThe monorepo now uses nx directly for all orchestration instead of going through a preflight layer. All scripts and tasks have been updated accordingly."
             },
@@ -523,16 +512,7 @@
             "mcp_result": "[🎫removepreflightfromcomposerepoandmonoreposetup](composerepo://y/00/m/00/d/00/tk/REMOVE-PREFLIGHT-FROM-COMPOSE-REPO-AND-MONOREPO-SETUP) - `closed` - `closed now`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "package.json",
-                ".vscode/tasks.json",
-                "compose/rs/package.json",
-                "compose/sketchpad/package.json",
-                "README.md",
-                "compose/js/README.md",
-                "compose/DOCS.md",
-                "repo/DOCS.md"
-              ],
+              "files": ["package.json", ".vscode/tasks.json", "compose/rs/package.json", "compose/sketchpad/package.json", "README.md", "compose/js/README.md", "compose/DOCS.md", "repo/DOCS.md"],
               "path": "26/03/12/REMOVE-PREFLIGHT-FROM-COMPOSE-REPO-AND-MONOREPO-SETUP",
               "summary": "Successfully removed all preflight-related functionality from repo and monorepo setup:\n\n1. ✅ Removed preflight script from root package.json\n2. ✅ Updated all package.json scripts that used preflight to use nx directly (test, build, publish:test, publish)\n3. ✅ Removed entire preflight section from .vscode/tasks.json (16 individual preflight tasks)\n4. ✅ Removed preflight scripts from individual package.json files (compose/rs, compose/sketchpad)\n5. ✅ Updated documentation to remove preflight references:\n   - README.md build instructions and automation commands description\n   - compose/js/README.md preflight section\n   - compose/DOCS.md preflight section  \n   - repo/DOCS.md preflight command documentation\n\nThe monorepo now uses nx directly for all orchestration instead of going through a preflight layer. All scripts and tasks have been updated accordingly."
             },

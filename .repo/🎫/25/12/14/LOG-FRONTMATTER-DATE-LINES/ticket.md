@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 `scripts/log.ts` stored task tracking under a nested `stats` object and used a single `date` timestamp, which made it harder to evolve the schema and update git-derived line stats consistently across multiple prompts.
@@ -23,6 +24,7 @@ Updated `README.md` and `AGENTS.md` log system documentation to the new frontmat
 ## Log
 
 ## Summary
+
 # Summary
 
 Reshape log frontmatter and migrate logs

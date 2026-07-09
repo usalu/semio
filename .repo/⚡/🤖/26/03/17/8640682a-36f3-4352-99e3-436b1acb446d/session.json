@@ -100,10 +100,7 @@
             "max_results": 2
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__search",
-              "mcp__repo__ticket_open"
-            ],
+            "matches": ["mcp__repo__search", "mcp__repo__ticket_open"],
             "query": "select:mcp__repo__search,mcp__repo__ticket_open",
             "total_deferred_tools": 86
           },
@@ -504,9 +501,7 @@
             "pattern": "compose/desktop/renderer.tsx"
           },
           "tool_response": {
-            "filenames": [
-              "/workspaces/semio/compose/desktop/renderer.tsx"
-            ],
+            "filenames": ["/workspaces/semio/compose/desktop/renderer.tsx"],
             "durationMs": 282,
             "numFiles": 1,
             "truncated": false
@@ -540,9 +535,7 @@
             "pattern": "coda/engine/coda.py"
           },
           "tool_response": {
-            "filenames": [
-              "/workspaces/semio/coda/engine/coda.py"
-            ],
+            "filenames": ["/workspaces/semio/coda/engine/coda.py"],
             "durationMs": 292,
             "numFiles": 1,
             "truncated": false
@@ -1406,9 +1399,7 @@
             "pattern": "compose/sites/play/**/*.tsx"
           },
           "tool_response": {
-            "filenames": [
-              "/workspaces/semio/compose/sites/play/index.tsx"
-            ],
+            "filenames": ["/workspaces/semio/compose/sites/play/index.tsx"],
             "durationMs": 286,
             "numFiles": 1,
             "truncated": false
@@ -1879,9 +1870,7 @@
             "pattern": "coda/desktop/**/*.tsx"
           },
           "tool_response": {
-            "filenames": [
-              "/workspaces/semio/coda/desktop/renderer.tsx"
-            ],
+            "filenames": ["/workspaces/semio/coda/desktop/renderer.tsx"],
             "durationMs": 279,
             "numFiles": 1,
             "truncated": false
@@ -2682,9 +2671,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "TodoWrite"
-            ],
+            "matches": ["TodoWrite"],
             "query": "select:TodoWrite",
             "total_deferred_tools": 86
           },

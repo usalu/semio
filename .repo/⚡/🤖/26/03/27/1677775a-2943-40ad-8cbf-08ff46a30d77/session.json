@@ -9182,9 +9182,7 @@
           "tool_input": {
             "client": "copilot-chat",
             "summary": "Fixed the two remaining hover/selection performance bottlenecks in the sketchpad:\\n\\n1. **useDesignAppIsPieceHovered** — Was subscribing to the full hover object via `createDesignHoverSelector` (returns entire `DesignAppHover`), causing ALL piece components to re-render on any hover change. Changed to inline granular boolean selector that returns `boolean` directly from XState state, using `useMemo` with `stablePieceId` dep. Only re-renders when the boolean result actually changes for that specific piece.\\n\\n2. **useDesignAppSelectedConnector** — Was subscribing to the full selection object via `createDesignSelectionSelector`, then creating a new `{ piece, connector }` object on every render (unstable reference → cascading downstream re-renders). Changed to inline granular selector that extracts the connector directly from state, with a custom `compare` function for `useSelector` that checks `piece` and `connector` equality to prevent new object references from triggering re-renders.\\n\\nAlready-present optimizations verified intact: queueMicrotask (12 hover commands), areHoverStatesEqual comparator on useDesignAppHover, stable setter via stableSetterRef, Set/Map O(1) lookups in computeHoverData, inline boolean selectors for isPieceSelected/isConnectionHovered/isConnectionSelected/isPortHovered/isPiecePortSelected.\\n\\nVite build: passes. All 105 vitest tests: pass.",
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_bdrk_01YFKVf9fqJXU33zYKu3r51N__vscode-1774619848614",
           "cwd": "/workspaces/semio"
@@ -9266,9 +9264,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Fixed the two remaining hover/selection performance bottlenecks in the sketchpad:\\n\\n1. **useDesignAppIsPieceHovered** — Was subscribing to the full hover object via createDesignHoverSelector (returns entire DesignAppHover), causing ALL piece components to re-render on any hover change. Changed to inline granular boolean selector that returns boolean directly from XState state, using useMemo with stablePieceId dep. Only re-renders when the boolean result actually changes for that specific piece.\\n\\n2. **useDesignAppSelectedConnector** — Was subscribing to the full selection object via createDesignSelectionSelector, then creating a new { piece, connector } object on every render (unstable reference causing cascading downstream re-renders). Changed to inline granular selector that extracts the connector directly from state, with a custom compare function for useSelector that checks piece and connector equality to prevent new object references from triggering re-renders.\\n\\nAlready-present optimizations verified intact: queueMicrotask (12 hover commands), areHoverStatesEqual comparator on useDesignAppHover, stable setter via stableSetterRef, Set/Map O(1) lookups in computeHoverData, inline boolean selectors for isPieceSelected/isConnectionHovered/isConnectionSelected/isPortHovered/isPiecePortSelected.\\n\\nVite build: passes. All 105 vitest tests: pass.",
             "ticketId": "🎫optimizehoverselectiongranularselectors"
           },
@@ -9354,9 +9350,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Fixed the two remaining hover/selection performance bottlenecks: (1) useDesignAppIsPieceHovered changed from full hover object subscription to inline granular boolean selector returning boolean directly, (2) useDesignAppSelectedConnector changed from full selection object subscription to inline granular selector with custom compare function for stable references. Vite build passes, 105 tests pass.",
             "ticketId": "2026/03/27/OPTIMIZE-HOVER-SELECTION-GRANULAR-SELECTORS"
           },
@@ -9384,9 +9378,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/1677775a-2943-40ad-8cbf-08ff46a30d77.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "path": "26/03/27/OPTIMIZE-HOVER-SELECTION-GRANULAR-SELECTORS",
             "summary": "Fixed the two remaining hover/selection performance bottlenecks: (1) useDesignAppIsPieceHovered changed from full hover object subscription to inline granular boolean selector returning boolean directly from XState state, (2) useDesignAppSelectedConnector changed from full selection object subscription to inline granular selector with custom compare function for stable references. Vite build passes, 105 tests pass."
           },
@@ -9414,9 +9406,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/1677775a-2943-40ad-8cbf-08ff46a30d77.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "path": "26/03/27/OPTIMIZE-HOVER-SELECTION-GRANULAR-SELECTORS",
             "summary": "Fixed the two remaining hover/selection performance bottlenecks: (1) useDesignAppIsPieceHovered changed from full hover object subscription to inline granular boolean selector returning boolean directly from XState state, (2) useDesignAppSelectedConnector changed from full selection object subscription to inline granular selector with custom compare function for stable references. Vite build passes, 105 tests pass."
           },

@@ -2,27 +2,27 @@
 name: Declarative Playground Class
 overview: Introduce a React-free `Playground` base class and a one-line `renderPlayground(instance)` renderer in `@elements/playground`, extend the declarative `UiNode` vocabulary so every panel (document, inspector, settings, status, footer) is declarative, and refactor the scene, topology, and board playgrounds into single `Playground` subclass instances with no React in their definitions.
 todos:
-  - id: ticket
-    content: Open repo ticket via repo MCP, read repo://goals and associate with the best-fit goal.
-    status: cancelled
-  - id: core-uinode
-    content: Extend UiNode vocabulary (section/field/input/select/toggle/vec3/keyValue/tree) and move playgroundTreePanelRootItems into core.ts; add Playground abstract base.
-    status: completed
-  - id: react-renderer
-    content: Extend UiRenderer for new nodes; render rightTabs declaratively + drop augmentPanelTabs; add PlaygroundShell (generic surface chrome + keybindings) and renderPlayground.
-    status: completed
-  - id: scene
-    content: Add ScenePlayground class, convert scene inspector/setting/document/kinds panels to declarative bodies, expose registerSceneSurfaceHosts, delete PlayApp/footer/bridge, rewrite main.ts.
-    status: in_progress
-  - id: topology
-    content: Add TopologyPlayground class, convert status/document panels to declarative bodies, expose registerTopologySurfaceHosts, delete TopologyPlayApp, rewrite main.ts.
-    status: pending
-  - id: board
-    content: Migrate board React state + host bridge into BoardPlayShellController, convert panels to declarative bodies, add BoardPlayground, expose registerBoardSurfaceHosts, rewrite main.ts.
-    status: pending
-  - id: tests
-    content: Extend colocated vitest blocks for new nodes/renderer/Playground and each playground; run nx test + playwright e2e + dev runtime check; close ticket.
-    status: pending
+ - id: ticket
+   content: Open repo ticket via repo MCP, read repo://goals and associate with the best-fit goal.
+   status: cancelled
+ - id: core-uinode
+   content: Extend UiNode vocabulary (section/field/input/select/toggle/vec3/keyValue/tree) and move playgroundTreePanelRootItems into core.ts; add Playground abstract base.
+   status: completed
+ - id: react-renderer
+   content: Extend UiRenderer for new nodes; render rightTabs declaratively + drop augmentPanelTabs; add PlaygroundShell (generic surface chrome + keybindings) and renderPlayground.
+   status: completed
+ - id: scene
+   content: Add ScenePlayground class, convert scene inspector/setting/document/kinds panels to declarative bodies, expose registerSceneSurfaceHosts, delete PlayApp/footer/bridge, rewrite main.ts.
+   status: in_progress
+ - id: topology
+   content: Add TopologyPlayground class, convert status/document panels to declarative bodies, expose registerTopologySurfaceHosts, delete TopologyPlayApp, rewrite main.ts.
+   status: pending
+ - id: board
+   content: Migrate board React state + host bridge into BoardPlayShellController, convert panels to declarative bodies, add BoardPlayground, expose registerBoardSurfaceHosts, rewrite main.ts.
+   status: pending
+ - id: tests
+   content: Extend colocated vitest blocks for new nodes/renderer/Playground and each playground; run nx test + playwright e2e + dev runtime check; close ticket.
+   status: pending
 isProject: false
 ---
 
@@ -52,8 +52,6 @@ flowchart TB
   pg --> rt["createRuntime(): controller + app + modes + SideTabSpec + footer"]
   lib["library index.tsx (React canvas adapters)"] -.registers surfaceId.-> uir
 ```
-
-
 
 ## 1. Framework core — `elements/lib/playground/core.ts`
 
@@ -117,4 +115,3 @@ flowchart TB
 - Open a repo ticket first (repo MCP `ticket_open`) associated with the most fitting `repo://goals` entry; keep temp files inside the ticket folder; close it with a summary when done.
 - No backwards compatibility: `augmentPanelTabs`, the board host bridge, and the per-playground `mount*Play()`/`PlayApp` are removed outright.
 - The `elements/lib/react/` "no classes" rule applies to pure components; playground classes live in `play/index.ts`, consistent with the existing `*ShellController` classes there.
-

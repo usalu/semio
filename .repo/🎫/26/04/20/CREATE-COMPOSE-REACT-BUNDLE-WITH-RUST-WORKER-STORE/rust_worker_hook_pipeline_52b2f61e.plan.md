@@ -2,30 +2,30 @@
 name: Rust worker hook pipeline
 overview: End-to-end refactor so the single source of truth is the Rust `KitStore` running in a Web Worker via WASM; `@semio-tech/compose-js` exposes a typed Comlink client; `@semio-tech/compose-react` exports `[value, setValue, status]` hooks driven by `KitEvent`; `@semio-tech/compose-sketchpad` consumes those hooks. Setters are async, return `Promise<Result<void, SetError>>`, and surface domain rejections (`IllegalName`, `Timeout`, `DuplicateGuid`, …).
 todos:
-  - id: rs_errors
-    content: Introduce SetError + KitEvent::SetRejected; refactor every set_* method in compose/rs to return SetResult with domain rejections and update existing events tests.
-    status: completed
-  - id: rs_rpc
-    content: Add uniform KitStore::set_field / add_child / remove_child / get_field dispatcher in new src/rpc.rs; drive all WASM entry points through it.
-    status: completed
-  - id: rs_wasm
-    content: Replace compose/rs/src/wasm.rs with stateful KitStoreHandle exposing snapshot, setField, addChild, removeChild, subscribe, applyDesignDiff returning structured SetResult promises.
-    status: completed
-  - id: js_client
-    content: Delete JS KitImpl mutation path from compose/js/index.ts; add KitStoreClient (Comlink) + compose/js/worker.ts + InlineKitStoreClient fallback + SetError types.
-    status: completed
-  - id: react_hooks
-    content: Rewrite compose/react/index.tsx KitProvider + useField core on top of KitStoreClient event stream; regenerate per-field hooks to return [value, setValue, status].
-    status: completed
-  - id: sketchpad_migration
-    content: In compose/sketchpad/index.tsx replace local usePieceName/etc. with @semio-tech/compose-react re-exports and migrate all call sites from canSet to status.kind.
-    status: cancelled
-  - id: tests_pipeline
-    content: Extend existing test regions (rs events, rs wasm-bindgen-test, js KitStoreClient, react hook tests, sketchpad Playwright spec) to cover success, IllegalName rejection, Timeout, concurrent writes.
-    status: completed
-  - id: verify_pipeline
-    content: cargo test --lib + cargo test --target wasm32-unknown-unknown, pnpm -F @semio-tech/compose-js test, pnpm -F @semio-tech/compose-react test, pnpm -F @semio-tech/compose-sketchpad test; confirm pipeline end-to-end.
-    status: completed
+ - id: rs_errors
+   content: Introduce SetError + KitEvent::SetRejected; refactor every set_* method in compose/rs to return SetResult with domain rejections and update existing events tests.
+   status: completed
+ - id: rs_rpc
+   content: Add uniform KitStore::set_field / add_child / remove_child / get_field dispatcher in new src/rpc.rs; drive all WASM entry points through it.
+   status: completed
+ - id: rs_wasm
+   content: Replace compose/rs/src/wasm.rs with stateful KitStoreHandle exposing snapshot, setField, addChild, removeChild, subscribe, applyDesignDiff returning structured SetResult promises.
+   status: completed
+ - id: js_client
+   content: Delete JS KitImpl mutation path from compose/js/index.ts; add KitStoreClient (Comlink) + compose/js/worker.ts + InlineKitStoreClient fallback + SetError types.
+   status: completed
+ - id: react_hooks
+   content: Rewrite compose/react/index.tsx KitProvider + useField core on top of KitStoreClient event stream; regenerate per-field hooks to return [value, setValue, status].
+   status: completed
+ - id: sketchpad_migration
+   content: In compose/sketchpad/index.tsx replace local usePieceName/etc. with @semio-tech/compose-react re-exports and migrate all call sites from canSet to status.kind.
+   status: cancelled
+ - id: tests_pipeline
+   content: Extend existing test regions (rs events, rs wasm-bindgen-test, js KitStoreClient, react hook tests, sketchpad Playwright spec) to cover success, IllegalName rejection, Timeout, concurrent writes.
+   status: completed
+ - id: verify_pipeline
+   content: cargo test --lib + cargo test --target wasm32-unknown-unknown, pnpm -F @semio-tech/compose-js test, pnpm -F @semio-tech/compose-react test, pnpm -F @semio-tech/compose-sketchpad test; confirm pipeline end-to-end.
+   status: completed
 isProject: false
 ---
 
@@ -49,39 +49,18 @@ Single source of truth = Rust `KitStore`. All writes go `setValue -> client.setF
 ## 2. Hook contract (chosen: option A)
 
 ```ts
-export type SetErrorKind =
-  | "IllegalName"
-  | "NameTooLong"
-  | "InvalidUrl"
-  | "InvalidValue"
-  | "DuplicateGuid"
-  | "NotFound"
-  | "CyclicReference"
-  | "PortFamilyMismatch"
-  | "Readonly"
-  | "Disposed"
-  | "Timeout"
-  | "LockPoisoned"
-  | "Internal";
+export type SetErrorKind = "IllegalName" | "NameTooLong" | "InvalidUrl" | "InvalidValue" | "DuplicateGuid" | "NotFound" | "CyclicReference" | "PortFamilyMismatch" | "Readonly" | "Disposed" | "Timeout" | "LockPoisoned" | "Internal";
 export type SetError = {
-  kind: SetErrorKind;
-  message: string;
-  field?: string;
-  entity?: { kind: string; guid: string };
+ kind: SetErrorKind;
+ message: string;
+ field?: string;
+ entity?: { kind: string; guid: string };
 };
 export type SetResult = { ok: true } | { ok: false; error: SetError };
 
-export type WriteStatus =
-  | { kind: "idle"; pending: 0; lastError?: undefined }
-  | { kind: "pending"; pending: number; lastError?: SetError }
-  | { kind: "error"; pending: 0; lastError: SetError }
-  | { kind: "readonly"; pending: 0 };
+export type WriteStatus = { kind: "idle"; pending: 0; lastError?: undefined } | { kind: "pending"; pending: number; lastError?: SetError } | { kind: "error"; pending: 0; lastError: SetError } | { kind: "readonly"; pending: 0 };
 
-export type HookTriad<T> = readonly [
-  T,
-  (next: T | ((prev: T) => T)) => Promise<SetResult>,
-  WriteStatus,
-];
+export type HookTriad<T> = readonly [T, (next: T | ((prev: T) => T)) => Promise<SetResult>, WriteStatus];
 ```
 
 `canSet` is derived: `status.kind !== "readonly"`. `pending` counts concurrent in-flight writes on that field so overlapping calls don't flicker.
@@ -189,32 +168,19 @@ Rewrite the runtime context to be driven by the Rust event stream:
 - Core hook:
 
 ```ts
-function useField<T>(
-  kind: EntityKind,
-  field: string,
-  guid?: string,
-): HookTriad<T> {
-  const runtime = useKitRuntime();
-  const key = `${kind}:${guid}:${field}`;
-  const value = useSyncExternalStore(
-    (sub) => runtime.subscribeField(key, sub),
-    () => runtime.readField<T>(key),
-  );
-  const status = useSyncExternalStore(
-    (sub) => runtime.subscribeStatus(key, sub),
-    () => runtime.readStatus(key),
-  );
-  const setValue = useCallback(
-    async (next) =>
-      runtime.dispatchSet(
-        kind,
-        guid,
-        field,
-        typeof next === "function" ? (next as any)(value) : next,
-      ),
-    [runtime, kind, guid, field, value],
-  );
-  return [value, setValue, status] as const;
+function useField<T>(kind: EntityKind, field: string, guid?: string): HookTriad<T> {
+ const runtime = useKitRuntime();
+ const key = `${kind}:${guid}:${field}`;
+ const value = useSyncExternalStore(
+  (sub) => runtime.subscribeField(key, sub),
+  () => runtime.readField<T>(key),
+ );
+ const status = useSyncExternalStore(
+  (sub) => runtime.subscribeStatus(key, sub),
+  () => runtime.readStatus(key),
+ );
+ const setValue = useCallback(async (next) => runtime.dispatchSet(kind, guid, field, typeof next === "function" ? (next as any)(value) : next), [runtime, kind, guid, field, value]);
+ return [value, setValue, status] as const;
 }
 ```
 
@@ -226,11 +192,7 @@ function useField<T>(
 
 - Replace the ~300 local `useX` implementations and the `HookResult` / `conditionalHookResult` / `writableHookResult` helpers with re-exports / thin wrappers from `@semio-tech/compose-react`:
   ```ts
-  export {
-    usePieceName,
-    usePieceColor,
-    useKitName /* ... */,
-  } from "@semio-tech/compose-react";
+  export { usePieceName, usePieceColor, useKitName /* ... */ } from "@semio-tech/compose-react";
   export type HookResult<T> = import("@semio-tech/compose-react").HookTriad<T>;
   ```
 - Replace the `useDesignAppCommands().updatePiece(...)` write path with direct `setValue(...)` from the hook triad. Delete `DesignAppCommands` mutation paths; keep selection/hover/etc. UX commands.

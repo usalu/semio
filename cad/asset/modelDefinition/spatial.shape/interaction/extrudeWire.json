@@ -6,12 +6,7 @@
   "key": "e",
   "interaction": {
     "spatialGroundPick": false,
-    "pickDisabledStates": [
-      "idle",
-      "selectWire",
-      "setDistance",
-      "committed"
-    ],
+    "pickDisabledStates": ["idle", "selectWire", "setDistance", "committed"],
     "groundPointerMoveStates": [],
     "heightDragStates": [],
     "verticalRodStates": [],
@@ -19,10 +14,7 @@
   },
   "requires": {
     "kernel": {
-      "operations": [
-        "wire.extrudeToCell",
-        "entity.tessellate"
-      ]
+      "operations": ["wire.extrudeToCell", "entity.tessellate"]
     }
   },
   "guards": [
@@ -83,9 +75,7 @@
       {
         "name": "selectWire",
         "selection": {
-          "accept": [
-            "wire"
-          ],
+          "accept": ["wire"],
           "multiple": false,
           "prompt": "Pick wire"
         },
@@ -221,11 +211,7 @@
             "text": "Set extrude distance",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                2,
-                0
-              ]
+              "value": [0, 2, 0]
             }
           }
         ]
@@ -234,9 +220,7 @@
   },
   "commit": {
     "when": "hasWireAndDistance",
-    "fromStates": [
-      "setDistance"
-    ],
+    "fromStates": ["setDistance"],
     "operation": {
       "kind": "action",
       "action": "feature.extrudeWireToSolid",
@@ -263,11 +247,7 @@
         },
         "direction": {
           "kind": "const",
-          "value": [
-            0,
-            0,
-            1
-          ]
+          "value": [0, 0, 1]
         }
       }
     }

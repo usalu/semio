@@ -4,9 +4,7 @@
   "version": "1.0.0",
   "label": "Railing",
   "description": "Guard or handrail element.",
-  "primitiveKinds": [
-    "curve"
-  ],
+  "primitiveKinds": ["curve"],
   "style": {
     "color": "#616161",
     "edgeColor": "#424242",

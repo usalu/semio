@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The Sketchpad hooks were using `useKit()`, `useDesign()`, and `useType()` with selector patterns that caused overfetching. Every component that needed just one field (like kit name or pieces array) would subscribe to the entire store, causing unnecessary re-renders when unrelated fields changed.
@@ -184,15 +185,15 @@ Refactored `ConnectionsSectionForm` to use granular hooks instead of manual diff
 
 ```tsx
 const ConnectionsSectionForm: FC<{ connections: Connection[] }> = ({ connections }) => {
-  const { updateConnection } = useDesignAppCommands();
-  // Manual diff creation
-  const handleChange = (updatedConnection: Connection) => {
-    const diff: ConnectionDiff = {};
-    if (updatedConnection.gap !== connection.gap) diff.gap = updatedConnection.gap;
-    // ... more manual diff building
-    updateConnection(origin, updatedConnection.guid, diff);
-  };
-  // ... 200+ lines of form with isSingle checks everywhere
+ const { updateConnection } = useDesignAppCommands();
+ // Manual diff creation
+ const handleChange = (updatedConnection: Connection) => {
+  const diff: ConnectionDiff = {};
+  if (updatedConnection.gap !== connection.gap) diff.gap = updatedConnection.gap;
+  // ... more manual diff building
+  updateConnection(origin, updatedConnection.guid, diff);
+ };
+ // ... 200+ lines of form with isSingle checks everywhere
 };
 ```
 
@@ -200,28 +201,28 @@ const ConnectionsSectionForm: FC<{ connections: Connection[] }> = ({ connections
 
 ```tsx
 const SingleConnectionInfo: FC = () => {
-  const connection = useConnection() as Connection;
-  // Read-only info display using useConnection() hook
+ const connection = useConnection() as Connection;
+ // Read-only info display using useConnection() hook
 };
 
 const SingleConnectionFields: FC = () => {
-  const [gap, setGap] = useConnectionGap();
-  const [shift, setShift] = useConnectionShift();
-  // ... other granular hooks
-  // No manual diff creation - hooks handle it internally
+ const [gap, setGap] = useConnectionGap();
+ const [shift, setShift] = useConnectionShift();
+ // ... other granular hooks
+ // No manual diff creation - hooks handle it internally
 };
 
 const ConnectionsSectionForm: FC<{ connections: Connection[] }> = ({ connections }) => {
-  const isSingle = connections.length === 1;
-  if (isSingle) {
-    return (
-      <ConnectionScopeProvider guid={connections[0].guid}>
-        <SingleConnectionInfo />
-        <SingleConnectionFields />
-      </ConnectionScopeProvider>
-    );
-  }
-  return <MultipleConnectionsMessage />;
+ const isSingle = connections.length === 1;
+ if (isSingle) {
+  return (
+   <ConnectionScopeProvider guid={connections[0].guid}>
+    <SingleConnectionInfo />
+    <SingleConnectionFields />
+   </ConnectionScopeProvider>
+  );
+ }
+ return <MultipleConnectionsMessage />;
 };
 ```
 
@@ -244,6 +245,7 @@ const ConnectionsSectionForm: FC<{ connections: Connection[] }> = ({ connections
 ## Log
 
 ## Summary
+
 # Summary
 
->-
+> -

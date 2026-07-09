@@ -11398,9 +11398,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\306a8106-3bce-411b-9ecf-e4acccea4fb8.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\sketchpad\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\sketchpad\\index.tsx"]
           },
           "tool_use_id": "call_GfVSyCzI2hEXYBQ20wo4S7Uv__vscode-1776879023114",
           "cwd": "c:\\git\\compose"
@@ -11426,9 +11424,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\306a8106-3bce-411b-9ecf-e4acccea4fb8.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\sketchpad\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\sketchpad\\index.tsx"]
           },
           "tool_use_id": "call_GfVSyCzI2hEXYBQ20wo4S7Uv__vscode-1776879023114",
           "cwd": "c:\\git\\compose"
@@ -11454,9 +11450,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\306a8106-3bce-411b-9ecf-e4acccea4fb8.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\sketchpad\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\sketchpad\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_GfVSyCzI2hEXYBQ20wo4S7Uv__vscode-1776879023114",
@@ -11513,9 +11507,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\306a8106-3bce-411b-9ecf-e4acccea4fb8.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\sketchpad\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\sketchpad\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_GfVSyCzI2hEXYBQ20wo4S7Uv__vscode-1776879023114",

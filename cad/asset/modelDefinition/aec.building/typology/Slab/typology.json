@@ -4,9 +4,7 @@
   "version": "1.0.0",
   "label": "Slab",
   "description": "Horizontal planar floor or deck element.",
-  "primitiveKinds": [
-    "surface"
-  ],
+  "primitiveKinds": ["surface"],
   "style": {
     "color": "#BDBDBD",
     "edgeColor": "#757575",

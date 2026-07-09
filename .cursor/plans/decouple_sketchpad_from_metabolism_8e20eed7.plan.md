@@ -2,33 +2,33 @@
 name: Decouple Sketchpad From Metabolism
 overview: Make the sketchpad fully independent of the metabolism kit by replacing the hardcoded metabolism auto-seed/buttons/asset-root with a generic, env-driven multi-kit preload mechanism, keeping metabolism only in tests and in new launch configs. Stop bundling metabolism into the `js` and `play` builds.
 todos:
-  - id: ticket
-    content: Read repo://goals and open a ticket for decoupling sketchpad from metabolism
-    status: completed
-  - id: preload-env
-    content: Add COMPOSE_SKETCHPAD_PRELOAD_KITS define to js and play vite configs (replacing COMPOSE_SKETCHPAD_E2E)
-    status: completed
-  - id: preload-impl
-    content: Replace metabolism auto-seed block with generic sketchpadPreloadKitUrls()/preloadSketchpadKits() in index.ts and wire init call
-    status: completed
-  - id: asset-base
-    content: "Generalize asset root: add assetBaseUrl to registerKitStore/getKitAssetBaseUrl and thread through open/attach + sketchpadKitFileUrlById"
-    status: completed
-  - id: remove-buttons
-    content: Remove metabolism/Nakagin command buttons, command cases, and shell command registrations from index.ts
-    status: completed
-  - id: play-build
-    content: Remove metabolism.zip dev middleware and generateBundle emit from play vite.config.ts
-    status: completed
-  - id: tests
-    content: Update unit tests for new preload/asset API and rewrite E2E tests + playwright webServer env to use preloaded kit
-    status: completed
-  - id: launch
-    content: Add metabolism-preloading launch configs for sketchpad and sketchpad-play in .vscode/launch.json
-    status: completed
-  - id: verify
-    content: Run dev (plain + metabolism), build both apps, grep for metabolism, run full test suite; close ticket
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open a ticket for decoupling sketchpad from metabolism
+   status: completed
+ - id: preload-env
+   content: Add COMPOSE_SKETCHPAD_PRELOAD_KITS define to js and play vite configs (replacing COMPOSE_SKETCHPAD_E2E)
+   status: completed
+ - id: preload-impl
+   content: Replace metabolism auto-seed block with generic sketchpadPreloadKitUrls()/preloadSketchpadKits() in index.ts and wire init call
+   status: completed
+ - id: asset-base
+   content: "Generalize asset root: add assetBaseUrl to registerKitStore/getKitAssetBaseUrl and thread through open/attach + sketchpadKitFileUrlById"
+   status: completed
+ - id: remove-buttons
+   content: Remove metabolism/Nakagin command buttons, command cases, and shell command registrations from index.ts
+   status: completed
+ - id: play-build
+   content: Remove metabolism.zip dev middleware and generateBundle emit from play vite.config.ts
+   status: completed
+ - id: tests
+   content: Update unit tests for new preload/asset API and rewrite E2E tests + playwright webServer env to use preloaded kit
+   status: completed
+ - id: launch
+   content: Add metabolism-preloading launch configs for sketchpad and sketchpad-play in .vscode/launch.json
+   status: completed
+ - id: verify
+   content: Run dev (plain + metabolism), build both apps, grep for metabolism, run full test suite; close ticket
+   status: completed
 isProject: false
 ---
 
@@ -37,6 +37,7 @@ isProject: false
 ## Problem
 
 The metabolism kit is baked into sketchpad production code and builds:
+
 - [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) hardcodes the metabolism fixture URL, kit id `f042c2a4-...`, asset root, auto-seed, and two "Open metabolism fixture / Nakagin filtered fixture" commands+buttons (lines ~10656-10685, ~11529-11580, ~14181-14182, ~15039, ~15123-15131, ~15254-15255, ~15664).
 - [compose/client/lib/sketchpad/play/vite.config.ts](compose/client/lib/sketchpad/play/vite.config.ts) serves and emits `metabolism.zip` into the build (lines ~146-182). No code references `/metabolism.zip`, so it is dead weight.
 
@@ -58,10 +59,12 @@ Expose to client via `define` in both [compose/client/lib/sketchpad/js/vite.conf
 ```
 
 In `index.ts` `🔖KitHost` region, replace the metabolism-specific block (`SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH/URL`, `SKETCHPAD_DEV_FIXTURE_KIT_URL`, `SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL`, `ensureSketchpadDevFixtureKitLoaded`, `seedSketchpadDevFixtureKitIfEmpty`, hardcoded `metabolismKitId`) with generic helpers:
+
 - `sketchpadPreloadKitUrls(): string[]` parses `import.meta.env.COMPOSE_SKETCHPAD_PRELOAD_KITS`.
 - `preloadSketchpadKits(): Promise<void>` opens each URL via `openSketchpadKitFromImport(url, { kind: "fixture", navigate: false, assetBaseUrl: <dir of url> })`, skipping already-open kits.
 
 Call sites:
+
 - Init (~line 15664): replace `seedSketchpadDevFixtureKitIfEmpty()` with `void preloadSketchpadKits()`, gated only by `sketchpadPreloadKitUrls().length > 0` (drop the DEV/E2E gate; production build injects `""`).
 - Navigation handler (~line 15034-15040): remove the DEV `ensureSketchpadDevFixtureKitLoaded(path)` lazy-load block (eager init preload covers it).
 
@@ -75,6 +78,7 @@ Call sites:
 ## 3. Remove fixture command buttons/commands
 
 In `index.ts` production code remove:
+
 - the two `sketchpadPanelCommandButton("Open metabolism fixture"/"Open Nakagin filtered fixture", ...)` (~14181-14182),
 - the `importFixtureKit` / `importNakaginFilteredKit` command cases (~15123-15131),
 - the two `sketchpadShellCommand(...)` registrations (~15254-15255).

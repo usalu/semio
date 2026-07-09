@@ -2,54 +2,54 @@
 name: Puzzle3D WGPU Feature Parity
 overview: "Fix the empty puzzle3d viewport (a real culling/projection bug) and then rebuild, in the new WGPU renderer, the full legacy PlayCanvas visualization/interaction set that the current React world-3d-host.tsx no longer has: vortices, attractions, target volumes, reference image planes, brush placement preview, and object relocate with indirect/proximity connect."
 todos:
-  - id: phase0-frustum-fix
-    content: Fix frustum_planes matrix indexing bug in ui/wgpu/rs/scene3d.rs with a real regression test
-    status: completed
-  - id: phase0-ndc-fix
-    content: Fix Mat4::perspective to WGPU NDC z in [0,1] convention
-    status: completed
-  - id: phase0-layer-batch-fix
-    content: Harden build_layer_batches to not drop scene-only layers
-    status: completed
-  - id: phase0-glb-id-fix
-    content: Fix GLB mesh id mismatch in apply_glb_bytes
-    status: completed
-  - id: phase0-verify
-    content: Rebuild WASM and verify puzzle3d/puzzle5d/lowpoly e2e show real geometry
-    status: completed
-  - id: phase1-schema
-    content: Add references field + vortex radius to Puzzle3dFixture; extend World3dScene with vortices/attractions/targetVolumes/references JSON
-    status: completed
-  - id: phase1-plugin-wiring
-    content: Build and wire world_vortices_json/world_attractions_json/world_target_volumes_json/world_references_json in puzzle3d plugin
-    status: completed
-  - id: phase2-line-pipeline
-    content: Add WORLD3D_LINES_SHADER + pipeline for attraction lines and target-volume wireframes
-    status: completed
-  - id: phase2-vortex-markers
-    content: Add vortex marker mesh/instances reusing world pipeline
-    status: completed
-  - id: phase2-brush-preview-pipeline
-    content: Add translucent world pipeline variant for brush placement ghost preview
-    status: completed
-  - id: phase2-reference-planes
-    content: Add textured 3D quad pipeline + image texture loading for reference planes
-    status: completed
-  - id: phase3-render-wiring
-    content: Parse and render vortices/attractions/target-volumes/references in world3d.rs render_world_3d
-    status: completed
-  - id: phase3-vortex-picking
-    content: Add vortex hit-testing for brush hover/click
-    status: completed
-  - id: phase3-brush-flow
-    content: Wire brush candidate preview + placement command flow end-to-end
-    status: completed
-  - id: phase3-relocate-connect
-    content: Implement MVP object translate-drag with proximity/indirect connect
-    status: completed
-  - id: final-verify
-    content: Full e2e + manual browser verification of all restored features against concrete-forest example
-    status: completed
+ - id: phase0-frustum-fix
+   content: Fix frustum_planes matrix indexing bug in ui/wgpu/rs/scene3d.rs with a real regression test
+   status: completed
+ - id: phase0-ndc-fix
+   content: Fix Mat4::perspective to WGPU NDC z in [0,1] convention
+   status: completed
+ - id: phase0-layer-batch-fix
+   content: Harden build_layer_batches to not drop scene-only layers
+   status: completed
+ - id: phase0-glb-id-fix
+   content: Fix GLB mesh id mismatch in apply_glb_bytes
+   status: completed
+ - id: phase0-verify
+   content: Rebuild WASM and verify puzzle3d/puzzle5d/lowpoly e2e show real geometry
+   status: completed
+ - id: phase1-schema
+   content: Add references field + vortex radius to Puzzle3dFixture; extend World3dScene with vortices/attractions/targetVolumes/references JSON
+   status: completed
+ - id: phase1-plugin-wiring
+   content: Build and wire world_vortices_json/world_attractions_json/world_target_volumes_json/world_references_json in puzzle3d plugin
+   status: completed
+ - id: phase2-line-pipeline
+   content: Add WORLD3D_LINES_SHADER + pipeline for attraction lines and target-volume wireframes
+   status: completed
+ - id: phase2-vortex-markers
+   content: Add vortex marker mesh/instances reusing world pipeline
+   status: completed
+ - id: phase2-brush-preview-pipeline
+   content: Add translucent world pipeline variant for brush placement ghost preview
+   status: completed
+ - id: phase2-reference-planes
+   content: Add textured 3D quad pipeline + image texture loading for reference planes
+   status: completed
+ - id: phase3-render-wiring
+   content: Parse and render vortices/attractions/target-volumes/references in world3d.rs render_world_3d
+   status: completed
+ - id: phase3-vortex-picking
+   content: Add vortex hit-testing for brush hover/click
+   status: completed
+ - id: phase3-brush-flow
+   content: Wire brush candidate preview + placement command flow end-to-end
+   status: completed
+ - id: phase3-relocate-connect
+   content: Implement MVP object translate-drag with proximity/indirect connect
+   status: completed
+ - id: final-verify
+   content: Full e2e + manual browser verification of all restored features against concrete-forest example
+   status: completed
 isProject: false
 ---
 
@@ -64,6 +64,7 @@ isProject: false
 Root cause, verified independently: `frustum_planes()` in [ui/wgpu/rs/scene3d.rs](ui/wgpu/rs/scene3d.rs) (around line 406) extracts frustum planes with transposed row/column indices against the column-major `Mat4` (`cols[col][row]`, confirmed by `transform_point` at line 119-123). For row `r`, the correct plane component at index `c` is `m[c][r]`, not `m[r][c]` as currently written. This produces mathematically wrong plane equations, which the per-instance frustum cull in [framework/renderer/wgpu/rs/world3d.rs](framework/renderer/wgpu/rs/world3d.rs) line 254-288 then uses to discard the only object in the scene, leaving `culled_draws` empty — an empty scene pass, hence the black viewport (matches the screenshot in `.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/screenshot-puzzle3d.png`). The existing test `frustum_contains_origin_box` (scene3d.rs test module) passes only because it uses a symmetric huge box under a symmetric default camera, which happens to survive the transposed formula — it does not catch this class of bug.
 
 Fixes, all in `ui/wgpu/rs`:
+
 1. **`frustum_planes`** (`scene3d.rs`) — rewrite the six plane-row extractions using `m[c][r]` (component `c` from column `c`, row `r`), matching `transform_point`'s established convention. Add a regression test with a small offset box and a non-trivial (translated/rotated-via-orbit) camera — both a case that must stay visible and a case that must be culled — since the existing symmetric test cannot detect this bug class.
 2. **`Mat4::perspective`** (`scene3d.rs` line 80-90) — currently emits OpenGL-style NDC z ∈ [-1, 1]; WGPU (like D3D/Metal) expects z ∈ [0, 1] for its hardware clip/depth test. Adjust the two affected matrix entries (`cols[2][2]` and `cols[3][2]`) to the D3D/WGPU convention. Add a unit test asserting `transform_point` maps a point at `near` to z≈0 and at `far` to z≈1.
 3. **`build_layer_batches`** (`ui/wgpu/rs/draw.rs` line 772-775) — currently skips a layer if it has no UI/vector content, silently dropping any `ScenePass3d` whose `layer_index` points at that layer. Include layers that are referenced by any `draw.scene_passes[..].layer_index` even when `ui_instances`/`vector_vertices` are empty, so 3D content never depends on an incidental background quad being pushed first.
@@ -103,7 +104,7 @@ All in `framework/renderer/wgpu/rs/world3d.rs`:
 1. **`World3dState`** — add fields for parsed vortices/attractions/target-volumes/references (mirroring the existing `scene_*_json` cache-and-diff pattern at line 76-79/122-136) so unchanged data is skipped, matching existing perf discipline.
 2. **`render_world_3d`** — after building `culled_draws` (line 254-289), also build: attraction line segments (vortex→vortex), target-volume wireframe edges, vortex marker instances, and (if references phase is included) reference plane quads — push them into the extended `ScenePass3d`.
 3. **Vortex hit-testing** — extend `pick_instance_at` (line 522-542) or add a sibling `pick_vortex_at` using `ray_aabb_slab`/sphere-ray test against each vortex world position + radius, for brush-target hover and click.
-4. **Brush tool integration** — when `state` (or a new `active_tool` field threaded from the plugin's `setActiveTool`) is `"brush"`: on hover over a vortex, call into `Puzzle3dPrecomputeSession::brush_candidates` (already exposed, `puzzle/3d/rs/lib.rs` line 1390/1549) via a WASM-safe path from the plugin (the plugin already owns the `Puzzle3dPrecomputeSession`; renderer needs the *result* — likely the plugin computes preview JSON in `handle_command`/`render` and passes it as `brush_preview_json`, avoiding giving the generic renderer knowledge of puzzle3d's engine). On click, existing `addBrushObject` command path (`puzzle/3d/plugin/rs/lib.rs` line 689-703) already applies the placement — just needs the renderer to emit that command with the right `BrushPlacePayload` (target vortex, candidate kind) instead of it being unreachable today.
+4. **Brush tool integration** — when `state` (or a new `active_tool` field threaded from the plugin's `setActiveTool`) is `"brush"`: on hover over a vortex, call into `Puzzle3dPrecomputeSession::brush_candidates` (already exposed, `puzzle/3d/rs/lib.rs` line 1390/1549) via a WASM-safe path from the plugin (the plugin already owns the `Puzzle3dPrecomputeSession`; renderer needs the _result_ — likely the plugin computes preview JSON in `handle_command`/`render` and passes it as `brush_preview_json`, avoiding giving the generic renderer knowledge of puzzle3d's engine). On click, existing `addBrushObject` command path (`puzzle/3d/plugin/rs/lib.rs` line 689-703) already applies the placement — just needs the renderer to emit that command with the right `BrushPlacePayload` (target vortex, candidate kind) instead of it being unreachable today.
 5. **Object relocate + connect gestures** — implement MVP single-axis-free translate drag (screen-space delta projected onto the ground plane through the dragged object's current Z, no full 3-axis gizmo initially — flag full gumball as a stretch/follow-up): on drag end, if the new position brings a vortex within `proximityRadius` of a compatible vortex (reuse engine's `vortices_attraction_compatible_for_drag`/host-accepts logic, again invoked plugin-side), auto-create the attraction (proximity connect) or require an explicit indirect-connect drop target (indirect connect) — both call a new plugin command (e.g. `worldRelocate`/`worldConnect`) mirroring the old `onRelocate`/`onIndirectConnect`/`onProximityConnect` callbacks.
 6. **Fill visualization** — no new rendering needed: `setFillCount` (`puzzle/3d/plugin/rs/lib.rs` line 704-719) already returns an updated fixture whose new objects/attractions flow through the normal instance/attraction pipeline once Phases 1-2 land.
 

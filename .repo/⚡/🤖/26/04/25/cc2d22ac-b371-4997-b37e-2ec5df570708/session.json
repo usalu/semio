@@ -3009,10 +3009,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "staged",
-              "unstaged"
-            ]
+            "sourceControlState": ["staged", "unstaged"]
           },
           "tool_use_id": "call_x1jB0cw6Ngk29oJFSGuAeE3Z__vscode-1777128804804",
           "cwd": "c:\\git\\compose"
@@ -3039,10 +3036,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "staged",
-              "unstaged"
-            ]
+            "sourceControlState": ["staged", "unstaged"]
           },
           "tool_response": "",
           "tool_use_id": "call_x1jB0cw6Ngk29oJFSGuAeE3Z__vscode-1777128804804",
@@ -3070,10 +3064,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "staged",
-              "unstaged"
-            ]
+            "sourceControlState": ["staged", "unstaged"]
           },
           "tool_response": "",
           "tool_use_id": "call_x1jB0cw6Ngk29oJFSGuAeE3Z__vscode-1777128804804",
@@ -6127,10 +6118,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\cc2d22ac-b371-4997-b37e-2ec5df570708.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\js\\index.ts",
-              "c:\\git\\compose\\compose\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\js\\index.ts", "c:\\git\\compose\\compose\\react\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_rUvWAySgcn5eIXZGYOb49ZOW__vscode-1777128804841",
@@ -6217,10 +6205,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\cc2d22ac-b371-4997-b37e-2ec5df570708.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\js\\index.ts",
-              "c:\\git\\compose\\compose\\react\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\js\\index.ts", "c:\\git\\compose\\compose\\react\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_rUvWAySgcn5eIXZGYOb49ZOW__vscode-1777128804841",
@@ -6845,12 +6830,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\cc2d22ac-b371-4997-b37e-2ec5df570708.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\js\\index.ts",
-              "c:\\git\\compose\\compose\\react\\index.tsx",
-              "c:\\git\\compose\\compose\\js",
-              "c:\\git\\compose\\compose\\react"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\js\\index.ts", "c:\\git\\compose\\compose\\react\\index.tsx", "c:\\git\\compose\\compose\\js", "c:\\git\\compose\\compose\\react"]
           },
           "tool_use_id": "call_c81w3rrBhnggwIiBnDHmqIJl__vscode-1777128804847",
           "cwd": "c:\\git\\compose"
@@ -6876,12 +6856,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\cc2d22ac-b371-4997-b37e-2ec5df570708.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\js\\index.ts",
-              "c:\\git\\compose\\compose\\react\\index.tsx",
-              "c:\\git\\compose\\compose\\js",
-              "c:\\git\\compose\\compose\\react"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\js\\index.ts", "c:\\git\\compose\\compose\\react\\index.tsx", "c:\\git\\compose\\compose\\js", "c:\\git\\compose\\compose\\react"]
           },
           "tool_use_id": "call_c81w3rrBhnggwIiBnDHmqIJl__vscode-1777128804847",
           "cwd": "c:\\git\\compose"
@@ -6937,12 +6912,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\cc2d22ac-b371-4997-b37e-2ec5df570708.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\js\\index.ts",
-              "c:\\git\\compose\\compose\\react\\index.tsx",
-              "c:\\git\\compose\\compose\\js",
-              "c:\\git\\compose\\compose\\react"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\js\\index.ts", "c:\\git\\compose\\compose\\react\\index.tsx", "c:\\git\\compose\\compose\\js", "c:\\git\\compose\\compose\\react"]
           },
           "tool_response": "",
           "tool_use_id": "call_c81w3rrBhnggwIiBnDHmqIJl__vscode-1777128804847",
@@ -7813,10 +7783,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_use_id": "call_2Pu2MxCSQCMn2WCFkyQgBrTy__vscode-1777128804854",
           "cwd": "c:\\git\\compose"
@@ -7988,10 +7955,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_response": "",
           "tool_use_id": "call_2Pu2MxCSQCMn2WCFkyQgBrTy__vscode-1777128804854",
@@ -8019,10 +7983,7 @@
           "tool_name": "get_changed_files",
           "tool_input": {
             "repositoryPath": "c:\\git\\compose",
-            "sourceControlState": [
-              "unstaged",
-              "staged"
-            ]
+            "sourceControlState": ["unstaged", "staged"]
           },
           "tool_response": "",
           "tool_use_id": "call_2Pu2MxCSQCMn2WCFkyQgBrTy__vscode-1777128804854",
@@ -8051,12 +8012,7 @@
           "tool_input": {
             "path": "26/04/25/ALIGN-JS-NAMING-WITH-RUST-DTO-AND-BACKBONE-TERMS",
             "summary": "Aligned compose/js and compose/react public naming with compose/rs by renaming JS DTO/backbone/control-plane types to Rust-aligned terms, removing React compatibility aliases, updating bundle docs, and adding a rename-specific embedded test. Verified exact old identifiers are gone from compose/js and compose/react, compose/react build passes, and the targeted rename smoke test passes. Full compose/js embedded suite still has unrelated pre-existing failures outside the rename scope.",
-            "files": [
-              "compose/js/index.ts",
-              "compose/js/AGENTS.md",
-              "compose/react/index.tsx",
-              "compose/react/AGENTS.md"
-            ],
+            "files": ["compose/js/index.ts", "compose/js/AGENTS.md", "compose/react/index.tsx", "compose/react/AGENTS.md"],
             "no_management": true
           },
           "tool_use_id": "call_QKtHouGAdHYGOhxBa4WmFQCO__vscode-1777128804855",
@@ -8085,12 +8041,7 @@
           "tool_input": {
             "path": "26/04/25/ALIGN-JS-NAMING-WITH-RUST-DTO-AND-BACKBONE-TERMS",
             "summary": "Aligned compose/js and compose/react public naming with compose/rs by renaming JS DTO/backbone/control-plane types to Rust-aligned terms, removing React compatibility aliases, updating bundle docs, and adding a rename-specific embedded test. Verified exact old identifiers are gone from compose/js and compose/react, compose/react build passes, and the targeted rename smoke test passes. Full compose/js embedded suite still has unrelated pre-existing failures outside the rename scope.",
-            "files": [
-              "compose/js/index.ts",
-              "compose/js/AGENTS.md",
-              "compose/react/index.tsx",
-              "compose/react/AGENTS.md"
-            ],
+            "files": ["compose/js/index.ts", "compose/js/AGENTS.md", "compose/react/index.tsx", "compose/react/AGENTS.md"],
             "no_management": true
           },
           "tool_use_id": "call_QKtHouGAdHYGOhxBa4WmFQCO__vscode-1777128804855",
@@ -8119,12 +8070,7 @@
           "tool_input": {
             "path": "26/04/25/ALIGN-JS-NAMING-WITH-RUST-DTO-AND-BACKBONE-TERMS",
             "summary": "Aligned compose/js and compose/react public naming with compose/rs by renaming JS DTO/backbone/control-plane types to Rust-aligned terms, removing React compatibility aliases, updating bundle docs, and adding a rename-specific embedded test. Verified exact old identifiers are gone from compose/js and compose/react, compose/react build passes, and the targeted rename smoke test passes. Full compose/js embedded suite still has unrelated pre-existing failures outside the rename scope.",
-            "files": [
-              "compose/js/index.ts",
-              "compose/js/AGENTS.md",
-              "compose/react/index.tsx",
-              "compose/react/AGENTS.md"
-            ],
+            "files": ["compose/js/index.ts", "compose/js/AGENTS.md", "compose/react/index.tsx", "compose/react/AGENTS.md"],
             "no_management": true
           },
           "tool_response": "[🎫alignjsnamingwithrustdtoandbackboneterms](repo://ticket/🎫alignjsnamingwithrustdtoandbackboneterms) - `closed` - `closed 1 hour from now`\n",
@@ -8154,12 +8100,7 @@
           "tool_input": {
             "path": "26/04/25/ALIGN-JS-NAMING-WITH-RUST-DTO-AND-BACKBONE-TERMS",
             "summary": "Aligned compose/js and compose/react public naming with compose/rs by renaming JS DTO/backbone/control-plane types to Rust-aligned terms, removing React compatibility aliases, updating bundle docs, and adding a rename-specific embedded test. Verified exact old identifiers are gone from compose/js and compose/react, compose/react build passes, and the targeted rename smoke test passes. Full compose/js embedded suite still has unrelated pre-existing failures outside the rename scope.",
-            "files": [
-              "compose/js/index.ts",
-              "compose/js/AGENTS.md",
-              "compose/react/index.tsx",
-              "compose/react/AGENTS.md"
-            ],
+            "files": ["compose/js/index.ts", "compose/js/AGENTS.md", "compose/react/index.tsx", "compose/react/AGENTS.md"],
             "no_management": true
           },
           "tool_response": "[🎫alignjsnamingwithrustdtoandbackboneterms](repo://ticket/🎫alignjsnamingwithrustdtoandbackboneterms) - `closed` - `closed 1 hour from now`\n",

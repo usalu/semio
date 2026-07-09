@@ -2,27 +2,27 @@
 name: Wire GIS map tiles into wgpu Trunk dev server
 overview: Fix the wgpu-native GIS map renderer so it actually paints raster/vector cartography instead of only pins+labels, by giving the Trunk dev server (and native-bin) a path to the same tile cache/proxy that the React/Vite renderer already uses.
 todos:
-  - id: tile-proxy-server
-    content: Add startGisMapTileProxyServer() in ui/styling/vite-elements-assets.ts reusing existing osm/vt Connect middlewares
-    status: completed
-  - id: port-constant
-    content: Add fixed GIS_MAP_WGPU_TILE_PROXY_PORT constant in repo/lib/js/index.ts
-    status: completed
-  - id: trunk-proxy-config
-    content: Add [[proxy]] entries for /osm/ and /vt/ in framework/renderer/wgpu/Trunk.toml
-    status: completed
-  - id: wire-serve-script
-    content: Start tile-proxy server from TrunkServeScript (gis2d only) in framework/renderer/wgpu/script.ts
-    status: completed
-  - id: wire-native-script
-    content: Start tile-proxy server + pass SEMIO_GIS_MAP_TILE_BASE_URL env into NativeRunScript for gis2d
-    status: completed
-  - id: plugin-absolute-template
-    content: "gis/2d/plugin/rs/lib.rs render_canvas: override tile_url_template/vector_tile_url_template from SEMIO_GIS_MAP_TILE_BASE_URL when set, plus test"
-    status: completed
-  - id: verify-close
-    content: Reopen Map Wgpu Renderer Parity ticket, rebuild/verify tiles render in wgpu dev + run cargo tests, close ticket with summary
-    status: completed
+ - id: tile-proxy-server
+   content: Add startGisMapTileProxyServer() in ui/styling/vite-elements-assets.ts reusing existing osm/vt Connect middlewares
+   status: completed
+ - id: port-constant
+   content: Add fixed GIS_MAP_WGPU_TILE_PROXY_PORT constant in repo/lib/js/index.ts
+   status: completed
+ - id: trunk-proxy-config
+   content: Add [[proxy]] entries for /osm/ and /vt/ in framework/renderer/wgpu/Trunk.toml
+   status: completed
+ - id: wire-serve-script
+   content: Start tile-proxy server from TrunkServeScript (gis2d only) in framework/renderer/wgpu/script.ts
+   status: completed
+ - id: wire-native-script
+   content: Start tile-proxy server + pass SEMIO_GIS_MAP_TILE_BASE_URL env into NativeRunScript for gis2d
+   status: completed
+ - id: plugin-absolute-template
+   content: "gis/2d/plugin/rs/lib.rs render_canvas: override tile_url_template/vector_tile_url_template from SEMIO_GIS_MAP_TILE_BASE_URL when set, plus test"
+   status: completed
+ - id: verify-close
+   content: Reopen Map Wgpu Renderer Parity ticket, rebuild/verify tiles render in wgpu dev + run cargo tests, close ticket with summary
+   status: completed
 isProject: false
 ---
 
@@ -47,6 +47,7 @@ The new wgpu-native renderer's dev server is **Trunk** (`framework/renderer/wgpu
 Native-bin is also broken today, for a different reason: `fetch_map_tile_bytes_blocking`'s `ureq` fetch only accepts absolute `http(s)://` URLs and rejects the relative `/osm/...` template outright.
 
 Verified while investigating:
+
 - `tile.openstreetmap.org` and `tiles.openfreemap.org` both send `access-control-allow-origin: *`, so cross-origin `fetch()` works once a reachable URL exists.
 - OpenFreeMap has no stable non-versioned vector tile URL — the real path template must be resolved from its TileJSON (`https://tiles.openfreemap.org/planet`), which `ui/styling/vite-elements-assets.ts` already does. Re-implementing that resolution in Rust would duplicate logic that already exists and is tested; reusing the existing Node-based cache/proxy is the smaller, single-source-of-truth fix.
 - Trunk 0.21.14 (installed) supports `[[proxy]] backend = "..."` sections in `Trunk.toml` that forward matching paths to a backend HTTP server.

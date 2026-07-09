@@ -2,30 +2,30 @@
 name: Declarative Node Defaults Options
 overview: Make every flow and procedural neuron kind declare typed inputs with sensible defaults (single source of truth in the manifest), inject those defaults at evaluation so unconnected inputs just work, add a native boolean type, and add new option inputs (e.g. list.get index default 0 + wrap boolean default false).
 todos:
-  - id: engine-schema
-    content: "neural/engine: add Atom::Boolean + as_bool; add InputSpec {id,type,default?,label?} with builder ctors; change NeuronKindInfo.inputs to Vec<InputSpec>; inject declared defaults in collect_neuron_input for unconnected ports; update variadic/'*' handling and engine tests."
-    status: completed
-  - id: wasm-glue
-    content: "flow/module/wasm: verify manifest serializes InputSpec; update test.echo fixtures to typed inputs."
-    status: completed
-  - id: flow-modules
-    content: "math/list/text/logic/dictionary modules: convert all registrations to typed InputSpec with sensible defaults; simplify evaluate to use injected defaults; add new options incl. list.get index default 0 + wrap boolean default false; extend each module's tests."
-    status: completed
-  - id: core-ports
-    content: "flow/core: read spec.id in port layout; extend computation node to carry per-input type+default+current param value+connected flag; adjust node sizing."
-    status: completed
-  - id: dag-ports
-    content: "mathematical dag: extend IoPortSpec/Computation with value_type, default, value, connected; adjust computation node height for inline fields."
-    status: completed
-  - id: flow-react-ui
-    content: "flow/react: change inputs to InputSpecV1[]; add InputSpecV1 interface; render inline default editors (number/text/boolean) for unconnected inputs dispatching setNeuronParams; fix manifest fixtures/tests."
-    status: completed
-  - id: brep-kinds
-    content: "procedural/react: widen brepKind to typed inputs+defaults; convert all ~106 BREP_FLOW_KINDS moving handler literals into manifest defaults; refactor BREP_EVAL_HANDLERS to read injected values and add options; extend tests."
-    status: completed
-  - id: validate
-    content: Run cargo tests (engine, modules, core), vitest (flow/react, procedural/react), and runtime-verify in the play harness with [DEBUG] logs that list.get defaults to 0 and wrap=true wraps.
-    status: completed
+ - id: engine-schema
+   content: "neural/engine: add Atom::Boolean + as_bool; add InputSpec {id,type,default?,label?} with builder ctors; change NeuronKindInfo.inputs to Vec<InputSpec>; inject declared defaults in collect_neuron_input for unconnected ports; update variadic/'*' handling and engine tests."
+   status: completed
+ - id: wasm-glue
+   content: "flow/module/wasm: verify manifest serializes InputSpec; update test.echo fixtures to typed inputs."
+   status: completed
+ - id: flow-modules
+   content: "math/list/text/logic/dictionary modules: convert all registrations to typed InputSpec with sensible defaults; simplify evaluate to use injected defaults; add new options incl. list.get index default 0 + wrap boolean default false; extend each module's tests."
+   status: completed
+ - id: core-ports
+   content: "flow/core: read spec.id in port layout; extend computation node to carry per-input type+default+current param value+connected flag; adjust node sizing."
+   status: completed
+ - id: dag-ports
+   content: "mathematical dag: extend IoPortSpec/Computation with value_type, default, value, connected; adjust computation node height for inline fields."
+   status: completed
+ - id: flow-react-ui
+   content: "flow/react: change inputs to InputSpecV1[]; add InputSpecV1 interface; render inline default editors (number/text/boolean) for unconnected inputs dispatching setNeuronParams; fix manifest fixtures/tests."
+   status: completed
+ - id: brep-kinds
+   content: "procedural/react: widen brepKind to typed inputs+defaults; convert all ~106 BREP_FLOW_KINDS moving handler literals into manifest defaults; refactor BREP_EVAL_HANDLERS to read injected values and add options; extend tests."
+   status: completed
+ - id: validate
+   content: Run cargo tests (engine, modules, core), vitest (flow/react, procedural/react), and runtime-verify in the play harness with [DEBUG] logs that list.get defaults to 0 and wrap=true wraps.
+   status: completed
 isProject: false
 ---
 

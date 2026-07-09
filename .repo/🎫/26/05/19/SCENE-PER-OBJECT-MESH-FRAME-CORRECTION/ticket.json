@@ -5,7 +5,5 @@
   "description": "Per-object GLB Z-up correction inside SceneObject and vortex handle Clone; revert planeBasisToThreeJs to canonical x,z,-y.",
   "summary": "Reverted planeBasisToThreeJs to canonical authoring (x,y,z)→(x,z,-y). Added per-object inner group rotation −90° X on SceneObject body Clone and SceneVortexHandleGltf Clone (Z-up kit meshes), leaving fixture-driven group pose unchanged. Regenerated nakagin scene fixture; Vitest + Playwright green.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪d401a38b60f843199a46ddffb76ccb2f"
-  ]
+  "sessions": ["⚪d401a38b60f843199a46ddffb76ccb2f"]
 }

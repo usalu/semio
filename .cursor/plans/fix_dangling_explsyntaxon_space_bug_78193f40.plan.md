@@ -2,18 +2,18 @@
 name: Fix Dangling ExplSyntaxOn Space Bug
 overview: Fix a package-level bug that silently deletes every space character in the Zwischenbericht body text (headings and prose) from `\begin{document}` onward, causing the "overshooting"/"wrong spacing" text rendering the user reported.
 todos:
-  - id: fix-explsyntax
-    content: Add missing \ExplSyntaxOff at end of \AfterEndPreamble block in print/tex/semio-window.sty
-    status: completed
-  - id: rebuild
-    content: Rebuild zwischenbericht.tex and zwischenbericht-dark.tex with bun ./script.ts build
-    status: completed
-  - id: verify
-    content: Render and visually verify pages 5-7 (and spot-check earlier pages) in both light/dark PDFs show correct spacing/wrapping
-    status: completed
-  - id: ticket
-    content: Reopen relevant ticket, log the fix, and close with summary
-    status: completed
+ - id: fix-explsyntax
+   content: Add missing \ExplSyntaxOff at end of \AfterEndPreamble block in print/tex/semio-window.sty
+   status: completed
+ - id: rebuild
+   content: Rebuild zwischenbericht.tex and zwischenbericht-dark.tex with bun ./script.ts build
+   status: completed
+ - id: verify
+   content: Render and visually verify pages 5-7 (and spot-check earlier pages) in both light/dark PDFs show correct spacing/wrapping
+   status: completed
+ - id: ticket
+   content: Reopen relevant ticket, log the fix, and close with summary
+   status: completed
 isProject: false
 ---
 

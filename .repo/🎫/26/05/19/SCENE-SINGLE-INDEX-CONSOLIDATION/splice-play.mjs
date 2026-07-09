@@ -23,8 +23,8 @@ if (!import.meta.vitest && typeof document !== "undefined") {
 const marker = /\r?\n\/\/#endregion 🎬Scene\r?\n\r?\nif \(import\.meta\.vitest\)/;
 if (!marker.test(main)) throw new Error("marker missing");
 main = main.replace(
-	marker,
-	`
+  marker,
+  `
 
 //#endregion 🎬Scene
 

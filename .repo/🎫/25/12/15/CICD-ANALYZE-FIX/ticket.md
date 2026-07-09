@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 # Plan
@@ -23,6 +24,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Integrate analyze/fix CI pipeline

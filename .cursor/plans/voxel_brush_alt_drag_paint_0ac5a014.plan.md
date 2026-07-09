@@ -2,12 +2,12 @@
 name: Voxel Brush Alt Drag Paint
 overview: Fix the puzzle3d voxel brush so that holding Alt and moving the mouse paints a continuous trail of voxels, instead of only painting a single voxel on Alt keydown or Alt+left-click.
 todos:
-  - id: fix-onmove
-    content: Update onMove in VoxelBrushBridge (puzzle/3d/react/index.tsx) to commitAt + setAltPainting(true) when event.altKey is held during a pointer move.
-    status: completed
-  - id: verify
-    content: Run the puzzle3d play app and confirm via the [DEBUG] commit log that holding Alt and dragging paints a one-voxel-per-cell trail.
-    status: completed
+ - id: fix-onmove
+   content: Update onMove in VoxelBrushBridge (puzzle/3d/react/index.tsx) to commitAt + setAltPainting(true) when event.altKey is held during a pointer move.
+   status: completed
+ - id: verify
+   content: Run the puzzle3d play app and confirm via the [DEBUG] commit log that holding Alt and dragging paints a one-voxel-per-cell trail.
+   status: completed
 isProject: false
 ---
 

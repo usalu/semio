@@ -2,30 +2,30 @@
 name: Live Subscription Field Tree
 overview: "Replace the opaque `Subscription { event: Json! }` with a typed live-query tree that mirrors `Query`, so any selection (down to a single scalar like `u` of a coordinate) becomes a fine-grained subscription. Add the missing id-based accessors on `Kit`, `Design`, `Type`, `Folder`, `Piece`, `Group`, `Connection`, `Connector`, `Port`, `Session`, etc. so the example path resolves end-to-end."
 todos:
-  - id: subscription_tree
-    content: "Replace `type Subscription { event: Json! }` with a live-query mirror of Query (`session`, `wip`, `authoritative`, `conflicts`, `node(id)`, `entity(hash)`) and a region comment documenting live-query semantics."
-    status: completed
-  - id: kit_id_accessors
-    content: "On `Kit`, replace bare `design`/`type` singulars with `design(id: ID!)`/`type(id: ID!)`; add id-based accessors for family/file/folder/author/concept/tag/quality/prop/attribute/stat."
-    status: completed
-  - id: design_id_accessors
-    content: On `Design`, replace bare `piece`/`connection` with id-based variants; add `layer(id)`, `group(id)`, `author(id)`, `quality(id)`, `prop(id)`, `attribute(id)`, `stat(id)`.
-    status: completed
-  - id: type_id_accessors
-    content: On `Type`, replace bare `connector`/`representation` with id-based; add `port(id)`, `concept(id)`, `tag(id)`, `quality(id)`, `prop(id)`, `attribute(id)`, `stat(id)`, `author(id)`. Keep `bestRepresentation`.
-    status: completed
-  - id: child_id_accessors
-    content: Add id-based accessors on Folder (file/subFolder/family/type/design), Piece (prop/attribute/childPiece/childConnection), Connection/Connector/Port/File/Tag/Concept/Quality/Prop/Stat (attribute, quality, tag where applicable), Group (piece).
-    status: completed
-  - id: session_navigation
-    content: "Add `Session.alternative(id: ID!): Alternative` and `Session.theKit: Version` so subscription paths mirror SessionCommandInput. Promote Checkpoint.change/edit id args from optional to required."
-    status: completed
-  - id: validate_schema
-    content: "Re-run `compose/graphql/scripts/export-schema.ts`; ripgrep checks for remaining bare singular accessors and remaining `event: Json!`; validate a sample subscription doc with the user's full example path against the new SDL."
-    status: completed
-  - id: ticket_lifecycle
-    content: Open ticket via repo MCP under goal r2602/runningsketchpad with this plan id, update ticket.md with problem/change/verification, close ticket on completion.
-    status: completed
+ - id: subscription_tree
+   content: "Replace `type Subscription { event: Json! }` with a live-query mirror of Query (`session`, `wip`, `authoritative`, `conflicts`, `node(id)`, `entity(hash)`) and a region comment documenting live-query semantics."
+   status: completed
+ - id: kit_id_accessors
+   content: "On `Kit`, replace bare `design`/`type` singulars with `design(id: ID!)`/`type(id: ID!)`; add id-based accessors for family/file/folder/author/concept/tag/quality/prop/attribute/stat."
+   status: completed
+ - id: design_id_accessors
+   content: On `Design`, replace bare `piece`/`connection` with id-based variants; add `layer(id)`, `group(id)`, `author(id)`, `quality(id)`, `prop(id)`, `attribute(id)`, `stat(id)`.
+   status: completed
+ - id: type_id_accessors
+   content: On `Type`, replace bare `connector`/`representation` with id-based; add `port(id)`, `concept(id)`, `tag(id)`, `quality(id)`, `prop(id)`, `attribute(id)`, `stat(id)`, `author(id)`. Keep `bestRepresentation`.
+   status: completed
+ - id: child_id_accessors
+   content: Add id-based accessors on Folder (file/subFolder/family/type/design), Piece (prop/attribute/childPiece/childConnection), Connection/Connector/Port/File/Tag/Concept/Quality/Prop/Stat (attribute, quality, tag where applicable), Group (piece).
+   status: completed
+ - id: session_navigation
+   content: "Add `Session.alternative(id: ID!): Alternative` and `Session.theKit: Version` so subscription paths mirror SessionCommandInput. Promote Checkpoint.change/edit id args from optional to required."
+   status: completed
+ - id: validate_schema
+   content: "Re-run `compose/graphql/scripts/export-schema.ts`; ripgrep checks for remaining bare singular accessors and remaining `event: Json!`; validate a sample subscription doc with the user's full example path against the new SDL."
+   status: completed
+ - id: ticket_lifecycle
+   content: Open ticket via repo MCP under goal r2602/runningsketchpad with this plan id, update ticket.md with problem/change/verification, close ticket on completion.
+   status: completed
 isProject: false
 ---
 
@@ -33,7 +33,7 @@ isProject: false
 
 ## Goal
 
-Make `subscription { wip { alternative(id: $alt) { kit { design(id: $des) { piece(id: $piece) { flatPosition { center { u } } } } } } } }` valid SDL and emit-on-change. Generally: any leaf reachable via `Query` must be subscribable. Subscription becomes a live-query mirror of Query — same root fields, same return types — so the *selection set* alone determines what is tracked. Drop `event: Json!`.
+Make `subscription { wip { alternative(id: $alt) { kit { design(id: $des) { piece(id: $piece) { flatPosition { center { u } } } } } } } }` valid SDL and emit-on-change. Generally: any leaf reachable via `Query` must be subscribable. Subscription becomes a live-query mirror of Query — same root fields, same return types — so the _selection set_ alone determines what is tracked. Drop `event: Json!`.
 
 ## Design
 
@@ -51,12 +51,12 @@ Make `subscription { wip { alternative(id: $alt) { kit { design(id: $des) { piec
 # the selection changes (live-query). Subscribe to a single leaf scalar to
 # receive only that scalar's updates.
 type Subscription {
-  session: Session!
-  wip: Graph!
-  authoritative: Graph
-  conflicts: ConflictConnection!
-  node(id: ID!): Node
-  entity(hash: ID!): Entity
+ session: Session!
+ wip: Graph!
+ authoritative: Graph
+ conflicts: ConflictConnection!
+ node(id: ID!): Node
+ entity(hash: ID!): Entity
 }
 ```
 
@@ -98,7 +98,7 @@ flowchart LR
 
 ### What this plan does NOT change
 
-- Operation/Modification/Diff trees and `Event` enum stay as they are. Subscriptions track *state*, not events.
+- Operation/Modification/Diff trees and `Event` enum stay as they are. Subscriptions track _state_, not events.
 - Mutation tree (`session → theKit | alternative(id) → unsavedChange(id) → kit → …`) is unchanged.
 - Rust resolvers (`compose/rs/lib.rs::gql::Subscription`) are not rewritten by this ticket — schema-only. A follow-up ticket wires `EventBus` updates into the new live-query tree (the existing bus already broadcasts the typed events needed to invalidate selections). The schema change is the contract; the resolver is the implementation.
 

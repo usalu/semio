@@ -24,9 +24,7 @@
         },
         "kinds": {
           "kind": "const",
-          "value": [
-            "face"
-          ]
+          "value": ["face"]
         }
       },
       "assignTo": "result"

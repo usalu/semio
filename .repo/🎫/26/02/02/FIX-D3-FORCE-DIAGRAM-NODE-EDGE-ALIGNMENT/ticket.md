@@ -25,15 +25,17 @@
 ## Log
 
 ### Analysis Phase
+
 - **Problem Identified**: Node avatars rendered at default `size-small` (~16px at compact spacing) while edge calculations used NODE_RADIUS (50px)
 - **Root Cause**: `size-full` class on Avatar was not forcing dimensions to match the 100px x 100px node container
-- **Expected Dimensions**: 
+- **Expected Dimensions**:
   - ICON_WIDTH: 50px
   - NODE_SCALE: 2
   - NODE_WIDTH/HEIGHT: 100px
   - NODE_RADIUS: 50px (used for edge intersection calculations)
 
 ### Implementation Phase
+
 - Ensured node container uses explicit `${NODE_WIDTH}px` string dimensions instead of numeric values
 - Added style prop passthrough to TableAvatar and Avatar components
 - Applied explicit dimensions (100px x 100px) via inline style to override any CSS specificity issues

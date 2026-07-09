@@ -211,16 +211,16 @@ Both also have Kit Diagram Geometry code (shape strategies, snap points, anchor 
 
 ## App Selection Support Matrix
 
-| Feature | Home | Kit | Type | Design | Quality |
-|---|---|---|---|---|---|
-| Selection type | `kits` | 9 dims | `connectors, models` | `pieces, connections, connectors` | `formulaNodes` |
-| `resolveSelectionCompositionKind` | ❌ manual | ✅ table | ✅ port click | ✅ lasso + table | ❌ |
-| `applySelectionComposition` | ❌ manual | ✅ table | ✅ port click | ✅ lasso + table | ❌ |
-| Keyboard modifier handler | ❌ | ✅ | ✅ | ✅ (partial) | ❌ |
-| Node/diagram click selection | N/A | ✅ | ✅ | ❌ EMPTY | N/A |
-| Lasso selection | N/A | N/A | N/A | ✅ | N/A |
-| Range selection (shift) | ✅ manual | ✅ | N/A | N/A | ❌ |
-| Tool-based composition | N/A | ✅ | ✅ | ✅ | ❌ |
+| Feature                           | Home      | Kit      | Type                 | Design                            | Quality        |
+| --------------------------------- | --------- | -------- | -------------------- | --------------------------------- | -------------- |
+| Selection type                    | `kits`    | 9 dims   | `connectors, models` | `pieces, connections, connectors` | `formulaNodes` |
+| `resolveSelectionCompositionKind` | ❌ manual | ✅ table | ✅ port click        | ✅ lasso + table                  | ❌             |
+| `applySelectionComposition`       | ❌ manual | ✅ table | ✅ port click        | ✅ lasso + table                  | ❌             |
+| Keyboard modifier handler         | ❌        | ✅       | ✅                   | ✅ (partial)                      | ❌             |
+| Node/diagram click selection      | N/A       | ✅       | ✅                   | ❌ EMPTY                          | N/A            |
+| Lasso selection                   | N/A       | N/A      | N/A                  | ✅                                | N/A            |
+| Range selection (shift)           | ✅ manual | ✅       | N/A                  | N/A                               | ❌             |
+| Tool-based composition            | N/A       | ✅       | ✅                   | ✅                                | ❌             |
 
 ## Issues Found
 

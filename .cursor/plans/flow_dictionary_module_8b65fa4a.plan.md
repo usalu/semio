@@ -2,30 +2,30 @@
 name: Flow Dictionary Module
 overview: Add a new `flow_module_dictionary` crate mirroring the existing math/text/logic modules, providing neuron kinds for dictionary manipulation (pack, unpack, get, set, remove, has, keys, size, merge), and wire it into the flow core registry so it appears automatically in the catalogue.
 todos:
-  - id: ticket
-    content: Read repo://goals and open/reopen a repo MCP ticket for the dictionary module
-    status: completed
-  - id: crate
-    content: Create flow/module/dictionary/Cargo.toml (crate flow_module_dictionary, dep neural_engine)
-    status: completed
-  - id: lib
-    content: Create flow/module/dictionary/lib.rs with neuron kinds (pack, unpack, get, set, remove, has, keys, size, merge), helpers, register(), and tests region
-    status: completed
-  - id: workspace
-    content: Add flow/module/dictionary to workspace members in Cargo.toml
-    status: completed
-  - id: core-cargo
-    content: Add flow_module_dictionary dependency to flow/core/Cargo.toml
-    status: completed
-  - id: core-wire
-    content: Wire pub use + register call in flow/core/lib.rs and extend catalogue_has_module_sections test to assert dictionary
-    status: completed
-  - id: test
-    content: Run cargo tests for flow_module_dictionary and flow_core; confirm pass
-    status: completed
-  - id: close
-    content: Close the ticket with summary and file list
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open/reopen a repo MCP ticket for the dictionary module
+   status: completed
+ - id: crate
+   content: Create flow/module/dictionary/Cargo.toml (crate flow_module_dictionary, dep neural_engine)
+   status: completed
+ - id: lib
+   content: Create flow/module/dictionary/lib.rs with neuron kinds (pack, unpack, get, set, remove, has, keys, size, merge), helpers, register(), and tests region
+   status: completed
+ - id: workspace
+   content: Add flow/module/dictionary to workspace members in Cargo.toml
+   status: completed
+ - id: core-cargo
+   content: Add flow_module_dictionary dependency to flow/core/Cargo.toml
+   status: completed
+ - id: core-wire
+   content: Wire pub use + register call in flow/core/lib.rs and extend catalogue_has_module_sections test to assert dictionary
+   status: completed
+ - id: test
+   content: Run cargo tests for flow_module_dictionary and flow_core; confirm pass
+   status: completed
+ - id: close
+   content: Close the ticket with summary and file list
+   status: completed
 isProject: false
 ---
 
@@ -89,6 +89,3 @@ flowchart LR
   d --> cat["build_catalogue()"]
   cat --> ui["catalogue JSON -> UI palette"]
 ```
-
-
-

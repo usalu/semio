@@ -310,9 +310,7 @@
             "success": true,
             "result": [
               {
-                "filePaths": [
-                  "/workspaces/semio/compose/sketchpad/index.tsx"
-                ],
+                "filePaths": ["/workspaces/semio/compose/sketchpad/index.tsx"],
                 "totalFiles": 1,
                 "truncated": false
               }
@@ -2666,9 +2664,7 @@
                   {
                     "file": "/workspaces/semio/compose/sketchpad/index.tsx",
                     "count": 1,
-                    "matches": [
-                      "47287:          \u003cTree className=\"min-w-0 overflow-hidden p-double\" sections={[{ id: \"compose.sketchpad.app.docs.settings.content\", label: null, content: \u003cSettings /\u003e }]} /\u003e"
-                    ]
+                    "matches": ["47287:          \u003cTree className=\"min-w-0 overflow-hidden p-double\" sections={[{ id: \"compose.sketchpad.app.docs.settings.content\", label: null, content: \u003cSettings /\u003e }]} /\u003e"]
                   }
                 ]
               }
@@ -2962,10 +2958,7 @@
                   {
                     "file": "/workspaces/semio/compose/sketchpad/index.tsx",
                     "count": 2,
-                    "matches": [
-                      "55788:      await verifyDesignNavbarSettingsIsAvailable(page);",
-                      "56742:    async function verifyDesignNavbarSettingsIsAvailable(page: PlaywrightPage): Promise\u003cvoid\u003e {"
-                    ]
+                    "matches": ["55788:      await verifyDesignNavbarSettingsIsAvailable(page);", "56742:    async function verifyDesignNavbarSettingsIsAvailable(page: PlaywrightPage): Promise\u003cvoid\u003e {"]
                   }
                 ]
               }
@@ -3715,9 +3708,7 @@
           },
           "tool_response": {
             "success": true,
-            "result": [
-              ""
-            ]
+            "result": [""]
           }
         }
       },
@@ -3831,9 +3822,7 @@
           },
           "tool_response": {
             "success": true,
-            "result": [
-              ""
-            ]
+            "result": [""]
           }
         }
       },
@@ -3885,9 +3874,7 @@
           },
           "tool_response": {
             "success": true,
-            "result": [
-              ""
-            ]
+            "result": [""]
           }
         }
       },
@@ -4969,9 +4956,7 @@
           },
           "tool_response": {
             "success": true,
-            "result": [
-              ""
-            ]
+            "result": [""]
           }
         }
       },
@@ -5023,9 +5008,7 @@
           },
           "tool_response": {
             "success": true,
-            "result": [
-              ""
-            ]
+            "result": [""]
           }
         }
       },
@@ -5077,9 +5060,7 @@
           },
           "tool_response": {
             "success": true,
-            "result": [
-              ""
-            ]
+            "result": [""]
           }
         }
       },
@@ -5131,9 +5112,7 @@
           },
           "tool_response": {
             "success": true,
-            "result": [
-              ""
-            ]
+            "result": [""]
           }
         }
       },
@@ -5622,9 +5601,7 @@
           },
           "tool_response": {
             "success": true,
-            "result": [
-              ""
-            ]
+            "result": [""]
           }
         }
       },
@@ -6761,9 +6738,7 @@
             "success": true,
             "result": [
               {
-                "filePaths": [
-                  "/workspaces/semio/compose/sketchpad/index.tsx"
-                ],
+                "filePaths": ["/workspaces/semio/compose/sketchpad/index.tsx"],
                 "totalFiles": 1,
                 "truncated": false
               }
@@ -7069,65 +7044,47 @@
                   {
                     "file": "/workspaces/semio/elements/ui/package.json",
                     "count": 1,
-                    "matches": [
-                      "45:    \"@radix-ui/react-slider\": \"^1.3.6\","
-                    ]
+                    "matches": ["45:    \"@radix-ui/react-slider\": \"^1.3.6\","]
                   },
                   {
                     "file": "/workspaces/semio/elements/ui/tailwind.config.ts",
                     "count": 1,
-                    "matches": [
-                      "13:// GNU Affero General Public License for more details."
-                    ]
+                    "matches": ["13:// GNU Affero General Public License for more details."]
                   },
                   {
                     "file": "/workspaces/semio/elements/ui/postcss.config.ts",
                     "count": 1,
-                    "matches": [
-                      "13:// GNU Affero General Public License for more details."
-                    ]
+                    "matches": ["13:// GNU Affero General Public License for more details."]
                   },
                   {
                     "file": "/workspaces/semio/elements/ui/eslint.config.ts",
                     "count": 1,
-                    "matches": [
-                      "13:// GNU Affero General Public License for more details."
-                    ]
+                    "matches": ["13:// GNU Affero General Public License for more details."]
                   },
                   {
                     "file": "/workspaces/semio/elements/ui/.storybook/withLevel.tsx",
                     "count": 1,
-                    "matches": [
-                      "14:// GNU Lesser General Public License for more details."
-                    ]
+                    "matches": ["14:// GNU Lesser General Public License for more details."]
                   },
                   {
                     "file": "/workspaces/semio/elements/ui/.storybook/preview.ts",
                     "count": 1,
-                    "matches": [
-                      "14:// GNU Lesser General Public License for more details."
-                    ]
+                    "matches": ["14:// GNU Lesser General Public License for more details."]
                   },
                   {
                     "file": "/workspaces/semio/elements/ui/.storybook/main.ts",
                     "count": 1,
-                    "matches": [
-                      "14:// GNU Lesser General Public License for more details."
-                    ]
+                    "matches": ["14:// GNU Lesser General Public License for more details."]
                   },
                   {
                     "file": "/workspaces/semio/elements/ui/.storybook/vitest.setup.ts",
                     "count": 1,
-                    "matches": [
-                      "14:// GNU Lesser General Public License for more details."
-                    ]
+                    "matches": ["14:// GNU Lesser General Public License for more details."]
                   },
                   {
                     "file": "/workspaces/semio/elements/ui/.storybook/withTheme.tsx",
                     "count": 1,
-                    "matches": [
-                      "14:// GNU Lesser General Public License for more details."
-                    ]
+                    "matches": ["14:// GNU Lesser General Public License for more details."]
                   }
                 ]
               }
@@ -8953,9 +8910,7 @@
                   {
                     "file": "/workspaces/semio/elements/ui/index.tsx",
                     "count": 1,
-                    "matches": [
-                      "14332:export const TreeContent: React.FC\u003c{ children: React.ReactNode }\u003e = ({ children }) =\u003e {"
-                    ]
+                    "matches": ["14332:export const TreeContent: React.FC\u003c{ children: React.ReactNode }\u003e = ({ children }) =\u003e {"]
                   }
                 ]
               }
@@ -9071,9 +9026,7 @@
           },
           "tool_response": {
             "success": false,
-            "error": [
-              "An error occurred processing the tool: \nMcp error: -32603: ticket goal is required"
-            ]
+            "error": ["An error occurred processing the tool: \nMcp error: -32603: ticket goal is required"]
           }
         }
       },
@@ -9434,9 +9387,7 @@
           },
           "tool_response": {
             "success": true,
-            "result": [
-              ""
-            ]
+            "result": [""]
           }
         }
       },
@@ -9736,9 +9687,7 @@
           "tool_name": "@repo/ticket_close",
           "tool_input": {
             "summary": "Fixed vertical misalignment of stepper, slider, and input controls in the detail panel property rows. The property-control div in the Label component (elements/ui/index.tsx) was a plain block container with only min-w-0, causing controls to top-align within the grid cell instead of centering. Added flex items-center to property-control so all controls (stepper, slider, input, select, combobox) vertically center with their labels. All 8 elements/ui tests pass.",
-            "files": [
-              "/workspaces/semio/elements/ui/index.tsx"
-            ]
+            "files": ["/workspaces/semio/elements/ui/index.tsx"]
           }
         }
       },
@@ -9760,15 +9709,11 @@
           "tool_name": "@repo/ticket_close",
           "tool_input": {
             "summary": "Fixed vertical misalignment of stepper, slider, and input controls in the detail panel property rows. The property-control div in the Label component (elements/ui/index.tsx) was a plain block container with only min-w-0, causing controls to top-align within the grid cell instead of centering. Added flex items-center to property-control so all controls (stepper, slider, input, select, combobox) vertically center with their labels. All 8 elements/ui tests pass.",
-            "files": [
-              "/workspaces/semio/elements/ui/index.tsx"
-            ]
+            "files": ["/workspaces/semio/elements/ui/index.tsx"]
           },
           "tool_response": {
             "success": false,
-            "error": [
-              "An error occurred processing the tool: \nMcp error: -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/00/ticket.json"
-            ]
+            "error": ["An error occurred processing the tool: \nMcp error: -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/00/ticket.json"]
           }
         }
       },
@@ -10282,9 +10227,7 @@
           "tool_name": "@repo/ticket_close",
           "tool_input": {
             "path": ".repo/🎫/26/03/30/FIX-DETAIL-PANEL-VERTICAL-ALIGNMENT-OF-STEPPER-SLIDER-AND-INPUT-CONTROLS",
-            "files": [
-              "/workspaces/semio/elements/ui/index.tsx"
-            ],
+            "files": ["/workspaces/semio/elements/ui/index.tsx"],
             "summary": "Fixed vertical misalignment of stepper, slider, and input controls in the detail panel property rows. The property-control div in the Label component (elements/ui/index.tsx) was a plain block container with only min-w-0, causing controls to top-align within the grid cell instead of centering. Added flex items-center to property-control so all controls (stepper, slider, input, select, combobox) vertically center with their labels. All 8 elements/ui tests pass."
           }
         }
@@ -10307,16 +10250,12 @@
           "tool_name": "@repo/ticket_close",
           "tool_input": {
             "path": ".repo/🎫/26/03/30/FIX-DETAIL-PANEL-VERTICAL-ALIGNMENT-OF-STEPPER-SLIDER-AND-INPUT-CONTROLS",
-            "files": [
-              "/workspaces/semio/elements/ui/index.tsx"
-            ],
+            "files": ["/workspaces/semio/elements/ui/index.tsx"],
             "summary": "Fixed vertical misalignment of stepper, slider, and input controls in the detail panel property rows. The property-control div in the Label component (elements/ui/index.tsx) was a plain block container with only min-w-0, causing controls to top-align within the grid cell instead of centering. Added flex items-center to property-control so all controls (stepper, slider, input, select, combobox) vertically center with their labels. All 8 elements/ui tests pass."
           },
           "tool_response": {
             "success": false,
-            "error": [
-              "An error occurred processing the tool: \nMcp error: -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/26/03/30/FIX-DETAIL-PANEL-VERTICAL-ALIGNMENT-OF-STEPPER-SLIDER-AND-INPUT-CONTROLS/ticket.json"
-            ]
+            "error": ["An error occurred processing the tool: \nMcp error: -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/26/03/30/FIX-DETAIL-PANEL-VERTICAL-ALIGNMENT-OF-STEPPER-SLIDER-AND-INPUT-CONTROLS/ticket.json"]
           }
         }
       },
@@ -10426,9 +10365,7 @@
           },
           "tool_response": {
             "success": true,
-            "result": [
-              ""
-            ]
+            "result": [""]
           }
         }
       },
@@ -10834,9 +10771,7 @@
           },
           "tool_response": {
             "success": false,
-            "error": [
-              "An error occurred processing the tool: \nMcp error: -32603: ticket goal is required"
-            ]
+            "error": ["An error occurred processing the tool: \nMcp error: -32603: ticket goal is required"]
           }
         }
       },
@@ -11972,9 +11907,7 @@
           "tool_name": "@repo/ticket_close",
           "tool_input": {
             "summary": "Fixed gitkraken VS Code launch config: (1) Changed binary from /usr/bin/gitkraken (wrapper that sets ELECTRON_RUN_AS_NODE=1, causing VS Code node-terminal to attach a Node debugger and immediately exit) to /usr/share/gitkraken/gitkraken (actual Electron binary). (2) Added --no-sandbox flag required for devcontainer environments. (3) Fixed broken replacement character (U+FFFD) before the rocket emoji in the config name.",
-            "files": [
-              ".vscode/launch.json"
-            ]
+            "files": [".vscode/launch.json"]
           }
         }
       },
@@ -11996,15 +11929,11 @@
           "tool_name": "@repo/ticket_close",
           "tool_input": {
             "summary": "Fixed gitkraken VS Code launch config: (1) Changed binary from /usr/bin/gitkraken (wrapper that sets ELECTRON_RUN_AS_NODE=1, causing VS Code node-terminal to attach a Node debugger and immediately exit) to /usr/share/gitkraken/gitkraken (actual Electron binary). (2) Added --no-sandbox flag required for devcontainer environments. (3) Fixed broken replacement character (U+FFFD) before the rocket emoji in the config name.",
-            "files": [
-              ".vscode/launch.json"
-            ]
+            "files": [".vscode/launch.json"]
           },
           "tool_response": {
             "success": false,
-            "error": [
-              "An error occurred processing the tool: \nMcp error: -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/00/ticket.json"
-            ]
+            "error": ["An error occurred processing the tool: \nMcp error: -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/00/ticket.json"]
           }
         }
       },
@@ -12081,9 +12010,7 @@
           "tool_name": "@repo/ticket_close",
           "tool_input": {
             "path": "🎯aioptimizedrepo🎫fixgitkrakenvscodelaunchconfiguration",
-            "files": [
-              ".vscode/launch.json"
-            ],
+            "files": [".vscode/launch.json"],
             "summary": "Fixed gitkraken VS Code launch config: (1) Changed binary from /usr/bin/gitkraken (wrapper that sets ELECTRON_RUN_AS_NODE=1, causing VS Code node-terminal to attach a Node debugger and immediately exit) to /usr/share/gitkraken/gitkraken (actual Electron binary). (2) Added --no-sandbox flag required for devcontainer environments. (3) Fixed broken replacement character (U+FFFD) before the rocket emoji in the config name."
           }
         }
@@ -12106,16 +12033,12 @@
           "tool_name": "@repo/ticket_close",
           "tool_input": {
             "path": "🎯aioptimizedrepo🎫fixgitkrakenvscodelaunchconfiguration",
-            "files": [
-              ".vscode/launch.json"
-            ],
+            "files": [".vscode/launch.json"],
             "summary": "Fixed gitkraken VS Code launch config: (1) Changed binary from /usr/bin/gitkraken (wrapper that sets ELECTRON_RUN_AS_NODE=1, causing VS Code node-terminal to attach a Node debugger and immediately exit) to /usr/share/gitkraken/gitkraken (actual Electron binary). (2) Added --no-sandbox flag required for devcontainer environments. (3) Fixed broken replacement character (U+FFFD) before the rocket emoji in the config name."
           },
           "tool_response": {
             "success": false,
-            "error": [
-              "An error occurred processing the tool: \nMcp error: -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/00/ticket.json"
-            ]
+            "error": ["An error occurred processing the tool: \nMcp error: -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/00/ticket.json"]
           }
         }
       },
@@ -12469,9 +12392,7 @@
           "cwd": "/workspaces/semio",
           "tool_name": "@repo/ticket_close",
           "tool_input": {
-            "files": [
-              ".vscode/launch.json"
-            ],
+            "files": [".vscode/launch.json"],
             "path": ".repo/🎫/26/03/30/FIX-GITKRAKEN-VS-CODE-LAUNCH-CONFIGURATION",
             "summary": "Fixed gitkraken VS Code launch config: (1) Changed binary from /usr/bin/gitkraken (wrapper that sets ELECTRON_RUN_AS_NODE=1, causing VS Code node-terminal to attach a Node debugger and immediately exit) to /usr/share/gitkraken/gitkraken (actual Electron binary). (2) Added --no-sandbox flag required for devcontainer environments. (3) Fixed broken replacement character (U+FFFD) before the rocket emoji in the config name."
           }
@@ -12494,17 +12415,13 @@
           "cwd": "/workspaces/semio",
           "tool_name": "@repo/ticket_close",
           "tool_input": {
-            "files": [
-              ".vscode/launch.json"
-            ],
+            "files": [".vscode/launch.json"],
             "path": ".repo/🎫/26/03/30/FIX-GITKRAKEN-VS-CODE-LAUNCH-CONFIGURATION",
             "summary": "Fixed gitkraken VS Code launch config: (1) Changed binary from /usr/bin/gitkraken (wrapper that sets ELECTRON_RUN_AS_NODE=1, causing VS Code node-terminal to attach a Node debugger and immediately exit) to /usr/share/gitkraken/gitkraken (actual Electron binary). (2) Added --no-sandbox flag required for devcontainer environments. (3) Fixed broken replacement character (U+FFFD) before the rocket emoji in the config name."
           },
           "tool_response": {
             "success": false,
-            "error": [
-              "An error occurred processing the tool: \nMcp error: -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/26/03/30/FIX-GITKRAKEN-VS-CODE-LAUNCH-CONFIGURATION/ticket.json"
-            ]
+            "error": ["An error occurred processing the tool: \nMcp error: -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/26/03/30/FIX-GITKRAKEN-VS-CODE-LAUNCH-CONFIGURATION/ticket.json"]
           }
         }
       },
@@ -12614,9 +12531,7 @@
           },
           "tool_response": {
             "success": true,
-            "result": [
-              ""
-            ]
+            "result": [""]
           }
         }
       },

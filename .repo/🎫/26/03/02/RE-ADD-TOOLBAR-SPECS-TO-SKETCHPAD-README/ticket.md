@@ -7,6 +7,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Re-added comprehensive toolbar specs to sketchpad README
+
 ## Changes
 
 ## Log

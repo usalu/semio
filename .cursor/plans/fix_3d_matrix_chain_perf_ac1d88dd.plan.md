@@ -2,18 +2,18 @@
 name: Fix 3D Matrix Chain Perf
 overview: Make updateWorldMatrixChain O(chain-depth) instead of O(whole-scene) so the per-frame CableBatch vortex-world loop stops re-traversing the entire Nakagin scene graph, eliminating the multi-second interaction freezes in the puzzle 5d paired view.
 todos:
-  - id: rewrite-chain
-    content: Rewrite updateWorldMatrixChain in puzzle/3d/react/index.tsx to compose world matrices only along the ancestor chain (no child recursion).
-    status: completed
-  - id: verify-profile
-    content: Re-profile a pointer drag/pan on the 5d 3d surface and confirm updateMatrixWorld no longer dominates and interactions are sub-second.
-    status: completed
-  - id: verify-correctness
-    content: Confirm cable/attraction endpoints, relocate, and vortex hover/select still render at correct world positions.
-    status: completed
-  - id: build-check
-    content: Build puzzle/3d/play and puzzle/5d/play to confirm no type regressions.
-    status: completed
+ - id: rewrite-chain
+   content: Rewrite updateWorldMatrixChain in puzzle/3d/react/index.tsx to compose world matrices only along the ancestor chain (no child recursion).
+   status: completed
+ - id: verify-profile
+   content: Re-profile a pointer drag/pan on the 5d 3d surface and confirm updateMatrixWorld no longer dominates and interactions are sub-second.
+   status: completed
+ - id: verify-correctness
+   content: Confirm cable/attraction endpoints, relocate, and vortex hover/select still render at correct world positions.
+   status: completed
+ - id: build-check
+   content: Build puzzle/3d/play and puzzle/5d/play to confirm no type regressions.
+   status: completed
 isProject: false
 ---
 
@@ -27,14 +27,14 @@ Rewrite `updateWorldMatrixChain` in [puzzle/3d/react/index.tsx](puzzle/3d/react/
 
 ```ts
 export function updateWorldMatrixChain(leaf: Object3D): void {
-  const chain: Object3D[] = [];
-  for (let cur: Object3D | null = leaf; cur; cur = cur.parent) chain.push(cur);
-  for (let i = chain.length - 1; i >= 0; i--) {
-    const node = chain[i]!;
-    node.updateMatrix();
-    if (node.parent) node.matrixWorld.multiplyMatrices(node.parent.matrixWorld, node.matrix);
-    else node.matrixWorld.copy(node.matrix);
-  }
+ const chain: Object3D[] = [];
+ for (let cur: Object3D | null = leaf; cur; cur = cur.parent) chain.push(cur);
+ for (let i = chain.length - 1; i >= 0; i--) {
+  const node = chain[i]!;
+  node.updateMatrix();
+  if (node.parent) node.matrixWorld.multiplyMatrices(node.parent.matrixWorld, node.matrix);
+  else node.matrixWorld.copy(node.matrix);
+ }
 }
 ```
 

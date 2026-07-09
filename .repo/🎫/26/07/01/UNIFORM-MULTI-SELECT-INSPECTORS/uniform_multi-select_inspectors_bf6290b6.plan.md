@@ -2,36 +2,36 @@
 name: Uniform multi-select inspectors
 overview: "Bring every technology's playground Inspection tab up to one consistent standard: batch-editable fields for the entire current selection (not just the first/only selected item), with field groups ordered most-specific (kind-specific) first and most-general (shared/base) last — mirroring the pattern `draw` and `puzzle/2d` already use."
 todos:
-  - id: phase0-shared-helper
-    content: Add shared uiInspectorAllEqual + Mixed-value convention to framework/product/platform/core/index.ts
-    status: completed
-  - id: phase1-draw-raster-forms
-    content: Upgrade draw, raster, forms inspectors to batch multi-select editing
-    status: in_progress
-  - id: phase2-flow-dag-map-presentation
-    content: Upgrade flow, dag, gis/map, presentation inspectors from reject-multi to batch editing + grouped ordering
-    status: pending
-  - id: phase3-shooting
-    content: Generalize shooting's selection model to sets of shot/asset ids with batch patch commands
-    status: pending
-  - id: phase4-trinity
-    content: Make trinity's shared jack/rewrite inspector editable and batch-selectable
-    status: pending
-  - id: phase5-puzzle-gaps
-    content: Close multi-edit gaps in puzzle/3d (vortices/attractions) and puzzle/5d (grips)
-    status: pending
-  - id: phase6-cad
-    content: Extend CAD batch inspector fields beyond typology/hidden/locked
-    status: pending
-  - id: phase7-sketchpad
-    content: Add sketchpad connection batch editing and type parent-chain inheritance ordering
-    status: pending
-  - id: phase8-semios
-    content: Add a net-new Inspection tab to the Semios shell for media-graph nodes and app instances
-    status: pending
-  - id: phase9-verify
-    content: Verify procedural/mindmap delegated fixes and confirm writer stays document-level
-    status: pending
+ - id: phase0-shared-helper
+   content: Add shared uiInspectorAllEqual + Mixed-value convention to framework/product/platform/core/index.ts
+   status: completed
+ - id: phase1-draw-raster-forms
+   content: Upgrade draw, raster, forms inspectors to batch multi-select editing
+   status: in_progress
+ - id: phase2-flow-dag-map-presentation
+   content: Upgrade flow, dag, gis/map, presentation inspectors from reject-multi to batch editing + grouped ordering
+   status: pending
+ - id: phase3-shooting
+   content: Generalize shooting's selection model to sets of shot/asset ids with batch patch commands
+   status: pending
+ - id: phase4-trinity
+   content: Make trinity's shared jack/rewrite inspector editable and batch-selectable
+   status: pending
+ - id: phase5-puzzle-gaps
+   content: Close multi-edit gaps in puzzle/3d (vortices/attractions) and puzzle/5d (grips)
+   status: pending
+ - id: phase6-cad
+   content: Extend CAD batch inspector fields beyond typology/hidden/locked
+   status: pending
+ - id: phase7-sketchpad
+   content: Add sketchpad connection batch editing and type parent-chain inheritance ordering
+   status: pending
+ - id: phase8-semios
+   content: Add a net-new Inspection tab to the Semios shell for media-graph nodes and app instances
+   status: pending
+ - id: phase9-verify
+   content: Verify procedural/mindmap delegated fixes and confirm writer stays document-level
+   status: pending
 isProject: false
 ---
 
@@ -42,6 +42,7 @@ isProject: false
 Every playground already exposes an "Inspection" tab (`FRAMEWORK_PANEL_TAB_INSPECTION_LABEL` in [framework/core/index.ts](framework/core/index.ts)) built via `build*InspectorTree`/`build*DetailsBody` functions, wired through `PureSidePanelTabDefinition` in [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx). The shared helper `uiInspectorGroupsToTree` in [framework/product/platform/core/index.ts](framework/product/platform/core/index.ts:513-538) already documents the target contract ("ordered most-specific first, most-general last"), but only `draw` and `raster` actually use it. No technology has a shared "batch edit + Mixed value" helper — each place that supports it (`puzzle/2d`, `puzzle/3d`, `puzzle/5d`, `cad`, `sketchpad`) reimplements its own `allEqual`.
 
 Maturity tiers found:
+
 - **Full multi-edit reference**: `puzzle/2d` (`patchInspectorNodes`/`Handles`/`Edges` in [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx:4391)).
 - **Partial multi-edit**: `puzzle/3d` (objects batch, vortices/attractions read-only on multi), `puzzle/5d` (parts batch, grips single-only), `cad` (only typology/hidden/locked batch), `sketchpad` (pieces batch, connections read-only, no type-inheritance display).
 - **Single-id-only ("first selected wins")**: `draw`, `raster`, `forms`.
@@ -55,6 +56,7 @@ Maturity tiers found:
 ## Phase 0 — Shared infrastructure (do first, everyone depends on it)
 
 In [framework/product/platform/core/index.ts](framework/product/platform/core/index.ts), next to `UiInspectorFieldGroup`/`uiInspectorGroupsToTree`:
+
 - Add a single exported `uiInspectorAllEqual<T>(values: readonly T[]): boolean` helper (dedupe the four copies found in `puzzle/2d`, `puzzle/3d`, `puzzle/5d`, `sketchpad`).
 - Add a small `uiInspectorMixedValue` convention doc (placeholder `"Mixed"` for text/select, `Number.NaN` + `uniform: false` for `numberStepper`/`vec3`) so every technology binds controls the same way instead of inventing its own.
 - Keep `uiInspectorGroupsToTree` as the canonical way to render specific→general ordering; every technology below must route through it (not raw `uiDeclarativeSectionsToTree`).
@@ -83,6 +85,7 @@ All four currently early-return a "N selected" message and use raw `uiDeclarativ
 ## Phase 4 — Trinity: make fields real and batch-editable
 
 [trinity/react/index.tsx](trinity/react/index.tsx:194) (`buildTrinityPlayInspectorTree`, shared by `jack` and `rewrite`) is 100% read-only `tree`/`description` items and requires exactly one selection. Rework to:
+
 - Accept `selectedNodeIds.length >= 1`.
 - Convert to `uiDeclarativeSectionsToTree`/`uiInspectorGroupsToTree` with real `field`+`input` nodes: `name` becomes editable and batchable; `kind` stays read-only (structural); surface any settable entries from `node.properties` as editable fields ordered kind-specific (from the node's own properties) before the general identity group (`id`/`kind`/`ports` read-only).
 - Add a batch `patchTrinityNodes({ nodeIds, field, value })` command to both `trinity/jack/play/index.ts` and `trinity/rewrite/play/index.ts` controllers (they already share `setSelection`; add the patch handler alongside it), committing through each controller's existing fixture-commit path.
@@ -100,12 +103,14 @@ All four currently early-return a "N selected" message and use raw `uiDeclarativ
 ## Phase 7 — Sketchpad: connections batch edit + type-inheritance ordering
 
 [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts:14478) (`buildSketchpadInspectionPanelBody`):
+
 - Connections currently show gap as read-only "Mixed" text with no `onChange` — add batch `patchRouteConnections({ connectionIds, field, value })` mirroring the existing `patchRoutePieces`.
 - Type section: per `compose/AGENTS.md`'s `parent^{type}` model, walk the parent-type chain and render the selected type's own fields first, then a general "Inherited" sub-group per ancestor (most specific type first, root/proto type last) — this is the one place in the repo where "sorted by inheritance from specific to general superclasses" is literal, not just a UI convention.
 
 ## Phase 8 — Semios shell: add its own Inspection tab
 
 [semios/play/index.ts](semios/play/index.ts) has no Inspection tab today (`SemiosPlayController` only tracks `activeInstanceId`, no selection state). Add:
+
 - Selection state for media-graph nodes and app instances (`selectedMediaNodeIds`, `selectedAppInstanceIds`).
 - A `buildSemiosPlayInspectorTree` following the same group pattern: Media Graph Node group (label/position, kind-specific per node's backing program) and/or App Instance group (label/position), general identity (`id`) last; batch `patchMediaNodes`/`patchAppInstances` commands.
 - Register it as a `PureSidePanelTabDefinition` in the playground renderer alongside the other technologies' Inspection tabs, using `FRAMEWORK_PANEL_TAB_INSPECTION_LABEL`.

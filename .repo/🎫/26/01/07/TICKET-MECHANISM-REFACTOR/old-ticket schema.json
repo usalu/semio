@@ -16,10 +16,7 @@
       },
       "author": "Ueli Saluz <ueli.saluz@iek.uni-hannover.de>",
       "commit": "864921b472c3d45c3c0d70e8940686a9678caad0",
-      "files": [
-        "./repo/cli/cli.go",
-        "./repo/cli/cli_test.go"
-      ],
+      "files": ["./repo/cli/cli.go", "./repo/cli/cli_test.go"],
       "sections": [
         {
           "file": "./repo/cli/cli.go",
@@ -34,19 +31,7 @@
               "column": 0
             }
           },
-          "definitions": [
-            "Ticket",
-            "GetPrompt",
-            "GetLLM",
-            "GetSummary",
-            "GetStatus",
-            "GetAuthor",
-            "GetCommit",
-            "GetCheckpoints",
-            "GetDateCreated",
-            "GetDateFinished",
-            "TicketCheckpoint"
-          ],
+          "definitions": ["Ticket", "GetPrompt", "GetLLM", "GetSummary", "GetStatus", "GetAuthor", "GetCommit", "GetCheckpoints", "GetDateCreated", "GetDateFinished", "TicketCheckpoint"],
           "metrics": {
             "added": 18,
             "removed": 0

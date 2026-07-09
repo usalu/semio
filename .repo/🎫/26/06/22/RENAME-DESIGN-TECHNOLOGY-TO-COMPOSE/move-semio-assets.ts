@@ -19,7 +19,7 @@ const REPLACEMENTS: [string, string][] = [
   ["semio_inkscape", "semio_inkscape"],
   ["semiofile_deserialize", "semiofile_deserialize"],
   ["semiofile_serialize", "semiofile_serialize"],
-  ['<title>semio</title>', "<title>semio</title>"],
+  ["<title>semio</title>", "<title>semio</title>"],
   ['<title id="title1">semio</title>', '<title id="title1">semio</title>'],
   ["usalu/semio", "usalu/semio"],
   ["The semio monorepo asset bundle.", "The semio monorepo asset bundle."],

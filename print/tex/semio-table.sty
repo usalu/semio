@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{semio-table}[2026/07/08 v1.0.0 semio data table styling]
+\ProvidesPackage{semio-table}[2026/07/09 v1.1.0 semio data table styling]
 
 \RequirePackage{array}
 \RequirePackage{colortbl}
@@ -22,6 +22,7 @@
   \semio_table_header_row:n {#1}
   \\
   \hline
+  \global\semio@table@row@startedfalse
 }
 \cs_new_protected:Npn \semio_table_dot_count_int:n #1 {
   \int_zero:N \l_tmpa_int
@@ -52,16 +53,18 @@
   \SemioTableRow{%
     #1 &
     \hspace{\dimen0}#2 &
-    \pageref{#3}%
+    0%
   }%
 }
 
 \newlength{\semio@table@header@height}
 \newlength{\semio@table@body@height}
+\newif\ifsemio@table@row@started
 
 \newcommand{\semio@table@setup}{%
   \setlength{\semio@table@header@height}{\dimexpr9\semio@spacing@unit\relax}%
   \setlength{\semio@table@body@height}{\dimexpr7\semio@spacing@unit\relax}%
+  \global\semio@table@row@startedfalse
   \arrayrulecolor{semio-chrome-border-normal}%
   \setlength{\arrayrulewidth}{\semio@stroke@hairline}%
   \setlength{\tabcolsep}{\semio@spacing@single}%
@@ -69,13 +72,27 @@
   \renewcommand{\arraystretch}{1}%
 }
 
-\newcommand{\semio@table@colspec@two}{@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.5\linewidth-\tabcolsep\relax}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.5\linewidth-\tabcolsep\relax}@{}}
+\newcommand{\semio@table@colspec@two}{@{}T{\dimexpr0.5\linewidth-\tabcolsep\relax}T{\dimexpr0.5\linewidth-\tabcolsep\relax}@{}}
 
-\newcommand{\semio@table@colspec@three}{@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.34\linewidth-\tabcolsep\relax}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.33\linewidth-\tabcolsep\relax}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.33\linewidth-2\tabcolsep\relax}@{}}
+\newcommand{\semio@table@colspec@three}{@{}T{\dimexpr0.34\linewidth-\tabcolsep\relax}T{\dimexpr0.33\linewidth-\tabcolsep\relax}T{\dimexpr0.33\linewidth-2\tabcolsep\relax}@{}}
 
-\newcommand{\semio@table@colspec@register}{@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.16\linewidth-\tabcolsep\relax}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.62\linewidth-\tabcolsep\relax}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
+\newcommand{\semio@table@colspec@register}{@{}T{\dimexpr0.16\linewidth-\tabcolsep\relax}T{\dimexpr0.62\linewidth-\tabcolsep\relax}U{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
 
-\newcommand{\semio@table@colspec@reference}{@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.12\linewidth-\tabcolsep\relax}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.66\linewidth-\tabcolsep\relax}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
+\newcommand{\semio@table@colspec@reference}{@{}T{\dimexpr0.12\linewidth-\tabcolsep\relax}T{\dimexpr0.66\linewidth-\tabcolsep\relax}U{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
+
+\newcolumntype{T}[1]{%
+  >{\raggedright\arraybackslash\hspace{0pt}%
+   \vspace{\semio@spacing@single}}%
+  p{#1}%
+  <{\vspace{\semio@spacing@single}}%
+}
+
+\newcolumntype{U}[1]{%
+  >{\raggedleft\arraybackslash\hspace{0pt}%
+   \vspace{\semio@spacing@single}}%
+  p{#1}%
+  <{\vspace{\semio@spacing@single}}%
+}
 
 \newcommand{\semio@table@header@cell}[1]{%
   \cellcolor{semio-chrome-window}%
@@ -84,10 +101,16 @@
   \vspace{\semio@spacing@single}%
 }
 
+\newcommand{\semio@table@row@sep}{%
+  \noalign{\hrule height\arrayrulewidth}%
+}
+
 \newcommand{\SemioTableRow}[1]{%
+  \ifsemio@table@row@started
+    \semio@table@row@sep
+  \fi
+  \global\semio@table@row@startedtrue
   #1\\
-  \noalign{\vskip\semio@block@sep@skip}%
-  \hline
 }
 
 \newcommand{\semio@table@render}[2]{%

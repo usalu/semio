@@ -8,9 +8,7 @@
         "entityId": "019ab664-3333-3333-3333-333333333333",
         "field": "id"
       },
-      "relatedIds": [
-        "019ab664-3333-3333-3333-333333333333"
-      ],
+      "relatedIds": ["019ab664-3333-3333-3333-333333333333"],
       "fixes": []
     },
     {
@@ -21,10 +19,7 @@
         "entityId": "019ab664-2222-2222-2222-222222222222",
         "field": "name"
       },
-      "relatedIds": [
-        "019ab664-1111-1111-1111-111111111111",
-        "019ab664-2222-2222-2222-222222222222"
-      ],
+      "relatedIds": ["019ab664-1111-1111-1111-111111111111", "019ab664-2222-2222-2222-222222222222"],
       "fixes": [
         {
           "title": "Rename \"Duplicate Type Name\"",
@@ -53,10 +48,7 @@
         "entityId": "019ab664-6666-6666-6666-666666666666",
         "field": "name"
       },
-      "relatedIds": [
-        "019ab664-3333-3333-3333-333333333333",
-        "019ab664-6666-6666-6666-666666666666"
-      ],
+      "relatedIds": ["019ab664-3333-3333-3333-333333333333", "019ab664-6666-6666-6666-666666666666"],
       "fixes": [
         {
           "title": "Rename \"Duplicate Design Name\"",
@@ -85,10 +77,7 @@
         "entityId": "019ab664-5555-5555-5555-555555555555",
         "field": "name"
       },
-      "relatedIds": [
-        "019ab664-4444-4444-4444-444444444444",
-        "019ab664-5555-5555-5555-555555555555"
-      ],
+      "relatedIds": ["019ab664-4444-4444-4444-444444444444", "019ab664-5555-5555-5555-555555555555"],
       "fixes": [
         {
           "title": "Rename piece \"Duplicate Piece Name\"",
@@ -128,10 +117,7 @@
         "entityId": "019ab664-8888-8888-8888-888888888888",
         "field": "name"
       },
-      "relatedIds": [
-        "019ab664-7777-7777-7777-777777777777",
-        "019ab664-8888-8888-8888-888888888888"
-      ],
+      "relatedIds": ["019ab664-7777-7777-7777-777777777777", "019ab664-8888-8888-8888-888888888888"],
       "fixes": [
         {
           "title": "Rename quality \"Duplicate Quality Name\"",
@@ -160,10 +146,7 @@
         "entityId": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000",
         "field": "name"
       },
-      "relatedIds": [
-        "019ab664-BBBB-BBBB-BBBB-BBBBBBBB0000",
-        "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000"
-      ],
+      "relatedIds": ["019ab664-BBBB-BBBB-BBBB-BBBBBBBB0000", "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000"],
       "fixes": [
         {
           "title": "Rename file \"duplicate-file.txt\"",
@@ -192,10 +175,7 @@
         "entityId": "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000",
         "field": "name"
       },
-      "relatedIds": [
-        "019ab664-DDDD-DDDD-DDDD-DDDDDDDD0000",
-        "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000"
-      ],
+      "relatedIds": ["019ab664-DDDD-DDDD-DDDD-DDDDDDDD0000", "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000"],
       "fixes": [
         {
           "title": "Rename folder \"duplicate-folder\"",
@@ -224,10 +204,7 @@
         "entityId": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB",
         "field": "name"
       },
-      "relatedIds": [
-        "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA",
-        "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB"
-      ],
+      "relatedIds": ["019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA", "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB"],
       "fixes": [
         {
           "title": "Rename connector \"Duplicate Connector Name\"",
@@ -267,10 +244,7 @@
         "entityId": "019ab664-1111-1111-1111-111111110002",
         "field": "name"
       },
-      "relatedIds": [
-        "019ab664-1111-1111-1111-111111110001",
-        "019ab664-1111-1111-1111-111111110002"
-      ],
+      "relatedIds": ["019ab664-1111-1111-1111-111111110001", "019ab664-1111-1111-1111-111111110002"],
       "fixes": [
         {
           "title": "Rename representation \"Duplicate Representation Name\"",

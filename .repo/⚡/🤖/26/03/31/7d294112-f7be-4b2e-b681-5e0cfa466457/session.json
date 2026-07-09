@@ -8055,9 +8055,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/7d294112-f7be-4b2e-b681-5e0cfa466457.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Moved chat and settings from right panel tabs to dedicated navbar toggle buttons. Added ChatIcon and SettingsIcon toggles next to left/right panel toggles in PanelToggles component. Made chat, settings, and rightSidePanel mutually exclusive via EXCLUSIVE_SIDE_PANEL_KEYS. Removed all addSidePanelTab('right', ...) calls for chat/settings from Kit, Design, Type, Quality, Home, and Docs apps. LayoutWrapper now renders chat/settings content as a single-tab right side panel when their respective navbar toggle is active. Updated test helpers to use navbar toggles instead of right panel tab clicks. Vite build passes cleanly."
           },
           "tool_use_id": "toolu_bdrk_01JQn8ypXSxfabdg5kchshrb__vscode-1774973709552",
@@ -8322,9 +8320,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/7d294112-f7be-4b2e-b681-5e0cfa466457.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Moved chat and settings from right panel tabs to dedicated navbar toggle buttons. Added ChatIcon and SettingsIcon toggles next to left/right panel toggles in PanelToggles component. Made chat, settings, and rightSidePanel mutually exclusive via EXCLUSIVE_SIDE_PANEL_KEYS. Removed all addSidePanelTab right calls for chat/settings from Kit, Design, Type, Quality, Home, and Docs apps. LayoutWrapper now renders chat/settings content as a single-tab right side panel when their respective navbar toggle is active. Updated test helpers to use navbar toggles instead of right panel tab clicks. Vite build passes cleanly.",
             "ticket": "2026/03/31/MOVE-CHAT-AND-SETTINGS-TO-NAVBAR-TOGGLE-BUTTONS"
           },
@@ -8352,9 +8348,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/7d294112-f7be-4b2e-b681-5e0cfa466457.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "summary": "Moved chat and settings from right panel tabs to dedicated navbar toggle buttons. Added ChatIcon and SettingsIcon toggles next to left/right panel toggles in PanelToggles component. Made chat, settings, and rightSidePanel mutually exclusive via EXCLUSIVE_SIDE_PANEL_KEYS. Removed all addSidePanelTab right calls for chat/settings from Kit, Design, Type, Quality, Home, and Docs apps. LayoutWrapper renders chat/settings content as single-tab right side panel when navbar toggle active. Updated tests.",
             "ticket": "26/03/31/MOVE-CHAT-AND-SETTINGS-TO-NAVBAR-TOGGLE-BUTTONS"
           },
@@ -8439,9 +8433,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/7d294112-f7be-4b2e-b681-5e0cfa466457.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "path": "26/03/31/MOVE-CHAT-AND-SETTINGS-TO-NAVBAR-TOGGLE-BUTTONS",
             "summary": "Moved chat and settings from right panel tabs to dedicated navbar toggle buttons. Added ChatIcon and SettingsIcon toggles next to left/right panel toggles in PanelToggles component. Made chat, settings, and rightSidePanel mutually exclusive via EXCLUSIVE_SIDE_PANEL_KEYS. Removed all addSidePanelTab right calls for chat/settings from Kit, Design, Type, Quality, Home, and Docs apps. LayoutWrapper renders chat/settings content as single-tab right side panel when navbar toggle active. Updated tests."
           },
@@ -8469,9 +8461,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/7d294112-f7be-4b2e-b681-5e0cfa466457.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "path": "26/03/31/MOVE-CHAT-AND-SETTINGS-TO-NAVBAR-TOGGLE-BUTTONS",
             "summary": "Moved chat and settings from right panel tabs to dedicated navbar toggle buttons. Added ChatIcon and SettingsIcon toggles next to left/right panel toggles in PanelToggles component. Made chat, settings, and rightSidePanel mutually exclusive via EXCLUSIVE_SIDE_PANEL_KEYS. Removed all addSidePanelTab right calls for chat/settings from Kit, Design, Type, Quality, Home, and Docs apps. LayoutWrapper renders chat/settings content as single-tab right side panel when navbar toggle active. Updated tests."
           },

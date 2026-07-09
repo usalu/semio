@@ -100,11 +100,7 @@
             "max_results": 3
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__search",
-              "mcp__repo__ticket_open",
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__search", "mcp__repo__ticket_open", "mcp__repo__ticket_close"],
             "query": "select:mcp__repo__search,mcp__repo__ticket_open,mcp__repo__ticket_close",
             "total_deferred_tools": 23
           },
@@ -3146,14 +3142,7 @@
                 "oldLines": 2,
                 "newStart": 1,
                 "newLines": 6,
-                "lines": [
-                  " @import \"../ui/globals.css\";",
-                  " @import \"@xyflow/react/dist/style.css\";",
-                  "+@source \"../../elements/ui\";",
-                  "+@source \"../ui\";",
-                  "+@source \"../js\";",
-                  "+@source \".\";"
-                ]
+                "lines": [" @import \"../ui/globals.css\";", " @import \"@xyflow/react/dist/style.css\";", "+@source \"../../elements/ui\";", "+@source \"../ui\";", "+@source \"../js\";", "+@source \".\";"]
               }
             ],
             "userModified": false,

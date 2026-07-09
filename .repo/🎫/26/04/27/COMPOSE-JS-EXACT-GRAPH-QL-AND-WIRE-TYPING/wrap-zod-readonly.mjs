@@ -17,9 +17,6 @@ export type ReadonlyDto<T> = T extends ReadonlyArray<infer U>
     : T;`,
   );
 }
-s = s.replace(
-  /^export type ([A-Za-z0-9_]+) = z\.infer<typeof ([A-Za-z0-9_]+Schema)>;$/gm,
-  "export type $1 = ReadonlyDto<z.infer<typeof $2>>;",
-);
+s = s.replace(/^export type ([A-Za-z0-9_]+) = z\.infer<typeof ([A-Za-z0-9_]+Schema)>;$/gm, "export type $1 = ReadonlyDto<z.infer<typeof $2>>;");
 fs.writeFileSync(p, s);
 console.log("ok");

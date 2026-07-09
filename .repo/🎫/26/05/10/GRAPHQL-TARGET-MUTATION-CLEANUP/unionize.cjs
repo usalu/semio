@@ -9,10 +9,10 @@
 //    • Removes all `union` declarations.
 //    • Renames `EntityConnectionInterface` → `EntityConnection` (the union of that name is gone).
 
-const fs = require('fs');
-const path = 'C:/git/compose/compose/graphql/target.schema.graphql';
+const fs = require("fs");
+const path = "C:/git/compose/compose/graphql/target.schema.graphql";
 
-const src = fs.readFileSync(path, 'utf8');
+const src = fs.readFileSync(path, "utf8");
 const lines = src.split(/\r?\n/);
 
 // ─── 1) Collect all unions: name → [memberTypes] ──────────────────────────────
@@ -21,7 +21,10 @@ for (let i = 0; i < lines.length; i++) {
   const single = lines[i].match(/^union (\w+)\s*=\s*(.+?)\s*$/);
   if (single) {
     const name = single[1];
-    const members = single[2].split('|').map((s) => s.trim()).filter(Boolean);
+    const members = single[2]
+      .split("|")
+      .map((s) => s.trim())
+      .filter(Boolean);
     unions.set(name, members);
     continue;
   }
@@ -31,7 +34,7 @@ for (let i = 0; i < lines.length; i++) {
     const members = [];
     let j = i + 1;
     while (j < lines.length && /^\s*\|\s*\w+\s*$/.test(lines[j])) {
-      members.push(lines[j].trim().replace(/^\|\s*/, ''));
+      members.push(lines[j].trim().replace(/^\|\s*/, ""));
       j++;
     }
     unions.set(name, members);
@@ -58,8 +61,8 @@ for (let i = 0; i < lines.length; i++) {
 
 function membersComment(unionName) {
   const members = unions.get(unionName);
-  if (!members || members.length === 0) return '';
-  return ` // ${members.join(' | ')}`;
+  if (!members || members.length === 0) return "";
+  return ` // ${members.join(" | ")}`;
 }
 
 // ─── 3) Track the "current concrete operation type name" so we can narrow `scope`/`input`. ─
@@ -90,7 +93,7 @@ for (let i = 0; i < lines.length; i++) {
     currentTypeIsConcreteOperation = /\bOperation\b/.test(typeOpen[2]);
     currentBlockIsInterfaceOperation = false;
   } else if (/^interface Operation\b[^{]*\{/.test(line)) {
-    currentTypeName = 'Operation';
+    currentTypeName = "Operation";
     currentTypeIsConcreteOperation = false;
     currentBlockIsInterfaceOperation = true;
   } else if (/^type \w+\s*\{/.test(line) || /^interface \w+\b/.test(line)) {
@@ -110,9 +113,9 @@ for (let i = 0; i < lines.length; i++) {
   let m = line.match(/^(\s*)ownerEntity:\s*OwnerEntity!?\s*(?:#\s*computed)?(?:\s*\/\/\s*([^\n]*))?\s*$/);
   if (m) {
     const indent = m[1];
-    const trailing = m[2] ? m[2].trim() : '';
-    const firstToken = trailing.split(/\s+/)[0] || '';
-    const comment = unions.has(firstToken) ? membersComment(firstToken) : '';
+    const trailing = m[2] ? m[2].trim() : "";
+    const firstToken = trailing.split(/\s+/)[0] || "";
+    const comment = unions.has(firstToken) ? membersComment(firstToken) : "";
     out.push(`${indent}owner: Entity # reference${comment}`);
     transformedOwner++;
     continue;
@@ -122,9 +125,9 @@ for (let i = 0; i < lines.length; i++) {
   m = line.match(/^(\s*)ownedEntities:\s*OwnedEntityConnection!?\s*(?:#\s*computed)?(?:\s*\/\/\s*([^\n]*))?\s*$/);
   if (m) {
     const indent = m[1];
-    const trailing = m[2] ? m[2].trim() : '';
-    const firstToken = trailing.split(/\s+/)[0] || '';
-    const comment = unions.has(firstToken) ? membersComment(firstToken) : '';
+    const trailing = m[2] ? m[2].trim() : "";
+    const firstToken = trailing.split(/\s+/)[0] || "";
+    const comment = unions.has(firstToken) ? membersComment(firstToken) : "";
     out.push(`${indent}owned: EntityConnection # reference${comment}`);
     transformedOwned++;
     continue;
@@ -141,13 +144,13 @@ for (let i = 0; i < lines.length; i++) {
   if (currentTypeIsConcreteOperation && currentTypeName) {
     const sm = line.match(/^(\s*)scope:\s*Scope(!?)\s*(#.*)?$/);
     if (sm) {
-      out.push(`${sm[1]}scope: ${currentTypeName}Scope${sm[2]} ${sm[3] || '# data'}`.replace(/\s+$/, ''));
+      out.push(`${sm[1]}scope: ${currentTypeName}Scope${sm[2]} ${sm[3] || "# data"}`.replace(/\s+$/, ""));
       narrowedScope++;
       continue;
     }
     const im = line.match(/^(\s*)input:\s*Input(!?)\s*(#.*)?$/);
     if (im) {
-      out.push(`${im[1]}input: ${currentTypeName}Input${im[2]} ${im[3] || '# data'}`.replace(/\s+$/, ''));
+      out.push(`${im[1]}input: ${currentTypeName}Input${im[2]} ${im[3] || "# data"}`.replace(/\s+$/, ""));
       narrowedInput++;
       continue;
     }
@@ -158,19 +161,19 @@ for (let i = 0; i < lines.length; i++) {
   if (m) {
     const indent = m[1];
     const bang = m[2];
-    const trailing = m[3] || '# reference';
-    out.push(`${indent}blueprint: Entity${bang} ${trailing}${membersComment('Blueprint')}`.replace(/\s+$/, ''));
+    const trailing = m[3] || "# reference";
+    out.push(`${indent}blueprint: Entity${bang} ${trailing}${membersComment("Blueprint")}`.replace(/\s+$/, ""));
     blueprintRewrites++;
     continue;
   }
 
   // 3f) Rename interface `EntityConnectionInterface` → `EntityConnection` everywhere.
-  line = line.replace(/\bEntityConnectionInterface\b/g, 'EntityConnection');
+  line = line.replace(/\bEntityConnectionInterface\b/g, "EntityConnection");
 
   out.push(line);
 }
 
-fs.writeFileSync(path, out.join('\n'));
+fs.writeFileSync(path, out.join("\n"));
 console.log(`Removed ${dropLineIndices.size} union lines.`);
 console.log(`Rewrote ${transformedOwner} owner / ${transformedOwned} owned fields.`);
 console.log(`Narrowed ${narrowedScope} scope / ${narrowedInput} input fields on concrete operations.`);

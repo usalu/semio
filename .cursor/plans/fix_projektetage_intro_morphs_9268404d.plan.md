@@ -2,30 +2,30 @@
 name: Fix Projektetage Intro Morphs
 overview: Restore the working commit-34 intro morph behavior (slides 0-6) by removing the later "intro flow morph" grid-lock layer that suppresses all auto-animate, while keeping the catalogue/media morphs and content additions intact.
 todos:
-  - id: ticket
-    content: Read repo://goals and reopen/create the intro-morph ticket via repo MCP
-    status: completed
-  - id: renderer-config
-    content: "Restore stock auto-animate for intro: enable per-slide unmatched, drop data-transition none, drop intro pair options in matcher"
-    status: completed
-  - id: renderer-layout
-    content: Remove intro-flow grid surface + introFlowLocked/gridRow branches; restore generic centered flow placement
-    status: completed
-  - id: renderer-helpers
-    content: Delete now-unused intro-flow helper functions and REVEAL_FLIP_ONLY_AUTO_ANIMATE_STYLES + imports
-    status: completed
-  - id: css
-    content: Remove presentation-arrangement-surface--intro-flow grid CSS in globals.css
-    status: completed
-  - id: core
-    content: Remove unused INTRO_FLOW_MORPH_* helpers in core/index.ts
-    status: completed
-  - id: tests
-    content: Update existing renderer test region to assert stock intro auto-animate behavior
-    status: completed
-  - id: verify
-    content: Verify slides 0-6 morph and slides 7-9 still work on the live deck (port 6050)
-    status: completed
+ - id: ticket
+   content: Read repo://goals and reopen/create the intro-morph ticket via repo MCP
+   status: completed
+ - id: renderer-config
+   content: "Restore stock auto-animate for intro: enable per-slide unmatched, drop data-transition none, drop intro pair options in matcher"
+   status: completed
+ - id: renderer-layout
+   content: Remove intro-flow grid surface + introFlowLocked/gridRow branches; restore generic centered flow placement
+   status: completed
+ - id: renderer-helpers
+   content: Delete now-unused intro-flow helper functions and REVEAL_FLIP_ONLY_AUTO_ANIMATE_STYLES + imports
+   status: completed
+ - id: css
+   content: Remove presentation-arrangement-surface--intro-flow grid CSS in globals.css
+   status: completed
+ - id: core
+   content: Remove unused INTRO_FLOW_MORPH_* helpers in core/index.ts
+   status: completed
+ - id: tests
+   content: Update existing renderer test region to assert stock intro auto-animate behavior
+   status: completed
+ - id: verify
+   content: Verify slides 0-6 morph and slides 7-9 still work on the live deck (port 6050)
+   status: completed
 isProject: false
 ---
 
@@ -51,18 +51,22 @@ Slides 0-6 morph like commit 34: matched `title` FLIP-moves/scales, and newly ad
 Restore generic centered-flow layout + stock auto-animate for intro slides only, leaving the catalogue ghost-morph machinery (which depends on global `autoAnimateUnmatched: false`) untouched.
 
 ### Renderer: [framework/product/presentation/renderer/react/index.tsx](framework/product/presentation/renderer/react/index.tsx)
+
 - Section element (around lines 4708-4734): drop `data-transition="none"` and the `data-auto-animate-unmatched="false"` for intro flow; instead set `data-auto-animate-unmatched="true"` on intro flow slides (per-slide override so the global `false` still protects catalogue morphs). Stop applying the `presentation-arrangement-surface--intro-flow` grid surface so intro dispositions stack/center generically.
 - Matcher (around lines 906-911): for intro wrapper pairs pass no options (`undefined`) instead of `revealIntroFlowWrapperAutoAnimatePairOptions()`, so reveal computes real FLIP from/to rects.
 - Disposition component (around lines 3720, 3869, 4174-4202): remove the `introFlowLocked` / `introFlowGridRow` branches that lock position and disable drag, restoring generic flow placement.
 - Delete now-unused intro-flow helpers: `revealIntroFlowWrapperAutoAnimatePairOptions`, `revealIntroFlowDispositionMeasureForAutoAnimate`, `revealIntroFlowInkForAutoAnimate`, `measureIntroFlowDispositionInkInSection`, `revealFlowMorphDisablesUnmatched`, `isIntroFlowMorphSlide`/`isIntroFlowMorphTransition`, `REVEAL_FLIP_ONLY_AUTO_ANIMATE_STYLES`, and their imports.
 
 ### Renderer CSS: [framework/product/presentation/renderer/react/globals.css](framework/product/presentation/renderer/react/globals.css)
+
 - Remove the `presentation-arrangement-surface--intro-flow` grid rules and `presentation-interactive-disposition--intro-flow` row placement so intro returns to centered flow.
 
 ### Core: [framework/product/presentation/core/index.ts](framework/product/presentation/core/index.ts)
+
 - Remove the unused `INTRO_FLOW_MORPH_SLOT_ROW`, `INTRO_FLOW_MORPH_ROW_WEIGHTS`, `introFlowMorphRowCenterFraction`, `introFlowMorphGridRow` (lines ~1505-1535). Leave `introSlideFiles`/`introEmbodiments` (arrangement spec) as-is.
 
 ### Tests
+
 - Update the existing renderer test region (assertions around lines 6630-6743, 7985, 8030) that encode the broken intro-flow options/unmatched behavior to instead assert stock auto-animate (matched title pairs without intro options, intro slides enable unmatched). Per repo rules, edit the existing test file/region; do not add new test files.
 
 ## Verification (mandatory, runtime)
@@ -70,4 +74,5 @@ Restore generic centered-flow layout + stock auto-animate for intro slides only,
 Use the running dev server (port 6050) and step slides 0->6, confirming via DOM instrumentation that during each transition: matched `title` gets a non-`none` transform when it should move, and new lines appear with a fade (unmatched). Confirm catalogue/media morphs (slides 7-9) still animate correctly.
 
 ## Process
+
 - Read `repo://goals`, then reopen/create the matching ticket via repo MCP before editing; keep any temp logs/screenshots inside the ticket folder; close with a summary of touched files when done.

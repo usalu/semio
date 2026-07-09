@@ -2,51 +2,51 @@
 name: S studio parity restoration
 overview: "Restore pre-migration S studio feature parity: fix the currently-broken shared plugin build, fix two confirmed runtime regressions (broken keybindings, window layout getting wiped on every command), restore lost S UI affordances using existing generic plugin infra, correct the demo fixture's cross-technology reference, and implement real studio persistence plus a presence-peers data contract."
 todos:
-  - id: phase0-fix-build
-    content: Fix World3dScene missing-fields compile error in framework/plugin/rs/scaffold.rs:241 blocking all plugins; verify with cargo check
-    status: completed
-  - id: phase1-keybinding-mod-bug
-    content: Fix keybinding matcher in os-shell.tsx to recognize 'mod' token and ignore keydown when focus is in an editable text field
-    status: completed
-  - id: phase1-layout-reset-bug
-    content: Fix refreshUi() unconditionally resetting shellLayout on every command; only reseed on actual app/session identity change
-    status: completed
-  - id: phase1-mobile-panel
-    content: Wire a mobilePanel (merged left+right tabs) into os-shell.tsx's Layout so panels are reachable on mobile viewports
-    status: completed
-  - id: phase2-toolbar-tools
-    content: Populate mode_tools() for S home (createStudio/importStudio) and studio (undo/redo/checkpoint) in s/plugin/rs/lib.rs; remove redundant hardcoded footer branch in os-shell.tsx
-    status: completed
-  - id: phase2-context-menu
-    content: Restore richer media-graph context menu (copy/paste/duplicate/rename/group/delete) in render_media_graph
-    status: completed
-  - id: phase2-inspector-fields
-    content: Restore Program/App (batch, 'Mixed'-aware) and single-selection Instance-id readonly rows in build_inspector_tree
-    status: completed
-  - id: phase2-parameter-constraints
-    content: Make numeric parameter Min/Max/Step fields always render (empty when unset) in parameter_constraint_fields
-    status: completed
-  - id: phase2-categorical-options
-    content: Restore per-option row UI (individual Remove + typed Add-option input) for categorical parameters
-    status: completed
-  - id: phase2-dynamic-examples
-    content: Restore glob-based discovery of s/example/*.s.json fixtures as selectable studio examples (S-only, no cross-tech)
-    status: completed
-  - id: phase2-settings-panel
-    content: Restore meaningful App-identity settings content alongside the existing theme/compact/expertise tab
-    status: completed
-  - id: phase3-fixture-sketchpad
-    content: Replace compose.sketchpad instance in s/example/demo.s.json with an in-technology (e.g. second note) instance
-    status: completed
-  - id: phase4-persistence
-    content: Implement browser-persistent OsBackbonePort (localStorage), wire CATALOG_PORT and per-studio sync/load_backbone calls, extend s-plugin tests
-    status: completed
-  - id: phase4-presence
-    content: Reintroduce PresencePeer type, presence_peers() accessor, and avatar-overlay UI on the media graph (empty list absent a real transport)
-    status: completed
-  - id: verify-all
-    content: Run cargo test -p s-plugin, framework-renderer-react vitest, S studio E2E, and manual repro checks for both confirmed bugs plus mobile/persistence
-    status: completed
+ - id: phase0-fix-build
+   content: Fix World3dScene missing-fields compile error in framework/plugin/rs/scaffold.rs:241 blocking all plugins; verify with cargo check
+   status: completed
+ - id: phase1-keybinding-mod-bug
+   content: Fix keybinding matcher in os-shell.tsx to recognize 'mod' token and ignore keydown when focus is in an editable text field
+   status: completed
+ - id: phase1-layout-reset-bug
+   content: Fix refreshUi() unconditionally resetting shellLayout on every command; only reseed on actual app/session identity change
+   status: completed
+ - id: phase1-mobile-panel
+   content: Wire a mobilePanel (merged left+right tabs) into os-shell.tsx's Layout so panels are reachable on mobile viewports
+   status: completed
+ - id: phase2-toolbar-tools
+   content: Populate mode_tools() for S home (createStudio/importStudio) and studio (undo/redo/checkpoint) in s/plugin/rs/lib.rs; remove redundant hardcoded footer branch in os-shell.tsx
+   status: completed
+ - id: phase2-context-menu
+   content: Restore richer media-graph context menu (copy/paste/duplicate/rename/group/delete) in render_media_graph
+   status: completed
+ - id: phase2-inspector-fields
+   content: Restore Program/App (batch, 'Mixed'-aware) and single-selection Instance-id readonly rows in build_inspector_tree
+   status: completed
+ - id: phase2-parameter-constraints
+   content: Make numeric parameter Min/Max/Step fields always render (empty when unset) in parameter_constraint_fields
+   status: completed
+ - id: phase2-categorical-options
+   content: Restore per-option row UI (individual Remove + typed Add-option input) for categorical parameters
+   status: completed
+ - id: phase2-dynamic-examples
+   content: Restore glob-based discovery of s/example/*.s.json fixtures as selectable studio examples (S-only, no cross-tech)
+   status: completed
+ - id: phase2-settings-panel
+   content: Restore meaningful App-identity settings content alongside the existing theme/compact/expertise tab
+   status: completed
+ - id: phase3-fixture-sketchpad
+   content: Replace compose.sketchpad instance in s/example/demo.s.json with an in-technology (e.g. second note) instance
+   status: completed
+ - id: phase4-persistence
+   content: Implement browser-persistent OsBackbonePort (localStorage), wire CATALOG_PORT and per-studio sync/load_backbone calls, extend s-plugin tests
+   status: completed
+ - id: phase4-presence
+   content: Reintroduce PresencePeer type, presence_peers() accessor, and avatar-overlay UI on the media graph (empty list absent a real transport)
+   status: completed
+ - id: verify-all
+   content: Run cargo test -p s-plugin, framework-renderer-react vitest, S studio E2E, and manual repro checks for both confirmed bugs plus mobile/persistence
+   status: completed
 isProject: false
 ---
 

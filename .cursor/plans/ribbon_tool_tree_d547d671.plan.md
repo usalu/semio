@@ -2,36 +2,36 @@
 name: Ribbon Tool Tree
 overview: Replace the fixed two-level toolbar (category -> tools) with an arbitrary-depth recursive tree of buttons, toggles, and collections, rendered as a drill-down ribbon in the footer where activating a sibling collection replaces everything to its right, and roll it out across all play apps and sketchpad.
 todos:
-  - id: ticket
-    content: Read repo://goals and open/reopen the ticket for the ribbon tool tree work
-    status: completed
-  - id: core-model
-    content: Replace AppToolCategory/ToolItem/AppTools with recursive ToolNode tree + helpers (merge, count, default-path) in framework/core/index.ts
-    status: completed
-  - id: view-model
-    content: Make UIToolbarItem/ToolbarViewTools and shellToolToToolbarItem/declareToolsToViewTools recursive in the platform renderer
-    status: completed
-  - id: ribbon-render
-    content: Rewrite UIToolbar to render per-level zones with single-select collections and replace-downstream drill-down + auto-open path
-    status: completed
-  - id: i18n
-    content: Loosen toolbar-parent key typing to free-form collection ids in ui/react and sketchpad, keep existing entries, update resolveControlLabelId tests
-    status: completed
-  - id: playground-core
-    content: Convert playground browse builders + PlaygroundController.rebuildBrowseModeTools to the tree shape
-    status: completed
-  - id: play-builders
-    content: Convert all play toolbar builders (puzzle 2d/3d/5d, procedural 2d/3d, gis/map, shooting, presentation, cad) to ToolNode collections
-    status: completed
-  - id: platform-core
-    content: Update framework/product/platform/core re-exports and merge call sites to recursive AppTools
-    status: completed
-  - id: stories-tests
-    content: Update Storybook toolbar stories and extend existing vitest blocks for merge/default-path/replace-downstream/i18n
-    status: completed
-  - id: verify
-    content: Verify runtime drill-down, replace-downstream, gaps and auto-open in puzzle 2d play and sketchpad, then close ticket
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open/reopen the ticket for the ribbon tool tree work
+   status: completed
+ - id: core-model
+   content: Replace AppToolCategory/ToolItem/AppTools with recursive ToolNode tree + helpers (merge, count, default-path) in framework/core/index.ts
+   status: completed
+ - id: view-model
+   content: Make UIToolbarItem/ToolbarViewTools and shellToolToToolbarItem/declareToolsToViewTools recursive in the platform renderer
+   status: completed
+ - id: ribbon-render
+   content: Rewrite UIToolbar to render per-level zones with single-select collections and replace-downstream drill-down + auto-open path
+   status: completed
+ - id: i18n
+   content: Loosen toolbar-parent key typing to free-form collection ids in ui/react and sketchpad, keep existing entries, update resolveControlLabelId tests
+   status: completed
+ - id: playground-core
+   content: Convert playground browse builders + PlaygroundController.rebuildBrowseModeTools to the tree shape
+   status: completed
+ - id: play-builders
+   content: Convert all play toolbar builders (puzzle 2d/3d/5d, procedural 2d/3d, gis/map, shooting, presentation, cad) to ToolNode collections
+   status: completed
+ - id: platform-core
+   content: Update framework/product/platform/core re-exports and merge call sites to recursive AppTools
+   status: completed
+ - id: stories-tests
+   content: Update Storybook toolbar stories and extend existing vitest blocks for merge/default-path/replace-downstream/i18n
+   status: completed
+ - id: verify
+   content: Verify runtime drill-down, replace-downstream, gaps and auto-open in puzzle 2d play and sketchpad, then close ticket
+   status: completed
 isProject: false
 ---
 
@@ -60,8 +60,6 @@ flowchart LR
   end
   z0 -->|"gap-single"| z1 -->|"gap-single"| z2
 ```
-
-
 
 Activating `view` in zone 0 discards zones 1 and 2 and renders `view`'s children as the new zone 1.
 
@@ -122,4 +120,3 @@ Update re-exports / merge call sites to the new `AppTools`/`mergeAppTools` shape
 - This is a clean break (no compat layer, no `AppToolCategory` enum left behind), consistent with the greenfield rule set.
 - Watch i18n compile enforcement (`I18N-COMPILE-ENFORCEMENT`): every collection id used must resolve to a real translation entry in both `en` and `de`.
 - Verify at runtime in at least one playground (puzzle 2d) and sketchpad that drill-down, replace-downstream, gaps, and auto-open behave as specified before closing the ticket.
-

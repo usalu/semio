@@ -5,7 +5,5 @@
   "description": "Replace husky with a global pre-commit setup for the monorepo.",
   "summary": "Removed all blocking git hooks. Added removeGitHooks to repo CLI configure command (clears pre-commit, post-commit, and related hook files). Deleted .pre-commit-config.yaml and pre-commit dev dependency. Updated setup git messaging and README. Extended configure test to verify hook removal. Removed local post-commit hook.",
   "goal": "🎯aioptimizedrepo",
-  "sessions": [
-    "⚪f34eefc1409647cf9f24a5661b3f0b70"
-  ]
+  "sessions": ["⚪f34eefc1409647cf9f24a5661b3f0b70"]
 }

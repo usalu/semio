@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - Analyzed compose.test.ts to understand JavaScript test structure
@@ -49,6 +50,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Sync Python unit tests with JS fixtures and extend engine.py

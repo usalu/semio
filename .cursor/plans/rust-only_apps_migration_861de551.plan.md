@@ -2,30 +2,30 @@
 name: Rust-Only Apps Migration
 overview: "Make every app 100% Rust: apps only emit declarative UiNode trees with generic component scenes, both framework renderers (React and wgpu) provide all rendering through app-agnostic hosts, and all app-level JS/React packages are deleted."
 todos:
-  - id: ticket
-    content: List repo goals and open/reopen ticket for the migration
-    status: completed
-  - id: contract
-    content: "Generalize scene contract in framework/core/rs/ui.rs: remove flow-canvas, extend NodeGraphScene and TextEditorScene"
-    status: completed
-  - id: react-nodegraph
-    content: Fold flow-canvas capabilities into generic React node-graph host; delete flow-canvas-host and flow-react/dag-react deps
-    status: completed
-  - id: react-texteditor
-    content: Rewrite React text-editor host generically; drop writer-react/writer-core deps, aliases, stubs
-    status: completed
-  - id: wgpu-parity
-    content: Update wgpu interpreter/scenes for merged node-graph and enriched text-editor
-    status: completed
-  - id: plugins
-    content: Update s plugin to node-graph scene and writer plugin to emit Rust-computed tokens/diagnostics
-    status: completed
-  - id: delete-js
-    content: Delete all app core/js and app react packages; port residual logic to Rust; clean manifests, aliases, launch.json, lockfile
-    status: completed
-  - id: verify
-    content: Build all plugins, run e2e for all playgrounds on both renderers, run Rust/JS tests
-    status: completed
+ - id: ticket
+   content: List repo goals and open/reopen ticket for the migration
+   status: completed
+ - id: contract
+   content: "Generalize scene contract in framework/core/rs/ui.rs: remove flow-canvas, extend NodeGraphScene and TextEditorScene"
+   status: completed
+ - id: react-nodegraph
+   content: Fold flow-canvas capabilities into generic React node-graph host; delete flow-canvas-host and flow-react/dag-react deps
+   status: completed
+ - id: react-texteditor
+   content: Rewrite React text-editor host generically; drop writer-react/writer-core deps, aliases, stubs
+   status: completed
+ - id: wgpu-parity
+   content: Update wgpu interpreter/scenes for merged node-graph and enriched text-editor
+   status: completed
+ - id: plugins
+   content: Update s plugin to node-graph scene and writer plugin to emit Rust-computed tokens/diagnostics
+   status: completed
+ - id: delete-js
+   content: Delete all app core/js and app react packages; port residual logic to Rust; clean manifests, aliases, launch.json, lockfile
+   status: completed
+ - id: verify
+   content: Build all plugins, run e2e for all playgrounds on both renderers, run Rust/JS tests
+   status: completed
 isProject: false
 ---
 
@@ -56,8 +56,6 @@ flowchart LR
   Plugin --> Core --> ReactR
   Core --> WgpuR
 ```
-
-
 
 Generic shared render libs stay (not app code): `@semio-tech/ui-react` ([ui/js/react](ui/js/react)), `infinite/cavas/react-renderer`, `infinite/world/r3f`, `ui/wgpu/rs`.
 

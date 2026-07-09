@@ -27,9 +27,7 @@
       {
         "name": "selectFace",
         "selection": {
-          "accept": [
-            "face"
-          ],
+          "accept": ["face"],
           "multiple": false,
           "prompt": "Pick face"
         },
@@ -132,9 +130,7 @@
   },
   "commit": {
     "when": "hasFaceArea",
-    "fromStates": [
-      "ready"
-    ],
+    "fromStates": ["ready"],
     "operation": {
       "kind": "action",
       "action": "measure.faceArea",

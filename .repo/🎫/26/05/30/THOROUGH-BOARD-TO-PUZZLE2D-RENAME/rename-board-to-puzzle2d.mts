@@ -172,7 +172,7 @@ const replacements: [string, string][] = [
   ['data-testid="board-canvas"', 'data-testid="puzzle2d-canvas"'],
   ["__boardRenderer", "__puzzle2dRenderer"],
   ["data-board-", "data-puzzle2d-"],
-  ["data-testid=\"board-text-overlay\"", "data-testid=\"puzzle2d-text-overlay\""],
+  ['data-testid="board-text-overlay"', 'data-testid="puzzle2d-text-overlay"'],
   ["useBoardEvent", "usePuzzle2dEvent"],
   ["useBoardRenderer", "usePuzzle2dRenderer"],
   ["useBoardAreaSelectPreview", "usePuzzle2dAreaSelectPreview"],
@@ -184,10 +184,10 @@ const replacements: [string, string][] = [
   ["boardPlayLodCanvasProps", "puzzle2dPlayLodCanvasProps"],
   ["boardPlayProgressiveForceIters", "puzzle2dPlayProgressiveForceIters"],
   ["boardPlayRedrawLayoutOpts", "puzzle2dPlayRedrawLayoutOpts"],
-  ["PLAYGROUND_CANVAS_HOST_TYPES = new Set([\"board\", \"puzzle2d\"", "PLAYGROUND_CANVAS_HOST_TYPES = new Set([\"puzzle2d\""],
-  ["node.type === \"board\"", "node.type === \"puzzle2d\""],
+  ['PLAYGROUND_CANVAS_HOST_TYPES = new Set(["board", "puzzle2d"', 'PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d"'],
+  ['node.type === "board"', 'node.type === "puzzle2d"'],
   ['case "board":', 'case "puzzle2d":'],
-  ["type: \"board\"", "type: \"puzzle2d\""],
+  ['type: "board"', 'type: "puzzle2d"'],
   ["puzzle.2d.play.board/v1", "puzzle.2d.play/v1"],
   ["board.wire.", "puzzle2d.wire."],
   ["board.edge.", "puzzle2d.edge."],
@@ -240,10 +240,7 @@ function applyReplacements(text: string): string {
     if (to === "REMOVE_ALIAS" || to.startsWith("// REMOVED")) continue;
     text = text.split(from).join(to);
   }
-  text = text.replace(
-    /^\/\*\* @emoji 📋 Playground alias for \{@link UiPuzzle2dHostSurfaceNode\}\. \*\/\nexport type UiBoardHostSurfaceNode = import\("@framework\/platform\/core"\)\.UiPuzzle2dHostSurfaceNode;\n\n/m,
-    "",
-  );
+  text = text.replace(/^\/\*\* @emoji 📋 Playground alias for \{@link UiPuzzle2dHostSurfaceNode\}\. \*\/\nexport type UiBoardHostSurfaceNode = import\("@framework\/platform\/core"\)\.UiPuzzle2dHostSurfaceNode;\n\n/m, "");
   return text;
 }
 

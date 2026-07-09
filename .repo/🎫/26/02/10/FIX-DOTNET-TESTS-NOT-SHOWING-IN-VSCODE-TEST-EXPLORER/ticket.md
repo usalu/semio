@@ -7,6 +7,7 @@ goal: R26-03/RUNNING-NET/TESTED-NET
 ## Summary
 
 Fixed three issues
+
 ## Changes
 
 ## Log

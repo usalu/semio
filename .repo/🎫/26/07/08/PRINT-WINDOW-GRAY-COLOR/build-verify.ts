@@ -14,13 +14,9 @@ const ext = platform() === "win32" ? ".exe" : "";
 const tectonic = join(repoRoot, `.repo/cache/tectonic/${tectonicVersion}/tectonic${ext}`);
 if (!existsSync(tectonic)) throw new Error(`missing tectonic: ${tectonic}`);
 mkdirSync(ticketDir, { recursive: true });
-const build = spawnSync(
-	tectonic,
-	["--keep-logs", "--synctex", `-Z`, `search-path=${texDir}`, "--outdir", ticketDir, "verify.tex"],
-	{
-		cwd: ticketDir,
-		stdio: "inherit",
-		env: { ...process.env, TEXINPUTS: `${texDir}:` },
-	},
-);
+const build = spawnSync(tectonic, ["--keep-logs", "--synctex", `-Z`, `search-path=${texDir}`, "--outdir", ticketDir, "verify.tex"], {
+  cwd: ticketDir,
+  stdio: "inherit",
+  env: { ...process.env, TEXINPUTS: `${texDir}:` },
+});
 if (build.status !== 0) process.exit(build.status ?? 1);

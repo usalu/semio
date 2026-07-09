@@ -13,9 +13,9 @@ s = readFileSync("spatial/js/core/index.ts", "utf8");
 s = s.replace("return { diff: boxTopologyDiff(", "return { diff: ctx.preview.boxTopologyDiff(");
 
 const patchRun = (id: string, prelude: string) => {
-	const needle = `id: "${id}",\n\t\trun: (params) => {`;
-	if (!s.includes(needle)) return;
-	s = s.replace(needle, `id: "${id}",\n\t\trun: (params, ctx) => {\n\t\t\t${prelude}`);
+  const needle = `id: "${id}",\n\t\trun: (params) => {`;
+  if (!s.includes(needle)) return;
+  s = s.replace(needle, `id: "${id}",\n\t\trun: (params, ctx) => {\n\t\t\t${prelude}`);
 };
 
 patchRun("box.aabbFromDiagonalCorners", "const pr = ctx.preview;");

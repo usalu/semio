@@ -44,9 +44,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🔬coda🖱️desktop⚙️package📌1📌49"
-        ],
+        "ranges": ["🔬coda🖱️desktop⚙️package📌1📌49"],
         "second": "🎆26🌙03☀️13⏰10⌚53⏱️33",
         "session": "⚪5ef20f1290094e1ea9aa1b1e9e6f863a",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/5ef20f12-9009-4e1e-a9aa-1b1e9e6f863a.jsonl"
@@ -218,9 +216,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅devcontainer⚙️dockerfile📌1📌82"
-        ],
+        "ranges": ["🛅devcontainer⚙️dockerfile📌1📌82"],
         "second": "🎆26🌙03☀️13⏰10⌚54⏱️07",
         "session": "⚪5ef20f1290094e1ea9aa1b1e9e6f863a",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/5ef20f12-9009-4e1e-a9aa-1b1e9e6f863a.jsonl"
@@ -308,9 +304,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🔬coda📚py💻coda📌1297📌1346"
-        ],
+        "ranges": ["🔬coda📚py💻coda📌1297📌1346"],
         "second": "🎆26🌙03☀️13⏰10⌚54⏱️15",
         "session": "⚪5ef20f1290094e1ea9aa1b1e9e6f863a",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/5ef20f12-9009-4e1e-a9aa-1b1e9e6f863a.jsonl"
@@ -357,9 +351,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅devcontainer⚙️dockerfile📌1📌82"
-        ],
+        "ranges": ["🛅devcontainer⚙️dockerfile📌1📌82"],
         "second": "🎆26🌙03☀️13⏰10⌚54⏱️20",
         "session": "⚪5ef20f1290094e1ea9aa1b1e9e6f863a",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/5ef20f12-9009-4e1e-a9aa-1b1e9e6f863a.jsonl"
@@ -443,9 +435,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🔬coda🖱️desktop💻main📌1📌479"
-        ],
+        "ranges": ["🔬coda🖱️desktop💻main📌1📌479"],
         "second": "🎆26🌙03☀️13⏰10⌚54⏱️38",
         "session": "⚪5ef20f1290094e1ea9aa1b1e9e6f863a",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/5ef20f12-9009-4e1e-a9aa-1b1e9e6f863a.jsonl"
@@ -482,9 +472,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🔬coda🖱️desktop💻preload📌1📌67"
-        ],
+        "ranges": ["🔬coda🖱️desktop💻preload📌1📌67"],
         "second": "🎆26🌙03☀️13⏰10⌚54⏱️38",
         "session": "⚪5ef20f1290094e1ea9aa1b1e9e6f863a",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/5ef20f12-9009-4e1e-a9aa-1b1e9e6f863a.jsonl"
@@ -531,9 +519,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🔬coda🖱️desktop💻main📌1📌479"
-        ],
+        "ranges": ["🔬coda🖱️desktop💻main📌1📌479"],
         "second": "🎆26🌙03☀️13⏰10⌚54⏱️47",
         "session": "⚪5ef20f1290094e1ea9aa1b1e9e6f863a",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/5ef20f12-9009-4e1e-a9aa-1b1e9e6f863a.jsonl"
@@ -580,9 +566,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🔬coda🖱️desktop💻preload📌1📌67"
-        ],
+        "ranges": ["🔬coda🖱️desktop💻preload📌1📌67"],
         "second": "🎆26🌙03☀️13⏰10⌚54⏱️47",
         "session": "⚪5ef20f1290094e1ea9aa1b1e9e6f863a",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/5ef20f12-9009-4e1e-a9aa-1b1e9e6f863a.jsonl"
@@ -719,9 +703,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🔬coda📚py⚙️pyproject📌1📌11"
-        ],
+        "ranges": ["🔬coda📚py⚙️pyproject📌1📌11"],
         "second": "🎆26🌙03☀️13⏰10⌚55⏱️20",
         "session": "⚪5ef20f1290094e1ea9aa1b1e9e6f863a",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/5ef20f12-9009-4e1e-a9aa-1b1e9e6f863a.jsonl"
@@ -768,9 +750,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🔬coda📚py⚙️pyproject📌1📌11"
-        ],
+        "ranges": ["🔬coda📚py⚙️pyproject📌1📌11"],
         "second": "🎆26🌙03☀️13⏰10⌚55⏱️29",
         "session": "⚪5ef20f1290094e1ea9aa1b1e9e6f863a",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/5ef20f12-9009-4e1e-a9aa-1b1e9e6f863a.jsonl"
@@ -914,9 +894,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🔬coda🖱️desktop⚙️forgeconfig📌1📌82"
-        ],
+        "ranges": ["🔬coda🖱️desktop⚙️forgeconfig📌1📌82"],
         "second": "🎆26🌙03☀️13⏰10⌚56⏱️21",
         "session": "⚪5ef20f1290094e1ea9aa1b1e9e6f863a",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/5ef20f12-9009-4e1e-a9aa-1b1e9e6f863a.jsonl"
@@ -963,9 +941,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🔬coda🖱️desktop⚙️forgeconfig📌1📌82"
-        ],
+        "ranges": ["🔬coda🖱️desktop⚙️forgeconfig📌1📌82"],
         "second": "🎆26🌙03☀️13⏰10⌚56⏱️33",
         "session": "⚪5ef20f1290094e1ea9aa1b1e9e6f863a",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/5ef20f12-9009-4e1e-a9aa-1b1e9e6f863a.jsonl"
@@ -1380,9 +1356,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅vscode⚙️launch📌1📌627"
-        ],
+        "ranges": ["🛅vscode⚙️launch📌1📌627"],
         "second": "🎆26🌙03☀️13⏰13⌚32⏱️05",
         "session": "⚪5ef20f1290094e1ea9aa1b1e9e6f863a",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/5ef20f12-9009-4e1e-a9aa-1b1e9e6f863a.jsonl"
@@ -1427,9 +1401,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅vscode⚙️launch📌1📌627"
-        ],
+        "ranges": ["🛅vscode⚙️launch📌1📌627"],
         "second": "🎆26🌙03☀️13⏰13⌚32⏱️21",
         "session": "⚪5ef20f1290094e1ea9aa1b1e9e6f863a",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/5ef20f12-9009-4e1e-a9aa-1b1e9e6f863a.jsonl"

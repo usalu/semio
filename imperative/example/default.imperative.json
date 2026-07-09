@@ -1,1 +1,10 @@
-{"schema":"imperative.document","path":{"steps":[{"id":"step-1","kind":"state.set","params":{"key":"counter","value":0}},{"id":"step-2","kind":"log.print","params":{"message":"hello imperative"}}]},"seed":{}}
+{
+  "schema": "imperative.document",
+  "path": {
+    "steps": [
+      { "id": "step-1", "kind": "state.set", "params": { "key": "counter", "value": 0 } },
+      { "id": "step-2", "kind": "log.print", "params": { "message": "hello imperative" } }
+    ]
+  },
+  "seed": {}
+}

@@ -7,20 +7,20 @@
 
 ## SAppHostRouter manual sample checklist
 
-| Technology | Host | Write-back |
-|------------|------|------------|
-| draw | DrawCanvas | patchAppSource |
-| raster | RasterCanvas | applyAppOperation |
-| lowpoly | SLowpolyHost + LowpolyCanvas | patchAppSource |
-| vcs | SVcsHost + HistoryTable | applyAppOperation setCounter |
-| trinity/jack | Writer + TrinityCanvas jackDispatch | patchAppSource |
-| trinity/rewrite | STrinityRewriteHost composite | patchAppSource (trinity graph) |
-| puzzle2d | SPuzzle2dHost | patchAppSource |
-| puzzle3d | SPuzzle3dHost | patchAppSource (brush/connect/relocate) |
-| puzzle5d | SPuzzle5dHost | patchAppSource |
-| gismap | SGisMapHost + Position/Route | fixture-bound render |
-| catalogue | SCatalogueHost | read-only kind list |
-| presentation | PresentationDeck + JSON editor | patchAppSource |
+| Technology      | Host                                | Write-back                              |
+| --------------- | ----------------------------------- | --------------------------------------- |
+| draw            | DrawCanvas                          | patchAppSource                          |
+| raster          | RasterCanvas                        | applyAppOperation                       |
+| lowpoly         | SLowpolyHost + LowpolyCanvas        | patchAppSource                          |
+| vcs             | SVcsHost + HistoryTable             | applyAppOperation setCounter            |
+| trinity/jack    | Writer + TrinityCanvas jackDispatch | patchAppSource                          |
+| trinity/rewrite | STrinityRewriteHost composite       | patchAppSource (trinity graph)          |
+| puzzle2d        | SPuzzle2dHost                       | patchAppSource                          |
+| puzzle3d        | SPuzzle3dHost                       | patchAppSource (brush/connect/relocate) |
+| puzzle5d        | SPuzzle5dHost                       | patchAppSource                          |
+| gismap          | SGisMapHost + Position/Route        | fixture-bound render                    |
+| catalogue       | SCatalogueHost                      | read-only kind list                     |
+| presentation    | PresentationDeck + JSON editor      | patchAppSource                          |
 
 ## Notes
 

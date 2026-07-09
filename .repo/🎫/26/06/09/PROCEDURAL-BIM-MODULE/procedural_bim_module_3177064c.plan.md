@@ -2,30 +2,30 @@
 name: Procedural BIM Module
 overview: Add a new flow module `bim` (Building Information Modeling) that contributes semantic building-model schemas and operators, fully wired into the flow/procedural toolchain, so future modules like `energy` and `structure` can consume a building model.
 todos:
-  - id: ticket
-    content: Open repo MCP ticket (read repo://goals, associate goal) for the bim module work
-    status: completed
-  - id: crate
-    content: "Create flow/modules/bim crate: Cargo.toml, package.json, project.json, script.ts, lib.rs (schemas, element constructors, assembly, measure, tests, wasm_ext)"
-    status: completed
-  - id: rust-wiring
-    content: Wire crate into root Cargo.toml members, flow/core/Cargo.toml deps, and flow_core flow_registry()
-    status: completed
-  - id: ts-host
-    content: "Register bim in flow/react/index.tsx: VITEST init block, FLOW_MODULE_LOADERS, FLOW_DEFAULT_MODULE_IDS"
-    status: completed
-  - id: scripts
-    content: Add bim to flow/play, procedural/play, procedural/react build/test script module lists (+ flow_module_bim cargo -p)
-    status: completed
-  - id: aliases
-    content: Add @semio-tech/flow-module-bim aliases to flow/react, procedural/react, procedural/play vitest configs and procedural/play vite config
-    status: completed
-  - id: launch
-    content: Add module-bim launch.json dev entry and include flow_module_bim in the flow cargo test command
-    status: completed
-  - id: validate
-    content: Build wasm + run cargo and vitest suites; confirm bim.* catalogue + end-to-end evaluation, then close ticket
-    status: completed
+ - id: ticket
+   content: Open repo MCP ticket (read repo://goals, associate goal) for the bim module work
+   status: completed
+ - id: crate
+   content: "Create flow/modules/bim crate: Cargo.toml, package.json, project.json, script.ts, lib.rs (schemas, element constructors, assembly, measure, tests, wasm_ext)"
+   status: completed
+ - id: rust-wiring
+   content: Wire crate into root Cargo.toml members, flow/core/Cargo.toml deps, and flow_core flow_registry()
+   status: completed
+ - id: ts-host
+   content: "Register bim in flow/react/index.tsx: VITEST init block, FLOW_MODULE_LOADERS, FLOW_DEFAULT_MODULE_IDS"
+   status: completed
+ - id: scripts
+   content: Add bim to flow/play, procedural/play, procedural/react build/test script module lists (+ flow_module_bim cargo -p)
+   status: completed
+ - id: aliases
+   content: Add @semio-tech/flow-module-bim aliases to flow/react, procedural/react, procedural/play vitest configs and procedural/play vite config
+   status: completed
+ - id: launch
+   content: Add module-bim launch.json dev entry and include flow_module_bim in the flow cargo test command
+   status: completed
+ - id: validate
+   content: Build wasm + run cargo and vitest suites; confirm bim.* catalogue + end-to-end evaluation, then close ticket
+   status: completed
 isProject: false
 ---
 
@@ -100,6 +100,3 @@ flowchart LR
   building -. future .-> energy[energy module]
   building -. future .-> structure[structure module]
 ```
-
-
-

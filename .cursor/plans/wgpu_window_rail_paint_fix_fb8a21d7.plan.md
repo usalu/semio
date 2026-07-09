@@ -2,27 +2,27 @@
 name: WGPU Window Rail Paint Fix
 overview: Fix the WGPU renderer so the per-window "Command" (engagement) and "Window Options" (measures) foldable rails are actually visible and match the React reference renderer's placement, default state, and visibility rules.
 todos:
-  - id: open-ticket
-    content: Open a repo MCP ticket for the WGPU window rail paint-order/parity fix
-    status: completed
-  - id: fix-paint-order
-    content: Route folded/collapsed rail chip draws to the overlay DrawList instead of the main draw list in shell.rs
-    status: completed
-  - id: fix-side-swap
-    content: Swap Window Options rail to right edge and Command rail to left edge to match React
-    status: completed
-  - id: fix-default-fold
-    content: Default measures_folded to true to match React's default folded state
-    status: completed
-  - id: fix-visibility-gating
-    content: Add windowEngagementChromeVisible-equivalent gating and hide-when-measures-expanded guard to the engagement rail
-    status: completed
-  - id: rebuild-and-verify
-    content: cargo check, rebuild wgpu wasm, run verify-wgpu-playgrounds-e2e.ts on s and draw, screenshot-compare vs React
-    status: completed
-  - id: close-ticket
-    content: Close the ticket with a summary of files changed
-    status: completed
+ - id: open-ticket
+   content: Open a repo MCP ticket for the WGPU window rail paint-order/parity fix
+   status: completed
+ - id: fix-paint-order
+   content: Route folded/collapsed rail chip draws to the overlay DrawList instead of the main draw list in shell.rs
+   status: completed
+ - id: fix-side-swap
+   content: Swap Window Options rail to right edge and Command rail to left edge to match React
+   status: completed
+ - id: fix-default-fold
+   content: Default measures_folded to true to match React's default folded state
+   status: completed
+ - id: fix-visibility-gating
+   content: Add windowEngagementChromeVisible-equivalent gating and hide-when-measures-expanded guard to the engagement rail
+   status: completed
+ - id: rebuild-and-verify
+   content: cargo check, rebuild wgpu wasm, run verify-wgpu-playgrounds-e2e.ts on s and draw, screenshot-compare vs React
+   status: completed
+ - id: close-ticket
+   content: Close the ticket with a summary of files changed
+   status: completed
 isProject: false
 ---
 

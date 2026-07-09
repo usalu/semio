@@ -5,7 +5,5 @@
   "description": "Reimplement board force-directed layout in elements/client/lib/board/rs so the force_graph module uses no nalgebra or external math crate—plain f64 vectors only. Preserve behavior and existing Rust tests.",
   "summary": "Force-directed board layout no longer uses nalgebra: a private Vec2 (scalar ops + norm) backs the same repulsion, springs, gravity, and integration loop. Removed nalgebra from elements_board Cargo.toml; updated layoutBoardFixtureForceGraph doc in index.ts. Verified with cargo test -p elements_board (53), vitest (72), and wasm-pack release build.",
   "goal": "🎯r2602/🎯runningsketchpad",
-  "sessions": [
-    "⚪5ee9713a8b7c470ba09f0131457cf8a1"
-  ]
+  "sessions": ["⚪5ee9713a8b7c470ba09f0131457cf8a1"]
 }

@@ -6,7 +6,7 @@ const re = /([a-zA-Z0-9$]+) = \$\$\$config\.([a-zA-Z0-9]+)/g;
 const keys = new Set();
 let m;
 while ((m = re.exec(s))) {
-	keys.add(m[2]);
+  keys.add(m[2]);
 }
 fs.writeFileSync(new URL("./required-keys.txt", import.meta.url), [...keys].sort().join("\n"));
 console.error("count", keys.size);
@@ -14,10 +14,10 @@ console.error("count", keys.size);
 const stub = fs.readFileSync(new URL("./stubs.txt", import.meta.url), "utf8");
 const have = new Set();
 for (const line of stub.split(/\n/)) {
-	const mm = /^\t([a-zA-Z0-9]+):/.exec(line);
-	if (mm) {
-		have.add(mm[1]);
-	}
+  const mm = /^\t([a-zA-Z0-9]+):/.exec(line);
+  if (mm) {
+    have.add(mm[1]);
+  }
 }
 const missing = [...keys].filter((k) => !have.has(k)).sort();
 const extra = [...have].filter((k) => !keys.has(k)).sort();

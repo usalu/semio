@@ -7,6 +7,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Fixed second filter regression by restoring cross-root shared filter synchronization and strict off-state diagram filtering in Design app. Re-verified with passing Design Playwright test.
+
 ## Changes
 
 - `compose/js/sketchpad/Design.tsx`: Fixed `toggleFilter()` to clear all filter params when all 3 kinds are re-enabled

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The Type app test is failing because `[TypeMesh] Selected` console log appears multiple times instead of once, indicating infinite re-renders. The test expects exactly one model selection.
@@ -81,14 +82,14 @@ Updated `useSyncField` to use `getFieldSnapshot` when available:
 
 ```typescript
 const getSnapshot = useCallback(() => {
-  let newValue: TSelected;
-  if (store.getFieldSnapshot) {
-    const fieldValue = store.getFieldSnapshot(key);
-    newValue = selector({ [key]: fieldValue } as T);
-  } else {
-    newValue = selector(store.snapshot());
-  }
-  // ...JSON comparison for stability...
+ let newValue: TSelected;
+ if (store.getFieldSnapshot) {
+  const fieldValue = store.getFieldSnapshot(key);
+  newValue = selector({ [key]: fieldValue } as T);
+ } else {
+  newValue = selector(store.snapshot());
+ }
+ // ...JSON comparison for stability...
 }, [store, selector, key]);
 ```
 
@@ -190,6 +191,7 @@ This reduced pan time from ~2300ms to ~300-500ms.
 ## Log
 
 ## Summary
+
 # Summary
 
 Optimize Yjs state management to prevent overfetching and infinite rerenders

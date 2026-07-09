@@ -3,7 +3,22 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { cn, floatingToolbarSurfaceClass, menuListItemClassName, reactHostPort, resolveSceneGizmoViewportPlacement, sceneHostPort, referenceMediaPort, UnifiedGumball, gumballConfigVisible, gumballHandleKindToTransformMode, type GumballConfig, type GumballPose, type ReactNode, type ThreeEvent } from "@semio-tech/ui-react";
+import {
+  cn,
+  floatingToolbarSurfaceClass,
+  menuListItemClassName,
+  reactHostPort,
+  resolveSceneGizmoViewportPlacement,
+  sceneHostPort,
+  referenceMediaPort,
+  UnifiedGumball,
+  gumballConfigVisible,
+  gumballHandleKindToTransformMode,
+  type GumballConfig,
+  type GumballPose,
+  type ReactNode,
+  type ThreeEvent,
+} from "@semio-tech/ui-react";
 import { clearColorResolveCache, resolveColorHex, resolveThreeColor, semanticVar, themeColorVar, tokenHex, tokenVar } from "@semio-tech/ui-styling";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactElement } from "react";
 import { MeshBVH, type HitPointInfo } from "three-mesh-bvh";
@@ -387,13 +402,7 @@ export interface SolidOverlapVolumeOptions {
 }
 
 /** @emoji 📐 Estimates solid overlap volume (m3) between two posed {@link CollisionBody} instances. */
-export function solidOverlapVolume(
-  a: CollisionBody,
-  worldA: Matrix4,
-  b: CollisionBody,
-  worldB: Matrix4,
-  opts?: SolidOverlapVolumeOptions,
-): number {
+export function solidOverlapVolume(a: CollisionBody, worldA: Matrix4, b: CollisionBody, worldB: Matrix4, opts?: SolidOverlapVolumeOptions): number {
   collisionBodyWorldBounds(a, worldA, _collisionBoxA);
   collisionBodyWorldBounds(b, worldB, _collisionBoxB);
   _collisionInterBox.copy(_collisionBoxA).intersect(_collisionBoxB);
@@ -413,11 +422,7 @@ export function solidOverlapVolume(
   _collisionInvB.copy(worldB).invert();
   let insideBoth = 0;
   for (let i = 0; i < sampleCount; i += 1) {
-    _collisionPoint.set(
-      _collisionInterBox.min.x + Math.random() * _collisionSize.x,
-      _collisionInterBox.min.y + Math.random() * _collisionSize.y,
-      _collisionInterBox.min.z + Math.random() * _collisionSize.z,
-    );
+    _collisionPoint.set(_collisionInterBox.min.x + Math.random() * _collisionSize.x, _collisionInterBox.min.y + Math.random() * _collisionSize.y, _collisionInterBox.min.z + Math.random() * _collisionSize.z);
     if (collisionPointInsideBody(a, _collisionInvA, _collisionPoint) && collisionPointInsideBody(b, _collisionInvB, _collisionPoint)) {
       insideBoth += 1;
     }
@@ -496,13 +501,7 @@ export function chunkBoundsRadius(chunkSize: number): number {
 }
 
 /** @emoji 👁️ Distance-only chunk visibility with enter/exit hysteresis (avoids frustum-edge flicker). */
-export function chunkDistanceVisible(args: {
-  readonly camPos: Vector3;
-  readonly chunkCenter: Vector3;
-  readonly chunkSize: number;
-  readonly maxDist: number;
-  readonly wasVisible: boolean;
-}): boolean {
+export function chunkDistanceVisible(args: { readonly camPos: Vector3; readonly chunkCenter: Vector3; readonly chunkSize: number; readonly maxDist: number; readonly wasVisible: boolean }): boolean {
   const boundsR = chunkBoundsRadius(args.chunkSize);
   const dist = args.camPos.distanceTo(args.chunkCenter);
   const enterDist = args.maxDist + boundsR;
@@ -580,12 +579,7 @@ export function WorldChunks(props: { readonly chunkSize: number; readonly maxDis
 }
 
 /** @emoji 🧩 Chunked scene subtree + unchunked sibling group (view-radius streaming). */
-export function WorldChunkedSceneChildren(props: {
-  readonly chunkSize: number;
-  readonly maxDistance: number;
-  readonly children: ReactNode;
-  readonly unchunkedDataAttr?: string;
-}): ReactElement {
+export function WorldChunkedSceneChildren(props: { readonly chunkSize: number; readonly maxDistance: number; readonly children: ReactNode; readonly unchunkedDataAttr?: string }): ReactElement {
   const { chunked, rest } = reactHostPort.useMemo(() => splitChunkedSceneChildren(props.children), [props.children]);
   const attr = props.unchunkedDataAttr ?? "data-world-unchunked";
   return (
@@ -1037,23 +1031,7 @@ export function WorldLayerStack(props: { readonly children: ReactNode }): ReactE
 
 // #region 📷OrbitCameraView
 /** @emoji 🧭 Standard orbit orthographic-style view ids for Z-up CAD scenes. */
-export type OrbitCameraViewId =
-  | "top"
-  | "bottom"
-  | "front"
-  | "back"
-  | "right"
-  | "left"
-  | "north"
-  | "south"
-  | "east"
-  | "west"
-  | "isometricNe"
-  | "isometricNw"
-  | "isometricSe"
-  | "isometricSw"
-  | "perspective"
-  | "twoPointPerspective";
+export type OrbitCameraViewId = "top" | "bottom" | "front" | "back" | "right" | "left" | "north" | "south" | "east" | "west" | "isometricNe" | "isometricNw" | "isometricSe" | "isometricSw" | "perspective" | "twoPointPerspective";
 
 /** @emoji 📡 Command name products should handle to apply {@link OrbitCameraViewId} presets. */
 export const ORBIT_CAMERA_VIEW_COMMAND = "setOrbitCameraView";
@@ -1150,24 +1128,7 @@ export function orbitCameraProjectionForView(view: OrbitCameraViewId): OrbitCame
   return view === "perspective" || view === "twoPointPerspective" ? "perspective" : "orthographic";
 }
 
-const ORBIT_CAMERA_VIEW_IDS: readonly OrbitCameraViewId[] = [
-  "top",
-  "bottom",
-  "front",
-  "back",
-  "right",
-  "left",
-  "north",
-  "south",
-  "east",
-  "west",
-  "isometricNe",
-  "isometricNw",
-  "isometricSe",
-  "isometricSw",
-  "perspective",
-  "twoPointPerspective",
-];
+const ORBIT_CAMERA_VIEW_IDS: readonly OrbitCameraViewId[] = ["top", "bottom", "front", "back", "right", "left", "north", "south", "east", "west", "isometricNe", "isometricNw", "isometricSe", "isometricSw", "perspective", "twoPointPerspective"];
 
 const ORBIT_CAMERA_TEMPLATE_BRANCH_VIEWS: Record<string, OrbitCameraViewId> = {
   orthographic: "top",
@@ -1248,12 +1209,11 @@ function applyWorldCameraState(camera: Camera, state: WorldCameraState, controls
 
 /** @emoji 🧭 Maps a CAD viewport gizmo axis click to a named orbit view (Z-up). */
 export function resolveOrbitGizmoViewFromDirection(direction: { readonly x: number; readonly y: number; readonly z: number }): OrbitCameraViewId {
-  const dominant =
-    [
-      { axis: "x" as const, magnitude: Math.abs(direction.x), sign: direction.x >= 0 ? 1 : -1 },
-      { axis: "y" as const, magnitude: Math.abs(direction.y), sign: direction.y >= 0 ? 1 : -1 },
-      { axis: "z" as const, magnitude: Math.abs(direction.z), sign: direction.z >= 0 ? 1 : -1 },
-    ].sort((a, b) => b.magnitude - a.magnitude)[0] ?? { axis: "z" as const, magnitude: 1, sign: 1 };
+  const dominant = [
+    { axis: "x" as const, magnitude: Math.abs(direction.x), sign: direction.x >= 0 ? 1 : -1 },
+    { axis: "y" as const, magnitude: Math.abs(direction.y), sign: direction.y >= 0 ? 1 : -1 },
+    { axis: "z" as const, magnitude: Math.abs(direction.z), sign: direction.z >= 0 ? 1 : -1 },
+  ].sort((a, b) => b.magnitude - a.magnitude)[0] ?? { axis: "z" as const, magnitude: 1, sign: 1 };
   if (dominant.axis === "x") {
     return dominant.sign > 0 ? "right" : "left";
   }
@@ -1303,11 +1263,7 @@ export interface WorldOrbitViewGizmoProps {
 }
 
 function resolveWorldCadAxisColors(): [string, string, string] {
-  return [
-    resolveColorHex(semanticVar("accent"), "gray"),
-    resolveColorHex(semanticVar("accent-secondary"), "gray"),
-    resolveColorHex(semanticVar("accent-tertiary"), "gray"),
-  ];
+  return [resolveColorHex(semanticVar("accent"), "gray"), resolveColorHex(semanticVar("accent-secondary"), "gray"), resolveColorHex(semanticVar("accent-tertiary"), "gray")];
 }
 
 //#region 🧭WorldOrbitViewGizmoViewport
@@ -1540,13 +1496,7 @@ export function WorldOrbitViewControls(props: WorldOrbitViewControlsProps): Reac
   const [pendingView, setPendingView] = reactHostPort.useState<OrbitCameraViewId | null>(null);
   return (
     <>
-      <WorldOrbitViewSnapDriver
-        pendingView={pendingView}
-        onPendingViewClear={() => setPendingView(null)}
-        onCameraChange={props.onCameraChange}
-        onProjectionChange={props.onProjectionChange}
-        onViewSnap={props.onViewSnap}
-      />
+      <WorldOrbitViewSnapDriver pendingView={pendingView} onPendingViewClear={() => setPendingView(null)} onCameraChange={props.onCameraChange} onProjectionChange={props.onProjectionChange} onViewSnap={props.onViewSnap} />
       <WorldOrbitViewGizmo show={props.show} onViewSelect={setPendingView} />
     </>
   );
@@ -1561,8 +1511,7 @@ export interface WorldOrbitProjectionSwitchProps {
 /** @emoji 🔀 Small orthographic / perspective toggle for infinite-world viewports. */
 export function WorldOrbitProjectionSwitch(props: WorldOrbitProjectionSwitchProps): ReactElement {
   const shellClass = props.className ?? cn("pointer-events-auto absolute bottom-[4.75rem] right-3 z-10 flex text-2xs font-medium", floatingToolbarSurfaceClass);
-  const buttonClass = (active: boolean) =>
-    cn("px-2 py-1 transition-colors", active ? "bg-active-base text-emphasized" : cn(menuListItemClassName, "text-muted-foreground"));
+  const buttonClass = (active: boolean) => cn("px-2 py-1 transition-colors", active ? "bg-active-base text-emphasized" : cn(menuListItemClassName, "text-muted-foreground"));
   return (
     <div className={shellClass} data-world-projection-switch>
       <button type="button" className={buttonClass(props.projection === "orthographic")} aria-pressed={props.projection === "orthographic"} onClick={() => props.onProjectionChange("orthographic")}>
@@ -1590,24 +1539,11 @@ export interface CreateOrbitCameraViewTemplatesConfig {
   readonly views?: readonly OrbitCameraViewId[];
 }
 
-function orbitCameraViewTemplateLeaf(
-  controllerId: string,
-  command: string,
-  view: OrbitCameraViewId,
-  id = view,
-  label = ORBIT_CAMERA_VIEW_LABELS[view],
-): OrbitCameraViewTemplateDescriptor {
+function orbitCameraViewTemplateLeaf(controllerId: string, command: string, view: OrbitCameraViewId, id = view, label = ORBIT_CAMERA_VIEW_LABELS[view]): OrbitCameraViewTemplateDescriptor {
   return { id, label, controllerId, command, args: { view } };
 }
 
-function orbitCameraViewTemplateBranch(
-  controllerId: string,
-  command: string,
-  id: string,
-  label: string,
-  view: OrbitCameraViewId,
-  children: readonly OrbitCameraViewTemplateDescriptor[],
-): OrbitCameraViewTemplateDescriptor {
+function orbitCameraViewTemplateBranch(controllerId: string, command: string, id: string, label: string, view: OrbitCameraViewId, children: readonly OrbitCameraViewTemplateDescriptor[]): OrbitCameraViewTemplateDescriptor {
   return { id, label, controllerId, command, args: { view }, children };
 }
 
@@ -1617,22 +1553,14 @@ export function createOrbitCameraViewTemplates(config: CreateOrbitCameraViewTemp
   if (config.views) {
     return config.views.map((view) => orbitCameraViewTemplateLeaf(config.controllerId, command, view));
   }
-  const orthographic2d: OrbitCameraViewTemplateDescriptor[] = (["top", "bottom", "front", "back", "right", "left"] as const).map((view) =>
-    orbitCameraViewTemplateLeaf(config.controllerId, command, view),
-  );
-  const isometryCorners: OrbitCameraViewTemplateDescriptor[] = (["isometricNe", "isometricNw", "isometricSe", "isometricSw"] as const).map((view) =>
-    orbitCameraViewTemplateLeaf(config.controllerId, command, view),
-  );
+  const orthographic2d: OrbitCameraViewTemplateDescriptor[] = (["top", "bottom", "front", "back", "right", "left"] as const).map((view) => orbitCameraViewTemplateLeaf(config.controllerId, command, view));
+  const isometryCorners: OrbitCameraViewTemplateDescriptor[] = (["isometricNe", "isometricNw", "isometricSe", "isometricSw"] as const).map((view) => orbitCameraViewTemplateLeaf(config.controllerId, command, view));
   return [
     orbitCameraViewTemplateBranch(config.controllerId, command, "orthographic", "Orthographic", "top", [
       orbitCameraViewTemplateBranch(config.controllerId, command, "orthographic-2d", "2D", "top", orthographic2d),
-      orbitCameraViewTemplateBranch(config.controllerId, command, "orthographic-3d", "3D", "isometricNe", [
-        orbitCameraViewTemplateBranch(config.controllerId, command, "isometry", "Isometry", "isometricNe", isometryCorners),
-      ]),
+      orbitCameraViewTemplateBranch(config.controllerId, command, "orthographic-3d", "3D", "isometricNe", [orbitCameraViewTemplateBranch(config.controllerId, command, "isometry", "Isometry", "isometricNe", isometryCorners)]),
     ]),
-    orbitCameraViewTemplateBranch(config.controllerId, command, "perspective", "Perspective", "perspective", [
-      orbitCameraViewTemplateLeaf(config.controllerId, command, "twoPointPerspective"),
-    ]),
+    orbitCameraViewTemplateBranch(config.controllerId, command, "perspective", "Perspective", "perspective", [orbitCameraViewTemplateLeaf(config.controllerId, command, "twoPointPerspective")]),
   ];
 }
 
@@ -1671,9 +1599,7 @@ function orbitLayoutSingle(view: OrbitCameraViewId, group: string): OrbitCameraV
 /** @emoji 🧭 Catalog of reusable orbit-view window arrangements for named layouts. */
 export function createOrbitCameraViewLayoutDescriptors(): readonly OrbitCameraViewLayoutDescriptor[] {
   const singles2d = (["top", "bottom", "front", "back", "right", "left"] as const).map((view) => orbitLayoutSingle(view, "2D"));
-  const singles3d = (["isometricNe", "isometricNw", "isometricSe", "isometricSw", "perspective", "twoPointPerspective"] as const).map((view) =>
-    orbitLayoutSingle(view, "3D"),
-  );
+  const singles3d = (["isometricNe", "isometricNw", "isometricSe", "isometricSw", "perspective", "twoPointPerspective"] as const).map((view) => orbitLayoutSingle(view, "3D"));
   const dualRow = (id: string, label: string, group: string, panes: readonly OrbitCameraViewLayoutPane[]): OrbitCameraViewLayoutDescriptor => ({
     id,
     label,
@@ -1763,11 +1689,7 @@ export function createOrbitCameraViewLayoutDescriptors(): readonly OrbitCameraVi
 }
 
 /** @emoji 📷 Applies an orbit view preset when `seedKey` changes (owned-camera canvases). */
-export function WorldOrbitCameraViewApplier(props: {
-  readonly view: OrbitCameraViewId;
-  readonly seedKey: string | number;
-  readonly projectionOverride?: OrbitCameraProjection;
-}): ReactElement {
+export function WorldOrbitCameraViewApplier(props: { readonly view: OrbitCameraViewId; readonly seedKey: string | number; readonly projectionOverride?: OrbitCameraProjection }): ReactElement {
   const { camera } = useThree();
   const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
   const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
@@ -1782,11 +1704,7 @@ export function WorldOrbitCameraViewApplier(props: {
 }
 
 /** @emoji 📷 Seeds orbit camera + target when `seedKey` changes (fixture presets, display templates). */
-export function OrbitCameraViewSeed(props: {
-  readonly camera: Camera | null;
-  readonly state: WorldCameraState;
-  readonly seedKey: string | number;
-}): null {
+export function OrbitCameraViewSeed(props: { readonly camera: Camera | null; readonly state: WorldCameraState; readonly seedKey: string | number }): null {
   const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
   const lastSeedKey = reactHostPort.useRef<string | number | null>(null);
   reactHostPort.useLayoutEffect(() => {
@@ -1801,12 +1719,7 @@ export function OrbitCameraViewSeed(props: {
 }
 
 /** @emoji 📷 Mounts perspective/orthographic camera + seeds orbit state for display templates. */
-export function WorldOrbitCameraViewRig(props: {
-  readonly state: WorldCameraState;
-  readonly seedKey: string | number;
-  readonly onCamera?: (camera: Camera | null) => void;
-  readonly perspectiveFov?: number;
-}): ReactElement {
+export function WorldOrbitCameraViewRig(props: { readonly state: WorldCameraState; readonly seedKey: string | number; readonly onCamera?: (camera: Camera | null) => void; readonly perspectiveFov?: number }): ReactElement {
   const projection = props.state.projection ?? "perspective";
   const up = cadVec3ToThree(props.state.up ?? ORBIT_CAMERA_Z_UP);
   const cameraKey = `${projection}:${props.seedKey}`;
@@ -1815,16 +1728,7 @@ export function WorldOrbitCameraViewRig(props: {
       {projection === "orthographic" ? (
         <orthographicCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={500_000} zoom={props.state.zoom} />
       ) : (
-        <perspectiveCamera
-          key={cameraKey}
-          ref={props.onCamera}
-          makeDefault
-          up={up}
-          near={0.2}
-          far={500_000}
-          fov={props.perspectiveFov ?? 50}
-          zoom={props.state.zoom}
-        />
+        <perspectiveCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={500_000} fov={props.perspectiveFov ?? 50} zoom={props.state.zoom} />
       )}
       <WorldOrbitCameraViewRigSeed state={props.state} seedKey={props.seedKey} />
     </>
@@ -1896,10 +1800,7 @@ export function applyWorldOrbitMouseButtonsIdle(controls: WorldOrbitControlsBind
 }
 
 /** @emoji 🖱️ Maps right-button modifiers: plain right → context menu, Shift+right → pan, Alt+right → orbit. */
-export function resolveWorldOrbitRightMouseAction(
-  event: Pick<PointerEvent, "button" | "altKey" | "shiftKey">,
-  _projection: OrbitCameraProjection = "perspective",
-): number | null {
+export function resolveWorldOrbitRightMouseAction(event: Pick<PointerEvent, "button" | "altKey" | "shiftKey">, _projection: OrbitCameraProjection = "perspective"): number | null {
   if (event.button !== 2) {
     return null;
   }
@@ -1921,11 +1822,7 @@ export interface WorldOrbitRightMouseBindingsOptions {
 }
 
 /** @emoji 🖱️ Binds projection-aware Alt+right and Shift+right actions while leaving plain right click for context menus. */
-export function useWorldOrbitRightMouseBindings(
-  controls: WorldOrbitControlsBinding | null,
-  domElement: HTMLElement | undefined,
-  options?: WorldOrbitRightMouseBindingsOptions,
-): void {
+export function useWorldOrbitRightMouseBindings(controls: WorldOrbitControlsBinding | null, domElement: HTMLElement | undefined, options?: WorldOrbitRightMouseBindingsOptions): void {
   const projection = options?.projection ?? "perspective";
   const optionsRef = reactHostPort.useRef(options);
   optionsRef.current = options;
@@ -2244,10 +2141,7 @@ export interface WorldReferenceAppearance {
 }
 
 /** @emoji 🖼️ Resolves hover/selection fill, content opacity, and border for reference planes. */
-export function worldReferenceAppearance(
-  renderMode: Pick<WorldEntityRenderMode, "asHover" | "showSelectedOutline">,
-  baseOpacity: number,
-): WorldReferenceAppearance {
+export function worldReferenceAppearance(renderMode: Pick<WorldEntityRenderMode, "asHover" | "showSelectedOutline">, baseOpacity: number): WorldReferenceAppearance {
   if (renderMode.showSelectedOutline) {
     return {
       backgroundColor: resolveColorHex(WORLD_REFERENCE_SELECTED_BACKGROUND_CSS, "primary"),
@@ -2334,20 +2228,11 @@ export function worldEulerDegreesToQuat(euler: readonly [number, number, number]
   const sp = Math.sin(pitch * 0.5);
   const cr = Math.cos(roll * 0.5);
   const sr = Math.sin(roll * 0.5);
-  return [
-    sr * cp * cy - cr * sp * sy,
-    cr * sp * cy + sr * cp * sy,
-    cr * cp * sy - sr * sp * cy,
-    cr * cp * cy + sr * sp * sy,
-  ];
+  return [sr * cp * cy - cr * sp * sy, cr * sp * cy + sr * cp * sy, cr * cp * sy - sr * sp * cy, cr * cp * cy + sr * sp * sy];
 }
 
 /** @emoji 🖼️ Applies a declarative inspector patch to one reference plane. */
-export function patchWorldReferenceProps(
-  reference: WorldReferenceProps,
-  field: "origin" | "rotation" | "scale" | "scaleUniform" | "widthWorld" | "opacity",
-  value: unknown,
-): WorldReferenceProps | null {
+export function patchWorldReferenceProps(reference: WorldReferenceProps, field: "origin" | "rotation" | "scale" | "scaleUniform" | "widthWorld" | "opacity", value: unknown): WorldReferenceProps | null {
   const patch: Partial<Omit<WorldReferenceProps, "id">> = {};
   if (field === "origin" && Array.isArray(value) && value.length === 3) {
     patch.origin = [Number(value[0]), Number(value[1]), Number(value[2])];
@@ -2384,12 +2269,7 @@ function worldReferencePlaneSize(reference: WorldReferenceProps, aspect: number)
   return [width, width / Math.max(aspect, 1e-6)];
 }
 
-const WorldReferenceGumball = reactHostPort.memo(function WorldReferenceGumball(props: {
-  readonly referenceId: string;
-  readonly target: Group;
-  readonly config: GumballConfig;
-  readonly onRelocate?: (payload: WorldReferenceRelocatePayload) => void;
-}) {
+const WorldReferenceGumball = reactHostPort.memo(function WorldReferenceGumball(props: { readonly referenceId: string; readonly target: Group; readonly config: GumballConfig; readonly onRelocate?: (payload: WorldReferenceRelocatePayload) => void }) {
   const beforeRef = reactHostPort.useRef<GumballPose | null>(null);
   return (
     <UnifiedGumball
@@ -2483,11 +2363,7 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
   const showGumball = props.selected && selectable && props.relocateActive !== false && groupRef.current && config && gumballConfigVisible(config);
   return (
     <>
-      <group
-        ref={groupRef}
-        visible={renderMode.visible}
-        userData={{ worldReferenceId: props.reference.id }}
-      >
+      <group ref={groupRef} visible={renderMode.visible} userData={{ worldReferenceId: props.reference.id }}>
         {appearance.backgroundColor ? (
           <mesh raycast={worldRaycastNone} renderOrder={-11}>
             <planeGeometry args={[planeWidth, planeHeight]} />
@@ -2530,9 +2406,7 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
           </lineSegments>
         ) : null}
       </group>
-      {showGumball && groupRef.current ? (
-        <WorldReferenceGumball referenceId={props.reference.id} target={groupRef.current} config={config} onRelocate={props.onRelocate} />
-      ) : null}
+      {showGumball && groupRef.current ? <WorldReferenceGumball referenceId={props.reference.id} target={groupRef.current} config={config} onRelocate={props.onRelocate} /> : null}
     </>
   );
 });
@@ -2637,12 +2511,7 @@ const _worldVolumeCorner = new Vector3();
 const _worldVolumeLocal = new Vector3();
 
 /** @emoji 🧊 True when every corner of a world AABB lies inside any oriented volume (union). */
-export function worldVolumesContainAabb(
-  volumes: readonly WorldVolumeProps[],
-  aabbMin: Vec3,
-  aabbMax: Vec3,
-  epsilon = 1e-3,
-): boolean {
+export function worldVolumesContainAabb(volumes: readonly WorldVolumeProps[], aabbMin: Vec3, aabbMax: Vec3, epsilon = 1e-3): boolean {
   if (!volumes.length) {
     return true;
   }
@@ -2680,12 +2549,7 @@ export function worldVolumesContainAabb(
   return false;
 }
 
-const WorldVolumeGumball = reactHostPort.memo(function WorldVolumeGumball(props: {
-  readonly volumeId: string;
-  readonly target: Group;
-  readonly config: GumballConfig;
-  readonly onRelocate?: (payload: WorldVolumeRelocatePayload) => void;
-}) {
+const WorldVolumeGumball = reactHostPort.memo(function WorldVolumeGumball(props: { readonly volumeId: string; readonly target: Group; readonly config: GumballConfig; readonly onRelocate?: (payload: WorldVolumeRelocatePayload) => void }) {
   const beforeRef = reactHostPort.useRef<GumballPose | null>(null);
   return (
     <UnifiedGumball
@@ -2770,9 +2634,7 @@ const WorldVolumeBoxItem = reactHostPort.memo(function WorldVolumeBoxItem(props:
           <lineBasicMaterial color={color} transparent opacity={Math.min(1, opacity + 0.35)} depthWrite={false} />
         </lineSegments>
       </group>
-      {showGumball && groupRef.current ? (
-        <WorldVolumeGumball volumeId={props.volume.id} target={groupRef.current} config={config} onRelocate={props.onRelocate} />
-      ) : null}
+      {showGumball && groupRef.current ? <WorldVolumeGumball volumeId={props.volume.id} target={groupRef.current} config={config} onRelocate={props.onRelocate} /> : null}
     </>
   );
 });
@@ -2921,10 +2783,7 @@ if (import.meta.vitest) {
 
   describe("applyOrbitProjectionToCameraState", () => {
     it("applies orthographic zoom defaults while preserving pose", () => {
-      const state = applyOrbitProjectionToCameraState(
-        { position: [100, 0, 50], target: [0, 0, 0], zoom: 1, projection: "perspective" },
-        "orthographic",
-      );
+      const state = applyOrbitProjectionToCameraState({ position: [100, 0, 50], target: [0, 0, 0], zoom: 1, projection: "perspective" }, "orthographic");
       expect(state.projection).toBe("orthographic");
       expect(state.zoom).toBe(50);
       expect(state.position).toEqual([100, 0, 50]);

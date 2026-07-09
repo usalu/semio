@@ -7,6 +7,7 @@ goal: HOOKS/EVENTDATA
 ## Summary
 
 Refactored HookResult to return structured event-specific data matching the YAML schema. Added HookPlanStep struct, 15 extraction functions, populateEventData dispatcher, and 30+ tests. Each event type now returns its specific fields (session, timestamp, client, parent, sha, prompt, chat, name, input, response, steps, query, include, exclude, path, old, new, all, command, pid, terminated, stdout, stderr) plus a raw field with the original input JSON.
+
 ## Changes
 
 - Extended HookResult with event-specific fields (session, timestamp, client, parent, sha, prompt, chat, name, input, response, steps, query, include, exclude, path, old, new, all, command, pid, terminated, stdout, stderr, raw)

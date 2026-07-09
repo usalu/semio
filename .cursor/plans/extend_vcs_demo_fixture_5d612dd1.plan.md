@@ -2,30 +2,30 @@
 name: Extend VCS Demo Fixture
 overview: Extend `DocumentVcsStore` with a small, backward-compatible "checkout" mechanism so alternatives can genuinely fork from any earlier checkpoint (not just the latest), then rewrite the `vcs/play` demo fixture into a rich ~15-checkpoint, 5-alternative history exercising real branch forks, batched multi-edit commits, 3 authors, and 2 new operation kinds.
 todos:
-  - id: store-checkout
-    content: Add checkoutCheckpoint command, currentCheckpointId tracking, and checkoutCheckpointInternal helper to DocumentVcsStore in vcs/core/index.ts
-    status: completed
-  - id: store-fork-fix
-    content: Rewrite commitCheckpoint/createAlternative/switchAlternative to use currentCheckpointId (not always-last-checkpoint) and grow the active alternative's checkpointIds on each commit
-    status: completed
-  - id: store-tests
-    content: Extend vcs/core/index.ts test block with fork + checkout round-trip cases
-    status: completed
-  - id: fixture-ops
-    content: Add status/tags fields to VcsDemoProjection and setStatus/addTag/removeTag operations in vcs/play/index.ts
-    status: completed
-  - id: fixture-authors
-    content: Add third author (Carol) to VCS_DEMO_AUTHORS
-    status: completed
-  - id: fixture-seed
-    content: Rewrite seedVcsDemoHistory into ~15-checkpoint/5-alternative history with real forks (checkoutCheckpoint) and batched multi-edit commits
-    status: completed
-  - id: fixture-tests
-    content: Extend seedVcsDemoHistory test assertions for new scale and real-fork proof
-    status: completed
-  - id: verify-fixture
-    content: Run vcs-core/vcs-play tests and bun run dev:vcs, screenshot the branching History graph
-    status: completed
+ - id: store-checkout
+   content: Add checkoutCheckpoint command, currentCheckpointId tracking, and checkoutCheckpointInternal helper to DocumentVcsStore in vcs/core/index.ts
+   status: completed
+ - id: store-fork-fix
+   content: Rewrite commitCheckpoint/createAlternative/switchAlternative to use currentCheckpointId (not always-last-checkpoint) and grow the active alternative's checkpointIds on each commit
+   status: completed
+ - id: store-tests
+   content: Extend vcs/core/index.ts test block with fork + checkout round-trip cases
+   status: completed
+ - id: fixture-ops
+   content: Add status/tags fields to VcsDemoProjection and setStatus/addTag/removeTag operations in vcs/play/index.ts
+   status: completed
+ - id: fixture-authors
+   content: Add third author (Carol) to VCS_DEMO_AUTHORS
+   status: completed
+ - id: fixture-seed
+   content: Rewrite seedVcsDemoHistory into ~15-checkpoint/5-alternative history with real forks (checkoutCheckpoint) and batched multi-edit commits
+   status: completed
+ - id: fixture-tests
+   content: Extend seedVcsDemoHistory test assertions for new scale and real-fork proof
+   status: completed
+ - id: verify-fixture
+   content: Run vcs-core/vcs-play tests and bun run dev:vcs, screenshot the branching History graph
+   status: completed
 isProject: false
 ---
 
@@ -62,9 +62,7 @@ private checkoutCheckpointInternal(checkpointId: string): void {
 
 ```typescript
 const activeAltId = this.envelope.activeAlternativeId;
-const alternatives = activeAltId
-	? this.envelope.vcs.alternatives.map((alt) => (alt.id === activeAltId ? { ...alt, checkpointIds: [...alt.checkpointIds, checkpoint.id] } : alt))
-	: this.envelope.vcs.alternatives;
+const alternatives = activeAltId ? this.envelope.vcs.alternatives.map((alt) => (alt.id === activeAltId ? { ...alt, checkpointIds: [...alt.checkpointIds, checkpoint.id] } : alt)) : this.envelope.vcs.alternatives;
 ```
 
 5. Rewrite `createAlternative` to branch from `this.currentCheckpointId` instead of `checkpoints.at(-1)?.id`.

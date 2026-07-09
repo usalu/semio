@@ -33,10 +33,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:4181";
 const repoRoot = resolve(__dirname, "../../../../../");
-const viteBinCandidates = [
-  resolve(__dirname, "node_modules/vite/bin/vite.js"),
-  resolve(repoRoot, "node_modules/vite/bin/vite.js"),
-];
+const viteBinCandidates = [resolve(__dirname, "node_modules/vite/bin/vite.js"), resolve(repoRoot, "node_modules/vite/bin/vite.js")];
 const viteBin = viteBinCandidates.find((candidate) => existsSync(candidate)) ?? viteBinCandidates[0]!;
 const previewHost = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
 

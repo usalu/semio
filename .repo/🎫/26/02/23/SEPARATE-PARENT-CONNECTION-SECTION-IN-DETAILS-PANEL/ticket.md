@@ -7,6 +7,7 @@ goal: SKETCHPAD/DETAILSPANEL
 ## Summary
 
 Bulk close
+
 ## Changes
 
 ## Log

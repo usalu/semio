@@ -245,8 +245,8 @@ npx tsx .repo/tickets/2026/03/03/DESIGN-DRAG-PERFORMANCE-LONG-TASK-OPTIMIZATION/
 
 ## 8. Files Modified During Optimization Sessions
 
-| File                               | Changes                                                                                                                                                                                                              |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| File                                 | Changes                                                                                                                                                                                                              |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `compose/js/sketchpad/shared.ts`     | DerivedNode version counter, version reset in subscribe cleanup and dispose()                                                                                                                                        |
 | `compose/js/sketchpad/Sketchpad.tsx` | kitShallows version counter, useDerived getSnapshot version optimization                                                                                                                                             |
 | `compose/js/sketchpad/elements.tsx`  | Zustand no-op patch, transform suppression, Three.js frameloop="demand", SceneFrameControl pause/resume, Orb dragging prop, Ring localT + rAF throttle                                                               |

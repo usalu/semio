@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Sketchpad.tsx contained app-specific caches and hook getters:
@@ -63,4 +64,5 @@ These violated the open/closed principle: adding/removing an app required modify
 ## Log
 
 ## Summary
+
 # Summary

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 repo.tsx CLI was fully implemented in a previous session with analyze, fix, ticket, bundle, region, definition, and tool commands.
@@ -54,4 +55,5 @@ Updated diagnostic source filter from "compose" to "compose-kit" to match rename
 ## Log
 
 ## Summary
+
 # Summary

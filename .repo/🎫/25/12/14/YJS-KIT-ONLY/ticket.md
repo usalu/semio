@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 # Context
@@ -27,6 +28,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 XState owns Sketchpad UI state

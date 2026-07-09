@@ -20,29 +20,29 @@ import tseslint from "typescript-eslint";
 // Default ESLint flat configuration export with no custom rules.
 // Export MUST be an array of ESLint config objects.
 export default tseslint.config(
-    {
-        ignores: ["node_modules/**", "out/**", ".vscode-test/**", "codegen/**"],
+  {
+    ignores: ["node_modules/**", "out/**", ".vscode-test/**", "codegen/**"],
+  },
+  {
+    files: ["**/*.ts"],
+    languageOptions: {
+      parser: tseslint.parser,
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        ...globals.node,
+      },
     },
-    {
-        files: ["**/*.ts"],
-        languageOptions: {
-            parser: tseslint.parser,
-            ecmaVersion: "latest",
-            sourceType: "module",
-            globals: {
-                ...globals.node,
-            },
-        },
+  },
+  {
+    files: ["**/*.test.ts"],
+    languageOptions: {
+      globals: {
+        ...globals.mocha,
+        ...globals.node,
+      },
     },
-    {
-        files: ["**/*.test.ts"],
-        languageOptions: {
-            globals: {
-                ...globals.mocha,
-                ...globals.node,
-            },
-        },
-    }
+  },
 );
 
 // #endregion 🗄️Configuration

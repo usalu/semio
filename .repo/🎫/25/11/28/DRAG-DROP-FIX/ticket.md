@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The drag and drop feature for placing pieces in the diagram was not working correctly:
@@ -58,6 +59,7 @@ Note: Scene drop hover verification skipped in test due to Playwright timing iss
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix drag and drop piece placement in diagram and scene

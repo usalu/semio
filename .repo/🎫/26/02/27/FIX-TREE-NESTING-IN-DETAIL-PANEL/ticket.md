@@ -7,6 +7,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Fixed tree nesting indentation in the detail panel. Two issues were found and fixed:
+
 1. TreeContent paddingLeft was `level * 0.75rem` which didn't account for chevron+gap offset → changed to `level * 0.75 + 1.25rem`
 2. Sketchpad.tsx had `[&_[data-slot='tree-content']]:!pl-0` CSS override that forced ALL tree-content padding-left to 0 with !important, completely neutralizing hierarchical indentation in the right panel → removed this override
 

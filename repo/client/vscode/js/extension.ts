@@ -53,15 +53,14 @@ export type RepoEvent = {
 // #region 🧬CodegenGraphql
 // #endregion 🧲Header
 
-
-import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+import { TypedDocumentNode as DocumentNode } from "@graphql-typed-document-node/core";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
-export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends " $fragmentName" | "__typename" ? T[P] : never };
 /** All built-in ands = {
   ID: { input: string; output: string; }
   String: { input: string; output: string; }
@@ -865,7 +864,9 @@ export function graphql(source: "\n  query Tickets($year: Int, $month: Int, $day
 /**
  * 🕸️The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query Contributors {\n    repo {\n      contributors {\n        id github name emails\n        links { name url }\n        icons { avatar avatarRound github }\n        metrics { checkpoints tickets bundles folders files sections definitions lines }\n      }\n    }\n  }\n"): (typeof documents)["\n  query Contributors {\n    repo {\n      contributors {\n        id github name emails\n        links { name url }\n        icons { avatar avatarRound github }\n        metrics { checkpoints tickets bundles folders files sections definitions lines }\n      }\n    }\n  }\n"];
+export function graphql(
+  source: "\n  query Contributors {\n    repo {\n      contributors {\n        id github name emails\n        links { name url }\n        icons { avatar avatarRound github }\n        metrics { checkpoints tickets bundles folders files sections definitions lines }\n      }\n    }\n  }\n",
+): (typeof documents)["\n  query Contributors {\n    repo {\n      contributors {\n        id github name emails\n        links { name url }\n        icons { avatar avatarRound github }\n        metrics { checkpoints tickets bundles folders files sections definitions lines }\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a d\n    analyze(scope: $scope) {\n      breachs {\n        id summary priority autofixable scope line column excerpt\n        kind { id policy { id name } reason solution }\n        autofix { description }\n      }\n      metrics { total byPriority { high medium low } autofixable }\n    }\n  }\n"): (typeof documents)["\n  query Analyze($scope: String) {\n    analyze(scope: $scope) {\n      breachs {\n        id summary priority autofixable scope line column excerpt\n        kind{ high medium low } autofixable }\n    }\n  }\n"];
 export function graphql(source: "\n  mutation Fix($scope: String) {\n    fix(scope: $scope) {\n      fixed remaining\n      breachs { id summary priority scope }\n    }\n  }\n"): (typeof documents)["\n  mutation Fix($scope: String) {\n    fix(scope: $scope) {\n      fixed remaining\n      breachs { id summary priority scope }\n    }\n  }\n"];
@@ -1693,7 +1694,7 @@ function writeLog(level: string, args: any[]): void {
   try {
     const logPath = path.join(getWorkspaceRoot() || "", "activation.log");
     fs.appendFileSync(logPath, `[${level}] ${message}\n`);
-  } catch (e) { }
+  } catch (e) {}
 }
 
 /**
@@ -2837,7 +2838,7 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
   private _onDidChangeTreeData = new vscode.EventEmitter<MonorepoTreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  constructor(public filterProvider?: FilterTreeDataProvider) { }
+  constructor(public filterProvider?: FilterTreeDataProvider) {}
 
   refresh(): void {
     this._onDidChangeTreeData.fire();
@@ -2942,7 +2943,7 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
             if (parsed.section) {
               sections.push(parsed.section);
             }
-          } catch (e) { }
+          } catch (e) {}
         }
         return this.createSectionItems(sections, filePath);
       } catch (e) {
@@ -3679,6 +3680,6 @@ export function activate(context: vscode.ExtensionContext) {
  * Deactivates the repo VS Code extension and releases resources.
  *Implementations MUST clean up any active subscriptions.
  **/
-export function deactivate() { }
+export function deactivate() {}
 
 // #endregion 📜Activation

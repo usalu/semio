@@ -5,7 +5,5 @@
   "description": "Refactor elements/client/lib/topology: align board+scene play and react layers; extract shared meta/kind defaults and mirror helpers; add topology helpers for board-only and scene-only binding slices; unify play chrome; extend vitest in existing files; run bun ./script.ts test.",
   "summary": "Aligned topology board+scene: shared paired-meta helpers (topologyPairedKindCatalogBundle, topologyPairedKindCompatibility, topologySharedKindsFromPairedMetas), topologyMirrorProximityHandlers, TOPOLOGY_LOD_GRID_DEFAULTS, TOPOLOGY_PANE_ROOT_CLASS, topologySceneChromeDefaults; subregions for panes; module doc on individual vs paired testing. Refactored play into TopologyPlayChromeStrip, useTopologyPairedPlayModel, TOPOLOGY_PLAY_WINDOWS/labels, removed duplicate meta parsers. E2e uses focusGoldenLayoutTabByTitle + synced tab title constant. All topology tests pass.",
   "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": [
-    "⚪bb339e714138456aa7ffd7094434ebd9"
-  ]
+  "sessions": ["⚪bb339e714138456aa7ffd7094434ebd9"]
 }

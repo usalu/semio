@@ -33,16 +33,16 @@ flowchart TD
   shell --> playgroundView
 ```
 
-
-
 ## Approach
 
 1. In [framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx), factor the layout shell out of `PlatformView` into a reusable, product-neutral `ProductShell` component (new `//#region 🪨ProductShell`). `ProductShell` owns: `Layout` composition (navbar+canvas+footer+floating left/right `SidePanel`+toolbar overlay+mobilePanel), `ShellModeCanvas`, panel-visibility state/sizes, panel toggle group, `UISearch`/`UIFind` (Ctrl+P / Ctrl+F), and the shared helpers (`findDefaultActiveWindowKindId`, `convertFrameworkLayoutToShellLayout`).
 2. Make `ProductShell` operate on `@semio-tech/framework-core` base types (`Platform`, resolved app fields) and accept the product-specific bits as props/slots:
-  - resolved window-kind view defs (`UIWindowKindDefinition[]`) + active-window handling,
-  - left/right side-panel tab configs (so platform keeps details/options/chat kinds; playground stays tree-only with no JSON fallback),
-  - resolved toolbar/footer/navbar item arrays,
-  - navigation props (back/forward/up/uri) and search/find items.
+
+- resolved window-kind view defs (`UIWindowKindDefinition[]`) + active-window handling,
+- left/right side-panel tab configs (so platform keeps details/options/chat kinds; playground stays tree-only with no JSON fallback),
+- resolved toolbar/footer/navbar item arrays,
+- navigation props (back/forward/up/uri) and search/find items.
+
 3. Rewrite `PlatformView` as a thin wrapper that computes its panel kinds (workbench/details/options/chat) + resolved data and renders `ProductShell`. Keep its existing exported props/behavior.
 4. Refactor [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx): import `ProductShell` (and already-shared helpers like `windowKindsToGolden`, `UiToolbar`, `registerSurfaceBinding`, `UiRenderer`) from `@semio-tech/framework-platform-renderer-react`; delete the duplicated `ShellModeCanvas`, layout-conversion, `findDefaultActiveWindowKindId`, toolbar, navbar, and side-panel plumbing; reduce `PlaygroundView` to a thin wrapper that injects playground-only concerns (tree-only side panels, window engagement overlays, puzzle play surface hosts, the playground `UiNode` renderer for tree/section/field nodes) into `ProductShell`.
 5. Verify and update consumers of `PlatformView`/`PlaygroundView` (compose desktop client, puzzle play mains) for prop compatibility.

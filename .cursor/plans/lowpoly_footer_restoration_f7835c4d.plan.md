@@ -5,7 +5,6 @@ todos: []
 isProject: false
 ---
 
-
 ## Root cause
 
 The footer toolbar is built in [lowpoly/plugin/rs/lib.rs](lowpoly/plugin/rs/lib.rs) `edit_tools()`/`paint_tools()` (lines 849-964) and rendered by [framework/renderer/react/tool-tree.tsx](framework/renderer/react/tool-tree.tsx). `toolIcon()` in that file falls back to a generic `circle` icon whenever `iconId in ICONS` is false:
@@ -31,6 +30,7 @@ Regenerate via `bun nx run @semio-tech/ui-asset:build` (runs `bun ./script.ts ge
 ## Phase 2 — Restore footer tool labels, icons, and grouping
 
 In [lowpoly/plugin/rs/lib.rs](lowpoly/plugin/rs/lib.rs):
+
 - Extend `tool_button`/`tool_toggle`/`tool_collection` call sites with a label (these helpers in `framework/core/rs/tools.rs` are only used by lowpoly today, so it is safe to add a `label: impl Into<String>` parameter to each, setting both `label` and `title` on the resulting `ToolNode`).
 - `edit_tools()`: add labels to the 4 selection toggles (Mesh/Vertex/Edge/Face) and 3 transform toggles (Move/Rotate/Scale, restoring icon `maximize-2` for Scale to match old); regroup the 11 edit ops back into a `tool_collection("lowpoly-tools-edit", "pen-tool", [...])` (matching old `edit` collection) with labels and restored icons:
   - Extrude `box`, Inset `square`, Flip Normals `flip-vertical`, Bevel `git-branch`, Loop Cut `git-commit`, Merge `git-merge`, Dissolve `eraser`, Subdivide `grid-3x3`, Triangulate `triangle`, Mirror `flip-horizontal`, Decimate `minimize-2` (already vendored).
@@ -40,6 +40,7 @@ In [lowpoly/plugin/rs/lib.rs](lowpoly/plugin/rs/lib.rs):
 ## Phase 3 — Restore the window engagement rail
 
 In [lowpoly/plugin/rs/lib.rs](lowpoly/plugin/rs/lib.rs) `create_lowpoly_app()`:
+
 - Build a `WindowEngagement` mirroring old `windowEngagement()`: `options` = Move/Rotate/Scale toggles (`setTransformTool`, duplicating the footer transform toggles as in old code) + Snap (`magnet`, command `snap`) + Smooth (`sun`, command `toggleSmooth`); `input` = placeholder `"extrude, inset, mirror, decimate"` with `onSubmit: lowpoly_cmd("engagementSubmit", None)` (no `onChange` handler, matching old); `possible_engagements` = Extrude/Triangulate quick actions; `status` = a representative selection/tool summary string.
 - Replace `.window_kind(LOWPOLY_PLAY_WINDOW_MAIN, ...)` and `.window_kind(LOWPOLY_PLAY_WINDOW_UV, ...)` with `.window_kind_with_engagement(...)` passing this engagement (both window kinds, matching old behavior of attaching the same engagement to Model and UV windows).
 - Add an `"engagementSubmit"` handler in `handle_command` that trims/lowercases the submitted value and re-dispatches it as a command via `self.handle_command(&value, None, document_json, view_state)` (mirrors old `run(value)` in `f8376e848`); `engagementInput` needs no handler since it falls through to the existing no-op default (matches old, which had no listener either).
@@ -52,6 +53,6 @@ In [lowpoly/plugin/rs/lib.rs](lowpoly/plugin/rs/lib.rs) `create_lowpoly_app()`:
 - Rebuild the lowpoly wasm plugin and run the React E2E sweep: `.repo/🎫/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/verify-react-playgrounds-e2e.ts --plugin lowpoly`.
 - Manual live-browser screenshot of the footer in both Edit and Paint modes to confirm real icons render (no stray circles), tooltips show labels on hover, edit ops collapse into a single grouped button, and the window engagement rail (Snap/Smooth/command bar) appears at the top of the Model/UV windows.
 - Update the ticket `.repo/🎫/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/important.md` with a summary of the icon-vendoring root cause and files touched.
-</plan>
-<todos>[{"id": "vendor-icons", "content": "Add 16 missing icon ids to VENDORED_ICON_IDS in ui/asset/script.ts and regenerate via bun nx run @semio-tech/ui-asset:build"}, {"id": "tool-helper-labels", "content": "Add label parameter to tool_button/tool_toggle/tool_collection in framework/core/rs/tools.rs"}, {"id": "restore-edit-tools", "content": "Restore labels, icons, and edit collection grouping in lowpoly edit_tools()"}, {"id": "restore-paint-tools", "content": "Restore labels, icons, and uv/history collection grouping in lowpoly paint_tools()"}, {"id": "fix-flip-icon-consistency", "content": "Fix document face flip-normal action icon to flip-vertical for consistency with edit tool"}, {"id": "restore-window-engagement", "content": "Build WindowEngagement (Snap/Smooth/command input/possible engagements/status) and wire via window_kind_with_engagement; add engagementSubmit handler"}, {"id": "verify-footer-fix", "content": "Run cargo tests, rebuild wasm, run React E2E for lowpoly, manually verify footer and engagement rail in browser, update ticket"}]</todos>
-</CreatePlan>
+  </plan>
+  <todos>[{"id": "vendor-icons", "content": "Add 16 missing icon ids to VENDORED_ICON_IDS in ui/asset/script.ts and regenerate via bun nx run @semio-tech/ui-asset:build"}, {"id": "tool-helper-labels", "content": "Add label parameter to tool_button/tool_toggle/tool_collection in framework/core/rs/tools.rs"}, {"id": "restore-edit-tools", "content": "Restore labels, icons, and edit collection grouping in lowpoly edit_tools()"}, {"id": "restore-paint-tools", "content": "Restore labels, icons, and uv/history collection grouping in lowpoly paint_tools()"}, {"id": "fix-flip-icon-consistency", "content": "Fix document face flip-normal action icon to flip-vertical for consistency with edit tool"}, {"id": "restore-window-engagement", "content": "Build WindowEngagement (Snap/Smooth/command input/possible engagements/status) and wire via window_kind_with_engagement; add engagementSubmit handler"}, {"id": "verify-footer-fix", "content": "Run cargo tests, rebuild wasm, run React E2E for lowpoly, manually verify footer and engagement rail in browser, update ticket"}]</todos>
+  </CreatePlan>

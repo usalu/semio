@@ -7,6 +7,7 @@ goal: SKETCHPAD
 ## Summary
 
 Added the Type app toolbar model import action and extended the existing Type Playwright test to cover it. Playwright still reports no tests found for this repo layout, and the current tsc baseline still fails in sketchpad.test.ts for unrelated pre-existing errors.
+
 ## Changes
 
 - Inspect Type app toolbar registration and existing file import commands.

@@ -2,27 +2,27 @@
 name: Flow Undo Redo
 overview: Add an undo/redo history stack inside the Rust flow core (FlowHost), expose it through the WASM FlowSession, and bind native undo/redo keys in the React FlowCanvas.
 todos:
-  - id: ticket
-    content: Read repo://goals and open/reopen a ticket for flow undo/redo via repo MCP
-    status: completed
-  - id: core-history
-    content: Add FlowHistory struct + field and begin_change/undo/redo/can_undo/can_redo/content_changed to FlowHost in flow/core/lib.rs
-    status: completed
-  - id: core-hooks
-    content: Call begin_change in discrete mutations and add gesture coalescing in pointer_down/up
-    status: completed
-  - id: wasm-bindings
-    content: Expose undo/redo/canUndo/canRedo on FlowSession wasm_bindgen impl
-    status: completed
-  - id: react-keys
-    content: Add native undo/redo keybindings to FlowCanvas onKeyDown with commit sequence
-    status: completed
-  - id: tests
-    content: Extend Rust tests in lib.rs and vitest in index.tsx for undo/redo
-    status: completed
-  - id: build-verify
-    content: Rebuild WASM (nx run @semio-tech/flow-core:wasm) and run core + react test suites
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open/reopen a ticket for flow undo/redo via repo MCP
+   status: completed
+ - id: core-history
+   content: Add FlowHistory struct + field and begin_change/undo/redo/can_undo/can_redo/content_changed to FlowHost in flow/core/lib.rs
+   status: completed
+ - id: core-hooks
+   content: Call begin_change in discrete mutations and add gesture coalescing in pointer_down/up
+   status: completed
+ - id: wasm-bindings
+   content: Expose undo/redo/canUndo/canRedo on FlowSession wasm_bindgen impl
+   status: completed
+ - id: react-keys
+   content: Add native undo/redo keybindings to FlowCanvas onKeyDown with commit sequence
+   status: completed
+ - id: tests
+   content: Extend Rust tests in lib.rs and vitest in index.tsx for undo/redo
+   status: completed
+ - id: build-verify
+   content: Rebuild WASM (nx run @semio-tech/flow-core:wasm) and run core + react test suites
+   status: completed
 isProject: false
 ---
 
@@ -39,8 +39,6 @@ flowchart LR
   host -->|"swap fixture, keep camera"| rebuild["rebuild_dag + evaluate"]
   rebuild --> react["emitInteractionState / evaluate / persistFixture / renderFrame"]
 ```
-
-
 
 State of record is `FlowHost.fixture` (`FlowFixture`: widgets, synapses, layout, camera). Snapshots clone the fixture; comparison/undo ignore `camera` so zoom/pan never creates or is affected by undo steps. Selection/hover/preview-visibility live in the dag (ephemeral) and are intentionally not part of history.
 
@@ -110,4 +108,3 @@ On a true result: `event.preventDefault()`, then `emitInteractionState(session);
 
 - No new executable command, so no `launch.json` entry needed.
 - Camera is preserved across undo/redo (no viewport jump); selection is reset after undo/redo (acceptable for v1).
-

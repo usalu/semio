@@ -50,7 +50,7 @@ flowchart LR
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `kit_graph_change_from_diffs` | Add `KitGraphChange::from_diffs(forward: KitDiff, backward: KitDiff) -> Self` with the same body as today’s function (~20529). Keep `pub fn kit_graph_change_from_diffs(...)` as a one-line forward (optionally `#[deprecated(note = "...")]`) so external callers do not break.        |
 | `extract_granular_events`     | Move implementation to `KitGraphChange::granular_events(&self) -> Vec<KitGranularEvent>`. Replace internal uses (e.g. backbone section ~26699, tests ~27538, test harness ~25555) with `.granular_events()`. Keep `pub fn extract_granular_events` as a thin wrapper for compatibility. |
-| `commit_kit_graph_change`     | Today it only forwards to [`KitGraphSession::commit`](c:\git\compose\compose\rs\lib.rs) (~21354–21360). Either document “use `session.commit`” or add an inherent alias on `KitGraphSession` (e.g. `commit_graph_change`) and deprecate the free function — avoid duplicate semantics.      |
+| `commit_kit_graph_change`     | Today it only forwards to [`KitGraphSession::commit`](c:\git\compose\compose\rs\lib.rs) (~21354–21360). Either document “use `session.commit`” or add an inherent alias on `KitGraphSession` (e.g. `commit_graph_change`) and deprecate the free function — avoid duplicate semantics.  |
 
 **Verification:** `cargo test --lib -p compose` (all ~84 tests including backbone and delete tests).
 

@@ -5,22 +5,7 @@
   "jsRegions": ["🧰Type", "🔘Port", "🔗Connector"],
   "reactRegions": ["🧰Type", "🔘Port", "🔗Connector"],
   "schemaOperationInputs": {
-    "TypeOperationInput": [
-      "rename",
-      "changeDescription",
-      "changeIcon",
-      "addAttribute",
-      "removeAttribute",
-      "removeAttributes",
-      "createPort",
-      "port",
-      "deletePort",
-      "deletePorts",
-      "addConnector",
-      "connector",
-      "removeConnector",
-      "removeConnectors"
-    ],
+    "TypeOperationInput": ["rename", "changeDescription", "changeIcon", "addAttribute", "removeAttribute", "removeAttributes", "createPort", "port", "deletePort", "deletePorts", "addConnector", "connector", "removeConnector", "removeConnectors"],
     "PortOperationInput": ["rename", "changeDescription", "changeIcon", "addAttribute", "removeAttribute", "removeAttributes"],
     "ConnectorOperationInput": ["rename", "changeDescription", "changeIcon"]
   },
@@ -66,16 +51,7 @@
     "useRemovePortAttribute",
     "useRemovePortAttributes"
   ],
-  "reactExportsConnector": [
-    "useConnector",
-    "useConnectorCode",
-    "useConnectorDescription",
-    "useConnectorIcon",
-    "useConnectorAttributes",
-    "useRenameConnector",
-    "useChangeConnectorDescription",
-    "useChangeConnectorIcon"
-  ],
+  "reactExportsConnector": ["useConnector", "useConnectorCode", "useConnectorDescription", "useConnectorIcon", "useConnectorAttributes", "useRenameConnector", "useChangeConnectorDescription", "useChangeConnectorIcon"],
   "supportingChange": {
     "note": "compose/js 🎒Kit gained readId, readIcon, readImage, readTypeIds, readDesignIds, readAuthorIds, readQualityIds, readTagIds, readConceptIds so compose/react 🪝HooksKit kit field hooks typecheck.",
     "files": ["compose/js/index.ts"]

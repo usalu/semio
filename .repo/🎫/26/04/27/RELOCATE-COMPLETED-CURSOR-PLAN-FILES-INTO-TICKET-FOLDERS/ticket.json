@@ -5,9 +5,7 @@
   "description": "Move all completed .cursor/plans/*.plan.md files into the appropriate .repo/🎫/YY/MM/DD/TICKETSLUG/ folders, matching existing tickets by topic where possible, otherwise open and close a ticket per plan using plan_id archival.",
   "summary": "Relocated 40 completed Cursor plan files from .cursor/plans into topic-matched .repo ticket folders; added relocate-cursor-plans.ps1; updated plan.local on KIT-COMMAND-SCOPE-REFACTOR and REACT-JS-STORE-BOUNDARY-REFACTOR tickets.",
   "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": [
-    "⚪77a054a4bbea4d85951ae2797eeb5be5"
-  ],
+  "sessions": ["⚪77a054a4bbea4d85951ae2797eeb5be5"],
   "files": [
     ".repo/🎫/26/04/27/RELOCATE-COMPLETED-CURSOR-PLAN-FILES-INTO-TICKET-FOLDERS/relocate-cursor-plans.ps1",
     ".repo/🎫/26/04/26/KIT-COMMAND-SCOPE-REFACTOR/ticket.json",

@@ -7,6 +7,7 @@ goal: SKETCHPADLAYOUT/COMPONENTANALYSIS
 ## Summary
 
 Completed detailed layout analysis of 10 components in elements.tsx: Label, TreeContent, TreeSection, TreeItem, Input, Combobox, Slider, Stepper, Textarea, SidePanel. Documented all data-slots, layout structures, sizing defaults, showLabel wrapping patterns, and right-panel sizing interactions.
+
 ## Plan
 
 1. Read each component definition
@@ -46,13 +47,15 @@ Source: `compose/js/sketchpad/elements.tsx` (6992 lines)
 ## 1. Label (lines ~836–861)
 
 ### Data-slots
-| Slot | Element |
-|------|---------|
-| `property-row` | Outer `<div>` (grid container) |
-| `property-label` | `<span>` (label text) |
-| `property-control` | `<div>` (child wrapper) |
+
+| Slot               | Element                        |
+| ------------------ | ------------------------------ |
+| `property-row`     | Outer `<div>` (grid container) |
+| `property-label`   | `<span>` (label text)          |
+| `property-control` | `<div>` (child wrapper)        |
 
 ### Layout structure
+
 ```
 <div data-slot="property-row">          ← CSS Grid
   <span data-slot="property-label">     ← Column 1 (96px)
@@ -66,6 +69,7 @@ Source: `compose/js/sketchpad/elements.tsx` (6992 lines)
 **Classes**: `group grid min-w-0 w-full items-center`
 
 ### Label column
+
 - Fixed width: **96px**
 - Height: **22px** (`h-[22px]`)
 - Text: `text-xs font-medium`, truncated, left-aligned
@@ -73,17 +77,25 @@ Source: `compose/js/sketchpad/elements.tsx` (6992 lines)
 - Wrapped in `<Tooltip>` → `<TooltipTrigger asChild>` → `<TooltipContent>` with `<DescriptionTooltipContent>`
 
 ### Control column
+
 - `min-w-0` (prevents overflow)
 - Receives `{children}` directly
 
 ### Label+Input interaction
+
 The `Label` component is **never used standalone**. Input components (Input, Slider, Stepper, Textarea, Combobox, Select) conditionally wrap themselves in `<Label>` when `showLabel` is true:
+
 ```tsx
 if (showLabel && id) {
-  return <Label id={id} labelElementId={`${id}-label`}>{inputElement}</Label>;
+ return (
+  <Label id={id} labelElementId={`${id}-label`}>
+   {inputElement}
+  </Label>
+ );
 }
 return inputElement;
 ```
+
 This means the grid layout (96px | 1fr) only appears when `showLabel` is truthy. Without it, the input element renders raw.
 
 ---
@@ -91,11 +103,13 @@ This means the grid layout (96px | 1fr) only appears when `showLabel` is truthy.
 ## 2. TreeContent (line ~3764)
 
 ### Data-slots
-| Slot | Element |
-|------|---------|
+
+| Slot           | Element       |
+| -------------- | ------------- |
 | `tree-content` | Outer `<div>` |
 
 ### Layout structure
+
 ```
 <div data-slot="tree-content" class="relative"
      style="paddingTop: 3px; paddingBottom: 3px; paddingLeft: {level * 0.75}rem">
@@ -113,16 +127,18 @@ This means the grid layout (96px | 1fr) only appears when `showLabel` is truthy.
 ## 3. TreeSection (lines ~3850–3982)
 
 ### Data-slots
-| Slot | Element |
-|------|---------|
+
+| Slot               | Element                                                 |
+| ------------------ | ------------------------------------------------------- |
 | `tree-section-row` | Outer row `<div>` (both empty and collapsible variants) |
-| `tree-label` | `<span>` label text |
+| `tree-label`       | `<span>` label text                                     |
 
 ### Layout structure
 
 **Two variants:**
 
 #### A. No children (empty section)
+
 ```
 <div data-slot="tree-section-row" class="relative flex items-center gap-[6px] ..."
      style="paddingLeft: {level*0.75}rem; height: 20px; marginBottom: 6px">
@@ -135,6 +151,7 @@ This means the grid layout (96px | 1fr) only appears when `showLabel` is truthy.
 ```
 
 #### B. Has children (collapsible)
+
 ```
 <Collapsible>
   <CollapsibleTrigger asChild>
@@ -156,6 +173,7 @@ This means the grid layout (96px | 1fr) only appears when `showLabel` is truthy.
 ```
 
 ### Default sizing
+
 - **Row height**: `20px`
 - **Bottom margin**: `6px`
 - **Chevron**: `14px × 14px`
@@ -163,11 +181,13 @@ This means the grid layout (96px | 1fr) only appears when `showLabel` is truthy.
 - **Left padding**: `level * 0.75rem`
 
 ### Label styling
+
 - `text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate`
 - Optionally wrapped in `<Tooltip>` when `id` is provided
 - `flex-1` takes remaining space
 
 ### Actions
+
 - Rendered in `<div class="flex items-center gap-single">` at the end of the row
 
 ---
@@ -175,16 +195,18 @@ This means the grid layout (96px | 1fr) only appears when `showLabel` is truthy.
 ## 4. TreeItem (lines ~4162–4308)
 
 ### Data-slots
-| Slot | Element |
-|------|---------|
-| `tree-item-row` | Outer row `<div>` |
-| `tree-label` | `<span>` label text |
+
+| Slot            | Element             |
+| --------------- | ------------------- |
+| `tree-item-row` | Outer row `<div>`   |
+| `tree-label`    | `<span>` label text |
 
 ### Layout structure
 
 **Three variants:**
 
 #### A. Has children + label (expandable)
+
 ```
 <>
   <div data-slot="tree-item-row" role="treeitem"
@@ -206,11 +228,13 @@ This means the grid layout (96px | 1fr) only appears when `showLabel` is truthy.
 ```
 
 #### B. No label (passthrough)
+
 ```
 <TreeContext.Provider value={level, ...}>{children}</TreeContext.Provider>
 ```
 
 #### C. Leaf item (no children)
+
 ```
 <div data-slot="tree-item-row" role="treeitem"
      class="relative flex items-center gap-[6px] ..."
@@ -226,17 +250,20 @@ This means the grid layout (96px | 1fr) only appears when `showLabel` is truthy.
 ```
 
 ### Default sizing
+
 - **No explicit height** (content-driven, typically ~20px from text-xs)
 - **Chevron**: `size-3` (12px)
 - **Gap**: `6px`
 - **Left padding**: `level * 0.75rem`
 
 ### State classes
+
 - Selected: `bg-active-base text-active-foreground`
 - Highlighted: `bg-active-base text-active-foreground`
 - Hover: `hover:bg-hover-panel`
 
 ### SortableTreeItem variant
+
 - Same layout but uses `useSortable` hook for DnD
 - Adds `ref={setNodeRef}`, `transform`, `transition`, `opacity` via inline style
 - Optional drag handle: `<Action class="cursor-grab" {...attributes} {...listeners} icon={<GripVerticalIcon />} />`
@@ -246,17 +273,21 @@ This means the grid layout (96px | 1fr) only appears when `showLabel` is truthy.
 ## 5. Input (lines ~1981–2098)
 
 ### Data-slots
-| Slot | Element |
-|------|---------|
+
+| Slot    | Element           |
+| ------- | ----------------- |
 | `input` | `<input>` element |
 
 ### Layout structure
+
 ```
 <div style="opacity: shouldFade ? 0 : 1; transition: opacity 150ms">
   <input data-slot="input" type={type} ... />
 </div>
 ```
+
 When `showLabel && id`:
+
 ```
 <Label id={id} labelElementId={`${id}-label`}>
   <div style="opacity ...">
@@ -266,6 +297,7 @@ When `showLabel && id`:
 ```
 
 ### Default sizing
+
 - **Height**: `h-medium` (CSS variable)
 - **Width**: `w-full min-w-0`
 - **Padding**: `p-single`
@@ -274,6 +306,7 @@ When `showLabel && id`:
 - Number type: hides spin buttons via WebKit/Moz rules
 
 ### Interaction model
+
 - **lazy mode**: local state tracked; committed on blur/Enter, aborted on Escape
 - **interactionId**: fades other controls when this one is active (opacity 0 → 1 transition)
 - **transaction**: start on focus, finalize on blur/Enter, abort on Escape
@@ -283,6 +316,7 @@ When `showLabel && id`:
 ## 6. Combobox (lines ~1908–1976)
 
 ### Data-slots
+
 None directly — uses composite sub-components:
 | Slot (from sub-components) | Source component |
 |---|---|
@@ -292,6 +326,7 @@ None directly — uses composite sub-components:
 The trigger button gets `role="combobox"` and `aria-expanded={open}`.
 
 ### Layout structure
+
 ```
 <Popover>
   <PopoverTrigger asChild>
@@ -317,14 +352,17 @@ The trigger button gets `role="combobox"` and `aria-expanded={open}`.
 ```
 
 ### When showLabel && id
+
 ```
 <Label id={id} labelElementId={`${id}-label`} className="h-medium">
   {comboboxElement}
 </Label>
 ```
+
 Note: extra `h-medium` class on Label to constrain row height.
 
 ### Default sizing
+
 - Button: `w-full`, `h-medium` (from Button defaults)
 - Popover content: `w-full`, aligned to start
 - Command list: `max-h-[300px]` with scroll
@@ -334,18 +372,20 @@ Note: extra `h-medium` class on Label to constrain row height.
 ## 7. Slider (lines ~2278–2498)
 
 ### Data-slots
-| Slot | Element |
-|------|---------|
-| `slider` | `<SliderPrimitive.Root>` |
-| `slider-track` | `<SliderPrimitive.Track>` |
-| `slider-range` | `<SliderPrimitive.Range>` |
-| `slider-thumb` | `<SliderPrimitive.Thumb>` (per value) |
-| `slider-content` | Outer wrapper `<div>` |
-| `slider-row` | Grid row `<div>` |
-| `slider-track-cell` | Track cell `<div>` |
-| `slider-value` | Value display `<span>` |
+
+| Slot                | Element                               |
+| ------------------- | ------------------------------------- |
+| `slider`            | `<SliderPrimitive.Root>`              |
+| `slider-track`      | `<SliderPrimitive.Track>`             |
+| `slider-range`      | `<SliderPrimitive.Range>`             |
+| `slider-thumb`      | `<SliderPrimitive.Thumb>` (per value) |
+| `slider-content`    | Outer wrapper `<div>`                 |
+| `slider-row`        | Grid row `<div>`                      |
+| `slider-track-cell` | Track cell `<div>`                    |
+| `slider-value`      | Value display `<span>`                |
 
 ### Layout structure
+
 ```
 <div data-slot="slider-content" class="flex-1 min-w-0"
      style="opacity: shouldFade ? 0 : 1">
@@ -371,6 +411,7 @@ Note: extra `h-medium` class on Label to constrain row height.
 ```
 
 ### When showLabel
+
 ```
 <Label id={id} labelElementId={`${id}-label`} className={className}>
   {sliderContent}
@@ -378,6 +419,7 @@ Note: extra `h-medium` class on Label to constrain row height.
 ```
 
 ### Default sizing
+
 - **slider-row**: `h-[22px]`, grid `[minmax(0,1fr) 28px]`, gap `8px`
 - **slider-track**: `h-single` (horizontal), full width
 - **slider-thumb**: `size-small`, rounded-full
@@ -389,13 +431,15 @@ Note: extra `h-medium` class on Label to constrain row height.
 ## 8. Stepper (lines ~2500–2745)
 
 ### Data-slots
-| Slot | Element |
-|------|---------|
+
+| Slot            | Element                        |
+| --------------- | ------------------------------ |
 | `stepper-group` | Outer `<div>` (flex container) |
-| `stepper-minus` | Decrement `<button>` |
-| `stepper-plus` | Increment `<button>` |
+| `stepper-minus` | Decrement `<button>`           |
+| `stepper-plus`  | Increment `<button>`           |
 
 ### Layout structure
+
 ```
 <Label id={id}>
   <div data-slot="stepper-group"
@@ -416,6 +460,7 @@ Note: extra `h-medium` class on Label to constrain row height.
 **ALWAYS wraps in Label** — no `showLabel` conditional. The Stepper always renders inside `<Label id={id}>`.
 
 ### Default sizing
+
 - **stepper-group**: `h-[22px]`, `w-[100px]`, `min-w-[100px]`
 - **minus/plus buttons**: `22px × 22px` each
 - **center input**: `h-[22px]`, `w-[56px]`, `min-w-[56px]`
@@ -428,15 +473,19 @@ Note: extra `h-medium` class on Label to constrain row height.
 ## 9. Textarea (lines ~2750–2842)
 
 ### Data-slots
-| Slot | Element |
-|------|---------|
+
+| Slot       | Element              |
+| ---------- | -------------------- |
 | `textarea` | `<textarea>` element |
 
 ### Layout structure
+
 ```
 <textarea data-slot="textarea" class="... min-h-huge w-full ..." />
 ```
+
 When `showLabel && id`:
+
 ```
 <Label id={id} labelElementId={`${id}-label`} className="items-start">
   <textarea data-slot="textarea" ... />
@@ -444,6 +493,7 @@ When `showLabel && id`:
 ```
 
 ### Default sizing
+
 - **Min height**: `min-h-huge` (CSS variable)
 - **Width**: `w-full`
 - **Padding**: `px-tiny py-single`
@@ -452,6 +502,7 @@ When `showLabel && id`:
 - **Border**: standard, focus: `focus-visible:border-accent`
 
 ### Label interaction note
+
 When wrapped in Label, adds `className="items-start"` to the Label grid — this aligns the label text to the top instead of center (since textarea can be multi-line).
 
 ---
@@ -459,15 +510,17 @@ When wrapped in Label, adds `className="items-start"` to the Label grid — this
 ## 10. SidePanel (lines ~4994–5135)
 
 ### Data-slots
-| Slot | Element |
-|------|---------|
-| `side-panel-tabs` | Tab bar `<div>` |
+
+| Slot                    | Element                   |
+| ----------------------- | ------------------------- |
+| `side-panel-tabs`       | Tab bar `<div>`           |
 | `side-panel-tab-button` | Individual tab `<button>` |
-| `side-panel-content` | Content area `<div>` |
+| `side-panel-content`    | Content area `<div>`      |
 
 Also uses `data-panel="leftSidePanel"` or `data-panel="rightSidePanel"` on the outer container (not `data-slot`).
 
 ### Layout structure
+
 ```
 <LevelProvider level="panel">
   <div data-panel="leftSidePanel|rightSidePanel"
@@ -497,6 +550,7 @@ Also uses `data-panel="leftSidePanel"` or `data-panel="rightSidePanel"` on the o
 ```
 
 ### Default sizing
+
 - **Position**: `absolute`, inset by `var(--spacing-double)` from edges
 - **Default width**: `300px` (via `size` prop, default 300)
 - **Min width**: `200px`, **Max width**: `600px`
@@ -508,6 +562,7 @@ Also uses `data-panel="leftSidePanel"` or `data-panel="rightSidePanel"` on the o
 - **Resize handle**: `w-single` (1 CSS unit), full height
 
 ### Resize behavior
+
 - Manual `mousedown`/`mousemove`/`mouseup` handling
 - Accent border on hover/resize: `border-l-accent` or `border-r-accent`
 - Constrained to `[minSize, maxSize]` range
@@ -533,6 +588,7 @@ When wrapped in Label, the component becomes a child of the 96px|1fr grid, place
 ## Interaction fading
 
 Input and Slider support `interactionId`. When one control is "active" (being interacted with), other controls fade to `opacity: 0` via:
+
 ```tsx
 const shouldFade = activeInteraction && !isInteracting;
 <div style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
@@ -541,6 +597,7 @@ const shouldFade = activeInteraction && !isInteracting;
 ## Transaction model
 
 All input components use `useTransaction()` for undo/redo support:
+
 - `transaction.start()` — on focus/pointerdown/open
 - `transaction.finalize()` — on blur/pointerup/close/Enter
 - `transaction.abort()` — on Escape
@@ -548,6 +605,7 @@ All input components use `useTransaction()` for undo/redo support:
 ## Right panel sizing interaction
 
 When components are placed inside a `SidePanel`, the panel's content area has:
+
 - `p-[10px]` padding on `side-panel-content`
 - The panel itself is `flex flex-col` with `min-w-0 overflow-hidden`
 - Width is controlled by `size` prop (default 300px)

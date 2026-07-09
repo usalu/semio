@@ -7,7 +7,7 @@
 
 - `gql_relay`: `ConnectorConnection`/`RepresentationConnection`/`SideConnection`/`BlueprintEdge`/`BlueprintConnection` (+ `Side::compute_hash`).
 - `Connector` / `Representation`: Artifact-shaped `name`/`icon`/string fields; `port` as `Option<Arc<Port>>`; attributes → `AttributeConnection`.
-- `Type`: string slots for description/icon/image/unit; `connectors`/`representations`/`authors`/props/attributes/stats return relay connections; `KitGraphEngine` entity_* helpers wrapped `Some` for `Type`.
+- `Type`: string slots for description/icon/image/unit; `connectors`/`representations`/`authors`/props/attributes/stats return relay connections; `KitGraphEngine` entity\_\* helpers wrapped `Some` for `Type`.
 - `Side`: `piece`/`port`/`connector`/`design_piece` use `Arc`/optional `Arc`; `owner_connection` for `SideOwner`; `Connection` artifact name/description/icon + `AttributeConnection`.
 - `Piece`: `replaceableBlueprints` → `BlueprintConnection`.
 - `meta::Layer`: `icon` field for Artifact alignment.

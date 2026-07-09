@@ -2,27 +2,27 @@
 name: Flow Note and Preview Fixes
 overview: "Fix four Flow canvas issues: make Note's default size match a Slider, support native (non-DOM-overlay) double-click text editing on Notes, left-align Note text, and left-align/truncate the dictionary preview tree while keeping its fixed node width."
 todos:
-  - id: note-size
-    content: Make note_widget_size match slider size (40x14) in dag rs; update stale height assertion in flow/core/rs/lib.rs
-    status: completed
-  - id: note-align
-    content: Left-align Note text paint anchor in dag rs
-    status: completed
-  - id: preview-truncate
-    content: Add left-aligned truncation-with-ellipsis helper for preview tree rows and note text, keeping fixed node width
-    status: completed
-  - id: note-edit-engine
-    content: Add transient editing_note/caret state and begin/insert/backspace/delete/move/commit methods to DagHost, plus native caret painting
-    status: completed
-  - id: note-edit-flow
-    content: Wrap DagHost note-edit methods in FlowHost with undo gesture grouping and sync_from_dag; expose via FlowSession wasm bindings
-    status: completed
-  - id: note-edit-react
-    content: Wire double-click, keydown routing, click-away commit, and RAF caret blink in flow/react/index.tsx without any DOM overlay
-    status: completed
-  - id: tests
-    content: Extend existing Rust and React test files to cover all of the above (no new test files)
-    status: completed
+ - id: note-size
+   content: Make note_widget_size match slider size (40x14) in dag rs; update stale height assertion in flow/core/rs/lib.rs
+   status: completed
+ - id: note-align
+   content: Left-align Note text paint anchor in dag rs
+   status: completed
+ - id: preview-truncate
+   content: Add left-aligned truncation-with-ellipsis helper for preview tree rows and note text, keeping fixed node width
+   status: completed
+ - id: note-edit-engine
+   content: Add transient editing_note/caret state and begin/insert/backspace/delete/move/commit methods to DagHost, plus native caret painting
+   status: completed
+ - id: note-edit-flow
+   content: Wrap DagHost note-edit methods in FlowHost with undo gesture grouping and sync_from_dag; expose via FlowSession wasm bindings
+   status: completed
+ - id: note-edit-react
+   content: Wire double-click, keydown routing, click-away commit, and RAF caret blink in flow/react/index.tsx without any DOM overlay
+   status: completed
+ - id: tests
+   content: Extend existing Rust and React test files to cover all of the above (no new test files)
+   status: completed
 isProject: false
 ---
 
@@ -48,6 +48,7 @@ Update the now-stale assertion in [flow/core/rs/lib.rs](flow/core/rs/lib.rs):
         assert!(node.width >= 40.0);
         assert!(node.height > 20.0);
 ```
+
 to assert the note height equals `dag::DAG_CHANNEL_ROW_HEIGHT` (matching slider height) instead of `> 20.0`.
 
 ## 2. Left-align Note text
@@ -100,6 +101,7 @@ caret_visible: bool,
 ```
 
 Add `DagHost` methods (near `try_widget_pointer_down`/`toggle_preview_tree_path`, line ~3091-3160):
+
 - `begin_note_edit(node_id, world_x, world_y)` — hit-tests a byte offset from `world_x` against the note's text (small helper mirroring writer's `hit_byte_in_line`, using the shared `cavas`/`infinite_cavas` text-measuring helpers already imported here, e.g. `port_label_text_width`), sets `editing_note = Some(NoteEditState { node_id, caret: offset, anchor: offset })`.
 - `note_insert_text(chunk)`, `note_backspace()`, `note_delete_forward()`, `note_move_caret(dir, extend)` — mutate the target `DagNodeKind::Note.text` in place and update `caret`/`anchor` (byte offsets).
 - `note_commit_edit()` — clears `editing_note`.
@@ -110,6 +112,7 @@ Paint: extend the Note branch (line 4248) so when `self.editing_note` matches th
 ### FlowHost/FlowSession: widget sync + undo + wasm bindings
 
 `FlowHost` wraps these with its own widget model and undo gestures, mirroring the existing slider-drag gesture pattern (`history.pending` set in `pointer_down_screen`, committed via `commit_gesture_history`, [flow/core/rs/lib.rs:2234-2236](flow/core/rs/lib.rs) and [flow/core/rs/lib.rs:3115-3129](flow/core/rs/lib.rs)):
+
 - `begin_note_edit(widget_id, world_x, world_y)`: `self.history.pending = Some(self.fixture.clone())`, then `self.dag.begin_note_edit(...)`.
 - `note_insert_text` / `note_backspace` / `note_delete_forward` / `note_move_caret`: delegate to `self.dag.<method>`, then `self.sync_from_dag()` (already has the `(Widget::InputNote { text, .. }, DagNodeKind::Note { text: dag_text, .. }) => *text = dag_text.clone()` arm at [flow/core/rs/lib.rs:2629-2631](flow/core/rs/lib.rs)) and `self.touch_channel_eval()`.
 - `note_commit_edit`: `self.dag.note_commit_edit()`, `self.commit_gesture_history()`.
@@ -120,6 +123,7 @@ Expose all of these as `#[wasm_bindgen(js_name = ...)]` on `FlowSession` next to
 ### React: FlowCanvas wiring, no overlay component
 
 In [flow/react/index.tsx](flow/react/index.tsx):
+
 - Add `const [editingNoteId, setEditingNoteId] = useState<string | null>(null)`.
 - In `onCanvasDoubleClick` ([flow/react/index.tsx:4035-4058](flow/react/index.tsx)), before falling through to the spotlight: if the hovered widget's `kind === "inputNote"`, call `session.beginNoteEdit(hoveredId, world.x, world.y)`, `setEditingNoteId(hoveredId)`, `containerRef.current?.focus()`, `renderFrame()`, and `return`.
 - In the container `onKeyDown` handler ([flow/react/index.tsx:3532-3590](flow/react/index.tsx)), branch at the top: if `editingNoteId` is set, route keys to the new note-edit bindings instead of undo/redo/delete-selection (Escape/Enter → `noteCommitEdit` + clear state; Backspace → `noteBackspace`; Delete → `noteDeleteForward`; Arrow keys/Home/End → `noteMoveCaret`; single printable characters with no meta/ctrl → `noteInsertText`), each followed by `evaluate()`/`persistFixture()`/`renderFrame()` like every other mutation path in this file; `event.preventDefault()` and return early so shortcuts don't also fire.

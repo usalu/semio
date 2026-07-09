@@ -5,7 +5,5 @@
   "description": "Fix puzzle 2d selection sync across windows: group select syncs correctly, but background click and individual element click leave stale group selection on other windows.",
   "summary": "Fixed puzzle 2d multi-pane selection desync after group select: peer panes kept stale area-select preselect in JS, so `pushWasmSelectionAndPreselectToSession` re-applied the old marquee preview after a background click or single-element pick.\n\n- `applySelectionFromPeerSilent` now clears preselect before deriving committed selection chrome, re-syncs scene flags once both stores match, and pushes empty preselect to WASM when needed.\n- Added regression test for group-select → deselect peer chrome.\n- 116 puzzle/2d/react vitest tests pass.",
   "goal": "🎯puzzle",
-  "sessions": [
-    "⚪d4093a6e723c423d9017099903ed9470"
-  ]
+  "sessions": ["⚪d4093a6e723c423d9017099903ed9470"]
 }

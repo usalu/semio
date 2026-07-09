@@ -32,27 +32,35 @@ realMeshes.set("hexagonal-cut-concrete-forest-right.glb", await loadGlb("hexagon
 
 const unitBox = new Mesh(new BoxGeometry(1, 1, 1));
 const seq = buildBrushFillSequence({
-  baseFixture: f, maxCount: 100, seed: 42, kindCatalogs: catalogs, kindCompatibility: compat,
-  collisionTolerance: 0, meshRootForUrl: () => unitBox,
+  baseFixture: f,
+  maxCount: 100,
+  seed: 42,
+  kindCatalogs: catalogs,
+  kindCompatibility: compat,
+  collisionTolerance: 0,
+  meshRootForUrl: () => unitBox,
 });
 const applied = applyBrushFillPlacementsToFixture(f, seq, catalogs);
 console.log("[DEBUG] 1x1 probe seq", seq.length);
-function realBox(obj: typeof applied.objects[0]) {
+function realBox(obj: (typeof applied.objects)[0]) {
   const url = resolveObjectKindMeshUrl(obj.objectKind, catalogs, applied)!;
   const meshRoot = realMeshes.get(url.replace("/meshes/", ""))!;
   const probe = brushProbeGroupFromPreview({ origin: obj.origin, orientation: obj.orientation, scale: obj.scale }, meshRoot);
   updateWorldMatrixChain(probe);
   return brushPreviewCollisionBox(probe, 0);
 }
-let pairs = 0; let overlapVol = 0;
+let pairs = 0;
+let overlapVol = 0;
 const meshVol = 9.8 * 4.5 * 3;
 const boxes = applied.objects.map((o) => realBox(o));
-for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
-  const a = boxes[i]!; const b = boxes[j]!;
-  if (boxesPenetrationExceeds(a, b, 0, 0)) pairs++;
-  const ix = Math.max(0, Math.min(a.max.x, b.max.x) - Math.max(a.min.x, b.min.x));
-  const iy = Math.max(0, Math.min(a.max.y, b.max.y) - Math.max(a.min.y, b.min.y));
-  const iz = Math.max(0, Math.min(a.max.z, b.max.z) - Math.max(a.min.z, b.min.z));
-  overlapVol += ix * iy * iz;
-}
-console.log(`[DEBUG] pairs=${pairs} overlapVolRatio=${(overlapVol/(meshVol*applied.objects.length)*100).toFixed(1)}%`);
+for (let i = 0; i < boxes.length; i++)
+  for (let j = i + 1; j < boxes.length; j++) {
+    const a = boxes[i]!;
+    const b = boxes[j]!;
+    if (boxesPenetrationExceeds(a, b, 0, 0)) pairs++;
+    const ix = Math.max(0, Math.min(a.max.x, b.max.x) - Math.max(a.min.x, b.min.x));
+    const iy = Math.max(0, Math.min(a.max.y, b.max.y) - Math.max(a.min.y, b.min.y));
+    const iz = Math.max(0, Math.min(a.max.z, b.max.z) - Math.max(a.min.z, b.min.z));
+    overlapVol += ix * iy * iz;
+  }
+console.log(`[DEBUG] pairs=${pairs} overlapVolRatio=${((overlapVol / (meshVol * applied.objects.length)) * 100).toFixed(1)}%`);

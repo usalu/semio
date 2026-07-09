@@ -5,7 +5,5 @@
   "description": "Add engagement Zoom option in puzzle3d that zooms/framed camera to the current selection when pressed or submitted via command line.",
   "summary": "Added puzzle3d engagement Zoom that frames the orbit camera on the current selection.\n\n- Engagement panel shows a Zoom option when any object, vortex, or attraction is selected; command line accepts \"zoom\".\n- requestPuzzle3dZoomToSelection + SelectionZoom viewport hook apply applyAutoFitCamera via boundsFromPuzzle3dSelection (objects, vortices, attractions).\n- Play controller and playground publisher wire option press and submit.\n\n226 @semio-tech/puzzle-3d-react tests pass; 30 @semio-tech/puzzle-3d-play tests pass.",
   "goal": "🎯puzzle",
-  "sessions": [
-    "⚪0faeb1671b4a4794bac4cc1bc344f4d5"
-  ]
+  "sessions": ["⚪0faeb1671b4a4794bac4cc1bc344f4d5"]
 }

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - Sketchpad exposed the global interaction mode as `layout` (`useLayout()`, `SET_LAYOUT`, `settings.layout.*` i18n IDs).
@@ -24,6 +25,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Rename layout to device in hooks, types, and enums

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Current architecture:
@@ -88,6 +89,7 @@ These should be addressed in a separate task.
 ## Log
 
 ## Summary
+
 # Summary
 
 "Decouple app state from Y.js, move transactions to app level"

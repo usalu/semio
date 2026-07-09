@@ -83,10 +83,14 @@ await page.waitForTimeout(500);
 await browser.close();
 
 const lodLogs = debugLogs.filter((line) => line.includes("dag draw lod="));
-const bands = new Set(lodLogs.map((line) => {
-  const match = line.match(/dag draw lod=(\w+)/);
-  return match?.[1] ?? "";
-}).filter(Boolean));
+const bands = new Set(
+  lodLogs
+    .map((line) => {
+      const match = line.match(/dag draw lod=(\w+)/);
+      return match?.[1] ?? "";
+    })
+    .filter(Boolean),
+);
 
 console.log("[validate-flow-lods] url:", baseUrl);
 console.log("[validate-flow-lods] lod transitions:", lodLogs);

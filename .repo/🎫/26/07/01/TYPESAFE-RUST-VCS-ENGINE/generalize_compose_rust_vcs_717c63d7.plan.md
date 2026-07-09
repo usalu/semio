@@ -2,30 +2,30 @@
 name: Generalize Compose Rust VCS
 overview: Rework the shared Rust VCS engine so every command, checkpoint, alternative, and operation is a real typed Rust enum/struct (no serde_json::Value dispatch, no whole-projection JSON replace), and put the backbone (dev JSON file, local sqlite folder, remote server) fully behind one trait so no caller — Rust or TypeScript — knows which storage implementation is active.
 todos:
-  - id: phase0-tests
-    content: Extend semios spawn test to assert materialized projections for every technology; fix forms.dictionary/v1 vs forms.form/v1 mismatch
-    status: completed
-  - id: phase1-framework-rs
-    content: "Rework framework/rs into a truly generic, typesafe engine: DocumentVcsStore<P, Op, A: ApplyOp<P, Op>> with no Value/JsonReplaceOp anywhere; refactor compose/client/lib/rs to consume it for its typed Operation enum"
-    status: completed
-  - id: phase1b-backbone-trait
-    content: Design and implement the Backbone trait (attach/load/sync over opaque bytes) with DevJsonFileBackbone, SqliteFolderBackbone, RemoteHttpBackbone implementations and a resolve_backbone(uri) factory so callers only ever pass a URI
-    status: pending
-  - id: phase2-semios-rs
-    content: Replace semios_studio's Value-based apply_studio_operation with a typed StudioOp enum and exhaustive match; StudioStore takes a backbone URI and never touches a concrete backbone type
-    status: completed
-  - id: phase3-existing-rust-tech
-    content: Add typed Op enums (mirroring each technology's existing TS *EditOp union) plus checkpoint/alternative/undo/redo to raster/rs, writer/rs, puzzle/2d/rs, puzzle/3d/rs, gis/map/rs, flow/core, dag, trinity, reasoning/mindmap; replace their TS reducers with thin WASM clients
-    status: completed
-  - id: phase4-new-rust-tech
-    content: Give draw/rs, forms/rs, shooting/rs, cad/rs, presentation/rs real typed Op enums ported 1:1 from their existing TS *EditOp unions (no placeholder empty projections, no JsonReplaceOp)
-    status: completed
-  - id: phase5-retire-ts-vcs
-    content: Retire framework/core's DocumentVcsStore/AppVcsRegistry/JsonReplaceOp TypeScript implementations once all technologies are Rust-backed with typed ops
-    status: completed
-  - id: phase6-regression
-    content: Run cargo test + WASM builds across all crates, re-run Phase 0 projection tests, and manually verify dev:semios parity (including backbone swap) across all technologies
-    status: completed
+ - id: phase0-tests
+   content: Extend semios spawn test to assert materialized projections for every technology; fix forms.dictionary/v1 vs forms.form/v1 mismatch
+   status: completed
+ - id: phase1-framework-rs
+   content: "Rework framework/rs into a truly generic, typesafe engine: DocumentVcsStore<P, Op, A: ApplyOp<P, Op>> with no Value/JsonReplaceOp anywhere; refactor compose/client/lib/rs to consume it for its typed Operation enum"
+   status: completed
+ - id: phase1b-backbone-trait
+   content: Design and implement the Backbone trait (attach/load/sync over opaque bytes) with DevJsonFileBackbone, SqliteFolderBackbone, RemoteHttpBackbone implementations and a resolve_backbone(uri) factory so callers only ever pass a URI
+   status: pending
+ - id: phase2-semios-rs
+   content: Replace semios_studio's Value-based apply_studio_operation with a typed StudioOp enum and exhaustive match; StudioStore takes a backbone URI and never touches a concrete backbone type
+   status: completed
+ - id: phase3-existing-rust-tech
+   content: Add typed Op enums (mirroring each technology's existing TS *EditOp union) plus checkpoint/alternative/undo/redo to raster/rs, writer/rs, puzzle/2d/rs, puzzle/3d/rs, gis/map/rs, flow/core, dag, trinity, reasoning/mindmap; replace their TS reducers with thin WASM clients
+   status: completed
+ - id: phase4-new-rust-tech
+   content: Give draw/rs, forms/rs, shooting/rs, cad/rs, presentation/rs real typed Op enums ported 1:1 from their existing TS *EditOp unions (no placeholder empty projections, no JsonReplaceOp)
+   status: completed
+ - id: phase5-retire-ts-vcs
+   content: Retire framework/core's DocumentVcsStore/AppVcsRegistry/JsonReplaceOp TypeScript implementations once all technologies are Rust-backed with typed ops
+   status: completed
+ - id: phase6-regression
+   content: Run cargo test + WASM builds across all crates, re-run Phase 0 projection tests, and manually verify dev:semios parity (including backbone swap) across all technologies
+   status: completed
 isProject: false
 ---
 
@@ -142,7 +142,7 @@ export type DrawEditOp =
 
 `draw/rs` gets the literal Rust equivalent (`enum DrawOp { SetLayerVisible { layer_id: String, visible: bool }, ... }`) instead of the current placeholder `empty_draw_projection()` + JSON replace.
 
-`wasm-bindgen` cannot export generic types, so each technology still exposes a concrete, monomorphized WASM struct (`DrawDocumentVcs`, `RasterDocumentVcs`, ...). The WASM boundary still carries JSON strings (unavoidable for any WASM/JS boundary), but the Rust side immediately `serde_json::from_str::<DrawOp>(...)`-decodes into the real enum and rejects anything that doesn't match a variant — the typesafety guarantee is that the *op application logic* is a compiler-checked match, not that bytes never cross the FFI boundary as JSON.
+`wasm-bindgen` cannot export generic types, so each technology still exposes a concrete, monomorphized WASM struct (`DrawDocumentVcs`, `RasterDocumentVcs`, ...). The WASM boundary still carries JSON strings (unavoidable for any WASM/JS boundary), but the Rust side immediately `serde_json::from_str::<DrawOp>(...)`-decodes into the real enum and rejects anything that doesn't match a variant — the typesafety guarantee is that the _op application logic_ is a compiler-checked match, not that bytes never cross the FFI boundary as JSON.
 
 ### 2. Backbone fully behind one interface
 
@@ -190,35 +190,45 @@ pub enum StudioOp {
 ## Phases
 
 ### Phase 0 (done)
+
 Test baseline already extended to materialize every spawned technology's projection; no rework needed.
 
 ### Phase 1 — Rework `framework/rs` to be generic and typed
+
 - Replace the `Value`-based `DocumentChange`/`DocumentVcs`/`DocumentVcsEnvelope`/`DocumentVcsCommand`/`ApplyDocumentOp`/`DocumentVcsStore` with the generic `<P, Op>` versions above.
 - Delete `JsonReplaceApplier`, `apply_json_replace_op`, `json_replace_op`, `JsonDocumentStore`.
 - Refactor `compose/client/lib/rs` to instantiate the generic engine with its own real `Operation` type (it already has one — `compose/client/lib/rs/lib.rs`'s `operation` module) instead of the ad hoc integration test added previously.
 
 ### Phase 1b — Backbone trait
+
 - Implement `Backbone` trait, `resolve_backbone(uri)`, and three implementations: `DevJsonFileBackbone`, `SqliteFolderBackbone` (native-only, sqlite-per-folder), `RemoteHttpBackbone`.
 - Wire `DocumentVcsStore`/`StudioStore` to take a URI and call `resolve_backbone` internally; delete direct construction of `DevJsonBackbone`/`RemoteJsonBackbone` from any call site outside this module.
 
 ### Phase 2 — Typed `StudioOp` in `semios/rs`
+
 - Replace `apply_studio_operation`'s `Value` dispatch with the `StudioOp` enum and exhaustive match shown above.
 - `StudioStore::new` takes a backbone URI (from the studio document's existing `backbone` field) rather than nothing; `sync`/`load` go through the trait.
 
 ### Phase 3 — Typed ops for technologies with an existing Rust crate
+
 For `raster`, `writer`, `puzzle.2d`, `puzzle.3d`, `gis.map`, `flow`, `dag`, `trinity`, `reasoning.wires`:
+
 - Port each technology's existing TS `*EditOp` union (e.g. `raster/core`'s edit op type) into a Rust enum with matching variants.
 - Implement `ApplyOp<TechProjection, TechOp>` with a real match, replacing any placeholder/JSON-replace behavior left over from the first pass.
 - Extend the technology's WASM struct with `dispatch`/`undo`/`redo`/`commitCheckpoint`/`createAlternative`/`switchAlternative`/`projectionJson`, decoding incoming op JSON into the typed enum.
 
 ### Phase 4 — Typed ops for the newly created crates
+
 For `draw`, `forms`, `shooting`, `cad`, `presentation`:
+
 - Replace each crate's placeholder `empty_*_projection()` + `JsonDocumentStore` with a real projection struct and op enum ported 1:1 from the technology's existing TS domain model (e.g. `draw/core`'s `DrawDocument`/`DrawEditOp` shown above), and a real `ApplyOp` implementation mirroring the TS `applyDrawEditOp`-style reducer.
 
 ### Phase 5 — Retire the TypeScript generic VCS layer
+
 - Once every technology has a typed Rust `ApplyOp` and WASM session, remove `framework/core`'s TypeScript `DocumentVcsStore`/`materializeDocumentProjection`/`JsonReplaceOp`/`AppVcsRegistry` (the sync mirror added in the first pass) entirely — TypeScript keeps only thin WASM-client wrappers, matching how `compose/js` relates to `compose/rs` today.
 
 ### Phase 6 — Regression
+
 - `cargo test` across every crate (typed op round-trips, checkpoint/alternative, backbone swap between `dev://`, `local://`/sqlite, and a mocked `remote://`).
 - Re-run Phase 0's per-technology materialization tests against the typed engine.
 - Boot `dev:semios` and manually verify undo/redo/checkpoint/alternatives, plus swapping a document's backbone URI without any TS or Rust call site needing to change.

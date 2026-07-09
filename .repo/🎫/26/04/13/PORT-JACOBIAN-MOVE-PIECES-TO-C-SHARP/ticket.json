@@ -4,7 +4,5 @@
   "description": "Port Jacobian move to CSharp",
   "summary": "Fixed cross-language test compliance across all 5 compose implementations:\n\n**Python** (72/72 pass):\n- Fixed 30 Python 2-style `except X, Y:` → `except (X, Y):` syntax errors blocking test collection on Python 3.13\n- Installed missing `trimesh` and `ifcopenshell` dependencies\n- Regenerated `metabolism.shallow.kit.compose.json` fixture (49→50 types to match current kit)\n- Updated expected hash to `2ebfdb63f7f1a329702f4c4852c1a7c7c11cf550b74a1f280d7538fc5c25dd0a`\n\n**TypeScript** (196/196 pass):\n- Fixed null→undefined conversion in `deserializeKit` JSON.parse reviver for Zod v4 compatibility\n\n**C# net8.0** (71/71 pass):\n- Rewrote `DefaultComputeChildPlane` and `MoveTranslationWorldFromPiecePlane` from System.Numerics float (32-bit) to double[] arrays (64-bit) for precision parity with THREE.js\n- Fixed hash test (removed debug Assert.Fail, updated expected hash)\n\n**Go** (all pass): Updated expected hash in main_test.go\n**Rust** (63/63 pass): Updated expected hash in lib.rs",
   "goal": "🎯aioptimizedrepo",
-  "sessions": [
-    "⚪68016b72093945988a0f29ed87838e2b"
-  ]
+  "sessions": ["⚪68016b72093945988a0f29ed87838e2b"]
 }

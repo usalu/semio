@@ -5,10 +5,7 @@
   "label": "Split",
   "interaction": {
     "spatialGroundPick": false,
-    "pickDisabledStates": [
-      "idle",
-      "committed"
-    ],
+    "pickDisabledStates": ["idle", "committed"],
     "groundPointerMoveStates": [],
     "heightDragStates": [],
     "verticalRodStates": [],
@@ -41,11 +38,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        0
-                      ]
+                      "value": [0, 0, 0]
                     }
                   },
                   {
@@ -89,12 +82,7 @@
       {
         "name": "select_objects_to_split",
         "selection": {
-          "accept": [
-            "edge",
-            "wire",
-            "face",
-            "solid"
-          ],
+          "accept": ["edge", "wire", "face", "solid"],
           "multiple": true,
           "prompt": "Select objects to split"
         },
@@ -156,11 +144,7 @@
       {
         "name": "select_cutting_objects",
         "selection": {
-          "accept": [
-            "edge",
-            "wire",
-            "face"
-          ],
+          "accept": ["edge", "wire", "face"],
           "multiple": true,
           "prompt": "Select cutting objects"
         },
@@ -237,11 +221,7 @@
             "text": "Select objects to split",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -304,11 +284,7 @@
             "text": "Select cutting objects",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -364,9 +340,7 @@
     ]
   },
   "commit": {
-    "fromStates": [
-      "ready"
-    ],
+    "fromStates": ["ready"],
     "operation": {
       "kind": "action",
       "action": "command.finish",

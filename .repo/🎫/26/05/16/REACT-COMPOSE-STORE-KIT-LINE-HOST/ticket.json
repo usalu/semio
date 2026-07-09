@@ -5,7 +5,5 @@
   "description": "Implement ComposeStoreKitLineHost in @semio-tech/compose-react (logic/index.tsx): openSessionHttp, full provider chain, dispose on unmount. Fix tsconfig paths for @semio-tech/compose-js and @semio-tech/compose-rs-wasm from logic folder. Fix missing ID type import. Ensure tsc and vitest pass.",
   "summary": "Added ComposeStoreKitLineHost: opens HTTP session via openSessionHttp, resolves first store and WIP kit id, composes Session→Store→LocalProvider→Wip→TheKit→Kit providers, disposes on unmount, optional fallback and installCreateDto/timeoutMs. Re-exported SessionHttpOpenOptions, openSessionHttp, and ID from @semio-tech/compose-js. Fixed logic tsconfig and Vite paths to ../../js and ../../rs/pkg (logic lives under react/logic). Fixed Nx cwd to logic for tsc/vitest. Extended Vitest with host coverage (mock session).",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪f3805abe05da46d599ce62f1b59330bc"
-  ]
+  "sessions": ["⚪f3805abe05da46d599ce62f1b59330bc"]
 }

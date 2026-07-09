@@ -5,7 +5,5 @@
   "description": "The fullscreen/maximize control cap on mode dock windows is missing the left border line in both normal and active states. Restore border-l on windowControlsCap* classes.",
   "summary": "The mode-dock maximize (fullscreen) control cap used `!border-l-0`, which removed the left chrome line in inactive and active stacks. Aligned `windowControlsCapClass`, `windowControlsCapActiveClass`, and `windowControlsCapActiveSplitClass` with the tab cap by using `border-x` instead of `border-r` plus `!border-l-0`. Extended Mode layout tests to assert `border-x` on controls caps and no `border-l-0`.",
   "goal": "🎯ui",
-  "sessions": [
-    "⚪de4a01b170e84be2b38960d8897b249f"
-  ]
+  "sessions": ["⚪de4a01b170e84be2b38960d8897b249f"]
 }

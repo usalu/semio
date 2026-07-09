@@ -21,114 +21,114 @@ type TopologyAnchor = { readonly id: string; readonly anchorKind?: string; reado
 type TopologyPart = { readonly id: string; readonly anchors?: TopologyAnchor[] };
 
 function suffixAfterLastDot(kind: string): string {
-	const i = kind.lastIndexOf(".");
-	return i >= 0 ? kind.slice(i + 1) : kind;
+  const i = kind.lastIndexOf(".");
+  return i >= 0 ? kind.slice(i + 1) : kind;
 }
 
 function cadPoint(row: { x: number; y: number; z: number }): Vec3 {
-	return [row.x, row.y, row.z];
+  return [row.x, row.y, row.z];
 }
 
 function buildHandlePortByKind(handles: readonly CatalogRow[] | undefined): Map<string, string> {
-	const map = new Map<string, string>();
-	for (const row of handles ?? []) {
-		const portId = suffixAfterLastDot(row.id);
-		map.set(row.id, portId);
-		if (row.name) map.set(row.name, portId);
-	}
-	return map;
+  const map = new Map<string, string>();
+  for (const row of handles ?? []) {
+    const portId = suffixAfterLastDot(row.id);
+    map.set(row.id, portId);
+    if (row.name) map.set(row.name, portId);
+  }
+  return map;
 }
 
 function connectorOnTypeByPortId(type: TypeRow, portId: string): ConnectorRow | undefined {
-	return (type.connectors?.items ?? []).find((c) => c.port?.id === portId);
+  return (type.connectors?.items ?? []).find((c) => c.port?.id === portId);
 }
 
 function sceneRadiusFromBoard(boardRadius: number | undefined, existing: number | undefined): number | undefined {
-	if (typeof existing === "number") return existing;
-	if (typeof boardRadius === "number") return boardRadius * 0.12;
-	return undefined;
+  if (typeof existing === "number") return existing;
+  if (typeof boardRadius === "number") return boardRadius * 0.12;
+  return undefined;
 }
 
 function main(): void {
-	const kit = JSON.parse(readFileSync(kitPath, "utf8")) as { types: { items: TypeRow[] } };
-	const board = JSON.parse(readFileSync(boardPath, "utf8")) as { nodes: BoardNode[]; meta?: { kindCatalogs?: { handles?: CatalogRow[] } } };
-	const scene = JSON.parse(readFileSync(scenePath, "utf8")) as { objects: SceneObject[] };
-	const topology = JSON.parse(readFileSync(topologyPath, "utf8")) as { parts: TopologyPart[] };
+  const kit = JSON.parse(readFileSync(kitPath, "utf8")) as { types: { items: TypeRow[] } };
+  const board = JSON.parse(readFileSync(boardPath, "utf8")) as { nodes: BoardNode[]; meta?: { kindCatalogs?: { handles?: CatalogRow[] } } };
+  const scene = JSON.parse(readFileSync(scenePath, "utf8")) as { objects: SceneObject[] };
+  const topology = JSON.parse(readFileSync(topologyPath, "utf8")) as { parts: TopologyPart[] };
 
-	const typesByUuid = new Map(kit.types.items.map((t) => [t.id, t]));
-	const typesByName = new Map(kit.types.items.map((t) => [t.name, t]));
-	const boardById = new Map(board.nodes.map((n) => [n.id, n]));
-	const handlePortByKind = buildHandlePortByKind(board.meta?.kindCatalogs?.handles);
+  const typesByUuid = new Map(kit.types.items.map((t) => [t.id, t]));
+  const typesByName = new Map(kit.types.items.map((t) => [t.name, t]));
+  const boardById = new Map(board.nodes.map((n) => [n.id, n]));
+  const handlePortByKind = buildHandlePortByKind(board.meta?.kindCatalogs?.handles);
 
-	let migrated = 0;
-	let missing = 0;
+  let migrated = 0;
+  let missing = 0;
 
-	const objects = scene.objects.map((obj) => {
-		const node = boardById.get(obj.id);
-		if (!node?.handles?.length) return obj;
-		const typeUuid = node.nodeKind ? suffixAfterLastDot(node.nodeKind) : "";
-		const type = typesByUuid.get(typeUuid) ?? (obj.objectKind ? typesByName.get(obj.objectKind) : undefined);
-		if (!type) {
-			missing += node.handles.length;
-			return obj;
-		}
+  const objects = scene.objects.map((obj) => {
+    const node = boardById.get(obj.id);
+    if (!node?.handles?.length) return obj;
+    const typeUuid = node.nodeKind ? suffixAfterLastDot(node.nodeKind) : "";
+    const type = typesByUuid.get(typeUuid) ?? (obj.objectKind ? typesByName.get(obj.objectKind) : undefined);
+    if (!type) {
+      missing += node.handles.length;
+      return obj;
+    }
 
-		const existingById = new Map((obj.vortices ?? []).map((v) => [v.id, v]));
-		const vortices: SceneVortex[] = [];
+    const existingById = new Map((obj.vortices ?? []).map((v) => [v.id, v]));
+    const vortices: SceneVortex[] = [];
 
-		for (const h of node.handles) {
-			const portId = (h.handleKind ? handlePortByKind.get(h.handleKind) : undefined) ?? (h.handleKind ? suffixAfterLastDot(h.handleKind) : "");
-			const connector = connectorOnTypeByPortId(type, portId);
-			if (!connector?.point) {
-				missing += 1;
-				const prev = existingById.get(h.id);
-				if (prev) vortices.push(prev);
-				continue;
-			}
-			const prev = existingById.get(h.id);
-			const position = cadPoint(connector.point);
-			const direction = connector.direction != null ? cadPoint(connector.direction) : prev?.direction;
-			const radius = sceneRadiusFromBoard(h.radius, prev?.radius);
-			vortices.push({
-				id: h.id,
-				...(h.handleKind ? { vortexKind: prev?.vortexKind ?? h.handleKind } : {}),
-				...(prev?.label ? { label: prev.label } : {}),
-				position,
-				...(direction ? { direction } : {}),
-				...(radius !== undefined ? { radius } : {}),
-			});
-			migrated += 1;
-		}
+    for (const h of node.handles) {
+      const portId = (h.handleKind ? handlePortByKind.get(h.handleKind) : undefined) ?? (h.handleKind ? suffixAfterLastDot(h.handleKind) : "");
+      const connector = connectorOnTypeByPortId(type, portId);
+      if (!connector?.point) {
+        missing += 1;
+        const prev = existingById.get(h.id);
+        if (prev) vortices.push(prev);
+        continue;
+      }
+      const prev = existingById.get(h.id);
+      const position = cadPoint(connector.point);
+      const direction = connector.direction != null ? cadPoint(connector.direction) : prev?.direction;
+      const radius = sceneRadiusFromBoard(h.radius, prev?.radius);
+      vortices.push({
+        id: h.id,
+        ...(h.handleKind ? { vortexKind: prev?.vortexKind ?? h.handleKind } : {}),
+        ...(prev?.label ? { label: prev.label } : {}),
+        position,
+        ...(direction ? { direction } : {}),
+        ...(radius !== undefined ? { radius } : {}),
+      });
+      migrated += 1;
+    }
 
-		return { ...obj, vortices };
-	});
+    return { ...obj, vortices };
+  });
 
-	const sceneByObjectId = new Map(objects.map((o) => [o.id, o]));
-	const parts = topology.parts.map((part) => {
-		const obj = sceneByObjectId.get(part.id);
-		if (!obj?.vortices?.length) return part;
-		const vortexByAnchorId = new Map(obj.vortices.map((v) => [suffixAfterLastDot(v.id), v]));
-		const anchors = (part.anchors ?? []).map((anchor) => {
-			const v = vortexByAnchorId.get(anchor.id) ?? vortexByAnchorId.get("link");
-			if (!v?.position) return anchor;
-			return {
-				...anchor,
-				volume: {
-					...(anchor.volume ?? {}),
-					position: v.position,
-					...(v.direction ? { direction: v.direction } : {}),
-					...(v.radius !== undefined ? { radius: v.radius } : {}),
-					...(v.label ? { label: v.label } : {}),
-				},
-			};
-		});
-		return { ...part, anchors };
-	});
+  const sceneByObjectId = new Map(objects.map((o) => [o.id, o]));
+  const parts = topology.parts.map((part) => {
+    const obj = sceneByObjectId.get(part.id);
+    if (!obj?.vortices?.length) return part;
+    const vortexByAnchorId = new Map(obj.vortices.map((v) => [suffixAfterLastDot(v.id), v]));
+    const anchors = (part.anchors ?? []).map((anchor) => {
+      const v = vortexByAnchorId.get(anchor.id) ?? vortexByAnchorId.get("link");
+      if (!v?.position) return anchor;
+      return {
+        ...anchor,
+        volume: {
+          ...(anchor.volume ?? {}),
+          position: v.position,
+          ...(v.direction ? { direction: v.direction } : {}),
+          ...(v.radius !== undefined ? { radius: v.radius } : {}),
+          ...(v.label ? { label: v.label } : {}),
+        },
+      };
+    });
+    return { ...part, anchors };
+  });
 
-	writeFileSync(scenePath, `${JSON.stringify({ ...scene, objects }, null, 2)}\n`, "utf8");
-	writeFileSync(topologyPath, `${JSON.stringify({ ...topology, parts }, null, 2)}\n`, "utf8");
-	console.log(`[migrate-vortex-connector-geometry] scene ${migrated} vortices (${missing} unresolved) → ${scenePath}`);
-	console.log(`[migrate-vortex-connector-geometry] topology anchors synced → ${topologyPath}`);
+  writeFileSync(scenePath, `${JSON.stringify({ ...scene, objects }, null, 2)}\n`, "utf8");
+  writeFileSync(topologyPath, `${JSON.stringify({ ...topology, parts }, null, 2)}\n`, "utf8");
+  console.log(`[migrate-vortex-connector-geometry] scene ${migrated} vortices (${missing} unresolved) → ${scenePath}`);
+  console.log(`[migrate-vortex-connector-geometry] topology anchors synced → ${topologyPath}`);
 }
 
 main();

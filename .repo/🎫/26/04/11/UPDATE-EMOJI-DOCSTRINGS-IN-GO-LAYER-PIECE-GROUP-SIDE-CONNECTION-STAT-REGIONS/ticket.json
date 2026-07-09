@@ -4,7 +4,5 @@
   "description": "Update Emoji Docstrings in Go Layer Piece Group Side Connection Stat Regions",
   "summary": "Replaced 23 emoji+description docstrings in Layer, Piece, Group, Side, Connection and Stat regions of compose/go/main.go. All Go tests pass.",
   "goal": "🎯r2603",
-  "sessions": [
-    "⚪7726b12d40ff40aea156afef575607b2"
-  ]
+  "sessions": ["⚪7726b12d40ff40aea156afef575607b2"]
 }

@@ -2,24 +2,24 @@
 name: Flow Procedural Rich Context Menu
 overview: Add context-aware right-click menus to the flow canvas (shared by flow and procedural), with the menu structure and action dispatch owned by the play controllers, and the actual graph/session operations effected inside FlowCanvas via a generic command-request mechanism.
 todos:
-  - id: canvas
-    content: "FlowCanvas: add FlowCanvasContextMenuContext, contextMenu builder prop, commandRequest effect, onPreviewOffChange, image-widget detection, select-hovered-on-right-click, shared buildFlowContextMenuItems helper + tests"
-    status: completed
-  - id: flow-play
-    content: "flow/play: commandRequest epoch + canvasCommand dispatcher + buildFlowPlayCanvasContextMenu + tests"
-    status: completed
-  - id: proc-play
-    content: "procedural/play: commandRequest epoch + dispatcher, previewOff mirror from onPreviewOffChange, buildProceduralPlayCanvasContextMenu with preview items + tests"
-    status: completed
-  - id: proc-react
-    content: "ProceduralFlowEditor: forward contextMenu, commandRequest, onPreviewOffChange to FlowCanvas"
-    status: completed
-  - id: renderer
-    content: "Playground renderer: wire contextMenu builder, commandRequest, and (procedural) onPreviewOffChange in flow + procedural surface hosts"
-    status: completed
-  - id: verify
-    content: Run nx tests for the four packages and manually verify right-click actions mutate the graph
-    status: completed
+ - id: canvas
+   content: "FlowCanvas: add FlowCanvasContextMenuContext, contextMenu builder prop, commandRequest effect, onPreviewOffChange, image-widget detection, select-hovered-on-right-click, shared buildFlowContextMenuItems helper + tests"
+   status: completed
+ - id: flow-play
+   content: "flow/play: commandRequest epoch + canvasCommand dispatcher + buildFlowPlayCanvasContextMenu + tests"
+   status: completed
+ - id: proc-play
+   content: "procedural/play: commandRequest epoch + dispatcher, previewOff mirror from onPreviewOffChange, buildProceduralPlayCanvasContextMenu with preview items + tests"
+   status: completed
+ - id: proc-react
+   content: "ProceduralFlowEditor: forward contextMenu, commandRequest, onPreviewOffChange to FlowCanvas"
+   status: completed
+ - id: renderer
+   content: "Playground renderer: wire contextMenu builder, commandRequest, and (procedural) onPreviewOffChange in flow + procedural surface hosts"
+   status: completed
+ - id: verify
+   content: Run nx tests for the four packages and manually verify right-click actions mutate the graph
+   status: completed
 isProject: false
 ---
 
@@ -37,7 +37,7 @@ Right-clicking the flow canvas (in both flow play and procedural play) opens a m
 
 ## Design
 
-Selection/graph live in the canvas `FlowSession`. So the controller owns the menu *definition + dispatch*, while FlowCanvas executes via two new props:
+Selection/graph live in the canvas `FlowSession`. So the controller owns the menu _definition + dispatch_, while FlowCanvas executes via two new props:
 
 - `contextMenu?: (ctx: FlowCanvasContextMenuContext) => readonly ContextMenuItem[]` — builder invoked at right-click; FlowCanvas supplies the context.
 - `commandRequest?: { epoch: number; command: string; argsJson?: string }` — epoch-bumped imperative channel (same pattern as existing `reorganize`) that FlowCanvas runs against the session.
@@ -52,8 +52,6 @@ flowchart LR
   fc2 -->|"session op + evaluate/persist/render"| emit["emitInteractionState"]
   emit -->|"onSelectionChange / onPreviewOffChange"| ctrl
 ```
-
-
 
 `FlowCanvasContextMenuContext = { hoveredNodeId, selectedNodeIds, isImageWidget, isBackground, previewOffNodeIds, screen, world, clientX, clientY }`.
 
@@ -92,10 +90,9 @@ flowchart LR
 ## Conventions / workflow
 
 - Open a repo-mcp ticket (e.g. `FLOW-PROCEDURAL-RICH-CONTEXT-MENU`) after reading `repo://goals`; keep temp files in the ticket folder; close with a summary when done.
-- All additions go inside existing `#region`/`//#region` blocks of the existing files (no new files), concise code, emoji docstrings, `[DEBUG]`  logs for any temporary logging.
+- All additions go inside existing `#region`/`//#region` blocks of the existing files (no new files), concise code, emoji docstrings, `[DEBUG]` logs for any temporary logging.
 
 ## Verification
 
 - `nx test` for `@semio-tech/flow-react`, `@semio-tech/flow-play`, `@semio-tech/procedural-react`, `@semio-tech/procedural-play`.
 - Manual: in flow + procedural playgrounds, right-click background and a node; confirm context-appropriate items and that Delete/Add/Toggle preview/Reorganize/Select all actually mutate the graph (confirmed via `[DEBUG]` logs).
-

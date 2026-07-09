@@ -24,7 +24,7 @@ s = s.replace(
   let fastenerTarget = "";`,
 );
 
-s = s.replace(/    "2d" =\n      payload\.shape === "rectangle"/, "    flatAspect =\n      payload.shape === \"rectangle\"");
+s = s.replace(/    "2d" =\n      payload\.shape === "rectangle"/, '    flatAspect =\n      payload.shape === "rectangle"');
 s = s.replace(/    "3d" = volume\.aspect;/g, "    volumeAspect = volume.aspect;");
 s = s.replace(/    anchors = mergeGripsFlatAndVolume/g, "    grips = mergeGripsFlatAndVolume");
 s = s.replace(/    anchors = volume\.grips;/g, "    grips = volume.grips;");

@@ -67,53 +67,25 @@ const SPECS: Spec[] = [
 ];
 
 function stripBootTail(content: string): string {
-  return content.replace(
-    /\nlet \w+PlayChromeRegistered = false;\n?/g,
-    "\n",
-  ).replace(
-    /\nexport function register\w+PlaySurfaceHosts\(\): void \{[\s\S]*?\n\}\n/g,
-    "\n",
-  ).replace(
-    /\nfunction \w+PlayInner\([\s\S]*?\n\}\n/g,
-    "\n",
-  ).replace(
-    /\nfunction \w+PlayChrome\([\s\S]*?\n\}\n/g,
-    "\n",
-  ).replace(
-    /\nexport function mount\w+PlayChrome\([\s\S]*?\n\}\n/g,
-    "\n",
-  ).replace(
-    /\nconst \w+PlayChromeBoot[\s\S]*?\n\};\n/g,
-    "\n",
-  ).replace(
-    /\nexport (?:async )?function boot\w+Play\([\s\S]*?\n\}\n/g,
-    "\n",
-  ).replace(
-    /\n\/\/#endregion 🔖\w+PlayHost\n?$/,
-    "\n",
-  );
+  return content
+    .replace(/\nlet \w+PlayChromeRegistered = false;\n?/g, "\n")
+    .replace(/\nexport function register\w+PlaySurfaceHosts\(\): void \{[\s\S]*?\n\}\n/g, "\n")
+    .replace(/\nfunction \w+PlayInner\([\s\S]*?\n\}\n/g, "\n")
+    .replace(/\nfunction \w+PlayChrome\([\s\S]*?\n\}\n/g, "\n")
+    .replace(/\nexport function mount\w+PlayChrome\([\s\S]*?\n\}\n/g, "\n")
+    .replace(/\nconst \w+PlayChromeBoot[\s\S]*?\n\};\n/g, "\n")
+    .replace(/\nexport (?:async )?function boot\w+Play\([\s\S]*?\n\}\n/g, "\n")
+    .replace(/\n\/\/#endregion 🔖\w+PlayHost\n?$/, "\n");
 }
 
 function fixImports(content: string): string {
   let c = content;
-  c = c.replace(
-    /\/\*\* @emoji 🛝 Playground play host for ([^—]+) — loaded only via `\.\/play` subpath\. \*\//,
-    "/** @emoji 🛝 $1 app renderer contribution — loaded only via `./play` subpath. */",
-  );
+  c = c.replace(/\/\*\* @emoji 🛝 Playground play host for ([^—]+) — loaded only via `\.\/play` subpath\. \*\//, "/** @emoji 🛝 $1 app renderer contribution — loaded only via `./play` subpath. */");
   if (!c.includes("AppRendererContribution")) {
-    c = c.replace(
-      /import type \{ ReactElement \} from "react";/,
-      `import type { ReactElement } from "react";\nimport type { AppRendererContribution } from "@semio-tech/framework-platform-core";`,
-    );
+    c = c.replace(/import type \{ ReactElement \} from "react";/, `import type { ReactElement } from "react";\nimport type { AppRendererContribution } from "@semio-tech/framework-platform-core";`);
   }
-  c = c.replace(
-    /import \{ type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, /,
-    "import { ",
-  );
-  c = c.replace(
-    /import \{ type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, /,
-    "import { ",
-  );
+  c = c.replace(/import \{ type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, /, "import { ");
+  c = c.replace(/import \{ type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, /, "import { ");
   c = c.replace(/, registerUi\w+SurfaceHost/g, "");
   c = c.replace(/registerUi\w+SurfaceHost, /g, "");
   c = c.replace(/, registerTabIcon/g, "");
@@ -131,11 +103,7 @@ for (const spec of SPECS) {
   let content = readFileSync(full, "utf8");
   content = fixImports(content);
   content = stripBootTail(content);
-  const lines = [
-    `/** @emoji 🛝 ${spec.exportName.replace("AppRenderer", " app renderer")} for playground and OS shells. */`,
-    `export const ${spec.exportName}: AppRendererContribution = {`,
-    `  surfaceHosts: ${spec.surfaceHosts},`,
-  ];
+  const lines = [`/** @emoji 🛝 ${spec.exportName.replace("AppRenderer", " app renderer")} for playground and OS shells. */`, `export const ${spec.exportName}: AppRendererContribution = {`, `  surfaceHosts: ${spec.surfaceHosts},`];
   if (spec.panelTabs) lines.push(`  panelTabs: ${spec.panelTabs},`);
   if (spec.tabIcons) lines.push(`  tabIcons: ${spec.tabIcons},`);
   if (spec.preload) lines.push(`  preload: ${spec.preload},`);

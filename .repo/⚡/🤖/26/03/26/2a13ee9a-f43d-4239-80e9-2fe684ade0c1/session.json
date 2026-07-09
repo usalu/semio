@@ -1251,9 +1251,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "path": "26/03/25/OPTIMIZE-SKETCHPAD-INTERACTION-PERFORMANCE-FOR-SELECTION-AND-HOVER",
             "summary": "Restored all discarded performance optimizations. All 15 changes re-applied: DerivedNode custom isEqual, DerivedStore.getOrCreate isEqual passthrough, simplified clear hover guard, useDesignAppHover setter with queueMicrotask + deduplication + stable ref, 6 granular boolean selectors (isPieceHovered/Selected, isConnectionHovered/Selected, isPortHovered, isPiecePortSelected), useDesignAppSelectedConnector with stable ref, computeHoverData with Set/Map for O(1) lookups, useTypeAppIsPortHovered with inline selector. Build verified: 239 pre-existing errors, 0 new."
           },
@@ -1281,9 +1279,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "path": "26/03/25/OPTIMIZE-SKETCHPAD-INTERACTION-PERFORMANCE-FOR-SELECTION-AND-HOVER",
             "summary": "Restored all discarded performance optimizations. All 15 changes re-applied: DerivedNode custom isEqual, DerivedStore.getOrCreate isEqual passthrough, simplified clear hover guard, useDesignAppHover setter with queueMicrotask + deduplication + stable ref, 6 granular boolean selectors (isPieceHovered/Selected, isConnectionHovered/Selected, isPortHovered, isPiecePortSelected), useDesignAppSelectedConnector with stable ref, computeHoverData with Set/Map for O(1) lookups, useTypeAppIsPortHovered with inline selector. Build verified: 239 pre-existing errors, 0 new."
           },

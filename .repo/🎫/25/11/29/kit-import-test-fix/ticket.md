@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The Kit Import Playwright test was failing due to multiple issues:
@@ -80,6 +81,7 @@ The Kit Import test now **passes consistently**. It verifies:
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix Kit Import Playwright Test

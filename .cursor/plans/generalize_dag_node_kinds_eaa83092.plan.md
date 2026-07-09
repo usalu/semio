@@ -2,33 +2,33 @@
 name: Generalize DAG Node Kinds
 overview: Generalize the DAG's single computation-rectangle node into a tagged node-kind model (Computation, Slider, Select, Screen) with per-kind Vello rendering, local widget interaction (no propagation), and React DOM media overlays for Screen nodes.
 todos:
-  - id: model
-    content: Generalize IoNodeSpec -> DagNodeSpec + DagNodeKind (Computation/Slider/Select/Screen) + DagMedia, accessors, computation() ctor; update DagFixture.nodes in dag/lib.rs
-    status: completed
-  - id: engine-sync
-    content: Update rebuild_engine_with_layout + sync fns to use node.inputs()/outputs() generically
-    status: completed
-  - id: render
-    content: Per-kind paint_scene rendering for Computation/Slider/Select/Screen
-    status: completed
-  - id: interaction
-    content: "Host-level widget hit-test in pointer_down/move/up: slider drag mutates value, select click advances option; [DEBUG] logs"
-    status: completed
-  - id: overlay
-    content: Add DagSession.nodeOverlaysJson() (screen-space rects) and React DOM media overlay manager in rAF tick
-    status: completed
-  - id: ts-fixture
-    content: Update DagNode TS union + DAG_DEFAULT_FIXTURE + demo.dag.json showcasing all kinds; sync count assertions
-    status: completed
-  - id: flow
-    content: Adapt flow/core/lib.rs widget_to_io_node + build_dag_fixture_v1 to DagNodeSpec::computation, preserving behavior
-    status: completed
-  - id: tests
-    content: Extend dag/lib.rs, dag/react, dag/play tests for kinds, interaction, overlay, counts
-    status: completed
-  - id: ticket-validate
-    content: Open repo ticket, rebuild WASM, run cargo + dag/flow vitest, extend validate-dag-runtime.mjs for slider drag + screen overlay
-    status: completed
+ - id: model
+   content: Generalize IoNodeSpec -> DagNodeSpec + DagNodeKind (Computation/Slider/Select/Screen) + DagMedia, accessors, computation() ctor; update DagFixture.nodes in dag/lib.rs
+   status: completed
+ - id: engine-sync
+   content: Update rebuild_engine_with_layout + sync fns to use node.inputs()/outputs() generically
+   status: completed
+ - id: render
+   content: Per-kind paint_scene rendering for Computation/Slider/Select/Screen
+   status: completed
+ - id: interaction
+   content: "Host-level widget hit-test in pointer_down/move/up: slider drag mutates value, select click advances option; [DEBUG] logs"
+   status: completed
+ - id: overlay
+   content: Add DagSession.nodeOverlaysJson() (screen-space rects) and React DOM media overlay manager in rAF tick
+   status: completed
+ - id: ts-fixture
+   content: Update DagNode TS union + DAG_DEFAULT_FIXTURE + demo.dag.json showcasing all kinds; sync count assertions
+   status: completed
+ - id: flow
+   content: Adapt flow/core/lib.rs widget_to_io_node + build_dag_fixture_v1 to DagNodeSpec::computation, preserving behavior
+   status: completed
+ - id: tests
+   content: Extend dag/lib.rs, dag/react, dag/play tests for kinds, interaction, overlay, counts
+   status: completed
+ - id: ticket-validate
+   content: Open repo ticket, rebuild WASM, run cargo + dag/flow vitest, extend validate-dag-runtime.mjs for slider drag + screen overlay
+   status: completed
 isProject: false
 ---
 
@@ -50,8 +50,6 @@ flowchart TD
   K --> Select["Select: options[], selected, single output"]
   K --> Screen["Screen: media{kind,src}, single input"]
 ```
-
-
 
 - Input nodes (Slider, Select): one `Source` output handle, no inputs.
 - Output node (Screen): one `Target` input handle, no outputs.
@@ -116,7 +114,7 @@ Vello can't render SVG/PDF/video, so Screen content renders as absolutely-positi
 ### 10. Ticket + runtime validation
 
 - Read `repo://goals`, open a repo ticket (e.g. "Generalize DAG Nodes to Input and Output Kinds"); keep temp logs/scripts inside the ticket folder.
-- Rebuild WASM (dag crate `bun ./script.ts wasm` via its `test` target) and run `cargo test -p mathematical_graph_port_directed_dag` + `@dag/`* and `@flow/*` vitest.
+- Rebuild WASM (dag crate `bun ./script.ts wasm` via its `test` target) and run `cargo test -p mathematical_graph_port_directed_dag` + `@dag/`_ and `@flow/_` vitest.
 - Extend [validate-dag-runtime.mjs](.repo/🎫/26/06/07/EXTRACT-GENERIC-GRAPH-CANVAS-FROM-PUZZLE-2D-AND-ADD-DAG/validate-dag-runtime.mjs): update the 6/6 count checks to the new counts; drag the slider thumb and assert the `[DEBUG] dag slider value` log + changed fixture value; assert a Screen media overlay element is present in the DOM.
 
 ### Decisions (opinionated)
@@ -124,4 +122,3 @@ Vello can't render SVG/PDF/video, so Screen content renders as absolutely-positi
 - Schema string stays `dag.fixture/v1` (greenfield, structure replaced in place; no migration).
 - Slider/Select painted + interacted in Vello (uniform dragging); only Screen uses a DOM overlay (read-only, `pointer-events: none`).
 - DAG does no value propagation; widget edits mutate only the owning node's stored value.
-

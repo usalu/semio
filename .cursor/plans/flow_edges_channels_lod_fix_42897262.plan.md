@@ -5,7 +5,6 @@ todos: []
 isProject: false
 ---
 
-
 ## Root causes (verified by direct grep/read)
 
 This is broader than a wgpu-only gap: two of the three causes affect **both** renderers today.
@@ -33,30 +32,36 @@ The plugin emits `"forced"` (`flow/plugin/rs/lib.rs:729`), wgpu's `sync_flow_hos
 ## Fix plan
 
 ### A. Wire operator metadata end-to-end (fixes ports/channels/edges in both renderers)
+
 - `flow/core/rs/lib.rs`: add a small public helper, e.g. `pub fn flow_neuron_kind_infos_json() -> String { serde_json::to_string(&flow_registry().operator_catalogue()).unwrap_or_else(|_| "[]".into()) }`, next to `flow_operator_catalogue_json`.
 - `flow/plugin/rs/lib.rs:720`: change `operators_json: None` to `operators_json: Some(flow_core::flow_neuron_kind_infos_json())`.
 - `framework/renderer/wgpu/rs/engine_canvas.rs`'s `sync_flow_host`: add a diff-gated `operators_json` field to `NodeGraphSyncCache` and call `host.set_neuron_kind_infos_json(json)` when it changes (mirroring the existing `fixture_json`/`catalogue_json` pattern added previously).
 - `framework/renderer/react/components/flow-graph-canvas-host.tsx`'s `syncFlowSessionFromScene`: add `if (scene.operatorsJson) session.setNeuronKindInfosJson(scene.operatorsJson);`.
 
 ### B. Fix React's label overlay row shape (`framework/renderer/react/components/graph-canvas-overlays.tsx`)
+
 - Update `DagLabelOverlayRow` to match the real Rust shape: `nodeW`/`nodeH` (world units) instead of `width`/`height`, `layout: "horizontal" | "vertical"` instead of `vertical: boolean`.
 - In `paintDagLabelOverlays`, accept the camera (already parsed via `parseDagOverlayCamera`) and project each row's world `x`/`y` to screen with the existing `worldToScreen` helper (`graph-canvas-overlays.tsx:79-84`) before drawing; scale `nodeW`/`nodeH` by `camera.zoom` for on-screen box sizing.
 - Update the call site in `flow-graph-canvas-host.tsx` (`paintOverlays`, ~line 258-274) to pass the camera through.
 
 ### C. Add a wgpu label-overlay renderer (`framework/renderer/wgpu/rs/engine_canvas.rs`, `scenes.rs`)
+
 - Add `paint_node_graph_labels(ctx, scene, inner)` in `engine_canvas.rs`: look up the `EngineSurface`, call `host.label_overlay_paint_state_json()` (Flow) or the equivalent `GraphHost` method for non-Flow graphs, parse `{ camera, width, height, labels }`.
 - For each row, project world `x`/`y` to screen using the same convention as React's `worldToScreen` (`screen = inner.origin + (world - camera) * camera.zoom + rowSpaceCenter`), and call the existing `ui_wgpu::draw_text`/`draw_text` helper (already used throughout `scenes.rs`) to push glyphs into `ctx.draw`, on top of the already-pushed raster quad.
 - Render all rows left-aligned/horizontally (skip true 90-degree rotation for `layout: "vertical"` rows as an explicit, acceptable simplification — wgpu's `push_glyph` only supports axis-aligned quads; rotated text would require extending the glyph pipeline, out of scope here since it's a cosmetic orientation difference, not a missing-content bug).
 - Call `paint_node_graph_labels` from `render_node_graph` in `scenes.rs` right after `engine_canvas::paint_node_graph(...)`.
 
 ### D. Fix forced-LOD-label field name mismatch
+
 - Standardize on `forcedLabel` everywhere: change `flow/plugin/rs/lib.rs:729` to emit `"forcedLabel"` instead of `"forced"`, and update wgpu's `sync_flow_host` (`engine_canvas.rs:114`) to read `"forcedLabel"` instead of `"lod"`. React already reads `"forcedLabel"` — no change needed there.
 
 ### E. Verification
+
 - `cargo test -p flow-plugin`, `cargo test -p flow_core`, `cargo test -p mathematical-graph-port-directed-dag` (or workspace equivalents) and `cargo build --target wasm32-unknown-unknown` for `flow-plugin` and `semio-framework-renderer-wgpu`.
 - Manually check both the React and wgpu Flow playgrounds with a neuron-to-neuron chain (e.g. two connected `math.add`/`math.multiply` nodes): confirm port/channel labels are visible, connecting edge lines render, node/port text density changes across zoom levels (LOD), and that picking a specific tier from "LOD Mode" actually pins that tier's appearance in both renderers.
 
 ## Explicitly out of scope
+
 - True rotated-text rendering for vertical-layout label rows in wgpu (slider/note/image/preview/variable/cluster widget names) — will render horizontally instead of sideways as a first pass.
 - Inline param/stepper DOM editors (`GraphParamOverlays`/`GraphStepperOverlays` in React) and their wgpu equivalent — separate interactive-editing feature, not required for edges/channels/LOD visibility.
 - Per-node `HitTarget`s / double-click-to-open-instance in wgpu (already tracked as out of scope from the prior pan/zoom/select fix).

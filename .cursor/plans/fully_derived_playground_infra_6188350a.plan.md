@@ -2,27 +2,27 @@
 name: Fully Derived Playground Infra
 overview: Make every piece of playground infrastructure (ports, site hosts, Vite plugins, body/surface registration, program routing) derive solely from each app's own semio.app manifest + core exports, deleting all remaining central tables, playEntryKind dispatches, and the compose.sketchpad special-cases.
 todos:
-  - id: manifest-schema
-    content: Extend PlaygroundAppManifest with site/assets/programIds/lockedExampleFixtures/optimizeDepsExclude; add semio.app manifests for s, compose-sketchpad, projektetage; derive port seeds, PLAYGROUND_SITE_HOSTS, embed ports from manifests; generalize devServerPlayEntry
-    status: completed
-  - id: declarative-bodies
-    content: Add windowBodies/sidePanelBodies to AppRendererContribution, register them in applyAppRendererContribution, drop registerBodies/registerSurfaceHosts from createPlaygroundApp, migrate all ~24 apps
-    status: completed
-  - id: sketchpad-manifest
-    content: Give compose.sketchpad a full semio.app manifest + instanceHost; delete s/react play-host branches, bootstrapSPlayExtensions hardcoded import, TECHNOLOGY_APP_RESOURCE_BY_PROGRAM entry, dead compose-sketchpad-stub.ts
-    status: completed
-  - id: vite-assets
-    content: Replace playEntryKind plugin dispatch with manifest assets union; delete PlaygroundRendererPuzzleKind union; move PUZZLE_3D_LOCKED_FIXTURE_JSON_REL into puzzle manifests; rename PUZZLE_PLAY_ENTRY to PLAYGROUND_APP_KIND
-    status: completed
-  - id: program-id-routing
-    content: Emit programIdToPlaygroundKind fully from manifests (programId + programIds aliases); add reasoning.mindmap manifest and presentation.deck alias; delete PROGRAM_ID_RESIDUAL and virtual-module inline residuals
-    status: completed
-  - id: example-host-tightening
-    content: Make controllerBackedExampleContribution/resolvePlaygroundExampleCatalog fail loudly when controller lacks PlaygroundExampleHost instead of silent duck-detection
-    status: completed
-  - id: verify
-    content: Run tests for all touched packages + dependency-cruiser; boot draw, puzzle 2d, cad, gis 2d, and S/OS studio (incl. sketchpad instance) to confirm derived ports, plugins, examples, and bodies
-    status: completed
+ - id: manifest-schema
+   content: Extend PlaygroundAppManifest with site/assets/programIds/lockedExampleFixtures/optimizeDepsExclude; add semio.app manifests for s, compose-sketchpad, projektetage; derive port seeds, PLAYGROUND_SITE_HOSTS, embed ports from manifests; generalize devServerPlayEntry
+   status: completed
+ - id: declarative-bodies
+   content: Add windowBodies/sidePanelBodies to AppRendererContribution, register them in applyAppRendererContribution, drop registerBodies/registerSurfaceHosts from createPlaygroundApp, migrate all ~24 apps
+   status: completed
+ - id: sketchpad-manifest
+   content: Give compose.sketchpad a full semio.app manifest + instanceHost; delete s/react play-host branches, bootstrapSPlayExtensions hardcoded import, TECHNOLOGY_APP_RESOURCE_BY_PROGRAM entry, dead compose-sketchpad-stub.ts
+   status: completed
+ - id: vite-assets
+   content: Replace playEntryKind plugin dispatch with manifest assets union; delete PlaygroundRendererPuzzleKind union; move PUZZLE_3D_LOCKED_FIXTURE_JSON_REL into puzzle manifests; rename PUZZLE_PLAY_ENTRY to PLAYGROUND_APP_KIND
+   status: completed
+ - id: program-id-routing
+   content: Emit programIdToPlaygroundKind fully from manifests (programId + programIds aliases); add reasoning.mindmap manifest and presentation.deck alias; delete PROGRAM_ID_RESIDUAL and virtual-module inline residuals
+   status: completed
+ - id: example-host-tightening
+   content: Make controllerBackedExampleContribution/resolvePlaygroundExampleCatalog fail loudly when controller lacks PlaygroundExampleHost instead of silent duck-detection
+   status: completed
+ - id: verify
+   content: Run tests for all touched packages + dependency-cruiser; boot draw, puzzle 2d, cad, gis 2d, and S/OS studio (incl. sketchpad instance) to confirm derived ports, plugins, examples, and bodies
+   status: completed
 isProject: false
 ---
 
@@ -52,8 +52,6 @@ flowchart LR
   Scan --> Ports
   Contribution --> Boot
 ```
-
-
 
 ## Part 1 — Manifest schema extension ([repo/lib/js/index.ts](repo/lib/js/index.ts))
 

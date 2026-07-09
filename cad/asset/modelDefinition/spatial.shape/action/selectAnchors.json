@@ -24,9 +24,7 @@
         },
         "kinds": {
           "kind": "const",
-          "value": [
-            "anchor"
-          ]
+          "value": ["anchor"]
         }
       },
       "assignTo": "result"

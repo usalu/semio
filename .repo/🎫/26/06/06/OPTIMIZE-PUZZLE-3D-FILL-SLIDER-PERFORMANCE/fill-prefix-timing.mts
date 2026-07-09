@@ -1,13 +1,6 @@
 /** @emoji ⏱ Compares O(1) fill prefix composition vs replaying placements. */
 import { BoxGeometry, Mesh } from "three";
-import {
-  applyBrushFillPlacementsToFixture,
-  buildBrushFillSequence,
-  createBrushFillSequenceStepper,
-  type FixtureV1,
-  type KindCatalogBundle,
-  type KindCompatEntry,
-} from "/Users/ueli/Documents/compose/puzzle/3d/react/index.tsx";
+import { applyBrushFillPlacementsToFixture, buildBrushFillSequence, createBrushFillSequenceStepper, type FixtureV1, type KindCatalogBundle, type KindCompatEntry } from "/Users/ueli/Documents/compose/puzzle/3d/react/index.tsx";
 
 const brushCatalogs: KindCatalogBundle = {
   objects: [

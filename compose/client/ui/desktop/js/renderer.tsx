@@ -10,14 +10,7 @@
 
 // #region 🔌Adapters
 import { mountPlatform } from "@semio-tech/framework-platform-renderer-react";
-import {
-	configureSketchpadKitFactories,
-	createComposeKitStoreFromJsStore,
-	ensureSketchpadPlatform,
-	importKit,
-	InMemoryComposeKitStore,
-	type ComposeKitStore,
-} from "@semio-tech/compose-sketchpad";
+import { configureSketchpadKitFactories, createComposeKitStoreFromJsStore, ensureSketchpadPlatform, importKit, InMemoryComposeKitStore, type ComposeKitStore } from "@semio-tech/compose-sketchpad";
 import { createRoot } from "react-dom/client";
 // #endregion 🔌Adapters
 
@@ -82,9 +75,7 @@ if (!rootElement) {
   throw new Error("Renderer root element '#root' is missing.");
 }
 
-createRoot(rootElement).render(
-  <div className="flex h-screen w-screen items-center justify-center bg-neutral-950 text-white">Loading sketchpad…</div>,
-);
+createRoot(rootElement).render(<div className="flex h-screen w-screen items-center justify-center bg-neutral-950 text-white">Loading sketchpad…</div>);
 
 void (async () => {
   try {

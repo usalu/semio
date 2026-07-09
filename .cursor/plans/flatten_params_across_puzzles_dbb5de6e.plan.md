@@ -2,42 +2,42 @@
 name: Flatten Params Across Puzzles
 overview: Give puzzle 2d/3d/5d attractions/fasteners/edges the same 6 transform params (plus u/v) as compose connections, and reimplement the flatten algorithm independently in each technology (puzzle 2d, 3d, 5d, and keep compose rs as the matching reference) so the UI computes absolute placement from relative params instead of relying on rs-precomputed flatPosition.
 todos:
-  - id: ticket
-    content: Read repo://goals and open/reopen the repo MCP ticket for this flatten/params work.
-    status: completed
-  - id: params-2d
-    content: Add 8 params (gap,shift,rise,rotation,turn,tilt,u,v) to puzzle 2d edge type + parser + fingerprint.
-    status: completed
-  - id: params-3d
-    content: Add 8 params to puzzle 3d AttractionProps + parseFixture + appearance fingerprint.
-    status: completed
-  - id: params-5d
-    content: Add 8 params to puzzle 5d Fastener + parseModel + compose5d/project2d/project3d passthrough; add grip 2d t param.
-    status: completed
-  - id: flatten-3d
-    content: Implement flatten3d in puzzle 3d (object origin/orientation from attractions + vortex geometry), matching rs compute_child_plane.
-    status: completed
-  - id: flatten-2d
-    content: Implement flatten2d in puzzle 2d (node x/y diagram center from edges + u/v + handle-angle t).
-    status: completed
-  - id: flatten-5d
-    content: "Implement flatten5d in puzzle 5d (full: part 3d origin/orientation + 2d center) and apply it in the render path."
-    status: completed
-  - id: rs-align
-    content: Keep compose rs flatten as canonical reference; align constants/edge-cases with the new TS ports.
-    status: completed
-  - id: host-rewire
-    content: Rewire sketchpad host fixtures to emit identity origins + local vortex geometry + relative params, drop flatPosition consumers, apply flatten5d.
-    status: completed
-  - id: dto-connector-geom
-    content: Verify/extend SKETCHPAD_KIT_READ_INNER to fetch type connector local point/direction/t for local vortex emission.
-    status: completed
-  - id: fixtures
-    content: Regenerate puzzle nakagin 3d/5d fixtures from compose so attractions/fasteners carry params and use local geometry.
-    status: completed
-  - id: tests
-    content: Extend in-file flatten tests in puzzle 2d/3d/5d and rs; run Nakagin design e2e with [DEBUG] logs.
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open/reopen the repo MCP ticket for this flatten/params work.
+   status: completed
+ - id: params-2d
+   content: Add 8 params (gap,shift,rise,rotation,turn,tilt,u,v) to puzzle 2d edge type + parser + fingerprint.
+   status: completed
+ - id: params-3d
+   content: Add 8 params to puzzle 3d AttractionProps + parseFixture + appearance fingerprint.
+   status: completed
+ - id: params-5d
+   content: Add 8 params to puzzle 5d Fastener + parseModel + compose5d/project2d/project3d passthrough; add grip 2d t param.
+   status: completed
+ - id: flatten-3d
+   content: Implement flatten3d in puzzle 3d (object origin/orientation from attractions + vortex geometry), matching rs compute_child_plane.
+   status: completed
+ - id: flatten-2d
+   content: Implement flatten2d in puzzle 2d (node x/y diagram center from edges + u/v + handle-angle t).
+   status: completed
+ - id: flatten-5d
+   content: "Implement flatten5d in puzzle 5d (full: part 3d origin/orientation + 2d center) and apply it in the render path."
+   status: completed
+ - id: rs-align
+   content: Keep compose rs flatten as canonical reference; align constants/edge-cases with the new TS ports.
+   status: completed
+ - id: host-rewire
+   content: Rewire sketchpad host fixtures to emit identity origins + local vortex geometry + relative params, drop flatPosition consumers, apply flatten5d.
+   status: completed
+ - id: dto-connector-geom
+   content: Verify/extend SKETCHPAD_KIT_READ_INNER to fetch type connector local point/direction/t for local vortex emission.
+   status: completed
+ - id: fixtures
+   content: Regenerate puzzle nakagin 3d/5d fixtures from compose so attractions/fasteners carry params and use local geometry.
+   status: completed
+ - id: tests
+   content: Extend in-file flatten tests in puzzle 2d/3d/5d and rs; run Nakagin design e2e with [DEBUG] logs.
+   status: completed
 isProject: false
 ---
 
@@ -92,6 +92,7 @@ Each lives in that technology's `react/index.tsx` as a pure exported function wi
 ### C. Compose host rewire (decouple from rs flatPosition)
 
 In [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts):
+
 - `sketchpadDesignVolumeFixtureFromDesign` (L13017-13051): emit objects at **identity** origin/orientation and populate `vortices` with **type-local** connector `position`/`direction` (from the type's connectors), instead of `sketchpadPieceSceneOrigin/Orientation` (L12838-12886, which read `flatPosition`). Put the 8 params on each attraction (read from the connection DTO already fetched in `SKETCHPAD_KIT_READ_INNER`).
 - `sketchpadDesignPuzzle2dFixtureFromDesign` (L12977-13014): put the 8 params on each edge; stop using `sketchpadPieceDiagramUv` from `flatPosition`.
 - Ensure `SKETCHPAD_KIT_READ_INNER` also fetches type connector local `point/direction/t` so the host can emit local vortices (verify the connector-geometry fields added in the prior ticket are selected).

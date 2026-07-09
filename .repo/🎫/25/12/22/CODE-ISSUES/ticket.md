@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The code.json report showed 497 issues including:
@@ -46,4 +47,5 @@ The code.json report showed 497 issues including:
 ## Log
 
 ## Summary
+
 # Summary

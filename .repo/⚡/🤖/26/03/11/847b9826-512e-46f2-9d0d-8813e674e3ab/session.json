@@ -22,9 +22,7 @@
         "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "🧰composerepo⌨️cli🥼maintest"
-        ],
+        "files": ["🧰composerepo⌨️cli🥼maintest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️11⏰14⌚06⏱️57",

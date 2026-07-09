@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The codebase had inconsistent hook patterns:
@@ -66,6 +67,7 @@ No Granular suffix exists on hook names - hooks already use `GranularHookResult<
 ## Log
 
 ## Summary
+
 # Summary
 
->-
+> -

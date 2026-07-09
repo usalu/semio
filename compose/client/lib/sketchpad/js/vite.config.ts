@@ -73,10 +73,7 @@ function monorepoWorkspaceTransformPlugin(workspaceRoot: string): Plugin {
   };
 }
 
-const EMBEDDED_NODE_TEST_REGIONS = [
-  /\/\/#region 🧪Tests[\s\S]*?\/\/#endregion 🧪Tests\s*/,
-  /\/\/#region 🧪E2E[\s\S]*?\/\/#endregion 🧪E2E\s*/,
-];
+const EMBEDDED_NODE_TEST_REGIONS = [/\/\/#region 🧪Tests[\s\S]*?\/\/#endregion 🧪Tests\s*/, /\/\/#region 🧪E2E[\s\S]*?\/\/#endregion 🧪E2E\s*/];
 
 function isSketchpadIndexModule(id: string): boolean {
   return id.replace(/\\/g, "/").endsWith("/compose/client/lib/sketchpad/js/index.ts");
@@ -227,10 +224,7 @@ function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: 
             res.setHeader("Content-Type", "application/json");
           }
           const kitDir = path.dirname(filePath);
-          if (
-            requestedFixturePath.endsWith("/kit.compose.json") &&
-            (fsMod.existsSync(path.join(kitDir, "type")) || fsMod.existsSync(path.join(kitDir, "types")))
-          ) {
+          if (requestedFixturePath.endsWith("/kit.compose.json") && (fsMod.existsSync(path.join(kitDir, "type")) || fsMod.existsSync(path.join(kitDir, "types")))) {
             const assembled = readInitialKitFixtureFromPath(filePath);
             res.end(JSON.stringify(assembled));
             return;
@@ -285,9 +279,7 @@ export default defineConfig(async ({ mode }) => {
     { find: "scheduler", replacement: schedulerEntry },
     { find: "vite/internal", replacement: viteInternalFallback },
   ];
-  const defaultPreloadKits =
-    process.env.COMPOSE_SKETCHPAD_PRELOAD_KITS ??
-    (process.env.NODE_ENV !== "production" ? "/fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json" : "");
+  const defaultPreloadKits = process.env.COMPOSE_SKETCHPAD_PRELOAD_KITS ?? (process.env.NODE_ENV !== "production" ? "/fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json" : "");
   return {
     define: {
       __COMPOSE_JS_RUN_BENCHMARKS__: "false",
@@ -335,7 +327,19 @@ export default defineConfig(async ({ mode }) => {
     ],
     optimizeDeps: {
       include: ["golden-layout", "scheduler", "use-sync-external-store/shim", "use-sync-external-store/shim/with-selector", "use-sync-external-store/with-selector", "@react-three/fiber", "@react-three/drei"],
-      exclude: ["@semio-tech/compose-js", "@semio-tech/compose-sketchpad", "@playwright/test", "playwright", "playwright-core", "chromium-bidi", "fsevents", "vitest", "@vitest/expect", "@testing-library/react", ...findWorkspacePackages(workspaceRoot)],
+      exclude: [
+        "@semio-tech/compose-js",
+        "@semio-tech/compose-sketchpad",
+        "@playwright/test",
+        "playwright",
+        "playwright-core",
+        "chromium-bidi",
+        "fsevents",
+        "vitest",
+        "@vitest/expect",
+        "@testing-library/react",
+        ...findWorkspacePackages(workspaceRoot),
+      ],
       esbuildOptions: {
         target: "es2020",
         plugins: [

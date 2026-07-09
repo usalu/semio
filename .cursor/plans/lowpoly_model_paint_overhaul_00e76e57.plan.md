@@ -2,36 +2,36 @@
 name: Lowpoly Model/Paint Overhaul
 overview: Fix broken camera/selection in the lowpoly playground's Model mode, expand it to a true multi-object scene, and add a full Paint mode with seam-based UV unwrapping, a layered texture-painting engine, VCS-backed undo, and a dedicated UV window — following the Model/Generate-style mode-switch pattern already used by `flow` and `procedural`.
 todos:
-  - id: phase1-camera
-    content: Fix controlsGate to use gumballDragActive state; add onCameraChange to WorldOrbitViewControls
-    status: completed
-  - id: phase2-multi-object
-    content: Add tessellateAll WASM method; render all objects as separate groups; object-level multi-select + active-object switching
-    status: completed
-  - id: phase3-topo-selection
-    content: Extend MeshTransfer/tessellate() with faceIds/vertexIds/edgeIds; fix click selection to use topological ids; add selection highlight overlays
-    status: completed
-  - id: phase4-marquee
-    content: Implement LowpolyMarqueeBridge (screen-space box select with modifier-key merge) and wire the existing dead marquee state/render branch
-    status: completed
-  - id: phase5-modes
-    content: Add paintMode ModeRuntime, two-window paint layout, new UV surface id/host, register via app.addMode
-    status: completed
-  - id: phase6-uv-unwrap
-    content: Add per-corner UV storage + seam marking + island detection + LSCM solve (hand-rolled CG) + packing; extend tessellate()/OBJ export with UVs
-    status: completed
-  - id: phase7-paint-engine
-    content: Add per-object multi-layer RGBA paint buffers, brush/eraser/fill/eyedropper/compositing in lowpoly/core
-    status: completed
-  - id: phase8-vcs-undo
-    content: Wire paint strokes through vcs/core + vcs/rs for undo/redo
-    status: completed
-  - id: phase9-paint-ui
-    content: Build Paint 3D viewport (texture-mapped material, brush raycast to UV) + new UV 2D canvas window + Layers panel + paint toolbar/inspector fields
-    status: completed
-  - id: phase10-verify
-    content: Rust/vitest tests for unwrap, tessellation buffers, paint compositing, VCS undo; manual browser verification of camera/selection/paint end-to-end
-    status: completed
+ - id: phase1-camera
+   content: Fix controlsGate to use gumballDragActive state; add onCameraChange to WorldOrbitViewControls
+   status: completed
+ - id: phase2-multi-object
+   content: Add tessellateAll WASM method; render all objects as separate groups; object-level multi-select + active-object switching
+   status: completed
+ - id: phase3-topo-selection
+   content: Extend MeshTransfer/tessellate() with faceIds/vertexIds/edgeIds; fix click selection to use topological ids; add selection highlight overlays
+   status: completed
+ - id: phase4-marquee
+   content: Implement LowpolyMarqueeBridge (screen-space box select with modifier-key merge) and wire the existing dead marquee state/render branch
+   status: completed
+ - id: phase5-modes
+   content: Add paintMode ModeRuntime, two-window paint layout, new UV surface id/host, register via app.addMode
+   status: completed
+ - id: phase6-uv-unwrap
+   content: Add per-corner UV storage + seam marking + island detection + LSCM solve (hand-rolled CG) + packing; extend tessellate()/OBJ export with UVs
+   status: completed
+ - id: phase7-paint-engine
+   content: Add per-object multi-layer RGBA paint buffers, brush/eraser/fill/eyedropper/compositing in lowpoly/core
+   status: completed
+ - id: phase8-vcs-undo
+   content: Wire paint strokes through vcs/core + vcs/rs for undo/redo
+   status: completed
+ - id: phase9-paint-ui
+   content: Build Paint 3D viewport (texture-mapped material, brush raycast to UV) + new UV 2D canvas window + Layers panel + paint toolbar/inspector fields
+   status: completed
+ - id: phase10-verify
+   content: Rust/vitest tests for unwrap, tessellation buffers, paint compositing, VCS undo; manual browser verification of camera/selection/paint end-to-end
+   status: completed
 isProject: false
 ---
 
@@ -41,7 +41,7 @@ isProject: false
 
 - **Camera dead**: in [lowpoly/react/index.tsx](lowpoly/react/index.tsx) `WorldOrbitGated` receives `controlsGate={!gumballPointerConsumesCanvasEventRef.current}`. `WorldOrbitGated` disables controls when the gate is `true` (`enabled={!gate && !snapGate}` in [infinite/world/r3f/index.tsx](infinite/world/r3f/index.tsx)); the ref defaults to `false`, so the gate is always `true` and OrbitControls are permanently off. The component already tracks a reactive `gumballDragActive` state that is never used for this.
 - **Selection is a stub**: face-click uses the draw-call `event.faceIndex` (not a topological `FaceId`), vertex-click uses tessellated point index (not `VertexId`), edge-click has no handler at all, `selectedIds` is never rendered as a highlight, and `marquee`/`setMarquee` in the same file is fully dead code (never invoked, never wired to pointer events).
-- **Single-object viewport**: `LowpolySession.tessellateActive()` in [lowpoly/core/lib.rs](lowpoly/core/lib.rs) only tessellates the *active* object; `LowpolyDocument` (same file) already stores `Vec<HalfedgeMesh>` for every object, but only one is ever shown/selectable — adding a primitive from the catalogue swaps what's visible instead of adding to the scene.
+- **Single-object viewport**: `LowpolySession.tessellateActive()` in [lowpoly/core/lib.rs](lowpoly/core/lib.rs) only tessellates the _active_ object; `LowpolyDocument` (same file) already stores `Vec<HalfedgeMesh>` for every object, but only one is ever shown/selectable — adding a primitive from the catalogue swaps what's visible instead of adding to the scene.
 - **No Model/Paint modes**: `lowpoly/play/index.ts` defines a single `ModeRuntime("main", "Edit", ...)`. The existing repo pattern for switchable modes with different toolbars/layouts is `flow`/`procedural`'s `mainMode` + `generateMode`, registered via `createPlayAppRuntime(..., controller.mainMode)` + `app.addMode(controller.generateMode)`; the platform shell auto-renders a mode-switch button group in the navbar once `app.modes.length > 1`.
 - **No UV/paint infrastructure exists anywhere in the repo** (confirmed by full-repo search) — this is new from-scratch work, closest conceptual reference is `raster/`'s layer/blend-mode/VCS architecture and the generic `vcs/core` + `vcs/rs` engine already reused by ~15 other technologies (writer, forms, flow, cad, draw, procedural, puzzle, shooting, gis, presentation, s, mindmap, trinity, raster).
 
@@ -81,8 +81,6 @@ flowchart LR
     PaintMode --> UvView
     Paint <--> VCS[vcs/core + vcs/rs undo/redo]
 ```
-
-
 
 ## Phase 1 — Camera fix (small, do first)
 

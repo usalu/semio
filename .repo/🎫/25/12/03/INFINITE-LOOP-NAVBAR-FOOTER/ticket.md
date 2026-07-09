@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 When opening the Design app or Type app after importing a kit in the sketchpad test, the app would:
@@ -24,7 +25,7 @@ The `TypeAppFooter` and `DesignAppFooter` components had a useEffect dependency 
 
 ```typescript
 useEffect(() => {
-  // ... add/remove footer items ...
+ // ... add/remove footer items ...
 }, [appType, addFooterItem, removeFooterItem, allModelTagGuids, tagNameMap, selectedModelTags, addModelTag, removeModelTag]); // <-- Problem
 ```
 
@@ -70,6 +71,7 @@ useEffect(() => {
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix infinite loop and missing navbar/footer in Design/Type apps after import

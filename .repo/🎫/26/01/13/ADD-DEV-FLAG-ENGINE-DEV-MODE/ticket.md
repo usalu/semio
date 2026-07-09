@@ -1,13 +1,16 @@
 # Ticket
 
 ## Todos
+
 # Plan
+
 - Align engine flags so debug and dev behave identically in startup flow.
 - Update documentation in README.md and AGENTS.md to reflect debug/dev equivalence.
 
 ## Changes
 
 ## Log
+
 [2026-01-13T11:24:30+01:00] Start task: add dev flag to engine for dev mode in py/engine/engine.py.
 [2026-01-13T11:30:35+01:00] Updated py/engine/engine.py to add --dev flag and dev-mode startup behavior.
 [2026-01-13T11:30:35+01:00] Updated README.md and AGENTS.md with dev-mode flag documentation.
@@ -21,5 +24,7 @@
 [2026-01-13T11:39:55+01:00] Closed ticket after aligning debug/dev behavior.
 
 ## Summary
+
 Summary:
+
 - Aligned debug and dev startup behavior in py/engine/engine.py and documented the dev/debug equivalence in README.md and AGENTS.md.

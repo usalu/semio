@@ -13,10 +13,5 @@
     "id": "753831c3",
     "local": "semios_full_cqrs_unification_753831c3.plan.md"
   },
-  "sessions": [
-    "⚪7abf98171c24479490ae4cc903af8800",
-    "⚪1ffce31567da4dea8cd8d4be2f2579e1",
-    "⚪fd1e728e9eed45859719ea59cd1fc6c9",
-    "⚪b2bf68ce374d46adacc4f153a75cc613"
-  ]
+  "sessions": ["⚪7abf98171c24479490ae4cc903af8800", "⚪1ffce31567da4dea8cd8d4be2f2579e1", "⚪fd1e728e9eed45859719ea59cd1fc6c9", "⚪b2bf68ce374d46adacc4f153a75cc613"]
 }

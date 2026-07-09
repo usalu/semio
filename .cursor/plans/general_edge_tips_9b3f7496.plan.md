@@ -2,24 +2,24 @@
 name: General Edge Tips
 overview: "Replace the narrow, WIRES-leaking single-marker code with a general board-level edge-tip mechanism: every edge can show source and/or target tips, tip shapes come from an extensible registry, directed edges default to a target arrow, and WIRES configures tips per relationship kind. Force a WASM rebuild so the changes actually render."
 todos:
-  - id: rust-tip-model
-    content: Replace EdgeEndMarker with registry-driven EdgeTipDef/EdgeTipGeometry + edge_tips map in puzzle 2d rs; remove from_wires_edge_kind leak
-    status: completed
-  - id: rust-edgekind-edgedata
-    content: Add source_tip/target_tip/directed to EdgeKindDef and source_tip/target_tip to EdgeData; parse from catalog + descriptor
-    status: completed
-  - id: rust-render
-    content: Generalize append_edge_tip and draw both source and target tips from curve tangents with directed-arrow default; update host_tests
-    status: completed
-  - id: ts-plumbing
-    content: Update puzzle 2d react EdgeKind/edge descriptor types, parse+serialize edgeTips/sourceTip/targetTip/directed, update tests
-    status: completed
-  - id: wires-config
-    content: Configure per-relationship-kind tips in wires react adapter + metabolism fixture; update wires tests
-    status: completed
-  - id: rebuild-validate
-    content: Force WASM rebuild, run cargo + vitest, runtime-verify tips on wires play canvas with screenshot, close ticket
-    status: completed
+ - id: rust-tip-model
+   content: Replace EdgeEndMarker with registry-driven EdgeTipDef/EdgeTipGeometry + edge_tips map in puzzle 2d rs; remove from_wires_edge_kind leak
+   status: completed
+ - id: rust-edgekind-edgedata
+   content: Add source_tip/target_tip/directed to EdgeKindDef and source_tip/target_tip to EdgeData; parse from catalog + descriptor
+   status: completed
+ - id: rust-render
+   content: Generalize append_edge_tip and draw both source and target tips from curve tangents with directed-arrow default; update host_tests
+   status: completed
+ - id: ts-plumbing
+   content: Update puzzle 2d react EdgeKind/edge descriptor types, parse+serialize edgeTips/sourceTip/targetTip/directed, update tests
+   status: completed
+ - id: wires-config
+   content: Configure per-relationship-kind tips in wires react adapter + metabolism fixture; update wires tests
+   status: completed
+ - id: rebuild-validate
+   content: Force WASM rebuild, run cargo + vitest, runtime-verify tips on wires play canvas with screenshot, close ticket
+   status: completed
 isProject: false
 ---
 
@@ -40,8 +40,6 @@ flowchart LR
   wasmCat --> resolve["resolve tips: instance -> kind -> directed default arrow"]
   resolve --> paint["append_edges_wires_and_link: draw source + target tips from curve tangents"]
 ```
-
-
 
 - Tips are board-level and apply to every edge (and reuse the same drawing for wires later).
 - Both ends: independent `source_tip` and `target_tip`.
@@ -83,4 +81,3 @@ flowchart LR
 
 - Diamonds/arrows are placed at the target end by default (consistent direction reading); source tips remain available for any edge but unused by current WIRES kinds.
 - Removing `from_wires_edge_kind` means WIRES visuals now flow entirely through the catalog, satisfying the no-leak rule.
-

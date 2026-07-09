@@ -28,9 +28,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌47421"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌47421"],
         "second": "🎆26🌙03☀️12⏰21⌚20⏱️34",
         "session": "⚪ab5dd3991f1f4ae29671254c174ba433"
       },
@@ -61,9 +59,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌47421"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌47421"],
         "second": "🎆26🌙03☀️12⏰21⌚21⏱️13",
         "session": "⚪ab5dd3991f1f4ae29671254c174ba433"
       },
@@ -94,9 +90,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌47421"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌47421"],
         "second": "🎆26🌙03☀️12⏰21⌚21⏱️22",
         "session": "⚪ab5dd3991f1f4ae29671254c174ba433"
       },
@@ -121,16 +115,12 @@
         "checkpoint": "🔀1efa44848e9ec2b5680dd1a6f66b86c5267f2df9",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "🧰composerepo⌨️cli🥼maintest"
-        ],
+        "files": ["🧰composerepo⌨️cli🥼maintest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️12⏰21⌚22⏱️04",
         "session": "⚪ab5dd3991f1f4ae29671254c174ba433",
-        "tests": [
-          "🧰composerepo⌨️cli🥼maintest🧪testclie2eticketlifecyclesyntaxesnomanagement"
-        ]
+        "tests": ["🧰composerepo⌨️cli🥼maintest🧪testclie2eticketlifecyclesyntaxesnomanagement"]
       },
       "response": {
         "allowed": true

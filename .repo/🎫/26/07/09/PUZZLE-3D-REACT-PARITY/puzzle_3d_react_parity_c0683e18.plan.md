@@ -20,12 +20,14 @@ isProject: false
 ## Part A — Fix GLB coordinate frame
 
 [framework/renderer/react/components/world-3d-host.tsx](framework/renderer/react/components/world-3d-host.tsx)
+
 - Import `GLB_MESH_FRAME_ROTATION_X` from `@semio-tech/infinite-world-r3f`.
 - In `GlbInstanceMesh`, wrap the cloned scene in a `<group rotation={[GLB_MESH_FRAME_ROTATION_X, 0, 0]}>` before returning, so glTF Y-up mesh data lands correctly in the Z-up fixture frame (matches premigration `GlbMeshFrame`).
 
 ## Part B — Fix hover/select/gumball/marquee protocol
 
 [puzzle/plugin/rs/d3/mod.rs](puzzle/plugin/rs/d3/mod.rs)
+
 1. Add `transform_tool: String` (default `"move"`) to `Puzzle3dRuntime`.
 2. Add command handlers (alongside existing `worldSelect`/`worldHover`, keep both since `worldHover`/`worldSelect` may still be used elsewhere e.g. wgpu renderer — do not remove):
    - `"setHover"`: if `args.objectId` present, set `runtime.hovered_object_id` from it; else clear it.
@@ -47,6 +49,7 @@ isProject: false
 ## Part D — Brush/Select/Fill toolbar (`window_engagements`)
 
 [puzzle/plugin/rs/d3/mod.rs](puzzle/plugin/rs/d3/mod.rs) — port `puzzle2d_engagement`/`puzzle2d_brush_placement_control`/`puzzle2d_fill_count_control` from [puzzle/plugin/rs/d2/mod.rs:536-665](puzzle/plugin/rs/d2/mod.rs):
+
 1. `fn puzzle3d_brush_placement_control(envelope) -> Option<WindowEngagementControl>`: build a `ToggleGroup` from `self.precompute.brush_candidates(target_vortex_full_id)` (target = `runtime.selection.vortex_ids.first()` or `runtime.hovered_object_id`-derived vortex), options labelled by candidate object kind, `on_select: puzzle3d_cmd("engagementControlSelect", None)`.
 2. `fn puzzle3d_fill_count_control(envelope) -> WindowEngagementControl`: `Slider` bound to `runtime.fill_count`, `on_change: puzzle3d_cmd("setFillCount", None)`, max 1000 (matches `FILL_COUNT_MAX` in `puzzle/3d/rs/lib.rs`).
 3. `fn puzzle3d_engagement(envelope) -> WindowEngagement`: `options` = Select/Brush/Fill (`PUZZLE3D_ENGAGEMENT_TOOL_SELECT/BRUSH/FILL`, `pressed` from `runtime.active_tool`, `command: puzzle3d_cmd("engagementPossibleSelect", Some({possibleId}))`), `control` = brush/fill control when active, `session_active: Some(runtime.active_tool != "select")`.

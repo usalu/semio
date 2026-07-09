@@ -4,7 +4,5 @@
   "status": "open",
   "description": "Configure VSCode to apply the Rust/cargo formatter (rustfmt) by default and tune it so it introduces as few new lines as possible, analogous to the existing Prettier config (`printWidth: 250`). This means creating a workspace-root `rustfmt.toml` with a wide `max_width` and `use_small_heuristics = \"Max\"` so width-related heuristics (arrays, chains, fn calls, structs, …) all collapse onto single lines when they fit. Also ensure VSCode runs rust-analyzer (which uses rustfmt) as the default formatter for Rust files on save.",
   "goal": "🎯aioptimizedrepo",
-  "sessions": [
-    "⚪557fb37b7f1f4f1ebbe94ca45c091577"
-  ]
+  "sessions": ["⚪557fb37b7f1f4f1ebbe94ca45c091577"]
 }

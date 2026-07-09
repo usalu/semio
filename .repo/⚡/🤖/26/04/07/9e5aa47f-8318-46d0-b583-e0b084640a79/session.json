@@ -4391,13 +4391,8 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/9e5aa47f-8318-46d0-b583-e0b084640a79.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "/workspaces/semio/compose/js/index.ts"
-            ],
-            "testNames": [
-              "Metabolism Kit -\u003e Validate = Empty report",
-              "Invalid Kit -\u003e Validate = Invalid Report"
-            ]
+            "files": ["/workspaces/semio/compose/js/index.ts"],
+            "testNames": ["Metabolism Kit -\u003e Validate = Empty report", "Invalid Kit -\u003e Validate = Invalid Report"]
           },
           "tool_use_id": "toolu_bdrk_015NCmseBscYTDvionkPcgRj__vscode-1775565509175",
           "cwd": "/workspaces/semio"
@@ -4423,13 +4418,8 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/9e5aa47f-8318-46d0-b583-e0b084640a79.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "/workspaces/semio/compose/js/index.ts"
-            ],
-            "testNames": [
-              "Metabolism Kit -\u003e Validate = Empty report",
-              "Invalid Kit -\u003e Validate = Invalid Report"
-            ]
+            "files": ["/workspaces/semio/compose/js/index.ts"],
+            "testNames": ["Metabolism Kit -\u003e Validate = Empty report", "Invalid Kit -\u003e Validate = Invalid Report"]
           },
           "tool_use_id": "toolu_bdrk_015NCmseBscYTDvionkPcgRj__vscode-1775565509175",
           "cwd": "/workspaces/semio"
@@ -4455,13 +4445,8 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/9e5aa47f-8318-46d0-b583-e0b084640a79.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "/workspaces/semio/compose/js/index.ts"
-            ],
-            "testNames": [
-              "Metabolism Kit -\u003e Validate = Empty report",
-              "Invalid Kit -\u003e Validate = Invalid Report"
-            ]
+            "files": ["/workspaces/semio/compose/js/index.ts"],
+            "testNames": ["Metabolism Kit -\u003e Validate = Empty report", "Invalid Kit -\u003e Validate = Invalid Report"]
           },
           "tool_response": "No tests found in the files. Ensure the correct absolute paths are passed to the tool.",
           "tool_use_id": "toolu_bdrk_015NCmseBscYTDvionkPcgRj__vscode-1775565509175",
@@ -4488,13 +4473,8 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/9e5aa47f-8318-46d0-b583-e0b084640a79.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "/workspaces/semio/compose/js/index.ts"
-            ],
-            "testNames": [
-              "Metabolism Kit -\u003e Validate = Empty report",
-              "Invalid Kit -\u003e Validate = Invalid Report"
-            ]
+            "files": ["/workspaces/semio/compose/js/index.ts"],
+            "testNames": ["Metabolism Kit -\u003e Validate = Empty report", "Invalid Kit -\u003e Validate = Invalid Report"]
           },
           "tool_response": "No tests found in the files. Ensure the correct absolute paths are passed to the tool.",
           "tool_use_id": "toolu_bdrk_015NCmseBscYTDvionkPcgRj__vscode-1775565509175",

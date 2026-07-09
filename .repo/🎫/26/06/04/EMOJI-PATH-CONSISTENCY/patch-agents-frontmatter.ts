@@ -53,10 +53,7 @@ function rel(p: string): string {
   return p.slice(root.length + 1);
 }
 
-function upsertFrontmatter(
-  body: string,
-  fields: Record<string, string | { name: string; emoji: string; description?: string; kind?: string }>,
-): string {
+function upsertFrontmatter(body: string, fields: Record<string, string | { name: string; emoji: string; description?: string; kind?: string }>): string {
   const hasFm = body.startsWith("---\n");
   const end = hasFm ? body.indexOf("\n---\n", 4) : -1;
   const content = hasFm && end > 0 ? body.slice(end + 5) : body;
@@ -83,16 +80,10 @@ function patchTechnologyAgents(relPath: string, text: string): string | null {
     let next = text.replace(/^---\nemoji: .*\n/m, `---\nemoji: ${emoji}\n`);
     next = next.replace(/^---\ntechnology: spatial\n/m, `---\ntechnology: cad\nemoji: ${emoji}\n`);
     if (name === "ui" && !next.includes("\nemoji:")) {
-      next = next.replace(
-        /^---\ntechnology: ui\n/m,
-        `---\ntechnology: ui\nemoji: ${emoji}\n`,
-      );
+      next = next.replace(/^---\ntechnology: ui\n/m, `---\ntechnology: ui\nemoji: ${emoji}\n`);
     }
     if (name === "framework" && !next.includes("\nemoji:")) {
-      next = next.replace(
-        /^---\ntechnology: framework\n/m,
-        `---\ntechnology: framework\nemoji: ${emoji}\n`,
-      );
+      next = next.replace(/^---\ntechnology: framework\n/m, `---\ntechnology: framework\nemoji: ${emoji}\n`);
     }
     return next;
   }

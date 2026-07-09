@@ -2,33 +2,33 @@
 name: Schema Inconsistency Cleanup
 overview: "Fix a coherent batch of inconsistencies in `compose/graphql/target.schema.graphql`: wrong `implements` clauses, missing required `Artifact` fields, missing `Edge`/`Connection` for `Clump` and `TheKit`, ghost/duplicate/wrong-direction tokens in owner unions, narrowed per-type owner/owns unions, missing field tags, per-`<Op>Edge`/`<Op>Connection` for every concrete Operation, and a uniform `# Banner` rule attributing every field to the interface that introduces it."
 todos:
-  - id: ghost_tokens
-    content: Strip ghost names, dupe `AlternativeModification`, and wrong-direction `Edit` from every `owner`/`owns` union comment
-    status: completed
-  - id: implements_fixes
-    content: Fix `implements` on `GroupDiff`, `PieceDiff`, `DesignDiff` (-> Diff), `GroupModifications`, `PieceModifications`, `DesignModifications` (-> Entity), `interface Operation` (-> StrongEntity), all `XModifications` (-> WeakEntity); prune the Artifact fields on the six retyped Diff/Modifications types
-    status: completed
-  - id: artifact_completeness
-    content: "Add `changes: ChangeConnection # computed` and retag `createdBy`/`authoredBy`/`changedIn`/`lastChangedBy`/`lastChangedIn` to `# computed` on `File`, `Type`, `Design`"
-    status: completed
-  - id: missing_edges
-    content: Add `ClumpEdge`/`ClumpConnection`, `TheKitEdge`/`TheKitConnection`; delete `ModificationAttributesConnection` and replace usages with `AttributeConnection`; annotate `BlueprintEdge` polymorphism
-    status: completed
-  - id: per_op_edges
-    content: Generate `<Op>Edge` and `<Op>Connection` for every concrete `type X implements Operation` (~85 types) via a helper script in the existing ticket folder
-    status: completed
-  - id: narrow_unions
-    content: Replace giant copy-pasted `owner` unions on every `XModification`/`XModifications` with narrow per-type unions; clear `XModification.owns` to bare `# reference`; fix drift on `TagModifications`/`PositionModifications`/`LocationModifications`/`PlaceModifications` `owns`
-    status: completed
-  - id: tag_fixes
-    content: Add missing `# data`/`# reference`/`# computed` tags; retag `PieceDiff.icon` to `# computed`; retag `type Modifications` `removed`/`modifications`/`added` to `# computed`
-    status: completed
-  - id: banner_normalization
-    content: Insert correct `# <InterfaceName>` banners before every group of inherited fields on EVERY type (not just Operation) so each field is attributed to the interface that introduces it
-    status: completed
-  - id: regions
-    content: Move `#endregion Entities` after `#endregion VCS`, rename `#region Kit` -> `#region Kit Entities`, reorder `Design` to before nested `#region Clump`
-    status: completed
+ - id: ghost_tokens
+   content: Strip ghost names, dupe `AlternativeModification`, and wrong-direction `Edit` from every `owner`/`owns` union comment
+   status: completed
+ - id: implements_fixes
+   content: Fix `implements` on `GroupDiff`, `PieceDiff`, `DesignDiff` (-> Diff), `GroupModifications`, `PieceModifications`, `DesignModifications` (-> Entity), `interface Operation` (-> StrongEntity), all `XModifications` (-> WeakEntity); prune the Artifact fields on the six retyped Diff/Modifications types
+   status: completed
+ - id: artifact_completeness
+   content: "Add `changes: ChangeConnection # computed` and retag `createdBy`/`authoredBy`/`changedIn`/`lastChangedBy`/`lastChangedIn` to `# computed` on `File`, `Type`, `Design`"
+   status: completed
+ - id: missing_edges
+   content: Add `ClumpEdge`/`ClumpConnection`, `TheKitEdge`/`TheKitConnection`; delete `ModificationAttributesConnection` and replace usages with `AttributeConnection`; annotate `BlueprintEdge` polymorphism
+   status: completed
+ - id: per_op_edges
+   content: Generate `<Op>Edge` and `<Op>Connection` for every concrete `type X implements Operation` (~85 types) via a helper script in the existing ticket folder
+   status: completed
+ - id: narrow_unions
+   content: Replace giant copy-pasted `owner` unions on every `XModification`/`XModifications` with narrow per-type unions; clear `XModification.owns` to bare `# reference`; fix drift on `TagModifications`/`PositionModifications`/`LocationModifications`/`PlaceModifications` `owns`
+   status: completed
+ - id: tag_fixes
+   content: Add missing `# data`/`# reference`/`# computed` tags; retag `PieceDiff.icon` to `# computed`; retag `type Modifications` `removed`/`modifications`/`added` to `# computed`
+   status: completed
+ - id: banner_normalization
+   content: Insert correct `# <InterfaceName>` banners before every group of inherited fields on EVERY type (not just Operation) so each field is attributed to the interface that introduces it
+   status: completed
+ - id: regions
+   content: Move `#endregion Entities` after `#endregion VCS`, rename `#region Kit` -> `#region Kit Entities`, reorder `Design` to before nested `#region Clump`
+   status: completed
 isProject: false
 ---
 
@@ -40,40 +40,40 @@ All edits land in [compose/graphql/target.schema.graphql](compose/graphql/target
 
 Every field on a `type` MUST sit under the `# <InterfaceName>` banner that introduces it. The full taxonomy, in canonical declaration order, is:
 
-| Banner | Fields it covers |
-|---|---|
-| `# Node` | `id` |
-| `# Entity` | `hash`, `owner`, `owns` |
-| `# WeakEntity` / `# StrongEntity` | (no extra fields; banner only when the next group is a sibling block) |
-| `# RichStrongEntity` | `name`, `description`, `icon`, `createdAt`, `createdBy` |
-| `# Artifact` | `authoredBy`, `changedIn`, `lastChangedAt`, `lastChangedBy`, `lastChangedIn`, `changes`, `edits` |
-| `# Document` | `previewImage` |
-| `# Event` | `timestamp`, `involves` |
-| `# Version` | `checkpoint`, `latestWipCheckpointAncestor`, `savedChanges`, `unsavedChanges`, `kit` |
-| `# Input` (then `# Arguments`) | input argument fields |
-| `# Diff` | per-diff fields |
-| `# Modification` | `before`, `diff`, `after` |
-| `# Modifications` | `removed`, `modifications`, `added` |
-| `# Operation` | `scope`, `input`, `modification` |
-| `# Operation Output` | per-op output fields (`piece`, `pieces`, `quality`, `tag`, ...) |
-| `# <ConcreteName>` | type-specific fields not covered above |
-| `# EntityEdge` | `cursor` |
-| `# <X>Edge` | `node` |
-| `# EntityConnection` | `edges`, `pageInfo`, `hash` |
+| Banner                            | Fields it covers                                                                                 |
+| --------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `# Node`                          | `id`                                                                                             |
+| `# Entity`                        | `hash`, `owner`, `owns`                                                                          |
+| `# WeakEntity` / `# StrongEntity` | (no extra fields; banner only when the next group is a sibling block)                            |
+| `# RichStrongEntity`              | `name`, `description`, `icon`, `createdAt`, `createdBy`                                          |
+| `# Artifact`                      | `authoredBy`, `changedIn`, `lastChangedAt`, `lastChangedBy`, `lastChangedIn`, `changes`, `edits` |
+| `# Document`                      | `previewImage`                                                                                   |
+| `# Event`                         | `timestamp`, `involves`                                                                          |
+| `# Version`                       | `checkpoint`, `latestWipCheckpointAncestor`, `savedChanges`, `unsavedChanges`, `kit`             |
+| `# Input` (then `# Arguments`)    | input argument fields                                                                            |
+| `# Diff`                          | per-diff fields                                                                                  |
+| `# Modification`                  | `before`, `diff`, `after`                                                                        |
+| `# Modifications`                 | `removed`, `modifications`, `added`                                                              |
+| `# Operation`                     | `scope`, `input`, `modification`                                                                 |
+| `# Operation Output`              | per-op output fields (`piece`, `pieces`, `quality`, `tag`, ...)                                  |
+| `# <ConcreteName>`                | type-specific fields not covered above                                                           |
+| `# EntityEdge`                    | `cursor`                                                                                         |
+| `# <X>Edge`                       | `node`                                                                                           |
+| `# EntityConnection`              | `edges`, `pageInfo`, `hash`                                                                      |
 
 The user-supplied counter-example shows the bug clearly:
 
 ```graphql
 type CreatedTags implements Operation {
-  # Operation                                              <- WRONG: this is the Node block
-  id: ID! # data // uuidv7
-  hash: String! # cached                                   <- this is # Entity
-  owner: Entity # reference // Edit
-  owns: EntityConnection # reference // CreatedTagsInput | Tag
-  scope: Entity! # reference // Entity                     <- now we are actually in # Operation
-  input: CreatedTagsInput! # data
-  modification: Modification! # computed
-  tags: TagConnection! # data                              <- this is # Operation Output
+ # Operation                                              <- WRONG: this is the Node block
+ id: ID! # data // uuidv7
+ hash: String! # cached                                   <- this is # Entity
+ owner: Entity # reference // Edit
+ owns: EntityConnection # reference // CreatedTagsInput | Tag
+ scope: Entity! # reference // Entity                     <- now we are actually in # Operation
+ input: CreatedTagsInput! # data
+ modification: Modification! # computed
+ tags: TagConnection! # data                              <- this is # Operation Output
 }
 ```
 
@@ -81,18 +81,18 @@ Canonical form:
 
 ```graphql
 type CreatedTags implements Operation {
-  # Node
-  id: ID! # data // uuidv7
-  # Entity
-  hash: String! # cached
-  owner: Entity # reference // Edit
-  owns: EntityConnection # reference // CreatedTagsInput | Tag
-  # Operation
-  scope: Entity! # reference // KitModifications
-  input: CreatedTagsInput! # data
-  modification: Modification! # computed
-  # Operation Output
-  tags: TagConnection! # data
+ # Node
+ id: ID! # data // uuidv7
+ # Entity
+ hash: String! # cached
+ owner: Entity # reference // Edit
+ owns: EntityConnection # reference // CreatedTagsInput | Tag
+ # Operation
+ scope: Entity! # reference // KitModifications
+ input: CreatedTagsInput! # data
+ modification: Modification! # computed
+ # Operation Output
+ tags: TagConnection! # data
 }
 ```
 
@@ -239,17 +239,17 @@ Example skeleton:
 
 ```graphql
 type ClumpEdge implements EntityEdge {
-  # EntityEdge
-  cursor: String! # computed
-  # ClumpEdge
-  node: Clump! # reference
+ # EntityEdge
+ cursor: String! # computed
+ # ClumpEdge
+ node: Clump! # reference
 }
 
 type ClumpConnection implements EntityConnection {
-  # EntityConnection
-  edges: [ClumpEdge!]! # computed
-  pageInfo: PageInfo! # computed
-  hash: String! # cached
+ # EntityConnection
+ edges: [ClumpEdge!]! # computed
+ pageInfo: PageInfo! # computed
+ hash: String! # cached
 }
 ```
 
@@ -263,17 +263,17 @@ For every concrete `type X implements Operation` (~85 types: `CreatedQuality`, `
 
 ```graphql
 type CreatedQualityEdge implements EntityEdge {
-  # EntityEdge
-  cursor: String! # computed
-  # CreatedQualityEdge
-  node: CreatedQuality! # reference
+ # EntityEdge
+ cursor: String! # computed
+ # CreatedQualityEdge
+ node: CreatedQuality! # reference
 }
 
 type CreatedQualityConnection implements EntityConnection {
-  # EntityConnection
-  edges: [CreatedQualityEdge!]! # computed
-  pageInfo: PageInfo! # computed
-  hash: String! # cached
+ # EntityConnection
+ edges: [CreatedQualityEdge!]! # computed
+ pageInfo: PageInfo! # computed
+ hash: String! # cached
 }
 ```
 
@@ -327,10 +327,10 @@ Example — before:
 
 ```graphql
 type QualityModification implements Modification {
-  # ...
-  owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | ... | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | ... | VectorModification
-  # ...
+ # ...
+ owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | ... | UpdatedTypeIcon
+ owns: EntityConnection # reference // AlternativeModification | AttributeModification | ... | VectorModification
+ # ...
 }
 ```
 
@@ -338,16 +338,16 @@ After:
 
 ```graphql
 type QualityModification implements Modification {
-  # Node
-  id: ID! # computed // hash
-  # Entity
-  hash: String! # cached
-  owner: Entity # reference // CreatedQuality | CreatedQualities | RenamedQuality | UpdatedQualityDescription | UpdatedQualityIcon | DeletedQuality | DeletedQualities | KitModifications
-  owns: EntityConnection # reference
-  # Modification
-  before: Entity! # reference // Quality
-  diff: Diff! # reference // QualityDiff
-  after: Entity! # reference // Quality
+ # Node
+ id: ID! # computed // hash
+ # Entity
+ hash: String! # cached
+ owner: Entity # reference // CreatedQuality | CreatedQualities | RenamedQuality | UpdatedQualityDescription | UpdatedQualityIcon | DeletedQuality | DeletedQualities | KitModifications
+ owns: EntityConnection # reference
+ # Modification
+ before: Entity! # reference // Quality
+ diff: Diff! # reference // QualityDiff
+ after: Entity! # reference // Quality
 }
 ```
 

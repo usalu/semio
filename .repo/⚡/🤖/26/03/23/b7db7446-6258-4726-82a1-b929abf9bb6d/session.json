@@ -2093,9 +2093,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/sketchpad/index.tsx"
-              ],
+              "files": ["compose/sketchpad/index.tsx"],
               "path": "2026/03/23/FIX-DESIGN-APP-COORDINATE-SYSTEM-MISMATCH",
               "summary": "Fixed coordinate system mismatch between compose (Z-up left-handed) and Three.js (Y-up) in the Design app, matching the approach used in the Type editor.\n\nRoot cause: ModelPiece group matrix was `toThreeRotation() * planeMatrix`, but `planeMatrix` operates in compose Z-up space while loaded mesh geometry (GLTF/FBX/OBJ) is in Three.js Y-up space. The mesh needs conversion to compose space before plane positioning.\n\nChanges:\n1. ModelPiece originalMatrix/diffedMatrix: Changed from `toThreeRotation() * planeMatrix` to `toThreeRotation() * planeMatrix * toComposeRotation()`. This converts mesh from Y-up → Z-up (toComposeRotation), positions via plane in compose space (planeMatrix), then converts to Y-up for rendering (toThreeRotation).\n2. PlaneThree: Same matrix fix applied for plane axis visualization.\n3. handleSceneDragEnd: Fixed drag-drop piece placement to properly convert Three.js ray intersection coordinates to compose coordinates (composeX=threeX, composeY=-threeZ, composeZ=0).\n\nAll 83 JS tests pass. Pre-existing TypeScript errors in @semio-tech/compose-js:build are unrelated."
             },
@@ -2123,9 +2121,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/sketchpad/index.tsx"
-              ],
+              "files": ["compose/sketchpad/index.tsx"],
               "path": "26/03/23/FIX-DESIGN-APP-COORDINATE-SYSTEM-MISMATCH",
               "summary": "Fixed coordinate system mismatch between compose (Z-up left-handed) and Three.js (Y-up) in the Design app, matching the approach used in the Type editor.\n\nRoot cause: ModelPiece group matrix was `toThreeRotation() * planeMatrix`, but `planeMatrix` operates in compose Z-up space while loaded mesh geometry (GLTF/FBX/OBJ) is in Three.js Y-up space. The mesh needs conversion to compose space before plane positioning.\n\nChanges:\n1. ModelPiece originalMatrix/diffedMatrix: Changed from `toThreeRotation() * planeMatrix` to `toThreeRotation() * planeMatrix * toComposeRotation()`. This converts mesh from Y-up to Z-up (toComposeRotation), positions via plane in compose space (planeMatrix), then converts to Y-up for rendering (toThreeRotation).\n2. PlaneThree: Same matrix fix applied for plane axis visualization.\n3. handleSceneDragEnd: Fixed drag-drop piece placement to properly convert Three.js ray intersection coordinates to compose coordinates (composeX=threeX, composeY=-threeZ, composeZ=0).\n\nAll 83 JS tests pass. Pre-existing TypeScript errors in @semio-tech/compose-js:build are unrelated."
             },
@@ -2154,9 +2150,7 @@
             "mcp_result": "[🎫fixdesignappcoordinatesystemmismatch](repo://y/00/m/00/d/00/tk/FIX-DESIGN-APP-COORDINATE-SYSTEM-MISMATCH) - `closed` - `closed now`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/sketchpad/index.tsx"
-              ],
+              "files": ["compose/sketchpad/index.tsx"],
               "path": "26/03/23/FIX-DESIGN-APP-COORDINATE-SYSTEM-MISMATCH",
               "summary": "Fixed coordinate system mismatch between compose (Z-up left-handed) and Three.js (Y-up) in the Design app, matching the approach used in the Type editor.\n\nRoot cause: ModelPiece group matrix was `toThreeRotation() * planeMatrix`, but `planeMatrix` operates in compose Z-up space while loaded mesh geometry (GLTF/FBX/OBJ) is in Three.js Y-up space. The mesh needs conversion to compose space before plane positioning.\n\nChanges:\n1. ModelPiece originalMatrix/diffedMatrix: Changed from `toThreeRotation() * planeMatrix` to `toThreeRotation() * planeMatrix * toComposeRotation()`. This converts mesh from Y-up to Z-up (toComposeRotation), positions via plane in compose space (planeMatrix), then converts to Y-up for rendering (toThreeRotation).\n2. PlaneThree: Same matrix fix applied for plane axis visualization.\n3. handleSceneDragEnd: Fixed drag-drop piece placement to properly convert Three.js ray intersection coordinates to compose coordinates (composeX=threeX, composeY=-threeZ, composeZ=0).\n\nAll 83 JS tests pass. Pre-existing TypeScript errors in @semio-tech/compose-js:build are unrelated."
             },

@@ -2783,10 +2783,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/sketchpad/sketchpad/Design.tsx",
-                "compose/sketchpad/sketchpad/Sketchpad.tsx"
-              ],
+              "files": ["compose/sketchpad/sketchpad/Design.tsx", "compose/sketchpad/sketchpad/Sketchpad.tsx"],
               "path": "2026/03/17/OPTIMIZE-SKETCHPAD-DESIGN-APP-PERFORMANCE",
               "summary": "Optimized design-app state propagation by reducing redundant hover and render-data churn, scoped heavy design components to design-local panel visibility, repaired sketchpad and kit Yjs container allocation paths that blocked startup/import flows, and verified the full sketchpad Playwright suite passes."
             },
@@ -2932,10 +2929,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/sketchpad/sketchpad/Design.tsx",
-                "compose/sketchpad/sketchpad/Sketchpad.tsx"
-              ],
+              "files": ["compose/sketchpad/sketchpad/Design.tsx", "compose/sketchpad/sketchpad/Sketchpad.tsx"],
               "path": "y/26/m/03/d/17/tk/OPTIMIZE-SKETCHPAD-DESIGN-APP-PERFORMANCE",
               "summary": "Optimized design-app state propagation by reducing redundant hover and render-data churn, scoped heavy design components to design-local panel visibility, repaired sketchpad and kit Yjs container allocation paths that blocked startup/import flows, and verified the full sketchpad Playwright suite passes."
             },
@@ -3117,10 +3111,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/sketchpad/sketchpad/Design.tsx",
-                "compose/sketchpad/sketchpad/Sketchpad.tsx"
-              ],
+              "files": ["compose/sketchpad/sketchpad/Design.tsx", "compose/sketchpad/sketchpad/Sketchpad.tsx"],
               "path": "26/03/17/OPTIMIZE-SKETCHPAD-DESIGN-APP-PERFORMANCE",
               "summary": "Optimized design-app state propagation by reducing redundant hover and render-data churn, scoped heavy design components to design-local panel visibility, repaired sketchpad and kit Yjs container allocation paths that blocked startup and import flows, and verified the full sketchpad Playwright suite passes."
             },
@@ -3149,10 +3140,7 @@
             "mcp_result": "[🎫optimizesketchpaddesignappperformance](repo://y/00/m/00/d/00/tk/OPTIMIZE-SKETCHPAD-DESIGN-APP-PERFORMANCE) - `closed` - `closed now`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/sketchpad/sketchpad/Design.tsx",
-                "compose/sketchpad/sketchpad/Sketchpad.tsx"
-              ],
+              "files": ["compose/sketchpad/sketchpad/Design.tsx", "compose/sketchpad/sketchpad/Sketchpad.tsx"],
               "path": "26/03/17/OPTIMIZE-SKETCHPAD-DESIGN-APP-PERFORMANCE",
               "summary": "Optimized design-app state propagation by reducing redundant hover and render-data churn, scoped heavy design components to design-local panel visibility, repaired sketchpad and kit Yjs container allocation paths that blocked startup and import flows, and verified the full sketchpad Playwright suite passes."
             },

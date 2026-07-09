@@ -1,6 +1,7 @@
 # Command Kernel Verify Log
 
 ## Unit tests
+
 - `cargo test -p semio-framework-core --lib` — 16 passed
 - `cargo test -p semio-framework-sync --lib` — 1 passed
 - `cargo test -p vcs --lib` — 10 passed
@@ -9,10 +10,12 @@
 - `cargo check -p semio-framework-os -p semio-framework-plugin -p semio-framework-renderer-wgpu -p semio-framework-plugin-host` — pass
 
 ## End-to-end
+
 - `bun run dev:lowpoly` — exit 0, dev server at http://127.0.0.1:6078/
 - lowpoly plugin manifest callable via C-ABI wrapper (wasm-bindgen path)
 
 ## Architecture delivered
+
 - Phase 1: kernel contracts in `framework/core/rs` (`kernel` module)
 - Phase 2: `framework/hash`, `framework/hlc`, `framework/schema` crates
 - Phase 3: vcs causal metadata, undo policies, merge strategies on existing Edit/Checkpoint/Alternative

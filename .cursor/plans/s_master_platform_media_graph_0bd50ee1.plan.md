@@ -2,27 +2,27 @@
 name: S Master Platform Media Graph
 overview: Rebuild S's media graph into a true typed multi-port flow-DAG backed by a forked DAG Rust/WASM engine, add a drag-and-drop app catalogue in the workbench, and make double-clicking a node drill in fullscreen to that app — fully wired end-to-end for a representative slice (draw, writer, shooting, puzzle 5d) with the pattern documented for extending every remaining technology.
 todos:
-  - id: phase1-port-model
-    content: "s/core: replace SAppRegistration.yields with typed inputs/outputs port arrays; add 3d.mesh + catalogue.kinds resource kinds; generalize mediaGraphNodeForInstance, appInstanceResourceProjection, resolveUpstreamResourceHandle for N named ports; mechanically migrate all existing app registrations"
-    status: completed
-  - id: phase2-representative-slice
-    content: Wire draw/writer baseline ports; wire puzzle 5d (graph2d + mesh3d outputs, catalogue input) and shooting (mesh input, real ShootingFixture materialization instead of stub); add Kit Catalogue system app
-    status: completed
-  - id: phase3-dag-engine-fork
-    content: "Fork mathematical/graph/port/directed/dag/lib.rs: add AppInstance node kind + resource_kind port color field across all match sites, manifest entry, double-click detection, screenToWorld export"
-    status: completed
-  - id: phase4-canvas-rewrite
-    content: Rewrite s/react SMediaGraphCanvas to wrap DagCanvas with SMediaGraph<->DagFixture bridge functions and open-request polling
-    status: completed
-  - id: phase5-drill-in
-    content: Add focusedInstanceId + openInstance/closeFocusedInstance to SPlayController; extract SAppHostContent and render full-viewport drill-in with back button in SPlayInner
-    status: completed
-  - id: phase6-catalogue-dnd
-    content: Add S workbench Catalogue tab with draggable app tree, pointer-drag controller, canvas drop-to-spawn wiring; retire text-input spawn UI
-    status: completed
-  - id: phase7-tests
-    content: Extend existing s/play and dag lib.rs test blocks; manual Playwright verification of full drag-spawn-connect-drillin loop
-    status: completed
+ - id: phase1-port-model
+   content: "s/core: replace SAppRegistration.yields with typed inputs/outputs port arrays; add 3d.mesh + catalogue.kinds resource kinds; generalize mediaGraphNodeForInstance, appInstanceResourceProjection, resolveUpstreamResourceHandle for N named ports; mechanically migrate all existing app registrations"
+   status: completed
+ - id: phase2-representative-slice
+   content: Wire draw/writer baseline ports; wire puzzle 5d (graph2d + mesh3d outputs, catalogue input) and shooting (mesh input, real ShootingFixture materialization instead of stub); add Kit Catalogue system app
+   status: completed
+ - id: phase3-dag-engine-fork
+   content: "Fork mathematical/graph/port/directed/dag/lib.rs: add AppInstance node kind + resource_kind port color field across all match sites, manifest entry, double-click detection, screenToWorld export"
+   status: completed
+ - id: phase4-canvas-rewrite
+   content: Rewrite s/react SMediaGraphCanvas to wrap DagCanvas with SMediaGraph<->DagFixture bridge functions and open-request polling
+   status: completed
+ - id: phase5-drill-in
+   content: Add focusedInstanceId + openInstance/closeFocusedInstance to SPlayController; extract SAppHostContent and render full-viewport drill-in with back button in SPlayInner
+   status: completed
+ - id: phase6-catalogue-dnd
+   content: Add S workbench Catalogue tab with draggable app tree, pointer-drag controller, canvas drop-to-spawn wiring; retire text-input spawn UI
+   status: completed
+ - id: phase7-tests
+   content: Extend existing s/play and dag lib.rs test blocks; manual Playwright verification of full drag-spawn-connect-drillin loop
+   status: completed
 isProject: false
 ---
 
@@ -86,12 +86,12 @@ flowchart TB
 Scoped against `mathematical/graph/port/directed/dag/lib.rs`:
 
 - Add `AppInstance { instance_id, program_id, app_id, icon, inputs: Vec<IoPortSpec>, outputs: Vec<IoPortSpec> }` to `DagNodeKind` (`lib.rs:539`). Add a `resource_kind: Option<String>` field to `IoPortSpec` (`lib.rs:232`) for port coloring.
-- Add compiler-forced match arms at the 7 exhaustive sites found: `dag_node_kind_tag` (`:597`), `DagNodeSpec::inputs`/`outputs` (`:699`,`:708`), `computation_io_side_row_counts` (`:857`), `computation_channel_row_count` (`:915`), `fit_node_size` (`:923`), `paint_node_visual` (`:3909`). `AppInstance` is *not* added to `uses_computation_layout` so it gets the existing `proportional_port_center_y` (`:200`) even-spacing for free.
+- Add compiler-forced match arms at the 7 exhaustive sites found: `dag_node_kind_tag` (`:597`), `DagNodeSpec::inputs`/`outputs` (`:699`,`:708`), `computation_io_side_row_counts` (`:857`), `computation_channel_row_count` (`:915`), `fit_node_size` (`:923`), `paint_node_visual` (`:3909`). `AppInstance` is _not_ added to `uses_computation_layout` so it gets the existing `proportional_port_center_y` (`:200`) even-spacing for free.
 - Paint: reuse the already-shared box/stroke drawing (before the kind match, `:3876`), `paint_node_lod_icon` (`:3720`) for the icon, a title + "programId/appId" subtitle line, and thread `resource_kind` into `paint_snap_handle`/`paint_node_handles_for_spec` (`:4118`, `:3149`) for port coloring (deterministic hash-based palette).
 - Register the new kind in [flow/manifest/dag.manifest.json](flow/manifest/dag.manifest.json) and regenerate `mathematical/graph/manifest/generated/flow_dag.rs`.
 - Build double-click detection from scratch (confirmed absent everywhere): add last-pointerdown timestamp + position fields to `DagHost`, threshold check in `pointer_down_screen` (`:2966`); on double-click over an `AppInstance` body (not a port), set `pending_open_instance_id` instead of starting a drag. Add a new `DagSession.takePendingOpenInstanceId() -> Option<String>` wasm export, polled by React after each `pointerUp`.
 - Add a `DagSession.screenToWorld(x, y) -> {x, y}` wasm export (does not exist today) so the TS layer can place a dropped catalogue item at the correct world position.
-- Keep the integration pattern already used elsewhere in this codebase: `DagSession` stays document-in/document-out for *structural* changes (spawn/remove/connect: `StudioStore` mutates → `session.loadFixtureJson(new)`), and only live pointer gestures (drag/box-select/edge-draw) are read back out via `onFixtureChange` once they settle — no `add_node`/`remove_node` WASM methods needed.
+- Keep the integration pattern already used elsewhere in this codebase: `DagSession` stays document-in/document-out for _structural_ changes (spawn/remove/connect: `StudioStore` mutates → `session.loadFixtureJson(new)`), and only live pointer gestures (drag/box-select/edge-draw) are read back out via `onFixtureChange` once they settle — no `add_node`/`remove_node` WASM methods needed.
 
 ## Phase 4 — New S media graph canvas on the forked engine
 

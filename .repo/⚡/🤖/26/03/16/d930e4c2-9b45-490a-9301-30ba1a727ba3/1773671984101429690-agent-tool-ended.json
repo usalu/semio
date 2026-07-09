@@ -21,11 +21,7 @@
         "max_results": 3
       },
       "tool_response": {
-        "matches": [
-          "mcp__repo__ticket_open",
-          "mcp__repo__ticket_close",
-          "TodoWrite"
-        ],
+        "matches": ["mcp__repo__ticket_open", "mcp__repo__ticket_close", "TodoWrite"],
         "query": "select:mcp__repo__ticket_open,mcp__repo__ticket_close,TodoWrite",
         "total_deferred_tools": 96
       },

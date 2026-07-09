@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The sketchpad currently uses multiple diagram implementations across apps.
@@ -121,6 +122,7 @@ The sketchpad currently uses multiple diagram implementations across apps.
 ## Log
 
 ## Summary
+
 # Summary
 
 Generalize diagram component across apps

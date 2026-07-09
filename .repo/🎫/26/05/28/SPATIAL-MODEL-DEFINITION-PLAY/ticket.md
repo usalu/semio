@@ -30,6 +30,7 @@ When a non-builtin model definition is active, the spatial stack scopes selectio
 - MD switch resets toggles, selection, interaction, `lastFinalizedInteractionId`
 - `SelectionAttributesPanel` + `SelectionPropertiesPanel` in play aside (scoped defs)
 - Play: `scopedInteractions`, guarded interaction load, construct panel seeds from active MD typologies
+
 ## Kernel
 
 - STEP export derives properties via `listApplicablePropertyDefinitionsForModelDefinition(modelId, …)`

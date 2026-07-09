@@ -25,9 +25,5 @@ const alias = new Map([
 ]);
 const parts = filtered.map((n) => alias.get(n) || n);
 const out = `export {\n  ${parts.join(",\n  ")},\n} from "./kit-wasm-store.js";\n`;
-fs.writeFileSync(
-  ".repo/🎫/26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES/wasm-value-reexports.txt",
-  out,
-  "utf8",
-);
+fs.writeFileSync(".repo/🎫/26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES/wasm-value-reexports.txt", out, "utf8");
 console.log("count", parts.length);

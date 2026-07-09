@@ -7310,9 +7310,7 @@
           "tool_input": {
             "path": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎫optimizeinteractionperformanceforselectionandhoveracrosslinkedviews",
             "summary": "Implemented 7 key performance optimizations for hover/selection interaction across linked views (scene + diagram): 1) Granular boolean selectors for useDesignAppIsPieceHovered, useDesignAppIsConnectionHovered, useDesignAppIsPieceSelected, useDesignAppIsConnectionSelected, useDesignAppIsPortHovered, useDesignAppIsPiecePortSelected — returns boolean directly from XState selector instead of subscribing to full hover/selection object. 2) Stable hover setter in useDesignAppHover — removed value dependency, reads lazily from actor.getSnapshot(). 3) Custom areHoverStatesEqual comparator for useSelector in useDesignAppHover. 4) queueMicrotask replaces setTimeout(0) in all 10 hover command dispatchers. 5) O(1) lookups in computeHoverData with Set-based operations. 6) Lazy selection access in ModelPiece scene component. 7) Stable useDesignAppSelectedConnector with inline granular selector. Build verified: Vite build succeeds, 0 new errors.",
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_bdrk_01BHwydCwHRyLRkfK92r1GgJ__vscode-1774605829154",
           "cwd": "/workspaces/semio"
@@ -7338,9 +7336,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/dc6b4ac1-354a-4fe0-9912-6cf239a1676e.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "path": "2026/03/26/OPTIMIZE-INTERACTION-PERFORMANCE-FOR-SELECTION-AND-HOVER-ACROSS-LINKED-VIEWS",
             "summary": "Implemented 7 key performance optimizations for hover/selection interaction across linked views (scene + diagram): 1) Granular boolean selectors for useDesignAppIsPieceHovered, useDesignAppIsConnectionHovered, useDesignAppIsPieceSelected, useDesignAppIsConnectionSelected, useDesignAppIsPortHovered, useDesignAppIsPiecePortSelected — returns boolean directly from XState selector instead of subscribing to full hover/selection object. 2) Stable hover setter in useDesignAppHover — removed value dependency, reads lazily from actor.getSnapshot(). 3) Custom areHoverStatesEqual comparator for useSelector in useDesignAppHover. 4) queueMicrotask replaces setTimeout(0) in all 10 hover command dispatchers. 5) O(1) lookups in computeHoverData with Set-based operations. 6) Lazy selection access in ModelPiece scene component. 7) Stable useDesignAppSelectedConnector with inline granular selector. Build verified: Vite build succeeds, 0 new errors."
           },
@@ -7429,9 +7425,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/dc6b4ac1-354a-4fe0-9912-6cf239a1676e.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "path": "26/03/26/OPTIMIZE-INTERACTION-PERFORMANCE-FOR-SELECTION-AND-HOVER-ACROSS-LINKED-VIEWS",
             "summary": "Implemented 7 key performance optimizations for hover/selection interaction across linked views (scene + diagram): 1) Granular boolean selectors for useDesignAppIsPieceHovered, useDesignAppIsConnectionHovered, useDesignAppIsPieceSelected, useDesignAppIsConnectionSelected, useDesignAppIsPortHovered, useDesignAppIsPiecePortSelected — returns boolean directly from XState selector instead of subscribing to full hover/selection object. 2) Stable hover setter in useDesignAppHover — removed value dependency, reads lazily from actor.getSnapshot(). 3) Custom areHoverStatesEqual comparator for useSelector in useDesignAppHover. 4) queueMicrotask replaces setTimeout(0) in all 10 hover command dispatchers. 5) O(1) lookups in computeHoverData with Set-based operations. 6) Lazy selection access in ModelPiece scene component. 7) Stable useDesignAppSelectedConnector with inline granular selector. Build verified: Vite build succeeds, 0 new errors."
           },
@@ -7459,9 +7453,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/dc6b4ac1-354a-4fe0-9912-6cf239a1676e.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "path": "26/03/26/OPTIMIZE-INTERACTION-PERFORMANCE-FOR-SELECTION-AND-HOVER-ACROSS-LINKED-VIEWS",
             "summary": "Implemented 7 key performance optimizations for hover/selection interaction across linked views (scene + diagram): 1) Granular boolean selectors for useDesignAppIsPieceHovered, useDesignAppIsConnectionHovered, useDesignAppIsPieceSelected, useDesignAppIsConnectionSelected, useDesignAppIsPortHovered, useDesignAppIsPiecePortSelected — returns boolean directly from XState selector instead of subscribing to full hover/selection object. 2) Stable hover setter in useDesignAppHover — removed value dependency, reads lazily from actor.getSnapshot(). 3) Custom areHoverStatesEqual comparator for useSelector in useDesignAppHover. 4) queueMicrotask replaces setTimeout(0) in all 10 hover command dispatchers. 5) O(1) lookups in computeHoverData with Set-based operations. 6) Lazy selection access in ModelPiece scene component. 7) Stable useDesignAppSelectedConnector with inline granular selector. Build verified: Vite build succeeds, 0 new errors."
           },

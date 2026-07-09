@@ -5,7 +5,5 @@
   "description": "Window options: absolute overlay on content, per-option floating cards, pointer-events split so canvas receives clicks through empty overlay.",
   "summary": "Window body uses full-size relative column; options render in pointer-events-none absolute overlay with pointer-events-auto right-aligned stack (scroll). Each UIWindowOption (except section/separator) wrapped in UIWindowOptionFloat (rounded, shadow, blur, translucent bg). Section is compact pill; separator short tick. Tests updated for overlay + float slots.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪c15a44cfaec046fa942bb5cd196ef647"
-  ]
+  "sessions": ["⚪c15a44cfaec046fa942bb5cd196ef647"]
 }

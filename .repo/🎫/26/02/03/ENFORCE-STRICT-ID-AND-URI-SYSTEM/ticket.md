@@ -3,6 +3,7 @@
 ## Summary
 
 Bulk close
+
 ## Changes
 
 ## Log

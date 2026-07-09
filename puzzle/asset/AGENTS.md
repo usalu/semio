@@ -1,10 +1,10 @@
 ---
 technology: puzzle
 bundle:
-  name: asset
-  emoji: 🧩
-  description: Builtin puzzle JSON for play, playground, and storybook.
-  kind: asset
+ name: asset
+ emoji: 🧩
+ description: Builtin puzzle JSON for play, playground, and storybook.
+ kind: asset
 ---
 
 # 🧾 Specification

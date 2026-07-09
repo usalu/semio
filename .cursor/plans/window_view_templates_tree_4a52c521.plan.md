@@ -2,30 +2,30 @@
 name: Window View Templates Tree
 overview: Restructure the orbit camera view "window templates" into the requested Orthographic/Perspective tree (every node draggable), recurse the Display Windows/Layout panels to render nested draggable nodes, and add a generous tree of named layouts. Wire it fully for both Puzzle 3D and CAD play (including new CAD per-window camera-view seeding).
 todos:
-  - id: engine
-    content: "infinite/world/r3f: add new view ids/directions/labels, rewrite createOrbitCameraViewTemplates into the nested tree, add createOrbitCameraViewLayoutDescriptors + WorldOrbitCameraViewApplier; extend tests."
-    status: completed
-  - id: core
-    content: "framework/core: add children? to WindowTemplate and groupPath? to NamedLayout/createNamedLayout."
-    status: completed
-  - id: panels
-    content: "platform renderer: recurse findWindowTemplate, nest buildDisplayWindowsTree items, group buildDisplayLayoutTree by groupPath; extend vitest."
-    status: completed
-  - id: mapper
-    content: "playground/core: add namedLayoutsFromOrbitViewDescriptors mapper to build NamedLayout[] from abstract layout descriptors."
-    status: completed
-  - id: puzzle
-    content: "puzzle/3d/play: support new view ids in applyOrbitCameraView/legacy, replace named layouts with full catalog; update tests."
-    status: completed
-  - id: cad-renderer
-    content: "cad/js/renderer: thread cameraView/seedKey through PlaySession -> InteractionSpatialView and render WorldOrbitCameraViewApplier."
-    status: completed
-  - id: cad-play
-    content: "cad/js/renderer/play: add view templates per window kind, handle setOrbitCameraView per instance, pass instanceId+seed into the pane, add full view-layout catalog; update tests."
-    status: completed
-  - id: validate
-    content: Run world/puzzle/cad/framework suites and smoke both plays to confirm drag + camera application and layouts.
-    status: completed
+ - id: engine
+   content: "infinite/world/r3f: add new view ids/directions/labels, rewrite createOrbitCameraViewTemplates into the nested tree, add createOrbitCameraViewLayoutDescriptors + WorldOrbitCameraViewApplier; extend tests."
+   status: completed
+ - id: core
+   content: "framework/core: add children? to WindowTemplate and groupPath? to NamedLayout/createNamedLayout."
+   status: completed
+ - id: panels
+   content: "platform renderer: recurse findWindowTemplate, nest buildDisplayWindowsTree items, group buildDisplayLayoutTree by groupPath; extend vitest."
+   status: completed
+ - id: mapper
+   content: "playground/core: add namedLayoutsFromOrbitViewDescriptors mapper to build NamedLayout[] from abstract layout descriptors."
+   status: completed
+ - id: puzzle
+   content: "puzzle/3d/play: support new view ids in applyOrbitCameraView/legacy, replace named layouts with full catalog; update tests."
+   status: completed
+ - id: cad-renderer
+   content: "cad/js/renderer: thread cameraView/seedKey through PlaySession -> InteractionSpatialView and render WorldOrbitCameraViewApplier."
+   status: completed
+ - id: cad-play
+   content: "cad/js/renderer/play: add view templates per window kind, handle setOrbitCameraView per instance, pass instanceId+seed into the pane, add full view-layout catalog; update tests."
+   status: completed
+ - id: validate
+   content: Run world/puzzle/cad/framework suites and smoke both plays to confirm drag + camera application and layouts.
+   status: completed
 isProject: false
 ---
 
@@ -48,8 +48,6 @@ flowchart TD
   Iso --> SW
   Persp[Perspective] --> TPP[Two Point Perspective]
 ```
-
-
 
 Each parent (Orthographic, 2D, 3D, Isometry, Perspective) is itself a draggable template that applies a sensible default view (Orthographic/2D -> Top, 3D/Isometry -> NE, Perspective -> standard perspective).
 
@@ -107,4 +105,3 @@ Play ([cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx)):
 - View semantics (Z-up): Right=+X, Left=-X, Below=-Z, Top=+Z, Front=-Y, Back=+Y; isometry corners are the four diagonals; Two Point Perspective is a horizontal eye-level perspective (no vertical convergence).
 - Keep `@semio-tech/infinite-world-r3f` free of `@framework/*` types (descriptors stay abstract; mapping to `WindowTemplate`/`NamedLayout` happens in the framework/play layers), matching the existing `as readonly WindowTemplate[]` cast pattern.
 - All edits extend existing files within their regions per repo rules; tests extend existing in-file vitest blocks. Validate by running the `@semio-tech/infinite-world-r3f`, `@semio-tech/puzzle-3d-play`, `@semio-tech/cad-js-renderer`, and `@framework/...` suites, plus a runtime smoke of both plays.
-

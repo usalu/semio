@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The codebase used `useDesignAppCommands()` hook to access all design app commands. UI components would destructure specific commands and call them with origin strings. This mixed app state operations (hover, selection, focus) with kit mutations (addPiece, updatePiece, addConnection).
@@ -147,6 +148,7 @@ Settings commands used across apps:
 ## Log
 
 ## Summary
+
 # Summary
 
->-
+> -

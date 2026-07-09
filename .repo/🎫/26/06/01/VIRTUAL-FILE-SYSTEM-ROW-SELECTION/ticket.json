@@ -5,7 +5,5 @@
   "description": "All VirtualFileSystem file nodes must show hover and support full multi-select: shift for range, ctrl/cmd for toggle, plain click for single select.",
   "summary": "VirtualFileSystem rows are always hoverable and selectable with built-in shift-range and ctrl/cmd-toggle multi-select (shared with Tree selection math). Platform uses setVirtualFileSystemRowSelection; sketchpad home maps kit row ids. Tests added in @semio-tech/ui-react and @semio-tech/framework-platform-core.",
   "goal": "🎯compose",
-  "sessions": [
-    "⚪8b6e55ae9edf4594ae3aebaaf034834e"
-  ]
+  "sessions": ["⚪8b6e55ae9edf4594ae3aebaaf034834e"]
 }

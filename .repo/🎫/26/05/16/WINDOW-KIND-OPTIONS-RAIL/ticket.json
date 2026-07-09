@@ -5,7 +5,5 @@
   "description": "Extend UIWindowKindDefinition with declarative options array; render options in a vertical rail on the right inside GoldenLayout windows; cover option kinds in vitest.",
   "summary": "Added UIWindowOption discriminated union and options?: UIWindowOption[] on UIWindowKindDefinition. New UIWindowOptionsRail maps all option kinds (section, separator, toggle, select, combobox, button, buttonCycle, input, textarea, checkbox, radio, slider, number, color) into a vertical stack. Window accepts options ReactNode and renders an aside on the right (top-to-bottom). UICanvas wires window kind options into Window. Board play demonstrates options on all three panes. Vitest config now includes index.tsx so embedded tests run; fixed ring tree test expectations to match property-row layout.",
   "goal": "🎯r2602",
-  "sessions": [
-    "⚪c8a9065dd63e424a974036939ff915d0"
-  ]
+  "sessions": ["⚪c8a9065dd63e424a974036939ff915d0"]
 }

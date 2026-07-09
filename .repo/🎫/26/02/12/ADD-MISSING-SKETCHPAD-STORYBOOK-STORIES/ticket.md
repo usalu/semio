@@ -7,9 +7,11 @@ goal: R26-02/RUNNING-SKETCHPAD
 ## Summary
 
 Fixed Storybook indexing failure by removing duplicate Panel declaration collision in Resizable stories and validating with a successful Storybook build.
+
 ## Changes
 
 ### Files modified:
+
 1. **Avatar.stories.tsx** → Added `DraggableAvatar` (Default, Selected, Hovered, Faded states), `TableAvatar` (image, fallback, selected, hovered states)
 2. **Band.stories.tsx** → Added `Strip` (horizontal scrollable, non-scrollable variants)
 3. **Canvas.stories.tsx** → Added `DiagramNode` (default, selected, hovered, placeholder, clickable), `DiagramSkeleton` (default skeleton)
@@ -23,9 +25,11 @@ Fixed Storybook indexing failure by removing duplicate Panel declaration collisi
 11. **Resizable.stories.tsx** → Added `Panel` (resizable panel with 2 sections)
 
 ### Components added (22):
+
 DraggableAvatar, TableAvatar, Strip, DiagramNode, DiagramSkeleton, Aside, Card, CardGrid, Spinner, LoadingRow, Section, Steps, ToolbarZone, ToolbarGroup, ToolbarDivider, ToolbarItem, TableSkeleton, Page, SidePanel, HudPanel, NotFound, PageNavigation, Panel
 
 ### Intentionally skipped (with reasons):
+
 - **InteractionProvider, LevelProvider, TransactionProvider** → React context providers, not visual components
 - **TreeStateProvider, TreeContent, SortableTreeItems, TreeItems, FileTree** → Tree internal sub-components, fully covered by Tree.stories
 - **PlaceholderDiagramNode** → Thin wrapper around DiagramNode with useLabel; DiagramNode story covers its visual appearance
@@ -35,6 +39,7 @@ DraggableAvatar, TableAvatar, Strip, DiagramNode, DiagramSkeleton, Aside, Card, 
 - **LeftPanel, RightPanel, MiddlePanel, BottomPanel** → Thin wrappers around Panel with fixed resizeSide prop; Panel story covers the base component
 
 ### Storybook main.ts:
+
 Verified globs cover all story locations. No changes needed.
 
 ## Log
@@ -57,6 +62,7 @@ Verified globs cover all story locations. No changes needed.
 ## Plan
 
 ### Components to add stories for (grouped by target file):
+
 1. **Avatar.stories.tsx**: DraggableAvatar, TableAvatar
 2. **Band.stories.tsx**: Strip
 3. **Canvas.stories.tsx**: DiagramNode, DiagramSkeleton
@@ -70,6 +76,7 @@ Verified globs cover all story locations. No changes needed.
 11. **Resizable.stories.tsx**: Panel
 
 ### Intentionally skipped:
+
 - InteractionProvider, LevelProvider, TransactionProvider → Context providers, not visual
 - TreeStateProvider, TreeContent, SortableTreeItems, TreeItems, FileTree → Tree internal sub-components, covered by Tree.stories
 - PlaceholderDiagramNode → Wraps DiagramNode with useLabel; DiagramNode story covers visuals
@@ -81,24 +88,29 @@ Verified globs cover all story locations. No changes needed.
 ## Reopen 2026-02-25
 
 ### Summary
+
 Fix Storybook indexing crash in `Resizable.stories.tsx` caused by duplicate module-scope declaration of `Panel`.
 
 ### Plan
+
 1. Reproduce or statically verify the duplicate symbol collision in the story module.
 2. Resolve the declaration collision without removing story coverage.
 3. Run Storybook build/indexing command to validate `/index.json` generation.
 4. Close the ticket with an explicit file list and verification result.
 
 ### Todos
+
 - [x] Reopen ticket and capture failure context from Storybook stack trace.
 - [x] Patch duplicate `Panel` declaration in `Resizable.stories.tsx`.
 - [x] Run Storybook build to validate indexing.
 - [x] Close ticket with summary and touched files.
 
 ### Changes
+
 - Aliased imported component `Panel` to `ResizableSidePanel` in `Resizable.stories.tsx`.
 - Updated `PanelDefault` story render to use `ResizableSidePanel`.
 
 ### Log
+
 - 2026-02-25: Applied collision fix, validation pending.
 - 2026-02-25: Ran `cd compose/js && npm run build`; Storybook build completed successfully and emitted `Resizable.stories-*.js`.

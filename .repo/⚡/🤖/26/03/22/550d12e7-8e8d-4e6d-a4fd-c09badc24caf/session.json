@@ -1419,15 +1419,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/py/main.py",
-                "compose/py/pyproject.toml",
-                "conftest.py",
-                "compose/engine/engine.py",
-                "compose/py/compose.py",
-                "compose/py/compose.test.py",
-                "compose/py/compose.benchmark.py"
-              ],
+              "files": ["compose/py/main.py", "compose/py/pyproject.toml", "conftest.py", "compose/engine/engine.py", "compose/py/compose.py", "compose/py/compose.test.py", "compose/py/compose.benchmark.py"],
               "no_github": true,
               "path": "2026/03/22/CONSOLIDATE-COMPOSE-PY-FILES-INTO-MAIN-PY",
               "summary": "Consolidated compose.py, compose.test.py, and compose.benchmark.py into a single main.py file. Added missing imports (struct, time, pytest) to the top-level imports. Deduplicated helper functions (load_json, load_kit, find_design etc.) with _test_ prefixes to avoid name collisions. Renamed test-specific TOLERANCE to TEST_TOLERANCE and ASSETS_DIR to TEST_ASSETS_DIR. Updated pyproject.toml hatch build includes and pytest config. Updated conftest.py to import main instead of compose. Updated engine.py sys.path and import from main. All 24 tests pass."
@@ -1456,15 +1448,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/py/main.py",
-                "compose/py/pyproject.toml",
-                "conftest.py",
-                "compose/engine/engine.py",
-                "compose/py/compose.py",
-                "compose/py/compose.test.py",
-                "compose/py/compose.benchmark.py"
-              ],
+              "files": ["compose/py/main.py", "compose/py/pyproject.toml", "conftest.py", "compose/engine/engine.py", "compose/py/compose.py", "compose/py/compose.test.py", "compose/py/compose.benchmark.py"],
               "no_github": true,
               "path": "26/03/22/CONSOLIDATE-COMPOSE-PY-FILES-INTO-MAIN-PY",
               "summary": "Consolidated compose.py, compose.test.py, and compose.benchmark.py into a single main.py file. Added missing imports (struct, time, pytest) to the top-level imports. Deduplicated helper functions with _test_ prefixes to avoid name collisions. Renamed test-specific TOLERANCE to TEST_TOLERANCE and ASSETS_DIR to TEST_ASSETS_DIR. Updated pyproject.toml hatch build includes and pytest config. Updated conftest.py to import main instead of compose. Updated engine.py sys.path and import from main. All 24 tests pass."
@@ -1494,15 +1478,7 @@
             "mcp_result": "[🎫consolidatecomposepyfilesintomainpy](repo://y/00/m/00/d/00/tk/CONSOLIDATE-COMPOSE-PY-FILES-INTO-MAIN-PY) - `closed` - `closed now`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "compose/py/main.py",
-                "compose/py/pyproject.toml",
-                "conftest.py",
-                "compose/engine/engine.py",
-                "compose/py/compose.py",
-                "compose/py/compose.test.py",
-                "compose/py/compose.benchmark.py"
-              ],
+              "files": ["compose/py/main.py", "compose/py/pyproject.toml", "conftest.py", "compose/engine/engine.py", "compose/py/compose.py", "compose/py/compose.test.py", "compose/py/compose.benchmark.py"],
               "no_github": true,
               "path": "26/03/22/CONSOLIDATE-COMPOSE-PY-FILES-INTO-MAIN-PY",
               "summary": "Consolidated compose.py, compose.test.py, and compose.benchmark.py into a single main.py file. Added missing imports (struct, time, pytest) to the top-level imports. Deduplicated helper functions with _test_ prefixes to avoid name collisions. Renamed test-specific TOLERANCE to TEST_TOLERANCE and ASSETS_DIR to TEST_ASSETS_DIR. Updated pyproject.toml hatch build includes and pytest config. Updated conftest.py to import main instead of compose. Updated engine.py sys.path and import from main. All 24 tests pass."

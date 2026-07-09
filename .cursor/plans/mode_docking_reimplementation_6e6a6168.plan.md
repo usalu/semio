@@ -2,36 +2,36 @@
 name: Mode Docking Reimplementation
 overview: Reimplement Golden Layout's full window-docking behavior in pure React inside the elements `Mode` component (tab stacks, splitter resize, drag-to-reorder, drag-to-dock/split, maximize/restore, close - no persistence, no popout), and restore the sketchpad's Golden Layout dependency/CSS that the prior removal broke.
 todos:
-  - id: ticket
-    content: Reopen the repo-MCP ticket for the elements Mode docking reimplementation.
-    status: completed
-  - id: core-types-utils
-    content: "Extend WindowLayoutStackNode (activeId) + ModeWindowDescriptor (title); add Mode tree utils: normalizeLayoutToStacks, reconcileWindows, removeWindowFromLayout, insertWindowAsTab, splitWithWindow, applyAxisSizes."
-    status: completed
-  - id: tabbar-stack
-    content: Implement DockTabBar (tabs, per-tab close, active highlight, maximize/restore control) and DockStack (tabbar + active window body, rect ref registration).
-    status: completed
-  - id: render-resize
-    content: Implement recursive renderNode using ResizablePrimitive Group/Panel/Separator for axes with onLayoutChanged size capture; normalize window leaves into stacks; maximize overlay.
-    status: completed
-  - id: dock-drag
-    content: "Implement useDockDrag: pointer-based tab drag with floating ghost, drop-zone hit-testing (center/edges/outer), drop indicator overlay, and tree mutation on drop (reorder/move/split)."
-    status: completed
-  - id: window-cleanup
-    content: Remove dead Golden Layout header-portal code from Window; ensure stack header owns maximize/close while keeping controls/measures/engagement overlays.
-    status: completed
-  - id: renderer-titles
-    content: Thread tab titles via windowKind.label in framework + playground ShellModeCanvas and convertFrameworkLayoutNodeToShellLayout.
-    status: completed
-  - id: sketchpad-restore
-    content: Restore golden-layout dependency + base CSS/.lm_ overrides (recovered from commit 8d5dba003) for the still-Golden-Layout sketchpad/compose surface broken by the prior removal.
-    status: completed
-  - id: tests-stories
-    content: Extend core inline vitest (tabs visibility, close+collapse, split/remove utils, maximize); update Mode stories (tab stacks, drag-dock, maximize); run vitest + build Storybook.
-    status: completed
-  - id: verify-close
-    content: Runtime-verify spatial play host + sketchpad (tabs, drag-dock, resize, maximize, close), run lint, then close the ticket.
-    status: completed
+ - id: ticket
+   content: Reopen the repo-MCP ticket for the elements Mode docking reimplementation.
+   status: completed
+ - id: core-types-utils
+   content: "Extend WindowLayoutStackNode (activeId) + ModeWindowDescriptor (title); add Mode tree utils: normalizeLayoutToStacks, reconcileWindows, removeWindowFromLayout, insertWindowAsTab, splitWithWindow, applyAxisSizes."
+   status: completed
+ - id: tabbar-stack
+   content: Implement DockTabBar (tabs, per-tab close, active highlight, maximize/restore control) and DockStack (tabbar + active window body, rect ref registration).
+   status: completed
+ - id: render-resize
+   content: Implement recursive renderNode using ResizablePrimitive Group/Panel/Separator for axes with onLayoutChanged size capture; normalize window leaves into stacks; maximize overlay.
+   status: completed
+ - id: dock-drag
+   content: "Implement useDockDrag: pointer-based tab drag with floating ghost, drop-zone hit-testing (center/edges/outer), drop indicator overlay, and tree mutation on drop (reorder/move/split)."
+   status: completed
+ - id: window-cleanup
+   content: Remove dead Golden Layout header-portal code from Window; ensure stack header owns maximize/close while keeping controls/measures/engagement overlays.
+   status: completed
+ - id: renderer-titles
+   content: Thread tab titles via windowKind.label in framework + playground ShellModeCanvas and convertFrameworkLayoutNodeToShellLayout.
+   status: completed
+ - id: sketchpad-restore
+   content: Restore golden-layout dependency + base CSS/.lm_ overrides (recovered from commit 8d5dba003) for the still-Golden-Layout sketchpad/compose surface broken by the prior removal.
+   status: completed
+ - id: tests-stories
+   content: Extend core inline vitest (tabs visibility, close+collapse, split/remove utils, maximize); update Mode stories (tab stacks, drag-dock, maximize); run vitest + build Storybook.
+   status: completed
+ - id: verify-close
+   content: Runtime-verify spatial play host + sketchpad (tabs, drag-dock, resize, maximize, close), run lint, then close the ticket.
+   status: completed
 isProject: false
 ---
 
@@ -77,6 +77,7 @@ The existing tree types already mirror Golden Layout (`row`/`column`/`stack`/`wi
 ## Sketchpad regression remediation (compose surface I broke)
 
 The prior removal deleted the `golden-layout` dependency and its CSS, but [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) `LayoutCanvas` still uses Golden Layout (`import("golden-layout")`, `.lm_popout`/`.lm_maximise`/`.lm_close`, 7+ usages). Restore, using `git show 8d5dba003^:<file>` to recover exact removed content:
+
 - Re-add the `golden-layout` dependency to the package(s) the sketchpad/compose surface needs (recovered from the commit diff).
 - Restore the Golden Layout base CSS import + `.lm_*` overrides in [elements/lib/styling/js/elements.css](elements/lib/styling/js/elements.css) (only the `.touch .lm_*` rules survive today). This keeps the separate compose sketchpad working; elements no longer uses Golden Layout.
 

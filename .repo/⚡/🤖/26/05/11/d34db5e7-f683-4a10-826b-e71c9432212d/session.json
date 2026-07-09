@@ -3124,11 +3124,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\d34db5e7-f683-4a10-826b-e71c9432212d.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\react\\index.tsx",
-              "c:\\git\\compose\\compose\\sketchpad\\index.tsx",
-              "c:\\git\\compose\\compose\\rs\\lib.rs"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\react\\index.tsx", "c:\\git\\compose\\compose\\sketchpad\\index.tsx", "c:\\git\\compose\\compose\\rs\\lib.rs"]
           },
           "tool_use_id": "call_eKZSv3BIriENtHXDn0d5LUkL__vscode-1778443899341",
           "cwd": "c:\\git\\compose"
@@ -3154,11 +3150,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\d34db5e7-f683-4a10-826b-e71c9432212d.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\react\\index.tsx",
-              "c:\\git\\compose\\compose\\sketchpad\\index.tsx",
-              "c:\\git\\compose\\compose\\rs\\lib.rs"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\react\\index.tsx", "c:\\git\\compose\\compose\\sketchpad\\index.tsx", "c:\\git\\compose\\compose\\rs\\lib.rs"]
           },
           "tool_response": "",
           "tool_use_id": "call_eKZSv3BIriENtHXDn0d5LUkL__vscode-1778443899341",
@@ -3215,11 +3207,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\d34db5e7-f683-4a10-826b-e71c9432212d.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\compose\\react\\index.tsx",
-              "c:\\git\\compose\\compose\\sketchpad\\index.tsx",
-              "c:\\git\\compose\\compose\\rs\\lib.rs"
-            ]
+            "filePaths": ["c:\\git\\compose\\compose\\react\\index.tsx", "c:\\git\\compose\\compose\\sketchpad\\index.tsx", "c:\\git\\compose\\compose\\rs\\lib.rs"]
           },
           "tool_response": "",
           "tool_use_id": "call_eKZSv3BIriENtHXDn0d5LUkL__vscode-1778443899341",

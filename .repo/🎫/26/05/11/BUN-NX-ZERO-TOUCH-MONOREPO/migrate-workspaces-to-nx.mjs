@@ -43,9 +43,7 @@ for (const ws of rootPkg.workspaces) {
   }
 
   const projPath = join(dir, "project.json");
-  const existing = existsSync(projPath)
-    ? JSON.parse(readFileSync(projPath, "utf8"))
-    : {};
+  const existing = existsSync(projPath) ? JSON.parse(readFileSync(projPath, "utf8")) : {};
   const projName = existing.name || pkg.name;
   if (!projName) {
     console.warn("[skip] no project name", ws);

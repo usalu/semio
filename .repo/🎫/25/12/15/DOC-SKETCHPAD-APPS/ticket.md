@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The AGENTS.md documentation had architecture-level documentation for the Sketchpad but was missing:
@@ -97,6 +98,7 @@ The AGENTS.md documentation had architecture-level documentation for the Sketchp
 ## Log
 
 ## Summary
+
 # Summary
 
 Document Sketchpad apps and core mechanisms

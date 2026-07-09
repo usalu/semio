@@ -59,10 +59,7 @@ function resetModelDefinitionCaches(): void {
   typologyStyleCache = null;
 }
 
-function mergeModelDefinitionAssetModules(
-  base: ModelDefinitionAssetModules,
-  patch: ModelDefinitionAssetModules,
-): ModelDefinitionAssetModules {
+function mergeModelDefinitionAssetModules(base: ModelDefinitionAssetModules, patch: ModelDefinitionAssetModules): ModelDefinitionAssetModules {
   return {
     typologies: { ...base.typologies, ...patch.typologies },
     actions: { ...base.actions, ...patch.actions },
@@ -747,9 +744,7 @@ export interface InteractionOutputBinding {
   readonly value: Expr;
 }
 
-function interactionOutputBindings(
-  outputs: readonly InteractionOutputBinding[] | Record<string, unknown> | undefined,
-): readonly InteractionOutputBinding[] | undefined {
+function interactionOutputBindings(outputs: readonly InteractionOutputBinding[] | Record<string, unknown> | undefined): readonly InteractionOutputBinding[] | undefined {
   if (!outputs) return undefined;
   if (Array.isArray(outputs)) return outputs;
   return Object.entries(outputs).map(([hostKey, childKey]) => ({
@@ -979,11 +974,7 @@ function normalizeInteractionDocumentRaw(r: Record<string, unknown>): void {
 }
 
 /** @emoji 📞 Writes child session values onto host context using declarative output bindings. */
-export function mergeInteractionCallOutputs(
-  hostContext: Record<string, unknown>,
-  childContext: Record<string, unknown>,
-  outputs: readonly InteractionOutputBinding[] | Record<string, unknown> | undefined,
-): void {
+export function mergeInteractionCallOutputs(hostContext: Record<string, unknown>, childContext: Record<string, unknown>, outputs: readonly InteractionOutputBinding[] | Record<string, unknown> | undefined): void {
   const bindings = interactionOutputBindings(outputs);
   if (!bindings?.length) return;
   const childEnv: ExprEnv = { context: childContext, event: { kind: "interaction.return" } };
@@ -1696,14 +1687,7 @@ export function mergeStepDataChunk(chunk: string, writer: StepEntityWriter): Rea
 export function stepSpatialFileHeader(fileName: string, timestampIso: string): string {
   const ts = stepEscape(timestampIso);
   const name = stepEscape(fileName);
-  return [
-    "ISO-10303-21;",
-    "HEADER;",
-    "FILE_DESCRIPTION(('Pure Spatial State Export'), '2;1');",
-    `FILE_NAME(${name}, ${ts}, ('Spatial'), ('Spatial'), 'spatial-kernel', 'spatial', '');`,
-    `FILE_SCHEMA(('${STEP_AP242_SCHEMA}'));`,
-    "ENDSEC;",
-  ].join("\n");
+  return ["ISO-10303-21;", "HEADER;", "FILE_DESCRIPTION(('Pure Spatial State Export'), '2;1');", `FILE_NAME(${name}, ${ts}, ('Spatial'), ('Spatial'), 'spatial-kernel', 'spatial', '');`, `FILE_SCHEMA(('${STEP_AP242_SCHEMA}'));`, "ENDSEC;"].join("\n");
 }
 
 /** @emoji 🪜 Assembles header + DATA + ENDSEC footer. */
@@ -1712,13 +1696,7 @@ export function assembleStepFile(header: string, writer: StepEntityWriter): stri
 }
 
 /** @emoji 🪜 Property-definition + descriptive value UDA pair on a STEP definition context. */
-export function emitSpatialUdaProperty(
-  writer: StepEntityWriter,
-  contextId: number,
-  propertyName: string,
-  payloadJson: string,
-  role: "Authored Attribute" | "Derived Property" | "System_Generated",
-): void {
+export function emitSpatialUdaProperty(writer: StepEntityWriter, contextId: number, propertyName: string, payloadJson: string, role: "Authored Attribute" | "Derived Property" | "System_Generated"): void {
   const propId = writer.emitNew(`PROPERTY_DEFINITION(${stepEscape(propertyName)}, ${stepEscape(role)}, #${contextId})`);
   const itemId = writer.emitNew(`DESCRIPTIVE_REPRESENTATION_ITEM('Value', ${stepEscape(payloadJson)})`);
   const reprId = writer.emitNew(`REPRESENTATION('Spatial_Uda', (#${itemId}), #10)`);
@@ -1963,16 +1941,7 @@ export function inferTypologyPrimitiveKinds(typology: string): readonly Typology
   if (id.includes(".transform.") || id.includes(".edit.")) return ["solid", "surface", "curve"];
   if (id.includes(".beam") || id.includes(".railing")) return ["curve"];
   if (id.includes(".column") || id.includes(".stair") || id.includes(".hull")) return ["solid"];
-  if (
-    id.includes("wall") ||
-    id.includes("slab") ||
-    id.includes(".roof") ||
-    id.includes("baseplate") ||
-    id.includes("ceiling") ||
-    id.includes("foundation") ||
-    id.includes(".door") ||
-    id.includes("window")
-  ) {
+  if (id.includes("wall") || id.includes("slab") || id.includes(".roof") || id.includes("baseplate") || id.includes("ceiling") || id.includes("foundation") || id.includes(".door") || id.includes("window")) {
     return ["surface"];
   }
   return ["solid"];
@@ -2088,9 +2057,10 @@ function hslToHex(h: number, s: number, l: number): string {
     r = c;
     b = x;
   }
-  const toByte = (v: number) => Math.round((v + m) * 255)
-    .toString(16)
-    .padStart(2, "0");
+  const toByte = (v: number) =>
+    Math.round((v + m) * 255)
+      .toString(16)
+      .padStart(2, "0");
   return `#${toByte(r)}${toByte(g)}${toByte(b)}`;
 }
 
@@ -2200,10 +2170,7 @@ export function parseAttributeDefinitionSpec(raw: unknown): AttributeDefinitionS
   if (typeof r.field !== "string" || !Array.isArray(r.targets) || r.targets.length === 0) return null;
   if (!("value" in r)) return null;
   const selector = r.geometrySelector;
-  const geometrySelector =
-    selector && typeof selector === "object" && Array.isArray((selector as { kinds?: unknown }).kinds)
-      ? { kinds: (selector as { kinds: string[] }).kinds }
-      : undefined;
+  const geometrySelector = selector && typeof selector === "object" && Array.isArray((selector as { kinds?: unknown }).kinds) ? { kinds: (selector as { kinds: string[] }).kinds } : undefined;
   return {
     schema: "spatial.attribute",
     id: r.id,
@@ -2455,10 +2422,7 @@ export function registerPropertyComputer(propertyId: string, computer: PropertyC
 }
 
 /** @emoji 📐 Derives property output for one model object from a property definition. */
-export async function derivePropertyValue(
-  defn: PropertyDefinitionSpec,
-  ctx: { readonly model: Model; readonly kernel: SpatialKernel; readonly object: SpatialObjectRecord },
-): Promise<Record<string, unknown>> {
+export async function derivePropertyValue(defn: PropertyDefinitionSpec, ctx: { readonly model: Model; readonly kernel: SpatialKernel; readonly object: SpatialObjectRecord }): Promise<Record<string, unknown>> {
   if (!propertyDefinitionAppliesToObject(defn, ctx.object)) return {};
   const computer = propertyComputers.get(defn.id);
   if (computer) return computer({ ...ctx, defn });
@@ -2467,11 +2431,7 @@ export async function derivePropertyValue(
 }
 
 /** @emoji 📚 Property definitions for one model definition that apply to `object` on `model`. */
-export function listApplicablePropertyDefinitionsForModelDefinition(
-  modelDefinitionId: string,
-  model: Model,
-  object: SpatialObjectRecord,
-): readonly PropertyDefinitionSpec[] {
+export function listApplicablePropertyDefinitionsForModelDefinition(modelDefinitionId: string, model: Model, object: SpatialObjectRecord): readonly PropertyDefinitionSpec[] {
   const scoped = new Set(listPropertyDefinitionsForModelDefinition(modelDefinitionId).map((row) => row.id));
   return shippedPropertyDefinitionCatalog().filter((defn) => scoped.has(defn.id) && propertyDefinitionAppliesToObject(defn, object));
 }
@@ -2517,18 +2477,13 @@ export function parseStatDefinitionSpec(raw: unknown): StatDefinitionSpec | null
     });
   }
   const scopesRaw = r.scopes;
-  const scopes: ("model" | "selection")[] =
-    Array.isArray(scopesRaw) && scopesRaw.length > 0
-      ? scopesRaw.filter((scope): scope is "model" | "selection" => scope === "model" || scope === "selection")
-      : ["model", "selection"];
+  const scopes: ("model" | "selection")[] = Array.isArray(scopesRaw) && scopesRaw.length > 0 ? scopesRaw.filter((scope): scope is "model" | "selection" => scope === "model" || scope === "selection") : ["model", "selection"];
   if (scopes.length === 0) return null;
   const sourcesRaw = r.sources;
   const sources =
     sourcesRaw && typeof sourcesRaw === "object"
       ? {
-          typologies: Array.isArray((sourcesRaw as { typologies?: unknown }).typologies)
-            ? (sourcesRaw as { typologies: string[] }).typologies.filter((id): id is string => typeof id === "string")
-            : undefined,
+          typologies: Array.isArray((sourcesRaw as { typologies?: unknown }).typologies) ? (sourcesRaw as { typologies: string[] }).typologies.filter((id): id is string => typeof id === "string") : undefined,
         }
       : undefined;
   return {
@@ -2734,13 +2689,7 @@ export async function computeStat(defn: StatDefinitionSpec, ctx: StatComputeCont
 }
 
 /** @emoji 📊 Objects included when computing stats for one model definition scope. */
-export function objectsForStatCompute(
-  model: Model,
-  modelDefinitionId: string,
-  defn: StatDefinitionSpec,
-  scope: "model" | "selection",
-  selectionObjects: readonly SpatialObjectRecord[],
-): readonly SpatialObjectRecord[] {
+export function objectsForStatCompute(model: Model, modelDefinitionId: string, defn: StatDefinitionSpec, scope: "model" | "selection", selectionObjects: readonly SpatialObjectRecord[]): readonly SpatialObjectRecord[] {
   const typologyFilter = defn.sources?.typologies;
   let base: readonly SpatialObjectRecord[];
   if (scope === "selection") {
@@ -2775,10 +2724,7 @@ export function attributeDefinitionAppliesToEntity(defn: AttributeDefinitionSpec
 }
 
 /** @emoji 📚 Attribute definitions for one model definition and entity kind. */
-export function listAttributeDefinitionsForModelDefinitionEntity(
-  modelDefinitionId: string,
-  entityKind: ModelEntityKind,
-): readonly AttributeDefinitionSpec[] {
+export function listAttributeDefinitionsForModelDefinitionEntity(modelDefinitionId: string, entityKind: ModelEntityKind): readonly AttributeDefinitionSpec[] {
   return listAttributeDefinitionsForModelDefinition(modelDefinitionId).filter((defn) => attributeDefinitionAppliesToEntity(defn, entityKind));
 }
 
@@ -2964,9 +2910,7 @@ function parseTransformationDeriveSpec(raw: unknown): TransformationDeriveSpec |
           ...(typeof fuseRaw.hullSolidId === "string" ? { hullSolidId: fuseRaw.hullSolidId } : {}),
           ...(Array.isArray(fuseRaw.contactPairs)
             ? {
-                contactPairs: fuseRaw.contactPairs
-                  .filter((pair): pair is [string, string] => Array.isArray(pair) && pair.length === 2 && typeof pair[0] === "string" && typeof pair[1] === "string")
-                  .map((pair) => [pair[0], pair[1]] as const),
+                contactPairs: fuseRaw.contactPairs.filter((pair): pair is [string, string] => Array.isArray(pair) && pair.length === 2 && typeof pair[0] === "string" && typeof pair[1] === "string").map((pair) => [pair[0], pair[1]] as const),
               }
             : {}),
           ...(typeof fuseRaw.maxSeparation === "number" ? { maxSeparation: fuseRaw.maxSeparation } : {}),
@@ -2974,12 +2918,7 @@ function parseTransformationDeriveSpec(raw: unknown): TransformationDeriveSpec |
       : undefined;
   const openingRaw = classify.opening as Record<string, unknown> | undefined;
   const opening: TransformationDeriveOpening | undefined =
-    openingRaw &&
-    Array.isArray(openingRaw.fields) &&
-    openingRaw.fields.every((f) => typeof f === "string") &&
-    Array.isArray(openingRaw.values) &&
-    typeof openingRaw.typology === "string" &&
-    typeof openingRaw.role === "string"
+    openingRaw && Array.isArray(openingRaw.fields) && openingRaw.fields.every((f) => typeof f === "string") && Array.isArray(openingRaw.values) && typeof openingRaw.typology === "string" && typeof openingRaw.role === "string"
       ? {
           fields: openingRaw.fields as string[],
           values: openingRaw.values as (string | boolean)[],
@@ -3196,10 +3135,7 @@ export function modelDefinitionIdForInteraction(interactionId: string): string |
 }
 
 /** @emoji 🧭 Interactions shipped for a model definition (folder assets + typology references). */
-export function listSpatialInteractionsForModelDefinition(
-  modelDefinitionId: string,
-  options?: { readonly includeCallable?: boolean },
-): readonly SpatialInteraction[] {
+export function listSpatialInteractionsForModelDefinition(modelDefinitionId: string, options?: { readonly includeCallable?: boolean }): readonly SpatialInteraction[] {
   const ids = new Set<string>();
   for (const [id, owner] of interactionOwnerById()) {
     if (owner === modelDefinitionId) ids.add(id);
@@ -3263,9 +3199,7 @@ export function listPropertyDefinitionsForModelDefinition(modelDefinitionId: str
   for (const typology of listTypologiesForModelDefinition(modelDefinitionId)) {
     for (const propertyId of typology.properties ?? []) ids.add(propertyId);
   }
-  return [...ids]
-    .map((id) => loadPropertyDefinition(id))
-    .filter((row): row is PropertyDefinitionSpec => row !== null);
+  return [...ids].map((id) => loadPropertyDefinition(id)).filter((row): row is PropertyDefinitionSpec => row !== null);
 }
 
 /** @emoji 🧭 Interaction ids invoked via `interaction.call` in one spec. */
@@ -3434,11 +3368,7 @@ export function registerTransformationApplier(qualifiedTransformationId: string,
   transformationAppliers.set(qualifiedTransformationId, applier);
 }
 
-function collectTransformationPrimitiveRefs(
-  model: Model,
-  sourceModelDefinition: string,
-  primitiveKind: TypologyPrimitiveKind,
-): readonly SolidRef[] {
+function collectTransformationPrimitiveRefs(model: Model, sourceModelDefinition: string, primitiveKind: TypologyPrimitiveKind): readonly SolidRef[] {
   const refs = new Set<string>();
   for (const obj of listModelObjectsForModelDefinition(model, sourceModelDefinition)) {
     for (const [kind, primitiveRef] of objectPrimitiveEntries(obj)) {
@@ -3465,36 +3395,22 @@ function deriveOpeningMatch(model: Model, faceId: FaceRef, opening: Transformati
   return false;
 }
 
-function deriveClassifyRuleMatches(
-  rule: TransformationDeriveClassifyRule,
-  normal: Vec3,
-  centroid: Vec3,
-  zMin: number,
-  zMax: number,
-  zTol: number,
-): boolean {
+function deriveClassifyRuleMatches(rule: TransformationDeriveClassifyRule, normal: Vec3, centroid: Vec3, zMin: number, zMax: number, zTol: number): boolean {
   if (rule.fallback) return true;
   const ax = Math.abs(normal[0]);
   const ay = Math.abs(normal[1]);
   const az = Math.abs(normal[2]);
-  if (rule.dominantAxis === 'z' && rule.minDominantNormal != null) {
+  if (rule.dominantAxis === "z" && rule.minDominantNormal != null) {
     if (!(az >= ax && az >= ay && az >= rule.minDominantNormal)) return false;
-    if (rule.zBand === 'max') return centroid[2] >= zMax - zTol;
-    if (rule.zBand === 'min') return centroid[2] <= zMin + zTol;
+    if (rule.zBand === "max") return centroid[2] >= zMax - zTol;
+    if (rule.zBand === "min") return centroid[2] <= zMin + zTol;
     return true;
   }
   if (rule.minAxisNormal != null) return ax >= rule.minAxisNormal || ay >= rule.minAxisNormal;
   return false;
 }
 
-function classifyFaceFromDeriveRules(
-  derive: TransformationDeriveSpec,
-  normal: Vec3,
-  centroid: Vec3,
-  zMin: number,
-  zMax: number,
-  zTol: number,
-): TransformationDeriveClassifyRule {
+function classifyFaceFromDeriveRules(derive: TransformationDeriveSpec, normal: Vec3, centroid: Vec3, zMin: number, zMax: number, zTol: number): TransformationDeriveClassifyRule {
   for (const rule of derive.classify.rules) {
     if (deriveClassifyRuleMatches(rule, normal, centroid, zMin, zMax, zTol)) return rule;
   }
@@ -3544,7 +3460,7 @@ function runDeriveTransformation(spec: TransformationSpec, source: Model, previe
     maxSeparation: derive.fuse?.maxSeparation,
   });
   if (solidRefs.length > 1) {
-    target.metadata.setField(String(hullSolid), 'fuseSourceSolidIds', solidRefs.map(String));
+    target.metadata.setField(String(hullSolid), "fuseSourceSolidIds", solidRefs.map(String));
     target.solids[hullSolid] = { id: hullSolid, shellIds: [] };
   }
   const centroids: Vec3[] = [];
@@ -3592,9 +3508,7 @@ function runDeriveTransformation(spec: TransformationSpec, source: Model, previe
             return { role: rule.role, typology: rule.typology as TypologyRef };
           })();
     const mergeGroup = mergeRoles.has(classified.role);
-    const groupKey = mergeGroup && mergeByPlane
-      ? `${classified.typology}:${preview.facePlaneGroupKey(row.normal, row.centroid)}`
-      : `${classified.typology}:${String(row.face)}`;
+    const groupKey = mergeGroup && mergeByPlane ? `${classified.typology}:${preview.facePlaneGroupKey(row.normal, row.centroid)}` : `${classified.typology}:${String(row.face)}`;
     const existing = groupedFaces.get(groupKey);
     if (existing) existing.faces.push(row.face);
     else groupedFaces.set(groupKey, { role: classified.role, typology: classified.typology, faces: [row.face] });
@@ -3616,7 +3530,7 @@ function runDeriveTransformation(spec: TransformationSpec, source: Model, previe
       target.objects[objectId] = {
         id: objectId,
         typology: ensure.typology as TypologyRef,
-        primitives: ensure.empty ? {} : { surface: String(externalFaces[0] ?? '') },
+        primitives: ensure.empty ? {} : { surface: String(externalFaces[0] ?? "") },
         attributes: { sourceObjectIds },
       };
     }
@@ -3827,15 +3741,7 @@ function isEntityDiffEmpty<TRec, TDiff, TId extends string>(e: EntityDiff<TRec, 
 /** @emoji 🧮 True when `diff` has no geometry mutations. */
 export function isEmptyModelDiff(d: ModelDiff | undefined): boolean {
   if (!d) return true;
-  return (
-    isEntityDiffEmpty(d.anchors) &&
-    isEntityDiffEmpty(d.vertices) &&
-    isEntityDiffEmpty(d.edges) &&
-    isEntityDiffEmpty(d.wires) &&
-    isEntityDiffEmpty(d.faces) &&
-    isEntityDiffEmpty(d.shells) &&
-    isEntityDiffEmpty(d.solids)
-  );
+  return isEntityDiffEmpty(d.anchors) && isEntityDiffEmpty(d.vertices) && isEntityDiffEmpty(d.edges) && isEntityDiffEmpty(d.wires) && isEntityDiffEmpty(d.faces) && isEntityDiffEmpty(d.shells) && isEntityDiffEmpty(d.solids);
 }
 
 function cloneRec<T>(r: T): T {
@@ -4169,11 +4075,7 @@ async function runCreateBox(params: Record<string, unknown>, ctx: { readonly ker
   const cornerA = vec3Param(params, "cornerA", vec3Param(params, "p0"));
   const cornerB = vec3Param(params, "cornerB", vec3Param(params, "p1", [1, 1, 0]));
   const p2 = vec3Param(params, "p2", cornerB);
-  const height = numericParam(
-    params,
-    "height",
-    Math.max(Math.abs(cornerB[0] - cornerA[0]), Math.abs(cornerB[1] - cornerA[1]), Math.abs(p2[2] - cornerA[2]), 1),
-  );
+  const height = numericParam(params, "height", Math.max(Math.abs(cornerB[0] - cornerA[0]), Math.abs(cornerB[1] - cornerA[1]), Math.abs(p2[2] - cornerA[2]), 1));
   if (ctx.kernel.createBoxFromCornersDiff) {
     const result = await ctx.kernel.createBoxFromCornersDiff({ cornerA, cornerB, height });
     return { diff: result.diff, data: { solid: result.solid } };
@@ -4396,8 +4298,20 @@ function modelDefinitionActionCapabilityDefs(): readonly ActionDef[] {
       id: "measure.solidVolume",
       run: async (params, ctx) => ({ data: await ctx.kernel.solidVolume(String(params.solidId ?? params.solid) as SolidRef) }),
     },
-    { id: "feature.extrudeWireToSolid", run: async (params, ctx) => ctx.kernel.extrudeWireDiff ? ctx.kernel.extrudeWireDiff({ wireId: String(params.wireId ?? params.wire ?? ""), distance: numericParam(params, "distance", 1), direction: vec3Param(params, "direction", [0, 0, 1]), model: ctx.model }) : ({ diff: EMPTY_MODEL_DIFF }) },
-    { id: "feature.offsetFaces", run: async (params, ctx) => ctx.kernel.offsetFacesDiff ? ctx.kernel.offsetFacesDiff({ faceIds: Array.isArray(params.faceIds) ? params.faceIds.map(String) : [String(params.faceId ?? "")], distance: numericParam(params, "distance", 1), model: ctx.model }) : ({ diff: EMPTY_MODEL_DIFF }) },
+    {
+      id: "feature.extrudeWireToSolid",
+      run: async (params, ctx) =>
+        ctx.kernel.extrudeWireDiff
+          ? ctx.kernel.extrudeWireDiff({ wireId: String(params.wireId ?? params.wire ?? ""), distance: numericParam(params, "distance", 1), direction: vec3Param(params, "direction", [0, 0, 1]), model: ctx.model })
+          : { diff: EMPTY_MODEL_DIFF },
+    },
+    {
+      id: "feature.offsetFaces",
+      run: async (params, ctx) =>
+        ctx.kernel.offsetFacesDiff
+          ? ctx.kernel.offsetFacesDiff({ faceIds: Array.isArray(params.faceIds) ? params.faceIds.map(String) : [String(params.faceId ?? "")], distance: numericParam(params, "distance", 1), model: ctx.model })
+          : { diff: EMPTY_MODEL_DIFF },
+    },
   ];
 }
 
@@ -4758,11 +4672,7 @@ function vec3Eq(a: Vec3, b: Vec3): boolean {
 }
 
 /** @emoji 📍 Replaces interaction points bound to moved vertices with live model positions. */
-export function resolveLiveInteractionPoints(
-  model: Model,
-  points: readonly Vec3[],
-  snaps: readonly (InteractionPointSnap | null)[],
-): readonly Vec3[] {
+export function resolveLiveInteractionPoints(model: Model, points: readonly Vec3[], snaps: readonly (InteractionPointSnap | null)[]): readonly Vec3[] {
   if (!snaps.length) return points;
   return points.map((point, index) => {
     const snap = snaps[index];
@@ -5287,11 +5197,7 @@ function defaultEngagementControlKind(entry: InteractionEngagementEntryControl, 
 }
 
 /** @emoji 🎛 Resolves declarative engagement control params for `state` (length/scalar entry + context value). */
-export function interactionControlForState(
-  spec: InteractionSpec,
-  state: string,
-  context: Record<string, unknown> = {},
-): ResolvedInteractionEngagementControl | null {
+export function interactionControlForState(spec: InteractionSpec, state: string, context: Record<string, unknown> = {}): ResolvedInteractionEngagementControl | null {
   const scalar = interactionScalarEntryForState(spec, state);
   if (scalar) {
     const kind = defaultEngagementControlKind(scalar, scalar.event);
@@ -5437,20 +5343,14 @@ function lengthEntryCommitPoint(ctx: Record<string, unknown>, entry: Interaction
 }
 
 /** @emoji 🔢 Commit event after numeric entry (Enter/Space): `pointer.down` with clamped point or `confirm`. */
-export function interactionNumericEntryCommitEvent(
-  spec: InteractionSpec,
-  state: string,
-  ctx: Record<string, unknown>,
-  preview: SpatialPreviewKernel,
-): InteractionEvent | null {
+export function interactionNumericEntryCommitEvent(spec: InteractionSpec, state: string, ctx: Record<string, unknown>, preview: SpatialPreviewKernel): InteractionEvent | null {
   const lengthEntry = interactionLengthEntryForState(spec, state);
   const scalarEntry = interactionScalarEntryForState(spec, state);
   if (!lengthEntry && !scalarEntry) return null;
   const st = findState(spec, state);
   if (!st?.on) return null;
   const events = new Set(st.on.map((h) => h.event));
-  const commitKind =
-    scalarEntry?.commit ?? lengthEntry?.commit ?? (scalarEntry ? "confirm" : events.has("pointer.down") ? "pointer.down" : "confirm");
+  const commitKind = scalarEntry?.commit ?? lengthEntry?.commit ?? (scalarEntry ? "confirm" : events.has("pointer.down") ? "pointer.down" : "confirm");
   if (commitKind === "pointer.down" && events.has("pointer.down") && lengthEntry) {
     const point = lengthEntryCommitPoint(ctx, lengthEntry, preview);
     if (point) return { kind: "pointer.down", point, modifiers: {} };
@@ -5480,12 +5380,7 @@ export function interactionCanFinalizeStep(spec: InteractionSpec, state: string,
 }
 
 /** @emoji ✅ Enter/Space finalize: `confirm` when available, else length-entry `pointer.down`. */
-export function interactionStepFinalizeEvent(
-  spec: InteractionSpec,
-  state: string,
-  ctx: Record<string, unknown>,
-  preview: SpatialPreviewKernel,
-): InteractionEvent | null {
+export function interactionStepFinalizeEvent(spec: InteractionSpec, state: string, ctx: Record<string, unknown>, preview: SpatialPreviewKernel): InteractionEvent | null {
   if (interactionCanFinalizeStep(spec, state, ctx, preview)) return { kind: "confirm", modifiers: {} };
   return interactionNumericEntryCommitEvent(spec, state, ctx, preview);
 }
@@ -5509,12 +5404,7 @@ export function scalarEntryAxisBase(ctx: Record<string, unknown>, entry: Interac
 }
 
 /** @emoji 📏 Projects `raw` onto the scalar axis; returns axis parameter `t` and closest point. */
-export function projectPointOnScalarAxis(
-  base: Vec3,
-  axis: Vec3,
-  raw: Vec3,
-  preview: SpatialPreviewKernel,
-): { readonly projected: Vec3; readonly t: number } {
+export function projectPointOnScalarAxis(base: Vec3, axis: Vec3, raw: Vec3, preview: SpatialPreviewKernel): { readonly projected: Vec3; readonly t: number } {
   return preview.projectPointOnScalarAxis(base, axis, raw);
 }
 
@@ -5597,13 +5487,7 @@ function lengthEntryRawPoint(ctx: Record<string, unknown>, entry: InteractionLen
   return [anchor[0] + 1, anchor[1], anchor[2]];
 }
 
-function applyLengthEntryToContext(
-  ctx: Record<string, unknown>,
-  entry: InteractionLengthEntrySpec,
-  raw: Vec3,
-  lock: number,
-  preview: SpatialPreviewKernel,
-): void {
+function applyLengthEntryToContext(ctx: Record<string, unknown>, entry: InteractionLengthEntrySpec, raw: Vec3, lock: number, preview: SpatialPreviewKernel): void {
   const anchor = readInteractionContextVec3(ctx, entry.anchor);
   if (!anchor) return;
   const clamped = preview.clampPointAlongDirection(anchor, raw, lock);
@@ -5717,13 +5601,7 @@ export interface DisplayModel {
 }
 
 /** @emoji 🖼️ Instantiates `display.states[state]` templates using current `context`. */
-export function resolveDisplay(
-  spec: InteractionSpec,
-  state: string,
-  context: Record<string, unknown>,
-  preview: SpatialPreviewKernel,
-  model?: Model,
-): DisplayModel {
+export function resolveDisplay(spec: InteractionSpec, state: string, context: Record<string, unknown>, preview: SpatialPreviewKernel, model?: Model): DisplayModel {
   const env: ExprEnv = { context: model ? withResolvedInteractionPointsContext(model, context) : context, preview };
   const section = spec.display?.states?.find((s) => s.state === state);
   const raw = section?.items ?? [];
@@ -5838,15 +5716,10 @@ export function resolveDisplay(
     const axis = scalarEntryAxis(scalarEntry);
     const heightLock = positiveHeightLock(context);
     const fieldVal = context[scalarEntry.field];
-    const height =
-      heightLock ??
-      (typeof fieldVal === "number" && Number.isFinite(fieldVal) && fieldVal > 0 ? fieldVal : null);
+    const height = heightLock ?? (typeof fieldVal === "number" && Number.isFinite(fieldVal) && fieldVal > 0 ? fieldVal : null);
     if (base && height != null) {
       const raw = readInteractionContextVec3(context, CURSOR_RAW_CTX);
-      const signedT =
-        typeof context[SCALAR_AXIS_T_CTX] === "number" && Number.isFinite(context[SCALAR_AXIS_T_CTX])
-          ? (context[SCALAR_AXIS_T_CTX] as number)
-          : height;
+      const signedT = typeof context[SCALAR_AXIS_T_CTX] === "number" && Number.isFinite(context[SCALAR_AXIS_T_CTX]) ? (context[SCALAR_AXIS_T_CTX] as number) : height;
       const top = preview.scalarTopOnAxis(base, axis, height, signedT);
       items.push({
         kind: "segment",
@@ -6205,11 +6078,7 @@ export class InteractionRuntime {
     await this.continueHostSessionAfterEngineSend();
   }
 
-  private async handleEngineSendResult(
-    r: StateEngineSendResult,
-    beforeState: string,
-    beforeCtx: Record<string, unknown>,
-  ): Promise<void> {
+  private async handleEngineSendResult(r: StateEngineSendResult, beforeState: string, beforeCtx: Record<string, unknown>): Promise<void> {
     if (!r.ok) return;
     if (r.childCall) {
       if (!r.transient) {
@@ -6713,9 +6582,7 @@ const SELECTION_INTERACTION_KEYS: Readonly<Record<string, string>> = {
   "selection.selectObjects": "xo",
 };
 
-const SELECTION_ACTION_META: Readonly<
-  Record<string, { readonly operation: SelectionApplyOperation; readonly kinds?: readonly ModelEntityKind[] }>
-> = {
+const SELECTION_ACTION_META: Readonly<Record<string, { readonly operation: SelectionApplyOperation; readonly kinds?: readonly ModelEntityKind[] }>> = {
   "selection.selectAll": { operation: "selectAll" },
   "selection.deselectAll": { operation: "deselectAll" },
   "selection.invert": { operation: "invert" },
@@ -7145,9 +7012,7 @@ if (import.meta.vitest) {
       const structure = resolveModelDefinitionScope("aec.building.structure");
       expect(structure.selectionEntityKinds).toContain("face");
       expect(structure.selectionEntityKinds).toContain("object");
-      expect(listAttributeDefinitionsForModelDefinitionEntity("aec.building.structure", "face").some((row) => row.field === "exposure")).toBe(
-        true,
-      );
+      expect(listAttributeDefinitionsForModelDefinitionEntity("aec.building.structure", "face").some((row) => row.field === "exposure")).toBe(true);
       expect(listPropertyDefinitionsForModelDefinition("aec.building.energy").some((row) => row.id === "energy.heatedvolume")).toBe(true);
       expect(actionAvailableInModelDefinition("primitive.createBoxFromCorners", defaultModelDefinitionId())).toBe(true);
       expect(actionAvailableInModelDefinition("primitive.createBoxFromCorners", "aec.building.energy")).toBe(false);
@@ -7289,14 +7154,8 @@ if (import.meta.vitest) {
       expect(target.objects["energy.energy.hull"]?.primitives.solid).toBe("from_geometry-hull");
       expect(target.objects["energy.energy.roof"]?.primitives.surface).toBe("box-upper-face-top");
       expect(target.objects["energy.energy.baseplate"]?.primitives.surface).toBe("box-lower-face-bottom");
-      expect(
-        listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.externalwall"),
-      ).toHaveLength(4);
-      expect(
-        listModelObjectsForModelDefinition(target, "aec.building.energy").filter(
-          (row) => row.typology === "energy.energy.hull" && row.id !== "energy.energy.hull",
-        ),
-      ).toHaveLength(0);
+      expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.externalwall")).toHaveLength(4);
+      expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.hull" && row.id !== "energy.energy.hull")).toHaveLength(0);
       expect(target.objects["box-lower-face-top"]).toBeUndefined();
       expect(target.objects["box-upper-face-bottom"]).toBeUndefined();
     });
@@ -7766,9 +7625,7 @@ if (import.meta.vitest) {
       expect(registry.get("selection.selectAll")?.spec?.steps.some((s) => s.op === "kernel.call" && s.function === "spatial.selection.apply")).toBe(true);
       expect(registry.get("command.addPoint")?.spec?.steps.some((s) => s.op === "kernel.call" && s.function === "spatial.action.capability")).toBe(true);
       const allowedKernelFunctions = new Set(["spatial.selection.apply", "spatial.action.capability"]);
-      expect(
-        specs.every((spec) => spec.steps.every((step) => step.op !== "kernel.call" || allowedKernelFunctions.has(step.function))),
-      ).toBe(true);
+      expect(specs.every((spec) => spec.steps.every((step) => step.op !== "kernel.call" || allowedKernelFunctions.has(step.function)))).toBe(true);
     });
     it("typology actions reference shipped declarative action specs", () => {
       const actionIds = new Set(listModelDefinitionActionSpecs().map((row) => row.id));
@@ -7780,7 +7637,11 @@ if (import.meta.vitest) {
     });
     it("every typology ships construct kit or legacy create interactions", () => {
       const actionIds = new Set(listModelDefinitionActionSpecs().map((row) => row.id));
-      const interactionIds = new Set(InteractionRegistry.withModelDefinitionInteractions().list().map((row) => row.id));
+      const interactionIds = new Set(
+        InteractionRegistry.withModelDefinitionInteractions()
+          .list()
+          .map((row) => row.id),
+      );
       for (const typology of listModelDefinitionTypologies()) {
         if (typology.id.includes(".kernel.")) continue;
         const ids = typologyConstructAssetIds(typology.id, typology.label);
@@ -7817,9 +7678,7 @@ if (import.meta.vitest) {
             expect(actionOwnedByModelDefinition(actionId, mdId), `${mdId} → ${typology.id} → ${actionId}`).toBe(true);
           }
         }
-        expect(listConstructableTypologiesForModelDefinition(mdId).length).toBe(
-          listTypologiesForModelDefinition(mdId).filter(typologyHasNativeConstructKit).length,
-        );
+        expect(listConstructableTypologiesForModelDefinition(mdId).length).toBe(listTypologiesForModelDefinition(mdId).filter(typologyHasNativeConstructKit).length);
       }
     });
     it("typology constructFrom2PointsAndHeight adds an object row for the typology", async () => {
@@ -7971,7 +7830,10 @@ if (import.meta.vitest) {
       applyModelDiff(model, created.diff);
       const edge = Object.values(model.edges)[0]!;
       const before = edge.curve?.kind === "nurbs" ? edge.curve.poles.map((pole) => [...pole] as Vec3) : [];
-      applyModelDiff(model, selectionTargetsPointTransformDiff(model, [{ kind: "edge", id: edge.id }], (point) => [point[0] + 1, point[1], point[2]]));
+      applyModelDiff(
+        model,
+        selectionTargetsPointTransformDiff(model, [{ kind: "edge", id: edge.id }], (point) => [point[0] + 1, point[1], point[2]]),
+      );
       const updated = model.edges[edge.id]!;
       expect(updated.curve?.kind).toBe("nurbs");
       if (updated.curve?.kind === "nurbs") {
@@ -7994,7 +7856,10 @@ if (import.meta.vitest) {
       const edge = Object.values(model.edges)[0]!;
       const midPole = edge.curve?.kind === "nurbs" ? [...edge.curve.poles[1]!] : null;
       const startId = edge.vertexIds[0]!;
-      applyModelDiff(model, selectionTargetsPointTransformDiff(model, [{ kind: "vertex", id: startId }], (point) => [point[0], point[1] + 5, point[2]]));
+      applyModelDiff(
+        model,
+        selectionTargetsPointTransformDiff(model, [{ kind: "vertex", id: startId }], (point) => [point[0], point[1] + 5, point[2]]),
+      );
       const updated = model.edges[edge.id]!;
       expect(updated.curve?.kind).toBe("nurbs");
       if (updated.curve?.kind === "nurbs" && midPole) {
@@ -8399,11 +8264,7 @@ if (import.meta.vitest) {
     it("selection.selectAll returns targets without model diff", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
-      const result = await ActionRegistry.withModelDefinitionActions().run(
-        "selection.selectAll",
-        { seedTargets: [], __context: {}, __event: { kind: "commit" } },
-        { kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M, model },
-      );
+      const result = await ActionRegistry.withModelDefinitionActions().run("selection.selectAll", { seedTargets: [], __context: {}, __event: { kind: "commit" } }, { kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M, model });
       const targets = selectionTargetsFromActionResult(result);
       expect(targets.length).toBeGreaterThan(8);
       expect(targets.some((t) => t.kind === "solid")).toBe(true);
@@ -8418,11 +8279,7 @@ if (import.meta.vitest) {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
       const hist = new DocumentHistory();
-      await ActionRegistry.withModelDefinitionActions().run(
-        "selection.selectAll",
-        { seedTargets: [], __context: {}, __event: { kind: "commit" } },
-        { kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M, model },
-      );
+      await ActionRegistry.withModelDefinitionActions().run("selection.selectAll", { seedTargets: [], __context: {}, __event: { kind: "commit" } }, { kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M, model });
       expect(hist.entries()).toEqual([]);
     });
     it.each(listSelectionOperationsForModelDefinition(defaultModelDefinitionId()))("registers selection command action $id", (defn) => {
@@ -8432,11 +8289,7 @@ if (import.meta.vitest) {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("e2e-box")));
       const seed = [{ kind: "solid", id: "e2e-box", editable: true }] as const;
-      const result = await ActionRegistry.withModelDefinitionActions().run(
-        "selection.invert",
-        { seedTargets: seed, __context: {}, __event: { kind: "commit" } },
-        { kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M, model },
-      );
+      const result = await ActionRegistry.withModelDefinitionActions().run("selection.invert", { seedTargets: seed, __context: {}, __event: { kind: "commit" } }, { kernel: new BrepjsKernel() as unknown as SpatialKernel, preview: M, model });
       const targets = selectionTargetsFromActionResult(result);
       expect(targets.some((t) => t.kind === "solid" && t.id === "e2e-box")).toBe(false);
       expect(targets.length).toBeGreaterThan(0);
@@ -8843,7 +8696,12 @@ if (import.meta.vitest) {
     });
 
     it("readInteractionContextVec3 supports points.@last on arrays", () => {
-      const ctx = { points: [[0, 0, 0], [1, 2, 3]] as Vec3[] };
+      const ctx = {
+        points: [
+          [0, 0, 0],
+          [1, 2, 3],
+        ] as Vec3[],
+      };
       expect(readInteractionContextVec3(ctx, "points.@last")).toEqual([1, 2, 3]);
     });
 
@@ -8899,10 +8757,7 @@ if (import.meta.vitest) {
     it("interactionLengthEntryLiveDistance reads Z rod cursor offset for extrusion_distance", () => {
       const spec = loadSpatialInteraction("surface.extrudeCrv")!;
       const entry = interactionLengthEntryForState(spec, "extrusion_distance")!;
-      const distance = interactionLengthEntryLiveDistance(
-        { origin: [0, 0, 0] as Vec3, cursor: [0, 0, 1.25] as Vec3, direction: [0, 0, 1] as Vec3 },
-        entry,
-      );
+      const distance = interactionLengthEntryLiveDistance({ origin: [0, 0, 0] as Vec3, cursor: [0, 0, 1.25] as Vec3, direction: [0, 0, 1] as Vec3 }, entry);
       expect(distance).toBeCloseTo(1.25, 5);
       expect(interactionNumericEntryLockedValue(spec, "extrusion_distance", { origin: [0, 0, 0], cursor: [0, 0, 2], direction: [0, 0, 1] })).toBe(2);
     });
@@ -9477,13 +9332,7 @@ if (import.meta.vitest) {
       readonly seedBox?: boolean;
       readonly useModelObjects?: boolean;
       readonly spec?: InteractionSpec;
-      readonly assert?: (ctx: {
-        readonly snap: InteractionSnapshot;
-        readonly model: Model;
-        readonly before: ReturnType<typeof entityCounts>;
-        readonly after: ReturnType<typeof entityCounts>;
-        readonly activeModelDefinitionId?: string | null;
-      }) => void;
+      readonly assert?: (ctx: { readonly snap: InteractionSnapshot; readonly model: Model; readonly before: ReturnType<typeof entityCounts>; readonly after: ReturnType<typeof entityCounts>; readonly activeModelDefinitionId?: string | null }) => void;
     }[] = [
       {
         id: "entity.createAnchor",

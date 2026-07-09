@@ -8,8 +8,5 @@
     "noEmit": true,
     "target": "ESNext"
   },
-  "include": [
-    "../../../../../../elements/client/lib/board/index.ts",
-    "../../../../../../elements/client/lib/board/index.tsx"
-  ]
+  "include": ["../../../../../../elements/client/lib/board/index.ts", "../../../../../../elements/client/lib/board/index.tsx"]
 }

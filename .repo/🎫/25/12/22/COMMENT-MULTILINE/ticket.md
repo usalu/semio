@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Code hook missed multi-line/JSDoc comments during scan and fix.
@@ -18,6 +19,7 @@ Collected JSDoc comment ranges in the TypeScript comment scan/strip logic and do
 ## Log
 
 ## Summary
+
 # Summary
 
 Extend code hook to detect and strip multi-line comments

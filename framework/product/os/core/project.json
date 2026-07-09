@@ -1,13 +1,13 @@
 {
-	"name": "@semio-tech/framework-os-core",
-	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-	"targets": {
-		"test": {
-			"executor": "nx:run-commands",
-			"options": {
-				"cwd": "framework/product/os/core",
-				"command": "bun ./script.ts test"
-			}
-		}
-	}
+  "name": "@semio-tech/framework-os-core",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "framework/product/os/core",
+        "command": "bun ./script.ts test"
+      }
+    }
+  }
 }

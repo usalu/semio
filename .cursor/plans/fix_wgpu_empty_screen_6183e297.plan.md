@@ -2,24 +2,24 @@
 name: Fix Wgpu Empty Screen
 overview: Fix three GPU-side bugs that make the wgpu shell render an empty screen (buffer aliasing across draw layers, wrong scissor Y-flip, glyph atlas never re-uploaded), plus a hover-order bug, then strengthen the E2E paint assertion so it can't pass on a blank canvas.
 todos:
-  - id: fix-buffer-aliasing
-    content: Single concatenated buffer upload with per-layer draw ranges in draw.rs render + render_overlay
-    status: completed
-  - id: fix-scissor-flip
-    content: Remove Y-flip in ScissorRect::from_rect, update unit tests
-    status: completed
-  - id: fix-glyph-upload
-    content: FontAtlas dirty flag + per-frame re-upload of glyph atlas
-    status: completed
-  - id: fix-hover-order
-    content: update_hover before clear_frame in AppRuntime::frame
-    status: completed
-  - id: strengthen-e2e
-    content: Real pixel-based paint + chrome-structure assertions in E2E script
-    status: completed
-  - id: verify
-    content: Rebuild wasm, cargo test, run 25-plugin suite, inspect screenshots for navbar/footer/panels/text
-    status: completed
+ - id: fix-buffer-aliasing
+   content: Single concatenated buffer upload with per-layer draw ranges in draw.rs render + render_overlay
+   status: completed
+ - id: fix-scissor-flip
+   content: Remove Y-flip in ScissorRect::from_rect, update unit tests
+   status: completed
+ - id: fix-glyph-upload
+   content: FontAtlas dirty flag + per-frame re-upload of glyph atlas
+   status: completed
+ - id: fix-hover-order
+   content: update_hover before clear_frame in AppRuntime::frame
+   status: completed
+ - id: strengthen-e2e
+   content: Real pixel-based paint + chrome-structure assertions in E2E script
+   status: completed
+ - id: verify
+   content: Rebuild wasm, cargo test, run 25-plugin suite, inspect screenshots for navbar/footer/panels/text
+   status: completed
 isProject: false
 ---
 
@@ -31,9 +31,10 @@ Screenshots from the last E2E run ([.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/scre
 
 ### Bug 1 — All draw layers alias one GPU buffer (the main cause)
 
-In `UiPipelines::render` ([ui/wgpu/rs/draw.rs](ui/wgpu/rs/draw.rs) ~line 1329), each layer calls `frame_buffers.ui_instances.upload(...)` inside the render-pass loop. `GrowBuffer::upload` does `queue.write_buffer` into the **same buffer** every time. All `write_buffer` calls execute at submit time *before* any recorded draw call, so every layer's data is overwritten by the last layer's — every draw call renders the final layer's (often tiny) contents. Same for `vector_vertices`. Since the scissor work split the frame into many layers, the whole UI collapses.
+In `UiPipelines::render` ([ui/wgpu/rs/draw.rs](ui/wgpu/rs/draw.rs) ~line 1329), each layer calls `frame_buffers.ui_instances.upload(...)` inside the render-pass loop. `GrowBuffer::upload` does `queue.write_buffer` into the **same buffer** every time. All `write_buffer` calls execute at submit time _before_ any recorded draw call, so every layer's data is overwritten by the last layer's — every draw call renders the final layer's (often tiny) contents. Same for `vector_vertices`. Since the scissor work split the frame into many layers, the whole UI collapses.
 
 **Fix**: concatenate all layers into a single upload per frame and record ranges:
+
 - Pre-pass: build `Vec<(scissor, instance_range)>` while appending all layers' `ui_instances` into one `Vec`, same for vector vertices.
 - One `upload` call per buffer, then in the pass loop `pass.draw(0..6, range.start..range.end)` (instanced) and `pass.draw(vrange, 0..1)` per layer with its scissor.
 - Apply the same fix inside `render_overlay`.
@@ -52,7 +53,7 @@ In `UiPipelines::render` ([ui/wgpu/rs/draw.rs](ui/wgpu/rs/draw.rs) ~line 1329), 
 
 ### Bug 4 — Hover computed after hit targets are cleared
 
-`frame()` calls `input.clear_frame()` (clears `hit_targets`) *before* `input.update_hover(...)`, so `hovered_id` is always `None`.
+`frame()` calls `input.clear_frame()` (clears `hit_targets`) _before_ `input.update_hover(...)`, so `hovered_id` is always `None`.
 
 **Fix**: call `update_hover` first (against last frame's hit targets), then `clear_frame`.
 

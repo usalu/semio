@@ -48,17 +48,14 @@ for (const ws of rootPkg.workspaces) {
   }
 
   const projPath = join(dir, "project.json");
-  const existing = existsSync(projPath)
-    ? (JSON.parse(readFileSync(projPath, "utf8")) as Record<string, unknown>)
-    : {};
+  const existing = existsSync(projPath) ? (JSON.parse(readFileSync(projPath, "utf8")) as Record<string, unknown>) : {};
   const projName = (existing.name as string) || pkg.name;
   if (!projName) {
     console.warn("[skip] no project name", ws);
     continue;
   }
 
-  const oldTargets =
-    (existing.targets as Record<string, unknown> | undefined) || {};
+  const oldTargets = (existing.targets as Record<string, unknown> | undefined) || {};
   const merged = {
     ...existing,
     name: projName,

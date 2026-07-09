@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 # Sketchpad tables target `h-medium` rows but table body `td` used `p-single`, so rows expanded beyond the fixed height whenever a cell contained an `h-medium` control (Toggle/Input/etc).
@@ -20,6 +21,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Normalize Sketchpad table row heights

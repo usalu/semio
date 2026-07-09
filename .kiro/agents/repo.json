@@ -1,9 +1,5 @@
 {
-  "allowedTools": [
-    "@repo",
-    "@compose",
-    "@coda"
-  ],
+  "allowedTools": ["@repo", "@compose", "@coda"],
   "description": "Interacts with the compose monorepo via repo CLI hooks and MCP tools",
   // Agent hooks disabled while logging is off — re-enable by uncommenting entries below.
   "hooks": {},
@@ -37,7 +33,5 @@
   "includeMcpJson": true,
   "name": "repo",
   "prompt": "file://../../AGENTS.md",
-  "tools": [
-    "*"
-  ]
+  "tools": ["*"]
 }

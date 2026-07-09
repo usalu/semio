@@ -2,36 +2,36 @@
 name: Kit virtual file system
 overview: Add a unified, constrained FileSystemNode abstraction (computed parent/children/path) across the GraphQL contract, the Rust store, and the compose/js client, with folder membership and reparenting wired through the existing kit operation/command mechanism.
 todos:
-  - id: ticket
-    content: Open repo MCP ticket, read repo://goals and associate with the best goal
-    status: completed
-  - id: golden-schema
-    content: Add FileSystemNode interface/connection/kind enum to schema.golden.graphql and make Kit/Folder/File/Design/Type/Family/Piece/Connection implement it; add createFolder/moveToFolder command + operation shells
-    status: completed
-  - id: rs-storage
-    content: Add folder-membership storage in lib.rs (Folder name/icon/parent, File/Design/Type/Family folder id, minimal Family model)
-    status: completed
-  - id: rs-interface
-    content: Add FileSystemNodeInterface enum + connection and implement the 6 computed resolvers on all 8 kinds per the constraint table; register types in build_schema
-    status: completed
-  - id: rs-writes
-    content: Add Operation::CreateFolder and Operation::MoveToFolder (scope/input/to_diff/to_backwards via apply_kit_state) and the createFolder/moveToFolder command resolvers
-    status: completed
-  - id: rs-regen
-    content: Regenerate schema.graphql and make schema_matches_target_graphql_file pass (golden strict)
-    status: completed
-  - id: js-read
-    content: Add shared FileSystem field roster to compose/js and install on the 8 classes (+ new Family class); finish Folder navigation and add Kit.folders / Store.folder
-    status: completed
-  - id: js-write
-    content: Add createFolder/moveToFolder to KIT_OPERATIONS with declare signatures and change subscriptions
-    status: completed
-  - id: tests
-    content: Extend Rust tests and embedded vitest to cover the VFS projection and reparenting; run both suites
-    status: completed
-  - id: close
-    content: Close the ticket with a summary of created/updated files
-    status: completed
+ - id: ticket
+   content: Open repo MCP ticket, read repo://goals and associate with the best goal
+   status: completed
+ - id: golden-schema
+   content: Add FileSystemNode interface/connection/kind enum to schema.golden.graphql and make Kit/Folder/File/Design/Type/Family/Piece/Connection implement it; add createFolder/moveToFolder command + operation shells
+   status: completed
+ - id: rs-storage
+   content: Add folder-membership storage in lib.rs (Folder name/icon/parent, File/Design/Type/Family folder id, minimal Family model)
+   status: completed
+ - id: rs-interface
+   content: Add FileSystemNodeInterface enum + connection and implement the 6 computed resolvers on all 8 kinds per the constraint table; register types in build_schema
+   status: completed
+ - id: rs-writes
+   content: Add Operation::CreateFolder and Operation::MoveToFolder (scope/input/to_diff/to_backwards via apply_kit_state) and the createFolder/moveToFolder command resolvers
+   status: completed
+ - id: rs-regen
+   content: Regenerate schema.graphql and make schema_matches_target_graphql_file pass (golden strict)
+   status: completed
+ - id: js-read
+   content: Add shared FileSystem field roster to compose/js and install on the 8 classes (+ new Family class); finish Folder navigation and add Kit.folders / Store.folder
+   status: completed
+ - id: js-write
+   content: Add createFolder/moveToFolder to KIT_OPERATIONS with declare signatures and change subscriptions
+   status: completed
+ - id: tests
+   content: Extend Rust tests and embedded vitest to cover the VFS projection and reparenting; run both suites
+   status: completed
+ - id: close
+   content: Close the ticket with a summary of created/updated files
+   status: completed
 isProject: false
 ---
 
@@ -64,8 +64,6 @@ graph TD
   Design --> Piece
   Design --> Connection
 ```
-
-
 
 ## Layer 1 - GraphQL contract
 
@@ -110,4 +108,3 @@ File: [index.ts](compose/client/lib/js/index.ts) (single monolith; declarative `
 - Extend the existing Rust tests (`#region Tests` in `lib.rs`) to cover: VFS resolvers per kind, root vs folder placement, design children = pieces+connections, connection children empty, piece parent = design, and the `createFolder`/`moveToFolder` operations (forward + backward diff). Confirm the schema-match test.
 - Extend the embedded vitest in `index.ts` (gated by `COMPOSE_JS_RUN_EMBEDDED_TESTS=1`) to create a folder, move a design into it, and assert the projection end-to-end.
 - Work inside a repo MCP ticket (open, associate with the most appropriate goal from `repo://goals`, close with a summary of touched files).
-

@@ -78,11 +78,7 @@ function normalizeNumber(value: number): number {
 }
 
 function escapeXmlAttribute(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
+  return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
 function createIdentityTransform(): TransformData {
@@ -98,11 +94,7 @@ function createIdentityTransform(): TransformData {
 //#region 🧮Transform Parsing
 // Transform parsing MUST support matrix, translate, rotate, and scale syntax from the SVG keyframes.
 
-function transformToMatrix(
-  translate: { x: number; y: number },
-  rotate: { angle: number; cx: number; cy: number },
-  scale: { x: number; y: number },
-): string {
+function transformToMatrix(translate: { x: number; y: number }, rotate: { angle: number; cx: number; cy: number }, scale: { x: number; y: number }): string {
   const angleRadians = (rotate.angle * Math.PI) / 180;
   const cosine = Math.cos(angleRadians);
   const sine = Math.sin(angleRadians);
@@ -113,12 +105,8 @@ function transformToMatrix(
   const b = normalizeNumber(sine * scaleX);
   const c = normalizeNumber(-sine * scaleY);
   const d = normalizeNumber(cosine * scaleY);
-  const e = normalizeNumber(
-    translate.x + rotate.cx - rotate.cx * a - rotate.cy * c,
-  );
-  const f = normalizeNumber(
-    translate.y + rotate.cy - rotate.cx * b - rotate.cy * d,
-  );
+  const e = normalizeNumber(translate.x + rotate.cx - rotate.cx * a - rotate.cy * c);
+  const f = normalizeNumber(translate.y + rotate.cy - rotate.cx * b - rotate.cy * d);
 
   return `${a} ${b} ${c} ${d} ${e} ${f}`;
 }
@@ -265,9 +253,7 @@ function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void 
 
   const totalFrames = sequence.length;
   const totalDurationSeconds = Math.max(keyframes.length * 4, 1);
-  const keyTimes = sequence.map((_, index) =>
-    normalizeNumber(index / Math.max(totalFrames - 1, 1)).toString(),
-  );
+  const keyTimes = sequence.map((_, index) => normalizeNumber(index / Math.max(totalFrames - 1, 1)).toString());
   const keyTimesText = keyTimes.join(";");
   const keySplinesText = Array.from({ length: Math.max(totalFrames - 1, 1) }, (_, index) => {
     const currentFrame = JSON.stringify(sequence[index]);
@@ -298,34 +284,18 @@ function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void 
     }
 
     const matrixValues = groupFrames
-      .map((group) => transformToMatrix(
-        group?.transform.translate ?? firstGroup.transform.translate,
-        group?.transform.rotate ?? firstGroup.transform.rotate,
-        group?.transform.scale ?? firstGroup.transform.scale,
-      ))
+      .map((group) => transformToMatrix(group?.transform.translate ?? firstGroup.transform.translate, group?.transform.rotate ?? firstGroup.transform.rotate, group?.transform.scale ?? firstGroup.transform.scale))
       .join(";");
     const fillValues = groupFrames.map((group) => group?.path.fill ?? firstGroup.path.fill).join(";");
     const strokeValues = groupFrames.map((group) => group?.path.stroke ?? firstGroup.path.stroke).join(";");
-    const strokeWidthValues = groupFrames
-      .map((group) => group?.path.strokeWidth ?? firstGroup.path.strokeWidth)
-      .join(";");
+    const strokeWidthValues = groupFrames.map((group) => group?.path.strokeWidth ?? firstGroup.path.strokeWidth).join(";");
 
     lines.push(`  <g id="${escapeXmlAttribute(groupId)}">`);
-    lines.push(
-      `    <path d="${escapeXmlAttribute(firstGroup.path.d)}" fill="${escapeXmlAttribute(firstGroup.path.fill)}" stroke="${escapeXmlAttribute(firstGroup.path.stroke)}" stroke-width="${escapeXmlAttribute(firstGroup.path.strokeWidth)}">`,
-    );
-    lines.push(
-      `      <animateTransform attributeName="transform" type="matrix" dur="${totalDurationSeconds}s" repeatCount="indefinite" keyTimes="${keyTimesText}" values="${matrixValues}" calcMode="spline" keySplines="${keySplinesText}" />`,
-    );
-    lines.push(
-      `      <animate attributeName="fill" dur="${totalDurationSeconds}s" repeatCount="indefinite" keyTimes="${keyTimesText}" values="${fillValues}" calcMode="spline" keySplines="${keySplinesText}" />`,
-    );
-    lines.push(
-      `      <animate attributeName="stroke" dur="${totalDurationSeconds}s" repeatCount="indefinite" keyTimes="${keyTimesText}" values="${strokeValues}" calcMode="spline" keySplines="${keySplinesText}" />`,
-    );
-    lines.push(
-      `      <animate attributeName="stroke-width" dur="${totalDurationSeconds}s" repeatCount="indefinite" keyTimes="${keyTimesText}" values="${strokeWidthValues}" calcMode="spline" keySplines="${keySplinesText}" />`,
-    );
+    lines.push(`    <path d="${escapeXmlAttribute(firstGroup.path.d)}" fill="${escapeXmlAttribute(firstGroup.path.fill)}" stroke="${escapeXmlAttribute(firstGroup.path.stroke)}" stroke-width="${escapeXmlAttribute(firstGroup.path.strokeWidth)}">`);
+    lines.push(`      <animateTransform attributeName="transform" type="matrix" dur="${totalDurationSeconds}s" repeatCount="indefinite" keyTimes="${keyTimesText}" values="${matrixValues}" calcMode="spline" keySplines="${keySplinesText}" />`);
+    lines.push(`      <animate attributeName="fill" dur="${totalDurationSeconds}s" repeatCount="indefinite" keyTimes="${keyTimesText}" values="${fillValues}" calcMode="spline" keySplines="${keySplinesText}" />`);
+    lines.push(`      <animate attributeName="stroke" dur="${totalDurationSeconds}s" repeatCount="indefinite" keyTimes="${keyTimesText}" values="${strokeValues}" calcMode="spline" keySplines="${keySplinesText}" />`);
+    lines.push(`      <animate attributeName="stroke-width" dur="${totalDurationSeconds}s" repeatCount="indefinite" keyTimes="${keyTimesText}" values="${strokeWidthValues}" calcMode="spline" keySplines="${keySplinesText}" />`);
     lines.push("    </path>");
     lines.push("  </g>");
   }
@@ -380,9 +350,7 @@ class ExportScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir)
-  .register("generate", GenerateScript)
-  .register("export", ExportScript);
+const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("export", ExportScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });
 

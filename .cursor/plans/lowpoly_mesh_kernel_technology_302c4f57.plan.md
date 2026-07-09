@@ -2,27 +2,27 @@
 name: Lowpoly Mesh Kernel Technology
 overview: Split kernel/3d into kernel/3d/brep (existing B-Rep kernel, moved) and a new kernel/3d/mesh half-edge mesh kernel, then build a full new "lowpoly" technology (core/react/play) on top of it, wired into the shared playground shell exactly like sequence/procedural/puzzle.
 todos:
-  - id: phase1-move-brep
-    content: Move kernel/3d/{engine,rs,js} into kernel/3d/brep/{engine,rs,js}; update all relative path references (root Cargo.toml, flow/module/brep/Cargo.toml, script.ts files, vite-elements-assets.ts) and split AGENTS.md
-    status: completed
-  - id: phase2-mesh-kernel
-    content: "Create kernel/3d/mesh native Rust crate: half-edge mesh struct + primitives + full tool set (extrude/inset/bevel/loop-cut/knife/merge/dissolve/subdivide/triangulate/mirror/snap/proportional/decimate/shading/tessellate/obj-export) with unit tests"
-    status: completed
-  - id: phase3-lowpoly-core
-    content: "Create lowpoly/core: TS fixture types (lowpoly.fixture/v1) + Rust wasm-bindgen LowpolySession crate wrapping kernel_3d_mesh; add to root Cargo.toml workspace"
-    status: completed
-  - id: phase4-lowpoly-react
-    content: "Create lowpoly/react: LowpolyCanvas using infinite-world-r3f + UnifiedGumball/SelectionMarquee from ui/react, vertex/edge/face raycasting picking, mesh buffer building from tessellateActive()"
-    status: completed
-  - id: phase5-lowpoly-play
-    content: "Create lowpoly/play: LowpolyPlayController, toolbar tools, document/catalogue/inspector tree builders, window kind, PlaygroundLowpoly, default rock fixture"
-    status: completed
-  - id: phase6-wiring
-    content: Wire lowpoly into framework playground renderer host (bootLowpolyPlay region), vite-elements-assets.ts, root package.json/script.ts/launch.json, regenerate bun.lock, add lowpoly/AGENTS.md
-    status: completed
-  - id: phase7-verify
-    content: Run cargo tests, wasm build, vitest suites, and manually boot dev:lowpoly to confirm the playground renders and tools work
-    status: completed
+ - id: phase1-move-brep
+   content: Move kernel/3d/{engine,rs,js} into kernel/3d/brep/{engine,rs,js}; update all relative path references (root Cargo.toml, flow/module/brep/Cargo.toml, script.ts files, vite-elements-assets.ts) and split AGENTS.md
+   status: completed
+ - id: phase2-mesh-kernel
+   content: "Create kernel/3d/mesh native Rust crate: half-edge mesh struct + primitives + full tool set (extrude/inset/bevel/loop-cut/knife/merge/dissolve/subdivide/triangulate/mirror/snap/proportional/decimate/shading/tessellate/obj-export) with unit tests"
+   status: completed
+ - id: phase3-lowpoly-core
+   content: "Create lowpoly/core: TS fixture types (lowpoly.fixture/v1) + Rust wasm-bindgen LowpolySession crate wrapping kernel_3d_mesh; add to root Cargo.toml workspace"
+   status: completed
+ - id: phase4-lowpoly-react
+   content: "Create lowpoly/react: LowpolyCanvas using infinite-world-r3f + UnifiedGumball/SelectionMarquee from ui/react, vertex/edge/face raycasting picking, mesh buffer building from tessellateActive()"
+   status: completed
+ - id: phase5-lowpoly-play
+   content: "Create lowpoly/play: LowpolyPlayController, toolbar tools, document/catalogue/inspector tree builders, window kind, PlaygroundLowpoly, default rock fixture"
+   status: completed
+ - id: phase6-wiring
+   content: Wire lowpoly into framework playground renderer host (bootLowpolyPlay region), vite-elements-assets.ts, root package.json/script.ts/launch.json, regenerate bun.lock, add lowpoly/AGENTS.md
+   status: completed
+ - id: phase7-verify
+   content: Run cargo tests, wasm build, vitest suites, and manually boot dev:lowpoly to confirm the playground renders and tools work
+   status: completed
 isProject: false
 ---
 
@@ -45,8 +45,6 @@ graph TD
   brepEngine --> brepRs --> flowBrep --> brepJs
   meshKernel --> lowpolyCore --> lowpolyReact --> lowpolyPlay --> shellHost
 ```
-
-
 
 This mirrors the existing brep/flow split: `kernel/3d/mesh` is a pure-Rust geometry crate (no wasm-bindgen), consumed as a Cargo path dependency by `lowpoly/core`, which is the wasm-bindgen cdylib (same pattern as `puzzle/3d/rs` and `sequence/core`). `lowpoly/react` loads `../core/pkg/lowpoly_core.js` directly (like puzzle/3d does with `puzzle_3d.js`), no separate JS bridge module needed.
 
@@ -146,4 +144,3 @@ Single-file `lowpoly/play/index.ts` (`@semio-tech/lowpoly-play`), directly model
 - Full tool coverage from the feature list is implemented in the kernel (Phase 2); UI polish (custom cursors/icons per tool, Playwright e2e) is out of scope for this pass.
 - No changes to `@semio-tech/infinite-world-r3f` itself — sub-object (vertex/edge/face) picking is implemented locally in `lowpoly/react` to avoid leaking mesh-editing concerns into the shared world-canvas library.
 - Rig/Bones and UV/texel-density workflows from the concept list are modeled as data fields (`smoothShading`, per-face material slot placeholder) but authoring tools for UVs/bones are deferred — flagged explicitly as a follow-up rather than half-implemented.
-

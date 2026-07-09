@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Initial implementation of loading and error mechanisms for the Sketchpad app.
@@ -44,6 +45,7 @@ Initial implementation of loading and error mechanisms for the Sketchpad app.
 ## Log
 
 ## Summary
+
 # Summary
 
 Add loading spinners and not-found pages to Sketchpad

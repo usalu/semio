@@ -3304,10 +3304,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Completed OO refactoring of compose/rs. Dissolved the flatten module into a region with top-level types. Converted all serialize_kit/deserialize_kit/are_kits_equal free function call sites (~40 across lib.rs and kit_backbone_async.rs) to Kit method calls (Kit::from_json_str, kit.to_json_pretty(), kit.are_equal()). Added missing top-level imports (RefCell, Rc, VecDeque). Build passes with only warnings, all 82 tests pass.",
-            "files": [
-              "compose/rs/lib.rs",
-              "compose/rs/kit_backbone_async.rs"
-            ]
+            "files": ["compose/rs/lib.rs", "compose/rs/kit_backbone_async.rs"]
           },
           "tool_use_id": "toolu_bdrk_01Udh6jViJyHwhGXRhKmhorr__vscode-1776612600281",
           "cwd": "c:\\git\\compose"
@@ -3334,10 +3331,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Completed OO refactoring of compose/rs. Dissolved the flatten module into a region with top-level types. Converted all serialize_kit/deserialize_kit/are_kits_equal free function call sites (~40 across lib.rs and kit_backbone_async.rs) to Kit method calls (Kit::from_json_str, kit.to_json_pretty(), kit.are_equal()). Added missing top-level imports (RefCell, Rc, VecDeque). Build passes with only warnings, all 82 tests pass.",
-            "files": [
-              "compose/rs/lib.rs",
-              "compose/rs/kit_backbone_async.rs"
-            ]
+            "files": ["compose/rs/lib.rs", "compose/rs/kit_backbone_async.rs"]
           },
           "tool_use_id": "toolu_bdrk_01Udh6jViJyHwhGXRhKmhorr__vscode-1776612600281",
           "cwd": "c:\\git\\compose"
@@ -3364,10 +3358,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Completed OO refactoring of compose/rs. Dissolved the flatten module into a region with top-level types. Converted all serialize_kit/deserialize_kit/are_kits_equal free function call sites (~40 across lib.rs and kit_backbone_async.rs) to Kit method calls (Kit::from_json_str, kit.to_json_pretty(), kit.are_equal()). Added missing top-level imports (RefCell, Rc, VecDeque). Build passes with only warnings, all 82 tests pass.",
-            "files": [
-              "compose/rs/lib.rs",
-              "compose/rs/kit_backbone_async.rs"
-            ]
+            "files": ["compose/rs/lib.rs", "compose/rs/kit_backbone_async.rs"]
           },
           "tool_response": "[🎫replacerustfreefunctionswithmethods](repo://ticket/🎫replacerustfreefunctionswithmethods) - `closed` - `closed 1 hour from now`\n",
           "tool_use_id": "toolu_bdrk_01Udh6jViJyHwhGXRhKmhorr__vscode-1776612600281",
@@ -3395,10 +3386,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Completed OO refactoring of compose/rs. Dissolved the flatten module into a region with top-level types. Converted all serialize_kit/deserialize_kit/are_kits_equal free function call sites (~40 across lib.rs and kit_backbone_async.rs) to Kit method calls (Kit::from_json_str, kit.to_json_pretty(), kit.are_equal()). Added missing top-level imports (RefCell, Rc, VecDeque). Build passes with only warnings, all 82 tests pass.",
-            "files": [
-              "compose/rs/lib.rs",
-              "compose/rs/kit_backbone_async.rs"
-            ]
+            "files": ["compose/rs/lib.rs", "compose/rs/kit_backbone_async.rs"]
           },
           "tool_response": "[🎫replacerustfreefunctionswithmethods](repo://ticket/🎫replacerustfreefunctionswithmethods) - `closed` - `closed 1 hour from now`\n",
           "tool_use_id": "toolu_bdrk_01Udh6jViJyHwhGXRhKmhorr__vscode-1776612600281",

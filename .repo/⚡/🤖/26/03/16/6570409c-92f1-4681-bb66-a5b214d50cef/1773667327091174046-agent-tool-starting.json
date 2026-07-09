@@ -16,9 +16,7 @@
       "tool_info": {
         "mcp_server_name": "repo",
         "mcp_tool_arguments": {
-          "files": [
-            "elements/ui/index.ts"
-          ],
+          "files": ["elements/ui/index.ts"],
           "path": "/workspaces/semio/.repo/🎫/26/03/16/FIX-STORYBOOK-STORY-LOADING",
           "summary": "Removed server-only configuration re-exports from the `@elements/ui` runtime entrypoint so Storybook no longer bundles `eslint.config.ts` and `typescript-eslint` into the browser. Verified with a successful `npm run build` in `elements/ui`."
         },

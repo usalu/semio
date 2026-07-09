@@ -5,10 +5,7 @@
   "label": "Sweep1",
   "interaction": {
     "spatialGroundPick": false,
-    "pickDisabledStates": [
-      "idle",
-      "committed"
-    ],
+    "pickDisabledStates": ["idle", "committed"],
     "groundPointerMoveStates": [],
     "heightDragStates": [],
     "verticalRodStates": [],
@@ -41,11 +38,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        0
-                      ]
+                      "value": [0, 0, 0]
                     }
                   },
                   {
@@ -89,10 +82,7 @@
       {
         "name": "select_rail",
         "selection": {
-          "accept": [
-            "wire",
-            "edge"
-          ],
+          "accept": ["wire", "edge"],
           "multiple": true,
           "prompt": "Select rail"
         },
@@ -138,10 +128,7 @@
       {
         "name": "select_cross_section_curves",
         "selection": {
-          "accept": [
-            "wire",
-            "edge"
-          ],
+          "accept": ["wire", "edge"],
           "multiple": true,
           "prompt": "Select cross-section curves"
         },
@@ -304,11 +291,7 @@
             "text": "Select rail",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -371,11 +354,7 @@
             "text": "Select cross-section curves",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -438,11 +417,7 @@
             "text": "Adjust seams",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -505,11 +480,7 @@
             "text": "Sweep1 options",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -565,9 +536,7 @@
     ]
   },
   "commit": {
-    "fromStates": [
-      "ready"
-    ],
+    "fromStates": ["ready"],
     "operation": {
       "kind": "action",
       "action": "command.finish",

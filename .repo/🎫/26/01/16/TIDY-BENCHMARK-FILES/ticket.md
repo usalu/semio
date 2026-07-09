@@ -6,14 +6,14 @@
 
 ## Current State
 
-| Language   | Current Location                 | Target Location                        |
-| ---------- | -------------------------------- | -------------------------------------- |
-| Python     | `py/compose/benchmark.py`          | `py/compose/compose.benchmark.py`          |
-| JavaScript | `js/compose/benchmark.ts`          | `js/compose/compose.benchmark.ts`          |
-| Rust       | `rs/compose/examples/benchmark.rs` | `rs/compose/compose.benchmark.rs`          |
-| Go         | (none)                           | `go/compose/compose_benchmark.go`          |
+| Language   | Current Location                   | Target Location                        |
+| ---------- | ---------------------------------- | -------------------------------------- |
+| Python     | `py/compose/benchmark.py`          | `py/compose/compose.benchmark.py`      |
+| JavaScript | `js/compose/benchmark.ts`          | `js/compose/compose.benchmark.ts`      |
+| Rust       | `rs/compose/examples/benchmark.rs` | `rs/compose/compose.benchmark.rs`      |
+| Go         | (none)                             | `go/compose/compose_benchmark.go`      |
 | .NET       | `net/Compose.Benchmark/Program.cs` | No change (already follows convention) |
-| Reports    | `benchmark.csv`                  | `reports/benchmark.csv`                |
+| Reports    | `benchmark.csv`                    | `reports/benchmark.csv`                |
 
 ## Tasks
 
@@ -85,14 +85,14 @@ Reorganized benchmark files across all language implementations to follow a cons
 
 ## Final Structure
 
-| Language   | Location                                     |
-| ---------- | -------------------------------------------- |
-| Python     | `py/compose/compose.benchmark.py`                |
-| JavaScript | `js/compose/compose.benchmark.ts`                |
-| Rust       | `rs/compose/compose.benchmark.rs`                |
-| Go         | `go/compose/compose_benchmark.go`                |
+| Language   | Location                                       |
+| ---------- | ---------------------------------------------- |
+| Python     | `py/compose/compose.benchmark.py`              |
+| JavaScript | `js/compose/compose.benchmark.ts`              |
+| Rust       | `rs/compose/compose.benchmark.rs`              |
+| Go         | `go/compose/compose_benchmark.go`              |
 | .NET       | `net/Compose.Benchmark/Program.cs` (unchanged) |
-| Reports    | `reports/benchmark.csv`                      |
+| Reports    | `reports/benchmark.csv`                        |
 
 ## Changes Made
 

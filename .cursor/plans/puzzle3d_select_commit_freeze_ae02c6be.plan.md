@@ -24,8 +24,6 @@ flowchart LR
   hover["hover / marquee preview"] -.-> snap
 ```
 
-
-
 - Commit path: [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) `publishSelection` / `commitSelection` (~~L7302-7325), `commitMarqueeSelection` (~~L7420-7438); host wiring [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) L1585 `onSelect -> noteSelection`.
 - Shell bump: [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) `notifySelection` (L1038-1045) -> `emit()` -> [framework/core/index.ts](framework/core/index.ts) `Platform.notify()` (L1029-1035).
 - `Platform.notify()` itself is cheap (`invalidateResolvedState` only nulls a cache, L910-912). The ~6s is the synchronous React re-render of `runtime.generation` subscribers that fire on the bump: the canvas window body [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) `ShellDeclarativeWindowBody` (L675-692), the side panels `DeclarativeSidePanelBody` / `PlaygroundDeclarativeTree` (L443-472, L788-809), and shell chrome.

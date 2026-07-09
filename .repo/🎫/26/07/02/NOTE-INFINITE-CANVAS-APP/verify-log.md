@@ -3,20 +3,24 @@
 ## Grid & window options (2026-07-03)
 
 ### Grid
+
 - Replaced finite 8000×8000 world-space SVG with viewport-aligned `NoteViewportGrid` (screen space, camera-offset pattern)
 - Grid fills entire canvas at any pan/zoom (`hasViewportGrid: true`, canvas SVG rect matches viewport)
 - Document fields: `gridSpacing`, `gridSubdivisions`, `gridOpacity`, `snapGridSpacing`
 - Snap on block place/paste and on move release when `snapEnabled`
 
 ### Window options (measures rail)
+
 - Grouped sections: **Camera** (zoom), **Grid** (show, major spacing, subdivisions, opacity), **Snap** (enable, spacing), **Drawing** (pencil, eraser)
 - Toggles use `iconId` + descriptive `text` labels
 - Engagement status shows grid/snap summary
 
 ### Tests
+
 - `bun run test:note` — PASSED (note-core 11 tests, note-react 2 tests)
 
 ### Runtime verify
+
 - http://127.0.0.1:6080/ — Window Options rail shows CAMERA / GRID / SNAP / DRAWING groups with labeled sliders
 
 ## Dev host E2E
@@ -29,6 +33,7 @@
 ## Feature completion (2026-07-02)
 
 ### Core model (`note/core/internal.ts`)
+
 - Rich text: `NoteTextParagraph` / `NoteTextRun` with bold/italic/underline/link marks
 - Eraser tools: `eraserStroke`, `eraserPoint` + `eraserRadius` document field
 - Geometry: `noteSelectionBounds`, `noteScaleBlockWithinGroup`, `noteResizeBounds`
@@ -37,15 +42,18 @@
 - Image assets: `noteImageAssetDataUrl`, `createNoteImageAssetFromDataUrl`, `createNoteImageAssetKey`
 
 ### Controller (`note/core/index.ts`)
+
 - Commands: `deleteSelection`, `duplicateSelection`, `clearSelection`, `nudgeSelection`, `undo`, `redo`
 - Table inspector: Add/Remove Row/Column buttons
 - Eraser radius slider + stroke/point eraser tool toggles
 
 ### Keybindings (`note/core/playground.ts` + renderer)
+
 - `ctrl+a`, `delete/backspace`, `ctrl+d`, `ctrl+z`, `ctrl+shift+z/ctrl+y`, `escape`, arrow nudge (shift = 10px)
 - `playgroundKeybindings={playground.keybindings}` wired in `NotePlayInner`
 
 ### React canvas (`note/react/index.tsx`)
+
 - Double-click empty canvas → create text block + inline editor
 - Double-click text block → rich text overlay (B/I/U/Link toolbar, contenteditable)
 - Double-click table cell → inline cell editor (Enter/Tab advance)
@@ -57,6 +65,7 @@
 - Copy/paste: `cmd+c`/`cmd+v` block clipboard JSON; OS image/SVG paste creates image blocks; plain text paste creates text block
 
 ### Fixtures
+
 - `note/fixture/semio.note.json` updated to `paragraphs` schema
 - `note/manifest/blocks.manifest.json` text property → `paragraphs`
 

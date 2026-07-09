@@ -119,7 +119,7 @@ async function dragOnCanvas(canvas, from, to) {
 }
 
 function nodePorts(node, input) {
-  if (node.kind === "computation") return input ? node.inputs ?? [] : node.outputs ?? [];
+  if (node.kind === "computation") return input ? (node.inputs ?? []) : (node.outputs ?? []);
   if (input && node.kind === "screen") return [node.input];
   if (!input && (node.kind === "slider" || node.kind === "select")) return [node.output];
   return [];

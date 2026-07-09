@@ -6,9 +6,5 @@
   "goal": "🎯puzzle3d🎯puzzle3dplay",
   "summary": "Replaced oriented-box 3-point draw with voxel brush: Alt held paints axis-aligned voxels at cursor grid cell; release Alt for voxel-only selection. Voxel size stepper in fill edit engagement. Fill containment unchanged (WorldVolumeProps per cell).",
   "sessions": [],
-  "files": [
-    "puzzle/3d/react/index.tsx",
-    "puzzle/3d/play/index.ts",
-    "framework/product/playground/renderer/react/index.tsx"
-  ]
+  "files": ["puzzle/3d/react/index.tsx", "puzzle/3d/play/index.ts", "framework/product/playground/renderer/react/index.tsx"]
 }

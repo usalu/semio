@@ -16804,10 +16804,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Fixed two issues in the sketchpad workbench:\n\n1. **Tooltip fix**: Added translation entries for workbench action IDs in both EN and DE so tooltips show \"Add Piece\" / \"Duplicate Type\" instead of the raw action ID strings like `compose.sketchpad.app.design.panel.workbench.types.addPiece`. Added translations for:\n   - `compose.sketchpad.app.design.panel.workbench.types.addPiece`\n   - `compose.sketchpad.app.design.panel.workbench.types.duplicateType`\n   - `compose.sketchpad.app.design.panel.workbench.designs.addPiece`\n\n2. **Piece creation consistency**: Added `id_` field to pieces created via workbench `+` buttons (both type and design), matching the drag-drop creation path which already sets `id_`. This ensures consistent piece identification across all creation paths.\n\nFiles changed:\n- `elements/ui/index.tsx` (translation entries in EN and DE)\n- `compose/sketchpad/index.tsx` (piece creation consistency)\n\nAll 134 tests pass.",
-            "files_updated": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ]
+            "files_updated": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_bdrk_0172WJW63BLtSnBpAqZRT8t8__vscode-1775022551642",
           "cwd": "/workspaces/semio"
@@ -16834,10 +16831,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Fixed two issues in the sketchpad workbench:\n\n1. **Tooltip fix**: Added translation entries for workbench action IDs in both EN and DE so tooltips show \"Add Piece\" / \"Duplicate Type\" instead of the raw action ID strings like `compose.sketchpad.app.design.panel.workbench.types.addPiece`. Added translations for:\n   - `compose.sketchpad.app.design.panel.workbench.types.addPiece`\n   - `compose.sketchpad.app.design.panel.workbench.types.duplicateType`\n   - `compose.sketchpad.app.design.panel.workbench.designs.addPiece`\n\n2. **Piece creation consistency**: Added `id_` field to pieces created via workbench `+` buttons (both type and design), matching the drag-drop creation path which already sets `id_`. This ensures consistent piece identification across all creation paths.\n\nFiles changed:\n- `elements/ui/index.tsx` (translation entries in EN and DE)\n- `compose/sketchpad/index.tsx` (piece creation consistency)\n\nAll 134 tests pass.",
-            "files_updated": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ]
+            "files_updated": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_bdrk_0172WJW63BLtSnBpAqZRT8t8__vscode-1775022551642",
           "cwd": "/workspaces/semio"
@@ -17229,10 +17223,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/979b1c3b-2648-4fd3-ab75-6d92f06050e5.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files_updated": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "files_updated": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "summary": "Fixed two issues in the sketchpad workbench:\\n\\n1. Tooltip fix: Added i18n translation entries (EN+DE) for workbench action IDs at compose.sketchpad.app.design.panel.workbench.{types.addPiece, types.duplicateType, designs.addPiece} so tooltips show human-readable labels instead of raw action ID strings.\\n\\n2. Piece creation consistency: Added id_ field to pieces created via workbench + buttons for both type and design rows, matching the drag-drop creation path.\\n\\nAll 134 tests pass.",
             "ticket": "2026/04/01/FIX-ADD-PIECE-TOOLTIP-AND-TYPE-MODEL-LINKING"
           },
@@ -17260,10 +17251,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/979b1c3b-2648-4fd3-ab75-6d92f06050e5.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "files_updated": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ],
+            "files_updated": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"],
             "summary": "Fixed two issues in the sketchpad workbench:\\n\\n1. Tooltip fix: Added i18n translation entries (EN+DE) for workbench action IDs at compose.sketchpad.app.design.panel.workbench.{types.addPiece, types.duplicateType, designs.addPiece} so tooltips show human-readable labels instead of raw action ID strings.\\n\\n2. Piece creation consistency: Added id_ field to pieces created via workbench + buttons for both type and design rows, matching the drag-drop creation path.\\n\\nAll 134 tests pass.",
             "ticket": "2026/04/01/FIX-ADD-PIECE-TOOLTIP-AND-TYPE-MODEL-LINKING"
           },
@@ -17407,10 +17395,7 @@
           "tool_input": {
             "path": "/workspaces/semio/.repo/🎫/26/04/01/FIX-ADD-PIECE-TOOLTIP-AND-TYPE-MODEL-LINKING",
             "summary": "Fixed two issues in the sketchpad workbench: 1) Added i18n translation entries (EN+DE) for workbench action IDs at compose.sketchpad.app.design.panel.workbench so tooltips show human-readable labels like 'Add Piece' and 'Duplicate Type' instead of raw action ID strings. 2) Added id_ field to pieces created via workbench + buttons for consistency with the drag-drop creation path. All 134 tests pass.",
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_bdrk_01DtXBXsV8GN3Zd2DcB1Q28B__vscode-1775022551648",
           "cwd": "/workspaces/semio"
@@ -17438,10 +17423,7 @@
           "tool_input": {
             "path": "/workspaces/semio/.repo/🎫/26/04/01/FIX-ADD-PIECE-TOOLTIP-AND-TYPE-MODEL-LINKING",
             "summary": "Fixed two issues in the sketchpad workbench: 1) Added i18n translation entries (EN+DE) for workbench action IDs at compose.sketchpad.app.design.panel.workbench so tooltips show human-readable labels like 'Add Piece' and 'Duplicate Type' instead of raw action ID strings. 2) Added id_ field to pieces created via workbench + buttons for consistency with the drag-drop creation path. All 134 tests pass.",
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_bdrk_01DtXBXsV8GN3Zd2DcB1Q28B__vscode-1775022551648",
           "cwd": "/workspaces/semio"
@@ -17468,10 +17450,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Fixed two issues in the sketchpad workbench: 1) Added i18n translation entries (EN+DE) for workbench action IDs at compose.sketchpad.app.design.panel.workbench so tooltips show human-readable labels like 'Add Piece' and 'Duplicate Type' instead of raw action ID strings. 2) Added id_ field to pieces created via workbench + buttons for consistency with the drag-drop creation path. All 134 tests pass.",
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_bdrk_01QnTauv2hNpLu5NEwJgb9N8__vscode-1775022551649",
           "cwd": "/workspaces/semio"
@@ -17498,10 +17477,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "summary": "Fixed two issues in the sketchpad workbench: 1) Added i18n translation entries (EN+DE) for workbench action IDs at compose.sketchpad.app.design.panel.workbench so tooltips show human-readable labels like 'Add Piece' and 'Duplicate Type' instead of raw action ID strings. 2) Added id_ field to pieces created via workbench + buttons for consistency with the drag-drop creation path. All 134 tests pass.",
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_bdrk_01QnTauv2hNpLu5NEwJgb9N8__vscode-1775022551649",
           "cwd": "/workspaces/semio"
@@ -17584,10 +17560,7 @@
             "no_github": true,
             "path": "26/04/01/FIX-ADD-PIECE-TOOLTIP-AND-TYPE-MODEL-LINKING",
             "summary": "Fixed two issues in the sketchpad workbench: 1) Added i18n translation entries (EN+DE) for workbench action IDs at compose.sketchpad.app.design.panel.workbench so tooltips show human-readable labels like Add Piece and Duplicate Type instead of raw action ID strings. 2) Added id_ field to pieces created via workbench + buttons for consistency with the drag-drop creation path. All 134 tests pass.",
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_bdrk_014kMSBEXwBNoq2ngzX8LP65__vscode-1775022551651",
           "cwd": "/workspaces/semio"
@@ -17616,10 +17589,7 @@
             "no_github": true,
             "path": "26/04/01/FIX-ADD-PIECE-TOOLTIP-AND-TYPE-MODEL-LINKING",
             "summary": "Fixed two issues in the sketchpad workbench: 1) Added i18n translation entries (EN+DE) for workbench action IDs at compose.sketchpad.app.design.panel.workbench so tooltips show human-readable labels like Add Piece and Duplicate Type instead of raw action ID strings. 2) Added id_ field to pieces created via workbench + buttons for consistency with the drag-drop creation path. All 134 tests pass.",
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"]
           },
           "tool_use_id": "toolu_bdrk_014kMSBEXwBNoq2ngzX8LP65__vscode-1775022551651",
           "cwd": "/workspaces/semio"
@@ -17648,10 +17618,7 @@
             "no_github": true,
             "path": "26/04/01/FIX-ADD-PIECE-TOOLTIP-AND-TYPE-MODEL-LINKING",
             "summary": "Fixed two issues in the sketchpad workbench: 1) Added i18n translation entries (EN+DE) for workbench action IDs at compose.sketchpad.app.design.panel.workbench so tooltips show human-readable labels like Add Piece and Duplicate Type instead of raw action ID strings. 2) Added id_ field to pieces created via workbench + buttons for consistency with the drag-drop creation path. All 134 tests pass.",
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"]
           },
           "tool_response": "[🎫fixaddpiecetooltipandtypemodellinking](repo://ticket/🎫fixaddpiecetooltipandtypemodellinking) - `closed` - `closed now`\n",
           "tool_use_id": "toolu_bdrk_014kMSBEXwBNoq2ngzX8LP65__vscode-1775022551651",
@@ -17681,10 +17648,7 @@
             "no_github": true,
             "path": "26/04/01/FIX-ADD-PIECE-TOOLTIP-AND-TYPE-MODEL-LINKING",
             "summary": "Fixed two issues in the sketchpad workbench: 1) Added i18n translation entries (EN+DE) for workbench action IDs at compose.sketchpad.app.design.panel.workbench so tooltips show human-readable labels like Add Piece and Duplicate Type instead of raw action ID strings. 2) Added id_ field to pieces created via workbench + buttons for consistency with the drag-drop creation path. All 134 tests pass.",
-            "files": [
-              "elements/ui/index.tsx",
-              "compose/sketchpad/index.tsx"
-            ]
+            "files": ["elements/ui/index.tsx", "compose/sketchpad/index.tsx"]
           },
           "tool_response": "[🎫fixaddpiecetooltipandtypemodellinking](repo://ticket/🎫fixaddpiecetooltipandtypemodellinking) - `closed` - `closed now`\n",
           "tool_use_id": "toolu_bdrk_014kMSBEXwBNoq2ngzX8LP65__vscode-1775022551651",

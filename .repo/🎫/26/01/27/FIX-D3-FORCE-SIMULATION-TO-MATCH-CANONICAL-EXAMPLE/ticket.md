@@ -1,18 +1,21 @@
 # Ticket: Fix D3 Force Simulation To Match Canonical Example
 
 ## Todos
+
 - [x] Add ref to track drag-initiated reheat
 - [x] Update handleNodeDragStart with event.active pattern
-- [x] Update handleNodeDrag to only update fixed position  
+- [x] Update handleNodeDrag to only update fixed position
 - [x] Update handleNodeDragStop with event.active pattern
 - [x] Test drag behavior matches canonical example
 
 ## Changes
 
 ### Kit.tsx
+
 Implementing proper D3 force simulation drag behavior following the canonical example pattern from https://d3js.org/d3-force.
 
 Key changes:
+
 - Add `isDragReheatActiveRef` to track if we initiated the simulation reheat
 - Check simulation alpha before reheating (equivalent to `if (!event.active)`)
 - Only cool down simulation if we were the ones who reheated it
@@ -21,6 +24,7 @@ Key changes:
 ## Log
 
 ### Implementation Complete
+
 - Added `isDragReheatActiveRef` to track if drag initiated the simulation reheat
 - Updated `handleNodeDragStart`:
   - Checks if `simulation.alpha() < 0.3` before reheating (equivalent to `if (!event.active)`)
@@ -36,6 +40,7 @@ Key changes:
   - Clears tracking ref
 
 The implementation now exactly matches the canonical D3 force example pattern where:
+
 - Dragging a node reheats the simulation if it's cooled down
 - Other nodes respond in real-time through force calculations
 - Connected nodes are pulled via link forces

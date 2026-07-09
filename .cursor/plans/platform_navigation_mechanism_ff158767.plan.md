@@ -2,30 +2,30 @@
 name: Platform Navigation Mechanism
 overview: Build a general platform-product navigation mechanism (URL-synced back/forward/up/breadcrumb + six fixed panel slots shown as navbar toggles only when an app registers tabs) into the framework platform product, then wire it into sketchpad.
 todos:
-  - id: core-panelkind
-    content: "framework/core: add PanelKind type + groupings, add SideTabSpec.panel, replace leftTabs/rightTabs with panelTabs on runtimes/ResolvedState/mergeMode"
-    status: completed
-  - id: platform-core
-    content: "framework platform core: mirror panelTabs rename across AppRuntime/ModeRuntime/mergeMode/AppDefinition/ModeDefinition/plugin host"
-    status: completed
-  - id: renderer-panels
-    content: "Platform React renderer: group panelTabs by kind, dynamic navbar toggles (only when tabs exist), add left-panel-kind switching, rename options->settings"
-    status: completed
-  - id: renderer-breadcrumb
-    content: "Platform React renderer: replace raw-URI navbar item with Breadcrumb from @semio-tech/ui-react + optional platform.breadcrumb override hook"
-    status: completed
-  - id: renderer-history
-    content: "Platform React renderer: add platform.applyUri + browser-history wrapper around PlatformView; wire into ReactUI.mount/mountPlatform"
-    status: completed
-  - id: playground
-    content: "framework playground core: update buildPlaygroundWorkbenchApp to panelTabs"
-    status: completed
-  - id: sketchpad
-    content: "Sketchpad: convert apps to panelTabs with panel kinds, set platform.applyUri, remove wireSketchpadBrowserNavigation, optional breadcrumb override"
-    status: completed
-  - id: tests
-    content: Extend existing vitest test regions for toggles/breadcrumb/setting/history; typecheck + run suites + runtime verify in sketchpad
-    status: completed
+ - id: core-panelkind
+   content: "framework/core: add PanelKind type + groupings, add SideTabSpec.panel, replace leftTabs/rightTabs with panelTabs on runtimes/ResolvedState/mergeMode"
+   status: completed
+ - id: platform-core
+   content: "framework platform core: mirror panelTabs rename across AppRuntime/ModeRuntime/mergeMode/AppDefinition/ModeDefinition/plugin host"
+   status: completed
+ - id: renderer-panels
+   content: "Platform React renderer: group panelTabs by kind, dynamic navbar toggles (only when tabs exist), add left-panel-kind switching, rename options->settings"
+   status: completed
+ - id: renderer-breadcrumb
+   content: "Platform React renderer: replace raw-URI navbar item with Breadcrumb from @semio-tech/ui-react + optional platform.breadcrumb override hook"
+   status: completed
+ - id: renderer-history
+   content: "Platform React renderer: add platform.applyUri + browser-history wrapper around PlatformView; wire into ReactUI.mount/mountPlatform"
+   status: completed
+ - id: playground
+   content: "framework playground core: update buildPlaygroundWorkbenchApp to panelTabs"
+   status: completed
+ - id: sketchpad
+   content: "Sketchpad: convert apps to panelTabs with panel kinds, set platform.applyUri, remove wireSketchpadBrowserNavigation, optional breadcrumb override"
+   status: completed
+ - id: tests
+   content: Extend existing vitest test regions for toggles/breadcrumb/setting/history; typecheck + run suites + runtime verify in sketchpad
+   status: completed
 isProject: false
 ---
 
@@ -50,8 +50,6 @@ flowchart LR
   PV --> navbar["Navbar: back/fwd/up + Breadcrumb + search + find + panel toggles"]
   app["activeApp.panelTabs (panel kind)"] --> toggles["toggles shown only for non-empty kinds"]
 ```
-
-
 
 ## Ticket workflow (first + last step)
 
@@ -112,4 +110,3 @@ Extend the existing `🧪Tests` regions (no new test files): toggles hidden when
 - "windows"/"overview" have no built-in special content; they are fixed slots filled by app-registered tabs (per your clarification). Sketchpad will register at least `windows`.
 - `options` is renamed to `settings` everywhere (ids, toggles, default tab).
 - Svelte renderer stubs untouched (React is the only implementation).
-

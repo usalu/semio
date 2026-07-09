@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Sketchpad UI elements accepted an optional `transaction` prop that could override the ambient `TransactionProvider` context. This leaked transaction plumbing through most form controls and encouraged repeated `useKitTransaction()` / `useKitAppTransaction()` calls at call sites.
@@ -22,6 +23,7 @@ Sketchpad UI elements accepted an optional `transaction` prop that could overrid
 ## Log
 
 ## Summary
+
 # Summary
 
 Remove transaction props from elements

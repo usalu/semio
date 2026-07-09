@@ -12,43 +12,43 @@ const baseUrl = `http://${host}:${port}/?plugin=flow`;
 const logPath = join(ticketDir, "e2e-verify-log.md");
 
 function run(args, opts = {}) {
-	const result = spawnSync("bun", args, {
-		cwd: repoRoot,
-		stdio: "inherit",
-		...opts,
-	});
-	if (result.status !== 0) throw new Error(`bun ${args.join(" ")} failed`);
+  const result = spawnSync("bun", args, {
+    cwd: repoRoot,
+    stdio: "inherit",
+    ...opts,
+  });
+  if (result.status !== 0) throw new Error(`bun ${args.join(" ")} failed`);
 }
 
 async function waitForHttp(url, attempts = 90) {
-	for (let i = 0; i < attempts; i++) {
-		try {
-			const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
-			if (res.ok) return res;
-		} catch {
-			/* retry */
-		}
-		await new Promise((resolve) => setTimeout(resolve, 1000));
-	}
-	throw new Error(`timeout waiting for ${url}`);
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
+      if (res.ok) return res;
+    } catch {
+      /* retry */
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  throw new Error(`timeout waiting for ${url}`);
 }
 
 const lines = ["# Flow wgpu parity verify", ""];
 function log(line) {
-	console.log(line);
-	lines.push(line);
+  console.log(line);
+  lines.push(line);
 }
 
 mkdirSync(ticketDir, { recursive: true });
 
 log("[DEBUG] building flow wasm plugin");
 run(["framework/product/os/dev/script.ts", "plugin", "flow"], {
-	env: { ...process.env, SEMIO_PLUGIN: "flow", SKIP_ENGINE_BUILD: "1" },
+  env: { ...process.env, SEMIO_PLUGIN: "flow", SKIP_ENGINE_BUILD: "1" },
 });
 
 log("[DEBUG] building wgpu trunk renderer");
 run(["framework/renderer/wgpu/script.ts", "wasm"], {
-	env: { ...process.env, NO_COLOR: undefined, FORCE_COLOR: undefined },
+  env: { ...process.env, NO_COLOR: undefined, FORCE_COLOR: undefined },
 });
 
 const dist = join(repoRoot, "framework/product/os/dev/renderer-modules/wgpu");
@@ -58,33 +58,33 @@ if (!existsSync(join(dist, "index.html"))) throw new Error("missing trunk index.
 
 log(`[DEBUG] starting trunk serve on ${baseUrl}`);
 const trunk = spawn("trunk", ["serve", "--config", "Trunk.toml", "--port", port], {
-	cwd: join(repoRoot, "framework/renderer/wgpu"),
-	stdio: "inherit",
-	env: { ...process.env, NO_COLOR: undefined, FORCE_COLOR: undefined },
+  cwd: join(repoRoot, "framework/renderer/wgpu"),
+  stdio: "inherit",
+  env: { ...process.env, NO_COLOR: undefined, FORCE_COLOR: undefined },
 });
 
 try {
-	const indexRes = await waitForHttp(baseUrl);
-	const indexHtml = await indexRes.text();
-	if (!indexHtml.includes('id="root"')) throw new Error("index.html missing #root");
-	if (!indexHtml.includes("semio-framework-renderer-wgpu")) {
-		throw new Error("index.html missing wgpu renderer module");
-	}
+  const indexRes = await waitForHttp(baseUrl);
+  const indexHtml = await indexRes.text();
+  if (!indexHtml.includes('id="root"')) throw new Error("index.html missing #root");
+  if (!indexHtml.includes("semio-framework-renderer-wgpu")) {
+    throw new Error("index.html missing wgpu renderer module");
+  }
 
-	const bootRes = await fetch(`http://${host}:${port}/boot.js`, { signal: AbortSignal.timeout(5000) });
-	if (!bootRes.ok) throw new Error(`boot.js fetch failed: ${bootRes.status}`);
-	const bootSource = await bootRes.text();
-	if (!bootSource.includes("flow")) throw new Error("boot.ts missing flow plugin target");
+  const bootRes = await fetch(`http://${host}:${port}/boot.js`, { signal: AbortSignal.timeout(5000) });
+  if (!bootRes.ok) throw new Error(`boot.js fetch failed: ${bootRes.status}`);
+  const bootSource = await bootRes.text();
+  if (!bootSource.includes("flow")) throw new Error("boot.ts missing flow plugin target");
 
-	const pluginRes = await fetch(`http://${host}:${port}/plugin-modules/flow/flow_plugin.js`, {
-		signal: AbortSignal.timeout(5000),
-	});
-	if (!pluginRes.ok) throw new Error(`flow plugin js missing: ${pluginRes.status}`);
+  const pluginRes = await fetch(`http://${host}:${port}/plugin-modules/flow/flow_plugin.js`, {
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!pluginRes.ok) throw new Error(`flow plugin js missing: ${pluginRes.status}`);
 
-	log(`[DEBUG] flow wgpu e2e boot verify passed (${baseUrl})`);
-	log("");
-	log("Manual screenshot pass: default zoom, zoomed LOD, selected node, area-select drag.");
+  log(`[DEBUG] flow wgpu e2e boot verify passed (${baseUrl})`);
+  log("");
+  log("Manual screenshot pass: default zoom, zoomed LOD, selected node, area-select drag.");
 } finally {
-	trunk.kill("SIGTERM");
-	writeFileSync(logPath, `${lines.join("\n")}\n`);
+  trunk.kill("SIGTERM");
+  writeFileSync(logPath, `${lines.join("\n")}\n`);
 }

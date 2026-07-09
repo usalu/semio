@@ -2,21 +2,21 @@
 name: Breadcrumb Navigation Mechanism
 overview: Introduce a framework-level navigation-tree mechanism (breadcrumb decoupled from URL and VFS) whose separators dynamically suggest alternatives, then wire sketchpad to it with the Home > Kits > {Kit} > Typologies > {Typology} > Designs > {Design} document.
 todos:
-  - id: core-model
-    content: "framework/core: replace PlatformBreadcrumbItem/breadcrumb with NavigationDestination, NavigationLevel, and Platform.navigation hook"
-    status: completed
-  - id: renderer
-    content: "Platform React renderer: add navigationTrailToBreadcrumbItems mapping alternatives->options, prefer platform.navigation in breadcrumb useMemo"
-    status: completed
-  - id: sketchpad
-    content: "Sketchpad: implement sketchpadNavigation building Home>Kits>{Kit}>Typologies>{Typology}>Designs>{Design} with alternatives; wire platform.navigation; add typology-resolution helpers"
-    status: completed
-  - id: tests
-    content: "Extend existing vitest regions: renderer mapping test + sketchpad navigation trail/alternatives tests; typecheck and run suites"
-    status: completed
-  - id: ticket
-    content: Open repo ticket under best goal, keep temp files in ticket folder, close ticket with summary
-    status: completed
+ - id: core-model
+   content: "framework/core: replace PlatformBreadcrumbItem/breadcrumb with NavigationDestination, NavigationLevel, and Platform.navigation hook"
+   status: completed
+ - id: renderer
+   content: "Platform React renderer: add navigationTrailToBreadcrumbItems mapping alternatives->options, prefer platform.navigation in breadcrumb useMemo"
+   status: completed
+ - id: sketchpad
+   content: "Sketchpad: implement sketchpadNavigation building Home>Kits>{Kit}>Typologies>{Typology}>Designs>{Design} with alternatives; wire platform.navigation; add typology-resolution helpers"
+   status: completed
+ - id: tests
+   content: "Extend existing vitest regions: renderer mapping test + sketchpad navigation trail/alternatives tests; typecheck and run suites"
+   status: completed
+ - id: ticket
+   content: Open repo ticket under best goal, keep temp files in ticket folder, close ticket with summary
+   status: completed
 isProject: false
 ---
 
@@ -34,8 +34,6 @@ flowchart LR
   map --> bc["Breadcrumb items[].options"]
   bc --> sep["> separator dropdown = alternatives"]
 ```
-
-
 
 ## 1. Framework core model — [framework/core/index.ts](framework/core/index.ts)
 
@@ -83,4 +81,3 @@ Per repo rules: read `repo://goals`, `ticket_open` a ticket (e.g. "Breadcrumb Na
 
 - Playground and presentation products (no navigation chrome there, per your decision).
 - Adding a typology segment to the URL (breadcrumb stays decoupled from URL).
-

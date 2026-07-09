@@ -1,0 +1,13 @@
+{
+  "title": "VCS Backbones and Sync Tool Category",
+  "emoji": "🗄️",
+  "status": "open",
+  "description": "Refactor vcs to four canonical backbones (Temporary, File, Folder, Remote), make them the single persistence path for os and playground documents, and add a shell-injected Sync tool category with attach cards in both React and WGPU renderers.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1881"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪7698b5e155ed4901a6139766417dae31"
+  ]
+}

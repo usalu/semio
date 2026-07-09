@@ -2,36 +2,36 @@
 name: 2D references on grid
 overview: Add a shared "2D reference" primitive to the infinite world (@semio-tech/infinite-world-r3f) that places png/jpg, svg, and pdf images on the grid plane as textured planes that can be moved, resized, rotated, locked, and hidden, then wire it into both puzzle 3d and CAD.
 todos:
-  - id: ticket
-    content: Open repo ticket (INFINITE-WORLD-2D-REFERENCES) associated with the best repo://goals goal
-    status: completed
-  - id: media-port
-    content: Add ReferenceMediaPort + default wiring (TextureLoader for image, canvas rasterize for svg, pdfjs-dist for pdf) in ui/react, behind interface
-    status: completed
-  - id: world-primitive
-    content: "Add #region Reference to infinite/world/r3f: WorldReferenceProps, WorldReferencePlane, WorldReferenceGumball, WorldReferenceLayer, applyWorldReferenceTransform; reuse WorldEntityFlags + UnifiedGumball"
-    status: completed
-  - id: puzzle-schema
-    content: Extend puzzle 3d Fixture with references[] + parse/encode + pure ops (add/update/relocate)
-    status: completed
-  - id: puzzle-scene
-    content: Render WorldReferenceLayer in puzzle 3d scene with registry selection/hover and relocate wiring
-    status: completed
-  - id: puzzle-play
-    content: "Puzzle 3d play: import-reference command, file drop placement, document References group with hide/lock toggles, toolbar/launch.json entries"
-    status: completed
-  - id: cad-scene
-    content: "CAD: add cad.references WorldLayer in InteractionSpatialView + references store + selection/gumball commit + flags filtering"
-    status: completed
-  - id: cad-play
-    content: "CAD play: import-reference command, document References group with hide/lock, toolbar/launch.json entries, .model.json references sidecar"
-    status: completed
-  - id: assets-fixtures
-    content: Add Vite static alias for infinite/fixture and seed puzzle + CAD fixtures referencing sketch.png and site.pdf
-    status: completed
-  - id: verify
-    content: Extend existing tests; run play apps and confirm runtime move/resize/rotate/lock/hide for png + pdf with [DEBUG] logs; close ticket
-    status: completed
+ - id: ticket
+   content: Open repo ticket (INFINITE-WORLD-2D-REFERENCES) associated with the best repo://goals goal
+   status: completed
+ - id: media-port
+   content: Add ReferenceMediaPort + default wiring (TextureLoader for image, canvas rasterize for svg, pdfjs-dist for pdf) in ui/react, behind interface
+   status: completed
+ - id: world-primitive
+   content: "Add #region Reference to infinite/world/r3f: WorldReferenceProps, WorldReferencePlane, WorldReferenceGumball, WorldReferenceLayer, applyWorldReferenceTransform; reuse WorldEntityFlags + UnifiedGumball"
+   status: completed
+ - id: puzzle-schema
+   content: Extend puzzle 3d Fixture with references[] + parse/encode + pure ops (add/update/relocate)
+   status: completed
+ - id: puzzle-scene
+   content: Render WorldReferenceLayer in puzzle 3d scene with registry selection/hover and relocate wiring
+   status: completed
+ - id: puzzle-play
+   content: "Puzzle 3d play: import-reference command, file drop placement, document References group with hide/lock toggles, toolbar/launch.json entries"
+   status: completed
+ - id: cad-scene
+   content: "CAD: add cad.references WorldLayer in InteractionSpatialView + references store + selection/gumball commit + flags filtering"
+   status: completed
+ - id: cad-play
+   content: "CAD play: import-reference command, document References group with hide/lock, toolbar/launch.json entries, .model.json references sidecar"
+   status: completed
+ - id: assets-fixtures
+   content: Add Vite static alias for infinite/fixture and seed puzzle + CAD fixtures referencing sketch.png and site.pdf
+   status: completed
+ - id: verify
+   content: Extend existing tests; run play apps and confirm runtime move/resize/rotate/lock/hide for png + pdf with [DEBUG] logs; close ticket
+   status: completed
 isProject: false
 ---
 
@@ -53,8 +53,6 @@ flowchart TD
   world --> puzzle
   world --> cad
 ```
-
-
 
 Key existing hooks to reuse (no reinvention):
 
@@ -126,4 +124,3 @@ In [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx): add import-
 
 - Work inside a new repo ticket (`ticket_open`, slug e.g. `INFINITE-WORLD-2D-REFERENCES`), associated with the most appropriate goal from `repo://goals`; temp files/logs live in the ticket folder.
 - Structure all new code with `#region`/subregions; concise code, emoji-prefixed docstrings; no comments inside definitions; no direct external-lib imports (pdf.js only behind the port).
-

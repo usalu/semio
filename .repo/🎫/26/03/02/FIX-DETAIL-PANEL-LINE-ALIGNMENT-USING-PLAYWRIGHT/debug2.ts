@@ -4,25 +4,25 @@ async function main() {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const page = await context.newPage();
-  
+
   await page.goto("http://127.0.0.1:6006/iframe.html?id=elements-aggregation-tree--panel&viewMode=story");
   await page.waitForTimeout(3000);
-  
+
   const data = await page.evaluate(() => {
     const results: any[] = [];
-    
+
     // For each tree item row, find the indentation lines and chevron within it
-    document.querySelectorAll('[data-slot="tree-item-row"], [data-slot="tree-section-row"]').forEach(row => {
+    document.querySelectorAll('[data-slot="tree-item-row"], [data-slot="tree-section-row"]').forEach((row) => {
       const rowRect = row.getBoundingClientRect();
       const style = window.getComputedStyle(row);
-      const slot = row.getAttribute('data-slot');
-      const label = row.querySelector('[data-slot="tree-label"]')?.textContent || '?';
-      
+      const slot = row.getAttribute("data-slot");
+      const label = row.querySelector('[data-slot="tree-label"]')?.textContent || "?";
+
       // Find chevron (first svg within a button, or first svg if no button)
-      const button = row.querySelector('button');
-      const chevronSvg = button?.querySelector('svg');
-      const iconSvg = row.querySelector(':scope > span > svg') || row.querySelector(':scope > span svg');
-      
+      const button = row.querySelector("button");
+      const chevronSvg = button?.querySelector("svg");
+      const iconSvg = row.querySelector(":scope > span > svg") || row.querySelector(":scope > span svg");
+
       let chevronCenterX = null;
       let chevronOffsetFromRow = null;
       if (chevronSvg) {
@@ -30,7 +30,7 @@ async function main() {
         chevronCenterX = chevronRect.x + chevronRect.width / 2;
         chevronOffsetFromRow = chevronCenterX - rowRect.x;
       }
-      
+
       let iconCenterX = null;
       let iconOffsetFromRow = null;
       if (iconSvg && iconSvg !== chevronSvg) {
@@ -38,12 +38,12 @@ async function main() {
         iconCenterX = iconRect.x + iconRect.width / 2;
         iconOffsetFromRow = iconCenterX - rowRect.x;
       }
-      
+
       // Find indentation lines within this row
-      const lineContainer = row.querySelector('.pointer-events-none');
+      const lineContainer = row.querySelector(".pointer-events-none");
       const lines: any[] = [];
       if (lineContainer) {
-        lineContainer.querySelectorAll('.bg-muted-foreground\\/40').forEach(line => {
+        lineContainer.querySelectorAll(".bg-muted-foreground\\/40").forEach((line) => {
           const lineRect = line.getBoundingClientRect();
           if (lineRect.height > 0) {
             lines.push({
@@ -54,7 +54,7 @@ async function main() {
           }
         });
       }
-      
+
       results.push({
         slot,
         label,
@@ -67,10 +67,10 @@ async function main() {
         lines,
       });
     });
-    
+
     return results;
   });
-  
+
   console.log("[DEBUG] === STORYBOOK TREE ALIGNMENT ANALYSIS ===");
   for (const item of data) {
     console.log(`\n[DEBUG] ${item.slot} "${item.label}" (paddingLeft=${item.paddingLeft})`);
@@ -87,10 +87,10 @@ async function main() {
       }
     }
   }
-  
+
   // Also compute what the formula EXPECTS
   console.log("\n[DEBUG] === EXPECTED VALUES ===");
-  const detailPanelIndentPx = (level: number): number => level === 0 ? 0 : 5 + 5 * level;
+  const detailPanelIndentPx = (level: number): number => (level === 0 ? 0 : 5 + 5 * level);
   const indentationLinePx = (i: number): number => detailPanelIndentPx(i) + 7;
   for (let level = 0; level <= 4; level++) {
     console.log(`level ${level}: paddingLeft=${detailPanelIndentPx(level)}, chevronCenter=${detailPanelIndentPx(level) + 7}`);
@@ -98,7 +98,7 @@ async function main() {
       console.log(`  line[${i}] expected offset from row: ${indentationLinePx(i)}`);
     }
   }
-  
+
   await browser.close();
 }
 

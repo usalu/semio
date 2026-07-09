@@ -16784,9 +16784,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "llm": "opus-4-6",
             "path": "26/03/27/OPTIMIZE-HOVER-TO-SUB-16MS-IN-SKETCHPAD-SCENE-WINDOW",
             "summary": "Optimized hover to sub-16ms in sketchpad scene window by fixing the 4 remaining bottlenecks:\\n\\n1. **materialColor DOM+canvas resolution cached** (BIGGEST FIX): Replaced per-render DOM element creation, getComputedStyle, canvas pixel read with module-level `_cssColorToRgbCache` Map. First call does DOM work, all subsequent calls for same CSS color return cached `rgb()` string in \u003c0.01ms. Before: ~2-5ms per piece per hover. After: \u003c0.01ms (cache hit).\\n\\n2. **useDesignAppHoverActions combined hook**: Added `useDesignAppHoverActions()` that calls `useDesignAppHover()` once and returns both `hoverPiece` and `clearHover`. ModelPiece uses this instead of separate `useDesignAppHoverPiece()` + `useDesignAppClearHover()`. Eliminates 1 redundant XState `useSelector` subscription per piece.\\n\\n3. **getComputedColor cache** (already applied from prior ticket): `_computedColorCache` Map avoids repeated `getComputedStyle(document.documentElement)` calls.\\n\\n4. **prevHighlightRef skip** (already applied from prior ticket): GLTFMesh/FBXMesh/OBJMesh skip `applyHighlightToLoadedScene` scene traversal when highlight color hasn't changed.\\n\\nBuild: Vite bundle succeeds. Tests: 105 pass, 0 new failures."
@@ -16816,9 +16814,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "compose/sketchpad/index.tsx"
-            ],
+            "files": ["compose/sketchpad/index.tsx"],
             "llm": "opus-4-6",
             "path": "26/03/27/OPTIMIZE-HOVER-TO-SUB-16MS-IN-SKETCHPAD-SCENE-WINDOW",
             "summary": "Optimized hover to sub-16ms in sketchpad scene window by fixing the 4 remaining bottlenecks:\\n\\n1. **materialColor DOM+canvas resolution cached** (BIGGEST FIX): Replaced per-render DOM element creation, getComputedStyle, canvas pixel read with module-level `_cssColorToRgbCache` Map. First call does DOM work, all subsequent calls for same CSS color return cached `rgb()` string in \u003c0.01ms. Before: ~2-5ms per piece per hover. After: \u003c0.01ms (cache hit).\\n\\n2. **useDesignAppHoverActions combined hook**: Added `useDesignAppHoverActions()` that calls `useDesignAppHover()` once and returns both `hoverPiece` and `clearHover`. ModelPiece uses this instead of separate `useDesignAppHoverPiece()` + `useDesignAppClearHover()`. Eliminates 1 redundant XState `useSelector` subscription per piece.\\n\\n3. **getComputedColor cache** (already applied from prior ticket): `_computedColorCache` Map avoids repeated `getComputedStyle(document.documentElement)` calls.\\n\\n4. **prevHighlightRef skip** (already applied from prior ticket): GLTFMesh/FBXMesh/OBJMesh skip `applyHighlightToLoadedScene` scene traversal when highlight color hasn't changed.\\n\\nBuild: Vite bundle succeeds. Tests: 105 pass, 0 new failures."

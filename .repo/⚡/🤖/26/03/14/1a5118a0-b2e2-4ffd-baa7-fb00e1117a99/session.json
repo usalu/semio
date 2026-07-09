@@ -28,9 +28,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌22238"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌22238"],
         "second": "🎆26🌙03☀️14⏰21⌚57⏱️32",
         "session": "⚪1a5118a0b2e24ffdbaa7fb00e1117a99"
       },
@@ -61,9 +59,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌47630"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌47630"],
         "second": "🎆26🌙03☀️14⏰21⌚57⏱️53",
         "session": "⚪1a5118a0b2e24ffdbaa7fb00e1117a99"
       },
@@ -94,9 +90,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌47630"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌47630"],
         "second": "🎆26🌙03☀️14⏰21⌚59⏱️04",
         "session": "⚪1a5118a0b2e24ffdbaa7fb00e1117a99"
       },
@@ -127,9 +121,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli💻main📌1📌47630"
-        ],
+        "ranges": ["🧰composerepo⌨️cli💻main📌1📌47630"],
         "second": "🎆26🌙03☀️14⏰22⌚00⏱️06",
         "session": "⚪1a5118a0b2e24ffdbaa7fb00e1117a99"
       },
@@ -212,9 +204,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌22238"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌22238"],
         "second": "🎆26🌙03☀️14⏰22⌚03⏱️09",
         "session": "⚪1a5118a0b2e24ffdbaa7fb00e1117a99"
       },
@@ -245,9 +235,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌22238"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌22238"],
         "second": "🎆26🌙03☀️14⏰22⌚04⏱️20",
         "session": "⚪1a5118a0b2e24ffdbaa7fb00e1117a99"
       },
@@ -278,9 +266,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌22238"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌22238"],
         "second": "🎆26🌙03☀️14⏰22⌚05⏱️15",
         "session": "⚪1a5118a0b2e24ffdbaa7fb00e1117a99"
       },
@@ -311,9 +297,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌22238"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌22238"],
         "second": "🎆26🌙03☀️14⏰22⌚06⏱️04",
         "session": "⚪1a5118a0b2e24ffdbaa7fb00e1117a99"
       },
@@ -390,9 +374,7 @@
         "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "🧰composerepo⌨️cli🥼maintest"
-        ],
+        "files": ["🧰composerepo⌨️cli🥼maintest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️14⏰22⌚09⏱️05",
@@ -956,16 +938,12 @@
         "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "🧰composerepo⌨️cli🥼maintest"
-        ],
+        "files": ["🧰composerepo⌨️cli🥼maintest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️14⏰22⌚21⏱️08",
         "session": "⚪1a5118a0b2e24ffdbaa7fb00e1117a99",
-        "tests": [
-          "'TestDefinitionNativeDocstringAutofix"
-        ]
+        "tests": ["'TestDefinitionNativeDocstringAutofix"]
       },
       "response": {
         "allowed": true
@@ -994,9 +972,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌22273"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌22273"],
         "second": "🎆26🌙03☀️14⏰22⌚22⏱️25",
         "session": "⚪1a5118a0b2e24ffdbaa7fb00e1117a99"
       },
@@ -1027,9 +1003,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌22273"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌22273"],
         "second": "🎆26🌙03☀️14⏰22⌚22⏱️56",
         "session": "⚪1a5118a0b2e24ffdbaa7fb00e1117a99"
       },
@@ -1060,9 +1034,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌22273"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌22273"],
         "second": "🎆26🌙03☀️14⏰22⌚22⏱️57",
         "session": "⚪1a5118a0b2e24ffdbaa7fb00e1117a99"
       },
@@ -1093,9 +1065,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌22273"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌22273"],
         "second": "🎆26🌙03☀️14⏰22⌚24⏱️09",
         "session": "⚪1a5118a0b2e24ffdbaa7fb00e1117a99"
       },
@@ -1126,9 +1096,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🧰composerepo⌨️cli🥼maintest📌1📌22273"
-        ],
+        "ranges": ["🧰composerepo⌨️cli🥼maintest📌1📌22273"],
         "second": "🎆26🌙03☀️14⏰22⌚25⏱️01",
         "session": "⚪1a5118a0b2e24ffdbaa7fb00e1117a99"
       },
@@ -1257,16 +1225,12 @@
         "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
         "client": "windsurf-chat",
         "contributor": "🧑‍💻ueli",
-        "files": [
-          "🧰composerepo⌨️cli🥼maintest"
-        ],
+        "files": ["🧰composerepo⌨️cli🥼maintest"],
         "kind": "agent.tool.test.starting",
         "parent": "",
         "second": "🎆26🌙03☀️14⏰22⌚31⏱️40",
         "session": "⚪1a5118a0b2e24ffdbaa7fb00e1117a99",
-        "tests": [
-          "'TestDefinitionNativeDocstringAutofix"
-        ]
+        "tests": ["'TestDefinitionNativeDocstringAutofix"]
       },
       "response": {
         "allowed": true
@@ -1282,10 +1246,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/repo/cli/main.go",
-                "/workspaces/semio/repo/cli/main_test.go"
-              ],
+              "files": ["/workspaces/semio/repo/cli/main.go", "/workspaces/semio/repo/cli/main_test.go"],
               "no_github": true,
               "path": "2026/03/14/FIX-TYPE-SCRIPT-DEFINITION-ID-DOC-FORMATTING",
               "summary": "Fixed the TypeScript native-docstring autofix so definition identification lines are emitted as a single JSDoc line without an extra blank separator or doubled asterisk marker. Repaired an existing malformed test wrapper in main_test.go and extended the existing autofix test to lock down the identification-line formatting. Verified with targeted Go tests covering the formatter and surrounding autofix paths."
@@ -1325,9 +1286,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅composerepo🗃️tickets🗃️2026🗃️03💾14📌1"
-        ],
+        "ranges": ["🛅composerepo🗃️tickets🗃️2026🗃️03💾14📌1"],
         "second": "🎆26🌙03☀️14⏰22⌚34⏱️21",
         "session": "⚪1a5118a0b2e24ffdbaa7fb00e1117a99"
       },
@@ -1445,10 +1404,7 @@
           "tool_info": {
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/repo/cli/main.go",
-                "/workspaces/semio/repo/cli/main_test.go"
-              ],
+              "files": ["/workspaces/semio/repo/cli/main.go", "/workspaces/semio/repo/cli/main_test.go"],
               "no_github": true,
               "path": "26/03/14/FIX-TYPE-SCRIPT-DEFINITION-ID-DOC-FORMATTING",
               "summary": "Fixed the TypeScript native-docstring autofix so definition identification lines are emitted as a single JSDoc line without an extra blank separator or doubled asterisk marker. Repaired an existing malformed test wrapper in main_test.go and extended the existing autofix test to lock down the identification-line formatting. Verified with targeted Go tests covering the formatter and surrounding autofix paths."
@@ -1481,10 +1437,7 @@
             "mcp_result": "[🎫fixtypescriptdefinitioniddocformatting](composerepo://y/00/m/00/d/00/tk/FIX-TYPE-SCRIPT-DEFINITION-ID-DOC-FORMATTING) - `closed` - `closed 1 second ago`\n",
             "mcp_server_name": "repo",
             "mcp_tool_arguments": {
-              "files": [
-                "/workspaces/semio/repo/cli/main.go",
-                "/workspaces/semio/repo/cli/main_test.go"
-              ],
+              "files": ["/workspaces/semio/repo/cli/main.go", "/workspaces/semio/repo/cli/main_test.go"],
               "no_github": true,
               "path": "26/03/14/FIX-TYPE-SCRIPT-DEFINITION-ID-DOC-FORMATTING",
               "summary": "Fixed the TypeScript native-docstring autofix so definition identification lines are emitted as a single JSDoc line without an extra blank separator or doubled asterisk marker. Repaired an existing malformed test wrapper in main_test.go and extended the existing autofix test to lock down the identification-line formatting. Verified with targeted Go tests covering the formatter and surrounding autofix paths."

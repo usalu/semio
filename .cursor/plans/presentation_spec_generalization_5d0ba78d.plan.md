@@ -2,27 +2,27 @@
 name: Presentation Spec Generalization
 overview: Align @semio-tech/framework-presentation with the spec by introducing a first-class Slide (arrangement + optional transition to the next slide), generalizing Morph so the renderer auto-derives the required "morph position/style first, then switch embodiment" step, and simplifying Split to "one figure into many tiles" by removing the bespoke column/ghost/morphTarget machinery. The real 33.projektetage deck is re-expressed using the clean primitives.
 todos:
-  - id: ticket
-    content: Open repo MCP ticket (read repo://goals, associate with running-sketchpad goal); do not edit AGENTS.md.
-    status: completed
-  - id: core-model
-    content: "Core: add Slide (arrangement + transition), Thought.slides, per-slide Transition; add FigureEmbodiment.crop; simplify DispositionSplit to tiles; remove SplitColumnGroup/SplitMorphTarget/column helpers and extra Disposition/ResolvedDisposition fields."
-    status: completed
-  - id: core-morph
-    content: "Core: implement expandThoughtSlides() — auto-derive morph bridges (source embodiment at target position/style) and partition slides into morph-runs with unique autoAnimateId; refactor resolveArrangement to resolve an Arrangement against participants."
-    status: completed
-  - id: core-traverse
-    content: "Core: route collectPresentationSlides/countArrangements/presentationSlideAt/bookmark+URL helpers through expandThoughtSlides; migrate intro() and analogy() to the slides model."
-    status: completed
-  - id: renderer
-    content: "Renderer: iterate expandThoughtSlides, set data-auto-animate-id per morph-run, render cropped figures, keep split tiles, remove column/ghost views; clean globals.css and exports."
-    status: completed
-  - id: deck
-    content: "Re-express 33.projektetage on the slides model: catalogue columns as crop-figure+text participants morphing focus->labels via generalized morph; remove bespoke column/ghost usage."
-    status: completed
-  - id: tests
-    content: Extend core, renderer, and deck vitest suites in place to cover the new model; run all via nx and ensure they pass; close the ticket.
-    status: completed
+ - id: ticket
+   content: Open repo MCP ticket (read repo://goals, associate with running-sketchpad goal); do not edit AGENTS.md.
+   status: completed
+ - id: core-model
+   content: "Core: add Slide (arrangement + transition), Thought.slides, per-slide Transition; add FigureEmbodiment.crop; simplify DispositionSplit to tiles; remove SplitColumnGroup/SplitMorphTarget/column helpers and extra Disposition/ResolvedDisposition fields."
+   status: completed
+ - id: core-morph
+   content: "Core: implement expandThoughtSlides() — auto-derive morph bridges (source embodiment at target position/style) and partition slides into morph-runs with unique autoAnimateId; refactor resolveArrangement to resolve an Arrangement against participants."
+   status: completed
+ - id: core-traverse
+   content: "Core: route collectPresentationSlides/countArrangements/presentationSlideAt/bookmark+URL helpers through expandThoughtSlides; migrate intro() and analogy() to the slides model."
+   status: completed
+ - id: renderer
+   content: "Renderer: iterate expandThoughtSlides, set data-auto-animate-id per morph-run, render cropped figures, keep split tiles, remove column/ghost views; clean globals.css and exports."
+   status: completed
+ - id: deck
+   content: "Re-express 33.projektetage on the slides model: catalogue columns as crop-figure+text participants morphing focus->labels via generalized morph; remove bespoke column/ghost usage."
+   status: completed
+ - id: tests
+   content: Extend core, renderer, and deck vitest suites in place to cover the new model; run all via nx and ensure they pass; close the ticket.
+   status: completed
 isProject: false
 ---
 
@@ -39,20 +39,38 @@ Make `@semio-tech/framework-presentation` match `[framework/product/presentation
 ## New core model (wrap)
 
 ```ts
-interface Transition { readonly kind: "morph" | "fade"; }            // slide -> next slide
+interface Transition {
+ readonly kind: "morph" | "fade";
+} // slide -> next slide
 
-interface Arrangement { readonly id: string; readonly name?: string; readonly dispositions: readonly Disposition[]; }
-
-interface Slide { readonly arrangement: Arrangement; readonly transition?: Transition; }
-
-interface Thought {
-  readonly id: string; readonly name?: string;
-  readonly participants: readonly Participant[];
-  readonly slides: readonly Slide[];          // replaces arrangements + transition
+interface Arrangement {
+ readonly id: string;
+ readonly name?: string;
+ readonly dispositions: readonly Disposition[];
 }
 
-interface DispositionSplit { readonly tiles: readonly SplitTile[]; }  // tiles only
-interface FigureEmbodiment { kind:"figure"; id?:string; src:string; alt?:string; crop?: DispositionPosition; }
+interface Slide {
+ readonly arrangement: Arrangement;
+ readonly transition?: Transition;
+}
+
+interface Thought {
+ readonly id: string;
+ readonly name?: string;
+ readonly participants: readonly Participant[];
+ readonly slides: readonly Slide[]; // replaces arrangements + transition
+}
+
+interface DispositionSplit {
+ readonly tiles: readonly SplitTile[];
+} // tiles only
+interface FigureEmbodiment {
+ kind: "figure";
+ id?: string;
+ src: string;
+ alt?: string;
+ crop?: DispositionPosition;
+}
 ```
 
 `SplitTile` stays (`key`, `crop`, `position`, `emphasis?`, `style?`). `splitFigureGrid` stays. Remove `SplitColumnGroup`, `SplitMorphTarget`, `morphTargetId`, `columnMorphId`, `columnMorphTileId`, `splitColumnBounds`, `splitColumnCrop`, and the extra `DispositionSplit`/`Disposition`/`ResolvedDisposition` fields. Keep `Bullet`/`Authors`/`Affiliations` embodiments and `analogy()` (migrate to slides), since those are not the bespoke machinery being removed.
@@ -85,8 +103,6 @@ flowchart LR
   Disp -->|figure| Split[Split -> tiles]
 ```
 
-
-
 ## Renderer changes ([renderer/react/index.tsx](framework/product/presentation/renderer/react/index.tsx))
 
 - Iterate `expandThoughtSlides(thought)`; render each `arrangement` as a `<section>`; set `data-auto-animate` + `data-auto-animate-id={autoAnimateId}` only when `autoAnimateId` is set.
@@ -105,4 +121,3 @@ flowchart LR
 - Renderer tests: per-slide `data-auto-animate-id`, cropped figure rendering, removal of column-morph DOM.
 - Deck tests: updated counts/bookmarks and the new column-as-participant morph.
 - Run `nx` vitest for core, renderer, and the deck; all must pass. Close the ticket with a summary and touched files.
-

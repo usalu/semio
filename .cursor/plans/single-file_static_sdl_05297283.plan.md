@@ -2,51 +2,51 @@
 name: Single-file Static SDL
 overview: Replace the dynamic-schema runtime with a single, compile-time, type-safe `lib.rs` that emits exactly `target.schema.graphql` and fully wires every Mutation / Subscription / Operation. `gql_target.rs` is deleted; everything lives in [compose/rs/lib.rs](compose/rs/lib.rs).
 todos:
-  - id: drop-dynamic
-    content: Delete compose/rs/gql_target.rs, drop mod gql_target and dynamic-schema feature in Cargo.toml
-    status: completed
-  - id: lift-geom
-    content: "Lift geometry types to Arc/RwLock + #[Object] with id/hash/entityOwner/ownedEntities"
-    status: completed
-  - id: lift-meta
-    content: "Lift meta entities (Tag/Concept/Quality/Attribute/Author/Stat/Prop/Layer/Group/File/Folder/Benchmark) to Arc/RwLock + #[Object]"
-    status: completed
-  - id: vcs-entities
-    content: Add Conflict/ReadVersion/WriteVersion + audit existing VCS Arc structs for Entity field parity
-    status: completed
-  - id: interfaces
-    content: Define interface enums (Entity/WeakEntity/StrongEntity/Artifact/Document/Modification/Diff/Operation) and global unions (OwnerEntity/OwnedEntity/ChangeOwned/DiffOwner/DiffsOwner/Input)
-    status: completed
-  - id: relay-macros
-    content: Author entity_relay!, entity_diffs!, entity_owner! macros at module scope
-    status: completed
-  - id: expand-relay
-    content: Invoke macros for every concrete entity family in geom/meta/type/design/kit/vcs sub-regions (~60 families x 12 types)
-    status: pending
-  - id: op-history
-    content: "Per-Graph snapshot store: ordered Vec<Arc<OperationIface>> with before/after Arcs and modification values"
-    status: completed
-  - id: ops-macro
-    content: Author ops!{} macro producing Operation struct + Modification + Diff + Diffs + edges + connections + interface registration
-    status: completed
-  - id: ops-rows
-    content: Emit ~100 op rows covering Kit/Tag/Concept/Port/Quality/Type/Connector/Design/Piece
-    status: completed
-  - id: query-root
-    content: Static Query root with session/wip/authoritative/conflicts/node/entity/pieceInDesign/alternativePieceKind
-    status: completed
-  - id: mutation-root
-    content: "Static Mutation root: ~100 async fns calling op apply functions, snapshotting before/after, emitting events, returning Id"
-    status: pending
-  - id: subscription-root
-    content: "Static Subscription root: ~95 typed streams over EventBus broadcast plus commandSucceeded/operationSucceeded/operationFailed/error"
-    status: completed
-  - id: schema-build
-    content: Replace pub mod gql with Schema::build(Query,Mutation,Subscription); update wasm_bridge to the new AppSchema
-    status: completed
-  - id: validation
-    content: Add target_sdl_byte_match test; adapt existing tests; run cargo test (native) + cargo check (wasm32)
-    status: completed
+ - id: drop-dynamic
+   content: Delete compose/rs/gql_target.rs, drop mod gql_target and dynamic-schema feature in Cargo.toml
+   status: completed
+ - id: lift-geom
+   content: "Lift geometry types to Arc/RwLock + #[Object] with id/hash/entityOwner/ownedEntities"
+   status: completed
+ - id: lift-meta
+   content: "Lift meta entities (Tag/Concept/Quality/Attribute/Author/Stat/Prop/Layer/Group/File/Folder/Benchmark) to Arc/RwLock + #[Object]"
+   status: completed
+ - id: vcs-entities
+   content: Add Conflict/ReadVersion/WriteVersion + audit existing VCS Arc structs for Entity field parity
+   status: completed
+ - id: interfaces
+   content: Define interface enums (Entity/WeakEntity/StrongEntity/Artifact/Document/Modification/Diff/Operation) and global unions (OwnerEntity/OwnedEntity/ChangeOwned/DiffOwner/DiffsOwner/Input)
+   status: completed
+ - id: relay-macros
+   content: Author entity_relay!, entity_diffs!, entity_owner! macros at module scope
+   status: completed
+ - id: expand-relay
+   content: Invoke macros for every concrete entity family in geom/meta/type/design/kit/vcs sub-regions (~60 families x 12 types)
+   status: pending
+ - id: op-history
+   content: "Per-Graph snapshot store: ordered Vec<Arc<OperationIface>> with before/after Arcs and modification values"
+   status: completed
+ - id: ops-macro
+   content: Author ops!{} macro producing Operation struct + Modification + Diff + Diffs + edges + connections + interface registration
+   status: completed
+ - id: ops-rows
+   content: Emit ~100 op rows covering Kit/Tag/Concept/Port/Quality/Type/Connector/Design/Piece
+   status: completed
+ - id: query-root
+   content: Static Query root with session/wip/authoritative/conflicts/node/entity/pieceInDesign/alternativePieceKind
+   status: completed
+ - id: mutation-root
+   content: "Static Mutation root: ~100 async fns calling op apply functions, snapshotting before/after, emitting events, returning Id"
+   status: pending
+ - id: subscription-root
+   content: "Static Subscription root: ~95 typed streams over EventBus broadcast plus commandSucceeded/operationSucceeded/operationFailed/error"
+   status: completed
+ - id: schema-build
+   content: Replace pub mod gql with Schema::build(Query,Mutation,Subscription); update wasm_bridge to the new AppSchema
+   status: completed
+ - id: validation
+   content: Add target_sdl_byte_match test; adapt existing tests; run cargo test (native) + cargo check (wasm32)
+   status: completed
 isProject: false
 ---
 

@@ -2,39 +2,39 @@
 name: Note App Feature Completion
 overview: "Bring `note` (infinite canvas) to feature parity with a real note app: rich inline text editing via double-click, working resize handles, multi-block drag, an eraser that actually erases ink, and full clipboard support (paste images/SVG from the OS, copy/paste blocks inside the app), plus the keyboard shortcuts and undo/redo that are currently missing entirely."
 todos:
-  - id: core-richtext-geometry
-    content: "note/core/internal.ts: rich text model, group-resize geometry, ink erase helpers, clipboard helpers, eraser tool ids/radius"
-    status: completed
-  - id: core-controller-commands
-    content: "note/core/index.ts: deleteSelection, duplicateSelection, clearSelection, nudgeSelection, undo, redo commands; eraser toolbar; table inspector row/col buttons"
-    status: completed
-  - id: core-keybindings
-    content: "note/core/playground.ts + renderer NotePlayInner: wire delete/duplicate/undo/redo/escape/arrow-nudge keybindings and playgroundKeybindings prop"
-    status: completed
-  - id: react-image-render
-    content: "note/react/index.tsx: render actual image/SVG assets instead of placeholder text"
-    status: completed
-  - id: react-doubleclick-richtext
-    content: "note/react/index.tsx: double-click to create/edit text blocks, NoteTextEditorOverlay with bold/italic/underline/link toolbar, paragraphs-aware NoteBlockView text rendering"
-    status: completed
-  - id: react-resize-multiselect
-    content: "note/react/index.tsx: 8-handle resize (single + multi-select group scaling), fix multi-block drag-move"
-    status: completed
-  - id: react-table-editing
-    content: "note/react/index.tsx: double-click table cell editing"
-    status: completed
-  - id: react-eraser
-    content: "note/react/index.tsx: stroke eraser + point eraser drag interactions"
-    status: completed
-  - id: react-clipboard
-    content: "note/react/index.tsx: native onCopy/onPaste for OS image/SVG paste and internal block copy/paste"
-    status: completed
-  - id: fixtures-manifest
-    content: Update note/fixture/semio.note.json and note/manifest/blocks.manifest.json for new text paragraph schema
-    status: completed
-  - id: verify
-    content: Run test:note, boot dev:note, manually verify all new interactions via CDP, update verify-log.md, reopen/close ticket
-    status: completed
+ - id: core-richtext-geometry
+   content: "note/core/internal.ts: rich text model, group-resize geometry, ink erase helpers, clipboard helpers, eraser tool ids/radius"
+   status: completed
+ - id: core-controller-commands
+   content: "note/core/index.ts: deleteSelection, duplicateSelection, clearSelection, nudgeSelection, undo, redo commands; eraser toolbar; table inspector row/col buttons"
+   status: completed
+ - id: core-keybindings
+   content: "note/core/playground.ts + renderer NotePlayInner: wire delete/duplicate/undo/redo/escape/arrow-nudge keybindings and playgroundKeybindings prop"
+   status: completed
+ - id: react-image-render
+   content: "note/react/index.tsx: render actual image/SVG assets instead of placeholder text"
+   status: completed
+ - id: react-doubleclick-richtext
+   content: "note/react/index.tsx: double-click to create/edit text blocks, NoteTextEditorOverlay with bold/italic/underline/link toolbar, paragraphs-aware NoteBlockView text rendering"
+   status: completed
+ - id: react-resize-multiselect
+   content: "note/react/index.tsx: 8-handle resize (single + multi-select group scaling), fix multi-block drag-move"
+   status: completed
+ - id: react-table-editing
+   content: "note/react/index.tsx: double-click table cell editing"
+   status: completed
+ - id: react-eraser
+   content: "note/react/index.tsx: stroke eraser + point eraser drag interactions"
+   status: completed
+ - id: react-clipboard
+   content: "note/react/index.tsx: native onCopy/onPaste for OS image/SVG paste and internal block copy/paste"
+   status: completed
+ - id: fixtures-manifest
+   content: Update note/fixture/semio.note.json and note/manifest/blocks.manifest.json for new text paragraph schema
+   status: completed
+ - id: verify
+   content: Run test:note, boot dev:note, manually verify all new interactions via CDP, update verify-log.md, reopen/close ticket
+   status: completed
 isProject: false
 ---
 
@@ -43,8 +43,8 @@ isProject: false
 ## Scope confirmed with user
 
 - **Rich text**: `NoteTextBlock` is reworked to store paragraphs of runs with per-run bold/italic/underline/link marks (not just a plain string), edited via a contenteditable overlay with a floating Bold/Italic/Underline/Link toolbar.
-- **Clipboard**: both OS-clipboard image/SVG paste (creates image blocks) *and* in-app block copy/paste (`cmd+c`/`cmd+v` duplicates selection with an offset).
-- **Eraser**: two modes — *stroke eraser* (click/drag over an ink stroke deletes the whole stroke) and *point eraser* (drag removes points within a radius, splitting the stroke where needed).
+- **Clipboard**: both OS-clipboard image/SVG paste (creates image blocks) _and_ in-app block copy/paste (`cmd+c`/`cmd+v` duplicates selection with an offset).
+- **Eraser**: two modes — _stroke eraser_ (click/drag over an ink stroke deletes the whole stroke) and _point eraser_ (drag removes points within a radius, splitting the stroke where needed).
 
 All new document mutations continue to flow through the existing `NoteCanvas` → `onCommit` → `NotePlayController.run("commitDocument", …)` → `DocumentVcsStore` path (see `note/react/index.tsx` `commit()` at [note/react/index.tsx](note/react/index.tsx) lines 219-225 and `NotePlayPaneSurfaceHost`'s `onCommit` in [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) line 11071). No new transport is needed — most work is new pure helpers in `note/core/internal.ts` plus interaction logic in `note/react/index.tsx`, with a handful of new keyboard-triggered controller commands in `note/core/index.ts`.
 
@@ -68,8 +68,6 @@ flowchart LR
   ctrl --> vcs["DocumentVcsStore"]
   hotkeys["Keybindings (delete/duplicate/undo/redo/nudge)"] --> ctrl
 ```
-
-
 
 ## 1. Rich text model (`note/core/internal.ts`)
 
@@ -146,4 +144,3 @@ flowchart LR
 - Run `bun run test:note` (extends existing inline vitest blocks — no new test files).
 - Boot `bun run dev:note`, and manually exercise via CDP/browser: double-click empty canvas creates + focuses a text block; type + bold/italic/underline/link via toolbar; double-click existing text re-opens editor; resize handles resize single and multi selections; multi-select drag moves all selected blocks; stroke/point eraser removes/splits ink; copy/paste of blocks (cmd+c/cmd+v) and paste of a copied image/SVG from the OS clipboard; Delete/Backspace, cmd+d, cmd+z/cmd+shift+z, arrow-key nudge, and Escape all work.
 - Update `.repo/🎫/26/07/02/NOTE-INFINITE-CANVAS-APP/verify-log.md` with the new verification results (reopen ticket via `ticket_reopen` since it covers the same app).
-

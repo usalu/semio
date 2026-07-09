@@ -2,30 +2,30 @@
 name: Gumball To Flow
 overview: Add a move/rotate/scale gumball to the procedural 3D preview that, on drag, inserts and rewires the matching transform nodes (translate/rotate/scale) into the flow graph with incremental layout spacing, re-grabs to update existing nodes, and exposes a configurable node-granularity window.
 todos:
-  - id: ticket
-    content: Open a repo ticket (associate with the flow goal after reading repo://goals) for the gumball-to-flow feature.
-    status: completed
-  - id: flow-core
-    content: "flow/core/lib.rs: add generic primitives insert_between, make_space, set_neuron_params, optional WidgetDescriptor id; expose on FlowSession WASM; extend tests; rebuild flow_core wasm."
-    status: completed
-  - id: flow-react
-    content: "flow/react/index.tsx: add generic batched 'graphEdit' command case + type to FlowCanvasCommandRequest that runs an ordered primitive op list and evaluates."
-    status: completed
-  - id: preview-gumball
-    content: "procedural/react/index.tsx: render UnifiedGumball at selected geometry pivot; map handle kind+before/after to {op, delta}; emit via onGumballTransform; guard canvas selection while dragging."
-    status: completed
-  - id: granularity-window
-    content: "procedural/react/index.tsx: add 'Transform Detail' window (compact | full) bound to controller state and passed into the gumball callback."
-    status: completed
-  - id: recipe-controller
-    content: "procedural/play/index.ts: applyGumballTransform builds graphEdit recipes per op+granularity, tracks generated nodes for re-grab updates, inserts/rewires/spaces, moves selection to new transform, dispatches via commandRequest."
-    status: completed
-  - id: playground-wiring
-    content: "framework/product/playground/renderer/react/index.tsx: wire preview onGumballTransform to controller and controller commandRequest to ProceduralFlowEditor; verify launch.json/build tasks."
-    status: completed
-  - id: validate
-    content: Run Rust tests for new primitives and verify runtime behavior with [DEBUG] logs for translate/rotate/scale insert and re-grab update.
-    status: completed
+ - id: ticket
+   content: Open a repo ticket (associate with the flow goal after reading repo://goals) for the gumball-to-flow feature.
+   status: completed
+ - id: flow-core
+   content: "flow/core/lib.rs: add generic primitives insert_between, make_space, set_neuron_params, optional WidgetDescriptor id; expose on FlowSession WASM; extend tests; rebuild flow_core wasm."
+   status: completed
+ - id: flow-react
+   content: "flow/react/index.tsx: add generic batched 'graphEdit' command case + type to FlowCanvasCommandRequest that runs an ordered primitive op list and evaluates."
+   status: completed
+ - id: preview-gumball
+   content: "procedural/react/index.tsx: render UnifiedGumball at selected geometry pivot; map handle kind+before/after to {op, delta}; emit via onGumballTransform; guard canvas selection while dragging."
+   status: completed
+ - id: granularity-window
+   content: "procedural/react/index.tsx: add 'Transform Detail' window (compact | full) bound to controller state and passed into the gumball callback."
+   status: completed
+ - id: recipe-controller
+   content: "procedural/play/index.ts: applyGumballTransform builds graphEdit recipes per op+granularity, tracks generated nodes for re-grab updates, inserts/rewires/spaces, moves selection to new transform, dispatches via commandRequest."
+   status: completed
+ - id: playground-wiring
+   content: "framework/product/playground/renderer/react/index.tsx: wire preview onGumballTransform to controller and controller commandRequest to ProceduralFlowEditor; verify launch.json/build tasks."
+   status: completed
+ - id: validate
+   content: Run Rust tests for new primitives and verify runtime behavior with [DEBUG] logs for translate/rotate/scale insert and re-grab update.
+   status: completed
 isProject: false
 ---
 
@@ -50,8 +50,6 @@ flowchart LR
   FS -->|evaluate| OUT[eval outputs]
   OUT --> CTRL --> PV[preview items rerender]
 ```
-
-
 
 ## Decisions (from clarification)
 
@@ -112,4 +110,3 @@ WASM: expose the new methods in the `#[wasm_bindgen]` `FlowSession` impl (alongs
 
 - Keep brep kind names (`brep.xform.*`, `brep.vector`) only in `procedural`; `flow` stays generic.
 - Edit existing files with regions/subregions; extend existing tests (no new test files); no migrations.
-

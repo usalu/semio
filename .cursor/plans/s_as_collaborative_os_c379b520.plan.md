@@ -2,33 +2,33 @@
 name: S as Collaborative OS
 overview: "Promote S from a playground app to the OS: dedicated OS dev host, complete media-graph hosting of all technologies, unified rich VCS at the studio level, and a generic hub extracted into a VFS-backed OS storage layer with end-to-end multi-user sync."
 todos:
-  - id: os-dev-host
-    content: Create framework/product/os/dev host (vite, script.ts, project.json); rewire root script.ts dev s and launch.json; remove S from playground app-registry
-    status: completed
-  - id: boot-extensions
-    content: Await bootstrapSPlayExtensions() in OS boot; storage-first document resolution with fixture seed
-    status: completed
-  - id: complete-app-hosting
-    content: Complete SAppHostRouter (note case, editable layout, no JSON fallbacks) and register reasoning.wires/mindmap programs + handlers
-    status: completed
-  - id: registry-audit
-    content: "Audit all programs: definition + VCS handler + componentKind + ports; add registry-completeness test"
-    status: completed
-  - id: studio-vcs
-    content: Upgrade OsVcs to document-VCS model (checkpoint parents, authors, checkout); wire History window to HistoryTable branch lanes
-    status: completed
-  - id: os-hub
-    content: "Build framework/product/os/hub Rust service: VFS nodes, document snapshots, op log, sessions, WebSocket op/presence streaming"
-    status: completed
-  - id: backbone-remote
-    content: Implement RemoteOsBackbone (REST push, WS pull, conflict surfacing) and BroadcastChannel multi-tab sync; OsStore remote-change path with pending-op queue
-    status: completed
-  - id: files-app-presence
-    content: OsStorageVirtualFileSystemController + s.system files app; presence store and peer indicators in media graph
-    status: completed
-  - id: verify-e2e
-    content: "Run all package tests and verify end-to-end: OS boot, all apps spawn/connect, VCS checkout, multi-tab and multi-client convergence"
-    status: completed
+ - id: os-dev-host
+   content: Create framework/product/os/dev host (vite, script.ts, project.json); rewire root script.ts dev s and launch.json; remove S from playground app-registry
+   status: completed
+ - id: boot-extensions
+   content: Await bootstrapSPlayExtensions() in OS boot; storage-first document resolution with fixture seed
+   status: completed
+ - id: complete-app-hosting
+   content: Complete SAppHostRouter (note case, editable layout, no JSON fallbacks) and register reasoning.wires/mindmap programs + handlers
+   status: completed
+ - id: registry-audit
+   content: "Audit all programs: definition + VCS handler + componentKind + ports; add registry-completeness test"
+   status: completed
+ - id: studio-vcs
+   content: Upgrade OsVcs to document-VCS model (checkpoint parents, authors, checkout); wire History window to HistoryTable branch lanes
+   status: completed
+ - id: os-hub
+   content: "Build framework/product/os/hub Rust service: VFS nodes, document snapshots, op log, sessions, WebSocket op/presence streaming"
+   status: completed
+ - id: backbone-remote
+   content: Implement RemoteOsBackbone (REST push, WS pull, conflict surfacing) and BroadcastChannel multi-tab sync; OsStore remote-change path with pending-op queue
+   status: completed
+ - id: files-app-presence
+   content: OsStorageVirtualFileSystemController + s.system files app; presence store and peer indicators in media graph
+   status: completed
+ - id: verify-e2e
+   content: "Run all package tests and verify end-to-end: OS boot, all apps spawn/connect, VCS checkout, multi-tab and multi-client convergence"
+   status: completed
 isProject: false
 ---
 

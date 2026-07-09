@@ -11,7 +11,7 @@
 
 Sketchpad still depends on **wasm kit registry** symbols (`KitStoreProvider`, `useKitStoreSnapshot`, `executeComposeKitCommand`, …) that lived in an older merged `@semio-tech/compose-react` + `@semio-tech/compose-js` API. Restoring sketchpad end-to-end requires either:
 
-1. Re-exporting / re-implementing those KitStore WASM APIs in `@semio-tech/compose-js` again, or  
+1. Re-exporting / re-implementing those KitStore WASM APIs in `@semio-tech/compose-js` again, or
 2. Replacing sketchpad call sites incrementally with CQRS hooks + `ComposeStoreKitLineHost` (large change across `index.tsx`).
 
 ## Files touched

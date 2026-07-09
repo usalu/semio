@@ -28,9 +28,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🥼composetest📌1📌231"
-        ],
+        "ranges": ["👤compose📚js🥼composetest📌1📌231"],
         "second": "🎆26🌙03☀️08⏰23⌚22⏱️43",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -111,9 +109,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻design📌1📌10063"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻design📌1📌10063"],
         "second": "🎆26🌙03☀️08⏰23⌚25⏱️07",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -144,9 +140,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻quality📌1📌2318"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻quality📌1📌2318"],
         "second": "🎆26🌙03☀️08⏰23⌚25⏱️07",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -177,9 +171,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻kit📌1📌9380"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻kit📌1📌9380"],
         "second": "🎆26🌙03☀️08⏰23⌚25⏱️13",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -210,9 +202,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚js🗃️sketchpad💻quality📌1📌2318"
-        ],
+        "ranges": ["👤compose📚js🗃️sketchpad💻quality📌1📌2318"],
         "second": "🎆26🌙03☀️08⏰23⌚25⏱️18",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -293,9 +283,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌9898"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌9898"],
         "second": "🎆26🌙03☀️08⏰23⌚26⏱️19",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -326,9 +314,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌9898"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌9898"],
         "second": "🎆26🌙03☀️08⏰23⌚26⏱️25",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -359,9 +345,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌7820"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌7820"],
         "second": "🎆26🌙03☀️08⏰23⌚26⏱️46",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -392,9 +376,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌7820"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌7820"],
         "second": "🎆26🌙03☀️08⏰23⌚26⏱️46",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -425,9 +407,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌7820"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌7820"],
         "second": "🎆26🌙03☀️08⏰23⌚26⏱️53",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -458,9 +438,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌7820"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌7820"],
         "second": "🎆26🌙03☀️08⏰23⌚26⏱️58",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -491,9 +469,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshoppertests💻tests📌1📌55"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshoppertests💻tests📌1📌55"],
         "second": "🎆26🌙03☀️08⏰23⌚27⏱️25",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -524,9 +500,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshoppertests💻tests📌1📌55"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshoppertests💻tests📌1📌55"],
         "second": "🎆26🌙03☀️08⏰23⌚27⏱️35",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -557,9 +531,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshoppertests🥼composegrasshoppertests📌1📌30"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshoppertests🥼composegrasshoppertests📌1📌30"],
         "second": "🎆26🌙03☀️08⏰23⌚27⏱️57",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -590,9 +562,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💾composegrasshopper📌1📌48"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💾composegrasshopper📌1📌48"],
         "second": "🎆26🌙03☀️08⏰23⌚27⏱️57",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -623,9 +593,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💾composegrasshopper📌1📌48"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💾composegrasshopper📌1📌48"],
         "second": "🎆26🌙03☀️08⏰23⌚28⏱️04",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -656,9 +624,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌7988"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌7988"],
         "second": "🎆26🌙03☀️08⏰23⌚31⏱️06",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -689,9 +655,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌7988"
-        ],
+        "ranges": ["👤compose📚gh🛅composegrasshopper💻composegrasshopper📌1📌7988"],
         "second": "🎆26🌙03☀️08⏰23⌚31⏱️16",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -722,9 +686,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌9898"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌9898"],
         "second": "🎆26🌙03☀️08⏰23⌚31⏱️43",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -755,9 +717,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌9898"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌9898"],
         "second": "🎆26🌙03☀️08⏰23⌚31⏱️56",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -872,9 +832,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️08⏰23⌚34⏱️39",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a",
-        "tests": [
-          ""
-        ]
+        "tests": [""]
       },
       "response": {
         "allowed": true
@@ -903,9 +861,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌9898"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌9898"],
         "second": "🎆26🌙03☀️08⏰23⌚36⏱️30",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -936,9 +892,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose📚net🛅compose💻compose📌1📌9898"
-        ],
+        "ranges": ["👤compose📚net🛅compose💻compose📌1📌9898"],
         "second": "🎆26🌙03☀️08⏰23⌚36⏱️40",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a"
       },
@@ -1029,9 +983,7 @@
         "parent": "",
         "second": "🎆26🌙03☀️08⏰23⌚37⏱️40",
         "session": "⚪790d1460aa3c4c5c9444be27de54893a",
-        "tests": [
-          ""
-        ]
+        "tests": [""]
       },
       "response": {
         "allowed": true

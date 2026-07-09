@@ -88,19 +88,18 @@ await waitForDebugLog(debugLogs, "flow evaluate preview: 3");
 await waitForDebugLog(debugLogs, "flow extension activated: math");
 
 await openWorkbench(page);
-await page.waitForFunction(() => {
-  const host = window.__flowExtensionHost;
-  if (!host) return false;
-  const sections = host.catalogueSections().map((section) => section.id);
-  const operators = JSON.parse(host.kindInfosJson());
-  const add = operators.find((operator) => operator.id === "math.add");
-  const constructVector = operators.find((operator) => operator.id === "math.constructVector");
-  return (
-    ["core", "dictionary", "list", "logic", "math", "text"].every((id) => sections.includes(id)) &&
-    add?.inputs?.map((input) => input.id).join(",") === "a,b" &&
-    constructVector?.inputs?.map((input) => input.id).join(",") === "x,y,z"
-  );
-}, { timeout: 60_000 });
+await page.waitForFunction(
+  () => {
+    const host = window.__flowExtensionHost;
+    if (!host) return false;
+    const sections = host.catalogueSections().map((section) => section.id);
+    const operators = JSON.parse(host.kindInfosJson());
+    const add = operators.find((operator) => operator.id === "math.add");
+    const constructVector = operators.find((operator) => operator.id === "math.constructVector");
+    return ["core", "dictionary", "list", "logic", "math", "text"].every((id) => sections.includes(id)) && add?.inputs?.map((input) => input.id).join(",") === "a,b" && constructVector?.inputs?.map((input) => input.id).join(",") === "x,y,z";
+  },
+  { timeout: 60_000 },
+);
 
 const hasMathBefore = await page.evaluate(() => {
   const host = window.__flowExtensionHost;

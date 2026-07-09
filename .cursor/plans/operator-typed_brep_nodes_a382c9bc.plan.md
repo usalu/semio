@@ -2,33 +2,33 @@
 name: Operator-Typed Brep Nodes
 overview: Switch channel typing from schemas to required-operator capabilities across neural/flow, then replace the OpenCascade JS brep kernel with a pure-Rust brepkit-backed flow module so every procedural node has accurate, capability-typed channels instead of generic in/out.
 todos:
-  - id: channel-operators-core
-    content: "neural/engine: replace ChannelSpec.schema with operators: Vec<String>; add Registry capability map (schema->operators) + finalize to auto-fill output provided operators; adjust channel_schema fallback; update builders; keep dispatch/variadics/inject_channel_defaults working; update neural tests."
-    status: completed
-  - id: channel-operators-modules
-    content: Update flow/module/wasm glue and all in-repo modules (core/math/text/logic/dictionary/list) registrations + tests to operator-typed channels.
-    status: completed
-  - id: channel-operators-flowcore-react
-    content: flow/core port layout (neuron_io_layout/input_spec_to_port) and flow/react FlowChannelSpec + connection compatibility switched to required-operator set-containment; update flow/react vitest.
-    status: completed
-  - id: brep-rust-interface
-    content: Create geometry/brep/engine (Rust BrepKernel trait + handle/kind/mesh value types) as the external-lib interface; wire Cargo workspace, script.ts, launch.json.
-    status: completed
-  - id: brep-rust-brepkit
-    content: "Create geometry/brep/brepkit (brepkit-backed impl): Topology+handle registry, supported ops, STEP/STL IO, and tessellation (tris+normals+edges+face groups) to mesh buffers; tests."
-    status: completed
-  - id: brep-flow-module
-    content: "Create flow/module/brep WASM module: register geometry schema + operator-typed brep operators (reusing math point/vector + core schemas), stateful kernel, and wasm-bindgen manifest/evaluate/tessellate/dispose; tests."
-    status: completed
-  - id: procedural-integration
-    content: Rewire procedural/react to load the brep WASM module via the normal flow path; preview tessellation through the wasm bridge; update procedural/play wiring, Vite/aliases, launch.json, root workspaces, extension-tree counts; update brep tests in procedural/react.
-    status: completed
-  - id: remove-opencascade
-    content: Remove geometry/brep/js OpenCascade kernel and brepjs/brepjs-opencascade dependencies and dead contracts.
-    status: completed
-  - id: validate-e2e
-    content: "Run cargo tests (neural + all flow modules + brep crates) and vitest (flow/react, procedural/play); browser-probe procedural: capability-typed ports, box->fillet->translate renders, compatibility enforced."
-    status: completed
+ - id: channel-operators-core
+   content: "neural/engine: replace ChannelSpec.schema with operators: Vec<String>; add Registry capability map (schema->operators) + finalize to auto-fill output provided operators; adjust channel_schema fallback; update builders; keep dispatch/variadics/inject_channel_defaults working; update neural tests."
+   status: completed
+ - id: channel-operators-modules
+   content: Update flow/module/wasm glue and all in-repo modules (core/math/text/logic/dictionary/list) registrations + tests to operator-typed channels.
+   status: completed
+ - id: channel-operators-flowcore-react
+   content: flow/core port layout (neuron_io_layout/input_spec_to_port) and flow/react FlowChannelSpec + connection compatibility switched to required-operator set-containment; update flow/react vitest.
+   status: completed
+ - id: brep-rust-interface
+   content: Create geometry/brep/engine (Rust BrepKernel trait + handle/kind/mesh value types) as the external-lib interface; wire Cargo workspace, script.ts, launch.json.
+   status: completed
+ - id: brep-rust-brepkit
+   content: "Create geometry/brep/brepkit (brepkit-backed impl): Topology+handle registry, supported ops, STEP/STL IO, and tessellation (tris+normals+edges+face groups) to mesh buffers; tests."
+   status: completed
+ - id: brep-flow-module
+   content: "Create flow/module/brep WASM module: register geometry schema + operator-typed brep operators (reusing math point/vector + core schemas), stateful kernel, and wasm-bindgen manifest/evaluate/tessellate/dispose; tests."
+   status: completed
+ - id: procedural-integration
+   content: Rewire procedural/react to load the brep WASM module via the normal flow path; preview tessellation through the wasm bridge; update procedural/play wiring, Vite/aliases, launch.json, root workspaces, extension-tree counts; update brep tests in procedural/react.
+   status: completed
+ - id: remove-opencascade
+   content: Remove geometry/brep/js OpenCascade kernel and brepjs/brepjs-opencascade dependencies and dead contracts.
+   status: completed
+ - id: validate-e2e
+   content: "Run cargo tests (neural + all flow modules + brep crates) and vitest (flow/react, procedural/play); browser-probe procedural: capability-typed ports, box->fillet->translate renders, compatibility enforced."
+   status: completed
 isProject: false
 ---
 
@@ -62,8 +62,6 @@ graph TB
     neural --> flowreact --> proc
   end
 ```
-
-
 
 Brep is stateful (arena `Topology` + handle map) while neural operators are stateless dict-in/dict-out. The brep WASM module keeps a thread-local kernel: operators allocate handles and return `{ "$schema": "geometry", "handle": "solid-1", "kind": "solid" }`; a wasm-bindgen `tessellate(handle, tolerance)` + `dispose(handle)` feed the R3F viewport (mirrors today's `MeshTransfer`).
 
@@ -99,7 +97,7 @@ Per repo rule "no direct external dependency; wrap behind an interface":
 
 ## Phase 4 — Procedural integration + remove OpenCascade
 
-Files: [procedural/react/index.tsx](procedural/react/index.tsx), [procedural/play/*](procedural/play), [geometry/brep/js/index.ts](geometry/brep/js/index.ts), build configs.
+Files: [procedural/react/index.tsx](procedural/react/index.tsx), [procedural/play/\*](procedural/play), [geometry/brep/js/index.ts](geometry/brep/js/index.ts), build configs.
 
 - Replace `BREP_FLOW_KINDS`/`BREP_EVAL_HANDLERS`/virtual-module overrides with loading the brep WASM module through the normal flow module path; `ProceduralExtensionHost` keeps only: load brep wasm, register its manifest, and expose `tessellateGeometry` by calling the brep wasm `tessellate` (preview at L1409-1451 unchanged downstream of `MeshTransfer`).
 - Remove `geometry/brep/js` OpenCascade kernel and `brepjs`/`brepjs-opencascade` deps; delete now-dead TS contracts or move the still-needed mesh-buffer types into the wasm bridge.
@@ -117,4 +115,3 @@ Files: [procedural/react/index.tsx](procedural/react/index.tsx), [procedural/pla
 - brepkit coverage gaps shrink the node catalogue (acceptable per scope).
 - Tessellation parity: must produce triangles + normals + edges + per-face groups to match the existing viewport `MeshTransfer`.
 - This is large; phases 1 and 2/3 are independent and can proceed in parallel, but Phase 3 channel definitions depend on Phase 1 landing.
-

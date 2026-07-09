@@ -2,33 +2,33 @@
 name: Flow Wgpu Interaction Parity
 overview: "Close the remaining premigration parity gaps in the wgpu Flow/DAG node-graph renderer: invisible labels/selection overlay, wrong zoom/pan/drag semantics, missing double-click note editing with live text + caret, a dead evaluate/preview pipeline, and missing drag-and-drop ghost preview from the catalogue."
 todos:
-  - id: ticket
-    content: Reopen/open ticket for interaction parity work and record scope in important.md
-    status: completed
-  - id: zorder
-    content: Add overlay draw buffers + post-raster ui_overlay_pass in ui/wgpu/rs/lib.rs; repoint label/selection overlay painting to use it
-    status: completed
-  - id: zoom-pan
-    content: Fix wheel-always-zooms, add ctrl_or_meta helper, add Dag pan gesture (middle/alt/space+drag), wire wheel-active LOD pin
-    status: completed
-  - id: note-edit
-    content: Wire double-click note editing, keyboard forwarding into note_insert_text/backspace/caret, and caret blink
-    status: completed
-  - id: preview-pipeline
-    content: Enable evaluate on wasm, stop camera-only fixture resync from wiping OutputPreview state, evaluate on mount
-    status: completed
-  - id: dnd-ghost
-    content: Make Flow catalogue rows draggable, wire ghost widget preview during drag over node-graph, handle drop to addWidget at cursor
-    status: completed
-  - id: tests
-    content: Extend existing test modules (flow/core, dag, ui-wgpu, framework-renderer-wgpu, flow-plugin) with regression coverage for each fix
-    status: completed
-  - id: verify
-    content: Rebuild wasm bundles, manually verify all premigration parity behaviors, run cargo test across affected crates
-    status: completed
-  - id: close-ticket
-    content: Update important.md and close ticket with full file list
-    status: completed
+ - id: ticket
+   content: Reopen/open ticket for interaction parity work and record scope in important.md
+   status: completed
+ - id: zorder
+   content: Add overlay draw buffers + post-raster ui_overlay_pass in ui/wgpu/rs/lib.rs; repoint label/selection overlay painting to use it
+   status: completed
+ - id: zoom-pan
+   content: Fix wheel-always-zooms, add ctrl_or_meta helper, add Dag pan gesture (middle/alt/space+drag), wire wheel-active LOD pin
+   status: completed
+ - id: note-edit
+   content: Wire double-click note editing, keyboard forwarding into note_insert_text/backspace/caret, and caret blink
+   status: completed
+ - id: preview-pipeline
+   content: Enable evaluate on wasm, stop camera-only fixture resync from wiping OutputPreview state, evaluate on mount
+   status: completed
+ - id: dnd-ghost
+   content: Make Flow catalogue rows draggable, wire ghost widget preview during drag over node-graph, handle drop to addWidget at cursor
+   status: completed
+ - id: tests
+   content: Extend existing test modules (flow/core, dag, ui-wgpu, framework-renderer-wgpu, flow-plugin) with regression coverage for each fix
+   status: completed
+ - id: verify
+   content: Rebuild wasm bundles, manually verify all premigration parity behaviors, run cargo test across affected crates
+   status: completed
+ - id: close-ticket
+   content: Update important.md and close ticket with full file list
+   status: completed
 isProject: false
 ---
 

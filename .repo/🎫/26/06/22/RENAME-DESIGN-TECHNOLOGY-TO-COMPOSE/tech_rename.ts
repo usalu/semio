@@ -1,22 +1,43 @@
 import * as fs from "fs";
 import * as path from "path";
 
-const EXCLUDE_DIRS = new Set([
-  ".git",
-  "node_modules",
-  ".repo",
-  "dist",
-  "target",
-  "storybook-static",
-  ".repo-cache",
-  ".venv"
-]);
+const EXCLUDE_DIRS = new Set([".git", "node_modules", ".repo", "dist", "target", "storybook-static", ".repo-cache", ".venv"]);
 
 const BUNDLES = [
-  "client", "dev", "server", "site", "fixture", "asset",
-  "algorithms", "antlr", "assets", "desktop", "docs", "engine", "examples", "gh", "go",
-  "graphql", "js", "jsonschema", "liveblocks", "net", "openapi", "peg", "play", "py",
-  "rb", "rdf", "reports", "rs", "sites", "sketchpad", "sqlite", "studio", "ui", "vscode"
+  "client",
+  "dev",
+  "server",
+  "site",
+  "fixture",
+  "asset",
+  "algorithms",
+  "antlr",
+  "assets",
+  "desktop",
+  "docs",
+  "engine",
+  "examples",
+  "gh",
+  "go",
+  "graphql",
+  "js",
+  "jsonschema",
+  "liveblocks",
+  "net",
+  "openapi",
+  "peg",
+  "play",
+  "py",
+  "rb",
+  "rdf",
+  "reports",
+  "rs",
+  "sites",
+  "sketchpad",
+  "sqlite",
+  "studio",
+  "ui",
+  "vscode",
 ];
 
 function walk(dir: string, callback: (file: string) => void) {
@@ -40,15 +61,7 @@ function runTechRename() {
 
   walk(".", (file) => {
     // Ignore binary/image files
-    if (
-      file.endsWith(".png") ||
-      file.endsWith(".ico") ||
-      file.endsWith(".zip") ||
-      file.endsWith(".jpg") ||
-      file.endsWith(".3dm") ||
-      file.endsWith(".gh") ||
-      file.endsWith(".wasm")
-    ) {
+    if (file.endsWith(".png") || file.endsWith(".ico") || file.endsWith(".zip") || file.endsWith(".jpg") || file.endsWith(".3dm") || file.endsWith(".gh") || file.endsWith(".wasm")) {
       return;
     }
 

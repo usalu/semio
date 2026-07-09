@@ -166,15 +166,9 @@ s = s.replace(
 
 s = s.replaceAll("builtinInteractionJsons", "shippedInteractionJsons");
 
-s = s.replace(
-  `/** @emoji 📚 Host-facing built-in interaction row (\`spatial/assets/extension/builtin/interaction/<group>/*.json\`). */`,
-  `/** @emoji 📚 Host-facing interaction row (\`spatial/assets/modelDefinition/**/interaction/*.json\`). */`,
-);
+s = s.replace(`/** @emoji 📚 Host-facing built-in interaction row (\`spatial/assets/extension/builtin/interaction/<group>/*.json\`). */`, `/** @emoji 📚 Host-facing interaction row (\`spatial/assets/modelDefinition/**/interaction/*.json\`). */`);
 
-s = s.replace(
-  `/** @emoji 📚 Built-in interaction ids for host interaction surfaces (\`spatial/assets/extension/builtin/interaction/<group>/*.json\`). */`,
-  `/** @emoji 📚 Interaction ids from shipped model-definition assets. */`,
-);
+s = s.replace(`/** @emoji 📚 Built-in interaction ids for host interaction surfaces (\`spatial/assets/extension/builtin/interaction/<group>/*.json\`). */`, `/** @emoji 📚 Interaction ids from shipped model-definition assets. */`);
 
 await Bun.write(path, s);
 console.log("patched core catalogs");

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Kit app details panel had inconsistent rendering:
@@ -27,6 +28,7 @@ Kit app details panel had inconsistent rendering:
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix Kit app details panel rendering

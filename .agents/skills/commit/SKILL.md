@@ -1,9 +1,9 @@
 ---
 name: commit
 description: >-
-  Bundle micro-commits into one squash commit. Triggers C, bundle, squash — execute immediately.
-  Agent must analyze last bundle state and the full diff, decide bundle attribution (not automatic), then write new summaries.
-  Prepare stdout: four git fences, tag name, full commit message (six blocks total).
+ Bundle micro-commits into one squash commit. Triggers C, bundle, squash — execute immediately.
+ Agent must analyze last bundle state and the full diff, decide bundle attribution (not automatic), then write new summaries.
+ Prepare stdout: four git fences, tag name, full commit message (six blocks total).
 ---
 
 # Commit (bundle)
@@ -20,12 +20,12 @@ description: >-
 
 ## What the script does vs you
 
-| Script (automatic) | You (from analysis) |
-|--------------------|---------------------|
-| Subject `🐙…🔀` | — |
+| Script (automatic)                                                                                                                     | You (from analysis)                                                                                  |
+| -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Subject `🐙…🔀`                                                                                                                        | —                                                                                                    |
 | Per-bundle and per-day `📊uloc➕…✏️…➖…🟰…` from git **after** you name bundles (`🟰` = ➕+✏️+➖); **bundles sorted highest 🟰 first** | **Which bundles exist**, bundle scope lines (`🏘️compose✍️sketchpad`), **which changes belong where** |
-| Footer `📊uloc➕…✏️…➖…🟰…` (+ per-language rows) + `Signed-off-by` | Date lines `🎆YY🌙MM☀️DD` (no uloc on stdin) |
-| Four `git` commands on prepare stdout | **New** bullets `{emoji}{description}` |
+| Footer `📊uloc➕…✏️…➖…🟰…` (+ per-language rows) + `Signed-off-by`                                                                    | Date lines `🎆YY🌙MM☀️DD` (no uloc on stdin)                                                         |
+| Four `git` commands on prepare stdout                                                                                                  | **New** bullets `{emoji}{description}`                                                               |
 
 **Nothing** in the script reads prior commit bullets and auto-fills the bundle body. Prior messages may be wrong or another format — **never** copy them.
 
@@ -43,11 +43,11 @@ Do not assume yesterday’s bundle boundaries still apply. Do not let path-token
 
 **Uloc constraints (enforced on `check` and `prepare`):**
 
-| Level | Must sum (➕ ✏️ ➖ 🟰) |
-|-------|----------------------|
-| Each bundle’s `🎆` days | That bundle’s scope header `📊uloc` |
-| All bundle headers | Footer `📊uloc➕…` (full WIP range) |
-| Each footer language row | Same footer `📊uloc➕…` |
+| Level                    | Must sum (➕ ✏️ ➖ 🟰)              |
+| ------------------------ | ----------------------------------- |
+| Each bundle’s `🎆` days  | That bundle’s scope header `📊uloc` |
+| All bundle headers       | Footer `📊uloc➕…` (full WIP range) |
+| Each footer language row | Same footer `📊uloc➕…`             |
 
 Every changed path must belong to **exactly one** bundle. If days, bundles, or languages do not add up, attribution is wrong — fix scopes/dates and re-run check.
 

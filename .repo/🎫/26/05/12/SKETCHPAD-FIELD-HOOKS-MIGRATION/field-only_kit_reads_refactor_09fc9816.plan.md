@@ -8,91 +8,91 @@ isProject: false
 ---
 
 name: field-only kit reads refactor
-overview: Collapse `compose/js/index.ts` to only export entity classes (`Kit`, `Design`, `Type`, `Piece`, `Connection`, `Author`, `Quality`, ...); merge `Kit` and `KitStore` into one `Kit` class. The classes are stateless GraphQL clients over the schema in `compose/rs/lib.rs` (`Query` / `Mutation` / `Subscription`) — there is no in-class cache, no optimistic apply, no reconciliation logic anywhere in `compose/js`, `compose/react`, or `compose/sketchpad`. The Rust server is in-memory and authoritative for every read. Each field exposes two methods: `field(): Promise<T>` (one GraphQL `Query`) and `on<Event>(cb: (next: T) => void): Unsubscribe` (subscription event routed through an `EventBus`, where `next` comes from the server's event payload or a refetch — the class never stores it). Commands map 1:1 to leaves of the `*OperationInput` types in `compose/graphql/target.schema.graphql` and each ships as a single async method `op(...): Promise<SetResult>` that just dispatches the GraphQL mutation and awaits the server. `compose/react/index.tsx` adds nothing beyond the schema; every hook is 1:1 with one schema field (read) or one `*OperationInput` leaf (write). Read hooks back themselves with `useState` + `useEffect` (fetch on mount, replace on each subscription event) and return `T | undefined` lean / class instance(s) bulky. Operation hooks return `readonly [run, status]`. The `status` discriminated union has a *general* part (`idle` / `pending` / `successful` / `timeout` / `failed`) shared by every operation, plus per-operation *extras* declared by the schema's `SetError` kinds for that specific operation — e.g. only the rename/changeDescription/changeIcon/addAttribute family adds `tooLong`, while `useDragPiece` / `useFixPiece` / `useDeletePiece` carry only the general union. The TypeScript type per hook reflects exactly those kinds. No sub-selection, no derivation, no aggregate / metadata / shallow / view hooks. Sketchpad obeys the same rule and inlines every sub-selection at the call site.
+overview: Collapse `compose/js/index.ts` to only export entity classes (`Kit`, `Design`, `Type`, `Piece`, `Connection`, `Author`, `Quality`, ...); merge `Kit` and `KitStore` into one `Kit` class. The classes are stateless GraphQL clients over the schema in `compose/rs/lib.rs` (`Query` / `Mutation` / `Subscription`) — there is no in-class cache, no optimistic apply, no reconciliation logic anywhere in `compose/js`, `compose/react`, or `compose/sketchpad`. The Rust server is in-memory and authoritative for every read. Each field exposes two methods: `field(): Promise<T>` (one GraphQL `Query`) and `on<Event>(cb: (next: T) => void): Unsubscribe` (subscription event routed through an `EventBus`, where `next` comes from the server's event payload or a refetch — the class never stores it). Commands map 1:1 to leaves of the `*OperationInput` types in `compose/graphql/target.schema.graphql` and each ships as a single async method `op(...): Promise<SetResult>` that just dispatches the GraphQL mutation and awaits the server. `compose/react/index.tsx` adds nothing beyond the schema; every hook is 1:1 with one schema field (read) or one `*OperationInput` leaf (write). Read hooks back themselves with `useState` + `useEffect` (fetch on mount, replace on each subscription event) and return `T | undefined` lean / class instance(s) bulky. Operation hooks return `readonly [run, status]`. The `status` discriminated union has a _general_ part (`idle` / `pending` / `successful` / `timeout` / `failed`) shared by every operation, plus per-operation _extras_ declared by the schema's `SetError` kinds for that specific operation — e.g. only the rename/changeDescription/changeIcon/addAttribute family adds `tooLong`, while `useDragPiece` / `useFixPiece` / `useDeletePiece` carry only the general union. The TypeScript type per hook reflects exactly those kinds. No sub-selection, no derivation, no aggregate / metadata / shallow / view hooks. Sketchpad obeys the same rule and inlines every sub-selection at the call site.
 todos:
 
 - id: ticket
-content: Phase 0 (W-Foundation, sequential). Open / reopen the field-only kit reads ticket via repo MCP, place all temp artifacts inside the ticket folder, cache schema introspection (target.schema.graphql + compose/rs/lib.rs) into phase-0.json, and broadcast the entity → region map to Phase 1 workers.
-status: pending
+  content: Phase 0 (W-Foundation, sequential). Open / reopen the field-only kit reads ticket via repo MCP, place all temp artifacts inside the ticket folder, cache schema introspection (target.schema.graphql + compose/rs/lib.rs) into phase-0.json, and broadcast the entity → region map to Phase 1 workers.
+  status: pending
 - id: regions
-content: Phase 0 (W-Foundation). Insert the empty region scaffolding from §7.1 into compose/js/index.ts (🌐Transport / 🧬Entity / 🧱Classes/* per entity / 🪶WeakEntities/* / 🚀PublicAPI / 🧪Tests/* per entity), compose/react/index.tsx (🌉Bridges / 🎭Contexts/* / 🪝Hooks/<entity>/{🛡️Selectors,📖Reads,✍️Writes,🛠️Runtime} / 🧪Tests/* per entity), and compose/sketchpad/index.tsx (🎨Sketchpad/{🖼️Canvas,🗂️Catalog,🪟Outliner,🛠️Properties,📋ContextMenu,🧪NegativeGrep}). Sibling region emojis are unique. No code yet — just the markers.
-status: pending
+  content: Phase 0 (W-Foundation). Insert the empty region scaffolding from §7.1 into compose/js/index.ts (🌐Transport / 🧬Entity / 🧱Classes/_ per entity / 🪶WeakEntities/_ / 🚀PublicAPI / 🧪Tests/_ per entity), compose/react/index.tsx (🌉Bridges / 🎭Contexts/_ / 🪝Hooks/<entity>/{🛡️Selectors,📖Reads,✍️Writes,🛠️Runtime} / 🧪Tests/\* per entity), and compose/sketchpad/index.tsx (🎨Sketchpad/{🖼️Canvas,🗂️Catalog,🪟Outliner,🛠️Properties,📋ContextMenu,🧪NegativeGrep}). Sibling region emojis are unique. No code yet — just the markers.
+  status: pending
 - id: foundation
-content: Phase 0 (W-Foundation). Implement compose/js#🌐Transport (GqlTransport.query / .mutate / .subscribe; one persistent subscription per Kit; JSON event demux into 📡EventBus), compose/js#🧬Entity (Entity base + defineField/defineOperation/defineFields/defineOperations factories — pure GraphQL plumbing, no cache, no fieldSync, no dispatchSync, no applyToCache), compose/js#🚀PublicAPI (openKit factory only), compose/react#🌉Bridges (bindFieldToReact via useState+useEffect; bindOpToReact returning [run, status]; OperationStatus<T, Extra> + GeneralOperationStatus + TooLongStatus + OpErrorMapper + mapTooLong + IDLE + READONLY), compose/sketchpad#🧪NegativeGrep (failing scaffold), and rewrite compose/js/kit-store.worker.ts to host only the GraphQL transport (no DTO marshaling, no diff plumbing).
-status: pending
+  content: Phase 0 (W-Foundation). Implement compose/js#🌐Transport (GqlTransport.query / .mutate / .subscribe; one persistent subscription per Kit; JSON event demux into 📡EventBus), compose/js#🧬Entity (Entity base + defineField/defineOperation/defineFields/defineOperations factories — pure GraphQL plumbing, no cache, no fieldSync, no dispatchSync, no applyToCache), compose/js#🚀PublicAPI (openKit factory only), compose/react#🌉Bridges (bindFieldToReact via useState+useEffect; bindOpToReact returning [run, status]; OperationStatus<T, Extra> + GeneralOperationStatus + TooLongStatus + OpErrorMapper + mapTooLong + IDLE + READONLY), compose/sketchpad#🧪NegativeGrep (failing scaffold), and rewrite compose/js/kit-store.worker.ts to host only the GraphQL transport (no DTO marshaling, no diff plumbing).
+  status: pending
 - id: phase-1-kit
-content: Phase 1 (W-Kit, parallel). Implement compose/js#🎒Kit (merged with legacy KitStore as the constructor that owns GqlTransport + EventBus) + compose/react#🪝Kit (🛡️Selectors useKit / 📖Reads useKitName / useKitDescription / useKitTypes / useKitDesigns / useKitAuthors / useKitQualities / useKitTags / useKitConcepts / ✍️Writes useRenameKit (+tooLong) / useChangeKitDescription (+tooLong) / useCreateType (+tooLong) / useCreateDesign (+tooLong) / useStartNewChange / useSaveUnsavedChange / useCreateCheckpoint (+tooLong on message) / useStartAlternative / useIntegrateAlternative / useLogin (+tooLong) / useLogout / useStartSession / useEndSession / useHydrateKitStoreBundleJson / 🛠️Runtime useKitErrors / useKitConnectionStatus / useKitSync) + 🎭Contexts/Kit (KitContext provider + useKitContext) + 🧪Tests/Kit. Owns the entire Kit class API; no other worker touches 🎒Kit.
-status: pending
+  content: Phase 1 (W-Kit, parallel). Implement compose/js#🎒Kit (merged with legacy KitStore as the constructor that owns GqlTransport + EventBus) + compose/react#🪝Kit (🛡️Selectors useKit / 📖Reads useKitName / useKitDescription / useKitTypes / useKitDesigns / useKitAuthors / useKitQualities / useKitTags / useKitConcepts / ✍️Writes useRenameKit (+tooLong) / useChangeKitDescription (+tooLong) / useCreateType (+tooLong) / useCreateDesign (+tooLong) / useStartNewChange / useSaveUnsavedChange / useCreateCheckpoint (+tooLong on message) / useStartAlternative / useIntegrateAlternative / useLogin (+tooLong) / useLogout / useStartSession / useEndSession / useHydrateKitStoreBundleJson / 🛠️Runtime useKitErrors / useKitConnectionStatus / useKitSync) + 🎭Contexts/Kit (KitContext provider + useKitContext) + 🧪Tests/Kit. Owns the entire Kit class API; no other worker touches 🎒Kit.
+  status: pending
 - id: phase-1-design
-content: Phase 1 (W-Design, parallel). Implement compose/js#📐Design (every DesignOperationInput leaf, navigation design.piece(id) / design.pieces(ids) / design.connection(id), bulky list reads design.pieces() / design.connections()) + compose/react#📐Design (🛡️Selectors useDesign / 📖Reads useDesignName / useDesignDescription / useDesignPieces / useDesignConnections / useDesignAttributes / ✍️Writes useRenameDesign (+tooLong) / useChangeDesignDescription (+tooLong) / useFlattenDesign / useAddFixedPiece (+tooLong on optional name/description) / useAddChildPieceWithParentConnection (+tooLong) / useAddHangingChildPieceWithParentConnection (+tooLong) / useDeletePiece / useDeletePieces / useDeletePiecesAndConnections / useAddDesignAttribute (+tooLong) / useRemoveDesignAttribute / useRemoveDesignAttributes) + 🎭Contexts/Design + 🧪Tests/Design.
-status: pending
+  content: Phase 1 (W-Design, parallel). Implement compose/js#📐Design (every DesignOperationInput leaf, navigation design.piece(id) / design.pieces(ids) / design.connection(id), bulky list reads design.pieces() / design.connections()) + compose/react#📐Design (🛡️Selectors useDesign / 📖Reads useDesignName / useDesignDescription / useDesignPieces / useDesignConnections / useDesignAttributes / ✍️Writes useRenameDesign (+tooLong) / useChangeDesignDescription (+tooLong) / useFlattenDesign / useAddFixedPiece (+tooLong on optional name/description) / useAddChildPieceWithParentConnection (+tooLong) / useAddHangingChildPieceWithParentConnection (+tooLong) / useDeletePiece / useDeletePieces / useDeletePiecesAndConnections / useAddDesignAttribute (+tooLong) / useRemoveDesignAttribute / useRemoveDesignAttributes) + 🎭Contexts/Design + 🧪Tests/Design.
+  status: pending
 - id: phase-1-type
-content: Phase 1 (W-Type, parallel). Implement compose/js#🧰Type (every TypeOperationInput leaf, navigation type.port(id) / type.connector(id), bulky list reads type.ports() / type.connectors() / type.representations()) + compose/react#🧰Type (🛡️Selectors useType / 📖Reads useTypeName / useTypeDescription / useTypeIcon / useTypeImage / useTypeUnit / useTypePorts / useTypeConnectors / useTypeRepresentations / ✍️Writes useRenameType (+tooLong) / useChangeTypeDescription (+tooLong) / useChangeTypeIcon (+tooLong) / useAddTypeAttribute (+tooLong) / useRemoveTypeAttribute / useRemoveTypeAttributes / useCreatePort (+tooLong) / useDeletePort / useDeletePorts / useAddConnector (+tooLong) / useRemoveConnector / useRemoveConnectors) + 🎭Contexts/Type + 🧪Tests/Type.
-status: pending
+  content: Phase 1 (W-Type, parallel). Implement compose/js#🧰Type (every TypeOperationInput leaf, navigation type.port(id) / type.connector(id), bulky list reads type.ports() / type.connectors() / type.representations()) + compose/react#🧰Type (🛡️Selectors useType / 📖Reads useTypeName / useTypeDescription / useTypeIcon / useTypeImage / useTypeUnit / useTypePorts / useTypeConnectors / useTypeRepresentations / ✍️Writes useRenameType (+tooLong) / useChangeTypeDescription (+tooLong) / useChangeTypeIcon (+tooLong) / useAddTypeAttribute (+tooLong) / useRemoveTypeAttribute / useRemoveTypeAttributes / useCreatePort (+tooLong) / useDeletePort / useDeletePorts / useAddConnector (+tooLong) / useRemoveConnector / useRemoveConnectors) + 🎭Contexts/Type + 🧪Tests/Type.
+  status: pending
 - id: phase-1-port-connector
-content: Phase 1 (W-PortConnector, parallel). Implement compose/js#🔘Port + 🔗Connector (every PortOperationInput / ConnectorOperationInput leaf) + compose/react#🔘Port + 🔗Connector (🛡️Selectors usePort / useConnector / 📖Reads usePortCode / usePortLabel / usePortDescription / usePortIcon / usePortAttributes / useConnectorCode / useConnectorDescription / useConnectorIcon / ✍️Writes useRenamePort (+tooLong) / useChangePortDescription (+tooLong) / useChangePortIcon (+tooLong) / useAddPortAttribute (+tooLong) / useRemovePortAttribute / useRemovePortAttributes / useRenameConnector (+tooLong) / useChangeConnectorDescription (+tooLong) / useChangeConnectorIcon (+tooLong)) + 🎭Contexts/Port + 🎭Contexts/Connector + 🧪Tests/Port + 🧪Tests/Connector.
-status: pending
+  content: Phase 1 (W-PortConnector, parallel). Implement compose/js#🔘Port + 🔗Connector (every PortOperationInput / ConnectorOperationInput leaf) + compose/react#🔘Port + 🔗Connector (🛡️Selectors usePort / useConnector / 📖Reads usePortCode / usePortLabel / usePortDescription / usePortIcon / usePortAttributes / useConnectorCode / useConnectorDescription / useConnectorIcon / ✍️Writes useRenamePort (+tooLong) / useChangePortDescription (+tooLong) / useChangePortIcon (+tooLong) / useAddPortAttribute (+tooLong) / useRemovePortAttribute / useRemovePortAttributes / useRenameConnector (+tooLong) / useChangeConnectorDescription (+tooLong) / useChangeConnectorIcon (+tooLong)) + 🎭Contexts/Port + 🎭Contexts/Connector + 🧪Tests/Port + 🧪Tests/Connector.
+  status: pending
 - id: phase-1-piece
-content: Phase 1 (W-Piece, parallel). Implement compose/js#🧩Piece + 🪢PiecesOperations (every PieceOperationInput leaf, every PiecesOperationInput leaf for design.pieces(ids), all 17 schema fields including parentPiece / parentConnection / childPieces / childConnections navigation) + compose/react#🧩Piece + 🪢Pieces (🛡️Selectors usePiece / 📖Reads usePieceName / usePieceDescription / usePiecePlane / usePieceCenter / usePieceFlatPlane / usePieceFlatCenter / usePiecePosition / usePieceFlatPosition / usePieceScale / usePieceBlueprint / usePieceAttributes / usePieceParentPiece / usePieceParentConnection / usePieceChildPieces / usePieceChildConnections / usePieceDepth / usePieceConnectionKind / ✍️Writes useRenamePiece (+tooLong) / useChangePieceDescription (+tooLong) / useDragPiece / useMovePiece / useFixPiece / useChangePieceBlueprint (+tooLong) / useAddPieceAttribute (+tooLong) / useRemovePieceAttribute / useRemovePieceAttributes / useDragPieces / useMovePieces / useFixPieces / useChangePiecesBlueprint (+tooLong)) + 🎭Contexts/Piece + 🧪Tests/Piece.
-status: pending
+  content: Phase 1 (W-Piece, parallel). Implement compose/js#🧩Piece + 🪢PiecesOperations (every PieceOperationInput leaf, every PiecesOperationInput leaf for design.pieces(ids), all 17 schema fields including parentPiece / parentConnection / childPieces / childConnections navigation) + compose/react#🧩Piece + 🪢Pieces (🛡️Selectors usePiece / 📖Reads usePieceName / usePieceDescription / usePiecePlane / usePieceCenter / usePieceFlatPlane / usePieceFlatCenter / usePiecePosition / usePieceFlatPosition / usePieceScale / usePieceBlueprint / usePieceAttributes / usePieceParentPiece / usePieceParentConnection / usePieceChildPieces / usePieceChildConnections / usePieceDepth / usePieceConnectionKind / ✍️Writes useRenamePiece (+tooLong) / useChangePieceDescription (+tooLong) / useDragPiece / useMovePiece / useFixPiece / useChangePieceBlueprint (+tooLong) / useAddPieceAttribute (+tooLong) / useRemovePieceAttribute / useRemovePieceAttributes / useDragPieces / useMovePieces / useFixPieces / useChangePiecesBlueprint (+tooLong)) + 🎭Contexts/Piece + 🧪Tests/Piece.
+  status: pending
 - id: phase-1-connection
-content: Phase 1 (W-Connection, parallel). Implement compose/js#⛓️Connection (read-only Artifact class — no *OperationInput in current schema; all per-field reads gap / shift / rise / rotation / turn / tilt / connected / connecting) + compose/react#⛓️Connection (🛡️Selectors useConnection / 📖Reads useConnectionGap / useConnectionShift / useConnectionRise / useConnectionRotation / useConnectionTurn / useConnectionTilt / useConnectionConnected / useConnectionConnecting / no ✍️Writes subregion until schema declares ConnectionOperationInput) + 🎭Contexts/Connection + 🧪Tests/Connection.
-status: pending
+  content: Phase 1 (W-Connection, parallel). Implement compose/js#⛓️Connection (read-only Artifact class — no \*OperationInput in current schema; all per-field reads gap / shift / rise / rotation / turn / tilt / connected / connecting) + compose/react#⛓️Connection (🛡️Selectors useConnection / 📖Reads useConnectionGap / useConnectionShift / useConnectionRise / useConnectionRotation / useConnectionTurn / useConnectionTilt / useConnectionConnected / useConnectionConnecting / no ✍️Writes subregion until schema declares ConnectionOperationInput) + 🎭Contexts/Connection + 🧪Tests/Connection.
+  status: pending
 - id: phase-1-author
-content: Phase 1 (W-Author, parallel). Implement compose/js#✍️Author (read-only Artifact class) + compose/react#✍️Author (🛡️Selectors useAuthor / 📖Reads useAuthorName / useAuthorEmail / useAuthorRank / no ✍️Writes) + 🎭Contexts/Author + 🧪Tests/Author.
-status: pending
+  content: Phase 1 (W-Author, parallel). Implement compose/js#✍️Author (read-only Artifact class) + compose/react#✍️Author (🛡️Selectors useAuthor / 📖Reads useAuthorName / useAuthorEmail / useAuthorRank / no ✍️Writes) + 🎭Contexts/Author + 🧪Tests/Author.
+  status: pending
 - id: phase-1-quality
-content: Phase 1 (W-Quality, parallel). Implement compose/js#💎Quality (every QualityOperationInput leaf) + compose/react#💎Quality (🛡️Selectors useQuality / 📖Reads useQualityKey / useQualityValue / useQualityUnit / useQualityDefinition / useQualityDescription / useQualityIcon / useQualityAttributes / ✍️Writes useRenameQuality (+tooLong) / useChangeQualityDescription (+tooLong) / useChangeQualityIcon (+tooLong) / useAddQualityAttribute (+tooLong) / useRemoveQualityAttribute / useRemoveQualityAttributes) + 🎭Contexts/Quality + 🧪Tests/Quality.
-status: pending
+  content: Phase 1 (W-Quality, parallel). Implement compose/js#💎Quality (every QualityOperationInput leaf) + compose/react#💎Quality (🛡️Selectors useQuality / 📖Reads useQualityKey / useQualityValue / useQualityUnit / useQualityDefinition / useQualityDescription / useQualityIcon / useQualityAttributes / ✍️Writes useRenameQuality (+tooLong) / useChangeQualityDescription (+tooLong) / useChangeQualityIcon (+tooLong) / useAddQualityAttribute (+tooLong) / useRemoveQualityAttribute / useRemoveQualityAttributes) + 🎭Contexts/Quality + 🧪Tests/Quality.
+  status: pending
 - id: phase-1-tag-concept
-content: Phase 1 (W-TagConcept, parallel). Implement compose/js#🏷️Tag + 💡Concept (every TagOperationInput / ConceptOperationInput leaf) + compose/react#🏷️Tag + 💡Concept (🛡️Selectors useTag / useConcept / 📖Reads useTagName / useTagDescription / useTagIcon / useTagAttributes / useConceptName / useConceptDescription / useConceptIcon / useConceptAttributes / ✍️Writes useRenameTag (+tooLong) / useChangeTagDescription (+tooLong) / useChangeTagIcon (+tooLong) / useAddTagAttribute (+tooLong) / useRemoveTagAttribute / useRemoveTagAttributes / useRenameConcept (+tooLong) / useChangeConceptDescription (+tooLong) / useChangeConceptIcon (+tooLong) / useAddConceptAttribute (+tooLong) / useRemoveConceptAttribute / useRemoveConceptAttributes) + 🎭Contexts/Tag + 🎭Contexts/Concept + 🧪Tests/Tag + 🧪Tests/Concept.
-status: pending
+  content: Phase 1 (W-TagConcept, parallel). Implement compose/js#🏷️Tag + 💡Concept (every TagOperationInput / ConceptOperationInput leaf) + compose/react#🏷️Tag + 💡Concept (🛡️Selectors useTag / useConcept / 📖Reads useTagName / useTagDescription / useTagIcon / useTagAttributes / useConceptName / useConceptDescription / useConceptIcon / useConceptAttributes / ✍️Writes useRenameTag (+tooLong) / useChangeTagDescription (+tooLong) / useChangeTagIcon (+tooLong) / useAddTagAttribute (+tooLong) / useRemoveTagAttribute / useRemoveTagAttributes / useRenameConcept (+tooLong) / useChangeConceptDescription (+tooLong) / useChangeConceptIcon (+tooLong) / useAddConceptAttribute (+tooLong) / useRemoveConceptAttribute / useRemoveConceptAttributes) + 🎭Contexts/Tag + 🎭Contexts/Concept + 🧪Tests/Tag + 🧪Tests/Concept.
+  status: pending
 - id: phase-1-representation
-content: Phase 1 (W-Representation, parallel). Implement compose/js#🎨Representation (read-only until schema declares RepresentationOperationInput) + compose/react#🎨Representation (🛡️Selectors useRepresentation / 📖Reads useRepresentationUrl / useRepresentationDescription / useRepresentationTags / useRepresentationLod / useRepresentationAttributes / no ✍️Writes) + 🎭Contexts/Representation + 🧪Tests/Representation.
-status: pending
+  content: Phase 1 (W-Representation, parallel). Implement compose/js#🎨Representation (read-only until schema declares RepresentationOperationInput) + compose/react#🎨Representation (🛡️Selectors useRepresentation / 📖Reads useRepresentationUrl / useRepresentationDescription / useRepresentationTags / useRepresentationLod / useRepresentationAttributes / no ✍️Writes) + 🎭Contexts/Representation + 🧪Tests/Representation.
+  status: pending
 - id: phase-1-bulky-extras
-content: Phase 1 (W-BulkyExtras, parallel). Implement compose/js#👨‍👩‍👦Family + 📄File + 📁Folder + 🪟Layer + 👥Group + 📊Stat + 🎚️Prop (read-only Artifact classes per current schema). Hooks added in compose/react only when sketchpad in Phase 2 reports a missing-hook entry; otherwise the JS classes ship without React surface. No deletions.
-status: pending
+  content: Phase 1 (W-BulkyExtras, parallel). Implement compose/js#👨‍👩‍👦Family + 📄File + 📁Folder + 🪟Layer + 👥Group + 📊Stat + 🎚️Prop (read-only Artifact classes per current schema). Hooks added in compose/react only when sketchpad in Phase 2 reports a missing-hook entry; otherwise the JS classes ship without React surface. No deletions.
+  status: pending
 - id: phase-1-weak-entities
-content: Phase 1 (W-WeakEntities, parallel). Implement compose/js#🪶WeakEntities — Plane / Coordinate / Point / Vector / Side / Position / Place / Location / Camera / Benchmark / Attribute as plain TypeScript interfaces mirroring target.schema.graphql lines 51–67 verbatim. NO classes, NO React contexts, NO React hooks. Owners (Piece / Connection / etc.) return these by-value from their field() methods.
-status: pending
+  content: Phase 1 (W-WeakEntities, parallel). Implement compose/js#🪶WeakEntities — Plane / Coordinate / Point / Vector / Side / Position / Place / Location / Camera / Benchmark / Attribute as plain TypeScript interfaces mirroring target.schema.graphql lines 51–67 verbatim. NO classes, NO React contexts, NO React hooks. Owners (Piece / Connection / etc.) return these by-value from their field() methods.
+  status: pending
 - id: phase-2-sketch-canvas
-content: Phase 2 (W-SketchCanvas, parallel). Migrate compose/sketchpad#🖼️Canvas. Replace every banned hook usage in viewport / drag / hover / gizmo code with chains of usePieceCenter / usePieceFlatCenter / usePiecePlane reads + [dragPiece, dragPieceStatus] = useDragPiece / [movePiece, movePieceStatus] = useMovePiece / [fixPiece, fixPieceStatus] = useFixPiece. No optimistic apply, no commands.applyKitDiff. Bound usePieceCenter rerenders only when the server emits CenterChanged.
-status: pending
+  content: Phase 2 (W-SketchCanvas, parallel). Migrate compose/sketchpad#🖼️Canvas. Replace every banned hook usage in viewport / drag / hover / gizmo code with chains of usePieceCenter / usePieceFlatCenter / usePiecePlane reads + [dragPiece, dragPieceStatus] = useDragPiece / [movePiece, movePieceStatus] = useMovePiece / [fixPiece, fixPieceStatus] = useFixPiece. No optimistic apply, no commands.applyKitDiff. Bound usePieceCenter rerenders only when the server emits CenterChanged.
+  status: pending
 - id: phase-2-sketch-catalog
-content: Phase 2 (W-SketchCatalog, parallel). Migrate compose/sketchpad#🗂️Catalog. Types / designs / authors / qualities / tags / concepts panels — replace every useKit / useDesign-style read with useKitTypes / useKitDesigns / useKitAuthors / useKitQualities / useKitTags / useKitConcepts and fan list rendering through .map((x) => <Context id={x.id}>). Mutations via [createType, createTypeStatus] = useCreateType + sibling create / delete hooks.
-status: pending
+  content: Phase 2 (W-SketchCatalog, parallel). Migrate compose/sketchpad#🗂️Catalog. Types / designs / authors / qualities / tags / concepts panels — replace every useKit / useDesign-style read with useKitTypes / useKitDesigns / useKitAuthors / useKitQualities / useKitTags / useKitConcepts and fan list rendering through .map((x) => <Context id={x.id}>). Mutations via [createType, createTypeStatus] = useCreateType + sibling create / delete hooks.
+  status: pending
 - id: phase-2-sketch-outliner
-content: Phase 2 (W-SketchOutliner, parallel). Migrate compose/sketchpad#🪟Outliner. Pieces / connections tree per design — useDesignPieces + useDesignConnections, fan into <PieceContext id={p.id}> and <ConnectionContext id={c.id}> children that read their own per-field hooks. Hide / lock state derived inline from usePieceAttributes (until schema grows Piece.isHidden / Piece.isLocked).
-status: pending
+  content: Phase 2 (W-SketchOutliner, parallel). Migrate compose/sketchpad#🪟Outliner. Pieces / connections tree per design — useDesignPieces + useDesignConnections, fan into <PieceContext id={p.id}> and <ConnectionContext id={c.id}> children that read their own per-field hooks. Hide / lock state derived inline from usePieceAttributes (until schema grows Piece.isHidden / Piece.isLocked).
+  status: pending
 - id: phase-2-sketch-properties
-content: Phase 2 (W-SketchProperties, parallel). Migrate compose/sketchpad#🛠️Properties. Edit panels for piece / connection / type / port / connector — heavy users of +tooLong hooks (useRenamePiece / useChangePieceDescription / useRenameConnector / useChangeConnectorIcon / useChangePortDescription / etc.) plus the matching per-field reads. Render saving / tooLong / timeout / failed UI off opStatus.kind. For general ops verify TypeScript rejects opStatus.kind === "tooLong" comparisons.
-status: pending
+  content: Phase 2 (W-SketchProperties, parallel). Migrate compose/sketchpad#🛠️Properties. Edit panels for piece / connection / type / port / connector — heavy users of +tooLong hooks (useRenamePiece / useChangePieceDescription / useRenameConnector / useChangeConnectorIcon / useChangePortDescription / etc.) plus the matching per-field reads. Render saving / tooLong / timeout / failed UI off opStatus.kind. For general ops verify TypeScript rejects opStatus.kind === "tooLong" comparisons.
+  status: pending
 - id: phase-2-sketch-menu
-content: Phase 2 (W-SketchMenu, parallel). Migrate compose/sketchpad#📋ContextMenu. Right-click menus, hotkeys, copy/paste, undo/redo, alternatives — useStartNewChange / useSaveUnsavedChange / useCreateCheckpoint (+tooLong on message) / useStartAlternative / useIntegrateAlternative / useDeletePiece / useDeletePieces / useDeletePiecesAndConnections. Drop the useDesignAppCommands indirection entirely.
-status: pending
+  content: Phase 2 (W-SketchMenu, parallel). Migrate compose/sketchpad#📋ContextMenu. Right-click menus, hotkeys, copy/paste, undo/redo, alternatives — useStartNewChange / useSaveUnsavedChange / useCreateCheckpoint (+tooLong on message) / useStartAlternative / useIntegrateAlternative / useDeletePiece / useDeletePieces / useDeletePiecesAndConnections. Drop the useDesignAppCommands indirection entirely.
+  status: pending
 - id: phase-2-sketch-tests
-content: Phase 2 (W-SketchTests, parallel). Add the file-level negative-grep block in compose/sketchpad#🧪NegativeGrep asserting zero matches for: \b(useKit|useDesign|useType|usePiece|useConnection|useAuthor|useQuality)\b standalone usage, applyKitDiff, useDesignAppCommands, useSyncExternalStore, \buse\w+Sync\b operation hooks, *Schema / *Dto / *Snapshot imports, KitStore / KitHostStore. Run as inline vitest.
-status: pending
+  content: Phase 2 (W-SketchTests, parallel). Add the file-level negative-grep block in compose/sketchpad#🧪NegativeGrep asserting zero matches for: \b(useKit|useDesign|useType|usePiece|useConnection|useAuthor|useQuality)\b standalone usage, applyKitDiff, useDesignAppCommands, useSyncExternalStore, \buse\w+Sync\b operation hooks, *Schema / *Dto / \*Snapshot imports, KitStore / KitHostStore. Run as inline vitest.
+  status: pending
 - id: phase-3-del-js-stores
-content: Phase 3 (W-DEL-JS-Stores, parallel). Delete from compose/js/index.ts the legacy host-store and registry layer — KitStore (merged into Kit during Phase 1), KitStoreClient / WasmKitStoreClient, KitHostStore + KitStoreSnapshot + KitHostStoreSnapshot + KitSyncSnapshot, InMemoryKitStore + createSessionKitStore + createJsonFileKitStore + createFolderKitStore + applyKitClientSnapshotToLocalStore + KitBundlePersistingStore + KIT_BUNDLE_BOOTSTRAPPED + KitJsonFileAdapter + KitFolderAdapter + KitBinaryStore, every Read*Command / ComposeKitLiveReadStore / KitDesignReadStore / KitShallowListStore / KitViewCatalogStore, every kitStoreClientAdd*/Update*/Remove* free function, submitKitChangeCommands / buildSchemaEntityChangeCommands / writeKitStoreClientSchemaField / StoreField / StoreCommand / CommandBuilder.
-status: pending
+  content: Phase 3 (W-DEL-JS-Stores, parallel). Delete from compose/js/index.ts the legacy host-store and registry layer — KitStore (merged into Kit during Phase 1), KitStoreClient / WasmKitStoreClient, KitHostStore + KitStoreSnapshot + KitHostStoreSnapshot + KitSyncSnapshot, InMemoryKitStore + createSessionKitStore + createJsonFileKitStore + createFolderKitStore + applyKitClientSnapshotToLocalStore + KitBundlePersistingStore + KIT_BUNDLE_BOOTSTRAPPED + KitJsonFileAdapter + KitFolderAdapter + KitBinaryStore, every Read*Command / ComposeKitLiveReadStore / KitDesignReadStore / KitShallowListStore / KitViewCatalogStore, every kitStoreClientAdd*/Update*/Remove* free function, submitKitChangeCommands / buildSchemaEntityChangeCommands / writeKitStoreClientSchemaField / StoreField / StoreCommand / CommandBuilder.
+  status: pending
 - id: phase-3-del-js-diffs
-content: Phase 3 (W-DEL-JS-Diffs, parallel). Delete from compose/js/index.ts every diff / DTO / schema layer — *DiffSchema / *Diff / *sDiffSchema / *sDiff types, Design.applyDiff / Design.previewWithDiff / Design.dragBySelection / Design.deletePiecesAndConnectionsDiff, Type.pickBestRepresentation, Kit.copyDesignOp / Kit.pasteDesignOp / Kit.flattenDesignCachedOp / Kit.findParentPieceInDesign / Kit.findParentConnectionForPieceInDesign / Kit.findChildrenPiecesInDesign / Kit.findDesign / Kit.findType / Kit.piecesMetadataFor / Kit.fromDto / Kit.toDto / Kit.toJSON / Kit.deserialize / Kit.serialize / Kit.ensure, every *Schema / Zod export, every *Dto / *MetadataDto / *Shallow type, KitFullDto + KitFullDtoSchema + normalizeKitFullDtoFolderPaths, KitJson* helpers, KitGraphqlResponseEnvelope, kitChangeSemanticKindToGraphQl + KitChangeKind + KitChangeSemanticKindGql + KitCommandLifecycleEvent + COMPOSE_KIT_STORE_CONTROL_COMMAND_KINDS + ComposeKitStoreControlCommandName, every kitEventAffects* helper, file-state helpers (getStoredKitFileUrls / getOrCreateKitFileState / getKitFileProvider / getReadableKitFileUrl / fetchReadableKitFileBlob / getKitFileStoragePath / createKitFileObjectUrl / isBrowserReadableFileUrl / getKitPorts), TOLERANCE / ICON_WIDTH / DiffStatus / EntityLifecycle / FlatMerkleCacheEntry / OperationResult / DesignOperationResult / DesignDiffOperationResult / AlgorithmError / PiecePlacementRowDto.
-status: pending
+  content: Phase 3 (W-DEL-JS-Diffs, parallel). Delete from compose/js/index.ts every diff / DTO / schema layer — *DiffSchema / *Diff / *sDiffSchema / *sDiff types, Design.applyDiff / Design.previewWithDiff / Design.dragBySelection / Design.deletePiecesAndConnectionsDiff, Type.pickBestRepresentation, Kit.copyDesignOp / Kit.pasteDesignOp / Kit.flattenDesignCachedOp / Kit.findParentPieceInDesign / Kit.findParentConnectionForPieceInDesign / Kit.findChildrenPiecesInDesign / Kit.findDesign / Kit.findType / Kit.piecesMetadataFor / Kit.fromDto / Kit.toDto / Kit.toJSON / Kit.deserialize / Kit.serialize / Kit.ensure, every *Schema / Zod export, every *Dto / *MetadataDto / *Shallow type, KitFullDto + KitFullDtoSchema + normalizeKitFullDtoFolderPaths, KitJson* helpers, KitGraphqlResponseEnvelope, kitChangeSemanticKindToGraphQl + KitChangeKind + KitChangeSemanticKindGql + KitCommandLifecycleEvent + COMPOSE_KIT_STORE_CONTROL_COMMAND_KINDS + ComposeKitStoreControlCommandName, every kitEventAffects* helper, file-state helpers (getStoredKitFileUrls / getOrCreateKitFileState / getKitFileProvider / getReadableKitFileUrl / fetchReadableKitFileBlob / getKitFileStoragePath / createKitFileObjectUrl / isBrowserReadableFileUrl / getKitPorts), TOLERANCE / ICON_WIDTH / DiffStatus / EntityLifecycle / FlatMerkleCacheEntry / OperationResult / DesignOperationResult / DesignDiffOperationResult / AlgorithmError / PiecePlacementRowDto.
+  status: pending
 - id: phase-3-del-react-snapshot
-content: Phase 3 (W-DEL-REACT-Snapshot, parallel). Delete from compose/react/index.tsx — useKitSnapshot / useKitStoreSnapshot / useKitHostStore / useKitStore / useComposeStoreSelector / useComposeReadSnap / useComposeKitScopedView / useKitStoreClient; useSchemaObjectState / useSchemaObjectMutation / useSchemaObjectValue / useSchemaFieldValue / useSchemaFieldMutation / useSchemaFieldState / useSchemaScope / useKitRuntimeSafe / useKitRegistry / useKitRegistrySafe; the IndexedSchemaState / resolveReference / readSchemaFieldValue / KitRuntimeContext machinery; every useResolved* helper; KitFieldBinding / HookRead / WriteStatus / WRITE_STATUS_IDLE / WRITE_STATUS_READONLY / WRITE_STATUS_PENDING / writeStatusEquivalent; whole-snapshot file/binary helpers (useKitFileBlobUrl / useKitStoredFileUrls / useFileUrls / useKitFileState / useKitPersistenceKind / useKitPersistenceSource / useKitBinary / useEmbedKitFile / useKitFileUrl); old freeform command hooks (useUndo / useRedo / useDeselectAll / useDeleteSelected / usePasteDesignSelection / useChange / useCommandBuilder / useWriteIndicator / useWriteQueue / useOptimistic / usePendingTriad).
-status: pending
+  content: Phase 3 (W-DEL-REACT-Snapshot, parallel). Delete from compose/react/index.tsx — useKitSnapshot / useKitStoreSnapshot / useKitHostStore / useKitStore / useComposeStoreSelector / useComposeReadSnap / useComposeKitScopedView / useKitStoreClient; useSchemaObjectState / useSchemaObjectMutation / useSchemaObjectValue / useSchemaFieldValue / useSchemaFieldMutation / useSchemaFieldState / useSchemaScope / useKitRuntimeSafe / useKitRegistry / useKitRegistrySafe; the IndexedSchemaState / resolveReference / readSchemaFieldValue / KitRuntimeContext machinery; every useResolved\* helper; KitFieldBinding / HookRead / WriteStatus / WRITE_STATUS_IDLE / WRITE_STATUS_READONLY / WRITE_STATUS_PENDING / writeStatusEquivalent; whole-snapshot file/binary helpers (useKitFileBlobUrl / useKitStoredFileUrls / useFileUrls / useKitFileState / useKitPersistenceKind / useKitPersistenceSource / useKitBinary / useEmbedKitFile / useKitFileUrl); old freeform command hooks (useUndo / useRedo / useDeselectAll / useDeleteSelected / usePasteDesignSelection / useChange / useCommandBuilder / useWriteIndicator / useWriteQueue / useOptimistic / usePendingTriad).
+  status: pending
 - id: phase-3-del-react-aggregates
-content: Phase 3 (W-DEL-REACT-Aggregates, parallel). Delete from compose/react/index.tsx every sub-selection / aggregate / metadata / shallow / view / registry hook listed in §4 — useTypesIds / useDesignsIds / useKitTypeIds / useKitDesignIds / useKitAuthorIds / useKitQualityIds / useDesignPieceIds / useDesignConnectionIds / useTypePortIds / useTypeConnectorIds / useTypeRepresentationIds / useConnectionConnectedPieceId / useConnectionConnectingPieceId / usePieceCenterU / usePieceCenterV / usePieceIsHidden / usePieceIsLocked / useTypesMetadata / useDesignsMetadata / useTypesFull / useDesignsFull / useFilesFull / useTagsFull / useKitDesignsShallow / useKitTypesShallow / useKitAuthorsShallow / useKitPieces / useKitConnections / usePiecesMetadataMap / usePieceMetadata / useIncludedDesigns / useDesignClusterableGroups / useDesignQualitySum / useTypeBestRepresentation / useKitColoredConnectors / useReplacableTypes / useReplacableDesigns / useExplodeableDesignNodes / useOpenKitGuids / useActiveKitGuid / useOpenKitShallows / useRegistryHasKit / useRegistryKitPersistenceKind / useKitAlternatives / useKitAlternativeSelection; every whole-object triad (usePieceTriad / useDesignTriad / useTypeTriad / useAuthorTriad / useQualityTriad / useConnectionTriad); every whole-object accessor (useFolder / useFile / useTag (DTO) / useConcept (DTO) / useFamily / useGroup / usePort (DTO) / useProp / useStat / useBenchmark / useCoordinate / usePoint / useVector / usePlane / useCamera / useAttribute / useLocation / useRepresentation (DTO) / useConnector (DTO) / useActor / useUser / useAgent / useSessionActorInput); every *Input / *PatchInput whole-object hook.
-status: pending
+  content: Phase 3 (W-DEL-REACT-Aggregates, parallel). Delete from compose/react/index.tsx every sub-selection / aggregate / metadata / shallow / view / registry hook listed in §4 — useTypesIds / useDesignsIds / useKitTypeIds / useKitDesignIds / useKitAuthorIds / useKitQualityIds / useDesignPieceIds / useDesignConnectionIds / useTypePortIds / useTypeConnectorIds / useTypeRepresentationIds / useConnectionConnectedPieceId / useConnectionConnectingPieceId / usePieceCenterU / usePieceCenterV / usePieceIsHidden / usePieceIsLocked / useTypesMetadata / useDesignsMetadata / useTypesFull / useDesignsFull / useFilesFull / useTagsFull / useKitDesignsShallow / useKitTypesShallow / useKitAuthorsShallow / useKitPieces / useKitConnections / usePiecesMetadataMap / usePieceMetadata / useIncludedDesigns / useDesignClusterableGroups / useDesignQualitySum / useTypeBestRepresentation / useKitColoredConnectors / useReplacableTypes / useReplacableDesigns / useExplodeableDesignNodes / useOpenKitGuids / useActiveKitGuid / useOpenKitShallows / useRegistryHasKit / useRegistryKitPersistenceKind / useKitAlternatives / useKitAlternativeSelection; every whole-object triad (usePieceTriad / useDesignTriad / useTypeTriad / useAuthorTriad / useQualityTriad / useConnectionTriad); every whole-object accessor (useFolder / useFile / useTag (DTO) / useConcept (DTO) / useFamily / useGroup / usePort (DTO) / useProp / useStat / useBenchmark / useCoordinate / usePoint / useVector / usePlane / useCamera / useAttribute / useLocation / useRepresentation (DTO) / useConnector (DTO) / useActor / useUser / useAgent / useSessionActorInput); every *Input / *PatchInput whole-object hook.
+  status: pending
 - id: validate
-content: Phase 4 (W-Validate, sequential). Run npm run depcruise:layers; run npm run typecheck for compose/js + compose/react + compose/sketchpad; run every inline vitest (entity field round-trips, OperationStatus transitions per per-op extras, expectTypeOf assertions, single rerender per server event, sketchpad negative-grep); manual sketchpad smoke (open kit, rename with tooLong UI, drag piece confirming pending → successful + bound rerender on server CenterChanged event, GraphQL transport log shows 1 mutation + 1 subscription event per edit); fix integration fallout cross-region.
-status: pending
+  content: Phase 4 (W-Validate, sequential). Run npm run depcruise:layers; run npm run typecheck for compose/js + compose/react + compose/sketchpad; run every inline vitest (entity field round-trips, OperationStatus transitions per per-op extras, expectTypeOf assertions, single rerender per server event, sketchpad negative-grep); manual sketchpad smoke (open kit, rename with tooLong UI, drag piece confirming pending → successful + bound rerender on server CenterChanged event, GraphQL transport log shows 1 mutation + 1 subscription event per edit); fix integration fallout cross-region.
+  status: pending
 - id: close
-content: Phase 4 (W-Validate). Close the ticket via the repo MCP with a per-file summary listing every region touched in compose/js/index.ts, compose/react/index.tsx, compose/sketchpad/index.tsx, compose/js/kit-store.worker.ts and every deletion (KitStore family, snapshot machinery, *Diff types, generic schema readers, sub-selection / aggregate / shell / registry hooks, whole-object triads / accessors / *Input wrappers).
-status: pending
-isProject: false
+  content: Phase 4 (W-Validate). Close the ticket via the repo MCP with a per-file summary listing every region touched in compose/js/index.ts, compose/react/index.tsx, compose/sketchpad/index.tsx, compose/js/kit-store.worker.ts and every deletion (KitStore family, snapshot machinery, *Diff types, generic schema readers, sub-selection / aggregate / shell / registry hooks, whole-object triads / accessors / *Input wrappers).
+  status: pending
+  isProject: false
 
 ---
 
@@ -140,8 +140,6 @@ flowchart LR
   Sketchpad["compose/sketchpad/index.tsx (only field hooks)"] --> FieldHooks
 ```
 
-
-
 ## 2. Stateless GraphQL client on every entity class
 
 Every entity class is a thin, stateless wrapper around the GraphQL surface in [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql). There is **no in-class cache, no optimistic apply, no reconciliation** anywhere in [compose/js/index.ts](compose/js/index.ts) — [compose/rs/lib.rs](compose/rs/lib.rs) is in-memory and authoritative for every read.
@@ -149,12 +147,16 @@ Every entity class is a thin, stateless wrapper around the GraphQL surface in [c
 Each class has three things:
 
 1. **Reads** — two methods per field from the schema's data/computed fields:
-  - `field(): Promise<T>` — one-off GraphQL `Query` against [compose/rs/lib.rs](compose/rs/lib.rs). Always hits the server. There is no synchronous companion (`fieldSync` is gone) because there is nothing to read from synchronously.
-  - `on<Event>(cb: (next: T) => void): Unsubscribe` — subscribe to the routed event channel. The `next` argument is delivered by the unified `subscription { event }` stream — either taken directly from the server's event payload when the schema embeds the new value, or fetched once by the JS class via the same `field()` query and broadcast to all listeners. Either way the class never *stores* `next`; it just relays it. Event names follow the schema's Edit/Modification union (`onRenamed`, `onDescriptionChanged`, `onMoved`, `onDragged`, `onFixed`, `onFlattened`, `onPlaneChanged`, `onCenterChanged`, `onAttributeAdded`, `onAttributeRemoved`, `onPieceAdded`, `onPieceDeleted`, `onConnectionAdded`, `onConnectionDeleted`, `onPortCreated`, `onPortDeleted`, `onConnectorAdded`, `onConnectorRemoved`, `onTagCreated`, `onTagDeleted`, `onConceptCreated`, `onConceptDeleted`, `onQualityCreated`, `onQualityDeleted`, `onTypeCreated`, `onTypeDeleted`, `onDesignCreated`, `onDesignDeleted`, `onCheckpointCreated`, …).
+
+- `field(): Promise<T>` — one-off GraphQL `Query` against [compose/rs/lib.rs](compose/rs/lib.rs). Always hits the server. There is no synchronous companion (`fieldSync` is gone) because there is nothing to read from synchronously.
+- `on<Event>(cb: (next: T) => void): Unsubscribe` — subscribe to the routed event channel. The `next` argument is delivered by the unified `subscription { event }` stream — either taken directly from the server's event payload when the schema embeds the new value, or fetched once by the JS class via the same `field()` query and broadcast to all listeners. Either way the class never _stores_ `next`; it just relays it. Event names follow the schema's Edit/Modification union (`onRenamed`, `onDescriptionChanged`, `onMoved`, `onDragged`, `onFixed`, `onFlattened`, `onPlaneChanged`, `onCenterChanged`, `onAttributeAdded`, `onAttributeRemoved`, `onPieceAdded`, `onPieceDeleted`, `onConnectionAdded`, `onConnectionDeleted`, `onPortCreated`, `onPortDeleted`, `onConnectorAdded`, `onConnectorRemoved`, `onTagCreated`, `onTagDeleted`, `onConceptCreated`, `onConceptDeleted`, `onQualityCreated`, `onQualityDeleted`, `onTypeCreated`, `onTypeDeleted`, `onDesignCreated`, `onDesignDeleted`, `onCheckpointCreated`, …).
+
 2. **Operations** — exactly **one** method per leaf command in the matching `*OperationInput` from §`#region Commands`. Method signatures mirror the schema (same names, same args, same nullability) and return `Promise<SetResult>`:
-  - `operation(...args): Promise<SetResult>` — single async path. Builds a `mutation { session { ... } }`, dispatches it through `GqlTransport` against [compose/rs/lib.rs](compose/rs/lib.rs), and resolves with the server's response. **Nothing** is mutated locally — the JS class does not touch any cache, does not pre-fire `on<Event>` callbacks, does not reconcile anything. UI updates flow exclusively from the subscription event(s) that the server emits in response to the mutation.
-  - `SetResult` is `{ ok: true; id: ID }` on success, or `{ ok: false; error: SetError }` on rejection. `SetError` is the discriminated union enumerated in [target.schema.graphql](compose/graphql/target.schema.graphql) (e.g. `Readonly`, `TooLong`, `Validation`, `Conflict`, `Rejected`). Network timeouts surface as `{ kind: "Timeout"; message }` from the transport.
-  - Callers that want fire-and-forget simply drop the `Promise` (the React operation hook tracks status independently — see §4).
+
+- `operation(...args): Promise<SetResult>` — single async path. Builds a `mutation { session { ... } }`, dispatches it through `GqlTransport` against [compose/rs/lib.rs](compose/rs/lib.rs), and resolves with the server's response. **Nothing** is mutated locally — the JS class does not touch any cache, does not pre-fire `on<Event>` callbacks, does not reconcile anything. UI updates flow exclusively from the subscription event(s) that the server emits in response to the mutation.
+- `SetResult` is `{ ok: true; id: ID }` on success, or `{ ok: false; error: SetError }` on rejection. `SetError` is the discriminated union enumerated in [target.schema.graphql](compose/graphql/target.schema.graphql) (e.g. `Readonly`, `TooLong`, `Validation`, `Conflict`, `Rejected`). Network timeouts surface as `{ kind: "Timeout"; message }` from the transport.
+- Callers that want fire-and-forget simply drop the `Promise` (the React operation hook tracks status independently — see §4).
+
 3. **Navigation methods** — for command-input fields that nest into another scoped command input, the class returns the matching child class instance. E.g. `design.piece(id) → Piece`, `design.pieces(ids) → PiecesOperations`, `kit.type(id) → Type`, `type.port(id) → Port`, `type.connector(id) → Connector`, etc. Because these wrappers are stateless, memoizing them by id is purely an ergonomic identity helper (so `design.piece("p1") === design.piece("p1")`); it is not value caching.
 
 ### Generic mechanisms (JS side)
@@ -250,7 +252,7 @@ defineOperations(Piece, Piece.operations);
 
 The full operation surface per class (mirrors [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql) exactly):
 
-- `**Kit`** (merged with `KitStore`; mirrors `KitOperationInput`): owns `GqlTransport` + `EventBus`. Operations: `rename(newName)`, `changeDescription(newDescription)`, `createTag(name, description?, icon?, order?)`, `tag(id) → Tag`, `deleteTag(id)`, `deleteTags(ids)`, `createConcept(name, description?, icon?, order?)`, `concept(id) → Concept`, `deleteConcept(id)`, `deleteConcepts(ids)`, `createQuality(key, value?, unit?, definition?, description?, icon?)`, `quality(id) → Quality`, `deleteQuality(id)`, `deleteQualities(ids)`, `createType(name, description?, icon?, image?, unit?)`, `type(id) → Type`, `deleteType(id)`, `deleteTypes(ids)`. Plus version/session control: `startNewChange()`, `save()`, `createCheckpoint(message)`, `unsavedChange(id) → Kit` scope helper, `startAlternative(name?)`, `alternative(id)`, `integrateAlternative(id)`, `start()`, `end()`, `login(username, passwordHash, hubUrl?)`, `logout()`, `hydrateBundleJson(json)`.
+- `**Kit`\*\* (merged with `KitStore`; mirrors `KitOperationInput`): owns `GqlTransport` + `EventBus`. Operations: `rename(newName)`, `changeDescription(newDescription)`, `createTag(name, description?, icon?, order?)`, `tag(id) → Tag`, `deleteTag(id)`, `deleteTags(ids)`, `createConcept(name, description?, icon?, order?)`, `concept(id) → Concept`, `deleteConcept(id)`, `deleteConcepts(ids)`, `createQuality(key, value?, unit?, definition?, description?, icon?)`, `quality(id) → Quality`, `deleteQuality(id)`, `deleteQualities(ids)`, `createType(name, description?, icon?, image?, unit?)`, `type(id) → Type`, `deleteType(id)`, `deleteTypes(ids)`. Plus version/session control: `startNewChange()`, `save()`, `createCheckpoint(message)`, `unsavedChange(id) → Kit` scope helper, `startAlternative(name?)`, `alternative(id)`, `integrateAlternative(id)`, `start()`, `end()`, `login(username, passwordHash, hubUrl?)`, `logout()`, `hydrateBundleJson(json)`.
 - `**Design**` (mirrors `DesignOperationInput`): `rename(newName)`, `changeDescription(newDescription)`, `flatten()`, `addAttribute`, `removeAttribute(id)`, `removeAttributes(ids)`, `addFixedPiece(blueprintId, position, name?, description?)`, `addChildPieceWithParentConnection(blueprintId, parentPieceId, parentConnector, childConnector, name?, description?, position?, scale?)`, `addHangingChildPieceWithParentConnection(blueprintId, parentPieceId, parentConnector, childConnector, position, name?, description?, scale?)`, `piece(id) → Piece`, `pieces(ids) → PiecesOperations`, `deletePiece(id)`, `deletePieces(ids)`, `deletePiecesAndConnections(pieceIds, connectionIds)`.
 - `**PiecesOperations**` (small helper returned by `design.pieces(ids)`; mirrors `PiecesOperationInput`): `drag(offset)`, `move(offset)`, `fix()`, `changeBlueprint(blueprintId)`. Has no reads — it's a pure command scope.
 - `**Type**` (mirrors `TypeOperationInput`): `rename(newName)`, `changeDescription(newDescription)`, `changeIcon(newIcon)`, attributes operations, `createPort(code?, label?, description?, icon?, order?)`, `port(id) → Port`, `deletePort(id)`, `deletePorts(ids)`, `addConnector(code, description?, icon?, portId?)`, `connector(id) → Connector`, `removeConnector(id)`, `removeConnectors(ids)`.
@@ -261,7 +263,7 @@ The full operation surface per class (mirrors [compose/graphql/target.schema.gra
 - `**Piece**` (mirrors `PieceOperationInput`): see snippet above.
 - `**Connection**`, `**Author**`: both implement `Artifact` (bulky) so they are classes with the full read API (one `field()` + `on<Event>(cb)` pair per schema field). The schema currently does not declare a dedicated `*OperationInput` for either, so the class only carries reads; their commands (e.g. add/remove connection, addAuthor) live on the parent `Design` / `Kit` per the schema. If the schema later grows `ConnectionOperationInput` / `AuthorOperationInput`, the matching methods are added then.
 
-`Plane`, `Coordinate`, `Position`, `Point`, `Vector`, `Side`, `Attribute` (every `WeakEntity` per [target.schema.graphql](compose/graphql/target.schema.graphql) lines 51–67) are **not classes**. They are plain TypeScript record types that mirror the schema 1:1 (e.g. `interface Plane { origin: Point; xAxis: Vector; yAxis: Vector }`). They are returned by-value from owner methods (`piece.plane(): Promise<Plane>`, `piece.flatPlane(): Promise<Plane>`, `connection.side(): Promise<Side>`, `piece.attributes(): Promise<readonly Attribute[]>`, …). Each call hits the server fresh; no in-class cache holds them. There is no `class Plane`, no `class Coordinate`, no `class Attribute`. There are no `*Scope` / `*Context` providers, no entity-identity hooks, and no `field()` / `on<Event>` API anchored to a weak-entity id — those values appear *only* as field results inside their owning Artifact class.
+`Plane`, `Coordinate`, `Position`, `Point`, `Vector`, `Side`, `Attribute` (every `WeakEntity` per [target.schema.graphql](compose/graphql/target.schema.graphql) lines 51–67) are **not classes**. They are plain TypeScript record types that mirror the schema 1:1 (e.g. `interface Plane { origin: Point; xAxis: Vector; yAxis: Vector }`). They are returned by-value from owner methods (`piece.plane(): Promise<Plane>`, `piece.flatPlane(): Promise<Plane>`, `connection.side(): Promise<Side>`, `piece.attributes(): Promise<readonly Attribute[]>`, …). Each call hits the server fresh; no in-class cache holds them. There is no `class Plane`, no `class Coordinate`, no `class Attribute`. There are no `*Scope` / `*Context` providers, no entity-identity hooks, and no `field()` / `on<Event>` API anchored to a weak-entity id — those values appear _only_ as field results inside their owning Artifact class.
 
 Every command method translates to one `mutation { session { ... } }` GraphQL request. The session/version/change scoping (`session.theKit.unsavedChange(activeChangeId).kit.<…>`, or `session.alternative(…)`, or `session.theKit.…` for save / checkpoint flows) is encapsulated by `Kit`; child classes hold a reference to their owning `Kit` and route their own command through it.
 
@@ -308,14 +310,14 @@ The same rule applies to writes — every write hook is a 1:1 wrapper around one
 
 ### Strict separation of reads and writes
 
-- **Reads** are pure plain-data hooks. `use<Entity><Field>(id?)` returns just the value (`T | undefined` for lean, `Entity | null` / `readonly Entity[] | undefined` for bulky). The hook backs itself with `useState` + `useEffect`: on mount (or whenever the resolved entity changes) it calls `entity.field()` once and stores the result; on every `entity.on<Event>(cb)` callback it replaces the stored value with the new one. The hook does *not* keep an external cache, does *not* dedupe across components, does *not* try to optimize equality. The Rust server is in-memory and fast — every component pays for its own fetch and that's fine. While the first fetch is in flight the hook returns `undefined`. No tuple, no setter, no status, no `KitFieldBinding`, no `HookRead`.
+- **Reads** are pure plain-data hooks. `use<Entity><Field>(id?)` returns just the value (`T | undefined` for lean, `Entity | null` / `readonly Entity[] | undefined` for bulky). The hook backs itself with `useState` + `useEffect`: on mount (or whenever the resolved entity changes) it calls `entity.field()` once and stores the result; on every `entity.on<Event>(cb)` callback it replaces the stored value with the new one. The hook does _not_ keep an external cache, does _not_ dedupe across components, does _not_ try to optimize equality. The Rust server is in-memory and fast — every component pays for its own fetch and that's fine. While the first fetch is in flight the hook returns `undefined`. No tuple, no setter, no status, no `KitFieldBinding`, no `HookRead`.
 - **Writes** are operation hooks. `use<Operation><Entity>(id?)` returns a stable `readonly [run, status]` tuple where `run(...args): Promise<SetResult>` is bound to that entity + operation and `status: OperationStatus<SetSuccess, Extra>` is a discriminated-union snapshot. The `general` part is shared by every operation (`idle` / `pending` / `successful` / `timeout` / `failed`); each operation may extend it with `Extra` kinds declared by the schema's `SetError` for that specific operation (e.g. only the rename / changeDescription / changeIcon / addAttribute / changeBlueprint family adds `tooLong`). See §"Operation hook pattern". There is no `*Sync` variant, no embedded read fallback, no optimistic apply. `run` simply awaits the GraphQL mutation; any UI update that must follow the write arrives through the subscription events the server emits. Callers compose a read hook and a write hook independently.
 - The kit can only be modified through these operation hooks. Operation hooks map 1:1 to leaves of the `*OperationInput` types in [target.schema.graphql](compose/graphql/target.schema.graphql).
 
 ### Resolution rules (every hook)
 
 - Every read / write hook accepts a single optional argument `id?: string`. When `id` is omitted the hook reads the matching context (`KitContext`, `DesignContext`, `TypeContext`, `PortContext`, `ConnectorContext`, `PieceContext`, `ConnectionContext`, `AuthorContext`, `QualityContext`, `TagContext`, `ConceptContext`, …). When `id` is provided it wins over the context.
-- There are no `useResolved`* helpers. Resolution is the explicit composition `useKit()` → `kit.<child>(id)`, `useDesign()` → `design.<child>(id)`, `useType()` → `type.<child>(id)`, `useDesign().piece(id)` → `Piece`, `useDesign().connection(id)` → `Connection`, `useType().port(id)` → `Port`, `useType().connector(id)` → `Connector`, etc. Inside the per-field hook body the chain is written out.
+- There are no `useResolved`\* helpers. Resolution is the explicit composition `useKit()` → `kit.<child>(id)`, `useDesign()` → `design.<child>(id)`, `useType()` → `type.<child>(id)`, `useDesign().piece(id)` → `Piece`, `useDesign().connection(id)` → `Connection`, `useType().port(id)` → `Port`, `useType().connector(id)` → `Connector`, etc. Inside the per-field hook body the chain is written out.
 - The entity-identity selectors return the class instance from §2, never a DTO. Their union signatures are:
   ```ts
   export function useKit(): Kit | null;
@@ -399,7 +401,7 @@ function PieceCompare({ otherId }: { otherId: string }) {
 }
 ```
 
-A connector editor binds inside a `Type` and a specific `Connector` and uses one of the operation hooks that *does* exist (`ConnectorOperationInput` declares `rename` / `changeDescription` / `changeIcon`):
+A connector editor binds inside a `Type` and a specific `Connector` and uses one of the operation hooks that _does_ exist (`ConnectorOperationInput` declares `rename` / `changeDescription` / `changeIcon`):
 
 ```tsx
 <TypeContext id={typeId}>
@@ -433,7 +435,7 @@ Operation hooks called outside any provider must take an explicit `id` (otherwis
 
 ### Sketchpad target
 
-Sketchpad obeys the same schema-1:1 rule: it never re-implements a `usePieceCenterU` / `usePieceIsHidden` / `useConnectionGapValue`-style hook either. Every existing `HookResult<T>` style sketchpad hook is **deleted entirely**. Slicing a lean value (e.g. picking `u` from a `Coordinate`) or picking a class `id` from a list happens *inline at the call site*, in the component body that needs it. Reads come from `@semio-tech/compose-react`'s schema-1:1 read hooks; writes come from `@semio-tech/compose-react`'s schema-1:1 operation hooks.
+Sketchpad obeys the same schema-1:1 rule: it never re-implements a `usePieceCenterU` / `usePieceIsHidden` / `useConnectionGapValue`-style hook either. Every existing `HookResult<T>` style sketchpad hook is **deleted entirely**. Slicing a lean value (e.g. picking `u` from a `Coordinate`) or picking a class `id` from a list happens _inline at the call site_, in the component body that needs it. Reads come from `@semio-tech/compose-react`'s schema-1:1 read hooks; writes come from `@semio-tech/compose-react`'s schema-1:1 operation hooks.
 
 ```ts
 // Before — compose/sketchpad/index.tsx around line 16888
@@ -520,7 +522,7 @@ const [dragPiece, dragPieceStatus] = useDragPiece(id);
 
 Pointer-move drag responsiveness comes entirely from the in-memory Rust server: `piece.drag(offset)` is a single GraphQL mutation hop, the server applies the change in-place, the subscription emits `CenterChanged`, the bound `usePieceCenter` hook receives the new value and rerenders. There is no optimistic shortcut anywhere on the JS / React / sketchpad side.
 
-Net effect: every banned `useKit` / `useDesign` / `useType` / `usePiece` / `useConnection` / `useAuthor` / `useQuality` import disappears from sketchpad, every sub-selection / tuple sketchpad hook (`usePieceCenterU`, `usePieceCenterV`, `usePieceScale` (sketchpad version), `usePieceIsHidden`, `usePieceIsLocked`, `useConnectionGapValue`, `useConnectionShiftValue`, `useConnectionRiseValue`, `useConnectionRotationValue`, `useConnectionTurnValue`, `useConnectionTiltValue`, `useDesignPieceIds`, `useDesignConnectionIds`, …) is *deleted* (no rename, no replacement hook), every `commands.updatePiece` / `updateConnection` / `updateType` / `updateDesign` / `applyKitDiff` call becomes a `const [op, opStatus] = use<Op><Entity>(); … void op(...)` pair, and every read uses a schema-1:1 field hook from `@semio-tech/compose-react` plus inline destructuring at the call site. The `useDesignAppCommands` indirection itself is deleted — sketchpad calls the operation hooks directly. No optimistic-apply layer is reintroduced anywhere.
+Net effect: every banned `useKit` / `useDesign` / `useType` / `usePiece` / `useConnection` / `useAuthor` / `useQuality` import disappears from sketchpad, every sub-selection / tuple sketchpad hook (`usePieceCenterU`, `usePieceCenterV`, `usePieceScale` (sketchpad version), `usePieceIsHidden`, `usePieceIsLocked`, `useConnectionGapValue`, `useConnectionShiftValue`, `useConnectionRiseValue`, `useConnectionRotationValue`, `useConnectionTurnValue`, `useConnectionTiltValue`, `useDesignPieceIds`, `useDesignConnectionIds`, …) is _deleted_ (no rename, no replacement hook), every `commands.updatePiece` / `updateConnection` / `updateType` / `updateDesign` / `applyKitDiff` call becomes a `const [op, opStatus] = use<Op><Entity>(); … void op(...)` pair, and every read uses a schema-1:1 field hook from `@semio-tech/compose-react` plus inline destructuring at the call site. The `useDesignAppCommands` indirection itself is deleted — sketchpad calls the operation hooks directly. No optimistic-apply layer is reintroduced anywhere.
 
 ### Generic mechanisms (React side)
 
@@ -768,7 +770,7 @@ export function usePieceIsHidden(): boolean { … }
 export function useDesignQualitySum(): number { … }
 ```
 
-Each call to `<entity>.field()` is one fresh GraphQL `Query` against [compose/rs/lib.rs](compose/rs/lib.rs); each `<entity>.on<Event>(cb)` callback fires once per matching subscription event. `bindFieldToReact` calls `field()` exactly once per `entity` change (mount or resolved-id change) and replaces the cached *React state* on each event payload — there is no JS-side cache, no equality short-circuit, and no `useSyncExternalStore`. The Rust server is in-memory and authoritative, so even a busy view re-fetching once per event is acceptable.
+Each call to `<entity>.field()` is one fresh GraphQL `Query` against [compose/rs/lib.rs](compose/rs/lib.rs); each `<entity>.on<Event>(cb)` callback fires once per matching subscription event. `bindFieldToReact` calls `field()` exactly once per `entity` change (mount or resolved-id change) and replaces the cached _React state_ on each event payload — there is no JS-side cache, no equality short-circuit, and no `useSyncExternalStore`. The Rust server is in-memory and authoritative, so even a busy view re-fetching once per event is acceptable.
 
 ### Operation hook pattern
 
@@ -776,6 +778,7 @@ Every per-operation write hook is a one-line application of the matching `create
 
 - `run(...args): Promise<SetResult>` — invokes the underlying class method (`piece.drag(offset)`, …). The class method dispatches a single GraphQL mutation against [compose/rs/lib.rs](compose/rs/lib.rs) and awaits the server's reply. The promise resolves with `{ ok: true; id }` or `{ ok: false; error }`. Any bound `usePieceCenter` / `usePiecePlane` / … rerender only when the server emits the corresponding subscription event in response to the mutation; the JS side never updates state ahead of the server.
 - `status: OperationStatus<SetSuccess, Extra>` — discriminated union snapshot of the most recent invocation, kept in React state by the factory. The shape is `general ∪ per-operation extras`:
+
   ```ts
   // GENERAL — every operation hook carries these.
   type GeneralOperationStatus<T = SetSuccess> =
@@ -791,9 +794,10 @@ Every per-operation write hook is a one-line application of the matching `create
   // The per-operation status type is general ∪ that op's extras.
   type OperationStatus<T = SetSuccess, Extra extends { kind: string } = never> = GeneralOperationStatus<T> | Extra;
   ```
+
   - The general kinds (`idle`, `pending`, `successful`, `timeout`, `failed`) appear on **every** operation hook.
-  - Extras are opt-in per operation via the factory's `mapError` argument. The schema's `SetError` discriminated union lists every possible failure kind (`Readonly`, `Timeout`, `TooLong`, `Validation`, `Conflict`, `Rejected`, …). Each operation only ever produces a *subset* of those; the per-operation declaration enumerates the subset that should be exposed as a top-level `status.kind`. Anything not listed lands in `failed` with the raw `SetError` so consumers can still pattern-match on `error.kind` if needed.
-  - This keeps the typing tight: `useDragPiece(id)` yields `OperationStatus<SetSuccess>` (pure general — no `tooLong` because dragging takes a numeric `offset` and the server can't reject it as "too long"), while `useRenamePiece(id)` yields `OperationStatus<SetSuccess, TooLongStatus>` (general + `tooLong` because the schema declares a max length on the new name). `dragPieceStatus.kind === "tooLong"` is a *static* type error; `renamePieceStatus.kind === "tooLong"` is valid.
+  - Extras are opt-in per operation via the factory's `mapError` argument. The schema's `SetError` discriminated union lists every possible failure kind (`Readonly`, `Timeout`, `TooLong`, `Validation`, `Conflict`, `Rejected`, …). Each operation only ever produces a _subset_ of those; the per-operation declaration enumerates the subset that should be exposed as a top-level `status.kind`. Anything not listed lands in `failed` with the raw `SetError` so consumers can still pattern-match on `error.kind` if needed.
+  - This keeps the typing tight: `useDragPiece(id)` yields `OperationStatus<SetSuccess>` (pure general — no `tooLong` because dragging takes a numeric `offset` and the server can't reject it as "too long"), while `useRenamePiece(id)` yields `OperationStatus<SetSuccess, TooLongStatus>` (general + `tooLong` because the schema declares a max length on the new name). `dragPieceStatus.kind === "tooLong"` is a _static_ type error; `renamePieceStatus.kind === "tooLong"` is valid.
   - Once a call resolves, the next call resets `status` to `pending` for the new attempt — the previous final state is replaced, not stacked.
 
 The factory invokes `useState` once internally to track the latest status; the returned `[run, status]` tuple is stable as long as the resolved entity/id doesn't change.
@@ -889,8 +893,8 @@ Every entry below is a single async hook (no `*Sync` variants). The hook signatu
 - `**KitOperationInput**` → `useRenameKit` (+tooLong), `useChangeKitDescription` (+tooLong), `useCreateTag` (+tooLong), `useDeleteTag` (general), `useDeleteTags` (general), `useCreateConcept` (+tooLong), `useDeleteConcept` (general), `useDeleteConcepts` (general), `useCreateQuality` (+tooLong), `useDeleteQuality` (general), `useDeleteQualities` (general), `useCreateType` (+tooLong), `useDeleteType` (general), `useDeleteTypes` (general), `useCreateDesign` (+tooLong), `useDeleteDesign` (general), `useDeleteDesigns` (general).
 - `**VersionCommandInput` / `UnsavedChangeCommandInput**` → `useStartNewChange` (general), `useSaveUnsavedChange` (general), `useCreateCheckpoint` (+tooLong on message), `useSaveVersion` (general).
 - `**SessionCommandInput` / `AlternativeCommandInput**` → `useStartSession` (general), `useEndSession` (general), `useLogin` (+tooLong on username/passwordHash/hubUrl), `useLogout` (general), `useStartAlternative` (+tooLong on optional name), `useIntegrateAlternative` (general).
-- `**Mutation` root extras** → `useHydrateKitStoreBundleJson` (general).
-- `**DesignOperationInput`** → `useRenameDesign` (+tooLong), `useChangeDesignDescription` (+tooLong), `useFlattenDesign` (general), `useAddDesignAttribute` (+tooLong on key/value/definition), `useRemoveDesignAttribute` (general), `useRemoveDesignAttributes` (general), `useAddFixedPiece` (+tooLong on optional name/description), `useAddChildPieceWithParentConnection` (+tooLong on optional name/description), `useAddHangingChildPieceWithParentConnection` (+tooLong on optional name/description), `useDeletePiece` (general), `useDeletePieces` (general), `useDeletePiecesAndConnections` (general).
+- `**Mutation` root extras\*\* → `useHydrateKitStoreBundleJson` (general).
+- `**DesignOperationInput`\*\* → `useRenameDesign` (+tooLong), `useChangeDesignDescription` (+tooLong), `useFlattenDesign` (general), `useAddDesignAttribute` (+tooLong on key/value/definition), `useRemoveDesignAttribute` (general), `useRemoveDesignAttributes` (general), `useAddFixedPiece` (+tooLong on optional name/description), `useAddChildPieceWithParentConnection` (+tooLong on optional name/description), `useAddHangingChildPieceWithParentConnection` (+tooLong on optional name/description), `useDeletePiece` (general), `useDeletePieces` (general), `useDeletePiecesAndConnections` (general).
 - `**PieceOperationInput**` → `useRenamePiece` (+tooLong), `useChangePieceDescription` (+tooLong), `useDragPiece` (general), `useMovePiece` (general), `useFixPiece` (general), `useChangePieceBlueprint` (+tooLong on blueprintId), `useAddPieceAttribute` (+tooLong on key/value/definition), `useRemovePieceAttribute` (general), `useRemovePieceAttributes` (general).
 - `**PiecesOperationInput**` (batch on `design.pieces(ids)`) → `useDragPieces` (general), `useMovePieces` (general), `useFixPieces` (general), `useChangePiecesBlueprint` (+tooLong on blueprintId). Each takes `(ids: readonly string[], …args)`.
 - `**TypeOperationInput**` → `useRenameType` (+tooLong), `useChangeTypeDescription` (+tooLong), `useChangeTypeIcon` (+tooLong), `useAddTypeAttribute` (+tooLong), `useRemoveTypeAttribute` (general), `useRemoveTypeAttributes` (general), `useCreatePort` (+tooLong), `useDeletePort` (general), `useDeletePorts` (general), `useAddConnector` (+tooLong), `useRemoveConnector` (general), `useRemoveConnectors` (general).
@@ -911,7 +915,7 @@ If [target.schema.graphql](compose/graphql/target.schema.graphql) later declares
 - **Per-field read hooks** — one per (Artifact type) × (schema field), generated by `create<Entity>FieldHook` (see read hook pattern above). Lean fields return the value, bulky fields return the class instance(s).
 - **Per-operation write hooks** — exactly one async hook per leaf of every `*OperationInput`, generated by `create<Entity>OpHook`. Each returns the `readonly [run, status]` tuple described above. No `*Sync` variants.
 - **Context providers + context hooks** — one per Artifact type that takes an `id` prop: `KitContext`, `DesignContext`, `TypeContext`, `PortContext`, `ConnectorContext`, `PieceContext`, `ConnectionContext`, `AuthorContext`, `QualityContext`, `TagContext`, `ConceptContext`, `RepresentationContext`. Each pairs with a `use<Entity>Context()` accessor that returns `{ id: string } | null`. No `*Scope` / `*ScopeContext` / `*ScopeProvider` aliases.
-- **Runtime / shell hooks** — minimal surface for binding the React tree to a `Kit` instance and reporting its sync/error status. These are *not* schema fields; they wrap the `Kit` class's runtime control APIs so React components can render their state. Each is 1:1 with one `Kit` runtime method (no derivation):
+- **Runtime / shell hooks** — minimal surface for binding the React tree to a `Kit` instance and reporting its sync/error status. These are _not_ schema fields; they wrap the `Kit` class's runtime control APIs so React components can render their state. Each is 1:1 with one `Kit` runtime method (no derivation):
   - `useKitConnectionStatus(): "disconnected" | "connecting" | "ready" | "error"` (binds `kit.connectionStatusSync()` + `kit.onConnectionStatusChanged`),
   - `useKitErrors(): readonly KitError[] | undefined` (binds `kit.errorsSync()` + `kit.onErrorsChanged`),
   - `useKitSync(): KitSyncSnapshot | undefined` (binds `kit.syncSync()` + `kit.onSyncChanged`).
@@ -921,17 +925,17 @@ If [target.schema.graphql](compose/graphql/target.schema.graphql) later declares
 The following are deleted because they violate the schema-1:1 invariant or the strict read/write split:
 
 - **Sub-selection / derived hooks**: every `useTypesIds`, `useDesignsIds`, `useKitTypeIds`, `useKitDesignIds`, `useKitAuthorIds`, `useKitQualityIds`, `useDesignPieceIds`, `useDesignConnectionIds`, `useTypePortIds`, `useTypeConnectorIds`, `useTypeRepresentationIds`, `useConnectionConnectedPieceId`, `useConnectionConnectingPieceId`, `usePieceCenterU`/`V`, `usePieceIsHidden`, `usePieceIsLocked`. Callers destructure the lean value or read the class `id` getter inline.
-- **Aggregate / metadata / shallow / view hooks**: `useTypesMetadata`, `useDesignsMetadata`, `useTypesFull`, `useDesignsFull`, `useFilesFull`, `useTagsFull`, `useKitDesignsShallow`, `useKitTypesShallow`, `useKitAuthorsShallow`, `useKitPieces`, `useKitConnections`, `usePiecesMetadataMap`, `usePieceMetadata`, `useIncludedDesigns`, `useDesignClusterableGroups`, `useDesignQualitySum`, `useTypeBestRepresentation`, `useKitColoredConnectors`, `useReplacableTypes`, `useReplacableDesigns`, `useExplodeableDesignNodes`. Each is reintroduced as a 1:1 hook *only if* the corresponding field is added to [target.schema.graphql](compose/graphql/target.schema.graphql) as a computed field (e.g. `Design.qualitySum: Float!`, `Type.bestRepresentation: Representation`, `Kit.coloredConnectors: [Connector!]!`, …).
+- **Aggregate / metadata / shallow / view hooks**: `useTypesMetadata`, `useDesignsMetadata`, `useTypesFull`, `useDesignsFull`, `useFilesFull`, `useTagsFull`, `useKitDesignsShallow`, `useKitTypesShallow`, `useKitAuthorsShallow`, `useKitPieces`, `useKitConnections`, `usePiecesMetadataMap`, `usePieceMetadata`, `useIncludedDesigns`, `useDesignClusterableGroups`, `useDesignQualitySum`, `useTypeBestRepresentation`, `useKitColoredConnectors`, `useReplacableTypes`, `useReplacableDesigns`, `useExplodeableDesignNodes`. Each is reintroduced as a 1:1 hook _only if_ the corresponding field is added to [target.schema.graphql](compose/graphql/target.schema.graphql) as a computed field (e.g. `Design.qualitySum: Float!`, `Type.bestRepresentation: Representation`, `Kit.coloredConnectors: [Connector!]!`, …).
 - **Registry / shell-state hooks**: `useOpenKitGuids`, `useActiveKitGuid`, `useOpenKitShallows`, `useRegistryHasKit`, `useRegistryKitPersistenceKind`, `useKitAlternatives`, `useKitAlternativeSelection`. The runtime kit registry is not in `target.schema.graphql`; consumers that need cross-kit shell state import the registry from the host application directly (sketchpad). `@semio-tech/compose-react` exposes only the active `Kit` (via `useKit()` / `KitContext`) and the operation hooks for `SessionCommandInput` / `AlternativeCommandInput`.
 - **Backbone hooks**: same rule — only kept if `target.schema.graphql` declares the corresponding fields/operations. Otherwise dropped, and consumers call the host transport directly.
 - **All `KitFieldBinding`, `HookRead`, `WriteStatus`, `WRITE_STATUS_IDLE`, `WRITE_STATUS_READONLY`, `WRITE_STATUS_PENDING`, `writeStatusEquivalent`** types and helpers.
 - **Old freeform command hooks**: `useUndo`, `useRedo`, `useDeselectAll`, `useDeleteSelected`, `usePasteDesignSelection`, `useChange`, `useCommandBuilder`, `useWriteIndicator`, `useWriteQueue`, `useOptimistic`, `usePendingTriad`. Replaced by the schema-1:1 operation hooks (`use<Op><Entity>` returning `readonly [run, status]`, 1:1 with `*OperationInput` leaves). Sketchpad's existing pending-write indicator now reads `status.kind === "pending"` off whichever operation hook is in flight (see §4 examples).
 - **Old per-entity `useCreate*`/`useDelete*`/`useUpdate*`** legacy shapes (replaced by operation hooks).
 - **Whole-object triads**: `usePieceTriad`, `useDesignTriad`, `useTypeTriad`, `useAuthorTriad`, `useQualityTriad`, `useConnectionTriad`.
-- **Whole-object accessors**: `useFolder`, `useFile`, `useTag` (DTO), `useConcept` (DTO), `useFamily`, `useGroup`, `usePort` (DTO), `useProp`, `useStat`, `useBenchmark`, `useCoordinate`, `usePoint`, `useVector`, `usePlane`, `useCamera`, `useAttribute`, `useLocation`, `useRepresentation` (DTO), `useConnector` (DTO), `useActor`, `useUser`, `useAgent`, `useSessionActorInput`, every `*Input` and `*PatchInput` whole-object hook. (Note: there is *no* `usePort` returning a DTO; the entity-identity `usePort(id?)` returning `Port | null` does survive — same for `useConnector`, `useTag`, `useConcept`, `useRepresentation`.)
+- **Whole-object accessors**: `useFolder`, `useFile`, `useTag` (DTO), `useConcept` (DTO), `useFamily`, `useGroup`, `usePort` (DTO), `useProp`, `useStat`, `useBenchmark`, `useCoordinate`, `usePoint`, `useVector`, `usePlane`, `useCamera`, `useAttribute`, `useLocation`, `useRepresentation` (DTO), `useConnector` (DTO), `useActor`, `useUser`, `useAgent`, `useSessionActorInput`, every `*Input` and `*PatchInput` whole-object hook. (Note: there is _no_ `usePort` returning a DTO; the entity-identity `usePort(id?)` returning `Port | null` does survive — same for `useConnector`, `useTag`, `useConcept`, `useRepresentation`.)
 - **Snapshot exports**: `useKitSnapshot`, `useKitStoreSnapshot`, `useKitHostStore`, `useKitStore`, `useComposeStoreSelector`, `useComposeReadSnap`, `useComposeKitScopedView`. `useKitStoreClient` is removed entirely.
 - **Generic schema readers**: `useSchemaObjectState`, `useSchemaObjectMutation`, `useSchemaObjectValue`, `useSchemaFieldValue`, `useSchemaFieldMutation`, `useSchemaFieldState`, `useSchemaScope`, `useKitRuntimeSafe`, `useKitRegistry`, `useKitRegistrySafe`. The `IndexedSchemaState` / `resolveReference` / `readSchemaFieldValue` / `KitRuntimeContext` machinery is deleted.
-- `**useResolved<Entity>`** helpers.
+- `**useResolved<Entity>`\*\* helpers.
 - **Whole-snapshot file/binary helpers**: `useKitFileBlobUrl`, `useKitStoredFileUrls`, `useFileUrls`, `useKitFileState`, `useKitPersistenceKind`, `useKitPersistenceSource`, `useKitBinary`, `useEmbedKitFile`, `useKitFileUrl`. If the schema later adds `File.url` / `File.blob` as computed fields, the matching 1:1 hook reappears.
 - **Re-exports of deleted js symbols** (`asKitInstance`, `Kit`-class static helpers, `KitEntityStore`, `*Store` legacy aliases, `KitFileState`, …).
 
@@ -944,7 +948,7 @@ Sketchpad must compile without importing any of:
 - any deleted hook from §4,
 - any entity class as a runtime read carrier (`Piece`, `Design`, `Type`, `Connection`, `Author`, `Quality`, `Kit`).
 
-Sketchpad obeys the same schema-1:1 invariant as `@semio-tech/compose-react` — it *adds nothing* beyond the schema either. Every existing `HookResult<T>` tuple sketchpad hook (`usePieceCenterU`, `usePieceCenterV`, sketchpad's tuple `usePieceScale`, `usePieceIsHidden`, `usePieceIsLocked`, `useConnectionGapValue`, `useConnectionShiftValue`, `useConnectionRiseValue`, `useConnectionRotationValue`, `useConnectionTurnValue`, `useConnectionTiltValue`, `useDesignPieceIds`, `useDesignConnectionIds`, every `useType*Ids` / `useKit*Ids`, every `*Metadata` / `*Shallow` / `*Full` derivation) is **deleted entirely** with no replacement hook. Slicing a lean value or picking class ids happens *inline at the call site* (see §4 "Sketchpad target" for examples).
+Sketchpad obeys the same schema-1:1 invariant as `@semio-tech/compose-react` — it _adds nothing_ beyond the schema either. Every existing `HookResult<T>` tuple sketchpad hook (`usePieceCenterU`, `usePieceCenterV`, sketchpad's tuple `usePieceScale`, `usePieceIsHidden`, `usePieceIsLocked`, `useConnectionGapValue`, `useConnectionShiftValue`, `useConnectionRiseValue`, `useConnectionRotationValue`, `useConnectionTurnValue`, `useConnectionTiltValue`, `useDesignPieceIds`, `useDesignConnectionIds`, every `useType*Ids` / `useKit*Ids`, every `*Metadata` / `*Shallow` / `*Full` derivation) is **deleted entirely** with no replacement hook. Slicing a lean value or picking class ids happens _inline at the call site_ (see §4 "Sketchpad target" for examples).
 
 Per call site (64 currently identified by `\b(useKit|useDesign|useType|usePiece|useConnection|useAuthor|useQuality)\b`), inspect what fields the JSX actually reads and what mutations it performs, then replace with schema-1:1 hooks from `@semio-tech/compose-react`. Reads and writes are spelled out independently (no tuple shape, no setter inside a read hook, no read inside a write hook, no sub-selection wrapper):
 
@@ -956,7 +960,7 @@ Per call site (64 currently identified by `\b(useKit|useDesign|useType|usePiece|
 
 Where a list of children is needed, sketchpad calls the bulky list hook (`useDesignPieces`, `useDesignConnections`, `useTypePorts`, `useTypeConnectors`, `useTypeRepresentations`, `useKitTypes`, `useKitDesigns`, `useKitAuthors`, `useKitQualities`, `useKitTags`, `useKitConcepts`) and reads `id` off each class instance.
 
-Missing per-field hooks that sketchpad needs are added to [compose/react/index.tsx](compose/react/index.tsx) **only if** they correspond to existing schema fields (one method on the matching class, one hook in react). Likely additions, all schema-direct: `useDesignPieces`, `useDesignConnections`, `useTypeRepresentations`, `useTypePorts`, `useTypeConnectors`, `useConnectionConnected`, `useConnectionConnecting`, `useKitTypes`, `useKitDesigns`, `useKitAuthors`, `useKitQualities`, `useKitTags`, `useKitConcepts`. Anything sketchpad needs that is *not* in the schema (e.g. `Design.qualitySum`, `Type.bestRepresentation`, `Piece.isHidden`) is either added to the schema first (so the auto-generated 1:1 hook appears) or computed inline in the sketchpad component.
+Missing per-field hooks that sketchpad needs are added to [compose/react/index.tsx](compose/react/index.tsx) **only if** they correspond to existing schema fields (one method on the matching class, one hook in react). Likely additions, all schema-direct: `useDesignPieces`, `useDesignConnections`, `useTypeRepresentations`, `useTypePorts`, `useTypeConnectors`, `useConnectionConnected`, `useConnectionConnecting`, `useKitTypes`, `useKitDesigns`, `useKitAuthors`, `useKitQualities`, `useKitTags`, `useKitConcepts`. Anything sketchpad needs that is _not_ in the schema (e.g. `Design.qualitySum`, `Type.bestRepresentation`, `Piece.isHidden`) is either added to the schema first (so the auto-generated 1:1 hook appears) or computed inline in the sketchpad component.
 
 ## 6. Validation
 
@@ -987,60 +991,60 @@ Every worker writes only inside subregions it owns. Sibling regions are independ
 //#region 🌐Transport            // worker: W-Foundation
 //#endregion
 //#region 🧬Entity                // worker: W-Foundation
-  //#region 🛠️Base
-  //#region 🏭Factories            // defineField / defineOperation / defineFields / defineOperations
+//#region 🛠️Base
+//#region 🏭Factories            // defineField / defineOperation / defineFields / defineOperations
 //#endregion
 //#region 🧱Classes                // one subregion per entity, one worker per subregion
-  //#region 🎒Kit                  // W-Kit (also owns Transport/Entity placement since Kit constructs them)
-  //#region 📐Design               // W-Design
-  //#region 🧰Type                 // W-Type
-  //#region 🔘Port                 // W-PortConnector
-  //#region 🔗Connector            // W-PortConnector
-  //#region 🧩Piece                // W-Piece
-  //#region 🪢PiecesOperations     // W-Piece
-  //#region ⛓️Connection           // W-Connection
-  //#region ✍️Author               // W-Author
-  //#region 💎Quality              // W-Quality
-  //#region 🏷️Tag                 // W-TagConcept
-  //#region 💡Concept              // W-TagConcept
-  //#region 🎨Representation       // W-Representation
-  //#region 👨‍👩‍👦Family             // W-BulkyExtras
-  //#region 📄File                 // W-BulkyExtras
-  //#region 📁Folder               // W-BulkyExtras
-  //#region 🪟Layer                // W-BulkyExtras
-  //#region 👥Group                // W-BulkyExtras
-  //#region 📊Stat                 // W-BulkyExtras
-  //#region 🎚️Prop                // W-BulkyExtras
+//#region 🎒Kit                  // W-Kit (also owns Transport/Entity placement since Kit constructs them)
+//#region 📐Design               // W-Design
+//#region 🧰Type                 // W-Type
+//#region 🔘Port                 // W-PortConnector
+//#region 🔗Connector            // W-PortConnector
+//#region 🧩Piece                // W-Piece
+//#region 🪢PiecesOperations     // W-Piece
+//#region ⛓️Connection           // W-Connection
+//#region ✍️Author               // W-Author
+//#region 💎Quality              // W-Quality
+//#region 🏷️Tag                 // W-TagConcept
+//#region 💡Concept              // W-TagConcept
+//#region 🎨Representation       // W-Representation
+//#region 👨‍👩‍👦Family             // W-BulkyExtras
+//#region 📄File                 // W-BulkyExtras
+//#region 📁Folder               // W-BulkyExtras
+//#region 🪟Layer                // W-BulkyExtras
+//#region 👥Group                // W-BulkyExtras
+//#region 📊Stat                 // W-BulkyExtras
+//#region 🎚️Prop                // W-BulkyExtras
 //#endregion
 //#region 🪶WeakEntities           // W-WeakEntities (pure interface declarations, no class)
-  //#region 📐Plane                // sibling 📐 OK because parent differs from Classes
-  //#region 📍Coordinate
-  //#region 🔵Point
-  //#region ➡️Vector
-  //#region ↔️Side
-  //#region 📌Position
-  //#region 🌍Place
-  //#region 🗺️Location
-  //#region 📷Camera
-  //#region 🏁Benchmark
-  //#region 🪪Attribute
+//#region 📐Plane                // sibling 📐 OK because parent differs from Classes
+//#region 📍Coordinate
+//#region 🔵Point
+//#region ➡️Vector
+//#region ↔️Side
+//#region 📌Position
+//#region 🌍Place
+//#region 🗺️Location
+//#region 📷Camera
+//#region 🏁Benchmark
+//#region 🪪Attribute
 //#endregion
 //#region 🚀PublicAPI              // W-Foundation: openKit factory only
 //#endregion
 //#region 🧪Tests                  // each entity worker owns the matching subregion
-  //#region 🧪Transport            // W-Foundation
-  //#region 🧪Kit
-  //#region 🧪Design
-  //#region 🧪Type
-  //#region 🧪Piece
-  //#region 🧪Connection
-  //#region 🧪Author
-  //#region 🧪Quality
-  //#region 🧪Tag
-  //#region 🧪Concept
-  //#region 🧪Port
-  //#region 🧪Connector
-  //#region 🧪Representation
+//#region 🧪Transport            // W-Foundation
+//#region 🧪Kit
+//#region 🧪Design
+//#region 🧪Type
+//#region 🧪Piece
+//#region 🧪Connection
+//#region 🧪Author
+//#region 🧪Quality
+//#region 🧪Tag
+//#region 🧪Concept
+//#region 🧪Port
+//#region 🧪Connector
+//#region 🧪Representation
 //#endregion
 ```
 
@@ -1050,38 +1054,38 @@ Every worker writes only inside subregions it owns. Sibling regions are independ
 //#region 🌉Bridges                // W-Foundation: bindFieldToReact / bindOpToReact / OperationStatus / mapTooLong
 //#endregion
 //#region 🎭Contexts               // W-Foundation defines the type; each entity worker fills its own subregion
-  //#region 🎒Kit
-  //#region 📐Design
-  //#region 🧰Type
-  //#region 🔘Port
-  //#region 🔗Connector
-  //#region 🧩Piece
-  //#region ⛓️Connection
-  //#region ✍️Author
-  //#region 💎Quality
-  //#region 🏷️Tag
-  //#region 💡Concept
-  //#region 🎨Representation
+//#region 🎒Kit
+//#region 📐Design
+//#region 🧰Type
+//#region 🔘Port
+//#region 🔗Connector
+//#region 🧩Piece
+//#region ⛓️Connection
+//#region ✍️Author
+//#region 💎Quality
+//#region 🏷️Tag
+//#region 💡Concept
+//#region 🎨Representation
 //#endregion
 //#region 🪝Hooks                  // one subregion per entity, exclusive owner
-  //#region 🎒Kit                  // W-Kit
-    //#region 🛡️Selectors          // useKit
-    //#region 📖Reads              // useKitName / useKitDescription / useKitTypes / useKitDesigns / ...
-    //#region ✍️Writes             // useRenameKit / useChangeKitDescription / ...
-    //#region 🛠️Runtime            // useKitErrors / useKitConnectionStatus / useKitSync
-  //#endregion
-  //#region 📐Design               // W-Design — same 4 sub-subregions
-  //#region 🧰Type                 // W-Type
-  //#region 🔘Port                 // W-PortConnector
-  //#region 🔗Connector            // W-PortConnector
-  //#region 🧩Piece                // W-Piece
-  //#region 🪢Pieces               // W-Piece
-  //#region ⛓️Connection           // W-Connection (no Writes — no *OperationInput)
-  //#region ✍️Author               // W-Author (no Writes)
-  //#region 💎Quality              // W-Quality
-  //#region 🏷️Tag                 // W-TagConcept
-  //#region 💡Concept              // W-TagConcept
-  //#region 🎨Representation       // W-Representation
+//#region 🎒Kit                  // W-Kit
+//#region 🛡️Selectors          // useKit
+//#region 📖Reads              // useKitName / useKitDescription / useKitTypes / useKitDesigns / ...
+//#region ✍️Writes             // useRenameKit / useChangeKitDescription / ...
+//#region 🛠️Runtime            // useKitErrors / useKitConnectionStatus / useKitSync
+//#endregion
+//#region 📐Design               // W-Design — same 4 sub-subregions
+//#region 🧰Type                 // W-Type
+//#region 🔘Port                 // W-PortConnector
+//#region 🔗Connector            // W-PortConnector
+//#region 🧩Piece                // W-Piece
+//#region 🪢Pieces               // W-Piece
+//#region ⛓️Connection           // W-Connection (no Writes — no *OperationInput)
+//#region ✍️Author               // W-Author (no Writes)
+//#region 💎Quality              // W-Quality
+//#region 🏷️Tag                 // W-TagConcept
+//#region 💡Concept              // W-TagConcept
+//#region 🎨Representation       // W-Representation
 //#endregion
 //#region 🧪Tests                  // one subregion per entity, owned by the matching entity worker
 //#endregion
@@ -1093,12 +1097,12 @@ The migration is mostly call-site rewrites. Sketchpad workers split the file int
 
 ```ts
 //#region 🎨Sketchpad
-  //#region 🖼️Canvas               // W-SketchCanvas: viewport, drag, hover, gizmos
-  //#region 🗂️Catalog              // W-SketchCatalog: types/designs/authors/qualities lists
-  //#region 🪟Outliner             // W-SketchOutliner: pieces & connections tree per design
-  //#region 🛠️Properties           // W-SketchProperties: piece/connection/type/port/connector edit panels
-  //#region 📋ContextMenu          // W-SketchMenu: right-click menus, hotkeys, copy/paste, undo/redo
-  //#region 🧪NegativeGrep         // W-SketchTests: in-file vitest asserting zero matches for banned imports
+//#region 🖼️Canvas               // W-SketchCanvas: viewport, drag, hover, gizmos
+//#region 🗂️Catalog              // W-SketchCatalog: types/designs/authors/qualities lists
+//#region 🪟Outliner             // W-SketchOutliner: pieces & connections tree per design
+//#region 🛠️Properties           // W-SketchProperties: piece/connection/type/port/connector edit panels
+//#region 📋ContextMenu          // W-SketchMenu: right-click menus, hotkeys, copy/paste, undo/redo
+//#region 🧪NegativeGrep         // W-SketchTests: in-file vitest asserting zero matches for banned imports
 //#endregion
 ```
 
@@ -1171,7 +1175,7 @@ Phase 2 sync point: all six workers report green; coordinator runs sketchpad typ
 Each deletion worker carries the corresponding bullet list from §3 (compose/js) or §4 (compose/react) and removes the named exports + their implementations + any now-orphaned helpers. Every deletion worker:
 
 - Touches **only** code that no other worker is creating in Phases 0–2 (the foundation regions and entity subregions are off-limits — those are kept).
-- Removes top-level legacy code blocks that lived **outside** the new region tree (i.e. the old `KitStore` family, the snapshot machinery, `*Diff` types, generic schema readers, etc., all of which sit in the legacy area of each file *before* the new regions).
+- Removes top-level legacy code blocks that lived **outside** the new region tree (i.e. the old `KitStore` family, the snapshot machinery, `*Diff` types, generic schema readers, etc., all of which sit in the legacy area of each file _before_ the new regions).
 - Re-exports only what §3 / §4 / §5 keep.
 
 Workers:
@@ -1228,4 +1232,3 @@ W-Validate (sequential)                                                         
 ```
 
 Total: **1 + 12 + 6 + 4 + 1 = 24 subagent runs** in **5 phases**, with strict parallelism inside each non-foundation phase. Wall-clock target: Phase 0 ≈ 1 hour, Phase 1 ≈ 1 hour (longest entity = W-Kit), Phase 2 ≈ 1 hour, Phase 3 ≈ 30 minutes, Phase 4 ≈ 30 minutes — about 4 hours end-to-end on a single machine vs ≈ 12 hours sequential.
-

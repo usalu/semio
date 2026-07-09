@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Merge Design App Workbench Sections
 
 Goal: Merge the design app workbench sections into a single pieces section with separate types and designs sub-items while keeping parent-child hierarchies intact.
@@ -22,6 +23,7 @@ Implementation:
 ## Log
 
 ## Summary
+
 # Summary
 
 Merge design app workbench sections into single pieces section

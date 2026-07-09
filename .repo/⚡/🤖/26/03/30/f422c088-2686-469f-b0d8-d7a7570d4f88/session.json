@@ -4850,9 +4850,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "compose/ui/index.tsx"
-            ],
+            "files": ["compose/ui/index.tsx"],
             "llm": "opus-4-6",
             "path": "26/03/30/SYNCHRONIZE-DIAGRAM-PAN-AND-ZOOM",
             "summary": "Moved algorithm diagram pan/zoom into shared AlgorithmApp-owned viewport state so diagram-backed windows stay synchronized across input, selection, diff, and output panes and no longer reset on Storybook-driven rerenders. Extended the existing in-file compose/ui tests to cover shared viewport props and reducer seeding priority, then verified the compose/ui vitest suite passes."
@@ -4882,9 +4880,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "compose/ui/index.tsx"
-            ],
+            "files": ["compose/ui/index.tsx"],
             "llm": "opus-4-6",
             "path": "26/03/30/SYNCHRONIZE-DIAGRAM-PAN-AND-ZOOM",
             "summary": "Moved algorithm diagram pan/zoom into shared AlgorithmApp-owned viewport state so diagram-backed windows stay synchronized across input, selection, diff, and output panes and no longer reset on Storybook-driven rerenders. Extended the existing in-file compose/ui tests to cover shared viewport props and reducer seeding priority, then verified the compose/ui vitest suite passes."
@@ -4914,9 +4910,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "compose/ui/index.tsx"
-            ],
+            "files": ["compose/ui/index.tsx"],
             "llm": "opus-4-6",
             "path": "26/03/30/SYNCHRONIZE-DIAGRAM-PAN-AND-ZOOM",
             "summary": "Moved algorithm diagram pan/zoom into shared AlgorithmApp-owned viewport state so diagram-backed windows stay synchronized across input, selection, diff, and output panes and no longer reset on Storybook-driven rerenders. Extended the existing in-file compose/ui tests to cover shared viewport props and reducer seeding priority, then verified the compose/ui vitest suite passes."
@@ -4947,9 +4941,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "client": "copilot-chat",
-            "files": [
-              "compose/ui/index.tsx"
-            ],
+            "files": ["compose/ui/index.tsx"],
             "llm": "opus-4-6",
             "path": "26/03/30/SYNCHRONIZE-DIAGRAM-PAN-AND-ZOOM",
             "summary": "Moved algorithm diagram pan/zoom into shared AlgorithmApp-owned viewport state so diagram-backed windows stay synchronized across input, selection, diff, and output panes and no longer reset on Storybook-driven rerenders. Extended the existing in-file compose/ui tests to cover shared viewport props and reducer seeding priority, then verified the compose/ui vitest suite passes."

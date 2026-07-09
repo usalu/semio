@@ -2,21 +2,21 @@
 name: gis-map-reuse-pins
 overview: Convert the raw reuse graph export into a proper gis.map fixture JSON, then extend the map renderer (WASM + React + play host) so it shows donor/receiver pins with name, icon, and a clickable source-link popup, plus donor-to-receiver relationship lines.
 todos:
-  - id: converter
-    content: Add `fixture` converter command to gis/map/play/script.ts (raw graph -> gis.map.fixture/v1), preserve raw input as reuse.graph.gis.json, register in launch.json, run to regenerate reuse.map.gis.json
-    status: completed
-  - id: wasm
-    content: Extend PositionData (source_url/icon/kind/name) + kind-colored pins + pin hit-test selectPosition event + positionScreenJson API in gis/map/rs/lib.rs; extend rs tests
-    status: completed
-  - id: react
-    content: Extend MapPositionProps + mapDescriptorToJson; consume drainEvents, track selection, render anchored HTML popup with Icon + name + clickable source link in gis/map/react/index.tsx; extend react tests
-    status: completed
-  - id: playhost
-    content: Wire fixture loading + catalog in gis/map/play/index.ts and render fixture positions/routes in MapPlayPaneSurfaceHost (framework playground renderer); extend play tests
-    status: completed
-  - id: validate
-    content: Run cargo + vitest tests and a play dev smoke confirming pins, relationship lines, and source-link popup via console logs
-    status: completed
+ - id: converter
+   content: Add `fixture` converter command to gis/map/play/script.ts (raw graph -> gis.map.fixture/v1), preserve raw input as reuse.graph.gis.json, register in launch.json, run to regenerate reuse.map.gis.json
+   status: completed
+ - id: wasm
+   content: Extend PositionData (source_url/icon/kind/name) + kind-colored pins + pin hit-test selectPosition event + positionScreenJson API in gis/map/rs/lib.rs; extend rs tests
+   status: completed
+ - id: react
+   content: Extend MapPositionProps + mapDescriptorToJson; consume drainEvents, track selection, render anchored HTML popup with Icon + name + clickable source link in gis/map/react/index.tsx; extend react tests
+   status: completed
+ - id: playhost
+   content: Wire fixture loading + catalog in gis/map/play/index.ts and render fixture positions/routes in MapPlayPaneSurfaceHost (framework playground renderer); extend play tests
+   status: completed
+ - id: validate
+   content: Run cargo + vitest tests and a play dev smoke confirming pins, relationship lines, and source-link popup via console logs
+   status: completed
 isProject: false
 ---
 
@@ -62,9 +62,11 @@ Keep the raw export reproducible: preserve it as input `gis/map/fixture/reuse.gr
 ## Steps
 
 ### 1. Converter command in `gis/map/play/script.ts`
+
 Add a `FixtureScript` (registered as `fixture`) that reads `../fixture/reuse.graph.gis.json`, builds the `gis.map.fixture/v1` payload (pins + reuse routes per mapping above), and writes `../fixture/reuse.map.gis.json`. Register in `[.vscode/launch.json](.vscode/launch.json)` following the existing gis/map grouping. Run it once to regenerate the proper fixture.
 
 ### 2. WASM: rich pins + selection (`gis/map/rs/lib.rs`)
+
 - Extend `PositionData` (region `🔖MapContent`) with `#[serde(default)]` `source_url: Option<String>`, `icon: Option<String>`, `kind: Option<String>`, `name: Option<String>`.
 - Color pin fill by `kind` (donor vs receiver) in `append_positions` using existing theme accents.
 - Add screen-space pin hit-test in `pointer_up_screen` (`🔖WasmSession` + `MapHost`): when the pointer did not pan (click), find the nearest pin within a radius and `push_event("selectPosition", {"id":...})`, else `push_event("selectPosition", {"id":null})`.
@@ -72,17 +74,20 @@ Add a `FixtureScript` (registered as `fixture`) that reads `../fixture/reuse.gra
 - Extend the `#region Tests` (selection event on click, `positionScreenJson` round-trip, `source_url`/`icon` parse).
 
 ### 3. React renderer (`gis/map/react/index.tsx`)
+
 - Extend `MapPositionProps` with `name?`, `icon?`, `sourceUrl?`, `kind?`; update `mapDescriptorToJson` to serialize `source_url`/`icon`/`kind`/`name`.
 - `MapRenderer`: add `selectedPositionScreen(id)` wrapper over `positionScreenJson`; expose drained events.
 - `MapCanvas`: in the render loop consume `drainEvents()`, track `selectedId`; render an absolutely-positioned popup `<div>` anchored at the projected screen coords (updated each frame via a ref + style mutation to avoid re-render storms) showing `<Icon icon={...}/>` + `name` + `<a href={sourceUrl} target="_blank" rel="noreferrer">`. Clicking empty space clears selection.
 - Extend the `🧪Tests` region (descriptor serializes new fields; selection state).
 
 ### 4. Play host wiring
+
 - `[gis/map/play/index.ts](gis/map/play/index.ts)`: import the converted fixture JSON, add a `parseGisMapFixture` + types, expose `GIS_MAP_PLAY_FIXTURE_OPTIONS` and a default fixture, and surface positions/routes through controller state (mirror puzzle2d's `getFixtureCatalog`/`setActiveFixture`). Provide the active descriptor to the surface host.
 - `MapPlayPaneSurfaceHost` in `[framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx)`: replace the hardcoded Zürich/Bern demo with `<Position>`/`<Route>` mapped from the active fixture (name/icon/sourceUrl/kind passed through).
 - Extend the play `🧪Tests` (fixture parse + catalog options).
 
 ### 5. Validate
+
 - `cargo test -p gis_map`, `@semio-tech/gis-map-react` + `@semio-tech/gis-map-play` vitest.
 - `@semio-tech/gis-map-play` dev: confirm with console logs that pins load from the fixture, donor/receiver lines render, clicking a pin opens the popup with name + icon + working source link, and the popup follows pan/zoom.
 

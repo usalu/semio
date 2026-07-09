@@ -2,30 +2,30 @@
 name: Compile-Time Graph Manifests
 overview: Introduce a unified manifest kernel with codegen-driven kind registries (node/edge/port/wire/layer/surface/property kinds) shared across Rust and TypeScript, then migrate Trinity, Puzzle, Flow DAG, Mindmap, Draw, Writer, and platform/playground surfaces to strict compile-time + load-time validation.
 todos:
-  - id: kernel-codegen
-    content: Create mathematical/graph/manifest crate + script.ts codegen (Rust enums, TS unions, JSON Schema) wired into build.rs and nx/launch.json
-    status: completed
-  - id: nakagin-unify
-    content: Author nakagin.manifest.json; migrate trinity_ram + puzzle 2d BoardHost + fixtures; strict ManifestValidator tests
-    status: completed
-  - id: puzzle-3d-5d
-    content: Add puzzle 3d/5d manifests; replace KindCatalogBundle hand types and playground inspector catalog plumbing
-    status: completed
-  - id: trinity-jack-flow
-    content: Trinity/Jack validation + flow DAG manifest replacing DagNodeKind hand enum
-    status: completed
-  - id: mindmap-wires
-    content: WIRES manifest; remove wiresKindCatalogsToPuzzle2d adapter
-    status: completed
-  - id: draw-writer
-    content: Draw layer manifest + Writer language manifest with strict document parsers
-    status: completed
-  - id: platform-builtin
-    content: Platform builtin.manifest.json for surfaces/VFS/window kinds; PluginManifest JSON Schema validation
-    status: completed
-  - id: cleanup-enforce
-    content: Remove legacy catalog/manifest types; add generate deps to wasm builds; extend runtime checks in ticket folder
-    status: completed
+ - id: kernel-codegen
+   content: Create mathematical/graph/manifest crate + script.ts codegen (Rust enums, TS unions, JSON Schema) wired into build.rs and nx/launch.json
+   status: completed
+ - id: nakagin-unify
+   content: Author nakagin.manifest.json; migrate trinity_ram + puzzle 2d BoardHost + fixtures; strict ManifestValidator tests
+   status: completed
+ - id: puzzle-3d-5d
+   content: Add puzzle 3d/5d manifests; replace KindCatalogBundle hand types and playground inspector catalog plumbing
+   status: completed
+ - id: trinity-jack-flow
+   content: Trinity/Jack validation + flow DAG manifest replacing DagNodeKind hand enum
+   status: completed
+ - id: mindmap-wires
+   content: WIRES manifest; remove wiresKindCatalogsToPuzzle2d adapter
+   status: completed
+ - id: draw-writer
+   content: Draw layer manifest + Writer language manifest with strict document parsers
+   status: completed
+ - id: platform-builtin
+   content: Platform builtin.manifest.json for surfaces/VFS/window kinds; PluginManifest JSON Schema validation
+   status: completed
+ - id: cleanup-enforce
+   content: Remove legacy catalog/manifest types; add generate deps to wasm builds; extend runtime checks in ticket folder
+   status: completed
 isProject: false
 ---
 
@@ -34,7 +34,6 @@ isProject: false
 ## Problem
 
 Today kind definitions are fragmented and mostly **runtime string IDs**:
-
 
 | Stack                                                                                            | Kind source                                               | Property typing                | TS/Rust parity                    |
 | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------- | ------------------------------ | --------------------------------- |
@@ -46,8 +45,7 @@ Today kind definitions are fragmented and mostly **runtime string IDs**:
 | [writer/core/index.ts](writer/core/index.ts)                                                     | free `languageId: string`                                 | none                           | No Rust                           |
 | [framework/product/platform/core/index.ts](framework/product/platform/core/index.ts)             | ad-hoc `VirtualFileSystemSchemaModel`, `PluginManifest`   | descriptor presentation unions | No shared kernel                  |
 
-
-Trinity [AGENTS.md](trinity/AGENTS.md) already states the target: *"A graph has a manifest at compile time and nodes and edges at runtime"* — but manifests are deserialized JSON with unchecked `kind: String` instances ([trinity/ram/lib.rs](trinity/ram/lib.rs) lines 174–199). Puzzle duplicates Nakagin semantics across [nakagin-capsule-tower.trinity.json](trinity/fixture/nakagin-capsule-tower.trinity.json) (property manifest) and [nakagin-capsule-tower.2d.json](puzzle/2d/fixture/nakagin-capsule-tower.2d.json) (`meta.kindCatalogs` visual catalog only).
+Trinity [AGENTS.md](trinity/AGENTS.md) already states the target: _"A graph has a manifest at compile time and nodes and edges at runtime"_ — but manifests are deserialized JSON with unchecked `kind: String` instances ([trinity/ram/lib.rs](trinity/ram/lib.rs) lines 174–199). Puzzle duplicates Nakagin semantics across [nakagin-capsule-tower.trinity.json](trinity/fixture/nakagin-capsule-tower.trinity.json) (property manifest) and [nakagin-capsule-tower.2d.json](puzzle/2d/fixture/nakagin-capsule-tower.2d.json) (`meta.kindCatalogs` visual catalog only).
 
 ## Target architecture
 
@@ -81,8 +79,6 @@ flowchart TB
   kernel --> PlatformCore
   kernel --> Playgrounds
 ```
-
-
 
 ### Unified manifest format (`manifest/v1`)
 
@@ -148,8 +144,10 @@ Jack LSP ([trinity/jack/core/lib.rs](trinity/jack/core/lib.rs)) upgrades from wa
 
 1. Create `mathematical/graph/manifest` crate + `@semio-tech/graph-manifest` TS re-export.
 2. Author [trinity/manifest/nakagin.manifest.json](trinity/manifest/nakagin.manifest.json) merging:
-  - Trinity property defs from [nakagin-capsule-tower.trinity.json](trinity/fixture/nakagin-capsule-tower.trinity.json)
-  - Puzzle visual catalog from fixture `meta.kindCatalogs` (handles, wires, nodes, edges, edgeTips)
+
+- Trinity property defs from [nakagin-capsule-tower.trinity.json](trinity/fixture/nakagin-capsule-tower.trinity.json)
+- Puzzle visual catalog from fixture `meta.kindCatalogs` (handles, wires, nodes, edges, edgeTips)
+
 3. Run codegen; wire `build.rs` into `trinity_ram`, `mathematical_graph_port_directed`, `puzzle_2d` WASM builds.
 4. Replace [trinity/ram/lib.rs](trinity/ram/lib.rs) hand-rolled `Manifest` / `Manifest::nakagin_default()` with generated `NAKAGIN_MANIFEST`.
 5. Replace [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) `KindCatalogBundle`, `DEFAULT_KIND_CATALOG_BUNDLE`, and loose parsers with generated types + `nakaginManifestCatalogBundle()`.
@@ -196,9 +194,11 @@ Jack LSP ([trinity/jack/core/lib.rs](trinity/jack/core/lib.rs)) upgrades from wa
 ### Phase 8 — Platform + framework surfaces
 
 1. Author [framework/product/platform/manifest/builtin.manifest.json](framework/product/platform/manifest/builtin.manifest.json):
-  - `surfaceKinds`: draw, writer, puzzle2d/3d/5d, virtualFileSystem, …
-  - `windowKinds` + engagement options schema
-  - VFS `fileNodeKinds` + `descriptorKinds` (replace [VirtualFileSystemSchemaModel](framework/product/platform/core/index.ts) hand types)
+
+- `surfaceKinds`: draw, writer, puzzle2d/3d/5d, virtualFileSystem, …
+- `windowKinds` + engagement options schema
+- VFS `fileNodeKinds` + `descriptorKinds` (replace [VirtualFileSystemSchemaModel](framework/product/platform/core/index.ts) hand types)
+
 2. Codegen produces `BuiltinSurfaceKindId`, `BuiltinFileNodeKindId`, etc.
 3. [framework/product/platform/core/index.ts](framework/product/platform/core/index.ts): host surface nodes typed against generated surface kinds; VFS controller validates `fileNodeKindId`.
 4. **Plugin manifests** ([PluginManifest](framework/product/platform/core/index.ts)): remain runtime JSON but validated against generated JSON Schema (`platform.plugin-manifest/v1`); builtin contribution kinds are compile-time, third-party plugins are schema-validated only.
@@ -215,7 +215,6 @@ Jack LSP ([trinity/jack/core/lib.rs](trinity/jack/core/lib.rs)) upgrades from wa
 
 ## Key design decisions
 
-
 | Decision                 | Choice                                              | Rationale                                                                              |
 | ------------------------ | --------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | Source of truth          | Checked-in `*.manifest.json` per domain             | Enables true compile-time enums/unions in Rust + TS                                    |
@@ -224,7 +223,6 @@ Jack LSP ([trinity/jack/core/lib.rs](trinity/jack/core/lib.rs)) upgrades from wa
 | Plugin manifests         | Schema-validated at runtime, not codegen per plugin | Third-party plugins are dynamic; builtin kinds are codegen'd                           |
 | Normal vs ported graphs  | Manifest `axes.portModel`                           | Reuses [mathematical/core](mathematical/core/lib.rs) axis model from GENERALIZE-GRAPHS |
 | Backwards compatibility  | None (greenfield rule)                              | Inline manifests and stringly kinds removed, fixtures updated in same pass             |
-
 
 ---
 
@@ -244,4 +242,3 @@ Jack LSP ([trinity/jack/core/lib.rs](trinity/jack/core/lib.rs)) upgrades from wa
 - **WASM build order**: Codegen must run before `wasm-pack`; wire into existing [puzzle/2d/rs](puzzle/2d/rs/lib.rs) and [mathematical/graph/port/directed/dag/script.ts](mathematical/graph/port/directed/dag/script.ts) wasm scripts.
 - **5d naming drift**: 3d kind family names differ (Object/Vortex); manifest uses canonical ids with `presentation.aliases` rather than maintaining parallel type hierarchies.
 - **Derived properties**: Keep hardcoded derivations (`flatFromConnections`) in Rust initially; manifest `expr` field is declarative metadata until a generic evaluator exists.
-

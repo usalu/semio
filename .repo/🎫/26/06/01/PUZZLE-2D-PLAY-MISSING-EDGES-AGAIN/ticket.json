@@ -5,8 +5,5 @@
   "description": "Nakagin play on 6012 shows nodes but 0 edges after reload. Fix declarative sync vs WASM drain race and skip fingerprint so 179 edges stay in scene and render.",
   "summary": "Fixed puzzle 2d play nakagin missing edges after reload: stop pre-setting declarative sync fingerprint before sync runs; skip when descriptor lists edges but scene count mismatches; resolve host descriptor from fixture + children; microtask edge repair after WASM mount race; explicit edge branch in scene.add. Cleared play Vite cache. Browser on 6012: 179 scene edges on all three panes, 179 in WASM descriptor JSON. 121 react tests pass.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": [
-    "⚪777ba87591824e89868b655a0bcb7014",
-    "⚪5c69e08d51e841edbfd185b7ddbbfb3a"
-  ]
+  "sessions": ["⚪777ba87591824e89868b655a0bcb7014", "⚪5c69e08d51e841edbfd185b7ddbbfb3a"]
 }

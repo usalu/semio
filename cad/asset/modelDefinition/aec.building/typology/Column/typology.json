@@ -4,9 +4,7 @@
   "version": "1.0.0",
   "label": "Column",
   "description": "Vertical load-bearing member.",
-  "primitiveKinds": [
-    "solid"
-  ],
+  "primitiveKinds": ["solid"],
   "style": {
     "color": "#9E9E9E",
     "edgeColor": "#616161",

@@ -1,20 +1,28 @@
-const { chromium } = require('playwright');
+const { chromium } = require("playwright");
 
 async function openDetails(page) {
-  await page.goto('http://127.0.0.1:4173/', { waitUntil: 'load' });
+  await page.goto("http://127.0.0.1:4173/", { waitUntil: "load" });
   await page.waitForTimeout(3000);
   const kitGuid = await page.evaluate(async () => {
     const store = window.__COMPOSE_STORE__;
-    const existing = (store.kitShallows?.() ?? []).find((kit) => String(kit?.name ?? '').toLowerCase().includes('metabolism'));
+    const existing = (store.kitShallows?.() ?? []).find((kit) =>
+      String(kit?.name ?? "")
+        .toLowerCase()
+        .includes("metabolism"),
+    );
     if (existing?.guid) return existing.guid;
-    const kitModule = await import('/@fs/workspaces/semio/assets/compose/kit_metabolism.json');
-    await store.execute('compose.sketchpad.createKit', 'compose.sketchpad.test.ensureMetabolismKitLoaded', kitModule.default, false, false);
+    const kitModule = await import("/@fs/workspaces/semio/assets/compose/kit_metabolism.json");
+    await store.execute("compose.sketchpad.createKit", "compose.sketchpad.test.ensureMetabolismKitLoaded", kitModule.default, false, false);
     for (let attempt = 0; attempt < 30; attempt += 1) {
-      const match = (store.kitShallows?.() ?? []).find((candidate) => String(candidate?.name ?? '').toLowerCase().includes('metabolism'));
+      const match = (store.kitShallows?.() ?? []).find((candidate) =>
+        String(candidate?.name ?? "")
+          .toLowerCase()
+          .includes("metabolism"),
+      );
       if (match?.guid) return match.guid;
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
-    throw new Error('kit not loaded');
+    throw new Error("kit not loaded");
   });
   await page.evaluate((nextKitGuid) => {
     window.__COMPOSE_NAVIGATE__(`/kits/${nextKitGuid}`);
@@ -25,11 +33,14 @@ async function openDetails(page) {
     const store = window.__COMPOSE_STORE__;
     const kit = store.kit(nextKitGuid).snapshot();
     const designs = kit.designs ?? [];
-    return designs.find((design) => design.guid?.includes('9a890dd4'))?.guid ?? designs[designs.length - 1]?.guid;
+    return designs.find((design) => design.guid?.includes("9a890dd4"))?.guid ?? designs[designs.length - 1]?.guid;
   }, kitGuid);
-  await page.evaluate(({ nextKitGuid, nextDesignGuid }) => {
-    window.__COMPOSE_NAVIGATE__(`/kits/${nextKitGuid}/designs/${nextDesignGuid}`);
-  }, { nextKitGuid: kitGuid, nextDesignGuid: designGuid });
+  await page.evaluate(
+    ({ nextKitGuid, nextDesignGuid }) => {
+      window.__COMPOSE_NAVIGATE__(`/kits/${nextKitGuid}/designs/${nextDesignGuid}`);
+    },
+    { nextKitGuid: kitGuid, nextDesignGuid: designGuid },
+  );
   await page.waitForURL(new RegExp(`/kits/${kitGuid}/designs/${designGuid}`), { timeout: 30000 });
   await page.waitForTimeout(4000);
 
@@ -43,7 +54,7 @@ async function openDetails(page) {
   }
 
   const rightPanel = page.locator('[data-panel="rightSidePanel"]').first();
-  for (const labelText of ['Authors', 'Author 1']) {
+  for (const labelText of ["Authors", "Author 1"]) {
     const label = rightPanel.getByText(labelText, { exact: true }).first();
     if (await label.isVisible().catch(() => false)) {
       await label.click({ force: true }).catch(() => undefined);
@@ -57,8 +68,8 @@ async function openDetails(page) {
   const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
   await openDetails(page);
   const rows = await page.evaluate(() => {
-    const pick = (label) => Array.from(document.querySelectorAll('[data-panel="rightSidePanel"] [data-slot="tree-item-row"]')).find((row) => (row.textContent ?? '').trim().startsWith(label));
-    return ['Authors', 'Author 1'].map((label) => {
+    const pick = (label) => Array.from(document.querySelectorAll('[data-panel="rightSidePanel"] [data-slot="tree-item-row"]')).find((row) => (row.textContent ?? "").trim().startsWith(label));
+    return ["Authors", "Author 1"].map((label) => {
       const row = pick(label);
       if (!row) return { label, found: false };
       const gutter = row.querySelector('[data-slot="tree-gutter"]');
@@ -69,10 +80,10 @@ async function openDetails(page) {
         label,
         found: true,
         slotTag: slot?.tagName ?? null,
-        slotClass: slot?.getAttribute('class') ?? null,
-        slotStyle: slot?.getAttribute('style') ?? null,
-        elbowStyle: elbow?.getAttribute('style') ?? null,
-        stemStyle: stem?.getAttribute('style') ?? null,
+        slotClass: slot?.getAttribute("class") ?? null,
+        slotStyle: slot?.getAttribute("style") ?? null,
+        elbowStyle: elbow?.getAttribute("style") ?? null,
+        stemStyle: stem?.getAttribute("style") ?? null,
       };
     });
   });

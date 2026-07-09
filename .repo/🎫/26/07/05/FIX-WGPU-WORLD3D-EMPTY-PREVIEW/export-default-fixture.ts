@@ -20,9 +20,9 @@ writeFileSync(join(import.meta.dir, "export_fixture_test.snippet.rs"), snippet);
 runCargo(["test", "-p", "lowpoly_core", "default_fixture_has_rock_object", "--", "--nocapture"], repoRoot);
 const { execFileSync } = await import("node:child_process");
 const output = execFileSync("cargo", ["test", "-p", "lowpoly_core", "export_default_fixture_once", "--", "--nocapture"], {
-	cwd: repoRoot,
-	encoding: "utf8",
-	stdio: ["ignore", "pipe", "pipe"],
+  cwd: repoRoot,
+  encoding: "utf8",
+  stdio: ["ignore", "pipe", "pipe"],
 });
 const match = output.match(/LOWPOLY_FIXTURE_JSON_START\n([\s\S]*?)\nLOWPOLY_FIXTURE_JSON_END/);
 if (!match?.[1]) throw new Error("failed to export fixture json");

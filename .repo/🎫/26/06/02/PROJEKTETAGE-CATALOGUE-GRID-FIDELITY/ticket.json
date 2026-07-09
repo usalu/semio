@@ -8,9 +8,5 @@
     "issue": "https://github.com/usalu/semio/issues/1523"
   },
   "goal": "🎯presentation",
-  "sessions": [
-    "⚪8d2f8dfb897a46fd9d0a4ea692eb8d67",
-    "⚪b7bf829ae42d45bf8b0ce1bc1de5c831",
-    "⚪655e68c78d9042fbb1e1b17cb4050d14"
-  ]
+  "sessions": ["⚪8d2f8dfb897a46fd9d0a4ea692eb8d67", "⚪b7bf829ae42d45bf8b0ce1bc1de5c831", "⚪655e68c78d9042fbb1e1b17cb4050d14"]
 }

@@ -2,36 +2,36 @@
 name: Sequence Technology Elevation
 overview: "Rebuild `sequence` to match the DAG/Trinity/Flow playground architecture: split the nested canvas+aside into two proper top-level windows (Sequence graph, Compiled Script), fix bidirectional selection, add real catalogue drag-and-drop, and add genuine multi-module extension support for step kinds (proven with a second imperative module)."
 todos:
-  - id: strip-aside
-    content: Strip SequenceCanvas back to canvas-only (remove inline Compiled Text/Effect Log aside)
-    status: completed
-  - id: script-window
-    content: Add second WindowKindRuntime (sequence-script) with writer-based read-only compiled script surface, row layout split
-    status: completed
-  - id: run-log-panel
-    content: Move effect log into Inspection side panel as Run Log section; add controller getCompiledText/getEffectLog
-    status: completed
-  - id: selection-diagnose
-    content: Runtime-diagnose and fix bidirectional selection sync (canvas<->document<->inspector) with console-log verification
-    status: completed
-  - id: world-from-screen
-    content: Add worldFromScreen WASM export to SequenceSession for drop coordinate conversion
-    status: completed
-  - id: catalogue-dnd
-    content: Implement draggable catalogue items, sequenceStepPaletteTreeDragController, canvas onDrop calling session.addStep at drop position
-    status: completed
-  - id: module-text-crate
-    content: Create imperative/module/text crate (2-3 operators) proving multi-module composition
-    status: completed
-  - id: extension-host
-    content: Add ImperativeExtensionHost/SequenceExtensionHost merging catalogue sections from installed modules by id/revision
-    status: completed
-  - id: catalogue-by-module
-    content: Group SequencePlayCatalogueTree items into sections per contributing module
-    status: completed
-  - id: verify-close-ticket
-    content: Run cargo/bun tests, verify all fixes live in the running playground, reopen/close IMPERATIVE-AND-SEQUENCE-TECHNOLOGIES ticket
-    status: completed
+ - id: strip-aside
+   content: Strip SequenceCanvas back to canvas-only (remove inline Compiled Text/Effect Log aside)
+   status: completed
+ - id: script-window
+   content: Add second WindowKindRuntime (sequence-script) with writer-based read-only compiled script surface, row layout split
+   status: completed
+ - id: run-log-panel
+   content: Move effect log into Inspection side panel as Run Log section; add controller getCompiledText/getEffectLog
+   status: completed
+ - id: selection-diagnose
+   content: Runtime-diagnose and fix bidirectional selection sync (canvas<->document<->inspector) with console-log verification
+   status: completed
+ - id: world-from-screen
+   content: Add worldFromScreen WASM export to SequenceSession for drop coordinate conversion
+   status: completed
+ - id: catalogue-dnd
+   content: Implement draggable catalogue items, sequenceStepPaletteTreeDragController, canvas onDrop calling session.addStep at drop position
+   status: completed
+ - id: module-text-crate
+   content: Create imperative/module/text crate (2-3 operators) proving multi-module composition
+   status: completed
+ - id: extension-host
+   content: Add ImperativeExtensionHost/SequenceExtensionHost merging catalogue sections from installed modules by id/revision
+   status: completed
+ - id: catalogue-by-module
+   content: Group SequencePlayCatalogueTree items into sections per contributing module
+   status: completed
+ - id: verify-close-ticket
+   content: Run cargo/bun tests, verify all fixes live in the running playground, reopen/close IMPERATIVE-AND-SEQUENCE-TECHNOLOGIES ticket
+   status: completed
 isProject: false
 ---
 
@@ -39,7 +39,7 @@ isProject: false
 
 ## Root causes (confirmed by reading code)
 
-1. **Window-in-window**: [sequence/react/index.tsx](sequence/react/index.tsx) `SequenceCanvas` renders a grid with the WASM canvas *and* an inline `<aside>` (Compiled Text + Effect Log) baked into the same component:
+1. **Window-in-window**: [sequence/react/index.tsx](sequence/react/index.tsx) `SequenceCanvas` renders a grid with the WASM canvas _and_ an inline `<aside>` (Compiled Text + Effect Log) baked into the same component:
 
 ```414:437:sequence/react/index.tsx
 	return (
@@ -96,8 +96,6 @@ flowchart TB
     extHost -->|"registers"| wasm
 ```
 
-
-
 ## 1. Two-window layout (fixes window-in-window)
 
 - `**sequence/react/index.tsx**`: strip `SequenceCanvas` back to canvas-only (`<div><canvas/></div>`, matching `DagCanvas`/`TrinityCanvas`). Remove the local `compiledText`/`effectLog` state and the `<aside>` JSX entirely. Keep `onRunResult` prop (already exists) as the hand-off point for effect-log data.
@@ -126,7 +124,7 @@ flowchart TB
 
 ## 4. Extension support (multi-module step kinds)
 
-Imperative's execution model (`Executor::run(path, scope)` threads a `Dictionary` scope sequentially through steps in one synchronous Rust call) is architecturally different from Flow's per-node JS-orchestrated dataflow evaluation, so we adapt rather than copy Flow's exact lazy-WASM-import mechanism — the same *practical* extensibility, sized correctly for tiny action-kind modules instead of Flow's large lazy-loaded geometry modules.
+Imperative's execution model (`Executor::run(path, scope)` threads a `Dictionary` scope sequentially through steps in one synchronous Rust call) is architecturally different from Flow's per-node JS-orchestrated dataflow evaluation, so we adapt rather than copy Flow's exact lazy-WASM-import mechanism — the same _practical_ extensibility, sized correctly for tiny action-kind modules instead of Flow's large lazy-loaded geometry modules.
 
 - **Split the module boundary in Rust**: keep [imperative/module/core/lib.rs](imperative/module/core/lib.rs) as-is (log/state/wait), add a **second crate** `imperative/module/text/lib.rs` with 2-3 real operators (e.g. `text.concat`, `text.uppercase`) following the exact `register(&mut Registry)` / `catalogue_json(&Registry)` / inline-tests pattern already established, with its own `project.json`/`script.ts` (`bun ./script.ts wasm|test`).
 - **Compose the registry** in `SequenceHost`/`ImperativeSession` ([sequence/core/lib.rs](sequence/core/lib.rs), [imperative/core/lib.rs](imperative/core/lib.rs)): call both modules' `register()` into one `Registry`, so `run()` transparently executes steps from either module.
@@ -150,4 +148,3 @@ Imperative's execution model (`Executor::run(path, scope)` threads a `Dictionary
 - `bun test` for `sequence/react`, `imperative/core`
 - Runtime check on the sequence dev server (port 6077): drag a catalogue item onto the canvas and confirm a step appears at the drop point; click a step and confirm document + inspector highlight it; click a document item and confirm the canvas highlights it; confirm exactly two top-level windows (Sequence, Compiled Script) with no nested chrome; confirm the Inspection panel shows a Run Log after clicking Run.
 - Close/reopen the `IMPERATIVE-AND-SEQUENCE-TECHNOLOGIES` ticket per repo workflow once verified.
-

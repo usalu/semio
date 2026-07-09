@@ -2,30 +2,30 @@
 name: single subscription endpoint
 overview: "Introduce a top-level general-purpose `Event` interface with `involved: [Entity!]!` (replacing per-op `scope: Entity!`), make `Operation` a specialization of `Event`, add `FailedOperation` as a sibling event kind, rewrite all 95 concrete operation types to use `involved`, and collapse Subscription to a single `event: Event!` endpoint."
 todos:
-  - id: add_event_interface
-    content: "Add root-level `interface Event implements Entity` with `involved: [Entity!]!` (+ EventEdge + EventConnection) next to Operation."
-    status: pending
-  - id: rebase_operation
-    content: "Re-declare `interface Operation implements Event & Entity`; drop scope, inherit involved, keep modification."
-    status: pending
-  - id: rewrite_concrete_ops
-    content: "Bulk rewrite 95 concrete operation types: replace `scope: Entity! # reference // ...` with `involved: [Entity!]! # reference // ...` (preserve trailing comments)."
-    status: pending
-  - id: add_failed_operation
-    content: "Add FailedOperation (+ Edge + Connection) implementing Event & Entity with `involved: [Entity!]!` and `message: String!`."
-    status: pending
-  - id: replace_subscription
-    content: "Replace type Subscription block (L5979-6097) with `Subscription { event: Event! }`."
-    status: pending
-  - id: drop_orphan_payloads
-    content: "Delete unused `type Command` and `type Error`; rename region SubscriptionPayloads -> EventPayloads."
-    status: pending
-  - id: validate
-    content: "Run graphql parse + buildSchema; rg sweeps confirm no `scope:` leftovers in operation types and exactly 96+ `involved: [Entity!]!` occurrences."
-    status: pending
-  - id: ticket_update
-    content: "Append problem/change/verification to .repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md."
-    status: pending
+ - id: add_event_interface
+   content: "Add root-level `interface Event implements Entity` with `involved: [Entity!]!` (+ EventEdge + EventConnection) next to Operation."
+   status: pending
+ - id: rebase_operation
+   content: "Re-declare `interface Operation implements Event & Entity`; drop scope, inherit involved, keep modification."
+   status: pending
+ - id: rewrite_concrete_ops
+   content: "Bulk rewrite 95 concrete operation types: replace `scope: Entity! # reference // ...` with `involved: [Entity!]! # reference // ...` (preserve trailing comments)."
+   status: pending
+ - id: add_failed_operation
+   content: "Add FailedOperation (+ Edge + Connection) implementing Event & Entity with `involved: [Entity!]!` and `message: String!`."
+   status: pending
+ - id: replace_subscription
+   content: "Replace type Subscription block (L5979-6097) with `Subscription { event: Event! }`."
+   status: pending
+ - id: drop_orphan_payloads
+   content: "Delete unused `type Command` and `type Error`; rename region SubscriptionPayloads -> EventPayloads."
+   status: pending
+ - id: validate
+   content: "Run graphql parse + buildSchema; rg sweeps confirm no `scope:` leftovers in operation types and exactly 96+ `involved: [Entity!]!` occurrences."
+   status: pending
+ - id: ticket_update
+   content: "Append problem/change/verification to .repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md."
+   status: pending
 isProject: false
 ---
 
@@ -65,22 +65,22 @@ graph TD
 
 ```graphql
 interface Event implements Entity {
-  id: ID! # data // uuidv7
-  hash: String! # cached
-  owner: Entity # reference // any owning entity (Change for an Operation, Session/Draft/Transaction for a lifecycle event, ...)
-  owns: EntityConnection # reference
-  involved: [Entity!]! # reference // all entities this event touches
+ id: ID! # data // uuidv7
+ hash: String! # cached
+ owner: Entity # reference // any owning entity (Change for an Operation, Session/Draft/Transaction for a lifecycle event, ...)
+ owns: EntityConnection # reference
+ involved: [Entity!]! # reference // all entities this event touches
 }
 
 type EventEdge implements EntityEdge {
-  cursor: String! # computed
-  node: Event! # reference
+ cursor: String! # computed
+ node: Event! # reference
 }
 
 type EventConnection implements EntityConnection {
-  edges: [EventEdge!]! # computed
-  pageInfo: PageInfo! # computed
-  hash: String! # cached
+ edges: [EventEdge!]! # computed
+ pageInfo: PageInfo! # computed
+ hash: String! # cached
 }
 ```
 
@@ -90,15 +90,15 @@ type EventConnection implements EntityConnection {
 
 ```graphql
 interface Operation implements Event & Entity {
-  # Entity
-  id: ID! # data // uuidv7
-  hash: String! # cached
-  owner: Entity # reference // Change
-  owns: EntityConnection # reference
-  # Event
-  involved: [Entity!]! # reference
-  # Operation
-  modification: Modification! # computed
+ # Entity
+ id: ID! # data // uuidv7
+ hash: String! # cached
+ owner: Entity # reference // Change
+ owns: EntityConnection # reference
+ # Event
+ involved: [Entity!]! # reference
+ # Operation
+ modification: Modification! # computed
 }
 ```
 
@@ -124,26 +124,26 @@ Affected count: 96 lines total (1 on `interface Operation` already replaced in s
 
 ```graphql
 type FailedOperation implements Event & Entity {
-  # Entity
-  id: ID! # data // uuidv7
-  hash: String! # cached
-  owner: Entity # reference // Change
-  owns: EntityConnection # reference
-  # Event
-  involved: [Entity!]! # reference
-  # FailedOperation
-  message: String! # data // failure reason
+ # Entity
+ id: ID! # data // uuidv7
+ hash: String! # cached
+ owner: Entity # reference // Change
+ owns: EntityConnection # reference
+ # Event
+ involved: [Entity!]! # reference
+ # FailedOperation
+ message: String! # data // failure reason
 }
 
 type FailedOperationEdge implements EntityEdge {
-  cursor: String! # computed
-  node: FailedOperation! # reference
+ cursor: String! # computed
+ node: FailedOperation! # reference
 }
 
 type FailedOperationConnection implements EntityConnection {
-  edges: [FailedOperationEdge!]! # computed
-  pageInfo: PageInfo! # computed
-  hash: String! # cached
+ edges: [FailedOperationEdge!]! # computed
+ pageInfo: PageInfo! # computed
+ hash: String! # cached
 }
 ```
 
@@ -151,9 +151,9 @@ type FailedOperationConnection implements EntityConnection {
 
 ```graphql
 type Subscription {
-  # 📡 Single async feed of every event on the system — applied operations, failed operations, and any future lifecycle/sync events.
-  # Clients discriminate concrete events (RenamedTag, MovedPiece, FailedOperation, ...) via inline fragments.
-  event: Event!
+ # 📡 Single async feed of every event on the system — applied operations, failed operations, and any future lifecycle/sync events.
+ # Clients discriminate concrete events (RenamedTag, MovedPiece, FailedOperation, ...) via inline fragments.
+ event: Event!
 }
 ```
 
@@ -187,4 +187,3 @@ Append to `.repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md`:
 - Problem: flat per-event Subscription duplicates the Operation interface; `FailedOperation` cannot implement `Operation` (no `modification`/`after`); events are a general concept, not just operations; a single event commonly involves multiple entities so `scope: Entity!` is the wrong shape.
 - Change: introduce top-level general-purpose `Event` interface (+ edge/connection) with `involved: [Entity!]!`; rewrite all 96 `scope: Entity!` lines (Operation interface + 95 concrete ops) to `involved: [Entity!]!` via `scope_to_involved.cjs`; `Operation` becomes one specialization of `Event`; add `FailedOperation` as a sibling specialization; collapse Subscription to a single `event: Event!`; remove orphaned `Command` / `Error`.
 - Verification: parse + build commands above, plus the rg sweeps (zero `scope: Entity!`, ~97 `involved: [Entity!]!`).
-

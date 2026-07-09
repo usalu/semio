@@ -5,7 +5,5 @@
   "description": "Fix inconsistent and doubled borders, specifically the left border of collapsed window options.",
   "summary": "Fix inconsistent and doubled borders in Sketchpad UI (toolbar buttons/toggles, collapsed window options left border)",
   "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": [
-    "⚪d0f1ffaf70734625b244bb522e31e4bf"
-  ]
+  "sessions": ["⚪d0f1ffaf70734625b244bb522e31e4bf"]
 }

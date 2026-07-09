@@ -1026,10 +1026,7 @@
             "max_results": 2
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_open",
-              "mcp__repo__search"
-            ],
+            "matches": ["mcp__repo__ticket_open", "mcp__repo__search"],
             "query": "select:mcp__repo__ticket_open,mcp__repo__search",
             "total_deferred_tools": 23
           },
@@ -2282,9 +2279,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "TaskOutput"
-            ],
+            "matches": ["TaskOutput"],
             "query": "select:TaskOutput",
             "total_deferred_tools": 23
           },

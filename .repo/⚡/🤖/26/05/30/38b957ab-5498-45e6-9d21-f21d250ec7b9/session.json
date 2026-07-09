@@ -35,9 +35,7 @@
           "session_id": "38b957ab-5498-45e6-9d21-f21d250ec7b9",
           "hook_event_name": "beforeSubmitPrompt",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": null
         }
@@ -63,9 +61,7 @@
           "session_id": "38b957ab-5498-45e6-9d21-f21d250ec7b9",
           "hook_event_name": "stop",
           "cursor_version": "3.6.21",
-          "workspace_roots": [
-            "/Users/ueli/Documents/compose"
-          ],
+          "workspace_roots": ["/Users/ueli/Documents/compose"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": null
         }

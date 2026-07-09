@@ -104,9 +104,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌1📌150"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻kit📌1📌150"],
         "second": "🎆26🌙03☀️14⏰20⌚35⏱️15",
         "session": "⚪23a22ac23932411499ab5fb03b3d41ef"
       },
@@ -142,9 +140,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻kit📌1📌150"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻kit📌1📌150"],
         "second": "🎆26🌙03☀️14⏰20⌚35⏱️29",
         "session": "⚪23a22ac23932411499ab5fb03b3d41ef"
       },
@@ -180,9 +176,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌5084📌5100"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌5084📌5100"],
         "second": "🎆26🌙03☀️14⏰20⌚35⏱️33",
         "session": "⚪23a22ac23932411499ab5fb03b3d41ef"
       },
@@ -492,9 +486,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻type📌1📌2000"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻type📌1📌2000"],
         "second": "🎆26🌙03☀️14⏰20⌚35⏱️33",
         "session": "⚪23a22ac23932411499ab5fb03b3d41ef"
       },
@@ -530,9 +522,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🥼sketchpadtest📌5084📌5100"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🥼sketchpadtest📌5084📌5100"],
         "second": "🎆26🌙03☀️14⏰20⌚35⏱️43",
         "session": "⚪23a22ac23932411499ab5fb03b3d41ef"
       },
@@ -842,9 +832,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "👤compose🖱️sketchpad🗃️sketchpad💻type📌1📌2000"
-        ],
+        "ranges": ["👤compose🖱️sketchpad🗃️sketchpad💻type📌1📌2000"],
         "second": "🎆26🌙03☀️14⏰20⌚35⏱️45",
         "session": "⚪23a22ac23932411499ab5fb03b3d41ef"
       },

@@ -54,12 +54,7 @@ export const Default: Story = {
                     {
                       id: "review",
                       label: "Review",
-                      children: (
-                        <Mode
-                          windows={[{ id: "preview", children: <Pane title="Preview" /> }]}
-                          activeWindowId="preview"
-                        />
-                      ),
+                      children: <Mode windows={[{ id: "preview", children: <Pane title="Preview" /> }]} activeWindowId="preview" />,
                     },
                   ]}
                   activeModeId="design"
@@ -70,9 +65,7 @@ export const Default: Story = {
             {
               id: "dashboard",
               label: "Dashboard",
-              children: (
-                <Mode windows={[{ id: "stats", children: <Pane title="Statistics" /> }]} activeWindowId="stats" />
-              ),
+              children: <Mode windows={[{ id: "stats", children: <Pane title="Statistics" /> }]} activeWindowId="stats" />,
             },
           ]}
           activeAppId={activeAppId}

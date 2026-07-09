@@ -1,28 +1,28 @@
 ---
 name: Forms Extensions And Flow Kinds
-overview: "Generalize forms into an extension-driven technology: a controlled, DOM-free question-kind registry/host (mirroring flow's manifest pattern), plus a built-in \"procedural\" extension that contributes a flow-backed \"Building Component\" question kind. The form edits the flow's input parameters and shows a live async 3D preview by evaluating the neural DAG headlessly through FlowOrchestratorClient. Forms fixtures are reduced to a single building-component.forms.json."
+overview: 'Generalize forms into an extension-driven technology: a controlled, DOM-free question-kind registry/host (mirroring flow''s manifest pattern), plus a built-in "procedural" extension that contributes a flow-backed "Building Component" question kind. The form edits the flow''s input parameters and shows a live async 3D preview by evaluating the neural DAG headlessly through FlowOrchestratorClient. Forms fixtures are reduced to a single building-component.forms.json.'
 todos:
-  - id: ticket
-    content: Reopen the forms ticket (.repo/🎫/26/06/30/FORMS-TECHNOLOGY-AND-GENERATE-MODE) via repo MCP after reading repo://goals
-    status: completed
-  - id: core-host
-    content: "forms-core: add FormsExtensionHost + question-kind contribution registry (DOM-free), register 13 built-ins as the builtin extension, widen parser for extension kinds, widen FormValue to allow nested records, update runtime default/validate/submit; move flowFixtureToFormSpec/applyGenerationValuesToFixture into core; extend vitest"
-    status: completed
-  - id: react-control
-    content: "forms-react: extension/flow3d branch in questionControl rendering nested param sub-form + live headless 3D preview (FlowOrchestratorClient + ProceduralPreview); registry-driven palette; add deps; extend vitest"
-    status: completed
-  - id: proc-ext
-    content: Add declarative procedural forms extension contributing buildingComponent kind referencing the hexagonal column flow fixture; ensure no flow editor imports (neural DAG only)
-    status: completed
-  - id: play-wiring
-    content: "forms-play + framework renderer: activate extension defaults, registry-driven catalogue/inspector, extension revision subscription, Try-mode preview"
-    status: completed
-  - id: fixtures
-    content: Delete default/onboarding forms fixtures, add building-component.forms.json, update fixture-slugs.ts
-    status: completed
-  - id: verify
-    content: Extend in-file vitest, run tests via script.ts, verify runtime in browser (params edit + non-blocking 3D preview, Edit/Try), then close ticket
-    status: completed
+ - id: ticket
+   content: Reopen the forms ticket (.repo/🎫/26/06/30/FORMS-TECHNOLOGY-AND-GENERATE-MODE) via repo MCP after reading repo://goals
+   status: completed
+ - id: core-host
+   content: "forms-core: add FormsExtensionHost + question-kind contribution registry (DOM-free), register 13 built-ins as the builtin extension, widen parser for extension kinds, widen FormValue to allow nested records, update runtime default/validate/submit; move flowFixtureToFormSpec/applyGenerationValuesToFixture into core; extend vitest"
+   status: completed
+ - id: react-control
+   content: "forms-react: extension/flow3d branch in questionControl rendering nested param sub-form + live headless 3D preview (FlowOrchestratorClient + ProceduralPreview); registry-driven palette; add deps; extend vitest"
+   status: completed
+ - id: proc-ext
+   content: Add declarative procedural forms extension contributing buildingComponent kind referencing the hexagonal column flow fixture; ensure no flow editor imports (neural DAG only)
+   status: completed
+ - id: play-wiring
+   content: "forms-play + framework renderer: activate extension defaults, registry-driven catalogue/inspector, extension revision subscription, Try-mode preview"
+   status: completed
+ - id: fixtures
+   content: Delete default/onboarding forms fixtures, add building-component.forms.json, update fixture-slugs.ts
+   status: completed
+ - id: verify
+   content: Extend in-file vitest, run tests via script.ts, verify runtime in browser (params edit + non-blocking 3D preview, Edit/Try), then close ticket
+   status: completed
 isProject: false
 ---
 
@@ -47,8 +47,6 @@ flowchart TD
   orch -->|outputsJson| extract["extractChannelPreviewItems (pure)"]
   extract --> preview
 ```
-
-
 
 Key principle: when a form uses a flow it touches only the headless neural DAG (`FlowOrchestratorClient`) plus pure helpers and the preview render component. It never imports the flow editor (`FlowCanvas`/`ProceduralFlowEditor`).
 
@@ -104,4 +102,3 @@ In [forms/react/index.tsx](forms/react/index.tsx):
 - Extensions are declarative/manifest-only with no DOM access; all rendering is trusted host code (controlled surfaces).
 - Flow usage = neural DAG only, evaluated off the main thread (non-blocking).
 - Single forms fixture; no migration/adapter cruft; edits to existing files using regions; work continues under the reopened forms ticket.
-

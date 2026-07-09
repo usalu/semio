@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The i18n validation script (`scripts/i18n.ts`) was reporting 290 errors and 237 warnings for missing and incomplete translations in the Sketchpad locales.
@@ -57,6 +58,7 @@ The i18n validation script (`scripts/i18n.ts`) was reporting 290 errors and 237 
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix all i18n errors and warnings

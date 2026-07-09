@@ -7,6 +7,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Implemented a shared local-only sketchpad chat panel and replaced all chat placeholders, including Kit. Added Playwright coverage, but validation remains blocked by pre-existing Quality.tsx syntax errors and the existing initDesign chat-toggle timeout path.
+
 ## Changes
 
 - `compose/js/sketchpad/elements.tsx`: Added a shared `BasicChatPanel` component with seeded assistant messages, local draft state, Enter-to-send behavior, send/clear actions, and stable `data-testid` hooks for automation.

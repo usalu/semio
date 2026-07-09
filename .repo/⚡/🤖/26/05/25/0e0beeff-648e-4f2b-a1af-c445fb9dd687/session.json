@@ -523,10 +523,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts",
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\spatial\\js\\core\\index.ts", "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"]
           },
           "tool_use_id": "call_lodyZKqkEh8a9Ygah8WvdvVB__vscode-1779617653993",
           "cwd": "c:\\git\\compose"
@@ -581,10 +578,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts",
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\spatial\\js\\core\\index.ts", "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"]
           },
           "tool_use_id": "call_lodyZKqkEh8a9Ygah8WvdvVB__vscode-1779617653993",
           "cwd": "c:\\git\\compose"
@@ -610,10 +604,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts",
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\spatial\\js\\core\\index.ts", "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_lodyZKqkEh8a9Ygah8WvdvVB__vscode-1779617653993",
@@ -700,9 +691,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_kR5cfRjDcXOT9aS6ZsdOZtiN__vscode-1779617653994",
@@ -729,9 +718,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=22 failed=1 /\u003e\n\u003ctestFailure name=\"-808641859_4_0\" path=\"C:/git/compose/spatial \u003e C:/git/compose/spatial/js \u003e C:/git/compose/spatial/js/renderer-r3f \u003e C:/git/compose/spatial/js/renderer-r3f/index.tsx \u003e -808641859_4\"\u003e\n\u003cexpectedOutput\u003e\ntrue\n\u003c/expectedOutput\u003e\n\u003cactualOutput\u003e\nfalse\n\u003c/actualOutput\u003e\n\u003cstackFrame path=\"c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx\" line=\"3161\" col=\"25\" /\u003e\n\u003clocation path=\"c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx\" line=\"3131\" col=\"4\" /\u003e\n\u003c/testFailure\u003e\n",
@@ -759,9 +746,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=22 failed=1 /\u003e\n\u003ctestFailure name=\"-808641859_4_0\" path=\"C:/git/compose/spatial \u003e C:/git/compose/spatial/js \u003e C:/git/compose/spatial/js/renderer-r3f \u003e C:/git/compose/spatial/js/renderer-r3f/index.tsx \u003e -808641859_4\"\u003e\n\u003cexpectedOutput\u003e\ntrue\n\u003c/expectedOutput\u003e\n\u003cactualOutput\u003e\nfalse\n\u003c/actualOutput\u003e\n\u003cstackFrame path=\"c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx\" line=\"3161\" col=\"25\" /\u003e\n\u003clocation path=\"c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx\" line=\"3131\" col=\"4\" /\u003e\n\u003c/testFailure\u003e\n",
@@ -1763,9 +1748,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\core\\index.ts"],
             "mode": "run"
           },
           "tool_use_id": "call_GXjVPPrJmwtxpttYcUXwLLu1__vscode-1779617654006",
@@ -1792,9 +1775,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\core\\index.ts"],
             "mode": "run"
           },
           "tool_use_id": "call_GXjVPPrJmwtxpttYcUXwLLu1__vscode-1779617654006",
@@ -1821,9 +1802,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\core\\index.ts"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=37 failed=4 /\u003e\n\u003ctestFailure name=\"112462107_6_7\" path=\"C:/git/compose/spatial \u003e C:/git/compose/spatial/js \u003e C:/git/compose/spatial/js/core \u003e C:/git/compose/spatial/js/core/index.ts \u003e 112462107_6\"\u003e\n\u003cexpectedOutput\u003e\npoint_to_move_from\n\u003c/expectedOutput\u003e\n\u003cactualOutput\u003e\nselect_objects_to_move\n\u003c/actualOutput\u003e\n\u003cstackFrame path=\"c:\\git\\compose\\spatial\\js\\core\\index.ts\" line=\"4336\" col=\"23\" /\u003e\n\u003clocation path=\"c:\\git\\compose\\spatial\\js\\core\\index.ts\" line=\"4311\" col=\"4\" /\u003e\n\u003c/testFailure\u003e\n\u003ctestFailure name=\"112462107_6_9\" path=\"C:/git/compose/spatial \u003e C:/git/compose/spatial/js \u003e C:/git/compose/spatial/js/core \u003e C:/git/compose/spatial/js/core/index.ts \u003e 112462107_6\"\u003e\n\u003cexpectedOutput\u003e\ncommitted\n\u003c/expectedOutput\u003e\n\u003cactualOutput\u003e\nselect_objects_to_move\n\u003c/actualOutput\u003e\n\u003cstackFrame path=\"c:\\git\\compose\\spatial\\js\\core\\index.ts\" line=\"4411\" col=\"23\" /\u003e\n\u003clocation path=\"c:\\git\\compose\\spatial\\js\\core\\index.ts\" line=\"4384\" col=\"4\" /\u003e\n\u003c/testFailure\u003e\n\u003ctestFailure name=\"112462107_12_1\" path=\"C:/git/compose/spatial \u003e C:/git/compose/spatial/js \u003e C:/git/compose/spatial/js/core \u003e C:/git/compose/spatial/js/core/index.ts \u003e 112462107_12\"\u003e\n\u003cexpectedOutput\u003e\nfalse\n\u003c/expectedOutput\u003e\n\u003cactualOutput\u003e\ntrue\n\u003c/actualOutput\u003e\n\u003cstackFrame path=\"c:\\git\\compose\\spatial\\js\\core\\index.ts\" line=\"4721\" col=\"40\" /\u003e\n\u003clocation path=\"c:\\git\\compose\\spatial\\js\\core\\index.ts\" line=\"4690\" col=\"4\" /\u003e\n\u003c/testFailure\u003e\n\u003ctestFailure name=\"112462107_17_0\" path=\"C:/git/compose/spatial \u003e C:/git/compose/spatial/js \u003e C:/git/compose/spatial/js/core \u003e C:/git/compose/spatial/js/core/index.ts \u003e 112462107_17\"\u003e\n\u003cexpectedOutput\u003e\n0\n\u003c/expectedOutput\u003e\n\u003cactualOutput\u003e\n1\n\u003c/actualOutput\u003e\n\u003cstackFrame path=\"c:\\git\\compose\\spatial\\js\\core\\index.ts\" line=\"4893\" col=\"40\" /\u003e\n\u003clocation path=\"c:\\git\\compose\\spatial\\js\\core\\index.ts\" line=\"4859\" col=\"4\" /\u003e\n\u003c/testFailure\u003e\n",
@@ -1851,9 +1830,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_Gzg16JHzEd3gFpZJQOM4hr5I__vscode-1779617654007",
@@ -1880,9 +1857,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\core\\index.ts"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=37 failed=4 /\u003e\n\u003ctestFailure name=\"112462107_6_7\" path=\"C:/git/compose/spatial \u003e C:/git/compose/spatial/js \u003e C:/git/compose/spatial/js/core \u003e C:/git/compose/spatial/js/core/index.ts \u003e 112462107_6\"\u003e\n\u003cexpectedOutput\u003e\npoint_to_move_from\n\u003c/expectedOutput\u003e\n\u003cactualOutput\u003e\nselect_objects_to_move\n\u003c/actualOutput\u003e\n\u003cstackFrame path=\"c:\\git\\compose\\spatial\\js\\core\\index.ts\" line=\"4336\" col=\"23\" /\u003e\n\u003clocation path=\"c:\\git\\compose\\spatial\\js\\core\\index.ts\" line=\"4311\" col=\"4\" /\u003e\n\u003c/testFailure\u003e\n\u003ctestFailure name=\"112462107_6_9\" path=\"C:/git/compose/spatial \u003e C:/git/compose/spatial/js \u003e C:/git/compose/spatial/js/core \u003e C:/git/compose/spatial/js/core/index.ts \u003e 112462107_6\"\u003e\n\u003cexpectedOutput\u003e\ncommitted\n\u003c/expectedOutput\u003e\n\u003cactualOutput\u003e\nselect_objects_to_move\n\u003c/actualOutput\u003e\n\u003cstackFrame path=\"c:\\git\\compose\\spatial\\js\\core\\index.ts\" line=\"4411\" col=\"23\" /\u003e\n\u003clocation path=\"c:\\git\\compose\\spatial\\js\\core\\index.ts\" line=\"4384\" col=\"4\" /\u003e\n\u003c/testFailure\u003e\n\u003ctestFailure name=\"112462107_12_1\" path=\"C:/git/compose/spatial \u003e C:/git/compose/spatial/js \u003e C:/git/compose/spatial/js/core \u003e C:/git/compose/spatial/js/core/index.ts \u003e 112462107_12\"\u003e\n\u003cexpectedOutput\u003e\nfalse\n\u003c/expectedOutput\u003e\n\u003cactualOutput\u003e\ntrue\n\u003c/actualOutput\u003e\n\u003cstackFrame path=\"c:\\git\\compose\\spatial\\js\\core\\index.ts\" line=\"4721\" col=\"40\" /\u003e\n\u003clocation path=\"c:\\git\\compose\\spatial\\js\\core\\index.ts\" line=\"4690\" col=\"4\" /\u003e\n\u003c/testFailure\u003e\n\u003ctestFailure name=\"112462107_17_0\" path=\"C:/git/compose/spatial \u003e C:/git/compose/spatial/js \u003e C:/git/compose/spatial/js/core \u003e C:/git/compose/spatial/js/core/index.ts \u003e 112462107_17\"\u003e\n\u003cexpectedOutput\u003e\n0\n\u003c/expectedOutput\u003e\n\u003cactualOutput\u003e\n1\n\u003c/actualOutput\u003e\n\u003cstackFrame path=\"c:\\git\\compose\\spatial\\js\\core\\index.ts\" line=\"4893\" col=\"40\" /\u003e\n\u003clocation path=\"c:\\git\\compose\\spatial\\js\\core\\index.ts\" line=\"4859\" col=\"4\" /\u003e\n\u003c/testFailure\u003e\n",
@@ -1910,9 +1885,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_use_id": "call_Gzg16JHzEd3gFpZJQOM4hr5I__vscode-1779617654007",
@@ -1939,9 +1912,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=22 failed=1 /\u003e\n\u003ctestFailure name=\"-808641859_4_0\" path=\"C:/git/compose/spatial \u003e C:/git/compose/spatial/js \u003e C:/git/compose/spatial/js/renderer-r3f \u003e C:/git/compose/spatial/js/renderer-r3f/index.tsx \u003e -808641859_4\"\u003e\n\u003cexpectedOutput\u003e\ntrue\n\u003c/expectedOutput\u003e\n\u003cactualOutput\u003e\nfalse\n\u003c/actualOutput\u003e\n\u003cstackFrame path=\"c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx\" line=\"3161\" col=\"25\" /\u003e\n\u003clocation path=\"c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx\" line=\"3131\" col=\"4\" /\u003e\n\u003c/testFailure\u003e\n",
@@ -1969,9 +1940,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=22 failed=1 /\u003e\n\u003ctestFailure name=\"-808641859_4_0\" path=\"C:/git/compose/spatial \u003e C:/git/compose/spatial/js \u003e C:/git/compose/spatial/js/renderer-r3f \u003e C:/git/compose/spatial/js/renderer-r3f/index.tsx \u003e -808641859_4\"\u003e\n\u003cexpectedOutput\u003e\ntrue\n\u003c/expectedOutput\u003e\n\u003cactualOutput\u003e\nfalse\n\u003c/actualOutput\u003e\n\u003cstackFrame path=\"c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx\" line=\"3161\" col=\"25\" /\u003e\n\u003clocation path=\"c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx\" line=\"3131\" col=\"4\" /\u003e\n\u003c/testFailure\u003e\n",
@@ -2280,9 +2249,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\core\\index.ts"],
             "testNames": [
               "commits createAnchor directly from a hit-point selection",
               "commits createAnchor after selecting a host then placing a point",
@@ -2315,9 +2282,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\core\\index.ts"],
             "testNames": [
               "commits createAnchor directly from a hit-point selection",
               "commits createAnchor after selecting a host then placing a point",
@@ -2350,9 +2315,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\core\\index.ts"],
             "testNames": [
               "commits createAnchor directly from a hit-point selection",
               "commits createAnchor after selecting a host then placing a point",
@@ -2386,14 +2349,8 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
-            "testNames": [
-              "creates snap and selection metadata for topology targets",
-              "creates selectable targets for every editable topology kind",
-              "carries host selection into interaction start events"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
+            "testNames": ["creates snap and selection metadata for topology targets", "creates selectable targets for every editable topology kind", "carries host selection into interaction start events"],
             "mode": "run"
           },
           "tool_use_id": "call_a8tfdxstFRvcNr0fJHgQPuXQ__vscode-1779617654013",
@@ -2420,9 +2377,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\core\\index.ts"],
             "testNames": [
               "commits createAnchor directly from a hit-point selection",
               "commits createAnchor after selecting a host then placing a point",
@@ -2456,14 +2411,8 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
-            "testNames": [
-              "creates snap and selection metadata for topology targets",
-              "creates selectable targets for every editable topology kind",
-              "carries host selection into interaction start events"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
+            "testNames": ["creates snap and selection metadata for topology targets", "creates selectable targets for every editable topology kind", "carries host selection into interaction start events"],
             "mode": "run"
           },
           "tool_use_id": "call_a8tfdxstFRvcNr0fJHgQPuXQ__vscode-1779617654013",
@@ -2490,14 +2439,8 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
-            "testNames": [
-              "creates snap and selection metadata for topology targets",
-              "creates selectable targets for every editable topology kind",
-              "carries host selection into interaction start events"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
+            "testNames": ["creates snap and selection metadata for topology targets", "creates selectable targets for every editable topology kind", "carries host selection into interaction start events"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=2 failed=0 /\u003e\n",
@@ -2525,14 +2468,8 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
-            "testNames": [
-              "creates snap and selection metadata for topology targets",
-              "creates selectable targets for every editable topology kind",
-              "carries host selection into interaction start events"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
+            "testNames": ["creates snap and selection metadata for topology targets", "creates selectable targets for every editable topology kind", "carries host selection into interaction start events"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=2 failed=0 /\u003e\n",
@@ -2642,9 +2579,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\core\\index.ts"],
             "testNames": [
               "commits createAnchor directly from a hit-point selection",
               "commits createAnchor after selecting a host then placing a point",
@@ -2705,9 +2640,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\core\\index.ts"],
             "testNames": [
               "commits createAnchor directly from a hit-point selection",
               "commits createAnchor after selecting a host then placing a point",
@@ -2740,9 +2673,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\core\\index.ts"],
             "testNames": [
               "commits createAnchor directly from a hit-point selection",
               "commits createAnchor after selecting a host then placing a point",
@@ -2776,9 +2707,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\core\\index.ts"],
             "testNames": [
               "commits createAnchor directly from a hit-point selection",
               "commits createAnchor after selecting a host then placing a point",
@@ -2812,10 +2741,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts",
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\spatial\\js\\core\\index.ts", "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"]
           },
           "tool_use_id": "call_vRSlyaCfkvk4Y16jpu85H6pw__vscode-1779617654016",
           "cwd": "c:\\git\\compose"
@@ -2841,10 +2767,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts",
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\spatial\\js\\core\\index.ts", "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"]
           },
           "tool_use_id": "call_vRSlyaCfkvk4Y16jpu85H6pw__vscode-1779617654016",
           "cwd": "c:\\git\\compose"
@@ -2870,10 +2793,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts",
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\spatial\\js\\core\\index.ts", "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_vRSlyaCfkvk4Y16jpu85H6pw__vscode-1779617654016",
@@ -2900,14 +2820,8 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
-            "testNames": [
-              "creates snap and selection metadata for topology targets",
-              "creates selectable targets for every editable topology kind",
-              "carries host selection into interaction start events"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
+            "testNames": ["creates snap and selection metadata for topology targets", "creates selectable targets for every editable topology kind", "carries host selection into interaction start events"],
             "mode": "run"
           },
           "tool_use_id": "call_AmEKgxHw2OKOnRcPI73Wtczj__vscode-1779617654017",
@@ -2934,10 +2848,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts",
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\spatial\\js\\core\\index.ts", "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_vRSlyaCfkvk4Y16jpu85H6pw__vscode-1779617654016",
@@ -2964,14 +2875,8 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
-            "testNames": [
-              "creates snap and selection metadata for topology targets",
-              "creates selectable targets for every editable topology kind",
-              "carries host selection into interaction start events"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
+            "testNames": ["creates snap and selection metadata for topology targets", "creates selectable targets for every editable topology kind", "carries host selection into interaction start events"],
             "mode": "run"
           },
           "tool_use_id": "call_AmEKgxHw2OKOnRcPI73Wtczj__vscode-1779617654017",
@@ -2998,14 +2903,8 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
-            "testNames": [
-              "creates snap and selection metadata for topology targets",
-              "creates selectable targets for every editable topology kind",
-              "carries host selection into interaction start events"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
+            "testNames": ["creates snap and selection metadata for topology targets", "creates selectable targets for every editable topology kind", "carries host selection into interaction start events"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=2 failed=0 /\u003e\n",
@@ -3033,14 +2932,8 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
-            "testNames": [
-              "creates snap and selection metadata for topology targets",
-              "creates selectable targets for every editable topology kind",
-              "carries host selection into interaction start events"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
+            "testNames": ["creates snap and selection metadata for topology targets", "creates selectable targets for every editable topology kind", "carries host selection into interaction start events"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=2 failed=0 /\u003e\n",
@@ -3156,10 +3049,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts",
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\spatial\\js\\core\\index.ts", "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"]
           },
           "tool_use_id": "call_G1UiGJ3wXbxsoyYxkUjFZB1w__vscode-1779617654020",
           "cwd": "c:\\git\\compose"
@@ -3213,10 +3103,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts",
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\spatial\\js\\core\\index.ts", "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"]
           },
           "tool_use_id": "call_G1UiGJ3wXbxsoyYxkUjFZB1w__vscode-1779617654020",
           "cwd": "c:\\git\\compose"
@@ -3298,10 +3185,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts",
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\spatial\\js\\core\\index.ts", "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_G1UiGJ3wXbxsoyYxkUjFZB1w__vscode-1779617654020",
@@ -3386,10 +3270,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "get_errors",
           "tool_input": {
-            "filePaths": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts",
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ]
+            "filePaths": ["c:\\git\\compose\\spatial\\js\\core\\index.ts", "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"]
           },
           "tool_response": "",
           "tool_use_id": "call_G1UiGJ3wXbxsoyYxkUjFZB1w__vscode-1779617654020",
@@ -3530,9 +3411,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\core\\index.ts"],
             "testNames": [
               "lists stable mnemonic keys for each built-in interaction",
               "commits createAnchor directly from a hit-point selection",
@@ -3565,9 +3444,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\core\\index.ts"],
             "testNames": [
               "lists stable mnemonic keys for each built-in interaction",
               "commits createAnchor directly from a hit-point selection",
@@ -3600,9 +3477,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\core\\index.ts"],
             "testNames": [
               "lists stable mnemonic keys for each built-in interaction",
               "commits createAnchor directly from a hit-point selection",
@@ -3636,14 +3511,8 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
-            "testNames": [
-              "creates snap and selection metadata for topology targets",
-              "creates selectable targets for every editable topology kind",
-              "carries host selection into interaction start events"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
+            "testNames": ["creates snap and selection metadata for topology targets", "creates selectable targets for every editable topology kind", "carries host selection into interaction start events"],
             "mode": "run"
           },
           "tool_use_id": "call_Q7n65f9kEF27u26tUfGhCied__vscode-1779617654023",
@@ -3670,9 +3539,7 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\core\\index.ts"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\core\\index.ts"],
             "testNames": [
               "lists stable mnemonic keys for each built-in interaction",
               "commits createAnchor directly from a hit-point selection",
@@ -3706,14 +3573,8 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
-            "testNames": [
-              "creates snap and selection metadata for topology targets",
-              "creates selectable targets for every editable topology kind",
-              "carries host selection into interaction start events"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
+            "testNames": ["creates snap and selection metadata for topology targets", "creates selectable targets for every editable topology kind", "carries host selection into interaction start events"],
             "mode": "run"
           },
           "tool_use_id": "call_Q7n65f9kEF27u26tUfGhCied__vscode-1779617654023",
@@ -3740,14 +3601,8 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
-            "testNames": [
-              "creates snap and selection metadata for topology targets",
-              "creates selectable targets for every editable topology kind",
-              "carries host selection into interaction start events"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
+            "testNames": ["creates snap and selection metadata for topology targets", "creates selectable targets for every editable topology kind", "carries host selection into interaction start events"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=2 failed=0 /\u003e\n",
@@ -3775,14 +3630,8 @@
           "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\0e0beeff-648e-4f2b-a1af-c445fb9dd687.jsonl",
           "tool_name": "runTests",
           "tool_input": {
-            "files": [
-              "c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"
-            ],
-            "testNames": [
-              "creates snap and selection metadata for topology targets",
-              "creates selectable targets for every editable topology kind",
-              "carries host selection into interaction start events"
-            ],
+            "files": ["c:\\git\\compose\\spatial\\js\\renderer-r3f\\index.tsx"],
+            "testNames": ["creates snap and selection metadata for topology targets", "creates selectable targets for every editable topology kind", "carries host selection into interaction start events"],
             "mode": "run"
           },
           "tool_response": "\u003csummary passed=2 failed=0 /\u003e\n",

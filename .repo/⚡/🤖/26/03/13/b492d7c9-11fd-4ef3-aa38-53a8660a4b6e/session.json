@@ -139,9 +139,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__search"
-            ],
+            "matches": ["mcp__repo__search"],
             "query": "select:mcp__repo__search",
             "total_deferred_tools": 75
           },
@@ -160,9 +158,7 @@
         "name": "ToolSearch",
         "parent": "",
         "response": {
-          "matches": [
-            "mcp__repo__search"
-          ],
+          "matches": ["mcp__repo__search"],
           "query": "select:mcp__repo__search",
           "total_deferred_tools": 75
         },
@@ -187,10 +183,7 @@
             "pattern": "coda/examples/**/.coda/project.json"
           },
           "tool_response": {
-            "filenames": [
-              "/workspaces/semio/coda/examples/compose-blnbo-roomprogram/.coda/project.json",
-              "/workspaces/semio/coda/examples/coda-example/.coda/project.json"
-            ],
+            "filenames": ["/workspaces/semio/coda/examples/compose-blnbo-roomprogram/.coda/project.json", "/workspaces/semio/coda/examples/coda-example/.coda/project.json"],
             "durationMs": 31356,
             "numFiles": 2,
             "truncated": false
@@ -210,10 +203,7 @@
         "parent": "",
         "response": {
           "durationMs": 31356,
-          "filenames": [
-            "/workspaces/semio/coda/examples/compose-blnbo-roomprogram/.coda/project.json",
-            "/workspaces/semio/coda/examples/coda-example/.coda/project.json"
-          ],
+          "filenames": ["/workspaces/semio/coda/examples/compose-blnbo-roomprogram/.coda/project.json", "/workspaces/semio/coda/examples/coda-example/.coda/project.json"],
           "numFiles": 2,
           "truncated": false
         },
@@ -407,9 +397,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🔬coda📚examples🗃️composeblnboroomprogram🛅coda⚙️project📌1📌36"
-        ],
+        "ranges": ["🔬coda📚examples🗃️composeblnboroomprogram🛅coda⚙️project📌1📌36"],
         "second": "🎆26🌙03☀️13⏰09⌚49⏱️27",
         "session": "⚪b492d7c911fd4ef3aa3853a8660a4b6e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/b492d7c9-11fd-4ef3-aa38-53a8660a4b6e.jsonl"
@@ -454,9 +442,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🔬coda📚examples🗃️codaexample🛅coda⚙️project📌1📌6"
-        ],
+        "ranges": ["🔬coda📚examples🗃️codaexample🛅coda⚙️project📌1📌6"],
         "second": "🎆26🌙03☀️13⏰09⌚49⏱️33",
         "session": "⚪b492d7c911fd4ef3aa3853a8660a4b6e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/b492d7c9-11fd-4ef3-aa38-53a8660a4b6e.jsonl"
@@ -547,9 +533,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_open"
-            ],
+            "matches": ["mcp__repo__ticket_open"],
             "query": "select:mcp__repo__ticket_open",
             "total_deferred_tools": 75
           },
@@ -568,9 +552,7 @@
         "name": "ToolSearch",
         "parent": "",
         "response": {
-          "matches": [
-            "mcp__repo__ticket_open"
-          ],
+          "matches": ["mcp__repo__ticket_open"],
           "query": "select:mcp__repo__ticket_open",
           "total_deferred_tools": 75
         },
@@ -595,10 +577,7 @@
             "pattern": "coda/examples/**/project.json"
           },
           "tool_response": {
-            "filenames": [
-              "/workspaces/semio/coda/examples/compose-blnbo-roomprogram/.coda/project.json",
-              "/workspaces/semio/coda/examples/coda-example/.coda/project.json"
-            ],
+            "filenames": ["/workspaces/semio/coda/examples/compose-blnbo-roomprogram/.coda/project.json", "/workspaces/semio/coda/examples/coda-example/.coda/project.json"],
             "durationMs": 10816,
             "numFiles": 2,
             "truncated": false
@@ -618,10 +597,7 @@
         "parent": "",
         "response": {
           "durationMs": 10816,
-          "filenames": [
-            "/workspaces/semio/coda/examples/compose-blnbo-roomprogram/.coda/project.json",
-            "/workspaces/semio/coda/examples/coda-example/.coda/project.json"
-          ],
+          "filenames": ["/workspaces/semio/coda/examples/compose-blnbo-roomprogram/.coda/project.json", "/workspaces/semio/coda/examples/coda-example/.coda/project.json"],
           "numFiles": 2,
           "truncated": false
         },
@@ -2341,13 +2317,7 @@
                 "oldLines": 4,
                 "newStart": 1,
                 "newLines": 5,
-                "lines": [
-                  " {",
-                  "+  \"name\": \"coda-example\",",
-                  "   \"design\": {",
-                  "     \"id\": \"Coda Example\"",
-                  "   },"
-                ]
+                "lines": [" {", "+  \"name\": \"coda-example\",", "   \"design\": {", "     \"id\": \"Coda Example\"", "   },"]
               }
             ],
             "userModified": false,
@@ -2434,13 +2404,7 @@
                 "oldLines": 4,
                 "newStart": 1,
                 "newLines": 5,
-                "lines": [
-                  " {",
-                  "+    \"name\": \"compose-blnbo-roomprogram\",",
-                  "     \"mcp\": {",
-                  "         \"command\": \"../repo/cli/cli\",",
-                  "         \"args\": ["
-                ]
+                "lines": [" {", "+    \"name\": \"compose-blnbo-roomprogram\",", "     \"mcp\": {", "         \"command\": \"../repo/cli/cli\",", "         \"args\": ["]
               }
             ],
             "userModified": false,
@@ -2586,9 +2550,7 @@
             "max_results": 1
           },
           "tool_response": {
-            "matches": [
-              "mcp__repo__ticket_close"
-            ],
+            "matches": ["mcp__repo__ticket_close"],
             "query": "select:mcp__repo__ticket_close",
             "total_deferred_tools": 75
           },
@@ -2607,9 +2569,7 @@
         "name": "ToolSearch",
         "parent": "",
         "response": {
-          "matches": [
-            "mcp__repo__ticket_close"
-          ],
+          "matches": ["mcp__repo__ticket_close"],
           "query": "select:mcp__repo__ticket_close",
           "total_deferred_tools": 75
         },
@@ -2633,10 +2593,7 @@
           "tool_input": {
             "path": "26/03/13/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
             "summary": "Added unique `name` fields to both .coda/project.json files: \"coda-example\" and \"compose-blnbo-roomprogram\". NX project graph now resolves without duplicate name errors.",
-            "files": [
-              "coda/examples/coda-example/.coda/project.json",
-              "coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-            ]
+            "files": ["coda/examples/coda-example/.coda/project.json", "coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
           },
           "tool_use_id": "toolu_01L46o6PAjXRUXMUGyW4yfqJ"
         }
@@ -2648,10 +2605,7 @@
         "input": {
           "path": "26/03/13/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
           "summary": "Added unique `name` fields to both .coda/project.json files: \"coda-example\" and \"compose-blnbo-roomprogram\". NX project graph now resolves without duplicate name errors.",
-          "files": [
-            "coda/examples/coda-example/.coda/project.json",
-            "coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-          ]
+          "files": ["coda/examples/coda-example/.coda/project.json", "coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
         },
         "kind": "repo.ticket.close.starting",
         "name": "mcp__repo__ticket_close",
@@ -2676,10 +2630,7 @@
           "tool_input": {
             "path": "26/03/13/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
             "summary": "Added unique `name` fields to both .coda/project.json files: \"coda-example\" and \"compose-blnbo-roomprogram\". NX project graph now resolves without duplicate name errors.",
-            "files": [
-              "coda/examples/coda-example/.coda/project.json",
-              "coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-            ]
+            "files": ["coda/examples/coda-example/.coda/project.json", "coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
           },
           "tool_use_id": "toolu_01L46o6PAjXRUXMUGyW4yfqJ"
         }
@@ -2689,10 +2640,7 @@
         "client": "claude-code",
         "contributor": "🧑‍💻ueli",
         "input": {
-          "files": [
-            "coda/examples/coda-example/.coda/project.json",
-            "coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-          ],
+          "files": ["coda/examples/coda-example/.coda/project.json", "coda/examples/compose-blnbo-roomprogram/.coda/project.json"],
           "path": "26/03/13/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
           "summary": "Added unique `name` fields to both .coda/project.json files: \"coda-example\" and \"compose-blnbo-roomprogram\". NX project graph now resolves without duplicate name errors."
         },
@@ -2719,10 +2667,7 @@
           "tool_input": {
             "path": "26/03/13/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
             "summary": "Added unique `name` fields to both .coda/project.json files: \"coda-example\" and \"compose-blnbo-roomprogram\". NX project graph now resolves without duplicate name errors.",
-            "files": [
-              "coda/examples/coda-example/.coda/project.json",
-              "coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-            ]
+            "files": ["coda/examples/coda-example/.coda/project.json", "coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
           },
           "tool_use_id": "toolu_01L46o6PAjXRUXMUGyW4yfqJ",
           "error": "MCP error -32603: at least one file is required",
@@ -2736,10 +2681,7 @@
         "input": {
           "path": "26/03/13/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
           "summary": "Added unique `name` fields to both .coda/project.json files: \"coda-example\" and \"compose-blnbo-roomprogram\". NX project graph now resolves without duplicate name errors.",
-          "files": [
-            "coda/examples/coda-example/.coda/project.json",
-            "coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-          ]
+          "files": ["coda/examples/coda-example/.coda/project.json", "coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
         },
         "kind": "repo.ticket.close.ended",
         "name": "mcp__repo__ticket_close",
@@ -2764,10 +2706,7 @@
           "tool_input": {
             "path": "26/03/13/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
             "summary": "Added unique `name` fields to both .coda/project.json files: \"coda-example\" and \"compose-blnbo-roomprogram\". NX project graph now resolves without duplicate name errors.",
-            "files": [
-              "coda/examples/coda-example/.coda/project.json",
-              "coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-            ]
+            "files": ["coda/examples/coda-example/.coda/project.json", "coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
           },
           "tool_use_id": "toolu_01L46o6PAjXRUXMUGyW4yfqJ",
           "error": "MCP error -32603: at least one file is required",
@@ -2779,10 +2718,7 @@
         "client": "claude-code",
         "contributor": "🧑‍💻ueli",
         "input": {
-          "files": [
-            "coda/examples/coda-example/.coda/project.json",
-            "coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-          ],
+          "files": ["coda/examples/coda-example/.coda/project.json", "coda/examples/compose-blnbo-roomprogram/.coda/project.json"],
           "path": "26/03/13/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
           "summary": "Added unique `name` fields to both .coda/project.json files: \"coda-example\" and \"compose-blnbo-roomprogram\". NX project graph now resolves without duplicate name errors."
         },
@@ -3473,9 +3409,7 @@
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
-        "ranges": [
-          "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃feedbackcomposerepomcpuris📌1📌11"
-        ],
+        "ranges": ["🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃feedbackcomposerepomcpuris📌1📌11"],
         "second": "🎆26🌙03☀️13⏰10⌚06⏱️02",
         "session": "⚪b492d7c911fd4ef3aa3853a8660a4b6e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/b492d7c9-11fd-4ef3-aa38-53a8660a4b6e.jsonl"
@@ -3520,9 +3454,7 @@
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
-        "ranges": [
-          "🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃feedbackcomposerepomcpuris📌1📌11"
-        ],
+        "ranges": ["🛅🛅🗃️home🗃️vscode🛅claude🗃️projects🗃️workspacescompose🗃️memory📃feedbackcomposerepomcpuris📌1📌11"],
         "second": "🎆26🌙03☀️13⏰10⌚06⏱️14",
         "session": "⚪b492d7c911fd4ef3aa3853a8660a4b6e",
         "transcript": "/home/vscode/.claude/projects/-workspaces-compose/b492d7c9-11fd-4ef3-aa38-53a8660a4b6e.jsonl"
@@ -3699,10 +3631,7 @@
           "tool_input": {
             "path": "composerepo://y/26/m/03/d/13/tk/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
             "summary": "Added unique name fields to both .coda/project.json files: coda-example and compose-blnbo-roomprogram. NX project graph now resolves without duplicate name errors.",
-            "files": [
-              "composerepo://f/coda/examples/coda-example/.coda/project.json",
-              "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-            ]
+            "files": ["composerepo://f/coda/examples/coda-example/.coda/project.json", "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
           },
           "tool_use_id": "toolu_01JxQT9TSJWyRFsmUMMpN3WP"
         }
@@ -3714,10 +3643,7 @@
         "input": {
           "path": "composerepo://y/26/m/03/d/13/tk/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
           "summary": "Added unique name fields to both .coda/project.json files: coda-example and compose-blnbo-roomprogram. NX project graph now resolves without duplicate name errors.",
-          "files": [
-            "composerepo://f/coda/examples/coda-example/.coda/project.json",
-            "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-          ]
+          "files": ["composerepo://f/coda/examples/coda-example/.coda/project.json", "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
         },
         "kind": "repo.ticket.close.starting",
         "name": "mcp__repo__ticket_close",
@@ -3742,10 +3668,7 @@
           "tool_input": {
             "path": "composerepo://y/26/m/03/d/13/tk/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
             "summary": "Added unique name fields to both .coda/project.json files: coda-example and compose-blnbo-roomprogram. NX project graph now resolves without duplicate name errors.",
-            "files": [
-              "composerepo://f/coda/examples/coda-example/.coda/project.json",
-              "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-            ]
+            "files": ["composerepo://f/coda/examples/coda-example/.coda/project.json", "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
           },
           "tool_use_id": "toolu_01JxQT9TSJWyRFsmUMMpN3WP"
         }
@@ -3755,10 +3678,7 @@
         "client": "claude-code",
         "contributor": "🧑‍💻ueli",
         "input": {
-          "files": [
-            "composerepo://f/coda/examples/coda-example/.coda/project.json",
-            "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-          ],
+          "files": ["composerepo://f/coda/examples/coda-example/.coda/project.json", "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"],
           "path": "composerepo://y/26/m/03/d/13/tk/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
           "summary": "Added unique name fields to both .coda/project.json files: coda-example and compose-blnbo-roomprogram. NX project graph now resolves without duplicate name errors."
         },
@@ -3785,10 +3705,7 @@
           "tool_input": {
             "path": "composerepo://y/26/m/03/d/13/tk/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
             "summary": "Added unique name fields to both .coda/project.json files: coda-example and compose-blnbo-roomprogram. NX project graph now resolves without duplicate name errors.",
-            "files": [
-              "composerepo://f/coda/examples/coda-example/.coda/project.json",
-              "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-            ]
+            "files": ["composerepo://f/coda/examples/coda-example/.coda/project.json", "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
           },
           "tool_use_id": "toolu_01JxQT9TSJWyRFsmUMMpN3WP",
           "error": "MCP error -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/00/26/m/03/d/13/tk/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES/ticket.json",
@@ -3802,10 +3719,7 @@
         "input": {
           "path": "composerepo://y/26/m/03/d/13/tk/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
           "summary": "Added unique name fields to both .coda/project.json files: coda-example and compose-blnbo-roomprogram. NX project graph now resolves without duplicate name errors.",
-          "files": [
-            "composerepo://f/coda/examples/coda-example/.coda/project.json",
-            "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-          ]
+          "files": ["composerepo://f/coda/examples/coda-example/.coda/project.json", "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
         },
         "kind": "repo.ticket.close.ended",
         "name": "mcp__repo__ticket_close",
@@ -3830,10 +3744,7 @@
           "tool_input": {
             "path": "composerepo://y/26/m/03/d/13/tk/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
             "summary": "Added unique name fields to both .coda/project.json files: coda-example and compose-blnbo-roomprogram. NX project graph now resolves without duplicate name errors.",
-            "files": [
-              "composerepo://f/coda/examples/coda-example/.coda/project.json",
-              "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-            ]
+            "files": ["composerepo://f/coda/examples/coda-example/.coda/project.json", "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
           },
           "tool_use_id": "toolu_01JxQT9TSJWyRFsmUMMpN3WP",
           "error": "MCP error -32603: ticket not found: /workspaces/semio/.repo/🎫/00/00/00/26/m/03/d/13/tk/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES/ticket.json",
@@ -3845,10 +3756,7 @@
         "client": "claude-code",
         "contributor": "🧑‍💻ueli",
         "input": {
-          "files": [
-            "composerepo://f/coda/examples/coda-example/.coda/project.json",
-            "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-          ],
+          "files": ["composerepo://f/coda/examples/coda-example/.coda/project.json", "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"],
           "path": "composerepo://y/26/m/03/d/13/tk/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
           "summary": "Added unique name fields to both .coda/project.json files: coda-example and compose-blnbo-roomprogram. NX project graph now resolves without duplicate name errors."
         },
@@ -3875,10 +3783,7 @@
           "tool_input": {
             "path": "26/03/13/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
             "summary": "Added unique name fields to both .coda/project.json files: coda-example and compose-blnbo-roomprogram. NX project graph now resolves without duplicate name errors.",
-            "files": [
-              "composerepo://f/coda/examples/coda-example/.coda/project.json",
-              "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-            ]
+            "files": ["composerepo://f/coda/examples/coda-example/.coda/project.json", "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
           },
           "tool_use_id": "toolu_01KKphR2BNBiasGxVNjaokg7"
         }
@@ -3890,10 +3795,7 @@
         "input": {
           "path": "26/03/13/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
           "summary": "Added unique name fields to both .coda/project.json files: coda-example and compose-blnbo-roomprogram. NX project graph now resolves without duplicate name errors.",
-          "files": [
-            "composerepo://f/coda/examples/coda-example/.coda/project.json",
-            "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-          ]
+          "files": ["composerepo://f/coda/examples/coda-example/.coda/project.json", "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
         },
         "kind": "repo.ticket.close.starting",
         "name": "mcp__repo__ticket_close",
@@ -3918,10 +3820,7 @@
           "tool_input": {
             "path": "26/03/13/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
             "summary": "Added unique name fields to both .coda/project.json files: coda-example and compose-blnbo-roomprogram. NX project graph now resolves without duplicate name errors.",
-            "files": [
-              "composerepo://f/coda/examples/coda-example/.coda/project.json",
-              "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-            ]
+            "files": ["composerepo://f/coda/examples/coda-example/.coda/project.json", "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
           },
           "tool_use_id": "toolu_01KKphR2BNBiasGxVNjaokg7"
         }
@@ -3931,10 +3830,7 @@
         "client": "claude-code",
         "contributor": "🧑‍💻ueli",
         "input": {
-          "files": [
-            "composerepo://f/coda/examples/coda-example/.coda/project.json",
-            "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-          ],
+          "files": ["composerepo://f/coda/examples/coda-example/.coda/project.json", "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"],
           "path": "26/03/13/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
           "summary": "Added unique name fields to both .coda/project.json files: coda-example and compose-blnbo-roomprogram. NX project graph now resolves without duplicate name errors."
         },
@@ -3961,10 +3857,7 @@
           "tool_input": {
             "path": "26/03/13/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
             "summary": "Added unique name fields to both .coda/project.json files: coda-example and compose-blnbo-roomprogram. NX project graph now resolves without duplicate name errors.",
-            "files": [
-              "composerepo://f/coda/examples/coda-example/.coda/project.json",
-              "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-            ]
+            "files": ["composerepo://f/coda/examples/coda-example/.coda/project.json", "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
           },
           "tool_response": [
             {
@@ -3982,10 +3875,7 @@
         "input": {
           "path": "26/03/13/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
           "summary": "Added unique name fields to both .coda/project.json files: coda-example and compose-blnbo-roomprogram. NX project graph now resolves without duplicate name errors.",
-          "files": [
-            "composerepo://f/coda/examples/coda-example/.coda/project.json",
-            "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-          ]
+          "files": ["composerepo://f/coda/examples/coda-example/.coda/project.json", "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
         },
         "kind": "repo.ticket.close.ended",
         "name": "mcp__repo__ticket_close",
@@ -4016,10 +3906,7 @@
           "tool_input": {
             "path": "26/03/13/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
             "summary": "Added unique name fields to both .coda/project.json files: coda-example and compose-blnbo-roomprogram. NX project graph now resolves without duplicate name errors.",
-            "files": [
-              "composerepo://f/coda/examples/coda-example/.coda/project.json",
-              "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-            ]
+            "files": ["composerepo://f/coda/examples/coda-example/.coda/project.json", "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"]
           },
           "tool_response": [
             {
@@ -4035,10 +3922,7 @@
         "client": "claude-code",
         "contributor": "🧑‍💻ueli",
         "input": {
-          "files": [
-            "composerepo://f/coda/examples/coda-example/.coda/project.json",
-            "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"
-          ],
+          "files": ["composerepo://f/coda/examples/coda-example/.coda/project.json", "composerepo://f/coda/examples/compose-blnbo-roomprogram/.coda/project.json"],
           "path": "26/03/13/FIX-DUPLICATE-NX-PROJECT-NAMES-IN-CODA-EXAMPLES",
           "summary": "Added unique name fields to both .coda/project.json files: coda-example and compose-blnbo-roomprogram. NX project graph now resolves without duplicate name errors."
         },

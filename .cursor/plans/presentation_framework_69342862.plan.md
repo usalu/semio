@@ -2,24 +2,24 @@
 name: presentation framework
 overview: Build a render-independent declarative presentation framework as @semio-tech/framework-presentation-core (pure TS, following the domain model in presentation/AGENTS.md) plus a first React+reveal.js renderer, then migrate mit-bestand/präsentation/33.projektetage to render the eg-ice-25 intro (5 slides) declaratively with zero direct React/reveal dependency.
 todos:
-  - id: ticket
-    content: Read repo://goals and open/reopen a repo MCP ticket associated with the best goal
-    status: completed
-  - id: scaffold
-    content: Create framework/product/presentation namespace package.json + core and renderer/react package.json, project.json, script.ts, vitest.config.ts; add both to root workspaces and bun install
-    status: completed
-  - id: core-model
-    content: "Implement @semio-tech/framework-presentation-core/index.ts: Presentation/Sequence/Thought/Participant/Embodiment/Arrangement/Transition + resolver + intro() template, with inline vitest"
-    status: completed
-  - id: renderer
-    content: "Implement @semio-tech/framework-presentation-renderer-react/index.tsx: declarative→reveal.js DOM mapping, mountPresentation, surface chrome + theme sync, globals.css, inline vitest"
-    status: completed
-  - id: migrate-app
-    content: "Migrate 33.projektetage: index.ts declarative eg-ice-25 intro + mountPresentation; update package.json/vite.config.ts/globals.css/index.html; drop react/reveal/@semio-tech/ui-react deps"
-    status: completed
-  - id: verify
-    content: Run core + renderer tests and projektetage dev server; confirm 5-slide auto-animate intro renders; close ticket with summary
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open/reopen a repo MCP ticket associated with the best goal
+   status: completed
+ - id: scaffold
+   content: Create framework/product/presentation namespace package.json + core and renderer/react package.json, project.json, script.ts, vitest.config.ts; add both to root workspaces and bun install
+   status: completed
+ - id: core-model
+   content: "Implement @semio-tech/framework-presentation-core/index.ts: Presentation/Sequence/Thought/Participant/Embodiment/Arrangement/Transition + resolver + intro() template, with inline vitest"
+   status: completed
+ - id: renderer
+   content: "Implement @semio-tech/framework-presentation-renderer-react/index.tsx: declarative→reveal.js DOM mapping, mountPresentation, surface chrome + theme sync, globals.css, inline vitest"
+   status: completed
+ - id: migrate-app
+   content: "Migrate 33.projektetage: index.ts declarative eg-ice-25 intro + mountPresentation; update package.json/vite.config.ts/globals.css/index.html; drop react/reveal/@semio-tech/ui-react deps"
+   status: completed
+ - id: verify
+   content: Run core + renderer tests and projektetage dev server; confirm 5-slide auto-animate intro renders; close ticket with summary
+   status: completed
 isProject: false
 ---
 

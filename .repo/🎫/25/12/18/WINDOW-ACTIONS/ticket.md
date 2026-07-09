@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 GoldenLayout window chrome controls and the splitter add-window overlay used non-Action UI buttons, causing inconsistent interaction styling and tooltip/id behavior.
@@ -23,6 +24,7 @@ GoldenLayout window chrome controls and the splitter add-window overlay used non
 ## Log
 
 ## Summary
+
 # Summary
 
 Use Action UI elements for all window buttons

@@ -53,29 +53,8 @@ import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, u
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Slot } from "@radix-ui/react-slot";
-import {
-  Clone,
-  Edges,
-  GizmoHelper,
-  GizmoViewport,
-  Grid,
-  Line as DreiLine,
-  OrbitControls,
-  OrthographicCamera,
-  Outlines,
-  PerspectiveCamera,
-  Text as DreiText,
-  TransformControls,
-  useGLTF,
-} from "@react-three/drei";
-import {
-  Canvas as ThreeCanvas,
-  createPortal as r3fCreatePortal,
-  ThreeEvent,
-  useFrame,
-  useStore,
-  useThree,
-} from "@react-three/fiber";
+import { Clone, Edges, GizmoHelper, GizmoViewport, Grid, Line as DreiLine, OrbitControls, OrthographicCamera, Outlines, PerspectiveCamera, Text as DreiText, TransformControls, useGLTF } from "@react-three/drei";
+import { Canvas as ThreeCanvas, createPortal as r3fCreatePortal, ThreeEvent, useFrame, useStore, useThree } from "@react-three/fiber";
 import {
   applyNodeChanges,
   Background,
@@ -230,16 +209,7 @@ export let sceneHostPort: SceneHostPort = {
 // #endregion 🔌PortWiring
 
 // #region 🔖IconRenderPort
-export type {
-  IconRenderCamera,
-  IconRenderFormat,
-  IconRenderShape,
-  IconRenderLights,
-  IconRenderMaterial,
-  IconRenderPort,
-  IconRenderRequest,
-  IconRenderResult,
-} from "@semio-tech/ui-styling";
+export type { IconRenderCamera, IconRenderFormat, IconRenderShape, IconRenderLights, IconRenderMaterial, IconRenderPort, IconRenderRequest, IconRenderResult } from "@semio-tech/ui-styling";
 
 import type { IconRenderPort, IconRenderRequest, IconRenderResult, IconRenderShape } from "@semio-tech/ui-styling";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -406,10 +376,7 @@ export const iconRenderPort: IconRenderPort = {
     const model = await loadGlbGroup(request.assetUrl);
     const scene = buildIconScene(request, model);
     const camera = buildIconCamera(request);
-    const result =
-      request.format === "svg"
-        ? await renderIconSvg(scene, camera, request.width, request.height)
-        : await renderIconPng(scene, camera, request.width, request.height, request.shadowEnabled === true);
+    const result = request.format === "svg" ? await renderIconSvg(scene, camera, request.width, request.height) : await renderIconPng(scene, camera, request.width, request.height, request.shadowEnabled === true);
     return applyIconRenderShape(result, request.shape, request.width, request.height);
   },
 };
@@ -582,10 +549,7 @@ export type SelectionMarqueePoint = {
 export type SelectionMarqueeProps = {
   readonly coverage: SelectionMarqueeCoverage;
   readonly className?: string;
-} & (
-  | { readonly shape: "rect"; readonly rect: SelectionMarqueeRect }
-  | { readonly shape: "polygon"; readonly points: readonly SelectionMarqueePoint[] }
-);
+} & ({ readonly shape: "rect"; readonly rect: SelectionMarqueeRect } | { readonly shape: "polygon"; readonly points: readonly SelectionMarqueePoint[] });
 
 /** @emoji ⬚ Shared SVG marquee for spatial area selection (primary fill/stroke; dashed when partial). */
 export function SelectionMarquee(props: SelectionMarqueeProps): React.ReactElement {
@@ -644,12 +608,7 @@ export function marqueeCoverageFromPath(path: readonly SelectionMarqueePoint[], 
 }
 
 /** @emoji 🖱️ Resolves marquee coverage for rectangle or lasso gestures. */
-export function marqueeCoverageFromGesture(input: {
-  readonly method: SelectionMarqueeMethod;
-  readonly startX: number;
-  readonly endX: number;
-  readonly path: readonly SelectionMarqueePoint[];
-}): SelectionMarqueeCoverage {
+export function marqueeCoverageFromGesture(input: { readonly method: SelectionMarqueeMethod; readonly startX: number; readonly endX: number; readonly path: readonly SelectionMarqueePoint[] }): SelectionMarqueeCoverage {
   if (input.method === "lasso" && input.path.length > 0) {
     return marqueeCoverageFromPath(input.path, "lasso");
   }
@@ -719,14 +678,7 @@ export type CanvasPickMenuProps = {
   readonly title?: string;
 };
 
-export {
-  CANVAS_HOVER_SOURCE_CANVAS,
-  CANVAS_HOVER_SOURCE_PICK_MENU,
-  canvasHoverFocusFromTarget,
-  canvasPickTargetKey,
-  pickMostSpecificCanvasTarget,
-  sortCanvasPickTargetsGeneralFirst,
-} from "@semio-tech/framework-core";
+export { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget, canvasPickTargetKey, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst } from "@semio-tech/framework-core";
 export type { CanvasHoverFocus, CanvasPickRequest, CanvasPickTarget } from "@semio-tech/framework-core";
 
 /** @emoji 🎯 Fixed DOM pick list for overlapping canvas targets (not painted on the infinite canvas). */
@@ -771,10 +723,11 @@ export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDism
           onPick(target);
         }}
       >
-        {renderRow ? renderRow(target, active) : (
+        {renderRow ? (
+          renderRow(target, active)
+        ) : (
           <>
-            <span className="text-muted-foreground">{target.domain}</span>{" "}
-            <code className="text-foreground">{target.label ?? target.id}</code>
+            <span className="text-muted-foreground">{target.domain}</span> <code className="text-foreground">{target.label ?? target.id}</code>
           </>
         )}
       </button>
@@ -820,12 +773,7 @@ export type CanvasPickInteraction = {
 };
 
 /** @emoji 🎯 Shared pointer routing for canvas hover (most-specific) and click disambiguation menus. */
-export function useCanvasPickInteraction({
-  resolveTargetsAtClient,
-  onHoverFocus,
-  onSelectTarget,
-  clickThresholdPx = 4,
-}: UseCanvasPickInteractionOptions): CanvasPickInteraction {
+export function useCanvasPickInteraction({ resolveTargetsAtClient, onHoverFocus, onSelectTarget, clickThresholdPx = 4 }: UseCanvasPickInteractionOptions): CanvasPickInteraction {
   const [pickMenu, setPickMenu] = React.useState<CanvasPickRequest | null>(null);
   const [menuHoveredKey, setMenuHoveredKey] = React.useState<string | null>(null);
   const pointerDownRef = React.useRef<{ readonly x: number; readonly y: number } | null>(null);
@@ -888,7 +836,7 @@ export function useCanvasPickInteraction({
     (key: string | null) => {
       setMenuHoveredKey(key);
       if (!pickMenu) return;
-      const target = key ? pickMenu.targets.find((row) => canvasPickTargetKey(row) === key) ?? null : null;
+      const target = key ? (pickMenu.targets.find((row) => canvasPickTargetKey(row) === key) ?? null) : null;
       onHoverFocus(canvasHoverFocusFromTarget(CANVAS_HOVER_SOURCE_PICK_MENU, target));
     },
     [onHoverFocus, pickMenu],
@@ -955,13 +903,7 @@ export type IconSelectorMode = "url" | "shortcode" | "data" | "emoji" | "math" |
 
 function isRasterDataUrlPayloadForIcon(s: string): boolean {
   const u = s.trim().toLowerCase();
-  return (
-    u.startsWith("data:image/png;base64,") ||
-    u.startsWith("data:image/jpeg;base64,") ||
-    u.startsWith("data:image/jpg;base64,") ||
-    u.startsWith("data:image/webp;base64,") ||
-    u.startsWith("data:image/gif;base64,")
-  );
+  return u.startsWith("data:image/png;base64,") || u.startsWith("data:image/jpeg;base64,") || u.startsWith("data:image/jpg;base64,") || u.startsWith("data:image/webp;base64,") || u.startsWith("data:image/gif;base64,");
 }
 
 function isSvgDataUrlPayloadForIcon(s: string): boolean {
@@ -1188,13 +1130,7 @@ export async function resolveIconUrlsInBoardJson(json: string): Promise<string> 
 }
 
 /** @emoji 🖼 Icon payload: canonical union, vendored catalog name, or legacy shorthand. */
-export type IconSource =
-  | Icon
-  | IconName
-  | { readonly name: IconName }
-  | { readonly svg: string }
-  | { readonly url: string }
-  | { readonly node: React.ReactNode };
+export type IconSource = Icon | IconName | { readonly name: IconName } | { readonly svg: string } | { readonly url: string } | { readonly node: React.ReactNode };
 
 /** @emoji 🎛 Required icon slot for chrome controls (buttons, toggles, actions). */
 export type ControlIcon = IconSource | React.ReactElement;
@@ -1324,12 +1260,7 @@ export function Icon({ icon, size = "base", className, title }: IconProps): Reac
       </span>
     );
   }
-  const svgMarkup =
-    normalized.kind === "svg"
-      ? normalized.svg
-      : normalized.kind === "catalog"
-        ? (ICONS as Record<string, string>)[normalized.key] ?? iconSvgMarkup(normalized.key)
-        : undefined;
+  const svgMarkup = normalized.kind === "svg" ? normalized.svg : normalized.kind === "catalog" ? ((ICONS as Record<string, string>)[normalized.key] ?? iconSvgMarkup(normalized.key)) : undefined;
   if (!svgMarkup) {
     return (
       <span className={cn("inline-flex shrink-0 items-center justify-center font-mono text-2xs text-muted-foreground", boxClass)} style={boxStyle} title={title}>
@@ -1433,9 +1364,7 @@ export const glassWindowOptionsClass = "ui-glass-window-options";
 const GlassTierContext = reactHostPort.createContext<GlassTier | null>(null);
 
 /** @emoji 🪟 Sets the glass opacity tier for portaled overlays (e.g. window-options selects). */
-export const GlassTierProvider: React.FC<{ readonly tier: GlassTier; readonly children: React.ReactNode }> = ({ tier, children }) => (
-  <GlassTierContext.Provider value={tier}>{children}</GlassTierContext.Provider>
-);
+export const GlassTierProvider: React.FC<{ readonly tier: GlassTier; readonly children: React.ReactNode }> = ({ tier, children }) => <GlassTierContext.Provider value={tier}>{children}</GlassTierContext.Provider>;
 
 /** @emoji 🪝 Returns the nearest {@link GlassTierProvider} tier, else `menu`. */
 export function useGlassTier(): GlassTier {
@@ -1479,11 +1408,7 @@ export const interactiveOnClass = cn(
 );
 
 /** @emoji 🎨 Shared active fill for pressed tabs, toggles, and nav selection. */
-export const interactiveActiveFillClass = cn(
-  "bg-active-base",
-  interactiveActiveBorderClass,
-  "text-emphasized hover:bg-active-base/90 hover:border-active-base hover:text-emphasized",
-);
+export const interactiveActiveFillClass = cn("bg-active-base", interactiveActiveBorderClass, "text-emphasized hover:bg-active-base/90 hover:border-active-base hover:text-emphasized");
 
 /** @emoji 🎨 Table rows: element gray at rest, hover fill + emphasized content. */
 export const tableRowInteractiveClass = cn("text-element", interactiveControlTransitionClass, interactiveHoverClass);
@@ -1509,10 +1434,7 @@ export const menuListItemClassName = cn(
   "data-[selected=true]:bg-active-base data-[selected=true]:border-active-base data-[selected=true]:text-emphasized",
 );
 
-const contextMenuContentClassName = cn(
-  glassMenuClass,
-  "w-auto min-w-[10rem] overflow-hidden border p-single z-temporary text-element",
-);
+const contextMenuContentClassName = cn(glassMenuClass, "w-auto min-w-[10rem] overflow-hidden border p-single z-temporary text-element");
 const contextMenuItemClassName = cn(
   "text-element relative flex items-center gap-single p-single text-sm outline-none whitespace-nowrap cursor-default select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
   menuListItemClassName,
@@ -1558,10 +1480,7 @@ export function renderContextMenuItems(items: ContextMenuItem[] | undefined, onC
     if (item.children?.length) {
       rows.push(
         <DropdownMenuPrimitive.Sub key={item.id}>
-          <DropdownMenuPrimitive.SubTrigger
-            disabled={item.disabled}
-            className={cn(contextMenuItemClassName, item.destructive && "text-destructive focus:bg-destructive/10")}
-          >
+          <DropdownMenuPrimitive.SubTrigger disabled={item.disabled} className={cn(contextMenuItemClassName, item.destructive && "text-destructive focus:bg-destructive/10")}>
             {renderContextMenuIcon(item.icon)}
             <span className="truncate">{item.label ?? item.id}</span>
             <span className={contextMenuShortcutClassName}>{item.shortcut}</span>
@@ -1733,11 +1652,7 @@ function renderFixedContextMenuItems(items: ContextMenuItem[], onClose: () => vo
         key={item.id}
         aria-checked={item.checked}
         aria-disabled={item.disabled}
-        className={cn(
-          contextMenuItemClassName,
-          "w-full bg-transparent text-left",
-          item.destructive && "text-destructive focus:bg-destructive/10",
-        )}
+        className={cn(contextMenuItemClassName, "w-full bg-transparent text-left", item.destructive && "text-destructive focus:bg-destructive/10")}
         data-disabled={item.disabled ? "" : undefined}
         disabled={item.disabled}
         onClick={(event) => {
@@ -1790,13 +1705,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     return null;
   }
   return renderPortalInto(
-    <div
-      className={contextMenuContentClassName}
-      onContextMenu={(event) => event.preventDefault()}
-      ref={menuRef}
-      role="menu"
-      style={{ left: position.x, position: "fixed", top: position.y }}
-    >
+    <div className={contextMenuContentClassName} onContextMenu={(event) => event.preventDefault()} ref={menuRef} role="menu" style={{ left: position.x, position: "fixed", top: position.y }}>
       {renderFixedContextMenuItems(items, close)}
     </div>,
     getDocumentBody(),
@@ -1807,9 +1716,9 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
 
 /** @emoji 🎚 Surface expertise tier for chrome and label resolution. */
 export enum Expertise {
-	BEGINNER = "beginner",
-	NORMAL = "normal",
-	EXPERT = "expert",
+  BEGINNER = "beginner",
+  NORMAL = "normal",
+  EXPERT = "expert",
 }
 
 let _expertiseProvider: (() => Expertise) | undefined;
@@ -2139,13 +2048,7 @@ export type UiChromeLabelPolicy = "compact" | "always";
 const UiChromeLabelPolicyContext = reactHostPort.createContext<UiChromeLabelPolicy>("compact");
 
 /** @emoji 🏷️ Overrides {@link useControlInlineText} for a subtree (e.g. navbar always shows captions). */
-export function UiChromeLabelPolicyProvider({
-  policy,
-  children,
-}: {
-  readonly policy: UiChromeLabelPolicy;
-  readonly children: React.ReactNode;
-}): React.ReactElement {
+export function UiChromeLabelPolicyProvider({ policy, children }: { readonly policy: UiChromeLabelPolicy; readonly children: React.ReactNode }): React.ReactElement {
   return <UiChromeLabelPolicyContext.Provider value={policy}>{children}</UiChromeLabelPolicyContext.Provider>;
 }
 
@@ -2279,15 +2182,7 @@ export function useControlInlineText(id: string | undefined, text?: string): str
 }
 
 /** @emoji 🏷️ Native title/aria-label for chrome controls (avoids Radix tooltip `setTrigger` ref update loops). */
-export function ChromeControlHint({
-  id,
-  text,
-  children,
-}: {
-  readonly id?: string;
-  readonly text?: string;
-  readonly children: React.ReactElement;
-}): React.ReactElement {
+export function ChromeControlHint({ id, text, children }: { readonly id?: string; readonly text?: string; readonly children: React.ReactElement }): React.ReactElement {
   const label = useControlAccessibleLabel(id, text);
   if (!label || !React.isValidElement(children)) return children;
   const childProps = children.props as { readonly title?: string; readonly "aria-label"?: string };
@@ -2301,7 +2196,6 @@ export function ChromeControlHint({
 // #endregion 🌈SurfaceChrome
 
 // #region 🪁I18n Resources
-
 
 // Domain-neutral UI translation bundles (settings, tooltip, generic shell `ui.*` ids).
 // Product-specific bundles (e.g. compose sketchpad) register via {@link registerUiTranslationBundles}.
@@ -2321,24 +2215,7 @@ export type UiLabelValue = {
 };
 
 /** @emoji 🪁 Toolbar collection ids for ribbon collection toggles. */
-export type UiToolbarParentCategory =
-  | "history"
-  | "hand"
-  | "selection"
-  | "lasso"
-  | "filter"
-  | "open"
-  | "save"
-  | "transfer"
-  | "transform"
-  | "create"
-  | "view"
-  | "actions"
-  | "settings"
-  | "methods"
-  | "mode"
-  | "targets"
-  | "export";
+export type UiToolbarParentCategory = "history" | "hand" | "selection" | "lasso" | "filter" | "open" | "save" | "transfer" | "transform" | "create" | "view" | "actions" | "settings" | "methods" | "mode" | "targets" | "export";
 
 /** @emoji 🪁 i18n key for a toolbar collection toggle. */
 export type UiToolbarParentKey = `ui.toolbar.parent.${string}`;
@@ -2538,699 +2415,699 @@ const _assertUiToolbarParentKeys: AssertUiToolbarParentKeysCovered<UiToolbarPare
 export const uiChromeTranslationBundles = {
   de: {
     translation: {
-  "ui": {
-    "nav": {
-      "back": {
-        "label": {
-          "normal": "Zurueck",
-          "beginner": "Zurueck"
-        }
-      },
-      "forward": {
-        "label": {
-          "normal": "Vorwaerts",
-          "beginner": "Vorwaerts"
-        }
-      },
-      "up": {
-        "label": {
-          "normal": "Eine Ebene hoch",
-          "beginner": "Eine Ebene hoch"
-        }
-      }
-    },
-    "search": {
-      "toggle": {
-        "label": {
-          "normal": "Suche",
-          "beginner": "Suche"
-        }
-      },
-      "close": {
-        "label": {
-          "normal": "Suche schliessen",
-          "beginner": "Suche schliessen"
-        }
-      },
-      "title": {
-        "label": {
-          "normal": "Suche",
-          "beginner": "Suche"
-        }
-      },
-      "description": {
-        "label": {
-          "normal": "Nach Elementen suchen",
-          "beginner": "Nach Elementen suchen"
-        }
-      },
-      "placeholder": {
-        "label": {
-          "normal": "Suchen...",
-          "beginner": "Suchen..."
-        }
-      },
-      "empty": {
-        "label": {
-          "normal": "Keine Ergebnisse gefunden.",
-          "beginner": "Keine Ergebnisse gefunden."
-        }
-      }
-    },
-    find: {
-      toggle: {
-        label: {
-          normal: "Finden",
-          beginner: "Im aktuellen Kontext finden",
+      ui: {
+        nav: {
+          back: {
+            label: {
+              normal: "Zurueck",
+              beginner: "Zurueck",
+            },
+          },
+          forward: {
+            label: {
+              normal: "Vorwaerts",
+              beginner: "Vorwaerts",
+            },
+          },
+          up: {
+            label: {
+              normal: "Eine Ebene hoch",
+              beginner: "Eine Ebene hoch",
+            },
+          },
         },
-      },
-      title: {
-        label: {
-          normal: "Finden",
-          beginner: "Finden",
+        search: {
+          toggle: {
+            label: {
+              normal: "Suche",
+              beginner: "Suche",
+            },
+          },
+          close: {
+            label: {
+              normal: "Suche schliessen",
+              beginner: "Suche schliessen",
+            },
+          },
+          title: {
+            label: {
+              normal: "Suche",
+              beginner: "Suche",
+            },
+          },
+          description: {
+            label: {
+              normal: "Nach Elementen suchen",
+              beginner: "Nach Elementen suchen",
+            },
+          },
+          placeholder: {
+            label: {
+              normal: "Suchen...",
+              beginner: "Suchen...",
+            },
+          },
+          empty: {
+            label: {
+              normal: "Keine Ergebnisse gefunden.",
+              beginner: "Keine Ergebnisse gefunden.",
+            },
+          },
         },
-      },
-      description: {
-        label: {
-          normal: "Elemente in dieser Ansicht finden",
-          beginner: "Elemente in dieser Ansicht finden",
+        find: {
+          toggle: {
+            label: {
+              normal: "Finden",
+              beginner: "Im aktuellen Kontext finden",
+            },
+          },
+          title: {
+            label: {
+              normal: "Finden",
+              beginner: "Finden",
+            },
+          },
+          description: {
+            label: {
+              normal: "Elemente in dieser Ansicht finden",
+              beginner: "Elemente in dieser Ansicht finden",
+            },
+          },
+          placeholder: {
+            label: {
+              normal: "Finden...",
+              beginner: "Finden...",
+            },
+          },
+          empty: {
+            label: {
+              normal: "Keine Ergebnisse gefunden.",
+              beginner: "Keine Ergebnisse gefunden.",
+            },
+          },
         },
-      },
-      placeholder: {
-        label: {
-          normal: "Finden...",
-          beginner: "Finden...",
+        fullscreen: {
+          toggle: {
+            label: {
+              normal: "Vollbild",
+              beginner: "Vollbild",
+            },
+          },
         },
-      },
-      empty: {
-        label: {
-          normal: "Keine Ergebnisse gefunden.",
-          beginner: "Keine Ergebnisse gefunden.",
+        panelToggle: {
+          display: {
+            label: {
+              normal: "Anzeige",
+              beginner: "Anzeige",
+            },
+          },
+          overview: {
+            label: {
+              normal: "Uebersicht",
+              beginner: "Uebersicht",
+            },
+          },
+          workbench: {
+            label: {
+              normal: "Arbeitsbereich",
+              beginner: "Arbeitsbereich",
+            },
+          },
+          details: {
+            label: {
+              normal: "Details",
+              beginner: "Details",
+            },
+          },
+          settings: {
+            label: {
+              normal: "Einstellungen",
+              beginner: "Einstellungen",
+            },
+          },
+          chat: {
+            label: {
+              normal: "Chat",
+              beginner: "Chat",
+            },
+          },
         },
-      },
-    },
-    fullscreen: {
-      toggle: {
-        label: {
-          normal: "Vollbild",
-          beginner: "Vollbild",
+        display: {
+          tab: {
+            windows: { label: { normal: "Fenster", beginner: "Fenster" } },
+            layout: { label: { normal: "Layout", beginner: "Layout" } },
+          },
+          saveLayout: { label: { normal: "Layout speichern", beginner: "Layout speichern" } },
+          saveLayoutPlaceholder: { label: { normal: "Layoutname", beginner: "Layoutname" } },
+          deleteLayout: { label: { normal: "Loeschen", beginner: "Loeschen" } },
+          emptyShell: {
+            label: {
+              normal: "Fenster aus Anzeige in der Navigationsleiste hierher ziehen oder ein gespeichertes Layout wiederherstellen.",
+              beginner: "Fenster aus Anzeige in der Navigationsleiste hierher ziehen oder ein gespeichertes Layout wiederherstellen.",
+            },
+          },
         },
-      },
-    },
-    "panelToggle": {
-      "display": {
-        "label": {
-          "normal": "Anzeige",
-          "beginner": "Anzeige"
-        }
-      },
-      "overview": {
-        "label": {
-          "normal": "Uebersicht",
-          "beginner": "Uebersicht"
-        }
-      },
-      "workbench": {
-        "label": {
-          "normal": "Arbeitsbereich",
-          "beginner": "Arbeitsbereich"
-        }
-      },
-      "details": {
-        "label": {
-          "normal": "Details",
-          "beginner": "Details"
-        }
-      },
-      "settings": {
-        "label": {
-          "normal": "Einstellungen",
-          "beginner": "Einstellungen"
-        }
-      },
-      "chat": {
-        "label": {
-          "normal": "Chat",
-          "beginner": "Chat"
-        }
-      }
-    },
-    display: {
-      tab: {
-        windows: { label: { normal: "Fenster", beginner: "Fenster" } },
-        layout: { label: { normal: "Layout", beginner: "Layout" } },
-      },
-      saveLayout: { label: { normal: "Layout speichern", beginner: "Layout speichern" } },
-      saveLayoutPlaceholder: { label: { normal: "Layoutname", beginner: "Layoutname" } },
-      deleteLayout: { label: { normal: "Loeschen", beginner: "Loeschen" } },
-      emptyShell: {
-        label: {
-          normal: "Fenster aus Anzeige in der Navigationsleiste hierher ziehen oder ein gespeichertes Layout wiederherstellen.",
-          beginner: "Fenster aus Anzeige in der Navigationsleiste hierher ziehen oder ein gespeichertes Layout wiederherstellen.",
+        settings: {
+          tab: {
+            general: { label: { normal: "Allgemein", beginner: "Allgemein" } },
+            mode: { label: { normal: "Modus", beginner: "Modus" } },
+            expertise: { label: { normal: "Expertise", beginner: "Expertise" } },
+            app: { label: { normal: "App", beginner: "App" } },
+            theme: { label: { normal: "Design", beginner: "Design" } },
+          },
+          theme: {
+            light: { label: { normal: "Hell", beginner: "Hell" } },
+            dark: { label: { normal: "Dunkel", beginner: "Dunkel" } },
+            system: { label: { normal: "System", beginner: "System" } },
+          },
         },
-      },
-    },
-    settings: {
-      tab: {
-        general: { label: { normal: "Allgemein", beginner: "Allgemein" } },
-        mode: { label: { normal: "Modus", beginner: "Modus" } },
-        expertise: { label: { normal: "Expertise", beginner: "Expertise" } },
-        app: { label: { normal: "App", beginner: "App" } },
-        theme: { label: { normal: "Design", beginner: "Design" } },
-      },
-      theme: {
-        light: { label: { normal: "Hell", beginner: "Hell" } },
-        dark: { label: { normal: "Dunkel", beginner: "Dunkel" } },
-        system: { label: { normal: "System", beginner: "System" } },
-      },
-    },
-    toolbar: {
-      group: {
-        parent: {
-          label: {
-            normal: "Werkzeug",
-            beginner: "Werkzeug",
+        toolbar: {
+          group: {
+            parent: {
+              label: {
+                normal: "Werkzeug",
+                beginner: "Werkzeug",
+              },
+            },
+          },
+          parent: uiToolbarParentDe,
+        },
+        common: {
+          mixedValues: {
+            label: {
+              normal: "Gemischt",
+              beginner: "Gemischt",
+            },
+          },
+        },
+        docs: {
+          navigation: {
+            previous: {
+              label: {
+                normal: "Zurueck",
+                beginner: "Zurueck",
+              },
+            },
+            next: {
+              label: {
+                normal: "Weiter",
+                beginner: "Weiter",
+              },
+            },
+          },
+        },
+        ring: {
+          demo: {
+            label: {
+              normal: "Ring",
+              beginner: "Ring",
+            },
+          },
+        },
+        stepper: {
+          demo: {
+            label: {
+              normal: "Wert",
+              beginner: "Wert",
+            },
+          },
+        },
+        engagement: {
+          command: {
+            label: {
+              normal: "Befehl",
+              beginner: "Befehl eingeben oder aus der Liste waehlen",
+            },
+          },
+          commandActive: {
+            label: {
+              normal: "Befehl oder Wert",
+              beginner: "Befehl oder Zahl fuer den aktuellen Schritt",
+            },
+          },
+          commands: {
+            label: {
+              normal: "Befehle",
+              beginner: "Schnellbefehle fuer den aktuellen Schritt",
+            },
+          },
+          suggestions: {
+            label: {
+              normal: "Vorschlaege",
+              beginner: "Liste der passenden Befehle oeffnen",
+            },
+          },
+          noMatches: {
+            label: {
+              normal: "Keine Treffer",
+              beginner: "Keine passenden Befehle",
+            },
           },
         },
       },
-      parent: uiToolbarParentDe,
-    },
-    common: {
-      mixedValues: {
-        label: {
-          normal: "Gemischt",
-          beginner: "Gemischt",
-        },
-      },
-    },
-    docs: {
-      navigation: {
-        previous: {
-          label: {
-            normal: "Zurueck",
-            beginner: "Zurueck",
+      settings: {
+        layout: {
+          normal: {
+            label: {
+              normal: "Normal layout",
+              beginner: "Use the standard layout optimized for mouse and keyboard.",
+            },
+          },
+          desktop: {
+            label: {
+              normal: "Desktop layout",
+              beginner: "Use the desktop layout optimized for large screens.",
+            },
+          },
+          tablet: {
+            label: {
+              normal: "Tablet layout",
+              beginner: "Use the tablet layout optimized for medium screens.",
+            },
+          },
+          mobile: {
+            label: {
+              normal: "Mobile layout",
+              beginner: "Use the mobile layout optimized for small screens.",
+            },
           },
         },
-        next: {
+        compact: {
           label: {
-            normal: "Weiter",
-            beginner: "Weiter",
+            normal: "Kompakt",
+            beginner: "Schaltflaechen und Umschalter nur mit Symbol anzeigen, um Platz zu sparen",
+          },
+        },
+        mode: {
+          dev: {
+            label: {
+              normal: "Developer mode",
+              beginner: "Show developer tools and advanced options.",
+            },
+          },
+          user: {
+            label: {
+              normal: "User mode",
+              beginner: "Show standard user port.",
+            },
+          },
+          beginner: {
+            label: {
+              normal: "Beginner mode",
+              beginner: "Show full guidance, tutorials, and detailed tooltips.",
+            },
+          },
+          normal: {
+            label: {
+              normal: "Normal mode",
+              beginner: "Show contextual help without tutorials.",
+            },
+          },
+        },
+        expertise: {
+          beginner: {
+            label: {
+              normal: "Anfänger",
+              beginner: "Show full guidance and tutorials.",
+            },
+          },
+          normal: {
+            label: {
+              normal: "Normal",
+              beginner: "Show contextual help.",
+            },
+          },
+          expert: {
+            label: {
+              normal: "Experte",
+              beginner: "Hide guidance.",
+            },
           },
         },
       },
-    },
-    ring: {
-      demo: {
-        label: {
-          normal: "Ring",
-          beginner: "Ring",
+      tooltip: {
+        manual: {
+          label: {
+            normal: "Handbuch",
+            beginner: "Handbuch",
+          },
+        },
+        tutorial: {
+          label: {
+            normal: "Tutorial",
+            beginner: "Tutorial",
+          },
         },
       },
-    },
-    stepper: {
-      demo: {
-        label: {
-          normal: "Wert",
-          beginner: "Wert",
-        },
-      },
-    },
-    engagement: {
-      command: {
-        label: {
-          normal: "Befehl",
-          beginner: "Befehl eingeben oder aus der Liste waehlen",
-        },
-      },
-      commandActive: {
-        label: {
-          normal: "Befehl oder Wert",
-          beginner: "Befehl oder Zahl fuer den aktuellen Schritt",
-        },
-      },
-      commands: {
-        label: {
-          normal: "Befehle",
-          beginner: "Schnellbefehle fuer den aktuellen Schritt",
-        },
-      },
-      suggestions: {
-        label: {
-          normal: "Vorschlaege",
-          beginner: "Liste der passenden Befehle oeffnen",
-        },
-      },
-      noMatches: {
-        label: {
-          normal: "Keine Treffer",
-          beginner: "Keine passenden Befehle",
-        },
-      },
-    },
-  },
-  settings: {
-    "layout": {
-      "normal": {
-        "label": {
-          "normal": "Normal layout",
-          "beginner": "Use the standard layout optimized for mouse and keyboard."
-        }
-      },
-      "desktop": {
-        "label": {
-          "normal": "Desktop layout",
-          "beginner": "Use the desktop layout optimized for large screens."
-        }
-      },
-      "tablet": {
-        "label": {
-          "normal": "Tablet layout",
-          "beginner": "Use the tablet layout optimized for medium screens."
-        }
-      },
-      "mobile": {
-        "label": {
-          "normal": "Mobile layout",
-          "beginner": "Use the mobile layout optimized for small screens."
-        }
-      }
-    },
-    "compact": {
-      "label": {
-        "normal": "Kompakt",
-        "beginner": "Schaltflaechen und Umschalter nur mit Symbol anzeigen, um Platz zu sparen"
-      }
-    },
-    "mode": {
-      "dev": {
-        "label": {
-          "normal": "Developer mode",
-          "beginner": "Show developer tools and advanced options."
-        }
-      },
-      "user": {
-        "label": {
-          "normal": "User mode",
-          "beginner": "Show standard user port."
-        }
-      },
-      "beginner": {
-        "label": {
-          "normal": "Beginner mode",
-          "beginner": "Show full guidance, tutorials, and detailed tooltips."
-        }
-      },
-      "normal": {
-        "label": {
-          "normal": "Normal mode",
-          "beginner": "Show contextual help without tutorials."
-        }
-      }
-    },
-    "expertise": {
-      "beginner": {
-        "label": {
-          "normal": "Anfänger",
-          "beginner": "Show full guidance and tutorials."
-        }
-      },
-      "normal": {
-        "label": {
-          "normal": "Normal",
-          "beginner": "Show contextual help."
-        }
-      },
-      "expert": {
-        "label": {
-          "normal": "Experte",
-          "beginner": "Hide guidance."
-        }
-      }
-    }
-  },
-  "tooltip": {
-    "manual": {
-      "label": {
-        "normal": "Handbuch",
-        "beginner": "Handbuch"
-      }
-    },
-    tutorial: {
-      label: {
-        normal: "Tutorial",
-        beginner: "Tutorial",
-      },
-    },
-  },
-} satisfies UiTranslationSchema,
+    } satisfies UiTranslationSchema,
   },
   en: {
     translation: {
-  "ui": {
-    "nav": {
-      "back": {
-        "label": {
-          "normal": "Go back",
-          "beginner": "Go back"
-        }
-      },
-      "forward": {
-        "label": {
-          "normal": "Go forward",
-          "beginner": "Go forward"
-        }
-      },
-      "up": {
-        "label": {
-          "normal": "Go up one level",
-          "beginner": "Go up one level"
-        }
-      }
-    },
-    "search": {
-      "toggle": {
-        "label": {
-          "normal": "Search",
-          "beginner": "Search"
-        }
-      },
-      "close": {
-        "label": {
-          "normal": "Close search",
-          "beginner": "Close search"
-        }
-      },
-      "title": {
-        "label": {
-          "normal": "Search",
-          "beginner": "Search"
-        }
-      },
-      "description": {
-        "label": {
-          "normal": "Search for items",
-          "beginner": "Search for items"
-        }
-      },
-      "placeholder": {
-        "label": {
-          "normal": "Search...",
-          "beginner": "Search..."
-        }
-      },
-      "empty": {
-        "label": {
-          "normal": "No results found.",
-          "beginner": "No results found."
-        }
-      }
-    },
-    find: {
-      toggle: {
-        label: {
-          normal: "Find",
-          beginner: "Find in view",
+      ui: {
+        nav: {
+          back: {
+            label: {
+              normal: "Go back",
+              beginner: "Go back",
+            },
+          },
+          forward: {
+            label: {
+              normal: "Go forward",
+              beginner: "Go forward",
+            },
+          },
+          up: {
+            label: {
+              normal: "Go up one level",
+              beginner: "Go up one level",
+            },
+          },
         },
-      },
-      title: {
-        label: {
-          normal: "Find",
-          beginner: "Find",
+        search: {
+          toggle: {
+            label: {
+              normal: "Search",
+              beginner: "Search",
+            },
+          },
+          close: {
+            label: {
+              normal: "Close search",
+              beginner: "Close search",
+            },
+          },
+          title: {
+            label: {
+              normal: "Search",
+              beginner: "Search",
+            },
+          },
+          description: {
+            label: {
+              normal: "Search for items",
+              beginner: "Search for items",
+            },
+          },
+          placeholder: {
+            label: {
+              normal: "Search...",
+              beginner: "Search...",
+            },
+          },
+          empty: {
+            label: {
+              normal: "No results found.",
+              beginner: "No results found.",
+            },
+          },
         },
-      },
-      description: {
-        label: {
-          normal: "Find items in this view",
-          beginner: "Find items in this view",
+        find: {
+          toggle: {
+            label: {
+              normal: "Find",
+              beginner: "Find in view",
+            },
+          },
+          title: {
+            label: {
+              normal: "Find",
+              beginner: "Find",
+            },
+          },
+          description: {
+            label: {
+              normal: "Find items in this view",
+              beginner: "Find items in this view",
+            },
+          },
+          placeholder: {
+            label: {
+              normal: "Find...",
+              beginner: "Find...",
+            },
+          },
+          empty: {
+            label: {
+              normal: "No results found.",
+              beginner: "No results found.",
+            },
+          },
         },
-      },
-      placeholder: {
-        label: {
-          normal: "Find...",
-          beginner: "Find...",
+        fullscreen: {
+          toggle: {
+            label: {
+              normal: "Fullscreen",
+              beginner: "Fullscreen",
+            },
+          },
         },
-      },
-      empty: {
-        label: {
-          normal: "No results found.",
-          beginner: "No results found.",
+        panelToggle: {
+          display: {
+            label: {
+              normal: "Display",
+              beginner: "Display",
+            },
+          },
+          overview: {
+            label: {
+              normal: "Overview",
+              beginner: "Overview",
+            },
+          },
+          workbench: {
+            label: {
+              normal: "Workbench",
+              beginner: "Workbench",
+            },
+          },
+          details: {
+            label: {
+              normal: "Details",
+              beginner: "Details",
+            },
+          },
+          settings: {
+            label: {
+              normal: "Settings",
+              beginner: "Settings",
+            },
+          },
+          chat: {
+            label: {
+              normal: "Chat",
+              beginner: "Chat",
+            },
+          },
         },
-      },
-    },
-    fullscreen: {
-      toggle: {
-        label: {
-          normal: "Fullscreen",
-          beginner: "Fullscreen",
+        display: {
+          tab: {
+            windows: { label: { normal: "Windows", beginner: "Windows" } },
+            layout: { label: { normal: "Layout", beginner: "Layout" } },
+          },
+          saveLayout: { label: { normal: "Save layout", beginner: "Save layout" } },
+          saveLayoutPlaceholder: { label: { normal: "Layout name", beginner: "Layout name" } },
+          deleteLayout: { label: { normal: "Delete", beginner: "Delete" } },
+          emptyShell: {
+            label: {
+              normal: "Drag windows from Display in the navbar, or restore a saved layout.",
+              beginner: "Drag windows from Display in the navbar, or restore a saved layout.",
+            },
+          },
         },
-      },
-    },
-    "panelToggle": {
-      "display": {
-        "label": {
-          "normal": "Display",
-          "beginner": "Display"
-        }
-      },
-      "overview": {
-        "label": {
-          "normal": "Overview",
-          "beginner": "Overview"
-        }
-      },
-      "workbench": {
-        "label": {
-          "normal": "Workbench",
-          "beginner": "Workbench"
-        }
-      },
-      "details": {
-        "label": {
-          "normal": "Details",
-          "beginner": "Details"
-        }
-      },
-      "settings": {
-        "label": {
-          "normal": "Settings",
-          "beginner": "Settings"
-        }
-      },
-      "chat": {
-        "label": {
-          "normal": "Chat",
-          "beginner": "Chat"
-        }
-      }
-    },
-    display: {
-      tab: {
-        windows: { label: { normal: "Windows", beginner: "Windows" } },
-        layout: { label: { normal: "Layout", beginner: "Layout" } },
-      },
-      saveLayout: { label: { normal: "Save layout", beginner: "Save layout" } },
-      saveLayoutPlaceholder: { label: { normal: "Layout name", beginner: "Layout name" } },
-      deleteLayout: { label: { normal: "Delete", beginner: "Delete" } },
-      emptyShell: {
-        label: {
-          normal: "Drag windows from Display in the navbar, or restore a saved layout.",
-          beginner: "Drag windows from Display in the navbar, or restore a saved layout.",
+        settings: {
+          tab: {
+            general: { label: { normal: "General", beginner: "General" } },
+            mode: { label: { normal: "Mode", beginner: "Mode" } },
+            expertise: { label: { normal: "Expertise", beginner: "Expertise" } },
+            app: { label: { normal: "App", beginner: "App" } },
+            theme: { label: { normal: "Theme", beginner: "Theme" } },
+          },
+          theme: {
+            light: { label: { normal: "Light", beginner: "Light" } },
+            dark: { label: { normal: "Dark", beginner: "Dark" } },
+            system: { label: { normal: "System", beginner: "System" } },
+          },
         },
-      },
-    },
-    settings: {
-      tab: {
-        general: { label: { normal: "General", beginner: "General" } },
-        mode: { label: { normal: "Mode", beginner: "Mode" } },
-        expertise: { label: { normal: "Expertise", beginner: "Expertise" } },
-        app: { label: { normal: "App", beginner: "App" } },
-        theme: { label: { normal: "Theme", beginner: "Theme" } },
-      },
-      theme: {
-        light: { label: { normal: "Light", beginner: "Light" } },
-        dark: { label: { normal: "Dark", beginner: "Dark" } },
-        system: { label: { normal: "System", beginner: "System" } },
-      },
-    },
-    toolbar: {
-      group: {
-        parent: {
-          label: {
-            normal: "Tool",
-            beginner: "Tool",
+        toolbar: {
+          group: {
+            parent: {
+              label: {
+                normal: "Tool",
+                beginner: "Tool",
+              },
+            },
+          },
+          parent: uiToolbarParentEn,
+        },
+        common: {
+          mixedValues: {
+            label: {
+              normal: "Mixed",
+              beginner: "Mixed",
+            },
+          },
+        },
+        docs: {
+          navigation: {
+            previous: {
+              label: {
+                normal: "Previous",
+                beginner: "Previous",
+              },
+            },
+            next: {
+              label: {
+                normal: "Next",
+                beginner: "Next",
+              },
+            },
+          },
+        },
+        ring: {
+          demo: {
+            label: {
+              normal: "Ring",
+              beginner: "Ring",
+            },
+          },
+        },
+        stepper: {
+          demo: {
+            label: {
+              normal: "Value",
+              beginner: "Value",
+            },
+          },
+        },
+        engagement: {
+          command: {
+            label: {
+              normal: "Command",
+              beginner: "Type a command or pick one from the list",
+            },
+          },
+          commandActive: {
+            label: {
+              normal: "Command or value",
+              beginner: "Command or number for the current step",
+            },
+          },
+          commands: {
+            label: {
+              normal: "Commands",
+              beginner: "Quick commands for the current step",
+            },
+          },
+          suggestions: {
+            label: {
+              normal: "Suggestions",
+              beginner: "Open the list of matching commands",
+            },
+          },
+          noMatches: {
+            label: {
+              normal: "No matches",
+              beginner: "No matching commands",
+            },
           },
         },
       },
-      parent: uiToolbarParentEn,
-    },
-    common: {
-      mixedValues: {
-        label: {
-          normal: "Mixed",
-          beginner: "Mixed",
-        },
-      },
-    },
-    docs: {
-      navigation: {
-        previous: {
-          label: {
-            normal: "Previous",
-            beginner: "Previous",
+      settings: {
+        layout: {
+          normal: {
+            label: {
+              normal: "Normal layout",
+              beginner: "Use the standard layout optimized for mouse and keyboard.",
+            },
+          },
+          desktop: {
+            label: {
+              normal: "Desktop layout",
+              beginner: "Use the desktop layout optimized for large screens.",
+            },
+          },
+          tablet: {
+            label: {
+              normal: "Tablet layout",
+              beginner: "Use the tablet layout optimized for medium screens.",
+            },
+          },
+          mobile: {
+            label: {
+              normal: "Mobile layout",
+              beginner: "Use the mobile layout optimized for small screens.",
+            },
           },
         },
-        next: {
+        compact: {
           label: {
-            normal: "Next",
-            beginner: "Next",
+            normal: "Compact",
+            beginner: "Show icon-only buttons and toggles to save space",
+          },
+        },
+        mode: {
+          dev: {
+            label: {
+              normal: "Developer mode",
+              beginner: "Show developer tools and advanced options.",
+            },
+          },
+          user: {
+            label: {
+              normal: "User mode",
+              beginner: "Show standard user port.",
+            },
+          },
+          beginner: {
+            label: {
+              normal: "Beginner mode",
+              beginner: "Show full guidance, tutorials, and detailed tooltips.",
+            },
+          },
+          normal: {
+            label: {
+              normal: "Normal mode",
+              beginner: "Show contextual help without tutorials.",
+            },
+          },
+        },
+        expertise: {
+          beginner: {
+            label: {
+              normal: "Beginner",
+              beginner: "Show full guidance and tutorials.",
+            },
+          },
+          normal: {
+            label: {
+              normal: "Normal",
+              beginner: "Show contextual help.",
+            },
+          },
+          expert: {
+            label: {
+              normal: "Expert",
+              beginner: "Hide guidance.",
+            },
           },
         },
       },
-    },
-    ring: {
-      demo: {
-        label: {
-          normal: "Ring",
-          beginner: "Ring",
+      tooltip: {
+        manual: {
+          label: {
+            normal: "Manual",
+            beginner: "Manual",
+          },
+        },
+        tutorial: {
+          label: {
+            normal: "Tutorial",
+            beginner: "Tutorial",
+          },
         },
       },
-    },
-    stepper: {
-      demo: {
-        label: {
-          normal: "Value",
-          beginner: "Value",
-        },
-      },
-    },
-    engagement: {
-      command: {
-        label: {
-          normal: "Command",
-          beginner: "Type a command or pick one from the list",
-        },
-      },
-      commandActive: {
-        label: {
-          normal: "Command or value",
-          beginner: "Command or number for the current step",
-        },
-      },
-      commands: {
-        label: {
-          normal: "Commands",
-          beginner: "Quick commands for the current step",
-        },
-      },
-      suggestions: {
-        label: {
-          normal: "Suggestions",
-          beginner: "Open the list of matching commands",
-        },
-      },
-      noMatches: {
-        label: {
-          normal: "No matches",
-          beginner: "No matching commands",
-        },
-      },
-    },
-  },
-  settings: {
-    layout: {
-      normal: {
-        label: {
-          normal: "Normal layout",
-          beginner: "Use the standard layout optimized for mouse and keyboard.",
-        },
-      },
-      "desktop": {
-        "label": {
-          "normal": "Desktop layout",
-          "beginner": "Use the desktop layout optimized for large screens."
-        }
-      },
-      "tablet": {
-        "label": {
-          "normal": "Tablet layout",
-          "beginner": "Use the tablet layout optimized for medium screens."
-        }
-      },
-      "mobile": {
-        "label": {
-          "normal": "Mobile layout",
-          "beginner": "Use the mobile layout optimized for small screens."
-        }
-      }
-    },
-    "compact": {
-      "label": {
-        "normal": "Compact",
-        "beginner": "Show icon-only buttons and toggles to save space"
-      }
-    },
-    "mode": {
-      "dev": {
-        "label": {
-          "normal": "Developer mode",
-          "beginner": "Show developer tools and advanced options."
-        }
-      },
-      "user": {
-        "label": {
-          "normal": "User mode",
-          "beginner": "Show standard user port."
-        }
-      },
-      "beginner": {
-        "label": {
-          "normal": "Beginner mode",
-          "beginner": "Show full guidance, tutorials, and detailed tooltips."
-        }
-      },
-      "normal": {
-        "label": {
-          "normal": "Normal mode",
-          "beginner": "Show contextual help without tutorials."
-        }
-      }
-    },
-    "expertise": {
-      "beginner": {
-        "label": {
-          "normal": "Beginner",
-          "beginner": "Show full guidance and tutorials."
-        }
-      },
-      "normal": {
-        "label": {
-          "normal": "Normal",
-          "beginner": "Show contextual help."
-        }
-      },
-      "expert": {
-        "label": {
-          "normal": "Expert",
-          "beginner": "Hide guidance."
-        }
-      }
-    }
-  },
-  "tooltip": {
-    "manual": {
-      "label": {
-        "normal": "Manual",
-        "beginner": "Manual"
-      }
-    },
-    tutorial: {
-      label: {
-        normal: "Tutorial",
-        beginner: "Tutorial",
-      },
-    },
-  },
-} satisfies UiTranslationSchema,
+    } satisfies UiTranslationSchema,
   },
 } satisfies Record<UiLocale, { readonly translation: UiTranslationSchema }>;
 
@@ -3239,8 +3116,6 @@ export type UiTranslationLocaleCode = UiLocale;
 export type UiTranslationBundlesInput = {
   readonly [L in UiLocale]: { readonly translation: Record<string, unknown> };
 };
-
-
 
 declare module "i18next" {
   interface CustomTypeOptions {
@@ -3487,10 +3362,7 @@ export const SIDE_PANEL_TOGGLE_RIGHT_HOTKEY = "ctrl+shift+b,meta+shift+b";
 /**
  * ⌨️ Binds {@link SIDE_PANEL_TOGGLE_LEFT_HOTKEY} and {@link SIDE_PANEL_TOGGLE_RIGHT_HOTKEY} when handlers are provided.
  **/
-export function useSidePanelChromeHotkeys(options: {
-  readonly onToggleLeft?: () => void;
-  readonly onToggleRight?: () => void;
-}): void {
+export function useSidePanelChromeHotkeys(options: { readonly onToggleLeft?: () => void; readonly onToggleRight?: () => void }): void {
   const { onToggleLeft, onToggleRight } = options;
   useHotkeys(
     SIDE_PANEL_TOGGLE_LEFT_HOTKEY,
@@ -3753,10 +3625,7 @@ function useGhostController(): GhostController {
     return () => bindings.dispose();
   }, []);
 
-  return reactHostPort.useMemo(
-    () => ({ active, begin, end, commands, activeInteraction }),
-    [active, activeInteraction, begin, commands, end],
-  );
+  return reactHostPort.useMemo(() => ({ active, begin, end, commands, activeInteraction }), [active, activeInteraction, begin, commands, end]);
 }
 
 /** @emoji 👻 Mounts global ghost detection and interaction context for layout + panels. */
@@ -3766,10 +3635,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setPanelGhostSessionBridge({ begin: ghost.begin, end: ghost.end });
     return () => setPanelGhostSessionBridge(null);
   }, [ghost.begin, ghost.end]);
-  const panelGhostValue = reactHostPort.useMemo<PanelGhostValue>(
-    () => ({ active: ghost.active, begin: ghost.begin, end: ghost.end }),
-    [ghost.active, ghost.begin, ghost.end],
-  );
+  const panelGhostValue = reactHostPort.useMemo<PanelGhostValue>(() => ({ active: ghost.active, begin: ghost.begin, end: ghost.end }), [ghost.active, ghost.begin, ghost.end]);
   return (
     <PanelGhostContext.Provider value={panelGhostValue}>
       <InteractionContext.Provider value={ghost.commands}>
@@ -3786,10 +3652,7 @@ interface GhostRegionShellProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 /** @emoji 👻 Ghost region shell: dims {@link data-dim} children when {@link GhostProvider} is active. */
-const GhostRegionShell = reactHostPort.forwardRef<HTMLDivElement, GhostRegionShellProps>(function GhostRegionShell(
-  { children, className, style, clickThroughWhenGhost = false, ...props },
-  ref,
-) {
+const GhostRegionShell = reactHostPort.forwardRef<HTMLDivElement, GhostRegionShellProps>(function GhostRegionShell({ children, className, style, clickThroughWhenGhost = false, ...props }, ref) {
   const ghost = usePanelGhost();
   const mergedStyle = reactHostPort.useMemo(
     () => ({
@@ -3829,69 +3692,69 @@ const LevelContext = reactHostPort.createContext<Level>("base");
 
 /** @emoji 🎈 Sets the current UI depth level for descendant chrome. */
 export const LevelProvider: React.FC<{
-	readonly level: Level;
-	readonly children: React.ReactNode;
+  readonly level: Level;
+  readonly children: React.ReactNode;
 }> = ({ level, children }) => <LevelContext.Provider value={level}>{children}</LevelContext.Provider>;
 
 /** @emoji 🪝 Returns the nearest {@link LevelProvider} level. */
 export function useLevel(): Level {
-	return reactHostPort.useContext(LevelContext);
+  return reactHostPort.useContext(LevelContext);
 }
 
 /** @emoji 🎨 Tailwind background class for a {@link Level}. */
 export function getLevelBgClass(level: Level): string {
-	switch (level) {
-		case "canvas":
-			return "bg-canvas";
-		case "window":
-			return "bg-window";
-		case "panel":
-			return "bg-panel";
-		case "overlay":
-			return "bg-overlay";
-		case "temporary":
-			return "bg-temporary";
-		default:
-			return "bg-base";
-	}
+  switch (level) {
+    case "canvas":
+      return "bg-canvas";
+    case "window":
+      return "bg-window";
+    case "panel":
+      return "bg-panel";
+    case "overlay":
+      return "bg-overlay";
+    case "temporary":
+      return "bg-temporary";
+    default:
+      return "bg-base";
+  }
 }
 
 /** @emoji 🎨 Per-level hover background + emphasized content for interactive controls. */
 export const levelHoverVariantClasses = {
-	base: interactiveHoverClass,
-	canvas: interactiveHoverClass,
-	window: interactiveHoverClass,
-	panel: interactiveHoverClass,
-	overlay: interactiveHoverClass,
-	temporary: interactiveHoverClass,
+  base: interactiveHoverClass,
+  canvas: interactiveHoverClass,
+  window: interactiveHoverClass,
+  panel: interactiveHoverClass,
+  overlay: interactiveHoverClass,
+  temporary: interactiveHoverClass,
 } as const satisfies Record<Level, string>;
 
 /** @emoji 🎨 Tailwind hover background class for a {@link Level}. */
 export function getLevelHoverClass(_level: Level): string {
-	return interactiveHoverClass;
+  return interactiveHoverClass;
 }
 
 /** @emoji 🎨 Tailwind active-hover class for a {@link Level}. */
 export function getLevelActiveHoverClass(_level: Level): string {
-	return interactiveTabActiveClass;
+  return interactiveTabActiveClass;
 }
 
 /** @emoji 🎨 Tailwind z-index class for a {@link Level}. */
 export function getLevelZClass(level: Level): string {
-	switch (level) {
-		case "canvas":
-			return "z-canvas";
-		case "window":
-			return "z-window";
-		case "panel":
-			return "z-panel";
-		case "overlay":
-			return "z-overlay";
-		case "temporary":
-			return "z-temporary";
-		default:
-			return "z-base";
-	}
+  switch (level) {
+    case "canvas":
+      return "z-canvas";
+    case "window":
+      return "z-window";
+    case "panel":
+      return "z-panel";
+    case "overlay":
+      return "z-overlay";
+    case "temporary":
+      return "z-temporary";
+    default:
+      return "z-base";
+  }
 }
 
 /** @emoji 📏 Emphasized shell stroke for active/selected chrome accents. */
@@ -3922,18 +3785,10 @@ export const borderNormalTopClass = `border-t ${borderNormalClass}`;
 export const borderElementClass = "border-element";
 
 /** @emoji 🎯 Focus/open on form controls: accent border color only, never extra ring width. */
-export const formControlFocusBorderClass = cn(
-  "outline-none",
-  interactiveControlTransitionClass,
-  "focus-visible:border-accent data-[state=open]:border-accent aria-invalid:border-destructive focus-visible:ring-0 shadow-none",
-);
+export const formControlFocusBorderClass = cn("outline-none", interactiveControlTransitionClass, "focus-visible:border-accent data-[state=open]:border-accent aria-invalid:border-destructive focus-visible:ring-0 shadow-none");
 
 /** @emoji 🎚 Slider filled range — element gray at rest; foreground emphasis on hover; active fill while dragging. */
-export const sliderRangeClassName = cn(
-  "bg-element absolute transition-[background-color] data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full",
-  "group-hover:bg-emphasized",
-  "data-[dragging=true]:bg-active-base",
-);
+export const sliderRangeClassName = cn("bg-element absolute transition-[background-color] data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full", "group-hover:bg-emphasized", "data-[dragging=true]:bg-active-base");
 
 /** @emoji 🎚 Slider thumb — element border at rest; hover fill; primary fill when dragging/focused. */
 export const sliderThumbClassName = cn(
@@ -3945,10 +3800,7 @@ export const sliderThumbClassName = cn(
 );
 
 /** @emoji 🎚 Slider numeric readout — element gray at rest. */
-export const sliderValueClassName = cn(
-  "text-element w-large text-right text-xs leading-none select-none transition-colors",
-  "hover:text-emphasized group-hover:text-emphasized",
-);
+export const sliderValueClassName = cn("text-element w-large text-right text-xs leading-none select-none transition-colors", "hover:text-emphasized group-hover:text-emphasized");
 
 /** @emoji 📏 Active window chrome line when that stack is globally active. */
 export const activeLineClass = "border-active-base";
@@ -3963,46 +3815,25 @@ export const panelGlassFillClass = glassPanelClass;
 export const panelChromeFillLayerClass = cn("pointer-events-none absolute inset-0 z-0", panelGlassFillClass);
 
 /** @emoji 🪟 Emphasized stroke on top of fill and content (transparent center; not ghost-dimmed). */
-export const panelChromeFrameLayerClass = cn(
-  "pointer-events-none absolute inset-0 z-30 box-border bg-transparent",
-  panelChromeBorderClass,
-);
+export const panelChromeFrameLayerClass = cn("pointer-events-none absolute inset-0 z-30 box-border bg-transparent", panelChromeBorderClass);
 
 /** @emoji 🪟 Frosted side/bottom panel chrome (full frame + glass fill) for hosts that use a single layer. */
 export const panelGlassFrameClass = cn(panelChromeBorderClass, panelGlassFillClass);
 
 /** @emoji 🪟 Frosted floating menu/popover surface for technology renderer overlays. */
-export const floatingMenuSurfaceClass = cn(
-  glassMenuClass,
-  "overflow-hidden rounded-md border shadow-sm text-element",
-  borderNormalClass,
-);
+export const floatingMenuSurfaceClass = cn(glassMenuClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
 
 /** @emoji 🪟 Action row inside {@link floatingMenuSurfaceClass}. */
-export const floatingMenuItemClass = cn(
-  "relative flex w-full cursor-default items-center gap-single rounded-sm px-single py-half text-left text-xs text-element outline-none select-none",
-  menuListItemClassName,
-);
+export const floatingMenuItemClass = cn("relative flex w-full cursor-default items-center gap-single rounded-sm px-single py-half text-left text-xs text-element outline-none select-none", menuListItemClassName);
 
 /** @emoji 🪟 Frosted editor aside chrome for technology renderers. */
-export const floatingPanelAsideClass = cn(
-  "relative flex shrink-0 flex-col gap-single overflow-auto p-double text-element z-[2]",
-  panelGlassFrameClass,
-);
+export const floatingPanelAsideClass = cn("relative flex shrink-0 flex-col gap-single overflow-auto p-double text-element z-[2]", panelGlassFrameClass);
 
 /** @emoji 🪟 Frosted compact toolbar chrome (projection switch, align controls). */
-export const floatingToolbarSurfaceClass = cn(
-  glassToolbarClass,
-  "overflow-hidden rounded-md border shadow-sm text-element",
-  borderNormalClass,
-);
+export const floatingToolbarSurfaceClass = cn(glassToolbarClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
 
 /** @emoji 🪟 Frosted inline field/command shell inside editor asides. */
-export const floatingFieldSurfaceClass = cn(
-  glassMenuClass,
-  "relative overflow-visible rounded-md border",
-  borderNormalClass,
-);
+export const floatingFieldSurfaceClass = cn(glassMenuClass, "relative overflow-visible rounded-md border", borderNormalClass);
 
 /** @emoji 🪟 Golden-window host root for technology canvases inside {@link ProductShell}. */
 export const canvasHostRootClass = "relative flex h-full min-h-0 w-full min-w-0 flex-col bg-canvas text-element font-sans";
@@ -4011,10 +3842,7 @@ export const canvasHostRootClass = "relative flex h-full min-h-0 w-full min-w-0 
 export const editorShellRootClass = "bg-background text-element flex h-screen min-h-0 w-full flex-row font-sans";
 
 /** @emoji 🏷️ Toggle chip for layer/filter controls in technology renderers. */
-export const floatingTagClass = cn(
-  "inline-flex items-center gap-half rounded-full border px-half py-0.5 text-xs text-element",
-  borderNormalClass,
-);
+export const floatingTagClass = cn("inline-flex items-center gap-half rounded-full border px-half py-0.5 text-xs text-element", borderNormalClass);
 
 export const floatingTagOnClass = "bg-accent text-accent-foreground";
 export const floatingTagOffClass = "bg-transparent text-muted-foreground";
@@ -4023,10 +3851,7 @@ export const floatingTagOffClass = "bg-transparent text-muted-foreground";
 export const canvasViewportClass = "relative h-full min-h-0 w-full min-w-0 bg-canvas outline-none";
 
 /** @emoji 📑 Panel tab strip — sits above {@link panelChromeFrameLayerClass}; inset padding keeps labels off the frame edge. */
-export const panelTabBarClass = cn(
-  "relative z-40 flex min-w-0 items-center shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single px-single",
-  borderNormalBottomClass,
-);
+export const panelTabBarClass = cn("relative z-40 flex min-w-0 items-center shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single px-single", borderNormalBottomClass);
 
 /** @emoji 📑 Panel tab icon slot — defers dimensions to the tab icon (12px). */
 export const panelTabIconSlotClass = "inline-flex shrink-0 items-center justify-center leading-none";
@@ -4064,10 +3889,7 @@ export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, tabs, activeT
   const tabSlot = variant === "side" ? "side-panel" : "mobile-panel";
   const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
   const resolvedActiveTabId = activeTabId ?? sortedTabs[0]?.id;
-  const activeTab = reactHostPort.useMemo(
-    () => sortedTabs.find((tab) => tab.id === resolvedActiveTabId) ?? sortedTabs[0],
-    [resolvedActiveTabId, sortedTabs],
-  );
+  const activeTab = reactHostPort.useMemo(() => sortedTabs.find((tab) => tab.id === resolvedActiveTabId) ?? sortedTabs[0], [resolvedActiveTabId, sortedTabs]);
 
   reactHostPort.useLayoutEffect(() => {
     const bar = barRef.current;
@@ -4089,13 +3911,7 @@ export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, tabs, activeT
         const isActive = tab.id === activeTab?.id;
         return (
           <ChromeControlHint key={tab.id} id={tab.id}>
-            <button
-              data-slot={`${tabSlot}-tab-button`}
-              id={tab.id}
-              data-active={isActive ? "true" : undefined}
-              onClick={() => onTabChange(tab.id)}
-              className={cn(buttonClass, isActive && panelTabActiveClass)}
-            >
+            <button data-slot={`${tabSlot}-tab-button`} id={tab.id} data-active={isActive ? "true" : undefined} onClick={() => onTabChange(tab.id)} className={cn(buttonClass, isActive && panelTabActiveClass)}>
               <span className={panelTabIconSlotClass}>
                 <Icon size={12} />
               </span>
@@ -4159,11 +3975,11 @@ export interface ModeDockChromeGrid {
 }
 
 /** @emoji 📐 Computes {@link ModeDockChromeGrid} column indices for a tab stack. */
-export function modeDockChromeGridPlacement(
-  tabs: readonly { id: string; title: string }[],
-  activeId: string | undefined,
-): ModeDockChromeGrid {
-  const activeTabIndex = Math.max(0, tabs.findIndex((tab) => tab.id === activeId));
+export function modeDockChromeGridPlacement(tabs: readonly { id: string; title: string }[], activeId: string | undefined): ModeDockChromeGrid {
+  const activeTabIndex = Math.max(
+    0,
+    tabs.findIndex((tab) => tab.id === activeId),
+  );
   const gapCol = tabs.length + 1;
   const controlsCol = tabs.length + 2;
   const activeCol = activeTabIndex + 1;
@@ -4180,16 +3996,13 @@ export function modeDockChromeGridPlacement(
 }
 
 /** @emoji 📏 Inactive sibling tab — normal pill resting on the U-frame baseline. */
-export const modeDockInactiveTabClass =
-  `relative z-30 box-border min-h-medium shrink-0 border ${borderNormalClass} bg-window`;
+export const modeDockInactiveTabClass = `relative z-30 box-border min-h-medium shrink-0 border ${borderNormalClass} bg-window`;
 
 /** @emoji 📏 Inactive tab before gap — no bottom stroke; gap owns the horizontal segment before controls. */
-export const modeDockInactiveTabBeforeGapClass =
-  `relative z-30 box-border min-h-medium shrink-0 border-t border-l border-r border-b-0 ${borderNormalClass} bg-window`;
+export const modeDockInactiveTabBeforeGapClass = `relative z-30 box-border min-h-medium shrink-0 border-t border-l border-r border-b-0 ${borderNormalClass} bg-window`;
 
 /** @emoji 🪟 Default mode-dock tab label — element gray; emphasize on hover/active only. */
-export const modeDockTabClassName =
-  "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half px-single text-xs text-element select-none transition-colors hover:bg-hover-interactive-fill hover:text-emphasized";
+export const modeDockTabClassName = "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half px-single text-xs text-element select-none transition-colors hover:bg-hover-interactive-fill hover:text-emphasized";
 
 /** @emoji 🪧 Static shell title (navbar app label, pane headings) — element gray at rest. */
 export const shellChromeTitleClassName = "truncate text-sm font-medium text-element";
@@ -4204,8 +4017,7 @@ export const modeDockActiveTabFillClass = interactiveActiveFillClass;
 export const panelTabActiveClass = interactiveActiveFillClass;
 
 /** @emoji 📏 Stack-active tab — three-sided U-cap above body; open bottom merges into stack body. */
-export const modeDockActiveTabClass =
-  `relative z-20 box-border min-h-medium shrink-0 border-t border-l border-r !border-b-0 ${activeLineClass} ${modeDockActiveTabFillClass}`;
+export const modeDockActiveTabClass = `relative z-20 box-border min-h-medium shrink-0 border-t border-l border-r !border-b-0 ${activeLineClass} ${modeDockActiveTabFillClass}`;
 
 /** @emoji 📏 Maximize cap on the right of the gap (normal chrome line). */
 export const windowControlsCapClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${borderNormalClass} bg-window text-element`;
@@ -4217,10 +4029,7 @@ export const windowControlsCapActiveClass = `relative z-[2] flex shrink-0 items-
 export const windowControlsCapActiveSplitClass = `relative flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window text-element`;
 
 /** @emoji 🪟 Window chrome icon button — element gray by default, emphasize on hover. */
-export const windowChromeControlButtonClass = cn(
-  "flex size-medium items-center justify-center border-0 bg-transparent transition-colors",
-  interactiveHoverClass,
-);
+export const windowChromeControlButtonClass = cn("flex size-medium items-center justify-center border-0 bg-transparent transition-colors", interactiveHoverClass);
 
 /** @emoji 📐 Default unfolded width of the right-edge window options rail (token-derived). */
 export const windowMeasuresDefaultWidthPx = domSizePx("layoutPanelRailUiSpacing");
@@ -4241,14 +4050,10 @@ export const windowMeasuresResizeHandleLeftClass = "absolute top-0 bottom-0 left
 export const windowEngagementMaxWidthPx = domSizePx("layoutEngagementMaxUiSpacing");
 
 /** @emoji 📐 Outer overlay for floating window measures along the top-right edge. */
-export const windowMeasuresOverlayClass =
-  "pointer-events-none absolute top-0 right-0 z-panel flex max-h-full flex-col items-end p-single";
+export const windowMeasuresOverlayClass = "pointer-events-none absolute top-0 right-0 z-panel flex max-h-full flex-col items-end p-single";
 
 /** @emoji 📐 Scrollable frosted rail for window measures (height follows content, capped by the window body). */
-export const windowMeasuresStackClass = cn(
-  glassWindowOptionsClass,
-  `pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-hidden rounded-md border ${borderElementClass}/40 p-0 shadow-sm`,
-);
+export const windowMeasuresStackClass = cn(glassWindowOptionsClass, `pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-hidden rounded-md border ${borderElementClass}/40 p-0 shadow-sm`);
 
 /** @emoji 📐 Window measures rail spanning the full window body (stays below shell side panels). */
 export const windowMeasuresOverlayExpandedClass = "inset-0 z-panel items-stretch";
@@ -4263,8 +4068,7 @@ export const windowMeasuresStackExpandedClass = "h-full max-h-full min-h-0";
 export const windowMeasuresStackFoldedClass = "w-fit max-w-full";
 
 /** @emoji 📐 Outer overlay for floating window engagement along the top-left edge. */
-export const windowEngagementOverlayClass =
-  "pointer-events-none absolute top-0 left-0 z-panel flex max-h-full flex-col items-start p-single";
+export const windowEngagementOverlayClass = "pointer-events-none absolute top-0 left-0 z-panel flex max-h-full flex-col items-start p-single";
 
 /** @emoji 📐 Collapsed command chrome hugging the top-left corner. */
 export const windowEngagementOverlayFoldedClass = windowMeasuresOverlayFoldedClass;
@@ -4279,8 +4083,7 @@ export const windowChromeScrollClearanceVar = "--window-chrome-scroll-clearance"
 export const windowContentDeadLineVar = "--window-content-dead-line";
 
 /** @emoji 🏝️ Chrome-aware scroll hosts stay edgeless but reserve scroll-padding for the dead line. */
-export const windowContentDeadLineScrollClass =
-  "overscroll-contain [scroll-padding-top:var(--window-content-dead-line)]";
+export const windowContentDeadLineScrollClass = "overscroll-contain [scroll-padding-top:var(--window-content-dead-line)]";
 
 /** @emoji 📐 Resolves {@link windowChromeScrollClearanceVar} to px for layout math. */
 export function readWindowChromeScrollClearancePx(element?: Element | null, rootPx = STYLING_COMPACT_ROOT_PX): number {
@@ -4309,7 +4112,7 @@ export function measureWindowChromeScrollClearancePx(element?: Element | null): 
 /** @emoji 🏝️ True when an element scrolls inside a window with floating chrome overlays (not edgeless canvas bodies). */
 export function isWindowContentDeadLineHost(element: Element | null): boolean {
   if (!element) return false;
-  if (element.closest('[data-window-content-layout=edgeless]')) return false;
+  if (element.closest("[data-window-content-layout=edgeless]")) return false;
   const windowBody = element.closest('[data-slot="window-body"]');
   if (!windowBody) return false;
   return windowBody.querySelector('[data-slot="window-engagement-overlay"], [data-slot="window-measures-overlay"]') != null;
@@ -4384,46 +4187,33 @@ export function useWindowContentDeadLineScroll(scrollerRef: React.RefObject<HTML
 }
 
 /** @emoji 🏝️ Full-bleed scroll surface for chrome-aware window bodies (writer hosts, forms, tables). */
-export const ChromeAwareWindowScrollSurface = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div">>(
-  ({ className, children, ...props }, ref) => {
-    const scrollerRef = reactHostPort.useRef<HTMLDivElement | null>(null);
-    const setScrollerRef = reactHostPort.useCallback(
-      (node: HTMLDivElement | null) => {
-        scrollerRef.current = node;
-        if (typeof ref === "function") ref(node);
-        else if (ref) ref.current = node;
-      },
-      [ref],
-    );
-    useWindowContentDeadLineScroll(scrollerRef);
-    return (
-      <div
-        ref={setScrollerRef}
-        data-slot="window-dead-line-scroll"
-        className={cn("min-h-0 min-w-0 overflow-auto", windowContentDeadLineScrollClass, className)}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  },
-);
+export const ChromeAwareWindowScrollSurface = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div">>(({ className, children, ...props }, ref) => {
+  const scrollerRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const setScrollerRef = reactHostPort.useCallback(
+    (node: HTMLDivElement | null) => {
+      scrollerRef.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
+  useWindowContentDeadLineScroll(scrollerRef);
+  return (
+    <div ref={setScrollerRef} data-slot="window-dead-line-scroll" className={cn("min-h-0 min-w-0 overflow-auto", windowContentDeadLineScrollClass, className)} {...props}>
+      {children}
+    </div>
+  );
+});
 ChromeAwareWindowScrollSurface.displayName = "ChromeAwareWindowScrollSurface";
 
 /** @emoji 📐 Labelled icon action in window rail chrome bars (options + command). */
-export const windowRailChromeLabelActionClass = cn(
-  "flex h-medium w-auto items-center justify-center border-0 bg-transparent text-element px-single gap-single",
-  interactiveHoverClass,
-);
+export const windowRailChromeLabelActionClass = cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent text-element px-single gap-single", interactiveHoverClass);
 
 /** @emoji 📐 Compact title bar on top of the window options stack. */
-export const windowMeasuresChromeClass =
-  `pointer-events-auto flex h-medium shrink-0 items-stretch justify-between gap-0 border-b ${borderElementClass}/40 px-0 py-0`;
+export const windowMeasuresChromeClass = `pointer-events-auto flex h-medium shrink-0 items-stretch justify-between gap-0 border-b ${borderElementClass}/40 px-0 py-0`;
 
 /** @emoji 📐 Square icon action in the window options chrome bar. */
-export const windowMeasuresChromeActionClass = cn(
-  "size-small min-h-small min-w-small max-h-small max-w-small shrink-0 rounded-none border-0 bg-transparent p-0 text-element transition-colors hover:bg-hover-interactive-fill hover:text-emphasized",
-);
+export const windowMeasuresChromeActionClass = cn("size-small min-h-small min-w-small max-h-small max-w-small shrink-0 rounded-none border-0 bg-transparent p-0 text-element transition-colors hover:bg-hover-interactive-fill hover:text-emphasized");
 
 /** @emoji 📐 Span toggle hugging the stack top-left corner. */
 export const windowMeasuresChromeCornerLeftClass = "border-r border-element/40";
@@ -4438,31 +4228,25 @@ export const windowMeasuresBodyClass = "flex min-h-0 min-w-0 flex-auto flex-col 
 export const windowMeasuresStackInnerClass = "flex w-full min-w-0 flex-col gap-tiny";
 
 /** @emoji 📐 Single measure tile in the window rail. */
-export const windowMeasureTileClass =
-  `pointer-events-auto select-none ${glassWindowOptionsClass} w-full min-w-0 shrink-0 rounded-sm border ${borderElementClass}/40 px-tiny py-tiny`;
+export const windowMeasureTileClass = `pointer-events-auto select-none ${glassWindowOptionsClass} w-full min-w-0 shrink-0 rounded-sm border ${borderElementClass}/40 px-tiny py-tiny`;
 
 /** @emoji 📐 Optional measure caption above a control. */
-export const windowMeasureLabelClass =
-  "text-muted-foreground mb-tiny block min-w-0 truncate text-2xs font-medium leading-none";
+export const windowMeasureLabelClass = "text-muted-foreground mb-tiny block min-w-0 truncate text-2xs font-medium leading-none";
 
 /** @emoji 📐 Measure section title without a heavy chrome box. */
-export const windowMeasureSectionClass =
-  "text-muted-foreground w-full truncate px-single py-tiny text-center text-2xs font-medium uppercase tracking-wide";
+export const windowMeasureSectionClass = "text-muted-foreground w-full truncate px-single py-tiny text-center text-2xs font-medium uppercase tracking-wide";
 
 /** @emoji 📐 Constrains measure controls to the rail width. */
 export const windowMeasureControlClass = "w-full min-w-0 max-w-full";
 
 /** @emoji 🌳 Compact disclosure header for a nested measure group. */
-export const windowMeasureGroupHeaderClass =
-  "pointer-events-auto flex h-small w-full min-w-0 shrink-0 cursor-pointer select-none items-center gap-tiny rounded-sm px-tiny py-0 text-element hover:bg-hover-interactive-fill hover:text-emphasized";
+export const windowMeasureGroupHeaderClass = "pointer-events-auto flex h-small w-full min-w-0 shrink-0 cursor-pointer select-none items-center gap-tiny rounded-sm px-tiny py-0 text-element hover:bg-hover-interactive-fill hover:text-emphasized";
 
 /** @emoji 🌳 Indented children under a measure group (minimal chrome). */
-export const windowMeasureGroupChildrenClass =
-  "pointer-events-none flex w-full min-w-0 flex-col gap-0 border-l pl-tiny ml-tiny pb-0 pt-0";
+export const windowMeasureGroupChildrenClass = "pointer-events-none flex w-full min-w-0 flex-col gap-0 border-l pl-tiny ml-tiny pb-0 pt-0";
 
 /** @emoji 🌳 Nested measure leaf without an outer tile border (indent only). */
-export const windowMeasureTileNestedClass =
-  "pointer-events-auto select-none w-full min-w-0 shrink-0 px-0 py-0";
+export const windowMeasureTileNestedClass = "pointer-events-auto select-none w-full min-w-0 shrink-0 px-0 py-0";
 
 /** @emoji 📐 Toggle sized to fill the measure tree row (active fill spans full width). */
 export const windowMeasureToggleClass =
@@ -4480,12 +4264,12 @@ export const windowMeasureTreeLeafLabelClass = "text-tiny font-normal text-eleme
 
 /** @emoji 🎨 Normal border stroke for controls and in-chrome dividers at a {@link Level}. */
 export function getLevelBorderElementClass(_level: Level): string {
-	return borderNormalClass;
+  return borderNormalClass;
 }
 
 /** @emoji 🎨 Tailwind divide token class for a {@link Level}. */
 export function getLevelDivideElementClass(_level: Level): string {
-	return "divide-normal";
+  return "divide-normal";
 }
 // #endregion 🎈Level Context
 
@@ -4588,7 +4372,12 @@ function CommandInput({ className, ...props }: React.ComponentProps<typeof Comma
   return (
     <div data-slot="command-input-wrapper" className={cn("flex h-medium items-center gap-single px-tiny", borderNormalBottomClass)}>
       <SearchIcon className="size-small shrink-0 opacity-50" />
-      <CommandPrimitive.Input data-slot="command-input" className={cn("placeholder:text-muted-foreground flex h-medium w-full bg-transparent text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50", className)} {...uiFormControlBrowserDefaultProps} {...props} />
+      <CommandPrimitive.Input
+        data-slot="command-input"
+        className={cn("placeholder:text-muted-foreground flex h-medium w-full bg-transparent text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50", className)}
+        {...uiFormControlBrowserDefaultProps}
+        {...props}
+      />
     </div>
   );
 }
@@ -4701,7 +4490,11 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible =
             </ActionGroup>
           </div>
         ) : null}
-        {toolbar ? <div data-slot="toolbar-anchor" className="shrink-0">{toolbar}</div> : null}
+        {toolbar ? (
+          <div data-slot="toolbar-anchor" className="shrink-0">
+            {toolbar}
+          </div>
+        ) : null}
       </div>
     </footer>
   );
@@ -5203,7 +4996,12 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
     </div>
   ) : (
     <div ref={propertyLabelRef} data-slot="property-label-inline" className="min-w-0">
-      <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized h-medium">
+      <span
+        data-slot="property-label"
+        id={labelElementId}
+        title={controlHint}
+        className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized h-medium"
+      >
         {resolvedLabel}
       </span>
     </div>
@@ -5442,7 +5240,9 @@ export const DraggableAvatar = reactHostPort.forwardRef<HTMLDivElement, Draggabl
           className={cn("cursor-grab active:cursor-grabbing select-none", avatarClassName, isSelected && "ring-1 ring-[color:var(--active-base)]", isHovered && !isSelected && "ring-1 ring-[color:var(--hover-base)]")}
           style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}
         >
-          <AvatarFallback className={cn("select-none", isSelected && "bg-[var(--active-base)] text-[var(--active-foreground)]", isHovered && !isSelected && "bg-[var(--hover-base)] text-emphasized", !isSelected && !isHovered && "bg-muted text-element")}>
+          <AvatarFallback
+            className={cn("select-none", isSelected && "bg-[var(--active-base)] text-[var(--active-foreground)]", isHovered && !isSelected && "bg-[var(--hover-base)] text-emphasized", !isSelected && !isHovered && "bg-muted text-element")}
+          >
             {content}
           </AvatarFallback>
         </Avatar>
@@ -5662,19 +5462,7 @@ export interface DiagramNodeProps {
 /**
  * Individual node element within a diagram graph.
  **/
-export const DiagramNode: React.FC<DiagramNodeProps> = ({
-  content,
-  selected = false,
-  hovered = false,
-  isPlaceholder = false,
-  showTopHandle = false,
-  showBottomHandle = false,
-  className = "",
-  onMouseEnter,
-  onMouseLeave,
-  onClick,
-  contextMenu,
-}) => {
+export const DiagramNode: React.FC<DiagramNodeProps> = ({ content, selected = false, hovered = false, isPlaceholder = false, showTopHandle = false, showBottomHandle = false, className = "", onMouseEnter, onMouseLeave, onClick, contextMenu }) => {
   return (
     <ContextMenu items={contextMenu}>
       <div
@@ -5740,7 +5528,10 @@ function HoverCardContent({ className, align = "center", sideOffset = 4, ...prop
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          cn(glassMenuClass, "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary w-64 origin-(--radix-hover-card-content-transform-origin) border p-single outline-hidden"),
+          cn(
+            glassMenuClass,
+            "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary w-64 origin-(--radix-hover-card-content-transform-origin) border p-single outline-hidden",
+          ),
           className,
         )}
         {...props}
@@ -6289,12 +6080,7 @@ function Button({ className, asChild = false, id, icon, text, children, ...props
 function ButtonCycle<T extends string = string>({ className, id, showLabel, value, onValueChange, items, ...props }: ButtonCycleProps<T>) {
   const currentIndex = items.findIndex((item) => item.value === value);
   const currentItem = currentIndex >= 0 ? items[currentIndex] : items[0];
-  const cycleText =
-    typeof currentItem?.text === "string"
-      ? currentItem.text
-      : typeof currentItem?.label === "string"
-        ? currentItem.label
-        : undefined;
+  const cycleText = typeof currentItem?.text === "string" ? currentItem.text : typeof currentItem?.label === "string" ? currentItem.label : undefined;
 
   const handleCycle = () => {
     const nextIndex = (currentIndex + 1) % items.length;
@@ -6375,14 +6161,7 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <ButtonGroup detailPanelWidthMode="fill" style={{ opacity: comboboxEmptyOpacity, transition: "opacity 150ms" }}>
-          <ButtonGroupItem
-            id={id}
-            role="combobox"
-            aria-expanded={open}
-            className="w-full min-w-0 justify-between"
-            icon="chevrons-up-down"
-            text={selectedOption ? selectedOption.label : computedPlaceholder}
-          />
+          <ButtonGroupItem id={id} role="combobox" aria-expanded={open} className="w-full min-w-0 justify-between" icon="chevrons-up-down" text={selectedOption ? selectedOption.label : computedPlaceholder} />
         </ButtonGroup>
       </PopoverTrigger>
       <PopoverContent className="w-full" align="start">
@@ -7306,12 +7085,7 @@ function Slider({
         <SliderPrimitive.Range data-slot="slider-range" data-dragging={isDragging ? "true" : undefined} className={cn(sliderRangeClassName)} />
       </SliderPrimitive.Track>
       {Array.from({ length: _values.length }, (_, index) => (
-        <SliderPrimitive.Thumb
-          data-slot="slider-thumb"
-          data-dragging={isDragging ? "true" : undefined}
-          key={index}
-          className={sliderThumbClassName}
-        />
+        <SliderPrimitive.Thumb data-slot="slider-thumb" data-dragging={isDragging ? "true" : undefined} key={index} className={sliderThumbClassName} />
       ))}
     </SliderPrimitive.Root>
   );
@@ -7896,12 +7670,7 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
       data-state={rootDataState}
       id={id}
       type={kind}
-      className={cn(
-        "group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden has-[_[data-slot=inline-label]]:overflow-visible h-medium divide-x",
-        borderClass,
-        divideClass,
-        className,
-      )}
+      className={cn("group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden has-[_[data-slot=inline-label]]:overflow-visible h-medium divide-x", borderClass, divideClass, className)}
       {...(restProps as any)}
     >
       <ToggleGroupContext.Provider value={{ level }}>
@@ -7944,9 +7713,7 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
         toggleVariants({
           level,
         }),
-        inlineText
-          ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel"
-          : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
+        inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
         (inlineText || action) && "flex items-center gap-single py-single px-double aspect-auto",
         inlineText && "w-auto",
         className,
@@ -8096,7 +7863,11 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
             {availableItems.map((item) => {
               const dropdownText = item.dropdownText || item.text;
               const buttonElement = (
-                <button key={item.value} onClick={() => handleSelect(item.value)} className={cn("flex items-center p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-interactive-fill outline-none focus-visible:bg-hover-interactive-fill")}>
+                <button
+                  key={item.value}
+                  onClick={() => handleSelect(item.value)}
+                  className={cn("flex items-center p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-interactive-fill outline-none focus-visible:bg-hover-interactive-fill")}
+                >
                   <span className="flex flex-1 items-center gap-single text-left">
                     <span className="flex items-center">{renderControlIcon(addIconSize(item.icon))}</span>
                     {dropdownText ? <span className="text-xs">{dropdownText}</span> : null}
@@ -8105,7 +7876,11 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
               );
 
               if (item.id) {
-                return <ChromeControlHint key={item.value} id={item.id}>{buttonElement}</ChromeControlHint>;
+                return (
+                  <ChromeControlHint key={item.value} id={item.id}>
+                    {buttonElement}
+                  </ChromeControlHint>
+                );
               }
 
               return buttonElement;
@@ -8410,11 +8185,7 @@ function AccordionTrigger({ className, children, ...props }: React.ComponentProp
   const hoverClass = getLevelHoverClass(level);
   return (
     <AccordionPrimitive.Header className="flex">
-      <AccordionPrimitive.Trigger
-        data-slot="accordion-trigger"
-        className={cn("flex flex-1 cursor-selectable items-center justify-between py-single text-sm font-medium", interactiveControlTransitionClass, hoverClass, className)}
-        {...props}
-      >
+      <AccordionPrimitive.Trigger data-slot="accordion-trigger" className={cn("flex flex-1 cursor-selectable items-center justify-between py-single text-sm font-medium", interactiveControlTransitionClass, hoverClass, className)} {...props}>
         {children as React.ReactNode}
         <ChevronDownIconAlt className="text-muted-foreground pointer-events-none size-small shrink-0 translate-y-0.5 transition-transform duration-200" />
       </AccordionPrimitive.Trigger>
@@ -8454,13 +8225,7 @@ function Collapsible({ ...props }: React.ComponentProps<typeof CollapsiblePrimit
 function CollapsibleTrigger({ className, ...props }: React.ComponentProps<typeof CollapsiblePrimitive.CollapsibleTrigger>) {
   const level = useLevel();
   const hoverClass = getLevelHoverClass(level);
-  return (
-    <CollapsiblePrimitive.CollapsibleTrigger
-      data-slot="collapsible-trigger"
-      className={cn("cursor-selectable", interactiveControlTransitionClass, hoverClass, className)}
-      {...props}
-    />
-  );
+  return <CollapsiblePrimitive.CollapsibleTrigger data-slot="collapsible-trigger" className={cn("cursor-selectable", interactiveControlTransitionClass, hoverClass, className)} {...props} />;
 }
 
 /**
@@ -8534,7 +8299,10 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          cn(glassMenuClass, "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-temporary grid w-full max-w-[calc(100%-2*var(--ui-spacing)*var(--medium))] translate-x-[-50%] translate-y-[-50%] gap-medium border p-medium duration-200 sm:max-w-lg"),
+          cn(
+            glassMenuClass,
+            "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-temporary grid w-full max-w-[calc(100%-2*var(--ui-spacing)*var(--medium))] translate-x-[-50%] translate-y-[-50%] gap-medium border p-medium duration-200 sm:max-w-lg",
+          ),
           className,
         )}
         {...props}
@@ -8608,9 +8376,10 @@ type ResizableJoinCornerElement = HTMLDivElement & {
   __composeResizableJoinCornerResize?: ResizableJoinCornerResizeHandler;
 };
 
-type ResizableCornerWindow = Window & typeof globalThis & {
-  __composeResizableCornerInterceptorV2?: boolean;
-};
+type ResizableCornerWindow = Window &
+  typeof globalThis & {
+    __composeResizableCornerInterceptorV2?: boolean;
+  };
 
 function readResizableJoinCornerSpec(element: HTMLElement): ResizableJoinCornerSpec | null {
   const raw = element.dataset.joinSpec;
@@ -8691,12 +8460,7 @@ export interface ResizableJoinCornerSpec {
 }
 
 /** @emoji ↔️ Pixel placement for a corner grab on a separator strip. */
-export function resizableJoinCornerPlacementStyle(
-  orientation: "horizontal" | "vertical",
-  edgeSide: ResizableJoinEdgeSide,
-  alongFraction: number,
-  sizePx = RESIZABLE_CORNER_GRAB_PX,
-): React.CSSProperties {
+export function resizableJoinCornerPlacementStyle(orientation: "horizontal" | "vertical", edgeSide: ResizableJoinEdgeSide, alongFraction: number, sizePx = RESIZABLE_CORNER_GRAB_PX): React.CSSProperties {
   const along = `${Math.round(Math.min(1, Math.max(0, alongFraction)) * 100)}%`;
   if (orientation === "horizontal") {
     return {
@@ -8741,23 +8505,10 @@ function ResizableJoinCornerGrab({
     };
   }, [onResize, spec]);
 
-  return (
-    <div
-      ref={elementRef}
-      data-slot="resizable-corner"
-      data-edge={edgeSide}
-      className="absolute z-50 cursor-move touch-none"
-      style={resizableJoinCornerPlacementStyle(orientation, edgeSide, alongFraction)}
-    />
-  );
+  return <div ref={elementRef} data-slot="resizable-corner" data-edge={edgeSide} className="absolute z-50 cursor-move touch-none" style={resizableJoinCornerPlacementStyle(orientation, edgeSide, alongFraction)} />;
 }
 
-function ResizablePanelGroup({
-  className,
-  orientation = "horizontal",
-  resizeTargetMinimumSize = RESIZABLE_HIT_TARGET_MINIMUM_SIZE,
-  ...props
-}: React.ComponentProps<typeof ResizablePrimitive.Group>) {
+function ResizablePanelGroup({ className, orientation = "horizontal", resizeTargetMinimumSize = RESIZABLE_HIT_TARGET_MINIMUM_SIZE, ...props }: React.ComponentProps<typeof ResizablePrimitive.Group>) {
   return (
     <ResizablePrimitive.Group
       data-slot="resizable-panel-group"
@@ -8809,16 +8560,18 @@ function ResizableHandle({
       }}
       {...(props as any)}
     >
-      {onJoinCornerResize ? joinCorners?.map((spec) => (
-        <ResizableJoinCornerGrab
-          key={`${spec.mainAxisPath}-${spec.mainSeparatorIndex}-${spec.crossAxisPath}-${spec.crossSeparatorIndex}-${spec.edgeSide}-${spec.alongFraction}`}
-          alongFraction={spec.alongFraction}
-          edgeSide={spec.edgeSide}
-          onResize={onJoinCornerResize}
-          orientation={orientation}
-          spec={spec}
-        />
-      )) : null}
+      {onJoinCornerResize
+        ? joinCorners?.map((spec) => (
+            <ResizableJoinCornerGrab
+              key={`${spec.mainAxisPath}-${spec.mainSeparatorIndex}-${spec.crossAxisPath}-${spec.crossSeparatorIndex}-${spec.edgeSide}-${spec.alongFraction}`}
+              alongFraction={spec.alongFraction}
+              edgeSide={spec.edgeSide}
+              onResize={onJoinCornerResize}
+              orientation={orientation}
+              spec={spec}
+            />
+          ))
+        : null}
     </ResizablePrimitive.Separator>
   );
 }
@@ -8829,37 +8582,35 @@ export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 
 // #region 🎮Scrollable
 /** @emoji 📜 Native overflow scroll host (avoids Radix ScrollArea `setViewport` / `setScrollbar*Enabled` ref update loops). */
-const Scrollable = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div"> & { orientation?: "vertical" | "horizontal" | "both" }>(
-  ({ className, children, orientation = "vertical", ...props }, ref) => {
-    const scrollerRef = reactHostPort.useRef<HTMLDivElement | null>(null);
-    const setScrollerRef = reactHostPort.useCallback(
-      (node: HTMLDivElement | null) => {
-        scrollerRef.current = node;
-        if (typeof ref === "function") ref(node);
-        else if (ref) ref.current = node;
-      },
-      [ref],
-    );
-    useWindowContentDeadLineScroll(scrollerRef);
-    return (
-      <div
-        ref={setScrollerRef}
-        data-slot="scroll-area"
-        className={cn(
-          "relative min-h-0 min-w-0 size-full focus-visible:ring-ring/50 transition-[color,box-shadow] outline-none focus-visible:ring-[length:var(--stroke-focus)] focus-visible:outline-1",
-          orientation === "horizontal" ? "overflow-x-auto overflow-y-hidden" : orientation === "vertical" ? "overflow-y-auto overflow-x-hidden" : "overflow-auto",
-          windowContentDeadLineScrollClass,
-          className,
-        )}
-        {...props}
-      >
-        <div data-slot="scroll-area-viewport" className="min-h-0 min-w-0">
-          {children}
-        </div>
+const Scrollable = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div"> & { orientation?: "vertical" | "horizontal" | "both" }>(({ className, children, orientation = "vertical", ...props }, ref) => {
+  const scrollerRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const setScrollerRef = reactHostPort.useCallback(
+    (node: HTMLDivElement | null) => {
+      scrollerRef.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
+  useWindowContentDeadLineScroll(scrollerRef);
+  return (
+    <div
+      ref={setScrollerRef}
+      data-slot="scroll-area"
+      className={cn(
+        "relative min-h-0 min-w-0 size-full focus-visible:ring-ring/50 transition-[color,box-shadow] outline-none focus-visible:ring-[length:var(--stroke-focus)] focus-visible:outline-1",
+        orientation === "horizontal" ? "overflow-x-auto overflow-y-hidden" : orientation === "vertical" ? "overflow-y-auto overflow-x-hidden" : "overflow-auto",
+        windowContentDeadLineScrollClass,
+        className,
+      )}
+      {...props}
+    >
+      <div data-slot="scroll-area-viewport" className="min-h-0 min-w-0">
+        {children}
       </div>
-    );
-  },
-);
+    </div>
+  );
+});
 Scrollable.displayName = "Scrollable";
 
 export { Scrollable };
@@ -9006,9 +8757,7 @@ export async function toggleDocumentFullscreen(doc: Document = document): Promis
 
 /** @emoji 🖥️ Tracks browser fullscreen state for shell chrome. */
 export function useDocumentFullscreen(): { isFullscreen: boolean; toggle: () => void } {
-  const [isFullscreen, setIsFullscreen] = reactHostPort.useState(() =>
-    typeof document !== "undefined" ? readDocumentFullscreenActive() : false,
-  );
+  const [isFullscreen, setIsFullscreen] = reactHostPort.useState(() => (typeof document !== "undefined" ? readDocumentFullscreenActive() : false));
 
   reactHostPort.useEffect(() => {
     if (typeof document === "undefined") return;
@@ -9033,14 +8782,7 @@ export function useDocumentFullscreen(): { isFullscreen: boolean; toggle: () => 
 
 function NavbarFullscreenToggle() {
   const { isFullscreen, toggle } = useDocumentFullscreen();
-  return (
-    <Toggle
-      id="ui.fullscreen.toggle"
-      pressed={isFullscreen}
-      onPressedChange={toggle}
-      icon={isFullscreen ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
-    />
-  );
+  return <Toggle id="ui.fullscreen.toggle" pressed={isFullscreen} onPressedChange={toggle} icon={isFullscreen ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />} />;
 }
 
 // #endregion 🖥️Fullscreen
@@ -9093,13 +8835,8 @@ function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) 
           ) : null}
         </div>
         {centeredItems.map((item, index) => (
-          <div
-            key={item.key ?? index}
-            className="pointer-events-none absolute inset-0 flex items-center justify-center"
-          >
-            <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>
-              {item.content}
-            </div>
+          <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
           </div>
         ))}
       </UiChromeLabelPolicyProvider>
@@ -9111,25 +8848,11 @@ export { Navbar };
 
 //#region 🩺SemioLogo
 /** @emoji 🎨 Round dark semio emblem for navbar and chrome. */
-export function SemioLogo({ className, style }: { className?: string, style?: React.CSSProperties }) {
+export function SemioLogo({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <svg
-      viewBox="0 0 350 350"
-      className={className}
-      style={style}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076"
-        fill="#001117"
-      />
-      <path
-        d="M76.25 271.933l35-35.808V118.75h-35z"
-        fill="#fa9500"
-        stroke="#f7f3e3"
-        strokeWidth="2.5"
-        strokeMiterlimit="5"
-      />
+    <svg viewBox="0 0 350 350" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
+      <path d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076" fill="#001117" />
+      <path d="M76.25 271.933l35-35.808V118.75h-35z" fill="#fa9500" stroke="#f7f3e3" strokeWidth="2.5" strokeMiterlimit="5" />
       <g fill="#ff344f" stroke="#f7f3e3" strokeWidth="2.5" strokeMiterlimit="5">
         <path d="M76.25 113.75h155.563l37.66-37.5H76.25zM236.263 273.75l-.013-155.606 37.5-37.62V273.75z" />
       </g>
@@ -9163,15 +8886,7 @@ function PanelToggleGroup({ items }: { readonly items: readonly PanelToggleItem[
   return (
     <div data-slot="app-panel-toggle-group" className={cn("flex min-w-0 items-stretch border h-medium", borderNormalClass)}>
       {items.map((item, index) => (
-        <Toggle
-          key={item.id}
-          id={item.id}
-          text={item.text}
-          pressed={item.pressed}
-          onPressedChange={item.onPressedChange}
-          className={cn("border-0 rounded-none shrink-0", index > 0 && cn("border-l", borderNormalClass))}
-          icon={item.icon}
-        />
+        <Toggle key={item.id} id={item.id} text={item.text} pressed={item.pressed} onPressedChange={item.onPressedChange} className={cn("border-0 rounded-none shrink-0", index > 0 && cn("border-l", borderNormalClass))} icon={item.icon} />
       ))}
     </div>
   );
@@ -9379,14 +9094,7 @@ export interface IconSelectorProps {
 }
 
 /** @emoji 🖼️ Canonical `iconKind` editor for all canvases. */
-export function IconSelector({
-  id,
-  value,
-  onChange,
-  disabled = false,
-  uniform = true,
-  classifyIconSelectorMode: classifyModeProp,
-}: IconSelectorProps): React.ReactElement {
+export function IconSelector({ id, value, onChange, disabled = false, uniform = true, classifyIconSelectorMode: classifyModeProp }: IconSelectorProps): React.ReactElement {
   const classifyMode = classifyModeProp ?? classifyIconSelectorMode;
   const activeMode = classifyMode(value);
   const fileInputRef = reactHostPort.useRef<HTMLInputElement>(null);
@@ -9649,13 +9357,10 @@ const treeInspectorInnerRowClassName = "min-w-0 w-full";
 const treeHeaderRowClassName = "flex h-full min-w-0 w-full items-center gap-double";
 const treeHeaderMainClassName = "flex h-full min-w-0 flex-1 items-center gap-double";
 const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
-const indentationLineLen = (i: number, multiplier = 1): string =>
-  `calc(${detailPanelIndentLen(i, multiplier)} + ${uiSpacingLen(STYLING_DOM.treeIndentLineExtraUiSpacing)})`;
-const indentationLinePx = (i: number, multiplier = 1): number =>
-  detailPanelIndentPx(i, multiplier) + domSizePx("treeIndentLineExtraUiSpacing");
+const indentationLineLen = (i: number, multiplier = 1): string => `calc(${detailPanelIndentLen(i, multiplier)} + ${uiSpacingLen(STYLING_DOM.treeIndentLineExtraUiSpacing)})`;
+const indentationLinePx = (i: number, multiplier = 1): number => detailPanelIndentPx(i, multiplier) + domSizePx("treeIndentLineExtraUiSpacing");
 /** @emoji 🌳 Ancestor guide indices for a branch at {@link level}: parent level always continues through expanded children; deeper ancestors stop after last siblings. */
-const treeBranchGuideIndices = (level: number, isLastAtLevel: readonly boolean[]): number[] =>
-  Array.from({ length: level }, (_, index) => index).filter((index) => index === level - 1 || !isLastAtLevel[index]);
+const treeBranchGuideIndices = (level: number, isLastAtLevel: readonly boolean[]): number[] => Array.from({ length: level }, (_, index) => index).filter((index) => index === level - 1 || !isLastAtLevel[index]);
 const treeRowInlineGapPx = domSizePx("propertyInlineGapUiSpacing");
 const treeToggleSlotWidthPx = domSizePx("treeToggleUiSpacing");
 const treeRowVerticalPaddingPx = 0;
@@ -9679,21 +9384,14 @@ const renderTreeRowIcon = (icon: React.ReactNode | undefined, defaultIcon: IconN
     {icon ?? <Icon icon={defaultIcon} size={12} className={treeRowDefaultIconClassName} />}
   </span>
 );
-const treeGutterSlotLeftLen = (level: number, extraMultiplier = 0, multiplier = 1): string =>
-  extraMultiplier > 0
-    ? `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(extraMultiplier)})`
-    : detailPanelIndentLen(level, multiplier);
+const treeGutterSlotLeftLen = (level: number, extraMultiplier = 0, multiplier = 1): string => (extraMultiplier > 0 ? `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(extraMultiplier)})` : detailPanelIndentLen(level, multiplier));
 const treeGutterSlotLeftPx = (level: number, extraLeftPx = 0, multiplier = 1): number => detailPanelIndentPx(level, multiplier) + extraLeftPx;
 const treeGutterAnchorTop = (_anchorOffsetPx?: number): string => "calc(var(--size-workbench) / 2)";
 const treeGutterSlotStyle = (level: number, extraLeftPx = 0, multiplier = 1, anchorOffsetPx?: number): React.CSSProperties => ({
   top: treeGutterAnchorTop(anchorOffsetPx),
-  left:
-    extraLeftPx > 0
-      ? `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(extraLeftPx / (STYLING_COMPACT_ROOT_PX * 0.2))})`
-      : detailPanelIndentLen(level, multiplier),
+  left: extraLeftPx > 0 ? `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(extraLeftPx / (STYLING_COMPACT_ROOT_PX * 0.2))})` : detailPanelIndentLen(level, multiplier),
 });
-const treeGutterWidthLen = (level: number, multiplier = 1): string =>
-  `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(STYLING_DOM.treeToggleUiSpacing)})`;
+const treeGutterWidthLen = (level: number, multiplier = 1): string => `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(STYLING_DOM.treeToggleUiSpacing)})`;
 const treeGutterWidthPx = (level: number, multiplier = 1): number => detailPanelIndentPx(level, multiplier) + treeToggleSlotWidthPx;
 const treeBranchContentStyle = (topPaddingPx = 0): React.CSSProperties => ({
   rowGap: treeBranchRowGapPx > 0 ? uiSpacingLen(treeBranchRowGapPx / (STYLING_COMPACT_ROOT_PX * 0.2)) : "0",
@@ -9804,11 +9502,7 @@ const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
 }) => {
   const { indentMultiplier } = reactHostPort.useContext(TreeContext);
   return (
-    <div
-      data-slot="tree-row-layout"
-      className={cn(treeRowLayoutClassName, align === "start" ? "items-start" : "items-center", className)}
-      style={treeAlignedRowStyle(level, indentMultiplier)}
-    >
+    <div data-slot="tree-row-layout" className={cn(treeRowLayoutClassName, align === "start" ? "items-start" : "items-center", className)} style={treeAlignedRowStyle(level, indentMultiplier)}>
       <TreeDocumentGutter level={level} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} extendCurrentLevelToBottom={extendCurrentLevelToBottom} slotOffsetPx={slotOffsetPx} anchorOffsetPx={anchorOffsetPx} />
       <div data-slot="tree-row-content" className={cn(align === "start" ? "min-w-0 h-full" : treeRowContentClassName, contentChromeClassName, contentClassName)}>
         {children}
@@ -10079,14 +9773,7 @@ export interface TreeDragAndDropController {
   pointerPaletteDrag?: TreePointerPaletteDragController;
   onDragStart?: (context: { items: TreeDataItem[]; sourceItem: TreeDataItem; section: TreeDataSection }) => void;
   onDragEnd?: (context: { items: TreeDataItem[]; sourceItem: TreeDataItem; section: TreeDataSection }) => void;
-  handleDrop?: (context: {
-    target: TreeDataItem | TreeDataSection;
-    targetKind: "item" | "section";
-    data: Record<string, string>;
-    sourceItems: TreeDataItem[];
-    section: TreeDataSection;
-    dropPosition?: TreeDropPosition;
-  }) => void | Promise<void>;
+  handleDrop?: (context: { target: TreeDataItem | TreeDataSection; targetKind: "item" | "section"; data: Record<string, string>; sourceItems: TreeDataItem[]; section: TreeDataSection; dropPosition?: TreeDropPosition }) => void | Promise<void>;
 }
 
 export type TreeDropPosition = "before" | "after" | "inside";
@@ -10120,23 +9807,13 @@ function TreeReorderDropPreview(props: { readonly preview: { readonly targetId: 
   }, [props.preview]);
   if (!props.preview || !frame || typeof document === "undefined" || !document.body) return null;
   if (props.preview.position === "before") {
-    return createPortal(
-      <div data-slot="tree-drop-preview" className="pointer-events-none fixed z-tutorial h-0.5 bg-primary" style={{ left: frame.left, top: frame.top, width: frame.width }} />,
-      document.body,
-    );
+    return createPortal(<div data-slot="tree-drop-preview" className="pointer-events-none fixed z-tutorial h-0.5 bg-primary" style={{ left: frame.left, top: frame.top, width: frame.width }} />, document.body);
   }
   if (props.preview.position === "after") {
-    return createPortal(
-      <div data-slot="tree-drop-preview" className="pointer-events-none fixed z-tutorial h-0.5 bg-primary" style={{ left: frame.left, top: frame.bottom - 2, width: frame.width }} />,
-      document.body,
-    );
+    return createPortal(<div data-slot="tree-drop-preview" className="pointer-events-none fixed z-tutorial h-0.5 bg-primary" style={{ left: frame.left, top: frame.bottom - 2, width: frame.width }} />, document.body);
   }
   return createPortal(
-    <div
-      data-slot="tree-drop-preview"
-      className="pointer-events-none fixed z-tutorial border-2 border-primary/80 bg-primary/10"
-      style={{ left: frame.left, top: frame.top, width: frame.width, height: frame.height }}
-    />,
+    <div data-slot="tree-drop-preview" className="pointer-events-none fixed z-tutorial border-2 border-primary/80 bg-primary/10" style={{ left: frame.left, top: frame.top, width: frame.width, height: frame.height }} />,
     document.body,
   );
 }
@@ -10758,19 +10435,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
   const isHeaderlessSection =
-    suppressLocalizedLabel &&
-    localizedLabel === undefined &&
-    !icon &&
-    actions.length === 0 &&
-    !loading &&
-    !draggable &&
-    !onDoubleClick &&
-    !onSectionPointerEnter &&
-    !onSectionPointerLeave &&
-    !onDragStart &&
-    !onDragOver &&
-    !onDragLeave &&
-    !onDrop;
+    suppressLocalizedLabel && localizedLabel === undefined && !icon && actions.length === 0 && !loading && !draggable && !onDoubleClick && !onSectionPointerEnter && !onSectionPointerLeave && !onDragStart && !onDragOver && !onDragLeave && !onDrop;
   const rowClassName = cn(treeRowShellClassName, treeRowChromeShellClasses(false, false), isExpandable ? "cursor-foldable" : "cursor-selectable", className);
   const rowContentFillClassName = treeRowChromeContentFillClasses(false, false);
 
@@ -10805,7 +10470,15 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           onDoubleClick(event);
         }}
       >
-        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : null} contentClassName="min-w-0" contentChromeClassName={rowContentFillClassName}>
+        <TreeAlignedRow
+          level={level}
+          isLastAtLevel={isLastAtLevel}
+          showLines={showLines}
+          connectCurrentLevel={level > 0}
+          slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : null}
+          contentClassName="min-w-0"
+          contentChromeClassName={rowContentFillClassName}
+        >
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {renderTreeRowIcon(icon, "folder")}
@@ -10918,13 +10591,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const itemShellClasses = cn(
-    treeRowShellClassName,
-    treeRowChromeShellClasses(isSelected, isHighlighted),
-    "w-full",
-    hasChildren ? "cursor-foldable" : "cursor-selectable",
-    className,
-  );
+  const itemShellClasses = cn(treeRowShellClassName, treeRowChromeShellClasses(isSelected, isHighlighted), "w-full", hasChildren ? "cursor-foldable" : "cursor-selectable", className);
   const itemContentFillClassName = treeRowChromeContentFillClasses(isSelected, isHighlighted);
 
   if (hasChildren && displayLabel) {
@@ -11290,108 +10957,14 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   if (layoutKind === "property") {
     return (
       <TreeItemRowContextMenu items={contextMenu}>
-      <div
-        data-dim
-        data-slot="tree-property-item"
-        data-tree-row-kind={isExpandable ? "group" : "property"}
-        role="treeitem"
-        id={id}
-        data-state={open ? "open" : "closed"}
-        className={cn("min-w-0 w-full", treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), className)}
-        draggable={draggable}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onDrop={onDrop}
-        onDoubleClick={(event) => {
-          if (!onDoubleClick) return;
-          event.preventDefault();
-          event.stopPropagation();
-          onDoubleClick(event);
-        }}
-        onMouseEnter={handlePointerEnter}
-        onMouseLeave={handlePointerLeave}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerCancel}
-      >
-        <TreeAlignedRow
-          level={level}
-          isLastAtLevel={isLastAtLevel}
-          showLines={showLines}
-          connectCurrentLevel={level > 0}
-          extendCurrentLevelToBottom={isExpandable && open && hasChildren}
-          slot={
-            isExpandable ? (
-              <button
-                type="button"
-                className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
-                onClick={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  setOpen(!open);
-                }}
-              >
-                {loading ? <Spinner size="small" className="text-muted-foreground" /> : open ? <ChevronDownIcon className="size-small flex-shrink-0" /> : <ChevronRightIcon className="size-small flex-shrink-0" />}
-              </button>
-            ) : undefined
-          }
-          contentClassName="min-w-0"
-          contentChromeClassName={itemContentFillClassName}
-        >
-          <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
-            <div className={treeHeaderMainClassName}>
-              {renderTreeRowIcon(icon, isExpandable ? "folder" : "file-text")}
-              <span
-                data-slot="tree-label"
-                title={controlHint}
-                className={cn(treeItemLabelSlotClassName, "font-medium transition-colors", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text")}
-                style={treeItemLabelStyle}
-                onClick={(event) => {
-                  if (event.detail > 1) return;
-                  event.preventDefault();
-                  event.stopPropagation();
-                  if (isExpandable) {
-                    setOpen(!open);
-                    return;
-                  }
-                  onClick?.(event);
-                }}
-              >
-                {resolvedLabel as React.ReactNode}
-              </span>
-            </div>
-            {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-          </div>
-        </TreeAlignedRow>
-        {open ? (
-          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier }}>
-            <TreeBranchContent slot="tree-property-content" ownerRowKind={isExpandable ? "group" : "property"} ownerExpanded={open && hasChildren} className="min-w-0" topPaddingPx={treeItemContentPaddingTopPx}>
-              {children}
-            </TreeBranchContent>
-          </TreeContext.Provider>
-        ) : (
-          <div data-slot="tree-property-content" className="min-w-0" />
-        )}
-      </div>
-      </TreeItemRowContextMenu>
-    );
-  }
-
-  if (isExpandable && resolvedLabel) {
-    return (
-      <TreeItemRowContextMenu items={contextMenu}>
-      <>
         <div
           data-dim
-          data-slot="tree-item-row"
-          data-tree-row-kind="group"
-          data-tree-group
+          data-slot="tree-property-item"
+          data-tree-row-kind={isExpandable ? "group" : "property"}
           role="treeitem"
           id={id}
-          className={itemShellClasses}
+          data-state={open ? "open" : "closed"}
+          className={cn("min-w-0 w-full", treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), className)}
           draggable={draggable}
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
@@ -11416,82 +10989,176 @@ export const TreeItem: React.FC<TreeItemProps> = ({
             isLastAtLevel={isLastAtLevel}
             showLines={showLines}
             connectCurrentLevel={level > 0}
-            extendCurrentLevelToBottom={open && hasChildren}
+            extendCurrentLevelToBottom={isExpandable && open && hasChildren}
             slot={
-              <button
-                className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setOpen(!open);
-                }}
-              >
-                {loading ? <Spinner size="small" className="text-muted-foreground" /> : open ? <ChevronDownIcon className="size-small flex-shrink-0" /> : <ChevronRightIcon className="size-small flex-shrink-0" />}
-              </button>
+              isExpandable ? (
+                <button
+                  type="button"
+                  className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setOpen(!open);
+                  }}
+                >
+                  {loading ? <Spinner size="small" className="text-muted-foreground" /> : open ? <ChevronDownIcon className="size-small flex-shrink-0" /> : <ChevronRightIcon className="size-small flex-shrink-0" />}
+                </button>
+              ) : undefined
             }
             contentClassName="min-w-0"
             contentChromeClassName={itemContentFillClassName}
           >
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
-                {renderTreeRowIcon(icon, "folder")}
+                {renderTreeRowIcon(icon, isExpandable ? "folder" : "file-text")}
                 <span
                   data-slot="tree-label"
-                  className={cn(treeItemLabelSlotClassName, "cursor-selectable")}
+                  title={controlHint}
+                  className={cn(treeItemLabelSlotClassName, "font-medium transition-colors", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text")}
                   style={treeItemLabelStyle}
-                  onClick={(e) => {
-                    if (e.detail > 1) return;
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onClick?.(e);
+                  onClick={(event) => {
+                    if (event.detail > 1) return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (isExpandable) {
+                      setOpen(!open);
+                      return;
+                    }
+                    onClick?.(event);
                   }}
                 >
                   {resolvedLabel as React.ReactNode}
                 </span>
               </div>
               {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-              {branchCount > 0 && (
-                <div data-slot="tree-branch-nav" className="flex items-center gap-single flex-shrink-0">
-                  <button
-                    data-slot="tree-branch-prev"
-                    className="p-0 border-0 bg-transparent cursor-selectable hover:bg-hover-interactive-fill disabled:opacity-30 disabled:cursor-default"
-                    disabled={activeBranchIndex <= 0}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onBranchChange?.(activeBranchIndex - 1);
-                    }}
-                  >
-                    <ChevronLeftIcon className="size-tiny text-muted-foreground" />
-                  </button>
-                  <span data-slot="tree-branch-indicator" className="text-2xs text-muted-foreground tabular-nums select-none">
-                    {activeBranchIndex + 1}/{branchCount}
-                  </span>
-                  <button
-                    data-slot="tree-branch-next"
-                    className="p-0 border-0 bg-transparent cursor-selectable hover:bg-hover-interactive-fill disabled:opacity-30 disabled:cursor-default"
-                    disabled={activeBranchIndex >= branchCount - 1}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onBranchChange?.(activeBranchIndex + 1);
-                    }}
-                  >
-                    <ChevronRightIcon className="size-tiny text-muted-foreground" />
-                  </button>
-                </div>
-              )}
             </div>
           </TreeAlignedRow>
+          {open ? (
+            <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier }}>
+              <TreeBranchContent slot="tree-property-content" ownerRowKind={isExpandable ? "group" : "property"} ownerExpanded={open && hasChildren} className="min-w-0" topPaddingPx={treeItemContentPaddingTopPx}>
+                {children}
+              </TreeBranchContent>
+            </TreeContext.Provider>
+          ) : (
+            <div data-slot="tree-property-content" className="min-w-0" />
+          )}
         </div>
-        {open && (
-          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier }}>
-            <TreeBranchContent slot="tree-item-content" ownerRowKind="group" ownerExpanded={open && hasChildren} topPaddingPx={treeItemContentPaddingTopPx}>
-              {children}
-            </TreeBranchContent>
-          </TreeContext.Provider>
-        )}
-      </>
+      </TreeItemRowContextMenu>
+    );
+  }
+
+  if (isExpandable && resolvedLabel) {
+    return (
+      <TreeItemRowContextMenu items={contextMenu}>
+        <>
+          <div
+            data-dim
+            data-slot="tree-item-row"
+            data-tree-row-kind="group"
+            data-tree-group
+            role="treeitem"
+            id={id}
+            className={itemShellClasses}
+            draggable={draggable}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            onDrop={onDrop}
+            onDoubleClick={(event) => {
+              if (!onDoubleClick) return;
+              event.preventDefault();
+              event.stopPropagation();
+              onDoubleClick(event);
+            }}
+            onMouseEnter={handlePointerEnter}
+            onMouseLeave={handlePointerLeave}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerCancel}
+          >
+            <TreeAlignedRow
+              level={level}
+              isLastAtLevel={isLastAtLevel}
+              showLines={showLines}
+              connectCurrentLevel={level > 0}
+              extendCurrentLevelToBottom={open && hasChildren}
+              slot={
+                <button
+                  className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setOpen(!open);
+                  }}
+                >
+                  {loading ? <Spinner size="small" className="text-muted-foreground" /> : open ? <ChevronDownIcon className="size-small flex-shrink-0" /> : <ChevronRightIcon className="size-small flex-shrink-0" />}
+                </button>
+              }
+              contentClassName="min-w-0"
+              contentChromeClassName={itemContentFillClassName}
+            >
+              <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
+                <div className={treeHeaderMainClassName}>
+                  {renderTreeRowIcon(icon, "folder")}
+                  <span
+                    data-slot="tree-label"
+                    className={cn(treeItemLabelSlotClassName, "cursor-selectable")}
+                    style={treeItemLabelStyle}
+                    onClick={(e) => {
+                      if (e.detail > 1) return;
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onClick?.(e);
+                    }}
+                  >
+                    {resolvedLabel as React.ReactNode}
+                  </span>
+                </div>
+                {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
+                {branchCount > 0 && (
+                  <div data-slot="tree-branch-nav" className="flex items-center gap-single flex-shrink-0">
+                    <button
+                      data-slot="tree-branch-prev"
+                      className="p-0 border-0 bg-transparent cursor-selectable hover:bg-hover-interactive-fill disabled:opacity-30 disabled:cursor-default"
+                      disabled={activeBranchIndex <= 0}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onBranchChange?.(activeBranchIndex - 1);
+                      }}
+                    >
+                      <ChevronLeftIcon className="size-tiny text-muted-foreground" />
+                    </button>
+                    <span data-slot="tree-branch-indicator" className="text-2xs text-muted-foreground tabular-nums select-none">
+                      {activeBranchIndex + 1}/{branchCount}
+                    </span>
+                    <button
+                      data-slot="tree-branch-next"
+                      className="p-0 border-0 bg-transparent cursor-selectable hover:bg-hover-interactive-fill disabled:opacity-30 disabled:cursor-default"
+                      disabled={activeBranchIndex >= branchCount - 1}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onBranchChange?.(activeBranchIndex + 1);
+                      }}
+                    >
+                      <ChevronRightIcon className="size-tiny text-muted-foreground" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </TreeAlignedRow>
+          </div>
+          {open && (
+            <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier }}>
+              <TreeBranchContent slot="tree-item-content" ownerRowKind="group" ownerExpanded={open && hasChildren} topPaddingPx={treeItemContentPaddingTopPx}>
+                {children}
+              </TreeBranchContent>
+            </TreeContext.Provider>
+          )}
+        </>
       </TreeItemRowContextMenu>
     );
   }
@@ -11502,75 +11169,71 @@ export const TreeItem: React.FC<TreeItemProps> = ({
 
   return (
     <TreeItemRowContextMenu items={contextMenu}>
-    <div
-      data-dim
-      data-slot="tree-item-row"
-      data-tree-row-kind={layoutKind === "property" ? "property" : "leaf"}
-      role="treeitem"
-      id={id}
-      className={itemShellClasses}
-      draggable={draggable}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
-      onClick={onClick}
-      onMouseEnter={handlePointerEnter}
-      onMouseLeave={handlePointerLeave}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerCancel}
-    >
-      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
-        <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
-          <div className={treeHeaderMainClassName}>
-            {loading && <Spinner size="small" className="text-muted-foreground" />}
-            {renderTreeRowIcon(icon, "file-text")}
-            <span
-              data-slot="tree-label"
-              className={cn(treeItemLabelSlotClassName, draggable ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass)}
-              style={treeItemLabelStyle}
-            >
-              {resolvedLabel as React.ReactNode}
-            </span>
-          </div>
-          {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-          {branchCount > 0 && (
-            <div data-slot="tree-branch-nav" className="flex items-center gap-single flex-shrink-0">
-              <button
-                data-slot="tree-branch-prev"
-                className="p-0 border-0 bg-transparent cursor-selectable disabled:opacity-30 disabled:cursor-default"
-                disabled={activeBranchIndex <= 0}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onBranchChange?.(activeBranchIndex - 1);
-                }}
-              >
-                <ChevronLeftIcon className="size-tiny text-muted-foreground" />
-              </button>
-              <span data-slot="tree-branch-indicator" className="text-2xs text-muted-foreground tabular-nums select-none">
-                {activeBranchIndex + 1}/{branchCount}
+      <div
+        data-dim
+        data-slot="tree-item-row"
+        data-tree-row-kind={layoutKind === "property" ? "property" : "leaf"}
+        role="treeitem"
+        id={id}
+        className={itemShellClasses}
+        draggable={draggable}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+        onClick={onClick}
+        onMouseEnter={handlePointerEnter}
+        onMouseLeave={handlePointerLeave}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
+      >
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
+          <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
+            <div className={treeHeaderMainClassName}>
+              {loading && <Spinner size="small" className="text-muted-foreground" />}
+              {renderTreeRowIcon(icon, "file-text")}
+              <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, draggable ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass)} style={treeItemLabelStyle}>
+                {resolvedLabel as React.ReactNode}
               </span>
-              <button
-                data-slot="tree-branch-next"
-                className="p-0 border-0 bg-transparent cursor-selectable disabled:opacity-30 disabled:cursor-default"
-                disabled={activeBranchIndex >= branchCount - 1}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onBranchChange?.(activeBranchIndex + 1);
-                }}
-              >
-                <ChevronRightIcon className="size-tiny text-muted-foreground" />
-              </button>
             </div>
-          )}
-        </div>
-      </TreeAlignedRow>
-    </div>
+            {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
+            {branchCount > 0 && (
+              <div data-slot="tree-branch-nav" className="flex items-center gap-single flex-shrink-0">
+                <button
+                  data-slot="tree-branch-prev"
+                  className="p-0 border-0 bg-transparent cursor-selectable disabled:opacity-30 disabled:cursor-default"
+                  disabled={activeBranchIndex <= 0}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onBranchChange?.(activeBranchIndex - 1);
+                  }}
+                >
+                  <ChevronLeftIcon className="size-tiny text-muted-foreground" />
+                </button>
+                <span data-slot="tree-branch-indicator" className="text-2xs text-muted-foreground tabular-nums select-none">
+                  {activeBranchIndex + 1}/{branchCount}
+                </span>
+                <button
+                  data-slot="tree-branch-next"
+                  className="p-0 border-0 bg-transparent cursor-selectable disabled:opacity-30 disabled:cursor-default"
+                  disabled={activeBranchIndex >= branchCount - 1}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onBranchChange?.(activeBranchIndex + 1);
+                  }}
+                >
+                  <ChevronRightIcon className="size-tiny text-muted-foreground" />
+                </button>
+              </div>
+            )}
+          </div>
+        </TreeAlignedRow>
+      </div>
     </TreeItemRowContextMenu>
   );
 };
@@ -11638,7 +11301,15 @@ export const TreeRow: React.FC<{
   return (
     <TreeRowAlignmentContext.Provider value={true}>
       <div data-dim data-slot="tree-row" data-tree-row-kind={rowKind} className={cn(treeRowShellClassName, "w-full", className)}>
-        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} className="h-full" contentClassName="min-w-0" anchorOffsetPx={rowKind === "property" ? detailPanelHeaderLineCenterPx : undefined}>
+        <TreeAlignedRow
+          level={level}
+          isLastAtLevel={isLastAtLevel}
+          showLines={showLines}
+          connectCurrentLevel={level > 0}
+          className="h-full"
+          contentClassName="min-w-0"
+          anchorOffsetPx={rowKind === "property" ? detailPanelHeaderLineCenterPx : undefined}
+        >
           {children}
         </TreeAlignedRow>
       </div>
@@ -11722,7 +11393,8 @@ export interface FileTreeNode {
 const treeBranchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content", "window-measure-tree-content"]);
 // 🔷Row-level elements that own an elbow connector.
 const treeRowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "tree-row", "control-tree-row", "window-measure-tree-row"]);
-const treeHoverPathRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="tree-row"], [data-slot="control-tree-row"], [data-slot="tree-content"], [data-slot="window-measure-tree-row"]';
+const treeHoverPathRowSelector =
+  '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="tree-row"], [data-slot="control-tree-row"], [data-slot="tree-content"], [data-slot="window-measure-tree-row"]';
 const treeHoverPathBranchSelector = '[data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"], [data-slot="window-measure-tree-content"]';
 const treeHoverPathAttr = "data-tree-hover-path";
 const treeSelectionPathAttr = "data-tree-selection-path";
@@ -11952,27 +11624,10 @@ const useTreeSelectionPathSync = (treeRootRef: React.RefObject<HTMLDivElement | 
 //#endregion 🎃TreeHoverPath
 
 /** @emoji 🌿 Hoisted data-tree item row (stable component type across Tree re-renders). */
-const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
-  readonly item: TreeDataItem;
-  readonly section: TreeDataSection;
-  readonly path: readonly string[];
-  readonly isLastItem: boolean;
-}): React.ReactElement {
+const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { readonly item: TreeDataItem; readonly section: TreeDataSection; readonly path: readonly string[]; readonly isLastItem: boolean }): React.ReactElement {
   const { item, section, path, isLastItem } = props;
-  const {
-    itemItemsById,
-    loadingById,
-    dragAndDropController,
-    loadItemItems,
-    handleSelectItem,
-    handleDoubleClickItem,
-    handleDragStart,
-    handleDragEnd,
-    handleDragOverItem,
-    handleDropOnItem,
-    buildPalettePointerProps,
-    draggedIds,
-  } = useTreeDataRendering();
+  const { itemItemsById, loadingById, dragAndDropController, loadItemItems, handleSelectItem, handleDoubleClickItem, handleDragStart, handleDragEnd, handleDragOverItem, handleDropOnItem, buildPalettePointerProps, draggedIds } =
+    useTreeDataRendering();
   const isRowSelected = useTreeItemRowSelected(item.id, item.isSelected);
   const isRowHighlighted = useTreeItemRowHighlighted(item.id, item.isHighlighted);
   const isDragging = draggedIds.includes(item.id);
@@ -12272,12 +11927,9 @@ export const Tree = (({
     [itemItemsById, resolvedSections, sectionItemsById, selectionMode, updateSelection],
   );
 
-  const handleDoubleClickItem = reactHostPort.useCallback(
-    (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => {
-      item.onDoubleClick?.(event, { path, selectedIds: selectionStoreRef.current.getSelectedIds(), sectionId: section.id });
-    },
-    [],
-  );
+  const handleDoubleClickItem = reactHostPort.useCallback((event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => {
+    item.onDoubleClick?.(event, { path, selectedIds: selectionStoreRef.current.getSelectedIds(), sectionId: section.id });
+  }, []);
 
   const handleDragStart = reactHostPort.useCallback(
     (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => {
@@ -12341,8 +11993,7 @@ export const Tree = (({
   );
 
   const resolveItemDragData = reactHostPort.useCallback(
-    (treeItem: TreeDataItem, treeSection: TreeDataSection) =>
-      dragAndDropController?.getDragData?.({ items: [treeItem], sourceItem: treeItem, section: treeSection }) ?? treeItem.dragData,
+    (treeItem: TreeDataItem, treeSection: TreeDataSection) => dragAndDropController?.getDragData?.({ items: [treeItem], sourceItem: treeItem, section: treeSection }) ?? treeItem.dragData,
     [dragAndDropController],
   );
 
@@ -12842,15 +12493,7 @@ export const defaultControlRenderer = (def: ControlDef): React.ReactNode => {
       return <Slider id={controlId} value={[def.value]} onValueChange={(v) => def.onChange(v[0])} min={def.meta?.min ?? 0} max={def.meta?.max ?? 100} />;
     case "boolean": {
       const labelText = typeof def.meta?.label === "string" ? def.meta.label : def.key;
-      return (
-        <Toggle
-          id={controlId}
-          pressed={def.value}
-          onPressedChange={def.onChange}
-          icon={def.value ? <CheckIcon className="size-small" /> : <CloseIcon className="size-small" />}
-          text={labelText}
-        />
-      );
+      return <Toggle id={controlId} pressed={def.value} onPressedChange={def.onChange} icon={def.value ? <CheckIcon className="size-small" /> : <CloseIcon className="size-small" />} text={labelText} />;
     }
     case "string":
       return <Input id={controlId} lazy value={def.value} onLazyChange={def.onChange} />;
@@ -13065,7 +12708,11 @@ const WindowMeasureTreeRow: React.FC<WindowMeasureTreeRowProps> = ({ left, right
     <div data-slot="window-measure-tree-row-left" className="relative min-w-0">
       {left}
     </div>
-    {right !== undefined ? <div data-slot="window-measure-tree-row-right" className="min-w-0">{right}</div> : null}
+    {right !== undefined ? (
+      <div data-slot="window-measure-tree-row-right" className="min-w-0">
+        {right}
+      </div>
+    ) : null}
   </div>
 );
 
@@ -13074,13 +12721,7 @@ export const WindowMeasuresTree: React.FC<{ children: React.ReactNode; className
   const { treeRootRef, handleTreePointerOver, handleTreePointerLeave, refreshTreeHoverPath } = useTreeHoverPathRootHandlers();
 
   return (
-    <div
-      ref={treeRootRef}
-      data-slot="window-measures-tree"
-      className={cn("pointer-events-auto w-full min-w-0", windowMeasureTreeChromeClass, className)}
-      onPointerOver={handleTreePointerOver}
-      onPointerLeave={handleTreePointerLeave}
-    >
+    <div ref={treeRootRef} data-slot="window-measures-tree" className={cn("pointer-events-auto w-full min-w-0", windowMeasureTreeChromeClass, className)} onPointerOver={handleTreePointerOver} onPointerLeave={handleTreePointerLeave}>
       <TreeHoverPathRefreshContext.Provider value={refreshTreeHoverPath}>
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>{children}</TreeContext.Provider>
       </TreeHoverPathRefreshContext.Provider>
@@ -13178,7 +12819,11 @@ export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ la
           {labelNode}
         </TreeAlignedRow>
       }
-      right={<div data-slot="window-measure-tree-leaf-body" className="min-w-0">{children}</div>}
+      right={
+        <div data-slot="window-measure-tree-leaf-body" className="min-w-0">
+          {children}
+        </div>
+      }
     />
   );
 };
@@ -13202,23 +12847,13 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
   if (folded) {
     return (
       <div data-slot="window-measures-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <ActionGroupItem
-          id={`${windowId}-window-measures-unfold`}
-          icon="chevron-left"
-          text="Window Options"
-          className={windowRailChromeLabelActionClass}
-          onClick={onUnfold}
-        />
+        <ActionGroupItem id={`${windowId}-window-measures-unfold`} icon="chevron-left" text="Window Options" className={windowRailChromeLabelActionClass} onClick={onUnfold} />
       </div>
     );
   }
 
   return (
-    <div
-      data-slot="window-measures-chrome"
-      data-expanded={expanded ? "true" : undefined}
-      className={windowMeasuresChromeClass}
-    >
+    <div data-slot="window-measures-chrome" data-expanded={expanded ? "true" : undefined} className={windowMeasuresChromeClass}>
       <ActionGroupItem
         id={`${windowId}-window-measures-span`}
         icon={expanded ? "minimize-2" : "maximize-2"}
@@ -13226,13 +12861,7 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
         className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerLeftClass)}
         onClick={expanded ? onCollapseExpand : onExpand}
       />
-      <ActionGroupItem
-        id={`${windowId}-window-measures-fold`}
-        icon="chevron-right"
-        text="Window Options"
-        className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerRightClass)}
-        onClick={onFold}
-      />
+      <ActionGroupItem id={`${windowId}-window-measures-fold`} icon="chevron-right" text="Window Options" className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerRightClass)} onClick={onFold} />
     </div>
   );
 };
@@ -13252,26 +12881,14 @@ const WindowEngagementChrome: React.FC<WindowEngagementChromeProps> = ({ windowI
   if (!expanded) {
     return (
       <div data-slot="window-engagement-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <ActionGroupItem
-          id={`${windowId}-window-engagement-toggle`}
-          icon="chevron-right"
-          text="Command"
-          className={windowRailChromeLabelActionClass}
-          onClick={onToggle}
-        />
+        <ActionGroupItem id={`${windowId}-window-engagement-toggle`} icon="chevron-right" text="Command" className={windowRailChromeLabelActionClass} onClick={onToggle} />
       </div>
     );
   }
 
   return (
     <div data-slot="window-engagement-chrome" data-expanded="true" className={windowMeasuresChromeClass}>
-      <ActionGroupItem
-        id={`${windowId}-window-engagement-toggle`}
-        icon="chevron-left"
-        text="Command"
-        className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerLeftClass)}
-        onClick={onToggle}
-      />
+      <ActionGroupItem id={`${windowId}-window-engagement-toggle`} icon="chevron-left" text="Command" className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerLeftClass)} onClick={onToggle} />
     </div>
   );
 };
@@ -13755,12 +13372,7 @@ const Panel: React.FC<PanelProps> = ({
         {showBackground ? (
           <>
             <div data-dim aria-hidden className={panelChromeFillLayerClass} />
-            <div
-              data-dim
-              data-slot="panel-chrome-frame"
-              aria-hidden
-              className={cn(panelChromeFrameLayerClass, panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered))}
-            />
+            <div data-dim data-slot="panel-chrome-frame" aria-hidden className={cn(panelChromeFrameLayerClass, panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered))} />
           </>
         ) : null}
         <Scrollable className="relative z-10 h-full">
@@ -14127,10 +13739,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
   const currentActiveTab = activeTabId ?? internalActiveTab;
   const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
   const showTabBar = sortedTabs.length > 0;
-  const activeTab = reactHostPort.useMemo(
-    () => sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0],
-    [currentActiveTab, sortedTabs],
-  );
+  const activeTab = reactHostPort.useMemo(() => sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0], [currentActiveTab, sortedTabs]);
   const activeTabTree = activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null;
 
   const handleTabChange = (tabId: string) => {
@@ -14161,17 +13770,10 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
         {visible ? (
           <>
             <div data-dim aria-hidden className={panelChromeFillLayerClass} />
-            <div
-              data-dim
-              data-slot="panel-chrome-frame"
-              aria-hidden
-              className={cn(panelChromeFrameLayerClass, panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered))}
-            />
+            <div data-dim data-slot="panel-chrome-frame" aria-hidden className={cn(panelChromeFrameLayerClass, panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered))} />
           </>
         ) : null}
-        {showTabBar ? (
-          <PanelTabBar activeTabId={currentActiveTab} onTabChange={handleTabChange} tabs={sortedTabs} variant="side" />
-        ) : null}
+        {showTabBar ? <PanelTabBar activeTabId={currentActiveTab} onTabChange={handleTabChange} tabs={sortedTabs} variant="side" /> : null}
         <Scrollable className="relative z-10 flex-1 min-h-0">
           <div data-slot="side-panel-content" className="flex min-h-0 flex-1 flex-col">
             {activeTabTree ? <SidePanelTreePane config={activeTabTree} /> : null}
@@ -14241,9 +13843,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
       <PanelGhostRoot data-panel="mobilePanel" className={cn("relative w-full text-foreground flex flex-col box-border overflow-hidden", className)} style={{ height: `${height}px` }}>
         <div data-dim aria-hidden className={panelChromeFillLayerClass} />
         <div data-dim data-slot="panel-chrome-frame" aria-hidden className={panelChromeFrameLayerClass} />
-        {showTabBar ? (
-          <PanelTabBar activeTabId={currentActiveTab} onTabChange={handleTabChange} tabs={sortedTabs} variant="mobile" />
-        ) : null}
+        {showTabBar ? <PanelTabBar activeTabId={currentActiveTab} onTabChange={handleTabChange} tabs={sortedTabs} variant="mobile" /> : null}
         <Scrollable className="relative z-10 flex-1 min-h-0">
           <div data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
             {activeTabTree ? (
@@ -14442,12 +14042,7 @@ export interface EngagementSelectControl {
 }
 
 /** @emoji 🎛 Optional engagement UI control for the active command step. */
-export type EngagementControl =
-  | EngagementSliderControl
-  | EngagementStepperControl
-  | EngagementRingControl
-  | EngagementToggleGroupControl
-  | EngagementSelectControl;
+export type EngagementControl = EngagementSliderControl | EngagementStepperControl | EngagementRingControl | EngagementToggleGroupControl | EngagementSelectControl;
 
 /** @emoji 🏷 i18n keys for window command chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
 export const UI_ENGAGEMENT = {
@@ -14471,9 +14066,7 @@ export const ENGAGEMENT_USER = {
 export function humanizeEngagementStepId(stepId: string): string {
   const trimmed = stepId.trim();
   if (!trimmed) return "";
-  return trimmed
-    .replace(/[._-]+/g, " ")
-    .replace(/\b\w/g, (character) => character.toUpperCase());
+  return trimmed.replace(/[._-]+/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
 /** @emoji ⌨️ Normalizes engagement command text: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`). */
@@ -14609,10 +14202,7 @@ export const uiFormControlBrowserDefaultProps = {
   spellCheck: false,
   "data-1p-ignore": true,
   "data-lpignore": "true",
-} as const satisfies Pick<
-  React.InputHTMLAttributes<HTMLInputElement>,
-  "autoComplete" | "autoCorrect" | "autoCapitalize" | "spellCheck" | "data-1p-ignore" | "data-lpignore"
->;
+} as const satisfies Pick<React.InputHTMLAttributes<HTMLInputElement>, "autoComplete" | "autoCorrect" | "autoCapitalize" | "spellCheck" | "data-1p-ignore" | "data-lpignore">;
 
 /** @emoji 🚫 Applies {@link uiFormControlBrowserDefaultProps} to a live form control (idempotent). */
 export function applyUiFormControlBrowserDefaults(element: HTMLInputElement | HTMLTextAreaElement): void {
@@ -14671,11 +14261,7 @@ export function installElementsSurfaceBrowserDefaultSuppression(bindings: Return
 /** @emoji ⌨️ True when the event target is already the active window engagement command field. */
 export function isEngagementCommandTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
-  return Boolean(
-    t.closest(
-      '[data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] [data-slot="input"], [data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] textarea',
-    ),
-  );
+  return Boolean(t.closest('[data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] [data-slot="input"], [data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] textarea'));
 }
 
 /** @emoji ⌨️ True when printable keys should route to the active window engagement command (skip other text fields). */
@@ -14692,9 +14278,7 @@ export function shouldRouteKeysToWindowEngagement(t: EventTarget | null): boolea
 /** @emoji ⌨️ Returns the window engagement command input, optionally requiring {@link EngagementProps.active}. */
 export function queryWindowEngagementInput(activeOnly = false): HTMLInputElement | null {
   const engagementActive = activeOnly ? '[data-active="true"]' : "";
-  return document.querySelector<HTMLInputElement>(
-    `[data-slot="window"][data-active="true"] [data-slot="engagement"]${engagementActive} [data-slot="input"]`,
-  );
+  return document.querySelector<HTMLInputElement>(`[data-slot="window"][data-active="true"] [data-slot="engagement"]${engagementActive} [data-slot="input"]`);
 }
 
 /** @emoji ⌨️ Focuses the command input in the active window engagement overlay, if present. */
@@ -14706,10 +14290,7 @@ export function focusActiveEngagementInput(): boolean {
 }
 
 /** @emoji 👁 True when the window engagement chrome should render (active session, non-empty command, or explicit activation via the command button / typing). */
-export function windowEngagementChromeVisible(
-  engagement: EngagementSpec | undefined,
-  zone: { readonly activated: boolean },
-): boolean {
+export function windowEngagementChromeVisible(engagement: EngagementSpec | undefined, zone: { readonly activated: boolean }): boolean {
   if (!engagement) return false;
   if (engagement.sessionActive) return true;
   if (engagement.input?.value?.trim()) return true;
@@ -14717,12 +14298,7 @@ export function windowEngagementChromeVisible(
 }
 
 /** @emoji 👁 True when an empty engagement should hide after pointer or focus leaves its zone (ignores popover targets and active command). */
-export function shouldDismissEmptyWindowEngagement(
-  engagement: EngagementSpec | undefined,
-  relatedTarget: EventTarget | null,
-  zoneRoot: HTMLElement | null,
-  zone: { readonly commandActive: boolean },
-): boolean {
+export function shouldDismissEmptyWindowEngagement(engagement: EngagementSpec | undefined, relatedTarget: EventTarget | null, zoneRoot: HTMLElement | null, zone: { readonly commandActive: boolean }): boolean {
   if (zone.commandActive) return false;
   if (engagement?.sessionActive) return false;
   if (engagement?.input?.value?.trim()) return false;
@@ -14757,10 +14333,7 @@ export function applyEngagementSpaceAction(input: EngagementInput, draft: string
 }
 
 /** @emoji 🔁 Routes Space outside the engagement field: idle empty → {@link EngagementInput.onRepeatLast}; session or typed draft → {@link EngagementInput.onSubmit}. */
-export function routeWindowEngagementSpace(
-  engagement: EngagementSpec | undefined,
-  event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">,
-): boolean {
+export function routeWindowEngagementSpace(engagement: EngagementSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
   const input = engagement?.input;
   if (!input || event.defaultPrevented || event.isComposing) return false;
   if (event.key !== " " || event.ctrlKey || event.metaKey || event.altKey) return false;
@@ -14966,11 +14539,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
   return (
     <div data-slot="engagement-control" data-control-kind="ring" className="flex min-w-0 flex-col items-center gap-half px-half">
       {label ? <span className="text-element text-xs">{label}</span> : null}
-      <Ring
-        id={control.id}
-        orbs={orbs}
-        onOrbSelect={(orbId) => control.onSelect?.(orbId)}
-      />
+      <Ring id={control.id} orbs={orbs} onOrbSelect={(orbId) => control.onSelect?.(orbId)} />
     </div>
   );
 }
@@ -14985,15 +14554,11 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
   const draft = normalizeEngagementCommandText(isControlledInput ? (input?.value ?? "") : uncontrolledDraft);
   const primaryStepStatus = sessionActive ? status?.find((row) => row.id === "engagement-step") : undefined;
   const secondaryStatus = sessionActive ? status?.filter((row) => row.id !== "engagement-step") : status;
-  const commandPlaceholder =
-    input?.placeholder ?? (sessionActive ? commandActivePlaceholderLabel || ENGAGEMENT_USER.commandPlaceholderActive : commandPlaceholderLabel || ENGAGEMENT_USER.commandPlaceholder);
+  const commandPlaceholder = input?.placeholder ?? (sessionActive ? commandActivePlaceholderLabel || ENGAGEMENT_USER.commandPlaceholderActive : commandPlaceholderLabel || ENGAGEMENT_USER.commandPlaceholder);
   const [possiblesExpanded, setPossiblesExpanded] = reactHostPort.useState(false);
   const [activePossibleIndex, setActivePossibleIndex] = reactHostPort.useState(0);
   const engagementRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const filteredPossibles = reactHostPort.useMemo(
-    () => filterEngagementPossibles(draft, possibleEngagements ?? []),
-    [draft, possibleEngagements],
-  );
+  const filteredPossibles = reactHostPort.useMemo(() => filterEngagementPossibles(draft, possibleEngagements ?? []), [draft, possibleEngagements]);
 
   reactHostPort.useEffect(() => {
     setActivePossibleIndex((index) => (filteredPossibles.length ? Math.min(index, filteredPossibles.length - 1) : 0));
@@ -15005,14 +14570,11 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
 
   const hasOptions = !!options?.length;
   const hasInput = !!input;
-  const hasControl = !!control || !!(controls?.length);
+  const hasControl = !!control || !!controls?.length;
   const hasStatus = !!status?.length;
   const hasPossibles = !!possibleEngagements?.length;
   const showPossiblesList = hasPossibles && possiblesExpanded && filteredPossibles.length > 0;
-  const inlineCompletion = reactHostPort.useMemo(
-    () => (showPossiblesList ? null : engagementActiveInlineCompletion(draft, filteredPossibles, activePossibleIndex)),
-    [activePossibleIndex, draft, filteredPossibles, showPossiblesList],
-  );
+  const inlineCompletion = reactHostPort.useMemo(() => (showPossiblesList ? null : engagementActiveInlineCompletion(draft, filteredPossibles, activePossibleIndex)), [activePossibleIndex, draft, filteredPossibles, showPossiblesList]);
 
   const applyDraft = reactHostPort.useCallback(
     (value: string) => {
@@ -15066,196 +14628,173 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
         data-active={active ? "true" : undefined}
         data-session-active={sessionActive ? "true" : undefined}
         data-possibles-open={showPossiblesList ? "true" : undefined}
-        className={cn(
-          "pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half",
-          sessionActive && "ring-accent/35 rounded-sm bg-window/95 ring-1 shadow-sm",
-          className,
-        )}
+        className={cn("pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half", sessionActive && "ring-accent/35 rounded-sm bg-window/95 ring-1 shadow-sm", className)}
       >
-      {primaryStepStatus ? (
-        <div
-          data-slot="engagement-step-heading"
-          className="text-foreground px-half text-sm font-medium leading-tight"
-        >
-          {primaryStepStatus.content}
-        </div>
-      ) : null}
-      {hasInput ? (
-        <Popover
-          open={showPossiblesList}
-          onOpenChange={(open) => {
-            if (!open) setPossiblesExpanded(false);
-          }}
-        >
-          <PopoverAnchor asChild>
-            <div data-slot="engagement-command-row" className="flex w-full min-w-0 items-stretch gap-half">
-              <div
-                data-slot="engagement-command-input"
-                className="relative grid min-w-0 flex-1 [&_[data-slot=input-root]]:col-start-1 [&_[data-slot=input-root]]:row-start-1 [&_[data-slot=input-root]]:min-w-0"
-              >
-                <Input
-                  id={
-                    !input!.id || input!.id === "engagement-input" || isInternalChromeControlId(input!.id)
-                      ? UI_ENGAGEMENT.command
-                      : input!.id
-                  }
-                  className="relative z-[1] min-w-0 flex-1 bg-transparent"
-                  value={draft}
-                  tabIndex={active ? 0 : -1}
-                  onChange={(event) => applyDraft(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Escape") {
-                      if (showPossiblesList) {
-                        event.preventDefault();
-                        setPossiblesExpanded(false);
+        {primaryStepStatus ? (
+          <div data-slot="engagement-step-heading" className="text-foreground px-half text-sm font-medium leading-tight">
+            {primaryStepStatus.content}
+          </div>
+        ) : null}
+        {hasInput ? (
+          <Popover
+            open={showPossiblesList}
+            onOpenChange={(open) => {
+              if (!open) setPossiblesExpanded(false);
+            }}
+          >
+            <PopoverAnchor asChild>
+              <div data-slot="engagement-command-row" className="flex w-full min-w-0 items-stretch gap-half">
+                <div data-slot="engagement-command-input" className="relative grid min-w-0 flex-1 [&_[data-slot=input-root]]:col-start-1 [&_[data-slot=input-root]]:row-start-1 [&_[data-slot=input-root]]:min-w-0">
+                  <Input
+                    id={!input!.id || input!.id === "engagement-input" || isInternalChromeControlId(input!.id) ? UI_ENGAGEMENT.command : input!.id}
+                    className="relative z-[1] min-w-0 flex-1 bg-transparent"
+                    value={draft}
+                    tabIndex={active ? 0 : -1}
+                    onChange={(event) => applyDraft(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") {
+                        if (showPossiblesList) {
+                          event.preventDefault();
+                          setPossiblesExpanded(false);
+                          return;
+                        }
+                        if (input!.onAbort) {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          input!.onAbort();
+                        }
                         return;
                       }
-                      if (input!.onAbort) {
+                      if (event.key === "Tab" && !showPossiblesList && inlineCompletion) {
                         event.preventDefault();
-                        event.stopPropagation();
-                        input!.onAbort();
+                        applyDraft(inlineCompletion.prefix + inlineCompletion.suffix);
+                        return;
                       }
-                      return;
-                    }
-                    if (event.key === "Tab" && !showPossiblesList && inlineCompletion) {
-                      event.preventDefault();
-                      applyDraft(inlineCompletion.prefix + inlineCompletion.suffix);
-                      return;
-                    }
-                    if (event.key === "ArrowDown" && filteredPossibles.length) {
-                      event.preventDefault();
-                      setActivePossibleIndex((index) => (index + 1) % filteredPossibles.length);
-                      return;
-                    }
-                    if (event.key === "ArrowUp" && filteredPossibles.length) {
-                      event.preventDefault();
-                      setActivePossibleIndex((index) => (index - 1 + filteredPossibles.length) % filteredPossibles.length);
-                      return;
-                    }
-                    if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey) {
-                      event.preventDefault();
-                      if (shouldActivateEngagementPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
-                      applyEngagementSpaceAction(input!, draft, sessionActive);
-                      return;
-                    }
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      if (shouldActivateEngagementPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
-                      input!.onSubmit?.(draft);
-                    }
-                  }}
-                  placeholder={commandPlaceholder}
-                  disabled={input!.disabled}
-                  aria-label={commandPlaceholder}
-                />
-                {inlineCompletion ? (
-                  <div
-                    aria-hidden
-                    data-slot="engagement-inline-completion"
-                    className="text-foreground pointer-events-none col-start-1 row-start-1 flex h-medium min-w-0 items-center overflow-hidden p-single text-sm md:text-sm"
-                  >
-                    <span className="relative inline-flex min-w-0 truncate">
-                      <span className="truncate text-transparent">{draft}</span>
-                      <span className="absolute inset-0 truncate font-semibold text-foreground">{inlineCompletion.prefix}</span>
-                    </span>
-                    <span data-slot="engagement-inline-suffix" className="truncate text-muted-foreground">
-                      {inlineCompletion.suffix}
-                    </span>
-                  </div>
+                      if (event.key === "ArrowDown" && filteredPossibles.length) {
+                        event.preventDefault();
+                        setActivePossibleIndex((index) => (index + 1) % filteredPossibles.length);
+                        return;
+                      }
+                      if (event.key === "ArrowUp" && filteredPossibles.length) {
+                        event.preventDefault();
+                        setActivePossibleIndex((index) => (index - 1 + filteredPossibles.length) % filteredPossibles.length);
+                        return;
+                      }
+                      if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey) {
+                        event.preventDefault();
+                        if (shouldActivateEngagementPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
+                        applyEngagementSpaceAction(input!, draft, sessionActive);
+                        return;
+                      }
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        if (shouldActivateEngagementPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
+                        input!.onSubmit?.(draft);
+                      }
+                    }}
+                    placeholder={commandPlaceholder}
+                    disabled={input!.disabled}
+                    aria-label={commandPlaceholder}
+                  />
+                  {inlineCompletion ? (
+                    <div aria-hidden data-slot="engagement-inline-completion" className="text-foreground pointer-events-none col-start-1 row-start-1 flex h-medium min-w-0 items-center overflow-hidden p-single text-sm md:text-sm">
+                      <span className="relative inline-flex min-w-0 truncate">
+                        <span className="truncate text-transparent">{draft}</span>
+                        <span className="absolute inset-0 truncate font-semibold text-foreground">{inlineCompletion.prefix}</span>
+                      </span>
+                      <span data-slot="engagement-inline-suffix" className="truncate text-muted-foreground">
+                        {inlineCompletion.suffix}
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+                {hasPossibles ? (
+                  <Action
+                    id={UI_ENGAGEMENT.suggestions}
+                    aria-expanded={possiblesExpanded}
+                    aria-label={ENGAGEMENT_USER.suggestionsAria}
+                    data-slot="engagement-possibles-toggle"
+                    icon={possiblesExpanded ? <ChevronDownIcon className="size-small" /> : <ChevronRightIcon className="size-small" />}
+                    onClick={() => setPossiblesExpanded((open) => !open)}
+                  />
                 ) : null}
               </div>
-              {hasPossibles ? (
-                <Action
-                  id={UI_ENGAGEMENT.suggestions}
-                  aria-expanded={possiblesExpanded}
-                  aria-label={ENGAGEMENT_USER.suggestionsAria}
-                  data-slot="engagement-possibles-toggle"
-                  icon={possiblesExpanded ? <ChevronDownIcon className="size-small" /> : <ChevronRightIcon className="size-small" />}
-                  onClick={() => setPossiblesExpanded((open) => !open)}
-                />
-              ) : null}
-            </div>
-          </PopoverAnchor>
-          {hasPossibles ? (
-            <PopoverContent
-              data-slot="engagement-autocomplete"
-              className="w-[min(100vw-1rem,28rem)] p-0"
-              align="end"
-              onOpenAutoFocus={(event) => event.preventDefault()}
-            >
-              <Command shouldFilter={false}>
-                <CommandList>
-                  {filteredPossibles.length ? (
-                    <CommandGroup>
-                      {filteredPossibles.map((item, index) => (
-                        <CommandItem
-                          key={item.id}
-                          value={item.id}
-                          data-active={index === activePossibleIndex ? "true" : undefined}
-                          className={cn(index === activePossibleIndex && interactiveActiveFillClass)}
-                          onPointerDown={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            selectPossible(item);
-                          }}
-                          onMouseEnter={() => setActivePossibleIndex(index)}
-                          onSelect={() => selectPossible(item)}
-                        >
-                          <span className="truncate">{engagementHighlightedLabel(item.label, draft, item.detail)}</span>
-                          {item.detail ? <span className="ml-auto truncate text-xs text-muted-foreground">{item.detail}</span> : null}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  ) : (
-                    <CommandEmpty>{ENGAGEMENT_USER.noMatches}</CommandEmpty>
-                  )}
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          ) : null}
-        </Popover>
-      ) : null}
-      {control ? <EngagementControlView control={control} /> : null}
-      {controls?.map((row) => (
-        <EngagementControlView key={row.id ?? row.label ?? row.kind} control={row} />
-      ))}
-      {secondaryStatus?.length ? (
-        <div data-slot="engagement-status" className="flex flex-wrap items-center justify-center gap-single text-xs text-muted-foreground">
-          {secondaryStatus.map((item) => (
-            <span key={item.id} data-slot="engagement-status-item">
-              {item.content}
-            </span>
-          ))}
-        </div>
-      ) : null}
-      {hasOptions ? (
-        <div
-          data-slot="engagement-options"
-          data-step-options={sessionActive ? "true" : undefined}
-          className="flex flex-wrap items-center justify-center gap-half"
-          role="group"
-          aria-label={sessionActive ? stepOptionsAriaLabel || ENGAGEMENT_USER.commandsAria : ENGAGEMENT_USER.commandsAria}
-        >
-          <ButtonGroup id={UI_ENGAGEMENT.commands}>
-            {options!.map((option) => {
-              const commandLabel = normalizeEngagementCommandText(option.label);
-              const optionControlId = isInternalChromeControlId(option.id) ? undefined : option.id;
-              return (
-              <ButtonGroupItem
-                key={option.id}
-                id={optionControlId}
-                aria-label={commandLabel}
-                icon={option.icon}
-                text={commandLabel}
-                className={cn(option.pressed && interactiveActiveFillClass)}
-                onClick={option.onPress}
-                disabled={option.disabled}
-              />
-            );
-            })}
-          </ButtonGroup>
-        </div>
-      ) : null}
+            </PopoverAnchor>
+            {hasPossibles ? (
+              <PopoverContent data-slot="engagement-autocomplete" className="w-[min(100vw-1rem,28rem)] p-0" align="end" onOpenAutoFocus={(event) => event.preventDefault()}>
+                <Command shouldFilter={false}>
+                  <CommandList>
+                    {filteredPossibles.length ? (
+                      <CommandGroup>
+                        {filteredPossibles.map((item, index) => (
+                          <CommandItem
+                            key={item.id}
+                            value={item.id}
+                            data-active={index === activePossibleIndex ? "true" : undefined}
+                            className={cn(index === activePossibleIndex && interactiveActiveFillClass)}
+                            onPointerDown={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              selectPossible(item);
+                            }}
+                            onMouseEnter={() => setActivePossibleIndex(index)}
+                            onSelect={() => selectPossible(item)}
+                          >
+                            <span className="truncate">{engagementHighlightedLabel(item.label, draft, item.detail)}</span>
+                            {item.detail ? <span className="ml-auto truncate text-xs text-muted-foreground">{item.detail}</span> : null}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    ) : (
+                      <CommandEmpty>{ENGAGEMENT_USER.noMatches}</CommandEmpty>
+                    )}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            ) : null}
+          </Popover>
+        ) : null}
+        {control ? <EngagementControlView control={control} /> : null}
+        {controls?.map((row) => (
+          <EngagementControlView key={row.id ?? row.label ?? row.kind} control={row} />
+        ))}
+        {secondaryStatus?.length ? (
+          <div data-slot="engagement-status" className="flex flex-wrap items-center justify-center gap-single text-xs text-muted-foreground">
+            {secondaryStatus.map((item) => (
+              <span key={item.id} data-slot="engagement-status-item">
+                {item.content}
+              </span>
+            ))}
+          </div>
+        ) : null}
+        {hasOptions ? (
+          <div
+            data-slot="engagement-options"
+            data-step-options={sessionActive ? "true" : undefined}
+            className="flex flex-wrap items-center justify-center gap-half"
+            role="group"
+            aria-label={sessionActive ? stepOptionsAriaLabel || ENGAGEMENT_USER.commandsAria : ENGAGEMENT_USER.commandsAria}
+          >
+            <ButtonGroup id={UI_ENGAGEMENT.commands}>
+              {options!.map((option) => {
+                const commandLabel = normalizeEngagementCommandText(option.label);
+                const optionControlId = isInternalChromeControlId(option.id) ? undefined : option.id;
+                return (
+                  <ButtonGroupItem
+                    key={option.id}
+                    id={optionControlId}
+                    aria-label={commandLabel}
+                    icon={option.icon}
+                    text={commandLabel}
+                    className={cn(option.pressed && interactiveActiveFillClass)}
+                    onClick={option.onPress}
+                    disabled={option.disabled}
+                  />
+                );
+              })}
+            </ButtonGroup>
+          </div>
+        ) : null}
       </div>
     </LevelProvider>
   );
@@ -15348,7 +14887,27 @@ export function windowEngagementZoneMaxWidthStyle(measuresReservePx: number, has
   return { width: `min(28rem, calc(100% - ${reservePx}px))` };
 }
 
-const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls, measures, engagement, active = false, onActivate, fill = false }) => {
+const Window: React.FC<WindowProps> = ({
+  id,
+  children,
+  onDoubleClick,
+  className = "",
+  isVisible = true,
+  loading = false,
+  error = null,
+  skeleton,
+  showControls = false,
+  onOpenInNewWindow,
+  onMaximize,
+  onMinimize,
+  onClose,
+  controls,
+  measures,
+  engagement,
+  active = false,
+  onActivate,
+  fill = false,
+}) => {
   const bgClass = "bg-window";
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
   const windowBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -15366,9 +14925,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     return Math.max(windowMeasuresMinWidthPx, Math.min(windowMeasuresMaxWidthPx, Math.round(bodyWidth) - 8));
   }, []);
   const measuresMaxWidthPx = readMeasuresMaxWidthPx();
-  const measuresOverlaySizeStyle = measuresUnfolded
-    ? ({ width: measuresWidthPx, maxWidth: "calc(100% - 0.5rem)", maxHeight: "100%" } satisfies React.CSSProperties)
-    : undefined;
+  const measuresOverlaySizeStyle = measuresUnfolded ? ({ width: measuresWidthPx, maxWidth: "calc(100% - 0.5rem)", maxHeight: "100%" } satisfies React.CSSProperties) : undefined;
   const engagementZoneSizeStyle = windowEngagementZoneMaxWidthStyle(measuresReservePx, !!measures);
   const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
   const engagementDraftRef = reactHostPort.useRef("");
@@ -15381,8 +14938,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     setEngagementActivated(next);
   }, []);
   const engagementCommandActive = engagementActivated || engagementZoneFocused;
-  const showEngagementChrome =
-    active && !measuresExpanded && windowEngagementChromeVisible(engagement, { activated: engagementActivated });
+  const showEngagementChrome = active && !measuresExpanded && windowEngagementChromeVisible(engagement, { activated: engagementActivated });
 
   reactHostPort.useEffect(() => {
     if (!measuresExpanded) return;
@@ -15486,20 +15042,9 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
       {controls}
       {(showControls || onOpenInNewWindow || onMaximize || onMinimize || onClose) && (
         <ActionGroup id={`${id}-window-controls`}>
-          {onOpenInNewWindow && (
-            <ActionGroupItem id={`${id}-window-controls-external`} onClick={onOpenInNewWindow} icon={<ExternalLinkIcon />} text="New Window" />
-          )}
-          {(onMaximize || onMinimize) && (
-            <ActionGroupItem
-              id={`${id}-window-controls-maximize`}
-              onClick={onMaximize ?? onMinimize}
-              icon={onMinimize ? <Minimize2Icon /> : <Maximize2Icon />}
-              text={onMinimize ? "Unfocus" : "Focus"}
-            />
-          )}
-          {onClose && (
-            <ActionGroupItem id={`${id}-window-controls-close`} onClick={onClose} icon={<CloseIcon />} text="Close" />
-          )}
+          {onOpenInNewWindow && <ActionGroupItem id={`${id}-window-controls-external`} onClick={onOpenInNewWindow} icon={<ExternalLinkIcon />} text="New Window" />}
+          {(onMaximize || onMinimize) && <ActionGroupItem id={`${id}-window-controls-maximize`} onClick={onMaximize ?? onMinimize} icon={onMinimize ? <Minimize2Icon /> : <Maximize2Icon />} text={onMinimize ? "Unfocus" : "Focus"} />}
+          {onClose && <ActionGroupItem id={`${id}-window-controls-close`} onClick={onClose} icon={<CloseIcon />} text="Close" />}
         </ActionGroup>
       )}
     </div>
@@ -15513,20 +15058,10 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
         data-active={active ? "true" : undefined}
         onDoubleClick={onDoubleClick}
         onPointerDownCapture={() => onActivate?.()}
-        className={cn(
-          "relative flex w-full min-w-0 flex-col overflow-hidden",
-          fill ? "h-full min-h-0" : "h-auto max-h-full self-start",
-          bgClass,
-          getLevelZClass("window"),
-          className,
-        )}
+        className={cn("relative flex w-full min-w-0 flex-col overflow-hidden", fill ? "h-full min-h-0" : "h-auto max-h-full self-start", bgClass, getLevelZClass("window"), className)}
       >
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
-        <div
-          ref={windowBodyRef}
-          data-slot="window-body"
-          className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}
-        >
+        <div ref={windowBodyRef} data-slot="window-body" className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}>
           {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
           {measures ? (
             <GlassTierProvider tier="windowOptions">
@@ -15535,14 +15070,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
                 data-slot="window-measures-overlay"
                 data-expanded={measuresExpanded ? "true" : undefined}
                 style={measuresOverlaySizeStyle}
-                className={cn(
-                  windowMeasuresOverlayClass,
-                  measuresFolded
-                    ? windowMeasuresOverlayFoldedClass
-                    : measuresExpanded
-                      ? windowMeasuresOverlayExpandedClass
-                      : !measuresOverlaySizeStyle && windowMeasuresRailWidthClass,
-                )}
+                className={cn(windowMeasuresOverlayClass, measuresFolded ? windowMeasuresOverlayFoldedClass : measuresExpanded ? windowMeasuresOverlayExpandedClass : !measuresOverlaySizeStyle && windowMeasuresRailWidthClass)}
               >
                 <div
                   data-dim
@@ -15593,20 +15121,14 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
                 data-slot="window-engagement-overlay"
                 data-expanded={showEngagementChrome ? "true" : undefined}
                 style={showEngagementChrome ? engagementZoneSizeStyle : undefined}
-                className={cn(
-                  windowEngagementOverlayClass,
-                  !showEngagementChrome && windowEngagementOverlayFoldedClass,
-                )}
+                className={cn(windowEngagementOverlayClass, !showEngagementChrome && windowEngagementOverlayFoldedClass)}
               >
                 <div
                   ref={engagementZoneRef}
                   data-dim
                   data-slot="window-engagement-zone"
                   data-folded={showEngagementChrome ? undefined : "true"}
-                  className={cn(
-                    windowMeasuresStackClass,
-                    !showEngagementChrome && windowMeasuresStackFoldedClass,
-                  )}
+                  className={cn(windowMeasuresStackClass, !showEngagementChrome && windowMeasuresStackFoldedClass)}
                   onFocusCapture={() => {
                     setEngagementZoneFocused(true);
                   }}
@@ -16782,23 +16304,7 @@ export type GumballPose = {
 };
 
 /** @emoji 🎛 Per-handle drag kinds for the unified gumball. */
-export type GumballHandleKind =
-  | "moveX"
-  | "moveY"
-  | "moveZ"
-  | "moveXY"
-  | "moveYZ"
-  | "moveXZ"
-  | "rotateX"
-  | "rotateY"
-  | "rotateZ"
-  | "scaleX"
-  | "scaleY"
-  | "scaleZ"
-  | "scaleXY"
-  | "scaleYZ"
-  | "scaleXZ"
-  | "scaleUniform";
+export type GumballHandleKind = "moveX" | "moveY" | "moveZ" | "moveXY" | "moveYZ" | "moveXZ" | "rotateX" | "rotateY" | "rotateZ" | "scaleX" | "scaleY" | "scaleZ" | "scaleXY" | "scaleYZ" | "scaleXZ" | "scaleUniform";
 
 /** @emoji 🎛 Visibility and snap settings for {@link UnifiedGumball}. */
 export interface GumballConfig {
@@ -16967,10 +16473,7 @@ export function gumballEffectiveSnapValue(configSnap: number | undefined, shiftK
 }
 
 /** @emoji 🎛 Active gumball drag snap steps for translate / rotate / scale. */
-export function gumballResolveDragSnaps(
-  config: GumballConfig,
-  shiftKey: boolean,
-): { readonly translationSnap: number | undefined; readonly rotationSnap: number | undefined; readonly scaleSnap: number | undefined } {
+export function gumballResolveDragSnaps(config: GumballConfig, shiftKey: boolean): { readonly translationSnap: number | undefined; readonly rotationSnap: number | undefined; readonly scaleSnap: number | undefined } {
   return {
     translationSnap: gumballEffectiveSnapValue(config.translationSnap, shiftKey, config.shiftTranslationSnap ?? 0),
     rotationSnap: gumballEffectiveSnapValue(config.rotationSnap, shiftKey, config.shiftRotationSnap ?? GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP),
@@ -17045,11 +16548,7 @@ function gumballWorldPointToLocalOffset(point: GumballVec3, pivot: GumballVec3, 
 }
 
 /** @emoji 📐 Scale factors for a 2D plane scale drag; uniform uses radial distance in the plane. */
-export function gumballPlaneScaleFactors(
-  startLocal: readonly [number, number],
-  currentLocal: readonly [number, number],
-  uniform = false,
-): readonly [number, number] {
+export function gumballPlaneScaleFactors(startLocal: readonly [number, number], currentLocal: readonly [number, number], uniform = false): readonly [number, number] {
   if (uniform) {
     const factor = gumballAxisScaleFactor(Math.hypot(startLocal[0], startLocal[1]), Math.hypot(currentLocal[0], currentLocal[1]));
     return [factor, factor];
@@ -17197,9 +16696,20 @@ export function gumballPreviewWorldExtent(camera: THREE.Camera, pivotWorld: THRE
 }
 
 function gumballAxisPreviewPoints(axis: GumballPreviewAxis, half: number): [number, number, number][] {
-  if (axis === "x") return [[-half, 0, 0], [half, 0, 0]];
-  if (axis === "y") return [[0, -half, 0], [0, half, 0]];
-  return [[0, 0, -half], [0, 0, half]];
+  if (axis === "x")
+    return [
+      [-half, 0, 0],
+      [half, 0, 0],
+    ];
+  if (axis === "y")
+    return [
+      [0, -half, 0],
+      [0, half, 0],
+    ];
+  return [
+    [0, 0, -half],
+    [0, 0, half],
+  ];
 }
 
 /** @emoji 🎨 Resolved gumball chrome aligned with spatial selection / hover tokens. */
@@ -17325,7 +16835,7 @@ function GumballPlanePreviewMesh(props: { readonly orientation: "xy" | "yz" | "x
     mesh.scale.set(size, size, 1);
     invalidate();
   });
-  const rotation = props.orientation === "yz" ? [0, Math.PI / 2, 0] as const : props.orientation === "xz" ? ([-Math.PI / 2, 0, 0] as const) : ([0, 0, 0] as const);
+  const rotation = props.orientation === "yz" ? ([0, Math.PI / 2, 0] as const) : props.orientation === "xz" ? ([-Math.PI / 2, 0, 0] as const) : ([0, 0, 0] as const);
   return (
     <mesh ref={meshRef} rotation={rotation} renderOrder={997}>
       <planeGeometry args={[1, 1]} />
@@ -17439,13 +16949,7 @@ function gumballBindHandleRaycast(root: THREE.Object3D): void {
 }
 
 /** @emoji 🎛 Raycasts a gumball root subtree for a handle at a client-space pointer. */
-function gumballRaycastOwnedAtClientPoint(
-  camera: THREE.Camera,
-  canvas: HTMLElement,
-  clientX: number,
-  clientY: number,
-  root: THREE.Object3D,
-): { readonly kind: GumballHandleKind; readonly object: THREE.Object3D } | null {
+function gumballRaycastOwnedAtClientPoint(camera: THREE.Camera, canvas: HTMLElement, clientX: number, clientY: number, root: THREE.Object3D): { readonly kind: GumballHandleKind; readonly object: THREE.Object3D } | null {
   const rect = canvas.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) return null;
   root.updateWorldMatrix(true, false);
@@ -17475,13 +16979,7 @@ export function gumballKindFromRaycastObject(object: THREE.Object3D | null): Gum
 }
 
 /** @emoji 🎛 Raycasts the scene for a gumball handle at a client-space pointer (any depth; not limited to the closest scene hit). */
-export function gumballRaycastAtClientPoint(
-  scene: THREE.Scene,
-  camera: THREE.Camera,
-  canvas: HTMLElement,
-  clientX: number,
-  clientY: number,
-): { readonly kind: GumballHandleKind; readonly object: THREE.Object3D } | null {
+export function gumballRaycastAtClientPoint(scene: THREE.Scene, camera: THREE.Camera, canvas: HTMLElement, clientX: number, clientY: number): { readonly kind: GumballHandleKind; readonly object: THREE.Object3D } | null {
   const rect = canvas.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) return null;
   const ndc = gumballNdcFromPointer(clientX, clientY, rect);
@@ -17541,13 +17039,7 @@ function GumballHandleMesh(props: {
   readonly children: React.ReactNode;
 }): React.ReactElement {
   const rootRef = reactHostPort.useRef<THREE.Group>(null);
-  const doubleSided =
-    props.kind === "moveXY" ||
-    props.kind === "moveYZ" ||
-    props.kind === "moveXZ" ||
-    props.kind === "scaleXY" ||
-    props.kind === "scaleYZ" ||
-    props.kind === "scaleXZ";
+  const doubleSided = props.kind === "moveXY" || props.kind === "moveYZ" || props.kind === "moveXZ" || props.kind === "scaleXY" || props.kind === "scaleYZ" || props.kind === "scaleXZ";
   const visual = gumballResolveHandleVisual(props.baseColor, props.visualState, props.palette);
   const material = reactHostPort.useMemo(
     () =>
@@ -18025,15 +17517,7 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
 
   return sceneHostPort.fiber.createPortal(
     <group ref={groupRef} frustumCulled={false}>
-      <GumballHandles
-        config={config}
-        palette={palette}
-        hovered={hovered}
-        active={activeKind}
-        onPointerDown={beginDrag}
-        onPointerOver={handlePointerOver}
-        onPointerOut={handlePointerOut}
-      />
+      <GumballHandles config={config} palette={palette} hovered={hovered} active={activeKind} onPointerDown={beginDrag} onPointerOver={handlePointerOver} onPointerOut={handlePointerOut} />
     </group>,
     scene,
   );
@@ -18620,22 +18104,7 @@ interface TableDraggableRowProps<T> {
   onRowMouseLeave?: (row: T, index: number) => void;
 }
 
-function TableDraggableRow<T>({
-  row,
-  rowId,
-  index,
-  isSelected,
-  customRowClassName,
-  activeId,
-  rowHeightClass,
-  visibleColumns,
-  dragDrop,
-  onRowClick,
-  onRowContextMenu,
-  onRowDoubleClick,
-  onRowMouseEnter,
-  onRowMouseLeave,
-}: TableDraggableRowProps<T>) {
+function TableDraggableRow<T>({ row, rowId, index, isSelected, customRowClassName, activeId, rowHeightClass, visibleColumns, dragDrop, onRowClick, onRowContextMenu, onRowDoubleClick, onRowMouseEnter, onRowMouseLeave }: TableDraggableRowProps<T>) {
   const canDragRow = !dragDrop?.canDrag || dragDrop.canDrag(rowId);
   const {
     attributes,
@@ -18657,13 +18126,7 @@ function TableDraggableRow<T>({
     setDraggableRef(node);
     setDroppableRef(node);
   };
-  const baseRowClassName = cn(
-    borderNormalBottomClass,
-    rowHeightClass,
-    tableRowInteractiveClass,
-    isSelected && tableRowSelectedClass,
-    isOver && !isSelected && "bg-hover-interactive-fill text-emphasized ring-2 ring-active",
-  );
+  const baseRowClassName = cn(borderNormalBottomClass, rowHeightClass, tableRowInteractiveClass, isSelected && tableRowSelectedClass, isOver && !isSelected && "bg-hover-interactive-fill text-emphasized ring-2 ring-active");
   const isDragging = activeId === rowId || isDraggingHook;
   return (
     <tr
@@ -19008,10 +18471,7 @@ export interface FileNodeKind {
 }
 
 /** @emoji 📁 Cell value for one {@link FileNodeDescriptor} column on a {@link FileNode}. */
-export type FileNodeDescriptorValue =
-  | { readonly presentation: "text"; readonly text: string }
-  | { readonly presentation: "time"; readonly iso: string }
-  | { readonly presentation: "avatar"; readonly name: string; readonly icon?: string };
+export type FileNodeDescriptorValue = { readonly presentation: "text"; readonly text: string } | { readonly presentation: "time"; readonly iso: string } | { readonly presentation: "avatar"; readonly name: string; readonly icon?: string };
 
 /** @emoji 📁 Schema driving {@link VirtualFileSystem} columns and glyphs. */
 export interface VirtualFileSystemSchema {
@@ -19152,10 +18612,7 @@ export function resolveVirtualFileSystemDescriptorKind(schema: VirtualFileSystem
 }
 
 /** @emoji 📁 Finds the first {@link FileNodeDescriptor} binding for a column id across all file node kinds. */
-export function resolveVirtualFileSystemDescriptorBinding(
-  schema: VirtualFileSystemSchema,
-  descriptorColumnId: string,
-): { readonly binding: FileNodeDescriptor; readonly descriptorKind: DescriptorKind } | undefined {
+export function resolveVirtualFileSystemDescriptorBinding(schema: VirtualFileSystemSchema, descriptorColumnId: string): { readonly binding: FileNodeDescriptor; readonly descriptorKind: DescriptorKind } | undefined {
   for (const fileNodeKind of Object.values(schema.fileNodeKinds)) {
     const binding = fileNodeKind.descriptors.find((entry) => entry.id === descriptorColumnId);
     if (!binding) continue;
@@ -19193,10 +18650,7 @@ export function buildVirtualFileSystemDescriptorValues(
 }
 
 /** @emoji 📁 Renders one descriptor cell for a {@link VirtualFileSystemRow}. */
-export function renderVirtualFileSystemDescriptorCell(
-  descriptorKind: DescriptorKind,
-  value: FileNodeDescriptorValue | undefined,
-): React.ReactNode {
+export function renderVirtualFileSystemDescriptorCell(descriptorKind: DescriptorKind, value: FileNodeDescriptorValue | undefined): React.ReactNode {
   if (!value || value.presentation !== descriptorKind.presentation) return "";
   switch (value.presentation) {
     case "text":
@@ -19333,22 +18787,11 @@ export function virtualFileSystemKindIcon(fileNodeKindId: string): IconName {
 /** @emoji 📁 True when a VFS row `icon` value is a remote or data URL image, not a schema icon id. */
 export function isVirtualFileSystemRemoteIcon(icon: string): boolean {
   const trimmed = icon.trim();
-  return (
-    trimmed.startsWith("http://") ||
-    trimmed.startsWith("https://") ||
-    trimmed.startsWith("data:") ||
-    trimmed.startsWith("/") ||
-    trimmed.startsWith("./")
-  );
+  return trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("data:") || trimmed.startsWith("/") || trimmed.startsWith("./");
 }
 
 /** @emoji 📁 DFS-flattens visible rows: only children of expanded parents in `childrenByParentId`. */
-export function buildVirtualFileSystemVisibleRows(
-  rootId: string,
-  childrenByParentId: ReadonlyMap<string, readonly VirtualFileSystemNode[]>,
-  expandedIds: ReadonlySet<string>,
-  root?: VirtualFileSystemNode,
-): VirtualFileSystemRow[] {
+export function buildVirtualFileSystemVisibleRows(rootId: string, childrenByParentId: ReadonlyMap<string, readonly VirtualFileSystemNode[]>, expandedIds: ReadonlySet<string>, root?: VirtualFileSystemNode): VirtualFileSystemRow[] {
   const rows: VirtualFileSystemRow[] = [];
   const visit = (node: VirtualFileSystemNode, level: number) => {
     const hasChildren = Boolean(node.hasChildren);
@@ -19436,12 +18879,8 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
   dragDrop,
   extraColumns = [],
 }) => {
-  const [uncontrolledSelectedRowIds, setUncontrolledSelectedRowIds] = reactHostPort.useState<Set<string>>(
-    () => new Set(normalizeVirtualFileSystemSelectedRowIds(defaultSelectedRowIds, selectionMode)),
-  );
-  const selectionAnchorRowIdRef = reactHostPort.useRef<string | undefined>(
-    normalizeVirtualFileSystemSelectedRowIds(defaultSelectedRowIds, selectionMode)[0],
-  );
+  const [uncontrolledSelectedRowIds, setUncontrolledSelectedRowIds] = reactHostPort.useState<Set<string>>(() => new Set(normalizeVirtualFileSystemSelectedRowIds(defaultSelectedRowIds, selectionMode)));
+  const selectionAnchorRowIdRef = reactHostPort.useRef<string | undefined>(normalizeVirtualFileSystemSelectedRowIds(defaultSelectedRowIds, selectionMode)[0]);
   const orderedRowIds = reactHostPort.useMemo(() => getVirtualFileSystemOrderedRowIds(rows), [rows]);
   const resolvedSelectedRowIds = reactHostPort.useMemo(() => {
     if (controlledSelectedRowIds === undefined) return uncontrolledSelectedRowIds;
@@ -19644,12 +19083,7 @@ export function windowTemplatePaletteTreeDragController(): TreeDragAndDropContro
         if (typeof payload.windowKindId !== "string") {
           return;
         }
-        const label =
-          typeof sourceItem.label === "string"
-            ? sourceItem.label
-            : typeof sourceItem.label === "number"
-              ? String(sourceItem.label)
-              : "Window";
+        const label = typeof sourceItem.label === "string" ? sourceItem.label : typeof sourceItem.label === "number" ? String(sourceItem.label) : "Window";
         beginWindowTemplateDrag({ payload, label });
       } catch {
         /* ignore */
@@ -19664,10 +19098,7 @@ export function windowTemplatePaletteTreeDragController(): TreeDragAndDropContro
   };
 }
 
-export type ModeCanvasDropTarget =
-  | { kind: "tab"; stackPath: string; index: number }
-  | { kind: "split"; stackPath: string; side: "left" | "right" | "top" | "bottom" }
-  | { kind: "root-split"; side: "left" | "right" | "top" | "bottom" };
+export type ModeCanvasDropTarget = { kind: "tab"; stackPath: string; index: number } | { kind: "split"; stackPath: string; side: "left" | "right" | "top" | "bottom" } | { kind: "root-split"; side: "left" | "right" | "top" | "bottom" };
 
 export interface WindowTemplateDropPayload {
   readonly windowKindId: string;
@@ -19796,9 +19227,7 @@ function removeAbsentWindowsFromLayout(layout: WindowLayoutNode, allowed: Readon
   }
   return {
     ...layout,
-    children: layout.children
-      .map((child) => removeAbsentWindowsFromLayout(child as WindowLayoutNode, allowed))
-      .filter((child) => child.kind !== "stack" || child.children.length > 0) as (WindowLayoutAxisNode | WindowLayoutStackNode)[],
+    children: layout.children.map((child) => removeAbsentWindowsFromLayout(child as WindowLayoutNode, allowed)).filter((child) => child.kind !== "stack" || child.children.length > 0) as (WindowLayoutAxisNode | WindowLayoutStackNode)[],
   };
 }
 
@@ -19811,9 +19240,7 @@ function removeWindowFromLayout(layout: WindowLayoutNode, windowId: string): Win
     const activeId = layout.activeId === windowId ? children[0]?.id : layout.activeId;
     return { ...layout, children, activeId };
   }
-  const children = layout.children
-    .map((child) => removeWindowFromLayout(child as WindowLayoutNode, windowId))
-    .filter((child): child is WindowLayoutAxisNode | WindowLayoutStackNode => child !== null);
+  const children = layout.children.map((child) => removeWindowFromLayout(child as WindowLayoutNode, windowId)).filter((child): child is WindowLayoutAxisNode | WindowLayoutStackNode => child !== null);
   if (children.length === 0) return null;
   return collapseLayout({ ...layout, children });
 }
@@ -19829,12 +19256,7 @@ function insertWindowAsTab(layout: WindowLayoutNode, stackPath: ModeLayoutPath, 
 }
 
 /** @emoji 📑 Merges every tab from a dragged stack into another stack at the given index. */
-function mergeStackTabsIntoStack(
-  layout: WindowLayoutNode,
-  targetStackPath: ModeLayoutPath,
-  stack: WindowLayoutStackNode,
-  index: number,
-): WindowLayoutNode {
+function mergeStackTabsIntoStack(layout: WindowLayoutNode, targetStackPath: ModeLayoutPath, stack: WindowLayoutStackNode, index: number): WindowLayoutNode {
   const insertAt = index < 0 ? undefined : index;
   let result = layout;
   stack.children.forEach((child, offset) => {
@@ -19876,10 +19298,7 @@ function splitRootWithWindow(layout: WindowLayoutNode, windowId: string, side: M
 }
 
 /** @emoji 🪟 Detaches a tab stack from the layout tree for stack-level drag-dock. */
-function extractStackFromLayout(
-  layout: WindowLayoutNode,
-  stackPath: ModeLayoutPath,
-): { layout: WindowLayoutNode | null; stack: WindowLayoutStackNode | null } {
+function extractStackFromLayout(layout: WindowLayoutNode, stackPath: ModeLayoutPath): { layout: WindowLayoutNode | null; stack: WindowLayoutStackNode | null } {
   const stack = readLayoutAtPath(layout, stackPath);
   if (!stack || stack.kind !== "stack") return { layout, stack: null };
   if (!stackPath) return { layout: null, stack };
@@ -19942,13 +19361,7 @@ export function modePerpendicularJoinSeparators(node: WindowLayoutNode): readonl
 }
 
 /** @emoji ↔️ Corner join specs for a main-axis separator that crosses perpendicular child splits. */
-export function modeJoinCornerSpecsForSeparator(
-  parentPath: ModeLayoutPath,
-  parentKind: "row" | "column",
-  separatorIndex: number,
-  prevChild: WindowLayoutNode,
-  nextChild: WindowLayoutNode,
-): ResizableJoinCornerSpec[] {
+export function modeJoinCornerSpecsForSeparator(parentPath: ModeLayoutPath, parentKind: "row" | "column", separatorIndex: number, prevChild: WindowLayoutNode, nextChild: WindowLayoutNode): ResizableJoinCornerSpec[] {
   const specs: ResizableJoinCornerSpec[] = [];
   const pushSpecs = (beforeSide: boolean, crossPath: ModeLayoutPath, crossChild: WindowLayoutNode) => {
     const joins = modePerpendicularJoinSeparators(crossChild);
@@ -19974,12 +19387,7 @@ export function modeJoinCornerSpecsForSeparator(
 }
 
 /** @emoji ↔️ Corner join specs on a cross-axis separator where it meets a parent split. */
-export function modeJoinCornerSpecsForCrossSeparator(
-  crossPath: ModeLayoutPath,
-  crossKind: "row" | "column",
-  crossSeparatorIndex: number,
-  parent: { path: ModeLayoutPath; kind: "row" | "column"; panelIndex: number },
-): ResizableJoinCornerSpec[] {
+export function modeJoinCornerSpecsForCrossSeparator(crossPath: ModeLayoutPath, crossKind: "row" | "column", crossSeparatorIndex: number, parent: { path: ModeLayoutPath; kind: "row" | "column"; panelIndex: number }): ResizableJoinCornerSpec[] {
   if ((parent.kind === "row" && crossKind !== "column") || (parent.kind === "column" && crossKind !== "row")) return [];
   const parentSeparatorIndex = parent.panelIndex === 0 ? parent.panelIndex + 1 : parent.panelIndex;
   const edgeSide: ResizableJoinEdgeSide = parent.panelIndex === 0 ? "trailing" : "leading";
@@ -19998,13 +19406,7 @@ export function modeJoinCornerSpecsForCrossSeparator(
 }
 
 /** @emoji ↔️ Percentage delta for one panel pair on an axis separator. */
-export function applyAxisResizeDelta(
-  layout: WindowLayoutNode,
-  axisPath: ModeLayoutPath,
-  separatorIndex: number,
-  deltaPct: number,
-  minPct = 8,
-): WindowLayoutNode {
+export function applyAxisResizeDelta(layout: WindowLayoutNode, axisPath: ModeLayoutPath, separatorIndex: number, deltaPct: number, minPct = 8): WindowLayoutNode {
   if (Math.abs(deltaPct) < 0.001) return layout;
   return updateLayoutAtPath(layout, axisPath, (node) => {
     if (node.kind !== "row" && node.kind !== "column") return node;
@@ -20027,13 +19429,7 @@ export function applyAxisResizeDelta(
 }
 
 /** @emoji ↔️ Pointer delta for a corner join on perpendicular row/column axes. */
-export function resolveJoinCornerResizeDeltas(
-  parentKind: "row" | "column",
-  deltaXPx: number,
-  deltaYPx: number,
-  mainAxisPixelSize: number,
-  crossAxisPixelSize: number,
-): { mainDeltaPct: number; crossDeltaPct: number } {
+export function resolveJoinCornerResizeDeltas(parentKind: "row" | "column", deltaXPx: number, deltaYPx: number, mainAxisPixelSize: number, crossAxisPixelSize: number): { mainDeltaPct: number; crossDeltaPct: number } {
   if (mainAxisPixelSize <= 0 || crossAxisPixelSize <= 0) return { mainDeltaPct: 0, crossDeltaPct: 0 };
   if (parentKind === "row") {
     return {
@@ -20048,13 +19444,7 @@ export function resolveJoinCornerResizeDeltas(
 }
 
 /** @emoji ↔️ Applies a separator percentage delta to a live resizable group layout. */
-export function applyAxisGroupLayoutDelta(
-  layout: Record<string, number>,
-  axisPath: ModeLayoutPath,
-  separatorIndex: number,
-  deltaPct: number,
-  minPct = 8,
-): Record<string, number> {
+export function applyAxisGroupLayoutDelta(layout: Record<string, number>, axisPath: ModeLayoutPath, separatorIndex: number, deltaPct: number, minPct = 8): Record<string, number> {
   const leadingId = modeJoinPath(axisPath, separatorIndex - 1);
   const trailingId = modeJoinPath(axisPath, separatorIndex);
   const leadingSize = layout[leadingId];
@@ -20073,27 +19463,12 @@ export function applyAxisGroupLayoutDelta(
 export function modeAxisGroupLayout(layout: WindowLayoutNode, axisPath: ModeLayoutPath): Record<string, number> {
   const node = axisPath ? readLayoutAtPath(layout, axisPath) : layout;
   if (!node || (node.kind !== "row" && node.kind !== "column")) return {};
-  return Object.fromEntries(
-    node.children.map((child, index) => [modeJoinPath(axisPath, index), child.size ?? 100 / node.children.length]),
-  );
+  return Object.fromEntries(node.children.map((child, index) => [modeJoinPath(axisPath, index), child.size ?? 100 / node.children.length]));
 }
 
 /** @emoji ↔️ Applies a corner grab delta to both the main and cross layout axes. */
-export function applyModeJoinCornerResize(
-  layout: WindowLayoutNode,
-  spec: ResizableJoinCornerSpec,
-  deltaXPx: number,
-  deltaYPx: number,
-  mainAxisPixelSize: number,
-  crossAxisPixelSize: number,
-): WindowLayoutNode {
-  const { mainDeltaPct, crossDeltaPct } = resolveJoinCornerResizeDeltas(
-    spec.parentKind,
-    deltaXPx,
-    deltaYPx,
-    mainAxisPixelSize,
-    crossAxisPixelSize,
-  );
+export function applyModeJoinCornerResize(layout: WindowLayoutNode, spec: ResizableJoinCornerSpec, deltaXPx: number, deltaYPx: number, mainAxisPixelSize: number, crossAxisPixelSize: number): WindowLayoutNode {
+  const { mainDeltaPct, crossDeltaPct } = resolveJoinCornerResizeDeltas(spec.parentKind, deltaXPx, deltaYPx, mainAxisPixelSize, crossAxisPixelSize);
   let next = applyAxisResizeDelta(layout, spec.mainAxisPath, spec.mainSeparatorIndex, mainDeltaPct);
   next = applyAxisResizeDelta(next, spec.crossAxisPath, spec.crossSeparatorIndex, crossDeltaPct);
   return next;
@@ -20121,7 +19496,10 @@ function setActiveWindowInLayout(layout: WindowLayoutNode, windowId: string): Wi
 
 function resolveModeLayout(windows: readonly ModeWindowDescriptor[], layout?: WindowLayoutNode): WindowLayoutNode {
   const base = layout ?? createEvenWindowLayout(windows.map((window) => window.id));
-  return reconcileWindows(base, windows.map((window) => window.id));
+  return reconcileWindows(
+    base,
+    windows.map((window) => window.id),
+  );
 }
 
 /** @emoji 🪟 Inserts a new window leaf at a dock drop target (external template drag). */
@@ -20135,10 +19513,7 @@ export function insertWindowAtDropZone(layout: WindowLayoutNode, windowId: strin
 
 //#region 🧭ModeDockDrag
 
-type ModeDropZone =
-  | { kind: "tab"; stackPath: ModeLayoutPath; index: number }
-  | { kind: "split"; stackPath: ModeLayoutPath; side: ModeDockSide }
-  | { kind: "root-split"; side: ModeDockSide };
+type ModeDropZone = { kind: "tab"; stackPath: ModeLayoutPath; index: number } | { kind: "split"; stackPath: ModeLayoutPath; side: ModeDockSide } | { kind: "root-split"; side: ModeDockSide };
 
 type ModeDragKind = "tab" | "stack";
 
@@ -20225,11 +19600,7 @@ function resolveModeSplitSideInBody(localX: number, localY: number, bodyWidth: n
 }
 
 /** @emoji 📐 Half-panel rectangle for split drop preview inside a stack body (origin top-left of body). */
-function computeModeSplitPreviewInBody(
-  bodyWidth: number,
-  bodyHeight: number,
-  side: ModeDockSide,
-): { left: number; top: number; width: number; height: number } {
+function computeModeSplitPreviewInBody(bodyWidth: number, bodyHeight: number, side: ModeDockSide): { left: number; top: number; width: number; height: number } {
   const halfWidth = bodyWidth / 2;
   const halfHeight = bodyHeight / 2;
   if (side === "left") return { left: 0, top: 0, width: halfWidth, height: bodyHeight };
@@ -20238,12 +19609,7 @@ function computeModeSplitPreviewInBody(
   return { left: 0, top: bodyHeight - halfHeight, width: bodyWidth, height: halfHeight };
 }
 
-function computeModeDropZone(
-  pointerX: number,
-  pointerY: number,
-  stackTargets: ReadonlyMap<ModeLayoutPath, ModeStackDropTargets>,
-  modeRect: DOMRect | null,
-): ModeDropZone | null {
+function computeModeDropZone(pointerX: number, pointerY: number, stackTargets: ReadonlyMap<ModeLayoutPath, ModeStackDropTargets>, modeRect: DOMRect | null): ModeDropZone | null {
   for (const [stackPath, targets] of stackTargets) {
     if (targets.tabBar && pointerInRect(pointerX, pointerY, targets.tabBar)) {
       return { kind: "tab", stackPath, index: computeTabInsertIndex(pointerX, targets.tabBarElement) };
@@ -20256,12 +19622,7 @@ function computeModeDropZone(
     return { kind: "split", stackPath, side };
   }
   if (!modeRect || !pointerInRect(pointerX, pointerY, modeRect)) return null;
-  const side = resolveModeSplitSideInBody(
-    pointerX - modeRect.left,
-    pointerY - modeRect.top,
-    modeRect.width,
-    modeRect.height,
-  );
+  const side = resolveModeSplitSideInBody(pointerX - modeRect.left, pointerY - modeRect.top, modeRect.width, modeRect.height);
   return { kind: "root-split", side };
 }
 
@@ -20269,20 +19630,17 @@ function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: Mode
   const { dragKind, windowId, stackPath: sourcePath, tabIndex } = drag;
   if (dragKind === "stack") {
     const targetStack = zone.kind === "tab" ? readLayoutAtPath(layout, zone.stackPath) : null;
-    const targetAnchorId =
-      targetStack?.kind === "stack" ? targetStack.activeId ?? targetStack.children[0]?.id : undefined;
+    const targetAnchorId = targetStack?.kind === "stack" ? (targetStack.activeId ?? targetStack.children[0]?.id) : undefined;
     const { layout: withoutSource, stack } = extractStackFromLayout(layout, sourcePath);
     if (!stack) return layout;
     const base = withoutSource ?? { kind: "stack", children: [] };
     if (zone.kind === "root-split") return splitRootWithStack(base, stack, zone.side);
     if (zone.stackPath === sourcePath) return layout;
     if (zone.kind === "split") {
-      const splitTargetPath =
-        targetAnchorId !== undefined ? resolveStackPathForWindowId(base, targetAnchorId) ?? zone.stackPath : zone.stackPath;
+      const splitTargetPath = targetAnchorId !== undefined ? (resolveStackPathForWindowId(base, targetAnchorId) ?? zone.stackPath) : zone.stackPath;
       return splitWithStack(base, splitTargetPath, stack, zone.side);
     }
-    const mergeTargetPath =
-      targetAnchorId !== undefined ? resolveStackPathForWindowId(base, targetAnchorId) ?? zone.stackPath : zone.stackPath;
+    const mergeTargetPath = targetAnchorId !== undefined ? (resolveStackPathForWindowId(base, targetAnchorId) ?? zone.stackPath) : zone.stackPath;
     return mergeStackTabsIntoStack(base, mergeTargetPath, stack, zone.index);
   }
   if (zone.kind === "root-split") return splitRootWithWindow(layout, windowId, zone.side);
@@ -20317,29 +19675,16 @@ interface ModeTabInsertPreview {
 type ModeDockTabDisplayItem = { id: string; title: string; preview?: "ghost" };
 
 /** @emoji 📑 Tab bar row with ghost tab(s) at the drop index so layout matches the committed drop. */
-function modeDockTabsWithInsertPreview(
-  tabs: readonly { id: string; title: string }[],
-  insertPreview: ModeTabInsertPreview | null,
-  stackPath: ModeLayoutPath,
-  ghostTabs: readonly { id: string; title: string }[],
-): ModeDockTabDisplayItem[] {
+function modeDockTabsWithInsertPreview(tabs: readonly { id: string; title: string }[], insertPreview: ModeTabInsertPreview | null, stackPath: ModeLayoutPath, ghostTabs: readonly { id: string; title: string }[]): ModeDockTabDisplayItem[] {
   if (!insertPreview || insertPreview.stackPath !== stackPath || ghostTabs.length === 0) return tabs.map((tab) => ({ ...tab }));
   const insertAt = Math.min(Math.max(0, insertPreview.index), tabs.length);
   const row: ModeDockTabDisplayItem[] = tabs.map((tab) => ({ ...tab }));
-  row.splice(
-    insertAt,
-    0,
-    ...ghostTabs.map((tab) => ({ id: tab.id, title: tab.title, preview: "ghost" as const })),
-  );
+  row.splice(insertAt, 0, ...ghostTabs.map((tab) => ({ id: tab.id, title: tab.title, preview: "ghost" as const })));
   return row;
 }
 
 /** @emoji 📑 Tab descriptors shown as insert-preview ghosts for the current drag. */
-function modeDockDragInsertTabs(
-  layout: WindowLayoutNode,
-  drag: ModeDragState,
-  windowTitle: (windowId: string) => string,
-): readonly { id: string; title: string }[] {
+function modeDockDragInsertTabs(layout: WindowLayoutNode, drag: ModeDragState, windowTitle: (windowId: string) => string): readonly { id: string; title: string }[] {
   if (drag.dragKind === "tab") return [{ id: drag.windowId, title: windowTitle(drag.windowId) }];
   const stack = readLayoutAtPath(layout, drag.stackPath);
   if (!stack || stack.kind !== "stack") return [{ id: drag.windowId, title: windowTitle(drag.windowId) }];
@@ -20352,8 +19697,7 @@ function resolveModeTabInsertPreview(drag: ModeDragState | null, zone: ModeDropZ
   return { stackPath: zone.stackPath, index: zone.index };
 }
 
-const modeDockTabInsertPreviewClass =
-  "mx-half my-half flex h-[calc(100%-var(--spacing-single))] min-w-[5.5rem] max-w-[12rem] shrink-0 items-center rounded-sm border-2 border-accent bg-accent/20 px-single text-xs text-foreground/80 select-none";
+const modeDockTabInsertPreviewClass = "mx-half my-half flex h-[calc(100%-var(--spacing-single))] min-w-[5.5rem] max-w-[12rem] shrink-0 items-center rounded-sm border-2 border-accent bg-accent/20 px-single text-xs text-foreground/80 select-none";
 
 //#endregion 🧭ModeDockDrag
 
@@ -20373,30 +19717,15 @@ interface ModeDockDragPreviewProps {
 /** @emoji 🪟 Floating tab or window preview shown while docking. */
 const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, content, className, style, tabOnly = false }) =>
   tabOnly ? (
-    <div
-      data-slot="mode-dock-drag-preview"
-      className={cn(
-        "pointer-events-none flex max-w-[12rem] shrink-0 items-center gap-half px-single text-xs text-element shadow-md select-none",
-        modeDockInactiveTabClass,
-        className,
-      )}
-      style={style}
-    >
+    <div data-slot="mode-dock-drag-preview" className={cn("pointer-events-none flex max-w-[12rem] shrink-0 items-center gap-half px-single text-xs text-element shadow-md select-none", modeDockInactiveTabClass, className)} style={style}>
       <span className="truncate">{title}</span>
     </div>
   ) : (
-    <div
-      data-slot="mode-dock-drag-preview"
-      className={cn("pointer-events-none flex flex-col overflow-hidden rounded shadow-lg", className)}
-      style={style}
-    >
+    <div data-slot="mode-dock-drag-preview" className={cn("pointer-events-none flex flex-col overflow-hidden rounded shadow-lg", className)} style={style}>
       <div data-slot="mode-dock-drag-preview-cap" className={cn("relative z-[2] flex h-medium shrink-0 items-stretch px-single", windowCapFrameClass)}>
         <span className="flex min-w-0 flex-1 items-center truncate text-xs">{title}</span>
       </div>
-      <div
-        data-slot="mode-dock-drag-preview-body"
-        className={cn("relative min-h-0 flex-1 overflow-hidden p-single opacity-95", windowBodyFrameClass)}
-      >
+      <div data-slot="mode-dock-drag-preview-body" className={cn("relative min-h-0 flex-1 overflow-hidden p-single opacity-95", windowBodyFrameClass)}>
         {content ? <div className="h-full w-full overflow-hidden bg-window [&_*]:pointer-events-none">{content}</div> : null}
       </div>
     </div>
@@ -20440,16 +19769,14 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const capFrameClass = stackGloballyActive ? windowCapFrameActiveClass : windowCapFrameClass;
   const gapFrameClass = stackGloballyActive ? windowGapFrameActiveClass : windowGapFrameClass;
   const baselineBottomClass = stackGloballyActive ? "border-b-active-base" : borderNormalBottomClass;
-  const displayTabs = reactHostPort.useMemo(
-    () =>
-      modeDockTabsWithInsertPreview(tabs, dock?.tabInsertPreview ?? null, stackPath, dock?.draggedInsertTabs ?? []),
-    [tabs, dock?.tabInsertPreview, stackPath, dock?.draggedInsertTabs],
-  );
+  const displayTabs = reactHostPort.useMemo(() => modeDockTabsWithInsertPreview(tabs, dock?.tabInsertPreview ?? null, stackPath, dock?.draggedInsertTabs ?? []), [tabs, dock?.tabInsertPreview, stackPath, dock?.draggedInsertTabs]);
   const displayChromeGrid =
-    displayTabs.length > 1 ? modeDockChromeGridPlacement(
-        displayTabs.map(({ id, title }) => ({ id, title })),
-        activeId,
-      ) : undefined;
+    displayTabs.length > 1
+      ? modeDockChromeGridPlacement(
+          displayTabs.map(({ id, title }) => ({ id, title })),
+          activeId,
+        )
+      : undefined;
 
   const renderGhostTab = (tab: { id: string; title: string }) => (
     <div data-slot="mode-dock-tab-insert-preview" className={modeDockTabInsertPreviewClass} aria-hidden>
@@ -20491,25 +19818,11 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   );
 
   const controlsCap = (
-    <div
-      data-slot="mode-dock-controls-cap"
-      className={cn(
-        perTabActiveChrome
-          ? stackGloballyActive
-            ? windowControlsCapActiveSplitClass
-            : windowControlsCapClass
-          : stackGloballyActive
-            ? windowControlsCapActiveClass
-            : windowControlsCapClass,
-      )}
-    >
+    <div data-slot="mode-dock-controls-cap" className={cn(perTabActiveChrome ? (stackGloballyActive ? windowControlsCapActiveSplitClass : windowControlsCapClass) : stackGloballyActive ? windowControlsCapActiveClass : windowControlsCapClass)}>
       <button
         type="button"
         data-slot="mode-dock-maximize"
-        className={cn(
-          "flex h-medium w-auto items-center justify-center border-0 bg-transparent transition-colors px-single gap-single text-element",
-          interactiveHoverClass,
-        )}
+        className={cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
         onClick={() => dock?.toggleMaximize(stackPath)}
       >
         {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
@@ -20519,10 +19832,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
         <button
           type="button"
           data-slot="mode-dock-close"
-          className={cn(
-            "flex h-medium w-auto items-center justify-center border-0 bg-transparent transition-colors px-single gap-single text-element",
-            interactiveHoverClass,
-          )}
+          className={cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
           onClick={() => dock?.closeWindow(activeId)}
         >
           <CloseIcon className="size-small" />
@@ -20535,11 +19845,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const tabGap = (
     <div
       data-slot="mode-dock-tab-gap"
-      className={cn(
-        "relative min-h-medium min-w-0 flex-1 cursor-grab bg-canvas active:cursor-grabbing",
-        perTabActiveChrome ? "z-0" : "z-[1]",
-        gapFrameClass,
-      )}
+      className={cn("relative min-h-medium min-w-0 flex-1 cursor-grab bg-canvas active:cursor-grabbing", perTabActiveChrome ? "z-0" : "z-[1]", gapFrameClass)}
       onPointerUp={(event) => {
         if (event.button !== 0) return;
         dock?.clearPendingDrag?.(event.pointerId);
@@ -20554,37 +19860,24 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
 
   if (perTabActiveChrome && displayChromeGrid && chromeBody) {
     return (
-      <div
-        data-slot="mode-dock-chrome-column"
-        className="relative z-[2] grid h-full min-h-0 min-w-0 flex-1 grid-rows-[auto_minmax(0,1fr)]"
-        style={{ gridTemplateColumns: displayChromeGrid.templateColumns }}
-      >
-        <div
-          ref={ref}
-          data-slot="mode-dock-tabbar"
-          className="grid min-h-medium min-w-0 items-stretch"
-          style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: displayChromeGrid.templateColumns }}
-        >
+      <div data-slot="mode-dock-chrome-column" className="relative z-[2] grid h-full min-h-0 min-w-0 flex-1 grid-rows-[auto_minmax(0,1fr)]" style={{ gridTemplateColumns: displayChromeGrid.templateColumns }}>
+        <div ref={ref} data-slot="mode-dock-tabbar" className="grid min-h-medium min-w-0 items-stretch" style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: displayChromeGrid.templateColumns }}>
           {displayTabs.map((tab, index) =>
             tab.preview === "ghost" ? (
-              <div
-                key={`ghost-${tab.id}`}
-                className="relative z-20 flex min-h-medium items-stretch justify-self-start"
-                style={{ gridColumn: displayChromeGrid.tabCol(index) }}
-              >
+              <div key={`ghost-${tab.id}`} className="relative z-20 flex min-h-medium items-stretch justify-self-start" style={{ gridColumn: displayChromeGrid.tabCol(index) }}>
                 {renderGhostTab(tab)}
               </div>
             ) : (
               <div
                 key={tab.id}
                 data-slot={activeId === tab.id && stackGloballyActive ? "mode-dock-tab-active-cell" : "mode-dock-tab-cell"}
-                className={cn(
-                  "relative flex min-h-medium items-stretch justify-self-start overflow-visible",
-                  activeId === tab.id && stackGloballyActive ? "z-10" : "z-20",
-                )}
+                className={cn("relative flex min-h-medium items-stretch justify-self-start overflow-visible", activeId === tab.id && stackGloballyActive ? "z-10" : "z-20")}
                 style={{ gridColumn: displayChromeGrid.tabCol(index) }}
               >
-                {renderTab(tab, tabs.findIndex((row) => row.id === tab.id))}
+                {renderTab(
+                  tab,
+                  tabs.findIndex((row) => row.id === tab.id),
+                )}
               </div>
             ),
           )}
@@ -20595,10 +19888,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
             {controlsCap}
           </div>
         </div>
-        <div
-          className="flex min-h-0 min-w-0 flex-col overflow-hidden"
-          style={{ gridColumn: displayChromeGrid.bodyColumnSpan, gridRow: 2 }}
-        >
+        <div className="flex min-h-0 min-w-0 flex-col overflow-hidden" style={{ gridColumn: displayChromeGrid.bodyColumnSpan, gridRow: 2 }}>
           {chromeBody}
         </div>
       </div>
@@ -20607,18 +19897,17 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
 
   return (
     <div ref={ref} data-slot="mode-dock-tabbar" className="relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent">
-      <div
-        data-slot="mode-dock-tab-cap"
-        className={cn(
-          "relative flex min-h-medium min-w-0 max-w-[calc(100%-var(--size-medium))] shrink-0 items-stretch",
-          capFrameClass,
-        )}
-      >
+      <div data-slot="mode-dock-tab-cap" className={cn("relative flex min-h-medium min-w-0 max-w-[calc(100%-var(--size-medium))] shrink-0 items-stretch", capFrameClass)}>
         <div data-slot="mode-dock-tabs" className="flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden">
           {displayTabs.map((tab) =>
-            tab.preview === "ghost"
-              ? <div key={`ghost-${tab.id}`}>{renderGhostTab(tab)}</div>
-              : renderTab(tab, tabs.findIndex((row) => row.id === tab.id)),
+            tab.preview === "ghost" ? (
+              <div key={`ghost-${tab.id}`}>{renderGhostTab(tab)}</div>
+            ) : (
+              renderTab(
+                tab,
+                tabs.findIndex((row) => row.id === tab.id),
+              )
+            ),
           )}
         </div>
       </div>
@@ -20659,61 +19948,27 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   const chromeGrid = tabs.length > 1 ? modeDockChromeGridPlacement(tabs, activeId) : undefined;
 
   const stackBody = (
-    <div
-      ref={bodyRef}
-      data-slot="mode-dock-stack-body"
-      className={cn(
-        "relative z-0 flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single",
-        stackGloballyActive ? windowBodyFrameActiveClass : windowBodyFrameClass,
-      )}
-    >
-      {activeDescriptor ? (
-        (() => {
-          const { children, engagement, ...windowProps } = activeDescriptor;
-          return (
-            <Window
-              {...windowProps}
-              fill={activeDescriptor.fill ?? true}
-              engagement={engagement}
-              active={activeWindowId === activeId}
-              onActivate={() => dock?.activateWindow(activeId!)}
-            >
-              {children}
-            </Window>
-          );
-        })()
-      ) : null}
+    <div ref={bodyRef} data-slot="mode-dock-stack-body" className={cn("relative z-0 flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", stackGloballyActive ? windowBodyFrameActiveClass : windowBodyFrameClass)}>
+      {activeDescriptor
+        ? (() => {
+            const { children, engagement, ...windowProps } = activeDescriptor;
+            return (
+              <Window {...windowProps} fill={activeDescriptor.fill ?? true} engagement={engagement} active={activeWindowId === activeId} onActivate={() => dock?.activateWindow(activeId!)}>
+                {children}
+              </Window>
+            );
+          })()
+        : null}
     </div>
   );
 
   return (
-    <div
-      data-slot="mode-dock-stack"
-      data-stack-path={stackPath}
-      data-active={stackGloballyActive ? "true" : undefined}
-      className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-transparent"
-    >
+    <div data-slot="mode-dock-stack" data-stack-path={stackPath} data-active={stackGloballyActive ? "true" : undefined} className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-transparent">
       {chromeGrid ? (
-        <ModeDockTabBar
-          ref={tabBarRef}
-          stackPath={stackPath}
-          tabs={tabs}
-          activeId={activeId}
-          activeWindowId={activeWindowId}
-          chromeGrid={chromeGrid}
-          chromeBody={stackBody}
-          onSelectTab={(windowId) => dock?.activateWindow(windowId)}
-        />
+        <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} chromeGrid={chromeGrid} chromeBody={stackBody} onSelectTab={(windowId) => dock?.activateWindow(windowId)} />
       ) : (
         <>
-          <ModeDockTabBar
-            ref={tabBarRef}
-            stackPath={stackPath}
-            tabs={tabs}
-            activeId={activeId}
-            activeWindowId={activeWindowId}
-            onSelectTab={(windowId) => dock?.activateWindow(windowId)}
-          />
+          <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} />
           {stackBody}
         </>
       )}
@@ -20740,12 +19995,7 @@ interface ModeRenderParentAxis {
   panelIndex: number;
 }
 
-function renderModeDockNode(
-  node: WindowLayoutNode,
-  path: ModeLayoutPath,
-  ctx: ModeRenderContext,
-  parentAxis?: ModeRenderParentAxis,
-): React.ReactNode {
+function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: ModeRenderContext, parentAxis?: ModeRenderParentAxis): React.ReactNode {
   if (node.kind === "stack") {
     return <ModeDockStack key={path || "root-stack"} stackPath={path} node={node} windowsById={ctx.windowsById} activeWindowId={ctx.activeWindowId} />;
   }
@@ -20755,18 +20005,8 @@ function renderModeDockNode(
     const childPath = modeJoinPath(path, index);
     if (index > 0) {
       const prevChild = node.children[index - 1]!;
-      const joinCorners = [
-        ...modeJoinCornerSpecsForSeparator(path, node.kind, index, prevChild, child),
-        ...(parentAxis ? modeJoinCornerSpecsForCrossSeparator(path, node.kind, index, parentAxis) : []),
-      ];
-      panels.push(
-        <ResizableHandle
-          key={`sep-${childPath}`}
-          joinCorners={joinCorners}
-          onJoinCornerResize={ctx.onJoinCornerResize}
-          orientation={orientation}
-        />,
-      );
+      const joinCorners = [...modeJoinCornerSpecsForSeparator(path, node.kind, index, prevChild, child), ...(parentAxis ? modeJoinCornerSpecsForCrossSeparator(path, node.kind, index, parentAxis) : [])];
+      panels.push(<ResizableHandle key={`sep-${childPath}`} joinCorners={joinCorners} onJoinCornerResize={ctx.onJoinCornerResize} orientation={orientation} />);
     }
     panels.push(
       <ResizablePanel key={childPath} id={childPath} defaultSize={child.size ?? 100 / node.children.length} minSize={8} className="box-border min-h-0 min-w-0">
@@ -20933,39 +20173,33 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     setPendingDrag((prev) => (prev?.pointerId === pointerId ? null : prev));
   }, []);
 
-  const startTabDrag = reactHostPort.useCallback(
-    (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => {
-      if (event.button !== 0) return;
-      setPendingDrag({
-        dragKind: "tab",
-        windowId,
-        stackPath,
-        tabIndex,
-        pointerId: event.pointerId,
-        ghostLabel: label,
-        startX: event.clientX,
-        startY: event.clientY,
-      });
-    },
-    [],
-  );
+  const startTabDrag = reactHostPort.useCallback((windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => {
+    if (event.button !== 0) return;
+    setPendingDrag({
+      dragKind: "tab",
+      windowId,
+      stackPath,
+      tabIndex,
+      pointerId: event.pointerId,
+      ghostLabel: label,
+      startX: event.clientX,
+      startY: event.clientY,
+    });
+  }, []);
 
-  const startStackDrag = reactHostPort.useCallback(
-    (windowId: string, stackPath: ModeLayoutPath, label: string, event: React.PointerEvent<HTMLElement>) => {
-      if (event.button !== 0) return;
-      setPendingDrag({
-        dragKind: "stack",
-        windowId,
-        stackPath,
-        tabIndex: -1,
-        pointerId: event.pointerId,
-        ghostLabel: label,
-        startX: event.clientX,
-        startY: event.clientY,
-      });
-    },
-    [],
-  );
+  const startStackDrag = reactHostPort.useCallback((windowId: string, stackPath: ModeLayoutPath, label: string, event: React.PointerEvent<HTMLElement>) => {
+    if (event.button !== 0) return;
+    setPendingDrag({
+      dragKind: "stack",
+      windowId,
+      stackPath,
+      tabIndex: -1,
+      pointerId: event.pointerId,
+      ghostLabel: label,
+      startX: event.clientX,
+      startY: event.clientY,
+    });
+  }, []);
 
   reactHostPort.useEffect(() => {
     if (!pendingDrag && !dragState) return;
@@ -21201,9 +20435,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
 
   const previewDragState = dragState ?? templatePreviewDrag;
 
-  const draggedPreviewTitle = previewDragState
-    ? (windowsById.get(previewDragState.windowId)?.title ?? previewDragState.ghostLabel)
-    : "";
+  const draggedPreviewTitle = previewDragState ? (windowsById.get(previewDragState.windowId)?.title ?? previewDragState.ghostLabel) : "";
   const tabInsertPreview = resolveModeTabInsertPreview(previewDragState, dropZone);
   const draggedInsertTabs = reactHostPort.useMemo(() => {
     if (templateDrag) return [{ id: MODE_TEMPLATE_PREVIEW_WINDOW_ID, title: templateDrag.label }];
@@ -21225,19 +20457,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       maximizedStackPath,
       toggleMaximize,
     }),
-    [
-      previewDragState,
-      tabInsertPreview,
-      draggedInsertTabs,
-      registerStackDropTargets,
-      startTabDrag,
-      startStackDrag,
-      clearPendingDrag,
-      closeWindow,
-      activateWindow,
-      maximizedStackPath,
-      toggleMaximize,
-    ],
+    [previewDragState, tabInsertPreview, draggedInsertTabs, registerStackDropTargets, startTabDrag, startStackDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
   );
 
   const renderContext = reactHostPort.useMemo<ModeRenderContext>(
@@ -21245,10 +20465,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     [windowsById, activeWindowId, onAxisLayoutChanged, onJoinCornerResize, registerAxisGroup, registerAxisElement],
   );
 
-  const dockOutLayout = reactHostPort.useMemo(
-    () => (dragState ? modeDockOutLayout(layoutState, dragState) : layoutState),
-    [layoutState, dragState],
-  );
+  const dockOutLayout = reactHostPort.useMemo(() => (dragState ? modeDockOutLayout(layoutState, dragState) : layoutState), [layoutState, dragState]);
 
   const maximizedStack =
     maximizedStackPath !== null
@@ -21276,12 +20493,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     ));
 
   return (
-    <div
-      data-slot="mode"
-      data-dragging={previewDragState ? "true" : undefined}
-      data-maximized-path={maximizedStackPath ?? undefined}
-      className={cn("relative flex h-full min-h-0 w-full flex-col", className)}
-    >
+    <div data-slot="mode" data-dragging={previewDragState ? "true" : undefined} data-maximized-path={maximizedStackPath ?? undefined} className={cn("relative flex h-full min-h-0 w-full flex-col", className)}>
       <LevelProvider level="canvas">
         <div
           ref={modeBodyRef}
@@ -21297,52 +20509,52 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
           ) : (
             body
           )}
-        {previewDragState ? (
-          <>
-            {dropZone?.kind !== "tab" ? (
-              <ModeDockDragPreview
-                title={draggedPreviewTitle}
-                content={previewDragState.dragKind === "stack" ? windowsById.get(previewDragState.windowId)?.children : undefined}
-                tabOnly={previewDragState.dragKind === "tab"}
-                style={{
-                  position: "fixed",
-                  left: previewDragState.x + MODE_DRAG_CURSOR_OFFSET_X,
-                  top: previewDragState.y - MODE_DRAG_CURSOR_OFFSET_Y,
-                  zIndex: 70,
-                }}
-              />
-            ) : null}
-            {dropZone && (dropZone.kind === "split" || dropZone.kind === "root-split") ? (
-              <div data-slot="mode-dock-drop-indicator" className="pointer-events-none absolute inset-0 z-panel">
-                <div
-                  className="absolute rounded-sm border-2 border-accent bg-accent/20"
-                  style={(() => {
-                    if (dropZone.kind === "root-split") {
-                      const side = dropZone.side;
-                      if (side === "left") return { left: 0, top: 0, width: "50%", height: "100%" };
-                      if (side === "right") return { right: 0, top: 0, width: "50%", height: "100%" };
-                      if (side === "top") return { left: 0, top: 0, width: "100%", height: "50%" };
-                      return { left: 0, bottom: 0, width: "100%", height: "50%" };
-                    }
-                    const elements = stackDropElementsRef.current.get(dropZone.stackPath);
-                    const rect = elements?.body?.getBoundingClientRect();
-                    const modeRect = modeBodyRef.current?.getBoundingClientRect();
-                    if (!rect || !modeRect) return { display: "none" };
-                    const bodyOriginLeft = rect.left - modeRect.left;
-                    const bodyOriginTop = rect.top - modeRect.top;
-                    const preview = computeModeSplitPreviewInBody(rect.width, rect.height, dropZone.side);
-                    return {
-                      left: bodyOriginLeft + preview.left,
-                      top: bodyOriginTop + preview.top,
-                      width: preview.width,
-                      height: preview.height,
-                    };
-                  })()}
+          {previewDragState ? (
+            <>
+              {dropZone?.kind !== "tab" ? (
+                <ModeDockDragPreview
+                  title={draggedPreviewTitle}
+                  content={previewDragState.dragKind === "stack" ? windowsById.get(previewDragState.windowId)?.children : undefined}
+                  tabOnly={previewDragState.dragKind === "tab"}
+                  style={{
+                    position: "fixed",
+                    left: previewDragState.x + MODE_DRAG_CURSOR_OFFSET_X,
+                    top: previewDragState.y - MODE_DRAG_CURSOR_OFFSET_Y,
+                    zIndex: 70,
+                  }}
                 />
-              </div>
-            ) : null}
-          </>
-        ) : null}
+              ) : null}
+              {dropZone && (dropZone.kind === "split" || dropZone.kind === "root-split") ? (
+                <div data-slot="mode-dock-drop-indicator" className="pointer-events-none absolute inset-0 z-panel">
+                  <div
+                    className="absolute rounded-sm border-2 border-accent bg-accent/20"
+                    style={(() => {
+                      if (dropZone.kind === "root-split") {
+                        const side = dropZone.side;
+                        if (side === "left") return { left: 0, top: 0, width: "50%", height: "100%" };
+                        if (side === "right") return { right: 0, top: 0, width: "50%", height: "100%" };
+                        if (side === "top") return { left: 0, top: 0, width: "100%", height: "50%" };
+                        return { left: 0, bottom: 0, width: "100%", height: "50%" };
+                      }
+                      const elements = stackDropElementsRef.current.get(dropZone.stackPath);
+                      const rect = elements?.body?.getBoundingClientRect();
+                      const modeRect = modeBodyRef.current?.getBoundingClientRect();
+                      if (!rect || !modeRect) return { display: "none" };
+                      const bodyOriginLeft = rect.left - modeRect.left;
+                      const bodyOriginTop = rect.top - modeRect.top;
+                      const preview = computeModeSplitPreviewInBody(rect.width, rect.height, dropZone.side);
+                      return {
+                        left: bodyOriginLeft + preview.left,
+                        top: bodyOriginTop + preview.top,
+                        width: preview.width,
+                        height: preview.height,
+                      };
+                    })()}
+                  />
+                </div>
+              ) : null}
+            </>
+          ) : null}
         </div>
       </LevelProvider>
     </div>
@@ -21484,7 +20696,11 @@ const Ui: React.FC<UiProps> = ({ apps, activeAppId, onActiveAppChange, navbar, f
       <div data-slot="ui-body" className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {body}
       </div>
-      {footer && <div data-slot="ui-footer" className="shrink-0">{footer}</div>}
+      {footer && (
+        <div data-slot="ui-footer" className="shrink-0">
+          {footer}
+        </div>
+      )}
     </div>
   );
 };
@@ -21642,15 +20858,7 @@ if (import.meta.vitest) {
 
   describe("iconCodec", () => {
     it("round-trips canonical icon strings", () => {
-      const samples = [
-        "url:https://example.com/icon.png",
-        ":smile:",
-        "data:image/png;base64,iVBORw0KGgo=",
-        "emoji:☺",
-        "typst:$x^2$",
-        "text:Hi",
-        "capsule_J",
-      ];
+      const samples = ["url:https://example.com/icon.png", ":smile:", "data:image/png;base64,iVBORw0KGgo=", "emoji:☺", "typst:$x^2$", "text:Hi", "capsule_J"];
       for (const sample of samples) {
         const icon = decodeIcon(sample);
         expect(icon).toBeTruthy();
@@ -21727,15 +20935,7 @@ if (import.meta.vitest) {
 
     it("renders general-first rows and highlights hovered item", async () => {
       const onHoverKey = vi.fn();
-      render(
-        <CanvasPickMenu
-          request={{ targets, client: { x: 10, y: 20 } }}
-          hoveredKey="path:p1"
-          onHoverKey={onHoverKey}
-          onPick={vi.fn()}
-          onDismiss={vi.fn()}
-        />,
-      );
+      render(<CanvasPickMenu request={{ targets, client: { x: 10, y: 20 } }} hoveredKey="path:p1" onHoverKey={onHoverKey} onPick={vi.fn()} onDismiss={vi.fn()} />);
       const items = await waitFor(() => screen.getAllByRole("menuitem"));
       expect(items[0]?.textContent).toContain("Group 1");
       expect(items[1]?.getAttribute("aria-selected")).toBe("true");
@@ -21743,15 +20943,7 @@ if (import.meta.vitest) {
 
     it("dismisses on outside pointerdown", async () => {
       const onDismiss = vi.fn();
-      render(
-        <CanvasPickMenu
-          request={{ targets, client: { x: 10, y: 20 } }}
-          hoveredKey={null}
-          onHoverKey={vi.fn()}
-          onPick={vi.fn()}
-          onDismiss={onDismiss}
-        />,
-      );
+      render(<CanvasPickMenu request={{ targets, client: { x: 10, y: 20 } }} hoveredKey={null} onHoverKey={vi.fn()} onPick={vi.fn()} onDismiss={onDismiss} />);
       await waitFor(() => expect(screen.getAllByRole("menuitem").length).toBe(2));
       window.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
       expect(onDismiss).toHaveBeenCalled();
@@ -21915,9 +21107,7 @@ if (import.meta.vitest) {
       const tabbar = container.querySelector('[data-slot="mode-dock-tabbar"]');
       expect(tabbar?.querySelector('[data-slot="mode-dock-tab-cap"]')).toBeTruthy();
       expect(tabbar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeTruthy();
-      expect(
-        [...(tabbar?.children ?? [])].map((child) => child.getAttribute("data-slot")).filter(Boolean),
-      ).toEqual(["mode-dock-tab-cap", "mode-dock-tab-gap", "mode-dock-controls-cap"]);
+      expect([...(tabbar?.children ?? [])].map((child) => child.getAttribute("data-slot")).filter(Boolean)).toEqual(["mode-dock-tab-cap", "mode-dock-tab-gap", "mode-dock-controls-cap"]);
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("bg-window");
       expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("bg-window");
       expect(container.querySelector('[data-slot="mode-dock-maximize"]')?.className).toContain("hover:text-emphasized");
@@ -21964,12 +21154,18 @@ if (import.meta.vitest) {
               children: [
                 {
                   kind: "stack",
-                  children: [{ kind: "window", id: "a1" }, { kind: "window", id: "a2" }],
+                  children: [
+                    { kind: "window", id: "a1" },
+                    { kind: "window", id: "a2" },
+                  ],
                   activeId: "a1",
                 },
                 {
                   kind: "stack",
-                  children: [{ kind: "window", id: "b1" }, { kind: "window", id: "b2" }],
+                  children: [
+                    { kind: "window", id: "b1" },
+                    { kind: "window", id: "b2" },
+                  ],
                   activeId: "b2",
                 },
               ],
@@ -22116,7 +21312,14 @@ if (import.meta.vitest) {
               { id: "a", title: "Alpha", children: <div>Alpha Body</div> },
               { id: "b", title: "Beta", children: <div>Beta Body</div> },
             ]}
-            layout={{ kind: "stack", children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }], activeId: "a" }}
+            layout={{
+              kind: "stack",
+              children: [
+                { kind: "window", id: "a" },
+                { kind: "window", id: "b" },
+              ],
+              activeId: "a",
+            }}
             activeWindowId="a"
             onActiveWindowChange={() => {}}
           />
@@ -22147,8 +21350,7 @@ if (import.meta.vitest) {
       expect(multiTabBar?.querySelectorAll('[data-slot="mode-dock-maximize"]')).toHaveLength(1);
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("grid");
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-active-base");
-      const tabOrder = () =>
-        [...container.querySelectorAll('[data-slot="mode-dock-tab"]')].map((tab) => tab.getAttribute("data-window-id"));
+      const tabOrder = () => [...container.querySelectorAll('[data-slot="mode-dock-tab"]')].map((tab) => tab.getAttribute("data-window-id"));
       expect(tabOrder()).toEqual(["a", "b"]);
       fireEvent.click(screen.getByText("Beta"));
       expect(screen.getByText("Beta Body")).toBeTruthy();
@@ -22165,7 +21367,14 @@ if (import.meta.vitest) {
               { id: "shape", title: "Shape", children: <div>Shape Body</div> },
               { id: "energy", title: "Energy", children: <div>Energy Body</div> },
             ]}
-            layout={{ kind: "stack", children: [{ kind: "window", id: "shape" }, { kind: "window", id: "energy" }], activeId: "energy" }}
+            layout={{
+              kind: "stack",
+              children: [
+                { kind: "window", id: "shape" },
+                { kind: "window", id: "energy" },
+              ],
+              activeId: "energy",
+            }}
             activeWindowId="energy"
             onActiveWindowChange={() => {}}
           />
@@ -22245,10 +21454,7 @@ if (import.meta.vitest) {
       const row = modeDockTabsWithInsertPreview(tabs, { stackPath: "1", index: 1 }, "1", [{ id: "drag", title: "Drag" }]);
       expect(row.map((tab) => tab.id)).toEqual(["a", "drag", "b"]);
       expect(row[1]?.preview).toBe("ghost");
-      expect(modeDockTabsWithInsertPreview(tabs, { stackPath: "2", index: 1 }, "1", [{ id: "drag", title: "Drag" }]).map((tab) => tab.id)).toEqual([
-        "a",
-        "b",
-      ]);
+      expect(modeDockTabsWithInsertPreview(tabs, { stackPath: "2", index: 1 }, "1", [{ id: "drag", title: "Drag" }]).map((tab) => tab.id)).toEqual(["a", "b"]);
     });
 
     it("modeDockTabsWithInsertPreview inserts ghost tabs for every window in a dragged stack", () => {
@@ -22256,15 +21462,10 @@ if (import.meta.vitest) {
         { id: "a", title: "A" },
         { id: "b", title: "B" },
       ];
-      const row = modeDockTabsWithInsertPreview(
-        tabs,
-        { stackPath: "1", index: 0 },
-        "1",
-        [
-          { id: "x", title: "X" },
-          { id: "y", title: "Y" },
-        ],
-      );
+      const row = modeDockTabsWithInsertPreview(tabs, { stackPath: "1", index: 0 }, "1", [
+        { id: "x", title: "X" },
+        { id: "y", title: "Y" },
+      ]);
       expect(row.map((tab) => tab.id)).toEqual(["x", "y", "a", "b"]);
       expect(row[0]?.preview).toBe("ghost");
       expect(row[1]?.preview).toBe("ghost");
@@ -22274,7 +21475,14 @@ if (import.meta.vitest) {
       const layout: WindowLayoutNode = {
         kind: "row",
         children: [
-          { kind: "stack", children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }], activeId: "a" },
+          {
+            kind: "stack",
+            children: [
+              { kind: "window", id: "a" },
+              { kind: "window", id: "b" },
+            ],
+            activeId: "a",
+          },
           { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
         ],
       };
@@ -22289,12 +21497,7 @@ if (import.meta.vitest) {
         y: 0,
       };
       const next = applyModeDrop(layout, drag, { kind: "tab", stackPath: "1", index: 0 });
-      const merged =
-        next.kind === "stack"
-          ? next
-          : next.kind === "row" || next.kind === "column"
-            ? next.children.find((child) => child.kind === "stack" && child.children.some((window) => window.id === "c"))
-            : null;
+      const merged = next.kind === "stack" ? next : next.kind === "row" || next.kind === "column" ? next.children.find((child) => child.kind === "stack" && child.children.some((window) => window.id === "c")) : null;
       expect(merged?.kind).toBe("stack");
       if (merged?.kind === "stack") expect(merged.children.map((child) => child.id)).toEqual(["a", "b", "c"]);
     });
@@ -22512,7 +21715,10 @@ if (import.meta.vitest) {
     it("reconcileWindows drops closed windows instead of re-adding them", () => {
       const layout: WindowLayoutNode = {
         kind: "stack",
-        children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }],
+        children: [
+          { kind: "window", id: "a" },
+          { kind: "window", id: "b" },
+        ],
         activeId: "a",
       };
       const next = reconcileWindows(layout, ["a"]);
@@ -22532,10 +21738,7 @@ if (import.meta.vitest) {
       };
       const next = insertWindowAtDropZone(layout, "b", { kind: "root-split", side: "right" });
       expect(next.kind).toBe("row");
-      const ids =
-        next.kind === "row"
-          ? next.children.flatMap((child) => (child.kind === "stack" ? child.children.map((leaf) => leaf.id) : []))
-          : [];
+      const ids = next.kind === "row" ? next.children.flatMap((child) => (child.kind === "stack" ? child.children.map((leaf) => leaf.id) : [])) : [];
       expect(ids.sort()).toEqual(["a", "b"]);
     });
 
@@ -22551,7 +21754,14 @@ if (import.meta.vitest) {
       const layout: WindowLayoutNode = {
         kind: "row",
         children: [
-          { kind: "stack", children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }], activeId: "a" },
+          {
+            kind: "stack",
+            children: [
+              { kind: "window", id: "a" },
+              { kind: "window", id: "b" },
+            ],
+            activeId: "a",
+          },
           { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
         ],
       };
@@ -22564,7 +21774,14 @@ if (import.meta.vitest) {
       const layout: WindowLayoutNode = {
         kind: "row",
         children: [
-          { kind: "stack", children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }], activeId: "a" },
+          {
+            kind: "stack",
+            children: [
+              { kind: "window", id: "a" },
+              { kind: "window", id: "b" },
+            ],
+            activeId: "a",
+          },
           { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
         ],
       };
@@ -22582,7 +21799,14 @@ if (import.meta.vitest) {
       const layout: WindowLayoutNode = {
         kind: "row",
         children: [
-          { kind: "stack", children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }], activeId: "a" },
+          {
+            kind: "stack",
+            children: [
+              { kind: "window", id: "a" },
+              { kind: "window", id: "b" },
+            ],
+            activeId: "a",
+          },
           { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
         ],
       };
@@ -22595,7 +21819,14 @@ if (import.meta.vitest) {
       const layout: WindowLayoutNode = {
         kind: "row",
         children: [
-          { kind: "stack", children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }], activeId: "a" },
+          {
+            kind: "stack",
+            children: [
+              { kind: "window", id: "a" },
+              { kind: "window", id: "b" },
+            ],
+            activeId: "a",
+          },
           { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
         ],
       };
@@ -22624,7 +21855,10 @@ if (import.meta.vitest) {
     it("applyModeDrop splits within the same stack when dropping on a body edge zone", () => {
       const layout: WindowLayoutNode = {
         kind: "stack",
-        children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }],
+        children: [
+          { kind: "window", id: "a" },
+          { kind: "window", id: "b" },
+        ],
         activeId: "a",
       };
       const drag = {
@@ -22677,13 +21911,7 @@ if (import.meta.vitest) {
     });
 
     it("Engagement renders options, input, and status lines", () => {
-      const { container } = render(
-        <Engagement
-          options={[{ id: "opt-a", label: "Option A", icon: "circle-dot", onPress: () => {} }]}
-          input={{ placeholder: "Type here" }}
-          status={[{ id: "status-a", content: "Ready" }]}
-        />,
-      );
+      const { container } = render(<Engagement options={[{ id: "opt-a", label: "Option A", icon: "circle-dot", onPress: () => {} }]} input={{ placeholder: "Type here" }} status={[{ id: "status-a", content: "Ready" }]} />);
       expect(screen.getByRole("button", { name: "OptionA" })).toBeTruthy();
       expect(screen.getByPlaceholderText("Type here")).toBeTruthy();
       expect(screen.getByText("Ready")).toBeTruthy();
@@ -23170,13 +22398,7 @@ if (import.meta.vitest) {
 
     it("Engagement Escape calls onAbort when possibles list is closed", () => {
       const aborted: string[] = [];
-      render(
-        <Engagement
-          active
-          input={{ placeholder: "Command", onAbort: () => aborted.push("abort") }}
-          possibleEngagements={[{ id: "a", label: "A", onSelect: () => {} }]}
-        />,
-      );
+      render(<Engagement active input={{ placeholder: "Command", onAbort: () => aborted.push("abort") }} possibleEngagements={[{ id: "a", label: "A", onSelect: () => {} }]} />);
       const field = screen.getByPlaceholderText("Command");
       fireEvent.keyDown(field, { key: "Escape" });
       expect(aborted).toEqual(["abort"]);
@@ -23186,13 +22408,7 @@ if (import.meta.vitest) {
       const scrollIntoView = Element.prototype.scrollIntoView;
       Element.prototype.scrollIntoView = () => undefined;
       const aborted: string[] = [];
-      render(
-        <Engagement
-          active
-          input={{ placeholder: "Command", onAbort: () => aborted.push("abort") }}
-          possibleEngagements={[{ id: "a", label: "A", onSelect: () => {} }]}
-        />,
-      );
+      render(<Engagement active input={{ placeholder: "Command", onAbort: () => aborted.push("abort") }} possibleEngagements={[{ id: "a", label: "A", onSelect: () => {} }]} />);
       fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
       const field = screen.getByPlaceholderText("Command");
       fireEvent.keyDown(field, { key: "Escape" });
@@ -23209,11 +22425,7 @@ if (import.meta.vitest) {
         sessionActive: true,
         input: { value: "", placeholder: "Brush", onAbort: () => aborted.push("abort") },
       };
-      const handled = routeWindowEngagementEscape(
-        engagement,
-        { key: "Escape", defaultPrevented: false, isComposing: false, target: document.body },
-        { chromeVisible: false, commandActive: false },
-      );
+      const handled = routeWindowEngagementEscape(engagement, { key: "Escape", defaultPrevented: false, isComposing: false, target: document.body }, { chromeVisible: false, commandActive: false });
       expect(handled).toBe(true);
       expect(aborted).toEqual(["abort"]);
     });
@@ -23408,17 +22620,11 @@ if (import.meta.vitest) {
 
     it("Window and ModeDock controls render with labels", () => {
       const { container } = render(
-        <Window
-          id="labeled-window"
-          onOpenInNewWindow={() => {}}
-          onMaximize={() => {}}
-          onClose={() => {}}
-          measures={<div data-testid="measure-slot">LOD</div>}
-        >
+        <Window id="labeled-window" onOpenInNewWindow={() => {}} onMaximize={() => {}} onClose={() => {}} measures={<div data-testid="measure-slot">LOD</div>}>
           <div>Body</div>
         </Window>,
       );
-      
+
       const newWindowBtn = container.querySelector('[id="labeled-window-window-controls-external"]');
       expect(newWindowBtn?.textContent?.trim()).toBe("New Window");
 
@@ -23445,10 +22651,7 @@ if (import.meta.vitest) {
 
     it("Window maximize renders as Unfocus when onMinimize is provided", () => {
       const { container } = render(
-        <Window
-          id="labeled-window-min"
-          onMinimize={() => {}}
-        >
+        <Window id="labeled-window-min" onMinimize={() => {}}>
           <div>Body</div>
         </Window>,
       );
@@ -23458,12 +22661,7 @@ if (import.meta.vitest) {
 
     it("Window engagement max width shrinks when measures rail is present", () => {
       const { container } = render(
-        <Window
-          id="layout-window"
-          active
-          engagement={{ input: { placeholder: "Command" } }}
-          measures={<div data-testid="measure-slot">LOD</div>}
-        >
+        <Window id="layout-window" active engagement={{ input: { placeholder: "Command" } }} measures={<div data-testid="measure-slot">LOD</div>}>
           <div data-testid="window-body">Body</div>
         </Window>,
       );
@@ -23478,13 +22676,7 @@ if (import.meta.vitest) {
     it("Window engagement and measures overlays pass pointer hits through to the canvas body", () => {
       const bodyDown = vi.fn();
       const { container } = render(
-        <Window
-          id="canvas-window"
-          active
-          fill
-          engagement={{ options: [{ id: "opt-a", label: "Alpha", icon: "circle-dot", onPress: () => {} }] }}
-          measures={<div data-testid="measure-slot">LOD</div>}
-        >
+        <Window id="canvas-window" active fill engagement={{ options: [{ id: "opt-a", label: "Alpha", icon: "circle-dot", onPress: () => {} }] }} measures={<div data-testid="measure-slot">LOD</div>}>
           <div data-testid="window-body" className="size-full" onPointerDown={bodyDown}>
             Body
           </div>
@@ -23500,12 +22692,7 @@ if (import.meta.vitest) {
 
     it("Window hides engagement overlay when measures are fullscreen", () => {
       const { container } = render(
-        <Window
-          id="measures-engagement-window"
-          active
-          engagement={{ input: { placeholder: "Command" } }}
-          measures={<div data-testid="measure-slot">LOD</div>}
-        >
+        <Window id="measures-engagement-window" active engagement={{ input: { placeholder: "Command" } }} measures={<div data-testid="measure-slot">LOD</div>}>
           <div>Body</div>
         </Window>,
       );
@@ -23678,7 +22865,6 @@ if (import.meta.vitest) {
 }
 
 // #endregion 🔍Window Components
-
 
 // #region 🗿Framework Re-exports
 
@@ -23939,7 +23125,9 @@ if (treeVitest) {
       render(
         <GhostProvider>
           <GhostRegionShell>
-            <div data-dim id="window-ui">Window UI</div>
+            <div data-dim id="window-ui">
+              Window UI
+            </div>
             <div data-slot="control-tree-row" data-dim>
               <div data-slot="slider-content" data-dim>
                 <div data-slot="slider" id="nested-slider"></div>
@@ -24795,11 +23983,7 @@ if (treeVitest) {
           ...VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS,
           root: {
             ...VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS.root,
-            descriptors: [
-              ...VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS.root.descriptors,
-              { id: "updated", descriptorKindId: "time", label: "Updated" },
-              { id: "createdBy", descriptorKindId: "avatar", label: "Created by" },
-            ],
+            descriptors: [...VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS.root.descriptors, { id: "updated", descriptorKindId: "time", label: "Updated" }, { id: "createdBy", descriptorKindId: "avatar", label: "Created by" }],
           },
         },
       };
@@ -24847,12 +24031,7 @@ if (treeVitest) {
     });
 
     it("renders file node kind vendored icons instead of avatars for schema icon ids", () => {
-      const markup = renderToStaticMarkup(
-        <VirtualFileSystem
-          schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
-          rows={[{ id: "root", fileNodeKindId: "root", name: "Alpha", level: 0, hasChildren: false }]}
-        />,
-      );
+      const markup = renderToStaticMarkup(<VirtualFileSystem schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA} rows={[{ id: "root", fileNodeKindId: "root", name: "Alpha", level: 0, hasChildren: false }]} />);
       expect(markup).toContain('data-icon="layout-grid"');
       expect(markup).not.toContain("avatar-fallback");
     });
@@ -24870,12 +24049,7 @@ if (treeVitest) {
     });
 
     it("renders per-row extension icons for kit files", () => {
-      const markup = renderToStaticMarkup(
-        <VirtualFileSystem
-          schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
-          rows={[{ id: "f1", fileNodeKindId: "leaf", name: "Tower", icon: "glb", level: 0, hasChildren: false }]}
-        />,
-      );
+      const markup = renderToStaticMarkup(<VirtualFileSystem schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA} rows={[{ id: "f1", fileNodeKindId: "leaf", name: "Tower", icon: "glb", level: 0, hasChildren: false }]} />);
       expect(markup).toContain('data-icon="box"');
       expect(markup).not.toContain("avatar-fallback");
     });
@@ -24886,11 +24060,7 @@ if (treeVitest) {
       const user = userEvent.setup();
       const onRowDoubleClick = vi.fn();
       const { container } = render(
-        <VirtualFileSystem
-          schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
-          rows={[{ id: "leaf-a", fileNodeKindId: "leaf", name: "Alpha", level: 0, hasChildren: false, navigateUri: "/alpha" }]}
-          onRowDoubleClick={onRowDoubleClick}
-        />,
+        <VirtualFileSystem schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA} rows={[{ id: "leaf-a", fileNodeKindId: "leaf", name: "Alpha", level: 0, hasChildren: false, navigateUri: "/alpha" }]} onRowDoubleClick={onRowDoubleClick} />,
       );
       const leafRow = container.querySelector('tr[data-row-id="leaf-a"]');
       expect(leafRow).toBeTruthy();
@@ -25103,13 +24273,7 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(
         <WindowMeasuresTree>
           <WindowMeasureTreeLeaf fullWidth>
-            <Toggle
-              id="move-axes"
-              className={cn(windowMeasureToggleClass, windowMeasureToggleCompactClass)}
-              pressed
-              icon={<CheckIcon className="size-small" />}
-              text="Move Axes"
-            />
+            <Toggle id="move-axes" className={cn(windowMeasureToggleClass, windowMeasureToggleCompactClass)} pressed icon={<CheckIcon className="size-small" />} text="Move Axes" />
           </WindowMeasureTreeLeaf>
         </WindowMeasuresTree>,
       );
@@ -25142,9 +24306,7 @@ if (treeVitest) {
     });
 
     it("renders panel toggles with icons including display", () => {
-      const markup = renderToStaticMarkup(
-        <Toggle id="ui.panelToggle.display" pressed={false} onPressedChange={() => undefined} icon="layout-grid" />,
-      );
+      const markup = renderToStaticMarkup(<Toggle id="ui.panelToggle.display" pressed={false} onPressedChange={() => undefined} icon="layout-grid" />);
       expect(markup).toContain('id="ui.panelToggle.display"');
       expect(markup).toContain('data-icon="layout-grid"');
       expect(markup).toContain('width="7"');
@@ -25182,9 +24344,7 @@ if (treeVitest) {
     });
 
     it("keeps emphasized label styling on pressed navbar toggles", () => {
-      const markup = renderToStaticMarkup(
-        <Toggle id="ui.panelToggle.display" pressed={true} onPressedChange={() => undefined} icon="layout-grid" text="Display" />,
-      );
+      const markup = renderToStaticMarkup(<Toggle id="ui.panelToggle.display" pressed={true} onPressedChange={() => undefined} icon="layout-grid" text="Display" />);
       expect(markup).toContain('data-state="on"');
       expect(markup).toContain("data-[state=on]:bg-active-base");
       expect(markup).toContain("data-[state=on]:border-active-base");
@@ -25215,25 +24375,7 @@ if (treeVitest) {
     });
 
     it("resolves toolbar collection ids in en and de", () => {
-      const categories: readonly UiToolbarParentCategory[] = [
-        "history",
-        "hand",
-        "selection",
-        "lasso",
-        "filter",
-        "open",
-        "save",
-        "transfer",
-        "transform",
-        "create",
-        "view",
-        "actions",
-        "settings",
-        "methods",
-        "mode",
-        "targets",
-        "export",
-      ];
+      const categories: readonly UiToolbarParentCategory[] = ["history", "hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform", "create", "view", "actions", "settings", "methods", "mode", "targets", "export"];
       for (const locale of ["en", "de"] as const) {
         void uiI18n.changeLanguage(locale);
         for (const category of categories) {
@@ -25274,7 +24416,12 @@ if (treeVitest) {
 
     it("renders breadcrumb links and menu rows with hover feedback", () => {
       const breadcrumbMarkup = renderToStaticMarkup(
-        <Breadcrumb items={[{ content: "Home", onNavigate: () => undefined }, { content: "Project", onNavigate: () => undefined }]} />,
+        <Breadcrumb
+          items={[
+            { content: "Home", onNavigate: () => undefined },
+            { content: "Project", onNavigate: () => undefined },
+          ]}
+        />,
       );
       expect(breadcrumbMarkup).toContain('data-slot="breadcrumb-link"');
       expect(breadcrumbMarkup).toContain("text-element");
@@ -25373,20 +24520,14 @@ if (treeVitest) {
       const toolbarMarkup = renderToStaticMarkup(
         <ToolbarZone>
           <ToolbarItem>
-            <ToggleGroup
-              kind="single"
-              value="tool"
-              items={[{ value: "tool", id: "ui.toolbar.group.tool", icon: "save", text: "Tool" }]}
-            />
+            <ToggleGroup kind="single" value="tool" items={[{ value: "tool", id: "ui.toolbar.group.tool", icon: "save", text: "Tool" }]} />
           </ToolbarItem>
         </ToolbarZone>,
       );
       expect(toolbarMarkup).toMatch(/\bborder\b/);
       expect(toolbarMarkup).toContain(borderNormalClass);
       expect(toolbarMarkup).not.toContain("border-emphasized");
-      const panelMarkup = renderToStaticMarkup(
-        <SidePanel position="left" visible tabs={[{ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }]} />,
-      );
+      const panelMarkup = renderToStaticMarkup(<SidePanel position="left" visible tabs={[{ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }]} />);
       expect(panelMarkup).toContain('data-slot="panel-chrome-frame"');
       expect(panelMarkup).toContain("border-normal");
       expect(panelMarkup).not.toContain("border-emphasized");
@@ -25396,9 +24537,7 @@ if (treeVitest) {
       expect(panelMarkup).not.toMatch(/side-panel-tabs[^>]*border-emphasized/);
       expect(panelMarkup).toMatch(/side-panel-tabs[^>]*z-40/);
       expect(panelMarkup).toMatch(/panel-chrome-frame[^>]*z-30/);
-      const measuresMarkup = renderToStaticMarkup(
-        <div data-slot="window-measures-stack" className={windowMeasuresStackClass} />,
-      );
+      const measuresMarkup = renderToStaticMarkup(<div data-slot="window-measures-stack" className={windowMeasuresStackClass} />);
       expect(measuresMarkup).toContain("border-element/40");
       expect(measuresMarkup).not.toContain("border-emphasized");
     });
@@ -25444,10 +24583,7 @@ if (treeVitest) {
     it("renders engagement suggestions toggle without internal-id humanized labels", () => {
       const markup = renderToStaticMarkup(
         <UiChromeCompactProvider compact={false}>
-          <Engagement
-            input={{ placeholder: "Command" }}
-            possibleEngagements={[{ id: "primitive.box", label: "Box", detail: "b", onSelect: () => {} }]}
-          />
+          <Engagement input={{ placeholder: "Command" }} possibleEngagements={[{ id: "primitive.box", label: "Box", detail: "b", onSelect: () => {} }]} />
         </UiChromeCompactProvider>,
       );
       expect(markup).toContain('id="ui.engagement.suggestions"');
@@ -25463,7 +24599,7 @@ if (treeVitest) {
       );
       expect(markup).toContain("Details");
       expect(markup).toContain("aspect-auto");
-      expect(markup).toContain("data-slot=\"inline-label\"");
+      expect(markup).toContain('data-slot="inline-label"');
     });
 
     it("navbar keeps workbench and details panel toggle labels when compact chrome is enabled", () => {
@@ -25507,6 +24643,4 @@ if (treeVitest) {
       expect(markup).toContain("aspect-auto");
     });
   });
-
-
 }

@@ -2,30 +2,30 @@
 name: Consolidate Storybooks Into Root
 overview: One root Storybook under `.storybook/` with all duplicate config and helpers merged; all story modules live under a single top-level `.storybook/story/<technology>/<bundle>/` tree (not merged into fewer story files).
 todos:
-  - id: ticket
-    content: Open repo ticket for the consolidation
-    status: completed
-  - id: move-stories
-    content: Move *.stories.* into .storybook/story/<tech>/<bundle>/ (single top-level stories tree); non-story helpers to fixtures/ and compose/algorithm/kit-store/
-    status: completed
-  - id: consolidate-helpers
-    content: Single root withLevel.tsx (globals.level + optional args.level), withTheme.tsx, vitest.setup.ts; delete all bundle main/preview/with*
-    status: completed
-  - id: update-main-preview
-    content: Update .storybook/main.ts globs and .storybook/preview.ts decorator imports
-    status: completed
-  - id: fix-imports
-    content: Rewrite relative imports in moved stories to use @compose/* and @elements/* aliases
-    status: completed
-  - id: delete-old
-    content: Delete elements/client/lib/react/.storybook, compose/client/lib/react/rendering/.storybook, compose/dev/algorithm/.storybook
-    status: completed
-  - id: verify
-    content: Run dev:storybook and build:storybook; fix breakages
-    status: completed
-  - id: close-ticket
-    content: Close the ticket with summary and file list
-    status: completed
+ - id: ticket
+   content: Open repo ticket for the consolidation
+   status: completed
+ - id: move-stories
+   content: Move *.stories.* into .storybook/story/<tech>/<bundle>/ (single top-level stories tree); non-story helpers to fixtures/ and compose/algorithm/kit-store/
+   status: completed
+ - id: consolidate-helpers
+   content: Single root withLevel.tsx (globals.level + optional args.level), withTheme.tsx, vitest.setup.ts; delete all bundle main/preview/with*
+   status: completed
+ - id: update-main-preview
+   content: Update .storybook/main.ts globs and .storybook/preview.ts decorator imports
+   status: completed
+ - id: fix-imports
+   content: Rewrite relative imports in moved stories to use @compose/* and @elements/* aliases
+   status: completed
+ - id: delete-old
+   content: Delete elements/client/lib/react/.storybook, compose/client/lib/react/rendering/.storybook, compose/dev/algorithm/.storybook
+   status: completed
+ - id: verify
+   content: Run dev:storybook and build:storybook; fix breakages
+   status: completed
+ - id: close-ticket
+   content: Close the ticket with summary and file list
+   status: completed
 isProject: false
 ---
 

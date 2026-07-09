@@ -4,7 +4,5 @@
   "description": "Remove the compose/studio bundle directory entirely. The studio code has already been inlined into compose/sketchpad/index.tsx and compose/desktop/renderer.tsx. All source file imports from @compose/studio have been migrated. Remove the studio directory, clean up package-lock.json reference, and verify builds work.",
   "summary": "Removed the compose/studio bundle directory entirely. The code was already consolidated into compose/sketchpad/index.tsx (all interfaces, classes, factories: SyncDoc, CrdtDoc, PersistenceProviders, JsonFileKitStore, FolderKitStore, SessionKitStore, granular hooks) and compose/desktop/renderer.tsx (native Electron IPC callbacks passed via Desktop.kitFolder and Desktop.kitFile props). Cleaned @compose/studio entries from package-lock.json (node_modules symlink, dependency entries in desktop/play/sketchpad/vscode sections, and the studio package definition itself). No source files imported from @compose/studio. Desktop renderer.tsx compiles clean.",
   "goal": "🎯sketchpad",
-  "sessions": [
-    "⚪27b71b59d9404fdf9d3f9cf13c4a55e8"
-  ]
+  "sessions": ["⚪27b71b59d9404fdf9d3f9cf13c4a55e8"]
 }

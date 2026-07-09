@@ -25,9 +25,7 @@
           "session_id": "dce4a536-4340-48ab-bb34-be7db86fe18a",
           "hook_event_name": "beforeTabFileRead",
           "cursor_version": "3.3.12",
-          "workspace_roots": [
-            "/workspaces/semio"
-          ],
+          "workspace_roots": ["/workspaces/semio"],
           "user_email": "ueli.saluz@iek.uni-hannover.de",
           "transcript_path": null
         }

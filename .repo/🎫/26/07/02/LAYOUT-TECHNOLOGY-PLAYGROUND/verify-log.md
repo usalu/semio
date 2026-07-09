@@ -17,6 +17,7 @@
 ## Preflight (seeded fixture)
 
 Default document includes deliberate issues verified in core tests:
+
 - `asset.missing` (link-missing)
 - `text.below_minimum_size` (frame-small-text on page-2)
 

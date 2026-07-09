@@ -5,7 +5,5 @@
   "description": "Consolidate compose/js/index.ts boilerplate: cachedMapGet, readKitBranch*, readKitPath*, subscribeKitCoarseRefetch, Design/Type kit frags, Connection connectionRow, Author node field helper — aligned with SINGLE-SOURCE-ENTITY-LAYERS plan factories.",
   "summary": "Introduced file-local kit-shape helpers (cachedMapGet, readKitBranchString/Number/NumberOrNull, readKitPathNode/String/NumberOrNull, subscribeKitCoarseRefetch) under Entity parsers per single-source plan. Refactored Store, Graph, Session, TheKit, Checkpoint, Design, Type, Port, Connector, Connection, Quality, Tag, Concept, Representation, and Author to use these mechanisms instead of copy-pasted Map.get blocks, nested frag parsing, and duplicate bus subscriptions. Fixed vitest: removed stale KIT_COMMAND_SUCCEEDED_SUBSCRIPTION expect; Mutation SDL assertion now matches session: SessionCommandInput!.",
   "goal": "🎯aioptimizedrepo🎯singlefilerepo",
-  "sessions": [
-    "⚪c1ecb8ee48fe475b84763830e1499758"
-  ]
+  "sessions": ["⚪c1ecb8ee48fe475b84763830e1499758"]
 }

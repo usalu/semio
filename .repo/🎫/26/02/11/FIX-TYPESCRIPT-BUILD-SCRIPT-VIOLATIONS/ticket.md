@@ -3,6 +3,7 @@
 ## Summary
 
 Added section regions around orphan code and summary+spec comments for definitions in 10 TypeScript build script files: Grasshopper build.ts (Build section, 5 defs), build-value-lists.ts (Value List Generation section, 2 defs), yak/build.ts (Build section, 3 defs), yak/login.ts (Login section, 1 def), yak/publish.ts (Publish section, 6 defs), yak/test-push.ts (Test Push section, 2 defs), yak/unyank.ts (Unyank section, 2 defs), yak/yank.ts (Yank section, 2 defs), net/Compose/build.ts (Build section, 1 def), jsonschema/build.ts (Schema Export section, 4 defs)
+
 ## Changes
 
 - **compose/gh/Compose.Grasshopper/build.ts**: Added `Build` section region, summary+spec comments on `cwd`, `msbuild`, `yakDistFolder`, `binFolder`, `files` definitions

@@ -7,7 +7,9 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Filtered utility tabs out of the shared right panel across sketchpad apps while preserving navbar toggle access; extended the existing Panels Playwright spec with cross-app assertions.
+
 ## Changes
+
 - Updated `compose/js/sketchpad/Design.tsx`:
 - Removed `settings` and `chat` components from Design window layout defaults and window kind registrations.
 - Added layout sanitization that removes legacy `settings/chat` window nodes from stored layouts and persists migrated layout.
@@ -36,6 +38,7 @@ Filtered utility tabs out of the shared right panel across sketchpad apps while 
 - `npm --prefix compose/js run build` failed due existing Storybook indexing issue in `.storybook/stories/elements/aggregation/Resizable.stories.tsx` (`Duplicate declaration "Panel"`), unrelated to this ticket.
 
 ## Log
+
 - Opened ticket for left-panel Chat/Settings migration.
 - Refactored Design window config and persisted migration behavior for old stored layouts.
 - Refactored Sketchpad panel routing so Chat/Settings render at left side panel position.
@@ -45,11 +48,13 @@ Filtered utility tabs out of the shared right panel across sketchpad apps while 
 - Ran tests and compile checks; recorded unrelated existing failures.
 
 ## Todos
+
 - Verify UI manually in sketchpad Design route: property panel has no tabs, and Chat/Settings open only from navbar toggles.
 - Add/update e2e assertions once Playwright webServer startup issue is fixed.
 - Run the updated cross-app `Panels` Playwright coverage and confirm the new assertions pass.
 
 ## Plan
+
 - Remove Chat/Settings from Design scene window layout.
 - Register Chat/Settings as right side panel tabs in Design app.
 - Route navbar Chat/Settings toggles to right side panel presentation path.

@@ -2,30 +2,30 @@
 name: Normal-Border Default Theming
 overview: Shift the default content color of UI components from the emphasized `--foreground` to the normal-border gray (`--color-element`), and make hover fill each level while flipping content to emphasized, applied consistently across the @ui design system, the Vello graph palette, and all downstream tech renderers.
 todos:
-  - id: ticket
-    content: Read repo://goals and open a repo MCP ticket for the normal-border default theming change.
-    status: completed
-  - id: css-hover
-    content: "Layer A: extend per-level hover rules in ui.css to flip content to --border-emphasized-color and add color+bg transitions."
-    status: completed
-  - id: core-defaults
-    content: "Layer B: in ui/react/index.tsx swap default text-foreground -> text-element in interactive/content bases and add hover:text-emphasized (centralized via getLevelHoverClass + variant maps)."
-    status: completed
-  - id: core-trees
-    content: "Layer B: switch tree/side-panel/window-options text to text-element with row hover emphasis; keep strong/code/active emphasized."
-    status: completed
-  - id: vello-palette-ts
-    content: "Layer C: update serializeGraphVelloThemePaletteJson defaults to element gray, hovered to emphasized, add labelFillHovered, and update its test."
-    status: completed
-  - id: vello-palette-rs
-    content: "Layer C: add label_fill_hovered to VelloThemePalette and select hovered label/stroke colors in dag/board_host renderers; verify puzzle2d/gis consumers."
-    status: completed
-  - id: downstream-sweep
-    content: "Layer D: sweep cad/puzzle/gis/procedural/compose/framework/infinite renderers replacing default text-foreground with text-element (+ hover emphasis), keeping intentional emphasis."
-    status: completed
-  - id: verify
-    content: Run @ui + affected tech vitest and graph crate builds; runtime-verify hover behavior on flow/play pages; close the ticket with summary.
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open a repo MCP ticket for the normal-border default theming change.
+   status: completed
+ - id: css-hover
+   content: "Layer A: extend per-level hover rules in ui.css to flip content to --border-emphasized-color and add color+bg transitions."
+   status: completed
+ - id: core-defaults
+   content: "Layer B: in ui/react/index.tsx swap default text-foreground -> text-element in interactive/content bases and add hover:text-emphasized (centralized via getLevelHoverClass + variant maps)."
+   status: completed
+ - id: core-trees
+   content: "Layer B: switch tree/side-panel/window-options text to text-element with row hover emphasis; keep strong/code/active emphasized."
+   status: completed
+ - id: vello-palette-ts
+   content: "Layer C: update serializeGraphVelloThemePaletteJson defaults to element gray, hovered to emphasized, add labelFillHovered, and update its test."
+   status: completed
+ - id: vello-palette-rs
+   content: "Layer C: add label_fill_hovered to VelloThemePalette and select hovered label/stroke colors in dag/board_host renderers; verify puzzle2d/gis consumers."
+   status: completed
+ - id: downstream-sweep
+   content: "Layer D: sweep cad/puzzle/gis/procedural/compose/framework/infinite renderers replacing default text-foreground with text-element (+ hover emphasis), keeping intentional emphasis."
+   status: completed
+ - id: verify
+   content: Run @ui + affected tech vitest and graph crate builds; runtime-verify hover behavior on flow/play pages; close the ticket with summary.
+   status: completed
 isProject: false
 ---
 
@@ -53,8 +53,6 @@ flowchart LR
   end
   rest -->|"transition color + bg"| hov
 ```
-
-
 
 No new tokens are required: `text-element` (`--color-element`) and `text-emphasized` (`--color-emphasized`) already exist in the `@theme inline` block of [ui/styling/js/ui.css](ui/styling/js/ui.css) (lines ~808-810). `--foreground` stays meaning "emphasized ink" so all derived tokens (`--accent-foreground`, `--border-emphasized-color`, prose, etc.) remain correct.
 
@@ -102,4 +100,3 @@ Replace default-content `text-foreground` with `text-element` (+ hover emphasis 
 ## Repo workflow
 
 - Open a new ticket via the repo MCP (read `repo://goals` first to associate the most fitting goal) before editing; keep any temp logs/screens inside the ticket folder; close it with a summary and file list when done.
-

@@ -914,10 +914,7 @@
       {
         "name": "pick_wires",
         "selection": {
-          "accept": [
-            "wire",
-            "edge"
-          ],
+          "accept": ["wire", "edge"],
           "multiple": true,
           "prompt": "Pick curves for loft / tween"
         },
@@ -984,11 +981,7 @@
             "text": "Curve: 1=line 2=polyline 3=arc 4=circle 5=interpolate 6=pick wires (loft)",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           }
         ]
@@ -1003,11 +996,7 @@
             "text": "Select curves, then Finish pick",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           }
         ]
@@ -1016,9 +1005,7 @@
   },
   "commit": {
     "when": "hasCurveResult",
-    "fromStates": [
-      "committed"
-    ],
+    "fromStates": ["committed"],
     "operation": {
       "kind": "action",
       "action": "command.finish",

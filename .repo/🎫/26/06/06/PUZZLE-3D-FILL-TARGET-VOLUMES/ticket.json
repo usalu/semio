@@ -6,11 +6,5 @@
   "goal": "🎯puzzle3d🎯puzzle3dplay",
   "summary": "Implemented fill target volumes end-to-end: shared WorldVolume* primitive with AABB containment; FixtureV1.targetVolumes; 3-point+height draw tool; fillEditTargetVolumes sub-mode; TS + Rust fill gating; playground host wiring; document Target Volumes group. All tests passing.",
   "sessions": [],
-  "files": [
-    "infinite/world/r3f/index.tsx",
-    "puzzle/3d/react/index.tsx",
-    "puzzle/3d/play/index.ts",
-    "puzzle/3d/rs/lib.rs",
-    "framework/product/playground/renderer/react/index.tsx"
-  ]
+  "files": ["infinite/world/r3f/index.tsx", "puzzle/3d/react/index.tsx", "puzzle/3d/play/index.ts", "puzzle/3d/rs/lib.rs", "framework/product/playground/renderer/react/index.tsx"]
 }

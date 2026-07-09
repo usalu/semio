@@ -4,8 +4,5 @@
   "description": "Remove the Parent field from Type and Design structs (and their Meta/Shallow/Diff variants) in compose/go/main.go. Keep Folder's Parent field. Update all related code: constructors, merkle hash, diff functions, equality checks, applyDiff, inverseDiff, guid remapping, guid collection, SQLite read/write, and getConnector parent chain walking.",
   "summary": "Removed the `Parent` field from Type and Design structs (and their Meta/Shallow/Diff variants) in `compose/go/main.go`. Folder's Parent field was kept intact. Changes made:\n\n1. Removed `Parent` field from 8 structs: Type, TypeDiff, TypeMeta, TypeShallow, Design, DesignDiff, DesignMeta, DesignShallow\n2. Removed `Parent: t.Parent` / `Parent: d.Parent` from ToTypeMeta, ToTypeShallow, ToDesignMeta, ToDesignShallow constructors\n3. Removed `diff.Parent == nil \u0026\u0026` from isTypeDiffEmpty and isDesignDiffEmpty\n4. Removed Type/Design parent guid remapping in RemapGuid (kept Folder's)\n5. Simplified TypeNameUniquenessConstraint and DesignNameUniquenessConstraint to flat grouping (no parent-based sibling grouping)\n6. Removed design parent validation from validateDesignDiffNestedGo\n7. Simplified FilterDesignsWithoutParent to return all designs\n8. Removed parent_guid from SQLite type/design read queries and scan\n9. Removed parent_guid from SQLite type/design write queries\n10. Updated TypeDiff docstring to remove \"parent\" mention\n\nVerified: `go build ./...` succeeds with no errors. Many items from the user's list (hash functions, equality checks, applyDiff, inverseDiff, getConnector) were already clean and didn't reference Type/Design Parent.",
   "goal": "🎯coda",
-  "sessions": [
-    "⚪234cfa4ed58c451a9f42763899cc7f9e",
-    "⚪46ef6d1b11ff4ae0a041026c9cc2b335"
-  ]
+  "sessions": ["⚪234cfa4ed58c451a9f42763899cc7f9e", "⚪46ef6d1b11ff4ae0a041026c9cc2b335"]
 }

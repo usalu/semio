@@ -5,7 +5,5 @@
   "description": "Support slide/\u003cchapter\u003e/\u003csequence\u003e/\u003cthought\u003e.ts thought files that expand via templates (intro). Replace projektetage Einleitung folder with Einleitung.ts.",
   "summary": "Thought-level template files: slide/\u003cchapter\u003e/\u003csequence\u003e/\u003cthought\u003e.ts expands via templates instead of a folder of slide files.\n\n- ThoughtFile, introThoughtFile, parsePresentationThoughtFilePath, presentationThoughtFilePath, expandThoughtFileToSlideModules\n- loadPresentationFromSlideGlob accepts SlideFile | ThoughtFile; intro template expands to seven slides; conflicts if both .ts and folder slides exist\n- Projektetage: replaced slide/.../Einleitung/*.ts with Einleitung.ts using introThoughtFile(introSpec)\n\n39 core + 22 renderer tests pass; projektetage build succeeds.",
   "goal": "🎯framework",
-  "sessions": [
-    "⚪f48c2527f9a4432299b01b8b1dfbfb8f"
-  ]
+  "sessions": ["⚪f48c2527f9a4432299b01b8b1dfbfb8f"]
 }

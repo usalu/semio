@@ -24,9 +24,6 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir)
-  .register("build", BuildScript)
-  .register("dev", DevScript)
-  .register("test", TestScript);
+const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("dev", DevScript).register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "dev" });

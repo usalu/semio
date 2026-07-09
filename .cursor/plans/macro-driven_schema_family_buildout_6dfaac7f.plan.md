@@ -2,54 +2,54 @@
 name: Macro-Driven Schema Family Buildout
 overview: Implement the full system described by `compose/schema/graphql/schema.golden.graphql` as real Rust types via async-graphql code-first derivation. Macros emit Rust structs, `#[Object]` / `SimpleObject` / `Interface` / `Union` / `InputObject` impls only — never SDL strings. `gql::sdl()` stays a thin wrapper around `Schema::sdl()`; the SDL is a pure byproduct of the typed surface that async-graphql produces from the registered output types.
 todos:
-  - id: reopen-ticket
-    content: Reopen ticket 2026/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR via repo MCP ticket_reopen
-    status: pending
-  - id: w0-purge-string-sdl
-    content: "W0: delete sdl_registry::HasSdlFragment, register_entities!/register_operations! empty-fragment shells, and any __sdl_*/__build_sdl_fragment!/SDL_HEADER macros - SDL is no longer string-built"
-    status: pending
-  - id: w0-macro-foundation
-    content: "W0: rewrite //#region entity_dsl with code-first macro suite (entity_family! emits struct + Default + #[Object] impl + owner-slot enum + owner async_graphql::Union + Edge/Connection/Diff/Modification/Modifications real Rust types via SimpleObject/ComplexObject - no string concat anywhere)"
-    status: pending
-  - id: w0-command-macro
-    content: "W0: build command_family! macro for command-only types (SessionCommand/StoreCommand/AlternativeCommand/VersionCommand/UnsavedChangeCommand and Backbone/Provider command impls) that emit only Object + Edge + Connection (no Diff/Modification ladder)"
-    status: pending
-  - id: w0-interface-enums
-    content: "W0: build interface_enums! macro emitting #[derive(async_graphql::Interface)] enums for Node, Entity, WeakEntity, StrongEntity, RichStrongEntity, Artifact, Document, Event, Workspace, Input, Diff, Modification, Operation, EntityEdge, EntityConnection, Backbone, Provider, BackboneCommand, ProviderCommand - populated from the entity/operation/command roster filtered by kind"
-    status: pending
-  - id: w0-region-markers
-    content: "W0: inject //#region W1..W8 markers into lib.rs to delimit subagent write ranges"
-    status: pending
-  - id: w0-vector-tag-canonical
-    content: "W0: convert Vector + Tag end-to-end as canonical templates for subagent reference; cargo check green; verify Schema::sdl() emits VectorEdge/VectorConnection/VectorDiff/VectorModification/VectorModifications + matching trio for Tag"
-    status: pending
-  - id: w1-w6-dispatch
-    content: Dispatch W1-W6 parallel subagents (geometry/meta/type-tree/design-tree/kit/vcs) to emit entity_family! per entity in their region; each runs cargo check
-    status: pending
-  - id: w7-operations
-    content: "W7: dispatch sequential subagent to apply kit_operation_enum!/scope_enum!/input_enum! and operation_family! per registered operation - each operation becomes real Rust types implementing the Operation interface"
-    status: pending
-  - id: w8-command-navs
-    content: "W8: dispatch sequential subagent to replace hand-written *OperationNav structs with command_nav! invocations driven by the operation roster"
-    status: pending
-  - id: w9-runtime-mechanisms
-    content: "W9: dispatch sequential subagent for the new Session/Provider/Backbone/Store/Graph/Version mechanisms - emit Workspace/Backbone/Provider interfaces, FileBackbone+WebsocketBackbone+LocalProvider+RemoteProvider entity_family! invocations, Store/Version concrete types, full command_family! suite (SessionCommand/StoreCommand/AlternativeCommand/VersionCommand/UnsavedChangeCommand + Backbone/Provider command impls), VersionKind/BackboneStatus enums, and rewire Mutation root to session: SessionCommand!"
-    status: pending
-  - id: integrate-rosters
-    content: "Integrate: author final register_entities!/register_operations! rosters that auto-grow async_graphql::Union enums (OwnerEntity, OwnedEntity, AttributeOwner, Blueprint, ChangeOwner, ...) and Interface enums covering every entity/operation"
-    status: pending
-  - id: register-output-types
-    content: "Integrate: ensure every macro-emitted type is reachable from Query/Mutation OR registered via SchemaBuilder::register_output_type so async_graphql includes it in Schema::sdl()"
-    status: pending
-  - id: regenerate-schema
-    content: Regenerate schema.graphql via build.script.ts and diff against golden until every golden `^type|^interface|^union|^input|^scalar|^enum` declaration is present in the generated schema
-    status: pending
-  - id: test-sweep
-    content: Run cargo test -p compose + wasm32 cargo check; rewrite schema_matches_target_graphql_file to parse both schemas with apollo-parser/async-graphql-parser and assert that every type/interface/field in golden is structurally present in the generated schema
-    status: pending
-  - id: close-ticket
-    content: Close ticket via repo MCP ticket_close with summary of converted entities/operations and schema diff stats
-    status: pending
+ - id: reopen-ticket
+   content: Reopen ticket 2026/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR via repo MCP ticket_reopen
+   status: pending
+ - id: w0-purge-string-sdl
+   content: "W0: delete sdl_registry::HasSdlFragment, register_entities!/register_operations! empty-fragment shells, and any __sdl_*/__build_sdl_fragment!/SDL_HEADER macros - SDL is no longer string-built"
+   status: pending
+ - id: w0-macro-foundation
+   content: "W0: rewrite //#region entity_dsl with code-first macro suite (entity_family! emits struct + Default + #[Object] impl + owner-slot enum + owner async_graphql::Union + Edge/Connection/Diff/Modification/Modifications real Rust types via SimpleObject/ComplexObject - no string concat anywhere)"
+   status: pending
+ - id: w0-command-macro
+   content: "W0: build command_family! macro for command-only types (SessionCommand/StoreCommand/AlternativeCommand/VersionCommand/UnsavedChangeCommand and Backbone/Provider command impls) that emit only Object + Edge + Connection (no Diff/Modification ladder)"
+   status: pending
+ - id: w0-interface-enums
+   content: "W0: build interface_enums! macro emitting #[derive(async_graphql::Interface)] enums for Node, Entity, WeakEntity, StrongEntity, RichStrongEntity, Artifact, Document, Event, Workspace, Input, Diff, Modification, Operation, EntityEdge, EntityConnection, Backbone, Provider, BackboneCommand, ProviderCommand - populated from the entity/operation/command roster filtered by kind"
+   status: pending
+ - id: w0-region-markers
+   content: "W0: inject //#region W1..W8 markers into lib.rs to delimit subagent write ranges"
+   status: pending
+ - id: w0-vector-tag-canonical
+   content: "W0: convert Vector + Tag end-to-end as canonical templates for subagent reference; cargo check green; verify Schema::sdl() emits VectorEdge/VectorConnection/VectorDiff/VectorModification/VectorModifications + matching trio for Tag"
+   status: pending
+ - id: w1-w6-dispatch
+   content: Dispatch W1-W6 parallel subagents (geometry/meta/type-tree/design-tree/kit/vcs) to emit entity_family! per entity in their region; each runs cargo check
+   status: pending
+ - id: w7-operations
+   content: "W7: dispatch sequential subagent to apply kit_operation_enum!/scope_enum!/input_enum! and operation_family! per registered operation - each operation becomes real Rust types implementing the Operation interface"
+   status: pending
+ - id: w8-command-navs
+   content: "W8: dispatch sequential subagent to replace hand-written *OperationNav structs with command_nav! invocations driven by the operation roster"
+   status: pending
+ - id: w9-runtime-mechanisms
+   content: "W9: dispatch sequential subagent for the new Session/Provider/Backbone/Store/Graph/Version mechanisms - emit Workspace/Backbone/Provider interfaces, FileBackbone+WebsocketBackbone+LocalProvider+RemoteProvider entity_family! invocations, Store/Version concrete types, full command_family! suite (SessionCommand/StoreCommand/AlternativeCommand/VersionCommand/UnsavedChangeCommand + Backbone/Provider command impls), VersionKind/BackboneStatus enums, and rewire Mutation root to session: SessionCommand!"
+   status: pending
+ - id: integrate-rosters
+   content: "Integrate: author final register_entities!/register_operations! rosters that auto-grow async_graphql::Union enums (OwnerEntity, OwnedEntity, AttributeOwner, Blueprint, ChangeOwner, ...) and Interface enums covering every entity/operation"
+   status: pending
+ - id: register-output-types
+   content: "Integrate: ensure every macro-emitted type is reachable from Query/Mutation OR registered via SchemaBuilder::register_output_type so async_graphql includes it in Schema::sdl()"
+   status: pending
+ - id: regenerate-schema
+   content: Regenerate schema.graphql via build.script.ts and diff against golden until every golden `^type|^interface|^union|^input|^scalar|^enum` declaration is present in the generated schema
+   status: pending
+ - id: test-sweep
+   content: Run cargo test -p compose + wasm32 cargo check; rewrite schema_matches_target_graphql_file to parse both schemas with apollo-parser/async-graphql-parser and assert that every type/interface/field in golden is structurally present in the generated schema
+   status: pending
+ - id: close-ticket
+   content: Close ticket via repo MCP ticket_close with summary of converted entities/operations and schema diff stats
+   status: pending
 isProject: false
 ---
 

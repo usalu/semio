@@ -4,7 +4,5 @@
   "description": "The CopyAndPaste.stories.tsx defines a custom LAYOUT using `id` and `label` on window nodes, but UIWindowLayoutWindowNode requires `windowKindId` (not `id`). The `convertWindowLayoutNodeToGoldenConfig` function reads `child.windowKindId` to set the GoldenLayout `componentName`, so when `id` is used instead, all componentNames are `undefined` and no windows render. Fix: update LAYOUT to use `windowKindId` instead of `id` on all window nodes.",
   "summary": "Bulk close",
   "goal": "🎯r2603",
-  "sessions": [
-    "⚪9b164627ed194284af9ac837e8c00181"
-  ]
+  "sessions": ["⚪9b164627ed194284af9ac837e8c00181"]
 }

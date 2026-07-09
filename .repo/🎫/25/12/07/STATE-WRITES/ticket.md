@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 # Plan
@@ -57,9 +58,9 @@ For every “thing” we care about (diagram scale, panel visibility, selection,
 
 ```ts
 export function useSomething(): [ValueType, (value: ValueType) => void, boolean] {
-  // 1. Read value via existing mechanism (store/read hooks)
-  // 2. Get XState actor & canSet via selectors
-  // 3. Build a setter that sends an event to the machine
+ // 1. Read value via existing mechanism (store/read hooks)
+ // 2. Get XState actor & canSet via selectors
+ // 3. Build a setter that sends an event to the machine
 }
 ```
 
@@ -109,17 +110,17 @@ For any design app write (e.g. delete selection, move piece, change plane compon
 
    ```ts
    const actions = {
-     designUpdatePiecePlaneXAxisY: ({ context, event }) => {
-       if (event.type !== "DESIGN.UPDATE_PIECE_PLANE_XAXIS_Y") return;
+    designUpdatePiecePlaneXAxisY: ({ context, event }) => {
+     if (event.type !== "DESIGN.UPDATE_PIECE_PLANE_XAXIS_Y") return;
 
-       const store = context.sketchpadStore.designApp({ kit: event.kitGuid, design: event.designGuid }) as DesignStore;
+     const store = context.sketchpadStore.designApp({ kit: event.kitGuid, design: event.designGuid }) as DesignStore;
 
-       store.execute(
-         "compose.designApp.updatePieces", // existing command
-         "compose.sketchpad.useFlatPiecePlaneXAxisY", // origin
-         [{ id: event.pieceGuid, diff: { plane: { xAxis: { y: event.value } } } }],
-       );
-     },
+     store.execute(
+      "compose.designApp.updatePieces", // existing command
+      "compose.sketchpad.useFlatPiecePlaneXAxisY", // origin
+      [{ id: event.pieceGuid, diff: { plane: { xAxis: { y: event.value } } } }],
+     );
+    },
    };
    ```
 
@@ -162,30 +163,30 @@ Plan:
 
      ```ts
      export function useDesignDiagramScaleTriad(): [number | undefined, (scale: number) => void, boolean] {
-       // read
-       const scale = useDesignDiagramScale(); // existing read hook
+      // read
+      const scale = useDesignDiagramScale(); // existing read hook
 
-       // write / canSet
-       const actor = useActor();
-       const { kitGuid, designGuid } = useDesignScope(); // assuming scope hooks
+      // write / canSet
+      const actor = useActor();
+      const { kitGuid, designGuid } = useDesignScope(); // assuming scope hooks
 
-       const canSet = useSelector(actor, (state) => {
-         // e.g. check if this design is editable, based on machine's local state
-         const app = selectDesignAppState(state, kitGuid, designGuid);
-         return !app.isReadOnly;
+      const canSet = useSelector(actor, (state) => {
+       // e.g. check if this design is editable, based on machine's local state
+       const app = selectDesignAppState(state, kitGuid, designGuid);
+       return !app.isReadOnly;
+      });
+
+      const setScale = (value: number) => {
+       if (!canSet) return;
+       actor.send({
+        type: "DESIGN.SET_DIAGRAM_SCALE",
+        kitGuid,
+        designGuid,
+        scale: value,
        });
+      };
 
-       const setScale = (value: number) => {
-         if (!canSet) return;
-         actor.send({
-           type: "DESIGN.SET_DIAGRAM_SCALE",
-           kitGuid,
-           designGuid,
-           scale: value,
-         });
-       };
-
-       return [scale, setScale, canSet];
+      return [scale, setScale, canSet];
      }
      ```
 
@@ -195,23 +196,23 @@ Plan:
 
    ```ts
    export function useDesignDeleteSelectedTriad(): [boolean, () => void, boolean] {
-     const actor = useActor();
-     const { kitGuid, designGuid } = useDesignScope();
+    const actor = useActor();
+    const { kitGuid, designGuid } = useDesignScope();
 
-     const canDelete = useSelector(actor, (state) => {
-       const app = selectDesignAppState(state, kitGuid, designGuid);
-       const sel = app.selection;
-       const hasSelection = !!(sel?.pieces?.length || sel?.connections?.length);
-       return hasSelection && !app.isReadOnly;
-     });
+    const canDelete = useSelector(actor, (state) => {
+     const app = selectDesignAppState(state, kitGuid, designGuid);
+     const sel = app.selection;
+     const hasSelection = !!(sel?.pieces?.length || sel?.connections?.length);
+     return hasSelection && !app.isReadOnly;
+    });
 
-     const deleteSelected = () => {
-       if (!canDelete) return;
-       actor.send({ type: "DESIGN.DELETE_SELECTED", kitGuid, designGuid });
-     };
+    const deleteSelected = () => {
+     if (!canDelete) return;
+     actor.send({ type: "DESIGN.DELETE_SELECTED", kitGuid, designGuid });
+    };
 
-     // state for this triad could just be “is there anything to delete?”
-     return [canDelete, deleteSelected, canDelete];
+    // state for this triad could just be “is there anything to delete?”
+    return [canDelete, deleteSelected, canDelete];
    }
    ```
 
@@ -248,35 +249,35 @@ Implementation sketch:
 
    ```ts
    export function useFlatPiecePlaneXAxisY(): [number, (value: number) => void, boolean] {
-     // READ: existing mechanism
-     const plane = useFlatPiecePlane(); // uses current metadata/flattening logic
-     const value = plane?.xAxis.y ?? 0;
+    // READ: existing mechanism
+    const plane = useFlatPiecePlane(); // uses current metadata/flattening logic
+    const value = plane?.xAxis.y ?? 0;
 
-     // IDs from scopes
-     const { kitGuid } = useKitScope();
-     const { designGuid } = useDesignScope();
-     const { pieceGuid } = usePieceScope();
+    // IDs from scopes
+    const { kitGuid } = useKitScope();
+    const { designGuid } = useDesignScope();
+    const { pieceGuid } = usePieceScope();
 
-     const actor = useActor();
+    const actor = useActor();
 
-     const canSet = useSelector(actor, (state) => {
-       const app = selectDesignAppState(state, kitGuid, designGuid);
-       // example logic: editable design, correct tool, etc.
-       return app.activeTool === ToolKind.Move && !app.isReadOnly;
+    const canSet = useSelector(actor, (state) => {
+     const app = selectDesignAppState(state, kitGuid, designGuid);
+     // example logic: editable design, correct tool, etc.
+     return app.activeTool === ToolKind.Move && !app.isReadOnly;
+    });
+
+    const setValue = (next: number) => {
+     if (!canSet) return;
+     actor.send({
+      type: "DESIGN.UPDATE_PIECE_PLANE_XAXIS_Y",
+      kitGuid,
+      designGuid,
+      pieceGuid,
+      value: next,
      });
+    };
 
-     const setValue = (next: number) => {
-       if (!canSet) return;
-       actor.send({
-         type: "DESIGN.UPDATE_PIECE_PLANE_XAXIS_Y",
-         kitGuid,
-         designGuid,
-         pieceGuid,
-         value: next,
-       });
-     };
-
-     return [value, setValue, canSet];
+    return [value, setValue, canSet];
    }
    ```
 
@@ -441,6 +442,7 @@ Added event handlers in the machine's `on` block:
 ## Log
 
 ## Summary
+
 # Summary
 
 Update state writes handling

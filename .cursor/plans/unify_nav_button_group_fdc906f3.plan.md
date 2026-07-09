@@ -2,18 +2,18 @@
 name: Unify Nav Button Group
 overview: Merge back, forward, and up into one `ButtonGroup` in `PlatformView` so the breadcrumb sits beside a single bordered control cluster instead of three separate groups with gaps between them.
 todos:
-  - id: ticket
-    content: Open MCP ticket (read repo://goals, ticket_open) for navbar nav group fix
-    status: completed
-  - id: merge-nav-group
-    content: Replace three nav navbar items with one ButtonGroup id="ui.nav" and three ButtonGroupItems in PlatformView
-    status: completed
-  - id: tests
-    content: Extend PlatformView vitest to assert single ui.nav button group + preserved item ids
-    status: completed
-  - id: verify-close
-    content: Run renderer tests; visual check in PlatformView app; ticket_close with summary
-    status: in_progress
+ - id: ticket
+   content: Open MCP ticket (read repo://goals, ticket_open) for navbar nav group fix
+   status: completed
+ - id: merge-nav-group
+   content: Replace three nav navbar items with one ButtonGroup id="ui.nav" and three ButtonGroupItems in PlatformView
+   status: completed
+ - id: tests
+   content: Extend PlatformView vitest to assert single ui.nav button group + preserved item ids
+   status: completed
+ - id: verify-close
+   content: Run renderer tests; visual check in PlatformView app; ticket_close with summary
+   status: in_progress
 isProject: false
 ---
 
@@ -62,8 +62,6 @@ flowchart LR
   end
 ```
 
-
-
 ## Implementation
 
 **Single file change** (production code): `[framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx)`
@@ -72,29 +70,14 @@ flowchart LR
 
 ```tsx
 navbarItems.push({
-  key: "navHistory",
-  content: (
-    <ButtonGroup id="ui.nav">
-      <ButtonGroupItem
-        id="ui.nav.back"
-        onClick={onGoBack}
-        className={cn(!canGoBackProp && "opacity-30 pointer-events-none")}
-        icon={<Icon icon="arrow-left" size="small" />}
-      />
-      <ButtonGroupItem
-        id="ui.nav.forward"
-        onClick={onGoForward}
-        className={cn(!canGoForwardProp && "opacity-30 pointer-events-none")}
-        icon={<Icon icon="arrow-right" size="small" />}
-      />
-      <ButtonGroupItem
-        id="ui.nav.up"
-        onClick={onGoUp}
-        className={cn(!canGoUpProp && "opacity-30 pointer-events-none")}
-        icon={<Icon icon="arrow-up" size="small" />}
-      />
-    </ButtonGroup>
-  ),
+ key: "navHistory",
+ content: (
+  <ButtonGroup id="ui.nav">
+   <ButtonGroupItem id="ui.nav.back" onClick={onGoBack} className={cn(!canGoBackProp && "opacity-30 pointer-events-none")} icon={<Icon icon="arrow-left" size="small" />} />
+   <ButtonGroupItem id="ui.nav.forward" onClick={onGoForward} className={cn(!canGoForwardProp && "opacity-30 pointer-events-none")} icon={<Icon icon="arrow-right" size="small" />} />
+   <ButtonGroupItem id="ui.nav.up" onClick={onGoUp} className={cn(!canGoUpProp && "opacity-30 pointer-events-none")} icon={<Icon icon="arrow-up" size="small" />} />
+  </ButtonGroup>
+ ),
 });
 ```
 
@@ -125,5 +108,4 @@ Optional (low value): add a small static markup test in `[ui/react/index.tsx](ui
 ## Out of scope
 
 - `.repo/🎫/...` archive copies (`framework-react-head.tsx`) — not production sources
-- Sketchpad / other products unless they duplicate this navbar (grep shows only `PlatformView` uses `ui.nav.`* today)
-
+- Sketchpad / other products unless they duplicate this navbar (grep shows only `PlatformView` uses `ui.nav.`\* today)

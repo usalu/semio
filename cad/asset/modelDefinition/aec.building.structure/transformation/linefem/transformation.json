@@ -10,7 +10,5 @@
   "target": {
     "modelDefinition": "aec.building.structure"
   },
-  "typologies": [
-    "structure.linefem.lineelement"
-  ]
+  "typologies": ["structure.linefem.lineelement"]
 }

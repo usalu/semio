@@ -5,10 +5,7 @@
   "label": "BooleanDifference",
   "interaction": {
     "spatialGroundPick": false,
-    "pickDisabledStates": [
-      "idle",
-      "committed"
-    ],
+    "pickDisabledStates": ["idle", "committed"],
     "groundPointerMoveStates": [],
     "heightDragStates": [],
     "verticalRodStates": [],
@@ -41,11 +38,7 @@
                     },
                     "value": {
                       "kind": "const",
-                      "value": [
-                        0,
-                        0,
-                        0
-                      ]
+                      "value": [0, 0, 0]
                     }
                   },
                   {
@@ -89,10 +82,7 @@
       {
         "name": "select_surfaces_or_polysurfaces_to_subtract_from",
         "selection": {
-          "accept": [
-            "shell",
-            "solid"
-          ],
+          "accept": ["shell", "solid"],
           "multiple": true,
           "prompt": "Select surfaces or polysurfaces to subtract from"
         },
@@ -154,10 +144,7 @@
       {
         "name": "select_surfaces_or_polysurfaces_to_subtract_with",
         "selection": {
-          "accept": [
-            "shell",
-            "solid"
-          ],
+          "accept": ["shell", "solid"],
           "multiple": true,
           "prompt": "Select surfaces or polysurfaces to subtract with"
         },
@@ -234,11 +221,7 @@
             "text": "Select surfaces or polysurfaces to subtract from",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -301,11 +284,7 @@
             "text": "Select surfaces or polysurfaces to subtract with",
             "position": {
               "kind": "const",
-              "value": [
-                0,
-                0.25,
-                1.55
-              ]
+              "value": [0, 0.25, 1.55]
             }
           },
           {
@@ -361,9 +340,7 @@
     ]
   },
   "commit": {
-    "fromStates": [
-      "ready"
-    ],
+    "fromStates": ["ready"],
     "operation": {
       "kind": "action",
       "action": "command.finish",

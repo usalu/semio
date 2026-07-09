@@ -7,7 +7,7 @@ isProject: false
 
 ## Problem
 
-In the sketchpad WIRES board, nodes are filled with their kind-catalog color (e.g. `var(--color-dark-8-9)` / `var(--color-gray-700)`), painted by the WASM/Vello renderer. But the label is drawn separately in the JS text overlay using the node's *stroke* color (theme `emphasized`/dark) regardless of fill:
+In the sketchpad WIRES board, nodes are filled with their kind-catalog color (e.g. `var(--color-dark-8-9)` / `var(--color-gray-700)`), painted by the WASM/Vello renderer. But the label is drawn separately in the JS text overlay using the node's _stroke_ color (theme `emphasized`/dark) regardless of fill:
 
 ```6637:6639:puzzle/2d/react/index.tsx
       const style = this.getStyle(node.style, puzzle2dInteractionChromeStyleKey("node", node.id, chrome));
@@ -19,7 +19,8 @@ So a dark catalog fill + dark label = unreadable. There is no contrast/luminance
 
 ## Approach
 
-Auto-compute label color from the resolved node fill luminance, picking a near-black or near-white theme palette token. Resolve the *effective* fill per node:
+Auto-compute label color from the resolved node fill luminance, picking a near-black or near-white theme palette token. Resolve the _effective_ fill per node:
+
 - selected/highlighted chrome -> the chrome tint fill (`style.fill`)
 - normal + a `nodeKind` catalog color -> that catalog color (this is what WASM actually paints)
 - otherwise -> theme node fill (`style.fill`)
@@ -29,6 +30,7 @@ Node scene objects have no per-instance color override (only handles do), and `p
 ## 1. Contrast helper (`ui/styling/js/resolve.ts`)
 
 Add to the `🎨Resolve` region:
+
 - `relativeLuminance(hex: string): number` - WCAG sRGB relative luminance.
 - `readableForegroundHex(backgroundRef: string, lightKey?, darkKey?): string` - resolves `backgroundRef` to hex, then returns `tokenHex(darkKey ?? "dark")` on light backgrounds and `tokenHex(lightKey ?? "light")` on dark backgrounds (luminance threshold ~0.5, cached like `resolveColorHex`).
 - Extend the `🧪Tests` block in the same file (no new test files) covering luminance ordering and that a dark fill yields the light token and vice versa.
@@ -51,6 +53,6 @@ Add to the `🎨Resolve` region:
 - The sketchpad kit + metabolism fixture identity-kind fills (`--color-dark-*` / `--color-light*`) are left as-is: step 2's auto-contrast makes them readable in both themes, which is the consistent fix the user asked for. (They are palette swatches by design, not semantic chrome.)
 - Edge/relationship labels are not drawn in the overlay, so they are out of scope.
 - Verify by running the puzzle 2d vitest project and visually checking the WIRES board in the sketchpad dev server (light + dark).
-</plan>
-<todos>[{"id": "contrast-helper", "content": "Add relativeLuminance + readableForegroundHex (with tests) to ui/styling/js/resolve.ts"}, {"id": "puzzle2d-labels", "content": "Use readable foreground for node + handle labels in puzzle 2d overlay based on effective fill; extend overlay tests"}, {"id": "discrete-fixes", "content": "Fix DialogOverlay bg-black/50 scrim and platform success button green literals to semantic tokens"}, {"id": "verify", "content": "Run puzzle 2d vitest and visually verify WIRES board readability in light + dark"}]</todos>
-</invoke>
+  </plan>
+  <todos>[{"id": "contrast-helper", "content": "Add relativeLuminance + readableForegroundHex (with tests) to ui/styling/js/resolve.ts"}, {"id": "puzzle2d-labels", "content": "Use readable foreground for node + handle labels in puzzle 2d overlay based on effective fill; extend overlay tests"}, {"id": "discrete-fixes", "content": "Fix DialogOverlay bg-black/50 scrim and platform success button green literals to semantic tokens"}, {"id": "verify", "content": "Run puzzle 2d vitest and visually verify WIRES board readability in light + dark"}]</todos>
+  </invoke>

@@ -2,27 +2,27 @@
 name: Restore Flow Wgpu Rendering Parity
 overview: Diagnose and fix the wgpu Flow node-graph renderer so it regains premigration parity (edges, port handles/channels, labels, selection rectangle, LOD-adjusted content) instead of showing bare rectangles, then verify live against the `premigration` git tag baseline.
 todos:
-  - id: repro
-    content: Rebuild wgpu wasm, boot flow plugin, screenshot default/zoomed/selected/area-select states
-    status: in_progress
-  - id: reference
-    content: Establish a premigration-equivalent visual reference (worktree checkout or working DAG playground) for comparison
-    status: pending
-  - id: trace-pipeline
-    content: Trace NodeGraphScene JSON -> sync_flow_host -> theme sync -> paint_scene -> texture composite -> label overlay to find where content is lost
-    status: in_progress
-  - id: audit-chrome-regression
-    content: Check whether today's window-chrome rail / session bootstrap changes in framework/renderer/wgpu/rs/lib.rs degrade the node-graph content rect or skip rendering
-    status: pending
-  - id: fix-root-cause
-    content: Apply targeted fix(es) in engine_canvas region / flow plugin / shared types once root cause(s) confirmed
-    status: pending
-  - id: tests
-    content: Extend existing Rust test modules with regression coverage for the fixed behavior
-    status: pending
-  - id: verify
-    content: Rebuild, re-screenshot all four states plus one non-flow DAG playground, confirm parity, update/close ticket
-    status: pending
+ - id: repro
+   content: Rebuild wgpu wasm, boot flow plugin, screenshot default/zoomed/selected/area-select states
+   status: in_progress
+ - id: reference
+   content: Establish a premigration-equivalent visual reference (worktree checkout or working DAG playground) for comparison
+   status: pending
+ - id: trace-pipeline
+   content: Trace NodeGraphScene JSON -> sync_flow_host -> theme sync -> paint_scene -> texture composite -> label overlay to find where content is lost
+   status: in_progress
+ - id: audit-chrome-regression
+   content: Check whether today's window-chrome rail / session bootstrap changes in framework/renderer/wgpu/rs/lib.rs degrade the node-graph content rect or skip rendering
+   status: pending
+ - id: fix-root-cause
+   content: Apply targeted fix(es) in engine_canvas region / flow plugin / shared types once root cause(s) confirmed
+   status: pending
+ - id: tests
+   content: Extend existing Rust test modules with regression coverage for the fixed behavior
+   status: pending
+ - id: verify
+   content: Rebuild, re-screenshot all four states plus one non-flow DAG playground, confirm parity, update/close ticket
+   status: pending
 isProject: false
 ---
 
@@ -31,6 +31,7 @@ isProject: false
 At the `premigration` git tag, "flow" was rendered by [flow/react/index.tsx](flow/react/index.tsx) (5.8k lines) — a DOM/canvas React renderer with full node-graph chrome. The WGPU-WINIT-TRUNK-MIGRATION effort deleted that renderer and replaced it with a native/WASM renderer (`framework/renderer/wgpu`, `ui/wgpu`) that composites the same underlying Rust drawing engines into a texture quad inside a winit+wgpu shell.
 
 Critically, the actual drawing logic is **shared and unchanged**:
+
 - [flow/core/rs/lib.rs](flow/core/rs/lib.rs) `FlowHost::paint_scene` just delegates to `dag.paint_scene`.
 - [mathematical/graph/port/directed/dag/rs/lib.rs](mathematical/graph/port/directed/dag/rs/lib.rs) `paint_scene` (6905 lines) is **byte-identical** to `premigration` (`git diff --stat premigration -- mathematical/graph/port/directed/dag/rs/lib.rs` is empty) — this already draws node bodies, edges, port handles, and LOD-tiered content as vector paths into a `cavas::Scene`.
 

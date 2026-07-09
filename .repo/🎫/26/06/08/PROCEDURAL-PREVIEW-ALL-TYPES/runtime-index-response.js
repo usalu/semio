@@ -1,9 +1,8 @@
-import.meta.env = {"BASE_URL": "/", "DEV": true, "MODE": "development", "PLAYGROUND_LOCKED_FIXTURE_ID": "hexagonal-mushroom-column", "PROD": false, "PUZZLE_PLAY_ENTRY": "procedural-3d", "SSR": false};import * as __vite_glob_0_0 from "/@fs/Users/ueli/Documents/semio/procedural/3d/fixture/hexagonal-mushroom-column.procedural.json?import";import * as __vite_glob_0_1 from "/@fs/Users/ueli/Documents/semio/procedural/3d/fixture/rectangle-extrude-volume.procedural.json?import";import * as __vite_glob_0_2 from "/@fs/Users/ueli/Documents/semio/procedural/3d/fixture/sphere-cut-with-torus.procedural.json?import";import {
-  buildFlowPlayCatalogueTree,
-  buildFlowPlayDocumentTree,
-  buildFlowPlayInspectorTree,
-  parseFlowPlayFixtureJson
-} from "/@fs/Users/ueli/Documents/semio/flow/play/index.ts";
+import.meta.env = { BASE_URL: "/", DEV: true, MODE: "development", PLAYGROUND_LOCKED_FIXTURE_ID: "hexagonal-mushroom-column", PROD: false, PUZZLE_PLAY_ENTRY: "procedural-3d", SSR: false };
+import * as __vite_glob_0_0 from "/@fs/Users/ueli/Documents/semio/procedural/3d/fixture/hexagonal-mushroom-column.procedural.json?import";
+import * as __vite_glob_0_1 from "/@fs/Users/ueli/Documents/semio/procedural/3d/fixture/rectangle-extrude-volume.procedural.json?import";
+import * as __vite_glob_0_2 from "/@fs/Users/ueli/Documents/semio/procedural/3d/fixture/sphere-cut-with-torus.procedural.json?import";
+import { buildFlowPlayCatalogueTree, buildFlowPlayDocumentTree, buildFlowPlayInspectorTree, parseFlowPlayFixtureJson } from "/@fs/Users/ueli/Documents/semio/flow/play/index.ts";
 import {
   buildCatalogueKindsTreeSections,
   buildFlowContextMenuItems,
@@ -14,7 +13,7 @@ import {
   FLOW_DEFAULT_PROXIMITY_DISTANCE,
   flowPlayCatalogueItemDragData,
   flowSensibleSliderRange,
-  isDagDrawLodKind
+  isDagDrawLodKind,
 } from "/@fs/Users/ueli/Documents/semio/flow/react/index.tsx";
 import {
   buildFlowWindowBody,
@@ -32,17 +31,10 @@ import {
   PLAYGROUND_NO_FIXTURE_ID,
   playgroundResolvedFixtureId,
   registerWindowBody,
-  WindowKindRuntime
+  WindowKindRuntime,
 } from "/@fs/Users/ueli/Documents/semio/framework/product/playground/core/index.ts";
 import { meshTransferFromPreviewPayload } from "/@fs/Users/ueli/Documents/semio/geometry/brep/js/index.ts";
-import {
-  extractChannelPreviewItems,
-  filterVisiblePreviewItems,
-  PROCEDURAL_DEFAULT_FIXTURE,
-  proceduralExtensionHost,
-  proceduralFixtureToJson,
-  resolveGeometryTargets
-} from "/@fs/Users/ueli/Documents/semio/procedural/3d/react/index.tsx";
+import { extractChannelPreviewItems, filterVisiblePreviewItems, PROCEDURAL_DEFAULT_FIXTURE, proceduralExtensionHost, proceduralFixtureToJson, resolveGeometryTargets } from "/@fs/Users/ueli/Documents/semio/procedural/3d/react/index.tsx";
 import { bootstrapElementsSurfaceChromeDocument, selectionMergeIds } from "/@fs/Users/ueli/Documents/semio/ui/react/index.tsx";
 function previewItemKey(item) {
   return `${item.widgetId}:${item.port}:${item.direction}`;
@@ -67,63 +59,69 @@ export const PROCEDURAL_PLAY_BODY_KEY_PREVIEW = "procedural.play.preview";
 export const PROCEDURAL_PLAY_SURFACE_ID_PREVIEW = "procedural.play.preview/v1";
 export const PROCEDURAL_PLAY_DEFAULT_FIXTURE = PROCEDURAL_DEFAULT_FIXTURE;
 export const PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON = proceduralFixtureToJson(PROCEDURAL_DEFAULT_FIXTURE);
-export const PROCEDURAL_PLAY_LAYOUT = createDefaultLayout(
-  [PROCEDURAL_PLAY_WINDOW_KIND_ID, PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW],
-  "row",
-  [55, 45],
-  ["Flow", "Preview"]
-);
+export const PROCEDURAL_PLAY_LAYOUT = createDefaultLayout([PROCEDURAL_PLAY_WINDOW_KIND_ID, PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW], "row", [55, 45], ["Flow", "Preview"]);
 export const PROCEDURAL_PLAY_KINDS_TAB_ID = "procedural-play-kinds";
 export const PROCEDURAL_PLAY_EXTENSIONS_TAB_ID = "procedural-play-extensions";
 export const PROCEDURAL_PLAY_DOCUMENT_TAB_ID = "framework.panel.document";
 export const PROCEDURAL_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const PROCEDURAL_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
 export const PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID = "procedural-default";
-import {
-  PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID,
-  resolveProceduralPlayFixtureSlug
-} from "/fixture-slugs.ts";
+import { PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID, resolveProceduralPlayFixtureSlug } from "/fixture-slugs.ts";
 export { PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID, resolveProceduralPlayFixtureSlug };
-const proceduralFixtureModules = /* #__PURE__ */ Object.assign({"../fixture/hexagonal-mushroom-column.procedural.json": __vite_glob_0_0,"../fixture/rectangle-extrude-volume.procedural.json": __vite_glob_0_1,"../fixture/sphere-cut-with-torus.procedural.json": __vite_glob_0_2});
+const proceduralFixtureModules = /* #__PURE__ */ Object.assign({
+  "../fixture/hexagonal-mushroom-column.procedural.json": __vite_glob_0_0,
+  "../fixture/rectangle-extrude-volume.procedural.json": __vite_glob_0_1,
+  "../fixture/sphere-cut-with-torus.procedural.json": __vite_glob_0_2,
+});
 function proceduralFixtureIdFromGlobPath(globPath) {
   const base = globPath.split("/").pop() ?? globPath;
   return base.replace(/\.procedural\.json$/, "");
 }
 function proceduralFixtureLabelFromId(id) {
-  return id.split("-").filter(Boolean).map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+  return id
+    .split("-")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 const PROCEDURAL_PLAY_FILE_FIXTURE_JSON_BY_ID = Object.fromEntries(
   Object.entries(proceduralFixtureModules).map(([path, mod]) => {
     const id = proceduralFixtureIdFromGlobPath(path);
     const json = typeof mod.default === "string" ? mod.default : JSON.stringify(mod.default);
     return [id, json];
-  })
+  }),
 );
 export const PROCEDURAL_PLAY_EMPTY_FIXTURE = {
   schema: "flow.fixture/v1",
   camera: { x: 0, y: 0, zoom: 1 },
   widgets: [],
-  synapses: []
+  synapses: [],
 };
 export const PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON = proceduralFixtureToJson(PROCEDURAL_PLAY_EMPTY_FIXTURE);
 export const PROCEDURAL_PLAY_FIXTURE_OPTIONS = [
   { id: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID, label: "Box fillet move" },
-  ...Object.keys(PROCEDURAL_PLAY_FILE_FIXTURE_JSON_BY_ID).sort().map((id) => ({ id, label: proceduralFixtureLabelFromId(id) }))
+  ...Object.keys(PROCEDURAL_PLAY_FILE_FIXTURE_JSON_BY_ID)
+    .sort()
+    .map((id) => ({ id, label: proceduralFixtureLabelFromId(id) })),
 ];
 const PROCEDURAL_PLAY_STORE_KEY = "procedural.fixture/v1";
 export function createProceduralPlayFixtureStore(storage) {
-  const resolved = storage ?? (typeof globalThis.localStorage !== "undefined" ? globalThis.localStorage : /* @__PURE__ */ (() => {
-    const backing = /* @__PURE__ */ new Map();
-    return {
-      getItem: (key) => backing.get(key) ?? null,
-      setItem: (key, value) => {
-        backing.set(key, value);
-      },
-      removeItem: (key) => {
-        backing.delete(key);
-      }
-    };
-  })());
+  const resolved =
+    storage ??
+    (typeof globalThis.localStorage !== "undefined"
+      ? globalThis.localStorage
+      : /* @__PURE__ */ (() => {
+          const backing = /* @__PURE__ */ new Map();
+          return {
+            getItem: (key) => backing.get(key) ?? null,
+            setItem: (key, value) => {
+              backing.set(key, value);
+            },
+            removeItem: (key) => {
+              backing.delete(key);
+            },
+          };
+        })());
   return {
     load() {
       return resolved.getItem(PROCEDURAL_PLAY_STORE_KEY);
@@ -133,7 +131,7 @@ export function createProceduralPlayFixtureStore(storage) {
     },
     clear() {
       resolved.removeItem(PROCEDURAL_PLAY_STORE_KEY);
-    }
+    },
   };
 }
 const DEFAULT_LAYER_SPACING = 120;
@@ -141,7 +139,7 @@ const DEFAULT_SIBLING_GAP = 40;
 const BREP_XFORM_NEURON_KIND = {
   translate: "brep.xform.translate",
   rotate: "brep.xform.rotate",
-  scale: "brep.xform.scale"
+  scale: "brep.xform.scale",
 };
 const GUMBALL_SLIDER_HALF_WIDTH = 42;
 const GUMBALL_NEURON_HALF_WIDTH = 48;
@@ -176,7 +174,7 @@ function copyGumballValues(binding) {
   return {
     offset: [binding.values.offset[0], binding.values.offset[1], binding.values.offset[2]],
     angle: binding.values.angle,
-    factor: binding.values.factor
+    factor: binding.values.factor,
   };
 }
 function setGumballBindingValues(binding, values) {
@@ -189,7 +187,7 @@ function applyGumballDeltaToBase(base, op, delta) {
     return {
       offset: [base.offset[0] + delta.offset[0], base.offset[1] + delta.offset[1], base.offset[2] + delta.offset[2]],
       angle: base.angle,
-      factor: base.factor
+      factor: base.factor,
     };
   }
   if (op === "rotate" && delta.op === "rotate") {
@@ -201,15 +199,11 @@ function applyGumballDeltaToBase(base, op, delta) {
   return base;
 }
 function gumballBindingNodeIds(binding) {
-  return [...binding.valueWidgetIds, ...binding.vectorId ? [binding.vectorId] : [], binding.transformId];
+  return [...binding.valueWidgetIds, ...(binding.vectorId ? [binding.vectorId] : []), binding.transformId];
 }
 function accumulateGumballDelta(binding, delta) {
   if (delta.op === "translate" && binding.op === "translate") {
-    binding.values.offset = [
-      binding.values.offset[0] + delta.offset[0],
-      binding.values.offset[1] + delta.offset[1],
-      binding.values.offset[2] + delta.offset[2]
-    ];
+    binding.values.offset = [binding.values.offset[0] + delta.offset[0], binding.values.offset[1] + delta.offset[1], binding.values.offset[2] + delta.offset[2]];
     return;
   }
   if (delta.op === "rotate" && binding.op === "rotate") {
@@ -253,7 +247,7 @@ export function buildProceduralPlayCanvasContextMenu(ctx, dispatch) {
       onSelect: () => {
         dispatch("setSelection", { ids: [ctx.hoveredNodeId], mode: "default" });
         dispatch("setShowMode", { id: "selected" });
-      }
+      },
     });
   }
   return items;
@@ -267,16 +261,16 @@ export function buildProceduralPlayExtensionsTree(entries) {
           id: "procedural-play-extensions.empty",
           label: "Extensions",
           defaultOpen: false,
-          items: [{ id: "procedural-play-extensions.empty.msg", label: "Loading extensions…" }]
-        }
-      ]
+          items: [{ id: "procedural-play-extensions.empty.msg", label: "Loading extensions…" }],
+        },
+      ],
     };
   }
   const commandItems = proceduralExtensionHost.activeCommands().map((command) => ({
     id: `procedural-play-extensions.command.${command.id}`,
     label: command.title,
     description: command.id,
-    command: proceduralPlayCmd("runExtensionCommand", { commandId: command.id })
+    command: proceduralPlayCmd("runExtensionCommand", { commandId: command.id }),
   }));
   const sections = [
     {
@@ -291,17 +285,17 @@ export function buildProceduralPlayExtensionsTree(entries) {
           id: `procedural-play-extensions.${entry.id}`,
           label: entry.manifest.name,
           description: `${entry.manifest.version} · ${entry.active ? "enabled" : "disabled"} · ${operators.length} operators · ${schemas.length} schemas · ${commands.length} commands`,
-          command: proceduralPlayCmd("toggleExtension", { id: entry.id, enabled: !entry.active })
+          command: proceduralPlayCmd("toggleExtension", { id: entry.id, enabled: !entry.active }),
         };
-      })
-    }
+      }),
+    },
   ];
   if (commandItems.length) {
     sections.push({
       id: "procedural-play-extensions.commands",
       label: "Commands",
       defaultOpen: false,
-      items: commandItems
+      items: commandItems,
     });
   }
   return { type: "tree", sections };
@@ -315,9 +309,9 @@ export function buildProceduralPlayKindsTree(sections) {
           id: "procedural-play-kinds.empty",
           label: "Catalogue",
           defaultOpen: false,
-          items: [{ id: "procedural-play-kinds.empty.msg", label: "Loading catalogue…" }]
-        }
-      ]
+          items: [{ id: "procedural-play-kinds.empty.msg", label: "Loading catalogue…" }],
+        },
+      ],
     };
   }
   const treeSections = buildCatalogueKindsTreeSections(sections, "procedural-play-kinds", flowPlayCatalogueItemDragData);
@@ -343,7 +337,7 @@ export function buildProceduralPlayToolbarTools(state, controllerId) {
       pressed: state.selectionMethod === "rectangle",
       controllerId,
       command: "setSelectionMethod",
-      args: { method: "rectangle" }
+      args: { method: "rectangle" },
     },
     {
       id: "procedural.select.lasso",
@@ -354,7 +348,7 @@ export function buildProceduralPlayToolbarTools(state, controllerId) {
       pressed: state.selectionMethod === "lasso",
       controllerId,
       command: "setSelectionMethod",
-      args: { method: "lasso" }
+      args: { method: "lasso" },
     },
     {
       id: "procedural.select.mode.default",
@@ -365,7 +359,7 @@ export function buildProceduralPlayToolbarTools(state, controllerId) {
       pressed: state.selectionMode === "default",
       controllerId,
       command: "setSelectionMode",
-      args: { mode: "default" }
+      args: { mode: "default" },
     },
     {
       id: "procedural.select.mode.additive",
@@ -376,7 +370,7 @@ export function buildProceduralPlayToolbarTools(state, controllerId) {
       pressed: state.selectionMode === "additive",
       controllerId,
       command: "setSelectionMode",
-      args: { mode: "additive" }
+      args: { mode: "additive" },
     },
     {
       id: "procedural.select.mode.subtractive",
@@ -387,7 +381,7 @@ export function buildProceduralPlayToolbarTools(state, controllerId) {
       pressed: state.selectionMode === "subtractive",
       controllerId,
       command: "setSelectionMode",
-      args: { mode: "subtractive" }
+      args: { mode: "subtractive" },
     },
     {
       id: "procedural.select.mode.invertive",
@@ -398,7 +392,7 @@ export function buildProceduralPlayToolbarTools(state, controllerId) {
       pressed: state.selectionMode === "invertive",
       controllerId,
       command: "setSelectionMode",
-      args: { mode: "invertive" }
+      args: { mode: "invertive" },
     },
     {
       id: "procedural.selection.clear",
@@ -408,8 +402,8 @@ export function buildProceduralPlayToolbarTools(state, controllerId) {
       order: 6,
       disabled: state.selectionCount === 0,
       controllerId,
-      command: "clearSelection"
-    }
+      command: "clearSelection",
+    },
   ];
   const saveTools = [
     {
@@ -419,7 +413,7 @@ export function buildProceduralPlayToolbarTools(state, controllerId) {
       label: "Store",
       order: 0,
       controllerId,
-      command: "saveStored"
+      command: "saveStored",
     },
     {
       id: "procedural.save.download",
@@ -428,7 +422,7 @@ export function buildProceduralPlayToolbarTools(state, controllerId) {
       label: "Download",
       order: 1,
       controllerId,
-      command: "saveDownload"
+      command: "saveDownload",
     },
     {
       id: "procedural.save.load",
@@ -437,7 +431,7 @@ export function buildProceduralPlayToolbarTools(state, controllerId) {
       label: "Load",
       order: 2,
       controllerId,
-      command: "loadRequest"
+      command: "loadRequest",
     },
     {
       id: "procedural.save.loadStored",
@@ -447,7 +441,7 @@ export function buildProceduralPlayToolbarTools(state, controllerId) {
       order: 3,
       disabled: !state.hasStoredFixture,
       controllerId,
-      command: "loadStored"
+      command: "loadStored",
     },
     {
       id: "procedural.save.reset",
@@ -456,8 +450,8 @@ export function buildProceduralPlayToolbarTools(state, controllerId) {
       label: "Reset",
       order: 4,
       controllerId,
-      command: "resetFixture"
-    }
+      command: "resetFixture",
+    },
   ];
   return {
     selection: selectionTools,
@@ -472,7 +466,7 @@ export function buildProceduralPlayToolbarTools(state, controllerId) {
         pressed: state.showMode === "everything",
         controllerId,
         command: "setShowMode",
-        args: { id: "everything" }
+        args: { id: "everything" },
       },
       {
         id: "procedural.view.selected",
@@ -483,8 +477,8 @@ export function buildProceduralPlayToolbarTools(state, controllerId) {
         pressed: state.showMode === "selected",
         controllerId,
         command: "setShowMode",
-        args: { id: "selected" }
-      }
+        args: { id: "selected" },
+      },
     ],
     actions: [
       {
@@ -494,7 +488,7 @@ export function buildProceduralPlayToolbarTools(state, controllerId) {
         label: "Reorganize",
         order: 0,
         controllerId,
-        command: "reorganize"
+        command: "reorganize",
       },
       {
         id: "procedural.action.delete",
@@ -504,9 +498,9 @@ export function buildProceduralPlayToolbarTools(state, controllerId) {
         order: 1,
         disabled: state.selectionCount === 0,
         controllerId,
-        command: "deleteSelection"
-      }
-    ]
+        command: "deleteSelection",
+      },
+    ],
   };
 }
 function proceduralFixtureJsonForId(fixtureId) {
@@ -583,13 +577,15 @@ export class ProceduralPlayController extends Controller {
     this.rebuildToolbarTools();
   }
   toolbarState() {
-    return this.hostBridge?.getToolbarState() ?? {
-      selectionMethod: this.selectionMethod,
-      selectionMode: this.selectionMode,
-      showMode: this.showMode,
-      selectionCount: this.selectedNodeIds.length,
-      hasStoredFixture: this.hasStoredFixture()
-    };
+    return (
+      this.hostBridge?.getToolbarState() ?? {
+        selectionMethod: this.selectionMethod,
+        selectionMode: this.selectionMode,
+        showMode: this.showMode,
+        selectionCount: this.selectedNodeIds.length,
+        hasStoredFixture: this.hasStoredFixture(),
+      }
+    );
   }
   /** @emoji 🔄 Rebuilds {@link ModeRuntime.tools} from the latest toolbar snapshot. */
   rebuildToolbarTools() {
@@ -645,13 +641,13 @@ export class ProceduralPlayController extends Controller {
     if (!trimmed || trimmed === oldId) return;
     const fixture = parseFlowPlayFixtureJson(this.fixtureJson);
     if (!fixture || fixture.widgets.some((widget) => widget.id === trimmed)) return;
-    const widgets = fixture.widgets.map((widget) => widget.id === oldId ? { ...widget, id: trimmed } : widget);
+    const widgets = fixture.widgets.map((widget) => (widget.id === oldId ? { ...widget, id: trimmed } : widget));
     const synapses = fixture.synapses.map((synapse) => ({
       ...synapse,
       from: synapse.from === oldId ? trimmed : synapse.from,
-      to: synapse.to === oldId ? trimmed : synapse.to
+      to: synapse.to === oldId ? trimmed : synapse.to,
     }));
-    this.selectedNodeIds = this.selectedNodeIds.map((id) => id === oldId ? trimmed : id);
+    this.selectedNodeIds = this.selectedNodeIds.map((id) => (id === oldId ? trimmed : id));
     this.applyFixtureJson(proceduralFixtureToJson({ ...fixture, widgets, synapses }));
   }
   patchFlowWidget(widgetId, field, value) {
@@ -872,7 +868,7 @@ export class ProceduralPlayController extends Controller {
       return [
         { op: "setSliderValue", id: sx, value: x },
         { op: "setSliderValue", id: sy, value: y },
-        { op: "setSliderValue", id: sz, value: z }
+        { op: "setSliderValue", id: sz, value: z },
       ];
     }
     const sliderId = binding.valueWidgetIds[0];
@@ -906,8 +902,8 @@ export class ProceduralPlayController extends Controller {
       values: {
         offset: delta.op === "translate" ? [delta.offset[0], delta.offset[1], delta.offset[2]] : [0, 0, 0],
         angle: delta.op === "rotate" ? delta.angle : 0,
-        factor: delta.op === "scale" ? delta.factor : 1
-      }
+        factor: delta.op === "scale" ? delta.factor : 1,
+      },
     };
     let transformColumnX = gumballColumnAfter(sourceLayout.x, sourceHalf, transformHalf, edgeGap);
     const ops = [];
@@ -917,7 +913,7 @@ export class ProceduralPlayController extends Controller {
         op: "addWidget",
         descriptor: neuronDescriptor(transformId, BREP_XFORM_NEURON_KIND[op]),
         x: transformColumnX,
-        y: sourceLayout.y
+        y: sourceLayout.y,
       });
       ops.push({ op: "setNeuronParams", id: transformId, paramsJson: JSON.stringify(compactNeuronParams(binding)) });
     } else if (op === "translate") {
@@ -937,7 +933,7 @@ export class ProceduralPlayController extends Controller {
         { op: "connectPorts", from: sliderXId, fromPort: "number", to: vectorId, toPort: "x" },
         { op: "connectPorts", from: sliderYId, fromPort: "number", to: vectorId, toPort: "y" },
         { op: "connectPorts", from: sliderZId, fromPort: "number", to: vectorId, toPort: "z" },
-        { op: "connectPorts", from: vectorId, fromPort: "vector", to: transformId, toPort: "offset" }
+        { op: "connectPorts", from: vectorId, fromPort: "vector", to: transformId, toPort: "offset" },
       );
     } else {
       binding.valueWidgetIds = [scalarSliderId];
@@ -953,8 +949,8 @@ export class ProceduralPlayController extends Controller {
           from: scalarSliderId,
           fromPort: "number",
           to: transformId,
-          toPort: op === "rotate" ? "angle" : "factor"
-        }
+          toPort: op === "rotate" ? "angle" : "factor",
+        },
       );
     }
     ops.push({
@@ -963,7 +959,7 @@ export class ProceduralPlayController extends Controller {
       anchorOutPort: "solid",
       mid: transformId,
       midInPort: "geometry",
-      midOutPort: "geometry"
+      midOutPort: "geometry",
     });
     ops.push({ op: "setPreviewOff", ids: [sourceWidgetId] });
     return { ops, binding };
@@ -993,11 +989,8 @@ export class ProceduralPlayController extends Controller {
       id: `${scopeId}-lod`,
       label: "LOD",
       value: this.lodModeForScope(scopeId),
-      items: [
-        { id: "automatic", value: DAG_LOD_MODE_AUTOMATIC, label: dagLodAutomaticSelectLabel(this.effectiveLod) },
-        ...dagPlayLodTiers().map((tier) => ({ id: tier, value: tier, label: dagPlayLodTierMenuLabel(tier) }))
-      ],
-      onChange: { controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "setLodMode", args: { instanceId: scopeId } }
+      items: [{ id: "automatic", value: DAG_LOD_MODE_AUTOMATIC, label: dagLodAutomaticSelectLabel(this.effectiveLod) }, ...dagPlayLodTiers().map((tier) => ({ id: tier, value: tier, label: dagPlayLodTierMenuLabel(tier) }))],
+      onChange: { controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "setLodMode", args: { instanceId: scopeId } },
     };
   }
   proximityMeasure() {
@@ -1009,7 +1002,7 @@ export class ProceduralPlayController extends Controller {
       min: 0,
       max: 240,
       step: 4,
-      onChange: { controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "setProximityDistance" }
+      onChange: { controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "setProximityDistance" },
     };
   }
   flowWindowMeasures() {
@@ -1024,9 +1017,9 @@ export class ProceduralPlayController extends Controller {
         value: this.showMode,
         items: [
           { id: "everything", value: "everything", label: "Everything" },
-          { id: "selected", value: "selected", label: "Selected" }
+          { id: "selected", value: "selected", label: "Selected" },
         ],
-        onChange: { controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "setShowMode" }
+        onChange: { controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "setShowMode" },
       },
       {
         kind: "select",
@@ -1035,10 +1028,10 @@ export class ProceduralPlayController extends Controller {
         value: this.transformGranularity,
         items: [
           { id: "full", value: "full", label: "Full (sliders + vector)" },
-          { id: "compact", value: "compact", label: "Compact (node params)" }
+          { id: "compact", value: "compact", label: "Compact (node params)" },
         ],
-        onChange: { controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "setTransformGranularity" }
-      }
+        onChange: { controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "setTransformGranularity" },
+      },
     ];
   }
   /** @emoji 🔔 Subscribes to catalogue updates for workbench kinds panel refresh. */
@@ -1074,12 +1067,12 @@ export class ProceduralPlayController extends Controller {
         value: this.engagementInput,
         placeholder: "Reorganize, lr, tb",
         onChange: proceduralPlayCmd("engagementInput"),
-        onSubmit: proceduralPlayCmd("engagementSubmit")
+        onSubmit: proceduralPlayCmd("engagementSubmit"),
       },
       possibleEngagements: [
         { id: "procedural.tool.reorganize", label: "Reorganize", command: proceduralPlayCmd("reorganize") },
         { id: "procedural.layout.leftRight", label: "Left to Right", command: proceduralPlayCmd("setOrientation", { orientation: "leftRight" }) },
-        { id: "procedural.layout.topBottom", label: "Top to Bottom", command: proceduralPlayCmd("setOrientation", { orientation: "topBottom" }) }
+        { id: "procedural.layout.topBottom", label: "Top to Bottom", command: proceduralPlayCmd("setOrientation", { orientation: "topBottom" }) },
       ],
       controls: [
         {
@@ -1090,7 +1083,7 @@ export class ProceduralPlayController extends Controller {
           min: 40,
           max: 320,
           step: 10,
-          onChange: proceduralPlayCmd("setSpacing", { field: "layerSpacing" })
+          onChange: proceduralPlayCmd("setSpacing", { field: "layerSpacing" }),
         },
         {
           kind: "slider",
@@ -1100,10 +1093,10 @@ export class ProceduralPlayController extends Controller {
           min: 10,
           max: 160,
           step: 5,
-          onChange: proceduralPlayCmd("setSpacing", { field: "siblingGap" })
-        }
+          onChange: proceduralPlayCmd("setSpacing", { field: "siblingGap" }),
+        },
       ],
-      status: [{ id: "procedural-layout-orientation", text: this.orientation === "leftRight" ? "Left to right" : "Top to bottom" }]
+      status: [{ id: "procedural-layout-orientation", text: this.orientation === "leftRight" ? "Left to right" : "Top to bottom" }],
     };
   }
   previewWindowEngagement() {
@@ -1114,22 +1107,15 @@ export class ProceduralPlayController extends Controller {
         value: "",
         placeholder: "Preview",
         onChange: proceduralPlayCmd("previewEngagementInput"),
-        onSubmit: proceduralPlayCmd("previewEngagementSubmit")
+        onSubmit: proceduralPlayCmd("previewEngagementSubmit"),
       },
-      status: [{ id: "procedural-preview-item-count", text: `${this.previewItems.length} preview items` }]
+      status: [{ id: "procedural-preview-item-count", text: `${this.previewItems.length} preview items` }],
     };
   }
   rebuildShellMode() {
     this.mainMode.windowKinds = [
       new WindowKindRuntime(PROCEDURAL_PLAY_WINDOW_KIND_ID, "Flow", PROCEDURAL_PLAY_BODY_KEY_MAIN, void 0, this.flowWindowMeasures(), this.flowWindowEngagement()),
-      new WindowKindRuntime(
-        PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW,
-        "Preview",
-        PROCEDURAL_PLAY_BODY_KEY_PREVIEW,
-        void 0,
-        this.previewWindowMeasures(),
-        this.previewWindowEngagement()
-      )
+      new WindowKindRuntime(PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW, "Preview", PROCEDURAL_PLAY_BODY_KEY_PREVIEW, void 0, this.previewWindowMeasures(), this.previewWindowEngagement()),
     ];
     for (const windowKind of this.mainMode.windowKinds) {
       enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Procedural play window "${windowKind.id}"`);
@@ -1180,7 +1166,7 @@ export class ProceduralPlayController extends Controller {
       const canvasCommand = args.command;
       if (typeof canvasCommand !== "string" || !canvasCommand) return;
       const argsJson = args.argsJson;
-      this.commandRequestPayload = { command: canvasCommand, ...argsJson !== void 0 ? { argsJson } : {} };
+      this.commandRequestPayload = { command: canvasCommand, ...(argsJson !== void 0 ? { argsJson } : {}) };
       this.commandRequestEpoch += 1;
       this.emit();
       return;
@@ -1265,11 +1251,7 @@ export class ProceduralPlayController extends Controller {
       const outputsJson = args.outputsJson;
       const previewMeshes = args.previewMeshes;
       if (typeof outputsJson === "string") {
-        const nextItems = previewItemsWithMeshes(
-          extractChannelPreviewItems(outputsJson),
-          previewMeshes,
-          this.previewItems
-        );
+        const nextItems = previewItemsWithMeshes(extractChannelPreviewItems(outputsJson), previewMeshes, this.previewItems);
         this.previewItems = nextItems;
         this.interactionRevision += 1;
         this.notifySnapshot();
@@ -1525,7 +1507,7 @@ export class PlaygroundProcedural extends Playground {
   keybindings = [
     { key: "ctrl+a,meta+a", controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "selectAll" },
     { key: "Delete", controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
-    { key: "Backspace", controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" }
+    { key: "Backspace", controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
   ];
   createRuntime() {
     const runtime = createProductPlaygroundPlatform(this.id);
@@ -1545,8 +1527,7 @@ if (import.meta.vitest) {
     });
     it("starts with no fixture selected", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       expect(ctrl.getFixtureCatalog().activeFixtureId).toBe(PLAYGROUND_NO_FIXTURE_ID);
       expect(ctrl.getFixtureJson()).toContain('"widgets":[]');
     });
@@ -1559,18 +1540,16 @@ if (import.meta.vitest) {
         },
         removeItem: (k) => {
           backing.delete(k);
-        }
+        },
       });
       store.save(PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON);
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      }, store);
+      const ctrl = new ProceduralPlayController(bus, () => {}, store);
       expect(ctrl.getFixtureJson()).toContain('"widgets":[]');
     });
     it("controller stores fixture json", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setFixtureJson", { json: '{"schema":"flow.fixture/v1"}' });
       expect(ctrl.getFixtureJson()).toContain("flow.fixture/v1");
     });
@@ -1584,10 +1563,10 @@ if (import.meta.vitest) {
             {
               id: "brep.primitives-3d",
               title: "Primitives 3D",
-              items: [{ kind: "neuron", neuronKind: "brep.prim3d.box", name: "Box", abbreviation: "Box", icon: "emoji:📦", summary: "Axis-aligned box" }]
-            }
-          ]
-        }
+              items: [{ kind: "neuron", neuronKind: "brep.prim3d.box", name: "Box", abbreviation: "Box", icon: "emoji:📦", summary: "Axis-aligned box" }],
+            },
+          ],
+        },
       ]);
       expect(tree.type).toBe("tree");
       const leaf = tree.sections?.[0]?.items?.[0]?.items?.[0];
@@ -1596,8 +1575,7 @@ if (import.meta.vitest) {
     });
     it("catalogue snapshot listeners fire when sections arrive", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       let revision = ctrl.getCatalogueRevision();
       const unsubscribe = ctrl.subscribeSnapshot(() => {
         revision = ctrl.getCatalogueRevision();
@@ -1608,8 +1586,7 @@ if (import.meta.vitest) {
     });
     it("catalogue revision bumps when sections arrive", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       expect(ctrl.getCatalogueRevision()).toBe(0);
       ctrl.run("setCatalogueSections", {
         sections: [
@@ -1621,23 +1598,22 @@ if (import.meta.vitest) {
               {
                 id: "brep.primitives-3d",
                 title: "Primitives 3D",
-                items: [{ kind: "neuron", neuronKind: "brep.prim3d.box", name: "Box", abbreviation: "Box", icon: "emoji:📦", summary: "Box" }]
+                items: [{ kind: "neuron", neuronKind: "brep.prim3d.box", name: "Box", abbreviation: "Box", icon: "emoji:📦", summary: "Box" }],
               },
               {
                 id: "brep.curves",
                 title: "Curves",
-                items: [{ kind: "neuron", neuronKind: "brep.curve.line", name: "Line", abbreviation: "Line", icon: "emoji:〰️", summary: "Line edge" }]
-              }
-            ]
-          }
-        ]
+                items: [{ kind: "neuron", neuronKind: "brep.curve.line", name: "Line", abbreviation: "Line", icon: "emoji:〰️", summary: "Line edge" }],
+              },
+            ],
+          },
+        ],
       });
       expect(ctrl.getCatalogueRevision()).toBe(1);
     });
     it("catalogue revision bumps for nested brep groups", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setCatalogueSections", {
         sections: [
           {
@@ -1646,31 +1622,28 @@ if (import.meta.vitest) {
             items: [],
             groups: [
               { id: "brep.primitives-3d", title: "Primitives 3D", items: [] },
-              { id: "brep.solid", title: "Solid", items: [] }
-            ]
-          }
-        ]
+              { id: "brep.solid", title: "Solid", items: [] },
+            ],
+          },
+        ],
       });
       expect(ctrl.getCatalogueSections()[0]?.groups?.length).toBe(2);
     });
     it("controller exposes flow and preview window kinds", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       expect(ctrl.mainMode.windowKinds).toHaveLength(2);
       expect(ctrl.mainMode.windowKinds[1]?.id).toBe(PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW);
     });
     it("flow window exposes inline lod select", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
       expect(measures.some((measure) => measure.kind === "select" && measure.label === "LOD")).toBe(true);
     });
     it("flow window proximity measure defaults and updates via command", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       expect(ctrl.proximityDistanceValue()).toBe(FLOW_DEFAULT_PROXIMITY_DISTANCE);
       const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
       const proximity = measures.find((measure) => measure.kind === "slider" && measure.label === "Proximity");
@@ -1688,8 +1661,7 @@ if (import.meta.vitest) {
     });
     it("preview window exposes show mode and transform detail in shell measures", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       const measures = ctrl.mainMode.windowKinds[1]?.measures ?? [];
       const show = measures.find((measure) => measure.kind === "select" && measure.label === "Show");
       expect(show?.kind === "select" && show.value).toBe("everything");
@@ -1697,23 +1669,20 @@ if (import.meta.vitest) {
     });
     it("setTransformGranularity accepts shell measure value", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setTransformGranularity", { value: "compact" });
       expect(ctrl.getTransformGranularity()).toBe("compact");
     });
     it("setShowMode updates preview filter", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       expect(ctrl.getShowMode()).toBe("everything");
       ctrl.run("setShowMode", { id: "selected" });
       expect(ctrl.getShowMode()).toBe("selected");
     });
     it("setShowMode accepts shell measure value", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setShowMode", { value: "selected" });
       expect(ctrl.getShowMode()).toBe("selected");
       ctrl.run("setShowMode", { value: "everything" });
@@ -1721,16 +1690,14 @@ if (import.meta.vitest) {
     });
     it("canvasCommand bumps command request epoch", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("canvasCommand", { command: "deleteSelection" });
       expect(ctrl.getCommandRequest().command).toBe("deleteSelection");
       expect(ctrl.getCommandRequest().epoch).toBe(1);
     });
     it("deleteSelection forwards to flow canvas command request", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setSelection", { ids: ["node-a"] });
       ctrl.run("deleteSelection");
       expect(ctrl.getCommandRequest().command).toBe("deleteSelection");
@@ -1738,8 +1705,7 @@ if (import.meta.vitest) {
     });
     it("setPreviewOff stores preview-off node ids", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setPreviewOff", { ids: ["a", "b"] });
       expect(ctrl.getPreviewOffNodeIds()).toEqual(["a", "b"]);
     });
@@ -1755,19 +1721,17 @@ if (import.meta.vitest) {
           screen: { x: 0, y: 0 },
           world: { x: 0, y: 0 },
           clientX: 0,
-          clientY: 0
+          clientY: 0,
         },
-        () => {
-        }
+        () => {},
       );
       expect(items.some((item) => item.id === "procedural.ctx.isolatePreview")).toBe(true);
     });
     it("setFixtureJson sync preserves preview items after flow interaction", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setEvalOutputs", {
-        outputsJson: JSON.stringify({ box: { in: {}, out: { solid: { geometry: "solid-1" } } } })
+        outputsJson: JSON.stringify({ box: { in: {}, out: { solid: { geometry: "solid-1" } } } }),
       });
       const base = ctrl.getFixtureJson();
       const interacted = JSON.stringify({
@@ -1776,75 +1740,66 @@ if (import.meta.vitest) {
         widgets: [
           { kind: "neuron", id: "sketch", neuronKind: "brep.sketch2d.rectangle" },
           { kind: "neuron", id: "solid", neuronKind: "brep.solid.extrude" },
-          { kind: "outputPreview", id: "preview", preview: { geometry: "solid-9" } }
-        ]
+          { kind: "outputPreview", id: "preview", preview: { geometry: "solid-9" } },
+        ],
       });
       ctrl.run("setFixtureJson", { json: interacted });
-      expect(ctrl.getPreviewItems()).toEqual([
-        { widgetId: "box", port: "solid", direction: "out", kind: "geometry", handle: "solid-1" }
-      ]);
+      expect(ctrl.getPreviewItems()).toEqual([{ widgetId: "box", port: "solid", direction: "out", kind: "geometry", handle: "solid-1" }]);
     });
     it("setFixtureJson with resetInteraction clears preview items", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setEvalOutputs", {
-        outputsJson: JSON.stringify({ box: { in: {}, out: { solid: { geometry: "solid-1" } } } })
+        outputsJson: JSON.stringify({ box: { in: {}, out: { solid: { geometry: "solid-1" } } } }),
       });
       ctrl.run("setFixtureJson", {
         json: '{"schema":"flow.fixture/v1","camera":{"x":0,"y":0,"zoom":1},"widgets":[],"synapses":[]}',
-        resetInteraction: true
+        resetInteraction: true,
       });
       expect(ctrl.getPreviewItems()).toEqual([]);
     });
     it("setEvalOutputs stores preview items per widget", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setEvalOutputs", {
-        outputsJson: JSON.stringify({ box: { in: {}, out: { solid: { geometry: "solid-1" } } } })
+        outputsJson: JSON.stringify({ box: { in: {}, out: { solid: { geometry: "solid-1" } } } }),
       });
-      expect(ctrl.getPreviewItems()).toEqual([
-        { widgetId: "box", port: "solid", direction: "out", kind: "geometry", handle: "solid-1" }
-      ]);
+      expect(ctrl.getPreviewItems()).toEqual([{ widgetId: "box", port: "solid", direction: "out", kind: "geometry", handle: "solid-1" }]);
     });
     it("setEvalOutputs stores point and vector preview items", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setEvalOutputs", {
         outputsJson: JSON.stringify({
           pt: { in: {}, out: { point: { $schema: "point", x: 1, y: 0, z: 0 } } },
-          vec: { in: {}, out: { vector: { $schema: "vector", x: 0, y: 1, z: 0 } } }
-        })
+          vec: { in: {}, out: { vector: { $schema: "vector", x: 0, y: 1, z: 0 } } },
+        }),
       });
       expect(ctrl.getPreviewItems()).toEqual([
         { widgetId: "pt", port: "point", direction: "out", kind: "point", position: [1, 0, 0] },
-        { widgetId: "vec", port: "vector", direction: "out", kind: "vector", directionVec: [0, 1, 0] }
+        { widgetId: "vec", port: "vector", direction: "out", kind: "vector", directionVec: [0, 1, 0] },
       ]);
     });
     it("selectAll includes widgets with point and vector preview items", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setEvalOutputs", {
         outputsJson: JSON.stringify({
           pt: { in: {}, out: { point: { $schema: "point", x: 0, y: 0, z: 0 } } },
-          vec: { in: {}, out: { vector: { $schema: "vector", x: 1, y: 0, z: 0 } } }
-        })
+          vec: { in: {}, out: { vector: { $schema: "vector", x: 1, y: 0, z: 0 } } },
+        }),
       });
       ctrl.run("selectAll");
       expect(ctrl.getSelectedNodeIds().sort()).toEqual(["pt", "vec"]);
     });
     it("setHoverChannel and geometry target getters resolve upstream output", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setEvalOutputs", {
         outputsJson: JSON.stringify({
           circle: { in: {}, out: { wire: { geometry: "drawing-1" } } },
-          offset: { in: { geometry: "drawing-1" }, out: { geometry: { geometry: "wire-2" } } }
-        })
+          offset: { in: { geometry: "drawing-1" }, out: { geometry: { geometry: "wire-2" } } },
+        }),
       });
       ctrl.run("setFixtureJson", {
         json: JSON.stringify({
@@ -1852,21 +1807,20 @@ if (import.meta.vitest) {
           camera: { x: 0, y: 0, zoom: 1 },
           widgets: [
             { kind: "neuron", id: "circle", neuronKind: "brep.sketch2d.circle" },
-            { kind: "neuron", id: "offset", neuronKind: "brep.xform.offset" }
+            { kind: "neuron", id: "offset", neuronKind: "brep.xform.offset" },
           ],
-          synapses: [{ id: "s1", from: "circle", to: "offset", from_port: "wire", to_port: "geometry" }]
-        })
+          synapses: [{ id: "s1", from: "circle", to: "offset", from_port: "wire", to_port: "geometry" }],
+        }),
       });
       ctrl.run("setHoverChannel", {
-        channel: { widgetId: "offset", port: "geometry", direction: "in" }
+        channel: { widgetId: "offset", port: "geometry", direction: "in" },
       });
       expect(ctrl.getHoveredChannel()).toEqual({ widgetId: "offset", port: "geometry", direction: "in" });
       expect(ctrl.getHoveredGeometryTargets()).toEqual([{ widgetId: "circle", port: "wire", direction: "out" }]);
     });
     it("parseFixtureEdges reads camelCase flow synapse ports", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setFixtureJson", {
         json: JSON.stringify({
           schema: "flow.fixture/v1",
@@ -1874,35 +1828,32 @@ if (import.meta.vitest) {
           widgets: [],
           synapses: [
             { id: "e101", from: "brep_prim3d_sphere_2", to: "brep_bool_cut_5", fromPort: "solid", toPort: "a" },
-            { id: "e102", from: "brep_prim3d_torus_4", to: "brep_bool_cut_5", fromPort: "solid", toPort: "b" }
-          ]
-        })
+            { id: "e102", from: "brep_prim3d_torus_4", to: "brep_bool_cut_5", fromPort: "solid", toPort: "b" },
+          ],
+        }),
       });
       expect(ctrl.getSelectedGeometryTargets()).toEqual([]);
       ctrl.run("setSelectChannels", {
-        channels: [{ widgetId: "brep_bool_cut_5", port: "a", direction: "in" }]
+        channels: [{ widgetId: "brep_bool_cut_5", port: "a", direction: "in" }],
       });
       ctrl.run("setEvalOutputs", {
         outputsJson: JSON.stringify({
           brep_prim3d_sphere_2: { in: {}, out: { solid: { geometry: "solid-sphere" } } },
-          brep_bool_cut_5: { in: { a: { geometry: "solid-sphere" } }, out: { solid: { geometry: "solid-cut" } } }
-        })
+          brep_bool_cut_5: { in: { a: { geometry: "solid-sphere" } }, out: { solid: { geometry: "solid-cut" } } },
+        }),
       });
-      expect(ctrl.getSelectedGeometryTargets()).toEqual([
-        { widgetId: "brep_prim3d_sphere_2", port: "solid", direction: "out" }
-      ]);
+      expect(ctrl.getSelectedGeometryTargets()).toEqual([{ widgetId: "brep_prim3d_sphere_2", port: "solid", direction: "out" }]);
     });
     it("show selected reveals upstream geometry for preview-off input channels", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       const outputsJson = JSON.stringify({
         brep_prim3d_sphere_2: { in: {}, out: { solid: { geometry: "solid-sphere" } } },
         brep_prim3d_torus_4: { in: {}, out: { solid: { geometry: "solid-torus" } } },
         brep_bool_cut_5: {
           in: { a: { geometry: "solid-sphere" }, b: { geometry: "solid-torus" } },
-          out: { solid: { geometry: "solid-cut" } }
-        }
+          out: { solid: { geometry: "solid-cut" } },
+        },
       });
       ctrl.run("setEvalOutputs", { outputsJson });
       ctrl.run("setFixtureJson", {
@@ -1912,21 +1863,21 @@ if (import.meta.vitest) {
           widgets: [
             { kind: "neuron", id: "brep_prim3d_sphere_2", neuronKind: "brep.prim3d.sphere", preview: false },
             { kind: "neuron", id: "brep_prim3d_torus_4", neuronKind: "brep.prim3d.torus", preview: false },
-            { kind: "neuron", id: "brep_bool_cut_5", neuronKind: "brep.bool.cut", preview: true }
+            { kind: "neuron", id: "brep_bool_cut_5", neuronKind: "brep.bool.cut", preview: true },
           ],
           synapses: [
             { id: "e1", from: "brep_prim3d_sphere_2", to: "brep_bool_cut_5", fromPort: "solid", toPort: "a" },
-            { id: "e2", from: "brep_prim3d_torus_4", to: "brep_bool_cut_5", fromPort: "solid", toPort: "b" }
-          ]
-        })
+            { id: "e2", from: "brep_prim3d_torus_4", to: "brep_bool_cut_5", fromPort: "solid", toPort: "b" },
+          ],
+        }),
       });
       ctrl.run("setPreviewOff", {
         ids: ["brep_prim3d_sphere_2", "brep_prim3d_torus_4"],
-        fromFlow: true
+        fromFlow: true,
       });
       ctrl.run("setShowMode", { id: "selected" });
       ctrl.run("setSelectChannels", {
-        channels: [{ widgetId: "brep_bool_cut_5", port: "a", direction: "in" }]
+        channels: [{ widgetId: "brep_bool_cut_5", port: "a", direction: "in" }],
       });
       const visible = filterVisiblePreviewItems(ctrl.getPreviewItems(), {
         showMode: ctrl.getShowMode(),
@@ -1934,7 +1885,7 @@ if (import.meta.vitest) {
         selectedChannels: [...ctrl.getSelectedChannels()],
         selectedGeometryTargets: [...ctrl.getSelectedGeometryTargets()],
         hoveredNodeId: null,
-        hoveredChannel: null
+        hoveredChannel: null,
       });
       expect(visible).toEqual([
         {
@@ -1942,24 +1893,22 @@ if (import.meta.vitest) {
           port: "solid",
           direction: "out",
           kind: "geometry",
-          handle: "solid-sphere"
-        }
+          handle: "solid-sphere",
+        },
       ]);
     });
     it("setSelectChannels stores channel selection and parent nodes", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setSelectChannels", {
-        channels: [{ widgetId: "box", port: "solid", direction: "out" }]
+        channels: [{ widgetId: "box", port: "solid", direction: "out" }],
       });
       expect(ctrl.getSelectedChannels()).toEqual([{ widgetId: "box", port: "solid", direction: "out" }]);
       expect(ctrl.getSelectedNodeIds()).toEqual(["box"]);
     });
     it("setSelection and setHover update interaction revision", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setSelection", { ids: ["box"] });
       ctrl.run("setHover", { id: "box" });
       expect(ctrl.getSelectedNodeIds()).toEqual(["box"]);
@@ -1968,23 +1917,20 @@ if (import.meta.vitest) {
     });
     it("setHover stores hovered channel", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setHover", { id: "offset", channel: { widgetId: "offset", port: "geometry", direction: "in" } });
       expect(ctrl.getHoveredChannel()).toEqual({ widgetId: "offset", port: "geometry", direction: "in" });
     });
     it("setSelection merges additively when mode is additive", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setSelection", { ids: ["a"], mode: "default" });
       ctrl.run("setSelection", { ids: ["b"], mode: "additive" });
       expect(ctrl.getSelectedNodeIds()).toEqual(["a", "b"]);
     });
     it("setSelectionMethod updates marquee method", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setSelectionMethod", { method: "lasso" });
       expect(ctrl.getSelectionMethod()).toBe("lasso");
     });
@@ -1995,26 +1941,19 @@ if (import.meta.vitest) {
           selectionMode: "default",
           showMode: "everything",
           selectionCount: 0,
-          hasStoredFixture: false
+          hasStoredFixture: false,
         },
-        PROCEDURAL_3D_PLAY_CONTROLLER_ID
+        PROCEDURAL_3D_PLAY_CONTROLLER_ID,
       );
       expect(tools.selection?.some((row) => row.id === "procedural.select.rectangle")).toBe(true);
-      expect(tools.save?.map((row) => row.id)).toEqual([
-        "procedural.save.stored",
-        "procedural.save.download",
-        "procedural.save.load",
-        "procedural.save.loadStored",
-        "procedural.save.reset"
-      ]);
+      expect(tools.save?.map((row) => row.id)).toEqual(["procedural.save.stored", "procedural.save.download", "procedural.save.load", "procedural.save.loadStored", "procedural.save.reset"]);
       expect(tools.save?.[3]?.disabled).toBe(true);
       expect(tools.view?.length).toBe(2);
       expect(tools.actions?.some((row) => row.id === "procedural.action.reorganize")).toBe(true);
     });
     it("controller exposes toolbar tools when host bridge is attached", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       expect(ctrl.mainMode.tools).toBeUndefined();
       ctrl.setHostBridge({
         getToolbarState: () => ({
@@ -2022,10 +1961,9 @@ if (import.meta.vitest) {
           selectionMode: "default",
           showMode: "everything",
           selectionCount: 0,
-          hasStoredFixture: false
+          hasStoredFixture: false,
         }),
-        runHostCommand: () => {
-        }
+        runHostCommand: () => {},
       });
       expect(ctrl.mainMode.tools?.selection?.length).toBeGreaterThan(0);
     });
@@ -2038,11 +1976,10 @@ if (import.meta.vitest) {
         },
         removeItem: (k) => {
           backing.delete(k);
-        }
+        },
       });
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      }, store);
+      const ctrl = new ProceduralPlayController(bus, () => {}, store);
       ctrl.run("saveStored");
       expect(ctrl.hasStoredFixture()).toBe(true);
       ctrl.run("setFixtureJson", { json: '{"schema":"flow.fixture/v1","widgets":[],"synapses":[]}' });
@@ -2051,8 +1988,7 @@ if (import.meta.vitest) {
     });
     it("setActiveFixture loads default and empty fixtures", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setActiveFixture", { fixtureId: PLAYGROUND_NO_FIXTURE_ID });
       expect(ctrl.getFixtureJson()).toContain('"widgets":[]');
       ctrl.run("setActiveFixture", { fixtureId: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID });
@@ -2060,12 +1996,8 @@ if (import.meta.vitest) {
     });
     it("fixture catalog includes procedural/fixture files", () => {
       expect(PROCEDURAL_PLAY_FIXTURE_OPTIONS.some((option) => option.id === "sphere-cut-with-torus")).toBe(true);
-      expect(PROCEDURAL_PLAY_FIXTURE_OPTIONS.find((option) => option.id === "sphere-cut-with-torus")?.label).toBe(
-        "Sphere Cut With Torus"
-      );
-      expect(PROCEDURAL_PLAY_FIXTURE_OPTIONS.some((option) => option.id === PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID)).toBe(
-        true
-      );
+      expect(PROCEDURAL_PLAY_FIXTURE_OPTIONS.find((option) => option.id === "sphere-cut-with-torus")?.label).toBe("Sphere Cut With Torus");
+      expect(PROCEDURAL_PLAY_FIXTURE_OPTIONS.some((option) => option.id === PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID)).toBe(true);
     });
     it("resolveProceduralPlayFixtureSlug maps hexagonal-column shorthand", async () => {
       const { resolveProceduralPlayFixtureSlug: resolveProceduralPlayFixtureSlug2, PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID: PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID2 } = await import("/fixture-slugs.ts");
@@ -2077,8 +2009,7 @@ if (import.meta.vitest) {
       import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID = PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID;
       try {
         const bus = new CommandBus();
-        const ctrl = new ProceduralPlayController(bus, () => {
-        });
+        const ctrl = new ProceduralPlayController(bus, () => {});
         expect(ctrl.getFixtureCatalog()).toBeNull();
         ctrl.run("setActiveFixture", { fixtureId: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID });
         expect(ctrl.getFixtureCatalog()).toBeNull();
@@ -2095,8 +2026,7 @@ if (import.meta.vitest) {
       import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID = PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID;
       try {
         const bus = new CommandBus();
-        const ctrl = new ProceduralPlayController(bus, () => {
-        });
+        const ctrl = new ProceduralPlayController(bus, () => {});
         expect(ctrl.getFixtureJson()).toContain("brep.solid.extrude");
         expect(ctrl.getFixtureJson()).toContain("brep_curve_polygon_9");
       } finally {
@@ -2111,8 +2041,7 @@ if (import.meta.vitest) {
       const sphereCutId = "sphere-cut-with-torus";
       expect(proceduralPlayFixtureJson(sphereCutId)).toContain("brep.bool.cut");
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setActiveFixture", { fixtureId: sphereCutId });
       expect(ctrl.getFixtureJson()).toContain("brep.bool.cut");
       expect(ctrl.getFixtureJson()).toContain("brep.prim3d.sphere");
@@ -2132,31 +2061,30 @@ if (import.meta.vitest) {
               neuronKinds: [{ id: "brep.prim3d.box", module: "brep", name: "Box", abbreviation: "Box", icon: "emoji:📦", summary: "Box", inputs: [], outputs: ["geometry"] }],
               widgets: [],
               commands: [],
-              settings: []
-            }
-          }
-        }
+              settings: [],
+            },
+          },
+        },
       ]);
       const labels = tree.sections?.flatMap((section) => section.items?.map((item) => item.label) ?? []) ?? [];
       expect(labels).toContain("Brep");
     });
     it("applyGumballTransform dispatches graphEdit insert then update", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setFixtureJson", {
         json: JSON.stringify({
           schema: "flow.fixture/v1",
           camera: { x: 0, y: 0, zoom: 1 },
           widgets: [{ kind: "neuron", id: "solid", neuronKind: "brep.prim3d.box" }],
           synapses: [],
-          layout: { solid: { x: 100, y: 50 } }
-        })
+          layout: { solid: { x: 100, y: 50 } },
+        }),
       });
       ctrl.applyGumballTransform({
         widgetId: "solid",
         granularity: "compact",
-        delta: { op: "translate", offset: [1, 0, 0] }
+        delta: { op: "translate", offset: [1, 0, 0] },
       });
       const insert = ctrl.getCommandRequest();
       expect(insert.command).toBe("graphEdit");
@@ -2167,7 +2095,7 @@ if (import.meta.vitest) {
       ctrl.applyGumballTransform({
         widgetId: "solid_gumball_translate",
         granularity: "compact",
-        delta: { op: "translate", offset: [0, 2, 0] }
+        delta: { op: "translate", offset: [0, 2, 0] },
       });
       const update = ctrl.getCommandRequest();
       const updateOps = JSON.parse(update.argsJson ?? "{}").ops;
@@ -2175,60 +2103,56 @@ if (import.meta.vitest) {
     });
     it("applyGumballTransform live drag updates without accumulating per frame", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setFixtureJson", {
         json: JSON.stringify({
           schema: "flow.fixture/v1",
           camera: { x: 0, y: 0, zoom: 1 },
           widgets: [{ kind: "neuron", id: "solid", neuronKind: "brep.prim3d.box" }],
           synapses: [],
-          layout: { solid: { x: 100, y: 50 } }
-        })
+          layout: { solid: { x: 100, y: 50 } },
+        }),
       });
       ctrl.applyGumballTransform({
         widgetId: "solid",
         granularity: "compact",
         phase: "start",
-        delta: { op: "translate", offset: [0, 0, 0] }
+        delta: { op: "translate", offset: [0, 0, 0] },
       });
       expect(ctrl.getGumballActiveWidgetIds()).toEqual(["solid_gumball_translate", "solid"]);
       ctrl.applyGumballTransform({
         widgetId: "solid",
         granularity: "compact",
         phase: "live",
-        delta: { op: "translate", offset: [2, 0, 0] }
+        delta: { op: "translate", offset: [2, 0, 0] },
       });
       ctrl.applyGumballTransform({
         widgetId: "solid",
         granularity: "compact",
         phase: "end",
-        delta: { op: "translate", offset: [3, 0, 0] }
+        delta: { op: "translate", offset: [3, 0, 0] },
       });
       const end = ctrl.getCommandRequest();
       const endOps = JSON.parse(end.argsJson ?? "{}").ops;
-      expect(endOps).toEqual([
-        { op: "setNeuronParams", id: "solid_gumball_translate", paramsJson: JSON.stringify({ offset: [3, 0, 0] }) }
-      ]);
+      expect(endOps).toEqual([{ op: "setNeuronParams", id: "solid_gumball_translate", paramsJson: JSON.stringify({ offset: [3, 0, 0] }) }]);
       expect(ctrl.getGumballActiveWidgetIds()).toEqual([]);
     });
     it("applyGumballTransform full translate lays out value, vector, and transform columns without overlap", () => {
       const bus = new CommandBus();
-      const ctrl = new ProceduralPlayController(bus, () => {
-      });
+      const ctrl = new ProceduralPlayController(bus, () => {});
       ctrl.run("setFixtureJson", {
         json: JSON.stringify({
           schema: "flow.fixture/v1",
           camera: { x: 0, y: 0, zoom: 1 },
           widgets: [{ kind: "neuron", id: "solid", neuronKind: "brep.prim3d.box" }],
           synapses: [],
-          layout: { solid: { x: 200, y: 0 } }
-        })
+          layout: { solid: { x: 200, y: 0 } },
+        }),
       });
       ctrl.applyGumballTransform({
         widgetId: "solid",
         granularity: "full",
-        delta: { op: "translate", offset: [1, 2, 3] }
+        delta: { op: "translate", offset: [1, 2, 3] },
       });
       const insertOps = JSON.parse(ctrl.getCommandRequest().argsJson ?? "{}").ops;
       const positions = insertOps.filter((op) => op.op === "addWidget").map((op) => ({ id: JSON.parse(op.descriptor).id, x: op.x, y: op.y }));

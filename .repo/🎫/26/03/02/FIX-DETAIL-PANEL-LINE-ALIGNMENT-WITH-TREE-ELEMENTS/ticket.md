@@ -7,7 +7,9 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Final continuation complete: TreeRow no longer wraps rows in TreeContent indentation, and tree-aware Label now renders document indentation/lines only in the left cell while controls remain fixed in a 160px right column across nesting levels. compose/js unit tests pass.
+
 ## Changes
+
 - Replaced nested `TreeContent` leaf rendering in `ControlTree` with dedicated shared grid rows.
 - Added fixed control column sizing for all rows (`minmax(0, 1fr)` + `160px`).
 - Kept folder nesting and collapse behavior while moving document-only layout concerns into left cells.
@@ -20,6 +22,7 @@ Final continuation complete: TreeRow no longer wraps rows in TreeContent indenta
 - Verified `npm --workspace compose/js test -- compose.test.ts` passes with 16/16 tests.
 
 ## Log
+
 - Reopened this ticket to implement right toggle panel two-column alignment refactor.
 - Implemented ControlTree-specific row components (`ControlTreeRow`, `ControlTreeFolderRow`, `ControlTreeLeafRow`) in `compose/js/sketchpad/elements.tsx`.
 - Confirmed nested folders still collapse/expand and keep indentation lines in the left column only.
@@ -28,12 +31,14 @@ Final continuation complete: TreeRow no longer wraps rows in TreeContent indenta
 - Ran JS unit tests successfully after refactor.
 
 ## Todos
+
 - [x] Implement shared grid row layout for ControlTree folders and controls.
 - [x] Keep collapse/expand and nesting behavior intact.
 - [x] Ensure right control/value column x-position is fixed for every row depth.
 - [x] Extend existing tests and run them.
 
 ## Plan
+
 - Refactor only the `ControlTree` section in `compose/js/sketchpad/elements.tsx`.
 - Avoid broad `TreeItem`/`TreeSection` regressions by introducing ControlTree-specific row renderers.
 - Validate with existing JS unit tests.

@@ -7,6 +7,7 @@ goal: SKETCHPAD-IMPROVEMENTS
 ## Summary
 
 Bulk close
+
 ## Changes
 
 - `compose/js/sketchpad/shared.ts`: Added SETTINGS/CHAT to WindowKind, removed from PanelKind, PanelVisibility, PanelSizes, PanelSections, PanelKey, panelKindConfigs, EMPTY_PANEL_VISIBILITY.

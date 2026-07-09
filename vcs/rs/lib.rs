@@ -5,7 +5,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 use thiserror::Error;
 
 static ID_COUNTER: AtomicU64 = AtomicU64::new(0);
@@ -17,11 +17,47 @@ pub fn create_document_vcs_id(prefix: &str) -> String {
 }
 
 //#region 🔖Schemas
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum BackboneKind {
+    Temporary,
+    File,
+    Folder,
+    Remote,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DocumentBackboneRef {
-    pub kind: String,
+    pub kind: BackboneKind,
     pub uri: String,
+}
+
+/// @emoji 🧭 Maps a backbone URI scheme to its canonical kind.
+pub fn backbone_kind_from_uri(uri: &str) -> BackboneKind {
+    match uri.split("://").next().unwrap_or("") {
+        "temp" => BackboneKind::Temporary,
+        "file" => BackboneKind::File,
+        "folder" => BackboneKind::Folder,
+        "remote" => BackboneKind::Remote,
+        _ => BackboneKind::Temporary,
+    }
+}
+
+/// @emoji 🔗 Builds a typed backbone reference from a URI.
+pub fn document_backbone_ref(uri: &str) -> DocumentBackboneRef {
+    DocumentBackboneRef {
+        kind: backbone_kind_from_uri(uri),
+        uri: uri.to_string(),
+    }
+}
+
+/// @emoji 🧠 Default in-memory backbone for a document id.
+pub fn default_temporary_backbone_ref(document_id: &str) -> DocumentBackboneRef {
+    DocumentBackboneRef {
+        kind: BackboneKind::Temporary,
+        uri: format!("temp://{document_id}"),
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -334,6 +370,7 @@ pub fn create_document_vcs_envelope<P, Op>(
 where
     P: Clone,
 {
+    let backbone = backbone.or_else(|| Some(default_temporary_backbone_ref(id)));
     DocumentVcsEnvelope {
         schema: schema.into(),
         id: id.into(),
@@ -517,6 +554,11 @@ where
     }
 
     pub fn dispatch(&mut self, command: DocumentVcsCommand<Op>) -> Result<(), VcsError> {
+        self.dispatch_inner(command)?;
+        self.maybe_sync_backbone()
+    }
+
+    fn dispatch_inner(&mut self, command: DocumentVcsCommand<Op>) -> Result<(), VcsError> {
         match command {
             DocumentVcsCommand::Undo => self.dispatch(DocumentVcsCommand::UndoWithPolicy {
                 policy: UndoPolicy::ExactBaseOnly,
@@ -747,6 +789,32 @@ where
         Ok(())
     }
 
+    pub fn attach_backbone(&mut self, uri: &str) -> Result<(), VcsError> {
+        self.envelope.backbone = Some(document_backbone_ref(uri));
+        self.backbone = Some(resolve_backbone(uri)?);
+        self.bump();
+        Ok(())
+    }
+
+    pub fn detach_backbone(&mut self) {
+        let id = self.envelope.id.clone();
+        let uri = format!("temp://{id}");
+        self.envelope.backbone = Some(document_backbone_ref(&uri));
+        self.backbone = resolve_backbone(&uri).ok();
+        self.bump();
+    }
+
+    pub fn backbone_ref(&self) -> Option<&DocumentBackboneRef> {
+        self.envelope.backbone.as_ref()
+    }
+
+    fn maybe_sync_backbone(&self) -> Result<(), VcsError> {
+        if self.backbone.is_some() {
+            self.sync_backbone()?;
+        }
+        Ok(())
+    }
+
     fn bump(&mut self) {
         self.generation += 1;
     }
@@ -771,6 +839,20 @@ pub trait Backbone: Send + Sync {
 pub trait BackbonePort: Send + Sync {
     fn read(&self, uri: &str) -> Result<String, VcsError>;
     fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError>;
+}
+
+static TEMPORARY_STORE: LazyLock<MemoryBackbonePort> = LazyLock::new(MemoryBackbonePort::new);
+static HOST_BACKBONE_PORT: Mutex<Option<Arc<dyn BackbonePort>>> = Mutex::new(None);
+
+/// @emoji 🔌 Injects the browser or dev-server backbone port for wasm file/folder IO.
+pub fn set_host_backbone_port(port: Arc<dyn BackbonePort>) {
+    if let Ok(mut guard) = HOST_BACKBONE_PORT.lock() {
+        *guard = Some(port);
+    }
+}
+
+fn host_backbone_port() -> Option<Arc<dyn BackbonePort>> {
+    HOST_BACKBONE_PORT.lock().ok().and_then(|guard| guard.clone())
 }
 
 #[derive(Default)]
@@ -855,42 +937,56 @@ impl BackbonePort for LocalStorageBackbonePort {
     }
 }
 
-pub struct DevJsonFileBackbone {
+pub struct TemporaryBackbone {
     uri: String,
-    #[cfg(not(target_arch = "wasm32"))]
-    port: Option<Arc<dyn BackbonePort>>,
 }
 
-impl DevJsonFileBackbone {
+impl TemporaryBackbone {
     pub fn new(uri: &str) -> Result<Self, VcsError> {
-        if !uri.starts_with("dev://") {
-            return Err(VcsError::Backbone(format!("expected dev:// uri, got {uri}")));
+        if !uri.starts_with("temp://") {
+            return Err(VcsError::Backbone(format!("expected temp:// uri, got {uri}")));
         }
-        Ok(Self {
-            uri: uri.to_string(),
-            #[cfg(not(target_arch = "wasm32"))]
-            port: None,
-        })
+        Ok(Self { uri: uri.to_string() })
+    }
+}
+
+impl Backbone for TemporaryBackbone {
+    fn load(&self) -> Result<String, VcsError> {
+        TEMPORARY_STORE.read(&self.uri)
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn with_port(mut self, port: Arc<dyn BackbonePort>) -> Self {
-        self.port = Some(port);
-        self
+    fn sync(&self, envelope_json: &str) -> Result<(), VcsError> {
+        TEMPORARY_STORE.write(&self.uri, envelope_json)
+    }
+}
+
+pub struct FileJsonBackbone {
+    uri: String,
+}
+
+impl FileJsonBackbone {
+    pub fn new(uri: &str) -> Result<Self, VcsError> {
+        if !uri.starts_with("file://") {
+            return Err(VcsError::Backbone(format!("expected file:// uri, got {uri}")));
+        }
+        Ok(Self { uri: uri.to_string() })
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     fn file_path(&self) -> Result<std::path::PathBuf, VcsError> {
-        let relative = self.uri.strip_prefix("dev://").unwrap_or(&self.uri);
-        Ok(std::path::PathBuf::from(relative))
+        let path = self
+            .uri
+            .strip_prefix("file://")
+            .ok_or_else(|| VcsError::Backbone(format!("invalid file uri: {}", self.uri)))?;
+        Ok(std::path::PathBuf::from(path))
     }
 }
 
-impl Backbone for DevJsonFileBackbone {
+impl Backbone for FileJsonBackbone {
     fn load(&self) -> Result<String, VcsError> {
         #[cfg(not(target_arch = "wasm32"))]
         {
-            if let Some(port) = &self.port {
+            if let Some(port) = host_backbone_port() {
                 return port.read(&self.uri);
             }
             let path = self.file_path()?;
@@ -898,14 +994,16 @@ impl Backbone for DevJsonFileBackbone {
         }
         #[cfg(target_arch = "wasm32")]
         {
-            Err(VcsError::Backbone("dev file backbone is native-only".into()))
+            host_backbone_port()
+                .ok_or_else(|| VcsError::Backbone("file backbone requires host port".into()))?
+                .read(&self.uri)
         }
     }
 
     fn sync(&self, envelope_json: &str) -> Result<(), VcsError> {
         #[cfg(not(target_arch = "wasm32"))]
         {
-            if let Some(port) = &self.port {
+            if let Some(port) = host_backbone_port() {
                 return port.write(&self.uri, envelope_json);
             }
             let path = self.file_path()?;
@@ -916,61 +1014,69 @@ impl Backbone for DevJsonFileBackbone {
         }
         #[cfg(target_arch = "wasm32")]
         {
-            let _ = envelope_json;
-            Err(VcsError::Backbone("dev file backbone is native-only".into()))
+            host_backbone_port()
+                .ok_or_else(|| VcsError::Backbone("file backbone requires host port".into()))?
+                .write(&self.uri, envelope_json)
         }
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub struct SqliteFolderBackbone {
+pub struct FolderSqliteBackbone {
     folder: std::path::PathBuf,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl SqliteFolderBackbone {
+impl FolderSqliteBackbone {
     pub fn new(uri: &str) -> Result<Self, VcsError> {
         let folder = uri
-            .strip_prefix("local://")
-            .or_else(|| uri.strip_prefix("sqlite://"))
-            .ok_or_else(|| VcsError::Backbone(format!("expected local:// or sqlite:// uri, got {uri}")))?;
+            .strip_prefix("folder://")
+            .ok_or_else(|| VcsError::Backbone(format!("expected folder:// uri, got {uri}")))?;
         Ok(Self {
             folder: std::path::PathBuf::from(folder),
         })
     }
 
     fn db_path(&self) -> std::path::PathBuf {
-        self.folder.join("vcs.sqlite")
+        self.folder.join(".semio").join("document.db")
     }
 
     fn connection(&self) -> Result<rusqlite::Connection, VcsError> {
-        std::fs::create_dir_all(&self.folder).map_err(|e| VcsError::Backbone(e.to_string()))?;
+        let semio_dir = self.folder.join(".semio");
+        std::fs::create_dir_all(&semio_dir).map_err(|e| VcsError::Backbone(e.to_string()))?;
         rusqlite::Connection::open(self.db_path()).map_err(|e| VcsError::Backbone(e.to_string()))
+    }
+
+    fn ensure_schema(conn: &rusqlite::Connection) -> Result<(), VcsError> {
+        conn.execute_batch(
+            "CREATE TABLE IF NOT EXISTS document (id INTEGER PRIMARY KEY CHECK (id = 1), json TEXT NOT NULL);",
+        )
+        .map_err(|e| VcsError::Backbone(e.to_string()))
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl Backbone for SqliteFolderBackbone {
+impl Backbone for FolderSqliteBackbone {
     fn load(&self) -> Result<String, VcsError> {
+        if let Some(port) = host_backbone_port() {
+            return port.read(&format!("folder://{}", self.folder.display()));
+        }
         let conn = self.connection()?;
-        conn.execute_batch(
-            "CREATE TABLE IF NOT EXISTS envelope (id INTEGER PRIMARY KEY CHECK (id = 1), json TEXT NOT NULL);",
-        )
-        .map_err(|e| VcsError::Backbone(e.to_string()))?;
+        Self::ensure_schema(&conn)?;
         let json: String = conn
-            .query_row("SELECT json FROM envelope WHERE id = 1", [], |row| row.get(0))
+            .query_row("SELECT json FROM document WHERE id = 1", [], |row| row.get(0))
             .map_err(|e| VcsError::Backbone(e.to_string()))?;
         Ok(json)
     }
 
     fn sync(&self, envelope_json: &str) -> Result<(), VcsError> {
+        if let Some(port) = host_backbone_port() {
+            return port.write(&format!("folder://{}", self.folder.display()), envelope_json);
+        }
         let conn = self.connection()?;
-        conn.execute_batch(
-            "CREATE TABLE IF NOT EXISTS envelope (id INTEGER PRIMARY KEY CHECK (id = 1), json TEXT NOT NULL);",
-        )
-        .map_err(|e| VcsError::Backbone(e.to_string()))?;
+        Self::ensure_schema(&conn)?;
         conn.execute(
-            "INSERT INTO envelope (id, json) VALUES (1, ?1) ON CONFLICT(id) DO UPDATE SET json = excluded.json",
+            "INSERT INTO document (id, json) VALUES (1, ?1) ON CONFLICT(id) DO UPDATE SET json = excluded.json",
             [envelope_json],
         )
         .map_err(|e| VcsError::Backbone(e.to_string()))?;
@@ -978,15 +1084,45 @@ impl Backbone for SqliteFolderBackbone {
     }
 }
 
-pub struct RemoteHttpBackbone {
+#[cfg(target_arch = "wasm32")]
+pub struct FolderSqliteBackbone {
+    uri: String,
+}
+
+#[cfg(target_arch = "wasm32")]
+impl FolderSqliteBackbone {
+    pub fn new(uri: &str) -> Result<Self, VcsError> {
+        if !uri.starts_with("folder://") {
+            return Err(VcsError::Backbone(format!("expected folder:// uri, got {uri}")));
+        }
+        Ok(Self { uri: uri.to_string() })
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+impl Backbone for FolderSqliteBackbone {
+    fn load(&self) -> Result<String, VcsError> {
+        host_backbone_port()
+            .ok_or_else(|| VcsError::Backbone("folder backbone requires host port".into()))?
+            .read(&self.uri)
+    }
+
+    fn sync(&self, envelope_json: &str) -> Result<(), VcsError> {
+        host_backbone_port()
+            .ok_or_else(|| VcsError::Backbone("folder backbone requires host port".into()))?
+            .write(&self.uri, envelope_json)
+    }
+}
+
+pub struct RemoteBackbone {
     uri: String,
     last_conflict: Mutex<Option<StudioConflict>>,
 }
 
-impl RemoteHttpBackbone {
+impl RemoteBackbone {
     pub fn new(uri: &str) -> Result<Self, VcsError> {
-        if !(uri.starts_with("remote://") || uri.starts_with("http://") || uri.starts_with("https://")) {
-            return Err(VcsError::Backbone(format!("expected remote/http uri, got {uri}")));
+        if !uri.starts_with("remote://") {
+            return Err(VcsError::Backbone(format!("expected remote:// uri, got {uri}")));
         }
         Ok(Self {
             uri: uri.to_string(),
@@ -997,24 +1133,94 @@ impl RemoteHttpBackbone {
     pub fn last_conflict(&self) -> Option<StudioConflict> {
         self.last_conflict.lock().ok().and_then(|g| g.clone())
     }
-}
 
-impl Backbone for RemoteHttpBackbone {
-    fn load(&self) -> Result<String, VcsError> {
-        let _ = &self.uri;
-        Err(VcsError::RemoteSyncNotImplemented)
+    fn endpoint(&self) -> Result<(String, String), VcsError> {
+        let rest = self
+            .uri
+            .strip_prefix("remote://")
+            .ok_or_else(|| VcsError::Backbone(format!("invalid remote uri: {}", self.uri)))?;
+        let (host_port, document_id) = rest
+            .rsplit_once('/')
+            .ok_or_else(|| VcsError::Backbone(format!("remote uri missing document id: {}", self.uri)))?;
+        if document_id.is_empty() {
+            return Err(VcsError::Backbone(format!(
+                "remote uri missing document id: {}",
+                self.uri
+            )));
+        }
+        Ok((format!("http://{host_port}"), document_id.to_string()))
     }
 
-    fn sync(&self, _envelope_json: &str) -> Result<(), VcsError> {
+    fn record_conflict(&self, message: impl Into<String>) {
         let conflict = StudioConflict {
             kind: "studio-conflict".into(),
             uri: self.uri.clone(),
-            message: "remote backbone sync is not implemented".into(),
+            message: message.into(),
         };
         if let Ok(mut guard) = self.last_conflict.lock() {
             *guard = Some(conflict);
         }
-        Err(VcsError::RemoteSyncNotImplemented)
+    }
+}
+
+impl Backbone for RemoteBackbone {
+    fn load(&self) -> Result<String, VcsError> {
+        #[cfg(target_arch = "wasm32")]
+        {
+            return host_backbone_port()
+                .ok_or_else(|| VcsError::Backbone("remote backbone requires host port".into()))?
+                .read(&self.uri);
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let (base, document_id) = self.endpoint()?;
+            let url = format!("{base}/documents/{document_id}/envelope");
+            let response = ureq::get(&url)
+                .call()
+                .map_err(|err| {
+                    self.record_conflict(err.to_string());
+                    VcsError::Backbone(err.to_string())
+                })?;
+            if response.status() != 200 {
+                self.record_conflict(format!("remote load failed with status {}", response.status()));
+                return Err(VcsError::Backbone(format!(
+                    "remote load failed with status {}",
+                    response.status()
+                )));
+            }
+            response
+                .into_string()
+                .map_err(|err| VcsError::Backbone(err.to_string()))
+        }
+    }
+
+    fn sync(&self, envelope_json: &str) -> Result<(), VcsError> {
+        #[cfg(target_arch = "wasm32")]
+        {
+            return host_backbone_port()
+                .ok_or_else(|| VcsError::Backbone("remote backbone requires host port".into()))?
+                .write(&self.uri, envelope_json);
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let (base, document_id) = self.endpoint()?;
+            let url = format!("{base}/documents/{document_id}/envelope");
+            let response = ureq::put(&url)
+                .set("Content-Type", "application/json")
+                .send_string(envelope_json)
+                .map_err(|err| {
+                    self.record_conflict(err.to_string());
+                    VcsError::Backbone(err.to_string())
+                })?;
+            if response.status() != 200 {
+                self.record_conflict(format!("remote sync failed with status {}", response.status()));
+                return Err(VcsError::Backbone(format!(
+                    "remote sync failed with status {}",
+                    response.status()
+                )));
+            }
+            Ok(())
+        }
     }
 }
 
@@ -1022,19 +1228,10 @@ impl Backbone for RemoteHttpBackbone {
 pub fn resolve_backbone(uri: &str) -> Result<Box<dyn Backbone>, VcsError> {
     let scheme = uri.split("://").next().unwrap_or("");
     match scheme {
-        "dev" => Ok(Box::new(DevJsonFileBackbone::new(uri)?)),
-        "local" | "sqlite" => {
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                Ok(Box::new(SqliteFolderBackbone::new(uri)?))
-            }
-            #[cfg(target_arch = "wasm32")]
-            {
-                let _ = uri;
-                Err(VcsError::Backbone("sqlite backbone is native-only".into()))
-            }
-        }
-        "remote" | "http" | "https" => Ok(Box::new(RemoteHttpBackbone::new(uri)?)),
+        "temp" => Ok(Box::new(TemporaryBackbone::new(uri)?)),
+        "file" => Ok(Box::new(FileJsonBackbone::new(uri)?)),
+        "folder" => Ok(Box::new(FolderSqliteBackbone::new(uri)?)),
+        "remote" => Ok(Box::new(RemoteBackbone::new(uri)?)),
         _ => Err(VcsError::Backbone(format!("unsupported backbone uri: {uri}"))),
     }
 }
@@ -1221,11 +1418,9 @@ mod tests {
     }
 
     #[test]
-    fn dev_json_backbone_round_trip() {
-        let port = Arc::new(MemoryBackbonePort::new());
-        let backbone = DevJsonFileBackbone::new("dev://demo.json")
-            .expect("backbone")
-            .with_port(port.clone());
+    fn temporary_backbone_round_trip() {
+        let uri = "temp://demo".to_string();
+        let backbone = TemporaryBackbone::new(&uri).expect("backbone");
         let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 1 }, None);
         let json = serde_json::to_string(&envelope).expect("json");
@@ -1236,10 +1431,25 @@ mod tests {
     }
 
     #[test]
-    fn sqlite_folder_backbone_round_trip() {
+    fn file_json_backbone_round_trip() {
         let dir = tempfile::tempdir().expect("tempdir");
-        let uri = format!("local://{}", dir.path().display());
-        let backbone = SqliteFolderBackbone::new(&uri).expect("backbone");
+        let path = dir.path().join("demo.json");
+        let uri = format!("file://{}", path.display());
+        let backbone = FileJsonBackbone::new(&uri).expect("backbone");
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 1 }, None);
+        let json = serde_json::to_string(&envelope).expect("json");
+        backbone.sync(&json).expect("sync");
+        let loaded: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            serde_json::from_str(&backbone.load().expect("load")).expect("parse");
+        assert_eq!(loaded.id, "demo");
+    }
+
+    #[test]
+    fn folder_sqlite_backbone_round_trip() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let uri = format!("folder://{}", dir.path().display());
+        let backbone = FolderSqliteBackbone::new(&uri).expect("backbone");
         let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 3 }, None);
         let json = serde_json::to_string(&envelope).expect("json");
@@ -1250,39 +1460,23 @@ mod tests {
     }
 
     #[test]
-    fn remote_backbone_sync_reports_conflict() {
-        let remote = RemoteHttpBackbone::new("remote://studio").expect("attach");
+    fn store_attaches_and_auto_syncs_temporary_backbone() {
         let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let json = serde_json::to_string(&envelope).expect("json");
-        assert_eq!(remote.sync(&json), Err(VcsError::RemoteSyncNotImplemented));
-        assert_eq!(
-            remote.last_conflict().map(|c| c.kind),
-            Some("studio-conflict".into())
-        );
-    }
-
-    #[test]
-    fn store_syncs_through_resolved_backbone() {
-        let port = Arc::new(MemoryBackbonePort::new());
-        let backbone_uri = "dev://studio-store.json".to_string();
-        DevJsonFileBackbone::new(&backbone_uri)
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 2 }],
+                description: None,
+            })
+            .expect("apply");
+        let loaded = TemporaryBackbone::new("temp://demo")
             .expect("backbone")
-            .with_port(port.clone())
-            .sync("{}")
-            .expect("seed");
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> = create_document_vcs_envelope(
-            "demo/v1",
-            "demo",
-            DemoProjection { n: 0 },
-            Some(DocumentBackboneRef {
-                kind: "dev".into(),
-                uri: backbone_uri,
-            }),
-        );
-        let store = DocumentVcsStore::new(envelope);
-        store.sync_backbone().expect("sync");
-        assert!(port.read("dev://studio-store.json").is_ok());
+            .load()
+            .expect("load");
+        let parsed: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            serde_json::from_str(&loaded).expect("parse");
+        assert_eq!(parsed.vcs.edits.len(), 1);
     }
 }
 //#endregion 🧪Tests

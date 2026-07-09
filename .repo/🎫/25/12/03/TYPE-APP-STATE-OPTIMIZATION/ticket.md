@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The Type app was suffering from overfetching and overrendering issues:
@@ -105,6 +106,7 @@ After fixes:
 ## Log
 
 ## Summary
+
 # Summary
 
 Optimize TypeApp state management to fix overfetching and overrendering

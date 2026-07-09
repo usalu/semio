@@ -5,12 +5,14 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/index.ts";
 
-export async function runTests(options: {
-  extensionDevelopmentPath?: string;
-  extensionTestsPath?: string;
-  workspaceFolder?: string;
-  launchArgs?: string[];
-} = {}) {
+export async function runTests(
+  options: {
+    extensionDevelopmentPath?: string;
+    extensionTestsPath?: string;
+    workspaceFolder?: string;
+    launchArgs?: string[];
+  } = {},
+) {
   const extensionDevelopmentPath = path.resolve(options.extensionDevelopmentPath ?? import.meta.dir);
   let extensionTestsPath = options.extensionTestsPath;
   if (!extensionTestsPath) {
