@@ -32,6 +32,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 	Toggle,
+	ToggleGroup,
 	ToolbarDivider,
 	ToolbarGroup,
 	ToolbarItem,
@@ -48,6 +49,7 @@ import {
 	navbarFillItem,
 	shellChromeTitleClassName,
 	staticTreePanelDefinition,
+	UiChromeLabelPolicyProvider,
 	useMediaQuery,
 	useSidePanelChromeHotkeys,
 	useCommandHotkey,
@@ -503,6 +505,30 @@ function resolveCanvasBodyKey(app: AppDefinition): string {
 	return windowKind.bodyKey;
 }
 
+/** @emoji 🎛 Picks dynamic plugin tools when present, otherwise static mode tools for a spawned app. */
+export function selectSpawnedToolNodes(
+	dynamicTools: readonly ToolNode[],
+	app: Pick<AppDefinition, "modes" | "defaultModeId">,
+	activeModeId?: string,
+): readonly ToolNode[] {
+	const modeId = activeModeId ?? app.defaultModeId ?? app.modes[0]?.id;
+	const staticTools = app.modes.find((mode) => mode.id === modeId)?.tools ?? [];
+	return dynamicTools.length > 0 ? dynamicTools : staticTools;
+}
+
+/** @emoji 💬 Builds spawned-window engagement and measures chrome for one window kind. */
+export function spawnedWindowChromeForKind(
+	kind: AppDefinition["windowKinds"][number],
+	engagementsByKind: Readonly<Record<string, WindowEngagement>>,
+	measuresByKind: Readonly<Record<string, readonly WindowMeasure[]>>,
+	onCommand: (command: CommandDescriptor) => void,
+): { readonly engagement?: EngagementSpec; readonly measures: ReactNode } {
+	return {
+		engagement: windowEngagementToSpec(resolveWindowEngagement(kind, engagementsByKind), onCommand),
+		measures: windowMeasuresOverlay(measuresByKind[kind.id] ?? kind.measures, onCommand),
+	};
+}
+
 function isTreeNode(node: UiNode): node is UiTreeNode {
 	return node.type === "tree";
 }
@@ -667,6 +693,13 @@ export function FrameworkOsShell({
 	const [panelUiByKey, setPanelUiByKey] = useState<Readonly<Record<string, UiNode>>>({});
 	const [activeToolNodes, setActiveToolNodes] = useState<readonly ToolNode[]>([]);
 	const [spawnedWindowUi, setSpawnedWindowUi] = useState<UiNode | null>(null);
+	const [spawnedWindowEngagements, setSpawnedWindowEngagements] = useState<
+		Readonly<Record<string, WindowEngagement>>
+	>({});
+	const [spawnedWindowMeasures, setSpawnedWindowMeasures] = useState<
+		Readonly<Record<string, readonly WindowMeasure[]>>
+	>({});
+	const [spawnedToolNodes, setSpawnedToolNodes] = useState<readonly ToolNode[]>([]);
 	const [error, setError] = useState<string | null>(null);
 	const [leftPanelVisible, setLeftPanelVisible] = useState(true);
 	const [rightPanelVisible, setRightPanelVisible] = useState(true);
@@ -681,6 +714,7 @@ export function FrameworkOsShell({
 	const [findOpen, setFindOpen] = useState(false);
 	const importStudioInputRef = useRef<HTMLInputElement>(null);
 	const refreshGenerationRef = useRef(0);
+	const spawnedRefreshGenerationRef = useRef(0);
 	const contributorInstancesRef = useRef<Map<string, number>>(new Map());
 	const layoutSeedKeyRef = useRef<string | null>(null);
 	const [mobileActiveTabId, setMobileActiveTabId] = useState<string | undefined>(undefined);
@@ -865,6 +899,45 @@ export function FrameworkOsShell({
 		[loadedPlugins],
 	);
 
+	const refreshSpawnedUi = useCallback(
+		async (spawned: SpawnedAppEntry, viewState: ViewState) => {
+			const generation = ++spawnedRefreshGenerationRef.current;
+			const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId);
+			const plugin = pluginEntry?.handle;
+			const app = pluginEntry?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
+			if (!plugin || !app) {
+				setSpawnedWindowUi(null);
+				setSpawnedWindowEngagements({});
+				setSpawnedWindowMeasures({});
+				setSpawnedToolNodes([]);
+				return;
+			}
+			const contributionsJson = buildContributionsJson(
+				loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })),
+			);
+			const fullViewState: ViewState = { ...viewState, contributionsJson };
+			const bodyKey = resolveCanvasBodyKey(app);
+			const [ui, dynamicTools, dynamicEngagements, dynamicMeasures] = await Promise.all([
+				plugin.render(spawned.instanceId, bodyKey, fullViewState),
+				plugin.tools(spawned.instanceId, fullViewState),
+				plugin.windowEngagements(spawned.instanceId, fullViewState),
+				plugin.windowMeasures(spawned.instanceId, fullViewState),
+			]);
+			if (generation !== spawnedRefreshGenerationRef.current) return;
+			setSpawnedWindowUi(ui as UiNode);
+			setSpawnedWindowEngagements(dynamicEngagements);
+			setSpawnedWindowMeasures(dynamicMeasures);
+			setSpawnedToolNodes(
+				selectSpawnedToolNodes(
+					dynamicTools,
+					app,
+					fullViewState.activeModeId ?? app.defaultModeId ?? app.modes[0]?.id,
+				),
+			);
+		},
+		[loadedPlugins],
+	);
+
 	useEffect(() => {
 		if (!session) return;
 		void refreshUi(session).catch((renderError) => {
@@ -876,28 +949,24 @@ export function FrameworkOsShell({
 	useEffect(() => {
 		if (!studioMode || !session) {
 			setSpawnedWindowUi(null);
+			setSpawnedWindowEngagements({});
+			setSpawnedWindowMeasures({});
+			setSpawnedToolNodes([]);
 			return;
 		}
 		const activeSpawned = panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
 		if (!activeSpawned) {
 			setSpawnedWindowUi(null);
+			setSpawnedWindowEngagements({});
+			setSpawnedWindowMeasures({});
+			setSpawnedToolNodes([]);
 			return;
 		}
-		const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === activeSpawned.pluginId)?.handle;
-		const app = loadedPlugins.find((entry) => entry.handle.pluginId === activeSpawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === activeSpawned.appId);
-		if (!plugin || !app) {
+		void refreshSpawnedUi(activeSpawned, session.viewState).catch((renderError) => {
+			console.error("[DEBUG] spawned render failed", renderError);
 			setSpawnedWindowUi(null);
-			return;
-		}
-		const bodyKey = resolveCanvasBodyKey(app);
-		void plugin
-			.render(activeSpawned.instanceId, bodyKey, {
-				activeModeId: app.defaultModeId ?? app.modes[0]?.id,
-				activeWindowKindId: app.windowKinds[0]?.id,
-			})
-			.then(setSpawnedWindowUi)
-			.catch(() => setSpawnedWindowUi(null));
-	}, [loadedPlugins, panel, session, studioMode]);
+		});
+	}, [loadedPlugins, panel, refreshSpawnedUi, session, studioMode]);
 
 	const updateStudioPanel = useCallback((panelState: StudioPanelState) => {
 		setSession((current) => {
@@ -1081,16 +1150,23 @@ export function FrameworkOsShell({
 				}
 			}
 			const nextSession = { ...baseSession, viewState: nextViewState };
+			const isSpawnedPluginSession = studioMode && session && baseSession.pluginId !== session.pluginId;
 			setSession((current) => {
 				if (!current) return nextSession;
+				if (isSpawnedPluginSession) return { ...current, viewState: nextViewState };
 				if (current.instanceId !== nextSession.instanceId) return current;
 				return { ...current, viewState: nextViewState };
 			});
-			if (session?.instanceId === nextSession.instanceId || baseSession.instanceId === nextSession.instanceId) {
+			if (isSpawnedPluginSession) {
+				const spawned = parsePanelState(nextViewState)?.spawnedApps.find(
+					(entry) => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId,
+				);
+				if (spawned) await refreshSpawnedUi(spawned, nextViewState);
+			} else if (session?.instanceId === nextSession.instanceId || baseSession.instanceId === nextSession.instanceId) {
 				await refreshUi(nextSession);
 			}
 		},
-		[ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshUi, session?.instanceId],
+		[ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, session, studioMode],
 	);
 
 	const spawnProgram = useCallback(
@@ -1712,21 +1788,31 @@ export function FrameworkOsShell({
 	}, [session]);
 
 	const footerToolbar = useMemo(() => {
-		if (!activeToolNodes.length) return undefined;
-		return <ToolTree tools={activeToolNodes} onCommand={onCommand} />;
-	}, [activeToolNodes, onCommand]);
+		const tools = studioMode && panel?.activeSpawnedId ? spawnedToolNodes : activeToolNodes;
+		if (!tools.length) return undefined;
+		return <ToolTree tools={tools} onCommand={onCommand} />;
+	}, [activeToolNodes, onCommand, panel?.activeSpawnedId, spawnedToolNodes, studioMode]);
 
 	const modeWindows = useMemo((): ModeWindowDescriptor[] => {
 		if (!session) return [];
 		if (studioMode && spawnedWindowUi && panel?.activeSpawnedId) {
 			const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
 			if (spawned) {
+				const spawnedApp = loadedPlugins
+					.find((entry) => entry.handle.pluginId === spawned.pluginId)
+					?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
+				const windowKind = spawnedApp?.windowKinds[0];
+				const chrome = windowKind
+					? spawnedWindowChromeForKind(windowKind, spawnedWindowEngagements, spawnedWindowMeasures, onCommand)
+					: undefined;
 				return [
 					{
 						id: spawned.id,
 						title: appDocumentLabel(spawned.document),
 						fill: true,
 						showControls: true,
+						measures: chrome?.measures,
+						engagement: chrome?.engagement,
 						children: (
 							<ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
 								{interpretUiNode(spawnedWindowUi, { onCommand })}
@@ -1770,7 +1856,7 @@ export function FrameworkOsShell({
 			];
 		});
 		return [...baseWindows, ...extraWindows];
-	}, [extraWindowInstances, onCommand, panel, session, spawnedWindowUi, studioMode, windowEngagementsByKind, windowUiByKind]);
+	}, [extraWindowInstances, loadedPlugins, onCommand, panel, session, spawnedWindowEngagements, spawnedWindowMeasures, spawnedWindowUi, studioMode, windowEngagementsByKind, windowMeasuresByKind, windowUiByKind]);
 
 	const canvas = useMemo(() => {
 		if (!session) return <p className="p-4 text-sm text-muted-foreground">Loading plugins…</p>;
@@ -2119,6 +2205,16 @@ export type World3dScene = {
 	readonly meshesJson: string;
 	readonly instancesJson: string;
 	readonly selectionJson: string;
+	readonly vorticesJson?: string;
+	readonly attractionsJson?: string;
+	readonly targetVolumesJson?: string;
+	readonly referencesJson?: string;
+	readonly brushPreviewJson?: string;
+	readonly interactionJson?: string;
+	readonly engagementPreviewJson?: string;
+	readonly lodJson?: string;
+	readonly chunkingJson?: string;
+	readonly contextMenuJson?: string;
 };
 
 export type NodeGraphScene = {
@@ -3122,93 +3218,257 @@ function toolIcon(iconId: string): IconName {
 	return iconId in ICONS ? (iconId as IconName) : "circle";
 }
 
-function renderToolLeaf(node: ToolNode, onCommand: (command: CommandDescriptor) => void): ReactElement | null {
-	if (node.kind === "separator") return <ToolbarDivider key={node.id} />;
-	if (node.kind === "button") {
-		const command = resolveLeafCommand(node);
-		if (!command) return null;
-		return (
-			<ToolbarItem key={node.id}>
-				<ButtonGroupItem
-					aria-label={node.title ?? node.label ?? node.id}
-					title={node.title ?? node.label}
-					disabled={node.disabled}
-					onClick={() => onCommand(command)}
-				>
-					<Icon icon={toolIcon(node.iconId)} size="small" />
-				</ButtonGroupItem>
-			</ToolbarItem>
-		);
-	}
-	if (node.kind === "toggle") {
-		const command = resolveLeafCommand(node);
-		if (!command) return null;
-		return (
-			<ToolbarItem key={node.id}>
-				<Toggle
-					aria-label={node.title ?? node.label ?? node.id}
-					title={node.title ?? node.label}
-					icon={<Icon icon={toolIcon(node.iconId)} size="small" />}
-					pressed={node.pressed ?? false}
-					disabled={node.disabled}
-					onPressedChange={() => onCommand(command)}
-				/>
-			</ToolbarItem>
-		);
-	}
-	return null;
+/** @emoji 🔢 Sorts toolbar nodes by `order`. */
+export function sortToolNodes(nodes: readonly ToolNode[]): ToolNode[] {
+	return [...nodes].sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
 }
 
-function ToolCollection({
-	node,
+function isInteractiveToolNode(node: ToolNode): boolean {
+	if (node.kind === "separator") return false;
+	if (node.kind === "collection") return hasInteractiveToolNodes(node.children);
+	return true;
+}
+
+function hasInteractiveToolNodes(nodes?: readonly ToolNode[]): boolean {
+	return Boolean(nodes?.some((node) => isInteractiveToolNode(node)));
+}
+
+function isLeafOnlyToolCollection(node: ToolNode): boolean {
+	if (node.kind !== "collection") return false;
+	return node.children.every((child) => child.kind !== "collection");
+}
+
+function hasInteractiveToolLeaves(items: readonly ToolLeaf[]): boolean {
+	return items.some((node) => node.kind !== "separator");
+}
+
+function toolLeaves(nodes: readonly ToolNode[]): ToolLeaf[] {
+	return sortToolNodes(nodes).filter((node): node is ToolLeaf => node.kind !== "collection");
+}
+
+type ToolCollectionNode = Extract<ToolNode, { readonly kind: "collection" }>;
+
+export type ToolbarRibbonSegment =
+	| { readonly kind: "picker"; readonly collections: readonly ToolCollectionNode[]; readonly depth: number }
+	| { readonly kind: "tools"; readonly items: readonly ToolLeaf[] };
+
+/** @emoji 🎀 Builds drill-down ribbon segments from a toolbar tree and active collection path. */
+export function buildToolbarRibbonSegments(
+	nodes: readonly ToolNode[],
+	path: readonly string[],
+	depth = 0,
+): ToolbarRibbonSegment[] {
+	const sorted = sortToolNodes(nodes);
+	const collections = sorted.filter(
+		(node): node is ToolCollectionNode => node.kind === "collection" && !node.disabled,
+	);
+	const looseLeaves = sorted.filter((node): node is ToolLeaf => node.kind !== "collection");
+	const segments: ToolbarRibbonSegment[] = [];
+
+	if (collections.length === 0) {
+		if (hasInteractiveToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves });
+		return segments;
+	}
+
+	if (collections.length === 1) {
+		if (hasInteractiveToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves });
+		segments.push(...buildToolbarRibbonSegments(collections[0].children, path, depth));
+		return segments;
+	}
+
+	if (collections.every(isLeafOnlyToolCollection)) {
+		for (const collection of collections) {
+			const leaves = toolLeaves(collection.children);
+			if (hasInteractiveToolLeaves(leaves)) segments.push({ kind: "tools", items: leaves });
+		}
+		if (hasInteractiveToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves });
+		return segments;
+	}
+
+	segments.push({ kind: "picker", collections, depth });
+	const activeId = path[depth] ?? collections[0]?.id;
+	const active = collections.find((node) => node.id === activeId) ?? collections[0];
+	if (!active) return segments;
+	segments.push(...buildToolbarRibbonSegments(active.children, path, depth + 1));
+	return segments;
+}
+
+function reconcileToolPath(nodes: readonly ToolNode[], path: readonly string[]): readonly string[] {
+	let current = nodes;
+	const reconciled: string[] = [];
+	let pathIndex = 0;
+
+	while (true) {
+		const collections = sortToolNodes(current).filter(
+			(node): node is ToolCollectionNode => node.kind === "collection" && !node.disabled,
+		);
+		if (collections.length === 0) break;
+		if (collections.length > 1 && collections.every(isLeafOnlyToolCollection)) break;
+		if (collections.length === 1) {
+			current = collections[0].children;
+			continue;
+		}
+
+		let collectionId = path[pathIndex];
+		if (!collectionId || !collections.some((node) => node.id === collectionId)) {
+			collectionId = collections[0]?.id;
+		}
+		if (!collectionId) break;
+		reconciled.push(collectionId);
+		const active = collections.find((node) => node.id === collectionId);
+		if (!active || active.kind !== "collection") break;
+		current = active.children;
+		pathIndex++;
+	}
+
+	return reconciled;
+}
+
+function ToolToolbarItems({
+	items,
 	onCommand,
 }: {
-	readonly node: Extract<ToolNode, { readonly kind: "collection" }>;
+	readonly items: readonly ToolLeaf[];
 	readonly onCommand: (command: CommandDescriptor) => void;
 }): ReactElement {
-	const [open, setOpen] = useState(false);
-	const leaves = node.children.filter((child) => child.kind !== "collection");
-	return (
-		<ToolbarGroup key={node.id}>
-			<ToolbarItem>
-				<Toggle
-					aria-label={node.title ?? node.label ?? node.id}
-					title={node.title ?? node.label}
-					icon={<Icon icon={toolIcon(node.iconId)} size="small" />}
-					pressed={open}
-					disabled={node.disabled}
-					onPressedChange={setOpen}
-				/>
-			</ToolbarItem>
-			{open
-				? leaves.map((child) => {
-						if (child.kind === "separator") return <ToolbarDivider key={child.id} />;
-						if (child.kind === "button") return renderToolLeaf(child, onCommand);
-						if (child.kind === "toggle") return renderToolLeaf(child, onCommand);
-						return null;
-					})
-				: null}
-		</ToolbarGroup>
-	);
+	const sorted = useMemo(() => sortToolNodes(items) as ToolLeaf[], [items]);
+	const nodes = useMemo(() => {
+		const rendered: ReactElement[] = [];
+		let buttonRun: ToolLeaf[] = [];
+		let toggleRun: ToolLeaf[] = [];
+
+		const flushButtons = () => {
+			if (buttonRun.length === 0) return;
+			const run = buttonRun;
+			buttonRun = [];
+			rendered.push(
+				<ToolbarItem key={`buttons-${run.map((entry) => entry.id).join("-")}`}>
+					<ButtonGroup>
+						{run.map((entry) => {
+							const command = resolveLeafCommand(entry);
+							if (!command) return null;
+							return (
+								<ButtonGroupItem
+									key={entry.id}
+									id={entry.id}
+									aria-label={entry.title ?? entry.label ?? entry.id}
+									title={entry.title ?? entry.label}
+									disabled={entry.disabled}
+									onClick={() => onCommand(command)}
+									icon={<Icon icon={toolIcon(entry.iconId)} size="small" />}
+									text={entry.text ?? entry.label}
+								/>
+							);
+						})}
+					</ButtonGroup>
+				</ToolbarItem>,
+			);
+		};
+
+		const flushToggles = () => {
+			if (toggleRun.length === 0) return;
+			const run = toggleRun;
+			toggleRun = [];
+			rendered.push(
+				<ToolbarItem key={`toggles-${run.map((entry) => entry.id).join("-")}`}>
+					<ToggleGroup
+						kind="multiple"
+						value={run.filter((entry) => entry.pressed).map((entry) => entry.id)}
+						onValueChange={(values) => {
+							for (const entry of run) {
+								const command = resolveLeafCommand(entry);
+								if (!command) continue;
+								const pressed = values.includes(entry.id);
+								if ((entry.pressed ?? false) !== pressed) onCommand(command);
+							}
+						}}
+						items={run.map((entry) => ({
+							value: entry.id,
+							id: entry.id,
+							icon: <Icon icon={toolIcon(entry.iconId)} size="small" />,
+							text: entry.text ?? entry.label,
+						}))}
+					/>
+				</ToolbarItem>,
+			);
+		};
+
+		const flushRuns = () => {
+			flushButtons();
+			flushToggles();
+		};
+
+		for (const item of sorted) {
+			if (item.kind === "separator") {
+				flushRuns();
+				rendered.push(<ToolbarDivider key={item.id} />);
+				continue;
+			}
+			if (item.kind === "toggle") {
+				flushButtons();
+				toggleRun.push(item);
+				continue;
+			}
+			flushToggles();
+			buttonRun.push(item);
+		}
+		flushRuns();
+		return rendered;
+	}, [onCommand, sorted]);
+
+	return <ToolbarGroup>{nodes}</ToolbarGroup>;
 }
 
 export function ToolTree({ tools, onCommand }: ToolTreeProps): ReactElement | null {
-	const content = useMemo(() => {
-		if (!tools.length) return null;
-		return (
-			<ToolbarZone>
-				<ButtonGroup>
-					{tools.map((node) => {
-						if (node.kind === "collection") {
-							return <ToolCollection key={node.id} node={node} onCommand={onCommand} />;
+	const [activePath, setActivePath] = useState<readonly string[]>([]);
+
+	useEffect(() => {
+		setActivePath((previousPath) => reconcileToolPath(tools, previousPath));
+	}, [tools]);
+
+	const segments = useMemo(() => buildToolbarRibbonSegments(tools, activePath), [tools, activePath]);
+
+	if (!hasInteractiveToolNodes(tools)) return null;
+
+	return (
+		<UiChromeLabelPolicyProvider policy="always">
+			<div
+				role="toolbar"
+				id="ui.toolbar"
+				className="pointer-events-auto flex w-fit max-w-full shrink-0 items-center justify-start gap-single"
+			>
+				{segments.map((segment, index) => (
+					<ToolbarZone
+						key={
+							segment.kind === "picker"
+								? `picker-${segment.depth}-${segment.collections.map((entry) => entry.id).join("-")}`
+								: `tools-${index}-${segment.items.map((entry) => entry.id).join("-")}`
 						}
-						return renderToolLeaf(node, onCommand);
-					})}
-				</ButtonGroup>
-			</ToolbarZone>
-		);
-	}, [onCommand, tools]);
-	return content;
+					>
+						{segment.kind === "picker" ? (
+							<ToolbarItem>
+								<ToggleGroup
+									kind="single"
+									value={activePath[segment.depth] ?? ""}
+									onValueChange={(value) => {
+										if (value) setActivePath(reconcileToolPath(tools, [...activePath.slice(0, segment.depth), value]));
+									}}
+									items={segment.collections.map((entry) => ({
+										value: entry.id,
+										id: `ui.toolbar.group.${entry.id}`,
+										icon: <Icon icon={toolIcon(entry.iconId)} size="small" />,
+										text: entry.text ?? entry.label,
+									}))}
+								/>
+							</ToolbarItem>
+						) : (
+							<ToolToolbarItems items={segment.items} onCommand={onCommand} />
+						)}
+					</ToolbarZone>
+				))}
+			</div>
+		</UiChromeLabelPolicyProvider>
+	);
 }
 //#endregion 🔖tool-tree
 

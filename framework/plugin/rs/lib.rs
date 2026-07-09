@@ -13,7 +13,7 @@ pub mod app {
 use semio_framework_core::{
     collect_window_kind_ids_from_layout, kernel::{
         ActorId, CapabilityRequirement, CommandInvocationId, CommandResult, HybridLogicalTimestamp,
-        InverseOperation, KernelOperation, ModelDiff, ModelHandle, ModelVersion, OperationId, Rights,
+        InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
     AppDefinition, CommandDescriptor, Contribution, ExampleDefinition, Keybinding,
@@ -290,7 +290,7 @@ impl AppBuilder {
                     measures: window.measures,
                     engagement: window.engagement,
                     params_schema: None,
-                    model_projection_schema: None,
+                    document_projection_schema: None,
                     input_event_schema: None,
                     output_schema: None,
                     capabilities: vec![],
@@ -1049,7 +1049,7 @@ use crate::app::{AppInstance, Plugin, PluginBundle};
 use semio_framework_core::{
     kernel::{
         ActorId, CommandInvocationId, CommandResult, HybridLogicalTimestamp, InverseOperation,
-        KernelOperation, ModelDiff, ModelHandle, ModelVersion, OperationId, SchemaId, UndoGroup,
+        KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationId, SchemaId, UndoGroup,
         UndoPolicy,
     },
     PluginManifest, UiNode, ViewState,
@@ -1074,8 +1074,8 @@ pub fn command_result_from_patch_ops(
 ) -> CommandResult {
     let invocation_id = CommandInvocationId(format!("{command}:{instance_id}:{generation}"));
     let actor_id = ActorId(actor.to_string());
-    let model = ModelHandle(instance_id as u128);
-    let base_version = ModelVersion(generation);
+    let document = DocumentHandle(instance_id as u128);
+    let base_version = DocumentVersion(generation);
     let operations: Vec<KernelOperation> = patch_ops
         .iter()
         .enumerate()
@@ -1085,16 +1085,16 @@ pub fn command_result_from_patch_ops(
             let operation_id = OperationId(format!("{}:{index}", invocation_id.0));
             KernelOperation {
                 id: operation_id.clone(),
-                model,
+                document,
                 base_version,
                 command_id: invocation_id.clone(),
-                diff: ModelDiff {
+                diff: DocumentDiff {
                     schema_id: SchemaId(JSON_PATCH_SCHEMA_ID.into()),
                     payload,
                 },
                 inverse: InverseOperation {
                     target_operation: operation_id,
-                    inverse_diff: ModelDiff {
+                    inverse_diff: DocumentDiff {
                         schema_id: SchemaId("semio.kernel.json-patch.inverse".into()),
                         payload: serde_json::Value::Null,
                     },
@@ -1673,8 +1673,10 @@ impl PluginApp for StandardPluginApp {
                     references_json: None,
                     brush_preview_json: None,
                     interaction_json: None,
+                    engagement_preview_json: None,
                     lod_json: None,
                     chunking_json: None,
+                    context_menu_json: None,
                 },
             ),
             SurfaceKind::NodeGraph => {
@@ -2005,6 +2007,8 @@ pub fn world3d_scene(
         None,
         None,
         None,
+        None,
+        None,
     )
 }
 
@@ -2019,8 +2023,10 @@ pub fn world3d_scene_extended(
     references_json: Option<String>,
     brush_preview_json: Option<String>,
     interaction_json: Option<String>,
+    engagement_preview_json: Option<String>,
     lod_json: Option<String>,
     chunking_json: Option<String>,
+    context_menu_json: Option<String>,
 ) -> World3dScene {
     World3dScene {
         camera_json,
@@ -2033,8 +2039,10 @@ pub fn world3d_scene_extended(
         references_json,
         brush_preview_json,
         interaction_json,
+        engagement_preview_json,
         lod_json,
         chunking_json,
+        context_menu_json,
     }
 }
 

@@ -3,7 +3,12 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { uiAssetsVitePlugin, puzzle3dMeshesVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import {
+	gisMapTilesVitePlugins,
+	resolveGisMapTileServeMode,
+	uiAssetsVitePlugin,
+	puzzle3dMeshesVitePlugin,
+} from "../../../../../ui/styling/vite-elements-assets.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const playDir = path.resolve(configDir, "..");
@@ -11,11 +16,13 @@ const repoRoot = path.resolve(playDir, "../../../..");
 const pluginModulesDir = path.join(playDir, "plugin-modules");
 const rendererModulesDir = path.join(playDir, "renderer-modules");
 const renderer = process.env.SEMIO_RENDERER ?? "react";
+const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
 const uiAssetsRoot = path.join(repoRoot, "ui/asset");
 
 export default defineConfig({
 	root: playDir,
 	publicDir: path.join(playDir, "public"),
+	assetsInclude: ["**/*.wasm"],
 	resolve: {
 		alias: {
 			"@semio-tech/ui-react": path.resolve(repoRoot, "ui/js/react/index.tsx"),
@@ -40,6 +47,9 @@ export default defineConfig({
 	plugins: [
 		...uiAssetsVitePlugin(uiAssetsRoot),
 		...puzzle3dMeshesVitePlugin(repoRoot),
+		...(plugin === "gis2d"
+			? gisMapTilesVitePlugins(repoRoot, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE))
+			: []),
 		...(renderer === "wgpu" ? [tailwindcss()] : [react(), tailwindcss()]),
 	],
 	optimizeDeps: {
@@ -50,7 +60,12 @@ export default defineConfig({
 			"@react-three/fiber",
 			"fuse.js",
 		],
-		exclude: renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : [],
+		exclude: [
+			...(renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : []),
+			"@semio-tech/gis-2d-rs",
+			"@semio-tech/framework-graph-rs",
+			"@semio-tech/framework-editor-rs",
+		],
 	},
 	define: {
 		"import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(process.env.SEMIO_PLUGIN ?? "s"),

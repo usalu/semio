@@ -12,8 +12,9 @@ const { createCanvas } = createRequire(pdfjsEntry)("@napi-rs/canvas");
 const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
 const jobs: readonly (readonly [string, number, string])[] = [
+	["forschungsbericht.pdf", 1, "forschungsbericht-p1-windows"],
+	["forschungsbericht-dark.pdf", 1, "forschungsbericht-dark-p1-windows"],
 	["report.pdf", 4, "report-p4-window"],
-	["report-dark.pdf", 4, "report-dark-p4-window"],
 ];
 
 for (const [name, pageNum, outStem] of jobs) {

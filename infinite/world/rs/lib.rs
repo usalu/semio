@@ -274,6 +274,7 @@ pub struct World3dState {
     scene_references_json: Option<String>,
     scene_brush_preview_json: Option<String>,
     scene_interaction_json: Option<String>,
+    scene_engagement_preview_json: Option<String>,
     vortices: Vec<WorldVortexRecord>,
     attractions: Vec<WorldAttractionRecord>,
     target_volumes: Vec<WorldTargetVolumeRecord>,
@@ -350,6 +351,7 @@ impl World3dState {
             scene_references_json: None,
             scene_brush_preview_json: None,
             scene_interaction_json: None,
+            scene_engagement_preview_json: None,
             vortices: Vec::new(),
             attractions: Vec::new(),
             target_volumes: Vec::new(),
@@ -1639,6 +1641,7 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         state.scene_references_json = None;
         state.scene_brush_preview_json = None;
         state.scene_interaction_json = None;
+        state.scene_engagement_preview_json = None;
         state.scene_lod_json = None;
         state.scene_chunking_json = None;
         return;
@@ -1653,6 +1656,7 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         && state.scene_references_json.as_deref() == world.references_json.as_deref()
         && state.scene_brush_preview_json.as_deref() == world.brush_preview_json.as_deref()
         && state.scene_interaction_json.as_deref() == world.interaction_json.as_deref()
+        && state.scene_engagement_preview_json.as_deref() == world.engagement_preview_json.as_deref()
         && state.scene_lod_json.as_deref() == world.lod_json.as_deref()
         && state.scene_chunking_json.as_deref() == world.chunking_json.as_deref();
     if unchanged {
@@ -1669,6 +1673,7 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     state.scene_references_json = world.references_json.clone();
     state.scene_brush_preview_json = world.brush_preview_json.clone();
     state.scene_interaction_json = world.interaction_json.clone();
+    state.scene_engagement_preview_json = world.engagement_preview_json.clone();
     state.scene_lod_json = world.lod_json.clone();
     state.scene_chunking_json = world.chunking_json.clone();
     state.lod = world
@@ -3473,8 +3478,10 @@ mod tests {
                 references_json: None,
                 brush_preview_json: None,
                 interaction_json: None,
+                engagement_preview_json: None,
                 lod_json: None,
                 chunking_json: None,
+                context_menu_json: None,
             }),
             node_graph: None,
             text_editor: None,

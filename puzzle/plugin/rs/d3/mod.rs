@@ -2,11 +2,13 @@
 
 use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_world_3d_scene, create_default_layout, export_mesh_glb_bytes, export_mesh_obj,
+    layout::WindowEngagementToggleGroupOption,
     merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls,
-    world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, App, CommandDescriptor, MeshData,
-    PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
-    ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, App, CommandDescriptor,
+    PluginApp, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+    ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementOption,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
@@ -34,6 +36,7 @@ const PUZZLE3D_FALLBACK_MESH_KIND: &str = "box";
 const PUZZLE3D_ENGAGEMENT_TOOL_BRUSH: &str = "puzzle3d.tool.brush";
 const PUZZLE3D_ENGAGEMENT_TOOL_SELECT: &str = "puzzle3d.tool.select";
 const PUZZLE3D_ENGAGEMENT_TOOL_FILL: &str = "puzzle3d.tool.fill";
+const PUZZLE3D_FILL_COUNT_MAX: u32 = 1000;
 
 const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../../3d/example/concrete-forest.3d.json");
 //#endregion 🔖Constants
@@ -200,6 +203,12 @@ struct Puzzle3dRuntime {
     object_kind_weights: HashMap<String, f64>,
     #[serde(default)]
     vortex_kind_weights: HashMap<String, f64>,
+    #[serde(default = "default_transform_tool")]
+    transform_tool: String,
+}
+
+fn default_transform_tool() -> String {
+    "move".into()
 }
 
 fn default_overlap_budget() -> f64 {
@@ -617,12 +626,59 @@ fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, envelope: &P
     }
 }
 
-fn world_selection_json(runtime: &Puzzle3dRuntime) -> String {
-    world3d_selection_json(
+fn world_selection_json(envelope: &Puzzle3dEnvelope) -> String {
+    let runtime = &envelope.runtime;
+    let mut value: Value = serde_json::from_str(&world3d_selection_json(
         &runtime.selection_method,
         &runtime.selection.object_ids,
         runtime.hovered_object_id.as_deref(),
-    )
+    ))
+    .unwrap_or_else(|_| json!({}));
+    if let Some(object) = value.as_object_mut() {
+        object.insert("granularity".into(), json!("mesh"));
+        object.insert("selectionMode".into(), json!("mesh"));
+        object.insert(
+            "targets".into(),
+            json!({
+                "mesh": true,
+                "vertex": false,
+                "edge": false,
+                "face": false,
+            }),
+        );
+        object.insert("transformTool".into(), json!(runtime.transform_tool));
+        if let Some(active_id) = runtime.selection.object_ids.first() {
+            object.insert("activeObjectId".into(), json!(active_id));
+        }
+        let gumball_active = !runtime.selection.object_ids.is_empty();
+        object.insert("gumballActive".into(), json!(gumball_active));
+        if gumball_active {
+            if let Some(target) = gumball_target_world(envelope) {
+                object.insert("gumballTarget".into(), json!(target));
+            }
+        }
+    }
+    value.to_string()
+}
+
+fn gumball_target_world(envelope: &Puzzle3dEnvelope) -> Option<[f64; 3]> {
+    let selected: Vec<&Puzzle3dObject> = envelope
+        .fixture
+        .objects
+        .iter()
+        .filter(|object| envelope.runtime.selection.object_ids.contains(&object.id))
+        .collect();
+    if selected.is_empty() {
+        return None;
+    }
+    let mut sum = [0.0, 0.0, 0.0];
+    for object in &selected {
+        sum[0] += object.origin.first().copied().unwrap_or(0.0);
+        sum[1] += object.origin.get(1).copied().unwrap_or(0.0);
+        sum[2] += object.origin.get(2).copied().unwrap_or(0.0);
+    }
+    let count = selected.len() as f64;
+    Some([sum[0] / count, sum[1] / count, sum[2] / count])
 }
 
 fn fixture_from_engine_json(envelope: &Puzzle3dEnvelope, fixture_json: &str) -> Option<Puzzle3dEnvelope> {
@@ -795,6 +851,160 @@ fn build_inspector_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
 }
 //#endregion 🔖Panels
 
+//#region 🔖Engagement
+fn puzzle3d_brush_target_vortex(envelope: &Puzzle3dEnvelope) -> Option<String> {
+    envelope
+        .runtime
+        .selection
+        .vortex_ids
+        .first()
+        .cloned()
+        .or_else(|| {
+            let object_id = envelope.runtime.hovered_object_id.as_deref()?;
+            let object = envelope.fixture.objects.iter().find(|entry| entry.id == object_id)?;
+            let vortex = object.vortices.first()?;
+            Some(puzzle3d_vortex_full_id(&object.id, &vortex.id))
+        })
+}
+
+fn puzzle3d_brush_placement_control(
+    envelope: &Puzzle3dEnvelope,
+    precompute: &Puzzle3dPrecomputeSession,
+) -> Option<WindowEngagementControl> {
+    let target = puzzle3d_brush_target_vortex(envelope)?;
+    let raw = precompute.brush_candidates(&target);
+    let candidates: Vec<Value> = serde_json::from_str(&raw).unwrap_or_default();
+    if candidates.is_empty() {
+        return None;
+    }
+    let options: Vec<WindowEngagementToggleGroupOption> = candidates
+        .iter()
+        .enumerate()
+        .map(|(index, candidate)| {
+            let label = candidate
+                .get("objectKind")
+                .and_then(|value| value.as_str())
+                .or_else(|| candidate.get("objectKindId").and_then(|value| value.as_str()))
+                .unwrap_or("kind");
+            WindowEngagementToggleGroupOption {
+                id: format!("puzzle3d.brush.candidate.{index}"),
+                label: label.into(),
+                disabled: None,
+            }
+        })
+        .collect();
+    let selected_index = envelope.runtime.brush_candidate_index.min(options.len().saturating_sub(1));
+    Some(WindowEngagementControl::ToggleGroup {
+        id: Some("puzzle3d-brush-placement".into()),
+        label: Some("Placement".into()),
+        value: Some(format!("puzzle3d.brush.candidate.{selected_index}")),
+        options,
+        disabled: None,
+        on_select: Some(puzzle3d_cmd("engagementControlSelect", None)),
+    })
+}
+
+fn puzzle3d_fill_count_control(envelope: &Puzzle3dEnvelope) -> WindowEngagementControl {
+    WindowEngagementControl::Slider {
+        id: Some("puzzle3d-fill-count".into()),
+        label: Some(format!("Fill {}", envelope.runtime.fill_count)),
+        value: envelope.runtime.fill_count as f64,
+        min: 0.0,
+        max: PUZZLE3D_FILL_COUNT_MAX as f64,
+        step: Some(1.0),
+        unit: None,
+        disabled: None,
+        on_change: Some(puzzle3d_cmd("setFillCount", None)),
+        on_commit: None,
+    }
+}
+
+fn puzzle3d_engagement(envelope: &Puzzle3dEnvelope, precompute: &Puzzle3dPrecomputeSession) -> WindowEngagement {
+    let object_count = envelope.fixture.objects.len();
+    let attraction_count = envelope.fixture.attractions.len();
+    let control = match envelope.runtime.active_tool.as_str() {
+        "fill" => Some(puzzle3d_fill_count_control(envelope)),
+        "brush" => puzzle3d_brush_placement_control(envelope, precompute),
+        _ => None,
+    };
+    WindowEngagement {
+        session_active: Some(envelope.runtime.active_tool != "select"),
+        options: Some(vec![
+            WindowEngagementOption {
+                id: PUZZLE3D_ENGAGEMENT_TOOL_SELECT.into(),
+                label: Some("Select".into()),
+                icon_id: Some("cursor".into()),
+                pressed: Some(envelope.runtime.active_tool == "select"),
+                disabled: None,
+                command: Some(puzzle3d_cmd(
+                    "engagementPossibleSelect",
+                    Some(json!({ "possibleId": PUZZLE3D_ENGAGEMENT_TOOL_SELECT })),
+                )),
+            },
+            WindowEngagementOption {
+                id: PUZZLE3D_ENGAGEMENT_TOOL_BRUSH.into(),
+                label: Some("Brush".into()),
+                icon_id: Some("brush".into()),
+                pressed: Some(envelope.runtime.active_tool == "brush"),
+                disabled: None,
+                command: Some(puzzle3d_cmd(
+                    "engagementPossibleSelect",
+                    Some(json!({ "possibleId": PUZZLE3D_ENGAGEMENT_TOOL_BRUSH })),
+                )),
+            },
+            WindowEngagementOption {
+                id: PUZZLE3D_ENGAGEMENT_TOOL_FILL.into(),
+                label: Some("Fill".into()),
+                icon_id: Some("fill".into()),
+                pressed: Some(envelope.runtime.fill_count > 0 || envelope.runtime.active_tool == "fill"),
+                disabled: None,
+                command: Some(puzzle3d_cmd(
+                    "engagementPossibleSelect",
+                    Some(json!({ "possibleId": PUZZLE3D_ENGAGEMENT_TOOL_FILL })),
+                )),
+            },
+        ]),
+        input: None,
+        control,
+        controls: None,
+        status: Some(vec![semio_framework_plugin::layout::WindowEngagementStatus {
+            id: "puzzle3d-world-status".into(),
+            text: format!("{object_count} objects · {attraction_count} attractions"),
+        }]),
+        possible_engagements: None,
+    }
+}
+
+fn puzzle3d_context_menu_json(envelope: &Puzzle3dEnvelope) -> Option<String> {
+    if envelope.runtime.selection.object_ids.is_empty() {
+        return None;
+    }
+    let items = vec![
+        json!({
+            "id": "duplicate",
+            "label": "Duplicate",
+            "command": "duplicateSelection",
+        }),
+        json!({
+            "id": "select-same-kind",
+            "label": "Select all of same kind",
+            "command": "selectSameKindSelection",
+        }),
+        json!({
+            "id": "zoom",
+            "label": "Zoom to selection",
+            "command": "zoomToSelection",
+        }),
+        json!({
+            "id": "delete",
+            "label": "Delete",
+            "command": "deleteSelection",
+        }),
+    ];
+    serde_json::to_string(&items).ok()
+}
+//#endregion 🔖Engagement
+
 //#region 🔖Puzzle3dPlayApp
 pub struct Puzzle3dPlayApp {
     precompute: Puzzle3dPrecomputeSession,
@@ -825,6 +1035,7 @@ impl PluginApp for Puzzle3dPlayApp {
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
+        sync_precompute_session(&mut self.precompute, &envelope);
         match command {
             "setDocument" => {
                 if let Some(document) = args.and_then(|value| value.get("document")) {
@@ -910,6 +1121,49 @@ impl PluginApp for Puzzle3dPlayApp {
                 envelope.runtime.selection.object_ids.clear();
                 return vec![set_document_op(&envelope)];
             }
+            "duplicateSelection" => {
+                let ids = envelope.runtime.selection.object_ids.clone();
+                let mut new_ids = Vec::new();
+                for object in envelope
+                    .fixture
+                    .objects
+                    .iter()
+                    .filter(|object| ids.contains(&object.id))
+                {
+                    let id = next_object_id();
+                    let mut clone = object.clone();
+                    clone.id = id.clone();
+                    clone.origin[0] += 0.5;
+                    clone.origin[1] += 0.5;
+                    envelope.fixture.objects.push(clone);
+                    new_ids.push(id);
+                }
+                envelope.runtime.selection.object_ids = new_ids;
+                return vec![set_document_op(&envelope)];
+            }
+            "selectSameKindSelection" => {
+                let Some(first_id) = envelope.runtime.selection.object_ids.first() else {
+                    return Vec::new();
+                };
+                let Some(kind) = envelope
+                    .fixture
+                    .objects
+                    .iter()
+                    .find(|object| object.id == *first_id)
+                    .and_then(|object| object.object_kind.clone())
+                    .filter(|kind| !kind.is_empty())
+                else {
+                    return Vec::new();
+                };
+                envelope.runtime.selection.object_ids = envelope
+                    .fixture
+                    .objects
+                    .iter()
+                    .filter(|object| object.object_kind.as_deref() == Some(kind.as_str()))
+                    .map(|object| object.id.clone())
+                    .collect();
+                return vec![set_document_op(&envelope)];
+            }
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value(camera.clone()) {
@@ -981,6 +1235,64 @@ impl PluginApp for Puzzle3dPlayApp {
                     .and_then(|value| value.as_str())
                     .map(str::to_string);
                 return vec![set_document_op(&envelope)];
+            }
+            "setHover" => {
+                if args.is_none() || args.and_then(|value| value.get("objectId")).is_none() {
+                    envelope.runtime.hovered_object_id = None;
+                } else {
+                    envelope.runtime.hovered_object_id = args
+                        .and_then(|value| value.get("objectId"))
+                        .and_then(|value| value.as_str())
+                        .map(str::to_string);
+                }
+                return vec![set_document_op(&envelope)];
+            }
+            "worldPick" => {
+                let merge = args
+                    .and_then(|value| value.get("merge"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("replace");
+                if args
+                    .and_then(|value| value.get("id"))
+                    .map_or(true, |value| value.is_null())
+                {
+                    if merge == "replace" {
+                        envelope.runtime.selection.object_ids.clear();
+                    }
+                    return vec![set_document_op(&envelope)];
+                }
+                let index = args
+                    .and_then(|value| value.get("id"))
+                    .and_then(|value| value.as_u64())
+                    .unwrap_or(0) as usize;
+                if let Some(object) = envelope.fixture.objects.get(index) {
+                    let id = object.id.clone();
+                    let merge_ids = if merge == "add" {
+                        let mut merged = envelope.runtime.selection.object_ids.clone();
+                        if !merged.contains(&id) {
+                            merged.push(id.clone());
+                        }
+                        merged
+                    } else if merge == "toggle" {
+                        let mut merged = envelope.runtime.selection.object_ids.clone();
+                        if let Some(pos) = merged.iter().position(|entry| entry == &id) {
+                            merged.remove(pos);
+                        } else {
+                            merged.push(id);
+                        }
+                        merged
+                    } else {
+                        vec![id]
+                    };
+                    envelope.runtime.selection.object_ids = merge_ids;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setTransformTool" => {
+                if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
+                    envelope.runtime.transform_tool = tool.into();
+                    return vec![set_document_op(&envelope)];
+                }
             }
             "worldVortexHover" => {
                 envelope.runtime.selection.vortex_ids = args
@@ -1081,6 +1393,19 @@ impl PluginApp for Puzzle3dPlayApp {
                 .into();
                 return vec![set_document_op(&envelope)];
             }
+            "engagementControlSelect" => {
+                let candidate_id = args
+                    .and_then(|value| value.get("id").or_else(|| value.get("value")))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                if let Some(index) = candidate_id
+                    .strip_prefix("puzzle3d.brush.candidate.")
+                    .and_then(|rest| rest.parse::<usize>().ok())
+                {
+                    envelope.runtime.brush_candidate_index = index;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
             "addBrushObject" => {
                 drive_precompute(&mut self.precompute, &envelope);
                 if let Some(payload_value) = args {
@@ -1099,9 +1424,10 @@ impl PluginApp for Puzzle3dPlayApp {
             "setFillCount" => {
                 drive_precompute(&mut self.precompute, &envelope);
                 let count = args
-                    .and_then(|value| value.get("count"))
+                    .and_then(|value| value.get("count").or_else(|| value.get("value")))
                     .and_then(|value| value.as_u64())
-                    .unwrap_or(0) as u32;
+                    .unwrap_or(0)
+                    .min(u64::from(PUZZLE3D_FILL_COUNT_MAX)) as u32;
                 envelope.runtime.fill_count = count;
                 if count > 0 {
                     if let Ok(fixture_json) = self.precompute.apply_fill_count_rust(count) {
@@ -1180,7 +1506,7 @@ impl PluginApp for Puzzle3dPlayApp {
                         camera_json(&envelope.fixture.camera),
                         world_meshes_json(&envelope.fixture),
                         world_instances_json(&envelope.fixture, &envelope.runtime),
-                        world_selection_json(&envelope.runtime),
+                        world_selection_json(&envelope),
                         Some(world_vortices_json(&envelope.fixture)),
                         Some(world_attractions_json(&envelope.fixture)),
                         Some(world_target_volumes_json(&envelope.fixture)),
@@ -1188,7 +1514,9 @@ impl PluginApp for Puzzle3dPlayApp {
                         brush_preview,
                         Some(world_interaction_json(&envelope.runtime)),
                         None,
+                        None,
                         Some(world3d_chunking_json(256.0, 8000.0)),
+                        puzzle3d_context_menu_json(&envelope),
                     ),
                 )
             }
@@ -1198,17 +1526,32 @@ impl PluginApp for Puzzle3dPlayApp {
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
+
+    fn window_engagements(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+        let envelope = parse_envelope(document_json);
+        HashMap::from([(
+            PUZZLE3D_PLAY_WINDOW_MAIN.into(),
+            puzzle3d_engagement(&envelope, &self.precompute),
+        )])
+    }
 }
 //#endregion 🔖Puzzle3dPlayApp
 
 //#region 🔖Manifest
 pub fn create_puzzle3d_app() -> App {
+    let envelope = default_envelope();
     App::from_builder(
         App::builder(PUZZLE3D_PLAY_APP_ID, "Puzzle 3D").document(["semio", "puzzle", "3d"])
             .icon_id("puzzle")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(PUZZLE3D_PLAY_WINDOW_MAIN, "Puzzle 3D", PUZZLE3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d)
+            .window_kind_with_engagement(
+                PUZZLE3D_PLAY_WINDOW_MAIN,
+                "Puzzle 3D",
+                PUZZLE3D_PLAY_BODY_COMPOSITE,
+                SurfaceKind::World3d,
+                puzzle3d_engagement(&envelope, &Puzzle3dPrecomputeSession::new()),
+            )
             .default_layout(create_default_layout(
                 &[PUZZLE3D_PLAY_WINDOW_MAIN.into()],
                 "row",
@@ -1321,6 +1664,89 @@ mod tests {
             }
         }
         next
+    }
+
+    #[test]
+    fn world_pick_selects_object_by_index() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops(
+            "worldPick",
+            Some(&json!({ "granularity": "mesh", "id": 0, "merge": "replace" })),
+            &document,
+            &ViewState::default(),
+        );
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert!(!envelope.runtime.selection.object_ids.is_empty());
+        let selection: Value = serde_json::from_str(&world_selection_json(&envelope)).unwrap();
+        assert_eq!(selection.get("selectionMode").and_then(|v| v.as_str()), Some("mesh"));
+        assert_eq!(selection.get("gumballActive").and_then(|v| v.as_bool()), Some(true));
+        assert!(selection.get("gumballTarget").is_some());
+    }
+
+    #[test]
+    fn world_pick_clears_selection_on_null_id() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops(
+            "worldPick",
+            Some(&json!({ "granularity": "mesh", "id": 0, "merge": "replace" })),
+            &document,
+            &ViewState::default(),
+        );
+        let document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let ops = app.handle_command_patch_ops(
+            "worldPick",
+            Some(&json!({ "granularity": "mesh", "id": null, "merge": "replace" })),
+            &document,
+            &ViewState::default(),
+        );
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert!(envelope.runtime.selection.object_ids.is_empty());
+    }
+
+    #[test]
+    fn set_hover_updates_hovered_object_id() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let object_id = envelope.fixture.objects.first().map(|object| object.id.clone()).unwrap();
+        let ops = app.handle_command_patch_ops(
+            "setHover",
+            Some(&json!({ "objectId": object_id, "mode": "mesh", "id": 0 })),
+            &document,
+            &ViewState::default(),
+        );
+        let hovered = apply_ops(&envelope, &ops);
+        assert_eq!(hovered.runtime.hovered_object_id.as_deref(), Some(hovered.fixture.objects[0].id.as_str()));
+        let ops = app.handle_command_patch_ops("setHover", None, &serde_json::to_string(&hovered).unwrap(), &ViewState::default());
+        let cleared = apply_ops(&hovered, &ops);
+        assert!(cleared.runtime.hovered_object_id.is_none());
+    }
+
+    #[test]
+    fn window_engagements_include_select_brush_fill() {
+        let app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let engagements = app.window_engagements(&document, &ViewState::default());
+        let engagement = engagements.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main engagement");
+        let options = engagement.options.as_ref().expect("tool options");
+        let ids: Vec<&str> = options.iter().map(|option| option.id.as_str()).collect();
+        assert!(ids.contains(&PUZZLE3D_ENGAGEMENT_TOOL_SELECT));
+        assert!(ids.contains(&PUZZLE3D_ENGAGEMENT_TOOL_BRUSH));
+        assert!(ids.contains(&PUZZLE3D_ENGAGEMENT_TOOL_FILL));
+    }
+
+    #[test]
+    fn fill_tool_shows_slider_control() {
+        let app = Puzzle3dPlayApp::default();
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        envelope.runtime.active_tool = "fill".into();
+        envelope.runtime.fill_count = 5;
+        let document = serde_json::to_string(&envelope).unwrap();
+        let engagements = app.window_engagements(&document, &ViewState::default());
+        let engagement = engagements.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main engagement");
+        assert!(matches!(engagement.control, Some(WindowEngagementControl::Slider { .. })));
     }
 }
 //#endregion 🧪Tests

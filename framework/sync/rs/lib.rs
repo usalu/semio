@@ -152,7 +152,7 @@ where
 mod tests {
     use super::*;
     use semio_framework_core::{
-        ActorId, InverseOperation, ModelDiff, ModelId, OperationId, PayloadHash, SchemaId, SchemaVersion,
+        ActorId, InverseOperation, DocumentDiff, DocumentId, OperationId, PayloadHash, SchemaId, SchemaVersion,
         UndoPolicy,
     };
     use serde_json::json;
@@ -161,21 +161,21 @@ mod tests {
         OpEnvelope {
             id: OperationId(id.into()),
             actor: ActorId("actor-1".into()),
-            model: ModelId("model-1".into()),
+            document: DocumentId("document-1".into()),
             schema_version: SchemaVersion("test.v1".into()),
             deps: deps.into_iter().map(|dep| OperationId(dep.into())).collect(),
             payload_hash: PayloadHash("hash".into()),
-            diff: ModelDiff {
+            diff: DocumentDiff {
                 schema_id: SchemaId("diff.v1".into()),
                 payload: json!({"value": id}),
             },
             inverse: InverseOperation {
                 target_operation: OperationId(id.into()),
-                inverse_diff: ModelDiff {
+                inverse_diff: DocumentDiff {
                     schema_id: SchemaId("diff.v1".into()),
                     payload: json!({}),
                 },
-                base_version: semio_framework_core::ModelVersion(0),
+                base_version: semio_framework_core::DocumentVersion(0),
                 dependencies: Vec::new(),
                 undo_policy: UndoPolicy::ExactBaseOnly,
             },

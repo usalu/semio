@@ -19,16 +19,20 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import {
 	DEFAULT_LOD_GRID_FACTOR,
 	DEFAULT_MANUAL_LOD,
+	GLB_MESH_FRAME_ROTATION_X,
 	WorldCanvas,
 	WorldLayerStack,
 	WorldLodBridge,
 	WorldOrbitCameraViewRig,
 	WorldOrbitGated,
 	WorldOrbitViewSnapGateProvider,
+	WorldReferenceLayer,
+	WorldVolumeLayer,
 	type WorldCameraState,
 } from "@semio-tech/infinite-world-r3f";
 import {
 	UnifiedGumball,
+	ContextMenuController,
 	marqueeCoverageFromGesture,
 	marqueeModeFromModifiers,
 	SelectionMarquee,
@@ -96,6 +100,13 @@ type WorldHoverComponent = {
 	readonly id?: number;
 };
 
+type WorldContextMenuItem = {
+	readonly id: string;
+	readonly label: string;
+	readonly command: string;
+	readonly args?: Record<string, unknown>;
+};
+
 type WorldSelectionRecord = {
 	readonly method?: SelectionMarqueeMethod;
 	readonly ids?: readonly string[];
@@ -112,6 +123,81 @@ type WorldSelectionRecord = {
 	readonly showEdges?: boolean;
 	readonly engagementSessionActive?: boolean;
 };
+
+type WorldInteractionRecord = {
+	readonly activeTool?: string;
+	readonly brushCandidateIndex?: number;
+	readonly hoveredVortexFullId?: string;
+};
+
+type WorldVortexRecord = {
+	readonly fullId: string;
+	readonly objectId?: string;
+	readonly vortexKind?: string;
+	readonly position: readonly [number, number, number];
+	readonly direction?: readonly [number, number, number];
+	readonly radius?: number;
+	readonly color?: string;
+};
+
+type WorldAttractionRecord = {
+	readonly id: string;
+	readonly from: readonly [number, number, number];
+	readonly to: readonly [number, number, number];
+	readonly color?: string;
+};
+
+type WorldTargetVolumeRecord = {
+	readonly id: string;
+	readonly origin: readonly [number, number, number];
+	readonly orientation?: readonly [number, number, number, number];
+	readonly scale?: readonly [number, number, number] | number;
+	readonly color?: string;
+};
+
+type WorldReferenceRecord = {
+	readonly id: string;
+	readonly url: string;
+	readonly origin: readonly [number, number, number];
+	readonly widthWorld?: number;
+	readonly locked?: boolean;
+	readonly hidden?: boolean;
+};
+
+type WorldBrushPreviewRecord = {
+	readonly targetVortexFullId?: string;
+	readonly objectKindId?: string;
+	readonly sourceVortexIndex?: number;
+	readonly meshUrl?: string;
+	readonly origin?: readonly [number, number, number];
+	readonly orientation?: readonly [number, number, number, number];
+	readonly scale?: readonly [number, number, number] | number;
+};
+
+type WorldEngagementPreviewPoint = {
+	readonly kind: "point";
+	readonly role?: string;
+	readonly position: readonly [number, number, number];
+};
+
+type WorldEngagementPreviewSegment = {
+	readonly kind: "segment";
+	readonly role?: string;
+	readonly from: readonly [number, number, number];
+	readonly to: readonly [number, number, number];
+};
+
+type WorldEngagementPreviewBox = {
+	readonly kind: "box-preview";
+	readonly role?: string;
+	readonly cornerA?: readonly [number, number, number];
+	readonly cornerB?: readonly [number, number, number];
+};
+
+type WorldEngagementPreviewItem =
+	| WorldEngagementPreviewPoint
+	| WorldEngagementPreviewSegment
+	| WorldEngagementPreviewBox;
 
 type SemanticColors = {
 	readonly mesh: string;
@@ -178,6 +264,44 @@ function parseSelection(selectionJson: string): WorldSelectionRecord {
 	} catch {
 		return { method: "rectangle", ids: [] };
 	}
+}
+
+function parseJsonArray<T>(json: string | undefined): readonly T[] {
+	if (!json) return [];
+	try {
+		const parsed = JSON.parse(json);
+		return Array.isArray(parsed) ? (parsed as T[]) : [];
+	} catch {
+		return [];
+	}
+}
+
+function parseInteraction(interactionJson: string | undefined): WorldInteractionRecord {
+	if (!interactionJson) return {};
+	try {
+		return JSON.parse(interactionJson) as WorldInteractionRecord;
+	} catch {
+		return {};
+	}
+}
+
+function parseBrushPreview(brushPreviewJson: string | undefined): WorldBrushPreviewRecord | null {
+	if (!brushPreviewJson) return null;
+	try {
+		return JSON.parse(brushPreviewJson) as WorldBrushPreviewRecord;
+	} catch {
+		return null;
+	}
+}
+
+function parseEngagementPreview(engagementPreviewJson: string | undefined): readonly WorldEngagementPreviewItem[] {
+	return parseJsonArray<WorldEngagementPreviewItem>(engagementPreviewJson);
+}
+
+function scaleTuple(scale: WorldBrushPreviewRecord["scale"]): [number, number, number] {
+	if (typeof scale === "number") return [scale, scale, scale];
+	if (Array.isArray(scale) && scale.length >= 3) return [scale[0]!, scale[1]!, scale[2]!];
+	return [1, 1, 1];
 }
 
 function geometryFromMesh(mesh: WorldMeshData) {
@@ -319,7 +443,11 @@ function GlbInstanceMesh({ url, color }: { readonly url: string; readonly color:
 		});
 		return cloned;
 	}, [gltf.scene, color]);
-	return <primitive object={scene} />;
+	return (
+		<group rotation={[GLB_MESH_FRAME_ROTATION_X, 0, 0]}>
+			<primitive object={scene} />
+		</group>
+	);
 }
 
 function gumballConfigForTransformTool(tool: string): GumballConfig {
@@ -689,6 +817,7 @@ function WorldInstancesLayer({
 	onGumballDraggingChanged,
 	onGumballDragEnd,
 	previewComponentIds,
+	blockPick,
 }: {
 	readonly instances: readonly WorldInstanceRecord[];
 	readonly meshes: readonly WorldMeshRecord[];
@@ -703,6 +832,7 @@ function WorldInstancesLayer({
 	readonly onGumballDraggingChanged: (dragging: boolean) => void;
 	readonly onGumballDragEnd: (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => void;
 	readonly previewComponentIds: ReadonlySet<number>;
+	readonly blockPick?: boolean;
 }) {
 	const meshById = useMemo(() => new Map(meshes.map((mesh) => [mesh.id, mesh])), [meshes]);
 	const geometries = useMemo(() => {
@@ -715,7 +845,7 @@ function WorldInstancesLayer({
 	const targets = selection.targets ?? { mesh: true, vertex: false, edge: false, face: false };
 	const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
 	const selectedComponentIds = new Set(selection.componentIds ?? []);
-	const pickEnabled = !gumballDragActive && !onPaintAt;
+	const pickEnabled = !gumballDragActive && !onPaintAt && !blockPick;
 	const transformTool = selection.transformTool ?? "move";
 	const gumballConfig = useMemo(() => gumballConfigForTransformTool(transformTool), [transformTool]);
 	const paintMode = selection.interactionMode === "paint";
@@ -807,6 +937,177 @@ function WorldInstancesLayer({
 	);
 }
 //#endregion WorldInstancesLayer
+
+function WorldVortexMarkers({
+	vortices,
+	brushMode,
+	onHover,
+	onSelect,
+	onBrushPlace,
+}: {
+	readonly vortices: readonly WorldVortexRecord[];
+	readonly brushMode: boolean;
+	readonly onHover: (fullId: string | null) => void;
+	readonly onSelect: (fullId: string) => void;
+	readonly onBrushPlace: () => void;
+}) {
+	if (!vortices.length) return null;
+	return (
+		<group>
+			{vortices.map((vortex) => {
+				const radius = vortex.radius ?? 0.36;
+				const color = vortex.color ?? "#38bdf8";
+				return (
+					<mesh
+						key={vortex.fullId}
+						position={vortex.position as [number, number, number]}
+						onPointerOver={(event) => {
+							event.stopPropagation();
+							onHover(vortex.fullId);
+						}}
+						onPointerOut={(event) => {
+							event.stopPropagation();
+							onHover(null);
+						}}
+						onClick={(event) => {
+							event.stopPropagation();
+							if (brushMode) {
+								onBrushPlace();
+								return;
+							}
+							onSelect(vortex.fullId);
+						}}
+					>
+						<sphereGeometry args={[radius, 16, 16]} />
+						<meshStandardMaterial color={color} transparent opacity={0.88} />
+					</mesh>
+				);
+			})}
+		</group>
+	);
+}
+
+function WorldAttractionLines({
+	attractions,
+}: {
+	readonly attractions: readonly WorldAttractionRecord[];
+}) {
+	if (!attractions.length) return null;
+	return (
+		<group>
+			{attractions.map((attraction) => {
+				const positions = new Float32Array([
+					attraction.from[0],
+					attraction.from[1],
+					attraction.from[2],
+					attraction.to[0],
+					attraction.to[1],
+					attraction.to[2],
+				]);
+				const geometry = new BufferGeometry();
+				geometry.setAttribute("position", new BufferAttribute(positions, 3));
+				return (
+					<lineSegments key={attraction.id} geometry={geometry} raycast={() => null}>
+						<lineBasicMaterial color={attraction.color ?? "#60a5fa"} linewidth={2} />
+					</lineSegments>
+				);
+			})}
+		</group>
+	);
+}
+
+function BrushPreviewGhost({
+	preview,
+	meshes,
+}: {
+	readonly preview: WorldBrushPreviewRecord;
+	readonly meshes: readonly WorldMeshRecord[];
+}) {
+	if (!preview.origin) return null;
+	const meshUrl = preview.meshUrl;
+	const meshRecord = meshUrl ? meshes.find((mesh) => mesh.url === meshUrl) : undefined;
+	const position = preview.origin as [number, number, number];
+	const rotation = preview.orientation as [number, number, number, number] | undefined;
+	const scale = scaleTuple(preview.scale);
+	const quaternion = rotation ? new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]) : undefined;
+	return (
+		<group position={position} scale={scale} quaternion={quaternion}>
+			{meshRecord?.url ? (
+				<Suspense fallback={null}>
+					<GlbInstanceMesh url={meshRecord.url} color="#fbbf24" />
+				</Suspense>
+			) : (
+				<mesh raycast={() => null}>
+					<boxGeometry args={[1, 1, 1]} />
+					<meshBasicMaterial color="#fbbf24" transparent opacity={0.42} depthWrite={false} />
+				</mesh>
+			)}
+		</group>
+	);
+}
+
+function EngagementPreviewLayer({
+	items,
+	color,
+}: {
+	readonly items: readonly WorldEngagementPreviewItem[];
+	readonly color: string;
+}) {
+	if (!items.length) return null;
+	return (
+		<group>
+			{items.map((item, index) => {
+				if (item.kind === "point") {
+					return (
+						<mesh
+							key={`preview-point-${index}`}
+							position={item.position as [number, number, number]}
+							raycast={() => null}
+						>
+							<sphereGeometry args={[0.08, 12, 12]} />
+							<meshStandardMaterial color={color} />
+						</mesh>
+					);
+				}
+				if (item.kind === "segment") {
+					const positions = new Float32Array([
+						item.from[0],
+						item.from[1],
+						item.from[2],
+						item.to[0],
+						item.to[1],
+						item.to[2],
+					]);
+					const geometry = new BufferGeometry();
+					geometry.setAttribute("position", new BufferAttribute(positions, 3));
+					return (
+						<lineSegments key={`preview-segment-${index}`} geometry={geometry} raycast={() => null}>
+							<lineBasicMaterial color={color} linewidth={2} />
+						</lineSegments>
+					);
+				}
+				if (item.kind === "box-preview" && item.cornerA && item.cornerB) {
+					const [ax, ay, az] = item.cornerA;
+					const [bx, by, bz] = item.cornerB;
+					const width = Math.max(Math.abs(bx - ax), 0.05);
+					const depth = Math.max(Math.abs(by - ay), 0.05);
+					const height = Math.max(Math.abs(bz - az), 0.05);
+					return (
+						<mesh
+							key={`preview-box-${index}`}
+							position={[(ax + bx) * 0.5, (ay + by) * 0.5, (az + bz) * 0.5]}
+							raycast={() => null}
+						>
+							<boxGeometry args={[width, depth, height]} />
+							<meshBasicMaterial color={color} transparent opacity={0.35} depthWrite={false} wireframe />
+						</mesh>
+					);
+				}
+				return null;
+			})}
+		</group>
+	);
+}
 
 function pointInMarqueeRect(sx: number, sy: number, marquee: readonly SelectionMarqueePoint[]): boolean {
 	if (marquee.length < 2) return false;
@@ -964,6 +1265,23 @@ export function World3dHost({
 	const meshes = useMemo(() => parseMeshes(scene?.meshesJson ?? "[]"), [scene?.meshesJson]);
 	const instances = useMemo(() => parseInstances(scene?.instancesJson ?? "[]"), [scene?.instancesJson]);
 	const selection = useMemo(() => parseSelection(scene?.selectionJson ?? "{}"), [scene?.selectionJson]);
+	const vortices = useMemo(() => parseJsonArray<WorldVortexRecord>(scene?.vorticesJson), [scene?.vorticesJson]);
+	const attractions = useMemo(() => parseJsonArray<WorldAttractionRecord>(scene?.attractionsJson), [scene?.attractionsJson]);
+	const targetVolumes = useMemo(() => parseJsonArray<WorldTargetVolumeRecord>(scene?.targetVolumesJson), [scene?.targetVolumesJson]);
+	const references = useMemo(() => parseJsonArray<WorldReferenceRecord>(scene?.referencesJson), [scene?.referencesJson]);
+	const interaction = useMemo(() => parseInteraction(scene?.interactionJson), [scene?.interactionJson]);
+	const engagementPreview = useMemo(
+		() => parseEngagementPreview(scene?.engagementPreviewJson),
+		[scene?.engagementPreviewJson],
+	);
+	const brushPreview = useMemo(() => parseBrushPreview(scene?.brushPreviewJson), [scene?.brushPreviewJson]);
+	const contextMenuItems = useMemo(
+		() => parseJsonArray<WorldContextMenuItem>(scene?.contextMenuJson),
+		[scene?.contextMenuJson],
+	);
+	const activeTool = interaction.activeTool ?? "select";
+	const fillMode = activeTool === "fill";
+	const brushMode = activeTool === "brush";
 	const hostRef = useRef<HTMLDivElement | null>(null);
 	const lodRef = useRef(DEFAULT_MANUAL_LOD);
 	const [marqueePath, setMarqueePath] = useState<readonly SelectionMarqueePoint[]>([]);
@@ -971,6 +1289,7 @@ export function World3dHost({
 	const [marqueePreviewIds, setMarqueePreviewIds] = useState<readonly number[]>([]);
 	const [gumballDragActive, setGumballDragActive] = useState(false);
 	const [paintStrokeActive, setPaintStrokeActive] = useState(false);
+	const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number } | null>(null);
 	const cameraRef = useRef<import("three").Camera | null>(null);
 	const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
 
@@ -983,6 +1302,53 @@ export function World3dHost({
 			});
 		},
 		[node.controllerId, node.surfaceId, onCommand],
+	);
+
+	const handleZoomToSelection = useCallback(() => {
+		const selectedIds = new Set(selection.ids ?? []);
+		if (selectedIds.size === 0) return;
+		const selected = instances.filter((instance) => selectedIds.has(instance.id));
+		if (selected.length === 0) return;
+		let centerX = 0;
+		let centerY = 0;
+		let centerZ = 0;
+		for (const instance of selected) {
+			const position = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
+			centerX += position[0];
+			centerY += position[1];
+			centerZ += position[2];
+		}
+		const count = selected.length;
+		centerX /= count;
+		centerY /= count;
+		centerZ /= count;
+		let maxDistance = 1;
+		for (const instance of selected) {
+			const position = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
+			const dx = position[0] - centerX;
+			const dy = position[1] - centerY;
+			const dz = position[2] - centerZ;
+			maxDistance = Math.max(maxDistance, Math.hypot(dx, dy, dz));
+		}
+		const distance = maxDistance * 3 + 2;
+		dispatch("setCamera", {
+			camera: {
+				position: [centerX + distance * 0.6, centerY - distance * 0.6, centerZ + distance * 0.5],
+				target: [centerX, centerY, centerZ],
+				fov: cameraState.fov,
+			},
+		});
+	}, [cameraState.fov, dispatch, instances, selection.ids]);
+
+	const handleContextMenuSelect = useCallback(
+		(item: WorldContextMenuItem) => {
+			if (item.command === "zoomToSelection") {
+				handleZoomToSelection();
+				return;
+			}
+			dispatch(item.command, item.args);
+		},
+		[dispatch, handleZoomToSelection],
 	);
 
 	const mergeModeToArg = (mode: ReturnType<typeof marqueeModeFromModifiers>) => {
@@ -1035,6 +1401,36 @@ export function World3dHost({
 		},
 		[dispatch],
 	);
+
+	const handleVortexHover = useCallback(
+		(fullId: string | null) => {
+			if (!fullId) {
+				dispatch("worldVortexHover", {});
+				return;
+			}
+			dispatch("worldVortexHover", { fullId });
+		},
+		[dispatch],
+	);
+
+	const handleVortexSelect = useCallback(
+		(fullId: string) => {
+			dispatch("worldVortexSelect", { fullId });
+		},
+		[dispatch],
+	);
+
+	const handleBrushPlace = useCallback(() => {
+		if (!brushPreview) return;
+		dispatch("addBrushObject", {
+			targetVortexFullId: brushPreview.targetVortexFullId,
+			objectKindId: brushPreview.objectKindId,
+			sourceVortexIndex: brushPreview.sourceVortexIndex ?? 0,
+			origin: brushPreview.origin,
+			orientation: brushPreview.orientation,
+			scale: brushPreview.scale,
+		});
+	}, [brushPreview, dispatch]);
 
 	const handleWorldPick = useCallback(
 		(args: { granularity: string; id: number; merge: string }) => {
@@ -1134,7 +1530,7 @@ export function World3dHost({
 
 	const handlePointerDown = useCallback(
 		(event: React.PointerEvent<HTMLDivElement>) => {
-			if (event.button !== 0 || event.target !== hostRef.current) return;
+			if (event.button !== 0) return;
 			if (selection.engagementSessionActive && hostRef.current && cameraRef.current) {
 				const rect = hostRef.current.getBoundingClientRect();
 				const point = raycastGroundPoint(event.clientX, event.clientY, rect, cameraRef.current);
@@ -1149,6 +1545,7 @@ export function World3dHost({
 					return;
 				}
 			}
+			if (event.target !== hostRef.current) return;
 			if (paintMode) {
 				setPaintStrokeActive(true);
 				dispatch("paintStrokeBegin");
@@ -1268,6 +1665,11 @@ export function World3dHost({
 			ref={hostRef}
 			className="semio-world-3d-host relative h-full min-h-[24rem] w-full"
 			data-surface-id={node.surfaceId}
+			onContextMenu={(event) => {
+				if (contextMenuItems.length === 0) return;
+				event.preventDefault();
+				setContextMenu({ x: event.clientX, y: event.clientY });
+			}}
 			onPointerDown={handlePointerDown}
 			onPointerMove={handlePointerMove}
 			onPointerUp={handlePointerUp}
@@ -1311,6 +1713,40 @@ export function World3dHost({
 						onGumballDraggingChanged={setGumballDragActive}
 						onGumballDragEnd={handleGumballDragEnd}
 						previewComponentIds={new Set(marqueePreviewIds)}
+						blockPick={fillMode}
+					/>
+					<WorldVortexMarkers
+						vortices={vortices}
+						brushMode={brushMode}
+						onHover={handleVortexHover}
+						onSelect={handleVortexSelect}
+						onBrushPlace={handleBrushPlace}
+					/>
+					<WorldAttractionLines attractions={attractions} />
+					{brushPreview ? <BrushPreviewGhost preview={brushPreview} meshes={meshes} /> : null}
+					{engagementPreview.length > 0 ? (
+						<EngagementPreviewLayer items={engagementPreview} color={colors.hover} />
+					) : null}
+					<WorldVolumeLayer
+						volumes={targetVolumes.map((volume) => ({
+							id: volume.id,
+							origin: volume.origin as [number, number, number],
+							orientation: volume.orientation as [number, number, number, number] | undefined,
+							scale: volume.scale,
+							color: volume.color,
+						}))}
+						interactive={false}
+					/>
+					<WorldReferenceLayer
+						references={references
+							.filter((reference) => !reference.hidden)
+							.map((reference) => ({
+								id: reference.id,
+								source: { url: reference.url, mediaKind: "image" as const },
+								origin: reference.origin as [number, number, number],
+								widthWorld: reference.widthWorld,
+								locked: reference.locked,
+							}))}
 					/>
 				</WorldLodBridge>
 				</WorldOrbitViewSnapGateProvider>
@@ -1331,6 +1767,18 @@ export function World3dHost({
 					/>
 				)
 			) : null}
+			<ContextMenuController
+				open={contextMenu != null}
+				position={contextMenu ?? { x: 0, y: 0 }}
+				items={contextMenuItems.map((item) => ({
+					id: item.id,
+					label: item.label,
+					onSelect: () => handleContextMenuSelect(item),
+				}))}
+				onOpenChange={(open) => {
+					if (!open) setContextMenu(null);
+				}}
+			/>
 		</div>
 	);
 }

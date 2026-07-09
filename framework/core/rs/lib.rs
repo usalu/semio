@@ -1340,7 +1340,7 @@ mod tests {
                 measures: Vec::new(),
                 engagement: None,
                 params_schema: None,
-                model_projection_schema: None,
+                document_projection_schema: None,
                 input_event_schema: None,
                 output_schema: None,
                 capabilities: Vec::new(),
@@ -2206,9 +2206,13 @@ pub struct World3dScene {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub interaction_json: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub engagement_preview_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lod_json: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub chunking_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub context_menu_json: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2927,7 +2931,7 @@ pub struct WindowKindDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub params_schema: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub model_projection_schema: Option<String>,
+    pub document_projection_schema: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub input_event_schema: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3096,7 +3100,7 @@ use serde_json::Value;
 //#region 🔖Identifiers
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct ModelHandle(pub u128);
+pub struct DocumentHandle(pub u128);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -3140,7 +3144,7 @@ pub struct ActorId(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct ModelId(pub String);
+pub struct DocumentId(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -3148,7 +3152,7 @@ pub struct SchemaId(pub String);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct ModelVersion(pub u64);
+pub struct DocumentVersion(pub u64);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -3215,7 +3219,7 @@ pub enum Rights {
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ResourceKind {
-    Model,
+    Document,
     Projection,
     Window,
     Asset,
@@ -3307,7 +3311,7 @@ pub struct AppEvent {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ModelDiff {
+pub struct DocumentDiff {
     pub schema_id: SchemaId,
     pub payload: Value,
 }
@@ -3325,8 +3329,8 @@ pub enum UndoPolicy {
 #[serde(rename_all = "camelCase")]
 pub struct InverseOperation {
     pub target_operation: OperationId,
-    pub inverse_diff: ModelDiff,
-    pub base_version: ModelVersion,
+    pub inverse_diff: DocumentDiff,
+    pub base_version: DocumentVersion,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dependencies: Vec<OperationId>,
     pub undo_policy: UndoPolicy,
@@ -3336,10 +3340,10 @@ pub struct InverseOperation {
 #[serde(rename_all = "camelCase")]
 pub struct KernelOperation {
     pub id: OperationId,
-    pub model: ModelHandle,
-    pub base_version: ModelVersion,
+    pub document: DocumentHandle,
+    pub base_version: DocumentVersion,
     pub command_id: CommandInvocationId,
-    pub diff: ModelDiff,
+    pub diff: DocumentDiff,
     pub inverse: InverseOperation,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dependencies: Vec<OperationId>,
@@ -3373,7 +3377,7 @@ pub struct CommandResult {
 #[serde(rename_all = "camelCase")]
 pub struct CommandContext {
     pub invocation: CommandInvocation,
-    pub model_projection: Value,
+    pub document_projection: Value,
     pub view_state: super::ViewState,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub granted_capabilities: Vec<CapabilityGrant>,
@@ -3390,12 +3394,12 @@ pub struct PayloadHash(pub String);
 pub struct OpEnvelope {
     pub id: OperationId,
     pub actor: ActorId,
-    pub model: ModelId,
+    pub document: DocumentId,
     pub schema_version: SchemaVersion,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub deps: Vec<OperationId>,
     pub payload_hash: PayloadHash,
-    pub diff: ModelDiff,
+    pub diff: DocumentDiff,
     pub inverse: InverseOperation,
 }
 //#endregion 🔖Sync
@@ -3432,7 +3436,7 @@ pub struct CommandRequest {
 pub struct WindowKindDef {
     pub id: WindowKindId,
     pub params_schema: SchemaId,
-    pub model_projection_schema: SchemaId,
+    pub document_projection_schema: SchemaId,
     pub input_event_schema: SchemaId,
     pub output_schema: SchemaId,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -3444,7 +3448,7 @@ pub struct WindowKindDef {
 pub struct WindowInput {
     pub window: WindowHandle,
     pub params: Value,
-    pub model_projection: Value,
+    pub document_projection: Value,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub events: Vec<WindowEvent>,
     pub size: PhysicalSize,
@@ -3464,7 +3468,7 @@ pub struct WindowOutput {
 //#region 🔖MergeStrategy
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum ModelKind {
+pub enum DocumentKind {
     PlainRecord,
     OrderedSequence,
     TextSequence,
@@ -3482,14 +3486,14 @@ pub enum MergeStrategyKind {
     ContentAddressedBlob,
 }
 
-impl ModelKind {
+impl DocumentKind {
     pub fn merge_strategy(&self) -> MergeStrategyKind {
         match self {
-            ModelKind::PlainRecord => MergeStrategyKind::LwwRegister,
-            ModelKind::OrderedSequence => MergeStrategyKind::OrderedSequence,
-            ModelKind::TextSequence => MergeStrategyKind::TextSequence,
-            ModelKind::TombstonedGraph => MergeStrategyKind::TombstonedGraphSet,
-            ModelKind::ContentAddressedBlob => MergeStrategyKind::ContentAddressedBlob,
+            DocumentKind::PlainRecord => MergeStrategyKind::LwwRegister,
+            DocumentKind::OrderedSequence => MergeStrategyKind::OrderedSequence,
+            DocumentKind::TextSequence => MergeStrategyKind::TextSequence,
+            DocumentKind::TombstonedGraph => MergeStrategyKind::TombstonedGraphSet,
+            DocumentKind::ContentAddressedBlob => MergeStrategyKind::ContentAddressedBlob,
         }
     }
 }
@@ -3539,7 +3543,7 @@ pub use ui::kernel::{
     ActorId, AppEvent, AppInstanceId, AssetHandle, Capability, CapabilityGrant, CapabilityRequirement,
     CapabilityToken, CommandContext, CommandDef, CommandId, CommandInvocation, CommandInvocationId,
     CommandRequest, CommandResult, Diagnostic, HostEffect, HybridLogicalTimestamp, InverseOperation,
-    KernelOperation, MergeStrategyKind, ModelDiff, ModelHandle, ModelId, ModelKind, ModelVersion,
+    KernelOperation, MergeStrategyKind, DocumentDiff, DocumentHandle, DocumentId, DocumentKind, DocumentVersion,
     OpEnvelope, OperationId, PayloadHash, PhysicalSize, PluginInstanceId, ResourceId, ResourceKind,
     Rights, SchemaId, SchemaVersion, Scope, Theme, UndoGroup, UndoPolicy, WindowEvent, WindowHandle,
     WindowInput, WindowKindDef, WindowKindId, WindowOutput,

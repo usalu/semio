@@ -156,14 +156,32 @@ export async function createPluginApi() {
       });
       return response.json;
     },
-    async tools() {
-      return "[]";
+    async tools(instanceId, viewStateJson) {
+      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
+      const context =
+        viewStateJson && viewStateJson.trim().startsWith("{")
+          ? viewStateJson
+          : JSON.stringify({ viewState: JSON.parse(viewStateJson), actor: "local" });
+      const response = await plugin.listTools(instanceId, { json: context });
+      return response.json;
     },
-    async windowEngagements() {
-      return "{}";
+    async windowEngagements(instanceId, viewStateJson) {
+      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
+      const context =
+        viewStateJson && viewStateJson.trim().startsWith("{")
+          ? viewStateJson
+          : JSON.stringify({ viewState: JSON.parse(viewStateJson), actor: "local" });
+      const response = await plugin.windowEngagements(instanceId, { json: context });
+      return response.json;
     },
-    async windowMeasures() {
-      return "{}";
+    async windowMeasures(instanceId, viewStateJson) {
+      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
+      const context =
+        viewStateJson && viewStateJson.trim().startsWith("{")
+          ? viewStateJson
+          : JSON.stringify({ viewState: JSON.parse(viewStateJson), actor: "local" });
+      const response = await plugin.windowMeasures(instanceId, { json: context });
+      return response.json;
     },
   };
 }
@@ -291,6 +309,11 @@ async function buildEngineWasm(pluginId: string, renderer: string): Promise<void
 		const flowScript = join(repoRoot, "flow/core/script.ts");
 		const flowBuild = spawnSync("bun", [flowScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
 		if (flowBuild.status !== 0) throw new Error("flow-core wasm build failed");
+	}
+	if (pluginId === "gis2d") {
+		const gis2dScript = join(repoRoot, "gis/2d/rs/script.ts");
+		const gis2dBuild = spawnSync("bun", [gis2dScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
+		if (gis2dBuild.status !== 0) throw new Error("gis-2d-rs wasm build failed");
 	}
 }
 

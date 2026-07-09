@@ -25,13 +25,25 @@ interface types {
     json: string,
   }
 
-  record migrate-model-input {
+  record plugin-tools-json {
+    json: string,
+  }
+
+  record plugin-window-engagements-json {
+    json: string,
+  }
+
+  record plugin-window-measures-json {
+    json: string,
+  }
+
+  record migrate-document-input {
     from-version: string,
     to-version: string,
     data: list<u8>,
   }
 
-  record migrate-model-output {
+  record migrate-document-output {
     data: list<u8>,
   }
 
@@ -48,8 +60,11 @@ interface plugin {
     command-response-json,
     window-input-json,
     window-output-json,
-    migrate-model-input,
-    migrate-model-output,
+    plugin-tools-json,
+    plugin-window-engagements-json,
+    plugin-window-measures-json,
+    migrate-document-input,
+    migrate-document-output,
     plugin-error,
   };
 
@@ -64,14 +79,26 @@ interface plugin {
     instance-id: u32,
     input: window-input-json,
   ) -> result<window-output-json, plugin-error>;
-  migrate-model: func(input: migrate-model-input) -> result<migrate-model-output, plugin-error>;
+  list-tools: func(
+    instance-id: u32,
+    context: command-context-json,
+  ) -> result<plugin-tools-json, plugin-error>;
+  window-engagements: func(
+    instance-id: u32,
+    context: command-context-json,
+  ) -> result<plugin-window-engagements-json, plugin-error>;
+  window-measures: func(
+    instance-id: u32,
+    context: command-context-json,
+  ) -> result<plugin-window-measures-json, plugin-error>;
+  migrate-document: func(input: migrate-document-input) -> result<migrate-document-output, plugin-error>;
 }
 
 interface host {
   log: func(level: string, message: string);
   now-ms: func() -> s64;
-  read-model: func(handle: u64) -> result<string, string>;
-  write-model: func(handle: u64, payload-json: string) -> result<_, string>;
+  read-document: func(handle: u64) -> result<string, string>;
+  write-document: func(handle: u64, payload-json: string) -> result<_, string>;
   open-window: func(kind: string, params-json: string) -> result<u64, string>;
   invoke-command: func(target: string, invocation-json: string) -> result<string, string>;
   read-asset: func(handle: u64) -> result<list<u8>, string>;

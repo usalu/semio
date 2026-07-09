@@ -112,6 +112,19 @@ pub fn import_geometry_handles(
     }
 
     for face in &geometry.faces {
+        if let Some(wire_id) = face.wire_ids.first() {
+            if let Some(wire_handle) = handles.get(wire_id) {
+                let wire = GeometryHandle(wire_handle.clone());
+                if let Ok(handle) = kernel.planar_face_from_wire_sync(&wire) {
+                    handles.insert(face.id.clone(), handle.0.clone());
+                    continue;
+                }
+                if let Ok(handle) = kernel.face_from_wire_sync(&wire) {
+                    handles.insert(face.id.clone(), handle.0.clone());
+                    continue;
+                }
+            }
+        }
         let points = face_boundary_points(face, &wires, &edges, &vertices);
         if points.len() < 3 {
             continue;
@@ -192,11 +205,13 @@ pub fn tessellate_geometry_handle(
 }
 
 fn curve_mesh_from_wire(kernel: &mut BrepkitKernel, wire: &GeometryHandle) -> Option<MeshData> {
-    let profile = kernel.circle_curve_sync([0.0, 0.0, 0.0], [0.0, 0.0, 1.0], 0.05).ok()?;
-    let solid = kernel.pipe_sync(&profile, wire, None).ok()?;
+    let profile_wire = kernel.regular_polygon_wire_sync(0.08, 8).ok()?;
+    let profile_face = kernel.planar_face_from_wire_sync(&profile_wire).ok()?;
+    let solid = kernel.sweep_sync(&profile_face, wire).ok()?;
     let mesh = block_on(kernel.tessellate(&solid, 0.1)).ok()?;
     let _ = kernel.dispose_sync(&solid);
-    let _ = kernel.dispose_sync(&profile);
+    let _ = kernel.dispose_sync(&profile_face);
+    let _ = kernel.dispose_sync(&profile_wire);
     Some(mesh_from_indexed(&mesh.position, &mesh.normal, &mesh.index))
 }
 
@@ -306,5 +321,28 @@ mod tests {
         );
         assert!(mesh.is_some());
         assert!(mesh.unwrap().positions.len() > 12);
+    }
+
+    #[test]
+    fn forest_structure_curve_wires_tessellate_as_tubes() {
+        let source = include_str!("../../asset/play/hexagonal-cut-concrete-forest-left.model.json");
+        let root: Value = serde_json::from_str(source).expect("fixture");
+        let geometry = parse_geometry(root.pointer("/models/3/model/geometry"));
+        let objects = root
+            .pointer("/models/3/model/objects")
+            .and_then(|value| value.as_array())
+            .cloned()
+            .unwrap_or_default();
+        let mut kernel = BrepkitKernel::new();
+        let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
+        assert!(!imported.is_empty());
+        let curve_object = imported
+            .iter()
+            .find(|object| object.primitives.iter().any(|primitive| primitive.kind == "curve"))
+            .expect("curve object");
+        let handle = curve_object.solid_handle.as_ref().expect("curve handle");
+        let mesh = tessellate_geometry_handle(&mut kernel, handle, "curve").expect("curve mesh");
+        assert!(mesh.positions.len() > 36);
+        assert!(mesh.indices.len() > 12);
     }
 }

@@ -1,0 +1,18 @@
+{
+  "title": "Puzzle 2D React Parity",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Restore premigration parity for puzzle 2D in the React renderer: fix camera transform sign bug, sync BoardHost pointer hit-testing with rendered frame, and add shape/color/selection fidelity to Canvas2d layers.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1876"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "2171369a",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/puzzle_2d_react_parity_2171369a.plan.md"
+  },
+  "sessions": [
+    "⚪7def8db35dd84b859db01a45487c8a7a"
+  ]
+}

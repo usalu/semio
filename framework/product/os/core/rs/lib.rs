@@ -18,7 +18,7 @@ use crate::registry::{
 };
 use semio_framework_core::{
     AppDefinition, CommandContext, CommandDescriptor, CommandInvocation, CommandResult,
-    Contribution, HybridLogicalTimestamp, InverseOperation, KernelOperation, ModelDiff, ModelHandle, ModelVersion,
+    Contribution, HybridLogicalTimestamp, InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion,
     OperationId, PluginManifest, SchemaId, UiButtonNode, UiNode, UndoGroup, UndoPolicy, ViewState,
     ui_stack_vertical, ui_text,
 };
@@ -168,7 +168,7 @@ impl PluginHost {
         if let Err(error) = self.validate_swap_instances(&plugin_id, &plugin) {
             return self.hot_swap_failed(plugin_id, error, rollback);
         }
-        if let Err(error) = self.validate_swap_model_migration(&plugin, rollback.previous_plugin.as_ref()) {
+        if let Err(error) = self.validate_swap_document_migration(&plugin, rollback.previous_plugin.as_ref()) {
             return self.hot_swap_failed(plugin_id, error, rollback);
         }
         if let Err(error) = self.validate_swap_window_kinds(&plugin) {
@@ -299,22 +299,22 @@ impl PluginHost {
                 instance.generation,
             )
         };
-        let model_projection =
+        let document_projection =
             serde_json::from_str(&document_json).unwrap_or(Value::Null);
         let _context = CommandContext {
             invocation: invocation.clone(),
-            model_projection,
+            document_projection,
             view_state,
             granted_capabilities: vec![],
         };
-        let model = ModelHandle(instance_id as u128);
-        let base_version = ModelVersion(generation);
+        let document = DocumentHandle(instance_id as u128);
+        let base_version = DocumentVersion(generation);
         let patch_ops = extract_patch_ops(&invocation.input);
         let operations: Vec<KernelOperation> = patch_ops
             .iter()
             .enumerate()
             .map(|(index, op)| {
-                kernel_operation_from_patch_op(&invocation, op, index, base_version, model)
+                kernel_operation_from_patch_op(&invocation, op, index, base_version, document)
             })
             .collect::<Result<Vec<_>, _>>()?;
         let operation_ids: Vec<OperationId> = operations.iter().map(|op| op.id.clone()).collect();
@@ -448,7 +448,7 @@ impl PluginHost {
         Ok(())
     }
 
-    fn validate_swap_model_migration(
+    fn validate_swap_document_migration(
         &self,
         plugin: &LoadedPlugin,
         previous: Option<&LoadedPlugin>,
@@ -585,21 +585,21 @@ fn kernel_operation_from_patch_op(
     invocation: &CommandInvocation,
     op_json: &str,
     index: usize,
-    base_version: ModelVersion,
-    model: ModelHandle,
+    base_version: DocumentVersion,
+    document: DocumentHandle,
 ) -> Result<KernelOperation, String> {
     let payload: Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
     let operation_id = OperationId(format!("{}:{index}", invocation.id.0));
-    let inverse_diff = ModelDiff {
+    let inverse_diff = DocumentDiff {
         schema_id: SchemaId("semio.kernel.json-patch.inverse".into()),
         payload: Value::Null,
     };
     Ok(KernelOperation {
         id: operation_id.clone(),
-        model,
+        document,
         base_version,
         command_id: invocation.id.clone(),
-        diff: ModelDiff {
+        diff: DocumentDiff {
             schema_id: SchemaId(JSON_PATCH_SCHEMA_ID.into()),
             payload,
         },
@@ -1885,7 +1885,7 @@ mod tests {
                     measures: Vec::new(),
                     engagement: None,
                     params_schema: None,
-                    model_projection_schema: None,
+                    document_projection_schema: None,
                     input_event_schema: None,
                     output_schema: None,
                     capabilities: vec![],
@@ -1933,7 +1933,7 @@ mod tests {
                 measures: Vec::new(),
                 engagement: None,
                 params_schema: None,
-                model_projection_schema: None,
+                document_projection_schema: None,
                 input_event_schema: None,
                 output_schema: None,
                 capabilities: vec![],
@@ -1965,7 +1965,7 @@ mod tests {
                 measures: Vec::new(),
                 engagement: None,
                 params_schema: None,
-                model_projection_schema: None,
+                document_projection_schema: None,
                 input_event_schema: None,
                 output_schema: None,
                 capabilities: vec![],
@@ -2041,7 +2041,7 @@ mod tests {
                 measures: Vec::new(),
                 engagement: None,
                 params_schema: None,
-                model_projection_schema: None,
+                document_projection_schema: None,
                 input_event_schema: None,
                 output_schema: None,
                 capabilities: vec![],
@@ -2169,7 +2169,7 @@ mod tests {
                     measures: Vec::new(),
                     engagement: None,
                     params_schema: None,
-                    model_projection_schema: None,
+                    document_projection_schema: None,
                     input_event_schema: None,
                     output_schema: None,
                     capabilities: vec![],

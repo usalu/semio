@@ -1,8 +1,9 @@
 {
   "title": "Print Window Tertiary Color",
   "emoji": "🎨",
-  "status": "open",
+  "status": "closed",
   "description": "Fix print window heading hierarchy to use semio-tertiary color for subsubsection level before transitioning to colorless (muted) paragraph windows. Currently jumps from secondary directly to chrome border color.",
+  "summary": "Fixed print window heading color hierarchy: subsubsection now uses semio-tertiary (orange) instead of semio-chrome-border-normal, restoring the intended primary → secondary → tertiary → colorless (paragraph) progression.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1871"
   },

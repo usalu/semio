@@ -70,7 +70,7 @@
     \str_set:Nx \l_tmpd_str { \seq_item:cn { g_semio_register_ #1 _label_seq } { ##1 } }
     \semio_window_register_body_add:Vxx \l_tmpb_tl \l_tmpc_tl \l_tmpd_str
   }
-  \exp_args:Ne \cs_gset_nopar:cpn { semio@register@body@#1 } { \tl_use:N \l_tmpa_tl }
+  \exp_args:No \cs_gset_nopar:cpn { semio@register@body@#1 } { \tl_use:N \l_tmpa_tl }
 }
 
 \seq_new:c { g_semio_register_toc_num_seq }
@@ -175,7 +175,6 @@
 
 \cs_new_protected:Npn \semio_window_toc_render: {
   \semio_window_toc_aux_load:
-  \iow_term:x { [DEBUG]~toc~seq~=~\int_eval:n { \seq_count:c { g_semio_register_toc_num_seq } } }%
   \int_compare:nNnT { \seq_count:c { g_semio_register_toc_num_seq } } > { 0 } {
     \semio_window_register_body_materialize:n { toc }
     \group_begin:
@@ -304,14 +303,6 @@
     before~skip=0pt,
     after~skip=0pt,
     parbox=false,
-    before~upper={%
-      \hspace*{-\semio@chrome@padding}%
-      \semio_window_header_inbox:
-      \hspace*{-\semio@chrome@padding}%
-      \par\nointerlineskip
-      \setlength{\parindent}{0pt}%
-      \setlength{\parskip}{\semio@spacing@single}%
-    },
   },
   semio~window~row/.style={
     semio~window,
@@ -325,15 +316,29 @@
   row .bool_set:N = \l_semio_window_row_bool,
 }
 
-\cs_new_protected:Npn \semio_window_header_inbox: {
-  \semio@window@header@inbox
+\cs_new_protected:Npn \semio_window_header_store: {
+  \exp_args:Nx \semio_window_header_store_aux:nn
     { \tl_use:N \l_semio_window_number_tl }
     { \tl_use:N \l_semio_window_kind_title_tl }
+}
+\cs_new_protected:Npn \semio_window_header_store_aux:nn #1#2 {
+  \ExplSyntaxOff
+  \def\semio@window@header@number{#1}
+  \def\semio@window@header@title{#2}
+  \ExplSyntaxOn
 }
 
 \cs_new_protected:Npn \semio_window_tier_header:nnn #1 #2 #3 {
   \tl_set:Nn \l_semio_window_number_tl {#1}
   \tl_set:Nn \l_semio_window_kind_title_tl {#2}
+}
+
+\cs_new_protected:Npn \semio_window_header_muted_use: {
+  \group_begin:
+  \ExplSyntaxOff
+  \noindent
+  \use:c { semio@window@header@invoke }
+  \group_end:
 }
 
 \cs_new_protected:Npn \semio_window_kind_begin:nnn #1 #2 #3 {
@@ -362,7 +367,10 @@
     { \tl_use:N \l_semio_window_number_tl }
     { \tl_use:N \l_semio_window_kind_title_tl }
     { #2 }
+  \semio_window_header_store:
   \semio_block_sep_before:
+  \semio_window_header_muted_use:
+  \semio_window_vskip_stroke_hairline:
   \noindent
   \begin{tcolorbox}[semio~window~tier~#2]
 }
@@ -624,7 +632,9 @@
     { }
     { \tl_use:N \l_semio_window_kind_title_tl }
     { structural }
-  \noindent
+  \semio_window_header_store:
+  \semio_window_header_muted_use:
+  \semio_window_vskip_stroke_hairline:
   \bool_if:NTF \l_semio_window_row_bool {
     \begin{tcolorbox}[semio~window~tier~structural, semio~window~row]
   } {
@@ -799,6 +809,18 @@
 
 \def\semio@chrome@heading{}
 
+\newcommand{\semio@window@render@inbox@header}{%
+  \hspace*{-\semio@chrome@padding}%
+  \semio@window@header@inbox{\semio@window@header@number}{\semio@window@header@title}%
+}
+
+\def\semio@window@header@number{}
+\def\semio@window@header@title{}
+
+\newcommand{\semio@window@header@invoke}{%
+  \semio@window@header@muted{\semio@window@header@number}{\semio@window@header@title}%
+}
+
 \newcommand{\semio@chrome@heading@set}[1]{%
   \gdef\semio@chrome@heading{#1}%
 }
@@ -837,6 +859,13 @@
 \newcommand{\semio@window@stroke@v}[1]{%
   \color{#1}%
   \rule{\semio@stroke@hairline}{\semio@chrome@titlebar@height}%
+}
+
+\newcommand{\semio@window@stroke@v@extended}[1]{%
+  \color{#1}%
+  \rule{\semio@stroke@hairline}{%
+    \dimexpr\semio@chrome@titlebar@height+\semio@stroke@hairline\relax
+  }%
 }
 
 \newcommand{\semio@window@stroke@h}[2]{%
@@ -896,7 +925,7 @@
   \SemioSans\fontsize{\semio@chrome@font@title}{\semio@chrome@font@title}\selectfont
 }
 
-\newcommand{\semio@heading@cap@muted}[1]{%
+\newcommand{\semio@heading@cap@muted@core}[1]{%
   \semio@window@cap@body@h@set
   \sbox{\semio@window@cap@slot}{%
     \begingroup
@@ -905,26 +934,38 @@
     \endgroup
   }%
   \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
-  \hbox{%
-    \semio@window@stroke@v{semio-chrome-border-normal}%
-    \vbox to \semio@chrome@titlebar@height{%
-      \nointerlineskip
-      \hbox{%
-        \begingroup
-        \setlength{\fboxsep}{0pt}%
-        \fcolorbox{semio-chrome-border-normal}{semio-chrome-canvas}{%
-          \vbox to \dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax{%
-            \vfil
-            \nointerlineskip
-            \hbox to \semio@window@cap@w{%
-              \hfil\usebox{\semio@window@cap@slot}\hfil
-            }%
-            \vfil
+  \vbox to \semio@chrome@titlebar@height{%
+    \nointerlineskip
+    \hbox to \semio@window@cap@w{%
+      \semio@window@stroke@h{semio-chrome-border-normal}{\semio@window@cap@w}%
+    }%
+    \nointerlineskip
+    \hbox to \semio@window@cap@w{%
+      \colorbox{semio-chrome-canvas}{%
+        \vbox to \semio@window@cap@body@h{%
+          \vfil
+          \nointerlineskip
+          \hbox to \semio@window@cap@w{%
+            \hfil\usebox{\semio@window@cap@slot}\hfil
           }%
+          \vfil
         }%
-        \endgroup
       }%
     }%
+  }%
+}
+
+\newcommand{\semio@heading@cap@muted@tab}[1]{%
+  \hbox{%
+    \semio@heading@cap@muted@core{#1}%
+    \semio@window@stroke@v{semio-chrome-border-normal}%
+  }%
+}
+
+\newcommand{\semio@heading@cap@muted}[1]{%
+  \hbox{%
+    \semio@window@stroke@v{semio-chrome-border-normal}%
+    \semio@heading@cap@muted@core{#1}%
     \semio@window@stroke@v{semio-chrome-border-normal}%
   }%
 }
@@ -936,30 +977,25 @@
 }
 
 \newcommand{\semio@heading@cap@muted@inbox}[1]{%
+  \semio@heading@cap@muted@tab{#1}%
+}
+
+\newcommand{\semio@window@gap@inbox}[1]{%
   \semio@window@cap@body@h@set
-  \sbox{\semio@window@cap@slot}{%
-    \begingroup
-    \semio@heading@chip@font\color{semio-chrome-text-normal}%
-    \hspace{\semio@chrome@padding}#1\hspace{\semio@chrome@padding}%
-    \endgroup
-  }%
-  \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
-  \vbox to \semio@chrome@titlebar@height{%
-    \nointerlineskip
-    \hbox{%
-      \begingroup
-      \setlength{\fboxsep}{0pt}%
-      \fcolorbox{semio-chrome-border-normal}{semio-chrome-canvas}{%
-        \vbox to \dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax{%
-          \vfil
-          \nointerlineskip
-          \hbox to \semio@window@cap@w{%
-            \hfil\usebox{\semio@window@cap@slot}\hfil
+  \hbox to \dimexpr\semio@window@gap@w\relax{%
+    \vbox to \semio@chrome@titlebar@height{%
+      \nointerlineskip
+      \hbox to \dimexpr\semio@window@gap@w\relax{%
+        \semio@window@stroke@h{semio-chrome-border-normal}{\semio@window@gap@w}%
+      }%
+      \nointerlineskip
+      \hbox to \dimexpr\semio@window@gap@w\relax{%
+        \colorbox{#1}{%
+          \vbox to \semio@window@cap@body@h{%
+            \vfil\null\vfil
           }%
-          \vfil
         }%
       }%
-      \endgroup
     }%
   }%
 }
@@ -976,10 +1012,19 @@
   \setlength{\semio@window@gap@w}{%
     \dimexpr\linewidth+2\semio@chrome@padding-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
   }%
-  \hbox to \dimexpr\linewidth+2\semio@chrome@padding\relax{%
-    \usebox{\semio@window@tab@box}%
-    \semio@window@gap{semio-chrome-base}%
-    \usebox{\semio@window@ctrl@box}%
+  \vtop{%
+    \nointerlineskip
+    \hbox to \dimexpr\linewidth+2\semio@chrome@padding\relax{%
+      \usebox{\semio@window@tab@box}%
+      \semio@window@gap@inbox{semio-chrome-base}%
+      \usebox{\semio@window@ctrl@box}%
+    }%
+    \nointerlineskip
+    \hbox to \dimexpr\linewidth+2\semio@chrome@padding\relax{%
+      \semio@window@stroke@h{semio-chrome-border-normal}{%
+        \dimexpr\linewidth+2\semio@chrome@padding\relax
+      }%
+    }%
   }%
 }
 
@@ -1249,8 +1294,7 @@
 }
 
 \newcommand{\semio@nest@build@number}{%
-  \thesubsubsection
-  \ifnum\c@paragraph>\z@ .\theparagraph\fi
+  \ifnum\c@paragraph>\z@ \theparagraph\else \thesubsubsection\fi
   \ifnum\value{semio@nest@depth}>0 .\thesemio@nest@a\fi
   \ifnum\value{semio@nest@depth}>1 .\thesemio@nest@b\fi
   \ifnum\value{semio@nest@depth}>2 .\thesemio@nest@c\fi
@@ -1305,6 +1349,7 @@
 \newcommand{\semio@window@header@row@wrap}[1]{%
   \noindent
   #1%
+  \nointerlineskip
 }
 
 \newcommand{\semio@window@header@muted}[2]{%
@@ -1313,17 +1358,24 @@
     \if\relax\detokenize{#1}\relax
       \hbox{}%
     \else
-      \semio@heading@cap@muted{#1}%
+      \semio@heading@cap@muted@tab{#1}%
     \fi
   }%
   \setlength{\semio@window@gap@w}{%
     \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
   }%
   \semio@window@header@row@wrap{%
-    \hbox to \linewidth{%
-      \usebox{\semio@window@tab@box}%
-      \semio@window@gap{semio-chrome-base}%
-      \usebox{\semio@window@ctrl@box}%
+    \vtop{%
+      \nointerlineskip
+      \hbox to \linewidth{%
+        \usebox{\semio@window@tab@box}%
+        \semio@window@gap@inbox{semio-chrome-base}%
+        \usebox{\semio@window@ctrl@box}%
+      }%
+      \nointerlineskip
+      \hbox to \linewidth{%
+        \semio@window@stroke@h{semio-chrome-border-normal}{\linewidth}%
+      }%
     }%
   }%
 }

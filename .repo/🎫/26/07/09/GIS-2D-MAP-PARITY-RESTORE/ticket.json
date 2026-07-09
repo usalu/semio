@@ -1,0 +1,7 @@
+{
+  "id": "26/07/09/GIS-2D-MAP-PARITY-RESTORE",
+  "title": "Gis 2d Map Parity Restore",
+  "status": "open",
+  "goalId": null,
+  "summary": "Restore GIS 2D map tile rendering and window options to premigration parity via GisMapHost React renderer and window_measures() in gis plugin."
+}

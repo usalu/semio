@@ -7,7 +7,7 @@ import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
 import { TextEditorHost } from "./components/text-editor-host.tsx";
 import { World3dHost } from "./components/world-3d-host.tsx";
-import { appDocumentLabel, appWindowDocumentLabel } from "./os-shell.tsx";
+import { appDocumentLabel, appWindowDocumentLabel, buildToolbarRibbonSegments, selectSpawnedToolNodes, sortToolNodes, spawnedWindowChromeForKind, ToolTree } from "./os-shell.tsx";
 import { interpretUiNode } from "./ui-interpreter.tsx";
 import type { UiNode } from "./os-shell.tsx";
 
@@ -18,6 +18,22 @@ describe("framework plugin runtime", () => {
 		const { loadPluginModule } = await import("@semio-tech/framework-core");
 		const handle = await loadPluginModule("mock", "data:application/javascript,export function semio_plugin_manifest(){return JSON.stringify({pluginId:'mock',label:'Mock',version:'0',apps:[],programs:[],examples:[]})}");
 		expect(handle.manifest.pluginId).toBe("mock");
+	});
+
+	it("extracts patch ops from CommandResult plugin responses", async () => {
+		const { patchOpsFromCommandResponse } = await import("@semio-tech/framework-core");
+		const legacy = patchOpsFromCommandResponse(
+			JSON.stringify([JSON.stringify({ op: "setDocument", document: { id: "legacy" } })]),
+		);
+		expect(legacy).toEqual([JSON.stringify({ op: "setDocument", document: { id: "legacy" } })]);
+		const commandResult = patchOpsFromCommandResponse(
+			JSON.stringify({
+				output: null,
+				operations: [{ diff: { payload: { op: "setDocument", document: { id: "forest" } } } }],
+				inverseGroup: { commandId: "setActiveExample:1:0", operations: [] },
+			}),
+		);
+		expect(commandResult).toEqual([JSON.stringify({ op: "setDocument", document: { id: "forest" } })]);
 	});
 });
 
@@ -210,18 +226,25 @@ describe("framework renderer hosts", () => {
 	it("accepts extended world 3d scene fields", () => {
 		const node: UiNode = {
 			type: "componentScene",
-			surfaceId: "lowpoly.play.main",
-			controllerId: "lowpoly-play",
+			surfaceId: "puzzle.3d.play.viewport",
+			controllerId: "puzzle3d-play",
 			componentKind: "world-3d",
 			world3d: {
 				cameraJson: "{}",
 				meshesJson: "[]",
 				instancesJson: "[]",
 				selectionJson: "{}",
+				vorticesJson: "[]",
+				attractionsJson: "[]",
+				targetVolumesJson: "[]",
+				referencesJson: "[]",
+				brushPreviewJson: undefined,
+				interactionJson: "{\"activeTool\":\"select\"}",
 			},
 		};
 		expect(node.world3d?.meshesJson).toBe("[]");
-		expect(node.world3d?.selectionJson).toBe("{}");
+		expect(node.world3d?.vorticesJson).toBe("[]");
+		expect(node.world3d?.interactionJson).toContain("select");
 	});
 
 	it("renders text editor host", () => {
@@ -317,5 +340,176 @@ describe("framework renderer hosts", () => {
 			) as ReactElement,
 		);
 		expect(markup).toContain("Draw");
+	});
+});
+
+describe("spawned window chrome", () => {
+	const app = {
+		id: "cad-play",
+		label: "CAD",
+		document: ["semio", "cad"],
+		controllerId: "cad-play",
+		defaultModeId: "edit",
+		modes: [
+			{
+				id: "edit",
+				label: "Edit",
+				tools: [{ id: "static-tool", kind: "button" as const, iconId: "save", controllerId: "cad-play", command: "save" }],
+			},
+		],
+		windowKinds: [
+			{
+				id: "cad-window-shape",
+				label: "Shape",
+				bodyKey: "shape",
+				engagement: {
+					input: {
+						id: "engagement-input",
+						placeholder: "Command",
+						onChange: { controllerId: "cad-play", command: "engagementInput" },
+					},
+					possibleEngagements: [{ id: "box", label: "Box", command: { controllerId: "cad-play", command: "startBox" } }],
+				},
+				measures: [{ id: "render-mode", kind: "select" as const, label: "Render Mode", value: "shaded", items: [], onChange: { controllerId: "cad-play", command: "setRenderMode" } }],
+			},
+		],
+		panelTabs: [],
+		keybindings: [],
+	};
+
+	it("prefers dynamic spawned tools over static mode tools", () => {
+		const dynamic = [{ id: "dynamic-tool", kind: "button" as const, iconId: "box", controllerId: "cad-play", command: "box" }];
+		expect(selectSpawnedToolNodes(dynamic, app, "edit")).toEqual(dynamic);
+		expect(selectSpawnedToolNodes([], app, "edit")).toEqual(app.modes[0]!.tools);
+	});
+
+	it("builds spawned engagement and measures chrome from plugin contributions", () => {
+		const kind = app.windowKinds[0]!;
+		const engagements = {
+			[kind.id]: {
+				input: {
+					id: "engagement-input",
+					value: "Box",
+					placeholder: "Command",
+					onChange: { controllerId: "cad-play", command: "engagementInput" },
+				},
+				possibleEngagements: [{ id: "box", label: "Box", detail: "b", command: { controllerId: "cad-play", command: "startBox" } }],
+			},
+		};
+		const measures = { [kind.id]: kind.measures ?? [] };
+		const chrome = spawnedWindowChromeForKind(kind, engagements, measures, noopCommand);
+		expect(chrome.engagement?.input?.value).toBe("Box");
+		expect(chrome.engagement?.possibleEngagements?.[0]?.label).toBe("Box");
+		const measuresMarkup = renderToStaticMarkup(chrome.measures as ReactElement);
+		expect(measuresMarkup).toContain("Render Mode");
+	});
+});
+
+describe("toolbar ribbon", () => {
+	it("sorts tool nodes by order", () => {
+		const sorted = sortToolNodes([
+			{ id: "b", kind: "button", iconId: "box", order: 2, controllerId: "x", command: "b" },
+			{ id: "a", kind: "button", iconId: "box", order: 1, controllerId: "x", command: "a" },
+		]);
+		expect(sorted.map((node) => node.id)).toEqual(["a", "b"]);
+	});
+
+	it("builds picker segments for sibling nested collections", () => {
+		const segments = buildToolbarRibbonSegments(
+			[
+				{
+					id: "view",
+					kind: "collection",
+					iconId: "eye",
+					children: [
+						{
+							id: "view-tools",
+							kind: "collection",
+							iconId: "zoom-in",
+							children: [{ id: "zoom-in", kind: "button", iconId: "zoom-in", controllerId: "x", command: "zoomIn" }],
+						},
+					],
+				},
+				{
+					id: "construct",
+					kind: "collection",
+					iconId: "box",
+					children: [
+						{
+							id: "construct-tools",
+							kind: "collection",
+							iconId: "box",
+							children: [{ id: "box", kind: "button", iconId: "box", controllerId: "x", command: "box" }],
+						},
+					],
+				},
+			],
+			["construct"],
+		);
+		expect(segments[0]).toMatchObject({ kind: "picker", depth: 0 });
+		expect(segments.some((segment) => segment.kind === "tools" && segment.items.some((item) => item.id === "box"))).toBe(true);
+	});
+
+	it("flattens leaf-only sibling collections into separate tool zones", () => {
+		const segments = buildToolbarRibbonSegments(
+			[
+				{
+					id: "view",
+					kind: "collection",
+					iconId: "eye",
+					children: [{ id: "zoom-in", kind: "button", iconId: "zoom-in", controllerId: "x", command: "zoomIn" }],
+				},
+				{
+					id: "save",
+					kind: "collection",
+					iconId: "save",
+					children: [{ id: "export", kind: "button", iconId: "download", controllerId: "x", command: "export" }],
+				},
+			],
+			[],
+		);
+		expect(segments.every((segment) => segment.kind === "tools")).toBe(true);
+		expect(segments).toHaveLength(2);
+	});
+
+	it("renders ribbon toolbar with picker and batched toggles", () => {
+		const markup = renderToStaticMarkup(
+			createElement(ToolTree, {
+				tools: [
+					{
+						id: "view",
+						kind: "collection",
+						iconId: "eye",
+						children: [
+							{
+								id: "view-tools",
+								kind: "collection",
+								iconId: "eye",
+								children: [
+									{ id: "show-edges", kind: "toggle", iconId: "box", pressed: true, controllerId: "x", command: "edges" },
+									{ id: "show-faces", kind: "toggle", iconId: "square", pressed: false, controllerId: "x", command: "faces" },
+								],
+							},
+						],
+					},
+					{
+						id: "construct",
+						kind: "collection",
+						iconId: "box",
+						children: [
+							{
+								id: "construct-tools",
+								kind: "collection",
+								iconId: "box",
+								children: [{ id: "box", kind: "button", iconId: "box", controllerId: "x", command: "box" }],
+							},
+						],
+					},
+				],
+				onCommand: noopCommand,
+			}),
+		);
+		expect(markup).toContain('id="ui.toolbar"');
+		expect(markup).toContain('data-slot="toggle-group"');
 	});
 });

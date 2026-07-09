@@ -59,12 +59,12 @@ impl semio::framework::host::Host for HostState {
             .unwrap_or(0)
     }
 
-    fn read_model(&mut self, _handle: u64) -> Result<String, String> {
-        Err("read-model not implemented".into())
+    fn read_document(&mut self, _handle: u64) -> Result<String, String> {
+        Err("read-document not implemented".into())
     }
 
-    fn write_model(&mut self, _handle: u64, _payload_json: String) -> Result<(), String> {
-        Err("write-model not implemented".into())
+    fn write_document(&mut self, _handle: u64, _payload_json: String) -> Result<(), String> {
+        Err("write-document not implemented".into())
     }
 
     fn open_window(&mut self, _kind: String, _params_json: String) -> Result<u64, String> {

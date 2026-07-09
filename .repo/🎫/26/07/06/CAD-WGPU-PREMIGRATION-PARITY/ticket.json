@@ -1,20 +1,22 @@
 {
   "title": "CAD Wgpu Premigration Parity",
   "emoji": "📐",
-  "status": "closed",
+  "status": "open",
   "description": "Restore CAD premigration feature set inside wgpu/Rust plugin stack per plan cad_wgpu_premigration_parity_85c19a7c.",
-  "summary": "Completed CAD Full Premigration Parity: real BREP-backed derive transformations (fuse + face classify for from_geometry, from_building typology remap, typology fallback), premigration-qualified typology catalog per pane, solid_handle persistence on CadObject, interaction statechart with 4 ported specs (box/external wall/slab/column) and REPL parsing, engagement session with keyed transitions and preview display items, save/load with SpatialExchangeBundle JSON (selected), STEP export (modelspace/current) via export_step_sync, downloadMediaExport + requestFileOpen with native rfd file dialogs in wgpu renderer. Tests: 28 passing (25 cad-plugin + 3 cad_document).",
+  "summary": "Fixed CAD play E2E for concrete forest left: patchOpsFromCommandResponse unwraps WASM CommandResult into JSON patch op strings (fixes ops is not iterable blocking setActiveExample and all commands). Extended WIT plugin interface with list-tools/window-engagements/window-measures and wired dev createPluginApi bridge so footer construct tools and window engagement chrome work in React dev. Improved geometry face import via wire-based planar faces. Verified: 15 react tests pass, forest example loads all four panes with brep meshes, manual smoke on :6020.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1841"
   },
   "goal": "🎯r2602🎯runningsketchpad",
   "plan": {
     "client": "cursor",
-    "id": "85c19a7c",
-    "local": "cad_wgpu_premigration_parity_85c19a7c.plan.md"
+    "id": "c4302eab",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/fix_cad_interaction_and_curve_bugs_c4302eab.plan.md"
   },
   "sessions": [
     "⚪0736e59e8ef248e1a2fe33651ec5f4e9",
-    "⚪2f92f2ecccf24e39889ad62f01f6761c"
+    "⚪2f92f2ecccf24e39889ad62f01f6761c",
+    "⚪df13dd787def4e3cb276eb12bb7a8bea",
+    "⚪a1dafdef07c248e1a42ebf41108d2128"
   ]
 }

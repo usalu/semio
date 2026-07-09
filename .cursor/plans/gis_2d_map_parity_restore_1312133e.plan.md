@@ -10,16 +10,16 @@ todos:
     status: completed
   - id: gis-map-host
     content: Create components/gis-map-host.tsx porting MapRenderer + MapCanvas (tiles, camera, marquee selection, hover, context menu, theme sync)
-    status: in_progress
+    status: completed
   - id: wire-interpreter
     content: Add gis2d-map lazy case in ui-interpreter.tsx renderComponentSceneHost
-    status: pending
+    status: completed
   - id: rust-window-measures
     content: Factor lod_select_entries/layer_weight_entries helpers and implement Gis2dPlayApp::window_measures() in app_2d.rs, extend tests
-    status: pending
+    status: completed
   - id: validate
     content: cargo test -p gis-plugin, rebuild gis plugin wasm + gis-2d-rs pkg, browser smoke test tiles/interactions/window options
-    status: pending
+    status: completed
 isProject: false
 ---
 

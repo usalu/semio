@@ -1,4 +1,4 @@
-//! 📸 Shooting plugin — icon studio with model + preview windows bundled as a hot-swappable WASM component.
+//! 📸 Shooting plugin — icon studio with scene + preview windows bundled as a hot-swappable WASM component.
 
 use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_raster_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids,
@@ -18,14 +18,14 @@ use std::sync::LazyLock;
 //#region 🔖Constants
 const SHOOTING_PLAY_APP_ID: &str = "shooting-play";
 const SHOOTING_PLAY_CONTROLLER_ID: &str = "shooting-play";
-const SHOOTING_PLAY_SURFACE_MODEL: &str = "shooting.play.model";
+const SHOOTING_PLAY_SURFACE_SCENE: &str = "shooting.play.scene";
 const SHOOTING_PLAY_SURFACE_ICON: &str = "shooting.play.icon";
-const SHOOTING_PLAY_BODY_MODEL: &str = "shooting.play.model";
+const SHOOTING_PLAY_BODY_SCENE: &str = "shooting.play.scene";
 const SHOOTING_PLAY_BODY_ICON: &str = "shooting.play.icon";
 const SHOOTING_PLAY_BODY_DOCUMENT: &str = "shooting.play.document";
 const SHOOTING_PLAY_BODY_CATALOGUE: &str = "shooting.play.catalogue";
 const SHOOTING_PLAY_BODY_INSPECTION: &str = "shooting.play.inspection";
-const SHOOTING_PLAY_WINDOW_MODEL: &str = "shooting-model";
+const SHOOTING_PLAY_WINDOW_SCENE: &str = "shooting-scene";
 const SHOOTING_PLAY_WINDOW_ICON: &str = "shooting-icon";
 const SHOOTING_FIXTURE_SCHEMA: &str = "shooting.fixture";
 const SHOOTING_EXAMPLE_DEFAULT_ID: &str = "base-icon";
@@ -695,7 +695,7 @@ fn asset_inspector_group(asset: &ShootingAsset) -> UiInspectorFieldGroup {
 //#region 🔖Render
 fn render_model_scene(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime) -> UiNode {
     build_world_3d_scene(
-        SHOOTING_PLAY_SURFACE_MODEL,
+        SHOOTING_PLAY_SURFACE_SCENE,
         SHOOTING_PLAY_APP_ID,
         world3d_scene(
             camera_json(&fixture.camera),
@@ -1075,7 +1075,7 @@ impl PluginApp for ShootingPlayApp {
     fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
         match body_key {
-            SHOOTING_PLAY_BODY_MODEL => render_model_scene(&envelope.fixture, &envelope.runtime),
+            SHOOTING_PLAY_BODY_SCENE => render_model_scene(&envelope.fixture, &envelope.runtime),
             SHOOTING_PLAY_BODY_ICON => render_icon_scene(&envelope.fixture),
             SHOOTING_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
             SHOOTING_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
@@ -1093,10 +1093,10 @@ fn create_shooting_app() -> App {
             .icon_id("camera")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(SHOOTING_PLAY_WINDOW_MODEL, "Model", SHOOTING_PLAY_BODY_MODEL, SurfaceKind::World3d)
+            .window_kind(SHOOTING_PLAY_WINDOW_SCENE, "Scene", SHOOTING_PLAY_BODY_SCENE, SurfaceKind::World3d)
             .window_kind(SHOOTING_PLAY_WINDOW_ICON, "Icon", SHOOTING_PLAY_BODY_ICON, SurfaceKind::Canvas2d)
             .default_layout(create_default_layout(
-                &[SHOOTING_PLAY_WINDOW_MODEL.into(), SHOOTING_PLAY_WINDOW_ICON.into()],
+                &[SHOOTING_PLAY_WINDOW_SCENE.into(), SHOOTING_PLAY_WINDOW_ICON.into()],
                 "row",
                 Some(&[68.0, 32.0]),
                 Some(&["Model".into(), "Icon".into()]),
@@ -1158,7 +1158,7 @@ mod tests {
     fn renders_world_model_scene() {
         let app = ShootingPlayApp;
         let document = app.initial_document_json();
-        let node = app.render(SHOOTING_PLAY_BODY_MODEL, &document, &ViewState::default());
+        let node = app.render(SHOOTING_PLAY_BODY_SCENE, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("world-3d"));
     }
@@ -1200,7 +1200,7 @@ mod tests {
     fn model_scene_uses_asset_mesh_urls() {
         let app = ShootingPlayApp;
         let document = app.initial_document_json();
-        let node = app.render(SHOOTING_PLAY_BODY_MODEL, &document, &ViewState::default());
+        let node = app.render(SHOOTING_PLAY_BODY_SCENE, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("mesh:base"));
         assert!(json.contains("/mesh/base.glb"));

@@ -3,7 +3,7 @@
   "emoji": "🖨️",
   "status": "closed",
   "description": "LaTeX Table OS Style Parity",
-  "summary": "Fixed empty Semio Table-window TOCs despite document content.\n\nRoot cause: Tectonic keeps .sctoc in memory during a run but does not persist it to disk without --keep-intermediates. A separate second tectonic process could not reliably read pass-1 TOC data, so \\maketableofcontents rendered with zero rows.\n\nFixes:\n- compilePrintDocument now uses a single tectonic invocation with --reruns 1 and --keep-intermediates so .sctoc is written and re-read in-process before the final PDF.\n- Set tocdepth to unlimited (99) again in AtBeginDocument so KOMA cannot leave pruning active.\n- Restored \\semio@toc@depth@unlimited definition without breaking ExplSyntaxOn (accidental \\ExplSyntaxOff at package load had broken \\cs_new_protected).\n\nVerified: zwischenbericht.sctoc has 109 entries; build and bun print/script.ts test pass.",
+  "summary": "Fixed empty Semio Table TOC body rows: `semio_window_register_body_materialize` used `\\exp_args:Ne`, which fully expanded `\\semio@register@data` / `\\SemioTableRegisterRow` during materialize (outside tabular), so only the Nr/Titel/Seite header rendered. Switched to `\\exp_args:No` so row tokens are stored and expanded inside `\\SemioTableRegister` when `.sctoc` is loaded on pass 2. Also added `\\renewcommand{\\semio@window@header@invoke}` after `\\semio@window@header@muted` to fix expl3 forward-reference tokenization for window chrome.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1860"
   },
@@ -15,6 +15,7 @@
     "⚪80a565fad6e94da8be81d7eaf999e69f",
     "⚪8f763ee957b04cb9a95a01afd440897b",
     "⚪d7f53c00e7d4480e9f17aa5f50794969",
-    "⚪4d8271f8aa914c97b5b570e82de3fee5"
+    "⚪4d8271f8aa914c97b5b570e82de3fee5",
+    "⚪75d733eb98464c8fbaa23b7492ea846a"
   ]
 }

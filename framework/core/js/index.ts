@@ -812,6 +812,39 @@ export type PluginRegistryEntry = {
 	readonly moduleUrl: string;
 };
 
+type KernelOperationPayload = {
+	readonly diff?: {
+		readonly payload?: unknown;
+	};
+};
+
+type CommandResultPayload = {
+	readonly operations?: readonly KernelOperationPayload[];
+};
+
+/** @emoji 🔧 Normalizes plugin command responses into legacy JSON patch op strings. */
+export function patchOpsFromCommandResponse(raw: string): string[] {
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(raw);
+	} catch {
+		return [];
+	}
+	if (Array.isArray(parsed)) {
+		return parsed.map((entry) => (typeof entry === "string" ? entry : JSON.stringify(entry)));
+	}
+	if (parsed && typeof parsed === "object") {
+		const result = parsed as CommandResultPayload;
+		if (Array.isArray(result.operations)) {
+			return result.operations
+				.map((operation) => operation?.diff?.payload)
+				.filter((payload): payload is Record<string, unknown> => payload != null && typeof payload === "object")
+				.map((payload) => JSON.stringify(payload));
+		}
+	}
+	return [];
+}
+
 export const DEFAULT_PLUGIN_REGISTRY: readonly PluginRegistryEntry[] = [
 	{ pluginId: "draw", moduleUrl: "/plugin-modules/draw/draw_plugin.js" },
 ];
@@ -857,7 +890,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
 			},
 			handleCommand: async (instanceId, commandJson, viewState) => {
 				const raw = await api.handleCommand(instanceId, commandJson, JSON.stringify(viewState));
-				return JSON.parse(raw) as string[];
+				return patchOpsFromCommandResponse(raw);
 			},
 			render: async (instanceId, bodyKey, viewState) =>
 				JSON.parse(await api.render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode,
@@ -907,7 +940,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
 			const handle = module.semio_plugin_handle_command;
 			if (!handle) return [];
 			const raw = handle(instanceId, commandJson, JSON.stringify(viewState));
-			return JSON.parse(raw) as string[];
+			return patchOpsFromCommandResponse(raw);
 		},
 		async render(instanceId: number, bodyKey: string, viewState: PluginViewState) {
 			const render = module.semio_plugin_render;

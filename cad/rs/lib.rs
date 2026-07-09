@@ -183,7 +183,7 @@ fn default_width_world() -> f64 {
     10.0
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CadCamera {
     #[serde(default = "default_camera_position")]
@@ -194,6 +194,17 @@ pub struct CadCamera {
     pub zoom: f64,
     #[serde(default = "default_fov")]
     pub fov: f64,
+}
+
+impl Default for CadCamera {
+    fn default() -> Self {
+        Self {
+            position: default_camera_position(),
+            target: default_camera_target(),
+            zoom: one_f64(),
+            fov: default_fov(),
+        }
+    }
 }
 
 fn default_camera_position() -> [f64; 3] {
@@ -227,6 +238,12 @@ pub struct CadScene {
     pub id: String,
     #[serde(default)]
     pub camera: CadCamera,
+    #[serde(default)]
+    pub camera_building: CadCamera,
+    #[serde(default)]
+    pub camera_energy: CadCamera,
+    #[serde(default)]
+    pub camera_structure_classic: CadCamera,
     #[serde(default)]
     pub objects: Vec<CadObject>,
     #[serde(default)]
@@ -271,6 +288,24 @@ pub fn cad_pane_geometry_mut(scene: &mut CadScene, pane: CadPaneId) -> &mut Opti
     }
 }
 
+pub fn cad_pane_camera<'a>(scene: &'a CadScene, pane: CadPaneId) -> &'a CadCamera {
+    match pane {
+        CadPaneId::Shape => &scene.camera,
+        CadPaneId::Building => &scene.camera_building,
+        CadPaneId::Energy => &scene.camera_energy,
+        CadPaneId::StructureClassic => &scene.camera_structure_classic,
+    }
+}
+
+pub fn cad_pane_camera_mut(scene: &mut CadScene, pane: CadPaneId) -> &mut CadCamera {
+    match pane {
+        CadPaneId::Shape => &mut scene.camera,
+        CadPaneId::Building => &mut scene.camera_building,
+        CadPaneId::Energy => &mut scene.camera_energy,
+        CadPaneId::StructureClassic => &mut scene.camera_structure_classic,
+    }
+}
+
 fn default_model_definition_id() -> String {
     "spatial.shape".into()
 }
@@ -283,6 +318,9 @@ pub fn empty_cad_projection() -> CadScene {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: "cad".into(),
         camera: CadCamera::default(),
+        camera_building: CadCamera::default(),
+        camera_energy: CadCamera::default(),
+        camera_structure_classic: CadCamera::default(),
         objects: Vec::new(),
         building_objects: Vec::new(),
         energy_objects: Vec::new(),
@@ -1213,6 +1251,29 @@ mod tests {
             .expect("translate");
         let scene = store.projection().expect("projection");
         assert_eq!(scene.objects[0].origin, [2.0, 1.0, 3.5]);
+    }
+
+    #[test]
+    fn pane_cameras_isolate_states() {
+        let mut scene = empty_cad_projection();
+        
+        // Assert initial defaults
+        assert_eq!(cad_pane_camera(&scene, CadPaneId::Shape).fov, 50.0);
+        assert_eq!(cad_pane_camera(&scene, CadPaneId::Building).fov, 50.0);
+        
+        // Update Shape camera
+        cad_pane_camera_mut(&mut scene, CadPaneId::Shape).fov = 40.0;
+        
+        // Verify isolation
+        assert_eq!(cad_pane_camera(&scene, CadPaneId::Shape).fov, 40.0);
+        assert_eq!(cad_pane_camera(&scene, CadPaneId::Building).fov, 50.0);
+        
+        // Update Building camera
+        cad_pane_camera_mut(&mut scene, CadPaneId::Building).fov = 60.0;
+        
+        // Verify isolation
+        assert_eq!(cad_pane_camera(&scene, CadPaneId::Shape).fov, 40.0);
+        assert_eq!(cad_pane_camera(&scene, CadPaneId::Building).fov, 60.0);
     }
 }
 //#endregion 🧪Tests

@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./pkg/gis_2d.js"
+    ".": "./pkg/gis_2d.js",
+    "./pkg/gis_2d.js": "./pkg/gis_2d.js"
   }
 }

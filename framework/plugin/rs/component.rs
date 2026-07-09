@@ -2,7 +2,7 @@
 
 use crate::plugin_runtime::{
     ensure_plugin_initialized, plugin_create_app, plugin_handle_command, plugin_manifest,
-    plugin_render_with_document,
+    plugin_render_with_document, plugin_tools, plugin_window_engagements, plugin_window_measures,
 };
 use wit_bindgen::generate;
 
@@ -13,8 +13,9 @@ generate!({
 
 use exports::semio::framework::plugin::Guest;
 use semio::framework::types::{
-    CommandContextJson, CommandInvocationJson, CommandResponseJson, MigrateModelInput,
-    MigrateModelOutput, PluginError, PluginManifestJson, WindowInputJson, WindowOutputJson,
+    CommandContextJson, CommandInvocationJson, CommandResponseJson, MigrateDocumentInput,
+    MigrateDocumentOutput, PluginError, PluginManifestJson, PluginToolsJson, PluginWindowEngagementsJson,
+    PluginWindowMeasuresJson, WindowInputJson, WindowOutputJson,
 };
 
 pub struct ComponentGuest;
@@ -57,8 +58,43 @@ impl Guest for ComponentGuest {
         })
     }
 
-    fn migrate_model(_input: MigrateModelInput) -> Result<MigrateModelOutput, PluginError> {
-        Err(PluginError::Message("migrate-model not implemented".into()))
+    fn list_tools(
+        instance_id: u32,
+        context: CommandContextJson,
+    ) -> Result<PluginToolsJson, PluginError> {
+        ensure_plugin_initialized();
+        let tools = plugin_tools(instance_id, &context.json).map_err(PluginError::Message)?;
+        Ok(PluginToolsJson {
+            json: serde_json::to_string(&tools).unwrap_or_else(|_| "[]".into()),
+        })
+    }
+
+    fn window_engagements(
+        instance_id: u32,
+        context: CommandContextJson,
+    ) -> Result<PluginWindowEngagementsJson, PluginError> {
+        ensure_plugin_initialized();
+        let engagements =
+            plugin_window_engagements(instance_id, &context.json).map_err(PluginError::Message)?;
+        Ok(PluginWindowEngagementsJson {
+            json: serde_json::to_string(&engagements).unwrap_or_else(|_| "{}".into()),
+        })
+    }
+
+    fn window_measures(
+        instance_id: u32,
+        context: CommandContextJson,
+    ) -> Result<PluginWindowMeasuresJson, PluginError> {
+        ensure_plugin_initialized();
+        let measures =
+            plugin_window_measures(instance_id, &context.json).map_err(PluginError::Message)?;
+        Ok(PluginWindowMeasuresJson {
+            json: serde_json::to_string(&measures).unwrap_or_else(|_| "{}".into()),
+        })
+    }
+
+    fn migrate_document(_input: MigrateDocumentInput) -> Result<MigrateDocumentOutput, PluginError> {
+        Err(PluginError::Message("migrate-document not implemented".into()))
     }
 }
 

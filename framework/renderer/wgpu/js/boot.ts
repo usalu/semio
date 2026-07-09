@@ -2,6 +2,7 @@
 /** @emoji 🧊 Trunk boot glue — loads wasm plugins and starts the wgpu renderer. */
 // #endregion 🧲Header
 
+import { patchOpsFromCommandResponse } from "@semio-tech/framework-core";
 import { PLUGIN_TARGETS } from "../../../plugin/registry/generated/plugins.ts";
 
 declare const DEFAULT_PLUGIN_FILTER: string;
@@ -204,7 +205,7 @@ async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): P
 		createApp: (appId: string) => client.createApp(appId),
 		destroyApp: (instanceId: number) => client.destroyApp(instanceId),
 		handleCommand: async (instanceId: number, commandJson: string, viewState: unknown) =>
-			JSON.parse(await client.handleCommand(instanceId, commandJson, viewState)),
+			patchOpsFromCommandResponse(await client.handleCommand(instanceId, commandJson, viewState)),
 		render: async (instanceId: number, bodyKey: string, viewState: unknown) =>
 			JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState))),
 		renderWithDocument: async (instanceId: number, bodyKey: string, viewState: unknown, documentJson: string) =>

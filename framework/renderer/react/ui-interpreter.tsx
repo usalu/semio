@@ -34,6 +34,7 @@ const RasterHost = lazy(() => import("./components/raster-host.tsx").then((modul
 const TableHost = lazy(() => import("./components/table-host.tsx").then((module) => ({ default: module.TableHost })));
 const TextEditorHost = lazy(() => import("./components/text-editor-host.tsx").then((module) => ({ default: module.TextEditorHost })));
 const World3dHost = lazy(() => import("./components/world-3d-host.tsx").then((module) => ({ default: module.World3dHost })));
+const GisMapHost = lazy(() => import("./components/gis-map-host.tsx").then((module) => ({ default: module.GisMapHost })));
 
 function ComponentSceneFallback() {
 	return <p className="text-muted-foreground p-2 text-xs">Loading surface…</p>;
@@ -57,6 +58,8 @@ function renderComponentSceneHost(
 				return <TableHost node={node} onCommand={onCommand} />;
 			case "raster":
 				return <RasterHost node={node} onCommand={onCommand} />;
+			case "gis2d-map":
+				return <GisMapHost node={node} onCommand={onCommand} />;
 			case "virtualFileSystem":
 				return <VirtualFileSystemHost node={node} onCommand={onCommand} />;
 			default:

@@ -1694,7 +1694,7 @@ mod tests {
                     measures: vec![],
                     engagement: None,
                     params_schema: None,
-                    model_projection_schema: None,
+                    document_projection_schema: None,
                     input_event_schema: None,
                     output_schema: None,
                     capabilities: vec![],
@@ -3817,6 +3817,11 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         check_optional_json_payload(
             &format!("{scene_label} world3d.interaction"),
             &world.interaction_json,
+            limits,
+        )?;
+        check_optional_json_payload(
+            &format!("{scene_label} world3d.engagementPreview"),
+            &world.engagement_preview_json,
             limits,
         )?;
         check_optional_json_payload(&format!("{scene_label} world3d.lod"), &world.lod_json, limits)?;

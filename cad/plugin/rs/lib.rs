@@ -6,6 +6,7 @@ mod transformation;
 
 use cad_document::{
     cad_all_objects, cad_find_object_pane, cad_pane_from_model_definition_id, cad_pane_objects,
+    cad_pane_camera, cad_pane_camera_mut,
     CadCamera, CadEnvelope, CadGeometry, CadNode, CadObject,
     CadObjectPatch, CadOp, CadPaneId, CadPrimitiveSlot, CadReference, CadReferencePatch, CadScene,
     CadStore, CAD_DOCUMENT_SCHEMA, CAD_PLAY_DOCUMENT_SCHEMA,
@@ -367,15 +368,19 @@ fn typology_mesh_kind(typology: &str) -> &'static str {
 }
 
 fn default_document() -> CadScene {
+    let default_cam = CadCamera {
+        position: [12.0, -12.0, 8.0],
+        target: [0.0, 0.0, 0.0],
+        zoom: 1.0,
+        fov: 50.0,
+    };
     CadScene {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: "cad".into(),
-        camera: CadCamera {
-            position: [12.0, -12.0, 8.0],
-            target: [0.0, 0.0, 0.0],
-            zoom: 1.0,
-            fov: 50.0,
-        },
+        camera: default_cam.clone(),
+        camera_building: default_cam.clone(),
+        camera_energy: default_cam.clone(),
+        camera_structure_classic: default_cam.clone(),
         objects: vec![CadObject {
             id: "object-box-1".into(),
             label: "Box".into(),
@@ -430,15 +435,19 @@ fn forest_play_document(source_json: &str, id: &str) -> CadScene {
     let (energy_objects, energy_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_ENERGY);
     let (structure_classic_objects, structure_classic_geometry) =
         cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_STRUCTURE_CLASSIC);
+    let default_cam = CadCamera {
+        position: [12.0, -12.0, 8.0],
+        target: [5.4, 2.34, 1.5],
+        zoom: 1.0,
+        fov: 50.0,
+    };
     CadScene {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: id.into(),
-        camera: CadCamera {
-            position: [12.0, -12.0, 8.0],
-            target: [5.4, 2.34, 1.5],
-            zoom: 1.0,
-            fov: 50.0,
-        },
+        camera: default_cam.clone(),
+        camera_building: default_cam.clone(),
+        camera_energy: default_cam.clone(),
+        camera_structure_classic: default_cam.clone(),
         objects: shape_objects,
         nodes: vec![CadNode {
             id: "node-root".into(),
@@ -545,6 +554,11 @@ fn cad_pane_id_from_suffix(id_suffix: &str) -> CadPaneId {
         "structure-classic" => CadPaneId::StructureClassic,
         _ => CadPaneId::Shape,
     }
+}
+
+fn cad_pane_id_from_surface_id(surface_id: &str) -> CadPaneId {
+    let suffix = surface_id.split('/').last().unwrap_or(surface_id);
+    cad_pane_id_from_suffix(suffix)
 }
 
 fn cad_pane_suffix(pane: CadPaneId) -> &'static str {
@@ -1043,7 +1057,7 @@ fn build_world_scene_for_pane(envelope: &CadPlayEnvelope, pane: CadPaneId, surfa
         surface_id,
         CAD_PLAY_APP_ID,
         world3d_scene_extended(
-            camera_json(&envelope.document.camera),
+            camera_json(cad_pane_camera(&envelope.document, pane)),
             world_meshes_json(objects),
             world_instances_json(objects, &envelope.runtime),
             world_selection_json(&envelope.document, &envelope.runtime),
@@ -1052,9 +1066,11 @@ fn build_world_scene_for_pane(envelope: &CadPlayEnvelope, pane: CadPaneId, surfa
             None,
             world_references_json(&envelope.document, pane),
             None,
+            None,
             preview,
             None,
             Some(world3d_chunking_json(256.0, 8000.0)),
+            None,
         ),
     )
 }
@@ -2205,7 +2221,12 @@ impl PluginApp for CadApp {
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value(camera.clone()) {
-                        envelope.document.camera = parsed;
+                        let pane = args
+                            .and_then(|value| value.get("surfaceId"))
+                            .and_then(|v| v.as_str())
+                            .map(cad_pane_id_from_surface_id)
+                            .unwrap_or(CadPaneId::Shape);
+                        *cad_pane_camera_mut(&mut envelope.document, pane) = parsed;
                         return vec![set_document_op(&envelope)];
                     }
                 }
@@ -2852,6 +2873,7 @@ semio_framework_plugin::plugin_exports!(bundle);
 #[cfg(test)]
 mod tests {
     use super::*;
+    use cad_document::empty_cad_projection;
     use semio_framework_plugin::PluginApp;
 
     #[test]

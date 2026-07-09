@@ -510,21 +510,21 @@ function compilePrintDocument(tectonic: string, texAbs: string, outDir: string):
 	const workDir = dirname(texAbs);
 	const texFile = basename(texAbs);
 	mkdirSync(outDir, { recursive: true });
-	const args = [
-		"--keep-logs",
-		"--keep-intermediates",
-		"--synctex",
-		"--reruns",
-		"1",
-		"-Z",
-		`search-path=${texDir}`,
-		"--outdir",
-		outDir,
-		texFile,
-	];
-	const env = tectonicEnv();
-	const build = spawnSync(tectonic, args, { cwd: workDir, stdio: "inherit", env });
-	if (build.status !== 0) throw new Error(`tectonic build failed for ${texAbs}`);
+  const args = [
+    "--keep-logs",
+    "--keep-intermediates",
+    "--synctex",
+    "--reruns",
+    "1",
+    "-Z",
+    `search-path=${texDir}`,
+    "--outdir",
+    outDir,
+    texFile,
+  ];
+  const env = tectonicEnv();
+  const build = spawnSync(tectonic, args, { cwd: workDir, stdio: "inherit", env });
+  if (build.status !== 0) throw new Error(`tectonic build failed for ${texAbs}`);
 	const pdf = join(outDir, `${basename(texAbs, ".tex")}.pdf`);
 	if (!existsSync(pdf)) throw new Error(`missing PDF output: ${pdf}`);
 	console.log(`[DEBUG] print built ${relative(repoRoot, pdf)}`);
