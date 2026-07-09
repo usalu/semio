@@ -151,13 +151,6 @@
   \group_end:
 }
 
-\cs_new_protected:Npn \semio_window_vskip_double_stroke_hairline: {
-  \group_begin:
-  \ExplSyntaxOff
-  \vskip-\dimexpr 2\semio@stroke@hairline\relax
-  \group_end:
-}
-
 \cs_new_protected:Npn \semio_window_toc_aux_input:n #1 {
   \file_if_exist_input:n {#1} { }
 }
@@ -809,11 +802,6 @@
 
 \def\semio@chrome@heading{}
 
-\newcommand{\semio@window@render@inbox@header}{%
-  \hspace*{-\semio@chrome@padding}%
-  \semio@window@header@inbox{\semio@window@header@number}{\semio@window@header@title}%
-}
-
 \def\semio@window@header@number{}
 \def\semio@window@header@title{}
 
@@ -859,13 +847,6 @@
 \newcommand{\semio@window@stroke@v}[1]{%
   \color{#1}%
   \rule{\semio@stroke@hairline}{\semio@chrome@titlebar@height}%
-}
-
-\newcommand{\semio@window@stroke@v@extended}[1]{%
-  \color{#1}%
-  \rule{\semio@stroke@hairline}{%
-    \dimexpr\semio@chrome@titlebar@height+\semio@stroke@hairline\relax
-  }%
 }
 
 \newcommand{\semio@window@stroke@h}[2]{%
@@ -976,10 +957,6 @@
   }%
 }
 
-\newcommand{\semio@heading@cap@muted@inbox}[1]{%
-  \semio@heading@cap@muted@tab{#1}%
-}
-
 \newcommand{\semio@window@gap@inbox}[1]{%
   \semio@window@cap@body@h@set
   \hbox to \dimexpr\semio@window@gap@w\relax{%
@@ -995,34 +972,6 @@
             \vfil\null\vfil
           }%
         }%
-      }%
-    }%
-  }%
-}
-
-\newcommand{\semio@window@header@inbox}[2]{%
-  \sbox{\semio@window@tab@box}{\semio@heading@cap@muted@inbox{#2}}%
-  \sbox{\semio@window@ctrl@box}{%
-    \if\relax\detokenize{#1}\relax
-      \hbox{}%
-    \else
-      \semio@heading@cap@muted@inbox{#1}%
-    \fi
-  }%
-  \setlength{\semio@window@gap@w}{%
-    \dimexpr\linewidth+2\semio@chrome@padding-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
-  }%
-  \vtop{%
-    \nointerlineskip
-    \hbox to \dimexpr\linewidth+2\semio@chrome@padding\relax{%
-      \usebox{\semio@window@tab@box}%
-      \semio@window@gap@inbox{semio-chrome-base}%
-      \usebox{\semio@window@ctrl@box}%
-    }%
-    \nointerlineskip
-    \hbox to \dimexpr\linewidth+2\semio@chrome@padding\relax{%
-      \semio@window@stroke@h{semio-chrome-border-normal}{%
-        \dimexpr\linewidth+2\semio@chrome@padding\relax
       }%
     }%
   }%
@@ -1365,7 +1314,7 @@
     \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
   }%
   \semio@window@header@row@wrap{%
-    \vtop{%
+    \vbox{%
       \nointerlineskip
       \hbox to \linewidth{%
         \usebox{\semio@window@tab@box}%

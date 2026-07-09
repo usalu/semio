@@ -3949,6 +3949,20 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
             limits,
         )?;
     }
+    if let Some(board) = &scene.puzzle2d_board {
+        check_json_payload(&format!("{scene_label} puzzle2dBoard.fixture"), &board.fixture_json, limits)?;
+        check_json_payload(&format!("{scene_label} puzzle2dBoard.camera"), &board.camera_json, limits)?;
+        check_json_payload(
+            &format!("{scene_label} puzzle2dBoard.kindCatalogs"),
+            &board.kind_catalogs_json,
+            limits,
+        )?;
+        check_json_payload(
+            &format!("{scene_label} puzzle2dBoard.selection"),
+            &board.selection_json,
+            limits,
+        )?;
+    }
     Ok(())
 }
 
@@ -7842,7 +7856,14 @@ impl ShellState {
         self.plugins
             .iter()
             .find(|p| p.plugin_id == session.plugin_id)
-            .map(|p| p.manifest.examples.clone())
+            .map(|p| {
+                p.manifest
+                    .examples
+                    .iter()
+                    .filter(|example| example.app_id.is_empty() || example.app_id == session.app.id)
+                    .cloned()
+                    .collect()
+            })
             .unwrap_or_default()
     }
 

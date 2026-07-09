@@ -93,6 +93,12 @@ type FrameworkGraphSession = GraphWasmSession & {
 };
 //#endregion Types
 
+//#region Viewport
+export function nodeGraphViewportCommandArgs(cameraJson: string): { readonly viewportJson: string } {
+	return { viewportJson: cameraJson };
+}
+//#endregion Viewport
+
 //#region Parsing
 function parseViewport(viewportJson: string): DiagramViewport {
 	try {
@@ -346,7 +352,7 @@ function WasmGraphSurface({
 			dispatch(nodeGraphCommands.select, { nodeIds });
 			const hovered = session.hoveredNodeId();
 			dispatch(nodeGraphCommands.hover, { hoverJson: hovered ? JSON.stringify({ nodeId: hovered }) : null });
-			dispatch(nodeGraphCommands.viewport, { viewportJson: session.cameraJson() });
+			dispatch(nodeGraphCommands.viewport, nodeGraphViewportCommandArgs(session.cameraJson()));
 			const openId = session.takePendingOpenInstanceId?.();
 			if (openId) dispatch("openInstance", { instanceId: openId });
 		} catch {
@@ -1749,7 +1755,7 @@ export function FlowGraphCanvasHost({
 					const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaMode === 2 ? event.deltaY * 400 : event.deltaY;
 					session.wheelScreen(event.clientX - rect.left, event.clientY - rect.top, 0, delta, true);
 					session.renderFrame();
-					dispatch(nodeGraphCommands.viewport, { viewportJson: scene.viewportJson });
+					dispatch(nodeGraphCommands.viewport, nodeGraphViewportCommandArgs(session.cameraJson()));
 					paintOverlays();
 				}}
 			/>

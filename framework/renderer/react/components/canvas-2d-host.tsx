@@ -2,19 +2,88 @@ import { useCallback, useMemo, useRef } from "react";
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
 import type { CommandDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
 
+//#region CanvasCameraMath
+export const CANVAS_CAMERA_ZOOM_MIN = 0.05;
+export const CANVAS_CAMERA_ZOOM_MAX = 32;
+const WHEEL_ZOOM_IN_FACTOR = 1.1;
+const WHEEL_ZOOM_OUT_FACTOR = 0.9;
+
+export type CanvasCamera = {
+	x: number;
+	y: number;
+	zoom: number;
+};
+
+export function clampCanvasZoom(zoom: number): number {
+	return Math.min(CANVAS_CAMERA_ZOOM_MAX, Math.max(CANVAS_CAMERA_ZOOM_MIN, zoom));
+}
+
+/** 🧭 Maps world coordinates to logical (CSS-pixel) screen space — matches `infinite_cavas::camera::world_to_screen`. */
+export function worldToScreenLogical(
+	worldX: number,
+	worldY: number,
+	camera: CanvasCamera,
+	viewportWidth: number,
+	viewportHeight: number,
+): { readonly x: number; readonly y: number } {
+	const zoom = camera.zoom || 1;
+	return {
+		x: (worldX - camera.x) * zoom + viewportWidth * 0.5,
+		y: (worldY - camera.y) * zoom + viewportHeight * 0.5,
+	};
+}
+
+/** 🧭 Maps logical (CSS-pixel) screen space to world coordinates — matches `infinite_cavas::camera::screen_to_world`. */
+export function screenToWorldLogical(
+	screenX: number,
+	screenY: number,
+	camera: CanvasCamera,
+	viewportWidth: number,
+	viewportHeight: number,
+): { readonly x: number; readonly y: number } {
+	const zoom = camera.zoom || 1;
+	return {
+		x: (screenX - viewportWidth * 0.5) / zoom + camera.x,
+		y: (screenY - viewportHeight * 0.5) / zoom + camera.y,
+	};
+}
+
+/** 🔍 Cursor-anchored wheel zoom — matches `infinite_cavas::camera::wheel_screen`. */
+export function wheelCameraAtScreen(
+	camera: CanvasCamera,
+	screenX: number,
+	screenY: number,
+	deltaY: number,
+	viewportWidth: number,
+	viewportHeight: number,
+): CanvasCamera {
+	const zoomFactor = deltaY < 0 ? WHEEL_ZOOM_IN_FACTOR : WHEEL_ZOOM_OUT_FACTOR;
+	const nextZoom = clampCanvasZoom((camera.zoom || 1) * zoomFactor);
+	const worldBefore = screenToWorldLogical(screenX, screenY, camera, viewportWidth, viewportHeight);
+	return {
+		x: worldBefore.x - (screenX - viewportWidth * 0.5) / nextZoom,
+		y: worldBefore.y - (screenY - viewportHeight * 0.5) / nextZoom,
+		zoom: nextZoom,
+	};
+}
+//#endregion CanvasCameraMath
+
 //#region JsonLayersCanvasSession
 type CanvasLayerRecord = {
 	readonly id?: string;
 	readonly kind?: string;
+	readonly role?: string;
 	readonly name?: string;
+	readonly color?: string;
+	readonly selected?: boolean;
 	readonly x?: number;
 	readonly y?: number;
 	readonly width?: number;
 	readonly height?: number;
 	readonly x0?: number;
 	readonly y0?: number;
-	readonly x1?: number;
 	readonly y1?: number;
+	readonly x1?: number;
 	readonly dataUrl?: string;
 	readonly points?: readonly (readonly [number, number])[];
 	readonly seams?: readonly number[];
@@ -44,6 +113,18 @@ function rgbaToCss(color: readonly number[] | undefined, opacity = 1): string {
 	if (!color || color.length < 3) return `rgba(148, 163, 184, ${opacity})`;
 	const alpha = (color[3] ?? 1) * opacity;
 	return `rgba(${color[0]! * 255}, ${color[1]! * 255}, ${color[2]! * 255}, ${alpha})`;
+}
+
+function layerColorCss(layer: CanvasLayerRecord, fallbackHue: number, opacity = 1): string {
+	if (layer.color) {
+		if (layer.color.startsWith("#") || layer.color.startsWith("hsl")) {
+			if (layer.color.startsWith("hsl") && opacity < 1) {
+				return layer.color.replace(")", ` / ${opacity})`).replace("hsl(", "hsla(");
+			}
+			return layer.color;
+		}
+	}
+	return `hsla(${fallbackHue}, 70%, 55%, ${opacity})`;
 }
 
 function applySceneTransform(ctx: CanvasRenderingContext2D, transform: readonly number[] | undefined): void {
@@ -124,12 +205,6 @@ function drawSceneNode(
 	ctx.restore();
 }
 
-type CanvasCamera = {
-	x: number;
-	y: number;
-	zoom: number;
-};
-
 function layerBounds(layer: CanvasLayerRecord): { readonly x: number; readonly y: number; readonly width: number; readonly height: number } | null {
 	const x = layer.x ?? layer.base?.x;
 	const y = layer.y ?? layer.base?.y;
@@ -141,6 +216,74 @@ function layerBounds(layer: CanvasLayerRecord): { readonly x: number; readonly y
 
 function layerLabel(layer: CanvasLayerRecord): string {
 	return layer.name ?? layer.base?.name ?? layer.kind ?? layer.id ?? "layer";
+}
+
+function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number): void {
+	const r = Math.min(radius, width * 0.5, height * 0.5);
+	ctx.beginPath();
+	ctx.moveTo(x + r, y);
+	ctx.lineTo(x + width - r, y);
+	ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+	ctx.lineTo(x + width, y + height - r);
+	ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+	ctx.lineTo(x + r, y + height);
+	ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+	ctx.lineTo(x, y + r);
+	ctx.quadraticCurveTo(x, y, x + r, y);
+	ctx.closePath();
+}
+
+function drawBoundsLayer(
+	ctx: CanvasRenderingContext2D,
+	layer: CanvasLayerRecord,
+	bounds: { readonly x: number; readonly y: number; readonly width: number; readonly height: number },
+	label: string,
+	hue: number,
+	zoom: number,
+): void {
+	const isHandle = layer.role === "handle";
+	const isSelected = layer.selected === true;
+	const fillOpacity = isHandle ? 0.35 : isSelected ? 0.42 : 0.22;
+	const strokeOpacity = isSelected ? 1 : isHandle ? 0.7 : 0.85;
+	const fillColor = layerColorCss(layer, hue, fillOpacity);
+	const strokeColor = isSelected ? "rgba(251, 191, 36, 0.95)" : layerColorCss(layer, hue, strokeOpacity);
+	const lineWidth = Math.max((isSelected ? 2.5 : 1) / zoom, 1 / zoom);
+	if (isSelected) {
+		ctx.strokeStyle = "rgba(251, 191, 36, 0.28)";
+		ctx.lineWidth = Math.max(5 / zoom, 2 / zoom);
+		if (layer.kind === "circle") {
+			const cx = bounds.x + bounds.width * 0.5;
+			const cy = bounds.y + bounds.height * 0.5;
+			const radius = Math.min(bounds.width, bounds.height) * 0.5 + 4 / zoom;
+			ctx.beginPath();
+			ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+			ctx.stroke();
+		} else {
+			drawRoundedRect(ctx, bounds.x - 4 / zoom, bounds.y - 4 / zoom, bounds.width + 8 / zoom, bounds.height + 8 / zoom, 6 / zoom);
+			ctx.stroke();
+		}
+	}
+	ctx.fillStyle = fillColor;
+	ctx.strokeStyle = strokeColor;
+	ctx.lineWidth = lineWidth;
+	if (layer.kind === "circle") {
+		const cx = bounds.x + bounds.width * 0.5;
+		const cy = bounds.y + bounds.height * 0.5;
+		const radius = Math.min(bounds.width, bounds.height) * 0.5;
+		ctx.beginPath();
+		ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.stroke();
+	} else {
+		drawRoundedRect(ctx, bounds.x, bounds.y, bounds.width, bounds.height, 4 / zoom);
+		ctx.fill();
+		ctx.stroke();
+	}
+	if (!isHandle && label) {
+		ctx.fillStyle = "rgba(226, 232, 240, 0.92)";
+		ctx.font = `${12 / zoom}px ui-monospace, monospace`;
+		ctx.fillText(label, bounds.x + 4, bounds.y + 14 / zoom);
+	}
 }
 
 function drawCheckerboard(ctx: CanvasRenderingContext2D, width: number, height: number, zoom: number): void {
@@ -225,18 +368,22 @@ class JsonLayersCanvasSession implements GraphWasmSession {
 		const ctx = this.ctx;
 		const canvas = this.canvas;
 		if (!ctx || !canvas) return;
-		const width = canvas.width;
-		const height = canvas.height;
-		ctx.setTransform(1, 0, 0, 1, 0, 0);
-		ctx.clearRect(0, 0, width, height);
-		ctx.fillStyle = "#111318";
-		ctx.fillRect(0, 0, width, height);
-		const layers = this.parseLayers();
+		const deviceWidth = canvas.width;
+		const deviceHeight = canvas.height;
+		const logicalWidth = this.logicalWidth;
+		const logicalHeight = this.logicalHeight;
+		const dpr = this.dpr;
 		const zoom = this.camera.zoom || 1;
+		ctx.setTransform(1, 0, 0, 1, 0, 0);
+		ctx.clearRect(0, 0, deviceWidth, deviceHeight);
+		ctx.fillStyle = "#111318";
+		ctx.fillRect(0, 0, deviceWidth, deviceHeight);
+		const layers = this.parseLayers();
 		ctx.save();
-		ctx.translate(width / 2 + this.camera.x * this.dpr * zoom, height / 2 + this.camera.y * this.dpr * zoom);
-		ctx.scale(zoom * this.dpr, zoom * this.dpr);
-		drawCheckerboard(ctx, this.logicalWidth, this.logicalHeight, zoom);
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+		ctx.translate(logicalWidth * 0.5 - this.camera.x * zoom, logicalHeight * 0.5 - this.camera.y * zoom);
+		ctx.scale(zoom, zoom);
+		drawCheckerboard(ctx, logicalWidth, logicalHeight, zoom);
 		for (const [index, layer] of layers.entries()) {
 			if (layer.segments?.length || layer.text || layer.image?.src) {
 				drawSceneNode(ctx, layer, zoom, this.imageCache);
@@ -256,7 +403,7 @@ class JsonLayersCanvasSession implements GraphWasmSession {
 					const [x0, y0] = layer.points[segment]!;
 					const [x1, y1] = layer.points[segment + 1]!;
 					const seamIndex = segment / 2;
-					ctx.strokeStyle = "rgba(148, 163, 184, 0.95)";
+					ctx.strokeStyle = layerColorCss(layer, (index * 47) % 360, 0.95);
 					ctx.lineWidth = Math.max(1 / zoom, 1);
 					ctx.setLineDash(seams[seamIndex] ? [6 / zoom, 4 / zoom] : []);
 					ctx.beginPath();
@@ -275,27 +422,23 @@ class JsonLayersCanvasSession implements GraphWasmSession {
 				const y0 = layer.y0 ?? layer.y ?? 0;
 				const x1 = layer.x1 ?? (layer.x ?? 0) + (layer.width ?? 0);
 				const y1 = layer.y1 ?? (layer.y ?? 0) + (layer.height ?? 0);
-				ctx.strokeStyle = `hsla(${hue}, 70%, 60%, 0.9)`;
-				ctx.lineWidth = Math.max(1 / zoom, 1);
+				const isWire = layer.role === "wire";
+				ctx.strokeStyle = layerColorCss(layer, hue, 0.9);
+				ctx.lineWidth = Math.max((isWire ? 1.25 : 2) / zoom, 1 / zoom);
+				ctx.setLineDash(isWire ? [6 / zoom, 4 / zoom] : []);
 				ctx.beginPath();
 				ctx.moveTo(x0, y0);
 				ctx.lineTo(x1, y1);
 				ctx.stroke();
+				ctx.setLineDash([]);
 				continue;
 			}
 			if (bounds) {
-				ctx.strokeStyle = "rgba(148, 163, 184, 0.8)";
-				ctx.lineWidth = 1 / zoom;
-				ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
-				ctx.fillStyle = `hsla(${(index * 47) % 360}, 70%, 55%, 0.18)`;
-				ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
-				ctx.fillStyle = "rgba(226, 232, 240, 0.9)";
-				ctx.font = `${12 / zoom}px ui-monospace, monospace`;
-				ctx.fillText(label, bounds.x + 4, bounds.y + 14 / zoom);
+				drawBoundsLayer(ctx, layer, bounds, label, hue, zoom);
 			} else {
 				ctx.fillStyle = "rgba(226, 232, 240, 0.75)";
 				ctx.font = `${12 / zoom}px ui-monospace, monospace`;
-				ctx.fillText(label, -this.logicalWidth / 2 + 16, -this.logicalHeight / 2 + 20 + index * 18);
+				ctx.fillText(label, -logicalWidth / 2 + 16, -logicalHeight / 2 + 20 + index * 18);
 			}
 		}
 		if (layers.length === 0) {
@@ -306,18 +449,6 @@ class JsonLayersCanvasSession implements GraphWasmSession {
 		ctx.restore();
 	}
 
-	private toCanvasCoords(x: number, y: number): { readonly x: number; readonly y: number } {
-		const canvas = this.canvas;
-		if (!canvas) return { x, y };
-		const zoom = this.camera.zoom || 1;
-		const width = canvas.width;
-		const height = canvas.height;
-		return {
-			x: (x - width / 2) / (zoom * this.dpr) - this.camera.x,
-			y: (y - height / 2) / (zoom * this.dpr) - this.camera.y,
-		};
-	}
-
 	pointerDown(x: number, y: number, button: number, extend: boolean): void {
 		if (button === 1) {
 			this.panning = true;
@@ -325,10 +456,9 @@ class JsonLayersCanvasSession implements GraphWasmSession {
 			this.panCameraStart = { x: this.camera.x, y: this.camera.y };
 			return;
 		}
-		const point = this.toCanvasCoords(x, y);
 		this.onPointer?.("canvasPointerDown", {
-			x: point.x,
-			y: point.y,
+			x,
+			y,
 			button,
 			extend,
 			width: this.logicalWidth,
@@ -341,18 +471,17 @@ class JsonLayersCanvasSession implements GraphWasmSession {
 			const zoom = this.camera.zoom || 1;
 			const next = {
 				...this.camera,
-				x: this.panCameraStart.x + (x - this.panStart.x) / (zoom * this.dpr),
-				y: this.panCameraStart.y + (y - this.panStart.y) / (zoom * this.dpr),
+				x: this.panCameraStart.x - (x - this.panStart.x) / zoom,
+				y: this.panCameraStart.y - (y - this.panStart.y) / zoom,
 			};
 			this.camera = next;
 			this.onCameraChange(next);
 			this.renderFrame();
 			return;
 		}
-		const point = this.toCanvasCoords(x, y);
 		this.onPointer?.("canvasPointerMove", {
-			x: point.x,
-			y: point.y,
+			x,
+			y,
 			width: this.logicalWidth,
 			height: this.logicalHeight,
 		});
@@ -363,23 +492,20 @@ class JsonLayersCanvasSession implements GraphWasmSession {
 			this.panning = false;
 			return;
 		}
-		const point = this.toCanvasCoords(x, y);
 		this.onPointer?.("canvasPointerUp", {
-			x: point.x,
-			y: point.y,
+			x,
+			y,
 			width: this.logicalWidth,
 			height: this.logicalHeight,
 		});
 	}
 
 	wheel(x: number, y: number, deltaY: number): void {
-		const factor = deltaY > 0 ? 0.9 : 1.1;
-		const nextZoom = Math.min(8, Math.max(0.125, (this.camera.zoom || 1) * factor));
-		const next = { ...this.camera, zoom: nextZoom };
+		const next = wheelCameraAtScreen(this.camera, x, y, deltaY, this.logicalWidth, this.logicalHeight);
 		this.camera = next;
 		this.onCameraChange(next);
 		this.renderFrame();
-		this.onPointer?.("canvasWheel", { x, y, deltaY });
+		this.onPointer?.("canvasWheel", { x, y, deltaY, width: this.logicalWidth, height: this.logicalHeight });
 	}
 }
 //#endregion JsonLayersCanvasSession

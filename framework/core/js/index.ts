@@ -649,7 +649,7 @@ export type PluginManifest = {
 		readonly label: string;
 		readonly yields: string;
 	}[];
-	readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string }[];
+	readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string }[];
 	readonly contributions?: readonly PluginContribution[];
 };
 

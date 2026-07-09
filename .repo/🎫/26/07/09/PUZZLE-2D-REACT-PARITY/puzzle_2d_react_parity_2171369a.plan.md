@@ -7,31 +7,31 @@ todos:
     status: completed
   - id: part-a-camera
     content: Fix camera translate sign + dpr mixing in canvas-2d-host.tsx JsonLayersCanvasSession, add pure transform helpers + tests
-    status: in_progress
+    status: completed
   - id: part-a-wheel
     content: Implement cursor-anchored wheel zoom matching infinite_cavas::camera::wheel_screen
-    status: pending
+    status: completed
   - id: part-b-sync
     content: Sync BoardHost camera/size to the render camera before handling canvasPointerDown/Move/Up/Wheel in d2/mod.rs
-    status: pending
+    status: completed
   - id: part-b-raw-coords
     content: Dispatch raw CSS-pixel pointer coords from canvas-2d-host.tsx instead of pre-converted world coords
-    status: pending
+    status: completed
   - id: part-b-tests
     content: "Add d2/mod.rs test: click at rendered node position selects it"
-    status: pending
+    status: completed
   - id: part-c-color-role
     content: Emit color/role fields for node/handle/edge/wire layers from kindCatalogs (with deterministic fallback) in d2/mod.rs
-    status: pending
+    status: completed
   - id: part-c-draw
     content: Draw real circle/rect shapes, selection highlight, handle styling, edge vs wire dashing in canvas-2d-host.tsx
-    status: pending
+    status: completed
   - id: part-c-tests
     content: Extend index.test.ts and d2/mod.rs tests for new color/role/selected fields
-    status: pending
+    status: completed
   - id: validate
     content: Run vitest + cargo test, rebuild plugin, manually verify in running dev server, close ticket with summary
-    status: pending
+    status: completed
 isProject: false
 ---
 

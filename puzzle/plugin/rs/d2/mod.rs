@@ -1,16 +1,11 @@
 //! 🧩 Puzzle 2D plugin — declarative puzzle 2d play app bundled as a hot-swappable WASM component.
 
-use puzzle_2d::{
-    handle_position_on_circle, handle_position_on_rectangle, puzzle_board_host, puzzle_2d_lod_scale_json, BoardHost,
-    Point, Puzzle2dExtension, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN,
-};
-use semio_framework_plugin::{SurfaceKind, 
-    build_canvas_2d_scene, create_default_layout,
+use puzzle_2d::{handle_position_on_circle, handle_position_on_rectangle, puzzle_2d_lod_scale_json, puzzle_board_host, BoardHost, Point, Puzzle2dExtension, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
+use semio_framework_plugin::{
+    build_canvas_2d_scene, build_puzzle2d_board_scene, create_default_layout,
     layout::{MeasureSelectItem, WindowEngagementStatus, WindowEngagementToggleGroupOption},
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor, PanelGroup, PluginApp,
-    PluginBundle, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
-    WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, CommandDescriptor, PanelGroup, PluginApp, PluginBundle, Puzzle2dBoardScene, SurfaceKind, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
+    WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -85,11 +80,7 @@ fn default_suggestion_offset() -> f64 {
 
 /// 📶 Overview/selection default to automatic LOD; detail defaults to a fixed "detail" tier, matching the pre-migration triptych.
 fn default_lod_mode_by_pane() -> BTreeMap<String, String> {
-    BTreeMap::from([
-        (PUZZLE2D_PANE_OVERVIEW.to_string(), PUZZLE2D_LOD_MODE_AUTOMATIC.to_string()),
-        (PUZZLE2D_PANE_DETAIL.to_string(), "detail".to_string()),
-        (PUZZLE2D_PANE_SELECTION.to_string(), PUZZLE2D_LOD_MODE_AUTOMATIC.to_string()),
-    ])
+    BTreeMap::from([(PUZZLE2D_PANE_OVERVIEW.to_string(), PUZZLE2D_LOD_MODE_AUTOMATIC.to_string()), (PUZZLE2D_PANE_DETAIL.to_string(), "detail".to_string()), (PUZZLE2D_PANE_SELECTION.to_string(), PUZZLE2D_LOD_MODE_AUTOMATIC.to_string())])
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -166,10 +157,7 @@ fn default_empty_fixture() -> Value {
 }
 
 fn default_envelope() -> Puzzle2dPlayEnvelope {
-    Puzzle2dPlayEnvelope {
-        fixture: default_empty_fixture(),
-        runtime: Puzzle2dPlayRuntime::default(),
-    }
+    Puzzle2dPlayEnvelope { fixture: default_empty_fixture(), runtime: Puzzle2dPlayRuntime::default() }
 }
 
 fn parse_envelope(document_json: &str) -> Puzzle2dPlayEnvelope {
@@ -181,22 +169,11 @@ fn set_document_op(envelope: &Puzzle2dPlayEnvelope) -> String {
 }
 
 fn puzzle2d_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
-        controller_id: PUZZLE2D_PLAY_CONTROLLER_ID.into(),
-        command: command.into(),
-        args,
-    }
+    CommandDescriptor { controller_id: PUZZLE2D_PLAY_CONTROLLER_ID.into(), command: command.into(), args }
 }
 
 fn selection_ids(args: Option<&Value>) -> Vec<String> {
-    args.and_then(|value| value.get("ids"))
-        .and_then(|value| serde_json::from_value(value.clone()).ok())
-        .or_else(|| {
-            args.and_then(|value| value.get("id"))
-                .and_then(|value| value.as_str())
-                .map(|id| vec![id.to_string()])
-        })
-        .unwrap_or_default()
+    args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).or_else(|| args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(|id| vec![id.to_string()])).unwrap_or_default()
 }
 
 fn fixture_camera(fixture: &Value) -> (f64, f64, f64) {
@@ -209,28 +186,15 @@ fn fixture_camera(fixture: &Value) -> (f64, f64, f64) {
 }
 
 fn fixture_nodes(fixture: &Value) -> &[Value] {
-    fixture
-        .get("nodes")
-        .and_then(|value| value.as_array())
-        .map(|values| values.as_slice())
-        .unwrap_or(&[])
+    fixture.get("nodes").and_then(|value| value.as_array()).map(|values| values.as_slice()).unwrap_or(&[])
 }
 
 fn fixture_edges(fixture: &Value) -> &[Value] {
-    fixture
-        .get("edges")
-        .and_then(|value| value.as_array())
-        .map(|values| values.as_slice())
-        .unwrap_or(&[])
+    fixture.get("edges").and_then(|value| value.as_array()).map(|values| values.as_slice()).unwrap_or(&[])
 }
 
 fn kind_catalog_entries<'a>(fixture: &'a Value, key: &str) -> Option<&'a [Value]> {
-    fixture
-        .get("meta")
-        .and_then(|value| value.get("kindCatalogs"))
-        .and_then(|value| value.get(key))
-        .and_then(|value| value.as_array())
-        .map(|values| values.as_slice())
+    fixture.get("meta").and_then(|value| value.get("kindCatalogs")).and_then(|value| value.get(key)).and_then(|value| value.as_array()).map(|values| values.as_slice())
 }
 
 fn new_node_id(prefix: &str) -> String {
@@ -265,41 +229,21 @@ fn delete_selection_from_fixture(fixture: &mut Value, selected: &[String]) {
         return;
     }
     let selected: HashSet<&str> = selected.iter().map(String::as_str).collect();
-    let node_ids: HashSet<String> = fixture_nodes(fixture)
-        .iter()
-        .filter_map(|node| node.get("id").and_then(|value| value.as_str()))
-        .filter(|id| selected.contains(id))
-        .map(str::to_string)
-        .collect();
+    let node_ids: HashSet<String> = fixture_nodes(fixture).iter().filter_map(|node| node.get("id").and_then(|value| value.as_str())).filter(|id| selected.contains(id)).map(str::to_string).collect();
     let handle_ids: HashSet<String> = fixture_nodes(fixture)
         .iter()
-        .flat_map(|node| {
-            node.get("handles")
-                .and_then(|value| value.as_array())
-                .into_iter()
-                .flatten()
-                .filter_map(|handle| handle.get("id").and_then(|value| value.as_str()))
-        })
+        .flat_map(|node| node.get("handles").and_then(|value| value.as_array()).into_iter().flatten().filter_map(|handle| handle.get("id").and_then(|value| value.as_str())))
         .filter(|id| selected.contains(id))
         .map(str::to_string)
         .collect();
     if let Some(nodes) = fixture.get_mut("nodes").and_then(|value| value.as_array_mut()) {
         *nodes = nodes
             .iter()
-            .filter(|node| {
-                node.get("id")
-                    .and_then(|value| value.as_str())
-                    .is_none_or(|id| !node_ids.contains(id))
-            })
+            .filter(|node| node.get("id").and_then(|value| value.as_str()).is_none_or(|id| !node_ids.contains(id)))
             .map(|node| {
                 let mut next = node.clone();
                 if let Some(handles) = next.get_mut("handles").and_then(|value| value.as_array_mut()) {
-                    handles.retain(|handle| {
-                        handle
-                            .get("id")
-                            .and_then(|value| value.as_str())
-                            .is_none_or(|id| !handle_ids.contains(id))
-                    });
+                    handles.retain(|handle| handle.get("id").and_then(|value| value.as_str()).is_none_or(|id| !handle_ids.contains(id)));
                 }
                 next
             })
@@ -307,10 +251,7 @@ fn delete_selection_from_fixture(fixture: &mut Value, selected: &[String]) {
     }
     if let Some(edges) = fixture.get_mut("edges").and_then(|value| value.as_array_mut()) {
         edges.retain(|edge| {
-            let id_ok = edge
-                .get("id")
-                .and_then(|value| value.as_str())
-                .is_none_or(|id| !selected.contains(id));
+            let id_ok = edge.get("id").and_then(|value| value.as_str()).is_none_or(|id| !selected.contains(id));
             let source = edge.get("source").and_then(|value| value.as_str()).unwrap_or("");
             let target = edge.get("target").and_then(|value| value.as_str()).unwrap_or("");
             id_ok && !node_ids.contains(source) && !node_ids.contains(target) && !handle_ids.contains(source) && !handle_ids.contains(target)
@@ -336,12 +277,7 @@ fn sync_host_from_envelope(host: &mut BoardHost, envelope: &Puzzle2dPlayEnvelope
     let _ = host.parse_fixture_v1(&envelope.fixture);
     host.set_selection_ids(&envelope.runtime.selected_ids);
     host.set_active_tool(&envelope.runtime.active_tool);
-    let overview_lod_mode = envelope
-        .runtime
-        .lod_mode_by_pane
-        .get(PUZZLE2D_PANE_OVERVIEW)
-        .map(String::as_str)
-        .unwrap_or(PUZZLE2D_LOD_MODE_AUTOMATIC);
+    let overview_lod_mode = envelope.runtime.lod_mode_by_pane.get(PUZZLE2D_PANE_OVERVIEW).map(String::as_str).unwrap_or(PUZZLE2D_LOD_MODE_AUTOMATIC);
     if overview_lod_mode == PUZZLE2D_LOD_MODE_AUTOMATIC {
         host.set_automatic_lod(true);
     } else {
@@ -357,33 +293,21 @@ fn sync_host_from_envelope(host: &mut BoardHost, envelope: &Puzzle2dPlayEnvelope
     })) {
         host.set_brush_kind_weights(&weights_json);
     }
-    host.set_selection_options(
-        &envelope.runtime.selection_method,
-        "replace",
-        true,
-        true,
-        true,
-    );
+    host.set_selection_options(&envelope.runtime.selection_method, "replace", true, true, true);
     if let Some(catalogs) = envelope.fixture.get("meta").and_then(|value| value.get("kindCatalogs")) {
         if let Ok(json) = serde_json::to_string(catalogs) {
             let _ = host.set_board_kind_catalogs_from_json(&json);
         }
     }
-    if let Some(compat) = envelope
-        .fixture
-        .get("meta")
-        .and_then(|value| value.get("kindCompatibility"))
-        .or_else(|| envelope.fixture.get("kindCompatibility"))
-    {
+    if let Some(compat) = envelope.fixture.get("meta").and_then(|value| value.get("kindCompatibility")).or_else(|| envelope.fixture.get("kindCompatibility")) {
         if let Ok(json) = serde_json::to_string(compat) {
             let _ = host.set_handle_link_compat_from_json(&json);
         }
     }
 }
 
-fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dPlayEnvelope) {
-    let events_raw = host.drain_events_json();
-    let Ok(events) = serde_json::from_str::<Vec<Value>>(&events_raw) else {
+fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dPlayEnvelope) {
+    let Ok(events) = serde_json::from_str::<Vec<Value>>(events_json) else {
         return;
     };
     for event in events {
@@ -464,34 +388,22 @@ fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dPlayEnvelope) 
             _ => {}
         }
     }
+}
+
+fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dPlayEnvelope) {
+    let events_raw = host.drain_events_json();
+    apply_board_events_from_json(&events_raw, envelope);
     envelope.runtime.selected_ids = host.selection.iter().cloned().collect();
     let (camera_x, camera_y, zoom) = fixture_camera(&envelope.fixture);
-    if (host.camera.x - camera_x).abs() > 1e-9
-        || (host.camera.y - camera_y).abs() > 1e-9
-        || (host.camera.zoom - zoom).abs() > 1e-9
-    {
-        set_fixture_camera(
-            &mut envelope.fixture,
-            &json!({ "x": host.camera.x, "y": host.camera.y, "zoom": host.camera.zoom }),
-        );
+    if (host.camera.x - camera_x).abs() > 1e-9 || (host.camera.y - camera_y).abs() > 1e-9 || (host.camera.zoom - zoom).abs() > 1e-9 {
+        set_fixture_camera(&mut envelope.fixture, &json!({ "x": host.camera.x, "y": host.camera.y, "zoom": host.camera.zoom }));
     }
 }
 
 fn apply_brush_place_payload(fixture: &mut Value, payload: &Value) {
-    let node_id = payload
-        .get("nodeId")
-        .and_then(|value| value.as_str())
-        .map(str::to_string)
-        .unwrap_or_else(|| new_node_id("node"));
-    let edge_id = payload
-        .get("edgeId")
-        .and_then(|value| value.as_str())
-        .map(str::to_string)
-        .unwrap_or_else(|| new_node_id("edge"));
-    let node_kind = payload
-        .get("nodeKind")
-        .and_then(|value| value.as_str())
-        .unwrap_or("node");
+    let node_id = payload.get("nodeId").and_then(|value| value.as_str()).map(str::to_string).unwrap_or_else(|| new_node_id("node"));
+    let edge_id = payload.get("edgeId").and_then(|value| value.as_str()).map(str::to_string).unwrap_or_else(|| new_node_id("edge"));
+    let node_kind = payload.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("node");
     let x = payload.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
     let y = payload.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);
     let shape = payload.get("shape").and_then(|value| value.as_str()).unwrap_or("circle");
@@ -516,10 +428,7 @@ fn apply_brush_place_payload(fixture: &mut Value, payload: &Value) {
     if let Some(nodes) = fixture.get_mut("nodes").and_then(|value| value.as_array_mut()) {
         nodes.push(node);
     }
-    let source = payload
-        .get("sourceHandleId")
-        .and_then(|value| value.as_str())
-        .unwrap_or("");
+    let source = payload.get("sourceHandleId").and_then(|value| value.as_str()).unwrap_or("");
     if !source.is_empty() {
         if let Some(edges) = fixture.get_mut("edges").and_then(|value| value.as_array_mut()) {
             edges.push(json!({
@@ -543,16 +452,8 @@ fn puzzle2d_brush_placement_control(envelope: &Puzzle2dPlayEnvelope) -> Option<W
         .iter()
         .enumerate()
         .map(|(index, candidate)| {
-            let node_kind = candidate
-                .get("nodeKind")
-                .and_then(|value| value.as_str())
-                .or_else(|| candidate.as_str())
-                .unwrap_or("kind");
-            WindowEngagementToggleGroupOption {
-                id: format!("puzzle2d.brush.candidate.{index}"),
-                label: node_kind.into(),
-                disabled: None,
-            }
+            let node_kind = candidate.get("nodeKind").and_then(|value| value.as_str()).or_else(|| candidate.as_str()).unwrap_or("kind");
+            WindowEngagementToggleGroupOption { id: format!("puzzle2d.brush.candidate.{index}"), label: node_kind.into(), disabled: None }
         })
         .collect();
     let selected_index = envelope.runtime.brush_candidate_index.min(options.len().saturating_sub(1));
@@ -584,16 +485,8 @@ fn puzzle2d_fill_count_control(envelope: &Puzzle2dPlayEnvelope) -> WindowEngagem
 
 fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost, pane: &str) -> WindowEngagement {
     let overlay: Value = serde_json::from_str(&host.overlay_paint_state_json()).unwrap_or(Value::Null);
-    let pane_lod_mode = envelope
-        .runtime
-        .lod_mode_by_pane
-        .get(pane)
-        .map(String::as_str)
-        .unwrap_or(PUZZLE2D_LOD_MODE_AUTOMATIC);
-    let lod = overlay
-        .get("lod")
-        .and_then(|value| value.as_str())
-        .unwrap_or(if pane_lod_mode == PUZZLE2D_LOD_MODE_AUTOMATIC { "auto" } else { pane_lod_mode });
+    let pane_lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).map(String::as_str).unwrap_or(PUZZLE2D_LOD_MODE_AUTOMATIC);
+    let lod = overlay.get("lod").and_then(|value| value.as_str()).unwrap_or(if pane_lod_mode == PUZZLE2D_LOD_MODE_AUTOMATIC { "auto" } else { pane_lod_mode });
     let node_count = fixture_nodes(&envelope.fixture).len();
     let edge_count = fixture_edges(&envelope.fixture).len();
     let control = match envelope.runtime.active_tool.as_str() {
@@ -621,10 +514,7 @@ fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost, pane: 
         }),
         control,
         controls: None,
-        status: Some(vec![WindowEngagementStatus {
-            id: "puzzle2d-board-status".into(),
-            text: format!("{node_count} nodes · {edge_count} edges · LOD {lod}"),
-        }]),
+        status: Some(vec![WindowEngagementStatus { id: "puzzle2d-board-status".into(), text: format!("{node_count} nodes · {edge_count} edges · LOD {lod}") }]),
         options: Some(vec![
             WindowEngagementOption {
                 id: PUZZLE2D_ENGAGEMENT_TOOL_SELECT.into(),
@@ -632,10 +522,7 @@ fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost, pane: 
                 icon_id: Some("cursor".into()),
                 pressed: Some(envelope.runtime.active_tool == "select"),
                 disabled: None,
-                command: Some(puzzle2d_cmd(
-                    "engagementPossibleSelect",
-                    Some(json!({ "pane": pane, "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_SELECT })),
-                )),
+                command: Some(puzzle2d_cmd("engagementPossibleSelect", Some(json!({ "pane": pane, "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_SELECT })))),
             },
             WindowEngagementOption {
                 id: PUZZLE2D_ENGAGEMENT_TOOL_BRUSH.into(),
@@ -643,10 +530,7 @@ fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost, pane: 
                 icon_id: Some("brush".into()),
                 pressed: Some(envelope.runtime.active_tool == "brush"),
                 disabled: None,
-                command: Some(puzzle2d_cmd(
-                    "engagementPossibleSelect",
-                    Some(json!({ "pane": pane, "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_BRUSH })),
-                )),
+                command: Some(puzzle2d_cmd("engagementPossibleSelect", Some(json!({ "pane": pane, "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_BRUSH })))),
             },
             WindowEngagementOption {
                 id: PUZZLE2D_ENGAGEMENT_TOOL_FILL.into(),
@@ -654,10 +538,7 @@ fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost, pane: 
                 icon_id: Some("fill".into()),
                 pressed: Some(envelope.runtime.fill_count > 0 || envelope.runtime.active_tool == "fill"),
                 disabled: None,
-                command: Some(puzzle2d_cmd(
-                    "engagementPossibleSelect",
-                    Some(json!({ "pane": pane, "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_FILL })),
-                )),
+                command: Some(puzzle2d_cmd("engagementPossibleSelect", Some(json!({ "pane": pane, "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_FILL })))),
             },
         ]),
         possible_engagements: None,
@@ -667,39 +548,19 @@ fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost, pane: 
 
 //#region 🔖Canvas
 fn fixture_wires(fixture: &Value) -> &[Value] {
-    fixture
-        .get("wires")
-        .and_then(|value| value.as_array())
-        .map(|values| values.as_slice())
-        .unwrap_or(&[])
+    fixture.get("wires").and_then(|value| value.as_array()).map(|values| values.as_slice()).unwrap_or(&[])
 }
 
 fn fixture_handles(fixture: &Value) -> Vec<Value> {
-    fixture_nodes(fixture)
-        .iter()
-        .flat_map(|node| {
-            node.get("handles")
-                .and_then(|value| value.as_array())
-                .into_iter()
-                .flatten()
-                .cloned()
-        })
-        .collect()
+    fixture_nodes(fixture).iter().flat_map(|node| node.get("handles").and_then(|value| value.as_array()).into_iter().flatten().cloned()).collect()
 }
 
 fn fixture_endpoint_xy(fixture: &Value, endpoint_id: &str) -> Option<(f64, f64)> {
     if let Some((node_id, handle_id)) = endpoint_id.split_once(':') {
-        let node = fixture_nodes(fixture)
-            .iter()
-            .find(|node| node.get("id").and_then(|value| value.as_str()) == Some(node_id))?;
+        let node = fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(node_id))?;
         let cx = node.get("x").and_then(|value| value.as_f64())?;
         let cy = node.get("y").and_then(|value| value.as_f64())?;
-        let handle = node
-            .get("handles")
-            .and_then(|value| value.as_array())
-            .into_iter()
-            .flatten()
-            .find(|handle| handle.get("id").and_then(|value| value.as_str()) == Some(handle_id))?;
+        let handle = node.get("handles").and_then(|value| value.as_array()).into_iter().flatten().find(|handle| handle.get("id").and_then(|value| value.as_str()) == Some(handle_id))?;
         let angle = handle.get("angle").and_then(|value| value.as_f64()).unwrap_or(0.0);
         let point = if node.get("shape").and_then(|value| value.as_str()) == Some("rectangle") {
             let width = node.get("width").and_then(|value| value.as_f64()).unwrap_or(48.0);
@@ -711,97 +572,8 @@ fn fixture_endpoint_xy(fixture: &Value, endpoint_id: &str) -> Option<(f64, f64)>
         };
         return Some((point.x, point.y));
     }
-    let node = fixture_nodes(fixture)
-        .iter()
-        .find(|node| node.get("id").and_then(|value| value.as_str()) == Some(endpoint_id))?;
-    Some((
-        node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0),
-        node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0),
-    ))
-}
-
-fn edge_line_layer(edge: &Value, fixture: &Value) -> Option<Value> {
-    let source = edge.get("source").and_then(|value| value.as_str())?;
-    let target = edge.get("target").and_then(|value| value.as_str())?;
-    let (x0, y0) = fixture_endpoint_xy(fixture, source)?;
-    let (x1, y1) = fixture_endpoint_xy(fixture, target)?;
-    let id = edge
-        .get("id")
-        .and_then(|value| value.as_str())
-        .unwrap_or("edge")
-        .to_string();
-    Some(json!({
-        "id": id,
-        "kind": "line",
-        "name": edge_label(edge, fixture),
-        "x0": x0,
-        "y0": y0,
-        "x1": x1,
-        "y1": y1,
-        "source": source,
-        "target": target,
-    }))
-}
-
-fn node_canvas_layer(node: &Value, selected: &HashSet<&str>) -> Value {
-    let id = node.get("id").and_then(|value| value.as_str()).unwrap_or("node");
-    let label = node_label(node);
-    let x = node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
-    let y = node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);
-    let shape = node.get("shape").and_then(|value| value.as_str()).unwrap_or("circle");
-    let (width, height) = if shape == "rectangle" {
-        (
-            node.get("width").and_then(|value| value.as_f64()).unwrap_or(48.0),
-            node.get("height").and_then(|value| value.as_f64()).unwrap_or(48.0),
-        )
-    } else {
-        let diameter = node.get("radius").and_then(|value| value.as_f64()).unwrap_or(24.0) * 2.0;
-        (diameter, diameter)
-    };
-    json!({
-        "id": id,
-        "kind": shape,
-        "name": label,
-        "x": x - width * 0.5,
-        "y": y - height * 0.5,
-        "width": width,
-        "height": height,
-        "selected": selected.contains(id),
-    })
-}
-
-fn canvas_layers_json(fixture: &Value, selected: &[String]) -> String {
-    let selected: HashSet<&str> = selected.iter().map(String::as_str).collect();
-    let mut layers: Vec<Value> = fixture_nodes(fixture)
-        .iter()
-        .map(|node| node_canvas_layer(node, &selected))
-        .collect();
-    for edge in fixture_edges(fixture) {
-        if let Some(layer) = edge_line_layer(edge, fixture) {
-            layers.push(layer);
-        }
-    }
-    for wire in fixture_wires(fixture) {
-        if let Some(layer) = edge_line_layer(wire, fixture) {
-            layers.push(layer);
-        }
-    }
-    for handle in fixture_handles(fixture) {
-        let id = handle.get("id").and_then(|value| value.as_str()).unwrap_or("handle");
-        let radius = handle.get("radius").and_then(|value| value.as_f64()).unwrap_or(6.0) * 2.0;
-        if let Some((x, y)) = fixture_endpoint_xy(fixture, id) {
-            layers.push(json!({
-                "id": id,
-                "kind": "circle",
-                "name": handle.get("handleKind").and_then(|value| value.as_str()).unwrap_or("handle"),
-                "x": x - radius * 0.5,
-                "y": y - radius * 0.5,
-                "width": radius,
-                "height": radius,
-            }));
-        }
-    }
-    serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
+    let node = fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(endpoint_id))?;
+    Some((node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0), node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0)))
 }
 
 //#region 🔖PaneCamera
@@ -828,10 +600,7 @@ fn puzzle2d_fixture_world_bounds(fixture: &Value) -> (f64, f64, f64) {
             continue;
         };
         let (half_w, half_h) = if node.get("shape").and_then(|value| value.as_str()) == Some("rectangle") {
-            (
-                node.get("width").and_then(|value| value.as_f64()).unwrap_or(48.0) * 0.5,
-                node.get("height").and_then(|value| value.as_f64()).unwrap_or(48.0) * 0.5,
-            )
+            (node.get("width").and_then(|value| value.as_f64()).unwrap_or(48.0) * 0.5, node.get("height").and_then(|value| value.as_f64()).unwrap_or(48.0) * 0.5)
         } else {
             let radius = node.get("radius").and_then(|value| value.as_f64()).unwrap_or(24.0);
             (radius, radius)
@@ -850,12 +619,15 @@ fn puzzle2d_fixture_world_bounds(fixture: &Value) -> (f64, f64, f64) {
 
 /// 📷 Triptych camera for a pane: overview is zoomed out and centered on the fixture, detail zooms into the last-placed node, selection frames a lower-left quadrant — mirrors the pre-migration `puzzle2dPlayTriptychCameraForPane`.
 fn puzzle2d_pane_camera(fixture: &Value, pane: &str) -> (f64, f64, f64) {
+    let (camera_x, camera_y, camera_zoom) = fixture_camera(fixture);
+    if pane == PUZZLE2D_PANE_OVERVIEW {
+        return (camera_x, camera_y, puzzle2d_clamp_zoom(camera_zoom));
+    }
     let (cx, cy, half_span) = puzzle2d_fixture_world_bounds(fixture);
     let usable = PUZZLE2D_VIEWPORT_REF_SHORT_PX * (1.0 - 2.0 * PUZZLE2D_VIEWPORT_MARGIN);
     let world_span = (2.0 * half_span * PUZZLE2D_VIEWPORT_FRAMING_HALF_SPAN_SCALE).max(1.0);
     let base_zoom = puzzle2d_clamp_zoom((usable / world_span) * PUZZLE2D_VIEWPORT_ZOOM_BOOST);
     let zoom = puzzle2d_clamp_zoom(base_zoom * puzzle2d_pane_zoom_scale(pane));
-    let (camera_x, camera_y, _) = fixture_camera(fixture);
     match pane {
         PUZZLE2D_PANE_DETAIL => {
             let nodes = fixture_nodes(fixture);
@@ -880,32 +652,22 @@ fn pane_from_surface_id(surface_id: &str) -> &'static str {
     }
 }
 
-/// 🖱️ Only the overview pane drives the shared `BoardHost` pointer session; detail/selection are camera-framed previews.
-fn puzzle2d_pointer_pane_is_interactive(args: Option<&Value>) -> bool {
-    let surface_id = args.and_then(|value| value.get("surfaceId")).and_then(|value| value.as_str()).unwrap_or(PUZZLE2D_PLAY_BODY_OVERVIEW);
-    pane_from_surface_id(surface_id) == PUZZLE2D_PANE_OVERVIEW
-}
 //#endregion 🔖PaneCamera
 
-fn render_canvas(fixture: &Value, selected: &[String], pane: &str) -> UiNode {
+fn puzzle2d_board_scene(fixture: &Value, selected: &[String], pane: &str) -> Puzzle2dBoardScene {
     let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(fixture, pane);
-    build_canvas_2d_scene(
-        format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}"),
-        PUZZLE2D_PLAY_CONTROLLER_ID,
-        Canvas2dScene {
-            camera_x,
-            camera_y,
-            zoom,
-            layers_json: canvas_layers_json(fixture, selected),
-        },
-    )
+    let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
+    let kind_catalogs_json = fixture.get("meta").and_then(|value| value.get("kindCatalogs")).map(|value| value.to_string()).unwrap_or_else(|| "{}".into());
+    let selection_json = serde_json::to_string(selected).unwrap_or_else(|_| "[]".into());
+    Puzzle2dBoardScene { fixture_json: fixture.to_string(), camera_json, kind_catalogs_json, selection_json, interactive: pane == PUZZLE2D_PANE_OVERVIEW }
+}
+
+fn render_canvas(fixture: &Value, selected: &[String], pane: &str) -> UiNode {
+    build_puzzle2d_board_scene(format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}"), PUZZLE2D_PLAY_CONTROLLER_ID, puzzle2d_board_scene(fixture, selected, pane))
 }
 
 fn force_layout_fixture(fixture: &mut Value) {
-    let Ok(layout_json) = puzzle_2d::apply_force_graph_layout_to_fixture_v1_json(
-        &fixture.to_string(),
-        r#"{"mode":"force-graph"}"#,
-    ) else {
+    let Ok(layout_json) = puzzle_2d::apply_force_graph_layout_to_fixture_v1_json(&fixture.to_string(), r#"{"mode":"force-graph"}"#) else {
         return;
     };
     if let Ok(parsed) = serde_json::from_str(&layout_json) {
@@ -952,27 +714,14 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
 }
 
 fn node_label(node: &Value) -> String {
-    node.get("text")
-        .and_then(|value| value.as_str())
-        .filter(|value| !value.is_empty())
-        .or_else(|| node.get("id").and_then(|value| value.as_str()))
-        .unwrap_or("node")
-        .into()
+    node.get("text").and_then(|value| value.as_str()).filter(|value| !value.is_empty()).or_else(|| node.get("id").and_then(|value| value.as_str())).unwrap_or("node").into()
 }
 
 fn edge_label(edge: &Value, fixture: &Value) -> String {
     let source = edge.get("source").and_then(|value| value.as_str()).unwrap_or("?");
     let target = edge.get("target").and_then(|value| value.as_str()).unwrap_or("?");
-    let source_label = fixture_nodes(fixture)
-        .iter()
-        .find(|node| node.get("id").and_then(|value| value.as_str()) == Some(source))
-        .map(node_label)
-        .unwrap_or_else(|| source.into());
-    let target_label = fixture_nodes(fixture)
-        .iter()
-        .find(|node| node.get("id").and_then(|value| value.as_str()) == Some(target))
-        .map(node_label)
-        .unwrap_or_else(|| target.into());
+    let source_label = fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(source)).map(node_label).unwrap_or_else(|| source.into());
+    let target_label = fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(target)).map(node_label).unwrap_or_else(|| target.into());
     format!("{source_label} → {target_label}")
 }
 
@@ -980,16 +729,10 @@ fn document_tree_selected_ids(fixture: &Value, selected: &[String]) -> Vec<Strin
     selected
         .iter()
         .filter_map(|id| {
-            if fixture_nodes(fixture)
-                .iter()
-                .any(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))
-            {
+            if fixture_nodes(fixture).iter().any(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str())) {
                 return Some(format!("puzzle2d-play-document.node.{id}"));
             }
-            if fixture_edges(fixture)
-                .iter()
-                .any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))
-            {
+            if fixture_edges(fixture).iter().any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(id.as_str())) {
                 return Some(format!("puzzle2d-play-document.edge.{id}"));
             }
             None
@@ -1003,24 +746,14 @@ fn render_document_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
         .iter()
         .filter_map(|node| {
             let id = node.get("id")?.as_str()?;
-            Some(tree_item_with_command(
-                format!("puzzle2d-play-document.node.{id}"),
-                node_label(node),
-                node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string),
-                puzzle2d_cmd("setSelection", Some(json!({ "ids": [id] }))),
-            ))
+            Some(tree_item_with_command(format!("puzzle2d-play-document.node.{id}"), node_label(node), node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string), puzzle2d_cmd("setSelection", Some(json!({ "ids": [id] })))))
         })
         .collect();
     let edge_items: Vec<UiTreeItemNode> = fixture_edges(fixture)
         .iter()
         .filter_map(|edge| {
             let id = edge.get("id")?.as_str()?;
-            Some(tree_item_with_command(
-                format!("puzzle2d-play-document.edge.{id}"),
-                edge_label(edge, fixture),
-                edge.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string),
-                puzzle2d_cmd("setSelection", Some(json!({ "ids": [id] }))),
-            ))
+            Some(tree_item_with_command(format!("puzzle2d-play-document.edge.{id}"), edge_label(edge, fixture), edge.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string), puzzle2d_cmd("setSelection", Some(json!({ "ids": [id] })))))
         })
         .collect();
     UiNode::Tree(UiTreeNode {
@@ -1064,9 +797,9 @@ fn render_document_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
                         selected: None,
                         default_open: None,
                         command: None,
-        hover_command: None,
-        unhover_command: None,
-        actions: None,
+                        hover_command: None,
+                        unhover_command: None,
+                        actions: None,
                         draggable: None,
                         drag_data: None,
                         items: None,
@@ -1087,13 +820,7 @@ fn render_document_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
 
 //#region 🔖CataloguePanel
 fn catalog_kind_label(entry: &Value) -> String {
-    entry
-        .get("name")
-        .and_then(|value| value.as_str())
-        .filter(|value| !value.is_empty())
-        .or_else(|| entry.get("id").and_then(|value| value.as_str()))
-        .unwrap_or("kind")
-        .into()
+    entry.get("name").and_then(|value| value.as_str()).filter(|value| !value.is_empty()).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
 
 fn inferred_kind_entries(fixture: &Value, field: &str) -> Vec<Value> {
@@ -1126,9 +853,7 @@ fn inferred_kind_entries(fixture: &Value, field: &str) -> Vec<Value> {
         }
         _ => {}
     }
-    ids.into_iter()
-        .map(|id| json!({ "id": id, "name": id }))
-        .collect()
+    ids.into_iter().map(|id| json!({ "id": id, "name": id })).collect()
 }
 
 fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value]) -> UiTreeSectionNode {
@@ -1169,9 +894,9 @@ fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value]) -> UiT
                 selected: None,
                 default_open: None,
                 command: None,
-        hover_command: None,
-        unhover_command: None,
-        actions: None,
+                hover_command: None,
+                unhover_command: None,
+                actions: None,
                 draggable: None,
                 drag_data: None,
                 items: None,
@@ -1206,16 +931,7 @@ fn render_catalogue_panel(fixture: &Value) -> UiNode {
 
 //#region 🔖InspectorPanel
 fn render_properties_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
-    let selected_nodes: Vec<&Value> = envelope
-        .runtime
-        .selected_ids
-        .iter()
-        .filter_map(|id| {
-            fixture_nodes(&envelope.fixture)
-                .iter()
-                .find(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))
-        })
-        .collect();
+    let selected_nodes: Vec<&Value> = envelope.runtime.selected_ids.iter().filter_map(|id| fixture_nodes(&envelope.fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))).collect();
     if selected_nodes.is_empty() {
         return ui_stack_vertical(vec![
             ui_text(format!("Schema: {PUZZLE2D_FIXTURE_SCHEMA}")),
@@ -1226,49 +942,17 @@ fn render_properties_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
     }
     let node = selected_nodes[0];
     ui_stack_vertical(vec![
-        ui_inspector_readonly_field(
-            "puzzle2d-play-inspector.id",
-            "Id",
-            node.get("id")
-                .and_then(|value| value.as_str())
-                .unwrap_or("")
-                .to_string(),
-        ),
-        ui_inspector_readonly_field(
-            "puzzle2d-play-inspector.node-kind",
-            "Node Kind",
-            node.get("nodeKind")
-                .and_then(|value| value.as_str())
-                .unwrap_or("—")
-                .to_string(),
-        ),
-        ui_inspector_readonly_field(
-            "puzzle2d-play-inspector.x",
-            "X",
-            node.get("x")
-                .and_then(|value| value.as_f64())
-                .map(|value| value.to_string())
-                .unwrap_or_else(|| "—".into()),
-        ),
-        ui_inspector_readonly_field(
-            "puzzle2d-play-inspector.y",
-            "Y",
-            node.get("y")
-                .and_then(|value| value.as_f64())
-                .map(|value| value.to_string())
-                .unwrap_or_else(|| "—".into()),
-        ),
+        ui_inspector_readonly_field("puzzle2d-play-inspector.id", "Id", node.get("id").and_then(|value| value.as_str()).unwrap_or("").to_string()),
+        ui_inspector_readonly_field("puzzle2d-play-inspector.node-kind", "Node Kind", node.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("—").to_string()),
+        ui_inspector_readonly_field("puzzle2d-play-inspector.x", "X", node.get("x").and_then(|value| value.as_f64()).map(|value| value.to_string()).unwrap_or_else(|| "—".into())),
+        ui_inspector_readonly_field("puzzle2d-play-inspector.y", "Y", node.get("y").and_then(|value| value.as_f64()).map(|value| value.to_string()).unwrap_or_else(|| "—".into())),
     ])
 }
 //#endregion 🔖InspectorPanel
 
 //#region 🔖Measures
 fn puzzle2d_lod_tier_ids() -> Vec<String> {
-    serde_json::from_str::<Vec<Value>>(&puzzle_2d_lod_scale_json())
-        .unwrap_or_default()
-        .into_iter()
-        .filter_map(|row| row.get("id").and_then(|value| value.as_str()).map(str::to_string))
-        .collect()
+    serde_json::from_str::<Vec<Value>>(&puzzle_2d_lod_scale_json()).unwrap_or_default().into_iter().filter_map(|row| row.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect()
 }
 
 fn puzzle2d_kind_ids(fixture: &Value, field: &str) -> Vec<String> {
@@ -1279,23 +963,9 @@ fn puzzle2d_kind_ids(fixture: &Value, field: &str) -> Vec<String> {
 
 /// 📶 Per-pane LOD select measure: "Automatic" plus every scale tier (minimap…micro), persisted via `setLodModeForPane`.
 fn puzzle2d_lod_measure(pane: &str, current_mode: &str) -> WindowMeasure {
-    let mut items = vec![MeasureSelectItem {
-        id: PUZZLE2D_LOD_MODE_AUTOMATIC.into(),
-        value: PUZZLE2D_LOD_MODE_AUTOMATIC.into(),
-        label: "Automatic".into(),
-    }];
-    items.extend(puzzle2d_lod_tier_ids().into_iter().map(|tier| MeasureSelectItem {
-        id: tier.clone(),
-        value: tier.clone(),
-        label: tier,
-    }));
-    WindowMeasure::Select {
-        id: format!("{pane}-lod"),
-        label: Some("LOD".into()),
-        value: current_mode.into(),
-        items,
-        on_change: puzzle2d_cmd("setLodModeForPane", Some(json!({ "pane": pane }))),
-    }
+    let mut items = vec![MeasureSelectItem { id: PUZZLE2D_LOD_MODE_AUTOMATIC.into(), value: PUZZLE2D_LOD_MODE_AUTOMATIC.into(), label: "Automatic".into() }];
+    items.extend(puzzle2d_lod_tier_ids().into_iter().map(|tier| MeasureSelectItem { id: tier.clone(), value: tier.clone(), label: tier }));
+    WindowMeasure::Select { id: format!("{pane}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: puzzle2d_cmd("setLodModeForPane", Some(json!({ "pane": pane }))) }
 }
 
 fn puzzle2d_kind_weight_measures(prefix: &str, ids: &[String], weights: &BTreeMap<String, f64>, catalog_slice: &str) -> Vec<WindowMeasure> {
@@ -1362,9 +1032,7 @@ pub struct Puzzle2dPlayApp {
 
 impl Default for Puzzle2dPlayApp {
     fn default() -> Self {
-        Self {
-            host: puzzle_board_host(),
-        }
+        Self { host: puzzle_board_host() }
     }
 }
 
@@ -1377,13 +1045,7 @@ impl PluginApp for Puzzle2dPlayApp {
         serde_json::to_string(&default_envelope()).expect("puzzle2d envelope json")
     }
 
-    fn handle_command_patch_ops(
-        &mut self,
-        command: &str,
-        args: Option<&Value>,
-        document_json: &str,
-        _view_state: &ViewState,
-    ) -> Vec<String> {
+    fn handle_command_patch_ops(&mut self, command: &str, args: Option<&Value>, document_json: &str, _view_state: &ViewState) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
         sync_host_from_envelope(&mut self.host, &envelope);
         let ops = match command {
@@ -1413,11 +1075,7 @@ impl PluginApp for Puzzle2dPlayApp {
             }
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
-                    if let (Some(x), Some(y), Some(zoom)) = (
-                        camera.get("x").and_then(|value| value.as_f64()),
-                        camera.get("y").and_then(|value| value.as_f64()),
-                        camera.get("zoom").and_then(|value| value.as_f64()),
-                    ) {
+                    if let (Some(x), Some(y), Some(zoom)) = (camera.get("x").and_then(|value| value.as_f64()), camera.get("y").and_then(|value| value.as_f64()), camera.get("zoom").and_then(|value| value.as_f64())) {
                         self.host.set_camera(x, y, zoom);
                     }
                     set_fixture_camera(&mut envelope.fixture, camera);
@@ -1427,10 +1085,7 @@ impl PluginApp for Puzzle2dPlayApp {
                 }
             }
             "setActiveExample" => {
-                let example_id = args
-                    .and_then(|value| value.get("exampleId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
+                let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
                 envelope.fixture = if example_id.is_empty() || example_id == "empty" {
                     default_empty_fixture()
                 } else if example_id == PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID || example_id == "concrete" {
@@ -1453,10 +1108,7 @@ impl PluginApp for Puzzle2dPlayApp {
                 }
             }
             "engagementPossibleSelect" => {
-                let possible_id = args
-                    .and_then(|value| value.get("possibleId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
+                let possible_id = args.and_then(|value| value.get("possibleId")).and_then(|value| value.as_str()).unwrap_or("");
                 let pane = args.and_then(|value| value.get("pane")).and_then(|value| value.as_str()).unwrap_or(PUZZLE2D_PANE_OVERVIEW);
                 envelope.runtime.active_tool = match possible_id {
                     PUZZLE2D_ENGAGEMENT_TOOL_BRUSH => "brush",
@@ -1482,12 +1134,7 @@ impl PluginApp for Puzzle2dPlayApp {
             }
             "engagementSubmit" => {
                 let pane = args.and_then(|value| value.get("pane")).and_then(|value| value.as_str()).unwrap_or(PUZZLE2D_PANE_OVERVIEW).to_string();
-                let value = args
-                    .and_then(|value| value.get("value"))
-                    .and_then(|value| value.as_str())
-                    .map(str::trim)
-                    .unwrap_or("")
-                    .to_lowercase();
+                let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).map(str::trim).unwrap_or("").to_lowercase();
                 let applied = match value.as_str() {
                     "select" => {
                         envelope.runtime.active_tool = "select".into();
@@ -1538,10 +1185,7 @@ impl PluginApp for Puzzle2dPlayApp {
                 vec![set_document_op(&envelope)]
             }
             "engagementControlSelect" => {
-                let candidate_id = args
-                    .and_then(|value| value.get("id").or_else(|| value.get("value")))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
+                let candidate_id = args.and_then(|value| value.get("id").or_else(|| value.get("value"))).and_then(|value| value.as_str()).unwrap_or("");
                 if let Some(index) = candidate_id.strip_prefix("puzzle2d.brush.candidate.").and_then(|rest| rest.parse::<usize>().ok()) {
                     self.host.brush_set_candidate_index(index);
                     envelope.runtime.brush_candidate_index = index;
@@ -1569,10 +1213,7 @@ impl PluginApp for Puzzle2dPlayApp {
                 }
             }
             "setGridSnapEnabled" => {
-                let enabled = args
-                    .and_then(|value| value.get("enabled"))
-                    .and_then(|value| value.as_bool())
-                    .unwrap_or(false);
+                let enabled = args.and_then(|value| value.get("enabled")).and_then(|value| value.as_bool()).unwrap_or(false);
                 envelope.runtime.grid_snap_enabled = enabled;
                 self.host.set_grid_snap_enabled(enabled);
                 vec![set_document_op(&envelope)]
@@ -1587,10 +1228,7 @@ impl PluginApp for Puzzle2dPlayApp {
                 }
             }
             "setSelectionMethod" => {
-                let method = args
-                    .and_then(|value| value.get("method"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("rectangle");
+                let method = args.and_then(|value| value.get("method")).and_then(|value| value.as_str()).unwrap_or("rectangle");
                 envelope.runtime.selection_method = method.into();
                 self.host.set_selection_options(method, "replace", true, true, true);
                 vec![set_document_op(&envelope)]
@@ -1634,10 +1272,7 @@ impl PluginApp for Puzzle2dPlayApp {
                 }
             }
             "brushCycleCandidate" => {
-                let forward = args
-                    .and_then(|value| value.get("forward"))
-                    .and_then(|value| value.as_bool())
-                    .unwrap_or(true);
+                let forward = args.and_then(|value| value.get("forward")).and_then(|value| value.as_bool()).unwrap_or(true);
                 self.host.brush_cycle_candidate(forward);
                 envelope.runtime.brush_candidate_index = envelope.runtime.brush_candidate_index.saturating_add(1);
                 vec![set_document_op(&envelope)]
@@ -1667,11 +1302,7 @@ impl PluginApp for Puzzle2dPlayApp {
                 Vec::new()
             }
             "setFillCount" => {
-                let count = args
-                    .and_then(|value| value.get("count").or_else(|| value.get("value")))
-                    .and_then(|value| value.as_u64())
-                    .unwrap_or(0)
-                    .min(u64::from(PUZZLE2D_FILL_COUNT_MAX)) as u32;
+                let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_u64()).unwrap_or(0).min(u64::from(PUZZLE2D_FILL_COUNT_MAX)) as u32;
                 envelope.runtime.fill_count = count;
                 envelope.runtime.active_tool = "fill".into();
                 self.host.set_active_tool("brush");
@@ -1687,22 +1318,13 @@ impl PluginApp for Puzzle2dPlayApp {
                 vec![set_document_op(&envelope)]
             }
             "brushFillSessionBegin" => {
-                let max_count = args
-                    .and_then(|value| value.get("maxCount"))
-                    .and_then(|value| value.as_u64())
-                    .unwrap_or(0) as u32;
-                let seed = args
-                    .and_then(|value| value.get("seed"))
-                    .and_then(|value| value.as_u64())
-                    .unwrap_or(1) as u32;
+                let max_count = args.and_then(|value| value.get("maxCount")).and_then(|value| value.as_u64()).unwrap_or(0) as u32;
+                let seed = args.and_then(|value| value.get("seed")).and_then(|value| value.as_u64()).unwrap_or(1) as u32;
                 self.host.brush_fill_session_begin(max_count, u64::from(seed));
                 Vec::new()
             }
             "brushFillSessionStep" => {
-                let budget = args
-                    .and_then(|value| value.get("chunkBudget"))
-                    .and_then(|value| value.as_u64())
-                    .unwrap_or(8) as u32;
+                let budget = args.and_then(|value| value.get("chunkBudget")).and_then(|value| value.as_u64()).unwrap_or(8) as u32;
                 let step = self.host.brush_fill_session_step(budget);
                 if let Ok(progress) = serde_json::from_str::<Value>(&step) {
                     if let Some(placements) = progress.get("placements").and_then(|value| value.as_array()) {
@@ -1719,10 +1341,7 @@ impl PluginApp for Puzzle2dPlayApp {
                 vec![set_document_op(&envelope)]
             }
             "patchInspectorNodes" => {
-                let ids: Vec<String> = args
-                    .and_then(|value| value.get("ids"))
-                    .and_then(|value| serde_json::from_value(value.clone()).ok())
-                    .unwrap_or_else(|| envelope.runtime.selected_ids.clone());
+                let ids: Vec<String> = args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_else(|| envelope.runtime.selected_ids.clone());
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
                 let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
                 if !field.is_empty() {
@@ -1745,10 +1364,7 @@ impl PluginApp for Puzzle2dPlayApp {
                 vec![set_document_op(&envelope)]
             }
             "selectAll" => {
-                let ids: Vec<String> = fixture_nodes(&envelope.fixture)
-                    .iter()
-                    .filter_map(|node| node.get("id").and_then(|value| value.as_str()).map(str::to_string))
-                    .collect();
+                let ids: Vec<String> = fixture_nodes(&envelope.fixture).iter().filter_map(|node| node.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect();
                 envelope.runtime.selected_ids = ids.clone();
                 self.host.set_selection_ids(&ids);
                 vec![set_document_op(&envelope)]
@@ -1788,11 +1404,7 @@ impl PluginApp for Puzzle2dPlayApp {
                             "zoom": 1.0,
                         });
                         set_fixture_camera(&mut envelope.fixture, &camera);
-                        if let (Some(x), Some(y), Some(zoom)) = (
-                            camera.get("x").and_then(|value| value.as_f64()),
-                            camera.get("y").and_then(|value| value.as_f64()),
-                            camera.get("zoom").and_then(|value| value.as_f64()),
-                        ) {
+                        if let (Some(x), Some(y), Some(zoom)) = (camera.get("x").and_then(|value| value.as_f64()), camera.get("y").and_then(|value| value.as_f64()), camera.get("zoom").and_then(|value| value.as_f64())) {
                             self.host.set_camera(x, y, zoom);
                         }
                         vec![set_document_op(&envelope)]
@@ -1801,40 +1413,13 @@ impl PluginApp for Puzzle2dPlayApp {
                     }
                 }
             }
-            "canvasPointerDown" if puzzle2d_pointer_pane_is_interactive(args) => {
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let button = args.and_then(|value| value.get("button")).and_then(|value| value.as_u64()).unwrap_or(0) as u8;
-                let extend = args.and_then(|value| value.get("extend")).and_then(|value| value.as_bool()).unwrap_or(false);
-                self.host.pointer_down_screen(x, y, button, extend, false);
-                apply_host_events(&mut self.host, &mut envelope);
-                vec![set_document_op(&envelope)]
-            }
-            "canvasPointerMove" if puzzle2d_pointer_pane_is_interactive(args) => {
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let shift = args.and_then(|value| value.get("shift")).and_then(|value| value.as_bool()).unwrap_or(false);
-                let alt = args.and_then(|value| value.get("alt")).and_then(|value| value.as_bool()).unwrap_or(false);
-                self.host.pointer_move_screen(x, y, shift, false, alt);
-                apply_host_events(&mut self.host, &mut envelope);
-                vec![set_document_op(&envelope)]
-            }
-            "canvasPointerUp" if puzzle2d_pointer_pane_is_interactive(args) => {
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let shift = args.and_then(|value| value.get("shift")).and_then(|value| value.as_bool()).unwrap_or(false);
-                let alt = args.and_then(|value| value.get("alt")).and_then(|value| value.as_bool()).unwrap_or(false);
-                self.host.pointer_up_screen(x, y, shift, false, alt);
-                apply_host_events(&mut self.host, &mut envelope);
-                vec![set_document_op(&envelope)]
-            }
-            "canvasWheel" if puzzle2d_pointer_pane_is_interactive(args) => {
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(512.0);
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(384.0);
-                let delta = args.and_then(|value| value.get("deltaY")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                self.host.wheel_screen(x, y, delta);
-                apply_host_events(&mut self.host, &mut envelope);
-                vec![set_document_op(&envelope)]
+            "applyBoardEvents" => {
+                if let Some(events_json) = args.and_then(|value| value.get("eventsJson")).and_then(|value| value.as_str()) {
+                    apply_board_events_from_json(events_json, &mut envelope);
+                    vec![set_document_op(&envelope)]
+                } else {
+                    Vec::new()
+                }
             }
             "lodScaleJson" => {
                 let _ = puzzle_2d_lod_scale_json();
@@ -1864,18 +1449,12 @@ impl PluginApp for Puzzle2dPlayApp {
 
     fn window_engagements(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let envelope = parse_envelope(document_json);
-        PUZZLE2D_PANES
-            .iter()
-            .map(|pane| (pane.to_string(), puzzle2d_engagement(&envelope, &self.host, pane)))
-            .collect()
+        PUZZLE2D_PANES.iter().map(|pane| (pane.to_string(), puzzle2d_engagement(&envelope, &self.host, pane))).collect()
     }
 
     fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let envelope = parse_envelope(document_json);
-        PUZZLE2D_PANES
-            .iter()
-            .map(|pane| (pane.to_string(), puzzle2d_window_measures(pane, &envelope)))
-            .collect()
+        PUZZLE2D_PANES.iter().map(|pane| (pane.to_string(), puzzle2d_window_measures(pane, &envelope))).collect()
     }
 }
 //#endregion 🔖Puzzle2dPlayApp
@@ -1886,25 +1465,18 @@ pub fn create_puzzle2d_app() -> App {
     let envelope = default_envelope();
     sync_host_from_envelope(&mut host, &envelope);
     let mut app = App::from_builder(
-        App::builder(PUZZLE2D_PLAY_APP_ID, "Puzzle 2D").document(["semio", "puzzle", "2d"])
+        App::builder(PUZZLE2D_PLAY_APP_ID, "Puzzle 2D")
+            .document(["semio", "puzzle", "2d"])
             .icon_id("puzzle2d")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind_with_engagement(PUZZLE2D_PANE_OVERVIEW, "Overview", PUZZLE2D_PLAY_BODY_OVERVIEW, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_OVERVIEW),
-            )
-            .window_kind_with_engagement(PUZZLE2D_PANE_DETAIL, "Detail", PUZZLE2D_PLAY_BODY_DETAIL, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_DETAIL),
-            )
-            .window_kind_with_engagement(PUZZLE2D_PANE_SELECTION, "Selection", PUZZLE2D_PLAY_BODY_SELECTION, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_SELECTION),
-            )
+            .window_kind_with_engagement(PUZZLE2D_PANE_OVERVIEW, "Overview", PUZZLE2D_PLAY_BODY_OVERVIEW, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_OVERVIEW))
+            .window_kind_with_engagement(PUZZLE2D_PANE_DETAIL, "Detail", PUZZLE2D_PLAY_BODY_DETAIL, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_DETAIL))
+            .window_kind_with_engagement(PUZZLE2D_PANE_SELECTION, "Selection", PUZZLE2D_PLAY_BODY_SELECTION, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_SELECTION))
             .panel_tab("framework.panel.document", FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE2D_PLAY_BODY_LAYERS)
             .panel_tab("framework.panel.catalogue", FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE2D_PLAY_BODY_CATALOGUE)
             .panel_tab("framework.panel.inspection", FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE2D_PLAY_BODY_PROPERTIES)
-            .default_layout(create_default_layout(
-                &[PUZZLE2D_PANE_OVERVIEW.into(), PUZZLE2D_PANE_DETAIL.into(), PUZZLE2D_PANE_SELECTION.into()],
-                "row",
-                Some(&[50.0, 25.0, 25.0]),
-                Some(&["Overview".into(), "Detail".into(), "Selection".into()]),
-            )),
+            .default_layout(create_default_layout(&[PUZZLE2D_PANE_OVERVIEW.into(), PUZZLE2D_PANE_DETAIL.into(), PUZZLE2D_PANE_SELECTION.into()], "row", Some(&[50.0, 25.0, 25.0]), Some(&["Overview".into(), "Detail".into(), "Selection".into()]))),
     );
     for pane in PUZZLE2D_PANES {
         if let Some(window) = app.definition.window_kinds.iter_mut().find(|window| window.id == pane) {
@@ -1912,25 +1484,17 @@ pub fn create_puzzle2d_app() -> App {
         }
     }
     app.example("empty", "Empty", serde_json::to_string(&default_envelope()).unwrap())
-    .example(
-        PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID,
-        "Concrete Forest",
-        serde_json::to_string(&Puzzle2dPlayEnvelope {
-            fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap_or_else(|_| default_empty_fixture()),
-            runtime: Puzzle2dPlayRuntime::default(),
-        })
-        .unwrap(),
-    )
-    .example(
-        PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID,
-        "Nakagin Capsule Tower",
-        serde_json::to_string(&Puzzle2dPlayEnvelope {
-            fixture: serde_json::from_str(NAKAGIN_EXAMPLE_JSON).unwrap_or_else(|_| default_empty_fixture()),
-            runtime: Puzzle2dPlayRuntime::default(),
-        })
-        .unwrap(),
-    )
-    .program("puzzle2d", "Puzzle 2D", "layout")
+        .example(
+            PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID,
+            "Concrete Forest",
+            serde_json::to_string(&Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap_or_else(|_| default_empty_fixture()), runtime: Puzzle2dPlayRuntime::default() }).unwrap(),
+        )
+        .example(
+            PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID,
+            "Nakagin Capsule Tower",
+            serde_json::to_string(&Puzzle2dPlayEnvelope { fixture: serde_json::from_str(NAKAGIN_EXAMPLE_JSON).unwrap_or_else(|_| default_empty_fixture()), runtime: Puzzle2dPlayRuntime::default() }).unwrap(),
+        )
+        .program("puzzle2d", "Puzzle 2D", "layout")
 }
 
 fn puzzle2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
@@ -1949,12 +1513,12 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn renders_canvas_scene() {
+    fn renders_puzzle2d_board_scene() {
         let app = Puzzle2dPlayApp::default();
         let document = app.initial_document_json();
         let node = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("canvas-2d"));
+        assert!(json.contains("puzzle2d-board"));
     }
 
     #[test]
@@ -1971,21 +1535,21 @@ mod tests {
     #[test]
     fn renders_distinct_canvas_per_pane() {
         let app = Puzzle2dPlayApp::default();
-        let envelope = Puzzle2dPlayEnvelope {
-            fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(),
-            runtime: Puzzle2dPlayRuntime::default(),
-        };
+        let envelope = Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(), runtime: Puzzle2dPlayRuntime::default() };
         let document = serde_json::to_string(&envelope).unwrap();
-        let overview_zoom = canvas_scene_zoom(&app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, &document, &ViewState::default()));
-        let detail_zoom = canvas_scene_zoom(&app.render(PUZZLE2D_PLAY_BODY_DETAIL, &document, &ViewState::default()));
-        let selection_zoom = canvas_scene_zoom(&app.render(PUZZLE2D_PLAY_BODY_SELECTION, &document, &ViewState::default()));
+        let overview_zoom = board_scene_zoom(&app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, &document, &ViewState::default()));
+        let detail_zoom = board_scene_zoom(&app.render(PUZZLE2D_PLAY_BODY_DETAIL, &document, &ViewState::default()));
+        let selection_zoom = board_scene_zoom(&app.render(PUZZLE2D_PLAY_BODY_SELECTION, &document, &ViewState::default()));
         assert!(detail_zoom > overview_zoom, "detail {detail_zoom} should zoom in past overview {overview_zoom}");
         assert!(overview_zoom > selection_zoom, "overview {overview_zoom} should zoom in past selection {selection_zoom}");
     }
 
-    fn canvas_scene_zoom(node: &UiNode) -> f64 {
+    fn board_scene_zoom(node: &UiNode) -> f64 {
         match node {
-            UiNode::ComponentScene(scene) => scene.canvas_2d.as_ref().expect("canvas2d scene").zoom,
+            UiNode::ComponentScene(scene) => {
+                let camera_json = scene.puzzle2d_board.as_ref().expect("puzzle2d board scene").camera_json.clone();
+                serde_json::from_str::<Value>(&camera_json).ok().and_then(|value| value.get("zoom").and_then(|zoom| zoom.as_f64())).unwrap_or(1.0)
+            }
             other => panic!("expected component scene, got {other:?}"),
         }
     }
@@ -1994,12 +1558,7 @@ mod tests {
     fn set_lod_mode_for_pane_persists_per_pane_state() {
         let mut app = Puzzle2dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
-            "setLodModeForPane",
-            Some(&json!({ "pane": PUZZLE2D_PANE_DETAIL, "value": "compact" })),
-            &document,
-            &ViewState::default(),
-        );
+        let ops = app.handle_command_patch_ops("setLodModeForPane", Some(&json!({ "pane": PUZZLE2D_PANE_DETAIL, "value": "compact" })), &document, &ViewState::default());
         let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
         assert_eq!(envelope.runtime.lod_mode_by_pane.get(PUZZLE2D_PANE_DETAIL).map(String::as_str), Some("compact"));
         assert_eq!(envelope.runtime.lod_mode_by_pane.get(PUZZLE2D_PANE_OVERVIEW).map(String::as_str), Some(PUZZLE2D_LOD_MODE_AUTOMATIC));
@@ -2009,21 +1568,11 @@ mod tests {
     fn engagement_input_and_submit_round_trip_sets_active_tool() {
         let mut app = Puzzle2dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
-            "engagementInput",
-            Some(&json!({ "pane": PUZZLE2D_PANE_OVERVIEW, "value": "brush" })),
-            &document,
-            &ViewState::default(),
-        );
+        let ops = app.handle_command_patch_ops("engagementInput", Some(&json!({ "pane": PUZZLE2D_PANE_OVERVIEW, "value": "brush" })), &document, &ViewState::default());
         let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
         assert_eq!(envelope.runtime.engagement_input_by_pane.get(PUZZLE2D_PANE_OVERVIEW).map(String::as_str), Some("brush"));
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops(
-            "engagementSubmit",
-            Some(&json!({ "pane": PUZZLE2D_PANE_OVERVIEW, "value": "brush" })),
-            &document,
-            &ViewState::default(),
-        );
+        let ops = app.handle_command_patch_ops("engagementSubmit", Some(&json!({ "pane": PUZZLE2D_PANE_OVERVIEW, "value": "brush" })), &document, &ViewState::default());
         let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
         assert_eq!(envelope.runtime.active_tool, "brush");
         assert_eq!(envelope.runtime.engagement_input_by_pane.get(PUZZLE2D_PANE_OVERVIEW).map(String::as_str), Some(""));
@@ -2058,12 +1607,7 @@ mod tests {
         assert_eq!(envelope.runtime.suggestion_offset, 40.0);
 
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops(
-            "setBrushKindWeights",
-            Some(&json!({ "kindId": "heavy", "catalogSlice": "nodes", "value": 0.75 })),
-            &document,
-            &ViewState::default(),
-        );
+        let ops = app.handle_command_patch_ops("setBrushKindWeights", Some(&json!({ "kindId": "heavy", "catalogSlice": "nodes", "value": 0.75 })), &document, &ViewState::default());
         let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
         assert_eq!(envelope.runtime.node_kind_weights.get("heavy").copied(), Some(0.75));
     }
@@ -2071,10 +1615,7 @@ mod tests {
     #[test]
     fn document_panel_lists_nodes_section() {
         let app = Puzzle2dPlayApp::default();
-        let envelope = Puzzle2dPlayEnvelope {
-            fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(),
-            runtime: Puzzle2dPlayRuntime::default(),
-        };
+        let envelope = Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(), runtime: Puzzle2dPlayRuntime::default() };
         let document = serde_json::to_string(&envelope).unwrap();
         let node = app.render(PUZZLE2D_PLAY_BODY_LAYERS, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
@@ -2090,6 +1631,49 @@ mod tests {
         assert_eq!(ops.len(), 1);
         let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
         assert_eq!(envelope.fixture.get("nodes").and_then(|value| value.as_array()).map(|values| values.len()), Some(1));
+    }
+
+    #[test]
+    fn apply_board_events_selects_node_from_client_session() {
+        let mut app = Puzzle2dPlayApp::default();
+        let envelope = Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(), runtime: Puzzle2dPlayRuntime::default() };
+        let document = serde_json::to_string(&envelope).unwrap();
+        let events_json = serde_json::json!([{
+            "name": "select",
+            "payload": { "ids": ["seed-left-001"] }
+        }])
+        .to_string();
+        let ops = app.handle_command_patch_ops("applyBoardEvents", Some(&json!({ "eventsJson": events_json })), &document, &ViewState::default());
+        let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
+        assert!(envelope.runtime.selected_ids.iter().any(|id| id == "seed-left-001"), "expected seed-left-001 selected, got {:?}", envelope.runtime.selected_ids);
+    }
+
+    #[test]
+    fn apply_board_events_camera_round_trips_to_overview_scene() {
+        let mut app = Puzzle2dPlayApp::default();
+        let envelope = Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(), runtime: Puzzle2dPlayRuntime::default() };
+        let document = serde_json::to_string(&envelope).unwrap();
+        let camera = json!({ "x": 345.0, "y": -123.0, "zoom": 4.25 });
+        let events_json = serde_json::json!([{
+            "name": "camera",
+            "payload": camera
+        }])
+        .to_string();
+        let ops = app.handle_command_patch_ops("applyBoardEvents", Some(&json!({ "eventsJson": events_json })), &document, &ViewState::default());
+        let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
+        let node = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
+        let scene_camera = board_scene_camera(&node);
+        assert_eq!(scene_camera, camera);
+    }
+
+    fn board_scene_camera(node: &UiNode) -> Value {
+        match node {
+            UiNode::ComponentScene(scene) => {
+                let camera_json = scene.puzzle2d_board.as_ref().expect("puzzle2d board scene").camera_json.clone();
+                serde_json::from_str::<Value>(&camera_json).expect("camera json")
+            }
+            other => panic!("expected component scene, got {other:?}"),
+        }
     }
 
     fn apply_document_op(document_json: &str, op_json: &str) -> Puzzle2dPlayEnvelope {

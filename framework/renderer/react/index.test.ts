@@ -1,8 +1,9 @@
 import { createElement, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { Canvas2dHost } from "./components/canvas-2d-host.tsx";
-import { NodeGraphHost } from "./components/node-graph-host.tsx";
+import { Canvas2dHost, worldToScreenLogical } from "./components/canvas-2d-host.tsx";
+import { Puzzle2dBoardHost } from "./components/puzzle-2d-board-host.tsx";
+import { NodeGraphHost, nodeGraphViewportCommandArgs } from "./components/node-graph-host.tsx";
 import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
 import { TextEditorHost } from "./components/text-editor-host.tsx";
@@ -187,6 +188,12 @@ describe("framework renderer hosts", () => {
 		expect(markup).toContain("semio-node-graph-host");
 	});
 
+	it("uses the live session camera for node graph wheel viewport commands", () => {
+		expect(nodeGraphViewportCommandArgs('{"x":12,"y":24,"zoom":1.75}')).toEqual({
+			viewportJson: '{"x":12,"y":24,"zoom":1.75}',
+		});
+	});
+
 	it("renders canvas 2d host with infinite canvas session", () => {
 		const markup = renderToStaticMarkup(
 			createElement(Canvas2dHost, {
@@ -206,6 +213,52 @@ describe("framework renderer hosts", () => {
 			}),
 		);
 		expect(markup).toContain("semio-canvas-2d-host");
+	});
+
+	it("renders puzzle 2d board host shell", () => {
+		const markup = renderToStaticMarkup(
+			createElement(Puzzle2dBoardHost, {
+				node: {
+					type: "componentScene",
+					surfaceId: "puzzle2d.play.composite.2d-overview",
+					controllerId: "puzzle2d-play",
+					componentKind: "puzzle2d-board",
+					puzzle2dBoard: {
+						fixtureJson: JSON.stringify({ nodes: [], edges: [], camera: { x: 0, y: 0, zoom: 1 } }),
+						cameraJson: '{"x":0,"y":0,"zoom":1}',
+						kindCatalogsJson: "{}",
+						selectionJson: "[]",
+						interactive: true,
+					},
+				},
+				onCommand: noopCommand,
+			}),
+		);
+		expect(markup).toContain("semio-puzzle2d-board-host");
+	});
+
+	it("maps a world-centered node inside the viewport with canonical camera math", () => {
+		const camera = { x: 120, y: 80, zoom: 2 };
+		const viewportWidth = 800;
+		const viewportHeight = 600;
+		const screen = worldToScreenLogical(120, 80, camera, viewportWidth, viewportHeight);
+		expect(screen.x).toBeCloseTo(viewportWidth * 0.5, 5);
+		expect(screen.y).toBeCloseTo(viewportHeight * 0.5, 5);
+		const layersJson = JSON.stringify([
+			{
+				id: "node-a",
+				kind: "circle",
+				role: "node",
+				color: "#336699",
+				selected: true,
+				x: 110,
+				y: 70,
+				width: 20,
+				height: 20,
+			},
+		]);
+		expect(layersJson).toContain('"role":"node"');
+		expect(layersJson).toContain('"selected":true');
 	});
 
 	it("renders world 3d empty state without mounting r3f canvas", () => {
@@ -240,11 +293,16 @@ describe("framework renderer hosts", () => {
 				referencesJson: "[]",
 				brushPreviewJson: undefined,
 				interactionJson: "{\"activeTool\":\"select\"}",
+				engagementPreviewJson:
+					"[{\"kind\":\"point\",\"role\":\"origin\",\"position\":[0,0,0]},{\"kind\":\"box-preview\",\"role\":\"preview\",\"cornerA\":[0,0,0],\"cornerB\":[2,2,0]}]",
+				contextMenuJson: "[]",
 			},
 		};
 		expect(node.world3d?.meshesJson).toBe("[]");
 		expect(node.world3d?.vorticesJson).toBe("[]");
 		expect(node.world3d?.interactionJson).toContain("select");
+		expect(node.world3d?.engagementPreviewJson).toContain("box-preview");
+		expect(node.world3d?.contextMenuJson).toBe("[]");
 	});
 
 	it("renders text editor host", () => {

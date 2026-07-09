@@ -1,9 +1,9 @@
 {
   "title": "CAD Wgpu Premigration Parity",
   "emoji": "📐",
-  "status": "open",
+  "status": "closed",
   "description": "Restore CAD premigration feature set inside wgpu/Rust plugin stack per plan cad_wgpu_premigration_parity_85c19a7c.",
-  "summary": "Fixed CAD play E2E for concrete forest left: patchOpsFromCommandResponse unwraps WASM CommandResult into JSON patch op strings (fixes ops is not iterable blocking setActiveExample and all commands). Extended WIT plugin interface with list-tools/window-engagements/window-measures and wired dev createPluginApi bridge so footer construct tools and window engagement chrome work in React dev. Improved geometry face import via wire-based planar faces. Verified: 15 react tests pass, forest example loads all four panes with brep meshes, manual smoke on :6020.",
+  "summary": "Fixed three root-cause bugs blocking CAD construction interactions and structure-classic curve rendering.\n\n**Bug A — pointer dispatch:** Moved `engagementSessionActive` handling ahead of the `event.target === hostRef` gate in `world-3d-host.tsx` so canvas clicks during box construction reach `worldPointerDown`.\n\n**Bug B — engagement preview:** Added dedicated `engagement_preview_json` field to `World3dScene` (core, plugin, infinite world, wgpu validation, os-shell type). CAD plugin now routes `preview_display_items` into that slot. Added `EngagementPreviewLayer` in `world-3d-host.tsx` for point/segment/box-preview geometry.\n\n**Bug C — curve tubes:** Rewrote `curve_mesh_from_wire` to build a polygon face profile and `sweep_sync` along the wire path instead of piping a bare curve entity.\n\n**Tests:** `sweep_wire_profile_produces_tube_mesh` in kernel_3d_brepkit; `forest_structure_curve_wires_tessellate_as_tubes` in geometry_import.rs; extended react test for `engagementPreviewJson`.\n\n**Verification:** kernel_3d_brepkit 14/14, react 22/22, cad-plugin wasm release build OK; browser smoke on :6020 — forest example loads 11 structure-classic objects, Box tool reaches `first_corner`.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1841"
   },
@@ -11,7 +11,7 @@
   "plan": {
     "client": "cursor",
     "id": "c4302eab",
-    "source": "/Users/ueli/Documents/semio/.cursor/plans/fix_cad_interaction_and_curve_bugs_c4302eab.plan.md"
+    "local": "fix_cad_interaction_and_curve_bugs_c4302eab.plan.md"
   },
   "sessions": [
     "⚪0736e59e8ef248e1a2fe33651ec5f4e9",

@@ -1835,5 +1835,19 @@ mod tests {
         let mesh = kernel.tessellate_sync(&curve, 0.1).unwrap();
         assert!(!mesh.edges.is_empty());
     }
+
+    #[test]
+    fn sweep_wire_profile_produces_tube_mesh() {
+        let mut kernel = BrepkitKernel::new();
+        let path_wire = kernel
+            .polyline_wire_sync(&[[0.0, 0.0, 0.0], [4.0, 0.0, 0.0]])
+            .unwrap();
+        let profile_wire = kernel.regular_polygon_wire_sync(0.08, 8).unwrap();
+        let profile_face = kernel.planar_face_from_wire_sync(&profile_wire).unwrap();
+        let solid = kernel.sweep_sync(&profile_face, &path_wire).unwrap();
+        let mesh = kernel.tessellate_sync(&solid, 0.1).unwrap();
+        assert!(mesh.position.len() > 36);
+        assert!(mesh.index.len() > 12);
+    }
 }
 // #endregion 🔖Tests

@@ -10,16 +10,16 @@ todos:
     status: completed
   - id: context-menu-core
     content: Add context_menu_json to World3dScene (core/rs, plugin/rs) and update 3 callers
-    status: in_progress
+    status: completed
   - id: context-menu-puzzle3d
     content: Build context menu items + duplicateSelection/selectSameKindSelection handlers in d3/mod.rs
-    status: pending
+    status: completed
   - id: context-menu-react
     content: Wire ContextMenuController + zoom-to-selection into world-3d-host.tsx and os-shell.tsx types
-    status: pending
+    status: completed
   - id: validate-close
     content: Run vitest + cargo test, manual verify, update verify-log, reopen/close ticket
-    status: pending
+    status: completed
 isProject: false
 ---
 

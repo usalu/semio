@@ -2,7 +2,7 @@
 /** @emoji 🧭 `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
 import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, watch, writeFileSync } from "node:fs";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
 	BundleScript,
@@ -21,7 +21,7 @@ import {
 } from "../../../../repo/lib/js/index.ts";
 import { resolvePluginRegistryId } from "../../../core/js/index.ts";
 import { PLUGIN_BUILD_TARGETS } from "./js/index.ts";
-import { generatePluginRegistry } from "../../../plugin/registry/script.ts";
+import { generatePluginRegistry, type PluginRegistryEntry } from "../../../plugin/registry/script.ts";
 
 const repoRoot = getWorkspaceRoot();
 const pluginOutRoot = join(repoRoot, "framework/product/os/dev/plugin-modules");
@@ -247,6 +247,22 @@ async function ensurePluginRegistry(): Promise<void> {
 	if (generate.status !== 0) throw new Error("plugin registry generation failed");
 }
 
+function resolvePluginBuildTargets(filterPlugin?: string): readonly PluginRegistryEntry[] {
+	const registryId = filterPlugin ? resolvePluginRegistryId(filterPlugin) : undefined;
+	const targets = registryId
+		? PLUGIN_BUILD_TARGETS.filter(
+				(target) =>
+					target.pluginId === registryId || target.pluginId === `${registryId}-module-procedural`,
+			)
+		: PLUGIN_BUILD_TARGETS;
+	if (filterPlugin && targets.length === 0) {
+		throw new Error(
+			`no plugin build targets for filter ${JSON.stringify(filterPlugin)} (resolved registry id: ${registryId ?? "none"})`,
+		);
+	}
+	return targets;
+}
+
 async function buildPlugins(filterPlugin?: string): Promise<void> {
 	ensureWasmTarget();
 	await ensurePluginRegistry();
@@ -256,12 +272,15 @@ async function buildPlugins(filterPlugin?: string): Promise<void> {
 		rmSync(stalePublicPlugins, { recursive: true, force: true });
 	}
 	const registryId = filterPlugin ? resolvePluginRegistryId(filterPlugin) : undefined;
-	const targets = registryId
-		? PLUGIN_BUILD_TARGETS.filter(
-				(target) =>
-					target.pluginId === registryId || target.pluginId === `${registryId}-module-procedural`,
-			)
-		: PLUGIN_BUILD_TARGETS;
+	const targets = resolvePluginBuildTargets(filterPlugin);
+	const catalogCount = PLUGIN_BUILD_TARGETS.length;
+	if (filterPlugin) {
+		console.log(
+			`[DEBUG] plugin build scope: ${registryId} (${targets.length}/${catalogCount} known plugin crates)`,
+		);
+	} else {
+		console.log(`[DEBUG] plugin build scope: all (${targets.length} known plugin crates)`);
+	}
 	for (const target of targets) {
 		await buildPlugin(target);
 	}
@@ -278,13 +297,7 @@ class PluginWatchScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
 		const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND;
 		await buildPlugins(filterPlugin || undefined);
-		const registryId = filterPlugin ? resolvePluginRegistryId(filterPlugin) : undefined;
-		const targets = registryId
-			? PLUGIN_BUILD_TARGETS.filter(
-					(target) =>
-						target.pluginId === registryId || target.pluginId === `${registryId}-module-procedural`,
-				)
-			: PLUGIN_BUILD_TARGETS;
+		const targets = resolvePluginBuildTargets(filterPlugin || undefined);
 		for (const target of targets) {
 			const watchRoot = join(repoRoot, target.cratePath);
 			watch(watchRoot, { recursive: true }, () => {
@@ -314,6 +327,11 @@ async function buildEngineWasm(pluginId: string, renderer: string): Promise<void
 		const gis2dScript = join(repoRoot, "gis/2d/rs/script.ts");
 		const gis2dBuild = spawnSync("bun", [gis2dScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
 		if (gis2dBuild.status !== 0) throw new Error("gis-2d-rs wasm build failed");
+	}
+	if (pluginId === "puzzle" || pluginId === "puzzle2d") {
+		const puzzle2dScript = join(repoRoot, "puzzle/2d/rs/script.ts");
+		const puzzle2dBuild = spawnSync("bun", [puzzle2dScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
+		if (puzzle2dBuild.status !== 0) throw new Error("puzzle-2d-rs wasm build failed");
 	}
 }
 
@@ -406,6 +424,20 @@ class BuildScript extends BundleScript {
 	}
 }
 
+const PLUGIN_HOST_MODE_SYMBOLS = ["SEMIO_PLUGIN", "PLAYGROUND_APP_KIND", "studioMode", "pluginFilter"] as const;
+
+function walkRustSources(dir: string, out: string[]): void {
+	for (const ent of readdirSync(dir, { withFileTypes: true })) {
+		if (ent.name === "target" || ent.name === "node_modules") continue;
+		const abs = join(dir, ent.name);
+		if (ent.isDirectory()) {
+			walkRustSources(abs, out);
+			continue;
+		}
+		if (ent.name.endsWith(".rs")) out.push(abs);
+	}
+}
+
 class PluginCapabilityLintScript extends BundleScript {
 	async run(): Promise<void> {
 		const metadataResult = spawnSync("cargo", ["metadata", "--format-version", "1"], {
@@ -423,6 +455,8 @@ class PluginCapabilityLintScript extends BundleScript {
 				dependencies: Array<{ name: string }>;
 			}>;
 		};
+		const registryEntries = generatePluginRegistry(repoRoot);
+		const pluginPackageNames = new Map(registryEntries.map((entry) => [entry.packageName, entry.pluginId]));
 		const depRules: Record<string, string> = {
 			rusqlite: "localBackboneStorage",
 			libloading: "forbidden",
@@ -433,6 +467,7 @@ class PluginCapabilityLintScript extends BundleScript {
 		const failures: string[] = [];
 		for (const pkg of metadata.packages) {
 			if (!pkg.manifest_path.includes("/plugin/rs/Cargo.toml")) continue;
+			if (pkg.manifest_path.includes("/framework/plugin/rs/")) continue;
 			const manifestText = await Bun.file(pkg.manifest_path).text();
 			const declared = new Set<string>();
 			const metaMatch = manifestText.match(/\[package\.metadata\.semio\][\s\S]*?capabilities\s*=\s*\[([^\]]*)\]/);
@@ -445,6 +480,12 @@ class PluginCapabilityLintScript extends BundleScript {
 				declared.add("localBackboneStorage");
 			}
 			const depNames = new Set(pkg.dependencies.map((dep) => dep.name));
+			for (const dep of pkg.dependencies) {
+				const otherPluginId = pluginPackageNames.get(dep.name);
+				if (otherPluginId && dep.name !== pkg.name) {
+					failures.push(`${pkg.name}: cross-plugin dependency on ${dep.name} (${otherPluginId})`);
+				}
+			}
 			for (const [dep, rule] of Object.entries(depRules)) {
 				if (!depNames.has(dep)) continue;
 				if (rule === "forbidden") {
@@ -455,11 +496,20 @@ class PluginCapabilityLintScript extends BundleScript {
 					failures.push(`${pkg.name}: dependency ${dep} requires capability ${rule}`);
 				}
 			}
-			const libRs = join(dirname(pkg.manifest_path), "lib.rs");
-			if (existsSync(libRs)) {
-				const source = await Bun.file(libRs).text();
+			const rustSources: string[] = [];
+			walkRustSources(dirname(pkg.manifest_path), rustSources);
+			for (const sourcePath of rustSources) {
+				const source = await Bun.file(sourcePath).text();
 				if (/std::fs::|std::net::/.test(source) && !declared.has("localBackboneStorage")) {
-					failures.push(`${pkg.name}: uses std::fs/std::net without localBackboneStorage capability`);
+					failures.push(
+						`${pkg.name}: uses std::fs/std::net without localBackboneStorage capability (${relative(repoRoot, sourcePath)})`,
+					);
+				}
+				for (const symbol of PLUGIN_HOST_MODE_SYMBOLS) {
+					if (!source.includes(symbol)) continue;
+					failures.push(
+						`${pkg.name}: plugin source references host-mode symbol ${symbol} (${relative(repoRoot, sourcePath)})`,
+					);
 				}
 			}
 		}

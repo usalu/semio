@@ -19,10 +19,10 @@ todos:
     status: completed
   - id: extend-tests
     content: Extend existing cad-plugin/kernel tests to cover curve tube tessellation
-    status: in_progress
+    status: completed
   - id: verify-e2e
     content: cargo test, rebuild wasm, manual browser verification of box construction + structure-classic curves on hexagonal-cut-concrete-forest-left
-    status: pending
+    status: completed
   - id: reopen-ticket
     content: Reopen CAD-WGPU-PREMIGRATION-PARITY ticket before implementing, close with summary when done
     status: completed

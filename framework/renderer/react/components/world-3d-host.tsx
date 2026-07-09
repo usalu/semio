@@ -5,6 +5,7 @@ import {
 	DoubleSide,
 	Group,
 	LineBasicMaterial,
+	Mesh,
 	MeshBasicMaterial,
 	MeshStandardMaterial,
 	Object3D,
@@ -227,17 +228,54 @@ function useSemanticColors(): SemanticColors {
 
 function parseCameraState(cameraJson: string): WorldCameraState & { readonly fov: number } {
 	try {
-		const parsed = JSON.parse(cameraJson) as WorldCameraRecord & { target?: readonly [number, number, number] };
+		const parsed = JSON.parse(cameraJson) as WorldCameraRecord & { target?: readonly [number, number, number]; zoom?: number };
 		const position: [number, number, number] = parsed.position
 			? [parsed.position[0], parsed.position[1], parsed.position[2]]
 			: [parsed.x ?? 4, parsed.y ?? -4, parsed.z ?? 3];
 		const target: [number, number, number] = parsed.target
 			? [parsed.target[0], parsed.target[1], parsed.target[2]]
 			: [0, 0, 0];
-		return { position, target, zoom: 1, projection: "perspective", fov: parsed.fov ?? 45 };
+		return {
+			position,
+			target,
+			zoom: typeof parsed.zoom === "number" ? parsed.zoom : 1,
+			projection: "perspective",
+			fov: parsed.fov ?? 45,
+		};
 	} catch {
 		return { position: [4, -4, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45 };
 	}
+}
+
+function autofitCameraFromInstances(instances: readonly WorldInstanceRecord[]): WorldCameraState & { readonly fov: number } {
+	if (instances.length === 0) {
+		return { position: [4, -4, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45 };
+	}
+	let minX = Number.POSITIVE_INFINITY;
+	let minY = Number.POSITIVE_INFINITY;
+	let minZ = Number.POSITIVE_INFINITY;
+	let maxX = Number.NEGATIVE_INFINITY;
+	let maxY = Number.NEGATIVE_INFINITY;
+	let maxZ = Number.NEGATIVE_INFINITY;
+	for (const instance of instances) {
+		const position = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
+		minX = Math.min(minX, position[0]);
+		minY = Math.min(minY, position[1]);
+		minZ = Math.min(minZ, position[2]);
+		maxX = Math.max(maxX, position[0]);
+		maxY = Math.max(maxY, position[1]);
+		maxZ = Math.max(maxZ, position[2]);
+	}
+	const center: [number, number, number] = [(minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2];
+	const span = Math.max(maxX - minX, maxY - minY, maxZ - minZ, 1);
+	const distance = span * 2.5;
+	return {
+		position: [center[0] + distance * 0.7, center[1] - distance * 0.7, center[2] + distance * 0.45],
+		target: center,
+		zoom: 1,
+		projection: "perspective",
+		fov: 45,
+	};
 }
 
 function parseMeshes(meshesJson: string): WorldMeshRecord[] {
@@ -437,7 +475,7 @@ function GlbInstanceMesh({ url, color }: { readonly url: string; readonly color:
 		const cloned = gltf.scene.clone(true);
 		cloned.traverse((child) => {
 			if ("isMesh" in child && (child as { isMesh?: boolean }).isMesh) {
-				const mesh = child as import("three").Mesh;
+				const mesh = child as Mesh;
 				mesh.material = new MeshStandardMaterial({ color });
 			}
 		});
@@ -448,6 +486,59 @@ function GlbInstanceMesh({ url, color }: { readonly url: string; readonly color:
 			<primitive object={scene} />
 		</group>
 	);
+}
+
+function extractGlbCollisionMesh(gltf: Awaited<ReturnType<GLTFLoader["loadAsync"]>>): {
+	readonly positions: number[];
+	readonly indices: number[];
+} {
+	const frame = new Object3D();
+	frame.rotation.x = GLB_MESH_FRAME_ROTATION_X;
+	frame.updateMatrixWorld(true);
+	const positions: number[] = [];
+	const indices: number[] = [];
+	let vertexOffset = 0;
+	const scratch = new Vector3();
+	gltf.scene.updateMatrixWorld(true);
+	gltf.scene.traverse((child) => {
+		if (!(child instanceof Mesh)) return;
+		const geometry = child.geometry;
+		const positionAttr = geometry.getAttribute("position");
+		if (!positionAttr) return;
+		const worldMatrix = frame.matrixWorld.clone().multiply(child.matrixWorld);
+		for (let index = 0; index < positionAttr.count; index += 1) {
+			scratch.fromBufferAttribute(positionAttr, index).applyMatrix4(worldMatrix);
+			positions.push(scratch.x, scratch.y, scratch.z);
+		}
+		const indexAttr = geometry.index;
+		if (indexAttr) {
+			for (let index = 0; index < indexAttr.count; index += 1) {
+				indices.push(indexAttr.getX(index) + vertexOffset);
+			}
+		} else {
+			for (let index = 0; index < positionAttr.count; index += 3) {
+				indices.push(vertexOffset + index, vertexOffset + index + 1, vertexOffset + index + 2);
+			}
+		}
+		vertexOffset += positionAttr.count;
+	});
+	return { positions, indices };
+}
+
+function BrushMeshRegistrar({
+	url,
+	onRegister,
+}: {
+	readonly url: string;
+	readonly onRegister: (url: string, positions: number[], indices: number[]) => void;
+}) {
+	const gltf = useLoader(GLTFLoader, url);
+	useEffect(() => {
+		const mesh = extractGlbCollisionMesh(gltf);
+		if (mesh.positions.length === 0 || mesh.indices.length === 0) return;
+		onRegister(url, mesh.positions, mesh.indices);
+	}, [gltf, onRegister, url]);
+	return null;
 }
 
 function gumballConfigForTransformTool(tool: string): GumballConfig {
@@ -1261,9 +1352,13 @@ export function World3dHost({
 }) {
 	const scene = node.world3d;
 	const colors = useSemanticColors();
-	const cameraState = useMemo(() => parseCameraState(scene?.cameraJson ?? "{}"), [scene?.cameraJson]);
-	const meshes = useMemo(() => parseMeshes(scene?.meshesJson ?? "[]"), [scene?.meshesJson]);
+	const parsedCamera = useMemo(() => parseCameraState(scene?.cameraJson ?? "{}"), [scene?.cameraJson]);
 	const instances = useMemo(() => parseInstances(scene?.instancesJson ?? "[]"), [scene?.instancesJson]);
+	const cameraState = useMemo(() => {
+		if ((scene?.cameraJson ?? "").includes("\"position\"")) return parsedCamera;
+		return instances.length > 0 ? autofitCameraFromInstances(instances) : parsedCamera;
+	}, [instances, parsedCamera, scene?.cameraJson]);
+	const meshes = useMemo(() => parseMeshes(scene?.meshesJson ?? "[]"), [scene?.meshesJson]);
 	const selection = useMemo(() => parseSelection(scene?.selectionJson ?? "{}"), [scene?.selectionJson]);
 	const vortices = useMemo(() => parseJsonArray<WorldVortexRecord>(scene?.vorticesJson), [scene?.vorticesJson]);
 	const attractions = useMemo(() => parseJsonArray<WorldAttractionRecord>(scene?.attractionsJson), [scene?.attractionsJson]);
@@ -1302,6 +1397,21 @@ export function World3dHost({
 			});
 		},
 		[node.controllerId, node.surfaceId, onCommand],
+	);
+
+	const registeredBrushMeshesRef = useRef(new Set<string>());
+	const handleRegisterBrushMesh = useCallback(
+		(url: string, positions: number[], indices: number[]) => {
+			if (registeredBrushMeshesRef.current.has(url)) return;
+			registeredBrushMeshesRef.current.add(url);
+			dispatch("registerBrushMesh", { url, positions, indices });
+		},
+		[dispatch],
+	);
+
+	const brushMeshUrls = useMemo(
+		() => [...new Set(meshes.map((mesh) => mesh.url).filter((url): url is string => Boolean(url)))],
+		[meshes],
 	);
 
 	const handleZoomToSelection = useCallback(() => {
@@ -1699,6 +1809,11 @@ export function World3dHost({
 					<ambientLight intensity={0.65} />
 					<directionalLight intensity={0.85} position={[4, 6, 8]} />
 					<CameraRefBridge cameraRef={cameraRef} />
+					{brushMeshUrls.map((url) => (
+						<Suspense key={url} fallback={null}>
+							<BrushMeshRegistrar url={url} onRegister={handleRegisterBrushMesh} />
+						</Suspense>
+					))}
 					<WorldInstancesLayer
 						instances={instances}
 						meshes={meshes}

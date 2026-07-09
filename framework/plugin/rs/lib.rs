@@ -382,6 +382,7 @@ impl App {
             id: id.into(),
             label: label.into(),
             document_json: document_json.into(),
+            app_id: String::new(),
         });
         self
     }
@@ -491,8 +492,12 @@ impl PluginBundle {
         app: App,
         factory: impl Fn() -> Box<dyn PluginApp> + Send + 'static,
     ) -> Self {
+        let app_id = app.definition.id.clone();
         self.manifest.apps.push(app.definition);
-        self.manifest.examples.extend(app.examples);
+        for mut example in app.examples {
+            example.app_id = app_id.clone();
+            self.manifest.examples.push(example);
+        }
         if let Some(program) = app.program {
             self.manifest.programs.push(program);
         }

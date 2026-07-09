@@ -1629,10 +1629,19 @@ export function FrameworkOsShell({
 		() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest,
 		[loadedPlugins, session?.pluginId],
 	);
-	const exampleOptions = useMemo(
-		() => (activePluginManifest?.examples ?? []).map((example) => ({ id: example.id, label: example.label })),
-		[activePluginManifest],
-	);
+	const exampleOptions = useMemo(() => {
+		const appId = session?.app.id ?? "";
+		if (!appId) return [];
+		const seen = new Set<string>();
+		return (activePluginManifest?.examples ?? [])
+			.filter((example) => example.appId === appId)
+			.filter((example) => {
+				if (seen.has(example.id)) return false;
+				seen.add(example.id);
+				return true;
+			})
+			.map((example) => ({ id: example.id, label: example.label }));
+	}, [activePluginManifest, session?.app.id]);
 
 	useEffect(() => {
 		if (exampleOptions.length === 0) return;
@@ -2314,6 +2323,14 @@ export type GisMapScene = {
 	readonly contextMenuJson?: string;
 };
 
+export type Puzzle2dBoardScene = {
+	readonly fixtureJson: string;
+	readonly cameraJson: string;
+	readonly kindCatalogsJson: string;
+	readonly selectionJson: string;
+	readonly interactive: boolean;
+};
+
 export type UiExternalSlotNode = {
 	readonly type: "externalSlot";
 	readonly pluginId: string;
@@ -2337,6 +2354,7 @@ export type UiComponentSceneNode = {
 	readonly raster?: RasterScene;
 	readonly virtualFileSystem?: VirtualFileSystemScene;
 	readonly gisMap?: GisMapScene;
+	readonly puzzle2dBoard?: Puzzle2dBoardScene;
 };
 
 export type UiNode =
@@ -2580,7 +2598,7 @@ export type PluginManifest = {
 	readonly version: string;
 	readonly apps: readonly AppDefinition[];
 	readonly programs: readonly { readonly programId: string; readonly appId: string; readonly label: string; readonly document: readonly string[]; readonly yields: string }[];
-	readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string }[];
+	readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string }[];
 	readonly contributions?: readonly {
 		readonly kind: "formsQuestionKind";
 		readonly appId: string;
@@ -2942,6 +2960,44 @@ export async function createMapSession(): Promise<MapWasmSession> {
 	}
 	const mod = await mapSessionPromise;
 	return new mod.MapSession();
+}
+
+export type Puzzle2dBoardWasmSession = {
+	attach_canvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown>;
+	setSize(width: number, height: number, dpr: number): void;
+	renderFrame(): void;
+	parseFixtureJson(json: string): boolean;
+	syncDescriptorJson(json: string): void;
+	setKindCatalogsJson(json: string): void;
+	setCamera(x: number, y: number, zoom: number): void;
+	setSelectionIdsJson(json: string): void;
+	setCanvasThemeJson(json: string): void;
+	pointerDownScreen(sx: number, sy: number, button: number, shift: boolean, ctrlOrMeta: boolean): void;
+	pointerMoveScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
+	pointerUpScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
+	wheelScreen(sx: number, sy: number, deltaY: number): void;
+	drainEventsJson(): string;
+	cameraJson(): string;
+	gpuReady(): boolean;
+	free(): void;
+};
+
+type Puzzle2dBoardSessionModule = {
+	readonly default: (input?: unknown) => Promise<unknown>;
+	readonly BoardSession: new () => Puzzle2dBoardWasmSession;
+};
+
+let puzzle2dBoardSessionPromise: Promise<Puzzle2dBoardSessionModule> | null = null;
+
+export async function createPuzzle2dBoardSession(): Promise<Puzzle2dBoardWasmSession> {
+	if (!puzzle2dBoardSessionPromise) {
+		puzzle2dBoardSessionPromise = import("@semio-tech/puzzle-2d-rs/pkg/puzzle_2d.js").then(async (mod) => {
+			await mod.default();
+			return mod as Puzzle2dBoardSessionModule;
+		});
+	}
+	const mod = await puzzle2dBoardSessionPromise;
+	return new mod.BoardSession();
 }
 //#endregion MapSession
 

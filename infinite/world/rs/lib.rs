@@ -3489,6 +3489,7 @@ mod tests {
             raster: None,
             virtual_file_system: None,
             gis_map: None,
+            puzzle2d_board: None,
         }
     }
 

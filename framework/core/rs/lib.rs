@@ -2154,6 +2154,8 @@ pub enum SurfaceKind {
     VirtualFileSystem,
     #[serde(rename = "gis2d-map")]
     GisMap,
+    #[serde(rename = "puzzle2d-board")]
+    Puzzle2dBoard,
 }
 
 impl SurfaceKind {
@@ -2167,11 +2169,12 @@ impl SurfaceKind {
             Self::Raster => "raster",
             Self::VirtualFileSystem => "virtualFileSystem",
             Self::GisMap => "gis2d-map",
+            Self::Puzzle2dBoard => "puzzle2d-board",
         }
     }
 
     pub fn is_viewport(self) -> bool {
-        matches!(self, Self::World3d | Self::NodeGraph | Self::Canvas2d)
+        matches!(self, Self::World3d | Self::NodeGraph | Self::Canvas2d | Self::Puzzle2dBoard)
     }
 }
 
@@ -2503,6 +2506,40 @@ impl GisMapScene {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct Puzzle2dBoardScene {
+    pub fixture_json: String,
+    pub camera_json: String,
+    #[serde(default = "puzzle2d_board_default_kind_catalogs_json")]
+    pub kind_catalogs_json: String,
+    #[serde(default = "puzzle2d_board_default_selection_json")]
+    pub selection_json: String,
+    #[serde(default)]
+    pub interactive: bool,
+}
+
+pub fn puzzle2d_board_default_kind_catalogs_json() -> String {
+    "{}".into()
+}
+
+pub fn puzzle2d_board_default_selection_json() -> String {
+    "[]".into()
+}
+
+impl Puzzle2dBoardScene {
+    /** @emoji 🧩 Builds a puzzle 2D board scene with optional extensions unset. */
+    pub fn base(fixture_json: String, camera_json: String, interactive: bool) -> Self {
+        Self {
+            fixture_json,
+            camera_json,
+            kind_catalogs_json: puzzle2d_board_default_kind_catalogs_json(),
+            selection_json: puzzle2d_board_default_selection_json(),
+            interactive,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UiExternalSlotNode {
     pub plugin_id: String,
     pub app_id: String,
@@ -2536,6 +2573,8 @@ pub struct UiComponentSceneNode {
     pub virtual_file_system: Option<VirtualFileSystemScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub gis_map: Option<GisMapScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub puzzle2d_board: Option<Puzzle2dBoardScene>,
 }
 //#endregion 🔖ComponentScenes
 
@@ -2631,6 +2670,10 @@ pub mod text_editor_commands {
 }
 
 /** @emoji 🗺️ Renderer-to-plugin command names for GIS map surfaces. */
+pub mod puzzle2d_board_commands {
+    pub const APPLY_BOARD_EVENTS: &str = "applyBoardEvents";
+}
+
 pub mod gis_map_commands {
     pub const SET_CAMERA: &str = "setCamera";
     pub const SET_FEATURE_SELECTION: &str = "setFeatureSelection";
@@ -2699,6 +2742,7 @@ fn component_scene(
     raster: Option<RasterScene>,
     virtual_file_system: Option<VirtualFileSystemScene>,
     gis_map: Option<GisMapScene>,
+    puzzle2d_board: Option<Puzzle2dBoardScene>,
 ) -> UiNode {
     UiNode::ComponentScene(UiComponentSceneNode {
         surface_id: surface_id.into(),
@@ -2714,6 +2758,7 @@ fn component_scene(
         raster,
         virtual_file_system,
         gis_map,
+        puzzle2d_board,
     })
 }
 
@@ -2729,6 +2774,7 @@ pub fn build_canvas_2d_scene(
         None,
         None,
         Some(scene),
+        None,
         None,
         None,
         None,
@@ -2758,6 +2804,7 @@ pub fn build_world_3d_scene(
         None,
         None,
         None,
+        None,
     )
 }
 
@@ -2775,6 +2822,7 @@ pub fn build_node_graph_scene(
         None,
         None,
         Some(scene),
+        None,
         None,
         None,
         None,
@@ -2802,6 +2850,7 @@ pub fn build_text_editor_scene(
         None,
         None,
         None,
+        None,
     )
 }
 
@@ -2821,6 +2870,7 @@ pub fn build_table_scene(
         None,
         None,
         Some(scene),
+        None,
         None,
         None,
         None,
@@ -2844,6 +2894,7 @@ pub fn build_raster_scene(
         None,
         None,
         Some(scene),
+        None,
         None,
         None,
     )
@@ -2870,6 +2921,7 @@ pub fn build_virtual_file_system_scene(
         None,
         Some(scene),
         None,
+        None,
     )
 }
 
@@ -2882,6 +2934,30 @@ pub fn build_gis_map_scene(
         surface_id,
         controller_id,
         SurfaceKind::GisMap,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        Some(scene),
+        None,
+    )
+}
+
+pub fn build_puzzle2d_board_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: Puzzle2dBoardScene,
+) -> UiNode {
+    component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::Puzzle2dBoard,
+        None,
         None,
         None,
         None,
@@ -3043,6 +3119,7 @@ pub struct ExampleDefinition {
     pub id: String,
     pub label: String,
     pub document_json: String,
+    pub app_id: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

@@ -636,13 +636,16 @@ describe("package boundary guards", () => {
     expect(files).toEqual([]);
   });
 
-  test("framework playground renderer has no per-technology registerUi surface host APIs", () => {
-    const rendererPath = join(repoRoot, "framework/product/playground/renderer/react/index.tsx");
-    const source = readFileSync(rendererPath, "utf8");
-    expect(source).not.toMatch(
+  test("framework renderer host has no per-technology registerUi surface host APIs", () => {
+    const shellPath = join(repoRoot, "framework/renderer/react/os-shell.tsx");
+    const interpreterPath = join(repoRoot, "framework/renderer/react/ui-interpreter.tsx");
+    const shellSource = readFileSync(shellPath, "utf8");
+    const interpreterSource = readFileSync(interpreterPath, "utf8");
+    const combined = `${shellSource}\n${interpreterSource}`;
+    expect(combined).not.toMatch(
       /registerUi(?:Draw|Flow|Layout|Note|Puzzle2d|Puzzle3d|Puzzle5d|Sequence|Writer|Raster|Forms|Trinity|Procedural|Shooting|Gis|Cad|Dag|Lowpoly|Imperative|S)SurfaceHost/,
     );
-    expect(source).toContain("bootPlaygroundApp");
+    expect(shellSource).toContain("bootFrameworkOs");
   });
 });
 

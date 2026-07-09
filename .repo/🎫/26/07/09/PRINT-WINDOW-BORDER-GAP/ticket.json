@@ -1,7 +1,7 @@
 {
   "title": "Print Window Border Gap",
   "emoji": "🪟",
-  "status": "closed",
+  "status": "open",
   "description": "Print windows have a small gap between the title bar first line and the window content box; borders should touch seamlessly.",
   "summary": "Fixed inverted window title bar order: header is now a single vtop block (caps + separator) without vrule/hbox baseline clash; first cap keeps the left stroke; single hairline vskip connects body border.",
   "github": {
@@ -10,6 +10,7 @@
   "goal": "🎯r2602",
   "sessions": [
     "⚪c34019e9f36f4fa39b5cca84bc1967e7",
-    "⚪6b8d4adfbe924bda887077615a6d0c76"
+    "⚪6b8d4adfbe924bda887077615a6d0c76",
+    "⚪d7abbee7805b426bb7938af214766254"
   ]
 }

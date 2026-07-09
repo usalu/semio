@@ -1,9 +1,9 @@
 {
   "title": "Puzzle 3D React Parity",
   "emoji": "🧩",
-  "status": "closed",
+  "status": "open",
   "description": "Restore premigration parity for puzzle 3D in the React renderer: GLB coordinate frame, hover/select/gumball/marquee protocol, scene layers (vortices/attractions/target volumes/references/brush preview), and Select/Brush/Fill window engagements.",
-  "summary": "Restored Puzzle 3D React renderer premigration parity: GLB meshes now use GLB_MESH_FRAME_ROTATION_X (Y-up→Z-up), puzzle3d plugin handles setHover/worldPick/setTransformTool and emits gumball-ready selection JSON, World3dHost renders vortices/attractions/target volumes/references/brush preview from extended World3dScene fields, and window_engagements exposes Select/Brush/Fill toolbar with brush candidate toggle and fill slider. Vitest: 21 passed. Native cargo test -p puzzle-plugin blocked by pre-existing wasm plugin_exports macro (same as other plugins).",
+  "summary": "Fixed puzzle 3D fill (setFillCount accepts slider value key), brush (unconditional precompute sync on every command), and added selection context menu (contextMenuJson + ContextMenuController with Duplicate/Select same kind/Zoom/Delete). Extended World3dScene with contextMenuJson across core, plugin, and React. Vitest 21 passed.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1873"
   },
@@ -14,6 +14,8 @@
     "local": "puzzle_3d_react_parity_c0683e18.plan.md"
   },
   "sessions": [
-    "⚪a96627df0fb248c3be63325d64f489fb"
+    "⚪a96627df0fb248c3be63325d64f489fb",
+    "⚪996981b38f874a57a7bf71f5c9fc1741",
+    "⚪0faf10db782a4e19804f9b72bf1c9194"
   ]
 }

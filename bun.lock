@@ -608,6 +608,7 @@
         "@semio-tech/gis-2d-rs": "workspace:*",
         "@semio-tech/infinite-cavas-react-renderer": "workspace:*",
         "@semio-tech/infinite-world-r3f": "workspace:*",
+        "@semio-tech/puzzle-2d-rs": "workspace:*",
         "@semio-tech/ui-asset": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
         "@semio-tech/ui-styling": "workspace:*",
@@ -753,6 +754,9 @@
     },
     "procedural/3d/rs": {
       "name": "@semio-tech/procedural-3d-rs",
+    },
+    "puzzle/2d/rs": {
+      "name": "@semio-tech/puzzle-2d-rs",
     },
     "puzzle/3d/rs": {
       "name": "@semio-tech/puzzle-3d-rs",
@@ -2065,6 +2069,8 @@
     "@semio-tech/procedural-2d-rs": ["@semio-tech/procedural-2d-rs@workspace:procedural/2d/rs"],
 
     "@semio-tech/procedural-3d-rs": ["@semio-tech/procedural-3d-rs@workspace:procedural/3d/rs"],
+
+    "@semio-tech/puzzle-2d-rs": ["@semio-tech/puzzle-2d-rs@workspace:puzzle/2d/rs"],
 
     "@semio-tech/puzzle-3d-rs": ["@semio-tech/puzzle-3d-rs@workspace:puzzle/3d/rs"],
 

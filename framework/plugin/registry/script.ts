@@ -50,8 +50,23 @@ function parsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistr
 	return { pluginId: componentPackage, cratePath, packageName, wasmOut };
 }
 
+function tryParsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistryEntry | undefined {
+	try {
+		return parsePluginCargo(manifestPath, repoRoot);
+	} catch (error) {
+		console.warn(
+			`[DEBUG] plugin registry catalog: skipping ${manifestPath}: ${error instanceof Error ? error.message : String(error)}`,
+		);
+		return undefined;
+	}
+}
+
 export function generatePluginRegistry(repoRoot = getWorkspaceRoot()): PluginRegistryEntry[] {
-	const entries = findPluginCargoFiles(repoRoot).map((path) => parsePluginCargo(path, repoRoot));
+	const entries: PluginRegistryEntry[] = [];
+	for (const path of findPluginCargoFiles(repoRoot)) {
+		const entry = tryParsePluginCargo(path, repoRoot);
+		if (entry) entries.push(entry);
+	}
 	entries.sort((a, b) => a.pluginId.localeCompare(b.pluginId));
 	return entries;
 }
@@ -92,10 +107,12 @@ class GenerateScript extends BundleScript {
 		mkdirSync(outDir, { recursive: true });
 		writeFileSync(join(outDir, "plugins.json"), `${JSON.stringify(entries, null, 2)}\n`);
 		writeFileSync(join(outDir, "plugins.ts"), emitTypeScript(entries));
-		console.log(`[DEBUG] generated plugin registry (${entries.length} plugins) -> ${outDir}`);
+		console.log(`[DEBUG] plugin registry catalog refreshed (${entries.length} known plugin crates) -> ${outDir}`);
 	}
 }
 
 const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });
+if (import.meta.main) {
+	await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });
+}

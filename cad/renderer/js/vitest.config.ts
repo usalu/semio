@@ -11,8 +11,6 @@ const reactRoot = resolve(repoRoot, "node_modules/react");
 const reactDomRoot = resolve(repoRoot, "node_modules/react-dom");
 const threeModule = resolve(repoRoot, "node_modules/three/build/three.module.js");
 const threePackageRoot = resolve(repoRoot, "node_modules/three");
-const rendererRoot = resolve(repoRoot, "framework/product/playground/renderer/react");
-const rendererIndex = resolve(rendererRoot, "index.tsx");
 
 const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot);
 
@@ -23,7 +21,6 @@ export default defineConfig({
   server: workspaceResolve.server,
   resolve: {
     alias: [
-      { find: /^@framework\/playground\/renderer\/react($|\/.*$)/, replacement: rendererIndex },
       ...(workspaceResolve.resolve?.alias ?? []),
       { find: "@semio-tech/cad-js-core", replacement: resolve(root, "../../core/js/index.ts") },
       { find: "@semio-tech/cad-js-kernel-brepjs", replacement: resolve(root, "../../kernel/brepjs/js/index.ts") },
