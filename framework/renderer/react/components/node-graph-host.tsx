@@ -7,6 +7,7 @@ import {
 	Handle,
 	Position,
 	SelectionMarquee,
+	Slider,
 	useCanvasPickInteraction,
 	useCanvasThemeSync,
 	type CanvasPickTarget,
@@ -76,6 +77,7 @@ type FrameworkGraphSession = GraphWasmSession & {
 	labelOverlayPaintStateJson(): string;
 	paramOverlayPaintStateJson(): string;
 	stepperOverlayStateJson(): string;
+	sliderOverlayStateJson(): string;
 	selectionUnionBoundsScreenJson(): string;
 	selectionPreviewPointsJson(): string;
 	selectionPreviewCrossing(): boolean;
@@ -249,6 +251,7 @@ function WasmGraphSurface({
 	const [overlaySize, setOverlaySize] = useState({ w: 0, h: 0 });
 	const [paramStateJson, setParamStateJson] = useState("{}");
 	const [stepperStateJson, setStepperStateJson] = useState("{}");
+	const [sliderStateJson, setSliderStateJson] = useState("{}");
 	const sceneJson = useMemo(() => sceneToSyncJson(scene), [scene]);
 
 	const dispatch = useCallback(
@@ -282,6 +285,7 @@ function WasmGraphSurface({
 		try {
 			setParamStateJson(session.paramOverlayPaintStateJson());
 			setStepperStateJson(session.stepperOverlayStateJson());
+			setSliderStateJson(session.sliderOverlayStateJson());
 		} catch {
 			/* session not ready */
 		}
@@ -328,6 +332,7 @@ function WasmGraphSurface({
 			labelOverlayPaintStateJson: () => '{"labels":[]}',
 			paramOverlayPaintStateJson: () => "{}",
 			stepperOverlayStateJson: () => "{}",
+			sliderOverlayStateJson: () => "{}",
 			selectionUnionBoundsScreenJson: () => "{}",
 			selectionPreviewPointsJson: () => "[]",
 			selectionPreviewCrossing: () => false,
@@ -527,6 +532,15 @@ function WasmGraphSurface({
 				editable={editable}
 				onStepperChange={(widgetId, fieldKey, value) =>
 					dispatch(nodeGraphCommands.edit, { op: "setStepper", widgetId, fieldKey, value })
+				}
+			/>
+			<GraphSliderOverlays
+				stateJson={sliderStateJson}
+				logicalW={overlaySize.w}
+				logicalH={overlaySize.h}
+				editable={editable}
+				onSliderChange={(widgetId, value) =>
+					dispatch(nodeGraphCommands.edit, { op: "setSlider", widgetId, value })
 				}
 			/>
 			<CanvasPickMenu
@@ -883,6 +897,18 @@ export type DagStepperOverlayRow = {
 	readonly fields: readonly DagStepperFieldRow[];
 };
 
+export type DagSliderOverlayRow = {
+	readonly widgetId: string;
+	readonly value: number;
+	readonly min: number;
+	readonly max: number;
+	readonly step: number;
+	readonly x: number;
+	readonly y: number;
+	readonly w: number;
+	readonly h: number;
+};
+
 export type DagSelectionBounds = {
 	readonly x: number;
 	readonly y: number;
@@ -1042,6 +1068,15 @@ export function parseDagStepperOverlays(stateJson: string): readonly DagStepperO
 	try {
 		const parsed = JSON.parse(stateJson) as { readonly steppers?: DagStepperOverlayRow[] };
 		return parsed.steppers ?? [];
+	} catch {
+		return [];
+	}
+}
+
+export function parseDagSliderOverlays(stateJson: string): readonly DagSliderOverlayRow[] {
+	try {
+		const parsed = JSON.parse(stateJson) as { readonly sliders?: DagSliderOverlayRow[] };
+		return parsed.sliders ?? [];
 	} catch {
 		return [];
 	}
@@ -1256,6 +1291,51 @@ export function GraphStepperOverlays({
 	);
 }
 
+export function GraphSliderOverlays({
+	stateJson,
+	logicalW,
+	logicalH,
+	editable,
+	onSliderChange,
+}: {
+	readonly stateJson: string;
+	readonly logicalW: number;
+	readonly logicalH: number;
+	readonly editable: boolean;
+	readonly onSliderChange: (widgetId: string, value: number) => void;
+}) {
+	const camera = parseDagOverlayCamera(stateJson);
+	const sliders = parseDagSliderOverlays(stateJson);
+	if (sliders.length === 0) return null;
+	return (
+		<div className="pointer-events-none absolute inset-0 z-45">
+			{sliders.map((slider) => {
+				const screen = worldToScreen(camera, logicalW, logicalH, slider.x, slider.y);
+				const w = slider.w * camera.zoom;
+				const h = Math.max(slider.h * camera.zoom, 16);
+				return (
+					<div
+						key={slider.widgetId}
+						className="pointer-events-auto absolute flex items-center px-1"
+						style={{ left: screen.x - w / 2, top: screen.y - h / 2, width: w, height: h }}
+						onPointerDown={(event) => event.stopPropagation()}
+					>
+						<Slider
+							className="w-full min-w-0"
+							max={slider.max}
+							min={slider.min}
+							step={slider.step}
+							value={[slider.value]}
+							disabled={!editable}
+							onValueChange={(values) => onSliderChange(slider.widgetId, values[0] ?? slider.value)}
+						/>
+					</div>
+				);
+			})}
+		</div>
+	);
+}
+
 const ALIGN_MODES = [
 	{ id: "left", label: "⬅" },
 	{ id: "center-h", label: "↔" },
@@ -1390,6 +1470,7 @@ export function FlowGraphCanvasHost({
 	const [labelStateJson, setLabelStateJson] = useState("{}");
 	const [paramStateJson, setParamStateJson] = useState("{}");
 	const [stepperStateJson, setStepperStateJson] = useState("{}");
+	const [sliderStateJson, setSliderStateJson] = useState("{}");
 	const [previewText, setPreviewText] = useState("");
 	const [containerSize, setContainerSize] = useState({ w: 800, h: 600 });
 	const [sessionReady, setSessionReady] = useState(false);
@@ -1436,6 +1517,7 @@ export function FlowGraphCanvasHost({
 			});
 			setParamStateJson(session.paramOverlayPaintStateJson());
 			setStepperStateJson(session.stepperOverlayStateJson());
+			setSliderStateJson(session.sliderOverlayStateJson());
 		} catch {
 			/* gpu not ready */
 		}
@@ -1660,6 +1742,17 @@ export function FlowGraphCanvasHost({
 				editable={editable}
 				onStepperChange={(widgetId, fieldKey, value) => {
 					sessionRef.current?.setStepperFieldValue(widgetId, fieldKey, value);
+					commitFixture();
+					paintOverlays();
+				}}
+			/>
+			<GraphSliderOverlays
+				stateJson={sliderStateJson}
+				logicalW={containerSize.w}
+				logicalH={containerSize.h}
+				editable={editable}
+				onSliderChange={(widgetId, value) => {
+					sessionRef.current?.setSliderValue(widgetId, value);
 					commitFixture();
 					paintOverlays();
 				}}

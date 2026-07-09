@@ -75,6 +75,8 @@
 
 \newcommand{\semio@table@colspec@register}{@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.16\linewidth-\tabcolsep\relax}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.62\linewidth-\tabcolsep\relax}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
 
+\newcommand{\semio@table@colspec@reference}{@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.12\linewidth-\tabcolsep\relax}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.66\linewidth-\tabcolsep\relax}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
+
 \newcommand{\semio@table@header@cell}[1]{%
   \cellcolor{semio-chrome-window}%
   \vspace{\semio@spacing@single}%
@@ -113,6 +115,14 @@
   \expandafter\semio@table@render\expandafter{\semio@table@colspec@register}{#1}%
 }
 
+\newcommand{\SemioTableReferenceRow}[3]{%
+  \SemioTableRow{#1 & #2 & #3}%
+}
+
+\newcommand{\SemioTableReference}[1]{%
+  \expandafter\semio@table@render\expandafter{\semio@table@colspec@reference}{#1}%
+}
+
 \newcommand{\semio@table@begin@tabular}[1]{\begin{tabular}{#1}}
 
 \newcommand{\SemioTableBegin}[1]{%
@@ -132,7 +142,11 @@
       \ifx\semio@table@spec\semio@table@spec@nrp
         \expandafter\semio@table@begin@tabular\expandafter{\semio@table@colspec@register}%
       \else
-        \begin{tabular}{@{}#1@{}}%
+        \ifx\semio@table@spec\semio@table@spec@nry
+          \expandafter\semio@table@begin@tabular\expandafter{\semio@table@colspec@reference}%
+        \else
+          \begin{tabular}{@{}#1@{}}%
+        \fi
       \fi
     \fi
   \fi
@@ -141,6 +155,7 @@
 \def\semio@table@spec@ll{ll}
 \def\semio@table@spec@lll{lll}
 \def\semio@table@spec@nrp{nrp}
+\def\semio@table@spec@nry{nry}
 
 \newcommand{\SemioTableEnd}{%
   \end{tabular}%

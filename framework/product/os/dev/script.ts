@@ -119,9 +119,31 @@ function pluginComponentBridgeSource(componentBase: string, wasmFileName: string
 import { plugin } from "./${componentBase}.js";
 
 const apps = new Set();
+let tail = Promise.resolve();
+let pluginApiPromise = null;
 
-export async function createPluginApi() {
-  return {
+function runSerialized(fn) {
+  const job = tail.then(async () => {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      try {
+        return await fn();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (!message.includes("plugin instance busy") && !message.includes("plugin busy")) throw error;
+        await new Promise((resolve) => setTimeout(resolve, attempt + 1));
+      }
+    }
+    return fn();
+  }, async () => fn());
+  tail = job.then(
+    () => undefined,
+    () => undefined,
+  );
+  return job;
+}
+
+async function createPluginApiInner() {
+  const core = {
     async manifest() {
       return (await plugin.manifest()).json;
     },
@@ -184,6 +206,27 @@ export async function createPluginApi() {
       return response.json;
     },
   };
+  return {
+    manifest: () => runSerialized(() => core.manifest()),
+    createApp: (appId) => runSerialized(() => core.createApp(appId)),
+    destroyApp: (instanceId) => runSerialized(() => core.destroyApp(instanceId)),
+    handleCommand: (instanceId, commandJson, contextJson) =>
+      runSerialized(() => core.handleCommand(instanceId, commandJson, contextJson)),
+    render: (instanceId, bodyKey, viewStateJson) =>
+      runSerialized(() => core.render(instanceId, bodyKey, viewStateJson)),
+    renderWithDocument: (instanceId, bodyKey, viewStateJson, documentJson) =>
+      runSerialized(() => core.renderWithDocument(instanceId, bodyKey, viewStateJson, documentJson)),
+    tools: (instanceId, viewStateJson) => runSerialized(() => core.tools(instanceId, viewStateJson)),
+    windowEngagements: (instanceId, viewStateJson) =>
+      runSerialized(() => core.windowEngagements(instanceId, viewStateJson)),
+    windowMeasures: (instanceId, viewStateJson) =>
+      runSerialized(() => core.windowMeasures(instanceId, viewStateJson)),
+  };
+}
+
+export async function createPluginApi() {
+  if (!pluginApiPromise) pluginApiPromise = createPluginApiInner();
+  return pluginApiPromise;
 }
 `;
 }

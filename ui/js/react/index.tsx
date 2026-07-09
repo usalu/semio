@@ -11989,7 +11989,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
   const hasControl = Boolean(item.control);
   const propertyLayout = hasControl;
   const hasNestedTreeItems = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0;
-  const defaultOpen = hasControl ? false : getTreeItemDefaultOpen(item);
+  const defaultOpen = hasControl ? !hasNestedTreeItems || getTreeItemDefaultOpen(item) : getTreeItemDefaultOpen(item);
   const treeOpenState = useTreeOpenState(getTreeItemStateId(item.id), defaultOpen);
   const propertyExpandable = hasControl ? hasNestedTreeItems : isExpandable;
 
@@ -24166,6 +24166,31 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="property-control"');
       expect(markup).toContain('id="inspector.object.id.input"');
       expect(markup).toContain("seed-left-001");
+    });
+
+    it("keeps leaf inspector controls visible without manual expand", () => {
+      const markup = renderToStaticMarkup(
+        <TreeStateProvider>
+          <Tree
+            sections={[
+              {
+                id: "procedural-play-inspector.widget",
+                label: "Widget",
+                defaultOpen: true,
+                items: [
+                  {
+                    id: "procedural-play-inspector.value",
+                    label: "Value",
+                    control: <input id="procedural-play-inspector.value.input" defaultValue="2.2" readOnly />,
+                  },
+                ],
+              },
+            ]}
+          />
+        </TreeStateProvider>,
+      );
+      expect(markup).toContain('id="procedural-play-inspector.value.input"');
+      expect(markup).toContain("2.2");
     });
 
     it("renders property-layout tree items with a dedicated control column", () => {

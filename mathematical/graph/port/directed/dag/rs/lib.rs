@@ -3828,6 +3828,36 @@ impl DagHost {
     }
 
     /// �️ Stepper widget field anchors for the HTML stepper overlay.
+    pub fn slider_overlay_state_json(&self) -> Result<String, String> {
+        let cam = &self.fixture.camera;
+        let mut sliders: Vec<serde_json::Value> = Vec::new();
+        for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
+            let node = self.node_spec_for_paint(idx, fixture_node);
+            let DagNodeKind::Slider { min, max, step, value, .. } = &node.kind else {
+                continue;
+            };
+            let (x0, y0, x1, y1) = slider_track_bounds(&node);
+            sliders.push(serde_json::json!({
+                "widgetId": fixture_node.id,
+                "value": value,
+                "min": min,
+                "max": max,
+                "step": step,
+                "x": (x0 + x1) * 0.5,
+                "y": (y0 + y1) * 0.5,
+                "w": (x1 - x0).max(1.0),
+                "h": (y1 - y0).max(1.0),
+            }));
+        }
+        serde_json::to_string(&serde_json::json!({
+            "camera": { "x": cam.x, "y": cam.y, "zoom": cam.zoom },
+            "width": self.width,
+            "height": self.height,
+            "sliders": sliders,
+        }))
+        .map_err(|err| err.to_string())
+    }
+
     pub fn stepper_overlay_state_json(&self) -> Result<String, String> {
         let cam = &self.fixture.camera;
         let mut steppers: Vec<serde_json::Value> = Vec::new();
@@ -5479,6 +5509,35 @@ mod tests {
         let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
         let labels = raw["labels"].as_array().expect("labels");
         assert!(labels.iter().any(|row| row["text"] == "Radius" && row["layout"] == "horizontal"));
+    }
+
+    #[test]
+    fn dag_host_slider_overlay_state_json_includes_slider_track() {
+        let mut host = DagHost::from_fixture_without_layout(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
+            nodes: vec![DagNodeSpec {
+                id: "slider".into(),
+                name: "Radius".into(),
+                abbreviation: "Radius".into(),
+                icon: "emoji:🎚️".into(),
+                x: 0.0,
+                y: 0.0,
+                width: 120.0,
+                height: 32.0,
+                kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 3.0, output: IoPortSpec { id: "out".into(), label: "value".into(), ..Default::default() } },
+                ..Default::default()
+            }],
+            edges: vec![],
+        });
+        host.set_viewport(1280, 800, 1.0);
+        let raw: serde_json::Value = serde_json::from_str(&host.slider_overlay_state_json().unwrap()).unwrap();
+        let sliders = raw["sliders"].as_array().expect("sliders");
+        assert_eq!(sliders.len(), 1);
+        assert_eq!(sliders[0]["widgetId"], "slider");
+        assert_eq!(sliders[0]["value"], 3.0);
+        assert_eq!(sliders[0]["min"], 0.0);
+        assert_eq!(sliders[0]["max"], 10.0);
     }
 
     #[test]

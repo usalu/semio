@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{semio-window}[2026/07/07 v1.0.0 semio OS window chrome]
+\ProvidesPackage{semio-window}[2026/07/09 v1.1.0 semio OS window chrome]
 
 \RequirePackage{expl3}
 \RequirePackage{xparse}
@@ -310,27 +310,34 @@
 }
 
 \cs_new_protected:Npn \semio_window_header_store: {
-  \exp_args:Nx \semio_window_header_store_aux:nn
-    { \tl_use:N \l_semio_window_number_tl }
-    { \tl_use:N \l_semio_window_kind_title_tl }
+  \exp_args:NNo
+  \semio_window_header_store_aux:nn
+  \l_semio_window_number_tl
+  \l_semio_window_kind_title_tl
 }
 \cs_new_protected:Npn \semio_window_header_store_aux:nn #1#2 {
+  \group_begin:
   \ExplSyntaxOff
+  \makeatletter
   \def\semio@window@header@number{#1}
   \def\semio@window@header@title{#2}
-  \ExplSyntaxOn
+  \makeatother
+  \group_end:
 }
 
 \cs_new_protected:Npn \semio_window_tier_header:nnn #1 #2 #3 {
   \tl_set:Nn \l_semio_window_number_tl {#1}
-  \tl_set:Nn \l_semio_window_kind_title_tl {#2}
+  \tl_set:Nx \l_semio_window_kind_title_tl {#2}
 }
 
 \cs_new_protected:Npn \semio_window_header_muted_use: {
   \group_begin:
   \ExplSyntaxOff
+  \makeatletter
+  \ifvmode\else\par\fi
   \noindent
-  \use:c { semio@window@header@invoke }
+  \semio@window@header@invoke
+  \makeatother
   \group_end:
 }
 
@@ -631,7 +638,7 @@
   \bool_if:NTF \l_semio_window_row_bool {
     \begin{tcolorbox}[semio~window~tier~structural, semio~window~row]
   } {
-    \begin{tcolorbox}[semio~window~tier~structural]
+    \begin{tcolorbox}[semio~window~tier~structural, breakable=false]
   }
 }
 \cs_new_protected:Npn \semio_window_generic_end: {
@@ -729,6 +736,81 @@
   \semio@register@window@close
   \clearpage
 }
+
+%region References
+\ExplSyntaxOn
+\seq_new:N \g_semio_references_keys_seq
+
+\cs_new_protected:Npn \semio_references_keys_clear: {
+  \seq_clear:N \g_semio_references_keys_seq
+}
+
+\cs_new_protected:Npn \semio_references_key_collect: {
+  \seq_gput_right:Nx \g_semio_references_keys_seq { \thefield{entrykey} }
+}
+
+\cs_new_protected:Npn \semio_references_row_handler:n #1 {
+  \stepcounter{semio@reference@nr}
+  \gappto\semio@references@rows {
+    \SemioTableReferenceRow{\thesemio@reference@nr}{\citeauthor{#1}, \citefield{title}{#1}}{\citeyear{#1}}
+  }
+}
+
+\cs_new_protected:Npn \semio_references_rows_build: {
+  \renewcommand{\semio@references@rows}{}
+  \setcounter{semio@reference@nr}{0}
+  \seq_map_inline:Nn \g_semio_references_keys_seq {
+    \semio_references_row_handler:n { ##1 }
+  }
+}
+
+\cs_new_protected:Npn \semio_references_render: {
+  \semio_references_keys_clear:
+  \printbibliography[env=semioreferences,heading=none]
+  \seq_if_empty:NTF \g_semio_references_keys_seq { } {
+    \semio_references_rows_build:
+    \semio@register@window@open{\SemioReferencesTitle}
+    \semio@references@table@render
+    \semio@register@window@close
+  }
+}
+
+\cs_new_eq:NN \semio@references@render \semio_references_render:
+\cs_new_eq:NN \semio@references@collect \semio_references_key_collect:
+\ExplSyntaxOff
+
+\newcounter{semio@reference@nr}
+\newcommand{\semio@references@rows}{}
+
+\newcommand{\semio@references@table@header}{%
+  \SemioTableHeaderRow{%
+    \semio@register@header@number &
+    \semio@register@header@reference &
+    \semio@register@header@year
+  }%
+}
+
+\defbibenvironment{semioreferences}
+  {\begin{quote}}
+  {\end{quote}}
+  {}
+
+\AtEveryBibitem{%
+  \semio@references@collect
+  \finentry
+}
+
+\newcommand{\semio@references@table@render}{%
+  \SemioTableReference{%
+    \semio@references@table@header
+    \semio@references@rows
+  }%
+}
+
+\newcommand{\SemioReferences}{%
+  \semio@references@render
+}
+%endregion References
 
 \newdimen\semio@panel@shipout@x
 \newdimen\semio@panel@shipout@y
@@ -1296,9 +1378,10 @@
 }
 
 \newcommand{\semio@window@header@row@wrap}[1]{%
+  \ifvmode\else\par\fi
   \noindent
   #1%
-  \nointerlineskip
+  \ifvmode\nointerlineskip\fi
 }
 
 \newcommand{\semio@window@header@muted}[2]{%

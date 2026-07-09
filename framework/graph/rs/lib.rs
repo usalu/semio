@@ -530,12 +530,17 @@ mod wasm_session {
             self.state.borrow().host.dag.param_overlay_paint_state_json().map_err(|e| JsValue::from_str(&e))
         }
 
-        #[wasm_bindgen(js_name = stepperOverlayStateJson)]
-        pub fn stepper_overlay_state_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.dag.stepper_overlay_state_json().map_err(|e| JsValue::from_str(&e))
-        }
+    #[wasm_bindgen(js_name = stepperOverlayStateJson)]
+    pub fn stepper_overlay_state_json(&self) -> Result<String, JsValue> {
+        self.state.borrow().host.dag.stepper_overlay_state_json().map_err(|e| JsValue::from_str(&e))
+    }
 
-        #[wasm_bindgen(js_name = selectionUnionBoundsScreenJson)]
+    #[wasm_bindgen(js_name = sliderOverlayStateJson)]
+    pub fn slider_overlay_state_json(&self) -> Result<String, JsValue> {
+        self.state.borrow().host.dag.slider_overlay_state_json().map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = selectionUnionBoundsScreenJson)]
         pub fn selection_union_bounds_screen_json(&self) -> String {
             self.state.borrow().host.dag.selection_union_bounds_screen_json()
         }

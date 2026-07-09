@@ -1060,7 +1060,7 @@ use semio_framework_core::{
     PluginManifest, UiNode, ViewState,
 };
 use serde::Deserialize;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::sync::atomic::{AtomicU32, Ordering};
 
 const JSON_PATCH_SCHEMA_ID: &str = "semio.kernel.json-patch";
@@ -1068,6 +1068,35 @@ const JSON_PATCH_SCHEMA_ID: &str = "semio.kernel.json-patch";
 thread_local! {
     static PLUGIN: RefCell<Option<PluginBundle>> = const { RefCell::new(None) };
     static INSTANCES: RefCell<Vec<AppInstance>> = const { RefCell::new(Vec::new()) };
+    static INSTANCE_GUARD: Cell<u32> = const { Cell::new(0) };
+}
+
+struct InstanceGuard;
+
+impl InstanceGuard {
+    fn enter() -> Result<Self, String> {
+        if INSTANCE_GUARD.get() > 0 {
+            return Err("plugin instance busy".to_string());
+        }
+        INSTANCE_GUARD.set(1);
+        Ok(Self)
+    }
+}
+
+impl Drop for InstanceGuard {
+    fn drop(&mut self) {
+        INSTANCE_GUARD.set(0);
+    }
+}
+
+fn with_instances_mut<R, F: FnOnce(&mut Vec<AppInstance>) -> Result<R, String>>(f: F) -> Result<R, String> {
+    let _guard = InstanceGuard::enter()?;
+    INSTANCES.with(|instances| f(&mut instances.borrow_mut()))
+}
+
+fn with_instances<R, F: FnOnce(&Vec<AppInstance>) -> Result<R, String>>(f: F) -> Result<R, String> {
+    let _guard = InstanceGuard::enter()?;
+    INSTANCES.with(|instances| f(&instances.borrow()))
 }
 
 pub fn command_result_from_patch_ops(
@@ -1231,20 +1260,20 @@ pub fn plugin_create_app(app_id: &str) -> Result<u32, String> {
             .ok_or_else(|| format!("unknown app: {app_id}"))?;
         let id = NEXT_INSTANCE_ID.fetch_add(1, Ordering::SeqCst);
         let document_json = app.initial_document_json();
-        INSTANCES.with(|instances| {
-            instances.borrow_mut().push(AppInstance {
+        with_instances_mut(|list| {
+            list.push(AppInstance {
                 id,
                 app,
                 document_json,
             });
-        });
+            Ok(())
+        })?;
         Ok(id)
     })
 }
 
 pub fn plugin_destroy_app(instance_id: u32) -> Result<(), String> {
-    INSTANCES.with(|instances| {
-        let mut list = instances.borrow_mut();
+    with_instances_mut(|list| {
         let index = list
             .iter()
             .position(|instance| instance.id == instance_id)
@@ -1277,8 +1306,7 @@ pub fn plugin_handle_command(
         .get("actor")
         .and_then(|value| value.as_str())
         .unwrap_or("local");
-  INSTANCES.with(|instances| {
-        let mut list = instances.borrow_mut();
+  with_instances_mut(|list| {
         let instance = list
             .iter_mut()
             .find(|instance| instance.id == instance_id)
@@ -1354,8 +1382,7 @@ pub fn plugin_render_with_document(
             document_json.map(str::to_string),
         )
     };
-    INSTANCES.with(|instances| {
-        let list = instances.borrow();
+    with_instances(|list| {
         let instance = list
             .iter()
             .find(|instance| instance.id == instance_id)
@@ -1372,8 +1399,7 @@ pub fn plugin_render_with_document(
 pub fn plugin_tools(instance_id: u32, view_state_json: &str) -> Result<Vec<semio_framework_core::ToolNode>, String> {
     let view_state: ViewState =
         serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
-    INSTANCES.with(|instances| {
-        let list = instances.borrow();
+    with_instances(|list| {
         let instance = list
             .iter()
             .find(|instance| instance.id == instance_id)
@@ -1390,8 +1416,7 @@ pub fn plugin_window_engagements(
 ) -> Result<std::collections::HashMap<String, semio_framework_core::layout::WindowEngagement>, String> {
     let view_state: ViewState =
         serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
-    INSTANCES.with(|instances| {
-        let list = instances.borrow();
+    with_instances(|list| {
         let instance = list
             .iter()
             .find(|instance| instance.id == instance_id)
@@ -1408,8 +1433,7 @@ pub fn plugin_window_measures(
 ) -> Result<std::collections::HashMap<String, Vec<semio_framework_core::WindowMeasure>>, String> {
     let view_state: ViewState =
         serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
-    INSTANCES.with(|instances| {
-        let list = instances.borrow();
+    with_instances(|list| {
         let instance = list
             .iter()
             .find(|instance| instance.id == instance_id)

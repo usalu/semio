@@ -1273,6 +1273,7 @@ pub fn create_rewrite_app() -> App {
                 TRINITY_REWRITE_PLAY_WINDOW_PARAMETERS,
                 "Parameters",
                 TRINITY_REWRITE_PLAY_BODY_PARAMETERS,
+                SurfaceKind::Canvas2d,
             )
             .default_layout(rewrite_layout())
             .panel_tab(

@@ -18,6 +18,11 @@ function parseBoardCamera(json: string): BoardCamera | null {
 		return null;
 	}
 }
+
+export function puzzle2dBoardCameraCommandArgs(cameraJson: string): { readonly camera: BoardCamera } | null {
+	const camera = parseBoardCamera(cameraJson);
+	return camera ? { camera } : null;
+}
 //#endregion Parsing
 
 //#region Sync
@@ -241,6 +246,8 @@ export function Puzzle2dBoardHost({
 			} catch {
 				/* gpu not ready */
 			}
+			const cameraArgs = puzzle2dBoardCameraCommandArgs(session.cameraJson());
+			if (cameraArgs) dispatch("setCamera", cameraArgs);
 			drainBoardEvents();
 		};
 

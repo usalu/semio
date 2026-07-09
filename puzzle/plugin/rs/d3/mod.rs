@@ -239,10 +239,13 @@ fn default_envelope() -> Puzzle3dEnvelope {
 }
 
 fn parse_envelope(document_json: &str) -> Puzzle3dEnvelope {
+    if let Ok(envelope) = serde_json::from_str::<Puzzle3dEnvelope>(document_json) {
+        return envelope;
+    }
     if let Ok(fixture) = serde_json::from_str::<Puzzle3dFixture>(document_json) {
         return Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() };
     }
-    serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
+    default_envelope()
 }
 
 fn set_document_op(envelope: &Puzzle3dEnvelope) -> String {
@@ -538,8 +541,8 @@ fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzz
 
 fn drive_precompute(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dEnvelope) {
     sync_precompute_session(session, envelope);
-    for _ in 0..48 {
-        if !session.precompute_step(16) {
+    for _ in 0..128 {
+        if !session.precompute_step(32) {
             break;
         }
     }
@@ -937,6 +940,9 @@ impl PluginApp for Puzzle3dPlayApp {
             "setActiveTool" => {
                 let tool = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()).unwrap_or("select");
                 envelope.runtime.active_tool = tool.into();
+                if envelope.runtime.active_tool == "brush" || envelope.runtime.active_tool == "fill" {
+                    drive_precompute(&mut self.precompute, &envelope);
+                }
                 return vec![set_document_op(&envelope)];
             }
             "addObjectKind" => {
@@ -1451,6 +1457,22 @@ mod tests {
         let engagements = app.window_engagements(&document, &ViewState::default());
         let engagement = engagements.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main engagement");
         assert!(matches!(engagement.control, Some(WindowEngagementControl::Slider { .. })));
+    }
+
+    #[test]
+    fn parse_envelope_preserves_runtime_state() {
+        let envelope = Puzzle3dEnvelope {
+            fixture: empty_fixture(),
+            runtime: Puzzle3dRuntime {
+                active_tool: "fill".into(),
+                fill_count: 2,
+                ..Puzzle3dRuntime::default()
+            },
+        };
+        let json = serde_json::to_string(&envelope).unwrap();
+        let parsed = parse_envelope(&json);
+        assert_eq!(parsed.runtime.active_tool, "fill");
+        assert_eq!(parsed.runtime.fill_count, 2);
     }
 
     #[test]

@@ -1,7 +1,7 @@
 {
   "title": "Rename Model Schema Manifest To Document",
   "emoji": "📄",
-  "status": "closed",
+  "status": "open",
   "description": "Rename framework kernel and app terminology from model to document for schema manifests: ModelHandle/ModelId/ModelVersion/ModelDiff/ModelKind, ResourceKind::Model, model_projection/model_projection_schema, WIT migrate-model/read-model/write-model, and remaining play.model body keys (shooting).",
   "summary": "Renamed framework kernel and plugin contract terminology from model to document for schema manifests.\n\nKernel types: ModelHandle/ModelId/ModelVersion/ModelDiff/ModelKind → Document*; ResourceKind::Model → Document; model_projection/model_projection_schema → document_projection/document_projection_schema; KernelOperation.model and OpEnvelope.model → document.\n\nWIT: migrate-model/read-model/write-model → migrate-document/read-document/write-document; restored list-tools/window-engagements/window-measures exports that component.rs already implemented.\n\nUpdated framework plugin host, OS core, sync, wgpu renderer, and shooting plugin (play body key shooting.play.model → shooting.play.scene to avoid collision with shooting.play.document panel).\n\nFixed generated semio-framework-plugin.d.ts aliases (MigrateModel* → MigrateDocument*). Apps already used *_DOCUMENT_SCHEMA constants.\n\nTests: @semio-tech/framework-core (7), semio-framework-plugin (10), semio-framework-sync (1), semio-framework-os (included in plugin crate tests) — all passed.\n\nNote: plugin-modules *_component.js still contain migrate-model until a full `bun nx run @semio-tech/framework-os-dev:plugin` rebuild completes (blocked by unrelated puzzle-plugin wasm build failure). CAD spatial Model/ModelDiff and program yields \"model\" left unchanged.",
   "github": {
@@ -9,6 +9,7 @@
   },
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
-    "⚪799a7706eae548b1b0449b3ea3c1732c"
+    "⚪799a7706eae548b1b0449b3ea3c1732c",
+    "⚪73b2d6b4ca76477c9a353a1ab8adff4b"
   ]
 }

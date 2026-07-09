@@ -1,28 +1,35 @@
 # Puzzle 3D React Parity — Verify Log
 
-## Changes (round 1)
+## Root cause (brush/fill)
 
-- Part A: `GLB_MESH_FRAME_ROTATION_X` wrapper on `GlbInstanceMesh` (glTF Y-up → CAD Z-up)
-- Part B: `setHover`, `worldPick`, `setTransformTool` handlers + enriched `world_selection_json` (gumball, selectionMode, targets)
-- Part C: Extended `World3dScene` type + vortex/attraction/volume/reference/brush-preview rendering in `World3dHost`
-- Part D: `window_engagements` with Select/Brush/Fill toolbar + brush candidate toggle + fill slider
+- **Brush candidates:** `brush_candidates()` returns `{ free, unknownPending }` but d3 parsed the payload as a bare array — always empty. Fixed via `parse_brush_candidates_free()`.
+- **Brush preview:** `world_brush_preview_json` now uses `puzzle3d_brush_target_vortex` (selection + hovered-object fallback).
+- **Precompute:** `drive_precompute` increased; runs on example switch, brush/fill tool select, vortex hover, and `cycleBrushCandidate`.
+- **Runtime round trip:** `parse_envelope` now deserializes `Puzzle3dEnvelope` first so `runtime` (active tool, fill count, selection) is not dropped.
+- **Fill:** `setFillCount` accepts `{ value }` / `{ count }`; fill tool activates when count > 0.
 
-## Changes (round 2 — brush/fill/context menu)
+## React / shell
 
-- Fill: `setFillCount` now accepts engagement slider `{ value }` as well as `{ count }` (matches puzzle 2d)
-- Brush: `sync_precompute_session` runs at the top of every `handle_command_patch_ops` so brush candidates/preview are available on hover without an unrelated command first
-- Context menu: `contextMenuJson` on `World3dScene` (core + plugin + React); puzzle 3d emits Duplicate / Select same kind / Zoom to selection / Delete when selection is non-empty; `duplicateSelection` and `selectSameKindSelection` commands added; `ContextMenuController` wired in `world-3d-host.tsx` with client-side zoom
+- **Example dedupe:** `exampleOptions` filters strictly on `example.appId === session.app.id` plus id de-duplication (manifest shows one Empty + one Concrete Forest for `puzzle3d-play`).
+- **Camera:** `parseCameraState` respects fixture `zoom`; autofit fallback when camera JSON has no `position`.
+- **Brush meshes:** `BrushMeshRegistrar` in `world-3d-host.tsx` dispatches `registerBrushMesh` when GLBs load (needed for collision-free brush candidates in the live app).
 
 ## Tests run
 
-- `bun nx run @semio-tech/framework-renderer-react:test` — 21 passed
-- `cargo check -p semio-framework-core -p semio-framework-plugin` — ok
-- `cargo test -p puzzle-plugin` — blocked on native host by pre-existing `plugin_exports!` wasm-only macro in `puzzle/plugin/rs/lib.rs`; d3 logic compiles after borrow fix
+- `bun nx run @semio-tech/framework-renderer-react:test` — 24 passed
+- `cargo build -p puzzle-plugin --target wasm32-wasip2 --release` — ok
+- `bun ./.repo/🎫/26/07/09/PUZZLE-3D-REACT-PARITY/wasm-verify.ts` — fill slider round trip (select fill → value 4); manifest example scoping ok
+- `cargo test -p puzzle_3d brush` — ok
+- `cargo test -p puzzle-plugin` — blocked on native host by pre-existing `plugin_exports!` wasm-only macro in `puzzle/plugin/rs/lib.rs`
 
-## Manual browser check (pending dev server)
+## Live verification notes
 
-Load Concrete Forest in Puzzle 3D and confirm:
-- Brush mode: hover vortex → candidate toggle + ghost preview; click places object
-- Fill mode: slider adds objects (count > 0)
-- Right-click with selection → context menu (Duplicate, Select same kind, Zoom, Delete)
-- GLB meshes upright, hover/select/marquee+gumball, vortex/cable overlays, Select/Brush/Fill toolbar
+- Puzzle 3D dev server: `http://127.0.0.1:6013/` (isolated from other `dev:puzzle:*` builds to avoid shared wasm-pack races).
+- Wasm API verification confirms fill command round trip; brush placement candidates require GLB collision meshes (`registerBrushMesh`) after assets load — headless wasm script without mesh fetch may still show zero brush candidates even when the parse/precompute path is correct.
+- Browser automation: fill tool button click works; engagement chrome may need the window focused/expanded before the slider appears in the overlay (wasm path does not depend on React engagement chrome).
+
+## Ticket scripts (temporary)
+
+- `wasm-verify.ts` — automated wasm fill + manifest dedupe check
+- `browser-verify.ts` — playwright smoke (run after dev server + wasm rebuild)
+- `manifest-check.ts`, `brush-debug.ts` — investigation helpers

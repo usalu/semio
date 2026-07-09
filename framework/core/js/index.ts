@@ -849,7 +849,67 @@ export const DEFAULT_PLUGIN_REGISTRY: readonly PluginRegistryEntry[] = [
 	{ pluginId: "draw", moduleUrl: "/plugin-modules/draw/draw_plugin.js" },
 ];
 
+//#region SerializedPluginWasm
+/** @emoji 🔒 Serializes wasm plugin entry points — the host keeps instances in one RefCell. */
+export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): PluginWasmHandle {
+	let tail: Promise<void> = Promise.resolve();
+	const runSerialized = <T>(fn: () => Promise<T>): Promise<T> => {
+		const job = tail.then(async () => {
+			for (let attempt = 0; attempt < 8; attempt += 1) {
+				try {
+					return await fn();
+				} catch (error) {
+					const message = error instanceof Error ? error.message : String(error);
+					if (!message.includes("plugin instance busy") && !message.includes("plugin busy")) throw error;
+					await new Promise((resolve) => setTimeout(resolve, attempt + 1));
+				}
+			}
+			return fn();
+		});
+		tail = job.then(
+			() => undefined,
+			() => undefined,
+		);
+		return job;
+	};
+	return {
+		pluginId: handle.pluginId,
+		manifest: handle.manifest,
+		createApp: (appId) => runSerialized(() => handle.createApp(appId)),
+		destroyApp: (instanceId) => runSerialized(() => handle.destroyApp(instanceId)),
+		handleCommand: (instanceId, commandJson, viewState) =>
+			runSerialized(() => handle.handleCommand(instanceId, commandJson, viewState)),
+		render: (instanceId, bodyKey, viewState) => runSerialized(() => handle.render(instanceId, bodyKey, viewState)),
+		renderWithDocument: handle.renderWithDocument
+			? (instanceId, bodyKey, viewState, documentJson) =>
+					runSerialized(() => handle.renderWithDocument!(instanceId, bodyKey, viewState, documentJson))
+			: undefined,
+		tools: (instanceId, viewState) => runSerialized(() => handle.tools(instanceId, viewState)),
+		windowEngagements: (instanceId, viewState) =>
+			runSerialized(() => handle.windowEngagements(instanceId, viewState)),
+		windowMeasures: (instanceId, viewState) =>
+			runSerialized(() => handle.windowMeasures(instanceId, viewState)),
+		dispose: handle.dispose,
+	};
+}
+//#endregion SerializedPluginWasm
+
+const pluginModuleHandleCache = new Map<string, Promise<PluginWasmHandle>>();
+
 export async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
+	const cached = pluginModuleHandleCache.get(moduleUrl);
+	if (cached) return cached;
+	const pending = loadPluginModuleUncached(pluginId, moduleUrl);
+	pluginModuleHandleCache.set(moduleUrl, pending);
+	try {
+		return await pending;
+	} catch (error) {
+		pluginModuleHandleCache.delete(moduleUrl);
+		throw error;
+	}
+}
+
+async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
 	const module = (await import(/* @vite-ignore */ moduleUrl)) as {
 		default?: () => Promise<void> | void;
 		createPluginApi?: () => Promise<{
@@ -881,7 +941,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
 	if (module.createPluginApi) {
 		const api = await module.createPluginApi();
 		const manifest = JSON.parse(await api.manifest()) as PluginManifest;
-		return {
+		return withSerializedPluginWasmHandle({
 			pluginId,
 			manifest,
 			createApp: (appId) => api.createApp(appId),
@@ -919,13 +979,13 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
 				>;
 			},
 			dispose() {},
-		};
+		});
 	}
 	if (!module.semio_plugin_manifest) {
 		throw new Error(`[DEBUG] plugin ${pluginId} missing semio_plugin_manifest export`);
 	}
 	const manifest = JSON.parse(module.semio_plugin_manifest()) as PluginManifest;
-	return {
+	return withSerializedPluginWasmHandle({
 		pluginId,
 		manifest,
 		async createApp(appId: string) {
@@ -963,7 +1023,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
 			return JSON.parse(measures(instanceId, JSON.stringify(viewState))) as Record<string, readonly Record<string, unknown>[]>;
 		},
 		dispose() {},
-	};
+	});
 }
 
 export async function loadPluginWasm(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {

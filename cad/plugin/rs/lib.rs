@@ -17,7 +17,7 @@ use geometry_import::{
 use semio_framework_plugin::{PanelGroup, 
     build_world_3d_scene, export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_from_kind,
     tool_button, tool_collection, tool_separator, tool_toggle, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
-    ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_mixed_vec3, ui_inspector_readonly_field,
+    ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_mixed_vec3, ui_inspector_all_equal, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, App,
     CommandDescriptor, MeshData, PluginApp, PluginBundle, ToolCategory, ToolNode, UiControlNode, UiFieldNode,
     UiInspectorFieldGroup, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiTreeItemAction, UiTreeItemNode,
@@ -303,6 +303,10 @@ struct CadPlayRuntime {
     #[serde(default)]
     selected_reference_id: Option<String>,
     #[serde(default)]
+    selected_primitive_id: Option<String>,
+    #[serde(default)]
+    selected_primitive_kind: Option<String>,
+    #[serde(default)]
     engagement_pane: Option<String>,
     #[serde(default)]
     engagement_session: Option<CadEngagementSession>,
@@ -335,6 +339,8 @@ impl Default for CadPlayRuntime {
             active_example_id: None,
             selected_reference_model_definition_id: None,
             selected_reference_id: None,
+            selected_primitive_id: None,
+            selected_primitive_kind: None,
             engagement_pane: None,
             engagement_session: None,
             pending_export: None,
@@ -639,15 +645,7 @@ fn apply_transformation_to_envelope(envelope: &mut CadPlayEnvelope, qid: &str) -
     let Some(target_pane) = cad_pane_from_model_definition_id(spec.target_model_definition_id) else {
         return false;
     };
-    let objects = if envelope.runtime.active_example_id.as_deref() == Some(CAD_EXAMPLE_FOREST_LEFT) {
-        let model_index = match target_pane {
-            CadPaneId::Building => CAD_MODEL_INDEX_BUILDING,
-            CadPaneId::Energy => CAD_MODEL_INDEX_ENERGY,
-            CadPaneId::StructureClassic => CAD_MODEL_INDEX_STRUCTURE_CLASSIC,
-            CadPaneId::Shape => CAD_MODEL_INDEX_SHAPE,
-        };
-        cad_document_pane_objects(FOREST_LEFT_MODEL_JSON, model_index)
-    } else {
+    let objects = {
         let source_objects: Vec<CadObject> = cad_pane_objects(&envelope.document, source_pane)
             .iter()
             .cloned()
@@ -1011,6 +1009,11 @@ fn world_selection_json(document: &CadScene, runtime: &CadPlayRuntime) -> String
             json!(runtime.engagement_session.is_some()),
         );
         object.insert("showEdges".into(), json!(true));
+        object.insert("selectionMode".into(), json!("mesh"));
+        object.insert("granularity".into(), json!("mesh"));
+        if let Some(reference_id) = runtime.selected_reference_id.as_deref() {
+            object.insert("referenceSelectedId".into(), json!(reference_id));
+        }
         if let Some(target) = gumball_target_for(document, &runtime.selected_object_ids) {
             object.insert("gumballTarget".into(), json!(target));
         }
@@ -1284,6 +1287,59 @@ fn references_section(model_definition_id: &str, references: &[CadReference]) ->
     }
 }
 
+fn document_tree_selected_ids(document: &CadScene, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
+    if let (Some(model_definition_id), Some(reference_id)) = (
+        runtime.selected_reference_model_definition_id.as_deref(),
+        runtime.selected_reference_id.as_deref(),
+    ) {
+        return Some(vec![format!("cad-reference:{model_definition_id}:{reference_id}")]);
+    }
+    if let (Some(object_id), Some(primitive_id)) = (
+        runtime.selected_object_ids.first(),
+        runtime.selected_primitive_id.as_deref(),
+    ) {
+        if let Some(pane) = cad_find_object_pane(document, object_id) {
+            return Some(vec![format!(
+                "cad-primitive:{}:{object_id}:{primitive_id}",
+                cad_pane_suffix(pane)
+            )]);
+        }
+    }
+    let selected: Vec<String> = runtime
+        .selected_object_ids
+        .iter()
+        .filter_map(|object_id| {
+            cad_find_object_pane(document, object_id)
+                .map(|pane| format!("cad-object:{}:{object_id}", cad_pane_suffix(pane)))
+        })
+        .collect();
+    if selected.is_empty() {
+        None
+    } else {
+        Some(selected)
+    }
+}
+
+fn document_tree_highlighted_ids(document: &CadScene, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
+    let hovered = runtime.hovered_object_id.as_deref()?;
+    if let Some(reference_id) = hovered.strip_prefix("reference:") {
+        for pane in CadPaneId::all() {
+            let model_definition_id = pane.model_definition_id();
+            if document
+                .references_by_model_definition_id
+                .get(model_definition_id)
+                .is_some_and(|rows| rows.iter().any(|row| row.id == reference_id))
+            {
+                return Some(vec![format!("cad-reference:{model_definition_id}:{reference_id}")]);
+            }
+        }
+        return None;
+    }
+    cad_find_object_pane(document, hovered).map(|pane| {
+        vec![format!("cad-object:{}:{hovered}", cad_pane_suffix(pane))]
+    })
+}
+
 fn build_document_tree(envelope: &CadPlayEnvelope) -> UiNode {
     let node_items: Vec<UiTreeItemNode> = envelope
         .document
@@ -1353,12 +1409,8 @@ fn build_document_tree(envelope: &CadPlayEnvelope) -> UiNode {
     let _ = &mut sections;
     UiNode::Tree(UiTreeNode {
         sections,
-        selected_ids: None,
-        highlighted_ids: envelope
-            .runtime
-            .hovered_object_id
-            .as_ref()
-            .map(|id| vec![format!("cad-object:shape:{id}")]),
+        selected_ids: document_tree_selected_ids(&envelope.document, &envelope.runtime),
+        highlighted_ids: document_tree_highlighted_ids(&envelope.document, &envelope.runtime),
         selection_change: None,
     })
 }
@@ -1389,6 +1441,30 @@ fn build_catalogue_tree() -> UiNode {
 }
 
 fn build_properties_panel(envelope: &CadPlayEnvelope) -> UiNode {
+    if let (Some(object_id), Some(primitive_id)) = (
+        envelope.runtime.selected_object_ids.first(),
+        envelope.runtime.selected_primitive_id.as_deref(),
+    ) {
+        if let Some((object, _)) = cad_all_objects(&envelope.document).find(|(object, _)| object.id == *object_id) {
+            let kind = envelope
+                .runtime
+                .selected_primitive_kind
+                .as_deref()
+                .or_else(|| {
+                    object
+                        .primitives
+                        .iter()
+                        .find(|primitive| primitive.primitive_id == primitive_id)
+                        .map(|primitive| primitive.kind.as_str())
+                })
+                .unwrap_or("primitive");
+            return ui_inspector_groups_to_tree(&[primitive_inspector_group(
+                object,
+                primitive_id,
+                kind,
+            )]);
+        }
+    }
     if !envelope.runtime.selected_object_ids.is_empty() {
         let selected: Vec<&CadObject> = envelope
             .runtime
@@ -1509,6 +1585,10 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
         .iter()
         .map(|object| object.scale.unwrap_or([1.0, 1.0, 1.0]))
         .collect();
+    let orientations: Vec<[f64; 4]> = objects
+        .iter()
+        .map(|object| object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]))
+        .collect();
     let label_mixed = ui_inspector_mixed_text(&labels);
     let typology_mixed = ui_inspector_mixed_text(&typologies);
     let hidden_mixed = ui_inspector_mixed_toggle(&hidden);
@@ -1599,8 +1679,62 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
                 &object_ids,
                 "scale",
             ),
+            inspector_quat_field(
+                "cad-play-inspector.object.orientation",
+                "Rotation",
+                &orientations,
+                &object_ids,
+            ),
         ],
     }
+}
+
+fn primitive_inspector_group(object: &CadObject, primitive_id: &str, kind: &str) -> UiInspectorFieldGroup {
+    let slot = object
+        .primitives
+        .iter()
+        .find(|primitive| primitive.primitive_id == primitive_id)
+        .map(|primitive| primitive.slot.as_str())
+        .unwrap_or("primitive");
+    UiInspectorFieldGroup {
+        id: "cad-play-inspector.primitive".into(),
+        label: "Primitive".into(),
+        default_open: None,
+        fields: vec![
+            ui_inspector_readonly_field("cad-play-inspector.primitive.object", "Object", &object.label),
+            ui_inspector_readonly_field("cad-play-inspector.primitive.slot", "Slot", slot),
+            ui_inspector_readonly_field("cad-play-inspector.primitive.kind", "Kind", kind),
+            ui_inspector_readonly_field("cad-play-inspector.primitive.id", "Id", primitive_id),
+        ],
+    }
+}
+
+fn inspector_quat_field(id: &str, label: &str, values: &[[f64; 4]], object_ids: &[String]) -> UiNode {
+    let serialized: Vec<String> = values
+        .iter()
+        .map(|row| format!("[{}, {}, {}, {}]", row[0], row[1], row[2], row[3]))
+        .collect();
+    let uniform = ui_inspector_all_equal(&serialized);
+    let value = values.first().copied().unwrap_or([0.0, 0.0, 0.0, 1.0]);
+    UiNode::Field(UiFieldNode {
+        id: id.into(),
+        label: label.into(),
+        child: UiControlNode::Input(UiInputNode {
+            id: format!("{id}.input"),
+            input_kind: "text".into(),
+            value: if uniform {
+                format!("[{}, {}, {}, {}]", value[0], value[1], value[2], value[3])
+            } else {
+                String::new()
+            },
+            placeholder: if uniform { None } else { Some("—".into()) },
+            commit: None,
+            on_change: cad_cmd(
+                "patchSelection",
+                Some(json!({ "objectIds": object_ids, "field": "orientation" })),
+            ),
+        }),
+    })
 }
 
 fn reference_inspector_group(model_definition_id: &str, reference: &CadReference) -> UiInspectorFieldGroup {
@@ -1990,8 +2124,36 @@ fn object_patch_from_field(field: &str, value: Option<&Value>) -> Option<CadObje
             scale: Some(scale),
             ..Default::default()
         }),
+        "orientation" => value.and_then(parse_quat_value).map(|orientation| CadObjectPatch {
+            orientation: Some(orientation),
+            ..Default::default()
+        }),
         _ => None,
     }
+}
+
+fn parse_quat_value(value: &Value) -> Option<[f64; 4]> {
+    if let Some(array) = value.as_array() {
+        if array.len() >= 4 {
+            return Some([
+                array[0].as_f64().unwrap_or(0.0),
+                array[1].as_f64().unwrap_or(0.0),
+                array[2].as_f64().unwrap_or(0.0),
+                array[3].as_f64().unwrap_or(1.0),
+            ]);
+        }
+    }
+    if let Some(text) = value.as_str() {
+        let trimmed = text.trim().trim_start_matches('[').trim_end_matches(']');
+        let parts: Vec<f64> = trimmed
+            .split(',')
+            .filter_map(|part| part.trim().parse().ok())
+            .collect();
+        if parts.len() >= 4 {
+            return Some([parts[0], parts[1], parts[2], parts[3]]);
+        }
+    }
+    None
 }
 
 fn parse_vec3_value(value: &Value) -> Option<[f64; 3]> {
@@ -2207,6 +2369,10 @@ impl PluginApp for CadApp {
                     .unwrap_or_default();
                 envelope.runtime.selected_object_ids = object_ids;
                 envelope.runtime.selected_node_ids.clear();
+                envelope.runtime.selected_primitive_id = None;
+                envelope.runtime.selected_primitive_kind = None;
+                envelope.runtime.selected_reference_model_definition_id = None;
+                envelope.runtime.selected_reference_id = None;
                 return vec![set_document_op(&envelope)];
             }
             "setNodeSelection" => {
@@ -2416,6 +2582,10 @@ impl PluginApp for CadApp {
                 envelope.runtime.selected_object_ids =
                     merge_world_selection_ids(&envelope.runtime.selected_object_ids, &ids, merge);
                 envelope.runtime.selected_node_ids.clear();
+                envelope.runtime.selected_primitive_id = None;
+                envelope.runtime.selected_primitive_kind = None;
+                envelope.runtime.selected_reference_model_definition_id = None;
+                envelope.runtime.selected_reference_id = None;
                 return vec![set_document_op(&envelope)];
             }
             "worldHover" => {
@@ -2423,6 +2593,63 @@ impl PluginApp for CadApp {
                     .and_then(|value| value.get("id"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string);
+                return vec![set_document_op(&envelope)];
+            }
+            "setHover" => {
+                if args.is_none() || args.and_then(|value| value.get("objectId")).is_none() {
+                    envelope.runtime.hovered_object_id = None;
+                } else {
+                    envelope.runtime.hovered_object_id = args
+                        .and_then(|value| value.get("objectId"))
+                        .and_then(|value| value.as_str())
+                        .map(str::to_string);
+                }
+                return vec![set_document_op(&envelope)];
+            }
+            "worldPick" => {
+                let merge = args
+                    .and_then(|value| value.get("merge"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("replace");
+                if args
+                    .and_then(|value| value.get("id"))
+                    .map_or(true, |value| value.is_null())
+                {
+                    if merge == "replace" {
+                        envelope.runtime.selected_object_ids.clear();
+                        envelope.runtime.selected_primitive_id = None;
+                        envelope.runtime.selected_primitive_kind = None;
+                    }
+                    return vec![set_document_op(&envelope)];
+                }
+                let index = args
+                    .and_then(|value| value.get("id"))
+                    .and_then(|value| value.as_u64())
+                    .unwrap_or(0) as usize;
+                let pane = args
+                    .and_then(|value| value.get("surfaceId"))
+                    .and_then(|value| value.as_str())
+                    .map(cad_pane_id_from_surface_id)
+                    .or_else(|| {
+                        args.and_then(|value| value.get("pane"))
+                            .and_then(|value| value.as_str())
+                            .map(cad_pane_id_from_suffix)
+                    })
+                    .unwrap_or(CadPaneId::Shape);
+                if let Some(object) = cad_pane_objects(&envelope.document, pane)
+                    .iter()
+                    .filter(|object| object.visible)
+                    .nth(index)
+                {
+                    let id = object.id.clone();
+                    envelope.runtime.selected_object_ids =
+                        merge_world_selection_ids(&envelope.runtime.selected_object_ids, &[id], merge);
+                    envelope.runtime.selected_node_ids.clear();
+                    envelope.runtime.selected_primitive_id = None;
+                    envelope.runtime.selected_primitive_kind = None;
+                    envelope.runtime.selected_reference_model_definition_id = None;
+                    envelope.runtime.selected_reference_id = None;
+                }
                 return vec![set_document_op(&envelope)];
             }
             "setSelectionMethod" => {
@@ -2526,16 +2753,26 @@ impl PluginApp for CadApp {
                 }
             }
             "setReferenceSelection" => {
-                envelope.runtime.selected_reference_model_definition_id = args
-                    .and_then(|value| value.get("modelDefinitionId"))
+                let pane = args
+                    .and_then(|value| value.get("pane"))
                     .and_then(|value| value.as_str())
-                    .map(str::to_string);
+                    .map(cad_pane_id_from_suffix)
+                    .or_else(|| {
+                        args.and_then(|value| value.get("modelDefinitionId"))
+                            .and_then(|value| value.as_str())
+                            .and_then(cad_pane_from_model_definition_id)
+                    })
+                    .unwrap_or(CadPaneId::Shape);
+                envelope.runtime.selected_reference_model_definition_id =
+                    Some(pane.model_definition_id().into());
                 envelope.runtime.selected_reference_id = args
                     .and_then(|value| value.get("referenceId"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string);
                 envelope.runtime.selected_object_ids.clear();
                 envelope.runtime.selected_node_ids.clear();
+                envelope.runtime.selected_primitive_id = None;
+                envelope.runtime.selected_primitive_kind = None;
                 return vec![set_document_op(&envelope)];
             }
             "referenceHover" => {
@@ -2695,6 +2932,16 @@ impl PluginApp for CadApp {
                 if let Some(object_id) = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()) {
                     envelope.runtime.selected_object_ids = vec![object_id.into()];
                     envelope.runtime.selected_node_ids.clear();
+                    envelope.runtime.selected_primitive_id = args
+                        .and_then(|value| value.get("primitiveId"))
+                        .and_then(|value| value.as_str())
+                        .map(str::to_string);
+                    envelope.runtime.selected_primitive_kind = args
+                        .and_then(|value| value.get("kind"))
+                        .and_then(|value| value.as_str())
+                        .map(str::to_string);
+                    envelope.runtime.selected_reference_model_definition_id = None;
+                    envelope.runtime.selected_reference_id = None;
                     return vec![set_document_op(&envelope)];
                 }
             }
@@ -3126,6 +3373,94 @@ mod tests {
             .energy_objects
             .iter()
             .any(|object| object.typology.starts_with("energy.energy.")));
+    }
+
+    #[test]
+    fn forest_transformation_uses_live_shape_pane() {
+        let mut app = CadApp;
+        let mut envelope = forest_play_envelope();
+        let fixture_energy_count = envelope.document.energy_objects.len();
+        assert!(fixture_energy_count > 10, "forest fixture should have many energy objects");
+        envelope.document.energy_objects.clear();
+        envelope.document.objects.truncate(1);
+        envelope.document.objects[0].typology = "spatial.shape.primitive.box".into();
+        envelope.document.objects[0].label = "live-shape-only".into();
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command_patch_ops(
+            "applyTransformation",
+            Some(&json!({ "qid": "spatial.shape.from_geometry" })),
+            &document,
+            &ViewState::default(),
+        );
+        let next = apply_ops(&envelope, &ops);
+        assert!(!next.document.energy_objects.is_empty());
+        assert!(
+            next.document.energy_objects.len() < fixture_energy_count / 2,
+            "live single-box derive should not repopulate the static forest energy fixture"
+        );
+    }
+
+    #[test]
+    fn multi_selection_inspector_shows_mixed_values() {
+        let app = CadApp;
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        let second = make_object_for_typology("spatial.shape.primitive.box", 1, CadPaneId::Shape);
+        let second_id = second.id.clone();
+        envelope.document.objects.push(second);
+        envelope.document.objects[0].label = "Alpha".into();
+        envelope.document.objects[1].label = "Beta".into();
+        envelope.document.objects[0].orientation = Some([0.0, 0.0, 0.0, 1.0]);
+        envelope.document.objects[1].orientation = Some([0.0, 0.707, 0.0, 0.707]);
+        envelope.runtime.selected_object_ids = vec!["object-box-1".into(), second_id];
+        let panel = build_properties_panel(&envelope);
+        let json = serde_json::to_string(&panel).unwrap();
+        assert!(json.contains("Mixed"));
+        assert!(json.contains("cad-play-inspector.object.orientation"));
+    }
+
+    #[test]
+    fn world_pick_selects_visible_object_by_index() {
+        let mut app = CadApp;
+        let envelope = forest_play_envelope();
+        let shape_visible: Vec<_> = envelope
+            .document
+            .objects
+            .iter()
+            .filter(|object| object.visible)
+            .collect();
+        assert!(shape_visible.len() > 1);
+        let expected_id = shape_visible[1].id.clone();
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command_patch_ops(
+            "worldPick",
+            Some(&json!({
+                "surfaceId": CAD_PLAY_WINDOW_SHAPE,
+                "id": 1,
+                "merge": "replace"
+            })),
+            &document,
+            &ViewState::default(),
+        );
+        let next = apply_ops(&envelope, &ops);
+        assert_eq!(next.runtime.selected_object_ids, vec![expected_id]);
+    }
+
+    #[test]
+    fn document_tree_reflects_viewport_selection() {
+        let mut envelope = forest_play_envelope();
+        let object = envelope
+            .document
+            .objects
+            .iter()
+            .find(|object| object.visible)
+            .expect("visible shape object");
+        let object_id = object.id.clone();
+        envelope.runtime.selected_object_ids = vec![object_id.clone()];
+        envelope.runtime.hovered_object_id = Some(object_id.clone());
+        let selected = document_tree_selected_ids(&envelope.document, &envelope.runtime).expect("selected");
+        assert!(selected.iter().any(|id| id.contains(&object_id) && id.starts_with("cad-object:shape:")));
+        let highlighted = document_tree_highlighted_ids(&envelope.document, &envelope.runtime).expect("highlighted");
+        assert!(highlighted.iter().any(|id| id.contains(&object_id) && id.starts_with("cad-object:shape:")));
     }
 
     #[test]

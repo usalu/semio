@@ -111,6 +111,8 @@ type WorldContextMenuItem = {
 type WorldSelectionRecord = {
 	readonly method?: SelectionMarqueeMethod;
 	readonly ids?: readonly string[];
+	readonly hoveredId?: string | null;
+	readonly referenceSelectedId?: string;
 	readonly granularity?: string;
 	readonly selectionMode?: string;
 	readonly activeObjectId?: string;
@@ -163,6 +165,7 @@ type WorldReferenceRecord = {
 	readonly widthWorld?: number;
 	readonly locked?: boolean;
 	readonly hidden?: boolean;
+	readonly opacity?: number;
 };
 
 type WorldBrushPreviewRecord = {
@@ -1399,6 +1402,38 @@ export function World3dHost({
 		[node.controllerId, node.surfaceId, onCommand],
 	);
 
+	const referenceSelectedIds = useMemo(() => {
+		if (!selection.referenceSelectedId) return new Set<string>();
+		return new Set([selection.referenceSelectedId]);
+	}, [selection.referenceSelectedId]);
+
+	const referenceHoveredId = useMemo(() => {
+		const hovered = selection.hoveredId;
+		if (!hovered?.startsWith("reference:")) return null;
+		return hovered.slice("reference:".length);
+	}, [selection.hoveredId]);
+
+	const handleReferenceSelect = useCallback(
+		(id: string) => {
+			dispatch("setReferenceSelection", {
+				pane: paneSuffixFromSurfaceId(node.surfaceId),
+				referenceId: id,
+			});
+		},
+		[dispatch, node.surfaceId],
+	);
+
+	const handleReferenceHover = useCallback(
+		(id: string | null) => {
+			if (!id) {
+				dispatch("referenceHover", {});
+				return;
+			}
+			dispatch("referenceHover", { referenceId: id });
+		},
+		[dispatch],
+	);
+
 	const registeredBrushMeshesRef = useRef(new Set<string>());
 	const handleRegisterBrushMesh = useCallback(
 		(url: string, positions: number[], indices: number[]) => {
@@ -1861,7 +1896,12 @@ export function World3dHost({
 								origin: reference.origin as [number, number, number],
 								widthWorld: reference.widthWorld,
 								locked: reference.locked,
+								opacity: reference.opacity,
 							}))}
+						selectedIds={referenceSelectedIds}
+						hoveredId={referenceHoveredId}
+						onSelect={(id) => handleReferenceSelect(id)}
+						onHover={handleReferenceHover}
 					/>
 				</WorldLodBridge>
 				</WorldOrbitViewSnapGateProvider>

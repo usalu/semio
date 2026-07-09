@@ -13,10 +13,10 @@ todos:
     status: completed
   - id: rebuild-and-rasterize
     content: Rebuild zwischenbericht/report and rasterize to confirm chip row now renders above box content and cover title isn't clipped
-    status: in_progress
+    status: completed
   - id: update-ticket
     content: Update verify-log.md and close ticket PRINT-WINDOW-BORDER-GAP with the corrected root cause
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -2,8 +2,8 @@ import { createElement, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Canvas2dHost, worldToScreenLogical } from "./components/canvas-2d-host.tsx";
-import { Puzzle2dBoardHost } from "./components/puzzle-2d-board-host.tsx";
-import { NodeGraphHost, nodeGraphViewportCommandArgs } from "./components/node-graph-host.tsx";
+import { Puzzle2dBoardHost, puzzle2dBoardCameraCommandArgs } from "./components/puzzle-2d-board-host.tsx";
+import { NodeGraphHost, nodeGraphViewportCommandArgs, parseDagSliderOverlays } from "./components/node-graph-host.tsx";
 import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
 import { TextEditorHost } from "./components/text-editor-host.tsx";
@@ -35,6 +35,36 @@ describe("framework plugin runtime", () => {
 			}),
 		);
 		expect(commandResult).toEqual([JSON.stringify({ op: "setDocument", document: { id: "forest" } })]);
+	});
+
+	it("serializes concurrent plugin wasm handle calls", async () => {
+		const { withSerializedPluginWasmHandle } = await import("@semio-tech/framework-core");
+		let inFlight = 0;
+		let maxInFlight = 0;
+		const handle = withSerializedPluginWasmHandle({
+			pluginId: "mock",
+			manifest: { pluginId: "mock", label: "Mock", version: "0", apps: [], programs: [], examples: [] },
+			createApp: async () => 1,
+			destroyApp: async () => {},
+			handleCommand: async () => {
+				inFlight += 1;
+				maxInFlight = Math.max(maxInFlight, inFlight);
+				await new Promise((resolve) => setTimeout(resolve, 5));
+				inFlight -= 1;
+				return [];
+			},
+			render: async () => ({ type: "text", value: "x" }),
+			tools: async () => [],
+			windowEngagements: async () => ({}),
+			windowMeasures: async () => ({}),
+			dispose: () => {},
+		});
+		await Promise.all([
+			handle.handleCommand(1, "{}", {}),
+			handle.handleCommand(1, "{}", {}),
+			handle.handleCommand(1, "{}", {}),
+		]);
+		expect(maxInFlight).toBe(1);
 	});
 });
 
@@ -194,6 +224,30 @@ describe("framework renderer hosts", () => {
 		});
 	});
 
+	it("parses slider overlay state json for flow graph hosts", () => {
+		const sliders = parseDagSliderOverlays(
+			JSON.stringify({
+				camera: { x: 0, y: 0, zoom: 1 },
+				sliders: [
+					{
+						widgetId: "slider_2",
+						value: 2.2,
+						min: 0,
+						max: 10,
+						step: 0.1,
+						x: 100,
+						y: 50,
+						w: 120,
+						h: 8,
+					},
+				],
+			}),
+		);
+		expect(sliders).toHaveLength(1);
+		expect(sliders[0]?.widgetId).toBe("slider_2");
+		expect(sliders[0]?.value).toBe(2.2);
+	});
+
 	it("renders canvas 2d host with infinite canvas session", () => {
 		const markup = renderToStaticMarkup(
 			createElement(Canvas2dHost, {
@@ -235,6 +289,12 @@ describe("framework renderer hosts", () => {
 			}),
 		);
 		expect(markup).toContain("semio-puzzle2d-board-host");
+	});
+
+	it("uses the live puzzle 2d board camera for wheel persistence commands", () => {
+		expect(puzzle2dBoardCameraCommandArgs('{"x":345,"y":-123,"zoom":4.25}')).toEqual({
+			camera: { x: 345, y: -123, zoom: 4.25 },
+		});
 	});
 
 	it("maps a world-centered node inside the viewport with canonical camera math", () => {

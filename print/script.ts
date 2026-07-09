@@ -501,7 +501,7 @@ function tectonicEnv(): NodeJS.ProcessEnv {
 	const sep = process.platform === "win32" ? ";" : ":";
 	return {
 		...process.env,
-		TEXINPUTS: `${texDir}${sep}`,
+		TEXINPUTS: `${texDir}//${sep}${texDir}${sep}`,
 	};
 }
 
@@ -515,7 +515,7 @@ function compilePrintDocument(tectonic: string, texAbs: string, outDir: string):
     "--keep-intermediates",
     "--synctex",
     "--reruns",
-    "1",
+    "2",
     "-Z",
     `search-path=${texDir}`,
     "--outdir",

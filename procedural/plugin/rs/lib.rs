@@ -14,5 +14,6 @@ fn bundle() -> PluginBundle {
         .register_app(app_3d::create_procedural3d_app(), || Box::new(app_3d::Procedural3dPlayApp))
 }
 
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Bundle

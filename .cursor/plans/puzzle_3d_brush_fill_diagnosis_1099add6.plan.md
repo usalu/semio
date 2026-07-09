@@ -4,19 +4,19 @@ overview: Investigate why the user still sees no brush/fill/suggestion behavior 
 todos:
   - id: clean-env-retest
     content: Restart puzzle-3d dev server in isolation, wait for full rebuild, re-verify Brush/Fill/context-menu live with real click gestures
-    status: in_progress
+    status: completed
   - id: bisect-if-broken
     content: If round trip still broken, add temporary [DEBUG] logs at dispatch/os-shell/Rust handler hand-offs to pinpoint break, fix, then remove logs
-    status: pending
+    status: cancelled
   - id: dedupe-examples
     content: Find and fix duplicate Concrete Forest / Nakagin Capsule Tower example registration causing React duplicate-key warnings
-    status: pending
+    status: completed
   - id: camera-autofit
     content: Consider auto-framing camera to seed object bounds on example load so small seed meshes aren't lost against the large reference grid
-    status: pending
+    status: completed
   - id: validate-close
     content: Run renderer + Rust tests, update verify-log.md, reopen/close PUZZLE-3D-REACT-PARITY ticket with findings
-    status: pending
+    status: completed
 isProject: false
 ---
 

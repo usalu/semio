@@ -2,34 +2,50 @@
 
 ## Problem
 
-Window title bars showed a small gap between the horizontal separator and the content box; left/right borders did not meet the label cap corners (see user screenshot).
+Window title bars rendered **below** box content instead of above it; cover titles could clip at the page top. Builds also appeared frozen when many orphaned `tectonic` processes were running.
 
-## Root causes
+## Root cause (title bar order)
 
-1. Title cap used `fcolorbox` with a bottom border while the gap filler drew a separate bottom stroke at a different vertical position.
-2. `\semio@heading@row@wrap` inserted `\vskip\semio@block@sep@skip` after window headers.
-3. Header row and `tcolorbox` body were separate boxes, so side borders could not connect vertically.
-4. Calling `\semio@window@header@muted` from `\ExplSyntaxOn` without `\use:c` / invoke wrapper broke `@` macros and caused TeX to hang in error recovery.
+`\semio@window@header@muted` wrapped the chip row + separator in `\vtop{...}` while working heading chips use `\vbox{...}` in `\semio@heading@row@wrap`.
 
-## Fix (`print/tex/semio-window.sty`)
+Per the TeX box model:
 
-- Refactored muted cap into `@core` (top stroke + fill), `@tab` (core + right stroke for window headers), and full `@muted` (left + core + right for paragraph headings).
-- Window header row: extended left stroke spans title bar + separator; caps use `@tab`; gap uses fill-only `@inbox` variant; full-width bottom stroke below the row.
-- `\semio@window@header@row@wrap` renders without trailing block separation vskip.
-- `\semio_window_vskip_double_stroke_hairline:` pulls the body `tcolorbox` up to meet the separator.
-- `\semio@window@header@invoke` + `\semio_window_header_muted_use:` bridge expl3 begins to LaTeX2e header macros safely.
+- `\vbox{A B}` — reference point at the bottom of the last item → header height is correct; `tcolorbox` body follows immediately after the separator.
+- `\vtop{A B}` — reference point at the bottom of the first item (chip row) → most of the header becomes **depth** below the baseline, so labels visually land under content and the cover title can clip at the top.
 
-## Spacing fix (title bar below content)
+## Additional fixes uncovered during verification
 
-The title row was placed in an `\hbox` beside a tall `\vrule`/`\rule`, so TeX baseline-aligned the rule bottom with the `\vtop` top. The label caps were pushed into the box depth (below the baseline) while the `tcolorbox` body followed at the normal vertical position — values appeared above labels and the cover title was clipped.
+1. **TeX hang / frozen builds** — `\semio_window_tier_header:nnn` used `\tl_set:Nn` with `{ \tl_use:N \l_semio_window_kind_title_tl }`, storing a self-referential token list. Combined with `\exp_args:Nx` in `\semio_window_header_store:`, this caused infinite expansion. Fixed with `\tl_set:Nx` for titles and `\exp_args:NNo` header store (number tokens deferred to LaTeX2e).
+2. **Cover page `\centering`** — global `\centering` in `\makecoverpages` put block-level `\vbox` headers in horizontal mode (`\prevdepth` errors / extreme slowdown). Removed page-level `\centering`; title text centers inside the Titel window body.
+3. **Header row wrap** — `\semio@window@header@row@wrap` guards `\par` / `\nointerlineskip` with `\ifvmode`.
+4. **Generic `Window`** — `breakable=false` for non-row cover/metadata windows.
 
-Fix: wrap the full header in `\vtop{...}` without side-by-side `\vrule`; first cap uses `\semio@heading@cap@muted` (left stroke), remaining caps use `@tab`. Removed `\semio_window_vskip_double_stroke_hairline` (replaced with single hairline overlap).
+## Changes
 
-Rebuild `forschungsbericht` or `zwischenbericht` (cover page with `Window` fields) and rasterize page 1:
+### `print/tex/semio-window.sty`
+
+- `\vtop` → `\vbox` in `\semio@window@header@muted`.
+- Removed abandoned inbox-header / double-hairline dead code.
+- `\semio_window_tier_header` title assignment uses `\tl_set:Nx`; number uses `\tl_set:Nn`.
+- `\semio_window_header_store` uses `\exp_args:NNo` + `\semio_window_header_store_aux` in `\ExplSyntaxOff`.
+- `\semio@window@header@row@wrap` vertical-mode guards.
+- Generic `Window` uses `breakable=false` when not `row`.
+
+### `print/tex/semio-components.sty`
+
+- `\makecoverpages` no longer applies global `\centering`; Titel window body uses local `\centering`.
+
+## Verification
 
 ```bash
-cd print && bun run script.ts build forschungsbericht
+cd print/template/zukunftbau && tectonic --outdir ../../dist zwischenbericht.tex
+cd print/template/report && tectonic --outdir ../../dist report.tex
 cd .repo/🎫/26/07/09/PRINT-WINDOW-BORDER-GAP && bun rasterize.ts
 ```
 
-During development, many concurrent `tectonic` processes caused builds to hang; run a single template build for visual confirmation.
+Raster captures:
+
+- `zwischenbericht-p1-windows.png` — cover chips + separators above window bodies; title not clipped.
+- `report-p4-window.png` — in-body window chrome (report build succeeds end-to-end).
+
+Both templates build in ~3–4s single-pass after fixes (no infinite TeX loop).

@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import {
+	cadFixtureVitePlugin,
 	gisMapTilesVitePlugins,
 	resolveGisMapTileServeMode,
 	uiAssetsVitePlugin,
@@ -46,6 +47,7 @@ export default defineConfig({
 	},
 	plugins: [
 		...uiAssetsVitePlugin(uiAssetsRoot),
+		...cadFixtureVitePlugin(repoRoot),
 		...puzzle3dMeshesVitePlugin(repoRoot),
 		...(plugin === "gis2d"
 			? gisMapTilesVitePlugins(repoRoot, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE))

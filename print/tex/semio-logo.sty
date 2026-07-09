@@ -13,10 +13,8 @@
 \tl_new:N \l_semio_logo_path_tl
 
 \cs_new_protected:Npn \semio_logo_dark_variant:nN #1 #2 {
-  \group_begin:
-  \filename@parse { #1 }
-  \tl_set:Nx #2 { \filename@base -dark . \filename@ext }
-  \group_end:
+  \exp_args:Nx \filename@parse { #1 }
+  \tl_set:Nx #2 { \filename@area\filename@base-dark.\filename@ext }
 }
 
 \cs_new_protected:Npn \semio_logo_resolve_path:nN #1 #2 {

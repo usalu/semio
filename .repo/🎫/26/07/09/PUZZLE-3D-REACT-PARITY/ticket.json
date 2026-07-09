@@ -3,7 +3,7 @@
   "emoji": "🧩",
   "status": "open",
   "description": "Restore premigration parity for puzzle 3D in the React renderer: GLB coordinate frame, hover/select/gumball/marquee protocol, scene layers (vortices/attractions/target volumes/references/brush preview), and Select/Brush/Fill window engagements.",
-  "summary": "Fixed puzzle 3D fill (setFillCount accepts slider value key), brush (unconditional precompute sync on every command), and added selection context menu (contextMenuJson + ContextMenuController with Duplicate/Select same kind/Zoom/Delete). Extended World3dScene with contextMenuJson across core, plugin, and React. Vitest 21 passed.",
+  "summary": "Fixed puzzle 3d brush/fill round trip: parse brush_candidates `.free`, brush target vortex fallback, stronger precompute + registerBrushMesh wiring, parse_envelope runtime preservation, fill slider `{value}` parity, example picker strict appId dedupe, camera zoom/autofit. Wasm verify: fill 0→4 works; react tests 24/24 pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1873"
   },
@@ -16,6 +16,7 @@
   "sessions": [
     "⚪a96627df0fb248c3be63325d64f489fb",
     "⚪996981b38f874a57a7bf71f5c9fc1741",
-    "⚪0faf10db782a4e19804f9b72bf1c9194"
+    "⚪0faf10db782a4e19804f9b72bf1c9194",
+    "⚪c9c86e83cb984232b75b486c58216a3e"
   ]
 }

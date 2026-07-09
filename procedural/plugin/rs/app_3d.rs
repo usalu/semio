@@ -21,7 +21,8 @@ use semio_framework_plugin::{PanelGroup,
 };
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_core::SurfaceKind;
-use std::collections::HashSet;
+use std::collections::{hash_map::DefaultHasher, HashSet};
+use std::hash::{Hash, Hasher};
 use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult};
 use base64::Engine;
 use serde::{Deserialize, Serialize};
@@ -121,6 +122,10 @@ struct Procedural3dRuntime {
     /// ⏭️ Flow-graph snapshots for redo, cleared whenever a new edit is snapshotted.
     #[serde(default)]
     redo_fixtures: Vec<FlowFixture>,
+    #[serde(default)]
+    preview_cache: Option<Procedural3dPreviewCache>,
+    #[serde(default)]
+    generation_preview_cache: Option<Procedural3dPreviewCache>,
 }
 
 impl Default for Procedural3dRuntime {
@@ -134,6 +139,8 @@ impl Default for Procedural3dRuntime {
             preview_camera: Procedural3dPreviewCamera::default(),
             undo_fixtures: Vec::new(),
             redo_fixtures: Vec::new(),
+            preview_cache: None,
+            generation_preview_cache: None,
         }
     }
 }
@@ -149,6 +156,14 @@ fn default_show_mode() -> String {
 
 fn default_selection_method() -> String {
     "rectangle".into()
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Procedural3dPreviewCache {
+    signature: u64,
+    meshes_json: String,
+    instances_json: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -170,10 +185,14 @@ fn default_envelope() -> Procedural3dEnvelope {
 }
 
 fn envelope_from_fixture_json(json_text: &str) -> Option<Procedural3dEnvelope> {
-    serde_json::from_str::<FlowFixture>(json_text).ok().map(|fixture| Procedural3dEnvelope {
-        fixture,
-        runtime: Procedural3dRuntime::default(),
-        generation: GenerationPlayState::default(),
+    serde_json::from_str::<FlowFixture>(json_text).ok().map(|fixture| {
+        let mut envelope = Procedural3dEnvelope {
+            fixture,
+            runtime: Procedural3dRuntime::default(),
+            generation: GenerationPlayState::default(),
+        };
+        refresh_preview_cache(&mut envelope.runtime, &envelope.fixture);
+        envelope
     })
 }
 
@@ -183,6 +202,84 @@ fn parse_envelope(document_json: &str) -> Procedural3dEnvelope {
 
 fn set_document_op(envelope: &Procedural3dEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
+}
+
+fn fixture_signature(fixture: &FlowFixture) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    if let Ok(json) = serde_json::to_string(&fixture.widgets) {
+        json.hash(&mut hasher);
+    }
+    if let Ok(json) = serde_json::to_string(&fixture.synapses) {
+        json.hash(&mut hasher);
+    }
+    hasher.finish()
+}
+
+fn generation_preview_signature(fixture: &FlowFixture, generation: &GenerationPlayState) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    fixture_signature(fixture).hash(&mut hasher);
+    if let Some(selected) = selected_generation(generation) {
+        selected.id.hash(&mut hasher);
+        if let Ok(json) = serde_json::to_string(&selected.values) {
+            json.hash(&mut hasher);
+        }
+    }
+    hasher.finish()
+}
+
+fn generation_fixture_for_envelope(envelope: &Procedural3dEnvelope) -> FlowFixture {
+    if let Some(generation) = selected_generation(&envelope.generation) {
+        let patched = apply_generation_values_to_fixture(
+            &serde_json::to_string(&envelope.fixture).unwrap_or_default(),
+            &generation.values,
+        );
+        FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| envelope.fixture.clone())
+    } else {
+        envelope.fixture.clone()
+    }
+}
+
+fn refresh_preview_cache(runtime: &mut Procedural3dRuntime, fixture: &FlowFixture) {
+    let signature = fixture_signature(fixture);
+    if runtime.preview_cache.as_ref().is_some_and(|entry| entry.signature == signature) {
+        return;
+    }
+    let (meshes_json, instances_json) = evaluated_preview_payload(fixture, runtime);
+    runtime.preview_cache = Some(Procedural3dPreviewCache {
+        signature,
+        meshes_json,
+        instances_json,
+    });
+}
+
+fn refresh_generation_preview_cache(runtime: &mut Procedural3dRuntime, fixture: &FlowFixture, generation: &GenerationPlayState) {
+    let signature = generation_preview_signature(fixture, generation);
+    if runtime.generation_preview_cache.as_ref().is_some_and(|entry| entry.signature == signature) {
+        return;
+    }
+    let (meshes_json, instances_json) = evaluated_preview_payload(fixture, runtime);
+    runtime.generation_preview_cache = Some(Procedural3dPreviewCache {
+        signature,
+        meshes_json,
+        instances_json,
+    });
+}
+
+fn preview_payload_cached(runtime: &Procedural3dRuntime, fixture: &FlowFixture) -> (String, String) {
+    let signature = fixture_signature(fixture);
+    if let Some(cache) = &runtime.preview_cache {
+        if cache.signature == signature {
+            return (cache.meshes_json.clone(), cache.instances_json.clone());
+        }
+    }
+    evaluated_preview_payload(fixture, runtime)
+}
+
+fn finalize_document_op(envelope: &mut Procedural3dEnvelope) -> String {
+    refresh_preview_cache(&mut envelope.runtime, &envelope.fixture);
+    let generation_fixture = generation_fixture_for_envelope(envelope);
+    refresh_generation_preview_cache(&mut envelope.runtime, &generation_fixture, &envelope.generation);
+    set_document_op(envelope)
 }
 
 fn procedural_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
@@ -527,15 +624,13 @@ fn refresh_generation_preview(envelope: &mut Procedural3dEnvelope) {
 }
 
 fn generation_preview_payload(envelope: &Procedural3dEnvelope) -> (String, String) {
-    let fixture = if let Some(generation) = selected_generation(&envelope.generation) {
-        let patched = apply_generation_values_to_fixture(
-            &serde_json::to_string(&envelope.fixture).unwrap_or_default(),
-            &generation.values,
-        );
-        FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| envelope.fixture.clone())
-    } else {
-        envelope.fixture.clone()
-    };
+    let fixture = generation_fixture_for_envelope(envelope);
+    let signature = generation_preview_signature(&fixture, &envelope.generation);
+    if let Some(cache) = &envelope.runtime.generation_preview_cache {
+        if cache.signature == signature {
+            return (cache.meshes_json.clone(), cache.instances_json.clone());
+        }
+    }
     evaluated_preview_payload(&fixture, &envelope.runtime)
 }
 
@@ -597,7 +692,7 @@ fn preview_selection_json(runtime: &Procedural3dRuntime) -> String {
 }
 
 fn export_mesh_from_envelope(envelope: &Procedural3dEnvelope) -> semio_framework_plugin::MeshData {
-    let (meshes_json, _) = evaluated_preview_payload(&envelope.fixture, &envelope.runtime);
+    let (meshes_json, _) = preview_payload_cached(&envelope.runtime, &envelope.fixture);
     if let Ok(meshes) = serde_json::from_str::<Vec<Value>>(&meshes_json) {
         if let Some(first) = meshes.first() {
             if let Ok(data) = serde_json::from_value(first.get("data").cloned().unwrap_or(Value::Null)) {
@@ -816,8 +911,8 @@ impl PluginApp for Procedural3dPlayApp {
         match command {
             "setDocument" => {
                 if let Some(document) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value(document.clone()) {
-                        return vec![set_document_op(&parsed)];
+                    if let Ok(mut parsed) = serde_json::from_value::<Procedural3dEnvelope>(document.clone()) {
+                        return vec![finalize_document_op(&mut parsed)];
                     }
                 }
             }
@@ -841,18 +936,18 @@ impl PluginApp for Procedural3dPlayApp {
                 } else {
                     envelope
                 };
-                return vec![set_document_op(&envelope)];
+                return vec![finalize_document_op(&mut envelope)];
             }
             "setSelection" | "selectNode" | "nodeGraphSelect" => {
                 envelope.runtime.selected_node_ids = node_graph_selection_ids(args);
-                return vec![set_document_op(&envelope)];
+                return vec![finalize_document_op(&mut envelope)];
             }
             "nodeGraphHover" => return Vec::new(),
             "nodeGraphViewport" => {
                 if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
                     if let Ok(camera) = serde_json::from_str(viewport_json) {
                         envelope.fixture.camera = camera;
-                        return vec![set_document_op(&envelope)];
+                        return vec![finalize_document_op(&mut envelope)];
                     }
                 }
             }
@@ -907,7 +1002,7 @@ impl PluginApp for Procedural3dPlayApp {
                 }
                 if changed {
                     envelope.fixture = host.fixture;
-                    return vec![set_document_op(&envelope)];
+                    return vec![finalize_document_op(&mut envelope)];
                 }
             }
             "deleteSelection" => {
@@ -916,7 +1011,7 @@ impl PluginApp for Procedural3dPlayApp {
                     if host.remove_widget(&node_id).is_ok() {
                         envelope.fixture = host.fixture;
                         envelope.runtime.selected_node_ids.retain(|id| id != &node_id);
-                        return vec![set_document_op(&envelope)];
+                        return vec![finalize_document_op(&mut envelope)];
                     }
                     envelope.runtime.undo_fixtures.pop();
                 }
@@ -932,7 +1027,7 @@ impl PluginApp for Procedural3dPlayApp {
                         if host.remove_widget(target_id).is_ok() {
                             envelope.fixture = host.fixture;
                             envelope.runtime.selected_node_ids.retain(|id| id != target_id);
-                            return vec![set_document_op(&envelope)];
+                            return vec![finalize_document_op(&mut envelope)];
                         }
                         envelope.runtime.undo_fixtures.pop();
                     }
@@ -942,26 +1037,26 @@ impl PluginApp for Procedural3dPlayApp {
                 if let Some(previous) = envelope.runtime.undo_fixtures.pop() {
                     envelope.runtime.redo_fixtures.push(envelope.fixture.clone());
                     envelope.fixture = previous;
-                    return vec![set_document_op(&envelope)];
+                    return vec![finalize_document_op(&mut envelope)];
                 }
             }
             "redo" => {
                 if let Some(next) = envelope.runtime.redo_fixtures.pop() {
                     envelope.runtime.undo_fixtures.push(envelope.fixture.clone());
                     envelope.fixture = next;
-                    return vec![set_document_op(&envelope)];
+                    return vec![finalize_document_op(&mut envelope)];
                 }
             }
             "setLodMode" => {
                 if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
                     envelope.runtime.lod_mode = mode.into();
-                    return vec![set_document_op(&envelope)];
+                    return vec![finalize_document_op(&mut envelope)];
                 }
             }
             "setShowMode" => {
                 if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
                     envelope.runtime.show_mode = mode.into();
-                    return vec![set_document_op(&envelope)];
+                    return vec![finalize_document_op(&mut envelope)];
                 }
             }
             "moveMediaNode" => {
@@ -971,7 +1066,7 @@ impl PluginApp for Procedural3dPlayApp {
                 if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
                     if host.move_widget(node_id, x, y).is_ok() {
                         envelope.fixture = host.fixture;
-                        return vec![set_document_op(&envelope)];
+                        return vec![finalize_document_op(&mut envelope)];
                     }
                 }
             }
@@ -987,7 +1082,7 @@ impl PluginApp for Procedural3dPlayApp {
                 if let Ok(id) = host.add_widget(&descriptor, x, y) {
                     envelope.fixture = host.fixture;
                     envelope.runtime.selected_node_ids = vec![id];
-                    return vec![set_document_op(&envelope)];
+                    return vec![finalize_document_op(&mut envelope)];
                 }
                 envelope.runtime.undo_fixtures.pop();
             }
@@ -1011,13 +1106,13 @@ impl PluginApp for Procedural3dPlayApp {
                         }
                     }
                 }
-                return vec![set_document_op(&envelope)];
+                return vec![finalize_document_op(&mut envelope)];
             }
             "reorganize" => {
                 snapshot_procedural3d(&mut envelope.runtime, &envelope.fixture);
                 if host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok() {
                     envelope.fixture = host.fixture;
-                    return vec![set_document_op(&envelope)];
+                    return vec![finalize_document_op(&mut envelope)];
                 }
                 envelope.runtime.undo_fixtures.pop();
             }
@@ -1029,14 +1124,14 @@ impl PluginApp for Procedural3dPlayApp {
                     .unwrap_or_default();
                 envelope.runtime.selected_node_ids =
                     merge_world_selection_ids(&envelope.runtime.selected_node_ids, &ids, merge);
-                return vec![set_document_op(&envelope)];
+                return vec![finalize_document_op(&mut envelope)];
             }
             "worldHover" => {
                 envelope.runtime.hovered_node_id = args
                     .and_then(|value| value.get("id"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string);
-                return vec![set_document_op(&envelope)];
+                return vec![finalize_document_op(&mut envelope)];
             }
             "setSelectionMethod" => {
                 let method = args
@@ -1044,13 +1139,13 @@ impl PluginApp for Procedural3dPlayApp {
                     .and_then(|value| value.as_str())
                     .unwrap_or("rectangle");
                 envelope.runtime.selection_method = method.into();
-                return vec![set_document_op(&envelope)];
+                return vec![finalize_document_op(&mut envelope)];
             }
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value(camera.clone()) {
                         envelope.runtime.preview_camera = parsed;
-                        return vec![set_document_op(&envelope)];
+                        return vec![finalize_document_op(&mut envelope)];
                     }
                 }
             }
@@ -1086,7 +1181,7 @@ impl PluginApp for Procedural3dPlayApp {
                 if changed {
                     envelope.fixture = host.fixture;
                     envelope.runtime.selected_node_ids = new_selection;
-                    return vec![set_document_op(&envelope)];
+                    return vec![finalize_document_op(&mut envelope)];
                 }
             }
             "rotateSelection" => {
@@ -1122,7 +1217,7 @@ impl PluginApp for Procedural3dPlayApp {
                 if changed {
                     envelope.fixture = host.fixture;
                     envelope.runtime.selected_node_ids = new_selection;
-                    return vec![set_document_op(&envelope)];
+                    return vec![finalize_document_op(&mut envelope)];
                 }
             }
             "scaleSelection" => {
@@ -1158,7 +1253,7 @@ impl PluginApp for Procedural3dPlayApp {
                 if changed {
                     envelope.fixture = host.fixture;
                     envelope.runtime.selected_node_ids = new_selection;
-                    return vec![set_document_op(&envelope)];
+                    return vec![finalize_document_op(&mut envelope)];
                 }
             }
             "worldPointerDown" | "graphPointerDown" => return Vec::new(),
@@ -1169,7 +1264,7 @@ impl PluginApp for Procedural3dPlayApp {
                     if matches!(command, "addGeneration" | "selectGeneration" | "updateGenerationValues") {
                         refresh_generation_preview(&mut envelope);
                     }
-                    return vec![set_document_op(&envelope)];
+                    return vec![finalize_document_op(&mut envelope)];
                 }
             }
             _ => {}
@@ -1209,7 +1304,7 @@ impl PluginApp for Procedural3dPlayApp {
                 )
             }
             PROCEDURAL_3D_PLAY_BODY_PREVIEW => {
-                let (meshes_json, instances_json) = evaluated_preview_payload(&envelope.fixture, &envelope.runtime);
+                let (meshes_json, instances_json) = preview_payload_cached(&envelope.runtime, &envelope.fixture);
                 build_world_3d_scene(
                     PROCEDURAL_3D_PLAY_SURFACE_PREVIEW,
                     PROCEDURAL_3D_PLAY_APP_ID,
@@ -1470,6 +1565,67 @@ mod tests {
         );
         let envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
         assert!(envelope.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { neuronKind, .. } if neuronKind == "brep.prim3d.sphere")));
+    }
+
+    #[test]
+    fn sphere_cut_example_preview_renders_meshes() {
+        let app = Procedural3dPlayApp;
+        let mut envelope = envelope_from_fixture_json(SPHERE_TORUS_EXAMPLE_JSON).expect("sphere fixture");
+        refresh_preview_cache(&mut envelope.runtime, &envelope.fixture);
+        let document = serde_json::to_string(&envelope).expect("envelope json");
+        let node = app.render(PROCEDURAL_3D_PLAY_BODY_PREVIEW, &document, &ViewState::default());
+        let parsed: semio_framework_core::UiNode = serde_json::from_str(&serde_json::to_string(&node).unwrap()).expect("preview ui json");
+        match parsed {
+            semio_framework_core::UiNode::ComponentScene(scene) => {
+                let world = scene.world_3d.expect("world_3d payload");
+                assert_ne!(world.meshes_json, "[]");
+                assert_ne!(world.instances_json, "[]");
+            }
+            other => panic!("expected component scene, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn viewport_command_preserves_preview_cache() {
+        let mut app = Procedural3dPlayApp;
+        let document = app.initial_document_json();
+        let load_ops = app.handle_command_patch_ops(
+            "setActiveExample",
+            Some(&json!({ "exampleId": PROCEDURAL_EXAMPLE_SPHERE_TORUS })),
+            &document,
+            &ViewState::default(),
+        );
+        let mut envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &load_ops);
+        let cached = envelope.runtime.preview_cache.clone().expect("preview cache");
+        let document = serde_json::to_string(&envelope).unwrap();
+        let viewport_ops = app.handle_command_patch_ops(
+            "nodeGraphViewport",
+            Some(&json!({ "viewportJson": r#"{"x":12,"y":24,"zoom":2}"# })),
+            &document,
+            &ViewState::default(),
+        );
+        let next: Procedural3dEnvelope = apply_ops(&envelope, &viewport_ops);
+        let next_cache = next.runtime.preview_cache.expect("preview cache after viewport");
+        assert_eq!(next_cache.signature, cached.signature);
+        assert_eq!(next_cache.meshes_json, cached.meshes_json);
+        assert_eq!(next_cache.instances_json, cached.instances_json);
+    }
+
+    #[test]
+    fn patch_flow_widgets_refreshes_preview_cache() {
+        let mut app = Procedural3dPlayApp;
+        let document = app.initial_document_json();
+        let before: Procedural3dEnvelope = parse_envelope(&document);
+        let cached = before.runtime.preview_cache.clone().expect("preview cache");
+        let ops = app.handle_command_patch_ops(
+            "patchFlowWidgets",
+            Some(&json!({ "widgetIds": ["height"], "field": "value", "value": 9.5 })),
+            &document,
+            &ViewState::default(),
+        );
+        let after: Procedural3dEnvelope = apply_ops(&before, &ops);
+        let next_cache = after.runtime.preview_cache.expect("preview cache after patch");
+        assert_ne!(next_cache.signature, cached.signature);
     }
 
     #[test]

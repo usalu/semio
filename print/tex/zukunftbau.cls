@@ -16,16 +16,14 @@
 \ExplSyntaxOn
 \str_case:VnF \zukunftbau@type {
   { forschungsbericht } {
-    \LoadClass[language=de,theme=\zukunftbau@theme,type=report]{semio}
+    \LoadClass[language=de,theme=\zukunftbau@theme,type=report,citestyle=numeric]{semio}
   }
   { zwischenbericht } {
-    \LoadClass[language=de,theme=\zukunftbau@theme,type=paper]{semio}
+    \LoadClass[language=de,theme=\zukunftbau@theme,type=paper,citestyle=numeric]{semio}
   }
   { kompaktbericht } {
-    \LoadClass[language=de,theme=\zukunftbau@theme,type=paper]{semio}
+    \LoadClass[language=de,theme=\zukunftbau@theme,type=paper,citestyle=authoryear]{semio}
     \SemioSetup{kompakt-draft=true}
-    \RequirePackage[style=authoryear,backend=bibtex]{biblatex}
-    \addbibresource{references.bib}
   }
 } {
   \LoadClass[language=de,theme=\zukunftbau@theme,type=report]{semio}

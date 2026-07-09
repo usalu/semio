@@ -2826,6 +2826,10 @@ impl FlowHost {
         self.dag.stepper_overlay_state_json()
     }
 
+    pub fn slider_overlay_state_json(&self) -> Result<String, String> {
+        self.dag.slider_overlay_state_json()
+    }
+
     pub fn set_note_text(&mut self, widget_id: &str, text: &str) {
         self.begin_change();
         for widget in &mut self.fixture.widgets {
@@ -3604,6 +3608,11 @@ impl FlowSession {
     #[wasm_bindgen(js_name = stepperOverlayStateJson)]
     pub fn stepper_overlay_state_json(&self) -> Result<String, JsValue> {
         self.state.borrow().host.stepper_overlay_state_json().map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = sliderOverlayStateJson)]
+    pub fn slider_overlay_state_json(&self) -> Result<String, JsValue> {
+        self.state.borrow().host.slider_overlay_state_json().map_err(|e| JsValue::from_str(&e))
     }
 
     #[wasm_bindgen(js_name = setNoteText)]

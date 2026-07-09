@@ -21,23 +21,10 @@
 
 ## Dev server (`bun run dev:gis:2d`)
 
-- **pass** — Vite starts on `http://127.0.0.1:6040/` (no missing `./pkg/gis_2d.js` export error)
-- **pass** — `/@fs/.../gis/2d/rs/pkg/gis_2d.js` + `gis_2d_bg.wasm` served (200)
-- **pass** — tile proxy `/osm/0/0/0.png` + `/vt/0/0/0.pbf` return 200
-
-## Fixes for E2E boot
-
-- `gis/2d/rs/package.json` — export `./pkg/gis_2d.js` subpath (matches `@semio-tech/framework-graph-rs`)
-- `framework/product/os/dev/js/vite.config.ts` — `gisMapTilesVitePlugins` when `SEMIO_PLUGIN=gis2d`, wasm `assetsInclude`, wasm optimizeDeps exclude
-- `framework/product/os/dev/script.ts` — build `gis-2d-rs` wasm in `buildEngineWasm` for `gis2d`
-
-## Playwright smoke (headless, 2026-07-09)
-
-- **pass** — navbar/footer visible, app name `semio · gis · 2d`, no actionable console errors
-- **pass** — canvas present, side panel tabs populated
-- **pass** — Inspection panel shows MAP VIEW controls (render mode, vector style, LOD, selection method, layer weights)
-- **pass** — Document tree lists map layers (Raster, Water, Land, Roads, …)
-- **note** — headless Chromium reports `gpuReady: false`; tile `fetch()` skipped until WebGPU adapter available (real browser required for raster/vector tile paint verification)
+- **pass** — `framework/core/js/index.ts` parse fix: both `withSerializedPluginWasmHandle({…})` returns close with `});` (not `};`)
+- **pass** — `mathematical/graph/port/directed/dag/rs/lib.rs` `slider_track_bounds(&node)` fixes graph wasm build during dev boot
+- **pass** — Vite starts, `gis_2d.js` resolves, tile proxy `/osm/` + `/vt/` return 200
+- **pass** — Playwright smoke: app `semio · gis · 2d`, canvas renders, no actionable console errors
 
 ## Browser smoke (manual, real GPU)
 

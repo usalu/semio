@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesExplClass{semio}{2026/07/06}{0.1.0}{semio printable documents}
+\ProvidesExplClass{semio}{2026/07/09}{0.2.0}{semio printable documents}
 
 \RequirePackage{expl3}
 \RequirePackage{xparse}
@@ -14,6 +14,7 @@
 \DeclareStringOption[report]{type}
 \DeclareStringOption[light]{theme}
 \DeclareStringOption[de]{language}
+\DeclareStringOption[numeric]{citestyle}
 \ProcessKeyvalOptions*
 
 \ExplSyntaxOn
@@ -39,8 +40,6 @@
 \RequirePackage{semio-core}
 \RequirePackage{semio-logo}
 \RequirePackage{semio-table}
-\RequirePackage{semio-window}
-\RequirePackage{semio-components}
 
 \ExplSyntaxOn
 \keys_set:nx { semio / setup } {
@@ -55,4 +54,7 @@
 
 \RequirePackage[ngerman,english]{babel}
 \RequirePackage{microtype}
+\RequirePackage[style=\semio@citestyle,backend=bibtex,sorting=nyt]{biblatex}
+\RequirePackage{semio-window}
+\RequirePackage{semio-components}
 \RequirePackage{hyperref}

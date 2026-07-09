@@ -1771,6 +1771,19 @@ mod tests {
     }
 
     #[test]
+    fn fixture_sphere_cut_torus_at_slider_max_completes() {
+        let mut kernel = BrepkitKernel::new();
+        let sphere = kernel.sphere_prim_sync(10.0).unwrap();
+        let torus = kernel.torus_prim_sync(2.0, 0.5).unwrap();
+        let cut = kernel.cut_sync(&sphere, &torus).unwrap();
+        let volume = kernel.volume_sync(&cut).unwrap();
+        assert!(volume > 0.0);
+        let mesh = kernel.tessellate_sync(&cut, 0.1).unwrap();
+        assert!(!mesh.position.is_empty());
+        assert!(!mesh.index.is_empty());
+    }
+
+    #[test]
     fn retain_sync_drops_unreferenced_handles() {
         let mut kernel = BrepkitKernel::new();
         let kept = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();

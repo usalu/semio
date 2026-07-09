@@ -4,31 +4,31 @@ overview: Generalize biblatex citation support from the kompaktbericht-only hack
 todos:
   - id: cls-citestyle
     content: Add citestyle option + generic biblatex loading to semio.cls; remove kompaktbericht-only hack from zukunftbau.cls
-    status: in_progress
+    status: completed
   - id: core-labels
     content: Add References title function + reference/references kind labels to semio-core.sty
-    status: pending
+    status: completed
   - id: table-colspec
     content: Add reference table colspec/macro to semio-table.sty
-    status: pending
+    status: completed
   - id: window-references
     content: Implement defbibenvironment + SemioReferences chrome renderer in semio-window.sty
-    status: pending
+    status: completed
   - id: components-makeregisters
     content: Wire SemioReferences into makeregisters in semio-components.sty
-    status: pending
+    status: completed
   - id: templates-kompakt
     content: Move kompaktbericht bibliography from inline section to appendix registers
-    status: pending
+    status: completed
   - id: templates-zukunftbau-rest
     content: Add citations + registers call to forschungsbericht/zwischenbericht, extend references.bib
-    status: pending
+    status: completed
   - id: templates-report-paper
     content: Add references.bib + citations + registers to report and paper templates (paper gets alphabetic citestyle)
-    status: pending
+    status: completed
   - id: verify-build
     content: Run bun run print:test and inspect generated PDFs for citation rendering and references table styling
-    status: pending
+    status: in_progress
   - id: ticket-open-close
     content: Open repo ticket under goal r2602, do the work, close ticket with summary of touched files
     status: in_progress

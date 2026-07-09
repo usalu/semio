@@ -591,8 +591,22 @@ pub fn commit_object(
     }
 }
 
+fn preview_two_point_footprint(session: &CadEngagementSession, include_segment: bool) -> Vec<Value> {
+    let mut items = Vec::new();
+    if let Some(corner_a) = context_point(session, "cornerA") {
+        items.push(json!({ "kind": "point", "role": "cornerA", "position": corner_a }));
+    }
+    if include_segment {
+        if let (Some(corner_a), Some(corner_b)) = (context_point(session, "cornerA"), context_point(session, "cornerB")) {
+            items.push(json!({ "kind": "segment", "role": "footprint", "from": corner_a, "to": corner_b }));
+        }
+    }
+    items
+}
+
 pub fn preview_display_items(session: &CadEngagementSession) -> Vec<Value> {
-    match (session.interaction_id.as_str(), session.state.as_str()) {
+    let id = session.interaction_id.as_str();
+    match (id, session.state.as_str()) {
         ("primitive.box", "diagonal_rubber" | "first_corner_height" | "ready") => {
             let mut items = Vec::new();
             if let Some(origin) = context_point(session, "origin") {
@@ -604,12 +618,16 @@ pub fn preview_display_items(session: &CadEngagementSession) -> Vec<Value> {
             items
         }
         ("energy.energy.constructExternalWall", "two_points_second" | "two_points_height" | "ready") => {
+            preview_two_point_footprint(session, true)
+        }
+        (id, "footprint_first") if is_two_point_height(id) => preview_two_point_footprint(session, false),
+        (id, "footprint_second" | "slab_height" | "ready") if is_two_point_height(id) => {
+            preview_two_point_footprint(session, true)
+        }
+        (id, "column_height" | "ready") if is_base_height(id) => {
             let mut items = Vec::new();
-            if let Some(corner_a) = context_point(session, "cornerA") {
-                items.push(json!({ "kind": "point", "role": "cornerA", "position": corner_a }));
-            }
-            if let (Some(corner_a), Some(corner_b)) = (context_point(session, "cornerA"), context_point(session, "cornerB")) {
-                items.push(json!({ "kind": "segment", "role": "footprint", "from": corner_a, "to": corner_b }));
+            if let Some(base) = context_point(session, "base") {
+                items.push(json!({ "kind": "point", "role": "base", "position": base }));
             }
             items
         }
@@ -648,5 +666,27 @@ mod tests {
         let mut kernel = BrepkitKernel::new();
         let object = commit_object(&mut kernel, &session, 0, |prefix| format!("{prefix}-1"));
         assert!(object.is_some());
+    }
+
+    #[test]
+    fn slab_preview_shows_footprint_segment() {
+        let mut session =
+            start_session("structure.structure.constructOneWayReinforcedConcreteSlab", CadPaneId::StructureClassic)
+                .expect("session");
+        assert!(apply_event(&mut session, "start", None));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!([0.0, 0.0, 0.0]))));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!([4.0, 5.0, 0.0]))));
+        let items = preview_display_items(&session);
+        assert!(items.iter().any(|item| item.get("kind").and_then(|v| v.as_str()) == Some("segment")));
+    }
+
+    #[test]
+    fn column_preview_shows_base_point() {
+        let mut session =
+            start_session("building.building.constructColumn", CadPaneId::Building).expect("session");
+        assert!(apply_event(&mut session, "start", None));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!([1.0, 2.0, 0.0]))));
+        let items = preview_display_items(&session);
+        assert!(items.iter().any(|item| item.get("kind").and_then(|v| v.as_str()) == Some("point")));
     }
 }

@@ -1,0 +1,18 @@
+{
+  "title": "Procedural 3d Slider and Preview Hang Fix",
+  "emoji": "🔧",
+  "status": "open",
+  "description": "Fix procedural 3d react renderer parity: restore inspector slider editing (Tree defaultOpen regression), add in-canvas slider overlays wired to setSliderValue, and cache BREP preview evaluation to stop re-running expensive mesh boolean on every UI command (sphere cut with torus hang).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1878"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "7a4bc3a2",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/procedural_3d_slider_and_hang_fix_7a4bc3a2.plan.md"
+  },
+  "sessions": [
+    "⚪4386691cff374e65adbc4fd3b555b1cd"
+  ]
+}

@@ -227,6 +227,24 @@ function downloadMediaExport(filename: string, mimeType: string, data: string): 
 	anchor.click();
 	URL.revokeObjectURL(url);
 }
+
+function requestFileOpen(accept: string): Promise<string | null> {
+	if (typeof document === "undefined") return Promise.resolve(null);
+	return new Promise((resolve) => {
+		const input = document.createElement("input");
+		input.type = "file";
+		input.accept = accept;
+		input.onchange = async () => {
+			const file = input.files?.[0];
+			if (!file) {
+				resolve(null);
+				return;
+			}
+			resolve(await file.text());
+		};
+		input.click();
+	});
+}
 //#endregion ShellTypes
 
 //#region ShellHelpers
@@ -848,15 +866,16 @@ export function FrameworkOsShell({
 				viewState,
 			};
 			const windowCount = nextSession.app.windowKinds.length;
-			const rendered = await Promise.all([
-				...nextSession.app.windowKinds.map((kind) =>
-					plugin.render(nextSession.instanceId, kind.bodyKey, viewState),
-				),
-				...nextSession.app.panelTabs.map((tab) => plugin.render(nextSession.instanceId, tab.bodyKey, viewState)),
-				plugin.tools(nextSession.instanceId, viewState),
-				plugin.windowEngagements(nextSession.instanceId, viewState),
-				plugin.windowMeasures(nextSession.instanceId, viewState),
-			]);
+			const rendered: unknown[] = [];
+			for (const kind of nextSession.app.windowKinds) {
+				rendered.push(await plugin.render(nextSession.instanceId, kind.bodyKey, viewState));
+			}
+			for (const tab of nextSession.app.panelTabs) {
+				rendered.push(await plugin.render(nextSession.instanceId, tab.bodyKey, viewState));
+			}
+			rendered.push(await plugin.tools(nextSession.instanceId, viewState));
+			rendered.push(await plugin.windowEngagements(nextSession.instanceId, viewState));
+			rendered.push(await plugin.windowMeasures(nextSession.instanceId, viewState));
 			if (generation !== refreshGenerationRef.current) return;
 			const windowNodes = await Promise.all(
 				rendered.slice(0, windowCount).map((node) => resolveExternalSlots(node as UiNode, slotContext)),
@@ -1126,6 +1145,8 @@ export function FrameworkOsShell({
 					filename?: string;
 					mimeType?: string;
 					data?: string;
+					accept?: string;
+					importCommand?: string;
 				};
 				if (op.op === "setPanel" && op.panel) {
 					nextViewState = { ...nextViewState, panelJson: panelJsonFromState(op.panel) };
@@ -1136,6 +1157,24 @@ export function FrameworkOsShell({
 				}
 				if (op.op === "downloadMediaExport" && op.filename && op.mimeType && op.data) {
 					downloadMediaExport(op.filename, op.mimeType, op.data);
+				}
+				if (op.op === "requestFileOpen" && op.importCommand) {
+					const contents = await requestFileOpen(op.accept ?? ".json,.spatial.json");
+					if (contents) {
+						const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
+						if (pluginEntry) {
+							const importOps = await pluginEntry.handle.handleCommand(
+								baseSession.instanceId,
+								JSON.stringify({
+									controllerId: baseSession.app.controllerId,
+									command: op.importCommand,
+									args: { payload: contents },
+								}),
+								baseSession.viewState,
+							);
+							await processPluginOps(importOps, baseSession);
+						}
+					}
 				}
 				if (op.op === "spawnPluginInstance" && op.programId && op.appId) {
 					const currentPanel = parsePanelState(nextViewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
@@ -2813,6 +2852,7 @@ export type FlowWasmSession = GraphWasmSession & {
 	labelOverlayPaintStateJson(): string;
 	paramOverlayPaintStateJson(): string;
 	stepperOverlayStateJson(): string;
+	sliderOverlayStateJson(): string;
 	selectionUnionBoundsScreenJson(): string;
 	selectionPreviewPointsJson(): string;
 	selectionPreviewCrossing(): boolean;
