@@ -527,6 +527,7 @@ fn build_document_tree(envelope: &TrinityJackEnvelope) -> UiNode {
         ),
         highlighted_ids: None,
         selection_change: Some(jack_cmd("setSelection", Some(json!({ "ids": [] })))),
+        drop_command: None,
     })
 }
 
@@ -592,6 +593,7 @@ fn build_catalogue_tree(envelope: &TrinityJackEnvelope) -> UiNode {
         },
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -659,7 +661,14 @@ fn build_inspector_tree(envelope: &TrinityJackEnvelope) -> UiNode {
                             "patchTrinityNodes",
                             Some(json!({ "nodeIds": node_ids, "field": "name" })),
                         ),
+                        min: None,
+                        max: None,
+                        step: None,
+                        accept: None,
                     }),
+                    description: None,
+                    required: None,
+                    error: None,
                 }),
                 ui_inspector_readonly_field(
                     "trinity-inspector.kind",

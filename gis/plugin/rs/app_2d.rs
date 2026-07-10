@@ -311,7 +311,11 @@ fn layer_weight_slider_fields(play: &Gis2dPlayEnvelope) -> Vec<UiNode> {
                         "setLayerStrokeScale",
                         Some(json!({ "layerId": layer_id })),
                     ),
+                    unit: None,
                 }),
+                description: None,
+                required: None,
+                error: None,
             })
         })
         .collect()
@@ -516,6 +520,7 @@ fn build_document_tree(play: &Gis2dPlayEnvelope) -> UiNode {
         ),
         highlighted_ids: None,
         selection_change: Some(gis2d_cmd("setSelection", None)),
+        drop_command: None,
     })
 }
 
@@ -543,6 +548,7 @@ fn build_catalogue_tree(play: &Gis2dPlayEnvelope) -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -569,6 +575,9 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
                     placeholder: None,
                     on_change: gis2d_cmd("setRenderMode", None),
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
             UiNode::Field(UiFieldNode {
                 id: "gis2d-play-inspector.vector-style".into(),
@@ -584,6 +593,9 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
                     placeholder: None,
                     on_change: gis2d_cmd("setVectorStyle", None),
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
             UiNode::Field(UiFieldNode {
                 id: "gis2d-play-inspector.lod-mode".into(),
@@ -595,6 +607,9 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
                     placeholder: None,
                     on_change: gis2d_cmd("setLodMode", None),
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
             UiNode::Field(UiFieldNode {
                 id: "gis2d-play-inspector.selection-method".into(),
@@ -609,6 +624,9 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
                     placeholder: None,
                     on_change: gis2d_cmd("setSelectionMethod", None),
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
             ui_inspector_readonly_field("gis2d-play-inspector.feature-selection", "Selected Features", selected_count.to_string()),
     ];
@@ -672,6 +690,9 @@ fn build_inspector_tree(play: &Gis2dPlayEnvelope) -> UiNode {
                         text: None,
                         on_change: gis2d_cmd("toggleLayerVisibility", Some(json!({ "layerId": layer_id }))),
                     }),
+                    description: None,
+                    required: None,
+                    error: None,
                 }),
             ],
         },

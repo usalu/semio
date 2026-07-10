@@ -866,7 +866,14 @@ fn render_try_question(
                 placeholder: question.placeholder.clone(),
                 commit: None,
                 on_change: try_value_cmd(&key),
+                min: None,
+                max: None,
+                step: None,
+                accept: None,
             }),
+            description: None,
+            required: None,
+            error: None,
         }),
         "longText" => UiNode::Field(UiFieldNode {
             id: format!("forms-try.{key}"),
@@ -878,7 +885,14 @@ fn render_try_question(
                 placeholder: question.placeholder.clone(),
                 commit: None,
                 on_change: try_value_cmd(&key),
+                min: None,
+                max: None,
+                step: None,
+                accept: None,
             }),
+            description: None,
+            required: None,
+            error: None,
         }),
         "number" => UiNode::Field(UiFieldNode {
             id: format!("forms-try.{key}"),
@@ -890,7 +904,14 @@ fn render_try_question(
                 placeholder: None,
                 commit: None,
                 on_change: try_value_cmd(&key),
+                min: None,
+                max: None,
+                step: None,
+                accept: None,
             }),
+            description: None,
+            required: None,
+            error: None,
         }),
         "slider" => UiNode::Field(UiFieldNode {
             id: format!("forms-try.{key}"),
@@ -902,7 +923,11 @@ fn render_try_question(
                 max: question.max.unwrap_or(100.0),
                 step: question.step.unwrap_or(1.0),
                 on_change: try_value_cmd(&key),
+                unit: None,
             }),
+            description: None,
+            required: None,
+            error: None,
         }),
         "boolean" => UiNode::Field(UiFieldNode {
             id: format!("forms-try.{key}"),
@@ -914,6 +939,9 @@ fn render_try_question(
                 text: Some(if value.as_bool().unwrap_or(false) { "Yes".into() } else { "No".into() }),
                 on_change: try_value_cmd(&key),
             }),
+            description: None,
+            required: None,
+            error: None,
         }),
         "single" => {
             let items = question
@@ -939,6 +967,9 @@ fn render_try_question(
                     items,
                     on_change: try_value_cmd(&key),
                 }),
+                description: None,
+                required: None,
+                error: None,
             })
         }
         "multi" => {
@@ -966,6 +997,9 @@ fn render_try_question(
                                         Some(json!({ "key": key, "optionValue": option.value })),
                                     ),
                                 }),
+                                description: None,
+                                required: None,
+                                error: None,
                             })
                         })
                         .collect()
@@ -988,7 +1022,14 @@ fn render_try_question(
                 placeholder: None,
                 commit: None,
                 on_change: try_value_cmd(&key),
+                min: None,
+                max: None,
+                step: None,
+                accept: None,
             }),
+            description: None,
+            required: None,
+            error: None,
         }),
         "color" => UiNode::Field(UiFieldNode {
             id: format!("forms-try.{key}"),
@@ -1000,7 +1041,14 @@ fn render_try_question(
                 placeholder: None,
                 commit: None,
                 on_change: try_value_cmd(&key),
+                min: None,
+                max: None,
+                step: None,
+                accept: None,
             }),
+            description: None,
+            required: None,
+            error: None,
         }),
         "vector" => {
             let array = value.as_array().cloned().unwrap_or_default();
@@ -1027,6 +1075,9 @@ fn render_try_question(
                                 Some(json!({ "key": key, "vectorIndex": index })),
                             ),
                         }),
+                        description: None,
+                        required: None,
+                        error: None,
                     })
                 })
                 .collect();
@@ -1054,7 +1105,14 @@ fn render_try_question(
                 placeholder: question.accept.clone(),
                 commit: None,
                 on_change: try_value_cmd(&key),
+                min: None,
+                max: None,
+                step: None,
+                accept: None,
             }),
+            description: None,
+            required: None,
+            error: None,
         }),
         kind if is_extension_question_kind(kind) => {
             render_extension_question(question, values, contributions, "try", true)
@@ -1094,6 +1152,7 @@ fn render_try_wizard(spec: &FormSpec, play: &FormsPlayEnvelope, contributions: &
             label: "Back".into(),
             command: forms_cmd("previousStep", None),
             style: None,
+            disabled: None,
         }));
     }
     if step_index + 1 < spec.steps.len() {
@@ -1103,6 +1162,7 @@ fn render_try_wizard(spec: &FormSpec, play: &FormsPlayEnvelope, contributions: &
             label: "Next".into(),
             command: forms_cmd("nextStep", None),
             style: None,
+            disabled: None,
         }));
     } else {
         nav.push(UiNode::Button(UiButtonNode {
@@ -1111,6 +1171,7 @@ fn render_try_wizard(spec: &FormSpec, play: &FormsPlayEnvelope, contributions: &
             label: "Submit".into(),
             command: forms_cmd("submit", None),
             style: None,
+            disabled: None,
         }));
     }
     children.push(ui_stack_vertical(nav));
@@ -1192,6 +1253,7 @@ fn build_document_tree(spec: &FormSpec, selected_ids: &[String]) -> UiNode {
         selected_ids: Some(selected_ids.to_vec()),
         highlighted_ids: None,
         selection_change: Some(forms_cmd("setSelection", None)),
+        drop_command: None,
     })
 }
 
@@ -1273,6 +1335,7 @@ fn build_catalogue_tree(contributions: &[PluginContributionEntry]) -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -1292,7 +1355,14 @@ fn inspector_text_field(question_ids: &[String], field_id: &str, label: &str, va
             placeholder: mixed.placeholder,
             commit: None,
             on_change: inspector_patch(question_ids, field),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
         }),
+        description: None,
+        required: None,
+        error: None,
     })
 }
 
@@ -1309,6 +1379,9 @@ fn inspector_number_field(question_ids: &[String], field_id: &str, label: &str, 
             on_absolute: inspector_patch(question_ids, field),
             on_delta: inspector_patch(question_ids, field),
         }),
+        description: None,
+        required: None,
+        error: None,
     })
 }
 
@@ -1362,6 +1435,9 @@ fn inspector_kind_fields(
                         text: Some(if pressed { "Yes".into() } else { "No".into() }),
                         on_change: inspector_patch(question_ids, "default"),
                     }),
+                    description: None,
+                    required: None,
+                    error: None,
                 }));
             }
         }
@@ -1381,7 +1457,14 @@ fn inspector_kind_fields(
                                 "patchQuestionOptions",
                                 Some(json!({ "questionIds": question_ids, "optionValue": option.value, "field": "label" })),
                             ),
+                            min: None,
+                            max: None,
+                            step: None,
+                            accept: None,
                         }),
+                        description: None,
+                        required: None,
+                        error: None,
                     }));
                     fields.push(UiNode::Button(UiButtonNode {
                         id: Some(format!("forms-play-inspector.option.{}.remove", option.value)),
@@ -1392,6 +1475,7 @@ fn inspector_kind_fields(
                             Some(json!({ "questionId": question.id, "optionValue": option.value })),
                         ),
                         style: None,
+                        disabled: None,
                     }));
                 }
             }
@@ -1401,6 +1485,7 @@ fn inspector_kind_fields(
                 label: "Add Option".into(),
                 command: forms_cmd("addQuestionOption", Some(json!({ "questionId": question.id, "label": "New option" }))),
                 style: None,
+                disabled: None,
             }));
         }
         "date" | "color" => {
@@ -1430,7 +1515,14 @@ fn inspector_kind_fields(
                                 "patchVectorField",
                                 Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "label" })),
                             ),
+                            min: None,
+                            max: None,
+                            step: None,
+                            accept: None,
                         }),
+                        description: None,
+                        required: None,
+                        error: None,
                     }));
                     if let Some(value) = field.value {
                         fields.push(UiNode::Field(UiFieldNode {
@@ -1450,6 +1542,9 @@ fn inspector_kind_fields(
                                     Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "value" })),
                                 ),
                             }),
+                            description: None,
+                            required: None,
+                            error: None,
                         }));
                     }
                     fields.push(UiNode::Button(UiButtonNode {
@@ -1461,6 +1556,7 @@ fn inspector_kind_fields(
                             Some(json!({ "questionId": question.id, "fieldKey": field.key })),
                         ),
                         style: None,
+                        disabled: None,
                     }));
                 }
             }
@@ -1473,6 +1569,7 @@ fn inspector_kind_fields(
                     Some(json!({ "questionId": question.id, "fieldKey": "field" })),
                 ),
                 style: None,
+                disabled: None,
             }));
         }
         "note" => {
@@ -1551,6 +1648,9 @@ fn build_inspector_tree(
                 items: kind_items,
                 on_change: inspector_patch(&question_ids, "kind"),
             }),
+            description: None,
+            required: None,
+            error: None,
         }),
         ui_inspector_readonly_field(
             "forms-play-inspector.id",
@@ -1575,6 +1675,9 @@ fn build_inspector_tree(
                 },
                 on_change: inspector_patch(&question_ids, "required"),
             }),
+            description: None,
+            required: None,
+            error: None,
         }),
     ];
     if questions.len() == 1 {

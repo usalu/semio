@@ -213,6 +213,7 @@ fn build_document_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
         selected_ids: Some(envelope.runtime.selected_ids.clone()),
         highlighted_ids: None,
         selection_change: Some(presentation_cmd("setSelectedIds", Some(json!({ "ids": [] })))),
+        drop_command: None,
     })
 }
 
@@ -239,7 +240,14 @@ fn inspector_crop_field(tile_ids: &[String], field: &str, label: &str, values: &
                 "patchTileCrops",
                 Some(json!({ "ids": tile_ids, "field": field })),
             ),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
         }),
+        description: None,
+        required: None,
+        error: None,
     })
 }
 
@@ -278,7 +286,14 @@ fn build_details_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
             placeholder: name_mixed.placeholder,
             commit: Some("blur".into()),
             on_change: presentation_cmd("renameTiles", Some(json!({ "ids": tile_ids }))),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
         }),
+        description: None,
+        required: None,
+        error: None,
     })];
     identity_fields.push(ui_inspector_readonly_field(
         "presentation.play.tile.id",
@@ -296,6 +311,7 @@ fn build_details_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
             label: "Delete tile".into(),
             command: presentation_cmd("deleteTile", Some(json!({ "id": tile_ids[0] }))),
             style: None,
+            disabled: None,
         }));
     }
     identity_fields.push(UiNode::Button(semio_framework_plugin::UiButtonNode {
@@ -304,6 +320,7 @@ fn build_details_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
         label: "Delete selection".into(),
         command: presentation_cmd("deleteSelection", None),
         style: None,
+        disabled: None,
     }));
     let groups = vec![
         UiInspectorFieldGroup {
@@ -339,6 +356,7 @@ fn catalogue_button(id: &str, label: &str, command: &str, args: Option<Value>) -
         label: label.into(),
         command: presentation_cmd(command, args),
         style: None,
+        disabled: None,
     })
 }
 
@@ -387,7 +405,14 @@ fn build_catalogue_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
                         placeholder: None,
                         commit: None,
                         on_change: presentation_cmd("noop", None),
+                        min: None,
+                        max: None,
+                        step: None,
+                        accept: None,
                     }),
+                    description: None,
+                    required: None,
+                    error: None,
                 }),
                 ui_text(format!("Media kind: {}", envelope.deck.source.kind)),
             ],

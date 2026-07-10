@@ -1,7 +1,7 @@
 {
   "title": "Puzzle 2D React Parity",
   "emoji": "🧩",
-  "status": "closed",
+  "status": "open",
   "description": "Restore premigration parity for puzzle 2D in the React renderer: fix camera transform sign bug, sync BoardHost pointer hit-testing with rendered frame, and add shape/color/selection fidelity to Canvas2d layers.",
   "summary": "Fixed print window title-bar chrome to match OS UI: title/number persist via xdef store and expanded tmp macros in muted_use; gap uses semio@window@gap for U-cutout; removed duplicate trailing stroke; fixed empty-number ctrl chip. Verified on mit-bestand zwischenbericht cover (zwischenbericht-p1-windows.png).",
   "github": {
@@ -16,6 +16,7 @@
   "sessions": [
     "⚪7def8db35dd84b859db01a45487c8a7a",
     "⚪1140d47e5a3240b9b961333e108c4951",
-    "⚪85122e4e06b44008af1e657e134d6b7d"
+    "⚪85122e4e06b44008af1e657e134d6b7d",
+    "⚪06fdc9843ac64d94a7cdd61e0751ffec"
   ]
 }

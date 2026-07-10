@@ -933,6 +933,7 @@ pub fn render_generations_tree(
         selected_ids: selected_id.map(|id| vec![format!("{surface_prefix}.generation.{id}")]),
         highlighted_ids: None,
         selection_change: Some(generation_cmd(controller_id, "selectGeneration", None)),
+        drop_command: None,
     })
 }
 
@@ -969,6 +970,10 @@ fn render_question_field(
             placeholder: question.placeholder.clone(),
             commit: None,
             on_change: on_change(),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
         }),
         "number" => UiControlNode::Input(UiInputNode {
             id: format!("{field_id}.input"),
@@ -977,6 +982,10 @@ fn render_question_field(
             placeholder: question.placeholder.clone(),
             commit: None,
             on_change: on_change(),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
         }),
         "slider" => UiControlNode::Slider(UiSliderNode {
             id: format!("{field_id}.slider"),
@@ -985,6 +994,7 @@ fn render_question_field(
             max: question.max.unwrap_or(100.0),
             step: question.step.unwrap_or(1.0),
             on_change: on_change(),
+            unit: None,
         }),
         "boolean" => UiControlNode::Toggle(UiToggleNode {
             id: format!("{field_id}.toggle"),
@@ -1059,7 +1069,14 @@ fn render_question_field(
                                     "fieldIndex": index,
                                 })),
                             ),
+                            min: None,
+                            max: None,
+                            step: None,
+                            accept: None,
                         }),
+                        description: None,
+                        required: None,
+                        error: None,
                     })
                 })
                 .collect();
@@ -1074,12 +1091,19 @@ fn render_question_field(
             placeholder: question.placeholder.clone(),
             commit: None,
             on_change: on_change(),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
         }),
     };
     Some(UiNode::Field(UiFieldNode {
         id: field_id,
         label: question.label.clone(),
         child,
+        description: None,
+        required: None,
+        error: None,
     }))
 }
 
@@ -1845,6 +1869,9 @@ impl PluginApp for StandardPluginApp {
                     lod_json: None,
                     chunking_json: None,
                     context_menu_json: None,
+                    environment_json: None,
+                    frame_json: None,
+                    fit_json: None,
                 },
             ),
             SurfaceKind::NodeGraph => {
@@ -2211,6 +2238,9 @@ pub fn world3d_scene_extended(
         lod_json,
         chunking_json,
         context_menu_json,
+        environment_json: None,
+        frame_json: None,
+        fit_json: None,
     }
 }
 

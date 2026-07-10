@@ -392,6 +392,9 @@ fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
         gap: Some("standard".into()),
         padding: None,
         children,
+        id: None,
+        selected: None,
+        activate: None,
     })
 }
 
@@ -724,6 +727,7 @@ fn build_catalogue_tree(panel: &StudioPanelState) -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -779,6 +783,10 @@ fn parameter_value_control(parameter: &OsParameter) -> UiNode {
                 "patchParameter",
                 Some(json!({ "parameterId": id, "field": "value" })),
             ),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
         }),
     }
 }
@@ -809,6 +817,9 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                         Some(json!({ "parameterId": id, "field": "min" })),
                     ),
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
             UiNode::Field(UiFieldNode {
                 id: format!("s-play-parameters.{id}.max"),
@@ -827,6 +838,9 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                         Some(json!({ "parameterId": id, "field": "max" })),
                     ),
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
             UiNode::Field(UiFieldNode {
                 id: format!("s-play-parameters.{id}.step"),
@@ -845,6 +859,9 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                         Some(json!({ "parameterId": id, "field": "step" })),
                     ),
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
         ],
         OsParameter::Categorical { id, options, .. } => {
@@ -863,7 +880,11 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                                 Some(json!({ "parameterId": id, "field": "removeOption", "value": option })),
                             ),
                             style: None,
+                            disabled: None,
                         }),
+                        description: None,
+                        required: None,
+                        error: None,
                     })
                 })
                 .collect();
@@ -880,7 +901,14 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                         "patchParameter",
                         Some(json!({ "parameterId": id, "field": "addOption" })),
                     ),
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
                 }),
+                description: None,
+                required: None,
+                error: None,
             }));
             fields
         }
@@ -901,6 +929,7 @@ fn build_parameters_tree(document: &OsDocument) -> UiNode {
                 label: "Add Parameter".into(),
                 command: s_play_cmd("addParameter", Some(json!({ "type": "numeric" }))),
                 style: None,
+                disabled: None,
             }),
             ui_text(format!("{} parameter(s)", projection.parameters.len())),
         ],
@@ -926,7 +955,14 @@ fn build_parameters_tree(document: &OsDocument) -> UiNode {
                         "patchParameter",
                         Some(json!({ "parameterId": parameter_id, "field": "name" })),
                     ),
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
             UiNode::Field(UiFieldNode {
                 id: format!("s-play-parameters.{parameter_id}.value-field"),
@@ -943,8 +979,15 @@ fn build_parameters_tree(document: &OsDocument) -> UiNode {
                         placeholder: None,
                         commit: None,
                         on_change: s_play_cmd("patchParameter", None),
+                        min: None,
+                        max: None,
+                        step: None,
+                        accept: None,
                     }),
                 },
+                description: None,
+                required: None,
+                error: None,
             }),
         ];
         parameter_children.extend(parameter_constraint_fields(parameter));
@@ -957,6 +1000,7 @@ fn build_parameters_tree(document: &OsDocument) -> UiNode {
                 Some(json!({ "parameterId": parameter_id })),
             ),
             style: None,
+            disabled: None,
         }));
         children.push(UiSectionNode {
             id: format!("s-play-parameters.{parameter_id}"),
@@ -1008,7 +1052,14 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                     placeholder: None,
                     commit: None,
                     on_change: s_play_cmd("noop", None),
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
                 }),
+                description: None,
+                required: None,
+                error: None,
             }));
         }
         node_fields.push(UiNode::Field(UiFieldNode {
@@ -1028,7 +1079,14 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                     "patchMediaNodes",
                     Some(json!({ "nodeIds": media_node_ids, "field": "position", "axis": "x" })),
                 ),
+                min: None,
+                max: None,
+                step: None,
+                accept: None,
             }),
+            description: None,
+            required: None,
+            error: None,
         }));
         node_fields.push(UiNode::Field(UiFieldNode {
             id: "s-play-inspector.media-node.y".into(),
@@ -1047,7 +1105,14 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                     "patchMediaNodes",
                     Some(json!({ "nodeIds": media_node_ids, "field": "position", "axis": "y" })),
                 ),
+                min: None,
+                max: None,
+                step: None,
+                accept: None,
             }),
+            description: None,
+            required: None,
+            error: None,
         }));
         children.push(UiSectionNode {
             id: "s-play-inspector.media-nodes".into(),
@@ -1105,7 +1170,14 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                         "patchAppInstances",
                         Some(json!({ "instanceIds": instance_ids, "field": "label" })),
                     ),
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
         ];
         if instance_ids.len() == 1 {
@@ -1169,6 +1241,9 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                                     })),
                                 ),
                             }),
+                            description: None,
+                            required: None,
+                            error: None,
                         }));
                         if let Some(binding) = binding {
                             if let Some(parameter) = projection

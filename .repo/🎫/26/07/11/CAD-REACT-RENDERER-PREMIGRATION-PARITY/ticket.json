@@ -1,0 +1,13 @@
+{
+  "title": "Cad React Renderer Premigration Parity",
+  "emoji": "📐",
+  "status": "open",
+  "description": "Bring the CAD experience on the React renderer (SEMIO_RENDERER=react, launch config 🛠️dev📐cad⚛️react, port 6020) to full premigration level (git tag `premigration`, commit f8376e8486). Full maximalism scope per user decision: every premigration feature, including component (face/edge/vertex) selection + ambiguity pick menu, the metadata attributes panel, the full 37+ interaction catalog via a declarative interaction engine, the typology hatch material, STEP import on Load, and archived box footprints.\n\nConfirmed bugs to fix first (Phase 0): Load is broken end-to-end (plugin never string-parses the file payload), REPL numeric entry can never match due to shell command normalization stripping decimals, background-deselect misfires on every click (R3F stopPropagation doesn't stop DOM bubbling), ctrl-click \"remove\" merge mode unsupported in the shared selection-merge helper, gumball rotate crashes (reads wrong GumballPose field), and engagementRepeatLast is a no-op.\n\nCenterpiece: Phase 1 replaces the 9 hardcoded Rust statecharts in cad/plugin/rs/interaction.rs with a declarative interaction engine that interprets the in-tree JSON interaction/action assets (cad/asset/modelDefinition/*/interaction/*.json, ~37 for spatial.shape alone) against cad/schema/json/interaction.json and expression.json, executing via kernel_3d_brepkit sync ops.\n\nFull plan with file:line references is in /Users/ueli/.claude/plans/get-cad-to-premigration-stateful-rabbit.md (5 phases + Phase 0 bugs). Architecture constraint: shell/host code (framework/renderer/react, infinite/world/r3f) stays renderer-generic — no cad-specific branches; all cad logic lives in the Rust plugin (cad/plugin/rs, cad/rs). Working tree has concurrent WIP in framework/renderer/react/components/world-3d-host.tsx and lowpoly/plugin/rs/lib.rs from an unrelated lowpoly parity session — all edits here must be additive and must not revert those hunks.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1916"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪e8c0fc44008c443aa9e6ec05be0a3ae2"
+  ]
+}

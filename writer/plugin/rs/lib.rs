@@ -105,8 +105,8 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
 
 use grammar::tokenize_language;
 use trinity_jack::{complete, example_graph, format as jack_format, lint, semantic_tokens, Diagnostic};
-use semio_framework_plugin::{SurfaceKind, PanelGroup, 
-    build_text_editor_scene, ui_declarative_sections_to_tree, ui_text, App,
+use semio_framework_plugin::{SurfaceKind, PanelGroup,
+    build_text_editor_scene, text_identifier_occurrences_json, ui_declarative_sections_to_tree, ui_text, App,
     CommandDescriptor, PluginApp, PluginBundle, TextEditorScene, UiNode, UiSectionNode,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -498,6 +498,7 @@ fn render_document_panel(document: &WriterDocument, runtime: &WriterPlayRuntime)
             "setAstSelection",
             None,
         )),
+        drop_command: None,
     })
 }
 
@@ -539,47 +540,6 @@ fn render_inspection_panel(document: &WriterDocument) -> UiNode {
 //#endregion 🔖Panels
 
 //#region 🔖JackEditor
-fn identifier_bounds_at(text: &str, offset: usize) -> Option<(usize, usize)> {
-    let bytes = text.as_bytes();
-    let mut index = offset.min(bytes.len());
-    while index > 0 && (bytes[index - 1] as char).is_ascii_alphanumeric() || bytes[index - 1] == b'_' {
-        index -= 1;
-    }
-    let start = index;
-    while index < bytes.len() && (bytes[index] as char).is_ascii_alphanumeric() || bytes[index] == b'_' {
-        index += 1;
-    }
-    if start == index {
-        return None;
-    }
-    Some((start, index))
-}
-
-fn jack_occurrences_json(text: &str, cursor: usize) -> Option<String> {
-    let (start, end) = identifier_bounds_at(text, cursor)?;
-    let needle = &text[start..end];
-    if needle.is_empty() {
-        return None;
-    }
-    let mut ranges = Vec::new();
-    let mut scan = 0usize;
-    while let Some(found) = text[scan..].find(needle) {
-        let at = scan + found;
-        let next_end = at + needle.len();
-        if identifier_bounds_at(text, at) == Some((at, next_end)) {
-            ranges.push(json!({ "start": at, "end": next_end }));
-        }
-        scan = at + needle.len();
-    }
-    Some(
-        json!({
-            "selection": serde_json::to_string(&ranges).unwrap_or_else(|_| "[]".into()),
-            "hover": serde_json::to_string(&ranges).unwrap_or_else(|_| "[]".into()),
-        })
-        .to_string(),
-    )
-}
-
 /// 🪞 Canonical jack format when possible, else a whitespace-only normalization for other languages.
 fn format_writer_text(text: &str, language_id: &str) -> String {
     if language_id == "jack" {
@@ -644,7 +604,7 @@ fn render_main_scene(document: &WriterDocument, runtime: &WriterPlayRuntime) -> 
         None
     };
     let cursor = runtime.editor_selection.as_ref().map(|selection| selection.end).unwrap_or(0);
-    let occurrences_json = (document.language_id == "jack").then(|| jack_occurrences_json(&document.text, cursor)).flatten();
+    let occurrences_json = (document.language_id == "jack").then(|| text_identifier_occurrences_json(&document.text, cursor)).flatten();
     let completions_json = if document.language_id == "jack" {
         jack_completions_json(&document.text, cursor)
     } else if runtime.format_signal > 0 {

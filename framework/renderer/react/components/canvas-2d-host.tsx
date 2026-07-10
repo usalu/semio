@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, type DragEvent } from "react";
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
+import { CATALOGUE_DRAG_MIME } from "@semio-tech/ui-react";
 import type { CommandDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
 
 //#region CanvasCameraMath
@@ -473,12 +474,19 @@ class JsonLayersCanvasSession implements GraphWasmSession {
 //#endregion JsonLayersCanvasSession
 
 //#region Canvas2dHost
+const CAMERA_SYNC_DEBOUNCE_MS = 120;
+const DRAG_OVER_THROTTLE_MS = 50;
+const DRAG_OVER_THROTTLE_DISTANCE = 4;
+
 export function Canvas2dHost({ node, onCommand }: { readonly node: UiComponentSceneNode; readonly onCommand: (command: CommandDescriptor) => void }) {
   const scene = node.canvas2d;
   const initialCamera = useMemo(() => ({ x: scene?.cameraX ?? 0, y: scene?.cameraY ?? 0, zoom: scene?.zoom ?? 1 }), [scene?.cameraX, scene?.cameraY, scene?.zoom]);
   const cameraRef = useRef<CanvasCamera>(initialCamera);
   cameraRef.current = initialCamera;
   const sessionRef = useRef<JsonLayersCanvasSession | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const cameraSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dragOverStateRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const dispatch = useCallback(
     (command: string, args?: Record<string, unknown>) => {
       onCommand({
@@ -497,6 +505,8 @@ export function Canvas2dHost({ node, onCommand }: { readonly node: UiComponentSc
         (next) => {
           cameraRef.current = next;
           sessionRef.current?.updateCamera(next);
+          if (cameraSyncTimeoutRef.current) clearTimeout(cameraSyncTimeoutRef.current);
+          cameraSyncTimeoutRef.current = setTimeout(() => dispatch("setCamera", { camera: next }), CAMERA_SYNC_DEBOUNCE_MS);
         },
         (command, args) => {
           if (command === "canvasPointerDown" && args?.button === 0) {
@@ -513,10 +523,53 @@ export function Canvas2dHost({ node, onCommand }: { readonly node: UiComponentSc
     };
   }, [dispatch, scene?.layersJson]);
 
+  const handleDragOver = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (!event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME)) return;
+      event.preventDefault();
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const last = dragOverStateRef.current;
+      const now = Date.now();
+      if (last && now - last.time < DRAG_OVER_THROTTLE_MS && Math.abs(x - last.x) < DRAG_OVER_THROTTLE_DISTANCE && Math.abs(y - last.y) < DRAG_OVER_THROTTLE_DISTANCE) return;
+      dragOverStateRef.current = { x, y, time: now };
+      dispatch("canvasDragOver", { x, y, width: rect.width, height: rect.height, types: [...event.dataTransfer.types] });
+    },
+    [dispatch],
+  );
+
+  const handleDragLeave = useCallback(() => {
+    dragOverStateRef.current = null;
+    dispatch("canvasDragLeave");
+  }, [dispatch]);
+
+  const handleDrop = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      const raw = event.dataTransfer.getData(CATALOGUE_DRAG_MIME);
+      if (!raw) return;
+      event.preventDefault();
+      dragOverStateRef.current = null;
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      dispatch("canvasDrop", { x: event.clientX - rect.left, y: event.clientY - rect.top, width: rect.width, height: rect.height, dragData: raw });
+    },
+    [dispatch],
+  );
+
   if (!scene) return <div className="semio-canvas-2d-empty">No canvas scene</div>;
 
   return (
-    <div className="semio-canvas-2d-host h-full min-h-[24rem] w-full bg-canvas" data-controller-id={node.controllerId} data-surface-id={node.surfaceId}>
+    <div
+      ref={containerRef}
+      className="semio-canvas-2d-host h-full min-h-[24rem] w-full bg-canvas"
+      data-controller-id={node.controllerId}
+      data-surface-id={node.surfaceId}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <GraphWasmCanvas className="h-full w-full" sessionFactory={sessionFactory} />
     </div>
   );

@@ -454,6 +454,7 @@ fn build_document_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
         selected_ids: Some(selected.iter().map(|id| format!("dag-play-document.node.{id}")).collect()),
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -487,6 +488,7 @@ fn build_catalogue_tree() -> UiNode {
         selected_ids: Some(vec![]),
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -502,7 +504,14 @@ fn inspector_number_field(node_ids: &[String], field_id: &str, label: &str, valu
             placeholder: if mixed.uniform { None } else { Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into()) },
             commit: None,
             on_change: dag_cmd("patchDagNodes", Some(json!({ "nodeIds": node_ids, "field": field }))),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
         }),
+        description: None,
+        required: None,
+        error: None,
     })
 }
 
@@ -518,7 +527,14 @@ fn inspector_text_field(node_ids: &[String], field_id: &str, label: &str, values
             placeholder: mixed.placeholder,
             commit: Some("blur".into()),
             on_change: dag_cmd("patchDagNodes", Some(json!({ "nodeIds": node_ids, "field": field }))),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
         }),
+        description: None,
+        required: None,
+        error: None,
     })
 }
 
@@ -582,7 +598,14 @@ fn build_inspector_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
                     placeholder: None,
                     commit: Some("blur".into()),
                     on_change: dag_cmd("renameDagNode", Some(json!({ "oldId": node_ids[0] }))),
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
         );
     } else {

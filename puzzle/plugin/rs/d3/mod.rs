@@ -693,6 +693,7 @@ fn build_document_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -707,6 +708,7 @@ fn build_kinds_tree() -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -734,7 +736,14 @@ fn build_inspector_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
                             placeholder: None,
                             commit: None,
                             on_change: puzzle3d_cmd("setSelection", None),
+                            min: None,
+                            max: None,
+                            step: None,
+                            accept: None,
                         }),
+                        description: None,
+                        required: None,
+                        error: None,
                     }),
                 ],
             }]);

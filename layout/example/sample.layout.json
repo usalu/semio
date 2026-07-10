@@ -29,7 +29,7 @@
       "styleRuns": [{ "start": 0, "end": 120, "paragraphStyleId": "paragraph.body" }]
     }
   ],
-  "links": [{ "id": "link-missing", "path": "assets/site-plan.png", "hash": "sha256:missing", "width": 1200, "height": 800, "dpi": 72, "state": "missing" }],
+  "links": [{ "id": "link-missing", "path": "assets/site-plan.png", "hash": "sha256:missing", "width": 1200, "height": 800, "dpi": 72, "colorProfile": "RGB", "state": "missing" }],
   "parentPages": [
     {
       "id": "parent-master",

@@ -442,6 +442,7 @@ fn build_document_tree(play: &Procedural2dPlayEnvelope) -> UiNode {
         ),
         highlighted_ids: None,
         selection_change: Some(procedural2d_cmd("setSelection", None)),
+        drop_command: None,
     })
 }
 
@@ -518,6 +519,7 @@ fn build_catalogue_tree() -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 

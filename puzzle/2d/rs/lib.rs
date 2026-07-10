@@ -303,6 +303,12 @@ impl BoardSession {
         self.state.borrow_mut().host.set_camera(x, y, zoom);
     }
 
+    /// 🎥 Sets the camera without enqueuing a `camera` event — for re-applying the framing camera after a fixture re-parse without echoing it back to the plugin.
+    #[wasm_bindgen(js_name = setCameraSilent)]
+    pub fn set_camera_silent_wasm(&mut self, x: f64, y: f64, zoom: f64) {
+        self.state.borrow_mut().host.set_camera_silent(x, y, zoom);
+    }
+
     #[wasm_bindgen(js_name = pointerDownScreen)]
     pub fn pointer_down_screen_wasm(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool) {
         self.state.borrow_mut().host.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta);

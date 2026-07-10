@@ -1472,6 +1472,16 @@ impl EditorSession {
                 inner.host.set_camera(0.0, x, 1.0);
             }
         }
+        if let Some(json) = value.get("hoverJson").and_then(|v| v.as_str()) {
+            match serde_json::from_str::<serde_json::Value>(json) {
+                Ok(serde_json::Value::Object(range)) => {
+                    let start = range.get("start").and_then(|v| v.as_u64()).map(|v| v as usize);
+                    let end = range.get("end").and_then(|v| v.as_u64()).map(|v| v as usize);
+                    inner.host.set_hover_range(start, end);
+                }
+                _ => inner.host.set_hover_range(None, None),
+            }
+        }
         Ok(())
     }
 

@@ -218,10 +218,11 @@ import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
 const GLB_MESH_FRAME_ROTATION_X = Math.PI / 2;
 const ICON_RENDER_GLB_CACHE = new Map<string, Promise<THREE.Group>>();
 
-function sunPositionFromAzimuthElevation(azimuthDeg: number, elevationDeg: number, distance = 120): THREE.Vector3 {
+/** @emoji ☀️ Sun position on a sphere from azimuth/elevation degrees, see https://en.wikipedia.org/wiki/Horizontal_coordinate_system. */
+export function sunPositionFromAzimuthElevation(azimuthDeg: number, elevationDeg: number, distance = 120): [number, number, number] {
   const az = (azimuthDeg * Math.PI) / 180;
   const el = (elevationDeg * Math.PI) / 180;
-  return new THREE.Vector3(Math.cos(el) * Math.cos(az), Math.cos(el) * Math.sin(az), Math.sin(el)).multiplyScalar(distance);
+  return [Math.cos(el) * Math.cos(az) * distance, Math.cos(el) * Math.sin(az) * distance, Math.sin(el) * distance];
 }
 
 async function loadGlbGroup(url: string): Promise<THREE.Group> {
@@ -274,7 +275,7 @@ function buildIconScene(request: IconRenderRequest, model: THREE.Group): THREE.S
   const ambient = new THREE.AmbientLight(request.lights.ambientColor, request.lights.ambientIntensity);
   const sunPos = sunPositionFromAzimuthElevation(request.lights.sunAzimuth, request.lights.sunElevation);
   const sun = new THREE.DirectionalLight(request.lights.sunColor, request.lights.sunIntensity);
-  sun.position.copy(sunPos);
+  sun.position.set(sunPos[0], sunPos[1], sunPos[2]);
   if (request.shadowEnabled) {
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
@@ -380,6 +381,63 @@ export const iconRenderPort: IconRenderPort = {
     return applyIconRenderShape(result, request.shape, request.width, request.height);
   },
 };
+
+/** @emoji 🖼️ Aspect-ratio style keeping a W×H frame inside its container. */
+export function iconShotFrameStyle(width: number, height: number): React.CSSProperties {
+  const landscape = width >= height;
+  return {
+    aspectRatio: `${width} / ${height}`,
+    maxHeight: "100%",
+    maxWidth: "100%",
+    width: landscape ? "100%" : "auto",
+    height: landscape ? "auto" : "100%",
+  };
+}
+
+/** @emoji 🖼️ Frame mask class for an icon shot shape. */
+export function iconShotFrameClass(shape: IconRenderShape): string {
+  return shape === "ellipse" ? "rounded-full" : "rounded-none";
+}
+
+/** @emoji 🖼️ Centered shot frame overlay with shape mask and W×H badge. */
+export function IconShotFrame({
+  width,
+  height,
+  shape = "rectangle",
+  className,
+  background,
+  badge = true,
+  children,
+}: {
+  readonly width: number;
+  readonly height: number;
+  readonly shape?: IconRenderShape;
+  readonly className?: string;
+  readonly background?: string;
+  readonly badge?: boolean;
+  readonly children?: React.ReactNode;
+}): React.ReactNode {
+  return (
+    <div className={cn("pointer-events-none absolute inset-0 flex items-center justify-center", className)}>
+      <div
+        className={cn("relative box-border overflow-hidden border-2 border-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_20%,transparent)]", iconShotFrameClass(shape))}
+        data-icon-shot-frame
+        data-icon-shot-shape={shape}
+        style={{
+          ...iconShotFrameStyle(width, height),
+          ...(background ? { background } : {}),
+        }}
+      >
+        {children}
+        {badge ? (
+          <span className="pointer-events-none absolute bottom-1 right-1 rounded-sm bg-background/80 px-1 font-mono text-[10px] text-muted-foreground">
+            {width}×{height} · {shape}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 // #endregion 🔖IconRenderPort
 
 // #region 🖼️ReferenceMedia
@@ -20791,6 +20849,36 @@ if (import.meta.vitest) {
       expect(referenceMediaKindFromUrl("/infinite-fixture/icon.svg")).toBe("svg");
       expect(referenceMediaKindFromUrl("/infinite-fixture/site.pdf")).toBe("pdf");
       expect(referenceMediaKindFromUrl("/unknown.bin")).toBeNull();
+    });
+  });
+
+  describe("iconShotFrame", () => {
+    it("sizes the frame from fixed width and height", () => {
+      const landscape = iconShotFrameStyle(512, 256);
+      expect(landscape.aspectRatio).toBe("512 / 256");
+      expect(landscape.width).toBe("100%");
+      expect(landscape.height).toBe("auto");
+      const portrait = iconShotFrameStyle(256, 512);
+      expect(portrait.width).toBe("auto");
+      expect(portrait.height).toBe("100%");
+    });
+
+    it("masks ellipse shots with a rounded frame", () => {
+      expect(iconShotFrameClass("ellipse")).toBe("rounded-full");
+      expect(iconShotFrameClass("rectangle")).toBe("rounded-none");
+    });
+  });
+
+  describe("sunPositionFromAzimuthElevation", () => {
+    it("places the sun on the azimuth/elevation sphere", () => {
+      const [x, y, z] = sunPositionFromAzimuthElevation(0, 90, 100);
+      expect(x).toBeCloseTo(0, 5);
+      expect(y).toBeCloseTo(0, 5);
+      expect(z).toBeCloseTo(100, 5);
+      const [ex, ey, ez] = sunPositionFromAzimuthElevation(90, 0, 100);
+      expect(ex).toBeCloseTo(0, 5);
+      expect(ey).toBeCloseTo(100, 5);
+      expect(ez).toBeCloseTo(0, 5);
     });
   });
 

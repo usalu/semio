@@ -1,0 +1,13 @@
+{
+  "title": "Forms React Parity",
+  "emoji": "📋",
+  "status": "open",
+  "description": "Restore the forms experience in the React renderer to the level it had at git tag premigration. Replace the Blueprint table with the rich card-based builder emitted declaratively from the forms plugin, bring the Try wizard to premigration fidelity (step titles, field descriptions, required markers, inline validation errors, disabled navigation until valid, slider units, number min/max/step, file accept, URL image rendering, chip-row multi select), fix catalogue drag-and-drop end-to-end in the React renderer (MIME wiring plus a real drop dispatch of dropQuestionKind), make inspector kind-specific fields always editable, and extend the shared UiNode schema (field description/required/error, slider unit, input min/max/step/accept, button disabled, tree drop command, selectable-card stacks, image node) with TS mirrors and React interpreter support.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1917"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪9dd9b17a5ff0432ab0d900783f123e1a"
+  ]
+}

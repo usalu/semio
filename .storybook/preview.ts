@@ -163,7 +163,6 @@ import {
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
 } from "@semio-tech/ui-react";
-import type { Decorator } from "@storybook/react-vite";
 
 // #region 🌈StorySurfaceHost
 const StorySurfaceHost: React.FC<{

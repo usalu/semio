@@ -349,6 +349,7 @@ fn build_document_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNode
         selected_ids: Some(selected.iter().map(|id| format!("sequence-play-document.step.{id}")).collect()),
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -398,6 +399,7 @@ fn build_catalogue_tree(fixture: &SequenceFixture) -> UiNode {
         selected_ids: Some(vec![]),
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 

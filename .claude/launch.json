@@ -12,6 +12,16 @@
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:puzzle:5d"],
       "port": 6014
+    },
+    {
+      "name": "lowpoly-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:lowpoly"],
+      "env": {
+        "LOWPOLY_PLAY_PORT": "6078",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6078
     }
   ]
 }

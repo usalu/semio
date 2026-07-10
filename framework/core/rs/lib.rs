@@ -1556,6 +1556,12 @@ pub struct UiStackNode {
     pub gap: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub padding: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selected: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub activate: Option<CommandDescriptor>,
     pub children: Vec<UiNode>,
 }
 
@@ -1579,11 +1585,22 @@ pub struct UiButtonNode {
     pub command: CommandDescriptor,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub style: Option<StyleSpec>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disabled: Option<bool>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UiSeparatorNode {}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiImageNode {
+    pub id: String,
+    pub src: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub alt: Option<String>,
+}
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -1595,6 +1612,14 @@ pub struct UiInputNode {
     pub placeholder: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub commit: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub step: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accept: Option<String>,
     pub on_change: CommandDescriptor,
 }
 
@@ -1656,6 +1681,8 @@ pub struct UiSliderNode {
     pub min: f64,
     pub max: f64,
     pub step: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
     pub on_change: CommandDescriptor,
 }
 
@@ -1711,6 +1738,12 @@ pub enum UiControlNode {
 pub struct UiFieldNode {
     pub id: String,
     pub label: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub required: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
     pub child: UiControlNode,
 }
 
@@ -1813,6 +1846,8 @@ pub struct UiTreeNode {
     pub highlighted_ids: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub selection_change: Option<CommandDescriptor>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub drop_command: Option<CommandDescriptor>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1932,7 +1967,14 @@ pub fn ui_inspector_readonly_field(
                 command: String::new(),
                 args: None,
             },
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
         }),
+        description: None,
+        required: None,
+        error: None,
     })
 }
 
@@ -1994,6 +2036,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
+            drop_command: None,
         }
     } else {
         UiTreeNode {
@@ -2001,6 +2044,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
+            drop_command: None,
         }
     })
 }
@@ -2553,6 +2597,20 @@ pub struct Puzzle2dBoardScene {
     pub hovered_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub active_tool: Option<String>,
+    #[serde(default = "puzzle2d_board_default_selection_method")]
+    pub selection_method: String,
+    #[serde(default)]
+    pub grid_snap_enabled: bool,
+    #[serde(default = "puzzle2d_board_default_grid_factor")]
+    pub grid_factor: f64,
+    #[serde(default)]
+    pub suggestion_offset: f64,
+    #[serde(default = "puzzle2d_board_default_brush_kind_weights_json")]
+    pub brush_kind_weights_json: String,
+    #[serde(default = "puzzle2d_board_default_kind_compatibility_json")]
+    pub kind_compatibility_json: String,
+    #[serde(default = "puzzle2d_board_default_lod_mode")]
+    pub lod_mode: String,
 }
 
 pub fn puzzle2d_board_default_kind_catalogs_json() -> String {
@@ -2561,6 +2619,26 @@ pub fn puzzle2d_board_default_kind_catalogs_json() -> String {
 
 pub fn puzzle2d_board_default_selection_json() -> String {
     "[]".into()
+}
+
+pub fn puzzle2d_board_default_selection_method() -> String {
+    "rectangle".into()
+}
+
+pub fn puzzle2d_board_default_grid_factor() -> f64 {
+    1.0
+}
+
+pub fn puzzle2d_board_default_brush_kind_weights_json() -> String {
+    "{}".into()
+}
+
+pub fn puzzle2d_board_default_kind_compatibility_json() -> String {
+    "[]".into()
+}
+
+pub fn puzzle2d_board_default_lod_mode() -> String {
+    "automatic".into()
 }
 
 impl Puzzle2dBoardScene {
@@ -2574,6 +2652,45 @@ impl Puzzle2dBoardScene {
             interactive,
             hovered_id: None,
             active_tool: None,
+            selection_method: puzzle2d_board_default_selection_method(),
+            grid_snap_enabled: false,
+            grid_factor: puzzle2d_board_default_grid_factor(),
+            suggestion_offset: 0.0,
+            brush_kind_weights_json: puzzle2d_board_default_brush_kind_weights_json(),
+            kind_compatibility_json: puzzle2d_board_default_kind_compatibility_json(),
+            lod_mode: puzzle2d_board_default_lod_mode(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NoteCanvasScene {
+    pub document_json: String,
+    #[serde(default = "note_canvas_default_selection_json")]
+    pub selection_json: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hovered_id: Option<String>,
+    pub active_tool: String,
+    pub view_mode: String,
+    #[serde(default)]
+    pub interactive: bool,
+}
+
+pub fn note_canvas_default_selection_json() -> String {
+    "[]".into()
+}
+
+impl NoteCanvasScene {
+    /** @emoji 📝 Builds a note canvas scene with the default empty selection. */
+    pub fn base(document_json: String, active_tool: String, view_mode: String, interactive: bool) -> Self {
+        Self {
+            document_json,
+            selection_json: note_canvas_default_selection_json(),
+            hovered_id: None,
+            active_tool,
+            view_mode,
+            interactive,
         }
     }
 }
@@ -2617,6 +2734,8 @@ pub struct UiComponentSceneNode {
     pub puzzle2d_board: Option<Puzzle2dBoardScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon_render: Option<IconRenderScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub note_canvas: Option<NoteCanvasScene>,
 }
 //#endregion 🔖ComponentScenes
 
@@ -2640,6 +2759,7 @@ pub enum UiNode {
     Field(UiFieldNode),
     Section(UiSectionNode),
     Tree(UiTreeNode),
+    Image(UiImageNode),
     ComponentScene(UiComponentSceneNode),
     ExternalSlot(UiExternalSlotNode),
 }
@@ -2719,6 +2839,11 @@ pub mod puzzle2d_board_commands {
     pub const APPLY_BOARD_EVENTS: &str = "applyBoardEvents";
 }
 
+/** @emoji 📝 Renderer-to-plugin command names for note canvas surfaces. */
+pub mod note_canvas_commands {
+    pub const APPLY_NOTE_EVENTS: &str = "applyNoteEvents";
+}
+
 pub mod gis_map_commands {
     pub const SET_CAMERA: &str = "setCamera";
     pub const SET_FEATURE_SELECTION: &str = "setFeatureSelection";
@@ -2740,7 +2865,19 @@ pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
         direction: "vertical".into(),
         gap: Some("standard".into()),
         padding: None,
+        id: None,
+        selected: None,
+        activate: None,
         children,
+    })
+}
+
+/** @emoji 🖼️ Builds an image node rendering a source URL or path. */
+pub fn ui_image(id: impl Into<String>, src: impl Into<String>, alt: Option<String>) -> UiNode {
+    UiNode::Image(UiImageNode {
+        id: id.into(),
+        src: src.into(),
+        alt,
     })
 }
 
@@ -2804,6 +2941,8 @@ fn component_scene(
         virtual_file_system,
         gis_map,
         puzzle2d_board,
+        icon_render: None,
+        note_canvas: None,
     })
 }
 
@@ -2898,6 +3037,48 @@ pub fn build_text_editor_scene(
         None,
     )
 }
+
+//#region 🔖TextIdentifierOccurrences
+/// 🔎 Expands an offset in `text` to the bounds of the identifier (`[A-Za-z0-9_]+`) it falls in, if any.
+pub fn text_identifier_bounds_at(text: &str, offset: usize) -> Option<(usize, usize)> {
+    let bytes = text.as_bytes();
+    let is_ident = |byte: u8| (byte as char).is_ascii_alphanumeric() || byte == b'_';
+    let mut index = offset.min(bytes.len());
+    while index > 0 && is_ident(bytes[index - 1]) {
+        index -= 1;
+    }
+    let start = index;
+    while index < bytes.len() && is_ident(bytes[index]) {
+        index += 1;
+    }
+    if start == index {
+        None
+    } else {
+        Some((start, index))
+    }
+}
+
+/// 🔎 JSON `{selection, hover}` occurrence ranges for the identifier under `cursor`, for editor cross-highlighting.
+pub fn text_identifier_occurrences_json(text: &str, cursor: usize) -> Option<String> {
+    let (start, end) = text_identifier_bounds_at(text, cursor)?;
+    let needle = &text[start..end];
+    if needle.is_empty() {
+        return None;
+    }
+    let mut ranges = Vec::new();
+    let mut scan = 0usize;
+    while let Some(found) = text[scan..].find(needle) {
+        let at = scan + found;
+        let next_end = at + needle.len();
+        if text_identifier_bounds_at(text, at) == Some((at, next_end)) {
+            ranges.push(serde_json::json!({ "start": at, "end": next_end }));
+        }
+        scan = at + needle.len();
+    }
+    let ranges_json = serde_json::to_string(&ranges).unwrap_or_else(|_| "[]".into());
+    Some(serde_json::json!({ "selection": ranges_json, "hover": ranges_json }).to_string())
+}
+//#endregion 🔖TextIdentifierOccurrences
 
 pub fn build_table_scene(
     surface_id: impl Into<String>,
@@ -3014,6 +3195,64 @@ pub fn build_puzzle2d_board_scene(
         None,
         Some(scene),
     )
+}
+
+pub fn build_icon_render_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: IconRenderScene,
+) -> UiNode {
+    let UiNode::ComponentScene(node) = component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::IconRender,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    ) else {
+        unreachable!()
+    };
+    UiNode::ComponentScene(UiComponentSceneNode {
+        icon_render: Some(scene),
+        ..node
+    })
+}
+
+pub fn build_note_canvas_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: NoteCanvasScene,
+) -> UiNode {
+    let UiNode::ComponentScene(node) = component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::NoteCanvas,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    ) else {
+        unreachable!()
+    };
+    UiNode::ComponentScene(UiComponentSceneNode {
+        note_canvas: Some(scene),
+        ..node
+    })
 }
 //#endregion 🔖UiNode
 

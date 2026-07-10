@@ -760,6 +760,7 @@ fn build_document_tree(fixture: &FlowFixture, selected_node_ids: &[String]) -> U
         selected_ids: Some(selected_node_ids.iter().map(|id| format!("procedural-widget:{id}")).collect()),
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -785,6 +786,7 @@ fn build_catalogue_tree() -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -818,7 +820,14 @@ fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String]) -> 
                     "patchFlowWidgets",
                     Some(json!({ "widgetIds": [selected_id], "field": "value" })),
                 ),
+                min: None,
+                max: None,
+                step: None,
+                accept: None,
             }),
+            description: None,
+            required: None,
+            error: None,
         }));
         fields.push(ui_inspector_readonly_field(
             "procedural-play-inspector.range",

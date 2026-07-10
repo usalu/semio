@@ -814,6 +814,7 @@ fn render_document_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
         selected_ids: Some(document_tree_selected_ids(fixture, &envelope.runtime.selected_ids)),
         highlighted_ids: None,
         selection_change: Some(puzzle2d_cmd("setSelection", None)),
+        drop_command: None,
     })
 }
 //#endregion 🔖DocumentPanel
@@ -925,6 +926,7 @@ fn render_catalogue_panel(fixture: &Value) -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 //#endregion 🔖CataloguePanel

@@ -32,6 +32,21 @@ impl Path {
         Self::default()
     }
 }
+
+impl vcs::Identified<String> for Step {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+/// @emoji 🩹 A step's `params` patch is a full replace — the inverse captures the prior `Dictionary` wholesale.
+impl vcs::Patchable<Dictionary> for Step {
+    fn apply_patch(&mut self, patch: &Dictionary) -> Dictionary {
+        let inverse = self.params.clone();
+        self.params = patch.clone();
+        inverse
+    }
+}
 // #endregion 🔖Path
 
 // #region 🔖EffectLog

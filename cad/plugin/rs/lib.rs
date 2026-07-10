@@ -1412,6 +1412,7 @@ fn build_document_tree(envelope: &CadPlayEnvelope) -> UiNode {
         selected_ids: document_tree_selected_ids(&envelope.document, &envelope.runtime),
         highlighted_ids: document_tree_highlighted_ids(&envelope.document, &envelope.runtime),
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -1437,6 +1438,7 @@ fn build_catalogue_tree() -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -1540,7 +1542,14 @@ fn inspector_number_field(
                 "patchSelection",
                 Some(json!({ "objectIds": object_ids, "field": field })),
             ),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
         }),
+        description: None,
+        required: None,
+        error: None,
     })
 }
 
@@ -1570,7 +1579,14 @@ fn inspector_vec3_field(
                 "patchSelection",
                 Some(json!({ "objectIds": object_ids, "field": field })),
             ),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
         }),
+        description: None,
+        required: None,
+        error: None,
     })
 }
 
@@ -1615,7 +1631,14 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
                         "patchSelection",
                         Some(json!({ "objectIds": object_ids, "field": "label" })),
                     ),
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.object.typology".into(),
@@ -1636,6 +1659,9 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
                         Some(json!({ "objectIds": object_ids, "field": "typology" })),
                     ),
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.object.hidden".into(),
@@ -1650,6 +1676,9 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
                         Some(json!({ "objectIds": object_ids, "field": "hidden" })),
                     ),
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.object.locked".into(),
@@ -1664,6 +1693,9 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
                         Some(json!({ "objectIds": object_ids, "field": "locked" })),
                     ),
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
             inspector_vec3_field(
                 "cad-play-inspector.object.origin",
@@ -1733,7 +1765,14 @@ fn inspector_quat_field(id: &str, label: &str, values: &[[f64; 4]], object_ids: 
                 "patchSelection",
                 Some(json!({ "objectIds": object_ids, "field": "orientation" })),
             ),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
         }),
+        description: None,
+        required: None,
+        error: None,
     })
 }
 
@@ -1766,7 +1805,14 @@ fn reference_inspector_group(model_definition_id: &str, reference: &CadReference
                             "field": "widthWorld",
                         })),
                     ),
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
             inspector_vec3_field(
                 "cad-play-inspector.reference.origin",
@@ -1798,7 +1844,14 @@ fn node_inspector_group(node: &CadNode) -> UiInspectorFieldGroup {
                         "renameNode",
                         Some(json!({ "nodeId": node.id })),
                     ),
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
             ui_inspector_readonly_field("cad-play-inspector.node.kind", "Kind", &node.kind),
         ],
@@ -2733,6 +2786,10 @@ impl PluginApp for CadApp {
                     .cloned()
                     .or_else(|| args.cloned());
                 if let Some(payload) = payload {
+                    let payload = match payload {
+                        Value::String(text) => serde_json::from_str::<Value>(&text).unwrap_or(Value::String(text)),
+                        other => other,
+                    };
                     let unwrapped = unwrap_spatial_load_payload(&payload).unwrap_or(payload);
                     if let Some(scene) = scene_from_spatial_payload(&unwrapped) {
                         envelope.document = scene;
@@ -3515,6 +3572,41 @@ mod tests {
         let scene = scene_from_spatial_payload(&payload).expect("scene");
         assert_eq!(scene.objects.len(), 1);
         assert_eq!(scene.objects[0].id, "object-imported");
+    }
+
+    #[test]
+    fn import_spatial_json_command_accepts_file_text_string_payload() {
+        // The React shell's requestFileOpen host op reads the picked file as text and dispatches
+        // importSpatialJson with `args: { payload: <file text> }` — a JSON *string*, not a parsed
+        // value (framework/renderer/react/os-shell.tsx handleRequestFileOpen). The command must
+        // string-parse it before unwrapping/deserializing.
+        let mut app = CadApp;
+        let envelope = default_envelope();
+        let file_text = json!({
+            "schema": "spatial.model",
+            "revision": 1,
+            "modelDefinitionId": "spatial.shape",
+            "objects": [{
+                "id": "object-loaded",
+                "label": "Loaded",
+                "typology": "spatial.shape.primitive.box",
+                "visible": true,
+                "locked": false,
+                "origin": [1.0, 2.0, 3.0],
+                "primitives": []
+            }]
+        })
+        .to_string();
+        let ops = app.handle_command_patch_ops(
+            "importSpatialJson",
+            Some(&json!({ "payload": file_text })),
+            &serde_json::to_string(&envelope).unwrap(),
+            &ViewState::default(),
+        );
+        assert!(!ops.is_empty(), "importSpatialJson must emit a setDocument op for a string payload");
+        let next = apply_ops(&envelope, &ops);
+        assert_eq!(next.document.objects.len(), 1);
+        assert_eq!(next.document.objects[0].id, "object-loaded");
     }
 
     fn apply_ops(envelope: &CadPlayEnvelope, ops: &[String]) -> CadPlayEnvelope {

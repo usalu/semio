@@ -806,6 +806,7 @@ fn render_layers_panel(document: &RasterDocument, play: &RasterPlayEnvelope, vie
             "setSelection",
             None,
         )),
+        drop_command: None,
     })
 }
 
@@ -882,6 +883,7 @@ fn render_masks_panel(document: &RasterDocument, play: &RasterPlayEnvelope, view
         ),
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 

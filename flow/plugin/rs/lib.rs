@@ -420,6 +420,7 @@ fn build_document_tree(fixture: &FlowFixture, selected: &[String]) -> UiNode {
         selected_ids: Some(selected.iter().map(|id| format!("flow-play-document.widget.{id}")).collect()),
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -487,6 +488,7 @@ fn build_catalogue_tree(envelope: &FlowPlayEnvelope) -> UiNode {
         selected_ids: Some(vec![]),
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -623,6 +625,9 @@ fn canvas_settings_field_group(runtime: &FlowPlayRuntime) -> UiInspectorFieldGro
                     placeholder: None,
                     on_change: flow_cmd("setLodMode", None),
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
             UiNode::Field(UiFieldNode {
                 id: "flow-play-inspector.proximity-distance".into(),
@@ -634,7 +639,14 @@ fn canvas_settings_field_group(runtime: &FlowPlayRuntime) -> UiInspectorFieldGro
                     placeholder: None,
                     commit: None,
                     on_change: flow_cmd("setProximityDistance", None),
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
         ],
     }
@@ -674,7 +686,14 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
                     placeholder: if mixed.uniform { None } else { Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into()) },
                     commit: None,
                     on_change: flow_cmd("patchFlowWidgets", Some(json!({ "widgetIds": widget_ids, "field": "value" }))),
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
                 }),
+                description: None,
+                required: None,
+                error: None,
             })],
         });
     }
@@ -694,7 +713,14 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
                     placeholder: mixed.placeholder,
                     commit: Some("blur".into()),
                     on_change: flow_cmd("patchFlowWidgets", Some(json!({ "widgetIds": widget_ids, "field": "text" }))),
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
                 }),
+                description: None,
+                required: None,
+                error: None,
             })],
         });
     }
@@ -717,7 +743,14 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
                     placeholder: None,
                     commit: Some("blur".into()),
                     on_change: flow_cmd("renameFlowWidget", Some(json!({ "oldId": widget_ids[0] }))),
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
         );
     }

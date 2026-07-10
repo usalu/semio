@@ -4224,6 +4224,7 @@ dependencies = [
  "neural_engine",
  "serde",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
 ]
 
@@ -4239,6 +4240,7 @@ dependencies = [
  "neural_engine",
  "serde",
  "serde_json",
+ "vcs",
 ]
 
 [[package]]

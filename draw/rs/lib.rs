@@ -1,5 +1,6 @@
 //! ✏️ Draw document domain + typed VCS on `vcs`.
 
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
 use vcs::{create_document_vcs_envelope, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
@@ -290,11 +291,8 @@ pub struct DrawSceneNode {
     pub opacity: f64,
     pub blend_mode: String,
     pub visible: bool,
-    pub needs_kernel: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub kernel_kind: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub kernel_payload: Option<serde_json::Value>,
+    pub fill_rule: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub text: Option<DrawSceneText>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -759,6 +757,22 @@ fn transform_world_point(transform: &DrawTransform, x: f64, y: f64) -> (f64, f64
     (transform.x + sx * cos - sy * sin, transform.y + sx * sin + sy * cos)
 }
 
+fn scene_node_for_path(base: &DrawLayerBase, segments: Vec<PathSegment>) -> DrawSceneNode {
+    DrawSceneNode {
+        id: base.id.clone(),
+        transform: draw_transform_to_matrix(&base.transform),
+        segments,
+        fill: base.attributes.fill.clone(),
+        stroke: base.attributes.stroke.clone(),
+        opacity: base.opacity,
+        blend_mode: base.blend_mode.clone(),
+        visible: base.visible,
+        fill_rule: Some("evenodd".into()),
+        text: None,
+        image: None,
+    }
+}
+
 pub fn flatten_draw_document_to_scene_nodes(doc: &DrawDocument) -> Vec<DrawSceneNode> {
     let mut out = Vec::new();
     fn walk(doc: &DrawDocument, layers: &[DrawLayerNode], out: &mut Vec<DrawSceneNode>) {
@@ -769,39 +783,26 @@ pub fn flatten_draw_document_to_scene_nodes(doc: &DrawDocument) -> Vec<DrawScene
             }
             match layer {
                 DrawLayerNode::Group(group) => walk(doc, &group.children, out),
-                DrawLayerNode::Boolean(boolean) => out.push(DrawSceneNode {
-                    id: boolean.base.id.clone(),
-                    transform: draw_transform_to_matrix(&boolean.base.transform),
-                    segments: Vec::new(),
-                    fill: boolean.base.attributes.fill.clone(),
-                    stroke: boolean.base.attributes.stroke.clone(),
-                    opacity: boolean.base.opacity,
-                    blend_mode: boolean.base.blend_mode.clone(),
-                    visible: boolean.base.visible,
-                    needs_kernel: true,
-                    kernel_kind: Some("boolean".into()),
-                    kernel_payload: Some(serde_json::json!({ "op": boolean.op, "children": boolean.children })),
-                    text: None,
-                    image: None,
-                }),
-                DrawLayerNode::Trace(trace) => out.push(DrawSceneNode {
-                    id: trace.base.id.clone(),
-                    transform: draw_transform_to_matrix(&trace.base.transform),
-                    segments: Vec::new(),
-                    fill: trace.base.attributes.fill.clone(),
-                    stroke: trace.base.attributes.stroke.clone(),
-                    opacity: trace.base.opacity,
-                    blend_mode: trace.base.blend_mode.clone(),
-                    visible: trace.base.visible,
-                    needs_kernel: true,
-                    kernel_kind: Some("trace".into()),
-                    kernel_payload: Some(serde_json::json!({
-                        "sourceKey": trace.source_key,
-                        "params": trace.params
-                    })),
-                    text: None,
-                    image: None,
-                }),
+                DrawLayerNode::Boolean(boolean) => {
+                    let segments = resolve_boolean_layer_segments(doc, boolean);
+                    if segments.is_empty() {
+                        continue;
+                    }
+                    out.push(scene_node_for_path(&boolean.base, segments));
+                }
+                DrawLayerNode::Trace(trace) => {
+                    let segments = resolve_trace_layer_segments(doc, trace);
+                    if segments.is_empty() {
+                        continue;
+                    }
+                    let mut node = scene_node_for_path(&trace.base, segments);
+                    if node.fill.is_none() {
+                        if let Some(stroke) = node.stroke.take() {
+                            node.fill = Some(FillStyle::Solid { color: stroke.color });
+                        }
+                    }
+                    out.push(node);
+                }
                 DrawLayerNode::Text(text) => out.push(DrawSceneNode {
                     id: text.base.id.clone(),
                     transform: draw_transform_to_matrix(&text.base.transform),
@@ -811,9 +812,7 @@ pub fn flatten_draw_document_to_scene_nodes(doc: &DrawDocument) -> Vec<DrawScene
                     opacity: text.base.opacity,
                     blend_mode: text.base.blend_mode.clone(),
                     visible: text.base.visible,
-                    needs_kernel: false,
-                    kernel_kind: None,
-                    kernel_payload: None,
+                    fill_rule: None,
                     text: Some(DrawSceneText { content: text.content.clone(), size: text.size }),
                     image: None,
                 }),
@@ -839,33 +838,17 @@ pub fn flatten_draw_document_to_scene_nodes(doc: &DrawDocument) -> Vec<DrawScene
                         opacity: image.base.opacity,
                         blend_mode: image.base.blend_mode.clone(),
                         visible: image.base.visible,
-                        needs_kernel: false,
-                        kernel_kind: None,
-                        kernel_payload: None,
+                        fill_rule: None,
                         text: None,
                         image: Some(DrawSceneImage { src, width: image.width, height: image.height }),
                     });
                 }
                 _ => {
-                    let segments = layer_to_path_segments(layer);
+                    let segments = flatten_curve_segments(&layer_to_path_segments(layer));
                     if segments.is_empty() {
                         continue;
                     }
-                    out.push(DrawSceneNode {
-                        id: base.id.clone(),
-                        transform: draw_transform_to_matrix(&base.transform),
-                        segments,
-                        fill: base.attributes.fill.clone(),
-                        stroke: base.attributes.stroke.clone(),
-                        opacity: base.opacity,
-                        blend_mode: base.blend_mode.clone(),
-                        visible: base.visible,
-                        needs_kernel: false,
-                        kernel_kind: None,
-                        kernel_payload: None,
-                        text: None,
-                        image: None,
-                    });
+                    out.push(scene_node_for_path(base, segments));
                 }
             }
         }
@@ -930,6 +913,343 @@ pub fn clone_draw_layer_node(node: &DrawLayerNode, name_suffix: &str) -> DrawLay
     cloned
 }
 //#endregion 🔖Domain
+
+//#region 🔖SegmentGeometry
+fn draw_map_point_by_matrix(matrix: [f64; 6], point: [f64; 2]) -> [f64; 2] {
+    let [a, b, c, d, e, f] = matrix;
+    [a * point[0] + c * point[1] + e, b * point[0] + d * point[1] + f]
+}
+
+pub fn transform_path_segments(segments: &[PathSegment], transform: &DrawTransform) -> Vec<PathSegment> {
+    let matrix = draw_transform_to_matrix(transform);
+    segments
+        .iter()
+        .map(|segment| match segment {
+            PathSegment::Move { to } => PathSegment::Move { to: draw_map_point_by_matrix(matrix, *to) },
+            PathSegment::Line { to } => PathSegment::Line { to: draw_map_point_by_matrix(matrix, *to) },
+            PathSegment::Quad { ctrl, to } => PathSegment::Quad {
+                ctrl: draw_map_point_by_matrix(matrix, *ctrl),
+                to: draw_map_point_by_matrix(matrix, *to),
+            },
+            PathSegment::Cubic { ctrl1, ctrl2, to } => PathSegment::Cubic {
+                ctrl1: draw_map_point_by_matrix(matrix, *ctrl1),
+                ctrl2: draw_map_point_by_matrix(matrix, *ctrl2),
+                to: draw_map_point_by_matrix(matrix, *to),
+            },
+            PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => PathSegment::Arc {
+                rx: *rx,
+                ry: *ry,
+                rotation: *rotation,
+                large_arc: *large_arc,
+                sweep: *sweep,
+                to: draw_map_point_by_matrix(matrix, *to),
+            },
+            PathSegment::Close => PathSegment::Close,
+        })
+        .collect()
+}
+
+pub fn scale_path_segments(segments: &[PathSegment], scale_x: f64, scale_y: f64) -> Vec<PathSegment> {
+    if scale_x == 1.0 && scale_y == 1.0 {
+        return segments.to_vec();
+    }
+    transform_path_segments(segments, &DrawTransform { x: 0.0, y: 0.0, scale_x, scale_y, rotation: 0.0 })
+}
+
+pub fn split_path_segments_by_contour(segments: &[PathSegment]) -> Vec<Vec<PathSegment>> {
+    let mut contours = Vec::new();
+    let mut current: Vec<PathSegment> = Vec::new();
+    for segment in segments {
+        if matches!(segment, PathSegment::Move { .. }) && !current.is_empty() {
+            contours.push(std::mem::take(&mut current));
+        }
+        current.push(segment.clone());
+    }
+    if !current.is_empty() {
+        contours.push(current);
+    }
+    if contours.is_empty() {
+        contours.push(Vec::new());
+    }
+    contours
+}
+
+pub fn path_segments_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
+    let mut min_x = f64::INFINITY;
+    let mut min_y = f64::INFINITY;
+    let mut max_x = f64::NEG_INFINITY;
+    let mut max_y = f64::NEG_INFINITY;
+    for segment in segments {
+        if let Some(to) = segment_to_point(segment) {
+            min_x = min_x.min(to[0]);
+            min_y = min_y.min(to[1]);
+            max_x = max_x.max(to[0]);
+            max_y = max_y.max(to[1]);
+        }
+    }
+    if !min_x.is_finite() {
+        return None;
+    }
+    Some((min_x, min_y, max_x - min_x, max_y - min_y))
+}
+
+pub fn filter_path_segments_by_contour_area(segments: &[PathSegment], min_area: f64) -> Vec<PathSegment> {
+    if min_area <= 0.0 {
+        return segments.to_vec();
+    }
+    let mut kept = Vec::new();
+    for contour in split_path_segments_by_contour(segments) {
+        let Some((_, _, width, height)) = path_segments_bounds(&contour) else { continue };
+        if width * height < min_area {
+            continue;
+        }
+        kept.extend(contour);
+    }
+    kept
+}
+
+fn arc_ellipse_point(unit: [f64; 2], rx: f64, ry: f64, cos_phi: f64, sin_phi: f64, cx: f64, cy: f64) -> [f64; 2] {
+    let x = unit[0] * rx;
+    let y = unit[1] * ry;
+    [cos_phi * x - sin_phi * y + cx, sin_phi * x + cos_phi * y + cy]
+}
+
+fn arc_vector_angle(ux: f64, uy: f64, vx: f64, vy: f64) -> f64 {
+    let sign = if ux * vy - uy * vx < 0.0 { -1.0 } else { 1.0 };
+    let dot = (ux * vx + uy * vy).clamp(-1.0, 1.0);
+    sign * dot.acos()
+}
+
+fn arc_approx_unit_arc(ang1: f64, ang2: f64) -> ([f64; 2], [f64; 2], [f64; 2]) {
+    let a = (4.0 / 3.0) * ((ang2 - ang1) / 4.0).tan();
+    let (sin1, cos1) = ang1.sin_cos();
+    let (sin2, cos2) = ang2.sin_cos();
+    ([cos1 - sin1 * a, sin1 + cos1 * a], [cos2 + sin2 * a, sin2 - cos2 * a], [cos2, sin2])
+}
+
+/// 🌙 Converts one SVG endpoint-parameterized arc into cubic Bézier control triples (SVG spec F.6.5).
+fn arc_segment_to_cubics(from: [f64; 2], rx: f64, ry: f64, rotation_deg: f64, large_arc: bool, sweep: bool, to: [f64; 2]) -> Vec<([f64; 2], [f64; 2], [f64; 2])> {
+    if rx.abs() < 1e-9 || ry.abs() < 1e-9 {
+        return Vec::new();
+    }
+    let mut rx = rx.abs();
+    let mut ry = ry.abs();
+    let phi = rotation_deg.to_radians();
+    let (sin_phi, cos_phi) = phi.sin_cos();
+    let dx = (from[0] - to[0]) / 2.0;
+    let dy = (from[1] - to[1]) / 2.0;
+    let pxp = cos_phi * dx + sin_phi * dy;
+    let pyp = -sin_phi * dx + cos_phi * dy;
+    if pxp == 0.0 && pyp == 0.0 {
+        return Vec::new();
+    }
+    let lambda = (pxp * pxp) / (rx * rx) + (pyp * pyp) / (ry * ry);
+    if lambda > 1.0 {
+        let factor = lambda.sqrt();
+        rx *= factor;
+        ry *= factor;
+    }
+    let rx_sq = rx * rx;
+    let ry_sq = ry * ry;
+    let pxp_sq = pxp * pxp;
+    let pyp_sq = pyp * pyp;
+    let mut radicand = rx_sq * ry_sq - rx_sq * pyp_sq - ry_sq * pxp_sq;
+    if radicand < 0.0 {
+        radicand = 0.0;
+    }
+    radicand /= rx_sq * pyp_sq + ry_sq * pxp_sq;
+    let coef = radicand.sqrt() * if large_arc == sweep { -1.0 } else { 1.0 };
+    let centerxp = coef * (rx / ry) * pyp;
+    let centeryp = coef * -(ry / rx) * pxp;
+    let cx = cos_phi * centerxp - sin_phi * centeryp + (from[0] + to[0]) / 2.0;
+    let cy = sin_phi * centerxp + cos_phi * centeryp + (from[1] + to[1]) / 2.0;
+    let vx1 = (pxp - centerxp) / rx;
+    let vy1 = (pyp - centeryp) / ry;
+    let vx2 = (-pxp - centerxp) / rx;
+    let vy2 = (-pyp - centeryp) / ry;
+    let ang1 = arc_vector_angle(1.0, 0.0, vx1, vy1);
+    let mut ang2 = arc_vector_angle(vx1, vy1, vx2, vy2);
+    if !sweep && ang2 > 0.0 {
+        ang2 -= std::f64::consts::TAU;
+    }
+    if sweep && ang2 < 0.0 {
+        ang2 += std::f64::consts::TAU;
+    }
+    let mut ratio = ang2.abs() / std::f64::consts::FRAC_PI_2;
+    if (1.0 - ratio).abs() < 1e-7 {
+        ratio = 1.0;
+    }
+    let segment_count = ratio.ceil().max(1.0) as usize;
+    let delta = ang2 / segment_count as f64;
+    let mut cubics = Vec::with_capacity(segment_count);
+    let mut angle = ang1;
+    for _ in 0..segment_count {
+        let (unit_ctrl1, unit_ctrl2, unit_to) = arc_approx_unit_arc(angle, angle + delta);
+        cubics.push((
+            arc_ellipse_point(unit_ctrl1, rx, ry, cos_phi, sin_phi, cx, cy),
+            arc_ellipse_point(unit_ctrl2, rx, ry, cos_phi, sin_phi, cx, cy),
+            arc_ellipse_point(unit_to, rx, ry, cos_phi, sin_phi, cx, cy),
+        ));
+        angle += delta;
+    }
+    cubics
+}
+
+/// 🌙 Flattens `Arc` segments into `Cubic` runs so downstream consumers (booleans, canvas hosts) never see SVG endpoint arcs.
+pub fn flatten_curve_segments(segments: &[PathSegment]) -> Vec<PathSegment> {
+    let mut out = Vec::with_capacity(segments.len());
+    let mut cursor = [0.0, 0.0];
+    for segment in segments {
+        match segment {
+            PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => {
+                let cubics = arc_segment_to_cubics(cursor, *rx, *ry, *rotation, *large_arc, *sweep, *to);
+                if cubics.is_empty() {
+                    out.push(PathSegment::Line { to: *to });
+                } else {
+                    for (ctrl1, ctrl2, point) in cubics {
+                        out.push(PathSegment::Cubic { ctrl1, ctrl2, to: point });
+                    }
+                }
+                cursor = *to;
+            }
+            other => {
+                if let Some(to) = segment_to_point(other) {
+                    cursor = to;
+                }
+                out.push(other.clone());
+            }
+        }
+    }
+    out
+}
+
+pub fn draw_layer_descendant_leaf_ids(layer: &DrawLayerNode) -> Vec<String> {
+    match layer {
+        DrawLayerNode::Group(group) => group.children.iter().flat_map(draw_layer_descendant_leaf_ids).collect(),
+        _ => vec![layer_id(layer).to_string()],
+    }
+}
+//#endregion 🔖SegmentGeometry
+
+//#region 🔖KernelResolve
+fn to_kernel_segment(segment: &PathSegment) -> kernel_2d_engine::PathSegment {
+    use kernel_2d_engine::PathSegment as KernelSegment;
+    match segment {
+        PathSegment::Move { to } => KernelSegment::Move { to: *to },
+        PathSegment::Line { to } => KernelSegment::Line { to: *to },
+        PathSegment::Quad { ctrl, to } => KernelSegment::Quad { ctrl: *ctrl, to: *to },
+        PathSegment::Cubic { ctrl1, ctrl2, to } => KernelSegment::Cubic { ctrl1: *ctrl1, ctrl2: *ctrl2, to: *to },
+        PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => {
+            KernelSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: *to }
+        }
+        PathSegment::Close => KernelSegment::Close,
+    }
+}
+
+fn from_kernel_segment(segment: &kernel_2d_engine::PathSegment) -> PathSegment {
+    use kernel_2d_engine::PathSegment as KernelSegment;
+    match segment {
+        KernelSegment::Move { to } => PathSegment::Move { to: *to },
+        KernelSegment::Line { to } => PathSegment::Line { to: *to },
+        KernelSegment::Quad { ctrl, to } => PathSegment::Quad { ctrl: *ctrl, to: *to },
+        KernelSegment::Cubic { ctrl1, ctrl2, to } => PathSegment::Cubic { ctrl1: *ctrl1, ctrl2: *ctrl2, to: *to },
+        KernelSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => {
+            PathSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: *to }
+        }
+        KernelSegment::Close => PathSegment::Close,
+    }
+}
+
+fn to_kernel_segments(segments: &[PathSegment]) -> Vec<kernel_2d_engine::PathSegment> {
+    segments.iter().map(to_kernel_segment).collect()
+}
+
+fn from_kernel_segments(segments: &[kernel_2d_engine::PathSegment]) -> Vec<PathSegment> {
+    segments.iter().map(from_kernel_segment).collect()
+}
+
+/// 🪢 Resolves a boolean layer's children (each transformed by its own local transform) through the planar kernel.
+fn resolve_boolean_layer_segments(doc: &DrawDocument, boolean: &DrawBooleanBody) -> Vec<PathSegment> {
+    let child_segments: Vec<Vec<PathSegment>> = boolean
+        .children
+        .iter()
+        .filter_map(|child_id| find_draw_layer(doc, child_id))
+        .map(|child| transform_path_segments(&flatten_curve_segments(&layer_to_path_segments(child)), &layer_base(child).transform))
+        .filter(|segments| !segments.is_empty())
+        .collect();
+    if child_segments.is_empty() {
+        return Vec::new();
+    }
+    let kernel_inputs: Vec<Vec<kernel_2d_engine::PathSegment>> = child_segments.iter().map(|segments| to_kernel_segments(segments)).collect();
+    match kernel_2d_rs::booleans::boolean_paths_many(&kernel_inputs, &boolean.op) {
+        Ok(result) => from_kernel_segments(&result),
+        Err(_) => Vec::new(),
+    }
+}
+
+/// 🖼️ Decodes a (possibly resized) PNG asset into an 8-bit luma buffer, matching the premigration canvas-based decode.
+fn decode_draw_image_asset_luma(asset: &DrawImageAsset) -> Option<(u32, u32, Vec<u8>)> {
+    let base64_data = match asset.data.strip_prefix("data:") {
+        Some(rest) => rest.split_once(',').map(|(_, data)| data).unwrap_or(rest),
+        None => asset.data.as_str(),
+    };
+    let bytes = BASE64.decode(base64_data).ok()?;
+    let decoded = image::load_from_memory(&bytes).ok()?;
+    let target_width = asset.width.unwrap_or(decoded.width());
+    let target_height = asset.height.unwrap_or(decoded.height());
+    let rgba = if target_width == decoded.width() && target_height == decoded.height() {
+        decoded.to_rgba8()
+    } else {
+        image::imageops::resize(&decoded.to_rgba8(), target_width, target_height, image::imageops::FilterType::Triangle)
+    };
+    let mut luma = vec![0u8; (target_width as usize) * (target_height as usize)];
+    for (index, pixel) in rgba.pixels().enumerate() {
+        let [r, g, b, a] = pixel.0;
+        luma[index] = ((r as f64 * 0.299 + g as f64 * 0.587 + b as f64 * 0.114) * (a as f64 / 255.0)).round() as u8;
+    }
+    Some((target_width, target_height, luma))
+}
+
+/// 📐 Premigration artboard resolution: explicit artboard wins, else layer bounds excluding group/boolean/trace kinds.
+pub fn resolve_draw_artboard(doc: &DrawDocument) -> Option<DrawArtboard> {
+    if let Some(artboard) = &doc.artboard {
+        if artboard.width > 0.0 && artboard.height > 0.0 {
+            return Some(artboard.clone());
+        }
+    }
+    let mut max_x = 0.0_f64;
+    let mut max_y = 0.0_f64;
+    for layer in flatten_draw_layers(&doc.layers) {
+        if matches!(layer, DrawLayerNode::Trace(_) | DrawLayerNode::Boolean(_) | DrawLayerNode::Group(_)) {
+            continue;
+        }
+        if let Some((x, y, width, height)) = draw_layer_world_bounds(layer) {
+            max_x = max_x.max(x + width);
+            max_y = max_y.max(y + height);
+        }
+    }
+    if max_x <= 0.0 || max_y <= 0.0 {
+        return None;
+    }
+    Some(DrawArtboard { width: max_x, height: max_y })
+}
+
+/// 🔍 Resolves a trace layer's bitmap source into simplified, artboard-scaled contour segments.
+fn resolve_trace_layer_segments(doc: &DrawDocument, trace: &DrawTraceBody) -> Vec<PathSegment> {
+    let Some(assets) = &doc.assets else { return Vec::new() };
+    let Some(asset) = assets.get(&trace.source_key) else { return Vec::new() };
+    let Some((width, height, luma)) = decode_draw_image_asset_luma(asset) else { return Vec::new() };
+    let traced = match kernel_2d_rs::trace::trace_bitmap_paths(width, height, &luma, trace.params.threshold, trace.params.simplify_epsilon) {
+        Ok(segments) => from_kernel_segments(&segments),
+        Err(_) => return Vec::new(),
+    };
+    let scaled = match resolve_draw_artboard(doc) {
+        Some(artboard) if width > 0 && height > 0 => scale_path_segments(&traced, artboard.width / width as f64, artboard.height / height as f64),
+        _ => traced,
+    };
+    filter_path_segments_by_contour_area(&scaled, 6.0)
+}
+//#endregion 🔖KernelResolve
 
 //#region 🔖EditOps
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

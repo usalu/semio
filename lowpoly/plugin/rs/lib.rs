@@ -769,6 +769,7 @@ fn build_document_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) ->
             Some(highlighted_ids)
         },
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -800,6 +801,7 @@ fn build_catalogue_tree() -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -835,6 +837,7 @@ fn build_layers_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
         selected_ids: Some(vec![format!("lowpoly-layer:{active_layer}")]),
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -852,7 +855,14 @@ fn inspector_tool_param_field(id: &str, label: &str, key: &str, value: &Value) -
             placeholder: None,
             commit: None,
             on_change: lowpoly_cmd("setToolParam", Some(json!({ "key": key }))),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
         }),
+        description: None,
+        required: None,
+        error: None,
     })
 }
 
@@ -883,7 +893,14 @@ fn build_inspector_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
                             "patchObject",
                             Some(json!({ "objectId": object.id, "field": "name" })),
                         ),
+                        min: None,
+                        max: None,
+                        step: None,
+                        accept: None,
                     }),
+                    description: None,
+                    required: None,
+                    error: None,
                 }),
                 UiNode::Field(UiFieldNode {
                     id: "lowpoly-play-inspector.object.smooth".into(),
@@ -898,6 +915,9 @@ fn build_inspector_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
                             Some(json!({ "objectId": object.id, "field": "smoothShading" })),
                         ),
                     }),
+                    description: None,
+                    required: None,
+                    error: None,
                 }),
                 ui_inspector_readonly_field(
                     "lowpoly-play-inspector.object.selection",

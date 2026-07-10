@@ -702,6 +702,7 @@ fn build_document_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
         ),
         highlighted_ids: None,
         selection_change: Some(rewrite_cmd("setSelection", Some(json!({ "ids": [] })))),
+        drop_command: None,
     })
 }
 
@@ -720,6 +721,7 @@ fn build_catalogue_tree() -> UiNode {
         selected_ids: Some(vec![]),
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -806,7 +808,14 @@ fn build_parameters_panel(envelope: &TrinityRewriteEnvelope) -> UiNode {
                 placeholder: Some(param.kind_label()),
                 commit: Some("blur".into()),
                 on_change: rewrite_cmd("setParameter", Some(json!({ "name": param.name }))),
+                min: None,
+                max: None,
+                step: None,
+                accept: None,
             }),
+            description: None,
+            required: None,
+            error: None,
         }));
     }
     if children.is_empty() {

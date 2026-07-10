@@ -3963,6 +3963,16 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
             &board.selection_json,
             limits,
         )?;
+        check_json_payload(
+            &format!("{scene_label} puzzle2dBoard.brushKindWeights"),
+            &board.brush_kind_weights_json,
+            limits,
+        )?;
+        check_json_payload(
+            &format!("{scene_label} puzzle2dBoard.kindCompatibility"),
+            &board.kind_compatibility_json,
+            limits,
+        )?;
     }
     Ok(())
 }
@@ -8140,6 +8150,9 @@ impl ShellState {
             gap: None,
             padding: None,
             children: items,
+            id: None,
+            selected: None,
+            activate: None,
         })
     }
 
@@ -8159,6 +8172,7 @@ impl ShellState {
                         args: None,
                     },
                     style: None,
+                    disabled: None,
                 })
             })
             .collect();
@@ -8174,6 +8188,9 @@ impl ShellState {
             gap: None,
             padding: None,
             children: items,
+            id: None,
+            selected: None,
+            activate: None,
         })
     }
 
@@ -8233,6 +8250,8 @@ impl ShellState {
                     },
                 }),
             ],
+            selected: None,
+            activate: None,
         })
     }
 }

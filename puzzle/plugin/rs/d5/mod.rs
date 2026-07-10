@@ -716,7 +716,7 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, icon_
 fn build_document_tree(envelope: &Puzzle5dEnvelope) -> UiNode {
     let items: Vec<UiTreeItemNode> =
         envelope.document.parts.iter().map(|part| tree_item_with_command(format!("puzzle5d-part:{}", part.id), part.part_kind.clone(), Some("circle"), puzzle5d_cmd("setSelection", Some(json!({ "partIds": [part.id] }))))).collect();
-    UiNode::Tree(UiTreeNode { sections: vec![UiTreeSectionNode { id: "puzzle5d-play-document.parts".into(), label: Some("Parts".into()), default_open: Some(true), items }], selected_ids: None, highlighted_ids: None, selection_change: None })
+    UiNode::Tree(UiTreeNode { sections: vec![UiTreeSectionNode { id: "puzzle5d-play-document.parts".into(), label: Some("Parts".into()), default_open: Some(true), items }], selected_ids: None, highlighted_ids: None, selection_change: None, drop_command: None })
 }
 
 fn build_kinds_tree() -> UiNode {
@@ -730,6 +730,7 @@ fn build_kinds_tree() -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -757,7 +758,14 @@ fn build_inspector_tree(envelope: &Puzzle5dEnvelope) -> UiNode {
                             placeholder: None,
                             commit: None,
                             on_change: puzzle5d_cmd("patchPart", Some(json!({ "partId": part.id, "field": "text" }))),
+                            min: None,
+                            max: None,
+                            step: None,
+                            accept: None,
                         }),
+                        description: None,
+                        required: None,
+                        error: None,
                     }),
                 ],
             }]);

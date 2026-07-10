@@ -2315,6 +2315,9 @@ export type TextEditorScene = {
   readonly selectableSpansJson?: string;
   readonly settingsJson?: string;
   readonly cameraJson?: string;
+  readonly hoverJson?: string;
+  readonly newlineGatesJson?: string;
+  readonly renameJson?: string;
 };
 
 export const nodeGraphCommands = {
@@ -2379,6 +2382,13 @@ export type Puzzle2dBoardScene = {
   readonly interactive: boolean;
   readonly hoveredId?: string;
   readonly activeTool?: string;
+  readonly selectionMethod: string;
+  readonly gridSnapEnabled: boolean;
+  readonly gridFactor: number;
+  readonly suggestionOffset: number;
+  readonly brushKindWeightsJson: string;
+  readonly kindCompatibilityJson: string;
+  readonly lodMode: string;
 };
 
 export type UiExternalSlotNode = {
@@ -2920,6 +2930,22 @@ export type EditorWasmSession = GraphWasmSession & {
   hoverTokenRangeJson(): string;
   setHoverRange(start: number, end: number): void;
   cameraJson(): string;
+  moveLeft(extend: boolean): void;
+  moveRight(extend: boolean): void;
+  moveUp(extend: boolean): void;
+  moveDown(extend: boolean): void;
+  moveLineStart(extend: boolean): void;
+  moveLineEnd(extend: boolean): void;
+  tabInsertText(): string;
+  setSelectionRange(anchor: number, caret: number): void;
+  selectSpanAt(offset: number): void;
+  selectSpanAtScreen(sx: number, sy: number): void;
+  pickTargetsAtScreenJson(sx: number, sy: number): string;
+  caretWorldJson(): string;
+  worldToScreenJson(wx: number, wy: number): string;
+  setSelectionOccurrencesJson(json: string): void;
+  setExtraCaretsJson(json: string): void;
+  setCaretVisible(visible: boolean): void;
 };
 
 type EditorSessionModule = {
@@ -3015,6 +3041,25 @@ export type Puzzle2dBoardWasmSession = {
   gpuReady(): boolean;
   setHoveredIdSilent?(id?: string | null): void;
   setActiveTool?(label: string): void;
+  setSelectionOptions?(method: string, mode: string, selectNodes: boolean, selectEdges: boolean, selectHandles: boolean): void;
+  setGridSnapEnabled?(enabled: boolean): void;
+  setGridFactor?(v: number): void;
+  setSuggestionOffset?(distance: number): void;
+  setBrushKindWeights?(json: string): void;
+  setHandleLinkCompatJson?(json: string): void;
+  setAutomaticLod?(enabled: boolean): void;
+  setForcedDrawLodLabel?(label: string): void;
+  setSelectionIdsJsonSilent?(json: string): void;
+  setCameraSilent?(x: number, y: number, zoom: number): void;
+  pointerLeaveScreen?(alt: boolean): void;
+  pickTargetsAtScreenJson?(sx: number, sy: number): string;
+  deleteSelection?(): void;
+  cancelAreaSelect?(): boolean;
+  brushCycleCandidate?(forward: boolean): void;
+  setFixtureDropPreviewJson?(json: string): void;
+  clearFixtureDropPreview?(): void;
+  defersDescriptorSyncFromJs?(): boolean;
+  isDraggingAreaSelect?(): boolean;
   free(): void;
 };
 

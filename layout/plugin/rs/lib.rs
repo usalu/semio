@@ -2,19 +2,23 @@
 
 use base64::Engine;
 use layout_rs::{
-    export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip, parse_layout_document,
-    resolve_page, Frame, LayoutCamera, LayoutDocument, LAYOUT_FIXTURE_SCHEMA, Page, PageColumns, PageMargins,
+    build_display_list_for_page, export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip,
+    parse_layout_document, resolve_page, DisplayList, Frame, LayoutCamera, LayoutDocument, LAYOUT_FIXTURE_SCHEMA, Page,
+    PageColumns, PageMargins,
 };
-use semio_framework_plugin::{SurfaceKind, 
-    build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
-    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene,
-    CommandDescriptor, PanelGroup, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup,
-    UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+use semio_framework_plugin::{SurfaceKind,
+    build_canvas_2d_scene, create_default_layout, tool_button, tool_collection, ui_declarative_sections_to_tree,
+    ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
+    Canvas2dScene, CommandDescriptor, PanelGroup, PluginApp, PluginBundle, ToolNode, UiControlNode, UiFieldNode,
+    UiInputNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode,
+    UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+use semio_framework_plugin::layout::{WindowEngagementPossible, WindowEngagementStatus};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::collections::HashMap;
 use std::sync::LazyLock;
 
 //#region 🔖Constants
@@ -38,6 +42,11 @@ const LAYOUT_CATALOGUE_KINDS: &[(&str, &str, &str)] = &[
     ("text", "Text Frame", "type"),
     ("image", "Image Frame", "image"),
 ];
+
+const LAYOUT_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
+const LAYOUT_CATALOGUE_KIND_MIME_PREFIX: &str = "application/x-semio-catalogue-kind.";
+const LAYOUT_DROP_PREVIEW_WIDTH: f64 = 200.0;
+const LAYOUT_DROP_PREVIEW_HEIGHT: f64 = 120.0;
 //#endregion 🔖Constants
 
 //#region 🔖Types
@@ -51,17 +60,17 @@ struct LayoutPlayRuntime {
     #[serde(default)]
     hovered_id: Option<String>,
     #[serde(default)]
-    pan_drag: Option<LayoutPanDrag>,
+    drop_preview: Option<LayoutDropPreviewState>,
+    #[serde(default)]
+    engagement_input: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct LayoutPanDrag {
-    blueprint: bool,
-    start_x: f64,
-    start_y: f64,
-    origin_camera_x: f64,
-    origin_camera_y: f64,
+struct LayoutDropPreviewState {
+    kind: String,
+    x: f64,
+    y: f64,
 }
 
 impl Default for LayoutPlayRuntime {
@@ -70,7 +79,8 @@ impl Default for LayoutPlayRuntime {
             active_page_id: default_active_page_id(),
             selected_ids: Vec::new(),
             hovered_id: None,
-            pan_drag: None,
+            drop_preview: None,
+            engagement_input: String::new(),
         }
     }
 }
@@ -103,27 +113,6 @@ struct PreflightIssue {
     page_id: Option<String>,
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct LayoutCanvasLayer {
-    id: String,
-    kind: String,
-    name: String,
-    x: f64,
-    y: f64,
-    width: f64,
-    height: f64,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    fill: Option<[f32; 4]>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    stroke: Option<[f32; 4]>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    text: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none", rename = "linkId")]
-    link_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none", rename = "storyId")]
-    story_id: Option<String>,
-}
 //#endregion 🔖Types
 
 //#region 🔖DocumentHelpers
@@ -191,6 +180,26 @@ fn layer_row_id(page_id: &str, layer_id: &str) -> String {
     format!("layout-document.layer.{page_id}.{layer_id}")
 }
 
+fn spread_row_id(spread_id: &str) -> String {
+    format!("layout-document.spread.{spread_id}")
+}
+
+fn parent_page_row_id(parent_page_id: &str) -> String {
+    format!("layout-document.parentPage.{parent_page_id}")
+}
+
+fn story_row_id(story_id: &str) -> String {
+    format!("layout-document.story.{story_id}")
+}
+
+fn link_row_id(link_id: &str) -> String {
+    format!("layout-document.link.{link_id}")
+}
+
+fn style_row_id(style_id: &str) -> String {
+    format!("layout-document.style.{style_id}")
+}
+
 fn push_undo(play: &mut LayoutPlayEnvelope) {
     play.undo_stack.push(play.document.clone());
     if play.undo_stack.len() > 32 {
@@ -226,18 +235,128 @@ fn text_to_rgba(text: &str) -> Option<[f32; 4]> {
     (parts.len() == 4).then(|| [parts[0], parts[1], parts[2], parts[3]])
 }
 
-fn frame_layer_content(doc: &LayoutDocument, frame: &Frame) -> (Option<[f32; 4]>, Option<[f32; 4]>, Option<String>, Option<String>, Option<String>) {
-    match frame {
-        Frame::Rect { fill, stroke, .. } => (fill.clone(), stroke.clone(), None, None, None),
-        Frame::Text { story_id, .. } => (
-            None,
-            None,
-            story_excerpt(doc, story_id, 240),
-            None,
-            Some(story_id.clone()),
-        ),
-        Frame::Image { link_id, .. } => (None, None, None, Some(link_id.clone()), None),
+//#region 🔖CanvasScene
+fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Value {
+    json!([
+        { "kind": "move", "to": [x, y] },
+        { "kind": "line", "to": [x + width, y] },
+        { "kind": "line", "to": [x + width, y + height] },
+        { "kind": "line", "to": [x, y + height] },
+        { "kind": "close" },
+    ])
+}
+
+fn line_segments(x0: f64, y0: f64, x1: f64, y1: f64) -> Value {
+    json!([
+        { "kind": "move", "to": [x0, y0] },
+        { "kind": "line", "to": [x1, y1] },
+    ])
+}
+
+fn host_layer(id: impl Into<String>, segments: Value, fill: Option<[f32; 4]>, stroke: Option<([f32; 4], f64, Option<[f64; 2]>)>) -> Value {
+    let mut layer = json!({ "id": id.into(), "segments": segments });
+    if let Some(color) = fill {
+        layer["fill"] = json!({ "color": color });
     }
+    if let Some((color, width, dash)) = stroke {
+        let mut stroke_value = json!({ "color": color, "width": width });
+        if let Some(dash) = dash {
+            stroke_value["dash"] = json!(dash);
+        }
+        layer["stroke"] = stroke_value;
+    }
+    layer
+}
+
+fn guide_stroke_color(kind: &str) -> [f32; 4] {
+    match kind {
+        "margin" => [0.75, 0.2, 0.2, 0.35],
+        "column" => [0.2, 0.45, 0.85, 0.25],
+        "baseline" => [0.5, 0.5, 0.5, 0.2],
+        _ => [0.3, 0.3, 0.3, 0.3],
+    }
+}
+
+fn drop_preview_fill(kind: &str) -> [f32; 4] {
+    match kind {
+        "rect" => [0.85, 0.88, 0.92, 0.45],
+        "text" => [0.2, 0.55, 0.9, 0.25],
+        "image" => [0.85, 0.45, 0.2, 0.25],
+        _ => [0.5, 0.5, 0.5, 0.3],
+    }
+}
+
+fn display_list_to_host_layers(list: &DisplayList, blueprint: bool, drop_preview: Option<&LayoutDropPreviewState>) -> Vec<Value> {
+    let mut layers = Vec::new();
+
+    let page_bg = if blueprint { [0.97, 0.97, 0.98, 1.0] } else { [1.0, 1.0, 1.0, 1.0] };
+    layers.push(host_layer("layout.page-bg", rect_segments(0.0, 0.0, list.page_width as f64, list.page_height as f64), Some(page_bg), None));
+
+    if blueprint {
+        for guide in &list.guides {
+            let color = guide_stroke_color(&guide.kind);
+            let segments = if guide.rect.height <= 0.0 {
+                line_segments(guide.rect.x, guide.rect.y, guide.rect.x + guide.rect.width, guide.rect.y)
+            } else {
+                rect_segments(guide.rect.x, guide.rect.y, guide.rect.width, guide.rect.height)
+            };
+            layers.push(host_layer(format!("layout.guide.{}", guide.kind), segments, None, Some((color, 1.0, None))));
+        }
+    }
+
+    for rect in &list.rects {
+        let segments = rect_segments(rect.x as f64, rect.y as f64, rect.width as f64, rect.height as f64);
+        let fill = rect.fill.as_ref().map(|color| color.0);
+        let dash = (blueprint && rect.inherited).then_some([4.0, 3.0]);
+        let stroke = if let Some(stroke_color) = &rect.stroke {
+            let width = if rect.selected { 2.5 } else if rect.hovered { 1.75 } else { 1.0 };
+            Some((stroke_color.0, width, dash))
+        } else if rect.selected && blueprint {
+            Some(([0.1, 0.45, 0.95, 1.0], 2.0, None))
+        } else if rect.hovered && blueprint {
+            Some(([0.95, 0.72, 0.15, 1.0], 1.5, None))
+        } else {
+            None
+        };
+        layers.push(host_layer(rect.object_id.clone(), segments, fill, stroke));
+    }
+
+    for image in &list.images {
+        let color = if image.placeholder { [0.92, 0.88, 0.84, 1.0] } else { [0.85, 0.85, 0.85, 1.0] };
+        let segments = rect_segments(image.x as f64, image.y as f64, image.width as f64, image.height as f64);
+        let stroke = image.placeholder.then_some(([0.75, 0.35, 0.2, 1.0], 1.0, None));
+        layers.push(host_layer(format!("{}.image", image.object_id), segments, Some(color), stroke));
+    }
+
+    for run in &list.text_runs {
+        if run.glyphs.is_empty() {
+            continue;
+        }
+        let mut segments = Vec::new();
+        for glyph in &run.glyphs {
+            let scale = (glyph.font_size / 16.0) as f64;
+            let width = 0.45 * scale;
+            let height = glyph.font_size as f64 * scale;
+            let x = glyph.x as f64;
+            let y = glyph.y as f64;
+            segments.push(json!({ "kind": "move", "to": [x, y - height] }));
+            segments.push(json!({ "kind": "line", "to": [x + width, y - height] }));
+            segments.push(json!({ "kind": "line", "to": [x + width, y] }));
+            segments.push(json!({ "kind": "line", "to": [x, y] }));
+            segments.push(json!({ "kind": "close" }));
+        }
+        layers.push(host_layer(format!("{}.glyphs", run.object_id), json!(segments), Some([0.0, 0.0, 0.0, 1.0]), None));
+    }
+
+    if blueprint {
+        if let Some(preview) = drop_preview.filter(|preview| preview.kind != "page") {
+            let segments = rect_segments(preview.x, preview.y, LAYOUT_DROP_PREVIEW_WIDTH, LAYOUT_DROP_PREVIEW_HEIGHT);
+            let fill = drop_preview_fill(&preview.kind);
+            layers.push(host_layer("layout.drop-preview", segments, Some(fill), Some(([0.1, 0.45, 0.95, 0.85], 2.0, None))));
+        }
+    }
+
+    layers
 }
 
 fn canvas_layers(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, blueprint: bool) -> String {
@@ -245,32 +364,13 @@ fn canvas_layers(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, blueprint: b
         Some(page) => page,
         None => return "[]".into(),
     };
-    let resolved = resolve_page(doc, page);
-    let layers: Vec<LayoutCanvasLayer> = resolved
-        .iter()
-        .filter(|entry| entry.frame.visible())
-        .map(|entry| {
-            let bounds = entry.frame.bounds();
-            let (fill, stroke, text, link_id, story_id) = frame_layer_content(doc, &entry.frame);
-            LayoutCanvasLayer {
-                id: entry.frame.id().into(),
-                kind: entry.frame.kind_str().into(),
-                name: entry.frame.id().into(),
-                x: if blueprint { bounds.x } else { bounds.x + page.width + 24.0 },
-                y: bounds.y,
-                width: bounds.width,
-                height: bounds.height,
-                fill,
-                stroke,
-                text,
-                link_id,
-                story_id,
-            }
-        })
-        .collect();
+    let list = build_display_list_for_page(doc, page, &page.id, &runtime.selected_ids, runtime.hovered_id.as_deref(), blueprint);
+    let layers = display_list_to_host_layers(&list, blueprint, runtime.drop_preview.as_ref());
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }
+//#endregion 🔖CanvasScene
 
+//#region 🔖PointerCamera
 fn surface_is_blueprint(args: Option<&Value>) -> bool {
     args.and_then(|value| value.get("surfaceId"))
         .and_then(|value| value.as_str())
@@ -285,6 +385,31 @@ fn camera_for_surface<'a>(doc: &'a mut LayoutDocument, blueprint: bool) -> &'a m
     }
 }
 
+fn screen_to_world_for_surface(play: &LayoutPlayEnvelope, blueprint: bool, sx: f64, sy: f64, width: f64, height: f64) -> (f64, f64) {
+    let camera_doc = if blueprint { &play.document.camera } else { &play.document.preview_camera };
+    let camera = layout_rs::cavas::camera::Camera { x: camera_doc.x, y: camera_doc.y, zoom: camera_doc.zoom.max(0.0001) };
+    let viewport = layout_rs::cavas::camera::Viewport { width: width.max(1.0) as u32, height: height.max(1.0) as u32, dpr: 1.0 };
+    let world = layout_rs::cavas::camera::screen_to_world(&camera, &viewport, layout_rs::cavas::Point::new(sx, sy));
+    (world.x, world.y)
+}
+
+fn pointer_args(args: Option<&Value>) -> (f64, f64, f64, f64) {
+    let x = args.and_then(|value| value.get("x")).and_then(Value::as_f64).unwrap_or(0.0);
+    let y = args.and_then(|value| value.get("y")).and_then(Value::as_f64).unwrap_or(0.0);
+    let width = args.and_then(|value| value.get("width")).and_then(Value::as_f64).unwrap_or(1.0);
+    let height = args.and_then(|value| value.get("height")).and_then(Value::as_f64).unwrap_or(1.0);
+    (x, y, width, height)
+}
+
+fn hit_test_at(play: &LayoutPlayEnvelope, args: Option<&Value>, blueprint: bool) -> Option<String> {
+    let page = active_page(&play.document, &play.runtime)?;
+    let (sx, sy, width, height) = pointer_args(args);
+    let (wx, wy) = screen_to_world_for_surface(play, blueprint, sx, sy, width, height);
+    let list = build_display_list_for_page(&play.document, page, &page.id, &play.runtime.selected_ids, play.runtime.hovered_id.as_deref(), blueprint);
+    list.hit_test(wx as f32, wy as f32)
+}
+//#endregion 🔖PointerCamera
+
 fn patch_frame_bounds(frame: &mut Frame, field: &str, value: f64) {
     let bounds = match frame {
         Frame::Rect { bounds, .. } | Frame::Text { bounds, .. } | Frame::Image { bounds, .. } => bounds,
@@ -298,6 +423,37 @@ fn patch_frame_bounds(frame: &mut Frame, field: &str, value: f64) {
     }
 }
 
+fn resolve_link_state(link: &layout_rs::ImageLink) -> &str {
+    if let Some(state) = link.state.as_deref() {
+        return state;
+    }
+    if link.path.is_empty() || link.hash == "sha256:missing" {
+        return "missing";
+    }
+    if link.dpi < 150 {
+        return "low_resolution";
+    }
+    "ok"
+}
+
+fn resolve_run_style(doc: &LayoutDocument, paragraph_style_id: Option<&str>, character_style_id: Option<&str>) -> (String, f64) {
+    let paragraph = paragraph_style_id
+        .and_then(|id| doc.paragraph_styles.iter().find(|style| style.id == id))
+        .or_else(|| doc.paragraph_styles.first());
+    let (mut family, mut size) = paragraph.map(|style| (style.font_family.clone(), style.font_size)).unwrap_or_else(|| ("Layout Sans".into(), 12.0));
+    if let Some(character_id) = character_style_id {
+        if let Some(character) = doc.character_styles.iter().find(|value| value.get("id").and_then(Value::as_str) == Some(character_id)) {
+            if let Some(font_family) = character.get("fontFamily").and_then(Value::as_str) {
+                family = font_family.into();
+            }
+            if let Some(font_size) = character.get("fontSize").and_then(Value::as_f64) {
+                size = font_size;
+            }
+        }
+    }
+    (family, size)
+}
+
 fn run_layout_preflight(doc: &LayoutDocument) -> Vec<PreflightIssue> {
     let mut issues = Vec::new();
     for page in &doc.pages {
@@ -308,11 +464,7 @@ fn run_layout_preflight(doc: &LayoutDocument) -> Vec<PreflightIssue> {
                 continue;
             }
             let bounds = frame.bounds();
-            if bounds.x < 0.0
-                || bounds.y < 0.0
-                || bounds.x + bounds.width > page.width
-                || bounds.y + bounds.height > page.height
-            {
+            if bounds.x < 0.0 || bounds.y < 0.0 || bounds.x + bounds.width > page.width || bounds.y + bounds.height > page.height {
                 issues.push(PreflightIssue {
                     severity: "warning".into(),
                     code: "object.out_of_bounds".into(),
@@ -321,55 +473,108 @@ fn run_layout_preflight(doc: &LayoutDocument) -> Vec<PreflightIssue> {
                     page_id: Some(page.id.clone()),
                 });
             }
-            if frame.kind_str() == "text" {
-                if let Frame::Text { bounds, .. } = frame {
-                    if bounds.height < 24.0 || bounds.width < 24.0 {
-                        issues.push(PreflightIssue {
+            match frame {
+                Frame::Image { link_id, .. } => {
+                    let link = doc.links.iter().find(|entry| entry.id == *link_id);
+                    match link.map(resolve_link_state) {
+                        Some("missing") | None => issues.push(PreflightIssue {
+                            severity: "error".into(),
+                            code: "asset.missing".into(),
+                            message: format!("Linked asset missing for {}", frame.id()),
+                            object_id: Some(frame.id().into()),
+                            page_id: Some(page.id.clone()),
+                        }),
+                        Some("modified") => issues.push(PreflightIssue {
                             severity: "warning".into(),
-                            code: "text.below_minimum_size".into(),
-                            message: format!("Text frame {} is below minimum readable size", frame.id()),
+                            code: "asset.modified".into(),
+                            message: format!("Linked asset modified for {}", frame.id()),
+                            object_id: Some(frame.id().into()),
+                            page_id: Some(page.id.clone()),
+                        }),
+                        Some("low_resolution") => issues.push(PreflightIssue {
+                            severity: "warning".into(),
+                            code: "asset.low_resolution".into(),
+                            message: format!("Linked asset is low resolution for {}", frame.id()),
+                            object_id: Some(frame.id().into()),
+                            page_id: Some(page.id.clone()),
+                        }),
+                        _ => {}
+                    }
+                    if link.is_some_and(|entry| entry.proxy_data_url.is_none()) && bounds.width > 0.0 && bounds.height > 0.0 {
+                        issues.push(PreflightIssue {
+                            severity: "info".into(),
+                            code: "image.empty_frame".into(),
+                            message: format!("Image frame {} has no preview", frame.id()),
                             object_id: Some(frame.id().into()),
                             page_id: Some(page.id.clone()),
                         });
                     }
                 }
-            }
-            if let Frame::Image { link_id, .. } = frame {
-                let link = doc.links.iter().find(|entry| entry.id == *link_id);
-                let missing = link.map(|entry| entry.state.as_deref() == Some("missing")).unwrap_or(true);
-                if missing {
-                    issues.push(PreflightIssue {
-                        severity: "error".into(),
-                        code: "asset.missing".into(),
-                        message: format!("Linked asset missing for {}", frame.id()),
-                        object_id: Some(frame.id().into()),
-                        page_id: Some(page.id.clone()),
-                    });
+                Frame::Text { story_id, thread_next, .. } => {
+                    let Some(story) = doc.stories.iter().find(|story| story.id == *story_id) else {
+                        issues.push(PreflightIssue {
+                            severity: "error".into(),
+                            code: "text.missing_story".into(),
+                            message: format!("Text frame {} has no story", frame.id()),
+                            object_id: Some(frame.id().into()),
+                            page_id: Some(page.id.clone()),
+                        });
+                        continue;
+                    };
+                    let styles: Vec<(String, f64)> = if story.style_runs.is_empty() {
+                        vec![resolve_run_style(doc, None, None)]
+                    } else {
+                        story
+                            .style_runs
+                            .iter()
+                            .map(|run| resolve_run_style(doc, run.paragraph_style_id.as_deref(), run.character_style_id.as_deref()))
+                            .collect()
+                    };
+                    for (family, size) in &styles {
+                        if *size < 8.0 {
+                            issues.push(PreflightIssue {
+                                severity: "warning".into(),
+                                code: "text.below_minimum_size".into(),
+                                message: format!("Text in {} is below minimum readable size", frame.id()),
+                                object_id: Some(frame.id().into()),
+                                page_id: Some(page.id.clone()),
+                            });
+                        }
+                        let known_family = family == "Layout Sans" || doc.paragraph_styles.iter().any(|style| style.font_family == *family);
+                        if !known_family {
+                            issues.push(PreflightIssue {
+                                severity: "error".into(),
+                                code: "font.missing".into(),
+                                message: format!("Font {family} used by {} is not available", frame.id()),
+                                object_id: Some(frame.id().into()),
+                                page_id: Some(page.id.clone()),
+                            });
+                        }
+                    }
+                    if thread_next.is_none() && story.content.len() > 400 {
+                        issues.push(PreflightIssue {
+                            severity: "error".into(),
+                            code: "text.overset".into(),
+                            message: format!("Text in {} overflows its frame", frame.id()),
+                            object_id: Some(frame.id().into()),
+                            page_id: Some(page.id.clone()),
+                        });
+                    }
                 }
+                Frame::Rect { .. } => {}
             }
         }
-        for layer in &page.layers {
-            for object_id in &layer.object_ids {
-                if !object_id.contains("image") {
-                    continue;
-                }
-                if issues.iter().any(|issue| issue.object_id.as_deref() == Some(object_id.as_str())) {
-                    continue;
-                }
-                let link = doc
-                    .links
-                    .iter()
-                    .find(|entry| entry.state.as_deref() == Some("missing"));
-                if let Some(link) = link {
-                    issues.push(PreflightIssue {
-                        severity: "error".into(),
-                        code: "asset.missing".into(),
-                        message: format!("Linked asset missing for {object_id}"),
-                        object_id: Some(object_id.clone()),
-                        page_id: Some(page.id.clone()),
-                    });
-                    let _ = link;
-                }
+    }
+    if doc.print_target.as_deref() == Some("print") {
+        for link in &doc.links {
+            if link.color_profile.as_deref() == Some("RGB") {
+                issues.push(PreflightIssue {
+                    severity: "warning".into(),
+                    code: "asset.rgb_in_print".into(),
+                    message: format!("Linked asset {} uses RGB in a print document", link.id),
+                    object_id: Some(link.id.clone()),
+                    page_id: None,
+                });
             }
         }
     }
@@ -404,46 +609,149 @@ fn tree_item(
     }
 }
 
+fn tree_item_hoverable(
+    id: impl Into<String>,
+    label: impl Into<String>,
+    description: Option<String>,
+    icon_id: Option<String>,
+    command: Option<CommandDescriptor>,
+    hover_id: &str,
+) -> UiTreeItemNode {
+    let mut item = tree_item(id, label, description, icon_id, command);
+    item.hover_command = Some(layout_cmd("setHover", Some(json!({ "id": hover_id }))));
+    item.unhover_command = Some(layout_cmd("setHover", Some(json!({ "id": Value::Null }))));
+    item
+}
+
 fn build_document_tree(play: &LayoutPlayEnvelope) -> UiNode {
     let doc = &play.document;
+
+    let spread_items: Vec<UiTreeItemNode> = doc
+        .spreads
+        .iter()
+        .map(|spread| tree_item(spread_row_id(&spread.id), spread.name.clone(), Some(spread.page_ids.join(", ")), Some("layout".into()), None))
+        .collect();
+
     let page_items: Vec<UiTreeItemNode> = doc
         .pages
         .iter()
         .map(|page| {
-            let frame_items: Vec<UiTreeItemNode> = page
-                .frames
+            tree_item_hoverable(
+                page_row_id(&page.id),
+                page.name.clone(),
+                page.parent_page_id.as_ref().map(|parent_id| format!("parent: {parent_id}")),
+                Some("file".into()),
+                Some(layout_cmd("setActivePage", Some(json!({ "pageId": page.id })))),
+                &page.id,
+            )
+        })
+        .collect();
+
+    let frame_items: Vec<UiTreeItemNode> = doc
+        .pages
+        .iter()
+        .flat_map(|page| {
+            page.frames.iter().map(move |frame| {
+                tree_item_hoverable(
+                    frame_row_id(frame.id()),
+                    frame.id(),
+                    Some(format!("{} · {}", page.name, frame.kind_str())),
+                    Some(frame_icon(frame.kind_str()).into()),
+                    Some(layout_cmd("setSelection", Some(json!({ "ids": [frame.id()] })))),
+                    frame.id(),
+                )
+            })
+        })
+        .collect();
+    let frame_items = if frame_items.is_empty() {
+        vec![tree_item("layout-document.frames.empty", "Drop catalogue items here", None, Some("inbox".into()), None)]
+    } else {
+        frame_items
+    };
+
+    let parent_page_items: Vec<UiTreeItemNode> = doc
+        .parent_pages
+        .iter()
+        .map(|parent| {
+            tree_item(
+                parent_page_row_id(&parent.id),
+                parent.name.clone(),
+                Some(format!("{}×{}", parent.width as i64, parent.height as i64)),
+                Some("copy".into()),
+                None,
+            )
+        })
+        .collect();
+
+    let layer_items: Vec<UiTreeItemNode> = doc
+        .pages
+        .iter()
+        .flat_map(|page| {
+            page.layers.iter().map(move |layer| {
+                tree_item(
+                    layer_row_id(&page.id, &layer.id),
+                    format!("{} · {}", page.name, layer.name),
+                    Some(format!("{} objects", layer.object_ids.len())),
+                    Some("layers".into()),
+                    None,
+                )
+            })
+        })
+        .collect();
+
+    let story_items: Vec<UiTreeItemNode> = doc
+        .stories
+        .iter()
+        .map(|story| tree_item(story_row_id(&story.id), story.id.clone(), Some(format!("{} chars", story.content.chars().count())), Some("file-text".into()), None))
+        .collect();
+
+    let link_items: Vec<UiTreeItemNode> = doc
+        .links
+        .iter()
+        .map(|link| {
+            let referencing_ids: Vec<String> = doc
+                .pages
                 .iter()
-                .map(|frame| {
-                    tree_item(
-                        frame_row_id(frame.id()),
-                        frame.id(),
-                        Some(format!("{} · {}", page.name, frame.kind_str())),
-                        Some(frame_icon(frame.kind_str()).into()),
-                        Some(layout_cmd("setSelection", Some(json!({ "ids": [frame.id()] })))),
-                    )
+                .flat_map(|page| page.frames.iter())
+                .filter_map(|frame| match frame {
+                    Frame::Image { link_id, .. } if link_id == &link.id => Some(frame.id().to_string()),
+                    _ => None,
                 })
                 .collect();
             tree_item(
-                page_row_id(&page.id),
-                page.name.clone(),
-                Some(format!("{}×{}", page.width as i64, page.height as i64)),
-                Some("file".into()),
-                Some(layout_cmd("setActivePage", Some(json!({ "pageId": page.id })))),
+                link_row_id(&link.id),
+                link.path.clone(),
+                Some(link.state.clone().unwrap_or_else(|| "ok".into())),
+                Some("link".into()),
+                (!referencing_ids.is_empty()).then(|| layout_cmd("setSelection", Some(json!({ "ids": referencing_ids })))),
             )
-            .with_items(if frame_items.is_empty() { None } else { Some(frame_items) })
         })
         .collect();
-    let layer_items: Vec<UiTreeItemNode> = doc.pages.iter().flat_map(|page| {
-        page.layers.iter().map(|layer| {
+
+    let mut style_items: Vec<UiTreeItemNode> = doc
+        .paragraph_styles
+        .iter()
+        .map(|style| {
             tree_item(
-                layer_row_id(&page.id, &layer.id),
-                layer.name.clone(),
-                Some(page.name.clone()),
-                Some("layers".into()),
-                Some(layout_cmd("setSelection", Some(json!({ "ids": [layer.id.clone()] })))),
+                style_row_id(&style.id),
+                style.name.clone(),
+                Some(format!("{} · {}pt", style.font_family, style.font_size as i64)),
+                Some("type".into()),
+                None,
             )
         })
-    }).collect();
+        .collect();
+    style_items.extend(doc.character_styles.iter().enumerate().map(|(index, style)| {
+        let id = style.get("id").and_then(Value::as_str).map(str::to_string).unwrap_or_else(|| format!("character-{index}"));
+        let name = style.get("name").and_then(Value::as_str).map(str::to_string).unwrap_or_else(|| id.clone());
+        let font_family = style.get("fontFamily").and_then(Value::as_str).unwrap_or("—");
+        let description = match style.get("fontSize").and_then(Value::as_f64) {
+            Some(size) => format!("{font_family} · {}pt", size as i64),
+            None => font_family.to_string(),
+        };
+        tree_item(style_row_id(&id), name, Some(description), Some("type".into()), None)
+    }));
+
     let highlighted_ids: Vec<String> = play
         .runtime
         .hovered_id
@@ -464,62 +772,47 @@ fn build_document_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     None,
                 )],
             },
+            UiTreeSectionNode { id: "layout-document.spreads".into(), label: Some("Spreads".into()), default_open: Some(false), items: spread_items },
             UiTreeSectionNode {
                 id: "layout-document.pages".into(),
                 label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
                 default_open: Some(true),
                 items: page_items,
             },
-            UiTreeSectionNode {
-                id: "layout-document.layers".into(),
-                label: Some("Layers".into()),
-                default_open: Some(false),
-                items: layer_items,
-            },
+            UiTreeSectionNode { id: "layout-document.frames".into(), label: Some("Frames".into()), default_open: Some(true), items: frame_items },
+            UiTreeSectionNode { id: "layout-document.parentPages".into(), label: Some("Parent Pages".into()), default_open: Some(false), items: parent_page_items },
+            UiTreeSectionNode { id: "layout-document.layers".into(), label: Some("Layers".into()), default_open: Some(false), items: layer_items },
+            UiTreeSectionNode { id: "layout-document.stories".into(), label: Some("Stories".into()), default_open: Some(false), items: story_items },
+            UiTreeSectionNode { id: "layout-document.links".into(), label: Some("Links".into()), default_open: Some(false), items: link_items },
+            UiTreeSectionNode { id: "layout-document.styles".into(), label: Some("Styles".into()), default_open: Some(false), items: style_items },
         ],
         selected_ids: Some(
             play.runtime
                 .selected_ids
                 .iter()
-                .flat_map(|id| vec![page_row_id(id), frame_row_id(id), format!("layout-document.layer.{}.{}", play.runtime.active_page_id, id)])
+                .flat_map(|id| vec![page_row_id(id), frame_row_id(id), layer_row_id(&play.runtime.active_page_id, id)])
                 .collect(),
         ),
         highlighted_ids: if highlighted_ids.is_empty() { None } else { Some(highlighted_ids) },
         selection_change: Some(layout_cmd("setSelection", None)),
+        drop_command: None,
     })
 }
 
-trait TreeItemExt {
-    fn with_items(self, items: Option<Vec<UiTreeItemNode>>) -> UiTreeItemNode;
-}
-
-impl TreeItemExt for UiTreeItemNode {
-    fn with_items(mut self, items: Option<Vec<UiTreeItemNode>>) -> UiTreeItemNode {
-        self.items = items;
-        self
-    }
+fn catalogue_tree_item(kind: &str, label: &str, icon: &str) -> UiTreeItemNode {
+    let command = if kind == "page" { layout_cmd("addPage", None) } else { layout_cmd("addFrame", Some(json!({ "kind": kind }))) };
+    let mut drag_data = HashMap::new();
+    drag_data.insert(LAYOUT_CATALOGUE_DRAG_MIME.to_string(), json!({ "kind": kind }).to_string());
+    drag_data.insert(format!("{LAYOUT_CATALOGUE_KIND_MIME_PREFIX}{kind}"), String::new());
+    let mut item = tree_item(format!("layout-catalogue.{kind}"), label, Some(kind.into()), Some(icon.into()), Some(command));
+    item.draggable = Some(true);
+    item.drag_data = Some(drag_data);
+    item
 }
 
 fn build_catalogue_tree() -> UiNode {
-    let items: Vec<UiTreeItemNode> = LAYOUT_CATALOGUE_KINDS
-        .iter()
-        .map(|(kind, label, icon)| {
-            tree_item(
-                format!("layout-catalogue.{kind}"),
-                *label,
-                Some((*kind).into()),
-                Some((*icon).into()),
-                Some(layout_cmd("addFrame", Some(json!({ "kind": kind })))),
-            )
-        })
-        .chain(std::iter::once(tree_item(
-            "layout-catalogue.page",
-            "Page",
-            Some("page".into()),
-            Some("file".into()),
-            Some(layout_cmd("addPage", None)),
-        )))
-        .collect();
+    let mut items = vec![catalogue_tree_item("page", "Page", "file")];
+    items.extend(LAYOUT_CATALOGUE_KINDS.iter().map(|(kind, label, icon)| catalogue_tree_item(kind, label, icon)));
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "layout-catalogue.kinds".into(),
@@ -530,6 +823,7 @@ fn build_catalogue_tree() -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -557,7 +851,14 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     placeholder: None,
                     commit: Some("blur".into()),
                     on_change: layout_cmd("patchPage", Some(json!({ "pageId": page.id, "field": "name" }))),
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
         ];
         for (field, label, value) in [
@@ -579,7 +880,14 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     placeholder: None,
                     commit: Some("blur".into()),
                     on_change: layout_cmd("patchPage", Some(json!({ "pageId": page.id, "field": field }))),
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
                 }),
+                description: None,
+                required: None,
+                error: None,
             }));
         }
         fields.push(UiNode::Field(UiFieldNode {
@@ -592,7 +900,14 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                 placeholder: None,
                 commit: Some("blur".into()),
                 on_change: layout_cmd("patchPage", Some(json!({ "pageId": page.id, "field": "columnsCount" }))),
+                min: None,
+                max: None,
+                step: None,
+                accept: None,
             }),
+            description: None,
+            required: None,
+            error: None,
         }));
         return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
             id: "layout-play-inspector.page".into(),
@@ -631,7 +946,14 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                             "patchFrame",
                             Some(json!({ "frameId": frame_id, "pageId": page_id, "field": field })),
                         ),
+                        min: None,
+                        max: None,
+                        step: None,
+                        accept: None,
                     }),
+                    description: None,
+                    required: None,
+                    error: None,
                 }));
             }
             match frame {
@@ -650,7 +972,14 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                                     "patchFrame",
                                     Some(json!({ "frameId": frame_id, "pageId": page_id, "field": field })),
                                 ),
+                                min: None,
+                                max: None,
+                                step: None,
+                                accept: None,
                             }),
+                            description: None,
+                            required: None,
+                            error: None,
                         }));
                     }
                 }
@@ -668,7 +997,14 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                                 "patchFrame",
                                 Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "storyContent" })),
                             ),
+                            min: None,
+                            max: None,
+                            step: None,
+                            accept: None,
                         }),
+                        description: None,
+                        required: None,
+                        error: None,
                     }));
                     fields.push(UiNode::Field(UiFieldNode {
                         id: "layout-play-inspector.frame-wrapMode".into(),
@@ -687,6 +1023,9 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                                 Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "wrapMode" })),
                             ),
                         }),
+                        description: None,
+                        required: None,
+                        error: None,
                     }));
                     fields.push(UiNode::Field(UiFieldNode {
                         id: "layout-play-inspector.frame-columns".into(),
@@ -701,7 +1040,14 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                                 "patchFrame",
                                 Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "columns" })),
                             ),
+                            min: None,
+                            max: None,
+                            step: None,
+                            accept: None,
                         }),
+                        description: None,
+                        required: None,
+                        error: None,
                     }));
                 }
                 Frame::Image { link_id, .. } => {
@@ -718,7 +1064,14 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                                 "patchFrame",
                                 Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "linkPath" })),
                             ),
+                            min: None,
+                            max: None,
+                            step: None,
+                            accept: None,
                         }),
+                        description: None,
+                        required: None,
+                        error: None,
                     }));
                 }
             }
@@ -775,7 +1128,60 @@ fn build_preflight_tree(play: &LayoutPlayEnvelope) -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
+}
+
+fn layout_window_engagement(play: &LayoutPlayEnvelope, label: &str) -> WindowEngagement {
+    WindowEngagement {
+        session_active: Some(false),
+        options: None,
+        input: Some(WindowEngagementInput {
+            id: Some(format!("layout-engagement-{label}")),
+            value: Some(play.runtime.engagement_input.clone()),
+            placeholder: Some("undo, redo, export png".into()),
+            disabled: None,
+            on_change: Some(layout_cmd("engagementInput", None)),
+            on_submit: Some(layout_cmd("engagementSubmit", None)),
+            on_repeat_last: None,
+            on_abort: None,
+        }),
+        control: None,
+        controls: None,
+        status: Some(vec![WindowEngagementStatus {
+            id: format!("layout-status-{label}"),
+            text: format!("Page {}", play.runtime.active_page_id),
+        }]),
+        possible_engagements: Some(vec![
+            WindowEngagementPossible { id: "layout.eng.undo".into(), label: "Undo".into(), detail: None, command: Some(layout_cmd("undo", None)) },
+            WindowEngagementPossible { id: "layout.eng.redo".into(), label: "Redo".into(), detail: None, command: Some(layout_cmd("redo", None)) },
+        ]),
+    }
+}
+
+fn layout_toolbar_tools() -> Vec<ToolNode> {
+    vec![
+        tool_collection(
+            "layout-tools-document",
+            "file-text",
+            "Document",
+            vec![
+                tool_button("layout-tools-undo", "rotate-ccw", "Undo", layout_cmd("undo", None)),
+                tool_button("layout-tools-redo", "rotate-cw", "Redo", layout_cmd("redo", None)),
+            ],
+        ),
+        tool_collection(
+            "layout-tools-export",
+            "download",
+            "Export",
+            vec![
+                tool_button("layout-tools-export-png", "image", "PNG", layout_cmd("exportPng", None)),
+                tool_button("layout-tools-export-svg", "file-code", "SVG", layout_cmd("exportSvg", None)),
+                tool_button("layout-tools-export-pdf", "file-text", "PDF", layout_cmd("exportPdf", None)),
+                tool_button("layout-tools-export-package", "archive", "Package", layout_cmd("exportPackage", None)),
+            ],
+        ),
+    ]
 }
 //#endregion 🔖Panels
 
@@ -881,6 +1287,8 @@ impl PluginApp for LayoutPlayApp {
             }
             "addFrame" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("rect");
+                let drop_x = args.and_then(|value| value.get("x")).and_then(Value::as_f64);
+                let drop_y = args.and_then(|value| value.get("y")).and_then(Value::as_f64);
                 let page_id = play.runtime.active_page_id.clone();
                 let page_index = play.document.pages.iter().position(|page| page.id == page_id);
                 if let Some(page_index) = page_index {
@@ -897,8 +1305,8 @@ impl PluginApp for LayoutPlayApp {
                             id: frame_id.clone(),
                             layer_id,
                             bounds: layout_rs::LayoutBounds {
-                                x: 48.0,
-                                y: 120.0,
+                                x: drop_x.unwrap_or(48.0),
+                                y: drop_y.unwrap_or(120.0),
                                 width: 200.0,
                                 height: 120.0,
                                 rotation: 0.0,
@@ -915,8 +1323,8 @@ impl PluginApp for LayoutPlayApp {
                             id: frame_id.clone(),
                             layer_id,
                             bounds: layout_rs::LayoutBounds {
-                                x: 48.0,
-                                y: 280.0,
+                                x: drop_x.unwrap_or(48.0),
+                                y: drop_y.unwrap_or(280.0),
                                 width: 160.0,
                                 height: 120.0,
                                 rotation: 0.0,
@@ -929,8 +1337,8 @@ impl PluginApp for LayoutPlayApp {
                             id: frame_id.clone(),
                             layer_id,
                             bounds: layout_rs::LayoutBounds {
-                                x: 48.0,
-                                y: 48.0,
+                                x: drop_x.unwrap_or(48.0),
+                                y: drop_y.unwrap_or(48.0),
                                 width: 120.0,
                                 height: 64.0,
                                 rotation: 0.0,
@@ -1199,60 +1607,154 @@ impl PluginApp for LayoutPlayApp {
                     Err(_) => Vec::new(),
                 };
             }
+            "setCamera" => {
+                let blueprint = surface_is_blueprint(args);
+                if let Some(camera_value) = args.and_then(|value| value.get("camera")) {
+                    let x = camera_value.get("x").and_then(Value::as_f64);
+                    let y = camera_value.get("y").and_then(Value::as_f64);
+                    let zoom = camera_value.get("zoom").and_then(Value::as_f64);
+                    if let (Some(x), Some(y), Some(zoom)) = (x, y, zoom) {
+                        let camera = camera_for_surface(&mut play.document, blueprint);
+                        camera.x = x;
+                        camera.y = y;
+                        camera.zoom = zoom;
+                        return vec![set_document_op(&play)];
+                    }
+                }
+            }
             "canvasPointerDown" => {
                 let blueprint = surface_is_blueprint(args);
-                let button = args.and_then(|value| value.get("button")).and_then(|value| value.as_i64()).unwrap_or(0);
-                if button == 1 || button == 2 {
-                    let camera = if blueprint {
-                        &play.document.camera
-                    } else {
-                        &play.document.preview_camera
-                    };
-                    play.runtime.pan_drag = Some(LayoutPanDrag {
-                        blueprint,
-                        start_x: args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0),
-                        start_y: args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0),
-                        origin_camera_x: camera.x,
-                        origin_camera_y: camera.y,
-                    });
-                    return vec![set_document_op(&play)];
+                let button = args.and_then(|value| value.get("button")).and_then(Value::as_i64).unwrap_or(0);
+                if !blueprint || button != 0 {
+                    return Vec::new();
                 }
-                if let Some(layer_id) = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()) {
-                    play.runtime.selected_ids = vec![layer_id.into()];
-                    return vec![set_document_op(&play)];
-                }
+                let extend = args.and_then(|value| value.get("extend")).and_then(Value::as_bool).unwrap_or(false);
+                let hit = hit_test_at(&play, args, blueprint);
+                play.runtime.selected_ids = match hit {
+                    Some(id) if extend => {
+                        let mut ids = play.runtime.selected_ids.clone();
+                        if let Some(position) = ids.iter().position(|existing| *existing == id) {
+                            ids.remove(position);
+                        } else {
+                            ids.push(id);
+                        }
+                        ids
+                    }
+                    Some(id) => vec![id],
+                    None => Vec::new(),
+                };
+                return vec![set_document_op(&play)];
             }
             "canvasPointerMove" => {
-                if let Some(drag) = play.runtime.pan_drag.clone() {
-                    let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(drag.start_x);
-                    let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(drag.start_y);
-                    let zoom = if drag.blueprint {
-                        play.document.camera.zoom
-                    } else {
-                        play.document.preview_camera.zoom
-                    }
-                    .max(0.01);
-                    let camera = camera_for_surface(&mut play.document, drag.blueprint);
-                    camera.x = drag.origin_camera_x - (x - drag.start_x) / zoom;
-                    camera.y = drag.origin_camera_y - (y - drag.start_y) / zoom;
+                let blueprint = surface_is_blueprint(args);
+                if !blueprint {
+                    return Vec::new();
+                }
+                let hit = hit_test_at(&play, args, blueprint);
+                if hit == play.runtime.hovered_id {
+                    return Vec::new();
+                }
+                play.runtime.hovered_id = hit;
+                return vec![set_document_op(&play)];
+            }
+            "canvasPointerUp" => {
+                return Vec::new();
+            }
+            "canvasDragOver" => {
+                let blueprint = surface_is_blueprint(args);
+                if !blueprint {
+                    return Vec::new();
+                }
+                let kind = args
+                    .and_then(|value| value.get("types"))
+                    .and_then(|value| value.as_array())
+                    .and_then(|types| {
+                        types
+                            .iter()
+                            .find_map(|entry| entry.as_str().and_then(|type_value| type_value.strip_prefix(LAYOUT_CATALOGUE_KIND_MIME_PREFIX)).map(str::to_string))
+                    })
+                    .unwrap_or_else(|| "unknown".into());
+                let (sx, sy, width, height) = pointer_args(args);
+                let (wx, wy) = screen_to_world_for_surface(&play, blueprint, sx, sy, width, height);
+                let unchanged = play
+                    .runtime
+                    .drop_preview
+                    .as_ref()
+                    .is_some_and(|preview| preview.kind == kind && (preview.x - wx).abs() < 1.0 && (preview.y - wy).abs() < 1.0);
+                if unchanged {
+                    return Vec::new();
+                }
+                play.runtime.drop_preview = Some(LayoutDropPreviewState { kind, x: wx, y: wy });
+                return vec![set_document_op(&play)];
+            }
+            "canvasDragLeave" => {
+                if play.runtime.drop_preview.is_none() {
+                    return Vec::new();
+                }
+                play.runtime.drop_preview = None;
+                return vec![set_document_op(&play)];
+            }
+            "canvasDrop" => {
+                let blueprint = surface_is_blueprint(args);
+                play.runtime.drop_preview = None;
+                let cleared_json = serde_json::to_string(&play).unwrap_or_default();
+                if !blueprint {
+                    return vec![set_document_op(&play)];
+                }
+                let Some(payload) = args
+                    .and_then(|value| value.get("dragData"))
+                    .and_then(Value::as_str)
+                    .and_then(|raw| serde_json::from_str::<Value>(raw).ok())
+                else {
+                    return vec![set_document_op(&play)];
+                };
+                let Some(kind) = payload.get("kind").and_then(Value::as_str).map(str::to_string) else {
+                    return vec![set_document_op(&play)];
+                };
+                let (sx, sy, width, height) = pointer_args(args);
+                let (wx, wy) = screen_to_world_for_surface(&play, blueprint, sx, sy, width, height);
+                if kind == "page" {
+                    return self.handle_command_patch_ops("addPage", None, &cleared_json, _view_state);
+                }
+                return self.handle_command_patch_ops("addFrame", Some(&json!({ "kind": kind, "x": wx, "y": wy })), &cleared_json, _view_state);
+            }
+            "engagementInput" => {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(Value::as_str) {
+                    play.runtime.engagement_input = value.into();
                     return vec![set_document_op(&play)];
                 }
             }
-            "canvasPointerUp" => {
-                play.runtime.pan_drag = None;
-                return vec![set_document_op(&play)];
-            }
-            "canvasWheel" => {
-                let blueprint = surface_is_blueprint(args);
-                let delta = args.and_then(|value| value.get("deltaY")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let factor = (1.0 - delta * 0.001).clamp(0.5, 2.0);
-                let camera = camera_for_surface(&mut play.document, blueprint);
-                camera.zoom = (camera.zoom * factor).clamp(0.1, 8.0);
-                return vec![set_document_op(&play)];
+            "engagementSubmit" => {
+                let typed = args.and_then(|value| value.get("value")).and_then(Value::as_str).map(str::trim).map(str::to_lowercase).unwrap_or_default();
+                let command = match typed.as_str() {
+                    "undo" => Some("undo"),
+                    "redo" => Some("redo"),
+                    "export png" | "png" => Some("exportPng"),
+                    "export svg" | "svg" => Some("exportSvg"),
+                    "export pdf" | "pdf" => Some("exportPdf"),
+                    "export package" | "package" => Some("exportPackage"),
+                    _ => None,
+                };
+                if let Some(command) = command {
+                    return self.handle_command_patch_ops(command, None, document_json, _view_state);
+                }
+                return Vec::new();
             }
             _ => {}
         }
         Vec::new()
+    }
+
+    fn tools(&self, _document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
+        layout_toolbar_tools()
+    }
+
+    fn window_engagements(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+        let play = parse_envelope(document_json);
+        HashMap::from([
+            (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(&play, "blueprint")),
+            (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(&play, "preview")),
+        ])
     }
 
     fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
@@ -1277,7 +1779,7 @@ fn create_layout_app() -> App {
             .icon_id("layout")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(LAYOUT_PLAY_WINDOW_BLUEPRINT, "Blueprint", LAYOUT_PLAY_BODY_BLUEPRINT, SurfaceKind::NodeGraph)
+            .window_kind(LAYOUT_PLAY_WINDOW_BLUEPRINT, "Blueprint", LAYOUT_PLAY_BODY_BLUEPRINT, SurfaceKind::Canvas2d)
             .window_kind(LAYOUT_PLAY_WINDOW_PREVIEW, "Preview", LAYOUT_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d)
             .default_layout(create_default_layout(
                 &[LAYOUT_PLAY_WINDOW_BLUEPRINT.into(), LAYOUT_PLAY_WINDOW_PREVIEW.into()],

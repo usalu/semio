@@ -844,6 +844,7 @@ fn render_document_panel(document: &NoteDocument, play: &NotePlayEnvelope, view_
             "setSelection",
             None,
         )),
+        drop_command: None,
     })
 }
 
@@ -883,7 +884,14 @@ fn inspector_text_field(block_ids: &[String], field_id: &str, label: &str, value
             placeholder: mixed.placeholder,
             commit: None,
             on_change: inspector_patch(block_ids, field),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
         }),
+        description: None,
+        required: None,
+        error: None,
     })
 }
 
@@ -907,7 +915,14 @@ fn inspector_number_field(block_ids: &[String], field_id: &str, label: &str, val
             },
             commit: None,
             on_change: inspector_patch(block_ids, field),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
         }),
+        description: None,
+        required: None,
+        error: None,
     })
 }
 
@@ -972,6 +987,9 @@ fn render_properties_panel(document: &NoteDocument, play: &NotePlayEnvelope, vie
                     text: None,
                     on_change: inspector_patch(&block_ids, "visible"),
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
             UiNode::Field(UiFieldNode {
                 id: "note-properties.locked".into(),
@@ -983,6 +1001,9 @@ fn render_properties_panel(document: &NoteDocument, play: &NotePlayEnvelope, vie
                     text: None,
                     on_change: inspector_patch(&block_ids, "locked"),
                 }),
+                description: None,
+                required: None,
+                error: None,
             }),
         ],
     }])

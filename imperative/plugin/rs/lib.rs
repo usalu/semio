@@ -193,6 +193,7 @@ fn build_document_tree(document: &ImperativeDocument, selected: &[String]) -> Ui
         selected_ids: Some(selected.iter().map(|id| format!("imperative-play-document.step.{id}")).collect()),
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
@@ -224,6 +225,7 @@ fn build_catalogue_tree() -> UiNode {
         selected_ids: Some(vec![]),
         highlighted_ids: None,
         selection_change: None,
+        drop_command: None,
     })
 }
 
