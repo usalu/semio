@@ -145,11 +145,13 @@
 }
 
 \newcommand{\semio@table@long@continuation@chrome}{%
-  \noalign{\vskip\semio@block@sep@skip}%
   \multicolumn{3}{@{}l@{}}%
   {%
-    \semio@window@header@invoke
-    \vskip-\semio@stroke@hairline
+    \hbox to \linewidth{%
+      \semio@heading@cap@muted{\semio@window@header@title}%
+      \semio@window@gap{semio-chrome-base}%
+      \hbox{}%
+    }%
   }%
   \\%
 }

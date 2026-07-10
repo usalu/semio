@@ -381,12 +381,16 @@
   \int_gzero:N \g_semio_glossary_row_int
 }
 
-\cs_generate_variant:Nn \semio_glossary_body_gappto:nnn { VVV }
 
 \cs_new_protected:Npn \semio_glossary_body_gappto:nnn #1#2#3 {
   \int_gincr:N \g_semio_glossary_row_int
   \cs_gset:cpn { semio@glossary@row@ \int_use:N \g_semio_glossary_row_int }
-    { \SemioGlossaryTableRow {#1}{#2}{#3} }
+    {
+      \SemioGlossaryTableRow
+        { \exp_not:n {#1} }
+        { \exp_not:n {#2} }
+        { \exp_not:n {#3} }
+    }
 }
 
 \cs_new_protected:Npn \semio_glossary_row_for_term:n #1 {
@@ -394,10 +398,9 @@
     \tl_clear:N \l_semio_glossary_definition_tl
   }
   \semio_glossary_labels_csv:n {#1}
-  \semio_glossary_body_gappto:nnn
-    {#1}
-    { \tl_use:N \l_semio_glossary_definition_tl }
-    { \tl_use:N \l_tmpd_tl }
+  \tl_set:Nx \l_tmpb_tl { \tl_use:N \l_semio_glossary_definition_tl }
+  \tl_set:Nx \l_tmpc_tl { \tl_use:N \l_tmpd_tl }
+  \semio_glossary_body_gappto:nnn {#1} { \tl_use:N \l_tmpb_tl } { \tl_use:N \l_tmpc_tl }
 }
 
 \cs_new_protected:Npn \semio_glossary_body_finalize_step:n #1 {
