@@ -4,28 +4,27 @@ overview: Make `SemioWindowRowTwo/Three` stretch every window in a row to the ta
 todos:
   - id: ticket
     content: Open new ticket under goal r2602/updateddocs
-    status: pending
+    status: completed
   - id: anchor-key
     content: Add shared anchor choice key (nw/n/ne/w/center/e/sw/s/se) + valign/halign macros to semio-window.sty
-    status: pending
+    status: completed
   - id: stretch-splice
     content: Add stretch height/width + fit registers and splice extra tcolorbox options into both window-opening call sites
-    status: pending
+    status: completed
   - id: row-rewrite
     content: Rewrite SemioWindowRowTwo/Three to measure natural heights, stretch all columns to the max, and reset after
-    status: pending
+    status: completed
   - id: column-new
     content: Add new SemioWindowColumnTwo/Three (fit-content width measurement, stretch to max width, vertical stacking)
-    status: pending
+    status: completed
   - id: cover-anchor
     content: Add anchor=center to the 3 logo Windows in makecoverpages
-    status: pending
+    status: completed
   - id: verify
     content: Add bisect tests, build+rasterize zwischenbericht cover, confirm alignment, close ticket
-    status: pending
+    status: completed
 isProject: false
 ---
-
 
 # Window Row/Column Border Alignment
 

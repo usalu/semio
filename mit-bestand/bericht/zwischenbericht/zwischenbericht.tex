@@ -42,6 +42,31 @@
   Andererseits bleibt die Datensouveränität gewährleistet.%
 }
 
+\makeatletter
+\renewcommand{\semio@glossary@header@definition}{Verwendung im Bericht}
+\makeatother
+
+\GlossaryDefine{Entwurfsfähigkeit}{Fähigkeit eines wiederverwendeten Bauteils, in frühen Entwurfsphasen gesucht, verglichen, bewertet und einer möglichen Rolle in einer Variante zugeordnet zu werden.}
+\GlossaryDefine{Bauteil}{Konkretes physisches Element aus einem Bestand, z.\,B. Stütze, Träger, Platte oder Zuschnittfragment.}
+\GlossaryDefine{Baukomponente}{Übergeordneter Begriff für einzelne Bauteile, Bauteilgruppen oder Pakete, sofern sie für den Entwurf relevant sind.}
+\GlossaryDefine{Bestandsquelle}{Quelle wiederverwendbarer Baukomponenten, z.\,B. Bauteilbörse, Rückbauinventar, Materialkataster, Projektkatalog oder direkte Bestandsaufnahme.}
+\GlossaryDefine{Bauteilbörse}{Plattform oder Organisation, die wiederverwendbare Baukomponenten sichtbar macht, vermittelt, verkauft oder dokumentiert.}
+\GlossaryDefine{Ebene A / Ebene B}{Ebene A bezeichnet beschaffungsorientierte Angebotsdaten, etwa Standort, Preis oder Verfügbarkeit. Ebene B bezeichnet qualifizierte, planungsrelevante Bauteildaten für Entwurf, Vorbewertung und Nachweisführung.}
+\GlossaryDefine{Planungsrelevanter Bauteildatensatz}{Strukturierter Datensatz mit Geometrie, Material, Zustand, Herkunft, Verfügbarkeit, möglicher Entwurfsrolle, Bewertungsannahmen und Informationszustand.}
+\GlossaryDefine{Qualifizierung}{Überführung unvollständiger oder beschaffungsorientierter Bestandsdaten in planungsrelevante Informationen.}
+\GlossaryDefine{Datenreifegrad}{Einschätzung, wie belastbar einzelne Informationen zu einer Baukomponente sind.}
+\GlossaryDefine{Informations- und Nachweiszustände}{Vier Zustände zur Kennzeichnung einzelner Angaben: vorhanden, abgeleitet, angenommen und offen.}
+\GlossaryDefine{Entwurfsrolle}{Mögliche Funktion eines Bauteils im neuen Entwurf, z.\,B. als Träger, Stütze, Platte, Wandscheibe oder Zuschnittfragment.}
+\GlossaryDefine{Typologiefamilie}{Ordnungskategorie für Baukomponenten nach Rolle und Informationsbedarf, z.\,B. Linien-, Flächen-, Rahmen-, Stütz- oder Zuschnittfragmente.}
+\GlossaryDefine{Digitales Bauteilobjekt}{Digitale, entwurfsfähige Repräsentation einer realen Baukomponente mit Geometrie, Parametern, Rollen, Anschlussinformationen und Bewertungsannahmen.}
+\GlossaryDefine{Generator}{Parametrischer Mechanismus, der aus qualifizierten Eingaben ein digitales Bauteilobjekt erzeugt.}
+\GlossaryDefine{Bauteilportal}{Eingangs- und Qualifizierungsebene des Systems. Hier werden Baukomponenten erfasst, importiert, ergänzt und strukturiert.}
+\GlossaryDefine{Bauteilkatalog}{Such-, Sicht- und Auswahlebene des Systems. Hier werden qualifizierte Baukomponenten auffindbar, filterbar und vergleichbar gemacht.}
+\GlossaryDefine{Playground}{Entwurfs- und Bewertungsebene des Systems. Hier werden Baukomponenten zu Varianten kombiniert und ökologisch sowie tragwerklich vorbewertet.}
+\GlossaryDefine{Aggregator}{Technische Bezeichnung für den Playground innerhalb des semio-basierten Entwurfswerkzeugs.}
+\GlossaryDefine{Wizard}{Geführte Eingabeoberfläche zur schrittweisen Erfassung und Qualifizierung von Bauteildaten.}
+\GlossaryDefine{Test-Case}{Realer oder realitätsnaher Anwendungsfall, an dem die entwickelte digitale Kette geprüft wird.}
+
 \begin{document}
 
 \makecoverpages
@@ -347,5 +372,9 @@ Das Anforderungsmapping übersetzt die Stories in fünfzehn funktionale Cluster 
 \subsubsection{Zenodo}
 
 \subsubsection{Journalpaper}
+
+\appendix
+\section{Verzeichnisse}
+\listofglossaries
 
 \end{document}

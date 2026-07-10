@@ -45,14 +45,12 @@
   \fi
 }
 
+\newdimen\semio@table@register@indent
+
 \newcommand{\SemioTableRegisterRow}[3]{%
-  \semio@table@count@dots{#1}%
-  \dimen0=\semio@block@sep@skip
-  \multiply\dimen0 by 2
-  \multiply\dimen0 by \semio@table@dot@count
   \SemioTableRow{%
     #1 &
-    \hspace{\dimen0}#2 &
+    #2 &
     \ifcsname r@#3\endcsname \pageref{#3}\else --\fi
   }%
 }
@@ -189,13 +187,6 @@
   }{}%
 }
 
-\newcommand{\semio@glossary@pages@scan}[1|]{%
-  \ifx\semio@glossary@pages@sentinel#1\else
-    \semio@glossary@pages@dedup@add{#1}%
-    \expandafter\semio@glossary@pages@scan
-  \fi
-}
-
 \newcommand{\semio@glossary@pages@render}[1]{%
   \begingroup
   \makeatletter
@@ -203,7 +194,11 @@
   \if\relax\detokenize{#1}\relax
     --%
   \else
-    \semio@glossary@pages@scan#1|\semio@glossary@pages@sentinel|%
+    \@tfor\@semio@gls@label:=#1\do{%
+      \ifx\@semio@gls@label\empty\else
+        \semio@glossary@pages@dedup@add{\@semio@gls@label}%
+      \fi
+    }%
     \ifx\semio@glossary@pages@out\empty --\else\semio@glossary@pages@out\fi
   \fi
   \makeatother

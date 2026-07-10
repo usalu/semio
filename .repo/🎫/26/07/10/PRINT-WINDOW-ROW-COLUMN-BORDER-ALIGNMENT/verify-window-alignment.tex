@@ -1,0 +1,34 @@
+\documentclass[type=report,theme=light,language=de]{semio}
+\title{Window Row Column Alignment Verify}
+\author{Semio}
+
+\begin{document}
+\maketitle
+
+\section{Row bottom-border alignment}
+\SemioWindowRowThree{%
+  \begin{Window}[title=Short, row, anchor=center]
+    \vbox to 1.2cm{\vfil\hrule width 0.8\linewidth\vfil}%
+  \end{Window}%
+}{%
+  \begin{Window}[title=Tall, row, anchor=center]
+    \vbox to 3.6cm{\vfil\hrule width 0.8\linewidth\vfil}%
+  \end{Window}%
+}{%
+  \begin{Window}[title=Medium, row, anchor=center]
+    \vbox to 2.4cm{\vfil\hrule width 0.8\linewidth\vfil}%
+  \end{Window}%
+}
+
+\section{Column right-border alignment}
+\SemioWindowColumnTwo{%
+  \begin{Window}[title=Short, fit=true]
+    Short body.
+  \end{Window}%
+}{%
+  \begin{Window}[title=Much Longer Label, fit=true]
+    Wider content block.
+  \end{Window}%
+}
+
+\end{document}

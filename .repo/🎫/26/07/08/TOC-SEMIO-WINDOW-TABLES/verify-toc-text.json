@@ -1,8 +1,8 @@
 {
-  "ergebnisse": false,
-  "forschungsfragen": false,
+  "ergebnisse": true,
+  "forschungsfragen": true,
   "nested121": false,
-  "nestedCount": 0,
-  "textLength": 147,
-  "sctocLines": 109
+  "nestedCount": 1,
+  "textLength": 170,
+  "sctocLines": 110
 }
