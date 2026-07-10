@@ -31,7 +31,7 @@ import {
   type NoteDocument,
   type NoteInkBlock,
 } from "./components/note-canvas-host.tsx";
-import { appDocumentLabel, appWindowDocumentLabel, buildToolbarRibbonSegments, selectSpawnedToolNodes, sortToolNodes, spawnedWindowChromeForKind, ToolTree } from "./os-shell.tsx";
+import { appDocumentLabel, appWindowDocumentLabel, buildToolbarRibbonSegments, isFlowGraphScene, selectSpawnedToolNodes, sortToolNodes, spawnedWindowChromeForKind, ToolTree } from "./os-shell.tsx";
 import { interpretUiNode } from "./ui-interpreter.tsx";
 import type { UiNode } from "./os-shell.tsx";
 
@@ -293,6 +293,61 @@ describe("framework renderer hosts", () => {
             cameraY: 0,
             zoom: 1,
             layersJson: JSON.stringify([{ id: "layer-1", name: "Layer 1", x: 0, y: 0, width: 120, height: 80 }]),
+          },
+        },
+        onCommand: noopCommand,
+      }),
+    );
+    expect(markup).toContain("semio-canvas-2d-host");
+  });
+
+  it("renders canvas 2d host with draw gradient/blend/overlay/meta scene records", () => {
+    const markup = renderToStaticMarkup(
+      createElement(Canvas2dHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "draw.play.canvas",
+          controllerId: "draw-play",
+          componentKind: "canvas-2d",
+          canvas2d: {
+            cameraX: 0,
+            cameraY: 0,
+            zoom: 1,
+            layersJson: JSON.stringify([
+              { id: "meta:tool", role: "meta", tool: "selectDirect" },
+              {
+                id: "shape-1",
+                transform: [1, 0, 0, 1, 0, 0],
+                segments: [
+                  { kind: "move", to: [0, 0] },
+                  { kind: "line", to: [10, 0] },
+                  { kind: "line", to: [10, 10] },
+                  { kind: "close" },
+                ],
+                fill: { kind: "linearGradient", x1: 0, y1: 0, x2: 10, y2: 10, stops: [{ offset: 0, color: [1, 0, 0, 1] }, { offset: 1, color: [0, 0, 1, 1] }] },
+                stroke: { color: [0, 0, 0, 1], width: 1, cap: "round", join: "round" },
+                opacity: 1,
+                blendMode: "multiply",
+                visible: true,
+                fillRule: "evenodd",
+              },
+              {
+                id: "overlay:sel:shape-1",
+                role: "overlay",
+                transform: [1, 0, 0, 1, 0, 0],
+                segments: [
+                  { kind: "move", to: [0, 0] },
+                  { kind: "line", to: [10, 0] },
+                  { kind: "close" },
+                ],
+                fill: { kind: "solid", color: [0.98, 0.75, 0.14, 0.16] },
+                stroke: { color: [0.98, 0.75, 0.14, 0.95], width: 2 },
+                opacity: 1,
+                blendMode: "normal",
+                visible: true,
+                fillRule: "evenodd",
+              },
+            ]),
           },
         },
         onCommand: noopCommand,
@@ -590,7 +645,7 @@ describe("framework renderer hosts", () => {
     expect(result.text).toBe("MATCH (piece:Piece) RETURN piece.name");
     expect(result.occurrences).toEqual([
       { start: 7, end: 12 },
-      { start: 28, end: 33 },
+      { start: 23, end: 28 },
     ]);
   });
 
@@ -998,5 +1053,37 @@ describe("toolbar ribbon", () => {
     );
     expect(markup).toContain('id="ui.toolbar.model"');
     expect(markup).not.toContain('id="ui.toolbar"');
+  });
+});
+
+describe("s media graph flow routing", () => {
+  it("selects the flow engine for scenes with engine flow capabilities", () => {
+    expect(isFlowGraphScene('{"engine":"flow","spotlight":false,"noteEdit":false}')).toBe(true);
+    expect(isFlowGraphScene('{"spotlight":false,"noteEdit":false,"clusters":false}')).toBe(false);
+    expect(isFlowGraphScene(undefined)).toBe(false);
+  });
+
+  it("renders presence peers from the scene payload", () => {
+    const markup = renderToStaticMarkup(
+      createElement(NodeGraphHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "s.play.media-graph",
+          controllerId: "s-play",
+          componentKind: "node-graph",
+          nodeGraph: {
+            nodesJson: "[]",
+            edgesJson: "[]",
+            viewportJson: '{"x":0,"y":0,"zoom":1}',
+            presencePeersJson: JSON.stringify([
+              { clientId: "client-b", name: "Ada", selectionCount: 2 },
+            ]),
+          },
+        },
+        onCommand: noopCommand,
+      }),
+    );
+    expect(markup).toContain("Ada");
+    expect(markup).toContain("2 selected");
   });
 });

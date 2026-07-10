@@ -1,0 +1,9 @@
+{
+  "name": "@semio-tech/raster-rs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./pkg/raster.js",
+    "./pkg/raster.js": "./pkg/raster.js"
+  }
+}

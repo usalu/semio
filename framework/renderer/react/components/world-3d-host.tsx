@@ -1824,7 +1824,7 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
   }, [dispatch, marqueeDragActive, marqueePreview, paintStrokeActive, selectionMode]);
 
   const handleEmptyClick = useCallback(
-    (event: React.MouseEvent<HTMLDivElement>) => {
+    (event: MouseEvent) => {
       if (wasMarqueeDragRef.current) return;
       if (selection.engagementSessionActive || paintMode) return;
       dispatch("worldPick", { granularity: selectionMode, id: null, merge: instanceMergeArg(marqueeModeFromModifiers(event)) });
@@ -1847,7 +1847,6 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onClick={handleEmptyClick}
     >
       <WorldCanvas
         className="h-full w-full"
@@ -1856,6 +1855,7 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
         background={environment && !isTransparentWorldBackground(environment.background) ? environment.background : undefined}
         gl={environment && isTransparentWorldBackground(environment.background) ? { antialias: true, alpha: true } : undefined}
         shadows={environment?.shadow?.enabled === true ? true : undefined}
+        onPointerMissed={handleEmptyClick}
         overlay={
           frame || cameraState.explicitProjection ? (
             <>

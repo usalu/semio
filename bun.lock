@@ -609,6 +609,7 @@
         "@semio-tech/infinite-cavas-react-renderer": "workspace:*",
         "@semio-tech/infinite-world-r3f": "workspace:*",
         "@semio-tech/puzzle-2d-rs": "workspace:*",
+        "@semio-tech/raster-rs": "workspace:*",
         "@semio-tech/ui-asset": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
         "@semio-tech/ui-styling": "workspace:*",
@@ -770,6 +771,9 @@
     "puzzle/asset": {
       "name": "@semio-tech/puzzle-asset",
       "version": "0.1.0",
+    },
+    "raster/rs": {
+      "name": "@semio-tech/raster-rs",
     },
     "reasoning/mindmap": {
       "name": "@semio-tech/reasoning-mindmap-rs",
@@ -2079,6 +2083,8 @@
     "@semio-tech/puzzle-5d-rs": ["@semio-tech/puzzle-5d-rs@workspace:puzzle/5d/rs"],
 
     "@semio-tech/puzzle-asset": ["@semio-tech/puzzle-asset@workspace:puzzle/asset"],
+
+    "@semio-tech/raster-rs": ["@semio-tech/raster-rs@workspace:raster/rs"],
 
     "@semio-tech/reasoning-mindmap-rs": ["@semio-tech/reasoning-mindmap-rs@workspace:reasoning/mindmap"],
 

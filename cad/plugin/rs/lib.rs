@@ -3535,7 +3535,7 @@ mod tests {
         let ops = app.handle_command_patch_ops(
             "worldPick",
             Some(&json!({
-                "surfaceId": CAD_PLAY_WINDOW_BUILDING,
+                "surfaceId": "cad.play.scene3d/building",
                 "id": 1,
                 "merge": "replace"
             })),

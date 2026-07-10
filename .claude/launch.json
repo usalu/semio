@@ -43,6 +43,16 @@
         "SEMIO_RENDERER": "react"
       },
       "port": 6119
+    },
+    {
+      "name": "s-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:s"],
+      "env": {
+        "S_OS_PORT": "6070",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6070
     }
   ]
 }

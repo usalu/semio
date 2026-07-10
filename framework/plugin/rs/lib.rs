@@ -2263,7 +2263,7 @@ pub fn merge_world_selection_ids(existing: &[String], incoming: &[String], merge
             }
             merged
         }
-        "toggle" => {
+        "toggle" | "invertive" => {
             let mut merged = existing.to_vec();
             for id in incoming {
                 if let Some(index) = merged.iter().position(|entry| entry == id) {
@@ -2274,12 +2274,52 @@ pub fn merge_world_selection_ids(existing: &[String], incoming: &[String], merge
             }
             merged
         }
+        "remove" | "subtractive" => {
+            let mut merged = existing.to_vec();
+            for id in incoming {
+                merged.retain(|entry| entry != id);
+            }
+            merged
+        }
         _ => incoming.to_vec(),
     }
 }
 
 pub fn default_world3d_selection() -> String {
     world3d_default_selection_json()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn merge_world_selection_ids_supports_add_toggle_invertive_and_remove() {
+        assert_eq!(
+            merge_world_selection_ids(&["a".into()], &["b".into()], "add"),
+            vec!["a".to_string(), "b".to_string()]
+        );
+        assert_eq!(
+            merge_world_selection_ids(&["a".into(), "b".into()], &["b".into(), "c".into()], "toggle"),
+            vec!["a".to_string(), "c".to_string()]
+        );
+        assert_eq!(
+            merge_world_selection_ids(&["a".into(), "b".into()], &["b".into()], "invertive"),
+            vec!["a".to_string()]
+        );
+        assert_eq!(
+            merge_world_selection_ids(&["a".into()], &["b".into()], "replace"),
+            vec!["b".to_string()]
+        );
+        assert_eq!(
+            merge_world_selection_ids(&["a".into(), "b".into(), "c".into()], &["b".into()], "remove"),
+            vec!["a".to_string(), "c".to_string()]
+        );
+        assert_eq!(
+            merge_world_selection_ids(&["a".into(), "b".into(), "c".into()], &["b".into()], "subtractive"),
+            vec!["a".to_string(), "c".to_string()]
+        );
+    }
 }
 // #endregion world3d_host
 }

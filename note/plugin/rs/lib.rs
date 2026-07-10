@@ -8,10 +8,14 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER, create_default_layout,
+    ToolNode, WindowEngagement, WindowEngagementInput, WindowMeasure,
+    layout::WindowEngagementStatus,
+    tool_button, tool_separator, tool_toggle,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::sync::atomic::{AtomicU32, Ordering};
 
 //#region 🔖Constants
@@ -1208,6 +1212,225 @@ fn documents_differ_ignoring_camera(a: &NoteDocument, b: &NoteDocument) -> bool 
 }
 //#endregion 🔖CanvasEvents
 
+//#region 🔖Shell
+fn note_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
+    play_cmd(NOTE_PLAY_CONTROLLER_ID, command, args)
+}
+
+fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
+    vec![
+        WindowMeasure::Group {
+            id: "note-measures.camera".into(),
+            label: "Camera".into(),
+            default_open: Some(true),
+            children: vec![WindowMeasure::Slider {
+                id: "note-measures.zoom".into(),
+                label: Some("Zoom".into()),
+                value: document.camera.zoom,
+                min: 0.1,
+                max: 8.0,
+                step: Some(0.05),
+                on_change: note_cmd("setCameraZoom", None),
+            }],
+        },
+        WindowMeasure::Group {
+            id: "note-measures.grid".into(),
+            label: "Grid".into(),
+            default_open: Some(true),
+            children: vec![
+                WindowMeasure::Toggle {
+                    id: "note-measures.grid-visible".into(),
+                    icon_id: "layout-grid".into(),
+                    label: Some("Show grid".into()),
+                    pressed: document.grid_visible.unwrap_or(true),
+                    text: None,
+                    on_change: note_cmd("setGridVisible", None),
+                },
+                WindowMeasure::Slider {
+                    id: "note-measures.grid-spacing".into(),
+                    label: Some("Spacing".into()),
+                    value: document.grid_spacing.unwrap_or(32.0),
+                    min: 8.0,
+                    max: 256.0,
+                    step: Some(4.0),
+                    on_change: note_cmd("setGridSpacing", None),
+                },
+                WindowMeasure::Slider {
+                    id: "note-measures.grid-subdivisions".into(),
+                    label: Some("Subdivisions".into()),
+                    value: document.grid_subdivisions.unwrap_or(4.0),
+                    min: 1.0,
+                    max: 16.0,
+                    step: Some(1.0),
+                    on_change: note_cmd("setGridSubdivisions", None),
+                },
+                WindowMeasure::Slider {
+                    id: "note-measures.grid-opacity".into(),
+                    label: Some("Opacity".into()),
+                    value: document.grid_opacity.unwrap_or(0.35),
+                    min: 0.05,
+                    max: 1.0,
+                    step: Some(0.05),
+                    on_change: note_cmd("setGridOpacity", None),
+                },
+            ],
+        },
+        WindowMeasure::Group {
+            id: "note-measures.snap".into(),
+            label: "Snap".into(),
+            default_open: Some(false),
+            children: vec![
+                WindowMeasure::Toggle {
+                    id: "note-measures.snap-enabled".into(),
+                    icon_id: "magnet".into(),
+                    label: Some("Snap to grid".into()),
+                    pressed: document.snap_enabled.unwrap_or(false),
+                    text: None,
+                    on_change: note_cmd("setSnapEnabled", None),
+                },
+                WindowMeasure::Slider {
+                    id: "note-measures.snap-spacing".into(),
+                    label: Some("Snap spacing".into()),
+                    value: document.snap_grid_spacing.unwrap_or(8.0),
+                    min: 1.0,
+                    max: 128.0,
+                    step: Some(1.0),
+                    on_change: note_cmd("setSnapGridSpacing", None),
+                },
+            ],
+        },
+        WindowMeasure::Group {
+            id: "note-measures.drawing".into(),
+            label: "Drawing".into(),
+            default_open: Some(false),
+            children: vec![
+                WindowMeasure::Slider {
+                    id: "note-measures.pencil-width".into(),
+                    label: Some("Pencil width".into()),
+                    value: document.pencil_width.unwrap_or(3.0),
+                    min: 1.0,
+                    max: 24.0,
+                    step: Some(1.0),
+                    on_change: note_cmd("setPencilWidth", None),
+                },
+                WindowMeasure::Slider {
+                    id: "note-measures.eraser-radius".into(),
+                    label: Some("Eraser radius".into()),
+                    value: document.eraser_radius.unwrap_or(12.0),
+                    min: 4.0,
+                    max: 48.0,
+                    step: Some(1.0),
+                    on_change: note_cmd("setEraserRadius", None),
+                },
+            ],
+        },
+    ]
+}
+
+fn note_navigator_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
+    vec![
+        WindowMeasure::Slider {
+            id: "note-navigator-measures.zoom".into(),
+            label: Some("Zoom".into()),
+            value: document.camera.zoom,
+            min: 0.05,
+            max: 2.0,
+            step: Some(0.05),
+            on_change: note_cmd("setCameraZoom", None),
+        },
+        WindowMeasure::Toggle {
+            id: "note-navigator-measures.grid-visible".into(),
+            icon_id: "layout-grid".into(),
+            label: Some("Show grid".into()),
+            pressed: document.grid_visible.unwrap_or(true),
+            text: None,
+            on_change: note_cmd("setGridVisible", None),
+        },
+    ]
+}
+
+fn note_canvas_engagement(play: &NotePlayEnvelope) -> WindowEngagement {
+    let block_count = flatten_blocks(&play.document.blocks).len();
+    let selected_count = play.selected_ids.len();
+    let zoom = play.document.camera.zoom;
+    let snap_status = if play.document.snap_enabled.unwrap_or(false) {
+        format!("snap {}px", play.document.snap_grid_spacing.unwrap_or(8.0))
+    } else {
+        "snap off".into()
+    };
+    let grid_status = if play.document.grid_visible.unwrap_or(true) {
+        format!("grid {}px", play.document.grid_spacing.unwrap_or(32.0))
+    } else {
+        "grid off".into()
+    };
+    WindowEngagement {
+        session_active: Some(false),
+        options: None,
+        input: Some(WindowEngagementInput {
+            id: Some("note-engagement".into()),
+            value: Some(play.engagement_input.clone()),
+            placeholder: Some("Block name".into()),
+            disabled: Some(play.selected_ids.len() != 1),
+            on_change: Some(note_cmd("engagementInput", None)),
+            on_submit: Some(note_cmd("engagementSubmit", None)),
+            on_repeat_last: None,
+            on_abort: None,
+        }),
+        control: None,
+        controls: None,
+        status: Some(vec![
+            WindowEngagementStatus { id: "note-status.counts".into(), text: format!("{block_count} blocks · {selected_count} selected · zoom {zoom:.2}") },
+            WindowEngagementStatus { id: "note-status.grid".into(), text: format!("{grid_status} · {snap_status}") },
+        ]),
+        possible_engagements: None,
+    }
+}
+
+fn note_navigator_engagement(play: &NotePlayEnvelope) -> WindowEngagement {
+    WindowEngagement {
+        session_active: Some(false),
+        options: None,
+        input: Some(WindowEngagementInput {
+            id: Some("note-navigator-engagement".into()),
+            value: None,
+            placeholder: Some("Select all".into()),
+            disabled: None,
+            on_change: None,
+            on_submit: Some(note_cmd("selectAll", None)),
+            on_repeat_last: None,
+            on_abort: None,
+        }),
+        control: None,
+        controls: None,
+        status: Some(vec![WindowEngagementStatus { id: "note-navigator-status.tool".into(), text: format!("tool: {}", play.document.active_tool.clone().unwrap_or_else(|| "selectDirect".into())) }]),
+        possible_engagements: None,
+    }
+}
+
+fn note_toolbar(document: &NoteDocument) -> Vec<ToolNode> {
+    let tool = document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
+    let set_tool = |id: &str| note_cmd("setActiveTool", Some(json!({ "tool": id })));
+    vec![
+        tool_button("note.play.tools.open", "folder-open", "Import", note_cmd("loadRequest", None)),
+        tool_button("note.play.tools.save", "save", "Export", note_cmd("saveDownload", None)),
+        tool_separator("note.play.tools.separator.io"),
+        tool_toggle("note.play.tools.selectDirect", "cursor", "Direct", tool == "selectDirect", set_tool("selectDirect")),
+        tool_toggle("note.play.tools.selectMarquee", "selection", "Marquee", tool == "selectMarquee", set_tool("selectMarquee")),
+        tool_separator("note.play.tools.separator.select"),
+        tool_toggle("note.play.tools.text", "type", "Text", tool == "text", set_tool("text")),
+        tool_toggle("note.play.tools.image", "image", "Image", tool == "image", set_tool("image")),
+        tool_toggle("note.play.tools.table", "table", "Table", tool == "table", set_tool("table")),
+        tool_toggle("note.play.tools.math", "sigma", "Math", tool == "math", set_tool("math")),
+        tool_separator("note.play.tools.separator.blocks"),
+        tool_toggle("note.play.tools.pencil", "pencil", "Pencil", tool == "pencil", set_tool("pencil")),
+        tool_toggle("note.play.tools.eraserStroke", "eraser", "Stroke Eraser", tool == "eraserStroke", set_tool("eraserStroke")),
+        tool_toggle("note.play.tools.eraserPoint", "eraser", "Point Eraser", tool == "eraserPoint", set_tool("eraserPoint")),
+        tool_separator("note.play.tools.separator.draw"),
+        tool_toggle("note.play.tools.pan", "hand", "Pan", tool == "pan", set_tool("pan")),
+    ]
+}
+//#endregion 🔖Shell
+
 //#region 🔖NoteApp
 struct NoteApp;
 
@@ -1750,6 +1973,27 @@ impl PluginApp for NoteApp {
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
+
+    fn tools(&self, document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
+        let play = parse_envelope(document_json);
+        note_toolbar(&play.document)
+    }
+
+    fn window_engagements(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+        let play = parse_envelope(document_json);
+        HashMap::from([
+            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_engagement(&play)),
+            (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_engagement(&play)),
+        ])
+    }
+
+    fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        let play = parse_envelope(document_json);
+        HashMap::from([
+            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_measures(&play.document)),
+            (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_measures(&play.document)),
+        ])
+    }
 }
 //#endregion 🔖NoteApp
 
@@ -1874,13 +2118,22 @@ fn register_note_exports() {
 
 //#region 🔖Manifest
 fn create_note_app() -> App {
-    App::from_builder(
+    let envelope = NotePlayEnvelope {
+        document: empty_note_document(),
+        undo_stack: Vec::new(),
+        redo_stack: Vec::new(),
+        selected_ids: Vec::new(),
+        hovered_id: None,
+        gesture_base: None,
+        engagement_input: String::new(),
+    };
+    let mut app = App::from_builder(
         App::builder(NOTE_PLAY_APP_ID, "Note").document(["semio", "note"])
             .icon_id("note")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(NOTE_PLAY_WINDOW_COMPOSITE, "Canvas", NOTE_PLAY_BODY_COMPOSITE, SurfaceKind::NoteCanvas)
-            .window_kind(NOTE_PLAY_WINDOW_NAVIGATOR, "Navigator", NOTE_PLAY_BODY_NAVIGATOR, SurfaceKind::NoteCanvas)
+            .window_kind_with_engagement(NOTE_PLAY_WINDOW_COMPOSITE, "Canvas", NOTE_PLAY_BODY_COMPOSITE, SurfaceKind::NoteCanvas, note_canvas_engagement(&envelope))
+            .window_kind_with_engagement(NOTE_PLAY_WINDOW_NAVIGATOR, "Navigator", NOTE_PLAY_BODY_NAVIGATOR, SurfaceKind::NoteCanvas, note_navigator_engagement(&envelope))
             .default_layout(create_default_layout(
                 &[NOTE_PLAY_WINDOW_COMPOSITE.into(), NOTE_PLAY_WINDOW_NAVIGATOR.into()],
                 "row",
@@ -1921,10 +2174,17 @@ fn create_note_app() -> App {
             .keybinding("shift+down", "nudgeSelectionDownFast")
             .keybinding("shift+left", "nudgeSelectionLeftFast")
             .keybinding("shift+right", "nudgeSelectionRightFast"),
-    )
-    .example("empty", "Empty", serde_json::to_string(&empty_note_document()).unwrap())
-    .example("semio", "Semio", SEMIO_EXAMPLE_JSON)
-    .program("note", "Note", "document")
+    );
+    for window in app.definition.window_kinds.iter_mut() {
+        if window.id == NOTE_PLAY_WINDOW_COMPOSITE {
+            window.measures = note_canvas_measures(&envelope.document);
+        } else if window.id == NOTE_PLAY_WINDOW_NAVIGATOR {
+            window.measures = note_navigator_measures(&envelope.document);
+        }
+    }
+    app.example("empty", "Empty", serde_json::to_string(&empty_note_document()).unwrap())
+        .example("semio", "Semio", SEMIO_EXAMPLE_JSON)
+        .program("note", "Note", "document")
 }
 
 fn note_bundle() -> PluginBundle {

@@ -2388,12 +2388,192 @@ mod tests {
     }
 
     #[test]
-    fn renders_blueprint_table() {
+    fn renders_blueprint_builder_cards() {
         let app = FormsPlayApp;
         let document = app.initial_document_json();
+        let play = parse_envelope(&document);
+        let spec = materialized_projection(&play);
+        let first_question_id = spec.steps[0].questions[0].id.clone();
         let node = app.render(FORMS_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("table"));
+        assert!(json.contains("forms-blueprint.title"));
+        assert!(json.contains(&format!("forms-blueprint.card.{first_question_id}")));
+        assert!(json.contains("setSelection"));
+        assert!(json.contains("forms-blueprint.add-step"));
+        assert!(json.contains(&format!("forms-blueprint.{first_question_id}.label")));
+    }
+
+    #[test]
+    fn blueprint_builder_card_reflects_selection() {
+        let app = FormsPlayApp;
+        let document = app.initial_document_json();
+        let mut play = parse_envelope(&document);
+        let spec = materialized_projection(&play);
+        let first_question_id = spec.steps[0].questions[0].id.clone();
+        play.selected_ids = vec![first_question_id.clone()];
+        let node = app.render(FORMS_PLAY_BODY_BLUEPRINT, &serde_json::to_string(&play).unwrap(), &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains(r#""selected":true"#));
+    }
+
+    #[test]
+    fn try_wizard_gates_navigation_and_reports_inline_errors() {
+        let mut app = FormsPlayApp;
+        let ops = app.handle_command_patch_ops(
+            "setActiveExample",
+            Some(&json!({ "exampleId": "default" })),
+            &app.initial_document_json(),
+            &ViewState::default(),
+        );
+        let play = apply_ops(&app.initial_document_json(), &ops);
+        let clear_ops = app.handle_command_patch_ops(
+            "setTryValues",
+            Some(&json!({ "values": { "name": "", "email": "" } })),
+            &serde_json::to_string(&play).unwrap(),
+            &ViewState::default(),
+        );
+        let cleared = apply_ops(&serde_json::to_string(&play).unwrap(), &clear_ops);
+        let node = app.render(FORMS_PLAY_BODY_TRY, &serde_json::to_string(&cleared).unwrap(), &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains(r#""disabled":true"#));
+        assert!(json.contains(r#""error":"#));
+        assert!(json.contains("forms-try.back"));
+    }
+
+    #[test]
+    fn try_wizard_emits_slider_unit_and_number_bounds() {
+        let mut app = FormsPlayApp;
+        let ops = app.handle_command_patch_ops(
+            "setActiveExample",
+            Some(&json!({ "exampleId": "onboarding" })),
+            &app.initial_document_json(),
+            &ViewState::default(),
+        );
+        let play = apply_ops(&app.initial_document_json(), &ops);
+        let node = app.render(FORMS_PLAY_BODY_TRY, &serde_json::to_string(&play).unwrap(), &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains(r#""min":13.0"#) || json.contains(r#""min":13"#));
+        assert!(json.contains(r#""max":120.0"#) || json.contains(r#""max":120"#));
+        let next_ops = app.handle_command_patch_ops(
+            "setTryValues",
+            Some(&json!({ "values": { "full-name": "Ada" } })),
+            &serde_json::to_string(&play).unwrap(),
+            &ViewState::default(),
+        );
+        let filled = apply_ops(&serde_json::to_string(&play).unwrap(), &next_ops);
+        let step_ops = app.handle_command_patch_ops("nextStep", None, &serde_json::to_string(&filled).unwrap(), &ViewState::default());
+        let second = apply_ops(&serde_json::to_string(&filled).unwrap(), &step_ops);
+        let second_node = app.render(FORMS_PLAY_BODY_TRY, &serde_json::to_string(&second).unwrap(), &ViewState::default());
+        let second_json = serde_json::to_string(&second_node).unwrap();
+        assert!(second_json.contains(r#""unit":"%""#));
+    }
+
+    #[test]
+    fn image_question_with_url_src_emits_image_node() {
+        let app = FormsPlayApp;
+        let question = FormQuestion {
+            src: Some("https://example.com/picture.png".into()),
+            ..question_shell("q-image".into(), "Picture".into(), "image".into())
+        };
+        let node = render_try_question(&question, &Map::new(), &[], None);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains(r#""type":"image""#));
+        assert!(json.contains("https://example.com/picture.png"));
+        let _ = app;
+    }
+
+    #[test]
+    fn patch_step_updates_title_and_description() {
+        let mut app = FormsPlayApp;
+        let document = app.initial_document_json();
+        let step_id = materialized_projection(&parse_envelope(&document)).steps[0].id.clone();
+        let ops = app.handle_command_patch_ops(
+            "patchStep",
+            Some(&json!({ "stepId": step_id, "field": "title", "value": "Renamed" })),
+            &document,
+            &ViewState::default(),
+        );
+        let next = apply_ops(&document, &ops);
+        assert_eq!(materialized_projection(&next).steps[0].title, "Renamed");
+    }
+
+    #[test]
+    fn remove_and_move_step_commands() {
+        let mut app = FormsPlayApp;
+        let document = app.initial_document_json();
+        let add_ops = app.handle_command_patch_ops("addStep", None, &document, &ViewState::default());
+        let with_step = apply_ops(&document, &add_ops);
+        let with_step_json = serde_json::to_string(&with_step).unwrap();
+        let spec = materialized_projection(&with_step);
+        let last_step_id = spec.steps.last().unwrap().id.clone();
+        let move_ops = app.handle_command_patch_ops(
+            "moveStep",
+            Some(&json!({ "stepId": last_step_id, "index": 0 })),
+            &with_step_json,
+            &ViewState::default(),
+        );
+        let moved = apply_ops(&with_step_json, &move_ops);
+        assert_eq!(materialized_projection(&moved).steps[0].id, last_step_id);
+        let remove_ops = app.handle_command_patch_ops(
+            "removeStep",
+            Some(&json!({ "stepId": last_step_id })),
+            &serde_json::to_string(&moved).unwrap(),
+            &ViewState::default(),
+        );
+        let removed = apply_ops(&serde_json::to_string(&moved).unwrap(), &remove_ops);
+        assert!(materialized_projection(&removed).steps.iter().all(|step| step.id != last_step_id));
+    }
+
+    #[test]
+    fn update_form_command_sets_title() {
+        let mut app = FormsPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops(
+            "updateForm",
+            Some(&json!({ "field": "title", "value": "My Form" })),
+            &document,
+            &ViewState::default(),
+        );
+        let next = apply_ops(&document, &ops);
+        assert_eq!(materialized_projection(&next).title.as_deref(), Some("My Form"));
+    }
+
+    #[test]
+    fn document_tree_declares_drop_command() {
+        let app = FormsPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(FORMS_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains(r#""dropCommand""#));
+        assert!(json.contains("dropQuestionKind"));
+    }
+
+    #[test]
+    fn drop_question_kind_inserts_and_selects() {
+        let mut app = FormsPlayApp;
+        let document = app.initial_document_json();
+        let step_id = materialized_projection(&parse_envelope(&document)).steps[0].id.clone();
+        let ops = app.handle_command_patch_ops(
+            "dropQuestionKind",
+            Some(&json!({ "kind": "slider", "targetId": forms_play_step_tree_id(&step_id), "dropPosition": "inside" })),
+            &document,
+            &ViewState::default(),
+        );
+        let next = apply_ops(&document, &ops);
+        let spec = materialized_projection(&next);
+        assert!(spec.steps[0].questions.iter().any(|question| question.kind == "slider"));
+        assert_eq!(next.selected_ids.len(), 1);
+    }
+
+    #[test]
+    fn kind_editor_fields_are_editable_when_unset() {
+        let question = question_shell("q-num".into(), "Amount".into(), "number".into());
+        let fields = question_kind_editor_fields(&question, &["q-num".into()], &[], "forms-blueprint.q-num");
+        let json = serde_json::to_string(&fields).unwrap();
+        assert!(json.contains("forms-blueprint.q-num.min"));
+        assert!(json.contains("forms-blueprint.q-num.max"));
+        assert!(json.contains("forms-blueprint.q-num.default"));
+        assert!(json.contains("forms-blueprint.q-num.description"));
     }
 
     #[test]
@@ -2429,7 +2609,8 @@ mod tests {
             &app.initial_document_json(),
             &view_state,
         );
-        let play = apply_ops(&app.initial_document_json(), &ops);
+        let mut play = apply_ops(&app.initial_document_json(), &ops);
+        play.current_step_index = 1;
         let node = app.render(FORMS_PLAY_BODY_TRY, &serde_json::to_string(&play).unwrap(), &view_state);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("externalSlot"));
@@ -2446,7 +2627,8 @@ mod tests {
             &app.initial_document_json(),
             &ViewState::default(),
         );
-        let play = apply_ops(&app.initial_document_json(), &ops);
+        let mut play = apply_ops(&app.initial_document_json(), &ops);
+        play.current_step_index = 1;
         let node = app.render(FORMS_PLAY_BODY_TRY, &serde_json::to_string(&play).unwrap(), &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Extension unavailable"));
@@ -2459,7 +2641,8 @@ mod tests {
         let node = app.render(FORMS_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("forms-play-document.steps"));
-        assert!(json.contains("Inputs"));
+        assert!(json.contains("Identity"));
+        assert!(json.contains("Geometry"));
     }
 
     #[test]

@@ -96,6 +96,7 @@ fn default_envelope() -> TrinityJackEnvelope {
     TrinityJackEnvelope {
         fixture_json: NAKAGIN_FIXTURE_JSON.into(),
         graph_vcs: None,
+        graph_applied_edit_ids: Vec::new(),
         runtime: TrinityJackRuntime {
             active_fixture_id: "nakagin".into(),
             jack_query: TRINITY_JACK_DEFAULT_QUERY.into(),
@@ -165,7 +166,9 @@ fn property_value_to_string(value: &PropertyValue) -> String {
 
 fn graph_store_from_envelope(envelope: &TrinityJackEnvelope) -> TrinityGraphStore {
     if let Some(vcs) = &envelope.graph_vcs {
-        return TrinityGraphStore::new(vcs.clone());
+        let mut store = TrinityGraphStore::new(vcs.clone());
+        store.set_envelope(vcs.clone(), envelope.graph_applied_edit_ids.clone());
+        return store;
     }
     let fixture = GraphFixture::from_json(&envelope.fixture_json)
         .or_else(|_| GraphFixture::from_json(NAKAGIN_FIXTURE_JSON))
@@ -175,6 +178,7 @@ fn graph_store_from_envelope(envelope: &TrinityJackEnvelope) -> TrinityGraphStor
 
 fn sync_envelope_from_store(envelope: &mut TrinityJackEnvelope, store: &TrinityGraphStore) {
     envelope.graph_vcs = Some(store.envelope().clone());
+    envelope.graph_applied_edit_ids = store.applied_edit_ids().to_vec();
     if let Ok(fixture) = store.projection() {
         if let Ok(json) = Graph::from_fixture(fixture).and_then(|graph| graph.fixture_json()) {
             envelope.fixture_json = json;
@@ -735,7 +739,7 @@ fn build_inspector_tree(envelope: &TrinityJackEnvelope) -> UiNode {
                 semio_framework_plugin::UiNode::Field(UiFieldNode {
                     id: "trinity-inspector.name".into(),
                     label: "Name".into(),
-                    child: semio_framework_plugin::UiControlNode::Input(semio_framework_plugin::UiInputNode {
+                    child: Box::new(semio_framework_plugin::UiNode::Input(semio_framework_plugin::UiInputNode {
                         id: "trinity-inspector.name.input".into(),
                         input_kind: "text".into(),
                         value: name_mixed.value,
@@ -749,7 +753,7 @@ fn build_inspector_tree(envelope: &TrinityJackEnvelope) -> UiNode {
                         max: None,
                         step: None,
                         accept: None,
-                    }),
+                    })),
                     description: None,
                     required: None,
                     error: None,
@@ -1431,6 +1435,33 @@ mod tests {
         let json = serde_json::to_string(&tools).unwrap();
         assert!(json.contains("runJackQuery"));
         assert!(json.contains("undo"));
+    }
+
+    #[test]
+    fn undo_restores_fixture_across_separate_dispatches() {
+        let mut app = TrinityJackPlayApp;
+        let document = app.initial_document_json();
+        let query = "MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'undo-test-label'";
+        let run_ops = app.handle_command_patch_ops("runJackQuery", Some(&json!({ "query": query })), &document, &ViewState::default());
+        let ran_json = run_ops
+            .first()
+            .and_then(|op| serde_json::from_str::<Value>(op).ok())
+            .and_then(|value| value.get("document").cloned())
+            .expect("document op")
+            .to_string();
+        let ran_envelope = parse_envelope(&ran_json);
+        assert!(ran_envelope.fixture_json.contains("undo-test-label"), "SET should have applied the label");
+        let undo_ops = app.handle_command_patch_ops("undo", None, &ran_json, &ViewState::default());
+        assert!(!undo_ops.is_empty(), "undo should succeed in a fresh dispatch after a prior edit");
+        let undone_envelope = parse_envelope(
+            &undo_ops
+                .first()
+                .and_then(|op| serde_json::from_str::<Value>(op).ok())
+                .and_then(|value| value.get("document").cloned())
+                .expect("document op")
+                .to_string(),
+        );
+        assert!(!undone_envelope.fixture_json.contains("undo-test-label"), "undo should revert the label");
     }
 }
 //#endregion 🧪Tests

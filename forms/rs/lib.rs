@@ -715,6 +715,26 @@ mod tests {
     }
 
     #[test]
+    fn update_form_op_sets_and_reverts_title() {
+        let spec = empty_forms_projection();
+        let op = FormOp::UpdateForm {
+            title: Some("Renamed".into()),
+        };
+        let next = apply_form_edit_op(&spec, &op);
+        assert_eq!(next.title.as_deref(), Some("Renamed"));
+        let inverse = op.backwards(&spec);
+        assert_eq!(
+            inverse,
+            vec![FormOp::UpdateForm {
+                title: spec.title.clone()
+            }]
+        );
+        let reverted = inverse.iter().fold(next.clone(), |current, op| apply_form_edit_op(&current, op));
+        assert_eq!(reverted.title, spec.title);
+        assert_eq!(op.diff(&spec).apply(&spec).title.as_deref(), Some("Renamed"));
+    }
+
+    #[test]
     fn add_step_op_replays() {
         let mut store = FormsStore::new(create_document_vcs_envelope(FORMS_DOCUMENT_SCHEMA, "forms", empty_forms_projection(), None));
         let step = FormStep {

@@ -2017,6 +2017,8 @@ export interface WorldCanvasProps {
   readonly onWheel?: (event: WheelEvent) => void;
   readonly onDoubleClick?: (event: MouseEvent) => void;
   readonly onLostPointerCapture?: (event: PointerEvent) => void;
+  /** Fires only when a click/pointer event hits no interactive object (r3f raycast miss) — the correct signal for "background click deselects", since r3f's per-object `stopPropagation()` does not stop the underlying native DOM event from bubbling to a host-level `onClick`. */
+  readonly onPointerMissed?: (event: MouseEvent) => void;
 }
 
 /** @emoji 🌍 Generic infinite-world r3f canvas shell (`frameloop="demand"`). */
@@ -2074,6 +2076,7 @@ export function WorldCanvas(props: WorldCanvasProps): ReactElement {
         onContextMenu={(event) => props.onContextMenu?.(event.nativeEvent)}
         onDoubleClick={(event) => props.onDoubleClick?.(event.nativeEvent)}
         onLostPointerCapture={(event) => props.onLostPointerCapture?.(event.nativeEvent)}
+        onPointerMissed={props.onPointerMissed}
         onCreated={({ camera, gl: renderer }) => {
           wheelCleanupRef.current?.();
           const canvas = renderer.domElement;

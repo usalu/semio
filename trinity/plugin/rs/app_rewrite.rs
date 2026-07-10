@@ -20,7 +20,7 @@ use trinity_jack::semantic_tokens;
 use trinity_ram::{Graph, GraphFixture, Node, PortDirection, PropertyValue};
 use trinity_rewrite::{
     apply_rule, build_rule_query, rule_query_json, trinity_lod_scale_json,
-    create_rewrite_rule_envelope, dispatch_rewrite_rule_state, Lhs, ParameterKind, ParameterSpec, Rhs, Rule,
+    create_rewrite_rule_envelope, dispatch_rewrite_rule_state, AssignmentJson, Lhs, ParameterKind, ParameterSpec, Rhs, Rule,
     PatternJson, RewriteRuleEnvelope, RewriteRuleState, RewriteRuleStore,
 };
 use vcs::DocumentVcsCommand;
@@ -101,6 +101,8 @@ struct RewritePlayRuntime {
 struct TrinityRewriteEnvelope {
     rule_vcs: RewriteRuleEnvelope,
     #[serde(default)]
+    rule_applied_edit_ids: Vec<String>,
+    #[serde(default)]
     runtime: RewritePlayRuntime,
 }
 
@@ -119,6 +121,7 @@ fn default_rule_state() -> RewriteRuleState {
 fn default_envelope() -> TrinityRewriteEnvelope {
     TrinityRewriteEnvelope {
         rule_vcs: create_rewrite_rule_envelope(TRINITY_REWRITE_PLAY_APP_ID, default_rule_state()),
+        rule_applied_edit_ids: Vec::new(),
         runtime: RewritePlayRuntime::default(),
     }
 }
@@ -154,7 +157,9 @@ fn default_parameter_bindings(rhs_json: &str) -> HashMap<String, PropertyValue> 
 }
 
 fn rule_store_from_envelope(envelope: &TrinityRewriteEnvelope) -> RewriteRuleStore {
-    RewriteRuleStore::new(envelope.rule_vcs.clone())
+    let mut store = RewriteRuleStore::new(envelope.rule_vcs.clone());
+    store.set_envelope(envelope.rule_vcs.clone(), envelope.rule_applied_edit_ids.clone());
+    store
 }
 
 fn rule_state(envelope: &TrinityRewriteEnvelope) -> RewriteRuleState {
@@ -163,6 +168,7 @@ fn rule_state(envelope: &TrinityRewriteEnvelope) -> RewriteRuleState {
 
 fn sync_envelope_from_rule_store(envelope: &mut TrinityRewriteEnvelope, store: &RewriteRuleStore) {
     envelope.rule_vcs = store.envelope().clone();
+    envelope.rule_applied_edit_ids = store.applied_edit_ids().to_vec();
 }
 
 fn apply_rule_state(envelope: &mut TrinityRewriteEnvelope, next: RewriteRuleState) -> bool {
@@ -981,7 +987,7 @@ fn build_inspector_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
                 semio_framework_plugin::UiNode::Field(UiFieldNode {
                     id: "trinity-inspector.name".into(),
                     label: "Name".into(),
-                    child: semio_framework_plugin::UiControlNode::Input(semio_framework_plugin::UiInputNode {
+                    child: Box::new(semio_framework_plugin::UiNode::Input(semio_framework_plugin::UiInputNode {
                         id: "trinity-inspector.name.input".into(),
                         input_kind: "text".into(),
                         value: name_mixed.value,
@@ -992,7 +998,7 @@ fn build_inspector_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
                         max: None,
                         step: None,
                         accept: None,
-                    }),
+                    })),
                     description: None,
                     required: None,
                     error: None,
@@ -1032,7 +1038,7 @@ fn build_parameters_panel(envelope: &TrinityRewriteEnvelope) -> UiNode {
         children.push(semio_framework_plugin::UiNode::Field(UiFieldNode {
             id: format!("trinity-rewrite.param.{}", param.name),
             label: param.name.clone(),
-            child: semio_framework_plugin::UiControlNode::Input(semio_framework_plugin::UiInputNode {
+            child: Box::new(semio_framework_plugin::UiNode::Input(semio_framework_plugin::UiInputNode {
                 id: format!("trinity-rewrite.param.{}.input", param.name),
                 input_kind: match param.kind {
                     ParameterKind::Number => "number",
@@ -1048,7 +1054,7 @@ fn build_parameters_panel(envelope: &TrinityRewriteEnvelope) -> UiNode {
                 max: None,
                 step: None,
                 accept: None,
-            }),
+            })),
             description: None,
             required: None,
             error: None,
