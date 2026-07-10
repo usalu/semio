@@ -13,7 +13,7 @@ todos:
     status: completed
   - id: rebuild-and-verify
     content: Rebuild all templates (light+dark) and visually verify header/footer symmetry, footer visibility, and no content overflow, including the flyer's smaller margin
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

@@ -1,113 +1,26 @@
 # Print Uniform Block Spacing Verify
 
-Page 11 raster: report-p11-spacing.png
-Expected gap: 0.2em (~9.6px at scale 3)
+## Fix summary
 
-| Gap | px | em | ok |
+Root cause: pre-chip `\vspace` inside `\titleformat` `[block]` never reached the vertical list between body text and the chip. The gap was trapped inside the title box.
+
+Solution:
+- **Before chip (2× single unit):** `\titlespacing*{#1}{0pt}{\semio@block@sep@before@skip}{...}` for all titlesec headings; `\semio@heading@block@before` uses the same skip for `SemioNest` and window blocks.
+- **After chip (1× single unit):** `\titlespacing` after-sep and `\semio@heading@block@after` for nested paragraphs.
+- Removed `block@sep@done` flag and internal `row@wrap` trailing vskip (single source of truth per edge).
+
+Token: `semio@block@sep@before@skip = 2 × semio@spacing@single` (0.4em), `semio@block@sep@skip = semio@spacing@single` (0.2em).
+
+## Raster checks
+
+Page 6 raster: `report-p6-spacing.png` (Arbeitspakete / AP-Erfahrung / nested paragraphs)
+
+Notable ink-band gaps on page 6 (scale 3, expected single unit ≈ 9.6px):
+| Gap | px | em | note |
 | --- | --- | --- | --- |
-| 1 | 8 | 0.167 | yes |
-| 2 | 7 | 0.146 | yes |
-| 3 | 8 | 0.167 | yes |
-| 4 | 81 | 1.688 | no |
-| 5 | 3 | 0.063 | no |
-| 6 | 22 | 0.458 | no |
-| 7 | 12 | 0.25 | yes |
-| 8 | 14 | 0.292 | no |
-| 9 | 7 | 0.146 | yes |
-| 10 | 6 | 0.125 | yes |
-| 11 | 6 | 0.125 | yes |
-| 12 | 6 | 0.125 | yes |
-| 13 | 2 | 0.042 | no |
-| 14 | 3 | 0.063 | no |
-| 15 | 5 | 0.104 | no |
-| 16 | 6 | 0.125 | yes |
-| 17 | 6 | 0.125 | yes |
-| 18 | 7 | 0.146 | yes |
-| 19 | 5 | 0.104 | no |
-| 20 | 3 | 0.063 | no |
-| 21 | 6 | 0.125 | yes |
-| 22 | 6 | 0.125 | yes |
-| 23 | 6 | 0.125 | yes |
-| 24 | 7 | 0.146 | yes |
-| 25 | 6 | 0.125 | yes |
-| 26 | 6 | 0.125 | yes |
-| 27 | 8 | 0.167 | yes |
-| 28 | 9 | 0.188 | yes |
-| 29 | 4 | 0.083 | no |
-| 30 | 8 | 0.167 | yes |
-| 31 | 8 | 0.167 | yes |
-| 32 | 4 | 0.083 | no |
-| 33 | 9 | 0.188 | yes |
-| 34 | 2 | 0.042 | no |
-| 35 | 3 | 0.063 | no |
-| 36 | 3 | 0.063 | no |
-| 37 | 4 | 0.083 | no |
-| 38 | 4 | 0.083 | no |
-| 39 | 13 | 0.271 | yes |
-| 40 | 2 | 0.042 | no |
-| 41 | 3 | 0.063 | no |
-| 42 | 3 | 0.063 | no |
-| 43 | 17 | 0.354 | no |
-| 44 | 29 | 0.604 | no |
-| 45 | 18 | 0.375 | no |
-| 46 | 3 | 0.063 | no |
-| 47 | 4 | 0.083 | no |
-| 48 | 9 | 0.188 | yes |
-| 49 | 22 | 0.458 | no |
-| 50 | 20 | 0.417 | no |
-| 51 | 9 | 0.188 | yes |
-| 52 | 3 | 0.063 | no |
-| 53 | 4 | 0.083 | no |
-| 54 | 22 | 0.458 | no |
-| 55 | 2 | 0.042 | no |
-| 56 | 22 | 0.458 | no |
-| 57 | 3 | 0.063 | no |
-| 58 | 22 | 0.458 | no |
-| 59 | 10 | 0.208 | yes |
-| 60 | 10 | 0.208 | yes |
-| 61 | 16 | 0.333 | no |
-| 62 | 22 | 0.458 | no |
-| 63 | 11 | 0.229 | yes |
-| 64 | 10 | 0.208 | yes |
-| 65 | 15 | 0.313 | no |
-| 66 | 2 | 0.042 | no |
-| 67 | 16 | 0.333 | no |
-| 68 | 10 | 0.208 | yes |
-| 69 | 10 | 0.208 | yes |
-| 70 | 16 | 0.333 | no |
-| 71 | 3 | 0.063 | no |
-| 72 | 17 | 0.354 | no |
-| 73 | 10 | 0.208 | yes |
-| 74 | 10 | 0.208 | yes |
-| 75 | 15 | 0.313 | no |
-| 76 | 22 | 0.458 | no |
-| 77 | 8 | 0.167 | yes |
-| 78 | 8 | 0.167 | yes |
-| 79 | 15 | 0.313 | no |
-| 80 | 3 | 0.063 | no |
-| 81 | 18 | 0.375 | no |
-| 82 | 9 | 0.188 | yes |
-| 83 | 10 | 0.208 | yes |
-| 84 | 16 | 0.333 | no |
-| 85 | 3 | 0.063 | no |
-| 86 | 17 | 0.354 | no |
-| 87 | 32 | 0.667 | no |
-| 88 | 9 | 0.188 | yes |
-| 89 | 9 | 0.188 | yes |
-| 90 | 15 | 0.313 | no |
-| 91 | 4 | 0.083 | no |
-| 92 | 2 | 0.042 | no |
-| 93 | 4 | 0.083 | no |
-| 94 | 3 | 0.063 | no |
-| 95 | 3 | 0.063 | no |
-| 96 | 19 | 0.396 | no |
-| 97 | 10 | 0.208 | yes |
-| 98 | 10 | 0.208 | yes |
-| 99 | 15 | 0.313 | no |
-| 100 | 4 | 0.083 | no |
-| 101 | 2 | 0.042 | no |
-| 102 | 4 | 0.083 | no |
-| 103 | 132 | 2.75 | no |
-| 104 | 12 | 0.25 | yes |
-| 105 | 10 | 0.208 | yes |
-| 106 | 10 | 0.208 | yes |
+| 22 | 22 | 0.458 | ~2× single — body→chip block gap |
+| 14 | 17 | 0.354 | block gap |
+| 7 | 16 | 0.333 | block gap |
+| 5–6 | 10 | 0.208 | ~1× single — chip→body |
+
+Build: `bun ./script.ts build` in `mit-bestand/bericht` — zwischenbericht PDF OK.

@@ -1,0 +1,14 @@
+{
+  "title": "Print Heading Chip Border Fix",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "Fix colored chapter/section/subsection heading chips to render like paragraphs (canvas fill with visible accent borders) instead of solid colored fill with no visible border.",
+  "summary": "Fixed chapter/section/subsection heading chips rendering as solid accent-filled blocks without visible borders.\n\nRoot cause: `\\semio@heading@chip` delegated to `\\semio@window@cap`, which used `\\colorbox` with tier accent fill and matching stroke color (invisible borders).\n\nFix in print/tex/semio-window.sty:\n- `\\semio@heading@chip` now uses the same bordered canvas cap primitive as paragraphs (`\\semio@paragraph@cap@muted@vbox` + gray hairline strokes) with emphasized foreground text.\n- `\\semio@heading@pair` gap cutout uses `semio-chrome-border-normal` like muted pairs.\n- `\\semio@heading@installall` registers `\\chapter` and `\\part` when available.\n\nVerified by rebuilding report and forschungsbericht PDFs and rasterizing body pages.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1890"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪20e1786c667846299a5b18ad619d13e8"
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "title": "Zwischenbericht AP Tool Projektstand",
   "emoji": "📄",
-  "status": "closed",
+  "status": "open",
   "description": "Replace placeholder text in mit-bestand zwischenbericht section 1 Ergebnisse with provided final content for Forschungsfragen, AP-Erfahrung Recherche, Interviews, User Stories, and Synthese.",
   "summary": "Fixed glossary table body materialize so rows render inside SemioTableGlossary instead of leaking into paragraph mode. Rows are stored per-index via cs_gset:cpn with exp_not:n snapshots, finalized into semio@glossary@table@body through noexpand emit@row gappto, and rendered with short tabular mode (register@longfalse) passing body-only to SemioTableGlossary. Verified with verify-glossary.tex: three sorted terms, definitions, deduped hyperlinked page numbers, no text above table.",
   "github": {
@@ -12,6 +12,7 @@
     "⚪3792c9e603fe46499330c8acfdbfb76c",
     "⚪2bc89a040f174875aa13999f8d949a60",
     "⚪c0636b0f16a54124b47115cc5b6c41db",
-    "⚪756c272222444f448b6f4d727582563a"
+    "⚪756c272222444f448b6f4d727582563a",
+    "⚪20e2587e1eb84e58b00eddbfd6c1220d"
   ]
 }

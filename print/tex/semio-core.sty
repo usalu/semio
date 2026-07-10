@@ -480,14 +480,19 @@
 }
 
 \newskip\semio@block@sep@skip
+\newskip\semio@block@sep@before@skip
 \setlength{\semio@block@sep@skip}{0.2em}
+\newcommand{\semio@block@sep@before@set}{%
+  \setlength{\semio@block@sep@before@skip}{\dimexpr2\semio@block@sep@skip\relax}%
+}
+\semio@block@sep@before@set
 \newcommand{\semio@block@sep}{%
-  \par
-  \vspace*{\semio@block@sep@skip}%
+  \ifhmode\par\fi
+  \nointerlineskip\vskip\semio@block@sep@skip
 }
 \newcommand{\semio@heading@block@before}{%
-  \semio@block@sep
-  \semio@block@sep
+  \ifhmode\par\fi
+  \vskip\semio@block@sep@before@skip
 }
 \newcommand{\SemioSpacingUnit}{\semio@spacing@single}
 \newcommand{\SemioSpacingDouble}{\semio@spacing@double}

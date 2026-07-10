@@ -840,11 +840,11 @@
   \makeatletter
   \setlength { \parskip } { 0pt }
   \setlength { \semio@block@sep@skip } { \semio@spacing@single }
+  \semio@block@sep@before@set
   \setlength { \parindent } { 0pt }
   \semio@chrome@dims@compute
   \setcounter{tocdepth}{\semio@toc@depth@unlimited}
   \semio@hierarchy@hooks@install
-  \semio@heading@cmd@sep@install
   \makeatother
   \ExplSyntaxOn
   \semio_chrome_footer_install:
@@ -1337,9 +1337,23 @@
   }%
 }
 
+\newcommand{\semio@heading@chip@core}[1]{%
+  \semio@window@cap@body@h@set
+  \sbox{\semio@window@cap@slot}{%
+    \begingroup
+    \semio@heading@chip@font\color{semio-chrome-foreground}%
+    \hspace{\semio@chrome@padding}#1\hspace{\semio@chrome@padding}%
+    \endgroup
+  }%
+  \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
+  \semio@window@cap@raise{\semio@paragraph@cap@muted@vbox{semio-chrome-canvas}}%
+}
+
 \newcommand{\semio@heading@chip}[3]{%
-  \semio@window@cap{#1}{#3}{%
-    \semio@heading@chip@font\color{#2}%
+  \hbox{%
+    \semio@window@cap@raise{\semio@window@stroke@v{semio-chrome-border-normal}}%
+    \semio@heading@chip@core{#3}%
+    \semio@window@cap@raise{\semio@window@stroke@v{semio-chrome-border-normal}}%
   }%
 }
 
@@ -1389,7 +1403,7 @@
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
-      \semio@window@gap{#1}{#1}%
+      \semio@window@gap{semio-chrome-base}{semio-chrome-border-normal}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -1578,24 +1592,16 @@
       }%
       {##1}%
   }%
-  \titlespacing*{#1}{0pt}{0pt}{\semio@block@sep@skip}%
-}
-
-\newcommand{\semio@heading@cmd@sep@install}{%
-  \def\semio@heading@cmd@sep@level##1{%
-    \ifcsname c@##1\endcsname
-      \AddToHook{cmd/##1/before}{\semio@heading@block@before}%
-    \fi
-  }%
-  \semio@heading@cmd@sep@level{part}%
-  \semio@heading@cmd@sep@level{chapter}%
-  \semio@heading@cmd@sep@level{section}%
-  \semio@heading@cmd@sep@level{subsection}%
-  \semio@heading@cmd@sep@level{subsubsection}%
-  \semio@heading@cmd@sep@level{paragraph}%
+  \titlespacing*{#1}{0pt}{\semio@block@sep@before@skip}{\semio@block@sep@skip}%
 }
 
 \newcommand{\semio@heading@installall}{%
+  \ifcsname chapter\endcsname
+    \semio@heading@install{\chapter}{semio-secondary}{chapter}%
+  \fi
+  \ifcsname part\endcsname
+    \semio@heading@install{\part}{semio-primary}{part}%
+  \fi
   \semio@heading@install{\section}{semio-tertiary}{section}%
   \semio@heading@install{\subsection}{semio-secondary}{subsection}%
   \semio@heading@install{\subsubsection}{semio-primary}{subsubsection}%
@@ -1610,7 +1616,7 @@
       }%
       {##1}%
   }%
-  \titlespacing*{\paragraph}{0pt}{0pt}{\semio@block@sep@skip}%
+  \titlespacing*{\paragraph}{0pt}{\semio@block@sep@before@skip}{\semio@block@sep@skip}%
   \semio@heading@wrap@install
 }
 

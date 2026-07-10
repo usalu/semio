@@ -1,9 +1,9 @@
 {
-  "title": "TOC Semio Window Tables",
+  "title": "TOC Exact Table Parity",
   "emoji": "🖨️",
-  "status": "open",
+  "status": "closed",
   "description": "LaTeX Table OS Style Parity",
-  "summary": "Made TOC and other register tables (glossary, references, list-of-*) visually consistent with Window tables like Netzwerk: longtable register tables now use padded left/right vertical rules via pipe colspec, bottom closing rule on last page, continuation chrome with two-arg window gap and matching bordered multicolumn. Removed obsolete register@long flag/toggles; glossary now uses the same long bordered path. Fixed broken \\semio@window@gap{semio-chrome-base} call in continuation chrome (pre-existing two-arg signature). Verified zwischenbericht light+dark build (12 pages), TOC on pages 2-3, glossary on page 12.",
+  "summary": "Fixed TOC/Glossary/Reference longtable parity with Netzwerk short tables: (1) register colspecs now compute inner width after table body font selection with measured padding/rule widths, zero tabcolsep, and @{} between columns; (2) long-mode rows use literal \\hline via \\semio@table@row@long instead of global-boolean-gated \\noalign{\\hrule}, preserving 12-page pagination; (3) short tabular tables unchanged via \\semio@table@row@short. Verified light+dark builds (12 pages), per-row hairlines, right border alignment, and bottom closing rule on last TOC page.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1860"
   },

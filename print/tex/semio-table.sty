@@ -83,10 +83,12 @@
 \newcommand{\semio@table@colspec@three}{@{}T{\dimexpr0.34\linewidth-\tabcolsep\relax}T{\dimexpr0.33\linewidth-\tabcolsep\relax}T{\dimexpr0.33\linewidth-2\tabcolsep\relax}@{}}
 
 \newlength{\semio@table@long@inner@w}
+\newbox\semio@table@long@pad@box
 
 \newcommand{\semio@table@long@inner@w@set}{%
+  \setbox\semio@table@long@pad@box=\hbox{\hspace{\semio@chrome@padding}}%
   \setlength{\semio@table@long@inner@w}{%
-    \dimexpr\linewidth-2\semio@chrome@padding-2\semio@stroke@hairline\relax
+    \dimexpr\linewidth-2\wd\semio@table@long@pad@box-2\arrayrulewidth\relax
   }%
 }
 
@@ -95,11 +97,11 @@
   \setlength{\tabcolsep}{0pt}%
 }
 
-\newcommand{\semio@table@colspec@register@long}{@{\hspace{\semio@chrome@padding}}|>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.16\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.62\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}|@{\hspace{\semio@chrome@padding}}}
+\newcommand{\semio@table@colspec@register@long}{@{\hspace{\semio@chrome@padding}}|@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.16\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.62\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}@{}|@{\hspace{\semio@chrome@padding}}}
 
-\newcommand{\semio@table@colspec@reference@long}{@{\hspace{\semio@chrome@padding}}|>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.12\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.66\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}|@{\hspace{\semio@chrome@padding}}}
+\newcommand{\semio@table@colspec@reference@long}{@{\hspace{\semio@chrome@padding}}|@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.12\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.66\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}@{}|@{\hspace{\semio@chrome@padding}}}
 
-\newcommand{\semio@table@colspec@glossary@long}{@{\hspace{\semio@chrome@padding}}|>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.56\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}|@{\hspace{\semio@chrome@padding}}}
+\newcommand{\semio@table@colspec@glossary@long}{@{\hspace{\semio@chrome@padding}}|@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.56\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}@{}|@{\hspace{\semio@chrome@padding}}}
 
 \newcommand{\semio@table@colspec@register}{@{}T{\dimexpr0.16\linewidth-\tabcolsep\relax}T{\dimexpr0.62\linewidth-\tabcolsep\relax}U{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
 
@@ -183,7 +185,7 @@
   \setlength{\LTpost}{0pt}%
   \setlength{\LTleft}{0pt}%
   \setlength{\LTright}{0pt}%
-  \setlength{\LTcapwidth}{\textwidth}%
+  \setlength{\LTcapwidth}{\linewidth}%
   \begin{longtable}{#1}%
   #2%
   \endfirsthead

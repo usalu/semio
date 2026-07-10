@@ -13,16 +13,16 @@ todos:
     status: completed
   - id: diagnose-pagination-regression
     content: Rebuild and check for pagination regression; if it reproduces, root-cause via literal \hline instead of global-boolean-gated \noalign rather than re-disabling separators
-    status: in_progress
+    status: completed
   - id: verify-closing-rule
     content: Confirm the bottom closing rule from \semio@table@long@closing@rule actually renders on the last TOC/Glossary/Reference page
-    status: pending
+    status: completed
   - id: rebuild-verify-parity
     content: Rebuild light+dark, confirm no Overfull warnings, render TOC/Netzwerk/Glossary pages to PNG and visually confirm pixel parity
-    status: pending
+    status: completed
   - id: close-ticket
     content: Update verify-log.md and close the ticket with summary and touched files
-    status: pending
+    status: completed
 isProject: false
 ---
 

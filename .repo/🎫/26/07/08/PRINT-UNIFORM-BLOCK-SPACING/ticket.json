@@ -3,10 +3,14 @@
   "emoji": "🖨️",
   "status": "closed",
   "description": "Fix inconsistent vertical spacing between chapters, sections, paragraphs, windows, and other block elements in print LaTeX. All inter-block gaps must use exactly one spacing unit (semio@spacing@single).",
-  "summary": "Windows now get one block-spacing unit before they open when following body text, matching paragraph line gaps. Added semio_block_sep_before/after with a semio@block@sep@done flag so headings and consecutive windows do not double-space. Applied to typed window kinds and generic Window environment. paper.pdf builds successfully.",
+  "summary": "Fixed inconsistent gap above heading chips when body text precedes them. Root cause: pre-chip vspace inside titleformat [block] never entered the page vertical list. Moved pre-chip gap to titlesec titlespacing before-sep (2× single unit) and unified SemioNest/window block@before to the same skip register. Chip-to-body gap stays at 1× single via titlespacing after / block@after. Removed block@sep@done flag and row@wrap internal vskip.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1867"
   },
   "goal": "🎯r2602",
-  "sessions": ["⚪e54417b306684b108c0e0e9125face50", "⚪76468a6f69844b8eaabc85dd2e158296"]
+  "sessions": [
+    "⚪e54417b306684b108c0e0e9125face50",
+    "⚪76468a6f69844b8eaabc85dd2e158296",
+    "⚪a41b7ae3b8304233b78dff733fdf3cfe"
+  ]
 }
