@@ -1,0 +1,13 @@
+{
+  "title": "Lowpoly React Interaction Parity",
+  "emoji": "🖱️",
+  "status": "open",
+  "description": "Restore premigration-level 3D interaction parity for lowpoly in the React renderer: face/edge/vertex hover and select, rectangle marquee with live add/remove preview, all four merge modes (default/additive/subtractive/invertive), lasso point-in-polygon hit-testing with crossing-vs-window semantics, and fixed edge picking. Root cause: the shared framework/renderer/react/components/world-3d-host.tsx marquee/pick pipeline has several bugs (marquee never activates because of an event.target gate, merge modes collapsed to add/toggle only, no live preview for whole-instance mode, lasso is visual-only, edge index off-by-one, hover overlay gated to activeObjectId instead of the hovered object). Plugin-side: lowpoly/plugin/rs/lib.rs merge_selection_ids needs a \"remove\" arm and a Rectangle/Lasso selection-method window measure.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1906"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪aceede6b46d447ec961921ed70c7bc7c"
+  ]
+}

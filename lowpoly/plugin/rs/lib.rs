@@ -350,6 +350,13 @@ fn merge_selection_ids(existing: &[u32], incoming: &[u32], merge: &str) -> Vec<u
             }
             merged
         }
+        "remove" | "subtractive" => {
+            let mut merged = existing.to_vec();
+            for id in incoming {
+                merged.retain(|entry| entry != id);
+            }
+            merged
+        }
         _ => incoming.to_vec(),
     }
 }

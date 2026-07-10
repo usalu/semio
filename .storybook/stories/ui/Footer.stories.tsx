@@ -50,7 +50,7 @@ export const Default: Story = {
     toolbar: (
       <div role="toolbar" className="flex w-fit max-w-full shrink-0 items-center justify-start gap-single">
         <ToolbarZone>
-          <ToolbarItem>Toolbar</ToolbarItem>
+          <ToolbarItem>Sync</ToolbarItem>
         </ToolbarZone>
       </div>
     ),

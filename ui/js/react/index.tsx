@@ -4053,7 +4053,7 @@ export const windowEngagementMaxWidthPx = domSizePx("layoutEngagementMaxUiSpacin
 export const windowMeasuresOverlayClass = "pointer-events-none absolute top-0 right-0 z-panel flex max-h-full flex-col items-end p-single";
 
 /** @emoji 📐 Scrollable frosted rail for window measures (height follows content, capped by the window body). */
-export const windowMeasuresStackClass = cn(glassWindowOptionsClass, `pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-hidden rounded-md border ${borderElementClass}/40 p-0 shadow-sm`);
+export const windowMeasuresStackClass = cn(glassWindowOptionsClass, `pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-hidden border ${borderElementClass}/40 p-0 shadow-sm`);
 
 /** @emoji 📐 Window measures rail spanning the full window body (stays below shell side panels). */
 export const windowMeasuresOverlayExpandedClass = "inset-0 z-panel items-stretch";
@@ -4075,6 +4075,15 @@ export const windowEngagementOverlayFoldedClass = windowMeasuresOverlayFoldedCla
 
 /** @emoji 📐 Command input body below the engagement chrome bar. */
 export const windowEngagementBodyClass = "flex min-h-0 min-w-0 flex-auto flex-col gap-half overflow-hidden p-tiny";
+
+/** @emoji 📐 Outer overlay for the floating window toolbar spanning the full bottom edge. */
+export const windowToolbarOverlayClass = "pointer-events-none absolute right-0 bottom-0 left-0 z-panel flex max-h-full flex-col items-stretch p-single";
+
+/** @emoji 📐 Collapsed toolbar chrome hugging the bottom-left corner. */
+export const windowToolbarOverlayFoldedClass = "right-auto w-fit max-w-[min(14rem,calc(100%-0.5rem))]";
+
+/** @emoji 📐 Horizontal tool row below the toolbar chrome bar. */
+export const windowToolbarBodyClass = "flex min-h-0 min-w-0 flex-auto items-center gap-single overflow-x-auto p-tiny";
 
 /** @emoji 📐 CSS variable for invisible top clearance below floating window chrome. */
 export const windowChromeScrollClearanceVar = "--window-chrome-scroll-clearance";
@@ -12895,6 +12904,34 @@ const WindowEngagementChrome: React.FC<WindowEngagementChromeProps> = ({ windowI
 
 // #endregion 🪟WindowEngagementChrome
 
+// #region 🪟WindowToolbarChrome
+
+interface WindowToolbarChromeProps {
+  windowId: string;
+  folded: boolean;
+  onFold: () => void;
+  onUnfold: () => void;
+}
+
+/** @emoji 🧰 Title bar for the window toolbar strip (toggle left when unfolded, unfold chip when folded). */
+const WindowToolbarChrome: React.FC<WindowToolbarChromeProps> = ({ windowId, folded, onFold, onUnfold }) => {
+  if (folded) {
+    return (
+      <div data-slot="window-toolbar-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
+        <ActionGroupItem id={`${windowId}-window-toolbar-unfold`} icon="chevron-right" text="Tools" className={windowRailChromeLabelActionClass} onClick={onUnfold} />
+      </div>
+    );
+  }
+
+  return (
+    <div data-slot="window-toolbar-chrome" data-expanded="true" className={windowMeasuresChromeClass}>
+      <ActionGroupItem id={`${windowId}-window-toolbar-fold`} icon="chevron-left" text="Tools" className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerLeftClass)} onClick={onFold} />
+    </div>
+  );
+};
+
+// #endregion 🪟WindowToolbarChrome
+
 // #region ↔️WindowMeasuresResize
 
 /** @emoji ↔️ Mouse resize handle for the unfolded window options rail width (left edge). */
@@ -14824,6 +14861,7 @@ export interface WindowConfig {
   onClose?: () => void;
   controls?: React.ReactNode;
   measures?: React.ReactNode;
+  toolbar?: React.ReactNode;
   engagement?: EngagementSpec;
   active?: boolean;
   onActivate?: () => void;
@@ -14903,6 +14941,7 @@ const Window: React.FC<WindowProps> = ({
   onClose,
   controls,
   measures,
+  toolbar,
   engagement,
   active = false,
   onActivate,
@@ -14914,6 +14953,7 @@ const Window: React.FC<WindowProps> = ({
   const measuresOverlayRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [measuresFolded, setMeasuresFolded] = reactHostPort.useState(true);
   const [measuresExpanded, setMeasuresExpanded] = reactHostPort.useState(false);
+  const [toolbarFolded, setToolbarFolded] = reactHostPort.useState(false);
   const [measuresWidthPx, setMeasuresWidthPx] = reactHostPort.useState(windowMeasuresDefaultWidthPx);
   const [measuresResizeLeftActive, setMeasuresResizeLeftActive] = reactHostPort.useState(false);
   const measuresReservePx = useWindowMeasuresReservePx(!!engagement, measures, windowBodyRef, measuresOverlayRef);
@@ -15148,6 +15188,24 @@ const Window: React.FC<WindowProps> = ({
                       }}
                     >
                       <Engagement {...engagement} active={engagementCommandActive} />
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </GlassTierProvider>
+          ) : null}
+          {toolbar && !measuresExpanded ? (
+            <GlassTierProvider tier="windowOptions">
+              <div
+                data-slot="window-toolbar-overlay"
+                data-folded={toolbarFolded ? "true" : undefined}
+                className={cn(windowToolbarOverlayClass, toolbarFolded && windowToolbarOverlayFoldedClass)}
+              >
+                <div data-dim data-slot="window-toolbar" data-folded={toolbarFolded ? "true" : undefined} className={cn(windowMeasuresStackClass, toolbarFolded && windowMeasuresStackFoldedClass)}>
+                  <WindowToolbarChrome windowId={id} folded={toolbarFolded} onFold={() => setToolbarFolded(true)} onUnfold={() => setToolbarFolded(false)} />
+                  {!toolbarFolded ? (
+                    <div data-slot="window-toolbar-body" className={windowToolbarBodyClass}>
+                      {toolbar}
                     </div>
                   ) : null}
                 </div>
@@ -22852,6 +22910,40 @@ if (import.meta.vitest) {
       fireEvent.click(container.querySelector('[data-slot="window-measures-tree"] button')!);
       expect(screen.getByText("Alpha value")).toBeTruthy();
       expect(stack.style.height).toBe("");
+    });
+
+    it("Window toolbar renders unfolded by default and hides when toolbar is absent", () => {
+      const { container, rerender } = render(
+        <Window id="toolbar-window" toolbar={<button type="button">Tool</button>}>
+          <div>Body</div>
+        </Window>,
+      );
+      expect(container.querySelector('[data-slot="window-toolbar"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-toolbar-body"]')).toBeTruthy();
+      expect(screen.getByText("Tool")).toBeTruthy();
+      rerender(
+        <Window id="toolbar-window">
+          <div>Body</div>
+        </Window>,
+      );
+      expect(container.querySelector('[data-slot="window-toolbar"]')).toBeNull();
+    });
+
+    it("Window toolbar chrome folds to a bottom-left chip and unfolds back", () => {
+      const { container } = render(
+        <Window id="toolbar-fold-window" toolbar={<button type="button">Tool</button>}>
+          <div>Body</div>
+        </Window>,
+      );
+      const overlay = container.querySelector('[data-slot="window-toolbar-overlay"]') as HTMLElement;
+      expect(container.querySelector('[data-slot="window-toolbar-body"]')).toBeTruthy();
+      fireEvent.click(container.querySelector("#toolbar-fold-window-window-toolbar-fold")!);
+      expect(container.querySelector('[data-slot="window-toolbar-body"]')).toBeNull();
+      expect(container.querySelector('[data-slot="window-toolbar"]')?.getAttribute("data-folded")).toBe("true");
+      expect(overlay.className).toContain("w-fit");
+      fireEvent.click(container.querySelector("#toolbar-fold-window-window-toolbar-unfold")!);
+      expect(container.querySelector('[data-slot="window-toolbar-body"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-toolbar"]')?.getAttribute("data-folded")).toBeNull();
     });
 
     it("createEvenWindowLayout builds a row of stacks", () => {

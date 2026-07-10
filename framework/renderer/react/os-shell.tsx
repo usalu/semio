@@ -639,6 +639,11 @@ function renderWindowMeasure(measure: WindowMeasure, onCommand: (command: Comman
 function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, onCommand: (command: CommandDescriptor) => void): ReactNode {
   return <WindowMeasuresTree>{(measures ?? []).map((measure) => renderWindowMeasure(measure, onCommand))}</WindowMeasuresTree>;
 }
+
+function windowToolbarNode(tools: readonly ToolNode[] | undefined, windowId: string, onCommand: (command: CommandDescriptor) => void): ReactNode {
+  if (!tools?.length) return undefined;
+  return <ToolTree id={`ui.toolbar.${windowId}`} tools={tools} onCommand={onCommand} />;
+}
 //#endregion ShellHelpers
 
 //#region Boot
@@ -684,7 +689,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const [windowEngagementsByKind, setWindowEngagementsByKind] = useState<Readonly<Record<string, WindowEngagement>>>({});
   const [windowMeasuresByKind, setWindowMeasuresByKind] = useState<Readonly<Record<string, readonly WindowMeasure[]>>>({});
   const [panelUiByKey, setPanelUiByKey] = useState<Readonly<Record<string, UiNode>>>({});
-  const [activeToolNodes, setActiveToolNodes] = useState<readonly ToolNode[]>([]);
+  const [toolNodesByKind, setToolNodesByKind] = useState<Readonly<Record<string, readonly ToolNode[]>>>({});
   const [spawnedWindowUi, setSpawnedWindowUi] = useState<UiNode | null>(null);
   const [spawnedWindowEngagements, setSpawnedWindowEngagements] = useState<Readonly<Record<string, WindowEngagement>>>({});
   const [spawnedWindowMeasures, setSpawnedWindowMeasures] = useState<Readonly<Record<string, readonly WindowMeasure[]>>>({});
@@ -846,13 +851,16 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       for (const tab of nextSession.app.panelTabs) {
         rendered.push(await plugin.render(nextSession.instanceId, tab.bodyKey, viewState));
       }
-      rendered.push(await plugin.tools(nextSession.instanceId, viewState));
+      for (const kind of nextSession.app.windowKinds) {
+        rendered.push(await plugin.tools(nextSession.instanceId, { ...viewState, activeWindowKindId: kind.id }));
+      }
       rendered.push(await plugin.windowEngagements(nextSession.instanceId, viewState));
       rendered.push(await plugin.windowMeasures(nextSession.instanceId, viewState));
       if (generation !== refreshGenerationRef.current) return;
       const windowNodes = await Promise.all(rendered.slice(0, windowCount).map((node) => resolveExternalSlots(node as UiNode, slotContext)));
       const panelNodes = await Promise.all(rendered.slice(windowCount, windowCount + nextSession.app.panelTabs.length).map((node) => resolveExternalSlots(node as UiNode, slotContext)));
-      const dynamicTools = rendered[windowCount + nextSession.app.panelTabs.length] as readonly ToolNode[];
+      const toolsStart = windowCount + nextSession.app.panelTabs.length;
+      const dynamicToolsByKind = rendered.slice(toolsStart, toolsStart + windowCount) as (readonly ToolNode[])[];
       const dynamicEngagements = rendered[rendered.length - 2] as Readonly<Record<string, WindowEngagement>>;
       const dynamicMeasures = rendered[rendered.length - 1] as Readonly<Record<string, readonly WindowMeasure[]>>;
       setWindowUiByKind(Object.fromEntries(nextSession.app.windowKinds.map((kind, index) => [kind.id, windowNodes[index]! as UiNode])));
@@ -861,7 +869,14 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       setPanelUiByKey(Object.fromEntries(nextSession.app.panelTabs.map((tab, index) => [tab.id, panelNodes[index]! as UiNode])));
       const activeModeId = viewState.activeModeId ?? nextSession.app.defaultModeId ?? nextSession.app.modes[0]?.id;
       const staticTools = nextSession.app.modes.find((mode) => mode.id === activeModeId)?.tools ?? [];
-      setActiveToolNodes(dynamicTools.length > 0 ? dynamicTools : staticTools);
+      setToolNodesByKind(
+        Object.fromEntries(
+          nextSession.app.windowKinds.map((kind, index) => {
+            const dynamic = dynamicToolsByKind[index] ?? [];
+            return [kind.id, dynamic.length > 0 ? dynamic : staticTools];
+          }),
+        ),
+      );
       const windowIds = nextSession.app.windowKinds.map((kind) => kind.id);
       const layoutSeedKey = `${nextSession.pluginId}:${nextSession.app.id}:${nextSession.instanceId}`;
       if (layoutSeedKeyRef.current !== layoutSeedKey) {
@@ -1829,31 +1844,22 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   }, [session]);
 
   const footerToolbar = useMemo(() => {
-    const tools = studioMode && panel?.activeSpawnedId ? spawnedToolNodes : activeToolNodes;
     const syncTools = buildFrameworkSyncTools(syncBackboneUri) as readonly ToolNode[];
-    if (!tools.length && !syncTools.length) return undefined;
+    if (!syncTools.length) return undefined;
     return (
-      <div className="flex items-center gap-single">
-        {tools.length > 0 ? <ToolTree tools={tools} onCommand={onCommand} /> : null}
-        {syncTools.length > 0 ? (
-          <>
-            {tools.length > 0 ? <ToolbarDivider /> : null}
-            <SyncAttachCard
-              activeUri={syncBackboneUri}
-              cardKind={syncCardKind}
-              draftPath={syncDraftPath}
-              syncTools={syncTools}
-              onCommand={onCommand}
-              onDraftPathChange={setSyncDraftPath}
-              onClose={() => setSyncCardKind(null)}
-              onAttach={attachSyncBackbone}
-              onDetach={detachSyncBackbone}
-            />
-          </>
-        ) : null}
-      </div>
+      <SyncAttachCard
+        activeUri={syncBackboneUri}
+        cardKind={syncCardKind}
+        draftPath={syncDraftPath}
+        syncTools={syncTools}
+        onCommand={onCommand}
+        onDraftPathChange={setSyncDraftPath}
+        onClose={() => setSyncCardKind(null)}
+        onAttach={attachSyncBackbone}
+        onDetach={detachSyncBackbone}
+      />
     );
-  }, [activeToolNodes, attachSyncBackbone, detachSyncBackbone, onCommand, panel?.activeSpawnedId, spawnedToolNodes, studioMode, syncBackboneUri, syncCardKind, syncDraftPath]);
+  }, [attachSyncBackbone, detachSyncBackbone, onCommand, syncBackboneUri, syncCardKind, syncDraftPath]);
 
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
@@ -1871,6 +1877,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
             showControls: true,
             measures: chrome?.measures,
             engagement: chrome?.engagement,
+            toolbar: windowToolbarNode(spawnedToolNodes, spawned.id, onCommand),
             children: <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{interpretUiNode(spawnedWindowUi, { onCommand })}</ChromeAwareWindowScrollSurface>,
           },
         ];
@@ -1884,6 +1891,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       showControls: true,
       measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.measures, onCommand),
       engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onCommand),
+      toolbar: windowToolbarNode(toolNodesByKind[kind.id], kind.id, onCommand),
       children: (
         <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id}>
           {interpretUiNode(windowUiByKind[kind.id] ?? { type: "text", value: `Missing window: ${kind.id}` }, { onCommand })}
@@ -1901,6 +1909,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           showControls: true,
           measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.measures, onCommand),
           engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onCommand),
+          toolbar: windowToolbarNode(toolNodesByKind[kind.id], instance.id, onCommand),
           children: (
             <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id}>
               {interpretUiNode(windowUiByKind[kind.id] ?? { type: "text", value: `Missing window: ${kind.id}` }, { onCommand })}
@@ -1910,7 +1919,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       ];
     });
     return [...baseWindows, ...extraWindows];
-  }, [extraWindowInstances, loadedPlugins, onCommand, panel, session, spawnedWindowEngagements, spawnedWindowMeasures, spawnedWindowUi, studioMode, windowEngagementsByKind, windowMeasuresByKind, windowUiByKind]);
+  }, [extraWindowInstances, loadedPlugins, onCommand, panel, session, spawnedToolNodes, spawnedWindowEngagements, spawnedWindowMeasures, spawnedWindowUi, studioMode, toolNodesByKind, windowEngagementsByKind, windowMeasuresByKind, windowUiByKind]);
 
   const canvas = useMemo(() => {
     if (!session) return <p className="p-4 text-sm text-muted-foreground">Loading plugins…</p>;
@@ -3316,6 +3325,7 @@ function SyncAttachCard({ activeUri, cardKind, draftPath, syncTools, onCommand, 
 type ToolTreeProps = {
   readonly tools: readonly ToolNode[];
   readonly onCommand: (command: CommandDescriptor) => void;
+  readonly id?: string;
 };
 
 function resolveLeafCommand(node: ToolLeaf | Extract<ToolNode, { readonly kind: "button" | "toggle" }>): CommandDescriptor | null {
@@ -3517,7 +3527,7 @@ function ToolToolbarItems({ items, onCommand }: { readonly items: readonly ToolL
   return <ToolbarGroup>{nodes}</ToolbarGroup>;
 }
 
-export function ToolTree({ tools, onCommand }: ToolTreeProps): ReactElement | null {
+export function ToolTree({ tools, onCommand, id = "ui.toolbar" }: ToolTreeProps): ReactElement | null {
   const [activePath, setActivePath] = useState<readonly string[]>([]);
 
   useEffect(() => {
@@ -3530,7 +3540,7 @@ export function ToolTree({ tools, onCommand }: ToolTreeProps): ReactElement | nu
 
   return (
     <UiChromeLabelPolicyProvider policy="always">
-      <div role="toolbar" id="ui.toolbar" className="pointer-events-auto flex w-fit max-w-full shrink-0 items-center justify-start gap-single">
+      <div role="toolbar" id={id} className="pointer-events-auto flex w-fit max-w-full shrink-0 items-center justify-start gap-single">
         {segments.map((segment, index) => (
           <ToolbarZone key={segment.kind === "picker" ? `picker-${segment.depth}-${segment.collections.map((entry) => entry.id).join("-")}` : `tools-${index}-${segment.items.map((entry) => entry.id).join("-")}`}>
             {segment.kind === "picker" ? (
@@ -3543,7 +3553,7 @@ export function ToolTree({ tools, onCommand }: ToolTreeProps): ReactElement | nu
                   }}
                   items={segment.collections.map((entry) => ({
                     value: entry.id,
-                    id: `ui.toolbar.group.${entry.id}`,
+                    id: `${id}.group.${entry.id}`,
                     icon: <Icon icon={toolIcon(entry.iconId)} size="small" />,
                     text: entry.text ?? entry.label,
                   }))}

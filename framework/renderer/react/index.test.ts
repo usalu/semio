@@ -638,4 +638,16 @@ describe("toolbar ribbon", () => {
     expect(markup).toContain('id="ui.toolbar"');
     expect(markup).toContain('data-slot="toggle-group"');
   });
+
+  it("renders ToolTree with a custom id for per-window namespacing", () => {
+    const markup = renderToStaticMarkup(
+      createElement(ToolTree, {
+        id: "ui.toolbar.model",
+        tools: [{ id: "box", kind: "button", iconId: "box", controllerId: "x", command: "box" }],
+        onCommand: noopCommand,
+      }),
+    );
+    expect(markup).toContain('id="ui.toolbar.model"');
+    expect(markup).not.toContain('id="ui.toolbar"');
+  });
 });

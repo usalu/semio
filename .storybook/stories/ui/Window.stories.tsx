@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { Canvas, HorizontalWindows, VerticalWindows, Window } from "@semio-tech/ui-react";
+import { Canvas, HorizontalWindows, ToolbarItem, ToolbarZone, VerticalWindows, Window } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🌊Window
@@ -104,6 +104,55 @@ export const WithEngagement: Story = {
       input: { placeholder: "Command…" },
       status: [{ id: "status", content: "Ready" }],
     },
+  },
+  render: (args) => (
+    <div className="h-[400px] w-[600px]">
+      <Window {...args} fill />
+    </div>
+  ),
+};
+
+export const WithToolbar: Story = {
+  args: {
+    id: "toolbar-window",
+    children: <WindowContent title="Window with Toolbar" />,
+    fill: true,
+    toolbar: (
+      <ToolbarZone>
+        <ToolbarItem>Select</ToolbarItem>
+        <ToolbarItem>Move</ToolbarItem>
+        <ToolbarItem>Extrude</ToolbarItem>
+      </ToolbarZone>
+    ),
+  },
+  render: (args) => (
+    <div className="h-[400px] w-[600px]">
+      <Window {...args} fill />
+    </div>
+  ),
+};
+
+export const WithControlsMeasuresEngagementAndToolbar: Story = {
+  args: {
+    id: "full-chrome-window",
+    children: <WindowContent title="Every Rail at Once" />,
+    fill: true,
+    showControls: true,
+    onMaximize: () => {},
+    onClose: () => {},
+    measures: <div className="p-tiny text-sm">LOD 2</div>,
+    engagement: {
+      options: [{ id: "opt-grid", label: "Grid", onPress: () => {} }],
+      input: { placeholder: "Command…" },
+      status: [{ id: "status", content: "Ready" }],
+    },
+    toolbar: (
+      <ToolbarZone>
+        <ToolbarItem>Select</ToolbarItem>
+        <ToolbarItem>Move</ToolbarItem>
+        <ToolbarItem>Extrude</ToolbarItem>
+      </ToolbarZone>
+    ),
   },
   render: (args) => (
     <div className="h-[400px] w-[600px]">

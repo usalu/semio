@@ -1,0 +1,13 @@
+{
+  "title": "Per-Window Toolbar Strip",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "Every window receives its own toolbar strip on the bottom (same as footer but floating and glassy like window options). Tools are now on window level. In the footer should only remain app mode wide commands.\n\nImplementation: add a `toolbar` slot to `Window`/`WindowConfig` in ui/js/react/index.tsx, styled as a full-width floating glass strip at the bottom of the window body (windowOptions glass tier, no rounded corners), foldable with the same chrome pattern as WindowMeasuresChrome/WindowEngagementChrome, folded chip anchored bottom-left. Rewire framework/renderer/react/os-shell.tsx to source tools per window kind (toolNodesByKind via plugin.tools called per windowKindId) instead of one global activeToolNodes, pass each window its own ToolTree via the new toolbar slot, and strip the ToolTree/tools out of footerToolbar so the footer only keeps the app label item and the app-wide SyncAttachCard/sync tools. Update ui/styling/js/ui.css with a matching glass rule for the new data-slot, and extend Window.stories.tsx / Footer.stories.tsx and the existing test suites (framework/renderer/react/index.test.ts, in-source Window tests) accordingly. No rounded corners anywhere in the new/touched classes per repo design rule.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1904"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪c5e9333c29e6406db1b46559d9308eb7"
+  ]
+}
