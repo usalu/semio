@@ -183,14 +183,14 @@
 \cs_new_protected:Npn \semio_window_toc_render: {
   \semio_window_toc_aux_load:
   \int_compare:nNnT { \seq_count:c { g_semio_register_toc_num_seq } } > { 0 } {
+    \semio_window_register_body_macro_apply:n { toc }
     \group_begin:
     \ExplSyntaxOff
     \makeatletter
     \semio@register@window@open{\SemioTocTitle}%
     \SemioTableRegister{%
       \semio@register@table@header
-      \SemioTableRegisterRow{1}{Ergebnisse}{semio-toc-section-1}%
-      \SemioTableRegisterRow{2}{Forschungsfragen}{semio-toc-subsection-1.1}%
+      \semio@register@table@body
     }%
     \semio@register@window@close
     \clearpage
@@ -365,37 +365,36 @@
   }
 }
 
-\cs_new_protected:Npn \semio_glossary_row_for_term:n #1 {
+\cs_new_protected:Npn \semio_glossary_table_row:nnn #1#2#3 {
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \SemioGlossaryTableRow{#1}{#2}{#3}%
+  \makeatother
+  \group_end:
+}
+\cs_generate_variant:Nn \semio_glossary_table_row:nnn { VVV }
+
+\cs_new_protected:Npn \semio_glossary_row_print:n #1 {
   \prop_get:NnNTF \g_semio_glossary_definition_prop {#1} \l_semio_glossary_definition_tl { } {
     \tl_clear:N \l_semio_glossary_definition_tl
   }
   \semio_glossary_labels_csv:n {#1}
   \tl_set:Nn \l_tmpb_tl {#1}
-  \tl_put_right:Nx \l_tmpa_tl {
-    \exp_not:n { \SemioGlossaryTableRow }
-      { \tl_use:N \l_tmpb_tl }
-      { \tl_use:N \l_semio_glossary_definition_tl }
-      { \tl_use:N \l_tmpd_tl }
-  }
+  \semio_glossary_table_row:VVV
+    \l_tmpb_tl
+    \l_semio_glossary_definition_tl
+    \l_tmpd_tl
 }
 
-\cs_new_protected:Npn \semio_glossary_rows_build: {
+\cs_new_protected:Npn \semio_glossary_rows_emit: {
   \semio_glossary_terms_sort:
-  \tl_clear:N \l_tmpa_tl
   \seq_map_inline:Nn \l_semio_glossary_sorted_terms_seq {
-    \semio_glossary_row_for_term:n { ##1 }
+    \semio_glossary_row_print:n { ##1 }
   }
-  \toks0=\expandafter{\tl_use:N \l_tmpa_tl}
-  \group_begin:
-  \ExplSyntaxOff
-  \makeatletter
-  \gdef\semio@glossary@table@body{\the\toks0}%
-  \makeatother
-  \group_end:
 }
 
 \cs_new_protected:Npn \SemioGlossaryListOf {
-  \semio_glossary_rows_build:
   \int_compare:nNnT { \seq_count:N \g_semio_glossary_terms_seq } > { 0 } {
     \tl_set:Nx \l_semio_glossary_title_tl { \semio_glossary_title_text: }
     \group_begin:
@@ -403,7 +402,7 @@
     \exp_args:NV \semio@register@window@open \l_semio_glossary_title_tl
     \SemioTableGlossary{%
       \semio@glossary@table@header
-      \semio@glossary@table@body
+      \semio@glossary@rows@emit
     }%
     \semio@register@window@close
     \group_end:
@@ -534,12 +533,15 @@
   \ExplSyntaxOff
   \makeatletter
   \ifsemio@window@fit
-    \semio@window@fit@mark@true
+    \gdef\semio@fit@load@flag{true}
   \else
-    \semio@window@fit@mark@false
+    \gdef\semio@fit@load@flag{false}
   \fi
   \makeatother
   \group_end:
+  \str_if_eq:nnTF { \semio@fit@load@flag } { true }
+    { \bool_set_true:N \l_semio_window_fit_bool }
+    { \bool_set_false:N \l_semio_window_fit_bool }
 }
 
 \cs_new_protected:Npn \semio_window_tcolorbox_begin:nn #1#2 {
@@ -938,16 +940,8 @@
 \makeatletter
 \newif\ifsemio@window@fit
 \semio@window@fitfalse
-\newcommand{\semio@window@fit@mark@true}{%
-  \ExplSyntaxOn
-  \bool_set_true:N \l_semio_window_fit_bool
-  \ExplSyntaxOff
-}
-\newcommand{\semio@window@fit@mark@false}{%
-  \ExplSyntaxOn
-  \bool_set_false:N \l_semio_window_fit_bool
-  \ExplSyntaxOff
-}
+\newcommand{\semio@window@fit@mark@true}{\semio@window@fittrue}
+\newcommand{\semio@window@fit@mark@false}{\semio@window@fitfalse}
 \newcommand{\semio@this@pagestyle}{}
 \newcommand{\semio@shipout@this@pagestyle}{}
 \let\semio@saved@thispagestyle\thispagestyle
@@ -1000,6 +994,8 @@
 }
 
 \newcommand{\semio@glossary@table@body}{}
+
+\newcommand{\semio@glossary@rows@emit}{\semio_glossary_rows_emit:}
 
 \newcommand{\semio@glossary@table@header}{%
   \SemioTableHeaderRow{%
@@ -1736,22 +1732,27 @@
 \def\semio@tcb@variant@row{row}
 \def\semio@tcb@variant@fit{fit}
 \def\semio@tcb@variant@default{default}
-\newcommand{\semio@window@extra@opts}{%
-  valign=\semio@window@valign,halign=\semio@window@halign%
-  \ifdim\semio@window@stretch@height>0pt ,height=\semio@window@stretch@height\fi
-  \ifdim\semio@window@stretch@width>0pt ,width=\semio@window@stretch@width\fi
+\newcommand{\semio@window@tcolorbox@begin@with}[1]{%
+  \begin{tcolorbox}[#1]%
 }
 \newcommand{\semio@window@tcolorbox@begin}{%
   \def\semio@window@tcb@tag{\semio@window@tcb@variant}%
   \ifx\semio@window@tcb@tag\semio@tcb@variant@table
-    \begin{tcolorbox}[semio~window~tier~\semio@window@tcb@tier, semio~window~table,\semio@window@extra@opts]%
+    \def\semio@window@tcb@style{semio~window~table}%
   \else\ifx\semio@window@tcb@tag\semio@tcb@variant@row
-    \begin{tcolorbox}[semio~window~tier~\semio@window@tcb@tier, semio~window~row,\semio@window@extra@opts]%
+    \def\semio@window@tcb@style{semio~window~row}%
   \else\ifx\semio@window@tcb@tag\semio@tcb@variant@fit
-    \begin{tcolorbox}[semio~window~tier~\semio@window@tcb@tier, semio~window~fit,\semio@window@extra@opts]%
+    \def\semio@window@tcb@style{semio~window~fit}%
   \else
-    \begin{tcolorbox}[semio~window~tier~\semio@window@tcb@tier, breakable=false,\semio@window@extra@opts]%
+    \def\semio@window@tcb@style{breakable=false}%
   \fi\fi\fi
+  \edef\semio@window@tcb@keys{%
+    semio~window~tier~\semio@window@tcb@tier, \semio@window@tcb@style,%
+    valign=\semio@window@valign,halign=\semio@window@halign%
+    \ifdim\semio@window@stretch@height>0pt ,height=\the\semio@window@stretch@height\fi
+    \ifdim\semio@window@stretch@width>0pt ,width=\the\semio@window@stretch@width\fi
+  }%
+  \expandafter\semio@window@tcolorbox@begin@with\expandafter{\semio@window@tcb@keys}%
 }
 \newlength{\semio@window@row@gutter}
 \setlength{\semio@window@row@gutter}{\semio@spacing@single}
@@ -1768,7 +1769,11 @@
 \newsavebox{\semio@window@measure@box}
 
 \newcommand{\semio@window@row@col}[2]{%
-  \begin{minipage}[t]{#1}\raggedright #2\end{minipage}%
+  \ifdim\semio@window@stretch@height>0pt
+    \begin{minipage}[t][\semio@window@row@h@max][t]{#1}\raggedright #2\end{minipage}%
+  \else
+    \begin{minipage}[t]{#1}\raggedright #2\end{minipage}%
+  \fi
 }
 
 \newcommand{\semio@window@row@measure}[3]{%
@@ -1789,35 +1794,63 @@
   \fi
 }
 
+\newcommand{\semio@window@row@chrome@h@ensure}{%
+  \ifdim\semio@window@row@chrome@h>0pt\else
+    \setlength{\semio@window@stretch@height}{0pt}%
+    \begin{lrbox}{\semio@window@measure@box}%
+      \semio@window@header@muted{~}{~}%
+    \end{lrbox}%
+    \setlength{\semio@window@row@chrome@h}{%
+      \dimexpr\ht\semio@window@measure@box+\dp\semio@window@measure@box\relax
+    }%
+  \fi
+}
+
+\newcommand{\semio@window@row@body@h@apply}{%
+  \ifdim\semio@window@row@h@max>\semio@window@row@chrome@h
+    \setlength{\semio@window@stretch@height}{%
+      \dimexpr\semio@window@row@h@max-\semio@window@row@chrome@h\relax
+    }%
+  \else
+    \setlength{\semio@window@stretch@height}{0pt}%
+  \fi
+}
+
 \newcommand{\SemioWindowRowTwo}[2]{%
+  \setlength{\semio@window@row@h@max}{0pt}%
   \setlength{\semio@window@row@col@w}{\dimexpr(\linewidth-\semio@window@row@gutter)/2\relax}%
+  \semio@window@row@chrome@h@ensure
   \semio@window@row@measure{\semio@window@row@col@w}{#1}{\semio@window@row@h@a}%
   \semio@window@row@measure{\semio@window@row@col@w}{#2}{\semio@window@row@h@b}%
   \semio@window@row@h@max@set{\semio@window@row@h@a}%
   \semio@window@row@h@max@update{\semio@window@row@h@b}%
-  \setlength{\semio@window@stretch@height}{\semio@window@row@h@max}%
+  \semio@window@row@body@h@apply
   \noindent\hbox to \linewidth{%
     \semio@window@row@col{\semio@window@row@col@w}{#1}\hspace{\semio@window@row@gutter}%
     \semio@window@row@col{\semio@window@row@col@w}{#2}%
   }\par
   \setlength{\semio@window@stretch@height}{0pt}%
+  \setlength{\semio@window@row@h@max}{0pt}%
 }
 
 \newcommand{\SemioWindowRowThree}[3]{%
+  \setlength{\semio@window@row@h@max}{0pt}%
   \setlength{\semio@window@row@col@w}{\dimexpr(\linewidth-2\semio@window@row@gutter)/3\relax}%
+  \semio@window@row@chrome@h@ensure
   \semio@window@row@measure{\semio@window@row@col@w}{#1}{\semio@window@row@h@a}%
   \semio@window@row@measure{\semio@window@row@col@w}{#2}{\semio@window@row@h@b}%
   \semio@window@row@measure{\semio@window@row@col@w}{#3}{\semio@window@row@h@c}%
   \semio@window@row@h@max@set{\semio@window@row@h@a}%
   \semio@window@row@h@max@update{\semio@window@row@h@b}%
   \semio@window@row@h@max@update{\semio@window@row@h@c}%
-  \setlength{\semio@window@stretch@height}{\semio@window@row@h@max}%
+  \semio@window@row@body@h@apply
   \noindent\hbox to \linewidth{%
     \semio@window@row@col{\semio@window@row@col@w}{#1}\hspace{\semio@window@row@gutter}%
     \semio@window@row@col{\semio@window@row@col@w}{#2}\hspace{\semio@window@row@gutter}%
     \semio@window@row@col{\semio@window@row@col@w}{#3}%
   }\par
   \setlength{\semio@window@stretch@height}{0pt}%
+  \setlength{\semio@window@row@h@max}{0pt}%
 }
 %endregion WindowRow
 

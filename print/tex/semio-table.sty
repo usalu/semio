@@ -177,14 +177,19 @@
 }
 
 \newcommand{\semio@glossary@pages@dedup@add}[1]{%
-  \edef\semio@glossary@page@num{\getpagerefnumber{#1}}%
-  \edef\semio@glossary@page@key{\detokenize\expandafter{\semio@glossary@page@num}}%
-  \@ifundefined{semio@glossary@seen@\semio@glossary@page@key}{%
-    \global\@namedef{semio@glossary@seen@\semio@glossary@page@key}{1}%
-    \edef\semio@glossary@pages@out{%
-      \semio@glossary@pages@out\semio@glossary@pages@sep\noexpand\semio@glossary@page@link{#1}}%
-    \gdef\semio@glossary@pages@sep{, }%
-  }{}%
+  \ifcsname r@#1\endcsname
+    \edef\semio@glossary@page@num{\getpagerefnumber{#1}}%
+    \if\relax\detokenize\expandafter{\semio@glossary@page@num}\relax
+    \else
+      \edef\semio@glossary@page@key{\detokenize\expandafter{\semio@glossary@page@num}}%
+      \@ifundefined{semio@glossary@seen@\semio@glossary@page@key}{%
+        \global\@namedef{semio@glossary@seen@\semio@glossary@page@key}{1}%
+        \edef\semio@glossary@pages@out{%
+          \semio@glossary@pages@out\semio@glossary@pages@sep\noexpand\semio@glossary@page@link{#1}}%
+        \gdef\semio@glossary@pages@sep{, }%
+      }{}%
+    \fi
+  \fi
 }
 
 \newcommand{\semio@glossary@pages@render}[1]{%
