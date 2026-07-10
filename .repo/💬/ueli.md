@@ -240,6 +240,13 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+ui, os, playgrounds:
+Every window receives its own toolbar strip on the bottom (same as footer but floating and glassy like window options).
+Tools are now on window level.
+In the footer should only remain app mode wide commands.
+
+---
+
 Create two new technology called:
 imperative and sequence
 imperative is like neural a headless computation engine

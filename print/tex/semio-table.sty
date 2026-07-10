@@ -23,6 +23,7 @@
   \semio_table_header_row:n {#1}
   \\
   \hline
+  \noalign{\vskip-\topskip}
   \global\semio@table@row@startedfalse
 }
 \cs_new_protected:Npn \semio_table_dot_count_int:n #1 {
@@ -78,8 +79,14 @@
 \semio@table@long@first@rowtrue
 
 \newcommand{\semio@table@setup}{%
-  \setlength{\semio@table@header@height}{\dimexpr9\semio@spacing@unit\relax}%
-  \setlength{\semio@table@body@height}{\dimexpr7\semio@spacing@unit\relax}%
+  \setlength{\semio@table@header@height}{\dimexpr
+    \semio@spacing@unit+\semio@spacing@unit+\semio@spacing@unit+\semio@spacing@unit+\semio@spacing@unit
+    +\semio@spacing@unit+\semio@spacing@unit+\semio@spacing@unit+\semio@spacing@unit
+  \relax}%
+  \setlength{\semio@table@body@height}{\dimexpr
+    \semio@spacing@unit+\semio@spacing@unit+\semio@spacing@unit+\semio@spacing@unit
+    +\semio@spacing@unit+\semio@spacing@unit+\semio@spacing@unit
+  \relax}%
   \global\semio@table@row@startedfalse
   \arrayrulecolor{semio-chrome-border-normal}%
   \setlength{\arrayrulewidth}{\semio@stroke@hairline}%
@@ -146,6 +153,7 @@
   \semio@table@header@cell{#2} &
   \semio@table@header@cell{#3} \\
   \hline
+  \noalign{\vskip-\topskip}%
   \global\semio@table@row@startedfalse
 }
 

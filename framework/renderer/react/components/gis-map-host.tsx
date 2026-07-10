@@ -357,7 +357,7 @@ class MapRenderer {
   }
 
   async refreshTiles(): Promise<void> {
-    if (!this.canvasEl) return;
+    if (this.disposed || !this.canvasEl) return;
     if (this.refreshInFlight) {
       this.tilesRefreshQueued = true;
       return this.refreshInFlight;
@@ -396,6 +396,7 @@ class MapRenderer {
   }
 
   private async refreshRasterTiles(): Promise<void> {
+    if (this.disposed) return;
     const visibleKey = this.session.visibleTilesJson();
     const rows = parseVisibleTilesJson(visibleKey);
     if (rows.length === 0) return;
@@ -417,6 +418,7 @@ class MapRenderer {
         buf = await res.arrayBuffer();
         this.tileCache.set(key, buf);
       }
+      if (this.disposed) return;
       this.session.uploadTile(row.z, row.x, row.y, new Uint8Array(buf));
     };
     for (let i = 0; i < rows.length; i += MAX_CONCURRENT_TILE_FETCHES) {
@@ -425,6 +427,7 @@ class MapRenderer {
   }
 
   async refreshVectorTiles(): Promise<void> {
+    if (this.disposed) return;
     const visibleKey = this.session.visibleVectorTilesJson();
     const rows = parseVisibleTilesJson(visibleKey);
     if (rows.length === 0) return;
@@ -446,6 +449,7 @@ class MapRenderer {
         buf = await res.arrayBuffer();
         this.vectorTileCache.set(key, buf);
       }
+      if (this.disposed) return;
       this.session.uploadVectorTile(row.z, row.x, row.y, new Uint8Array(buf));
     };
     for (let i = 0; i < rows.length; i += MAX_CONCURRENT_TILE_FETCHES) {
@@ -656,6 +660,8 @@ export function GisMapHost({ node, onCommand }: { readonly node: UiComponentScen
 
   const mirrorSessionCameraToReactRef = useRef(mirrorSessionCameraToReact);
   mirrorSessionCameraToReactRef.current = mirrorSessionCameraToReact;
+  const dispatchCameraRef = useRef(dispatchCamera);
+  dispatchCameraRef.current = dispatchCamera;
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -738,7 +744,7 @@ export function GisMapHost({ node, onCommand }: { readonly node: UiComponentScen
           const bootCamera = renderer.readCameraFromSession();
           if (bootCamera) {
             renderer.applyCameraToSession(bootCamera);
-            dispatchCamera(bootCamera);
+            dispatchCameraRef.current(bootCamera);
           }
         }
         renderer.syncDescriptor(scene.mapFixtureJson);
@@ -760,7 +766,7 @@ export function GisMapHost({ node, onCommand }: { readonly node: UiComponentScen
       rendererRef.current?.dispose();
       rendererRef.current = null;
     };
-  }, [clampCamera, dispatchCamera, readContainerSize, resolveMapPaneElement, scene?.tileUrlTemplate, scene?.vectorTileUrlTemplate]);
+  }, [clampCamera, readContainerSize, resolveMapPaneElement, scene?.tileUrlTemplate, scene?.vectorTileUrlTemplate]);
 
   useEffect(() => {
     if (!scene) return;

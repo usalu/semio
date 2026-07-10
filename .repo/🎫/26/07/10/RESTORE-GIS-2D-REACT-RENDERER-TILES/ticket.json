@@ -1,0 +1,13 @@
+{
+  "title": "Restore GIS 2D React Renderer Tiles",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "GIS 2D shows no tiles (neither raster image nor vector). MapSession.uploadTile and uploadVectorTile throw \"null pointer passed to rust\" from wasm-bindgen in framework/renderer/react/components/gis-map-host.tsx. Bring the react renderer back to premigration level (git tag `premigration`, where gis/2d/react/index.tsx rendered tiles correctly) on the migrated architecture.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1902"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪e65e97b45dc341cd963e491ba3686dfa"
+  ]
+}
