@@ -288,6 +288,7 @@
 \tl_new:N \l_semio_glossary_title_tl
 \tl_new:N \l_semio_glossary_definition_tl
 \tl_new:N \l_semio_glossary_labels_tl
+\tl_new:N \l_semio_glossary_pages_tl
 
 \cs_new_protected:Npn \semio_glossary_term_ensure:n #1 {
   \prop_if_in:NnF \g_semio_glossary_pages_prop {#1} {
@@ -354,18 +355,46 @@
   }
 }
 
-\cs_new_protected:Npn \semio_glossary_row_emit:n #1 {
-  \tl_set:Nn \l_tmpb_tl {#1}
-  \prop_get:NnNTF \g_semio_glossary_definition_prop {#1} \l_semio_glossary_definition_tl {
-  } { \tl_clear:N \l_semio_glossary_definition_tl }
+\cs_generate_variant:Nn \semio_glossary_pages_to_tl_aux:n { V }
+
+\cs_new_protected:Npn \semio_glossary_pages_to_tl:n #1 {
   \semio_glossary_labels_csv:n {#1}
+  \semio_glossary_pages_to_tl_aux:V \l_tmpd_tl
+}
+
+\cs_new_protected:Npn \semio_glossary_pages_to_tl_aux:n #1 {
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
-  \exp_args:NNNo \SemioGlossaryTableRow
-    \l_tmpb_tl
-    \l_semio_glossary_definition_tl
-    \l_tmpd_tl
+  \if\relax\detokenize{#1}\relax
+    \tl_set:Nn \l_semio_glossary_pages_tl { -- }
+  \else
+    \edef\semio@glossary@pages@text{\semio@glossary@pages@render{#1}}%
+    \tl_set:Nx \l_semio_glossary_pages_tl { \semio@glossary@pages@text }
+  \fi
+  \makeatother
+  \group_end:
+}
+
+\cs_generate_variant:Nn \semio_glossary_row_emit_in_table_aux:nnn { VVV }
+
+\cs_new_protected:Npn \semio_glossary_row_emit_in_table:n #1 {
+  \tl_set:Nn \l_tmpb_tl {#1}
+  \prop_get:NnNTF \g_semio_glossary_definition_prop {#1} \l_semio_glossary_definition_tl {
+  } { \tl_clear:N \l_semio_glossary_definition_tl }
+  \semio_glossary_pages_to_tl:n {#1}
+  \tl_set:Nx \l_tmpx_tl { \tl_use:N \l_tmpb_tl }
+  \tl_set:Nx \l_tmpy_tl { \tl_use:N \l_semio_glossary_definition_tl }
+  \tl_set:Nx \l_tmpz_tl { \tl_use:N \l_semio_glossary_pages_tl }
+  \semio_glossary_row_emit_in_table_aux:VVV
+    \l_tmpx_tl \l_tmpy_tl \l_tmpz_tl
+}
+
+\cs_new_protected:Npn \semio_glossary_row_emit_in_table_aux:nnn #1#2#3 {
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \SemioGlossaryTableRowText{#1}{#2}{#3}%
   \makeatother
   \group_end:
 }
@@ -373,7 +402,7 @@
 \cs_new_protected:Npn \semio_glossary_rows_emit_for_table: {
   \semio_glossary_terms_sort:
   \seq_map_inline:Nn \l_semio_glossary_sorted_terms_seq {
-    \semio_glossary_row_emit:n { ##1 }
+    \semio_glossary_row_emit_in_table:n { ##1 }
   }
 }
 
@@ -903,8 +932,8 @@
 
 \newcounter{semioglossaryusage}
 
-\newcommand{\semio@glossary@rows@emit}{%
-  \csname semio_glossary_rows_emit_for_table:\endcsname
+\DeclareRobustCommand{\semio@glossary@data}[3]{%
+  \SemioGlossaryTableRow{#1}{#2}{#3}%
 }
 
 \newcommand{\semio@glossary@table@header}{%
@@ -1636,27 +1665,43 @@
 \def\semio@tcb@variant@fit{fit}
 \def\semio@tcb@variant@default{default}
 \newcommand{\semio@window@tcolorbox@begin}{%
-  \def\semio@window@tcb@tag{\semio@window@tcb@variant}%
-  \ifx\semio@window@tcb@tag\semio@tcb@variant@table
+  \ifx\semio@window@tcb@variant\semio@tcb@variant@table
     \def\semio@window@tcb@style{semio~window~table}%
-  \else\ifx\semio@window@tcb@tag\semio@tcb@variant@row
+  \else\ifx\semio@window@tcb@variant\semio@tcb@variant@row
     \def\semio@window@tcb@style{semio~window~row}%
-  \else\ifx\semio@window@tcb@tag\semio@tcb@variant@fit
+  \else\ifx\semio@window@tcb@variant\semio@tcb@variant@fit
     \def\semio@window@tcb@style{semio~window~fit}%
   \else
     \def\semio@window@tcb@style{breakable=false}%
   \fi\fi\fi
   \edef\semio@window@tcb@keys{%
-    semio~window~tier~\semio@window@tcb@tier, \semio@window@tcb@style,%
-    valign=\semio@window@valign,halign=\semio@window@halign%
-    \ifdim\semio@window@stretch@height>0pt ,height=\the\semio@window@stretch@height\fi
-    \ifdim\semio@window@stretch@width>0pt ,width=\the\semio@window@stretch@width\fi
+    \ifdim\semio@window@stretch@height>0pt height=\the\semio@window@stretch@height,\fi
+    \ifdim\semio@window@stretch@width>0pt width=\the\semio@window@stretch@width,\fi
+    semio~window~tier~\semio@window@tcb@tier,%
+    \semio@window@tcb@style,%
+    valign=\semio@window@valign,%
+    halign=\semio@window@halign%
   }%
-  \expandafter\begin\expandafter{tcolorbox}\expandafter[\semio@window@tcb@keys]%
+  \begin{tcolorbox}[\semio@window@tcb@keys]%
 }
 \newcommand{\semio@window@tcolorbox@open}[2]{%
   \def\semio@window@tcb@tier{#1}%
-  \def\semio@window@tcb@variant{#2}%
+  \edef\semio@window@tcb@vstr{\detokenize{#2}}%
+  \edef\semio@tcb@name@table{\detokenize{table}}%
+  \edef\semio@tcb@name@row{\detokenize{row}}%
+  \edef\semio@tcb@name@fit{\detokenize{fit}}%
+  \edef\semio@tcb@name@default{\detokenize{default}}%
+  \ifx\semio@window@tcb@vstr\semio@tcb@name@table
+    \let\semio@window@tcb@variant\semio@tcb@variant@table
+  \else\ifx\semio@window@tcb@vstr\semio@tcb@name@row
+    \let\semio@window@tcb@variant\semio@tcb@variant@row
+  \else\ifx\semio@window@tcb@vstr\semio@tcb@name@fit
+    \let\semio@window@tcb@variant\semio@tcb@variant@fit
+  \else\ifx\semio@window@tcb@vstr\semio@tcb@name@default
+    \let\semio@window@tcb@variant\semio@tcb@variant@default
+  \else
+    \let\semio@window@tcb@variant\semio@tcb@variant@default
+  \fi\fi\fi\fi
   \semio@window@tcolorbox@begin
 }
 \ExplSyntaxOn
@@ -1697,7 +1742,7 @@
 
 \newcommand{\semio@window@row@chrome@h@ensure}{%
   \setlength{\semio@window@row@chrome@h}{%
-    \dimexpr\semio@chrome@titlebar@height+2\semio@chrome@padding+2\semio@stroke@hairline\relax
+    \dimexpr\semio@chrome@titlebar@height+2\semio@chrome@padding+2\semio@stroke@hairline+3pt\relax
   }%
 }
 
@@ -1909,6 +1954,7 @@
 \ExplSyntaxOn
 \NewDocumentCommand \SemioTocDepth { m } { \setcounter { tocdepth } { #1 } }
 \NewDocumentCommand \semio@tableofcontents { } { \semio_window_toc_render: }
+\NewDocumentCommand \semio@glossary@rows@emit { } { \semio_glossary_rows_emit_for_table: }
 \RenewDocumentCommand \tableofcontents { } { \semio@tableofcontents }
 \ExplSyntaxOff
 \makeatother
