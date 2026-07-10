@@ -7581,16 +7581,29 @@ fn key_action_from_event(event: &KeyEvent) -> Option<KeyAction> {
 }
 
 
-pub use cursor::{resolve_semio_cursor, apply_window_cursor, CursorDragState, SemioCursor};
-#[cfg(target_arch = "wasm32")]
-pub use cursor::apply_canvas_cursor;
-pub use draw::{mesh_content_version, DrawList, IconAtlas, MeshGpuStore, RasterTextureStore, ear_clip_polygon, paint_selection_marquee};
+// #region re-exports
+// 🧩 Always available: declarative component types + engine-agnostic primitives (default features).
 pub use geometry::Rect;
+pub use theme::{GlassTier, Rgba, Theme};
+
+// 🖥️ Retained-mode engine surface (feature = "engine" only).
+#[cfg(feature = "engine")]
+pub use cursor::{resolve_semio_cursor, apply_window_cursor, CursorDragState, SemioCursor};
+#[cfg(all(feature = "engine", target_arch = "wasm32"))]
+pub use cursor::apply_canvas_cursor;
+#[cfg(feature = "engine")]
+pub use draw::{mesh_content_version, DrawList, IconAtlas, MeshGpuStore, RasterTextureStore, ear_clip_polygon, paint_selection_marquee};
+#[cfg(feature = "engine")]
 pub use gpu::GpuContext;
+#[cfg(feature = "engine")]
 pub use gpu::schedule_frame;
+#[cfg(feature = "engine")]
 pub use host::{dispatch_window_event, modifiers_from_winit, pointer_coords, WindowInputState};
+#[cfg(feature = "engine")]
 pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
+#[cfg(feature = "engine")]
 pub use layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
+#[cfg(feature = "engine")]
 pub use kernel_3d_scene::{
     aabb_intersects_frustum, axis_rotate_angle, Camera3d, frustum_planes, gumball_axis_drag_plane_normal,
     gumball_extent, gumball_eye, gumball_project_ray_onto_axis, Instance3d, LineDraw3d, LineVertex3d, Mat4,
@@ -7599,14 +7612,17 @@ pub use kernel_3d_scene::{
     ray_aabb_slab, ray_pick_instance, rect_contains, screen_select_instances, transform_aabb,
     marquee_is_crossing_from_path,
 };
+#[cfg(feature = "engine")]
 pub use text::{fetch_font_bytes, FontAtlas};
-pub use theme::{GlassTier, Rgba, Theme};
+#[cfg(feature = "engine")]
 pub use chrome::{
     chrome_item_bg, chrome_item_text, item_bg, item_text, measure_action_item, push_chrome_border,
     push_chrome_group_border, push_control_border, push_icon, push_window_cap_border, ICON_TINY,
 };
+#[cfg(feature = "engine")]
 pub use widgets::{
     draw_icon, draw_text, draw_text_overlay, draw_text_wrapped, measure_widget, render_scroll_region, render_widget,
     wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta,
     TreeItem, TreeItemAction, TreeSection, Vec3Meta, WidgetContext, WidgetInteractionMaps, WidgetNode,
 };
+// #endregion re-exports

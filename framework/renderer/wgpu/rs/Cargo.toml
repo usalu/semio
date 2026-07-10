@@ -18,7 +18,7 @@ infinite_cavas = { path = "../../../../infinite/cavas/rs" }
 infinite_world = { path = "../../../../infinite/world/rs" }
 gis_2d = { path = "../../../../gis/2d/rs" }
 flow_core = { path = "../../../../flow/core/rs" }
-ui_wgpu = { path = "../../../../ui/wgpu/rs" }
+ui_wgpu = { path = "../../../../ui/wgpu/rs", features = ["engine"] }
 semio-framework-plugin = { path = "../../../plugin/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

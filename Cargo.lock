@@ -2734,6 +2734,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "fsm"
+version = "0.1.0"
+dependencies = [
+ "fsm_macros",
+ "js-sys",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "fsm_macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "futures"
 version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"

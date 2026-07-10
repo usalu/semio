@@ -104,6 +104,8 @@ members = [
     "s/plugin/rs",
     "framework/product/presentation/plugin/rs",
     "framework/product/os/hub/rs",
+    "fsm/rs",
+    "fsm/macros/rs",
 ]
 
 resolver = "2"

@@ -227,6 +227,7 @@
     "esbuild": "^0.27.2"
   },
   "overrides": {
+    "@radix-ui/react-slot": "^1.2.5",
     "@semio-tech/semio-asset": "workspace:*",
     "@semio-tech/compose-js": "workspace:*",
     "diff": "^8.0.3",

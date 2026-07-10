@@ -1258,6 +1258,15 @@ mod tests {
     }
 
     #[test]
+    fn empty_document_background_layer_has_identity_scale() {
+        let document = empty_raster_document();
+        let json = document_sync_json(&document);
+        assert!(json.contains(r#""scaleX":1.0"#), "expected identity scale in {json}");
+        assert!(json.contains(r#""scaleY":1.0"#), "expected identity scale in {json}");
+        assert!(!json.contains(r#""scaleX":0.0"#), "layer must not collapse to zero size");
+    }
+
+    #[test]
     fn renders_layers_tree() {
         let app = RasterApp;
         let document = SEMIO_EXAMPLE_JSON.to_string();

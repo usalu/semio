@@ -10,7 +10,6 @@ use cad_document::{
     ExprPathSegment, ExprPathTarget, InteractionSpec,
 };
 use kernel_3d_brepkit::BrepkitKernel;
-use kernel_3d_engine::BrepKernel;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -306,22 +305,64 @@ fn context_target_field(target: &ExprPathTarget) -> Option<&str> {
     }
 }
 
-/// Executes an `action` effect by name. Only `command.addPoint` (used by sphere/circle/etc. to
-/// record a named point into a `context[field][key]` map) is interpreted — the `box.*` rubber-band
-/// helpers and selection-driven actions (used only by box's advanced cube/3-point/center sub-modes
-/// and by selection-based tools) are a documented follow-up; they no-op here rather than error.
-fn run_named_action_effect(context: &mut HashMap<String, Value>, action: &str, params: &HashMap<String, Value>) {
-    if action == "command.addPoint" {
-        let field = params.get("field").and_then(|value| value.as_str()).unwrap_or("points").to_string();
-        let key = params.get("key").and_then(|value| value.as_str()).map(str::to_string);
-        let point = params.get("point").cloned().unwrap_or(Value::Null);
-        let entry = context.entry(field).or_insert_with(|| json!({}));
-        if !entry.is_object() {
-            *entry = json!({});
+/// Wraps a raw event payload into the shape the JSON specs' `event.*` path expressions expect:
+/// `pointer.down`/`pointer.move` read `event.point`, `set.*` events read `event.value`. Callers
+/// (both `lib.rs`'s command handlers and this module's own tests) pass raw values (a `[x,y,z]`
+/// array, a bare number) for brevity — already-wrapped objects pass through unchanged.
+fn normalize_event_payload(event_kind: &str, payload: Option<&Value>) -> Option<Value> {
+    let payload = payload?;
+    if payload.is_object() {
+        return Some(payload.clone());
+    }
+    if event_kind == "pointer.down" || event_kind == "pointer.move" {
+        return Some(json!({ "point": payload }));
+    }
+    if event_kind.starts_with("set.") {
+        return Some(json!({ "value": payload }));
+    }
+    Some(payload.clone())
+}
+
+/// Executes an `action` effect by name.
+///
+/// `command.addPoint` (used by sphere/circle/etc.) records a named point into a
+/// `context[field][key]` map. `box.aabbFromDiagonalCorners` (box's default diagonal-mode second
+/// click) derives `context.origin`/`context.corner` — the axis-aligned min/max of `context.diagA`
+/// and `event.point` — which `hasValidBox` and the commit params then read.
+///
+/// The remaining `box.*` rubber-band helpers and selection-driven actions (used only by box's
+/// advanced cube/3-point/center sub-modes and by selection-based tools) are a documented
+/// follow-up; they no-op here rather than error.
+fn run_named_action_effect(
+    context: &mut HashMap<String, Value>,
+    payload: Option<&Value>,
+    action: &str,
+    params: &HashMap<String, Value>,
+) {
+    match action {
+        "command.addPoint" => {
+            let field = params.get("field").and_then(|value| value.as_str()).unwrap_or("points").to_string();
+            let key = params.get("key").and_then(|value| value.as_str()).map(str::to_string);
+            let point = params.get("point").cloned().unwrap_or(Value::Null);
+            let entry = context.entry(field).or_insert_with(|| json!({}));
+            if !entry.is_object() {
+                *entry = json!({});
+            }
+            if let (Some(key), Some(object)) = (key, entry.as_object_mut()) {
+                object.insert(key, point);
+            }
         }
-        if let (Some(key), Some(object)) = (key, entry.as_object_mut()) {
-            object.insert(key, point);
+        "box.aabbFromDiagonalCorners" => {
+            let diag_a = context.get("diagA").and_then(parse_vec3);
+            let second = payload.and_then(|value| value.get("point")).and_then(parse_vec3);
+            if let (Some(a), Some(b)) = (diag_a, second) {
+                let origin = [a[0].min(b[0]), a[1].min(b[1]), a[2].min(b[2])];
+                let corner = [a[0].max(b[0]), a[1].max(b[1]), a[2].max(b[2])];
+                context.insert("origin".into(), vec3_json(origin));
+                context.insert("corner".into(), vec3_json(corner));
+            }
         }
+        _ => {}
     }
 }
 
@@ -357,7 +398,7 @@ fn apply_effect(session: &mut CadEngagementSession, payload: Option<&Value>, eff
             let env = ExprEnv { context: &session.context, event: payload };
             let evaluated: HashMap<String, Value> =
                 params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, &env, &empty_vars))).collect();
-            run_named_action_effect(&mut session.context, action, &evaluated);
+            run_named_action_effect(&mut session.context, payload, action, &evaluated);
         }
         // Emit/OpenTransaction/CommitTransaction/RollbackTransaction/RequestPreview/KernelQuery/
         // ResolveEditable/SetDiagnostic/ClearDiagnostic/InteractionCall are not yet interpreted —
@@ -368,7 +409,7 @@ fn apply_effect(session: &mut CadEngagementSession, payload: Option<&Value>, eff
     }
 }
 
-fn apply_event_generic(session: &mut CadEngagementSession, event_kind: &str, payload: Option<&Value>, depth: u8) -> bool {
+fn apply_event_generic(session: &mut CadEngagementSession, event_kind: &str, raw_payload: Option<&Value>, depth: u8) -> bool {
     if depth > 8 {
         return false;
     }
@@ -381,6 +422,8 @@ fn apply_event_generic(session: &mut CadEngagementSession, event_kind: &str, pay
     let Some(handler) = state.on.iter().find(|handler| handler.event == event_kind) else {
         return false;
     };
+    let normalized = normalize_event_payload(event_kind, raw_payload);
+    let payload = normalized.as_ref();
     let chosen = handler.transitions.iter().find(|transition| match &transition.guard {
         None => true,
         Some(name) => {
@@ -930,7 +973,6 @@ mod tests {
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }))));
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [4.0, 0.0, 0.0] }))));
         assert!(apply_event(&mut session, "set.height", Some(&json!({ "value": 3.0 }))));
-        assert!(apply_event(&mut session, "confirm", None));
         assert!(can_commit(&session));
         let mut kernel = BrepkitKernel::new();
         let object = commit_object(&mut kernel, &session, 0, |prefix| format!("{prefix}-1"));
@@ -947,7 +989,6 @@ mod tests {
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [1.0, 1.0, 0.0] }))));
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [1.5, 1.0, 0.0] }))));
         assert!(apply_event(&mut session, "set.height", Some(&json!({ "value": 3.0 }))));
-        assert!(apply_event(&mut session, "confirm", None));
         let mut kernel = BrepkitKernel::new();
         let object = commit_object(&mut kernel, &session, 0, |prefix| format!("{prefix}-1"));
         let object = object.expect("column commits");
@@ -966,7 +1007,6 @@ mod tests {
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }))));
         assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [4.0, 5.0, 0.0] }))));
         assert!(apply_event(&mut session, "set.height", Some(&json!({ "value": 0.3 }))));
-        assert!(apply_event(&mut session, "confirm", None));
         let mut kernel = BrepkitKernel::new();
         let object = commit_object(&mut kernel, &session, 0, |prefix| format!("{prefix}-1"));
         assert!(object.is_some());

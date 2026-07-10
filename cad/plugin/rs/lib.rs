@@ -2292,6 +2292,36 @@ fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId)
     object
 }
 
+/// Commits `session` if it satisfies `can_commit`, dispatching the resulting object and clearing
+/// the session. Returns `true` when a commit happened (used by both the direct-event and
+/// keyed-transition REPL paths in `engagement_submit_line` — a state reached via either path can
+/// be commit-ready, e.g. box's explicit `confirm` step only reachable via a keyed transition).
+fn try_commit_session_if_ready(envelope: &mut CadPlayEnvelope, pane: CadPaneId, session: &CadEngagementSession) -> bool {
+    if !can_commit(session) {
+        return false;
+    }
+    let label_count = cad_pane_objects(&envelope.document, pane).len();
+    let Ok(mut kernel) = cad_brep_kernel().lock() else {
+        return false;
+    };
+    let Some(object) = commit_object(&mut kernel, session, label_count, |prefix| next_cad_id(prefix)) else {
+        return false;
+    };
+    drop(kernel);
+    let id = object.id.clone();
+    let interaction_id = session.interaction_id.clone();
+    if dispatch_cad_ops(envelope, vec![CadOp::AddObject { pane, object }]) {
+        envelope.runtime.selected_object_ids = vec![id];
+        envelope.runtime.engagement_input.clear();
+        envelope.runtime.last_finalized_interaction_id = Some(interaction_id);
+        envelope.runtime.engagement_session = None;
+        envelope.runtime.engagement_step = "Idle".into();
+        true
+    } else {
+        false
+    }
+}
+
 fn engagement_submit_line(envelope: &mut CadPlayEnvelope, pane: CadPaneId) -> bool {
     let input = envelope.runtime.engagement_input.trim();
     if input.is_empty() {
@@ -2301,40 +2331,29 @@ fn engagement_submit_line(envelope: &mut CadPlayEnvelope, pane: CadPaneId) -> bo
     let model_definition_id = pane.model_definition_id();
     let current_state = envelope.runtime.engagement_session.as_ref().map(|session| session.state.clone());
     if let Some((event_kind, payload)) = parse_repl_line(input, current_state.as_deref()) {
+        // An active session's own events/keyed-transitions always take priority over starting an
+        // unrelated interaction by key — otherwise a mid-flow keypress that happens to collide
+        // with another interaction's top-level key (e.g. box's "d" for diagonal mode vs. length's
+        // top-level key "d") would silently abandon the current session.
         if let Some(session) = envelope.runtime.engagement_session.as_mut() {
             if apply_event(session, &event_kind, payload.as_ref()) {
                 envelope.runtime.engagement_step = session.state.clone();
-                let ready = can_commit(session);
-                let session_snapshot = if ready { Some(session.clone()) } else { None };
-                if let Some(session_snapshot) = session_snapshot {
-                    let label_count = cad_pane_objects(&envelope.document, pane).len();
-                    if let Ok(mut kernel) = cad_brep_kernel().lock() {
-                        if let Some(object) = commit_object(
-                            &mut kernel,
-                            &session_snapshot,
-                            label_count,
-                            |prefix| next_cad_id(prefix),
-                        ) {
-                            let id = object.id.clone();
-                            if dispatch_cad_ops(
-                                envelope,
-                                vec![CadOp::AddObject { pane, object }],
-                            ) {
-                                envelope.runtime.selected_object_ids = vec![id];
-                                envelope.runtime.engagement_input.clear();
-                                envelope.runtime.last_finalized_interaction_id =
-                                    Some(session_snapshot.interaction_id.clone());
-                                envelope.runtime.engagement_session = None;
-                                envelope.runtime.engagement_step = "Idle".into();
-                                return true;
-                            }
-                        }
-                    }
-                }
+                let session_snapshot = session.clone();
+                try_commit_session_if_ready(envelope, pane, &session_snapshot);
                 return true;
             }
-        }
-        if let Some(entry) = resolve_interaction_key(&event_kind, model_definition_id) {
+            for transition in keyed_transitions(session) {
+                if transition.key.eq_ignore_ascii_case(input) || transition.event_kind.eq_ignore_ascii_case(input) {
+                    if apply_event(session, &transition.event_kind, None) {
+                        envelope.runtime.engagement_step = session.state.clone();
+                        envelope.runtime.engagement_input.clear();
+                        let session_snapshot = session.clone();
+                        try_commit_session_if_ready(envelope, pane, &session_snapshot);
+                        return true;
+                    }
+                }
+            }
+        } else if let Some(entry) = resolve_interaction_key(&event_kind, model_definition_id) {
             envelope.runtime.engagement_session = start_session(&entry.id, pane);
             if let Some(session) = envelope.runtime.engagement_session.as_mut() {
                 let _ = apply_event(session, "start", None);
@@ -2347,17 +2366,6 @@ fn engagement_submit_line(envelope: &mut CadPlayEnvelope, pane: CadPaneId) -> bo
                 .unwrap_or_else(|| "Idle".into());
             envelope.runtime.engagement_input.clear();
             return true;
-        }
-        if let Some(session) = envelope.runtime.engagement_session.as_mut() {
-            for transition in keyed_transitions(session) {
-                if transition.key.eq_ignore_ascii_case(input) || transition.event_kind.eq_ignore_ascii_case(input) {
-                    if apply_event(session, &transition.event_kind, None) {
-                        envelope.runtime.engagement_step = session.state.clone();
-                        envelope.runtime.engagement_input.clear();
-                        return true;
-                    }
-                }
-            }
         }
     }
     envelope.runtime.engagement_step = format!("Unknown: {input}");
@@ -3632,6 +3640,17 @@ mod tests {
         envelope = apply_ops(&envelope, &ops);
         assert!(envelope.runtime.engagement_session.is_some());
 
+        // box.json's default boxMode is "point" (length/width prompt); select diagonal mode (key
+        // "d") to reach the classic two-corner-click flow.
+        envelope.runtime.engagement_input = "d".into();
+        let ops = app.handle_command_patch_ops(
+            "engagementSubmit",
+            Some(&json!({ "pane": "shape" })),
+            &serde_json::to_string(&envelope).unwrap(),
+            &ViewState::default(),
+        );
+        envelope = apply_ops(&envelope, &ops);
+
         for position in [json!([0.0, 0.0, 0.0]), json!([2.0, 3.0, 0.0])] {
             let ops = app.handle_command_patch_ops(
                 "worldPointerDown",
@@ -3643,6 +3662,17 @@ mod tests {
         }
 
         envelope.runtime.engagement_input = "SetHeight2.5".into();
+        let ops = app.handle_command_patch_ops(
+            "engagementSubmit",
+            Some(&json!({ "pane": "shape" })),
+            &serde_json::to_string(&envelope).unwrap(),
+            &ViewState::default(),
+        );
+        envelope = apply_ops(&envelope, &ops);
+
+        // box.json's `set.height` only records the height (state stays first_corner_height);
+        // an explicit `confirm` (Enter) is needed to reach `ready`, box's commit.fromStates.
+        envelope.runtime.engagement_input = "Confirm".into();
         let ops = app.handle_command_patch_ops(
             "engagementSubmit",
             Some(&json!({ "pane": "shape" })),
