@@ -822,10 +822,10 @@ impl ScreenRect {
     }
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct PickTargetJson {
-    domain: &'static str,
+    domain: String,
     id: String,
     generality: u8,
 }
@@ -944,7 +944,7 @@ impl RasterHost {
                     }
                     if let Some(bounds) = self.group_screen_bounds(children) {
                         if bounds.contains_point(sx, sy) && !hits.iter().any(|h| &h.id == id) {
-                            hits.push(PickTargetJson { domain: "group", id: id.clone(), generality: 0 });
+                            hits.push(PickTargetJson { domain: "group".into(), id: id.clone(), generality: 0 });
                         }
                     }
                 }
@@ -957,11 +957,11 @@ impl RasterHost {
                         continue;
                     }
                     if !hits.iter().any(|h| &h.id == id) {
-                        hits.push(PickTargetJson { domain: "pixel", id: id.clone(), generality: 2 });
+                        hits.push(PickTargetJson { domain: "pixel".into(), id: id.clone(), generality: 2 });
                     }
                     for (group_id, group_visible) in ancestors {
                         if *group_visible && !hits.iter().any(|h| &h.id == group_id) {
-                            hits.push(PickTargetJson { domain: "group", id: group_id.clone(), generality: 0 });
+                            hits.push(PickTargetJson { domain: "group".into(), id: group_id.clone(), generality: 0 });
                         }
                     }
                 }
@@ -1299,7 +1299,7 @@ mod tests {
 
     #[test]
     fn parse_play_fixtures() {
-        let json = include_str!("../fixture/semio.raster.json");
+        let json = include_str!("../example/semio.raster.json");
         let doc = parse_document(json).expect("parse semio fixture");
         assert!(!doc.layers.is_empty(), "semio should have layers");
     }

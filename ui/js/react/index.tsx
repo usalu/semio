@@ -9977,6 +9977,13 @@ export const Catalogue: React.FC<CatalogueProps> = ({ title, items, mime = CATAL
   return <Tree className={className} sections={sections} dragAndDropController={dragController ?? catalogueTreeDragController(mime)} />;
 };
 
+let activeCatalogueDragPayload: string | null = null;
+
+/** @emoji 🖱️ Payload of the catalogue drag currently in flight — native HTML5 `dragover` can't read `dataTransfer` until drop, so drop targets (e.g. a canvas host previewing a fixture drop) read this instead. */
+export function getActiveCatalogueDragPayload(): string | null {
+  return activeCatalogueDragPayload;
+}
+
 /** @emoji 🖱️ {@link TreeDragAndDropController} for catalogue rows carrying encoded payloads. */
 export function catalogueTreeDragController(mime: string = CATALOGUE_DRAG_MIME): TreeDragAndDropController {
   const pointerRef = { active: false };
@@ -9994,9 +10001,12 @@ export function catalogueTreeDragController(mime: string = CATALOGUE_DRAG_MIME):
         pointerRef.active = false;
       },
     },
-    onDragStart: () => {},
+    onDragStart: ({ sourceItem }) => {
+      activeCatalogueDragPayload = readEncoded(sourceItem.dragData) ?? null;
+    },
     onDragEnd: () => {
       pointerRef.active = false;
+      activeCatalogueDragPayload = null;
     },
     handleDrop: ({ data, target, targetKind, dropPosition }) => {
       const encoded = readEncoded(data);

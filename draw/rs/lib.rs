@@ -1129,6 +1129,64 @@ pub fn draw_layer_descendant_leaf_ids(layer: &DrawLayerNode) -> Vec<String> {
         _ => vec![layer_id(layer).to_string()],
     }
 }
+
+const CURVE_LINE_SAMPLE_STEPS: usize = 16;
+
+fn sample_quad_points(from: [f64; 2], ctrl: [f64; 2], to: [f64; 2], steps: usize) -> Vec<[f64; 2]> {
+    (1..=steps)
+        .map(|step| {
+            let t = step as f64 / steps as f64;
+            let mt = 1.0 - t;
+            [
+                mt * mt * from[0] + 2.0 * mt * t * ctrl[0] + t * t * to[0],
+                mt * mt * from[1] + 2.0 * mt * t * ctrl[1] + t * t * to[1],
+            ]
+        })
+        .collect()
+}
+
+fn sample_cubic_points(from: [f64; 2], ctrl1: [f64; 2], ctrl2: [f64; 2], to: [f64; 2], steps: usize) -> Vec<[f64; 2]> {
+    (1..=steps)
+        .map(|step| {
+            let t = step as f64 / steps as f64;
+            let mt = 1.0 - t;
+            [
+                mt * mt * mt * from[0] + 3.0 * mt * mt * t * ctrl1[0] + 3.0 * mt * t * t * ctrl2[0] + t * t * t * to[0],
+                mt * mt * mt * from[1] + 3.0 * mt * mt * t * ctrl1[1] + 3.0 * mt * t * t * ctrl2[1] + t * t * t * to[1],
+            ]
+        })
+        .collect()
+}
+
+/// 📏 Flattens `Quad`/`Cubic`/`Arc` segments into `Line` segments — the planar boolean kernel only understands polygons.
+pub fn flatten_segments_to_lines(segments: &[PathSegment]) -> Vec<PathSegment> {
+    let curved = flatten_curve_segments(segments);
+    let mut out = Vec::with_capacity(curved.len());
+    let mut cursor = [0.0, 0.0];
+    for segment in &curved {
+        match segment {
+            PathSegment::Quad { ctrl, to } => {
+                for point in sample_quad_points(cursor, *ctrl, *to, CURVE_LINE_SAMPLE_STEPS) {
+                    out.push(PathSegment::Line { to: point });
+                }
+                cursor = *to;
+            }
+            PathSegment::Cubic { ctrl1, ctrl2, to } => {
+                for point in sample_cubic_points(cursor, *ctrl1, *ctrl2, *to, CURVE_LINE_SAMPLE_STEPS) {
+                    out.push(PathSegment::Line { to: point });
+                }
+                cursor = *to;
+            }
+            other => {
+                if let Some(to) = segment_to_point(other) {
+                    cursor = to;
+                }
+                out.push(other.clone());
+            }
+        }
+    }
+    out
+}
 //#endregion 🔖SegmentGeometry
 
 //#region 🔖KernelResolve
@@ -1174,7 +1232,7 @@ fn resolve_boolean_layer_segments(doc: &DrawDocument, boolean: &DrawBooleanBody)
         .children
         .iter()
         .filter_map(|child_id| find_draw_layer(doc, child_id))
-        .map(|child| transform_path_segments(&flatten_curve_segments(&layer_to_path_segments(child)), &layer_base(child).transform))
+        .map(|child| transform_path_segments(&flatten_segments_to_lines(&layer_to_path_segments(child)), &layer_base(child).transform))
         .filter(|segments| !segments.is_empty())
         .collect();
     if child_segments.is_empty() {

@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_note_canvas_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
-    ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
+    ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical, ui_text, App,
     NoteCanvasScene, CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiSectionNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -13,7 +13,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::LazyLock;
 
 //#region 🔖Constants
 const NOTE_PLAY_APP_ID: &str = "note-play";
@@ -977,6 +976,7 @@ fn render_document_panel(document: &NoteDocument, play: &NotePlayEnvelope, view_
             "setSelection",
             None,
         )),
+        drop_command: None,
     })
 }
 
@@ -1009,12 +1009,19 @@ fn inspector_text_field(block_ids: &[String], field_id: &str, label: &str, value
     UiNode::Field(UiFieldNode {
         id: field_id.into(),
         label: label.into(),
+        description: None,
+        required: None,
+        error: None,
         child: UiControlNode::Input(UiInputNode {
             id: format!("{field_id}.input"),
             input_kind: "text".into(),
             value: mixed.value,
             placeholder: mixed.placeholder,
             commit: None,
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
             on_change: inspector_patch(block_ids, field),
         }),
     })
@@ -1025,6 +1032,9 @@ fn inspector_number_field(block_ids: &[String], field_id: &str, label: &str, val
     UiNode::Field(UiFieldNode {
         id: field_id.into(),
         label: label.into(),
+        description: None,
+        required: None,
+        error: None,
         child: UiControlNode::Input(UiInputNode {
             id: format!("{field_id}.input"),
             input_kind: "number".into(),
@@ -1039,6 +1049,10 @@ fn inspector_number_field(block_ids: &[String], field_id: &str, label: &str, val
                 Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into())
             },
             commit: None,
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
             on_change: inspector_patch(block_ids, field),
         }),
     })
@@ -1098,6 +1112,9 @@ fn render_properties_panel(document: &NoteDocument, play: &NotePlayEnvelope, vie
             UiNode::Field(UiFieldNode {
                 id: "note-properties.visible".into(),
                 label: "Visible".into(),
+                description: None,
+                required: None,
+                error: None,
                 child: UiControlNode::Toggle(UiToggleNode {
                     id: "note-properties.visible.toggle".into(),
                     icon_id: "eye".into(),
@@ -1109,6 +1126,9 @@ fn render_properties_panel(document: &NoteDocument, play: &NotePlayEnvelope, vie
             UiNode::Field(UiFieldNode {
                 id: "note-properties.locked".into(),
                 label: "Locked".into(),
+                description: None,
+                required: None,
+                error: None,
                 child: UiControlNode::Toggle(UiToggleNode {
                     id: "note-properties.locked.toggle".into(),
                     icon_id: "lock".into(),
@@ -1218,7 +1238,7 @@ impl PluginApp for NoteApp {
         command: &str,
         args: Option<&Value>,
         document_json: &str,
-        view_state: &ViewState,
+        _view_state: &ViewState,
     ) -> Vec<String> {
         let mut play = parse_envelope(document_json);
         match command {

@@ -2187,6 +2187,29 @@ mod tests {
     fn validates_media_graph_cycles() {
         assert!(validate_media_graph(&empty_media_graph()).ok);
     }
+
+    #[test]
+    fn presence_upserts_prunes_and_excludes_self() {
+        let port: Arc<dyn OsBackbonePort> = Arc::new(MemoryBackbonePort::new());
+        let peer = |client_id: &str, name: &str, updated_at_ms: f64| OsPresencePeer {
+            client_id: client_id.into(),
+            name: name.into(),
+            selection: vec!["node-1".into()],
+            updated_at_ms,
+        };
+        write_os_presence(&port, "studio-1", peer("client-a", "Ada", 1_000.0)).expect("write a");
+        write_os_presence(&port, "studio-1", peer("client-b", "Bo", 2_000.0)).expect("write b");
+        let peers = read_os_presence_peers(&port, "studio-1", "client-a", 2_500.0);
+        assert_eq!(peers.len(), 1);
+        assert_eq!(peers[0].client_id, "client-b");
+        assert_eq!(peers[0].selection, vec!["node-1".to_string()]);
+        let stale = read_os_presence_peers(&port, "studio-1", "client-a", 2_000.0 + OS_PRESENCE_STALE_MS + 1.0);
+        assert!(stale.is_empty());
+        write_os_presence(&port, "studio-1", peer("client-c", "Cy", 60_000.0)).expect("write c");
+        let pruned = read_os_presence_peers(&port, "studio-1", "", 60_000.0);
+        assert_eq!(pruned.len(), 1);
+        assert_eq!(pruned[0].client_id, "client-c");
+    }
 }
 // #endregion host
 }
@@ -3077,8 +3100,9 @@ pub mod media_graph {
 // #region media_graph
 //! 🎬 Media graph, VFS projection types, and media export registry.
 
+use crate::host::OsOp;
 use crate::instance::{
-    is_parameter_port_id, media_port_spec_id, parameter_id_from_port_id,
+    create_os_id, is_parameter_port_id, media_port_spec_id, parameter_id_from_port_id,
     parameter_port_id, OsAppInstance, OsParameter, OsParameterFieldBinding,
 };
 use crate::registry::{os_app_primary_output_kind, os_app_registration, OsAppRegistration};
@@ -4169,7 +4193,7 @@ mod tests {
             &MediaGraphPosition { x: 0.0, y: 0.0 },
             "node-1",
         ));
-        let fixture = os_media_graph_to_flow_fixture(&graph, &[instance.clone()]);
+        let fixture = os_media_graph_to_flow_fixture(&graph, &[instance.clone()], &OsMediaGraphCamera::default());
         assert_eq!(fixture["schema"], "flow.fixture");
         assert_eq!(fixture["widgets"][0]["preview"], true);
         let operators = build_os_media_flow_operator_infos(&graph, &[instance], &[]);
@@ -4177,6 +4201,73 @@ mod tests {
         assert_eq!(operators[0].id, "os.media.node.node-1");
         assert_eq!(operators[0].module, OS_MEDIA_FLOW_MODULE_ID);
         assert_eq!(operators[0].name, "Draw");
+    }
+
+    fn media_node(id: &str, instance_id: &str, x: f64, y: f64) -> OsMediaGraphNode {
+        OsMediaGraphNode {
+            id: id.into(),
+            instance_id: instance_id.into(),
+            x,
+            y,
+            width: 160.0,
+            height: 72.0,
+            inputs: vec![OsMediaPort { id: format!("{instance_id}:in"), resource_kind: "2d.drawing".into(), direction: "in".into() }],
+            outputs: vec![OsMediaPort { id: format!("{instance_id}:out"), resource_kind: "2d.drawing".into(), direction: "out".into() }],
+        }
+    }
+
+    #[test]
+    fn flow_fixture_round_trips_camera_and_diffs_back_to_ops() {
+        let mut graph = empty_media_graph();
+        graph.nodes.push(media_node("node-1", "app-1", 40.0, 80.0));
+        graph.nodes.push(media_node("node-2", "app-2", 300.0, 80.0));
+        graph.edges.push(OsMediaGraphEdge {
+            id: "edge-1".into(),
+            source_node_id: "node-1".into(),
+            source_port_id: "app-1:out".into(),
+            target_node_id: "node-2".into(),
+            target_port_id: "app-2:in".into(),
+        });
+        let camera = OsMediaGraphCamera { x: 12.0, y: -8.0, zoom: 1.5 };
+        let fixture = os_media_graph_to_flow_fixture(&graph, &[], &camera);
+        assert_eq!(fixture["camera"]["x"], 12.0);
+        assert_eq!(fixture["camera"]["zoom"], 1.5);
+        let unchanged = apply_flow_fixture_to_os_media_graph(&graph, &fixture.to_string());
+        assert!(unchanged.is_empty());
+        let mut moved = fixture.clone();
+        moved["layout"]["node-1"] = json!({ "x": 220.0, "y": 156.0 });
+        let ops = apply_flow_fixture_to_os_media_graph(&graph, &moved.to_string());
+        assert_eq!(ops, vec![OsOp::MoveMediaNode { node_id: "node-1".into(), x: 140.0, y: 120.0 }]);
+    }
+
+    #[test]
+    fn flow_fixture_diff_connects_disconnects_and_removes() {
+        let mut graph = empty_media_graph();
+        graph.nodes.push(media_node("node-1", "app-1", 0.0, 0.0));
+        graph.nodes.push(media_node("node-2", "app-2", 200.0, 0.0));
+        graph.edges.push(OsMediaGraphEdge {
+            id: "edge-1".into(),
+            source_node_id: "node-1".into(),
+            source_port_id: "app-1:out".into(),
+            target_node_id: "node-2".into(),
+            target_port_id: "app-2:in".into(),
+        });
+        let mut fixture = os_media_graph_to_flow_fixture(&graph, &[], &OsMediaGraphCamera::default());
+        fixture["synapses"] = json!([
+            { "id": "", "from": "node-2", "fromPort": "app-2:out", "to": "node-1", "toPort": "app-1:in" }
+        ]);
+        let ops = apply_flow_fixture_to_os_media_graph(&graph, &fixture.to_string());
+        assert!(matches!(
+            &ops[0],
+            OsOp::ConnectMediaPorts { edge } if edge.source_node_id == "node-2" && edge.target_port_id == "app-1:in" && !edge.id.is_empty()
+        ));
+        assert!(ops.contains(&OsOp::DisconnectMediaEdge { edge_id: "edge-1".into() }));
+        let mut removal = os_media_graph_to_flow_fixture(&graph, &[], &OsMediaGraphCamera::default());
+        removal["widgets"] = json!([{ "id": "node-1" }]);
+        removal["synapses"] = json!([]);
+        let removal_ops = apply_flow_fixture_to_os_media_graph(&graph, &removal.to_string());
+        assert!(removal_ops.contains(&OsOp::RemoveAppInstance { instance_id: "app-2".into() }));
+        assert!(!removal_ops.iter().any(|op| matches!(op, OsOp::DisconnectMediaEdge { .. })));
     }
 }
 //#endregion 🧪Tests

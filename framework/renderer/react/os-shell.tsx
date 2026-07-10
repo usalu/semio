@@ -2107,6 +2107,9 @@ export type UiStackNode = {
   readonly direction: string;
   readonly gap?: string;
   readonly padding?: string;
+  readonly id?: string;
+  readonly selected?: boolean;
+  readonly activate?: CommandDescriptor;
   readonly children: readonly UiNode[];
 };
 
@@ -2124,9 +2127,17 @@ export type UiButtonNode = {
   readonly label: string;
   readonly command: CommandDescriptor;
   readonly style?: StyleSpec;
+  readonly disabled?: boolean;
 };
 
 export type UiSeparatorNode = { readonly type: "separator" };
+
+export type UiImageNode = {
+  readonly type: "image";
+  readonly id: string;
+  readonly src: string;
+  readonly alt?: string;
+};
 
 export type UiInputNode = {
   readonly type: "input";
@@ -2135,6 +2146,10 @@ export type UiInputNode = {
   readonly value: string;
   readonly placeholder?: string;
   readonly commit?: string;
+  readonly min?: number;
+  readonly max?: number;
+  readonly step?: number;
+  readonly accept?: string;
   readonly onChange: CommandDescriptor;
 };
 
@@ -2185,6 +2200,7 @@ export type UiSliderNode = {
   readonly min: number;
   readonly max: number;
   readonly step: number;
+  readonly unit?: string;
   readonly onChange: CommandDescriptor;
 };
 
@@ -2222,6 +2238,9 @@ export type UiFieldNode = {
   readonly type: "field";
   readonly id: string;
   readonly label: string;
+  readonly description?: string;
+  readonly required?: boolean;
+  readonly error?: string;
   readonly child: UiControlNode;
 };
 
@@ -2271,6 +2290,7 @@ export type UiTreeNode = {
   readonly selectedIds?: readonly string[];
   readonly highlightedIds?: readonly string[];
   readonly selectionChange?: CommandDescriptor;
+  readonly dropCommand?: CommandDescriptor;
 };
 
 export type UiInspectorFieldGroup = {
@@ -2474,6 +2494,7 @@ export type UiNode =
   | UiFieldNode
   | UiSectionNode
   | UiTreeNode
+  | UiImageNode
   | UiComponentSceneNode
   | UiExternalSlotNode;
 

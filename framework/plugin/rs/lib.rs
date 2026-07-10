@@ -1748,23 +1748,18 @@ fn raster_payload(document: &Value, fallback: &str) -> RasterScene {
         return scene;
     }
     let parsed: Value = serde_json::from_str(fallback).unwrap_or(Value::Null);
+    let document_sync_json = if document.is_null() { parsed } else { document.clone() }.to_string();
     RasterScene {
-        width: document
-            .get("width")
-            .or_else(|| parsed.get("width"))
-            .and_then(|value| value.as_u64())
-            .unwrap_or(256) as u32,
-        height: document
-            .get("height")
-            .or_else(|| parsed.get("height"))
-            .and_then(|value| value.as_u64())
-            .unwrap_or(256) as u32,
-        pixels_base64: document
-            .get("pixelsBase64")
-            .or_else(|| document.get("pixels_base64"))
-            .and_then(|value| value.as_str())
-            .unwrap_or("")
-            .into(),
+        document_sync_json,
+        assets_json: "[]".into(),
+        camera_json: "{}".into(),
+        selection_json: "{}".into(),
+        hovered_id: None,
+        active_tool: "brush".into(),
+        brush_size: 8.0,
+        brush_opacity: 1.0,
+        view_mode: "edit".into(),
+        composite_viewport_json: None,
     }
 }
 

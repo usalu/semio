@@ -129,6 +129,12 @@ fn load_graph(fixture_json: &str) -> Graph {
     })
 }
 
+fn fixture_with_derived(fixture_json: &str) -> Option<GraphFixture> {
+    let mut graph = Graph::load_json(fixture_json).ok()?;
+    graph.recompute_derived();
+    Some(graph.to_fixture())
+}
+
 fn fixture_json_for_preset(preset_id: &str) -> Option<&'static str> {
     match preset_id {
         "nakagin" | "nakagin-capsule-tower" => Some(NAKAGIN_FIXTURE_JSON),
@@ -509,6 +515,14 @@ fn tree_item_with_command(
     }
 }
 
+fn flat_position_uv(node: &Node) -> (String, String) {
+    let Some(flat) = node.properties.get("flatPosition").and_then(PropertyValue::as_object) else {
+        return (String::new(), String::new());
+    };
+    let format_axis = |axis: &str| flat.get(axis).and_then(PropertyValue::as_f64).map(|value| format!("{value:.2}")).unwrap_or_default();
+    (format_axis("u"), format_axis("v"))
+}
+
 fn build_document_tree(envelope: &TrinityJackEnvelope) -> UiNode {
     let Some(fixture) = parse_fixture_json(&envelope.fixture_json) else {
         return ui_text("Invalid trinity fixture");
@@ -664,8 +678,16 @@ fn build_inspector_tree(envelope: &TrinityJackEnvelope) -> UiNode {
     let kind_mixed = ui_inspector_mixed_text(&nodes.iter().map(|node| node.kind.clone()).collect::<Vec<_>>());
     let port_counts: Vec<String> = nodes.iter().map(|node| node.ports.len().to_string()).collect();
     let ports_mixed = ui_inspector_mixed_text(&port_counts);
-    let u_values: Vec<String> = nodes.iter().map(|node| flat_position_uv(node).0).collect();
-    let v_values: Vec<String> = nodes.iter().map(|node| flat_position_uv(node).1).collect();
+    let derived_fixture = fixture_with_derived(&envelope.fixture_json);
+    let derived_uv = |id: &str| -> (String, String) {
+        derived_fixture
+            .as_ref()
+            .and_then(|fixture| fixture.nodes.iter().find(|node| node.id == id))
+            .map(flat_position_uv)
+            .unwrap_or_default()
+    };
+    let u_values: Vec<String> = node_ids.iter().map(|id| derived_uv(id).0).collect();
+    let v_values: Vec<String> = node_ids.iter().map(|id| derived_uv(id).1).collect();
     let u_mixed = ui_inspector_mixed_text(&u_values);
     let v_mixed = ui_inspector_mixed_text(&v_values);
     ui_inspector_groups_to_tree(&[
@@ -881,9 +903,35 @@ impl PluginApp for TrinityJackPlayApp {
                     return vec![set_document_op(&envelope)];
                 }
             }
-            "setJackQuery" => {
-                if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
-                    envelope.runtime.jack_query = value.into();
+            "textEdit" => {
+                if let Some(text) = args.and_then(|v| v.get("text")).and_then(|v| v.as_str()) {
+                    envelope.runtime.jack_query = text.into();
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "textSelect" => {
+                let start = args.and_then(|v| v.get("start")).and_then(|v| v.as_u64()).unwrap_or(0);
+                let end = args.and_then(|v| v.get("end")).and_then(|v| v.as_u64()).unwrap_or(start);
+                envelope.runtime.editor_selection = Some(TrinityEditorSelection { start: start as usize, end: end as usize });
+                return vec![set_document_op(&envelope)];
+            }
+            "textHover" => return Vec::new(),
+            "requestCompletions" => {
+                envelope.runtime.revision += 1;
+                return vec![set_document_op(&envelope)];
+            }
+            "formatDocument" => {
+                if let Ok(formatted) = jack_format(&envelope.runtime.jack_query) {
+                    envelope.runtime.jack_query = formatted;
+                }
+                return vec![set_document_op(&envelope)];
+            }
+            "setLodMode" => {
+                if let (Some(window_id), Some(value)) = (
+                    args.and_then(|v| v.get("windowId")).and_then(|v| v.as_str()),
+                    args.and_then(|v| v.get("value")).and_then(|v| v.as_str()),
+                ) {
+                    envelope.runtime.lod_mode_by_window.insert(window_id.into(), value.into());
                     return vec![set_document_op(&envelope)];
                 }
             }
@@ -896,7 +944,7 @@ impl PluginApp for TrinityJackPlayApp {
                     return vec![set_document_op(&envelope)];
                 }
             }
-            "runJackQuery" => {
+            "runJackQuery" | "submit" => {
                 let query = args
                     .and_then(|v| v.get("query"))
                     .and_then(|v| v.as_str())
@@ -1142,6 +1190,23 @@ pub fn create_trinity_jack_app() -> App {
                 PanelGroup::Details,
                 TRINITY_JACK_PLAY_BODY_INSPECTION,
             )
+            .operation("nodeGraphEdit", "Edit Graph")
+            .operation("patchTrinityNodes", "Patch Nodes")
+            .operation("reorganize", "Reorganize")
+            .operation("runJackQuery", "Run Jack Query")
+            .view_command("setSelection", "Set Selection")
+            .view_command("selectNode", "Select Node")
+            .view_command("nodeGraphSelect", "Select Graph Node")
+            .view_command("nodeGraphHover", "Hover Graph Node")
+            .view_command("nodeGraphViewport", "Set Graph Viewport")
+            .view_command("setJackQuery", "Set Jack Query")
+            .view_command("loadExampleQuery", "Load Example Query")
+            .view_command("editorEngagementInput", "Editor Engagement Input")
+            .view_command("graphEngagementInput", "Graph Engagement Input")
+            .view_command("resultsEngagementInput", "Results Engagement Input")
+            .view_command("graphPointerDown", "Graph Pointer Down")
+            .shell_command("setDocument", "Set Document")
+            .shell_command("setActiveExample", "Set Active Example")
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .keybinding("mod+alt+s", "commitCheckpoint"),
