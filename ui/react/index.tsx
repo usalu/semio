@@ -128,6 +128,7 @@ export interface ReactHostPort {
   readonly lazy: typeof React.lazy;
   readonly Suspense: typeof React.Suspense;
   readonly createContext: typeof React.createContext;
+  readonly createRoot: typeof createRoot;
 }
 
 /** @emoji 🕸️ Host surface for diagram runtime (implemented by 🔌Adapters). */
@@ -188,6 +189,7 @@ export let reactHostPort: ReactHostPort = {
   lazy: React.lazy,
   Suspense: React.Suspense,
   createContext: React.createContext,
+  createRoot,
 };
 
 /** @emoji 🔌 Default diagram host port wired to @xyflow/react adapters. */

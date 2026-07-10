@@ -34,6 +34,7 @@ import {
     navbarFillItem,
     normalizeEngagementCommandText,
     reactHostPort,
+    renderControlIcon,
     readStoredComputeWorkerCount,
     readStoredUiChromeCompact,
     readStoredUiChromeExpertise,
@@ -178,10 +179,9 @@ import {
 import { loadPlaygroundRendererContribution } from "@semio-tech/framework-playground-core/app-registry";
 import type { OsAppInstance } from "@semio-tech/framework-os-core";
 import { OsUpstreamBadge, useOsInstanceHostBridge, useOsInstanceMaterialization } from "@semio-tech/framework-os-renderer-react";
-import { renderControlIcon } from "@semio-tech/ui-react";
 import type { ReactElement } from "react";
 import * as React from "react";
-import { createRoot, type Root } from "react-dom/client";
+import type { Root } from "react-dom/client";
 import { twMerge } from "tailwind-merge";
 // #endregion 🔌Adapters
 
@@ -1600,7 +1600,7 @@ export function mountPlaygroundApp(element: React.ReactElement, rootId = "root")
   bootstrapElementsSurfaceChromeDocument(PLAYGROUND_SYSTEM_SURFACE_CHROME.theme);
   const rootElement = document.getElementById(rootId) as PlaygroundDomRoot | null;
   if (!rootElement) throw new Error(`React root #${rootId} missing.`);
-  rootElement.__playgroundRoot ??= createRoot(rootElement);
+  rootElement.__playgroundRoot ??= reactHostPort.createRoot(rootElement);
   rootElement.__playgroundRoot.render(<PlaygroundShell>{element}</PlaygroundShell>);
 }
 
@@ -1734,7 +1734,7 @@ export function finalizeRendererContribution(
   contribution: AppRendererContribution,
   runtime: Platform,
 ): AppRendererContribution {
-  if (contribution.examples) return contribution;
+  if (contribution.examples || contribution.mountChrome) return contribution;
   const catalog = resolvePlaygroundExampleCatalog(runtime.getActiveApp()?.controller);
   if (!catalog?.options.length) return contribution;
   return {

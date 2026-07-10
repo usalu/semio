@@ -926,10 +926,8 @@ export function playgroundExampleCatalogWithNoOption(
 export function resolvePlaygroundExampleCatalog(controller: Controller | undefined): PlaygroundExampleCatalog | null {
   if (isPlaygroundExampleLocked()) return null;
   if (!controller) return null;
-  const host = controller as Controller & PlaygroundExampleHost;
-  if (typeof host.getExampleCatalog !== "function") {
-    throw new Error(`Controller "${controller.id}" does not implement PlaygroundExampleHost.getExampleCatalog()`);
-  }
+  const host = controller as Controller & Partial<PlaygroundExampleHost>;
+  if (typeof host.getExampleCatalog !== "function") return null;
   const catalog = host.getExampleCatalog();
   if (!catalog) return null;
   return playgroundExampleCatalogWithNoOption(catalog.activeExampleId, catalog.options);
@@ -1431,10 +1429,10 @@ if (import.meta.vitest) {
   });
 
   describe("resolvePlaygroundExampleCatalog", () => {
-    it("throws when the controller does not implement PlaygroundExampleHost", () => {
+    it("returns null when the controller does not implement PlaygroundExampleHost", () => {
       const bus = new CommandBus();
       const ctrl = new DemoPlaygroundController(bus, () => undefined);
-      expect(() => resolvePlaygroundExampleCatalog(ctrl)).toThrow(/PlaygroundExampleHost/);
+      expect(resolvePlaygroundExampleCatalog(ctrl)).toBeNull();
     });
 
     it("returns null when the playground host example is locked", () => {

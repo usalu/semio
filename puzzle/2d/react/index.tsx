@@ -1851,6 +1851,23 @@ export interface Puzzle2dLodEntry {
 
 let puzzle2dLodScaleCache: readonly Puzzle2dLodEntry[] | null = null;
 
+const PUZZLE_2D_LOD_SCALE_FALLBACK_JSON = JSON.stringify([
+  { id: "minimap", name: "Minimap", description: "Whole-board silhouette; group selection and bounded drag only.", maxZoom: 0.15 },
+  { id: "overview", name: "Overview", description: "Topology and indirect handle rings; no per-node picks.", maxZoom: 0.35 },
+  { id: "compact", name: "Compact", description: "Dense graph layout with simplified chrome.", maxZoom: 0.55 },
+  { id: "normal", name: "Normal", description: "Standard editing: nodes, edges, and handle rings.", maxZoom: 1.25 },
+  { id: "detail", name: "Detail", description: "Node icons and richer strokes.", maxZoom: 2.5 },
+  { id: "micro", name: "Micro", description: "Maximum fidelity including handle icons.", maxZoom: Number.POSITIVE_INFINITY },
+]);
+
+function puzzle2dLodScaleJsonFromSession(): string {
+  const session = new BoardSession() as BoardSession & { lodScaleJson?: () => string };
+  if (typeof session.lodScaleJson === "function") {
+    return session.lodScaleJson();
+  }
+  return PUZZLE_2D_LOD_SCALE_FALLBACK_JSON;
+}
+
 function parsePuzzle2dLodScaleJson(raw: string): readonly Puzzle2dLodEntry[] {
   const rows = JSON.parse(raw) as Array<{ id?: string; name?: string; description?: string; maxZoom?: number }>;
   if (!Array.isArray(rows)) {
@@ -1874,7 +1891,7 @@ function parsePuzzle2dLodScaleJson(raw: string): readonly Puzzle2dLodEntry[] {
 /** @emoji 📶 Fixed LOD table declared in puzzle 2d WASM (single source of truth). */
 export function getPuzzle2dLodScale(): readonly Puzzle2dLodEntry[] {
   if (!puzzle2dLodScaleCache) {
-    puzzle2dLodScaleCache = parsePuzzle2dLodScaleJson(new BoardSession().lodScaleJson());
+    puzzle2dLodScaleCache = parsePuzzle2dLodScaleJson(puzzle2dLodScaleJsonFromSession());
   }
   return puzzle2dLodScaleCache;
 }

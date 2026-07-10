@@ -1200,7 +1200,7 @@ export function createWorkspaceViteResolveConfig(
 ): Pick<UserConfig, "resolve" | "server" | "optimizeDeps"> {
   return {
     resolve: {
-      alias: [...extraAliases],
+      alias: [...findWorkspacePackageAliasEntries(repoRoot), ...extraAliases],
       dedupe: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei"],
     },
     server: {
@@ -1401,6 +1401,47 @@ export function findWorkspacePackages(repoRoot: string): string[] {
   };
   scan(repoRoot);
   return packages;
+}
+
+/** @emoji 🔗 Vite resolve aliases for every `@semio-tech/*` workspace package export. */
+export function findWorkspacePackageAliasEntries(
+  repoRoot: string,
+): Array<{ find: string | RegExp; replacement: string }> {
+  const entries: Array<{ find: string; replacement: string }> = [];
+  const scan = (dir: string) => {
+    for (const entry of readdirSync(dir)) {
+      if (entry === "node_modules" || entry === ".git" || entry === ".nx" || entry === "dist" || entry === "target" || entry === "storybook-static") continue;
+      const full = resolve(dir, entry);
+      if (statSync(full).isDirectory()) {
+        scan(full);
+      } else if (entry === "package.json" && full !== resolve(repoRoot, "package.json")) {
+        try {
+          const pkg = JSON.parse(readFileSync(full, "utf8")) as {
+            name?: string;
+            main?: string;
+            exports?: Record<string, string>;
+          };
+          if (!pkg.name?.startsWith("@semio-tech/")) continue;
+          const packageDir = dirname(full);
+          const pushAlias = (subpath: string, target: string) => {
+            const normalizedTarget = target.replace(/^\.\//, "");
+            const replacement = resolve(packageDir, normalizedTarget);
+            const find = subpath === "." ? pkg.name! : `${pkg.name}${subpath.startsWith(".") ? subpath.slice(1) : `/${subpath}`}`;
+            entries.push({ find, replacement });
+          };
+          if (pkg.exports && typeof pkg.exports === "object") {
+            for (const [subpath, target] of Object.entries(pkg.exports)) {
+              if (typeof target === "string") pushAlias(subpath, target);
+            }
+          } else if (typeof pkg.main === "string") {
+            pushAlias(".", pkg.main);
+          }
+        } catch {}
+      }
+    }
+  };
+  scan(repoRoot);
+  return entries.sort((left, right) => right.find.length - left.find.length);
 }
 
 /** @emoji 📄 Stubs all compose sketchpad MDX modules for s/os dev graphs (including worker bundles). */

@@ -407,15 +407,18 @@ export function cadPlayPaneForModelDefinition(modelDefinitionId: string): CadPla
 
 const CAD_PLAY_PANE_IDS: readonly CadPlayPaneId[] = ["shape", "building", "energy", "structure-classic"];
 
-function emptyInteractionIdByPane(): Record<CadPlayPaneId, string> {
+/** @emoji 🎛 Empty interaction id map for all CAD play panes. */
+export function emptyInteractionIdByPane(): Record<CadPlayPaneId, string> {
   return { shape: "", building: "", energy: "", "structure-classic": "" };
 }
 
-function emptyInteractionBootIdByPane(): Record<CadPlayPaneId, number> {
+/** @emoji 🎛 Empty interaction boot nonce map for all CAD play panes. */
+export function emptyInteractionBootIdByPane(): Record<CadPlayPaneId, number> {
   return { shape: 0, building: 0, energy: 0, "structure-classic": 0 };
 }
 
-function emptySnapshotByPane(): Record<CadPlayPaneId, InteractionSnapshot | null> {
+/** @emoji 🎛 Empty interaction snapshot map for all CAD play panes. */
+export function emptySnapshotByPane(): Record<CadPlayPaneId, InteractionSnapshot | null> {
   return { shape: null, building: null, energy: null, "structure-classic": null };
 }
 

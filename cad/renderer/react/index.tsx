@@ -105,6 +105,10 @@ import {
   cadPlayChromeSnapshotRef,
   cadPlayWindowBodies,
   cadPlaySidePanelBodies,
+  registerCadPlayDeclarativeBodies,
+  emptyInteractionIdByPane,
+  emptyInteractionBootIdByPane,
+  emptySnapshotByPane,
   type CadPlayChromeSnapshot,
   type CadPlayPaneId,
   type CadPlayReferencesByModelDefinitionId,
@@ -1744,6 +1748,7 @@ let cadPlayChromeRegistered = false;
 function registerCadPlayChrome(): void {
   if (cadPlayChromeRegistered) return;
   cadPlayChromeRegistered = true;
+  registerCadPlayDeclarativeBodies();
   for (const pane of ["shape", "building", "energy", "structure-classic"] as const) {
     registerSurfaceBinding(cadPlaySceneSurfaceIdForPane(pane), CadPlaySurfaceHost);
   }
@@ -1771,28 +1776,30 @@ export function CadPlaySurfaceHost({ node }: { readonly node: UiCadHostSurfaceNo
 
 /** @emoji 🧊 CAD play chrome root for standalone boot and s nested host. */
 export function CadPlayRoot({ runtime: runtimeOverride }: { readonly runtime?: Platform } = {}): ReactNode {
-  const runtimeRef = reactHostPort.useRef<Platform | null>(runtimeOverride ?? null);
-  const shellControllerRef = reactHostPort.useRef<CadPlayShellController | null>(null);
-  const [chromeSnapshot, setChromeSnapshot] = reactHostPort.useState<CadPlayChromeSnapshot | null>(null);
+  registerCadPlayChrome();
+  const runtimeRef = reactHostPort.useRef<Platform | null>(null);
   if (!runtimeRef.current) {
-    registerCadPlayChrome();
-    runtimeRef.current = buildCadPlayRuntime();
-    runtimeRef.current.setActiveAppId(CAD_PLAY_APP_ID);
-    shellControllerRef.current = runtimeRef.current.getActiveApp()?.controller as CadPlayShellController;
-  } else if (!shellControllerRef.current) {
-    registerCadPlayChrome();
-    shellControllerRef.current = runtimeRef.current.getActiveApp()?.controller as CadPlayShellController;
+    runtimeRef.current = runtimeOverride ?? buildCadPlayRuntime();
+    if (!runtimeOverride) {
+      runtimeRef.current.setActiveAppId(CAD_PLAY_APP_ID);
+    }
   }
-  const shellController = shellControllerRef.current;
+  const runtime = runtimeRef.current;
+  const shellController = runtime.getActiveApp()?.controller as CadPlayShellController | undefined;
+  const [chromeSnapshot, setChromeSnapshot] = reactHostPort.useState<CadPlayChromeSnapshot | null>(null);
   if (!shellController) {
-    return null;
+    return (
+      <div className="flex h-full min-h-0 items-center justify-center p-single text-sm text-destructive">
+        CAD play controller unavailable
+      </div>
+    );
   }
   const chromeContextValue = reactHostPort.useMemo<CadPlayChromeContextValue>(() => ({ snapshot: chromeSnapshot, publishSnapshot: setChromeSnapshot }), [chromeSnapshot]);
   return (
     <CadPlayChromeContext.Provider value={chromeContextValue}>
-      <CadPlayModelSpaceProvider runtime={runtimeRef.current} shellController={shellController}>
+      <CadPlayModelSpaceProvider runtime={runtime} shellController={shellController}>
         <CadPlayLoadInput />
-        <CadPlayExampleBridge runtime={runtimeRef.current} defaultAppId={CAD_PLAY_APP_ID} />
+        <CadPlayExampleBridge runtime={runtime} defaultAppId={CAD_PLAY_APP_ID} />
       </CadPlayModelSpaceProvider>
     </CadPlayChromeContext.Provider>
   );
@@ -1804,8 +1811,7 @@ export function registerCadPlaySurfaceHosts(): void {
 }
 
 //#region 🔖PlayHost
-import type { AppRendererContribution, PlaygroundMountProps } from "@semio-tech/framework-platform-core";
-import type { Platform } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution } from "@semio-tech/framework-platform-core";
 
 const CAD_PLAY_PANES = ["shape", "building", "energy", "structure-classic"] as const;
 
