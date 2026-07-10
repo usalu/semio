@@ -38,6 +38,76 @@ impl Default for ImperativeDocument {
     }
 }
 
+//#region 🔖Operation
+/// @emoji ✂️ A step-collection edit at a `PathRef` — root path or a nested `control.*` step's slot.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImperativeOp {
+    pub path_ref: PathRef,
+    pub collection: vcs::CollectionOp<String, Step, Dictionary>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct ImperativeDiff(pub Option<ImperativeOp>);
+
+impl vcs::OperationDiff<ImperativeDocument> for ImperativeDiff {
+    fn apply(&self, projection: &ImperativeDocument) -> ImperativeDocument {
+        let mut next = projection.clone();
+        if let Some(op) = &self.0 {
+            if let Some(steps) = resolve_steps_mut(&mut next, &op.path_ref) {
+                vcs::apply_collection_op(steps, &op.collection);
+            }
+        }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.0.is_some() {
+            self.0 = other.0;
+        }
+    }
+}
+
+impl vcs::Operation<ImperativeDocument> for ImperativeOp {
+    type Diff = ImperativeDiff;
+
+    fn diff(&self, _projection: &ImperativeDocument) -> Self::Diff {
+        ImperativeDiff(Some(self.clone()))
+    }
+
+    fn backwards(&self, projection: &ImperativeDocument) -> Vec<Self> {
+        match resolve_steps(projection, &self.path_ref) {
+            Some(steps) => vec![ImperativeOp {
+                path_ref: self.path_ref.clone(),
+                collection: vcs::invert_collection_op(steps, &self.collection),
+            }],
+            None => Vec::new(),
+        }
+    }
+}
+
+/// 🔎 Resolves the step list a `PathRef` addresses; a not-yet-materialized nested slot reads as empty.
+fn resolve_steps<'a>(document: &'a ImperativeDocument, path_ref: &PathRef) -> Option<&'a [Step]> {
+    if path_ref.owner.is_none() && path_ref.slot.is_none() {
+        return Some(&document.path.steps);
+    }
+    let owner = path_ref.owner.as_ref()?;
+    let slot = path_ref.slot.as_ref()?;
+    let owner_step = document.path.steps.iter().find(|step| &step.id == owner)?;
+    Some(owner_step.bodies.get(slot).map(|path| path.steps.as_slice()).unwrap_or(&[]))
+}
+
+fn resolve_steps_mut<'a>(document: &'a mut ImperativeDocument, path_ref: &PathRef) -> Option<&'a mut Vec<Step>> {
+    if path_ref.owner.is_none() && path_ref.slot.is_none() {
+        return Some(&mut document.path.steps);
+    }
+    let owner = path_ref.owner.clone()?;
+    let slot = path_ref.slot.clone()?;
+    let owner_step = document.path.steps.iter_mut().find(|step| step.id == owner)?;
+    Some(&mut owner_step.bodies.entry(slot).or_insert_with(Path::new).steps)
+}
+//#endregion 🔖Operation
+
 pub fn default_document() -> ImperativeDocument {
     ImperativeDocument {
         path: Path {
@@ -331,5 +401,77 @@ mod tests {
         assert_eq!(nested, "step-102");
         let owner_step = host.document.path.steps.iter().find(|step| step.id == owner).expect("owner");
         assert_eq!(owner_step.bodies.get("then").map(|path| path.steps.len()), Some(1));
+    }
+
+    fn step(id: &str, kind: &str) -> Step {
+        Step {
+            id: id.into(),
+            kind: kind.into(),
+            params: Dictionary::new(),
+            bodies: BTreeMap::new(),
+        }
+    }
+
+    #[test]
+    fn add_step_op_round_trips() {
+        let document = default_document();
+        let op = ImperativeOp {
+            path_ref: PathRef::default(),
+            collection: vcs::CollectionOp::Add { index: 0, item: step("step-x", "log.print") },
+        };
+        vcs::test_support::assert_operation_round_trip(&document, op.clone());
+        vcs::test_support::assert_store_roundtrip(document, op);
+    }
+
+    #[test]
+    fn remove_step_op_round_trips() {
+        let document = default_document();
+        let op = ImperativeOp {
+            path_ref: PathRef::default(),
+            collection: vcs::CollectionOp::Remove { id: "step-1".into() },
+        };
+        vcs::test_support::assert_operation_round_trip(&document, op.clone());
+        vcs::test_support::assert_store_roundtrip(document, op);
+    }
+
+    #[test]
+    fn move_step_op_round_trips() {
+        let document = default_document();
+        let op = ImperativeOp {
+            path_ref: PathRef::default(),
+            collection: vcs::CollectionOp::Move { id: "step-1".into(), to_index: 1 },
+        };
+        vcs::test_support::assert_operation_round_trip(&document, op.clone());
+        vcs::test_support::assert_store_roundtrip(document, op);
+    }
+
+    #[test]
+    fn patch_step_params_op_round_trips() {
+        let document = default_document();
+        let op = ImperativeOp {
+            path_ref: PathRef::default(),
+            collection: vcs::CollectionOp::Patch {
+                id: "step-1".into(),
+                patch: Dictionary::new().insert("key", neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into()))),
+            },
+        };
+        vcs::test_support::assert_operation_round_trip(&document, op.clone());
+        vcs::test_support::assert_store_roundtrip(document, op);
+    }
+
+    #[test]
+    fn add_step_into_nested_control_body_round_trips() {
+        let mut document = default_document();
+        document.path.steps.push(step("step-if", "control.if"));
+        let path_ref = PathRef { owner: Some("step-if".into()), slot: Some("then".into()) };
+        let op = ImperativeOp {
+            path_ref: path_ref.clone(),
+            collection: vcs::CollectionOp::Add { index: 0, item: step("step-nested", "log.print") },
+        };
+        vcs::test_support::assert_operation_round_trip(&document, op.clone());
+        let post = vcs::apply_operation(&document, &op);
+        let owner_step = post.path.steps.iter().find(|entry| entry.id == "step-if").expect("owner step");
+        assert_eq!(owner_step.bodies.get("then").map(|body| body.steps.len()), Some(1));
+        vcs::test_support::assert_store_roundtrip(document, op);
     }
 }

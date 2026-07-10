@@ -202,7 +202,7 @@ fn new_node_id(prefix: &str) -> String {
     format!("{prefix}-{serial}")
 }
 
-fn add_node_to_fixture(fixture: &mut Value, kind: Option<&str>) {
+fn add_node_to_fixture(fixture: &mut Value, kind: Option<&str>, args: Option<&Value>) {
     let Some(obj) = fixture.as_object_mut() else {
         return;
     };
@@ -212,16 +212,28 @@ fn add_node_to_fixture(fixture: &mut Value, kind: Option<&str>) {
     };
     let node_kind = kind.unwrap_or("node");
     let id = new_node_id("node");
-    nodes.push(json!({
+    let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+    let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+    let shape = args.and_then(|value| value.get("shape")).and_then(|value| value.as_str()).unwrap_or("circle");
+    let mut node = json!({
         "id": id,
         "nodeKind": node_kind,
-        "shape": "circle",
-        "x": 0.0,
-        "y": 0.0,
-        "radius": 24.0,
+        "shape": shape,
+        "x": x,
+        "y": y,
         "text": id,
         "handles": []
-    }));
+    });
+    if shape == "rectangle" {
+        node["width"] = json!(args.and_then(|value| value.get("width")).and_then(|value| value.as_f64()).unwrap_or(48.0));
+        node["height"] = json!(args.and_then(|value| value.get("height")).and_then(|value| value.as_f64()).unwrap_or(48.0));
+    } else {
+        node["radius"] = json!(args.and_then(|value| value.get("radius")).and_then(|value| value.as_f64()).unwrap_or(24.0));
+    }
+    if let Some(icon_kind) = args.and_then(|value| value.get("iconKind")) {
+        node["iconKind"] = icon_kind.clone();
+    }
+    nodes.push(node);
 }
 
 fn delete_selection_from_fixture(fixture: &mut Value, selected: &[String]) {
@@ -257,6 +269,152 @@ fn delete_selection_from_fixture(fixture: &mut Value, selected: &[String]) {
             id_ok && !node_ids.contains(source) && !node_ids.contains(target) && !handle_ids.contains(source) && !handle_ids.contains(target)
         });
     }
+}
+
+/// 🙈 Patches `hidden`/`locked` onto every selected node, handle, and edge in the fixture.
+fn apply_selection_flag(fixture: &mut Value, selected: &[String], flag: &str, value: bool) {
+    if selected.is_empty() {
+        return;
+    }
+    let selected: HashSet<&str> = selected.iter().map(String::as_str).collect();
+    let key = if flag == "locked" { "locked" } else { "hidden" };
+    if let Some(nodes) = fixture.get_mut("nodes").and_then(|entry| entry.as_array_mut()) {
+        for node in nodes.iter_mut() {
+            let node_selected = node.get("id").and_then(|entry| entry.as_str()).is_some_and(|id| selected.contains(id));
+            if let Some(handles) = node.get_mut("handles").and_then(|entry| entry.as_array_mut()) {
+                for handle in handles.iter_mut() {
+                    let handle_selected = handle.get("id").and_then(|entry| entry.as_str()).is_some_and(|id| selected.contains(id));
+                    if handle_selected {
+                        if let Some(obj) = handle.as_object_mut() {
+                            obj.insert(key.to_string(), json!(value));
+                        }
+                    }
+                }
+            }
+            if node_selected {
+                if let Some(obj) = node.as_object_mut() {
+                    obj.insert(key.to_string(), json!(value));
+                }
+            }
+        }
+    }
+    if let Some(edges) = fixture.get_mut("edges").and_then(|entry| entry.as_array_mut()) {
+        for edge in edges.iter_mut() {
+            let edge_selected = edge.get("id").and_then(|entry| entry.as_str()).is_some_and(|id| selected.contains(id));
+            if edge_selected {
+                if let Some(obj) = edge.as_object_mut() {
+                    obj.insert(key.to_string(), json!(value));
+                }
+            }
+        }
+    }
+}
+
+/// 📋 Clones every selected node (+24/+24 offset, fresh node+handle ids) and any edge whose both endpoints were cloned; returns the new node ids.
+fn duplicate_selection_in_fixture(fixture: &mut Value, selected: &[String]) -> Vec<String> {
+    if selected.is_empty() {
+        return Vec::new();
+    }
+    let selected_set: HashSet<&str> = selected.iter().map(String::as_str).collect();
+    let mut id_remap: HashMap<String, String> = HashMap::new();
+    let mut new_ids: Vec<String> = Vec::new();
+
+    let source_nodes: Vec<Value> = fixture_nodes(fixture).iter().filter(|node| node.get("id").and_then(|value| value.as_str()).is_some_and(|id| selected_set.contains(id))).cloned().collect();
+
+    let new_nodes: Vec<Value> = source_nodes
+        .into_iter()
+        .map(|mut node| {
+            let old_id = node.get("id").and_then(|value| value.as_str()).unwrap_or_default().to_string();
+            let new_id = new_node_id("node");
+            id_remap.insert(old_id, new_id.clone());
+            if let Some(obj) = node.as_object_mut() {
+                obj.insert("id".into(), json!(new_id));
+                if let Some(x) = obj.get("x").and_then(|value| value.as_f64()) {
+                    obj.insert("x".into(), json!(x + 24.0));
+                }
+                if let Some(y) = obj.get("y").and_then(|value| value.as_f64()) {
+                    obj.insert("y".into(), json!(y + 24.0));
+                }
+                if let Some(handles) = obj.get_mut("handles").and_then(|value| value.as_array_mut()) {
+                    for handle in handles.iter_mut() {
+                        let old_handle_id = handle.get("id").and_then(|value| value.as_str()).unwrap_or_default().to_string();
+                        let suffix = old_handle_id.rsplit(':').next().unwrap_or(old_handle_id.as_str());
+                        let new_handle_id = format!("{new_id}:{suffix}");
+                        id_remap.insert(old_handle_id, new_handle_id.clone());
+                        if let Some(hobj) = handle.as_object_mut() {
+                            hobj.insert("id".into(), json!(new_handle_id));
+                        }
+                    }
+                }
+            }
+            new_ids.push(new_id);
+            node
+        })
+        .collect();
+
+    if let Some(nodes) = fixture.get_mut("nodes").and_then(|value| value.as_array_mut()) {
+        nodes.extend(new_nodes);
+    }
+
+    let new_edges: Vec<Value> = fixture_edges(fixture)
+        .iter()
+        .filter_map(|edge| {
+            let source = edge.get("source").and_then(|value| value.as_str()).unwrap_or("");
+            let target = edge.get("target").and_then(|value| value.as_str()).unwrap_or("");
+            let (new_source, new_target) = (id_remap.get(source)?, id_remap.get(target)?);
+            let mut clone = edge.clone();
+            if let Some(obj) = clone.as_object_mut() {
+                obj.insert("id".into(), json!(new_node_id("edge")));
+                obj.insert("source".into(), json!(new_source));
+                obj.insert("target".into(), json!(new_target));
+            }
+            Some(clone)
+        })
+        .collect();
+    if !new_edges.is_empty() {
+        if let Some(edges) = fixture.get_mut("edges").and_then(|value| value.as_array_mut()) {
+            edges.extend(new_edges);
+        }
+    }
+
+    new_ids
+}
+
+/// 🎯 Every node/handle id sharing a `nodeKind`/`handleKind` with anything currently selected.
+fn select_same_kind_ids(fixture: &Value, selected: &[String]) -> Vec<String> {
+    let selected_set: HashSet<&str> = selected.iter().map(String::as_str).collect();
+    let mut node_kinds: HashSet<&str> = HashSet::new();
+    let mut handle_kinds: HashSet<&str> = HashSet::new();
+    for node in fixture_nodes(fixture) {
+        if node.get("id").and_then(|value| value.as_str()).is_some_and(|id| selected_set.contains(id)) {
+            if let Some(kind) = node.get("nodeKind").and_then(|value| value.as_str()) {
+                node_kinds.insert(kind);
+            }
+        }
+        for handle in node.get("handles").and_then(|value| value.as_array()).into_iter().flatten() {
+            if handle.get("id").and_then(|value| value.as_str()).is_some_and(|id| selected_set.contains(id)) {
+                if let Some(kind) = handle.get("handleKind").and_then(|value| value.as_str()) {
+                    handle_kinds.insert(kind);
+                }
+            }
+        }
+    }
+    let mut ids: Vec<String> = Vec::new();
+    for node in fixture_nodes(fixture) {
+        if node.get("nodeKind").and_then(|value| value.as_str()).is_some_and(|kind| node_kinds.contains(kind)) {
+            if let Some(id) = node.get("id").and_then(|value| value.as_str()) {
+                ids.push(id.to_string());
+            }
+        }
+        for handle in node.get("handles").and_then(|value| value.as_array()).into_iter().flatten() {
+            if handle.get("handleKind").and_then(|value| value.as_str()).is_some_and(|kind| handle_kinds.contains(kind)) {
+                if let Some(id) = handle.get("id").and_then(|value| value.as_str()) {
+                    ids.push(id.to_string());
+                }
+            }
+        }
+    }
+    ids
 }
 
 fn set_fixture_camera(fixture: &mut Value, camera: &Value) {
@@ -400,9 +558,26 @@ fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dPlayEnvelope) 
     }
 }
 
+/// 🎲 Re-mints a node id when it collides with an existing one — client-side brush serials restart every session.
+fn unique_node_id(fixture: &Value, candidate: String) -> String {
+    if fixture_nodes(fixture).iter().any(|node| node.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) {
+        new_node_id("node")
+    } else {
+        candidate
+    }
+}
+
+fn unique_edge_id(fixture: &Value, candidate: String) -> String {
+    if fixture_edges(fixture).iter().any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) {
+        new_node_id("edge")
+    } else {
+        candidate
+    }
+}
+
 fn apply_brush_place_payload(fixture: &mut Value, payload: &Value) {
-    let node_id = payload.get("nodeId").and_then(|value| value.as_str()).map(str::to_string).unwrap_or_else(|| new_node_id("node"));
-    let edge_id = payload.get("edgeId").and_then(|value| value.as_str()).map(str::to_string).unwrap_or_else(|| new_node_id("edge"));
+    let node_id = unique_node_id(fixture, payload.get("nodeId").and_then(|value| value.as_str()).map(str::to_string).unwrap_or_else(|| new_node_id("node")));
+    let edge_id = unique_edge_id(fixture, payload.get("edgeId").and_then(|value| value.as_str()).map(str::to_string).unwrap_or_else(|| new_node_id("edge")));
     let node_kind = payload.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("node");
     let x = payload.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
     let y = payload.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);
@@ -654,16 +829,44 @@ fn pane_from_surface_id(surface_id: &str) -> &'static str {
 
 //#endregion 🔖PaneCamera
 
-fn puzzle2d_board_scene(fixture: &Value, selected: &[String], pane: &str) -> Puzzle2dBoardScene {
+fn puzzle2d_board_scene(envelope: &Puzzle2dPlayEnvelope, pane: &str) -> Puzzle2dBoardScene {
+    let fixture = &envelope.fixture;
     let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(fixture, pane);
     let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
     let kind_catalogs_json = fixture.get("meta").and_then(|value| value.get("kindCatalogs")).map(|value| value.to_string()).unwrap_or_else(|| "{}".into());
-    let selection_json = serde_json::to_string(selected).unwrap_or_else(|_| "[]".into());
-    Puzzle2dBoardScene { fixture_json: fixture.to_string(), camera_json, kind_catalogs_json, selection_json, interactive: pane == PUZZLE2D_PANE_OVERVIEW, hovered_id: None, active_tool: None }
+    let selection_json = serde_json::to_string(&envelope.runtime.selected_ids).unwrap_or_else(|_| "[]".into());
+    let brush_kind_weights_json = serde_json::to_string(&json!({
+        "nodeWeights": envelope.runtime.node_kind_weights,
+        "handleWeights": envelope.runtime.handle_kind_weights,
+    }))
+    .unwrap_or_else(|_| "{}".into());
+    let kind_compatibility_json = fixture
+        .get("meta")
+        .and_then(|value| value.get("kindCompatibility"))
+        .or_else(|| fixture.get("kindCompatibility"))
+        .map(|value| value.to_string())
+        .unwrap_or_else(|| "[]".into());
+    let lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).cloned().unwrap_or_else(|| PUZZLE2D_LOD_MODE_AUTOMATIC.to_string());
+    Puzzle2dBoardScene {
+        fixture_json: fixture.to_string(),
+        camera_json,
+        kind_catalogs_json,
+        selection_json,
+        interactive: pane == PUZZLE2D_PANE_OVERVIEW,
+        hovered_id: None,
+        active_tool: Some(envelope.runtime.active_tool.clone()),
+        selection_method: envelope.runtime.selection_method.clone(),
+        grid_snap_enabled: envelope.runtime.grid_snap_enabled,
+        grid_factor: envelope.runtime.grid_factor,
+        suggestion_offset: envelope.runtime.suggestion_offset,
+        brush_kind_weights_json,
+        kind_compatibility_json,
+        lod_mode,
+    }
 }
 
-fn render_canvas(fixture: &Value, selected: &[String], pane: &str) -> UiNode {
-    build_puzzle2d_board_scene(format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}"), PUZZLE2D_PLAY_CONTROLLER_ID, puzzle2d_board_scene(fixture, selected, pane))
+fn render_canvas(envelope: &Puzzle2dPlayEnvelope, pane: &str) -> UiNode {
+    build_puzzle2d_board_scene(format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}"), PUZZLE2D_PLAY_CONTROLLER_ID, puzzle2d_board_scene(envelope, pane))
 }
 
 fn force_layout_fixture(fixture: &mut Value) {
@@ -857,12 +1060,38 @@ fn inferred_kind_entries(fixture: &Value, field: &str) -> Vec<Value> {
     ids.into_iter().map(|id| json!({ "id": id, "name": id })).collect()
 }
 
-fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value]) -> UiTreeSectionNode {
+/// 🖱️ MIME key `DeclarativeTreePanel` (framework/renderer/react/ui-interpreter.tsx) reads to auto-wire catalogue drag sources.
+const PUZZLE2D_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
+
+fn puzzle2d_catalog_item_drag_data(slice: &str, kind_id: &str, entry: &Value) -> HashMap<String, String> {
+    let mut payload = json!({ "kindId": kind_id, "catalogSlice": slice });
+    if let Some(obj) = payload.as_object_mut() {
+        if let Some(shape) = entry.get("shape") {
+            obj.insert("shape".into(), shape.clone());
+        }
+        if let Some(radius) = entry.get("radius") {
+            obj.insert("radius".into(), radius.clone());
+        }
+        if let Some(width) = entry.get("width") {
+            obj.insert("width".into(), width.clone());
+        }
+        if let Some(height) = entry.get("height") {
+            obj.insert("height".into(), height.clone());
+        }
+        if let Some(icon_kind) = entry.get("iconKind") {
+            obj.insert("iconKind".into(), icon_kind.clone());
+        }
+    }
+    HashMap::from([(PUZZLE2D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())])
+}
+
+fn kind_catalog_section(section_id: &str, slice: &str, label: &str, entries: &[Value]) -> UiTreeSectionNode {
     let items: Vec<UiTreeItemNode> = entries
         .iter()
         .enumerate()
         .map(|(index, entry)| {
             let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind");
+            let draggable = slice == "nodes";
             UiTreeItemNode {
                 id: format!("{section_id}.{index}.{kind_id}"),
                 label: catalog_kind_label(entry),
@@ -874,8 +1103,8 @@ fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value]) -> UiT
                 hover_command: None,
                 unhover_command: None,
                 actions: None,
-                draggable: None,
-                drag_data: None,
+                draggable: draggable.then_some(true),
+                drag_data: draggable.then(|| puzzle2d_catalog_item_drag_data(slice, kind_id, entry)),
                 items: None,
                 control: None,
                 is_hidden: None,
@@ -919,9 +1148,9 @@ fn render_catalogue_panel(fixture: &Value) -> UiNode {
     let edge_entries = kind_catalog_entries(fixture, "edges").unwrap_or(inferred_edges.as_slice());
     UiNode::Tree(UiTreeNode {
         sections: vec![
-            kind_catalog_section("puzzle2d-play-kinds.nodes", "Nodes", &node_entries),
-            kind_catalog_section("puzzle2d-play-kinds.handles", "Handles", &handle_entries),
-            kind_catalog_section("puzzle2d-play-kinds.edges", "Edges", &edge_entries),
+            kind_catalog_section("puzzle2d-play-kinds.nodes", "nodes", "Nodes", &node_entries),
+            kind_catalog_section("puzzle2d-play-kinds.handles", "handles", "Handles", &handle_entries),
+            kind_catalog_section("puzzle2d-play-kinds.edges", "edges", "Edges", &edge_entries),
         ],
         selected_ids: None,
         highlighted_ids: None,
@@ -1066,7 +1295,7 @@ impl PluginApp for Puzzle2dPlayApp {
             }
             "addNode" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str());
-                add_node_to_fixture(&mut envelope.fixture, kind);
+                add_node_to_fixture(&mut envelope.fixture, kind, args);
                 vec![set_document_op(&envelope)]
             }
             "deleteSelection" => {
@@ -1074,6 +1303,32 @@ impl PluginApp for Puzzle2dPlayApp {
                 delete_selection_from_fixture(&mut envelope.fixture, &envelope.runtime.selected_ids);
                 envelope.runtime.selected_ids.clear();
                 vec![set_document_op(&envelope)]
+            }
+            "setSelectionFlag" => {
+                let flag = args.and_then(|value| value.get("flag")).and_then(|value| value.as_str()).unwrap_or("hidden");
+                let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_bool()).unwrap_or(true);
+                apply_selection_flag(&mut envelope.fixture, &envelope.runtime.selected_ids, flag, value);
+                vec![set_document_op(&envelope)]
+            }
+            "duplicateSelection" => {
+                let new_ids = duplicate_selection_in_fixture(&mut envelope.fixture, &envelope.runtime.selected_ids);
+                if new_ids.is_empty() {
+                    Vec::new()
+                } else {
+                    envelope.runtime.selected_ids = new_ids;
+                    self.host.set_selection_ids(&envelope.runtime.selected_ids);
+                    vec![set_document_op(&envelope)]
+                }
+            }
+            "selectSameKind" => {
+                let ids = select_same_kind_ids(&envelope.fixture, &envelope.runtime.selected_ids);
+                if ids.is_empty() {
+                    Vec::new()
+                } else {
+                    envelope.runtime.selected_ids = ids;
+                    self.host.set_selection_ids(&envelope.runtime.selected_ids);
+                    vec![set_document_op(&envelope)]
+                }
             }
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
@@ -1439,9 +1694,9 @@ impl PluginApp for Puzzle2dPlayApp {
     fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
         match body_key {
-            PUZZLE2D_PLAY_BODY_OVERVIEW => render_canvas(&envelope.fixture, &envelope.runtime.selected_ids, PUZZLE2D_PANE_OVERVIEW),
-            PUZZLE2D_PLAY_BODY_DETAIL => render_canvas(&envelope.fixture, &envelope.runtime.selected_ids, PUZZLE2D_PANE_DETAIL),
-            PUZZLE2D_PLAY_BODY_SELECTION => render_canvas(&envelope.fixture, &envelope.runtime.selected_ids, PUZZLE2D_PANE_SELECTION),
+            PUZZLE2D_PLAY_BODY_OVERVIEW => render_canvas(&envelope, PUZZLE2D_PANE_OVERVIEW),
+            PUZZLE2D_PLAY_BODY_DETAIL => render_canvas(&envelope, PUZZLE2D_PANE_DETAIL),
+            PUZZLE2D_PLAY_BODY_SELECTION => render_canvas(&envelope, PUZZLE2D_PANE_SELECTION),
             PUZZLE2D_PLAY_BODY_LAYERS => render_document_panel(&envelope),
             PUZZLE2D_PLAY_BODY_CATALOGUE => render_catalogue_panel(&envelope.fixture),
             PUZZLE2D_PLAY_BODY_PROPERTIES => render_properties_panel(&envelope),

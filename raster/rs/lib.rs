@@ -777,6 +777,285 @@ impl cavas::canvas_content::CanvasContent for RasterHost {
 }
 // #endregion 🔖Host
 
+// #region 🔖Picking
+/// 📐 Axis-aligned screen/world rect, used for both hit-testing and bounds accumulation.
+#[derive(Clone, Copy, Debug)]
+struct ScreenRect {
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+}
+
+impl ScreenRect {
+    fn from_points(points: &[Point]) -> Self {
+        let min_x = points.iter().map(|p| p.x).fold(f64::INFINITY, f64::min);
+        let min_y = points.iter().map(|p| p.y).fold(f64::INFINITY, f64::min);
+        let max_x = points.iter().map(|p| p.x).fold(f64::NEG_INFINITY, f64::max);
+        let max_y = points.iter().map(|p| p.y).fold(f64::NEG_INFINITY, f64::max);
+        Self { x: min_x, y: min_y, width: max_x - min_x, height: max_y - min_y }
+    }
+
+    fn union(acc: Option<Self>, next: Self) -> Self {
+        match acc {
+            None => next,
+            Some(a) => {
+                let min_x = a.x.min(next.x);
+                let min_y = a.y.min(next.y);
+                let max_x = (a.x + a.width).max(next.x + next.width);
+                let max_y = (a.y + a.height).max(next.y + next.height);
+                Self { x: min_x, y: min_y, width: max_x - min_x, height: max_y - min_y }
+            }
+        }
+    }
+
+    fn contains(&self, inner: &ScreenRect) -> bool {
+        inner.x >= self.x && inner.y >= self.y && inner.x + inner.width <= self.x + self.width && inner.y + inner.height <= self.y + self.height
+    }
+
+    fn intersects(&self, other: &ScreenRect) -> bool {
+        self.x <= other.x + other.width && self.x + self.width >= other.x && self.y <= other.y + other.height && self.y + self.height >= other.y
+    }
+
+    fn contains_point(&self, x: f64, y: f64) -> bool {
+        x >= self.x && x <= self.x + self.width && y >= self.y && y <= self.y + self.height
+    }
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PickTargetJson {
+    domain: &'static str,
+    id: String,
+    generality: u8,
+}
+
+#[derive(serde::Deserialize)]
+struct ScreenPointIn {
+    x: f64,
+    y: f64,
+}
+
+#[derive(serde::Deserialize)]
+struct MarqueeQueryIn {
+    points: Vec<ScreenPointIn>,
+    crossing: bool,
+}
+
+#[derive(serde::Deserialize)]
+struct CameraJsonIn {
+    x: f64,
+    y: f64,
+    zoom: f64,
+}
+
+#[derive(serde::Deserialize)]
+struct ViewportJsonIn {
+    width: f64,
+    height: f64,
+}
+
+/// 🎯 Flattened pick candidate — mirrors premigration `flattenRasterLayers` (document order, parent pushed before children, no visibility cascade).
+enum PickEntry {
+    Pixel {
+        id: String,
+        visible: bool,
+        transform: Affine,
+        width: u32,
+        height: u32,
+        ancestors: Vec<(String, bool)>,
+    },
+    Group {
+        id: String,
+        visible: bool,
+        children: Vec<LayerNode>,
+    },
+}
+
+impl RasterHost {
+    fn pixel_screen_bounds(&self, transform: &Affine, width: u32, height: u32) -> ScreenRect {
+        let world = cavas::camera::camera_content_affine(&self.camera, &self.viewport) * (*transform);
+        let hw = width as f64 * 0.5;
+        let hh = height as f64 * 0.5;
+        let corners = [world * Point::new(-hw, -hh), world * Point::new(hw, -hh), world * Point::new(hw, hh), world * Point::new(-hw, hh)];
+        ScreenRect::from_points(&corners)
+    }
+
+    /// 🎯 Bounding box of a group's visible pixel descendants — port of premigration `rasterGroupScreenBounds`.
+    fn group_screen_bounds(&self, children: &[LayerNode]) -> Option<ScreenRect> {
+        let mut acc: Option<ScreenRect> = None;
+        for child in children {
+            match child {
+                LayerNode::Pixel { visible, transform, width, height, .. } => {
+                    if !*visible {
+                        continue;
+                    }
+                    acc = Some(ScreenRect::union(acc, self.pixel_screen_bounds(transform, *width, *height)));
+                }
+                LayerNode::Group { children, .. } => {
+                    if let Some(bounds) = self.group_screen_bounds(children) {
+                        acc = Some(ScreenRect::union(acc, bounds));
+                    }
+                }
+                LayerNode::Adjustment { .. } => {}
+            }
+        }
+        acc
+    }
+
+    fn flatten_pick_targets(&self) -> Vec<PickEntry> {
+        fn walk(nodes: &[LayerNode], ancestors: &[(String, bool)], out: &mut Vec<PickEntry>) {
+            for node in nodes {
+                match node {
+                    LayerNode::Pixel { id, visible, transform, width, height, .. } => {
+                        out.push(PickEntry::Pixel {
+                            id: id.clone(),
+                            visible: *visible,
+                            transform: *transform,
+                            width: *width,
+                            height: *height,
+                            ancestors: ancestors.to_vec(),
+                        });
+                    }
+                    LayerNode::Group { id, visible, children, .. } => {
+                        out.push(PickEntry::Group { id: id.clone(), visible: *visible, children: children.clone() });
+                        let mut next_ancestors = ancestors.to_vec();
+                        next_ancestors.push((id.clone(), *visible));
+                        walk(children, &next_ancestors, out);
+                    }
+                    LayerNode::Adjustment { .. } => {}
+                }
+            }
+        }
+        let mut out = Vec::new();
+        walk(&self.document.layers, &[], &mut out);
+        out
+    }
+
+    /// 🎯 Stacked pick targets at a screen point, topmost first — port of premigration `resolveRasterPickTargetsAtScreenPoint`.
+    pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
+        let entries = self.flatten_pick_targets();
+        let mut hits: Vec<PickTargetJson> = Vec::new();
+        for entry in entries.iter().rev() {
+            match entry {
+                PickEntry::Group { id, visible, children } => {
+                    if !*visible {
+                        continue;
+                    }
+                    if let Some(bounds) = self.group_screen_bounds(children) {
+                        if bounds.contains_point(sx, sy) && !hits.iter().any(|h| &h.id == id) {
+                            hits.push(PickTargetJson { domain: "group", id: id.clone(), generality: 0 });
+                        }
+                    }
+                }
+                PickEntry::Pixel { id, visible, transform, width, height, ancestors } => {
+                    if !*visible {
+                        continue;
+                    }
+                    let bounds = self.pixel_screen_bounds(transform, *width, *height);
+                    if !bounds.contains_point(sx, sy) {
+                        continue;
+                    }
+                    if !hits.iter().any(|h| &h.id == id) {
+                        hits.push(PickTargetJson { domain: "pixel", id: id.clone(), generality: 2 });
+                    }
+                    for (group_id, group_visible) in ancestors {
+                        if *group_visible && !hits.iter().any(|h| &h.id == group_id) {
+                            hits.push(PickTargetJson { domain: "group", id: group_id.clone(), generality: 0 });
+                        }
+                    }
+                }
+            }
+        }
+        serde_json::to_string(&hits).unwrap_or_else(|_| "[]".into())
+    }
+
+    /// 🖱️ Pixel layer ids hit by a screen-space marquee (rect or lasso bbox) — port of premigration `resolveRasterMarqueeLayerHits`.
+    pub fn marquee_hits_json(&self, query_json: &str) -> Result<String, String> {
+        let query: MarqueeQueryIn = serde_json::from_str(query_json).map_err(|e| e.to_string())?;
+        if query.points.len() < 2 {
+            return Ok("[]".into());
+        }
+        let points: Vec<Point> = query.points.iter().map(|p| Point::new(p.x, p.y)).collect();
+        let marquee = ScreenRect::from_points(&points);
+        let mut hits = Vec::new();
+        for entry in self.flatten_pick_targets() {
+            if let PickEntry::Pixel { id, visible, transform, width, height, .. } = entry {
+                if !visible {
+                    continue;
+                }
+                let bounds = self.pixel_screen_bounds(&transform, width, height);
+                let hit = if query.crossing { marquee.intersects(&bounds) } else { marquee.contains(&bounds) };
+                if hit {
+                    hits.push(id);
+                }
+            }
+        }
+        Ok(serde_json::to_string(&hits).unwrap_or_else(|_| "[]".into()))
+    }
+
+    /// 📐 World-space bounds of visible pixel layers (own transform only, no camera) — port of premigration `resolveRasterDocumentWorldBounds`.
+    fn document_world_bounds(&self) -> Option<ScreenRect> {
+        fn walk(nodes: &[LayerNode], acc: &mut Option<ScreenRect>) {
+            for node in nodes {
+                match node {
+                    LayerNode::Pixel { visible, transform, width, height, .. } => {
+                        if !*visible {
+                            continue;
+                        }
+                        let hw = *width as f64 * 0.5;
+                        let hh = *height as f64 * 0.5;
+                        let corners = [
+                            *transform * Point::new(-hw, -hh),
+                            *transform * Point::new(hw, -hh),
+                            *transform * Point::new(hw, hh),
+                            *transform * Point::new(-hw, hh),
+                        ];
+                        *acc = Some(ScreenRect::union(*acc, ScreenRect::from_points(&corners)));
+                    }
+                    LayerNode::Group { children, .. } => walk(children, acc),
+                    LayerNode::Adjustment { .. } => {}
+                }
+            }
+        }
+        let mut acc: Option<ScreenRect> = None;
+        walk(&self.document.layers, &mut acc);
+        acc
+    }
+
+    /// 🧭 Fits a camera to document content — port of premigration `rasterNavigatorFitCamera`. Falls back to the current camera when the document has no visible pixel content.
+    pub fn navigator_fit_camera_json(&self, viewport_w: f64, viewport_h: f64) -> String {
+        let padding = 24.0;
+        let (x, y, zoom) = match self.document_world_bounds() {
+            None => (self.camera.x, self.camera.y, self.camera.zoom),
+            Some(bounds) => {
+                let content_w = bounds.width.max(1.0);
+                let content_h = bounds.height.max(1.0);
+                let inner_w = (viewport_w.max(1.0) - padding * 2.0).max(1.0);
+                let inner_h = (viewport_h.max(1.0) - padding * 2.0).max(1.0);
+                let zoom = cavas::camera::clamp_zoom((inner_w / content_w).min(inner_h / content_h));
+                (bounds.x + bounds.width * 0.5, bounds.y + bounds.height * 0.5, zoom)
+            }
+        };
+        serde_json::json!({ "x": x, "y": y, "zoom": zoom }).to_string()
+    }
+
+    /// 🧭 Maps the composite viewport into navigator screen space for the overview overlay rectangle — port of premigration `rasterNavigatorViewportOverlay`. `self.camera`/`self.viewport` act as the navigator's own camera/viewport.
+    pub fn navigator_viewport_overlay_json(&self, content_camera_json: &str, content_viewport_json: &str) -> Result<String, String> {
+        let content_camera: CameraJsonIn = serde_json::from_str(content_camera_json).map_err(|e| e.to_string())?;
+        let content_viewport: ViewportJsonIn = serde_json::from_str(content_viewport_json).map_err(|e| e.to_string())?;
+        let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: cavas::camera::clamp_zoom(content_camera.zoom) };
+        let cv = Viewport { width: (content_viewport.width.max(1.0)) as u32, height: (content_viewport.height.max(1.0)) as u32, dpr: 1.0 };
+        let top_left_world = cavas::camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
+        let bottom_right_world = cavas::camera::screen_to_world(&cc, &cv, Point::new(cv.width as f64, cv.height as f64));
+        let top_left = cavas::camera::world_to_screen(&self.camera, &self.viewport, top_left_world);
+        let bottom_right = cavas::camera::world_to_screen(&self.camera, &self.viewport, bottom_right_world);
+        let rect = ScreenRect::from_points(&[top_left, bottom_right]);
+        Ok(serde_json::json!({ "x": rect.x, "y": rect.y, "width": rect.width, "height": rect.height }).to_string())
+    }
+}
+// #endregion 🔖Picking
+
 // #region 🔖WasmSession
 #[cfg(target_arch = "wasm32")]
 use std::cell::RefCell;
@@ -974,6 +1253,30 @@ impl RasterSession {
         g.host
             .set_show_selection_chrome(mode != "navigator");
     }
+
+    #[wasm_bindgen(js_name = pickTargetsAtScreenJson)]
+    pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
+        self.state.borrow().host.pick_targets_at_screen_json(sx, sy)
+    }
+
+    #[wasm_bindgen(js_name = marqueeHitsJson)]
+    pub fn marquee_hits_json(&self, query_json: &str) -> Result<String, JsValue> {
+        self.state.borrow().host.marquee_hits_json(query_json).map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = navigatorFitCameraJson)]
+    pub fn navigator_fit_camera_json(&self, viewport_w: f64, viewport_h: f64) -> String {
+        self.state.borrow().host.navigator_fit_camera_json(viewport_w, viewport_h)
+    }
+
+    #[wasm_bindgen(js_name = navigatorViewportOverlayJson)]
+    pub fn navigator_viewport_overlay_json(&self, content_camera_json: &str, content_viewport_json: &str) -> Result<String, JsValue> {
+        self.state
+            .borrow()
+            .host
+            .navigator_viewport_overlay_json(content_camera_json, content_viewport_json)
+            .map_err(|e| JsValue::from_str(&e))
+    }
 }
 // #endregion 🔖WasmSession
 
@@ -999,6 +1302,75 @@ mod tests {
         let json = include_str!("../fixture/semio.raster.json");
         let doc = parse_document(json).expect("parse semio fixture");
         assert!(!doc.layers.is_empty(), "semio should have layers");
+    }
+
+    fn two_pixel_layer_host() -> RasterHost {
+        let json = r#"{"schema":"raster.document","id":"t","camera":{"x":0,"y":0,"zoom":1},"layers":[
+            {"kind":"pixel","id":"back","name":"Back","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":0,"y":0,"scaleX":1,"scaleY":1,"rotation":0},"width":100,"height":100},
+            {"kind":"pixel","id":"front","name":"Front","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":10,"y":0,"scaleX":1,"scaleY":1,"rotation":0},"width":100,"height":100}
+        ]}"#;
+        let mut host = RasterHost::new();
+        host.set_size(400, 400, 1.0);
+        host.sync_document_json(json).expect("sync");
+        host
+    }
+
+    #[test]
+    fn pick_targets_topmost_first() {
+        let host = two_pixel_layer_host();
+        let hits: Vec<PickTargetJson> = serde_json::from_str(&host.pick_targets_at_screen_json(200.0, 200.0)).expect("json");
+        assert_eq!(hits.first().map(|h| h.id.as_str()), Some("front"), "later document layer is topmost");
+        assert!(hits.iter().any(|h| h.id == "back"), "overlapping back layer still hit");
+    }
+
+    #[test]
+    fn pick_targets_empty_when_missed() {
+        let host = two_pixel_layer_host();
+        let hits: Vec<PickTargetJson> = serde_json::from_str(&host.pick_targets_at_screen_json(0.0, 0.0)).expect("json");
+        assert!(hits.is_empty());
+    }
+
+    #[test]
+    fn marquee_hits_containment_vs_crossing() {
+        let host = two_pixel_layer_host();
+        let full_marquee = r#"{"points":[{"x":0,"y":0},{"x":400,"y":400}],"crossing":false}"#;
+        let full_hits: Vec<String> = serde_json::from_str(&host.marquee_hits_json(full_marquee).expect("marquee")).expect("json");
+        assert_eq!(full_hits.len(), 2, "marquee covering both layers should fully contain both");
+
+        let partial_marquee = r#"{"points":[{"x":195,"y":150},{"x":260,"y":250}],"crossing":false}"#;
+        let partial_hits: Vec<String> = serde_json::from_str(&host.marquee_hits_json(partial_marquee).expect("marquee")).expect("json");
+        assert!(partial_hits.is_empty(), "small marquee should not fully contain any layer");
+
+        let crossing_hits: Vec<String> = serde_json::from_str(
+            &host
+                .marquee_hits_json(r#"{"points":[{"x":195,"y":150},{"x":260,"y":250}],"crossing":true}"#)
+                .expect("marquee"),
+        )
+        .expect("json");
+        assert!(!crossing_hits.is_empty(), "same rect with crossing=true should hit intersecting layers");
+    }
+
+    #[test]
+    fn navigator_fit_camera_centers_content() {
+        let host = two_pixel_layer_host();
+        let camera_json = host.navigator_fit_camera_json(300.0, 300.0);
+        let camera: CameraJsonIn = serde_json::from_str(&camera_json).expect("camera json");
+        assert!(camera.zoom > 0.0);
+        assert!(camera.x.is_finite() && camera.y.is_finite());
+    }
+
+    #[test]
+    fn navigator_viewport_overlay_tracks_composite_camera() {
+        let mut host = two_pixel_layer_host();
+        let fit_json = host.navigator_fit_camera_json(300.0, 300.0);
+        let fit: CameraJsonIn = serde_json::from_str(&fit_json).expect("camera json");
+        host.set_camera(fit.x, fit.y, fit.zoom);
+        let overlay_json = host
+            .navigator_viewport_overlay_json(r#"{"x":0,"y":0,"zoom":1}"#, r#"{"width":400,"height":400}"#)
+            .expect("overlay");
+        let overlay: serde_json::Value = serde_json::from_str(&overlay_json).expect("overlay json");
+        assert!(overlay["width"].as_f64().unwrap() > 0.0);
+        assert!(overlay["height"].as_f64().unwrap() > 0.0);
     }
 }
 // #endregion 🧪Tests

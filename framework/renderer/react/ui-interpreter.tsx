@@ -36,6 +36,7 @@ const TextEditorHost = lazy(() => import("./components/text-editor-host.tsx").th
 const World3dHost = lazy(() => import("./components/world-3d-host.tsx").then((module) => ({ default: module.World3dHost })));
 const GisMapHost = lazy(() => import("./components/gis-map-host.tsx").then((module) => ({ default: module.GisMapHost })));
 const Puzzle2dBoardHost = lazy(() => import("./components/puzzle-2d-board-host.tsx").then((module) => ({ default: module.Puzzle2dBoardHost })));
+const IconRenderHost = lazy(() => import("./components/icon-render-host.tsx").then((module) => ({ default: module.IconRenderHost })));
 
 function ComponentSceneFallback() {
   return <p className="text-muted-foreground p-2 text-xs">Loading surface…</p>;
@@ -60,6 +61,8 @@ function renderComponentSceneHost(node: Extract<UiNode, { type: "componentScene"
         return <GisMapHost node={node} onCommand={onCommand} />;
       case "puzzle2d-board":
         return <Puzzle2dBoardHost node={node} onCommand={onCommand} />;
+      case "icon-render":
+        return <IconRenderHost node={node} onCommand={onCommand} />;
       case "virtualFileSystem":
         return <VirtualFileSystemHost node={node} onCommand={onCommand} />;
       default:

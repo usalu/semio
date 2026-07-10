@@ -1,0 +1,13 @@
+{
+  "title": "S React Renderer Premigration Parity",
+  "emoji": "🖥️",
+  "status": "open",
+  "description": "Restore every observable premigration (git tag `premigration`, f8376e84) behavior of the S (Semios) experience on the Rust-plugin + shared React renderer architecture. Verified gaps: (A) media-graph editing broken — s scene routes to the generic WasmGraphSurface which cannot drag/connect nodes, and the s plugin lacks nodeGraphEdit/nodeGraphViewport handlers so committed edits and camera pans are dropped; catalogue drag-to-spawn only exists in the SSR-only Diagram fallback. Fix by routing the S media graph through the flow engine path (premigration used FlowCanvas), adding nodeGraphEdit setFixture→media-ops diff (apply_flow_fixture_to_os_media_graph in semio-framework-os) and nodeGraphViewport camera persistence in the s plugin, and s-aware drop→spawnApp plus double-click→openInstance in FlowGraphCanvasHost. (B) presence stubbed — presence_peers_json() returns []; implement backbone-backed presence (OsPresencePeer records under presence:\u003cstudioId\u003e URIs with staleness eviction) in semio-framework-os, emission + presenceHeartbeat in the s plugin, and per-tab client identity + heartbeat in os-shell.tsx. (C) add s entry to .claude/launch.json. Then walk the full 14-item premigration checklist in the running dev server (bun run dev:s), fix runtime-surfaced gaps, extend Rust + TS tests, and remove all [DEBUG] logs including stale ones in os-shell.tsx backbone sync. Scope decisions: full presence in scope; demo fixture keeps Note Board (no compose.sketchpad restore).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1919"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪2cf46ea5c1fd40609dfe67b16daa5f33"
+  ]
+}

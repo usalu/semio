@@ -244,9 +244,10 @@ function useUIHistory(initialUri = "/", syncBrowser = false) {
   return { uri, canGoBack, canGoForward, canGoUp, parentUri, goBack, goForward, goUp, navigate, syncUri };
 }
 
-function downloadMediaExport(filename: string, mimeType: string, data: string): void {
+function downloadMediaExport(filename: string, mimeType: string, data: string, encoding?: string): void {
   if (typeof document === "undefined") return;
-  const blob = new Blob([data], { type: mimeType });
+  const payload = encoding === "base64" ? Uint8Array.from(atob(data), (char) => char.charCodeAt(0)) : data;
+  const blob = new Blob([payload], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -255,7 +256,15 @@ function downloadMediaExport(filename: string, mimeType: string, data: string): 
   URL.revokeObjectURL(url);
 }
 
-function requestFileOpen(accept: string): Promise<string | null> {
+function downloadDataUrl(filename: string, dataUrl: string): void {
+  if (typeof document === "undefined") return;
+  const anchor = document.createElement("a");
+  anchor.href = dataUrl;
+  anchor.download = filename;
+  anchor.click();
+}
+
+function requestFileOpen(accept: string, readAs?: string): Promise<{ contents: string; name: string } | null> {
   if (typeof document === "undefined") return Promise.resolve(null);
   return new Promise((resolve) => {
     const input = document.createElement("input");
@@ -267,7 +276,14 @@ function requestFileOpen(accept: string): Promise<string | null> {
         resolve(null);
         return;
       }
-      resolve(await file.text());
+      if (readAs === "dataUrl") {
+        const reader = new FileReader();
+        reader.onload = () => resolve(typeof reader.result === "string" ? { contents: reader.result, name: file.name } : null);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+        return;
+      }
+      resolve({ contents: await file.text(), name: file.name });
     };
     input.click();
   });
@@ -1093,8 +1109,11 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           filename?: string;
           mimeType?: string;
           data?: string;
+          encoding?: string;
           accept?: string;
           importCommand?: string;
+          readAs?: string;
+          items?: readonly { filename: string; request: unknown }[];
         };
         if (op.op === "setPanel" && op.panel) {
           nextViewState = { ...nextViewState, panelJson: panelJsonFromState(op.panel) };
@@ -1104,11 +1123,22 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           continue;
         }
         if (op.op === "downloadMediaExport" && op.filename && op.mimeType && op.data) {
-          downloadMediaExport(op.filename, op.mimeType, op.data);
+          downloadMediaExport(op.filename, op.mimeType, op.data, op.encoding);
+        }
+        if (op.op === "iconRenderExport" && op.items) {
+          const { iconRenderPort } = await import("@semio-tech/ui-react");
+          for (const item of op.items) {
+            try {
+              const result = await iconRenderPort.render(item.request as Parameters<typeof iconRenderPort.render>[0]);
+              downloadDataUrl(item.filename, result.dataUrl);
+            } catch (error) {
+              console.error(`icon render export failed for ${item.filename}`, error);
+            }
+          }
         }
         if (op.op === "requestFileOpen" && op.importCommand) {
-          const contents = await requestFileOpen(op.accept ?? ".json,.spatial.json");
-          if (contents) {
+          const opened = await requestFileOpen(op.accept ?? ".json,.spatial.json", op.readAs);
+          if (opened) {
             const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
             if (pluginEntry) {
               const importOps = await pluginEntry.handle.handleCommand(
@@ -1116,7 +1146,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
                 JSON.stringify({
                   controllerId: baseSession.app.controllerId,
                   command: op.importCommand,
-                  args: { payload: contents },
+                  args: { payload: opened.contents, name: opened.name },
                 }),
                 baseSession.viewState,
               );
@@ -2272,6 +2302,9 @@ export type World3dScene = {
   readonly lodJson?: string;
   readonly chunkingJson?: string;
   readonly contextMenuJson?: string;
+  readonly environmentJson?: string;
+  readonly frameJson?: string;
+  readonly fitJson?: string;
 };
 
 export type NodeGraphScene = {
@@ -2348,6 +2381,12 @@ export type RasterScene = {
   readonly pixelsBase64: string;
 };
 
+export type IconRenderScene = {
+  readonly requestJson: string;
+  readonly footer?: string;
+  readonly frameJson?: string;
+};
+
 export type VirtualFileSystemScene = {
   readonly schemaJson: string;
   readonly rowsJson: string;
@@ -2415,6 +2454,7 @@ export type UiComponentSceneNode = {
   readonly virtualFileSystem?: VirtualFileSystemScene;
   readonly gisMap?: GisMapScene;
   readonly puzzle2dBoard?: Puzzle2dBoardScene;
+  readonly iconRender?: IconRenderScene;
 };
 
 export type UiNode =
