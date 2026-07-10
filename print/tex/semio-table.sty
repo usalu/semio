@@ -45,12 +45,14 @@
   \fi
 }
 
-\newdimen\semio@table@register@indent
-
 \newcommand{\SemioTableRegisterRow}[3]{%
+  \semio@table@count@dots{#1}%
+  \dimen0=\semio@block@sep@skip
+  \multiply\dimen0 by 2
+  \multiply\dimen0 by \semio@table@dot@count
   \SemioTableRow{%
     #1 &
-    #2 &
+    \hspace{\dimen0}#2 &
     \ifcsname r@#3\endcsname \pageref{#3}\else --\fi
   }%
 }
@@ -77,8 +79,6 @@
 \newcommand{\semio@table@colspec@register}{@{}T{\dimexpr0.16\linewidth-\tabcolsep\relax}T{\dimexpr0.62\linewidth-\tabcolsep\relax}U{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
 
 \newcommand{\semio@table@colspec@reference}{@{}T{\dimexpr0.12\linewidth-\tabcolsep\relax}T{\dimexpr0.66\linewidth-\tabcolsep\relax}U{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
-
-\newcommand{\semio@table@colspec@glossary}{@{}T{\dimexpr0.22\linewidth-\tabcolsep\relax}T{\dimexpr0.56\linewidth-\tabcolsep\relax}U{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
 
 \newcolumntype{T}[1]{%
   >{\raggedright\arraybackslash\hspace{0pt}%
@@ -147,68 +147,6 @@
   \expandafter\semio@table@render\expandafter{\semio@table@colspec@reference}{#1}%
 }
 
-\newcommand{\SemioGlossaryTableRow}[3]{%
-  \SemioTableRow{#1 & #2 & \SemioTableGlossaryPages{#3}}%
-}
-
-\newcommand{\SemioTableGlossaryRow}[3]{%
-  \SemioTableRow{#1 & #2 & #3}%
-}
-
-\newcommand{\SemioTableGlossaryPages}[1]{%
-  \semio@glossary@pages@render{#1}%
-}
-
-\newcommand{\semio@glossary@pages@sentinel}{}
-\newcommand{\semio@glossary@pages@sep}{}
-\newcommand{\semio@glossary@pages@out}{}
-
-\newcommand{\semio@glossary@pages@render@init}{%
-  \gdef\semio@glossary@pages@out{}%
-  \gdef\semio@glossary@pages@sep{}%
-}
-
-\newcommand{\semio@glossary@page@link}[1]{%
-  \ifcsname r@#1\endcsname
-    \hyperref[#1]{\pageref{#1}}%
-  \else
-    --%
-  \fi
-}
-
-\newcommand{\semio@glossary@pages@dedup@add}[1]{%
-  \edef\semio@glossary@page@num{\getpagerefnumber{#1}}%
-  \edef\semio@glossary@page@key{\detokenize\expandafter{\semio@glossary@page@num}}%
-  \@ifundefined{semio@glossary@seen@\semio@glossary@page@key}{%
-    \global\@namedef{semio@glossary@seen@\semio@glossary@page@key}{1}%
-    \edef\semio@glossary@pages@out{%
-      \semio@glossary@pages@out\semio@glossary@pages@sep\noexpand\semio@glossary@page@link{#1}}%
-    \gdef\semio@glossary@pages@sep{, }%
-  }{}%
-}
-
-\newcommand{\semio@glossary@pages@render}[1]{%
-  \begingroup
-  \makeatletter
-  \semio@glossary@pages@render@init
-  \if\relax\detokenize{#1}\relax
-    --%
-  \else
-    \@tfor\@semio@gls@label:=#1\do{%
-      \ifx\@semio@gls@label\empty\else
-        \semio@glossary@pages@dedup@add{\@semio@gls@label}%
-      \fi
-    }%
-    \ifx\semio@glossary@pages@out\empty --\else\semio@glossary@pages@out\fi
-  \fi
-  \makeatother
-  \endgroup
-}
-
-\newcommand{\SemioTableGlossary}[1]{%
-  \expandafter\semio@table@render\expandafter{\semio@table@colspec@glossary}{#1}%
-}
-
 \newcommand{\semio@table@begin@tabular}[1]{\begin{tabular}{#1}}
 
 \newcommand{\SemioTableBegin}[1]{%
@@ -231,11 +169,7 @@
         \ifx\semio@table@spec\semio@table@spec@nry
           \expandafter\semio@table@begin@tabular\expandafter{\semio@table@colspec@reference}%
         \else
-          \ifx\semio@table@spec\semio@table@spec@tdp
-            \expandafter\semio@table@begin@tabular\expandafter{\semio@table@colspec@glossary}%
-          \else
           \begin{tabular}{@{}#1@{}}%
-          \fi
         \fi
       \fi
     \fi
@@ -246,7 +180,6 @@
 \def\semio@table@spec@lll{lll}
 \def\semio@table@spec@nrp{nrp}
 \def\semio@table@spec@nry{nry}
-\def\semio@table@spec@tdp{tdp}
 
 \newcommand{\SemioTableEnd}{%
   \end{tabular}%

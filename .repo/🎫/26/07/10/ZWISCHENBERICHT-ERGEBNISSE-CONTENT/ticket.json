@@ -1,0 +1,13 @@
+{
+  "title": "Zwischenbericht Ergebnisse Content",
+  "emoji": "📄",
+  "status": "open",
+  "description": "Replace placeholder text in mit-bestand zwischenbericht section 1 Ergebnisse with provided final content for Forschungsfragen, AP-Erfahrung Recherche, Interviews, User Stories, and Synthese.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1887"
+  },
+  "goal": "🎯r2602🎯updateddocs",
+  "sessions": [
+    "⚪3792c9e603fe46499330c8acfdbfb76c"
+  ]
+}

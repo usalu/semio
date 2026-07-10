@@ -122,7 +122,7 @@
 }
 
 \cs_new:Npn \semio_register_title_text:n #1 {
-  \str_case:VnF \l_semio_language_tl {
+  \str_case:Vn \l_semio_language_tl {
     { de } { Verzeichnis~der~\semio_kind_label_plural:n {#1} }
   } {
     List~of~\semio_kind_label_plural:n {#1}
@@ -130,73 +130,45 @@
 }
 
 \cs_new:Npn \semio_toc_title_text: {
-  \str_case:VnF \l_semio_language_tl {
+  \str_case:Vn \l_semio_language_tl {
     { de } { Inhaltsverzeichnis }
   } { Table~of~Contents }
 }
 
 \cs_new:Npn \semio_references_title_text: {
-  \str_case:VnF \l_semio_language_tl {
+  \str_case:Vn \l_semio_language_tl {
     { de } { Literaturverzeichnis }
   } { References }
 }
 
 \cs_new_protected:Npn \semio_register_header_reference: {
-  \str_case:VnF \l_semio_language_tl {
+  \str_case:Vn \l_semio_language_tl {
     { de } { Referenz }
   } { Reference }
 }
 
 \cs_new_protected:Npn \semio_register_header_year: {
-  \str_case:VnF \l_semio_language_tl {
+  \str_case:Vn \l_semio_language_tl {
     { de } { Jahr }
   } { Year }
 }
 
 \cs_new_protected:Npn \semio_register_header_number: {
-  \str_case:VnF \l_semio_language_tl {
+  \str_case:Vn \l_semio_language_tl {
     { de } { Nr. }
   } { No. }
 }
 
 \cs_new_protected:Npn \semio_register_header_title: {
-  \str_case:VnF \l_semio_language_tl {
+  \str_case:Vn \l_semio_language_tl {
     { de } { Titel }
   } { Title }
 }
 
 \cs_new_protected:Npn \semio_register_header_page: {
-  \str_case:VnF \l_semio_language_tl {
+  \str_case:Vn \l_semio_language_tl {
     { de } { Seite }
   } { Page }
-}
-
-\cs_new:Npn \semio_glossary_title_text: {
-  \str_case:Vn \l_semio_language_tl {
-    { de } { Glossar }
-    { en } { Glossary }
-  }
-}
-
-\cs_new_protected:Npn \semio_glossary_header_term: {
-  \str_case:Vn \l_semio_language_tl {
-    { de } { Begriff }
-    { en } { Term }
-  }
-}
-
-\cs_new_protected:Npn \semio_glossary_header_definition: {
-  \str_case:Vn \l_semio_language_tl {
-    { de } { Definition }
-    { en } { Definition }
-  }
-}
-
-\cs_new_protected:Npn \semio_glossary_header_pages: {
-  \str_case:Vn \l_semio_language_tl {
-    { de } { Seiten }
-    { en } { Pages }
-  }
 }
 
 \cs_new_protected:Npn \semio_kind_number:nn #1 #2 {
@@ -242,7 +214,7 @@
 }
 
 \cs_new_protected:Npn \semio_language_apply: {
-  \str_case:VnF \l_semio_language_tl {
+  \str_case:Vn \l_semio_language_tl {
     { de } { \selectlanguage { ngerman } }
     { en } { \selectlanguage { english } }
   } {
@@ -301,6 +273,7 @@
 \semio@kind@register@en{lemma}{Lemma}
 \semio@kind@register@en{proof}{Proof}
 \semio@kind@register@en{equation}{Equation}
+\semio@kind@register@en{glossary}{Glossary}
 \semio@kind@register@en{abbreviations}{Abbreviations}
 \semio@kind@register@en{blockquote}{Blockquote}
 \semio@kind@register@en{epigraph}{Epigraph}
@@ -322,6 +295,7 @@
 \semio@kind@register@de{lemma}{Lemma}
 \semio@kind@register@de{proof}{Beweis}
 \semio@kind@register@de{equation}{Gleichung}
+\semio@kind@register@de{glossary}{Glossar}
 \semio@kind@register@de{abbreviations}{Abkürzungen}
 \semio@kind@register@de{blockquote}{Zitat}
 \semio@kind@register@de{epigraph}{Epigraph}
@@ -337,6 +311,7 @@
 \semio@kind@register@plural@en{lemma}{Lemmas}
 \semio@kind@register@plural@en{proof}{Proofs}
 \semio@kind@register@plural@en{equation}{Equations}
+\semio@kind@register@plural@en{glossary}{Glossaries}
 \semio@kind@register@plural@en{abbreviations}{Abbreviations}
 \semio@kind@register@plural@en{blockquote}{Blockquotes}
 \semio@kind@register@plural@en{epigraph}{Epigraphs}
@@ -352,6 +327,7 @@
 \semio@kind@register@plural@de{lemma}{Lemmas}
 \semio@kind@register@plural@de{proof}{Beweise}
 \semio@kind@register@plural@de{equation}{Gleichungen}
+\semio@kind@register@plural@de{glossary}{Glossare}
 \semio@kind@register@plural@de{abbreviations}{Abkürzungen}
 \semio@kind@register@plural@de{blockquote}{Zitate}
 \semio@kind@register@plural@de{epigraph}{Epigraphen}
@@ -421,15 +397,11 @@
 \NewExpandableDocumentCommand \SemioRegisterTitle { m } { \semio_register_title_text:n {#1} }
 \NewExpandableDocumentCommand \SemioTocTitle { } { \semio_toc_title_text: }
 \NewExpandableDocumentCommand \SemioReferencesTitle { } { \semio_references_title_text: }
-\NewExpandableDocumentCommand \SemioGlossaryTitle { } { \semio_glossary_title_text: }
 \NewDocumentCommand \semio@register@header@reference { } { \semio_register_header_reference: }
 \NewDocumentCommand \semio@register@header@year { } { \semio_register_header_year: }
 \NewDocumentCommand \semio@register@header@number { } { \semio_register_header_number: }
 \NewDocumentCommand \semio@register@header@title { } { \semio_register_header_title: }
 \NewDocumentCommand \semio@register@header@page { } { \semio_register_header_page: }
-\NewDocumentCommand \semio@glossary@header@term { } { \semio_glossary_header_term: }
-\NewDocumentCommand \semio@glossary@header@definition { } { \semio_glossary_header_definition: }
-\NewDocumentCommand \semio@glossary@header@pages { } { \semio_glossary_header_pages: }
 \ExplSyntaxOff
 \makeatletter
 
