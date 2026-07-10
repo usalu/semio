@@ -179,6 +179,8 @@ export class SetupScript extends Script {
     tryRun("dotnet", ["restore", "Monorepo.sln"]);
     console.log("[setup] rustup wasm target…");
     tryRun("rustup", ["target", "add", "wasm32-unknown-unknown"]);
+    console.log("[setup] wasm packages…");
+    new WasmScript(this.root).run([]);
 
     const cargoHome = join(homedir(), ".cargo");
     const cargoConfig = join(cargoHome, "config.toml");
@@ -444,6 +446,15 @@ export class NxScript extends Script {
   }
 }
 //#endregion 🔖NxScript
+
+//#region 🔖WasmScript
+/** 🌐Build every Rust/WASM package required by dev playgrounds. */
+export class WasmScript extends Script {
+  run(segments: string[]): void {
+    new NxScript(this.root).run(["run-many", "-t", "wasm", "--parallel=3", ...segments]);
+  }
+}
+//#endregion 🔖WasmScript
 
 //#region 🔖GenerateScript
 export class GenerateScript extends Script {
@@ -876,6 +887,7 @@ export class CommitScript extends Script {
 //#region 🔖Dispatch
 const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("nx", NxScript)
+  .register("wasm", WasmScript)
   .register("setup", SetupScript)
   .register("start", StartScript)
   .register("dev", DevScript)

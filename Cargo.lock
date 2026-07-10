@@ -3757,7 +3757,6 @@ dependencies = [
 name = "mathematical_graph_manifest"
 version = "0.1.0"
 dependencies = [
- "neural_engine",
  "serde",
  "serde_json",
 ]

@@ -199,7 +199,8 @@
     "purge": "bun ./script.ts purge",
     "query:build": "bun nx run @semio-tech/compose-query:build",
     "query:test": "bun nx run @semio-tech/compose-query:test",
-    "query:wasm": "bun ./script.ts query wasm"
+    "query:wasm": "bun ./script.ts query wasm",
+    "wasm": "bun ./script.ts wasm"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

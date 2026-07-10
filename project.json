@@ -11,6 +11,14 @@
         "command": "bun ./script.ts setup"
       }
     },
+    "wasm": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts wasm",
+        "forwardAllArgs": true
+      }
+    },
     "start": {
       "executor": "nx:run-commands",
       "cache": false,

@@ -1114,6 +1114,17 @@
       }
     },
     {
+      "name": "📦build🌐wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts wasm",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 115
+      }
+    },
+    {
       "name": "📦build🗄️vcs",
       "type": "node-terminal",
       "request": "launch",

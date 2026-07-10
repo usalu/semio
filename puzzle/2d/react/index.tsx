@@ -1851,6 +1851,27 @@ export interface Puzzle2dLodEntry {
 
 let puzzle2dLodScaleCache: readonly Puzzle2dLodEntry[] | null = null;
 
+const DEFAULT_PUZZLE_2D_LOD_SCALE_JSON = JSON.stringify([
+  { id: "minimap", name: "Minimap", description: "Whole-graph silhouette; fill only.", maxZoom: 0.4 },
+  { id: "overview", name: "Overview", description: "Node icons only.", maxZoom: 0.6 },
+  { id: "compact", name: "Compact", description: "Horizontal abbreviations.", maxZoom: 0.8 },
+  { id: "normal", name: "Normal", description: "Vertical names with sections; channel abbreviations on ports.", maxZoom: 1.5 },
+  { id: "detail", name: "Detail", description: "Channel names on ports, port handles, and control text.", maxZoom: 2.75 },
+  { id: "micro", name: "Micro", description: "Full channel names on ports and maximum node fidelity.", maxZoom: Number.MAX_VALUE },
+]);
+
+function readPuzzle2dLodScaleJson(): string {
+  const session = new BoardSession() as { lodScaleJson?: () => string };
+  if (typeof session.lodScaleJson === "function") {
+    try {
+      return session.lodScaleJson.call(session);
+    } catch {
+      /* wasm pkg stub or init race */
+    }
+  }
+  return DEFAULT_PUZZLE_2D_LOD_SCALE_JSON;
+}
+
 function parsePuzzle2dLodScaleJson(raw: string): readonly Puzzle2dLodEntry[] {
   const rows = JSON.parse(raw) as Array<{ id?: string; name?: string; description?: string; maxZoom?: number }>;
   if (!Array.isArray(rows)) {
@@ -1874,7 +1895,7 @@ function parsePuzzle2dLodScaleJson(raw: string): readonly Puzzle2dLodEntry[] {
 /** @emoji 📶 Fixed LOD table declared in puzzle 2d WASM (single source of truth). */
 export function getPuzzle2dLodScale(): readonly Puzzle2dLodEntry[] {
   if (!puzzle2dLodScaleCache) {
-    puzzle2dLodScaleCache = parsePuzzle2dLodScaleJson(new BoardSession().lodScaleJson());
+    puzzle2dLodScaleCache = parsePuzzle2dLodScaleJson(readPuzzle2dLodScaleJson());
   }
   return puzzle2dLodScaleCache;
 }
