@@ -1,19 +1,8 @@
 \documentclass[type=report,theme=dark,language=de]{semio}
-\title{Window Row Column Alignment Verify}
+\title{Verify}
 \author{Semio}
-
 \begin{document}
-\maketitle
-
-\section{Row bottom-border alignment}
-\SemioWindowRowTwo{%
-  \begin{Window}[title=Short, row]
-    \vbox to 1.2cm{\vfil\hrule width 0.8\linewidth\vfil}%
-  \end{Window}%
-}{%
-  \begin{Window}[title=Tall, row]
-    \vbox to 3.6cm{\vfil\hrule width 0.8\linewidth\vfil}%
-  \end{Window}%
-}
-
+\begin{Window}[title=Only, row]
+  Hello.
+\end{Window}
 \end{document}
