@@ -1227,6 +1227,15 @@
   }%
 }
 
+\newcommand{\semio@window@cap@vbox}[2]{%
+  \vbox to \semio@chrome@titlebar@height{%
+    \nointerlineskip
+    \hbox{\semio@window@cap@paint{\semio@window@cap@w}{#1}{\semio@window@cap@body@h}}%
+    \nointerlineskip
+    \hbox{\semio@window@stroke@h{#2}{\semio@window@cap@w}}%
+  }%
+}
+
 \newcommand{\semio@window@cap}[3]{%
   \semio@window@cap@body@h@set
   \sbox{\semio@window@cap@slot}{%
@@ -1237,28 +1246,9 @@
   }%
   \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
   \hbox{%
-    \semio@window@stroke@v{#1}%
-    \vbox to \semio@chrome@titlebar@height{%
-      \nointerlineskip
-      \hbox{%
-        \begingroup
-        \setlength{\fboxsep}{0pt}%
-        \colorbox{#1}{%
-          \vbox to \semio@window@cap@body@h{%
-            \vfil
-            \nointerlineskip
-            \hbox to \semio@window@cap@w{%
-              \hfil\usebox{\semio@window@cap@slot}\hfil
-            }%
-            \vfil
-          }%
-        }%
-        \endgroup
-      }%
-      \nointerlineskip
-      \hbox{\semio@window@stroke@h{#1}{\semio@window@cap@w}}%
-    }%
-    \semio@window@stroke@v{#1}%
+    \semio@window@cap@raise{\semio@window@stroke@v{#1}}%
+    \semio@window@cap@raise{\semio@window@cap@vbox{#1}{#1}}%
+    \semio@window@cap@raise{\semio@window@stroke@v{#1}}%
   }%
 }
 
@@ -1337,44 +1327,14 @@
   }%
 }
 
-\newcommand{\semio@heading@chip@core}[1]{%
-  \semio@window@cap@body@h@set
-  \sbox{\semio@window@cap@slot}{%
-    \begingroup
-    \semio@heading@chip@font\color{semio-chrome-foreground}%
-    \hspace{\semio@chrome@padding}#1\hspace{\semio@chrome@padding}%
-    \endgroup
-  }%
-  \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
-  \semio@window@cap@raise{\semio@paragraph@cap@muted@vbox{semio-chrome-canvas}}%
-}
-
 \newcommand{\semio@heading@chip}[3]{%
-  \hbox{%
-    \semio@window@cap@raise{\semio@window@stroke@v{semio-chrome-border-normal}}%
-    \semio@heading@chip@core{#3}%
-    \semio@window@cap@raise{\semio@window@stroke@v{semio-chrome-border-normal}}%
+  \semio@window@cap{#1}{#3}{%
+    \semio@heading@chip@font\color{#2}%
   }%
 }
 
 \newcommand{\semio@window@gap@inbox}[1]{%
-  \semio@window@cap@body@h@set
-  \hbox to \dimexpr\semio@window@gap@w\relax{%
-    \vbox to \semio@chrome@titlebar@height{%
-      \nointerlineskip
-      \hbox to \dimexpr\semio@window@gap@w\relax{%
-        \semio@window@stroke@h{semio-chrome-border-normal}{\semio@window@gap@w}%
-      }%
-      \nointerlineskip
-      \hbox to \dimexpr\semio@window@gap@w\relax{%
-        \colorbox{#1}{%
-          \vbox to \semio@window@cap@body@h{%
-            \vfil\null\vfil
-          }%
-        }%
-      }%
-    }%
-  }%
+  \semio@window@gap{semio-chrome-base}{#1}%
 }
 
 \newcommand{\semio@heading@number@suffix}[1]{%
@@ -1403,7 +1363,7 @@
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
-      \semio@window@gap{semio-chrome-base}{semio-chrome-border-normal}%
+      \semio@window@gap{semio-chrome-base}{#1}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -1682,25 +1642,23 @@
 }
 %endregion NestedParagraphs
 
+\newcommand{\semio@window@gap@vbox}[2]{%
+  \vbox to \semio@chrome@titlebar@height{%
+    \nointerlineskip
+    \hbox to \dimexpr\semio@window@gap@w\relax{%
+      \semio@window@cap@paint{\semio@window@gap@w}{#1}{\semio@window@cap@body@h}%
+    }%
+    \nointerlineskip
+    \hbox{\semio@window@stroke@h{#2}{\semio@window@gap@w}}%
+  }%
+}
+
 \newcommand{\semio@window@gap}[2]{%
   \semio@window@cap@body@h@set
-  \hbox to \dimexpr\semio@window@gap@w\relax{%
-    \vbox to \semio@chrome@titlebar@height{%
-      \nointerlineskip
-      \hbox to \dimexpr\semio@window@gap@w\relax{%
-        \begingroup
-        \setlength{\fboxsep}{0pt}%
-        \colorbox{#1}{%
-          \vbox to \semio@window@cap@body@h{%
-            \vfil\null\vfil
-          }%
-        }%
-        \endgroup
-      }%
-      \nointerlineskip
-      \hbox to \dimexpr\semio@window@gap@w\relax{%
-        \semio@window@stroke@h{#2}{\semio@window@gap@w}%
-      }%
+  \semio@window@cap@raise{%
+    \hbox to \dimexpr\semio@window@gap@w\relax{%
+      \semio@window@gap@vbox{#1}{#2}%
+      \hfil
     }%
   }%
 }

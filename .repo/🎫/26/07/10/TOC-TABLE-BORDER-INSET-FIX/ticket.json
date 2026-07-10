@@ -1,0 +1,14 @@
+{
+  "title": "TOC Table Border Inset Fix",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "TOC Table Border Inset Fix",
+  "summary": "Fixed inward-offset vertical borders and header-to-first-row gap on register longtables by moving chrome padding inside the vertical rules (|@{\\hspace{padding}} ... @{\\hspace{padding}}|) instead of outside them, matching tcolorbox Window layout. Updated continuation chrome multicolumn to the same frame order and corrected its inner hbox width to linewidth minus rule widths.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1891"
+  },
+  "goal": "🎯print🎯tex",
+  "sessions": [
+    "⚪8ed89209fc8945368e7413f5515bf812"
+  ]
+}
