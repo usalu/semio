@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import {
   CanvasPickMenu,
   SelectionMarquee,
@@ -271,8 +271,10 @@ function RasterCanvasSurface({ node, scene, onCommand }: { readonly node: UiComp
   const pickInteraction = useCanvasPickInteraction({
     resolveTargetsAtClient: (client) => {
       const session = sessionRef.current;
-      if (!session) return [];
-      const point = clientPoint(client);
+      const container = containerRef.current;
+      if (!session || !container) return [];
+      const rect = container.getBoundingClientRect();
+      const point = { x: client.x - rect.left, y: client.y - rect.top };
       try {
         const targets = JSON.parse(session.pickTargetsAtScreenJson(point.x, point.y)) as RasterPickTarget[];
         return targets.map((target) => ({ ...target, label: target.id }));
@@ -339,7 +341,7 @@ function RasterCanvasSurface({ node, scene, onCommand }: { readonly node: UiComp
 
   //#region Pointer
   const onPointerDown = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
+    (event: ReactPointerEvent<HTMLDivElement>) => {
       const point = clientPoint(event);
       const session = sessionRef.current;
       if (event.button === 1) {
@@ -361,7 +363,7 @@ function RasterCanvasSurface({ node, scene, onCommand }: { readonly node: UiComp
   );
 
   const onPointerMove = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
+    (event: ReactPointerEvent<HTMLDivElement>) => {
       const point = clientPoint(event);
       const session = sessionRef.current;
       const pan = panRef.current;
@@ -404,7 +406,7 @@ function RasterCanvasSurface({ node, scene, onCommand }: { readonly node: UiComp
   );
 
   const onPointerUp = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
+    (event: ReactPointerEvent<HTMLDivElement>) => {
       const point = clientPoint(event);
       const session = sessionRef.current;
       if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
@@ -433,7 +435,7 @@ function RasterCanvasSurface({ node, scene, onCommand }: { readonly node: UiComp
   );
 
   const onWheel = useCallback(
-    (event: React.WheelEvent<HTMLDivElement>) => {
+    (event: ReactWheelEvent<HTMLDivElement>) => {
       event.preventDefault();
       const point = clientPoint(event);
       const session = sessionRef.current;
@@ -479,6 +481,7 @@ function RasterWasmCanvas({ sessionFactory, onSessionReady }: { readonly session
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | null>(null);
+  const observerRef = useRef<ResizeObserver | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -514,12 +517,12 @@ function RasterWasmCanvas({ sessionFactory, onSessionReady }: { readonly session
         resize();
         const observer = new ResizeObserver(resize);
         observer.observe(container);
+        observerRef.current = observer;
         const tick = () => {
           session.renderFrame();
           rafRef.current = requestAnimationFrame(tick);
         };
         rafRef.current = requestAnimationFrame(tick);
-        return () => observer.disconnect();
       })
       .catch(() => {
         /* attach failed — surfaced via session.gpuReady() polling in RasterCanvasSurface */
@@ -527,6 +530,8 @@ function RasterWasmCanvas({ sessionFactory, onSessionReady }: { readonly session
     return () => {
       disposed = true;
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      observerRef.current?.disconnect();
+      observerRef.current = null;
     };
   }, [onSessionReady, sessionFactory]);
 

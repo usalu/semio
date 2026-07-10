@@ -1390,8 +1390,12 @@ extern "C" {
 
 /// Ensures the embedding plugin crate's bundle installer ran before any WIT export is served.
 pub fn ensure_plugin_initialized() {
-    PLUGIN_INIT_ONCE.call_once(|| unsafe {
-        semio_plugin_install_bundle();
+    PLUGIN_INIT_ONCE.call_once(|| {
+        #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+        crate::host_port::register_host_backbone_port();
+        unsafe {
+            semio_plugin_install_bundle();
+        }
     });
 }
 
@@ -2363,6 +2367,24 @@ pub fn host_now_ms() -> f64 {
         .map(|elapsed| elapsed.as_millis() as f64)
         .unwrap_or(0.0)
 }
+
+/** @emoji 🔌 vcs backbone port backed by the component host capabilities. */
+pub struct HostBackbonePort;
+
+impl vcs::BackbonePort for HostBackbonePort {
+    fn read(&self, uri: &str) -> Result<String, vcs::VcsError> {
+        host_backbone_read(uri).map_err(vcs::VcsError::Backbone)
+    }
+
+    fn write(&self, uri: &str, payload: &str) -> Result<(), vcs::VcsError> {
+        host_backbone_write(uri, payload).map_err(vcs::VcsError::Backbone)
+    }
+}
+
+/** @emoji 🧷 Installs the component host as the vcs backbone port so browser storage and file/remote IO reach the shell. */
+pub fn register_host_backbone_port() {
+    vcs::set_host_backbone_port(std::sync::Arc::new(HostBackbonePort));
+}
 // #endregion host_port
 }
 
@@ -2376,7 +2398,7 @@ pub use generate_mode::{
     render_generations_tree, select_generation, selected_generation, selected_generation_mut,
     update_generation_values, FormGeneration, GenerationPlayState,
 };
-pub use host_port::{host_backbone_read, host_backbone_write, host_now_ms};
+pub use host_port::{host_backbone_read, host_backbone_write, host_now_ms, register_host_backbone_port, HostBackbonePort};
 pub use plugin_runtime::{command_result_from_patch_ops, install_plugin_bundle};
 pub use scaffold::{
     assert_standard_app_renders, register_standard_app, standard_app,

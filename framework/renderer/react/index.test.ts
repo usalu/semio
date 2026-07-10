@@ -187,6 +187,173 @@ describe("framework external slots", () => {
   });
 });
 
+describe("declarative forms parity", () => {
+  it("renders field description, required marker and inline error", () => {
+    const markup = renderToStaticMarkup(
+      interpretUiNode(
+        {
+          type: "field",
+          id: "forms-try.name",
+          label: "Name",
+          description: "Your full name",
+          required: true,
+          error: "Name is required",
+          child: {
+            type: "input",
+            id: "forms-try.name.input",
+            inputKind: "text",
+            value: "",
+            onChange: { controllerId: "forms-play", command: "setTryValue" },
+          },
+        },
+        { onCommand: noopCommand },
+      ),
+    );
+    expect(markup).toContain("Your full name");
+    expect(markup).toContain("Name is required");
+    expect(markup).toContain("*");
+    expect(markup).toContain('data-slot="field-error"');
+  });
+
+  it("renders slider unit readout", () => {
+    const markup = renderToStaticMarkup(
+      interpretUiNode(
+        {
+          type: "slider",
+          id: "forms-try.volume.slider",
+          value: 60,
+          min: 0,
+          max: 100,
+          step: 5,
+          unit: "%",
+          onChange: { controllerId: "forms-play", command: "setTryValue" },
+        },
+        { onCommand: noopCommand },
+      ),
+    );
+    expect(markup).toContain("60 %");
+  });
+
+  it("passes number bounds and file accept to inputs", () => {
+    const numberMarkup = renderToStaticMarkup(
+      interpretUiNode(
+        {
+          type: "input",
+          id: "forms-try.age.input",
+          inputKind: "number",
+          value: "28",
+          min: 13,
+          max: 120,
+          step: 1,
+          onChange: { controllerId: "forms-play", command: "setTryValue" },
+        },
+        { onCommand: noopCommand },
+      ),
+    );
+    expect(numberMarkup).toContain('min="13"');
+    expect(numberMarkup).toContain('max="120"');
+    const fileMarkup = renderToStaticMarkup(
+      interpretUiNode(
+        {
+          type: "input",
+          id: "forms-try.resume.input",
+          inputKind: "file",
+          value: "",
+          accept: ".pdf,.doc",
+          onChange: { controllerId: "forms-play", command: "setTryValue" },
+        },
+        { onCommand: noopCommand },
+      ),
+    );
+    expect(fileMarkup).toContain('accept=".pdf,.doc"');
+  });
+
+  it("disables gated wizard buttons", () => {
+    const markup = renderToStaticMarkup(
+      interpretUiNode(
+        {
+          type: "button",
+          id: "forms-try.next",
+          iconId: "chevron-right",
+          label: "Next",
+          disabled: true,
+          command: { controllerId: "forms-play", command: "nextStep" },
+        },
+        { onCommand: noopCommand },
+      ),
+    );
+    expect(markup).toContain("disabled");
+  });
+
+  it("renders selectable builder cards with selection ring", () => {
+    const markup = renderToStaticMarkup(
+      interpretUiNode(
+        {
+          type: "stack",
+          direction: "vertical",
+          id: "forms-blueprint.card.q1",
+          selected: true,
+          activate: { controllerId: "forms-play", command: "setSelection" },
+          children: [{ type: "text", value: "text · q1" }],
+        },
+        { onCommand: noopCommand },
+      ),
+    );
+    expect(markup).toContain('data-ui-stack="forms-blueprint.card.q1"');
+    expect(markup).toContain('role="button"');
+    expect(markup).toContain("ring-primary");
+  });
+
+  it("renders image nodes from url sources", () => {
+    const markup = renderToStaticMarkup(
+      interpretUiNode(
+        {
+          type: "image",
+          id: "forms-try.avatar.image",
+          src: "https://example.com/avatar.png",
+          alt: "Avatar",
+        },
+        { onCommand: noopCommand },
+      ),
+    );
+    expect(markup).toContain('src="https://example.com/avatar.png"');
+    expect(markup).toContain('alt="Avatar"');
+  });
+
+  it("dispatches the tree drop command with payload, target and position", async () => {
+    const { declarativeTreeDragController } = await import("./ui-interpreter.tsx");
+    const dispatched: unknown[] = [];
+    const controller = declarativeTreeDragController(
+      {
+        type: "tree",
+        sections: [{ id: "steps", items: [{ id: "forms-play-document.step.s1", label: "Inputs" }] }],
+        dropCommand: { controllerId: "forms-play", command: "dropQuestionKind" },
+      },
+      (command) => {
+        dispatched.push(command);
+      },
+    );
+    controller?.handleDrop?.({
+      target: { id: "forms-play-document.step.s1", label: "Inputs" },
+      targetKind: "item",
+      data: {
+        "application/vnd.code.tree.item": '["x"]',
+        "application/x-semio-forms-question-kind": '{"kind":"slider"}',
+      },
+      sourceItems: [],
+      section: { id: "steps", label: "Steps", items: [] },
+      dropPosition: "after",
+    });
+    expect(dispatched).toEqual([
+      {
+        controllerId: "forms-play",
+        command: "dropQuestionKind",
+        args: { kind: "slider", targetId: "forms-play-document.step.s1", dropPosition: "after" },
+      },
+    ]);
+  });
+});
+
 describe("framework renderer hosts", () => {
   it("renders node graph host from media graph scene json", () => {
     const markup = renderToStaticMarkup(
@@ -675,7 +842,7 @@ describe("framework renderer hosts", () => {
     expect(markup).toContain("Draw");
   });
 
-  it("renders raster host from base64 pixels", () => {
+  it("renders raster host canvas surface from document sync scene", () => {
     const markup = renderToStaticMarkup(
       createElement(RasterHost, {
         node: {
@@ -684,16 +851,64 @@ describe("framework renderer hosts", () => {
           controllerId: "raster-play",
           componentKind: "raster",
           raster: {
-            width: 2,
-            height: 2,
-            pixelsBase64: "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+            documentSyncJson: '{"schema":"raster.document","id":"raster","layers":[]}',
+            assetsJson: "{}",
+            cameraJson: '{"x":0,"y":0,"zoom":1}',
+            selectionJson: "[]",
+            activeTool: "selectMarquee",
+            brushSize: 24,
+            brushOpacity: 1,
+            viewMode: "composite",
           },
         },
         onCommand: noopCommand,
       }),
     );
-    expect(markup).toContain("semio-raster-host");
-    expect(markup).toContain("data:image/png;base64,");
+    expect(markup).toContain("semio-raster-canvas-surface");
+    expect(markup).toContain('data-surface-id="raster.play.viewport"');
+    expect(markup).toContain('data-view-mode="composite"');
+  });
+
+  it("renders raster navigator host with the composite viewport overlay channel", () => {
+    const markup = renderToStaticMarkup(
+      createElement(RasterHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "raster.play.navigator",
+          controllerId: "raster-play",
+          componentKind: "raster",
+          raster: {
+            documentSyncJson: '{"schema":"raster.document","id":"raster","layers":[]}',
+            assetsJson: "{}",
+            cameraJson: '{"x":0,"y":0,"zoom":1}',
+            selectionJson: "[]",
+            activeTool: "selectMarquee",
+            brushSize: 24,
+            brushOpacity: 1,
+            viewMode: "navigator",
+            compositeViewportJson: '{"width":640,"height":480}',
+          },
+        },
+        onCommand: noopCommand,
+      }),
+    );
+    expect(markup).toContain("semio-raster-canvas-surface");
+    expect(markup).toContain('data-view-mode="navigator"');
+  });
+
+  it("renders raster host empty fallback without a scene", () => {
+    const markup = renderToStaticMarkup(
+      createElement(RasterHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "raster.play.composite",
+          controllerId: "raster-play",
+          componentKind: "raster",
+        },
+        onCommand: noopCommand,
+      }),
+    );
+    expect(markup).toContain("semio-raster-empty");
   });
 
   it("interprets virtual file system component scenes", () => {

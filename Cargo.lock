@@ -7341,6 +7341,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+ "vcs",
  "wit-bindgen 0.36.0",
 ]
 

@@ -16,7 +16,7 @@ use semio_framework_os::{
 };
 use semio_framework_plugin::{PanelGroup,
     build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene,
-    create_default_layout, create_tab_stack_layout, host_backbone_read, host_backbone_write, host_now_ms,
+    create_default_layout, create_tab_stack_layout, host_now_ms,
     layout::MeasureSelectItem,
     layout::WindowEngagementStatus, tool_button, tool_collection, ui_declarative_sections_to_tree,
     ui_inspector_all_equal, ui_text,
@@ -503,30 +503,7 @@ fn media_graph_context_menu_json() -> String {
     .to_string()
 }
 
-struct HostPresencePort {
-    fallback: MemoryBackbonePort,
-}
-
-impl OsBackbonePort for HostPresencePort {
-    fn read(&self, uri: &str) -> Result<String, VcsError> {
-        match host_backbone_read(uri) {
-            Ok(payload) => Ok(payload),
-            Err(_) => vcs::BackbonePort::read(&self.fallback, uri),
-        }
-    }
-
-    fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError> {
-        vcs::BackbonePort::write(&self.fallback, uri, payload)?;
-        let _ = host_backbone_write(uri, payload);
-        Ok(())
-    }
-}
-
-static PRESENCE_PORT: LazyLock<Arc<dyn OsBackbonePort>> = LazyLock::new(|| {
-    Arc::new(HostPresencePort {
-        fallback: MemoryBackbonePort::new(),
-    })
-});
+static PRESENCE_PORT: LazyLock<Arc<dyn OsBackbonePort>> = LazyLock::new(|| Arc::new(LocalStorageBackbonePort::new()));
 
 fn presence_port() -> Arc<dyn OsBackbonePort> {
     PRESENCE_PORT.clone()

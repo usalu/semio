@@ -534,7 +534,7 @@ fn now_iso() -> String {
 }
 
 fn now_ms() -> u64 {
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
     {
         use std::time::{SystemTime, UNIX_EPOCH};
         return SystemTime::now()
@@ -542,7 +542,7 @@ fn now_ms() -> u64 {
             .map(|duration| duration.as_millis() as u64)
             .unwrap_or(0);
     }
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
     {
         js_sys::Date::now() as u64
     }
@@ -1092,7 +1092,12 @@ impl Default for LocalStorageBackbonePort {
 
 impl BackbonePort for LocalStorageBackbonePort {
     fn read(&self, uri: &str) -> Result<String, VcsError> {
-        #[cfg(target_arch = "wasm32")]
+        if let Some(port) = host_backbone_port() {
+            if let Ok(value) = port.read(uri) {
+                return Ok(value);
+            }
+        }
+        #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
         {
             if let Some(window) = web_sys::window() {
                 if let Ok(Some(storage)) = window.local_storage() {
@@ -1107,7 +1112,10 @@ impl BackbonePort for LocalStorageBackbonePort {
 
     fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError> {
         self.fallback.write(uri, payload)?;
-        #[cfg(target_arch = "wasm32")]
+        if let Some(port) = host_backbone_port() {
+            let _ = port.write(uri, payload);
+        }
+        #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
         {
             if let Some(window) = web_sys::window() {
                 if let Ok(Some(storage)) = window.local_storage() {

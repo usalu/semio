@@ -310,6 +310,8 @@ struct CadPlayRuntime {
     engagement_pane: Option<String>,
     #[serde(default)]
     engagement_session: Option<CadEngagementSession>,
+    #[serde(default)]
+    last_finalized_interaction_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pending_export: Option<Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -343,6 +345,7 @@ impl Default for CadPlayRuntime {
             selected_primitive_kind: None,
             engagement_pane: None,
             engagement_session: None,
+            last_finalized_interaction_id: None,
             pending_export: None,
             pending_export_filename: None,
             pending_export_mime: None,
@@ -2319,6 +2322,8 @@ fn engagement_submit_line(envelope: &mut CadPlayEnvelope, pane: CadPaneId) -> bo
                             ) {
                                 envelope.runtime.selected_object_ids = vec![id];
                                 envelope.runtime.engagement_input.clear();
+                                envelope.runtime.last_finalized_interaction_id =
+                                    Some(session_snapshot.interaction_id.clone());
                                 envelope.runtime.engagement_session = None;
                                 envelope.runtime.engagement_step = "Idle".into();
                                 return true;
@@ -2357,6 +2362,25 @@ fn engagement_submit_line(envelope: &mut CadPlayEnvelope, pane: CadPaneId) -> bo
     }
     envelope.runtime.engagement_step = format!("Unknown: {input}");
     false
+}
+
+/// Starts a fresh engagement session for `interaction_id` in `pane` (used by
+/// `engagementPossibleSelect`'s start-by-id path and `engagementRepeatLast`).
+fn start_interaction_session(envelope: &mut CadPlayEnvelope, pane: CadPaneId, interaction_id: &str) -> bool {
+    let Some(entry) = interaction::interaction_by_id(interaction_id) else {
+        return false;
+    };
+    envelope.runtime.engagement_session = start_session(entry.id, pane);
+    if let Some(session) = envelope.runtime.engagement_session.as_mut() {
+        let _ = apply_event(session, "start", None);
+    }
+    envelope.runtime.engagement_step = envelope
+        .runtime
+        .engagement_session
+        .as_ref()
+        .map(|session| session.state.clone())
+        .unwrap_or_else(|| "Idle".into());
+    true
 }
 
 //#region 🔖CadApp
@@ -2923,28 +2947,30 @@ impl PluginApp for CadApp {
                         if apply_event(session, possible_id, None) {
                             envelope.runtime.engagement_step = session.state.clone();
                         }
-                    } else if let Some(entry) = interaction::interaction_by_id(possible_id) {
-                        envelope.runtime.engagement_session = start_session(entry.id, pane);
-                        if let Some(session) = envelope.runtime.engagement_session.as_mut() {
-                            let _ = apply_event(session, "start", None);
-                        }
-                        envelope.runtime.engagement_step = envelope
-                            .runtime
-                            .engagement_session
-                            .as_ref()
-                            .map(|session| session.state.clone())
-                            .unwrap_or_else(|| "Idle".into());
-                    } else {
+                    } else if !start_interaction_session(&mut envelope, pane, possible_id) {
                         envelope.runtime.engagement_input = possible_id.into();
                     }
                 }
                 return vec![set_document_op(&envelope)];
             }
-            "engagementRepeatLast" | "engagementAbort" => {
-                if command == "engagementAbort" {
-                    envelope.runtime.engagement_input.clear();
-                    envelope.runtime.engagement_session = None;
+            "engagementRepeatLast" => {
+                let pane = args
+                    .and_then(|value| value.get("pane"))
+                    .and_then(|value| value.as_str())
+                    .map(cad_pane_id_from_suffix)
+                    .unwrap_or(CadPaneId::Shape);
+                if envelope.runtime.engagement_session.is_none() {
+                    if let Some(interaction_id) = envelope.runtime.last_finalized_interaction_id.clone() {
+                        start_interaction_session(&mut envelope, pane, &interaction_id);
+                        return vec![set_document_op(&envelope)];
+                    }
                 }
+                envelope.runtime.engagement_step = "Idle".into();
+                return vec![set_document_op(&envelope)];
+            }
+            "engagementAbort" => {
+                envelope.runtime.engagement_input.clear();
+                envelope.runtime.engagement_session = None;
                 envelope.runtime.engagement_step = "Idle".into();
                 return vec![set_document_op(&envelope)];
             }
@@ -2962,6 +2988,7 @@ impl PluginApp for CadApp {
                     .unwrap_or(CadPaneId::Shape);
                 let point = args.and_then(|value| value.get("position"));
                 if let Some(session) = envelope.runtime.engagement_session.as_mut() {
+                    let interaction_id = session.interaction_id.clone();
                     if apply_event(session, "pointer.down", point) {
                         envelope.runtime.engagement_step = session.state.clone();
                         if can_commit(session) {
@@ -2976,6 +3003,7 @@ impl PluginApp for CadApp {
                                         vec![CadOp::AddObject { pane, object }],
                                     ) {
                                         envelope.runtime.selected_object_ids = vec![id];
+                                        envelope.runtime.last_finalized_interaction_id = Some(interaction_id);
                                         envelope.runtime.engagement_session = None;
                                         envelope.runtime.engagement_step = "Idle".into();
                                     }

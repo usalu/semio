@@ -338,7 +338,8 @@ function treeDragPayloadMime(treeNode: UiTreeNode): string | undefined {
   return undefined;
 }
 
-function declarativeTreeDragController(treeNode: UiTreeNode, onCommand: UiInterpreterContext["onCommand"]): TreeDragAndDropController | undefined {
+/** @emoji 🖱️ Builds the drag/drop controller for a declarative tree — palette source when items carry drag payloads, drop dispatch when the tree declares a drop command. */
+export function declarativeTreeDragController(treeNode: UiTreeNode, onCommand: UiInterpreterContext["onCommand"]): TreeDragAndDropController | undefined {
   const mime = treeDragPayloadMime(treeNode);
   const source = mime ? catalogueTreeDragController(mime) : undefined;
   const dropCommand = treeNode.dropCommand;

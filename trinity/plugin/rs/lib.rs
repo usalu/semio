@@ -3,9 +3,7 @@
 pub mod app_jack;
 pub mod app_rewrite;
 
-use std::sync::LazyLock;
-
-use semio_framework_plugin::{install_plugin_bundle, PluginBundle};
+use semio_framework_plugin::PluginBundle;
 
 //#region 🔖Bundle
 fn bundle() -> PluginBundle {

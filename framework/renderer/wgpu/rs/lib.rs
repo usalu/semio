@@ -8207,6 +8207,9 @@ impl ShellState {
             direction: "column".into(),
             gap: None,
             padding: None,
+            id: None,
+            selected: None,
+            activate: None,
             children: vec![
                 UiNode::Text(UiTextNode {
                     value: "General".into(),

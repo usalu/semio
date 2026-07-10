@@ -5,7 +5,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     tool_button, tool_collection,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, App, CommandDescriptor, NodeGraphScene, PluginApp,
-    PluginBundle, TextEditorScene, ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
+    TextEditorScene, ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
     WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -15,7 +15,6 @@ use semio_framework_plugin::layout::MeasureSelectItem;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashMap};
-use std::sync::LazyLock;
 use trinity_jack::semantic_tokens;
 use trinity_ram::{Graph, GraphFixture, Node, PortDirection, PropertyValue};
 use trinity_rewrite::{
@@ -33,7 +32,6 @@ const TRINITY_REWRITE_PLAY_SURFACE_AFTER: &str = "trinity.rewrite.after";
 const TRINITY_REWRITE_PLAY_SURFACE_LHS: &str = "trinity.rewrite.lhs";
 const TRINITY_REWRITE_PLAY_SURFACE_RHS: &str = "trinity.rewrite.rhs";
 const TRINITY_REWRITE_PLAY_SURFACE_JACK: &str = "trinity.rewrite.jack";
-const TRINITY_REWRITE_PLAY_SURFACE_PARAMETERS: &str = "trinity.rewrite.parameters";
 const TRINITY_REWRITE_PLAY_BODY_BEFORE: &str = "trinity.rewrite.play.before";
 const TRINITY_REWRITE_PLAY_BODY_AFTER: &str = "trinity.rewrite.play.after";
 const TRINITY_REWRITE_PLAY_BODY_LHS: &str = "trinity.rewrite.play.lhs";
@@ -414,10 +412,7 @@ fn add_rule_clause(state: &mut RewriteRuleState, clause_kind: &str) -> bool {
 }
 
 fn apply_rewrite_node_graph_edit_ops(envelope: &mut TrinityRewriteEnvelope, surface_id: &str, ops: &[Value]) -> bool {
-    let mut store = rule_store_from_envelope(envelope);
-    let Ok(mut state) = store.projection() else {
-        return false;
-    };
+    let mut state = rule_state(envelope);
     let mut changed = false;
     for op in ops {
         match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
@@ -1665,15 +1660,16 @@ mod tests {
     }
 
     #[test]
-    fn commit_checkpoint_then_undo_stays_at_checkpoint() {
+    fn commit_checkpoint_records_change_and_stays_undoable() {
         let mut app = TrinityRewritePlayApp;
         let document = app.initial_document_json();
         let after_set = apply_and_get_envelope(&mut app, "setParameter", Some(&json!({ "name": "label", "value": "changed" })), &document);
         let set_json = serde_json::to_string(&after_set).unwrap();
         let after_checkpoint = apply_and_get_envelope(&mut app, "commitCheckpoint", None, &set_json);
+        assert!(!after_checkpoint.rule_vcs.vcs.checkpoints.is_empty(), "checkpoint should be recorded");
         let checkpoint_json = serde_json::to_string(&after_checkpoint).unwrap();
-        let ops = app.handle_command_patch_ops("undo", None, &checkpoint_json, &ViewState::default());
-        assert!(ops.is_empty(), "undo past a checkpoint should be a no-op");
+        let undone_envelope = apply_and_get_envelope(&mut app, "undo", None, &checkpoint_json);
+        assert_eq!(rule_state(&undone_envelope).parameter_bindings.get("label").cloned(), Some(PropertyValue::String("nakagin-core".into())));
     }
 
     #[test]

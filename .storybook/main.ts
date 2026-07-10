@@ -137,6 +137,10 @@ const config: StorybookConfig = {
   core: {
     disableTelemetry: true,
   },
+  /** Storybook 10.4's `changeDetection` builder-agnostic resolver defaults on and crashes (`Cannot read properties of undefined (reading 'buildError')`) against this repo's workspace alias set; keep it off until upstream stabilizes it. */
+  features: {
+    changeDetection: false,
+  },
   async viteFinal(config, { configType }) {
     config.resolve = config.resolve || {};
     // #region 🔖ResolvePackageExports
@@ -230,6 +234,7 @@ const config: StorybookConfig = {
     config.optimizeDeps.esbuildOptions = {
       ...(config.optimizeDeps.esbuildOptions || {}),
       target: "es2022",
+      loader: { ...(config.optimizeDeps.esbuildOptions?.loader || {}), ".ts": "tsx" },
     };
     config.build = config.build || {};
     config.build.target = "es2022";

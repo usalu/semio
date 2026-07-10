@@ -53,6 +53,56 @@
         "SEMIO_RENDERER": "react"
       },
       "port": 6070
+    },
+    {
+      "name": "writer-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:writer"],
+      "env": {
+        "WRITER_PLAY_PORT": "6062",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6062
+    },
+    {
+      "name": "raster-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:raster"],
+      "env": {
+        "RASTER_PLAY_PORT": "6060",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6060
+    },
+    {
+      "name": "note-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:note"],
+      "env": {
+        "NOTE_PLAY_PORT": "6080",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6080
+    },
+    {
+      "name": "trinity-jack-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:trinity:jack"],
+      "env": {
+        "TRINITY_JACK_PLAY_PORT": "6054",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6054
+    },
+    {
+      "name": "trinity-rewrite-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:trinity:rewrite"],
+      "env": {
+        "TRINITY_REWRITE_PLAY_PORT": "6056",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6056
     }
   ]
 }

@@ -1748,12 +1748,22 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
         return;
       }
       if (tool === "rotate") {
+        const beforeQuat = new Quaternion(...before.quaternion);
+        const afterQuat = new Quaternion(...after.quaternion);
+        const delta = afterQuat.multiply(beforeQuat.invert());
+        // Quaternion.w = cos(angle/2); clamp for asin/acos precision at the identity boundary.
+        const angle = 2 * Math.acos(Math.min(1, Math.max(-1, delta.w)));
+        const sinHalfAngle = Math.sqrt(Math.max(0, 1 - delta.w * delta.w));
+        const axis =
+          sinHalfAngle < 1e-6
+            ? { x: 0, y: 0, z: 1 }
+            : { x: delta.x / sinHalfAngle, y: delta.y / sinHalfAngle, z: delta.z / sinHalfAngle };
         dispatch("rotateSelection", {
           ...base,
-          ax: 0,
-          ay: 1,
-          az: 0,
-          angle: after.rotation[1] - before.rotation[1],
+          ax: axis.x,
+          ay: axis.y,
+          az: axis.z,
+          angle,
         });
         return;
       }
