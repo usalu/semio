@@ -358,34 +358,27 @@
   }
 }
 
+\cs_generate_variant:Nn \semio_glossary_row_direct:nnn { VVV }
 
-\cs_generate_variant:Nn \semio_glossary_body_gappto:nnn { VVV }
-
-\cs_new_protected:Npn \semio_glossary_body_gappto:nnn #1#2#3 {
-  \group_begin:
-  \ExplSyntaxOff
-  \makeatletter
-  \toks@={\noexpand\SemioGlossaryTableRow{#1}{#2}{#3}}%
-  \global\semio@glossarybodytoks=\expandafter{\the\semio@glossarybodytoks\the\toks@}%
-  \makeatother
-  \group_end:
+\cs_new_protected:Npn \semio_glossary_row_direct:nnn #1#2#3 {
+  \semio@glossary@emit@row {#1}{#2}{#3}
 }
 
-\cs_new_protected:Npn \semio_glossary_body_materialize: {
-  \group_begin:
-  \ExplSyntaxOff
-  \makeatletter
-  \global\semio@glossarybodytoks={}%
-  \toks@={\noexpand\SemioGlossaryTableRow{Semio}{Einheitliches Betriebssystem.}{semio-glossary-2}}%
-  \global\semio@glossarybodytoks=\expandafter{\the\semio@glossarybodytoks\the\toks@}%
-  \makeatother
-  \group_end:
-  \cs_gset_nopar:Npn \semio@glossary@table@body { \the\semio@glossarybodytoks }
+\cs_new_protected:Npn \semio_glossary_rows_in_table: {
+  \semio_glossary_terms_sort:
+  \seq_map_inline:Nn \l_semio_glossary_sorted_terms_seq {
+    \tl_set:Nn \l_tmpa_tl { ##1 }
+    \prop_get:NnNTF \g_semio_glossary_definition_prop { ##1 } \l_semio_glossary_definition_tl {
+    } {
+      \tl_clear:N \l_semio_glossary_definition_tl
+    }
+    \semio_glossary_labels_csv:n { ##1 }
+    \semio_glossary_row_direct:VVV \l_tmpa_tl \l_semio_glossary_definition_tl \l_tmpd_tl
+  }
 }
 
 \cs_new_protected:Npn \SemioGlossaryListOf {
   \int_compare:nNnT { \seq_count:N \g_semio_glossary_terms_seq } > { 0 } {
-    \semio_glossary_body_materialize:
     \tl_set:Nx \l_semio_glossary_title_tl { \semio_glossary_title_text: }
     \group_begin:
     \ExplSyntaxOff
@@ -918,7 +911,10 @@
 }
 
 \newcounter{semioglossaryusage}
-\newtoks\semio@glossarybodytoks
+
+\NewDocumentCommand \semio@glossary@emit@row { m m m } {
+  \SemioGlossaryTableRow{#1}{#2}{#3}
+}
 
 \newcommand{\semio@glossary@table@header}{%
   \SemioTableHeaderRow{%
@@ -927,6 +923,8 @@
     \semio@glossary@header@pages
   }%
 }
+
+\newcommand{\semio@glossary@table@body}{\csname semio_glossary_rows_in_table:\endcsname}
 
 \newcommand{\semio@register@table@body}{}
 

@@ -1,17 +1,24 @@
-# Verify Log
+# Verify Log — Window Row Bottom-Border Alignment
 
-## Builds
+## Fix
 
-- `bun run nx run mit-bestand-bericht:build` — success (zwischenbericht light + dark)
-- `bun ./verify.ts` — success (verify-window-alignment light + dark)
+`SemioWindowRowTwo` / `SemioWindowRowThree` measure natural column heights in `lrbox`, take the max, and pass it to row `Window` instances via `height=` on tcolorbox (`\SemioWindowStretchHeightValue` bridge).
 
-## Rasterized outputs
+`anchor` sets expl3 `\l_semio_window_valign_tl` / `\l_semio_window_halign_tl` so `valign` / `halign` work inside expl3 `\begin{tcolorbox}` (LaTeX `\semio@...` macros cannot be used there).
 
-- `verify-window-alignment-p1.png` — row/column bisect fixture
-- `zwischenbericht-p1-cover.png` — mit-bestand cover page with logo row
+## Results
+
+| Fixture | Build | Visual |
+|---------|-------|--------|
+| `verify-window-alignment.tex` p2 | OK | Short/Tall bottom borders aligned |
+| `verify-zwischenbericht-cover.tex` p1 | OK | Institution + logo rows share row height; logos centered |
 
 ## Notes
 
-- Row macros measure each column at final width, set shared `height=` on child `Window` tcolorboxes, then render once more for output.
-- Column macros measure natural width inside `\vbox` + `lrbox` with `fit=true`, stretch to max width, stack vertically with `\semio@block@sep`.
-- Cover logo windows use `anchor=center` so logos center inside the stretched row height.
+- Stretched row windows emit ~6pt overfull hbox / ~3pt overfull vbox warnings (tunable later).
+- Full `zwischenbericht.tex` still fails at `\makeworkpackages` (`Misplaced \noalign` in `\semio@table@row@sep`) — separate from window rows; cover verified via ticket fixture.
+
+## Artifacts
+
+- `verify-window-alignment-p2.png`
+- `zwischenbericht-p1-cover.png`

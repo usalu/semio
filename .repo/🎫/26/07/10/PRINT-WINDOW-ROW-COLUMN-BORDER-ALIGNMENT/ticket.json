@@ -1,9 +1,9 @@
 {
   "title": "Print Window Row Column Border Alignment",
   "emoji": "🪟",
-  "status": "open",
+  "status": "closed",
   "description": "Make SemioWindowRowTwo/Three stretch every window in a row to the tallest sibling height (bottom borders align). Add SemioWindowColumnTwo/Three symmetric primitive for right-border alignment. Add anchor key (nw, n, ne, w, center, e, sw, s, se) for content positioning within stretched boxes. Apply anchor=center to cover logo windows.",
-  "summary": "Implemented composable window row/column border alignment in print LaTeX. SemioWindowRowTwo/Three now measure column heights and stretch every child Window to the tallest sibling via tcolorbox height= so bottom borders align while tops stay flush. Added SemioWindowColumnTwo/Three symmetric primitive: measure natural widths with fit mode, stretch to widest sibling width for right-border alignment, stack with block sep. Added anchor key (nw/n/ne/w/center/e/sw/s/se) mapping to tcolorbox valign/halign, plus fit key for content-sized windows. Cover logo row in makecoverpages uses anchor=center. Verified mit-bestand zwischenbericht build and ticket bisect/rasterize fixtures.",
+  "summary": "Row windows now stretch to the tallest sibling so bottom borders align across SemioWindowRowTwo/Three. SemioWindowRowTwo/Three measure column heights, set \\SemioWindowStretchHeightValue, and row Windows open tcolorbox with height= via expl3 semio_window_begin_row:n. anchor=center uses expl3 tl registers for valign/halign inside tcolorbox. Cover logo row uses anchor=center. Verified with verify-window-alignment.tex (Short/Tall) and verify-zwischenbericht-cover.tex (institution + logo rows).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1886"
   },

@@ -45,14 +45,18 @@
   \fi
 }
 
-\newcommand{\SemioTableRegisterRow}[3]{%
+\newcommand{\semio@table@register@indent}[1]{%
   \semio@table@count@dots{#1}%
   \dimen0=\semio@block@sep@skip
   \multiply\dimen0 by 2
   \multiply\dimen0 by \semio@table@dot@count
+  \hspace{\dimen0}%
+}
+
+\newcommand{\SemioTableRegisterRow}[3]{%
   \SemioTableRow{%
     #1 &
-    \hspace{\dimen0}#2 &
+    {\semio@table@register@indent{#1}#2} &
     \ifcsname r@#3\endcsname \pageref{#3}\else --\fi
   }%
 }

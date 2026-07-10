@@ -6,20 +6,21 @@ import { fileURLToPath } from "node:url";
 import { buildPrintDocument } from "../../../../../../print/script.ts";
 
 const ticketDir = import.meta.dir;
-const repoRoot = join(ticketDir, "../../../../../../");
 const distDir = join(ticketDir, "dist");
 const texAbs = join(ticketDir, "verify-window-alignment.tex");
-const zwischenberichtPdf = join(repoRoot, "mit-bestand/bericht/zwischenbericht/dist/zwischenbericht.pdf");
+const coverTexAbs = join(ticketDir, "verify-zwischenbericht-cover.tex");
+const coverPdf = join(distDir, "verify-zwischenbericht-cover.pdf");
 
 await buildPrintDocument(texAbs, distDir);
+await buildPrintDocument(coverTexAbs, distDir);
 
 const pdfjsEntry = fileURLToPath(new URL("pdfjs-dist/legacy/build/pdf.mjs", import.meta.resolve("pdfjs-dist")));
 const { createCanvas } = createRequire(pdfjsEntry)("@napi-rs/canvas");
 const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
 const jobs: readonly (readonly [string, number, string])[] = [
-  [join(distDir, "verify-window-alignment.pdf"), 1, "verify-window-alignment-p1"],
-  [zwischenberichtPdf, 1, "zwischenbericht-p1-cover"],
+  [join(distDir, "verify-window-alignment.pdf"), 2, "verify-window-alignment-p2"],
+  [coverPdf, 1, "zwischenbericht-p1-cover"],
 ];
 
 for (const [pdfPath, pageNum, outStem] of jobs) {

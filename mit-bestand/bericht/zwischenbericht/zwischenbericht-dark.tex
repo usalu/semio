@@ -9,13 +9,17 @@
 \antragstellendeinstitution{%
   Leibniz Universität Hannover\\
   Fakultät für Architektur und Landschaft, IEK\\
-  Abt.\ Nachhaltige Gebäudesysteme\\
+  Abteilung Nachhaltige Gebäudesysteme\\
+  Institutsleitung: Prof. Dr.-Ing. Philipp Geyer\\
   Projektleitung: Ueli Saluz\\
   Weitere Bearbeitung: Nikolaus Möllenhof
 }
 \kooperationspartner{%
   Universität der Künste Berlin\\
+  Fakultät für Architektur\\
+  Institut für Architektur und Städtebau\\
   Konstruktives Entwerfen und Tragwerksplanung\\
+  Institutsleitung: Prof. Dr.-Ing. Christoph Gengnagel\\
   Bearbeitung: Kinan Sarakbi
 }
 \aktenzeichen{10.08.18.7-25.06}
@@ -62,7 +66,6 @@
 \GlossaryDefine{Generator}{Parametrischer Mechanismus, der aus qualifizierten Eingaben ein digitales Bauteilobjekt erzeugt.}
 \GlossaryDefine{Bauteilportal}{Eingangs- und Qualifizierungsebene des Systems. Hier werden Baukomponenten erfasst, importiert, ergänzt und strukturiert.}
 \GlossaryDefine{Bauteilkatalog}{Such-, Sicht- und Auswahlebene des Systems. Hier werden qualifizierte Baukomponenten auffindbar, filterbar und vergleichbar gemacht.}
-\GlossaryDefine{Playground}{Entwurfs- und Bewertungsebene des Systems. Hier werden Baukomponenten zu Varianten kombiniert und ökologisch sowie tragwerklich vorbewertet.}
 \GlossaryDefine{Aggregator}{Technische Bezeichnung für den Playground innerhalb des semio-basierten Entwurfswerkzeugs.}
 \GlossaryDefine{Wizard}{Geführte Eingabeoberfläche zur schrittweisen Erfassung und Qualifizierung von Bauteildaten.}
 \GlossaryDefine{Test-Case}{Realer oder realitätsnaher Anwendungsfall, an dem die entwickelte digitale Kette geprüft wird.}
@@ -87,118 +90,102 @@
 
 \subsection{Forschungsfragen und Vorgehen}
 
-Wiederverwendung wird nicht dadurch skalierbar, dass mehr Bauteile verfügbar sind, sondern dadurch, dass vorhandene Bauteile entwurfsfähig werden. Diese These trägt das Vorhaben. Sie verschiebt den Blick von der Menge des Angebots hin zu der Frage, ob ein rückgebautes Bauteil mit seinen Maßen, seinem Zustand und seinen Nachweisen so beschrieben ist, dass Entwerfende damit arbeiten können. Als entwurfsfähig gilt ein Bauteil in diesem Vorhaben dann, wenn es nicht nur beschaffbar ist, sondern mit belastbaren Informationen zu Geometrie, Zustand, Verfügbarkeit, Tragwerksverhalten, Umweltwirkung und Vertrauensstand in eine frühe Entwurfsentscheidung einbezogen werden kann. Der Hebel ist bei tragenden, großformatigen Bauteilen am größten, wo Wiederverwendung das Treibhauspotenzial gegenüber einem Neubauteil deutlich senkt (Küpfer et al.\ 2024, 2025). Der Engpass liegt dabei weniger im Material als im Entwurfsprozess und im Datenfluss zwischen Bauteilquelle und Entwurf.
+Das Vorhaben untersucht, wie wiederverwendete Baukomponenten in frühen Entwurfsphasen skalierbar planungsfähig gemacht werden können. Ausgangspunkt ist die Beobachtung, dass die Zahl der Bauteilbörsen, Rückbauinventare oder Materialbanken (siehe Anlagen) stärker wächst als die Zahl der realisierten Projekte (siehe Anlage Projekte). Die Hürden, welchen es zu überwältigen gilt, um mit wiederverwendeten Baukomponenten zu bauen, ist lang (siehe Anlage Hürden und Handbuch Abbau Aufbau). Unser Beitrag ist es, die effiziente, integrative und KI-gestützte Vorplanung für Entwürfe zu ermöglichen.
 
-Wiederverwendbare Bauteile sind in großer Zahl physisch vorhanden, doch entwurfsfähig sind sie damit noch nicht. Ein rückgebautes Bauteil bringt häufig eine unvollständige, uneinheitliche und oft nur analog dokumentierte Datenlage mit, aus der für einen Entwurf erst Geometrie, Tragwerks- und Umweltkennwerte sowie ein nachvollziehbarer Vertrauensstand werden müssen. Das Vorhaben ist das direkte Folgevorhaben zu „Abbau/Aufbau" (Gengnagel/Henschel 2024). Der Vorgänger löste die physische Seite, den zerstörungsarmen Rückbau und die Zerlegung von Stahlbeton, und benannte die offene digitale Lücke: die Überführung rückgebauter Bauteile in einen entwurfsfähigen Zustand. Genau dort setzt „Entwerfen mit Bestand" an und entwickelt eine durchgängige digitale Kette von der Bauteilquelle bis zur Entwurfsentscheidung.
+Vier Forschungsfragen leiten die Arbeit:
 
-Vier Forschungsfragen leiten die Arbeit, jeweils auf die Skalierbarkeit des Entwerfens bezogen:
+\begin{enumerate}
+\item Wie lassen sich heterogene Baukomponenten verallgemeinern/systematisieren, damit sie möglichst flexibel in neuen Entwurfssituationen eingesetzt werden können?
+\item Wie können Bauteilbörsen mit minimalem Aufwand planungsfähige Daten bereitstellen?
+\item Wie können gleichzeitig Entwurfs-, LCA- und Tragwerksmodelle erstellt/modifiziert/evaluiert werden?
+\item Wie kann KI, insbesondere LLMs, während dem Entwurfsprozess unterstützen?
+\end{enumerate}
 
-\begin{Blockquote}
-\textit{[Platzhalter --- die final abgestimmten vier Forschungsfragen werden hier eingesetzt.]}
-\end{Blockquote}
-
-Innerhalb des Verbunds sind die Schwerpunkte verteilt. Die LUH (NGS) untersucht und entwickelt federführend das Human-Interface-Design, die vereinfachte Ökobilanzierung mit Blick auf Verfügbarkeit, Präzision und Unsicherheit der Bauteil-Inputs sowie die KI-gestützte Entwurfsassistenz. Die UdK (KET) bearbeitet die test-case-basierte Entwurfsraumerkundung und die Integration der vereinfachten Tragwerksanalyse, hier mit Blick auf Kombinierbarkeit, Präzision und Unsicherheit der System-Inputs.
-
-Als Untersuchungsrahmen dient Stahlbeton als Test-Case, während das System materialübergreifend angelegt ist. Grundlage sind Verbund-Monolithteile aus „Abbau/Aufbau". Die Wirkungsebene ist die Vorplanung; finale statische Nachweise und Genehmigungen liegen außerhalb des Vorhabens.
-
-Das Vorgehen folgt den vier Arbeitspaketen, die zugleich den Aufbau dieses Berichts tragen. Das AP-Erfahrung sammelt Erfahrungswissen aus Recherche, Interviews und daraus abgeleiteten User-Stories. Das AP-Plattform entwickelt das Bauteilportal, über das Bauteile eingespeist, qualifiziert und generatorisch zu entwurfsfähigen Objekten aufbereitet werden. Das AP-Tool erweitert das Entwurfswerkzeug um Bauteilkatalog, Kompositionsumgebung sowie Lebenszyklus-, Tragwerks- und KI-Funktionen. Das AP-Validierung prüft die Kette am Stahlbeton-Test-Case. Kapitel~1 stellt die Ergebnisse dieser Arbeitspakete im Berichtszeitraum dar, Kapitel~2 den Projektstand.
+Der Zwischenbericht folgt dabei der Struktur der Arbeitspakete. AP-Erfahrung leitet aus der Recherche und den Interviews User Stories ab. Die User Stories definieren die fachlichen Anforderungen für die Plattform und für das Tool. AP-Plattform und AP-Tool übersetzen diese Anforderungen in digitale Systemkomponenten. AP-Validierung prüft die entwickelten Ansätze anhand eines Test-Cases.
 
 \subsection{Arbeitspakete}
 
 \subsubsection{AP-Erfahrung}
 
 \paragraph{Recherche}
-\begin{SemioNest}
-\paragraph{Bauteilbörsen}
-Bauteilbörsen machen wiederverwendbare Bauteile sichtbar, doch Sichtbarkeit allein genügt nicht, um mit ihnen zu entwerfen. Diese Beobachtung leitet die Recherche der UdK (KET), für die 51 öffentlich zugängliche Bauteilbörsen und Angebotskanäle aus mehreren europäischen Ländern ausgewertet wurden (vgl.\ Anlage Bauteilbörsen). Bewertet wurden insbesondere Angebotslogik, öffentlich sichtbare Datenfelder, Hinweise auf Verfügbarkeit, Nachweisführung und maschinenlesbare Anschlussfähigkeit. Die Auswertung folgt bewusst der Außensicht auf die Plattformen, also dem, was Angebotsseiten, Kataloge und Produktkarten öffentlich preisgeben. Sie beschreibt damit die Informationslage, die Entwerfenden in frühen Such- und Entscheidungsphasen tatsächlich zur Verfügung steht; interne Datenbanken oder Schnittstellen, die von außen nicht prüfbar sind, bleiben davon ausgenommen.
+Die Recherche ergab, dass wiederverwendete Bauteile in bestehenden Quellen zwar auffindbar, aber selten unmittelbar entwurfsfähig sind. Entwurfsfähig meint hier, dass ein Bauteil in frühen Entwurfsentscheidungen gesucht, verglichen, bewertet und einer möglichen Rolle in einer Variante zugeordnet werden kann.
+
+Die zentrale Lücke liegt zwischen Sichtbarkeit und Planbarkeit. Bauteilbörsen, Rückbauinventare und Materialbanken liefern meist Angaben zu Verfügbarkeit, Standort, Zustand oder Maßen. Für frühe Entwurfsentscheidungen fehlen häufig belastbare Angaben zu möglicher Rolle, Nachweisstand, Anschlussfähigkeit, Bewertungsannahmen und Unsicherheiten.
+
+Daraus wurde die Unterscheidung zwischen beschaffungsorientierten Daten (Ebene~A) und planungsrelevanten Bauteildatensätzen (Ebene~B) abgeleitet. Ein Bauteil wird planungsfähig, wenn es qualifiziert, typologisch eingeordnet und mit einem vorläufigen Bewertungs- und Nachweisstand versehen ist.
 
 \begin{SemioNest}
-\paragraph{Archetypen}
-Nach ihrer Angebotslogik lassen sich vier Grundtypen unterscheiden. Ein externer oder app-basierter Zugriff tritt quer zu ihnen auf und bildet keinen eigenen Grundtyp, da eine Plattform zugleich Marktplatz und externer Kanal sein kann.
+\paragraph{Bauteilbörsen}
+Die Auswertung von 51 öffentlich zugänglichen Bauteilbörsen und Angebotskanälen zeigt vier wiederkehrende Angebotslogiken: Depot-Shop, Marktplatz, Harvest-Katalog und Vermittlungsplattform (vgl.\ Anlage Bauteilbörsen). Die Auswertung folgt der Außensicht auf die Plattformen und erfasst, was Angebotsseiten, Kataloge und Produktkarten öffentlich preisgeben. Die Typen unterscheiden sich vor allem durch die Qualität, Stabilität und Anschlussfähigkeit ihrer Daten. Für das Vorhaben ist daher nicht die Plattformart selbst entscheidend, sondern ob aus einem Angebot ein planungsfähiger Bauteildatensatz entstehen kann.
 
 \begin{SemioNest}
 \paragraph{Depot-Shop}
-Verkauf geprüfter oder vorsortierter Bauteile aus einem eigenen Lager mit fester Bestandsführung. Dieser Typ bietet vergleichsweise hohe Kontrolle über Verfügbarkeit und Zustand, liefert aber nicht automatisch die für Entwurf und Nachweis erforderliche Datentiefe.
+weist tendenziell die stabilste Datenlage auf, weil Bauteile häufig bereits ausgebaut, gelagert oder gesichtet sind. Relevante Angaben sind Lagerort, Reservierbarkeit, Maße, Zustand und Verfügbarkeit. Die Angaben reichen meist aus für eine 3D-Modellierung, allerdings ist eine Vorbewertung und Nachweisführung nur aus den vorhandenen Daten nicht möglich.
 
 \paragraph{Marktplatz}
-Vermittlung von Angeboten Dritter, in Aufbau und Suchlogik einem allgemeinen Online-Handel ähnlich. Die Angebotsvielfalt ist hoch, die Datenqualität hängt jedoch stark von den jeweiligen Anbietenden ab.
+weist potentiell das höchste Bauteilangebot auf, führt aber häufig zu uneinheitlicher Datenqualität. Die Detailtiefe fluktuiert am meisten, da sie stark von den jeweiligen Anbieter:innen abhängt. Da meist keine Richtlinien zur Datenerfassung vorliegen oder eingehalten werden, ergibt sich ein Bedarf an Datenprüfung, Ergänzung und Normalisierung.
 
 \paragraph{Harvest-Katalog}
-Dokumentation von Bauteilen aus einem konkreten Rückbauprojekt, oft schon vor dem Ausbau und damit nur in einem befristeten Zeitfenster verfügbar. Dieser Typ ist für frühe Entwurfsentscheidungen relevant, macht die Verfügbarkeit jedoch besonders zeitabhängig.
+weist das größte Optimierungspotential auf, da gegebenfalls bedarfsgerecht rückgebaut werden kann, allerdings auf Kosten der Skalierbarkeit, erhöhter Unsicherheit und damit risikobehafteter. Zusatzinformation ist das Zeitfenster, Kosten und Aufwand für den Rückbau. Terminplanung, Logistik und Alternativen müssen insbesondere berücksichtigt werden.
 
 \paragraph{Vermittlungsplattform}
-Kontaktherstellung zwischen Anbietenden und Suchenden, ohne die Bauteile selbst zu führen. Der Mehrwert liegt in der Vermittlung, während Datentiefe und Nachweisstand häufig erst nachgelagert geklärt werden.
+stellt Kontakte zwischen Besitzenden, Suchenden und Fachakteur:innen her. Sie kann Wiederverwendungsprozesse anstoßen, führt aber häufig keine vollständigen Bauteildatensätze. Für die Planung wird sie erst anschlussfähig, wenn aus der Vermittlung ein strukturierter Datensatz entsteht.
 \end{SemioNest}
 
-\paragraph{Daten}
-Die Typen unterscheiden sich weniger im Sortiment als in der Tiefe und Verlässlichkeit ihrer Daten. Drei Dimensionen machen das sichtbar.
-
-\begin{SemioNest}
-\paragraph{Verfügbarkeit}
-selten dauerhaft. Angebote sind zeitpunktbezogen; ein heute gelistetes Bauteil kann morgen vergeben, reserviert oder nicht mehr zugänglich sein. Harvest-Kataloge binden die Verfügbarkeit zusätzlich an Rückbau- und Lagerzeiträume.
-
-\paragraph{Qualität}
-stark schwankend, von knappen Produktkarten mit Foto und Maß bis zu ausführlich dokumentierten Bauteilen mit Zustandsbericht und Nachweisen. Entscheidend ist nicht nur, ob eine Angabe vorhanden ist, sondern ob sie geschätzt, gemessen, geprüft oder nachgewiesen wurde. Ein durchgängiger Standard fehlt.
-
-\paragraph{Verknüpfung}
-die maschinenlesbare Anschlussfähigkeit an weitere Systeme, aus der Außensicht meist nicht belegbar und von strukturierten Exporten bis zu rein menschlich lesbaren Seiten reichend. Für einen durchgängigen Entwurfsprozess ist diese Anschlussfähigkeit zentral, weil Bauteildaten sonst manuell übertragen und neu interpretiert werden müssen.
-\end{SemioNest}
-\end{SemioNest}
-
-Dieses Bild deckt sich mit der Forschung, die gerade für tragende Bauteile unstrukturierte Märkte und eine schwache Rückverfolgbarkeit als zentrale Hemmnisse der Wiederverwendung beschreibt (Tingley et al.\ 2017; Sivers et al.\ 2025).
-
-Für das Vorhaben zählt vor allem eine Unterscheidung: Was Börsen zeigen, sind \textbf{Ebene-A-Daten} --- beschaffungsorientierte Angaben wie Identität, technische Kennwerte, Zustand, Standort und Verfügbarkeit. Sie beantworten, ob ein Bauteil zu beschaffen ist, nicht aber, ob und wie es sich entwerfen lässt. Zwischen beschaffungsorientierten Ebene-A-Daten und entwurfsfähigen Bauteildaten liegt damit ein Transformationsschritt, den das Vorhaben adressiert. Genau diese Lücke bestimmt die Anforderungen an das Bauteilportal (Abschnitt~1.2.2): Die Börsen liefern den Ausgangspunkt, nicht das entwurfsfähige Bauteil.
+Die Auswertung zeigt, dass die meisten bestehenden Angebotsquellen Bauteile sichtbar machen, aber selten vollständige Entscheidungsgrundlagen für Entwurf, Bewertung und Nachweisführung liefern; dieser Befund deckt sich mit der Literatur zu unstrukturierten Märkten und schwacher Rückverfolgbarkeit tragender Bauteile (Tingley et al.\ 2017; Sivers et al.\ 2025). Benötigt werden Angaben zu Geometrie, Zustand, Herkunft, Verfügbarkeit, möglicher Rolle, Nachweisstand, Datenquelle und Unsicherheit. Inventarstandards wie Swiss-Inv bestätigen diese Richtung, weil sie auf harmonisierte Bauteildaten und bessere Übertragbarkeit zwischen Plattformen, Planung und Dokumentation zielen (Cirkla o.\,J.). Für das Vorhaben folgt daraus: Die Eingabe- und Qualifizierungsebene muss Angebotsdaten in qualifizierte Bauteildatensätze überführen. Dazu gehören ein Datenreifegrad, ein Verfügbarkeitsstatus, ein Nachweisstatus und die Kennzeichnung fehlender oder unsicherer Angaben.
 
 \paragraph{Wiederverwendungsprozesse}
-Neben der Frage, woher Bauteile stammen, wurde recherchiert, wie mit ihnen bisher entworfen und wie ihre Eignung nachgewiesen wird. Als Grundlage dient neben eigener Recherche die Studie „ReUse in der Bauindustrie stärken" (Cirkla/BaselCircular 2025), die auf 18 Fachinterviews beruht und die wiederkehrenden Hemmnisse der Wiederverwendung ordnet. Die Prozessrecherche zeigt, dass Gestaltung und Nachweisführung bei wiederverwendeten Bauteilen nicht getrennt voneinander betrachtet werden können: Entwurfsentscheidungen hängen früh davon ab, welche Informationen zum Bauteil vorliegen und welche Nachweise später realistisch geführt werden können.
+Die Recherche zu Wiederverwendungsprozessen zeigt, dass Entwurfsfähigkeit früh im Prozess entsteht oder verloren geht. Entscheidend ist, ob Informationen aus Rückbau, Inventarisierung und Bauteilhandel rechtzeitig in die Planung gelangen. Digitale ReUse-Workflows wie der D5-Workflow (De Wolf et al.\ 2024) oder der buildingSMART-Use-Case „Decommissioning to ReUse" bestätigen, dass Wiederverwendung auf durchgängigen Datenflüssen zwischen Erfassung, Rückbau, Verteilung, Planung und Wiedereinbau beruht. Für das Vorhaben ist daraus vor allem relevant, dass ein Bauteil bereits in der Vorplanung mit einem nachvollziehbaren Informationsstand vorliegen muss. Planungsrelevant wird es erst, wenn Geometrie, Zustand, Verfügbarkeit, mögliche Rolle und offene Prüfungen erkennbar sind.
 
 \begin{SemioNest}
 \paragraph{Gestaltung}
-Das Entwerfen mit wiederverwendeten Bauteilen kehrt die übliche Planungslogik um: Nicht das Bauteil folgt dem Entwurf, sondern der Entwurf richtet sich nach dem verfügbaren Bestand. In der Forschung ist dieser Grundsatz als „form follows availability" beschrieben, weil Länge, Querschnitt und Zustand der vorhandenen Bauteile zur Entwurfseingabe werden (Brütting et al.\ 2019). Zwei Strategien lassen sich unterscheiden: das Entwerfen aus dem Bestand, das ausschließlich vorhandene Bauteile verwendet, und das Entwerfen mit dem Bestand, das so viele wiederverwendete Bauteile wie möglich einsetzt und nur dort mit Neuware ergänzt, wo es nötig ist (Bertin et al.\ 2020). Als Hemmnisse benennt die Recherche den fehlenden etablierten Rück- und Wiedereinbauprozess und den erhöhten Planungsaufwand; der größte Engpass ist die geringe Verfügbarkeit belastbarer Bauteilinformationen zum Zeitpunkt der Entwurfsentscheidung. Daraus folgt die Anforderung, Bauteildaten früh und in entwurfstauglicher Form bereitzustellen.
+Die Recherche bestätigt, dass Wiederverwendung die Richtung des Entwerfens verändert. Beim Entwerfen mit wiederverwendeten Bauteilen wirken sich vorhandene Längen, Querschnitte, Zustände, Anschlüsse und Verfügbarkeiten auf die frühe Formfindung aus; dieser Zusammenhang ist als „form follows availability" beschrieben (Brütting et al.\ 2019). Darauf aufbauend lassen sich zwei Strategien unterscheiden: das Entwerfen aus dem Bestand, das ausschließlich vorhandene Bauteile verwendet, und das Entwerfen mit dem Bestand, das wiederverwendete Bauteile einsetzt, wo es möglich ist, und mit Neuware ergänzt, wo es nötig ist (Bertin et al.\ 2020). Daraus folgt, dass Bauteile über ihre Produktbezeichnung hinaus beschrieben werden müssen. Ein Bauteil ist entwurfsrelevant, wenn es in einer Variante eine nachvollziehbare Rolle übernehmen kann: als Träger, Stütze, Platte, Wandscheibe, Rahmenteil oder Zuschnittfragment. Die Suche und Auswahl muss daher mögliche Entwurfsrollen, geometrische Einschränkungen und Bewertungszustände berücksichtigen.
 
 \paragraph{Nachweise}
-Wiederverwendete Bauteile müssen für den Einsatz erneut nachgewiesen werden, tragwerklich wie ökologisch. Die Recherche zeigt, dass weder zerstörungsfreie Prüfverfahren noch anerkannte Nachweiswege durchgängig vorliegen und Haftungs-, Garantie- und Versicherungsfragen die Zurückhaltung verstärken. Für die ökologische Bewertung gilt ein Prinzip, das den späteren Ökobilanz-Nachweis bestimmt (Abschnitt~1.2.3.3): Der Umweltvorteil ergibt sich aus der projektspezifischen Substitution eines Primärmaterials, nicht pauschal aus Geometrie und Datenbankwerten. Für das Vorhaben folgt daraus, dass Nachweise nicht als nachgelagerte Prüfung verstanden werden können, sondern bereits in der Bauteilbeschreibung und der frühen Variantenbewertung vorbereitet werden müssen.
+Die Recherche zeigt, dass Nachweise in frühen Entwurfsphasen nicht nur als abgeschlossen oder fehlend verstanden werden können. Wiederverwendete Bauteile liegen häufig mit unterschiedlichen Informationsständen vor. Einige Angaben sind belegt, andere aus Bestandsunterlagen oder Erfassung abgeleitet, weitere beruhen auf Annahmen oder bleiben offen. Der Datenreifegrad beschreibt, wie belastbar einzelne Angaben sind. Er wird im Vorhaben über vier Nachweiszustände gefasst: vorhanden, abgeleitet, angenommen und offen. Diese Zustände betreffen geometrische, materielle, tragwerkliche und ökologische Informationen. Geometrische Nachweise umfassen Maße, Toleranzen, Schnittflächen, Verformungen und Anschlussstellen. Materielle und tragwerkliche Nachweise betreffen Materialkennwerte, Zustand, Vorschädigungen, Lastabtrag, Verbindungsmöglichkeiten und erforderliche Prüfungen. Für die ökologische Vorbewertung sind Systemgrenze, Wiederverwendungspfad, Transport, Instandsetzung, Allokationsregel und substituiertes Primärmaterial relevant; diese Angaben liegen in der Vorplanung häufig nur als Annahmen vor und müssen sichtbar bleiben. Für den Umweltnachweis gilt dabei das Prinzip der projektspezifischen Substitution: Der Vorteil eines wiederverwendeten Bauteils bemisst sich am ersetzten Primärmaterial im konkreten Projekt (Abschnitt~1.2.3.3). Für das Werkzeug folgt daraus eine klare Funktion. Es soll nicht die abschließende Fachplanung ersetzen. Es soll sichtbar machen, auf welcher Datengrundlage eine Variante bewertet wird und welche Prüfungen im weiteren Prozess erforderlich bleiben.
 \end{SemioNest}
 
 \paragraph{Bauteiltypologien}
-Um wiederverwendete Bauteile im Entwurf handhabbar zu machen, ordnet das Vorhaben sie aus tragwerksbezogener Sicht in Typologiefamilien. Die Einteilung folgt nicht der festen Funktion eines Bauteils, sondern den tragenden Rollen, die es annehmen kann. Dasselbe Bauteil ist polymorph: Je nach Einbau, Tragrichtung und Lagerung übernimmt eine gegebene Grundform unterschiedliche Rollen im Tragwerk --- ein liegender Träger und eine stehende Stütze können derselbe Stab sein. Die Familien sind daher keine festen Schubladen, sondern Möglichkeitsräume; aus ihnen leitet sich ab, welcher Generator ein Bauteil erzeugt und welche Nachweise es verlangt. Die strukturelle Reuse-Forschung klassifiziert vorrangig lineare Elemente für Fachwerke und Rahmen und behandelt zugeschnittene Bestände über Cutting-Stock-Ansätze (Brütting et al.\ 2019, 2020); die hier verwendete Einteilung schließt daran an und ergänzt Flächen- und Fragmenttypen für den Stahlbeton-Kontext.
+Aus der Recherche wurde eine typologische Arbeitsordnung abgeleitet. Sie ordnet Bauteile nach ihrer möglichen Rolle im neuen Entwurf und verbindet Erfassung, Suche, digitale Objektbildung und Vorbewertung. Die Typologie beschreibt nicht nur Bauteilarten. Sie legt fest, welche Informationen je Bauteilfamilie benötigt werden. Polymorphie bezeichnet hier keine freie Umdeutung, sondern eine prüfbare Rollenzuordnung. Ein Bauteil kann eine andere Rolle übernehmen als im ursprünglichen Gebäude. Diese Möglichkeit hängt von Orientierung, Geometrie, Material, Zustand, Anschluss, Schnittführung und Nachweisstand ab.
 
 \begin{SemioNest}
 \paragraph{Linienelemente}
-stabförmige Bauteile, die Lasten entlang einer Achse tragen: Träger, Balken, Unterzüge, Binder, Pfetten, Riegel. Sie sind ausgeprägt polymorph, da sich ein Stab je nach Orientierung als Biegeträger oder als druckbeanspruchtes Element einsetzen lässt.
+stabförmige Bauteile mit dominanter Längsrichtung. Für die Erfassung sind Länge, Querschnitt, Material, Zustand, Anschlussenden und mögliche Tragrichtung relevant. Beispiele sind Träger, Balken, Unterzüge und Riegel. Für den Entwurf ist entscheidend, ob Geometrie, Tragrolle und Anschlussbedingungen hinreichend beschreibbar sind; Einschränkungen entstehen durch vorhandene Längen, Querschnitte, Anschlussstellen und mögliche Vorschädigungen.
 
 \paragraph{Flächenelemente}
-platten- und scheibenförmige Bauteile mit zweiachsigem Lastabtrag: Massiv- und Elementdecken, Wandtafeln, Fassadenpaneele. Dieselbe Platte kann liegend als biegebeanspruchte Decke oder stehend als aussteifende Wandscheibe wirken.
+platten- oder scheibenförmige Bauteile. Relevante Angaben sind Länge, Breite, Dicke, Spannrichtung, Bewehrungs- oder Schichtaufbau, Öffnungen, Schnittkanten und Randbedingungen. Für die Wiederverwendung ist entscheidend, ob ein Flächenelement horizontal, vertikal oder aussteifend eingesetzt werden kann; die mögliche Rolle hängt von Geometrie, Lagerung, Schnittkanten, Öffnungen, Materialaufbau und Nachweisstand ab.
 
 \paragraph{Rahmenelemente}
-bereits gefügte, biegesteife Teilstrukturen, die als Einheit ein Tragverhalten mitbringen: Rahmenecken, Riegel-Stiel-Verbünde, Portalrahmen-Segmente, Fertigteilrahmen. Sie lassen sich als vollständiger Rahmen weiterverwenden oder in Einzelstäbe zerlegen.
+gefügte Teilstrukturen, deren Verhalten sich aus Verbindung, Geometrie und Steifigkeit des Gesamtsystems ergibt. Relevante Angaben sind Verbindungstyp, Zerlegbarkeit, Steifigkeit, Transportierbarkeit und mögliche Weiterverwendung als Einheit oder als Einzelteile. Hier entsteht eine frühe Entscheidungsfrage: Der Rahmen kann als zusammenhängendes Element erhalten bleiben oder in Einzelteile zerlegt werden. Diese Entscheidung beeinflusst Erfassung, Transport, Nachweisführung und spätere digitale Objektbildung.
 
 \paragraph{Stützelemente}
-vertikal lastabtragende Bauteile unter Normalkraft: Stützen, Pfeiler, Pendel- und Verbundstützen. Strukturell sind sie mit den Linienelementen verwandt; als eigene Familie geführt werden sie, weil Druck- und Knicknachweise andere Anforderungen stellen als der Biegefall.
+primär druckbeanspruchte Bauteile. Sie werden als eigene Familie geführt, weil Knicken, Lagerung, Imperfektionen und Anschlussbedingungen andere Nachweisfragen erzeugen als biegebeanspruchte Linienelemente. Für die Erfassung sind Querschnitt, Länge, Material, Zustand, Anschlussflächen, mögliche Exzentrizitäten und Lagerungsbedingungen relevant. Eine Umnutzung als liegendes Linienelement ist möglich, erfordert aber eine neue Rollenzuordnung und einen entsprechenden Nachweisstand.
 
 \paragraph{Zuschnittfragmente}
-Teilstücke, die aus größeren Monolithteilen geschnitten werden und deren Tragrolle sich erst durch Schnittführung und Wiedereinbau ergibt: Segmente aus Massivdecken, ausgeschnittene Wand- und Deckenbereiche, geteilte Träger. Sie sind polymorph im stärksten Sinn, da aus einem Fragment je nach Schnitt verschiedene Elementtypen gewonnen werden können. Dieser Fall knüpft unmittelbar an die im Vorhaben „Abbau/Aufbau" zerlegten Verbund-Monolithteile an.
+aus größeren Monolithteilen herausgelöste Teilstücke. Ihre spätere Rolle entsteht durch Schnittführung, Restgeometrie, Bewehrungsverlauf, Kantenqualität und Anschlussmöglichkeit; diese Familie ist für die im Vorgängervorhaben (siehe Abbau Aufbau) untersuchten Verbund-Monolithteile zentral. Zuschnittfragmente liegen nicht als vollständige Produkte vor, sondern entstehen durch eine Entscheidung im Rückbau- oder Aufbereitungsprozess. Deshalb müssen Schnittlinien, verbleibende Bewehrung, mögliche Beschädigungen, Transportierbarkeit und neue Anschlussflächen dokumentiert werden. Für das Vorhaben ist diese Familie besonders relevant, weil sie zeigt, dass ein wiederverwendetes Bauteil nicht immer als fertiges Produkt vorliegt; es kann erst durch Schnittführung, Orientierung und neue Rolle als digitales Bauteilobjekt entstehen.
 \end{SemioNest}
+
+Die Typologie ist damit ein Ergebnis der Recherche und zugleich ein Arbeitsmittel für die Systementwicklung. Sie legt fest, welche Informationen bei der Erfassung abgefragt werden, welche Filter in der Such- und Vergleichsebene sinnvoll sind, welche digitale Objektbildung benötigt wird und welche Vorprüfungen an eine gewählte Rolle gebunden sind. Die Recherche zeigt insgesamt, dass wiederverwendete Bauteile an mehreren Stellen sichtbar werden: in Bauteilbörsen, Rückbauinventaren, Projektkatalogen und Materialbanken. Für frühe Entwurfsentscheidungen reicht diese Sichtbarkeit nicht aus. Planungsfähig werden die Bauteile erst durch qualifizierte Daten, typologische Einordnung, Nachweiszustände und vorläufige Bewertbarkeit.
 \end{SemioNest}
 
 \paragraph{Interviews}
+Zur Vertiefung der Recherche wurde ein neuer Sekundärbefund und drei vertiefende Fachgespräche durchgeführt und ausgewertet.
+
 \begin{SemioNest}
-\paragraph{18 Interviews}
-Als breite empirische Grundlage nutzt das Vorhaben die Studie „ReUse in der Bauindustrie stärken" (Cirkla/BaselCircular 2025): 18 qualitative Fachinterviews, in 13 Hemmnis-Gruppen geordnet und in einer Umfrage mit 94 Fachleuten nach Wirksamkeit bewertet. Sie erfüllt zugleich die für Anlage~8 geforderte Stellungnahme zu Ergebnissen Dritter und eine Auflage des Zuwendungsgebers, der eine breitere empirische Basis verlangt hatte; die eigenen Fachgespräche erweitern sie gezielt (Abschnitt~1.2.1.2.2).
+\paragraph{Sekundärbefund: 18 Interviews}
+Als Sekundärbefund wurde die Studie „ReUse in der Bauindustrie stärken" von BaselCircular und Cirkla ausgewertet (BaselCircular/Cirkla 2025). Sie basiert auf 18 qualitativen Gesprächen mit Branchenakteur:innen und einer anschließenden Umfrage mit 94 Akteur:innen der Baubranche. Sie erfüllt zugleich die für den Zwischenbericht geforderte Stellungnahme zu Ergebnissen Dritter.
 
-Die stärksten Hemmnisse liegen laut Studie nicht im Material, sondern im Prozess: Kosten und fehlende Akzeptanz führen die Rangfolge an, Informationsdefizite sowie Haftungs- und Versicherungsfragen bilden ein mittleres Niveau. Für den Entwurf mit wiederverwendeten Bauteilen sind gerade diese mittleren Gruppen ausschlaggebend, denn sie entscheiden, ob ein Bauteil planbar wird: fehlende Angaben zu Verbindungen, Lebensdauer und Tragfähigkeit zum Entwurfszeitpunkt, fehlende anerkannte Prüf- und Nachweiswege und die zu späte Berücksichtigung von ReUse in der Planung.
+Für das Vorhaben werden vor allem jene Befunde herangezogen, die Informationslücken, Nachweisstände und digitale Anschlussfähigkeit betreffen. Erstens muss Wiederverwendung früh in die Planung integriert werden. Zweitens fehlen häufig belastbare Informationen zu Quellobjekten, etwa zu Verbindungen, Lebensdauer, Materialverfügbarkeit, Tragkraft und Statik. Drittens gewinnen standardisierte Inventare und Schnittstellen an Bedeutung, weil Bauteildaten zwischen Rückbau, Plattform, Planung, Bewertung und Dokumentation übertragbar sein müssen. Der Sekundärbefund stützt damit die zentrale Ausrichtung des Vorhabens: Bauteildaten müssen mit Status, Nachweisstand, Unsicherheit und möglicher Entwurfsrolle in die Planung überführt werden.
 
-An diesen Punkten setzen die technologischen Ansätze an, die die Studie als wirksam bewertet: die frühe Integration von ReUse in die Planung und deren digitale Unterstützung, etwa die Kopplung von Inventarisierungsstandards mit Ausschreibungssystemen und ein ReUse-Faktor in frühen Ökobilanzen. Gegen fehlende Bauteilinformationen wirken Materialpässe wie Madaster, gegen die mangelnde Interoperabilität zwischen Plattformen, Ausschreibungen und Planungswerkzeugen der Datenstandard Swiss-Inv. Die Studie hält zugleich fest, dass diese Werkzeuge noch nicht flächendeckend etabliert sind. Für das Vorhaben bestätigt dies die Annahme, dass digitale Unterstützung dort ansetzen muss, wo Bauteilinformationen, Planungsentscheidungen und Bewertungsverfahren bisher nicht durchgängig verbunden sind.
-
-\paragraph{Fehlende Sichtweisen}
-Die 18 Interviews der Stärken-Studie decken die Breite der Baupraxis ab, lassen aber Fachperspektiven unterbelichtet, die für das Entwerfen mit Bestand zentral sind. Diese Lücke schließt das Vorhaben mit eigenen Experteninterviews, die über die Laufzeit geführt werden. Im Berichtszeitraum liegen zwei ausgewertete Gespräche vor; weitere sind angesetzt. Die eigenen Gespräche wiederholen die Sekundärstudie nicht, sondern vertiefen gezielt Perspektiven, die für Plattform, Tool und Validierung besonders relevant sind.
+\paragraph{Ergänzende Fachperspektiven}
+Der Sekundärbefund deckt viele Rollen ab, allerdings fehlten teilweise spezialisierte Perspektiven: digitale Gestaltung, Kreislaufwirtschaft und Tragwerksplanung.
 
 \begin{SemioNest}
 \paragraph{Digitale Gestaltung}
-Ein Gespräch mit einem Experten für computergestützten Entwurf richtete den Blick darauf, wie sich unregelmäßige, vorgeprägte Bauteile digital erfassen und im Entwurf verarbeiten lassen (vgl.\ Anlage Interviewauswertung, digitale Gestaltung). Statt Material nur zu verwalten, gehe es darum, es zu „lesen" und in ein digitales Materialobjekt zu überführen, dessen Unregelmäßigkeit als gestalterische Qualität erhalten bleibt. Für ein Werkzeug folgt daraus, Entscheidungen unter Unsicherheit zu ermöglichen und Bauteile ihrer möglichen Rolle im Entwurf zuzuordnen, statt sie nur zu katalogisieren.
+Das Gespräch zur digitalen Gestaltung zeigt, dass wiederverwendete Bauteile mit spezifischen materiellen Eigenschaften in den Entwurf eintreten (vgl.\ Anlage Interviewauswertung, digitale Gestaltung). Dazu gehören Spuren, frühere Verbindungen, Maßabweichungen, Oberflächenqualitäten, konstruktive Einschränkungen und mögliche Schäden. Für das Vorhaben ist der Schritt vom vorhandenen Material zum digitalen Materialobjekt relevant. Ein Bauteil muss so beschrieben werden, dass Geometrie, Orientierung, nutzbare Bereiche, riskante Bereiche, frühere Verbindungen, mögliche Anschlusszonen und offene Unsicherheiten im Entwurf lesbar bleiben. Die Auswertung schärft damit den Begriff der Standardisierung: Standardisierung bedeutet hier nicht Vereinheitlichung des Materials, sondern Strukturierung seiner Beschreibung. Abweichungen, Spuren und spezifische Materialqualitäten müssen dokumentierbar bleiben, weil sie die spätere Rolle im Entwurf beeinflussen können.
 
 \paragraph{Kreislaufwirtschaft}
-Raoul Bunschoten hob die fehlende Kontinuität entlang der Wertschöpfungskette hervor: Materialherkunft, Planung, Rückbau und Wiederverwendung sind heute unzureichend verbunden (vgl.\ Anlage Interviewauswertung Bunschoten). Ein digitales Werkzeug solle zudem keine fertigen Lösungen erzeugen, sondern Entscheidungsräume öffnen und Entwurfsvarianten mit ihren zugrunde liegenden Annahmen und Unsicherheiten vergleichbar machen. Es wirke daher weniger als abgeschlossene Anwendung denn als verbindende Struktur zwischen Datenquellen, Bewertungsverfahren und Beteiligten.
+Das Gespräch mit Raoul Bunschoten zeigt Wiederverwendung als verteilten Abstimmungsprozess zwischen Materialherkunft, Planung, Prüfung, Regulierung, Nutzung, Rückbau und erneuter Verwendung (vgl.\ Anlage Interviewauswertung Bunschoten). Für das Vorhaben ist daraus vor allem die Kontinuität von Informationen relevant. Bauteildaten müssen zwischen Akteur:innen und Projektphasen weitergeführt werden; dazu gehören Verfügbarkeit, Prüfstand, Annahmen, Risiken und Entscheidungsstände. Ein weiterer Befund betrifft den Umgang mit Szenarien. Wiederverwendung führt selten zu einer einzelnen eindeutigen Lösung. Digitale Entscheidungsunterstützung muss deshalb Varianten vergleichbar machen und zeigen, welche Annahmen, Unsicherheiten und Akteursperspektiven für die nächste Entscheidung relevant sind.
 
 \paragraph{Tragwerksplanung}
 \begin{Blockquote}
@@ -208,111 +195,243 @@ Raoul Bunschoten hob die fehlende Kontinuität entlang der Wertschöpfungskette 
 \end{SemioNest}
 
 \paragraph{User Stories}
-Aus den Befunden von Recherche und Interviews wurden strukturierte Anforderungen abgeleitet (vgl.\ Anlage User-Stories und Anforderungsmapping). Die User Stories übersetzen die zuvor beschriebenen Befunde in funktionale Anforderungen und bilden damit die Brücke zwischen AP-Erfahrung und den nachfolgenden Arbeitspaketen AP-Plattform, AP-Tool und AP-Validierung. In einem erfahrungsbasierten Prozess entstanden 36 Anforderungskarten aus vier Akteursperspektiven, verdichtet zu 35 konsolidierten User Stories im Format „Als [Akteur:in] möchte ich [Funktion], damit [Nutzen]". Die vier Perspektiven greifen mit unterschiedlichem Bedarf auf dasselbe Bauteil zu:
+Aus den bisherigen Befunden wurden 35 fachlich eindeutige User Stories abgeleitet, konsolidiert aus 36 Anforderungskarten (vgl.\ Anlage User-Stories und Anforderungsmapping). Sie bündeln Anforderungen aus vier Akteursperspektiven: Bauteilbörse (10), Architektur (12), Tragwerksplanung (6) und Energieberatung (7). Im Vordergrund stehen Erfassung, Suche, Vergleich, Bewertung, Statusverfolgung und Dokumentation. Die User Stories bilden damit eine Grundlage für die Zuordnung der Anforderungen zu drei Systemebenen: Datenerfassung und Qualifizierung (Bauteilportal), Suche und Vergleich (Bauteilkatalog) sowie Variantenbildung und Vorbewertung (Aggregator).
 
 \begin{SemioNest}
 \paragraph{Mitarbeiter:in einer Bauteilbörse}
-(10) --- Bauteildaten erfassen, gruppieren und mit Status, Herkunft, Nachweisen und Unsicherheiten versehen.
+Aus Sicht der Bauteilbörse steht die strukturierte Erfassung von Bauteilen im Vordergrund. Relevante Angaben sind Maße, Zustand, Herkunft, Nutzungskontext, Verfügbarkeit, Status, Nachweise und offene Informationslücken. Die User Stories zeigen, dass Bauteilbörsen eine vorbereitende Rolle für die Planung übernehmen können, wenn ihre Daten vergleichbar, aktualisierbar und prüfbar angelegt sind.
 
 \paragraph{Architekt:in}
-(12) --- Bauteile suchen, gestalterisch und materiell bewerten, in den Entwurf überführen.
+Aus Sicht der Architekt:innen ist die frühe Nutzbarkeit im Entwurf zentral. Bauteile müssen auffindbar, filterbar und nach gestalterischen, technischen und risikobezogenen Eigenschaften einschätzbar sein. Relevant ist außerdem die Übernahme in Entwurfsvarianten: Dafür müssen Bauteile als digitale Objekte verfügbar sein und bei Änderungen von Status, Verfügbarkeit oder Risiko erneut bewertet werden können.
 
 \paragraph{Tragwerksplaner:in}
-(6) --- strukturelle Eigenschaften filtern, Informationslücken erkennen, Nachweise definieren, Varianten vergleichen.
+Aus Sicht der Tragwerksplanung stehen tragwerksrelevante Eigenschaften und fehlende Informationen im Vordergrund. Benötigt werden Angaben zu Geometrie, Material, Zustand, möglicher Tragrolle, Anschlussprinzipien und offenen Prüfungen. Die User Stories zeigen, dass fehlende Informationen sichtbar bleiben müssen; sie sind Teil der fachlichen Einordnung und beeinflussen, ob ein Bauteil in einer Variante weiterverfolgt werden kann.
 
 \paragraph{Energieberater:in}
-(7) --- ökologische und energetische Kennwerte je Bauteil bereitstellen und in die Variantenbewertung einbringen.
+Aus Sicht der Energieberatung ist die frühe ökologische und energetische Einschätzung relevant. Dafür müssen Bauteile mit Informationen zu Material, Herkunft, Transport, Instandsetzung und Bewertungsannahmen verknüpft werden. Wichtig ist vor allem der Vergleich von Varianten: Bewertungsergebnisse müssen nachvollziehbar und exportierbar sein, damit sie in weitere Planungs- und Abstimmungsprozesse eingehen können.
 \end{SemioNest}
 
-Das Anforderungsmapping übersetzt die Stories in fünfzehn funktionale Cluster (REQ-01 bis REQ-15) und ordnet sie drei Systembereichen zu, die einen durchgängigen Arbeitsprozess bilden. Das \textbf{Bauteilportal} erfasst, qualifiziert und prüft Bauteildaten samt Nachweisen und Unsicherheiten; der \textbf{Bauteilkatalog} macht die qualifizierten Bauteile einheitlich such-, vergleich- und bewertbar; der \textbf{Aggregator} kombiniert ausgewählte Bauteile zu Varianten und bewertet diese tragwerklich und ökologisch. Die Schnittstellen zählen nicht doppelt, sondern gelten als Übergaben vom Portal in den Katalog und vom Katalog in den Aggregator.
+Das Anforderungsmapping übersetzt die 35 User Stories in fünfzehn funktionale Anforderungscluster (REQ-01 bis REQ-15) und ordnet sie den drei Systemebenen zu.
+
+\paragraph{Synthese: Anforderungen}
+Aus Recherche, Interviews und User Stories ergeben sich fünf Anforderungen an das System. Die Qualifizierung überführt Angebots- und Bestandsdaten in planungsrelevante Bauteildatensätze mit Herkunft, Zustand, Verfügbarkeit, Nachweisstand und Unsicherheit. Die Standardisierung strukturiert die Beschreibung heterogener Bauteile, sodass sie gesucht, verglichen und bewertet werden können. Die digitale Objektbildung (Generatoren) überführt qualifizierte Datensätze in digitale Bauteilobjekte mit Geometrie, möglicher Entwurfsrolle, Anschlusslogik und Bewertungsannahmen. Die Bewertung unterstützt die frühe ökologische und tragwerkliche Vorbewertung von Bauteilen und Varianten. Die Nachweisführung dokumentiert vorhandene, abgeleitete, angenommene und offene Informationen.
+
+Diese Anforderungen verteilen sich auf die drei Systemebenen Bauteilportal, Bauteilkatalog und Aggregator und bilden den Übergang zum AP-Plattform, das ihre technische Umsetzung beschreibt (Abschnitt~1.2.2).
 
 \subsubsection{AP-Plattform}
 
+Das AP-Plattform entwickelt die technische Grundlage, um Ausgangsdaten zu wiederverwendeten Bauteilen in Bauteilobjekte zu überführen. Dafür werden Bauteile über das Bauteilportal erfasst, einem Parametersatz zugeordnet und durch Generatoren in eine entwurfsfähige Arbeitsgeometrie übersetzt. Das Bauteilobjekt bildet anschließend die gemeinsame Datengrundlage für Auswahl, Kombination, Vorbewertung und Nachweisführung im Entwurfswerkzeug.
+
 \paragraph{Generatoren}
+Die generatorische Objektbildung erzeugt aus den erfassten Angaben zu einem realen Bauteil ein entwurfsfähiges, parametrisches Bauteilobjekt.
+
+Für jede Typologiefamilie steht ein vorprogrammierter Generator mit einem definierten Parametersatz bereit. Die Familie bestimmt den Generator, und der Generator bestimmt, welche Parameter ein Bauteil beschreiben (Abschnitt~1.2.1.1.3). Die Eingaben der Nutzenden werden über den Wizard (Abschnitt~1.2.2.2) auf diese Parameter abgebildet. Gibt eine Nutzerin etwa für eine Stütze eine Länge von drei Metern an, wird dieser Wert auf den Parameter der vordefinierten Stützenlogik des zugehörigen Generators abgebildet, der daraus die parametrische Geometrie erzeugt.
+
+Mit der Geometrie erzeugt der Generator weitere, mit ihr verknüpfte Repräsentationen desselben Bauteils. Sie bündeln die Größen, die für die spätere Bewertung nötig sind: eine ökobilanzielle Repräsentation mit Volumen, Masse und Materialangaben (Abschnitt~1.2.3.3), eine tragwerkliche mit Querschnitt, Materialkennwerten und Zustandsangaben (Abschnitt~1.2.3.4) sowie eine semantische, die Anschlussstellen und mögliche Rollen im Entwurf beschreibt. Diese Repräsentationen sind bereits am einzelnen Bauteil lesbar, bevor es im Aggregator mit anderen kombiniert wird.
+
+Im Berichtszeitraum baute die LUH (NGS) die Infrastruktur der Generatoren auf und implementierte prototypisch einen Generator für Stützen. Er erzeugt aus einem Parametersatz ein Bauteilobjekt, das im Bauteilkatalog angezeigt und im Aggregator verwendet werden kann. Die Struktur der Repräsentationen ist angelegt; ihre vollständige Befüllung sowie die Generatoren der übrigen Typologiefamilien sind konzipiert, aber noch nicht implementiert. Gleiches gilt für das durchgängige Mitführen der vier Nachweiszustände (Abschnitt~1.2.1.1.2.2) am erzeugten Objekt.
+
+\begin{Figure}[title=Generator-Pipeline]
+\textit{[Platzhalter: Generator-Pipeline.]}
+\end{Figure}
 
 \paragraph{Bauteileinspeisung}
-\begin{SemioNest}
-\paragraph{UI}
+Das Bauteilportal nimmt Bauteile über zwei Wege auf: geführt über die Benutzeroberfläche und maschinell über eine Schnittstelle. Beide Wege münden in denselben Parametersatz der Generatoren, sodass unabhängig vom Eingabeweg ein einheitlich beschriebenes Bauteilobjekt entstehen kann. Die Grundpfade beider Eingabewege wurden im Berichtszeitraum prototypisch implementiert. Die KI-gestützte Extraktion aus Dokumenten und die Anbindung konkreter externer Plattformen stehen noch aus.
+
 \begin{SemioNest}
 \paragraph{Wizard}
-\end{SemioNest}
-\paragraph{API}
-\begin{SemioNest}
-\paragraph{REST}
-\end{SemioNest}
+Der Wizard führt Nutzende schrittweise durch die Eingabe eines Bauteils. Vorgesehen ist eine KI-Assistenz bei der Bauteilerfassung. Angaben sollen frei formuliert oder aus hochgeladenen Dokumenten übernommen werden können, etwa aus Datenblättern, Fotos, Bestandsunterlagen oder Nachweisen. Die Assistenz soll daraus relevante Werte extrahieren und sie den passenden Formularfeldern zuordnen. Diese Zuordnung bleibt sichtbar und korrigierbar.
+
+Hochgeladene Dokumente werden am Bauteil hinterlegt und können die spätere Nachweisführung stützen. Sie ersetzen jedoch keine fachliche Prüfung. Erste Tests der Erkennung liegen vor; die Integration in den Wizard steht aus.
+
+Welche Felder erscheinen, steuern vorgebaute Constraints. Sie werten die bisherigen Angaben aus und blenden die dazu passenden Felder ein. Wird als Materialklasse Beton gewählt, erscheint die Betonklasse; bei Holz treten stattdessen holzspezifische Angaben hervor. Die so erfassten Werte bildet der Wizard auf die Parameter des zugehörigen Generators ab. Die Einspeisung bleibt dadurch geführt, nachvollziehbar und an die digitale Objektbildung gebunden.
+
+\paragraph{REST-Schnittstelle}
+Für die maschinelle Einspeisung stellt das Bauteilportal eine REST-Schnittstelle bereit. Sie nimmt strukturierte Bauteildaten entgegen, wie sie bei Börsen mit eigener Bestandsführung oder Inventarsystemen vorliegen können, und bildet sie auf dasselbe Datenschema ab wie der Wizard.
 \end{SemioNest}
 
 \subsubsection{AP-Tool}
 
+Das AP-Tool entwickelt das Entwurfswerkzeug, in dem die erzeugten Bauteilobjekte sichtbar, auswählbar, kombinierbar und vorläufig bewertbar werden. Es verbindet Bauteilkatalog, Kompositionsumgebung, Lebenszyklusbewertung, tragwerkliche Vorprüfung und KI-Assistenz. Die Entwicklung erfolgt auf Grundlage von semio und wird von beiden Verbundpartnern gemeinsam in die Plattform integriert.
+
+\paragraph{semio und Integration}
+Das Entwurfswerkzeug baut auf semio auf, einem quelloffenen Toolkit zum Entwerfen modularer Architektur, dessen Weiterentwicklung bei der LUH (NGS) liegt. Für die Wiederverwendung wird semio um zwei Bereiche erweitert: den Bauteilkatalog als Auswahlebene und eine Kompositionsumgebung, in der ausgewählte Bauteile zu Entwurfsvarianten zusammengeführt werden.
+
+Die zuvor funktional als Entwurfs- und Bewertungsumgebung beschriebene dritte Systemebene wird im AP-Tool als Aggregator konkretisiert. Der Aggregator ist die Kompositionsebene, in der ausgewählte Bauteile räumlich und strukturell miteinander in Beziehung gesetzt werden. Auf dieser Grundlage können Varianten dargestellt, verglichen und perspektivisch bewertet werden.
+
+Bauteile, die über Wizard oder Schnittstelle eingespeist und generatorisch zu parametrischen Objekten aufbereitet wurden, treten hier in den Entwurf ein. Der Bauteilkatalog macht sie auswählbar. Der Aggregator führt sie zu Varianten zusammen, die anschließend ökobilanziell und tragwerklich vorbewertet werden sollen.
+
+Im Berichtszeitraum ist der Aggregator als Kompositionsebene vorhanden und mit der Plattform prototypisch verbunden. Die technische Verbindung zwischen Plattform und Aggregator ist hergestellt. Der Bauteilkatalog ist als Oberfläche prototypisch umgesetzt; die Kopplung an die Bauteildaten des Portals steht aus.
+
 \paragraph{Human Interface Design}
+Das Human Interface Design umfasst eine Auswahlebene und zwei Kompositionsansichten. Der Bauteilkatalog dient der Auswahl einzelner Bauteile. Die 3D-Ansicht zeigt die generierte Arbeitsgeometrie räumlich. Die Diagrammansicht macht die Verknüpfungen zwischen Bauteilen sichtbar.
+
+\begin{SemioNest}
+\paragraph{Bauteilkatalog}
+Der Katalog erschließt die Bauteile über ihre typologische Ordnung. Von der Typologiefamilie führt die Auswahl über Typologie und Typ bis zum einzelnen Bauteil, dargestellt in aufeinanderfolgenden Panels oder als Baum. Such-, Filter- und Sortierfunktionen ergänzen die Navigation.
+
+Die Bauteilkarte ist dafür vorgesehen, die Daten aus dem Portal, die generierte Arbeitsgeometrie und die hinterlegten Dokumente zusammenzuführen. Der Reifegrad fasst die Nachweiszustände einzelner Angaben zusammen und macht sichtbar, welche Informationen vorhanden oder offen sind.
+
+\paragraph{3D-Ansicht}
+Die 3D-Ansicht stellt die generierte Arbeitsgeometrie räumlich dar und zeigt, wie sich Bauteile in einer Variante zueinander verhalten. Sie ist als Teil der Kompositionsumgebung implementiert.
+
+\paragraph{Diagrammansicht}
+Die Diagrammansicht bildet die Verknüpfungen zwischen Bauteilen als Graph ab. Dadurch wird die Struktur einer Entwurfsvariante lesbar, unabhängig von ihrer räumlichen Gestalt. Sie ist als Teil der Kompositionsumgebung implementiert.
+\end{SemioNest}
+
+\begin{Figure}[title=Oberflächen des Werkzeugs]
+\textit{[Platzhalter: Oberflächen des Werkzeugs. Screenshots von Bauteilkatalog, 3D-Ansicht und Diagrammansicht.]}
+\end{Figure}
 
 \paragraph{Lebenszyklusanalyse}
+Die Lebenszyklusanalyse ist als Entwurfsgrammatik konzipiert. Entwurfsgrammatik meint hier ein regelbasiertes Verfahren, das Bauteildaten, Geometrie und Entwurfsvariante in eine vorläufige Bewertung übersetzt. Die Bearbeitung liegt bei der LUH (NGS).
+
+Grundlage ist die ökobilanzielle Repräsentation des Bauteilobjekts. Sie fasst die für die Bewertung benötigten Größen zusammen: Volumen, Masse und Materialzusammensetzung aus der generierten Arbeitsgeometrie sowie Angaben zu Zustand, Instandsetzungsbedarf und Transport aus der Bauteilerfassung.
+
+Auf Bauteilebene soll der Bauteilkatalog die Umweltwirkungen eines einzelnen Bauteils ausweisen, bevor es in eine Variante eingeht. Auf Variantenebene soll der Aggregator die Umweltwirkungen einer Entwurfsvariante vorbewerten, sobald mehrere Bauteile zusammengeführt sind. Bewertet werden dabei die Prozesse des Wiederverwendungspfads, insbesondere Ausbau, Reinigung, Prüfung, Instandsetzung, Lagerung, Transport und Wiedereinbau.
+
+Maßgeblich für das Ergebnis ist die Allokationsregel. Sie legt fest, ob ursprüngliche Herstellungslasten eines Bauteils abgeschnitten, geteilt oder anteilig zugewiesen werden. Da diese Regeln zu deutlich unterschiedlichen Ergebnissen führen, legt das Vorhaben die verwendete Regel offen und bezieht den Umweltvorteil auf die projektspezifische Substitution eines Primärmaterials.
+
+Im Berichtszeitraum wurde die Lebenszyklusanalyse als Entwurfsgrammatik konzipiert. Die Repräsentationsstruktur ist angelegt. Die Bewertung auf Bauteilebene ist vorbereitet; ein Rulechecker zur Vorbewertung von Entwurfsvarianten im Aggregator ist noch nicht implementiert.
 
 \paragraph{Tragwerksanalyse}
+Die Tragwerksanalyse ist als tragwerkliche Vorprüfung in der Vorplanung angelegt. Sie soll Bauteile und Varianten nicht abschließend nachweisen, sondern tragwerksrelevante Eigenschaften, Rollen, Anschlussbedingungen und offene Prüfungen sichtbar machen. Die Bearbeitung liegt bei der UdK (KET).
 
-\paragraph{KI Assistenz}
+Grundlage ist die tragwerkliche Repräsentation des Bauteilobjekts. Sie enthält aus der Geometrie abgeleitete Querschnitts- und Systemgrößen sowie die bei der Erfassung hinterlegten Material- und Zustandsangaben. Dazu gehören etwa Festigkeiten, Vorschädigungen und die Geometrie möglicher Anschlussstellen.
+
+Auf Bauteilebene soll der Bauteilkatalog tragwerksrelevante Kennwerte sichtbar machen und je Angabe den Nachweiszustand anzeigen. Auf Variantenebene soll der Aggregator eine tragwerkliche Vorprüfung unterstützen. Da ein Bauteil je nach Einbau unterschiedliche Rollen im Tragwerk übernehmen kann, sind die zu prüfenden Bedingungen von der gewählten Rolle abhängig.
+
+Ein regelbasierter Prüfmechanismus liegt bislang für Anschlussstellen vor. Er prüft, ob zwei Bauteile geometrisch und semantisch zusammenpassen. Die darauf aufbauende tragwerkliche Vorprüfung einer Variante ist als Entwurfsgrammatik konzipiert; ein entsprechender Rulechecker ist noch nicht implementiert.
+
+Die Tragwerksanalyse des Werkzeugs wirkt in der Vorplanung. Sie unterstützt die Auswahl und Kombination von Bauteilen und macht offene Nachweise sichtbar. Sie ersetzt weder die statische Berechnung noch die Genehmigungsplanung.
+
+\paragraph{KI-Assistenz}
+Die KI-Assistenz im Entwurf befindet sich in der Konzeptionsphase. Erste Tests einzelner Funktionen liegen vor; eine Integration in das Werkzeug steht aus. Von der KI-Assistenz bei der Bauteilerfassung im Wizard ist sie zu unterscheiden. Die Bearbeitung liegt bei der LUH (NGS) auf Grundlage von Large-Language-Models.
+
+Die Assistenz soll den Entwurfsvorgang begleiten und Hinweise, Rückmeldungen und Warnungen im Interface erzeugen.
+
+Die bisher skizzierten Ansatzpunkte betreffen vier Bereiche: tragwerksbezogene Vorschläge, ökologische Rückmeldungen, Hinweise zu Raster, Spannweiten und Verschnitt sowie Warnungen bei angenommenen oder offenen Angaben. Im Tragwerk könnte die Assistenz auf mögliche Rollen hinweisen, die die ursprüngliche Bauteilfamilie nicht nahelegt. In der Lebenszyklusanalyse könnte sie Rückmeldungen zu Umweltwirkungen einzelner Entscheidungen geben. Im Entwurf könnte sie Hinweise zur Belegung verfügbarer Bauteile geben. Für die Datenlage könnte sie anzeigen, wo eine Entscheidung auf unsicheren Angaben beruht.
 
 \subsubsection{AP-Validierung}
 
-\paragraph{Test-Case}
-\begin{SemioNest}
-\paragraph{Entwurfsgrammatik}
+Das AP-Validierung prüft die entwickelte Kette an einem realen Bestand. Die Bearbeitung liegt bei der UdK (KET).
+
 \paragraph{Entwicklung}
-\end{SemioNest}
+\begin{Blockquote}
+\textit{[Platzhalter --- Beschreibung des Vorgehens und der Auswahl des Test-Case: warum dieser Bestand gewählt wurde, welche Typologie inhomogener Bauteile er bereitstellt (Deckenbereiche mit Unterzügen und Stützen), Erfassung, Auswahl der Bauteile, geplante Durchläufe. Geschätzter Umfang ca.\ 900 Zeichen.]}
+\end{Blockquote}
+
+\paragraph{Entwurfsgrammatik}
+\begin{Blockquote}
+\textit{[Platzhalter --- Entscheidung für die Typologie inhomogener Bauteile: Deckenbereiche mit Unterzügen und Stützen als zusammenhängendes Zuschnittfragment; Anbindung an die Voruntersuchung (Henschel 2020); Begründung der Eignung für die generatorische Objektbildung. Geschätzter Umfang ca.\ 900 Zeichen.]}
+\end{Blockquote}
 
 \section{Projektstand}
+
+\subsection{Soll-Ist-Vergleich}
+
+Das Vorhaben begann im Januar 2026. Der ursprünglich für November 2025 vorgesehene Beginn verschob sich, weil die Stellen erst zum Jahreswechsel besetzt werden konnten; die Verschiebung wurde dem Zuwendungsgeber angezeigt. Die Bearbeitung an der LUH nahm am 01.01.2026, die an der UdK am 23.01.2026 auf. Alle Monatsangaben der Meilensteine beziehen sich auf den Januar 2026 als ersten Projektmonat.
+
+\begin{SemioTable}{@{}T{0.06\linewidth-2\tabcolsep}T{0.44\linewidth-2\tabcolsep}T{0.18\linewidth-2\tabcolsep}T{0.32\linewidth-2\tabcolsep}@{}}
+  \SemioTableHeaderRow{Nr. & Meilenstein & Frist & Stand}
+  \SemioTableRow{1 & Erfahrungswissen & Monat 4 & erreicht}
+  \SemioTableRow{2 & Softwaredesign & Monat 9 & in Bearbeitung}
+  \SemioTableRow{3 & Life-Cycle-Analysis-Feature & Monat 12 & konzipiert}
+  \SemioTableRow{4 & Tragwerk-Feature & Monat 12 & konzipiert}
+  \SemioTableRow{5 & Anbindungsfähigkeit & Monat 14 & prototypisch umgesetzt}
+  \SemioTableRow{6 & KI-Assistenz & Monat 15 & konzipiert, erste Tests}
+  \SemioTableRow{7 & Anwendungsbereit & Monat 16 & offen}
+  \SemioTableRow{8 & Dokumentation & Monat 18 & offen}
+\end{SemioTable}
+
+Im Berichtszeitraum war allein Meilenstein 1 fällig. Er wurde mit dem Abschluss von Recherche, Interviews, User Stories und Anforderungssynthese erreicht (Abschnitt~1.2.1). Die übrigen Meilensteine liegen außerhalb des Berichtszeitraums. Meilenstein 5 ist der Frist voraus, da die Schnittstelle zur Bauteileinspeisung bereits prototypisch vorliegt (Abschnitt~1.2.2.2.2). Fristüberschreitungen sind nicht eingetreten.
+
+Gegenüber dem Antrag ergeben sich zwei Änderungen. Die erste betrifft den Projektbeginn und damit die Lage aller Meilensteintermine, die sich um zwei Monate verschieben; die Laufzeit und die Reihenfolge der Arbeitspakete bleiben unverändert. Die zweite betrifft die Erfassung von Bauteilgeometrie. Der Antrag sah vor, über Fotogrammetrie ein 3D-Modell zu erstellen. Im Verlauf der Arbeit erwies sich der generatorische Weg als tragfähiger: Die entwurfsfähige Geometrie wird erzeugt, während Fotogrammetrie, Scan und Foto als Eingaben dienen, um den passenden Generator zu wählen und die erzeugte Form an die reale Geometrie heranzuführen (Abschnitt~1.2.2.1). Die Zielsetzung des Vorhabens bleibt davon unberührt. Die Auflage zur Ökobilanzierung ist im Konzept der Lebenszyklusanalyse umgesetzt: Der Umweltvorteil wird über die projektspezifische Substitution eines Primärmaterials bestimmt (Abschnitt~1.2.3.3). Angaben zur Ausgabenplanung enthält Kapitel~3.
 
 \subsection{Arbeitspakete}
 
 \subsubsection{AP-Erfahrung}
 
+Das Arbeitspaket ist mit Meilenstein 1 abgeschlossen. Bauteilbörsen-Recherche, Wiederverwendungsprozesse und Bauteiltypologien liegen vor, ebenso die konsolidierten User Stories und die daraus abgeleiteten Anforderungen.
+
 \paragraph{Neuer Sekundärbefund}
-\begin{SemioNest}
+Im Berichtszeitraum wurde die Studie „ReUse in der Bauindustrie stärken" (Cirkla/BaselCircular 2025) bekannt. Sie beruht auf 18 Fachinterviews und ging als sekundäre Hauptquelle in die Erhebung des Erfahrungswissens ein (Abschnitt~1.2.1.2.1). Für die Planung folgt daraus, dass die eigenen Interviews nicht die Breite der Praxis abdecken müssen, sondern auf die Fachperspektiven zielen, die die Studie nicht vertieft.
+
 \paragraph{Geplante Interviews}
-\begin{SemioNest}
-\paragraph{I-Usability}
+Über die Laufzeit sind acht eigene Experteninterviews vorgesehen; zwei sind ausgewertet, eines ist angesetzt. Die verbleibenden Gespräche verteilen sich auf zwei Zwecke.
+
 \begin{SemioNest}
 \paragraph{I-U-Plattform}
+Rückmeldung zur Bedienbarkeit des Bauteilportals.
+
 \paragraph{I-U-Tool}
-\end{SemioNest}
-\paragraph{I-Validierung}
-\begin{SemioNest}
+Rückmeldung zur Bedienbarkeit von Bauteilkatalog und Aggregator.
+
 \paragraph{I-V-Bauteilbörse}
+Validierung aus Sicht der Bauteileinspeisung.
+
 \paragraph{I-V-Architekt:in}
+Validierung aus Sicht des Entwurfs.
+
 \paragraph{I-V-Tragwerksplaner:in}
+Validierung aus Sicht der Nachweisführung.
+
 \paragraph{I-V-Energieberater:in}
-\end{SemioNest}
-\end{SemioNest}
+Validierung aus Sicht der ökologischen Bewertung.
 \end{SemioNest}
 
 \subsubsection{AP-Plattform}
 
+\begin{SemioNest}
 \paragraph{Eingabe}
+Der Wizard ist prototypisch umgesetzt. Die KI-Erkennung ist getestet, jedoch nicht in den Wizard integriert. Die Infrastruktur der Generatoren ist aufgebaut, ein Generator für Stützen ist prototypisch implementiert; die Generatoren der übrigen Typologiefamilien sind in Entwicklung. Ausstehend sind zudem die vollständige Befüllung der Repräsentationen und das Mitführen der Nachweiszustände am Bauteilobjekt.
 
 \paragraph{Schnittstelle}
+Der prototypische Grundpfad der Datenübernahme ist implementiert. Die Anbindung einzelner Bauteilbörsen ist konzipiert; welche Plattformen angebunden werden, ist offen und hängt von deren Datenbereitstellung ab. Der Funktionsumfang der Schnittstelle wächst mit den Generatoren.
+\end{SemioNest}
 
 \subsubsection{AP-Tool}
 
+\begin{SemioNest}
 \paragraph{Human Interface Design}
+Der Bauteilkatalog ist implementiert, seine Kopplung an die Bauteildaten des Portals steht aus. Der Aggregator ist weit fortgeschritten: 3D-Ansicht, Diagrammansicht und Detailpanel sind verbunden. Für die Anschlussstellen liegt ein regelbasierter Prüfmechanismus vor.
 
 \paragraph{Lebenszyklusanalyse}
+Als Entwurfsgrammatik konzipiert; die Infrastruktur der Repräsentationen ist angelegt. Der nächste Schritt ist die Bewertung auf Bauteilebene im Bauteilkatalog, anschließend die Prüfung von Entwurfsvarianten im Aggregator.
 
 \paragraph{Tragwerksanalyse}
+Als Entwurfsgrammatik konzipiert. Der bestehende Prüfmechanismus für Anschlussstellen wird zur Prüfung der Tragfähigkeit einer Variante ausgebaut.
 
-\paragraph{KI Assistenz}
+\paragraph{KI-Assistenz}
+Erste Tests einzelner Funktionen liegen vor. Die nächsten Schritte betreffen die Auswahl der Ansatzpunkte, die tragen, und deren Integration in Bauteilkatalog und Aggregator.
+\end{SemioNest}
 
 \subsubsection{AP-Validierung}
 
 \paragraph{Test-Case}
 \begin{SemioNest}
 \paragraph{Entwurfsgrammatik}
+\begin{Blockquote}
+\textit{[Platzhalter: Stand der Entwurfsgrammatik für die Typologie inhomogener Bauteile. ca.\ 400 Zeichen.]}
+\end{Blockquote}
+
 \paragraph{Entwicklung}
+\begin{Blockquote}
+\textit{[Platzhalter: Stand der Test-Case-Vorbereitung, Erfassung des Bestands, geplante Durchläufe und deren Rückwirkung auf die Entwicklung. ca.\ 500 Zeichen.]}
+\end{Blockquote}
 \end{SemioNest}
 
 \paragraph{Workshop}
 \begin{SemioNest}
 \paragraph{Vorbereitung}
+\begin{Blockquote}
+\textit{[Platzhalter: Planung, Zeitpunkt, Teilnehmende. ca.\ 300 Zeichen.]}
+\end{Blockquote}
+
 \paragraph{Durchführung und Auswertung}
+\begin{Blockquote}
+\textit{[Platzhalter: geplantes Vorgehen und Einbindung in die Validierung. ca.\ 300 Zeichen.]}
+\end{Blockquote}
 \end{SemioNest}
 
 \section{Mittelverwendung}
