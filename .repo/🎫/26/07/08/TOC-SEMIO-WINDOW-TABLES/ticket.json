@@ -1,9 +1,9 @@
 {
   "title": "TOC Semio Window Tables",
   "emoji": "🖨️",
-  "status": "open",
+  "status": "closed",
   "description": "LaTeX Table OS Style Parity",
-  "summary": "Fixed empty Semio TOC/register table rows: (1) materialize now stores literal row values via Nx+exp_not instead of symbolic tl/str register references; (2) compilePrintDocumentWithPanels always runs a second tectonic pass; (3) register list shells use Window not nested Table tcolorbox; makeworkpackages uses Window; semio-table resets row state and guards pageref on first pass. Tectonic log shows TOC row text at line 50 (26pt overfull paragraph); full PDF rebuild should be re-run locally via mit-bestand/bericht and print/script.ts test.",
+  "summary": "Register tables (TOC, list-of-X, glossary, references) now break across pages using longtable instead of a non-breakable Table/tcolorbox + tabular.\n\nRegister list windows render the title chrome once before the table; continuation pages repeat the window title row and column headers via longtable \\endhead.\n\nKey fixes: global long-mode flag, correct \\endfirsthead placement, plain p-column spec for long mode, skip inter-row \\noalign hrule separators that blocked page breaks.\n\nVerified zwischenbericht TOC spans pages 2–3 with full ~106 entries including Ergebnisverwertung and Verzeichnisse; continuation page repeats Inhaltsverzeichnis title.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1860"
   },

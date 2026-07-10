@@ -282,6 +282,10 @@
 
 \cs_new_protected:Npn \semio_register_list_end: {
   \semio_block_sep_after:
+  \semio_register_list_reset:
+}
+
+\cs_new_protected:Npn \semio_register_list_reset: {
   \bool_set_false:N \l_semio_register_list_bool
   \group_begin:
   \ExplSyntaxOff
@@ -292,6 +296,7 @@
 
 \cs_new_protected:Npn \SemioRegisterListBegin #1 { \semio_register_list_begin:n {#1} }
 \cs_new_protected:Npn \SemioRegisterListEnd { \semio_register_list_end: }
+\cs_new_protected:Npn \SemioRegisterListReset { \semio_register_list_reset: }
 \cs_new_protected:Npn \SemioTocTrack #1#2 { \semio_window_toc_append:nn {#1}{#2} }
 \cs_new_protected:Npn \SemioTocTrackNum #1#2#3 { \semio_window_toc_append:nnn {#1}{#2}{#3} }
 
@@ -370,19 +375,18 @@
   }
 }
 
-\tl_new:N \g_semio_glossary_rows_tl
-
-\cs_gset_nopar:Npn \semio@glossary@table@body { \tl_use:N \g_semio_glossary_rows_tl }
+\int_new:N \g_semio_glossary_row_int
 
 \cs_new_protected:Npn \semio_glossary_body_init: {
-  \tl_gclear:N \g_semio_glossary_rows_tl
+  \int_gzero:N \g_semio_glossary_row_int
 }
 
 \cs_generate_variant:Nn \semio_glossary_body_gappto:nnn { VVV }
 
 \cs_new_protected:Npn \semio_glossary_body_gappto:nnn #1#2#3 {
-  \tl_put_right:Nn \g_semio_glossary_rows_tl
-    { \SemioGlossaryTableRow {#1} {#2} {#3} }
+  \int_gincr:N \g_semio_glossary_row_int
+  \cs_gset:cpn { semio@glossary@row@ \int_use:N \g_semio_glossary_row_int }
+    { \SemioGlossaryTableRow {#1}{#2}{#3} }
 }
 
 \cs_new_protected:Npn \semio_glossary_row_for_term:n #1 {
@@ -394,10 +398,23 @@
   \semio_glossary_body_gappto:VVV \l_semio_glossary_term_tl \l_semio_glossary_definition_tl \l_tmpd_tl
 }
 
+\newcommand{\semio@glossary@emit@row}[1]{\csname semio@glossary@row@#1\endcsname}
+
+\cs_new_protected:Npn \semio_glossary_body_finalize: {
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \gdef\semio@glossary@table@body{}%
+  \int_step_inline:nn { \g_semio_glossary_row_int } {
+    \gappto\semio@glossary@table@body{\noexpand\semio@glossary@emit@row{####1}}%
+  }%
+  \makeatother
+  \group_end:
+}
+
 \cs_new_protected:Npn \semio_glossary_body_materialize: {
   \semio_glossary_body_init:
-  \semio_glossary_terms_sort:
-  \seq_map_function:NN \l_semio_glossary_sorted_terms_seq \semio_glossary_row_for_term:n
+  \semio_glossary_body_finalize:
 }
 
 \cs_new_protected:Npn \SemioGlossaryListOf {
@@ -408,10 +425,8 @@
     \ExplSyntaxOff
     \makeatletter
     \exp_args:NV \semio@register@window@open \l_semio_glossary_title_tl
-    \SemioTableGlossary{%
-      \semio@glossary@table@header
-      \semio@glossary@table@body
-    }%
+    \global\semio@table@register@longfalse
+    \SemioTableGlossary{\semio@glossary@table@body}%
     \semio@register@window@close
     \makeatother
     \group_end:
@@ -457,7 +472,7 @@
     bottomrule=\semio@stroke@hairline,
     colback=semio-chrome-canvas,
     coltext=semio-chrome-text-normal,
-    top=0pt,
+    top=\semio@chrome@padding,
     left=\semio@chrome@padding,
     right=\semio@chrome@padding,
     bottom=\semio@chrome@padding,
@@ -468,6 +483,7 @@
   semio~window~table/.style={
     semio~window,
     breakable=false,
+    top=0pt,
     left=0pt,
     right=0pt,
     bottom=0pt,
@@ -935,6 +951,8 @@
 }
 
 \newcounter{semioglossaryusage}
+
+\newcommand{\semio@glossary@table@body}{}
 
 \newcommand{\semio@glossary@table@header}{%
   \SemioTableHeaderRow{%

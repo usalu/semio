@@ -1,8 +1,11 @@
 {
-  "numPages": 13,
+  "numPages": 12,
   "tocPages": [
-    4
+    2,
+    3
   ],
-  "ergebnisverwertungOnTocPages": false,
-  "verzeichnisseOnTocPages": false
+  "page2inhalt": 1,
+  "page3inhalt": 1,
+  "verzeichnisseOnToc": true,
+  "ergebnisverwertungOnToc": true
 }

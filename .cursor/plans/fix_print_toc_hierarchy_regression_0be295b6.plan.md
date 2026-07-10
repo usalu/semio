@@ -13,10 +13,10 @@ todos:
     status: completed
   - id: rebuild-verify
     content: Rebuild zwischenbericht PDF and verify full TOC hierarchy renders on page 2 via pdfjs text extraction
-    status: in_progress
+    status: completed
   - id: close-ticket
     content: Close ticket with summary and list of touched files
-    status: pending
+    status: completed
 isProject: false
 ---
 
