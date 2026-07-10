@@ -3619,6 +3619,52 @@ mod tests {
     }
 
     #[test]
+    fn engagement_repeat_last_restarts_the_last_finalized_interaction() {
+        let mut app = CadApp;
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        envelope.runtime.engagement_input = "b".into();
+        let ops = app.handle_command_patch_ops(
+            "engagementSubmit",
+            Some(&json!({ "pane": "shape" })),
+            &serde_json::to_string(&envelope).unwrap(),
+            &ViewState::default(),
+        );
+        envelope = apply_ops(&envelope, &ops);
+        assert!(envelope.runtime.engagement_session.is_some());
+
+        for position in [json!([0.0, 0.0, 0.0]), json!([2.0, 3.0, 0.0])] {
+            let ops = app.handle_command_patch_ops(
+                "worldPointerDown",
+                Some(&json!({ "pane": "shape", "position": position })),
+                &serde_json::to_string(&envelope).unwrap(),
+                &ViewState::default(),
+            );
+            envelope = apply_ops(&envelope, &ops);
+        }
+
+        envelope.runtime.engagement_input = "SetHeight2.5".into();
+        let ops = app.handle_command_patch_ops(
+            "engagementSubmit",
+            Some(&json!({ "pane": "shape" })),
+            &serde_json::to_string(&envelope).unwrap(),
+            &ViewState::default(),
+        );
+        envelope = apply_ops(&envelope, &ops);
+        assert!(envelope.runtime.engagement_session.is_none(), "box should have committed");
+        assert_eq!(envelope.runtime.last_finalized_interaction_id.as_deref(), Some("primitive.box"));
+
+        let ops = app.handle_command_patch_ops(
+            "engagementRepeatLast",
+            Some(&json!({ "pane": "shape" })),
+            &serde_json::to_string(&envelope).unwrap(),
+            &ViewState::default(),
+        );
+        let next = apply_ops(&envelope, &ops);
+        let session = next.runtime.engagement_session.expect("repeat-last should start a session");
+        assert_eq!(session.interaction_id, "primitive.box");
+    }
+
+    #[test]
     fn import_spatial_modelspace_round_trips() {
         let payload = json!({
             "schema": "spatial.modelspace",

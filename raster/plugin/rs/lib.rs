@@ -53,7 +53,7 @@ fn default_zoom() -> f64 {
     1.0
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct RasterTransform {
     #[serde(default)]
@@ -66,6 +66,12 @@ struct RasterTransform {
     scale_y: f64,
     #[serde(default)]
     rotation: f64,
+}
+
+impl Default for RasterTransform {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0, rotation: 0.0 }
+    }
 }
 
 fn one_f64() -> f64 {

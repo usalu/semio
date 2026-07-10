@@ -809,6 +809,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           }
           return [];
         });
+        console.log(`[DEBUG] boot registry=${registry.map((entry) => entry.pluginId).join(",")} loaded=${loaded.map((entry) => entry.pluginId).join(",")}`);
         if (loaded.length === 0) throw new Error("No plugins loaded");
         if (cancelled) return;
         const loadedState = loaded.map((handle) => ({ handle, manifest: handle.manifest }));
@@ -3102,6 +3103,8 @@ export type RasterWasmSession = {
   uploadLayerImage(layerId: string, bytes: Uint8Array): void;
   uploadRasterImageKey(key: string, bytes: Uint8Array): void;
   setActiveTool(tool: string): void;
+  setBrushSize(size: number): void;
+  setBrushOpacity(opacity: number): void;
   setHoveredIdSilent(id?: string | null): void;
   setSelectionIdsJson(json: string): void;
   setCanvasThemeJson(json: string): void;

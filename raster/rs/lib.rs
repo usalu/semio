@@ -596,6 +596,14 @@ impl RasterHost {
         self.active_tool = tool.to_string();
     }
 
+    pub fn set_brush_size(&mut self, size: f32) {
+        self.brush_size = size;
+    }
+
+    pub fn set_brush_opacity(&mut self, opacity: f32) {
+        self.brush_opacity = opacity.clamp(0.0, 1.0);
+    }
+
     pub fn set_hovered_id(&mut self, id: Option<String>) {
         self.hovered_id = id;
     }
@@ -1219,6 +1227,16 @@ impl RasterSession {
     #[wasm_bindgen(js_name = setActiveTool)]
     pub fn set_active_tool(&mut self, tool: &str) {
         self.state.borrow_mut().host.set_active_tool(tool);
+    }
+
+    #[wasm_bindgen(js_name = setBrushSize)]
+    pub fn set_brush_size(&mut self, size: f32) {
+        self.state.borrow_mut().host.set_brush_size(size);
+    }
+
+    #[wasm_bindgen(js_name = setBrushOpacity)]
+    pub fn set_brush_opacity(&mut self, opacity: f32) {
+        self.state.borrow_mut().host.set_brush_opacity(opacity);
     }
 
     #[wasm_bindgen(js_name = setHoveredIdSilent)]

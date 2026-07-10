@@ -447,6 +447,11 @@ function VirtualFileSystemHost({ node, onCommand }: { readonly node: Extract<UiN
 //#endregion VirtualFileSystemHost
 
 //#region InterpretUiNode
+function uiNodeKey(node: UiNode, index: number): string {
+  if ("id" in node && typeof node.id === "string" && node.id) return node.id;
+  return `${node.type}:${index}`;
+}
+
 /** @emoji 🌳 Interprets a declarative {@link UiNode} tree into ui-react components. */
 export function interpretUiNode(node: UiNode, context: UiInterpreterContext): ReactNode {
   switch (node.type) {
@@ -480,7 +485,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
           }}
         >
           {node.children.map((child, index) => (
-            <div key={index} className="min-h-0 min-w-0 flex-1">
+            <div key={uiNodeKey(child, index)} className="min-h-0 min-w-0 flex-1">
               {interpretUiNode(child, context)}
             </div>
           ))}
@@ -523,7 +528,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
       return (
         <Section id={node.id} title={node.label}>
           {node.children.map((child, index) => (
-            <div key={index}>{interpretUiNode(child, context)}</div>
+            <div key={uiNodeKey(child, index)}>{interpretUiNode(child, context)}</div>
           ))}
         </Section>
       );

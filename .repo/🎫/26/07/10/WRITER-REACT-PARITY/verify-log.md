@@ -31,13 +31,32 @@ Clean (no errors/warnings beyond 2 pre-existing crate-wide dead-code warnings el
 `text-editor-host.tsx`: 0 real errors (only the pre-existing, repo-wide `TS5097` `.tsx`-import-extension noise, 254 instances across the whole codebase, unrelated to this change). Also fixed one pre-existing bug while rewriting the file: the wasm-session fallback stub was missing `setCanvasThemeJson`, silently violating `EditorWasmSession` even before this ticket.
 
 ### `bun framework/product/os/dev/script.ts build writer` (wasm32-wasip2 release + jco transpile)
-[fill in after background build completes]
+Plugin component built cleanly: `writer_plugin.wasm`, jco-transpiled `writer_plugin_component.js`, and the bridge `writer_plugin.js` all produced under `framework/product/os/dev/plugin-modules/writer/`. (The script's subsequent static `vite build` step for a `writer/index.html` entry fails — that target expects a standalone static bundle entry point that was never part of the plugin-dev flow; irrelevant to the dev-server/browser verification path used here.)
 
 ### `wasm-verify.ts` (`.repo/🎫/26/07/10/WRITER-REACT-PARITY/wasm-verify.ts`)
-[fill in]
+Ran against the real compiled `writer_plugin.js` bridge — all checks passed:
+- Manifest exposes examples `empty`, `jack`, `dag.jack`.
+- Initial jack scene carries all new fields (`hoverJson`, `newlineGatesJson`, `placeholdersJson`, `selectableSpansJson`, `completionsJson`).
+- Placing the caret on the bound variable `a` yields 3 occurrences, `extraCaretsJson`, and `renameJson` with all 3 spans.
+- `commitRename` renames all 3 occurrences in one op (verified buffer text).
+- `engagementSubmit {value:"font 16"}` updates the live `window_measures` slider to 16.
+- `window_engagements` input placeholder contains "Format"; `tools()` contains `writer-format` + `writer-lint`.
+- `setAstHover` on the tree's root id sets `hoverJson` to the root span and the document tree's `highlightedIds`.
 
-### Browser verification (`writer-react-dev`, port 6062)
-[fill in]
+### Browser verification (`writer-react-dev`, port 6062) — NOT PERFORMED, documented honestly
+Could not open a live browser preview in this session: the folder's dev-server pool (max 5 concurrent) was entirely occupied by other concurrent sessions at verification time, and stopping someone else's in-progress server would destroy their work. Automated evidence above (24 Rust unit tests, 55 vitest cases, and an end-to-end `wasm-verify.ts` round-trip against the actual compiled `writer_plugin.js`/`writer_plugin.wasm`) is strong but does not substitute for a real GPU-rendered click-through. A follow-up session with a free dev-server slot should run `writer-react-dev` (port 6062) / `bun run dev:writer` with `SEMIO_RENDERER=react` and manually confirm:
+- Enter inserts a newline only at jack-meaningful positions (e.g. after `)`), not mid-token or before `.`.
+- Cmd+Space opens the completions popup at the caret; Arrow keys cycle, Tab/Enter accepts, replacing the identifier prefix.
+- Placing the caret on a bound variable (e.g. `a` in the jack example) shows highlighted occurrences with extra carets at each.
+- F2 opens the rename input at the caret; typing live-updates every occurrence; Enter commits, Escape reverts.
+- Right-click opens the context menu (Suggest/pick rows/Select token/Select line/Select all/Rename/Cut/Copy/Paste/Format/Lint); Alt+right-click opens completions directly.
+- Hovering an AST tree row highlights the corresponding editor span and vice versa.
+- The font-size/line-height/tab-size sliders and line-numbers toggle in the window measures panel update the editor live.
+- Typing "font 16" into the engagement input and submitting changes the font size.
+- Toolbar Format/Lint buttons work.
+- Scrolling the editor (wheel) persists camera position across the next keystroke (no snap-back).
+- The `dag.jack` example loads from the catalogue.
+Hard-refresh after any plugin rebuild — Vite does not reliably hot-swap `.wasm`.
 
 ## Pitfalls encountered
 

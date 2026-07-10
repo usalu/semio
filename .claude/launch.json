@@ -103,6 +103,16 @@
         "SEMIO_RENDERER": "react"
       },
       "port": 6056
+    },
+    {
+      "name": "forms-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:forms"],
+      "env": {
+        "FORMS_PLAY_PORT": "6558",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6558
     }
   ]
 }

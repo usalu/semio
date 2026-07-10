@@ -50,7 +50,7 @@ export default defineConfig({
   ],
   optimizeDeps: {
     include: ["react-reconciler", "react-reconciler/constants", "three", "@react-three/fiber", "fuse.js"],
-    exclude: [...(renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : []), "@semio-tech/gis-2d-rs", "@semio-tech/framework-graph-rs", "@semio-tech/framework-editor-rs"],
+    exclude: [...(renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : []), "@semio-tech/gis-2d-rs", "@semio-tech/framework-graph-rs", "@semio-tech/framework-editor-rs", "@semio-tech/raster-rs"],
   },
   define: {
     "import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(process.env.SEMIO_PLUGIN ?? "s"),

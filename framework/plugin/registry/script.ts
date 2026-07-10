@@ -128,21 +128,14 @@ export const pluginModuleUrl = (pluginId: string, fileName: string) =>
 }
 
 class GenerateScript extends BundleScript {
-  run(segments: string[]): void {
-    const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND;
-    const studioMode = isStudioPluginFilter(filterPlugin);
+  run(_segments: string[]): void {
     const repoRoot = getWorkspaceRoot();
-    const entries = generatePluginRegistry(repoRoot, studioMode ? {} : { filterPlaygroundPlugin: filterPlugin });
+    const entries = generatePluginRegistry(repoRoot);
     const outDir = join(this.root, "generated");
     mkdirSync(outDir, { recursive: true });
     writeFileSync(join(outDir, "plugins.json"), `${JSON.stringify(entries, null, 2)}\n`);
     writeFileSync(join(outDir, "plugins.ts"), emitTypeScript(entries));
-    if (studioMode) {
-      console.log(`[DEBUG] plugin registry catalog refreshed (${entries.length} plugin crates) -> ${outDir}`);
-    } else {
-      const ids = entries.map((entry) => entry.pluginId).join(", ") || "(none)";
-      console.log(`[DEBUG] plugin registry catalog: ${ids} -> ${outDir}`);
-    }
+    console.log(`plugin registry catalog refreshed (${entries.length} plugin crates) -> ${outDir}`);
   }
 }
 

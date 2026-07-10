@@ -1,0 +1,13 @@
+{
+  "title": "Retained Mode UI Crate",
+  "emoji": "🖼️",
+  "status": "open",
+  "description": "Turn ui_wgpu (ui/wgpu/rs) into a fullblown retained-mode UI crate in place: arena-allocated scene graph, dirty-flag invalidation, taffy flexbox layout, cached tessellation + batched wgpu rendering, retained hit testing/focus/capture. Move the declarative component model (UiNode, scene records, SurfaceKind, WindowLayout, CommandDescriptor) from framework/core/rs into ui_wgpu behind a component/engine Cargo feature split (default = components only, wasip2-clean for plugin apps; `engine` feature = full GPU retained engine). Carve widgets, dock/split/window shell chrome, and input routing out of framework/renderer/wgpu/rs (currently immediate-mode interpreter, ~14,750 lines) into ui_wgpu, leaving the renderer as a thin host (event loop, plugin bridge, vello/resvg scene hosts, icon atlas). JSON wire format must stay byte-identical (React renderer + WIT contract unaffected). Full plan at /Users/ueli/.claude/plans/ui-rs-make-sure-that-zesty-hoare.md. Phases: 0 golden wire-format tests, 1 feature split, 2 atomic type move (core -\u003e ui_wgpu), 3 retained engine build-out inside ui_wgpu (arena/tree/reconcile/flex/paint/events/shell), 4 renderer thinning, 5 app sweep + tooling.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1920"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯apps",
+  "sessions": [
+    "⚪32afa7636a984ecca938edd84aa52b86"
+  ]
+}

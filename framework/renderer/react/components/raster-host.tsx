@@ -101,6 +101,8 @@ function noopRasterSession(): RasterWasmSession {
     uploadLayerImage: () => {},
     uploadRasterImageKey: () => {},
     setActiveTool: () => {},
+    setBrushSize: () => {},
+    setBrushOpacity: () => {},
     setHoveredIdSilent: () => {},
     setSelectionIdsJson: () => {},
     setCanvasThemeJson: () => {},
@@ -191,6 +193,8 @@ function RasterCanvasSurface({ node, scene, onCommand }: { readonly node: UiComp
       assetsRef.current = scene.assetsJson;
     }
     session.setActiveTool(scene.activeTool);
+    session.setBrushSize(scene.brushSize);
+    session.setBrushOpacity(scene.brushOpacity);
     session.setSelectionIdsJson(scene.selectionJson);
     session.setHoveredIdSilent(scene.hoveredId ?? null);
     session.setViewMode(scene.viewMode);
@@ -218,7 +222,19 @@ function RasterCanvasSurface({ node, scene, onCommand }: { readonly node: UiComp
       }
     }
     session.renderFrame();
-  }, [isNavigator, scene]);
+  }, [
+    isNavigator,
+    scene.documentSyncJson,
+    scene.assetsJson,
+    scene.cameraJson,
+    scene.selectionJson,
+    scene.hoveredId,
+    scene.activeTool,
+    scene.brushSize,
+    scene.brushOpacity,
+    scene.viewMode,
+    scene.compositeViewportJson,
+  ]);
 
   useEffect(() => {
     syncAll();
