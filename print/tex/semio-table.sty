@@ -1,6 +1,9 @@
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{semio-table}[2026/07/09 v1.1.0 semio data table styling]
 
+\newif\ifsemio@table@long@mode
+\semio@table@long@modefalse
+
 \RequirePackage{array}
 \RequirePackage{colortbl}
 \RequirePackage{longtable}
@@ -81,11 +84,11 @@
 
 \newcommand{\semio@table@colspec@three}{@{}T{\dimexpr0.34\linewidth-\tabcolsep\relax}T{\dimexpr0.33\linewidth-\tabcolsep\relax}T{\dimexpr0.33\linewidth-2\tabcolsep\relax}@{}}
 
-\newcommand{\semio@table@colspec@register@long}{@{\vrule width\semio@stroke@hairline\hspace{\semio@chrome@padding}}>{\raggedright\arraybackslash\hspace{0pt}}p{0.155\linewidth}>{\raggedright\arraybackslash\hspace{0pt}}p{0.605\linewidth}>{\raggedleft\arraybackslash\hspace{0pt}}p{0.21\linewidth}@{\hspace{\semio@chrome@padding}\vrule width\semio@stroke@hairline}}
+\newcommand{\semio@table@colspec@register@long}{@{\hspace{\semio@chrome@padding}}|>{\raggedright\arraybackslash\hspace{0pt}}p{0.16\linewidth}>{\raggedright\arraybackslash\hspace{0pt}}p{0.62\linewidth}>{\raggedleft\arraybackslash\hspace{0pt}}p{0.22\linewidth}|@{\hspace{\semio@chrome@padding}}}
 
-\newcommand{\semio@table@colspec@reference@long}{@{\vrule width\semio@stroke@hairline\hspace{\semio@chrome@padding}}>{\raggedright\arraybackslash\hspace{0pt}}p{0.115\linewidth}>{\raggedright\arraybackslash\hspace{0pt}}p{0.645\linewidth}>{\raggedleft\arraybackslash\hspace{0pt}}p{0.21\linewidth}@{\hspace{\semio@chrome@padding}\vrule width\semio@stroke@hairline}}
+\newcommand{\semio@table@colspec@reference@long}{@{\hspace{\semio@chrome@padding}}|>{\raggedright\arraybackslash\hspace{0pt}}p{0.12\linewidth}>{\raggedright\arraybackslash\hspace{0pt}}p{0.66\linewidth}>{\raggedleft\arraybackslash\hspace{0pt}}p{0.22\linewidth}|@{\hspace{\semio@chrome@padding}}}
 
-\newcommand{\semio@table@colspec@glossary@long}{@{\vrule width\semio@stroke@hairline\hspace{\semio@chrome@padding}}>{\raggedright\arraybackslash\hspace{0pt}}p{0.215\linewidth}>{\raggedright\arraybackslash\hspace{0pt}}p{0.545\linewidth}>{\raggedleft\arraybackslash\hspace{0pt}}p{0.21\linewidth}@{\hspace{\semio@chrome@padding}\vrule width\semio@stroke@hairline}}
+\newcommand{\semio@table@colspec@glossary@long}{@{\hspace{\semio@chrome@padding}}|>{\raggedright\arraybackslash\hspace{0pt}}p{0.22\linewidth}>{\raggedright\arraybackslash\hspace{0pt}}p{0.56\linewidth}>{\raggedleft\arraybackslash\hspace{0pt}}p{0.22\linewidth}|@{\hspace{\semio@chrome@padding}}}
 
 \newcommand{\semio@table@colspec@register}{@{}T{\dimexpr0.16\linewidth-\tabcolsep\relax}T{\dimexpr0.62\linewidth-\tabcolsep\relax}U{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
 
@@ -112,8 +115,7 @@
   \noalign{\hrule height\arrayrulewidth}%
 }
 
-\newif\ifsemio@table@long@mode
-\semio@table@long@modefalse
+
 
 \newcommand{\semio@table@long@header@repeat@three}[3]{%
   \semio@table@header@cell{#1} &
@@ -145,7 +147,7 @@
 }
 
 \newcommand{\semio@table@long@continuation@chrome}{%
-  \multicolumn{3}{@{\vrule width\semio@stroke@hairline\hspace{\semio@chrome@padding}}@{}l@{}@{\hspace{\semio@chrome@padding}\vrule width\semio@stroke@hairline}}%
+  \multicolumn{3}{@{\hspace{\semio@chrome@padding}}|@{}l@{}|@{\hspace{\semio@chrome@padding}}|}%
   {%
     \hbox to \linewidth{%
       \semio@heading@cap@muted{\semio@window@header@title}%
@@ -181,6 +183,7 @@
   #3%
   \endhead
   \endfoot
+  \semio@table@long@closing@rule
   \endlastfoot
   #4%
   \end{longtable}%
@@ -200,6 +203,7 @@
 
 \newcommand{\semio@table@render}[2]{%
   \ExplSyntaxOff
+  \semio@table@require@window
   \semio@table@setup
   \begingroup
   \SemioSans
@@ -307,6 +311,7 @@
 
 \newcommand{\SemioTableBegin}[1]{%
   \ExplSyntaxOff
+  \semio@table@require@window
   \semio@table@setup
   \begingroup
   \SemioSans

@@ -40,6 +40,8 @@
 %region Registers
 \bool_new:N \l_semio_register_list_bool
 \bool_set_false:N \l_semio_register_list_bool
+\bool_new:N \l_semio_window_hierarchy_bool
+\bool_set_true:N \l_semio_window_hierarchy_bool
 
 \cs_new_protected:Npn \semio_window_register_write:nn #1#2 {
   \semio_hierarchy_path_sync_document:
@@ -231,11 +233,7 @@
     \bool_if:NF \l_semio_register_list_bool {
       \group_begin:
       \ExplSyntaxOff
-      \ifsemio@block@sep@done
-        \global\semio@block@sep@donefalse
-      \else
-        \semio@block@sep
-      \fi
+      \semio@heading@block@before
       \group_end:
     }
   }
@@ -264,10 +262,8 @@
 }
 
 \cs_new_protected:Npn \semio_register_list_begin:n #1 {
-  \group_begin:
-  \ExplSyntaxOff
-  \semio@register@listtrue
-  \group_end:
+  \use:c { semio@register@listtrue }
+  \use:c { semio@window@enter }
   \bool_set_true:N \l_semio_register_list_bool
   \tl_set:Nn \l_tmpa_tl {#1}
   \tl_set:Nx \l_tmpa_tl { \tl_use:N \l_tmpa_tl }
@@ -277,6 +273,7 @@
 \cs_new_protected:Npn \semio_register_list_end: {
   \semio_block_sep_after:
   \semio_register_list_reset:
+  \use:c { semio@window@leave }
 }
 
 \cs_new_protected:Npn \semio_register_list_reset: {
@@ -368,53 +365,38 @@
   }
 }
 
-\int_new:N \g_semio_glossary_row_int
+\tl_new:N \g_semio_glossary_rows_tl
 
 \cs_new_protected:Npn \semio_glossary_body_init: {
-  \int_gzero:N \g_semio_glossary_row_int
+  \tl_gclear:N \g_semio_glossary_rows_tl
 }
-
 
 \cs_new_protected:Npn \semio_glossary_body_gappto:nnn #1#2#3 {
-  \int_gincr:N \g_semio_glossary_row_int
-  \cs_gset:cpn { semio@glossary@row@ \int_use:N \g_semio_glossary_row_int }
-    {
-      \SemioGlossaryTableRow
-        { \exp_not:n {#1} }
-        { \exp_not:n {#2} }
-        { \exp_not:n {#3} }
-    }
+  \tl_gput_right:Nn \g_semio_glossary_rows_tl {
+    \SemioGlossaryTableRow{#1}{#2}{#3}
+  }
 }
+\cs_generate_variant:Nn \semio_glossary_body_gappto:nnn { VVV }
 
 \cs_new_protected:Npn \semio_glossary_row_for_term:n #1 {
+  \tl_set:Nn \l_semio_glossary_term_tl {#1}
   \prop_get:NnNTF \g_semio_glossary_definition_prop {#1} \l_semio_glossary_definition_tl { } {
     \tl_clear:N \l_semio_glossary_definition_tl
   }
   \semio_glossary_labels_csv:n {#1}
-  \tl_set:Nx \l_tmpb_tl { \tl_use:N \l_semio_glossary_definition_tl }
-  \tl_set:Nx \l_tmpc_tl { \tl_use:N \l_tmpd_tl }
-  \semio_glossary_body_gappto:nnn {#1} { \tl_use:N \l_tmpb_tl } { \tl_use:N \l_tmpc_tl }
-}
-
-\cs_new_protected:Npn \semio_glossary_body_finalize_step:n #1 {
-  \group_begin:
-  \ExplSyntaxOff
-  \makeatletter
-  \gappto\semio@glossary@table@body{\noexpand\semio@glossary@emit@row{#1}}%
-  \makeatother
-  \group_end:
+  \semio_glossary_body_gappto:VVV
+    \l_semio_glossary_term_tl
+    \l_semio_glossary_definition_tl
+    \l_tmpd_tl
 }
 
 \cs_new_protected:Npn \semio_glossary_body_finalize: {
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
-  \gdef\semio@glossary@table@body{}%
+  \xdef\semio@glossary@table@body{\exp_not:V \g_semio_glossary_rows_tl}%
   \makeatother
   \group_end:
-  \int_step_inline:nn { \g_semio_glossary_row_int } {
-    \semio_glossary_body_finalize_step:n { ##1 }
-  }
 }
 
 \cs_new_protected:Npn \semio_glossary_body_materialize: {
@@ -508,6 +490,8 @@
 
 \keys_define:nn { semio / window / kind } {
   title .tl_set:N = \l_semio_window_kind_title_tl,
+  hierarchy .bool_set:N = \l_semio_window_hierarchy_bool,
+  hierarchy .default:n = true,
   row .bool_set:N = \l_semio_window_row_bool,
   anchor .choice:,
   anchor / nw .code:n = { \semio_window_anchor_set:nn { top } { left } },
@@ -595,8 +579,10 @@
 }
 
 \cs_new_protected:Npn \semio_window_kind_begin:nnn #1 #2 #3 {
+  \bool_set_true:N \l_semio_window_hierarchy_bool
   \tl_clear:N \l_semio_window_kind_title_tl
   \keys_set:nn { semio / window / kind } { #3 }
+  \use:c { semio@window@enter }
   \bool_if:NTF \l_semio_register_list_bool {
     \tl_if_empty:NT \l_semio_window_kind_title_tl {
       \tl_set:Nn \l_semio_window_kind_title_tl {
@@ -606,15 +592,25 @@
     \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
     \tl_clear:N \l_semio_window_number_tl
   } {
-    \refstepcounter {#1}
-    \tl_if_empty:NTF \l_semio_window_kind_title_tl {
-      \tl_set:Nn \l_semio_window_kind_title_tl {
-        \semio_kind_label:n { \use:c { semio@window@#1@kind } }
-      }
-    } { }
-    \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
-    \semio_window_kind_number_set:n {#1}
-    \semio_window_register_write:nn {#1} { \use:c { semio@window@#1@kind } }
+    \bool_if:NTF \l_semio_window_hierarchy_bool {
+      \refstepcounter {#1}
+      \tl_if_empty:NTF \l_semio_window_kind_title_tl {
+        \tl_set:Nn \l_semio_window_kind_title_tl {
+          \semio_kind_label:n { \use:c { semio@window@#1@kind } }
+        }
+      } { }
+      \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
+      \semio_window_kind_number_set:n {#1}
+      \semio_window_register_write:nn {#1} { \use:c { semio@window@#1@kind } }
+    } {
+      \tl_if_empty:NTF \l_semio_window_kind_title_tl {
+        \tl_set:Nn \l_semio_window_kind_title_tl {
+          \semio_kind_label:n { \use:c { semio@window@#1@kind } }
+        }
+      } { }
+      \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
+      \tl_clear:N \l_semio_window_number_tl
+    }
   }
   \semio_window_header_store:
   \semio_block_sep_before:
@@ -637,6 +633,7 @@
   } {
     \end{tcolorbox}
     \semio_block_sep_after:
+    \use:c { semio@window@leave }
   }
 }
 
@@ -845,6 +842,9 @@
   \setlength { \parskip } { 0pt }
   \setlength { \semio@block@sep@skip } { \semio@spacing@single }
   \setlength { \parindent } { 0pt }
+  \AddToHook{everypar}{%
+    \global\semio@block@sep@donefalse
+  }
   \semio@chrome@dims@compute
   \setcounter{tocdepth}{\semio@toc@depth@unlimited}
   \semio@hierarchy@hooks@install
@@ -887,6 +887,7 @@
   \bool_set_false:N \l_semio_window_row_bool
   \tl_clear:N \l_semio_window_kind_title_tl
   \keys_set:nn { semio / window / kind } { #1 }
+  \use:c { semio@window@enter }
   \bool_if:NF \l_semio_window_row_bool { \semio_block_sep_before: }
   \tl_clear:N \l_semio_window_number_tl
   \semio_window_header_store:
@@ -901,6 +902,7 @@
 \cs_new_protected:Npn \semio_window_generic_end: {
   \end{tcolorbox}
   \bool_if:NF \l_semio_window_row_bool { \semio_block_sep_after: }
+  \use:c { semio@window@leave }
 }
 \NewDocumentEnvironment { Window } { O{} } {
   \semio_window_generic_begin:n { #1 }
@@ -1280,6 +1282,37 @@
   \SemioSans\fontsize{\semio@chrome@font@title}{\semio@chrome@font@title}\selectfont
 }
 
+\newcommand{\semio@paragraph@cap@muted@vbox}[1]{%
+  \vbox to \semio@chrome@titlebar@height{%
+    \nointerlineskip
+    \hbox{\semio@window@stroke@h{semio-chrome-border-normal}{\semio@window@cap@w}}%
+    \nointerlineskip
+    \hbox{\semio@window@cap@paint{\semio@window@cap@w}{#1}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}}%
+    \nointerlineskip
+    \hbox{\semio@window@stroke@h{semio-chrome-border-normal}{\semio@window@cap@w}}%
+  }%
+}
+
+\newcommand{\semio@paragraph@cap@muted@core}[1]{%
+  \semio@window@cap@body@h@set
+  \sbox{\semio@window@cap@slot}{%
+    \begingroup
+    \semio@heading@chip@font\color{semio-chrome-text-normal}%
+    \hspace{\semio@chrome@padding}#1\hspace{\semio@chrome@padding}%
+    \endgroup
+  }%
+  \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
+  \semio@window@cap@raise{\semio@paragraph@cap@muted@vbox{semio-chrome-canvas}}%
+}
+
+\newcommand{\semio@paragraph@cap@muted}[1]{%
+  \hbox{%
+    \semio@window@cap@raise{\semio@window@stroke@v{semio-chrome-border-normal}}%
+    \semio@paragraph@cap@muted@core{#1}%
+    \semio@window@cap@raise{\semio@window@stroke@v{semio-chrome-border-normal}}%
+  }%
+}
+
 \newcommand{\semio@heading@cap@muted@core}[1]{%
   \semio@window@cap@body@h@set
   \sbox{\semio@window@cap@slot}{%
@@ -1369,8 +1402,8 @@
 
 \newcommand{\semio@heading@pair@muted}[3]{%
   \semio@hierarchy@path@set{\csname the#2\endcsname}%
-  \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{#3}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted{\semio@heading@kind@number{#1}{#2}}}%
+  \sbox{\semio@window@tab@box}{\semio@paragraph@cap@muted{#3}}%
+  \sbox{\semio@window@ctrl@box}{\semio@paragraph@cap@muted{\semio@heading@kind@number{#1}{#2}}}%
   \setlength{\semio@window@gap@w}{%
     \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
   }%
@@ -1385,8 +1418,8 @@
 
 \newcommand{\semio@heading@pair@muted@num}[3]{%
   \semio@hierarchy@path@set{#2}%
-  \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{#3}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted{\semio@kind@number@bare{#2}}}%
+  \sbox{\semio@window@tab@box}{\semio@paragraph@cap@muted{#3}}%
+  \sbox{\semio@window@ctrl@box}{\semio@paragraph@cap@muted{\semio@kind@number@bare{#2}}}%
   \setlength{\semio@window@gap@w}{%
     \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
   }%
@@ -1407,7 +1440,7 @@
 
 \newcommand{\semio@heading@title@end@muted}[1]{%
   \semio@heading@row@wrap{%
-    \semio@heading@cap@muted{#1}%
+    \semio@paragraph@cap@muted{#1}%
   }%
 }
 

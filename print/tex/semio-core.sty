@@ -108,6 +108,18 @@
 %region Kinds
 \tl_new:N \g_semio_hierarchy_path_tl
 \newcounter { semio@window@slot }
+\newcount\semio@window@depth
+\newcommand{\semio@window@enter}{\global\advance\semio@window@depth\@ne}
+\newcommand{\semio@window@leave}{%
+  \ifnum\semio@window@depth>0
+    \global\advance\semio@window@depth\m@ne
+  \fi
+}
+\newcommand{\semio@table@require@window}{%
+  \ifnum\semio@window@depth>0\else
+    \PackageError{semio-table}{content outside window}{Wrap tables in Window, Table, Figure, or another window environment.}%
+  \fi
+}
 
 \cs_new_protected:Npn \semio_kind_label:n #1 {
   \exp_args:Ne \semio_kind_label_resolved:n { #1 }
@@ -480,6 +492,7 @@
   \ifsemio@block@sep@done
     \global\semio@block@sep@donefalse
   \else
+    \semio@block@sep
     \semio@block@sep
   \fi
 }

@@ -25,10 +25,10 @@ todos:
     status: completed
   - id: rebuild-verify
     content: Rebuild zwischenbericht (light+dark), verify no errors, and visually compare TOC/Glossary pages against the Netzwerk table
-    status: in_progress
+    status: completed
   - id: close-ticket
     content: Update verify-log.md and close the ticket with summary and touched files
-    status: pending
+    status: completed
 isProject: false
 ---
 
