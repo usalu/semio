@@ -1,20 +1,18 @@
 //! 📋 Forms plugin — declarative forms play app bundled as a hot-swappable WASM component.
 
-use base64::Engine;
 use forms::{
     can_advance, default_value_for_question, empty_forms_projection, flatten_form_questions,
     initial_try_values, is_extension_question_kind, visible_questions, FormOp, FormQuestion,
     FormQuestionOption, FormSpec, FormStep, FormVectorField, FormsEnvelope, FormsStore,
     FORM_BUILTIN_KINDS, FORMS_DOCUMENT_SCHEMA,
 };
-use image::RgbaImage;
-use semio_framework_plugin::{SurfaceKind, 
-    build_raster_scene, build_table_scene, create_default_layout,
-    ui_external_slot, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
+use semio_framework_plugin::{SurfaceKind,
+    build_table_scene, create_default_layout,
+    ui_external_slot, ui_image, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
     ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Contribution,
-    PanelGroup, CommandDescriptor, PluginApp, PluginBundle, RasterScene, TableScene, UiButtonNode,
+    PanelGroup, CommandDescriptor, PluginApp, PluginBundle, TableScene, UiButtonNode,
     UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
-    UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
+    UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -870,16 +868,17 @@ fn render_try_question(
     question: &FormQuestion,
     values: &Map<String, Value>,
     contributions: &[PluginContributionEntry],
+    error: Option<&str>,
 ) -> UiNode {
     let value = values.get(&question.id).cloned().unwrap_or_else(|| default_value_for_question(question));
     let key = question.id.clone();
     match question.kind.as_str() {
-        "text" => UiNode::Field(UiFieldNode {
-            id: format!("forms-try.{key}"),
-            label: question.label.clone(),
-            child: Box::new(UiNode::Input(UiInputNode {
+        "text" | "longText" => try_field(
+            question,
+            error,
+            UiNode::Input(UiInputNode {
                 id: format!("forms-try.{key}.input"),
-                input_kind: "text".into(),
+                input_kind: question.kind.clone(),
                 value: json_string_value(&value),
                 placeholder: question.placeholder.clone(),
                 commit: None,
@@ -888,79 +887,48 @@ fn render_try_question(
                 max: None,
                 step: None,
                 accept: None,
-            })),
-            description: None,
-            required: None,
-            error: None,
-        }),
-        "longText" => UiNode::Field(UiFieldNode {
-            id: format!("forms-try.{key}"),
-            label: question.label.clone(),
-            child: Box::new(UiNode::Input(UiInputNode {
-                id: format!("forms-try.{key}.input"),
-                input_kind: "longText".into(),
-                value: json_string_value(&value),
-                placeholder: question.placeholder.clone(),
-                commit: None,
-                on_change: try_value_cmd(&key),
-                min: None,
-                max: None,
-                step: None,
-                accept: None,
-            })),
-            description: None,
-            required: None,
-            error: None,
-        }),
-        "number" => UiNode::Field(UiFieldNode {
-            id: format!("forms-try.{key}"),
-            label: question.label.clone(),
-            child: Box::new(UiNode::Input(UiInputNode {
+            }),
+        ),
+        "number" => try_field(
+            question,
+            error,
+            UiNode::Input(UiInputNode {
                 id: format!("forms-try.{key}.input"),
                 input_kind: "number".into(),
                 value: json_string_value(&value),
                 placeholder: None,
                 commit: None,
                 on_change: try_value_cmd(&key),
-                min: None,
-                max: None,
-                step: None,
+                min: question.min,
+                max: question.max,
+                step: question.step,
                 accept: None,
-            })),
-            description: None,
-            required: None,
-            error: None,
-        }),
-        "slider" => UiNode::Field(UiFieldNode {
-            id: format!("forms-try.{key}"),
-            label: question.label.clone(),
-            child: Box::new(UiNode::Slider(UiSliderNode {
+            }),
+        ),
+        "slider" => try_field(
+            question,
+            error,
+            UiNode::Slider(UiSliderNode {
                 id: format!("forms-try.{key}.slider"),
                 value: json_f64_value(&value),
                 min: question.min.unwrap_or(0.0),
                 max: question.max.unwrap_or(100.0),
                 step: question.step.unwrap_or(1.0),
+                unit: question.unit.clone(),
                 on_change: try_value_cmd(&key),
-                unit: None,
-            })),
-            description: None,
-            required: None,
-            error: None,
-        }),
-        "boolean" => UiNode::Field(UiFieldNode {
-            id: format!("forms-try.{key}"),
-            label: question.label.clone(),
-            child: Box::new(UiNode::Toggle(UiToggleNode {
+            }),
+        ),
+        "boolean" => try_field(
+            question,
+            error,
+            UiNode::Toggle(UiToggleNode {
                 id: format!("forms-try.{key}.toggle"),
-                icon_id: "toggle-left".into(),
+                icon_id: "check".into(),
                 pressed: value.as_bool().unwrap_or(false),
                 text: Some(if value.as_bool().unwrap_or(false) { "Yes".into() } else { "No".into() }),
                 on_change: try_value_cmd(&key),
-            })),
-            description: None,
-            required: None,
-            error: None,
-        }),
+            }),
+        ),
         "single" => {
             let items = question
                 .options
@@ -975,67 +943,52 @@ fn render_try_question(
                         .collect()
                 })
                 .unwrap_or_default();
-            UiNode::Field(UiFieldNode {
-                id: format!("forms-try.{key}"),
-                label: question.label.clone(),
-                child: Box::new(UiNode::Select(UiSelectNode {
+            try_field(
+                question,
+                error,
+                UiNode::Select(UiSelectNode {
                     id: format!("forms-try.{key}.select"),
                     value: json_string_value(&value),
                     placeholder: None,
                     items,
                     on_change: try_value_cmd(&key),
-                })),
-                description: None,
-                required: None,
-                error: None,
-            })
+                }),
+            )
         }
         "multi" => {
             let selected: HashSet<String> = value
                 .as_array()
                 .map(|items| items.iter().filter_map(|entry| entry.as_str().map(str::to_string)).collect())
                 .unwrap_or_default();
-            let toggles = question
+            let chips = question
                 .options
                 .as_ref()
                 .map(|options| {
                     options
                         .iter()
                         .map(|option| {
-                            UiNode::Field(UiFieldNode {
-                                id: format!("forms-try.{key}.{}", option.value),
-                                label: option.label.clone(),
-                                child: Box::new(UiNode::Toggle(UiToggleNode {
-                                    id: format!("forms-try.{key}.{}.toggle", option.value),
-                                    icon_id: "check".into(),
-                                    pressed: selected.contains(&option.value),
-                                    text: Some(option.label.clone()),
-                                    on_change: forms_cmd(
-                                        "setTryValue",
-                                        Some(json!({ "key": key, "optionValue": option.value })),
-                                    ),
-                                })),
-                                description: None,
-                                required: None,
-                                error: None,
+                            UiNode::Toggle(UiToggleNode {
+                                id: format!("forms-try.{key}.{}.toggle", option.value),
+                                icon_id: "hash".into(),
+                                pressed: selected.contains(&option.value),
+                                text: Some(option.label.clone()),
+                                on_change: forms_cmd(
+                                    "setTryValue",
+                                    Some(json!({ "key": key, "optionValue": option.value })),
+                                ),
                             })
                         })
                         .collect()
                 })
                 .unwrap_or_default();
-            UiNode::Section(semio_framework_plugin::UiSectionNode {
-                id: format!("forms-try.{key}.section"),
-                label: Some(question.label.clone()),
-                default_open: Some(true),
-                children: toggles,
-            })
+            try_field(question, error, ui_stack_horizontal(chips))
         }
-        "date" => UiNode::Field(UiFieldNode {
-            id: format!("forms-try.{key}"),
-            label: question.label.clone(),
-            child: Box::new(UiNode::Input(UiInputNode {
+        "date" | "color" => try_field(
+            question,
+            error,
+            UiNode::Input(UiInputNode {
                 id: format!("forms-try.{key}.input"),
-                input_kind: "date".into(),
+                input_kind: question.kind.clone(),
                 value: json_string_value(&value),
                 placeholder: None,
                 commit: None,
@@ -1044,34 +997,12 @@ fn render_try_question(
                 max: None,
                 step: None,
                 accept: None,
-            })),
-            description: None,
-            required: None,
-            error: None,
-        }),
-        "color" => UiNode::Field(UiFieldNode {
-            id: format!("forms-try.{key}"),
-            label: question.label.clone(),
-            child: Box::new(UiNode::Input(UiInputNode {
-                id: format!("forms-try.{key}.input"),
-                input_kind: "color".into(),
-                value: json_string_value(&value),
-                placeholder: None,
-                commit: None,
-                on_change: try_value_cmd(&key),
-                min: None,
-                max: None,
-                step: None,
-                accept: None,
-            })),
-            description: None,
-            required: None,
-            error: None,
-        }),
+            }),
+        ),
         "vector" => {
             let array = value.as_array().cloned().unwrap_or_default();
             let fields = question.fields.as_ref().cloned().unwrap_or_default();
-            let children: Vec<UiNode> = fields
+            let steppers: Vec<UiNode> = fields
                 .iter()
                 .enumerate()
                 .map(|(index, field)| {
@@ -1079,6 +1010,9 @@ fn render_try_question(
                     UiNode::Field(UiFieldNode {
                         id: format!("forms-try.{key}.{}", field.key),
                         label: field.label.clone().unwrap_or_else(|| field.key.clone()),
+                        description: None,
+                        required: None,
+                        error: None,
                         child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
                             id: format!("forms-try.{key}.{}.stepper", field.key),
                             value: json_f64_value(&field_value),
@@ -1093,45 +1027,29 @@ fn render_try_question(
                                 Some(json!({ "key": key, "vectorIndex": index })),
                             ),
                         })),
-                        description: None,
-                        required: None,
-                        error: None,
                     })
                 })
                 .collect();
-            UiNode::Section(semio_framework_plugin::UiSectionNode {
-                id: format!("forms-try.{key}.section"),
-                label: Some(question.label.clone()),
-                default_open: Some(true),
-                children,
-            })
+            try_field(question, error, ui_stack_horizontal(steppers))
         }
         "note" => ui_text(question.text.clone().unwrap_or_else(|| question.label.clone())),
-        "image" => UiNode::Section(semio_framework_plugin::UiSectionNode {
-            id: format!("forms-try.{key}.section"),
-            label: Some(question.label.clone()),
-            default_open: Some(true),
-            children: vec![render_image_question(question)],
-        }),
-        "file" => UiNode::Field(UiFieldNode {
-            id: format!("forms-try.{key}"),
-            label: question.label.clone(),
-            child: Box::new(UiNode::Input(UiInputNode {
+        "image" => try_field(question, error, render_image_question(question)),
+        "file" => try_field(
+            question,
+            error,
+            UiNode::Input(UiInputNode {
                 id: format!("forms-try.{key}.input"),
                 input_kind: "file".into(),
                 value: json_string_value(&value),
-                placeholder: question.accept.clone(),
+                placeholder: None,
                 commit: None,
                 on_change: try_value_cmd(&key),
                 min: None,
                 max: None,
                 step: None,
-                accept: None,
-            })),
-            description: None,
-            required: None,
-            error: None,
-        }),
+                accept: question.accept.clone(),
+            }),
+        ),
         kind if is_extension_question_kind(kind) => {
             render_extension_question(question, values, contributions, "try", true)
         }
@@ -1148,51 +1066,57 @@ fn render_try_wizard(spec: &FormSpec, play: &FormsPlayEnvelope, contributions: &
     let values = effective_try_values(spec, play);
     let visible = visible_questions(step, &values);
     let errors = forms::step_errors(step, &values);
-    let _advance = can_advance(step, &values);
+    let advance = can_advance(step, &values);
+    let errors_by_question: HashMap<&str, &str> = errors
+        .iter()
+        .map(|error| (error.question_id.as_str(), error.message.as_str()))
+        .collect();
     let mut children = vec![
-        ui_text(spec.title.clone().unwrap_or_else(|| "Form".into())),
+        ui_text_emphasized(spec.title.clone().unwrap_or_else(|| "Form".into())),
         ui_text(format!("Step {} / {}", step_index + 1, spec.steps.len())),
+        ui_text_emphasized(step.title.clone()),
     ];
     if let Some(description) = &step.description {
         children.push(ui_text(description.clone()));
     }
     for question in visible {
-        children.push(render_try_question(question, &values, contributions));
+        children.push(render_try_question(
+            question,
+            &values,
+            contributions,
+            errors_by_question.get(question.id.as_str()).copied(),
+        ));
     }
-    for error in &errors {
-        children.push(ui_text(format!("⚠ {}", error.message)));
-    }
-    let mut nav = Vec::new();
-    if step_index > 0 {
-        nav.push(UiNode::Button(UiButtonNode {
+    let nav = vec![
+        UiNode::Button(UiButtonNode {
             id: Some("forms-try.back".into()),
-            icon_id: "arrow-left".into(),
+            icon_id: "chevron-left".into(),
             label: "Back".into(),
             command: forms_cmd("previousStep", None),
             style: None,
-            disabled: None,
-        }));
-    }
-    if step_index + 1 < spec.steps.len() {
-        nav.push(UiNode::Button(UiButtonNode {
-            id: Some("forms-try.next".into()),
-            icon_id: "arrow-right".into(),
-            label: "Next".into(),
-            command: forms_cmd("nextStep", None),
-            style: None,
-            disabled: None,
-        }));
-    } else {
-        nav.push(UiNode::Button(UiButtonNode {
-            id: Some("forms-try.submit".into()),
-            icon_id: "check".into(),
-            label: "Submit".into(),
-            command: forms_cmd("submit", None),
-            style: None,
-            disabled: None,
-        }));
-    }
-    children.push(ui_stack_vertical(nav));
+            disabled: Some(step_index == 0).filter(|disabled| *disabled),
+        }),
+        if step_index + 1 < spec.steps.len() {
+            UiNode::Button(UiButtonNode {
+                id: Some("forms-try.next".into()),
+                icon_id: "chevron-right".into(),
+                label: "Next".into(),
+                command: forms_cmd("nextStep", None),
+                style: None,
+                disabled: Some(!advance).filter(|disabled| *disabled),
+            })
+        } else {
+            UiNode::Button(UiButtonNode {
+                id: Some("forms-try.submit".into()),
+                icon_id: "check".into(),
+                label: "Submit".into(),
+                command: forms_cmd("submit", None),
+                style: None,
+                disabled: Some(!advance).filter(|disabled| *disabled),
+            })
+        },
+    ];
+    children.push(ui_stack_horizontal(nav));
     ui_stack_vertical(children)
 }
 //#endregion 🔖TryWizard

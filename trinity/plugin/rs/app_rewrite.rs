@@ -93,10 +93,6 @@ struct RewritePlayRuntime {
     #[serde(default)]
     select_epoch: u64,
     #[serde(default)]
-    lhs_graph_hover_id: String,
-    #[serde(default)]
-    rhs_graph_hover_id: String,
-    #[serde(default)]
     lod_mode_by_window: BTreeMap<String, String>,
 }
 
@@ -258,6 +254,19 @@ fn sync_hover_var_from_node(envelope: &mut TrinityRewriteEnvelope, fixture_json:
         }
     }
     envelope.runtime.hover_epoch += 1;
+}
+
+/// 🧭 Resolves which fixture backs a given rewrite graph surface (Before/After/LHS/RHS), for hover/select var lookup.
+fn fixture_json_for_surface(surface_id: &str, state: &RewriteRuleState) -> String {
+    if surface_id == TRINITY_REWRITE_PLAY_SURFACE_AFTER {
+        after_fixture_json(state)
+    } else if surface_id == TRINITY_REWRITE_PLAY_SURFACE_LHS {
+        lhs_graph_fixture_json(&state.lhs_json, &state.rule_layout)
+    } else if surface_id == TRINITY_REWRITE_PLAY_SURFACE_RHS {
+        rhs_graph_fixture_json(&state.rhs_json, &state.rule_layout)
+    } else {
+        state.before_fixture_json.clone()
+    }
 }
 
 fn apply_semantic_layout_edit(rule_layout: &mut HashMap<String, (f64, f64)>, current_fixture_json: &str, edited_fixture_json: &str) -> bool {
@@ -1185,18 +1194,17 @@ impl PluginApp for TrinityRewritePlayApp {
             }
             "setSelection" | "selectNode" | "nodeGraphSelect" => {
                 envelope.runtime.selected_node_ids = selection_ids(args);
+                let surface_id = args.and_then(|value| value.get("surfaceId")).and_then(|value| value.as_str()).unwrap_or("");
                 if let Some(node_id) = envelope.runtime.selected_node_ids.first().cloned() {
-                    let before_json = envelope.before_fixture_json.clone();
-                    let after_json = envelope.after_fixture_json.clone();
-                    sync_select_var_from_node(&mut envelope, &before_json, &node_id);
-                    if envelope.runtime.active_select_var.is_empty() {
-                        sync_select_var_from_node(&mut envelope, &after_json, &node_id);
-                    }
+                    let state = rule_state(&envelope);
+                    let fixture_json = fixture_json_for_surface(surface_id, &state);
+                    sync_select_var_from_node(&mut envelope, &fixture_json, &node_id);
                     envelope.runtime.select_epoch += 1;
                 }
                 return vec![set_document_op(&envelope)];
             }
             "nodeGraphHover" => {
+                let surface_id = args.and_then(|value| value.get("surfaceId")).and_then(|value| value.as_str()).unwrap_or("");
                 let node_id = args
                     .and_then(|value| value.get("hoverJson"))
                     .and_then(|value| {
@@ -1211,62 +1219,67 @@ impl PluginApp for TrinityRewritePlayApp {
                         }
                     });
                 if let Some(node_id) = node_id {
-                    let before_json = envelope.before_fixture_json.clone();
-                    let after_json = envelope.after_fixture_json.clone();
-                    sync_hover_var_from_node(&mut envelope, &before_json, &node_id);
-                    if envelope.runtime.active_hover_var.is_empty() {
-                        sync_hover_var_from_node(&mut envelope, &after_json, &node_id);
-                    }
+                    let state = rule_state(&envelope);
+                    let fixture_json = fixture_json_for_surface(surface_id, &state);
+                    sync_hover_var_from_node(&mut envelope, &fixture_json, &node_id);
                     return vec![set_document_op(&envelope)];
                 }
             }
             "nodeGraphViewport" => {
-                if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
-                    if let Ok(camera) = serde_json::from_str::<trinity_ram::Camera>(viewport_json) {
-                        if let Some(mut fixture) = parse_fixture_json(&envelope.before_fixture_json) {
-                            fixture.camera = camera;
-                            if let Ok(json) = Graph::from_fixture(fixture).and_then(|graph| graph.fixture_json()) {
-                                envelope.before_fixture_json = json;
-                                envelope.after_fixture_json =
-                                    apply_rewrite_to_fixture(&envelope.before_fixture_json, &envelope);
-                                return vec![set_document_op(&envelope)];
+                let surface_id = args.and_then(|value| value.get("surfaceId")).and_then(|value| value.as_str()).unwrap_or("");
+                if surface_id == TRINITY_REWRITE_PLAY_SURFACE_BEFORE {
+                    if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
+                        if let Ok(camera) = serde_json::from_str::<trinity_ram::Camera>(viewport_json) {
+                            let mut state = rule_state(&envelope);
+                            if let Some(mut fixture) = parse_fixture_json(&state.before_fixture_json) {
+                                fixture.camera = camera;
+                                if let Ok(json) = Graph::from_fixture(fixture).and_then(|graph| graph.fixture_json()) {
+                                    state.before_fixture_json = json;
+                                    if apply_rule_state(&mut envelope, state) {
+                                        return vec![set_document_op(&envelope)];
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
             "nodeGraphEdit" => {
+                let surface_id = args.and_then(|value| value.get("surfaceId")).and_then(|value| value.as_str()).unwrap_or("");
                 let ops = args
                     .and_then(|value| value.get("ops"))
                     .and_then(|value| value.as_array())
                     .cloned()
                     .unwrap_or_default();
-                if apply_rewrite_node_graph_edit_ops(&mut envelope, &ops) {
+                if apply_rewrite_node_graph_edit_ops(&mut envelope, surface_id, &ops) {
                     return vec![set_document_op(&envelope)];
                 }
             }
             "setLhsJson" => {
                 if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
-                    push_undo(&mut envelope);
-                    envelope.lhs_json = value.into();
-                    envelope.after_fixture_json = apply_rewrite_to_fixture(&envelope.before_fixture_json, &envelope);
-                    return vec![set_document_op(&envelope)];
+                    let mut state = rule_state(&envelope);
+                    state.lhs_json = value.into();
+                    if apply_rule_state(&mut envelope, state) {
+                        return vec![set_document_op(&envelope)];
+                    }
                 }
             }
             "setRhsJson" => {
                 if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
-                    push_undo(&mut envelope);
-                    envelope.rhs_json = value.into();
-                    envelope.runtime.parameter_bindings = default_parameter_bindings(&envelope.rhs_json);
-                    envelope.after_fixture_json = apply_rewrite_to_fixture(&envelope.before_fixture_json, &envelope);
-                    return vec![set_document_op(&envelope)];
+                    let mut state = rule_state(&envelope);
+                    state.rhs_json = value.into();
+                    state.parameter_bindings = default_parameter_bindings(&state.rhs_json);
+                    if apply_rule_state(&mut envelope, state) {
+                        return vec![set_document_op(&envelope)];
+                    }
                 }
             }
             "setParameter" => {
                 let name = args.and_then(|v| v.get("name")).and_then(|v| v.as_str()).unwrap_or("");
                 let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()).unwrap_or("");
                 if !name.is_empty() {
-                    let Ok(rhs) = serde_json::from_str::<Rhs>(&envelope.rhs_json) else {
+                    let mut state = rule_state(&envelope);
+                    let Ok(rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
                         return Vec::new();
                     };
                     let kind = rhs
@@ -1280,26 +1293,28 @@ impl PluginApp for TrinityRewritePlayApp {
                         Some(ParameterKind::String) | None => Some(PropertyValue::String(value.into())),
                     };
                     if let Some(parsed) = parsed {
-                        push_undo(&mut envelope);
-                        envelope.runtime.parameter_bindings.insert(name.into(), parsed);
-                        envelope.after_fixture_json =
-                            apply_rewrite_to_fixture(&envelope.before_fixture_json, &envelope);
-                        return vec![set_document_op(&envelope)];
+                        state.parameter_bindings.insert(name.into(), parsed);
+                        if apply_rule_state(&mut envelope, state) {
+                            return vec![set_document_op(&envelope)];
+                        }
                     }
+                }
+            }
+            "addRuleClause" => {
+                let kind = args.and_then(|v| v.get("kind")).and_then(|v| v.as_str()).unwrap_or("");
+                let mut state = rule_state(&envelope);
+                if add_rule_clause(&mut state, kind) && apply_rule_state(&mut envelope, state) {
+                    return vec![set_document_op(&envelope)];
                 }
             }
             "recomputeRewrite" | "reorganize" => {
                 envelope.runtime.reorganize_epoch += 1;
-                envelope.after_fixture_json = apply_rewrite_to_fixture(&envelope.before_fixture_json, &envelope);
                 return vec![set_document_op(&envelope)];
             }
             "resetRule" => {
-                envelope.lhs_json = DEFAULT_LHS_JSON.into();
-                envelope.rhs_json = DEFAULT_RHS_JSON.into();
-                envelope.runtime.parameter_bindings = default_parameter_bindings(&envelope.rhs_json);
-                envelope.before_fixture_json = NAKAGIN_FIXTURE_JSON.into();
-                envelope.after_fixture_json = apply_rewrite_to_fixture(&envelope.before_fixture_json, &envelope);
-                return vec![set_document_op(&envelope)];
+                if apply_rule_state(&mut envelope, default_rule_state()) {
+                    return vec![set_document_op(&envelope)];
+                }
             }
             "graphPointerDown" => {
                 if let Some(node_id) = args.and_then(|v| v.get("nodeId")).and_then(|v| v.as_str()) {
@@ -1315,127 +1330,71 @@ impl PluginApp for TrinityRewritePlayApp {
                 let field = args.and_then(|v| v.get("field")).and_then(|v| v.as_str()).unwrap_or("");
                 let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()).map(str::trim).unwrap_or("");
                 if !node_ids.is_empty() && !field.is_empty() && !value.is_empty() {
-                    push_undo(&mut envelope);
-                    if let Some(next) = patch_fixture_nodes(&envelope.before_fixture_json, &node_ids, field, value) {
-                        envelope.before_fixture_json = next;
-                        envelope.after_fixture_json =
-                            apply_rewrite_to_fixture(&envelope.before_fixture_json, &envelope);
-                        return vec![set_document_op(&envelope)];
-                    }
-                }
-            }
-            "setLhsGraphHover" | "setBeforeGraphHover" => {
-                if let Some(id) = args.and_then(|v| v.get("id")).and_then(|v| v.as_str()) {
-                    envelope.runtime.lhs_graph_hover_id = id.into();
-                    if let Some(fixture) = parse_fixture_json(&envelope.before_fixture_json) {
-                        if let Some(node) = fixture.nodes.iter().find(|node| node.id == id) {
-                            if let Some(var) = var_from_node_name(&node.name) {
-                                envelope.runtime.active_hover_var = var;
-                            }
+                    let mut state = rule_state(&envelope);
+                    if let Some(next) = patch_fixture_nodes(&state.before_fixture_json, &node_ids, field, value) {
+                        state.before_fixture_json = next;
+                        if apply_rule_state(&mut envelope, state) {
+                            return vec![set_document_op(&envelope)];
                         }
                     }
-                    envelope.runtime.hover_epoch += 1;
-                    return vec![set_document_op(&envelope)];
                 }
             }
-            "setRhsGraphHover" | "setAfterGraphHover" => {
-                if let Some(id) = args.and_then(|v| v.get("id")).and_then(|v| v.as_str()) {
-                    envelope.runtime.rhs_graph_hover_id = id.into();
-                    if let Some(fixture) = parse_fixture_json(&envelope.after_fixture_json) {
-                        if let Some(node) = fixture.nodes.iter().find(|node| node.id == id) {
-                            if let Some(var) = var_from_node_name(&node.name) {
-                                envelope.runtime.active_hover_var = var;
-                            }
-                        }
-                    }
-                    envelope.runtime.hover_epoch += 1;
-                    return vec![set_document_op(&envelope)];
-                }
-            }
-            "setJackSelect" | "textSelect" => {
+            "textSelect" => {
                 if let Some(var) = args.and_then(|v| v.get("var")).and_then(|v| v.as_str()) {
                     envelope.runtime.active_select_var = var.into();
                 } else if let Some(start) = args.and_then(|v| v.get("start")).and_then(|v| v.as_u64()) {
-                    let query = compiled_jack_query(&envelope);
-                    let text = query.as_str();
-                    let offset = start as usize;
-                    if offset < text.len() {
-                        let slice = &text[offset..];
-                        let token: String = slice
-                            .chars()
-                            .take_while(|ch| ch.is_ascii_alphanumeric() || *ch == '_')
-                            .collect();
-                        if !token.is_empty() {
-                            envelope.runtime.active_select_var = token;
-                        }
+                    if let Some(token) = jack_token_at_offset(&compiled_jack_query(&rule_state(&envelope)), start as usize) {
+                        envelope.runtime.active_select_var = token;
                     }
                 }
                 envelope.runtime.select_epoch += 1;
                 return vec![set_document_op(&envelope)];
             }
-            "setJackHover" | "textHover" => {
+            "textHover" => {
                 if let Some(var) = args.and_then(|v| v.get("var")).and_then(|v| v.as_str()) {
                     envelope.runtime.active_hover_var = var.into();
                 } else if let Some(offset) = args.and_then(|v| v.get("offset")).and_then(|v| v.as_u64()) {
-                    let query = compiled_jack_query(&envelope);
-                    let text = query.as_str();
-                    let offset = offset as usize;
-                    if offset < text.len() {
-                        let slice = &text[offset..];
-                        let token: String = slice
-                            .chars()
-                            .take_while(|ch| ch.is_ascii_alphanumeric() || *ch == '_')
-                            .collect();
-                        if !token.is_empty() {
-                            envelope.runtime.active_hover_var = token;
-                        }
+                    if let Some(token) = jack_token_at_offset(&compiled_jack_query(&rule_state(&envelope)), offset as usize) {
+                        envelope.runtime.active_hover_var = token;
                     }
                 }
                 envelope.runtime.hover_epoch += 1;
                 return vec![set_document_op(&envelope)];
             }
-            "setLhsGraphSelect" | "setBeforeGraphSelect" => {
-                if let Some(id) = args.and_then(|v| v.get("id")).and_then(|v| v.as_str()) {
-                    envelope.runtime.selected_node_ids = vec![id.into()];
-                    if let Some(fixture) = parse_fixture_json(&envelope.before_fixture_json) {
-                        if let Some(node) = fixture.nodes.iter().find(|node| node.id == id) {
-                            if let Some(var) = var_from_node_name(&node.name) {
-                                envelope.runtime.active_select_var = var;
-                            }
-                        }
-                    }
-                    envelope.runtime.select_epoch += 1;
-                    return vec![set_document_op(&envelope)];
-                }
-            }
-            "setRhsGraphSelect" | "setAfterGraphSelect" => {
-                if let Some(id) = args.and_then(|v| v.get("id")).and_then(|v| v.as_str()) {
-                    envelope.runtime.selected_node_ids = vec![id.into()];
-                    if let Some(fixture) = parse_fixture_json(&envelope.after_fixture_json) {
-                        if let Some(node) = fixture.nodes.iter().find(|node| node.id == id) {
-                            if let Some(var) = var_from_node_name(&node.name) {
-                                envelope.runtime.active_select_var = var;
-                            }
-                        }
-                    }
-                    envelope.runtime.select_epoch += 1;
+            "setLodMode" => {
+                if let (Some(window_id), Some(value)) = (
+                    args.and_then(|v| v.get("windowId")).and_then(|v| v.as_str()),
+                    args.and_then(|v| v.get("value")).and_then(|v| v.as_str()),
+                ) {
+                    envelope.runtime.lod_mode_by_window.insert(window_id.into(), value.into());
                     return vec![set_document_op(&envelope)];
                 }
             }
             "undo" => {
-                if let Some(previous_json) = envelope.runtime.undo_stack.pop() {
-                    envelope.runtime.redo_stack.push(snapshot_envelope_json(&envelope));
-                    if let Ok(previous) = serde_json::from_str(&previous_json) {
-                        return vec![set_document_op(&previous)];
-                    }
+                let mut store = rule_store_from_envelope(&envelope);
+                if store.dispatch(DocumentVcsCommand::Undo).is_ok() {
+                    sync_envelope_from_rule_store(&mut envelope, &store);
+                    return vec![set_document_op(&envelope)];
                 }
             }
             "redo" => {
-                if let Some(next_json) = envelope.runtime.redo_stack.pop() {
-                    envelope.runtime.undo_stack.push(snapshot_envelope_json(&envelope));
-                    if let Ok(next) = serde_json::from_str(&next_json) {
-                        return vec![set_document_op(&next)];
-                    }
+                let mut store = rule_store_from_envelope(&envelope);
+                if store.dispatch(DocumentVcsCommand::Redo).is_ok() {
+                    sync_envelope_from_rule_store(&mut envelope, &store);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "commitCheckpoint" => {
+                let mut store = rule_store_from_envelope(&envelope);
+                if store
+                    .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                        message: args.and_then(|v| v.get("message")).and_then(|v| v.as_str()).map(str::to_string),
+                        authors: Vec::new(),
+                    })
+                    .is_ok()
+                {
+                    sync_envelope_from_rule_store(&mut envelope, &store);
+                    return vec![set_document_op(&envelope)];
                 }
             }
             _ => {}
@@ -1445,24 +1404,35 @@ impl PluginApp for TrinityRewritePlayApp {
 
     fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
+        let state = rule_state(&envelope);
         match body_key {
-            TRINITY_REWRITE_PLAY_BODY_BEFORE => {
-                render_fixture_graph(TRINITY_REWRITE_PLAY_SURFACE_BEFORE, &envelope.before_fixture_json, &envelope)
-            }
-            TRINITY_REWRITE_PLAY_BODY_AFTER => {
-                render_fixture_graph(TRINITY_REWRITE_PLAY_SURFACE_AFTER, &envelope.after_fixture_json, &envelope)
-            }
-            TRINITY_REWRITE_PLAY_BODY_LHS => render_rule_graph(
-                TRINITY_REWRITE_PLAY_SURFACE_LHS,
-                &lhs_graph_fixture_json(&envelope.lhs_json),
+            TRINITY_REWRITE_PLAY_BODY_BEFORE => render_fixture_graph(
+                TRINITY_REWRITE_PLAY_SURFACE_BEFORE,
+                TRINITY_REWRITE_PLAY_WINDOW_BEFORE,
+                &state.before_fixture_json,
                 &envelope,
-                &envelope.runtime.lhs_graph_hover_id,
+                true,
             ),
-            TRINITY_REWRITE_PLAY_BODY_RHS => render_rule_graph(
-                TRINITY_REWRITE_PLAY_SURFACE_RHS,
-                &rhs_graph_fixture_json(&envelope.rhs_json),
+            TRINITY_REWRITE_PLAY_BODY_AFTER => render_fixture_graph(
+                TRINITY_REWRITE_PLAY_SURFACE_AFTER,
+                TRINITY_REWRITE_PLAY_WINDOW_AFTER,
+                &after_fixture_json(&state),
                 &envelope,
-                &envelope.runtime.rhs_graph_hover_id,
+                false,
+            ),
+            TRINITY_REWRITE_PLAY_BODY_LHS => render_fixture_graph(
+                TRINITY_REWRITE_PLAY_SURFACE_LHS,
+                TRINITY_REWRITE_PLAY_WINDOW_LHS,
+                &lhs_graph_fixture_json(&state.lhs_json, &state.rule_layout),
+                &envelope,
+                true,
+            ),
+            TRINITY_REWRITE_PLAY_BODY_RHS => render_fixture_graph(
+                TRINITY_REWRITE_PLAY_SURFACE_RHS,
+                TRINITY_REWRITE_PLAY_WINDOW_RHS,
+                &rhs_graph_fixture_json(&state.rhs_json, &state.rule_layout),
+                &envelope,
+                true,
             ),
             TRINITY_REWRITE_PLAY_BODY_JACK => render_jack_editor(&envelope),
             TRINITY_REWRITE_PLAY_BODY_PARAMETERS => build_parameters_panel(&envelope),
@@ -1471,6 +1441,38 @@ impl PluginApp for TrinityRewritePlayApp {
             TRINITY_REWRITE_PLAY_BODY_INSPECTION => build_inspector_tree(&envelope),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
+    }
+
+    fn tools(&self, _document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
+        vec![
+            tool_collection(
+                "trinity-rewrite-history",
+                "clock",
+                "History",
+                vec![
+                    tool_button("trinity-rewrite-undo", "undo-2", "Undo", rewrite_cmd("undo", None)),
+                    tool_button("trinity-rewrite-redo", "redo-2", "Redo", rewrite_cmd("redo", None)),
+                    tool_button("trinity-rewrite-checkpoint", "git-commit", "Checkpoint", rewrite_cmd("commitCheckpoint", None)),
+                ],
+            ),
+            tool_collection(
+                "trinity-rewrite-rule",
+                "code",
+                "Rule",
+                vec![tool_button("trinity-rewrite-reorganize", "rotate-cw", "Reorganize", rewrite_cmd("reorganize", None))],
+            ),
+        ]
+    }
+
+    fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> std::collections::HashMap<String, Vec<WindowMeasure>> {
+        let envelope = parse_envelope(document_json);
+        let mode_for = |window_id: &str| envelope.runtime.lod_mode_by_window.get(window_id).map(String::as_str).unwrap_or(TRINITY_LOD_MODE_AUTOMATIC);
+        std::collections::HashMap::from([
+            (TRINITY_REWRITE_PLAY_WINDOW_BEFORE.to_string(), vec![trinity_rewrite_lod_measure(TRINITY_REWRITE_PLAY_WINDOW_BEFORE, mode_for(TRINITY_REWRITE_PLAY_WINDOW_BEFORE))]),
+            (TRINITY_REWRITE_PLAY_WINDOW_AFTER.to_string(), vec![trinity_rewrite_lod_measure(TRINITY_REWRITE_PLAY_WINDOW_AFTER, mode_for(TRINITY_REWRITE_PLAY_WINDOW_AFTER))]),
+            (TRINITY_REWRITE_PLAY_WINDOW_LHS.to_string(), vec![trinity_rewrite_lod_measure(TRINITY_REWRITE_PLAY_WINDOW_LHS, mode_for(TRINITY_REWRITE_PLAY_WINDOW_LHS))]),
+            (TRINITY_REWRITE_PLAY_WINDOW_RHS.to_string(), vec![trinity_rewrite_lod_measure(TRINITY_REWRITE_PLAY_WINDOW_RHS, mode_for(TRINITY_REWRITE_PLAY_WINDOW_RHS))]),
+        ])
     }
 }
 //#endregion 🔖TrinityRewritePlayApp

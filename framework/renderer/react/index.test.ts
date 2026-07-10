@@ -16,6 +16,21 @@ import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
 import { TextEditorHost } from "./components/text-editor-host.tsx";
 import { World3dHost } from "./components/world-3d-host.tsx";
+import {
+  NoteCanvasHost,
+  noteBlockBounds,
+  noteEraseInkPointsInBlock,
+  noteHtmlToParagraphs,
+  noteParagraphsToHtml,
+  noteResizeBounds,
+  noteScaleBlockWithinGroup,
+  noteClipboardPayload,
+  noteBlocksFromClipboardPayload,
+  screenToWorld,
+  worldToScreen,
+  type NoteDocument,
+  type NoteInkBlock,
+} from "./components/note-canvas-host.tsx";
 import { appDocumentLabel, appWindowDocumentLabel, buildToolbarRibbonSegments, selectSpawnedToolNodes, sortToolNodes, spawnedWindowChromeForKind, ToolTree } from "./os-shell.tsx";
 import { interpretUiNode } from "./ui-interpreter.tsx";
 import type { UiNode } from "./os-shell.tsx";
@@ -568,6 +583,149 @@ describe("framework renderer hosts", () => {
       ) as ReactElement,
     );
     expect(markup).toContain("Draw");
+  });
+});
+
+describe("note canvas host", () => {
+  const semioNoteDocument: NoteDocument = {
+    schema: "note.document",
+    id: "semio",
+    title: "Semio Note",
+    camera: { x: 0, y: 0, zoom: 1 },
+    activeTool: "selectDirect",
+    gridVisible: true,
+    snapEnabled: false,
+    pencilWidth: 3,
+    eraserRadius: 12,
+    blocks: [
+      {
+        kind: "text",
+        id: "welcome-text",
+        name: "Welcome",
+        x: 80,
+        y: 80,
+        width: 360,
+        height: 120,
+        visible: true,
+        locked: false,
+        paragraphs: [{ runs: [{ text: "Welcome to Note — an infinite canvas for text, images, tables, math, and pencil ink." }] }],
+        fontSize: 20,
+        fontWeight: "normal",
+        align: "left",
+      },
+      { kind: "math", id: "welcome-math", name: "Equation", x: 80, y: 240, width: 240, height: 80, visible: true, locked: false, tex: "E = mc^2", displayMode: true },
+      {
+        kind: "table",
+        id: "welcome-table",
+        name: "Blocks",
+        x: 80,
+        y: 360,
+        width: 360,
+        height: 140,
+        visible: true,
+        locked: false,
+        columns: ["Block", "Description"],
+        rows: [
+          [{ content: "Text" }, { content: "Rich text blocks" }],
+          [{ content: "Math" }, { content: "TeX equations" }],
+          [{ content: "Ink" }, { content: "Freehand pencil strokes" }],
+        ],
+      },
+    ],
+  };
+
+  it("renders the semio example composite scene with rich text, table, and math fallback", () => {
+    const markup = renderToStaticMarkup(
+      createElement(NoteCanvasHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "note.play.composite",
+          controllerId: "note-play",
+          componentKind: "note-canvas",
+          noteCanvas: {
+            documentJson: JSON.stringify(semioNoteDocument),
+            selectionJson: "[]",
+            activeTool: "selectDirect",
+            viewMode: "composite",
+            interactive: true,
+          },
+        },
+        onCommand: noopCommand,
+      }) as ReactElement,
+    );
+    expect(markup).toContain("Welcome to Note");
+    expect(markup).toContain("<table");
+    expect(markup).toMatch(/\$\$E = mc\^2\$\$|annotation encoding="application\/x-tex">E = mc\^2</);
+    expect(markup).toContain('data-surface-id="note.play.composite"');
+  });
+
+  it("shows the grid pattern in composite mode but not in navigator mode", () => {
+    const baseNode = {
+      type: "componentScene" as const,
+      surfaceId: "note.play.composite",
+      controllerId: "note-play",
+      componentKind: "note-canvas",
+    };
+    const compositeMarkup = renderToStaticMarkup(
+      createElement(NoteCanvasHost, {
+        node: { ...baseNode, noteCanvas: { documentJson: JSON.stringify(semioNoteDocument), selectionJson: "[]", activeTool: "selectDirect", viewMode: "composite", interactive: true } },
+        onCommand: noopCommand,
+      }) as ReactElement,
+    );
+    expect(compositeMarkup).toContain("note-viewport-grid");
+
+    const navigatorMarkup = renderToStaticMarkup(
+      createElement(NoteCanvasHost, {
+        node: { ...baseNode, noteCanvas: { documentJson: JSON.stringify(semioNoteDocument), selectionJson: "[]", activeTool: "selectDirect", viewMode: "navigator", interactive: false } },
+        onCommand: noopCommand,
+      }) as ReactElement,
+    );
+    expect(navigatorMarkup).not.toContain("note-viewport-grid");
+  });
+
+  it("resizes with a minimum size and scales ink points when a group is resized", () => {
+    const fromBounds = { x: 0, y: 0, width: 100, height: 100 };
+    const shrunk = noteResizeBounds(fromBounds, "e", -1000, 0);
+    expect(shrunk.width).toBe(8);
+
+    const ink: NoteInkBlock = { kind: "ink", id: "ink-1", name: "Ink", x: 0, y: 0, width: 100, height: 100, visible: true, locked: false, points: [[0, 0], [100, 100]], strokeWidth: 2, color: [0, 0, 0, 1] };
+    const scaled = noteScaleBlockWithinGroup(ink, { x: 0, y: 0, width: 100, height: 100 }, { x: 0, y: 0, width: 200, height: 50 });
+    expect(scaled.kind).toBe("ink");
+    if (scaled.kind === "ink") expect(scaled.points).toEqual([[0, 0], [200, 50]]);
+  });
+
+  it("splits an ink stroke into fragments when erasing its middle point", () => {
+    const ink: NoteInkBlock = { kind: "ink", id: "ink-1", name: "Ink", x: 0, y: 0, width: 80, height: 1, visible: true, locked: false, points: [[0, 0], [40, 0], [80, 0]], strokeWidth: 2, color: [0, 0, 0, 1] };
+    const fragments = noteEraseInkPointsInBlock(ink, 40, 0, 5);
+    expect(fragments).toHaveLength(0);
+    const wideStroke: NoteInkBlock = { ...ink, points: [[0, 0], [10, 0], [40, 0], [70, 0], [80, 0]] };
+    const splitFragments = noteEraseInkPointsInBlock(wideStroke, 40, 0, 5);
+    expect(splitFragments).toHaveLength(2);
+  });
+
+  it("round-trips bold and link marks between paragraphs and html", () => {
+    const html = noteParagraphsToHtml([{ runs: [{ text: "hello", bold: true, link: "https://semio.tech" }] }]);
+    expect(html).toContain("<strong>");
+    expect(html).toContain('href="https://semio.tech"');
+  });
+
+  it("round-trips a clipboard payload of note blocks", () => {
+    const payload = noteClipboardPayload([semioNoteDocument.blocks[1]!]);
+    const parsed = noteBlocksFromClipboardPayload(payload);
+    expect(parsed).toHaveLength(1);
+    expect(parsed?.[0]?.kind).toBe("math");
+  });
+
+  it("computes ink block bounds from its local points", () => {
+    const ink: NoteInkBlock = { kind: "ink", id: "ink-1", name: "Ink", x: 10, y: 10, width: 1, height: 1, visible: true, locked: false, points: [[0, 0], [5, 5]], strokeWidth: 2, color: [0, 0, 0, 1] };
+    expect(noteBlockBounds(ink)).toEqual({ x: 10, y: 10, width: 5, height: 5 });
+  });
+
+  it("applies the canonical wheel-zoom camera formula symmetrically for screen<->world conversion", () => {
+    const camera = { x: 50, y: 50, zoom: 2 };
+    const world = screenToWorld(camera, 150, 150);
+    expect(world).toEqual([50, 50]);
+    expect(worldToScreen(camera, 50, 50)).toEqual({ x: 150, y: 150 });
   });
 });
 

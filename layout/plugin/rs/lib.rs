@@ -9,7 +9,7 @@ use layout_rs::{
 use semio_framework_plugin::{SurfaceKind,
     build_canvas_2d_scene, create_default_layout, tool_button, tool_collection, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
-    Canvas2dScene, CommandDescriptor, PanelGroup, PluginApp, PluginBundle, ToolNode, UiControlNode, UiFieldNode,
+    Canvas2dScene, CommandDescriptor, PanelGroup, PluginApp, PluginBundle, ToolNode, UiFieldNode,
     UiInputNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -2040,7 +2040,6 @@ mod tests {
         (screen.x, screen.y)
     }
 
-    #[test]
     fn scene_layers_json(node: &UiNode) -> String {
         let value: Value = serde_json::to_value(node).unwrap();
         value["canvas2d"]["layersJson"].as_str().expect("layersJson string").to_string()

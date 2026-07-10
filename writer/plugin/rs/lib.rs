@@ -2009,7 +2009,7 @@ mod tests {
 
     #[test]
     fn symbol_occurrences_find_bound_variable_uses() {
-        let symbol = jack_symbol_at_offset(CANONICAL_QUERY, CANONICAL_QUERY.find("a.name").unwrap() + 1).expect("symbol");
+        let symbol = jack_symbol_at_offset(CANONICAL_QUERY, CANONICAL_QUERY.find("a.name").unwrap()).expect("symbol");
         assert_eq!(symbol.kind, JackSymbolKind::Variable);
         assert_eq!(symbol.occurrences.len(), 3);
     }
@@ -2152,8 +2152,11 @@ mod tests {
         let tree_json = serde_json::to_string(&tree_node).unwrap();
         assert!(tree_json.contains(&root.id));
         let scene_node = app.render(WRITER_PLAY_BODY_MAIN, &next_document, &ViewState::default());
-        let scene_json = serde_json::to_string(&scene_node).unwrap();
-        assert!(scene_json.contains(&format!("\"start\":{}", root.start)));
+        let scene_value = serde_json::to_value(&scene_node).unwrap();
+        let hover_json = scene_value["textEditor"]["hoverJson"].as_str().expect("hoverJson string");
+        let hover_range: Value = serde_json::from_str(hover_json).unwrap();
+        assert_eq!(hover_range["start"].as_u64(), Some(root.start as u64));
+        assert_eq!(hover_range["end"].as_u64(), Some(root.end as u64));
     }
 
     #[test]

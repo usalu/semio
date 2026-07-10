@@ -650,6 +650,12 @@ fn render_layers_panel(document: &RasterDocument, play: &RasterPlayEnvelope, vie
         .iter()
         .filter_map(|id| find_layer(&document.layers, id).map(layer_row_id))
         .collect();
+    let highlighted_ids: Vec<String> = play
+        .hovered_id
+        .as_deref()
+        .and_then(|id| find_layer(&document.layers, id))
+        .map(|layer| vec![layer_row_id(layer)])
+        .unwrap_or_default();
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "raster-play-layers".into(),
@@ -658,7 +664,7 @@ fn render_layers_panel(document: &RasterDocument, play: &RasterPlayEnvelope, vie
             items: [toolbar, layer_items].concat(),
         }],
         selected_ids: Some(selected_ids),
-        highlighted_ids: None,
+        highlighted_ids: Some(highlighted_ids),
         selection_change: Some(play_cmd(
             RASTER_PLAY_CONTROLLER_ID,
             "setSelection",
@@ -993,7 +999,19 @@ impl PluginApp for RasterApp {
                     .unwrap_or_default();
                 return vec![set_document_op(&play)];
             }
-            "setHover" => {}
+            "setHover" => {
+                play.hovered_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
+                return vec![set_document_op(&play)];
+            }
+            "setCompositeViewport" => {
+                if let (Some(width), Some(height)) = (
+                    args.and_then(|value| value.get("width")).and_then(|value| value.as_f64()),
+                    args.and_then(|value| value.get("height")).and_then(|value| value.as_f64()),
+                ) {
+                    play.composite_viewport = Some(RasterViewportSize { width, height });
+                    return vec![set_document_op(&play)];
+                }
+            }
             "selectAll" => {
                 play.selected_ids = flatten_raster_layers(&play.document.layers)
                     .into_iter()
@@ -1133,8 +1151,8 @@ impl PluginApp for RasterApp {
     fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let play = parse_envelope(document_json);
         match body_key {
-            RASTER_PLAY_BODY_COMPOSITE => render_composite_scene(&play.document),
-            RASTER_PLAY_BODY_NAVIGATOR => render_navigator_scene(&play.document),
+            RASTER_PLAY_BODY_COMPOSITE => render_composite_scene(&play),
+            RASTER_PLAY_BODY_NAVIGATOR => render_navigator_scene(&play),
             RASTER_PLAY_BODY_LAYERS => render_layers_panel(&play.document, &play, view_state),
             RASTER_PLAY_BODY_MASKS => render_masks_panel(&play.document, &play, view_state),
             RASTER_PLAY_BODY_CATALOGUE => render_catalogue_panel(),
@@ -1152,8 +1170,8 @@ fn create_raster_app() -> App {
             .icon_id("raster")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(RASTER_PLAY_WINDOW_COMPOSITE, "Composite", RASTER_PLAY_BODY_COMPOSITE, SurfaceKind::Canvas2d)
-            .window_kind(RASTER_PLAY_WINDOW_NAVIGATOR, "Navigator", RASTER_PLAY_BODY_NAVIGATOR, SurfaceKind::Canvas2d)
+            .window_kind(RASTER_PLAY_WINDOW_COMPOSITE, "Composite", RASTER_PLAY_BODY_COMPOSITE, SurfaceKind::Raster)
+            .window_kind(RASTER_PLAY_WINDOW_NAVIGATOR, "Navigator", RASTER_PLAY_BODY_NAVIGATOR, SurfaceKind::Raster)
             .default_layout(create_default_layout(
                 &[RASTER_PLAY_WINDOW_COMPOSITE.into(), RASTER_PLAY_WINDOW_NAVIGATOR.into()],
                 "row",
@@ -1218,12 +1236,13 @@ mod tests {
     }
 
     #[test]
-    fn renders_navigator_canvas() {
+    fn renders_navigator_scene() {
         let app = RasterApp;
         let document = serde_json::to_string(&empty_raster_document()).unwrap();
         let node = app.render(RASTER_PLAY_BODY_NAVIGATOR, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("canvas-2d"));
+        assert!(json.contains("\"componentKind\":\"raster\""));
+        assert!(json.contains("\"viewMode\":\"navigator\""));
     }
 
     #[test]
@@ -1243,13 +1262,51 @@ mod tests {
     }
 
     #[test]
-    fn composite_scene_encodes_pixels() {
+    fn composite_scene_syncs_document_and_assets() {
         let app = RasterApp;
         let document = SEMIO_EXAMPLE_JSON.to_string();
         let node = app.render(RASTER_PLAY_BODY_COMPOSITE, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("raster"));
-        assert!(!json.contains("\"pixelsBase64\":\"\""));
+        assert!(json.contains("\"componentKind\":\"raster\""));
+        assert!(json.contains("\"viewMode\":\"composite\""));
+        assert!(!json.contains("\"assetsJson\":\"{}\""), "semio fixture has embedded assets");
+        let parsed: RasterPlayEnvelope = serde_json::from_str(&document).unwrap();
+        let sync_json = document_sync_json(&parsed.document);
+        assert!(!sync_json.contains("\"assets\""), "sync json must omit assets");
+        assert!(!sync_json.contains("\"camera\""), "sync json must omit camera");
+    }
+
+    #[test]
+    fn set_hover_stores_id_and_highlights_layer_row() {
+        let mut app = RasterApp;
+        let document = SEMIO_EXAMPLE_JSON.to_string();
+        let envelope: RasterPlayEnvelope = serde_json::from_str(&document).unwrap();
+        let layer_id = layer_node_id(&envelope.document.layers[0]).to_string();
+        let ops = app.handle_command_patch_ops("setHover", Some(&json!({ "id": layer_id })), &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let next_document = serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string();
+        let node = app.render(RASTER_PLAY_BODY_LAYERS, &next_document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("\"highlightedIds\":[\"raster-play-layers."));
+    }
+
+    #[test]
+    fn set_composite_viewport_feeds_navigator_scene() {
+        let mut app = RasterApp;
+        let document = serde_json::to_string(&empty_raster_document()).unwrap();
+        let ops = app.handle_command_patch_ops(
+            "setCompositeViewport",
+            Some(&json!({ "width": 640.0, "height": 480.0 })),
+            &document,
+            &ViewState::default(),
+        );
+        assert_eq!(ops.len(), 1);
+        let next_document = serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string();
+        let node = app.render(RASTER_PLAY_BODY_NAVIGATOR, &next_document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("compositeViewportJson"));
+        assert!(json.contains(r#"\"width\":640.0"#));
+        assert!(json.contains(r#"\"height\":480.0"#));
     }
 
     #[test]

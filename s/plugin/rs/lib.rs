@@ -3466,5 +3466,80 @@ mod tests {
         assert!(home_tools > 0);
         assert_eq!(studio.examples.len(), S_STUDIO_EXAMPLES.len());
     }
+
+    #[test]
+    fn media_graph_scene_uses_flow_engine_with_fixture() {
+        let app = SStudioApp;
+        let node = app.render(S_PLAY_BODY_MEDIA_GRAPH, &initial_studio_document_json(), &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains(r#"\"engine\":\"flow\""#));
+        assert!(json.contains("fixtureJson"));
+        assert!(json.contains(r#"\"schema\":\"flow.fixture\""#));
+    }
+
+    #[test]
+    fn node_graph_edit_set_fixture_moves_node_and_persists_camera() {
+        let mut envelope = initial_studio_envelope();
+        let projection = projection_from_document(&envelope.document);
+        let node = projection.media_graph.nodes.first().expect("node").clone();
+        let camera = OsMediaGraphCamera { x: 40.0, y: -20.0, zoom: 2.0 };
+        let mut fixture = os_media_graph_to_flow_fixture(&projection.media_graph, &projection.app_instances, &camera);
+        fixture["layout"][&node.id] = json!({ "x": 500.0 + node.width / 2.0, "y": 300.0 + node.height / 2.0 });
+        SStudioApp::handle_studio_command(
+            &mut envelope,
+            "nodeGraphEdit",
+            Some(&json!({ "ops": [{ "op": "setFixture", "fixtureJson": fixture.to_string() }] })),
+        );
+        let moved = projection_from_document(&envelope.document)
+            .media_graph
+            .nodes
+            .into_iter()
+            .find(|row| row.id == node.id)
+            .expect("node");
+        assert!((moved.x - 500.0).abs() < 0.01);
+        assert!((moved.y - 300.0).abs() < 0.01);
+        assert_eq!(envelope.runtime.media_graph_camera, Some(camera));
+    }
+
+    #[test]
+    fn node_graph_viewport_persists_camera() {
+        let mut envelope = initial_studio_envelope();
+        SStudioApp::handle_studio_command(
+            &mut envelope,
+            "nodeGraphViewport",
+            Some(&json!({ "viewportJson": r#"{"x":7.0,"y":9.0,"zoom":0.5}"# })),
+        );
+        assert_eq!(
+            envelope.runtime.media_graph_camera,
+            Some(OsMediaGraphCamera { x: 7.0, y: 9.0, zoom: 0.5 })
+        );
+    }
+
+    #[test]
+    fn presence_heartbeat_publishes_peer_for_other_clients() {
+        let mut envelope = initial_studio_envelope();
+        let first_node_id = projection_from_document(&envelope.document).media_graph.nodes[0].id.clone();
+        SStudioApp::handle_studio_command(
+            &mut envelope,
+            "nodeGraphSelect",
+            Some(&json!({ "nodeIds": [first_node_id] })),
+        );
+        SStudioApp::handle_studio_command(
+            &mut envelope,
+            "presenceHeartbeat",
+            Some(&json!({ "clientId": "client-test-a", "name": "Ada" })),
+        );
+        let other_runtime = StudioRuntimeState {
+            client_id: Some("client-test-b".into()),
+            studio_id: envelope.runtime.studio_id.clone(),
+            ..StudioRuntimeState::default()
+        };
+        let peers = presence_peers_json(&other_runtime);
+        assert!(peers.contains("client-test-a"));
+        assert!(peers.contains("Ada"));
+        assert!(peers.contains(r#""selectionCount":1"#));
+        let self_view = presence_peers_json(&envelope.runtime);
+        assert!(!self_view.contains("client-test-a"));
+    }
 }
 //#endregion 🧪Tests

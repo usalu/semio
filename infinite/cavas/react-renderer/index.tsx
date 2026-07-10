@@ -57,14 +57,23 @@ export interface CanvasWasmBridge<Session> {
 // #endregion 🔖CanvasWasmBridge
 
 // #region 🔖GraphWasmCanvas
+/** @emoji ⌨️ Modifier keys held during a pointer gesture (shift/ctrl/meta/alt). */
+export type CanvasInputModifiers = {
+  readonly shift: boolean;
+  readonly ctrl: boolean;
+  readonly meta: boolean;
+  readonly alt: boolean;
+};
+
 /** @emoji 🕸️ Minimal WASM graph session surface (attach, resize, RAF, optional pointer). */
 export interface GraphWasmSession {
   attachCanvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown>;
   setSize(width: number, height: number, dpr: number): void;
   renderFrame(): void;
-  pointerDown?(x: number, y: number, button: number, extend: boolean): void;
+  pointerDown?(x: number, y: number, button: number, extend: boolean, modifiers?: CanvasInputModifiers): void;
   pointerMove?(x: number, y: number): void;
-  pointerUp?(x: number, y: number): void;
+  pointerUp?(x: number, y: number, modifiers?: CanvasInputModifiers): void;
+  doubleClick?(x: number, y: number): void;
   wheel?(x: number, y: number, deltaY: number): void;
 }
 
@@ -125,9 +134,15 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
         rafRef.current = requestAnimationFrame(tick);
       };
       rafRef.current = requestAnimationFrame(tick);
+      const modifiersOf = (ev: PointerEvent | MouseEvent): CanvasInputModifiers => ({
+        shift: ev.shiftKey,
+        ctrl: ev.ctrlKey,
+        meta: ev.metaKey,
+        alt: ev.altKey,
+      });
       const onPointerDown = (ev: PointerEvent) => {
         const rect = canvas.getBoundingClientRect();
-        session.pointerDown?.(ev.clientX - rect.left, ev.clientY - rect.top, ev.button, ev.shiftKey);
+        session.pointerDown?.(ev.clientX - rect.left, ev.clientY - rect.top, ev.button, ev.shiftKey, modifiersOf(ev));
         renderFrame();
       };
       const onPointerMove = (ev: PointerEvent) => {
@@ -137,7 +152,12 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
       };
       const onPointerUp = (ev: PointerEvent) => {
         const rect = canvas.getBoundingClientRect();
-        session.pointerUp?.(ev.clientX - rect.left, ev.clientY - rect.top);
+        session.pointerUp?.(ev.clientX - rect.left, ev.clientY - rect.top, modifiersOf(ev));
+        renderFrame();
+      };
+      const onDoubleClick = (ev: MouseEvent) => {
+        const rect = canvas.getBoundingClientRect();
+        session.doubleClick?.(ev.clientX - rect.left, ev.clientY - rect.top);
         renderFrame();
       };
       const onWheel = (ev: WheelEvent) => {
@@ -151,6 +171,7 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
         canvas.addEventListener("pointermove", onPointerMove);
         canvas.addEventListener("pointerup", onPointerUp);
         canvas.addEventListener("pointerleave", onPointerUp);
+        canvas.addEventListener("dblclick", onDoubleClick);
         canvas.addEventListener("wheel", onWheel, { passive: false });
       }
       return () => {
@@ -160,6 +181,7 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
           canvas.removeEventListener("pointermove", onPointerMove);
           canvas.removeEventListener("pointerup", onPointerUp);
           canvas.removeEventListener("pointerleave", onPointerUp);
+          canvas.removeEventListener("dblclick", onDoubleClick);
           canvas.removeEventListener("wheel", onWheel);
         }
         if (rafRef.current != null) cancelAnimationFrame(rafRef.current);

@@ -3438,6 +3438,34 @@ mod tests {
     }
 
     #[test]
+    fn debug_forest_fixture_diagnostics() {
+        let envelope = forest_play_envelope();
+        eprintln!("[DEBUG] shape objects: {}", envelope.document.objects.len());
+        eprintln!(
+            "[DEBUG] shape visible: {}",
+            envelope.document.objects.iter().filter(|o| o.visible).count()
+        );
+        eprintln!("[DEBUG] building objects: {}", envelope.document.building_objects.len());
+        eprintln!(
+            "[DEBUG] building typologies: {:?}",
+            envelope
+                .document
+                .building_objects
+                .iter()
+                .map(|o| o.typology.as_str())
+                .collect::<std::collections::BTreeSet<_>>()
+        );
+        eprintln!("[DEBUG] energy objects: {}", envelope.document.energy_objects.len());
+        eprintln!(
+            "[DEBUG] structure_classic objects: {}",
+            envelope.document.structure_classic_objects.len()
+        );
+        for column in envelope.document.building_objects.iter().filter(|o| o.typology == "building.building.column") {
+            eprintln!("[DEBUG] column {} extent: {:?}", column.id, column.extent);
+        }
+    }
+
+    #[test]
     fn typology_extent_derives_from_authored_geometry() {
         let envelope = forest_play_envelope();
         let column = envelope

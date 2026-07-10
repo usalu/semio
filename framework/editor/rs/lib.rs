@@ -1760,6 +1760,15 @@ mod tests {
     }
 
     #[test]
+    fn sync_from_scene_json_sets_and_clears_hover_range() {
+        let mut host = EditorHost::new();
+        host.sync_from_scene_json(r#"{"buffer":"abc","hoverJson":"{\"start\":1,\"end\":2}"}"#).unwrap();
+        assert_eq!(host.hover_token_range(), Some((1, 2)));
+        host.sync_from_scene_json(r#"{"buffer":"abc","hoverJson":"null"}"#).unwrap();
+        assert_eq!(host.hover_token_range(), None);
+    }
+
+    #[test]
     fn theme_merge_from_json_updates_clear() {
         let mut host = EditorHost::new();
         let json = r#"{"rasterClear":[240,236,221,255],"labelFill":[0,17,23,255]}"#;

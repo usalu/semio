@@ -22,6 +22,17 @@
         "SEMIO_RENDERER": "react"
       },
       "port": 6078
+    },
+    {
+      "name": "shooting-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:shooting:base-icon"],
+      "env": {
+        "SHOOTING_PLAY_PORT": "6119",
+        "S_OS_PORT": "6119",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6119
     }
   ]
 }
