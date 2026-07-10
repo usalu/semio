@@ -1,0 +1,13 @@
+\documentclass{scrreprt}
+\makeatletter
+\let\semio@orig@sectionlinesformat\sectionlinesformat
+\renewcommand\sectionlinesformat[4]{%
+  \typeout{SLF level1=#1 level2=#2 num=#3 title=#4}%
+  \semio@orig@sectionlinesformat{#1}{#2}{#3}{#4}%
+}
+\makeatother
+\begin{document}
+\section{Sec}
+\subsection{Sub}
+\subsubsection{Subsub}
+\end{document}

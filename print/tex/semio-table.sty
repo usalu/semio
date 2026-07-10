@@ -23,7 +23,18 @@
   \semio_table_header_row:n {#1}
   \\
   \hline
+  \semio_table_header_row_close:
   \global\semio@table@row@startedfalse
+}
+\cs_new_protected:Npn \semio_table_header_row_close: {
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \ifnum\semio@table@long@mode>0\relax
+    \semio@table@long@header@close
+  \fi
+  \makeatother
+  \group_end:
 }
 \cs_new_protected:Npn \semio_table_dot_count_int:n #1 {
   \int_zero:N \l_tmpa_int
@@ -135,7 +146,43 @@
   \semio@table@header@cell{#2} &
   \semio@table@header@cell{#3} \\
   \hline
+  \semio@table@long@header@close
   \global\semio@table@row@startedfalse
+}
+
+\newcommand{\semio@table@long@header@close}{%
+  \noalign{\vskip\dimexpr-2\semio@spacing@unit\relax}%
+}
+
+\newcommand{\semio@table@long@title@chrome@prepare}{%
+  \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\semio@window@header@title}}%
+  \sbox{\semio@window@ctrl@box}{%
+    \if\relax\detokenize\expandafter{\semio@window@header@number}\relax
+      \hbox{}%
+    \else
+      \semio@heading@cap@muted@tab{\semio@window@header@number}%
+    \fi
+  }%
+  \setlength{\semio@window@gap@w}{%
+    \dimexpr\linewidth-2\arrayrulewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
+  }%
+}
+
+\newcommand{\semio@table@long@title@chrome}{%
+  \semio@table@long@title@chrome@prepare
+  \multicolumn{3}{|@{\hspace{\semio@chrome@padding}}@{}l@{}@{\hspace{\semio@chrome@padding}}|}%
+  {%
+    \hbox to \dimexpr\linewidth-2\arrayrulewidth\relax{%
+      \usebox{\semio@window@tab@box}%
+      \semio@window@gap{semio-chrome-base}{semio-chrome-border-normal}%
+      \usebox{\semio@window@ctrl@box}%
+    }%
+  }%
+  \\%
+}
+
+\newcommand{\semio@table@long@continuation@chrome}{%
+  \semio@table@long@title@chrome
 }
 
 \newcommand{\semio@register@table@header@long@repeat}{%
@@ -159,18 +206,6 @@
     {\semio@glossary@header@pages}%
 }
 
-\newcommand{\semio@table@long@continuation@chrome}{%
-  \multicolumn{3}{|@{\hspace{\semio@chrome@padding}}@{}l@{}@{\hspace{\semio@chrome@padding}}|}%
-  {%
-    \hbox to \dimexpr\linewidth-2\arrayrulewidth\relax{%
-      \semio@heading@cap@muted{\semio@window@header@title}%
-      \semio@window@gap{semio-chrome-base}{semio-chrome-border-normal}%
-      \hbox{}%
-    }%
-  }%
-  \\%
-}
-
 \newcommand{\semio@table@long@render}[4]{%
   \semio@table@setup@long
   \global\semio@table@long@mode=1\relax
@@ -179,7 +214,7 @@
   \fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont
   \color{semio-chrome-text-normal}%
   \semio@table@long@inner@w@set
-  \par
+  \nointerlineskip
   \raggedright
   \setlength{\LTpre}{0pt}%
   \setlength{\LTpost}{0pt}%
@@ -187,6 +222,7 @@
   \setlength{\LTright}{0pt}%
   \setlength{\LTcapwidth}{\linewidth}%
   \begin{longtable}{#1}%
+  \semio@table@long@title@chrome
   #2%
   \endfirsthead
   \semio@table@long@continuation@chrome

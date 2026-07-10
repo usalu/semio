@@ -237,11 +237,16 @@
 
 \tl_new:N \l_semio_heading_number_tl
 \clist_new:N \l_semio_footer_authors_clist
+\clist_new:N \l_semio_footer_logos_clist
 \seq_new:N \l_semio_author_name_parts_seq
 \tl_new:N \l_semio_author_name_tl
 
 \NewDocumentCommand \footerauthors { m } {
   \clist_set:Nn \l_semio_footer_authors_clist {#1}
+}
+
+\NewDocumentCommand \footerlogos { m } {
+  \clist_set:Nn \l_semio_footer_logos_clist {#1}
 }
 
 \cs_new:Npn \semio_author_name_shorten:n #1 {

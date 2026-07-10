@@ -11,7 +11,6 @@
 \RequirePackage{fancyhdr}
 \RequirePackage{graphicx}
 \RequirePackage{tcolorbox}
-\RequirePackage[explicit]{titlesec}
 \RequirePackage{eso-pic}
 \RequirePackage{tikz}
 \tcbuselibrary{skins,breakable,fitting}
@@ -256,8 +255,6 @@
   \tl_clear:N \l_semio_window_number_tl
   \semio_window_header_store:
   \semio_block_sep_before:
-  \semio_window_header_muted_use:
-  \semio_window_vskip_stroke_hairline:
 }
 
 \cs_new_protected:Npn \semio_register_list_begin:n #1 {
@@ -364,16 +361,21 @@
   }
 }
 
-\tl_new:N \g_semio_glossary_rows_tl
+\int_new:N \g_semio_glossary_row_int
 
 \cs_new_protected:Npn \semio_glossary_body_init: {
-  \tl_gclear:N \g_semio_glossary_rows_tl
+  \int_gzero:N \g_semio_glossary_row_int
 }
 
 \cs_new_protected:Npn \semio_glossary_body_gappto:nnn #1#2#3 {
-  \tl_gput_right:Nn \g_semio_glossary_rows_tl {
-    \SemioGlossaryTableRow{#1}{#2}{#3}
-  }
+  \int_gincr:N \g_semio_glossary_row_int
+  \cs_gset:cpn { semio@glossary@row@ \int_use:N \g_semio_glossary_row_int }
+    {
+      \SemioGlossaryTableRow
+        { \exp_not:n {#1} }
+        { \exp_not:n {#2} }
+        { \exp_not:n {#3} }
+    }
 }
 \cs_generate_variant:Nn \semio_glossary_body_gappto:nnn { VVV }
 
@@ -389,13 +391,27 @@
     \l_tmpd_tl
 }
 
+\newcommand{\semio@glossary@emit@row}[1]{\csname semio@glossary@row@#1\endcsname}
+
+\cs_new_protected:Npn \semio_glossary_body_finalize_step:n #1 {
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \gappto\semio@glossary@table@body{\noexpand\semio@glossary@emit@row{#1}}%
+  \makeatother
+  \group_end:
+}
+
 \cs_new_protected:Npn \semio_glossary_body_finalize: {
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
-  \xdef\semio@glossary@table@body{\exp_not:V \g_semio_glossary_rows_tl}%
+  \gdef\semio@glossary@table@body{}%
   \makeatother
   \group_end:
+  \int_step_inline:nn { \g_semio_glossary_row_int } {
+    \semio_glossary_body_finalize_step:n { ##1 }
+  }
 }
 
 \cs_new_protected:Npn \semio_glossary_body_materialize: {
@@ -502,18 +518,128 @@
   anchor / sw .code:n = { \semio_window_anchor_set:nn { bottom } { left } },
   anchor / s .code:n = { \semio_window_anchor_set:nn { bottom } { center } },
   anchor / se .code:n = { \semio_window_anchor_set:nn { bottom } { right } },
+  justify .choice:,
+  justify / left .code:n = { \semio_window_halign_set:n { left } },
+  justify / center .code:n = { \semio_window_halign_set:n { center } },
+  justify / right .code:n = { \semio_window_halign_set:n { right } },
+  justify / justify .code:n = { \semio_window_halign_set:n { justify } },
+  height .code:n = { \semio_window_height_set:n {#1} },
+  text-size .code:n = {
+    \str_if_eq:nnTF {#1} { fit }
+      { \bool_set_true:N \l_semio_window_textfit_bool }
+      {
+        \dim_set:Nn \l_semio_window_textsize_dim {#1}
+        \bool_set_true:N \l_semio_window_textsize_set_bool
+      }
+  },
+  image-fit .choice:,
+  image-fit / contain .code:n = { \semio_window_imagefit_set:n { contain } },
+  image-fit / cover .code:n = { \semio_window_imagefit_set:n { cover } },
+  image-fit / fill .code:n = { \semio_window_imagefit_set:n { fill } },
+  image-fit / none .code:n = { \semio_window_imagefit_set:n { none } },
 }
 
-\cs_new_protected:Npn \semio_window_anchor_reset: {
+\cs_new_protected:Npn \semio_window_content_state_reset: {
   \tl_set:Nn \l_semio_window_valign_tl { top }
-  \tl_set:Nn \l_semio_window_halign_tl { left }
+  \tl_set:Nn \l_semio_window_halign_tl { justify }
+  \bool_set_false:N \l_semio_window_height_set_bool
+  \bool_set_false:N \l_semio_window_textsize_set_bool
+  \bool_set_false:N \l_semio_window_textfit_bool
+  \semio_window_imagefit_set:n { contain }
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
   \gdef\semio@window@valign{top}
-  \gdef\semio@window@halign{left}
+  \gdef\semio@window@halign{justify}
+  \gdef\semio@window@height@dim{}
   \makeatother
   \group_end:
+}
+
+\cs_new_protected:Npn \semio_window_halign_set:n #1 {
+  \tl_set:Nn \l_semio_window_halign_tl {#1}
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \gdef\semio@window@halign{#1}
+  \makeatother
+  \group_end:
+}
+
+\cs_new_protected:Npn \semio_window_height_set:n #1 {
+  \dim_set:Nn \l_semio_window_height_dim {#1}
+  \bool_set_true:N \l_semio_window_height_set_bool
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \xdef\semio@window@height@dim{\the\l_semio_window_height_dim}
+  \makeatother
+  \group_end:
+}
+
+\cs_new_protected:Npn \semio_window_imagefit_set:n #1 {
+  \tl_set:Nn \l_semio_window_imagefit_tl {#1}
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \gdef\semio@window@imagefit{#1}
+  \makeatother
+  \group_end:
+}
+
+\cs_new_protected:Npn \semio_window_content_validate: {
+  \bool_if:NT \l_semio_window_textfit_bool {
+    \bool_if:NF \l_semio_window_height_set_bool {
+      \msg_error:nn { semio-window } { text-fit-no-height }
+    }
+  }
+}
+
+\cs_new_protected:Npn \semio_window_textsize_apply: {
+  \bool_if:NT \l_semio_window_textsize_set_bool {
+    \group_begin:
+    \ExplSyntaxOff
+    \fontsize{\the\dimexpr\l_semio_window_textsize_dim\relax}{\the\dimexpr\l_semio_window_textsize_dim\relax}\selectfont
+    \group_end:
+  }
+}
+
+\cs_new_protected:Npn \semio_window_tcb_open:n #1 {
+  \bool_if:NTF \l_semio_window_textfit_bool {
+    \begin{tcolorbox}[
+      #1,
+      breakable=false,
+      fit,
+      height=\dim_use:N \l_semio_window_height_dim,
+      valign=\tl_use:N \l_semio_window_valign_tl,
+      halign=\tl_use:N \l_semio_window_halign_tl
+    ]
+  } {
+    \bool_if:NTF \l_semio_window_height_set_bool {
+      \begin{tcolorbox}[
+        #1,
+        height=\dim_use:N \l_semio_window_height_dim,
+        valign=\tl_use:N \l_semio_window_valign_tl,
+        halign=\tl_use:N \l_semio_window_halign_tl
+      ]
+    } {
+      \begin{tcolorbox}[
+        #1,
+        valign=\tl_use:N \l_semio_window_valign_tl,
+        halign=\tl_use:N \l_semio_window_halign_tl
+      ]
+    }
+  }
+}
+
+\msg_new:nnn { semio-window } { text-fit-no-height }
+  { text-size=fit~requires~height=~on~the~same~window. }
+
+\msg_new:nnn { semio-window } { image-fit-no-height }
+  { image-fit~#1~requires~a~bounded~height~via~height=~on~the~window~or~\\SemioImage. }
+
+\cs_new_protected:Npn \semio_window_anchor_reset: {
+  \semio_window_content_state_reset:
 }
 
 \cs_new_protected:Npn \semio_window_anchor_set:nn #1#2 {
@@ -578,9 +704,11 @@
 }
 
 \cs_new_protected:Npn \semio_window_kind_begin:nnn #1 #2 #3 {
+  \semio_window_content_state_reset:
   \bool_set_true:N \l_semio_window_hierarchy_bool
   \tl_clear:N \l_semio_window_kind_title_tl
   \keys_set:nn { semio / window / kind } { #3 }
+  \semio_window_content_validate:
   \use:c { semio@window@enter }
   \bool_if:NTF \l_semio_register_list_bool {
     \tl_if_empty:NT \l_semio_window_kind_title_tl {
@@ -856,6 +984,7 @@
   \makeatletter
   \setcounter{tocdepth}{\semio@toc@depth@unlimited}
   \semio@heading@installall
+  \semio_chrome_navbar_labels_compute:
   \makeatother
 }
 
@@ -956,8 +1085,6 @@
 }
 
 \newcounter{semioglossaryusage}
-
-\newcommand{\semio@glossary@emit@row}[1]{\csname semio@glossary@row@#1\endcsname}
 
 \newcommand{\semio@glossary@table@body}{}
 
@@ -1227,12 +1354,12 @@
   }%
 }
 
-\newcommand{\semio@window@cap@vbox}[2]{%
+\newcommand{\semio@window@cap@accent@vbox}[1]{%
   \vbox to \semio@chrome@titlebar@height{%
     \nointerlineskip
-    \hbox{\semio@window@cap@paint{\semio@window@cap@w}{#1}{\semio@window@cap@body@h}}%
+    \hbox{\semio@window@stroke@h{#1}{\semio@window@cap@w}}%
     \nointerlineskip
-    \hbox{\semio@window@stroke@h{#2}{\semio@window@cap@w}}%
+    \hbox{\semio@window@cap@paint{\semio@window@cap@w}{#1}{\semio@window@cap@body@h}}%
   }%
 }
 
@@ -1247,7 +1374,7 @@
   \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
   \hbox{%
     \semio@window@cap@raise{\semio@window@stroke@v{#1}}%
-    \semio@window@cap@raise{\semio@window@cap@vbox{#1}{#1}}%
+    \semio@window@cap@raise{\semio@window@cap@accent@vbox{#1}}%
     \semio@window@cap@raise{\semio@window@stroke@v{#1}}%
   }%
 }
@@ -1441,11 +1568,14 @@
   \fi
 }
 
-\newcommand{\semio@koma@heading@block}[3]{%
+\newcommand{\semio@koma@heading@lines}[4]{%
+  \ifnum\numexpr\semio@toc@level{#1}\relax>\value{tocdepth}\else
+    \semio@toc@track@num{#1}{\csname the#1\endcsname}{#3}%
+  \fi
   \semio@chrome@heading@track{#1}{#3}%
   \semio@if@heading@chips
     {%
-      \if\relax\detokenize{\csname the#1\endcsname}\relax
+      \if\relax\detokenize{#4}\relax
         \semio@heading@title@end{#2}{semio-chrome-foreground}{#3}%
       \else
         \semio@heading@pair{#2}{semio-chrome-foreground}{#1}{#1}{#3}%
@@ -1454,10 +1584,13 @@
     {#3}%
 }
 
-\newcommand{\semio@koma@heading@block@muted}[1]{%
+\newcommand{\semio@koma@heading@lines@muted}[2]{%
+  \ifnum\numexpr\semio@toc@level{paragraph}\relax>\value{tocdepth}\else
+    \semio@toc@track@num{paragraph}{\theparagraph}{#1}%
+  \fi
   \semio@if@heading@chips
     {%
-      \if\relax\detokenize{\theparagraph}\relax
+      \if\relax\detokenize{#2}\relax
         \semio@heading@title@end@muted{#1}%
       \else
         \semio@heading@pair@muted{paragraph}{paragraph}{#1}%
@@ -1466,118 +1599,43 @@
     {#1}%
 }
 
-\newcommand{\semio@heading@wrap@tracked}[2]{%
-  \semio@toc@track@heading{#1}{#2}%
-}
-
-\newcommand{\semio@heading@wrap@part}{%
-  \let\semio@orig@part\part
-  \def\part{\@ifstar{\semio@orig@part*}{\semio@part@tracked}}%
-  \def\semio@part@tracked##1{%
-    \semio@orig@part{##1}%
-    \semio@heading@wrap@tracked{part}{##1}%
-  }%
-}
-
-\newcommand{\semio@heading@wrap@chapter}{%
-  \let\semio@orig@chapter\chapter
-  \def\chapter{\@ifstar{\semio@orig@chapter*}{\semio@chapter@tracked}}%
-  \def\semio@chapter@tracked##1{%
-    \semio@orig@chapter{##1}%
-    \semio@heading@wrap@tracked{chapter}{##1}%
-  }%
-}
-
-\newcommand{\semio@heading@wrap@section}{%
-  \let\semio@orig@section\section
-  \def\section{\@ifstar{\semio@orig@section*}{\semio@section@tracked}}%
-  \def\semio@section@tracked##1{%
-    \semio@orig@section{##1}%
-    \semio@heading@wrap@tracked{section}{##1}%
-  }%
-}
-
-\newcommand{\semio@heading@wrap@subsection}{%
-  \let\semio@orig@subsection\subsection
-  \def\subsection{\@ifstar{\semio@orig@subsection*}{\semio@subsection@tracked}}%
-  \def\semio@subsection@tracked##1{%
-    \semio@orig@subsection{##1}%
-    \semio@heading@wrap@tracked{subsection}{##1}%
-  }%
-}
-
-\newcommand{\semio@heading@wrap@subsubsection}{%
-  \let\semio@orig@subsubsection\subsubsection
-  \def\subsubsection{\@ifstar{\semio@orig@subsubsection*}{\semio@subsubsection@tracked}}%
-  \def\semio@subsubsection@tracked##1{%
-    \semio@orig@subsubsection{##1}%
-    \semio@heading@wrap@tracked{subsubsection}{##1}%
-  }%
-}
-
-\newcommand{\semio@heading@wrap@paragraph}{%
-  \let\semio@orig@paragraph\paragraph
-  \def\paragraph{\@ifstar{\semio@orig@paragraph*}{\semio@paragraph@tracked}}%
-  \def\semio@paragraph@tracked##1{%
-    \semio@orig@paragraph{##1}%
-    \ifnum\value{semio@nest@depth}>0\else
-      \semio@heading@wrap@tracked{paragraph}{##1}%
-    \fi
-  }%
-}
-
-\newcommand{\semio@heading@wrap@install}{%
-  \ifcsname c@part\endcsname
-    \semio@heading@wrap@part
+\newcommand{\semio@heading@lines@dispatch}[4]{%
+  \ifcsname semio@heading@color@#1\endcsname
+    \semio@koma@heading@lines{#1}{\csname semio@heading@color@#1\endcsname}{#4}{#3}%
+  \else
+    \semio@koma@heading@lines@muted{#4}{#3}%
   \fi
-  \ifcsname c@chapter\endcsname
-    \semio@heading@wrap@chapter
-  \fi
-  \semio@heading@wrap@section
-  \semio@heading@wrap@subsection
-  \semio@heading@wrap@subsubsection
-  \semio@heading@wrap@paragraph
 }
 
-\newcommand{\semio@heading@install}[3]{%
-  \titleformat{#1}[block]{}{}{0pt}{%
-    \semio@chrome@heading@track{#3}{##1}%
-    \semio@if@heading@chips
-      {%
-        \if\relax\detokenize{\csname the#3\endcsname}\relax
-          \semio@heading@title@end{#2}{semio-chrome-foreground}{##1}%
-        \else
-          \semio@heading@pair{#2}{semio-chrome-foreground}{#3}{#3}{##1}%
-        \fi
-      }%
-      {##1}%
-  }%
-  \titlespacing*{#1}{0pt}{\semio@block@sep@before@skip}{\semio@block@sep@skip}%
+\newcommand{\semio@heading@install@spacing}[1]{%
+  \RedeclareSectionCommand[
+    beforeskip=\semio@block@sep@before@skip,
+    afterskip=\semio@block@sep@skip,
+  ]{#1}%
 }
 
 \newcommand{\semio@heading@installall}{%
-  \ifcsname chapter\endcsname
-    \semio@heading@install{\chapter}{semio-secondary}{chapter}%
-  \fi
-  \ifcsname part\endcsname
-    \semio@heading@install{\part}{semio-primary}{part}%
-  \fi
-  \semio@heading@install{\section}{semio-tertiary}{section}%
-  \semio@heading@install{\subsection}{semio-secondary}{subsection}%
-  \semio@heading@install{\subsubsection}{semio-primary}{subsubsection}%
-  \titleformat{\paragraph}[block]{}{}{0pt}{%
-    \semio@if@heading@chips
-      {%
-        \if\relax\detokenize{\theparagraph}\relax
-          \semio@heading@title@end@muted{##1}%
-        \else
-          \semio@heading@pair@muted{paragraph}{paragraph}{##1}%
-        \fi
-      }%
-      {##1}%
+  \def\semio@heading@color@chapter{semio-secondary}%
+  \def\semio@heading@color@section{semio-tertiary}%
+  \def\semio@heading@color@subsection{semio-secondary}%
+  \def\semio@heading@color@subsubsection{semio-primary}%
+  \let\semio@orig@sectionlinesformat\sectionlinesformat
+  \RenewDocumentCommand\sectionlinesformat{mmmm}{%
+    \semio@heading@lines@dispatch{##1}{##2}{##3}{##4}%
   }%
-  \titlespacing*{\paragraph}{0pt}{\semio@block@sep@before@skip}{\semio@block@sep@skip}%
-  \semio@heading@wrap@install
+  \ifcsname chapterlinesformat\endcsname
+    \let\semio@orig@chapterlinesformat\chapterlinesformat
+    \RenewDocumentCommand\chapterlinesformat{mmm}{%
+      \semio@koma@heading@lines{chapter}{\semio@heading@color@chapter}{##3}{##2}%
+    }%
+  \fi
+  \ifcsname chapter\endcsname
+    \semio@heading@install@spacing{chapter}%
+  \fi
+  \semio@heading@install@spacing{section}%
+  \semio@heading@install@spacing{subsection}%
+  \semio@heading@install@spacing{subsubsection}%
+  \semio@heading@install@spacing{paragraph}%
 }
 
 %endregion Headings
@@ -1642,23 +1700,20 @@
 }
 %endregion NestedParagraphs
 
-\newcommand{\semio@window@gap@vbox}[2]{%
-  \vbox to \semio@chrome@titlebar@height{%
-    \nointerlineskip
-    \hbox to \dimexpr\semio@window@gap@w\relax{%
-      \semio@window@cap@paint{\semio@window@gap@w}{#1}{\semio@window@cap@body@h}%
-    }%
-    \nointerlineskip
-    \hbox{\semio@window@stroke@h{#2}{\semio@window@gap@w}}%
-  }%
-}
-
 \newcommand{\semio@window@gap}[2]{%
   \semio@window@cap@body@h@set
   \semio@window@cap@raise{%
     \hbox to \dimexpr\semio@window@gap@w\relax{%
-      \semio@window@gap@vbox{#1}{#2}%
-      \hfil
+      \vbox to \semio@chrome@titlebar@height{%
+        \nointerlineskip
+        \hbox to \dimexpr\semio@window@gap@w\relax{%
+          \semio@window@cap@paint{\semio@window@gap@w}{#1}{\semio@window@cap@body@h}%
+        }%
+        \nointerlineskip
+        \hbox to \dimexpr\semio@window@gap@w\relax{%
+          \semio@window@stroke@h{#2}{\semio@window@gap@w}%
+        }%
+      }%
     }%
   }%
 }
@@ -1818,11 +1873,16 @@
 %endregion WindowRow
 
 \newsavebox{\semio@chrome@navbar@emblem@box}
-\newsavebox{\semio@chrome@footer@emblem@box}
 \newlength{\semio@chrome@row@height}
 \newlength{\semio@chrome@row@height@footer}
 \newlength{\semio@chrome@icon@height}
 \newlength{\semio@chrome@icon@height@footer}
+
+\ExplSyntaxOn
+\tl_new:N \l_semio_navbar_project_tl
+\tl_new:N \l_semio_navbar_center_tl
+\seq_new:N \l_semio_navbar_title_seq
+\ExplSyntaxOff
 
 \newcommand{\semio@chrome@vcenter}[2]{%
   \vbox to #1{\vfil\nointerlineskip\hbox{#2}\vfil}%
@@ -1830,7 +1890,6 @@
 
 \newcommand{\semio@chrome@emblem@rebuild}{%
   \sbox{\semio@chrome@navbar@emblem@box}{\semioemblemheight{\semio@chrome@icon@height}}%
-  \sbox{\semio@chrome@footer@emblem@box}{\semioemblemheight{\semio@chrome@icon@height@footer}}%
 }
 
 \newcommand{\semio@chrome@dims@compute}{%
@@ -1870,6 +1929,60 @@
   }
 }
 \cs_new_eq:NN \SemioFooterAuthorChips \semio_footer_author_chips:
+
+\cs_new:Npn \semio_footer_logo_chip:n #1 {
+  \semio@chrome@chip {
+    \semio@chrome@vcenter{\semio@chrome@row@height@footer}{%
+      \semio_logo_height:nn { \semio@chrome@icon@height@footer } {#1}
+    }%
+  }
+  \hspace{\semio@chrome@padding}
+}
+\cs_new:Npn \semio_footer_logo_chips: {
+  \clist_map_inline:Nn \l_semio_footer_logos_clist {
+    \semio_footer_logo_chip:n {##1}
+  }
+}
+\cs_new_eq:NN \SemioFooterLogoChips \semio_footer_logo_chips:
+
+\cs_new_protected:Npn \semio_chrome_navbar_project_chip: {
+  \tl_if_empty:NF \l_semio_navbar_project_tl {
+    \hspace{\semio@chrome@padding}
+    \semio@chrome@navbar@chip@text{\semio@chrome@font@body}{\tl_use:N \l_semio_navbar_project_tl}
+  }
+}
+\cs_new_protected:Npn \semio_chrome_navbar_center_chip: {
+  \tl_if_empty:NF \l_semio_navbar_center_tl {
+    \semio@chrome@navbar@chip@text{\semio@chrome@font@body}{\tl_use:N \l_semio_navbar_center_tl}
+  }
+}
+
+\cs_new_protected:Npn \semio_chrome_navbar_labels_compute: {
+  \tl_clear:N \l_semio_navbar_project_tl
+  \tl_clear:N \l_semio_navbar_center_tl
+  \group_begin:
+    \makeatletter
+    \tl_set:Nx \l_tmpa_tl { \@title }
+    \makeatother
+    \tl_trim_spaces:N \l_tmpa_tl
+    \seq_set_split:Nnn \l_semio_navbar_title_seq { --- } { \l_tmpa_tl }
+    \int_compare:nNnTF { \seq_count:N \l_semio_navbar_title_seq } > 1 {
+      \tl_set:Nx \l_semio_navbar_center_tl { \seq_item:Nn \l_semio_navbar_title_seq { 1 } }
+      \tl_trim_spaces:N \l_semio_navbar_center_tl
+      \tl_set:Nx \l_semio_navbar_project_tl { \seq_item:Nn \l_semio_navbar_title_seq { 2 } }
+      \tl_trim_spaces:N \l_semio_navbar_project_tl
+    } {
+      \tl_set_eq:NN \l_semio_navbar_project_tl \l_tmpa_tl
+      \cs_if_exist:cTF { zukunftbau@type } {
+        \str_case:VnF \zukunftbau@type {
+          { zwischenbericht } { \tl_set:Nn \l_semio_navbar_center_tl { Zwischenbericht } }
+          { forschungsbericht } { \tl_set:Nn \l_semio_navbar_center_tl { Forschungsbericht } }
+          { kompaktbericht } { \tl_set:Nn \l_semio_navbar_center_tl { Kompaktbericht } }
+        } { }
+      } { }
+    }
+  \group_end:
+}
 \ExplSyntaxOff
 
 \newcommand{\semio@chrome@navbar@bar}[1]{%
@@ -1904,27 +2017,28 @@
   }%
 }
 
+\newcommand{\semio@chrome@navbar@chip@text}[2]{%
+  \semio@chrome@chip{%
+    \semio@chrome@vcenter{\semio@chrome@row@height}{%
+      {\SemioSans\fontsize{#1}{#1}\selectfont #2}%
+    }%
+  }%
+}
+
 \newcommand{\SemioChromeNavbarHead}{%
   \semio@chrome@navbar@bar{%
     \hbox to \headwidth{%
       \hspace{\semio@spacing@single}%
       \semio@chrome@chip{%
-        \hbox{%
-          \semio@chrome@vcenter{\semio@chrome@row@height}{\usebox{\semio@chrome@navbar@emblem@box}}%
-          \hspace{\semio@chrome@padding}%
-          \semio@chrome@vcenter{\semio@chrome@row@height}{%
-            {\SemioSans\fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont\@title}%
-          }%
-        }%
+        \semio@chrome@vcenter{\semio@chrome@row@height}{\usebox{\semio@chrome@navbar@emblem@box}}%
       }%
+      \semio_chrome_navbar_project_chip:
+      \hfil
+      \semio_chrome_navbar_center_chip:
       \hfil
       \if\relax\detokenize{\semio@chrome@heading}\relax
       \else
-        \semio@chrome@chip{%
-          \semio@chrome@vcenter{\semio@chrome@row@height}{%
-            {\SemioSans\fontsize{\semio@chrome@font@title}{\semio@chrome@font@title}\selectfont\semio@chrome@heading}%
-          }%
-        }%
+        \semio@chrome@navbar@chip@text{\semio@chrome@font@title}{\semio@chrome@heading}%
       \fi
       \hspace{\semio@spacing@single}%
     }%
@@ -1935,6 +2049,8 @@
   \semio@chrome@footer@bar{%
     \hbox to \headwidth{%
       \hspace{\semio@spacing@single}%
+      \SemioFooterLogoChips
+      \hfil
       \SemioFooterAuthorChips
       \hfil
       \semio@chrome@chip{%

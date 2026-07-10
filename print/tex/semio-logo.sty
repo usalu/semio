@@ -41,6 +41,15 @@
   }
 }
 
+\cs_new_protected:Npn \semio_logo_height:nn #1 #2 {
+  \semio_logo_resolve_path:nN {#2} \l_semio_logo_path_tl
+  \exp_args:NV \file_if_exist:nTF \l_semio_logo_path_tl {
+    \includegraphics[height=#1]{\tl_use:N \l_semio_logo_path_tl}
+  } {
+    \rule{0pt}{#1}\rule{#1}{0pt}%
+  }
+}
+
 \NewDocumentCommand{\semio@logo@slot}{O{4cm} m}{%
   \dim_set:Nn \l_semio_logo_slot_width_dim {#1}%
   \begin{minipage}[c]{\dim_use:N \l_semio_logo_slot_width_dim}%
