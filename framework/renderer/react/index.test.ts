@@ -14,7 +14,7 @@ import {
 import { NodeGraphHost, nodeGraphViewportCommandArgs, parseDagSliderOverlays } from "./components/node-graph-host.tsx";
 import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
-import { TextEditorHost } from "./components/text-editor-host.tsx";
+import { TextEditorHost, buildTextEditorContextMenuItems, lineRangeAt, multiSpanReplace } from "./components/text-editor-host.tsx";
 import { World3dHost } from "./components/world-3d-host.tsx";
 import {
   NoteCanvasHost,
@@ -509,6 +509,95 @@ describe("framework renderer hosts", () => {
     );
     expect(markup).toContain("semio-text-editor-host");
     expect(markup).toContain("hello");
+  });
+
+  it("renders text editor host with hover/newline/rename scene fields", () => {
+    const markup = renderToStaticMarkup(
+      createElement(TextEditorHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "writer.play.editor",
+          controllerId: "writer-play",
+          componentKind: "text-editor",
+          textEditor: {
+            buffer: "MATCH (a:Piece) RETURN a.name",
+            language: "jack",
+            hoverJson: '{"start":0,"end":5}',
+            newlineGatesJson: "[30]",
+            renameJson: '{"name":"a","occurrences":[{"start":7,"end":8}]}',
+          },
+        },
+        onCommand: noopCommand,
+      }),
+    );
+    expect(markup).toContain("semio-text-editor-host");
+  });
+
+  it("buildTextEditorContextMenuItems prepends suggest when completions are available", () => {
+    const items = buildTextEditorContextMenuItems(
+      { canSuggest: true, hasSelection: false, canRename: false, pickTargets: [] },
+      {
+        suggest: () => {},
+        selectToken: () => {},
+        selectLine: () => {},
+        selectAll: () => {},
+        rename: () => {},
+        cut: () => {},
+        copy: () => {},
+        paste: () => {},
+        format: () => {},
+        lint: () => {},
+        pickTarget: () => {},
+      },
+    );
+    expect(items[0]?.id).toBe("writer-suggest");
+    expect(items[0]?.label).toBe("Suggest completions");
+  });
+
+  it("buildTextEditorContextMenuItems includes pick rows when multiple targets overlap", () => {
+    const items = buildTextEditorContextMenuItems(
+      {
+        canSuggest: false,
+        hasSelection: false,
+        canRename: false,
+        pickTargets: [
+          { domain: "line", id: "0", label: "Line 1" },
+          { domain: "token", id: "0:5", label: "MATCH" },
+        ],
+      },
+      {
+        suggest: () => {},
+        selectToken: () => {},
+        selectLine: () => {},
+        selectAll: () => {},
+        rename: () => {},
+        cut: () => {},
+        copy: () => {},
+        paste: () => {},
+        format: () => {},
+        lint: () => {},
+        pickTarget: () => {},
+      },
+    );
+    expect(items.some((item) => item.id === "writer-pick-token-0:5")).toBe(true);
+  });
+
+  it("multiSpanReplace renames every occurrence and remaps spans", () => {
+    const result = multiSpanReplace("MATCH (a:Piece) RETURN a.name", [
+      { start: 7, end: 8 },
+      { start: 23, end: 24 },
+    ], "piece");
+    expect(result.text).toBe("MATCH (piece:Piece) RETURN piece.name");
+    expect(result.occurrences).toEqual([
+      { start: 7, end: 12 },
+      { start: 28, end: 33 },
+    ]);
+  });
+
+  it("lineRangeAt finds the line containing an offset", () => {
+    const text = "MATCH (a)\nWHERE a.x = 1\nRETURN a";
+    const range = lineRangeAt(text, 15);
+    expect(text.slice(range.start, range.end)).toBe("WHERE a.x = 1");
   });
 
   it("renders table host with ui-react table", () => {

@@ -189,6 +189,84 @@ pub fn resolve_primitive_handle(
     None
 }
 
+/// Collects the world-space vertex positions reachable from a solid/shell/face/wire/edge id by
+/// descending the authored topology graph (fixture vertex positions are already world-absolute).
+fn primitive_vertex_positions(geometry: &CadGeometry, primitive_id: &str) -> Vec<[f64; 3]> {
+    let vertices = vertex_map(geometry);
+    let edges = edge_map(geometry);
+    let wires = wire_map(geometry);
+    let faces = face_map(geometry);
+    let shells = shell_map(geometry);
+    let solids = solid_map(geometry);
+
+    let wire_ids: Vec<&String> = if let Some(solid) = solids.get(primitive_id) {
+        solid
+            .shell_ids
+            .iter()
+            .filter_map(|shell_id| shells.get(shell_id))
+            .flat_map(|shell| shell.face_ids.iter())
+            .filter_map(|face_id| faces.get(face_id))
+            .flat_map(|face| face.wire_ids.iter())
+            .collect()
+    } else if let Some(shell) = shells.get(primitive_id) {
+        shell
+            .face_ids
+            .iter()
+            .filter_map(|face_id| faces.get(face_id))
+            .flat_map(|face| face.wire_ids.iter())
+            .collect()
+    } else if let Some(face) = faces.get(primitive_id) {
+        face.wire_ids.iter().collect()
+    } else {
+        Vec::new()
+    };
+
+    let edge_ids: Vec<&String> = if let Some(wire) = wires.get(primitive_id) {
+        wire.edge_ids.iter().collect()
+    } else {
+        wire_ids
+            .into_iter()
+            .filter_map(|wire_id| wires.get(wire_id))
+            .flat_map(|wire| wire.edge_ids.iter())
+            .collect()
+    };
+
+    let vertex_ids: Vec<&String> = if let Some(edge) = edges.get(primitive_id) {
+        edge.vertex_ids.iter().collect()
+    } else {
+        edge_ids
+            .into_iter()
+            .filter_map(|edge_id| edges.get(edge_id))
+            .flat_map(|edge| edge.vertex_ids.iter())
+            .collect()
+    };
+
+    vertex_ids.into_iter().filter_map(|id| vertices.get(id).copied()).collect()
+}
+
+fn extent_from_positions(positions: &[[f64; 3]]) -> Option<[f64; 3]> {
+    if positions.is_empty() {
+        return None;
+    }
+    let mut min = [f64::MAX; 3];
+    let mut max = [f64::MIN; 3];
+    for position in positions {
+        for axis in 0..3 {
+            min[axis] = min[axis].min(position[axis]);
+            max[axis] = max[axis].max(position[axis]);
+        }
+    }
+    Some([max[0] - min[0], max[1] - min[1], max[2] - min[2]])
+}
+
+/// Derives an object's world-space bounding extent from its authored geometry, trying each
+/// primitive slot in order (mirrors `resolve_primitive_handle`'s slot priority).
+pub fn extent_from_fixture_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
+    primitives
+        .iter()
+        .find_map(|primitive| extent_from_positions(&primitive_vertex_positions(geometry, &primitive.primitive_id)))
+}
+
 pub fn tessellate_geometry_handle(
     kernel: &mut BrepkitKernel,
     handle_id: &str,
@@ -242,6 +320,7 @@ pub fn objects_from_fixture_model(
             let (solid_handle, _primary_kind) = resolve_primitive_handle(&primitives, &handles)
                 .map(|(handle, kind)| (Some(handle), kind))
                 .unwrap_or((None, String::new()));
+            let extent = extent_from_fixture_primitives(geometry, &primitives);
             Some(CadObject {
                 id: object_id.into(),
                 label: object_label_from_id(object_id),
@@ -252,7 +331,7 @@ pub fn objects_from_fixture_model(
                 orientation: Some([0.0, 0.0, 0.0, 1.0]),
                 scale: None,
                 mesh_url: None,
-                extent: None,
+                extent,
                 solid_handle,
                 primitives,
             })

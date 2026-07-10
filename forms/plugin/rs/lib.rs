@@ -7,12 +7,12 @@ use forms::{
     FORM_BUILTIN_KINDS, FORMS_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{SurfaceKind,
-    build_table_scene, create_default_layout,
+    create_default_layout,
     ui_external_slot, ui_image, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
     ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Contribution,
-    PanelGroup, CommandDescriptor, PluginApp, PluginBundle, TableScene, UiButtonNode,
-    UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
-    UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
+    PanelGroup, CommandDescriptor, PluginApp, PluginBundle, UiButtonNode,
+    UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
+    UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -768,46 +768,202 @@ fn catalogue_kinds(contributions: &[PluginContributionEntry]) -> Vec<(String, St
 }
 //#endregion 🔖Helpers
 
-//#region 🔖Tables
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct EditQuestionRow {
-    id: String,
-    label: String,
-    kind: String,
-    step: String,
+//#region 🔖Builder
+fn builder_text_editor(id: String, label: &str, value: String, on_change: CommandDescriptor) -> UiNode {
+    UiNode::Field(UiFieldNode {
+        id: id.clone(),
+        label: label.into(),
+        description: None,
+        required: None,
+        error: None,
+        child: Box::new(UiNode::Input(UiInputNode {
+            id: format!("{id}.input"),
+            input_kind: "text".into(),
+            value,
+            placeholder: None,
+            commit: None,
+            on_change,
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
+        })),
+    })
 }
 
-fn edit_table_rows(spec: &FormSpec) -> String {
-    let rows: Vec<EditQuestionRow> = flatten_questions(spec)
+fn builder_button(id: String, icon_id: &str, label: &str, command: CommandDescriptor, disabled: bool) -> UiNode {
+    UiNode::Button(UiButtonNode {
+        id: Some(id),
+        icon_id: icon_id.into(),
+        label: label.into(),
+        command,
+        style: None,
+        disabled: Some(disabled).filter(|disabled| *disabled),
+    })
+}
+
+fn builder_question_card(
+    question: &FormQuestion,
+    step: &FormStep,
+    index: usize,
+    selected_ids: &[String],
+    contributions: &[PluginContributionEntry],
+) -> UiNode {
+    let question_ids = vec![question.id.clone()];
+    let prefix = format!("forms-blueprint.{}", question.id);
+    let kind_label = catalogue_kinds(contributions)
         .into_iter()
-        .map(|(step, question)| EditQuestionRow {
-            id: question.id.clone(),
-            label: question.label.clone(),
-            kind: question.kind.clone(),
-            step,
-        })
-        .collect();
-    serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
+        .find(|(kind, _, _)| *kind == question.kind)
+        .map(|(_, label, _)| label)
+        .unwrap_or_else(|| question.kind.clone());
+    let required = question.required.unwrap_or(false);
+    let mut children = vec![
+        ui_text_emphasized(format!("{kind_label} · {}", question.id)),
+        builder_text_editor(
+            format!("{prefix}.label"),
+            "Label",
+            question.label.clone(),
+            forms_cmd("patchQuestions", Some(json!({ "questionIds": question_ids, "field": "label" }))),
+        ),
+        UiNode::Field(UiFieldNode {
+            id: format!("{prefix}.required"),
+            label: "Required".into(),
+            description: None,
+            required: None,
+            error: None,
+            child: Box::new(UiNode::Toggle(UiToggleNode {
+                id: format!("{prefix}.required.toggle"),
+                icon_id: "check".into(),
+                pressed: required,
+                text: Some(if required { "Yes".into() } else { "No".into() }),
+                on_change: forms_cmd("patchQuestions", Some(json!({ "questionIds": question_ids, "field": "required" }))),
+            })),
+        }),
+    ];
+    children.extend(question_kind_editor_fields(question, &question_ids, contributions, &prefix));
+    children.push(ui_stack_horizontal(vec![
+        builder_button(
+            format!("{prefix}.remove"),
+            "trash-2",
+            "Remove Question",
+            forms_cmd("removeQuestion", Some(json!({ "questionId": question.id }))),
+            false,
+        ),
+        builder_button(
+            format!("{prefix}.move-up"),
+            "arrow-up",
+            "Move Up",
+            forms_cmd(
+                "moveQuestion",
+                Some(json!({ "questionId": question.id, "toStepId": step.id, "index": index.saturating_sub(1) })),
+            ),
+            index == 0,
+        ),
+        builder_button(
+            format!("{prefix}.move-down"),
+            "arrow-down",
+            "Move Down",
+            forms_cmd(
+                "moveQuestion",
+                Some(json!({ "questionId": question.id, "toStepId": step.id, "index": index + 1 })),
+            ),
+            index + 1 >= step.questions.len(),
+        ),
+    ]));
+    UiNode::Stack(UiStackNode {
+        direction: "vertical".into(),
+        gap: Some("tight".into()),
+        padding: None,
+        id: Some(format!("forms-blueprint.card.{}", question.id)),
+        selected: Some(selected_ids.contains(&question.id)).filter(|selected| *selected),
+        activate: Some(forms_cmd("setSelection", Some(json!({ "ids": [question.id] })))),
+        children,
+    })
 }
 
-fn render_edit_table(spec: &FormSpec) -> UiNode {
-    build_table_scene(
-        FORMS_PLAY_SURFACE_BLUEPRINT,
-        FORMS_PLAY_CONTROLLER_ID,
-        TableScene {
-            columns_json: json!([
-                {"id":"id","label":"Id"},
-                {"id":"label","label":"Label"},
-                {"id":"kind","label":"Kind"},
-                {"id":"step","label":"Step"}
-            ])
-            .to_string(),
-            rows_json: edit_table_rows(spec),
-        },
-    )
+fn builder_step_section(
+    spec: &FormSpec,
+    step: &FormStep,
+    step_index: usize,
+    selected_ids: &[String],
+    contributions: &[PluginContributionEntry],
+) -> UiNode {
+    let prefix = format!("forms-blueprint.step.{}", step.id);
+    let mut children = vec![
+        builder_text_editor(
+            format!("{prefix}.title"),
+            "Title",
+            step.title.clone(),
+            forms_cmd("patchStep", Some(json!({ "stepId": step.id, "field": "title" }))),
+        ),
+        builder_text_editor(
+            format!("{prefix}.description"),
+            "Description",
+            step.description.clone().unwrap_or_default(),
+            forms_cmd("patchStep", Some(json!({ "stepId": step.id, "field": "description" }))),
+        ),
+    ];
+    for (index, question) in step.questions.iter().enumerate() {
+        children.push(builder_question_card(question, step, index, selected_ids, contributions));
+    }
+    children.push(ui_stack_horizontal(vec![
+        builder_button(
+            format!("{prefix}.add-question"),
+            "plus",
+            "Add Question",
+            forms_cmd("addQuestion", Some(json!({ "stepId": step.id, "kind": "text" }))),
+            false,
+        ),
+        builder_button(
+            format!("{prefix}.remove"),
+            "trash-2",
+            "Remove Step",
+            forms_cmd("removeStep", Some(json!({ "stepId": step.id }))),
+            false,
+        ),
+        builder_button(
+            format!("{prefix}.move-up"),
+            "arrow-up",
+            "Move Up",
+            forms_cmd("moveStep", Some(json!({ "stepId": step.id, "index": step_index.saturating_sub(1) }))),
+            step_index == 0,
+        ),
+        builder_button(
+            format!("{prefix}.move-down"),
+            "arrow-down",
+            "Move Down",
+            forms_cmd("moveStep", Some(json!({ "stepId": step.id, "index": step_index + 1 }))),
+            step_index + 1 >= spec.steps.len(),
+        ),
+    ]));
+    UiNode::Section(UiSectionNode {
+        id: prefix,
+        label: Some(step.title.clone()),
+        default_open: Some(true),
+        children,
+    })
 }
-//#endregion 🔖Tables
+
+fn render_blueprint_builder(spec: &FormSpec, play: &FormsPlayEnvelope, contributions: &[PluginContributionEntry]) -> UiNode {
+    let mut children = vec![builder_text_editor(
+        "forms-blueprint.title".into(),
+        "Form Title",
+        spec.title.clone().unwrap_or_default(),
+        forms_cmd("updateForm", Some(json!({ "field": "title" }))),
+    )];
+    for (step_index, step) in spec.steps.iter().enumerate() {
+        children.push(builder_step_section(spec, step, step_index, &play.selected_ids, contributions));
+    }
+    children.push(builder_button(
+        "forms-blueprint.add-step".into(),
+        "plus",
+        "Add Step",
+        forms_cmd("addStep", None),
+        false,
+    ));
+    ui_stack_vertical(children)
+}
+//#endregion 🔖Builder
 
 //#region 🔖TryWizard
 fn try_value_cmd(key: &str) -> CommandDescriptor {
@@ -1195,7 +1351,7 @@ fn build_document_tree(spec: &FormSpec, selected_ids: &[String]) -> UiNode {
         selected_ids: Some(selected_ids.to_vec()),
         highlighted_ids: None,
         selection_change: Some(forms_cmd("setSelection", None)),
-        drop_command: None,
+        drop_command: Some(forms_cmd("dropQuestionKind", None)),
     })
 }
 
@@ -1327,70 +1483,87 @@ fn inspector_number_field(question_ids: &[String], field_id: &str, label: &str, 
     })
 }
 
-fn inspector_kind_fields(
+fn question_kind_editor_fields(
     question: &FormQuestion,
     question_ids: &[String],
     contributions: &[PluginContributionEntry],
+    id_prefix: &str,
 ) -> Vec<UiNode> {
+    let fid = |suffix: &str| format!("{id_prefix}.{suffix}");
     let mut fields = Vec::new();
-    if let Some(description) = &question.description {
-        fields.push(inspector_text_field(question_ids, "forms-play-inspector.description", "Description", &[description.clone()], "description"));
-    }
+    fields.push(inspector_text_field(
+        question_ids,
+        &fid("description"),
+        "Description",
+        &[question.description.clone().unwrap_or_default()],
+        "description",
+    ));
     match question.kind.as_str() {
         "text" | "longText" => {
-            if let Some(placeholder) = &question.placeholder {
-                fields.push(inspector_text_field(question_ids, "forms-play-inspector.placeholder", "Placeholder", &[placeholder.clone()], "placeholder"));
-            }
-            if let Some(default) = &question.default {
-                fields.push(inspector_text_field(question_ids, "forms-play-inspector.default", "Default", &[json_string_value(default)], "default"));
-            }
+            fields.push(inspector_text_field(
+                question_ids,
+                &fid("placeholder"),
+                "Placeholder",
+                &[question.placeholder.clone().unwrap_or_default()],
+                "placeholder",
+            ));
+            fields.push(inspector_text_field(
+                question_ids,
+                &fid("default"),
+                "Default",
+                &[question.default.as_ref().map(json_string_value).unwrap_or_default()],
+                "default",
+            ));
         }
         "number" | "slider" => {
-            if let Some(min) = question.min {
-                fields.push(inspector_number_field(question_ids, "forms-play-inspector.min", "Min", &[min], "min"));
-            }
-            if let Some(max) = question.max {
-                fields.push(inspector_number_field(question_ids, "forms-play-inspector.max", "Max", &[max], "max"));
-            }
-            if let Some(step) = question.step {
-                fields.push(inspector_number_field(question_ids, "forms-play-inspector.step", "Step", &[step], "step"));
-            }
-            if let Some(default) = &question.default {
-                fields.push(inspector_number_field(question_ids, "forms-play-inspector.default", "Default", &[json_f64_value(default)], "default"));
-            }
+            fields.push(inspector_number_field(question_ids, &fid("min"), "Min", &[question.min.unwrap_or(0.0)], "min"));
+            fields.push(inspector_number_field(question_ids, &fid("max"), "Max", &[question.max.unwrap_or(100.0)], "max"));
+            fields.push(inspector_number_field(question_ids, &fid("step"), "Step", &[question.step.unwrap_or(1.0)], "step"));
+            fields.push(inspector_number_field(
+                question_ids,
+                &fid("default"),
+                "Default",
+                &[question.default.as_ref().map(json_f64_value).unwrap_or(0.0)],
+                "default",
+            ));
             if question.kind == "slider" {
-                if let Some(unit) = &question.unit {
-                    fields.push(inspector_text_field(question_ids, "forms-play-inspector.unit", "Unit", &[unit.clone()], "unit"));
-                }
+                fields.push(inspector_text_field(
+                    question_ids,
+                    &fid("unit"),
+                    "Unit",
+                    &[question.unit.clone().unwrap_or_default()],
+                    "unit",
+                ));
             }
         }
         "boolean" => {
-            if let Some(default) = &question.default {
-                let pressed = default.as_bool().unwrap_or(false);
-                fields.push(UiNode::Field(UiFieldNode {
-                    id: "forms-play-inspector.default".into(),
-                    label: "Default".into(),
-                    child: Box::new(UiNode::Toggle(UiToggleNode {
-                        id: "forms-play-inspector.default.toggle".into(),
-                        icon_id: "toggle-left".into(),
-                        pressed,
-                        text: Some(if pressed { "Yes".into() } else { "No".into() }),
-                        on_change: inspector_patch(question_ids, "default"),
-                    })),
-                    description: None,
-                    required: None,
-                    error: None,
-                }));
-            }
+            let pressed = question.default.as_ref().and_then(|default| default.as_bool()).unwrap_or(false);
+            fields.push(UiNode::Field(UiFieldNode {
+                id: fid("default"),
+                label: "Default".into(),
+                description: None,
+                required: None,
+                error: None,
+                child: Box::new(UiNode::Toggle(UiToggleNode {
+                    id: fid("default.toggle"),
+                    icon_id: "check".into(),
+                    pressed,
+                    text: Some(if pressed { "Yes".into() } else { "No".into() }),
+                    on_change: inspector_patch(question_ids, "default"),
+                })),
+            }));
         }
         "single" | "multi" => {
             if let Some(options) = &question.options {
                 for option in options {
                     fields.push(UiNode::Field(UiFieldNode {
-                        id: format!("forms-play-inspector.option.{}", option.value),
+                        id: fid(&format!("option.{}", option.value)),
                         label: format!("Option {}", option.value),
+                        description: None,
+                        required: None,
+                        error: None,
                         child: Box::new(UiNode::Input(UiInputNode {
-                            id: format!("forms-play-inspector.option.{}.input", option.value),
+                            id: fid(&format!("option.{}.input", option.value)),
                             input_kind: "text".into(),
                             value: option.label.clone(),
                             placeholder: None,
@@ -1404,12 +1577,9 @@ fn inspector_kind_fields(
                             step: None,
                             accept: None,
                         })),
-                        description: None,
-                        required: None,
-                        error: None,
                     }));
                     fields.push(UiNode::Button(UiButtonNode {
-                        id: Some(format!("forms-play-inspector.option.{}.remove", option.value)),
+                        id: Some(fid(&format!("option.{}.remove", option.value))),
                         icon_id: "trash-2".into(),
                         label: "Remove Option".into(),
                         command: forms_cmd(
@@ -1422,7 +1592,7 @@ fn inspector_kind_fields(
                 }
             }
             fields.push(UiNode::Button(UiButtonNode {
-                id: Some("forms-play-inspector.option.add".into()),
+                id: Some(fid("option.add")),
                 icon_id: "plus".into(),
                 label: "Add Option".into(),
                 command: forms_cmd("addQuestionOption", Some(json!({ "questionId": question.id, "label": "New option" }))),
@@ -1431,24 +1601,33 @@ fn inspector_kind_fields(
             }));
         }
         "date" | "color" => {
-            if let Some(default) = &question.default {
-                fields.push(inspector_text_field(question_ids, "forms-play-inspector.default", "Default", &[json_string_value(default)], "default"));
-            }
+            fields.push(inspector_text_field(
+                question_ids,
+                &fid("default"),
+                "Default",
+                &[question.default.as_ref().map(json_string_value).unwrap_or_default()],
+                "default",
+            ));
         }
         "vector" => {
-            if let Some(schema) = &question.schema {
-                fields.push(inspector_text_field(question_ids, "forms-play-inspector.schema", "Schema", &[schema.clone()], "schema"));
-            }
-            if let Some(step) = question.step {
-                fields.push(inspector_number_field(question_ids, "forms-play-inspector.step", "Step", &[step], "step"));
-            }
+            fields.push(inspector_text_field(
+                question_ids,
+                &fid("schema"),
+                "Schema",
+                &[question.schema.clone().unwrap_or_default()],
+                "schema",
+            ));
+            fields.push(inspector_number_field(question_ids, &fid("step"), "Step", &[question.step.unwrap_or(0.1)], "step"));
             if let Some(vector_fields) = &question.fields {
                 for field in vector_fields {
                     fields.push(UiNode::Field(UiFieldNode {
-                        id: format!("forms-play-inspector.vector.{}.label", field.key),
+                        id: fid(&format!("vector.{}.label", field.key)),
                         label: format!("{} label", field.key),
+                        description: None,
+                        required: None,
+                        error: None,
                         child: Box::new(UiNode::Input(UiInputNode {
-                            id: format!("forms-play-inspector.vector.{}.label.input", field.key),
+                            id: fid(&format!("vector.{}.label.input", field.key)),
                             input_kind: "text".into(),
                             value: field.label.clone().unwrap_or_else(|| field.key.clone()),
                             placeholder: None,
@@ -1462,35 +1641,30 @@ fn inspector_kind_fields(
                             step: None,
                             accept: None,
                         })),
+                    }));
+                    fields.push(UiNode::Field(UiFieldNode {
+                        id: fid(&format!("vector.{}.value", field.key)),
+                        label: format!("{} value", field.key),
                         description: None,
                         required: None,
                         error: None,
+                        child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
+                            id: fid(&format!("vector.{}.value.stepper", field.key)),
+                            value: field.value.unwrap_or(0.0),
+                            step: question.step.unwrap_or(0.1),
+                            uniform: true,
+                            on_absolute: forms_cmd(
+                                "patchVectorField",
+                                Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "value" })),
+                            ),
+                            on_delta: forms_cmd(
+                                "patchVectorField",
+                                Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "value" })),
+                            ),
+                        })),
                     }));
-                    if let Some(value) = field.value {
-                        fields.push(UiNode::Field(UiFieldNode {
-                            id: format!("forms-play-inspector.vector.{}.value", field.key),
-                            label: format!("{} value", field.key),
-                            child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
-                                id: format!("forms-play-inspector.vector.{}.value.stepper", field.key),
-                                value,
-                                step: question.step.unwrap_or(0.1),
-                                uniform: true,
-                                on_absolute: forms_cmd(
-                                    "patchVectorField",
-                                    Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "value" })),
-                                ),
-                                on_delta: forms_cmd(
-                                    "patchVectorField",
-                                    Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "value" })),
-                                ),
-                            })),
-                            description: None,
-                            required: None,
-                            error: None,
-                        }));
-                    }
                     fields.push(UiNode::Button(UiButtonNode {
-                        id: Some(format!("forms-play-inspector.vector.{}.remove", field.key)),
+                        id: Some(fid(&format!("vector.{}.remove", field.key))),
                         icon_id: "trash-2".into(),
                         label: format!("Remove {}", field.key),
                         command: forms_cmd(
@@ -1503,7 +1677,7 @@ fn inspector_kind_fields(
                 }
             }
             fields.push(UiNode::Button(UiButtonNode {
-                id: Some("forms-play-inspector.vector.add".into()),
+                id: Some(fid("vector.add")),
                 icon_id: "plus".into(),
                 label: "Add Vector Field".into(),
                 command: forms_cmd(
@@ -1515,33 +1689,38 @@ fn inspector_kind_fields(
             }));
         }
         "note" => {
-            if let Some(text) = &question.text {
-                fields.push(inspector_text_field(question_ids, "forms-play-inspector.text", "Text", &[text.clone()], "text"));
-            }
+            fields.push(inspector_text_field(
+                question_ids,
+                &fid("text"),
+                "Text",
+                &[question.text.clone().unwrap_or_default()],
+                "text",
+            ));
         }
         "image" => {
-            if let Some(src) = &question.src {
-                fields.push(inspector_text_field(question_ids, "forms-play-inspector.src", "Src", &[src.clone()], "src"));
-            } else {
-                fields.push(inspector_text_field(question_ids, "forms-play-inspector.src", "Src", &[String::new()], "src"));
-            }
+            fields.push(inspector_text_field(
+                question_ids,
+                &fid("src"),
+                "Src",
+                &[question.src.clone().unwrap_or_default()],
+                "src",
+            ));
         }
         "file" => {
-            if let Some(accept) = &question.accept {
-                fields.push(inspector_text_field(question_ids, "forms-play-inspector.accept", "Accept", &[accept.clone()], "accept"));
-            } else {
-                fields.push(inspector_text_field(question_ids, "forms-play-inspector.accept", "Accept", &[String::new()], "accept"));
-            }
+            fields.push(inspector_text_field(
+                question_ids,
+                &fid("accept"),
+                "Accept",
+                &[question.accept.clone().unwrap_or_default()],
+                "accept",
+            ));
         }
         kind if is_extension_question_kind(kind) => {
-            let params = question.params.clone().unwrap_or_else(|| json!({}));
             let values = serde_json::Map::new();
             fields.push(render_extension_question(question, &values, contributions, "blueprint", true));
             if let Some(slug) = &question.fixture_slug {
-                fields.push(ui_inspector_readonly_field("forms-play-inspector.fixtureSlug", "Fixture Slug", slug));
+                fields.push(ui_inspector_readonly_field(fid("fixtureSlug"), "Fixture Slug", slug));
             }
-            let _ = params;
-            let _ = question_ids;
         }
         _ => {}
     }
@@ -1623,7 +1802,7 @@ fn build_inspector_tree(
         }),
     ];
     if questions.len() == 1 {
-        base_fields.extend(inspector_kind_fields(&questions[0], &question_ids, contributions));
+        base_fields.extend(question_kind_editor_fields(&questions[0], &question_ids, contributions, "forms-play-inspector"));
     }
     let groups = vec![UiInspectorFieldGroup {
         id: "forms-play-inspector.base".into(),
@@ -1686,6 +1865,78 @@ impl PluginApp for FormsPlayApp {
                     description: None,
                 });
                 play.try_values.clear();
+                return apply_store_command(&mut play, &mut store);
+            }
+            "patchStep" => {
+                let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
+                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
+                let raw_value = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
+                let projection = store.projection().unwrap_or_else(|_| materialized_projection(&play));
+                let Some(step) = projection.steps.iter().find(|step| step.id == step_id).cloned() else {
+                    return Vec::new();
+                };
+                let step = match field {
+                    "title" => FormStep {
+                        title: raw_value.into(),
+                        ..step
+                    },
+                    "description" => FormStep {
+                        description: Some(raw_value.to_string()).filter(|description| !description.is_empty()),
+                        ..step
+                    },
+                    _ => return Vec::new(),
+                };
+                let _ = store.dispatch(DocumentVcsCommand::Apply {
+                    operations: vec![FormOp::UpdateStep { step }],
+                    description: None,
+                });
+                play.try_values.clear();
+                return apply_store_command(&mut play, &mut store);
+            }
+            "removeStep" => {
+                let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
+                if step_id.is_empty() {
+                    return Vec::new();
+                }
+                let projection = store.projection().unwrap_or_else(|_| materialized_projection(&play));
+                let removed_ids: Vec<String> = projection
+                    .steps
+                    .iter()
+                    .filter(|step| step.id == step_id)
+                    .flat_map(|step| step.questions.iter().map(|question| question.id.clone()))
+                    .collect();
+                let _ = store.dispatch(DocumentVcsCommand::Apply {
+                    operations: vec![FormOp::RemoveStep { step_id: step_id.into() }],
+                    description: None,
+                });
+                play.selected_ids.retain(|id| !removed_ids.contains(id));
+                play.try_values.clear();
+                return apply_store_command(&mut play, &mut store);
+            }
+            "moveStep" => {
+                let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
+                let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
+                if step_id.is_empty() {
+                    return Vec::new();
+                }
+                let _ = store.dispatch(DocumentVcsCommand::Apply {
+                    operations: vec![FormOp::MoveStep {
+                        step_id: step_id.into(),
+                        index,
+                    }],
+                    description: None,
+                });
+                play.try_values.clear();
+                return apply_store_command(&mut play, &mut store);
+            }
+            "updateForm" => {
+                let title = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
+                let _ = store.dispatch(DocumentVcsCommand::Apply {
+                    operations: vec![FormOp::UpdateForm {
+                        title: Some(title.to_string()).filter(|title| !title.is_empty()),
+                    }],
+                    description: None,
+                });
                 return apply_store_command(&mut play, &mut store);
             }
             "addQuestion" => {
@@ -2028,7 +2279,7 @@ impl PluginApp for FormsPlayApp {
         let spec = materialized_projection(&play);
         let contributions = parse_contributions(view_state);
         match body_key {
-            FORMS_PLAY_BODY_BLUEPRINT => render_edit_table(&spec),
+            FORMS_PLAY_BODY_BLUEPRINT => render_blueprint_builder(&spec, &play, &contributions),
             FORMS_PLAY_BODY_TRY => render_try_wizard(&spec, &play, &contributions),
             FORMS_PLAY_BODY_DOCUMENT => build_document_tree(&spec, &play.selected_ids),
             FORMS_PLAY_BODY_CATALOGUE => build_catalogue_tree(&contributions),

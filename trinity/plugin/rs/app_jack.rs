@@ -87,6 +87,8 @@ struct TrinityJackEnvelope {
     #[serde(default)]
     graph_vcs: Option<TrinityGraphEnvelope>,
     #[serde(default)]
+    graph_applied_edit_ids: Vec<String>,
+    #[serde(default)]
     runtime: TrinityJackRuntime,
 }
 

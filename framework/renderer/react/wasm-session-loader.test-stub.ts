@@ -22,6 +22,12 @@ export async function createEditorSession(): Promise<EditorWasmSession> {
   return noopSession as EditorWasmSession;
 }
 
+export type RasterWasmSession = GraphWasmSession & Record<string, unknown>;
+
+export async function createRasterSession(): Promise<RasterWasmSession> {
+  return noopSession as RasterWasmSession;
+}
+
 export function isFlowGraphScene(capabilitiesJson?: string): boolean {
   if (!capabilitiesJson) return false;
   try {

@@ -46,6 +46,7 @@ import {
   bootstrapElementsSurfaceChromeDocument,
   cn,
   createEvenWindowLayout,
+  iconRenderPort,
   getLevelBgClass,
   insertWindowAtDropZone,
   interactiveActiveFillClass,
@@ -177,6 +178,26 @@ const FRAMEWORK_SHELL_CHROME_THEME = "system" as const;
 const DEFAULT_LEFT_PANEL_SIZE = 280;
 const DEFAULT_RIGHT_PANEL_SIZE = 320;
 const APP_DOCUMENT_SEPARATOR = " · ";
+
+const PRESENCE_CLIENT_STORAGE_KEY = "semio.presence.client";
+const PRESENCE_HEARTBEAT_INTERVAL_MS = 5000;
+
+function presenceClientIdentity(): { readonly clientId: string; readonly name: string } {
+  if (typeof window === "undefined") return { clientId: "server", name: "Server" };
+  const stored = window.sessionStorage.getItem(PRESENCE_CLIENT_STORAGE_KEY);
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored) as { readonly clientId?: string; readonly name?: string };
+      if (parsed.clientId && parsed.name) return { clientId: parsed.clientId, name: parsed.name };
+    } catch {
+      /* reseed identity */
+    }
+  }
+  const clientId = `client-${Math.random().toString(36).slice(2, 10)}`;
+  const identity = { clientId, name: `Guest ${clientId.slice(-4).toUpperCase()}` };
+  window.sessionStorage.setItem(PRESENCE_CLIENT_STORAGE_KEY, JSON.stringify(identity));
+  return identity;
+}
 
 type UIHistoryEntry = { readonly uri: string };
 type UIHistory = { readonly entries: readonly UIHistoryEntry[]; readonly index: number };
@@ -1126,7 +1147,6 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           downloadMediaExport(op.filename, op.mimeType, op.data, op.encoding);
         }
         if (op.op === "iconRenderExport" && op.items) {
-          const { iconRenderPort } = await import("@semio-tech/ui-react");
           for (const item of op.items) {
             try {
               const result = await iconRenderPort.render(item.request as Parameters<typeof iconRenderPort.render>[0]);
@@ -1186,8 +1206,8 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           const docId = syncDocumentId(session, panel, studioMode);
           const envelopeJson = wrapDocumentEnvelope(op.document, docId, syncBackboneUri);
           lastEnvelopeJsonRef.current = envelopeJson;
-          void writeBackboneEnvelope(syncBackboneUri, envelopeJson).catch((syncError) => {
-            console.error("[DEBUG] backbone auto-sync failed", syncError);
+          void writeBackboneEnvelope(syncBackboneUri, envelopeJson).catch(() => {
+            /* backbone auto-sync is best-effort */
           });
         }
       }
@@ -1229,7 +1249,6 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       setSyncBackboneUri(uri);
       setSyncCardKind(null);
       await processPluginOps(ops, targetSession);
-      console.log("[DEBUG] attached backbone", uri);
     },
     [loadedPlugins, panel, processPluginOps, resolveSyncTargetSession, studioMode],
   );
@@ -1238,7 +1257,6 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     if (!session) return;
     const docId = syncDocumentId(session, panel, studioMode);
     await attachSyncBackbone(buildTemporaryBackboneUri(docId));
-    console.log("[DEBUG] detached backbone");
   }, [attachSyncBackbone, panel, session, studioMode]);
 
   const spawnProgram = useCallback(
@@ -1387,6 +1405,24 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     },
     [attachSyncBackbone, detachSyncBackbone, findPluginForCommand, loadedPlugins, panel, processPluginOps, session, spawnProgram, studioMode, syncBackboneUri, syncDraftPath, updateStudioPanel],
   );
+
+  const onCommandRef = useRef(onCommand);
+  useEffect(() => {
+    onCommandRef.current = onCommand;
+  }, [onCommand]);
+
+  const studioSessionActive = studioMode && session?.app.id === S_PLAY_APP_ID;
+  useEffect(() => {
+    if (!studioSessionActive || typeof window === "undefined") return;
+    const identity = presenceClientIdentity();
+    const beat = () => onCommandRef.current({ controllerId: S_PLAY_CONTROLLER_ID, command: "presenceHeartbeat", args: identity });
+    const initial = window.setTimeout(beat, 1000);
+    const timer = window.setInterval(beat, PRESENCE_HEARTBEAT_INTERVAL_MS);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(timer);
+    };
+  }, [studioSessionActive]);
 
   useSidePanelChromeHotkeys({
     onToggleLeft: () => setLeftPanelVisible((visible) => !visible),
@@ -2402,9 +2438,16 @@ export type TableScene = {
 };
 
 export type RasterScene = {
-  readonly width: number;
-  readonly height: number;
-  readonly pixelsBase64: string;
+  readonly documentSyncJson: string;
+  readonly assetsJson: string;
+  readonly cameraJson: string;
+  readonly selectionJson: string;
+  readonly hoveredId?: string;
+  readonly activeTool: string;
+  readonly brushSize: number;
+  readonly brushOpacity: number;
+  readonly viewMode: string;
+  readonly compositeViewportJson?: string;
 };
 
 export type IconRenderScene = {
@@ -3043,6 +3086,52 @@ export async function createEditorSession(): Promise<EditorWasmSession> {
   return new mod.EditorSession();
 }
 //#endregion EditorSession
+
+//#region RasterSession
+export type RasterWasmSession = {
+  gpuReady(): boolean;
+  attachCanvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown>;
+  setSize(width: number, height: number, dpr: number): void;
+  renderFrame(): void;
+  setCamera(x: number, y: number, zoom: number): void;
+  wheelScreen(sx: number, sy: number, deltaY: number): void;
+  pointerDownScreen(sx: number, sy: number, button: number): void;
+  pointerMoveScreen(sx: number, sy: number): void;
+  pointerUpScreen(sx: number, sy: number): void;
+  syncDocumentJson(json: string): void;
+  uploadLayerImage(layerId: string, bytes: Uint8Array): void;
+  uploadRasterImageKey(key: string, bytes: Uint8Array): void;
+  setActiveTool(tool: string): void;
+  setHoveredIdSilent(id?: string | null): void;
+  setSelectionIdsJson(json: string): void;
+  setCanvasThemeJson(json: string): void;
+  cameraJson(): string;
+  setViewMode(mode: string, layerId?: string | null): void;
+  pickTargetsAtScreenJson(sx: number, sy: number): string;
+  marqueeHitsJson(queryJson: string): string;
+  navigatorFitCameraJson(viewportW: number, viewportH: number): string;
+  navigatorViewportOverlayJson(contentCameraJson: string, contentViewportJson: string): string;
+  free(): void;
+};
+
+type RasterSessionModule = {
+  readonly default: (input?: unknown) => Promise<unknown>;
+  readonly RasterSession: new () => RasterWasmSession;
+};
+
+let rasterSessionPromise: Promise<RasterSessionModule> | null = null;
+
+export async function createRasterSession(): Promise<RasterWasmSession> {
+  if (!rasterSessionPromise) {
+    rasterSessionPromise = import("@semio-tech/raster-rs/pkg/raster.js").then(async (mod) => {
+      await mod.default();
+      return mod as RasterSessionModule;
+    });
+  }
+  const mod = await rasterSessionPromise;
+  return new mod.RasterSession();
+}
+//#endregion RasterSession
 
 //#region MapSession
 export type MapWasmSession = {

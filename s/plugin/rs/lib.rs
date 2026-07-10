@@ -3254,7 +3254,7 @@ mod tests {
                     os_out_port("topology", "out-b", "Out B"),
                 ],
                 source_format: "puzzle5d.document".into(),
-                component_kind: SurfaceKind::World3d,
+                component_kind: "world-3d".into(),
                 modes: vec![ModeDefinition {
                     id: "edit".into(),
                     label: "Edit".into(),
@@ -3296,7 +3296,7 @@ mod tests {
                 inputs: vec![os_in_port("2d.shooting", "scene-in", "Scene", true)],
                 outputs: vec![os_out_port("2d.shooting", "scene-out", "Scene")],
                 source_format: "shooting.document".into(),
-                component_kind: SurfaceKind::World3d,
+                component_kind: "world-3d".into(),
                 modes: vec![ModeDefinition {
                     id: "edit".into(),
                     label: "Edit".into(),

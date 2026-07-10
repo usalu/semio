@@ -24,6 +24,16 @@
       "port": 6078
     },
     {
+      "name": "layout-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:layout"],
+      "env": {
+        "LAYOUT_PLAY_PORT": "6079",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6079
+    },
+    {
       "name": "shooting-react-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:shooting:base-icon"],

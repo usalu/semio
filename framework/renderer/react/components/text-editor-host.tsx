@@ -55,7 +55,7 @@ function HighlightedBuffer({ buffer, tokens }: { readonly buffer: string; readon
 
 //#region EditingHelpers
 /** ✂️ Language-agnostic multi-span rename preview: replaces every span with `nextName`, remapping spans left-to-right. */
-function multiSpanReplace(text: string, occurrences: readonly SpanRange[], nextName: string): { readonly text: string; readonly occurrences: readonly SpanRange[] } {
+export function multiSpanReplace(text: string, occurrences: readonly SpanRange[], nextName: string): { readonly text: string; readonly occurrences: readonly SpanRange[] } {
   const sorted = [...occurrences].sort((a, b) => b.start - a.start);
   let out = text;
   const nextOccurrences: SpanRange[] = [];
@@ -66,7 +66,7 @@ function multiSpanReplace(text: string, occurrences: readonly SpanRange[], nextN
   return { text: out, occurrences: nextOccurrences };
 }
 
-function lineRangeAt(text: string, offset: number): SpanRange {
+export function lineRangeAt(text: string, offset: number): SpanRange {
   const start = text.lastIndexOf("\n", Math.max(0, offset - 1)) + 1;
   const nextNewline = text.indexOf("\n", offset);
   const end = nextNewline === -1 ? text.length : nextNewline;
@@ -89,7 +89,7 @@ function parseJsonOr<T>(json: string | undefined, fallback: T): T {
 }
 
 /** 🧭 Builds the right-click menu rows for a text-editor surface, independent of the active language. */
-function buildTextEditorContextMenuItems(
+export function buildTextEditorContextMenuItems(
   input: { readonly canSuggest: boolean; readonly hasSelection: boolean; readonly canRename: boolean; readonly pickTargets: readonly PickTarget[] },
   actions: {
     readonly suggest: () => void;

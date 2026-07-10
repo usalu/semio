@@ -1093,6 +1093,36 @@ fn rewrite_lod_json_for_window(runtime: &RewritePlayRuntime, window_id: &str) ->
     }
 }
 
+fn trinity_rewrite_lod_measure(window_id: &str, current_mode: &str) -> WindowMeasure {
+    let mut items = vec![MeasureSelectItem { id: TRINITY_LOD_MODE_AUTOMATIC.into(), value: TRINITY_LOD_MODE_AUTOMATIC.into(), label: "Automatic".into() }];
+    let rows: Vec<Value> = serde_json::from_str(&trinity_lod_scale_json()).unwrap_or_default();
+    items.extend(rows.into_iter().filter_map(|row| {
+        let id = row.get("id")?.as_str()?.to_string();
+        let name = row.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
+        Some(MeasureSelectItem { id: id.clone(), value: id, label: name })
+    }));
+    WindowMeasure::Select {
+        id: format!("{window_id}-lod"),
+        label: Some("LOD".into()),
+        value: current_mode.into(),
+        items,
+        on_change: rewrite_cmd("setLodMode", Some(json!({ "windowId": window_id }))),
+    }
+}
+
+fn jack_token_at_offset(text: &str, offset: usize) -> Option<String> {
+    if offset >= text.len() {
+        return None;
+    }
+    let slice = &text[offset..];
+    let token: String = slice.chars().take_while(|ch| ch.is_ascii_alphanumeric() || *ch == '_').collect();
+    if token.is_empty() {
+        None
+    } else {
+        Some(token)
+    }
+}
+
 fn render_rule_graph(
     surface_id: &str,
     window_id: &str,
@@ -1557,7 +1587,10 @@ pub fn create_rewrite_app() -> App {
                 FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
                 PanelGroup::Details,
                 TRINITY_REWRITE_PLAY_BODY_INSPECTION,
-            ),
+            )
+            .keybinding("mod+z", "undo")
+            .keybinding("mod+shift+z", "redo")
+            .keybinding("mod+alt+s", "commitCheckpoint"),
     )
     .example("label-core", "Label Core", serde_json::to_string(&default_envelope()).unwrap())
     .program("trinity-rewrite", "Trinity Rewrite", "graph")
@@ -1582,16 +1615,16 @@ mod tests {
 
     #[test]
     fn compiles_jack_query_from_rule() {
-        let envelope = default_envelope();
-        let query = compiled_jack_query(&envelope);
+        let state = default_rule_state();
+        let query = compiled_jack_query(&state);
         assert!(query.contains("MATCH"));
         assert!(query.contains("SET"));
     }
 
     #[test]
     fn apply_rewrite_changes_after_fixture() {
-        let envelope = default_envelope();
-        assert_ne!(envelope.before_fixture_json, envelope.after_fixture_json);
+        let state = default_rule_state();
+        assert_ne!(state.before_fixture_json, after_fixture_json(&state));
     }
 
     #[test]
@@ -1604,6 +1637,91 @@ mod tests {
         let rhs_json = serde_json::to_string(&rhs).unwrap();
         assert!(lhs_json.contains("node-graph"));
         assert!(rhs_json.contains("node-graph"));
+        assert!(lhs_json.contains("\"editable\":true"));
+        assert!(rhs_json.contains("\"editable\":true"));
+    }
+
+    fn apply_and_get_envelope(app: &mut TrinityRewritePlayApp, command: &str, args: Option<&Value>, document: &str) -> TrinityRewriteEnvelope {
+        let ops = app.handle_command_patch_ops(command, args, document, &ViewState::default());
+        let next = ops.first().cloned().and_then(|op| serde_json::from_str::<Value>(&op).ok()).and_then(|value| value.get("document").cloned()).expect("document op");
+        serde_json::from_value(next).expect("envelope")
+    }
+
+    #[test]
+    fn set_parameter_is_undoable() {
+        let mut app = TrinityRewritePlayApp;
+        let document = app.initial_document_json();
+        let after_set = apply_and_get_envelope(&mut app, "setParameter", Some(&json!({ "name": "label", "value": "changed" })), &document);
+        let set_json = serde_json::to_string(&after_set).unwrap();
+        let after_undo = apply_and_get_envelope(&mut app, "undo", None, &set_json);
+        let restored_state = rule_state(&after_undo);
+        assert_eq!(restored_state.parameter_bindings.get("label").cloned(), Some(PropertyValue::String("nakagin-core".into())));
+    }
+
+    #[test]
+    fn commit_checkpoint_then_undo_stays_at_checkpoint() {
+        let mut app = TrinityRewritePlayApp;
+        let document = app.initial_document_json();
+        let after_set = apply_and_get_envelope(&mut app, "setParameter", Some(&json!({ "name": "label", "value": "changed" })), &document);
+        let set_json = serde_json::to_string(&after_set).unwrap();
+        let after_checkpoint = apply_and_get_envelope(&mut app, "commitCheckpoint", None, &set_json);
+        let checkpoint_json = serde_json::to_string(&after_checkpoint).unwrap();
+        let ops = app.handle_command_patch_ops("undo", None, &checkpoint_json, &ViewState::default());
+        assert!(ops.is_empty(), "undo past a checkpoint should be a no-op");
+    }
+
+    #[test]
+    fn add_and_delete_rhs_set_clause() {
+        let mut app = TrinityRewritePlayApp;
+        let document = app.initial_document_json();
+        let after_add = apply_and_get_envelope(&mut app, "addRuleClause", Some(&json!({ "kind": "set" })), &document);
+        let rhs: Rhs = serde_json::from_str(&rule_state(&after_add).rhs_json).unwrap();
+        assert_eq!(rhs.set.len(), 2);
+        // deleteSelection requires a prior selection; select the newly added clause first.
+        let mut selected = after_add.clone();
+        selected.runtime.selected_node_ids = vec!["rhs-set-1".into()];
+        let selected_json = serde_json::to_string(&selected).unwrap();
+        let ops = app.handle_command_patch_ops(
+            "nodeGraphEdit",
+            Some(&json!({ "surfaceId": TRINITY_REWRITE_PLAY_SURFACE_RHS, "ops": [{ "op": "deleteSelection" }] })),
+            &selected_json,
+            &ViewState::default(),
+        );
+        assert!(!ops.is_empty());
+        let next = ops.first().and_then(|op| serde_json::from_str::<Value>(op).ok()).and_then(|value| value.get("document").cloned()).expect("document op");
+        let envelope: TrinityRewriteEnvelope = serde_json::from_value(next).unwrap();
+        let rhs: Rhs = serde_json::from_str(&rule_state(&envelope).rhs_json).unwrap();
+        assert_eq!(rhs.set.len(), 1);
+    }
+
+    #[test]
+    fn jack_view_has_occurrences_after_select() {
+        let mut app = TrinityRewritePlayApp;
+        let document = app.initial_document_json();
+        let after_select = apply_and_get_envelope(&mut app, "textSelect", Some(&json!({ "var": "a" })), &document);
+        let selected_json = serde_json::to_string(&after_select).unwrap();
+        let node = app.render(TRINITY_REWRITE_PLAY_BODY_JACK, &selected_json, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("occurrencesJson"));
+    }
+
+    #[test]
+    fn graph_scenes_have_lod_json() {
+        let app = TrinityRewritePlayApp;
+        let document = app.initial_document_json();
+        let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, &document, &ViewState::default());
+        let json = serde_json::to_string(&before).unwrap();
+        assert!(json.contains("lodJson"));
+    }
+
+    #[test]
+    fn tools_include_history_and_reorganize() {
+        let app = TrinityRewritePlayApp;
+        let document = app.initial_document_json();
+        let tools = app.tools(&document, &ViewState::default());
+        let json = serde_json::to_string(&tools).unwrap();
+        assert!(json.contains("undo"));
+        assert!(json.contains("reorganize"));
     }
 }
 //#endregion 🧪Tests

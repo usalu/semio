@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, type DragEvent } from "react";
-import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
+import { GraphWasmCanvas, type CanvasInputModifiers, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
 import { CATALOGUE_DRAG_MIME } from "@semio-tech/ui-react";
 import type { CommandDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
 
@@ -51,10 +51,13 @@ export function wheelCameraAtScreen(camera: CanvasCamera, screenX: number, scree
 //#endregion CanvasCameraMath
 
 //#region JsonLayersCanvasSession
+type CanvasGradientStop = { readonly offset?: number; readonly color?: readonly number[] };
+
 type CanvasLayerRecord = {
   readonly id?: string;
   readonly kind?: string;
   readonly role?: string;
+  readonly tool?: string;
   readonly name?: string;
   readonly color?: string;
   readonly selected?: boolean;
@@ -83,9 +86,22 @@ type CanvasLayerRecord = {
     readonly largeArc?: boolean;
     readonly sweep?: boolean;
   }[];
-  readonly fill?: { readonly kind?: string; readonly color?: readonly number[] };
-  readonly stroke?: { readonly color?: readonly number[]; readonly width?: number; readonly dash?: readonly number[] };
+  readonly fill?: {
+    readonly kind?: string;
+    readonly color?: readonly number[];
+    readonly x1?: number;
+    readonly y1?: number;
+    readonly x2?: number;
+    readonly y2?: number;
+    readonly cx?: number;
+    readonly cy?: number;
+    readonly r?: number;
+    readonly stops?: readonly CanvasGradientStop[];
+  };
+  readonly stroke?: { readonly color?: readonly number[]; readonly width?: number; readonly dash?: readonly number[]; readonly cap?: string; readonly join?: string };
   readonly opacity?: number;
+  readonly blendMode?: string;
+  readonly fillRule?: string;
   readonly visible?: boolean;
   readonly text?: { readonly content?: string; readonly size?: number };
   readonly image?: { readonly src?: string; readonly width?: number; readonly height?: number };
@@ -95,6 +111,70 @@ function rgbaToCss(color: readonly number[] | undefined, opacity = 1): string {
   if (!color || color.length < 3) return `rgba(148, 163, 184, ${opacity})`;
   const alpha = (color[3] ?? 1) * opacity;
   return `rgba(${color[0]! * 255}, ${color[1]! * 255}, ${color[2]! * 255}, ${alpha})`;
+}
+
+/** 🎨 Maps a `draw.document` blend mode to its `GlobalCompositeOperation` equivalent (16 modes, matches `DRAW_BLEND_MODES`). */
+const BLEND_MODE_TO_COMPOSITE: Readonly<Record<string, GlobalCompositeOperation>> = {
+  normal: "source-over",
+  multiply: "multiply",
+  screen: "screen",
+  overlay: "overlay",
+  darken: "darken",
+  lighten: "lighten",
+  colorDodge: "color-dodge",
+  colorBurn: "color-burn",
+  hardLight: "hard-light",
+  softLight: "soft-light",
+  difference: "difference",
+  exclusion: "exclusion",
+  hue: "hue",
+  saturation: "saturation",
+  color: "color",
+  luminosity: "luminosity",
+};
+
+function blendModeToComposite(mode: string | undefined): GlobalCompositeOperation {
+  return BLEND_MODE_TO_COMPOSITE[mode ?? "normal"] ?? "source-over";
+}
+
+/** 🪣 Resolves a fill record into a canvas paint — solid color or gradient (linear/radial, in local layer coordinates). */
+function fillStyleToPaint(ctx: CanvasRenderingContext2D, fill: CanvasLayerRecord["fill"], opacity: number): string | CanvasGradient | null {
+  if (!fill) return null;
+  if (fill.kind === "linearGradient" && fill.stops?.length) {
+    const gradient = ctx.createLinearGradient(fill.x1 ?? 0, fill.y1 ?? 0, fill.x2 ?? 0, fill.y2 ?? 0);
+    for (const stop of fill.stops) gradient.addColorStop(Math.min(1, Math.max(0, stop.offset ?? 0)), rgbaToCss(stop.color, opacity));
+    return gradient;
+  }
+  if (fill.kind === "radialGradient" && fill.stops?.length) {
+    const gradient = ctx.createRadialGradient(fill.cx ?? 0, fill.cy ?? 0, 0, fill.cx ?? 0, fill.cy ?? 0, Math.max(fill.r ?? 0, 0));
+    for (const stop of fill.stops) gradient.addColorStop(Math.min(1, Math.max(0, stop.offset ?? 0)), rgbaToCss(stop.color, opacity));
+    return gradient;
+  }
+  if (fill.color) return rgbaToCss(fill.color, opacity);
+  return null;
+}
+
+/** 🖊️ Builds a `Path2D` from the full (possibly multi-contour) segment list — evenodd fill handles holes correctly across contours. */
+function buildScenePath(segments: CanvasLayerRecord["segments"]): Path2D | null {
+  if (!segments?.length) return null;
+  const path = new Path2D();
+  for (const segment of segments) {
+    const kind = segment.kind ?? "line";
+    if (kind === "move" && segment.to) {
+      path.moveTo(segment.to[0]!, segment.to[1]!);
+    } else if (kind === "line" && segment.to) {
+      path.lineTo(segment.to[0]!, segment.to[1]!);
+    } else if (kind === "quad" && segment.ctrl && segment.to) {
+      path.quadraticCurveTo(segment.ctrl[0]!, segment.ctrl[1]!, segment.to[0]!, segment.to[1]!);
+    } else if (kind === "cubic" && segment.ctrl1 && segment.ctrl2 && segment.to) {
+      path.bezierCurveTo(segment.ctrl1[0]!, segment.ctrl1[1]!, segment.ctrl2[0]!, segment.ctrl2[1]!, segment.to[0]!, segment.to[1]!);
+    } else if (kind === "arc" && segment.to) {
+      path.lineTo(segment.to[0]!, segment.to[1]!);
+    } else if (kind === "close") {
+      path.closePath();
+    }
+  }
+  return path;
 }
 
 function layerColorCss(layer: CanvasLayerRecord, fallbackHue: number, opacity = 1): string {
@@ -115,61 +195,47 @@ function applySceneTransform(ctx: CanvasRenderingContext2D, transform: readonly 
   ctx.transform(a ?? 1, b ?? 0, c ?? 0, d ?? 1, e ?? 0, f ?? 0);
 }
 
-function traceScenePath(ctx: CanvasRenderingContext2D, segments: CanvasLayerRecord["segments"]): void {
-  if (!segments?.length) return;
-  for (const segment of segments) {
-    const kind = segment.kind ?? "line";
-    if (kind === "move" && segment.to) {
-      ctx.moveTo(segment.to[0]!, segment.to[1]!);
-    } else if (kind === "line" && segment.to) {
-      ctx.lineTo(segment.to[0]!, segment.to[1]!);
-    } else if (kind === "quad" && segment.ctrl && segment.to) {
-      ctx.quadraticCurveTo(segment.ctrl[0]!, segment.ctrl[1]!, segment.to[0]!, segment.to[1]!);
-    } else if (kind === "cubic" && segment.ctrl1 && segment.ctrl2 && segment.to) {
-      ctx.bezierCurveTo(segment.ctrl1[0]!, segment.ctrl1[1]!, segment.ctrl2[0]!, segment.ctrl2[1]!, segment.to[0]!, segment.to[1]!);
-    } else if (kind === "arc" && segment.to) {
-      ctx.arcTo(segment.to[0]!, segment.to[1]!, segment.to[0]!, segment.to[1]!, 0);
-    } else if (kind === "close") {
-      ctx.closePath();
-    }
-  }
-}
-
 function drawSceneNode(ctx: CanvasRenderingContext2D, layer: CanvasLayerRecord, zoom: number, imageCache: ReadonlyMap<string, HTMLImageElement>): void {
   if (layer.visible === false) return;
   const opacity = layer.opacity ?? 1;
   ctx.save();
+  ctx.globalCompositeOperation = blendModeToComposite(layer.blendMode);
   applySceneTransform(ctx, layer.transform);
-  if (layer.segments?.length) {
-    ctx.beginPath();
-    traceScenePath(ctx, layer.segments);
-    if (layer.fill?.color) {
-      ctx.fillStyle = rgbaToCss(layer.fill.color, opacity);
-      ctx.fill();
+  const path = buildScenePath(layer.segments);
+  if (path) {
+    const fillRule = layer.fillRule === "nonzero" ? "nonzero" : "evenodd";
+    const fillPaint = fillStyleToPaint(ctx, layer.fill, opacity);
+    if (fillPaint) {
+      ctx.fillStyle = fillPaint;
+      ctx.fill(path, fillRule);
     }
     if (layer.stroke) {
       ctx.strokeStyle = rgbaToCss(layer.stroke.color, opacity);
       ctx.lineWidth = Math.max((layer.stroke.width ?? 1) / zoom, 1 / zoom);
+      ctx.lineCap = (layer.stroke.cap as CanvasLineCap) ?? "butt";
+      ctx.lineJoin = (layer.stroke.join as CanvasLineJoin) ?? "miter";
       ctx.setLineDash(layer.stroke.dash?.map((value) => value / zoom) ?? []);
-      ctx.stroke();
+      ctx.stroke(path);
       ctx.setLineDash([]);
-    } else if (!layer.fill?.color) {
+    } else if (!fillPaint) {
       ctx.strokeStyle = rgbaToCss([0.58, 0.64, 0.72, 0.95], opacity);
       ctx.lineWidth = Math.max(1 / zoom, 1);
-      ctx.stroke();
+      ctx.stroke(path);
     }
   }
   if (layer.text?.content) {
-    ctx.fillStyle = rgbaToCss([0.9, 0.93, 0.97, 1], opacity);
-    ctx.font = `${(layer.text.size ?? 14) / zoom}px ui-sans-serif, system-ui, sans-serif`;
-    ctx.fillText(layer.text.content, 0, 0);
+    ctx.fillStyle = layer.fill?.color ? rgbaToCss(layer.fill.color, opacity) : rgbaToCss([0.89, 0.91, 0.94, 1], opacity);
+    ctx.font = `${layer.text.size ?? 14}px ui-monospace, monospace`;
+    ctx.fillText(layer.text.content, 0, layer.text.size ?? 14);
   }
   if (layer.image?.src) {
     const width = layer.image.width ?? layer.width ?? 64;
     const height = layer.image.height ?? layer.height ?? 64;
     const image = imageCache.get(layer.image.src);
     if (image?.complete) {
+      ctx.globalAlpha = opacity;
       ctx.drawImage(image, 0, 0, width, height);
+      ctx.globalAlpha = 1;
     }
   }
   ctx.restore();
@@ -271,6 +337,7 @@ class JsonLayersCanvasSession implements GraphWasmSession {
   private panning = false;
   private panStart = { x: 0, y: 0 };
   private panCameraStart = { x: 0, y: 0 };
+  private activeTool = "selectDirect";
 
   constructor(
     private readonly layersJson: string,
@@ -341,7 +408,10 @@ class JsonLayersCanvasSession implements GraphWasmSession {
     ctx.clearRect(0, 0, deviceWidth, deviceHeight);
     ctx.fillStyle = "#111318";
     ctx.fillRect(0, 0, deviceWidth, deviceHeight);
-    const layers = this.parseLayers();
+    const records = this.parseLayers();
+    const meta = records.find((record) => record.role === "meta");
+    if (meta?.tool) this.activeTool = meta.tool;
+    const layers = records.filter((record) => record.role !== "meta");
     ctx.save();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.translate(logicalWidth * 0.5 - this.camera.x * zoom, logicalHeight * 0.5 - this.camera.y * zoom);
@@ -412,8 +482,8 @@ class JsonLayersCanvasSession implements GraphWasmSession {
     ctx.restore();
   }
 
-  pointerDown(x: number, y: number, button: number, extend: boolean): void {
-    if (button === 1) {
+  pointerDown(x: number, y: number, button: number, _extend: boolean, modifiers?: CanvasInputModifiers): void {
+    if (button === 1 || this.activeTool === "transformMove") {
       this.panning = true;
       this.panStart = { x, y };
       this.panCameraStart = { x: this.camera.x, y: this.camera.y };
@@ -423,7 +493,10 @@ class JsonLayersCanvasSession implements GraphWasmSession {
       x,
       y,
       button,
-      extend,
+      shift: modifiers?.shift ?? false,
+      ctrl: modifiers?.ctrl ?? false,
+      meta: modifiers?.meta ?? false,
+      alt: modifiers?.alt ?? false,
       width: this.logicalWidth,
       height: this.logicalHeight,
     });
@@ -450,7 +523,7 @@ class JsonLayersCanvasSession implements GraphWasmSession {
     });
   }
 
-  pointerUp(x: number, y: number): void {
+  pointerUp(x: number, y: number, modifiers?: CanvasInputModifiers): void {
     if (this.panning) {
       this.panning = false;
       return;
@@ -458,9 +531,17 @@ class JsonLayersCanvasSession implements GraphWasmSession {
     this.onPointer?.("canvasPointerUp", {
       x,
       y,
+      shift: modifiers?.shift ?? false,
+      ctrl: modifiers?.ctrl ?? false,
+      meta: modifiers?.meta ?? false,
+      alt: modifiers?.alt ?? false,
       width: this.logicalWidth,
       height: this.logicalHeight,
     });
+  }
+
+  doubleClick(x: number, y: number): void {
+    this.onPointer?.("canvasDoubleClick", { x, y, width: this.logicalWidth, height: this.logicalHeight });
   }
 
   wheel(x: number, y: number, deltaY: number): void {
@@ -468,7 +549,6 @@ class JsonLayersCanvasSession implements GraphWasmSession {
     this.camera = next;
     this.onCameraChange(next);
     this.renderFrame();
-    this.onPointer?.("canvasWheel", { x, y, deltaY, width: this.logicalWidth, height: this.logicalHeight });
   }
 }
 //#endregion JsonLayersCanvasSession

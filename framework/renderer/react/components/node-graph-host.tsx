@@ -1541,6 +1541,15 @@ export function FlowGraphCanvasHost({
         world = screenToWorld(camera, rect.width, rect.height, sx, sy);
       }
       try {
+        const catalogueApp = JSON.parse(raw) as { readonly programId?: string; readonly appId?: string };
+        if (catalogueApp.programId && catalogueApp.appId) {
+          dispatch("spawnApp", { programId: catalogueApp.programId, appId: catalogueApp.appId, position: { x: world.x, y: world.y } });
+          return;
+        }
+      } catch {
+        /* not a catalogue app payload */
+      }
+      try {
         const descriptor = raw.startsWith("{") ? raw : JSON.stringify({ kind: raw });
         session.addWidget(descriptor, world.x, world.y);
         commitFixture();
@@ -1549,8 +1558,24 @@ export function FlowGraphCanvasHost({
         /* invalid descriptor */
       }
     },
-    [commitFixture, editable, emitInteractionState, labelStateJson],
+    [commitFixture, dispatch, editable, emitInteractionState, labelStateJson],
   );
+
+  const openHoveredInstance = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session || !scene.fixtureJson) return;
+    const widgetId = session.hoveredWidgetId();
+    if (!widgetId) return;
+    try {
+      const fixture = JSON.parse(scene.fixtureJson) as {
+        readonly widgets?: readonly { readonly id?: string; readonly params?: { readonly instanceId?: string } }[];
+      };
+      const instanceId = fixture.widgets?.find((widget) => widget.id === widgetId)?.params?.instanceId;
+      if (instanceId) dispatch("openInstance", { instanceId });
+    } catch {
+      /* fixture not parseable */
+    }
+  }, [dispatch, scene.fixtureJson]);
 
   return (
     <div
@@ -1660,6 +1685,7 @@ export function FlowGraphCanvasHost({
           emitInteractionState();
         }}
         onPointerLeave={() => pickInteraction.onCanvasPointerLeave()}
+        onDoubleClick={openHoveredInstance}
         onWheel={(event) => {
           event.preventDefault();
           const session = sessionRef.current;

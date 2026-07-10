@@ -3438,34 +3438,6 @@ mod tests {
     }
 
     #[test]
-    fn debug_forest_fixture_diagnostics() {
-        let envelope = forest_play_envelope();
-        eprintln!("[DEBUG] shape objects: {}", envelope.document.objects.len());
-        eprintln!(
-            "[DEBUG] shape visible: {}",
-            envelope.document.objects.iter().filter(|o| o.visible).count()
-        );
-        eprintln!("[DEBUG] building objects: {}", envelope.document.building_objects.len());
-        eprintln!(
-            "[DEBUG] building typologies: {:?}",
-            envelope
-                .document
-                .building_objects
-                .iter()
-                .map(|o| o.typology.as_str())
-                .collect::<std::collections::BTreeSet<_>>()
-        );
-        eprintln!("[DEBUG] energy objects: {}", envelope.document.energy_objects.len());
-        eprintln!(
-            "[DEBUG] structure_classic objects: {}",
-            envelope.document.structure_classic_objects.len()
-        );
-        for column in envelope.document.building_objects.iter().filter(|o| o.typology == "building.building.column") {
-            eprintln!("[DEBUG] column {} extent: {:?}", column.id, column.extent);
-        }
-    }
-
-    #[test]
     fn typology_extent_derives_from_authored_geometry() {
         let envelope = forest_play_envelope();
         let column = envelope
@@ -3505,8 +3477,9 @@ mod tests {
     fn forest_transformation_uses_live_shape_pane() {
         let mut app = CadApp;
         let mut envelope = forest_play_envelope();
-        let fixture_energy_count = envelope.document.energy_objects.len();
-        assert!(fixture_energy_count > 10, "forest fixture should have many energy objects");
+        let fixture_energy_ids: Vec<String> =
+            envelope.document.energy_objects.iter().map(|object| object.id.clone()).collect();
+        assert!(!fixture_energy_ids.is_empty(), "forest fixture should have energy objects");
         envelope.document.energy_objects.clear();
         envelope.document.objects.truncate(1);
         envelope.document.objects[0].typology = "spatial.shape.primitive.box".into();
@@ -3521,8 +3494,8 @@ mod tests {
         let next = apply_ops(&envelope, &ops);
         assert!(!next.document.energy_objects.is_empty());
         assert!(
-            next.document.energy_objects.len() < fixture_energy_count / 2,
-            "live single-box derive should not repopulate the static forest energy fixture"
+            next.document.energy_objects.iter().all(|object| !fixture_energy_ids.contains(&object.id)),
+            "live single-box derive should not repopulate the static forest energy fixture's original objects"
         );
     }
 
@@ -3546,21 +3519,23 @@ mod tests {
 
     #[test]
     fn world_pick_selects_visible_object_by_index() {
+        // The Shape pane's fixture object is a single hexagonal-cut solid (one object), so this
+        // exercises worldPick-by-index against the Building pane, which has multiple objects.
         let mut app = CadApp;
         let envelope = forest_play_envelope();
-        let shape_visible: Vec<_> = envelope
+        let building_visible: Vec<_> = envelope
             .document
-            .objects
+            .building_objects
             .iter()
             .filter(|object| object.visible)
             .collect();
-        assert!(shape_visible.len() > 1);
-        let expected_id = shape_visible[1].id.clone();
+        assert!(building_visible.len() > 1);
+        let expected_id = building_visible[1].id.clone();
         let document = serde_json::to_string(&envelope).unwrap();
         let ops = app.handle_command_patch_ops(
             "worldPick",
             Some(&json!({
-                "surfaceId": CAD_PLAY_WINDOW_SHAPE,
+                "surfaceId": CAD_PLAY_WINDOW_BUILDING,
                 "id": 1,
                 "merge": "replace"
             })),
