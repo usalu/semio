@@ -1,0 +1,13 @@
+{
+  "title": "Fix Procedural 3D Sphere-Cut-Torus Infinite Hang",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "In the procedural-3d dev app (bun run dev:procedural:3d, port 6018), selecting a \"sphere cut with torus\" boolean operation in the catalogue/workbench causes the UI to hang indefinitely (browser tab becomes unresponsive, no error surfaces). Need to reproduce, find the root cause (likely in the BRep boolean/cut kernel or the procedural plugin's evaluation of a sphere-torus difference), and fix the hang without introducing legacy/compat shims. Repo is greenfield; refactor cleanly at the root cause.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1909"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪4379c2eabcd0424ca61e3bfa1acedfa9"
+  ]
+}

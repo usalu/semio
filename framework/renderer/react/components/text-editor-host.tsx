@@ -158,6 +158,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
           session.renderFrame();
         }}
         onPointerUp={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
           sessionRef.current?.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.buttons);
           sessionRef.current?.renderFrame();
           emitSelection();

@@ -574,6 +574,30 @@ function uiDeclarativeChildToTreeItem(node: UiNode, fallbackId: string): UiTreeI
 }
 
 //#region PluginRuntime
+export type CommandKind = "operation" | "view" | "history" | "shell";
+
+export type CommandDefinition = {
+  readonly id: string;
+  readonly label: string;
+  readonly kind: CommandKind;
+  readonly iconId?: string;
+  readonly argsSchema?: unknown;
+  readonly keys?: string;
+  readonly inPalette: boolean;
+  readonly category?: string;
+};
+
+/** @emoji 🕹️ Mirrors `semio_framework_core::history_command_definitions` — the six framework-owned
+ * History commands every app receives, used by the shell to render the same set without a wasm round trip. */
+export const HISTORY_COMMAND_IDS = [
+  "undo",
+  "redo",
+  "commitCheckpoint",
+  "createAlternative",
+  "switchAlternative",
+  "checkoutCheckpoint",
+] as const;
+
 export type PluginViewState = {
   readonly activeModeId?: string;
   readonly activeWindowKindId?: string;

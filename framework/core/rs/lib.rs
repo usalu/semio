@@ -1347,6 +1347,7 @@ mod tests {
             }],
             panel_tabs: vec![],
             keybindings: vec![],
+            commands: vec![],
             named_layouts: Vec::new(),
             default_layout: None,
         });
@@ -2157,6 +2158,10 @@ pub enum SurfaceKind {
     GisMap,
     #[serde(rename = "puzzle2d-board")]
     Puzzle2dBoard,
+    #[serde(rename = "icon-render")]
+    IconRender,
+    #[serde(rename = "note-canvas")]
+    NoteCanvas,
 }
 
 impl SurfaceKind {
@@ -2171,11 +2176,16 @@ impl SurfaceKind {
             Self::VirtualFileSystem => "virtualFileSystem",
             Self::GisMap => "gis2d-map",
             Self::Puzzle2dBoard => "puzzle2d-board",
+            Self::IconRender => "icon-render",
+            Self::NoteCanvas => "note-canvas",
         }
     }
 
     pub fn is_viewport(self) -> bool {
-        matches!(self, Self::World3d | Self::NodeGraph | Self::Canvas2d | Self::Puzzle2dBoard)
+        matches!(
+            self,
+            Self::World3d | Self::NodeGraph | Self::Canvas2d | Self::Puzzle2dBoard | Self::NoteCanvas
+        )
     }
 }
 
@@ -2217,6 +2227,12 @@ pub struct World3dScene {
     pub chunking_json: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub context_menu_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub environment_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub frame_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fit_json: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2376,6 +2392,12 @@ pub struct TextEditorScene {
     pub settings_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub camera_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hover_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub newline_gates_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rename_json: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2391,6 +2413,17 @@ pub struct RasterScene {
     pub width: u32,
     pub height: u32,
     pub pixels_base64: String,
+}
+
+/** @emoji 🖼️ Icon-render scene: client-side render request for a shot preview, see https://threejs.org/docs/#examples/en/renderers/SVGRenderer. */
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IconRenderScene {
+    pub request_json: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub footer: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub frame_json: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2516,6 +2549,10 @@ pub struct Puzzle2dBoardScene {
     pub selection_json: String,
     #[serde(default)]
     pub interactive: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hovered_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_tool: Option<String>,
 }
 
 pub fn puzzle2d_board_default_kind_catalogs_json() -> String {
@@ -2535,6 +2572,8 @@ impl Puzzle2dBoardScene {
             kind_catalogs_json: puzzle2d_board_default_kind_catalogs_json(),
             selection_json: puzzle2d_board_default_selection_json(),
             interactive,
+            hovered_id: None,
+            active_tool: None,
         }
     }
 }
@@ -2576,6 +2615,8 @@ pub struct UiComponentSceneNode {
     pub gis_map: Option<GisMapScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub puzzle2d_board: Option<Puzzle2dBoardScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon_render: Option<IconRenderScene>,
 }
 //#endregion 🔖ComponentScenes
 
@@ -2646,6 +2687,9 @@ impl TextEditorScene {
             selectable_spans_json: None,
             settings_json: None,
             camera_json: None,
+            hover_json: None,
+            newline_gates_json: None,
+            rename_json: None,
         }
     }
 }
@@ -2981,6 +3025,72 @@ pub struct Keybinding {
     pub command: CommandDescriptor,
 }
 
+/// @emoji 🗂️ Classifies a declared command by how it interacts with VCS history.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum CommandKind {
+    /// Mutates the document — dispatched as VCS operations with a true inverse, recorded in history.
+    Operation,
+    /// Ephemeral view state (camera, selection, hover, active tool) — not recorded in history.
+    View,
+    /// Framework-provided undo/redo/checkpoint/alternative — auto-injected, never app-declared.
+    History,
+    /// Shell-only effect (navigate, export, spawn) — no document mutation.
+    Shell,
+}
+
+/// @emoji 📇 Declares one command an app can receive via `CommandDescriptor.command`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommandDefinition {
+    pub id: String,
+    pub label: String,
+    pub kind: CommandKind,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub args_schema: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub keys: Option<String>,
+    #[serde(default)]
+    pub in_palette: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub category: Option<String>,
+}
+
+impl CommandDefinition {
+    pub fn new(id: impl Into<String>, label: impl Into<String>, kind: CommandKind) -> Self {
+        Self {
+            id: id.into(),
+            label: label.into(),
+            kind,
+            icon_id: None,
+            args_schema: None,
+            keys: None,
+            in_palette: true,
+            category: None,
+        }
+    }
+}
+
+/// @emoji 🕹️ The six framework-owned History commands, auto-injected into every `AppDefinition`.
+pub fn history_command_definitions() -> Vec<CommandDefinition> {
+    vec![
+        CommandDefinition {
+            keys: Some("mod+z".into()),
+            ..CommandDefinition::new("undo", "Undo", CommandKind::History)
+        },
+        CommandDefinition {
+            keys: Some("mod+shift+z".into()),
+            ..CommandDefinition::new("redo", "Redo", CommandKind::History)
+        },
+        CommandDefinition::new("commitCheckpoint", "Commit Checkpoint", CommandKind::History),
+        CommandDefinition::new("createAlternative", "Create Alternative", CommandKind::History),
+        CommandDefinition::new("switchAlternative", "Switch Alternative", CommandKind::History),
+        CommandDefinition::new("checkoutCheckpoint", "Checkout Checkpoint", CommandKind::History),
+    ]
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ModeDefinition {
@@ -3068,6 +3178,8 @@ pub struct AppDefinition {
     pub window_kinds: Vec<WindowKindDefinition>,
     pub panel_tabs: Vec<PanelTabDefinition>,
     pub keybindings: Vec<Keybinding>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub commands: Vec<CommandDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub named_layouts: Vec<NamedLayout>,
     #[serde(skip_serializing_if = "Option::is_none")]

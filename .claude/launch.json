@@ -6,6 +6,12 @@
       "runtimeExecutable": "bunx",
       "runtimeArgs": ["storybook", "dev", "-c", ".storybook", "-p", "6006", "--host", "127.0.0.1", "--no-open"],
       "port": 6006
+    },
+    {
+      "name": "puzzle-5d-react",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:puzzle:5d"],
+      "port": 6014
     }
   ]
 }

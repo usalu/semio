@@ -659,7 +659,7 @@ fn puzzle2d_board_scene(fixture: &Value, selected: &[String], pane: &str) -> Puz
     let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
     let kind_catalogs_json = fixture.get("meta").and_then(|value| value.get("kindCatalogs")).map(|value| value.to_string()).unwrap_or_else(|| "{}".into());
     let selection_json = serde_json::to_string(selected).unwrap_or_else(|_| "[]".into());
-    Puzzle2dBoardScene { fixture_json: fixture.to_string(), camera_json, kind_catalogs_json, selection_json, interactive: pane == PUZZLE2D_PANE_OVERVIEW }
+    Puzzle2dBoardScene { fixture_json: fixture.to_string(), camera_json, kind_catalogs_json, selection_json, interactive: pane == PUZZLE2D_PANE_OVERVIEW, hovered_id: None, active_tool: None }
 }
 
 fn render_canvas(fixture: &Value, selected: &[String], pane: &str) -> UiNode {

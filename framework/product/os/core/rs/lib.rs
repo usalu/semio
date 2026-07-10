@@ -1713,6 +1713,7 @@ mod tests {
                 }],
                 panel_tabs: vec![],
                 keybindings: vec![],
+                commands: vec![],
                 named_layouts: Vec::new(),
                 default_layout: None,
             }],
@@ -1761,6 +1762,7 @@ mod tests {
             }],
             panel_tabs: vec![],
             keybindings: vec![],
+            commands: vec![],
             named_layouts: Vec::new(),
             default_layout: None,
         };
@@ -1793,6 +1795,7 @@ mod tests {
             }],
             panel_tabs: vec![],
             keybindings: vec![],
+            commands: vec![],
             named_layouts: Vec::new(),
             default_layout: None,
         };
@@ -1869,6 +1872,7 @@ mod tests {
             }],
             panel_tabs: vec![],
             keybindings: vec![],
+            commands: vec![],
             named_layouts: Vec::new(),
             default_layout: None,
         };
@@ -1997,6 +2001,7 @@ mod tests {
                 }],
                 panel_tabs: vec![],
                 keybindings: vec![],
+                commands: vec![],
                 named_layouts: Vec::new(),
                 default_layout: None,
             }],
@@ -4439,6 +4444,7 @@ pub fn resolve_os_app_definition(
         window_kinds: Vec::new(),
         panel_tabs: Vec::new(),
         keybindings: Vec::new(),
+        commands: Vec::new(),
         named_layouts: Vec::new(),
         default_layout: None,
     })

@@ -1,0 +1,13 @@
+{
+  "title": "Restore Layout Premigration Parity in React Renderer",
+  "emoji": "📐",
+  "status": "open",
+  "description": "Restore the layout technology's React renderer canvas, hierarchy panel, preflight panel, engagement, and toolbar to feature parity with the premigration git tag. The layout plugin (layout/plugin/rs/lib.rs) emits a layers_json schema the generic canvas-2d-host doesn't understand, so frames render as generic bounds rectangles instead of proper fills/strokes/text/guides/selection/hover. Plan: (1) generic host gains camera-sync dispatch + catalogue drag\u0026drop handlers, (2) plugin canvas scene emission rewritten to match host schema via layout_rs::build_display_list_for_page, (3) plugin-side hit-testing/selection/hover via shared camera math, (4) catalogue drag\u0026drop end-to-end with drop-preview ghost, (5) hierarchy tree expanded to 9 sections, (6) preflight expanded from 3 to 10 issue codes, (7) window engagement + footer toolbar restored. Full plan at /Users/ueli/.claude/plans/get-layout-to-premigration-ticklish-biscuit.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1910"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪e847642101e34d969ea0048f3cade594"
+  ]
+}

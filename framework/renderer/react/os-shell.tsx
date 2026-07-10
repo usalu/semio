@@ -93,6 +93,7 @@ import {
   resolveLayoutForMode,
   resolvePlaygroundDefaultAppId,
   resolvePluginRegistryId,
+  type CommandDefinition,
   type NamedLayout,
   type PluginRegistryEntry,
   type PluginWasmHandle as CorePluginWasmHandle,
@@ -2376,6 +2377,8 @@ export type Puzzle2dBoardScene = {
   readonly kindCatalogsJson: string;
   readonly selectionJson: string;
   readonly interactive: boolean;
+  readonly hoveredId?: string;
+  readonly activeTool?: string;
 };
 
 export type UiExternalSlotNode = {
@@ -2635,6 +2638,7 @@ export type AppDefinition = {
   }[];
   readonly panelTabs: readonly { readonly id: string; readonly label: string; readonly group: string; readonly bodyKey: string }[];
   readonly keybindings: readonly { readonly keys: string; readonly command: CommandDescriptor }[];
+  readonly commands?: readonly CommandDefinition[];
   readonly namedLayouts?: readonly NamedLayout[];
   readonly defaultLayout?: WindowLayout;
 };
@@ -3009,6 +3013,8 @@ export type Puzzle2dBoardWasmSession = {
   drainEventsJson(): string;
   cameraJson(): string;
   gpuReady(): boolean;
+  setHoveredIdSilent?(id?: string | null): void;
+  setActiveTool?(label: string): void;
   free(): void;
 };
 

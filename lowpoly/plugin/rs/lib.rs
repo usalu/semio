@@ -20,7 +20,7 @@ use semio_framework_plugin::{SurfaceKind,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use semio_framework_plugin::layout::{WindowEngagementPossible, WindowEngagementStatus};
+use semio_framework_plugin::layout::{MeasureSelectItem, WindowEngagementPossible, WindowEngagementStatus};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use std::collections::HashMap;
@@ -1096,6 +1096,16 @@ fn lowpoly_window_measures(envelope: &LowpolyPlayEnvelope) -> Vec<WindowMeasure>
             pressed: envelope.runtime.show_edges,
             text: None,
             on_change: lowpoly_cmd("toggleShowEdges", None),
+        },
+        WindowMeasure::Select {
+            id: "lowpoly-measure-selection-method".into(),
+            label: Some("Selection Method".into()),
+            value: envelope.runtime.selection_method.clone(),
+            items: vec![
+                MeasureSelectItem { id: "rectangle".into(), value: "rectangle".into(), label: "Rectangle".into() },
+                MeasureSelectItem { id: "lasso".into(), value: "lasso".into(), label: "Lasso".into() },
+            ],
+            on_change: lowpoly_cmd("setSelectionMethod", None),
         },
         WindowMeasure::Group {
             id: "lowpoly-measure-tool-params".into(),
@@ -2507,6 +2517,8 @@ mod tests {
         assert_eq!(merge_selection_ids(&[1, 2], &[2, 3], "toggle"), vec![1, 3]);
         assert_eq!(merge_selection_ids(&[1, 2], &[2], "invertive"), vec![1]);
         assert_eq!(merge_selection_ids(&[1], &[2], "replace"), vec![2]);
+        assert_eq!(merge_selection_ids(&[1, 2, 3], &[2], "remove"), vec![1, 3]);
+        assert_eq!(merge_selection_ids(&[1, 2, 3], &[2], "subtractive"), vec![1, 3]);
     }
 
     #[test]

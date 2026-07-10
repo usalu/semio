@@ -1,0 +1,13 @@
+{
+  "title": "Draw Technology Premigration Parity for React Renderer",
+  "emoji": "✏️",
+  "status": "open",
+  "description": "Restore the `draw` technology to premigration feature level (git tag `premigration`, deleted `draw/react/index.tsx` + `draw/core/js`) for the react renderer path, plugin-centric architecture: tool state machines/selection/overlays in `draw/plugin/rs`; booleans/trace resolved in `draw/rs` via `kernel_2d_rs` with full trace parity (pure-Rust PNG decode); generic `framework/renderer/react/components/canvas-2d-host.tsx` upgraded for gradients, blend modes, evenodd fill, arc rendering, and overlay records (selection/hover halos, marquee/lasso/preview). Full plan at /Users/ueli/.claude/plans/greedy-spinning-duckling.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1911"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪9f792ac7b72b495cb072eb81e81f31da"
+  ]
+}

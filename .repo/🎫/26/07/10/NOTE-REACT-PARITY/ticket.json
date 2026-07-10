@@ -1,0 +1,13 @@
+{
+  "title": "Note React Parity",
+  "emoji": "📝",
+  "status": "open",
+  "description": "Get the note technology (note/plugin/rs + framework/renderer/react) to premigration feature level (git tag `premigration`, where note/react/index.tsx was a 1069-line React renderer — NoteCanvas with 6 block kinds, 10 tools, marquee/resize/ink/erasers, contentEditable rich-text + table-cell editors, clipboard paste, KaTeX math, navigator minimap, undo/redo, keybindings, SVG/PNG export — plus note/core/js's NotePlayController) for the react renderer on the migrated Rust plugin architecture: note/plugin/rs emits UiTree interpreted by framework/renderer/react. Follow the approach of PUZZLE-2D-REACT-PARITY and PUZZLE-3D-REACT-PARITY (26/07/09). Core design: add a dedicated note-canvas componentKind + NoteCanvasHost (DOM-based, mirrors puzzle2d-board precedent) since the generic canvas-2d host cannot render rich text/tables/KaTeX math. Gesture protocol via applyNoteEvents{eventsJson,phase,selectIds} with begin/live/commit/atomic undo boundaries.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1914"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪a8e0c772482e45babd975c2abf78dcbc"
+  ]
+}

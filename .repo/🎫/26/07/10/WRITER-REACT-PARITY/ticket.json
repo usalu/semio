@@ -1,0 +1,13 @@
+{
+  "title": "Writer React Parity",
+  "emoji": "✍️",
+  "status": "open",
+  "description": "Get writer's react renderer to premigration level (git tag `premigration`, where writer/react/index.tsx was a 1542-line React renderer with WriterCanvas: jack AST tree, selectable spans, symbol occurrences/rename, placeholders, newline gating, completions, context menu, keyboard navigation, window measures/engagement, toolbar) on the migrated Rust plugin architecture: writer/plugin/rs emits a TextEditorScene UiTree interpreted by framework/renderer/react's text-editor-host.tsx, backed by the framework/editor/rs GPU editor session. Follow the approach of PUZZLE-2D-REACT-PARITY and PUZZLE-3D-REACT-PARITY (26/07/09).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1915"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪99ccf91289c84b07a4508badd57bf2dd"
+  ]
+}

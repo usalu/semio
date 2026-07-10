@@ -93,6 +93,9 @@ pub struct Edit<Op> {
     pub operation_meta: Vec<OperationMeta>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    /// @emoji 🪢 Gesture identity used by `AmendLast` to absorb follow-up operations into this edit.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub coalesce_key: Option<String>,
     pub sequence_number: i32,
     pub started_at: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -183,6 +186,11 @@ pub enum DocumentVcsCommand<Op> {
         #[serde(rename = "checkpointId")]
         checkpoint_id: String,
     },
+    AmendLast {
+        operations: Vec<Op>,
+        /// @emoji 🪢 Matches the last uncommitted edit's `coalesce_key` to absorb into it instead of creating a new edit.
+        coalesce_key: Option<String>,
+    },
 }
 //#endregion 🔖Schemas
 
@@ -242,6 +250,104 @@ impl<TId, TPatch, TAdded> Default for CollectionDiff<TId, TPatch, TAdded> {
     }
 }
 //#endregion 🔖CollectionDiff
+
+//#region 🔖CollectionOp
+/// @emoji 🏷️ Identifies an item within a `Vec` by a stable id, for generic collection ops.
+pub trait Identified<TId> {
+    fn id(&self) -> &TId;
+}
+
+/// @emoji 🩹 Applies a patch in place and returns the patch that undoes it (captured from prior state).
+pub trait Patchable<TPatch> {
+    fn apply_patch(&mut self, patch: &TPatch) -> TPatch;
+}
+
+/// @emoji 🧺 Generic ordered-collection operation (add/remove/move/patch) with mechanical pre-state inverses.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum CollectionOp<TId, TItem, TPatch> {
+    Add { index: usize, item: TItem },
+    Remove { id: TId },
+    Move { id: TId, to_index: usize },
+    Patch { id: TId, patch: TPatch },
+}
+
+/// @emoji ▶️ Applies a `CollectionOp` to a `Vec` in place.
+pub fn apply_collection_op<TId, TItem, TPatch>(items: &mut Vec<TItem>, op: &CollectionOp<TId, TItem, TPatch>)
+where
+    TId: PartialEq + Clone,
+    TItem: Identified<TId> + Clone + Patchable<TPatch>,
+{
+    match op {
+        CollectionOp::Add { index, item } => {
+            let at = (*index).min(items.len());
+            items.insert(at, item.clone());
+        }
+        CollectionOp::Remove { id } => {
+            items.retain(|item| item.id() != id);
+        }
+        CollectionOp::Move { id, to_index } => {
+            if let Some(from) = items.iter().position(|item| item.id() == id) {
+                let item = items.remove(from);
+                let at = (*to_index).min(items.len());
+                items.insert(at, item);
+            }
+        }
+        CollectionOp::Patch { id, patch } => {
+            if let Some(item) = items.iter_mut().find(|item| item.id() == id) {
+                item.apply_patch(patch);
+            }
+        }
+    }
+}
+
+/// @emoji ↩️ Computes the inverse `CollectionOp` from the pre-state `items`. Panics if `op` targets
+/// an id absent from `items` (Remove/Move/Patch always target an existing item by construction).
+pub fn invert_collection_op<TId, TItem, TPatch>(
+    items: &[TItem],
+    op: &CollectionOp<TId, TItem, TPatch>,
+) -> CollectionOp<TId, TItem, TPatch>
+where
+    TId: PartialEq + Clone,
+    TItem: Identified<TId> + Clone + Patchable<TPatch>,
+{
+    match op {
+        CollectionOp::Add { item, .. } => CollectionOp::Remove { id: item.id().clone() },
+        CollectionOp::Remove { id } => {
+            let index = items
+                .iter()
+                .position(|item| item.id() == id)
+                .expect("remove target must exist in pre-state");
+            CollectionOp::Add {
+                index,
+                item: items[index].clone(),
+            }
+        }
+        CollectionOp::Move { id, .. } => {
+            let index = items
+                .iter()
+                .position(|item| item.id() == id)
+                .expect("move target must exist in pre-state");
+            CollectionOp::Move {
+                id: id.clone(),
+                to_index: index,
+            }
+        }
+        CollectionOp::Patch { id, patch } => {
+            let mut prior = items
+                .iter()
+                .find(|item| item.id() == id)
+                .cloned()
+                .expect("patch target must exist in pre-state");
+            let inverse_patch = prior.apply_patch(patch);
+            CollectionOp::Patch {
+                id: id.clone(),
+                patch: inverse_patch,
+            }
+        }
+    }
+}
+//#endregion 🔖CollectionOp
 
 //#region 🔖Operation
 /// @emoji 📦 Centralized projection mutation — one `apply` per technology.
@@ -707,32 +813,9 @@ where
                     return Err(VcsError::EmptyApply);
                 }
                 let started_at = now_iso();
-                let mut projection = self.projection()?;
-                let mut forwards = Vec::with_capacity(operations.len());
-                let mut backwards = Vec::new();
-                let mut operation_meta = Vec::with_capacity(operations.len());
-                for operation in operations {
-                    let mut back = operation.backwards(&projection);
-                    back.reverse();
-                    backwards.extend(back);
-                    operation_meta.push(OperationMeta {
-                        operation_id: operation
-                            .operation_id()
-                            .unwrap_or_else(|| create_document_vcs_id("operation")),
-                        dependencies: operation.dependencies(),
-                        base_version: operation.base_version(),
-                        author_id: operation.author_id().unwrap_or_else(|| "local".into()),
-                        timestamp: operation
-                            .timestamp()
-                            .unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
-                        undo_policy: operation.undo_policy(),
-                        payload_hash: Some(semio_framework_hash::hash_bytes(
-                            &serde_json::to_vec(&operation).unwrap_or_default(),
-                        )),
-                    });
-                    projection = apply_operation(&projection, &operation);
-                    forwards.push(operation);
-                }
+                let pre_projection = self.projection()?;
+                let (forwards, backwards, operation_meta, _post) =
+                    Self::replay_operations(&pre_projection, operations);
                 self.edit_sequence += 1;
                 let edit = Edit {
                     id: create_document_vcs_id("edit"),
@@ -740,6 +823,7 @@ where
                     backwards,
                     operation_meta,
                     description,
+                    coalesce_key: None,
                     sequence_number: self.edit_sequence,
                     started_at,
                     finished_at: Some(now_iso()),
@@ -750,7 +834,105 @@ where
                 self.bump();
                 Ok(())
             }
+            DocumentVcsCommand::AmendLast {
+                operations,
+                coalesce_key,
+            } => {
+                if operations.is_empty() {
+                    return Err(VcsError::EmptyApply);
+                }
+                let amend_target = self.applied_edit_ids.last().cloned().filter(|last_id| {
+                    coalesce_key.is_some()
+                        && uncommitted_edit_ids(&self.envelope, &self.applied_edit_ids).contains(last_id)
+                        && self
+                            .envelope
+                            .vcs
+                            .edits
+                            .iter()
+                            .find(|edit| edit.id == *last_id)
+                            .map(|edit| edit.coalesce_key == coalesce_key)
+                            .unwrap_or(false)
+                });
+                if let Some(edit_id) = amend_target {
+                    let pre_ids = &self.applied_edit_ids[..self.applied_edit_ids.len() - 1];
+                    let pre_projection = materialize_document_projection(&self.envelope, pre_ids)?;
+                    let mut combined = self
+                        .envelope
+                        .vcs
+                        .edits
+                        .iter()
+                        .find(|edit| edit.id == edit_id)
+                        .map(|edit| edit.forwards.clone())
+                        .unwrap_or_default();
+                    combined.extend(operations);
+                    let (forwards, backwards, operation_meta, _post) =
+                        Self::replay_operations(&pre_projection, combined);
+                    if let Some(edit) = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
+                        edit.forwards = forwards;
+                        edit.backwards = backwards;
+                        edit.operation_meta = operation_meta;
+                        edit.finished_at = Some(now_iso());
+                    }
+                    self.redo_edit_ids.clear();
+                    self.bump();
+                    Ok(())
+                } else {
+                    let started_at = now_iso();
+                    let pre_projection = self.projection()?;
+                    let (forwards, backwards, operation_meta, _post) =
+                        Self::replay_operations(&pre_projection, operations);
+                    self.edit_sequence += 1;
+                    let edit = Edit {
+                        id: create_document_vcs_id("edit"),
+                        forwards,
+                        backwards,
+                        operation_meta,
+                        description: None,
+                        coalesce_key,
+                        sequence_number: self.edit_sequence,
+                        started_at,
+                        finished_at: Some(now_iso()),
+                    };
+                    self.applied_edit_ids.push(edit.id.clone());
+                    self.envelope.vcs.edits.push(edit);
+                    self.redo_edit_ids.clear();
+                    self.bump();
+                    Ok(())
+                }
+            }
         }
+    }
+
+    /// @emoji 🔂 Replays `operations` over `pre_projection`, returning forwards, reversed-backwards,
+    /// per-operation metadata, and the resulting projection. Shared by `Apply` and `AmendLast`.
+    fn replay_operations(pre_projection: &P, operations: Vec<Op>) -> (Vec<Op>, Vec<Op>, Vec<OperationMeta>, P) {
+        let mut projection = pre_projection.clone();
+        let mut forwards = Vec::with_capacity(operations.len());
+        let mut backwards = Vec::new();
+        let mut operation_meta = Vec::with_capacity(operations.len());
+        for operation in operations {
+            let mut back = operation.backwards(&projection);
+            back.reverse();
+            backwards.extend(back);
+            operation_meta.push(OperationMeta {
+                operation_id: operation
+                    .operation_id()
+                    .unwrap_or_else(|| create_document_vcs_id("operation")),
+                dependencies: operation.dependencies(),
+                base_version: operation.base_version(),
+                author_id: operation.author_id().unwrap_or_else(|| "local".into()),
+                timestamp: operation
+                    .timestamp()
+                    .unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
+                undo_policy: operation.undo_policy(),
+                payload_hash: Some(semio_framework_hash::hash_bytes(
+                    &serde_json::to_vec(&operation).unwrap_or_default(),
+                )),
+            });
+            projection = apply_operation(&projection, &operation);
+            forwards.push(operation);
+        }
+        (forwards, backwards, operation_meta, projection)
     }
 
     pub fn dispatch_json(&mut self, command_json: &str) -> Result<(), VcsError> {
@@ -1237,6 +1419,60 @@ pub fn resolve_backbone(uri: &str) -> Result<Box<dyn Backbone>, VcsError> {
 }
 //#endregion 🔖Backbone
 
+//#region 🔖TestSupport
+/// @emoji 🧪 Round-trip assertions shared by every technology crate's `Operation` test suite.
+pub mod test_support {
+    use super::*;
+
+    /// @emoji 🔁 Asserts that applying `op` then applying its reversed `backwards(pre)` restores `pre`.
+    pub fn assert_operation_round_trip<P, Op>(pre: &P, op: Op)
+    where
+        P: Clone + PartialEq + std::fmt::Debug,
+        Op: Operation<P>,
+    {
+        let post = apply_operation(pre, &op);
+        let mut backwards = op.backwards(pre);
+        backwards.reverse();
+        let restored = backwards
+            .iter()
+            .fold(post, |projection, back_op| apply_operation(&projection, back_op));
+        assert_eq!(&restored, pre, "operation backwards did not restore pre-state");
+    }
+
+    /// @emoji 🗄️ Asserts a full store round trip: Apply→Undo restores `initial`, Redo restores the
+    /// post-apply projection, and replay-materialization agrees with the live store projection.
+    pub fn assert_store_roundtrip<P, Op>(initial: P, op: Op)
+    where
+        P: Clone + Serialize + DeserializeOwned + PartialEq + std::fmt::Debug,
+        Op: Clone + Serialize + DeserializeOwned + Operation<P>,
+    {
+        let envelope = create_document_vcs_envelope("test/v1", "test", initial.clone(), None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![op],
+                description: None,
+            })
+            .expect("apply");
+        let post = store.projection().expect("post projection");
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        assert_eq!(
+            store.projection().expect("undo projection"),
+            initial,
+            "undo did not restore initial projection"
+        );
+        store.dispatch(DocumentVcsCommand::Redo).expect("redo");
+        assert_eq!(
+            store.projection().expect("redo projection"),
+            post,
+            "redo did not restore post projection"
+        );
+        let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("replay");
+        assert_eq!(replayed, post, "materialization from replay diverged from store projection");
+    }
+}
+//#endregion 🔖TestSupport
+
 //#region 🧪Tests
 #[cfg(test)]
 mod tests {
@@ -1477,6 +1713,187 @@ mod tests {
         let parsed: DocumentVcsEnvelope<DemoProjection, DemoOp> =
             serde_json::from_str(&loaded).expect("parse");
         assert_eq!(parsed.vcs.edits.len(), 1);
+    }
+
+    #[test]
+    fn amend_last_absorbs_into_matching_coalesce_key() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::AmendLast {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                coalesce_key: Some("drag".into()),
+            })
+            .expect("first amend");
+        store
+            .dispatch(DocumentVcsCommand::AmendLast {
+                operations: vec![DemoOp::SetN { n: 2 }],
+                coalesce_key: Some("drag".into()),
+            })
+            .expect("second amend");
+        assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced into a single edit");
+        assert_eq!(store.projection().expect("projection").n, 2);
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        assert_eq!(
+            store.projection().expect("projection after undo").n,
+            0,
+            "undo restores pre-gesture state in one step"
+        );
+    }
+
+    #[test]
+    fn amend_last_starts_new_edit_when_coalesce_key_differs() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::AmendLast {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                coalesce_key: Some("drag-a".into()),
+            })
+            .expect("first drag");
+        store
+            .dispatch(DocumentVcsCommand::AmendLast {
+                operations: vec![DemoOp::SetN { n: 2 }],
+                coalesce_key: Some("drag-b".into()),
+            })
+            .expect("second drag");
+        assert_eq!(store.envelope().vcs.edits.len(), 2, "distinct gestures are separate edits");
+    }
+
+    #[test]
+    fn amend_last_does_not_absorb_into_committed_edit() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::AmendLast {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                coalesce_key: Some("drag".into()),
+            })
+            .expect("amend");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message: None,
+                authors: Vec::new(),
+            })
+            .expect("commit");
+        store
+            .dispatch(DocumentVcsCommand::AmendLast {
+                operations: vec![DemoOp::SetN { n: 2 }],
+                coalesce_key: Some("drag".into()),
+            })
+            .expect("amend after commit");
+        assert_eq!(
+            store.envelope().vcs.edits.len(),
+            2,
+            "committed edits are never amended, even with a matching coalesce key"
+        );
+    }
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    struct DemoItem {
+        id: String,
+        value: i32,
+    }
+
+    impl Identified<String> for DemoItem {
+        fn id(&self) -> &String {
+            &self.id
+        }
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    struct DemoItemPatch {
+        value: Option<i32>,
+    }
+
+    impl Patchable<DemoItemPatch> for DemoItem {
+        fn apply_patch(&mut self, patch: &DemoItemPatch) -> DemoItemPatch {
+            let inverse = DemoItemPatch { value: Some(self.value) };
+            if let Some(value) = patch.value {
+                self.value = value;
+            }
+            inverse
+        }
+    }
+
+    #[test]
+    fn collection_op_add_and_invert() {
+        let items: Vec<DemoItem> = vec![DemoItem {
+            id: "a".into(),
+            value: 1,
+        }];
+        let op = CollectionOp::Add {
+            index: 1,
+            item: DemoItem {
+                id: "b".into(),
+                value: 2,
+            },
+        };
+        let mut applied = items.clone();
+        apply_collection_op(&mut applied, &op);
+        assert_eq!(applied.len(), 2);
+        assert_eq!(applied[1].id, "b");
+        let inverse = invert_collection_op(&items, &op);
+        apply_collection_op(&mut applied, &inverse);
+        assert_eq!(applied, items);
+    }
+
+    #[test]
+    fn collection_op_move_and_invert() {
+        let items: Vec<DemoItem> = vec![
+            DemoItem { id: "a".into(), value: 1 },
+            DemoItem { id: "b".into(), value: 2 },
+            DemoItem { id: "c".into(), value: 3 },
+        ];
+        let op = CollectionOp::Move {
+            id: "a".into(),
+            to_index: 2,
+        };
+        let mut applied = items.clone();
+        apply_collection_op(&mut applied, &op);
+        assert_eq!(applied.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["b", "c", "a"]);
+        let inverse = invert_collection_op(&items, &op);
+        apply_collection_op(&mut applied, &inverse);
+        assert_eq!(applied, items);
+    }
+
+    #[test]
+    fn collection_op_patch_and_invert() {
+        let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }];
+        let op = CollectionOp::Patch {
+            id: "a".into(),
+            patch: DemoItemPatch { value: Some(9) },
+        };
+        let mut applied = items.clone();
+        apply_collection_op(&mut applied, &op);
+        assert_eq!(applied[0].value, 9);
+        let inverse = invert_collection_op(&items, &op);
+        apply_collection_op(&mut applied, &inverse);
+        assert_eq!(applied, items);
+    }
+
+    #[test]
+    fn collection_op_remove_and_invert() {
+        let items: Vec<DemoItem> = vec![
+            DemoItem { id: "a".into(), value: 1 },
+            DemoItem { id: "b".into(), value: 2 },
+        ];
+        let op = CollectionOp::Remove { id: "a".into() };
+        let mut applied = items.clone();
+        apply_collection_op(&mut applied, &op);
+        assert_eq!(applied.len(), 1);
+        let inverse = invert_collection_op(&items, &op);
+        apply_collection_op(&mut applied, &inverse);
+        assert_eq!(applied, items);
+    }
+
+    #[test]
+    fn test_support_round_trip_helpers_pass_for_demo_op() {
+        test_support::assert_operation_round_trip(&DemoProjection { n: 4 }, DemoOp::SetN { n: 9 });
+        test_support::assert_store_roundtrip(DemoProjection { n: 4 }, DemoOp::SetN { n: 9 });
     }
 }
 //#endregion 🧪Tests

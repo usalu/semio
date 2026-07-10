@@ -1,0 +1,13 @@
+{
+  "title": "VCS-Complete Command Architecture for OS and Playgrounds",
+  "emoji": "🧬",
+  "status": "open",
+  "description": "Make every playground app cleanly register its commands declaratively. Commands that mutate the document become typed VCS operations (with diff + true inverse via Operation::backwards). Undo/redo/checkpoint/alternative become universal framework-level History commands routed through the existing vcs/rs DocumentVcsStore, replacing the three parallel undo systems currently in the repo (per-plugin full-document snapshot stacks, opaque per-canvas WASM session undo in flow/editor, and app-local undo commands). Every app document becomes a DocumentVcsEnvelope materialized by operation replay via materialize_document_projection. View state (camera/selection/hover/active tool) stays ephemeral, outside VCS history. Example fixtures stay pure projections, wrapped into a fresh envelope by the framework host at load time. In studio mode, the focused child app owns its own undo; the studio OsStore only records studio-graph operations (spawn/connect/parameters), not nested child-app operations.\n\nFull plan at /Users/ueli/.claude/plans/os-playgrounds-make-sure-fancy-bengio.md. Sequence: (1) vcs/rs engine additions (AmendLast command, round-trip test_support helpers, shared CollectionOp/graph/field/transform op modules), (2) framework/core CommandKind/CommandDefinition + TS mirrors, (3) framework/plugin/rs VcsApp trait + VcsAppHost + AppDocument, replacing PluginApp::handle_command_patch_ops, (4) shell os-shell.tsx palette-from-registry + typed processPluginOps + undo unification, (5) per-app migration in waves from simplest (presentation-tile-play, imperative-play) to hardest (puzzle-2d, flow, lowpoly), (6) vcs/core TS types bundle. Greenfield: no compatibility layers, no migrations, rewrite fixtures directly.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1908"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪6ab81cac29ea4aad82712c5caafe3562"
+  ]
+}

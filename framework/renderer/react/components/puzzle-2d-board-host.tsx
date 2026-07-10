@@ -31,6 +31,8 @@ function syncBoardSessionFromScene(session: Puzzle2dBoardWasmSession, scene: Puz
     session.parseFixtureJson(scene.fixtureJson);
     session.setKindCatalogsJson(scene.kindCatalogsJson);
     session.setSelectionIdsJson(scene.selectionJson);
+    session.setHoveredIdSilent?.(scene.hoveredId ?? null);
+    if (scene.activeTool) session.setActiveTool?.(scene.activeTool);
     const camera = parseBoardCamera(scene.cameraJson);
     if (camera) session.setCamera(camera.x, camera.y, camera.zoom);
   } catch {

@@ -25,6 +25,7 @@ import {
   type GumballConfig,
   type GumballHandleKind,
   type GumballPose,
+  type SelectionMarqueeCoverage,
   type SelectionMarqueeMethod,
   type SelectionMarqueePoint,
 } from "@semio-tech/ui-react";
@@ -587,6 +588,7 @@ function WorldInstanceNode({
   onWorldPick,
   onComponentHover,
   mergeMode,
+  previewInstanceSelected,
 }: {
   readonly instance: WorldInstanceRecord;
   readonly index: number;
@@ -616,12 +618,16 @@ function WorldInstanceNode({
   readonly onWorldPick: (args: { granularity: string; id: number; merge: string }) => void;
   readonly onComponentHover: (args: { objectId: string; mode: string; id: number } | null) => void;
   readonly mergeMode: (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => string;
+  /** Live marquee-drag merged selection state for this instance; undefined when no drag is in progress. */
+  readonly previewInstanceSelected?: boolean;
 }) {
   const isActiveObject = instance.id === activeObjectId;
-  const meshTint = instance.selected ? colors.select : instance.hovered ? colors.hover : colors.mesh;
-  const hoveredFaceId = isActiveObject && hoveredComponent?.mode === "face" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
-  const hoveredVertexId = isActiveObject && hoveredComponent?.mode === "vertex" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
-  const hoveredEdgeId = isActiveObject && hoveredComponent?.mode === "edge" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
+  const effectiveSelected = previewInstanceSelected ?? instance.selected;
+  const previewAddedInstance = previewInstanceSelected === true && !instance.selected;
+  const meshTint = previewAddedInstance ? colors.hover : effectiveSelected ? colors.select : instance.hovered ? colors.hover : colors.mesh;
+  const hoveredFaceId = hoveredComponent?.mode === "face" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
+  const hoveredVertexId = hoveredComponent?.mode === "vertex" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
+  const hoveredEdgeId = hoveredComponent?.mode === "edge" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
   const selectedFaceIds = isActiveObject && selectionMode === "face" ? selectedComponentIds : new Set<number>();
   const selectedVertexIds = isActiveObject && selectionMode === "vertex" ? selectedComponentIds : new Set<number>();
   const selectedEdgeIds = isActiveObject && selectionMode === "edge" ? selectedComponentIds : new Set<number>();
@@ -692,7 +698,7 @@ function WorldInstanceNode({
               onClick={(event) => {
                 if (!pickEnabled || !meshData?.edgeIds?.length) return;
                 event.stopPropagation();
-                const edgeIndex = event.index ?? 0;
+                const edgeIndex = Math.floor((event.index ?? 0) / 2);
                 const edgeId = meshData.edgeIds[edgeIndex];
                 if (edgeId == null) return;
                 onWorldPick({ granularity: "edge", id: edgeId, merge: mergeMode(event) });
@@ -700,7 +706,7 @@ function WorldInstanceNode({
               onPointerMove={(event) => {
                 if (!pickEnabled || !meshData?.edgeIds?.length) return;
                 event.stopPropagation();
-                const edgeIndex = event.index ?? 0;
+                const edgeIndex = Math.floor((event.index ?? 0) / 2);
                 const edgeId = meshData.edgeIds[edgeIndex];
                 if (edgeId == null) return;
                 onComponentHover({ objectId: instance.id, mode: "edge", id: edgeId });
@@ -826,7 +832,8 @@ function WorldInstancesLayer({
   gumballDragActive,
   onGumballDraggingChanged,
   onGumballDragEnd,
-  previewComponentIds,
+  mergedComponentIds,
+  mergedInstanceIds,
   blockPick,
 }: {
   readonly instances: readonly WorldInstanceRecord[];
@@ -841,7 +848,10 @@ function WorldInstancesLayer({
   readonly gumballDragActive: boolean;
   readonly onGumballDraggingChanged: (dragging: boolean) => void;
   readonly onGumballDragEnd: (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => void;
-  readonly previewComponentIds: ReadonlySet<number>;
+  /** Live drag-preview merged component id set (null when no marquee drag is in progress). */
+  readonly mergedComponentIds?: readonly number[] | null;
+  /** Live drag-preview merged whole-instance id set (null when no marquee drag is in progress). */
+  readonly mergedInstanceIds?: readonly string[] | null;
   readonly blockPick?: boolean;
 }) {
   const meshById = useMemo(() => new Map(meshes.map((mesh) => [mesh.id, mesh])), [meshes]);
@@ -854,18 +864,18 @@ function WorldInstancesLayer({
   }, [meshes]);
   const targets = selection.targets ?? { mesh: true, vertex: false, edge: false, face: false };
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
-  const selectedComponentIds = new Set(selection.componentIds ?? []);
-  const pickEnabled = !gumballDragActive && !onPaintAt && !blockPick;
+  const currentComponentIds = new Set(selection.componentIds ?? []);
+  const mergedComponentIdsSet = mergedComponentIds ? new Set(mergedComponentIds) : null;
+  // Still-selected (solid) = current ∩ merged when dragging; newly-added (preview tint) = merged − current.
+  const selectedComponentIds = mergedComponentIdsSet ? new Set([...currentComponentIds].filter((id) => mergedComponentIdsSet.has(id))) : currentComponentIds;
+  const previewComponentIds = mergedComponentIdsSet ? new Set([...mergedComponentIdsSet].filter((id) => !currentComponentIds.has(id))) : new Set<number>();
+  const mergedInstanceIdsSet = mergedInstanceIds ? new Set(mergedInstanceIds) : null;
+  const pickEnabled = !gumballDragActive && !onPaintAt && !blockPick && !mergedComponentIdsSet && !mergedInstanceIdsSet;
   const transformTool = selection.transformTool ?? "move";
   const gumballConfig = useMemo(() => gumballConfigForTransformTool(transformTool), [transformTool]);
   const paintMode = selection.interactionMode === "paint";
 
-  const mergeMode = (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
-    const mode = marqueeModeFromModifiers(event);
-    if (mode === "additive") return "add";
-    if (mode === "subtractive" || mode === "invertive") return "toggle";
-    return "replace";
-  };
+  const mergeMode = (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentMergeArg(marqueeModeFromModifiers(event));
 
   const paintFromHit = (objectId: string, mesh: WorldMeshData, event: ThreeEvent<PointerEvent> & { faceIndex?: number | null; uv?: { x: number; y: number } }) => {
     if (!onPaintAt) return;
@@ -895,10 +905,12 @@ function WorldInstancesLayer({
           const scale = instance.scale ?? [1, 1, 1];
           const rotation = instance.rotation;
           const quaternion = rotation ? new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]) : undefined;
+          const previewInstanceSelected = mergedInstanceIdsSet ? mergedInstanceIdsSet.has(instance.id) : undefined;
           return (
             <WorldInstanceNode
               key={instance.id}
               instance={instance}
+              previewInstanceSelected={previewInstanceSelected}
               index={index}
               meshRecord={meshRecord}
               meshData={meshData}
@@ -1069,6 +1081,43 @@ function EngagementPreviewLayer({ items, color }: { readonly items: readonly Wor
   );
 }
 
+const MARQUEE_DRAG_THRESHOLD_PX = 4;
+
+/** @emoji 🎯 Generic add/remove/toggle/replace merge, mirrors `selectionMergeIds` from `@semio-tech/ui-react` for non-string id sets. */
+function mergeIdSet<T>(mode: ReturnType<typeof marqueeModeFromModifiers>, current: readonly T[], incoming: readonly T[]): T[] {
+  const currentSet = new Set(current);
+  const incomingSet = new Set(incoming);
+  if (mode === "default") return [...incomingSet];
+  if (mode === "additive") {
+    for (const id of incomingSet) currentSet.add(id);
+    return [...currentSet];
+  }
+  if (mode === "subtractive") {
+    for (const id of incomingSet) currentSet.delete(id);
+    return [...currentSet];
+  }
+  for (const id of incomingSet) {
+    if (currentSet.has(id)) currentSet.delete(id);
+    else currentSet.add(id);
+  }
+  return [...currentSet];
+}
+
+/** @emoji 🖱️ additive→add, subtractive→remove, invertive→toggle, default→replace (whole-instance picks/marquee). */
+function instanceMergeArg(mode: ReturnType<typeof marqueeModeFromModifiers>): string {
+  if (mode === "additive") return "add";
+  if (mode === "subtractive") return "remove";
+  if (mode === "invertive") return "toggle";
+  return "replace";
+}
+
+/** @emoji 🖱️ Same as {@link instanceMergeArg} but a bare click (no modifiers) defaults to invertive, matching premigration component-pick behavior. */
+function componentMergeArg(mode: ReturnType<typeof marqueeModeFromModifiers>): string {
+  if (mode === "additive") return "add";
+  if (mode === "subtractive") return "remove";
+  return "toggle";
+}
+
 function pointInMarqueeRect(sx: number, sy: number, marquee: readonly SelectionMarqueePoint[]): boolean {
   if (marquee.length < 2) return false;
   const start = marquee[0]!;
@@ -1078,6 +1127,30 @@ function pointInMarqueeRect(sx: number, sy: number, marquee: readonly SelectionM
   const minY = Math.min(start.y, end.y);
   const maxY = Math.max(start.y, end.y);
   return sx >= minX && sx <= maxX && sy >= minY && sy <= maxY;
+}
+
+/** @emoji 🎯 Even-odd point-in-polygon test for lasso selection. */
+function pointInPolygon(sx: number, sy: number, polygon: readonly SelectionMarqueePoint[]): boolean {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const a = polygon[i]!;
+    const b = polygon[j]!;
+    const intersects = a.y > sy !== b.y > sy && sx < ((b.x - a.x) * (sy - a.y)) / (b.y - a.y) + a.x;
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}
+
+function pointInMarqueeRegion(sx: number, sy: number, method: SelectionMarqueeMethod, marquee: readonly SelectionMarqueePoint[]): boolean {
+  if (method === "lasso" && marquee.length >= 3) return pointInPolygon(sx, sy, marquee);
+  return pointInMarqueeRect(sx, sy, marquee);
+}
+
+/** @emoji 🎯 Window (full containment, all points) vs crossing (partial, any point) semantics for multi-point elements. */
+function pointsSatisfyMarquee(points: readonly (readonly [number, number])[], method: SelectionMarqueeMethod, marquee: readonly SelectionMarqueePoint[], coverage: SelectionMarqueeCoverage): boolean {
+  if (points.length === 0) return false;
+  const test = (point: readonly [number, number]) => pointInMarqueeRegion(point[0], point[1], method, marquee);
+  return coverage === "full" ? points.every(test) : points.some(test);
 }
 
 function projectWorldPoint(point: readonly [number, number, number], offset: readonly [number, number, number], camera: import("three").Camera, rect: DOMRect): { readonly x: number; readonly y: number } {
@@ -1096,6 +1169,8 @@ function resolveMarqueeComponentIds(
   marquee: readonly SelectionMarqueePoint[],
   rect: DOMRect,
   camera: import("three").Camera,
+  method: SelectionMarqueeMethod,
+  coverage: SelectionMarqueeCoverage,
 ): readonly number[] {
   const active = instances.find((instance) => instance.id === activeObjectId);
   if (!active) return [];
@@ -1103,45 +1178,104 @@ function resolveMarqueeComponentIds(
   const meshData = meshes.find((mesh) => mesh.id === meshId)?.data;
   if (!meshData) return [];
   const offset = (active.position ?? [0, 0, 0]) as [number, number, number];
+  const project = (point: readonly [number, number, number]): readonly [number, number] => {
+    const screen = projectWorldPoint(point, offset, camera, rect);
+    return [screen.x, screen.y];
+  };
   const hits = new Set<number>();
   if (selectionMode === "vertex") {
     const pick = buildVertexPickData(meshData);
     if (!pick) return [];
     const positions = pick.geometry.attributes.position!;
     for (let index = 0; index < pick.vertexIds.length; index += 1) {
-      const screen = projectWorldPoint([positions.getX(index), positions.getY(index), positions.getZ(index)], offset, camera, rect);
-      if (pointInMarqueeRect(screen.x, screen.y, marquee)) hits.add(pick.vertexIds[index]!);
+      const point = project([positions.getX(index), positions.getY(index), positions.getZ(index)]);
+      if (pointsSatisfyMarquee([point], method, marquee, coverage)) hits.add(pick.vertexIds[index]!);
     }
   } else if (selectionMode === "edge" && meshData.edgeIds && meshData.edgePositions) {
     for (let edgeIndex = 0; edgeIndex < meshData.edgeIds.length; edgeIndex += 1) {
       const base = edgeIndex * 6;
-      const screen = projectWorldPoint(
-        [(meshData.edgePositions[base]! + meshData.edgePositions[base + 3]!) * 0.5, (meshData.edgePositions[base + 1]! + meshData.edgePositions[base + 4]!) * 0.5, (meshData.edgePositions[base + 2]! + meshData.edgePositions[base + 5]!) * 0.5],
-        offset,
-        camera,
-        rect,
-      );
-      if (pointInMarqueeRect(screen.x, screen.y, marquee)) hits.add(meshData.edgeIds[edgeIndex]!);
+      const a = project([meshData.edgePositions[base]!, meshData.edgePositions[base + 1]!, meshData.edgePositions[base + 2]!]);
+      const b = project([meshData.edgePositions[base + 3]!, meshData.edgePositions[base + 4]!, meshData.edgePositions[base + 5]!]);
+      if (pointsSatisfyMarquee([a, b], method, marquee, coverage)) hits.add(meshData.edgeIds[edgeIndex]!);
     }
   } else if (selectionMode === "face" && meshData.faceIds && meshData.indices.length) {
     for (let faceIndex = 0; faceIndex < meshData.faceIds.length; faceIndex += 1) {
       const i0 = meshData.indices[faceIndex * 3] ?? 0;
       const i1 = meshData.indices[faceIndex * 3 + 1] ?? 0;
       const i2 = meshData.indices[faceIndex * 3 + 2] ?? 0;
-      const screen = projectWorldPoint(
-        [
-          (meshData.positions[i0 * 3]! + meshData.positions[i1 * 3]! + meshData.positions[i2 * 3]!) / 3,
-          (meshData.positions[i0 * 3 + 1]! + meshData.positions[i1 * 3 + 1]! + meshData.positions[i2 * 3 + 1]!) / 3,
-          (meshData.positions[i0 * 3 + 2]! + meshData.positions[i1 * 3 + 2]! + meshData.positions[i2 * 3 + 2]!) / 3,
-        ],
-        offset,
-        camera,
-        rect,
-      );
-      if (pointInMarqueeRect(screen.x, screen.y, marquee)) hits.add(meshData.faceIds[faceIndex]!);
+      const p0 = project([meshData.positions[i0 * 3]!, meshData.positions[i0 * 3 + 1]!, meshData.positions[i0 * 3 + 2]!]);
+      const p1 = project([meshData.positions[i1 * 3]!, meshData.positions[i1 * 3 + 1]!, meshData.positions[i1 * 3 + 2]!]);
+      const p2 = project([meshData.positions[i2 * 3]!, meshData.positions[i2 * 3 + 1]!, meshData.positions[i2 * 3 + 2]!]);
+      if (pointsSatisfyMarquee([p0, p1, p2], method, marquee, coverage)) hits.add(meshData.faceIds[faceIndex]!);
     }
   }
   return [...hits];
+}
+
+/** @emoji 📦 Local-space AABB corners of a mesh's vertex positions (fallback: origin only). */
+function meshBoundsCorners(meshData: WorldMeshData): readonly (readonly [number, number, number])[] {
+  let minX = Infinity;
+  let minY = Infinity;
+  let minZ = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  let maxZ = -Infinity;
+  for (let index = 0; index < meshData.positions.length; index += 3) {
+    const x = meshData.positions[index]!;
+    const y = meshData.positions[index + 1]!;
+    const z = meshData.positions[index + 2]!;
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+    if (z < minZ) minZ = z;
+    if (z > maxZ) maxZ = z;
+  }
+  if (!Number.isFinite(minX)) return [[0, 0, 0]];
+  return [
+    [minX, minY, minZ],
+    [maxX, minY, minZ],
+    [minX, maxY, minZ],
+    [maxX, maxY, minZ],
+    [minX, minY, maxZ],
+    [maxX, minY, maxZ],
+    [minX, maxY, maxZ],
+    [maxX, maxY, maxZ],
+  ];
+}
+
+function resolveMarqueeInstanceIds(
+  instances: readonly WorldInstanceRecord[],
+  meshes: readonly WorldMeshRecord[],
+  marquee: readonly SelectionMarqueePoint[],
+  rect: DOMRect,
+  camera: import("three").Camera,
+  method: SelectionMarqueeMethod,
+  coverage: SelectionMarqueeCoverage,
+): readonly string[] {
+  const meshById = new Map(meshes.map((mesh) => [mesh.id, mesh]));
+  const hits: string[] = [];
+  instances.forEach((instance, index) => {
+    const meshId = instance.meshId ?? instance.id;
+    const meshData = meshById.get(meshId)?.data;
+    const position = (instance.position ?? [instance.x ?? index, instance.y ?? 0, instance.z ?? 0]) as [number, number, number];
+    const scale = (instance.scale ?? [1, 1, 1]) as [number, number, number];
+    const rotation = instance.rotation;
+    const quaternion = rotation ? new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]) : undefined;
+    const localCorners = meshData ? meshBoundsCorners(meshData) : [[0, 0, 0] as const];
+    const worldCorners = localCorners.map((corner) => {
+      const v = new Vector3(corner[0] * scale[0], corner[1] * scale[1], corner[2] * scale[2]);
+      if (quaternion) v.applyQuaternion(quaternion);
+      v.add(new Vector3(position[0], position[1], position[2]));
+      return [v.x, v.y, v.z] as const;
+    });
+    const points = worldCorners.map((corner) => {
+      const screen = projectWorldPoint(corner, [0, 0, 0], camera, rect);
+      return [screen.x, screen.y] as const;
+    });
+    if (pointsSatisfyMarquee(points, method, marquee, coverage)) hits.push(instance.id);
+  });
+  return hits;
 }
 
 function CameraRefBridge({ cameraRef }: { readonly cameraRef: React.MutableRefObject<import("three").Camera | null> }) {
@@ -1149,6 +1283,16 @@ function CameraRefBridge({ cameraRef }: { readonly cameraRef: React.MutableRefOb
   useEffect(() => {
     cameraRef.current = camera;
   }, [camera, cameraRef]);
+  return null;
+}
+
+/** @emoji 🎯 Widens Line/Points raycast hit area so thin edge/vertex geometry is reliably pickable without stealing face clicks. */
+function RaycasterPickTuning() {
+  const raycaster = useThree((state) => state.raycaster);
+  useEffect(() => {
+    raycaster.params.Line = { threshold: 0.05 };
+    raycaster.params.Points = { threshold: 0.05 };
+  }, [raycaster]);
   return null;
 }
 
@@ -1169,21 +1313,6 @@ function raycastGroundPoint(clientX: number, clientY: number, hostRect: DOMRect,
   if (t < 0) return null;
   const hit = origin.add(direction.multiplyScalar(t));
   return [hit.x, hit.y, hit.z];
-}
-
-function instanceCenterInMarquee(instance: WorldInstanceRecord, index: number, marquee: readonly SelectionMarqueePoint[], hostRect: DOMRect, camera: import("three").Camera): boolean {
-  if (marquee.length < 2) return false;
-  const position = instance.position ?? [instance.x ?? index, instance.y ?? 0, instance.z ?? 0];
-  const projected = new Vector3(position[0], position[1], position[2]).project(camera);
-  const sx = ((projected.x + 1) / 2) * hostRect.width;
-  const sy = ((-projected.y + 1) / 2) * hostRect.height;
-  const start = marquee[0]!;
-  const end = marquee[marquee.length - 1]!;
-  const minX = Math.min(start.x, end.x);
-  const maxX = Math.max(start.x, end.x);
-  const minY = Math.min(start.y, end.y);
-  const maxY = Math.max(start.y, end.y);
-  return sx >= minX && sx <= maxX && sy >= minY && sy <= maxY;
 }
 
 //#region World3dHost
@@ -1212,13 +1341,23 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
   const hostRef = useRef<HTMLDivElement | null>(null);
   const lodRef = useRef(DEFAULT_MANUAL_LOD);
   const [marqueePath, setMarqueePath] = useState<readonly SelectionMarqueePoint[]>([]);
-  const [marqueeActive, setMarqueeActive] = useState(false);
-  const [marqueePreviewIds, setMarqueePreviewIds] = useState<readonly number[]>([]);
+  const [marqueeModifiers, setMarqueeModifiers] = useState<{ readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean }>({ shiftKey: false, ctrlKey: false, metaKey: false });
   const [gumballDragActive, setGumballDragActive] = useState(false);
   const [paintStrokeActive, setPaintStrokeActive] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number } | null>(null);
   const cameraRef = useRef<import("three").Camera | null>(null);
+  const wasMarqueeDragRef = useRef(false);
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
+  const marqueeDown = marqueePath.length > 0;
+  const method = selection.method ?? "rectangle";
+  const marqueeStart = marqueePath[0];
+  const marqueeEnd = marqueePath[marqueePath.length - 1];
+  const marqueeDragActive = marqueeDown && marqueePath.length > 1 && marqueeStart != null && marqueeEnd != null && Math.hypot(marqueeEnd.x - marqueeStart.x, marqueeEnd.y - marqueeStart.y) > MARQUEE_DRAG_THRESHOLD_PX;
+  const marqueeMergeMode = useMemo(() => marqueeModeFromModifiers(marqueeModifiers), [marqueeModifiers]);
+  const marqueeCoverage: SelectionMarqueeCoverage = useMemo(() => {
+    if (!marqueeDragActive || !marqueeStart || !marqueeEnd) return "full";
+    return marqueeCoverageFromGesture({ method, startX: marqueeStart.x, endX: marqueeEnd.x, path: marqueePath });
+  }, [marqueeDragActive, marqueeEnd, marqueePath, marqueeStart, method]);
 
   const dispatch = useCallback(
     (command: string, args?: Record<string, unknown>) => {
@@ -1322,12 +1461,6 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
     [dispatch, handleZoomToSelection],
   );
 
-  const mergeModeToArg = (mode: ReturnType<typeof marqueeModeFromModifiers>) => {
-    if (mode === "additive") return "add";
-    if (mode === "subtractive" || mode === "invertive") return "toggle";
-    return "replace";
-  };
-
   const selectionArgs = useCallback(
     () => ({
       mode: selection.selectionMode ?? selection.granularity ?? "mesh",
@@ -1338,7 +1471,7 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
 
   const handleInstancePointerDown = useCallback(
     (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => {
-      const merge = mergeModeToArg(marqueeModeFromModifiers(event));
+      const merge = instanceMergeArg(marqueeModeFromModifiers(event));
       if (selectionMode === "mesh" || selectionMode === "object") {
         dispatch("worldPick", { granularity: "mesh", id: index, merge });
         return;
@@ -1431,21 +1564,17 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
     [cameraState.fov, dispatch],
   );
 
-  const updateMarqueePreview = useCallback(
-    (path: readonly SelectionMarqueePoint[]) => {
-      if (path.length < 2 || !hostRef.current || !cameraRef.current) {
-        setMarqueePreviewIds([]);
-        return;
-      }
-      if (selectionMode === "mesh" || selectionMode === "object") {
-        setMarqueePreviewIds([]);
-        return;
-      }
-      const rect = hostRef.current.getBoundingClientRect();
-      setMarqueePreviewIds(resolveMarqueeComponentIds(instances, meshes, selectionMode, selection.activeObjectId, path, rect, cameraRef.current));
-    },
-    [instances, meshes, selection.activeObjectId, selectionMode],
-  );
+  const marqueePreview = useMemo<{ readonly mergedComponentIds: readonly number[] | null; readonly mergedInstanceIds: readonly string[] | null }>(() => {
+    if (!marqueeDragActive || !hostRef.current || !cameraRef.current) return { mergedComponentIds: null, mergedInstanceIds: null };
+    const rect = hostRef.current.getBoundingClientRect();
+    const camera = cameraRef.current;
+    if (selectionMode === "mesh" || selectionMode === "object") {
+      const hits = resolveMarqueeInstanceIds(instances, meshes, marqueePath, rect, camera, method, marqueeCoverage);
+      return { mergedComponentIds: null, mergedInstanceIds: mergeIdSet(marqueeMergeMode, selection.ids ?? [], hits) };
+    }
+    const hits = resolveMarqueeComponentIds(instances, meshes, selectionMode, selection.activeObjectId, marqueePath, rect, camera, method, marqueeCoverage);
+    return { mergedComponentIds: mergeIdSet(marqueeMergeMode, selection.componentIds ?? [], hits), mergedInstanceIds: null };
+  }, [instances, marqueeCoverage, marqueeDragActive, marqueeMergeMode, marqueePath, meshes, method, selection.activeObjectId, selection.componentIds, selection.ids, selectionMode]);
 
   const handleGumballDragEnd = useCallback(
     (_kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
@@ -1501,88 +1630,51 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
           return;
         }
       }
-      if (event.target !== hostRef.current) return;
       if (paintMode) {
         setPaintStrokeActive(true);
         dispatch("paintStrokeBegin");
       }
-      setMarqueeActive(true);
-      const point = toLocalPoint(event);
-      setMarqueePath([point]);
-      updateMarqueePreview([point]);
+      setMarqueeModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
+      setMarqueePath([toLocalPoint(event)]);
     },
-    [dispatch, node.surfaceId, paintMode, selection.engagementSessionActive, toLocalPoint, updateMarqueePreview],
+    [dispatch, node.surfaceId, paintMode, selection.engagementSessionActive, toLocalPoint],
   );
 
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      if (!marqueeActive) return;
-      setMarqueePath((path) => {
-        const next = [...path, toLocalPoint(event)];
-        updateMarqueePreview(next);
-        return next;
-      });
+      if (!marqueeDown) return;
+      setMarqueeModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
+      setMarqueePath((path) => [...path, toLocalPoint(event)]);
     },
-    [marqueeActive, toLocalPoint, updateMarqueePreview],
+    [marqueeDown, toLocalPoint],
   );
 
-  const handlePointerUp = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      if (marqueeActive && marqueePath.length === 1 && event.target === hostRef.current) {
-        dispatch("worldPick", {
-          granularity: selectionMode,
-          id: null,
-          merge: mergeModeToArg(marqueeModeFromModifiers(event)),
-        });
+  const handlePointerUp = useCallback(() => {
+    if (marqueeDragActive) {
+      if (marqueePreview.mergedInstanceIds) {
+        dispatch("worldSelect", { ids: marqueePreview.mergedInstanceIds, merge: "replace" });
+      } else if (marqueePreview.mergedComponentIds) {
+        dispatch("setSelection", { mode: selectionMode, ids: marqueePreview.mergedComponentIds });
       }
-      if (marqueeActive && marqueePath.length > 1 && hostRef.current && cameraRef.current) {
-        const rect = hostRef.current.getBoundingClientRect();
-        const camera = cameraRef.current;
-        const merge = mergeModeToArg(marqueeModeFromModifiers(event));
-        if (selectionMode === "mesh" || selectionMode === "object") {
-          const selected = instances.filter((instance, index) => instanceCenterInMarquee(instance, index, marqueePath, rect, camera)).map((instance) => instance.id);
-          if (selected.length > 0) {
-            dispatch("worldSelect", { ids: selected, merge });
-          }
-        } else {
-          const hits = resolveMarqueeComponentIds(instances, meshes, selectionMode, selection.activeObjectId, marqueePath, rect, camera);
-          if (hits.length > 0) {
-            const ids = merge === "add" ? [...new Set([...(selection.componentIds ?? []), ...hits])] : merge === "toggle" ? hits : hits;
-            if (merge === "toggle") {
-              for (const id of hits) {
-                dispatch("worldPick", { granularity: selectionMode, id, merge: "toggle" });
-              }
-            } else {
-              dispatch("setSelection", { mode: selectionMode, ids });
-            }
-          }
-        }
-      }
-      if (paintStrokeActive) {
-        dispatch("paintStrokeEnd");
-        setPaintStrokeActive(false);
-      }
-      setMarqueeActive(false);
-      setMarqueePath([]);
-      setMarqueePreviewIds([]);
+    }
+    wasMarqueeDragRef.current = marqueeDragActive;
+    if (paintStrokeActive) {
+      dispatch("paintStrokeEnd");
+      setPaintStrokeActive(false);
+    }
+    setMarqueePath([]);
+  }, [dispatch, marqueeDragActive, marqueePreview, paintStrokeActive, selectionMode]);
+
+  const handleEmptyClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (wasMarqueeDragRef.current) return;
+      if (selection.engagementSessionActive || paintMode) return;
+      dispatch("worldPick", { granularity: selectionMode, id: null, merge: instanceMergeArg(marqueeModeFromModifiers(event)) });
     },
-    [dispatch, instances, marqueeActive, marqueePath, meshes, paintStrokeActive, selection.activeObjectId, selection.componentIds, selectionMode],
+    [dispatch, paintMode, selection.engagementSessionActive, selectionMode],
   );
 
   if (!scene) return <div className="semio-world-3d-empty">No world scene</div>;
-
-  const method = selection.method ?? "rectangle";
-  const marqueeStart = marqueePath[0];
-  const marqueeEnd = marqueePath[marqueePath.length - 1];
-  const marqueeCoverage =
-    marqueeStart && marqueeEnd
-      ? marqueeCoverageFromGesture({
-          method,
-          startX: marqueeStart.x,
-          endX: marqueeEnd.x,
-          path: marqueePath,
-        })
-      : "full";
 
   return (
     <div
@@ -1597,15 +1689,17 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onClick={handleEmptyClick}
     >
       <WorldCanvas className="h-full w-full" cameraUp={[0, 0, 1]} cameraFov={cameraState.fov}>
         <WorldOrbitViewSnapGateProvider>
           <WorldOrbitCameraViewRig state={cameraState} seedKey={scene?.cameraJson ?? "default"} perspectiveFov={cameraState.fov} />
-          <WorldOrbitGated controlsGate={marqueeActive || gumballDragActive} onCamera={handleCameraChange} />
+          <WorldOrbitGated controlsGate={marqueeDown || gumballDragActive} onCamera={handleCameraChange} />
           <WorldLodBridge lodRef={lodRef} distanceReference={100} gridFactor={DEFAULT_LOD_GRID_FACTOR} gridSnapEnabled={false} showLodGrid automaticLod depthVariableLod={false} manualLod={DEFAULT_MANUAL_LOD} gridDatum={[0, 0, 0]}>
             <ambientLight intensity={0.65} />
             <directionalLight intensity={0.85} position={[4, 6, 8]} />
             <CameraRefBridge cameraRef={cameraRef} />
+            <RaycasterPickTuning />
             {brushMeshUrls.map((url) => (
               <Suspense key={url} fallback={null}>
                 <BrushMeshRegistrar url={url} onRegister={handleRegisterBrushMesh} />
@@ -1624,7 +1718,8 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
               gumballDragActive={gumballDragActive}
               onGumballDraggingChanged={setGumballDragActive}
               onGumballDragEnd={handleGumballDragEnd}
-              previewComponentIds={new Set(marqueePreviewIds)}
+              mergedComponentIds={marqueePreview.mergedComponentIds}
+              mergedInstanceIds={marqueePreview.mergedInstanceIds}
               blockPick={fillMode}
             />
             <WorldVortexMarkers vortices={vortices} brushMode={brushMode} onHover={handleVortexHover} onSelect={handleVortexSelect} onBrushPlace={handleBrushPlace} />
@@ -1660,7 +1755,7 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
           </WorldLodBridge>
         </WorldOrbitViewSnapGateProvider>
       </WorldCanvas>
-      {marqueeActive && marqueePath.length > 1 && marqueeStart && marqueeEnd ? (
+      {marqueeDragActive && marqueeStart && marqueeEnd ? (
         method === "lasso" ? (
           <SelectionMarquee coverage={marqueeCoverage} shape="polygon" points={marqueePath} />
         ) : (

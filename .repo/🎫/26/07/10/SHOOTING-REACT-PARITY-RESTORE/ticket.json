@@ -1,0 +1,13 @@
+{
+  "title": "Shooting React Parity Restore",
+  "emoji": "📸",
+  "status": "open",
+  "description": "Restore the shooting app to premigration feature parity for the React renderer (see git tag `premigration`). The Rust-plugin migration dropped: real icon rendering (GLB render via iconRenderPort, replaced by placeholder SVG emblem), fixture-driven lighting/material in the model viewport, saved cameras, per-shot cameras, center-model/auto-fit, shot-frame overlay, projection switch, window measures/engagements/toolbar, the modern setHover/worldPick selection protocol, and file import/export. Close these gaps via generic extensions: World3dScene gains optional environmentJson/frameJson/fitJson; new generic icon-render component host in the shared React renderer; new iconRenderExport renderer op; requestFileOpen readAs:dataUrl and downloadMediaExport encoding:base64 root fixes; full command/measure/engagement/tool parity in shooting/plugin/rs/lib.rs. Store/Restore (localStorage) intentionally dropped per dev decision — persistence is the kernel's job.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1913"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪77fadc0789b84e0b862693c5261397a7"
+  ]
+}

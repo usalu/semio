@@ -1,0 +1,13 @@
+{
+  "title": "Trinity React Parity",
+  "emoji": "🔺",
+  "status": "open",
+  "description": "Restore premigration parity for trinity (Jack + Rewrite apps) in the React renderer: fix dead Jack editor (textEdit/textSelect/requestCompletions/formatDocument commands + tokens/diagnostics/completions/occurrences), fix framework text-editor-host onPointerUp scope bug, add 6-tier LOD to node-graph scenes with per-window WindowMeasure select, restore History/Query toolbars via tools(), render graph-kind Jack query results as a graph, restore all 8 example queries, add Geometry inspector group + editable rewrite Name field, replace Rewrite's ad-hoc undo stack with a proper VCS envelope (SetLhs/SetRhs/SetParameter/SetRuleLayout ops), make LHS/RHS rewrite graphs editable with catalogue/context-menu, restore Jack-view occurrence cross-highlighting in Rewrite, fix dishonest SurfaceKinds on rewrite windows, and remove the dead duplicate setJackSelect match arm.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1912"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪0b834584bf0c41e29f494b1b4742bd72"
+  ]
+}

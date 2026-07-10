@@ -1,0 +1,13 @@
+{
+  "title": "Puzzle 5D React Parity",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Get puzzle 5d to premigration level (git tag `premigration`, where puzzle/5d/react/index.tsx was a 5673-line react renderer with model/hover/flatten/brush/palette-drop/structural-delete/inspector-patch/store/five-d/kind-meta/2d-layout/2d-markers/play-host regions) for the react renderer on the migrated Rust plugin architecture: puzzle/plugin/rs/d5 emits UiTree interpreted by framework/renderer/react. Follow the approach of PUZZLE-2D-REACT-PARITY (26/07/09) and PUZZLE-3D-REACT-PARITY (26/07/09).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1907"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪1f5d1089b3544c4595167281204cad9b"
+  ]
+}

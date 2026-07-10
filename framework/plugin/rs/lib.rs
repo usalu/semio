@@ -11,12 +11,12 @@ pub mod app {
 //! 🧩 Declarative app builder and plugin trait.
 
 use semio_framework_core::{
-    collect_window_kind_ids_from_layout, kernel::{
+    collect_window_kind_ids_from_layout, history_command_definitions, kernel::{
         ActorId, CapabilityRequirement, CommandInvocationId, CommandResult, HybridLogicalTimestamp,
         InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
-    AppDefinition, CommandDescriptor, Contribution, ExampleDefinition, Keybinding,
+    AppDefinition, CommandDefinition, CommandDescriptor, CommandKind, Contribution, ExampleDefinition, Keybinding,
     ModeDefinition, NamedLayout, PanelGroup, PanelTabDefinition, PluginManifest, ProgramDefinition, ToolNode,
     UiNode, ViewState, WindowEngagement, WindowKindDefinition, WindowLayout, WindowMeasure,
     SurfaceKind,
@@ -65,6 +65,7 @@ pub struct AppBuilder {
     window_kinds: Vec<WindowKindSpec>,
     panel_tabs: Vec<PanelTabSpec>,
     keybindings: Vec<KeybindingSpec>,
+    commands: Vec<CommandDefinition>,
     named_layouts: Vec<NamedLayout>,
     default_layout: Option<WindowLayout>,
 }
@@ -83,6 +84,7 @@ impl AppBuilder {
             window_kinds: Vec::new(),
             panel_tabs: Vec::new(),
             keybindings: Vec::new(),
+            commands: Vec::new(),
             named_layouts: Vec::new(),
             default_layout: None,
         }
@@ -207,6 +209,27 @@ impl AppBuilder {
         self
     }
 
+    /// @emoji ✏️ Declares a document-mutating command — dispatched as VCS operations with a true inverse.
+    pub fn operation(self, id: impl Into<String>, label: impl Into<String>) -> Self {
+        self.command_with(CommandDefinition::new(id, label, CommandKind::Operation))
+    }
+
+    /// @emoji 👁️ Declares an ephemeral view command (camera, selection, hover, active tool) — not recorded in history.
+    pub fn view_command(self, id: impl Into<String>, label: impl Into<String>) -> Self {
+        self.command_with(CommandDefinition::new(id, label, CommandKind::View))
+    }
+
+    /// @emoji 🐚 Declares a shell-only effect command (navigate, export, spawn) — no document mutation.
+    pub fn shell_command(self, id: impl Into<String>, label: impl Into<String>) -> Self {
+        self.command_with(CommandDefinition::new(id, label, CommandKind::Shell))
+    }
+
+    /// @emoji 📇 Declares a fully specified command (icon, args schema, keybinding, palette visibility, category).
+    pub fn command_with(mut self, command: CommandDefinition) -> Self {
+        self.commands.push(command);
+        self
+    }
+
     pub fn build_definition(self) -> AppDefinition {
         assert!(
             !self.document.is_empty() && self.document.iter().all(|segment| !segment.trim().is_empty()),
@@ -261,6 +284,63 @@ impl AppBuilder {
         let default_mode_id = self
             .default_mode_id
             .or_else(|| self.modes.first().map(|mode| mode.id.clone()));
+        let mut declared_command_ids = HashSet::new();
+        for command in &self.commands {
+            assert!(
+                declared_command_ids.insert(command.id.clone()),
+                "app {} duplicate command id {}",
+                self.id,
+                command.id
+            );
+        }
+        let app_declared_commands = !self.commands.is_empty();
+        let mut commands = self.commands;
+        for history_command in history_command_definitions() {
+            if declared_command_ids.insert(history_command.id.clone()) {
+                commands.push(history_command);
+            }
+        }
+        let mut bound_keys: HashSet<String> = self.keybindings.iter().map(|binding| binding.keys.clone()).collect();
+        let mut keybindings: Vec<Keybinding> = self
+            .keybindings
+            .into_iter()
+            .map(|binding| Keybinding {
+                keys: binding.keys,
+                command: CommandDescriptor {
+                    controller_id: binding.controller_id,
+                    command: binding.command,
+                    args: None,
+                },
+            })
+            .collect();
+        for history_command in commands.iter().filter(|command| command.kind == CommandKind::History) {
+            if let Some(keys) = &history_command.keys {
+                if bound_keys.insert(keys.clone()) {
+                    keybindings.push(Keybinding {
+                        keys: keys.clone(),
+                        command: CommandDescriptor {
+                            controller_id: self.controller_id.clone(),
+                            command: history_command.id.clone(),
+                            args: None,
+                        },
+                    });
+                }
+            }
+        }
+        // Apps that have adopted the declarative command registry must keep their keybindings
+        // in sync with it; apps not yet migrated (no `.operation()`/`.view_command()`/`.shell_command()`
+        // calls) are exempt until their migration wave lands their command declarations.
+        if app_declared_commands {
+            for binding in &keybindings {
+                assert!(
+                    declared_command_ids.contains(&binding.command.command),
+                    "app {} keybinding {} references undeclared command {}",
+                    self.id,
+                    binding.keys,
+                    binding.command.command
+                );
+            }
+        }
         AppDefinition {
             id: self.id,
             label: self.label,
@@ -306,18 +386,8 @@ impl AppBuilder {
                     body_key: tab.body_key,
                 })
                 .collect(),
-            keybindings: self
-                .keybindings
-                .into_iter()
-                .map(|binding| Keybinding {
-                    keys: binding.keys,
-                    command: CommandDescriptor {
-                        controller_id: binding.controller_id,
-                        command: binding.command,
-                        args: None,
-                    },
-                })
-                .collect(),
+            keybindings,
+            commands,
             named_layouts: self.named_layouts,
             default_layout: self.default_layout,
         }
@@ -355,6 +425,75 @@ mod app_builder_tests {
             .build_definition();
         assert_eq!(definition.window_kinds.len(), 1);
         assert_eq!(definition.panel_tabs.len(), 1);
+    }
+
+    fn minimal_app(id: &str) -> AppBuilder {
+        App::builder(id, "App")
+            .document(["semio", id])
+            .mode("edit", "Edit")
+            .window_kind("main", "Main", format!("{id}.main"), SurfaceKind::Canvas2d)
+    }
+
+    #[test]
+    fn build_definition_auto_injects_history_commands_and_keybindings() {
+        let definition = minimal_app("history-app").build_definition();
+        let history_ids: HashSet<&str> = definition.commands.iter().map(|c| c.id.as_str()).collect();
+        assert!(history_ids.contains("undo"));
+        assert!(history_ids.contains("redo"));
+        assert!(history_ids.contains("commitCheckpoint"));
+        assert!(history_ids.contains("createAlternative"));
+        assert!(history_ids.contains("switchAlternative"));
+        assert!(history_ids.contains("checkoutCheckpoint"));
+        let undo_binding = definition
+            .keybindings
+            .iter()
+            .find(|binding| binding.keys == "mod+z")
+            .expect("undo keybinding auto-injected");
+        assert_eq!(undo_binding.command.command, "undo");
+        assert_eq!(undo_binding.command.controller_id, "history-app");
+    }
+
+    #[test]
+    fn build_definition_does_not_duplicate_manually_declared_history_keybinding() {
+        let definition = minimal_app("manual-undo-app")
+            .keybinding("mod+z", "undo")
+            .build_definition();
+        assert_eq!(definition.keybindings.iter().filter(|b| b.keys == "mod+z").count(), 1);
+    }
+
+    #[test]
+    fn operation_view_and_shell_commands_are_declared_with_their_kind() {
+        let definition = minimal_app("typed-commands-app")
+            .operation("addLayer", "Add Layer")
+            .view_command("setCamera", "Set Camera")
+            .shell_command("exportPng", "Export PNG")
+            .build_definition();
+        let by_id = |id: &str| definition.commands.iter().find(|c| c.id == id).expect("declared");
+        assert_eq!(by_id("addLayer").kind, CommandKind::Operation);
+        assert_eq!(by_id("setCamera").kind, CommandKind::View);
+        assert_eq!(by_id("exportPng").kind, CommandKind::Shell);
+    }
+
+    #[test]
+    fn build_definition_rejects_duplicate_command_ids() {
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("dupe-command-app")
+                .operation("addLayer", "Add Layer")
+                .operation("addLayer", "Add Layer Again")
+                .build_definition()
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_rejects_keybinding_for_undeclared_command_once_opted_in() {
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("undeclared-keybinding-app")
+                .operation("addLayer", "Add Layer")
+                .keybinding("mod+l", "removeLayer")
+                .build_definition()
+        });
+        assert!(result.is_err());
     }
 }
 

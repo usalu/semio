@@ -1707,6 +1707,7 @@ mod tests {
                 body_key: "tab.body".into(),
             }],
             keybindings: vec![],
+            commands: vec![],
             named_layouts: vec![],
             default_layout: layout,
         }
