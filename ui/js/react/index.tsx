@@ -14174,15 +14174,18 @@ export function humanizeEngagementStepId(stepId: string): string {
   return trimmed.replace(/[._-]+/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
-/** @emoji ⌨️ Normalizes engagement command text: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`). */
+/** @emoji ⌨️ Normalizes engagement command text: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`), preserving decimal points inside numbers (`3.5` stays `3.5`, not `35`). */
 export function normalizeEngagementCommandText(text: string): string {
-  const words = text
-    .replace(/[^a-zA-Z0-9]+/g, " ")
+  const decimalMarker = "\u0001";
+  const withProtectedDecimals = text.replace(/(\d)\.(\d)/g, `$1${decimalMarker}$2`);
+  const words = withProtectedDecimals
+    .replace(new RegExp(`[^a-zA-Z0-9${decimalMarker}]+`, "g"), " ")
     .trim()
     .split(/\s+/)
     .filter(Boolean)
     .flatMap((word) => word.split(/(?=[A-Z])/))
-    .filter(Boolean);
+    .filter(Boolean)
+    .map((word) => word.split(decimalMarker).join("."));
   return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join("");
 }
 
@@ -22694,6 +22697,13 @@ if (import.meta.vitest) {
       expect(normalizeEngagementCommandText("b ")).toBe("B");
       expect(normalizeEngagementCommandText("box")).toBe("Box");
       expect(normalizeEngagementCommandText("SetHeight")).toBe("SetHeight");
+    });
+
+    it("normalizeEngagementCommandText preserves decimal points inside numbers", () => {
+      expect(normalizeEngagementCommandText("set height 3.5")).toBe("SetHeight3.5");
+      expect(normalizeEngagementCommandText("3.5")).toBe("3.5");
+      expect(normalizeEngagementCommandText("0.25")).toBe("0.25");
+      expect(normalizeEngagementCommandText("dist 12.75")).toBe("Dist12.75");
     });
 
     it("engagementCommandTokenEquals matches tokens regardless of casing", () => {

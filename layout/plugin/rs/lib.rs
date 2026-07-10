@@ -19,7 +19,6 @@ use semio_framework_plugin::layout::{WindowEngagementPossible, WindowEngagementS
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use std::sync::LazyLock;
 
 //#region 🔖Constants
 const LAYOUT_PLAY_APP_ID: &str = "layout-play";
@@ -206,14 +205,6 @@ fn push_undo(play: &mut LayoutPlayEnvelope) {
         play.undo_stack.remove(0);
     }
     play.redo_stack.clear();
-}
-
-fn story_excerpt(doc: &LayoutDocument, story_id: &str, max_len: usize) -> Option<String> {
-    doc.stories
-        .iter()
-        .find(|story| story.id == story_id)
-        .map(|story| story.content.chars().take(max_len).collect::<String>())
-        .filter(|text| !text.is_empty())
 }
 
 fn story_full_content(doc: &LayoutDocument, story_id: &str) -> String {
@@ -2040,6 +2031,332 @@ mod tests {
             assert_eq!(payload["mimeType"], mime_type);
             assert!(!payload["data"].as_str().unwrap_or("").is_empty());
         }
+    }
+
+    fn test_screen_point(camera_x: f64, camera_y: f64, zoom: f64, width: f64, height: f64, world_x: f64, world_y: f64) -> (f64, f64) {
+        let camera = layout_rs::cavas::camera::Camera { x: camera_x, y: camera_y, zoom };
+        let viewport = layout_rs::cavas::camera::Viewport { width: width as u32, height: height as u32, dpr: 1.0 };
+        let screen = layout_rs::cavas::camera::world_to_screen(&camera, &viewport, layout_rs::cavas::Point::new(world_x, world_y));
+        (screen.x, screen.y)
+    }
+
+    #[test]
+    fn blueprint_scene_has_page_background_and_guides() {
+        let app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
+        let json_str = serde_json::to_string(&node).unwrap();
+        assert!(json_str.contains("layout.page-bg"));
+        assert!(json_str.contains("0.97"));
+        assert!(json_str.contains("layout.guide.margin"));
+        assert!(json_str.contains("layout.guide.column"));
+        assert!(json_str.contains("\"segments\""));
+        assert!(json_str.contains("\"fill\":{\"color\""));
+        assert!(!json_str.contains("\"linkId\""));
+    }
+
+    #[test]
+    fn preview_scene_has_white_background_and_no_guides() {
+        let app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(LAYOUT_PLAY_BODY_PREVIEW, &document, &ViewState::default());
+        let json_str = serde_json::to_string(&node).unwrap();
+        assert!(json_str.contains("layout.page-bg"));
+        assert!(!json_str.contains("layout.guide."));
+    }
+
+    #[test]
+    fn inherited_frame_gets_dashed_stroke_in_blueprint() {
+        let app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
+        let json_str = serde_json::to_string(&node).unwrap();
+        assert!(json_str.contains("\"dash\":[4.0,3.0]"));
+    }
+
+    #[test]
+    fn selected_and_hovered_frames_get_chrome_strokes() {
+        let mut app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setSelection", Some(&json!({ "ids": ["frame-text-1"] })), &document, &ViewState::default());
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let selected: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        let document = serde_json::to_string(&selected).unwrap();
+        let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
+        let json_str = serde_json::to_string(&node).unwrap();
+        assert!(json_str.contains("2.5"));
+
+        let ops = app.handle_command_patch_ops("setHover", Some(&json!({ "id": "frame-image-1" })), &document, &ViewState::default());
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let hovered: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        let document = serde_json::to_string(&hovered).unwrap();
+        let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
+        let json_str = serde_json::to_string(&node).unwrap();
+        assert!(json_str.contains("1.75"));
+    }
+
+    #[test]
+    fn set_camera_updates_surface_camera() {
+        let mut app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops(
+            "setCamera",
+            Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "camera": { "x": 10.0, "y": 20.0, "zoom": 1.5 } })),
+            &document,
+            &ViewState::default(),
+        );
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        assert_eq!(next.document.camera.x, 10.0);
+        assert_eq!(next.document.camera.y, 20.0);
+        assert_eq!(next.document.camera.zoom, 1.5);
+        assert_eq!(next.document.preview_camera.x, 0.0);
+    }
+
+    #[test]
+    fn pointer_down_selects_frame_via_hit_test() {
+        let mut app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 136.0, 435.0);
+        let ops = app.handle_command_patch_ops(
+            "canvasPointerDown",
+            Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0, "button": 0 })),
+            &document,
+            &ViewState::default(),
+        );
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        assert_eq!(next.runtime.selected_ids, vec!["frame-image-1".to_string()]);
+    }
+
+    #[test]
+    fn pointer_move_hover_is_change_only() {
+        let mut app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 156.0, 220.0);
+        let args = json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0 });
+        let ops = app.handle_command_patch_ops("canvasPointerMove", Some(&args), &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        assert_eq!(next.runtime.hovered_id.as_deref(), Some("frame-text-1"));
+        let document = serde_json::to_string(&next).unwrap();
+        let ops = app.handle_command_patch_ops("canvasPointerMove", Some(&args), &document, &ViewState::default());
+        assert!(ops.is_empty());
+    }
+
+    #[test]
+    fn canvas_drop_adds_frame_at_world_coords() {
+        let mut app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 100.0, 200.0);
+        let drag_data = json!({ "kind": "rect" }).to_string();
+        let ops = app.handle_command_patch_ops(
+            "canvasDrop",
+            Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0, "dragData": drag_data })),
+            &document,
+            &ViewState::default(),
+        );
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        let frame_id = next.runtime.selected_ids[0].clone();
+        let frame = next.document.pages[0].frames.iter().find(|frame| frame.id() == frame_id).unwrap();
+        let bounds = frame.bounds();
+        assert!((bounds.x - 100.0).abs() < 0.01);
+        assert!((bounds.y - 200.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn canvas_drop_page_kind_adds_page() {
+        let mut app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let before: LayoutPlayEnvelope = serde_json::from_str(&document).unwrap();
+        let before_count = before.document.pages.len();
+        let drag_data = json!({ "kind": "page" }).to_string();
+        let ops = app.handle_command_patch_ops(
+            "canvasDrop",
+            Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": 0.0, "y": 0.0, "width": 800.0, "height": 600.0, "dragData": drag_data })),
+            &document,
+            &ViewState::default(),
+        );
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        assert_eq!(next.document.pages.len(), before_count + 1);
+    }
+
+    #[test]
+    fn drag_over_emits_ghost_and_leave_clears() {
+        let mut app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops(
+            "canvasDragOver",
+            Some(&json!({
+                "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT,
+                "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0,
+                "types": [format!("{LAYOUT_CATALOGUE_KIND_MIME_PREFIX}rect")],
+            })),
+            &document,
+            &ViewState::default(),
+        );
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let with_preview: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        assert!(with_preview.runtime.drop_preview.is_some());
+        let document = serde_json::to_string(&with_preview).unwrap();
+        let scene = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
+        let json_str = serde_json::to_string(&scene).unwrap();
+        assert!(json_str.contains("layout.drop-preview"));
+
+        let ops = app.handle_command_patch_ops("canvasDragLeave", Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT })), &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let cleared: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        assert!(cleared.runtime.drop_preview.is_none());
+    }
+
+    #[test]
+    fn catalogue_items_are_draggable() {
+        let app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(LAYOUT_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let json_str = serde_json::to_string(&node).unwrap();
+        assert!(json_str.contains(LAYOUT_CATALOGUE_DRAG_MIME));
+        assert!(json_str.contains("\"draggable\":true"));
+        assert!(json_str.contains("layout-catalogue.page"));
+    }
+
+    #[test]
+    fn document_tree_has_nine_sections() {
+        let app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(LAYOUT_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
+        let json_str = serde_json::to_string(&node).unwrap();
+        for section_id in [
+            "layout-document.document",
+            "layout-document.spreads",
+            "layout-document.pages",
+            "layout-document.frames",
+            "layout-document.parentPages",
+            "layout-document.layers",
+            "layout-document.stories",
+            "layout-document.links",
+            "layout-document.styles",
+        ] {
+            assert!(json_str.contains(section_id), "missing section {section_id}");
+        }
+    }
+
+    #[test]
+    fn preflight_reports_all_expected_issue_codes() {
+        let json = r#"{
+            "schema": "layout.fixture",
+            "name": "Preflight Fixture",
+            "camera": {"x":0,"y":0,"zoom":1},
+            "previewCamera": {"x":0,"y":0,"zoom":1},
+            "grid": {"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},
+            "paragraphStyles": [{"id":"paragraph.body","name":"Body","fontFamily":"Layout Sans","fontSize":12,"fontWeight":400,"leading":14.4,"tracking":0,"alignment":"left"}],
+            "characterStyles": [
+                {"id":"character.small","fontFamily":"Layout Sans","fontSize":6},
+                {"id":"character.exotic","fontFamily":"Comic Sans","fontSize":10}
+            ],
+            "stories": [
+                {"id":"story-small","content":"Small caption text.","styleRuns":[{"start":0,"end":10,"paragraphStyleId":"paragraph.body","characterStyleId":"character.small"}]},
+                {"id":"story-exotic","content":"Exotic font text.","styleRuns":[{"start":0,"end":10,"paragraphStyleId":"paragraph.body","characterStyleId":"character.exotic"}]},
+                {"id":"story-overset","content":"placeholder","styleRuns":[]}
+            ],
+            "links": [
+                {"id":"link-missing","path":"a.png","hash":"sha256:missing","width":100,"height":100,"dpi":300,"state":"missing"},
+                {"id":"link-modified","path":"b.png","hash":"sha256:abc","width":100,"height":100,"dpi":300,"state":"modified"},
+                {"id":"link-lowres","path":"c.png","hash":"sha256:def","width":100,"height":100,"dpi":72},
+                {"id":"link-rgb","path":"d.png","hash":"sha256:ghi","width":100,"height":100,"dpi":300,"colorProfile":"RGB"}
+            ],
+            "parentPages": [],
+            "spreads": [{"id":"spread-1","name":"Spread 1","pageIds":["page-1"]}],
+            "pages": [{
+                "id":"page-1","name":"Page 1","spreadId":"spread-1","width":200,"height":200,
+                "margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},
+                "guides":[], "layerIds":["layer-1"],
+                "layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-oob","frame-missing","frame-modified","frame-lowres","frame-no-story","frame-small","frame-exotic","frame-overset"]}],
+                "frames":[
+                    {"id":"frame-oob","layerId":"layer-1","kind":"rect","bounds":{"x":150,"y":150,"w":100,"h":100,"rotation":0},"fill":[0,0,0,1]},
+                    {"id":"frame-missing","layerId":"layer-1","kind":"image","bounds":{"x":0,"y":0,"w":20,"h":20,"rotation":0},"linkId":"link-missing"},
+                    {"id":"frame-modified","layerId":"layer-1","kind":"image","bounds":{"x":20,"y":0,"w":20,"h":20,"rotation":0},"linkId":"link-modified"},
+                    {"id":"frame-lowres","layerId":"layer-1","kind":"image","bounds":{"x":40,"y":0,"w":20,"h":20,"rotation":0},"linkId":"link-lowres"},
+                    {"id":"frame-no-story","layerId":"layer-1","kind":"text","bounds":{"x":0,"y":40,"w":50,"h":20,"rotation":0},"storyId":"story-absent","columns":1,"inset":{"x":0,"y":0,"w":50,"h":20},"wrapMode":"none"},
+                    {"id":"frame-small","layerId":"layer-1","kind":"text","bounds":{"x":0,"y":60,"w":50,"h":20,"rotation":0},"storyId":"story-small","columns":1,"inset":{"x":0,"y":0,"w":50,"h":20},"wrapMode":"none"},
+                    {"id":"frame-exotic","layerId":"layer-1","kind":"text","bounds":{"x":0,"y":80,"w":50,"h":20,"rotation":0},"storyId":"story-exotic","columns":1,"inset":{"x":0,"y":0,"w":50,"h":20},"wrapMode":"none"},
+                    {"id":"frame-overset","layerId":"layer-1","kind":"text","bounds":{"x":0,"y":100,"w":50,"h":20,"rotation":0},"storyId":"story-overset","columns":1,"inset":{"x":0,"y":0,"w":50,"h":20},"wrapMode":"none"}
+                ],
+                "overrides":[]
+            }],
+            "printTarget":"print"
+        }"#;
+        let mut doc = parse_layout_document(json).expect("preflight fixture");
+        if let Some(story) = doc.stories.iter_mut().find(|story| story.id == "story-overset") {
+            story.content = "a".repeat(450);
+        }
+        let issues = run_layout_preflight(&doc);
+        let codes: Vec<&str> = issues.iter().map(|issue| issue.code.as_str()).collect();
+        for expected in [
+            "object.out_of_bounds",
+            "asset.missing",
+            "asset.modified",
+            "asset.low_resolution",
+            "image.empty_frame",
+            "text.missing_story",
+            "text.below_minimum_size",
+            "font.missing",
+            "text.overset",
+            "asset.rgb_in_print",
+        ] {
+            assert!(codes.contains(&expected), "missing preflight code: {expected}");
+        }
+    }
+
+    #[test]
+    fn window_engagements_cover_both_windows() {
+        let app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let engagements = app.window_engagements(&document, &ViewState::default());
+        let blueprint = engagements.get(LAYOUT_PLAY_WINDOW_BLUEPRINT).expect("blueprint engagement");
+        let status = blueprint.status.as_ref().and_then(|rows| rows.first()).expect("status");
+        assert!(status.text.contains("Page"));
+        let input = blueprint.input.as_ref().expect("input");
+        assert_eq!(input.placeholder.as_deref(), Some("undo, redo, export png"));
+        assert!(engagements.contains_key(LAYOUT_PLAY_WINDOW_PREVIEW));
+    }
+
+    #[test]
+    fn tools_expose_undo_redo_and_exports() {
+        let app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let tools = app.tools(&document, &ViewState::default());
+        let json_str = serde_json::to_string(&tools).unwrap();
+        for needle in [
+            "layout-tools-undo",
+            "layout-tools-redo",
+            "layout-tools-export-png",
+            "layout-tools-export-svg",
+            "layout-tools-export-pdf",
+            "layout-tools-export-package",
+        ] {
+            assert!(json_str.contains(needle), "missing tool {needle}");
+        }
+    }
+
+    #[test]
+    fn engagement_submit_triggers_export() {
+        let mut app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("engagementSubmit", Some(&json!({ "value": "export png" })), &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        assert_eq!(payload["op"], "downloadMediaExport");
+        assert_eq!(payload["mimeType"], "image/png");
     }
 }
 //#endregion 🧪Tests

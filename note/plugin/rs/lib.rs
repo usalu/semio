@@ -567,10 +567,6 @@ fn push_undo(play: &mut NotePlayEnvelope) {
     play.redo_stack.clear();
 }
 
-fn block_tree_row_id_from_str(block_id: &str) -> String {
-    format!("note-play-block:{block_id}")
-}
-
 fn block_id_from_tree_row_id(row_id: &str) -> Option<String> {
     row_id.strip_prefix("note-play-block:").map(str::to_string)
 }
@@ -2088,11 +2084,13 @@ mod tests {
             &current,
             &ViewState::default(),
         );
-        let committed: NotePlayEnvelope = serde_json::from_str(&document_json_from_op(&ops[0])).unwrap();
+        let committed_document = document_json_from_op(&ops[0]);
+        let committed: NotePlayEnvelope = serde_json::from_str(&committed_document).unwrap();
         assert_eq!(committed.undo_stack.len(), 1, "gesture should push exactly one undo step");
         assert_eq!(committed.document.blocks.len(), 1);
 
-        let undo_ops = app.handle_command_patch_ops("undo", None, &ops[0], &ViewState::default());
+        let undo_ops = app.handle_command_patch_ops("undo", None, &committed_document, &ViewState::default());
+        assert_eq!(undo_ops.len(), 1);
         let undone: NotePlayEnvelope = serde_json::from_str(&document_json_from_op(&undo_ops[0])).unwrap();
         assert!(undone.document.blocks.is_empty(), "undo should restore pre-gesture document");
     }

@@ -109,12 +109,13 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_text_editor_scene, tool_button, tool_collection, ui_declarative_sections_to_tree, ui_text, App,
     CommandDescriptor, PluginApp, PluginBundle, TextEditorScene, ToolNode, UiNode, UiSectionNode,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
-    WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
+    WindowEngagementOption, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, create_default_layout,
 };
+use semio_framework_plugin::layout::{WindowEngagementPossible, WindowEngagementStatus};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -1304,6 +1305,7 @@ fn render_document_panel(document: &WriterDocument, runtime: &WriterPlayRuntime)
         selected_ids: Some(runtime.selected_ast_ids.clone()),
         highlighted_ids: highlighted_ast_id.map(|id| vec![id]),
         selection_change: Some(play_cmd(WRITER_PLAY_CONTROLLER_ID, "setAstSelection", None)),
+        drop_command: None,
     })
 }
 
@@ -1789,6 +1791,7 @@ impl PluginApp for WriterApp {
                 on_change: Some(play_cmd(WRITER_PLAY_CONTROLLER_ID, "engagementInput", None)),
                 on_submit: Some(play_cmd(WRITER_PLAY_CONTROLLER_ID, "engagementSubmit", None)),
                 on_repeat_last: None,
+                on_abort: None,
             }),
             control: None,
             controls: None,

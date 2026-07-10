@@ -1,15 +1,18 @@
 //! 📸 Shooting plugin — icon studio with scene + preview windows bundled as a hot-swappable WASM component.
 
-use semio_framework_plugin::{SurfaceKind, PanelGroup, 
-    build_raster_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids,
+use semio_framework_plugin::{SurfaceKind, PanelGroup,
+    build_icon_render_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_stack_vertical,
-    ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
-    world3d_selection_json, App, CommandDescriptor, PluginApp, PluginBundle, RasterScene, UiControlNode,
-    UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
+    ui_text, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
+    world3d_selection_json, App, CommandDescriptor, IconRenderScene, PluginApp, PluginBundle,
+    ToolNode, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode,
+    UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowMeasure,
+    World3dScene,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use std::collections::HashSet;
+use semio_framework_plugin::layout::{MeasureSelectItem, WindowEngagementPossible, WindowEngagementStatus};
+use std::collections::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -38,7 +41,7 @@ static SHOOTING_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖Constants
 
 //#region 🔖Document
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ShootingCamera {
     #[serde(default = "default_camera_position")]
@@ -49,14 +52,39 @@ struct ShootingCamera {
     zoom: f64,
     #[serde(default = "default_fov")]
     fov: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    up: Option<[f64; 3]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    projection: Option<String>,
+}
+
+impl Default for ShootingCamera {
+    fn default() -> Self {
+        Self {
+            position: default_camera_position(),
+            target: default_camera_target(),
+            zoom: 1.0,
+            fov: default_fov(),
+            up: None,
+            projection: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ShootingSavedCamera {
+    id: String,
+    label: String,
+    camera: ShootingCamera,
 }
 
 fn default_camera_position() -> [f64; 3] {
-    [0.0, -5.0, 3.0]
+    [420.0, -420.0, 320.0]
 }
 
 fn default_camera_target() -> [f64; 3] {
-    [0.0, 0.0, 0.0]
+    [0.0, 0.0, 40.0]
 }
 
 fn default_fov() -> f64 {
@@ -100,6 +128,68 @@ struct ShootingShot {
     height: u32,
     format: String,
     shape: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    background: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    camera_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+struct ShootingSun {
+    azimuth: f64,
+    elevation: f64,
+    intensity: f64,
+    color: String,
+}
+
+impl Default for ShootingSun {
+    fn default() -> Self {
+        Self { azimuth: 45.0, elevation: 35.0, intensity: 2.4, color: "#ffffff".into() }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+struct ShootingAmbient {
+    intensity: f64,
+    color: String,
+}
+
+impl Default for ShootingAmbient {
+    fn default() -> Self {
+        Self { intensity: 1.15, color: "#ffffff".into() }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+struct ShootingShadow {
+    enabled: bool,
+    opacity: f64,
+    softness: f64,
+}
+
+impl Default for ShootingShadow {
+    fn default() -> Self {
+        Self { enabled: true, opacity: 0.35, softness: 1.0 }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+struct ShootingMaterial {
+    color: String,
+    metalness: f64,
+    roughness: f64,
+    emissive: String,
+    emissive_intensity: f64,
+}
+
+impl Default for ShootingMaterial {
+    fn default() -> Self {
+        Self { color: "#9aa0ab".into(), metalness: 0.0, roughness: 1.0, emissive: "#000000".into(), emissive_intensity: 0.0 }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
@@ -108,13 +198,13 @@ struct ShootingSceneLighting {
     #[serde(default)]
     background: String,
     #[serde(default)]
-    sun: Value,
+    sun: ShootingSun,
     #[serde(default)]
-    ambient: Value,
+    ambient: ShootingAmbient,
     #[serde(default)]
-    shadow: Value,
+    shadow: ShootingShadow,
     #[serde(default)]
-    material: Value,
+    material: ShootingMaterial,
     #[serde(default, rename = "emblemBase64")]
     emblem_base64: Option<String>,
 }
@@ -128,7 +218,7 @@ struct ShootingFixture {
     #[serde(default)]
     camera: ShootingCamera,
     #[serde(default)]
-    saved_cameras: Vec<Value>,
+    saved_cameras: Vec<ShootingSavedCamera>,
     #[serde(default)]
     scene: ShootingSceneLighting,
     #[serde(default)]
@@ -139,17 +229,32 @@ struct ShootingFixture {
     active_asset_id: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
 struct ShootingPlayRuntime {
-    #[serde(default)]
     selected_shot_ids: Vec<String>,
-    #[serde(default)]
     selected_asset_ids: Vec<String>,
-    #[serde(default = "default_selection_method")]
     selection_method: String,
-    #[serde(default)]
     hovered_asset_id: Option<String>,
+    center_model: bool,
+    fit_revision: u32,
+    camera_draft_label: String,
+    transform_tool: String,
+}
+
+impl Default for ShootingPlayRuntime {
+    fn default() -> Self {
+        Self {
+            selected_shot_ids: Vec::new(),
+            selected_asset_ids: Vec::new(),
+            selection_method: default_selection_method(),
+            hovered_asset_id: None,
+            center_model: true,
+            fit_revision: 0,
+            camera_draft_label: String::new(),
+            transform_tool: "move".into(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -164,12 +269,7 @@ fn empty_shooting_fixture() -> ShootingFixture {
     ShootingFixture {
         schema: SHOOTING_FIXTURE_SCHEMA.into(),
         assets: Vec::new(),
-        camera: ShootingCamera {
-            position: default_camera_position(),
-            target: default_camera_target(),
-            zoom: 1.0,
-            fov: default_fov(),
-        },
+        camera: ShootingCamera::default(),
         saved_cameras: Vec::new(),
         scene: ShootingSceneLighting::default(),
         shots: Vec::new(),
@@ -322,7 +422,38 @@ fn active_asset<'a>(fixture: &'a ShootingFixture) -> Option<&'a ShootingAsset> {
 }
 
 fn camera_json(camera: &ShootingCamera) -> String {
-    world3d_camera_json(camera.position, camera.target, camera.fov)
+    let mut value = json!({
+        "position": camera.position,
+        "target": camera.target,
+        "fov": camera.fov,
+        "zoom": camera.zoom,
+        "projection": camera.projection.clone().unwrap_or_else(|| "perspective".into()),
+    });
+    if let (Some(object), Some(up)) = (value.as_object_mut(), camera.up) {
+        object.insert("up".into(), json!(up));
+    }
+    value.to_string()
+}
+
+fn resolve_shot_camera(fixture: &ShootingFixture, shot: &ShootingShot) -> ShootingCamera {
+    shot.camera_id
+        .as_ref()
+        .and_then(|camera_id| fixture.saved_cameras.iter().find(|entry| &entry.id == camera_id))
+        .map(|entry| entry.camera.clone())
+        .unwrap_or_else(|| fixture.camera.clone())
+}
+
+fn apply_camera_for_shot(fixture: &mut ShootingFixture, shot_id: Option<&str>, camera: ShootingCamera) {
+    let camera_id = shot_id
+        .and_then(|id| fixture.shots.iter().find(|shot| shot.id == id))
+        .and_then(|shot| shot.camera_id.clone());
+    if let Some(camera_id) = camera_id {
+        if let Some(saved) = fixture.saved_cameras.iter_mut().find(|entry| entry.id == camera_id) {
+            saved.camera = camera;
+            return;
+        }
+    }
+    fixture.camera = camera;
 }
 
 fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
@@ -424,12 +555,110 @@ fn world_meshes_json(fixture: &ShootingFixture) -> String {
     world3d_meshes_json_from_kinds_and_urls(&[SHOOTING_FALLBACK_MESH_KIND.into()], &collect_mesh_urls(fixture))
 }
 
-fn world_selection_json(runtime: &ShootingPlayRuntime) -> String {
-    world3d_selection_json(
+fn world_selection_json(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime) -> String {
+    let mut value: Value = serde_json::from_str(&world3d_selection_json(
         &runtime.selection_method,
         &runtime.selected_asset_ids,
         runtime.hovered_asset_id.as_deref(),
-    )
+    ))
+    .unwrap_or_else(|_| json!({}));
+    if let Some(object) = value.as_object_mut() {
+        object.insert("granularity".into(), json!("mesh"));
+        object.insert("selectionMode".into(), json!("mesh"));
+        object.insert("targets".into(), json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
+        object.insert("transformTool".into(), json!(runtime.transform_tool));
+        object.insert("activeObjectId".into(), json!(fixture.active_asset_id));
+        object.insert("gumballActive".into(), json!(!runtime.selected_asset_ids.is_empty()));
+        if let Some(target) = selection_centroid(fixture, &runtime.selected_asset_ids) {
+            object.insert("gumballTarget".into(), json!(target));
+        }
+    }
+    value.to_string()
+}
+
+fn selection_centroid(fixture: &ShootingFixture, selected_ids: &[String]) -> Option<[f64; 3]> {
+    let selected: Vec<&ShootingAsset> = fixture.assets.iter().filter(|asset| selected_ids.contains(&asset.id)).collect();
+    if selected.is_empty() {
+        return None;
+    }
+    let count = selected.len() as f64;
+    let sum = selected.iter().fold([0.0f64; 3], |acc, asset| {
+        [acc[0] + asset.origin[0], acc[1] + asset.origin[1], acc[2] + asset.origin[2]]
+    });
+    Some([sum[0] / count, sum[1] / count, sum[2] / count])
+}
+
+fn is_transparent_shooting_background(background: &str) -> bool {
+    background.is_empty() || background == "transparent"
+}
+
+fn shooting_environment_json(fixture: &ShootingFixture) -> String {
+    let scene = &fixture.scene;
+    let mut value = json!({
+        "ambient": { "intensity": scene.ambient.intensity, "color": scene.ambient.color },
+        "sun": { "azimuth": scene.sun.azimuth, "elevation": scene.sun.elevation, "intensity": scene.sun.intensity, "color": scene.sun.color },
+        "shadow": { "enabled": scene.shadow.enabled, "opacity": scene.shadow.opacity, "softness": scene.shadow.softness },
+        "material": { "color": scene.material.color, "metalness": scene.material.metalness, "roughness": scene.material.roughness, "emissive": scene.material.emissive, "emissiveIntensity": scene.material.emissive_intensity },
+    });
+    if let Some(object) = value.as_object_mut() {
+        if !is_transparent_shooting_background(&scene.background) {
+            object.insert("background".into(), json!(scene.background));
+        }
+    }
+    value.to_string()
+}
+
+fn shooting_frame_json(shot: &ShootingShot) -> String {
+    json!({ "width": shot.width, "height": shot.height, "shape": shot.shape, "badge": true }).to_string()
+}
+
+fn shooting_fit_json(runtime: &ShootingPlayRuntime) -> String {
+    json!({ "enabled": runtime.center_model, "revision": runtime.fit_revision, "padding": 1.25 }).to_string()
+}
+
+fn shooting_icon_render_request_json(fixture: &ShootingFixture, shot: &ShootingShot, asset: &ShootingAsset) -> String {
+    let camera = resolve_shot_camera(fixture, shot);
+    let scene = &fixture.scene;
+    let mut camera_value = json!({
+        "position": camera.position,
+        "target": camera.target,
+        "zoom": camera.zoom,
+        "fov": camera.fov,
+    });
+    if let (Some(object), Some(up)) = (camera_value.as_object_mut(), camera.up) {
+        object.insert("up".into(), json!(up));
+    }
+    let mut value = json!({
+        "assetUrl": asset.url,
+        "camera": camera_value,
+        "lights": {
+            "ambientIntensity": scene.ambient.intensity,
+            "ambientColor": scene.ambient.color,
+            "sunAzimuth": scene.sun.azimuth,
+            "sunElevation": scene.sun.elevation,
+            "sunIntensity": scene.sun.intensity,
+            "sunColor": scene.sun.color,
+        },
+        "width": shot.width,
+        "height": shot.height,
+        "format": shot.format,
+        "shape": if shot.shape == "ellipse" { "ellipse" } else { "rectangle" },
+        "shadowEnabled": scene.shadow.enabled,
+        "material": {
+            "color": scene.material.color,
+            "metalness": scene.material.metalness,
+            "roughness": scene.material.roughness,
+            "emissive": scene.material.emissive,
+            "emissiveIntensity": scene.material.emissive_intensity,
+        },
+    });
+    if let Some(object) = value.as_object_mut() {
+        let background = shot.background.clone().unwrap_or_else(|| scene.background.clone());
+        if !is_transparent_shooting_background(&background) {
+            object.insert("background".into(), json!(background));
+        }
+    }
+    value.to_string()
 }
 //#endregion 🔖FixtureOps
 
@@ -734,12 +963,17 @@ fn render_model_scene(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime) 
     build_world_3d_scene(
         SHOOTING_PLAY_SURFACE_SCENE,
         SHOOTING_PLAY_APP_ID,
-        world3d_scene(
-            camera_json(&fixture.camera),
-            world_meshes_json(fixture),
-            world_instances_json(fixture, runtime),
-            world_selection_json(runtime),
-        ),
+        World3dScene {
+            environment_json: Some(shooting_environment_json(fixture)),
+            frame_json: active_shot(fixture).map(shooting_frame_json),
+            fit_json: Some(shooting_fit_json(runtime)),
+            ..world3d_scene(
+                camera_json(&fixture.camera),
+                world_meshes_json(fixture),
+                world_instances_json(fixture, runtime),
+                world_selection_json(fixture, runtime),
+            )
+        },
     )
 }
 
@@ -788,19 +1022,331 @@ fn shooting_scene_svg(fixture: &ShootingFixture) -> (String, u32, u32) {
 }
 
 fn render_icon_scene(fixture: &ShootingFixture) -> UiNode {
-    let (svg, width, height) = shooting_scene_svg(fixture);
-    let pixels_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).unwrap_or_default();
-    build_raster_scene(
+    let (request_json, footer) = match (active_shot(fixture), active_asset(fixture)) {
+        (Some(shot), Some(asset)) => (
+            shooting_icon_render_request_json(fixture, shot, asset),
+            Some(format!("{} · {}×{} · {}", shot.label, shot.width, shot.height, shot.format.to_uppercase())),
+        ),
+        _ => ("null".into(), None),
+    };
+    build_icon_render_scene(
         SHOOTING_PLAY_SURFACE_ICON,
         SHOOTING_PLAY_APP_ID,
-        RasterScene {
-            width,
-            height,
-            pixels_base64,
+        IconRenderScene {
+            request_json,
+            footer,
+            frame_json: None,
         },
     )
 }
 //#endregion 🔖Render
+
+//#region 🔖Tools
+fn shooting_model_measures(envelope: &ShootingPlayEnvelope) -> Vec<WindowMeasure> {
+    let scene = &envelope.fixture.scene;
+    vec![
+        WindowMeasure::Toggle {
+            id: "shooting.measure.center-model".into(),
+            icon_id: "focus".into(),
+            label: Some("Center Model".into()),
+            pressed: envelope.runtime.center_model,
+            text: None,
+            on_change: shooting_cmd("setCenterModel", None),
+        },
+        WindowMeasure::Slider {
+            id: "shooting.measure.sun-azimuth".into(),
+            label: Some("Sun Azimuth".into()),
+            value: scene.sun.azimuth,
+            min: 0.0,
+            max: 360.0,
+            step: Some(1.0),
+            on_change: shooting_cmd("setSunAzimuth", None),
+        },
+        WindowMeasure::Slider {
+            id: "shooting.measure.sun-elevation".into(),
+            label: Some("Sun Elevation".into()),
+            value: scene.sun.elevation,
+            min: -10.0,
+            max: 90.0,
+            step: Some(1.0),
+            on_change: shooting_cmd("setSunElevation", None),
+        },
+        WindowMeasure::Slider {
+            id: "shooting.measure.sun-intensity".into(),
+            label: Some("Sun Intensity".into()),
+            value: scene.sun.intensity,
+            min: 0.0,
+            max: 5.0,
+            step: Some(0.1),
+            on_change: shooting_cmd("setSunIntensity", None),
+        },
+        WindowMeasure::Slider {
+            id: "shooting.measure.ambient".into(),
+            label: Some("Ambient".into()),
+            value: scene.ambient.intensity,
+            min: 0.0,
+            max: 3.0,
+            step: Some(0.05),
+            on_change: shooting_cmd("setAmbientIntensity", None),
+        },
+        WindowMeasure::Toggle {
+            id: "shooting.measure.shadow".into(),
+            icon_id: "sun".into(),
+            label: Some("Shadow".into()),
+            pressed: scene.shadow.enabled,
+            text: None,
+            on_change: shooting_cmd("setShadowEnabled", None),
+        },
+        WindowMeasure::Slider {
+            id: "shooting.measure.roughness".into(),
+            label: Some("Roughness".into()),
+            value: scene.material.roughness,
+            min: 0.0,
+            max: 1.0,
+            step: Some(0.05),
+            on_change: shooting_cmd("setMaterialRoughness", None),
+        },
+    ]
+}
+
+fn shooting_icon_measures(envelope: &ShootingPlayEnvelope) -> Vec<WindowMeasure> {
+    let fixture = &envelope.fixture;
+    let shot = active_shot(fixture);
+    vec![
+        WindowMeasure::Select {
+            id: "shooting.measure.shot".into(),
+            label: Some("Shot".into()),
+            value: shot.map(|entry| entry.id.clone()).unwrap_or_default(),
+            items: fixture
+                .shots
+                .iter()
+                .map(|entry| MeasureSelectItem {
+                    id: format!("shooting.measure.shot.{}", entry.id),
+                    value: entry.id.clone(),
+                    label: entry.label.clone(),
+                })
+                .collect(),
+            on_change: shooting_cmd("setActiveShot", None),
+        },
+        WindowMeasure::Select {
+            id: "shooting.measure.format".into(),
+            label: Some("Format".into()),
+            value: shot.map(|entry| entry.format.clone()).unwrap_or_else(|| "svg".into()),
+            items: vec![
+                MeasureSelectItem { id: "shooting.measure.format.svg".into(), value: "svg".into(), label: "SVG".into() },
+                MeasureSelectItem { id: "shooting.measure.format.png".into(), value: "png".into(), label: "PNG".into() },
+            ],
+            on_change: shooting_cmd("setActiveShotFormat", None),
+        },
+        WindowMeasure::Select {
+            id: "shooting.measure.shape".into(),
+            label: Some("Shape".into()),
+            value: shot.map(|entry| entry.shape.clone()).unwrap_or_else(|| "rectangle".into()),
+            items: vec![
+                MeasureSelectItem { id: "shooting.measure.shape.rectangle".into(), value: "rectangle".into(), label: "Rectangle".into() },
+                MeasureSelectItem { id: "shooting.measure.shape.ellipse".into(), value: "ellipse".into(), label: "Ellipse".into() },
+            ],
+            on_change: shooting_cmd("setActiveShotShape", None),
+        },
+    ]
+}
+
+fn shooting_model_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagement {
+    let transform = envelope.runtime.transform_tool.clone();
+    WindowEngagement {
+        session_active: Some(true),
+        options: Some(vec![
+            WindowEngagementOption {
+                id: "shooting.opt.move".into(),
+                label: Some("Move".into()),
+                icon_id: Some("move".into()),
+                pressed: Some(transform == "move"),
+                disabled: None,
+                command: Some(shooting_cmd("setTransformTool", Some(json!({ "tool": "move" })))),
+            },
+            WindowEngagementOption {
+                id: "shooting.opt.rotate".into(),
+                label: Some("Rotate".into()),
+                icon_id: Some("rotate-cw".into()),
+                pressed: Some(transform == "rotate"),
+                disabled: None,
+                command: Some(shooting_cmd("setTransformTool", Some(json!({ "tool": "rotate" })))),
+            },
+            WindowEngagementOption {
+                id: "shooting.opt.scale".into(),
+                label: Some("Scale".into()),
+                icon_id: Some("maximize-2".into()),
+                pressed: Some(transform == "scale"),
+                disabled: None,
+                command: Some(shooting_cmd("setTransformTool", Some(json!({ "tool": "scale" })))),
+            },
+        ]),
+        input: Some(WindowEngagementInput {
+            id: Some("shooting.camera-draft".into()),
+            value: Some(envelope.runtime.camera_draft_label.clone()),
+            placeholder: Some("Camera label".into()),
+            disabled: None,
+            on_change: Some(shooting_cmd("setCameraDraftLabel", None)),
+            on_submit: Some(shooting_cmd("saveCamera", None)),
+            on_repeat_last: None,
+            on_abort: None,
+        }),
+        control: None,
+        controls: None,
+        status: Some(vec![WindowEngagementStatus {
+            id: "shooting.status.model".into(),
+            text: format!("{} assets · {} shots", envelope.fixture.assets.len(), envelope.fixture.shots.len()),
+        }]),
+        possible_engagements: Some(
+            envelope
+                .fixture
+                .saved_cameras
+                .iter()
+                .map(|saved| WindowEngagementPossible {
+                    id: format!("shooting.camera.{}", saved.id),
+                    label: saved.label.clone(),
+                    detail: Some("Load camera".into()),
+                    command: Some(shooting_cmd("loadSavedCamera", Some(json!({ "id": saved.id })))),
+                })
+                .collect(),
+        ),
+    }
+}
+
+fn shooting_icon_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagement {
+    let shot = active_shot(&envelope.fixture);
+    WindowEngagement {
+        session_active: Some(true),
+        options: None,
+        input: Some(WindowEngagementInput {
+            id: Some("shooting.shot-label".into()),
+            value: shot.map(|entry| entry.label.clone()),
+            placeholder: Some("Shot label".into()),
+            disabled: Some(shot.is_none()),
+            on_change: Some(shooting_cmd("setActiveShotLabel", None)),
+            on_submit: None,
+            on_repeat_last: None,
+            on_abort: None,
+        }),
+        control: None,
+        controls: None,
+        status: Some(vec![WindowEngagementStatus {
+            id: "shooting.status.icon".into(),
+            text: shot
+                .map(|entry| format!("{}×{} {}", entry.width, entry.height, entry.format.to_uppercase()))
+                .unwrap_or_else(|| "No shot".into()),
+        }]),
+        possible_engagements: None,
+    }
+}
+
+fn shooting_tools(envelope: &ShootingPlayEnvelope) -> Vec<ToolNode> {
+    let has_shot = active_shot(&envelope.fixture).is_some() && active_asset(&envelope.fixture).is_some();
+    vec![
+        ToolNode::Collection {
+            id: "shooting.tools.open".into(),
+            icon_id: "folder-open".into(),
+            label: Some("Open".into()),
+            text: None,
+            title: Some("Import".into()),
+            order: Some(1),
+            disabled: None,
+            category: None,
+            children: vec![
+                ToolNode::Button {
+                    id: "shooting.tools.open.fixture".into(),
+                    icon_id: "file-json".into(),
+                    label: Some("Import Shooting".into()),
+                    text: None,
+                    title: None,
+                    order: Some(1),
+                    disabled: None,
+                    category: None,
+                    on_press: shooting_cmd("loadRequest", None),
+                },
+                ToolNode::Button {
+                    id: "shooting.tools.open.glb".into(),
+                    icon_id: "box".into(),
+                    label: Some("Import Glb".into()),
+                    text: None,
+                    title: None,
+                    order: Some(2),
+                    disabled: None,
+                    category: None,
+                    on_press: shooting_cmd("importAssetRequest", None),
+                },
+            ],
+        },
+        ToolNode::Collection {
+            id: "shooting.tools.save".into(),
+            icon_id: "save".into(),
+            label: Some("Save".into()),
+            text: None,
+            title: Some("Export".into()),
+            order: Some(2),
+            disabled: None,
+            category: None,
+            children: vec![
+                ToolNode::Button {
+                    id: "shooting.tools.save.fixture".into(),
+                    icon_id: "download".into(),
+                    label: Some("Download Shooting".into()),
+                    text: None,
+                    title: None,
+                    order: Some(1),
+                    disabled: None,
+                    category: None,
+                    on_press: shooting_cmd("saveDownload", None),
+                },
+                ToolNode::Button {
+                    id: "shooting.tools.save.shot".into(),
+                    icon_id: "image".into(),
+                    label: Some("Export Shot".into()),
+                    text: None,
+                    title: None,
+                    order: Some(2),
+                    disabled: Some(!has_shot),
+                    category: None,
+                    on_press: shooting_cmd("exportActiveShot", None),
+                },
+                ToolNode::Button {
+                    id: "shooting.tools.save.shots".into(),
+                    icon_id: "images".into(),
+                    label: Some("Export All Shots".into()),
+                    text: None,
+                    title: None,
+                    order: Some(3),
+                    disabled: Some(!has_shot),
+                    category: None,
+                    on_press: shooting_cmd("exportAllShots", None),
+                },
+                ToolNode::Button {
+                    id: "shooting.tools.save.reset".into(),
+                    icon_id: "rotate-ccw".into(),
+                    label: Some("Reset".into()),
+                    text: None,
+                    title: None,
+                    order: Some(4),
+                    disabled: None,
+                    category: None,
+                    on_press: shooting_cmd("resetFixture", None),
+                },
+            ],
+        },
+        ToolNode::Button {
+            id: "shooting.tools.save-camera".into(),
+            icon_id: "camera".into(),
+            label: Some("Save Camera".into()),
+            text: None,
+            title: None,
+            order: Some(3),
+            disabled: None,
+            category: None,
+            on_press: shooting_cmd("saveCamera", None),
+        },
+    ]
+}
+//#endregion 🔖Tools
 
 //#region 🔖ShootingPlayApp
 struct ShootingPlayApp;
@@ -831,9 +1377,19 @@ impl PluginApp for ShootingPlayApp {
                 }
             }
             "setFixtureJson" => {
-                if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
-                    if let Ok(fixture) = serde_json::from_str::<ShootingFixture>(json_text) {
+                let json_text = args
+                    .and_then(|value| value.get("json").or_else(|| value.get("payload")))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string)
+                    .or_else(|| {
+                        args.and_then(|value| value.get("json").or_else(|| value.get("payload")))
+                            .filter(|value| value.is_object())
+                            .map(|value| value.to_string())
+                    });
+                if let Some(json_text) = json_text {
+                    if let Ok(fixture) = serde_json::from_str::<ShootingFixture>(&json_text) {
                         envelope.fixture = fixture;
+                        envelope.runtime = ShootingPlayRuntime::default();
                         return vec![set_document_op(&envelope)];
                     }
                 }
@@ -894,17 +1450,187 @@ impl PluginApp for ShootingPlayApp {
                         &envelope.fixture,
                         &ShootingFixtureEditOp::SetActiveAsset { asset_id: asset_id.into() },
                     );
+                    envelope.runtime.fit_revision += 1;
                     return vec![set_document_op(&envelope)];
                 }
             }
             "setCamera" => {
                 if let Some(camera_value) = args.and_then(|value| value.get("camera")) {
-                    if let Ok(camera) = serde_json::from_value(camera_value.clone()) {
+                    if let Ok(camera) = serde_json::from_value::<ShootingCamera>(camera_value.clone()) {
+                        let active_shot_id = active_shot(&envelope.fixture).map(|shot| shot.id.clone());
+                        apply_camera_for_shot(&mut envelope.fixture, active_shot_id.as_deref(), camera);
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "setShotCamera" => {
+                let shot_id = args.and_then(|value| value.get("shotId")).and_then(|value| value.as_str()).map(str::to_string);
+                if let (Some(shot_id), Some(camera_value)) = (shot_id, args.and_then(|value| value.get("camera"))) {
+                    if let Ok(camera) = serde_json::from_value::<ShootingCamera>(camera_value.clone()) {
+                        apply_camera_for_shot(&mut envelope.fixture, Some(&shot_id), camera);
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "saveCamera" => {
+                let draft = envelope.runtime.camera_draft_label.trim().to_string();
+                let label = if draft.is_empty() {
+                    format!("Camera {}", envelope.fixture.saved_cameras.len() + 1)
+                } else {
+                    draft
+                };
+                envelope.fixture.saved_cameras.push(ShootingSavedCamera {
+                    id: next_shooting_id("camera"),
+                    label,
+                    camera: envelope.fixture.camera.clone(),
+                });
+                envelope.runtime.camera_draft_label.clear();
+                return vec![set_document_op(&envelope)];
+            }
+            "loadSavedCamera" => {
+                let camera_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).unwrap_or("");
+                if let Some(saved) = envelope.fixture.saved_cameras.iter().find(|entry| entry.id == camera_id) {
+                    envelope.fixture.camera = saved.camera.clone();
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setCameraDraftLabel" => {
+                envelope.runtime.camera_draft_label = args
+                    .and_then(|value| value.get("value"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                return vec![set_document_op(&envelope)];
+            }
+            "setCenterModel" => {
+                let next = args
+                    .and_then(|value| value.get("pressed").or_else(|| value.get("value")))
+                    .and_then(|value| value.as_bool())
+                    .unwrap_or(!envelope.runtime.center_model);
+                if next && !envelope.runtime.center_model {
+                    envelope.runtime.fit_revision += 1;
+                }
+                envelope.runtime.center_model = next;
+                return vec![set_document_op(&envelope)];
+            }
+            "setTransformTool" => {
+                let tool = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()).unwrap_or("move");
+                envelope.runtime.transform_tool = tool.into();
+                return vec![set_document_op(&envelope)];
+            }
+            "setSunAzimuth" | "setSunElevation" | "setSunIntensity" | "setAmbientIntensity" | "setMaterialRoughness" => {
+                if let Some(value) = args.and_then(|args| args.get("value")).and_then(|value| value.as_f64()) {
+                    match command {
+                        "setSunAzimuth" => envelope.fixture.scene.sun.azimuth = value,
+                        "setSunElevation" => envelope.fixture.scene.sun.elevation = value,
+                        "setSunIntensity" => envelope.fixture.scene.sun.intensity = value,
+                        "setAmbientIntensity" => envelope.fixture.scene.ambient.intensity = value,
+                        _ => envelope.fixture.scene.material.roughness = value,
+                    }
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setShadowEnabled" => {
+                let next = args
+                    .and_then(|value| value.get("value").or_else(|| value.get("pressed")))
+                    .and_then(|value| value.as_bool())
+                    .unwrap_or(!envelope.fixture.scene.shadow.enabled);
+                envelope.fixture.scene.shadow.enabled = next;
+                return vec![set_document_op(&envelope)];
+            }
+            "setActiveShotLabel" => {
+                if let Some(label) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+                    if let Some(shot_id) = active_shot(&envelope.fixture).map(|shot| shot.id.clone()) {
                         envelope.fixture = apply_fixture_edit(
                             &envelope.fixture,
-                            &ShootingFixtureEditOp::SetCamera { camera },
+                            &ShootingFixtureEditOp::PatchShots {
+                                shot_ids: vec![shot_id],
+                                field: "label".into(),
+                                value: json!(label),
+                            },
                         );
                         return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "resetFixture" => {
+                return vec![set_document_op(&default_envelope())];
+            }
+            "saveDownload" => {
+                if let Ok(fixture_json) = serde_json::to_string_pretty(&envelope.fixture) {
+                    return vec![json!({
+                        "op": "downloadMediaExport",
+                        "filename": "shooting.fixture.json",
+                        "mimeType": "application/json",
+                        "data": fixture_json,
+                    })
+                    .to_string()];
+                }
+            }
+            "loadRequest" => {
+                return vec![json!({
+                    "op": "requestFileOpen",
+                    "accept": ".json,application/json",
+                    "importCommand": "setFixtureJson",
+                })
+                .to_string()];
+            }
+            "importAssetRequest" => {
+                return vec![json!({
+                    "op": "requestFileOpen",
+                    "accept": ".glb,model/gltf-binary",
+                    "readAs": "dataUrl",
+                    "importCommand": "importAsset",
+                })
+                .to_string()];
+            }
+            "importAsset" => {
+                if let Some(payload) = args.and_then(|value| value.get("payload")).and_then(|value| value.as_str()) {
+                    let id = next_shooting_id("asset");
+                    let name = args
+                        .and_then(|value| value.get("name"))
+                        .and_then(|value| value.as_str())
+                        .map(|name| name.trim_end_matches(".glb").to_string())
+                        .filter(|name| !name.is_empty())
+                        .unwrap_or_else(|| format!("Asset {}", envelope.fixture.assets.len() + 1));
+                    let asset = ShootingAsset {
+                        id: id.clone(),
+                        name,
+                        url: payload.into(),
+                        format: "glb".into(),
+                        origin: [0.0, 0.0, 0.0],
+                        orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                        scale: None,
+                    };
+                    envelope.fixture = apply_fixture_edit(&envelope.fixture, &ShootingFixtureEditOp::AddAsset { asset });
+                    envelope.fixture = apply_fixture_edit(
+                        &envelope.fixture,
+                        &ShootingFixtureEditOp::SetActiveAsset { asset_id: id.clone() },
+                    );
+                    envelope.runtime.selected_asset_ids = vec![id];
+                    envelope.runtime.selected_shot_ids.clear();
+                    envelope.runtime.fit_revision += 1;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "exportActiveShot" | "exportAllShots" => {
+                if let Some(asset) = active_asset(&envelope.fixture) {
+                    let shots: Vec<&ShootingShot> = if command == "exportActiveShot" {
+                        active_shot(&envelope.fixture).into_iter().collect()
+                    } else {
+                        envelope.fixture.shots.iter().collect()
+                    };
+                    let items: Vec<Value> = shots
+                        .iter()
+                        .map(|shot| {
+                            json!({
+                                "filename": format!("{}.{}", shot.id, if shot.format == "png" { "png" } else { "svg" }),
+                                "request": serde_json::from_str::<Value>(&shooting_icon_render_request_json(&envelope.fixture, shot, asset)).unwrap_or(Value::Null),
+                            })
+                        })
+                        .collect();
+                    if !items.is_empty() {
+                        return vec![json!({ "op": "iconRenderExport", "items": items }).to_string()];
                     }
                 }
             }
@@ -1017,6 +1743,8 @@ impl PluginApp for ShootingPlayApp {
                     height: 256,
                     format: format.into(),
                     shape: shape.into(),
+                    background: None,
+                    camera_id: None,
                 };
                 envelope.fixture = apply_fixture_edit(&envelope.fixture, &ShootingFixtureEditOp::AddShot { shot });
                 envelope.fixture = apply_fixture_edit(
@@ -1095,6 +1823,34 @@ impl PluginApp for ShootingPlayApp {
                     .map(str::to_string);
                 return vec![set_document_op(&envelope)];
             }
+            "setHover" => {
+                envelope.runtime.hovered_asset_id = args
+                    .and_then(|value| value.get("objectId"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                return vec![set_document_op(&envelope)];
+            }
+            "worldPick" => {
+                let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
+                let id_value = args.and_then(|value| value.get("id"));
+                if id_value.map_or(true, |value| value.is_null()) {
+                    if merge == "replace" {
+                        envelope.runtime.selected_asset_ids.clear();
+                    }
+                    return vec![set_document_op(&envelope)];
+                }
+                let asset_id = id_value
+                    .and_then(|value| value.as_u64())
+                    .and_then(|index| envelope.fixture.assets.get(index as usize))
+                    .map(|asset| asset.id.clone())
+                    .or_else(|| id_value.and_then(|value| value.as_str()).map(str::to_string));
+                if let Some(asset_id) = asset_id {
+                    envelope.runtime.selected_asset_ids =
+                        merge_world_selection_ids(&envelope.runtime.selected_asset_ids, &[asset_id.clone()], merge);
+                    envelope.fixture.active_asset_id = asset_id;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
             "setSelectionMethod" => {
                 let method = args
                     .and_then(|value| value.get("method"))
@@ -1120,6 +1876,26 @@ impl PluginApp for ShootingPlayApp {
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
+
+    fn tools(&self, document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
+        shooting_tools(&parse_envelope(document_json))
+    }
+
+    fn window_engagements(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+        let envelope = parse_envelope(document_json);
+        HashMap::from([
+            (SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_engagement(&envelope)),
+            (SHOOTING_PLAY_WINDOW_ICON.into(), shooting_icon_engagement(&envelope)),
+        ])
+    }
+
+    fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        let envelope = parse_envelope(document_json);
+        HashMap::from([
+            (SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_measures(&envelope)),
+            (SHOOTING_PLAY_WINDOW_ICON.into(), shooting_icon_measures(&envelope)),
+        ])
+    }
 }
 //#endregion 🔖ShootingPlayApp
 
@@ -1131,7 +1907,7 @@ fn create_shooting_app() -> App {
             .mode("edit", "Edit")
             .default_mode_id("edit")
             .window_kind(SHOOTING_PLAY_WINDOW_SCENE, "Scene", SHOOTING_PLAY_BODY_SCENE, SurfaceKind::World3d)
-            .window_kind(SHOOTING_PLAY_WINDOW_ICON, "Icon", SHOOTING_PLAY_BODY_ICON, SurfaceKind::Canvas2d)
+            .window_kind(SHOOTING_PLAY_WINDOW_ICON, "Icon", SHOOTING_PLAY_BODY_ICON, SurfaceKind::IconRender)
             .default_layout(create_default_layout(
                 &[SHOOTING_PLAY_WINDOW_SCENE.into(), SHOOTING_PLAY_WINDOW_ICON.into()],
                 "row",

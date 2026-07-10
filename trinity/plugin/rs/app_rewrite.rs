@@ -870,11 +870,42 @@ fn render_fixture_graph(surface_id: &str, fixture_json: &str, envelope: &Trinity
     render_rule_graph(surface_id, fixture_json, envelope, "")
 }
 
-fn render_text_editor(surface_id: &str, buffer: &str, language: &str) -> UiNode {
+fn var_occurrences_json(text: &str, var: &str) -> Option<String> {
+    if var.is_empty() {
+        return None;
+    }
+    let mut ranges = Vec::new();
+    let mut scan = 0usize;
+    while let Some(found) = text[scan..].find(var) {
+        let at = scan + found;
+        let end = at + var.len();
+        if semio_framework_plugin::text_identifier_bounds_at(text, at) == Some((at, end)) {
+            ranges.push(json!({ "start": at, "end": end }));
+        }
+        scan = at + var.len();
+    }
+    if ranges.is_empty() {
+        return None;
+    }
+    let ranges_json = serde_json::to_string(&ranges).unwrap_or_else(|_| "[]".into());
+    Some(json!({ "selection": ranges_json, "hover": ranges_json }).to_string())
+}
+
+fn render_jack_editor(envelope: &TrinityRewriteEnvelope) -> UiNode {
+    let query = compiled_jack_query(envelope);
+    let active_var = if !envelope.runtime.active_hover_var.is_empty() {
+        envelope.runtime.active_hover_var.as_str()
+    } else {
+        envelope.runtime.active_select_var.as_str()
+    };
     build_text_editor_scene(
-        surface_id,
+        TRINITY_REWRITE_PLAY_SURFACE_JACK,
         TRINITY_REWRITE_PLAY_CONTROLLER_ID,
-        TextEditorScene::base(buffer.into(), Some(language.into()), None),
+        TextEditorScene {
+            tokens_json: serde_json::to_string(&semantic_tokens(&query)).ok(),
+            occurrences_json: var_occurrences_json(&query, active_var),
+            ..TextEditorScene::base(query, Some("jack".into()), None)
+        },
     )
 }
 //#endregion 🔖Render
@@ -1146,27 +1177,6 @@ impl PluginApp for TrinityRewritePlayApp {
                     return vec![set_document_op(&envelope)];
                 }
             }
-            "setJackSelect" => {
-                if let Some(var) = args.and_then(|v| v.get("var")).and_then(|v| v.as_str()) {
-                    envelope.runtime.active_select_var = var.into();
-                } else if let Some(offset) = args.and_then(|v| v.get("offset")).and_then(|v| v.as_u64()) {
-                    let query = compiled_jack_query(&envelope);
-                    let text = query.as_str();
-                    let offset = offset as usize;
-                    if offset < text.len() {
-                        let slice = &text[offset..];
-                        let token: String = slice
-                            .chars()
-                            .take_while(|ch| ch.is_ascii_alphanumeric() || *ch == '_')
-                            .collect();
-                        if !token.is_empty() {
-                            envelope.runtime.active_select_var = token;
-                        }
-                    }
-                }
-                envelope.runtime.select_epoch += 1;
-                return vec![set_document_op(&envelope)];
-            }
             "undo" => {
                 if let Some(previous_json) = envelope.runtime.undo_stack.pop() {
                     envelope.runtime.redo_stack.push(snapshot_envelope_json(&envelope));
@@ -1209,9 +1219,7 @@ impl PluginApp for TrinityRewritePlayApp {
                 &envelope,
                 &envelope.runtime.rhs_graph_hover_id,
             ),
-            TRINITY_REWRITE_PLAY_BODY_JACK => {
-                render_text_editor(TRINITY_REWRITE_PLAY_SURFACE_JACK, &compiled_jack_query(&envelope), "jack")
-            }
+            TRINITY_REWRITE_PLAY_BODY_JACK => render_jack_editor(&envelope),
             TRINITY_REWRITE_PLAY_BODY_PARAMETERS => build_parameters_panel(&envelope),
             TRINITY_REWRITE_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
             TRINITY_REWRITE_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
@@ -1273,11 +1281,11 @@ pub fn create_rewrite_app() -> App {
             .icon_id("trinity-rewrite")
             .mode("explore", "Explore")
             .default_mode_id("explore")
-            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_BEFORE, "Before", TRINITY_REWRITE_PLAY_BODY_BEFORE, SurfaceKind::Canvas2d)
-            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_AFTER, "After", TRINITY_REWRITE_PLAY_BODY_AFTER, SurfaceKind::Canvas2d)
-            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_LHS, "LHS", TRINITY_REWRITE_PLAY_BODY_LHS, SurfaceKind::Canvas2d)
-            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_RHS, "RHS", TRINITY_REWRITE_PLAY_BODY_RHS, SurfaceKind::Canvas2d)
-            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_JACK, "Jack", TRINITY_REWRITE_PLAY_BODY_JACK, SurfaceKind::Canvas2d)
+            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_BEFORE, "Before", TRINITY_REWRITE_PLAY_BODY_BEFORE, SurfaceKind::NodeGraph)
+            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_AFTER, "After", TRINITY_REWRITE_PLAY_BODY_AFTER, SurfaceKind::NodeGraph)
+            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_LHS, "LHS", TRINITY_REWRITE_PLAY_BODY_LHS, SurfaceKind::NodeGraph)
+            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_RHS, "RHS", TRINITY_REWRITE_PLAY_BODY_RHS, SurfaceKind::NodeGraph)
+            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_JACK, "Jack", TRINITY_REWRITE_PLAY_BODY_JACK, SurfaceKind::TextEditor)
             .window_kind(
                 TRINITY_REWRITE_PLAY_WINDOW_PARAMETERS,
                 "Parameters",

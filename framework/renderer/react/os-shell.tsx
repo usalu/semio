@@ -1811,7 +1811,21 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         onSelect: () => setActiveWindowId(kind.id),
       });
     }
+    const keysByCommandId = new Map(session.app.keybindings.map((binding) => [binding.command.command, binding.keys]));
+    const declaredCommandIds = new Set<string>();
+    for (const command of session.app.commands ?? []) {
+      if (!command.inPalette) continue;
+      declaredCommandIds.add(command.id);
+      items.push({
+        id: `command.${command.id}`,
+        label: command.label,
+        description: command.keys ?? keysByCommandId.get(command.id),
+        category: command.category ?? (command.kind === "history" ? "History" : "Commands"),
+        onSelect: () => onCommand({ controllerId: session.app.controllerId, command: command.id }),
+      });
+    }
     for (const binding of session.app.keybindings) {
+      if (declaredCommandIds.has(binding.command.command)) continue;
       items.push({
         id: `keybinding.${binding.keys}`,
         label: binding.command.command,
@@ -1851,14 +1865,6 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           onSelect: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "goHome" }),
         },
       );
-    }
-    if (studioMode && session.app.id === S_HOME_APP_ID) {
-      items.push({
-        id: "home.createStudio",
-        label: "Create Studio",
-        category: "Home",
-        onSelect: () => onCommand({ controllerId: S_HOME_CONTROLLER_ID, command: "createStudio" }),
-      });
     }
     return items;
   }, [onCommand, panel, session, studioMode]);

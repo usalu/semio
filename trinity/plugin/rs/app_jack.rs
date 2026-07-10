@@ -1112,6 +1112,44 @@ impl PluginApp for TrinityJackPlayApp {
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
+
+    fn tools(&self, _document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
+        vec![
+            tool_collection(
+                "trinity-jack-history",
+                "clock",
+                "History",
+                vec![
+                    tool_button("trinity-jack-undo", "undo-2", "Undo", jack_cmd("undo", None)),
+                    tool_button("trinity-jack-redo", "redo-2", "Redo", jack_cmd("redo", None)),
+                    tool_button("trinity-jack-checkpoint", "git-commit", "Checkpoint", jack_cmd("commitCheckpoint", None)),
+                ],
+            ),
+            tool_collection(
+                "trinity-jack-query",
+                "code",
+                "Query",
+                vec![
+                    tool_button("trinity-jack-run", "play", "Run", jack_cmd("runJackQuery", None)),
+                    tool_button("trinity-jack-reorganize", "rotate-cw", "Reorganize", jack_cmd("reorganize", None)),
+                ],
+            ),
+        ]
+    }
+
+    fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> std::collections::HashMap<String, Vec<WindowMeasure>> {
+        let envelope = parse_envelope(document_json);
+        let mode = envelope
+            .runtime
+            .lod_mode_by_window
+            .get(TRINITY_JACK_PLAY_WINDOW_GRAPH)
+            .map(String::as_str)
+            .unwrap_or(TRINITY_LOD_MODE_AUTOMATIC);
+        std::collections::HashMap::from([(
+            TRINITY_JACK_PLAY_WINDOW_GRAPH.to_string(),
+            vec![trinity_lod_measure(TRINITY_JACK_PLAY_WINDOW_GRAPH, mode)],
+        )])
+    }
 }
 //#endregion 🔖TrinityJackPlayApp
 
@@ -1170,7 +1208,7 @@ pub fn create_trinity_jack_app() -> App {
             .default_mode_id("explore")
             .window_kind(TRINITY_JACK_PLAY_WINDOW_GRAPH, "Nakagin Graph", TRINITY_JACK_PLAY_BODY_GRAPH, SurfaceKind::NodeGraph)
             .window_kind(TRINITY_JACK_PLAY_WINDOW_EDITOR, "Jack Query", TRINITY_JACK_PLAY_BODY_EDITOR, SurfaceKind::TextEditor)
-            .window_kind(TRINITY_JACK_PLAY_WINDOW_RESULTS, "Results", TRINITY_JACK_PLAY_BODY_RESULTS, SurfaceKind::Canvas2d)
+            .window_kind(TRINITY_JACK_PLAY_WINDOW_RESULTS, "Results", TRINITY_JACK_PLAY_BODY_RESULTS, SurfaceKind::Table)
             .default_layout(jack_layout())
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -1199,7 +1237,13 @@ pub fn create_trinity_jack_app() -> App {
             .view_command("nodeGraphSelect", "Select Graph Node")
             .view_command("nodeGraphHover", "Hover Graph Node")
             .view_command("nodeGraphViewport", "Set Graph Viewport")
-            .view_command("setJackQuery", "Set Jack Query")
+            .view_command("textEdit", "Edit Jack Query")
+            .view_command("textSelect", "Select Jack Query Text")
+            .view_command("textHover", "Hover Jack Query Text")
+            .view_command("requestCompletions", "Request Completions")
+            .view_command("formatDocument", "Format Jack Query")
+            .view_command("submit", "Submit Jack Query")
+            .view_command("setLodMode", "Set LOD Mode")
             .view_command("loadExampleQuery", "Load Example Query")
             .view_command("editorEngagementInput", "Editor Engagement Input")
             .view_command("graphEngagementInput", "Graph Engagement Input")
@@ -1282,6 +1326,109 @@ mod tests {
     fn nakagin_fixture_has_nodes() {
         let fixture = parse_fixture_json(NAKAGIN_FIXTURE_JSON).expect("nakagin fixture");
         assert!(!fixture.nodes.is_empty());
+    }
+
+    #[test]
+    fn editor_scene_has_tokens_and_diagnostics() {
+        let app = TrinityJackPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("tokensJson"));
+        assert!(json.contains("diagnosticsJson"));
+        assert!(json.contains("completionsJson"));
+    }
+
+    #[test]
+    fn text_edit_updates_query() {
+        let mut app = TrinityJackPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops(
+            "textEdit",
+            Some(&json!({ "text": "MATCH (a:Piece) RETURN a.name" })),
+            &document,
+            &ViewState::default(),
+        );
+        let next = ops.first().and_then(|op| serde_json::from_str::<Value>(op).ok()).and_then(|value| value.get("document").cloned()).expect("document op");
+        let envelope = serde_json::from_value::<TrinityJackEnvelope>(next).expect("envelope");
+        assert_eq!(envelope.runtime.jack_query, "MATCH (a:Piece) RETURN a.name");
+    }
+
+    #[test]
+    fn graph_scene_has_lod_json() {
+        let app = TrinityJackPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("lodJson"));
+        assert!(json.contains("automatic"));
+    }
+
+    #[test]
+    fn set_lod_mode_persists_per_window() {
+        let mut app = TrinityJackPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops(
+            "setLodMode",
+            Some(&json!({ "windowId": TRINITY_JACK_PLAY_WINDOW_GRAPH, "value": "minimap" })),
+            &document,
+            &ViewState::default(),
+        );
+        let next = ops.first().and_then(|op| serde_json::from_str::<Value>(op).ok()).and_then(|value| value.get("document").cloned()).expect("document op");
+        let envelope = serde_json::from_value::<TrinityJackEnvelope>(next).expect("envelope");
+        assert_eq!(envelope.runtime.lod_mode_by_window.get(TRINITY_JACK_PLAY_WINDOW_GRAPH).map(String::as_str), Some("minimap"));
+    }
+
+    #[test]
+    fn return_graph_example_renders_node_graph_in_results() {
+        let mut app = TrinityJackPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops(
+            "loadExampleQuery",
+            Some(&json!({ "query": "MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' RETURN a, r, b" })),
+            &document,
+            &ViewState::default(),
+        );
+        let next = ops.first().cloned().and_then(|op| serde_json::from_str::<Value>(&op).ok()).and_then(|value| value.get("document").cloned()).expect("document op");
+        let next_json = next.to_string();
+        let node = app.render(TRINITY_JACK_PLAY_BODY_RESULTS, &next_json, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("node-graph"));
+    }
+
+    #[test]
+    fn catalogue_has_eight_example_queries() {
+        let app = TrinityJackPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(TRINITY_JACK_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        for id in ["where-or", "return-graph", "set-label", "set-position", "create-node", "create-edge", "delete-leaf", "merge-edge"] {
+            assert!(json.contains(id), "missing example query {id}");
+        }
+    }
+
+    #[test]
+    fn inspector_has_flat_position_fields() {
+        let mut app = TrinityJackPlayApp;
+        let document = app.initial_document_json();
+        let fixture = parse_fixture_json(NAKAGIN_FIXTURE_JSON).expect("fixture");
+        let node_id = fixture.nodes.first().expect("node").id.clone();
+        let ops = app.handle_command_patch_ops("nodeGraphSelect", Some(&json!({ "nodeIds": [node_id] })), &document, &ViewState::default());
+        let next = ops.first().cloned().and_then(|op| serde_json::from_str::<Value>(&op).ok()).and_then(|value| value.get("document").cloned()).expect("document op").to_string();
+        let node = app.render(TRINITY_JACK_PLAY_BODY_INSPECTION, &next, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Flat U"));
+        assert!(json.contains("Flat V"));
+    }
+
+    #[test]
+    fn tools_include_run_jack_query() {
+        let app = TrinityJackPlayApp;
+        let document = app.initial_document_json();
+        let tools = app.tools(&document, &ViewState::default());
+        let json = serde_json::to_string(&tools).unwrap();
+        assert!(json.contains("runJackQuery"));
+        assert!(json.contains("undo"));
     }
 }
 //#endregion 🧪Tests

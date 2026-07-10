@@ -4213,6 +4213,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "vcs",
 ]
 
 [[package]]
