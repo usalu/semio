@@ -4,28 +4,28 @@ overview: "Make the TOC (and the other register-style tables: Glossary, Referenc
 todos:
   - id: reopen-ticket
     content: Reopen TOC-SEMIO-WINDOW-TABLES ticket via repo MCP
-    status: in_progress
+    status: completed
   - id: colspec-border
     content: Add left/right border+padding cells to the three @long colspecs in semio-table.sty
-    status: pending
+    status: completed
   - id: closing-rule
     content: Add bottom closing rule via \endlastfoot in \semio@table@long@render
-    status: pending
+    status: completed
   - id: continuation-chrome-border
     content: Match border+padding in \semio@table@long@continuation@chrome multicolumn
-    status: pending
+    status: completed
   - id: remove-long-flag
     content: Remove \ifsemio@table@register@long boolean; make SemioTableRow always separate rows; make Register/Reference/Glossary table macros call the long renderer unconditionally
-    status: pending
+    status: completed
   - id: remove-window-toggles
     content: Remove the global long-flag toggling in semio_register_list_begin/end/reset in semio-window.sty
-    status: pending
+    status: completed
   - id: fix-glossary-bug
     content: Remove the stray \global\semio@table@register@longfalse override in SemioGlossaryListOf
-    status: pending
+    status: completed
   - id: rebuild-verify
     content: Rebuild zwischenbericht (light+dark), verify no errors, and visually compare TOC/Glossary pages against the Netzwerk table
-    status: pending
+    status: in_progress
   - id: close-ticket
     content: Update verify-log.md and close the ticket with summary and touched files
     status: pending

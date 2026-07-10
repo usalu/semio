@@ -1,7 +1,7 @@
 {
   "title": "TOC Semio Window Tables",
   "emoji": "🖨️",
-  "status": "closed",
+  "status": "open",
   "description": "LaTeX Table OS Style Parity",
   "summary": "Register tables (TOC, list-of-X, glossary, references) now break across pages using longtable instead of a non-breakable Table/tcolorbox + tabular.\n\nRegister list windows render the title chrome once before the table; continuation pages repeat the window title row and column headers via longtable \\endhead.\n\nKey fixes: global long-mode flag, correct \\endfirsthead placement, plain p-column spec for long mode, skip inter-row \\noalign hrule separators that blocked page breaks.\n\nVerified zwischenbericht TOC spans pages 2–3 with full ~106 entries including Ergebnisverwertung and Verzeichnisse; continuation page repeats Inhaltsverzeichnis title.",
   "github": {
@@ -18,6 +18,7 @@
     "⚪4d8271f8aa914c97b5b570e82de3fee5",
     "⚪75d733eb98464c8fbaa23b7492ea846a",
     "⚪43b8c301446e4732a2b7f2cfac2d9c33",
-    "⚪902f40c6e5534574a46632523013bc4a"
+    "⚪902f40c6e5534574a46632523013bc4a",
+    "⚪456235bce7bd4059b2567e2baabc2673"
   ]
 }

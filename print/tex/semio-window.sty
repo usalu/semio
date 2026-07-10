@@ -272,12 +272,6 @@
   \tl_set:Nn \l_tmpa_tl {#1}
   \tl_set:Nx \l_tmpa_tl { \tl_use:N \l_tmpa_tl }
   \exp_args:NV \semio_register_list_header_open:n \l_tmpa_tl
-  \group_begin:
-  \ExplSyntaxOff
-  \makeatletter
-  \global\semio@table@register@longtrue
-  \makeatother
-  \group_end:
 }
 
 \cs_new_protected:Npn \semio_register_list_end: {
@@ -290,7 +284,6 @@
   \group_begin:
   \ExplSyntaxOff
   \semio@register@listfalse
-  \global\semio@table@register@longfalse
   \group_end:
 }
 
@@ -439,7 +432,6 @@
     \ExplSyntaxOff
     \makeatletter
     \exp_args:NV \semio@register@window@open \l_semio_glossary_title_tl
-    \global\semio@table@register@longfalse
     \SemioTableGlossary{\semio@glossary@table@body}%
     \semio@register@window@close
     \makeatother
@@ -1369,7 +1361,7 @@
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
-      \semio@window@gap{#1}%
+      \semio@window@gap{#1}{#1}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -1385,7 +1377,7 @@
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
-      \semio@window@gap{semio-chrome-base}%
+      \semio@window@gap{semio-chrome-base}{semio-chrome-border-normal}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -1401,7 +1393,7 @@
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
-      \semio@window@gap{semio-chrome-base}%
+      \semio@window@gap{semio-chrome-base}{semio-chrome-border-normal}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -1547,6 +1539,7 @@
 
 \newcommand{\semio@heading@install}[3]{%
   \titleformat{#1}[block]{}{}{0pt}{%
+    \semio@heading@block@before
     \semio@chrome@heading@track{#3}{##1}%
     \semio@if@heading@chips
       {%
@@ -1566,6 +1559,7 @@
   \semio@heading@install{\subsection}{semio-secondary}{subsection}%
   \semio@heading@install{\subsubsection}{semio-primary}{subsubsection}%
   \titleformat{\paragraph}[block]{}{}{0pt}{%
+    \semio@heading@block@before
     \semio@if@heading@chips
       {%
         \if\relax\detokenize{\theparagraph}\relax
@@ -1620,6 +1614,7 @@
 }
 
 \newcommand{\semio@nest@paragraph}[1]{%
+  \semio@heading@block@before
   \semio@nest@counter@step
   \edef\semio@nest@num{\semio@nest@build@number}%
   \ifnum\numexpr\semio@toc@level@paragraph+\value{semio@nest@depth}\relax>\value{tocdepth}\else
@@ -1641,7 +1636,7 @@
 }
 %endregion NestedParagraphs
 
-\newcommand{\semio@window@gap}[1]{%
+\newcommand{\semio@window@gap}[2]{%
   \semio@window@cap@body@h@set
   \hbox to \dimexpr\semio@window@gap@w\relax{%
     \vbox to \semio@chrome@titlebar@height{%
@@ -1658,7 +1653,7 @@
       }%
       \nointerlineskip
       \hbox to \dimexpr\semio@window@gap@w\relax{%
-        \semio@window@stroke@h{semio-chrome-border-normal}{\semio@window@gap@w}%
+        \semio@window@stroke@h{#2}{\semio@window@gap@w}%
       }%
     }%
   }%
@@ -1687,7 +1682,7 @@
   \semio@window@header@row@wrap{%
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
-      \semio@window@gap{semio-chrome-base}%
+      \semio@window@gap{semio-chrome-base}{semio-chrome-border-normal}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%

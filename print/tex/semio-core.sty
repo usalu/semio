@@ -476,6 +476,13 @@
   \par
   \vspace*{\semio@block@sep@skip}%
 }
+\newcommand{\semio@heading@block@before}{%
+  \ifsemio@block@sep@done
+    \global\semio@block@sep@donefalse
+  \else
+    \semio@block@sep
+  \fi
+}
 \newcommand{\SemioSpacingUnit}{\semio@spacing@single}
 \newcommand{\SemioSpacingDouble}{\semio@spacing@double}
 \makeatother
