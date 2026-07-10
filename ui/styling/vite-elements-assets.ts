@@ -156,6 +156,29 @@ export const boardRedrawHandlesFixtureJson = wasmJson;
 export const boardRedrawLayoutFixtureJson = wasmJson;
 `;
 
+function playgroundWasmPathNormalized(pathLike: string): string {
+  return pathLike.replace(/\\/g, "/");
+}
+
+function isPlaygroundWasmPkgId(cleanId: string): boolean {
+  const normalized = playgroundWasmPathNormalized(cleanId);
+  return (
+    normalized.includes("/pkg/") ||
+    normalized.endsWith(".wasm") ||
+    cleanId === "@semio-tech/flow-core/pkg/flow_core.js"
+  );
+}
+
+function playgroundWasmPkgAbsolutePath(repoRoot: string, cleanId: string, importer: string): string {
+  const bare = cleanId.split("?", 1)[0] ?? cleanId;
+  if (bare.startsWith(".")) return resolve(dirname(importer), bare);
+  if (isAbsolute(bare)) return bare;
+  if (bare.startsWith("@semio-tech/flow-core/pkg/")) {
+    return resolve(repoRoot, "flow/core/rs/pkg", bare.slice("@semio-tech/flow-core/pkg/".length));
+  }
+  return resolve(repoRoot, bare.replace(/^@semio-tech\/[^/]+\//, ""));
+}
+
 /** @emoji 🧱 Stubs missing wasm pkg imports until `nx run …:wasm` artifacts exist. */
 export function playgroundFlowWasmDevStubPlugin(repoRoot: string): Plugin {
   return {
@@ -164,16 +187,8 @@ export function playgroundFlowWasmDevStubPlugin(repoRoot: string): Plugin {
     resolveId(id, importer) {
       if (!importer || id.startsWith(PLAYGROUND_WASM_STUB_PREFIX)) return undefined;
       const cleanId = id.split("?", 1)[0] ?? id;
-      const isWasmPkg =
-        cleanId.includes("/pkg/") ||
-        cleanId.endsWith(".wasm") ||
-        cleanId === "@semio-tech/flow-core/pkg/flow_core.js";
-      if (!isWasmPkg) return undefined;
-      const abs = cleanId.startsWith(".")
-        ? resolve(dirname(importer), cleanId)
-        : cleanId.startsWith("@semio-tech/flow-core/pkg/")
-          ? resolve(repoRoot, "flow/core/rs/pkg", cleanId.slice("@semio-tech/flow-core/pkg/".length))
-          : resolve(repoRoot, cleanId.replace(/^@semio-tech\/[^/]+\//, ""));
+      if (!isPlaygroundWasmPkgId(cleanId)) return undefined;
+      const abs = playgroundWasmPkgAbsolutePath(repoRoot, cleanId, importer);
       if (existsSync(abs)) return undefined;
       return `${PLAYGROUND_WASM_STUB_PREFIX}${playgroundWasmStubKey(cleanId)}`;
     },
@@ -1426,6 +1441,7 @@ export function findWorkspacePackageAliasEntries(
           const pushAlias = (subpath: string, target: string) => {
             const normalizedTarget = target.replace(/^\.\//, "");
             const replacement = resolve(packageDir, normalizedTarget);
+            if (!existsSync(replacement)) return;
             const find = subpath === "." ? pkg.name! : `${pkg.name}${subpath.startsWith(".") ? subpath.slice(1) : `/${subpath}`}`;
             entries.push({ find, replacement });
           };
@@ -1723,6 +1739,32 @@ if (import.meta.vitest) {
       expect(config.resolve?.dedupe).toContain("three");
       expect(config.server?.fs?.allow).toContain(repoRoot);
       expect(config.optimizeDeps?.exclude).toContain("@semio-tech/flow-module-core");
+    });
+  });
+
+  describe("findWorkspacePackageAliasEntries", () => {
+    it("skips workspace aliases when export targets are missing on disk", () => {
+      const flowCorePkg = resolve(repoRoot, "flow/core/rs/pkg/flow_core.js");
+      const aliases = findWorkspacePackageAliasEntries(repoRoot);
+      const flowWasmAlias = aliases.find((row) => row.find === "@semio-tech/flow-core/pkg/flow_core.js");
+      if (existsSync(flowCorePkg)) {
+        expect(flowWasmAlias?.replacement).toBe(flowCorePkg);
+      } else {
+        expect(flowWasmAlias).toBeUndefined();
+      }
+    });
+  });
+
+  describe("playgroundFlowWasmDevStubPlugin", () => {
+    it("stubs missing flow-core wasm pkg imports", async () => {
+      const plugin = playgroundFlowWasmDevStubPlugin(repoRoot);
+      const flowCorePkg = resolve(repoRoot, "flow/core/rs/pkg/flow_core.js");
+      if (existsSync(flowCorePkg)) return;
+      const resolved = await plugin.resolveId?.("@semio-tech/flow-core/pkg/flow_core.js", resolve(repoRoot, "flow/react/index.tsx"), {} as never);
+      expect(resolved).toMatch(/^\u0000playground-wasm-stub\//);
+      const loaded = await plugin.load?.(resolved as string);
+      expect(loaded).toContain("export default async function initWasm");
+      expect(loaded).toContain("export class FlowSession");
     });
   });
 }
