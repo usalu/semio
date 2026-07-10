@@ -26,8 +26,7 @@
 \cs_new_protected:Npn \semio_cover_address:n #1 {
   \group_begin:
   \ExplSyntaxOff
-  \SemioSans\footnotesize
-  \raggedright
+  \SemioSans
   \setlength{\parindent}{0pt}%
   #1%
   \group_end:
@@ -105,40 +104,33 @@
       \str_if_eq:eeTF { \use:c { zukunftbau@type } } { zwischenbericht } {
         \SemioWindowStackUse
         \SemioWindowRowTwo{1}{%
-          \begin{Window}[title={Zukunft\ Bau}, row]
-            \centering\hyphenpenalty=10000\vfill
-            {\SemioSans\Large Zwischenbericht\par}\vfill
+          \begin{Window}[title={Zukunft\ Bau}, row, anchor=center, text-size=fit]
+            \SemioSans Zwischenbericht
           \end{Window}%
         }{1}{%
-          \begin{Window}[title={Titel}, row]
-            \centering\hyphenpenalty=10000\vfill
-            {\SemioSans\Large\tl_use:N \l_semio_clean_title_tl\par}\vfill
+          \begin{Window}[title={Titel}, row, anchor=center, text-size=fit]
+            \SemioSans \tl_use:N \l_semio_clean_title_tl
           \end{Window}%
         }
         \SemioWindowStackUse
-        \begin{Window}[title={Untertitel}, row]
-          \centering\hyphenpenalty=10000\vfill
-          {\large\tl_use:N \l_semio_subtitle_tl\par}\vfill
+        \begin{Window}[title={Untertitel}, row, anchor=center, text-size=fit]
+          \SemioSans \tl_use:N \l_semio_subtitle_tl
         \end{Window}
       } {
         \SemioWindowStackUse
-        \begin{Window}[title={Titel}, row]
-          \centering
-          {\SemioSans\Huge\@title\par}
+        \begin{Window}[title={Titel}, row, anchor=center, text-size=fit]
+          \SemioSans \@title
           \tl_if_empty:NTF \l_semio_subtitle_tl {} {%
-            \vspace{\semio@spacing@single}%
-            {\large\tl_use:N \l_semio_subtitle_tl\par}%
+            \par\SemioSans \tl_use:N \l_semio_subtitle_tl
           }
         \end{Window}
       }
     } {
       \SemioWindowStackUse
-      \begin{Window}[title={Titel}, row]
-        \centering
-        {\SemioSans\Huge\@title\par}
+      \begin{Window}[title={Titel}, row, anchor=center, text-size=fit]
+        \SemioSans \@title
         \tl_if_empty:NTF \l_semio_subtitle_tl {} {%
-          \vspace{\semio@spacing@single}%
-          {\large\tl_use:N \l_semio_subtitle_tl\par}%
+          \par\SemioSans \tl_use:N \l_semio_subtitle_tl
         }
       \end{Window}
     }
@@ -147,48 +139,52 @@
       \begin{Window}[title=Arbeitsprobe, row, anchor=center]
         \begin{minipage}[c]{\linewidth}
           \centering
-          \includegraphics[width=\linewidth, height=9.5cm, keepaspectratio]{\semio@cover@arbeitsprobe@image}
+          \includegraphics[
+            width=\linewidth,
+            height=\dimexpr\g_semio_window_stack_current_height_dim-\semio@chrome@titlebar@height-2\semio@chrome@padding-2\semio@stroke@hairline\relax,
+            keepaspectratio,
+          ]{\semio@cover@arbeitsprobe@image}
         \end{minipage}
       \end{Window}
     }
     \bool_if:NT \l_semio_cover@meta@row_bool {
       \SemioWindowStackUse
       \SemioWindowRowThree{1}{%
-        \begin{Window}[title=Aktenzeichen, row]
-          {\SemioSans\large\tl_use:N \l_semio_aktenzeichen_tl\par}
+        \begin{Window}[title=Aktenzeichen, row, anchor=center, text-size=fit]
+          \SemioSans \tl_use:N \l_semio_aktenzeichen_tl
         \end{Window}%
       }{1}{%
-        \begin{Window}[title=Förderzeitraum, row]
-          {\SemioSans\large\tl_use:N \l_semio_foerderzeitraum_tl\par}
+        \begin{Window}[title=Förderzeitraum, row, anchor=center, text-size=fit]
+          \SemioSans \tl_use:N \l_semio_foerderzeitraum_tl
         \end{Window}%
       }{1}{%
-        \begin{Window}[title=Berichtszeitraum, row]
-          {\SemioSans\large\tl_use:N \l_semio_berichtszeitraum_tl\par}
+        \begin{Window}[title=Berichtszeitraum, row, anchor=center, text-size=fit]
+          \SemioSans \tl_use:N \l_semio_berichtszeitraum_tl
         \end{Window}%
       }
     }
     \tl_if_empty:NTF \l_semio_doi_tl {} {%
       \SemioWindowStackUse
-      \begin{Window}[title=DOI, row]
-        {\SemioMono\tl_use:N \l_semio_doi_tl\par}
+      \begin{Window}[title=DOI, row, anchor=center, text-size=fit]
+        \SemioMono \tl_use:N \l_semio_doi_tl
       \end{Window}%
     }
     \bool_if:NF \l_semio_is_zwischenbericht_bool {
       \tl_if_empty:NTF \l_semio_kurzfassung_tl {} {%
         \SemioWindowStackUse
-        \begin{Window}[title=Beschreibung, row]
-          {\SemioSans\small\tl_use:N \l_semio_kurzfassung_tl\par}
+        \begin{Window}[title=Beschreibung, row, anchor=center, text-size=fit]
+          \SemioSans \tl_use:N \l_semio_kurzfassung_tl
         \end{Window}%
       }
     }
     \bool_if:NT \l_semio_cover@institution@row_bool {
       \SemioWindowStackUse
       \SemioWindowRowTwo{1}{%
-        \begin{Window}[title=Antragstellende~Institution, row]
+        \begin{Window}[title=Antragstellende~Institution, row, anchor=center, text-size=fit]
           \semio_cover_address:n { \tl_use:N \l_semio_antragstellendeinstitution_tl }
         \end{Window}%
       }{1}{%
-        \begin{Window}[title=Kooperationspartner, row]
+        \begin{Window}[title=Kooperationspartner, row, anchor=center, text-size=fit]
           \semio_cover_address:n { \tl_use:N \l_semio_kooperationspartner_tl }
         \end{Window}%
       }
