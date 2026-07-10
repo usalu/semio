@@ -323,6 +323,10 @@ pub enum FormOp {
     UpdateStep {
         step: FormStep,
     },
+    UpdateForm {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        title: Option<String>,
+    },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -364,6 +368,10 @@ pub enum FormDiff {
     },
     UpdateStep {
         step: FormStep,
+    },
+    UpdateForm {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        title: Option<String>,
     },
 }
 
@@ -407,6 +415,7 @@ impl OperationDiff<FormSpec> for FormDiff {
                 question: question.clone(),
             },
             FormDiff::UpdateStep { step } => FormOp::UpdateStep { step: step.clone() },
+            FormDiff::UpdateForm { title } => FormOp::UpdateForm { title: title.clone() },
         };
         apply_form_edit_op(projection, &op)
     }
@@ -459,6 +468,7 @@ impl Operation<FormSpec> for FormOp {
                 question: question.clone(),
             },
             FormOp::UpdateStep { step } => FormDiff::UpdateStep { step: step.clone() },
+            FormOp::UpdateForm { title } => FormDiff::UpdateForm { title: title.clone() },
         }
     }
 
@@ -543,6 +553,9 @@ impl Operation<FormSpec> for FormOp {
                 .find(|s| s.id == step.id)
                 .map(|prev| vec![FormOp::UpdateStep { step: prev.clone() }])
                 .unwrap_or_default(),
+            FormOp::UpdateForm { .. } => vec![FormOp::UpdateForm {
+                title: projection.title.clone(),
+            }],
         }
     }
 }
@@ -620,6 +633,9 @@ pub fn apply_form_edit_op(spec: &FormSpec, op: &FormOp) -> FormSpec {
                     *entry = step.clone();
                 }
             }
+        }
+        FormOp::UpdateForm { title } => {
+            next.title = title.clone();
         }
     }
     next

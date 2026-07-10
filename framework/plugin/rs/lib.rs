@@ -2284,6 +2284,47 @@ pub fn default_world3d_selection() -> String {
 // #endregion world3d_host
 }
 
+pub mod host_port {
+// #region host_port
+//! 🗄️ Host-capability access for WASI component builds — backbone IO and wall-clock time.
+
+/** @emoji 📥 Reads a backbone payload through the component host; errs when no host is linked. */
+pub fn host_backbone_read(uri: &str) -> Result<String, String> {
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    {
+        return crate::component::host_backbone_read(uri);
+    }
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    Err(format!("host backbone unavailable: {uri}"))
+}
+
+/** @emoji 📤 Writes a backbone payload through the component host; errs when no host is linked. */
+pub fn host_backbone_write(uri: &str, payload: &str) -> Result<(), String> {
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    {
+        return crate::component::host_backbone_write(uri, payload);
+    }
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    {
+        let _ = payload;
+        Err(format!("host backbone unavailable: {uri}"))
+    }
+}
+
+/** @emoji ⏱️ Wall-clock milliseconds from the component host, falling back to system time. */
+pub fn host_now_ms() -> f64 {
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    {
+        return crate::component::host_now_ms() as f64;
+    }
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|elapsed| elapsed.as_millis() as f64)
+        .unwrap_or(0.0)
+}
+// #endregion host_port
+}
 
 pub use app::{
     App, AppBuilder, AppInstance, KeybindingSpec, ModeSpec, PanelTabSpec, Plugin, PluginApp, PluginBundle,
@@ -2295,6 +2336,7 @@ pub use generate_mode::{
     render_generations_tree, select_generation, selected_generation, selected_generation_mut,
     update_generation_values, FormGeneration, GenerationPlayState,
 };
+pub use host_port::{host_backbone_read, host_backbone_write, host_now_ms};
 pub use plugin_runtime::{command_result_from_patch_ops, install_plugin_bundle};
 pub use scaffold::{
     assert_standard_app_renders, register_standard_app, standard_app,

@@ -1,18 +1,19 @@
 //! ✏️ Draw plugin — declarative draw app bundled as a hot-swappable WASM component.
 
 use draw::{
-    apply_draw_edit_op, create_draw_boolean_layer, create_draw_path_layer, create_layer_by_kind, default_draw_document,
-    draw_layer_world_bounds, draw_play_boolean_child_row_id, draw_play_layer_id_from_tree_row_id, draw_play_layers_tree_row_id,
+    apply_draw_edit_op, create_draw_boolean_layer, create_draw_path_layer, create_draw_trace_layer, create_layer_by_kind,
+    default_draw_document, default_layer_base, draw_layer_descendant_leaf_ids, draw_layer_world_bounds,
+    draw_play_boolean_child_row_id, draw_play_layer_id_from_tree_row_id, draw_play_layers_tree_row_id, draw_transform_to_matrix,
     empty_draw_projection, find_draw_layer, find_draw_layer_location, flatten_draw_document_to_scene_nodes,
-    flatten_draw_layers, layer_base, layer_id, layer_kind_label, mutate_draw_layer, patch_layer_field, rgba_to_hex,
-    DrawDocument, DrawLayerNode, DrawOp, PathSegment, DRAW_BLEND_MODES, DRAW_BOOLEAN_OPS, DRAW_DOCUMENT_SCHEMA,
+    flatten_draw_layers, layer_base, layer_id, layer_kind_label, layer_to_path_segments, mutate_draw_layer, patch_layer_field,
+    rgba_to_hex, DrawDocument, DrawLayerNode, DrawOp, PathSegment, DRAW_BLEND_MODES, DRAW_BOOLEAN_OPS, DRAW_DOCUMENT_SCHEMA,
 };
-use semio_framework_plugin::{SurfaceKind, 
+use semio_framework_plugin::{SurfaceKind,
     build_canvas_2d_scene, create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_select, ui_inspector_mixed_slider, ui_inspector_mixed_text, ui_inspector_mixed_toggle,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor, PanelGroup, UiControlNode,
-    UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode,
-    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor, PanelGroup, ToolNode,
+    UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiSliderNode,
+    UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
     layout::WindowEngagementStatus,
 };
@@ -32,6 +33,28 @@ const DRAW_PLAY_EXAMPLE_DEFAULT_ID: &str = "semio";
 const SEMIO_DRAW_EXAMPLE_JSON: &str = include_str!("../../example/semio.draw.json");
 
 //#region 🔖Interaction
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+enum DrawDragState {
+    Marquee {
+        method: String,
+        start: [f64; 2],
+        cursor: [f64; 2],
+        merge: String,
+        active: bool,
+    },
+    Shape {
+        tool: String,
+        start: [f64; 2],
+        cursor: [f64; 2],
+    },
+    Draft {
+        tool: String,
+        points: Vec<[f64; 2]>,
+        cursor: [f64; 2],
+    },
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct DrawInteractionState {
@@ -42,7 +65,7 @@ struct DrawInteractionState {
     #[serde(default)]
     engagement_input: String,
     #[serde(default)]
-    drawing_path_id: Option<String>,
+    drag: Option<DrawDragState>,
 }
 
 fn draw_play_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
@@ -103,6 +126,7 @@ fn interaction_state(envelope: &DrawPlayEnvelope, view_state: &ViewState) -> Dra
     if !envelope.interaction.selected_ids.is_empty()
         || envelope.interaction.hovered_id.is_some()
         || !envelope.interaction.engagement_input.is_empty()
+        || envelope.interaction.drag.is_some()
     {
         return envelope.interaction.clone();
     }
@@ -120,44 +144,325 @@ fn push_undo(play: &mut DrawPlayEnvelope) {
 fn canvas_point_to_world(camera: &draw::DrawCamera, x: f64, y: f64, viewport_w: f64, viewport_h: f64) -> (f64, f64) {
     let zoom = camera.zoom.max(0.01);
     (
-        (x - viewport_w * 0.5) / zoom - camera.x,
-        (y - viewport_h * 0.5) / zoom - camera.y,
+        (x - viewport_w * 0.5) / zoom + camera.x,
+        (y - viewport_h * 0.5) / zoom + camera.y,
     )
 }
+//#endregion 🔖Interaction
 
-fn pick_layer_at(document: &DrawDocument, world_x: f64, world_y: f64) -> Option<String> {
-    flatten_draw_layers(&document.layers).into_iter().rev().find_map(|layer| {
-        let (x, y, width, height) = draw_layer_world_bounds(layer)?;
-        if world_x >= x && world_x <= x + width && world_y >= y && world_y <= y + height {
-            Some(layer_id(layer).to_string())
-        } else {
-            None
-        }
-    })
+//#region 🔖ToolStateMachine
+const DRAW_MARQUEE_THRESHOLD_PX: f64 = 4.0;
+const DRAW_PICK_TOLERANCE_PX: f64 = 8.0;
+
+fn matrix_transform_point(matrix: [f64; 6], point: [f64; 2]) -> [f64; 2] {
+    let [a, b, c, d, e, f] = matrix;
+    [a * point[0] + c * point[1] + e, b * point[0] + d * point[1] + f]
 }
 
-fn append_pen_point(document: &DrawDocument, path_id: &str, point: [f64; 2], start: bool) -> DrawDocument {
-    mutate_draw_layer(document, path_id, |layer| {
-        if let DrawLayerNode::Path(path) = layer {
-            if start {
-                path.segments = vec![
-                    PathSegment::Move { to: point },
-                    PathSegment::Line { to: point },
-                ];
-            } else {
-                path.segments.push(PathSegment::Line { to: point });
+/// 🎯 Maps shift/ctrl/meta modifiers to a `SelectionMergeMode` (matches `@semio-tech/ui-react`'s `marqueeModeFromModifiers`).
+fn selection_merge_mode(shift: bool, ctrl: bool, meta: bool) -> &'static str {
+    let ctrl_or_meta = ctrl || meta;
+    if shift && ctrl_or_meta {
+        "invertive"
+    } else if shift {
+        "additive"
+    } else if ctrl_or_meta {
+        "subtractive"
+    } else {
+        "default"
+    }
+}
+
+fn merge_selection(mode: &str, current: &[String], incoming: &[String]) -> Vec<String> {
+    match mode {
+        "default" => {
+            let mut out = Vec::new();
+            for id in incoming {
+                if !out.contains(id) {
+                    out.push(id.clone());
+                }
+            }
+            out
+        }
+        "additive" => {
+            let mut out = current.to_vec();
+            for id in incoming {
+                if !out.contains(id) {
+                    out.push(id.clone());
+                }
+            }
+            out
+        }
+        "subtractive" => current.iter().filter(|id| !incoming.contains(id)).cloned().collect(),
+        _ => {
+            let mut out = current.to_vec();
+            for id in incoming {
+                if let Some(position) = out.iter().position(|existing| existing == id) {
+                    out.remove(position);
+                } else {
+                    out.push(id.clone());
+                }
+            }
+            out
+        }
+    }
+}
+
+struct DrawPickTarget {
+    generality: i32,
+    layer_id: String,
+}
+
+fn draw_pick_generality(layer: &DrawLayerNode) -> i32 {
+    match layer {
+        DrawLayerNode::Group(_) => 0,
+        DrawLayerNode::Boolean(_) | DrawLayerNode::Trace(_) => 1,
+        _ => 2,
+    }
+}
+
+fn ancestor_group_ids(doc: &DrawDocument, target_id: &str) -> Vec<String> {
+    fn walk(layers: &[DrawLayerNode], target_id: &str, ancestors: &mut Vec<String>) -> bool {
+        for layer in layers {
+            if layer_id(layer) == target_id {
+                return true;
+            }
+            if let DrawLayerNode::Group(group) = layer {
+                ancestors.push(group.base.id.clone());
+                if walk(&group.children, target_id, ancestors) {
+                    return true;
+                }
+                ancestors.pop();
             }
         }
-    })
+        false
+    }
+    let mut ancestors = Vec::new();
+    walk(&doc.layers, target_id, &mut ancestors);
+    ancestors
 }
 
-fn begin_pen_path(document: &DrawDocument, point: [f64; 2]) -> (DrawDocument, String) {
-    let layer = create_draw_path_layer("Pen path", vec![PathSegment::Move { to: point }, PathSegment::Line { to: point }]);
-    let id = layer_id(&layer).to_string();
-    let next = apply_draw_edit_op(document, &DrawOp::AddLayer { parent_id: None, index: None, layer });
-    (next, id)
+fn segment_control_points(segment: &PathSegment) -> Vec<[f64; 2]> {
+    match segment {
+        PathSegment::Move { to } | PathSegment::Line { to } => vec![*to],
+        PathSegment::Quad { ctrl, to } => vec![*ctrl, *to],
+        PathSegment::Cubic { ctrl1, ctrl2, to } => vec![*ctrl1, *ctrl2, *to],
+        PathSegment::Arc { to, .. } => vec![*to],
+        PathSegment::Close => Vec::new(),
+    }
 }
-//#endregion 🔖Interaction
+
+/// 🎯 All pick targets under a world point (groups win by default, control points win over everything when enabled).
+fn resolve_pick_targets_at(doc: &DrawDocument, world: [f64; 2], tolerance_world: f64, include_control_points: bool) -> Vec<DrawPickTarget> {
+    let mut hits = Vec::new();
+    for layer in flatten_draw_layers(&doc.layers).into_iter().rev() {
+        let base = layer_base(layer);
+        if !base.visible || base.locked {
+            continue;
+        }
+        let Some((x, y, width, height)) = draw_layer_world_bounds(layer) else { continue };
+        if !(world[0] >= x && world[0] <= x + width && world[1] >= y && world[1] <= y + height) {
+            continue;
+        }
+        let id = layer_id(layer).to_string();
+        hits.push(DrawPickTarget { generality: draw_pick_generality(layer), layer_id: id.clone() });
+        if matches!(layer, DrawLayerNode::Group(_)) {
+            continue;
+        }
+        for group_id in ancestor_group_ids(doc, &id) {
+            if !hits.iter().any(|target| target.layer_id == group_id) {
+                hits.push(DrawPickTarget { generality: 0, layer_id: group_id });
+            }
+        }
+        if include_control_points && matches!(layer, DrawLayerNode::Path(_) | DrawLayerNode::Shape(_)) {
+            let matrix = draw_transform_to_matrix(&base.transform);
+            for segment in layer_to_path_segments(layer) {
+                for local in segment_control_points(&segment) {
+                    let world_point = matrix_transform_point(matrix, local);
+                    let dx = world[0] - world_point[0];
+                    let dy = world[1] - world_point[1];
+                    if (dx * dx + dy * dy).sqrt() <= tolerance_world {
+                        hits.push(DrawPickTarget { generality: 4, layer_id: id.clone() });
+                    }
+                }
+            }
+        }
+    }
+    hits
+}
+
+fn best_pick_layer_id(targets: &[DrawPickTarget]) -> Option<String> {
+    targets.iter().max_by_key(|target| target.generality).map(|target| target.layer_id.clone())
+}
+
+fn apply_point_pick(play: &mut DrawPlayEnvelope, world: [f64; 2], shift: bool, ctrl: bool, meta: bool, include_control_points: bool) {
+    let tolerance = DRAW_PICK_TOLERANCE_PX / play.document.camera.zoom.max(1e-6);
+    let targets = resolve_pick_targets_at(&play.document, world, tolerance, include_control_points);
+    let picked = best_pick_layer_id(&targets);
+    let mode = selection_merge_mode(shift, ctrl, meta);
+    play.interaction.selected_ids = match picked {
+        Some(id) => merge_selection(mode, &play.interaction.selected_ids, &[id]),
+        None if mode == "default" => Vec::new(),
+        None => play.interaction.selected_ids.clone(),
+    };
+}
+
+/// ⬚ Marquee/lasso layer hits — reduces the lasso gesture to its bounding box, matching the premigration behaviour.
+fn marquee_layer_hits(doc: &DrawDocument, start: [f64; 2], end: [f64; 2], crossing: bool) -> Vec<String> {
+    let rect_x = start[0].min(end[0]);
+    let rect_y = start[1].min(end[1]);
+    let rect_w = (end[0] - start[0]).abs();
+    let rect_h = (end[1] - start[1]).abs();
+    let mut hits = Vec::new();
+    for layer in flatten_draw_layers(&doc.layers) {
+        let base = layer_base(layer);
+        if !base.visible || matches!(layer, DrawLayerNode::Group(_)) {
+            continue;
+        }
+        let Some((x, y, width, height)) = draw_layer_world_bounds(layer) else { continue };
+        let intersects = rect_x <= x + width && rect_x + rect_w >= x && rect_y <= y + height && rect_y + rect_h >= y;
+        let contains = x >= rect_x && y >= rect_y && x + width <= rect_x + rect_w && y + height <= rect_y + rect_h;
+        if if crossing { intersects } else { contains } {
+            hits.push(layer_id(layer).to_string());
+        }
+    }
+    hits
+}
+
+fn shape_preview_segments(tool: &str, start: [f64; 2], end: [f64; 2]) -> Vec<PathSegment> {
+    if tool == "shapeLine" {
+        return vec![PathSegment::Move { to: start }, PathSegment::Line { to: end }];
+    }
+    let x = start[0].min(end[0]);
+    let y = start[1].min(end[1]);
+    let width = (end[0] - start[0]).abs();
+    let height = (end[1] - start[1]).abs();
+    if tool == "shapeRect" {
+        return vec![
+            PathSegment::Move { to: [x, y] },
+            PathSegment::Line { to: [x + width, y] },
+            PathSegment::Line { to: [x + width, y + height] },
+            PathSegment::Line { to: [x, y + height] },
+            PathSegment::Close,
+        ];
+    }
+    let cx = x + width / 2.0;
+    let cy = y + height / 2.0;
+    let rx = width / 2.0;
+    let ry = height / 2.0;
+    let k = 0.552_284_749_8;
+    vec![
+        PathSegment::Move { to: [cx, cy - ry] },
+        PathSegment::Cubic { ctrl1: [cx + rx * k, cy - ry], ctrl2: [cx + rx, cy - ry * k], to: [cx + rx, cy] },
+        PathSegment::Cubic { ctrl1: [cx + rx, cy + ry * k], ctrl2: [cx + rx * k, cy + ry], to: [cx, cy + ry] },
+        PathSegment::Cubic { ctrl1: [cx - rx * k, cy + ry], ctrl2: [cx - rx, cy + ry * k], to: [cx - rx, cy] },
+        PathSegment::Cubic { ctrl1: [cx - rx, cy - ry * k], ctrl2: [cx - rx * k, cy - ry], to: [cx, cy - ry] },
+        PathSegment::Close,
+    ]
+}
+
+fn draft_preview_segments(tool: &str, points: &[[f64; 2]], cursor: [f64; 2]) -> Vec<PathSegment> {
+    if points.is_empty() {
+        return Vec::new();
+    }
+    let mut segments = vec![PathSegment::Move { to: points[0] }];
+    for point in points.iter().skip(1) {
+        segments.push(PathSegment::Line { to: *point });
+    }
+    segments.push(PathSegment::Line { to: cursor });
+    if tool == "shapePolygon" && points.len() > 1 {
+        segments.push(PathSegment::Close);
+    }
+    segments
+}
+
+fn commit_shape_drag(play: &mut DrawPlayEnvelope, tool: &str, start: [f64; 2], end: [f64; 2]) -> Option<String> {
+    let x = start[0].min(end[0]);
+    let y = start[1].min(end[1]);
+    let width = (end[0] - start[0]).abs();
+    let height = (end[1] - start[1]).abs();
+    if width < 1.0 && height < 1.0 {
+        return None;
+    }
+    let layer = DrawLayerNode::Shape(draw::DrawShapeBody {
+        base: default_layer_base(match tool {
+            "shapeLine" => "Line",
+            "shapeEllipse" => "Ellipse",
+            _ => "Rectangle",
+        }),
+        shape_kind: match tool {
+            "shapeLine" => "line",
+            "shapeEllipse" => "ellipse",
+            _ => "rect",
+        }
+        .into(),
+        rect: if tool == "shapeRect" { Some(draw::DrawRect { x, y, width, height }) } else { None },
+        ellipse: if tool == "shapeEllipse" {
+            Some(draw::DrawEllipse { cx: x + width / 2.0, cy: y + height / 2.0, rx: width / 2.0, ry: height / 2.0 })
+        } else {
+            None
+        },
+        circle: None,
+        line: if tool == "shapeLine" { Some(draw::DrawLine { x1: start[0], y1: start[1], x2: end[0], y2: end[1] }) } else { None },
+        polygon: None,
+    });
+    let select_id = layer_id(&layer).to_string();
+    push_undo(play);
+    play.document = apply_draw_edit_op(&play.document, &DrawOp::AddLayer { parent_id: None, index: Some(play.document.layers.len()), layer });
+    play.document = apply_draw_edit_op(&play.document, &DrawOp::SetActiveTool { tool: "selectDirect".into() });
+    play.interaction.selected_ids = vec![select_id.clone()];
+    Some(select_id)
+}
+
+fn commit_draft(play: &mut DrawPlayEnvelope, tool: &str, points: &[[f64; 2]]) -> Option<String> {
+    if points.len() < 2 {
+        return None;
+    }
+    let layer = if tool == "pen" {
+        let mut segments = vec![PathSegment::Move { to: points[0] }];
+        for point in points.iter().skip(1) {
+            segments.push(PathSegment::Line { to: *point });
+        }
+        create_draw_path_layer("Path", segments)
+    } else {
+        DrawLayerNode::Shape(draw::DrawShapeBody {
+            base: default_layer_base("Polygon"),
+            shape_kind: "polygon".into(),
+            rect: None,
+            ellipse: None,
+            circle: None,
+            line: None,
+            polygon: Some(draw::DrawPolygon { points: points.to_vec() }),
+        })
+    };
+    let select_id = layer_id(&layer).to_string();
+    push_undo(play);
+    play.document = apply_draw_edit_op(&play.document, &DrawOp::AddLayer { parent_id: None, index: Some(play.document.layers.len()), layer });
+    play.document = apply_draw_edit_op(&play.document, &DrawOp::SetActiveTool { tool: "selectDirect".into() });
+    play.interaction.selected_ids = vec![select_id.clone()];
+    Some(select_id)
+}
+
+fn commit_trace_at(play: &mut DrawPlayEnvelope, world: [f64; 2]) -> Option<String> {
+    let tolerance = DRAW_PICK_TOLERANCE_PX / play.document.camera.zoom.max(1e-6);
+    let hit_layer_id = best_pick_layer_id(&resolve_pick_targets_at(&play.document, world, tolerance, false));
+    let source_key = hit_layer_id
+        .and_then(|id| find_draw_layer(&play.document, &id).cloned())
+        .and_then(|layer| match layer {
+            DrawLayerNode::Image(image) => Some(image.image_key),
+            _ => None,
+        })
+        .or_else(|| play.document.assets.as_ref().and_then(|assets| assets.keys().next().cloned()));
+    let source_key = source_key?;
+    let layer = create_draw_trace_layer("Trace", &source_key);
+    let select_id = layer_id(&layer).to_string();
+    push_undo(play);
+    play.document = apply_draw_edit_op(&play.document, &DrawOp::AddLayer { parent_id: None, index: Some(play.document.layers.len()), layer });
+    play.document = apply_draw_edit_op(&play.document, &DrawOp::SetActiveTool { tool: "selectDirect".into() });
+    play.interaction.selected_ids = vec![select_id.clone()];
+    Some(select_id)
+}
+//#endregion 🔖ToolStateMachine
 
 //#region 🔖DrawApp
 struct DrawApp;
@@ -247,7 +552,6 @@ impl semio_framework_plugin::PluginApp for DrawApp {
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(camera) = serde_json::from_value(camera.clone()) {
-                        push_undo(&mut play);
                         play.document = apply_draw_edit_op(&play.document, &DrawOp::SetCamera { camera });
                         return vec![set_document_op(&play)];
                     }
@@ -257,7 +561,6 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                 let zoom = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()).unwrap_or(1.0);
                 let mut camera = play.document.camera.clone();
                 camera.zoom = zoom;
-                push_undo(&mut play);
                 play.document = apply_draw_edit_op(&play.document, &DrawOp::SetCamera { camera });
                 return vec![set_document_op(&play)];
             }
@@ -477,32 +780,47 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
                 let viewport_w = args.and_then(|value| value.get("width")).and_then(|value| value.as_f64()).unwrap_or(800.0);
                 let viewport_h = args.and_then(|value| value.get("height")).and_then(|value| value.as_f64()).unwrap_or(600.0);
-                let extend = args.and_then(|value| value.get("extend")).and_then(|value| value.as_bool()).unwrap_or(false);
-                if let (Some(x), Some(y)) = (x, y) {
-                    let (world_x, world_y) = canvas_point_to_world(&play.document.camera, x, y, viewport_w, viewport_h);
-                    let point = [world_x, world_y];
-                    if play.document.active_tool.as_deref() == Some("pen") {
-                        push_undo(&mut play);
-                        let (next, path_id) = begin_pen_path(&play.document, point);
-                        play.document = next;
-                        play.interaction.drawing_path_id = Some(path_id.clone());
-                        play.interaction.selected_ids = vec![path_id];
+                let shift = args.and_then(|value| value.get("shift")).and_then(|value| value.as_bool()).unwrap_or(false);
+                let ctrl = args.and_then(|value| value.get("ctrl")).and_then(|value| value.as_bool()).unwrap_or(false);
+                let meta = args.and_then(|value| value.get("meta")).and_then(|value| value.as_bool()).unwrap_or(false);
+                let (Some(x), Some(y)) = (x, y) else { return Vec::new() };
+                let (world_x, world_y) = canvas_point_to_world(&play.document.camera, x, y, viewport_w, viewport_h);
+                let world = [world_x, world_y];
+                let tool = play.document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
+                match tool.as_str() {
+                    "selectMarquee" | "selectLasso" => {
+                        play.interaction.drag = Some(DrawDragState::Marquee {
+                            method: if tool == "selectLasso" { "lasso".into() } else { "rectangle".into() },
+                            start: world,
+                            cursor: world,
+                            merge: selection_merge_mode(shift, ctrl, meta).into(),
+                            active: false,
+                        });
                         return vec![set_document_op(&play)];
                     }
-                    if let Some(picked) = pick_layer_at(&play.document, world_x, world_y) {
-                        if extend {
-                            if play.interaction.selected_ids.iter().any(|id| id == &picked) {
-                                play.interaction.selected_ids.retain(|id| id != &picked);
-                            } else {
-                                play.interaction.selected_ids.push(picked);
+                    "shapeRect" | "shapeEllipse" | "shapeLine" => {
+                        play.interaction.drag = Some(DrawDragState::Shape { tool: tool.clone(), start: world, cursor: world });
+                        return vec![set_document_op(&play)];
+                    }
+                    "pen" | "shapePolygon" => {
+                        let matches_existing = matches!(&play.interaction.drag, Some(DrawDragState::Draft { tool: existing, .. }) if existing == &tool);
+                        if matches_existing {
+                            if let Some(DrawDragState::Draft { points, cursor, .. }) = &mut play.interaction.drag {
+                                points.push(world);
+                                *cursor = world;
                             }
                         } else {
-                            play.interaction.selected_ids = vec![picked];
+                            play.interaction.drag = Some(DrawDragState::Draft { tool: tool.clone(), points: vec![world], cursor: world });
                         }
-                    } else if !extend {
-                        play.interaction.selected_ids.clear();
+                        return vec![set_document_op(&play)];
                     }
-                    return vec![set_document_op(&play)];
+                    "trace" => {
+                        if let Some(select_id) = commit_trace_at(&mut play, world) {
+                            return vec![set_document_op(&play), json!({ "op": "selectLayer", "layerId": select_id }).to_string()];
+                        }
+                        return Vec::new();
+                    }
+                    _ => {}
                 }
             }
             "canvasPointerMove" => {
@@ -510,24 +828,99 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
                 let viewport_w = args.and_then(|value| value.get("width")).and_then(|value| value.as_f64()).unwrap_or(800.0);
                 let viewport_h = args.and_then(|value| value.get("height")).and_then(|value| value.as_f64()).unwrap_or(600.0);
-                if let (Some(x), Some(y)) = (x, y) {
-                    let (world_x, world_y) = canvas_point_to_world(&play.document.camera, x, y, viewport_w, viewport_h);
-                    if play.document.active_tool.as_deref() == Some("pen") {
-                        if let Some(path_id) = play.interaction.drawing_path_id.clone() {
-                            play.document = append_pen_point(&play.document, &path_id, [world_x, world_y], false);
+                let (Some(x), Some(y)) = (x, y) else { return Vec::new() };
+                let (world_x, world_y) = canvas_point_to_world(&play.document.camera, x, y, viewport_w, viewport_h);
+                let world = [world_x, world_y];
+                if let Some(drag) = &mut play.interaction.drag {
+                    match drag {
+                        DrawDragState::Marquee { start, cursor, active, .. } => {
+                            let distance = ((world[0] - start[0]).powi(2) + (world[1] - start[1]).powi(2)).sqrt();
+                            let threshold_world = DRAW_MARQUEE_THRESHOLD_PX / play.document.camera.zoom.max(1e-6);
+                            *active = *active || distance >= threshold_world;
+                            *cursor = world;
+                        }
+                        DrawDragState::Shape { cursor, .. } | DrawDragState::Draft { cursor, .. } => {
+                            *cursor = world;
+                        }
+                    }
+                    return vec![set_document_op(&play)];
+                }
+                let tool = play.document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
+                let include_control_points = tool == "selectDirect";
+                let tolerance = DRAW_PICK_TOLERANCE_PX / play.document.camera.zoom.max(1e-6);
+                let next_hover = best_pick_layer_id(&resolve_pick_targets_at(&play.document, world, tolerance, include_control_points));
+                if next_hover == play.interaction.hovered_id {
+                    return Vec::new();
+                }
+                play.interaction.hovered_id = next_hover;
+                return vec![set_document_op(&play)];
+            }
+            "canvasPointerUp" => {
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
+                let viewport_w = args.and_then(|value| value.get("width")).and_then(|value| value.as_f64()).unwrap_or(800.0);
+                let viewport_h = args.and_then(|value| value.get("height")).and_then(|value| value.as_f64()).unwrap_or(600.0);
+                let shift = args.and_then(|value| value.get("shift")).and_then(|value| value.as_bool()).unwrap_or(false);
+                let ctrl = args.and_then(|value| value.get("ctrl")).and_then(|value| value.as_bool()).unwrap_or(false);
+                let meta = args.and_then(|value| value.get("meta")).and_then(|value| value.as_bool()).unwrap_or(false);
+                let (Some(x), Some(y)) = (x, y) else { return Vec::new() };
+                let (world_x, world_y) = canvas_point_to_world(&play.document.camera, x, y, viewport_w, viewport_h);
+                let world = [world_x, world_y];
+                match play.interaction.drag.clone() {
+                    Some(DrawDragState::Draft { .. }) => {
+                        return Vec::new();
+                    }
+                    Some(DrawDragState::Marquee { start, merge, active, .. }) => {
+                        play.interaction.drag = None;
+                        if active {
+                            let crossing = world[0] < start[0];
+                            let hits = marquee_layer_hits(&play.document, start, world, crossing);
+                            play.interaction.selected_ids = merge_selection(&merge, &play.interaction.selected_ids, &hits);
+                        } else {
+                            apply_point_pick(&mut play, world, shift, ctrl, meta, false);
+                        }
+                        return vec![set_document_op(&play)];
+                    }
+                    Some(DrawDragState::Shape { tool, start, .. }) => {
+                        play.interaction.drag = None;
+                        if let Some(select_id) = commit_shape_drag(&mut play, &tool, start, world) {
+                            return vec![set_document_op(&play), json!({ "op": "selectLayer", "layerId": select_id }).to_string()];
+                        }
+                        return vec![set_document_op(&play)];
+                    }
+                    None => {
+                        let tool = play.document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
+                        if tool == "selectDirect" {
+                            apply_point_pick(&mut play, world, shift, ctrl, meta, true);
                             return vec![set_document_op(&play)];
                         }
                     }
-                    play.interaction.hovered_id = pick_layer_at(&play.document, world_x, world_y);
+                }
+            }
+            "canvasDoubleClick" => {
+                if let Some(DrawDragState::Draft { tool, points, .. }) = play.interaction.drag.clone() {
+                    play.interaction.drag = None;
+                    if let Some(select_id) = commit_draft(&mut play, &tool, &points) {
+                        return vec![set_document_op(&play), json!({ "op": "selectLayer", "layerId": select_id }).to_string()];
+                    }
                     return vec![set_document_op(&play)];
                 }
             }
-            "canvasPointerUp" => {
-                if play.interaction.drawing_path_id.take().is_some() {
+            "canvasEscape" => {
+                if play.interaction.drag.is_some() {
+                    play.interaction.drag = None;
                     return vec![set_document_op(&play)];
                 }
             }
-            "canvasWheel" => {}
+            "canvasCommitDraft" => {
+                if let Some(DrawDragState::Draft { tool, points, .. }) = play.interaction.drag.clone() {
+                    play.interaction.drag = None;
+                    if let Some(select_id) = commit_draft(&mut play, &tool, &points) {
+                        return vec![set_document_op(&play), json!({ "op": "selectLayer", "layerId": select_id }).to_string()];
+                    }
+                    return vec![set_document_op(&play)];
+                }
+            }
             _ => {}
         }
         Vec::new()
@@ -537,19 +930,167 @@ impl semio_framework_plugin::PluginApp for DrawApp {
         let play = parse_envelope(document_json);
         let interaction = interaction_state(&play, view_state);
         match body_key {
-            DRAW_PLAY_BODY_COMPOSITE => render_canvas(&play.document),
+            DRAW_PLAY_BODY_COMPOSITE => render_canvas(&play.document, &interaction),
             DRAW_PLAY_BODY_LAYERS => render_layers_panel(&play.document, &interaction),
             DRAW_PLAY_BODY_CATALOGUE => render_catalogue_panel(&play.document, &interaction),
             DRAW_PLAY_BODY_PROPERTIES => render_properties_panel(&play.document, &interaction),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
+
+    fn tools(&self, document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
+        let play = parse_envelope(document_json);
+        let active = play.document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
+        const TOOLS: [(&str, &str, &str); 11] = [
+            ("selectMarquee", "square-dashed", "Marquee Select"),
+            ("selectLasso", "lasso", "Lasso Select"),
+            ("selectDirect", "mouse-pointer-2", "Direct Select"),
+            ("pen", "pen-tool", "Pen"),
+            ("shapeRect", "square", "Rectangle"),
+            ("shapeEllipse", "circle", "Ellipse"),
+            ("shapeLine", "minus", "Line"),
+            ("shapePolygon", "pentagon", "Polygon"),
+            ("booleanCombine", "combine", "Boolean"),
+            ("trace", "scan-line", "Trace"),
+            ("transformMove", "move", "Pan"),
+        ];
+        TOOLS
+            .into_iter()
+            .enumerate()
+            .map(|(index, (id, icon, label))| ToolNode::Toggle {
+                id: format!("draw-play-tools.{id}"),
+                icon_id: icon.into(),
+                label: Some(label.into()),
+                text: None,
+                title: Some(label.into()),
+                order: Some(index as u32),
+                pressed: Some(active == id),
+                disabled: None,
+                category: None,
+                on_change: draw_play_cmd("setActiveTool", Some(json!({ "tool": id }))),
+            })
+            .collect()
+    }
 }
 //#endregion 🔖DrawApp
 
 //#region 🔖Canvas
-fn render_canvas(document: &DrawDocument) -> UiNode {
+fn overlay_record(id: String, transform: [f64; 6], segments: &[PathSegment], fill: Option<[f64; 4]>, stroke_color: [f64; 4], stroke_width: f64) -> Value {
+    json!({
+        "id": id,
+        "role": "overlay",
+        "transform": transform,
+        "segments": segments,
+        "fill": fill.map(|color| json!({ "kind": "solid", "color": color })),
+        "stroke": { "color": stroke_color, "width": stroke_width, "cap": "round", "join": "round" },
+        "opacity": 1.0,
+        "blendMode": "normal",
+        "visible": true,
+        "fillRule": "evenodd",
+    })
+}
+
+const DRAW_OVERLAY_SELECTION_STROKE: [f64; 4] = [0.98, 0.75, 0.14, 0.95];
+const DRAW_OVERLAY_SELECTION_FILL: [f64; 4] = [0.98, 0.75, 0.14, 0.16];
+const DRAW_OVERLAY_HOVER_STROKE: [f64; 4] = [0.56, 0.78, 0.98, 0.9];
+const DRAW_OVERLAY_MARQUEE_STROKE: [f64; 4] = [0.36, 0.65, 0.98, 0.9];
+const DRAW_OVERLAY_MARQUEE_FILL: [f64; 4] = [0.36, 0.65, 0.98, 0.12];
+
+fn render_canvas(document: &DrawDocument, interaction: &DrawInteractionState) -> UiNode {
     let scene_nodes = flatten_draw_document_to_scene_nodes(document);
+    let mut records: Vec<Value> = Vec::with_capacity(scene_nodes.len() + 4);
+    records.push(json!({
+        "id": "meta:tool",
+        "role": "meta",
+        "tool": document.active_tool.clone().unwrap_or_else(|| "selectDirect".into()),
+    }));
+    for node in &scene_nodes {
+        records.push(serde_json::to_value(node).unwrap_or(Value::Null));
+    }
+    let node_by_id: HashMap<&str, &draw::DrawSceneNode> = scene_nodes.iter().map(|node| (node.id.as_str(), node)).collect();
+    let selected_leaf_ids: Vec<String> = interaction
+        .selected_ids
+        .iter()
+        .filter_map(|id| find_draw_layer(document, id))
+        .flat_map(draw_layer_descendant_leaf_ids)
+        .collect();
+    for leaf_id in &selected_leaf_ids {
+        if let Some(node) = node_by_id.get(leaf_id.as_str()) {
+            records.push(overlay_record(
+                format!("overlay:sel:{leaf_id}"),
+                node.transform,
+                &node.segments,
+                Some(DRAW_OVERLAY_SELECTION_FILL),
+                DRAW_OVERLAY_SELECTION_STROKE,
+                2.0,
+            ));
+        }
+    }
+    if let Some(hovered_id) = &interaction.hovered_id {
+        if !selected_leaf_ids.iter().any(|id| id == hovered_id) {
+            if let Some(layer) = find_draw_layer(document, hovered_id) {
+                for leaf_id in draw_layer_descendant_leaf_ids(layer) {
+                    if let Some(node) = node_by_id.get(leaf_id.as_str()) {
+                        records.push(overlay_record(
+                            format!("overlay:hover:{leaf_id}"),
+                            node.transform,
+                            &node.segments,
+                            None,
+                            DRAW_OVERLAY_HOVER_STROKE,
+                            1.5,
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    if let Some(drag) = &interaction.drag {
+        match drag {
+            DrawDragState::Marquee { start, cursor, .. } => {
+                let x = start[0].min(cursor[0]);
+                let y = start[1].min(cursor[1]);
+                let width = (cursor[0] - start[0]).abs();
+                let height = (cursor[1] - start[1]).abs();
+                let segments = vec![
+                    PathSegment::Move { to: [x, y] },
+                    PathSegment::Line { to: [x + width, y] },
+                    PathSegment::Line { to: [x + width, y + height] },
+                    PathSegment::Line { to: [x, y + height] },
+                    PathSegment::Close,
+                ];
+                records.push(overlay_record(
+                    "overlay:marquee".into(),
+                    [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                    &segments,
+                    Some(DRAW_OVERLAY_MARQUEE_FILL),
+                    DRAW_OVERLAY_MARQUEE_STROKE,
+                    1.0,
+                ));
+            }
+            DrawDragState::Shape { tool, start, cursor } => {
+                let segments = shape_preview_segments(tool, *start, *cursor);
+                records.push(overlay_record(
+                    "overlay:preview".into(),
+                    [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                    &segments,
+                    Some(DRAW_OVERLAY_SELECTION_FILL),
+                    DRAW_OVERLAY_SELECTION_STROKE,
+                    1.5,
+                ));
+            }
+            DrawDragState::Draft { tool, points, cursor } => {
+                let segments = draft_preview_segments(tool, points, *cursor);
+                records.push(overlay_record(
+                    "overlay:preview".into(),
+                    [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                    &segments,
+                    Some(DRAW_OVERLAY_SELECTION_FILL),
+                    DRAW_OVERLAY_SELECTION_STROKE,
+                    1.5,
+                ));
+            }
+        }
+    }
     build_canvas_2d_scene(
         DRAW_PLAY_SURFACE_ID,
         DRAW_PLAY_CONTROLLER_ID,
@@ -557,7 +1098,7 @@ fn render_canvas(document: &DrawDocument) -> UiNode {
             camera_x: document.camera.x,
             camera_y: document.camera.y,
             zoom: document.camera.zoom,
-            layers_json: serde_json::to_string(&scene_nodes).unwrap_or_else(|_| "[]".into()),
+            layers_json: serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()),
         },
     )
 }
@@ -1327,6 +1868,8 @@ fn create_draw_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .keybinding("mod+a", "selectAll")
+            .keybinding("escape", "canvasEscape")
+            .keybinding("enter", "canvasCommitDraft")
             .default_layout(create_default_layout(
                 &["draw-composite".into()],
                 "row",

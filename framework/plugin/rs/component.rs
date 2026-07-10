@@ -101,3 +101,15 @@ impl Guest for ComponentGuest {
 export!(ComponentGuest);
 
 pub fn component_export_anchor() {}
+
+pub fn host_backbone_read(uri: &str) -> Result<String, String> {
+    semio::framework::host::backbone_read(uri)
+}
+
+pub fn host_backbone_write(uri: &str, payload: &str) -> Result<(), String> {
+    semio::framework::host::backbone_write(uri, payload)
+}
+
+pub fn host_now_ms() -> i64 {
+    semio::framework::host::now_ms()
+}

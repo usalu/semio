@@ -35,7 +35,6 @@ const uiReactDir = resolve(repoRootPath, "ui/react");
 const uiStylingDir = resolve(repoRootPath, "ui/styling/js");
 const frameworkPlaygroundDir = resolve(repoRootPath, "framework/product/playground/core");
 const frameworkPlaygroundReactDir = resolve(repoRootPath, "framework/product/playground/renderer/react");
-const puzzle2dReactDir = resolve(repoRootPath, "puzzle/2d/react");
 const puzzle3dReactDir = resolve(repoRootPath, "puzzle/3d/react");
 const puzzle5dReactDir = resolve(repoRootPath, "puzzle/5d/react");
 const composeJsDir = resolve(repoRootPath, "compose/client/lib/js");
@@ -93,7 +92,6 @@ function buildStorybookAliases(): Record<string, string> {
     alias["@semio-tech/ui-styling"] = toVitePath(uiStylingDir);
     alias["@semio-tech/framework-playground-core"] = toVitePath(frameworkPlaygroundDir);
     alias["@semio-tech/framework-playground-renderer-react"] = toVitePath(frameworkPlaygroundReactDir);
-    alias["@semio-tech/puzzle-2d-react"] = toVitePath(puzzle2dReactDir);
     alias["@semio-tech/puzzle-3d-react"] = toVitePath(puzzle3dReactDir);
     alias["@semio-tech/puzzle-5d-react"] = toVitePath(puzzle5dReactDir);
     alias["@semio-tech/infinite-cavas-react-renderer"] = toVitePath(resolve(repoRootPath, "infinite/cavas/react-renderer/index.tsx"));
@@ -220,7 +218,6 @@ const config: StorybookConfig = {
       "@semio-tech/ui-react",
       "@semio-tech/framework-playground-core",
       "@semio-tech/framework-playground-renderer-react",
-      "@semio-tech/puzzle-2d-react",
       "@semio-tech/infinite-cavas-react-renderer",
       ...findWorkspacePackages(repoRootPath),
     ]);

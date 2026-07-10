@@ -398,11 +398,29 @@ pub fn apply_event(session: &mut CadEngagementSession, event_kind: &str, payload
     changed
 }
 
-pub fn parse_repl_line(line: &str) -> Option<(String, Option<Value>)> {
+/// States where a numeric-only line commits the pending height (premigration `tryCommitNumericEntry`).
+const NUMERIC_ENTRY_STATES: &[&str] =
+    &["first_corner_height", "two_points_height", "slab_height", "column_height"];
+
+fn strip_prefix_ignore_case<'a>(text: &'a str, prefix: &str) -> Option<&'a str> {
+    if text.len() < prefix.len() {
+        return None;
+    }
+    let (head, tail) = text.split_at(prefix.len());
+    head.eq_ignore_ascii_case(prefix).then_some(tail)
+}
+
+/// Parses a REPL command line into an `(event_kind, payload)` pair.
+///
+/// `current_state` is the active engagement session's state (if any) — required to disambiguate a
+/// bare numeric line (e.g. `"3.5"`) as a height commit only while a numeric-entry state is active,
+/// mirroring premigration's `trySubmitLine` numeric-entry step.
+pub fn parse_repl_line(line: &str, current_state: Option<&str>) -> Option<(String, Option<Value>)> {
     let trimmed = line.trim();
     if trimmed.is_empty() {
         return None;
     }
+    // Legacy raw forms (still used by the wgpu renderer's REPL, which does not PascalCase drafts).
     if let Some(rest) = trimmed.strip_prefix("set.height ") {
         return rest
             .trim()
@@ -416,6 +434,25 @@ pub fn parse_repl_line(line: &str) -> Option<(String, Option<Value>)> {
             .parse::<f64>()
             .ok()
             .map(|distance| ("set.distance".into(), Some(json!(distance))));
+    }
+    // Normalized forms: the React shell's engagement input PascalCases every draft (no separators),
+    // so `set.height 3.5` arrives as `SetHeight3.5` (framework/renderer/react `Engagement.applyDraft`
+    // via `normalizeEngagementCommandText`).
+    if let Some(rest) = strip_prefix_ignore_case(trimmed, "SetHeight") {
+        if let Ok(height) = rest.parse::<f64>() {
+            return Some(("set.height".into(), Some(json!(height))));
+        }
+    }
+    if let Some(rest) = strip_prefix_ignore_case(trimmed, "Dist") {
+        if let Ok(distance) = rest.parse::<f64>() {
+            return Some(("set.distance".into(), Some(json!(distance))));
+        }
+    }
+    // Bare numeric entry commits height while a numeric-entry state is active.
+    if current_state.is_some_and(|state| NUMERIC_ENTRY_STATES.contains(&state)) {
+        if let Ok(height) = trimmed.parse::<f64>() {
+            return Some(("set.height".into(), Some(json!(height))));
+        }
     }
     Some((trimmed.into(), None))
 }
@@ -688,5 +725,63 @@ mod tests {
         assert!(apply_event(&mut session, "pointer.down", Some(&json!([1.0, 2.0, 0.0]))));
         let items = preview_display_items(&session);
         assert!(items.iter().any(|item| item.get("kind").and_then(|v| v.as_str()) == Some("point")));
+    }
+
+    #[test]
+    fn parse_repl_line_accepts_legacy_raw_forms() {
+        assert_eq!(
+            parse_repl_line("set.height 2.5", None),
+            Some(("set.height".into(), Some(json!(2.5))))
+        );
+        assert_eq!(
+            parse_repl_line("dist 12", None),
+            Some(("set.distance".into(), Some(json!(12.0))))
+        );
+    }
+
+    #[test]
+    fn parse_repl_line_accepts_shell_normalized_forms() {
+        // The React shell PascalCases every draft (framework/renderer/react `normalizeEngagementCommandText`),
+        // so `set.height 3.5` arrives as `SetHeight3.5` with no separators.
+        assert_eq!(
+            parse_repl_line("SetHeight3.5", None),
+            Some(("set.height".into(), Some(json!(3.5))))
+        );
+        assert_eq!(
+            parse_repl_line("setheight0.25", None),
+            Some(("set.height".into(), Some(json!(0.25))))
+        );
+        assert_eq!(
+            parse_repl_line("Dist12.75", None),
+            Some(("set.distance".into(), Some(json!(12.75))))
+        );
+    }
+
+    #[test]
+    fn parse_repl_line_commits_bare_number_only_in_numeric_entry_state() {
+        // Bare numeric entry (premigration `tryCommitNumericEntry`) only applies while a
+        // numeric-entry state (e.g. box's first_corner_height) is active.
+        assert_eq!(
+            parse_repl_line("3.5", Some("first_corner_height")),
+            Some(("set.height".into(), Some(json!(3.5))))
+        );
+        assert_eq!(
+            parse_repl_line("2", Some("column_height")),
+            Some(("set.height".into(), Some(json!(2.0))))
+        );
+        // Outside a numeric-entry state, a bare number is treated as an (unresolvable) interaction key.
+        assert_eq!(parse_repl_line("3.5", None), Some(("3.5".into(), None)));
+        assert_eq!(parse_repl_line("3.5", Some("idle")), Some(("3.5".into(), None)));
+    }
+
+    #[test]
+    fn box_interaction_commits_via_shell_normalized_repl_line() {
+        let mut session = start_session("primitive.box", CadPaneId::Shape).expect("session");
+        assert!(apply_event(&mut session, "start", None));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!([0.0, 0.0, 0.0]))));
+        assert!(apply_event(&mut session, "pointer.down", Some(&json!([2.0, 3.0, 0.0]))));
+        let (event_kind, payload) = parse_repl_line("SetHeight2.5", Some(&session.state)).expect("parsed line");
+        assert!(apply_event(&mut session, &event_kind, payload.as_ref()));
+        assert!(can_commit(&session));
     }
 }

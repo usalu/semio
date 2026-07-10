@@ -2456,6 +2456,15 @@ export type Puzzle2dBoardScene = {
   readonly lodMode: string;
 };
 
+export type NoteCanvasScene = {
+  readonly documentJson: string;
+  readonly selectionJson: string;
+  readonly hoveredId?: string;
+  readonly activeTool: string;
+  readonly viewMode: string;
+  readonly interactive: boolean;
+};
+
 export type UiExternalSlotNode = {
   readonly type: "externalSlot";
   readonly pluginId: string;
@@ -2481,6 +2490,7 @@ export type UiComponentSceneNode = {
   readonly gisMap?: GisMapScene;
   readonly puzzle2dBoard?: Puzzle2dBoardScene;
   readonly iconRender?: IconRenderScene;
+  readonly noteCanvas?: NoteCanvasScene;
 };
 
 export type UiNode =

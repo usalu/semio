@@ -72,7 +72,7 @@
             \tl_if_empty:NT \l_semio_clean_title_tl {
               \tl_set:Nn \l_semio_clean_title_tl { \@title }
             }
-            \WindowItem[1.0]{
+            \WindowItem[0.9]{
               \begin{WindowRow}
                 \WindowItem{
                   \begin{Window}[title={Zukunft\ Bau}, anchor=center, text-size=fit]
@@ -93,7 +93,7 @@
             }
           } {
             \bool_set_false:N \l_semio_is_zwischenbericht_bool
-            \WindowItem[2.0]{
+            \WindowItem[1.8]{
               \begin{Window}[title={Titel}, anchor=center, text-size=fit]
                 \SemioSans \@title
                 \tl_if_empty:NTF \l_semio_subtitle_tl {} {%
@@ -104,7 +104,7 @@
           }
         } {
           \bool_set_false:N \l_semio_is_zwischenbericht_bool
-          \WindowItem[2.0]{
+          \WindowItem[1.8]{
             \begin{Window}[title={Titel}, anchor=center, text-size=fit]
               \SemioSans \@title
               \tl_if_empty:NTF \l_semio_subtitle_tl {} {%
@@ -168,7 +168,7 @@
           }
         }
         \bool_if:NT \l_semio_cover@institution@row_bool {
-          \WindowItem[2.3]{
+          \WindowItem[3.3]{
             \begin{WindowRow}
               \WindowItem{
                 \begin{Window}[title=Antragstellende~Institution, anchor=center, text-size=fit]
@@ -183,7 +183,7 @@
             \end{WindowRow}
           }
         }
-        \WindowItem[6.7]{
+        \WindowItem[5.2]{
           \begin{WindowRow}
             \WindowItem{
               \begin{Window}[title=Zukunft~Bau, anchor=center]

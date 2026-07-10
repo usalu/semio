@@ -2296,7 +2296,8 @@ fn engagement_submit_line(envelope: &mut CadPlayEnvelope, pane: CadPaneId) -> bo
         return false;
     }
     let model_definition_id = pane.model_definition_id();
-    if let Some((event_kind, payload)) = parse_repl_line(input) {
+    let current_state = envelope.runtime.engagement_session.as_ref().map(|session| session.state.clone());
+    if let Some((event_kind, payload)) = parse_repl_line(input, current_state.as_deref()) {
         if let Some(session) = envelope.runtime.engagement_session.as_mut() {
             if apply_event(session, &event_kind, payload.as_ref()) {
                 envelope.runtime.engagement_step = session.state.clone();

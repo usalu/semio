@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type DragEvent, type MouseEvent } from "react";
 import { CATALOGUE_DRAG_MIME, ContextMenuController, getActiveCatalogueDragPayload, pickMostSpecificCanvasTarget, useCanvasThemeSync, type CanvasPickTarget } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import type { CommandDescriptor, Puzzle2dBoardScene, Puzzle2dBoardWasmSession, UiComponentSceneNode } from "../os-shell.tsx";
@@ -625,7 +625,7 @@ export function Puzzle2dBoardHost({ node, onCommand }: { readonly node: UiCompon
 
   //#region ContextMenu
   const onContextMenu = useCallback(
-    (event: React.MouseEvent<HTMLDivElement>): void => {
+    (event: MouseEvent<HTMLDivElement>): void => {
       if (!scene?.interactive) return;
       const session = sessionRef.current;
       if (!session?.pickTargetsAtScreenJson) return;
@@ -660,7 +660,7 @@ export function Puzzle2dBoardHost({ node, onCommand }: { readonly node: UiCompon
 
   //#region FixtureDropHandlers
   const onDragOver = useCallback(
-    (event: React.DragEvent<HTMLDivElement>): void => {
+    (event: DragEvent<HTMLDivElement>): void => {
       if (!scene?.interactive || !event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME)) return;
       const session = sessionRef.current;
       if (!session?.setFixtureDropPreviewJson) return;
@@ -678,7 +678,7 @@ export function Puzzle2dBoardHost({ node, onCommand }: { readonly node: UiCompon
   }, []);
 
   const onDrop = useCallback(
-    (event: React.DragEvent<HTMLDivElement>): void => {
+    (event: DragEvent<HTMLDivElement>): void => {
       if (!scene?.interactive) return;
       const encoded = event.dataTransfer.getData(CATALOGUE_DRAG_MIME) || getActiveCatalogueDragPayload();
       const payload = parsePuzzle2dCatalogueDragPayload(encoded);

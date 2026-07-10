@@ -2,6 +2,7 @@ import { lazy, Suspense, type ReactElement, type ReactNode } from "react";
 import {
   Button,
   ChromeAwareWindowScrollSurface,
+  Field,
   Icon,
   IconSelector,
   Input,
@@ -20,9 +21,11 @@ import {
   VirtualFileSystem,
   catalogueTreeDragController,
   classifyIconSelectorMode,
+  cn,
   renderControlIcon,
   type TreeDataItem,
   type TreeDataSection,
+  type TreeDragAndDropController,
   type TreePanelConfig,
 } from "@semio-tech/ui-react";
 import { ICONS, type IconName } from "@semio-tech/ui-asset";
@@ -37,6 +40,7 @@ const World3dHost = lazy(() => import("./components/world-3d-host.tsx").then((mo
 const GisMapHost = lazy(() => import("./components/gis-map-host.tsx").then((module) => ({ default: module.GisMapHost })));
 const Puzzle2dBoardHost = lazy(() => import("./components/puzzle-2d-board-host.tsx").then((module) => ({ default: module.Puzzle2dBoardHost })));
 const IconRenderHost = lazy(() => import("./components/icon-render-host.tsx").then((module) => ({ default: module.IconRenderHost })));
+const NoteCanvasHost = lazy(() => import("./components/note-canvas-host.tsx").then((module) => ({ default: module.NoteCanvasHost })));
 
 function ComponentSceneFallback() {
   return <p className="text-muted-foreground p-2 text-xs">Loading surface…</p>;
@@ -63,6 +67,8 @@ function renderComponentSceneHost(node: Extract<UiNode, { type: "componentScene"
         return <Puzzle2dBoardHost node={node} onCommand={onCommand} />;
       case "icon-render":
         return <IconRenderHost node={node} onCommand={onCommand} />;
+      case "note-canvas":
+        return <NoteCanvasHost node={node} onCommand={onCommand} />;
       case "virtualFileSystem":
         return <VirtualFileSystemHost node={node} onCommand={onCommand} />;
       default:
@@ -122,6 +128,10 @@ export function renderUiControl(control: UiControlNode, onCommand: UiInterpreter
           className="h-medium w-full min-w-0"
           value={control.inputKind === "file" ? undefined : control.value}
           placeholder={control.placeholder}
+          min={control.min}
+          max={control.max}
+          step={control.step}
+          accept={control.inputKind === "file" ? control.accept : undefined}
           onChange={
             commitOnBlur
               ? undefined
@@ -203,8 +213,8 @@ export function renderUiControl(control: UiControlNode, onCommand: UiInterpreter
           ))}
         </dl>
       );
-    case "slider":
-      return (
+    case "slider": {
+      const slider = (
         <Slider
           id={control.id}
           className="w-full min-w-0"
@@ -215,6 +225,16 @@ export function renderUiControl(control: UiControlNode, onCommand: UiInterpreter
           onValueChange={(values) => dispatchUiCommand(onCommand, control.onChange, { value: values[0] ?? control.value })}
         />
       );
+      if (!control.unit) return slider;
+      return (
+        <div className="flex min-w-0 w-full items-center gap-single">
+          {slider}
+          <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
+            {control.value} {control.unit}
+          </span>
+        </div>
+      );
+    }
     case "numberStepper":
       return (
         <div className="flex min-w-0 w-full items-center gap-1">
@@ -252,7 +272,7 @@ export function renderUiControl(control: UiControlNode, onCommand: UiInterpreter
         />
       );
     case "button":
-      return <Button id={control.id} text={control.label} icon={resolveDeclarativeControlIcon(control.iconId)} onClick={() => onCommand(control.command)} />;
+      return <Button id={control.id} text={control.label} icon={resolveDeclarativeControlIcon(control.iconId)} disabled={control.disabled} onClick={() => onCommand(control.command)} />;
   }
 }
 //#endregion RenderUiControl
@@ -301,17 +321,47 @@ export function uiTreeNodeToTreePanelConfig(treeNode: UiTreeNode, onCommand: UiI
   };
 }
 
-function treeHasDragPayload(treeNode: UiTreeNode): boolean {
+function treeDragPayloadMime(treeNode: UiTreeNode): string | undefined {
   for (const section of treeNode.sections) {
-    const visit = (items: readonly UiTreeItemNode[]): boolean => items.some((item) => Boolean(item.dragData && Object.keys(item.dragData).length > 0) || Boolean(item.items?.length && visit(item.items)));
-    if (visit(section.items)) return true;
+    const visit = (items: readonly UiTreeItemNode[]): string | undefined => {
+      for (const item of items) {
+        const mime = item.dragData ? Object.keys(item.dragData)[0] : undefined;
+        if (mime) return mime;
+        const nested = item.items?.length ? visit(item.items) : undefined;
+        if (nested) return nested;
+      }
+      return undefined;
+    };
+    const mime = visit(section.items);
+    if (mime) return mime;
   }
-  return false;
+  return undefined;
+}
+
+function declarativeTreeDragController(treeNode: UiTreeNode, onCommand: UiInterpreterContext["onCommand"]): TreeDragAndDropController | undefined {
+  const mime = treeDragPayloadMime(treeNode);
+  const source = mime ? catalogueTreeDragController(mime) : undefined;
+  const dropCommand = treeNode.dropCommand;
+  if (!dropCommand) return source;
+  return {
+    ...(source ?? {}),
+    handleDrop: ({ data, target, dropPosition }) => {
+      const encoded = Object.entries(data).find(([kind, value]) => kind.startsWith("application/x-semio-") && value.trim())?.[1];
+      if (!encoded) return;
+      let payload: Record<string, unknown>;
+      try {
+        payload = JSON.parse(encoded) as Record<string, unknown>;
+      } catch {
+        return;
+      }
+      dispatchUiCommand(onCommand, dropCommand, { ...payload, targetId: target.id, dropPosition: dropPosition ?? "inside" });
+    },
+  };
 }
 
 function DeclarativeTreePanel({ treeNode, onCommand }: { readonly treeNode: UiTreeNode; readonly onCommand: UiInterpreterContext["onCommand"] }) {
   const config = uiTreeNodeToTreePanelConfig(treeNode, onCommand);
-  const dragController = treeHasDragPayload(treeNode) ? catalogueTreeDragController() : undefined;
+  const dragController = declarativeTreeDragController(treeNode, onCommand);
   return (
     <Tree
       className="min-h-0 min-w-0 flex-1 overflow-auto"
@@ -399,10 +449,25 @@ function VirtualFileSystemHost({ node, onCommand }: { readonly node: Extract<UiN
 /** @emoji 🌳 Interprets a declarative {@link UiNode} tree into ui-react components. */
 export function interpretUiNode(node: UiNode, context: UiInterpreterContext): ReactNode {
   switch (node.type) {
-    case "stack":
+    case "stack": {
+      const activate = node.activate;
       return (
         <div
-          className={`semio-ui-stack semio-ui-stack--${node.direction}`}
+          className={cn(
+            `semio-ui-stack semio-ui-stack--${node.direction}`,
+            activate && "border-border bg-panel cursor-pointer rounded-md border",
+            node.selected && "ring-primary border-primary ring-1",
+          )}
+          data-ui-stack={node.id}
+          role={activate ? "button" : undefined}
+          onClick={
+            activate
+              ? (event) => {
+                  event.stopPropagation();
+                  dispatchUiCommand(context.onCommand, activate, {});
+                }
+              : undefined
+          }
           style={{
             display: "flex",
             flexDirection: node.direction === "horizontal" ? "row" : "column",
@@ -420,12 +485,15 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
           ))}
         </div>
       );
+    }
     case "text":
       return <p className={node.emphasize ? "font-semibold" : "text-sm"}>{node.value}</p>;
     case "button":
-      return <Button id={node.id} text={node.label} icon={resolveDeclarativeControlIcon(node.iconId)} onClick={() => context.onCommand(node.command)} />;
+      return <Button id={node.id} text={node.label} icon={resolveDeclarativeControlIcon(node.iconId)} disabled={node.disabled} onClick={() => context.onCommand(node.command)} />;
     case "separator":
       return <hr className="border-border" />;
+    case "image":
+      return <img id={node.id} src={node.src} alt={node.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-image={node.id} />;
     case "input":
       return renderUiControl(node, context.onCommand);
     case "select":
@@ -446,10 +514,9 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
       return renderUiControl(node, context.onCommand);
     case "field":
       return (
-        <div className="flex flex-col gap-half" data-ui-field={node.id}>
-          <label className="text-muted-foreground text-xs">{node.label}</label>
+        <Field id={node.id} label={node.label} description={node.description} required={node.required} error={node.error}>
           {renderUiControl(node.child, context.onCommand)}
-        </div>
+        </Field>
       );
     case "section":
       return (

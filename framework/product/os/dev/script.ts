@@ -38,7 +38,7 @@ async function backboneDatabaseCtorLazy(): Promise<typeof import("bun:sqlite").D
 }
 
 async function readBackbonePayload(uri: string): Promise<string | null> {
-  if (uri.startsWith("temp://")) return temporaryBackboneFiles.get(uri) ?? null;
+  if (uri.startsWith("temp://") || uri.startsWith("presence:")) return temporaryBackboneFiles.get(uri) ?? null;
   if (uri.startsWith("file://")) {
     const path = uri.slice("file://".length);
     if (!existsSync(path)) return null;
@@ -58,7 +58,7 @@ async function readBackbonePayload(uri: string): Promise<string | null> {
 }
 
 async function writeBackbonePayload(uri: string, payload: string): Promise<void> {
-  if (uri.startsWith("temp://")) {
+  if (uri.startsWith("temp://") || uri.startsWith("presence:")) {
     temporaryBackboneFiles.set(uri, payload);
     return;
   }
@@ -388,9 +388,80 @@ function rewriteExistingPluginShimImports(): void {
 }
 
 function transpilePluginComponent(artifact: string, outDir: string, componentBase: string): void {
-  const transpile = spawnSync("bunx", ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase], { cwd: repoRoot, stdio: "inherit" });
+  const transpile = spawnSync(
+    "bunx",
+    ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/host=./host-shim.js"],
+    { cwd: repoRoot, stdio: "inherit" },
+  );
   if (transpile.status !== 0) throw new Error(`jco transpile failed for ${artifact}`);
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`));
+}
+
+/** @emoji 🗄️ JS implementation of the `semio:framework/host` component import — localStorage first, sync dev-server backbone fallback. */
+function hostShimSource(): string {
+  return `/** @generated semio plugin host shim */
+const BACKBONE_STORAGE_PREFIX = "semio.backbone.";
+
+export function log(level, message) {
+  if (level === "error") console.error(\`[plugin] \${message}\`);
+  else console.log(\`[plugin] \${message}\`);
+}
+
+export function nowMs() {
+  return BigInt(Date.now());
+}
+
+export function readDocument(handle) {
+  throw \`read-document unsupported: \${handle}\`;
+}
+
+export function writeDocument(handle, payloadJson) {
+  throw \`write-document unsupported: \${handle}\`;
+}
+
+export function openWindow(kind, paramsJson) {
+  throw \`open-window unsupported: \${kind}\`;
+}
+
+export function invokeCommand(target, invocationJson) {
+  throw \`invoke-command unsupported: \${target}\`;
+}
+
+export function readAsset(handle) {
+  throw \`read-asset unsupported: \${handle}\`;
+}
+
+export function networkFetch(origin, path) {
+  throw \`network-fetch unsupported: \${origin}\${path}\`;
+}
+
+function syncBackboneRequest(method, uri, body) {
+  const request = new XMLHttpRequest();
+  request.open(method, \`/semio-backbone?uri=\${encodeURIComponent(uri)}\`, false);
+  request.send(body);
+  return request;
+}
+
+export function backboneRead(uri) {
+  if (typeof localStorage !== "undefined") {
+    const value = localStorage.getItem(\`\${BACKBONE_STORAGE_PREFIX}\${uri}\`);
+    if (value == null) throw \`backbone entry missing: \${uri}\`;
+    return value;
+  }
+  const response = syncBackboneRequest("GET", uri, null);
+  if (response.status !== 200) throw \`backbone read failed: \${uri}\`;
+  return response.responseText;
+}
+
+export function backboneWrite(uri, payload) {
+  if (typeof localStorage !== "undefined") {
+    localStorage.setItem(\`\${BACKBONE_STORAGE_PREFIX}\${uri}\`, payload);
+    return;
+  }
+  const response = syncBackboneRequest("PUT", uri, payload);
+  if (response.status !== 200) throw \`backbone write failed: \${uri}\`;
+}
+`;
 }
 
 async function readPackageName(cratePath: string): Promise<string> {
@@ -411,6 +482,7 @@ async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
   const wasmOut = join(outDir, target.wasmOut);
   const componentBase = `${jsBase}_component`;
   copyFileSync(artifact, wasmOut);
+  writeFileSync(join(outDir, "host-shim.js"), hostShimSource());
   transpilePluginComponent(wasmOut, outDir, componentBase);
   const jsOut = join(outDir, `${jsBase}.js`);
   writeFileSync(jsOut, pluginComponentBridgeSource(componentBase, target.wasmOut));

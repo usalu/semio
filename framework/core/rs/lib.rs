@@ -1744,7 +1744,7 @@ pub struct UiFieldNode {
     pub required: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
-    pub child: UiControlNode,
+    pub child: Box<UiNode>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3987,3 +3987,13 @@ pub use ui::kernel::{
     Rights, SchemaId, SchemaVersion, Scope, Theme, UndoGroup, UndoPolicy, WindowEvent, WindowHandle,
     WindowInput, WindowKindDef, WindowKindId, WindowOutput,
 };
+
+#[cfg(test)]
+mod __scratch_surface_kind_check {
+    use super::SurfaceKind;
+    #[test]
+    fn scratch_print_raster_kind() {
+        let json = serde_json::to_string(&SurfaceKind::Raster).unwrap();
+        panic!("SurfaceKind::Raster serializes to: {json}");
+    }
+}

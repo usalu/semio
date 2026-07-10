@@ -2041,18 +2041,24 @@ mod tests {
     }
 
     #[test]
+    fn scene_layers_json(node: &UiNode) -> String {
+        let value: Value = serde_json::to_value(node).unwrap();
+        value["canvas2d"]["layersJson"].as_str().expect("layersJson string").to_string()
+    }
+
+    #[test]
     fn blueprint_scene_has_page_background_and_guides() {
         let app = LayoutPlayApp;
         let document = app.initial_document_json();
         let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
-        let json_str = serde_json::to_string(&node).unwrap();
-        assert!(json_str.contains("layout.page-bg"));
-        assert!(json_str.contains("0.97"));
-        assert!(json_str.contains("layout.guide.margin"));
-        assert!(json_str.contains("layout.guide.column"));
-        assert!(json_str.contains("\"segments\""));
-        assert!(json_str.contains("\"fill\":{\"color\""));
-        assert!(!json_str.contains("\"linkId\""));
+        let layers_json = scene_layers_json(&node);
+        assert!(layers_json.contains("layout.page-bg"));
+        assert!(layers_json.contains("0.97"));
+        assert!(layers_json.contains("layout.guide.margin"));
+        assert!(layers_json.contains("layout.guide.column"));
+        assert!(layers_json.contains("\"segments\""));
+        assert!(layers_json.contains("\"fill\":{\"color\""));
+        assert!(!layers_json.contains("\"linkId\""));
     }
 
     #[test]
@@ -2060,9 +2066,9 @@ mod tests {
         let app = LayoutPlayApp;
         let document = app.initial_document_json();
         let node = app.render(LAYOUT_PLAY_BODY_PREVIEW, &document, &ViewState::default());
-        let json_str = serde_json::to_string(&node).unwrap();
-        assert!(json_str.contains("layout.page-bg"));
-        assert!(!json_str.contains("layout.guide."));
+        let layers_json = scene_layers_json(&node);
+        assert!(layers_json.contains("layout.page-bg"));
+        assert!(!layers_json.contains("layout.guide."));
     }
 
     #[test]
@@ -2070,8 +2076,8 @@ mod tests {
         let app = LayoutPlayApp;
         let document = app.initial_document_json();
         let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
-        let json_str = serde_json::to_string(&node).unwrap();
-        assert!(json_str.contains("\"dash\":[4.0,3.0]"));
+        let layers_json = scene_layers_json(&node);
+        assert!(layers_json.contains("\"dash\":[4.0,3.0]"));
     }
 
     #[test]

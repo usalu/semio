@@ -265,6 +265,81 @@ struct RuleQueryResult {
 }
 // #endregion 🔖Rewrite
 
+// #region 🔖RuleVcs
+use vcs::{create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
+
+/// 📐 The full rewrite-rule document: before fixture, LHS/RHS patterns, parameter bindings, and rule-graph layout overrides.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RewriteRuleState {
+    pub before_fixture_json: String,
+    pub lhs_json: String,
+    pub rhs_json: String,
+    #[serde(default)]
+    pub parameter_bindings: HashMap<String, PropertyValue>,
+    #[serde(default)]
+    pub rule_layout: HashMap<String, (f64, f64)>,
+}
+
+/// 🔁 Whole-state snapshot diff: the rule document is one small unit, so history stores full pre/post states rather than field-level patches.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RewriteRuleDiff {
+    pub next: Option<RewriteRuleState>,
+}
+
+impl OperationDiff<RewriteRuleState> for RewriteRuleDiff {
+    fn apply(&self, projection: &RewriteRuleState) -> RewriteRuleState {
+        self.next.clone().unwrap_or_else(|| projection.clone())
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.next.is_some() {
+            self.next = other.next;
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum RewriteRuleOp {
+    SetState { state: RewriteRuleState },
+}
+
+impl Operation<RewriteRuleState> for RewriteRuleOp {
+    type Diff = RewriteRuleDiff;
+
+    fn diff(&self, _projection: &RewriteRuleState) -> Self::Diff {
+        match self {
+            RewriteRuleOp::SetState { state } => RewriteRuleDiff { next: Some(state.clone()) },
+        }
+    }
+
+    fn backwards(&self, projection: &RewriteRuleState) -> Vec<Self> {
+        vec![RewriteRuleOp::SetState { state: projection.clone() }]
+    }
+}
+
+pub type RewriteRuleEnvelope = DocumentVcsEnvelope<RewriteRuleState, RewriteRuleOp>;
+pub type RewriteRuleStore = DocumentVcsStore<RewriteRuleState, RewriteRuleOp>;
+
+const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
+
+pub fn create_rewrite_rule_envelope(id: &str, state: RewriteRuleState) -> RewriteRuleEnvelope {
+    create_document_vcs_envelope(REWRITE_RULE_SCHEMA, id, state, None)
+}
+
+pub fn dispatch_rewrite_rule_state(store: &mut RewriteRuleStore, state: RewriteRuleState) -> Result<(), String> {
+    let current = store.projection().map_err(|e| e.to_string())?;
+    if current == state {
+        return Ok(());
+    }
+    store
+        .dispatch(DocumentVcsCommand::Apply { operations: vec![RewriteRuleOp::SetState { state }], description: None })
+        .map_err(|e| e.to_string())
+}
+// #endregion 🔖RuleVcs
+
 // #region 🔖Lod
 use cavas::lod::{Lod, LodScale};
 

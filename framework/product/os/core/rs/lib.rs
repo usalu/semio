@@ -4802,9 +4802,10 @@ pub use host::{
     apply_os_operation, create_empty_os_document, create_os_studio, default_os_projection,
     delete_os_studio, import_os_studio_from_json, list_os_studio_catalog_entries,
     load_os_studio_document, materialize_os_projection, os_document_from_json, os_document_to_json,
-    seed_os_studio_catalog_if_empty, LoadedPlugin, OsBackbonePort, OsDiff, OsDocument, OsEnvelope,
-    OsOp, OsProjection, OsStore, OsStudioCatalogEntry, OsVcs, PluginHost, PluginHotSwapEvent,
-    PluginSupervisorState, OS_HOME_VFS_ROOT_ID, OS_STUDIO_BACKBONE_URI_PREFIX,
+    os_presence_uri, read_os_presence_peers, seed_os_studio_catalog_if_empty, write_os_presence,
+    LoadedPlugin, OsBackbonePort, OsDiff, OsDocument, OsEnvelope,
+    OsOp, OsPresencePeer, OsProjection, OsStore, OsStudioCatalogEntry, OsVcs, PluginHost, PluginHotSwapEvent,
+    PluginSupervisorState, OS_HOME_VFS_ROOT_ID, OS_PRESENCE_STALE_MS, OS_STUDIO_BACKBONE_URI_PREFIX,
 };
 pub use instance::{
     apply_parameter_values_to_projection, create_default_os_parameter, create_os_id,
@@ -4818,10 +4819,10 @@ pub use instance::{
 pub use media_export_raster::{rasterize_svg_to_png_base64, register_2d_svg_png_export_handlers, register_mesh_obj_glb_export_handlers};
 pub use media_export_simple::{map_points_svg, pages_rects_svg, title_card_svg, wrap_svg};
 pub use media_graph::{
-    assert_os_media_export_coverage, empty_media_graph, export_os_app_instance_media,
+    apply_flow_fixture_to_os_media_graph, assert_os_media_export_coverage, empty_media_graph, export_os_app_instance_media,
     list_os_media_graph_vfs_children, media_graph_node_for_instance, os_media_export_extension_for_format,
     os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload, os_media_graph_vfs_export_id, os_media_graph_vfs_instance_folder_id,
-    build_os_media_flow_operator_infos, OsMediaFlowOperatorInfo, OsMediaNodeGraphPayload,
+    build_os_media_flow_operator_infos, OsMediaFlowOperatorInfo, OsMediaGraphCamera, OsMediaNodeGraphPayload,
     os_media_graph_vfs_instance_id, os_media_graph_vfs_schema, os_media_graph_vfs_source_id,
     os_media_neuron_kind_for_node, register_os_media_export_handler, required_os_media_export_formats,
     sync_media_graph_parameter_ports, validate_media_graph, MediaGraphPosition, MediaGraphValidation,
