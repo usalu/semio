@@ -479,22 +479,15 @@
   \AddToHook{cmd/#1/after}{\semio@heading@chips@enable}%
 }
 
-\newif\ifsemio@block@sep@done
 \newskip\semio@block@sep@skip
-\newskip\semio@heading@after@skip
 \setlength{\semio@block@sep@skip}{0.2em}
-\setlength{\semio@heading@after@skip}{0pt}
 \newcommand{\semio@block@sep}{%
   \par
   \vspace*{\semio@block@sep@skip}%
 }
 \newcommand{\semio@heading@block@before}{%
-  \ifsemio@block@sep@done
-    \global\semio@block@sep@donefalse
-  \else
-    \semio@block@sep
-    \semio@block@sep
-  \fi
+  \semio@block@sep
+  \semio@block@sep
 }
 \newcommand{\SemioSpacingUnit}{\semio@spacing@single}
 \newcommand{\SemioSpacingDouble}{\semio@spacing@double}

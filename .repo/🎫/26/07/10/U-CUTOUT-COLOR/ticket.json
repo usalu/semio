@@ -1,10 +1,11 @@
 {
   "title": "U Cutout Color",
   "emoji": "🪟",
-  "status": "open",
+  "status": "closed",
   "description": "Make the lower border of the u cutout between the two chips have the same color as the chips",
   "goal": "🎯r2602",
   "sessions": [
     "⚪629272854f64411fb65e2005d855cab9"
-  ]
+  ],
+  "summary": "Implemented correct U cutout border color for chips in the print LaTeX system.\n\nThe lower border of the U-shaped cutout between two stacked chips (inside \\semio@window@gap in print/semio-window.sty) now correctly inherits the chip color (e.g., primary, secondary, tertiary) instead of always using the default chrome border color. For chips without a window above them (e.g., paragraphs chips at the bottom), the border is still drawn using semio-chrome-border-normal.\n\nFiles worked on:\n- print/semio-window.sty — Modified \\semio@window@gap to accept a bordercolor argument and updated \\semio@heading@pair to pass the chip accent color; updated \\semio@heading@pair@muted variants to use semio-chrome-border-normal."
 }

@@ -1,0 +1,13 @@
+{
+  "title": "Print Footer Visibility Fix",
+  "emoji": "🖨️",
+  "status": "open",
+  "description": "Fix print LaTeX page geometry so footer chrome bar is fully on-page and its outer spacing/positioning mirrors the header. Use includehead/includefoot geometry with shared top/bottom gap token.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1889"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪3260c78463a447529fb4a457ffc248ba"
+  ]
+}

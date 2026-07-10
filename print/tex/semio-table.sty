@@ -1,9 +1,6 @@
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{semio-table}[2026/07/09 v1.1.0 semio data table styling]
 
-\newif\ifsemio@table@long@mode
-\semio@table@long@modefalse
-
 \RequirePackage{array}
 \RequirePackage{colortbl}
 \RequirePackage{longtable}
@@ -68,6 +65,7 @@
 \newlength{\semio@table@header@height}
 \newlength{\semio@table@body@height}
 \newif\ifsemio@table@row@started
+\newcount\semio@table@long@mode
 
 \newcommand{\semio@table@setup}{%
   \setlength{\semio@table@header@height}{\dimexpr9\semio@spacing@unit\relax}%
@@ -84,11 +82,24 @@
 
 \newcommand{\semio@table@colspec@three}{@{}T{\dimexpr0.34\linewidth-\tabcolsep\relax}T{\dimexpr0.33\linewidth-\tabcolsep\relax}T{\dimexpr0.33\linewidth-2\tabcolsep\relax}@{}}
 
-\newcommand{\semio@table@colspec@register@long}{@{\hspace{\semio@chrome@padding}}|>{\raggedright\arraybackslash\hspace{0pt}}p{0.16\linewidth}>{\raggedright\arraybackslash\hspace{0pt}}p{0.62\linewidth}>{\raggedleft\arraybackslash\hspace{0pt}}p{0.22\linewidth}|@{\hspace{\semio@chrome@padding}}}
+\newlength{\semio@table@long@inner@w}
 
-\newcommand{\semio@table@colspec@reference@long}{@{\hspace{\semio@chrome@padding}}|>{\raggedright\arraybackslash\hspace{0pt}}p{0.12\linewidth}>{\raggedright\arraybackslash\hspace{0pt}}p{0.66\linewidth}>{\raggedleft\arraybackslash\hspace{0pt}}p{0.22\linewidth}|@{\hspace{\semio@chrome@padding}}}
+\newcommand{\semio@table@long@inner@w@set}{%
+  \setlength{\semio@table@long@inner@w}{%
+    \dimexpr\linewidth-2\semio@chrome@padding-2\semio@stroke@hairline\relax
+  }%
+}
 
-\newcommand{\semio@table@colspec@glossary@long}{@{\hspace{\semio@chrome@padding}}|>{\raggedright\arraybackslash\hspace{0pt}}p{0.22\linewidth}>{\raggedright\arraybackslash\hspace{0pt}}p{0.56\linewidth}>{\raggedleft\arraybackslash\hspace{0pt}}p{0.22\linewidth}|@{\hspace{\semio@chrome@padding}}}
+\newcommand{\semio@table@setup@long}{%
+  \semio@table@setup
+  \setlength{\tabcolsep}{0pt}%
+}
+
+\newcommand{\semio@table@colspec@register@long}{@{\hspace{\semio@chrome@padding}}|>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.16\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.62\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}|@{\hspace{\semio@chrome@padding}}}
+
+\newcommand{\semio@table@colspec@reference@long}{@{\hspace{\semio@chrome@padding}}|>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.12\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.66\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}|@{\hspace{\semio@chrome@padding}}}
+
+\newcommand{\semio@table@colspec@glossary@long}{@{\hspace{\semio@chrome@padding}}|>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.56\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}|@{\hspace{\semio@chrome@padding}}}
 
 \newcommand{\semio@table@colspec@register}{@{}T{\dimexpr0.16\linewidth-\tabcolsep\relax}T{\dimexpr0.62\linewidth-\tabcolsep\relax}U{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
 
@@ -158,17 +169,14 @@
   \\%
 }
 
-\newcommand{\semio@table@long@closing@rule}{%
-  \noalign{\global\semio@table@row@startedfalse\hrule height\arrayrulewidth}%
-}
-
 \newcommand{\semio@table@long@render}[4]{%
-  \semio@table@setup
-  \global\semio@table@long@modetrue
+  \semio@table@setup@long
+  \global\semio@table@long@mode=1\relax
   \global\semio@table@row@startedfalse
   \SemioSans
   \fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont
   \color{semio-chrome-text-normal}%
+  \semio@table@long@inner@w@set
   \par
   \raggedright
   \setlength{\LTpre}{0pt}%
@@ -183,22 +191,32 @@
   #3%
   \endhead
   \endfoot
-  \semio@table@long@closing@rule
   \endlastfoot
   #4%
   \end{longtable}%
-  \global\semio@table@long@modefalse
+  \global\semio@table@long@mode=0\relax
   \global\semio@table@row@startedfalse
 }
 
-\newcommand{\SemioTableRow}[1]{%
-  \ifsemio@table@long@mode\else
-    \ifsemio@table@row@started
-      \semio@table@row@sep
-    \fi
+\newcommand{\semio@table@row@long}[1]{%
+  #1\\
+  \hline
+}
+
+\newcommand{\semio@table@row@short}[1]{%
+  \ifsemio@table@row@started
+    \semio@table@row@sep
   \fi
   \global\semio@table@row@startedtrue
   #1\\
+}
+
+\newcommand{\SemioTableRow}[1]{%
+  \ifnum\semio@table@long@mode>0\relax
+    \semio@table@row@long{#1}%
+  \else
+    \semio@table@row@short{#1}%
+  \fi
 }
 
 \newcommand{\semio@table@render}[2]{%

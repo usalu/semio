@@ -19,10 +19,20 @@
 
 \ExplSyntaxOn
 \str_case:VnF \semio@type {
-  { flyer } { \RequirePackage[paper=a4paper,landscape,margin=1.2cm]{geometry} }
-  { paper } { \RequirePackage[paper=a4paper,margin=2.5cm]{geometry} }
-  { report } { \RequirePackage[paper=a4paper,margin=2.5cm]{geometry} }
+  { flyer } {
+    \providecommand { \semio@page@margin } { 1.2cm }
+    \RequirePackage[paper=a4paper,landscape,margin=1.2cm]{geometry}
+  }
+  { paper } {
+    \providecommand { \semio@page@margin } { 2.5cm }
+    \RequirePackage[paper=a4paper,margin=2.5cm]{geometry}
+  }
+  { report } {
+    \providecommand { \semio@page@margin } { 2.5cm }
+    \RequirePackage[paper=a4paper,margin=2.5cm]{geometry}
+  }
 } {
+  \providecommand { \semio@page@margin } { 2.5cm }
   \RequirePackage[paper=a4paper,margin=2.5cm]{geometry}
 }
 \str_case:VnF \semio@type {

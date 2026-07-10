@@ -242,10 +242,9 @@
 \cs_new_protected:Npn \semio_block_sep_after: {
   \bool_if:NF \l_semio_window_row_bool {
     \bool_if:NF \l_semio_register_list_bool {
-      \semio_block_sep:
       \group_begin:
       \ExplSyntaxOff
-      \global\semio@block@sep@donetrue
+      \vskip\semio@block@sep@skip
       \group_end:
     }
   }
@@ -842,12 +841,10 @@
   \setlength { \parskip } { 0pt }
   \setlength { \semio@block@sep@skip } { \semio@spacing@single }
   \setlength { \parindent } { 0pt }
-  \AddToHook{everypar}{%
-    \global\semio@block@sep@donefalse
-  }
   \semio@chrome@dims@compute
   \setcounter{tocdepth}{\semio@toc@depth@unlimited}
   \semio@hierarchy@hooks@install
+  \semio@heading@cmd@sep@install
   \makeatother
   \ExplSyntaxOn
   \semio_chrome_footer_install:
@@ -1379,9 +1376,7 @@
   \noindent
   \vbox{%
     #1%
-    \vskip\semio@block@sep@skip
   }%
-  \global\semio@block@sep@donetrue
 }
 
 \newcommand{\semio@heading@pair}[5]{%
@@ -1572,7 +1567,6 @@
 
 \newcommand{\semio@heading@install}[3]{%
   \titleformat{#1}[block]{}{}{0pt}{%
-    \semio@heading@block@before
     \semio@chrome@heading@track{#3}{##1}%
     \semio@if@heading@chips
       {%
@@ -1587,12 +1581,25 @@
   \titlespacing*{#1}{0pt}{0pt}{\semio@block@sep@skip}%
 }
 
+\newcommand{\semio@heading@cmd@sep@install}{%
+  \def\semio@heading@cmd@sep@level##1{%
+    \ifcsname c@##1\endcsname
+      \AddToHook{cmd/##1/before}{\semio@heading@block@before}%
+    \fi
+  }%
+  \semio@heading@cmd@sep@level{part}%
+  \semio@heading@cmd@sep@level{chapter}%
+  \semio@heading@cmd@sep@level{section}%
+  \semio@heading@cmd@sep@level{subsection}%
+  \semio@heading@cmd@sep@level{subsubsection}%
+  \semio@heading@cmd@sep@level{paragraph}%
+}
+
 \newcommand{\semio@heading@installall}{%
   \semio@heading@install{\section}{semio-tertiary}{section}%
   \semio@heading@install{\subsection}{semio-secondary}{subsection}%
   \semio@heading@install{\subsubsection}{semio-primary}{subsubsection}%
   \titleformat{\paragraph}[block]{}{}{0pt}{%
-    \semio@heading@block@before
     \semio@if@heading@chips
       {%
         \if\relax\detokenize{\theparagraph}\relax
@@ -1997,12 +2004,19 @@
 }
 
 \setlength{\headheight}{38.14006pt}
-\addtolength{\topmargin}{-21.14006pt}
 \setlength{\headsep}{\semio@spacing@double}
 \newlength{\semio@chrome@footer@reserve}
 \setlength{\semio@chrome@footer@reserve}{\dimexpr\semio@spacing@double+\semio@chrome@footer@height+\semio@stroke@hairline\relax}
-\setlength{\footskip}{\semio@chrome@footer@reserve}
-\geometry{bottom=\semio@spacing@single}
+\newlength{\semio@chrome@page@gap}
+\setlength{\semio@chrome@page@gap}{\dimexpr\semio@page@margin-\headheight-\headsep\relax}
+\geometry{
+  includehead, includefoot,
+  top=\semio@chrome@page@gap,
+  headheight=\headheight,
+  headsep=\semio@spacing@double,
+  bottom=\semio@chrome@page@gap,
+  footskip=\semio@chrome@footer@reserve,
+}
 \ExplSyntaxOn
 \NewDocumentCommand \SemioTocDepth { m } { \setcounter { tocdepth } { #1 } }
 \NewDocumentCommand \semio@tableofcontents { } { \semio_window_toc_render: }
