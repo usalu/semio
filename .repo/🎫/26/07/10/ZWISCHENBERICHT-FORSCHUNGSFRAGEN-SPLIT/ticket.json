@@ -1,7 +1,7 @@
 {
   "title": "Zwischenbericht AP Tool Projektstand",
   "emoji": "📄",
-  "status": "closed",
+  "status": "open",
   "description": "Replace placeholder text in mit-bestand zwischenbericht section 1 Ergebnisse with provided final content for Forschungsfragen, AP-Erfahrung Recherche, Interviews, User Stories, and Synthese.",
   "summary": "Fixed colored heading chips missing in PDF: removed incompatible titlesec, wired KOMA chapterlinesformat/sectionlinesformat hooks in AfterEndPreamble, and switched accent chip paint from colorbox to rule-based cap@paint (same path as muted header chips). Verified on probe-heading.pdf — chapter/section/subsection show accent fills plus matching gap border lines.",
   "github": {
@@ -13,6 +13,7 @@
     "⚪2bc89a040f174875aa13999f8d949a60",
     "⚪c0636b0f16a54124b47115cc5b6c41db",
     "⚪756c272222444f448b6f4d727582563a",
-    "⚪20e2587e1eb84e58b00eddbfd6c1220d"
+    "⚪20e2587e1eb84e58b00eddbfd6c1220d",
+    "⚪efa40bb67fd64502a429d273cf9285d2"
   ]
 }

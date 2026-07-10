@@ -3,7 +3,7 @@
   "emoji": "🖨️",
   "status": "closed",
   "description": "Add glossary mechanism to print LaTeX stack: GlossaryDefine/Gls usage tracking, Term/Definition/Pages table at end via listofglossaries, replacing unused semioglossary register stub.",
-  "summary": "Added the 20-term project glossary to Zwischenbericht mit Bestand (`\\GlossaryDefine` in preamble, `\\listofglossaries` in appendix with header \"Verwendung im Bericht\"). Fixed glossary row materialization in `semio-window.sty` to use the same leak-free register-list token pattern, so documents with `\\maketableofcontents` no longer fail at `\\listofglossaries`. Verified via ticket `verify.ts` and `mit-bestand/bericht` build.",
+  "summary": "Fixed glossary rendering: the Term/Definition/Pages table was empty with all content leaking above it as plain text. Root cause was two-fold in print/tex/semio-table.sty's \\SemioTableGlossaryPages: (1) it was wrapped with a runtime \\ExplSyntaxOn/\\Off inside a \\newcommand body defined in normal catcode context, so the expl3 control sequence names it called (e.g. \\semio_glossary_pages_render:n) were tokenized with '_'/':' as ordinary characters at definition time and never matched their real csnames, leaving \\SemioTableGlossaryPages effectively broken and letting \\SemioGlossaryTableRow's arguments spill into the document as plain paragraph text; (2) the page-number dedup logic used \\seq_if_in:NnF with an unexpanded tl variable as the comparison item, so duplicates were never detected. Rewrote the whole pages-column pipeline as a small expl3 module defined entirely inside a real \\ExplSyntaxOn block (\\semio_glossary_page_link:n, \\semio_glossary_pages_dedup_add:n, \\semio_glossary_pages_render:n, and \\SemioTableGlossaryPages itself via \\cs_new_protected:Npn), using \\seq_if_in:NxF/\\seq_put_right:Nx/\\tl_put_right:Nx variants (generated via \\cs_generate_variant:Nn) so page numbers are compared and deduped by their expanded value. Verified against a clean tectonic build of verify-glossary.tex (3 terms, cross-chapter usages) rendered to PNG: the Glossar table now shows Begriff | Definition | Seiten columns with no leaked text above it, terms sorted alphabetically, page numbers deduplicated per term (e.g. 'Entwurfsfähigkeit' -\u003e 2, 3 instead of 2, 2, 3), and confirmed via pdfjs annotation inspection that all 4 page-number cells carry real hyperlink annotations to their \\label destinations. Also re-verified the build against the live, concurrently-edited print/tex/semio-window.sty and semio-table.sty (other agents' in-flight border/layout changes) to confirm the glossary fix is isolated and doesn't conflict.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1885"
   },
@@ -16,6 +16,7 @@
   "sessions": [
     "⚪97edf9a40ce045a4a665ac717348c84b",
     "⚪0a5ed7ba634947ba8c1eb092722a3651",
-    "⚪b114a31a359741a696c0968b9d61d625"
+    "⚪b114a31a359741a696c0968b9d61d625",
+    "⚪64793f99ae87430089412b920397c99f"
   ]
 }

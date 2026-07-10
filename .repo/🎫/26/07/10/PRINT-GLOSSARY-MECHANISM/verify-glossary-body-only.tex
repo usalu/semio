@@ -9,7 +9,6 @@
 \newcommand{\SemioSans}{}
 \newcommand{\semio@chrome@font@body}{10pt}
 \newcommand{\SemioGlossaryTableRow}[3]{#1 & #2 & #3\\}
-\makeatother
 
 \ExplSyntaxOn
 \seq_new:N \g_semio_glossary_terms_seq
@@ -62,7 +61,7 @@
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
-  \gappto\semio@glossary@table@body{\SemioGlossaryTableRow{#1}{#2}{#3}}%
+  \gappto\semio@glossary@table@body{\noexpand\SemioGlossaryTableRow{#1}{#2}{#3}}%
   \makeatother
   \group_end:
 }
@@ -89,6 +88,7 @@
 \cs_new_protected:Npn \GlossaryDefine #1#2 { \semio_glossary_define:nn {#1} {#2} }
 \cs_new_protected:Npn \TestMaterialize { \semio_glossary_body_materialize: }
 \ExplSyntaxOff
+\makeatother
 
 \begin{document}
 

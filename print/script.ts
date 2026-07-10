@@ -470,11 +470,22 @@ function tectonicEnv(): NodeJS.ProcessEnv {
   };
 }
 
+function clearStaleTocAuxFiles(workDir: string, outDir: string, jobname: string): void {
+  for (const ext of [".sctoc", ".semio-toc", ".register-toc"]) {
+    for (const dir of [workDir, outDir]) {
+      const path = join(dir, `${jobname}${ext}`);
+      if (existsSync(path)) rmSync(path);
+    }
+  }
+}
+
 function compilePrintDocument(tectonic: string, texAbs: string, outDir: string): void {
   emitSemioTokensSty();
   const workDir = dirname(texAbs);
   const texFile = basename(texAbs);
+  const jobname = basename(texAbs, ".tex");
   mkdirSync(outDir, { recursive: true });
+  clearStaleTocAuxFiles(workDir, outDir, jobname);
   const args = ["--keep-logs", "--keep-intermediates", "--synctex", "--reruns", "2", "-Z", `search-path=${texDir}`, "--outdir", outDir, texFile];
   const env = tectonicEnv();
   const build = spawnSync(tectonic, args, { cwd: workDir, stdio: "inherit", env });

@@ -7,25 +7,25 @@ todos:
     status: cancelled
   - id: state
     content: "Add height/text-size/text-fit/image-fit expl3 state vars; broaden anchor reset into semio_window_content_state_reset: and call it from both kind-path and generic-path begins"
-    status: in_progress
+    status: completed
   - id: keys
     content: Extend semio/window/kind keys_define with justify, height, text-size, image-fit
-    status: pending
+    status: completed
   - id: open-helper
     content: Add semio_window_tcb_open:n helper wiring valign/halign/height/fit into all three non-row tcolorbox opens; add PackageError for text-size=fit without height
-    status: pending
+    status: completed
   - id: textsize-apply
     content: Emit fontsize selection right after box opens when text-size is an explicit dimension
-    status: pending
+    status: completed
   - id: semioimage
     content: Implement \SemioImage with contain/cover/fill/none branches, cover via settowidth/settototalheight + trim/clip math
-    status: pending
+    status: completed
   - id: dogfood
     content: Migrate Arbeitsprobe cover-page image in semio-components.sty to Window[height=...] + \SemioImage
-    status: pending
+    status: completed
   - id: demo-verify
     content: Extend report.content.tex demo, compile templates, screenshot pages into ticket folder as verification
-    status: pending
+    status: completed
 isProject: false
 ---
 

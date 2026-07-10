@@ -1,0 +1,14 @@
+{
+  "title": "Composable Window Content Layout",
+  "emoji": "🖼️",
+  "status": "closed",
+  "description": "Implement composable window layout keys (anchor, justify, height, text-size, image-fit) and SemioImage primitive in semio-window.sty",
+  "summary": "Extended semio-window with composable layout keys on all window kinds: anchor (9-point), justify, height, text-size (dimension or fit with validation), and image-fit. Added semio_window_tcb_open:n wiring valign/halign/height/fit into kind and generic paths; semio_window_content_state_reset: fixes state leaks and defaults halign to justify. Implemented \\SemioImage with contain/cover/fill/none modes, settowidth/settototalheight measurement, fp_eval cover crop via trim+clip, and plain-TeX graphics helpers (no ExplSyntaxOff inside box bodies). Migrated Arbeitsprobe cover to Window[height=10.8cm, row, anchor=center] + \\SemioImage. Added layout demos to report.content.tex. Fixed register body macro apply via :eee variant and grouped TOC render ExplSyntaxOff. Verified: bun ./script.ts build forschungsbericht flyer succeeds; screenshots in ticket folder. Report template still fails on tableofcontents/semiotoc aux (pre-existing path/state issue unrelated to image layout).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1894"
+  },
+  "goal": "🎯🎨r2602🎯🎨runningprint",
+  "sessions": [
+    "⚪567f91e9ac434ea7b72556cbec934a35"
+  ]
+}
