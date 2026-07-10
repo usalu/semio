@@ -140,6 +140,7 @@ import {
     isEdgelessWindowBody,
     isPlaygroundExampleLocked,
     isPlaygroundNoExampleId,
+    playgroundExampleCatalogWithNoOption,
     playgroundResolvedExampleId,
     playgroundTreePanelRootItems,
     registerSidePanelBody,

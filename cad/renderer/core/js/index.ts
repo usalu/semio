@@ -236,7 +236,7 @@ export function cadPlayReferencesForFixture(fixtureId: string): Record<string, W
   );
 }
 
-function cadPlayEmptyReferencesByModelDefinitionId(): Record<string, WorldReferenceProps[]> {
+export function cadPlayEmptyReferencesByModelDefinitionId(): Record<string, WorldReferenceProps[]> {
   return {};
 }
 
@@ -405,7 +405,7 @@ export function cadPlayPaneForModelDefinition(modelDefinitionId: string): CadPla
   return CAD_PLAY_PANE_SPECS.find((row) => row.modelDefinitionId === modelDefinitionId)?.pane ?? null;
 }
 
-const CAD_PLAY_PANE_IDS: readonly CadPlayPaneId[] = ["shape", "building", "energy", "structure-classic"];
+export const CAD_PLAY_PANE_IDS: readonly CadPlayPaneId[] = ["shape", "building", "energy", "structure-classic"];
 
 /** @emoji 🎛 Empty interaction id map for all CAD play panes. */
 export function emptyInteractionIdByPane(): Record<CadPlayPaneId, string> {
@@ -1332,7 +1332,7 @@ function ensurePlayShapeModel(models: Readonly<Record<string, Model>>): Record<s
   return { ...models, [defaultModelDefinitionId()]: new Model() };
 }
 
-function parseModelSpaceJson(raw: unknown): ModelSpace | null {
+export function parseModelSpaceJson(raw: unknown): ModelSpace | null {
   if (!raw || typeof raw !== "object") return null;
   const row = raw as Record<string, unknown>;
   if (row.schema !== "spatial.modelspace" || !Array.isArray(row.models)) return null;
@@ -1469,7 +1469,7 @@ function cadPlayCmd(command: string, args?: Record<string, unknown>): CommandDes
   return { controllerId: CAD_PLAY_CONTROLLER_ID, command, args: args as never };
 }
 
-type CadPlayReferencePatchField = "origin" | "rotation" | "scale" | "scaleUniform" | "widthWorld" | "opacity";
+export type CadPlayReferencePatchField = "origin" | "rotation" | "scale" | "scaleUniform" | "widthWorld" | "opacity";
 
 export type CadPlaySelectionPatchField = "typology" | "hidden" | "locked" | "name";
 
