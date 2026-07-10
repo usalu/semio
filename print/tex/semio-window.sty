@@ -359,26 +359,38 @@
 }
 
 \tl_new:N \g_semio_glossary_rows_tl
-\tl_new:N \l_semio_glossary_row_tl
 
 \cs_gset_nopar:Npn \semio@glossary@table@body { \tl_use:N \g_semio_glossary_rows_tl }
 
-\cs_new_protected:Npn \semio_glossary_row_token:nnn #1#2#3 {
-  \semio@glossary@row@call {#1}{#2}{#3}
+\cs_new_protected:Npn \semio_glossary_body_init: {
+  \tl_gclear:N \g_semio_glossary_rows_tl
 }
 
 \cs_generate_variant:Nn \semio_glossary_body_gappto:nnn { VVV }
 
 \cs_new_protected:Npn \semio_glossary_body_gappto:nnn #1#2#3 {
-  \tl_set:Nn \l_semio_glossary_row_tl { \semio@glossary@row@call {#1} {#2} {#3} }
-  \tl_put_right:NV \g_semio_glossary_rows_tl \l_semio_glossary_row_tl
+  \tl_put_right:Nn \g_semio_glossary_rows_tl
+    {
+      \exp_not:n { \SemioGlossaryTableRow }
+      { \exp_not:n {#1} }
+      { \exp_not:n {#2} }
+      { \exp_not:n {#3} }
+    }
+}
+
+\cs_new_protected:Npn \semio_glossary_row_for_term:n #1 {
+  \tl_set:Nn \l_semio_glossary_term_tl {#1}
+  \prop_get:NnNTF \g_semio_glossary_definition_prop {#1} \l_semio_glossary_definition_tl { } {
+    \tl_clear:N \l_semio_glossary_definition_tl
+  }
+  \semio_glossary_labels_csv:n {#1}
+  \semio_glossary_body_gappto:VVV \l_semio_glossary_term_tl \l_semio_glossary_definition_tl \l_tmpd_tl
 }
 
 \cs_new_protected:Npn \semio_glossary_body_materialize: {
-  \tl_gclear:N \g_semio_glossary_rows_tl
-  \semio_glossary_body_gappto:nnn { Entwurfsfähigkeit } { Bauteil mit belastbaren Informationen für frühe Entwurfsentscheidungen. } { }
-  \semio_glossary_body_gappto:nnn { Semio } { Einheitliches Betriebssystem für gebaute Umgebung und Designprozesse. } { }
-  \semio_glossary_body_gappto:nnn { Zwischenbericht } { Bericht über den Projektstand im laufenden Förderzeitraum. } { }
+  \semio_glossary_body_init:
+  \semio_glossary_terms_sort:
+  \seq_map_function:NN \l_semio_glossary_sorted_terms_seq \semio_glossary_row_for_term:n
 }
 
 \cs_new_protected:Npn \SemioGlossaryListOf {
@@ -916,10 +928,6 @@
 }
 
 \newcounter{semioglossaryusage}
-
-\NewDocumentCommand \semio@glossary@row@call { m m m } {
-  \SemioGlossaryTableRow{#1}{#2}{#3}
-}
 
 \newcommand{\semio@glossary@table@header}{%
   \SemioTableHeaderRow{%

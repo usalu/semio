@@ -47,7 +47,7 @@
   theme = \semio@theme,
   language = \semio@language,
 }
-\str_case:Vn \semio@language {
+\str_case:VnF \semio@language {
   { de } { \PassOptionsToPackage { main = ngerman } { babel } }
 } { }
 \ExplSyntaxOff
