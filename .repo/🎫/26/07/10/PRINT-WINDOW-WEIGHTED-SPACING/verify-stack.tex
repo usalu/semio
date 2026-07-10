@@ -1,0 +1,18 @@
+% !TEX program = tectonic
+\documentclass{semio}
+\begin{document}
+\setlength{\semio@window@gap}{4pt}
+\SemioWindowStackBegin{10cm}
+\SemioWindowStackPush{1}
+\SemioWindowStackPush{2}
+\SemioWindowStackPrepare
+\SemioWindowStackUse
+\SemioWindowRowTwo{1}{%
+  \begin{Window}[title=A, row]A\par\end{Window}%
+}{1}{%
+  \begin{Window}[title=B, row]B\par\end{Window}%
+}
+\SemioWindowStackUse
+\begin{Window}[title=C, row]C\par\end{Window}
+\SemioWindowStackUseEnd
+\end{document}

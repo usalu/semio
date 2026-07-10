@@ -7337,6 +7337,8 @@ use semio_framework_core::layout::{
     FRAMEWORK_PANEL_TAB_INSPECTION_ID,
 };
 use serde::{Deserialize, Serialize};
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::JsCast;
 use std::collections::HashMap;
 use ui_wgpu::{
     chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DrawList, DragAxis, FontAtlas, GlassTier,

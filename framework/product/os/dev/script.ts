@@ -340,9 +340,46 @@ function ensureWasmTarget(): void {
   }
 }
 
+function preview2ShimVendorDir(): string {
+  return join(pluginOutRoot, "_vendor/@bytecodealliance/preview2-shim");
+}
+
+function ensurePreview2ShimVendor(): void {
+  const sourceDir = join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/lib/browser");
+  const targetDir = preview2ShimVendorDir();
+  if (!existsSync(sourceDir)) throw new Error("missing @bytecodealliance/preview2-shim browser shims; run bun install");
+  mkdirSync(targetDir, { recursive: true });
+  for (const entry of readdirSync(sourceDir, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith(".js")) continue;
+    copyFileSync(join(sourceDir, entry.name), join(targetDir, entry.name));
+  }
+}
+
+function rewritePreview2ShimImports(componentJsPath: string): void {
+  const outDir = dirname(componentJsPath);
+  const rel = relative(outDir, preview2ShimVendorDir()).replace(/\\/g, "/");
+  const prefix = rel.endsWith("/") ? rel : `${rel}/`;
+  let content = readFileSync(componentJsPath, "utf8");
+  if (!content.includes("@bytecodealliance/preview2-shim/")) return;
+  content = content.replace(/@bytecodealliance\/preview2-shim\/([\w-]+)/g, (_match, subpath) => `${prefix}${subpath}.js`);
+  writeFileSync(componentJsPath, content);
+}
+
+function rewriteExistingPluginShimImports(): void {
+  if (!existsSync(pluginOutRoot)) return;
+  for (const entry of readdirSync(pluginOutRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name.startsWith("_")) continue;
+    for (const file of readdirSync(join(pluginOutRoot, entry.name))) {
+      if (!file.endsWith("_component.js")) continue;
+      rewritePreview2ShimImports(join(pluginOutRoot, entry.name, file));
+    }
+  }
+}
+
 function transpilePluginComponent(artifact: string, outDir: string, componentBase: string): void {
   const transpile = spawnSync("bunx", ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase], { cwd: repoRoot, stdio: "inherit" });
   if (transpile.status !== 0) throw new Error(`jco transpile failed for ${artifact}`);
+  rewritePreview2ShimImports(join(outDir, `${componentBase}.js`));
 }
 
 async function readPackageName(cratePath: string): Promise<string> {
@@ -395,6 +432,8 @@ async function buildPlugins(filterPlugin?: string): Promise<void> {
   await ensurePluginRegistry(filterPlugin);
   const catalogEntries = generatePluginRegistry(repoRoot, filterPlugin && !isStudioPluginFilter(filterPlugin) ? { filterPlaygroundPlugin: filterPlugin } : {});
   mkdirSync(pluginOutRoot, { recursive: true });
+  ensurePreview2ShimVendor();
+  rewriteExistingPluginShimImports();
   const stalePublicPlugins = join(repoRoot, "framework/product/os/dev/public/plugin-modules");
   if (existsSync(stalePublicPlugins)) {
     rmSync(stalePublicPlugins, { recursive: true, force: true });

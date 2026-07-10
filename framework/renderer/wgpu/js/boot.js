@@ -39,28 +39,7 @@ var pluginModuleHandleCache = new Map;
 
 // ../../plugin/registry/generated/plugins.ts
 var PLUGIN_BUILD_TARGETS = [
-  { pluginId: "cad", cratePath: "cad/plugin/rs", wasmOut: "cad_plugin.wasm" },
-  { pluginId: "dag", cratePath: "mathematical/graph/port/directed/dag/plugin/rs", wasmOut: "dag_plugin.wasm" },
-  { pluginId: "draw", cratePath: "draw/plugin/rs", wasmOut: "draw_plugin.wasm" },
-  { pluginId: "flow", cratePath: "flow/plugin/rs", wasmOut: "flow_plugin.wasm" },
-  { pluginId: "forms", cratePath: "forms/plugin/rs", wasmOut: "forms_plugin.wasm" },
-  { pluginId: "forms-module-procedural", cratePath: "forms/module/procedural/rs", wasmOut: "forms_module_procedural.wasm" },
-  { pluginId: "gis", cratePath: "gis/plugin/rs", wasmOut: "gis_plugin.wasm" },
-  { pluginId: "imperative", cratePath: "imperative/plugin/rs", wasmOut: "imperative_plugin.wasm" },
-  { pluginId: "layout", cratePath: "layout/plugin/rs", wasmOut: "layout_plugin.wasm" },
-  { pluginId: "lowpoly", cratePath: "lowpoly/plugin/rs", wasmOut: "lowpoly_plugin.wasm" },
-  { pluginId: "note", cratePath: "note/plugin/rs", wasmOut: "note_plugin.wasm" },
-  { pluginId: "presentation", cratePath: "framework/product/presentation/plugin/rs", wasmOut: "presentation_plugin.wasm" },
-  { pluginId: "procedural", cratePath: "procedural/plugin/rs", wasmOut: "procedural_plugin.wasm" },
-  { pluginId: "puzzle", cratePath: "puzzle/plugin/rs", wasmOut: "puzzle_plugin.wasm" },
-  { pluginId: "raster", cratePath: "raster/plugin/rs", wasmOut: "raster_plugin.wasm" },
-  { pluginId: "reasoning-mindmap", cratePath: "reasoning/mindmap/plugin/rs", wasmOut: "reasoning_mindmap_plugin.wasm" },
-  { pluginId: "s", cratePath: "s/plugin/rs", wasmOut: "s_plugin.wasm" },
-  { pluginId: "sequence", cratePath: "sequence/plugin/rs", wasmOut: "sequence_plugin.wasm" },
-  { pluginId: "shooting", cratePath: "shooting/plugin/rs", wasmOut: "shooting_plugin.wasm" },
-  { pluginId: "trinity", cratePath: "trinity/plugin/rs", wasmOut: "trinity_plugin.wasm" },
-  { pluginId: "vcs", cratePath: "vcs/plugin/rs", wasmOut: "vcs_plugin.wasm" },
-  { pluginId: "writer", cratePath: "writer/plugin/rs", wasmOut: "writer_plugin.wasm" }
+  { pluginId: "lowpoly", cratePath: "lowpoly/plugin/rs", wasmOut: "lowpoly_plugin.wasm" }
 ];
 var PLUGIN_TARGETS = PLUGIN_BUILD_TARGETS.map((target) => ({
   pluginId: target.pluginId,
@@ -229,7 +208,7 @@ function pluginHandleForBridge(handle) {
   };
 }
 var pluginFromUrl = new URLSearchParams(location.search).get("plugin");
-var pluginFilter = pluginFromUrl ?? "forms";
+var pluginFilter = pluginFromUrl ?? "lowpoly";
 var studioMode = pluginFilter === "s";
 var pluginTargets = studioMode ? PLUGIN_TARGETS : PLUGIN_TARGETS.filter((entry) => entry.pluginId === pluginFilter || entry.pluginId === `${pluginFilter}-module-procedural`);
 async function pluginModuleAvailable(moduleUrl) {
