@@ -748,7 +748,10 @@
   \ExplSyntaxOff
   \makeatletter
   \setlength{\semio@window@textfit@target@h}{%
-    \dimexpr\semio@window@height@dim - \semio@chrome@titlebar@height - 2\semio@chrome@padding - 2\semio@stroke@hairline\relax
+    \dimexpr\semio@window@height@dim - \semio@chrome@titlebar@height
+      - \semio@chrome@padding - \semio@chrome@padding
+      - \semio@stroke@hairline - \semio@stroke@hairline
+    \relax
   }
   \makeatother
   \group_end:
@@ -962,7 +965,10 @@
       \bool_gset_false:N \g_semio_image_target_h_set_bool
     } {
       \dim_set:Nn \l_semio_image_target_h_dim {
-        \dimexpr \semio@window@height@dim - 2\semio@chrome@padding - \semio@stroke@hairline \relax
+        \dimexpr \semio@window@height@dim
+          - \semio@chrome@padding - \semio@chrome@padding
+          - \semio@stroke@hairline
+        \relax
       }
       \bool_gset_true:N \g_semio_image_target_h_set_bool
     }
@@ -1058,7 +1064,10 @@
 
 \cs_new_protected:Npn \semio_image_default_width_resolve: {
   \dim_set:Nn \l_semio_image_target_w_dim {
-    \dimexpr \linewidth - 2\semio@chrome@padding - 2\semio@stroke@hairline \relax
+    \dimexpr \linewidth
+      - \semio@chrome@padding - \semio@chrome@padding
+      - \semio@stroke@hairline - \semio@stroke@hairline
+    \relax
   }
 }
 
@@ -2282,7 +2291,11 @@
   \xdef\semio@chrome@tmp@row{\the\dimexpr\semio@chrome@font@body\relax}%
   \xdef\semio@chrome@tmp@row@footer{\the\dimexpr\semio@chrome@font@number\relax}%
   \xdef\semio@chrome@tmp@titlebar{%
-    \the\dimexpr\semio@chrome@font@body+2\semio@chrome@padding+2\semio@stroke@hairline\relax
+    \the\dimexpr
+      \semio@chrome@font@body
+      +\semio@chrome@padding+\semio@chrome@padding
+      +\semio@stroke@hairline+\semio@stroke@hairline
+    \relax
   }%
   \endgroup
   \setlength{\semio@chrome@row@height}{\semio@chrome@tmp@row}%

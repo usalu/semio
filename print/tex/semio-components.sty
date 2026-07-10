@@ -120,7 +120,10 @@
                 \centering
                 \includegraphics[
                   width=\linewidth,
-                  height=\dimexpr\l_semio_window_pending_height_dim-\semio@chrome@titlebar@height-2\semio@chrome@padding-2\semio@stroke@hairline\relax,
+                  height=\dimexpr\l_semio_window_pending_height_dim-\semio@chrome@titlebar@height
+                    -\semio@chrome@padding-\semio@chrome@padding
+                    -\semio@stroke@hairline-\semio@stroke@hairline
+                  \relax,
                   keepaspectratio,
                 ]{\semio@cover@arbeitsprobe@image}
               \end{minipage}
