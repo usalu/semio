@@ -877,6 +877,10 @@ fn builder_question_card(
         id: Some(format!("forms-blueprint.card.{}", question.id)),
         selected: Some(selected_ids.contains(&question.id)).filter(|selected| *selected),
         activate: Some(forms_cmd("setSelection", Some(json!({ "ids": [question.id] })))),
+        drop_command: Some(forms_cmd(
+            "dropQuestionKind",
+            Some(json!({ "targetId": question.id, "dropPosition": "after" })),
+        )),
         children,
     })
 }
@@ -906,6 +910,19 @@ fn builder_step_section(
     for (index, question) in step.questions.iter().enumerate() {
         children.push(builder_question_card(question, step, index, selected_ids, contributions));
     }
+    children.push(UiNode::Stack(UiStackNode {
+        direction: "vertical".into(),
+        gap: Some("tight".into()),
+        padding: None,
+        id: Some(format!("{prefix}.dropzone")),
+        selected: None,
+        activate: None,
+        drop_command: Some(forms_cmd(
+            "dropQuestionKind",
+            Some(json!({ "targetId": forms_play_step_tree_id(&step.id), "dropPosition": "inside" })),
+        )),
+        children: vec![ui_text("Drop a question kind here")],
+    }));
     children.push(ui_stack_horizontal(vec![
         builder_button(
             format!("{prefix}.add-question"),
@@ -1006,6 +1023,7 @@ fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
         selected: None,
         activate: None,
         children,
+        drop_command: None,
     })
 }
 

@@ -1887,12 +1887,12 @@ fn cad_window_engagement(envelope: &CadPlayEnvelope, pane: CadPaneId) -> WindowE
             list_interactions_for_model_definition(model_definition_id)
                 .into_iter()
                 .map(|entry| WindowEngagementPossible {
-                    id: entry.id.into(),
-                    label: entry.label.into(),
-                    detail: Some(entry.key.into()),
+                    id: entry.id.clone(),
+                    label: entry.label.clone(),
+                    detail: Some(entry.key.clone()),
                     command: Some(cad_cmd(
                         "engagementPossibleSelect",
-                        Some(json!({ "pane": cad_pane_suffix(pane), "possibleId": entry.id })),
+                        Some(json!({ "pane": cad_pane_suffix(pane), "possibleId": entry.id.clone() })),
                     )),
                 })
                 .collect()
@@ -2089,14 +2089,14 @@ fn build_cad_play_toolbar(envelope: &CadPlayEnvelope) -> Vec<ToolNode> {
             tool_button(
                 format!("cad.play.construct.{}", entry.id),
                 "plus",
-                entry.label,
+                entry.label.clone(),
                 cad_cmd(
                     "engagementPossibleSelect",
                     Some(json!({
                         "pane": cad_pane_suffix(
                             cad_pane_from_model_definition_id(active).unwrap_or(CadPaneId::Shape),
                         ),
-                        "possibleId": entry.id,
+                        "possibleId": entry.id.clone(),
                     })),
                 ),
             )
@@ -2335,7 +2335,7 @@ fn engagement_submit_line(envelope: &mut CadPlayEnvelope, pane: CadPaneId) -> bo
             }
         }
         if let Some(entry) = resolve_interaction_key(&event_kind, model_definition_id) {
-            envelope.runtime.engagement_session = start_session(entry.id, pane);
+            envelope.runtime.engagement_session = start_session(&entry.id, pane);
             if let Some(session) = envelope.runtime.engagement_session.as_mut() {
                 let _ = apply_event(session, "start", None);
             }
@@ -2370,7 +2370,7 @@ fn start_interaction_session(envelope: &mut CadPlayEnvelope, pane: CadPaneId, in
     let Some(entry) = interaction::interaction_by_id(interaction_id) else {
         return false;
     };
-    envelope.runtime.engagement_session = start_session(entry.id, pane);
+    envelope.runtime.engagement_session = start_session(&entry.id, pane);
     if let Some(session) = envelope.runtime.engagement_session.as_mut() {
         let _ = apply_event(session, "start", None);
     }

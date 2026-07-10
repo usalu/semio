@@ -8161,6 +8161,7 @@ impl ShellState {
             id: None,
             selected: None,
             activate: None,
+            drop_command: None,
         })
     }
 
@@ -8199,6 +8200,7 @@ impl ShellState {
             id: None,
             selected: None,
             activate: None,
+            drop_command: None,
         })
     }
 
@@ -8263,6 +8265,7 @@ impl ShellState {
             ],
             selected: None,
             activate: None,
+            drop_command: None,
         })
     }
 }

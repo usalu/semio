@@ -457,6 +457,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
   switch (node.type) {
     case "stack": {
       const activate = node.activate;
+      const dropCommand = node.dropCommand;
       return (
         <div
           className={cn(
@@ -471,6 +472,29 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
               ? (event) => {
                   event.stopPropagation();
                   dispatchUiCommand(context.onCommand, activate, {});
+                }
+              : undefined
+          }
+          onDragOver={
+            dropCommand
+              ? (event) => {
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "copy";
+                }
+              : undefined
+          }
+          onDrop={
+            dropCommand
+              ? (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  const encoded = [...event.dataTransfer.types].filter((kind) => kind.startsWith("application/x-semio-")).map((kind) => event.dataTransfer.getData(kind))[0];
+                  if (!encoded?.trim()) return;
+                  try {
+                    dispatchUiCommand(context.onCommand, dropCommand, JSON.parse(encoded) as Record<string, unknown>);
+                  } catch {
+                    return;
+                  }
                 }
               : undefined
           }

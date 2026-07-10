@@ -689,7 +689,12 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Pro
   const root = document.getElementById(options.rootId ?? "root");
   if (!root) throw new Error("missing #root");
   bootstrapElementsSurfaceChromeDocument(FRAMEWORK_SHELL_CHROME_THEME);
-  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? DEFAULT_PLUGIN_REGISTRY} />);
+  const reactRoot = createRoot(root, {
+    onUncaughtError: (error, errorInfo) => {
+      console.log("[DEBUG] uncaught render error:", error instanceof Error ? error.message : String(error), errorInfo.componentStack?.slice(0, 2000));
+    },
+  });
+  reactRoot.render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? DEFAULT_PLUGIN_REGISTRY} />);
 }
 //#endregion Boot
 
@@ -2153,6 +2158,7 @@ export type UiStackNode = {
   readonly id?: string;
   readonly selected?: boolean;
   readonly activate?: CommandDescriptor;
+  readonly dropCommand?: CommandDescriptor;
   readonly children: readonly UiNode[];
 };
 

@@ -1,5 +1,6 @@
-//! 🖱️ Business-logic-free wgpu UI toolkit for browser WASM renderers.
+//! 🖱️ Declarative UI components (default) and retained-mode wgpu engine (feature "engine").
 
+#[cfg(feature = "engine")]
 pub mod chrome {
 // #region chrome
 //! 🎛 Bordered chrome primitives shared by widgets and shell renderers.
@@ -115,6 +116,7 @@ pub fn item_text(theme: &Theme, pressed: bool, hovered: bool) -> Rgba {
 // #endregion chrome
 }
 
+#[cfg(feature = "engine")]
 pub mod cursor {
 // #region cursor
 //! 🖱️ Theme-aware Semio cursor URLs for wgpu canvas hover parity with React.
@@ -403,6 +405,7 @@ mod tests {
 // #endregion cursor
 }
 
+#[cfg(feature = "engine")]
 pub mod draw {
 // #region draw
 //! 🖌️ Draw list and GPU pipeline for UI quads, vector geometry, and 3D scene passes.
@@ -4041,6 +4044,7 @@ impl Rect {
 // #endregion geometry
 }
 
+#[cfg(feature = "engine")]
 pub mod gpu {
 // #region gpu
 //! 🖥️ WebGPU device, surface, and frame loop.
@@ -4360,6 +4364,7 @@ pub fn schedule_frame(window: &winit::window::Window, _callback: impl FnMut() + 
 // #endregion gpu
 }
 
+#[cfg(feature = "engine")]
 pub mod input {
 // #region input
 //! 🖱️ Pointer and keyboard input state for hit testing.
@@ -4685,6 +4690,7 @@ mod tests {
 // #endregion input
 }
 
+#[cfg(feature = "engine")]
 pub mod layout {
 // #region layout
 //! 🧮 Flex stack layout for widget trees.
@@ -4784,6 +4790,7 @@ mod tests {
 // #endregion layout
 }
 
+#[cfg(feature = "engine")]
 pub mod shaders {
 // #region shaders
 //! 🧊 WGSL shader sources for the raw wgpu UI renderer.
@@ -5194,6 +5201,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 // #endregion shaders
 }
 
+#[cfg(feature = "engine")]
 pub mod text {
 // #region text
 //! 🖋️ Glyph atlas — fontdue when bytes are available, built-in bitmap fallback.
@@ -5814,6 +5822,7 @@ mod tests {
 // #endregion theme
 }
 
+#[cfg(feature = "engine")]
 pub mod widgets {
 // #region widgets
 //! 🧩 Generic widget tree — layout, measurement, and drawing.
@@ -7422,6 +7431,7 @@ pub fn draw_text_overlay<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, 
 // #endregion widgets
 }
 
+#[cfg(feature = "engine")]
 pub mod host {
 // #region host
 //! 🪟 winit window event bridge into pointer callbacks.

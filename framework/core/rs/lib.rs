@@ -544,6 +544,164 @@ pub fn default_viewport_engagement() -> WindowEngagement {
     }
 }
 //#endregion 🔖WindowEngagement
+
+//#region 🔖WireFormatGoldenTests
+/** 🧊 Golden wire-format tests: freeze exact JSON for layout/command/engagement types
+before these move into ui_wgpu, so the move can be proven byte-identical. */
+#[cfg(test)]
+mod layout_wire_format_tests {
+    use super::*;
+
+    const GOLDEN_COMMAND_DESCRIPTOR_JSON: &str = "[{\"controllerId\":\"ctrl\",\"command\":\"doThing\",\"args\":42},{\"controllerId\":\"ctrl\",\"command\":\"doOther\"},{\"variant\":\"primary\",\"size\":\"md\"}]";
+
+    #[test]
+    fn command_descriptor_and_style_spec_serialize_to_golden_json() {
+        let values = (
+            CommandDescriptor {
+                controller_id: "ctrl".into(),
+                command: "doThing".into(),
+                args: Some(serde_json::json!(42)),
+            },
+            CommandDescriptor { controller_id: "ctrl".into(), command: "doOther".into(), args: None },
+            StyleSpec {
+                variant: Some("primary".into()),
+                size: Some("md".into()),
+                density: None,
+            },
+        );
+        let json = serde_json::to_string(&values).unwrap();
+        assert_eq!(json, GOLDEN_COMMAND_DESCRIPTOR_JSON);
+    }
+
+    const GOLDEN_WINDOW_LAYOUT_JSON: &str = "{\"root\":{\"kind\":\"horizontal\",\"children\":[{\"kind\":\"stack\",\"size\":0.5,\"activeWindowKindId\":\"main\",\"children\":[{\"kind\":\"window\",\"windowKindId\":\"main\",\"title\":\"Main\"}]},{\"kind\":\"vertical\",\"size\":0.5,\"children\":[]}]}}";
+
+    #[test]
+    fn window_layout_serializes_to_golden_json() {
+        let layout = WindowLayout {
+            root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
+                kind: "horizontal".into(),
+                size: None,
+                children: vec![
+                    WindowLayoutChild::Stack(WindowLayoutStackNode {
+                        kind: "stack".into(),
+                        size: Some(0.5),
+                        active_window_kind_id: Some("main".into()),
+                        children: vec![WindowLayoutWindowNode {
+                            kind: "window".into(),
+                            window_kind_id: "main".into(),
+                            title: Some("Main".into()),
+                            instance_id: None,
+                            template_id: None,
+                        }],
+                    }),
+                    WindowLayoutChild::Axis(WindowLayoutAxisNode {
+                        kind: "vertical".into(),
+                        size: Some(0.5),
+                        children: vec![],
+                    }),
+                ],
+            }),
+        };
+        let json = serde_json::to_string(&layout).unwrap();
+        assert_eq!(json, GOLDEN_WINDOW_LAYOUT_JSON);
+        let roundtripped: WindowLayout = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, layout);
+    }
+
+    const GOLDEN_WINDOW_MEASURE_JSON: &str = "[{\"kind\":\"select\",\"id\":\"m1\",\"label\":\"Mode\",\"value\":\"a\",\"items\":[{\"id\":\"a\",\"value\":\"a\",\"label\":\"A\"}],\"on_change\":{\"controllerId\":\"ctrl\",\"command\":\"measureSelect\"}},{\"kind\":\"slider\",\"id\":\"m2\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":0.5,\"on_change\":{\"controllerId\":\"ctrl\",\"command\":\"measureSlider\"}},{\"kind\":\"toggle\",\"id\":\"m3\",\"icon_id\":\"icon.grid\",\"label\":null,\"pressed\":true,\"text\":null,\"on_change\":{\"controllerId\":\"ctrl\",\"command\":\"measureToggle\"}},{\"kind\":\"group\",\"id\":\"m4\",\"label\":\"Group\",\"default_open\":true,\"children\":[]}]";
+
+    #[test]
+    fn window_measure_serializes_to_golden_json() {
+        let measures = vec![
+            WindowMeasure::Select {
+                id: "m1".into(),
+                label: Some("Mode".into()),
+                value: "a".into(),
+                items: vec![MeasureSelectItem { id: "a".into(), value: "a".into(), label: "A".into() }],
+                on_change: CommandDescriptor { controller_id: "ctrl".into(), command: "measureSelect".into(), args: None },
+            },
+            WindowMeasure::Slider {
+                id: "m2".into(),
+                label: None,
+                value: 1.0,
+                min: 0.0,
+                max: 2.0,
+                step: Some(0.5),
+                on_change: CommandDescriptor { controller_id: "ctrl".into(), command: "measureSlider".into(), args: None },
+            },
+            WindowMeasure::Toggle {
+                id: "m3".into(),
+                icon_id: "icon.grid".into(),
+                label: None,
+                pressed: true,
+                text: None,
+                on_change: CommandDescriptor { controller_id: "ctrl".into(), command: "measureToggle".into(), args: None },
+            },
+            WindowMeasure::Group {
+                id: "m4".into(),
+                label: "Group".into(),
+                default_open: Some(true),
+                children: vec![],
+            },
+        ];
+        let json = serde_json::to_string(&measures).unwrap();
+        assert_eq!(json, GOLDEN_WINDOW_MEASURE_JSON);
+        let roundtripped: Vec<WindowMeasure> = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, measures);
+    }
+
+    const GOLDEN_WINDOW_ENGAGEMENT_JSON: &str = "{\"sessionActive\":true,\"options\":[{\"id\":\"opt1\",\"label\":\"Option\",\"pressed\":false}],\"input\":{\"id\":\"in1\",\"value\":\"v\"},\"control\":{\"kind\":\"slider\",\"id\":\"sl1\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":null,\"unit\":null,\"disabled\":null,\"on_change\":null,\"on_commit\":null},\"status\":[{\"id\":\"st1\",\"text\":\"Ready\"}],\"possibleEngagements\":[{\"id\":\"pe1\",\"label\":\"Possible\"}]}";
+
+    #[test]
+    fn window_engagement_serializes_to_golden_json() {
+        let engagement = WindowEngagement {
+            session_active: Some(true),
+            options: Some(vec![WindowEngagementOption {
+                id: "opt1".into(),
+                label: Some("Option".into()),
+                icon_id: None,
+                pressed: Some(false),
+                disabled: None,
+                command: None,
+            }]),
+            input: Some(WindowEngagementInput {
+                id: Some("in1".into()),
+                value: Some("v".into()),
+                placeholder: None,
+                disabled: None,
+                on_change: None,
+                on_submit: None,
+                on_repeat_last: None,
+                on_abort: None,
+            }),
+            control: Some(WindowEngagementControl::Slider {
+                id: Some("sl1".into()),
+                label: None,
+                value: 1.0,
+                min: 0.0,
+                max: 2.0,
+                step: None,
+                unit: None,
+                disabled: None,
+                on_change: None,
+                on_commit: None,
+            }),
+            controls: None,
+            status: Some(vec![WindowEngagementStatus { id: "st1".into(), text: "Ready".into() }]),
+            possible_engagements: Some(vec![WindowEngagementPossible {
+                id: "pe1".into(),
+                label: "Possible".into(),
+                detail: None,
+                command: None,
+            }]),
+        };
+        let json = serde_json::to_string(&engagement).unwrap();
+        assert_eq!(json, GOLDEN_WINDOW_ENGAGEMENT_JSON);
+        let roundtripped: WindowEngagement = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, engagement);
+    }
+}
+//#endregion 🔖WireFormatGoldenTests
 // #endregion layout
 }
 
@@ -1529,6 +1687,43 @@ pub fn tool_collection(
         children,
     }
 }
+
+//#region 🔖WireFormatGoldenTests
+/** 🧊 Golden wire-format tests: freeze exact JSON for ToolNode before it moves into ui_wgpu. */
+#[cfg(test)]
+mod tool_node_wire_format_tests {
+    use super::*;
+    use crate::layout::CommandDescriptor;
+
+    const GOLDEN_TOOL_NODE_JSON: &str = "[{\"kind\":\"separator\",\"id\":\"sep1\",\"order\":1},{\"kind\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.tool\",\"label\":\"Tool\",\"title\":\"Tool\",\"category\":\"history\",\"onPress\":{\"controllerId\":\"ctrl\",\"command\":\"runTool\"}},{\"kind\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.toggle\",\"label\":\"Toggle\",\"title\":\"Toggle\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"command\":\"toggleTool\"}},{\"kind\":\"collection\",\"id\":\"col1\",\"iconId\":\"icon.group\",\"label\":\"Group\",\"title\":\"Group\",\"children\":[{\"kind\":\"separator\",\"id\":\"sep2\"}]}]";
+
+    #[test]
+    fn tool_node_serializes_to_golden_json() {
+        let nodes = vec![
+            ToolNode::Separator { id: "sep1".into(), order: Some(1), disabled: None },
+            tool_button(
+                "btn1",
+                "icon.tool",
+                "Tool",
+                CommandDescriptor { controller_id: "ctrl".into(), command: "runTool".into(), args: None },
+            )
+            .with_category(ToolCategory::History),
+            tool_toggle(
+                "tog1",
+                "icon.toggle",
+                "Toggle",
+                true,
+                CommandDescriptor { controller_id: "ctrl".into(), command: "toggleTool".into(), args: None },
+            ),
+            tool_collection("col1", "icon.group", "Group", vec![tool_separator("sep2")]),
+        ];
+        let json = serde_json::to_string(&nodes).unwrap();
+        assert_eq!(json, GOLDEN_TOOL_NODE_JSON);
+        let roundtripped: Vec<ToolNode> = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, nodes);
+    }
+}
+//#endregion 🔖WireFormatGoldenTests
 // #endregion tools
 }
 
@@ -1562,6 +1757,8 @@ pub struct UiStackNode {
     pub selected: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub activate: Option<CommandDescriptor>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub drop_command: Option<CommandDescriptor>,
     pub children: Vec<UiNode>,
 }
 
@@ -2881,6 +3078,7 @@ pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
         selected: None,
         activate: None,
         children,
+        drop_command: None,
     })
 }
 
@@ -3988,6 +4186,269 @@ mod app_document_tests {
     }
 }
 //#endregion 🔖Manifest
+
+//#region 🔖WireFormatGoldenTests
+/** 🧊 Golden wire-format tests: freeze exact JSON for every UiNode/scene/SurfaceKind
+before these types move into ui_wgpu, so the move can be proven byte-identical. */
+#[cfg(test)]
+mod ui_node_wire_format_tests {
+    use super::*;
+
+    fn cmd(command: &str) -> CommandDescriptor {
+        CommandDescriptor {
+            controller_id: "ctrl".into(),
+            command: command.into(),
+            args: None,
+        }
+    }
+
+    fn sample_tree() -> UiNode {
+        UiNode::Stack(UiStackNode {
+            direction: "vertical".into(),
+            gap: Some("md".into()),
+            padding: None,
+            id: Some("root".into()),
+            selected: None,
+            activate: None,
+            drop_command: None,
+            children: vec![
+                UiNode::Text(UiTextNode {
+                    value: "Hello".into(),
+                    emphasize: Some(true),
+                    data_attributes: None,
+                }),
+                UiNode::Button(UiButtonNode {
+                    id: Some("btn1".into()),
+                    icon_id: "icon.save".into(),
+                    label: "Save".into(),
+                    command: cmd("save"),
+                    style: None,
+                    disabled: Some(false),
+                }),
+                UiNode::Separator(UiSeparatorNode {}),
+                UiNode::Input(UiInputNode {
+                    id: "inp1".into(),
+                    input_kind: "text".into(),
+                    value: "abc".into(),
+                    placeholder: Some("type...".into()),
+                    commit: None,
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
+                    on_change: cmd("setValue"),
+                }),
+                UiNode::Select(UiSelectNode {
+                    id: "sel1".into(),
+                    value: "a".into(),
+                    items: vec![
+                        UiSelectItem { value: "a".into(), label: "A".into() },
+                        UiSelectItem { value: "b".into(), label: "B".into() },
+                    ],
+                    placeholder: None,
+                    on_change: cmd("selectChange"),
+                }),
+                UiNode::Toggle(UiToggleNode {
+                    id: "tog1".into(),
+                    icon_id: "icon.bold".into(),
+                    pressed: true,
+                    text: None,
+                    on_change: cmd("toggle"),
+                }),
+                UiNode::Vec3(UiVec3Node {
+                    id: "vec1".into(),
+                    value: Some([1.0, 2.0, 3.0]),
+                    on_change: cmd("vecChange"),
+                }),
+                UiNode::KeyValue(UiKeyValueNode {
+                    entries: vec![UiKeyValueEntry { label: "K".into(), value: "V".into() }],
+                }),
+                UiNode::Slider(UiSliderNode {
+                    id: "sl1".into(),
+                    value: 0.5,
+                    min: 0.0,
+                    max: 1.0,
+                    step: 0.1,
+                    unit: Some("%".into()),
+                    on_change: cmd("sliderChange"),
+                }),
+                UiNode::NumberStepper(UiNumberStepperNode {
+                    id: "num1".into(),
+                    value: 2.0,
+                    step: 1.0,
+                    uniform: true,
+                    on_absolute: cmd("setAbs"),
+                    on_delta: cmd("setDelta"),
+                }),
+                UiNode::Ring(UiRingNode {
+                    id: "ring1".into(),
+                    orb_id: "orb1".into(),
+                    t: 0.25,
+                    disabled: None,
+                    on_change: cmd("ringChange"),
+                }),
+                UiNode::IconSelect(UiIconSelectNode {
+                    id: "icn1".into(),
+                    value: "star".into(),
+                    uniform: true,
+                    classifier_kind: "icon".into(),
+                    on_change: cmd("iconChange"),
+                }),
+                UiNode::Field(UiFieldNode {
+                    id: "field1".into(),
+                    label: "Field".into(),
+                    description: Some("desc".into()),
+                    required: Some(true),
+                    error: None,
+                    child: Box::new(UiNode::Text(UiTextNode {
+                        value: "child".into(),
+                        emphasize: None,
+                        data_attributes: None,
+                    })),
+                }),
+                UiNode::Section(UiSectionNode {
+                    id: "sec1".into(),
+                    label: Some("Section".into()),
+                    default_open: Some(true),
+                    children: vec![],
+                }),
+                UiNode::Tree(UiTreeNode {
+                    sections: vec![UiTreeSectionNode {
+                        id: "treesec1".into(),
+                        label: Some("Items".into()),
+                        default_open: Some(true),
+                        items: vec![UiTreeItemNode::base("item1", "Item 1")],
+                    }],
+                    selected_ids: Some(vec!["item1".into()]),
+                    highlighted_ids: None,
+                    selection_change: None,
+                    drop_command: None,
+                }),
+                UiNode::Image(UiImageNode {
+                    id: "img1".into(),
+                    src: "icon.png".into(),
+                    alt: Some("alt text".into()),
+                }),
+                UiNode::ComponentScene(UiComponentSceneNode {
+                    surface_id: "surf1".into(),
+                    controller_id: "ctrl".into(),
+                    component_kind: SurfaceKind::World3d,
+                    pane_id: None,
+                    binding_id: None,
+                    canvas_2d: None,
+                    world_3d: Some(World3dScene {
+                        camera_json: "{}".into(),
+                        meshes_json: "[]".into(),
+                        instances_json: "[]".into(),
+                        selection_json: "{}".into(),
+                        vortices_json: None,
+                        attractions_json: None,
+                        target_volumes_json: None,
+                        references_json: None,
+                        brush_preview_json: None,
+                        interaction_json: None,
+                        engagement_preview_json: None,
+                        lod_json: None,
+                        chunking_json: None,
+                        context_menu_json: None,
+                        environment_json: None,
+                        frame_json: None,
+                        fit_json: None,
+                    }),
+                    node_graph: None,
+                    text_editor: None,
+                    table: None,
+                    raster: None,
+                    virtual_file_system: None,
+                    gis_map: None,
+                    puzzle2d_board: None,
+                    icon_render: None,
+                    note_canvas: None,
+                }),
+                UiNode::ExternalSlot(UiExternalSlotNode {
+                    plugin_id: "plugin1".into(),
+                    app_id: "app1".into(),
+                    body_key: "body1".into(),
+                    params_json: "{}".into(),
+                }),
+            ],
+        })
+    }
+
+    const GOLDEN_UI_NODE_TREE_JSON: &str = "{\"type\":\"stack\",\"direction\":\"vertical\",\"gap\":\"md\",\"id\":\"root\",\"children\":[{\"type\":\"text\",\"value\":\"Hello\",\"emphasize\":true},{\"type\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.save\",\"label\":\"Save\",\"command\":{\"controllerId\":\"ctrl\",\"command\":\"save\"},\"disabled\":false},{\"type\":\"separator\"},{\"type\":\"input\",\"id\":\"inp1\",\"inputKind\":\"text\",\"value\":\"abc\",\"placeholder\":\"type...\",\"onChange\":{\"controllerId\":\"ctrl\",\"command\":\"setValue\"}},{\"type\":\"select\",\"id\":\"sel1\",\"value\":\"a\",\"items\":[{\"value\":\"a\",\"label\":\"A\"},{\"value\":\"b\",\"label\":\"B\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"command\":\"selectChange\"}},{\"type\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.bold\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"command\":\"toggle\"}},{\"type\":\"vec3\",\"id\":\"vec1\",\"value\":[1.0,2.0,3.0],\"onChange\":{\"controllerId\":\"ctrl\",\"command\":\"vecChange\"}},{\"type\":\"keyValue\",\"entries\":[{\"label\":\"K\",\"value\":\"V\"}]},{\"type\":\"slider\",\"id\":\"sl1\",\"value\":0.5,\"min\":0.0,\"max\":1.0,\"step\":0.1,\"unit\":\"%\",\"onChange\":{\"controllerId\":\"ctrl\",\"command\":\"sliderChange\"}},{\"type\":\"numberStepper\",\"id\":\"num1\",\"value\":2.0,\"step\":1.0,\"uniform\":true,\"onAbsolute\":{\"controllerId\":\"ctrl\",\"command\":\"setAbs\"},\"onDelta\":{\"controllerId\":\"ctrl\",\"command\":\"setDelta\"}},{\"type\":\"ring\",\"id\":\"ring1\",\"orbId\":\"orb1\",\"t\":0.25,\"onChange\":{\"controllerId\":\"ctrl\",\"command\":\"ringChange\"}},{\"type\":\"iconSelect\",\"id\":\"icn1\",\"value\":\"star\",\"uniform\":true,\"classifierKind\":\"icon\",\"onChange\":{\"controllerId\":\"ctrl\",\"command\":\"iconChange\"}},{\"type\":\"field\",\"id\":\"field1\",\"label\":\"Field\",\"description\":\"desc\",\"required\":true,\"child\":{\"type\":\"text\",\"value\":\"child\"}},{\"type\":\"section\",\"id\":\"sec1\",\"label\":\"Section\",\"defaultOpen\":true,\"children\":[]},{\"type\":\"tree\",\"sections\":[{\"id\":\"treesec1\",\"label\":\"Items\",\"defaultOpen\":true,\"items\":[{\"id\":\"item1\",\"label\":\"Item 1\"}]}],\"selectedIds\":[\"item1\"]},{\"type\":\"image\",\"id\":\"img1\",\"src\":\"icon.png\",\"alt\":\"alt text\"},{\"type\":\"componentScene\",\"surfaceId\":\"surf1\",\"controllerId\":\"ctrl\",\"componentKind\":\"world-3d\",\"world3d\":{\"cameraJson\":\"{}\",\"meshesJson\":\"[]\",\"instancesJson\":\"[]\",\"selectionJson\":\"{}\"}},{\"type\":\"externalSlot\",\"pluginId\":\"plugin1\",\"appId\":\"app1\",\"bodyKey\":\"body1\",\"paramsJson\":\"{}\"}]}";
+
+    #[test]
+    fn ui_node_tree_serializes_to_golden_json() {
+        let node = sample_tree();
+        let json = serde_json::to_string(&node).unwrap();
+        assert_eq!(
+            json, GOLDEN_UI_NODE_TREE_JSON,
+            "UiNode wire format drifted \u{2014} lock this in before moving the type into ui_wgpu"
+        );
+        let roundtripped: UiNode = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, node);
+    }
+
+    const GOLDEN_SURFACE_KIND_JSON: &str = "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"raster\",\"virtualFileSystem\",\"gis2d-map\",\"puzzle2d-board\",\"icon-render\",\"note-canvas\"]";
+
+    #[test]
+    fn surface_kind_serializes_to_golden_json() {
+        let kinds = vec![
+            SurfaceKind::Canvas2d,
+            SurfaceKind::World3d,
+            SurfaceKind::NodeGraph,
+            SurfaceKind::TextEditor,
+            SurfaceKind::Table,
+            SurfaceKind::Raster,
+            SurfaceKind::VirtualFileSystem,
+            SurfaceKind::GisMap,
+            SurfaceKind::Puzzle2dBoard,
+            SurfaceKind::IconRender,
+            SurfaceKind::NoteCanvas,
+        ];
+        let json = serde_json::to_string(&kinds).unwrap();
+        assert_eq!(json, GOLDEN_SURFACE_KIND_JSON);
+        let roundtripped: Vec<SurfaceKind> = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, kinds);
+    }
+
+    const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeTool\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{\\\"raster\\\":true,\\\"water\\\":true,\\\"land\\\":true,\\\"roads\\\":true,\\\"buildings\\\":true,\\\"borders\\\":true,\\\"labels\\\":true,\\\"positions\\\":true,\\\"positionLabels\\\":true,\\\"routes\\\":true,\\\"regions\\\":true}\",\"layerStrokeScaleJson\":\"{\\\"raster\\\":1,\\\"water\\\":1,\\\"land\\\":1,\\\"roads\\\":1,\\\"buildings\\\":1,\\\"borders\\\":1,\\\"labels\\\":1,\\\"positions\\\":1,\\\"positionLabels\\\":1,\\\"routes\\\":1,\\\"regions\\\":1}\",\"selectionJson\":\"{\\\"positions\\\":[],\\\"routes\\\":[]}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"kindCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"suggestionOffset\":0.0,\"brushKindWeightsJson\":\"{}\",\"kindCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeTool\":\"select\",\"viewMode\":\"edit\",\"interactive\":true}]";
+
+    #[test]
+    fn scene_records_serialize_to_golden_json() {
+        let scenes = (
+            Canvas2dScene { camera_x: 1.0, camera_y: 2.0, zoom: 1.5, layers_json: "[]".into() },
+            TableScene { columns_json: "[]".into(), rows_json: "[]".into() },
+            RasterScene {
+                document_sync_json: "{}".into(),
+                assets_json: "[]".into(),
+                camera_json: "{}".into(),
+                selection_json: "[]".into(),
+                hovered_id: Some("h1".into()),
+                active_tool: "brush".into(),
+                brush_size: 4.0,
+                brush_opacity: 1.0,
+                view_mode: "composite".into(),
+                composite_viewport_json: None,
+            },
+            IconRenderScene { request_json: "{}".into(), footer: None, frame_json: None },
+            VirtualFileSystemScene {
+                schema_json: "{}".into(),
+                rows_json: "[]".into(),
+                selected_row_ids_json: None,
+                hovered_row_id: None,
+                empty_message: Some("Empty".into()),
+                drag_drop_enabled: Some(true),
+            },
+            GisMapScene::base("{}".into(), "{}".into()),
+            Puzzle2dBoardScene::base("{}".into(), "{}".into(), true),
+            NoteCanvasScene::base("{}".into(), "select".into(), "edit".into(), true),
+        );
+        let json = serde_json::to_string(&scenes).unwrap();
+        assert_eq!(json, GOLDEN_SCENES_JSON);
+    }
+}
+//#endregion 🔖WireFormatGoldenTests
 // #endregion ui
 }
 

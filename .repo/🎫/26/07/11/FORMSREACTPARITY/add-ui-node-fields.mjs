@@ -10,7 +10,7 @@ const STRUCT_FIELDS = {
   UiSliderNode: ["unit"],
   UiButtonNode: ["disabled"],
   UiTreeNode: ["drop_command"],
-  UiStackNode: ["id", "selected", "activate"],
+  UiStackNode: ["id", "selected", "activate", "drop_command"],
 };
 
 const files = execSync(

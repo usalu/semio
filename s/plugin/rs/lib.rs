@@ -402,6 +402,7 @@ fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
         id: None,
         selected: None,
         activate: None,
+        drop_command: None,
     })
 }
 

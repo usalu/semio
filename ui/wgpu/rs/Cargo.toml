@@ -3,25 +3,46 @@ name = "ui_wgpu"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Business-logic-free wgpu UI toolkit for browser WASM renderers"
+description = "Declarative UI components (default) and retained-mode wgpu engine (feature \"engine\") shared by plugins and renderers"
 
 [lib]
 path = "lib.rs"
 
+[features]
+default = []
+# 🖥️ Full retained-mode engine: arena/tree/layout/text/input/gpu rendering. Off by
+# default so wasm32-wasip2 plugin components depend on the component types only.
+engine = [
+    "dep:fontdue",
+    "dep:bytemuck",
+    "dep:winit",
+    "dep:wgpu",
+    "dep:taffy",
+    "dep:kernel_3d_scene",
+    "dep:pollster",
+    "dep:js-sys",
+    "dep:wasm-bindgen",
+    "dep:wasm-bindgen-futures",
+    "dep:web-sys",
+]
+
 [dependencies]
 ui_styling = { path = "../../styling/rs" }
-kernel_3d_scene = { path = "../../../kernel/3d/scene/rs" }
-fontdue = "0.9.3"
-bytemuck = { version = "1.24.0", features = ["derive"] }
-winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
-wgpu = { version = "27.0.1", default-features = false, features = ["wgsl"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+kernel_3d_scene = { path = "../../../kernel/3d/scene/rs", optional = true }
+fontdue = { version = "0.9.3", optional = true }
+bytemuck = { version = "1.24.0", features = ["derive"], optional = true }
+winit = { version = "0.30.12", default-features = false, features = ["rwh_06"], optional = true }
+wgpu = { version = "27.0.1", default-features = false, features = ["wgsl"], optional = true }
+taffy = { version = "0.9", default-features = false, features = ["std", "flexbox"], optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wgpu = { version = "27.0.1", default-features = false, features = ["webgpu", "wgsl"] }
-js-sys = "0.3.83"
-wasm-bindgen = "0.2.106"
-wasm-bindgen-futures = "0.4.71"
-web-sys = { version = "0.3.98", features = [
+wgpu = { version = "27.0.1", default-features = false, features = ["webgpu", "wgsl"], optional = true }
+js-sys = { version = "0.3.83", optional = true }
+wasm-bindgen = { version = "0.2.106", optional = true }
+wasm-bindgen-futures = { version = "0.4.71", optional = true }
+web-sys = { version = "0.3.98", optional = true, features = [
     "Window",
     "HtmlCanvasElement",
     "HtmlElement",
@@ -36,5 +57,5 @@ web-sys = { version = "0.3.98", features = [
 ] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-wgpu = { version = "27.0.1", default-features = false, features = ["metal", "vulkan", "dx12", "wgsl"] }
-pollster = "0.4.0"
+wgpu = { version = "27.0.1", default-features = false, features = ["metal", "vulkan", "dx12", "wgsl"], optional = true }
+pollster = { version = "0.4.0", optional = true }
