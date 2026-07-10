@@ -1346,6 +1346,10 @@
 }
 
 
+\newcommand{\semio@heading@block@after}{%
+  \vskip\semio@block@sep@skip
+}
+
 \newcommand{\semio@heading@row@wrap}[1]{%
   \noindent
   \vbox{%
@@ -1572,7 +1576,7 @@
       }%
       {##1}%
   }%
-  \titlespacing*{\paragraph}{0pt}{0pt}{0pt}%
+  \titlespacing*{\paragraph}{0pt}{0pt}{\semio@block@sep@skip}%
   \semio@heading@wrap@install
 }
 
@@ -1622,6 +1626,7 @@
     \semio@toc@track@num{paragraph}{\semio@nest@num}{#1}%
   \fi
   \semio@heading@pair@muted@num{paragraph}{\semio@nest@num}{#1}%
+  \semio@heading@block@after
 }
 
 \newenvironment{SemioNest}{%

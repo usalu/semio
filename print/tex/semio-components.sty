@@ -21,6 +21,7 @@
 \newcommand{\semio@cover@zukunftbau@logo}{zukunftbau-logo.pdf}
 \newcommand{\semio@cover@bbsr@logo}{bbsr-logo.pdf}
 \newcommand{\semio@cover@bundesministerium@logo}{bundesbauministerium-logo.pdf}
+\newcommand{\semio@cover@arbeitsprobe@image}{}
 
 \cs_new_protected:Npn \semio_cover_address:n #1 {
   \group_begin:
@@ -102,12 +103,19 @@
         }
       \end{Window}
     }
+    \tl_if_blank:eF { \semio@cover@arbeitsprobe@image } {
+      \semio@window@row@body@h@set{6.4cm}
+      \begin{Window}[title=Arbeitsprobe, row, anchor=center]
+        \includegraphics[width=\linewidth,height=5.7cm,keepaspectratio]{\semio@cover@arbeitsprobe@image}
+      \end{Window}\par
+      \semio@window@row@body@h@reset
+    }
     \bool_set_false:N \l_semio_cover@meta@row_bool
     \tl_if_empty:NF \l_semio_aktenzeichen_tl { \bool_set_true:N \l_semio_cover@meta@row_bool }
     \tl_if_empty:NF \l_semio_foerderzeitraum_tl { \bool_set_true:N \l_semio_cover@meta@row_bool }
     \tl_if_empty:NF \l_semio_berichtszeitraum_tl { \bool_set_true:N \l_semio_cover@meta@row_bool }
     \bool_if:NT \l_semio_cover@meta@row_bool {
-      \SemioWindowRowThreeFixed{1.45cm}{%
+      \SemioWindowRowThreeFixed{1.35cm}{%
         \begin{Window}[title=Aktenzeichen, row]
           {\SemioSans\large\tl_use:N \l_semio_aktenzeichen_tl\par}
         \end{Window}%
@@ -137,7 +145,7 @@
     \tl_if_empty:NF \l_semio_antragstellendeinstitution_tl { \bool_set_true:N \l_semio_cover@institution@row_bool }
     \tl_if_empty:NF \l_semio_kooperationspartner_tl { \bool_set_true:N \l_semio_cover@institution@row_bool }
     \bool_if:NT \l_semio_cover@institution@row_bool {
-      \SemioWindowRowTwoFixed{4.75cm}{%
+      \SemioWindowRowTwoFixed{3.55cm}{%
         \begin{Window}[title=Antragstellende~Institution, row]
           \semio_cover_address:n { \tl_use:N \l_semio_antragstellendeinstitution_tl }
         \end{Window}%
@@ -147,7 +155,7 @@
         \end{Window}%
       }
     }
-    \SemioWindowRowThreeFixed{14.3cm}{%
+    \SemioWindowRowThreeFixed{8.75cm}{%
       \begin{Window}[title=Zukunft~Bau, row, anchor=center]
         \semio@logo@slot[\linewidth]{\semio@cover@zukunftbau@logo}
       \end{Window}%
