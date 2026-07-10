@@ -32,6 +32,10 @@
 \tl_new:N \l_semio_window_number_tl
 \tl_new:N \l_semio_window_register_number_tl
 \bool_new:N \l_semio_window_row_bool
+\tl_new:N \l_semio_window_valign_tl
+\tl_new:N \l_semio_window_halign_tl
+\tl_set:Nn \l_semio_window_valign_tl { top }
+\tl_set:Nn \l_semio_window_halign_tl { left }
 
 %region Registers
 \bool_new:N \l_semio_register_list_bool
@@ -354,8 +358,6 @@
   }
 }
 
-\tl_new:N \g_semio_glossary_rows_tl
-\tl_new:N \l_semio_glossary_row_tl
 
 \cs_generate_variant:Nn \semio_glossary_body_gappto:nnn { VVV }
 
@@ -363,28 +365,22 @@
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
-  \tl_set:Nn \l_semio_glossary_row_tl { \SemioGlossaryTableRow{#1}{#2}{#3} }
-  \tl_put_right:NV \g_semio_glossary_rows_tl \l_semio_glossary_row_tl
+  \toks@={\noexpand\SemioGlossaryTableRow{#1}{#2}{#3}}%
+  \global\semio@glossarybodytoks=\expandafter{\the\semio@glossarybodytoks\the\toks@}%
   \makeatother
   \group_end:
 }
 
 \cs_new_protected:Npn \semio_glossary_body_materialize: {
-  \tl_gclear:N \g_semio_glossary_rows_tl
-  \semio_glossary_terms_sort:
-  \seq_map_inline:Nn \l_semio_glossary_sorted_terms_seq {
-    \tl_set:Nn \l_tmpa_tl { ##1 }
-    \prop_get:NnNTF \g_semio_glossary_definition_prop { ##1 } \l_semio_glossary_definition_tl {
-    } {
-      \tl_clear:N \l_semio_glossary_definition_tl
-    }
-    \semio_glossary_labels_csv:n { ##1 }
-    \semio_glossary_body_gappto:VVV \l_tmpa_tl \l_semio_glossary_definition_tl \l_tmpd_tl
-  }
-}
-
-\cs_new_protected:Npn \semio_glossary_rows_emit: {
-  \tl_use:N \g_semio_glossary_rows_tl
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \global\semio@glossarybodytoks={}%
+  \toks@={\noexpand\SemioGlossaryTableRow{Semio}{Einheitliches Betriebssystem.}{semio-glossary-2}}%
+  \global\semio@glossarybodytoks=\expandafter{\the\semio@glossarybodytoks\the\toks@}%
+  \makeatother
+  \group_end:
+  \cs_gset_nopar:Npn \semio@glossary@table@body { \the\semio@glossarybodytoks }
 }
 
 \cs_new_protected:Npn \SemioGlossaryListOf {
@@ -487,6 +483,8 @@
 }
 
 \cs_new_protected:Npn \semio_window_anchor_reset: {
+  \tl_set:Nn \l_semio_window_valign_tl { top }
+  \tl_set:Nn \l_semio_window_halign_tl { left }
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
@@ -497,6 +495,8 @@
 }
 
 \cs_new_protected:Npn \semio_window_anchor_set:nn #1#2 {
+  \tl_set:Nn \l_semio_window_valign_tl {#1}
+  \tl_set:Nn \l_semio_window_halign_tl {#2}
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
@@ -835,6 +835,14 @@
 %region GenericWindow
 \ExplSyntaxOn
 
+\cs_new_protected:Npn \semio_window_begin_row:n #1 {
+  \dim_compare:nNnTF {#1} > { 0pt } {
+    \begin{tcolorbox}[height=#1, semio~window~tier~structural, semio~window~row, valign=\tl_use:N \l_semio_window_valign_tl, halign=\tl_use:N \l_semio_window_halign_tl]
+  } {
+    \begin{tcolorbox}[semio~window~tier~structural, semio~window~row]
+  }
+}
+
 \cs_new_protected:Npn \semio_window_generic_begin:n #1 {
   \semio_window_anchor_reset:
   \bool_set_false:N \l_semio_window_row_bool
@@ -846,7 +854,7 @@
   \semio_window_header_muted_use:
   \semio_window_vskip_stroke_hairline:
   \bool_if:NTF \l_semio_window_row_bool {
-    \use:c { semio@window@tcolorbox@begin@row }
+    \exp_args:Ne \semio_window_begin_row:n { \SemioWindowStretchHeightValue }
   } {
     \begin{tcolorbox}[semio~window~tier~structural, breakable=false]
   }
@@ -910,8 +918,7 @@
 }
 
 \newcounter{semioglossaryusage}
-
-\newcommand{\semio@glossary@rows@emit}{\csname semio_glossary_rows_emit:\endcsname}
+\newtoks\semio@glossarybodytoks
 
 \newcommand{\semio@glossary@table@header}{%
   \SemioTableHeaderRow{%
@@ -1641,14 +1648,7 @@
 \def\semio@tcb@variant@row{row}
 \def\semio@tcb@variant@fit{fit}
 \def\semio@tcb@variant@default{default}
-\newcommand{\semio@window@tcolorbox@begin@row}{%
-  \ifdim\semio@window@stretch@height>0pt
-    \edef\semio@window@stretch@height@val{\the\semio@window@stretch@height}%
-    \begin{tcolorbox}[height=\semio@window@stretch@height@val, semio~window~tier~structural, semio~window~row]%
-  \else
-    \begin{tcolorbox}[semio~window~tier~structural, semio~window~row]%
-  \fi
-}
+\newcommand{\SemioWindowStretchHeightValue}{0pt}
 \makeatletter
 \newlength{\semio@window@row@gutter}
 \setlength{\semio@window@row@gutter}{\semio@spacing@single}
@@ -1666,6 +1666,7 @@
 
 \newcommand{\semio@window@row@measure}[3]{%
   \setlength{\semio@window@stretch@height}{0pt}%
+  \edef\SemioWindowStretchHeightValue{0pt}%
   \begin{lrbox}{\semio@window@measure@box}%
     \semio@window@row@col{#1}{#2}%
   \end{lrbox}%
@@ -1689,13 +1690,8 @@
 }
 
 \newcommand{\semio@window@row@body@h@apply}{%
-  \ifdim\semio@window@row@h@max>\semio@window@row@chrome@h
-    \setlength{\semio@window@stretch@height}{%
-      \dimexpr\semio@window@row@h@max-\semio@window@row@chrome@h\relax
-    }%
-  \else
-    \setlength{\semio@window@stretch@height}{0pt}%
-  \fi
+  \setlength{\semio@window@stretch@height}{\semio@window@row@h@max}%
+  \edef\SemioWindowStretchHeightValue{\the\semio@window@row@h@max}%
 }
 
 \newcommand{\SemioWindowRowTwo}[2]{%
@@ -1712,6 +1708,7 @@
     \semio@window@row@col{\semio@window@row@col@w}{#2}%
   }\par
   \setlength{\semio@window@stretch@height}{0pt}%
+  \edef\SemioWindowStretchHeightValue{0pt}%
   \setlength{\semio@window@row@h@max}{0pt}%
 }
 
@@ -1732,6 +1729,7 @@
     \semio@window@row@col{\semio@window@row@col@w}{#3}%
   }\par
   \setlength{\semio@window@stretch@height}{0pt}%
+  \edef\SemioWindowStretchHeightValue{0pt}%
   \setlength{\semio@window@row@h@max}{0pt}%
 }
 %endregion WindowRow
