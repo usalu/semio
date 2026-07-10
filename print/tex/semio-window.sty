@@ -354,37 +354,42 @@
   }
 }
 
-\cs_generate_variant:Nn \semio_glossary_row_emit_cmd:nnn { VVV }
+\tl_new:N \g_semio_glossary_rows_tl
+\tl_new:N \l_semio_glossary_row_tl
 
-\cs_new_protected:Npn \semio_glossary_row_emit_cmd:nnn #1#2#3 {
+\cs_generate_variant:Nn \semio_glossary_body_gappto:nnn { VVV }
+
+\cs_new_protected:Npn \semio_glossary_body_gappto:nnn #1#2#3 {
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
-  \SemioGlossaryTableRow{#1}{#2}{#3}%
+  \tl_set:Nn \l_semio_glossary_row_tl { \SemioGlossaryTableRow{#1}{#2}{#3} }
+  \tl_put_right:NV \g_semio_glossary_rows_tl \l_semio_glossary_row_tl
   \makeatother
   \group_end:
 }
 
-\cs_new_protected:Npn \semio_glossary_row_emit_in_table:n #1 {
-  \tl_set:Nn \l_tmpa_tl {#1}
-  \prop_get:NnNTF \g_semio_glossary_definition_prop {#1} \l_semio_glossary_definition_tl {
-  } {
-    \tl_clear:N \l_semio_glossary_definition_tl
-  }
-  \semio_glossary_labels_csv:n {#1}
-  \semio_glossary_row_emit_cmd:VVV
-    \l_tmpa_tl \l_semio_glossary_definition_tl \l_tmpd_tl
-}
-
-\cs_new_protected:Npn \semio_glossary_rows_emit_for_table: {
+\cs_new_protected:Npn \semio_glossary_body_materialize: {
+  \tl_gclear:N \g_semio_glossary_rows_tl
   \semio_glossary_terms_sort:
   \seq_map_inline:Nn \l_semio_glossary_sorted_terms_seq {
-    \semio_glossary_row_emit_in_table:n { ##1 }
+    \tl_set:Nn \l_tmpa_tl { ##1 }
+    \prop_get:NnNTF \g_semio_glossary_definition_prop { ##1 } \l_semio_glossary_definition_tl {
+    } {
+      \tl_clear:N \l_semio_glossary_definition_tl
+    }
+    \semio_glossary_labels_csv:n { ##1 }
+    \semio_glossary_body_gappto:VVV \l_tmpa_tl \l_semio_glossary_definition_tl \l_tmpd_tl
   }
+}
+
+\cs_new_protected:Npn \semio_glossary_rows_emit: {
+  \tl_use:N \g_semio_glossary_rows_tl
 }
 
 \cs_new_protected:Npn \SemioGlossaryListOf {
   \int_compare:nNnT { \seq_count:N \g_semio_glossary_terms_seq } > { 0 } {
+    \semio_glossary_body_materialize:
     \tl_set:Nx \l_semio_glossary_title_tl { \semio_glossary_title_text: }
     \group_begin:
     \ExplSyntaxOff
@@ -392,7 +397,7 @@
     \exp_args:NV \semio@register@window@open \l_semio_glossary_title_tl
     \SemioTableGlossary{%
       \semio@glossary@table@header
-      \semio@glossary@rows@emit
+      \semio@glossary@table@body
     }%
     \semio@register@window@close
     \makeatother
@@ -829,9 +834,6 @@
 
 %region GenericWindow
 \ExplSyntaxOn
-\cs_new_protected:Npn \semio_window_tcolorbox_open:nn #1#2 {
-  \semio_window_tcolorbox_open_aux:nn {#1} {#2}
-}
 
 \cs_new_protected:Npn \semio_window_generic_begin:n #1 {
   \semio_window_anchor_reset:
@@ -844,7 +846,7 @@
   \semio_window_header_muted_use:
   \semio_window_vskip_stroke_hairline:
   \bool_if:NTF \l_semio_window_row_bool {
-    \begin{tcolorbox}[semio~window~tier~structural, semio~window~row]
+    \use:c { semio@window@tcolorbox@begin@row }
   } {
     \begin{tcolorbox}[semio~window~tier~structural, breakable=false]
   }
@@ -909,9 +911,7 @@
 
 \newcounter{semioglossaryusage}
 
-\newcommand{\semio@glossary@data}[3]{%
-  \SemioGlossaryTableRow{#1}{#2}{#3}%
-}
+\newcommand{\semio@glossary@rows@emit}{\csname semio_glossary_rows_emit:\endcsname}
 
 \newcommand{\semio@glossary@table@header}{%
   \SemioTableHeaderRow{%
@@ -1643,21 +1643,12 @@
 \def\semio@tcb@variant@default{default}
 \newcommand{\semio@window@tcolorbox@begin@row}{%
   \ifdim\semio@window@stretch@height>0pt
-    \edef\semio@window@tcb@stretch@height@val{\the\semio@window@stretch@height}%
-    \begin{tcolorbox}[%
-      height=\semio@window@tcb@stretch@height@val,%
-      semio~window~tier~structural,%
-      semio~window~row,%
-      valign=\semio@window@valign,%
-      halign=\semio@window@halign%
-    ]%
+    \edef\semio@window@stretch@height@val{\the\semio@window@stretch@height}%
+    \begin{tcolorbox}[height=\semio@window@stretch@height@val, semio~window~tier~structural, semio~window~row]%
   \else
     \begin{tcolorbox}[semio~window~tier~structural, semio~window~row]%
   \fi
 }
-\ExplSyntaxOn
-\cs_new_eq:NN \semio_window_tcolorbox_begin_row: \semio@window@tcolorbox@begin@row
-\ExplSyntaxOff
 \makeatletter
 \newlength{\semio@window@row@gutter}
 \setlength{\semio@window@row@gutter}{\semio@spacing@single}
@@ -1905,7 +1896,6 @@
 \ExplSyntaxOn
 \NewDocumentCommand \SemioTocDepth { m } { \setcounter { tocdepth } { #1 } }
 \NewDocumentCommand \semio@tableofcontents { } { \semio_window_toc_render: }
-\NewDocumentCommand \semio@glossary@rows@emit { } { \semio_glossary_rows_emit_for_table: }
 \RenewDocumentCommand \tableofcontents { } { \semio@tableofcontents }
 \ExplSyntaxOff
 \makeatother

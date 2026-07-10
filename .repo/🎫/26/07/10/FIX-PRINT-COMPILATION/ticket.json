@@ -1,0 +1,13 @@
+{
+  "title": "Fix Print Compilation",
+  "emoji": "🖨️",
+  "status": "open",
+  "description": "Fix print compilation for zwischenbericht mit bestand and all other broken parts.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1888"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪190df1e08d4d4a949c0436bab5d259ab"
+  ]
+}
