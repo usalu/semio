@@ -6,28 +6,13 @@
 \maketitle
 
 \section{Row bottom-border alignment}
-\SemioWindowRowThree{%
-  \begin{Window}[title=Short, row, anchor=center]
+\SemioWindowRowTwo{%
+  \begin{Window}[title=Short, row]
     \vbox to 1.2cm{\vfil\hrule width 0.8\linewidth\vfil}%
   \end{Window}%
 }{%
-  \begin{Window}[title=Tall, row, anchor=center]
+  \begin{Window}[title=Tall, row]
     \vbox to 3.6cm{\vfil\hrule width 0.8\linewidth\vfil}%
-  \end{Window}%
-}{%
-  \begin{Window}[title=Medium, row, anchor=center]
-    \vbox to 2.4cm{\vfil\hrule width 0.8\linewidth\vfil}%
-  \end{Window}%
-}
-
-\section{Column right-border alignment}
-\SemioWindowColumnTwo{%
-  \begin{Window}[title=Short, fit=true]
-    Short body.
-  \end{Window}%
-}{%
-  \begin{Window}[title=Much Longer Label, fit=true]
-    Wider content block.
   \end{Window}%
 }
 

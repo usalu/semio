@@ -42,9 +42,9 @@
   Andererseits bleibt die Datensouveränität gewährleistet.%
 }
 
-\makeatletter
-\renewcommand{\semio@glossary@header@definition}{Verwendung im Bericht}
-\makeatother
+\ExplSyntaxOn
+\cs_set:Npn \semio_glossary_header_definition: { Verwendung im Bericht }
+\ExplSyntaxOff
 
 \GlossaryDefine{Entwurfsfähigkeit}{Fähigkeit eines wiederverwendeten Bauteils, in frühen Entwurfsphasen gesucht, verglichen, bewertet und einer möglichen Rolle in einer Variante zugeordnet zu werden.}
 \GlossaryDefine{Bauteil}{Konkretes physisches Element aus einem Bestand, z.\,B. Stütze, Träger, Platte oder Zuschnittfragment.}
