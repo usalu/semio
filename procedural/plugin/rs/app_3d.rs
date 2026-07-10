@@ -810,7 +810,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String]) -> 
         fields.push(UiNode::Field(UiFieldNode {
             id: "procedural-play-inspector.value".into(),
             label: "Value".into(),
-            child: UiControlNode::Input(semio_framework_plugin::UiInputNode {
+            child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
                 id: "procedural-play-inspector.value.input".into(),
                 input_kind: "number".into(),
                 value: mixed.value.to_string(),
@@ -824,7 +824,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String]) -> 
                 max: None,
                 step: None,
                 accept: None,
-            }),
+            })),
             description: None,
             required: None,
             error: None,

@@ -845,7 +845,7 @@ fn inspector_tool_param_field(id: &str, label: &str, key: &str, value: &Value) -
     UiNode::Field(UiFieldNode {
         id: format!("lowpoly-play-inspector.{id}"),
         label: label.into(),
-        child: UiControlNode::Input(semio_framework_plugin::UiInputNode {
+        child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
             id: format!("lowpoly-play-inspector.{id}.input"),
             input_kind: "number".into(),
             value: value
@@ -859,7 +859,7 @@ fn inspector_tool_param_field(id: &str, label: &str, key: &str, value: &Value) -
             max: None,
             step: None,
             accept: None,
-        }),
+        })),
         description: None,
         required: None,
         error: None,
@@ -883,7 +883,7 @@ fn build_inspector_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
                 UiNode::Field(UiFieldNode {
                     id: "lowpoly-play-inspector.object.name".into(),
                     label: "Name".into(),
-                    child: UiControlNode::Input(semio_framework_plugin::UiInputNode {
+                    child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
                         id: "lowpoly-play-inspector.object.name.input".into(),
                         input_kind: "text".into(),
                         value: object.name.clone(),
@@ -897,7 +897,7 @@ fn build_inspector_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
                         max: None,
                         step: None,
                         accept: None,
-                    }),
+                    })),
                     description: None,
                     required: None,
                     error: None,
@@ -905,7 +905,7 @@ fn build_inspector_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
                 UiNode::Field(UiFieldNode {
                     id: "lowpoly-play-inspector.object.smooth".into(),
                     label: "Smooth Shading".into(),
-                    child: UiControlNode::Toggle(UiToggleNode {
+                    child: Box::new(UiNode::Toggle(UiToggleNode {
                         id: "lowpoly-play-inspector.object.smooth.toggle".into(),
                         icon_id: "sun".into(),
                         pressed: object.smooth_shading,
@@ -914,7 +914,7 @@ fn build_inspector_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
                             "patchObject",
                             Some(json!({ "objectId": object.id, "field": "smoothShading" })),
                         ),
-                    }),
+                    })),
                     description: None,
                     required: None,
                     error: None,

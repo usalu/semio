@@ -1946,5 +1946,95 @@ mod tests {
         }
         envelope
     }
+
+    fn board_scene_json(node: &UiNode) -> Value {
+        match node {
+            UiNode::ComponentScene(scene) => serde_json::to_value(scene.puzzle2d_board.as_ref().expect("puzzle2d board scene")).unwrap(),
+            other => panic!("expected component scene, got {other:?}"),
+        }
+    }
+
+    fn test_fixture_two_nodes() -> Value {
+        json!({
+            "schema": PUZZLE2D_FIXTURE_SCHEMA,
+            "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+            "nodes": [
+                { "id": "n1", "nodeKind": "seed", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "n1", "handles": [{ "id": "n1:v0", "handleKind": "port", "angle": 0.0, "radius": 4.0 }] },
+                { "id": "n2", "nodeKind": "seed", "shape": "circle", "x": 100.0, "y": 0.0, "radius": 24.0, "text": "n2", "handles": [{ "id": "n2:v0", "handleKind": "port", "angle": 3.14159, "radius": 4.0 }] },
+                { "id": "n3", "nodeKind": "other", "shape": "circle", "x": 200.0, "y": 0.0, "radius": 24.0, "text": "n3", "handles": [] }
+            ],
+            "edges": [
+                { "id": "e1", "edgeKind": "link", "source": "n1:v0", "target": "n2:v0" }
+            ]
+        })
+    }
+
+    fn envelope_with_selection(selected: &[&str]) -> Puzzle2dPlayEnvelope {
+        Puzzle2dPlayEnvelope { fixture: test_fixture_two_nodes(), runtime: Puzzle2dPlayRuntime { selected_ids: selected.iter().map(|id| id.to_string()).collect(), ..Puzzle2dPlayRuntime::default() } }
+    }
+
+    #[test]
+    fn puzzle2d_board_scene_carries_runtime_fields() {
+        let mut app = Puzzle2dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setActiveTool", Some(&json!({ "tool": "brush" })), &document, &ViewState::default());
+        let envelope = apply_document_op(&document, &ops[0]);
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command_patch_ops("setGridSnapEnabled", Some(&json!({ "enabled": true })), &document, &ViewState::default());
+        let envelope = apply_document_op(&document, &ops[0]);
+        let document = serde_json::to_string(&envelope).unwrap();
+
+        let node = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, &document, &ViewState::default());
+        let scene = board_scene_json(&node);
+        assert_eq!(scene.get("activeTool").and_then(|value| value.as_str()), Some("brush"));
+        assert_eq!(scene.get("gridSnapEnabled").and_then(|value| value.as_bool()), Some(true));
+        assert_eq!(scene.get("lodMode").and_then(|value| value.as_str()), Some(PUZZLE2D_LOD_MODE_AUTOMATIC));
+    }
+
+    #[test]
+    fn set_selection_flag_hides_and_locks_the_selected_node() {
+        let mut app = Puzzle2dPlayApp::default();
+        let envelope = envelope_with_selection(&["n1"]);
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command_patch_ops("setSelectionFlag", Some(&json!({ "flag": "hidden", "value": true })), &document, &ViewState::default());
+        let envelope = apply_document_op(&document, &ops[0]);
+        let node = fixture_nodes(&envelope.fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some("n1")).unwrap();
+        assert_eq!(node.get("hidden").and_then(|value| value.as_bool()), Some(true));
+
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command_patch_ops("setSelectionFlag", Some(&json!({ "flag": "locked", "value": true })), &document, &ViewState::default());
+        let envelope = apply_document_op(&document, &ops[0]);
+        let node = fixture_nodes(&envelope.fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some("n1")).unwrap();
+        assert_eq!(node.get("locked").and_then(|value| value.as_bool()), Some(true));
+    }
+
+    #[test]
+    fn duplicate_selection_clones_node_offsets_position_and_selects_the_clone() {
+        let mut app = Puzzle2dPlayApp::default();
+        let envelope = envelope_with_selection(&["n1"]);
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command_patch_ops("duplicateSelection", None, &document, &ViewState::default());
+        assert!(!ops.is_empty());
+        let envelope = apply_document_op(&document, &ops[0]);
+        assert_eq!(envelope.runtime.selected_ids.len(), 1);
+        let new_id = envelope.runtime.selected_ids[0].clone();
+        assert_ne!(new_id, "n1");
+        let clone = fixture_nodes(&envelope.fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(new_id.as_str())).unwrap();
+        assert_eq!(clone.get("x").and_then(|value| value.as_f64()), Some(24.0));
+        assert_eq!(clone.get("y").and_then(|value| value.as_f64()), Some(24.0));
+        assert_eq!(fixture_nodes(&envelope.fixture).len(), 4);
+    }
+
+    #[test]
+    fn select_same_kind_selects_every_node_sharing_a_kind() {
+        let mut app = Puzzle2dPlayApp::default();
+        let envelope = envelope_with_selection(&["n1"]);
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command_patch_ops("selectSameKind", None, &document, &ViewState::default());
+        let envelope = apply_document_op(&document, &ops[0]);
+        let mut ids = envelope.runtime.selected_ids.clone();
+        ids.sort();
+        assert_eq!(ids, vec!["n1".to_string(), "n2".to_string()]);
+    }
 }
 //#endregion 🧪Tests

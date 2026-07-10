@@ -1,16 +1,14 @@
 //! 🖼️ Raster plugin — declarative raster board bundled as a hot-swappable WASM component.
 
-use semio_framework_plugin::{SurfaceKind, 
-    build_canvas_2d_scene, build_raster_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
+use semio_framework_plugin::{SurfaceKind,
+    build_raster_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical,
-    ui_text, App, Canvas2dScene, CommandDescriptor, PanelGroup, PluginApp, PluginBundle, RasterScene, UiInspectorFieldGroup,
+    ui_text, App, CommandDescriptor, PanelGroup, PluginApp, PluginBundle, RasterScene, UiInspectorFieldGroup,
     UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER, create_default_layout,
 };
-use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
-use image::RgbaImage;
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -400,118 +398,6 @@ fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
     }
 }
 
-fn raster_document_bounds(document: &RasterDocument) -> (u32, u32) {
-    let mut max_x = 512u32;
-    let mut max_y = 512u32;
-    fn visit(layer: &RasterLayerNode, max_x: &mut u32, max_y: &mut u32) {
-        if !layer_visible(layer) {
-            return;
-        }
-        let (width, height, x, y) = match layer {
-            RasterLayerNode::Pixel {
-                width,
-                height,
-                transform,
-                ..
-            } => (
-                width.unwrap_or(512),
-                height.unwrap_or(512),
-                transform.x,
-                transform.y,
-            ),
-            RasterLayerNode::Group { transform, .. } => (512, 512, transform.x, transform.y),
-            RasterLayerNode::Adjustment { transform, .. } => (256, 256, transform.x, transform.y),
-        };
-        *max_x = (*max_x).max((x + width as f64) as u32);
-        *max_y = (*max_y).max((y + height as f64) as u32);
-        if let RasterLayerNode::Group { children, .. } = layer {
-            for child in children {
-                visit(child, max_x, max_y);
-            }
-        }
-    }
-    for layer in &document.layers {
-        visit(layer, &mut max_x, &mut max_y);
-    }
-    (max_x.max(1), max_y.max(1))
-}
-
-fn checkerboard_rgba(width: u32, height: u32) -> Vec<u8> {
-    let mut rgba = vec![0u8; (width * height * 4) as usize];
-    for y in 0..height {
-        for x in 0..width {
-            let idx = ((y * width + x) * 4) as usize;
-            let v = if ((x / 16) + (y / 16)) % 2 == 0 { 220u8 } else { 180u8 };
-            rgba[idx] = v;
-            rgba[idx + 1] = v;
-            rgba[idx + 2] = v;
-            rgba[idx + 3] = 255;
-        }
-    }
-    rgba
-}
-
-fn decode_asset_rgba(asset: &RasterImageAsset) -> Option<RgbaImage> {
-    let bytes = BASE64.decode(asset.data.as_bytes()).ok()?;
-    image::load_from_memory(&bytes).ok().map(|img| img.to_rgba8())
-}
-
-fn layer_pixel_rgba(document: &RasterDocument, layer: &RasterLayerNode) -> Option<(u32, u32, Vec<u8>)> {
-    let RasterLayerNode::Pixel {
-        width,
-        height,
-        image_key,
-        ..
-    } = layer
-    else {
-        return None;
-    };
-    let width = width.unwrap_or(512);
-    let height = height.unwrap_or(512);
-    if let Some(key) = image_key {
-        if let Some(asset) = document.assets.get(key) {
-            if let Some(image) = decode_asset_rgba(asset) {
-                return Some((image.width(), image.height(), image.into_raw()));
-            }
-        }
-    }
-    Some((width, height, checkerboard_rgba(width, height)))
-}
-
-fn blit_rgba(
-    canvas: &mut [u8],
-    canvas_w: u32,
-    canvas_h: u32,
-    src: &[u8],
-    src_w: u32,
-    src_h: u32,
-    dst_x: i32,
-    dst_y: i32,
-    opacity: f32,
-) {
-    for y in 0..src_h {
-        for x in 0..src_w {
-            let dst_xp = dst_x + x as i32;
-            let dst_yp = dst_y + y as i32;
-            if dst_xp < 0 || dst_yp < 0 || dst_xp >= canvas_w as i32 || dst_yp >= canvas_h as i32 {
-                continue;
-            }
-            let src_idx = ((y * src_w + x) * 4) as usize;
-            let dst_idx = ((dst_yp as u32 * canvas_w + dst_xp as u32) * 4) as usize;
-            let alpha = (src[src_idx + 3] as f32 / 255.0) * opacity;
-            if alpha <= 0.0 {
-                continue;
-            }
-            for channel in 0..3 {
-                let dst = canvas[dst_idx + channel] as f32;
-                let src_px = src[src_idx + channel] as f32;
-                canvas[dst_idx + channel] = (dst * (1.0 - alpha) + src_px * alpha) as u8;
-            }
-            canvas[dst_idx + 3] = 255;
-        }
-    }
-}
-
 fn flatten_raster_layers(layers: &[RasterLayerNode]) -> Vec<&RasterLayerNode> {
     let mut out = Vec::new();
     fn visit<'a>(layers: &'a [RasterLayerNode], out: &mut Vec<&'a RasterLayerNode>) {
@@ -526,45 +412,11 @@ fn flatten_raster_layers(layers: &[RasterLayerNode]) -> Vec<&RasterLayerNode> {
     out
 }
 
-fn composite_raster_pixels(document: &RasterDocument) -> (u32, u32, Vec<u8>) {
-    let (width, height) = raster_document_bounds(document);
-    let mut canvas = vec![255u8; (width * height * 4) as usize];
-    for channel in canvas.chunks_exact_mut(4) {
-        channel[0] = 32;
-        channel[1] = 34;
-        channel[2] = 40;
-        channel[3] = 255;
-    }
-    for layer in flatten_raster_layers(&document.layers) {
-        if !layer_visible(layer) {
-            continue;
-        }
-        let RasterLayerNode::Pixel {
-            opacity,
-            transform,
-            ..
-        } = layer
-        else {
-            continue;
-        };
-        let Some((src_w, src_h, src)) = layer_pixel_rgba(document, layer) else {
-            continue;
-        };
-        let dst_x = transform.x.round() as i32;
-        let dst_y = transform.y.round() as i32;
-        blit_rgba(
-            &mut canvas,
-            width,
-            height,
-            &src,
-            src_w,
-            src_h,
-            dst_x,
-            dst_y,
-            *opacity as f32,
-        );
-    }
-    (width, height, canvas)
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RasterViewportSize {
+    width: f64,
+    height: f64,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -578,6 +430,10 @@ struct RasterPlayEnvelope {
     undo_stack: Vec<RasterDocument>,
     #[serde(default)]
     redo_stack: Vec<RasterDocument>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    hovered_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    composite_viewport: Option<RasterViewportSize>,
 }
 
 fn parse_envelope(document_json: &str) -> RasterPlayEnvelope {
@@ -590,6 +446,8 @@ fn parse_envelope(document_json: &str) -> RasterPlayEnvelope {
         selected_ids: Vec::new(),
         undo_stack: Vec::new(),
         redo_stack: Vec::new(),
+        hovered_id: None,
+        composite_viewport: None,
     }
 }
 
@@ -952,30 +810,43 @@ fn render_properties_panel(document: &RasterDocument, view_state: &ViewState) ->
 //#endregion 🔖Panels
 
 //#region 🔖Scenes
-fn render_composite_scene(document: &RasterDocument) -> UiNode {
-    let (width, height, pixels) = composite_raster_pixels(document);
-    build_raster_scene(
-        RASTER_PLAY_SURFACE_COMPOSITE,
-        RASTER_PLAY_CONTROLLER_ID,
-        RasterScene {
-            width,
-            height,
-            pixels_base64: BASE64.encode(pixels),
-        },
-    )
+/// 📡 Document JSON for the WASM compositor, omitting embedded assets/camera/tool/brush — mirrors premigration `rasterDocumentToSyncJson`.
+fn document_sync_json(document: &RasterDocument) -> String {
+    let mut value = serde_json::to_value(document).unwrap_or(Value::Null);
+    if let Value::Object(ref mut map) = value {
+        map.remove("assets");
+        map.remove("camera");
+        map.remove("activeTool");
+        map.remove("brushSize");
+        map.remove("brushOpacity");
+    }
+    value.to_string()
 }
 
-fn render_navigator_scene(document: &RasterDocument) -> UiNode {
-    build_canvas_2d_scene(
-        RASTER_PLAY_SURFACE_NAVIGATOR,
-        RASTER_PLAY_CONTROLLER_ID,
-        Canvas2dScene {
-            camera_x: document.camera.x,
-            camera_y: document.camera.y,
-            zoom: document.camera.zoom,
-            layers_json: serde_json::to_string(&document.layers).unwrap_or_else(|_| "[]".into()),
-        },
-    )
+fn raster_scene(play: &RasterPlayEnvelope, view_mode: &str) -> RasterScene {
+    RasterScene {
+        document_sync_json: document_sync_json(&play.document),
+        assets_json: serde_json::to_string(&play.document.assets).unwrap_or_else(|_| "{}".into()),
+        camera_json: serde_json::to_string(&play.document.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into()),
+        selection_json: serde_json::to_string(&play.selected_ids).unwrap_or_else(|_| "[]".into()),
+        hovered_id: play.hovered_id.clone(),
+        active_tool: play.document.active_tool.clone().unwrap_or_else(|| "selectMarquee".into()),
+        brush_size: play.document.brush_size.unwrap_or(24.0) as f64,
+        brush_opacity: play.document.brush_opacity.unwrap_or(1.0) as f64,
+        view_mode: view_mode.into(),
+        composite_viewport_json: play
+            .composite_viewport
+            .as_ref()
+            .map(|viewport| serde_json::to_string(viewport).unwrap_or_else(|_| "{}".into())),
+    }
+}
+
+fn render_composite_scene(play: &RasterPlayEnvelope) -> UiNode {
+    build_raster_scene(RASTER_PLAY_SURFACE_COMPOSITE, RASTER_PLAY_CONTROLLER_ID, raster_scene(play, "composite"))
+}
+
+fn render_navigator_scene(play: &RasterPlayEnvelope) -> UiNode {
+    build_raster_scene(RASTER_PLAY_SURFACE_NAVIGATOR, RASTER_PLAY_CONTROLLER_ID, raster_scene(play, "navigator"))
 }
 //#endregion 🔖Scenes
 
@@ -993,6 +864,8 @@ impl PluginApp for RasterApp {
             selected_ids: Vec::new(),
             undo_stack: Vec::new(),
             redo_stack: Vec::new(),
+            hovered_id: None,
+            composite_viewport: None,
         })
         .expect("raster document json")
     }

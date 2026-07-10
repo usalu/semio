@@ -4228,10 +4228,18 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<CommandDescriptor> {
             classifier_kind: icon.classifier_kind.clone(),
             on_change: Some(icon.on_change.clone()),
         },
-        UiNode::Field(field) => WidgetNode::Field {
-            id: field.id.clone(),
-            label: field.label.clone(),
-            child: control_to_widget(&field.child),
+        UiNode::Field(field) => match semio_framework_core::ui_node_to_control(&field.child) {
+            Some(control) => WidgetNode::Field {
+                id: field.id.clone(),
+                label: field.label.clone(),
+                child: control_to_widget(&control),
+            },
+            None => WidgetNode::Section {
+                id: field.id.clone(),
+                label: Some(field.label.clone()),
+                default_open: true,
+                children: vec![ui_node_to_widget(&field.child)],
+            },
         },
         UiNode::Section(section) => WidgetNode::Section {
             id: section.id.clone(),

@@ -729,7 +729,7 @@ fn build_inspector_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
                     UiNode::Field(UiFieldNode {
                         id: "puzzle3d-play-inspector.object.origin".into(),
                         label: "Origin".into(),
-                        child: UiControlNode::Input(semio_framework_plugin::UiInputNode {
+                        child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
                             id: "puzzle3d-play-inspector.object.origin.input".into(),
                             input_kind: "text".into(),
                             value: format!("{:.2}, {:.2}, {:.2}", object.origin.first().copied().unwrap_or(0.0), object.origin.get(1).copied().unwrap_or(0.0), object.origin.get(2).copied().unwrap_or(0.0),),
@@ -740,7 +740,7 @@ fn build_inspector_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
                             max: None,
                             step: None,
                             accept: None,
-                        }),
+                        })),
                         description: None,
                         required: None,
                         error: None,

@@ -1956,7 +1956,7 @@ pub fn ui_inspector_readonly_field(
     UiNode::Field(UiFieldNode {
         id: id.clone(),
         label: label.into(),
-        child: UiControlNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode {
             id,
             input_kind: "text".into(),
             value: value.into(),
@@ -1971,7 +1971,7 @@ pub fn ui_inspector_readonly_field(
             max: None,
             step: None,
             accept: None,
-        }),
+        })),
         description: None,
         required: None,
         error: None,
@@ -2069,7 +2069,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             is_hidden: None,
         },
         UiNode::Field(field) => {
-            let description = if let UiControlNode::Input(input) = &field.child {
+            let description = if let UiNode::Input(input) = field.child.as_ref() {
                 input
                     .placeholder
                     .clone()
@@ -2091,7 +2091,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
                 draggable: None,
                 drag_data: None,
                 items: None,
-                control: Some(field.child.clone()),
+                control: ui_node_to_control(&field.child),
                 is_hidden: None,
             }
         }
@@ -2194,7 +2194,9 @@ pub enum SurfaceKind {
     NodeGraph,
     #[serde(rename = "text-editor")]
     TextEditor,
+    #[serde(rename = "table")]
     Table,
+    #[serde(rename = "raster")]
     Raster,
     #[serde(rename = "virtualFileSystem")]
     VirtualFileSystem,
@@ -2889,6 +2891,39 @@ pub fn ui_image(id: impl Into<String>, src: impl Into<String>, alt: Option<Strin
         src: src.into(),
         alt,
     })
+}
+
+/** @emoji 🎛 Extracts the control payload of a {@link UiNode} when it is a control variant. */
+pub fn ui_node_to_control(node: &UiNode) -> Option<UiControlNode> {
+    match node {
+        UiNode::Input(input) => Some(UiControlNode::Input(input.clone())),
+        UiNode::Select(select) => Some(UiControlNode::Select(select.clone())),
+        UiNode::Toggle(toggle) => Some(UiControlNode::Toggle(toggle.clone())),
+        UiNode::Vec3(vec3) => Some(UiControlNode::Vec3(vec3.clone())),
+        UiNode::Button(button) => Some(UiControlNode::Button(button.clone())),
+        UiNode::KeyValue(key_value) => Some(UiControlNode::KeyValue(key_value.clone())),
+        UiNode::Slider(slider) => Some(UiControlNode::Slider(slider.clone())),
+        UiNode::NumberStepper(stepper) => Some(UiControlNode::NumberStepper(stepper.clone())),
+        UiNode::Ring(ring) => Some(UiControlNode::Ring(ring.clone())),
+        UiNode::IconSelect(icon) => Some(UiControlNode::IconSelect(icon.clone())),
+        _ => None,
+    }
+}
+
+/** @emoji 🎛 Wraps a {@link UiControlNode} back into its matching {@link UiNode} control variant (inverse of {@link ui_node_to_control}). */
+pub fn ui_control_to_node(control: UiControlNode) -> UiNode {
+    match control {
+        UiControlNode::Input(input) => UiNode::Input(input),
+        UiControlNode::Select(select) => UiNode::Select(select),
+        UiControlNode::Toggle(toggle) => UiNode::Toggle(toggle),
+        UiControlNode::Vec3(vec3) => UiNode::Vec3(vec3),
+        UiControlNode::Button(button) => UiNode::Button(button),
+        UiControlNode::KeyValue(key_value) => UiNode::KeyValue(key_value),
+        UiControlNode::Slider(slider) => UiNode::Slider(slider),
+        UiControlNode::NumberStepper(stepper) => UiNode::NumberStepper(stepper),
+        UiControlNode::Ring(ring) => UiNode::Ring(ring),
+        UiControlNode::IconSelect(icon) => UiNode::IconSelect(icon),
+    }
 }
 
 impl Default for UiNode {
@@ -3987,13 +4022,3 @@ pub use ui::kernel::{
     Rights, SchemaId, SchemaVersion, Scope, Theme, UndoGroup, UndoPolicy, WindowEvent, WindowHandle,
     WindowInput, WindowKindDef, WindowKindId, WindowOutput,
 };
-
-#[cfg(test)]
-mod __scratch_surface_kind_check {
-    use super::SurfaceKind;
-    #[test]
-    fn scratch_print_raster_kind() {
-        let json = serde_json::to_string(&SurfaceKind::Raster).unwrap();
-        panic!("SurfaceKind::Raster serializes to: {json}");
-    }
-}

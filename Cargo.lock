@@ -6851,8 +6851,6 @@ dependencies = [
 name = "raster-plugin"
 version = "0.1.0"
 dependencies = [
- "base64 0.22.1",
- "image",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",

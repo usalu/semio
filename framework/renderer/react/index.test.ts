@@ -2,7 +2,15 @@ import { createElement, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Canvas2dHost, worldToScreenLogical } from "./components/canvas-2d-host.tsx";
-import { Puzzle2dBoardHost, puzzle2dBoardCameraCommandArgs } from "./components/puzzle-2d-board-host.tsx";
+import {
+  Puzzle2dBoardHost,
+  puzzle2dBoardCameraCommandArgs,
+  buildPuzzle2dSelectionMenuItems,
+  coalescePuzzle2dBoardEvents,
+  parsePuzzle2dCatalogueDragPayload,
+  puzzle2dFixtureDropPreviewJson,
+  puzzle2dScreenToWorld,
+} from "./components/puzzle-2d-board-host.tsx";
 import { NodeGraphHost, nodeGraphViewportCommandArgs, parseDagSliderOverlays } from "./components/node-graph-host.tsx";
 import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
@@ -292,6 +300,13 @@ describe("framework renderer hosts", () => {
             kindCatalogsJson: "{}",
             selectionJson: "[]",
             interactive: true,
+            selectionMethod: "rectangle",
+            gridSnapEnabled: false,
+            gridFactor: 1,
+            suggestionOffset: 0,
+            brushKindWeightsJson: "{}",
+            kindCompatibilityJson: "[]",
+            lodMode: "automatic",
           },
         },
         onCommand: noopCommand,
@@ -304,6 +319,93 @@ describe("framework renderer hosts", () => {
     expect(puzzle2dBoardCameraCommandArgs('{"x":345,"y":-123,"zoom":4.25}')).toEqual({
       camera: { x: 345, y: -123, zoom: 4.25 },
     });
+  });
+
+  it("coalesces puzzle 2d board events: drops transients, keeps the latest camera, coalesces nodeMove per id", () => {
+    const rows = [
+      { name: "preselect", payload: { ids: ["a"] } },
+      { name: "camera", payload: { x: 1, y: 1, zoom: 1 } },
+      { name: "nodeMove", payload: { id: "alpha", x: 10, y: 10 } },
+      { name: "camera", payload: { x: 2, y: 2, zoom: 1.5 } },
+      { name: "nodeMove", payload: { id: "alpha", x: 20, y: 20 } },
+      { name: "nodeMove", payload: { id: "beta", x: 5, y: 5 } },
+    ];
+    const { flushNow, eventsJson } = coalescePuzzle2dBoardEvents(rows);
+    const events = JSON.parse(eventsJson) as { name: string; payload: Record<string, unknown> }[];
+    expect(flushNow).toBe(false);
+    expect(events.find((event) => event.name === "preselect")).toBeUndefined();
+    const cameraEvents = events.filter((event) => event.name === "camera");
+    expect(cameraEvents).toHaveLength(1);
+    expect(cameraEvents[0]?.payload).toEqual({ x: 2, y: 2, zoom: 1.5 });
+    const alphaMoves = events.filter((event) => event.name === "nodeMove" && event.payload.id === "alpha");
+    expect(alphaMoves).toHaveLength(1);
+    expect(alphaMoves[0]?.payload).toEqual({ id: "alpha", x: 20, y: 20 });
+  });
+
+  it("coalesces puzzle 2d board events: drops nodeMove rows once a nodeDragEnd follows", () => {
+    const rows = [
+      { name: "nodeMove", payload: { id: "alpha", x: 10, y: 10 } },
+      { name: "nodeDragEnd", payload: { moves: [{ id: "alpha", x: 20, y: 20 }] } },
+    ];
+    const { eventsJson } = coalescePuzzle2dBoardEvents(rows);
+    const events = JSON.parse(eventsJson) as { name: string }[];
+    expect(events.some((event) => event.name === "nodeMove")).toBe(false);
+    expect(events.some((event) => event.name === "nodeDragEnd")).toBe(true);
+  });
+
+  it("flushes puzzle 2d board events immediately for select/brushPlace/edge/delete rows, not for camera/nodeMove alone", () => {
+    expect(coalescePuzzle2dBoardEvents([{ name: "camera", payload: { x: 0, y: 0, zoom: 1 } }]).flushNow).toBe(false);
+    expect(coalescePuzzle2dBoardEvents([{ name: "nodeMove", payload: { id: "alpha", x: 0, y: 0 } }]).flushNow).toBe(false);
+    for (const name of ["select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete"]) {
+      expect(coalescePuzzle2dBoardEvents([{ name, payload: {} }]).flushNow).toBe(true);
+    }
+  });
+
+  it("builds a select-all menu when nothing is selected", () => {
+    const items = buildPuzzle2dSelectionMenuItems(JSON.stringify({ nodes: [], edges: [] }), "[]");
+    expect(items).toEqual([{ id: "selectAll", label: "Select all", command: "selectAll" }]);
+  });
+
+  it("builds the full selection menu with Hide/Lock/Duplicate/SelectSameKind/ZoomToSelection/Delete for a visible unlocked node", () => {
+    const fixture = { nodes: [{ id: "alpha", nodeKind: "seed" }], edges: [] };
+    const items = buildPuzzle2dSelectionMenuItems(JSON.stringify(fixture), JSON.stringify(["alpha"]));
+    expect(items.map((item) => item.id)).toEqual(["toggleHidden", "toggleLocked", "duplicate", "selectSameKind", "focusSelection", "deleteSelection"]);
+    expect(items.find((item) => item.id === "toggleHidden")).toMatchObject({ label: "Hide", args: { flag: "hidden", value: true } });
+    expect(items.find((item) => item.id === "toggleLocked")).toMatchObject({ label: "Lock", args: { flag: "locked", value: true } });
+    expect(items.find((item) => item.id === "duplicate")).toMatchObject({ disabled: false });
+    expect(items.find((item) => item.id === "deleteSelection")).toMatchObject({ destructive: true });
+  });
+
+  it("flips the selection menu labels to Show/Unlock for an already hidden and locked node", () => {
+    const fixture = { nodes: [{ id: "alpha", nodeKind: "seed", hidden: true, locked: true }], edges: [] };
+    const items = buildPuzzle2dSelectionMenuItems(JSON.stringify(fixture), JSON.stringify(["alpha"]));
+    expect(items.find((item) => item.id === "toggleHidden")).toMatchObject({ label: "Show", args: { flag: "hidden", value: false } });
+    expect(items.find((item) => item.id === "toggleLocked")).toMatchObject({ label: "Unlock", args: { flag: "locked", value: false } });
+  });
+
+  it("disables Duplicate when the selection is only a handle, not a node", () => {
+    const fixture = { nodes: [{ id: "alpha", nodeKind: "seed", handles: [{ id: "alpha:v0", handleKind: "port" }] }], edges: [] };
+    const items = buildPuzzle2dSelectionMenuItems(JSON.stringify(fixture), JSON.stringify(["alpha:v0"]));
+    expect(items.find((item) => item.id === "duplicate")).toMatchObject({ disabled: true });
+  });
+
+  it("parses a catalogue drag payload and builds a drop-preview JSON", () => {
+    const encoded = JSON.stringify({ kindId: "seed", catalogSlice: "nodes", shape: "circle", radius: 24 });
+    const payload = parsePuzzle2dCatalogueDragPayload(encoded);
+    expect(payload).toEqual({ kindId: "seed", catalogSlice: "nodes", shape: "circle", radius: 24, width: undefined, height: undefined, iconKind: undefined });
+    expect(payload).not.toBeNull();
+    expect(JSON.parse(puzzle2dFixtureDropPreviewJson(payload!, 100, 200))).toMatchObject({ nodeKind: "seed", screenX: 100, screenY: 200, shape: "circle", radius: 24 });
+  });
+
+  it("rejects a catalogue drag payload without a kindId", () => {
+    expect(parsePuzzle2dCatalogueDragPayload(JSON.stringify({ catalogSlice: "nodes" }))).toBeNull();
+    expect(parsePuzzle2dCatalogueDragPayload(null)).toBeNull();
+  });
+
+  it("inverts the canonical screen-to-world transform for a fixture drop", () => {
+    const cameraJson = JSON.stringify({ x: 120, y: 80, zoom: 2 });
+    const world = puzzle2dScreenToWorld(cameraJson, { w: 800, h: 600 }, { x: 400, y: 300 });
+    expect(world).toEqual({ x: 120, y: 80 });
   });
 
   it("maps a world-centered node inside the viewport with canonical camera math", () => {

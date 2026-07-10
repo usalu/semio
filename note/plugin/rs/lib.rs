@@ -1008,7 +1008,7 @@ fn inspector_text_field(block_ids: &[String], field_id: &str, label: &str, value
         description: None,
         required: None,
         error: None,
-        child: UiControlNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode {
             id: format!("{field_id}.input"),
             input_kind: "text".into(),
             value: mixed.value,
@@ -1019,7 +1019,7 @@ fn inspector_text_field(block_ids: &[String], field_id: &str, label: &str, value
             step: None,
             accept: None,
             on_change: inspector_patch(block_ids, field),
-        }),
+        })),
     })
 }
 
@@ -1031,7 +1031,7 @@ fn inspector_number_field(block_ids: &[String], field_id: &str, label: &str, val
         description: None,
         required: None,
         error: None,
-        child: UiControlNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode {
             id: format!("{field_id}.input"),
             input_kind: "number".into(),
             value: if mixed.uniform {
@@ -1050,7 +1050,7 @@ fn inspector_number_field(block_ids: &[String], field_id: &str, label: &str, val
             step: None,
             accept: None,
             on_change: inspector_patch(block_ids, field),
-        }),
+        })),
     })
 }
 
@@ -1111,13 +1111,13 @@ fn render_properties_panel(document: &NoteDocument, play: &NotePlayEnvelope, vie
                 description: None,
                 required: None,
                 error: None,
-                child: UiControlNode::Toggle(UiToggleNode {
+                child: Box::new(UiNode::Toggle(UiToggleNode {
                     id: "note-properties.visible.toggle".into(),
                     icon_id: "eye".into(),
                     pressed: visible_mixed.uniform && visible_mixed.pressed,
                     text: None,
                     on_change: inspector_patch(&block_ids, "visible"),
-                }),
+                })),
             }),
             UiNode::Field(UiFieldNode {
                 id: "note-properties.locked".into(),
@@ -1125,13 +1125,13 @@ fn render_properties_panel(document: &NoteDocument, play: &NotePlayEnvelope, vie
                 description: None,
                 required: None,
                 error: None,
-                child: UiControlNode::Toggle(UiToggleNode {
+                child: Box::new(UiNode::Toggle(UiToggleNode {
                     id: "note-properties.locked.toggle".into(),
                     icon_id: "lock".into(),
                     pressed: locked_mixed.uniform && locked_mixed.pressed,
                     text: None,
                     on_change: inspector_patch(&block_ids, "locked"),
-                }),
+                })),
             }),
         ],
     }])

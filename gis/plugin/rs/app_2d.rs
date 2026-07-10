@@ -301,7 +301,7 @@ fn layer_weight_slider_fields(play: &Gis2dPlayEnvelope) -> Vec<UiNode> {
             UiNode::Field(UiFieldNode {
                 id: format!("gis2d-play-inspector.weight.{layer_id}"),
                 label: format!("{label} weight"),
-                child: UiControlNode::Slider(UiSliderNode {
+                child: Box::new(UiNode::Slider(UiSliderNode {
                     id: format!("gis2d-play-inspector.weight.{layer_id}.slider"),
                     value,
                     min: 0.25,
@@ -312,7 +312,7 @@ fn layer_weight_slider_fields(play: &Gis2dPlayEnvelope) -> Vec<UiNode> {
                         Some(json!({ "layerId": layer_id })),
                     ),
                     unit: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -564,7 +564,7 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
             UiNode::Field(UiFieldNode {
                 id: "gis2d-play-inspector.render-mode".into(),
                 label: "Render Mode".into(),
-                child: UiControlNode::Select(UiSelectNode {
+                child: Box::new(UiNode::Select(UiSelectNode {
                     id: "gis2d-play-inspector.render-mode.select".into(),
                     value: play.runtime.render_mode.clone(),
                     items: vec![
@@ -574,7 +574,7 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
                     ],
                     placeholder: None,
                     on_change: gis2d_cmd("setRenderMode", None),
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -582,7 +582,7 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
             UiNode::Field(UiFieldNode {
                 id: "gis2d-play-inspector.vector-style".into(),
                 label: "Vector Style".into(),
-                child: UiControlNode::Select(UiSelectNode {
+                child: Box::new(UiNode::Select(UiSelectNode {
                     id: "gis2d-play-inspector.vector-style.select".into(),
                     value: play.runtime.vector_style.clone(),
                     items: vec![
@@ -592,7 +592,7 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
                     ],
                     placeholder: None,
                     on_change: gis2d_cmd("setVectorStyle", None),
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -600,13 +600,13 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
             UiNode::Field(UiFieldNode {
                 id: "gis2d-play-inspector.lod-mode".into(),
                 label: "LOD Mode".into(),
-                child: UiControlNode::Select(UiSelectNode {
+                child: Box::new(UiNode::Select(UiSelectNode {
                     id: "gis2d-play-inspector.lod-mode.select".into(),
                     value: play.runtime.lod_mode.clone(),
                     items: lod_items,
                     placeholder: None,
                     on_change: gis2d_cmd("setLodMode", None),
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -614,7 +614,7 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
             UiNode::Field(UiFieldNode {
                 id: "gis2d-play-inspector.selection-method".into(),
                 label: "Selection Method".into(),
-                child: UiControlNode::Select(UiSelectNode {
+                child: Box::new(UiNode::Select(UiSelectNode {
                     id: "gis2d-play-inspector.selection-method.select".into(),
                     value: play.runtime.selection_method.clone(),
                     items: vec![
@@ -623,7 +623,7 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
                     ],
                     placeholder: None,
                     on_change: gis2d_cmd("setSelectionMethod", None),
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -683,13 +683,13 @@ fn build_inspector_tree(play: &Gis2dPlayEnvelope) -> UiNode {
                 UiNode::Field(UiFieldNode {
                     id: "gis2d-play-inspector.visible".into(),
                     label: "Visible".into(),
-                    child: UiControlNode::Toggle(UiToggleNode {
+                    child: Box::new(UiNode::Toggle(UiToggleNode {
                         id: "gis2d-play-inspector.visible.toggle".into(),
                         icon_id: "eye".into(),
                         pressed: mixed.uniform && mixed.pressed,
                         text: None,
                         on_change: gis2d_cmd("toggleLayerVisibility", Some(json!({ "layerId": layer_id }))),
-                    }),
+                    })),
                     description: None,
                     required: None,
                     error: None,

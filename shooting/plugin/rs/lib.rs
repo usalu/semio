@@ -5,7 +5,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_stack_vertical,
     ui_text, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
     world3d_selection_json, App, CommandDescriptor, IconRenderScene, PluginApp, PluginBundle,
-    ToolNode, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode,
+    ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowMeasure,
     World3dScene,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -16,7 +16,6 @@ use std::collections::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::LazyLock;
 
 //#region 🔖Constants
 const SHOOTING_PLAY_APP_ID: &str = "shooting-play";
@@ -833,7 +832,7 @@ fn shot_inspector_group(shot: &ShootingShot) -> UiInspectorFieldGroup {
             UiNode::Field(UiFieldNode {
                 id: "shooting-play-inspector.shot.label".into(),
                 label: "Label".into(),
-                child: UiControlNode::Input(semio_framework_plugin::UiInputNode {
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
                     id: "shooting-play-inspector.shot.label.input".into(),
                     input_kind: "text".into(),
                     value: shot.label.clone(),
@@ -847,7 +846,7 @@ fn shot_inspector_group(shot: &ShootingShot) -> UiInspectorFieldGroup {
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -857,7 +856,7 @@ fn shot_inspector_group(shot: &ShootingShot) -> UiInspectorFieldGroup {
             UiNode::Field(UiFieldNode {
                 id: "shooting-play-inspector.shot.width".into(),
                 label: "Width".into(),
-                child: UiControlNode::Input(semio_framework_plugin::UiInputNode {
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
                     id: "shooting-play-inspector.shot.width.input".into(),
                     input_kind: "number".into(),
                     value: width_mixed.value.to_string(),
@@ -871,7 +870,7 @@ fn shot_inspector_group(shot: &ShootingShot) -> UiInspectorFieldGroup {
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -879,7 +878,7 @@ fn shot_inspector_group(shot: &ShootingShot) -> UiInspectorFieldGroup {
             UiNode::Field(UiFieldNode {
                 id: "shooting-play-inspector.shot.height".into(),
                 label: "Height".into(),
-                child: UiControlNode::Input(semio_framework_plugin::UiInputNode {
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
                     id: "shooting-play-inspector.shot.height.input".into(),
                     input_kind: "number".into(),
                     value: height_mixed.value.to_string(),
@@ -893,7 +892,7 @@ fn shot_inspector_group(shot: &ShootingShot) -> UiInspectorFieldGroup {
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -911,7 +910,7 @@ fn asset_inspector_group(asset: &ShootingAsset) -> UiInspectorFieldGroup {
             UiNode::Field(UiFieldNode {
                 id: "shooting-play-inspector.asset.name".into(),
                 label: "Name".into(),
-                child: UiControlNode::Input(semio_framework_plugin::UiInputNode {
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
                     id: "shooting-play-inspector.asset.name.input".into(),
                     input_kind: "text".into(),
                     value: asset.name.clone(),
@@ -925,7 +924,7 @@ fn asset_inspector_group(asset: &ShootingAsset) -> UiInspectorFieldGroup {
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -933,7 +932,7 @@ fn asset_inspector_group(asset: &ShootingAsset) -> UiInspectorFieldGroup {
             UiNode::Field(UiFieldNode {
                 id: "shooting-play-inspector.asset.url".into(),
                 label: "URL".into(),
-                child: UiControlNode::Input(semio_framework_plugin::UiInputNode {
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
                     id: "shooting-play-inspector.asset.url.input".into(),
                     input_kind: "text".into(),
                     value: asset.url.clone(),
@@ -947,7 +946,7 @@ fn asset_inspector_group(asset: &ShootingAsset) -> UiInspectorFieldGroup {
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -1974,18 +1973,213 @@ mod tests {
         let node = app.render(SHOOTING_PLAY_BODY_SCENE, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("world-3d"));
+        let payload: Value = serde_json::from_str(&json).unwrap();
+        let environment: Value = serde_json::from_str(payload["world3d"]["environmentJson"].as_str().unwrap()).unwrap();
+        assert_eq!(environment["sun"]["azimuth"], json!(45.0));
+        assert_eq!(environment["material"]["roughness"], json!(1.0));
+        let frame: Value = serde_json::from_str(payload["world3d"]["frameJson"].as_str().unwrap()).unwrap();
+        assert_eq!(frame["width"], json!(256));
+        assert_eq!(frame["shape"], json!("rectangle"));
+        let fit: Value = serde_json::from_str(payload["world3d"]["fitJson"].as_str().unwrap()).unwrap();
+        assert_eq!(fit["enabled"], json!(true));
+        let camera: Value = serde_json::from_str(payload["world3d"]["cameraJson"].as_str().unwrap()).unwrap();
+        assert_eq!(camera["zoom"], json!(1.0));
+        assert_eq!(camera["projection"], json!("perspective"));
     }
 
     #[test]
-    fn renders_icon_raster_scene() {
+    fn renders_icon_render_scene_with_real_request() {
         let app = ShootingPlayApp;
         let document = app.initial_document_json();
         let node = app.render(SHOOTING_PLAY_BODY_ICON, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("raster"));
+        assert!(json.contains("icon-render"));
         let payload: Value = serde_json::from_str(&json).unwrap();
-        let pixels_base64 = payload["raster"]["pixelsBase64"].as_str().unwrap_or_default();
-        assert!(!pixels_base64.is_empty(), "icon renders a real rasterized emblem, not an empty placeholder");
+        let request: Value = serde_json::from_str(payload["iconRender"]["requestJson"].as_str().unwrap()).unwrap();
+        assert_eq!(request["assetUrl"], json!("/mesh/base.glb"));
+        assert_eq!(request["format"], json!("svg"));
+        assert_eq!(request["shape"], json!("rectangle"));
+        assert!(request.get("background").is_none(), "transparent default fixture background is omitted");
+        assert_eq!(request["lights"]["sunAzimuth"], json!(45.0));
+        assert!(payload["iconRender"]["footer"].as_str().unwrap().contains("256×256"));
+    }
+
+    #[test]
+    fn save_and_load_camera_round_trip() {
+        let mut app = ShootingPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setCameraDraftLabel", Some(&json!({ "value": "Hero" })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command_patch_ops("saveCamera", None, &document, &ViewState::default());
+        let envelope = apply_ops(&envelope, &ops);
+        assert_eq!(envelope.fixture.saved_cameras.len(), 1);
+        assert_eq!(envelope.fixture.saved_cameras[0].label, "Hero");
+        assert!(envelope.runtime.camera_draft_label.is_empty());
+        let saved_id = envelope.fixture.saved_cameras[0].id.clone();
+        let mut moved = envelope.clone();
+        moved.fixture.camera.position = [1.0, 2.0, 3.0];
+        let document = serde_json::to_string(&moved).unwrap();
+        let ops = app.handle_command_patch_ops("loadSavedCamera", Some(&json!({ "id": saved_id })), &document, &ViewState::default());
+        let restored = apply_ops(&moved, &ops);
+        assert_eq!(restored.fixture.camera.position, envelope.fixture.saved_cameras[0].camera.position);
+        let engagements = app.window_engagements(&serde_json::to_string(&restored).unwrap(), &ViewState::default());
+        let possible = engagements[SHOOTING_PLAY_WINDOW_SCENE].possible_engagements.as_ref().unwrap();
+        assert!(possible.iter().any(|entry| entry.label == "Hero"));
+    }
+
+    #[test]
+    fn set_shot_camera_writes_saved_camera_when_shot_references_one() {
+        let mut app = ShootingPlayApp;
+        let mut envelope = default_envelope();
+        envelope.fixture.saved_cameras.push(ShootingSavedCamera {
+            id: "camera-a".into(),
+            label: "A".into(),
+            camera: ShootingCamera::default(),
+        });
+        envelope.fixture.shots[0].camera_id = Some("camera-a".into());
+        let document = serde_json::to_string(&envelope).unwrap();
+        let camera = json!({ "position": [9.0, 9.0, 9.0], "target": [0.0, 0.0, 0.0], "zoom": 2.0, "fov": 50.0 });
+        let ops = app.handle_command_patch_ops(
+            "setShotCamera",
+            Some(&json!({ "shotId": envelope.fixture.shots[0].id, "camera": camera })),
+            &document,
+            &ViewState::default(),
+        );
+        let next = apply_ops(&envelope, &ops);
+        assert_eq!(next.fixture.saved_cameras[0].camera.position, [9.0, 9.0, 9.0]);
+        assert_eq!(next.fixture.camera.position, envelope.fixture.camera.position, "fixture camera untouched");
+    }
+
+    #[test]
+    fn scene_setters_mutate_lighting_and_measures_reflect_them() {
+        let mut app = ShootingPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setSunAzimuth", Some(&json!({ "value": 90.0 })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.fixture.scene.sun.azimuth, 90.0);
+        let ops = app.handle_command_patch_ops("setShadowEnabled", Some(&json!({ "pressed": false })), &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
+        let envelope = apply_ops(&envelope, &ops);
+        assert!(!envelope.fixture.scene.shadow.enabled);
+        let measures = app.window_measures(&serde_json::to_string(&envelope).unwrap(), &ViewState::default());
+        let model_measures = &measures[SHOOTING_PLAY_WINDOW_SCENE];
+        assert!(model_measures.iter().any(|measure| matches!(measure, WindowMeasure::Slider { value, .. } if *value == 90.0)));
+        assert!(measures[SHOOTING_PLAY_WINDOW_ICON].iter().any(|measure| matches!(measure, WindowMeasure::Select { .. })));
+    }
+
+    #[test]
+    fn center_model_and_asset_activation_bump_fit_revision() {
+        let mut app = ShootingPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setCenterModel", Some(&json!({ "pressed": false })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert!(!envelope.runtime.center_model);
+        let ops = app.handle_command_patch_ops("setCenterModel", Some(&json!({ "pressed": true })), &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
+        let envelope = apply_ops(&envelope, &ops);
+        assert!(envelope.runtime.center_model);
+        assert_eq!(envelope.runtime.fit_revision, 1);
+        let asset_id = envelope.fixture.assets[0].id.clone();
+        let ops = app.handle_command_patch_ops("setActiveAsset", Some(&json!({ "value": asset_id })), &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
+        let envelope = apply_ops(&envelope, &ops);
+        assert_eq!(envelope.runtime.fit_revision, 2);
+    }
+
+    #[test]
+    fn world_pick_and_hover_drive_selection_protocol() {
+        let mut app = ShootingPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("worldPick", Some(&json!({ "granularity": "mesh", "id": 0, "merge": "replace" })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.runtime.selected_asset_ids, vec!["base".to_string()]);
+        assert_eq!(envelope.fixture.active_asset_id, "base");
+        let selection: Value = serde_json::from_str(&world_selection_json(&envelope.fixture, &envelope.runtime)).unwrap();
+        assert_eq!(selection["gumballActive"], json!(true));
+        assert_eq!(selection["activeObjectId"], json!("base"));
+        assert!(selection.get("gumballTarget").is_some());
+        assert_eq!(selection["transformTool"], json!("move"));
+        let ops = app.handle_command_patch_ops("setHover", Some(&json!({ "objectId": "base" })), &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
+        let envelope = apply_ops(&envelope, &ops);
+        assert_eq!(envelope.runtime.hovered_asset_id.as_deref(), Some("base"));
+        let ops = app.handle_command_patch_ops("worldPick", Some(&json!({ "granularity": "mesh", "id": Value::Null, "merge": "replace" })), &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
+        let envelope = apply_ops(&envelope, &ops);
+        assert!(envelope.runtime.selected_asset_ids.is_empty());
+    }
+
+    #[test]
+    fn export_import_and_download_ops() {
+        let mut app = ShootingPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("exportActiveShot", None, &document, &ViewState::default());
+        let op: Value = serde_json::from_str(&ops[0]).unwrap();
+        assert_eq!(op["op"], json!("iconRenderExport"));
+        assert_eq!(op["items"].as_array().unwrap().len(), 1);
+        assert_eq!(op["items"][0]["filename"], json!("overview-svg.svg"));
+        assert_eq!(op["items"][0]["request"]["assetUrl"], json!("/mesh/base.glb"));
+        let ops = app.handle_command_patch_ops("exportAllShots", None, &document, &ViewState::default());
+        let op: Value = serde_json::from_str(&ops[0]).unwrap();
+        assert_eq!(op["items"].as_array().unwrap().len(), 2);
+        let ops = app.handle_command_patch_ops("saveDownload", None, &document, &ViewState::default());
+        let op: Value = serde_json::from_str(&ops[0]).unwrap();
+        assert_eq!(op["op"], json!("downloadMediaExport"));
+        assert_eq!(op["filename"], json!("shooting.fixture.json"));
+        let round_trip: ShootingFixture = serde_json::from_str(op["data"].as_str().unwrap()).unwrap();
+        assert_eq!(round_trip.schema, SHOOTING_FIXTURE_SCHEMA);
+        let ops = app.handle_command_patch_ops("loadRequest", None, &document, &ViewState::default());
+        let op: Value = serde_json::from_str(&ops[0]).unwrap();
+        assert_eq!(op["op"], json!("requestFileOpen"));
+        assert_eq!(op["importCommand"], json!("setFixtureJson"));
+        let ops = app.handle_command_patch_ops("importAssetRequest", None, &document, &ViewState::default());
+        let op: Value = serde_json::from_str(&ops[0]).unwrap();
+        assert_eq!(op["readAs"], json!("dataUrl"));
+        assert_eq!(op["importCommand"], json!("importAsset"));
+        let ops = app.handle_command_patch_ops(
+            "importAsset",
+            Some(&json!({ "payload": "data:model/gltf-binary;base64,AAAA", "name": "chair.glb" })),
+            &document,
+            &ViewState::default(),
+        );
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        let imported = envelope.fixture.assets.last().unwrap();
+        assert_eq!(imported.name, "chair");
+        assert!(imported.url.starts_with("data:"));
+        assert_eq!(envelope.fixture.active_asset_id, imported.id);
+    }
+
+    #[test]
+    fn tools_and_engagements_expose_toolbar_parity() {
+        let app = ShootingPlayApp;
+        let document = app.initial_document_json();
+        let tools = app.tools(&document, &ViewState::default());
+        let json = serde_json::to_string(&tools).unwrap();
+        for command in ["loadRequest", "importAssetRequest", "saveDownload", "exportActiveShot", "exportAllShots", "resetFixture", "saveCamera"] {
+            assert!(json.contains(command), "toolbar exposes {command}");
+        }
+        let engagements = app.window_engagements(&document, &ViewState::default());
+        let model = &engagements[SHOOTING_PLAY_WINDOW_SCENE];
+        assert!(model.options.as_ref().unwrap().iter().any(|option| option.id.ends_with("move")));
+        assert!(model.status.as_ref().unwrap()[0].text.contains("assets"));
+        let icon = &engagements[SHOOTING_PLAY_WINDOW_ICON];
+        assert!(icon.status.as_ref().unwrap()[0].text.contains("256×256"));
+    }
+
+    #[test]
+    fn set_active_shot_label_patches_active_shot() {
+        let mut app = ShootingPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setActiveShotLabel", Some(&json!({ "value": "Hero Shot" })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(active_shot(&envelope.fixture).unwrap().label, "Hero Shot");
+    }
+
+    #[test]
+    fn reset_fixture_restores_default_envelope() {
+        let mut app = ShootingPlayApp;
+        let mut envelope = default_envelope();
+        envelope.fixture.shots.clear();
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command_patch_ops("resetFixture", None, &document, &ViewState::default());
+        let restored = apply_ops(&envelope, &ops);
+        assert_eq!(restored.fixture.shots.len(), 2);
     }
 
     #[test]

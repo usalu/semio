@@ -1,22 +1,23 @@
 //! 🎛️ S Studio plugin — designer OS shell bundled as a hot-swappable WASM component.
 
 use semio_framework_os::{
-    create_os_studio, default_os_projection, delete_os_studio,
+    apply_flow_fixture_to_os_media_graph, create_os_studio, default_os_projection, delete_os_studio,
     import_os_studio_from_json, list_os_media_graph_vfs_children, list_os_programs,
     list_os_studio_catalog_entries, load_os_studio_document, materialize_os_projection, media_port_spec_id,
     os_app_registration,
     os_document_from_json, os_document_to_json, build_os_media_flow_operator_infos, materialize_os_app_instance_document_json,
-    os_media_graph_to_node_graph_payload, os_media_graph_vfs_schema,
+    os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload, os_media_graph_vfs_schema,
     os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id,
-    register_os_fixture_json, create_os_id, seed_os_studio_catalog_if_empty, document_backbone_ref,
-    MediaGraphPosition,
-    OsAppInstance, OsBackbonePort, OsDocument, OsMediaGraphVfsNodeRecord, OsOp, OsParameter, OsParameterFieldBinding,
-    OsParameterType, OsProjection, OsStore, OS_HOME_VFS_ROOT_ID, OS_MEDIA_GRAPH_VFS_ROOT_ID,
+    read_os_presence_peers, register_os_fixture_json, create_os_id, seed_os_studio_catalog_if_empty, document_backbone_ref,
+    write_os_presence, MediaGraphPosition,
+    OsAppInstance, OsBackbonePort, OsDocument, OsMediaGraphCamera, OsMediaGraphVfsNodeRecord, OsOp, OsParameter, OsParameterFieldBinding,
+    OsParameterType, OsPresencePeer, OsProjection, OsStore, OS_HOME_VFS_ROOT_ID, OS_MEDIA_GRAPH_VFS_ROOT_ID,
     OS_STUDIO_BACKBONE_URI_PREFIX, MemoryBackbonePort, VcsError,
 };
-use semio_framework_plugin::{PanelGroup, 
+use semio_framework_plugin::{PanelGroup,
     build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene,
-    create_default_layout, create_tab_stack_layout, layout::MeasureSelectItem,
+    create_default_layout, create_tab_stack_layout, host_backbone_read, host_backbone_write, host_now_ms,
+    layout::MeasureSelectItem,
     layout::WindowEngagementStatus, tool_button, tool_collection, ui_declarative_sections_to_tree,
     ui_inspector_all_equal, ui_text,
     App, CommandDescriptor, ModeDefinition, NodeGraphScene, PluginApp, PluginBundle, SurfaceKind, TextEditorScene,
@@ -126,6 +127,12 @@ struct StudioRuntimeState {
     studio_id: Option<String>,
     #[serde(default)]
     clipboard_instance_ids: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    media_graph_camera: Option<OsMediaGraphCamera>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    client_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    client_name: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -496,8 +503,69 @@ fn media_graph_context_menu_json() -> String {
     .to_string()
 }
 
-fn presence_peers_json() -> String {
-    "[]".into()
+struct HostPresencePort {
+    fallback: MemoryBackbonePort,
+}
+
+impl OsBackbonePort for HostPresencePort {
+    fn read(&self, uri: &str) -> Result<String, VcsError> {
+        match host_backbone_read(uri) {
+            Ok(payload) => Ok(payload),
+            Err(_) => vcs::BackbonePort::read(&self.fallback, uri),
+        }
+    }
+
+    fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError> {
+        vcs::BackbonePort::write(&self.fallback, uri, payload)?;
+        let _ = host_backbone_write(uri, payload);
+        Ok(())
+    }
+}
+
+static PRESENCE_PORT: LazyLock<Arc<dyn OsBackbonePort>> = LazyLock::new(|| {
+    Arc::new(HostPresencePort {
+        fallback: MemoryBackbonePort::new(),
+    })
+});
+
+fn presence_port() -> Arc<dyn OsBackbonePort> {
+    PRESENCE_PORT.clone()
+}
+
+fn runtime_studio_id(runtime: &StudioRuntimeState) -> String {
+    runtime.studio_id.clone().unwrap_or_else(|| OS_BOOT_STUDIO_ID.into())
+}
+
+fn presence_peers_json(runtime: &StudioRuntimeState) -> String {
+    let studio_id = runtime_studio_id(runtime);
+    let self_client_id = runtime.client_id.clone().unwrap_or_default();
+    let peers: Vec<Value> = read_os_presence_peers(&presence_port(), &studio_id, &self_client_id, host_now_ms())
+        .into_iter()
+        .map(|peer| {
+            json!({
+                "clientId": peer.client_id,
+                "name": peer.name,
+                "selectionCount": peer.selection.len(),
+            })
+        })
+        .collect();
+    serde_json::to_string(&peers).unwrap_or_else(|_| "[]".into())
+}
+
+fn publish_presence(runtime: &StudioRuntimeState) {
+    let (Some(client_id), Some(client_name)) = (&runtime.client_id, &runtime.client_name) else {
+        return;
+    };
+    let _ = write_os_presence(
+        &presence_port(),
+        &runtime_studio_id(runtime),
+        OsPresencePeer {
+            client_id: client_id.clone(),
+            name: client_name.clone(),
+            selection: runtime.selected_media_node_ids.clone(),
+            updated_at_ms: host_now_ms(),
+        },
+    );
 }
 //#endregion 🔖DocumentHelpers
 
@@ -803,7 +871,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
             UiNode::Field(UiFieldNode {
                 id: format!("s-play-parameters.{id}.min"),
                 label: "Min".into(),
-                child: UiControlNode::NumberStepper(UiNumberStepperNode {
+                child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
                     id: format!("s-play-parameters.{id}.min.stepper"),
                     value: min.unwrap_or(0.0),
                     step: 1.0,
@@ -816,7 +884,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                         "patchParameter",
                         Some(json!({ "parameterId": id, "field": "min" })),
                     ),
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -824,7 +892,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
             UiNode::Field(UiFieldNode {
                 id: format!("s-play-parameters.{id}.max"),
                 label: "Max".into(),
-                child: UiControlNode::NumberStepper(UiNumberStepperNode {
+                child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
                     id: format!("s-play-parameters.{id}.max.stepper"),
                     value: max.unwrap_or(0.0),
                     step: 1.0,
@@ -837,7 +905,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                         "patchParameter",
                         Some(json!({ "parameterId": id, "field": "max" })),
                     ),
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -845,7 +913,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
             UiNode::Field(UiFieldNode {
                 id: format!("s-play-parameters.{id}.step"),
                 label: "Step".into(),
-                child: UiControlNode::NumberStepper(UiNumberStepperNode {
+                child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
                     id: format!("s-play-parameters.{id}.step.stepper"),
                     value: step.unwrap_or(0.0),
                     step: 0.1,
@@ -858,7 +926,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                         "patchParameter",
                         Some(json!({ "parameterId": id, "field": "step" })),
                     ),
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -871,7 +939,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                     UiNode::Field(UiFieldNode {
                         id: format!("s-play-parameters.{id}.option.{option}"),
                         label: option.clone(),
-                        child: UiControlNode::Button(UiButtonNode {
+                        child: Box::new(UiNode::Button(UiButtonNode {
                             id: Some(format!("s-play-parameters.{id}.option.{option}.remove")),
                             icon_id: "trash-2".into(),
                             label: "Remove".into(),
@@ -881,7 +949,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                             ),
                             style: None,
                             disabled: None,
-                        }),
+                        })),
                         description: None,
                         required: None,
                         error: None,
@@ -891,7 +959,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
             fields.push(UiNode::Field(UiFieldNode {
                 id: format!("s-play-parameters.{id}.add-option"),
                 label: "Add option".into(),
-                child: UiControlNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {
                     id: format!("s-play-parameters.{id}.add-option.input"),
                     input_kind: "text".into(),
                     value: String::new(),
@@ -905,7 +973,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -940,7 +1008,7 @@ fn build_parameters_tree(document: &OsDocument) -> UiNode {
             UiNode::Field(UiFieldNode {
                 id: format!("s-play-parameters.{parameter_id}.name"),
                 label: "Name".into(),
-                child: UiControlNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {
                     id: format!("s-play-parameters.{parameter_id}.name.input"),
                     input_kind: "text".into(),
                     value: match parameter {
@@ -959,7 +1027,7 @@ fn build_parameters_tree(document: &OsDocument) -> UiNode {
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -967,24 +1035,7 @@ fn build_parameters_tree(document: &OsDocument) -> UiNode {
             UiNode::Field(UiFieldNode {
                 id: format!("s-play-parameters.{parameter_id}.value-field"),
                 label: "Value".into(),
-                child: match parameter_value_control(parameter) {
-                    UiNode::Input(input) => UiControlNode::Input(input),
-                    UiNode::Select(select) => UiControlNode::Select(select),
-                    UiNode::Toggle(toggle) => UiControlNode::Toggle(toggle),
-                    UiNode::NumberStepper(stepper) => UiControlNode::NumberStepper(stepper),
-                    other => UiControlNode::Input(UiInputNode {
-                        id: format!("s-play-parameters.{parameter_id}.fallback"),
-                        input_kind: "text".into(),
-                        value: format!("{other:?}"),
-                        placeholder: None,
-                        commit: None,
-                        on_change: s_play_cmd("patchParameter", None),
-                        min: None,
-                        max: None,
-                        step: None,
-                        accept: None,
-                    }),
-                },
+                child: Box::new(parameter_value_control(parameter)),
                 description: None,
                 required: None,
                 error: None,
@@ -1045,7 +1096,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
             node_fields.push(UiNode::Field(UiFieldNode {
                 id: "s-play-inspector.media-node.id".into(),
                 label: "Node id".into(),
-                child: UiControlNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {
                     id: "s-play-inspector.media-node.id.input".into(),
                     input_kind: "text".into(),
                     value: media_node_ids[0].clone(),
@@ -1056,7 +1107,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -1065,7 +1116,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
         node_fields.push(UiNode::Field(UiFieldNode {
             id: "s-play-inspector.media-node.x".into(),
             label: "X".into(),
-            child: UiControlNode::Input(UiInputNode {
+            child: Box::new(UiNode::Input(UiInputNode {
                 id: "s-play-inspector.media-node.x.input".into(),
                 input_kind: "number".into(),
                 value: if x_uniform {
@@ -1083,7 +1134,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                 max: None,
                 step: None,
                 accept: None,
-            }),
+            })),
             description: None,
             required: None,
             error: None,
@@ -1091,7 +1142,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
         node_fields.push(UiNode::Field(UiFieldNode {
             id: "s-play-inspector.media-node.y".into(),
             label: "Y".into(),
-            child: UiControlNode::Input(UiInputNode {
+            child: Box::new(UiNode::Input(UiInputNode {
                 id: "s-play-inspector.media-node.y.input".into(),
                 input_kind: "number".into(),
                 value: if y_uniform {
@@ -1109,7 +1160,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                 max: None,
                 step: None,
                 accept: None,
-            }),
+            })),
             description: None,
             required: None,
             error: None,
@@ -1156,7 +1207,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
             UiNode::Field(UiFieldNode {
                 id: "s-play-inspector.app-instance.label".into(),
                 label: "Label".into(),
-                child: UiControlNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {
                     id: "s-play-inspector.app-instance.label.input".into(),
                     input_kind: "text".into(),
                     value: if label_uniform {
@@ -1174,7 +1225,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -1223,7 +1274,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                         instance_fields.push(UiNode::Field(UiFieldNode {
                             id: format!("s-play-inspector.app-parameter.{}", field_spec.field_path),
                             label: field_spec.label.clone(),
-                            child: UiControlNode::Select(UiSelectNode {
+                            child: Box::new(UiNode::Select(UiSelectNode {
                                 id: format!(
                                     "s-play-inspector.app-parameter.{}.select",
                                     field_spec.field_path
@@ -1240,7 +1291,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                                         "fieldPath": field_spec.field_path,
                                     })),
                                 ),
-                            }),
+                            })),
                             description: None,
                             required: None,
                             error: None,
@@ -1449,6 +1500,8 @@ fn compiled_dag_engagement(document: &OsDocument) -> WindowEngagement {
 fn render_media_graph(document: &OsDocument, runtime: &StudioRuntimeState) -> UiNode {
     let projection = projection_from_document(document);
     let graph_payload = os_media_graph_to_node_graph_payload(&projection.media_graph, &projection.app_instances);
+    let camera = runtime.media_graph_camera.clone().unwrap_or_default();
+    let fixture = os_media_graph_to_flow_fixture(&projection.media_graph, &projection.app_instances, &camera);
     let operators = build_os_media_flow_operator_infos(
         &projection.media_graph,
         &projection.app_instances,
@@ -1472,12 +1525,13 @@ fn render_media_graph(document: &OsDocument, runtime: &StudioRuntimeState) -> Ui
             find_items_json: Some(graph_payload.find_items_json),
             selection_json,
             hover_json,
-            capabilities_json: Some(r#"{"spotlight":false,"noteEdit":false,"clusters":false}"#.into()),
-            presence_peers_json: Some(presence_peers_json()),
+            capabilities_json: Some(r#"{"engine":"flow","spotlight":false,"noteEdit":false,"clusters":false}"#.into()),
+            fixture_json: Some(fixture.to_string()),
+            presence_peers_json: Some(presence_peers_json(runtime)),
             ..NodeGraphScene::base(
                 graph_payload.nodes_json,
                 graph_payload.edges_json,
-                graph_payload.viewport_json,
+                serde_json::to_string(&camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into()),
             )
         },
     )
@@ -2149,6 +2203,89 @@ impl SStudioApp {
                         }
                     });
             }
+            "nodeGraphViewport" => {
+                if let Some(camera) = args
+                    .and_then(|value| value.get("viewportJson"))
+                    .and_then(|value| value.as_str())
+                    .and_then(|viewport_json| serde_json::from_str::<OsMediaGraphCamera>(viewport_json).ok())
+                {
+                    runtime.media_graph_camera = Some(camera);
+                }
+            }
+            "nodeGraphEdit" => {
+                let edit_ops = args
+                    .and_then(|value| value.get("ops"))
+                    .and_then(|value| value.as_array())
+                    .cloned()
+                    .unwrap_or_default();
+                let projection = store.projection().unwrap_or_else(|_| default_os_projection());
+                let mut graph_ops = Vec::new();
+                for edit in &edit_ops {
+                    match edit.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+                        "setFixture" => {
+                            if let Some(fixture_json) = edit.get("fixtureJson").and_then(|value| value.as_str()) {
+                                if let Some(camera) = serde_json::from_str::<Value>(fixture_json)
+                                    .ok()
+                                    .and_then(|fixture| fixture.get("camera").cloned())
+                                    .and_then(|camera| serde_json::from_value::<OsMediaGraphCamera>(camera).ok())
+                                {
+                                    runtime.media_graph_camera = Some(camera);
+                                }
+                                graph_ops.extend(apply_flow_fixture_to_os_media_graph(&projection.media_graph, fixture_json));
+                            }
+                        }
+                        "move" => {
+                            if let (Some(node_id), Some(x), Some(y)) = (
+                                edit.get("nodeId").and_then(|value| value.as_str()),
+                                edit.get("x").and_then(|value| value.as_f64()),
+                                edit.get("y").and_then(|value| value.as_f64()),
+                            ) {
+                                graph_ops.push(OsOp::MoveMediaNode { node_id: node_id.into(), x, y });
+                            }
+                        }
+                        "connect" => {
+                            if let (Some(source_node_id), Some(source_port_id), Some(target_node_id), Some(target_port_id)) = (
+                                edit.get("sourceNodeId").and_then(|value| value.as_str()),
+                                edit.get("sourcePortId").and_then(|value| value.as_str()),
+                                edit.get("targetNodeId").and_then(|value| value.as_str()),
+                                edit.get("targetPortId").and_then(|value| value.as_str()),
+                            ) {
+                                graph_ops.push(OsOp::ConnectMediaPorts {
+                                    edge: semio_framework_os::OsMediaGraphEdge {
+                                        id: create_os_id("edge"),
+                                        source_node_id: source_node_id.into(),
+                                        source_port_id: source_port_id.into(),
+                                        target_node_id: target_node_id.into(),
+                                        target_port_id: target_port_id.into(),
+                                    },
+                                });
+                            }
+                        }
+                        "deleteSelection" => {
+                            for node_id in &runtime.selected_media_node_ids {
+                                if let Some(node) = projection.media_graph.nodes.iter().find(|node| node.id == *node_id) {
+                                    graph_ops.push(OsOp::RemoveAppInstance { instance_id: node.instance_id.clone() });
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                if !graph_ops.is_empty() {
+                    let _ = store.dispatch_apply(graph_ops);
+                }
+            }
+            "presenceHeartbeat" => {
+                if let Some(client_id) = args.and_then(|value| value.get("clientId")).and_then(|value| value.as_str()) {
+                    runtime.client_id = Some(client_id.into());
+                    runtime.client_name = Some(
+                        args.and_then(|value| value.get("name"))
+                            .and_then(|value| value.as_str())
+                            .unwrap_or("Guest")
+                            .into(),
+                    );
+                }
+            }
             "setAppInstanceSelection" => {
                 let instance_ids: Vec<String> = args
                     .and_then(|value| value.get("instanceIds"))
@@ -2393,6 +2530,12 @@ impl SStudioApp {
                 let _ = runtime.compiled_dag_engagement_input.clone();
             }
             _ => {}
+        }
+        if matches!(
+            command,
+            "presenceHeartbeat" | "nodeGraphSelect" | "setMediaNodeSelection" | "selectInstance" | "setAppInstanceSelection" | "deleteSelection"
+        ) {
+            publish_presence(&runtime);
         }
         *envelope = envelope_from_store(store, runtime);
         persist_envelope_document(envelope);

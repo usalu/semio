@@ -867,14 +867,10 @@ fn selectable_spans_for_jack(text: &str, tokens: &[GrammarToken]) -> Vec<Selecta
         if head.class != "ident" {
             continue;
         }
-        let mut end = head.end;
-        let mut tail_start = head.start;
         let mut j = i;
         while j + 2 < tokens.len() && text.get(tokens[j + 1].start..tokens[j + 1].end) == Some(".") && tokens[j + 2].class == "ident" {
             let tail = &tokens[j + 2];
-            end = tail.end;
-            tail_start = tail.start;
-            spans.push(SelectableSpan { start: head.start, end, kind: "propertyAccess".into(), head_end: Some(head.end), tail_start: Some(tail_start) });
+            spans.push(SelectableSpan { start: head.start, end: tail.end, kind: "propertyAccess".into(), head_end: Some(head.end), tail_start: Some(tail.start) });
             j += 2;
         }
     }
@@ -2163,9 +2159,9 @@ mod tests {
     #[test]
     fn manifest_includes_dag_jack_example() {
         let bundle = writer_bundle();
-        let manifest = bundle.manifest();
-        let app = manifest.apps.iter().find(|a| a.id == WRITER_PLAY_APP_ID).expect("writer app");
-        assert!(app.examples.iter().any(|e| e.id == "dag.jack"));
+        let manifest = &bundle.manifest;
+        assert!(manifest.apps.iter().any(|a| a.id == WRITER_PLAY_APP_ID));
+        assert!(manifest.examples.iter().any(|e| e.id == "dag.jack" && e.app_id == WRITER_PLAY_APP_ID));
     }
 }
 //#endregion 🧪Tests

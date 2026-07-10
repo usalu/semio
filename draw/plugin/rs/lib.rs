@@ -5,14 +5,14 @@ use draw::{
     default_draw_document, default_layer_base, draw_layer_descendant_leaf_ids, draw_layer_world_bounds,
     draw_play_boolean_child_row_id, draw_play_layer_id_from_tree_row_id, draw_play_layers_tree_row_id, draw_transform_to_matrix,
     empty_draw_projection, find_draw_layer, find_draw_layer_location, flatten_draw_document_to_scene_nodes,
-    flatten_draw_layers, layer_base, layer_id, layer_kind_label, layer_to_path_segments, mutate_draw_layer, patch_layer_field,
+    flatten_draw_layers, layer_base, layer_id, layer_kind_label, layer_to_path_segments, patch_layer_field,
     rgba_to_hex, DrawDocument, DrawLayerNode, DrawOp, PathSegment, DRAW_BLEND_MODES, DRAW_BOOLEAN_OPS, DRAW_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{SurfaceKind,
     build_canvas_2d_scene, create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_select, ui_inspector_mixed_slider, ui_inspector_mixed_text, ui_inspector_mixed_toggle,
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor, PanelGroup, ToolNode,
-    UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiSliderNode,
+    UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiSliderNode,
     UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
     layout::WindowEngagementStatus,
@@ -1355,7 +1355,7 @@ fn inspector_number_field(layer_ids: &[String], field_id: &str, label: &str, val
     UiNode::Field(UiFieldNode {
         id: field_id.into(),
         label: label.into(),
-        child: UiControlNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode {
             id: format!("{field_id}.input"),
             input_kind: "number".into(),
             value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
@@ -1366,7 +1366,7 @@ fn inspector_number_field(layer_ids: &[String], field_id: &str, label: &str, val
             max: None,
             step: None,
             accept: None,
-        }),
+        })),
         description: None,
         required: None,
         error: None,
@@ -1378,7 +1378,7 @@ fn inspector_text_field(layer_ids: &[String], field_id: &str, label: &str, value
     UiNode::Field(UiFieldNode {
         id: field_id.into(),
         label: label.into(),
-        child: UiControlNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode {
             id: format!("{field_id}.input"),
             input_kind: "text".into(),
             value: mixed.value,
@@ -1389,7 +1389,7 @@ fn inspector_text_field(layer_ids: &[String], field_id: &str, label: &str, value
             max: None,
             step: None,
             accept: None,
-        }),
+        })),
         description: None,
         required: None,
         error: None,
@@ -1426,13 +1426,13 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
             fields.push(UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.boolean-op".into(),
                 label: "Boolean Op".into(),
-                child: UiControlNode::Select(UiSelectNode {
+                child: Box::new(UiNode::Select(UiSelectNode {
                     id: "draw-play-inspector.boolean-op.select".into(),
                     value: op_mixed.value,
                     placeholder: op_mixed.placeholder,
                     items: DRAW_BOOLEAN_OPS.iter().map(|op| UiSelectItem { value: (*op).into(), label: (*op).into() }).collect(),
                     on_change: inspector_patch(&layer_ids, "booleanOp"),
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -1475,7 +1475,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
             fields.push(UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.trace-threshold".into(),
                 label: "Trace Threshold".into(),
-                child: UiControlNode::Slider(UiSliderNode {
+                child: Box::new(UiNode::Slider(UiSliderNode {
                     id: "draw-play-inspector.trace-threshold.slider".into(),
                     value: if threshold_mixed.uniform { threshold_mixed.value } else { 0.0 },
                     min: 0.0,
@@ -1483,7 +1483,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
                     step: 0.01,
                     on_change: inspector_patch(&layer_ids, "traceThreshold"),
                     unit: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -1491,7 +1491,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
             fields.push(UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.trace-simplify".into(),
                 label: "Simplify".into(),
-                child: UiControlNode::Slider(UiSliderNode {
+                child: Box::new(UiNode::Slider(UiSliderNode {
                     id: "draw-play-inspector.trace-simplify.slider".into(),
                     value: if simplify_mixed.uniform { simplify_mixed.value } else { 0.0 },
                     min: 0.0,
@@ -1499,7 +1499,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
                     step: 0.1,
                     on_change: inspector_patch(&layer_ids, "traceSimplify"),
                     unit: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -1653,7 +1653,7 @@ fn inspector_appearance_group(layers: &[&draw::DrawLayerNode]) -> UiInspectorFie
             UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.fill-alpha".into(),
                 label: "Fill Alpha".into(),
-                child: UiControlNode::Slider(UiSliderNode {
+                child: Box::new(UiNode::Slider(UiSliderNode {
                     id: "draw-play-inspector.fill-alpha.slider".into(),
                     value: if fill_alpha_mixed.uniform { fill_alpha_mixed.value } else { 0.0 },
                     min: 0.0,
@@ -1661,7 +1661,7 @@ fn inspector_appearance_group(layers: &[&draw::DrawLayerNode]) -> UiInspectorFie
                     step: 0.01,
                     on_change: inspector_patch(&layer_ids, "fillAlpha"),
                     unit: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -1691,7 +1691,7 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode]) -> UiInspectorFieldGro
             UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.blend-mode".into(),
                 label: "Blend Mode".into(),
-                child: UiControlNode::Select(UiSelectNode {
+                child: Box::new(UiNode::Select(UiSelectNode {
                     id: "draw-play-inspector.blend-mode.select".into(),
                     value: blend_mixed.value,
                     placeholder: blend_mixed.placeholder,
@@ -1700,7 +1700,7 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode]) -> UiInspectorFieldGro
                         .map(|mode| UiSelectItem { value: (*mode).into(), label: (*mode).into() })
                         .collect(),
                     on_change: inspector_patch(&layer_ids, "blendMode"),
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -1708,13 +1708,13 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode]) -> UiInspectorFieldGro
             UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.visible".into(),
                 label: "Visible".into(),
-                child: UiControlNode::Toggle(UiToggleNode {
+                child: Box::new(UiNode::Toggle(UiToggleNode {
                     id: "draw-play-inspector.visible.toggle".into(),
                     icon_id: "eye".into(),
                     pressed: visible_mixed.uniform && visible_mixed.pressed,
                     text: None,
                     on_change: inspector_patch(&layer_ids, "visible"),
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -1722,13 +1722,13 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode]) -> UiInspectorFieldGro
             UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.locked".into(),
                 label: "Locked".into(),
-                child: UiControlNode::Toggle(UiToggleNode {
+                child: Box::new(UiNode::Toggle(UiToggleNode {
                     id: "draw-play-inspector.locked.toggle".into(),
                     icon_id: "lock".into(),
                     pressed: locked_mixed.uniform && locked_mixed.pressed,
                     text: None,
                     on_change: inspector_patch(&layer_ids, "locked"),
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -1919,7 +1919,11 @@ mod tests {
         let node = app.render(DRAW_PLAY_BODY_COMPOSITE, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("canvas-2d"));
-        assert!(json.contains("segments") || json.contains("kernelPayload"));
+        let value = serde_json::to_value(&node).unwrap();
+        let layers_json = value.pointer("/canvas2d/layersJson").and_then(|v| v.as_str()).expect("layersJson string");
+        assert!(layers_json.contains("segments"));
+        let records: Vec<Value> = serde_json::from_str(layers_json).unwrap();
+        assert!(records.iter().any(|record| record.get("role").and_then(|value| value.as_str()) == Some("meta")));
     }
 
     #[test]
@@ -2019,6 +2023,158 @@ mod tests {
         );
         let next = apply_ops(&document, &ops);
         assert!(next.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Boolean(_))));
+    }
+
+    #[test]
+    fn canvas_point_to_world_matches_host_formula() {
+        let camera = draw::DrawCamera { x: 100.0, y: 50.0, zoom: 2.0 };
+        let (world_x, world_y) = canvas_point_to_world(&camera, 420.0, 310.0, 800.0, 600.0);
+        assert!((world_x - 110.0).abs() < 1e-9);
+        assert!((world_y - 55.0).abs() < 1e-9);
+    }
+
+    fn dispatch(app: &mut DrawApp, document_json: &str, command: &str, args: Option<Value>, view_state: &ViewState) -> String {
+        let ops = app.handle_command_patch_ops(command, args.as_ref(), document_json, view_state);
+        for op_json in ops.iter().rev() {
+            if let Ok(op) = serde_json::from_str::<Value>(op_json) {
+                if op.get("op").and_then(|value| value.as_str()) == Some("setDocument") {
+                    if let Some(document) = op.get("document") {
+                        return document.to_string();
+                    }
+                }
+            }
+        }
+        document_json.to_string()
+    }
+
+    fn envelope_json(document: DrawDocument) -> String {
+        serde_json::to_string(&DrawPlayEnvelope {
+            document,
+            undo_stack: Vec::new(),
+            redo_stack: Vec::new(),
+            interaction: DrawInteractionState::default(),
+        })
+        .unwrap()
+    }
+
+    #[test]
+    fn shape_rect_drag_commits_rectangle_layer() {
+        let mut app = DrawApp;
+        let mut document = default_draw_document("shape-test", None);
+        document.active_tool = Some("shapeRect".into());
+        document.layers.clear();
+        let mut state = envelope_json(document);
+        state = dispatch(&mut app, &state, "canvasPointerDown", Some(json!({ "x": 500.0, "y": 400.0, "width": 1000.0, "height": 800.0 })), &ViewState::default());
+        state = dispatch(&mut app, &state, "canvasPointerMove", Some(json!({ "x": 600.0, "y": 500.0, "width": 1000.0, "height": 800.0 })), &ViewState::default());
+        state = dispatch(
+            &mut app,
+            &state,
+            "canvasPointerUp",
+            Some(json!({ "x": 600.0, "y": 500.0, "width": 1000.0, "height": 800.0, "shift": false, "ctrl": false, "meta": false })),
+            &ViewState::default(),
+        );
+        let envelope: DrawPlayEnvelope = serde_json::from_str(&state).unwrap();
+        assert!(envelope.document.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Shape(shape) if shape.shape_kind == "rect")));
+        assert_eq!(envelope.document.active_tool.as_deref(), Some("selectDirect"));
+        assert_eq!(envelope.interaction.selected_ids.len(), 1);
+    }
+
+    #[test]
+    fn pen_draft_commits_path_layer_on_enter() {
+        let mut app = DrawApp;
+        let mut document = default_draw_document("pen-test", None);
+        document.active_tool = Some("pen".into());
+        document.layers.clear();
+        let mut state = envelope_json(document);
+        state = dispatch(&mut app, &state, "canvasPointerDown", Some(json!({ "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &ViewState::default());
+        state = dispatch(&mut app, &state, "canvasPointerDown", Some(json!({ "x": 500.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &ViewState::default());
+        state = dispatch(&mut app, &state, "canvasCommitDraft", None, &ViewState::default());
+        let envelope: DrawPlayEnvelope = serde_json::from_str(&state).unwrap();
+        assert!(envelope.document.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Path(_))));
+        assert!(envelope.interaction.drag.is_none());
+        assert_eq!(envelope.document.active_tool.as_deref(), Some("selectDirect"));
+    }
+
+    #[test]
+    fn canvas_escape_cancels_draft_without_committing() {
+        let mut app = DrawApp;
+        let mut document = default_draw_document("escape-test", None);
+        document.active_tool = Some("pen".into());
+        document.layers.clear();
+        let mut state = envelope_json(document);
+        state = dispatch(&mut app, &state, "canvasPointerDown", Some(json!({ "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &ViewState::default());
+        state = dispatch(&mut app, &state, "canvasEscape", None, &ViewState::default());
+        let envelope: DrawPlayEnvelope = serde_json::from_str(&state).unwrap();
+        assert!(envelope.document.layers.is_empty());
+        assert!(envelope.interaction.drag.is_none());
+    }
+
+    #[test]
+    fn marquee_select_covers_contained_layer_only() {
+        let mut app = DrawApp;
+        let mut document = default_draw_document("marquee-test", None);
+        document.layers.clear();
+        document.active_tool = Some("selectMarquee".into());
+        let mut rect_a = create_draw_shape_layer_rect("A");
+        if let DrawLayerNode::Shape(shape) = &mut rect_a {
+            shape.rect = Some(draw::DrawRect { x: 10.0, y: 10.0, width: 20.0, height: 20.0 });
+        }
+        let rect_a_id = draw::layer_id(&rect_a).to_string();
+        let mut rect_b = create_draw_shape_layer_rect("B");
+        if let DrawLayerNode::Shape(shape) = &mut rect_b {
+            shape.rect = Some(draw::DrawRect { x: 200.0, y: 200.0, width: 20.0, height: 20.0 });
+        }
+        document.layers.push(rect_a);
+        document.layers.push(rect_b);
+        let mut state = envelope_json(document);
+        state = dispatch(&mut app, &state, "canvasPointerDown", Some(json!({ "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &ViewState::default());
+        state = dispatch(&mut app, &state, "canvasPointerMove", Some(json!({ "x": 460.0, "y": 360.0, "width": 800.0, "height": 600.0 })), &ViewState::default());
+        state = dispatch(
+            &mut app,
+            &state,
+            "canvasPointerUp",
+            Some(json!({ "x": 460.0, "y": 360.0, "width": 800.0, "height": 600.0, "shift": false, "ctrl": false, "meta": false })),
+            &ViewState::default(),
+        );
+        let envelope: DrawPlayEnvelope = serde_json::from_str(&state).unwrap();
+        assert_eq!(envelope.interaction.selected_ids, vec![rect_a_id]);
+    }
+
+    #[test]
+    fn set_camera_does_not_push_undo() {
+        let mut app = DrawApp;
+        let document = serde_json::to_string(&empty_draw_projection()).unwrap();
+        let ops = app.handle_command_patch_ops("setCamera", Some(&json!({ "camera": { "x": 5.0, "y": 5.0, "zoom": 2.0 } })), &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let op: Value = serde_json::from_str(&ops[0]).unwrap();
+        let envelope: DrawPlayEnvelope = serde_json::from_value(op.get("document").unwrap().clone()).unwrap();
+        assert!(envelope.undo_stack.is_empty());
+        assert_eq!(envelope.document.camera.zoom, 2.0);
+    }
+
+    #[test]
+    fn tools_marks_active_tool_pressed() {
+        let app = DrawApp;
+        let mut document = empty_draw_projection();
+        document.active_tool = Some("pen".into());
+        let document_json = serde_json::to_string(&document).unwrap();
+        let tools = app.tools(&document_json, &ViewState::default());
+        assert_eq!(tools.len(), 11);
+        let pen_pressed = tools.iter().any(|tool| matches!(tool, ToolNode::Toggle { id, pressed, .. } if id == "draw-play-tools.pen" && *pressed == Some(true)));
+        assert!(pen_pressed);
+    }
+
+    #[test]
+    fn render_canvas_emits_selection_overlay() {
+        let app = DrawApp;
+        let mut document = default_draw_document("overlay-test", None);
+        document.layers.clear();
+        document.layers.push(create_draw_shape_layer_rect("Rect"));
+        let layer_id = draw::layer_id(&document.layers[0]).to_string();
+        let document_json = serde_json::to_string(&document).unwrap();
+        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, &document_json, &view_with_selection(&[layer_id.as_str()]));
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("overlay:sel:"));
     }
 
     fn apply_ops(document: &DrawDocument, ops: &[String]) -> DrawDocument {

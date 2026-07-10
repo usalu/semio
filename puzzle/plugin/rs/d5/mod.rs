@@ -173,6 +173,10 @@ struct Puzzle5dPart2d {
     text: String,
     #[serde(default, rename = "iconKind", skip_serializing_if = "Option::is_none")]
     icon_kind: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    hidden: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    locked: Option<bool>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
@@ -576,6 +580,12 @@ fn board_node_value(part: &Puzzle5dPart) -> Value {
     if let Some(icon) = part.part_2d.icon_kind.as_ref() {
         node["iconKind"] = json!(icon);
     }
+    if let Some(hidden) = part.part_2d.hidden {
+        node["hidden"] = json!(hidden);
+    }
+    if let Some(locked) = part.part_2d.locked {
+        node["locked"] = json!(locked);
+    }
     node
 }
 
@@ -649,6 +659,28 @@ fn set_part_2d_position(document: &mut Puzzle5dDocument, part_id: &str, x: Optio
             part.part_2d.y = y;
         }
     }
+}
+
+/// 🎨 Palette drop: creates a free paired part at the flat drop point, deriving the volume origin from the nearest peer part's offset.
+fn add_palette_part(envelope: &mut Puzzle5dEnvelope, part_kind: &str, x: f64, y: f64) {
+    let flat_to_world = 1.0 / 48.0;
+    let origin = envelope
+        .document
+        .parts
+        .first()
+        .map(|peer| [peer.part_3d.origin[0] + (x - peer.part_2d.x) * flat_to_world, peer.part_3d.origin[1] - (y - peer.part_2d.y) * flat_to_world, peer.part_3d.origin[2]])
+        .unwrap_or([x * flat_to_world, -y * flat_to_world, 0.0]);
+    let id = next_part_id();
+    let mesh_url = resolve_part_kind_mesh_url(part_kind, envelope.document.kind_catalogs.as_ref());
+    let grips = grips_from_templates(&envelope.document, part_kind);
+    envelope.document.parts.push(Puzzle5dPart {
+        id: id.clone(),
+        part_kind: part_kind.into(),
+        part_2d: Puzzle5dPart2d { x, y, shape: "circle".into(), radius: PUZZLE5D_DEFAULT_PART_RADIUS, width: None, height: None, text: part_kind.into(), icon_kind: None, hidden: None, locked: None },
+        part_3d: Puzzle5dPart3d { origin, mesh_url, orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, label: None },
+        grips,
+    });
+    envelope.runtime.selection = Puzzle5dSelection { part_ids: vec![id], grip_ids: Vec::new(), fastener_ids: Vec::new() };
 }
 //#endregion 🔖Board
 
@@ -788,7 +820,7 @@ fn merge_engine_fixture(envelope: &Puzzle5dEnvelope, fixture_json: &str) -> Opti
             Some(Puzzle5dPart {
                 id,
                 part_kind: part_kind.clone(),
-                part_2d: Puzzle5dPart2d { x: 0.0, y: 0.0, shape: "circle".into(), radius: PUZZLE5D_DEFAULT_PART_RADIUS, width: None, height: None, text: part_kind, icon_kind: None },
+                part_2d: Puzzle5dPart2d { x: 0.0, y: 0.0, shape: "circle".into(), radius: PUZZLE5D_DEFAULT_PART_RADIUS, width: None, height: None, text: part_kind, icon_kind: None, hidden: None, locked: None },
                 part_3d: Puzzle5dPart3d { origin, mesh_url, orientation: orientation.or(Some([0.0, 0.0, 0.0, 1.0])), scale, label: None },
                 grips,
             })
@@ -1338,6 +1370,21 @@ fn catalog_kind_label(entry: &Value) -> String {
         .into()
 }
 
+/// 🖱️ MIME key `DeclarativeTreePanel` (framework/renderer/react/ui-interpreter.tsx) reads to auto-wire catalogue drag sources.
+const PUZZLE5D_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
+
+fn puzzle5d_catalog_item_drag_data(kind_id: &str, entry: &Value) -> HashMap<String, String> {
+    let mut payload = json!({ "kindId": kind_id, "catalogSlice": "nodes" });
+    if let Some(object) = payload.as_object_mut() {
+        for key in ["shape", "radius", "width", "height", "iconKind"] {
+            if let Some(value) = entry.get(key) {
+                object.insert(key.into(), value.clone());
+            }
+        }
+    }
+    HashMap::from([(PUZZLE5D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())])
+}
+
 fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value], add_command: Option<&str>) -> UiTreeSectionNode {
     let items: Vec<UiTreeItemNode> = entries
         .iter()
@@ -1348,6 +1395,8 @@ fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value], add_co
                 Some(command) => {
                     let mut item = tree_item_with_command(format!("{section_id}.{index}.{kind_id}"), catalog_kind_label(entry), Some("box"), puzzle5d_cmd(command, Some(json!({ "partKind": kind_id }))));
                     item.description = Some(kind_id.into());
+                    item.draggable = Some(true);
+                    item.drag_data = Some(puzzle5d_catalog_item_drag_data(kind_id, entry));
                     item
                 }
                 None => tree_info_item(format!("{section_id}.{index}.{kind_id}"), catalog_kind_label(entry), Some(kind_id.into())),
@@ -1393,7 +1442,7 @@ fn inspector_text_field(id: &str, label: &str, value: String, command: CommandDe
         description: None,
         required: None,
         error: None,
-        child: UiControlNode::Input(semio_framework_plugin::UiInputNode {
+        child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
             id: format!("{id}.input"),
             input_kind: "text".into(),
             value,
@@ -1404,7 +1453,7 @@ fn inspector_text_field(id: &str, label: &str, value: String, command: CommandDe
             step: None,
             accept: None,
             on_change: command,
-        }),
+        })),
     })
 }
 
@@ -1541,7 +1590,7 @@ impl Puzzle5dPlayApp {
         envelope.document.parts.push(Puzzle5dPart {
             id: id.clone(),
             part_kind: node_kind.clone(),
-            part_2d: Puzzle5dPart2d { x, y, shape: "circle".into(), radius: PUZZLE5D_DEFAULT_PART_RADIUS, width: None, height: None, text: node_kind, icon_kind: None },
+            part_2d: Puzzle5dPart2d { x, y, shape: "circle".into(), radius: PUZZLE5D_DEFAULT_PART_RADIUS, width: None, height: None, text: node_kind, icon_kind: None, hidden: None, locked: None },
             part_3d: Puzzle5dPart3d { origin, mesh_url, orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, label: None },
             grips,
         });
@@ -1709,14 +1758,39 @@ impl PluginApp for Puzzle5dPlayApp {
                 envelope.runtime.selection = Puzzle5dSelection { part_ids: new_ids, grip_ids: Vec::new(), fastener_ids: Vec::new() };
                 return vec![set_document_op(&envelope)];
             }
-            "selectSameKindSelection" => {
+            "selectSameKindSelection" | "selectSameKind" => {
                 let Some(kind) = envelope.runtime.selection.part_ids.first().and_then(|id| envelope.document.parts.iter().find(|part| &part.id == id)).map(|part| part.part_kind.clone()) else {
                     return Vec::new();
                 };
                 envelope.runtime.selection.part_ids = envelope.document.parts.iter().filter(|part| part.part_kind == kind).map(|part| part.id.clone()).collect();
                 return vec![set_document_op(&envelope)];
             }
-            "zoomToSelection" => {
+            "addNode" => {
+                let part_kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("Part").to_string();
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
+                add_palette_part(&mut envelope, &part_kind, x, y);
+                return vec![set_document_op(&envelope)];
+            }
+            "setSelectionFlag" => {
+                let flag = args.and_then(|value| value.get("flag")).and_then(|value| value.as_str()).unwrap_or("");
+                let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_bool()).unwrap_or(false);
+                let part_ids = envelope.runtime.selection.part_ids.clone();
+                for part in &mut envelope.document.parts {
+                    if !part_ids.contains(&part.id) {
+                        continue;
+                    }
+                    match flag {
+                        "hidden" => part.part_2d.hidden = Some(value),
+                        "locked" => part.part_2d.locked = Some(value),
+                        _ => {}
+                    }
+                }
+                if !part_ids.is_empty() && (flag == "hidden" || flag == "locked") {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "zoomToSelection" | "focusSelection" => {
                 let Some(target) = gumball_target_world(&envelope) else {
                     return Vec::new();
                 };
@@ -2357,7 +2431,7 @@ mod tests {
         envelope.document.parts.push(Puzzle5dPart {
             id: "part-b".into(),
             part_kind: "Hexagonal Cut Concrete Forest Right".into(),
-            part_2d: Puzzle5dPart2d { x: 320.0, y: 93.0, shape: "circle".into(), radius: 20.0, width: None, height: None, text: "b".into(), icon_kind: None },
+            part_2d: Puzzle5dPart2d { x: 320.0, y: 93.0, shape: "circle".into(), radius: 20.0, width: None, height: None, text: "b".into(), icon_kind: None, hidden: None, locked: None },
             part_3d: Puzzle5dPart3d::default(),
             grips: vec![Puzzle5dGrip { id: "v0".into(), grip_kind: "b-l".into(), grip_2d: Puzzle5dGrip2d::default(), grip_3d: Puzzle5dGrip3d::default() }],
         });

@@ -222,7 +222,7 @@ fn inspector_crop_field(tile_ids: &[String], field: &str, label: &str, values: &
     UiNode::Field(UiFieldNode {
         id: format!("presentation.play.tile.crop.{field}"),
         label: label.into(),
-        child: UiControlNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode {
             id: format!("presentation.play.tile.crop.{field}.input"),
             input_kind: "number".into(),
             value: if mixed.uniform {
@@ -244,7 +244,7 @@ fn inspector_crop_field(tile_ids: &[String], field: &str, label: &str, values: &
             max: None,
             step: None,
             accept: None,
-        }),
+        })),
         description: None,
         required: None,
         error: None,
@@ -279,7 +279,7 @@ fn build_details_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
     let mut identity_fields: Vec<UiNode> = vec![UiNode::Field(UiFieldNode {
         id: "presentation.play.tile.name".into(),
         label: "Name".into(),
-        child: UiControlNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode {
             id: "presentation.play.tile.name.input".into(),
             input_kind: "text".into(),
             value: name_mixed.value,
@@ -290,7 +290,7 @@ fn build_details_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
             max: None,
             step: None,
             accept: None,
-        }),
+        })),
         description: None,
         required: None,
         error: None,
@@ -398,7 +398,7 @@ fn build_catalogue_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
                 UiNode::Field(UiFieldNode {
                     id: "presentation.play.catalogue.figure.src".into(),
                     label: "Active source".into(),
-                    child: UiControlNode::Input(UiInputNode {
+                    child: Box::new(UiNode::Input(UiInputNode {
                         id: "presentation.play.catalogue.figure.src.readonly".into(),
                         input_kind: "text".into(),
                         value: envelope.deck.source.src.clone(),
@@ -409,7 +409,7 @@ fn build_catalogue_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
                         max: None,
                         step: None,
                         accept: None,
-                    }),
+                    })),
                     description: None,
                     required: None,
                     error: None,

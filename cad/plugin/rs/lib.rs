@@ -1528,7 +1528,7 @@ fn inspector_number_field(
     UiNode::Field(UiFieldNode {
         id: id.into(),
         label: label.into(),
-        child: UiControlNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode {
             id: format!("{id}.input"),
             input_kind: "number".into(),
             value: if mixed.uniform {
@@ -1546,7 +1546,7 @@ fn inspector_number_field(
             max: None,
             step: None,
             accept: None,
-        }),
+        })),
         description: None,
         required: None,
         error: None,
@@ -1565,7 +1565,7 @@ fn inspector_vec3_field(
     UiNode::Field(UiFieldNode {
         id: id.into(),
         label: label.into(),
-        child: UiControlNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode {
             id: format!("{id}.input"),
             input_kind: "text".into(),
             value: if mixed.uniform {
@@ -1583,7 +1583,7 @@ fn inspector_vec3_field(
             max: None,
             step: None,
             accept: None,
-        }),
+        })),
         description: None,
         required: None,
         error: None,
@@ -1621,7 +1621,7 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.object.label".into(),
                 label: "Label".into(),
-                child: UiControlNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {
                     id: "cad-play-inspector.object.label.input".into(),
                     input_kind: "text".into(),
                     value: label_mixed.value.clone(),
@@ -1635,7 +1635,7 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -1643,7 +1643,7 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.object.typology".into(),
                 label: "Typology".into(),
-                child: UiControlNode::Select(UiSelectNode {
+                child: Box::new(UiNode::Select(UiSelectNode {
                     id: "cad-play-inspector.object.typology.select".into(),
                     value: typology_mixed.value.clone(),
                     items: TYPOLOGY_CATALOG
@@ -1658,7 +1658,7 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
                         "patchSelection",
                         Some(json!({ "objectIds": object_ids, "field": "typology" })),
                     ),
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -1666,7 +1666,7 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.object.hidden".into(),
                 label: "Hidden".into(),
-                child: UiControlNode::Toggle(semio_framework_plugin::UiToggleNode {
+                child: Box::new(UiNode::Toggle(semio_framework_plugin::UiToggleNode {
                     id: "cad-play-inspector.object.hidden.toggle".into(),
                     icon_id: "eye-off".into(),
                     pressed: hidden_mixed.pressed,
@@ -1675,7 +1675,7 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
                         "patchSelection",
                         Some(json!({ "objectIds": object_ids, "field": "hidden" })),
                     ),
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -1683,7 +1683,7 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.object.locked".into(),
                 label: "Locked".into(),
-                child: UiControlNode::Toggle(semio_framework_plugin::UiToggleNode {
+                child: Box::new(UiNode::Toggle(semio_framework_plugin::UiToggleNode {
                     id: "cad-play-inspector.object.locked.toggle".into(),
                     icon_id: "lock".into(),
                     pressed: locked_mixed.pressed,
@@ -1692,7 +1692,7 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
                         "patchSelection",
                         Some(json!({ "objectIds": object_ids, "field": "locked" })),
                     ),
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -1751,7 +1751,7 @@ fn inspector_quat_field(id: &str, label: &str, values: &[[f64; 4]], object_ids: 
     UiNode::Field(UiFieldNode {
         id: id.into(),
         label: label.into(),
-        child: UiControlNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode {
             id: format!("{id}.input"),
             input_kind: "text".into(),
             value: if uniform {
@@ -1769,7 +1769,7 @@ fn inspector_quat_field(id: &str, label: &str, values: &[[f64; 4]], object_ids: 
             max: None,
             step: None,
             accept: None,
-        }),
+        })),
         description: None,
         required: None,
         error: None,
@@ -1791,7 +1791,7 @@ fn reference_inspector_group(model_definition_id: &str, reference: &CadReference
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.reference.widthWorld".into(),
                 label: "Width (world)".into(),
-                child: UiControlNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {
                     id: "cad-play-inspector.reference.widthWorld.input".into(),
                     input_kind: "number".into(),
                     value: reference.width_world.to_string(),
@@ -1809,7 +1809,7 @@ fn reference_inspector_group(model_definition_id: &str, reference: &CadReference
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -1834,7 +1834,7 @@ fn node_inspector_group(node: &CadNode) -> UiInspectorFieldGroup {
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.node.label".into(),
                 label: "Label".into(),
-                child: UiControlNode::Input(semio_framework_plugin::UiInputNode {
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
                     id: "cad-play-inspector.node.label.input".into(),
                     input_kind: "text".into(),
                     value: node.label.clone(),
@@ -1848,7 +1848,7 @@ fn node_inspector_group(node: &CadNode) -> UiInspectorFieldGroup {
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,

@@ -1054,7 +1054,7 @@ fn render_question_field(
                     UiNode::Field(UiFieldNode {
                         id: format!("{field_id}.vector.{index}"),
                         label,
-                        child: UiControlNode::Input(UiInputNode {
+                        child: Box::new(UiNode::Input(UiInputNode {
                             id: format!("{field_id}.vector.{index}.input"),
                             input_kind: "number".into(),
                             value: number.as_f64().map(|entry| entry.to_string()).unwrap_or_default(),
@@ -1073,7 +1073,7 @@ fn render_question_field(
                             max: None,
                             step: None,
                             accept: None,
-                        }),
+                        })),
                         description: None,
                         required: None,
                         error: None,
@@ -1100,7 +1100,7 @@ fn render_question_field(
     Some(UiNode::Field(UiFieldNode {
         id: field_id,
         label: question.label.clone(),
-        child,
+        child: Box::new(semio_framework_core::ui_control_to_node(child)),
         description: None,
         required: None,
         error: None,

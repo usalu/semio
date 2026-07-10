@@ -515,7 +515,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
     case "field":
       return (
         <Field id={node.id} label={node.label} description={node.description} required={node.required} error={node.error}>
-          {renderUiControl(node.child, context.onCommand)}
+          {interpretUiNode(node.child, context)}
         </Field>
       );
     case "section":

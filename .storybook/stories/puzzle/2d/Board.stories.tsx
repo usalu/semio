@@ -1,209 +1,293 @@
 // #region 🧲Header
-// 💻 .storybook/story/puzzle/2d/Puzzle2d.stories.tsx
-// Specs: Host the elements puzzle 2d canvas for Storybook + Playwright raster/LOD/selection checks.
-// Summary: Raster modes, full Nakagin puzzle 2d fixture (180 nodes / 179 kit connections), and Playwright harness stories.
+// 💻 .storybook/story/puzzle/2d/Board.stories.tsx
+// Specs: Host the framework renderer's `Puzzle2dBoardHost` for Storybook + Playwright selection/camera/tool checks.
+// Summary: Mounts the host directly against a `UiComponentSceneNode`; a story-local reducer emulates the `puzzle2d-play` Rust plugin's `applyBoardEvents`/selection/tool commands so the controlled scene ⇄ session loop round-trips without a running dev server.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { useCallback, useState, type Dispatch, type ReactElement, type SetStateAction } from "react";
+import { useCallback, useMemo, useState, type ReactElement } from "react";
 
-import {
-  Puzzle2dCanvas,
-  Edge,
-  Handle,
-  Node,
-  usePuzzle2dEvent,
-  BUILTIN_PORT_HANDLE_KIND,
-  DEFAULT_KIND_CATALOG_BUNDLE,
-  fixtureMetaKindCatalogBundle,
-  puzzle2dFixtureMetaKindCompatibility,
-  mergeKindCatalogBundleByRowId,
-} from "@semio-tech/puzzle-2d-react";
-import nakaginCapsuleTowerPuzzle2dFixture from "../../../../puzzle/2d/example/nakagin-capsule-tower.2d.json";
+import { Puzzle2dBoardHost } from "../../../../framework/renderer/react/components/puzzle-2d-board-host.tsx";
+import type { CommandDescriptor, UiComponentSceneNode } from "../../../../framework/renderer/react/os-shell.tsx";
+
+//#region StoryTypes
+type StoryPuzzle2dEntity = Record<string, unknown> & { readonly id: string };
+
+type StoryPuzzle2dFixture = {
+  readonly schema: string;
+  readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
+  readonly nodes: readonly StoryPuzzle2dEntity[];
+  readonly edges: readonly StoryPuzzle2dEntity[];
+  readonly meta?: { readonly kindCatalogs?: unknown; readonly kindCompatibility?: unknown };
+};
+
+type StoryPuzzle2dRuntime = {
+  readonly selectedIds: readonly string[];
+  readonly activeTool: string;
+  readonly selectionMethod: string;
+  readonly gridSnapEnabled: boolean;
+  readonly gridFactor: number;
+  readonly suggestionOffset: number;
+  readonly nodeKindWeights: Record<string, number>;
+  readonly handleKindWeights: Record<string, number>;
+  readonly lodMode: string;
+};
+
+type StoryPuzzle2dState = { readonly fixture: StoryPuzzle2dFixture; readonly runtime: StoryPuzzle2dRuntime };
+//#endregion StoryTypes
+
+//#region PluginEmulator
+const STORY_DEFAULT_RUNTIME: StoryPuzzle2dRuntime = {
+  selectedIds: [],
+  activeTool: "select",
+  selectionMethod: "rectangle",
+  gridSnapEnabled: false,
+  gridFactor: 1,
+  suggestionOffset: 0,
+  nodeKindWeights: {},
+  handleKindWeights: {},
+  lodMode: "automatic",
+};
+
+/** @emoji 📬 Story-local mirror of `apply_board_events_from_json` in `puzzle/plugin/rs/d2/mod.rs` — only the event kinds the stories exercise. */
+function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): StoryPuzzle2dState {
+  let events: readonly { readonly name: string; readonly payload?: Record<string, unknown> }[] = [];
+  try {
+    events = JSON.parse(eventsJson) as typeof events;
+  } catch {
+    return state;
+  }
+  let { fixture, runtime } = state;
+  for (const event of events) {
+    const payload = event.payload ?? {};
+    switch (event.name) {
+      case "camera": {
+        const { x, y, zoom } = payload as { x?: number; y?: number; zoom?: number };
+        if (typeof x === "number" && typeof y === "number" && typeof zoom === "number") fixture = { ...fixture, camera: { x, y, zoom } };
+        break;
+      }
+      case "select": {
+        const ids = payload.ids;
+        if (Array.isArray(ids)) runtime = { ...runtime, selectedIds: ids.filter((id): id is string => typeof id === "string") };
+        break;
+      }
+      case "nodeMove": {
+        const { id, x, y } = payload as { id?: string; x?: number; y?: number };
+        fixture = { ...fixture, nodes: fixture.nodes.map((node) => (node.id === id ? { ...node, x, y } : node)) };
+        break;
+      }
+      case "nodeDragEnd": {
+        const moves = payload.moves;
+        if (Array.isArray(moves)) {
+          fixture = {
+            ...fixture,
+            nodes: fixture.nodes.map((node) => {
+              const move = (moves as { id?: string; x?: number; y?: number }[]).find((entry) => entry.id === node.id);
+              return move ? { ...node, x: move.x, y: move.y } : node;
+            }),
+          };
+        }
+        break;
+      }
+      case "nodeDelete": {
+        const id = payload.id;
+        fixture = { ...fixture, nodes: fixture.nodes.filter((node) => node.id !== id) };
+        runtime = { ...runtime, selectedIds: [] };
+        break;
+      }
+      case "edgeDelete": {
+        const id = payload.id;
+        fixture = { ...fixture, edges: fixture.edges.filter((edge) => edge.id !== id) };
+        break;
+      }
+      case "edgeCreate": {
+        fixture = { ...fixture, edges: [...fixture.edges, payload as StoryPuzzle2dEntity] };
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  return { fixture, runtime };
+}
+
+/** @emoji 🧩 Story-local mirror of a subset of `Puzzle2dPlayApp::handle_command_patch_ops` — enough for the interaction stories to round-trip. */
+function reduceStoryPuzzle2dCommand(state: StoryPuzzle2dState, command: string, args: Record<string, unknown> | undefined): StoryPuzzle2dState {
+  const { fixture, runtime } = state;
+  switch (command) {
+    case "applyBoardEvents":
+      return applyStoryBoardEvents(state, typeof args?.eventsJson === "string" ? args.eventsJson : "[]");
+    case "setCamera": {
+      const camera = args?.camera as { x: number; y: number; zoom: number } | undefined;
+      return camera ? { fixture: { ...fixture, camera }, runtime } : state;
+    }
+    case "setSelection": {
+      const ids = args?.ids;
+      return { fixture, runtime: { ...runtime, selectedIds: Array.isArray(ids) ? (ids as string[]) : [] } };
+    }
+    case "selectAll":
+      return { fixture, runtime: { ...runtime, selectedIds: fixture.nodes.map((node) => node.id) } };
+    case "clearSelection":
+      return { fixture, runtime: { ...runtime, selectedIds: [] } };
+    case "deleteSelection": {
+      const selected = new Set(runtime.selectedIds);
+      return {
+        fixture: {
+          ...fixture,
+          nodes: fixture.nodes.filter((node) => !selected.has(node.id)),
+          edges: fixture.edges.filter((edge) => !selected.has(edge.id) && !selected.has(String(edge.source)) && !selected.has(String(edge.target))),
+        },
+        runtime: { ...runtime, selectedIds: [] },
+      };
+    }
+    case "setActiveTool":
+      return { fixture, runtime: { ...runtime, activeTool: typeof args?.tool === "string" ? args.tool : "select" } };
+    case "setSelectionFlag": {
+      const flag = args?.flag === "locked" ? "locked" : "hidden";
+      const value = Boolean(args?.value);
+      const selected = new Set(runtime.selectedIds);
+      const patch = (entity: StoryPuzzle2dEntity): StoryPuzzle2dEntity => (selected.has(entity.id) ? { ...entity, [flag]: value } : entity);
+      return { fixture: { ...fixture, nodes: fixture.nodes.map(patch), edges: fixture.edges.map(patch) }, runtime };
+    }
+    case "duplicateSelection": {
+      const selected = new Set(runtime.selectedIds);
+      const clones = fixture.nodes
+        .filter((node) => selected.has(node.id))
+        .map((node) => ({ ...node, id: `${node.id}-copy`, x: (node.x as number) + 24, y: (node.y as number) + 24 }));
+      if (clones.length === 0) return state;
+      return { fixture: { ...fixture, nodes: [...fixture.nodes, ...clones] }, runtime: { ...runtime, selectedIds: clones.map((clone) => clone.id) } };
+    }
+    case "selectSameKind": {
+      const kinds = new Set(fixture.nodes.filter((node) => runtime.selectedIds.includes(node.id)).map((node) => node.nodeKind));
+      return { fixture, runtime: { ...runtime, selectedIds: fixture.nodes.filter((node) => kinds.has(node.nodeKind)).map((node) => node.id) } };
+    }
+    case "addNode": {
+      const id = `story-node-${fixture.nodes.length + 1}`;
+      const node: StoryPuzzle2dEntity = { id, nodeKind: args?.kind ?? "node", shape: args?.shape ?? "circle", x: args?.x ?? 0, y: args?.y ?? 0, radius: args?.radius ?? 24, text: id, handles: [] };
+      return { fixture: { ...fixture, nodes: [...fixture.nodes, node] }, runtime };
+    }
+    default:
+      return state;
+  }
+}
+//#endregion PluginEmulator
+
+//#region SceneNode
+function buildStorySceneNode(state: StoryPuzzle2dState, interactive: boolean): UiComponentSceneNode {
+  const { fixture, runtime } = state;
+  return {
+    type: "componentScene",
+    surfaceId: "puzzle2d.story.overview",
+    controllerId: "puzzle2d-story",
+    componentKind: "puzzle2d-board",
+    puzzle2dBoard: {
+      fixtureJson: JSON.stringify(fixture),
+      cameraJson: JSON.stringify(fixture.camera),
+      kindCatalogsJson: JSON.stringify(fixture.meta?.kindCatalogs ?? {}),
+      selectionJson: JSON.stringify(runtime.selectedIds),
+      interactive,
+      activeTool: runtime.activeTool,
+      selectionMethod: runtime.selectionMethod,
+      gridSnapEnabled: runtime.gridSnapEnabled,
+      gridFactor: runtime.gridFactor,
+      suggestionOffset: runtime.suggestionOffset,
+      brushKindWeightsJson: JSON.stringify({ nodeWeights: runtime.nodeKindWeights, handleWeights: runtime.handleKindWeights }),
+      kindCompatibilityJson: JSON.stringify(fixture.meta?.kindCompatibility ?? []),
+      lodMode: runtime.lodMode,
+    },
+  };
+}
+//#endregion SceneNode
+
+//#region Fixtures
+const STORY_DEFAULT_FIXTURE: StoryPuzzle2dFixture = {
+  schema: "puzzle.2d.fixture",
+  camera: { x: 140, y: 60, zoom: 1 },
+  nodes: [
+    { id: "alpha", nodeKind: "seed", shape: "circle", x: 0, y: 0, radius: 44, text: "alpha", handles: [{ id: "alpha:v0", handleKind: "port", angle: 0, radius: 6 }] },
+    { id: "beta", nodeKind: "seed", shape: "circle", x: 280, y: 120, radius: 40, text: "beta", handles: [{ id: "beta:v0", handleKind: "port", angle: Math.PI, radius: 6 }] },
+  ],
+  edges: [{ id: "link-1", edgeKind: "link", source: "alpha:v0", target: "beta:v0" }],
+};
+
+const STORY_BRUSH_FIXTURE: StoryPuzzle2dFixture = {
+  ...STORY_DEFAULT_FIXTURE,
+  meta: {
+    kindCatalogs: { nodes: [{ id: "seed", name: "Seed" }], handles: [{ id: "port", name: "Port" }] },
+    kindCompatibility: [{ source: "port", target: "port", bidirectional: true, specificity: 0 }],
+  },
+};
+//#endregion Fixtures
+
+//#region StoryHost
+function Puzzle2dBoardStoryHost({ initialFixture, initialRuntime, interactive }: { readonly initialFixture: StoryPuzzle2dFixture; readonly initialRuntime: Partial<StoryPuzzle2dRuntime>; readonly interactive: boolean }): ReactElement {
+  const [state, setState] = useState<StoryPuzzle2dState>(() => ({ fixture: initialFixture, runtime: { ...STORY_DEFAULT_RUNTIME, ...initialRuntime } }));
+
+  const onCommand = useCallback((descriptor: CommandDescriptor): void => {
+    setState((current) => reduceStoryPuzzle2dCommand(current, descriptor.command, descriptor.args));
+  }, []);
+
+  const node = useMemo(() => buildStorySceneNode(state, interactive), [state, interactive]);
+  const debug = useMemo(
+    () => JSON.stringify({ selection: state.runtime.selectedIds, camera: state.fixture.camera, activeTool: state.runtime.activeTool, nodeCount: state.fixture.nodes.length, edgeCount: state.fixture.edges.length }),
+    [state],
+  );
+
+  return (
+    <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
+      <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
+        <Puzzle2dBoardHost node={node} onCommand={onCommand} />
+      </div>
+      <pre data-testid="puzzle2d-board-debug" style={{ margin: 0, padding: 4, fontSize: 11 }}>
+        {debug}
+      </pre>
+    </div>
+  );
+}
+//#endregion StoryHost
 
 const meta = {
   title: "🧩puzzle🩻2d",
-  component: Puzzle2dCanvas,
+  component: Puzzle2dBoardStoryHost,
   parameters: {
     layout: "fullscreen",
   },
   tags: ["autodocs"],
-} satisfies Meta<typeof Puzzle2dCanvas>;
+} satisfies Meta<typeof Puzzle2dBoardStoryHost>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-interface Puzzle2dFixtureHandleJson {
-  angle: number;
-  color?: string;
-  handleKind?: string;
-  id: string;
-  radius?: number;
-}
-
-interface Puzzle2dFixtureNodeJson {
-  cad?: { x: number; y: number; z: number } | null;
-  handles: Puzzle2dFixtureHandleJson[];
-  height?: number;
-  iconKind?: string;
-  id: string;
-  label?: string;
-  nodeKind?: string;
-  radius?: number;
-  shape?: "circle" | "rectangle";
-  text?: string;
-  width?: number;
-  x: number;
-  y: number;
-}
-
-interface Puzzle2dFixtureEdgeJson {
-  id: string;
-  source: string;
-  target: string;
-}
-
-interface Puzzle2dFixture {
-  camera: { x: number; y: number; zoom: number };
-  edges: Puzzle2dFixtureEdgeJson[];
-  meta?: Record<string, unknown>;
-  nodes: Puzzle2dFixtureNodeJson[];
-  schema: string;
-}
-
-const nakaginCapsuleTowerPuzzle2d = nakaginCapsuleTowerPuzzle2dFixture as Puzzle2dFixture;
-
-const nakaginStoryKindCatalogs = mergeKindCatalogBundleByRowId({ ...DEFAULT_KIND_CATALOG_BUNDLE }, fixtureMetaKindCatalogBundle(nakaginCapsuleTowerPuzzle2dFixture) ?? {});
-
-const nakaginStoryKindCompatibility = puzzle2dFixtureMetaKindCompatibility(nakaginCapsuleTowerPuzzle2dFixture) ?? [];
-
-type DefaultPuzzle2dGraphNode = {
-  handles: { angle: number; handleKind: string; id: string }[];
-  id: string;
-  radius: number;
-  x: number;
-  y: number;
-};
-
-type DefaultPuzzle2dGraphEdge = { id: string; source: string; target: string };
-
-type DefaultPuzzle2dGraph = { edges: DefaultPuzzle2dGraphEdge[]; nodes: DefaultPuzzle2dGraphNode[] };
-
-const defaultPuzzle2dGraph: DefaultPuzzle2dGraph = {
-  edges: [{ id: "link-1", source: "alpha.out", target: "beta.in" }],
-  nodes: [
-    { handles: [{ angle: 0, handleKind: BUILTIN_PORT_HANDLE_KIND, id: "alpha.out" }], id: "alpha", radius: 44, x: 0, y: 0 },
-    { handles: [{ angle: Math.PI, handleKind: BUILTIN_PORT_HANDLE_KIND, id: "beta.in" }], id: "beta", radius: 40, x: 280, y: 120 },
-  ],
-};
-
-function Puzzle2dDeleteReconciler({ setGraph }: { setGraph: Dispatch<SetStateAction<DefaultPuzzle2dGraph>> }): null {
-  usePuzzle2dEvent(
-    "edgeDelete",
-    useCallback(
-      ({ id }: { id: string }) => {
-        setGraph((graph) => ({ ...graph, edges: graph.edges.filter((edge) => edge.id !== id) }));
-      },
-      [setGraph],
-    ),
-  );
-  usePuzzle2dEvent(
-    "nodeDelete",
-    useCallback(
-      ({ id }: { id: string }) => {
-        setGraph((graph) => {
-          const node = graph.nodes.find((entry) => entry.id === id);
-          const handleIds = new Set(node?.handles.map((handle) => handle.id) ?? []);
-          return {
-            edges: graph.edges.filter((edge) => !handleIds.has(edge.source) && !handleIds.has(edge.target)),
-            nodes: graph.nodes.filter((entry) => entry.id !== id),
-          };
-        });
-      },
-      [setGraph],
-    ),
-  );
-  return null;
-}
-
-function StatefulInteractivePuzzle2dScene(): ReactElement {
-  const [graph, setGraph] = useState(() => defaultPuzzle2dGraph);
-  return (
-    <>
-      <Puzzle2dDeleteReconciler setGraph={setGraph} />
-      {graph.nodes.map((node) => (
-        <Node id={node.id} key={node.id} radius={node.radius} x={node.x} y={node.y}>
-          {node.handles.map((handle) => (
-            <Handle angle={handle.angle} handleKind={handle.handleKind} id={handle.id} key={handle.id} />
-          ))}
-        </Node>
-      ))}
-      {graph.edges.map((edge) => (
-        <Edge id={edge.id} key={edge.id} source={edge.source} target={edge.target} />
-      ))}
-    </>
-  );
-}
-
-/** 🗼 Full Nakagin Capsule Tower puzzle 2d from `nakagin-capsule-tower.2d.json` (regenerate via `nakagin-capsule-tower-board.generate.script.ts`). */
-const nakaginCapsuleTowerPuzzle2dScene: ReactElement = (
-  <>
-    {nakaginCapsuleTowerPuzzle2d.nodes.map((node) =>
-      node.shape === "rectangle" && node.width != null && node.height != null ? (
-        <Node draggable={false} height={node.height} id={node.id} key={node.id} {...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})} shape="rectangle" text={node.text} width={node.width} x={node.x} y={node.y}>
-          {node.handles.map((handle) => (
-            <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind ?? BUILTIN_PORT_HANDLE_KIND} id={handle.id} key={handle.id} radius={handle.radius} />
-          ))}
-        </Node>
-      ) : (
-        <Node draggable={false} id={node.id} key={node.id} {...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {})} radius={node.radius ?? 0} text={node.text} x={node.x} y={node.y}>
-          {node.handles.map((handle) => (
-            <Handle angle={handle.angle} color={handle.color} handleKind={handle.handleKind ?? BUILTIN_PORT_HANDLE_KIND} id={handle.id} key={handle.id} radius={handle.radius} />
-          ))}
-        </Node>
-      ),
-    )}
-    {nakaginCapsuleTowerPuzzle2d.edges.map((edge) => (
-      <Edge id={edge.id} key={edge.id} source={edge.source} target={edge.target} />
-    ))}
-  </>
-);
-
-export const Default: Story = {
-  render: (args) => (
-    <Puzzle2dCanvas {...args}>
-      <StatefulInteractivePuzzle2dScene />
-    </Puzzle2dCanvas>
-  ),
+export const OverviewSelect: Story = {
   args: {
-    camera: { x: 0, y: 0, zoom: 1 },
-    kindCatalogs: { ...DEFAULT_KIND_CATALOG_BUNDLE },
-    height: 520,
-    width: 720,
-    worldRasterTiling: "none",
+    initialFixture: STORY_DEFAULT_FIXTURE,
+    initialRuntime: {},
+    interactive: true,
   },
 };
 
-export const WorldTileClip: Story = {
-  render: (args) => (
-    <Puzzle2dCanvas {...args}>
-      <StatefulInteractivePuzzle2dScene />
-    </Puzzle2dCanvas>
-  ),
+export const LassoSelect: Story = {
   args: {
-    ...Default.args,
-    worldRasterTiling: "world-clip",
+    initialFixture: STORY_DEFAULT_FIXTURE,
+    initialRuntime: { selectionMethod: "lasso" },
+    interactive: true,
   },
 };
 
-export const NakaginCapsuleTowerFlatSelection: Story = {
-  render: (args) => <Puzzle2dCanvas {...args}>{nakaginCapsuleTowerPuzzle2dScene}</Puzzle2dCanvas>,
+export const BrushTool: Story = {
   args: {
-    ...Default.args,
-    camera: { ...nakaginCapsuleTowerPuzzle2d.camera },
-    kindCatalogs: nakaginStoryKindCatalogs,
-    kindCompatibility: nakaginStoryKindCompatibility,
+    initialFixture: STORY_BRUSH_FIXTURE,
+    initialRuntime: { activeTool: "brush" },
+    interactive: true,
+  },
+};
+
+export const ForcedLodPane: Story = {
+  args: {
+    initialFixture: STORY_DEFAULT_FIXTURE,
+    initialRuntime: { lodMode: "detail" },
+    interactive: false,
   },
 };

@@ -12,8 +12,6 @@ crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
-base64 = "0.22"
-image = { version = "0.25", default-features = false, features = ["png"] }
 semio-framework-os = { path = "../../../framework/product/os/core/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

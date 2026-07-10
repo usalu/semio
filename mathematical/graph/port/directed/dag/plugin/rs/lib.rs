@@ -497,7 +497,7 @@ fn inspector_number_field(node_ids: &[String], field_id: &str, label: &str, valu
     UiNode::Field(UiFieldNode {
         id: field_id.into(),
         label: label.into(),
-        child: UiControlNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode {
             id: format!("{field_id}.input"),
             input_kind: "number".into(),
             value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
@@ -508,7 +508,7 @@ fn inspector_number_field(node_ids: &[String], field_id: &str, label: &str, valu
             max: None,
             step: None,
             accept: None,
-        }),
+        })),
         description: None,
         required: None,
         error: None,
@@ -520,7 +520,7 @@ fn inspector_text_field(node_ids: &[String], field_id: &str, label: &str, values
     UiNode::Field(UiFieldNode {
         id: field_id.into(),
         label: label.into(),
-        child: UiControlNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode {
             id: format!("{field_id}.input"),
             input_kind: "text".into(),
             value: mixed.value,
@@ -531,7 +531,7 @@ fn inspector_text_field(node_ids: &[String], field_id: &str, label: &str, values
             max: None,
             step: None,
             accept: None,
-        }),
+        })),
         description: None,
         required: None,
         error: None,
@@ -591,7 +591,7 @@ fn build_inspector_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
             UiNode::Field(UiFieldNode {
                 id: "dag-play-inspector.id".into(),
                 label: "Id".into(),
-                child: UiControlNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {
                     id: "dag-play-inspector.id.input".into(),
                     input_kind: "text".into(),
                     value: node_ids[0].clone(),
@@ -602,7 +602,7 @@ fn build_inspector_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,

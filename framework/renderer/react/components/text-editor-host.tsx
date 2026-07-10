@@ -218,6 +218,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
       hoverTokenRangeJson: () => "null",
       setHoverRange: () => {},
       cameraJson: () => "{}",
+      setCanvasThemeJson: () => {},
       moveLeft: () => {},
       moveRight: () => {},
       moveUp: () => {},

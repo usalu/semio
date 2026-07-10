@@ -302,7 +302,7 @@ fn render_question_control(
         "text" | "longText" => UiNode::Field(UiFieldNode {
             id: format!("forms-module.{key}"),
             label: question.label.clone(),
-            child: UiControlNode::Input(UiInputNode {
+            child: Box::new(UiNode::Input(UiInputNode {
                 id: format!("forms-module.{key}.input"),
                 input_kind: question.kind.clone(),
                 value: json_string_value(value),
@@ -313,7 +313,7 @@ fn render_question_control(
                 max: None,
                 step: None,
                 accept: None,
-            }),
+            })),
             description: None,
             required: None,
             error: None,
@@ -321,7 +321,7 @@ fn render_question_control(
         "number" => UiNode::Field(UiFieldNode {
             id: format!("forms-module.{key}"),
             label: question.label.clone(),
-            child: UiControlNode::Input(UiInputNode {
+            child: Box::new(UiNode::Input(UiInputNode {
                 id: format!("forms-module.{key}.input"),
                 input_kind: "number".into(),
                 value: json_string_value(value),
@@ -332,7 +332,7 @@ fn render_question_control(
                 max: None,
                 step: None,
                 accept: None,
-            }),
+            })),
             description: None,
             required: None,
             error: None,
@@ -340,7 +340,7 @@ fn render_question_control(
         "slider" => UiNode::Field(UiFieldNode {
             id: format!("forms-module.{key}"),
             label: question.label.clone(),
-            child: UiControlNode::Slider(UiSliderNode {
+            child: Box::new(UiNode::Slider(UiSliderNode {
                 id: format!("forms-module.{key}.slider"),
                 value: json_f64_value(value),
                 min: question.min.unwrap_or(0.0),
@@ -348,7 +348,7 @@ fn render_question_control(
                 step: question.step.unwrap_or(1.0),
                 on_change: patch_cmd(key),
                 unit: None,
-            }),
+            })),
             description: None,
             required: None,
             error: None,
@@ -356,13 +356,13 @@ fn render_question_control(
         "boolean" => UiNode::Field(UiFieldNode {
             id: format!("forms-module.{key}"),
             label: question.label.clone(),
-            child: UiControlNode::Toggle(UiToggleNode {
+            child: Box::new(UiNode::Toggle(UiToggleNode {
                 id: format!("forms-module.{key}.toggle"),
                 icon_id: "check".into(),
                 pressed: value.as_bool().unwrap_or(false),
                 text: None,
                 on_change: patch_cmd(key),
-            }),
+            })),
             description: None,
             required: None,
             error: None,

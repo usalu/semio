@@ -487,7 +487,7 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
         UiNode::Field(UiFieldNode {
             id: "vcs-play-inspector.title".into(),
             label: "Title".into(),
-            child: UiControlNode::Input(UiInputNode {
+            child: Box::new(UiNode::Input(UiInputNode {
                 id: "vcs-play-inspector.title.input".into(),
                 input_kind: "text".into(),
                 value: projection.title.clone(),
@@ -498,7 +498,7 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
                 max: None,
                 step: None,
                 accept: None,
-            }),
+            })),
             description: None,
             required: None,
             error: None,
@@ -506,7 +506,7 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
         UiNode::Field(UiFieldNode {
             id: "vcs-play-inspector.counter".into(),
             label: "Counter".into(),
-            child: UiControlNode::Input(UiInputNode {
+            child: Box::new(UiNode::Input(UiInputNode {
                 id: "vcs-play-inspector.counter.input".into(),
                 input_kind: "number".into(),
                 value: projection.counter.to_string(),
@@ -517,7 +517,7 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
                 max: None,
                 step: None,
                 accept: None,
-            }),
+            })),
             description: None,
             required: None,
             error: None,
@@ -525,7 +525,7 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
         UiNode::Field(UiFieldNode {
             id: "vcs-play-inspector.status".into(),
             label: "Status".into(),
-            child: UiControlNode::Input(UiInputNode {
+            child: Box::new(UiNode::Input(UiInputNode {
                 id: "vcs-play-inspector.status.input".into(),
                 input_kind: "text".into(),
                 value: projection.status.clone(),
@@ -536,7 +536,7 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
                 max: None,
                 step: None,
                 accept: None,
-            }),
+            })),
             description: None,
             required: None,
             error: None,
@@ -544,7 +544,7 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
         UiNode::Field(UiFieldNode {
             id: "vcs-play-inspector.notes".into(),
             label: "Notes".into(),
-            child: UiControlNode::Input(UiInputNode {
+            child: Box::new(UiNode::Input(UiInputNode {
                 id: "vcs-play-inspector.notes.input".into(),
                 input_kind: "text".into(),
                 value: projection.notes.clone(),
@@ -555,7 +555,7 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
                 max: None,
                 step: None,
                 accept: None,
-            }),
+            })),
             description: None,
             required: None,
             error: None,

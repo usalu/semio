@@ -618,13 +618,13 @@ fn canvas_settings_field_group(runtime: &FlowPlayRuntime) -> UiInspectorFieldGro
             UiNode::Field(UiFieldNode {
                 id: "flow-play-inspector.lod-mode".into(),
                 label: "LOD Mode".into(),
-                child: UiControlNode::Select(UiSelectNode {
+                child: Box::new(UiNode::Select(UiSelectNode {
                     id: "flow-play-inspector.lod-mode.select".into(),
                     value: runtime.lod_mode.clone(),
                     items: lod_items,
                     placeholder: None,
                     on_change: flow_cmd("setLodMode", None),
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -632,7 +632,7 @@ fn canvas_settings_field_group(runtime: &FlowPlayRuntime) -> UiInspectorFieldGro
             UiNode::Field(UiFieldNode {
                 id: "flow-play-inspector.proximity-distance".into(),
                 label: "Proximity Distance".into(),
-                child: UiControlNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {
                     id: "flow-play-inspector.proximity-distance.input".into(),
                     input_kind: "number".into(),
                     value: runtime.proximity_distance.to_string(),
@@ -643,7 +643,7 @@ fn canvas_settings_field_group(runtime: &FlowPlayRuntime) -> UiInspectorFieldGro
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -679,7 +679,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
             fields: vec![UiNode::Field(UiFieldNode {
                 id: "flow-play-inspector.slider-value".into(),
                 label: "Value".into(),
-                child: UiControlNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {
                     id: "flow-play-inspector.slider-value.input".into(),
                     input_kind: "number".into(),
                     value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
@@ -690,7 +690,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -706,7 +706,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
             fields: vec![UiNode::Field(UiFieldNode {
                 id: "flow-play-inspector.note-text".into(),
                 label: "Text".into(),
-                child: UiControlNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {
                     id: "flow-play-inspector.note-text.input".into(),
                     input_kind: "text".into(),
                     value: mixed.value,
@@ -717,7 +717,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -736,7 +736,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
             UiNode::Field(UiFieldNode {
                 id: "flow-play-inspector.id".into(),
                 label: "Id".into(),
-                child: UiControlNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {
                     id: "flow-play-inspector.id.input".into(),
                     input_kind: "text".into(),
                     value: widget_ids[0].clone(),
@@ -747,7 +747,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,

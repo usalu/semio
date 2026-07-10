@@ -2247,7 +2247,7 @@ export type UiFieldNode = {
   readonly description?: string;
   readonly required?: boolean;
   readonly error?: string;
-  readonly child: UiControlNode;
+  readonly child: UiNode;
 };
 
 export type UiSectionNode = {

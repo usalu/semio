@@ -1,20 +1,29 @@
 //! ♻️ Trinity Rewrite plugin — parametric rewrite play app bundled as a hot-swappable WASM component.
 
-use semio_framework_plugin::{SurfaceKind, PanelGroup, 
-    build_node_graph_scene, build_text_editor_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
+use semio_framework_plugin::{SurfaceKind, PanelGroup,
+    build_node_graph_scene, build_text_editor_scene, text_identifier_bounds_at,
+    tool_button, tool_collection,
+    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, App, CommandDescriptor, NodeGraphScene, PluginApp,
-    PluginBundle, TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
+    PluginBundle, TextEditorScene, ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
-    WindowLayoutStackNode, WindowLayoutWindowNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
+use semio_framework_plugin::layout::MeasureSelectItem;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::sync::LazyLock;
+use trinity_jack::semantic_tokens;
 use trinity_ram::{Graph, GraphFixture, Node, PortDirection, PropertyValue};
-use trinity_rewrite::{apply_rule, build_rule_query, rule_query_json, Lhs, ParameterKind, ParameterSpec, Rhs, Rule, PatternJson};
+use trinity_rewrite::{
+    apply_rule, build_rule_query, rule_query_json, trinity_lod_scale_json,
+    create_rewrite_rule_envelope, dispatch_rewrite_rule_state, Lhs, ParameterKind, ParameterSpec, Rhs, Rule,
+    PatternJson, RewriteRuleEnvelope, RewriteRuleState, RewriteRuleStore,
+};
+use vcs::DocumentVcsCommand;
 
 //#region 🔖Constants
 const TRINITY_REWRITE_PLAY_APP_ID: &str = "trinity-rewrite-play";
@@ -63,6 +72,8 @@ const DEFAULT_RHS_JSON: &str = r#"{
   "merge": [],
   "parameters": [{ "name": "label", "kind": "string", "default": "nakagin-core" }]
 }"#;
+
+const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
 //#endregion 🔖Constants
 
 //#region 🔖Envelope
@@ -71,8 +82,6 @@ const DEFAULT_RHS_JSON: &str = r#"{
 struct RewritePlayRuntime {
     #[serde(default)]
     selected_node_ids: Vec<String>,
-    #[serde(default)]
-    parameter_bindings: HashMap<String, PropertyValue>,
     #[serde(default)]
     reorganize_epoch: u64,
     #[serde(default)]
@@ -88,33 +97,34 @@ struct RewritePlayRuntime {
     #[serde(default)]
     rhs_graph_hover_id: String,
     #[serde(default)]
-    undo_stack: Vec<String>,
-    #[serde(default)]
-    redo_stack: Vec<String>,
+    lod_mode_by_window: BTreeMap<String, String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct TrinityRewriteEnvelope {
-    before_fixture_json: String,
-    after_fixture_json: String,
-    lhs_json: String,
-    rhs_json: String,
+    rule_vcs: RewriteRuleEnvelope,
     #[serde(default)]
     runtime: RewritePlayRuntime,
 }
 
-fn default_envelope() -> TrinityRewriteEnvelope {
-    let mut envelope = TrinityRewriteEnvelope {
+fn default_rule_state() -> RewriteRuleState {
+    let mut state = RewriteRuleState {
         before_fixture_json: NAKAGIN_FIXTURE_JSON.into(),
-        after_fixture_json: NAKAGIN_FIXTURE_JSON.into(),
         lhs_json: DEFAULT_LHS_JSON.into(),
         rhs_json: DEFAULT_RHS_JSON.into(),
-        runtime: RewritePlayRuntime::default(),
+        parameter_bindings: HashMap::new(),
+        rule_layout: HashMap::new(),
     };
-    envelope.runtime.parameter_bindings = default_parameter_bindings(&envelope.rhs_json);
-    envelope.after_fixture_json = apply_rewrite_to_fixture(&envelope.before_fixture_json, &envelope);
-    envelope
+    state.parameter_bindings = default_parameter_bindings(&state.rhs_json);
+    state
+}
+
+fn default_envelope() -> TrinityRewriteEnvelope {
+    TrinityRewriteEnvelope {
+        rule_vcs: create_rewrite_rule_envelope(TRINITY_REWRITE_PLAY_APP_ID, default_rule_state()),
+        runtime: RewritePlayRuntime::default(),
+    }
 }
 
 fn parse_envelope(document_json: &str) -> TrinityRewriteEnvelope {
@@ -147,9 +157,31 @@ fn default_parameter_bindings(rhs_json: &str) -> HashMap<String, PropertyValue> 
         .collect()
 }
 
-fn build_rule_from_envelope(envelope: &TrinityRewriteEnvelope) -> Result<Rule, String> {
-    let lhs: Lhs = serde_json::from_str(&envelope.lhs_json).map_err(|e| e.to_string())?;
-    let rhs: Rhs = serde_json::from_str(&envelope.rhs_json).map_err(|e| e.to_string())?;
+fn rule_store_from_envelope(envelope: &TrinityRewriteEnvelope) -> RewriteRuleStore {
+    RewriteRuleStore::new(envelope.rule_vcs.clone())
+}
+
+fn rule_state(envelope: &TrinityRewriteEnvelope) -> RewriteRuleState {
+    rule_store_from_envelope(envelope).projection().unwrap_or_else(|_| default_rule_state())
+}
+
+fn sync_envelope_from_rule_store(envelope: &mut TrinityRewriteEnvelope, store: &RewriteRuleStore) {
+    envelope.rule_vcs = store.envelope().clone();
+}
+
+fn apply_rule_state(envelope: &mut TrinityRewriteEnvelope, next: RewriteRuleState) -> bool {
+    let mut store = rule_store_from_envelope(envelope);
+    if dispatch_rewrite_rule_state(&mut store, next).is_ok() {
+        sync_envelope_from_rule_store(envelope, &store);
+        true
+    } else {
+        false
+    }
+}
+
+fn build_rule_from_state(state: &RewriteRuleState) -> Result<Rule, String> {
+    let lhs: Lhs = serde_json::from_str(&state.lhs_json).map_err(|e| e.to_string())?;
+    let rhs: Rhs = serde_json::from_str(&state.rhs_json).map_err(|e| e.to_string())?;
     Ok(Rule {
         name: TRINITY_REWRITE_PLAY_RULE_NAME.into(),
         lhs,
@@ -157,35 +189,39 @@ fn build_rule_from_envelope(envelope: &TrinityRewriteEnvelope) -> Result<Rule, S
     })
 }
 
-fn compiled_jack_query(envelope: &TrinityRewriteEnvelope) -> String {
-    let rule_json = match build_rule_from_envelope(envelope) {
+fn compiled_jack_query(state: &RewriteRuleState) -> String {
+    let rule_json = match build_rule_from_state(state) {
         Ok(rule) => serde_json::to_string(&rule).unwrap_or_default(),
         Err(_) => return String::new(),
     };
-    let bindings_json = serde_json::to_string(&envelope.runtime.parameter_bindings).unwrap_or_else(|_| "{}".into());
+    let bindings_json = serde_json::to_string(&state.parameter_bindings).unwrap_or_else(|_| "{}".into());
     rule_query_json(&rule_json, &bindings_json)
         .ok()
         .and_then(|json| serde_json::from_str::<Value>(&json).ok())
         .and_then(|value| value.get("query").and_then(|query| query.as_str()).map(str::to_string))
         .unwrap_or_else(|| {
-            build_rule_from_envelope(envelope)
-                .map(|rule| build_rule_query(&rule, &envelope.runtime.parameter_bindings))
+            build_rule_from_state(state)
+                .map(|rule| build_rule_query(&rule, &state.parameter_bindings))
                 .unwrap_or_default()
         })
 }
 
-fn apply_rewrite_to_fixture(before_json: &str, envelope: &TrinityRewriteEnvelope) -> String {
+fn apply_rewrite_to_fixture(before_json: &str, state: &RewriteRuleState) -> String {
     let Ok(mut graph) = Graph::load_json(before_json) else {
         return before_json.into();
     };
-    let Ok(rule) = build_rule_from_envelope(envelope) else {
+    let Ok(rule) = build_rule_from_state(state) else {
         return before_json.into();
     };
-    if apply_rule(&mut graph, &rule, &envelope.runtime.parameter_bindings).is_ok() {
+    if apply_rule(&mut graph, &rule, &state.parameter_bindings).is_ok() {
         graph.fixture_json().unwrap_or_else(|_| before_json.into())
     } else {
         before_json.into()
     }
+}
+
+fn after_fixture_json(state: &RewriteRuleState) -> String {
+    apply_rewrite_to_fixture(&state.before_fixture_json, state)
 }
 
 fn selection_ids(args: Option<&Value>) -> Vec<String> {
@@ -224,38 +260,177 @@ fn sync_hover_var_from_node(envelope: &mut TrinityRewriteEnvelope, fixture_json:
     envelope.runtime.hover_epoch += 1;
 }
 
-fn apply_rewrite_node_graph_edit_ops(envelope: &mut TrinityRewriteEnvelope, ops: &[Value]) -> bool {
+fn apply_semantic_layout_edit(rule_layout: &mut HashMap<String, (f64, f64)>, current_fixture_json: &str, edited_fixture_json: &str) -> bool {
+    let (Some(current), Some(edited)) = (parse_fixture_json(current_fixture_json), parse_fixture_json(edited_fixture_json)) else {
+        return false;
+    };
+    let mut changed = false;
+    for node in &edited.nodes {
+        let Some(prev) = current.nodes.iter().find(|entry| entry.id == node.id) else {
+            continue;
+        };
+        if (prev.x - node.x).abs() > 1e-6 || (prev.y - node.y).abs() > 1e-6 {
+            rule_layout.insert(node.id.clone(), (node.x, node.y));
+            changed = true;
+        }
+    }
+    changed
+}
+
+enum RuleClauseRef {
+    LhsWhere,
+    RhsCreate(usize),
+    RhsMerge(usize),
+    RhsSet(usize),
+    RhsDelete(usize),
+    RhsParameter(usize),
+}
+
+fn parse_clause_ref(node_id: &str) -> Option<RuleClauseRef> {
+    if node_id == "lhs-where" {
+        return Some(RuleClauseRef::LhsWhere);
+    }
+    let (prefix, index) = node_id.rsplit_once('-')?;
+    let index: usize = index.parse().ok()?;
+    match prefix {
+        "rhs-create" => Some(RuleClauseRef::RhsCreate(index)),
+        "rhs-merge" => Some(RuleClauseRef::RhsMerge(index)),
+        "rhs-set" => Some(RuleClauseRef::RhsSet(index)),
+        "rhs-delete" => Some(RuleClauseRef::RhsDelete(index)),
+        "rhs-parameter" => Some(RuleClauseRef::RhsParameter(index)),
+        _ => None,
+    }
+}
+
+fn remove_at<T>(items: &mut Vec<T>, index: usize) -> bool {
+    if index < items.len() {
+        items.remove(index);
+        true
+    } else {
+        false
+    }
+}
+
+fn delete_rule_clause(state: &mut RewriteRuleState, node_id: &str) -> bool {
+    let Some(clause_ref) = parse_clause_ref(node_id) else {
+        return false;
+    };
+    let Ok(mut lhs) = serde_json::from_str::<Lhs>(&state.lhs_json) else {
+        return false;
+    };
+    let Ok(mut rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
+        return false;
+    };
+    let changed = match clause_ref {
+        RuleClauseRef::LhsWhere => {
+            let had = lhs.where_clause.is_some();
+            lhs.where_clause = None;
+            had
+        }
+        RuleClauseRef::RhsCreate(index) => remove_at(&mut rhs.create, index),
+        RuleClauseRef::RhsMerge(index) => remove_at(&mut rhs.merge, index),
+        RuleClauseRef::RhsSet(index) => remove_at(&mut rhs.set, index),
+        RuleClauseRef::RhsDelete(index) => remove_at(&mut rhs.delete, index),
+        RuleClauseRef::RhsParameter(index) => {
+            if index < rhs.parameters.len() {
+                let removed = rhs.parameters.remove(index);
+                state.parameter_bindings.remove(&removed.name);
+                true
+            } else {
+                false
+            }
+        }
+    };
+    if changed {
+        state.lhs_json = serde_json::to_string(&lhs).unwrap_or_default();
+        state.rhs_json = serde_json::to_string(&rhs).unwrap_or_default();
+        state.rule_layout.remove(node_id);
+    }
+    changed
+}
+
+/// ➕ Appends a default instance of `clause_kind` to the rule (rewrite.where/create/merge/set/delete/parameter).
+fn add_rule_clause(state: &mut RewriteRuleState, clause_kind: &str) -> bool {
+    let Ok(mut lhs) = serde_json::from_str::<Lhs>(&state.lhs_json) else {
+        return false;
+    };
+    let Ok(mut rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
+        return false;
+    };
+    let left_var = lhs.pattern.left_var.clone();
+    let changed = match clause_kind {
+        "where" => {
+            if lhs.where_clause.is_some() {
+                false
+            } else {
+                lhs.where_clause = Some(format!("{left_var}.name = 'value'"));
+                true
+            }
+        }
+        "create" => {
+            rhs.create.push(PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
+            true
+        }
+        "merge" => {
+            rhs.merge.push(PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
+            true
+        }
+        "set" => {
+            rhs.set.push(AssignmentJson { var: left_var, prop: "label".into(), value: PropertyValue::String(String::new()) });
+            true
+        }
+        "delete" => {
+            rhs.delete.push(left_var);
+            true
+        }
+        "parameter" => {
+            let name = format!("param{}", rhs.parameters.len());
+            state.parameter_bindings.insert(name.clone(), PropertyValue::String(String::new()));
+            rhs.parameters.push(ParameterSpec { name, kind: ParameterKind::String, default: PropertyValue::String(String::new()) });
+            true
+        }
+        _ => false,
+    };
+    if changed {
+        state.lhs_json = serde_json::to_string(&lhs).unwrap_or_default();
+        state.rhs_json = serde_json::to_string(&rhs).unwrap_or_default();
+    }
+    changed
+}
+
+fn apply_rewrite_node_graph_edit_ops(envelope: &mut TrinityRewriteEnvelope, surface_id: &str, ops: &[Value]) -> bool {
+    let mut store = rule_store_from_envelope(envelope);
+    let Ok(mut state) = store.projection() else {
+        return false;
+    };
     let mut changed = false;
     for op in ops {
         match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
             "setFixture" => {
-                if let Some(fixture_json) = op.get("fixtureJson").and_then(|value| value.as_str()) {
-                    if parse_fixture_json(fixture_json).is_some() {
-                        let before_ids: std::collections::HashSet<String> = parse_fixture_json(&envelope.before_fixture_json)
-                            .map(|fixture| fixture.nodes.into_iter().map(|node| node.id).collect())
-                            .unwrap_or_default();
-                        let matches_before = parse_fixture_json(fixture_json)
-                            .map(|fixture| {
-                                !fixture.nodes.is_empty()
-                                    && fixture.nodes.iter().all(|node| before_ids.contains(&node.id))
-                            })
-                            .unwrap_or(false);
-                        if matches_before {
-                            envelope.before_fixture_json = fixture_json.into();
-                        } else {
-                            envelope.after_fixture_json = fixture_json.into();
-                        }
-                        envelope.after_fixture_json =
-                            apply_rewrite_to_fixture(&envelope.before_fixture_json, envelope);
-                        changed = true;
-                    }
+                let Some(fixture_json) = op.get("fixtureJson").and_then(|value| value.as_str()) else {
+                    continue;
+                };
+                if parse_fixture_json(fixture_json).is_none() {
+                    continue;
+                }
+                if surface_id == TRINITY_REWRITE_PLAY_SURFACE_BEFORE {
+                    state.before_fixture_json = fixture_json.into();
+                    changed = true;
+                } else if surface_id == TRINITY_REWRITE_PLAY_SURFACE_LHS {
+                    let current = lhs_graph_fixture_json(&state.lhs_json, &state.rule_layout);
+                    changed |= apply_semantic_layout_edit(&mut state.rule_layout, &current, fixture_json);
+                } else if surface_id == TRINITY_REWRITE_PLAY_SURFACE_RHS {
+                    let current = rhs_graph_fixture_json(&state.rhs_json, &state.rule_layout);
+                    changed |= apply_semantic_layout_edit(&mut state.rule_layout, &current, fixture_json);
                 }
             }
             "deleteSelection" => {
-                if !envelope.runtime.selected_node_ids.is_empty() {
-                    push_undo(envelope);
+                if envelope.runtime.selected_node_ids.is_empty() {
+                    continue;
+                }
+                if surface_id == TRINITY_REWRITE_PLAY_SURFACE_BEFORE {
                     let ids = envelope.runtime.selected_node_ids.clone();
-                    if let Some(mut fixture) = parse_fixture_json(&envelope.before_fixture_json) {
+                    if let Some(mut fixture) = parse_fixture_json(&state.before_fixture_json) {
                         fixture.nodes.retain(|node| !ids.contains(&node.id));
                         fixture.edges.retain(|edge| {
                             let from = edge.source.split(':').next().unwrap_or(&edge.source);
@@ -263,31 +438,27 @@ fn apply_rewrite_node_graph_edit_ops(envelope: &mut TrinityRewriteEnvelope, ops:
                             !ids.iter().any(|id| id == from || id == to)
                         });
                         if let Ok(json) = Graph::from_fixture(fixture).and_then(|graph| graph.fixture_json()) {
-                            envelope.before_fixture_json = json;
-                            envelope.after_fixture_json =
-                                apply_rewrite_to_fixture(&envelope.before_fixture_json, envelope);
+                            state.before_fixture_json = json;
                             envelope.runtime.selected_node_ids.clear();
                             changed = true;
                         }
+                    }
+                } else if surface_id == TRINITY_REWRITE_PLAY_SURFACE_LHS || surface_id == TRINITY_REWRITE_PLAY_SURFACE_RHS {
+                    let ids = envelope.runtime.selected_node_ids.clone();
+                    let mut deleted = false;
+                    for id in &ids {
+                        deleted |= delete_rule_clause(&mut state, id);
+                    }
+                    if deleted {
+                        envelope.runtime.selected_node_ids.clear();
+                        changed = true;
                     }
                 }
             }
             _ => {}
         }
     }
-    changed
-}
-
-fn snapshot_envelope_json(envelope: &TrinityRewriteEnvelope) -> String {
-    serde_json::to_string(envelope).unwrap_or_default()
-}
-
-fn push_undo(envelope: &mut TrinityRewriteEnvelope) {
-    envelope.runtime.undo_stack.push(snapshot_envelope_json(envelope));
-    if envelope.runtime.undo_stack.len() > 32 {
-        envelope.runtime.undo_stack.remove(0);
-    }
-    envelope.runtime.redo_stack.clear();
+    changed && apply_rule_state(envelope, state)
 }
 
 fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, value: &str) -> Option<String> {
@@ -305,59 +476,8 @@ fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, val
     Graph::from_fixture(fixture).ok()?.fixture_json().ok()
 }
 
-fn pattern_graph_fixture(patterns: &[PatternJson], title: &str) -> GraphFixture {
-    let mut nodes = Vec::new();
-    let mut edges = Vec::new();
-    for (index, pattern) in patterns.iter().enumerate() {
-        let left_id = format!("lhs-{}-{}", pattern.left_var, index);
-        nodes.push(Node {
-            id: left_id.clone(),
-            name: format!("{}:{}", pattern.left_var, pattern.left_kind),
-            kind: pattern.left_kind.clone(),
-            x: (index as f64) * 220.0,
-            y: 0.0,
-            width: 120.0,
-            height: 56.0,
-            ports: vec![],
-            properties: Default::default(),
-        });
-        if let (Some(right_var), Some(right_kind)) = (&pattern.right_var, &pattern.right_kind) {
-            let right_id = format!("rhs-{}-{}", right_var, index);
-            nodes.push(Node {
-                id: right_id.clone(),
-                name: format!("{right_var}:{right_kind}"),
-                kind: right_kind.clone(),
-                x: (index as f64) * 220.0 + 180.0,
-                y: 0.0,
-                width: 120.0,
-                height: 56.0,
-                ports: vec![],
-                properties: Default::default(),
-            });
-            let edge_id = format!("edge-{index}");
-            let edge_kind = pattern.edge_kind.clone().unwrap_or_else(|| "Connection".into());
-            edges.push(trinity_ram::Edge {
-                id: edge_id,
-                kind: edge_kind,
-                source: format!("{left_id}:out"),
-                target: format!("{right_id}:in"),
-                properties: Default::default(),
-            });
-        }
-    }
-    GraphFixture {
-        schema: GraphFixture::SCHEMA.into(),
-        name: title.into(),
-        manifest_id: Some("nakagin".into()),
-        manifest: trinity_ram::Manifest::nakagin_default(),
-        camera: trinity_ram::Camera { x: 0.0, y: 0.0, zoom: 1.0 },
-        nodes,
-        edges,
-        root_node_id: None,
-    }
-}
-
-fn semantic_rule_node(id: &str, kind: &str, name: &str, x: f64, y: f64) -> Node {
+fn semantic_rule_node(id: &str, kind: &str, name: &str, x: f64, y: f64, rule_layout: &HashMap<String, (f64, f64)>) -> Node {
+    let (x, y) = rule_layout.get(id).copied().unwrap_or((x, y));
     Node {
         id: id.into(),
         name: name.into(),
@@ -371,17 +491,18 @@ fn semantic_rule_node(id: &str, kind: &str, name: &str, x: f64, y: f64) -> Node 
     }
 }
 
-fn lhs_semantic_graph_fixture(lhs: &Lhs) -> GraphFixture {
+fn lhs_semantic_graph_fixture(lhs: &Lhs, rule_layout: &HashMap<String, (f64, f64)>) -> GraphFixture {
     let mut nodes = vec![semantic_rule_node(
         "lhs-match",
         "rewrite.match",
         &format!("{}:{}", lhs.pattern.left_var, lhs.pattern.left_kind),
         0.0,
         0.0,
+        rule_layout,
     )];
     let mut edges = Vec::new();
     if let Some(where_clause) = lhs.where_clause.as_deref().filter(|value| !value.trim().is_empty()) {
-        nodes.push(semantic_rule_node("lhs-where", "rewrite.where", where_clause, 220.0, 80.0));
+        nodes.push(semantic_rule_node("lhs-where", "rewrite.where", where_clause, 220.0, 80.0, rule_layout));
         edges.push(trinity_ram::Edge {
             id: "lhs-match-where".into(),
             kind: "rewrite.flow".into(),
@@ -402,9 +523,9 @@ fn lhs_semantic_graph_fixture(lhs: &Lhs) -> GraphFixture {
     }
 }
 
-fn rhs_semantic_graph_fixture(rhs: &Rhs) -> GraphFixture {
+fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &HashMap<String, (f64, f64)>) -> GraphFixture {
     let mut nodes = Vec::new();
-    let mut edges = Vec::new();
+    let edges = Vec::new();
     let mut y = 0.0;
     for (index, pattern) in rhs.create.iter().enumerate() {
         let id = format!("rhs-create-{index}");
@@ -414,6 +535,7 @@ fn rhs_semantic_graph_fixture(rhs: &Rhs) -> GraphFixture {
             &format!("{}:{}", pattern.left_var, pattern.left_kind),
             (index as f64) * 220.0,
             y,
+            rule_layout,
         ));
     }
     y += 80.0;
@@ -425,6 +547,7 @@ fn rhs_semantic_graph_fixture(rhs: &Rhs) -> GraphFixture {
             &format!("{}:{}", pattern.left_var, pattern.left_kind),
             (index as f64) * 220.0,
             y,
+            rule_layout,
         ));
     }
     y += 80.0;
@@ -436,12 +559,13 @@ fn rhs_semantic_graph_fixture(rhs: &Rhs) -> GraphFixture {
             &format!("{}.{} = {:?}", assignment.var, assignment.prop, assignment.value),
             (index as f64) * 220.0,
             y,
+            rule_layout,
         ));
     }
     y += 80.0;
     for (index, name) in rhs.delete.iter().enumerate() {
         let id = format!("rhs-delete-{index}");
-        nodes.push(semantic_rule_node(&id, "rewrite.delete", name, (index as f64) * 220.0, y));
+        nodes.push(semantic_rule_node(&id, "rewrite.delete", name, (index as f64) * 220.0, y, rule_layout));
     }
     y += 80.0;
     for (index, parameter) in rhs.parameters.iter().enumerate() {
@@ -457,10 +581,11 @@ fn rhs_semantic_graph_fixture(rhs: &Rhs) -> GraphFixture {
             &format!("{}:{kind}", parameter.name),
             (index as f64) * 220.0,
             y,
+            rule_layout,
         ));
     }
     if nodes.is_empty() {
-        nodes.push(semantic_rule_node("rhs-empty", "rewrite.create", "result:Piece", 0.0, 0.0));
+        nodes.push(semantic_rule_node("rhs-empty", "rewrite.create", "result:Piece", 0.0, 0.0, rule_layout));
     }
     GraphFixture {
         schema: GraphFixture::SCHEMA.into(),
@@ -474,21 +599,21 @@ fn rhs_semantic_graph_fixture(rhs: &Rhs) -> GraphFixture {
     }
 }
 
-fn lhs_graph_fixture_json(lhs_json: &str) -> String {
+fn lhs_graph_fixture_json(lhs_json: &str, rule_layout: &HashMap<String, (f64, f64)>) -> String {
     let Ok(lhs) = serde_json::from_str::<Lhs>(lhs_json) else {
         return NAKAGIN_FIXTURE_JSON.into();
     };
-    Graph::from_fixture(lhs_semantic_graph_fixture(&lhs))
+    Graph::from_fixture(lhs_semantic_graph_fixture(&lhs, rule_layout))
         .ok()
         .and_then(|graph| graph.fixture_json().ok())
         .unwrap_or_else(|| NAKAGIN_FIXTURE_JSON.into())
 }
 
-fn rhs_graph_fixture_json(rhs_json: &str) -> String {
+fn rhs_graph_fixture_json(rhs_json: &str, rule_layout: &HashMap<String, (f64, f64)>) -> String {
     let Ok(rhs) = serde_json::from_str::<Rhs>(rhs_json) else {
         return NAKAGIN_FIXTURE_JSON.into();
     };
-    Graph::from_fixture(rhs_semantic_graph_fixture(&rhs))
+    Graph::from_fixture(rhs_semantic_graph_fixture(&rhs, rule_layout))
         .ok()
         .and_then(|graph| graph.fixture_json().ok())
         .unwrap_or_else(|| NAKAGIN_FIXTURE_JSON.into())
@@ -660,8 +785,29 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
     }
 }
 
+fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, description: Option<String>, command: CommandDescriptor) -> UiTreeItemNode {
+    UiTreeItemNode {
+        id: id.into(),
+        label: label.into(),
+        description,
+        icon_id: None,
+        selected: None,
+        default_open: None,
+        command: Some(command),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
+        draggable: None,
+        drag_data: None,
+        items: None,
+        control: None,
+        is_hidden: None,
+    }
+}
+
 fn build_document_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
-    let Some(fixture) = parse_fixture_json(&envelope.before_fixture_json) else {
+    let state = rule_state(envelope);
+    let Some(fixture) = parse_fixture_json(&state.before_fixture_json) else {
         return ui_text("Invalid trinity fixture");
     };
     let node_items: Vec<UiTreeItemNode> = fixture
@@ -706,18 +852,42 @@ fn build_document_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
     })
 }
 
+fn catalogue_add_item(id: &str, label: &str, clause_kind: &str) -> UiTreeItemNode {
+    tree_item_with_command(id, label, None, rewrite_cmd("addRuleClause", Some(json!({ "kind": clause_kind }))))
+}
+
 fn build_catalogue_tree() -> UiNode {
     UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode {
-            id: "trinity-catalogue.kinds".into(),
-            label: Some("Catalogue".into()),
-            default_open: Some(true),
-            items: vec![
-                tree_item("trinity-catalogue.piece", "Piece"),
-                tree_item("trinity-catalogue.connection", "Connection"),
-                tree_item("trinity-catalogue.connector", "Connector"),
-            ],
-        }],
+        sections: vec![
+            UiTreeSectionNode {
+                id: "trinity-catalogue.kinds".into(),
+                label: Some("Catalogue".into()),
+                default_open: Some(true),
+                items: vec![
+                    tree_item("trinity-catalogue.piece", "Piece"),
+                    tree_item("trinity-catalogue.connection", "Connection"),
+                    tree_item("trinity-catalogue.connector", "Connector"),
+                ],
+            },
+            UiTreeSectionNode {
+                id: "trinity-catalogue.lhs".into(),
+                label: Some("Add to LHS".into()),
+                default_open: Some(true),
+                items: vec![catalogue_add_item("trinity-catalogue.add-where", "Where clause", "where")],
+            },
+            UiTreeSectionNode {
+                id: "trinity-catalogue.rhs".into(),
+                label: Some("Add to RHS".into()),
+                default_open: Some(true),
+                items: vec![
+                    catalogue_add_item("trinity-catalogue.add-create", "Create pattern", "create"),
+                    catalogue_add_item("trinity-catalogue.add-merge", "Merge pattern", "merge"),
+                    catalogue_add_item("trinity-catalogue.add-set", "Set assignment", "set"),
+                    catalogue_add_item("trinity-catalogue.add-delete", "Delete pattern", "delete"),
+                    catalogue_add_item("trinity-catalogue.add-parameter", "Parameter", "parameter"),
+                ],
+            },
+        ],
         selected_ids: Some(vec![]),
         highlighted_ids: None,
         selection_change: None,
@@ -725,8 +895,23 @@ fn build_catalogue_tree() -> UiNode {
     })
 }
 
+fn flat_position_uv(node: &Node) -> (String, String) {
+    let Some(flat) = node.properties.get("flatPosition").and_then(PropertyValue::as_object) else {
+        return (String::new(), String::new());
+    };
+    let format_axis = |axis: &str| flat.get(axis).and_then(PropertyValue::as_f64).map(|value| format!("{value:.2}")).unwrap_or_default();
+    (format_axis("u"), format_axis("v"))
+}
+
+fn fixture_with_derived(fixture_json: &str) -> Option<GraphFixture> {
+    let mut graph = Graph::load_json(fixture_json).ok()?;
+    graph.recompute_derived();
+    Some(graph.to_fixture())
+}
+
 fn build_inspector_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
-    let Some(fixture) = parse_fixture_json(&envelope.before_fixture_json) else {
+    let state = rule_state(envelope);
+    let Some(fixture) = parse_fixture_json(&state.before_fixture_json) else {
         return ui_text("Invalid trinity fixture");
     };
     if envelope.runtime.selected_node_ids.is_empty() {
@@ -746,43 +931,85 @@ fn build_inspector_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
     if nodes.is_empty() {
         return ui_text("Piece not found");
     }
+    let node_ids: Vec<String> = nodes.iter().map(|node| node.id.clone()).collect();
     let name_mixed = ui_inspector_mixed_text(&nodes.iter().map(|node| node.name.clone()).collect::<Vec<_>>());
     let kind_mixed = ui_inspector_mixed_text(&nodes.iter().map(|node| node.kind.clone()).collect::<Vec<_>>());
-    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-        id: "trinity-inspector.identity".into(),
-        label: "Identity".into(),
-        default_open: None,
-        fields: vec![
-            ui_inspector_readonly_field(
-                "trinity-inspector.name",
-                "Name",
-                if name_mixed.placeholder.is_none() {
-                    name_mixed.value
-                } else {
-                    name_mixed.placeholder.unwrap_or_else(|| UI_INSPECTOR_MIXED_PLACEHOLDER.into())
-                },
-            ),
-            ui_inspector_readonly_field(
-                "trinity-inspector.kind",
-                "Kind",
-                if kind_mixed.placeholder.is_none() {
-                    nodes.first().map(|node| node.kind.clone()).unwrap_or_default()
-                } else {
-                    kind_mixed.placeholder.unwrap_or_else(|| UI_INSPECTOR_MIXED_PLACEHOLDER.into())
-                },
-            ),
-        ],
-    }])
+    let derived_fixture = fixture_with_derived(&state.before_fixture_json);
+    let derived_uv = |id: &str| -> (String, String) {
+        derived_fixture
+            .as_ref()
+            .and_then(|fixture| fixture.nodes.iter().find(|node| node.id == id))
+            .map(flat_position_uv)
+            .unwrap_or_default()
+    };
+    let u_values: Vec<String> = node_ids.iter().map(|id| derived_uv(id).0).collect();
+    let v_values: Vec<String> = node_ids.iter().map(|id| derived_uv(id).1).collect();
+    let u_mixed = ui_inspector_mixed_text(&u_values);
+    let v_mixed = ui_inspector_mixed_text(&v_values);
+    ui_inspector_groups_to_tree(&[
+        UiInspectorFieldGroup {
+            id: "trinity-inspector.geometry".into(),
+            label: "Geometry".into(),
+            default_open: None,
+            fields: vec![
+                ui_inspector_readonly_field(
+                    "trinity-inspector.flat-u",
+                    "Flat U",
+                    if u_mixed.placeholder.is_none() { u_values.first().cloned().unwrap_or_default() } else { u_mixed.placeholder.unwrap_or_else(|| UI_INSPECTOR_MIXED_PLACEHOLDER.into()) },
+                ),
+                ui_inspector_readonly_field(
+                    "trinity-inspector.flat-v",
+                    "Flat V",
+                    if v_mixed.placeholder.is_none() { v_values.first().cloned().unwrap_or_default() } else { v_mixed.placeholder.unwrap_or_else(|| UI_INSPECTOR_MIXED_PLACEHOLDER.into()) },
+                ),
+            ],
+        },
+        UiInspectorFieldGroup {
+            id: "trinity-inspector.identity".into(),
+            label: "Identity".into(),
+            default_open: None,
+            fields: vec![
+                semio_framework_plugin::UiNode::Field(UiFieldNode {
+                    id: "trinity-inspector.name".into(),
+                    label: "Name".into(),
+                    child: semio_framework_plugin::UiControlNode::Input(semio_framework_plugin::UiInputNode {
+                        id: "trinity-inspector.name.input".into(),
+                        input_kind: "text".into(),
+                        value: name_mixed.value,
+                        placeholder: name_mixed.placeholder,
+                        commit: None,
+                        on_change: rewrite_cmd("patchTrinityNodes", Some(json!({ "nodeIds": node_ids, "field": "name" }))),
+                        min: None,
+                        max: None,
+                        step: None,
+                        accept: None,
+                    }),
+                    description: None,
+                    required: None,
+                    error: None,
+                }),
+                ui_inspector_readonly_field(
+                    "trinity-inspector.kind",
+                    "Kind",
+                    if kind_mixed.placeholder.is_none() {
+                        nodes.first().map(|node| node.kind.clone()).unwrap_or_default()
+                    } else {
+                        kind_mixed.placeholder.unwrap_or_else(|| UI_INSPECTOR_MIXED_PLACEHOLDER.into())
+                    },
+                ),
+            ],
+        },
+    ])
 }
 
 fn build_parameters_panel(envelope: &TrinityRewriteEnvelope) -> UiNode {
-    let Ok(rhs) = serde_json::from_str::<Rhs>(&envelope.rhs_json) else {
+    let state = rule_state(envelope);
+    let Ok(rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
         return ui_text("Invalid RHS");
     };
     let mut children: Vec<UiNode> = Vec::new();
     for param in &rhs.parameters {
-        let value = envelope
-            .runtime
+        let value = state
             .parameter_bindings
             .get(&param.name)
             .cloned()
@@ -845,13 +1072,27 @@ impl ParameterKindLabel for ParameterSpec {
 //#endregion 🔖Panels
 
 //#region 🔖Render
+const DELETE_SELECTION_CONTEXT_MENU: &str =
+    r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#;
+
+fn rewrite_lod_json_for_window(runtime: &RewritePlayRuntime, window_id: &str) -> Option<String> {
+    let mode = runtime.lod_mode_by_window.get(window_id).map(String::as_str).unwrap_or(TRINITY_LOD_MODE_AUTOMATIC);
+    if mode == TRINITY_LOD_MODE_AUTOMATIC {
+        Some(json!({ "automatic": true }).to_string())
+    } else {
+        Some(json!({ "automatic": false, "forcedLabel": mode }).to_string())
+    }
+}
+
 fn render_rule_graph(
     surface_id: &str,
+    window_id: &str,
     fixture_json: &str,
     envelope: &TrinityRewriteEnvelope,
     hover_node_id: &str,
+    editable: bool,
 ) -> UiNode {
-    let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| GraphFixture::from_json(fixture_json).unwrap_or_else(|_| GraphFixture::from_json(NAKAGIN_FIXTURE_JSON).unwrap()));
+    let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| GraphFixture::from_json(NAKAGIN_FIXTURE_JSON).unwrap());
     let (nodes_json, edges_json, viewport_json) = fixture_to_media_graph(&fixture);
     let hover_json = graph_hover_json(fixture_json, &envelope.runtime.active_hover_var, hover_node_id);
     let selection_json = graph_selection_json(fixture_json, &envelope.runtime.active_select_var, &envelope.runtime.selected_node_ids);
@@ -861,13 +1102,16 @@ fn render_rule_graph(
         NodeGraphScene {
             hover_json,
             selection_json,
+            lod_json: rewrite_lod_json_for_window(&envelope.runtime, window_id),
+            editable: editable.then_some(true),
+            context_menu_json: editable.then(|| DELETE_SELECTION_CONTEXT_MENU.into()),
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
         },
     )
 }
 
-fn render_fixture_graph(surface_id: &str, fixture_json: &str, envelope: &TrinityRewriteEnvelope) -> UiNode {
-    render_rule_graph(surface_id, fixture_json, envelope, "")
+fn render_fixture_graph(surface_id: &str, window_id: &str, fixture_json: &str, envelope: &TrinityRewriteEnvelope, editable: bool) -> UiNode {
+    render_rule_graph(surface_id, window_id, fixture_json, envelope, "", editable)
 }
 
 fn var_occurrences_json(text: &str, var: &str) -> Option<String> {
@@ -879,7 +1123,7 @@ fn var_occurrences_json(text: &str, var: &str) -> Option<String> {
     while let Some(found) = text[scan..].find(var) {
         let at = scan + found;
         let end = at + var.len();
-        if semio_framework_plugin::text_identifier_bounds_at(text, at) == Some((at, end)) {
+        if text_identifier_bounds_at(text, at) == Some((at, end)) {
             ranges.push(json!({ "start": at, "end": end }));
         }
         scan = at + var.len();
@@ -892,7 +1136,8 @@ fn var_occurrences_json(text: &str, var: &str) -> Option<String> {
 }
 
 fn render_jack_editor(envelope: &TrinityRewriteEnvelope) -> UiNode {
-    let query = compiled_jack_query(envelope);
+    let state = rule_state(envelope);
+    let query = compiled_jack_query(&state);
     let active_var = if !envelope.runtime.active_hover_var.is_empty() {
         envelope.runtime.active_hover_var.as_str()
     } else {

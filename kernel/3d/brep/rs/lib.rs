@@ -234,7 +234,11 @@ impl BrepkitKernel {
     }
 
     fn boolean_mesh_sync(&mut self, op: BooleanOp, a: SolidId, b: SolidId) -> Result<SolidId, BrepError> {
-        let deflection = 0.03;
+        // 🐌 Coarser than the default render deflection on purpose: this only feeds the
+        // triangle-triangle boolean, not the final mesh, and a finer value multiplies the
+        // CDT/mesh-boolean triangle count enough to turn torus-involving cuts into a
+        // multi-second (wasm: ~20s) synchronous stall on the caller's thread.
+        let deflection = 0.1;
         let tol = brepkit_math::tolerance::Tolerance::new();
         let mesh_a = tessellate_solid_with_tolerance(&self.topo, a, deflection, 0.2).map_err(Self::map_err)?;
         let mesh_b = tessellate_solid_with_tolerance(&self.topo, b, deflection, 0.2).map_err(Self::map_err)?;

@@ -835,7 +835,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
             UiNode::Field(UiFieldNode {
                 id: "layout-play-inspector.page-name".into(),
                 label: "Name".into(),
-                child: UiControlNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {
                     id: "layout-play-inspector.page-name.input".into(),
                     input_kind: "text".into(),
                     value: page.name.clone(),
@@ -846,7 +846,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -864,7 +864,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
             fields.push(UiNode::Field(UiFieldNode {
                 id: format!("layout-play-inspector.page-{field}"),
                 label: label.into(),
-                child: UiControlNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {
                     id: format!("layout-play-inspector.page-{field}.input"),
                     input_kind: "number".into(),
                     value: format!("{value}"),
@@ -875,7 +875,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     max: None,
                     step: None,
                     accept: None,
-                }),
+                })),
                 description: None,
                 required: None,
                 error: None,
@@ -884,7 +884,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
         fields.push(UiNode::Field(UiFieldNode {
             id: "layout-play-inspector.page-columnsCount".into(),
             label: "Columns".into(),
-            child: UiControlNode::Input(UiInputNode {
+            child: Box::new(UiNode::Input(UiInputNode {
                 id: "layout-play-inspector.page-columnsCount.input".into(),
                 input_kind: "number".into(),
                 value: format!("{}", page.columns.count),
@@ -895,7 +895,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                 max: None,
                 step: None,
                 accept: None,
-            }),
+            })),
             description: None,
             required: None,
             error: None,
@@ -927,7 +927,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                 fields.push(UiNode::Field(UiFieldNode {
                     id: format!("layout-play-inspector.frame-{field}"),
                     label: label.into(),
-                    child: UiControlNode::Input(UiInputNode {
+                    child: Box::new(UiNode::Input(UiInputNode {
                         id: format!("layout-play-inspector.frame-{field}.input"),
                         input_kind: "number".into(),
                         value: format!("{}", value as i64),
@@ -941,7 +941,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                         max: None,
                         step: None,
                         accept: None,
-                    }),
+                    })),
                     description: None,
                     required: None,
                     error: None,
@@ -953,7 +953,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                         fields.push(UiNode::Field(UiFieldNode {
                             id: format!("layout-play-inspector.frame-{field}"),
                             label: label.into(),
-                            child: UiControlNode::Input(UiInputNode {
+                            child: Box::new(UiNode::Input(UiInputNode {
                                 id: format!("layout-play-inspector.frame-{field}.input"),
                                 input_kind: "text".into(),
                                 value: rgba_to_text(value),
@@ -967,7 +967,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                                 max: None,
                                 step: None,
                                 accept: None,
-                            }),
+                            })),
                             description: None,
                             required: None,
                             error: None,
@@ -978,7 +978,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     fields.push(UiNode::Field(UiFieldNode {
                         id: "layout-play-inspector.frame-story".into(),
                         label: "Story".into(),
-                        child: UiControlNode::Input(UiInputNode {
+                        child: Box::new(UiNode::Input(UiInputNode {
                             id: "layout-play-inspector.frame-story.input".into(),
                             input_kind: "text".into(),
                             value: story_full_content(doc, story_id),
@@ -992,7 +992,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                             max: None,
                             step: None,
                             accept: None,
-                        }),
+                        })),
                         description: None,
                         required: None,
                         error: None,
@@ -1000,7 +1000,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     fields.push(UiNode::Field(UiFieldNode {
                         id: "layout-play-inspector.frame-wrapMode".into(),
                         label: "Wrap Mode".into(),
-                        child: UiControlNode::Select(UiSelectNode {
+                        child: Box::new(UiNode::Select(UiSelectNode {
                             id: "layout-play-inspector.frame-wrapMode.select".into(),
                             value: wrap_mode.clone(),
                             items: vec![
@@ -1013,7 +1013,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                                 "patchFrame",
                                 Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "wrapMode" })),
                             ),
-                        }),
+                        })),
                         description: None,
                         required: None,
                         error: None,
@@ -1021,7 +1021,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     fields.push(UiNode::Field(UiFieldNode {
                         id: "layout-play-inspector.frame-columns".into(),
                         label: "Columns".into(),
-                        child: UiControlNode::Input(UiInputNode {
+                        child: Box::new(UiNode::Input(UiInputNode {
                             id: "layout-play-inspector.frame-columns.input".into(),
                             input_kind: "number".into(),
                             value: format!("{columns}"),
@@ -1035,7 +1035,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                             max: None,
                             step: None,
                             accept: None,
-                        }),
+                        })),
                         description: None,
                         required: None,
                         error: None,
@@ -1045,7 +1045,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     fields.push(UiNode::Field(UiFieldNode {
                         id: "layout-play-inspector.frame-linkPath".into(),
                         label: "Link Path".into(),
-                        child: UiControlNode::Input(UiInputNode {
+                        child: Box::new(UiNode::Input(UiInputNode {
                             id: "layout-play-inspector.frame-linkPath.input".into(),
                             input_kind: "text".into(),
                             value: link_path(doc, link_id),
@@ -1059,7 +1059,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                             max: None,
                             step: None,
                             accept: None,
-                        }),
+                        })),
                         description: None,
                         required: None,
                         error: None,
