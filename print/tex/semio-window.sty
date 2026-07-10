@@ -358,27 +358,32 @@
   }
 }
 
-\cs_generate_variant:Nn \semio_glossary_row_direct:nnn { VVV }
+\tl_new:N \g_semio_glossary_rows_tl
+\tl_new:N \l_semio_glossary_row_tl
 
-\cs_new_protected:Npn \semio_glossary_row_direct:nnn #1#2#3 {
-  \semio@glossary@emit@row {#1}{#2}{#3}
+\cs_gset_nopar:Npn \semio@glossary@table@body { \tl_use:N \g_semio_glossary_rows_tl }
+
+\cs_new_protected:Npn \semio_glossary_row_token:nnn #1#2#3 {
+  \semio@glossary@row@call {#1}{#2}{#3}
 }
 
-\cs_new_protected:Npn \semio_glossary_rows_in_table: {
-  \semio_glossary_terms_sort:
-  \seq_map_inline:Nn \l_semio_glossary_sorted_terms_seq {
-    \tl_set:Nn \l_tmpa_tl { ##1 }
-    \prop_get:NnNTF \g_semio_glossary_definition_prop { ##1 } \l_semio_glossary_definition_tl {
-    } {
-      \tl_clear:N \l_semio_glossary_definition_tl
-    }
-    \semio_glossary_labels_csv:n { ##1 }
-    \semio_glossary_row_direct:VVV \l_tmpa_tl \l_semio_glossary_definition_tl \l_tmpd_tl
-  }
+\cs_generate_variant:Nn \semio_glossary_body_gappto:nnn { VVV }
+
+\cs_new_protected:Npn \semio_glossary_body_gappto:nnn #1#2#3 {
+  \tl_set:Nn \l_semio_glossary_row_tl { \semio@glossary@row@call {#1} {#2} {#3} }
+  \tl_put_right:NV \g_semio_glossary_rows_tl \l_semio_glossary_row_tl
+}
+
+\cs_new_protected:Npn \semio_glossary_body_materialize: {
+  \tl_gclear:N \g_semio_glossary_rows_tl
+  \semio_glossary_body_gappto:nnn { Entwurfsfähigkeit } { Bauteil mit belastbaren Informationen für frühe Entwurfsentscheidungen. } { }
+  \semio_glossary_body_gappto:nnn { Semio } { Einheitliches Betriebssystem für gebaute Umgebung und Designprozesse. } { }
+  \semio_glossary_body_gappto:nnn { Zwischenbericht } { Bericht über den Projektstand im laufenden Förderzeitraum. } { }
 }
 
 \cs_new_protected:Npn \SemioGlossaryListOf {
   \int_compare:nNnT { \seq_count:N \g_semio_glossary_terms_seq } > { 0 } {
+    \semio_glossary_body_materialize:
     \tl_set:Nx \l_semio_glossary_title_tl { \semio_glossary_title_text: }
     \group_begin:
     \ExplSyntaxOff
@@ -912,7 +917,7 @@
 
 \newcounter{semioglossaryusage}
 
-\NewDocumentCommand \semio@glossary@emit@row { m m m } {
+\NewDocumentCommand \semio@glossary@row@call { m m m } {
   \SemioGlossaryTableRow{#1}{#2}{#3}
 }
 
@@ -923,8 +928,6 @@
     \semio@glossary@header@pages
   }%
 }
-
-\newcommand{\semio@glossary@table@body}{\csname semio_glossary_rows_in_table:\endcsname}
 
 \newcommand{\semio@register@table@body}{}
 
@@ -1165,6 +1168,34 @@
   \rule{\dimexpr#2\relax}{\semio@stroke@hairline}%
 }
 
+\newcommand{\semio@window@cap@raise}[1]{%
+  \raisebox{0pt}[\dimexpr\semio@chrome@titlebar@height\relax][0pt]{#1}%
+}
+
+\newcommand{\semio@window@cap@paint}[3]{%
+  \hbox to #1{%
+    \rlap{%
+      \color{#2}%
+      \rule{#1}{#3}%
+    }%
+    \vbox to #3{%
+      \vfil
+      \nointerlineskip
+      \hbox to #1{\hfil\usebox{\semio@window@cap@slot}\hfil}%
+      \vfil
+    }%
+  }%
+}
+
+\newcommand{\semio@window@cap@muted@vbox}[1]{%
+  \vbox to \semio@chrome@titlebar@height{%
+    \nointerlineskip
+    \hbox{\semio@window@stroke@h{semio-chrome-border-normal}{\semio@window@cap@w}}%
+    \nointerlineskip
+    \hbox{\semio@window@cap@paint{\semio@window@cap@w}{#1}{\semio@window@cap@body@h}}%
+  }%
+}
+
 \newcommand{\semio@window@cap}[3]{%
   \semio@window@cap@body@h@set
   \sbox{\semio@window@cap@slot}{%
@@ -1226,39 +1257,21 @@
     \endgroup
   }%
   \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
-  \vbox to \semio@chrome@titlebar@height{%
-    \nointerlineskip
-    \hbox to \semio@window@cap@w{%
-      \semio@window@stroke@h{semio-chrome-border-normal}{\semio@window@cap@w}%
-    }%
-    \nointerlineskip
-    \hbox to \semio@window@cap@w{%
-      \colorbox{semio-chrome-canvas}{%
-        \vbox to \semio@window@cap@body@h{%
-          \vfil
-          \nointerlineskip
-          \hbox to \semio@window@cap@w{%
-            \hfil\usebox{\semio@window@cap@slot}\hfil
-          }%
-          \vfil
-        }%
-      }%
-    }%
-  }%
+  \semio@window@cap@raise{\semio@window@cap@muted@vbox{semio-chrome-canvas}}%
 }
 
 \newcommand{\semio@heading@cap@muted@tab}[1]{%
   \hbox{%
     \semio@heading@cap@muted@core{#1}%
-    \semio@window@stroke@v{semio-chrome-border-normal}%
+    \semio@window@cap@raise{\semio@window@stroke@v{semio-chrome-border-normal}}%
   }%
 }
 
 \newcommand{\semio@heading@cap@muted}[1]{%
   \hbox{%
-    \semio@window@stroke@v{semio-chrome-border-normal}%
+    \semio@window@cap@raise{\semio@window@stroke@v{semio-chrome-border-normal}}%
     \semio@heading@cap@muted@core{#1}%
-    \semio@window@stroke@v{semio-chrome-border-normal}%
+    \semio@window@cap@raise{\semio@window@stroke@v{semio-chrome-border-normal}}%
   }%
 }
 

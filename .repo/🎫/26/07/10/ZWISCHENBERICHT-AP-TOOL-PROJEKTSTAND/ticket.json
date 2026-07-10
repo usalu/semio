@@ -1,9 +1,9 @@
 {
   "title": "Zwischenbericht AP Tool Projektstand",
   "emoji": "📄",
-  "status": "open",
+  "status": "closed",
   "description": "Replace placeholder text in mit-bestand zwischenbericht section 1 Ergebnisse with provided final content for Forschungsfragen, AP-Erfahrung Recherche, Interviews, User Stories, and Synthese.",
-  "summary": "Added final Zwischenbericht content for AP-Plattform (Generatoren, Bauteileinspeisung/Wizard/REST), AP-Tool (semio/Integration, HID with Bauteilkatalog/3D/Diagramm, LCA, Tragwerk, KI-Assistenz), AP-Validierung placeholders, Projektstand Soll-Ist-Vergleich with milestones table, and Arbeitspakete status sections. Figure placeholders for generator pipeline and tool UI. Build verified.",
+  "summary": "Re-fixed muted chip fill overshoot after regression. Previous \\fboxsep=0pt fix had been reverted; replaced \\colorbox in \\semio@heading@cap@muted@core with rule-based paint (\\semio@window@cap@paint via \\rlap{\\rule}) so canvas fill cannot exceed hairline borders. Affects paragraph chips and window header-row chips. Verified: no 6pt overfull in verify-paragraph.log or zwischenbericht.log; v5 PNGs in ticket folder.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1887"
   },

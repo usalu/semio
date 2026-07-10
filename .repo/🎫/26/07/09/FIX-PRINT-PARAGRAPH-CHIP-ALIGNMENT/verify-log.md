@@ -1,19 +1,19 @@
 # Verify Log — Fix Print Paragraph Chip Alignment
 
-## Muted chip fill overshoot — fixed 2026-07-10
+## Muted chip fill overshoot — fixed 2026-07-10 (re-applied v5)
 
-**Root cause:** `\semio@heading@cap@muted@core` used `\colorbox{semio-chrome-canvas}` without resetting `\fboxsep` to `0pt`. Default `\fboxsep` (3pt) made the fill `6pt` too wide and `3pt` too tall inside rigid `\hbox to \semio@window@cap@w` / `\vbox to \semio@chrome@titlebar@height`, while hairline border strokes (drawn via `\rule`) stayed correct.
+**Root cause:** `\semio@heading@cap@muted@core` used `\colorbox{semio-chrome-canvas}` which pads with `\fboxsep` (default 3pt), making fill `6pt` too wide / `3pt` too tall past hairline borders drawn via `\rule`.
 
-**Fix:** Wrap the muted `\colorbox` with `\begingroup \setlength{\fboxsep}{0pt} ... \endgroup`, matching `\semio@window@cap` (colored chips).
+**Fix (durable):** Replaced `\colorbox` with rule-based paint (`\semio@window@cap@paint` via `\rlap{\rule{…}{…}}`) in `\semio@window@cap@muted@vbox`. Side strokes use `\semio@window@cap@raise` for vertical alignment. No `\fboxsep` dependency — survives regressions.
 
 **Verified:**
-- `verify-paragraph.log` — no `Overfull \hbox (6.0pt too wide)` warnings after fix.
-- Full `zwischenbericht` rebuild — no `6.0pt` chip overfull warnings.
-- `verify-paragraph-p1-16x-v4.png`, `verify-paragraph-p1-8x-v4.png`, `verify-cover-p1-12x-v4.png`, `zwischenbericht-p1.png`, `zwischenbericht-p5.png`.
+- `verify-paragraph.log` — no `Overfull \hbox (6.0pt too wide)` warnings.
+- `zwischenbericht.log` — no `6.0pt` chip overfull warnings.
+- `verify-paragraph-p1-16x-v5.png`, `verify-cover-p1-12x-v5.png`, `zwischenbericht-p1.png`, `zwischenbericht-p5.png`.
 
 ## Changes (`print/tex/semio-window.sty`)
 
-1. **Muted chip `\fboxsep` reset** — `\semio@heading@cap@muted@core` canvas fill no longer overshoots border on right/bottom (paragraph chips + window header-row chips).
+1. **Rule-based muted chip paint** — `\semio@window@cap@paint`, `\semio@window@cap@muted@vbox`, `\semio@window@cap@raise`; `\semio@heading@cap@muted@core` no longer uses `\colorbox`.
 
 ## Verify commands
 
@@ -25,8 +25,8 @@ tectonic -Z search-path=../../../print/tex --outdir dist verify-paragraph.tex
 
 ## Visual result
 
-- `verify-paragraph-p1-16x-v4.png` — muted paragraph chips (`18 Interviews`, `Recherche`) fill matches border.
-- `verify-cover-p1-12x-v4.png` — cover window header-row chips aligned.
+- `verify-paragraph-p1-16x-v5.png` — muted paragraph chips (`18 Interviews`, `Recherche`) fill matches border.
+- `verify-cover-p1-12x-v5.png` — cover window header-row chips aligned.
 - `zwischenbericht-p5.png` — body paragraph chips in full document.
 
 ## Compile hang (`watch`) — fixed 2026-07-09
@@ -51,8 +51,7 @@ bun nx run @semio-tech/mit-bestand-bericht:build
 
 ## Raster artifacts
 
-- `verify-paragraph-p1-16x-v4.png`
-- `verify-paragraph-p1-8x-v4.png`
-- `verify-cover-p1-12x-v4.png`
+- `verify-paragraph-p1-16x-v5.png`
+- `verify-cover-p1-12x-v5.png`
 - `zwischenbericht-p1.png`
 - `zwischenbericht-p5.png`
