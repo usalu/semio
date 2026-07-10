@@ -53,7 +53,6 @@
   \newgeometry{left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm}
   \begin{titlepage}
     \semio_theme_apply:
-    \vfill
     \setlength{\semio@block@sep@skip}{4pt}
     \cs_if_exist:cTF { zukunftbau@type } {
       \str_if_eq:eeTF { \use:c { zukunftbau@type } } { zwischenbericht } {
@@ -64,21 +63,23 @@
         \tl_if_empty:NT \l_semio_clean_title_tl {
           \tl_set:Nn \l_semio_clean_title_tl { \@title }
         }
-        \SemioWindowRowTwo{%
+        \SemioWindowRowTwoFixed{1.55cm}{%
           \begin{Window}[title={Zukunft\ Bau}, row]
-            \centering\hyphenpenalty=10000
-            {\SemioSans\Large Zwischenbericht\par}
+            \centering\hyphenpenalty=10000\vfill
+            {\SemioSans\Large Zwischenbericht\par}\vfill
           \end{Window}%
         }{%
           \begin{Window}[title={Titel}, row]
-            \centering\hyphenpenalty=10000
-            {\SemioSans\Large\tl_use:N \l_semio_clean_title_tl\par}
+            \centering\hyphenpenalty=10000\vfill
+            {\SemioSans\Large\tl_use:N \l_semio_clean_title_tl\par}\vfill
           \end{Window}%
         }
-        \begin{Window}[title={Untertitel}]
-          \centering\hyphenpenalty=10000
-          {\large\tl_use:N \l_semio_subtitle_tl\par}
-        \end{Window}
+        \semio@window@row@body@h@set{1.15cm}
+        \begin{Window}[title={Untertitel}, row]
+          \centering\hyphenpenalty=10000\vfill
+          {\large\tl_use:N \l_semio_subtitle_tl\par}\vfill
+        \end{Window}\par
+        \semio@window@row@body@h@reset
       } {
         \bool_set_false:N \l_semio_is_zwischenbericht_bool
         \begin{Window}[title={Titel}]
@@ -106,17 +107,17 @@
     \tl_if_empty:NF \l_semio_foerderzeitraum_tl { \bool_set_true:N \l_semio_cover@meta@row_bool }
     \tl_if_empty:NF \l_semio_berichtszeitraum_tl { \bool_set_true:N \l_semio_cover@meta@row_bool }
     \bool_if:NT \l_semio_cover@meta@row_bool {
-      \SemioWindowRowThree{%
+      \SemioWindowRowThreeFixed{1.45cm}{%
         \begin{Window}[title=Aktenzeichen, row]
-          {\SemioSans\tl_use:N \l_semio_aktenzeichen_tl\par}
+          {\SemioSans\large\tl_use:N \l_semio_aktenzeichen_tl\par}
         \end{Window}%
       }{%
         \begin{Window}[title=Förderzeitraum, row]
-          {\SemioSans\tl_use:N \l_semio_foerderzeitraum_tl\par}
+          {\SemioSans\large\tl_use:N \l_semio_foerderzeitraum_tl\par}
         \end{Window}%
       }{%
         \begin{Window}[title=Berichtszeitraum, row]
-          {\SemioSans\tl_use:N \l_semio_berichtszeitraum_tl\par}
+          {\SemioSans\large\tl_use:N \l_semio_berichtszeitraum_tl\par}
         \end{Window}%
       }
     }
@@ -136,7 +137,7 @@
     \tl_if_empty:NF \l_semio_antragstellendeinstitution_tl { \bool_set_true:N \l_semio_cover@institution@row_bool }
     \tl_if_empty:NF \l_semio_kooperationspartner_tl { \bool_set_true:N \l_semio_cover@institution@row_bool }
     \bool_if:NT \l_semio_cover@institution@row_bool {
-      \SemioWindowRowTwo{%
+      \SemioWindowRowTwoFixed{4.75cm}{%
         \begin{Window}[title=Antragstellende~Institution, row]
           \semio_cover_address:n { \tl_use:N \l_semio_antragstellendeinstitution_tl }
         \end{Window}%
@@ -146,7 +147,7 @@
         \end{Window}%
       }
     }
-    \SemioWindowRowThree{%
+    \SemioWindowRowThreeFixed{14.3cm}{%
       \begin{Window}[title=Zukunft~Bau, row, anchor=center]
         \semio@logo@slot[\linewidth]{\semio@cover@zukunftbau@logo}
       \end{Window}%
@@ -159,7 +160,6 @@
         \semio@logo@slot[\linewidth]{\semio@cover@bundesministerium@logo}
       \end{Window}%
     }
-    \vfill
   \end{titlepage}
   \clearpage
   \restoregeometry

@@ -3,6 +3,7 @@
 
 \RequirePackage{array}
 \RequirePackage{colortbl}
+\RequirePackage{longtable}
 \RequirePackage{expl3}
 \RequirePackage{semio-core}
 \RequirePackage{semio-fonts}
@@ -80,6 +81,12 @@
 
 \newcommand{\semio@table@colspec@three}{@{}T{\dimexpr0.34\linewidth-\tabcolsep\relax}T{\dimexpr0.33\linewidth-\tabcolsep\relax}T{\dimexpr0.33\linewidth-2\tabcolsep\relax}@{}}
 
+\newcommand{\semio@table@colspec@register@long}{@{}>{\raggedright\arraybackslash}p{0.16\linewidth}>{\raggedright\arraybackslash}p{0.62\linewidth}>{\raggedleft\arraybackslash}p{0.22\linewidth}@{}}
+
+\newcommand{\semio@table@colspec@reference@long}{@{}>{\raggedright\arraybackslash}p{0.12\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}>{\raggedleft\arraybackslash}p{0.22\linewidth}@{}}
+
+\newcommand{\semio@table@colspec@glossary@long}{@{}>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}p{0.56\linewidth}>{\raggedleft\arraybackslash}p{0.22\linewidth}@{}}
+
 \newcommand{\semio@table@colspec@register}{@{}T{\dimexpr0.16\linewidth-\tabcolsep\relax}T{\dimexpr0.62\linewidth-\tabcolsep\relax}U{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
 
 \newcommand{\semio@table@colspec@reference}{@{}T{\dimexpr0.12\linewidth-\tabcolsep\relax}T{\dimexpr0.66\linewidth-\tabcolsep\relax}U{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
@@ -88,27 +95,65 @@
 
 \newcolumntype{T}[1]{%
   >{\raggedright\arraybackslash\hspace{0pt}%
-   \vspace{\semio@spacing@single}}%
+   \vspace*{\semio@spacing@single}}%
   p{#1}%
   <{\vspace{\semio@spacing@single}}%
 }
 
 \newcolumntype{U}[1]{%
   >{\raggedleft\arraybackslash\hspace{0pt}%
-   \vspace{\semio@spacing@single}}%
+   \vspace*{\semio@spacing@single}}%
   p{#1}%
   <{\vspace{\semio@spacing@single}}%
 }
 
 \newcommand{\semio@table@header@cell}[1]{%
   \cellcolor{semio-chrome-window}%
-  \vspace{\semio@spacing@single}%
+  \vspace*{\semio@spacing@single}%
   \bfseries #1%
   \vspace{\semio@spacing@single}%
 }
 
 \newcommand{\semio@table@row@sep}{%
   \noalign{\hrule height\arrayrulewidth}%
+}
+
+\newif\ifsemio@table@register@long
+\semio@table@register@longfalse
+
+\newcommand{\semio@table@long@continuation@chrome}{%
+  \multicolumn{3}{@{}>{\columncolor{semio-chrome-base}}p{\linewidth}@{}}%
+  {%
+    \semio@block@sep
+    \semio@window@header@invoke
+    \vskip-\semio@stroke@hairline
+  }%
+  \\%
+}
+
+\newcommand{\semio@table@long@render}[3]{%
+  \semio@table@setup
+  \global\semio@table@row@startedfalse
+  \SemioSans
+  \fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont
+  \color{semio-chrome-text-normal}%
+  \par
+  \raggedright
+  \setlength{\LTpre}{0pt}%
+  \setlength{\LTpost}{0pt}%
+  \setlength{\LTleft}{0pt}%
+  \setlength{\LTright}{0pt}%
+  \setlength{\LTcapwidth}{\textwidth}%
+  \begin{longtable}{#1}%
+  #2%
+  \endfirsthead
+  #2%
+  \endhead
+  \endfoot
+  \endlastfoot
+  #3%
+  \end{longtable}%
+  \global\semio@table@row@startedfalse
 }
 
 \newcommand{\SemioTableRow}[1]{%
@@ -142,7 +187,14 @@
 }
 
 \newcommand{\SemioTableRegister}[1]{%
-  \expandafter\semio@table@render\expandafter{\semio@table@colspec@register}{#1}%
+  \ifsemio@table@register@long
+    \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@register@long}{\semio@register@table@header}{#1}%
+  \else
+    \expandafter\semio@table@render\expandafter{\semio@table@colspec@register}{%
+      \semio@register@table@header
+      #1%
+    }%
+  \fi
 }
 
 \newcommand{\SemioTableReferenceRow}[3]{%
@@ -150,7 +202,14 @@
 }
 
 \newcommand{\SemioTableReference}[1]{%
-  \expandafter\semio@table@render\expandafter{\semio@table@colspec@reference}{#1}%
+  \ifsemio@table@register@long
+    \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@reference@long}{\semio@references@table@header}{#1}%
+  \else
+    \expandafter\semio@table@render\expandafter{\semio@table@colspec@reference}{%
+      \semio@references@table@header
+      #1%
+    }%
+  \fi
 }
 
 \newcommand{\SemioGlossaryTableRow}[3]{%
@@ -221,7 +280,14 @@
 }
 
 \newcommand{\SemioTableGlossary}[1]{%
-  \expandafter\semio@table@render\expandafter{\semio@table@colspec@glossary}{#1}%
+  \ifsemio@table@register@long
+    \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@glossary@long}{\semio@glossary@table@header}{#1}%
+  \else
+    \expandafter\semio@table@render\expandafter{\semio@table@colspec@glossary}{%
+      \semio@glossary@table@header
+      #1%
+    }%
+  \fi
 }
 
 \newcommand{\semio@table@begin@tabular}[1]{\begin{tabular}{#1}}

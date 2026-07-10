@@ -193,18 +193,13 @@
   \semio_window_toc_aux_load:
   \int_compare:nNnT { \seq_count:c { g_semio_register_toc_num_seq } } > { 0 } {
     \semio_window_register_body_macro_apply:n { toc }
-    \group_begin:
     \ExplSyntaxOff
     \makeatletter
     \semio@register@window@open{\SemioTocTitle}%
-    \SemioTableRegister{%
-      \semio@register@table@header
-      \semio@register@table@body
-    }%
+    \SemioTableRegister{\semio@register@table@body}%
     \semio@register@window@close
     \clearpage
     \makeatother
-    \group_end:
   }
 }
 
@@ -258,6 +253,16 @@
   }
 }
 
+\cs_new_protected:Npn \semio_register_list_header_open:n #1 {
+  \tl_set:Nn \l_semio_window_kind_title_tl {#1}
+  \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
+  \tl_clear:N \l_semio_window_number_tl
+  \semio_window_header_store:
+  \semio_block_sep_before:
+  \semio_window_header_muted_use:
+  \semio_window_vskip_stroke_hairline:
+}
+
 \cs_new_protected:Npn \semio_register_list_begin:n #1 {
   \group_begin:
   \ExplSyntaxOff
@@ -266,15 +271,22 @@
   \bool_set_true:N \l_semio_register_list_bool
   \tl_set:Nn \l_tmpa_tl {#1}
   \tl_set:Nx \l_tmpa_tl { \tl_use:N \l_tmpa_tl }
-  \exp_args:NV \semio@register@list@begin \l_tmpa_tl
+  \exp_args:NV \semio_register_list_header_open:n \l_tmpa_tl
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \global\semio@table@register@longtrue
+  \makeatother
+  \group_end:
 }
 
 \cs_new_protected:Npn \semio_register_list_end: {
-  \end{Table}
+  \semio_block_sep_after:
   \bool_set_false:N \l_semio_register_list_bool
   \group_begin:
   \ExplSyntaxOff
   \semio@register@listfalse
+  \global\semio@table@register@longfalse
   \group_end:
 }
 
@@ -370,12 +382,7 @@
 
 \cs_new_protected:Npn \semio_glossary_body_gappto:nnn #1#2#3 {
   \tl_put_right:Nn \g_semio_glossary_rows_tl
-    {
-      \exp_not:n { \SemioGlossaryTableRow }
-      { \exp_not:n {#1} }
-      { \exp_not:n {#2} }
-      { \exp_not:n {#3} }
-    }
+    { \SemioGlossaryTableRow {#1} {#2} {#3} }
 }
 
 \cs_new_protected:Npn \semio_glossary_row_for_term:n #1 {
@@ -948,7 +955,7 @@
 }
 
 \newcommand{\semio@register@list@begin}[1]{%
-  \begin{Table}[title={#1}]%
+  \semio_register_list_header_open:n {#1}%
 }
 
 \newcommand{\semio@toc@track@num}[3]{%
@@ -959,20 +966,14 @@
 \newcommand{\semio@render@register}[1]{%
   \ifnum\value{#1}>0
     \semio@register@window@open{\SemioRegisterTitle{\csname semio@window@#1@kind\endcsname}}%
-    \SemioTableRegister{%
-      \semio@register@table@header
-      \csname semio@register@body@#1\endcsname
-    }%
+    \SemioTableRegister{\csname semio@register@body@#1\endcsname}%
     \semio@register@window@close
   \fi
 }
 
 \newcommand{\semio@render@toc}{%
   \semio@register@window@open{\SemioTocTitle}%
-  \SemioTableRegister{%
-    \semio@register@table@header
-    \csname semio@register@body@toc\endcsname
-  }%
+  \SemioTableRegister{\csname semio@register@body@toc\endcsname}%
   \semio@register@window@close
   \clearpage
 }
@@ -1041,10 +1042,7 @@
 }
 
 \newcommand{\semio@references@table@render}{%
-  \SemioTableReference{%
-    \semio@references@table@header
-    \semio@references@rows
-  }%
+  \SemioTableReference{\semio@references@rows}%
 }
 
 \newcommand{\SemioReferences}{%
@@ -1713,6 +1711,17 @@
   \edef\SemioWindowStretchHeightValue{\the\semio@window@row@h@max}%
 }
 
+\newcommand{\semio@window@row@body@h@set}[1]{%
+  \setlength{\semio@window@stretch@height}{#1}%
+  \edef\SemioWindowStretchHeightValue{\the\semio@window@stretch@height}%
+}
+
+\newcommand{\semio@window@row@body@h@reset}{%
+  \setlength{\semio@window@stretch@height}{0pt}%
+  \edef\SemioWindowStretchHeightValue{0pt}%
+  \setlength{\semio@window@row@h@max}{0pt}%
+}
+
 \newcommand{\SemioWindowRowTwo}[2]{%
   \setlength{\semio@window@row@h@max}{0pt}%
   \setlength{\semio@window@row@col@w}{\dimexpr(\linewidth-\semio@window@row@gutter)/2\relax}%
@@ -1726,9 +1735,17 @@
     \semio@window@row@col{\semio@window@row@col@w}{#1}\hspace{\semio@window@row@gutter}%
     \semio@window@row@col{\semio@window@row@col@w}{#2}%
   }\par
-  \setlength{\semio@window@stretch@height}{0pt}%
-  \edef\SemioWindowStretchHeightValue{0pt}%
-  \setlength{\semio@window@row@h@max}{0pt}%
+  \semio@window@row@body@h@reset
+}
+
+\newcommand{\SemioWindowRowTwoFixed}[3]{%
+  \setlength{\semio@window@row@col@w}{\dimexpr(\linewidth-\semio@window@row@gutter)/2\relax}%
+  \semio@window@row@body@h@set{#1}%
+  \noindent\hbox to \linewidth{%
+    \semio@window@row@col{\semio@window@row@col@w}{#2}\hspace{\semio@window@row@gutter}%
+    \semio@window@row@col{\semio@window@row@col@w}{#3}%
+  }\par
+  \semio@window@row@body@h@reset
 }
 
 \newcommand{\SemioWindowRowThree}[3]{%
@@ -1747,9 +1764,18 @@
     \semio@window@row@col{\semio@window@row@col@w}{#2}\hspace{\semio@window@row@gutter}%
     \semio@window@row@col{\semio@window@row@col@w}{#3}%
   }\par
-  \setlength{\semio@window@stretch@height}{0pt}%
-  \edef\SemioWindowStretchHeightValue{0pt}%
-  \setlength{\semio@window@row@h@max}{0pt}%
+  \semio@window@row@body@h@reset
+}
+
+\newcommand{\SemioWindowRowThreeFixed}[4]{%
+  \setlength{\semio@window@row@col@w}{\dimexpr(\linewidth-2\semio@window@row@gutter)/3\relax}%
+  \semio@window@row@body@h@set{#1}%
+  \noindent\hbox to \linewidth{%
+    \semio@window@row@col{\semio@window@row@col@w}{#2}\hspace{\semio@window@row@gutter}%
+    \semio@window@row@col{\semio@window@row@col@w}{#3}\hspace{\semio@window@row@gutter}%
+    \semio@window@row@col{\semio@window@row@col@w}{#4}%
+  }\par
+  \semio@window@row@body@h@reset
 }
 %endregion WindowRow
 

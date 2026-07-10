@@ -1,8 +1,8 @@
 {
-  "ergebnisse": true,
-  "forschungsfragen": true,
-  "nested121": false,
-  "nestedCount": 1,
-  "textLength": 170,
-  "sctocLines": 110
+  "numPages": 13,
+  "tocPages": [
+    4
+  ],
+  "ergebnisverwertungOnTocPages": false,
+  "verzeichnisseOnTocPages": false
 }
