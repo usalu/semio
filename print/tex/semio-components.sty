@@ -104,11 +104,9 @@
       \end{Window}
     }
     \tl_if_blank:eF { \semio@cover@arbeitsprobe@image } {
-      \semio@window@row@body@h@set{10.8cm}
-      \begin{Window}[title=Arbeitsprobe, row, anchor=center]
-        \includegraphics[width=\linewidth,height=10.1cm,keepaspectratio]{\semio@cover@arbeitsprobe@image}
+      \begin{Window}[title=Arbeitsprobe, row, anchor=center, height=10.8cm]
+        \SemioImage{\semio@cover@arbeitsprobe@image}
       \end{Window}\par
-      \semio@window@row@body@h@reset
     }
     \bool_set_false:N \l_semio_cover@meta@row_bool
     \tl_if_empty:NF \l_semio_aktenzeichen_tl { \bool_set_true:N \l_semio_cover@meta@row_bool }

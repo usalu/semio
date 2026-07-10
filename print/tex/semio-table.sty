@@ -23,18 +23,7 @@
   \semio_table_header_row:n {#1}
   \\
   \hline
-  \semio_table_header_row_close:
   \global\semio@table@row@startedfalse
-}
-\cs_new_protected:Npn \semio_table_header_row_close: {
-  \group_begin:
-  \ExplSyntaxOff
-  \makeatletter
-  \ifnum\semio@table@long@mode>0\relax
-    \semio@table@long@header@close
-  \fi
-  \makeatother
-  \group_end:
 }
 \cs_new_protected:Npn \semio_table_dot_count_int:n #1 {
   \int_zero:N \l_tmpa_int
@@ -106,6 +95,7 @@
 \newcommand{\semio@table@setup@long}{%
   \semio@table@setup
   \setlength{\tabcolsep}{0pt}%
+  \setlength{\extrarowheight}{0pt}%
 }
 
 \newcommand{\semio@table@colspec@register@long}{|@{\hspace{\semio@chrome@padding}}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.16\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.62\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}@{}@{\hspace{\semio@chrome@padding}}|}
@@ -146,12 +136,7 @@
   \semio@table@header@cell{#2} &
   \semio@table@header@cell{#3} \\
   \hline
-  \semio@table@long@header@close
   \global\semio@table@row@startedfalse
-}
-
-\newcommand{\semio@table@long@header@close}{%
-  \noalign{\vskip\dimexpr-2\semio@spacing@unit\relax}%
 }
 
 \newcommand{\semio@table@long@title@chrome@prepare}{%
@@ -168,21 +153,16 @@
   }%
 }
 
-\newcommand{\semio@table@long@title@chrome}{%
+\newcommand{\semio@table@long@continuation@chrome}{%
   \semio@table@long@title@chrome@prepare
-  \multicolumn{3}{|@{\hspace{\semio@chrome@padding}}@{}l@{}@{\hspace{\semio@chrome@padding}}|}%
-  {%
-    \hbox to \dimexpr\linewidth-2\arrayrulewidth\relax{%
+  \multicolumn{3}{@{\hspace{\semio@chrome@padding}}@{}l@{\hspace{\semio@chrome@padding}}@{}}{%
+    \hbox to \semio@table@long@inner@w{%
       \usebox{\semio@window@tab@box}%
       \semio@window@gap{semio-chrome-base}{semio-chrome-border-normal}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
   \\%
-}
-
-\newcommand{\semio@table@long@continuation@chrome}{%
-  \semio@table@long@title@chrome
 }
 
 \newcommand{\semio@register@table@header@long@repeat}{%
@@ -222,7 +202,6 @@
   \setlength{\LTright}{0pt}%
   \setlength{\LTcapwidth}{\linewidth}%
   \begin{longtable}{#1}%
-  \semio@table@long@title@chrome
   #2%
   \endfirsthead
   \semio@table@long@continuation@chrome
