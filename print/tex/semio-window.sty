@@ -31,7 +31,9 @@
 \tl_new:N \l_semio_window_kind_title_tl
 \tl_new:N \l_semio_window_number_tl
 \tl_new:N \l_semio_window_register_number_tl
-\bool_new:N \l_semio_window_row_bool
+\bool_new:N \l_semio_window_in_item_bool
+\dim_new:N \l_semio_window_pending_height_dim
+\bool_new:N \l_semio_window_pending_height_bool
 \tl_new:N \l_semio_window_valign_tl
 \tl_new:N \l_semio_window_halign_tl
 \tl_set:Nn \l_semio_window_valign_tl { top }
@@ -41,8 +43,6 @@
 \dim_new:N \l_semio_window_textsize_dim
 \bool_new:N \l_semio_window_textsize_set_bool
 \bool_new:N \l_semio_window_textfit_bool
-\bool_new:N \l_semio_window_measure_bool
-\bool_new:N \l_semio_window_row_group_bool
 \tl_new:N \l_semio_window_imagefit_tl
 \tl_set:Nn \l_semio_window_imagefit_tl { contain }
 \tl_new:N \l_semio_image_fit_tl
@@ -213,10 +213,10 @@
     \semio_window_toc_title_plain:n {#2}
     \tl_if_empty:NF \l_tmpa_tl {
       \str_set:Nx \l_tmpb_str {#3}
-      \str_trim_spaces:N \l_tmpb_str
+      \tl_trim_spaces:N \l_tmpb_str
       \exp_args:Nc \seq_gput_right:Nn { g_semio_register_toc_num_seq } {#1}
       \seq_gput_right:Nx \g_semio_register_toc_title_seq { \tl_to_str:N \l_tmpa_tl }
-      \exp_args:NV \seq_gput_right:Nn \g_semio_register_toc_label_seq \l_tmpb_str
+      \exp_args:NNV \seq_gput_right:Nn \g_semio_register_toc_label_seq \l_tmpb_str
     }
   }
 }
@@ -242,13 +242,17 @@
     \int_set:Nn \l_tmpb_int { \int_eval:n { \l_tmpa_int - ##1 + 1 } }
     \tl_set:Nx \l_tmpa_tl { \seq_item:Nn \g_semio_register_toc_num_seq { \int_use:N \l_tmpb_int } }
     \tl_set:Nx \l_tmpc_tl { \seq_item:Nn \g_semio_register_toc_title_seq { \int_use:N \l_tmpb_int } }
-    \bool_lazy_or:nnTF
-      { \tl_if_in:NnT \l_tmpa_tl { Hy@SectionAnchorHref } }
-      { \tl_if_in:NnT \l_tmpc_tl { Hy@SectionAnchorHref } } {
+    \tl_if_in:NnTF \l_tmpa_tl { Hy@SectionAnchorHref } {
       \exp_args:Nx \seq_remove_item:Nn \g_semio_register_toc_num_seq { \int_use:N \l_tmpb_int }
       \exp_args:Nx \seq_remove_item:Nn \g_semio_register_toc_title_seq { \int_use:N \l_tmpb_int }
       \exp_args:Nx \seq_remove_item:Nn \g_semio_register_toc_label_seq { \int_use:N \l_tmpb_int }
-    } { }
+    } {
+      \tl_if_in:NnTF \l_tmpc_tl { Hy@SectionAnchorHref } {
+        \exp_args:Nx \seq_remove_item:Nn \g_semio_register_toc_num_seq { \int_use:N \l_tmpb_int }
+        \exp_args:Nx \seq_remove_item:Nn \g_semio_register_toc_title_seq { \int_use:N \l_tmpb_int }
+        \exp_args:Nx \seq_remove_item:Nn \g_semio_register_toc_label_seq { \int_use:N \l_tmpb_int }
+      } { }
+    }
   }
 }
 
@@ -304,7 +308,7 @@
 }
 
 \cs_new_protected:Npn \semio_block_sep_before: {
-  \bool_if:NF \l_semio_window_row_bool {
+  \bool_if:NF \l_semio_window_in_item_bool {
     \bool_if:NF \l_semio_register_list_bool {
       \group_begin:
       \ExplSyntaxOff
@@ -315,7 +319,7 @@
 }
 
 \cs_new_protected:Npn \semio_block_sep_after: {
-  \bool_if:NF \l_semio_window_row_bool {
+  \bool_if:NF \l_semio_window_in_item_bool {
     \bool_if:NF \l_semio_register_list_bool {
       \group_begin:
       \ExplSyntaxOff
@@ -562,7 +566,6 @@
   title .tl_set:N = \l_semio_window_kind_title_tl,
   hierarchy .bool_set:N = \l_semio_window_hierarchy_bool,
   hierarchy .default:n = true,
-  row .bool_set:N = \l_semio_window_row_bool,
   anchor .choice:,
   anchor / nw .code:n = { \semio_window_anchor_set:nn { top } { left } },
   anchor / n .code:n = { \semio_window_anchor_set:nn { top } { center } },
@@ -657,34 +660,67 @@
   \group_end:
 }
 
-\dim_new:N \g_semio_window_stack_current_height_dim
+%region WindowArrangement primitives
+\cs_new_protected:Npn \semio_window_item_provide:n #1 {
+  \dim_set:Nn \l_semio_window_pending_height_dim {#1}
+  \bool_set_true:N \l_semio_window_pending_height_bool
+  \bool_set_true:N \l_semio_window_in_item_bool
+}
 
-\cs_new_protected:Npn \semio_window_row_height_sync: {
-  \bool_if:NT \l_semio_window_row_bool {
+\cs_new_protected:Npn \semio_window_arrangement_height_adopt: {
+  \bool_if:NT \l_semio_window_pending_height_bool {
     \bool_if:NF \l_semio_window_height_set_bool {
-      \dim_compare:nNnT \g_semio_window_stack_current_height_dim > { 0pt } {
-        \bool_lazy_and:nnTF
-          { \l_semio_window_textfit_bool }
-          { \l_semio_window_row_group_bool }
-          { } {
-          \dim_set_eq:NN \l_semio_window_height_dim \g_semio_window_stack_current_height_dim
-          \bool_set_true:N \l_semio_window_height_set_bool
-          \exp_args:NV \semio_window_height_sync:n \l_semio_window_height_dim
+      \semio_window_height_set:n { \dim_use:N \l_semio_window_pending_height_dim }
+    }
+  }
+}
+
+\seq_new:N \l_semio_window_items_weight_seq
+\seq_new:N \l_semio_window_items_body_seq
+\seq_new:N \l_semio_window_dims_seq
+\fp_new:N \l_semio_window_weight_item_fp
+\fp_new:N \l_semio_window_weight_sum_fp
+\dim_new:N \l_semio_window_gap_total_dim
+\dim_new:N \l_semio_window_available_dim
+
+\cs_new_protected:Npn \semio_window_weights_to_dims:NnN #1 #2 #3 {
+  \seq_clear:N #3
+  \int_compare:nNnT { \seq_count:N #1 } > { 0 } {
+    \fp_set:Nn \l_semio_window_weight_sum_fp { 0 }
+    \seq_map_inline:Nn #1 {
+      \fp_set:Nn \l_semio_window_weight_sum_fp {
+        \fp_eval:n { \l_semio_window_weight_sum_fp + { ##1 } }
+      }
+    }
+    \int_compare:nNnTF { \seq_count:N #1 } > { 1 } {
+      \dim_set:Nn \l_semio_window_gap_total_dim {
+        \dim_eval:n { \int_eval:n { \seq_count:N #1 - 1 } * \semio@window@gap }
+      }
+    } {
+      \dim_zero:N \l_semio_window_gap_total_dim
+    }
+    \dim_set:Nn \l_semio_window_available_dim {
+      \dim_eval:n { (#2) - \l_semio_window_gap_total_dim }
+    }
+    \seq_map_inline:Nn #1 {
+      \fp_set:Nn \l_semio_window_weight_item_fp { { ##1 } }
+      \seq_put_right:Nx #3 {
+        \dim_eval:n {
+          \fp_eval:n {
+            \dim_to_decimal:n { \l_semio_window_available_dim }
+            * \l_semio_window_weight_item_fp / \l_semio_window_weight_sum_fp
+          } pt
         }
       }
     }
   }
 }
+%endregion WindowArrangement primitives
 
 \cs_new_protected:Npn \semio_window_content_validate: {
   \bool_if:NT \l_semio_window_textfit_bool {
-    \bool_if:NF \l_semio_window_measure_bool {
-      \bool_if:NF \l_semio_window_height_set_bool {
-        \dim_set:Nn \l_semio_window_height_dim { \SemioWindowStretchHeightValue }
-        \dim_compare:nNnF \l_semio_window_height_dim > { 0pt } {
-          \msg_error:nn { semio-window } { text-fit-no-height }
-        }
-      }
+    \bool_if:NF \l_semio_window_height_set_bool {
+      \msg_error:nn { semio-window } { text-fit-no-height }
     }
   }
 }
@@ -712,13 +748,8 @@
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
-  \ifx\semio@window@height@dim\empty
-    \edef\semio@window@textfit@outer@h{\semio@window@stretch@height}%
-  \else
-    \edef\semio@window@textfit@outer@h{\semio@window@height@dim}%
-  \fi
   \setlength{\semio@window@textfit@target@h}{%
-    \dimexpr\semio@window@textfit@outer@h - \semio@chrome@titlebar@height - 2\semio@chrome@padding - 2\semio@stroke@hairline\relax
+    \dimexpr\semio@window@height@dim - \semio@chrome@titlebar@height - 2\semio@chrome@padding - 2\semio@stroke@hairline\relax
   }
   \makeatother
   \group_end:
@@ -834,7 +865,7 @@
   \bool_set_true:N \l_semio_window_hierarchy_bool
   \tl_clear:N \l_semio_window_kind_title_tl
   \keys_set:nn { semio / window / kind } { #3 }
-  \semio_window_row_height_sync:
+  \semio_window_arrangement_height_adopt:
   \semio_window_content_validate:
   \use:c { semio@window@enter }
   \bool_if:NTF \l_semio_register_list_bool {
@@ -1350,31 +1381,26 @@
 
 \cs_new_protected:Npn \semio_window_generic_begin:n #1 {
   \semio_window_content_state_reset:
-  \bool_set_false:N \l_semio_window_row_bool
   \tl_clear:N \l_semio_window_kind_title_tl
   \keys_set:nn { semio / window / kind } { #1 }
-  \semio_window_row_height_sync:
+  \semio_window_arrangement_height_adopt:
   \semio_window_content_validate:
   \use:c { semio@window@enter }
-  \bool_if:NF \l_semio_window_row_bool { \semio_block_sep_before: }
+  \bool_if:NF \l_semio_window_in_item_bool { \semio_block_sep_before: }
   \tl_clear:N \l_semio_window_number_tl
   \semio_window_header_store:
   \semio_window_header_muted_use:
   \semio_window_vskip_stroke_hairline:
-  \bool_if:NTF \l_semio_window_row_bool {
-    \bool_if:NTF \l_semio_window_height_set_bool {
-      \semio_window_height_tl_set:
-      \exp_args:NV \semio_window_begin_row:n \l_semio_window_height_tl
-    } {
-      \exp_args:Ne \semio_window_begin_row:n { \SemioWindowStretchHeightValue }
-    }
+  \bool_if:NTF \l_semio_window_in_item_bool {
+    \semio_window_height_tl_set:
+    \exp_args:NV \semio_window_begin_row:n \l_semio_window_height_tl
   } {
     \semio_window_tcb_open:n { semio~window~tier~structural, breakable=false }
   }
   \semio_window_textsize_apply:
 }
 \cs_new_protected:Npn \semio_window_generic_end_tail: {
-  \bool_if:NF \l_semio_window_row_bool { \semio_block_sep_after: }
+  \bool_if:NF \l_semio_window_in_item_bool { \semio_block_sep_after: }
   \use:c { semio@window@leave }
 }
 \cs_new_protected:Npn \semio_window_generic_end: {

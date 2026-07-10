@@ -105,7 +105,7 @@
 \newcommand{\semio@table@setup@long}{%
   \semio@table@setup
   \setlength{\tabcolsep}{0pt}%
-  \setlength{\extrarowheight}{0pt}%
+  \setlength{\extrarowheight}{\semio@spacing@single}%
 }
 
 \newcommand{\semio@table@colspec@register@long}{|@{\hspace{\semio@chrome@padding}}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.16\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.62\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}@{}@{\hspace{\semio@chrome@padding}}|}
@@ -144,7 +144,7 @@
 \newcommand{\semio@table@long@header@repeat@three}[3]{%
   \semio@table@header@cell{#1} &
   \semio@table@header@cell{#2} &
-  \semio@table@header@cell{#3} \\[\dimexpr-\semio@spacing@single\relax]
+  \semio@table@header@cell{#3} \\
   \hline
   \global\semio@table@row@startedfalse
 }
@@ -200,7 +200,6 @@
 }
 
 \newcommand{\semio@table@long@render}[4]{%
-  \semio@table@setup@long
   \global\semio@table@long@mode=1\relax
   \global\semio@table@long@first@rowtrue
   \global\semio@table@row@startedfalse
@@ -208,6 +207,7 @@
   \ifvmode\else\par\fi
   \SemioSans
   \fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont
+  \semio@table@setup@long
   \color{semio-chrome-text-normal}%
   \semio@table@long@inner@w@set
   \nointerlineskip
@@ -218,7 +218,6 @@
   \setlength{\LTright}{0pt}%
   \setlength{\LTcapwidth}{\linewidth}%
   \begin{longtable}{#1}%
-  \hline
   #2%
   \endfirsthead
   #3%

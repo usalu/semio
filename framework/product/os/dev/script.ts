@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /** @emoji 🧭 `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
-import { Database } from "bun:sqlite";
 import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
@@ -31,7 +30,14 @@ const PLUGIN_WASM_TARGET = "wasm32-wasip2";
 //#region BackboneVitePlugin
 const temporaryBackboneFiles = new Map<string, string>();
 
-function readBackbonePayload(uri: string): string | null {
+/** Lazily imports `bun:sqlite` — a static top-level import breaks Vite's config bundler, which loads this module's exports under Node before the dev server (and its Bun runtime) exists. */
+let backboneDatabaseCtor: typeof import("bun:sqlite").Database | undefined;
+async function backboneDatabaseCtorLazy(): Promise<typeof import("bun:sqlite").Database> {
+  if (!backboneDatabaseCtor) ({ Database: backboneDatabaseCtor } = await import("bun:sqlite"));
+  return backboneDatabaseCtor;
+}
+
+async function readBackbonePayload(uri: string): Promise<string | null> {
   if (uri.startsWith("temp://")) return temporaryBackboneFiles.get(uri) ?? null;
   if (uri.startsWith("file://")) {
     const path = uri.slice("file://".length);
@@ -42,6 +48,7 @@ function readBackbonePayload(uri: string): string | null {
     const folder = uri.slice("folder://".length);
     const dbPath = join(folder, ".semio", "document.db");
     if (!existsSync(dbPath)) return null;
+    const Database = await backboneDatabaseCtorLazy();
     const db = new Database(dbPath);
     db.run("CREATE TABLE IF NOT EXISTS document (id INTEGER PRIMARY KEY CHECK (id = 1), json TEXT NOT NULL)");
     const row = db.query("SELECT json FROM document WHERE id = 1").get() as { json?: string } | null;
@@ -50,7 +57,7 @@ function readBackbonePayload(uri: string): string | null {
   return null;
 }
 
-function writeBackbonePayload(uri: string, payload: string): void {
+async function writeBackbonePayload(uri: string, payload: string): Promise<void> {
   if (uri.startsWith("temp://")) {
     temporaryBackboneFiles.set(uri, payload);
     return;
@@ -65,6 +72,7 @@ function writeBackbonePayload(uri: string, payload: string): void {
     const folder = uri.slice("folder://".length);
     const dbPath = join(folder, ".semio", "document.db");
     mkdirSync(dirname(dbPath), { recursive: true });
+    const Database = await backboneDatabaseCtorLazy();
     const db = new Database(dbPath);
     db.run("CREATE TABLE IF NOT EXISTS document (id INTEGER PRIMARY KEY CHECK (id = 1), json TEXT NOT NULL)");
     db.run("INSERT INTO document (id, json) VALUES (1, ?1) ON CONFLICT(id) DO UPDATE SET json = excluded.json", [payload]);
@@ -87,43 +95,45 @@ export function semioBackboneVitePlugin() {
           res.end("missing uri");
           return;
         }
-        try {
-          if (req.method === "GET") {
-            const payload = readBackbonePayload(uri);
-            if (payload == null) {
-              res.statusCode = 404;
-              res.end("");
-              return;
-            }
-            res.statusCode = 200;
-            res.setHeader("content-type", "application/json");
-            res.end(payload);
-            return;
-          }
-          if (req.method === "PUT") {
-            let body = "";
-            req.on("data", (chunk) => {
-              body += chunk;
+        if (req.method === "GET") {
+          readBackbonePayload(uri)
+            .then((payload) => {
+              if (payload == null) {
+                res.statusCode = 404;
+                res.end("");
+                return;
+              }
+              res.statusCode = 200;
+              res.setHeader("content-type", "application/json");
+              res.end(payload);
+            })
+            .catch((error) => {
+              res.statusCode = 500;
+              res.end(String(error));
             });
-            req.on("end", () => {
-              try {
-                writeBackbonePayload(uri, body);
+          return;
+        }
+        if (req.method === "PUT") {
+          let body = "";
+          req.on("data", (chunk) => {
+            body += chunk;
+          });
+          req.on("end", () => {
+            writeBackbonePayload(uri, body)
+              .then(() => {
                 res.statusCode = 200;
                 res.setHeader("content-type", "application/json");
                 res.end("{}");
-              } catch (error) {
+              })
+              .catch((error) => {
                 res.statusCode = 500;
                 res.end(String(error));
-              }
-            });
-            return;
-          }
-          res.statusCode = 405;
-          res.end("method not allowed");
-        } catch (error) {
-          res.statusCode = 500;
-          res.end(String(error));
+              });
+          });
+          return;
         }
+        res.statusCode = 405;
+        res.end("method not allowed");
       });
     },
   };
@@ -360,8 +370,9 @@ function rewritePreview2ShimImports(componentJsPath: string): void {
   const rel = relative(outDir, preview2ShimVendorDir()).replace(/\\/g, "/");
   const prefix = rel.endsWith("/") ? rel : `${rel}/`;
   let content = readFileSync(componentJsPath, "utf8");
-  if (!content.includes("@bytecodealliance/preview2-shim/")) return;
-  content = content.replace(/@bytecodealliance\/preview2-shim\/([\w-]+)/g, (_match, subpath) => `${prefix}${subpath}.js`);
+  const bareSpecifier = /(from\s+['"])@bytecodealliance\/preview2-shim\/([\w-]+)(['"])/g;
+  if (!bareSpecifier.test(content)) return;
+  content = content.replace(bareSpecifier, (_match, lead, subpath, trail) => `${lead}${prefix}${subpath}.js${trail}`);
   writeFileSync(componentJsPath, content);
 }
 
@@ -731,4 +742,6 @@ const router = new ScriptRouter(import.meta.dir)
     },
   );
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "dev" });
+if (import.meta.main) {
+  await runBundleScriptMain(router, import.meta.url, { defaultCommand: "dev" });
+}

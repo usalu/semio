@@ -1,0 +1,13 @@
+{
+  "title": "Fix Glossary Table Styling Issues",
+  "emoji": "🖨️",
+  "status": "open",
+  "description": "Fix styling issues in the glossary table in print/tex/semio-table.sty:\n\nIssues to fix:\n1. First row has an offset/gap at the top that shouldn't be there\n2. Text inside rows has no spacing towards the top - should have consistent vertical padding\n3. Header text also lacks proper top spacing\n\nThe problems are in the `\\semio@table@setup@long` command (line 105-109) where `\\extrarowheight` is set to 0pt, removing all vertical spacing. Additionally, the compensation with `\\\\[\\dimexpr-\\semio@spacing@single\\relax]` on line 147 is insufficient.\n\nSolution needs to:\n- Restore proper vertical spacing for long tables\n- Ensure header and body rows have consistent top padding\n- Remove the gap between the top border and the first row",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1899"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪b90221979bb14aaabe10c0ed23033e3b"
+  ]
+}
