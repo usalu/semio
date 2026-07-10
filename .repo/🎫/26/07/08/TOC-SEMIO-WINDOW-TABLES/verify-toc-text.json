@@ -1,11 +1,9 @@
 {
-  "numPages": 12,
+  "numPages": 11,
   "tocPages": [
-    2,
-    3
+    2
   ],
-  "page2inhalt": 1,
-  "page3inhalt": 1,
-  "verzeichnisseOnToc": true,
-  "ergebnisverwertungOnToc": true
+  "page2entries": 67,
+  "page3entries": 39,
+  "verzeichnisseOnToc": true
 }

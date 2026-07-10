@@ -390,30 +390,41 @@
 }
 
 \cs_new_protected:Npn \semio_glossary_row_for_term:n #1 {
-  \tl_set:Nn \l_semio_glossary_term_tl {#1}
   \prop_get:NnNTF \g_semio_glossary_definition_prop {#1} \l_semio_glossary_definition_tl { } {
     \tl_clear:N \l_semio_glossary_definition_tl
   }
   \semio_glossary_labels_csv:n {#1}
-  \semio_glossary_body_gappto:VVV \l_semio_glossary_term_tl \l_semio_glossary_definition_tl \l_tmpd_tl
+  \semio_glossary_body_gappto:nnn
+    {#1}
+    { \tl_use:N \l_semio_glossary_definition_tl }
+    { \tl_use:N \l_tmpd_tl }
 }
 
-\newcommand{\semio@glossary@emit@row}[1]{\csname semio@glossary@row@#1\endcsname}
+\cs_new_protected:Npn \semio_glossary_body_finalize_step:n #1 {
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \gappto\semio@glossary@table@body{\noexpand\semio@glossary@emit@row{#1}}%
+  \makeatother
+  \group_end:
+}
 
 \cs_new_protected:Npn \semio_glossary_body_finalize: {
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
   \gdef\semio@glossary@table@body{}%
-  \int_step_inline:nn { \g_semio_glossary_row_int } {
-    \gappto\semio@glossary@table@body{\noexpand\semio@glossary@emit@row{####1}}%
-  }%
   \makeatother
   \group_end:
+  \int_step_inline:nn { \g_semio_glossary_row_int } {
+    \semio_glossary_body_finalize_step:n { ##1 }
+  }
 }
 
 \cs_new_protected:Npn \semio_glossary_body_materialize: {
   \semio_glossary_body_init:
+  \semio_glossary_terms_sort:
+  \seq_map_function:NN \l_semio_glossary_sorted_terms_seq \semio_glossary_row_for_term:n
   \semio_glossary_body_finalize:
 }
 
@@ -951,6 +962,8 @@
 }
 
 \newcounter{semioglossaryusage}
+
+\newcommand{\semio@glossary@emit@row}[1]{\csname semio@glossary@row@#1\endcsname}
 
 \newcommand{\semio@glossary@table@body}{}
 

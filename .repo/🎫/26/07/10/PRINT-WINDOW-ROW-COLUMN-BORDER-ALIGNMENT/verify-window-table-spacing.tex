@@ -1,0 +1,24 @@
+\documentclass[type=report,theme=light,language=de]{semio}
+\title{Window Table Spacing Verify}
+\author{Semio}
+
+\begin{document}
+\maketitle
+
+\section{Spacing}
+
+\begin{Window}[title=Text]
+  Das Vorhaben untersucht, wie wiederverwendete Baukomponenten in fruehen Entwurfsphasen skalierbar planungsfaehig gemacht werden koennen.
+\end{Window}
+
+\begin{Window}[title=Netzwerk]
+  \SemioTableThree{%
+    \SemioTableHeaderRow{AP & Partner & Schwerpunkt im Berichtszeitraum}
+    \SemioTableRow{AP-Erfahrung & Leibniz Universitaet Hannover & Recherche, Interviews, User Stories}
+    \SemioTableRow{AP-Plattform & Leibniz Universitaet Hannover & Generatoren, Bauteileinspeisung}
+    \SemioTableRow{AP-Tool & Universitaet der Kuenste Berlin & HID, Lebenszyklusanalyse, Tragwerksanalyse, KI-Assistenz}
+    \SemioTableRow{AP-Validierung & Leibniz Universitaet Hannover & Test-Case, Entwurfsgrammatik, Entwicklung}
+  }%
+\end{Window}
+
+\end{document}
