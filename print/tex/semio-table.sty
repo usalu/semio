@@ -96,6 +96,8 @@
   \semio@table@setup
   \setlength{\tabcolsep}{0pt}%
   \setlength{\extrarowheight}{0pt}%
+  \setlength{\aboverulesep}{0pt}%
+  \setlength{\belowrulesep}{0pt}%
 }
 
 \newcommand{\semio@table@colspec@register@long}{|@{\hspace{\semio@chrome@padding}}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.16\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.62\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}@{}@{\hspace{\semio@chrome@padding}}|}
@@ -153,7 +155,7 @@
   }%
 }
 
-\newcommand{\semio@table@long@continuation@chrome}{%
+\newcommand{\semio@table@long@title@chrome@row}{%
   \semio@table@long@title@chrome@prepare
   \multicolumn{3}{@{\hspace{\semio@chrome@padding}}@{}l@{\hspace{\semio@chrome@padding}}@{}}{%
     \hbox to \semio@table@long@inner@w{%
@@ -163,6 +165,10 @@
     }%
   }%
   \\%
+}
+
+\newcommand{\semio@table@long@continuation@chrome}{%
+  \semio@table@long@title@chrome@row
 }
 
 \newcommand{\semio@register@table@header@long@repeat}{%
@@ -202,6 +208,7 @@
   \setlength{\LTright}{0pt}%
   \setlength{\LTcapwidth}{\linewidth}%
   \begin{longtable}{#1}%
+  \semio@table@long@title@chrome@row
   #2%
   \endfirsthead
   \semio@table@long@continuation@chrome

@@ -1,0 +1,3 @@
+\SemioTocAuxLine {1}{\interlinepenalty \@M Introduction\@@par }{semio-toc-chapter-1}
+\SemioTocAuxLine {1.1}{\Sectionformat {Background}{\numexpr \csname sectionnumdepth\endcsname \relax }}{semio-toc-section-1.1}
+\SemioTocAuxLine {1.1.1}{\Sectionformat {Design Tokens}{\numexpr \csname subsectionnumdepth\endcsname \relax }}{semio-toc-subsection-1.1.1}

@@ -11,6 +11,7 @@ const { createCanvas } = createRequire(pdfjsEntry)("@napi-rs/canvas");
 const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
 const docs = [
+  { id: "probe-heading", path: ".repo/🎫/26/07/10/PRINT-HEADING-CHIP-BORDER-FIX/probe-heading.pdf", pages: [2] },
   { id: "report", path: "print/dist/report.pdf", pages: [2, 3] },
   { id: "forschungsbericht", path: "print/dist/forschungsbericht.pdf", pages: [2, 3] },
   { id: "zwischenbericht", path: "print/dist/zwischenbericht.pdf", pages: [2] },

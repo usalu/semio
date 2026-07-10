@@ -17,6 +17,7 @@
 
 \providecommand{\semio@chrome@titlebar@height}{1.4em}
 \providecommand{\semio@chrome@padding}{0.2em}
+\providecommand{\semio@window@imagefit}{contain}
 \providecommand{\semio@chrome@navbar@height}{1.8em}
 \providecommand{\semio@chrome@footer@height}{1.8em}
 \providecommand{\semio@chrome@font@title}{0.7em}
@@ -34,9 +35,23 @@
 \tl_new:N \l_semio_window_valign_tl
 \tl_new:N \l_semio_window_halign_tl
 \tl_set:Nn \l_semio_window_valign_tl { top }
-\tl_set:Nn \l_semio_window_halign_tl { left }
-
-%region Registers
+\tl_set:Nn \l_semio_window_halign_tl { justify }
+\dim_new:N \l_semio_window_height_dim
+\bool_new:N \l_semio_window_height_set_bool
+\dim_new:N \l_semio_window_textsize_dim
+\bool_new:N \l_semio_window_textsize_set_bool
+\bool_new:N \l_semio_window_textfit_bool
+\tl_new:N \l_semio_window_imagefit_tl
+\tl_set:Nn \l_semio_window_imagefit_tl { contain }
+\tl_new:N \l_semio_image_fit_tl
+\bool_new:N \l_semio_image_width_set_bool
+\dim_new:N \l_semio_image_width_dim
+\bool_new:N \l_semio_image_height_set_bool
+\dim_new:N \l_semio_image_height_dim
+\bool_new:N \l_semio_image_target_h_set_bool
+\dim_new:N \l_semio_image_target_w_dim
+\dim_new:N \l_semio_image_target_h_dim
+\tl_new:N \l_semio_window_height_tl
 \bool_new:N \l_semio_register_list_bool
 \bool_set_false:N \l_semio_register_list_bool
 \bool_new:N \l_semio_window_hierarchy_bool
@@ -255,7 +270,6 @@
   \tl_clear:N \l_semio_window_number_tl
   \semio_window_header_store:
   \semio_block_sep_before:
-  \semio_window_header_muted_use:
 }
 
 \cs_new_protected:Npn \semio_register_list_begin:n #1 {
@@ -362,21 +376,22 @@
   }
 }
 
-\int_new:N \g_semio_glossary_row_int
-
 \cs_new_protected:Npn \semio_glossary_body_init: {
-  \int_gzero:N \g_semio_glossary_row_int
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \gdef\semio@glossary@table@body{}%
+  \makeatother
+  \group_end:
 }
 
 \cs_new_protected:Npn \semio_glossary_body_gappto:nnn #1#2#3 {
-  \int_gincr:N \g_semio_glossary_row_int
-  \cs_gset:cpn { semio@glossary@row@ \int_use:N \g_semio_glossary_row_int }
-    {
-      \SemioGlossaryTableRow
-        { \exp_not:n {#1} }
-        { \exp_not:n {#2} }
-        { \exp_not:n {#3} }
-    }
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \gappto\semio@glossary@table@body{\SemioGlossaryTableRow{#1}{#2}{#3}}%
+  \makeatother
+  \group_end:
 }
 \cs_generate_variant:Nn \semio_glossary_body_gappto:nnn { VVV }
 
@@ -392,34 +407,10 @@
     \l_tmpd_tl
 }
 
-\newcommand{\semio@glossary@emit@row}[1]{\csname semio@glossary@row@#1\endcsname}
-
-\cs_new_protected:Npn \semio_glossary_body_finalize_step:n #1 {
-  \group_begin:
-  \ExplSyntaxOff
-  \makeatletter
-  \gappto\semio@glossary@table@body{\noexpand\semio@glossary@emit@row{#1}}%
-  \makeatother
-  \group_end:
-}
-
-\cs_new_protected:Npn \semio_glossary_body_finalize: {
-  \group_begin:
-  \ExplSyntaxOff
-  \makeatletter
-  \gdef\semio@glossary@table@body{}%
-  \makeatother
-  \group_end:
-  \int_step_inline:nn { \g_semio_glossary_row_int } {
-    \semio_glossary_body_finalize_step:n { ##1 }
-  }
-}
-
 \cs_new_protected:Npn \semio_glossary_body_materialize: {
   \semio_glossary_body_init:
   \semio_glossary_terms_sort:
   \seq_map_function:NN \l_semio_glossary_sorted_terms_seq \semio_glossary_row_for_term:n
-  \semio_glossary_body_finalize:
 }
 
 \cs_new_protected:Npn \SemioGlossaryListOf {
@@ -494,7 +485,6 @@
   },
   semio~window~row/.style={
     semio~window,
-    enhanced=false,
     breakable=false,
     width=\linewidth,
   },
@@ -544,6 +534,7 @@
   \tl_set:Nn \l_semio_window_valign_tl { top }
   \tl_set:Nn \l_semio_window_halign_tl { justify }
   \bool_set_false:N \l_semio_window_height_set_bool
+  \dim_zero:N \l_semio_window_height_dim
   \bool_set_false:N \l_semio_window_textsize_set_bool
   \bool_set_false:N \l_semio_window_textfit_bool
   \semio_window_imagefit_set:n { contain }
@@ -567,15 +558,29 @@
   \group_end:
 }
 
-\cs_new_protected:Npn \semio_window_height_set:n #1 {
-  \dim_set:Nn \l_semio_window_height_dim {#1}
-  \bool_set_true:N \l_semio_window_height_set_bool
+\cs_new_protected:Npn \semio_window_height_sync:n #1 {
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
-  \xdef\semio@window@height@dim{\the\l_semio_window_height_dim}
+  \xdef\semio@window@height@dim{#1}
   \makeatother
   \group_end:
+}
+
+\cs_new_protected:Npn \semio_window_height_set:n #1 {
+  \dim_set:Nn \l_semio_window_height_dim {#1}
+  \bool_set_true:N \l_semio_window_height_set_bool
+  \exp_args:Nx \semio_window_height_sync:n { \dim_use:N \l_semio_window_height_dim }
+}
+
+\cs_new_protected:Npn \semio_window_height_tl_set: {
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \xdef\semio@window@height@tl{\semio@window@height@dim}
+  \makeatother
+  \group_end:
+  \tl_set:Nx \l_semio_window_height_tl { \semio@window@height@tl }
 }
 
 \cs_new_protected:Npn \semio_window_imagefit_set:n #1 {
@@ -607,12 +612,13 @@
 }
 
 \cs_new_protected:Npn \semio_window_tcb_open:n #1 {
+  \semio_window_height_tl_set:
   \bool_if:NTF \l_semio_window_textfit_bool {
     \begin{tcolorbox}[
       #1,
       breakable=false,
       fit,
-      height=\dim_use:N \l_semio_window_height_dim,
+      height=\tl_use:N \l_semio_window_height_tl,
       valign=\tl_use:N \l_semio_window_valign_tl,
       halign=\tl_use:N \l_semio_window_halign_tl
     ]
@@ -620,7 +626,7 @@
     \bool_if:NTF \l_semio_window_height_set_bool {
       \begin{tcolorbox}[
         #1,
-        height=\dim_use:N \l_semio_window_height_dim,
+        height=\tl_use:N \l_semio_window_height_tl,
         valign=\tl_use:N \l_semio_window_valign_tl,
         halign=\tl_use:N \l_semio_window_halign_tl
       ]
@@ -782,10 +788,6 @@
 \semio_window_kind_define:nnnnn { semioepigraph } { epigraph } { Epigraph } { structural } { epigraphs }
 
 %region Images
-\bool_new:N \l_semio_image_target_h_set_bool
-\dim_new:N \l_semio_image_target_w_dim
-\dim_new:N \l_semio_image_target_h_dim
-
 \keys_define:nn { semio / image } {
   fit .choice:,
   fit / contain .code:n = { \tl_set:Nn \l_semio_image_fit_tl { contain } },
@@ -810,18 +812,22 @@
     \group_begin:
     \ExplSyntaxOff
     \makeatletter
-    \edef\semio@image@ambient@height{\semio@window@height@dim}
+    \xdef\semio@image@sync@height{\semio@window@height@dim}
     \makeatother
     \group_end:
-    \tl_if_blank:eTF { \semio@image@ambient@height } {
+    \tl_if_blank:eTF { \semio@image@sync@height } {
       \bool_set_false:N \l_semio_image_target_h_set_bool
     } {
       \group_begin:
       \ExplSyntaxOff
-      \dim_set:Nn \l_semio_image_target_h_dim {
-        \dimexpr \semio@window@height@dim - 2\semio@chrome@padding - \semio@stroke@hairline \relax
-      }
+      \makeatletter
+      \setlength{\semio@image@target@h@dim}{%
+        \dimexpr \semio@image@sync@height - 2\semio@chrome@padding - \semio@stroke@hairline \relax
+      }%
+      \xdef\semio@image@target@h@value{\the\semio@image@target@h@dim}
+      \makeatother
       \group_end:
+      \dim_set:Nn \l_semio_image_target_h_dim { \semio@image@target@h@value }
       \bool_set_true:N \l_semio_image_target_h_set_bool
     }
   }
@@ -853,11 +859,24 @@
   \group_end:
 }
 
+\cs_new_protected:Npn \semio_image_default_width_resolve: {
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \setlength{\semio@image@target@w@dim}{%
+    \dimexpr\linewidth-2\semio@chrome@padding-2\semio@stroke@hairline\relax
+  }%
+  \xdef\semio@image@target@w@value{\the\semio@image@target@w@dim}
+  \makeatother
+  \group_end:
+  \dim_set:Nn \l_semio_image_target_w_dim { \semio@image@target@w@value }
+}
+
 \cs_new_protected:Npn \semio_image_typeset:n #1 {
   \bool_if:NTF \l_semio_image_width_set_bool {
     \dim_set_eq:NN \l_semio_image_target_w_dim \l_semio_image_width_dim
   } {
-    \dim_set:Nn \l_semio_image_target_w_dim { \linewidth }
+    \semio_image_default_width_resolve:
   }
   \semio_image_target_h_resolve:
   \tl_set:Nx \l_tmpa_tl { \dim_use:N \l_semio_image_target_w_dim }
@@ -909,13 +928,7 @@
 }
 
 \cs_new_protected:Npn \semio_image:nn #1#2 {
-  \group_begin:
-  \ExplSyntaxOff
-  \makeatletter
-  \edef\semio@image@ambient@fit{\semio@window@imagefit}
-  \makeatother
-  \group_end:
-  \tl_set:Nx \l_semio_image_fit_tl { \semio@image@ambient@fit }
+  \tl_set:Nx \l_semio_image_fit_tl { \semio@window@imagefit }
   \bool_set_false:N \l_semio_image_width_set_bool
   \bool_set_false:N \l_semio_image_height_set_bool
   \bool_set_false:N \l_semio_image_target_h_set_bool
@@ -1174,7 +1187,8 @@
   \semio_window_vskip_stroke_hairline:
   \bool_if:NTF \l_semio_window_row_bool {
     \bool_if:NTF \l_semio_window_height_set_bool {
-      \exp_args:NV \semio_window_begin_row:n \l_semio_window_height_dim
+      \semio_window_height_tl_set:
+      \exp_args:NV \semio_window_begin_row:n \l_semio_window_height_tl
     } {
       \exp_args:Ne \semio_window_begin_row:n { \SemioWindowStretchHeightValue }
     }
@@ -1184,6 +1198,7 @@
   \semio_window_textsize_apply:
 }
 \cs_new_protected:Npn \semio_window_generic_end: {
+  \par
   \end{tcolorbox}
   \bool_if:NF \l_semio_window_row_bool { \semio_block_sep_after: }
   \use:c { semio@window@leave }
@@ -1727,7 +1742,6 @@
 }
 
 \newcommand{\semio@koma@heading@lines}[4]{%
-  \typeout{[DEBUG] semio heading lines level=#1 title=#3}%
   \ifnum\numexpr\semio@toc@level{#1}\relax>\value{tocdepth}\else
     \semio@toc@track@num{#1}{\csname the#1\endcsname}{#3}%
   \fi
@@ -1774,7 +1788,6 @@
 }
 
 \newcommand{\semio@heading@installall}{%
-  \typeout{[DEBUG] semio heading installall}%
   \def\semio@heading@color@chapter{semio-secondary}%
   \def\semio@heading@color@section{semio-tertiary}%
   \def\semio@heading@color@subsection{semio-secondary}%
@@ -1911,8 +1924,9 @@
 \gdef\semio@window@valign{top}
 \gdef\semio@window@halign{justify}
 \newcommand{\semio@window@height@dim}{}
-\newcommand{\semio@window@imagefit}{contain}
 \newsavebox{\semio@image@measure@box}
+\newlength{\semio@image@target@h@dim}
+\newlength{\semio@image@target@w@dim}
 \newlength{\semio@image@nat@w}
 \newlength{\semio@image@nat@h}
 \newlength{\semio@image@trim@dim}

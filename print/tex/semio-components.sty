@@ -105,7 +105,7 @@
     }
     \tl_if_blank:eF { \semio@cover@arbeitsprobe@image } {
       \begin{Window}[title=Arbeitsprobe, row, anchor=center, height=10.8cm]
-        \SemioImage{\semio@cover@arbeitsprobe@image}
+        \includegraphics[width=\linewidth, height=9cm, keepaspectratio]{\semio@cover@arbeitsprobe@image}
       \end{Window}\par
     }
     \bool_set_false:N \l_semio_cover@meta@row_bool

@@ -1,0 +1,110 @@
+\documentclass{article}
+\usepackage{expl3}
+\usepackage{xparse}
+\usepackage{calc}
+\usepackage{etoolbox}
+\makeatletter
+\newcommand{\semio@chrome@padding}{0.4em}
+\newcommand{\semio@spacing@unit}{0.4em}
+\newcommand{\SemioSans}{}
+\newcommand{\semio@chrome@font@body}{10pt}
+\newcommand{\SemioGlossaryTableRow}[3]{#1 & #2 & #3\\}
+\makeatother
+
+\ExplSyntaxOn
+\seq_new:N \g_semio_glossary_terms_seq
+\prop_new:N \g_semio_glossary_definition_prop
+\prop_new:N \g_semio_glossary_pages_prop
+\seq_new:N \l_semio_glossary_sorted_terms_seq
+\clist_new:N \l_semio_glossary_labels_clist
+\tl_new:N \l_semio_glossary_definition_tl
+\tl_new:N \l_semio_glossary_term_tl
+
+\cs_new_protected:Npn \semio_glossary_term_ensure:n #1 {
+  \prop_if_in:NnF \g_semio_glossary_pages_prop {#1} {
+    \seq_gput_right:Nn \g_semio_glossary_terms_seq {#1}
+    \clist_clear:N \l_semio_glossary_labels_clist
+    \prop_gput:NnV \g_semio_glossary_pages_prop {#1} \l_semio_glossary_labels_clist
+  }
+}
+
+\cs_new_protected:Npn \semio_glossary_define:nn #1#2 {
+  \semio_glossary_term_ensure:n {#1}
+  \prop_gput:Nnn \g_semio_glossary_definition_prop {#1} {#2}
+}
+
+\tl_new:N \l_tmpd_tl
+\cs_new_protected:Npn \semio_glossary_labels_csv:n #1 { \tl_clear:N \l_tmpd_tl }
+
+\cs_new:Npn \semio_glossary_sort_compare:nn #1#2 {
+  \str_compare:nNnTF { #1 } < { #2 }
+    { \sort_return_same: }
+    { \sort_return_reverse: }
+}
+
+\cs_new_protected:Npn \semio_glossary_terms_sort: {
+  \seq_set_eq:NN \l_semio_glossary_sorted_terms_seq \g_semio_glossary_terms_seq
+  \seq_sort:Nn \l_semio_glossary_sorted_terms_seq {
+    \semio_glossary_sort_compare:nn { ####1 } { ######1 }
+  }
+}
+
+\cs_new_protected:Npn \semio_glossary_body_init: {
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \gdef\semio@glossary@table@body{}%
+  \makeatother
+  \group_end:
+}
+
+\cs_new_protected:Npn \semio_glossary_body_gappto:nnn #1#2#3 {
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \gappto\semio@glossary@table@body{\SemioGlossaryTableRow{#1}{#2}{#3}}%
+  \makeatother
+  \group_end:
+}
+\cs_generate_variant:Nn \semio_glossary_body_gappto:nnn { VVV }
+
+\cs_new_protected:Npn \semio_glossary_row_for_term:n #1 {
+  \tl_set:Nn \l_semio_glossary_term_tl {#1}
+  \prop_get:NnNTF \g_semio_glossary_definition_prop {#1} \l_semio_glossary_definition_tl { } {
+    \tl_clear:N \l_semio_glossary_definition_tl
+  }
+  \semio_glossary_labels_csv:n {#1}
+  \semio_glossary_body_gappto:VVV
+    \l_semio_glossary_term_tl
+    \l_semio_glossary_definition_tl
+    \l_tmpd_tl
+}
+
+\cs_new_protected:Npn \semio_glossary_body_materialize: {
+  \semio_glossary_body_init:
+  \semio_glossary_terms_sort:
+  \seq_map_function:NN \l_semio_glossary_sorted_terms_seq \semio_glossary_row_for_term:n
+}
+
+\cs_new_protected:Npn \GlossaryDefine #1#2 { \semio_glossary_define:nn {#1} {#2} }
+\cs_new_protected:Npn \TestMaterialize { \semio_glossary_body_materialize: }
+\ExplSyntaxOff
+
+\begin{document}
+
+\GlossaryDefine{Entwurfsfähigkeit}{Bauteil mit belastbaren Informationen für frühe Entwurfsentscheidungen.}
+\GlossaryDefine{Semio}{Einheitliches Betriebssystem für gebaute Umgebung und Designprozesse.}
+\GlossaryDefine{Zwischenbericht}{Bericht über den Projektstand im laufenden Förderzeitraum.}
+
+Before table (this text must stay here, not leak into the table):
+
+\TestMaterialize
+\makeatletter
+\begin{tabular}{lll}
+\semio@glossary@table@body
+\end{tabular}
+\makeatother
+
+After table.
+
+\end{document}
