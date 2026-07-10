@@ -694,8 +694,14 @@
       }
     }
     \int_compare:nNnTF { \seq_count:N #1 } > { 1 } {
+      \group_begin:
+      \ExplSyntaxOff
+      \makeatletter
+      \xdef\semio@window@gap@pt{\the\semio@window@gap}
+      \makeatother
+      \group_end:
       \dim_set:Nn \l_semio_window_gap_total_dim {
-        \dim_eval:n { \int_eval:n { \seq_count:N #1 - 1 } * \semio@window@gap }
+        \dim_eval:n { \int_eval:n { \seq_count:N #1 - 1 } \semio@window@gap@pt }
       }
     } {
       \dim_zero:N \l_semio_window_gap_total_dim
@@ -2275,11 +2281,15 @@
   \normalfont
   \xdef\semio@chrome@tmp@row{\the\dimexpr\semio@chrome@font@body\relax}%
   \xdef\semio@chrome@tmp@row@footer{\the\dimexpr\semio@chrome@font@number\relax}%
+  \xdef\semio@chrome@tmp@titlebar{%
+    \the\dimexpr\semio@chrome@font@body+2\semio@chrome@padding+2\semio@stroke@hairline\relax
+  }%
   \endgroup
   \setlength{\semio@chrome@row@height}{\semio@chrome@tmp@row}%
   \setlength{\semio@chrome@row@height@footer}{\semio@chrome@tmp@row@footer}%
   \setlength{\semio@chrome@icon@height}{\semio@chrome@row@height}%
   \setlength{\semio@chrome@icon@height@footer}{\semio@chrome@row@height@footer}%
+  \renewcommand{\semio@chrome@titlebar@height}{\semio@chrome@tmp@titlebar}%
   \semio@chrome@emblem@rebuild
 }
 

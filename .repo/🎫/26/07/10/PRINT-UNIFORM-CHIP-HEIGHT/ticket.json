@@ -1,0 +1,13 @@
+{
+  "title": "Print Uniform Chip Height",
+  "emoji": "🖨️",
+  "status": "open",
+  "description": "All chips in print/tex (chapter, section, subsection, paragraph, navbar, footer) must share the same height and same padding/spacing as the navbar chip. Currently chapter/section/etc. heading chips are taller than the navbar chip. Normalize chip height across print/tex/semio-window.sty and semio-core.sty to the navbar chip's height.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1901"
+  },
+  "goal": "🎯r2602🎯updateddocs",
+  "sessions": [
+    "⚪66aa125cbc7c48b486a0756593789434"
+  ]
+}

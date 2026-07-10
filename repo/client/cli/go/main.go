@@ -34944,17 +34944,6 @@ func artifactMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	return toolResultToMCP(result)
 }
 
-// 🌳mcpTree holds the data fields for a mcpTree record.
-func mcpTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	args := getArgs(request)
-	query, _, _ := getStringArg(args, "query")
-	filter := TreeFilter{Query: query}
-	tree := BuildMonorepoTreeCached(ctx)
-	tree = searchMonorepoTreeWithCache(ctx, tree, query)
-	tree = FilterMonorepoTree(tree, &filter)
-	return textResult(RenderMonorepoTreeMarkdown(tree)), nil
-}
-
 func graphqlQuery(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	query, err := requireStringArg(args, "query")
@@ -45793,14 +45782,6 @@ var mcpDescriptionTable = map[string]map[McpClientKind]string{
 		McpClientClaude:  "Use when Claude Code must split a region into its own file before shrinking the original module.",
 		McpClientCodex:   "Use when Codex must split a region into its own file before shrinking the original module.",
 	},
-	"tool_search": {
-		McpClientGeneric: "Use when you lack authoritative paths and must narrow the workspace before opening files.",
-		McpClientCursor:  "Use when the Cursor agent lacks authoritative paths and must narrow the workspace before opening files.",
-		McpClientKiro:    "Use when the Kiro agent lacks authoritative paths and must narrow the workspace before opening files.",
-		McpClientCopilot: "Use when the Copilot agent lacks authoritative paths and must narrow the workspace before opening files.",
-		McpClientClaude:  "Use when Claude Code lacks authoritative paths and must narrow the workspace before opening files.",
-		McpClientCodex:   "Use when Codex lacks authoritative paths and must narrow the workspace before opening files.",
-	},
 	"arg_plan_id": {
 		McpClientCursor:  "Set when a `.cursor/plans/*_<id>.plan.md` file exists and must be archived into the ticket on close.",
 		McpClientCopilot: "Set when a Copilot project memory file for this id exists and must be archived into the ticket on close.",
@@ -46023,13 +46004,6 @@ func CreateMcpServer(kind McpClientKind) *server.MCPServer {
 			mcp.WithString("target_file", mcp.Required(), mcp.Description("Path to the target file where the section will be written.")),
 		),
 		sectionExtract,
-	)
-	s.AddTool(
-		mcp.NewTool("search",
-			mcp.WithDescription(mcpDesc(kind, "tool_search")),
-			mcp.WithString("query", mcp.Description("Space-separated keywords to search for.")),
-		),
-		mcpTree,
 	)
 	return s
 }

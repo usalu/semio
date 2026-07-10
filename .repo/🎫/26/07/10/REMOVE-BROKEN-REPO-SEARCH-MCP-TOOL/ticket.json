@@ -1,0 +1,14 @@
+{
+  "title": "Remove Broken Repo Search MCP Tool",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "The repo mcp tool `search` hangs infinitely and must be removed from the repo MCP server implementation.",
+  "summary": "Removed the `search` MCP tool from the repo MCP server (Go implementation) because its handler could hang indefinitely — BuildMonorepoTreeCached's lock-acquisition loop retries forever with no context-aware timeout. Deleted the tool registration, its per-client description map entry, and the now-unreferenced mcpTree handler. Verified `go build ./...` still passes and no other references to the tool remain.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1900"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomcp🎯repomcptools",
+  "sessions": [
+    "⚪570466d5d71c47ce9da87f33ea338da5"
+  ]
+}

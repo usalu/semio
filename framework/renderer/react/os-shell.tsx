@@ -23,6 +23,7 @@ import {
   Mode,
   Navbar,
   NavbarExampleSelect,
+  PanelToggleGroup,
   Popover,
   PopoverAnchor,
   PopoverContent,
