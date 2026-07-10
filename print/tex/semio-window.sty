@@ -77,8 +77,6 @@
   }
 }
 
-\cs_generate_variant:Nn \semio_window_register_body_gappto:nnn { VVV }
-
 \cs_new_protected:Npn \semio_window_register_body_gappto:nnn #1#2#3 {
   \group_begin:
   \ExplSyntaxOff
@@ -87,6 +85,7 @@
   \makeatother
   \group_end:
 }
+\cs_generate_variant:Nn \semio_window_register_body_gappto:nnn { VVV }
 
 \seq_new:c { g_semio_register_toc_num_seq }
 \seq_new:c { g_semio_register_toc_title_seq }
@@ -365,36 +364,43 @@
   }
 }
 
-\cs_new_protected:Npn \semio_glossary_table_row:nnn #1#2#3 {
+\cs_new_protected:Npn \semio_glossary_body_gappto:nnn #1#2#3 {
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
-  \SemioGlossaryTableRow{#1}{#2}{#3}%
+  \gappto\semio@glossary@table@body{\SemioGlossaryTableRow{#1}{#2}{#3}}%
   \makeatother
   \group_end:
 }
-\cs_generate_variant:Nn \semio_glossary_table_row:nnn { VVV }
+\cs_generate_variant:Nn \semio_glossary_body_gappto:nnn { VVV }
 
-\cs_new_protected:Npn \semio_glossary_row_print:n #1 {
+\cs_new_protected:Npn \semio_glossary_row_append:n #1 {
   \prop_get:NnNTF \g_semio_glossary_definition_prop {#1} \l_semio_glossary_definition_tl { } {
     \tl_clear:N \l_semio_glossary_definition_tl
   }
   \semio_glossary_labels_csv:n {#1}
   \tl_set:Nn \l_tmpb_tl {#1}
-  \semio_glossary_table_row:VVV
+  \semio_glossary_body_gappto:VVV
     \l_tmpb_tl
     \l_semio_glossary_definition_tl
     \l_tmpd_tl
 }
 
-\cs_new_protected:Npn \semio_glossary_rows_emit: {
+\cs_new_protected:Npn \semio_glossary_rows_build: {
   \semio_glossary_terms_sort:
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \gdef\semio@glossary@table@body{}%
+  \makeatother
+  \group_end:
   \seq_map_inline:Nn \l_semio_glossary_sorted_terms_seq {
-    \semio_glossary_row_print:n { ##1 }
+    \semio_glossary_row_append:n { ##1 }
   }
 }
 
 \cs_new_protected:Npn \SemioGlossaryListOf {
+  \semio_glossary_rows_build:
   \int_compare:nNnT { \seq_count:N \g_semio_glossary_terms_seq } > { 0 } {
     \tl_set:Nx \l_semio_glossary_title_tl { \semio_glossary_title_text: }
     \group_begin:
@@ -402,7 +408,7 @@
     \exp_args:NV \semio@register@window@open \l_semio_glossary_title_tl
     \SemioTableGlossary{%
       \semio@glossary@table@header
-      \semio@glossary@rows@emit
+      \semio@glossary@table@body
     }%
     \semio@register@window@close
     \group_end:
@@ -545,14 +551,13 @@
 }
 
 \cs_new_protected:Npn \semio_window_tcolorbox_begin:nn #1#2 {
-  \group_begin:
   \ExplSyntaxOff
   \makeatletter
   \def\semio@window@tcb@tier{#1}%
   \def\semio@window@tcb@variant{#2}%
   \semio@window@tcolorbox@begin
   \makeatother
-  \group_end:
+  \ExplSyntaxOn
 }
 
 \keys_define:nn { semio / window / kind } {
@@ -994,8 +999,6 @@
 }
 
 \newcommand{\semio@glossary@table@body}{}
-
-\newcommand{\semio@glossary@rows@emit}{\semio_glossary_rows_emit:}
 
 \newcommand{\semio@glossary@table@header}{%
   \SemioTableHeaderRow{%
@@ -1798,7 +1801,7 @@
   \ifdim\semio@window@row@chrome@h>0pt\else
     \setlength{\semio@window@stretch@height}{0pt}%
     \begin{lrbox}{\semio@window@measure@box}%
-      \semio@window@header@muted{~}{~}%
+      \semio@window@header@muted{}{}%
     \end{lrbox}%
     \setlength{\semio@window@row@chrome@h}{%
       \dimexpr\ht\semio@window@measure@box+\dp\semio@window@measure@box\relax
@@ -1818,6 +1821,7 @@
 
 \newcommand{\SemioWindowRowTwo}[2]{%
   \setlength{\semio@window@row@h@max}{0pt}%
+  \setlength{\semio@window@row@chrome@h}{0pt}%
   \setlength{\semio@window@row@col@w}{\dimexpr(\linewidth-\semio@window@row@gutter)/2\relax}%
   \semio@window@row@chrome@h@ensure
   \semio@window@row@measure{\semio@window@row@col@w}{#1}{\semio@window@row@h@a}%
@@ -1835,6 +1839,7 @@
 
 \newcommand{\SemioWindowRowThree}[3]{%
   \setlength{\semio@window@row@h@max}{0pt}%
+  \setlength{\semio@window@row@chrome@h}{0pt}%
   \setlength{\semio@window@row@col@w}{\dimexpr(\linewidth-2\semio@window@row@gutter)/3\relax}%
   \semio@window@row@chrome@h@ensure
   \semio@window@row@measure{\semio@window@row@col@w}{#1}{\semio@window@row@h@a}%

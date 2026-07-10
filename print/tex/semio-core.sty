@@ -122,7 +122,7 @@
 }
 
 \cs_new:Npn \semio_register_title_text:n #1 {
-  \str_case:Vn \l_semio_language_tl {
+  \str_case:VnF \l_semio_language_tl {
     { de } { Verzeichnis~der~\semio_kind_label_plural:n {#1} }
   } {
     List~of~\semio_kind_label_plural:n {#1}
@@ -130,43 +130,43 @@
 }
 
 \cs_new:Npn \semio_toc_title_text: {
-  \str_case:Vn \l_semio_language_tl {
+  \str_case:VnF \l_semio_language_tl {
     { de } { Inhaltsverzeichnis }
   } { Table~of~Contents }
 }
 
 \cs_new:Npn \semio_references_title_text: {
-  \str_case:Vn \l_semio_language_tl {
+  \str_case:VnF \l_semio_language_tl {
     { de } { Literaturverzeichnis }
   } { References }
 }
 
 \cs_new_protected:Npn \semio_register_header_reference: {
-  \str_case:Vn \l_semio_language_tl {
+  \str_case:VnF \l_semio_language_tl {
     { de } { Referenz }
   } { Reference }
 }
 
 \cs_new_protected:Npn \semio_register_header_year: {
-  \str_case:Vn \l_semio_language_tl {
+  \str_case:VnF \l_semio_language_tl {
     { de } { Jahr }
   } { Year }
 }
 
 \cs_new_protected:Npn \semio_register_header_number: {
-  \str_case:Vn \l_semio_language_tl {
+  \str_case:VnF \l_semio_language_tl {
     { de } { Nr. }
   } { No. }
 }
 
 \cs_new_protected:Npn \semio_register_header_title: {
-  \str_case:Vn \l_semio_language_tl {
+  \str_case:VnF \l_semio_language_tl {
     { de } { Titel }
   } { Title }
 }
 
 \cs_new_protected:Npn \semio_register_header_page: {
-  \str_case:Vn \l_semio_language_tl {
+  \str_case:VnF \l_semio_language_tl {
     { de } { Seite }
   } { Page }
 }
@@ -242,7 +242,7 @@
 }
 
 \cs_new_protected:Npn \semio_language_apply: {
-  \str_case:Vn \l_semio_language_tl {
+  \str_case:VnF \l_semio_language_tl {
     { de } { \selectlanguage { ngerman } }
     { en } { \selectlanguage { english } }
   } {
