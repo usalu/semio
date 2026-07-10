@@ -54,156 +54,153 @@
   \begin{titlepage}
     \semio_theme_apply:
     \setlength{\semio@window@gap}{4pt}
-    \SemioWindowStackBegin{\textheight}
-    \cs_if_exist:cTF { zukunftbau@type } {
-      \str_if_eq:eeTF { \use:c { zukunftbau@type } } { zwischenbericht } {
-        \bool_set_true:N \l_semio_is_zwischenbericht_bool
-        \seq_set_split:Nnx \l_semio_title_seq { --- } { \@title }
-        \tl_set:Nx \l_semio_clean_title_tl { \seq_item:Nn \l_semio_title_seq { 2 } }
-        \tl_trim_spaces:N \l_semio_clean_title_tl
-        \tl_if_empty:NT \l_semio_clean_title_tl {
-          \tl_set:Nn \l_semio_clean_title_tl { \@title }
-        }
-        \SemioWindowStackPush{1.2}
-        \SemioWindowStackPush{1.15}
-      } {
-        \bool_set_false:N \l_semio_is_zwischenbericht_bool
-        \SemioWindowStackPush{2.35}
-      }
-    } {
-      \bool_set_false:N \l_semio_is_zwischenbericht_bool
-      \SemioWindowStackPush{2.35}
-    }
-    \tl_if_blank:eF { \semio@cover@arbeitsprobe@image } {
-      \SemioWindowStackPush{10.8}
-    }
     \bool_set_false:N \l_semio_cover@meta@row_bool
     \tl_if_empty:NF \l_semio_aktenzeichen_tl { \bool_set_true:N \l_semio_cover@meta@row_bool }
     \tl_if_empty:NF \l_semio_foerderzeitraum_tl { \bool_set_true:N \l_semio_cover@meta@row_bool }
     \tl_if_empty:NF \l_semio_berichtszeitraum_tl { \bool_set_true:N \l_semio_cover@meta@row_bool }
-    \bool_if:NT \l_semio_cover@meta@row_bool {
-      \SemioWindowStackPush{1.05}
-    }
-    \tl_if_empty:NTF \l_semio_doi_tl {} {%
-      \SemioWindowStackPush{0.5}%
-    }
-    \bool_if:NF \l_semio_is_zwischenbericht_bool {
-      \tl_if_empty:NTF \l_semio_kurzfassung_tl {} {%
-        \SemioWindowStackPush{2}%
-      }
-    }
     \bool_set_false:N \l_semio_cover@institution@row_bool
     \tl_if_empty:NF \l_semio_antragstellendeinstitution_tl { \bool_set_true:N \l_semio_cover@institution@row_bool }
     \tl_if_empty:NF \l_semio_kooperationspartner_tl { \bool_set_true:N \l_semio_cover@institution@row_bool }
-    \bool_if:NT \l_semio_cover@institution@row_bool {
-      \SemioWindowStackPush{2.75}
-    }
-    \SemioWindowStackPush{5.8}
-    \SemioWindowStackPrepare
-    \cs_if_exist:cTF { zukunftbau@type } {
-      \str_if_eq:eeTF { \use:c { zukunftbau@type } } { zwischenbericht } {
-        \SemioWindowStackUse
-        \SemioWindowRowTwo{1}{%
-          \begin{Window}[title={Zukunft\ Bau}, row, anchor=center, text-size=fit]
-            \SemioSans Zwischenbericht
-          \end{Window}%
-        }{1}{%
-          \begin{Window}[title={Titel}, row, anchor=center, text-size=fit]
-            \SemioSans \tl_use:N \l_semio_clean_title_tl
-          \end{Window}%
-        }
-        \SemioWindowStackUse
-        \begin{Window}[title={Untertitel}, row, anchor=center, text-size=fit]
-          \SemioSans \tl_use:N \l_semio_subtitle_tl
-        \end{Window}
-      } {
-        \SemioWindowStackUse
-        \begin{Window}[title={Titel}, row, anchor=center, text-size=fit]
-          \SemioSans \@title
-          \tl_if_empty:NTF \l_semio_subtitle_tl {} {%
-            \par\SemioSans \tl_use:N \l_semio_subtitle_tl
+    \begin{WindowArrangement}[height=\textheight]
+      \begin{WindowColumn}
+        \cs_if_exist:cTF { zukunftbau@type } {
+          \str_if_eq:eeTF { \use:c { zukunftbau@type } } { zwischenbericht } {
+            \bool_set_true:N \l_semio_is_zwischenbericht_bool
+            \seq_set_split:Nnx \l_semio_title_seq { --- } { \@title }
+            \tl_set:Nx \l_semio_clean_title_tl { \seq_item:Nn \l_semio_title_seq { 2 } }
+            \tl_trim_spaces:N \l_semio_clean_title_tl
+            \tl_if_empty:NT \l_semio_clean_title_tl {
+              \tl_set:Nn \l_semio_clean_title_tl { \@title }
+            }
+            \WindowItem[1.2]{
+              \begin{WindowRow}
+                \WindowItem{
+                  \begin{Window}[title={Zukunft\ Bau}, anchor=center, text-size=fit]
+                    \SemioSans Zwischenbericht
+                  \end{Window}
+                }
+                \WindowItem{
+                  \begin{Window}[title={Titel}, anchor=center, text-size=fit]
+                    \SemioSans \tl_use:N \l_semio_clean_title_tl
+                  \end{Window}
+                }
+              \end{WindowRow}
+            }
+            \WindowItem[1.15]{
+              \begin{Window}[title={Untertitel}, anchor=center, text-size=fit]
+                \SemioSans \tl_use:N \l_semio_subtitle_tl
+              \end{Window}
+            }
+          } {
+            \bool_set_false:N \l_semio_is_zwischenbericht_bool
+            \WindowItem[2.35]{
+              \begin{Window}[title={Titel}, anchor=center, text-size=fit]
+                \SemioSans \@title
+                \tl_if_empty:NTF \l_semio_subtitle_tl {} {%
+                  \par\SemioSans \tl_use:N \l_semio_subtitle_tl
+                }
+              \end{Window}
+            }
           }
-        \end{Window}
-      }
-    } {
-      \SemioWindowStackUse
-      \begin{Window}[title={Titel}, row, anchor=center, text-size=fit]
-        \SemioSans \@title
-        \tl_if_empty:NTF \l_semio_subtitle_tl {} {%
-          \par\SemioSans \tl_use:N \l_semio_subtitle_tl
+        } {
+          \bool_set_false:N \l_semio_is_zwischenbericht_bool
+          \WindowItem[2.35]{
+            \begin{Window}[title={Titel}, anchor=center, text-size=fit]
+              \SemioSans \@title
+              \tl_if_empty:NTF \l_semio_subtitle_tl {} {%
+                \par\SemioSans \tl_use:N \l_semio_subtitle_tl
+              }
+            \end{Window}
+          }
         }
-      \end{Window}
-    }
-    \tl_if_blank:eF { \semio@cover@arbeitsprobe@image } {
-      \SemioWindowStackUse
-      \begin{Window}[title=Arbeitsprobe, row, anchor=center]
-        \begin{minipage}[c]{\linewidth}
-          \centering
-          \includegraphics[
-            width=\linewidth,
-            height=\dimexpr\g_semio_window_stack_current_height_dim-\semio@chrome@titlebar@height-2\semio@chrome@padding-2\semio@stroke@hairline\relax,
-            keepaspectratio,
-          ]{\semio@cover@arbeitsprobe@image}
-        \end{minipage}
-      \end{Window}
-    }
-    \bool_if:NT \l_semio_cover@meta@row_bool {
-      \SemioWindowStackUse
-      \SemioWindowRowThree{1}{%
-        \begin{Window}[title=Aktenzeichen, row, anchor=center, text-size=fit]
-          \SemioSans \tl_use:N \l_semio_aktenzeichen_tl
-        \end{Window}%
-      }{1}{%
-        \begin{Window}[title=Förderzeitraum, row, anchor=center, text-size=fit]
-          \SemioSans \tl_use:N \l_semio_foerderzeitraum_tl
-        \end{Window}%
-      }{1}{%
-        \begin{Window}[title=Berichtszeitraum, row, anchor=center, text-size=fit]
-          \SemioSans \tl_use:N \l_semio_berichtszeitraum_tl
-        \end{Window}%
-      }
-    }
-    \tl_if_empty:NTF \l_semio_doi_tl {} {%
-      \SemioWindowStackUse
-      \begin{Window}[title=DOI, row, anchor=center, text-size=fit]
-        \SemioMono \tl_use:N \l_semio_doi_tl
-      \end{Window}%
-    }
-    \bool_if:NF \l_semio_is_zwischenbericht_bool {
-      \tl_if_empty:NTF \l_semio_kurzfassung_tl {} {%
-        \SemioWindowStackUse
-        \begin{Window}[title=Beschreibung, row, anchor=center, text-size=fit]
-          \SemioSans \tl_use:N \l_semio_kurzfassung_tl
-        \end{Window}%
-      }
-    }
-    \bool_if:NT \l_semio_cover@institution@row_bool {
-      \SemioWindowStackUse
-      \SemioWindowRowTwo{1}{%
-        \begin{Window}[title=Antragstellende~Institution, row, anchor=center, text-size=fit]
-          \semio_cover_address:n { \tl_use:N \l_semio_antragstellendeinstitution_tl }
-        \end{Window}%
-      }{1}{%
-        \begin{Window}[title=Kooperationspartner, row, anchor=center, text-size=fit]
-          \semio_cover_address:n { \tl_use:N \l_semio_kooperationspartner_tl }
-        \end{Window}%
-      }
-    }
-    \SemioWindowStackUse
-    \SemioWindowRowThree{1}{%
-      \begin{Window}[title=Zukunft~Bau, row, anchor=center]
-        \semio@logo@slot[\linewidth]{\semio@cover@zukunftbau@logo}
-      \end{Window}%
-    }{1}{%
-      \begin{Window}[title=BBSR, row, anchor=center]
-        \semio@logo@slot[0.82\linewidth]{\semio@cover@bbsr@logo}
-      \end{Window}%
-    }{1}{%
-      \begin{Window}[title=BMWSB, row, anchor=center]
-        \semio@logo@slot[\linewidth]{\semio@cover@bundesministerium@logo}
-      \end{Window}%
-    }
-    \SemioWindowStackUseEnd
+        \tl_if_blank:eF { \semio@cover@arbeitsprobe@image } {
+          \WindowItem[10.8]{
+            \begin{Window}[title=Arbeitsprobe, anchor=center]
+              \begin{minipage}[c]{\linewidth}
+                \centering
+                \includegraphics[
+                  width=\linewidth,
+                  height=\dimexpr\l_semio_window_pending_height_dim-\semio@chrome@titlebar@height-2\semio@chrome@padding-2\semio@stroke@hairline\relax,
+                  keepaspectratio,
+                ]{\semio@cover@arbeitsprobe@image}
+              \end{minipage}
+            \end{Window}
+          }
+        }
+        \bool_if:NT \l_semio_cover@meta@row_bool {
+          \WindowItem[1.05]{
+            \begin{WindowRow}
+              \WindowItem{
+                \begin{Window}[title=Aktenzeichen, anchor=center, text-size=fit]
+                  \SemioSans \tl_use:N \l_semio_aktenzeichen_tl
+                \end{Window}
+              }
+              \WindowItem{
+                \begin{Window}[title=Förderzeitraum, anchor=center, text-size=fit]
+                  \SemioSans \tl_use:N \l_semio_foerderzeitraum_tl
+                \end{Window}
+              }
+              \WindowItem{
+                \begin{Window}[title=Berichtszeitraum, anchor=center, text-size=fit]
+                  \SemioSans \tl_use:N \l_semio_berichtszeitraum_tl
+                \end{Window}
+              }
+            \end{WindowRow}
+          }
+        }
+        \tl_if_empty:NTF \l_semio_doi_tl {} {%
+          \WindowItem[0.5]{
+            \begin{Window}[title=DOI, anchor=center, text-size=fit]
+              \SemioMono \tl_use:N \l_semio_doi_tl
+            \end{Window}
+          }
+        }
+        \bool_if:NF \l_semio_is_zwischenbericht_bool {
+          \tl_if_empty:NTF \l_semio_kurzfassung_tl {} {%
+            \WindowItem[2]{
+              \begin{Window}[title=Beschreibung, anchor=center, text-size=fit]
+                \SemioSans \tl_use:N \l_semio_kurzfassung_tl
+              \end{Window}
+            }
+          }
+        }
+        \bool_if:NT \l_semio_cover@institution@row_bool {
+          \WindowItem[2.75]{
+            \begin{WindowRow}
+              \WindowItem{
+                \begin{Window}[title=Antragstellende~Institution, anchor=center, text-size=fit]
+                  \semio_cover_address:n { \tl_use:N \l_semio_antragstellendeinstitution_tl }
+                \end{Window}
+              }
+              \WindowItem{
+                \begin{Window}[title=Kooperationspartner, anchor=center, text-size=fit]
+                  \semio_cover_address:n { \tl_use:N \l_semio_kooperationspartner_tl }
+                \end{Window}
+              }
+            \end{WindowRow}
+          }
+        }
+        \WindowItem[5.8]{
+          \begin{WindowRow}
+            \WindowItem{
+              \begin{Window}[title=Zukunft~Bau, anchor=center]
+                \semio@logo@slot[\linewidth]{\semio@cover@zukunftbau@logo}
+              \end{Window}
+            }
+            \WindowItem{
+              \begin{Window}[title=BBSR, anchor=center]
+                \semio@logo@slot[0.82\linewidth]{\semio@cover@bbsr@logo}
+              \end{Window}
+            }
+            \WindowItem{
+              \begin{Window}[title=BMWSB, anchor=center]
+                \semio@logo@slot[\linewidth]{\semio@cover@bundesministerium@logo}
+              \end{Window}
+            }
+          \end{WindowRow}
+        }
+      \end{WindowColumn}
+    \end{WindowArrangement}
   \end{titlepage}
   \clearpage
   \restoregeometry
