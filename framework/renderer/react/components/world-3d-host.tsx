@@ -966,6 +966,7 @@ function WorldInstancesLayer({
   mergedComponentIds,
   mergedInstanceIds,
   blockPick,
+  environment,
 }: {
   readonly instances: readonly WorldInstanceRecord[];
   readonly meshes: readonly WorldMeshRecord[];
@@ -984,6 +985,7 @@ function WorldInstancesLayer({
   /** Live drag-preview merged whole-instance id set (null when no marquee drag is in progress). */
   readonly mergedInstanceIds?: readonly string[] | null;
   readonly blockPick?: boolean;
+  readonly environment?: WorldEnvironmentRecord | null;
 }) {
   const meshById = useMemo(() => new Map(meshes.map((mesh) => [mesh.id, mesh])), [meshes]);
   const geometries = useMemo(() => {
@@ -1069,6 +1071,8 @@ function WorldInstancesLayer({
               onWorldPick={onWorldPick}
               onComponentHover={onComponentHover}
               mergeMode={mergeMode}
+              environmentMaterial={environment?.material}
+              environmentShadowEnabled={environment?.shadow?.enabled === true}
             />
           );
         })}
@@ -1466,10 +1470,14 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
   const engagementPreview = useMemo(() => parseEngagementPreview(scene?.engagementPreviewJson), [scene?.engagementPreviewJson]);
   const brushPreview = useMemo(() => parseBrushPreview(scene?.brushPreviewJson), [scene?.brushPreviewJson]);
   const contextMenuItems = useMemo(() => parseJsonArray<WorldContextMenuItem>(scene?.contextMenuJson), [scene?.contextMenuJson]);
+  const environment = useMemo(() => parseEnvironment(scene?.environmentJson), [scene?.environmentJson]);
+  const frame = useMemo(() => parseFrame(scene?.frameJson), [scene?.frameJson]);
+  const fit = useMemo(() => parseFit(scene?.fitJson), [scene?.fitJson]);
   const activeTool = interaction.activeTool ?? "select";
   const fillMode = activeTool === "fill";
   const brushMode = activeTool === "brush";
   const hostRef = useRef<HTMLDivElement | null>(null);
+  const instancesGroupRef = useRef<Group | null>(null);
   const lodRef = useRef(DEFAULT_MANUAL_LOD);
   const [marqueePath, setMarqueePath] = useState<readonly SelectionMarqueePoint[]>([]);
   const [marqueeModifiers, setMarqueeModifiers] = useState<{ readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean }>({ shiftKey: false, ctrlKey: false, metaKey: false });
@@ -1688,11 +1696,30 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
         camera: {
           position: state.position,
           target: state.target,
+          zoom: state.zoom,
           fov: cameraState.fov,
+          ...(cameraState.explicitProjection ? { projection: state.projection ?? cameraState.projection } : {}),
+          ...(cameraState.up ? { up: cameraState.up } : {}),
         },
       });
     },
-    [cameraState.fov, dispatch],
+    [cameraState.explicitProjection, cameraState.fov, cameraState.projection, cameraState.up, dispatch],
+  );
+
+  const handleProjectionChange = useCallback(
+    (projection: OrbitCameraProjection) => {
+      dispatch("setCamera", {
+        camera: {
+          position: cameraState.position,
+          target: cameraState.target,
+          zoom: cameraState.zoom,
+          fov: cameraState.fov,
+          projection,
+          ...(cameraState.up ? { up: cameraState.up } : {}),
+        },
+      });
+    },
+    [cameraState, dispatch],
   );
 
   const marqueePreview = useMemo<{ readonly mergedComponentIds: readonly number[] | null; readonly mergedInstanceIds: readonly string[] | null }>(() => {
@@ -1822,13 +1849,43 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
       onPointerUp={handlePointerUp}
       onClick={handleEmptyClick}
     >
-      <WorldCanvas className="h-full w-full" cameraUp={[0, 0, 1]} cameraFov={cameraState.fov}>
+      <WorldCanvas
+        className="h-full w-full"
+        cameraUp={(cameraState.up as [number, number, number] | undefined) ?? [0, 0, 1]}
+        cameraFov={cameraState.fov}
+        background={environment && !isTransparentWorldBackground(environment.background) ? environment.background : undefined}
+        gl={environment && isTransparentWorldBackground(environment.background) ? { antialias: true, alpha: true } : undefined}
+        shadows={environment?.shadow?.enabled === true ? true : undefined}
+        overlay={
+          frame || cameraState.explicitProjection ? (
+            <>
+              {frame ? <IconShotFrame width={frame.width} height={frame.height} shape={frame.shape === "ellipse" ? "ellipse" : "rectangle"} badge={frame.badge !== false} background={frame.background} /> : null}
+              {cameraState.explicitProjection ? <WorldOrbitProjectionSwitch projection={cameraState.projection ?? "perspective"} onProjectionChange={handleProjectionChange} /> : null}
+            </>
+          ) : undefined
+        }
+      >
         <WorldOrbitViewSnapGateProvider>
           <WorldOrbitCameraViewRig state={cameraState} seedKey={scene?.cameraJson ?? "default"} perspectiveFov={cameraState.fov} />
-          <WorldOrbitGated controlsGate={marqueeDown || gumballDragActive} onCamera={handleCameraChange} />
+          <WorldOrbitGated controlsGate={marqueeDown || gumballDragActive} onCamera={handleCameraChange} zoom={cameraState.zoom} projection={cameraState.explicitProjection ? cameraState.projection : undefined} />
           <WorldLodBridge lodRef={lodRef} distanceReference={100} gridFactor={DEFAULT_LOD_GRID_FACTOR} gridSnapEnabled={false} showLodGrid automaticLod depthVariableLod={false} manualLod={DEFAULT_MANUAL_LOD} gridDatum={[0, 0, 0]}>
-            <ambientLight intensity={0.65} />
-            <directionalLight intensity={0.85} position={[4, 6, 8]} />
+            {environment ? (
+              <>
+                <ambientLight color={environment.ambient?.color ?? "#ffffff"} intensity={environment.ambient?.intensity ?? 0.65} />
+                <directionalLight
+                  color={environment.sun?.color ?? "#ffffff"}
+                  intensity={environment.sun?.intensity ?? 0.85}
+                  position={sunPositionFromAzimuthElevation(environment.sun?.azimuth ?? 45, environment.sun?.elevation ?? 35)}
+                  castShadow={environment.shadow?.enabled === true}
+                />
+              </>
+            ) : (
+              <>
+                <ambientLight intensity={0.65} />
+                <directionalLight intensity={0.85} position={[4, 6, 8]} />
+              </>
+            )}
+            {fit?.enabled ? <WorldAutoFit groupRef={instancesGroupRef} fitKey={`${fit.revision ?? 0}:${meshes.map((mesh) => mesh.url ?? mesh.id).join(",")}`} padding={fit.padding ?? 1.25} camera={cameraState} onFitted={handleCameraChange} /> : null}
             <CameraRefBridge cameraRef={cameraRef} />
             <RaycasterPickTuning />
             {brushMeshUrls.map((url) => (
@@ -1836,23 +1893,26 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
                 <BrushMeshRegistrar url={url} onRegister={handleRegisterBrushMesh} />
               </Suspense>
             ))}
-            <WorldInstancesLayer
-              instances={instances}
-              meshes={meshes}
-              selection={selection}
-              colors={colors}
-              onInstancePointerDown={handleInstancePointerDown}
-              onInstancePointerMove={handleInstancePointerMove}
-              onWorldPick={handleWorldPick}
-              onComponentHover={handleComponentHover}
-              onPaintAt={paintMode ? handlePaintAt : undefined}
-              gumballDragActive={gumballDragActive}
-              onGumballDraggingChanged={setGumballDragActive}
-              onGumballDragEnd={handleGumballDragEnd}
-              mergedComponentIds={marqueePreview.mergedComponentIds}
-              mergedInstanceIds={marqueePreview.mergedInstanceIds}
-              blockPick={fillMode}
-            />
+            <group ref={instancesGroupRef}>
+              <WorldInstancesLayer
+                instances={instances}
+                meshes={meshes}
+                selection={selection}
+                colors={colors}
+                onInstancePointerDown={handleInstancePointerDown}
+                onInstancePointerMove={handleInstancePointerMove}
+                onWorldPick={handleWorldPick}
+                onComponentHover={handleComponentHover}
+                onPaintAt={paintMode ? handlePaintAt : undefined}
+                gumballDragActive={gumballDragActive}
+                onGumballDraggingChanged={setGumballDragActive}
+                onGumballDragEnd={handleGumballDragEnd}
+                mergedComponentIds={marqueePreview.mergedComponentIds}
+                mergedInstanceIds={marqueePreview.mergedInstanceIds}
+                blockPick={fillMode}
+                environment={environment}
+              />
+            </group>
             <WorldVortexMarkers vortices={vortices} brushMode={brushMode} onHover={handleVortexHover} onSelect={handleVortexSelect} onBrushPlace={handleBrushPlace} />
             <WorldAttractionLines attractions={attractions} />
             {brushPreview ? <BrushPreviewGhost preview={brushPreview} meshes={meshes} /> : null}

@@ -41,9 +41,18 @@ const BRANCH_FIXTURE_JSON: &str = include_str!("../../example/branch-chain.trini
 
 const TRINITY_JACK_DEFAULT_QUERY: &str =
     "MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label";
+
+const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
 //#endregion 🔖Constants
 
 //#region 🔖Envelope
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TrinityEditorSelection {
+    start: usize,
+    end: usize,
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct TrinityJackRuntime {
@@ -63,6 +72,12 @@ struct TrinityJackRuntime {
     results_engagement_input: String,
     #[serde(default)]
     reorganize_epoch: u64,
+    #[serde(default)]
+    editor_selection: Option<TrinityEditorSelection>,
+    #[serde(default)]
+    lod_mode_by_window: BTreeMap<String, String>,
+    #[serde(default)]
+    revision: u64,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -282,6 +297,41 @@ fn apply_node_graph_edit_ops(envelope: &mut TrinityJackEnvelope, ops: &[Value]) 
 }
 //#endregion 🔖Envelope
 
+//#region 🔖Lod
+fn trinity_lod_tier_rows() -> Vec<Value> {
+    serde_json::from_str(&trinity_rewrite::trinity_lod_scale_json()).unwrap_or_default()
+}
+
+fn trinity_lod_measure(window_id: &str, current_mode: &str) -> WindowMeasure {
+    let mut items = vec![MeasureSelectItem {
+        id: TRINITY_LOD_MODE_AUTOMATIC.into(),
+        value: TRINITY_LOD_MODE_AUTOMATIC.into(),
+        label: "Automatic".into(),
+    }];
+    items.extend(trinity_lod_tier_rows().into_iter().filter_map(|row| {
+        let id = row.get("id")?.as_str()?.to_string();
+        let name = row.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
+        Some(MeasureSelectItem { id: id.clone(), value: id, label: name })
+    }));
+    WindowMeasure::Select {
+        id: format!("{window_id}-lod"),
+        label: Some("LOD".into()),
+        value: current_mode.into(),
+        items,
+        on_change: jack_cmd("setLodMode", Some(json!({ "windowId": window_id }))),
+    }
+}
+
+fn trinity_lod_json_for_window(runtime: &TrinityJackRuntime, window_id: &str) -> Option<String> {
+    let mode = runtime.lod_mode_by_window.get(window_id).map(String::as_str).unwrap_or(TRINITY_LOD_MODE_AUTOMATIC);
+    if mode == TRINITY_LOD_MODE_AUTOMATIC {
+        Some(json!({ "automatic": true }).to_string())
+    } else {
+        Some(json!({ "automatic": false, "forcedLabel": mode }).to_string())
+    }
+}
+//#endregion 🔖Lod
+
 //#region 🔖MediaGraph
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -388,28 +438,6 @@ fn node_to_media_record(node: &Node) -> MediaGraphNodeRecord {
 
 fn result_to_table(result_json: &str) -> (String, String) {
     let parsed: QueryResult = serde_json::from_str(result_json).unwrap_or(QueryResult::table(vec![], vec![]));
-    if parsed.kind == QueryResultKind::Graph {
-        if let Some(fixture) = parsed.graph_fixture {
-            let columns = vec![json!({ "id": "index", "label": "#" }), json!({ "id": "id", "label": "Id" }), json!({ "id": "name", "label": "Name" }), json!({ "id": "kind", "label": "Kind" })];
-            let rows: Vec<Value> = fixture
-                .nodes
-                .iter()
-                .enumerate()
-                .map(|(index, node)| {
-                    json!({
-                        "index": index + 1,
-                        "id": node.id,
-                        "name": node.name,
-                        "kind": node.kind,
-                    })
-                })
-                .collect();
-            return (
-                serde_json::to_string(&columns).unwrap_or_else(|_| "[]".into()),
-                serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into()),
-            );
-        }
-    }
     let columns: Vec<Value> = parsed
         .columns
         .iter()
@@ -540,6 +568,11 @@ fn build_catalogue_tree(envelope: &TrinityJackEnvelope) -> UiNode {
         ("where-or", "Where Or", "MATCH (a:Piece) WHERE a.name = 't_f0_b_c0' OR a.name = 't_f0_b_c1' RETURN a.name"),
         ("return-graph", "Return Graph", "MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' RETURN a, r, b"),
         ("set-label", "Set Label", "MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'demo-label'"),
+        ("set-position", "Set Position", "MATCH (a:Piece) WHERE a.name = 'b' SET a.x = 300, a.y = 120"),
+        ("create-node", "Create Node", "CREATE (n:Piece)"),
+        ("create-edge", "Create Edge", "MATCH (a:Piece), (b:Piece) WHERE a.name = 'b' AND b.name != 'b' CREATE (a)-[:Connection]->(b)"),
+        ("delete-leaf", "Delete Leaf", "MATCH (n:Piece) WHERE n.name = 'b' DELETE n"),
+        ("merge-edge", "Merge Edge", "MERGE (x:Piece)-[:Connection]->(y:Piece)"),
     ];
     UiNode::Tree(UiTreeNode {
         sections: vec![
@@ -631,20 +664,44 @@ fn build_inspector_tree(envelope: &TrinityJackEnvelope) -> UiNode {
     let kind_mixed = ui_inspector_mixed_text(&nodes.iter().map(|node| node.kind.clone()).collect::<Vec<_>>());
     let port_counts: Vec<String> = nodes.iter().map(|node| node.ports.len().to_string()).collect();
     let ports_mixed = ui_inspector_mixed_text(&port_counts);
+    let u_values: Vec<String> = nodes.iter().map(|node| flat_position_uv(node).0).collect();
+    let v_values: Vec<String> = nodes.iter().map(|node| flat_position_uv(node).1).collect();
+    let u_mixed = ui_inspector_mixed_text(&u_values);
+    let v_mixed = ui_inspector_mixed_text(&v_values);
     ui_inspector_groups_to_tree(&[
         UiInspectorFieldGroup {
             id: "trinity-inspector.geometry".into(),
             label: "Geometry".into(),
             default_open: None,
-            fields: vec![ui_inspector_readonly_field(
-                "trinity-inspector.ports",
-                "Connectors",
-                if ports_mixed.placeholder.is_none() {
-                    port_counts.first().cloned().unwrap_or_default()
-                } else {
-                    ports_mixed.placeholder.unwrap_or_else(|| UI_INSPECTOR_MIXED_PLACEHOLDER.into())
-                },
-            )],
+            fields: vec![
+                ui_inspector_readonly_field(
+                    "trinity-inspector.flat-u",
+                    "Flat U",
+                    if u_mixed.placeholder.is_none() {
+                        u_values.first().cloned().unwrap_or_default()
+                    } else {
+                        u_mixed.placeholder.unwrap_or_else(|| UI_INSPECTOR_MIXED_PLACEHOLDER.into())
+                    },
+                ),
+                ui_inspector_readonly_field(
+                    "trinity-inspector.flat-v",
+                    "Flat V",
+                    if v_mixed.placeholder.is_none() {
+                        v_values.first().cloned().unwrap_or_default()
+                    } else {
+                        v_mixed.placeholder.unwrap_or_else(|| UI_INSPECTOR_MIXED_PLACEHOLDER.into())
+                    },
+                ),
+                ui_inspector_readonly_field(
+                    "trinity-inspector.ports",
+                    "Connectors",
+                    if ports_mixed.placeholder.is_none() {
+                        port_counts.first().cloned().unwrap_or_default()
+                    } else {
+                        ports_mixed.placeholder.unwrap_or_else(|| UI_INSPECTOR_MIXED_PLACEHOLDER.into())
+                    },
+                ),
+            ],
         },
         UiInspectorFieldGroup {
             id: "trinity-inspector.identity".into(),
@@ -714,20 +771,47 @@ fn render_graph(envelope: &TrinityJackEnvelope) -> UiNode {
             context_menu_json: Some(
                 r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
             ),
+            lod_json: trinity_lod_json_for_window(&envelope.runtime, TRINITY_JACK_PLAY_WINDOW_GRAPH),
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
         },
     )
 }
 
 fn render_editor(envelope: &TrinityJackEnvelope) -> UiNode {
+    let query = &envelope.runtime.jack_query;
+    let graph = load_graph(&envelope.fixture_json);
+    let cursor = envelope.runtime.editor_selection.as_ref().map(|selection| selection.end).unwrap_or(0);
+    let selection_json = envelope
+        .runtime
+        .editor_selection
+        .as_ref()
+        .map(|selection| json!({ "start": selection.start, "end": selection.end }).to_string());
     build_text_editor_scene(
         TRINITY_JACK_PLAY_SURFACE_EDITOR,
         TRINITY_JACK_PLAY_CONTROLLER_ID,
-        TextEditorScene::base(envelope.runtime.jack_query.clone(), Some("jack".into()), None),
+        TextEditorScene {
+            selection_json,
+            tokens_json: serde_json::to_string(&semantic_tokens(query)).ok(),
+            diagnostics_json: serde_json::to_string(&lint(&graph, query)).ok(),
+            completions_json: serde_json::to_string(&complete(&graph, query, cursor)).ok(),
+            occurrences_json: text_identifier_occurrences_json(query, cursor),
+            ..TextEditorScene::base(query.clone(), Some("jack".into()), None)
+        },
     )
 }
 
 fn render_results(envelope: &TrinityJackEnvelope) -> UiNode {
+    let result: QueryResult = serde_json::from_str(&envelope.runtime.jack_result_json).unwrap_or(QueryResult::table(vec![], vec![]));
+    if result.kind == QueryResultKind::Graph {
+        if let Some(fixture) = &result.graph_fixture {
+            let (nodes_json, edges_json, viewport_json) = fixture_to_media_graph(fixture);
+            return build_node_graph_scene(
+                TRINITY_JACK_PLAY_SURFACE_RESULTS,
+                TRINITY_JACK_PLAY_CONTROLLER_ID,
+                NodeGraphScene::base(nodes_json, edges_json, viewport_json),
+            );
+        }
+    }
     let (columns_json, rows_json) = result_to_table(&envelope.runtime.jack_result_json);
     build_table_scene(
         TRINITY_JACK_PLAY_SURFACE_RESULTS,

@@ -57,6 +57,7 @@ impl vcs::OperationDiff<ImperativeDocument> for ImperativeDiff {
             if let Some(steps) = resolve_steps_mut(&mut next, &op.path_ref) {
                 vcs::apply_collection_op(steps, &op.collection);
             }
+            prune_empty_slot(&mut next, &op.path_ref);
         }
         next
     }
@@ -105,6 +106,19 @@ fn resolve_steps_mut<'a>(document: &'a mut ImperativeDocument, path_ref: &PathRe
     let slot = path_ref.slot.clone()?;
     let owner_step = document.path.steps.iter_mut().find(|step| step.id == owner)?;
     Some(&mut owner_step.bodies.entry(slot).or_insert_with(Path::new).steps)
+}
+
+/// 🧹 Drops a nested slot's `bodies` entry once it's empty, so an emptied slot is bit-identical to
+/// a never-touched one — required for `Add` then `Remove` to be a true, exact inverse pair.
+fn prune_empty_slot(document: &mut ImperativeDocument, path_ref: &PathRef) {
+    let (Some(owner), Some(slot)) = (&path_ref.owner, &path_ref.slot) else {
+        return;
+    };
+    if let Some(owner_step) = document.path.steps.iter_mut().find(|step| &step.id == owner) {
+        if owner_step.bodies.get(slot).is_some_and(|path| path.steps.is_empty()) {
+            owner_step.bodies.remove(slot);
+        }
+    }
 }
 //#endregion 🔖Operation
 

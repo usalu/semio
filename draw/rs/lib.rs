@@ -1972,5 +1972,122 @@ mod tests {
         assert_eq!(nodes.len(), 1);
         assert!(!nodes[0].segments.is_empty());
     }
+
+    #[test]
+    fn resolve_boolean_layer_segments_unions_two_rects() {
+        let mut doc = default_draw_document("bool-test", None);
+        doc.layers.clear();
+        let mut rect_a = create_draw_shape_layer_rect("A");
+        if let DrawLayerNode::Shape(shape) = &mut rect_a {
+            shape.rect = Some(DrawRect { x: 0.0, y: 0.0, width: 10.0, height: 10.0 });
+        }
+        let id_a = layer_id(&rect_a).to_string();
+        let mut rect_b = create_draw_shape_layer_rect("B");
+        if let DrawLayerNode::Shape(shape) = &mut rect_b {
+            shape.rect = Some(DrawRect { x: 5.0, y: 5.0, width: 10.0, height: 10.0 });
+        }
+        let id_b = layer_id(&rect_b).to_string();
+        doc.layers.push(rect_a);
+        doc.layers.push(rect_b);
+        let boolean = create_draw_boolean_layer("Union", "union", vec![id_a, id_b]);
+        let boolean_id = layer_id(&boolean).to_string();
+        doc.layers.push(boolean);
+        let nodes = flatten_draw_document_to_scene_nodes(&doc);
+        let boolean_node = nodes.iter().find(|node| node.id == boolean_id).expect("boolean scene node");
+        assert!(!boolean_node.segments.is_empty());
+        assert_eq!(boolean_node.fill_rule.as_deref(), Some("evenodd"));
+    }
+
+    #[test]
+    fn resolve_boolean_layer_segments_flattens_arcs_before_boolean_op() {
+        let mut doc = default_draw_document("bool-arc-test", None);
+        doc.layers.clear();
+        let path_a = create_draw_path_layer(
+            "A",
+            vec![
+                PathSegment::Move { to: [0.0, 0.0] },
+                PathSegment::Line { to: [10.0, 0.0] },
+                PathSegment::Arc { rx: 10.0, ry: 10.0, rotation: 0.0, large_arc: false, sweep: true, to: [0.0, 10.0] },
+                PathSegment::Close,
+            ],
+        );
+        let id_a = layer_id(&path_a).to_string();
+        let rect_b = {
+            let mut layer = create_draw_shape_layer_rect("B");
+            if let DrawLayerNode::Shape(shape) = &mut layer {
+                shape.rect = Some(DrawRect { x: 2.0, y: 2.0, width: 4.0, height: 4.0 });
+            }
+            layer
+        };
+        let id_b = layer_id(&rect_b).to_string();
+        doc.layers.push(path_a);
+        doc.layers.push(rect_b);
+        let boolean = create_draw_boolean_layer("Union", "union", vec![id_a, id_b]);
+        let boolean_id = layer_id(&boolean).to_string();
+        doc.layers.push(boolean);
+        let nodes = flatten_draw_document_to_scene_nodes(&doc);
+        let boolean_node = nodes.iter().find(|node| node.id == boolean_id).expect("boolean scene node");
+        assert!(!boolean_node.segments.is_empty());
+    }
+
+    #[test]
+    fn arc_segment_flattens_to_cubics_preserving_endpoints() {
+        let segments = vec![
+            PathSegment::Move { to: [10.0, 0.0] },
+            PathSegment::Arc { rx: 10.0, ry: 10.0, rotation: 0.0, large_arc: false, sweep: true, to: [0.0, 10.0] },
+        ];
+        let flattened = flatten_curve_segments(&segments);
+        assert!(flattened.iter().all(|segment| !matches!(segment, PathSegment::Arc { .. })));
+        match flattened.last() {
+            Some(PathSegment::Cubic { to, .. }) => {
+                assert!((to[0] - 0.0).abs() < 1e-6);
+                assert!((to[1] - 10.0).abs() < 1e-6);
+            }
+            other => panic!("expected trailing cubic segment, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn resolve_trace_layer_segments_traces_solid_square_png() {
+        let mut image_buffer = image::RgbaImage::new(8, 8);
+        for y in 2..6 {
+            for x in 2..6 {
+                image_buffer.put_pixel(x, y, image::Rgba([255, 255, 255, 255]));
+            }
+        }
+        let mut bytes = Vec::new();
+        image::DynamicImage::ImageRgba8(image_buffer)
+            .write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png)
+            .expect("encode png");
+        let mut doc = default_draw_document("trace-test", None);
+        doc.layers.clear();
+        let mut assets = std::collections::HashMap::new();
+        assets.insert(
+            "source".to_string(),
+            DrawImageAsset { mime: "image/png".into(), data: BASE64.encode(&bytes), width: None, height: None },
+        );
+        doc.assets = Some(assets);
+        doc.artboard = Some(DrawArtboard { width: 16.0, height: 16.0 });
+        doc.layers.push(create_draw_trace_layer("Trace", "source"));
+        let nodes = flatten_draw_document_to_scene_nodes(&doc);
+        assert_eq!(nodes.len(), 1);
+        assert!(!nodes[0].segments.is_empty());
+        assert_eq!(nodes[0].fill_rule.as_deref(), Some("evenodd"));
+    }
+
+    #[test]
+    fn resolve_draw_artboard_skips_group_boolean_trace_kinds() {
+        let mut doc = default_draw_document("artboard-test", None);
+        doc.layers.clear();
+        let mut rect = create_draw_shape_layer_rect("R");
+        if let DrawLayerNode::Shape(shape) = &mut rect {
+            shape.rect = Some(DrawRect { x: 0.0, y: 0.0, width: 20.0, height: 30.0 });
+        }
+        doc.layers.push(rect);
+        doc.layers.push(create_draw_trace_layer("Trace", "missing-source"));
+        let artboard = resolve_draw_artboard(&doc).expect("artboard bounds");
+        assert_eq!(artboard.width, 20.0);
+        assert_eq!(artboard.height, 30.0);
+    }
 }
 //#endregion 🧪Tests

@@ -216,6 +216,13 @@ mod renderer {
         }
     }
 
+    impl Mul<Point> for Affine {
+        type Output = Point;
+        fn mul(self, rhs: Point) -> Point {
+            Point(self.0 * rhs.0)
+        }
+    }
+
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub struct Rect(pub(crate) backend::kurbo::Rect);
 

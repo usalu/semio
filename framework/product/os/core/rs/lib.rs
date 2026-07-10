@@ -1491,6 +1491,57 @@ fn sync_os_studio_document(
 }
 //#endregion 🔖Backbone
 
+//#region 🔖Presence
+pub const OS_PRESENCE_URI_PREFIX: &str = "presence:";
+pub const OS_PRESENCE_STALE_MS: f64 = 15_000.0;
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OsPresencePeer {
+    pub client_id: String,
+    pub name: String,
+    #[serde(default)]
+    pub selection: Vec<String>,
+    pub updated_at_ms: f64,
+}
+
+pub fn os_presence_uri(studio_id: &str) -> String {
+    format!("{OS_PRESENCE_URI_PREFIX}{studio_id}")
+}
+
+fn read_os_presence_map(port: &Arc<dyn OsBackbonePort>, studio_id: &str) -> HashMap<String, OsPresencePeer> {
+    port.read(&os_presence_uri(studio_id))
+        .ok()
+        .and_then(|payload| serde_json::from_str(&payload).ok())
+        .unwrap_or_default()
+}
+
+/** @emoji 🫀 Upserts one peer heartbeat and prunes stale peers on the studio presence channel. */
+pub fn write_os_presence(port: &Arc<dyn OsBackbonePort>, studio_id: &str, peer: OsPresencePeer) -> Result<(), VcsError> {
+    let now_ms = peer.updated_at_ms;
+    let mut peers = read_os_presence_map(port, studio_id);
+    peers.retain(|_, entry| now_ms - entry.updated_at_ms <= OS_PRESENCE_STALE_MS);
+    peers.insert(peer.client_id.clone(), peer);
+    let payload = serde_json::to_string(&peers).map_err(|error| VcsError::Serialize(error.to_string()))?;
+    port.write(&os_presence_uri(studio_id), &payload)
+}
+
+/** @emoji 👥 Reads the live peers on a studio presence channel, excluding self and stale entries. */
+pub fn read_os_presence_peers(
+    port: &Arc<dyn OsBackbonePort>,
+    studio_id: &str,
+    self_client_id: &str,
+    now_ms: f64,
+) -> Vec<OsPresencePeer> {
+    let mut peers: Vec<_> = read_os_presence_map(port, studio_id)
+        .into_values()
+        .filter(|peer| peer.client_id != self_client_id && now_ms - peer.updated_at_ms <= OS_PRESENCE_STALE_MS)
+        .collect();
+    peers.sort_by(|a, b| a.name.cmp(&b.name).then_with(|| a.client_id.cmp(&b.client_id)));
+    peers
+}
+//#endregion 🔖Presence
+
 //#region 🔖StudioCatalog
 pub const OS_HOME_VFS_ROOT_ID: &str = "os-home-root";
 pub const OS_STUDIO_BACKBONE_URI_PREFIX: &str = "temp://studio/";
@@ -3224,9 +3275,24 @@ pub fn os_media_neuron_kind_for_node(node_id: &str) -> String {
     format!("os.media.node.{node_id}")
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OsMediaGraphCamera {
+    pub x: f64,
+    pub y: f64,
+    pub zoom: f64,
+}
+
+impl Default for OsMediaGraphCamera {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, zoom: 1.0 }
+    }
+}
+
 pub fn os_media_graph_to_flow_fixture(
     graph: &OsMediaGraph,
     instances: &[OsAppInstance],
+    camera: &OsMediaGraphCamera,
 ) -> Value {
     let instance_by_id: HashMap<_, _> = instances.iter().map(|instance| (instance.id.clone(), instance)).collect();
     let widgets: Vec<_> = graph
@@ -3274,11 +3340,101 @@ pub fn os_media_graph_to_flow_fixture(
         .collect();
     json!({
         "schema": "flow.fixture",
-        "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+        "camera": { "x": camera.x, "y": camera.y, "zoom": camera.zoom },
         "widgets": widgets,
         "synapses": synapses,
         "layout": layout,
     })
+}
+
+/** @emoji 🔁 Diffs a flow fixture back into media-graph operations — inverse of [`os_media_graph_to_flow_fixture`]. */
+pub fn apply_flow_fixture_to_os_media_graph(graph: &OsMediaGraph, fixture_json: &str) -> Vec<OsOp> {
+    let Ok(fixture) = serde_json::from_str::<Value>(fixture_json) else {
+        return Vec::new();
+    };
+    let mut ops = Vec::new();
+    if let Some(layout) = fixture.get("layout").and_then(Value::as_object) {
+        for node in &graph.nodes {
+            let Some(position) = layout.get(&node.id) else { continue };
+            let (Some(center_x), Some(center_y)) = (
+                position.get("x").and_then(Value::as_f64),
+                position.get("y").and_then(Value::as_f64),
+            ) else {
+                continue;
+            };
+            let x = center_x - node.width / 2.0;
+            let y = center_y - node.height / 2.0;
+            if (x - node.x).abs() > 1e-6 || (y - node.y).abs() > 1e-6 {
+                ops.push(OsOp::MoveMediaNode { node_id: node.id.clone(), x, y });
+            }
+        }
+    }
+    let mut removed_node_ids = HashSet::new();
+    if let Some(widgets) = fixture.get("widgets").and_then(Value::as_array) {
+        let widget_ids: HashSet<&str> = widgets
+            .iter()
+            .filter_map(|widget| widget.get("id").and_then(Value::as_str))
+            .collect();
+        for node in &graph.nodes {
+            if !widget_ids.contains(node.id.as_str()) {
+                removed_node_ids.insert(node.id.clone());
+                ops.push(OsOp::RemoveAppInstance { instance_id: node.instance_id.clone() });
+            }
+        }
+    }
+    let synapse_endpoints = |synapse: &Value| -> Option<(String, String, String, String)> {
+        Some((
+            synapse.get("from").and_then(Value::as_str)?.into(),
+            synapse.get("fromPort").and_then(Value::as_str)?.into(),
+            synapse.get("to").and_then(Value::as_str)?.into(),
+            synapse.get("toPort").and_then(Value::as_str)?.into(),
+        ))
+    };
+    let edge_endpoints = |edge: &OsMediaGraphEdge| {
+        (
+            edge.source_node_id.clone(),
+            edge.source_port_id.clone(),
+            edge.target_node_id.clone(),
+            edge.target_port_id.clone(),
+        )
+    };
+    let synapses = fixture.get("synapses").and_then(Value::as_array).cloned().unwrap_or_default();
+    let fixture_endpoints: HashSet<_> = synapses.iter().filter_map(synapse_endpoints).collect();
+    let graph_endpoints: HashSet<_> = graph.edges.iter().map(edge_endpoints).collect();
+    for synapse in &synapses {
+        let Some(endpoints) = synapse_endpoints(synapse) else { continue };
+        if graph_endpoints.contains(&endpoints) {
+            continue;
+        }
+        let (source_node_id, source_port_id, target_node_id, target_port_id) = endpoints;
+        let id = synapse
+            .get("id")
+            .and_then(Value::as_str)
+            .filter(|value| !value.is_empty())
+            .map(str::to_string)
+            .unwrap_or_else(|| create_os_id("edge"));
+        ops.push(OsOp::ConnectMediaPorts {
+            edge: OsMediaGraphEdge {
+                id,
+                source_node_id,
+                source_port_id,
+                target_node_id,
+                target_port_id,
+            },
+        });
+    }
+    if fixture.get("synapses").and_then(Value::as_array).is_some() {
+        for edge in &graph.edges {
+            if fixture_endpoints.contains(&edge_endpoints(edge)) {
+                continue;
+            }
+            if removed_node_ids.contains(&edge.source_node_id) || removed_node_ids.contains(&edge.target_node_id) {
+                continue;
+            }
+            ops.push(OsOp::DisconnectMediaEdge { edge_id: edge.id.clone() });
+        }
+    }
+    ops
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
