@@ -1616,6 +1616,7 @@ macro_rules! plugin_exports {
             $crate::plugin_runtime::install_plugin_bundle(($bundle_fn)());
         }
 
+        #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[used]
         static _SEMIO_PLUGIN_COMPONENT_LINK: fn() = $crate::component_export_anchor;
     };

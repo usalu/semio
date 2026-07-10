@@ -1,19 +1,22 @@
 //! 🔱 Trinity Jack plugin — jack query play app bundled as a hot-swappable WASM component.
 
-use semio_framework_plugin::{SurfaceKind, PanelGroup, 
+use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_node_graph_scene, build_table_scene, build_text_editor_scene, create_default_layout,
+    text_identifier_occurrences_json, tool_button, tool_collection,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
     ui_inspector_readonly_field, ui_text, App, CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle,
-    TableScene, TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
+    TableScene, TextEditorScene, ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
-    WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
+use semio_framework_plugin::layout::MeasureSelectItem;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::collections::BTreeMap;
 use std::sync::LazyLock;
-use trinity_jack::{execute, parse, run_json, QueryResult, QueryResultKind};
+use trinity_jack::{complete, execute, format as jack_format, lint, parse, run_json, semantic_tokens, QueryResult, QueryResultKind};
 use trinity_ram::{Graph, GraphFixture, Node, PortDirection, PropertyValue, create_trinity_graph_envelope, dispatch_trinity_graph_ops, TrinityGraphEnvelope, TrinityGraphStore};
 use vcs::DocumentVcsCommand;
 

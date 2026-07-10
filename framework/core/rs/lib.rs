@@ -2451,12 +2451,22 @@ pub struct TableScene {
     pub rows_json: String,
 }
 
+/** @emoji 🖼️ Raster scene: WASM `RasterSession` sync channels for the composite/navigator windows, see raster/rs/lib.rs. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RasterScene {
-    pub width: u32,
-    pub height: u32,
-    pub pixels_base64: String,
+    pub document_sync_json: String,
+    pub assets_json: String,
+    pub camera_json: String,
+    pub selection_json: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hovered_id: Option<String>,
+    pub active_tool: String,
+    pub brush_size: f64,
+    pub brush_opacity: f64,
+    pub view_mode: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub composite_viewport_json: Option<String>,
 }
 
 /** @emoji 🖼️ Icon-render scene: client-side render request for a shot preview, see https://threejs.org/docs/#examples/en/renderers/SVGRenderer. */

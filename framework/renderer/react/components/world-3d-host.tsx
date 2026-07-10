@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, Suspense, type ComponentProps } from "react";
-import { BufferAttribute, BufferGeometry, DoubleSide, Group, LineBasicMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PointsMaterial, Quaternion, TextureLoader, Vector3, type ThreeEvent } from "three";
-import { useLoader, useThree } from "@react-three/fiber";
+import { Box3, BufferAttribute, BufferGeometry, DoubleSide, Group, LineBasicMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PointsMaterial, Quaternion, TextureLoader, Vector3, type ThreeEvent } from "three";
+import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import {
   DEFAULT_LOD_GRID_FACTOR,
@@ -11,17 +11,21 @@ import {
   WorldLodBridge,
   WorldOrbitCameraViewRig,
   WorldOrbitGated,
+  WorldOrbitProjectionSwitch,
   WorldOrbitViewSnapGateProvider,
   WorldReferenceLayer,
   WorldVolumeLayer,
+  type OrbitCameraProjection,
   type WorldCameraState,
 } from "@semio-tech/infinite-world-r3f";
 import {
+  IconShotFrame,
   UnifiedGumball,
   ContextMenuController,
   marqueeCoverageFromGesture,
   marqueeModeFromModifiers,
   SelectionMarquee,
+  sunPositionFromAzimuthElevation,
   type GumballConfig,
   type GumballHandleKind,
   type GumballPose,
@@ -212,26 +216,140 @@ function useSemanticColors(): SemanticColors {
   return colors;
 }
 
-function parseCameraState(cameraJson: string): WorldCameraState & { readonly fov: number } {
+type WorldParsedCameraState = WorldCameraState & { readonly fov: number; readonly explicitProjection: boolean };
+
+function parseCameraState(cameraJson: string): WorldParsedCameraState {
   try {
-    const parsed = JSON.parse(cameraJson) as WorldCameraRecord & { target?: readonly [number, number, number]; zoom?: number };
+    const parsed = JSON.parse(cameraJson) as WorldCameraRecord & { target?: readonly [number, number, number]; zoom?: number; up?: readonly [number, number, number]; projection?: string };
     const position: [number, number, number] = parsed.position ? [parsed.position[0], parsed.position[1], parsed.position[2]] : [parsed.x ?? 4, parsed.y ?? -4, parsed.z ?? 3];
     const target: [number, number, number] = parsed.target ? [parsed.target[0], parsed.target[1], parsed.target[2]] : [0, 0, 0];
+    const explicitProjection = parsed.projection === "perspective" || parsed.projection === "orthographic";
     return {
       position,
       target,
+      up: parsed.up ? [parsed.up[0], parsed.up[1], parsed.up[2]] : undefined,
       zoom: typeof parsed.zoom === "number" ? parsed.zoom : 1,
-      projection: "perspective",
+      projection: parsed.projection === "orthographic" ? "orthographic" : "perspective",
       fov: parsed.fov ?? 45,
+      explicitProjection,
     };
   } catch {
-    return { position: [4, -4, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45 };
+    return { position: [4, -4, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45, explicitProjection: false };
   }
 }
 
-function autofitCameraFromInstances(instances: readonly WorldInstanceRecord[]): WorldCameraState & { readonly fov: number } {
+type WorldEnvironmentMaterialRecord = {
+  readonly color?: string;
+  readonly metalness?: number;
+  readonly roughness?: number;
+  readonly emissive?: string;
+  readonly emissiveIntensity?: number;
+};
+
+type WorldEnvironmentRecord = {
+  readonly background?: string;
+  readonly ambient?: { readonly intensity?: number; readonly color?: string };
+  readonly sun?: { readonly azimuth?: number; readonly elevation?: number; readonly intensity?: number; readonly color?: string };
+  readonly shadow?: { readonly enabled?: boolean; readonly opacity?: number; readonly softness?: number };
+  readonly material?: WorldEnvironmentMaterialRecord;
+};
+
+type WorldFrameRecord = {
+  readonly width: number;
+  readonly height: number;
+  readonly shape?: string;
+  readonly badge?: boolean;
+  readonly background?: string;
+};
+
+type WorldFitRecord = {
+  readonly enabled?: boolean;
+  readonly revision?: number;
+  readonly padding?: number;
+};
+
+function parseJsonRecord<T>(json?: string): T | null {
+  if (!json) return null;
+  try {
+    const parsed = JSON.parse(json) as T | null;
+    return typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+const parseEnvironment = (json?: string) => parseJsonRecord<WorldEnvironmentRecord>(json);
+const parseFrame = (json?: string) => parseJsonRecord<WorldFrameRecord>(json);
+const parseFit = (json?: string) => parseJsonRecord<WorldFitRecord>(json);
+
+function isTransparentWorldBackground(background?: string): boolean {
+  return !background || background === "transparent";
+}
+
+function fitCameraFromBounds(center: readonly [number, number, number], radius: number, camera: WorldParsedCameraState, padding: number): { position: [number, number, number]; target: [number, number, number]; zoom: number } {
+  const distance = Math.max(radius * padding, 2);
+  const dx = camera.position[0] - camera.target[0];
+  const dy = camera.position[1] - camera.target[1];
+  const dz = camera.position[2] - camera.target[2];
+  const length = Math.hypot(dx, dy, dz);
+  const nx = length > 1e-6 ? dx / length : 1;
+  const ny = length > 1e-6 ? dy / length : -1;
+  const nz = length > 1e-6 ? dz / length : 0.85;
+  const norm = Math.hypot(nx, ny, nz) || 1;
+  return {
+    position: [center[0] + (nx / norm) * distance, center[1] + (ny / norm) * distance, center[2] + (nz / norm) * distance],
+    target: [center[0], center[1], center[2]],
+    zoom: camera.zoom,
+  };
+}
+
+/** @emoji 🎯 Fits the orbit camera to the bounds of a scene group once per fit key, preserving the view direction. */
+function WorldAutoFit({
+  groupRef,
+  fitKey,
+  padding,
+  camera,
+  onFitted,
+}: {
+  readonly groupRef: React.RefObject<Group | null>;
+  readonly fitKey: string;
+  readonly padding: number;
+  readonly camera: WorldParsedCameraState;
+  readonly onFitted: (state: WorldCameraState) => void;
+}): null {
+  const { camera: sceneCamera, controls, invalidate } = useThree();
+  const appliedKeyRef = useRef("");
+  const targetScratch = useMemo(() => new Vector3(), []);
+  useFrame(() => {
+    if (!sceneCamera) return;
+    const group = groupRef.current;
+    if (!group) return;
+    if (appliedKeyRef.current === fitKey) return;
+    const box = new Box3().setFromObject(group);
+    if (box.isEmpty()) return;
+    const center = box.getCenter(new Vector3());
+    const size = box.getSize(new Vector3());
+    const radius = Math.max(size.x, size.y, size.z) * 0.5;
+    if (radius <= 0) return;
+    appliedKeyRef.current = fitKey;
+    const fitted = fitCameraFromBounds([center.x, center.y, center.z], radius, camera, padding);
+    const orbit = controls as { target: Vector3; update?: () => void } | null;
+    const target = orbit?.target ?? targetScratch;
+    target.set(fitted.target[0], fitted.target[1], fitted.target[2]);
+    sceneCamera.position.set(fitted.position[0], fitted.position[1], fitted.position[2]);
+    if ("zoom" in sceneCamera) sceneCamera.zoom = fitted.zoom;
+    sceneCamera.updateProjectionMatrix();
+    if (orbit) orbit.update?.();
+    else sceneCamera.lookAt(target);
+    invalidate();
+    onFitted({ ...camera, position: fitted.position, target: fitted.target, zoom: fitted.zoom });
+  });
+  return null;
+}
+
+function autofitCameraFromInstances(instances: readonly WorldInstanceRecord[]): WorldParsedCameraState {
   if (instances.length === 0) {
-    return { position: [4, -4, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45 };
+    return { position: [4, -4, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45, explicitProjection: false };
   }
   let minX = Number.POSITIVE_INFINITY;
   let minY = Number.POSITIVE_INFINITY;
@@ -257,6 +375,7 @@ function autofitCameraFromInstances(instances: readonly WorldInstanceRecord[]): 
     zoom: 1,
     projection: "perspective",
     fov: 45,
+    explicitProjection: false,
   };
 }
 
@@ -440,18 +559,25 @@ function PaintTexturedMesh({
   );
 }
 
-function GlbInstanceMesh({ url, color }: { readonly url: string; readonly color: string }) {
+function GlbInstanceMesh({ url, color, material, shadowEnabled }: { readonly url: string; readonly color: string; readonly material?: WorldEnvironmentMaterialRecord; readonly shadowEnabled?: boolean }) {
   const gltf = useLoader(GLTFLoader, url);
   const scene = useMemo(() => {
     const cloned = gltf.scene.clone(true);
     cloned.traverse((child) => {
       if ("isMesh" in child && (child as { isMesh?: boolean }).isMesh) {
         const mesh = child as Mesh;
-        mesh.material = new MeshStandardMaterial({ color });
+        const standard = new MeshStandardMaterial({ color, metalness: material?.metalness ?? 0, roughness: material?.roughness ?? 1 });
+        if (material?.emissive) {
+          standard.emissive.set(material.emissive);
+          standard.emissiveIntensity = material.emissiveIntensity ?? 1;
+        }
+        mesh.material = standard;
+        mesh.castShadow = shadowEnabled === true;
+        mesh.receiveShadow = shadowEnabled === true;
       }
     });
     return cloned;
-  }, [gltf.scene, color]);
+  }, [gltf.scene, color, material, shadowEnabled]);
   return (
     <group rotation={[GLB_MESH_FRAME_ROTATION_X, 0, 0]}>
       <primitive object={scene} />
@@ -589,6 +715,8 @@ function WorldInstanceNode({
   onComponentHover,
   mergeMode,
   previewInstanceSelected,
+  environmentMaterial,
+  environmentShadowEnabled,
 }: {
   readonly instance: WorldInstanceRecord;
   readonly index: number;
@@ -620,11 +748,14 @@ function WorldInstanceNode({
   readonly mergeMode: (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => string;
   /** Live marquee-drag merged selection state for this instance; undefined when no drag is in progress. */
   readonly previewInstanceSelected?: boolean;
+  readonly environmentMaterial?: WorldEnvironmentMaterialRecord;
+  readonly environmentShadowEnabled?: boolean;
 }) {
   const isActiveObject = instance.id === activeObjectId;
   const effectiveSelected = previewInstanceSelected ?? instance.selected;
   const previewAddedInstance = previewInstanceSelected === true && !instance.selected;
   const meshTint = previewAddedInstance ? colors.hover : effectiveSelected ? colors.select : instance.hovered ? colors.hover : colors.mesh;
+  const glbTinted = previewAddedInstance || effectiveSelected === true || instance.hovered === true;
   const hoveredFaceId = hoveredComponent?.mode === "face" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
   const hoveredVertexId = hoveredComponent?.mode === "vertex" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
   const hoveredEdgeId = hoveredComponent?.mode === "edge" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
@@ -799,7 +930,7 @@ function WorldInstanceNode({
           onPointerOut={() => onInstancePointerMove(null)}
         >
           <Suspense fallback={null}>
-            <GlbInstanceMesh url={meshRecord.url} color={meshTint} />
+            <GlbInstanceMesh url={meshRecord.url} color={glbTinted ? meshTint : environmentMaterial?.color ?? meshTint} material={environmentMaterial} shadowEnabled={environmentShadowEnabled} />
           </Suspense>
         </group>
       ) : (
