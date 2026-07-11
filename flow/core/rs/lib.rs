@@ -2967,7 +2967,7 @@ impl FlowHost {
     }
 
     pub fn set_canvas_theme_dark(&mut self, dark: bool) {
-        self.dag.canvas_theme = dag::CanvasThemePalette::from_board_theme(if dark {
+        self.dag.canvas_theme = dag::CanvasPalette::from_board_palette(if dark {
             &ui_styling::BOARD_DARK
         } else {
             &ui_styling::BOARD_LIGHT

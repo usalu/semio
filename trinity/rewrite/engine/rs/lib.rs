@@ -4,7 +4,7 @@ pub use infinite_cavas as cavas;
 use mathematical_graph_port_directed::{
     force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions},
     geometry::{compute_edge_bezier_points, distance_between},
-    BoardEngine, HandleRole, CanvasThemePalette,
+    BoardEngine, HandleRole, CanvasPalette,
 };
 use mathematical_graph_port_directed_normal::BoardHost;
 use serde::{Deserialize, Serialize};
@@ -603,7 +603,7 @@ pub struct TrinityHost {
     store: TrinityGraphStore,
     pub engine: TrinityBoardEngine,
     board: BoardHost,
-    pub canvas_theme: CanvasThemePalette,
+    pub canvas_theme: CanvasPalette,
     width: u32,
     height: u32,
     dpr: f64,
@@ -625,7 +625,7 @@ impl TrinityHost {
             store,
             engine: TrinityBoardEngine::new(),
             board: BoardHost::new(),
-            canvas_theme: CanvasThemePalette::default(),
+            canvas_theme: CanvasPalette::default(),
             width: 1,
             height: 1,
             dpr: 1.0,

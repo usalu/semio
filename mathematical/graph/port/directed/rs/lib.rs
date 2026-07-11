@@ -369,7 +369,7 @@ pub mod types {
     }
 
     #[derive(Clone, Copy, Debug)]
-    pub struct CanvasThemePalette {
+    pub struct CanvasPalette {
         pub raster_clear: Color,
         pub grid_minor_stroke: Color,
         pub edge_stroke: Color,
@@ -411,9 +411,9 @@ pub mod types {
         pub label_halo: Color,
     }
 
-    impl CanvasThemePalette {
+    impl CanvasPalette {
         /// @emoji 🎨 Builds a palette from centralized board theme tokens.
-        pub fn from_board_theme(t: &ui_styling::BoardTheme) -> Self {
+        pub fn from_board_palette(t: &ui_styling::BoardPalette) -> Self {
             Self {
                 raster_clear: Color::new(t.raster_clear),
                 grid_minor_stroke: Color::new(t.grid_minor_stroke),
@@ -668,7 +668,7 @@ pub mod types {
         }
 
         /// @emoji 🎨 Themed SVG icon fg/bg from centralized canvas tokens (not node chrome stroke/fill).
-        pub fn board_icon_paint_colors(canvas_theme: &CanvasThemePalette) -> (Color, Color) {
+        pub fn board_icon_paint_colors(canvas_theme: &CanvasPalette) -> (Color, Color) {
             let rgba = canvas_theme.raster_clear.to_rgba8();
             let lum = f64::from(rgba.r) * 0.299 + f64::from(rgba.g) * 0.587 + f64::from(rgba.b) * 0.114;
             let canvas = if lum < 128.0 { &ui_styling::CANVAS_DARK } else { &ui_styling::CANVAS_LIGHT };
@@ -677,9 +677,9 @@ pub mod types {
     }
     // #endregion 🔖Icons
 
-    impl Default for CanvasThemePalette {
+    impl Default for CanvasPalette {
         fn default() -> Self {
-            Self::from_board_theme(&ui_styling::BOARD_LIGHT)
+            Self::from_board_palette(&ui_styling::BOARD_LIGHT)
         }
     }
     // #endregion types
@@ -1564,7 +1564,7 @@ mod quadrant_tests {
 
     #[test]
     fn canvas_theme_default_uses_centralized_board_light_tokens() {
-        let p = CanvasThemePalette::default();
+        let p = CanvasPalette::default();
         let t = &ui_styling::BOARD_LIGHT;
         assert_eq!(p.raster_clear, Color::new(t.raster_clear));
         assert_eq!(p.edge_stroke_selected, Color::new(t.edge_stroke_selected));
@@ -1573,7 +1573,7 @@ mod quadrant_tests {
 
     #[test]
     fn board_icon_paint_colors_use_canvas_tokens_not_node_chrome() {
-        let theme = CanvasThemePalette::default();
+        let theme = CanvasPalette::default();
         let (fg, bg) = IconPaintCache::board_icon_paint_colors(&theme);
         assert_eq!(fg, Color::new(ui_styling::CANVAS_LIGHT.icon_fg));
         assert_eq!(bg, Color::new(ui_styling::CANVAS_LIGHT.icon_bg));

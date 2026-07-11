@@ -83,6 +83,7 @@ import {
   type SidePanelTabConfig,
   type TreeDataItem,
   type TreePanelConfig,
+  type UiChromeTerminologyId,
   type UiLocale,
   type UiTranslationKey,
   type WindowLayoutNode,
@@ -632,6 +633,12 @@ function shellLabel(key: UiTranslationKey): string {
   return resolveTranslationLabel(uiI18n.t(key)) ?? key;
 }
 
+/** @emoji 🗣️ Resolves a terminology id's display name; chrome-known ids get a translated label, app-declared ids fall back to their raw id. */
+function shellTerminologyLabel(id: string): string {
+  const isChromeKnown = id === "native" || id === "reuse";
+  return isChromeKnown ? shellLabel(`ui.settings.terminology.${id as UiChromeTerminologyId}`) : id;
+}
+
 function renderWindowMeasure(measure: WindowMeasure, onCommand: (command: CommandDescriptor) => void): ReactNode {
   if (measure.kind === "group") {
     return (
@@ -763,7 +770,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const spawnedRefreshGenerationRef = useRef(0);
   const contributorInstancesRef = useRef<Map<string, number>>(new Map());
   const layoutSeedKeyRef = useRef<string | null>(null);
-  const noExampleResetInstanceIdRef = useRef<string | null>(null);
+  const noExampleResetInstanceIdRef = useRef<number | null>(null);
   const [mobileActiveTabId, setMobileActiveTabId] = useState<string | undefined>(undefined);
   const [leftPanelTabId, setLeftPanelTabId] = useState<string | undefined>(undefined);
   const [rightPanelTabId, setRightPanelTabId] = useState<string | undefined>(undefined);
@@ -775,6 +782,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const [uiCompact, setUiCompact] = useState(() => readStoredUiChromeCompact());
   const [uiExpertise, setUiExpertise] = useState(() => readStoredUiChromeExpertise());
   const [uiLocale, setUiLocaleState] = useState<UiLocale>(() => readStoredUiChromeLocale() ?? (uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en"));
+  const [uiTerminology, setUiTerminologyState] = useState<string>(() => readStoredUiChromeTerminology());
   const [syncBackboneUri, setSyncBackboneUri] = useState<string | null>(null);
   const [syncCardKind, setSyncCardKind] = useState<SyncCardKind | null>(null);
   const [syncDraftPath, setSyncDraftPath] = useState("");
@@ -891,7 +899,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId)?.handle;
       if (!plugin) return;
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
-      const viewState: ViewState = { ...nextSession.viewState, contributionsJson };
+      const viewState: ViewState = { ...nextSession.viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology };
       const slotContext = {
         plugins: new Map(loadedPlugins.map((entry) => [entry.handle.pluginId, entry.handle])),
         contributorInstances: contributorInstancesRef.current,
@@ -943,7 +951,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         else if (windowIds[0]) setActiveWindowId(windowIds[0]);
       }
     },
-    [loadedPlugins],
+    [loadedPlugins, uiLocale, uiTerminology],
   );
 
   const refreshSpawnedUi = useCallback(
@@ -960,7 +968,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         return;
       }
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
-      const fullViewState: ViewState = { ...viewState, contributionsJson };
+      const fullViewState: ViewState = { ...viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology };
       const bodyKey = resolveCanvasBodyKey(app);
       const [ui, dynamicTools, dynamicEngagements, dynamicMeasures] = await Promise.all([
         plugin.render(spawned.instanceId, bodyKey, fullViewState),
@@ -974,7 +982,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       setSpawnedWindowMeasures(dynamicMeasures);
       setSpawnedToolNodes(selectSpawnedToolNodes(dynamicTools, app, fullViewState.activeModeId ?? app.defaultModeId ?? app.modes[0]?.id));
     },
-    [loadedPlugins],
+    [loadedPlugins, uiLocale, uiTerminology],
   );
 
   useEffect(() => {
@@ -1464,6 +1472,10 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     void setUiLocale(uiLocale);
   }, [uiLocale]);
 
+  useEffect(() => {
+    writeStoredUiChromeTerminology(uiTerminology);
+  }, [uiTerminology]);
+
   useCommandHotkey(
     "mod+[",
     useCallback(() => {
@@ -1572,8 +1584,11 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       setAppearance: setUiAppearance,
       locale: uiLocale,
       setLocale: setUiLocaleState,
+      terminology: uiTerminology,
+      setTerminology: setUiTerminologyState,
+      terminologies: [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])],
     }),
-    [session, uiCompact, uiExpertise, uiAppearance, uiLocale],
+    [session, uiCompact, uiExpertise, uiAppearance, uiLocale, uiTerminology],
   );
   settingsHostRef.current = settingsHost;
 
@@ -4019,6 +4034,9 @@ export type SettingsHostApi = {
   readonly setAppearance: (appearance: string) => void;
   readonly locale: UiLocale;
   readonly setLocale: (locale: UiLocale) => void;
+  readonly terminology: string;
+  readonly setTerminology: (id: string) => void;
+  readonly terminologies: readonly string[];
 };
 
 function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
@@ -4078,6 +4096,19 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
               <select id="framework.settings.language" className="h-small w-full rounded border border-border bg-background px-2 text-sm" value={host.locale} onChange={(event) => host.setLocale(event.target.value === "de" ? "de" : "en")}>
                 <option value="en">{shellLabel("ui.settings.language.en")}</option>
                 <option value="de">{shellLabel("ui.settings.language.de")}</option>
+              </select>
+            ),
+          },
+          {
+            id: "framework.settings.terminology",
+            label: shellLabel("ui.settings.tab.terminology"),
+            control: (
+              <select id="framework.settings.terminology" className="h-small w-full rounded border border-border bg-background px-2 text-sm" value={host.terminology} onChange={(event) => host.setTerminology(event.target.value)}>
+                {host.terminologies.map((id) => (
+                  <option key={id} value={id}>
+                    {shellTerminologyLabel(id)}
+                  </option>
+                ))}
               </select>
             ),
           },

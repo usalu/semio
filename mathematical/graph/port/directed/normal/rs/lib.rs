@@ -16,7 +16,7 @@ use crate::{
     handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
     normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_json, property_bag_to_json, rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveTool, BoardElementStyleKind, CachedIconBody, CompatSpecificity, EdgeData, EdgeDescJson,
     EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry, FixtureJson, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate,
-    NodeShape, SceneDescriptorJson, SelectionOptions, CanvasThemePalette, WireData, WireKindDef,
+    NodeShape, SceneDescriptorJson, SelectionOptions, CanvasPalette, WireData, WireKindDef,
 };
 use infinite_cavas::camera::Camera;
 use mathematical_graph_manifest::manifest_by_id;
@@ -263,7 +263,7 @@ pub struct BoardHost {
     pub selection_preview_crossing: bool,
     /// Screen-space polyline preview (CSS px) while dragging a handle link before drop.
     pub link_screen_preview: Option<Vec<Point>>,
-    pub canvas_theme: CanvasThemePalette,
+    pub canvas_theme: CanvasPalette,
     /// @emoji 📐 Positive multiplier for LOD world grid steps (`10` / `5` / `1` base world units per band).
     pub grid_factor: f64,
     /// @emoji 🧲 When true, node drags snap to the finest visible LOD grid (step scales with `grid_factor`).
@@ -343,7 +343,7 @@ impl Default for BoardHost {
             selection_screen_preview: None,
             selection_preview_crossing: false,
             link_screen_preview: None,
-            canvas_theme: CanvasThemePalette::default(),
+            canvas_theme: CanvasPalette::default(),
             grid_factor: GRID_FACTOR_DEFAULT,
             grid_snap_enabled: false,
             preserve_original_element_style: false,
@@ -1187,7 +1187,7 @@ impl BoardHost {
         }
     }
 
-    fn node_fill_for_style(theme: &CanvasThemePalette, kind: BoardElementStyleKind) -> Color {
+    fn node_fill_for_style(theme: &CanvasPalette, kind: BoardElementStyleKind) -> Color {
         match kind {
             BoardElementStyleKind::Hovered => theme.node_fill_hovered,
             BoardElementStyleKind::Selected => theme.node_fill_selected,
@@ -1197,7 +1197,7 @@ impl BoardHost {
         }
     }
 
-    fn node_stroke_for_style(theme: &CanvasThemePalette, kind: BoardElementStyleKind) -> Color {
+    fn node_stroke_for_style(theme: &CanvasPalette, kind: BoardElementStyleKind) -> Color {
         match kind {
             BoardElementStyleKind::Hovered => theme.node_stroke_hovered,
             BoardElementStyleKind::Selected => theme.node_stroke_selected,
@@ -1207,7 +1207,7 @@ impl BoardHost {
         }
     }
 
-    fn resolve_handle_fill_color(&self, h: &HandleData, theme: &CanvasThemePalette, kind: BoardElementStyleKind) -> Color {
+    fn resolve_handle_fill_color(&self, h: &HandleData, theme: &CanvasPalette, kind: BoardElementStyleKind) -> Color {
         match kind {
             BoardElementStyleKind::Hovered => theme.handle_fill_hovered,
             BoardElementStyleKind::Selected => theme.handle_fill_selected,
@@ -1225,7 +1225,7 @@ impl BoardHost {
         }
     }
 
-    fn resolve_handle_stroke_color(&self, _h: &HandleData, theme: &CanvasThemePalette, kind: BoardElementStyleKind) -> Color {
+    fn resolve_handle_stroke_color(&self, _h: &HandleData, theme: &CanvasPalette, kind: BoardElementStyleKind) -> Color {
         match kind {
             BoardElementStyleKind::Hovered => theme.handle_stroke_hovered,
             BoardElementStyleKind::Selected => theme.handle_stroke_selected,
@@ -1235,7 +1235,7 @@ impl BoardHost {
         }
     }
 
-    fn edge_stroke_for_style(theme: &CanvasThemePalette, kind: BoardElementStyleKind) -> Color {
+    fn edge_stroke_for_style(theme: &CanvasPalette, kind: BoardElementStyleKind) -> Color {
         match kind {
             BoardElementStyleKind::Hovered => theme.edge_stroke_hovered,
             BoardElementStyleKind::Selected => theme.edge_stroke_selected,
@@ -1257,7 +1257,7 @@ impl BoardHost {
         )
     }
 
-    fn resolve_node_fill_color(&self, n: &NodeData, theme: &CanvasThemePalette, kind: BoardElementStyleKind) -> Color {
+    fn resolve_node_fill_color(&self, n: &NodeData, theme: &CanvasPalette, kind: BoardElementStyleKind) -> Color {
         let theme_fill = Self::node_fill_for_style(theme, kind);
         match kind {
             BoardElementStyleKind::Hovered | BoardElementStyleKind::Selected | BoardElementStyleKind::Highlighted | BoardElementStyleKind::Disabled => theme_fill,
@@ -1425,7 +1425,7 @@ impl BoardHost {
         }
     }
 
-    fn wire_stroke_for_style(theme: &CanvasThemePalette, kind: BoardElementStyleKind) -> Color {
+    fn wire_stroke_for_style(theme: &CanvasPalette, kind: BoardElementStyleKind) -> Color {
         match kind {
             BoardElementStyleKind::Hovered => theme.wire_stroke_hovered,
             BoardElementStyleKind::Selected => theme.wire_stroke_selected,

@@ -4,19 +4,19 @@
 
 export { tailwindConfig, tailwindConfig as default } from "../tailwind/tailwind.config.ts";
 export {
-  STYLING_BOARD_THEMES,
+  STYLING_BOARD_PALETTES,
   STYLING_CANVAS_FONTS,
-  STYLING_CANVAS_THEMES,
-  STYLING_MAP_THEMES,
+  STYLING_CANVAS_PALETTES,
+  STYLING_MAP_PALETTES,
   STYLING_METRICS,
   STYLING_OPACITIES,
   STYLING_RADII,
   STYLING_STROKES,
   STYLING_TOKENS,
-  type StylingThemeName,
+  type StylingAppearanceName,
   type StylingTokenKey,
 } from "./tokens.generated.ts";
-import { STYLING_BOARD_THEMES, STYLING_METRICS, STYLING_TOKENS, type StylingTokenKey } from "./tokens.generated.ts";
+import { STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_TOKENS, type StylingTokenKey } from "./tokens.generated.ts";
 
 //#region 🔖sizing
 //#region 🔑SizeVars
@@ -356,30 +356,30 @@ export function readableForegroundHex(backgroundRef: string, lightKey: StylingTo
   return result;
 }
 
-/** @emoji 🌓 Resolves the active styling theme name from the document root class list. */
-export function currentStylingThemeName(): StylingThemeName {
+/** @emoji 🌓 Resolves the active styling appearance name from the document root class list. */
+export function currentStylingAppearanceName(): StylingAppearanceName {
   if (typeof document !== "undefined" && document.documentElement.classList.contains("dark")) {
     return "dark";
   }
   return "light";
 }
 
-/** @emoji 🎨 Serializes token board theme paints for DAG/flow canvas WASM (`CanvasThemePalette` JSON). */
-export function serializeGraphCanvasThemePaletteJson(themeName: StylingThemeName = currentStylingThemeName()): string {
-  return JSON.stringify(STYLING_BOARD_THEMES[themeName]);
+/** @emoji 🎨 Serializes board palette paints for DAG/flow canvas WASM (`CanvasPalette` JSON). */
+export function serializeCanvasThemeJson(appearanceName: StylingAppearanceName = currentStylingAppearanceName()): string {
+  return JSON.stringify(STYLING_BOARD_PALETTES[appearanceName]);
 }
 
-/** @emoji 🎨 WASM session surface that accepts serialized canvas theme palette JSON. */
+/** @emoji 🎨 WASM session surface that accepts serialized canvas theme JSON. */
 export interface CanvasThemeSession {
   setCanvasThemeJson(json: string): void;
 }
 
-/** @emoji 🌓 Pushes the active document theme palette into a canvas WASM session. */
+/** @emoji 🌓 Pushes the active theme's canvas palette into a canvas WASM session. */
 export function syncSessionCanvasTheme(session: CanvasThemeSession | null | undefined): void {
   if (!session) return;
   try {
     clearColorResolveCache();
-    session.setCanvasThemeJson(serializeGraphCanvasThemePaletteJson());
+    session.setCanvasThemeJson(serializeCanvasThemeJson());
   } catch {
     /* theme tokens not ready */
   }
@@ -433,8 +433,8 @@ if (import.meta.vitest) {
       expect(resolveColorHex("var(--color-element)", "gray")).not.toBe(tokenHex("dark"));
     });
 
-    it("serializeGraphCanvasThemePaletteJson emits token board theme fields", () => {
-      const parsed = JSON.parse(serializeGraphCanvasThemePaletteJson("light")) as {
+    it("serializeCanvasThemeJson emits token board palette fields", () => {
+      const parsed = JSON.parse(serializeCanvasThemeJson("light")) as {
         rasterClear: number[];
         nodeFill: number[];
         nodeStroke: number[];
@@ -449,17 +449,17 @@ if (import.meta.vitest) {
         labelHalo: number[];
         gridMinorStroke: number[];
       };
-      expect(parsed.rasterClear).toEqual(STYLING_BOARD_THEMES.light.rasterClear);
+      expect(parsed.rasterClear).toEqual(STYLING_BOARD_PALETTES.light.rasterClear);
       expect(parsed.nodeFill).toHaveLength(4);
       expect(parsed.labelFill).toEqual([123, 130, 125, 255]);
       expect(parsed.edgeStroke).toEqual([123, 130, 125, 255]);
       expect(parsed.handleStroke).toEqual([123, 130, 125, 255]);
       expect(parsed.handleStrokeHovered).toEqual(parsed.handleStroke);
-      expect(parsed.nodeStrokeSelected).toEqual(STYLING_BOARD_THEMES.light.nodeStrokeSelected);
+      expect(parsed.nodeStrokeSelected).toEqual(STYLING_BOARD_PALETTES.light.nodeStrokeSelected);
       expect(parsed.handleFill[3]).toBe(0);
       expect(parsed.gridMinorStroke[3]).toBeLessThan(255);
-      const dark = JSON.parse(serializeGraphCanvasThemePaletteJson("dark")) as { rasterClear: number[] };
-      expect(dark.rasterClear).toEqual(STYLING_BOARD_THEMES.dark.rasterClear);
+      const dark = JSON.parse(serializeCanvasThemeJson("dark")) as { rasterClear: number[] };
+      expect(dark.rasterClear).toEqual(STYLING_BOARD_PALETTES.dark.rasterClear);
       expect(dark.rasterClear).not.toEqual(parsed.rasterClear);
     });
 
@@ -472,7 +472,7 @@ if (import.meta.vitest) {
       });
       expect(calls.length).toBe(1);
       const parsed = JSON.parse(calls[0]!) as { rasterClear: number[] };
-      expect(parsed.rasterClear).toEqual(STYLING_BOARD_THEMES.light.rasterClear);
+      expect(parsed.rasterClear).toEqual(STYLING_BOARD_PALETTES.light.rasterClear);
     });
   });
 }

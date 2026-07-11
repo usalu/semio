@@ -12,9 +12,9 @@ from styling.generated import (
     STYLING_RADII,
     STYLING_STROKES,
     STYLING_TOKENS,
-    BoardTheme,
-    CanvasTheme,
-    MapTheme,
+    BoardPalette,
+    CanvasPalette,
+    MapPalette,
 )
 
 __all__ = [
@@ -29,7 +29,7 @@ __all__ = [
     "STYLING_RADII",
     "STYLING_STROKES",
     "STYLING_TOKENS",
-    "BoardTheme",
-    "CanvasTheme",
-    "MapTheme",
+    "BoardPalette",
+    "CanvasPalette",
+    "MapPalette",
 ]

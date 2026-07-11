@@ -287,7 +287,7 @@ pub mod canvas_fonts {
     pub const NOTO_COLOR_EMOJI: &str = "Noto Color Emoji";
 }
 
-pub struct BoardTheme {
+pub struct BoardPalette {
     pub raster_clear: [f32; 4],
     pub grid_minor_stroke: [f32; 4],
     pub edge_stroke: [f32; 4],
@@ -329,7 +329,7 @@ pub struct BoardTheme {
     pub label_halo: [f32; 4],
 }
 
-pub const BOARD_LIGHT: BoardTheme = BoardTheme {
+pub const BOARD_LIGHT: BoardPalette = BoardPalette {
     raster_clear: [0.87136712_f32, 0.83879901_f32, 0.72305513_f32, 1_f32],
     grid_minor_stroke: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 0.21960784_f32],
     edge_stroke: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
@@ -371,7 +371,7 @@ pub const BOARD_LIGHT: BoardTheme = BoardTheme {
     label_halo: [0.87136712_f32, 0.83879901_f32, 0.72305513_f32, 0.78039216_f32],
 };
 
-pub const BOARD_DARK: BoardTheme = BoardTheme {
+pub const BOARD_DARK: BoardPalette = BoardPalette {
     raster_clear: [0.00367651_f32, 0.01161225_f32, 0.01520851_f32, 1_f32],
     grid_minor_stroke: [0.09084171_f32, 0.11443537_f32, 0.10946171_f32, 0.21960784_f32],
     edge_stroke: [0.36130678_f32, 0.37626212_f32, 0.33716362_f32, 1_f32],
@@ -413,7 +413,7 @@ pub const BOARD_DARK: BoardTheme = BoardTheme {
     label_halo: [0.00367651_f32, 0.01161225_f32, 0.01520851_f32, 0.78039216_f32],
 };
 
-pub struct CanvasTheme {
+pub struct CanvasPalette {
     pub raster_clear: [f32; 4],
     pub icon_fg: [f32; 4],
     pub icon_bg: [f32; 4],
@@ -421,7 +421,7 @@ pub struct CanvasTheme {
     pub label_halo: [f32; 4],
 }
 
-pub const CANVAS_LIGHT: CanvasTheme = CanvasTheme {
+pub const CANVAS_LIGHT: CanvasPalette = CanvasPalette {
     raster_clear: [0.87136712_f32, 0.83879901_f32, 0.72305513_f32, 1_f32],
     icon_fg: [0_f32, 0_f32, 0_f32, 1_f32],
     icon_bg: [1_f32, 1_f32, 1_f32, 1_f32],
@@ -429,7 +429,7 @@ pub const CANVAS_LIGHT: CanvasTheme = CanvasTheme {
     label_halo: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
 };
 
-pub const CANVAS_DARK: CanvasTheme = CanvasTheme {
+pub const CANVAS_DARK: CanvasPalette = CanvasPalette {
     raster_clear: [0.00367651_f32, 0.01161225_f32, 0.01520851_f32, 1_f32],
     icon_fg: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
     icon_bg: [0_f32, 0.00560539_f32, 0.00856813_f32, 1_f32],
@@ -437,7 +437,7 @@ pub const CANVAS_DARK: CanvasTheme = CanvasTheme {
     label_halo: [0.00367651_f32, 0.01161225_f32, 0.01520851_f32, 1_f32],
 };
 
-pub struct ChromeTheme {
+pub struct ChromePalette {
     pub base: [f32; 4],
     pub canvas: [f32; 4],
     pub window: [f32; 4],
@@ -459,7 +459,7 @@ pub struct ChromeTheme {
     pub overlay_bg: [f32; 4],
 }
 
-pub const CHROME_LIGHT: ChromeTheme = ChromeTheme {
+pub const CHROME_LIGHT: ChromePalette = ChromePalette {
     base: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
     canvas: [0.87136712_f32, 0.83879901_f32, 0.72305513_f32, 1_f32],
     window: [0.83076988_f32, 0.80695226_f32, 0.69387176_f32, 1_f32],
@@ -481,7 +481,7 @@ pub const CHROME_LIGHT: ChromeTheme = ChromeTheme {
     overlay_bg: [0.30946892_f32, 0.3277781_f32, 0.29613827_f32, 0.98039216_f32],
 };
 
-pub const CHROME_DARK: ChromeTheme = ChromeTheme {
+pub const CHROME_DARK: ChromePalette = ChromePalette {
     base: [0_f32, 0.00560539_f32, 0.00856813_f32, 1_f32],
     canvas: [0.00367651_f32, 0.01161225_f32, 0.01520851_f32, 1_f32],
     window: [0.00212469_f32, 0.00913406_f32, 0.01228649_f32, 1_f32],
@@ -503,7 +503,7 @@ pub const CHROME_DARK: ChromeTheme = ChromeTheme {
     overlay_bg: [0.01764195_f32, 0.03189603_f32, 0.03560131_f32, 0.98039216_f32],
 };
 
-pub struct MapTheme {
+pub struct MapPalette {
     pub surface_clear: [f32; 4],
     pub land_fill: [f32; 4],
     pub land_stroke: [f32; 4],
@@ -516,7 +516,7 @@ pub struct MapTheme {
     pub position_stroke: [f32; 4],
 }
 
-pub const MAP_LIGHT: MapTheme = MapTheme {
+pub const MAP_LIGHT: MapPalette = MapPalette {
     surface_clear: [0.00367651_f32, 0.01161225_f32, 0.01520851_f32, 1_f32],
     land_fill: [0.02732089_f32, 0.0451862_f32, 0.04666509_f32, 1_f32],
     land_stroke: [0.03310477_f32, 0.05126946_f32, 0.05286065_f32, 0.41960784_f32],
@@ -529,7 +529,7 @@ pub const MAP_LIGHT: MapTheme = MapTheme {
     position_stroke: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
 };
 
-pub const MAP_DARK: MapTheme = MapTheme {
+pub const MAP_DARK: MapPalette = MapPalette {
     surface_clear: [0.00182116_f32, 0.00856813_f32, 0.01161225_f32, 1_f32],
     land_fill: [0.00367651_f32, 0.01161225_f32, 0.01520851_f32, 1_f32],
     land_stroke: [0.03310477_f32, 0.05126946_f32, 0.05286065_f32, 0.41960784_f32],

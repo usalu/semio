@@ -1,0 +1,13 @@
+{
+  "title": "Introduce Theme Mechanism",
+  "emoji": "🎨",
+  "status": "open",
+  "description": "Introduce a theme mechanism. The default theme is the semio theme. In os and playgrounds add a theme tab to settings side panel where premade themes can be selected, and customized. Add save and load mechanism. All tokens are editable in tree etc.\n\nApproach (see full plan in ticket folder / conversation): rename the existing light/dark palette dimension from \"theme\" to \"appearance\" (freeing \"theme\" for this new concept); build a UiTheme model covering colors, spacing, fontStacks, canvasFonts, strokes, radii, opacities, metrics, and appearances (light/dark palette groups); extend runtime merge bridges beyond colors to all tokens; add a Theme settings tab (select premades semio+mono, edit every token in a tree, save/load custom themes via localStorage + .theme.json export/import) in the shared os-shell settings panel (covers os and playgrounds/studio since they share the same shell).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1930"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪41fbd495cb694c7596fbc545278ffa80"
+  ]
+}

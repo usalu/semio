@@ -24,7 +24,7 @@ impl Default for EditorCanvasTheme {
 }
 
 impl EditorCanvasTheme {
-    fn from_board(t: &ui_styling::BoardTheme) -> Self {
+    fn from_board(t: &ui_styling::BoardPalette) -> Self {
         Self {
             raster_clear: Color::new(t.raster_clear),
             grid_minor_stroke: Color::new(t.grid_minor_stroke),

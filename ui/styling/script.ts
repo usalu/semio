@@ -3,6 +3,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/index.ts";
+import { parseUiTheme, resolveThemeMetrics, resolveThemePaint, type ThemePaintRef, type UiTheme } from "./js/theme.ts";
 
 const stylingRoot = import.meta.dir;
 const tokensPath = join(stylingRoot, "tokens.json");
@@ -29,12 +30,7 @@ const GOOGLE_FONT_QUERIES: Record<string, string> = {
 
 type Rgba8 = [number, number, number, number];
 
-interface PaintRef {
-  token?: string;
-  hex?: string;
-  alpha?: number;
-  mix?: [string, string, number];
-}
+type PaintRef = ThemePaintRef;
 
 interface Tokens {
   version: number;
@@ -47,8 +43,10 @@ interface Tokens {
   radii?: Record<string, number>;
   opacities?: Record<string, number>;
   metrics?: Record<string, Record<string, number | number[]>>;
-  themes?: Record<string, Record<string, Record<string, PaintRef>>>;
+  appearances?: Record<string, Record<string, Record<string, PaintRef>>>;
 }
+
+const APPEARANCE_NAMES = ["light", "dark"] as const;
 
 function colorKeyToCssVar(key: string): string {
   return `--color-${key.replaceAll("_", "-")}`;
@@ -150,22 +148,22 @@ function rustF64Lit(v: number): string {
   return Number.isInteger(v) ? `${v}.0` : String(v);
 }
 
-function resolveThemes(tokens: Tokens): Record<string, Record<string, Record<string, Rgba8>>> {
+function resolveAppearances(tokens: Tokens): Record<string, Record<string, Record<string, Rgba8>>> {
   const out: Record<string, Record<string, Record<string, Rgba8>>> = {};
-  for (const [themeName, groups] of Object.entries(tokens.themes ?? {})) {
-    out[themeName] = {};
+  for (const [appearanceName, groups] of Object.entries(tokens.appearances ?? {})) {
+    out[appearanceName] = {};
     for (const [groupName, paints] of Object.entries(groups)) {
-      out[themeName]![groupName] = {};
+      out[appearanceName]![groupName] = {};
       for (const [paintName, ref] of Object.entries(paints)) {
-        out[themeName]![groupName]![paintName] = resolvePaint(tokens.colors, ref);
+        out[appearanceName]![groupName]![paintName] = resolvePaint(tokens.colors, ref);
       }
     }
   }
   return out;
 }
 
-function themeGroupNames(resolvedThemes: ReturnType<typeof resolveThemes>): string[] {
-  return Object.keys(resolvedThemes.light ?? {}).sort();
+function paletteGroupNames(resolvedAppearances: ReturnType<typeof resolveAppearances>): string[] {
+  return Object.keys(resolvedAppearances.light ?? {}).sort();
 }
 
 function emitPaletteFonts(tokens: Tokens): string {
@@ -207,7 +205,7 @@ function emitJsonConst(name: string, value: unknown, indent = ""): string {
   return `${indent}export const ${name} = ${JSON.stringify(value, null, 2).replaceAll("\n", `\n${indent}`)} as const;\n`;
 }
 
-function emitTypeScriptTokens(tokens: Tokens, resolvedThemes: ReturnType<typeof resolveThemes>): string {
+function emitTypeScriptTokens(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolveAppearances>): string {
   const lines: string[] = ["/* Generated from ui/styling/tokens.json — run `bun ./script.ts generate`. */", ""];
   lines.push("export const STYLING_TOKENS = {");
   for (const [k, v] of Object.entries(tokens.colors)) {
@@ -222,21 +220,21 @@ function emitTypeScriptTokens(tokens: Tokens, resolvedThemes: ReturnType<typeof 
   lines.push(emitJsonConst("STYLING_OPACITIES", tokens.opacities ?? {}));
   lines.push(emitJsonConst("STYLING_METRICS", resolveMetrics(tokens.metrics)));
   lines.push(emitJsonConst("STYLING_CANVAS_FONTS", tokens.canvasFonts ?? {}));
-  for (const group of themeGroupNames(resolvedThemes)) {
-    const groupThemes: Record<string, Record<string, number[]>> = {};
-    for (const [themeName, groups] of Object.entries(resolvedThemes)) {
+  for (const group of paletteGroupNames(resolvedAppearances)) {
+    const groupPalettes: Record<string, Record<string, number[]>> = {};
+    for (const [appearanceName, groups] of Object.entries(resolvedAppearances)) {
       const paints = groups[group];
       if (!paints) {
         continue;
       }
-      groupThemes[themeName] = {};
+      groupPalettes[appearanceName] = {};
       for (const [paintName, rgba] of Object.entries(paints)) {
-        groupThemes[themeName]![paintName] = [...rgba];
+        groupPalettes[appearanceName]![paintName] = [...rgba];
       }
     }
-    lines.push(emitJsonConst(`STYLING_${group.toUpperCase()}_THEMES`, groupThemes));
+    lines.push(emitJsonConst(`STYLING_${group.toUpperCase()}_PALETTES`, groupPalettes));
     if (group === "board") {
-      lines.push("export type StylingThemeName = keyof typeof STYLING_BOARD_THEMES;");
+      lines.push("export type StylingAppearanceName = keyof typeof STYLING_BOARD_PALETTES;");
     }
     lines.push("");
   }
@@ -271,7 +269,7 @@ function emitCSharp(tokens: Tokens): string {
   return lines.join("\n");
 }
 
-function emitRust(tokens: Tokens, resolvedThemes: ReturnType<typeof resolveThemes>): string {
+function emitRust(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolveAppearances>): string {
   const lines: string[] = ["// @emoji 🎨 Auto-generated from ui/styling/tokens.json — do not edit by hand.", ""];
   for (const [group, values] of Object.entries({ strokes: tokens.strokes, radii: tokens.radii, opacities: tokens.opacities })) {
     if (!values) {
@@ -316,9 +314,9 @@ function emitRust(tokens: Tokens, resolvedThemes: ReturnType<typeof resolveTheme
   }
   lines.push("}");
   lines.push("");
-  for (const group of themeGroupNames(resolvedThemes)) {
-    lines.push(`pub struct ${toPascalCase(group)}Theme {`);
-    const sample = resolvedThemes.light?.[group];
+  for (const group of paletteGroupNames(resolvedAppearances)) {
+    lines.push(`pub struct ${toPascalCase(group)}Palette {`);
+    const sample = resolvedAppearances.light?.[group];
     if (sample) {
       for (const key of Object.keys(sample)) {
         lines.push(`    pub ${toSnakeCase(key)}: [f32; 4],`);
@@ -326,13 +324,13 @@ function emitRust(tokens: Tokens, resolvedThemes: ReturnType<typeof resolveTheme
     }
     lines.push("}");
     lines.push("");
-    for (const themeName of ["light", "dark"] as const) {
-      const paints = resolvedThemes[themeName]?.[group];
+    for (const appearanceName of APPEARANCE_NAMES) {
+      const paints = resolvedAppearances[appearanceName]?.[group];
       if (!paints) {
         continue;
       }
-      const constName = `${group.toUpperCase()}_${themeName.toUpperCase()}`;
-      lines.push(`pub const ${constName}: ${toPascalCase(group)}Theme = ${toPascalCase(group)}Theme {`);
+      const constName = `${group.toUpperCase()}_${appearanceName.toUpperCase()}`;
+      lines.push(`pub const ${constName}: ${toPascalCase(group)}Palette = ${toPascalCase(group)}Palette {`);
       for (const [key, rgba] of Object.entries(paints)) {
         const lin = rgba8ToLinear(rgba);
         lines.push(`    ${toSnakeCase(key)}: [${lin.map((x) => rustF32(x)).join(", ")}],`);
@@ -344,7 +342,7 @@ function emitRust(tokens: Tokens, resolvedThemes: ReturnType<typeof resolveTheme
   return lines.join("\n");
 }
 
-function emitPython(tokens: Tokens, resolvedThemes: ReturnType<typeof resolveThemes>): string {
+function emitPython(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolveAppearances>): string {
   const lines: string[] = [
     '"""@emoji 🎨 Auto-generated from ui/styling/tokens.json — do not edit by hand."""',
     "from __future__ import annotations",
@@ -363,26 +361,26 @@ function emitPython(tokens: Tokens, resolvedThemes: ReturnType<typeof resolveThe
   lines.push(`STYLING_OPACITIES: Final[dict[str, float]] = ${JSON.stringify(tokens.opacities ?? {}, null, 4)}`);
   lines.push(`STYLING_METRICS: Final[dict[str, dict[str, float | list[float]]]] = ${JSON.stringify(resolveMetrics(tokens.metrics), null, 4)}`);
   lines.push("");
-  for (const group of themeGroupNames(resolvedThemes)) {
+  for (const group of paletteGroupNames(resolvedAppearances)) {
     lines.push("@dataclass(frozen=True, slots=True)");
-    lines.push(`class ${toPascalCase(group)}Theme:`);
-    const sample = resolvedThemes.light?.[group];
+    lines.push(`class ${toPascalCase(group)}Palette:`);
+    const sample = resolvedAppearances.light?.[group];
     if (sample) {
       for (const key of Object.keys(sample)) {
         lines.push(`    ${toSnakeCase(key)}: tuple[int, int, int, int]`);
       }
     }
     lines.push("");
-    for (const themeName of ["light", "dark"] as const) {
-      const paints = resolvedThemes[themeName]?.[group];
+    for (const appearanceName of APPEARANCE_NAMES) {
+      const paints = resolvedAppearances[appearanceName]?.[group];
       if (!paints) {
         continue;
       }
-      const constName = `${group.toUpperCase()}_${themeName.toUpperCase()}`;
+      const constName = `${group.toUpperCase()}_${appearanceName.toUpperCase()}`;
       const fields = Object.entries(paints)
         .map(([k, rgba]) => `${toSnakeCase(k)}=(${rgba.join(", ")})`)
         .join(", ");
-      lines.push(`${constName}: Final[${toPascalCase(group)}Theme] = ${toPascalCase(group)}Theme(${fields})`);
+      lines.push(`${constName}: Final[${toPascalCase(group)}Palette] = ${toPascalCase(group)}Palette(${fields})`);
     }
     lines.push("");
   }
@@ -484,7 +482,7 @@ export async function fetchElementsFonts(): Promise<void> {
 /** @emoji 🎨 Writes all styling artifacts from {@link tokens.json}. */
 export function generateStylingArtifacts(): void {
   const tokens = loadTokens();
-  const resolvedThemes = resolveThemes(tokens);
+  const resolvedAppearances = resolveAppearances(tokens);
   mkdirSync(generatedDir, { recursive: true });
   mkdirSync(jsGeneratedDir, { recursive: true });
   mkdirSync(netPaletteDir, { recursive: true });
@@ -497,12 +495,12 @@ export function generateStylingArtifacts(): void {
   writeFileSync(join(generatedDir, "palette-fonts.css"), fonts, "utf8");
   writeFileSync(join(generatedDir, "palette-theme.css"), theme, "utf8");
   writeFileSync(join(jsGeneratedDir, "palette.css"), paletteCss, "utf8");
-  writeFileSync(join(jsGeneratedDir, "tokens.generated.ts"), emitTypeScriptTokens(tokens, resolvedThemes), "utf8");
+  writeFileSync(join(jsGeneratedDir, "tokens.generated.ts"), emitTypeScriptTokens(tokens, resolvedAppearances), "utf8");
   const cs = emitCSharp(tokens);
   writeFileSync(join(netPaletteDir, "Palette.g.cs"), cs, "utf8");
   writeFileSync(join(composeNetPaletteDir, "Palette.g.cs"), cs, "utf8");
-  writeFileSync(join(rustGeneratedDir, "generated.rs"), emitRust(tokens, resolvedThemes), "utf8");
-  writeFileSync(join(pyGeneratedDir, "generated.py"), emitPython(tokens, resolvedThemes), "utf8");
+  writeFileSync(join(rustGeneratedDir, "generated.rs"), emitRust(tokens, resolvedAppearances), "utf8");
+  writeFileSync(join(pyGeneratedDir, "generated.py"), emitPython(tokens, resolvedAppearances), "utf8");
 }
 
 class GenerateScript extends BundleScript {

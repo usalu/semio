@@ -1,0 +1,13 @@
+{
+  "title": "Responsive Desktop Tablet Mobile Layout Devices",
+  "emoji": "📱",
+  "status": "open",
+  "description": "Make the ui-react design system, the framework OS shell (os-shell.tsx), and the OS playground automatically switch into mobile mode when viewport width drops below 768px, and add a desktop/tablet layout setting. Desktop is the current look. Tablet uses larger touch-friendly spacing/buttons via the existing .touch CSS scale, selectable in Settings. Mobile drops the tiling window manager for a tab-based canvas with a phone-optimized navbar and bottom-nav footer, and is automatic (not user-selectable) below the breakpoint. Implementation plan agreed with user covers: ui-react ElementsSurfaceChrome/layout storage helpers, os-shell device-driven chrome wiring + settings Layout select, Mode component mobile prop (single active window, no tab bar/drag/dock), mobile FooterNav + compact mobile navbar, .touch CSS additions for touch target sizing, and extending existing vitest suites.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1931"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪cbe858d258c54c5fb41e645ac598ca3d"
+  ]
+}

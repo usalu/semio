@@ -11,7 +11,7 @@ fn map_color(rgba: [f32; 4]) -> Color {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct MapThemePalette {
+pub struct MapPalette {
     pub surface_clear: Color,
     pub land_fill: Color,
     pub land_stroke: Color,
@@ -26,9 +26,9 @@ pub struct MapThemePalette {
     pub hover_stroke: Color,
 }
 
-impl MapThemePalette {
+impl MapPalette {
     /// @emoji 🎨 Builds a map palette from centralized theme tokens.
-    pub fn from_map_theme(t: &ui_styling::MapTheme) -> Self {
+    pub fn from_map_palette(t: &ui_styling::MapPalette) -> Self {
         Self {
             surface_clear: map_color(t.surface_clear),
             land_fill: map_color(t.land_fill),
@@ -46,9 +46,9 @@ impl MapThemePalette {
     }
 }
 
-impl Default for MapThemePalette {
+impl Default for MapPalette {
     fn default() -> Self {
-        Self::from_map_theme(&ui_styling::MAP_LIGHT)
+        Self::from_map_palette(&ui_styling::MAP_LIGHT)
     }
 }
 // #endregion 🔖MapPalette
@@ -1367,7 +1367,7 @@ pub struct MapHost {
     layer_stroke_scale: MapLayerStrokeScale,
     pub events: Vec<serde_json::Value>,
     interaction: MapInteraction,
-    theme: MapThemePalette,
+    theme: MapPalette,
     selected_positions: std::collections::BTreeSet<String>,
     selected_routes: std::collections::BTreeSet<String>,
     hovered_kind: Option<String>,
@@ -1521,7 +1521,7 @@ impl Default for MapHost {
             layer_stroke_scale: MapLayerStrokeScale::default(),
             events: Vec::new(),
             interaction: MapInteraction::None,
-            theme: MapThemePalette::default(),
+            theme: MapPalette::default(),
             selected_positions: std::collections::BTreeSet::new(),
             selected_routes: std::collections::BTreeSet::new(),
             hovered_kind: None,
@@ -1606,7 +1606,7 @@ impl MapHost {
         Some(Color::from_rgba8(r, g, b, a))
     }
 
-    fn apply_theme_field(next: &mut MapThemePalette, v: &serde_json::Value, key: &str, assign: impl FnOnce(&mut MapThemePalette, Color)) {
+    fn apply_theme_field(next: &mut MapPalette, v: &serde_json::Value, key: &str, assign: impl FnOnce(&mut MapPalette, Color)) {
         if let Some(arr) = v.get(key).and_then(|x| x.as_array()) {
             if let Some(c) = Self::color_from_json_rgba8(arr) {
                 assign(next, c);

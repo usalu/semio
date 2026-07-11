@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { resolve } from "node:path";
-import { clearColorResolveCache, currentStylingThemeName, resolveColorHex, resolveColorRgba, resolveSemanticColorHex, serializeGraphCanvasThemePaletteJson, tokenHex, tokenVar } from "./index.ts";
-import { STYLING_BOARD_THEMES } from "./tokens.generated.ts";
+import { clearColorResolveCache, currentStylingAppearanceName, resolveColorHex, resolveColorRgba, resolveSemanticColorHex, serializeCanvasThemeJson, tokenHex, tokenVar } from "./index.ts";
+import { STYLING_BOARD_PALETTES } from "./tokens.generated.ts";
 import { puzzle3dLockedExampleMeshBasenames, puzzle3dMeshBasenamesInJson, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, playgroundPlayBootHtmlPlugin } from "../vite-elements-assets.ts";
 import { PLAYGROUND_LOCKED_EXAMPLE_ENV } from "../../../repo/lib/js/index.ts";
 
@@ -13,21 +13,21 @@ describe("styling resolve", () => {
     expect(tokenHex("primary")).toBe("#ff344f");
   });
 
-  it("serializeGraphCanvasThemePaletteJson emits token board theme fields", () => {
-    const parsed = JSON.parse(serializeGraphCanvasThemePaletteJson("light")) as {
+  it("serializeCanvasThemeJson emits token board palette fields", () => {
+    const parsed = JSON.parse(serializeCanvasThemeJson("light")) as {
       rasterClear: number[];
       labelFill: number[];
       gridMinorStroke: number[];
     };
-    expect(parsed.rasterClear).toEqual(STYLING_BOARD_THEMES.light.rasterClear);
+    expect(parsed.rasterClear).toEqual(STYLING_BOARD_PALETTES.light.rasterClear);
     expect(parsed.labelFill).toEqual([123, 130, 125, 255]);
     expect(parsed.gridMinorStroke[3]).toBeLessThan(255);
-    const dark = JSON.parse(serializeGraphCanvasThemePaletteJson("dark")) as { rasterClear: number[] };
-    expect(dark.rasterClear).toEqual(STYLING_BOARD_THEMES.dark.rasterClear);
+    const dark = JSON.parse(serializeCanvasThemeJson("dark")) as { rasterClear: number[] };
+    expect(dark.rasterClear).toEqual(STYLING_BOARD_PALETTES.dark.rasterClear);
   });
 
-  it("currentStylingThemeName defaults to light without document", () => {
-    expect(currentStylingThemeName()).toBe("light");
+  it("currentStylingAppearanceName defaults to light without document", () => {
+    expect(currentStylingAppearanceName()).toBe("light");
   });
 
   it("resolveColorHex resolves palette var refs headlessly", () => {

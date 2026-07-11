@@ -121,6 +121,9 @@ type WorldInteractionRecord = {
   readonly activeTool?: string;
   readonly brushCandidateIndex?: number;
   readonly hoveredVortexFullId?: string;
+  readonly fillEditTargetVolumes?: boolean;
+  readonly voxelDims?: readonly [number, number, number];
+  readonly gridFactor?: number;
 };
 
 type WorldLodRecord = {
@@ -1191,6 +1194,49 @@ function WorldConnectRubberBand({ from, to }: { readonly from: readonly [number,
   );
 }
 
+/** @emoji 🧊 Invisible ground plane (Z-up XY plane, matching this world's up axis) that tracks the grid-snapped cursor while voxel-editing target volumes; Alt+click commits a volume there. */
+function WorldVoxelGroundPlane({
+  gridFactor,
+  onHover,
+  onPlace,
+}: {
+  readonly gridFactor: number;
+  readonly onHover: (origin: readonly [number, number, number] | null) => void;
+  readonly onPlace: (origin: readonly [number, number, number]) => void;
+}) {
+  const snap = (value: number) => Math.round(value / gridFactor) * gridFactor;
+  return (
+    <mesh
+      onPointerMove={(event) => {
+        event.stopPropagation();
+        onHover([snap(event.point.x), snap(event.point.y), snap(event.point.z)]);
+      }}
+      onPointerOut={(event) => {
+        event.stopPropagation();
+        onHover(null);
+      }}
+      onClick={(event) => {
+        event.stopPropagation();
+        if (!event.nativeEvent.altKey) return;
+        onPlace([snap(event.point.x), snap(event.point.y), snap(event.point.z)]);
+      }}
+    >
+      <planeGeometry args={[10000, 10000]} />
+      <meshBasicMaterial visible={false} />
+    </mesh>
+  );
+}
+
+/** @emoji 🧊 Cursor-follow ghost box previewing the target volume that Alt+click would place, sized by the engagement's W/D/H steppers. */
+function WorldVoxelPreviewBox({ origin, dims, gridFactor }: { readonly origin: readonly [number, number, number]; readonly dims: readonly [number, number, number]; readonly gridFactor: number }) {
+  return (
+    <mesh position={origin as [number, number, number]} raycast={() => null}>
+      <boxGeometry args={[dims[0] * gridFactor, dims[1] * gridFactor, dims[2] * gridFactor]} />
+      <meshStandardMaterial color="#38bdf8" transparent opacity={0.48} />
+    </mesh>
+  );
+}
+
 function WorldAttractionLines({ attractions }: { readonly attractions: readonly WorldAttractionRecord[] }) {
   if (!attractions.length) return null;
   return (
@@ -1568,6 +1614,7 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
   const [gumballDragActive, setGumballDragActive] = useState(false);
   const [connectDragSource, setConnectDragSource] = useState<{ readonly fullId: string; readonly position: readonly [number, number, number] } | null>(null);
   const [connectDragHoverPosition, setConnectDragHoverPosition] = useState<readonly [number, number, number] | null>(null);
+  const [voxelHoverOrigin, setVoxelHoverOrigin] = useState<readonly [number, number, number] | null>(null);
   const [paintStrokeActive, setPaintStrokeActive] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number } | null>(null);
   const cameraRef = useRef<import("three").Camera | null>(null);
@@ -1783,6 +1830,13 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
     setConnectDragSource(null);
     setConnectDragHoverPosition(null);
   }, []);
+
+  const handleVoxelPlace = useCallback(
+    (origin: readonly [number, number, number]) => {
+      dispatch("addTargetVolume", { origin });
+    },
+    [dispatch],
+  );
 
   const handleBrushPlace = useCallback(() => {
     if (!brushPreview) return;
@@ -2098,6 +2152,12 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
               }))}
               interactive={false}
             />
+            {interaction.fillEditTargetVolumes ? (
+              <WorldVoxelGroundPlane gridFactor={interaction.gridFactor ?? DEFAULT_LOD_GRID_FACTOR} onHover={setVoxelHoverOrigin} onPlace={handleVoxelPlace} />
+            ) : null}
+            {interaction.fillEditTargetVolumes && voxelHoverOrigin ? (
+              <WorldVoxelPreviewBox origin={voxelHoverOrigin} dims={interaction.voxelDims ?? [1, 1, 1]} gridFactor={interaction.gridFactor ?? DEFAULT_LOD_GRID_FACTOR} />
+            ) : null}
             <WorldReferenceLayer
               references={references
                 .filter((reference) => !reference.hidden)

@@ -1,13 +1,15 @@
 {
   "title": "Terminology Mechanism For Plugin UI Labels",
   "emoji": "🗣️",
-  "status": "open",
+  "status": "closed",
   "description": "Introduce a \"terminology\" mechanism: every UI has a native terminology by default, and languages can define alternative complete term sets. Ship a \"reuse\"/\"Wiederverwendung\" terminology for puzzle 3d where \"Objects\"/\"Vortices\" become \"Building components\"/\"Connection points\" (en) and \"Baukomponenten\"/\"Verbindungspunkte\" (de). Add a Terminology dropdown to the OS Settings panel next to the existing Language dropdown. Implementation: ViewState gains locale/terminology fields passed from the OS shell into the plugin WASM boundary; AppDefinition gains a terminologies list; puzzle 3d resolves a compile-time-complete label struct per (terminology, locale) and remaps its emitted UiNode labels.",
+  "summary": "Introduced a \"terminology\" mechanism: every UI has an implicit \"native\" terminology, and apps can declare additional named term sets that swap domain vocabulary in plugin-rendered labels, independent of (but combinable with) UI locale. Threaded locale/terminology from the OS shell through ViewState into the WASM plugin boundary (framework/core/rs ViewState + AppDefinition.terminologies, framework/plugin/rs AppBuilder.terminology()), fixed every AppDefinition struct-literal site the compiler then required (core tests, wgpu renderer tests, os-core registrations). Shipped puzzle 3d's \"reuse\"/\"Wiederverwendung\" terminology: a compile-time-complete Puzzle3dLabels struct with native/reuse × en/de consts and an exhaustive resolver, threaded through build_document_tree/build_kinds_tree/build_inspector_tree/select+brush measure groups, remapping \"Objects\"→\"Building components\"/\"Baukomponenten\" and \"Vortices\"→\"Connection points\"/\"Verbindungspunkte\" (left the object_kind data default and generic Delete/Duplicate context-menu labels untouched, since those aren't UI vocabulary). Added 4 new Rust tests asserting each terminology×locale combination; all 54 puzzle-plugin tests pass. Extended the ui-kit i18n layer (ui.chrome.terminology storage, UiChromeTerminologyId, ui.settings.tab.terminology + ui.settings.terminology.{native,reuse} schema keys with a new AssertUiSettingsTerminologyKeysCovered compile-time guard) and wired a Terminology dropdown into the OS Settings panel next to Language, populated from the active app's declared terminologies (always including native). Verified via cargo check/test (zero new errors; the 7 pre-existing compose-hub session_kit visibility errors and other pre-existing repo-wide type errors are untouched/unrelated), ui-react and root tsc (zero terminology-related errors, error counts unchanged from before this change), both packages' vitest suites (renderer-react 69/69; ui-react's 9 pre-existing unrelated failures untouched), and end-to-end in the running puzzle-3d playground (port 6013): all four combinations (native/reuse × en/de) correctly retranslate the Document tree, Catalogue tree, and window measures live, confirmed via screenshots.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1928"
   },
   "goal": "🎯r2602",
   "sessions": [
-    "⚪70bfab4e9616417bbc7101686c7f31c7"
+    "⚪70bfab4e9616417bbc7101686c7f31c7",
+    "⚪240fb98d4e5a46669e5ac4175f789c65"
   ]
 }

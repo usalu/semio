@@ -29,43 +29,43 @@ pub mod color {
 }
 // #endregion 🔖Color
 
-// #region 🔖Theme
-pub mod theme {
+// #region 🔖Appearance
+pub mod appearance {
     use super::generated::{
-        BoardTheme, CanvasTheme, ChromeTheme, MapTheme, BOARD_DARK, BOARD_LIGHT, CANVAS_DARK, CANVAS_LIGHT,
+        BoardPalette, CanvasPalette, ChromePalette, MapPalette, BOARD_DARK, BOARD_LIGHT, CANVAS_DARK, CANVAS_LIGHT,
         CHROME_DARK, CHROME_LIGHT, MAP_DARK, MAP_LIGHT,
     };
 
-    /// @emoji 🎨 Active theme name for canvas hosts.
+    /// @emoji 🎨 Active appearance (light/dark) for canvas hosts.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    pub enum ThemeName {
+    pub enum AppearanceName {
         Light,
         Dark,
     }
 
-    impl ThemeName {
-        pub fn board(self) -> &'static BoardTheme {
+    impl AppearanceName {
+        pub fn board(self) -> &'static BoardPalette {
             match self {
                 Self::Light => &BOARD_LIGHT,
                 Self::Dark => &BOARD_DARK,
             }
         }
 
-        pub fn map(self) -> &'static MapTheme {
+        pub fn map(self) -> &'static MapPalette {
             match self {
                 Self::Light => &MAP_LIGHT,
                 Self::Dark => &MAP_DARK,
             }
         }
 
-        pub fn canvas(self) -> &'static CanvasTheme {
+        pub fn canvas(self) -> &'static CanvasPalette {
             match self {
                 Self::Light => &CANVAS_LIGHT,
                 Self::Dark => &CANVAS_DARK,
             }
         }
 
-        pub fn chrome(self) -> &'static ChromeTheme {
+        pub fn chrome(self) -> &'static ChromePalette {
             match self {
                 Self::Light => &CHROME_LIGHT,
                 Self::Dark => &CHROME_DARK,
@@ -81,11 +81,11 @@ pub mod theme {
         }
     }
 }
-// #endregion 🔖Theme
+// #endregion 🔖Appearance
 
 #[cfg(test)]
 mod tests {
-    use super::theme::ThemeName;
+    use super::appearance::AppearanceName;
     use super::{strokes, BOARD_LIGHT};
 
     #[test]
@@ -100,13 +100,13 @@ mod tests {
     }
 
     #[test]
-    fn theme_name_parse() {
-        assert_eq!(ThemeName::parse("dark"), ThemeName::Dark);
-        assert_eq!(ThemeName::parse("light"), ThemeName::Light);
+    fn appearance_name_parse() {
+        assert_eq!(AppearanceName::parse("dark"), AppearanceName::Dark);
+        assert_eq!(AppearanceName::parse("light"), AppearanceName::Light);
     }
 
     #[test]
-    fn light_and_dark_themes_differ() {
+    fn light_and_dark_palettes_differ() {
         use super::{BOARD_DARK, BOARD_LIGHT, CHROME_DARK, CHROME_LIGHT, MAP_DARK, MAP_LIGHT};
         assert_ne!(BOARD_LIGHT.raster_clear, BOARD_DARK.raster_clear);
         assert_ne!(MAP_LIGHT.surface_clear, MAP_DARK.surface_clear);

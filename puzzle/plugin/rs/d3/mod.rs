@@ -47,6 +47,8 @@ const PUZZLE3D_UNDOABLE_COMMANDS: &[&str] = &[
     "setFillCount",
     "createAttraction",
     "deleteAttraction",
+    "addTargetVolume",
+    "deleteTargetVolume",
 ];
 const PUZZLE3D_UNDO_STACK_MAX: usize = 50;
 
@@ -64,6 +66,10 @@ struct Puzzle3dCamera {
     target: [f64; 3],
     #[serde(default = "one_f64")]
     zoom: f64,
+    #[serde(default)]
+    up: Option<[f64; 3]>,
+    #[serde(default)]
+    projection: Option<String>,
 }
 
 fn one_f64() -> f64 {
@@ -281,6 +287,10 @@ struct Puzzle3dRuntime {
     proximity_radius: f64,
     #[serde(default = "default_chunk_size")]
     chunk_size: f64,
+    #[serde(default)]
+    fill_edit_target_volumes: bool,
+    #[serde(default = "default_voxel_dims")]
+    voxel_dims: [u32; 3],
 }
 
 impl Default for Puzzle3dRuntime {
@@ -312,6 +322,8 @@ impl Default for Puzzle3dRuntime {
             selection_mode_default: default_selection_mode(),
             proximity_radius: default_proximity_radius(),
             chunk_size: default_chunk_size(),
+            fill_edit_target_volumes: false,
+            voxel_dims: default_voxel_dims(),
         }
     }
 }
@@ -342,6 +354,10 @@ fn default_proximity_radius() -> f64 {
 
 fn default_chunk_size() -> f64 {
     256.0
+}
+
+fn default_voxel_dims() -> [u32; 3] {
+    [1, 1, 1]
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -398,17 +414,36 @@ fn puzzle3d_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
 }
 
 fn camera_json(camera: &Puzzle3dCamera) -> String {
-    json!({
+    let mut value = json!({
         "position": camera.position,
         "target": camera.target,
         "zoom": camera.zoom,
         "fov": 45.0,
-    })
-    .to_string()
+    });
+    if let Some(object) = value.as_object_mut() {
+        if let Some(up) = camera.up {
+            object.insert("up".into(), json!(up));
+        }
+        if let Some(projection) = &camera.projection {
+            object.insert("projection".into(), json!(projection));
+        }
+    }
+    value.to_string()
 }
 
 fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
     args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).filter(|ids: &Vec<String>| !ids.is_empty()).unwrap_or_else(|| fallback.to_vec())
+}
+
+/// 🎥 Named orbit-camera rigs — top/front/right use an orthographic projection with a non-Z `up` to avoid gimbal lock when looking straight down/along the Z-up axis.
+fn puzzle3d_camera_view_preset(preset: &str) -> Puzzle3dCamera {
+    match preset {
+        "top" => Puzzle3dCamera { position: [0.0, 0.0, 30.0], target: [0.0, 0.0, 0.0], zoom: 1.0, up: Some([0.0, 1.0, 0.0]), projection: Some("orthographic".into()) },
+        "front" => Puzzle3dCamera { position: [0.0, -30.0, 0.0], target: [0.0, 0.0, 0.0], zoom: 1.0, up: Some([0.0, 0.0, 1.0]), projection: Some("orthographic".into()) },
+        "right" => Puzzle3dCamera { position: [30.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], zoom: 1.0, up: Some([0.0, 0.0, 1.0]), projection: Some("orthographic".into()) },
+        "perspective" => Puzzle3dCamera { position: [12.0, -12.0, 9.0], target: [0.0, 0.0, 0.0], zoom: 1.0, up: Some([0.0, 0.0, 1.0]), projection: Some("perspective".into()) },
+        _ => Puzzle3dCamera { position: [12.0, -12.0, 9.0], target: [0.0, 0.0, 0.0], zoom: 1.0, up: None, projection: None },
+    }
 }
 
 fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
@@ -691,6 +726,9 @@ fn world_interaction_json(runtime: &Puzzle3dRuntime) -> String {
         "activeTool": runtime.active_tool,
         "brushCandidateIndex": runtime.brush_candidate_index,
         "hoveredVortexFullId": runtime.selection.vortex_ids.first().cloned(),
+        "fillEditTargetVolumes": runtime.fill_edit_target_volumes,
+        "voxelDims": runtime.voxel_dims,
+        "gridFactor": runtime.grid_factor,
     })
     .to_string()
 }
@@ -1565,14 +1603,48 @@ fn puzzle3d_fill_count_control(envelope: &Puzzle3dEnvelope) -> WindowEngagementC
     }
 }
 
+fn puzzle3d_voxel_controls(runtime: &Puzzle3dRuntime) -> Vec<WindowEngagementControl> {
+    let [w, d, h] = runtime.voxel_dims;
+    let axis_stepper = |axis: &str, label: &str, value: u32| WindowEngagementControl::Stepper {
+        id: Some(format!("puzzle3d-voxel-{axis}")),
+        label: Some(label.into()),
+        value: value as f64,
+        min: Some(1.0),
+        max: Some(64.0),
+        step: Some(1.0),
+        unit: None,
+        disabled: None,
+        on_change: Some(puzzle3d_cmd("setVoxelDims", Some(json!({ "axis": axis })))),
+        on_commit: None,
+    };
+    vec![
+        axis_stepper("w", "Width", w),
+        axis_stepper("d", "Depth", d),
+        axis_stepper("h", "Height", h),
+        WindowEngagementControl::ToggleGroup {
+            id: Some("puzzle3d-voxel-edit-mode".into()),
+            label: Some("Mode".into()),
+            value: Some(if runtime.fill_edit_target_volumes { "edit-volumes".into() } else { "fill".into() }),
+            options: vec![
+                WindowEngagementToggleGroupOption { id: "fill".into(), label: "Fill".into(), disabled: None },
+                WindowEngagementToggleGroupOption { id: "edit-volumes".into(), label: "Edit Volumes".into(), disabled: None },
+            ],
+            disabled: None,
+            on_select: Some(puzzle3d_cmd("setFillEditTargetVolumes", None)),
+        },
+    ]
+}
+
 fn puzzle3d_engagement(envelope: &Puzzle3dEnvelope, precompute: &Puzzle3dPrecomputeSession) -> WindowEngagement {
     let object_count = envelope.fixture.objects.len();
     let attraction_count = envelope.fixture.attractions.len();
+    let voxel_edit_active = envelope.runtime.active_tool == "fill" && envelope.runtime.fill_edit_target_volumes;
     let control = match envelope.runtime.active_tool.as_str() {
-        "fill" => Some(puzzle3d_fill_count_control(envelope)),
+        "fill" if !voxel_edit_active => Some(puzzle3d_fill_count_control(envelope)),
         "brush" => puzzle3d_brush_placement_control(envelope, precompute),
         _ => None,
     };
+    let controls = if voxel_edit_active { Some(puzzle3d_voxel_controls(&envelope.runtime)) } else { None };
     WindowEngagement {
         session_active: Some(envelope.runtime.active_tool != "select"),
         options: Some(vec![
@@ -1612,7 +1684,7 @@ fn puzzle3d_engagement(envelope: &Puzzle3dEnvelope, precompute: &Puzzle3dPrecomp
             on_abort: Some(puzzle3d_cmd("engagementAbort", None)),
         }),
         control,
-        controls: None,
+        controls,
         status: Some(vec![semio_framework_plugin::layout::WindowEngagementStatus { id: "puzzle3d-world-status".into(), text: format!("{object_count} objects · {attraction_count} attractions") }]),
         possible_engagements: None,
     }
@@ -1764,8 +1836,23 @@ fn puzzle3d_brush_measures_group(envelope: &Puzzle3dEnvelope, labels: &Puzzle3dL
     }
 }
 
+fn puzzle3d_view_measure() -> WindowMeasure {
+    WindowMeasure::Select {
+        id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-view"),
+        label: Some("View".into()),
+        value: "perspective".into(),
+        items: vec![
+            MeasureSelectItem { id: "perspective".into(), value: "perspective".into(), label: "Perspective".into() },
+            MeasureSelectItem { id: "top".into(), value: "top".into(), label: "Top".into() },
+            MeasureSelectItem { id: "front".into(), value: "front".into(), label: "Front".into() },
+            MeasureSelectItem { id: "right".into(), value: "right".into(), label: "Right".into() },
+        ],
+        on_change: puzzle3d_cmd("setCameraViewPreset", None),
+    }
+}
+
 fn puzzle3d_window_measures(envelope: &Puzzle3dEnvelope, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
-    vec![puzzle3d_lod_measures_group(&envelope.runtime), puzzle3d_select_measures_group(&envelope.runtime, labels), puzzle3d_brush_measures_group(envelope, labels)]
+    vec![puzzle3d_view_measure(), puzzle3d_lod_measures_group(&envelope.runtime), puzzle3d_select_measures_group(&envelope.runtime, labels), puzzle3d_brush_measures_group(envelope, labels)]
 }
 //#endregion 🔖Measures
 
@@ -1925,6 +2012,18 @@ impl PluginApp for Puzzle3dPlayApp {
                         envelope.fixture.camera = parsed;
                         return vec![set_document_op(&envelope)];
                     }
+                }
+            }
+            "setProjection" => {
+                if let Some(projection) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+                    envelope.fixture.camera.projection = Some(projection.into());
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setCameraViewPreset" => {
+                if let Some(preset) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+                    envelope.fixture.camera = puzzle3d_camera_view_preset(preset);
+                    return vec![set_document_op(&envelope)];
                 }
             }
             "translateSelection" => {
@@ -2279,6 +2378,45 @@ impl PluginApp for Puzzle3dPlayApp {
                     return vec![set_document_op(&envelope)];
                 }
             }
+            "setFillEditTargetVolumes" => {
+                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
+                envelope.runtime.fill_edit_target_volumes = match id {
+                    Some("edit-volumes") => true,
+                    Some("fill") => false,
+                    _ => !envelope.runtime.fill_edit_target_volumes,
+                };
+                return vec![set_document_op(&envelope)];
+            }
+            "setVoxelDims" => {
+                let axis = args.and_then(|value| value.get("axis")).and_then(|value| value.as_str()).unwrap_or("");
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
+                    let dimension = value.max(1.0).round() as u32;
+                    match axis {
+                        "w" => envelope.runtime.voxel_dims[0] = dimension,
+                        "d" => envelope.runtime.voxel_dims[1] = dimension,
+                        "h" => envelope.runtime.voxel_dims[2] = dimension,
+                        _ => {}
+                    }
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "addTargetVolume" => {
+                if let Some(origin) = args.and_then(|value| value.get("origin")).and_then(value_as_vec3) {
+                    let grid_factor = envelope.runtime.grid_factor.max(0.1);
+                    let snapped = [(origin[0] / grid_factor).round() * grid_factor, (origin[1] / grid_factor).round() * grid_factor, (origin[2] / grid_factor).round() * grid_factor];
+                    let [w, d, h] = envelope.runtime.voxel_dims;
+                    let scale = json!([w as f64 * grid_factor, d as f64 * grid_factor, h as f64 * grid_factor]);
+                    let id = format!("target-volume-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
+                    envelope.fixture.target_volumes.push(Puzzle3dTargetVolume { id, origin: snapped, orientation: None, scale: Some(scale), hidden: false, locked: false });
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "deleteTargetVolume" => {
+                if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
+                    envelope.fixture.target_volumes.retain(|volume| volume.id != id);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
             "engagementPossibleSelect" => {
                 let possible_id = args.and_then(|value| value.get("possibleId")).and_then(|value| value.as_str()).unwrap_or("");
                 envelope.runtime.active_tool = match possible_id {
@@ -2356,6 +2494,9 @@ impl PluginApp for Puzzle3dPlayApp {
                     let positions: Vec<f32> = positions.iter().filter_map(|v| v.as_f64().map(|n| n as f32)).collect();
                     let indices: Vec<u32> = indices.iter().filter_map(|v| v.as_u64().map(|n| n as u32)).collect();
                     self.precompute.register_mesh(url, &positions, &indices);
+                    if let Ok(mut registry) = PUZZLE3D_MESH_REGISTRY.lock() {
+                        registry.insert(url.to_string(), (positions, indices));
+                    }
                 }
                 return Vec::new();
             }
@@ -2443,8 +2584,53 @@ pub fn create_puzzle3d_app() -> App {
     .program("puzzle3d", "Puzzle 3D", "model")
 }
 
-fn puzzle3d_mesh_from_document(_doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
-    Ok(mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND))
+/// 🗃️ Real GLB geometry the browser round-tripped via `registerBrushMesh` this session, keyed by mesh url; falls back to a box for anything not yet loaded. `fn` pointers can't capture state, so this backs the export handler's plain-function-pointer signature.
+static PUZZLE3D_MESH_REGISTRY: LazyLock<std::sync::Mutex<HashMap<String, (Vec<f32>, Vec<u32>)>>> = LazyLock::new(|| std::sync::Mutex::new(HashMap::new()));
+
+/// 🌀 Undoes glTF's Y-up convention to land in this world's Z-up frame — mirrors `GLB_MESH_FRAME_ROTATION_X` (a fixed +90° turn about X) from `@semio-tech/infinite-world-r3f`, which the viewer applies visually but which raw `registerBrushMesh` vertices never carry.
+fn glb_frame_correct(position: [f32; 3]) -> [f32; 3] {
+    [position[0], -position[2], position[1]]
+}
+
+fn quat_rotate_point(point: [f32; 3], quat: [f64; 4]) -> [f32; 3] {
+    let [qx, qy, qz, qw] = quat;
+    let (x, y, z) = (point[0] as f64, point[1] as f64, point[2] as f64);
+    let (cx, cy, cz) = (qy * z - qz * y, qz * x - qx * z, qx * y - qy * x);
+    let (tx, ty, tz) = (2.0 * cx, 2.0 * cy, 2.0 * cz);
+    let (ux, uy, uz) = (qy * tz - qz * ty, qz * tx - qx * tz, qx * ty - qy * tx);
+    [(x + qw * tx + ux) as f32, (y + qw * ty + uy) as f32, (z + qw * tz + uz) as f32]
+}
+
+/// 💾 Bakes each object's world transform (GLB frame correction, then scale/orientation/origin) into a single merged mesh for OBJ/GLB export; objects whose GLB hasn't round-tripped through `registerBrushMesh` this session fall back to a box.
+fn puzzle3d_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
+    let envelope: Puzzle3dEnvelope = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
+    let registry = PUZZLE3D_MESH_REGISTRY.lock().map_err(|_| "puzzle3d mesh registry poisoned".to_string())?;
+    let fallback = mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
+    let mut merged = semio_framework_plugin::MeshData::default();
+    for object in envelope.fixture.objects.iter().filter(|object| !object.hidden) {
+        let mesh_url = resolve_object_mesh_url(object, &envelope.fixture.meta);
+        let (positions, indices): (&[f32], &[u32]) = match mesh_url.as_deref().and_then(|url| registry.get(url)) {
+            Some((positions, indices)) => (positions, indices),
+            None => (&fallback.positions, &fallback.indices),
+        };
+        let orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+        let scale = object_scale_json(object);
+        let index_offset = (merged.positions.len() / 3) as u32;
+        for chunk in positions.chunks_exact(3) {
+            let corrected = glb_frame_correct([chunk[0], chunk[1], chunk[2]]);
+            let scaled = [corrected[0] * scale[0] as f32, corrected[1] * scale[1] as f32, corrected[2] * scale[2] as f32];
+            let rotated = quat_rotate_point(scaled, orientation);
+            merged.positions.push(rotated[0] + object.origin[0] as f32);
+            merged.positions.push(rotated[1] + object.origin[1] as f32);
+            merged.positions.push(rotated[2] + object.origin[2] as f32);
+        }
+        merged.indices.extend(indices.iter().map(|index| index + index_offset));
+    }
+    if merged.positions.is_empty() {
+        return Ok(fallback);
+    }
+    merged.compute_normals();
+    Ok(merged)
 }
 
 /// 📥 Tier C DWG mesh import — always returns the empty puzzle-3d fixture; never errors on a structurally valid mesh.
@@ -2942,6 +3128,70 @@ mod tests {
     }
 
     #[test]
+    fn set_fill_edit_target_volumes_toggles_from_toggle_group_id() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setFillEditTargetVolumes", Some(&json!({ "id": "edit-volumes" })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert!(envelope.runtime.fill_edit_target_volumes);
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command_patch_ops("setFillEditTargetVolumes", Some(&json!({ "id": "fill" })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert!(!envelope.runtime.fill_edit_target_volumes);
+    }
+
+    #[test]
+    fn set_voxel_dims_updates_the_selected_axis_only() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setVoxelDims", Some(&json!({ "axis": "h", "value": 5.0 })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.runtime.voxel_dims, [1, 1, 5]);
+    }
+
+    #[test]
+    fn add_target_volume_snaps_origin_to_grid_and_sizes_by_voxel_dims() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setVoxelDims", Some(&json!({ "axis": "w", "value": 2.0 })), &document, &ViewState::default());
+        let sized_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let ops = app.handle_command_patch_ops("addTargetVolume", Some(&json!({ "origin": [4.3, 7.8, 0.2] })), &sized_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&sized_document), &ops);
+        assert_eq!(envelope.fixture.target_volumes.len(), 1);
+        let volume = &envelope.fixture.target_volumes[0];
+        // 🧊 grid_factor defaults to 10.0, so origin snaps to the nearest multiple of 10.
+        assert_eq!(volume.origin, [0.0, 10.0, 0.0]);
+        assert_eq!(volume.scale, Some(json!([20.0, 10.0, 10.0])));
+    }
+
+    #[test]
+    fn delete_target_volume_removes_it_by_id() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("addTargetVolume", Some(&json!({ "origin": [0.0, 0.0, 0.0] })), &document, &ViewState::default());
+        let added_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let volume_id = parse_envelope(&added_document).fixture.target_volumes[0].id.clone();
+        let ops = app.handle_command_patch_ops("deleteTargetVolume", Some(&json!({ "id": volume_id })), &added_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&added_document), &ops);
+        assert!(envelope.fixture.target_volumes.is_empty());
+    }
+
+    #[test]
+    fn fill_engagement_shows_voxel_controls_when_edit_mode_active() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setActiveTool", Some(&json!({ "tool": "fill" })), &document, &ViewState::default());
+        let fill_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let ops = app.handle_command_patch_ops("setFillEditTargetVolumes", Some(&json!({ "id": "edit-volumes" })), &fill_document, &ViewState::default());
+        let edit_document = serde_json::to_string(&apply_ops(&parse_envelope(&fill_document), &ops)).unwrap();
+        let engagements = app.window_engagements(&edit_document, &ViewState::default());
+        let engagement = engagements.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main engagement");
+        let controls = engagement.controls.as_ref().expect("voxel controls");
+        assert_eq!(controls.len(), 4);
+        assert!(engagement.control.is_none(), "fill-count slider should be replaced by voxel controls in edit mode");
+    }
+
+    #[test]
     fn build_inspector_tree_shows_mixed_placeholder_for_differing_labels() {
         let mut app = Puzzle3dPlayApp::default();
         let document = app.initial_document_json();
@@ -3081,6 +3331,66 @@ mod tests {
         assert_eq!(lod.get("gridFactor").and_then(|v| v.as_f64()), Some(5.0));
         assert_eq!(lod.get("manualLod").and_then(|v| v.as_f64()), Some(250.0));
         assert_eq!(lod.get("automaticLod").and_then(|v| v.as_bool()), Some(true));
+    }
+
+    #[test]
+    fn interaction_json_exposes_voxel_edit_state_for_the_host() {
+        let mut envelope = default_envelope();
+        envelope.runtime.fill_edit_target_volumes = true;
+        envelope.runtime.voxel_dims = [2, 3, 4];
+        let interaction: Value = serde_json::from_str(&world_interaction_json(&envelope.runtime)).unwrap();
+        assert_eq!(interaction.get("fillEditTargetVolumes").and_then(|v| v.as_bool()), Some(true));
+        assert_eq!(interaction.get("voxelDims").and_then(|v| v.as_array()).cloned(), Some(vec![json!(2), json!(3), json!(4)]));
+    }
+
+    #[test]
+    fn set_projection_updates_camera_and_serializes_into_camera_json() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setProjection", Some(&json!({ "value": "orthographic" })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.fixture.camera.projection.as_deref(), Some("orthographic"));
+        let camera: Value = serde_json::from_str(&camera_json(&envelope.fixture.camera)).unwrap();
+        assert_eq!(camera.get("projection").and_then(|v| v.as_str()), Some("orthographic"));
+    }
+
+    #[test]
+    fn camera_json_omits_projection_when_unset() {
+        let envelope = default_envelope();
+        let camera: Value = serde_json::from_str(&camera_json(&envelope.fixture.camera)).unwrap();
+        assert!(camera.get("projection").is_none());
+    }
+
+    #[test]
+    fn set_camera_view_preset_top_uses_orthographic_projection_and_non_z_up() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setCameraViewPreset", Some(&json!({ "value": "top" })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.fixture.camera.projection.as_deref(), Some("orthographic"));
+        assert_eq!(envelope.fixture.camera.up, Some([0.0, 1.0, 0.0]), "top view needs a non-Z up vector to avoid gimbal lock in a Z-up world");
+        assert_eq!(envelope.fixture.camera.target, [0.0, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn set_camera_view_preset_perspective_restores_perspective_projection() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setCameraViewPreset", Some(&json!({ "value": "front" })), &document, &ViewState::default());
+        let front_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let ops = app.handle_command_patch_ops("setCameraViewPreset", Some(&json!({ "value": "perspective" })), &front_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&front_document), &ops);
+        assert_eq!(envelope.fixture.camera.projection.as_deref(), Some("perspective"));
+    }
+
+    #[test]
+    fn window_measures_include_view_preset_select() {
+        let app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let measures = app.window_measures(&document, &ViewState::default());
+        let groups = measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main measures");
+        let has_view_select = groups.iter().any(|measure| matches!(measure, WindowMeasure::Select { label: Some(label), .. } if label == "View"));
+        assert!(has_view_select);
     }
 
     #[test]

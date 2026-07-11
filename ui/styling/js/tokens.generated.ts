@@ -335,7 +335,7 @@ export const STYLING_CANVAS_FONTS = {
   notoColorEmoji: "Noto Color Emoji",
 } as const;
 
-export const STYLING_BOARD_THEMES = {
+export const STYLING_BOARD_PALETTES = {
   light: {
     rasterClear: [240, 236, 221, 255],
     gridMinorStroke: [123, 130, 125, 56],
@@ -420,9 +420,9 @@ export const STYLING_BOARD_THEMES = {
   },
 } as const;
 
-export type StylingThemeName = keyof typeof STYLING_BOARD_THEMES;
+export type StylingAppearanceName = keyof typeof STYLING_BOARD_PALETTES;
 
-export const STYLING_CANVAS_THEMES = {
+export const STYLING_CANVAS_PALETTES = {
   light: {
     rasterClear: [240, 236, 221, 255],
     iconFg: [0, 0, 0, 255],
@@ -439,7 +439,7 @@ export const STYLING_CANVAS_THEMES = {
   },
 } as const;
 
-export const STYLING_CHROME_THEMES = {
+export const STYLING_CHROME_PALETTES = {
   light: {
     base: [247, 243, 227, 255],
     canvas: [240, 236, 221, 255],
@@ -484,7 +484,7 @@ export const STYLING_CHROME_THEMES = {
   },
 } as const;
 
-export const STYLING_MAP_THEMES = {
+export const STYLING_MAP_PALETTES = {
   light: {
     surfaceClear: [12, 28, 33, 255],
     landFill: [46, 60, 61, 255],

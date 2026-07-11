@@ -403,7 +403,7 @@ impl Default for RasterHost {
 
 impl RasterHost {
     pub fn new() -> Self {
-        let theme_clear = cavas::theme::canvas_clear_for(ui_styling::theme::ThemeName::Light);
+        let theme_clear = cavas::theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
         let (checkerboard_light_cell, checkerboard_dark_cell) = cavas::theme::checkerboard_shades_for_clear(theme_clear);
         Self {
             camera: Camera { x: 0.0, y: 0.0, zoom: 1.0 },

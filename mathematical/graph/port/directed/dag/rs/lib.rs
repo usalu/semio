@@ -10,7 +10,7 @@ use graph::{handle_position, world_box_from_points, BoardEvent, WorldBox};
 pub use infinite_cavas as cavas;
 pub use mathematical_graph_port_directed::{
     self as graph, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak, handle_exterior_cap_triangle_stroke_path, handle_outward_at_node_rim, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, HandleRole, InteractionMode, Node,
-    NodeId, RenderSnapshot, Selection, CanvasThemePalette,
+    NodeId, RenderSnapshot, Selection, CanvasPalette,
 };
 
 /// 🌳 DAG board engine alias.
@@ -1444,7 +1444,7 @@ fn dag_label_compact_paint_px(zoom: f64, lod_index: usize) -> f64 {
     cavas::lod::lod_band_label_screen_px(DAG_LABEL_COMPACT_SCREEN_PX, zoom, dag_lod_band_floor_zoom(lod_index))
 }
 
-fn dag_node_body_fill(theme: &CanvasThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
+fn dag_node_body_fill(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
     if dimmed {
         canvas_color_with_alpha(theme.node_fill_disabled, ui_styling::opacities::DISABLED_FILL_ALPHA)
     } else if selected {
@@ -1458,7 +1458,7 @@ fn dag_node_body_fill(theme: &CanvasThemePalette, dimmed: bool, selected: bool, 
     }
 }
 
-pub(crate) fn dag_node_body_stroke(theme: &CanvasThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
+pub(crate) fn dag_node_body_stroke(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
     if dimmed {
         canvas_color_with_alpha(theme.node_stroke, ui_styling::opacities::DIM_STROKE_ALPHA)
     } else if selected {
@@ -1472,7 +1472,7 @@ pub(crate) fn dag_node_body_stroke(theme: &CanvasThemePalette, dimmed: bool, sel
     }
 }
 
-pub(crate) fn dag_node_label_fill(theme: &CanvasThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
+pub(crate) fn dag_node_label_fill(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
     if dimmed {
         canvas_color_with_alpha(theme.label_fill, ui_styling::opacities::DIM_LABEL_ALPHA)
     } else if selected {
@@ -1495,7 +1495,7 @@ pub(crate) fn dag_node_internal_chrome_stroke(body_stroke: cavas::Color, label_f
     }
 }
 
-pub(crate) fn dag_handle_body_fill(theme: &CanvasThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
+pub(crate) fn dag_handle_body_fill(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
     if dimmed {
         canvas_color_with_alpha(theme.handle_fill_disabled, ui_styling::opacities::DISABLED_FILL_ALPHA)
     } else if selected {
@@ -1509,7 +1509,7 @@ pub(crate) fn dag_handle_body_fill(theme: &CanvasThemePalette, dimmed: bool, sel
     }
 }
 
-pub(crate) fn dag_handle_body_stroke(theme: &CanvasThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
+pub(crate) fn dag_handle_body_stroke(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
     if dimmed {
         canvas_color_with_alpha(theme.handle_stroke_disabled, ui_styling::opacities::DISABLED_STROKE_ALPHA)
     } else if selected {
@@ -1523,7 +1523,7 @@ pub(crate) fn dag_handle_body_stroke(theme: &CanvasThemePalette, dimmed: bool, s
     }
 }
 
-pub(crate) fn dag_edge_body_stroke(theme: &CanvasThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
+pub(crate) fn dag_edge_body_stroke(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
     if dimmed {
         canvas_color_with_alpha(theme.edge_stroke_disabled, ui_styling::opacities::DISABLED_STROKE_ALPHA)
     } else if selected {
@@ -1550,7 +1550,7 @@ fn dag_node_stroke_screen_px(dimmed: bool, selected: bool, highlighted: bool, ho
 }
 
 /// @emoji 🎨 Node body fill when painted; `None` means stroke/text only (puzzle 2d overview+).
-pub(crate) fn dag_node_paint_fill(lod: DagDrawLod, theme: &CanvasThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> Option<cavas::Color> {
+pub(crate) fn dag_node_paint_fill(lod: DagDrawLod, theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> Option<cavas::Color> {
     if lod == DagDrawLod::Minimap {
         return Some(dag_node_body_stroke(theme, dimmed, selected, highlighted, hovered));
     }
@@ -1777,7 +1777,7 @@ struct NoteEditState {
 pub struct DagHost {
     pub fixture: DagFixture,
     pub engine: DagBoardEngine,
-    pub canvas_theme: CanvasThemePalette,
+    pub canvas_theme: CanvasPalette,
     width: u32,
     height: u32,
     dpr: f64,
@@ -2026,7 +2026,7 @@ impl DagHost {
         let mut host = Self {
             fixture,
             engine: DagBoardEngine::new(),
-            canvas_theme: CanvasThemePalette::default(),
+            canvas_theme: CanvasPalette::default(),
             width: 1,
             height: 1,
             dpr: 1.0,
@@ -4037,7 +4037,7 @@ impl DagHost {
         scene.stroke(&stroke_style, aff, stroke, None, &Line::new(Point::new(divider_x, top), Point::new(divider_x, bottom)));
     }
 
-    fn paint_computation_channel_row_highlights(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, node: &DagNodeSpec, theme: &CanvasThemePalette, is_dimmed: bool) {
+    fn paint_computation_channel_row_highlights(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, node: &DagNodeSpec, theme: &CanvasPalette, is_dimmed: bool) {
         use cavas::Rect;
         use cavas::FillRule;
         let mut paint_bounds = |(x0, y0, x1, y1): (f64, f64, f64, f64), selected: bool, highlighted: bool, hovered: bool| {
@@ -4346,11 +4346,11 @@ impl DagHost {
         scene.stroke(&stroke, *aff, color, None, &path);
     }
 
-    fn paint_computing_active_border(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, rect: &cavas::Rect, cam_zoom: f64, theme: &CanvasThemePalette) {
+    fn paint_computing_active_border(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, rect: &cavas::Rect, cam_zoom: f64, theme: &CanvasPalette) {
         self.paint_computing_border_arc(scene, aff, rect, cam_zoom, theme.node_stroke_selected, self.computing_active_anim_phase.get(), false);
     }
 
-    fn paint_computing_stale_border(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, rect: &cavas::Rect, cam_zoom: f64, theme: &CanvasThemePalette) {
+    fn paint_computing_stale_border(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, rect: &cavas::Rect, cam_zoom: f64, theme: &CanvasPalette) {
         let highlight = canvas_color_with_alpha(theme.node_stroke_selected, 220);
         self.paint_computing_border_arc(scene, aff, rect, cam_zoom, highlight, self.computing_stale_anim_phase.get(), true);
     }
@@ -6472,14 +6472,14 @@ mod tests {
     #[test]
     fn dag_label_colors_use_theme_label_fields() {
         use cavas::Color;
-        let theme = CanvasThemePalette { label_fill: Color::from_rgba8(240, 241, 245, 255), label_halo: Color::from_rgba8(10, 12, 16, 180), node_stroke: Color::from_rgba8(90, 100, 110, 255), ..CanvasThemePalette::default() };
+        let theme = CanvasPalette { label_fill: Color::from_rgba8(240, 241, 245, 255), label_halo: Color::from_rgba8(10, 12, 16, 180), node_stroke: Color::from_rgba8(90, 100, 110, 255), ..CanvasPalette::default() };
         assert_ne!(theme.label_fill.to_rgba8(), theme.node_stroke.to_rgba8());
     }
 
     #[test]
     fn dag_node_paint_fill_matches_puzzle2d_lod_chrome() {
         use cavas::Color;
-        let theme = CanvasThemePalette {
+        let theme = CanvasPalette {
             node_fill: Color::from_rgba8(10, 20, 30, 255),
             node_stroke: Color::from_rgba8(200, 210, 220, 255),
             node_fill_hovered: Color::from_rgba8(40, 50, 60, 255),
@@ -6488,7 +6488,7 @@ mod tests {
             node_stroke_selected: Color::from_rgba8(120, 130, 140, 255),
             node_fill_selection_exit: Color::from_rgba8(196, 228, 213, 255),
             node_stroke_selection_exit: Color::from_rgba8(80, 140, 110, 255),
-            ..CanvasThemePalette::default()
+            ..CanvasPalette::default()
         };
         assert_eq!(dag_node_paint_fill(DagDrawLod::Minimap, &theme, false, false, false, false).expect("minimap neutral").to_rgba8(), theme.node_stroke.to_rgba8());
         assert!(dag_node_paint_fill(DagDrawLod::Overview, &theme, false, false, false, false).is_none());
@@ -6518,14 +6518,14 @@ mod tests {
     #[test]
     fn dag_handle_and_edge_stroke_use_theme_defaults() {
         use cavas::Color;
-        let theme = CanvasThemePalette {
+        let theme = CanvasPalette {
             edge_stroke: Color::from_rgba8(100, 110, 120, 255),
             edge_stroke_hovered: Color::from_rgba8(10, 20, 30, 255),
             edge_stroke_selected: Color::from_rgba8(40, 50, 60, 255),
             handle_stroke: Color::from_rgba8(130, 140, 150, 255),
             handle_stroke_hovered: Color::from_rgba8(20, 30, 40, 255),
             handle_stroke_selected: Color::from_rgba8(50, 60, 70, 255),
-            ..CanvasThemePalette::default()
+            ..CanvasPalette::default()
         };
         assert_eq!(dag_edge_body_stroke(&theme, false, false, false, false).to_rgba8(), theme.edge_stroke.to_rgba8());
         assert_eq!(dag_handle_body_stroke(&theme, false, false, false, false).to_rgba8(), theme.handle_stroke.to_rgba8());

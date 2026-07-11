@@ -5554,9 +5554,9 @@ pub mod theme {
 use crate::geometry::Rect;
 use ui_styling::{
     metrics::{chrome as chrome_metrics, dom, typography},
-    opacities, radii, strokes, ChromeTheme, CHROME_DARK, CHROME_LIGHT,
+    opacities, radii, strokes, ChromePalette, CHROME_DARK, CHROME_LIGHT,
 };
-use ui_styling::theme::ThemeName;
+use ui_styling::appearance::AppearanceName;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Rgba {
@@ -5659,7 +5659,7 @@ fn panel_width(ui_spacing_mult: f64) -> f32 {
     (chrome_metrics::UI_SPACING_COMPACT_PX * ui_spacing_mult) as f32
 }
 
-fn from_chrome(chrome: &ChromeTheme) -> Theme {
+fn from_chrome(chrome: &ChromePalette) -> Theme {
     Theme {
         background: Rgba::from_chrome(&chrome.canvas),
         panel: Rgba::from_chrome(&chrome.panel),
@@ -5713,10 +5713,10 @@ impl Theme {
         from_chrome(&CHROME_DARK)
     }
 
-    pub fn for_name(name: ThemeName) -> Self {
+    pub fn for_name(name: AppearanceName) -> Self {
         match name {
-            ThemeName::Light => Self::light(),
-            ThemeName::Dark => Self::dark(),
+            AppearanceName::Light => Self::light(),
+            AppearanceName::Dark => Self::dark(),
         }
     }
 
