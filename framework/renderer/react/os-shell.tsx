@@ -689,12 +689,7 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Pro
   const root = document.getElementById(options.rootId ?? "root");
   if (!root) throw new Error("missing #root");
   bootstrapElementsSurfaceChromeDocument(FRAMEWORK_SHELL_CHROME_THEME);
-  const reactRoot = createRoot(root, {
-    onUncaughtError: (error, errorInfo) => {
-      console.log("[DEBUG] uncaught render error:", error instanceof Error ? error.message : String(error), errorInfo.componentStack?.slice(0, 2000));
-    },
-  });
-  reactRoot.render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? DEFAULT_PLUGIN_REGISTRY} />);
+  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? DEFAULT_PLUGIN_REGISTRY} />);
 }
 //#endregion Boot
 
@@ -814,7 +809,6 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           }
           return [];
         });
-        console.log(`[DEBUG] boot registry=${registry.map((entry) => entry.pluginId).join(",")} loaded=${loaded.map((entry) => entry.pluginId).join(",")}`);
         if (loaded.length === 0) throw new Error("No plugins loaded");
         if (cancelled) return;
         const loadedState = loaded.map((handle) => ({ handle, manifest: handle.manifest }));

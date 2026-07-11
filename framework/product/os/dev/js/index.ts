@@ -4,15 +4,6 @@
 
 import "../globals.css";
 
-// [DEBUG] temporary depth-loop stack capture
-if (typeof window !== "undefined") {
-  window.addEventListener("error", (event) => {
-    if (String(event.message).includes("Maximum update depth")) {
-      console.log("[DEBUG] depth-loop stack:", String((event.error as Error | undefined)?.stack ?? "no stack").slice(0, 2500));
-    }
-  });
-}
-
 export type { PluginBuildTarget } from "../../../../plugin/registry/generated/plugins.ts";
 export { PLUGIN_BUILD_TARGETS, PLUGIN_TARGETS, pluginModuleUrl } from "../../../../plugin/registry/generated/plugins.ts";
 

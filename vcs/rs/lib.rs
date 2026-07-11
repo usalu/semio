@@ -1067,6 +1067,7 @@ impl BackbonePort for MemoryBackbonePort {
     }
 }
 
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 fn local_storage_backbone_key(uri: &str) -> String {
     format!("semio:vcs:{uri}")
 }

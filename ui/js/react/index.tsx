@@ -14968,8 +14968,9 @@ const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
  **/
 function useWindowMeasuresReservePx(enabled: boolean, measures: React.ReactNode, bodyRef: React.RefObject<HTMLDivElement | null>, measuresOverlayRef: React.RefObject<HTMLDivElement | null>) {
   const [measuresReservePx, setMeasuresReservePx] = reactHostPort.useState(0);
+  const hasMeasures = Boolean(measures);
   reactHostPort.useLayoutEffect(() => {
-    if (!enabled || !measures) {
+    if (!enabled || !hasMeasures) {
       setMeasuresReservePx(0);
       return;
     }
@@ -14983,7 +14984,7 @@ function useWindowMeasuresReservePx(enabled: boolean, measures: React.ReactNode,
     if (bodyRef.current) observer.observe(bodyRef.current);
     if (measuresOverlayRef.current) observer.observe(measuresOverlayRef.current);
     return () => observer.disconnect();
-  }, [bodyRef, enabled, measures, measuresOverlayRef]);
+  }, [bodyRef, enabled, hasMeasures, measuresOverlayRef]);
   return measuresReservePx;
 }
 

@@ -184,6 +184,13 @@ pub trait Machine: Sized + 'static {
     fn definition() -> &'static kernel::MachineDefinition<Self>;
 }
 
+/// 🏷️ Struct-level field name/type metadata, embedded as JSON — feeds TypeScript
+/// generation tooling. Implemented via `#[derive(StatechartSchema)]`.
+pub trait StatechartSchema {
+    /// 🏷️ `{"fields":[{"name":"..","type":".."}, ..]}` for this struct's named fields.
+    const SCHEMA_JSON: &'static str;
+}
+
 //#endregion 🔖Schema
 
 //#region 🔖Reexports
@@ -191,12 +198,19 @@ pub trait Machine: Sized + 'static {
 pub use host::{Host, NativeHost, TestHost};
 pub use inspect::{InspectionEvent, Inspector, MicrostepTrace, NullInspector, TraceInspector};
 pub use kernel::{
-    init, macrostep, Command, CommandSink, MachineDefinition, NodeDef, NodeKind, Snapshot, Status,
-    StepReport, TransitionDef, TransitionKind,
+    init, macrostep, timer_elapsed, ActionFn, Command, CommandSink, GuardFn, InputFn, MachineDefinition,
+    NodeDef, NodeKind, OutputFn, Snapshot, Status, StepReport, TransitionDef, TransitionKind, Trigger,
+    MICROSTEP_LIMIT, ROOT,
 };
-pub use persist::{Migration, PersistedSnapshot, RestoreError};
+pub use persist::{persist, restore, Migration, PersistedSnapshot, RestoreError};
 pub use runtime::{ActorLogic, ActorSystem, MachineLogic};
 
+#[cfg(any(test, feature = "testing"))]
+pub use testing::{check_invariants, explore, run_conformance, ConformanceStep, Coverage, Invariant, Model};
+
+// 🪄 `StatechartEvent` here re-exports the derive macro — it shares its name with the
+// `StatechartEvent` trait above without conflict since macros and traits live in
+// separate namespaces (the same pattern `serde`/`serde_derive` use).
 #[cfg(feature = "macros")]
 pub use fsm_macros::{statechart, StatechartEvent, StatechartSchema};
 
@@ -248,6 +262,189 @@ mod tests {
         bits.clear_all();
         assert!(bits.is_empty());
     }
+}
+
+/// 🎫 End-to-end proof that `statechart!` DSL → kernel → runtime → [`TestHost`] timers/invoke
+/// → persist/restore → inspection trace → model coverage all compose over one real machine.
+#[cfg(feature = "macros")]
+#[cfg(test)]
+mod checkout_integration {
+    use crate::{ActorId, ActorSystem, CommandSink, InvokeId, Machine, TestHost, TimerId, TraceInspector};
+
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct CheckoutContext {
+        pub attempts: u32,
+        pub method_set: bool,
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct Receipt {
+        pub attempts: u32,
+    }
+
+    fn build_context(_input: ()) -> CheckoutContext {
+        CheckoutContext::default()
+    }
+
+    fn allow_select(ctx: &CheckoutContext, _event: Option<&checkout::Event>) -> bool {
+        ctx.attempts < 3
+    }
+
+    fn set_method(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut dyn CommandSink<checkout::Checkout>) {
+        ctx.method_set = true;
+    }
+
+    fn note_timeout(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut dyn CommandSink<checkout::Checkout>) {
+        ctx.attempts += 1;
+    }
+
+    fn make_receipt(ctx: &CheckoutContext) -> Receipt {
+        Receipt { attempts: ctx.attempts }
+    }
+
+    crate::statechart! {
+        machine checkout {
+            context: CheckoutContext;
+            event Event { Confirm, SelectMethod, PaymentSucceeded, PaymentFailed, Retry, Cancel, Resume, ShipDone, InvoiceDone }
+            input: ();
+            output: Receipt;
+            effect: ();
+            context_from_input: build_context;
+            output_from_context: make_receipt;
+            initial: cart;
+
+            state cart {
+                on Confirm => payment;
+                on Resume => payment_history;
+            }
+            state payment {
+                initial: selecting;
+                history payment_history shallow;
+                state selecting {
+                    on SelectMethod if allow_select => processing do set_method;
+                }
+                state processing {
+                    invoke charge;
+                    after 5000 => failed do note_timeout;
+                    on PaymentSucceeded => fulfilment;
+                    on PaymentFailed => failed;
+                    on Cancel => cart;
+                }
+                state failed {
+                    on Retry => processing;
+                }
+            }
+            parallel fulfilment {
+                state shipping {
+                    initial: ship_pending;
+                    state ship_pending { on ShipDone => ship_done; }
+                    final ship_done;
+                }
+                state invoicing {
+                    initial: invoice_pending;
+                    state invoice_pending { on InvoiceDone => invoice_done; }
+                    final invoice_done;
+                }
+                on_done => done;
+            }
+            final done;
+        }
+    }
+
+    #[test]
+    fn dsl_machine_walks_cart_to_receipt() {
+        let mut system: ActorSystem<checkout::Checkout, TestHost<checkout::Checkout>> = ActorSystem::new(TestHost::new());
+        let root = system.spawn_root(());
+        assert!(system.snapshot(root).unwrap().matches("cart"));
+
+        system.send(root, checkout::Event::Confirm);
+        system.drain();
+        assert!(system.snapshot(root).unwrap().matches("selecting"));
+
+        system.send(root, checkout::Event::SelectMethod);
+        system.drain();
+        assert!(system.snapshot(root).unwrap().matches("processing"));
+        assert!(system.snapshot(root).unwrap().context.method_set);
+        assert_eq!(system.host.started_tasks(), &[(root, InvokeId(0))]);
+
+        system.send(root, checkout::Event::PaymentSucceeded);
+        system.drain();
+        assert!(system.snapshot(root).unwrap().matches("ship_pending"));
+        assert!(system.snapshot(root).unwrap().matches("invoice_pending"));
+        assert_eq!(system.host.cancelled_tasks(), &[(root, InvokeId(0))], "leaving processing must stop its invoke");
+
+        system.send(root, checkout::Event::ShipDone);
+        system.drain();
+        assert!(system.snapshot(root).unwrap().matches("ship_done"));
+        assert!(system.snapshot(root).unwrap().matches("invoice_pending"), "invoicing region must still be pending");
+        system.send(root, checkout::Event::InvoiceDone);
+        system.drain();
+
+        assert!(matches!(system.snapshot(root).unwrap().status, crate::Status::Done(_)));
+        if let crate::Status::Done(receipt) = &system.snapshot(root).unwrap().status {
+            assert_eq!(receipt.attempts, 0);
+        }
+    }
+
+    #[test]
+    fn dsl_machine_cancel_resume_round_trips_via_shallow_history() {
+        let mut sink: Vec<crate::Command<checkout::Checkout>> = Vec::new();
+        let mut snapshot = crate::init::<checkout::Checkout>((), &mut sink);
+        let mut inspector = TraceInspector::<checkout::Checkout>::default();
+
+        crate::macrostep(&mut snapshot, checkout::Event::Confirm, &mut sink, &mut inspector);
+        crate::macrostep(&mut snapshot, checkout::Event::SelectMethod, &mut sink, &mut inspector);
+        assert!(snapshot.matches("processing"));
+
+        // Cancelling from `processing` exits `payment` entirely (recording shallow
+        // history), landing back in `cart`.
+        crate::macrostep(&mut snapshot, checkout::Event::Cancel, &mut sink, &mut inspector);
+        assert!(snapshot.matches("cart"));
+        assert!(!snapshot.matches("payment"));
+
+        // Resuming must restore `processing`, not `payment`'s default `selecting`.
+        crate::macrostep(&mut snapshot, checkout::Event::Resume, &mut sink, &mut inspector);
+        assert!(snapshot.matches("processing"), "shallow history must restore into processing, not the default selecting");
+        assert!(!snapshot.matches("selecting"));
+        assert!(!inspector.entries.is_empty());
+
+        let fired = crate::timer_elapsed(&mut snapshot, TimerId(0), &mut sink, &mut inspector);
+        assert_eq!(fired.microsteps, 1);
+        assert!(snapshot.matches("failed"));
+        assert_eq!(snapshot.context.attempts, 1);
+
+        crate::macrostep(&mut snapshot, checkout::Event::Retry, &mut sink, &mut inspector);
+        assert!(snapshot.matches("processing"));
+
+        let persisted = crate::persist(&snapshot);
+        assert_eq!(persisted.fingerprint, checkout::Checkout::definition().fingerprint);
+        let restored = crate::restore::<checkout::Checkout>(&persisted, snapshot.context.clone(), &[]).expect("restore should succeed");
+        assert!(restored.matches("processing"));
+    }
+
+    #[test]
+    fn dsl_machine_coverage_reaches_every_declared_state() {
+        let model = crate::Model::<checkout::Checkout>::new(vec![
+            checkout::Event::Confirm,
+            checkout::Event::SelectMethod,
+            checkout::Event::PaymentSucceeded,
+            checkout::Event::PaymentFailed,
+            checkout::Event::Retry,
+            checkout::Event::Cancel,
+            checkout::Event::Resume,
+            checkout::Event::ShipDone,
+            checkout::Event::InvoiceDone,
+        ]);
+        let coverage = crate::explore(&model, ());
+        for expected in ["cart", "selecting", "processing", "failed", "ship_pending", "ship_done", "invoice_pending", "invoice_done", "done"] {
+            assert!(coverage.reached_stable_ids.contains(&expected), "expected model exploration to reach `{expected}`, got {:?}", coverage.reached_stable_ids);
+        }
+    }
+
+    // Silences an unused-import warning for `ActorId` kept for readability of the
+    // `started_tasks`/`cancelled_tasks` assertions above.
+    #[allow(dead_code)]
+    fn _use_actor_id(_id: ActorId) {}
 }
 
 //#endregion 🧪Tests

@@ -186,9 +186,21 @@ type WorldEngagementPreviewBox = {
   readonly role?: string;
   readonly cornerA?: readonly [number, number, number];
   readonly cornerB?: readonly [number, number, number];
+  readonly height?: number;
 };
 
-type WorldEngagementPreviewItem = WorldEngagementPreviewPoint | WorldEngagementPreviewSegment | WorldEngagementPreviewBox;
+type WorldEngagementPreviewLinearHandle = {
+  readonly kind: "linear-handle";
+  readonly role?: string;
+  readonly axis: readonly [number, number, number];
+  readonly origin: readonly [number, number, number];
+};
+
+type WorldEngagementPreviewItem =
+  | WorldEngagementPreviewPoint
+  | WorldEngagementPreviewSegment
+  | WorldEngagementPreviewBox
+  | WorldEngagementPreviewLinearHandle;
 
 type SemanticColors = {
   readonly mesh: string;
@@ -1199,14 +1211,38 @@ function EngagementPreviewLayer({ items, color }: { readonly items: readonly Wor
         }
         if (item.kind === "box-preview" && item.cornerA && item.cornerB) {
           const [ax, ay, az] = item.cornerA;
-          const [bx, by, bz] = item.cornerB;
+          const [bx, by] = item.cornerB;
           const width = Math.max(Math.abs(bx - ax), 0.05);
           const depth = Math.max(Math.abs(by - ay), 0.05);
-          const height = Math.max(Math.abs(bz - az), 0.05);
+          // `height` is a separate vertical extrusion from the footprint plane (az), not derived
+          // from cornerB's z — the interaction specs author cornerA/cornerB as ground-plane points.
+          const height = Math.max(Math.abs(item.height ?? 0.05), 0.05);
           return (
-            <mesh key={`preview-box-${index}`} position={[(ax + bx) * 0.5, (ay + by) * 0.5, (az + bz) * 0.5]} raycast={() => null}>
+            <mesh
+              key={`preview-box-${index}`}
+              position={[(ax + bx) * 0.5, (ay + by) * 0.5, az + height * 0.5]}
+              raycast={() => null}
+            >
               <boxGeometry args={[width, depth, height]} />
               <meshBasicMaterial color={color} transparent opacity={0.35} depthWrite={false} wireframe />
+            </mesh>
+          );
+        }
+        if (item.kind === "linear-handle") {
+          const [ox, oy, oz] = item.origin;
+          const [dx, dy, dz] = item.axis;
+          const length = Math.max(Math.hypot(dx, dy, dz), 0.05);
+          const direction = new Vector3(dx, dy, dz).normalize();
+          const quaternion = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), direction);
+          return (
+            <mesh
+              key={`preview-handle-${index}`}
+              position={[ox + dx * 0.5, oy + dy * 0.5, oz + dz * 0.5]}
+              quaternion={quaternion}
+              raycast={() => null}
+            >
+              <cylinderGeometry args={[0.02, 0.02, length, 8]} />
+              <meshBasicMaterial color={color} transparent opacity={0.6} depthWrite={false} />
             </mesh>
           );
         }
@@ -1486,6 +1522,8 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
   const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number } | null>(null);
   const cameraRef = useRef<import("three").Camera | null>(null);
   const wasMarqueeDragRef = useRef(false);
+  const engagementPointerMoveInFlightRef = useRef(false);
+  const engagementPointerMoveLastPointRef = useRef<readonly [number, number, number] | null>(null);
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
   const marqueeDown = marqueePath.length > 0;
   const method = selection.method ?? "rectangle";
@@ -1810,11 +1848,26 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
 
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
+      if (selection.engagementSessionActive && hostRef.current && cameraRef.current) {
+        const rect = hostRef.current.getBoundingClientRect();
+        const point = raycastGroundPoint(event.clientX, event.clientY, rect, cameraRef.current);
+        const last = engagementPointerMoveLastPointRef.current;
+        const unchanged = point && last && point[0] === last[0] && point[1] === last[1] && point[2] === last[2];
+        if (point && !unchanged && !engagementPointerMoveInFlightRef.current) {
+          engagementPointerMoveInFlightRef.current = true;
+          engagementPointerMoveLastPointRef.current = point;
+          requestAnimationFrame(() => {
+            engagementPointerMoveInFlightRef.current = false;
+            dispatch("worldPointerMove", { pane: paneSuffixFromSurfaceId(node.surfaceId), position: point });
+          });
+        }
+        return;
+      }
       if (!marqueeDown) return;
       setMarqueeModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
       setMarqueePath((path) => [...path, toLocalPoint(event)]);
     },
-    [marqueeDown, toLocalPoint],
+    [dispatch, marqueeDown, node.surfaceId, selection.engagementSessionActive, toLocalPoint],
   );
 
   const handlePointerUp = useCallback(() => {

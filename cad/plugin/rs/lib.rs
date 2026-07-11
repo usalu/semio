@@ -3022,6 +3022,16 @@ impl PluginApp for CadApp {
                 }
                 return vec![set_document_op(&envelope)];
             }
+            "worldPointerMove" => {
+                // Live rubber-band preview during an active engagement session: applies
+                // `pointer.move` (updating the session's cursor/preview context) without ever
+                // committing an object or touching VCS history.
+                let point = args.and_then(|value| value.get("position"));
+                if let Some(session) = envelope.runtime.engagement_session.as_mut() {
+                    apply_event(session, "pointer.move", point);
+                }
+                return vec![set_document_op(&envelope)];
+            }
             "setPrimitiveSelection" => {
                 if let Some(object_id) = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()) {
                     envelope.runtime.selected_object_ids = vec![object_id.into()];
@@ -3181,6 +3191,7 @@ fn create_cad_app() -> App {
             .view_command("engagementRepeatLast", "Engagement Repeat Last")
             .view_command("engagementAbort", "Engagement Abort")
             .view_command("worldPointerDown", "World Pointer Down")
+            .view_command("worldPointerMove", "World Pointer Move")
             .view_command("engagementPointerDown", "Engagement Pointer Down")
             .view_command("setPrimitiveSelection", "Set Primitive Selection")
             .shell_command("setDocument", "Set Document")
@@ -3624,6 +3635,37 @@ mod tests {
         );
         let next = apply_ops(&envelope, &ops);
         assert!(next.runtime.engagement_session.is_some());
+    }
+
+    #[test]
+    fn world_pointer_move_updates_live_preview_without_committing_or_touching_history() {
+        let mut app = CadApp;
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        envelope.runtime.engagement_input = "b".into();
+        let ops = app.handle_command_patch_ops(
+            "engagementSubmit",
+            Some(&json!({ "pane": "shape" })),
+            &serde_json::to_string(&envelope).unwrap(),
+            &ViewState::default(),
+        );
+        envelope = apply_ops(&envelope, &ops);
+        let history_len_before = envelope.applied_edit_ids.len();
+        let object_count_before = envelope.document.objects.len();
+
+        // box's default boxMode is "point"; a plain pointer.move in first_corner updates cursor.
+        let ops = app.handle_command_patch_ops(
+            "worldPointerMove",
+            Some(&json!({ "pane": "shape", "position": [3.0, 4.0, 0.0] })),
+            &serde_json::to_string(&envelope).unwrap(),
+            &ViewState::default(),
+        );
+        let next = apply_ops(&envelope, &ops);
+
+        let session = next.runtime.engagement_session.as_ref().expect("session still active");
+        assert_eq!(session.state, "first_corner", "pointer.move must not change state");
+        assert_eq!(session.context.get("cursor"), Some(&json!([3.0, 4.0, 0.0])));
+        assert_eq!(next.applied_edit_ids.len(), history_len_before, "no VCS entry from a pointer move");
+        assert_eq!(next.document.objects.len(), object_count_before, "no object committed by a pointer move");
     }
 
     #[test]

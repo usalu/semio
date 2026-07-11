@@ -14,6 +14,16 @@
       "port": 6014
     },
     {
+      "name": "cad-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:cad"],
+      "env": {
+        "CAD_JS_RENDERER_PLAY_PORT": "6020",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6020
+    },
+    {
       "name": "lowpoly-react-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:lowpoly"],
