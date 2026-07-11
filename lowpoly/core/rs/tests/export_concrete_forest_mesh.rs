@@ -3,8 +3,24 @@ mod geometry_import;
 
 use geometry_import::{objects_from_fixture_model, parse_geometry, tessellate_geometry_handle};
 use kernel_3d_brepkit::BrepkitKernel;
-use kernel_3d_mesh::{HalfedgeMesh, Vec3 as MeshVec3, VertexId};
+use kernel_3d_mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};
 use serde_json::Value;
+use std::collections::HashMap;
+
+/// Asserts every directed edge (by vertex id, after welding) has an opposite-winding counterpart, i.e. the
+/// mesh has no open boundary loops.
+fn assert_watertight(mesh: &HalfedgeMesh) {
+    let mut directed: HashMap<(u32, u32), u32> = HashMap::new();
+    for fi in 0..mesh.face_count() {
+        let verts = mesh.face_vertex_ids(FaceId(fi as u32)).expect("face verts");
+        let n = verts.len();
+        for i in 0..n {
+            *directed.entry((verts[i].0, verts[(i + 1) % n].0)).or_insert(0) += 1;
+        }
+    }
+    let open: Vec<(u32, u32)> = directed.keys().copied().filter(|&(a, b)| !directed.contains_key(&(b, a))).collect();
+    assert!(open.is_empty(), "mesh is not watertight: {} open boundary edges, e.g. {:?}", open.len(), &open[..open.len().min(5)]);
+}
 
 #[test]
 fn export_concrete_forest_left_lowpoly_mesh_json() {
@@ -29,6 +45,12 @@ fn export_concrete_forest_left_lowpoly_mesh_json() {
     .expect("tessellated mesh");
     let mut mesh = HalfedgeMesh::from_indexed_triangles(&mesh_data.positions, &mesh_data.indices)
         .expect("halfedge mesh");
+    // The BREP tessellator emits independently-tessellated, non-shared vertices along seams between
+    // adjacent source faces; weld those before touching topology so twins/boundaries are accurate.
+    mesh.weld_coincident_vertices(1e-4).expect("weld coincident vertices");
+    // Any remaining true boundary loops (e.g. an unclosed cut cross-section) get capped so the solid is
+    // watertight before merging — capping first lets the new cap faces also join the coplanar merge below.
+    mesh.fill_holes().expect("fill holes");
     let triangle_face_count = mesh.face_count();
     mesh.merge_coplanar_faces().expect("merge coplanar faces");
     assert!(
@@ -40,6 +62,7 @@ fn export_concrete_forest_left_lowpoly_mesh_json() {
         (0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(kernel_3d_mesh::FaceId(fi as u32)).map(|v| v.len()).unwrap_or(0) > 4),
         "expected at least one merged face with more than 4 corners"
     );
+    assert_watertight(&mesh);
     let mut min = MeshVec3::new(f32::MAX, f32::MAX, f32::MAX);
     let mut max = MeshVec3::new(f32::MIN, f32::MIN, f32::MIN);
     for index in 0..mesh.vertex_count() {

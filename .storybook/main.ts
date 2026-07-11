@@ -31,12 +31,8 @@ const productionStorySlices = (process.env.STORYBOOK_PRODUCTION_SLICES ?? "")
   .filter(Boolean);
 const productionSliceBuild = productionStorySlices.length > 0;
 
-const uiReactDir = resolve(repoRootPath, "ui/react");
+const uiReactDir = resolve(repoRootPath, "ui/js/react");
 const uiStylingDir = resolve(repoRootPath, "ui/styling/js");
-const frameworkPlaygroundDir = resolve(repoRootPath, "framework/product/playground/core");
-const frameworkPlaygroundReactDir = resolve(repoRootPath, "framework/product/playground/renderer/react");
-const puzzle3dReactDir = resolve(repoRootPath, "puzzle/3d/react");
-const puzzle5dReactDir = resolve(repoRootPath, "puzzle/5d/react");
 const composeJsDir = resolve(repoRootPath, "compose/client/lib/js");
 const composeRsWasmEntryPath = resolve(repoRootPath, "compose/client/lib/rs/pkg/compose.js");
 const composeAssetsDir = resolve(repoRootPath, "asset");
@@ -90,10 +86,6 @@ function buildStorybookAliases(): Record<string, string> {
     alias["@semio-tech/puzzle-asset"] = toVitePath(puzzleAssetsDir);
     alias["@semio-tech/ui-react"] = toVitePath(uiReactDir);
     alias["@semio-tech/ui-styling"] = toVitePath(uiStylingDir);
-    alias["@semio-tech/framework-playground-core"] = toVitePath(frameworkPlaygroundDir);
-    alias["@semio-tech/framework-playground-renderer-react"] = toVitePath(frameworkPlaygroundReactDir);
-    alias["@semio-tech/puzzle-3d-react"] = toVitePath(puzzle3dReactDir);
-    alias["@semio-tech/puzzle-5d-react"] = toVitePath(puzzle5dReactDir);
     alias["@semio-tech/infinite-cavas-react-renderer"] = toVitePath(resolve(repoRootPath, "infinite/cavas/react-renderer/index.tsx"));
     alias["@elements/ui/globals.css"] = toVitePath(resolve(uiReactDir, "globals.css"));
     alias["@semio-tech/coda-desktop/renderer"] = toVitePath(resolve(repoRootPath, "coda/client/ui/desktop/js/renderer.tsx"));
@@ -220,8 +212,6 @@ const config: StorybookConfig = {
     const optimizeExclude = new Set<string>([
       ...(config.optimizeDeps.exclude || []),
       "@semio-tech/ui-react",
-      "@semio-tech/framework-playground-core",
-      "@semio-tech/framework-playground-renderer-react",
       "@semio-tech/infinite-cavas-react-renderer",
       ...findWorkspacePackages(repoRootPath),
     ]);

@@ -1057,6 +1057,10 @@ impl Puzzle3dEngine {
         }
     }
 
+    fn has_mesh(&self, url: &str) -> bool {
+        self.meshes.contains_key(url)
+    }
+
     fn preview_collides(meshes: &HashMap<String, CollisionBody>, preview: &BrushPreviewState, placed: &[PlacedCollisionEntry], overlap_budget: f64, sample_count: usize) -> Option<bool> {
         let preview_body = meshes.get(&preview.mesh_url)?;
         let preview_world = pose_isometry(preview.origin, preview.orientation, &preview.scale);
@@ -1433,6 +1437,10 @@ impl Puzzle3dPrecomputeSession {
         self.engine.register_mesh(url.to_string(), positions.to_vec(), indices.to_vec());
     }
 
+    pub fn has_mesh(&self, url: &str) -> bool {
+        self.engine.has_mesh(url)
+    }
+
     pub fn precompute_step(&mut self, budget: u32) -> bool {
         self.engine.precompute_step(budget)
     }
@@ -1594,6 +1602,10 @@ impl Puzzle3dPrecomputeSession {
 
     pub fn register_mesh(&mut self, url: &str, positions: &[f32], indices: &[u32]) {
         self.engine.register_mesh(url.to_string(), positions.to_vec(), indices.to_vec());
+    }
+
+    pub fn has_mesh(&self, url: &str) -> bool {
+        self.engine.has_mesh(url)
     }
 
     pub fn precompute_step(&mut self, budget: u32) -> bool {

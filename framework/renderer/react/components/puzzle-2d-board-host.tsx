@@ -414,7 +414,7 @@ export function Puzzle2dBoardHost({ node, onCommand }: { readonly node: UiCompon
   useEffect(() => {
     if (!scene) return;
     const session = sessionRef.current;
-    if (!session || session.defersDescriptorSyncFromJs?.()) return;
+    if (!session || session.defersDescriptorSyncFromJs?.() || cameraInteractionActiveRef.current) return;
     applyToSession(session, (s) => {
       const camera = parseBoardCamera(scene.cameraJson);
       if (!camera) return;
@@ -558,6 +558,7 @@ export function Puzzle2dBoardHost({ node, onCommand }: { readonly node: UiCompon
       event.stopPropagation();
       const session = sessionRef.current;
       if (!session) return;
+      beginCameraInteraction();
       const point = clientToLocal(event.clientX, event.clientY);
       const delta = event.deltaY * (event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? 400 : 1);
       session.wheelScreen(point.x, point.y, delta);
@@ -585,7 +586,7 @@ export function Puzzle2dBoardHost({ node, onCommand }: { readonly node: UiCompon
       window.removeEventListener("pointerup", onPointerUp);
       container.removeEventListener("wheel", onWheel);
     };
-  }, [applyPendingFixtureIfReady, dispatch, drainAndMaybeFlush, flushBoardEvents, scene?.interactive]);
+  }, [applyPendingFixtureIfReady, beginCameraInteraction, dispatch, drainAndMaybeFlush, flushBoardEvents, scene?.interactive]);
   //#endregion Pointer
 
   //#region Keyboard

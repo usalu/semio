@@ -98,6 +98,7 @@ export const WithError: Story = {
 export const WithEngagement: Story = {
   args: {
     id: "engagement-window",
+    active: true,
     children: <WindowContent title="Window with Engagement" />,
     engagement: {
       options: [{ id: "opt-grid", label: "Grid", onPress: () => {} }],
@@ -135,6 +136,7 @@ export const WithToolbar: Story = {
 export const WithControlsMeasuresEngagementAndToolbar: Story = {
   args: {
     id: "full-chrome-window",
+    active: true,
     children: <WindowContent title="Every Rail at Once" />,
     fill: true,
     showControls: true,

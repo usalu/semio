@@ -59,12 +59,17 @@ import {
   useCommandHotkey,
   readStoredUiChromeCompact,
   readStoredUiChromeExpertise,
+  readStoredUiChromeLocale,
   readStoredUiChromeTheme,
   writeStoredUiChromeCompact,
   writeStoredUiChromeExpertise,
+  writeStoredUiChromeLocale,
   writeStoredUiChromeTheme,
   windowTemplatePaletteTreeDragController,
   Expertise,
+  resolveTranslationLabel,
+  setUiLocale,
+  uiI18n,
   type ElementsSurfaceTheme,
   type EngagementControl,
   type EngagementSpec,
@@ -75,6 +80,8 @@ import {
   type SidePanelTabConfig,
   type TreeDataItem,
   type TreePanelConfig,
+  type UiLocale,
+  type UiTranslationKey,
   type WindowLayoutNode,
   type ModeCanvasDropTarget,
   type WindowTemplateDropPayload,
@@ -618,6 +625,11 @@ function shellTabIcon(iconId: string): React.FC<{ size?: number }> {
   };
 }
 
+/** @emoji 🌐 Resolves a chrome translation key outside hook context (tree builders run there). */
+function shellLabel(key: UiTranslationKey): string {
+  return resolveTranslationLabel(uiI18n.t(key)) ?? key;
+}
+
 function renderWindowMeasure(measure: WindowMeasure, onCommand: (command: CommandDescriptor) => void): ReactNode {
   if (measure.kind === "group") {
     return (
@@ -759,6 +771,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const [uiTheme, setUiTheme] = useState<ElementsSurfaceTheme>(() => readStoredUiChromeTheme());
   const [uiCompact, setUiCompact] = useState(() => readStoredUiChromeCompact());
   const [uiExpertise, setUiExpertise] = useState(() => readStoredUiChromeExpertise());
+  const [uiLocale, setUiLocaleState] = useState<UiLocale>(() => readStoredUiChromeLocale() ?? (uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en"));
   const [syncBackboneUri, setSyncBackboneUri] = useState<string | null>(null);
   const [syncCardKind, setSyncCardKind] = useState<SyncCardKind | null>(null);
   const [syncDraftPath, setSyncDraftPath] = useState("");

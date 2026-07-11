@@ -158,7 +158,6 @@ export const withLevel: Decorator = (Story, context) => {
 
 //#region 🔖withTheme
 import {
-	Expertise,
 	useElementsSurfaceChrome,
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,

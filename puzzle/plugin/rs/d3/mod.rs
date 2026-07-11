@@ -24,6 +24,7 @@ const PUZZLE3D_PLAY_BODY_INSPECTOR: &str = "puzzle.3d.play.inspector";
 const PUZZLE3D_PLAY_WINDOW_MAIN: &str = "puzzle3d-main";
 const PUZZLE3D_FIXTURE_SCHEMA: &str = "puzzle.3d.fixture";
 const PUZZLE3D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
+const PUZZLE3D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
 const PUZZLE3D_FALLBACK_MESH_KIND: &str = "box";
 const PUZZLE3D_ENGAGEMENT_TOOL_BRUSH: &str = "puzzle3d.tool.brush";
 const PUZZLE3D_ENGAGEMENT_TOOL_SELECT: &str = "puzzle3d.tool.select";
@@ -31,6 +32,7 @@ const PUZZLE3D_ENGAGEMENT_TOOL_FILL: &str = "puzzle3d.tool.fill";
 const PUZZLE3D_FILL_COUNT_MAX: u32 = 1000;
 
 const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../../3d/example/concrete-forest.3d.json");
+const NAKAGIN_EXAMPLE_JSON: &str = include_str!("../../../3d/example/nakagin-capsule-tower.3d.json");
 //#endregion 🔖Constants
 
 //#region 🔖Document
@@ -232,6 +234,12 @@ fn empty_fixture() -> Puzzle3dFixture {
 
 fn default_envelope() -> Puzzle3dEnvelope {
     serde_json::from_str::<Puzzle3dFixture>(CONCRETE_FOREST_EXAMPLE_JSON)
+        .map(|fixture| Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() })
+        .unwrap_or_else(|_| Puzzle3dEnvelope { fixture: empty_fixture(), runtime: Puzzle3dRuntime::default() })
+}
+
+fn nakagin_envelope() -> Puzzle3dEnvelope {
+    serde_json::from_str::<Puzzle3dFixture>(NAKAGIN_EXAMPLE_JSON)
         .map(|fixture| Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() })
         .unwrap_or_else(|_| Puzzle3dEnvelope { fixture: empty_fixture(), runtime: Puzzle3dRuntime::default() })
 }
@@ -557,7 +565,6 @@ fn scene_config_json(envelope: &Puzzle3dEnvelope) -> String {
         "kindCompatibility": envelope.fixture.meta.kind_compatibility.clone().unwrap_or(json!([])),
         "overlapBudget": envelope.runtime.overlap_budget,
         "seed": 1,
-        "hostRules": {},
         "weights": {
             "objectWeights": envelope.runtime.object_kind_weights,
             "vortexWeights": envelope.runtime.vortex_kind_weights,
@@ -566,12 +573,17 @@ fn scene_config_json(envelope: &Puzzle3dEnvelope) -> String {
     .to_string()
 }
 
+/// 🧊 Only seeds the box fallback for URLs with no mesh yet, so a real GLB registered earlier via `registerBrushMesh` survives every subsequent resync.
 fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dEnvelope) {
     let _ = session.set_scene(&scene_config_json(envelope));
     let fallback = mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
-    session.register_mesh(PUZZLE3D_FALLBACK_MESH_KIND, &fallback.positions, &fallback.indices);
+    if !session.has_mesh(PUZZLE3D_FALLBACK_MESH_KIND) {
+        session.register_mesh(PUZZLE3D_FALLBACK_MESH_KIND, &fallback.positions, &fallback.indices);
+    }
     for url in collect_mesh_urls(&envelope.fixture) {
-        session.register_mesh(&url, &fallback.positions, &fallback.indices);
+        if !session.has_mesh(&url) {
+            session.register_mesh(&url, &fallback.positions, &fallback.indices);
+        }
     }
 }
 
@@ -930,6 +942,8 @@ impl PluginApp for Puzzle3dPlayApp {
                     Puzzle3dEnvelope { fixture: empty_fixture(), runtime: Puzzle3dRuntime::default() }
                 } else if example_id == PUZZLE3D_EXAMPLE_CONCRETE_FOREST || example_id == "concrete" {
                     default_envelope()
+                } else if example_id == PUZZLE3D_EXAMPLE_NAKAGIN || example_id == "nakagin" {
+                    nakagin_envelope()
                 } else {
                     envelope
                 };
@@ -1332,6 +1346,7 @@ pub fn create_puzzle3d_app() -> App {
     )
     .example("empty", "Empty", &serde_json::to_string(&Puzzle3dEnvelope { fixture: empty_fixture(), runtime: Puzzle3dRuntime::default() }).unwrap())
     .example(PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON)
+    .example(PUZZLE3D_EXAMPLE_NAKAGIN, "Nakagin Capsule Tower", NAKAGIN_EXAMPLE_JSON)
     .program("puzzle3d", "Puzzle 3D", "model")
 }
 
@@ -1370,6 +1385,33 @@ mod tests {
         let envelope = default_envelope();
         assert_eq!(envelope.fixture.schema, PUZZLE3D_FIXTURE_SCHEMA);
         assert!(!envelope.fixture.objects.is_empty());
+    }
+
+    #[test]
+    fn nakagin_example_parses() {
+        let envelope = nakagin_envelope();
+        assert_eq!(envelope.fixture.schema, PUZZLE3D_FIXTURE_SCHEMA);
+        assert!(!envelope.fixture.objects.is_empty());
+        assert!(envelope.fixture.meta.kind_catalogs.is_some());
+    }
+
+    #[test]
+    fn scene_config_json_omits_host_rules_key() {
+        let envelope = default_envelope();
+        let config: Value = serde_json::from_str(&scene_config_json(&envelope)).unwrap();
+        assert!(config.get("hostRules").is_none(), "an explicit empty hostRules object disables the default Nakagin brush rules");
+    }
+
+    #[test]
+    fn sync_precompute_session_preserves_registered_mesh() {
+        let envelope = default_envelope();
+        let mut session = Puzzle3dPrecomputeSession::new();
+        let real_mesh = mesh_from_kind("box");
+        let url = collect_mesh_urls(&envelope.fixture).into_iter().next().expect("fixture has at least one mesh url");
+        session.register_mesh(&url, &real_mesh.positions, &real_mesh.indices);
+        sync_precompute_session(&mut session, &envelope);
+        sync_precompute_session(&mut session, &envelope);
+        assert!(session.has_mesh(&url));
     }
 
     #[test]

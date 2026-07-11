@@ -1,0 +1,13 @@
+{
+  "title": "OS and Playground Language Support",
+  "emoji": "🌐",
+  "status": "open",
+  "description": "Add compile-time-checked internationalization (English + German) to the OS shell (framework/renderer/react/os-shell.tsx) and playground (framework/product/os/dev). Extend the existing typed i18n system in ui/js/react/index.tsx (UiTranslationSchema, UiLocale, satisfies-guarded bundles) with missing shell keys, add a ui.chrome.locale localStorage setting, and add a Language dropdown to the OS Settings panel with English/Deutsch options.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1925"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪28918644756b479894ececb80aab5faf"
+  ]
+}

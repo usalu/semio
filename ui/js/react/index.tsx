@@ -2060,6 +2060,22 @@ export function writeStoredUiChromeTheme(theme: ElementsSurfaceTheme): void {
   localStorage.setItem(UI_CHROME_THEME_STORAGE_KEY, theme);
 }
 
+/** @emoji 🌐 localStorage key for the active UI locale. */
+export const UI_CHROME_LOCALE_STORAGE_KEY = "ui.chrome.locale";
+
+/** @emoji 🌐 Reads the persisted UI locale from localStorage, if any. */
+export function readStoredUiChromeLocale(): UiLocale | null {
+  if (typeof localStorage === "undefined") return null;
+  const raw = localStorage.getItem(UI_CHROME_LOCALE_STORAGE_KEY);
+  return raw === "en" || raw === "de" ? raw : null;
+}
+
+/** @emoji 🌐 Persists the active UI locale to localStorage. */
+export function writeStoredUiChromeLocale(locale: UiLocale): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(UI_CHROME_LOCALE_STORAGE_KEY, locale);
+}
+
 /** @emoji 🧵 localStorage key for WASM compute worker thread count. */
 export const UI_COMPUTE_WORKER_COUNT_STORAGE_KEY = "ui.compute.workerCount";
 
@@ -2319,6 +2335,9 @@ export type UiTranslationSchema = {
       readonly placeholder: UiLabelValue;
       readonly empty: UiLabelValue;
     };
+    readonly fullscreen: {
+      readonly toggle: UiLabelValue;
+    };
     readonly panelToggle: {
       readonly display: UiLabelValue;
       readonly overview: UiLabelValue;
@@ -2334,8 +2353,12 @@ export type UiTranslationSchema = {
       };
       readonly saveLayout: UiLabelValue;
       readonly saveLayoutPlaceholder: UiLabelValue;
+      readonly saveCurrentLayout: UiLabelValue;
       readonly deleteLayout: UiLabelValue;
       readonly emptyShell: UiLabelValue;
+      readonly layouts: UiLabelValue;
+      readonly saved: UiLabelValue;
+      readonly unavailable: UiLabelValue;
     };
     readonly settings: {
       readonly tab: {
@@ -2344,12 +2367,24 @@ export type UiTranslationSchema = {
         readonly expertise: UiLabelValue;
         readonly app: UiLabelValue;
         readonly theme: UiLabelValue;
+        readonly language: UiLabelValue;
       };
       readonly theme: {
         readonly light: UiLabelValue;
         readonly dark: UiLabelValue;
         readonly system: UiLabelValue;
       };
+      readonly language: {
+        readonly en: UiLabelValue;
+        readonly de: UiLabelValue;
+      };
+      readonly app: {
+        readonly name: UiLabelValue;
+        readonly id: UiLabelValue;
+        readonly controller: UiLabelValue;
+        readonly plugin: UiLabelValue;
+      };
+      readonly unavailable: UiLabelValue;
     };
     readonly toolbar: {
       readonly group: {
@@ -2359,6 +2394,8 @@ export type UiTranslationSchema = {
     };
     readonly common: {
       readonly mixedValues: UiLabelValue;
+      readonly name: UiLabelValue;
+      readonly save: UiLabelValue;
     };
     readonly docs: {
       readonly navigation: {
@@ -2416,6 +2453,13 @@ export type AssertUiToolbarParentKeysCovered<Categories extends string> = {
   ? true
   : false;
 
+/** @emoji 🪁 Compile-time check that every {@link UiLocale} has a settings-dropdown label key. */
+export type AssertUiSettingsLanguageKeysCovered<Locales extends string> = {
+  readonly [L in Locales]: `ui.settings.language.${L}` extends UiTranslationKey ? true : false;
+}[Locales] extends true
+  ? true
+  : false;
+
 /** @emoji 🪁 Typed translate function for domain-neutral chrome keys. */
 export type UiTranslateFn = <K extends UiTranslationKey>(key: K, options?: Record<string, unknown>) => unknown;
 
@@ -2469,6 +2513,8 @@ const uiToolbarParentEn: UiToolbarParentEntries = {
 };
 
 const _assertUiToolbarParentKeys: AssertUiToolbarParentKeysCovered<UiToolbarParentCategory> = true;
+
+const _assertUiSettingsLanguageKeys: AssertUiSettingsLanguageKeysCovered<UiLocale> = true;
 
 export const uiChromeTranslationBundles = {
   de: {
@@ -2617,6 +2663,7 @@ export const uiChromeTranslationBundles = {
           },
           saveLayout: { label: { normal: "Layout speichern", beginner: "Layout speichern" } },
           saveLayoutPlaceholder: { label: { normal: "Layoutname", beginner: "Layoutname" } },
+          saveCurrentLayout: { label: { normal: "Aktuelles Layout speichern", beginner: "Aktuelles Layout speichern" } },
           deleteLayout: { label: { normal: "Loeschen", beginner: "Loeschen" } },
           emptyShell: {
             label: {
@@ -2624,6 +2671,9 @@ export const uiChromeTranslationBundles = {
               beginner: "Fenster aus Anzeige in der Navigationsleiste hierher ziehen oder ein gespeichertes Layout wiederherstellen.",
             },
           },
+          layouts: { label: { normal: "Layouts", beginner: "Layouts" } },
+          saved: { label: { normal: "Gespeichert", beginner: "Gespeichert" } },
+          unavailable: { label: { normal: "Anzeige nicht verfuegbar", beginner: "Anzeige nicht verfuegbar" } },
         },
         settings: {
           tab: {
@@ -2632,12 +2682,24 @@ export const uiChromeTranslationBundles = {
             expertise: { label: { normal: "Expertise", beginner: "Expertise" } },
             app: { label: { normal: "App", beginner: "App" } },
             theme: { label: { normal: "Design", beginner: "Design" } },
+            language: { label: { normal: "Sprache", beginner: "Sprache" } },
           },
           theme: {
             light: { label: { normal: "Hell", beginner: "Hell" } },
             dark: { label: { normal: "Dunkel", beginner: "Dunkel" } },
             system: { label: { normal: "System", beginner: "System" } },
           },
+          language: {
+            en: { label: { normal: "English", beginner: "English" } },
+            de: { label: { normal: "Deutsch", beginner: "Deutsch" } },
+          },
+          app: {
+            name: { label: { normal: "Name", beginner: "Name" } },
+            id: { label: { normal: "App-ID", beginner: "App-ID" } },
+            controller: { label: { normal: "Controller", beginner: "Controller" } },
+            plugin: { label: { normal: "Plugin", beginner: "Plugin" } },
+          },
+          unavailable: { label: { normal: "Einstellungen nicht verfuegbar", beginner: "Einstellungen nicht verfuegbar" } },
         },
         toolbar: {
           group: {
@@ -2657,6 +2719,8 @@ export const uiChromeTranslationBundles = {
               beginner: "Gemischt",
             },
           },
+          name: { label: { normal: "Name", beginner: "Name" } },
+          save: { label: { normal: "Speichern", beginner: "Speichern" } },
         },
         docs: {
           navigation: {
@@ -2965,6 +3029,7 @@ export const uiChromeTranslationBundles = {
           },
           saveLayout: { label: { normal: "Save layout", beginner: "Save layout" } },
           saveLayoutPlaceholder: { label: { normal: "Layout name", beginner: "Layout name" } },
+          saveCurrentLayout: { label: { normal: "Save current layout", beginner: "Save current layout" } },
           deleteLayout: { label: { normal: "Delete", beginner: "Delete" } },
           emptyShell: {
             label: {
@@ -2972,6 +3037,9 @@ export const uiChromeTranslationBundles = {
               beginner: "Drag windows from Display in the navbar, or restore a saved layout.",
             },
           },
+          layouts: { label: { normal: "Layouts", beginner: "Layouts" } },
+          saved: { label: { normal: "Saved", beginner: "Saved" } },
+          unavailable: { label: { normal: "Display unavailable", beginner: "Display unavailable" } },
         },
         settings: {
           tab: {
@@ -2980,12 +3048,24 @@ export const uiChromeTranslationBundles = {
             expertise: { label: { normal: "Expertise", beginner: "Expertise" } },
             app: { label: { normal: "App", beginner: "App" } },
             theme: { label: { normal: "Theme", beginner: "Theme" } },
+            language: { label: { normal: "Language", beginner: "Language" } },
           },
           theme: {
             light: { label: { normal: "Light", beginner: "Light" } },
             dark: { label: { normal: "Dark", beginner: "Dark" } },
             system: { label: { normal: "System", beginner: "System" } },
           },
+          language: {
+            en: { label: { normal: "English", beginner: "English" } },
+            de: { label: { normal: "Deutsch", beginner: "Deutsch" } },
+          },
+          app: {
+            name: { label: { normal: "Name", beginner: "Name" } },
+            id: { label: { normal: "App id", beginner: "App id" } },
+            controller: { label: { normal: "Controller", beginner: "Controller" } },
+            plugin: { label: { normal: "Plugin", beginner: "Plugin" } },
+          },
+          unavailable: { label: { normal: "Settings unavailable", beginner: "Settings unavailable" } },
         },
         toolbar: {
           group: {
@@ -3005,6 +3085,8 @@ export const uiChromeTranslationBundles = {
               beginner: "Mixed",
             },
           },
+          name: { label: { normal: "Name", beginner: "Name" } },
+          save: { label: { normal: "Save", beginner: "Save" } },
         },
         docs: {
           navigation: {
@@ -3201,6 +3283,8 @@ function normalizeUiLocale(language?: string): UiTranslationLocaleCode {
 }
 
 function resolveRequestedUiLocale(): UiTranslationLocaleCode {
+  const storedLocale = readStoredUiChromeLocale();
+  if (storedLocale) return storedLocale;
   return normalizeUiLocale(i18next.resolvedLanguage || i18next.language || (typeof navigator !== "undefined" ? navigator.language : undefined));
 }
 
@@ -3247,6 +3331,11 @@ function initializeUiI18n(): UiI18nPort {
     returnObjects: true,
     interpolation: {
       escapeValue: false,
+    },
+    detection: {
+      order: ["localStorage", "querystring", "navigator", "htmlTag"],
+      lookupLocalStorage: UI_CHROME_LOCALE_STORAGE_KEY,
+      caches: [],
     },
     react: {
       useSuspense: false,
@@ -4128,14 +4217,17 @@ export const windowMeasuresStackFoldedClass = "w-fit max-w-full";
 /** @emoji 📐 Outer overlay for floating window engagement along the top-left edge. */
 export const windowEngagementOverlayClass = "pointer-events-none absolute top-0 left-0 z-panel flex max-h-full flex-col items-start p-single";
 
-/** @emoji 📐 Frosted single-line strip for the window command rail: one line by default, grows only with Engagement's own rows (options/status/possibles). */
-export const windowEngagementStripClass = cn(glassWindowOptionsClass, `pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-hidden border ${borderElementClass}/40 p-tiny shadow-sm`);
+/** @emoji 📐 Collapsed command chrome hugging the top-left corner. */
+export const windowEngagementOverlayFoldedClass = windowMeasuresOverlayFoldedClass;
+
+/** @emoji 📐 Command input body beside the engagement chrome toggle: matches the chrome's height for a bare input, grows only when Engagement renders extra rows. */
+export const windowEngagementBodyClass = "flex min-h-medium min-w-0 flex-auto flex-col justify-center gap-half overflow-hidden px-single";
 
 /** @emoji 📐 Outer overlay for the floating window toolbar along the bottom-left edge. */
 export const windowToolbarOverlayClass = "pointer-events-none absolute bottom-0 left-0 z-panel flex max-h-full flex-col items-start p-single";
 
-/** @emoji 📐 Frosted single-line strip for window-level tools: one row, horizontal scroll instead of wrapping or growing taller. */
-export const windowToolbarStripClass = cn(glassWindowOptionsClass, `pointer-events-auto flex h-auto max-h-full w-fit max-w-full min-w-0 shrink-0 flex-row flex-nowrap items-center gap-single overflow-x-auto border ${borderElementClass}/40 p-tiny shadow-sm`);
+/** @emoji 📐 Horizontal tool row beside the toolbar chrome toggle: fixed to the chrome's height, never taller. */
+export const windowToolbarBodyClass = "flex h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto px-single";
 
 /** @emoji 📐 CSS variable for invisible top clearance below floating window chrome. */
 export const windowChromeScrollClearanceVar = "--window-chrome-scroll-clearance";
@@ -4272,6 +4364,9 @@ export const windowRailChromeLabelActionClass = cn("flex h-medium w-auto items-c
 
 /** @emoji 📐 Compact title bar on top of the window options stack. */
 export const windowMeasuresChromeClass = `pointer-events-auto flex h-medium shrink-0 items-stretch justify-between gap-0 border-b ${borderElementClass}/40 px-0 py-0`;
+
+/** @emoji 📐 Row-oriented fold/unfold toggle: hugs its own width, right border divides it from sibling content beside it instead of the header's bottom border. */
+export const windowRailChromeAsideClass = cn(windowMeasuresChromeClass, "w-auto shrink-0 border-b-0 border-r");
 
 /** @emoji 📐 Square icon action in the window options chrome bar. */
 export const windowMeasuresChromeActionClass = cn("size-small min-h-small min-w-small max-h-small max-w-small shrink-0 rounded-none border-0 bg-transparent p-0 text-element transition-colors hover:bg-hover-interactive-fill hover:text-emphasized");
@@ -12939,6 +13034,61 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
 
 // #endregion 🪟WindowMeasuresChrome
 
+// #region 🪟WindowEngagementChrome
+
+interface WindowEngagementChromeProps {
+  windowId: string;
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+/** @emoji ⌨️ Title bar for the window command rail: single fold/unfold toggle, same height and surface as {@link WindowMeasuresChrome}. */
+const WindowEngagementChrome: React.FC<WindowEngagementChromeProps> = ({ windowId, expanded, onToggle }) => {
+  if (!expanded) {
+    return (
+      <div data-slot="window-engagement-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
+        <ActionGroupItem id={`${windowId}-window-engagement-toggle`} icon="chevron-right" text="Command" className={windowRailChromeLabelActionClass} onClick={onToggle} />
+      </div>
+    );
+  }
+
+  return (
+    <div data-slot="window-engagement-chrome" data-expanded="true" className={windowRailChromeAsideClass}>
+      <ActionGroupItem id={`${windowId}-window-engagement-toggle`} icon="chevron-left" text="Command" className={windowRailChromeLabelActionClass} onClick={onToggle} />
+    </div>
+  );
+};
+
+// #endregion 🪟WindowEngagementChrome
+
+// #region 🪟WindowToolbarChrome
+
+interface WindowToolbarChromeProps {
+  windowId: string;
+  folded: boolean;
+  onFold: () => void;
+  onUnfold: () => void;
+}
+
+/** @emoji 🧰 Title bar for the window toolbar strip: single fold/unfold toggle, same height and surface as {@link WindowMeasuresChrome}. */
+const WindowToolbarChrome: React.FC<WindowToolbarChromeProps> = ({ windowId, folded, onFold, onUnfold }) => {
+  if (folded) {
+    return (
+      <div data-slot="window-toolbar-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
+        <ActionGroupItem id={`${windowId}-window-toolbar-unfold`} icon="chevron-right" text="Tools" className={windowRailChromeLabelActionClass} onClick={onUnfold} />
+      </div>
+    );
+  }
+
+  return (
+    <div data-slot="window-toolbar-chrome" data-expanded="true" className={windowRailChromeAsideClass}>
+      <ActionGroupItem id={`${windowId}-window-toolbar-fold`} icon="chevron-left" text="Tools" className={windowRailChromeLabelActionClass} onClick={onFold} />
+    </div>
+  );
+};
+
+// #endregion 🪟WindowToolbarChrome
+
 // #region ↔️WindowMeasuresResize
 
 /** @emoji ↔️ Mouse resize handle for the unfolded window options rail width (left edge). */
@@ -14945,6 +15095,8 @@ const Window: React.FC<WindowProps> = ({
   const measuresOverlayRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [measuresFolded, setMeasuresFolded] = reactHostPort.useState(true);
   const [measuresExpanded, setMeasuresExpanded] = reactHostPort.useState(false);
+  const [toolbarFolded, setToolbarFolded] = reactHostPort.useState(true);
+  const [engagementFolded, setEngagementFolded] = reactHostPort.useState(true);
   const [measuresWidthPx, setMeasuresWidthPx] = reactHostPort.useState(windowMeasuresDefaultWidthPx);
   const [measuresResizeLeftActive, setMeasuresResizeLeftActive] = reactHostPort.useState(false);
   const measuresReservePx = useWindowMeasuresReservePx(!!engagement, measures, windowBodyRef, measuresOverlayRef);
@@ -14959,19 +15111,48 @@ const Window: React.FC<WindowProps> = ({
   const measuresOverlaySizeStyle = measuresUnfolded ? ({ width: measuresWidthPx, maxWidth: "calc(100% - 0.5rem)", maxHeight: "100%" } satisfies React.CSSProperties) : undefined;
   const engagementZoneSizeStyle = windowEngagementZoneMaxWidthStyle(measuresReservePx, !!measures);
   const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const engagementDraftRef = reactHostPort.useRef("");
   const engagementVisible = active && !measuresExpanded && !!engagement;
+  const engagementExpanded = engagementVisible && !engagementFolded;
+
+  reactHostPort.useEffect(() => {
+    if (!measuresExpanded) return;
+    setEngagementFolded(true);
+  }, [measuresExpanded]);
+
+  reactHostPort.useEffect(() => {
+    const draft = engagement?.input?.value ?? "";
+    const hadDraft = engagementDraftRef.current.trim().length > 0;
+    const hasDraft = draft.trim().length > 0;
+    engagementDraftRef.current = draft;
+    if (!hasDraft || hadDraft) return;
+    setEngagementFolded(false);
+    queueMicrotask(() => focusActiveEngagementInput());
+  }, [engagement?.input?.value]);
+
+  reactHostPort.useEffect(() => {
+    if (!active || !engagement?.sessionActive) return;
+    setEngagementFolded(false);
+  }, [active, engagement?.sessionActive]);
 
   reactHostPort.useEffect(() => {
     if (!active || !engagement?.input?.onAbort) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (routeWindowEngagementEscape(engagement, event, { chromeVisible: engagementVisible, commandActive: engagementVisible })) {
+      if (routeWindowEngagementEscape(engagement, event, { chromeVisible: engagementExpanded, commandActive: engagementExpanded })) {
         event.preventDefault();
         event.stopPropagation();
       }
     };
     document.addEventListener("keydown", onKeyDown, true);
     return () => document.removeEventListener("keydown", onKeyDown, true);
-  }, [active, engagement, engagementVisible]);
+  }, [active, engagement, engagementExpanded]);
+
+  reactHostPort.useEffect(() => {
+    if (!active) {
+      engagementDraftRef.current = "";
+      setEngagementFolded(true);
+    }
+  }, [active]);
 
   reactHostPort.useLayoutEffect(() => {
     const body = windowBodyRef.current;
@@ -14994,7 +15175,7 @@ const Window: React.FC<WindowProps> = ({
       if (overlay) ro.observe(overlay);
     }
     return () => ro.disconnect();
-  }, [active, engagement, measures, engagementVisible, measuresFolded, measuresExpanded]);
+  }, [active, engagement, measures, engagementExpanded, measuresFolded, measuresExpanded]);
 
   if (!isVisible) return null;
 
@@ -15080,18 +15261,50 @@ const Window: React.FC<WindowProps> = ({
           ) : null}
           {engagement && engagementVisible ? (
             <GlassTierProvider tier="windowOptions">
-              <div data-slot="window-engagement-overlay" style={engagementZoneSizeStyle} className={windowEngagementOverlayClass}>
-                <div ref={engagementZoneRef} data-dim data-slot="window-engagement-zone" className={windowEngagementStripClass}>
-                  <Engagement {...engagement} active={active} />
+              <div
+                data-slot="window-engagement-overlay"
+                data-expanded={engagementExpanded ? "true" : undefined}
+                style={engagementExpanded ? engagementZoneSizeStyle : undefined}
+                className={cn(windowEngagementOverlayClass, !engagementExpanded && windowEngagementOverlayFoldedClass)}
+              >
+                <div
+                  ref={engagementZoneRef}
+                  data-dim
+                  data-slot="window-engagement-zone"
+                  data-folded={engagementExpanded ? undefined : "true"}
+                  className={cn(windowMeasuresStackClass, "flex-row items-start", !engagementExpanded && windowMeasuresStackFoldedClass)}
+                >
+                  <WindowEngagementChrome
+                    windowId={id}
+                    expanded={engagementExpanded}
+                    onToggle={() => {
+                      if (engagementExpanded) {
+                        setEngagementFolded(true);
+                        return;
+                      }
+                      setEngagementFolded(false);
+                      if (engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
+                    }}
+                  />
+                  {engagementExpanded ? (
+                    <div data-slot="window-engagement-body" className={windowEngagementBodyClass}>
+                      <Engagement {...engagement} active={engagementExpanded} />
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </GlassTierProvider>
           ) : null}
           {toolbar && !measuresExpanded ? (
             <GlassTierProvider tier="windowOptions">
-              <div data-slot="window-toolbar-overlay" className={windowToolbarOverlayClass}>
-                <div data-dim data-slot="window-toolbar" className={windowToolbarStripClass}>
-                  {toolbar}
+              <div data-slot="window-toolbar-overlay" data-folded={toolbarFolded ? "true" : undefined} className={windowToolbarOverlayClass}>
+                <div data-dim data-slot="window-toolbar" data-folded={toolbarFolded ? "true" : undefined} className={cn(windowMeasuresStackClass, "flex-row items-start w-fit")}>
+                  <WindowToolbarChrome windowId={id} folded={toolbarFolded} onFold={() => setToolbarFolded(true)} onUnfold={() => setToolbarFolded(false)} />
+                  {!toolbarFolded ? (
+                    <div data-slot="window-toolbar-body" className={windowToolbarBodyClass}>
+                      {toolbar}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </GlassTierProvider>
@@ -22214,9 +22427,7 @@ if (import.meta.vitest) {
         );
       };
       const { container } = render(<Harness />);
-      const field = screen.getByPlaceholderText("Command") as HTMLInputElement;
-      expect(field.value).toBe("");
-      field.blur();
+      expect(screen.queryByPlaceholderText("Command")).toBeNull();
       fireEvent.keyDown(container.querySelector('[data-slot="mode"]')!, { key: "b", bubbles: true });
       await waitFor(() => {
         const typedField = screen.getByPlaceholderText("Command") as HTMLInputElement;
@@ -22407,7 +22618,7 @@ if (import.meta.vitest) {
       expect(aborted).toEqual(["abort"]);
     });
 
-    it("Window shows engagement as a visible single-line strip as soon as it is active", () => {
+    it("Window shows engagement as a folded strip by default, same surface as window options", () => {
       const { container } = render(
         <Window id="engagement-window" active engagement={{ input: { placeholder: "Command" }, status: [{ id: "s", content: "Idle" }] }}>
           <div>Body</div>
@@ -22415,11 +22626,21 @@ if (import.meta.vitest) {
       );
       const zone = container.querySelector('[data-slot="window-engagement-zone"]') as HTMLElement;
       expect(zone).toBeTruthy();
+      expect(zone.className).toContain("ui-glass-window-options");
+      expect(zone.className).toContain("flex-row");
+      expect(screen.queryByPlaceholderText("Command")).toBeNull();
+      expect(screen.queryByText("Idle")).toBeNull();
+      fireEvent.click(container.querySelector('[id="engagement-window-window-engagement-toggle"]')!);
       expect(screen.getByPlaceholderText("Command")).toBeTruthy();
       expect(screen.getByText("Idle")).toBeTruthy();
+      const chrome = container.querySelector('[data-slot="window-engagement-chrome"]');
+      const body = container.querySelector('[data-slot="window-engagement-body"]');
+      expect(chrome?.nextElementSibling).toBe(body);
+      expect(chrome?.className).toContain("border-r");
+      expect(chrome?.className).toContain("border-b-0");
     });
 
-    it("Window reveals engagement immediately when active and focuses the input", async () => {
+    it("Window reveals engagement on button click and activates on click", async () => {
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("");
         return (
@@ -22428,7 +22649,11 @@ if (import.meta.vitest) {
           </Window>
         );
       };
-      render(<Harness />);
+      const { container } = render(<Harness />);
+      const toggleBtn = container.querySelector('[id="engagement-window-window-engagement-toggle"]') as HTMLElement;
+      expect(toggleBtn).toBeTruthy();
+      expect(screen.queryByPlaceholderText("Command")).toBeNull();
+      fireEvent.click(toggleBtn);
       const activeField = await waitFor(() => {
         const next = screen.getByPlaceholderText("Command") as HTMLInputElement;
         expect(document.activeElement).toBe(next);
@@ -22503,13 +22728,18 @@ if (import.meta.vitest) {
       );
       const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
       const zone = container.querySelector('[data-slot="window-engagement-zone"]');
+      const toggleBtn = container.querySelector('[id="engagement-window-window-engagement-toggle"]') as HTMLElement;
       expect(overlay).toBeTruthy();
       expect(overlay?.className).toContain("pointer-events-none");
       expect(overlay?.className).toContain("top-0");
       expect(overlay?.className).toContain("left-0");
       expect(overlay?.className).toContain("p-single");
       expect(zone?.className).toContain("pointer-events-auto");
-      expect(zone?.className).toContain("flex-col");
+      expect(zone?.className).toContain("flex-row");
+      expect(overlay?.getAttribute("data-expanded")).toBeNull();
+      expect(screen.queryByText("Idle")).toBeNull();
+      fireEvent.click(toggleBtn);
+      expect(overlay?.getAttribute("data-expanded")).toBe("true");
       expect(screen.getByText("Idle")).toBeTruthy();
     });
 
@@ -22521,6 +22751,8 @@ if (import.meta.vitest) {
       );
       const overlay = container.querySelector('[data-slot="window-engagement-overlay"]') as HTMLElement;
       const zone = container.querySelector('[data-slot="window-engagement-zone"]') as HTMLElement;
+      const toggleBtn = container.querySelector('[id="engagement-window-window-engagement-toggle"]') as HTMLElement;
+      fireEvent.click(toggleBtn);
       expect(zone.className).toContain("w-full");
       expect(overlay.style.width).toBe("min(28rem, 100%)");
       const row = container.querySelector('[data-slot="engagement-command-row"]');
@@ -22577,6 +22809,7 @@ if (import.meta.vitest) {
         </Window>,
       );
       const overlay = container.querySelector('[data-slot="window-engagement-overlay"]') as HTMLElement;
+      fireEvent.click(container.querySelector('[id="layout-window-window-engagement-toggle"]')!);
       expect(overlay.style.width).toContain("calc(100%");
       expect(overlay.style.width).toContain("min(28rem");
       expect(windowEngagementZoneMaxWidthStyle(200, true).width).toContain("204px");
@@ -22606,6 +22839,7 @@ if (import.meta.vitest) {
           <div>Body</div>
         </Window>,
       );
+      fireEvent.click(container.querySelector('[id="measures-engagement-window-window-engagement-toggle"]')!);
       fireEvent.click(container.querySelector("#measures-engagement-window-window-measures-unfold")!);
       expect(screen.getByPlaceholderText("Command")).toBeTruthy();
       fireEvent.click(container.querySelector(`#measures-engagement-window-window-measures-span`)!);
@@ -22756,7 +22990,7 @@ if (import.meta.vitest) {
       expect(stack.style.height).toBe("");
     });
 
-    it("Window toolbar renders as a single always-visible line and hides when toolbar is absent", () => {
+    it("Window toolbar folds and unfolds like window options, on the same surface", () => {
       const { container, rerender } = render(
         <Window id="toolbar-window" toolbar={<button type="button">Tool</button>}>
           <div>Body</div>
@@ -22764,9 +22998,18 @@ if (import.meta.vitest) {
       );
       const strip = container.querySelector('[data-slot="window-toolbar"]') as HTMLElement;
       expect(strip).toBeTruthy();
+      expect(strip.className).toContain("ui-glass-window-options");
       expect(strip.className).toContain("flex-row");
-      expect(strip.className).toContain("overflow-x-auto");
+      expect(strip.className).toContain("w-fit");
+      expect(screen.queryByText("Tool")).toBeNull();
+      fireEvent.click(container.querySelector('[id="toolbar-window-window-toolbar-unfold"]')!);
       expect(screen.getByText("Tool")).toBeTruthy();
+      const chrome = container.querySelector('[data-slot="window-toolbar-chrome"]');
+      const body = container.querySelector('[data-slot="window-toolbar-body"]');
+      expect(chrome?.nextElementSibling).toBe(body);
+      expect(chrome?.className).toContain("border-r");
+      fireEvent.click(container.querySelector('[id="toolbar-window-window-toolbar-fold"]')!);
+      expect(screen.queryByText("Tool")).toBeNull();
       rerender(
         <Window id="toolbar-window">
           <div>Body</div>

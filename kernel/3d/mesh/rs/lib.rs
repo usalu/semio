@@ -1064,6 +1064,105 @@ impl HalfedgeMesh {
         Ok(merge_count)
     }
 
+    /// Unifies every group of vertices at (nearly) the same position — as commonly produced by importers
+    /// that tessellate adjacent source faces independently, leaving duplicate, non-shared vertex ids along
+    /// shared boundaries — into a single vertex id per position, so the halfedge topology (twins, boundary
+    /// detection) reflects the true geometric connectivity. Returns the number of vertices removed.
+    pub fn weld_coincident_vertices(&mut self, precision: f32) -> MeshResult<usize> {
+        let (positions, face_list) = self.polygon_soup();
+        let scale = 1.0 / precision.max(1e-9);
+        let mut groups: HashMap<(i64, i64, i64), u32> = HashMap::new();
+        let mut compacted_positions: Vec<[f32; 3]> = Vec::new();
+        let mut remap: Vec<u32> = Vec::with_capacity(positions.len());
+        for p in &positions {
+            let key = ((p[0] as f64 * scale as f64).round() as i64, (p[1] as f64 * scale as f64).round() as i64, (p[2] as f64 * scale as f64).round() as i64);
+            let canonical = *groups.entry(key).or_insert_with(|| {
+                compacted_positions.push(*p);
+                (compacted_positions.len() - 1) as u32
+            });
+            remap.push(canonical);
+        }
+        let removed = positions.len() - compacted_positions.len();
+        if removed == 0 {
+            return Ok(0);
+        }
+        let new_faces: Vec<Vec<u32>> = face_list
+            .into_iter()
+            .map(|f| f.into_iter().map(|vi| remap[vi as usize]).collect::<Vec<u32>>())
+            .filter(|f| {
+                let mut unique = f.clone();
+                unique.sort();
+                unique.dedup();
+                unique.len() >= 3
+            })
+            .collect();
+        self.rebuild_from_polygon_soup(&compacted_positions, &new_faces)?;
+        Ok(removed)
+    }
+
+    /// Finds every closed boundary loop (a chain of edges with no opposite face on the other side) in the
+    /// current halfedge topology and caps each with a new n-gon face, so the mesh becomes watertight. Call
+    /// `weld_coincident_vertices` first if the mesh may contain importer-duplicated boundary vertices, or
+    /// this will also "cap" seams that are actually already shared with a differently-indexed neighbor.
+    /// Returns the number of holes filled.
+    pub fn fill_holes(&mut self) -> MeshResult<usize> {
+        let (positions, face_list) = self.polygon_soup();
+        // Count directed edge occurrences; a boundary (halfedge with no twin) is a directed edge (a,b)
+        // whose reverse (b,a) never occurs in the face list.
+        let mut directed_count: HashMap<(u32, u32), u32> = HashMap::new();
+        for face in &face_list {
+            let n = face.len();
+            for i in 0..n {
+                let a = face[i];
+                let b = face[(i + 1) % n];
+                *directed_count.entry((a, b)).or_insert(0) += 1;
+            }
+        }
+        let mut next_along_boundary: HashMap<u32, u32> = HashMap::new();
+        for (&(a, b), _) in directed_count.iter().filter(|(&(a, b), _)| !directed_count.contains_key(&(b, a))) {
+            next_along_boundary.insert(a, b);
+        }
+        let mut visited: HashSet<u32> = HashSet::new();
+        let mut new_faces: Vec<Vec<u32>> = Vec::new();
+        for &start in next_along_boundary.keys() {
+            if visited.contains(&start) {
+                continue;
+            }
+            let mut loop_verts = vec![start];
+            visited.insert(start);
+            let mut current = start;
+            let mut closed = false;
+            loop {
+                let Some(&next) = next_along_boundary.get(&current) else { break };
+                if next == start {
+                    closed = true;
+                    break;
+                }
+                if visited.contains(&next) {
+                    break;
+                }
+                visited.insert(next);
+                loop_verts.push(next);
+                current = next;
+            }
+            if closed && loop_verts.len() >= 3 {
+                // Boundary loops are traced in the "hole" direction (following existing faces' winding around
+                // the missing area); the cap face must have the opposite winding to be consistently oriented.
+                let mut cap = loop_verts;
+                cap.reverse();
+                new_faces.push(cap);
+            }
+        }
+        if new_faces.is_empty() {
+            return Ok(0);
+        }
+        let filled = new_faces.len();
+        let mut all_faces = face_list;
+        all_faces.extend(new_faces);
+        self.rebuild_from_polygon_soup(&positions, &all_faces)?;
+        Ok(filled)
+    }
+
     pub fn mirror(&mut self, axis: MirrorAxis, weld_threshold: f32) -> MeshResult<()> {
         let (positions, face_list) = self.polygon_soup();
         let mut all_positions = positions.clone();
@@ -2163,6 +2262,269 @@ mod tests {
         assert_eq!(transfer.face_ids.len(), corners.len() - 2);
         assert!(transfer.face_ids.iter().all(|&id| id == 0));
         assert_eq!(transfer.indices.len(), (corners.len() - 2) * 3);
+    }
+
+    #[test]
+    fn weld_coincident_vertices_unifies_independently_tessellated_seam() {
+        // Two quads sharing an edge but built with DUPLICATE (non-shared) vertices at that seam, as an
+        // importer would produce when tessellating adjacent source faces independently.
+        let positions = vec![
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0], // seam vertex, quad A's copy
+            [1.0, 1.0, 0.0], // seam vertex, quad A's copy
+            [0.0, 1.0, 0.0],
+            [1.0, 0.0, 0.0], // seam vertex, quad B's copy (duplicate position, different id)
+            [1.0, 1.0, 0.0], // seam vertex, quad B's copy (duplicate position, different id)
+            [2.0, 0.0, 0.0],
+            [2.0, 1.0, 0.0],
+        ];
+        let faces = vec![vec![0, 1, 2, 3], vec![4, 6, 7, 5]];
+        let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).unwrap();
+        assert_eq!(mesh.vertex_count(), 8);
+        let removed = mesh.weld_coincident_vertices(1e-4).unwrap();
+        assert_eq!(removed, 2);
+        assert_eq!(mesh.vertex_count(), 6);
+        let merges = mesh.merge_coplanar_faces().unwrap();
+        assert_eq!(merges, 1, "welding should have made the seam mergeable");
+        assert_eq!(mesh.face_count(), 1);
+    }
+
+    #[test]
+    fn fill_holes_caps_a_missing_box_face() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        // Remove one face by rebuilding without it.
+        let (positions, mut face_list) = mesh.polygon_soup();
+        face_list.remove(0);
+        assert_eq!(face_list.len(), 5);
+        mesh = HalfedgeMesh::from_faces(&positions, &face_list).unwrap();
+        let filled = mesh.fill_holes().unwrap();
+        assert_eq!(filled, 1);
+        assert_eq!(mesh.face_count(), 6);
+        // Verify the resulting mesh is watertight: every directed boundary edge (position-keyed) now has
+        // an opposite-winding counterpart.
+        let mut directed: HashMap<(u32, u32), u32> = HashMap::new();
+        for fi in 0..mesh.face_count() {
+            let verts = mesh.face_vertex_ids(FaceId(fi as u32)).unwrap();
+            let n = verts.len();
+            for i in 0..n {
+                *directed.entry((verts[i].0, verts[(i + 1) % n].0)).or_insert(0) += 1;
+            }
+        }
+        for (&(a, b), _) in &directed {
+            assert!(directed.contains_key(&(b, a)), "edge {a}->{b} has no opposite counterpart after fill_holes");
+        }
+    }
+
+    #[test]
+    fn diagnose_concrete_forest_mesh_coverage() {
+        if std::env::var("DIAGNOSE_LOWPOLY_FOREST_MESH").ok().as_deref() != Some("1") {
+            return;
+        }
+        let json = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../lowpoly/example/concrete-forest-left.mesh.json"),
+        )
+        .expect("read example mesh");
+        let mesh = HalfedgeMesh::from_json(&json).expect("parse mesh");
+        let mut bad_faces = 0;
+        for fi in 0..mesh.face_count() {
+            let face = FaceId(fi as u32);
+            let verts = mesh.face_vertex_ids(face).unwrap();
+            let positions: Vec<Vec3> = verts.iter().map(|v| mesh.vertex_position(*v).unwrap()).collect();
+            let normal = newell_normal(&positions);
+            let poly_area = normal.length() as f64 * 0.5;
+            let triangles = triangulate_polygon(&positions);
+            let mut tri_area = 0.0f64;
+            for tri in &triangles {
+                let a = positions[tri[0]];
+                let b = positions[tri[1]];
+                let c = positions[tri[2]];
+                let cross = b.sub(a).cross(c.sub(a));
+                tri_area += cross.length() as f64 * 0.5;
+            }
+            let expected_tris = verts.len() - 2;
+            if triangles.len() != expected_tris || (tri_area - poly_area).abs() > (poly_area * 0.01).max(1e-6) {
+                bad_faces += 1;
+                eprintln!(
+                    "[DEBUG] face {fi} verts={} triangles={} (expected {expected_tris}) poly_area={poly_area:.6} tri_area={tri_area:.6}",
+                    verts.len(),
+                    triangles.len()
+                );
+            }
+        }
+        eprintln!("[DEBUG] bad_faces = {bad_faces} / {}", mesh.face_count());
+        assert_eq!(bad_faces, 0);
+    }
+
+    /// Position-keyed (not index-keyed) watertightness check: every triangle edge's opposite-winding
+    /// counterpart must exist SOMEWHERE in the mesh (by rounded 3D position, since the BREP-tessellated
+    /// source mesh never welds vertex indices across originally-distinct faces). An edge with no
+    /// counterpart is a genuine geometric hole; an edge whose counterpart has the SAME winding (not
+    /// opposite) indicates a flipped/inconsistent face.
+    fn position_edge_key(p: [f32; 3]) -> (i64, i64, i64) {
+        let scale = 1_000_000.0;
+        ((p[0] as f64 * scale).round() as i64, (p[1] as f64 * scale).round() as i64, (p[2] as f64 * scale).round() as i64)
+    }
+
+    fn report_watertightness(label: &str, mesh: &HalfedgeMesh) -> (usize, usize, usize) {
+        // directed_edges: key = (posA, posB) unordered pair encoded as (min,max) with a sign for direction
+        let mut directed_count: HashMap<((i64, i64, i64), (i64, i64, i64)), i32> = HashMap::new();
+        for fi in 0..mesh.face_count() {
+            let verts = mesh.face_vertex_ids(FaceId(fi as u32)).unwrap();
+            let n = verts.len();
+            for i in 0..n {
+                let a = mesh.vertex_position(verts[i]).unwrap();
+                let b = mesh.vertex_position(verts[(i + 1) % n]).unwrap();
+                let ka = position_edge_key(a.0);
+                let kb = position_edge_key(b.0);
+                *directed_count.entry((ka, kb)).or_insert(0) += 1;
+            }
+        }
+        let mut open_edges = 0usize; // no reverse counterpart anywhere (true hole)
+        let mut same_winding_dupes = 0usize; // same direction appears >1 time (overlapping faces) or reverse missing but forward duplicated
+        let mut ok_edges = 0usize;
+        for (&(a, b), &count) in &directed_count {
+            if a > b {
+                continue; // count each undirected pair once
+            }
+            let forward = count;
+            let backward = *directed_count.get(&(b, a)).unwrap_or(&0);
+            if backward == 0 {
+                open_edges += 1;
+            } else if forward != 1 || backward != 1 {
+                same_winding_dupes += 1;
+            } else {
+                ok_edges += 1;
+            }
+        }
+        eprintln!("[DEBUG] {label}: ok_edges={ok_edges} open_edges(no opposite counterpart anywhere)={open_edges} irregular={same_winding_dupes}");
+        (ok_edges, open_edges, same_winding_dupes)
+    }
+
+    #[test]
+    fn diagnose_concrete_forest_mesh_watertightness() {
+        if std::env::var("DIAGNOSE_LOWPOLY_FOREST_MESH").ok().as_deref() != Some("1") {
+            return;
+        }
+        let json = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../lowpoly/example/concrete-forest-left.mesh.json"),
+        )
+        .expect("read example mesh");
+        let merged = HalfedgeMesh::from_json(&json).expect("parse mesh");
+        let (_, merged_open, _) = report_watertightness("merged (post coplanar-merge)", &merged);
+
+        // Rebuild the pre-merge (all-triangle) mesh straight from the same positions/faces for comparison:
+        // re-triangulate every merged face back into (n-2) fan triangles as an approximation of "before".
+        let mut triangulated = merged.clone();
+        triangulated.triangulate().expect("triangulate for comparison");
+        let (_, triangulated_open, _) = report_watertightness("re-triangulated (comparable to pre-merge)", &triangulated);
+
+        assert_eq!(merged_open, triangulated_open, "coplanar merge must not change the set of genuinely open (hole) edges");
+    }
+
+    #[test]
+    fn diagnose_concrete_forest_boundary_structure() {
+        if std::env::var("DIAGNOSE_LOWPOLY_FOREST_MESH").ok().as_deref() != Some("1") {
+            return;
+        }
+        let json = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../lowpoly/example/concrete-forest-left.mesh.json"),
+        )
+        .expect("read example mesh");
+        let mut mesh = HalfedgeMesh::from_json(&json).expect("parse mesh");
+        let before_weld = mesh.vertex_count();
+        let removed = mesh.weld_coincident_vertices(1e-4).unwrap();
+        eprintln!("[DEBUG] vertices before weld={before_weld} removed={removed} after={}", mesh.vertex_count());
+        let (_, face_list) = mesh.polygon_soup();
+        let mut directed_count: HashMap<(u32, u32), u32> = HashMap::new();
+        for face in &face_list {
+            let n = face.len();
+            for i in 0..n {
+                *directed_count.entry((face[i], face[(i + 1) % n])).or_insert(0) += 1;
+            }
+        }
+        let boundary: Vec<(u32, u32)> = directed_count.keys().copied().filter(|&(a, b)| !directed_count.contains_key(&(b, a))).collect();
+        eprintln!("[DEBUG] boundary directed edges after weld = {}", boundary.len());
+        let mut out_degree: HashMap<u32, usize> = HashMap::new();
+        let mut in_degree: HashMap<u32, usize> = HashMap::new();
+        for &(a, b) in &boundary {
+            *out_degree.entry(a).or_insert(0) += 1;
+            *in_degree.entry(b).or_insert(0) += 1;
+        }
+        let branching_out: Vec<_> = out_degree.iter().filter(|&(_, &d)| d > 1).collect();
+        let branching_in: Vec<_> = in_degree.iter().filter(|&(_, &d)| d > 1).collect();
+        eprintln!("[DEBUG] vertices with >1 outgoing boundary edge: {} e.g. {:?}", branching_out.len(), branching_out.iter().take(5).collect::<Vec<_>>());
+        eprintln!("[DEBUG] vertices with >1 incoming boundary edge: {} e.g. {:?}", branching_in.len(), branching_in.iter().take(5).collect::<Vec<_>>());
+        let filled = mesh.fill_holes().unwrap();
+        eprintln!("[DEBUG] holes filled = {filled}, face_count after = {}", mesh.face_count());
+        let (_, face_list2) = mesh.polygon_soup();
+        let mut directed_count2: HashMap<(u32, u32), u32> = HashMap::new();
+        for face in &face_list2 {
+            let n = face.len();
+            for i in 0..n {
+                *directed_count2.entry((face[i], face[(i + 1) % n])).or_insert(0) += 1;
+            }
+        }
+        let boundary2: Vec<(u32, u32)> = directed_count2.keys().copied().filter(|&(a, b)| !directed_count2.contains_key(&(b, a))).collect();
+        eprintln!("[DEBUG] boundary directed edges after fill_holes = {}", boundary2.len());
+    }
+
+    #[test]
+    fn diagnose_concrete_forest_open_edge_near_miss_distances() {
+        if std::env::var("DIAGNOSE_LOWPOLY_FOREST_MESH").ok().as_deref() != Some("1") {
+            return;
+        }
+        let json = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../lowpoly/example/concrete-forest-left.mesh.json"),
+        )
+        .expect("read example mesh");
+        let mesh = HalfedgeMesh::from_json(&json).expect("parse mesh");
+        // Collect every directed boundary edge (position pairs) that has no exact reverse counterpart.
+        let mut directed: HashMap<((i64, i64, i64), (i64, i64, i64)), i32> = HashMap::new();
+        let mut edge_positions: HashMap<(i64, i64, i64), Vec3> = HashMap::new();
+        for fi in 0..mesh.face_count() {
+            let verts = mesh.face_vertex_ids(FaceId(fi as u32)).unwrap();
+            let n = verts.len();
+            for i in 0..n {
+                let a = mesh.vertex_position(verts[i]).unwrap();
+                let b = mesh.vertex_position(verts[(i + 1) % n]).unwrap();
+                let ka = position_edge_key(a.0);
+                let kb = position_edge_key(b.0);
+                edge_positions.insert(ka, a);
+                edge_positions.insert(kb, b);
+                *directed.entry((ka, kb)).or_insert(0) += 1;
+            }
+        }
+        let mut open: Vec<((i64, i64, i64), (i64, i64, i64))> = Vec::new();
+        for (&(a, b), _) in &directed {
+            if *directed.get(&(b, a)).unwrap_or(&0) == 0 {
+                open.push((a, b));
+            }
+        }
+        eprintln!("[DEBUG] {} open directed edges", open.len());
+        // For each open edge, find the nearest OTHER open-edge-endpoint (excluding itself) to see if it's a
+        // near-miss (small numeric seam gap) vs a genuine large gap (real missing geometry).
+        let all_open_points: Vec<Vec3> = open.iter().flat_map(|&(a, b)| [edge_positions[&a], edge_positions[&b]]).collect();
+        let mut max_near_miss = 0.0f32;
+        let mut worst_gap = 0.0f32;
+        for &(a, b) in open.iter().take(20) {
+            let pa = edge_positions[&a];
+            let pb = edge_positions[&b];
+            // nearest distinct point to pa among all open-edge endpoints (excluding pa itself)
+            let mut nearest = f32::MAX;
+            for &p in &all_open_points {
+                let d = p.sub(pa).length();
+                if d > 1e-9 && d < nearest {
+                    nearest = d;
+                }
+            }
+            eprintln!("[DEBUG] open edge {a:?}->{b:?} pa={:?} pb={:?} nearest_other_open_point_dist={nearest:.6}", pa.0, pb.0);
+            if nearest < 0.01 {
+                max_near_miss = max_near_miss.max(nearest);
+            } else {
+                worst_gap = worst_gap.max(nearest);
+            }
+        }
+        eprintln!("[DEBUG] max_near_miss(<1cm-ish)={max_near_miss:.6} worst_gap(>=that)={worst_gap:.6}");
     }
 }
 

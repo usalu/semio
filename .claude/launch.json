@@ -8,6 +8,12 @@
       "port": 6006
     },
     {
+      "name": "puzzle-3d-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:puzzle:3d"],
+      "port": 6013
+    },
+    {
       "name": "puzzle-5d-react",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:puzzle:5d"],
