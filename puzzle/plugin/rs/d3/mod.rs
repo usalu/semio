@@ -1806,6 +1806,43 @@ mod tests {
         assert!(envelope.fixture.objects.iter().any(|object| object.object_kind.as_deref() == Some("Test Kind")));
     }
 
+    #[test]
+    fn add_object_kind_seeds_vortices_from_catalog_template() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("addObjectKind", Some(&json!({ "objectKind": "Hexagonal Cut Concrete Forest Left", "origin": [3.0, 4.0, 5.0] })), &document, &ViewState::default());
+        let envelope: Puzzle3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
+        let placed_id = envelope.runtime.selection.object_ids.first().expect("new object selected");
+        let placed = envelope.fixture.objects.iter().find(|object| &object.id == placed_id).expect("placed object");
+        assert!(!placed.vortices.is_empty(), "brush needs a real vortex to attach to");
+        assert_eq!(placed.origin, [3.0, 4.0, 5.0]);
+    }
+
+    #[test]
+    fn build_kinds_tree_lists_all_catalog_sections() {
+        let envelope = default_envelope();
+        let node = build_kinds_tree(&envelope);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Objects"));
+        assert!(json.contains("Vortices"));
+        assert!(json.contains("Cables"));
+        assert!(json.contains("Attractions"));
+        assert!(json.contains("Hexagonal Cut Concrete Forest Left"));
+        assert!(json.contains("\"draggable\":true"));
+    }
+
+    #[test]
+    fn set_kind_hover_highlights_matching_instances() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setKindHover", Some(&json!({ "kindId": "Hexagonal Cut Concrete Forest Left" })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.runtime.hovered_kind_id.as_deref(), Some("Hexagonal Cut Concrete Forest Left"));
+        let instances: Value = serde_json::from_str(&world_instances_json(&envelope.fixture, &envelope.runtime)).unwrap();
+        let first = instances.as_array().unwrap().first().expect("at least one instance");
+        assert_eq!(first.get("hovered").and_then(|v| v.as_bool()), Some(true));
+    }
+
     fn apply_ops(envelope: &Puzzle3dEnvelope, ops: &[String]) -> Puzzle3dEnvelope {
         let mut next = envelope.clone();
         for op_json in ops {

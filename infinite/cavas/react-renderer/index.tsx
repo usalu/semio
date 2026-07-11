@@ -93,8 +93,8 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
   const renderFrame = React.useCallback(() => {
     try {
       sessionRef.current?.renderFrame();
-    } catch {
-      /* gpu not ready */
+    } catch (e) {
+      console.log("[DEBUG] GraphWasmCanvas renderFrame threw:", e);
     }
   }, []);
 
@@ -162,10 +162,14 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
         session.setSize(w, h, dpr);
         renderFrame();
       };
+      console.log("[DEBUG] attachCanvas resolved, canvas size:", canvas.width, canvas.height);
       resize();
       localRo = new ResizeObserver(resize);
       localRo.observe(container);
+      let tickCount = 0;
       const tick = () => {
+        tickCount += 1;
+        if (tickCount % 60 === 0) console.log("[DEBUG] tick loop alive, count:", tickCount, "canvas size:", canvas.width, canvas.height);
         renderFrame();
         localRaf = requestAnimationFrame(tick);
       };

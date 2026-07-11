@@ -154,13 +154,19 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
 
   const syncSession = useCallback(() => {
     if (renameActiveRef.current) return;
+    console.log("[DEBUG] syncSession called, hasSession:", !!sessionRef.current, "bufferPreview:", scene.buffer.slice(0, 30));
     sessionRef.current?.syncFromSceneJson(sceneJson);
     sessionRef.current?.renderFrame();
-  }, [sceneJson]);
+    console.log("[DEBUG] after sync, session.text():", sessionRef.current?.text?.());
+  }, [sceneJson, scene.buffer]);
+
+  const [sessionEpoch, setSessionEpoch] = useState(0);
 
   useEffect(() => {
     syncSession();
-  }, [syncSession]);
+    // sessionEpoch: re-sync immediately after GraphWasmCanvas (re)attaches a session (e.g. the stub -> real wasm swap),
+    // since the attach lifecycle is independent of scene changes and a ref update alone would not otherwise re-trigger this effect.
+  }, [syncSession, sessionEpoch]);
 
   const emitSelection = useCallback(() => {
     const session = sessionRef.current;
@@ -185,11 +191,14 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
   }, [completions, completionsOpen, completionIndex]);
 
   useEffect(() => {
+    console.log("[DEBUG] mount effect (createEditorSession) running");
     let cancelled = false;
     void createEditorSession().then((session) => {
+      console.log("[DEBUG] createEditorSession resolved, cancelled:", cancelled);
       if (!cancelled) setWasmSession(session);
     });
     return () => {
+      console.log("[DEBUG] mount effect cleanup (unmounting or deps changed)");
       cancelled = true;
     };
   }, []);
@@ -236,7 +245,10 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
       setExtraCaretsJson: () => {},
       setCaretVisible: () => {},
     } satisfies FrameworkEditorSession;
-  }, [scene.buffer, wasmSession]);
+    // Deliberately omits scene.buffer: GraphWasmCanvas re-attaches the GPU canvas whenever sessionFactory's
+    // identity changes, so this must stay stable across content edits — only the wasmSession load transition matters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wasmSession]);
 
   const caretScreenPosition = useCallback((session: FrameworkEditorSession): { readonly x: number; readonly y: number } | null => {
     try {
@@ -316,15 +328,20 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
 
   const dismissContextMenu = useCallback(() => setContextMenu(null), []);
 
+  // Stable identity: GraphWasmCanvas re-attaches the GPU canvas whenever this prop's identity changes,
+  // so it must not close over anything that changes per scene update (see sessionEpoch above for re-sync).
+  const onSessionReady = useCallback((session: GraphWasmSession) => {
+    console.log("[DEBUG] onSessionReady called, session:", session);
+    sessionRef.current = session as FrameworkEditorSession;
+    setSessionEpoch((epoch) => epoch + 1);
+  }, []);
+
   return (
     <div className="relative min-h-0 flex-1">
       <GraphWasmCanvas
         className="absolute inset-0"
         sessionFactory={sessionFactory}
-        onSessionReady={(session) => {
-          sessionRef.current = session as FrameworkEditorSession;
-          syncSession();
-        }}
+        onSessionReady={onSessionReady}
         enablePointer={false}
       />
       <div
