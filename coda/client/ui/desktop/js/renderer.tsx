@@ -2693,7 +2693,7 @@ function buildCodaAppRuntime(controller: CodaShellController): AppRuntime {
 function ensureCodaPlatform(): Platform {
   if (codaPlatformSingleton) return codaPlatformSingleton;
   registerCodaShellBodies();
-  const platform = new Platform({ initialPanelVisibility: { leftSidePanel: true, rightSidePanel: true } });
+  const platform = new Platform({ initialPanelVisibility: { leftSidePanel: false, rightSidePanel: false } });
   const controller = new CodaShellController(platform.commandBus, () => platform.notify());
   codaShellControllerSingleton = controller;
   platform.addApp(buildCodaAppRuntime(controller));

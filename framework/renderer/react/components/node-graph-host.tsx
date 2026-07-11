@@ -9,7 +9,7 @@ import {
   SelectionMarquee,
   Slider,
   useCanvasPickInteraction,
-  useCanvasThemeSync,
+  useCanvasAppearanceSync,
   type CanvasPickTarget,
   type Edge,
   type Node,
@@ -1520,7 +1520,7 @@ export function FlowGraphCanvasHost({
     paintOverlays();
   }, [sceneSignature, paintOverlays, scene, sessionReady]);
 
-  useCanvasThemeSync(() => {
+  useCanvasAppearanceSync(() => {
     syncSessionCanvasTheme(sessionRef.current);
   });
 

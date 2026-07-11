@@ -7479,7 +7479,7 @@ pub struct ContextMenuState {
 pub enum OverlayState {
     #[default]
     None,
-    ThemeSelect,
+    AppearanceSelect,
     Search,
     Find,
     Dropdown(String),
@@ -7521,7 +7521,7 @@ pub struct ShellState {
     pub context_menu: Option<ContextMenuState>,
     pub search_open: bool,
     pub find_open: bool,
-    pub theme_id: String,
+    pub appearance_id: String,
     pub right_click: RightClickState,
     pub uri_history: Vec<String>,
     pub uri_index: usize,
@@ -7674,8 +7674,8 @@ impl ShellState {
             panel_ui: HashMap::new(),
             spawned_ui: None,
             active_window_id: None,
-            left_panel_open: true,
-            right_panel_open: true,
+            left_panel_open: false,
+            right_panel_open: false,
             left_panel_width: 280.0,
             right_panel_width: 320.0,
             scroll_offsets: HashMap::new(),
@@ -7686,7 +7686,7 @@ impl ShellState {
             context_menu: None,
             search_open: false,
             find_open: false,
-            theme_id: "system".into(),
+            appearance_id: "system".into(),
             right_click: RightClickState::default(),
             uri_history: vec!["/".into()],
             uri_index: 0,
@@ -8219,8 +8219,8 @@ impl ShellState {
                     data_attributes: None,
                 }),
                 UiNode::Select(UiSelectNode {
-                    id: "framework.settings.theme".into(),
-                    value: self.theme_id.clone(),
+                    id: "framework.settings.appearance".into(),
+                    value: self.appearance_id.clone(),
                     items: vec![
                         UiSelectItem {
                             value: "system".into(),
@@ -8238,7 +8238,7 @@ impl ShellState {
                     placeholder: None,
                     on_change: CommandDescriptor {
                         controller_id: "framework".into(),
-                        command: "setTheme".into(),
+                        command: "setAppearance".into(),
                         args: None,
                     },
                 }),
@@ -8555,14 +8555,14 @@ impl ShellState {
     pub async fn dispatch_command(&mut self, command: CommandDescriptor) -> Result<(), String> {
         if command.controller_id == "framework" {
             match command.command.as_str() {
-                "setTheme" => {
+                "setAppearance" => {
                     if let Some(value) = command
                         .args
                         .as_ref()
                         .and_then(|args| args.get("value"))
                         .and_then(|v| v.as_str())
                     {
-                        self.theme_id = value.to_string();
+                        self.appearance_id = value.to_string();
                     }
                     return Ok(());
                 }
@@ -9768,8 +9768,8 @@ impl ShellState {
                 .await?;
                 return Ok(true);
             }
-            id if id.starts_with("framework.settings.theme.") => {
-                self.theme_id = id.trim_start_matches("framework.settings.theme.").to_string();
+            id if id.starts_with("framework.settings.appearance.") => {
+                self.appearance_id = id.trim_start_matches("framework.settings.appearance.").to_string();
                 return Ok(true);
             }
             id if id.starts_with("shell.panel.tab.left.") => {
@@ -9801,8 +9801,8 @@ impl ShellState {
                 self.context_menu = None;
                 return Ok(true);
             }
-            id if id.starts_with("shell.theme.") => {
-                self.theme_id = id.trim_start_matches("shell.theme.").to_string();
+            id if id.starts_with("shell.appearance.") => {
+                self.appearance_id = id.trim_start_matches("shell.appearance.").to_string();
                 self.overlay_state = OverlayState::None;
                 return Ok(true);
             }
@@ -12325,7 +12325,7 @@ impl ShellState {
                 let _ = (items, id_items);
             }
             OverlayState::Dropdown(_) => {}
-            OverlayState::ThemeSelect => {}
+            OverlayState::AppearanceSelect => {}
             OverlayState::None => {}
         }
         if let Some(kind) = self.sync_card_kind.as_deref() {
@@ -13353,7 +13353,7 @@ impl ShellState {
         }
     }
 
-    fn render_theme_dropdown(
+    fn render_appearance_dropdown(
         &self,
         overlay: &mut DrawList,
         atlas: &mut FontAtlas,
@@ -13374,7 +13374,7 @@ impl ShellState {
                 w - theme.gap_standard * 2.0,
                 row_h,
             );
-            let selected = *value == self.theme_id;
+            let selected = *value == self.appearance_id;
             let hovered = row.contains(input.pointer_x, input.pointer_y);
             let bg = if selected {
                 theme.selected
@@ -13392,7 +13392,7 @@ impl ShellState {
             input.register_hit(HitTarget {
                 rect: row,
                 event: None,
-                control_id: Some(format!("shell.theme.{value}")),
+                control_id: Some(format!("shell.appearance.{value}")),
                 kind: HitKind::DropdownItem,
                 drag_axis: None,
             drag_data: None,
@@ -13707,8 +13707,8 @@ fn prefers_dark_scheme() -> bool {
     true
 }
 
-fn resolve_theme(theme_id: &str) -> Theme {
-    match theme_id {
+fn resolve_theme(appearance_id: &str) -> Theme {
+    match appearance_id {
         "light" => Theme::light(),
         "dark" => Theme::dark(),
         _ if prefers_dark_scheme() => Theme::dark(),
@@ -13716,8 +13716,8 @@ fn resolve_theme(theme_id: &str) -> Theme {
     }
 }
 
-fn theme_is_dark(theme_id: &str) -> bool {
-    match theme_id {
+fn appearance_is_dark(appearance_id: &str) -> bool {
+    match appearance_id {
         "light" => false,
         "dark" => true,
         _ => prefers_dark_scheme(),
@@ -13853,8 +13853,8 @@ impl AppRuntime {
             self.poll_native_plugin_hot_swap();
             self.maybe_reload_native_plugins();
         }
-        self.theme = resolve_theme(&self.shell.theme_id);
-        self.theme_dark = theme_is_dark(&self.shell.theme_id);
+        self.theme = resolve_theme(&self.shell.appearance_id);
+        self.theme_dark = appearance_is_dark(&self.shell.appearance_id);
         if !self.pointer_down && self.input.drag.active {
             self.input.end_drag();
         }
@@ -14636,7 +14636,7 @@ async fn boot_runtime(
         input: InputState::default(),
         theme: Theme::default(),
         window: window.clone(),
-        theme_dark: theme_is_dark("system"),
+        theme_dark: appearance_is_dark("system"),
         last_cursor: None,
         last_pointer_x: 0.0,
         last_pointer_y: 0.0,

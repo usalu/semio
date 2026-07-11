@@ -60,17 +60,17 @@ import {
   readStoredUiChromeCompact,
   readStoredUiChromeExpertise,
   readStoredUiChromeLocale,
-  readStoredUiChromeTheme,
+  readStoredUiChromeAppearance,
   writeStoredUiChromeCompact,
   writeStoredUiChromeExpertise,
   writeStoredUiChromeLocale,
-  writeStoredUiChromeTheme,
+  writeStoredUiChromeAppearance,
   windowTemplatePaletteTreeDragController,
   Expertise,
   resolveTranslationLabel,
   setUiLocale,
   uiI18n,
-  type ElementsSurfaceTheme,
+  type ElementsSurfaceAppearance,
   type EngagementControl,
   type EngagementSpec,
   type FooterItem,
@@ -181,7 +181,7 @@ const S_PLAY_APP_ID = "studio";
 const S_PLAY_CONTROLLER_ID = "s-play";
 const S_PLAY_CATALOGUE_TAB_ID = "s-play-catalogue";
 const NAVBAR_NO_EXAMPLE_ID = "__no_example__";
-const FRAMEWORK_SHELL_CHROME_THEME = "system" as const;
+const FRAMEWORK_SHELL_CHROME_APPEARANCE = "system" as const;
 const DEFAULT_LEFT_PANEL_SIZE = 280;
 const DEFAULT_RIGHT_PANEL_SIZE = 320;
 const APP_DOCUMENT_SEPARATOR = " · ";
@@ -700,7 +700,7 @@ function windowToolbarNode(tools: readonly ToolNode[] | undefined, windowId: str
 export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Promise<void> {
   const root = document.getElementById(options.rootId ?? "root");
   if (!root) throw new Error("missing #root");
-  bootstrapElementsSurfaceChromeDocument(FRAMEWORK_SHELL_CHROME_THEME);
+  bootstrapElementsSurfaceChromeDocument(FRAMEWORK_SHELL_CHROME_APPEARANCE);
   createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? DEFAULT_PLUGIN_REGISTRY} />);
 }
 //#endregion Boot
@@ -745,8 +745,8 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const [spawnedWindowMeasures, setSpawnedWindowMeasures] = useState<Readonly<Record<string, readonly WindowMeasure[]>>>({});
   const [spawnedToolNodes, setSpawnedToolNodes] = useState<readonly ToolNode[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [leftPanelVisible, setLeftPanelVisible] = useState(true);
-  const [rightPanelVisible, setRightPanelVisible] = useState(true);
+  const [leftPanelVisible, setLeftPanelVisible] = useState(false);
+  const [rightPanelVisible, setRightPanelVisible] = useState(false);
   const [activeLeftPanelKind, setActiveLeftPanelKind] = useState<"workbench" | "display">("workbench");
   const [activeRightPanelKind, setActiveRightPanelKind] = useState<"details" | "settings">("details");
   const [leftPanelSize, setLeftPanelSize] = useState(DEFAULT_LEFT_PANEL_SIZE);
@@ -768,7 +768,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const extraWindowCounterRef = useRef(0);
   const openStudioIdRef = useRef<string | null>(null);
   const sessionRef = useRef<ActiveSession | null>(null);
-  const [uiTheme, setUiTheme] = useState<ElementsSurfaceTheme>(() => readStoredUiChromeTheme());
+  const [uiAppearance, setUiAppearance] = useState<ElementsSurfaceAppearance>(() => readStoredUiChromeAppearance());
   const [uiCompact, setUiCompact] = useState(() => readStoredUiChromeCompact());
   const [uiExpertise, setUiExpertise] = useState(() => readStoredUiChromeExpertise());
   const [uiLocale, setUiLocaleState] = useState<UiLocale>(() => readStoredUiChromeLocale() ?? (uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en"));
@@ -1443,9 +1443,9 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   });
 
   useEffect(() => {
-    bootstrapElementsSurfaceChromeDocument(uiTheme);
-    writeStoredUiChromeTheme(uiTheme);
-  }, [uiTheme]);
+    bootstrapElementsSurfaceChromeDocument(uiAppearance);
+    writeStoredUiChromeAppearance(uiAppearance);
+  }, [uiAppearance]);
 
   useEffect(() => {
     writeStoredUiChromeCompact(uiCompact);
@@ -1565,12 +1565,12 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       setCompact: setUiCompact,
       expertise: uiExpertise,
       setExpertise: setUiExpertise,
-      theme: uiTheme,
-      setTheme: setUiTheme,
+      appearance: uiAppearance,
+      setAppearance: setUiAppearance,
       locale: uiLocale,
       setLocale: setUiLocaleState,
     }),
-    [session, uiCompact, uiExpertise, uiTheme, uiLocale],
+    [session, uiCompact, uiExpertise, uiAppearance, uiLocale],
   );
   settingsHostRef.current = settingsHost;
 
@@ -4002,8 +4002,8 @@ export type SettingsHostApi = {
   readonly setCompact: (compact: boolean) => void;
   readonly expertise: string;
   readonly setExpertise: (expertise: string) => void;
-  readonly theme: string;
-  readonly setTheme: (theme: string) => void;
+  readonly appearance: string;
+  readonly setAppearance: (appearance: string) => void;
   readonly locale: UiLocale;
   readonly setLocale: (locale: UiLocale) => void;
 };
@@ -4032,13 +4032,13 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
         defaultOpen: true,
         items: [
           {
-            id: "framework.settings.theme",
-            label: shellLabel("ui.settings.tab.theme"),
+            id: "framework.settings.appearance",
+            label: shellLabel("ui.settings.tab.appearance"),
             control: (
-              <select id="framework.settings.theme" className="h-small w-full rounded border border-border bg-background px-2 text-sm" value={host.theme} onChange={(event) => host.setTheme(event.target.value)}>
-                <option value="system">{shellLabel("ui.settings.theme.system")}</option>
-                <option value="light">{shellLabel("ui.settings.theme.light")}</option>
-                <option value="dark">{shellLabel("ui.settings.theme.dark")}</option>
+              <select id="framework.settings.appearance" className="h-small w-full rounded border border-border bg-background px-2 text-sm" value={host.appearance} onChange={(event) => host.setAppearance(event.target.value)}>
+                <option value="system">{shellLabel("ui.settings.appearance.system")}</option>
+                <option value="light">{shellLabel("ui.settings.appearance.light")}</option>
+                <option value="dark">{shellLabel("ui.settings.appearance.dark")}</option>
               </select>
             ),
           },

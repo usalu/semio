@@ -714,7 +714,7 @@ const composeSketchpadTranslationBundles = {
             "normal": "",
             "beginner": ""
           },
-          "theme": {
+          "appearance": {
             "label": {
               "normal": "Design",
               "beginner": "Wählen Sie das Farbschema für die Anwendung"
@@ -890,7 +890,7 @@ const composeSketchpadTranslationBundles = {
             "normal": "Sketchpad",
             "beginner": "Globale Sketchpad-Einstellungen"
           },
-          "theme": {
+          "appearance": {
             "label": {
               "normal": "Design",
               "beginner": "Farbschema wählen"
@@ -1075,7 +1075,7 @@ const composeSketchpadTranslationBundles = {
               "normal": "Einstellungen",
               "beginner": "Home-Einstellungen"
             },
-            "theme": {
+            "appearance": {
               "label": {
                 "normal": "Design",
                 "beginner": "Waehlen Sie das Farbschema fuer die Anwendung"
@@ -2136,10 +2136,10 @@ const composeSketchpadTranslationBundles = {
                 }
               }
             },
-            "theme": {
+            "appearance": {
               "label": {
-                "normal": "Thema",
-                "beginner": "Farbthema"
+                "normal": "Design",
+                "beginner": "Farbschema"
               }
             },
             "language": {
@@ -3512,7 +3512,7 @@ const composeSketchpadTranslationBundles = {
               "normal": "Einstellungen",
               "beginner": "Entwurfs-Einstellungen"
             },
-            "theme": {
+            "appearance": {
               "label": {
                 "normal": "Design",
                 "beginner": "Wählen Sie das Farbschema für die Anwendung"
@@ -3614,7 +3614,7 @@ const composeSketchpadTranslationBundles = {
               "normal": "Einstellungen",
               "beginner": "Einstellungen"
             },
-            "theme": {
+            "appearance": {
               "label": {
                 "normal": "Design",
                 "beginner": "Farbschema waehlen"
@@ -4855,7 +4855,7 @@ const composeSketchpadTranslationBundles = {
           "normal": "",
           "beginner": ""
         },
-        "theme": {
+        "appearance": {
           "label": {
             "normal": "Design",
             "beginner": "Farbschema für die Oberfläche"
@@ -5771,10 +5771,10 @@ const composeSketchpadTranslationBundles = {
             "normal": "",
             "beginner": ""
           },
-          "theme": {
+          "appearance": {
             "label": {
-              "normal": "Theme",
-              "beginner": "Choose the color theme for the application"
+              "normal": "Appearance",
+              "beginner": "Choose the color appearance for the application"
             },
             "dark": {
               "label": {
@@ -5791,7 +5791,7 @@ const composeSketchpadTranslationBundles = {
             "system": {
               "label": {
                 "normal": "System",
-                "beginner": "Follow system theme preference"
+                "beginner": "Follow system appearance preference"
               }
             }
           },
@@ -5899,10 +5899,10 @@ const composeSketchpadTranslationBundles = {
             "normal": "",
             "beginner": ""
           },
-          "theme": {
+          "appearance": {
             "label": {
-              "normal": "Theme",
-              "beginner": "Choose the color theme"
+              "normal": "Appearance",
+              "beginner": "Choose the color appearance"
             }
           },
           "layout": {
@@ -5990,9 +5990,9 @@ const composeSketchpadTranslationBundles = {
           "normal": "Sketchpad",
           "beginner": "Global sketchpad settings"
         },
-        "theme": {
+        "appearance": {
           "label": {
-            "normal": "Theme",
+            "normal": "Appearance",
             "beginner": "Color scheme for the port"
           },
           "system": {
@@ -6300,10 +6300,10 @@ const composeSketchpadTranslationBundles = {
               "normal": "Settings",
               "beginner": "Home settings"
             },
-            "theme": {
+            "appearance": {
               "label": {
-                "normal": "Theme",
-                "beginner": "Choose the color theme for the application"
+                "normal": "Appearance",
+                "beginner": "Choose the color appearance for the application"
               }
             },
             "language": {
@@ -7381,10 +7381,10 @@ const composeSketchpadTranslationBundles = {
                 }
               }
             },
-            "theme": {
+            "appearance": {
               "label": {
-                "normal": "Theme",
-                "beginner": "Color theme"
+                "normal": "Appearance",
+                "beginner": "Color appearance"
               }
             },
             "language": {
@@ -8762,9 +8762,9 @@ const composeSketchpadTranslationBundles = {
               "normal": "Settings",
               "beginner": "Design settings"
             },
-            "theme": {
+            "appearance": {
               "label": {
-                "normal": "Theme",
+                "normal": "Appearance",
                 "beginner": "Choose the color scheme for the application"
               }
             },
@@ -9827,10 +9827,10 @@ const composeSketchpadTranslationBundles = {
               "normal": "Settings",
               "beginner": "Settings"
             },
-            "theme": {
+            "appearance": {
               "label": {
-                "normal": "Theme",
-                "beginner": "Choose the color theme"
+                "normal": "Appearance",
+                "beginner": "Choose the color appearance"
               }
             },
             "language": {

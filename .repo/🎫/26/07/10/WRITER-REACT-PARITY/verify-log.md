@@ -1,5 +1,20 @@
 # Writer React Parity — Verify Log
 
+## Follow-up: "selecting an example shows nothing" (post-close bug report)
+
+Reopened after close. Two distinct real bugs found and fixed:
+
+1. **`setActiveExample` never handled.** The framework host's example dropdown dispatches `command: "setActiveExample", args: {exampleId}` (`os-shell.tsx:1813`). `writer/plugin/rs/lib.rs`'s `handle_command_patch_ops` had no case for it, so it silently fell through the `_ => {}` catch-all — selecting an example was a complete no-op. Fixed by adding a `setActiveExample` handler (matches the pattern in `note`/`trinity`/`puzzle` plugins) that loads the `jack`/`dag.jack`/`empty` document by id and resets runtime/undo/redo state. Added 3 unit tests (`set_active_example_loads_jack_fixture`, `_dag_jack_fixture`, `_falls_back_to_empty_document`) plus a dedicated `wasm-verify.ts` repro (loads a fresh instance, confirms it starts empty, dispatches `setActiveExample("jack")`, asserts the buffer contains the fixture text — this is the exact host-dispatched command, not a stand-in like `setDocumentJson`).
+
+2. **Root-cause GPU-canvas bug in the shared `GraphWasmCanvas` component** (`infinite/cavas/react-renderer/index.tsx`), not writer-specific — but it's what actually blocked the fix above from being *visible*. Two problems in the same effect:
+   - The canvas was measured and attached **synchronously** on mount using `container.getBoundingClientRect()`, with only a `Math.max(1, …)` floor. On first paint (before flex/grid layout settles — always true on React's very first commit, and guaranteed to recur at least once from React 18 StrictMode's mount→unmount→remount cycle in dev), this reliably attaches the WebGPU surface at 1×1. WebGPU surface/configure errors are asynchronous and out-of-band (`device.onuncapturederror`, never a thrown JS exception at the call site), so a botched first attach fails **silently** and never recovers — nothing paints, ever, for that session, even though the Rust-side text buffer is perfectly correct (confirmed via `session.text()`).
+   - Cleanup never called `session.detachGpu()`, so tearing down and reattaching (e.g. the StrictMode double-mount, or a real remount) reused the same `<canvas>` without releasing the prior GPU device/surface.
+   - Fix: added a `waitForLayout` rAF-poll (mirrors premigration `WriterCanvas`'s `waitForLayoutSize` helper) that defers the first `attachCanvas` call until the container reports a real size (≥8px, capped at ~120 frames as a fallback), and added `sessionRef.current?.detachGpu?.()` to the cleanup path (`detachGpu` added as an optional method on the shared `GraphWasmSession` interface — `framework/editor/rs`'s `EditorSession.detachGpu()` already existed and was simply never wired to cleanup).
+   - Caught and fixed my own regression while writing this fix: the first draft of the refactored `attach()` helper dropped the `canvas.width/height`/style assignment that must happen *before* `attachCanvas` is called (previously done inline before the refactor) — caught via `canvas.width/height` reading the browser's default 300×150 in a live check, fixed by restoring the assignment inside `attach()`.
+   - Verified in isolation (not dependent on the live, actively-churning dev server): a standalone console script (fresh canvas + fresh `EditorSession`, outside React) rendered jack text correctly on the very first two `renderFrame()` calls, proving the Rust rendering pipeline itself was never the problem — confirming the bug was entirely in `GraphWasmCanvas`'s attach lifecycle.
+
+**Browser click-through still not cleanly completed**: while investigating, discovered the dev server was undergoing a full page reload roughly every 7-10 seconds (`os-shell.tsx` and `ui/js/react/index.tsx`, both >500KB shared files, being saved repeatedly by other concurrent sessions — confirmed via `preview_logs` showing a continuous `hmr invalidate → page reload` cycle). This makes it structurally impossible for *any* client-side app in this shared session — mine or anyone else's — to stay mounted long enough to complete a GPU attach+paint cycle, independent of whether the fix is correct. This is an environmental condition outside this ticket's control, not a flaw in the fix. All verification above is deterministic and independent of that churn (native cargo tests, vitest, and `wasm-verify.ts` against the compiled artifact). A follow-up session should re-run the manual checklist below once the shared files stop reload-looping.
+
 ## Root cause / scope
 
 At the `premigration` tag, `writer/react/index.tsx` (1542 lines) + `writer/core/js` implemented a full jack code editor (AST tree, selectable spans, symbol occurrences/rename, placeholders, newline gating, completions, context menu, window measures/engagement, toolbar) on top of a GPU editor session. The post-migration `writer/plugin/rs` only had a crude keyword-scan AST, naive occurrence highlighting, no spans/placeholders/gating/measures/engagement/toolbar, and the generic `text-editor-host.tsx` lacked keyboard navigation, completions UX, rename, and context menu, plus had a latent `rect`-undefined crash on pointer-up.
@@ -73,6 +88,7 @@ Hard-refresh after any plugin rebuild — Vite does not reliably hot-swap `.wasm
 - `framework/renderer/react/os-shell.tsx`
 - `framework/renderer/react/components/text-editor-host.tsx`
 - `framework/renderer/react/index.test.ts`
+- `infinite/cavas/react-renderer/index.tsx` (root-cause `GraphWasmCanvas` fix, follow-up)
 - `.claude/launch.json`
 - `.repo/🎫/26/07/10/WRITER-REACT-PARITY/wasm-verify.ts` (new, ticket-scoped)
 - `.repo/🎫/26/07/10/WRITER-REACT-PARITY/verify-log.md` (this file)

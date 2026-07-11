@@ -7,7 +7,7 @@ import {
   screenRectFromPoints,
   selectionMergeIds,
   useCanvasPickInteraction,
-  useCanvasThemeSync,
+  useCanvasAppearanceSync,
   type SelectionMarqueeCoverage,
   type SelectionMarqueeMethod,
   type SelectionMergeMode,
@@ -240,7 +240,7 @@ function RasterCanvasSurface({ node, scene, onCommand }: { readonly node: UiComp
     syncAll();
   }, [syncAll]);
 
-  useCanvasThemeSync(() => {
+  useCanvasAppearanceSync(() => {
     if (!sessionRef.current) return;
     syncSessionCanvasTheme(sessionRef.current);
     sessionRef.current.renderFrame();

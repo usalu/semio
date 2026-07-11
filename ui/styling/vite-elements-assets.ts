@@ -532,13 +532,13 @@ export function puzzle3dMeshesVitePlugin(repoRoot: string): Plugin[] {
 export const PLAYGROUND_PLAY_BOOT_INLINE_STYLE =
   "html{color-scheme:light dark}html,body,#root{height:100%;margin:0}body{background-color:#f7f3e3;color:#001117}html.dark body{background-color:#001117;color:#f7f3e3}html:not([data-semio-styled]) body{visibility:hidden}";
 
-/** @emoji 🌓 Synchronous system theme bootstrap for play `index.html` heads. */
-export const PLAYGROUND_PLAY_BOOT_THEME_SCRIPT = `(function(){var d=document.documentElement,m=window.matchMedia("(prefers-color-scheme: dark)");var dark=m.matches;d.classList.toggle("dark",dark);d.dataset.uiTheme=dark?"dark":"light";d.style.colorScheme=dark?"dark":"light";if(document.body){document.body.style.colorScheme=dark?"dark":"light";document.body.style.backgroundColor=dark?"#001117":"#f7f3e3";document.body.style.color=dark?"#f7f3e3":"#001117";}})();`;
+/** @emoji 🌓 Synchronous system appearance bootstrap for play `index.html` heads. */
+export const PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT = `(function(){var d=document.documentElement,m=window.matchMedia("(prefers-color-scheme: dark)");var dark=m.matches;d.classList.toggle("dark",dark);d.dataset.uiAppearance=dark?"dark":"light";d.style.colorScheme=dark?"dark":"light";if(document.body){document.body.style.colorScheme=dark?"dark":"light";document.body.style.backgroundColor=dark?"#001117":"#f7f3e3";document.body.style.color=dark?"#f7f3e3":"#001117";}})();`;
 
 /** @emoji 👁️ Reveals the play shell after the linked globals stylesheet finishes loading. */
 export const PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT = `(function(){function reveal(){document.documentElement.dataset.semioStyled="ready"}var link=document.getElementById("semio-play-styles");if(link){if(link.sheet)reveal();else link.addEventListener("load",reveal,{once:true})}else{reveal()}setTimeout(reveal,8000)})();`;
 
-/** @emoji 🎬 Vite: inject early theme + stylesheet link into play `index.html` to avoid unstyled flashes. */
+/** @emoji 🎬 Vite: inject early appearance + stylesheet link into play `index.html` to avoid unstyled flashes. */
 export function playgroundPlayBootHtmlPlugin(): Plugin {
   return {
     name: "playground-play-boot-html",
@@ -548,7 +548,7 @@ export function playgroundPlayBootHtmlPlugin(): Plugin {
         return {
           tags: [
             { tag: "style", children: PLAYGROUND_PLAY_BOOT_INLINE_STYLE, injectTo: "head-prepend" },
-            { tag: "script", children: PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, injectTo: "head-prepend" },
+            { tag: "script", children: PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, injectTo: "head-prepend" },
             { tag: "link", attrs: { rel: "stylesheet", href: "./globals.css", id: "semio-play-styles" }, injectTo: "head" },
             { tag: "script", children: PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, injectTo: "head" },
           ],
@@ -1512,8 +1512,8 @@ if (import.meta.vitest) {
       expect(playgroundPlayBootHtmlPlugin().name).toBe("playground-play-boot-html");
     });
 
-    it("exposes inline theme and reveal scripts", () => {
-      expect(PLAYGROUND_PLAY_BOOT_THEME_SCRIPT).toContain("prefers-color-scheme");
+    it("exposes inline appearance and reveal scripts", () => {
+      expect(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT).toContain("prefers-color-scheme");
       expect(PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT).toContain("semio-play-styles");
       expect(PLAYGROUND_PLAY_BOOT_INLINE_STYLE).toContain("data-semio-styled");
     });

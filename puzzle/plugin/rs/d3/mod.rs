@@ -4,7 +4,7 @@ use puzzle_3d::{BrushPlacePayload, Puzzle3dPrecomputeSession};
 use semio_framework_plugin::{
     build_world_3d_scene, create_default_layout, layout::{MeasureSelectItem, WindowEngagementToggleGroupOption}, merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, App, CommandDescriptor, PanelGroup, PluginApp,
-    SurfaceKind, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    SurfaceKind, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
@@ -67,6 +67,10 @@ struct Puzzle3dVortex {
     direction: Option<[f64; 3]>,
     #[serde(default)]
     radius: Option<f64>,
+    #[serde(default)]
+    hidden: bool,
+    #[serde(default)]
+    locked: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
@@ -112,6 +116,10 @@ struct Puzzle3dObject {
     mesh_url: Option<String>,
     #[serde(default)]
     vortices: Vec<Puzzle3dVortex>,
+    #[serde(default)]
+    hidden: bool,
+    #[serde(default)]
+    locked: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
@@ -133,6 +141,10 @@ struct Puzzle3dTargetVolume {
     orientation: Option<[f64; 4]>,
     #[serde(default)]
     scale: Option<Value>,
+    #[serde(default)]
+    hidden: bool,
+    #[serde(default)]
+    locked: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
@@ -414,6 +426,7 @@ fn object_scale_json(object: &Puzzle3dObject) -> [f64; 3] {
     }
 }
 
+/// 🙈 Hidden objects stay in the emitted array — `worldPick`'s `id` arg is the array index into it — but render at zero scale so they're effectively invisible without shifting any other object's index.
 fn world_instances_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) -> String {
     let selection = &runtime.selection;
     let instances: Vec<Value> = fixture
@@ -424,6 +437,7 @@ fn world_instances_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) ->
             let hovered = runtime.hovered_object_id.as_deref() == Some(object.id.as_str());
             let kind_highlighted = runtime.hovered_kind_id.is_some() && runtime.hovered_kind_id.as_deref() == object.object_kind.as_deref();
             let mesh_id = resolve_object_mesh_url(object, &fixture.meta).map(|url| world3d_mesh_id_from_url(&url)).unwrap_or_else(|| PUZZLE3D_FALLBACK_MESH_KIND.into());
+            let scale = if object.hidden { json!([0.0, 0.0, 0.0]) } else { json!(object_scale_json(object)) };
             json!({
                 "id": object.id,
                 "meshId": mesh_id,
@@ -433,7 +447,7 @@ fn world_instances_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) ->
                     object.origin.get(2).copied().unwrap_or(0.0),
                 ],
                 "rotation": object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
-                "scale": object_scale_json(object),
+                "scale": scale,
                 "label": object.label.clone().or_else(|| object.object_kind.clone()).unwrap_or_else(|| object.id.clone()),
                 "color": if selected { "#f59e0b" } else if hovered || kind_highlighted { "#fbbf24" } else { "#94a3b8" },
                 "selected": selected,
@@ -752,11 +766,46 @@ fn puzzle3d_vortices_from_kind_template(catalog_entry: &Value) -> Vec<Puzzle3dVo
                     let position = template.get("position").and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok()).unwrap_or([0.0, 0.0, 0.0]);
                     let direction = template.get("direction").and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok());
                     let radius = template.get("radius").and_then(|value| value.as_f64());
-                    Puzzle3dVortex { id: format!("v{index}"), vortex_kind: template.get("vortexKind").and_then(|value| value.as_str()).map(str::to_string), position, direction, radius }
+                    Puzzle3dVortex { id: format!("v{index}"), vortex_kind: template.get("vortexKind").and_then(|value| value.as_str()).map(str::to_string), position, direction, radius, hidden: false, locked: false }
                 })
                 .collect()
         })
         .unwrap_or_default()
+}
+
+/// 🙈 Applies `hidden`/`locked` to the given ids of one entity kind — `"vortex"` ids are full ids (`objectId:vortexId`).
+fn apply_puzzle3d_selection_flag(fixture: &mut Puzzle3dFixture, entity: &str, ids: &[String], flag: &str, value: bool) {
+    if ids.is_empty() {
+        return;
+    }
+    let ids: HashSet<&str> = ids.iter().map(String::as_str).collect();
+    match entity {
+        "object" => {
+            for object in fixture.objects.iter_mut().filter(|object| ids.contains(object.id.as_str())) {
+                if flag == "locked" { object.locked = value } else { object.hidden = value }
+            }
+        }
+        "vortex" => {
+            for object in fixture.objects.iter_mut() {
+                for vortex in object.vortices.iter_mut() {
+                    if ids.contains(puzzle3d_vortex_full_id(&object.id, &vortex.id).as_str()) {
+                        if flag == "locked" { vortex.locked = value } else { vortex.hidden = value }
+                    }
+                }
+            }
+        }
+        "reference" => {
+            for reference in fixture.references.iter_mut().filter(|reference| ids.contains(reference.id.as_str())) {
+                if flag == "locked" { reference.locked = value } else { reference.hidden = value }
+            }
+        }
+        "targetVolume" => {
+            for volume in fixture.target_volumes.iter_mut().filter(|volume| ids.contains(volume.id.as_str())) {
+                if flag == "locked" { volume.locked = value } else { volume.hidden = value }
+            }
+        }
+        _ => {}
+    }
 }
 //#endregion 🔖Document
 
@@ -781,18 +830,109 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, icon_
     }
 }
 
+fn puzzle3d_hide_lock_actions(hidden: bool, locked: bool, flag_args: impl Fn(&str) -> Value) -> Vec<UiTreeItemAction> {
+    vec![
+        UiTreeItemAction { icon_id: if hidden { "eye-off".into() } else { "eye".into() }, label: Some(if hidden { "Show".into() } else { "Hide".into() }), command: puzzle3d_cmd("setSelectionFlag", Some(flag_args("hidden"))), reveal_on_hover: Some(true) },
+        UiTreeItemAction { icon_id: if locked { "lock".into() } else { "lock-open".into() }, label: Some(if locked { "Unlock".into() } else { "Lock".into() }), command: puzzle3d_cmd("setSelectionFlag", Some(flag_args("locked"))), reveal_on_hover: Some(true) },
+    ]
+}
+
 fn build_document_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
     let object_items: Vec<UiTreeItemNode> = envelope
         .fixture
         .objects
         .iter()
         .map(|object| {
-            tree_item_with_command(
-                format!("puzzle3d-object:{}", object.id),
-                object.object_kind.clone().unwrap_or_else(|| object.id.clone()),
-                Some("box"),
-                puzzle3d_cmd("setSelection", Some(json!({ "selection": { "objectIds": [object.id], "vortexIds": [], "attractionIds": [] } }))),
-            )
+            let vortex_items: Vec<UiTreeItemNode> = object
+                .vortices
+                .iter()
+                .map(|vortex| {
+                    let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
+                    tree_item_with_command(
+                        format!("puzzle3d-vortex:{full_id}"),
+                        vortex.vortex_kind.clone().unwrap_or_else(|| vortex.id.clone()),
+                        Some("circle-dot"),
+                        puzzle3d_cmd("setSelection", Some(json!({ "selection": { "objectIds": [], "vortexIds": [full_id], "attractionIds": [] } }))),
+                    )
+                })
+                .collect();
+            let flag_args = {
+                let id = object.id.clone();
+                move |flag: &str| json!({ "flag": flag, "value": true, "entity": "object", "ids": [id.clone()] })
+            };
+            UiTreeItemNode {
+                id: format!("puzzle3d-object:{}", object.id),
+                label: object.object_kind.clone().unwrap_or_else(|| object.id.clone()),
+                description: None,
+                icon_id: Some("box".into()),
+                selected: Some(envelope.runtime.selection.object_ids.contains(&object.id)),
+                default_open: Some(false),
+                command: Some(puzzle3d_cmd("setSelection", Some(json!({ "selection": { "objectIds": [object.id], "vortexIds": [], "attractionIds": [] } })))),
+                hover_command: Some(puzzle3d_cmd("setHover", Some(json!({ "objectId": object.id })))),
+                unhover_command: Some(puzzle3d_cmd("setHover", None)),
+                actions: Some(puzzle3d_hide_lock_actions(object.hidden, object.locked, flag_args)),
+                draggable: None,
+                drag_data: None,
+                items: if vortex_items.is_empty() { None } else { Some(vortex_items) },
+                control: None,
+                is_hidden: Some(object.hidden),
+            }
+        })
+        .collect();
+    let reference_items: Vec<UiTreeItemNode> = envelope
+        .fixture
+        .references
+        .iter()
+        .map(|reference| {
+            let flag_args = {
+                let id = reference.id.clone();
+                move |flag: &str| json!({ "flag": flag, "value": true, "entity": "reference", "ids": [id.clone()] })
+            };
+            UiTreeItemNode {
+                id: format!("puzzle3d-reference:{}", reference.id),
+                label: reference.id.clone(),
+                description: Some(reference.source.url.clone()),
+                icon_id: Some("globe".into()),
+                selected: None,
+                default_open: None,
+                command: None,
+                hover_command: None,
+                unhover_command: None,
+                actions: Some(puzzle3d_hide_lock_actions(reference.hidden, reference.locked, flag_args)),
+                draggable: None,
+                drag_data: None,
+                items: None,
+                control: None,
+                is_hidden: Some(reference.hidden),
+            }
+        })
+        .collect();
+    let target_volume_items: Vec<UiTreeItemNode> = envelope
+        .fixture
+        .target_volumes
+        .iter()
+        .map(|volume| {
+            let flag_args = {
+                let id = volume.id.clone();
+                move |flag: &str| json!({ "flag": flag, "value": true, "entity": "targetVolume", "ids": [id.clone()] })
+            };
+            UiTreeItemNode {
+                id: format!("puzzle3d-target-volume:{}", volume.id),
+                label: volume.id.clone(),
+                description: None,
+                icon_id: Some("cylinder".into()),
+                selected: Some(envelope.runtime.selection.target_volume_ids.contains(&volume.id)),
+                default_open: None,
+                command: Some(puzzle3d_cmd("setSelection", Some(json!({ "selection": { "objectIds": [], "vortexIds": [], "attractionIds": [], "targetVolumeIds": [volume.id] } })))),
+                hover_command: None,
+                unhover_command: None,
+                actions: Some(puzzle3d_hide_lock_actions(volume.hidden, volume.locked, flag_args)),
+                draggable: None,
+                drag_data: None,
+                items: None,
+                control: None,
+                is_hidden: Some(volume.hidden),
+            }
         })
         .collect();
     let attraction_items: Vec<UiTreeItemNode> = envelope
@@ -811,6 +951,8 @@ fn build_document_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
     UiNode::Tree(UiTreeNode {
         sections: vec![
             UiTreeSectionNode { id: "puzzle3d-play-document.objects".into(), label: Some("Objects".into()), default_open: Some(true), items: object_items },
+            UiTreeSectionNode { id: "puzzle3d-play-document.references".into(), label: Some("References".into()), default_open: Some(false), items: reference_items },
+            UiTreeSectionNode { id: "puzzle3d-play-document.target-volumes".into(), label: Some("Target Volumes".into()), default_open: Some(false), items: target_volume_items },
             UiTreeSectionNode { id: "puzzle3d-play-document.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), items: attraction_items },
         ],
         selected_ids: None,
@@ -1072,6 +1214,8 @@ fn puzzle3d_context_menu_json(envelope: &Puzzle3dEnvelope) -> Option<String> {
     if envelope.runtime.selection.object_ids.is_empty() {
         return None;
     }
+    let all_hidden = envelope.fixture.objects.iter().filter(|object| envelope.runtime.selection.object_ids.contains(&object.id)).all(|object| object.hidden);
+    let all_locked = envelope.fixture.objects.iter().filter(|object| envelope.runtime.selection.object_ids.contains(&object.id)).all(|object| object.locked);
     let items = vec![
         json!({
             "id": "duplicate",
@@ -1082,6 +1226,18 @@ fn puzzle3d_context_menu_json(envelope: &Puzzle3dEnvelope) -> Option<String> {
             "id": "select-same-kind",
             "label": "Select all of same kind",
             "command": "selectSameKindSelection",
+        }),
+        json!({
+            "id": "hide-show",
+            "label": if all_hidden { "Show" } else { "Hide" },
+            "command": "setSelectionFlag",
+            "args": { "flag": "hidden", "value": !all_hidden },
+        }),
+        json!({
+            "id": "lock-unlock",
+            "label": if all_locked { "Unlock" } else { "Lock" },
+            "command": "setSelectionFlag",
+            "args": { "flag": "locked", "value": !all_locked },
         }),
         json!({
             "id": "zoom",
@@ -1294,6 +1450,8 @@ impl PluginApp for Puzzle3dPlayApp {
                     scale: None,
                     mesh_url,
                     vortices,
+                    hidden: false,
+                    locked: false,
                 });
                 envelope.runtime.selection.object_ids = vec![id];
                 return vec![set_document_op(&envelope)];
@@ -1416,7 +1574,7 @@ impl PluginApp for Puzzle3dPlayApp {
                     return vec![set_document_op(&envelope)];
                 }
                 let index = args.and_then(|value| value.get("id")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
-                if let Some(object) = envelope.fixture.objects.get(index) {
+                if let Some(object) = envelope.fixture.objects.get(index).filter(|object| !object.locked && !object.hidden) {
                     let id = object.id.clone();
                     let merge_ids = if merge == "add" {
                         let mut merged = envelope.runtime.selection.object_ids.clone();
@@ -1466,7 +1624,7 @@ impl PluginApp for Puzzle3dPlayApp {
                     .and_then(|value| value.get("position"))
                     .and_then(|value| value.as_array())
                     .map(|values| [values.first().and_then(|v| v.as_f64()).unwrap_or(0.0), values.get(1).and_then(|v| v.as_f64()).unwrap_or(0.0), values.get(2).and_then(|v| v.as_f64()).unwrap_or(0.0)]);
-                if let (Some(object), Some(position)) = (envelope.fixture.objects.iter_mut().find(|object| object.id == object_id), position) {
+                if let (Some(object), Some(position)) = (envelope.fixture.objects.iter_mut().find(|object| object.id == object_id && !object.locked && !object.hidden), position) {
                     object.origin = position;
                     let proximity_radius = 0.75;
                     let mut source_vortex: Option<(String, [f64; 3])> = None;
@@ -1549,6 +1707,21 @@ impl PluginApp for Puzzle3dPlayApp {
             }
             "setKindHover" => {
                 envelope.runtime.hovered_kind_id = args.and_then(|value| value.get("kindId")).and_then(|value| value.as_str()).map(str::to_string);
+                return vec![set_document_op(&envelope)];
+            }
+            "setSelectionFlag" => {
+                let flag = args.and_then(|value| value.get("flag")).and_then(|value| value.as_str()).unwrap_or("hidden");
+                let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_bool()).unwrap_or(true);
+                let entity = args.and_then(|value| value.get("entity")).and_then(|value| value.as_str());
+                let explicit_ids: Option<Vec<String>> = args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok());
+                match (entity, explicit_ids) {
+                    (Some(entity), Some(ids)) => apply_puzzle3d_selection_flag(&mut envelope.fixture, entity, &ids, flag, value),
+                    _ => {
+                        apply_puzzle3d_selection_flag(&mut envelope.fixture, "object", &envelope.runtime.selection.object_ids.clone(), flag, value);
+                        apply_puzzle3d_selection_flag(&mut envelope.fixture, "vortex", &envelope.runtime.selection.vortex_ids.clone(), flag, value);
+                        apply_puzzle3d_selection_flag(&mut envelope.fixture, "targetVolume", &envelope.runtime.selection.target_volume_ids.clone(), flag, value);
+                    }
+                }
                 return vec![set_document_op(&envelope)];
             }
             "engagementPossibleSelect" => {

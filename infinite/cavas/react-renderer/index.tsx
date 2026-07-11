@@ -70,6 +70,7 @@ export interface GraphWasmSession {
   attachCanvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown>;
   setSize(width: number, height: number, dpr: number): void;
   renderFrame(): void;
+  detachGpu?(): void;
   pointerDown?(x: number, y: number, button: number, extend: boolean, modifiers?: CanvasInputModifiers): void;
   pointerMove?(x: number, y: number): void;
   pointerUp?(x: number, y: number, modifiers?: CanvasInputModifiers): void;
@@ -93,8 +94,8 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
   const renderFrame = React.useCallback(() => {
     try {
       sessionRef.current?.renderFrame();
-    } catch (e) {
-      console.log("[DEBUG] GraphWasmCanvas renderFrame threw:", e);
+    } catch {
+      /* gpu not ready */
     }
   }, []);
 
@@ -103,19 +104,12 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
     const container = containerRef.current;
     if (!canvas || !container) return;
     let torndown = false;
+    let waitRaf: number | null = null;
     let localRaf: number | null = null;
     let localRo: ResizeObserver | null = null;
     const session = sessionFactory();
     sessionRef.current = session;
     onSessionReady?.(session);
-    const rect = container.getBoundingClientRect();
-    const dpr = globalThis.devicePixelRatio || 1;
-    const initW = Math.max(1, Math.round(rect.width));
-    const initH = Math.max(1, Math.round(rect.height));
-    canvas.width = Math.round(initW * dpr);
-    canvas.height = Math.round(initH * dpr);
-    canvas.style.width = `${initW}px`;
-    canvas.style.height = `${initH}px`;
     const modifiersOf = (ev: PointerEvent | MouseEvent): CanvasInputModifiers => ({
       shift: ev.shiftKey,
       ctrl: ev.ctrlKey,
@@ -148,43 +142,67 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
       session.wheel?.(ev.clientX - rect.left, ev.clientY - rect.top, ev.deltaY);
       renderFrame();
     };
-    void session.attachCanvas(canvas, initW, initH, dpr).then(() => {
-      if (torndown) return;
-      const resize = () => {
-        const rect = container.getBoundingClientRect();
-        const dpr = globalThis.devicePixelRatio || 1;
-        const w = Math.max(1, Math.round(rect.width));
-        const h = Math.max(1, Math.round(rect.height));
-        canvas.width = Math.round(w * dpr);
-        canvas.height = Math.round(h * dpr);
-        canvas.style.width = `${w}px`;
-        canvas.style.height = `${h}px`;
-        session.setSize(w, h, dpr);
-        renderFrame();
-      };
-      console.log("[DEBUG] attachCanvas resolved, canvas size:", canvas.width, canvas.height);
-      resize();
-      localRo = new ResizeObserver(resize);
-      localRo.observe(container);
-      let tickCount = 0;
-      const tick = () => {
-        tickCount += 1;
-        if (tickCount % 60 === 0) console.log("[DEBUG] tick loop alive, count:", tickCount, "canvas size:", canvas.width, canvas.height);
-        renderFrame();
+    const attach = (initW: number, initH: number, dpr: number) => {
+      canvas.width = Math.round(initW * dpr);
+      canvas.height = Math.round(initH * dpr);
+      canvas.style.width = `${initW}px`;
+      canvas.style.height = `${initH}px`;
+      void session.attachCanvas(canvas, initW, initH, dpr).then(() => {
+        if (torndown) return;
+        const resize = () => {
+          const rect = container.getBoundingClientRect();
+          const dpr = globalThis.devicePixelRatio || 1;
+          const w = Math.max(1, Math.round(rect.width));
+          const h = Math.max(1, Math.round(rect.height));
+          canvas.width = Math.round(w * dpr);
+          canvas.height = Math.round(h * dpr);
+          canvas.style.width = `${w}px`;
+          canvas.style.height = `${h}px`;
+          session.setSize(w, h, dpr);
+          renderFrame();
+        };
+        resize();
+        localRo = new ResizeObserver(resize);
+        localRo.observe(container);
+        const tick = () => {
+          renderFrame();
+          localRaf = requestAnimationFrame(tick);
+        };
         localRaf = requestAnimationFrame(tick);
-      };
-      localRaf = requestAnimationFrame(tick);
-      if (enablePointer) {
-        canvas.addEventListener("pointerdown", onPointerDown);
-        canvas.addEventListener("pointermove", onPointerMove);
-        canvas.addEventListener("pointerup", onPointerUp);
-        canvas.addEventListener("pointerleave", onPointerUp);
-        canvas.addEventListener("dblclick", onDoubleClick);
-        canvas.addEventListener("wheel", onWheel, { passive: false });
+        if (enablePointer) {
+          canvas.addEventListener("pointerdown", onPointerDown);
+          canvas.addEventListener("pointermove", onPointerMove);
+          canvas.addEventListener("pointerup", onPointerUp);
+          canvas.addEventListener("pointerleave", onPointerUp);
+          canvas.addEventListener("dblclick", onDoubleClick);
+          canvas.addEventListener("wheel", onWheel, { passive: false });
+        }
+      });
+    };
+    // Waits for the container to report a real (non-degenerate) layout size before the first GPU attach —
+    // attaching at a stale 1x1 rect (common on first paint, before flex/grid layout settles) leaves the
+    // WebGPU surface configured at a bogus size; WebGPU surface errors are async/out-of-band and never
+    // surface as a JS exception, so a botched first attach silently renders nothing forever after.
+    let attempts = 0;
+    const waitForLayout = () => {
+      if (torndown) return;
+      const rect = container.getBoundingClientRect();
+      const dpr = globalThis.devicePixelRatio || 1;
+      attempts += 1;
+      if (rect.width >= 8 && rect.height >= 8) {
+        attach(Math.round(rect.width), Math.round(rect.height), dpr);
+        return;
       }
-    });
+      if (attempts > 120) {
+        attach(Math.max(1, Math.round(rect.width)), Math.max(1, Math.round(rect.height)), dpr);
+        return;
+      }
+      waitRaf = requestAnimationFrame(waitForLayout);
+    };
+    waitForLayout();
     return () => {
       torndown = true;
+      if (waitRaf != null) cancelAnimationFrame(waitRaf);
       localRo?.disconnect();
       if (enablePointer) {
         canvas.removeEventListener("pointerdown", onPointerDown);
@@ -195,6 +213,7 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
         canvas.removeEventListener("wheel", onWheel);
       }
       if (localRaf != null) cancelAnimationFrame(localRaf);
+      sessionRef.current?.detachGpu?.();
       sessionRef.current = null;
     };
   }, [enablePointer, onSessionReady, renderFrame, sessionFactory]);

@@ -1,6 +1,6 @@
 // #region 🧲Header
 // 💻 .storybook/preview.ts
-// Specs: Reuse the shared UI theme and level decorators for the root monorepo Storybook.
+// Specs: Reuse the shared UI appearance and level decorators for the root monorepo Storybook.
 // Summary: Defines global Storybook preview parameters; loads CSS stacks only for the active `STORYBOOK_SCOPE` slice in dev.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
@@ -19,7 +19,7 @@ if (__STORYBOOK_LOAD_UI__ || __STORYBOOK_LOAD_COMPOSE__ || __STORYBOOK_LOAD_PUZZ
 }
 //#endregion 🔖ScopeStyles
 
-enum Theme {
+enum Appearance {
 	SYSTEM = "system",
 	LIGHT = "light",
 	DARK = "dark",
@@ -50,15 +50,15 @@ const preview: Preview = {
 		},
 	},
 	globalTypes: {
-		theme: {
-			description: "Global theme for components",
+		appearance: {
+			description: "Global appearance for components",
 			toolbar: {
-				title: "Theme",
+				title: "Appearance",
 				icon: "circlehollow",
 				items: [
-					{ value: Theme.SYSTEM, title: "System", icon: "browser" },
-					{ value: Theme.LIGHT, title: "Light", icon: "sun" },
-					{ value: Theme.DARK, title: "Dark", icon: "moon" },
+					{ value: Appearance.SYSTEM, title: "System", icon: "browser" },
+					{ value: Appearance.LIGHT, title: "Light", icon: "sun" },
+					{ value: Appearance.DARK, title: "Dark", icon: "moon" },
 				],
 				dynamicTitle: true,
 			},
@@ -107,12 +107,12 @@ const preview: Preview = {
 		},
 	},
 	initialGlobals: {
-		theme: Theme.SYSTEM,
+		appearance: Appearance.SYSTEM,
 		level: Level.BASE,
 		device: Device.DESKTOP,
 		expertise: Expertise.NORMAL,
 	},
-	decorators: [withLevel, withTheme],
+	decorators: [withLevel, withAppearance],
 	tags: ["autodocs"],
 };
 
@@ -156,31 +156,31 @@ export const withLevel: Decorator = (Story, context) => {
 // #endregion 🧩WithLevel
 //#endregion 🔖withLevel
 
-//#region 🔖withTheme
+//#region 🔖withAppearance
 import {
 	useElementsSurfaceChrome,
 	type ElementsSurfaceDevice,
-	type ElementsSurfaceTheme,
+	type ElementsSurfaceAppearance,
 } from "@semio-tech/ui-react";
 
 // #region 🌈StorySurfaceHost
 const StorySurfaceHost: React.FC<{
 	children: React.ReactNode;
-	globals: { theme?: string; device?: string; expertise?: string };
+	globals: { appearance?: string; device?: string; expertise?: string };
 }> = ({ children, globals }) => {
-	const theme = (globals.theme as ElementsSurfaceTheme | undefined) ?? "system";
+	const appearance = (globals.appearance as ElementsSurfaceAppearance | undefined) ?? "system";
 	const device = (globals.device as ElementsSurfaceDevice | undefined) ?? "desktop";
 	const expertise = (globals.expertise as Expertise | undefined) ?? Expertise.NORMAL;
-	useElementsSurfaceChrome({ theme, device, expertise });
+	useElementsSurfaceChrome({ appearance, device, expertise });
 	return <>{children}</>;
 };
 // #endregion 🌈StorySurfaceHost
 
-// #region 🌈WithTheme
-export const withTheme: Decorator = (Story, context) => (
-	<StorySurfaceHost globals={context.globals as { theme?: string; device?: string; expertise?: string }}>
+// #region 🌈WithAppearance
+export const withAppearance: Decorator = (Story, context) => (
+	<StorySurfaceHost globals={context.globals as { appearance?: string; device?: string; expertise?: string }}>
 		<Story />
 	</StorySurfaceHost>
 );
-// #endregion 🌈WithTheme
-//#endregion 🔖withTheme
+// #endregion 🌈WithAppearance
+//#endregion 🔖withAppearance

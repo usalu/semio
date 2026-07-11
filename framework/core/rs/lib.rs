@@ -5503,7 +5503,7 @@ pub struct PhysicalSize {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Theme {
+pub struct Appearance {
     pub mode: String,
 }
 
@@ -5542,7 +5542,7 @@ pub struct WindowInput {
     pub events: Vec<WindowEvent>,
     pub size: PhysicalSize,
     pub scale_factor: f64,
-    pub theme: Theme,
+    pub appearance: Appearance,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -5899,6 +5899,6 @@ pub use ui::kernel::{
     CommandRequest, CommandResult, Diagnostic, HostEffect, HybridLogicalTimestamp, InverseOperation,
     KernelOperation, MergeStrategyKind, DocumentDiff, DocumentHandle, DocumentId, DocumentKind, DocumentVersion,
     OpEnvelope, OperationId, PayloadHash, PhysicalSize, PluginInstanceId, ResourceId, ResourceKind,
-    Rights, SchemaId, SchemaVersion, Scope, Theme, UndoGroup, UndoPolicy, WindowEvent, WindowHandle,
+    Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy, WindowEvent, WindowHandle,
     WindowInput, WindowKindDef, WindowKindId, WindowOutput,
 };

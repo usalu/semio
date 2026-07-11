@@ -231,7 +231,7 @@ function useSemanticColors(): SemanticColors {
   const [colors, setColors] = useState(resolve);
   useEffect(() => {
     const observer = new MutationObserver(() => setColors(resolve()));
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "class"] });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-ui-appearance", "class"] });
     return () => observer.disconnect();
   }, [resolve]);
   return colors;

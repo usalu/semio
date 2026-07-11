@@ -607,7 +607,7 @@ function mount(): void {
     mountPresentation(el, deck, {
       transition: "fade",
       slideNumber: false,
-      surfaceChrome: { theme: "dark", device: "desktop", expertise: Expertise.NORMAL },
+      surfaceChrome: { appearance: "dark", device: "desktop", expertise: Expertise.NORMAL },
     });
   });
 }

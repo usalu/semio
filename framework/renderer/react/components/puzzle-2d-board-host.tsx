@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type DragEvent, type MouseEvent } from "react";
-import { CATALOGUE_DRAG_MIME, ContextMenuController, getActiveCatalogueDragPayload, pickMostSpecificCanvasTarget, useCanvasThemeSync, type CanvasPickTarget } from "@semio-tech/ui-react";
+import { CATALOGUE_DRAG_MIME, ContextMenuController, getActiveCatalogueDragPayload, pickMostSpecificCanvasTarget, useCanvasAppearanceSync, type CanvasPickTarget } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import type { CommandDescriptor, Puzzle2dBoardScene, Puzzle2dBoardWasmSession, UiComponentSceneNode } from "../os-shell.tsx";
 import { createPuzzle2dBoardSession } from "../os-shell.tsx";
@@ -471,7 +471,7 @@ export function Puzzle2dBoardHost({ node, onCommand }: { readonly node: UiCompon
   }, [sessionEpoch, scene?.lodMode]);
   //#endregion SceneSync
 
-  useCanvasThemeSync(() => {
+  useCanvasAppearanceSync(() => {
     syncSessionCanvasTheme(sessionRef.current);
     try {
       sessionRef.current?.renderFrame();
