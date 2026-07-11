@@ -1,0 +1,127 @@
+../../../framework/core/js/index.ts(565,9): error TS2367: This comparison appears to be unintentional because the types '"button" | "input" | "select" | "toggle" | "vec3" | "keyValue" | "slider" | "numberStepper" | "ring" | "iconSelect"' and '"text"' have no overlap.
+../../../framework/core/js/index.ts(565,102): error TS2339: Property 'value' does not exist on type 'never'.
+../../asset/js/index.ts(6,50): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+../../asset/js/index.ts(7,141): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+index.tsx(576,15): error TS2300: Duplicate identifier 'ThreeEvent'.
+index.tsx(750,26): error TS2345: Argument of type 'Node' is not assignable to parameter of type 'Node | null'.
+index.tsx(750,26): error TS2352: Conversion of type 'EventTarget | null' to type 'Node' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'EventTarget' is not comparable to type 'Node'.
+    Type 'EventTarget' is missing the following properties from type '{ id: string; position: XYPosition; data: Record<string, unknown>; sourcePosition?: Position | undefined; targetPosition?: Position | undefined; ... 19 more ...; measured?: { ...; } | undefined; }': id, position, data
+index.tsx(1108,18): error TS2304: Cannot find name 'iconUrlDataCache'.
+index.tsx(1126,7): error TS2304: Cannot find name 'iconUrlDataCache'.
+index.tsx(1155,20): error TS2304: Cannot find name 'iconUrlDataCache'.
+index.tsx(1245,46): error TS2367: This comparison appears to be unintentional because the types 'string | Icon | { readonly name: "settings" | "focus" | "filter" | "info" | "code" | "link" | "search" | "user" | "undo" | "redo" | "puzzle" | "alert-circle" | "arrow-down" | "arrow-left" | ... 125 more ... | "zoom-out"; } | { ...; } | { ...; } | { ...; } | ReactElement<...>' and 'boolean' have no overlap.
+index.tsx(1522,16): error TS2322: Type 'string | { readonly kind: "url"; readonly url: string; } | { readonly kind: "shortcode"; readonly code: string; } | { readonly kind: "data"; readonly data: string; } | { readonly kind: "emoji"; readonly emoji: string; } | ... 8 more ... | { ...; }' is not assignable to type 'IconSource'.
+  Type 'string' is not assignable to type 'IconSource'.
+index.tsx(1755,44): error TS2345: Argument of type '(event: PointerEvent) => void' is not assignable to parameter of type 'EventListenerOrEventListenerObject'.
+  Type '(event: PointerEvent) => void' is not assignable to type 'EventListener'.
+    Types of parameters 'event' and 'evt' are incompatible.
+      Type 'Event' is missing the following properties from type 'PointerEvent': altitudeAngle, azimuthAngle, height, isPrimary, and 37 more.
+index.tsx(1756,40): error TS2345: Argument of type '(event: KeyboardEvent) => void' is not assignable to parameter of type 'EventListenerOrEventListenerObject'.
+  Type '(event: KeyboardEvent) => void' is not assignable to type 'EventListener'.
+    Types of parameters 'event' and 'evt' are incompatible.
+      Type 'Event' is missing the following properties from type 'KeyboardEvent': altKey, charCode, code, ctrlKey, and 17 more.
+index.tsx(1953,33): error TS2345: Argument of type '(event: MediaQueryListEvent) => void' is not assignable to parameter of type 'EventListenerOrEventListenerObject'.
+  Type '(event: MediaQueryListEvent) => void' is not assignable to type 'EventListener'.
+    Types of parameters 'event' and 'evt' are incompatible.
+      Type 'Event' is missing the following properties from type 'MediaQueryListEvent': matches, media
+index.tsx(3555,47): error TS2345: Argument of type '(event: MediaQueryListEvent) => void' is not assignable to parameter of type 'EventListenerOrEventListenerObject'.
+  Type '(event: MediaQueryListEvent) => void' is not assignable to type 'EventListener'.
+    Types of parameters 'event' and 'evt' are incompatible.
+      Type 'Event' is missing the following properties from type 'MediaQueryListEvent': matches, media
+index.tsx(3744,80): error TS2322: Type 'EventTarget | null' is not assignable to type 'EventTarget'.
+  Type 'null' is not assignable to type 'EventTarget'.
+index.tsx(5222,40): error TS2339: Property 'id' does not exist on type 'TooltipConfig'.
+index.tsx(6705,95): error TS2345: Argument of type 'string | number | readonly string[]' is not assignable to parameter of type 'string | number'.
+  Type 'readonly string[]' is not assignable to type 'string | number'.
+index.tsx(6718,68): error TS2345: Argument of type 'string | number | readonly string[]' is not assignable to parameter of type 'string | number'.
+  Type 'readonly string[]' is not assignable to type 'string | number'.
+index.tsx(6773,56): error TS2345: Argument of type 'string | number | readonly string[]' is not assignable to parameter of type 'string | number'.
+  Type 'readonly string[]' is not assignable to type 'string | number'.
+index.tsx(6783,76): error TS2345: Argument of type 'string | number | readonly string[]' is not assignable to parameter of type 'string | number'.
+  Type 'readonly string[]' is not assignable to type 'string | number'.
+index.tsx(8258,44): error TS2345: Argument of type '(e: PointerEvent) => void' is not assignable to parameter of type 'EventListenerOrEventListenerObject'.
+  Type '(e: PointerEvent) => void' is not assignable to type 'EventListener'.
+    Types of parameters 'e' and 'evt' are incompatible.
+      Type 'Event' is missing the following properties from type 'PointerEvent': altitudeAngle, azimuthAngle, height, isPrimary, and 37 more.
+index.tsx(8259,42): error TS2345: Argument of type '(e: PointerEvent) => void' is not assignable to parameter of type 'EventListenerOrEventListenerObject'.
+  Type '(e: PointerEvent) => void' is not assignable to type 'EventListener'.
+    Types of parameters 'e' and 'evt' are incompatible.
+      Type 'Event' is missing the following properties from type 'PointerEvent': altitudeAngle, azimuthAngle, height, isPrimary, and 37 more.
+index.tsx(9045,220): error TS2322: Type 'ReactNode' is not assignable to type 'ControlIcon'.
+  Type 'undefined' is not assignable to type 'ControlIcon'.
+index.tsx(9084,8): error TS2741: Property 'children' is missing in type '{ id: string; label: string; className: string; }' but required in type 'LabelProps'.
+index.tsx(9085,8): error TS2741: Property 'id' is missing in type '{ children: Element[]; value: string; onValueChange: (exampleId: string) => void; }' but required in type 'ElementProps'.
+index.tsx(9327,8): error TS2741: Property 'id' is missing in type '{ children: Element[]; disabled: boolean; onValueChange: (next: string) => void; value: IconSelectorMode; }' but required in type 'ElementProps'.
+index.tsx(10548,23): error TS4104: The type 'readonly ContextMenuItem[]' is 'readonly' and cannot be assigned to the mutable type 'ContextMenuItem[]'.
+index.tsx(11341,29): error TS2367: This comparison appears to be unintentional because the types '"default"' and '"property"' have no overlap.
+index.tsx(11983,87): error TS2345: Argument of type 'readonly string[]' is not assignable to parameter of type 'string[]'.
+  The type 'readonly string[]' is 'readonly' and cannot be assigned to the mutable type 'string[]'.
+index.tsx(12082,9): error TS4104: The type 'readonly string[]' is 'readonly' and cannot be assigned to the mutable type 'string[]'.
+index.tsx(12097,41): error TS4104: The type 'readonly string[]' is 'readonly' and cannot be assigned to the mutable type 'string[]'.
+index.tsx(12106,21): error TS2345: Argument of type 'readonly string[]' is not assignable to parameter of type 'SetStateAction<string[]>'.
+  The type 'readonly string[]' is 'readonly' and cannot be assigned to the mutable type 'string[]'.
+index.tsx(13541,70): error TS2353: Object literal may only specify known properties, and 'content' does not exist in type 'TreeDataSection'.
+index.tsx(13547,9): error TS2322: Type '{ id: string; icon: ReactNode; onClick: () => void; }[] | undefined' is not assignable to type 'TreeHeaderAction[] | undefined'.
+  Type '{ id: string; icon: ReactNode; onClick: () => void; }[]' is not assignable to type 'TreeHeaderAction[]'.
+    Type '{ id: string; icon: ReactNode; onClick: () => void; }' is not assignable to type 'TreeHeaderAction'.
+      Type '{ id: string; icon: ReactNode; onClick: () => void; }' is not assignable to type 'TreeSectionAction'.
+        Types of property 'icon' are incompatible.
+          Type 'ReactNode' is not assignable to type 'ControlIcon'.
+            Type 'undefined' is not assignable to type 'ControlIcon'.
+index.tsx(13558,9): error TS2353: Object literal may only specify known properties, and 'content' does not exist in type 'TreeDataSection'.
+index.tsx(13756,3): error TS2322: Type 'TreePanelSource' is not assignable to type 'TreePanelConfig'.
+  Property 'sections' is missing in type 'TreePanelDefinition' but required in type 'TreePanelConfig'.
+index.tsx(13763,3): error TS2322: Type 'SidePanelTabSource' is not assignable to type 'SidePanelTabConfig'.
+  Type 'SidePanelTabDefinition' is missing the following properties from type 'SidePanelTabConfig': id, icon, name, tree
+index.tsx(14402,72): error TS2344: Type '"autoCapitalize" | "spellCheck" | "autoCorrect" | "autoComplete" | "data-1p-ignore" | "data-lpignore"' does not satisfy the constraint 'keyof InputHTMLAttributes<HTMLInputElement>'.
+  Type '"data-1p-ignore"' is not assignable to type 'keyof InputHTMLAttributes<HTMLInputElement>'.
+index.tsx(14633,11): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+index.tsx(14655,11): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+index.tsx(14695,10): error TS2741: Property 'id' is missing in type '{ children: Element[]; value: string | undefined; onValueChange: (value: string) => void | undefined; disabled: boolean | undefined; }' but required in type 'ElementProps'.
+index.tsx(14720,13): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+index.tsx(14958,69): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+index.tsx(18699,18): error TS2320: Interface 'VirtualFileSystemRow' cannot simultaneously extend types 'FileNode' and 'HierarchicalRowData'.
+  Named property 'hasChildren' of types 'FileNode' and 'HierarchicalRowData' are not identical.
+index.tsx(19705,3): error TS2322: Type 'Element[]' is not assignable to type 'HTMLElement[]'.
+  Type 'Element' is missing the following properties from type 'HTMLElement': accessKey, accessKeyLabel, autocapitalize, autocorrect, and 130 more.
+index.tsx(20159,8): error TS2339: Property 'children' does not exist on type 'WindowLayoutWindowNode | WindowLayoutAxisNode'.
+  Property 'children' does not exist on type 'WindowLayoutWindowNode'.
+index.tsx(20159,26): error TS7006: Parameter 'child' implicitly has an 'any' type.
+index.tsx(20159,33): error TS7006: Parameter 'index' implicitly has an 'any' type.
+index.tsx(20162,30): error TS2339: Property 'children' does not exist on type 'WindowLayoutWindowNode | WindowLayoutAxisNode'.
+  Property 'children' does not exist on type 'WindowLayoutWindowNode'.
+index.tsx(20163,69): error TS2345: Argument of type '"window" | "row" | "column"' is not assignable to parameter of type '"row" | "column"'.
+  Type '"window"' is not assignable to type '"row" | "column"'.
+index.tsx(20163,166): error TS2345: Argument of type '"window" | "row" | "column"' is not assignable to parameter of type '"row" | "column"'.
+  Type '"window"' is not assignable to type '"row" | "column"'.
+index.tsx(20167,92): error TS2339: Property 'children' does not exist on type 'WindowLayoutWindowNode | WindowLayoutAxisNode'.
+  Property 'children' does not exist on type 'WindowLayoutWindowNode'.
+index.tsx(20168,80): error TS2322: Type '"window" | "row" | "column"' is not assignable to type '"row" | "column"'.
+  Type '"window"' is not assignable to type '"row" | "column"'.
+index.tsx(20869,17): error TS2339: Property 'vitest' does not exist on type 'ImportMeta'.
+index.tsx(20870,52): error TS2339: Property 'vitest' does not exist on type 'ImportMeta'.
+index.tsx(23062,15): error TS2300: Duplicate identifier 'ThreeEvent'.
+index.tsx(24415,14): error TS2741: Property 'id' is missing in type '{ children: Element[]; defaultValue: string; }' but required in type 'ElementProps'.
+index.tsx(24620,10): error TS2741: Property 'id' is missing in type '{ children: Element[]; open: true; defaultValue: string; }' but required in type 'ElementProps'.
+index.tsx(24636,10): error TS2741: Property 'id' is missing in type '{ children: Element[]; open: true; defaultValue: string; }' but required in type 'ElementProps'.
+script.ts(4,56): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+script.ts(5,34): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+script.ts(6,100): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+script.ts(7,28): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+script.ts(53,45): error TS2339: Property 'dir' does not exist on type 'ImportMeta'.
+tailwind.config.ts(5,59): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+../../styling/js/index.ts(5,59): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+../../styling/js/index.ts(18,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+../../styling/js/index.ts(19,93): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+../../styling/js/index.ts(193,54): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+../../styling/js/index.ts(360,44): error TS2304: Cannot find name 'StylingThemeName'.
+../../styling/js/index.ts(368,65): error TS2304: Cannot find name 'StylingThemeName'.
+../../styling/js/index.ts(369,25): error TS7053: Element implicitly has an 'any' type because expression of type 'StylingThemeName' can't be used to index type '{ readonly light: { readonly rasterClear: readonly [240, 236, 221, 255]; readonly gridMinorStroke: readonly [123, 130, 125, 56]; readonly edgeStroke: readonly [123, 130, 125, 255]; readonly edgeStrokeHovered: readonly [0, 17, 23, 255]; ... 34 more ...; readonly labelHalo: readonly [...]; }; readonly dark: { ...; }; }'.
+../../styling/js/index.ts(390,17): error TS2339: Property 'vitest' does not exist on type 'ImportMeta'.
+../../styling/js/index.ts(391,48): error TS2339: Property 'vitest' does not exist on type 'ImportMeta'.
+../../styling/js/tailwind.config.ts(5,59): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.

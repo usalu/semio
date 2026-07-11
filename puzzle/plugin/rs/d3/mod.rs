@@ -2,9 +2,9 @@
 
 use puzzle_3d::{BrushPlacePayload, Puzzle3dPrecomputeSession};
 use semio_framework_plugin::{
-    build_world_3d_scene, create_default_layout, layout::WindowEngagementToggleGroupOption, merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
+    build_world_3d_scene, create_default_layout, layout::{MeasureSelectItem, WindowEngagementToggleGroupOption}, merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, App, CommandDescriptor, PanelGroup, PluginApp,
-    SurfaceKind, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementOption, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    SurfaceKind, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
@@ -176,6 +176,27 @@ struct Puzzle3dSelection {
     target_volume_ids: Vec<String>,
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Puzzle3dSelectableKinds {
+    #[serde(default = "default_true")]
+    objects: bool,
+    #[serde(default = "default_true")]
+    vortices: bool,
+    #[serde(default = "default_true")]
+    attractions: bool,
+}
+
+impl Default for Puzzle3dSelectableKinds {
+    fn default() -> Self {
+        Self { objects: true, vortices: true, attractions: true }
+    }
+}
+
+fn default_true() -> bool {
+    true
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Puzzle3dRuntime {
@@ -199,6 +220,20 @@ struct Puzzle3dRuntime {
     vortex_kind_weights: HashMap<String, f64>,
     #[serde(default = "default_transform_tool")]
     transform_tool: String,
+    #[serde(default = "default_true")]
+    lod_automatic: bool,
+    #[serde(default)]
+    lod_depth_variable: bool,
+    #[serde(default = "default_true")]
+    lod_show_grid: bool,
+    #[serde(default = "default_manual_lod")]
+    lod_manual: f64,
+    #[serde(default)]
+    grid_snap_enabled: bool,
+    #[serde(default = "default_grid_factor")]
+    grid_factor: f64,
+    #[serde(default)]
+    selectable_kinds: Puzzle3dSelectableKinds,
 }
 
 fn default_transform_tool() -> String {
@@ -207,6 +242,14 @@ fn default_transform_tool() -> String {
 
 fn default_overlap_budget() -> f64 {
     0.02
+}
+
+fn default_manual_lod() -> f64 {
+    100.0
+}
+
+fn default_grid_factor() -> f64 {
+    10.0
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -537,6 +580,18 @@ fn world_interaction_json(runtime: &Puzzle3dRuntime) -> String {
     .to_string()
 }
 
+fn world3d_lod_json(runtime: &Puzzle3dRuntime) -> String {
+    json!({
+        "gridFactor": runtime.grid_factor,
+        "gridSnapEnabled": runtime.grid_snap_enabled,
+        "showLodGrid": runtime.lod_show_grid,
+        "automaticLod": runtime.lod_automatic,
+        "depthVariableLod": runtime.lod_depth_variable,
+        "manualLod": runtime.lod_manual,
+    })
+    .to_string()
+}
+
 fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dEnvelope) -> Option<String> {
     if envelope.runtime.active_tool != "brush" {
         return None;
@@ -573,16 +628,24 @@ fn scene_config_json(envelope: &Puzzle3dEnvelope) -> String {
     .to_string()
 }
 
+/// 🧊 Scales the unit box fallback (`mesh_from_kind` extent 1.0) past `BRUSH_COLLISION_MESH_MIN_EXTENT` (2.0) in `puzzle_3d`'s collision engine, otherwise its registration is a silent no-op and brush candidates never populate before a real GLB arrives.
+const PUZZLE3D_FALLBACK_MESH_SCALE: f32 = 4.0;
+
+fn scaled_mesh_positions(positions: &[f32], scale: f32) -> Vec<f32> {
+    positions.iter().map(|value| value * scale).collect()
+}
+
 /// 🧊 Only seeds the box fallback for URLs with no mesh yet, so a real GLB registered earlier via `registerBrushMesh` survives every subsequent resync.
 fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dEnvelope) {
     let _ = session.set_scene(&scene_config_json(envelope));
     let fallback = mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
+    let fallback_positions = scaled_mesh_positions(&fallback.positions, PUZZLE3D_FALLBACK_MESH_SCALE);
     if !session.has_mesh(PUZZLE3D_FALLBACK_MESH_KIND) {
-        session.register_mesh(PUZZLE3D_FALLBACK_MESH_KIND, &fallback.positions, &fallback.indices);
+        session.register_mesh(PUZZLE3D_FALLBACK_MESH_KIND, &fallback_positions, &fallback.indices);
     }
     for url in collect_mesh_urls(&envelope.fixture) {
         if !session.has_mesh(&url) {
-            session.register_mesh(&url, &fallback.positions, &fallback.indices);
+            session.register_mesh(&url, &fallback_positions, &fallback.indices);
         }
     }
 }
@@ -897,6 +960,113 @@ fn puzzle3d_context_menu_json(envelope: &Puzzle3dEnvelope) -> Option<String> {
 }
 //#endregion 🔖Engagement
 
+//#region 🔖Measures
+const PUZZLE3D_LOD_SLIDER_MIN: f64 = 0.0;
+const PUZZLE3D_LOD_SLIDER_MAX: f64 = 1000.0;
+
+fn puzzle3d_kind_ids(fixture: &Puzzle3dFixture, section: &str) -> Vec<String> {
+    fixture
+        .meta
+        .kind_catalogs
+        .as_ref()
+        .and_then(|catalogs| catalogs.get(section))
+        .and_then(|entries| entries.as_array())
+        .map(|entries| entries.iter().filter_map(|entry| entry.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect())
+        .unwrap_or_default()
+}
+
+fn puzzle3d_lod_measures_group(runtime: &Puzzle3dRuntime) -> WindowMeasure {
+    WindowMeasure::Group {
+        id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod"),
+        label: "LOD".into(),
+        default_open: Some(true),
+        children: vec![
+            WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-auto"), icon_id: "zoom-in".into(), label: Some("Auto zoom".into()), pressed: runtime.lod_automatic, text: None, on_change: puzzle3d_cmd("setLodAutomatic", None) },
+            WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-depth-variable"), icon_id: "layers".into(), label: Some("Depth-variable".into()), pressed: runtime.lod_depth_variable, text: None, on_change: puzzle3d_cmd("setLodDepthVariable", None) },
+            WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-grid"), icon_id: "layout-grid".into(), label: Some("Grid".into()), pressed: runtime.lod_show_grid, text: None, on_change: puzzle3d_cmd("setLodShowGrid", None) },
+            WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-value"), label: Some(format!("LOD {:.0}", runtime.lod_manual)), value: runtime.lod_manual, min: PUZZLE3D_LOD_SLIDER_MIN, max: PUZZLE3D_LOD_SLIDER_MAX, step: Some(1.0), on_change: puzzle3d_cmd("setLodManual", None) },
+        ],
+    }
+}
+
+fn puzzle3d_select_measures_group(runtime: &Puzzle3dRuntime) -> WindowMeasure {
+    WindowMeasure::Group {
+        id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select"),
+        label: "Select".into(),
+        default_open: Some(true),
+        children: vec![
+            WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-rectangle"), icon_id: "square".into(), label: Some("Rectangle".into()), pressed: runtime.selection_method == "rectangle", text: None, on_change: puzzle3d_cmd("setSelectionMethod", Some(json!({ "method": "rectangle" }))) },
+            WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-lasso"), icon_id: "lasso".into(), label: Some("Lasso".into()), pressed: runtime.selection_method == "lasso", text: None, on_change: puzzle3d_cmd("setSelectionMethod", Some(json!({ "method": "lasso" }))) },
+            WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-objects"), icon_id: "box".into(), label: Some("Objects".into()), pressed: runtime.selectable_kinds.objects, text: None, on_change: puzzle3d_cmd("setSelectableKind", Some(json!({ "kind": "objects" }))) },
+            WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-vortices"), icon_id: "circle-dot".into(), label: Some("Vortices".into()), pressed: runtime.selectable_kinds.vortices, text: None, on_change: puzzle3d_cmd("setSelectableKind", Some(json!({ "kind": "vortices" }))) },
+            WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-attractions"), icon_id: "link".into(), label: Some("Attractions".into()), pressed: runtime.selectable_kinds.attractions, text: None, on_change: puzzle3d_cmd("setSelectableKind", Some(json!({ "kind": "attractions" }))) },
+        ],
+    }
+}
+
+fn puzzle3d_kind_weight_measures(prefix: &str, kind_ids: &[String], weights: &HashMap<String, f64>, command: &str) -> Vec<WindowMeasure> {
+    kind_ids
+        .iter()
+        .map(|kind_id| {
+            let weight = weights.get(kind_id).copied().unwrap_or(1.0);
+            WindowMeasure::Slider {
+                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-{prefix}-{kind_id}"),
+                label: Some(format!("{kind_id} {:.0}%", weight * 100.0)),
+                value: weight,
+                min: 0.0,
+                max: 1.0,
+                step: Some(0.01),
+                on_change: puzzle3d_cmd(command, Some(json!({ "kindId": kind_id }))),
+            }
+        })
+        .collect()
+}
+
+fn puzzle3d_brush_measures_group(envelope: &Puzzle3dEnvelope) -> WindowMeasure {
+    let object_ids = puzzle3d_kind_ids(&envelope.fixture, "objects");
+    let vortex_ids = puzzle3d_kind_ids(&envelope.fixture, "vortices");
+    WindowMeasure::Group {
+        id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush"),
+        label: "Brush".into(),
+        default_open: Some(false),
+        children: vec![
+            WindowMeasure::Slider {
+                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-overlap-budget"),
+                label: Some("Overlap budget (m³)".into()),
+                value: envelope.runtime.overlap_budget,
+                min: 0.0,
+                max: 1.0,
+                step: Some(0.01),
+                on_change: puzzle3d_cmd("setBrushPlacementOverlapBudget", None),
+            },
+            WindowMeasure::Group {
+                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-distribution"),
+                label: "Distribution".into(),
+                default_open: Some(false),
+                children: vec![
+                    WindowMeasure::Group {
+                        id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-distribution-objects"),
+                        label: "Objects".into(),
+                        default_open: Some(false),
+                        children: puzzle3d_kind_weight_measures("object-kind", &object_ids, &envelope.runtime.object_kind_weights, "setObjectKindWeight"),
+                    },
+                    WindowMeasure::Group {
+                        id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-distribution-vortices"),
+                        label: "Vortices".into(),
+                        default_open: Some(false),
+                        children: puzzle3d_kind_weight_measures("vortex-kind", &vortex_ids, &envelope.runtime.vortex_kind_weights, "setVortexKindWeight"),
+                    },
+                ],
+            },
+        ],
+    }
+}
+
+fn puzzle3d_window_measures(envelope: &Puzzle3dEnvelope) -> Vec<WindowMeasure> {
+    vec![puzzle3d_lod_measures_group(&envelope.runtime), puzzle3d_select_measures_group(&envelope.runtime), puzzle3d_brush_measures_group(envelope)]
+}
+//#endregion 🔖Measures
+
 //#region 🔖Puzzle3dPlayApp
 pub struct Puzzle3dPlayApp {
     precompute: Puzzle3dPrecomputeSession,
@@ -1195,6 +1365,45 @@ impl PluginApp for Puzzle3dPlayApp {
                 envelope.runtime.selection_method = method.into();
                 return vec![set_document_op(&envelope)];
             }
+            "setLodAutomatic" => {
+                envelope.runtime.lod_automatic = args.and_then(|value| value.get("pressed")).and_then(|value| value.as_bool()).unwrap_or(!envelope.runtime.lod_automatic);
+                return vec![set_document_op(&envelope)];
+            }
+            "setLodDepthVariable" => {
+                envelope.runtime.lod_depth_variable = args.and_then(|value| value.get("pressed")).and_then(|value| value.as_bool()).unwrap_or(!envelope.runtime.lod_depth_variable);
+                return vec![set_document_op(&envelope)];
+            }
+            "setLodShowGrid" => {
+                envelope.runtime.lod_show_grid = args.and_then(|value| value.get("pressed")).and_then(|value| value.as_bool()).unwrap_or(!envelope.runtime.lod_show_grid);
+                return vec![set_document_op(&envelope)];
+            }
+            "setLodManual" => {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
+                    envelope.runtime.lod_manual = value.clamp(PUZZLE3D_LOD_SLIDER_MIN, PUZZLE3D_LOD_SLIDER_MAX);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setGridSnapEnabled" => {
+                envelope.runtime.grid_snap_enabled = args.and_then(|value| value.get("pressed")).and_then(|value| value.as_bool()).unwrap_or(!envelope.runtime.grid_snap_enabled);
+                return vec![set_document_op(&envelope)];
+            }
+            "setGridFactor" => {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
+                    envelope.runtime.grid_factor = value.max(0.1);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setSelectableKind" => {
+                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("");
+                let pressed = args.and_then(|value| value.get("pressed")).and_then(|value| value.as_bool());
+                match kind {
+                    "objects" => envelope.runtime.selectable_kinds.objects = pressed.unwrap_or(!envelope.runtime.selectable_kinds.objects),
+                    "vortices" => envelope.runtime.selectable_kinds.vortices = pressed.unwrap_or(!envelope.runtime.selectable_kinds.vortices),
+                    "attractions" => envelope.runtime.selectable_kinds.attractions = pressed.unwrap_or(!envelope.runtime.selectable_kinds.attractions),
+                    _ => {}
+                }
+                return vec![set_document_op(&envelope)];
+            }
             "engagementPossibleSelect" => {
                 let possible_id = args.and_then(|value| value.get("possibleId")).and_then(|value| value.as_str()).unwrap_or("");
                 envelope.runtime.active_tool = match possible_id {
@@ -1309,7 +1518,7 @@ impl PluginApp for Puzzle3dPlayApp {
                         brush_preview,
                         Some(world_interaction_json(&envelope.runtime)),
                         None,
-                        None,
+                        Some(world3d_lod_json(&envelope.runtime)),
                         Some(world3d_chunking_json(256.0, 8000.0)),
                         puzzle3d_context_menu_json(&envelope),
                     ),
@@ -1325,6 +1534,11 @@ impl PluginApp for Puzzle3dPlayApp {
     fn window_engagements(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let envelope = parse_envelope(document_json);
         HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.into(), puzzle3d_engagement(&envelope, &self.precompute))])
+    }
+
+    fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        let envelope = parse_envelope(document_json);
+        HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.into(), puzzle3d_window_measures(&envelope))])
     }
 }
 //#endregion 🔖Puzzle3dPlayApp
@@ -1402,13 +1616,17 @@ mod tests {
         assert!(config.get("hostRules").is_none(), "an explicit empty hostRules object disables the default Nakagin brush rules");
     }
 
+    /// 🧊 A real, above-`BRUSH_COLLISION_MESH_MIN_EXTENT` mesh registered via `registerBrushMesh` must keep its
+    /// url mapped across repeated resyncs (the primitive box fallback is itself below the extent threshold, so
+    /// its own registration is always a no-op and can never clear an existing entry).
     #[test]
     fn sync_precompute_session_preserves_registered_mesh() {
         let envelope = default_envelope();
         let mut session = Puzzle3dPrecomputeSession::new();
-        let real_mesh = mesh_from_kind("box");
+        let positions: Vec<f32> = vec![-4.0, -4.0, -4.0, 4.0, -4.0, -4.0, 4.0, 4.0, -4.0, -4.0, 4.0, -4.0, -4.0, -4.0, 4.0, 4.0, -4.0, 4.0, 4.0, 4.0, 4.0, -4.0, 4.0, 4.0];
+        let indices: Vec<u32> = vec![0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2];
         let url = collect_mesh_urls(&envelope.fixture).into_iter().next().expect("fixture has at least one mesh url");
-        session.register_mesh(&url, &real_mesh.positions, &real_mesh.indices);
+        session.register_mesh(&url, &positions, &indices);
         sync_precompute_session(&mut session, &envelope);
         sync_precompute_session(&mut session, &envelope);
         assert!(session.has_mesh(&url));

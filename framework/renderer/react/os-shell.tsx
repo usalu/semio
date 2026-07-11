@@ -1456,6 +1456,11 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     writeStoredUiChromeExpertise(uiExpertise);
   }, [uiExpertise]);
 
+  useEffect(() => {
+    writeStoredUiChromeLocale(uiLocale);
+    void setUiLocale(uiLocale);
+  }, [uiLocale]);
+
   useCommandHotkey(
     "mod+[",
     useCallback(() => {
@@ -1562,12 +1567,14 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       setExpertise: setUiExpertise,
       theme: uiTheme,
       setTheme: setUiTheme,
+      locale: uiLocale,
+      setLocale: setUiLocaleState,
     }),
-    [session, uiCompact, uiExpertise, uiTheme],
+    [session, uiCompact, uiExpertise, uiTheme, uiLocale],
   );
   settingsHostRef.current = settingsHost;
 
-  const frameworkDisplayTabs = useMemo(() => createFrameworkDisplayPanelTabs(() => displayHostRef.current), [displayHost]);
+  const frameworkDisplayTabs = useMemo(() => createFrameworkDisplayPanelTabs(() => displayHostRef.current), [displayHost, uiLocale]);
   const frameworkSettingsTab = useMemo(() => createFrameworkSettingsPanelTab(() => settingsHostRef.current), [settingsHost]);
 
   useEffect(() => {
@@ -3293,8 +3300,8 @@ export function UISearch({
   items,
   open,
   onOpenChange,
-  placeholder = "Search commands…",
-  emptyMessage = "No results.",
+  placeholder = shellLabel("ui.search.placeholder"),
+  emptyMessage = shellLabel("ui.search.empty"),
 }: {
   readonly items: readonly UISearchItem[];
   readonly open: boolean;
@@ -3339,7 +3346,7 @@ export function UISearch({
   );
 
   return (
-    <CommandDialog title="Search" description="Global command palette" open={open} onOpenChange={onOpenChange} shouldFilter={false}>
+    <CommandDialog title={shellLabel("ui.search.title")} description={shellLabel("ui.search.description")} open={open} onOpenChange={onOpenChange} shouldFilter={false}>
       <CommandInput id="ui.search.input" placeholder={placeholder} value={query} onValueChange={setQuery} />
       <CommandList>
         <CommandEmpty>{emptyMessage}</CommandEmpty>
@@ -3420,7 +3427,7 @@ export function useUIFindSafe(): UIFindContextValue | null {
   return useContext(UIFindContext);
 }
 
-export function UIFind({ open, onOpenChange, placeholder = "Find in window…", emptyMessage = "No results." }: { readonly open: boolean; readonly onOpenChange: (open: boolean) => void; readonly placeholder?: string; readonly emptyMessage?: string }) {
+export function UIFind({ open, onOpenChange, placeholder = shellLabel("ui.find.placeholder"), emptyMessage = shellLabel("ui.find.empty") }: { readonly open: boolean; readonly onOpenChange: (open: boolean) => void; readonly placeholder?: string; readonly emptyMessage?: string }) {
   const [query, setQuery] = useState("");
   const findContext = useContext(UIFindContext);
   const findItems = findContext?.findItems ?? [];
@@ -3463,7 +3470,7 @@ export function UIFind({ open, onOpenChange, placeholder = "Find in window…", 
   if (!findContext) return null;
 
   return (
-    <CommandDialog title="Find" description="Find in active window" open={open} onOpenChange={onOpenChange} shouldFilter={false}>
+    <CommandDialog title={shellLabel("ui.find.title")} description={shellLabel("ui.find.description")} open={open} onOpenChange={onOpenChange} shouldFilter={false}>
       <CommandInput id="ui.find.input" placeholder={placeholder} value={query} onValueChange={setQuery} />
       <CommandList>
         <CommandEmpty>{emptyMessage}</CommandEmpty>
@@ -3894,7 +3901,7 @@ function buildDisplayLayoutTree(host: DisplayHostApi): TreePanelConfig {
     ? [
         {
           id: "framework.display.layout.group.saved",
-          label: "Saved",
+          label: shellLabel("ui.display.saved"),
           defaultOpen: false,
           items: groupNamedLayoutsToTreeItems(
             userLayouts,
@@ -3908,12 +3915,12 @@ function buildDisplayLayoutTree(host: DisplayHostApi): TreePanelConfig {
     sections: [
       {
         id: "framework.display.layout.save",
-        label: "Save layout",
+        label: shellLabel("ui.display.saveLayout"),
         defaultOpen: false,
         items: [
           {
             id: "framework.display.layout.save.label",
-            label: "Name",
+            label: shellLabel("ui.common.name"),
             control: (
               <Input
                 id="framework.display.save-label"
@@ -3921,18 +3928,18 @@ function buildDisplayLayoutTree(host: DisplayHostApi): TreePanelConfig {
                 onChange={(event) => {
                   displayLayoutSaveLabel = event.target.value;
                 }}
-                placeholder="Layout name"
+                placeholder={shellLabel("ui.display.saveLayoutPlaceholder")}
               />
             ),
           },
           {
             id: "framework.display.layout.save.action",
-            label: "Save",
+            label: shellLabel("ui.common.save"),
             control: (
               <Button
                 id="framework.display.save"
                 size="sm"
-                text="Save current layout"
+                text={shellLabel("ui.display.saveCurrentLayout")}
                 disabled={!displayLayoutSaveLabel.trim()}
                 onClick={() => {
                   const label = displayLayoutSaveLabel.trim();
@@ -3947,7 +3954,7 @@ function buildDisplayLayoutTree(host: DisplayHostApi): TreePanelConfig {
       },
       {
         id: "framework.display.layout.list",
-        label: "Layouts",
+        label: shellLabel("ui.display.layouts"),
         defaultOpen: true,
         items: [...builtinItems, ...userItems],
       },
@@ -3960,24 +3967,24 @@ export function createFrameworkDisplayPanelTabs(getHost: () => DisplayHostApi | 
     {
       id: FRAMEWORK_DISPLAY_WINDOWS_TAB_ID,
       icon: shellTabIcon("framework.display.windows"),
-      name: "Windows",
+      name: shellLabel("ui.display.tab.windows"),
       order: -100,
       tree: {
         resolveTree: () => {
           const host = getHost();
-          return host ? buildDisplayWindowsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: "Display unavailable" }] }] };
+          return host ? buildDisplayWindowsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.display.unavailable") }] }] };
         },
       },
     },
     {
       id: FRAMEWORK_DISPLAY_LAYOUT_TAB_ID,
       icon: shellTabIcon("framework.display.layout"),
-      name: "Layout",
+      name: shellLabel("ui.display.tab.layout"),
       order: -99,
       tree: {
         resolveTree: () => {
           const host = getHost();
-          return host ? buildDisplayLayoutTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: "Display unavailable" }] }] };
+          return host ? buildDisplayLayoutTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.display.unavailable") }] }] };
         },
       },
     },
@@ -3997,6 +4004,8 @@ export type SettingsHostApi = {
   readonly setExpertise: (expertise: string) => void;
   readonly theme: string;
   readonly setTheme: (theme: string) => void;
+  readonly locale: UiLocale;
+  readonly setLocale: (locale: UiLocale) => void;
 };
 
 function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
@@ -4006,46 +4015,56 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
         ? [
             {
               id: "framework.settings.app",
-              label: "App",
+              label: shellLabel("ui.settings.tab.app"),
               defaultOpen: true,
               items: [
-                ...(host.appLabel ? [{ id: "framework.settings.app.label", label: `Name: ${host.appLabel}` }] : []),
-                ...(host.appId ? [{ id: "framework.settings.app.id", label: `App id: ${host.appId}` }] : []),
-                ...(host.controllerId ? [{ id: "framework.settings.app.controller", label: `Controller: ${host.controllerId}` }] : []),
-                ...(host.pluginId ? [{ id: "framework.settings.app.plugin", label: `Plugin: ${host.pluginId}` }] : []),
+                ...(host.appLabel ? [{ id: "framework.settings.app.label", label: `${shellLabel("ui.settings.app.name")}: ${host.appLabel}` }] : []),
+                ...(host.appId ? [{ id: "framework.settings.app.id", label: `${shellLabel("ui.settings.app.id")}: ${host.appId}` }] : []),
+                ...(host.controllerId ? [{ id: "framework.settings.app.controller", label: `${shellLabel("ui.settings.app.controller")}: ${host.controllerId}` }] : []),
+                ...(host.pluginId ? [{ id: "framework.settings.app.plugin", label: `${shellLabel("ui.settings.app.plugin")}: ${host.pluginId}` }] : []),
               ],
             },
           ]
         : []),
       {
         id: "framework.settings.general",
-        label: "General",
+        label: shellLabel("ui.settings.tab.general"),
         defaultOpen: true,
         items: [
           {
             id: "framework.settings.theme",
-            label: "Theme",
+            label: shellLabel("ui.settings.tab.theme"),
             control: (
               <select id="framework.settings.theme" className="h-small w-full rounded border border-border bg-background px-2 text-sm" value={host.theme} onChange={(event) => host.setTheme(event.target.value)}>
-                <option value="system">System</option>
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
+                <option value="system">{shellLabel("ui.settings.theme.system")}</option>
+                <option value="light">{shellLabel("ui.settings.theme.light")}</option>
+                <option value="dark">{shellLabel("ui.settings.theme.dark")}</option>
               </select>
             ),
           },
           {
             id: "framework.settings.compact",
-            label: "Compact UI",
+            label: shellLabel("settings.compact"),
             control: <input id="framework.settings.compact" type="checkbox" checked={host.compact} onChange={(event) => host.setCompact(event.target.checked)} />,
           },
           {
             id: "framework.settings.expertise",
-            label: "Expertise",
+            label: shellLabel("ui.settings.tab.expertise"),
             control: (
               <select id="framework.settings.expertise" className="h-small w-full rounded border border-border bg-background px-2 text-sm" value={host.expertise} onChange={(event) => host.setExpertise(event.target.value)}>
-                <option value="beginner">Beginner</option>
-                <option value="normal">Normal</option>
-                <option value="expert">Expert</option>
+                <option value="beginner">{shellLabel("settings.expertise.beginner")}</option>
+                <option value="normal">{shellLabel("settings.expertise.normal")}</option>
+                <option value="expert">{shellLabel("settings.expertise.expert")}</option>
+              </select>
+            ),
+          },
+          {
+            id: "framework.settings.language",
+            label: shellLabel("ui.settings.tab.language"),
+            control: (
+              <select id="framework.settings.language" className="h-small w-full rounded border border-border bg-background px-2 text-sm" value={host.locale} onChange={(event) => host.setLocale(event.target.value === "de" ? "de" : "en")}>
+                <option value="en">{shellLabel("ui.settings.language.en")}</option>
+                <option value="de">{shellLabel("ui.settings.language.de")}</option>
               </select>
             ),
           },
@@ -4059,12 +4078,12 @@ export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi |
   return {
     id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID,
     icon: shellTabIcon("framework.settings.general"),
-    name: "Settings",
+    name: shellLabel("ui.panelToggle.settings"),
     order: -98,
     tree: {
       resolveTree: () => {
         const host = getHost();
-        return host ? buildSettingsGeneralTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: "Settings unavailable" }] }] };
+        return host ? buildSettingsGeneralTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
       },
     },
   };

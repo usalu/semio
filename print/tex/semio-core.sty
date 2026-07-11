@@ -88,6 +88,22 @@
   \color{semio-chrome-text-normal}
 }
 
+%region Emphasis Mechanism
+% 🎨 Foreground-color emphasis, ported from the UI's text-element/text-emphasized
+% pair: https://github.com/usalu/semio ui/styling/js/ui.css. Emphasis is a color
+% swap, never italics — the print font stack (semio-fonts.sty) has no italic face.
+\newcommand{\semio@text@element}[1]{\textcolor{semio-chrome-text-normal}{#1}}
+\newcommand{\semio@text@emphasized}[1]{\textcolor{semio-chrome-foreground}{#1}}
+\renewcommand{\emph}[1]{\semio@text@emphasized{#1}}
+
+% 🎨 Active state, ported from the UI's active-base/active-foreground pair.
+\newcommand{\semio@active}[1]{\colorbox{semio-chrome-active-base}{\textcolor{semio-chrome-active-foreground}{#1}}}
+
+% 🎨 Highlight, ported from the UI's hover-interactive-fill + emphasized content
+% pair; print has no hover state, so the panel tint stands in as the static fill.
+\newcommand{\semio@highlighted}[1]{\colorbox{semio-chrome-panel}{\semio@text@emphasized{#1}}}
+%endregion Emphasis Mechanism
+
 \NewDocumentCommand{\SemioSetup}{m}{\keys_set:nn { semio / setup } {#1}}
 
 \NewDocumentCommand{\aktenzeichen}{m}{\tl_set:Nn \l_semio_aktenzeichen_tl {#1}}

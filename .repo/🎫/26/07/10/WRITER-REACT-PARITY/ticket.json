@@ -1,7 +1,7 @@
 {
   "title": "Writer React Parity",
   "emoji": "✍️",
-  "status": "closed",
+  "status": "open",
   "description": "Get writer's react renderer to premigration level (git tag `premigration`, where writer/react/index.tsx was a 1542-line React renderer with WriterCanvas: jack AST tree, selectable spans, symbol occurrences/rename, placeholders, newline gating, completions, context menu, keyboard navigation, window measures/engagement, toolbar) on the migrated Rust plugin architecture: writer/plugin/rs emits a TextEditorScene UiTree interpreted by framework/renderer/react's text-editor-host.tsx, backed by the framework/editor/rs GPU editor session. Follow the approach of PUZZLE-2D-REACT-PARITY and PUZZLE-3D-REACT-PARITY (26/07/09).",
   "summary": "Brought writer's react renderer to premigration feature parity on the migrated Rust-plugin architecture. writer/plugin/rs/lib.rs was rewritten with a full recursive-descent jack AST parser (replacing a crude keyword scan), selectable spans (atomic/varLabel/propertyAccess), placeholders, newline gating, jack symbol resolution (variable/property/nodeKind/edgeKind) with multi-occurrence rename, tree hover/selection sync, window measures/engagement, a Format/Lint toolbar, and a dag.jack example. Added 3 new TextEditorScene wire fields (hoverJson/newlineGatesJson/renameJson) across framework/core/rs, framework/editor/rs (scene sync), and framework/renderer/react/os-shell.tsx. Rewrote text-editor-host.tsx's WasmEditorSurface: fixed a latent pointer-up crash, added keyboard navigation (arrows/Home/End/Tab), Enter newline gating, completions with host-local open/cycle state, F2/context-menu rename with live multi-span preview, a generic right-click context menu via ContextMenuController, and wheel-driven camera persistence. Verified via 24 new/updated Rust unit tests (writer-plugin) + 19 (framework_editor) + 7 (framework_core) all passing natively, cargo check clean on wasm32-wasip2, tsc clean on the changed file, vitest passing (9 new cases), and an end-to-end wasm-verify.ts round-trip against the actual compiled writer_plugin.js/wasm confirming AST parsing, occurrences/rename, engagement, measures, tools, and hover sync all work correctly. Live browser click-through was not performed — all 5 dev-server slots for this folder were occupied by other concurrent sessions at verification time; a manual checklist is recorded in verify-log.md for a follow-up session to run.",
   "github": {
@@ -9,6 +9,7 @@
   },
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
-    "⚪99ccf91289c84b07a4508badd57bf2dd"
+    "⚪99ccf91289c84b07a4508badd57bf2dd",
+    "⚪f97c0378f3354b2084d82b938788e6c6"
   ]
 }

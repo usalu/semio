@@ -1738,6 +1738,20 @@ impl PluginApp for WriterApp {
                     return vec![set_document_op(&play)];
                 }
             }
+            "setActiveExample" => {
+                let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("empty");
+                let document = match example_id {
+                    "jack" => serde_json::from_str::<WriterDocument>(JACK_EXAMPLE_JSON).unwrap_or_else(|_| empty_writer_document()),
+                    "dag.jack" => serde_json::from_str::<WriterDocument>(DAG_JACK_EXAMPLE_JSON).unwrap_or_else(|_| empty_writer_document()),
+                    _ => empty_writer_document(),
+                };
+                return vec![set_document_op(&WriterPlayEnvelope {
+                    document,
+                    runtime: WriterPlayRuntime::default(),
+                    undo_stack: Vec::new(),
+                    redo_stack: Vec::new(),
+                })];
+            }
             _ => {}
         }
         Vec::new()
@@ -2165,6 +2179,38 @@ mod tests {
         let manifest = &bundle.manifest;
         assert!(manifest.apps.iter().any(|a| a.id == WRITER_PLAY_APP_ID));
         assert!(manifest.examples.iter().any(|e| e.id == "dag.jack" && e.app_id == WRITER_PLAY_APP_ID));
+    }
+
+    #[test]
+    fn set_active_example_loads_jack_fixture() {
+        let mut app = WriterApp;
+        let document = serde_json::to_string(&empty_writer_document()).unwrap();
+        let ops = app.handle_command_patch_ops("setActiveExample", Some(&json!({ "exampleId": "jack" })), &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
+        assert_eq!(envelope.document.id, "jack");
+        assert!(envelope.document.text.contains("MATCH"));
+    }
+
+    #[test]
+    fn set_active_example_loads_dag_jack_fixture() {
+        let mut app = WriterApp;
+        let document = serde_json::to_string(&empty_writer_document()).unwrap();
+        let ops = app.handle_command_patch_ops("setActiveExample", Some(&json!({ "exampleId": "dag.jack" })), &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
+        assert_eq!(envelope.document.id, "dag-jack");
+    }
+
+    #[test]
+    fn set_active_example_falls_back_to_empty_document() {
+        let mut app = WriterApp;
+        let document = JACK_EXAMPLE_JSON.to_string();
+        let ops = app.handle_command_patch_ops("setActiveExample", Some(&json!({ "exampleId": "empty" })), &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
+        assert_eq!(envelope.document.id, "empty");
+        assert_eq!(envelope.document.text, "");
     }
 }
 //#endregion 🧪Tests

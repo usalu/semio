@@ -11,9 +11,10 @@ use draw::{
 use semio_framework_plugin::{SurfaceKind,
     build_canvas_2d_scene, create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_select, ui_inspector_mixed_slider, ui_inspector_mixed_text, ui_inspector_mixed_toggle,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor, PanelGroup, ToolNode,
-    UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiSliderNode,
-    UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, tool_collection, tool_toggle, App, Canvas2dScene,
+    CommandDescriptor, PanelGroup, ToolNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSelectItem,
+    UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
+    WindowEngagementInput,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
     layout::WindowEngagementStatus,
 };
@@ -941,35 +942,46 @@ impl semio_framework_plugin::PluginApp for DrawApp {
     fn tools(&self, document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
         let play = parse_envelope(document_json);
         let active = play.document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
-        const TOOLS: [(&str, &str, &str); 11] = [
-            ("selectMarquee", "square-dashed", "Marquee Select"),
-            ("selectLasso", "lasso", "Lasso Select"),
-            ("selectDirect", "mouse-pointer-2", "Direct Select"),
-            ("pen", "pen-tool", "Pen"),
-            ("shapeRect", "square", "Rectangle"),
-            ("shapeEllipse", "circle", "Ellipse"),
-            ("shapeLine", "minus", "Line"),
-            ("shapePolygon", "pentagon", "Polygon"),
-            ("booleanCombine", "combine", "Boolean"),
-            ("trace", "scan-line", "Trace"),
-            ("transformMove", "move", "Pan"),
-        ];
-        TOOLS
-            .into_iter()
-            .enumerate()
-            .map(|(index, (id, icon, label))| ToolNode::Toggle {
-                id: format!("draw-play-tools.{id}"),
-                icon_id: icon.into(),
-                label: Some(label.into()),
-                text: None,
-                title: Some(label.into()),
-                order: Some(index as u32),
-                pressed: Some(active == id),
-                disabled: None,
-                category: None,
-                on_change: draw_play_cmd("setActiveTool", Some(json!({ "tool": id }))),
-            })
-            .collect()
+        let toggle = |id: &str, icon: &str, label: &str| {
+            tool_toggle(
+                format!("draw-play-tools.{id}"),
+                icon,
+                label,
+                active == id,
+                draw_play_cmd("setActiveTool", Some(json!({ "tool": id }))),
+            )
+        };
+        vec![
+            tool_collection(
+                "draw-play-tools-select",
+                "mouse-pointer-2",
+                "Select",
+                vec![
+                    toggle("selectMarquee", "square-dashed", "Marquee Select"),
+                    toggle("selectLasso", "lasso", "Lasso Select"),
+                    toggle("selectDirect", "mouse-pointer-2", "Direct Select"),
+                ],
+            ),
+            tool_collection(
+                "draw-play-tools-draw",
+                "pen-tool",
+                "Draw",
+                vec![
+                    toggle("pen", "pen-tool", "Pen"),
+                    toggle("shapeRect", "square", "Rectangle"),
+                    toggle("shapeEllipse", "circle", "Ellipse"),
+                    toggle("shapeLine", "minus", "Line"),
+                    toggle("shapePolygon", "pentagon", "Polygon"),
+                ],
+            ),
+            tool_collection(
+                "draw-play-tools-combine",
+                "combine",
+                "Combine",
+                vec![toggle("booleanCombine", "combine", "Boolean"), toggle("trace", "scan-line", "Trace")],
+            ),
+            tool_collection("draw-play-tools-view", "move", "View", vec![toggle("transformMove", "move", "Pan")]),
+        ]
     }
 }
 //#endregion 🔖DrawApp
@@ -2169,8 +2181,17 @@ mod tests {
         document.active_tool = Some("pen".into());
         let document_json = serde_json::to_string(&document).unwrap();
         let tools = app.tools(&document_json, &ViewState::default());
-        assert_eq!(tools.len(), 11);
-        let pen_pressed = tools.iter().any(|tool| matches!(tool, ToolNode::Toggle { id, pressed, .. } if id == "draw-play-tools.pen" && *pressed == Some(true)));
+        assert_eq!(tools.len(), 4);
+        assert!(tools.iter().all(|tool| matches!(tool, ToolNode::Collection { .. })));
+        let all_toggles: Vec<&ToolNode> = tools
+            .iter()
+            .flat_map(|tool| match tool {
+                ToolNode::Collection { children, .. } => children.iter(),
+                _ => [].iter(),
+            })
+            .collect();
+        assert_eq!(all_toggles.len(), 11);
+        let pen_pressed = all_toggles.iter().any(|tool| matches!(tool, ToolNode::Toggle { id, pressed, .. } if id == "draw-play-tools.pen" && *pressed == Some(true)));
         assert!(pen_pressed);
     }
 
