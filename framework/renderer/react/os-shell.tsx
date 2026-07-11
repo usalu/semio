@@ -1670,7 +1670,10 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     [draftThemePatch],
   );
 
-  const resetTheme = useCallback(() => setUiThemeDraft(null), []);
+  const resetTheme = useCallback(() => {
+    setUiThemeDraft(null);
+    setUiThemeIdState("semio");
+  }, []);
 
   const saveTheme = useCallback(
     (label: string) => {
@@ -4648,7 +4651,7 @@ function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
           {
             id: "framework.settings.theme.reset.action",
             label: shellLabel("ui.settings.theme.reset"),
-            control: <Button id="framework.settings.theme.reset" size="sm" text={shellLabel("ui.settings.theme.reset")} disabled={!host.themeDirty} onClick={() => host.resetTheme()} />,
+            control: <Button id="framework.settings.theme.reset" size="sm" text={shellLabel("ui.settings.theme.reset")} disabled={!host.themeDirty && host.themeId === "semio"} onClick={() => host.resetTheme()} />,
           },
           {
             id: "framework.settings.theme.export.action",

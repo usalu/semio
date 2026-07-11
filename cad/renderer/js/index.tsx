@@ -2045,6 +2045,8 @@ function spatialSceneColorToHex(color: string): number {
 }
 
 const cadFieldClass = "h-medium w-full bg-transparent text-element";
+/** 🕳️ Sentinel Select value standing in for "no enum value set", since Radix Select disallows an empty-string item value. */
+const ENUM_FIELD_NONE_VALUE = "__none__";
 // #endregion 🎨SpatialSceneColors
 
 /** @emoji 🖼️ Maps `DisplayModel.items` to R3F nodes (must live under `<Canvas>`). */
@@ -4737,6 +4739,8 @@ export function InteractionRepl({
   const modelDefinitions = reactHostPort.useMemo(() => listModelDefinitionManifests(), []);
   const transfersFrom = reactHostPort.useMemo(() => listTransformationsIntoModelDefinition(activeModelDefinitionId ?? defaultModelDefinitionId()), [activeModelDefinitionId]);
   const transfersTo = reactHostPort.useMemo(() => listTransformationsFromModelDefinition(activeModelDefinitionId ?? defaultModelDefinitionId()), [activeModelDefinitionId]);
+  const [transfersFromResetKey, setTransfersFromResetKey] = reactHostPort.useState(0);
+  const [transfersToResetKey, setTransfersToResetKey] = reactHostPort.useState(0);
   const modelDefinitionScope = reactHostPort.useMemo(() => resolveModelDefinitionScope(activeModelDefinitionId ?? defaultModelDefinitionId()), [activeModelDefinitionId]);
   const scopedInteractions = reactHostPort.useMemo(() => listSpatialInteractionsForModelDefinition(activeModelDefinitionId ?? defaultModelDefinitionId()), [activeModelDefinitionId, modelDefinitionRevision]);
   const kernel = rt.kernel();
@@ -5989,6 +5993,7 @@ export function InteractionRepl({
                 <label className="flex flex-col gap-half">
                   <span>Model definition</span>
                   <Select
+                    id="cad.modelDefinitionPicker"
                     value={activeModelDefinitionId ?? defaultModelDefinitionId()}
                     onValueChange={(next) => {
                       setActiveModelDefinitionId(next || defaultModelDefinitionId());
@@ -6024,6 +6029,7 @@ export function InteractionRepl({
                   <label className="flex flex-col gap-half">
                     <span>Transfer from</span>
                     <Select
+                      id="cad.transferFromPicker"
                       key={transfersFromResetKey}
                       onValueChange={(qid) => {
                         const spec = transfersFrom.find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid);
@@ -6047,24 +6053,26 @@ export function InteractionRepl({
                 {transfersTo.length ? (
                   <label className="flex flex-col gap-half">
                     <span>Transfer to</span>
-                    <select
-                      defaultValue=""
-                      onChange={(e) => {
-                        const qid = e.target.value;
-                        if (!qid) return;
+                    <Select
+                      id="cad.transferToPicker"
+                      key={transfersToResetKey}
+                      onValueChange={(qid) => {
                         const spec = transfersTo.find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid);
                         if (spec) onApplyTransformation?.(spec);
-                        e.target.value = "";
+                        setTransfersToResetKey((k) => k + 1);
                       }}
-                      className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}
                     >
-                      <option value="">Select outgoing transformation…</option>
-                      {transfersTo.map((row) => (
-                        <option key={qualifiedTransformationId(row.modelDefinitionId, row.id)} value={qualifiedTransformationId(row.modelDefinitionId, row.id)}>
-                          {row.label} ({row.source.modelDefinition} → {row.target.modelDefinition})
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}>
+                        <SelectValue placeholder="Select outgoing transformation…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {transfersTo.map((row) => (
+                          <SelectItem key={qualifiedTransformationId(row.modelDefinitionId, row.id)} value={qualifiedTransformationId(row.modelDefinitionId, row.id)}>
+                            {row.label} ({row.source.modelDefinition} → {row.target.modelDefinition})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </label>
                 ) : null}
               </>
@@ -6299,21 +6307,26 @@ export function SelectionAttributesPanel({ model, activeModelDefinitionId, selec
           return fieldRow(
             defn,
             current,
-            <select
-              value={typeof current === "string" ? current : ""}
-              onChange={(e) => {
-                if (!e.target.value) clearField(defn);
-                else setField(defn, e.target.value);
+            <Select
+              id={`cad.attribute.${defn.id}`}
+              value={typeof current === "string" ? current : ENUM_FIELD_NONE_VALUE}
+              onValueChange={(value) => {
+                if (value === ENUM_FIELD_NONE_VALUE) clearField(defn);
+                else setField(defn, value);
               }}
-              className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}
             >
-              <option value="">—</option>
-              {options.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>,
+              <SelectTrigger className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ENUM_FIELD_NONE_VALUE}>—</SelectItem>
+                {options.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>,
           );
         }
         if (editor === "number") {

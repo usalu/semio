@@ -1110,6 +1110,31 @@ fn sync_cad_history(envelope: &mut CadPlayEnvelope, store: &CadStore) {
 //#endregion 🔖NodeHistory
 //#endregion 🔖Document
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the CAD app; one field per label makes every terminology×locale combination compile-checked.
+struct CadLabels {
+    object: &'static str,
+    objects: &'static str,
+}
+
+const CAD_LABELS_NATIVE_EN: CadLabels = CadLabels { object: "Object", objects: "Objects" };
+const CAD_LABELS_NATIVE_DE: CadLabels = CadLabels { object: "Objekt", objects: "Objekte" };
+const CAD_LABELS_REUSE_EN: CadLabels = CadLabels { object: "Building component", objects: "Building components" };
+const CAD_LABELS_REUSE_DE: CadLabels = CadLabels { object: "Baukomponente", objects: "Baukomponenten" };
+
+/// 🗣️ Resolves the active label set from the shell-provided locale/terminology; unknown terminology ids fall back to native.
+fn cad_labels(view_state: &ViewState) -> &'static CadLabels {
+    let terminology = view_state.terminology.as_deref().unwrap_or("native");
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    match (terminology, is_de) {
+        ("reuse", true) => &CAD_LABELS_REUSE_DE,
+        ("reuse", false) => &CAD_LABELS_REUSE_EN,
+        (_, true) => &CAD_LABELS_NATIVE_DE,
+        (_, false) => &CAD_LABELS_NATIVE_EN,
+    }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Panels
 fn object_tree_item(id_suffix: &str, object: &CadObject) -> UiTreeItemNode {
     let primitive_items: Vec<UiTreeItemNode> = object
@@ -1443,7 +1468,7 @@ fn build_catalogue_tree() -> UiNode {
     })
 }
 
-fn build_properties_panel(envelope: &CadPlayEnvelope) -> UiNode {
+fn build_properties_panel(envelope: &CadPlayEnvelope, labels: &CadLabels) -> UiNode {
     if let (Some(object_id), Some(primitive_id)) = (
         envelope.runtime.selected_object_ids.first(),
         envelope.runtime.selected_primitive_id.as_deref(),
@@ -1463,6 +1488,7 @@ fn build_properties_panel(envelope: &CadPlayEnvelope) -> UiNode {
                 .unwrap_or("primitive");
             return ui_inspector_groups_to_tree(&[primitive_inspector_group(
                 object,
+                labels,
                 primitive_id,
                 kind,
             )]);
@@ -1480,7 +1506,7 @@ fn build_properties_panel(envelope: &CadPlayEnvelope) -> UiNode {
             })
             .collect();
         if !selected.is_empty() {
-            return ui_inspector_groups_to_tree(&[object_inspector_group(&selected)]);
+            return ui_inspector_groups_to_tree(&[object_inspector_group(&selected, labels)]);
         }
     }
     if let (Some(model_definition_id), Some(reference_id)) = (
@@ -1591,7 +1617,7 @@ fn inspector_vec3_field(
     })
 }
 
-fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
+fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> UiInspectorFieldGroup {
     let object_ids: Vec<String> = objects.iter().map(|object| object.id.clone()).collect();
     let labels: Vec<String> = objects.iter().map(|object| object.label.clone()).collect();
     let typologies: Vec<String> = objects.iter().map(|object| object.typology.clone()).collect();
@@ -1613,9 +1639,9 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
     UiInspectorFieldGroup {
         id: "cad-play-inspector.object".into(),
         label: if objects.len() == 1 {
-            "Object".into()
+            term_labels.object.into()
         } else {
-            format!("{} Objects", objects.len())
+            format!("{} {}", objects.len(), term_labels.objects)
         },
         default_open: None,
         fields: vec![
@@ -1722,7 +1748,7 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
     }
 }
 
-fn primitive_inspector_group(object: &CadObject, primitive_id: &str, kind: &str) -> UiInspectorFieldGroup {
+fn primitive_inspector_group(object: &CadObject, labels: &CadLabels, primitive_id: &str, kind: &str) -> UiInspectorFieldGroup {
     let slot = object
         .primitives
         .iter()
@@ -1734,7 +1760,7 @@ fn primitive_inspector_group(object: &CadObject, primitive_id: &str, kind: &str)
         label: "Primitive".into(),
         default_open: None,
         fields: vec![
-            ui_inspector_readonly_field("cad-play-inspector.primitive.object", "Object", &object.label),
+            ui_inspector_readonly_field("cad-play-inspector.primitive.object", labels.object, &object.label),
             ui_inspector_readonly_field("cad-play-inspector.primitive.slot", "Slot", slot),
             ui_inspector_readonly_field("cad-play-inspector.primitive.kind", "Kind", kind),
             ui_inspector_readonly_field("cad-play-inspector.primitive.id", "Id", primitive_id),
@@ -3057,7 +3083,7 @@ impl PluginApp for CadApp {
         build_cad_play_toolbar(&parse_envelope(document_json))
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
         match body_key {
             CAD_PLAY_BODY_SHAPE => build_world_scene_for_pane(&envelope, CadPaneId::Shape, CAD_PLAY_SURFACE_SHAPE),
@@ -3072,7 +3098,7 @@ impl PluginApp for CadApp {
             ),
             CAD_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
             CAD_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
-            CAD_PLAY_BODY_PROPERTIES => build_properties_panel(&envelope),
+            CAD_PLAY_BODY_PROPERTIES => build_properties_panel(&envelope, cad_labels(view_state)),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -3150,6 +3176,7 @@ fn create_cad_app() -> App {
     App::from_builder(
         App::builder(CAD_PLAY_APP_ID, "CAD").document(["semio", "cad"])
             .icon_id("box")
+            .terminology("reuse")
             .mode("edit", "Edit")
             .default_mode_id("edit")
             .window_kind(CAD_PLAY_WINDOW_SHAPE, "Shape", CAD_PLAY_BODY_SHAPE, SurfaceKind::World3d)
@@ -3595,10 +3622,55 @@ mod tests {
         envelope.document.objects[0].orientation = Some([0.0, 0.0, 0.0, 1.0]);
         envelope.document.objects[1].orientation = Some([0.0, 0.707, 0.0, 0.707]);
         envelope.runtime.selected_object_ids = vec!["object-box-1".into(), second_id];
-        let panel = build_properties_panel(&envelope);
+        let panel = build_properties_panel(&envelope, cad_labels(&ViewState::default()));
         let json = serde_json::to_string(&panel).unwrap();
         assert!(json.contains("Mixed"));
         assert!(json.contains("cad-play-inspector.object.orientation"));
+    }
+
+    #[test]
+    fn cad_labels_resolve_native_by_default() {
+        let app = CadApp;
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        envelope.runtime.selected_object_ids = vec!["object-box-1".into()];
+        let panel = build_properties_panel(&envelope, cad_labels(&ViewState::default()));
+        let json = serde_json::to_string(&panel).unwrap();
+        assert!(json.contains("\"Object\""));
+        assert!(!json.contains("Building component"));
+    }
+
+    #[test]
+    fn cad_labels_resolve_reuse_terminology_in_english() {
+        let app = CadApp;
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        envelope.runtime.selected_object_ids = vec!["object-box-1".into()];
+        let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("en".into()), ..ViewState::default() };
+        let panel = build_properties_panel(&envelope, cad_labels(&view_state));
+        let json = serde_json::to_string(&panel).unwrap();
+        assert!(json.contains("Building component"));
+        assert!(!json.contains("\"Object\""));
+    }
+
+    #[test]
+    fn cad_labels_resolve_reuse_terminology_in_german() {
+        let app = CadApp;
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        envelope.runtime.selected_object_ids = vec!["object-box-1".into()];
+        let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("de".into()), ..ViewState::default() };
+        let panel = build_properties_panel(&envelope, cad_labels(&view_state));
+        let json = serde_json::to_string(&panel).unwrap();
+        assert!(json.contains("Baukomponente"));
+    }
+
+    #[test]
+    fn cad_labels_resolve_native_terminology_in_german() {
+        let app = CadApp;
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        envelope.runtime.selected_object_ids = vec!["object-box-1".into()];
+        let view_state = ViewState { terminology: Some("native".into()), locale: Some("de".into()), ..ViewState::default() };
+        let panel = build_properties_panel(&envelope, cad_labels(&view_state));
+        let json = serde_json::to_string(&panel).unwrap();
+        assert!(json.contains("\"Objekt\""));
     }
 
     #[test]

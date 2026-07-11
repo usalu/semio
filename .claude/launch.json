@@ -103,6 +103,28 @@
       "port": 6178
     },
     {
+      "name": "puzzle2d-wgpu-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["nx", "run", "@semio-tech/framework-os-dev:dev"],
+      "env": {
+        "S_OS_PORT": "6112",
+        "SEMIO_PLUGIN": "puzzle2d",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "port": 6112
+    },
+    {
+      "name": "shooting-wgpu-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:shooting:base-icon"],
+      "env": {
+        "SHOOTING_PLAY_PORT": "6120",
+        "S_OS_PORT": "6120",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "port": 6120
+    },
+    {
       "name": "writer-react-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:writer"],

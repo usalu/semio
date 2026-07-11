@@ -1,0 +1,13 @@
+{
+  "title": "Reuse Terminology For CAD",
+  "emoji": "🗣️",
+  "status": "open",
+  "description": "Extend the terminology mechanism (already shipped for puzzle 3d) to the CAD app: add a \"reuse\"/\"Wiederverwendung\" terminology that remaps CAD's primary entity noun \"Object\"/\"Objects\" to \"Building component\"/\"Building components\" (en) and \"Baukomponente\"/\"Baukomponenten\" (de), consistent with puzzle 3d's wording. Also investigate a user report that the puzzle 3d terminology dropdown wasn't visible (root-caused to a transient WASM-boot timeout under heavy concurrent build load on the machine, not a code defect).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1936"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪db29766d32984c49800c33bdce5afa66"
+  ]
+}
