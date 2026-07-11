@@ -29,6 +29,17 @@ fn export_concrete_forest_left_lowpoly_mesh_json() {
     .expect("tessellated mesh");
     let mut mesh = HalfedgeMesh::from_indexed_triangles(&mesh_data.positions, &mesh_data.indices)
         .expect("halfedge mesh");
+    let triangle_face_count = mesh.face_count();
+    mesh.merge_coplanar_faces().expect("merge coplanar faces");
+    assert!(
+        mesh.face_count() < triangle_face_count,
+        "expected coplanar merge to reduce face count below {triangle_face_count}, got {}",
+        mesh.face_count()
+    );
+    assert!(
+        (0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(kernel_3d_mesh::FaceId(fi as u32)).map(|v| v.len()).unwrap_or(0) > 4),
+        "expected at least one merged face with more than 4 corners"
+    );
     let mut min = MeshVec3::new(f32::MAX, f32::MAX, f32::MAX);
     let mut max = MeshVec3::new(f32::MIN, f32::MIN, f32::MIN);
     for index in 0..mesh.vertex_count() {

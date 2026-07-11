@@ -227,10 +227,8 @@ impl HalfedgeMesh {
         if verts.len() < 3 {
             return Err(MeshKernelError::DegenerateOperation);
         }
-        let p0 = self.vertex_position(verts[0])?;
-        let p1 = self.vertex_position(verts[1])?;
-        let p2 = self.vertex_position(verts[2])?;
-        Ok(p1.sub(p0).cross(p2.sub(p0)).normalize())
+        let positions: Vec<Vec3> = verts.iter().map(|v| self.vertex_position(*v)).collect::<MeshResult<Vec<_>>>()?;
+        Ok(newell_normal(&positions).normalize())
     }
 
     pub fn edge_endpoints(&self, edge: EdgeId) -> MeshResult<(VertexId, VertexId)> {
@@ -919,21 +917,34 @@ impl HalfedgeMesh {
         if edges.is_empty() {
             return Err(MeshKernelError::EmptySelection);
         }
-        let (positions, face_list) = self.polygon_soup();
-        let mut remove_edges: HashMap<(u32, u32), bool> = HashMap::new();
+        let (positions, mut face_list) = self.polygon_soup();
         for &eid in edges {
-            if let Ok((v0, v1)) = self.edge_endpoints(eid) {
-                let key = if v0.0 < v1.0 {
-                    (v0.0, v1.0)
-                } else {
-                    (v1.0, v0.0)
-                };
-                remove_edges.insert(key, true);
+            let Ok((v0, v1)) = self.edge_endpoints(eid) else {
+                continue;
+            };
+            let mut a_idx = None;
+            let mut b_idx = None;
+            for (fi, face) in face_list.iter().enumerate() {
+                if find_edge_position(face, v0.0, v1.0).is_some() {
+                    a_idx = Some(fi);
+                }
+                if find_edge_position(face, v1.0, v0.0).is_some() {
+                    b_idx = Some(fi);
+                }
+            }
+            if let (Some(ai), Some(bi)) = (a_idx, b_idx) {
+                if ai == bi {
+                    continue;
+                }
+                if let Some(merged) = merge_face_loops(&face_list[ai], &face_list[bi]) {
+                    let (keep, remove) = if ai < bi { (ai, bi) } else { (bi, ai) };
+                    face_list[keep] = merged;
+                    face_list.remove(remove);
+                }
             }
         }
-        let new_faces: Vec<Vec<u32>> = face_list;
-        let _ = remove_edges;
-        self.rebuild_from_polygon_soup(&positions, &new_faces)
+        let cleaned = collinear_cleanup(&positions, &face_list);
+        self.rebuild_from_polygon_soup(&positions, &cleaned)
     }
 
     pub fn dissolve_vertices(&mut self, verts: &[VertexId]) -> MeshResult<()> {
@@ -997,13 +1008,60 @@ impl HalfedgeMesh {
         for face in face_list {
             if face.len() <= 3 {
                 new_faces.push(face);
-            } else {
-                for i in 1..face.len() - 1 {
-                    new_faces.push(vec![face[0], face[i], face[i + 1]]);
-                }
+                continue;
+            }
+            let face_positions: Vec<Vec3> = face.iter().map(|&vi| Vec3(positions[vi as usize])).collect();
+            for tri in triangulate_polygon(&face_positions) {
+                new_faces.push(vec![face[tri[0]], face[tri[1]], face[tri[2]]]);
             }
         }
         self.rebuild_from_polygon_soup(&positions, &new_faces)
+    }
+
+    /// Merges every pair of adjacent faces whose normals are parallel and whose union is planar (within kernel
+    /// tolerances) into a single n-gon, then drops resulting straight-pass-through (collinear) vertices. Returns
+    /// the number of merges performed.
+    pub fn merge_coplanar_faces(&mut self) -> MeshResult<usize> {
+        let (positions, mut face_list) = self.polygon_soup();
+        let mut merge_count = 0usize;
+        loop {
+            let mut merged_this_round = false;
+            'search: for ai in 0..face_list.len() {
+                let a_len = face_list[ai].len();
+                for i in 0..a_len {
+                    let u = face_list[ai][i];
+                    let v = face_list[ai][(i + 1) % a_len];
+                    let mut bi_found = None;
+                    for bi in 0..face_list.len() {
+                        if bi == ai {
+                            continue;
+                        }
+                        if find_edge_position(&face_list[bi], v, u).is_some() {
+                            bi_found = Some(bi);
+                            break;
+                        }
+                    }
+                    let Some(bi) = bi_found else { continue };
+                    if !faces_coplanar(&positions, &face_list[ai], &face_list[bi]) {
+                        continue;
+                    }
+                    if let Some(merged) = merge_face_loops(&face_list[ai], &face_list[bi]) {
+                        let (keep, remove) = if ai < bi { (ai, bi) } else { (bi, ai) };
+                        face_list[keep] = merged;
+                        face_list.remove(remove);
+                        merge_count += 1;
+                        merged_this_round = true;
+                        break 'search;
+                    }
+                }
+            }
+            if !merged_this_round {
+                break;
+            }
+        }
+        let cleaned = collinear_cleanup(&positions, &face_list);
+        self.rebuild_from_polygon_soup(&positions, &cleaned)?;
+        Ok(merge_count)
     }
 
     pub fn mirror(&mut self, axis: MirrorAxis, weld_threshold: f32) -> MeshResult<()> {
@@ -1297,8 +1355,9 @@ impl HalfedgeMesh {
             if verts.len() < 3 {
                 continue;
             }
-            for i in 1..verts.len() - 1 {
-                triangles.push([verts[0].0, verts[i].0, verts[i + 1].0]);
+            let face_positions: Vec<Vec3> = verts.iter().map(|v| Vec3(self.vertices[v.0 as usize].position)).collect();
+            for tri in triangulate_polygon(&face_positions) {
+                triangles.push([verts[tri[0]].0, verts[tri[1]].0, verts[tri[2]].0]);
             }
             for v in verts {
                 vert_set.insert(v.0);
@@ -1410,6 +1469,312 @@ impl HalfedgeMesh {
 
 //#endregion Uv
 
+//#region Polygon
+
+/// Newell's method: robust face normal for arbitrary (including non-planar/concave/collinear-first-corner) loops.
+fn newell_normal(positions: &[Vec3]) -> Vec3 {
+    let n = positions.len();
+    let mut nx = 0.0f64;
+    let mut ny = 0.0f64;
+    let mut nz = 0.0f64;
+    for i in 0..n {
+        let a = positions[i];
+        let b = positions[(i + 1) % n];
+        nx += (a.y() as f64 - b.y() as f64) * (a.z() as f64 + b.z() as f64);
+        ny += (a.z() as f64 - b.z() as f64) * (a.x() as f64 + b.x() as f64);
+        nz += (a.x() as f64 - b.x() as f64) * (a.y() as f64 + b.y() as f64);
+    }
+    Vec3::new(nx as f32, ny as f32, nz as f32)
+}
+
+type Vec3f64 = (f64, f64, f64);
+
+fn sub3(a: Vec3f64, b: Vec3f64) -> Vec3f64 {
+    (a.0 - b.0, a.1 - b.1, a.2 - b.2)
+}
+
+fn dot3(a: Vec3f64, b: Vec3f64) -> f64 {
+    a.0 * b.0 + a.1 * b.1 + a.2 * b.2
+}
+
+fn cross3(a: Vec3f64, b: Vec3f64) -> Vec3f64 {
+    (a.1 * b.2 - a.2 * b.1, a.2 * b.0 - a.0 * b.2, a.0 * b.1 - a.1 * b.0)
+}
+
+fn length3(a: Vec3f64) -> f64 {
+    dot3(a, a).sqrt()
+}
+
+fn normalize3(a: Vec3f64) -> Vec3f64 {
+    let l = length3(a);
+    if l < 1e-12 {
+        return (0.0, 0.0, 0.0);
+    }
+    (a.0 / l, a.1 / l, a.2 / l)
+}
+
+/// Least-parallel-world-axis projection basis for a plane with the given unit normal.
+fn plane_basis(normal: Vec3f64) -> (Vec3f64, Vec3f64) {
+    let (nx, ny, nz) = normal;
+    let reference: Vec3f64 = if nx.abs() < ny.abs() && nx.abs() < nz.abs() {
+        (1.0, 0.0, 0.0)
+    } else if ny.abs() < nz.abs() {
+        (0.0, 1.0, 0.0)
+    } else {
+        (0.0, 0.0, 1.0)
+    };
+    let axis_u = normalize3(cross3(normal, reference));
+    let axis_v = cross3(normal, axis_u);
+    (axis_u, axis_v)
+}
+
+fn cross2(o: (f64, f64), a: (f64, f64), b: (f64, f64)) -> f64 {
+    (a.0 - o.0) * (b.1 - o.1) - (a.1 - o.1) * (b.0 - o.0)
+}
+
+fn point_in_triangle(p: (f64, f64), a: (f64, f64), b: (f64, f64), c: (f64, f64)) -> bool {
+    let d1 = cross2(a, b, p);
+    let d2 = cross2(b, c, p);
+    let d3 = cross2(c, a, p);
+    let has_neg = d1 < 0.0 || d2 < 0.0 || d3 < 0.0;
+    let has_pos = d1 > 0.0 || d2 > 0.0 || d3 > 0.0;
+    !(has_neg && has_pos)
+}
+
+/// Deterministic ear-clipping triangulation of a simple polygon (convex or concave), given ordered 3D corner
+/// positions. Falls back to a fan (previous behavior) whenever the polygon is degenerate (zero-area / collinear)
+/// or clipping stalls, so it never returns fewer than `n - 2` triangles or panics.
+fn triangulate_polygon(positions: &[Vec3]) -> Vec<[usize; 3]> {
+    let n = positions.len();
+    if n < 3 {
+        return Vec::new();
+    }
+    if n == 3 {
+        return vec![[0, 1, 2]];
+    }
+    let fan = |from: usize| -> Vec<[usize; 3]> {
+        let _ = from;
+        (1..n - 1).map(|i| [0, i, i + 1]).collect()
+    };
+    let points_f64: Vec<Vec3f64> = positions.iter().map(|p| (p.x() as f64, p.y() as f64, p.z() as f64)).collect();
+    let normal = newell_normal(positions);
+    if normal.length() < 1e-8 {
+        return fan(0);
+    }
+    let normal_f64 = normalize3((normal.x() as f64, normal.y() as f64, normal.z() as f64));
+    let (axis_u, axis_v) = plane_basis(normal_f64);
+    let origin = points_f64[0];
+    let projected: Vec<(f64, f64)> = points_f64
+        .iter()
+        .map(|&p| {
+            let local = sub3(p, origin);
+            (dot3(local, axis_u), dot3(local, axis_v))
+        })
+        .collect();
+    let mut signed_area2 = 0.0f64;
+    for i in 0..n {
+        let a = projected[i];
+        let b = projected[(i + 1) % n];
+        signed_area2 += a.0 * b.1 - b.0 * a.1;
+    }
+    if signed_area2.abs() < 1e-14 {
+        return fan(0);
+    }
+    let ccw = signed_area2 > 0.0;
+
+    let mut indices: Vec<usize> = (0..n).collect();
+    let mut triangles = Vec::with_capacity(n - 2);
+    let mut guard = 0usize;
+    let guard_limit = n * n + 16;
+    while indices.len() > 3 {
+        guard += 1;
+        if guard > guard_limit {
+            for i in 1..indices.len() - 1 {
+                triangles.push([indices[0], indices[i], indices[i + 1]]);
+            }
+            return triangles;
+        }
+        let m = indices.len();
+        let mut ear_found = false;
+        for i in 0..m {
+            let prev = indices[(i + m - 1) % m];
+            let curr = indices[i];
+            let next = indices[(i + 1) % m];
+            let a = projected[prev];
+            let b = projected[curr];
+            let c = projected[next];
+            let cross = cross2(a, b, c);
+            let is_convex = if ccw { cross > 1e-14 } else { cross < -1e-14 };
+            if !is_convex {
+                continue;
+            }
+            let mut contains_other = false;
+            for &k in &indices {
+                if k == prev || k == curr || k == next {
+                    continue;
+                }
+                if point_in_triangle(projected[k], a, b, c) {
+                    contains_other = true;
+                    break;
+                }
+            }
+            if contains_other {
+                continue;
+            }
+            triangles.push([prev, curr, next]);
+            indices.remove(i);
+            ear_found = true;
+            break;
+        }
+        if !ear_found {
+            for i in 1..indices.len() - 1 {
+                triangles.push([indices[0], indices[i], indices[i + 1]]);
+            }
+            return triangles;
+        }
+    }
+    triangles.push([indices[0], indices[1], indices[2]]);
+    triangles
+}
+
+fn find_edge_position(loop_verts: &[u32], from: u32, to: u32) -> Option<usize> {
+    let n = loop_verts.len();
+    for i in 0..n {
+        if loop_verts[i] == from && loop_verts[(i + 1) % n] == to {
+            return Some(i);
+        }
+    }
+    None
+}
+
+/// Merges two face loops that share exactly one boundary edge (in opposite winding, as guaranteed by a
+/// consistently-oriented manifold) into a single n-gon loop. Returns `None` if the faces do not share exactly
+/// one edge, or if splicing would produce a loop with a repeated vertex (non-simple / holed result).
+fn merge_face_loops(a: &[u32], b: &[u32]) -> Option<Vec<u32>> {
+    let n = a.len();
+    let m = b.len();
+    if n < 3 || m < 3 {
+        return None;
+    }
+    let mut shared_a_pos = None;
+    for i in 0..n {
+        let u = a[i];
+        let v = a[(i + 1) % n];
+        if find_edge_position(b, v, u).is_some() {
+            shared_a_pos = Some(i);
+            break;
+        }
+    }
+    let a_pos = shared_a_pos?;
+    let u = a[a_pos];
+    let v = a[(a_pos + 1) % n];
+    let b_pos = find_edge_position(b, v, u)?;
+    for i in 0..n {
+        if i == a_pos {
+            continue;
+        }
+        let uu = a[i];
+        let vv = a[(i + 1) % n];
+        if find_edge_position(b, vv, uu).is_some() {
+            return None;
+        }
+    }
+    let a_rot: Vec<u32> = (0..n).map(|k| a[(a_pos + k) % n]).collect();
+    let b_rot: Vec<u32> = (0..m).map(|k| b[(b_pos + k) % m]).collect();
+    let mut merged = Vec::with_capacity(n + m - 2);
+    merged.push(a_rot[0]);
+    merged.extend_from_slice(&b_rot[2..]);
+    merged.extend_from_slice(&a_rot[1..]);
+    let mut seen = HashSet::new();
+    for &vid in &merged {
+        if !seen.insert(vid) {
+            return None;
+        }
+    }
+    Some(merged)
+}
+
+const COPLANAR_NORMAL_DOT_MIN: f32 = 1.0 - 1e-4;
+const COPLANAR_DISTANCE_REL_TOL: f32 = 1e-4;
+
+fn faces_coplanar(positions: &[[f32; 3]], a: &[u32], b: &[u32]) -> bool {
+    let pos = |vi: u32| Vec3(positions[vi as usize]);
+    let a_pts: Vec<Vec3> = a.iter().map(|&vi| pos(vi)).collect();
+    let b_pts: Vec<Vec3> = b.iter().map(|&vi| pos(vi)).collect();
+    let na = newell_normal(&a_pts);
+    let la = na.length();
+    if la < 1e-10 {
+        return false;
+    }
+    let na_n = na.scale(1.0 / la);
+    let nb = newell_normal(&b_pts);
+    let lb = nb.length();
+    if lb < 1e-10 {
+        return false;
+    }
+    let nb_n = nb.scale(1.0 / lb);
+    if na_n.dot(nb_n) < COPLANAR_NORMAL_DOT_MIN {
+        return false;
+    }
+    let origin = a_pts[0];
+    let mut min = a_pts[0];
+    let mut max = a_pts[0];
+    for &p in a_pts.iter().chain(b_pts.iter()) {
+        min = Vec3::new(min.x().min(p.x()), min.y().min(p.y()), min.z().min(p.z()));
+        max = Vec3::new(max.x().max(p.x()), max.y().max(p.y()), max.z().max(p.z()));
+    }
+    let diag = max.sub(min).length();
+    let tol = (COPLANAR_DISTANCE_REL_TOL * diag).max(1e-6);
+    for &p in b_pts.iter() {
+        if p.sub(origin).dot(na_n).abs() > tol {
+            return false;
+        }
+    }
+    true
+}
+
+/// Drops vertices that are a straight (~180°) pass-through in *every* face loop that references them, i.e. whose
+/// loop-neighbors are identical across all incident faces. Turns merged coplanar-face borders into clean n-gon
+/// corners instead of chains of collinear vertices left over from the original triangulation.
+fn collinear_cleanup(positions: &[[f32; 3]], face_list: &[Vec<u32>]) -> Vec<Vec<u32>> {
+    let pos = |vi: u32| Vec3(positions[vi as usize]);
+    let mut neighbor_pairs: HashMap<u32, HashSet<(u32, u32)>> = HashMap::new();
+    for face in face_list {
+        let n = face.len();
+        for i in 0..n {
+            let prev = face[(i + n - 1) % n];
+            let curr = face[i];
+            let next = face[(i + 1) % n];
+            neighbor_pairs.entry(curr).or_default().insert((prev, next));
+        }
+    }
+    let mut removable: HashSet<u32> = HashSet::new();
+    for (&vid, pairs) in &neighbor_pairs {
+        if pairs.len() != 1 {
+            continue;
+        }
+        let &(prev, next) = pairs.iter().next().unwrap();
+        if prev == next || prev == vid || next == vid {
+            continue;
+        }
+        let d1 = pos(vid).sub(pos(prev));
+        let d2 = pos(next).sub(pos(vid));
+        if d1.length() < 1e-9 || d2.length() < 1e-9 {
+            continue;
+        }
+        if d1.normalize().dot(d2.normalize()) > 1.0 - 1e-4 {
+            removable.insert(vid);
+        }
+    }
+    face_list
+        .iter()
+        .map(|face| face.iter().copied().filter(|v| !removable.contains(v)).collect::<Vec<u32>>())
+        .filter(|face: &Vec<u32>| face.len() >= 3)
+        .collect()
+}
+
+//#endregion Polygon
+
 //#region Export
 
 impl HalfedgeMesh {
@@ -1460,20 +1825,23 @@ impl HalfedgeMesh {
                 uvs.push(he.uv[1]);
             };
 
+            let face_positions: Vec<Vec3> = verts.iter().map(|v| Vec3(self.vertices[v.0 as usize].position)).collect();
+            let triangles = triangulate_polygon(&face_positions);
+
             if smooth {
                 for &he_id in &hes {
                     push_corner(he_id, &mut positions, &mut normals, &mut vertex_ids, &mut uvs, face_normal);
                 }
-                for i in 1..verts.len() - 1 {
-                    indices.push(base);
-                    indices.push(base + i as u32);
-                    indices.push(base + i as u32 + 1);
+                for tri in &triangles {
+                    indices.push(base + tri[0] as u32);
+                    indices.push(base + tri[1] as u32);
+                    indices.push(base + tri[2] as u32);
                     face_ids.push(fi as u32);
                 }
             } else {
-                for i in 1..verts.len() - 1 {
-                    for he_id in [hes[0], hes[i], hes[i + 1]] {
-                        push_corner(he_id, &mut positions, &mut normals, &mut vertex_ids, &mut uvs, face_normal);
+                for tri in &triangles {
+                    for &local in tri {
+                        push_corner(hes[local], &mut positions, &mut normals, &mut vertex_ids, &mut uvs, face_normal);
                     }
                     let tri_base = (positions.len() / 3 - 3) as u32;
                     indices.push(tri_base);
@@ -1596,7 +1964,6 @@ mod tests {
     }
 
     #[test]
-    #[test]
     fn from_indexed_triangles_builds_triangle_faces() {
         let positions = vec![
             0.0, 0.0, 0.0, //
@@ -1609,6 +1976,7 @@ mod tests {
         assert_eq!(mesh.face_count(), 1);
     }
 
+    #[test]
     fn triangulate_produces_triangles_only() {
         let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
         mesh.triangulate().unwrap();
@@ -1694,6 +2062,107 @@ mod tests {
         let json = mesh.to_json().unwrap();
         let restored = HalfedgeMesh::from_json(&json).unwrap();
         assert_eq!(restored.vertex_count(), mesh.vertex_count());
+    }
+
+    #[test]
+    fn newell_normal_handles_collinear_first_corner() {
+        // First three points (0,0,0)-(1,0,0)-(2,0,0) are collinear: the old first-triangle-cross
+        // method degenerates to a zero vector here, Newell's method must not.
+        let positions = vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0], [2.0, 1.0, 0.0]];
+        let mesh = HalfedgeMesh::from_faces(&positions, &[vec![0, 1, 2, 3]]).unwrap();
+        let normal = mesh.face_normal(FaceId(0)).unwrap();
+        assert!(normal.length() > 0.99 && normal.length() < 1.01);
+        assert!(normal.dot(Vec3::new(0.0, 0.0, 1.0)).abs() > 0.99);
+    }
+
+    #[test]
+    fn ear_clipping_triangulates_concave_l_polygon() {
+        // Concave L-shaped hexagon.
+        let corners = [(0.0, 0.0), (2.0, 0.0), (2.0, 1.0), (1.0, 1.0), (1.0, 2.0), (0.0, 2.0)];
+        let positions: Vec<Vec3> = corners.iter().map(|&(x, y)| Vec3::new(x, y, 0.0)).collect();
+        let triangles = triangulate_polygon(&positions);
+        assert_eq!(triangles.len(), corners.len() - 2);
+        let shoelace = |pts: &[(f64, f64)]| -> f64 {
+            let n = pts.len();
+            let mut sum = 0.0;
+            for i in 0..n {
+                let (x0, y0) = pts[i];
+                let (x1, y1) = pts[(i + 1) % n];
+                sum += x0 * y1 - x1 * y0;
+            }
+            sum.abs() * 0.5
+        };
+        let polygon_area = shoelace(&corners.iter().map(|&(x, y)| (x as f64, y as f64)).collect::<Vec<_>>());
+        let mut triangle_area_sum = 0.0f64;
+        for tri in &triangles {
+            let pts: Vec<(f64, f64)> = tri.iter().map(|&i| (corners[i].0 as f64, corners[i].1 as f64)).collect();
+            triangle_area_sum += shoelace(&pts);
+            // Nondegenerate.
+            assert!(shoelace(&pts) > 1e-6);
+        }
+        assert!((triangle_area_sum - polygon_area).abs() < 1e-6);
+    }
+
+    #[test]
+    fn merge_coplanar_faces_reassembles_triangulated_cube_into_quads() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        mesh.triangulate().unwrap();
+        assert_eq!(mesh.face_count(), 12);
+        let merges = mesh.merge_coplanar_faces().unwrap();
+        assert_eq!(merges, 6);
+        assert_eq!(mesh.face_count(), 6);
+        for fi in 0..mesh.face_count() {
+            let verts = mesh.face_vertex_ids(FaceId(fi as u32)).unwrap();
+            assert_eq!(verts.len(), 4);
+        }
+    }
+
+    #[test]
+    fn dissolve_edges_merges_two_triangles_into_a_quad() {
+        let positions = vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]];
+        let faces = vec![vec![0, 1, 2], vec![0, 2, 3]];
+        let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).unwrap();
+        assert_eq!(mesh.face_count(), 2);
+        // Halfedge index 2 is face 0's edge 2->0, the shared diagonal.
+        mesh.dissolve_edges(&[EdgeId(2)]).unwrap();
+        assert_eq!(mesh.face_count(), 1);
+        let verts = mesh.face_vertex_ids(FaceId(0)).unwrap();
+        assert_eq!(verts.len(), 4);
+    }
+
+    #[test]
+    fn merge_and_cleanup_collapses_seam_vertices_of_a_contiguous_strip() {
+        // Three coplanar quads in a row sharing seam edges; the seam vertices are used by exactly
+        // two faces each and lie on straight boundary lines, so they must be dropped after merge.
+        let positions = vec![
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [1.0, 1.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [2.0, 0.0, 0.0],
+            [2.0, 1.0, 0.0],
+            [3.0, 0.0, 0.0],
+            [3.0, 1.0, 0.0],
+        ];
+        let faces = vec![vec![0, 1, 2, 3], vec![1, 4, 5, 2], vec![4, 6, 7, 5]];
+        let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).unwrap();
+        assert_eq!(mesh.face_count(), 3);
+        let merges = mesh.merge_coplanar_faces().unwrap();
+        assert_eq!(merges, 2);
+        assert_eq!(mesh.face_count(), 1);
+        let verts = mesh.face_vertex_ids(FaceId(0)).unwrap();
+        assert_eq!(verts.len(), 4, "seam vertices 1,2,4,5 should have been dropped as collinear");
+    }
+
+    #[test]
+    fn tessellate_concave_face_tags_all_triangles_with_one_face_id() {
+        let corners = [(0.0, 0.0), (2.0, 0.0), (2.0, 1.0), (1.0, 1.0), (1.0, 2.0), (0.0, 2.0)];
+        let positions: Vec<[f32; 3]> = corners.iter().map(|&(x, y)| [x, y, 0.0]).collect();
+        let mesh = HalfedgeMesh::from_faces(&positions, &[(0..6).collect()]).unwrap();
+        let transfer = mesh.tessellate().unwrap();
+        assert_eq!(transfer.face_ids.len(), corners.len() - 2);
+        assert!(transfer.face_ids.iter().all(|&id| id == 0));
+        assert_eq!(transfer.indices.len(), (corners.len() - 2) * 3);
     }
 }
 

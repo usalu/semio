@@ -1,0 +1,13 @@
+{
+  "title": "Lowpoly Arbitrary N-Gon Faces And Coplanar Merge",
+  "emoji": "🔷",
+  "status": "open",
+  "description": "Support arbitrary vertex/edge count faces (n-gons) in the lowpoly mesh kernel end to end: Newell-method face normals (robust for non-planar/collinear-first-corner n-gons), ear-clipping triangulation replacing the convex-only fan (tessellate, triangulate command, UV unwrap), and a real merge_coplanar_faces + dissolve_edges implementation (currently a no-op stub) with a collinear-vertex cleanup pass. Regenerate the \"Concrete Forest Left\" default example mesh with all coplanar faces merged into n-gons instead of the current all-triangle tessellated output.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1923"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪3f1ffc8000f84bba9469c54b0fb02ba8"
+  ]
+}

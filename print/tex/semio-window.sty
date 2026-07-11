@@ -2168,11 +2168,11 @@
       \vbox to \semio@chrome@titlebar@height{%
         \nointerlineskip
         \hbox to \dimexpr\semio@window@gap@w\relax{%
-          \semio@window@cap@paint{\semio@window@gap@w}{#1}{\semio@window@cap@body@h}%
+          \semio@window@stroke@h{#2}{\semio@window@gap@w}%
         }%
         \nointerlineskip
         \hbox to \dimexpr\semio@window@gap@w\relax{%
-          \semio@window@stroke@h{#2}{\semio@window@gap@w}%
+          \semio@window@cap@paint{\semio@window@gap@w}{#1}{\semio@window@cap@body@h}%
         }%
       }%
     }%

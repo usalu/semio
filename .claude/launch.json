@@ -123,6 +123,16 @@
         "SEMIO_RENDERER": "react"
       },
       "port": 6558
+    },
+    {
+      "name": "procedural3d-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:procedural:3d"],
+      "env": {
+        "PROCEDURAL_3D_PLAY_PORT": "6018",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6018
     }
   ]
 }

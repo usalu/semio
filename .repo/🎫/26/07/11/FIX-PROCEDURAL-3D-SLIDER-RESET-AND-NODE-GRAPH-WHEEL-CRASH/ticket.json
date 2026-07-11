@@ -1,0 +1,13 @@
+{
+  "title": "Fix Procedural 3D Slider Reset And Node Graph Wheel Crash",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "In the procedural-3d dev playground, dragging an inspector/canvas slider (e.g. height) visibly resets/jumps back instead of updating the 3D preview. Browser console evidence:\n1. `node-graph-host.tsx:1697 Uncaught TypeError: session.cameraJson is not a function` fires on every wheel/zoom event in the flow/dag node graph (FlowGraphCanvasHost's onWheel calls session.cameraJson() without a guard, but FlowWasmSession.cameraJson is typed optional `cameraJson?(): string` and the underlying wasm FlowSession apparently doesn't implement it).\n2. After a slider drag + hover/selection changes, `SelectionMarquee` in ui/js/react/index.tsx:624 throws `Cannot read properties of undefined (reading 'map')`, which is caught by `ShellRenderErrorBoundary` and remounts the tree from scratch — this is very likely the actual cause of the visible \"jumps back to where it was\" symptom, since remounting re-syncs from the last committed document state and discards the in-progress uncommitted slider drag.\n\nRoot-cause and fix both bugs. Verify end-to-end in a live browser: open procedural-3d dev playground, drag a slider and confirm the 3D preview updates live without resetting; scroll/zoom the node graph and confirm no console errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1924"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪ffa213477cc04a97b1901fd3f9c1ea36"
+  ]
+}
