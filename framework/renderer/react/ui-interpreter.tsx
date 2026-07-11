@@ -412,12 +412,23 @@ function VirtualFileSystemHost({ node, onCommand }: { readonly node: Extract<UiN
           return;
         }
         if (uri.startsWith("os://export/")) {
-          const [, instanceId, , format] = uri.split("/");
+          const [, , , instanceId, , format] = uri.split("/");
           if (instanceId && format) {
             onCommand({
               controllerId: node.controllerId,
               command: "exportMedia",
               args: { surfaceId: node.surfaceId, instanceId, format },
+            });
+          }
+          return;
+        }
+        if (uri.startsWith("os://import/")) {
+          const [, , , instanceId, resourceKind, format] = uri.split("/");
+          if (instanceId && format) {
+            onCommand({
+              controllerId: node.controllerId,
+              command: "importMedia",
+              args: { surfaceId: node.surfaceId, instanceId, resourceKind, format },
             });
           }
           return;

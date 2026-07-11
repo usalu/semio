@@ -3958,6 +3958,18 @@ pub fn export_drawing_pdf(handle: &str) -> String {
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
+pub fn export_drawing_dwg(handle: &str) -> String {
+    flow_module_draw::export_dwg_json(handle)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn import_drawing_dwg(data_base64: &str) -> String {
+    flow_module_draw::import_dwg_json(data_base64)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
 pub fn dispose_drawing(handle: &str) {
     flow_module_draw::dispose_drawing(handle);
 }
@@ -3978,6 +3990,40 @@ pub fn boolean_drawing_segments(a_json: &str, b_json: &str, op: &str) -> String 
 #[wasm_bindgen]
 pub fn dispose(handle: &str) {
     flow_module_brep::dispose_geometry(handle);
+}
+
+/// 📐 Encodes a `MeshData` JSON payload as base64 DWG bytes, for JS consumers holding a mesh but no drawing/geometry handle.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn dwg_encode_mesh_json(mesh_json: &str) -> String {
+    let Ok(mesh) = serde_json::from_str::<semio_framework_core::MeshData>(mesh_json) else {
+        return serde_json::json!({ "error": "invalid mesh json" }).to_string();
+    };
+    let drawing = semio_framework_core::mesh_to_dwg_drawing(&mesh);
+    match semio_framework_core::dwg_to_bytes(&drawing) {
+        Ok(bytes) => {
+            use base64::Engine;
+            serde_json::json!({ "dwg": base64::engine::general_purpose::STANDARD.encode(bytes) }).to_string()
+        }
+        Err(error) => serde_json::json!({ "error": error }).to_string(),
+    }
+}
+
+/// 📐 Decodes base64 DWG bytes into a `MeshData` JSON payload.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn dwg_decode_mesh_json(data_base64: &str) -> String {
+    use base64::Engine;
+    let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(data_base64) else {
+        return serde_json::json!({ "error": "invalid base64 dwg payload" }).to_string();
+    };
+    match semio_framework_core::dwg_from_bytes(&bytes) {
+        Ok(drawing) => {
+            let mesh = semio_framework_core::dwg_drawing_to_mesh(&drawing);
+            serde_json::to_string(&mesh).unwrap_or_else(|_| serde_json::json!({ "error": "failed to serialize mesh" }).to_string())
+        }
+        Err(error) => serde_json::json!({ "error": error }).to_string(),
+    }
 }
 // #endregion 🔖WasmSession
 

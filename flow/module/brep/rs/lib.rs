@@ -317,6 +317,10 @@ fn out_obj() -> ChannelSpec {
     ChannelSpec::named("O", "Obj", "obj", "ObjExport")
 }
 
+fn out_dwg() -> ChannelSpec {
+    ChannelSpec::named("D", "Dwg", "dwg", "DwgExport")
+}
+
 fn operator_info_with_outputs(id: &str, name: &str, abbreviation: &str, icon: &str, summary: &str, inputs: Vec<ChannelSpec>, outputs: Vec<ChannelSpec>, group: &[&str]) -> OperatorInfo {
     OperatorInfo {
         id: id.into(),
@@ -938,6 +942,30 @@ impl Operation for ImportObj {
             let data = read_text(input, "data")?;
             let tolerance = read_channel_number(input, "tolerance")?;
             let handle = block_on(kernel.import_obj(&data, tolerance)).map_err(map_kernel_error)?;
+            Ok(channel_output("geometry", geometry_dict(kernel, &handle)?))
+        })
+    }
+}
+
+struct ExportDwg;
+impl Operation for ExportDwg {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        with_kernel(|kernel| {
+            let geometry = read_geometry(input, "geometry")?;
+            let deflection = read_channel_number(input, "deflection")?;
+            let data = block_on(kernel.export_dwg(&[geometry], deflection)).map_err(map_kernel_error)?;
+            Ok(channel_output("dwg", text_dictionary(encode_base64(&data))))
+        })
+    }
+}
+
+struct ImportDwg;
+impl Operation for ImportDwg {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        with_kernel(|kernel| {
+            let data = decode_base64(&read_text(input, "data")?)?;
+            let tolerance = read_channel_number(input, "tolerance")?;
+            let handle = block_on(kernel.import_dwg(&data, tolerance)).map_err(map_kernel_error)?;
             Ok(channel_output("geometry", geometry_dict(kernel, &handle)?))
         })
     }
@@ -1743,6 +1771,33 @@ pub fn register(registry: &mut Registry) {
         &["IO"],
         Box::new(ImportObj),
     );
+    register_typed(
+        registry,
+        operator_info_with_outputs(
+            "brep.io.exportDwg",
+            "Export Dwg",
+            "Dwg",
+            "emoji:💾",
+            "Export DWG as base64",
+            vec![geometry_channel("geometry", "brep.io.exportDwg"), number_channel("deflection", "brep.io.exportDwg", 0.1)],
+            vec![out_dwg()],
+            &["IO"],
+        ),
+        Box::new(ExportDwg),
+        &["text"],
+    );
+    reg_geo(
+        registry,
+        "brep.io.importDwg",
+        "Import Dwg",
+        "IDwg",
+        "emoji:📂",
+        "Import DWG from base64",
+        vec![ChannelSpec::requires("data", &["brep.io.importDwg"]), number_channel("tolerance", "brep.io.importDwg", 0.1)],
+        out_geometry("ImportedGeometry"),
+        &["IO"],
+        Box::new(ImportDwg),
+    );
 
     registry.finalize();
 }
@@ -1811,6 +1866,31 @@ mod tests {
         assert_eq!(curve.schema(), Some("geometry"));
         assert!(curve.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap().starts_with("curve-"));
         assert_eq!(curve.get("kind").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("curve"));
+    }
+
+    #[test]
+    fn dwg_export_import_round_trips_a_box() {
+        let _serial = test_serial();
+        reset_test_kernel();
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let solid = channel_payload(
+            &reg.dispatch("brep.prim3d.box", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("depth", Value::Dictionary(number_dictionary(3.0))).insert("height", Value::Dictionary(number_dictionary(4.0)))).unwrap(),
+            "solid",
+        );
+        let dwg = channel_payload(
+            &reg.dispatch("brep.io.exportDwg", &Dictionary::new().insert("geometry", Value::Dictionary(solid)).insert("deflection", Value::Dictionary(number_dictionary(0.1)))).unwrap(),
+            "dwg",
+        );
+        let data = dwg.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).expect("dwg base64").to_string();
+        assert!(!data.is_empty());
+
+        let imported = channel_payload(
+            &reg.dispatch("brep.io.importDwg", &Dictionary::new().insert("data", Value::Dictionary(text_dictionary(data))).insert("tolerance", Value::Dictionary(number_dictionary(0.1)))).unwrap(),
+            "geometry",
+        );
+        assert_eq!(imported.schema(), Some("geometry"));
+        assert!(imported.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).is_some());
     }
 
     #[test]

@@ -578,6 +578,36 @@ pub fn export_pdf_json(handle: &str) -> String {
         .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
 }
 
+/// 📐 Exports a drawing handle as base64 DWG JSON wrapper.
+pub fn export_dwg_json(handle: &str) -> String {
+    kernel()
+        .lock()
+        .ok()
+        .and_then(|store| {
+            let drawing = DrawingHandle(handle.to_string());
+            match block_on(store.export_dwg(&drawing)) {
+                Ok(dwg) => Some(serde_json::json!({ "dwg": base64_encode(&dwg) }).to_string()),
+                Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+            }
+        })
+        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+}
+
+/// 📐 Imports a base64 DWG payload into the in-process draw kernel, returning the new drawing handle JSON wrapper.
+pub fn import_dwg_json(data_base64: &str) -> String {
+    let Ok(bytes) = base64_decode(data_base64) else {
+        return serde_json::json!({ "error": "invalid base64 dwg payload" }).to_string();
+    };
+    kernel()
+        .lock()
+        .ok()
+        .and_then(|mut store| match block_on(store.import_dwg(&bytes)) {
+            Ok(handle) => Some(serde_json::json!({ "handle": handle.as_str() }).to_string()),
+            Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+        })
+        .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
+}
+
 /// 🗑️ Disposes a drawing handle owned by the in-process draw kernel.
 pub fn dispose_drawing(handle: &str) {
     if let Ok(mut store) = kernel().lock() {
@@ -644,6 +674,35 @@ fn base64_encode(data: &[u8]) -> String {
     }
     out
 }
+
+fn base64_decode(data: &str) -> Result<Vec<u8>, String> {
+    const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut lookup = [255u8; 256];
+    for (index, &byte) in TABLE.iter().enumerate() {
+        lookup[byte as usize] = index as u8;
+    }
+    let cleaned: Vec<u8> = data.bytes().filter(|byte| *byte != b'=' && !byte.is_ascii_whitespace()).collect();
+    let mut out = Vec::with_capacity(cleaned.len() * 3 / 4);
+    for chunk in cleaned.chunks(4) {
+        let mut values = [0u8; 4];
+        for (index, &byte) in chunk.iter().enumerate() {
+            let value = lookup[byte as usize];
+            if value == 255 {
+                return Err("invalid base64 character".to_string());
+            }
+            values[index] = value;
+        }
+        let triple = ((values[0] as u32) << 18) | ((values[1] as u32) << 12) | ((values[2] as u32) << 6) | (values[3] as u32);
+        out.push((triple >> 16) as u8);
+        if chunk.len() > 2 {
+            out.push((triple >> 8) as u8);
+        }
+        if chunk.len() > 3 {
+            out.push(triple as u8);
+        }
+    }
+    Ok(out)
+}
 // #endregion 🔖Scene
 
 // #region 🔖Tests
@@ -672,6 +731,28 @@ mod tests {
         let json = build_manifest_json("draw", "Draw", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
         assert!(json.contains("draw.shape.rect"));
         assert!(json.contains("draw.drawing"));
+    }
+
+    #[test]
+    fn dwg_export_import_round_trips_a_rect() {
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let input = Dictionary::new()
+            .insert("x", Value::Dictionary(number_dictionary(0.0)))
+            .insert("y", Value::Dictionary(number_dictionary(0.0)))
+            .insert("width", Value::Dictionary(number_dictionary(5.0)))
+            .insert("height", Value::Dictionary(number_dictionary(5.0)));
+        let out = reg.dispatch("draw.shape.rect", &input).unwrap();
+        let handle = out.get("draw.drawing").and_then(|v| v.as_dictionary()).and_then(|d| d.get("handle")).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap();
+
+        let export_json: serde_json::Value = serde_json::from_str(&export_dwg_json(handle)).unwrap();
+        let data = export_json.get("dwg").and_then(|v| v.as_str()).expect("dwg base64");
+        assert!(!data.is_empty());
+
+        let import_json: serde_json::Value = serde_json::from_str(&import_dwg_json(data)).unwrap();
+        let imported_handle = import_json.get("handle").and_then(|v| v.as_str()).expect("imported handle");
+        let scene_json = render_scene_json(imported_handle);
+        assert!(scene_json.contains("nodes"));
     }
 
     #[test]
@@ -732,6 +813,16 @@ mod wasm_ext {
     #[wasm_bindgen]
     pub fn export_pdf(handle: &str) -> String {
         super::export_pdf_json(handle)
+    }
+
+    #[wasm_bindgen]
+    pub fn export_dwg(handle: &str) -> String {
+        super::export_dwg_json(handle)
+    }
+
+    #[wasm_bindgen]
+    pub fn import_dwg(data_base64: &str) -> String {
+        super::import_dwg_json(data_base64)
     }
 
     #[wasm_bindgen]

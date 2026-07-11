@@ -314,6 +314,8 @@ pub trait DrawingKernel {
     async fn flatten_scene(&self, handle: &DrawingHandle) -> Result<DrawingScene, DrawingError>;
     async fn export_svg(&self, handle: &DrawingHandle) -> Result<String, DrawingError>;
     async fn export_pdf(&self, handle: &DrawingHandle) -> Result<Vec<u8>, DrawingError>;
+    async fn export_dwg(&self, handle: &DrawingHandle) -> Result<Vec<u8>, DrawingError>;
+    async fn import_dwg(&mut self, data: &[u8]) -> Result<DrawingHandle, DrawingError>;
     // #endregion Export
 
     // #region Core

@@ -1888,6 +1888,16 @@ fn create_draw_app() -> App {
 
 fn register_draw_exports() {
     semio_framework_os::register_2d_export_handlers("2d.drawing", "draw", draw::draw_document_json_to_svg);
+    semio_framework_os::register_os_media_export_handler("2d.drawing", semio_framework_os::OsMediaFormat::Dwg, |doc| {
+        let bytes = draw::draw_document_json_to_dwg_bytes(doc)?;
+        Ok(semio_framework_os::OsMediaExportResult {
+            data: { use base64::Engine; base64::engine::general_purpose::STANDARD.encode(bytes) },
+            mime_type: semio_framework_os::OsMediaFormat::Dwg.mime_type().into(),
+            file_name: "draw.dwg".into(),
+            encoding: Some("base64".into()),
+        })
+    });
+    semio_framework_os::register_dwg_import_handler("2d.drawing", draw::draw_document_json_from_dwg);
 }
 
 fn draw_bundle() -> semio_framework_plugin::PluginBundle {

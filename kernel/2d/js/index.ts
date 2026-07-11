@@ -92,6 +92,8 @@ export interface DrawingWasmBridge {
   renderScene(handle: DrawingRef | string): DrawingScene;
   exportSvg(handle: DrawingRef | string): string;
   exportPdf(handle: DrawingRef | string): string;
+  exportDwg(handle: DrawingRef | string): string;
+  importDwg(dwgBase64: string): DrawingRef;
   dispose(handle: DrawingRef | string): void;
   traceBitmap(width: number, height: number, maskOrLuma: Uint8Array, threshold: number, simplifyEpsilon: number): PathSegment[];
   booleanPaths(a: readonly PathSegment[], b: readonly PathSegment[], op: DrawBooleanOp): PathSegment[];
@@ -116,6 +118,11 @@ export interface DrawingPdfExportPort {
 /** @emoji 🖼️ PNG rasterization port for {@link DrawingScene}. */
 export interface DrawingPngExportPort {
   exportPng(scene: DrawingScene): string;
+}
+
+/** @emoji 📐 DWG serialization port for {@link DrawingScene}. */
+export interface DrawingDwgExportPort {
+  exportDwg(scene: DrawingScene): string;
 }
 
 /** @emoji 📄 Default SVG export via WASM when a handle is provided, otherwise client scene walk. */
@@ -330,6 +337,8 @@ type DrawingWasmModule = {
   export_drawing_svg: (handle: string) => string;
   export_drawing_pdf: (handle: string) => string;
   dispose_drawing: (handle: string) => void;
+  export_drawing_dwg?: (handle: string) => string;
+  import_drawing_dwg?: (dataBase64: string) => string;
   trace_drawing_bitmap?: (width: number, height: number, mask: Uint8Array, threshold: number, simplifyEpsilon: number) => string;
   boolean_drawing_segments?: (aJson: string, bJson: string, op: string) => string;
   initSync?: (input: { module: BufferSource }) => void;
@@ -362,13 +371,21 @@ export function booleanPathsClient(a: readonly PathSegment[], b: readonly PathSe
   return [...a];
 }
 
-function parseExportPayload(json: string, kind: "svg" | "pdf"): string {
-  const parsed = JSON.parse(json) as { data?: string; svg?: string; pdf?: string; error?: string };
+function parseExportPayload(json: string, kind: "svg" | "pdf" | "dwg"): string {
+  const parsed = JSON.parse(json) as { data?: string; svg?: string; pdf?: string; dwg?: string; error?: string };
   if (parsed?.error) throw new Error(parsed.error);
   if (kind === "svg" && typeof parsed?.svg === "string") return parsed.svg;
   if (kind === "pdf" && typeof parsed?.pdf === "string") return parsed.pdf;
+  if (kind === "dwg" && typeof parsed?.dwg === "string") return parsed.dwg;
   if (typeof parsed?.data === "string") return parsed.data;
   throw new Error(`drawing ${kind} export missing payload`);
+}
+
+function parseImportedHandle(json: string): DrawingRef {
+  const parsed = JSON.parse(json) as { handle?: string; error?: string };
+  if (parsed?.error) throw new Error(parsed.error);
+  if (typeof parsed?.handle !== "string") throw new Error("drawing dwg import missing handle");
+  return parsed.handle as DrawingRef;
 }
 
 /** @emoji 🎬 Parses a worker preview payload into a {@link DrawingScene}. */
@@ -393,10 +410,10 @@ export async function ensureDrawingWasmLoaded(): Promise<DrawingWasmModule> {
     drawingWasm = mod;
     return mod;
   }
-  const [{ default: initFlow, render_drawing_scene, export_drawing_svg, export_drawing_pdf, dispose_drawing, trace_drawing_bitmap, boolean_drawing_segments }, { default: wasmUrl }] = await Promise.all([
-    import("../../../flow/core/rs/pkg/flow_core.js"),
-    import("../../../flow/core/rs/pkg/flow_core_bg.wasm?url"),
-  ]);
+  const [
+    { default: initFlow, render_drawing_scene, export_drawing_svg, export_drawing_pdf, dispose_drawing, trace_drawing_bitmap, boolean_drawing_segments, export_drawing_dwg, import_drawing_dwg },
+    { default: wasmUrl },
+  ] = await Promise.all([import("../../../flow/core/rs/pkg/flow_core.js"), import("../../../flow/core/rs/pkg/flow_core_bg.wasm?url")]);
   if (typeof render_drawing_scene !== "function" || typeof export_drawing_svg !== "function" || typeof export_drawing_pdf !== "function" || typeof dispose_drawing !== "function") {
     throw new Error("flow_core drawing exports missing — rebuild flow/core wasm");
   }
@@ -408,6 +425,8 @@ export async function ensureDrawingWasmLoaded(): Promise<DrawingWasmModule> {
     dispose_drawing,
     trace_drawing_bitmap,
     boolean_drawing_segments,
+    export_drawing_dwg,
+    import_drawing_dwg,
   };
   return drawingWasm;
 }
@@ -439,6 +458,18 @@ export function createDrawingWasmBridge(module: DrawingWasmModule): DrawingExpor
     },
     exportPdf(handle) {
       return parseExportPayload(module.export_drawing_pdf(String(handle)), "pdf");
+    },
+    exportDwg(handle) {
+      if (typeof module.export_drawing_dwg !== "function") {
+        throw new Error("export_drawing_dwg export missing — rebuild flow/core wasm");
+      }
+      return parseExportPayload(module.export_drawing_dwg(String(handle)), "dwg");
+    },
+    importDwg(dwgBase64) {
+      if (typeof module.import_drawing_dwg !== "function") {
+        throw new Error("import_drawing_dwg export missing — rebuild flow/core wasm");
+      }
+      return parseImportedHandle(module.import_drawing_dwg(dwgBase64));
     },
     exportPng(handle) {
       return canvasDrawingPngExportPort.exportPng(this.renderScene(handle));
@@ -484,6 +515,13 @@ if (import.meta.vitest) {
       const scene = drawingSceneFromPreviewPayload({ width: 10, height: 20, nodes: [] });
       expect(scene).toEqual({ width: 10, height: 20, nodes: [] });
       expect(drawingSceneFromPreviewPayload({ error: "missing" })).toBeUndefined();
+    });
+
+    it("parses dwg export and import payloads", () => {
+      expect(parseExportPayload(JSON.stringify({ dwg: "QUMxMDE1" }), "dwg")).toBe("QUMxMDE1");
+      expect(() => parseExportPayload(JSON.stringify({ error: "boom" }), "dwg")).toThrow("boom");
+      expect(parseImportedHandle(JSON.stringify({ handle: "drawing-path-1" }))).toBe("drawing-path-1");
+      expect(() => parseImportedHandle(JSON.stringify({ error: "bad dwg" }))).toThrow("bad dwg");
     });
 
     it("rasterizes a rect scene to png data url", () => {

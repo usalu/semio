@@ -133,6 +133,10 @@ struct StudioRuntimeState {
     client_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     client_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pending_import_instance_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pending_import_format: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2068,11 +2072,19 @@ impl SStudioApp {
                         .iter()
                         .find(|row| row.id == instance_id)
                     {
+                        ensure_studio_fixtures_registered();
+                        let document_json = materialize_os_app_instance_document_json(
+                            instance,
+                            &projection.parameter_bindings,
+                            &projection.parameters,
+                            &projection.app_instances,
+                        );
+                        let document_value: Value = serde_json::from_str(&document_json).unwrap_or_else(|_| json!({}));
                         let export_format = semio_framework_os::OsMediaFormat::parse(format)
                             .unwrap_or(semio_framework_os::OsMediaFormat::Svg);
                         if let Ok(result) = semio_framework_os::export_os_app_instance_media(
                             instance,
-                            &json!({}),
+                            &document_value,
                             export_format,
                         ) {
                             ops.push(json!({
@@ -2080,8 +2092,43 @@ impl SStudioApp {
                                 "filename": result.file_name,
                                 "mimeType": result.mime_type,
                                 "data": result.data,
+                                "encoding": result.encoding,
                             })
                             .to_string());
+                        }
+                    }
+                }
+            }
+            "importMedia" => {
+                if let (Some(instance_id), Some(format)) = (
+                    args.and_then(|value| value.get("instanceId")).and_then(|value| value.as_str()),
+                    args.and_then(|value| value.get("format")).and_then(|value| value.as_str()),
+                ) {
+                    runtime.pending_import_instance_id = Some(instance_id.to_string());
+                    runtime.pending_import_format = Some(format.to_string());
+                    ops.push(json!({
+                        "op": "requestFileOpen",
+                        "accept": format!(".{format}"),
+                        "readAs": "dataUrl",
+                        "importCommand": "importMediaPayload",
+                    })
+                    .to_string());
+                }
+            }
+            "importMediaPayload" => {
+                if let (Some(instance_id), Some(format_name)) = (runtime.pending_import_instance_id.take(), runtime.pending_import_format.take()) {
+                    let payload = args.and_then(|value| value.get("payload")).and_then(|value| value.as_str());
+                    let format = semio_framework_os::OsMediaFormat::parse(&format_name);
+                    if let (Some(payload), Some(format)) = (payload, format) {
+                        use base64::Engine;
+                        let base64_part = payload.split_once(',').map(|(_, data)| data).unwrap_or(payload);
+                        if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
+                            let projection = store.projection().unwrap_or_else(|_| default_os_projection());
+                            if let Some(instance) = projection.app_instances.iter().find(|row| row.id == instance_id) {
+                                if let Ok(inline) = semio_framework_os::import_os_app_instance_media(instance, &bytes, format) {
+                                    let _ = store.dispatch_apply(vec![OsOp::PatchAppSource { instance_id, inline: inline.to_string() }]);
+                                }
+                            }
                         }
                     }
                 }
@@ -2982,6 +3029,43 @@ mod tests {
             .app_instances
             .iter()
             .any(|instance| instance.program_id == "draw"));
+    }
+
+    #[test]
+    fn export_then_import_dwg_media_round_trips_app_source() {
+        use base64::Engine;
+        seed_draw_program();
+        semio_framework_os::register_os_media_export_handler("2d.drawing", semio_framework_os::OsMediaFormat::Dwg, |_doc| {
+            let drawing = semio_framework_os::DwgDrawing::default();
+            let bytes = semio_framework_os::dwg_to_bytes(&drawing).map_err(|error| error)?;
+            Ok(semio_framework_os::OsMediaExportResult {
+                data: base64::engine::general_purpose::STANDARD.encode(bytes),
+                mime_type: semio_framework_os::OsMediaFormat::Dwg.mime_type().into(),
+                file_name: "draw.dwg".into(),
+                encoding: Some("base64".into()),
+            })
+        });
+        semio_framework_os::register_dwg_import_handler("2d.drawing", |_drawing| Ok(json!({ "schema": "draw.document", "imported": true })));
+
+        let mut envelope = initial_studio_envelope();
+        SStudioApp::handle_studio_command(&mut envelope, "spawnApp", Some(&json!({ "programId": "draw", "appId": "draw" })));
+        let projection = projection_from_document(&envelope.document);
+        let instance = projection.app_instances.iter().find(|instance| instance.program_id == "draw").expect("draw instance");
+        let instance_id = instance.id.clone();
+
+        let export_ops = SStudioApp::handle_studio_command(&mut envelope, "exportMedia", Some(&json!({ "instanceId": instance_id, "format": "dwg" })));
+        let export_op: Value = export_ops.iter().find_map(|op| serde_json::from_str::<Value>(op).ok().filter(|value| value["op"] == "downloadMediaExport")).expect("download op");
+        let data = export_op["data"].as_str().expect("base64 dwg data").to_string();
+        assert!(!data.is_empty());
+        assert_eq!(export_op["encoding"], "base64");
+
+        let import_ops = SStudioApp::handle_studio_command(&mut envelope, "importMedia", Some(&json!({ "instanceId": instance_id, "format": "dwg" })));
+        assert!(import_ops.iter().any(|op| op.contains("requestFileOpen")));
+
+        SStudioApp::handle_studio_command(&mut envelope, "importMediaPayload", Some(&json!({ "payload": format!("data:image/vnd.dwg;base64,{data}") })));
+        let projection_after = projection_from_document(&envelope.document);
+        let instance_after = projection_after.app_instances.iter().find(|instance| instance.id == instance_id).expect("draw instance still present");
+        assert_eq!(instance_after.source_document.inline.as_deref(), Some(r#"{"imported":true,"schema":"draw.document"}"#));
     }
 
     #[test]

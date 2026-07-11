@@ -8664,7 +8664,8 @@ impl ShellState {
                     op.get("mimeType").and_then(|v| v.as_str()),
                     op.get("data").and_then(|v| v.as_str()),
                 ) {
-                    download_media_export(filename, mime_type, data);
+                    let encoding = op.get("encoding").and_then(|v| v.as_str());
+                    download_media_export(filename, mime_type, data, encoding);
                 }
             }
             if op.get("op").and_then(|v| v.as_str()) == Some("requestFileOpen") {
@@ -8673,7 +8674,8 @@ impl ShellState {
                         .get("accept")
                         .and_then(|v| v.as_str())
                         .unwrap_or(".json");
-                    if let (Some(session), Some(contents)) = (self.session.clone(), request_file_open(accept)) {
+                    let read_as = op.get("readAs").and_then(|v| v.as_str());
+                    if let (Some(session), Some(contents)) = (self.session.clone(), request_file_open(accept, read_as)) {
                         let payload = serde_json::from_str::<serde_json::Value>(&contents)
                             .unwrap_or_else(|_| serde_json::Value::String(contents.clone()));
                         let mut args = op.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
@@ -13443,7 +13445,7 @@ impl ShellState {
 //#endregion ShellChrome
 
 #[cfg(target_arch = "wasm32")]
-fn download_media_export(filename: &str, mime_type: &str, data: &str) {
+fn download_media_export(filename: &str, mime_type: &str, data: &str, _encoding: Option<&str>) {
     use wasm_bindgen::JsCast;
     use web_sys::{Blob, HtmlAnchorElement, Url};
 
@@ -13472,13 +13474,19 @@ fn download_media_export(filename: &str, mime_type: &str, data: &str) {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn download_media_export(filename: &str, mime_type: &str, data: &str) {
+fn download_media_export(filename: &str, mime_type: &str, data: &str, encoding: Option<&str>) {
     if let Some(path) = rfd::FileDialog::new()
         .set_file_name(filename)
         .add_filter("export", &[mime_type.rsplit_once('/').map(|(_, ext)| ext).unwrap_or("dat")])
         .save_file()
     {
-        let _ = std::fs::write(path, data.as_bytes());
+        use base64::Engine;
+        let bytes = if encoding == Some("base64") {
+            base64::engine::general_purpose::STANDARD.decode(data).unwrap_or_else(|_| data.as_bytes().to_vec())
+        } else {
+            data.as_bytes().to_vec()
+        };
+        let _ = std::fs::write(path, bytes);
     }
 }
 
@@ -13506,7 +13514,7 @@ fn pick_folder() -> Option<String> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn request_file_open(accept: &str) -> Option<String> {
+fn request_file_open(accept: &str, read_as: Option<&str>) -> Option<String> {
     let extensions: Vec<&str> = accept
         .split(',')
         .filter_map(|entry| entry.trim().strip_prefix('.'))
@@ -13515,11 +13523,18 @@ fn request_file_open(accept: &str) -> Option<String> {
     if !extensions.is_empty() {
         dialog = dialog.add_filter("import", &extensions);
     }
-    dialog.pick_file().and_then(|path| std::fs::read_to_string(path).ok())
+    let path = dialog.pick_file()?;
+    if read_as == Some("dataUrl") {
+        use base64::Engine;
+        let bytes = std::fs::read(&path).ok()?;
+        let mime = extensions.first().map(|ext| format!("application/{ext}")).unwrap_or_else(|| "application/octet-stream".into());
+        return Some(format!("data:{mime};base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes)));
+    }
+    std::fs::read_to_string(path).ok()
 }
 
 #[cfg(target_arch = "wasm32")]
-fn request_file_open(_accept: &str) -> Option<String> {
+fn request_file_open(_accept: &str, _read_as: Option<&str>) -> Option<String> {
     None
 }
 

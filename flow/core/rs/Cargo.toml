@@ -23,6 +23,7 @@ flow_module_logic = { path = "../../module/logic/rs", default-features = false }
 flow_module_math = { path = "../../module/math/rs", default-features = false }
 flow_module_text = { path = "../../module/text/rs", default-features = false }
 kernel_3d_engine = { path = "../../../kernel/3d/brep/engine/rs", features = ["parallel"] }
+semio-framework-core = { path = "../../../framework/core/rs" }
 neural_engine = { path = "../../../neural/engine/rs", features = ["parallel"] }
 neural_dag = { path = "../../../neural/dag/rs" }
 mathematical_graph_manifest = { path = "../../../mathematical/graph/manifest/rs" }
@@ -32,6 +33,7 @@ ui_styling = { path = "../../../ui/styling/rs" }
 forms = { path = "../../../forms/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+base64 = "0.22"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"

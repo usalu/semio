@@ -1982,6 +1982,7 @@ dependencies = [
  "image",
  "kernel_2d_engine",
  "kernel_2d_rs",
+ "semio-framework-core",
  "serde",
  "serde_json",
  "vcs",
@@ -1992,6 +1993,7 @@ dependencies = [
 name = "draw-plugin"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "draw",
  "semio-framework-os",
  "semio-framework-plugin",
@@ -2304,6 +2306,7 @@ dependencies = [
 name = "flow_core"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "flow_module_bim",
  "flow_module_brep",
  "flow_module_core",
@@ -2321,6 +2324,7 @@ dependencies = [
  "mathematical_graph_port_directed_dag",
  "neural_dag",
  "neural_engine",
+ "semio-framework-core",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -4431,6 +4435,7 @@ dependencies = [
  "async-trait",
  "geo",
  "kernel_2d_engine",
+ "semio-framework-core",
  "serde",
 ]
 
@@ -7186,6 +7191,7 @@ checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
 name = "s-plugin"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "mathematical_graph_port_directed_dag",
  "semio-framework-os",
  "semio-framework-plugin",

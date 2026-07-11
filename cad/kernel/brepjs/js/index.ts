@@ -3388,6 +3388,32 @@ export async function exportModelSpaceToGlb(space: ModelSpace, deflection = 0.1)
   return meshTransferToGlb(mergeMeshTransfers(meshes));
 }
 
+/** @emoji 📐 Exports `space` solids as merged DWG bytes via tessellation, routed through the Rust DWG codec (flow-core wasm) rather than OpenCascade. */
+export async function exportModelSpaceToDwg(space: ModelSpace, deflection = 0.1): Promise<Uint8Array> {
+  const { mergeMeshTransfers, emptyMeshTransfer } = await import("@semio-tech/kernel-3d-js");
+  const kernel = new BrepjsKernel();
+  const meshes = [];
+  for (const model of Object.values(space.models)) {
+    for (const solid of Object.values(model.solids)) {
+      const mesh = await kernel.tessellate(solid.id, deflection, model);
+      if (mesh.position.length > 0 && mesh.index.length > 0) meshes.push(mesh);
+    }
+  }
+  const flowCore = (await import("../../../../flow/core/rs/pkg/flow_core.js")) as { dwg_encode_mesh_json?: (meshJson: string) => string };
+  if (typeof flowCore.dwg_encode_mesh_json !== "function") {
+    throw new Error("dwg_encode_mesh_json export missing — rebuild flow/core wasm");
+  }
+  const merged = meshes.length > 0 ? mergeMeshTransfers(meshes) : emptyMeshTransfer();
+  const meshJson = JSON.stringify({ positions: Array.from(merged.position), normals: Array.from(merged.normal), indices: Array.from(merged.index) });
+  const raw = JSON.parse(flowCore.dwg_encode_mesh_json(meshJson)) as { dwg?: string; error?: string };
+  if (raw.error) throw new Error(raw.error);
+  if (typeof raw.dwg !== "string") throw new Error("dwg_encode_mesh_json missing payload");
+  const binary = atob(raw.dwg);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
 /** @emoji 🪜 Exports `model` via a fresh `BrepjsKernel` (convenience). */
 export async function exportModelToStep(model: Model, modelId = "model"): Promise<string> {
   const kernel = new BrepjsKernel();

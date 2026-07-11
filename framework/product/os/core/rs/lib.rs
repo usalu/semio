@@ -4167,6 +4167,10 @@ pub fn os_media_graph_vfs_export_id(
     format!("inst:{instance_id}:export:{port_spec_id}:{}", format.as_str())
 }
 
+pub fn os_media_graph_vfs_import_id(instance_id: &str, format: &OsMediaFormat) -> String {
+    format!("inst:{instance_id}:import:{}", format.as_str())
+}
+
 fn regex_lite(input: &str, pattern: &str) -> Option<String> {
     if pattern == r"^inst:([^:]+)(?::|$)" {
         let rest = input.strip_prefix("inst:")?;
@@ -4320,6 +4324,21 @@ pub fn list_os_media_graph_vfs_children(
                         })
                         .unwrap_or_else(|| binding.parameter_id.clone()),
                 )]),
+            });
+        }
+        let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+        for format in required_os_media_import_formats(&descriptor.dimension) {
+            let ext = format.as_str();
+            rows.push(OsMediaGraphVfsNodeRecord {
+                id: os_media_graph_vfs_import_id(&instance_id, &format),
+                file_node_kind_id: "import".into(),
+                name: format!("import.{ext}"),
+                path: format!("/{}/inputs/import.{ext}", instance.label),
+                parent_id: Some(parent_id.into()),
+                has_children: false,
+                icon: Some(ext.into()),
+                navigate_uri: Some(format!("os://import/{}/{}/{}", instance.id, descriptor.kind, format.as_str())),
+                descriptor_values: HashMap::from([("format".into(), format.as_str().into())]),
             });
         }
         return rows;
@@ -4476,6 +4495,34 @@ mod tests {
         assert_eq!(operators[0].id, "os.media.node.node-1");
         assert_eq!(operators[0].module, OS_MEDIA_FLOW_MODULE_ID);
         assert_eq!(operators[0].name, "Draw");
+    }
+
+    #[test]
+    fn vfs_inputs_folder_lists_a_dwg_import_row_for_2d_kinds() {
+        let mut resources = HashMap::new();
+        resources.insert("draw".into(), os_baseline_resource("2d.drawing", "draw.document", "draw"));
+        let platform = OsPlatformInput {
+            id: "draw-vfs".into(),
+            name: "Draw".into(),
+            api_version: "1".into(),
+            apps: vec![OsPlatformAppInput { id: "draw".into(), label: "Draw".into(), document: vec!["semio".into(), "draw".into()], controller_id: "draw-play".into(), modes: vec![], default_mode_id: None }],
+        };
+        merge_os_program_definition("draw-vfs", &platform, &resources).expect("merge");
+        let registration = os_app_registration("draw-vfs", "draw").expect("registration");
+        let instance = OsAppInstance {
+            id: "app-vfs-1".into(),
+            program_id: "draw-vfs".into(),
+            app_id: "draw".into(),
+            label: "Draw".into(),
+            yields: os_app_primary_output_kind(&registration),
+            source_document: OsSourceDocument { format: "draw.document".into(), vcs_json: None, inline: Some("{}".into()), payload_ref: None },
+        };
+        let graph = empty_media_graph();
+        let inputs_folder = os_media_graph_vfs_inputs_folder_id(&instance.id);
+        let rows = list_os_media_graph_vfs_children(&inputs_folder, std::slice::from_ref(&instance), &graph, &[], &[]);
+        let import_row = rows.iter().find(|row| row.file_node_kind_id == "import").expect("import row present");
+        assert_eq!(import_row.name, "import.dwg");
+        assert_eq!(import_row.navigate_uri, Some(format!("os://import/{}/2d.drawing/dwg", instance.id)));
     }
 
     fn media_node(id: &str, instance_id: &str, x: f64, y: f64) -> OsMediaGraphNode {
@@ -5119,7 +5166,7 @@ pub use media_graph::{
     apply_flow_fixture_to_os_media_graph, assert_os_media_export_coverage, assert_os_media_import_coverage,
     empty_media_graph, export_os_app_instance_media, import_os_app_instance_media,
     list_os_media_graph_vfs_children, media_graph_node_for_instance, os_media_export_extension_for_format,
-    os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload, os_media_graph_vfs_export_id, os_media_graph_vfs_instance_folder_id,
+    os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload, os_media_graph_vfs_export_id, os_media_graph_vfs_import_id, os_media_graph_vfs_instance_folder_id,
     build_os_media_flow_operator_infos, OsMediaFlowOperatorInfo, OsMediaGraphCamera, OsMediaNodeGraphPayload,
     os_media_graph_vfs_instance_id, os_media_graph_vfs_schema, os_media_graph_vfs_source_id,
     os_media_neuron_kind_for_node, register_os_media_export_handler, register_os_media_import_handler,

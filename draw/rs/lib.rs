@@ -1993,6 +1993,98 @@ pub fn draw_document_json_to_svg(value: &serde_json::Value) -> Result<(String, u
     let doc: DrawDocument = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
     Ok(draw_document_to_svg(&doc))
 }
+
+fn apply_draw_transform_point(m: [f64; 6], p: [f64; 2]) -> [f64; 2] {
+    [m[0] * p[0] + m[2] * p[1] + m[4], m[1] * p[0] + m[3] * p[1] + m[5]]
+}
+
+fn draw_path_segment_to_dwg(segment: &PathSegment, transform: [f64; 6]) -> semio_framework_core::DwgPathSegment {
+    use semio_framework_core::DwgPathSegment;
+    match segment {
+        PathSegment::Move { to } => DwgPathSegment::Move { to: apply_draw_transform_point(transform, *to) },
+        PathSegment::Line { to } => DwgPathSegment::Line { to: apply_draw_transform_point(transform, *to) },
+        PathSegment::Quad { ctrl, to } => DwgPathSegment::Quad { ctrl: apply_draw_transform_point(transform, *ctrl), to: apply_draw_transform_point(transform, *to) },
+        PathSegment::Cubic { ctrl1, ctrl2, to } => DwgPathSegment::Cubic {
+            ctrl1: apply_draw_transform_point(transform, *ctrl1),
+            ctrl2: apply_draw_transform_point(transform, *ctrl2),
+            to: apply_draw_transform_point(transform, *to),
+        },
+        PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => {
+            DwgPathSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: apply_draw_transform_point(transform, *to) }
+        }
+        PathSegment::Close => DwgPathSegment::Close,
+    }
+}
+
+fn dwg_path_segment_to_draw(segment: &semio_framework_core::DwgPathSegment) -> PathSegment {
+    use semio_framework_core::DwgPathSegment;
+    match segment {
+        DwgPathSegment::Move { to } => PathSegment::Move { to: *to },
+        DwgPathSegment::Line { to } => PathSegment::Line { to: *to },
+        DwgPathSegment::Quad { ctrl, to } => PathSegment::Quad { ctrl: *ctrl, to: *to },
+        DwgPathSegment::Cubic { ctrl1, ctrl2, to } => PathSegment::Cubic { ctrl1: *ctrl1, ctrl2: *ctrl2, to: *to },
+        DwgPathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => PathSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: *to },
+        DwgPathSegment::Close => PathSegment::Close,
+    }
+}
+
+/// 📐 Converts a draw document to DWG bytes with native fidelity: circular/elliptical arcs become bulges (not flattened cubics) and text stays a DWG TEXT entity.
+pub fn draw_document_json_to_dwg_bytes(value: &serde_json::Value) -> Result<Vec<u8>, String> {
+    let doc: DrawDocument = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
+    let mut path_groups: Vec<Vec<semio_framework_core::DwgPathSegment>> = Vec::new();
+    let mut text_entities: Vec<(f64, f64, f64, String)> = Vec::new();
+    for node in flatten_draw_document_to_scene_nodes(&doc) {
+        if !node.visible {
+            continue;
+        }
+        if let Some(text) = &node.text {
+            let at = apply_draw_transform_point(node.transform, [0.0, 0.0]);
+            text_entities.push((at[0], at[1], text.size, text.content.clone()));
+            continue;
+        }
+        if node.segments.is_empty() {
+            continue;
+        }
+        path_groups.push(node.segments.iter().map(|segment| draw_path_segment_to_dwg(segment, node.transform)).collect());
+    }
+    let mut drawing = semio_framework_core::paths_to_dwg_drawing(&path_groups);
+    let layer = drawing.ensure_layer("0");
+    for (x, y, size, content) in text_entities {
+        drawing.entities.push(semio_framework_core::DwgEntity {
+            layer,
+            color: semio_framework_core::DwgColor::ByLayer,
+            geometry: semio_framework_core::DwgGeometry::Text { at: [x, y, 0.0], height: size, rotation: 0.0, content },
+        });
+    }
+    semio_framework_core::dwg_to_bytes(&drawing)
+}
+
+/// 📐 Rebuilds a draw document from an imported DWG drawing: one path layer per polyline/spline entity, DWG text entities become draw text layers.
+pub fn draw_document_json_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Result<serde_json::Value, String> {
+    let mut doc = default_draw_document("imported-dwg", Some("Imported DWG"));
+    let mut layers: Vec<DrawLayerNode> = semio_framework_core::dwg_drawing_to_paths(drawing)
+        .iter()
+        .enumerate()
+        .map(|(index, segments)| {
+            let draw_segments: Vec<PathSegment> = segments.iter().map(dwg_path_segment_to_draw).collect();
+            create_draw_path_layer(&format!("Path {}", index + 1), draw_segments)
+        })
+        .collect();
+    for entity in &drawing.entities {
+        if let semio_framework_core::DwgGeometry::Text { at, height, content, .. } = &entity.geometry {
+            layers.push(DrawLayerNode::Text(DrawTextBody { base: default_layer_base("Text"), x: at[0], y: at[1], content: content.clone(), size: *height }));
+        }
+    }
+    if layers.is_empty() {
+        layers.push(create_draw_path_layer("Layer 1", Vec::new()));
+    }
+    doc.layers = layers;
+    doc.artboard = Some(DrawArtboard {
+        width: (drawing.extmax[0] - drawing.extmin[0]).max(1.0),
+        height: (drawing.extmax[1] - drawing.extmin[1]).max(1.0),
+    });
+    serde_json::to_value(&doc).map_err(|error| error.to_string())
+}
 //#endregion 🔖MediaExport
 
 //#region 🧪Tests
@@ -2006,6 +2098,33 @@ mod tests {
         let doc = default_draw_document("test", None);
         assert_eq!(doc.layers.len(), 1);
         assert!(matches!(doc.layers[0], DrawLayerNode::Path(_)));
+    }
+
+    #[test]
+    fn dwg_export_import_round_trips_a_path_and_text_layer() {
+        let path_layer = create_draw_path_layer(
+            "Outline",
+            vec![
+                PathSegment::Move { to: [0.0, 0.0] },
+                PathSegment::Line { to: [10.0, 0.0] },
+                PathSegment::Cubic { ctrl1: [12.0, 2.0], ctrl2: [12.0, 6.0], to: [10.0, 8.0] },
+                PathSegment::Close,
+            ],
+        );
+        let text_layer = DrawLayerNode::Text(DrawTextBody { base: default_layer_base("Label"), x: 1.0, y: 2.0, content: "semio".into(), size: 3.0 });
+        let doc = DrawDocument { layers: vec![path_layer, text_layer], ..default_draw_document("dwg-test", None) };
+        let value = serde_json::to_value(&doc).unwrap();
+
+        let bytes = draw_document_json_to_dwg_bytes(&value).expect("export dwg");
+        assert!(!bytes.is_empty());
+        let drawing = semio_framework_core::dwg_from_bytes(&bytes).expect("decode dwg");
+        assert!(drawing.entities.iter().any(|entity| matches!(entity.geometry, semio_framework_core::DwgGeometry::Text { .. })));
+        assert!(drawing.entities.iter().any(|entity| matches!(entity.geometry, semio_framework_core::DwgGeometry::LwPolyline { .. } | semio_framework_core::DwgGeometry::Spline { .. })));
+
+        let reimported = draw_document_json_from_dwg(&drawing).expect("import dwg");
+        let reimported_doc: DrawDocument = serde_json::from_value(reimported).expect("valid draw document");
+        assert!(reimported_doc.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Text(text) if text.content == "semio")));
+        assert!(reimported_doc.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Path(_))));
     }
 
     #[test]

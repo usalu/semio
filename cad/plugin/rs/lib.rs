@@ -3238,8 +3238,33 @@ fn cad_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plu
     Ok(export_mesh_from_envelope(&envelope))
 }
 
+fn cad_document_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Result<serde_json::Value, String> {
+    let mut envelope = default_envelope();
+    let mut kernel = cad_brep_kernel().lock().map_err(|_| "cad brep kernel lock poisoned".to_string())?;
+    let objects: Vec<CadObject> = drawing
+        .layers
+        .iter()
+        .enumerate()
+        .filter_map(|(layer_index, layer)| {
+            let mut layer_drawing = drawing.clone();
+            layer_drawing.entities.retain(|entity| entity.layer == layer_index);
+            if layer_drawing.entities.is_empty() {
+                return None;
+            }
+            let mesh = semio_framework_core::dwg_drawing_to_mesh(&layer_drawing);
+            Some(cad_object_from_mesh(&mut kernel, format!("object-{}", layer.name), layer.name.clone(), "spatial.shape.imported", &mesh))
+        })
+        .collect();
+    if !objects.is_empty() {
+        envelope.document.objects = objects;
+    }
+    envelope.history = seed_cad_history(&envelope.document);
+    serde_json::to_value(&envelope).map_err(|err| err.to_string())
+}
+
 fn register_cad_exports() {
     semio_framework_os::register_mesh_export_handlers("3d.cad", "cad", cad_mesh_from_document);
+    semio_framework_os::register_dwg_import_handler("3d.cad", cad_document_from_dwg);
 }
 
 semio_framework_plugin::plugin_exports!(bundle);
@@ -3266,6 +3291,34 @@ mod tests {
             .building_objects
             .iter()
             .all(|object| object.solid_handle.is_some()));
+    }
+
+    #[test]
+    fn cad_document_from_dwg_creates_one_object_per_layer_with_geometry() {
+        let mut drawing = semio_framework_core::DwgDrawing::default();
+        let outline = drawing.ensure_layer("outline");
+        let empty_layer = drawing.ensure_layer("empty");
+        let _ = empty_layer;
+        drawing.entities.push(semio_framework_core::DwgEntity {
+            layer: outline,
+            color: semio_framework_core::DwgColor::ByLayer,
+            geometry: semio_framework_core::DwgGeometry::PolyfaceMesh {
+                vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]],
+                faces: vec![[1, 2, 3, 4]],
+            },
+        });
+        let value = cad_document_from_dwg(&drawing).expect("cad document from dwg");
+        let envelope: CadPlayEnvelope = serde_json::from_value(value).expect("valid cad play envelope");
+        assert_eq!(envelope.document.objects.len(), 1);
+        assert_eq!(envelope.document.objects[0].label, "outline");
+    }
+
+    #[test]
+    fn cad_document_from_empty_dwg_falls_back_to_default_document() {
+        let drawing = semio_framework_core::DwgDrawing::default();
+        let value = cad_document_from_dwg(&drawing).expect("cad document from empty dwg");
+        let envelope: CadPlayEnvelope = serde_json::from_value(value).expect("valid cad play envelope");
+        assert!(!envelope.document.objects.is_empty());
     }
 
     #[test]

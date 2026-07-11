@@ -427,6 +427,50 @@ export async function exportGltf(handle: GeometryRef, deflection = 0.1): Promise
   return meshTransferToGlb(mesh);
 }
 
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
+  }
+  return btoa(binary);
+}
+
+function base64ToBytes(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+/** @emoji 💾 Exports a brep geometry handle to DWG bytes via flow brep WASM. */
+export async function exportDwg(handle: GeometryRef, deflection = 0.1): Promise<Uint8Array> {
+  const mod = await ensureBrepModuleWasmLoaded();
+  const input = JSON.stringify({
+    geometry: { $schema: "geometry", handle, kind: "solid" },
+    deflection: { $schema: "number", value: deflection },
+  });
+  const raw = JSON.parse(mod.evaluate("brep.io.exportDwg", input)) as Record<string, unknown> & { error?: string };
+  if (raw.error) throw new Error(raw.error);
+  return base64ToBytes(readBrepTextChannel(raw, "dwg"));
+}
+
+/** @emoji 📂 Imports DWG bytes into a new brep geometry handle via flow brep WASM. */
+export async function importDwg(bytes: Uint8Array, tolerance = 0.1): Promise<GeometryRef> {
+  const mod = await ensureBrepModuleWasmLoaded();
+  const input = JSON.stringify({
+    data: { $schema: "text", value: bytesToBase64(bytes) },
+    tolerance: { $schema: "number", value: tolerance },
+  });
+  const raw = JSON.parse(mod.evaluate("brep.io.importDwg", input)) as Record<string, unknown> & { error?: string };
+  if (raw.error) throw new Error(raw.error);
+  const geometry = raw["geometry"];
+  if (geometry && typeof geometry === "object" && "handle" in geometry && typeof (geometry as { handle: unknown }).handle === "string") {
+    return (geometry as { handle: string }).handle as GeometryRef;
+  }
+  throw new Error("brep dwg import missing geometry handle");
+}
+
 /** @emoji 💾 Serializes a {@link MeshTransfer} to OBJ text. */
 export function meshTransferToObj(mesh: MeshTransfer): string {
   let out = "# mesh export\n";

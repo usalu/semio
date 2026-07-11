@@ -500,8 +500,145 @@ impl DrawingStore {
         let scene = self.flatten_scene_sync(handle)?;
         Ok(serialize_pdf(&scene))
     }
+
+    pub fn export_dwg_sync(&self, handle: &DrawingHandle) -> Result<Vec<u8>, DrawingError> {
+        let scene = self.flatten_scene_sync(handle)?;
+        let mut drawing = semio_framework_core::DwgDrawing::default();
+        let layer = drawing.ensure_layer("0");
+        for node in &scene.nodes {
+            if node.opacity <= 0.0 {
+                continue;
+            }
+            if let DrawingNode::Circle { cx, cy, r } = &node.node {
+                let center = affine_apply_point(node.transform, [*cx, *cy]);
+                drawing.entities.push(semio_framework_core::DwgEntity {
+                    layer,
+                    color: semio_framework_core::DwgColor::ByLayer,
+                    geometry: semio_framework_core::DwgGeometry::Circle { center: [center[0], center[1], 0.0], radius: r * node.transform.0[0].abs(), normal: [0.0, 0.0, 1.0] },
+                });
+                continue;
+            }
+            if let DrawingNode::Text { x, y, content, size } = &node.node {
+                let at = affine_apply_point(node.transform, [*x, *y]);
+                drawing.entities.push(semio_framework_core::DwgEntity {
+                    layer,
+                    color: semio_framework_core::DwgColor::ByLayer,
+                    geometry: semio_framework_core::DwgGeometry::Text { at: [at[0], at[1], 0.0], height: *size, rotation: 0.0, content: content.clone() },
+                });
+                continue;
+            }
+            if let Some(segments) = scene_node_world_segments(node) {
+                let dwg_segments: Vec<semio_framework_core::DwgPathSegment> = segments.iter().map(engine_segment_to_dwg).collect();
+                let mut sub = semio_framework_core::paths_to_dwg_drawing(&[dwg_segments]);
+                drawing.entities.extend(sub.entities.drain(..));
+            }
+        }
+        semio_framework_core::dwg_to_bytes(&drawing).map_err(DrawingError::InvalidInput)
+    }
+
+    pub fn import_dwg_sync(&mut self, data: &[u8]) -> Result<DrawingHandle, DrawingError> {
+        let drawing = semio_framework_core::dwg_from_bytes(data).map_err(DrawingError::InvalidInput)?;
+        let mut children = Vec::new();
+        for path in semio_framework_core::dwg_drawing_to_paths(&drawing) {
+            let segments: Vec<PathSegment> = path.iter().map(dwg_segment_to_engine).collect();
+            if segments.len() < 2 {
+                continue;
+            }
+            children.push(self.register(DrawingKind::Path, DrawingNode::Path { segments }));
+        }
+        for entity in &drawing.entities {
+            if let semio_framework_core::DwgGeometry::Text { at, height, content, .. } = &entity.geometry {
+                children.push(self.register(DrawingKind::Text, DrawingNode::Text { x: at[0], y: at[1], content: content.clone(), size: *height }));
+            }
+        }
+        if children.is_empty() {
+            return Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [0.0, 0.0] }] }));
+        }
+        if children.len() == 1 {
+            return Ok(children.into_iter().next().unwrap());
+        }
+        Ok(self.register(DrawingKind::Group, DrawingNode::Group { children: children.iter().map(|h| h.as_str().to_string()).collect() }))
+    }
 }
 // #endregion 🔖Store
+
+fn affine_apply_point(m: Affine2D, p: Vec2) -> Vec2 {
+    let a = m.0;
+    [a[0] * p[0] + a[2] * p[1] + a[4], a[1] * p[0] + a[3] * p[1] + a[5]]
+}
+
+fn scene_node_world_segments(node: &SceneNode) -> Option<Vec<PathSegment>> {
+    let segments = match &node.node {
+        DrawingNode::Path { segments } => segments.clone(),
+        DrawingNode::Line { x1, y1, x2, y2 } => vec![PathSegment::Move { to: [*x1, *y1] }, PathSegment::Line { to: [*x2, *y2] }],
+        DrawingNode::Polygon { points } => {
+            if points.is_empty() {
+                return None;
+            }
+            let mut segments = vec![PathSegment::Move { to: points[0] }];
+            for p in &points[1..] {
+                segments.push(PathSegment::Line { to: *p });
+            }
+            segments.push(PathSegment::Close);
+            segments
+        }
+        DrawingNode::Rect { x, y, width, height } => vec![
+            PathSegment::Move { to: [*x, *y] },
+            PathSegment::Line { to: [*x + *width, *y] },
+            PathSegment::Line { to: [*x + *width, *y + *height] },
+            PathSegment::Line { to: [*x, *y + *height] },
+            PathSegment::Close,
+        ],
+        DrawingNode::Ellipse { cx, cy, rx, ry } => vec![
+            PathSegment::Move { to: [*cx + *rx, *cy] },
+            PathSegment::Arc { rx: *rx, ry: *ry, rotation: 0.0, large_arc: true, sweep: true, to: [*cx - *rx, *cy] },
+            PathSegment::Arc { rx: *rx, ry: *ry, rotation: 0.0, large_arc: true, sweep: true, to: [*cx + *rx, *cy] },
+            PathSegment::Close,
+        ],
+        DrawingNode::Circle { .. } | DrawingNode::Text { .. } | DrawingNode::Group { .. } => return None,
+    };
+    Some(
+        segments
+            .into_iter()
+            .map(|segment| match segment {
+                PathSegment::Move { to } => PathSegment::Move { to: affine_apply_point(node.transform, to) },
+                PathSegment::Line { to } => PathSegment::Line { to: affine_apply_point(node.transform, to) },
+                PathSegment::Quad { ctrl, to } => PathSegment::Quad { ctrl: affine_apply_point(node.transform, ctrl), to: affine_apply_point(node.transform, to) },
+                PathSegment::Cubic { ctrl1, ctrl2, to } => {
+                    PathSegment::Cubic { ctrl1: affine_apply_point(node.transform, ctrl1), ctrl2: affine_apply_point(node.transform, ctrl2), to: affine_apply_point(node.transform, to) }
+                }
+                PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => {
+                    PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to: affine_apply_point(node.transform, to) }
+                }
+                PathSegment::Close => PathSegment::Close,
+            })
+            .collect(),
+    )
+}
+
+fn engine_segment_to_dwg(segment: &PathSegment) -> semio_framework_core::DwgPathSegment {
+    use semio_framework_core::DwgPathSegment;
+    match segment {
+        PathSegment::Move { to } => DwgPathSegment::Move { to: *to },
+        PathSegment::Line { to } => DwgPathSegment::Line { to: *to },
+        PathSegment::Quad { ctrl, to } => DwgPathSegment::Quad { ctrl: *ctrl, to: *to },
+        PathSegment::Cubic { ctrl1, ctrl2, to } => DwgPathSegment::Cubic { ctrl1: *ctrl1, ctrl2: *ctrl2, to: *to },
+        PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => DwgPathSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: *to },
+        PathSegment::Close => DwgPathSegment::Close,
+    }
+}
+
+fn dwg_segment_to_engine(segment: &semio_framework_core::DwgPathSegment) -> PathSegment {
+    use semio_framework_core::DwgPathSegment;
+    match segment {
+        DwgPathSegment::Move { to } => PathSegment::Move { to: *to },
+        DwgPathSegment::Line { to } => PathSegment::Line { to: *to },
+        DwgPathSegment::Quad { ctrl, to } => PathSegment::Quad { ctrl: *ctrl, to: *to },
+        DwgPathSegment::Cubic { ctrl1, ctrl2, to } => PathSegment::Cubic { ctrl1: *ctrl1, ctrl2: *ctrl2, to: *to },
+        DwgPathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => PathSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: *to },
+        DwgPathSegment::Close => PathSegment::Close,
+    }
+}
 
 // #region 🔖Geometry
 fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<PathSegment> {
@@ -889,6 +1026,14 @@ impl DrawingKernel for DrawingStore {
         self.export_pdf_sync(handle)
     }
 
+    async fn export_dwg(&self, handle: &DrawingHandle) -> Result<Vec<u8>, DrawingError> {
+        self.export_dwg_sync(handle)
+    }
+
+    async fn import_dwg(&mut self, data: &[u8]) -> Result<DrawingHandle, DrawingError> {
+        self.import_dwg_sync(data)
+    }
+
     async fn kind(&self, handle: &DrawingHandle) -> Result<DrawingKind, DrawingError> {
         Ok(self.entry(handle)?.kind)
     }
@@ -951,6 +1096,21 @@ mod tests {
         let group = block_on(store.group(&[a, b])).unwrap();
         let scene = store.flatten_scene_sync(&group).unwrap();
         assert_eq!(scene.nodes.len(), 2);
+    }
+
+    #[test]
+    fn dwg_export_import_round_trips_a_group() {
+        let mut store = DrawingStore::new();
+        let rect = block_on(store.rect_path(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let circle = block_on(store.circle(10.0, 10.0, 3.0)).unwrap();
+        let group = block_on(store.group(&[rect, circle])).unwrap();
+
+        let bytes = store.export_dwg_sync(&group).expect("export dwg");
+        assert!(!bytes.is_empty());
+
+        let imported = store.import_dwg_sync(&bytes).expect("import dwg");
+        let scene = store.flatten_scene_sync(&imported).expect("flatten imported scene");
+        assert!(!scene.nodes.is_empty());
     }
 }
 // #endregion 🔖Tests

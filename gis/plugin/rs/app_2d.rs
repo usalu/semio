@@ -1093,8 +1093,37 @@ fn gis2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), Strin
     semio_framework_os::map_points_svg(value, "GIS 2D")
 }
 
+/// 🗺️ Imports a DWG drawing into a gis map document: entity vertices become the map's points list, framed to the drawing's extents. Falls back to the default reuse-map fixture when the DWG carries no point-like geometry.
+fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
+    let positions: Vec<[f64; 2]> = drawing
+        .entities
+        .iter()
+        .flat_map(|entity| match &entity.geometry {
+            DwgGeometry::Point { at } => vec![[at[0], at[1]]],
+            DwgGeometry::Line { start, end } => vec![[start[0], start[1]], [end[0], end[1]]],
+            DwgGeometry::LwPolyline { vertices, .. } => vertices.clone(),
+            DwgGeometry::Polyline3d { vertices, .. } => vertices.iter().map(|v| [v[0], v[1]]).collect(),
+            _ => Vec::new(),
+        })
+        .collect();
+    if positions.is_empty() {
+        return serde_json::to_value(&default_envelope()).map_err(|error| error.to_string());
+    }
+    let mut envelope = default_envelope();
+    envelope.runtime.camera_json = serde_json::json!({
+        "x": (drawing.extmin[0] + drawing.extmax[0]) / 2.0,
+        "y": (drawing.extmin[1] + drawing.extmax[1]) / 2.0,
+        "zoom": 1.0,
+    })
+    .to_string();
+    let mut value = serde_json::to_value(&envelope).map_err(|error| error.to_string())?;
+    value["positions"] = serde_json::to_value(&positions).map_err(|error| error.to_string())?;
+    Ok(value)
+}
+
 pub fn register_gis2d_exports() {
     semio_framework_os::register_2d_export_handlers("2d.map", "gis2d", gis2d_document_json_to_svg);
+    semio_framework_os::register_dwg_import_handler("2d.map", gis2d_document_json_from_dwg);
 }
 //#endregion 🔖AppFactory
 
@@ -1103,6 +1132,24 @@ pub fn register_gis2d_exports() {
 mod tests {
     use super::*;
     use semio_framework_plugin::PluginApp;
+
+    #[test]
+    fn dwg_import_collects_point_and_line_vertices() {
+        let mut drawing = DwgDrawing::default();
+        let layer = drawing.ensure_layer("0");
+        drawing.entities.push(semio_framework_os::DwgEntity { layer, color: semio_framework_os::DwgColor::ByLayer, geometry: DwgGeometry::Point { at: [1.0, 2.0, 0.0] } });
+        drawing.entities.push(semio_framework_os::DwgEntity { layer, color: semio_framework_os::DwgColor::ByLayer, geometry: DwgGeometry::Line { start: [0.0, 0.0, 0.0], end: [3.0, 4.0, 0.0] } });
+        let value = gis2d_document_json_from_dwg(&drawing).expect("import dwg");
+        let positions = value.get("positions").and_then(|v| v.as_array()).expect("positions array");
+        assert_eq!(positions.len(), 3);
+    }
+
+    #[test]
+    fn dwg_import_falls_back_to_default_envelope_when_empty() {
+        let drawing = DwgDrawing::default();
+        let value = gis2d_document_json_from_dwg(&drawing).expect("import empty dwg");
+        assert!(serde_json::from_value::<Gis2dPlayEnvelope>(value).is_ok());
+    }
 
     #[test]
     fn renders_gis_map_scene() {
