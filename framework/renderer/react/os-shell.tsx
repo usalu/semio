@@ -812,7 +812,6 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const extraWindowCounterRef = useRef(0);
   const openStudioIdRef = useRef<string | null>(null);
   const sessionRef = useRef<ActiveSession | null>(null);
-  const debugRenderCount = useRef(0);
   const [uiAppearance, setUiAppearance] = useState<ElementsSurfaceAppearance>(() => readStoredUiChromeAppearance());
   const [uiLayout, setUiLayout] = useState<UiChromeLayout>(() => readStoredUiChromeLayout());
   const uiDevice: ElementsSurfaceDevice = mobile ? "mobile" : uiLayout;
@@ -2320,28 +2319,6 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     }
     return items;
   }, [activeWindowId, mobilePanel, mobilePanelOpen, mobileWindowTabs]);
-
-  debugRenderCount.current += 1;
-  if (debugRenderCount.current < 60) {
-    // eslint-disable-next-line no-console
-    console.log(
-      "[DEBUG] shell render " +
-        debugRenderCount.current +
-        " " +
-        JSON.stringify({
-          mobile,
-          activeWindowId,
-          mobileWindowTabsLen: mobileWindowTabs.length,
-          mobileFooterNavLen: mobileFooterNav.length,
-          mobilePanelVisible: mobilePanel?.visible,
-          mobilePanelOpen,
-          activeLeftPanelKind,
-          activeRightPanelKind,
-          leftPanelVisible,
-          rightPanelVisible,
-        }),
-    );
-  }
 
   const canvas = useMemo(() => {
     if (!session) return <p className="p-4 text-sm text-muted-foreground">Loading plugins…</p>;

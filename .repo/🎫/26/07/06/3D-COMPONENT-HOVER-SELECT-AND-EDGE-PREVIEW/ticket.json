@@ -1,9 +1,9 @@
 {
   "title": "3D Component Hover Select and Edge Preview",
   "emoji": "🎯",
-  "status": "open",
+  "status": "closed",
   "description": "Fix vertex/edge/face hover and selection in WGPU world engine and lowpoly plugin; add Show Edges window option toggle.",
-  "summary": "Fixed regression where apply_world_command_preview set scene_selection_json=None, forcing sync_world3d_state to re-parse stale cached selection JSON every frame and wipe optimistic hover/selection before the plugin round-trip completed. Removed cache invalidation; preview state now survives sync when scene JSON is unchanged. Added apply_runtime_draw_flags after sync to apply mesh hover/selection GPU flags without waiting for instances_json refresh. Apply preview synchronously when collecting world commands (before async dispatch) so the next frame sees updated state. React mesh clicks use worldPick with object index. Rebuilt WGPU WASM. Tests: preview_survives_sync_when_scene_json_unchanged plus existing suite.",
+  "summary": "Code and tests were already landed prior to this session: numeric-id sync (infinite/world/rs/lib.rs:3520), vertex/face/edge hover-select overlay tests (:3573/:3600/:3871), the `preview_survives_sync_when_scene_json_unchanged` regression test (:3969) for the optimistic-preview-wiped-by-stale-cache bug, and lowpoly's `toggleShowEdges` test (lowpoly/plugin/rs:2751).\n\nRe-verified this session: `cargo test -p infinite_world --lib` passes all 25 tests including `preview_survives_sync_when_scene_json_unchanged`. Rebuilt the wgpu renderer WASM and plugin WASM (both required a fresh build since the crate had been non-compiling before this session's ViewState/RasterScene schema fixes, tracked under 26/07/11/WGPU-RENDERER-FULL-PARITY) and booted the lowpoly playground under wgpu — console shows a clean `[DEBUG] wgpu renderer booted` with no hover/select/edge-preview errors.\n\nInteractive pixel verification (actually hovering/clicking/toggling Show Edges and observing the result) was not possible in this session: this headless Browser pane's WebGPU canvas never presents visible pixels despite a valid `navigator.gpu` adapter and error-free boot — the same environment gap documented in `.repo/🎫/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/parity-gap-update.md` and confirmed via a non-WebGPU screenshot sanity check. Closing on the strength of the unit test suite (which directly encodes the hover/select/edge-preview/toggle behaviors) plus clean boot; interactive confirmation needs a real (non-headless) browser.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1827"
   },
@@ -11,7 +11,12 @@
   "plan": {
     "client": "cursor",
     "id": "12c668e5",
-    "source": "/Users/ueli/Documents/semio/.cursor/plans/fix_wgpu_pointer_coordinate_scaling_bug_12c668e5.plan.md"
+    "local": "fix_wgpu_pointer_coordinate_scaling_bug_12c668e5.plan.md"
   },
-  "sessions": ["⚪fc1bc2ebf0c443ea894ca05133679000", "⚪012513bca08a4972891fb1f2df2e3112", "⚪15da272cc6354fd085557a0589c4e904", "⚪601db591fae341bdb68f7875957fe2f1"]
+  "sessions": [
+    "⚪fc1bc2ebf0c443ea894ca05133679000",
+    "⚪012513bca08a4972891fb1f2df2e3112",
+    "⚪15da272cc6354fd085557a0589c4e904",
+    "⚪601db591fae341bdb68f7875957fe2f1"
+  ]
 }

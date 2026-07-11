@@ -338,8 +338,7 @@ impl DockState {
             return false;
         }
         let window_id = windows.remove(from);
-        let insert_at = if to > from { to.saturating_sub(1) } else { to };
-        windows.insert(insert_at.min(windows.len()), window_id);
+        windows.insert(to.min(windows.len()), window_id);
         true
     }
 
@@ -1476,7 +1475,7 @@ fn stack_content_rect(
     maximized: bool,
 ) -> Rect {
     let layout = layout_stack_cap(windows, active, labels, atlas, theme, bounds, maximized);
-    stack_body_chrome_rect(bounds, theme, windows, &layout).inset(theme.padding_standard)
+    stack_body_chrome_rect(bounds, theme, windows, &layout)
 }
 
 fn render_cap_action_group(
@@ -1729,7 +1728,7 @@ mod tests {
             (stack_with("c"), 0.5),
         ]);
         let canvas = Rect::new(0.0, 0.0, 1000.0, 800.0);
-        let row_extent = dock.split_axis_extent(&vec![], canvas).unwrap();
+        let row_extent = dock.split_axis_extent(&vec![0], canvas).unwrap();
         assert!((row_extent - 1000.0).abs() < 0.1);
         let col_extent = dock.split_axis_extent(&vec![], canvas);
         assert!((col_extent.unwrap() - 800.0).abs() < 0.1);

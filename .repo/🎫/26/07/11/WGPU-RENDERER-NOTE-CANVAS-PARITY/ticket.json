@@ -1,0 +1,13 @@
+{
+  "title": "Wgpu Renderer Note Canvas Parity",
+  "emoji": "🖊️",
+  "status": "open",
+  "description": "Implement the note-canvas componentScene surface in the wgpu renderer (framework/renderer/wgpu/rs/lib.rs), which currently falls through to a placeholder. Port geometry/interaction logic from framework/renderer/react/components/note-canvas-host.tsx (block bounds/hit-testing, resize handles, screen\u003c-\u003eworld conversion, ink erasers, snap-to-grid, marquee selection) into a direct DrawList painter (render_note_canvas) following the render_canvas_2d/render_raster pattern, wired into SceneSurfaceState pointer handling. Verify against the `note` playground comparing wgpu vs react renderers.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1933"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪33905144771a4015954eef190e56f1e5"
+  ]
+}

@@ -32,6 +32,7 @@ import {
   type SelectionMarqueeCoverage,
   type SelectionMarqueeMethod,
   type SelectionMarqueePoint,
+  useCanvasAppearanceSync,
 } from "@semio-tech/ui-react";
 import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
 import type { CommandDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
@@ -232,11 +233,7 @@ function useSemanticColors(): SemanticColors {
     [],
   );
   const [colors, setColors] = useState(resolve);
-  useEffect(() => {
-    const observer = new MutationObserver(() => setColors(resolve()));
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-ui-appearance", "class"] });
-    return () => observer.disconnect();
-  }, [resolve]);
+  useCanvasAppearanceSync(useCallback(() => setColors(resolve()), [resolve]));
   return colors;
 }
 

@@ -14,6 +14,7 @@ import {
   UnifiedGumball,
   gumballConfigVisible,
   gumballHandleKindToTransformMode,
+  useCanvasAppearanceSync,
   type GumballConfig,
   type GumballPose,
   type ReactNode,
@@ -856,16 +857,18 @@ export function WorldLodGridHelper(props: { readonly gridDatum?: Vec3 }): ReactE
   const anchor = controls?.target;
   const gridLayerKey = reactHostPort.useMemo(() => lodProgressiveGridLayerKey(lod.lod, lod.gridFactor), [lod.lod, lod.gridFactor]);
   const layers = reactHostPort.useMemo(() => lodProgressiveGridLayers(lod.lod, lod.gridFactor), [gridLayerKey, lod.gridFactor]);
+  const [gridColor, setGridColor] = reactHostPort.useState<number>(() => resolveThreeColor(themeColorVar("element"), "gray"));
+  useCanvasAppearanceSync(reactHostPort.useCallback(() => setGridColor(resolveThreeColor(themeColorVar("element"), "gray")), []));
   const grids = reactHostPort.useMemo(() => {
     const size = 12_000;
     return layers.map(({ stepWorld, opacity }) => {
       const divs = Math.min(512, Math.max(2, Math.round(size / stepWorld)));
-      const grid = new GridHelper(size, divs, resolveThreeColor(themeColorVar("element"), "gray"), resolveThreeColor(themeColorVar("element"), "gray"));
+      const grid = new GridHelper(size, divs, gridColor, gridColor);
       grid.rotation.x = Math.PI / 2;
       applyLodGridLayerStyle(grid, opacity);
       return grid;
     });
-  }, [layers]);
+  }, [layers, gridColor]);
   reactHostPort.useEffect(
     () => () => {
       for (const grid of grids) grid.dispose();
@@ -1381,15 +1384,14 @@ export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactEleme
   const labels = reactHostPort.useMemo(() => ["X", "Y", "Z"] as [string, string, string], []);
   const placement = reactHostPort.useMemo(() => resolveSceneGizmoViewportPlacement(size), [size]);
   const axisScale = reactHostPort.useMemo(() => [0.88, 0.036, 0.036] as [number, number, number], []);
-  const labelColor = reactHostPort.useMemo(() => resolveColorHex(semanticVar("foreground"), "gray"), []);
+  const [labelColor, setLabelColor] = reactHostPort.useState<string>(() => resolveColorHex(semanticVar("foreground"), "gray"));
 
-  reactHostPort.useEffect(() => {
-    const updateColors = () => setColors(resolveWorldCadAxisColors());
-    updateColors();
-    const observer = new MutationObserver(updateColors);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, []);
+  useCanvasAppearanceSync(
+    reactHostPort.useCallback(() => {
+      setColors(resolveWorldCadAxisColors());
+      setLabelColor(resolveColorHex(semanticVar("foreground"), "gray"));
+    }, []),
+  );
 
   if (props.show === false) {
     return null;
