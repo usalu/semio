@@ -133,6 +133,16 @@
       "port": 6080
     },
     {
+      "name": "note-wgpu-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:note"],
+      "env": {
+        "NOTE_PLAY_PORT": "6180",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "port": 6180
+    },
+    {
       "name": "trinity-jack-react-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:trinity:jack"],

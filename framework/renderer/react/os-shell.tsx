@@ -4364,11 +4364,16 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
             id: "framework.settings.appearance",
             label: shellLabel("ui.settings.tab.appearance"),
             control: (
-              <select id="framework.settings.appearance" className="h-small w-full rounded border border-border bg-background px-2 text-sm" value={host.appearance} onChange={(event) => host.setAppearance(event.target.value)}>
-                <option value="system">{shellLabel("ui.settings.appearance.system")}</option>
-                <option value="light">{shellLabel("ui.settings.appearance.light")}</option>
-                <option value="dark">{shellLabel("ui.settings.appearance.dark")}</option>
-              </select>
+              <Select value={host.appearance} onValueChange={(value) => host.setAppearance(value)}>
+                <SelectTrigger id="framework.settings.appearance" className="h-small w-32" size="sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="system">{shellLabel("ui.settings.appearance.system")}</SelectItem>
+                  <SelectItem value="light">{shellLabel("ui.settings.appearance.light")}</SelectItem>
+                  <SelectItem value="dark">{shellLabel("ui.settings.appearance.dark")}</SelectItem>
+                </SelectContent>
+              </Select>
             ),
           },
           {
@@ -4377,10 +4382,15 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
             control: host.mobileActive ? (
               <span className="text-sm text-muted-foreground">{shellLabel("settings.layout.mobile")}</span>
             ) : (
-              <select id="framework.settings.layout" className="h-small w-full rounded border border-border bg-background px-2 text-sm" value={host.layout} onChange={(event) => host.setLayout(event.target.value === "tablet" ? "tablet" : "desktop")}>
-                <option value="desktop">{shellLabel("settings.layout.desktop")}</option>
-                <option value="tablet">{shellLabel("settings.layout.tablet")}</option>
-              </select>
+              <Select value={host.layout} onValueChange={(value) => host.setLayout(value === "tablet" ? "tablet" : "desktop")}>
+                <SelectTrigger id="framework.settings.layout" className="h-small w-32" size="sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="desktop">{shellLabel("settings.layout.desktop")}</SelectItem>
+                  <SelectItem value="tablet">{shellLabel("settings.layout.tablet")}</SelectItem>
+                </SelectContent>
+              </Select>
             ),
           },
           {
@@ -4392,34 +4402,49 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
             id: "framework.settings.expertise",
             label: shellLabel("ui.settings.tab.expertise"),
             control: (
-              <select id="framework.settings.expertise" className="h-small w-full rounded border border-border bg-background px-2 text-sm" value={host.expertise} onChange={(event) => host.setExpertise(event.target.value)}>
-                <option value="beginner">{shellLabel("settings.expertise.beginner")}</option>
-                <option value="normal">{shellLabel("settings.expertise.normal")}</option>
-                <option value="expert">{shellLabel("settings.expertise.expert")}</option>
-              </select>
+              <Select value={host.expertise} onValueChange={(value) => host.setExpertise(value)}>
+                <SelectTrigger id="framework.settings.expertise" className="h-small w-32" size="sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="beginner">{shellLabel("settings.expertise.beginner")}</SelectItem>
+                  <SelectItem value="normal">{shellLabel("settings.expertise.normal")}</SelectItem>
+                  <SelectItem value="expert">{shellLabel("settings.expertise.expert")}</SelectItem>
+                </SelectContent>
+              </Select>
             ),
           },
           {
             id: "framework.settings.language",
             label: shellLabel("ui.settings.tab.language"),
             control: (
-              <select id="framework.settings.language" className="h-small w-full rounded border border-border bg-background px-2 text-sm" value={host.locale} onChange={(event) => host.setLocale(event.target.value === "de" ? "de" : "en")}>
-                <option value="en">{shellLabel("ui.settings.language.en")}</option>
-                <option value="de">{shellLabel("ui.settings.language.de")}</option>
-              </select>
+              <Select value={host.locale} onValueChange={(value) => host.setLocale(value === "de" ? "de" : "en")}>
+                <SelectTrigger id="framework.settings.language" className="h-small w-32" size="sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">{shellLabel("ui.settings.language.en")}</SelectItem>
+                  <SelectItem value="de">{shellLabel("ui.settings.language.de")}</SelectItem>
+                </SelectContent>
+              </Select>
             ),
           },
           {
             id: "framework.settings.terminology",
             label: shellLabel("ui.settings.tab.terminology"),
             control: (
-              <select id="framework.settings.terminology" className="h-small w-full rounded border border-border bg-background px-2 text-sm" value={host.terminology} onChange={(event) => host.setTerminology(event.target.value)}>
-                {host.terminologies.map((id) => (
-                  <option key={id} value={id}>
-                    {shellTerminologyLabel(id)}
-                  </option>
-                ))}
-              </select>
+              <Select value={host.terminology} onValueChange={(value) => host.setTerminology(value)}>
+                <SelectTrigger id="framework.settings.terminology" className="h-small w-32" size="sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {host.terminologies.map((id) => (
+                    <SelectItem key={id} value={id}>
+                      {shellTerminologyLabel(id)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             ),
           },
         ],
@@ -4439,7 +4464,7 @@ function themeColorInputRow(id: string, label: string, hex: string, onChange: (h
   return {
     id,
     label,
-    control: <input id={id} type="color" className="h-small w-full rounded border border-border bg-background" value={hex} onChange={(event) => onChange(event.target.value)} />,
+    control: <input id={id} type="color" className="h-small w-16 shrink-0 rounded border border-border bg-background" value={hex} onChange={(event) => onChange(event.target.value)} />,
   };
 }
 
@@ -4447,7 +4472,7 @@ function themeTextInputRow(id: string, label: string, value: string, onCommit: (
   return {
     id,
     label,
-    control: <Input id={id} defaultValue={value} onBlur={(event) => onCommit(event.target.value)} className="h-small w-full" />,
+    control: <Input id={id} defaultValue={value} onBlur={(event) => onCommit(event.target.value)} className="h-small w-32" />,
   };
 }
 
@@ -4473,7 +4498,7 @@ function themeNumberInputRow(id: string, label: string, value: number | number[]
           const n = Number.parseFloat(raw);
           if (!Number.isNaN(n)) onCommit(n);
         }}
-        className="h-small w-full"
+        className="h-small w-32"
       />
     ),
   };
@@ -4583,19 +4608,24 @@ function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
             id: "framework.settings.theme.select.picker",
             label: shellLabel("ui.settings.theme.select"),
             control: (
-              <select id="framework.settings.theme.select" className="h-small w-full rounded border border-border bg-background px-2 text-sm" value={host.themeId} onChange={(event) => host.setThemeId(event.target.value)}>
-                {host.themes.map((theme) => (
-                  <option key={theme.id} value={theme.id}>
-                    {theme.label}
-                  </option>
-                ))}
-              </select>
+              <Select value={host.themeId} onValueChange={(value) => host.setThemeId(value)}>
+                <SelectTrigger id="framework.settings.theme.select" className="h-small w-32" size="sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {host.themes.map((theme) => (
+                    <SelectItem key={theme.id} value={theme.id}>
+                      {theme.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             ),
           },
           {
             id: "framework.settings.theme.save.label",
             label: shellLabel("ui.common.name"),
-            control: <Input id="framework.settings.theme.save-label" defaultValue={themeSaveLabel} onChange={(event) => (themeSaveLabel = event.target.value)} placeholder={shellLabel("ui.settings.theme.savePlaceholder")} className="h-small w-full" />,
+            control: <Input id="framework.settings.theme.save-label" defaultValue={themeSaveLabel} onChange={(event) => (themeSaveLabel = event.target.value)} placeholder={shellLabel("ui.settings.theme.savePlaceholder")} className="h-small w-32" />,
           },
           {
             id: "framework.settings.theme.save.action",

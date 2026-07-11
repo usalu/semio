@@ -1,0 +1,13 @@
+{
+  "title": "Fix Theme Color Tree Row Spacing In React Renderer",
+  "emoji": "🎨",
+  "status": "open",
+  "description": "The theme colors tree panel in the React renderer (framework/renderer/react/os-shell.tsx, themeColorInputRow) renders color swatch rows with inconsistent spacing/alignment compared to the workbench-token row height used by the tree component. The input[type=color] used className h-small w-full without a flex-centering wrapper, unlike the sibling buildThemeAppearanceGroupItems which wraps its color input in a flex items-center div. This caused misaligned/broken-looking rows for entries like black, d-d-d-g, d-g-g-g in the settings theme colors tree.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1934"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪3e79c68375f84bec8c34c48fb30f389b"
+  ]
+}

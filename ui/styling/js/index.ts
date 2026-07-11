@@ -494,17 +494,19 @@ export function semioTheme(): UiTheme {
 
 let _builtinThemesCache: UiTheme[] | undefined;
 
-/** @emoji 🎨 Premade themes bundled with the app: semio plus any `ui/styling/theme/*.theme.json` presets. */
+/** @emoji 🎨 Premade themes bundled with the app: semio plus any `ui/styling/theme/*.theme.json` presets. `import.meta.glob` is a Vite build-time macro — it only exists once actually *called* in the bundled output, so this must call it directly inside a try/catch rather than probe for it first (`import.meta.glob` as a bare property is always `undefined` at runtime, in Vite and everywhere else; a `typeof` guard would never be true). Outside Vite (bun scripts, tests) the call throws and this falls back to semio only. */
 export function builtinUiThemes(): readonly UiTheme[] {
   if (_builtinThemesCache) {
     return _builtinThemesCache;
   }
   const themes: UiTheme[] = [semioTheme()];
-  if (typeof import.meta.glob === "function") {
+  try {
     const modules = import.meta.glob("../theme/*.theme.json", { eager: true, import: "default" }) as Record<string, unknown>;
     for (const raw of Object.values(modules)) {
       themes.push(parseUiTheme(raw));
     }
+  } catch {
+    /* import.meta.glob unavailable outside Vite */
   }
   _builtinThemesCache = themes;
   return themes;
@@ -601,6 +603,11 @@ if (import.meta.vitest) {
       expect(themes[0]!.id).toBe("semio");
     });
 
+    it("builtinUiThemes discovers the mono premade via import.meta.glob", () => {
+      const themes = builtinUiThemes();
+      expect(themes.map((t) => t.id)).toContain("mono");
+    });
+
     it("activeUiTheme defaults to semio", () => {
       expect(activeUiTheme().id).toBe("semio");
     });
@@ -612,7 +619,7 @@ if (import.meta.vitest) {
 
     it("setActiveUiTheme changes serializeCanvasThemeJson output and notifies subscribers", () => {
       const mono = builtinUiThemes().find((t) => t.id === "mono");
-      if (!mono) return; // premade glob unavailable in this test runtime
+      if (!mono) throw new Error("mono premade not discovered by builtinUiThemes()");
       const seen: string[] = [];
       const unsubscribe = subscribeActiveUiTheme((t) => seen.push(t.id));
       setActiveUiTheme(mono);

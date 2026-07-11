@@ -29,7 +29,12 @@ import {
   queryWindowEngagementInput,
   reactHostPort,
   sceneHostPort,
+  Select,
+  SelectContent,
   SelectionMarquee,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   sortCanvasPickTargetsGeneralFirst,
   UnifiedGumball,
   gumballPointerConsumesCanvasEventRef,
@@ -5983,23 +5988,26 @@ export function InteractionRepl({
               <>
                 <label className="flex flex-col gap-half">
                   <span>Model definition</span>
-                  <select
+                  <Select
                     value={activeModelDefinitionId ?? defaultModelDefinitionId()}
-                    onChange={(e) => {
-                      const next = e.target.value || defaultModelDefinitionId();
-                      setActiveModelDefinitionId(next);
+                    onValueChange={(next) => {
+                      setActiveModelDefinitionId(next || defaultModelDefinitionId());
                       setModelDefinitionRevision((r) => r + 1);
                       setSelectionMenu(null);
                       setHoveredPickKey(null);
                     }}
-                    className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}
                   >
-                    {modelDefinitions.map((row) => (
-                      <option key={row.id} value={row.id}>
-                        {row.label} ({row.id})
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {modelDefinitions.map((row) => (
+                        <SelectItem key={row.id} value={row.id}>
+                          {row.label} ({row.id})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </label>
                 <span className="text-muted-foreground">
                   {modelDefinitionScope.typologies.length} kind{modelDefinitionScope.typologies.length === 1 ? "" : "s"}
@@ -6015,24 +6023,25 @@ export function InteractionRepl({
                 {transfersFrom.length ? (
                   <label className="flex flex-col gap-half">
                     <span>Transfer from</span>
-                    <select
-                      defaultValue=""
-                      onChange={(e) => {
-                        const qid = e.target.value;
-                        if (!qid) return;
+                    <Select
+                      key={transfersFromResetKey}
+                      onValueChange={(qid) => {
                         const spec = transfersFrom.find((row) => qualifiedTransformationId(row.modelDefinitionId, row.id) === qid);
                         if (spec) onApplyTransformation?.(spec);
-                        e.target.value = "";
+                        setTransfersFromResetKey((k) => k + 1);
                       }}
-                      className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}
                     >
-                      <option value="">Select incoming transformation…</option>
-                      {transfersFrom.map((row) => (
-                        <option key={qualifiedTransformationId(row.modelDefinitionId, row.id)} value={qualifiedTransformationId(row.modelDefinitionId, row.id)}>
-                          {row.label} ({row.source.modelDefinition} → {row.target.modelDefinition})
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className={cn(cadFieldClass, "rounded-md border px-single py-half", borderNormalClass)}>
+                        <SelectValue placeholder="Select incoming transformation…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {transfersFrom.map((row) => (
+                          <SelectItem key={qualifiedTransformationId(row.modelDefinitionId, row.id)} value={qualifiedTransformationId(row.modelDefinitionId, row.id)}>
+                            {row.label} ({row.source.modelDefinition} → {row.target.modelDefinition})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </label>
                 ) : null}
                 {transfersTo.length ? (

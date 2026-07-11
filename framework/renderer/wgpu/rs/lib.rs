@@ -2000,6 +2000,10 @@ struct EngineSurface {
     sync_cache: NodeGraphSyncCache,
     map_host: Option<gis_2d::MapHost>,
     map_sync_cache: MapSyncCache,
+    board_host: Option<puzzle_2d::BoardHost>,
+    board_sync_cache: BoardSyncCache,
+    board_pending_events: Vec<BoardEventRow>,
+    board_pointer_inside: bool,
     editor: Option<EditorHost>,
     vello: Renderer,
     texture: wgpu::Texture,
@@ -2021,6 +2025,24 @@ struct MapSyncCache {
     selection_json: Option<String>,
     hover_json: Option<String>,
     theme_json: Option<String>,
+    size_key: Option<String>,
+}
+
+#[derive(Default)]
+struct BoardSyncCache {
+    fixture_json: Option<String>,
+    kind_catalogs_json: Option<String>,
+    kind_compatibility_json: Option<String>,
+    selection_json: Option<String>,
+    camera_json: Option<String>,
+    hovered_id: Option<String>,
+    active_tool: Option<String>,
+    selection_method: Option<String>,
+    grid_snap_enabled: Option<bool>,
+    grid_factor: Option<f64>,
+    suggestion_offset: Option<f64>,
+    brush_kind_weights_json: Option<String>,
+    lod_mode: Option<String>,
     size_key: Option<String>,
 }
 
@@ -2236,6 +2258,10 @@ fn ensure_surface(
                     sync_cache: NodeGraphSyncCache::default(),
                     map_host: None,
                     map_sync_cache: MapSyncCache::default(),
+                    board_host: None,
+                    board_sync_cache: BoardSyncCache::default(),
+                    board_pending_events: Vec::new(),
+                    board_pointer_inside: false,
                     editor: None,
                     vello,
                     texture,
@@ -3547,6 +3573,429 @@ pub fn gis_map_wheel(
 }
 //#endregion GisMap
 
+//#region Puzzle2dBoard
+/// @emoji 🧩 Raw event row drained from {@link puzzle_2d::BoardHost::drain_events_json}; mirrors the TS `BoardEventRow` shape.
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+pub struct BoardEventRow {
+    pub name: String,
+    #[serde(default)]
+    pub payload: Value,
+}
+
+pub struct CoalescedBoardEvents {
+    pub flush_now: bool,
+    pub events_json: String,
+}
+
+const PUZZLE2D_TRANSIENT_EVENT_NAMES: &[&str] = &["preselect", "brushPreview", "linkCompatibleNodes", "linkTargetRing"];
+const PUZZLE2D_FLUSH_NOW_EVENT_NAMES: &[&str] = &["select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete"];
+
+/// @emoji 📬 Drops transient rows, coalesces `camera` to its latest value and `nodeMove` to one row per id (unless a `nodeDragEnd` follows), and flags whether the buffer should flush immediately. Port of `coalescePuzzle2dBoardEvents` in the React host.
+pub fn coalesce_puzzle2d_board_events(rows: &[BoardEventRow]) -> CoalescedBoardEvents {
+    let has_drag_end = rows.iter().any(|row| row.name == "nodeDragEnd");
+    let mut flush_now = false;
+    let mut last_camera: Option<BoardEventRow> = None;
+    let mut node_move_order: Vec<String> = Vec::new();
+    let mut node_move_by_id: HashMap<String, BoardEventRow> = HashMap::new();
+    let mut rest: Vec<BoardEventRow> = Vec::new();
+
+    for row in rows {
+        if PUZZLE2D_TRANSIENT_EVENT_NAMES.contains(&row.name.as_str()) {
+            continue;
+        }
+        if row.name == "camera" {
+            last_camera = Some(row.clone());
+            continue;
+        }
+        if row.name == "nodeMove" {
+            if has_drag_end {
+                continue;
+            }
+            if let Some(id) = row.payload.get("id").and_then(Value::as_str) {
+                if !node_move_by_id.contains_key(id) {
+                    node_move_order.push(id.to_string());
+                }
+                node_move_by_id.insert(id.to_string(), row.clone());
+                continue;
+            }
+        }
+        if PUZZLE2D_FLUSH_NOW_EVENT_NAMES.contains(&row.name.as_str()) {
+            flush_now = true;
+        }
+        rest.push(row.clone());
+    }
+
+    let mut coalesced: Vec<BoardEventRow> = Vec::new();
+    if let Some(camera) = last_camera {
+        coalesced.push(camera);
+    }
+    for id in &node_move_order {
+        if let Some(row) = node_move_by_id.get(id) {
+            coalesced.push(row.clone());
+        }
+    }
+    coalesced.extend(rest);
+    CoalescedBoardEvents {
+        flush_now,
+        events_json: serde_json::to_string(&coalesced).unwrap_or_else(|_| "[]".into()),
+    }
+}
+
+fn parse_board_camera(json: &str) -> Option<(f64, f64, f64)> {
+    let value: Value = serde_json::from_str(json).ok()?;
+    Some((value.get("x")?.as_f64()?, value.get("y")?.as_f64()?, value.get("zoom")?.as_f64()?))
+}
+
+fn parse_board_selection_ids(json: &str) -> Vec<String> {
+    serde_json::from_str::<Vec<String>>(json).unwrap_or_default()
+}
+
+/// @emoji 🔁 Applies scene fields onto `host`, diffing against `cache` so only changed fields re-sync. Mirrors `applyFixtureToSession` plus the independent per-field effects in the React host: reparsing the fixture resets selection/camera, so both are silently re-applied right after. Skips fixture/selection/camera sync entirely while `host` defers descriptor sync (mid-gesture), matching `pendingFixtureSceneRef`.
+fn sync_board_host(host: &mut puzzle_2d::BoardHost, scene: &semio_framework_core::Puzzle2dBoardScene, cache: &mut BoardSyncCache, pw: u32, ph: u32, dpr: f64) {
+    let size_key = format!("{pw}x{ph}@{dpr}");
+    if sync_field(&mut cache.size_key, &size_key) {
+        host.set_size(pw, ph, dpr);
+    }
+    let deferred = host.defers_descriptor_sync_from_js();
+    if !deferred && sync_field(&mut cache.fixture_json, &scene.fixture_json) {
+        if let Ok(raw) = serde_json::from_str::<Value>(&scene.fixture_json) {
+            host.parse_fixture_v1(&raw);
+        }
+        host.set_selection_options(&scene.selection_method, "replace", true, true, true);
+        host.set_selection_ids_silent(&parse_board_selection_ids(&scene.selection_json));
+        cache.selection_json = Some(scene.selection_json.clone());
+        if let Some((x, y, zoom)) = parse_board_camera(&scene.camera_json) {
+            host.set_camera_silent(x, y, zoom);
+        }
+        cache.camera_json = Some(scene.camera_json.clone());
+    }
+    if sync_field(&mut cache.kind_catalogs_json, &scene.kind_catalogs_json) {
+        let _ = host.set_board_kind_catalogs_from_json(&scene.kind_catalogs_json);
+    }
+    if sync_field(&mut cache.kind_compatibility_json, &scene.kind_compatibility_json) {
+        let _ = host.set_handle_link_compat_from_json(&scene.kind_compatibility_json);
+    }
+    if !deferred && sync_field(&mut cache.selection_json, &scene.selection_json) {
+        host.set_selection_ids_silent(&parse_board_selection_ids(&scene.selection_json));
+    }
+    if !deferred && sync_field(&mut cache.camera_json, &scene.camera_json) {
+        if let Some((x, y, zoom)) = parse_board_camera(&scene.camera_json) {
+            host.set_camera_silent(x, y, zoom);
+        }
+    }
+    if cache.hovered_id != scene.hovered_id {
+        cache.hovered_id = scene.hovered_id.clone();
+        host.set_hovered_id_silent(scene.hovered_id.clone());
+    }
+    let active_tool = scene.active_tool.as_deref().unwrap_or("select");
+    if cache.active_tool.as_deref() != Some(active_tool) {
+        cache.active_tool = Some(active_tool.to_string());
+        host.set_active_tool(active_tool);
+    }
+    if sync_field(&mut cache.selection_method, &scene.selection_method) {
+        host.set_selection_options(&scene.selection_method, "replace", true, true, true);
+    }
+    if cache.grid_snap_enabled != Some(scene.grid_snap_enabled) {
+        cache.grid_snap_enabled = Some(scene.grid_snap_enabled);
+        host.set_grid_snap_enabled(scene.grid_snap_enabled);
+    }
+    if cache.grid_factor != Some(scene.grid_factor) {
+        cache.grid_factor = Some(scene.grid_factor);
+        let _ = host.set_grid_factor(scene.grid_factor);
+    }
+    if scene.suggestion_offset > 0.0 && cache.suggestion_offset != Some(scene.suggestion_offset) {
+        cache.suggestion_offset = Some(scene.suggestion_offset);
+        host.set_suggestion_offset(scene.suggestion_offset);
+    }
+    if sync_field(&mut cache.brush_kind_weights_json, &scene.brush_kind_weights_json) {
+        host.set_brush_kind_weights(&scene.brush_kind_weights_json);
+    }
+    if sync_field(&mut cache.lod_mode, &scene.lod_mode) {
+        if scene.lod_mode == "automatic" {
+            host.set_automatic_lod(true);
+        } else {
+            host.set_automatic_lod(false);
+            host.set_forced_draw_lod_label(&scene.lod_mode);
+        }
+    }
+}
+
+pub fn paint_puzzle_board(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
+    let Some(board_scene) = &scene.puzzle2d_board else {
+        return;
+    };
+    let pw = inner.w.max(1.0) as u32;
+    let ph = inner.h.max(1.0) as u32;
+    let dpr = gpu.dpr() as f64;
+    if ensure_surface(gpu, &scene.surface_id, pw, ph).is_err() {
+        return;
+    }
+    let clear = vello_clear(ctx.theme);
+    let cavas_scene = ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let entry = map.get_mut(&scene.surface_id).expect("engine surface");
+        if entry.board_host.is_none() {
+            entry.board_host = Some(puzzle_2d::puzzle_board_host());
+            entry.board_sync_cache = BoardSyncCache::default();
+        }
+        let host = entry.board_host.as_mut().expect("board host");
+        sync_board_host(host, board_scene, &mut entry.board_sync_cache, pw, ph, dpr);
+        host.build_vector_scene()
+    });
+    if render_vello_scene(gpu, &scene.surface_id, &cavas_scene, clear).is_err() {
+        return;
+    }
+    ctx.draw.push_raster_quad(
+        &raster_key(&scene.surface_id),
+        [inner.x, inner.y, inner.w, inner.h],
+        [0.0, 0.0, 1.0, 1.0],
+        1.0,
+    );
+    if board_scene.interactive {
+        ctx.input.register_hit(HitTarget {
+            rect: inner,
+            event: None,
+            control_id: Some(format!("{}.board", scene.surface_id)),
+            kind: HitKind::ScrollRegion,
+            drag_axis: Some(ui_wgpu::input::DragAxis::Both),
+            drag_data: None,
+        });
+    }
+}
+
+pub fn with_board_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut puzzle_2d::BoardHost) -> R) -> Option<R> {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let entry = map.get_mut(surface_id)?;
+        let host = entry.board_host.as_mut()?;
+        Some(f(host))
+    })
+}
+
+pub fn with_board_host<R>(surface_id: &str, f: impl FnOnce(&puzzle_2d::BoardHost) -> R) -> Option<R> {
+    ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let entry = map.get(surface_id)?;
+        let host = entry.board_host.as_ref()?;
+        Some(f(host))
+    })
+}
+
+pub fn board_cmd(controller_id: &str, command: &str, args: Value) -> CommandDescriptor {
+    CommandDescriptor {
+        controller_id: controller_id.to_string(),
+        command: command.to_string(),
+        args: Some(args),
+    }
+}
+
+/// @emoji 🎯 Most-specific pick target at a screen point, mirroring `pickMostSpecificCanvasTarget`.
+pub fn board_pick_best_target_id(surface_id: &str, sx: f64, sy: f64) -> Option<String> {
+    with_board_host(surface_id, |host| {
+        let json = host.pick_targets_at_screen_json(sx, sy);
+        let targets: Vec<Value> = serde_json::from_str(&json).unwrap_or_default();
+        targets
+            .into_iter()
+            .max_by_key(|t| t.get("generality").and_then(Value::as_u64).unwrap_or(0))
+            .and_then(|t| t.get("id").and_then(|v| v.as_str()).map(str::to_string))
+    })
+    .flatten()
+}
+
+fn board_drain_into_buffer(surface_id: &str) {
+    let rows = with_board_host_mut(surface_id, |host| {
+        let json = host.drain_events_json();
+        serde_json::from_str::<Vec<BoardEventRow>>(&json).unwrap_or_default()
+    })
+    .unwrap_or_default();
+    if rows.is_empty() {
+        return;
+    }
+    ENGINE_SURFACES.with(|cell| {
+        if let Some(entry) = cell.borrow_mut().get_mut(surface_id) {
+            entry.board_pending_events.extend(rows);
+        }
+    });
+}
+
+fn board_take_buffer_coalesced(surface_id: &str) -> Option<String> {
+    let rows = ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        map.get_mut(surface_id).map(|entry| std::mem::take(&mut entry.board_pending_events))
+    })?;
+    if rows.is_empty() {
+        return None;
+    }
+    let coalesced = coalesce_puzzle2d_board_events(&rows);
+    if coalesced.events_json == "[]" {
+        None
+    } else {
+        Some(coalesced.events_json)
+    }
+}
+
+/// @emoji 📤 Unconditional drain + coalesce + dispatch, mirroring `flushBoardEvents` (used after pointer-up, pointer-leave, and wheel).
+fn board_flush_events_command(surface_id: &str, controller_id: &str) -> Option<CommandDescriptor> {
+    board_drain_into_buffer(surface_id);
+    let events_json = board_take_buffer_coalesced(surface_id)?;
+    Some(board_cmd(controller_id, "applyBoardEvents", json!({ "eventsJson": events_json })))
+}
+
+/// @emoji 📤 Drains into the buffer and only dispatches if a flush-now event (select, brushPlace, edgeCreate, ...) is pending, mirroring `drainAndMaybeFlush` (used on pointer-move).
+fn board_drain_and_maybe_flush(surface_id: &str, controller_id: &str) -> Vec<CommandDescriptor> {
+    board_drain_into_buffer(surface_id);
+    let flush_now = ENGINE_SURFACES.with(|cell| {
+        cell.borrow()
+            .get(surface_id)
+            .map(|entry| coalesce_puzzle2d_board_events(&entry.board_pending_events).flush_now)
+            .unwrap_or(false)
+    });
+    if !flush_now {
+        return Vec::new();
+    }
+    match board_take_buffer_coalesced(surface_id) {
+        Some(events_json) => vec![board_cmd(controller_id, "applyBoardEvents", json!({ "eventsJson": events_json }))],
+        None => Vec::new(),
+    }
+}
+
+fn board_camera_command(surface_id: &str, controller_id: &str) -> Option<CommandDescriptor> {
+    with_board_host(surface_id, |host| {
+        board_cmd(controller_id, "setCamera", json!({ "camera": { "x": host.camera.x, "y": host.camera.y, "zoom": host.camera.zoom } }))
+    })
+}
+
+fn board_set_pointer_inside(surface_id: &str, inside: bool) {
+    ENGINE_SURFACES.with(|cell| {
+        if let Some(entry) = cell.borrow_mut().get_mut(surface_id) {
+            entry.board_pointer_inside = inside;
+        }
+    });
+}
+
+pub fn puzzle_board_pointer_down(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool) {
+    let (sx, sy) = map_local_pointer(inner, x, y);
+    with_board_host_mut(surface_id, |host| host.pointer_down_screen(sx, sy, button.max(0) as u8, shift, ctrl_or_meta));
+    board_set_pointer_inside(surface_id, true);
+}
+
+pub fn puzzle_board_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<CommandDescriptor> {
+    let (sx, sy) = map_local_pointer(inner, x, y);
+    with_board_host_mut(surface_id, |host| host.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt));
+    board_set_pointer_inside(surface_id, true);
+    board_drain_and_maybe_flush(surface_id, controller_id)
+}
+
+pub fn puzzle_board_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<CommandDescriptor> {
+    let (sx, sy) = map_local_pointer(inner, x, y);
+    with_board_host_mut(surface_id, |host| host.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt));
+    board_flush_events_command(surface_id, controller_id).into_iter().collect()
+}
+
+pub fn puzzle_board_pointer_leave(surface_id: &str, controller_id: &str, alt: bool) -> Vec<CommandDescriptor> {
+    let was_inside = ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(surface_id) else {
+            return false;
+        };
+        let was = entry.board_pointer_inside;
+        entry.board_pointer_inside = false;
+        was
+    });
+    if !was_inside {
+        return Vec::new();
+    }
+    with_board_host_mut(surface_id, |host| host.pointer_leave_screen(alt));
+    board_flush_events_command(surface_id, controller_id).into_iter().collect()
+}
+
+/// @emoji 🖐️ True while a node drag or area-select gesture is in flight, so pointer-up outside the surface bounds still reaches the host (mirrors `gis_map_drag_active`).
+pub fn board_drag_active(surface_id: &str) -> bool {
+    with_board_host(surface_id, |host| host.defers_descriptor_sync_from_js() || host.is_dragging_area_select()).unwrap_or(false)
+}
+
+pub fn puzzle_board_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<CommandDescriptor> {
+    let (sx, sy) = map_local_pointer(inner, x, y);
+    with_board_host_mut(surface_id, |host| host.wheel_screen(sx, sy, delta as f64));
+    let mut commands = Vec::new();
+    if let Some(camera_command) = board_camera_command(surface_id, controller_id) {
+        commands.push(camera_command);
+    }
+    if let Some(events_command) = board_flush_events_command(surface_id, controller_id) {
+        commands.push(events_command);
+    }
+    commands
+}
+//#endregion Puzzle2dBoard
+
+#[cfg(test)]
+mod puzzle2d_board_engine_tests {
+    use super::*;
+
+    fn row(name: &str, payload: Value) -> BoardEventRow {
+        BoardEventRow { name: name.to_string(), payload }
+    }
+
+    #[test]
+    fn coalesce_drops_transient_events() {
+        let rows = vec![row("preselect", json!({})), row("brushPreview", json!({})), row("select", json!({ "ids": ["a"] }))];
+        let result = coalesce_puzzle2d_board_events(&rows);
+        assert!(result.flush_now);
+        let parsed: Vec<Value> = serde_json::from_str(&result.events_json).unwrap();
+        assert_eq!(parsed.len(), 1);
+        assert_eq!(parsed[0]["name"], "select");
+    }
+
+    #[test]
+    fn coalesce_keeps_only_latest_camera() {
+        let rows = vec![row("camera", json!({ "x": 1 })), row("camera", json!({ "x": 2 }))];
+        let result = coalesce_puzzle2d_board_events(&rows);
+        assert!(!result.flush_now);
+        let parsed: Vec<Value> = serde_json::from_str(&result.events_json).unwrap();
+        assert_eq!(parsed.len(), 1);
+        assert_eq!(parsed[0]["payload"]["x"], 2);
+    }
+
+    #[test]
+    fn coalesce_collapses_node_move_to_one_row_per_id_preserving_order() {
+        let rows = vec![
+            row("nodeMove", json!({ "id": "a", "x": 1 })),
+            row("nodeMove", json!({ "id": "b", "x": 2 })),
+            row("nodeMove", json!({ "id": "a", "x": 3 })),
+        ];
+        let result = coalesce_puzzle2d_board_events(&rows);
+        let parsed: Vec<Value> = serde_json::from_str(&result.events_json).unwrap();
+        assert_eq!(parsed.len(), 2);
+        assert_eq!(parsed[0]["payload"]["id"], "a");
+        assert_eq!(parsed[0]["payload"]["x"], 3);
+        assert_eq!(parsed[1]["payload"]["id"], "b");
+    }
+
+    #[test]
+    fn coalesce_drops_node_move_entirely_when_drag_end_follows() {
+        let rows = vec![row("nodeMove", json!({ "id": "a", "x": 1 })), row("nodeDragEnd", json!({ "moves": [] }))];
+        let result = coalesce_puzzle2d_board_events(&rows);
+        let parsed: Vec<Value> = serde_json::from_str(&result.events_json).unwrap();
+        assert_eq!(parsed.len(), 1);
+        assert_eq!(parsed[0]["name"], "nodeDragEnd");
+    }
+
+    #[test]
+    fn coalesce_flags_flush_now_for_edge_and_brush_events() {
+        for name in ["preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete"] {
+            let result = coalesce_puzzle2d_board_events(&[row(name, json!({}))]);
+            assert!(result.flush_now, "{name} should flush immediately");
+        }
+    }
+
+    #[test]
+    fn coalesce_empty_input_produces_empty_array_and_no_flush() {
+        let result = coalesce_puzzle2d_board_events(&[]);
+        assert!(!result.flush_now);
+        assert_eq!(result.events_json, "[]");
+    }
+}
+
 //#region TextEditor
 pub fn text_editor_apply_key(
     scene: &UiComponentSceneNode,
@@ -3720,7 +4169,7 @@ pub mod interpreter {
 // #region interpreter
 //! 🧩 Maps framework UiNode trees to ui_wgpu widget nodes.
 
-use crate::scenes::{queue_canvas_image_upload, render_component_scene, GisMapSurface, NodeGraphSurface};
+use crate::scenes::{queue_canvas_image_upload, render_component_scene, GisMapSurface, NodeGraphSurface, Puzzle2dBoardSurface};
 use semio_framework_core::{CommandDescriptor, UiComponentSceneNode, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
 use serde_json::Value;
 use ui_wgpu::{
@@ -4094,11 +4543,13 @@ pub fn render_ui_node(
     world3d_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
     node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
     gis_map_states: &mut std::collections::HashMap<String, GisMapSurface>,
+    icon_render_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
+    puzzle2d_board_states: &mut std::collections::HashMap<String, Puzzle2dBoardSurface>,
 ) {
     if let Err(message) = validate_ui_node(node, &RENDER_PLAN_LIMITS) {
         return render_plan_error_widget(&message, bounds, ctx);
     }
-    render_ui_node_inner(node, bounds, ctx, gpu, world3d_states, node_graph_states, gis_map_states);
+    render_ui_node_inner(node, bounds, ctx, gpu, world3d_states, node_graph_states, gis_map_states, icon_render_states, puzzle2d_board_states);
 }
 
 fn render_ui_node_inner(
@@ -4109,11 +4560,21 @@ fn render_ui_node_inner(
     world3d_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
     node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
     gis_map_states: &mut std::collections::HashMap<String, GisMapSurface>,
+    icon_render_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
+    puzzle2d_board_states: &mut std::collections::HashMap<String, Puzzle2dBoardSurface>,
 ) {
     match node {
-        UiNode::ComponentScene(scene) => {
-            render_component_scene(scene, bounds, ctx, gpu, world3d_states, node_graph_states, gis_map_states)
-        }
+        UiNode::ComponentScene(scene) => render_component_scene(
+            scene,
+            bounds,
+            ctx,
+            gpu,
+            world3d_states,
+            node_graph_states,
+            gis_map_states,
+            icon_render_states,
+            puzzle2d_board_states,
+        ),
         UiNode::Stack(stack) => {
             let gap = gap_for_token(ctx.theme, stack.gap.as_deref());
             let padding = padding_for_token(ctx.theme, stack.padding.as_deref());
@@ -4132,7 +4593,7 @@ fn render_ui_node_inner(
                 layout_horizontal(bounds, gap, padding, &sizes)
             };
             for (child, rect) in stack.children.iter().zip(rects.iter()) {
-                render_ui_node_inner(child, *rect, ctx, gpu, world3d_states, node_graph_states, gis_map_states);
+                render_ui_node_inner(child, *rect, ctx, gpu, world3d_states, node_graph_states, gis_map_states, icon_render_states, puzzle2d_board_states);
             }
         }
         UiNode::Section(section) => {
@@ -4145,7 +4606,7 @@ fn render_ui_node_inner(
                 .collect();
             let rects = layout_vertical(bounds, gap, padding, &sizes);
             for (child, rect) in section.children.iter().zip(rects.iter()) {
-                render_ui_node_inner(child, *rect, ctx, gpu, world3d_states, node_graph_states, gis_map_states);
+                render_ui_node_inner(child, *rect, ctx, gpu, world3d_states, node_graph_states, gis_map_states, icon_render_states, puzzle2d_board_states);
             }
         }
         UiNode::Image(image) => render_ui_image(image, bounds, ctx),
@@ -5116,12 +5577,12 @@ pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) ->
 }
 
 pub mod scenes {
-// #region scenes
+//#region scenes
 //! 🎬 Native component scene hosts for canvas-2d, tables, graphs, and 3D views.
 
 use crate::engine_canvas;
 use crate::interpreter::{validate_component_scene, FrameworkWidgetContext, RENDER_PLAN_LIMITS};
-use crate::shell::{push_context_menu_item, push_find_item, ContextMenuItem, ShellFindItem};
+use crate::shell::{push_context_menu_item, push_find_item, ContextMenuItem, ShellFindItem, ShellState};
 use infinite_world::{render_world_3d, World3dState};
 use base64::Engine;
 use semio_framework_core::{CommandDescriptor, SurfaceKind, UiComponentSceneNode};
@@ -5130,7 +5591,7 @@ use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use ui_wgpu::input::{DragAxis, KeyAction};
-use ui_wgpu::{draw_text, HitKind, HitTarget, Rect, Rgba, Theme};
+use ui_wgpu::{draw_text, draw_text_wrapped, HitKind, HitTarget, Rect, Rgba, Theme};
 
 //#region SceneRuntime
 #[derive(Clone, Copy, Debug, Default)]
@@ -5191,6 +5652,12 @@ enum SceneDragMode {
         merge_mode: String,
     },
     MapPan,
+    NotePan { start_x: f32, start_y: f32, camera_x: f64, camera_y: f64, zoom: f64 },
+    NoteMove { origins: HashMap<String, (f64, f64)>, start_x: f32, start_y: f32 },
+    NoteResize { handle: String, from: NoteBoundsF, start_x: f32, start_y: f32, selected_ids: Vec<String> },
+    NoteInk { block_id: String },
+    NoteEraser { mode: String },
+    NoteMarqueeDrag { start_x: f32, start_y: f32 },
 }
 
 #[derive(Clone, Debug)]
@@ -5221,6 +5688,9 @@ struct SceneSurfaceState {
     map_marquee_points: Vec<(f32, f32)>,
     map_marquee_active: bool,
     map_last_hover_json: Option<String>,
+    note_camera: Option<(f64, f64, f64)>,
+    note_overrides: HashMap<String, Value>,
+    note_marquee_points: Vec<(f32, f32)>,
 }
 
 #[derive(Clone, Debug)]
@@ -5495,6 +5965,7 @@ pub fn handle_scene_wheel(
             delta,
             ctrl,
         ),
+        SurfaceKind::NoteCanvas => note_wheel(scene, inner, x, y, delta),
         _ => Vec::new(),
     }
 }
@@ -5553,10 +6024,133 @@ pub fn handle_scene_pointer_move(
                     });
                 }
                 SceneDragMode::MapPan => {}
+                SceneDragMode::NotePan { start_x, start_y, camera_x, camera_y, zoom } => {
+                    let dx = (x - start_x) as f64;
+                    let dy = (y - start_y) as f64;
+                    let next = NoteCameraF { x: camera_x + dx, y: camera_y + dy, zoom: *zoom };
+                    mutate_scene_state(&scene.surface_id, |state| {
+                        state.note_camera = Some((next.x, next.y, next.zoom));
+                    });
+                    commands.push(note_set_camera_cmd(scene, next));
+                }
+                SceneDragMode::NoteMove { origins, start_x, start_y } => {
+                    let camera = note_current_camera(scene);
+                    let dx = (x - start_x) as f64 / camera.zoom.max(0.0001);
+                    let dy = (y - start_y) as f64 / camera.zoom.max(0.0001);
+                    let doc: NoteDocumentJson = scene
+                        .note_canvas
+                        .as_ref()
+                        .map(|n| serde_json::from_str(&n.document_json).unwrap_or_default())
+                        .unwrap_or_default();
+                    let mut events = Vec::new();
+                    let mut new_overrides = Vec::new();
+                    for (id, (ox, oy)) in origins.iter() {
+                        if let Some(block) = find_note_block(&doc.blocks, id) {
+                            let updated = note_block_with_position(block, ox + dx, oy + dy);
+                            events.push(json!({ "op": "updateBlock", "blockId": id, "block": updated }));
+                            new_overrides.push((id.clone(), updated));
+                        }
+                    }
+                    if !events.is_empty() {
+                        mutate_scene_state(&scene.surface_id, |state| {
+                            for (id, block) in new_overrides {
+                                state.note_overrides.insert(id, block);
+                            }
+                        });
+                        commands.push(note_apply_events_cmd(scene, &events, "live", None));
+                    }
+                }
+                SceneDragMode::NoteResize { handle, from, start_x, start_y, selected_ids } => {
+                    let camera = note_current_camera(scene);
+                    let dx = (x - start_x) as f64 / camera.zoom.max(0.0001);
+                    let dy = (y - start_y) as f64 / camera.zoom.max(0.0001);
+                    let to = note_resize_bounds(*from, handle, dx, dy, 8.0);
+                    let doc: NoteDocumentJson = scene
+                        .note_canvas
+                        .as_ref()
+                        .map(|n| serde_json::from_str(&n.document_json).unwrap_or_default())
+                        .unwrap_or_default();
+                    let mut events = Vec::new();
+                    let mut new_overrides = Vec::new();
+                    for id in selected_ids {
+                        if let Some(block) = find_note_block(&doc.blocks, id) {
+                            let updated = note_scaled_block(block, *from, to);
+                            events.push(json!({ "op": "updateBlock", "blockId": id, "block": updated }));
+                            new_overrides.push((id.clone(), updated));
+                        }
+                    }
+                    if !events.is_empty() {
+                        mutate_scene_state(&scene.surface_id, |state| {
+                            for (id, block) in new_overrides {
+                                state.note_overrides.insert(id, block);
+                            }
+                        });
+                        commands.push(note_apply_events_cmd(scene, &events, "live", None));
+                    }
+                }
+                SceneDragMode::NoteInk { block_id } => {
+                    let camera = note_current_camera(scene);
+                    let (world_x, world_y) = note_screen_to_world(camera, inner, x, y);
+                    let doc: NoteDocumentJson = scene
+                        .note_canvas
+                        .as_ref()
+                        .map(|n| serde_json::from_str(&n.document_json).unwrap_or_default())
+                        .unwrap_or_default();
+                    let current = state
+                        .note_overrides
+                        .get(block_id)
+                        .cloned()
+                        .or_else(|| find_note_block(&doc.blocks, block_id).cloned());
+                    if let Some(mut block) = current {
+                        let bx = note_block_num(&block, "x");
+                        let by = note_block_num(&block, "y");
+                        let local = json!([world_x - bx, world_y - by]);
+                        if let Some(obj) = block.as_object_mut() {
+                            let mut points = obj.get("points").and_then(Value::as_array).cloned().unwrap_or_default();
+                            points.push(local);
+                            obj.insert("points".into(), Value::Array(points));
+                        }
+                        let block_id = block_id.clone();
+                        mutate_scene_state(&scene.surface_id, |state| {
+                            state.note_overrides.insert(block_id.clone(), block.clone());
+                        });
+                        commands.push(note_apply_events_cmd(
+                            scene,
+                            &[json!({ "op": "updateBlock", "blockId": block_id, "block": block })],
+                            "live",
+                            None,
+                        ));
+                    }
+                }
+                SceneDragMode::NoteEraser { mode } => {
+                    let camera = note_current_camera(scene);
+                    let (world_x, world_y) = note_screen_to_world(camera, inner, x, y);
+                    let doc: NoteDocumentJson = scene
+                        .note_canvas
+                        .as_ref()
+                        .map(|n| serde_json::from_str(&n.document_json).unwrap_or_default())
+                        .unwrap_or_default();
+                    let events = if mode == "eraserStroke" {
+                        note_erase_ink_stroke_events(&doc.blocks, world_x, world_y, 8.0)
+                    } else {
+                        note_erase_ink_points_events(&doc.blocks, world_x, world_y, doc.eraser_radius.unwrap_or(12.0))
+                    };
+                    if !events.is_empty() {
+                        commands.push(note_apply_events_cmd(scene, &events, "live", None));
+                    }
+                }
+                SceneDragMode::NoteMarqueeDrag { start_x, start_y } => {
+                    mutate_scene_state(&scene.surface_id, |state| {
+                        state.note_marquee_points = vec![(*start_x, *start_y), (x, y)];
+                    });
+                }
             }
         }
     }
     match scene.component_kind {
+        SurfaceKind::NoteCanvas if !down => {
+            commands.extend(note_hover_move(scene, inner, x, y));
+        }
         SurfaceKind::Canvas2d if down => {
             commands.push(scene_cmd(
                 scene,
@@ -5690,10 +6284,16 @@ pub fn handle_scene_pointer_button(
             SurfaceKind::TextEditor => {
                 commands.extend(engine_canvas::text_editor_pointer_down(scene, inner, x, y, button));
             }
+            SurfaceKind::NoteCanvas => {
+                commands.extend(note_pointer_down(scene, inner, x, y, button, shift));
+            }
             _ => {}
         }
     } else {
         match scene.component_kind {
+            SurfaceKind::NoteCanvas => {
+                commands.extend(note_pointer_up(scene, inner, x, y));
+            }
             SurfaceKind::Canvas2d => {
                 commands.push(scene_cmd(
                     scene,
@@ -5824,6 +6424,8 @@ pub fn render_component_scene(
     world3d_states: &mut HashMap<String, World3dState>,
     node_graph_states: &mut HashMap<String, NodeGraphSurface>,
     gis_map_states: &mut HashMap<String, GisMapSurface>,
+    icon_render_states: &mut HashMap<String, World3dState>,
+    puzzle2d_board_states: &mut HashMap<String, Puzzle2dBoardSurface>,
 ) {
     if let Err(message) = validate_component_scene(scene, &RENDER_PLAN_LIMITS) {
         let theme = ctx.theme;
@@ -5858,12 +6460,15 @@ pub fn render_component_scene(
         SurfaceKind::GisMap => render_gis_map(scene, bounds, ctx, gpu, gis_map_states),
         SurfaceKind::VirtualFileSystem => render_vfs(scene, bounds, ctx),
         SurfaceKind::TextEditor => render_text_editor(scene, bounds, ctx, gpu),
+        SurfaceKind::NoteCanvas => render_note_canvas(scene, bounds, ctx, gpu),
         SurfaceKind::World3d => {
             let state = world3d_states
                 .entry(scene.surface_id.clone())
                 .or_insert_with(|| World3dState::new(scene.surface_id.clone(), scene.controller_id.clone()));
             render_world_3d(scene, bounds, ctx, state, gpu);
         }
+        SurfaceKind::IconRender => render_icon_render(scene, bounds, ctx, gpu, icon_render_states),
+        SurfaceKind::Puzzle2dBoard => render_puzzle_board(scene, bounds, ctx, gpu, puzzle2d_board_states),
         _ => render_placeholder(scene.component_kind.as_str(), bounds, ctx),
     }
     apply_scene_wheel(scene, bounds, ctx);
@@ -6470,6 +7075,1182 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
     });
 }
 //#endregion Canvas2d
+//#region NoteCanvas
+// 📝 Direct DrawList painting for note-canvas, ported from note-canvas-host.tsx (framework/renderer/react).
+
+//#region NoteCanvasModel
+static NOTE_HOST_ID_COUNTER: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+
+fn create_note_host_id(prefix: &str) -> String {
+    let next = NOTE_HOST_ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+    format!("{prefix}-host-{next}")
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+struct NoteCameraF {
+    x: f64,
+    y: f64,
+    zoom: f64,
+}
+
+impl From<NoteCameraJson> for NoteCameraF {
+    fn from(camera: NoteCameraJson) -> Self {
+        Self { x: camera.x, y: camera.y, zoom: camera.zoom }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct NoteCameraJson {
+    #[serde(default)]
+    x: f64,
+    #[serde(default)]
+    y: f64,
+    #[serde(default = "note_default_zoom")]
+    zoom: f64,
+}
+
+fn note_default_zoom() -> f64 {
+    1.0
+}
+
+impl Default for NoteCameraJson {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, zoom: 1.0 }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+struct NoteDocumentJson {
+    schema: String,
+    id: String,
+    camera: NoteCameraJson,
+    blocks: Vec<Value>,
+    active_tool: Option<String>,
+    grid_visible: Option<bool>,
+    grid_spacing: Option<f64>,
+    grid_subdivisions: Option<f64>,
+    grid_opacity: Option<f64>,
+    snap_enabled: Option<bool>,
+    snap_grid_spacing: Option<f64>,
+    pencil_width: Option<f64>,
+    eraser_radius: Option<f64>,
+    assets: HashMap<String, Value>,
+}
+
+impl Default for NoteDocumentJson {
+    fn default() -> Self {
+        Self {
+            schema: "note.document".into(),
+            id: "empty".into(),
+            camera: NoteCameraJson::default(),
+            blocks: Vec::new(),
+            active_tool: Some("selectDirect".into()),
+            grid_visible: None,
+            grid_spacing: None,
+            grid_subdivisions: None,
+            grid_opacity: None,
+            snap_enabled: None,
+            snap_grid_spacing: None,
+            pencil_width: None,
+            eraser_radius: None,
+            assets: HashMap::new(),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct NoteBoundsF {
+    x: f64,
+    y: f64,
+    w: f64,
+    h: f64,
+}
+
+impl NoteBoundsF {
+    fn contains_point(&self, x: f64, y: f64) -> bool {
+        x >= self.x && x <= self.x + self.w && y >= self.y && y <= self.y + self.h
+    }
+
+    fn intersects(&self, other: &NoteBoundsF) -> bool {
+        self.x < other.x + other.w && self.x + self.w > other.x && self.y < other.y + other.h && self.y + self.h > other.y
+    }
+}
+
+fn note_block_str<'a>(block: &'a Value, key: &str) -> &'a str {
+    block.get(key).and_then(Value::as_str).unwrap_or("")
+}
+
+fn note_block_id(block: &Value) -> &str {
+    note_block_str(block, "id")
+}
+
+fn note_block_kind(block: &Value) -> &str {
+    note_block_str(block, "kind")
+}
+
+fn note_block_visible(block: &Value) -> bool {
+    block.get("visible").and_then(Value::as_bool).unwrap_or(true)
+}
+
+fn note_block_locked(block: &Value) -> bool {
+    block.get("locked").and_then(Value::as_bool).unwrap_or(false)
+}
+
+fn note_block_num(block: &Value, key: &str) -> f64 {
+    block.get(key).and_then(Value::as_f64).unwrap_or(0.0)
+}
+
+fn note_block_bounds(block: &Value) -> NoteBoundsF {
+    let x = note_block_num(block, "x");
+    let y = note_block_num(block, "y");
+    let w = note_block_num(block, "width");
+    let h = note_block_num(block, "height");
+    if note_block_kind(block) == "ink" {
+        if let Some(points) = block.get("points").and_then(Value::as_array) {
+            if !points.is_empty() {
+                let mut min_x = f64::INFINITY;
+                let mut min_y = f64::INFINITY;
+                let mut max_x = f64::NEG_INFINITY;
+                let mut max_y = f64::NEG_INFINITY;
+                for point in points {
+                    let px = point.get(0).and_then(Value::as_f64).unwrap_or(0.0);
+                    let py = point.get(1).and_then(Value::as_f64).unwrap_or(0.0);
+                    min_x = min_x.min(px);
+                    min_y = min_y.min(py);
+                    max_x = max_x.max(px);
+                    max_y = max_y.max(py);
+                }
+                return NoteBoundsF {
+                    x: x + min_x,
+                    y: y + min_y,
+                    w: (max_x - min_x).max(1.0),
+                    h: (max_y - min_y).max(1.0),
+                };
+            }
+        }
+    }
+    NoteBoundsF { x, y, w, h }
+}
+
+fn note_effective_bounds(block: &Value, overrides: &HashMap<String, Value>) -> NoteBoundsF {
+    match overrides.get(note_block_id(block)) {
+        Some(over) => note_block_bounds(over),
+        None => note_block_bounds(block),
+    }
+}
+
+fn flatten_note_blocks(blocks: &[Value]) -> Vec<&Value> {
+    let mut out = Vec::new();
+    fn visit<'a>(blocks: &'a [Value], out: &mut Vec<&'a Value>) {
+        for block in blocks {
+            out.push(block);
+            if note_block_kind(block) == "group" {
+                if let Some(children) = block.get("children").and_then(Value::as_array) {
+                    visit(children, out);
+                }
+            }
+        }
+    }
+    visit(blocks, &mut out);
+    out
+}
+
+fn find_note_block<'a>(blocks: &'a [Value], id: &str) -> Option<&'a Value> {
+    flatten_note_blocks(blocks).into_iter().find(|block| note_block_id(block) == id)
+}
+
+fn note_blocks_at_point<'a>(blocks: &'a [Value], overrides: &HashMap<String, Value>, x: f64, y: f64) -> Vec<&'a Value> {
+    let mut flat = flatten_note_blocks(blocks);
+    flat.reverse();
+    flat.into_iter()
+        .filter(|block| note_effective_bounds(block, overrides).contains_point(x, y))
+        .collect()
+}
+
+fn note_blocks_intersecting_rect(blocks: &[Value], overrides: &HashMap<String, Value>, rect: NoteBoundsF) -> Vec<String> {
+    flatten_note_blocks(blocks)
+        .into_iter()
+        .filter(|block| note_effective_bounds(block, overrides).intersects(&rect))
+        .map(|block| note_block_id(block).to_string())
+        .collect()
+}
+
+fn note_selection_bounds(blocks: &[Value], overrides: &HashMap<String, Value>, ids: &[String]) -> Option<NoteBoundsF> {
+    let id_set: HashSet<&str> = ids.iter().map(String::as_str).collect();
+    let selected: Vec<NoteBoundsF> = flatten_note_blocks(blocks)
+        .into_iter()
+        .filter(|block| id_set.contains(note_block_id(block)))
+        .map(|block| note_effective_bounds(block, overrides))
+        .collect();
+    if selected.is_empty() {
+        return None;
+    }
+    let mut min_x = f64::INFINITY;
+    let mut min_y = f64::INFINITY;
+    let mut max_x = f64::NEG_INFINITY;
+    let mut max_y = f64::NEG_INFINITY;
+    for bounds in &selected {
+        min_x = min_x.min(bounds.x);
+        min_y = min_y.min(bounds.y);
+        max_x = max_x.max(bounds.x + bounds.w);
+        max_y = max_y.max(bounds.y + bounds.h);
+    }
+    Some(NoteBoundsF { x: min_x, y: min_y, w: (max_x - min_x).max(1.0), h: (max_y - min_y).max(1.0) })
+}
+
+fn note_scale_value(v: f64, from_min: f64, from_size: f64, to_min: f64, to_size: f64) -> f64 {
+    if from_size <= 0.0 {
+        return to_min;
+    }
+    to_min + ((v - from_min) / from_size) * to_size
+}
+
+fn note_scaled_block(block: &Value, from: NoteBoundsF, to: NoteBoundsF) -> Value {
+    let bounds = note_block_bounds(block);
+    let next_x = note_scale_value(bounds.x, from.x, from.w, to.x, to.w);
+    let next_y = note_scale_value(bounds.y, from.y, from.h, to.y, to.h);
+    let next_w = (note_scale_value(bounds.x + bounds.w, from.x, from.w, to.x, to.w) - next_x).max(8.0);
+    let next_h = (note_scale_value(bounds.y + bounds.h, from.y, from.h, to.y, to.h) - next_y).max(8.0);
+    let mut cloned = block.clone();
+    if let Some(obj) = cloned.as_object_mut() {
+        obj.insert("x".into(), json!(next_x));
+        obj.insert("y".into(), json!(next_y));
+        obj.insert("width".into(), json!(next_w));
+        obj.insert("height".into(), json!(next_h));
+        if note_block_kind(block) == "ink" {
+            let scale_x = if from.w > 0.0 { to.w / from.w } else { 1.0 };
+            let scale_y = if from.h > 0.0 { to.h / from.h } else { 1.0 };
+            if let Some(points) = block.get("points").and_then(Value::as_array) {
+                let scaled: Vec<Value> = points
+                    .iter()
+                    .map(|p| {
+                        let px = p.get(0).and_then(Value::as_f64).unwrap_or(0.0) * scale_x;
+                        let py = p.get(1).and_then(Value::as_f64).unwrap_or(0.0) * scale_y;
+                        json!([px, py])
+                    })
+                    .collect();
+                obj.insert("points".into(), Value::Array(scaled));
+            }
+        }
+    }
+    cloned
+}
+
+fn note_resize_bounds(from: NoteBoundsF, handle: &str, dx: f64, dy: f64, min_size: f64) -> NoteBoundsF {
+    let mut x = from.x;
+    let mut y = from.y;
+    let mut w = from.w;
+    let mut h = from.h;
+    if handle.contains('e') {
+        w = (w + dx).max(min_size);
+    }
+    if handle.contains('w') {
+        let next_w = (w - dx).max(min_size);
+        x += w - next_w;
+        w = next_w;
+    }
+    if handle.contains('s') {
+        h = (h + dy).max(min_size);
+    }
+    if handle.contains('n') {
+        let next_h = (h - dy).max(min_size);
+        y += h - next_h;
+        h = next_h;
+    }
+    NoteBoundsF { x, y, w, h }
+}
+
+fn note_snap_coordinate(v: f64, spacing: f64) -> f64 {
+    if spacing <= 0.0 {
+        v
+    } else {
+        (v / spacing).round() * spacing
+    }
+}
+
+fn note_snap_point(x: f64, y: f64, spacing: f64) -> (f64, f64) {
+    (note_snap_coordinate(x, spacing), note_snap_coordinate(y, spacing))
+}
+
+fn note_maybe_snap(doc: &NoteDocumentJson, x: f64, y: f64) -> (f64, f64) {
+    if doc.snap_enabled.unwrap_or(false) {
+        note_snap_point(x, y, doc.snap_grid_spacing.unwrap_or(8.0))
+    } else {
+        (x, y)
+    }
+}
+
+fn note_block_with_position(block: &Value, x: f64, y: f64) -> Value {
+    let mut cloned = block.clone();
+    if let Some(obj) = cloned.as_object_mut() {
+        obj.insert("x".into(), json!(x));
+        obj.insert("y".into(), json!(y));
+    }
+    cloned
+}
+
+fn note_create_block(kind: &str, x: f64, y: f64) -> Value {
+    let id = create_note_host_id(kind);
+    match kind {
+        "image" => json!({
+            "id": id, "name": "Image", "kind": "image", "x": x, "y": y, "width": 240.0, "height": 160.0,
+            "rotation": 0.0, "visible": true, "locked": false, "imageKey": "placeholder",
+        }),
+        "table" => json!({
+            "id": id, "name": "Table", "kind": "table", "x": x, "y": y, "width": 320.0, "height": 160.0,
+            "rotation": 0.0, "visible": true, "locked": false,
+            "columns": ["A", "B", "C"],
+            "rows": [
+                [{"content": ""}, {"content": ""}, {"content": ""}],
+                [{"content": ""}, {"content": ""}, {"content": ""}],
+            ],
+        }),
+        "math" => json!({
+            "id": id, "name": "Math", "kind": "math", "x": x, "y": y, "width": 200.0, "height": 80.0,
+            "rotation": 0.0, "visible": true, "locked": false, "tex": "E = mc^2", "displayMode": true,
+        }),
+        "ink" => json!({
+            "id": id, "name": "Ink", "kind": "ink", "x": x, "y": y, "width": 1.0, "height": 1.0,
+            "rotation": 0.0, "visible": true, "locked": false, "points": [], "strokeWidth": 3.0, "color": [0.0, 0.0, 0.0, 1.0],
+        }),
+        "group" => json!({
+            "id": id, "name": "Group", "kind": "group", "x": x, "y": y, "width": 280.0, "height": 120.0,
+            "rotation": 0.0, "visible": true, "locked": false, "children": [],
+        }),
+        _ => json!({
+            "id": id, "name": "Text", "kind": "text", "x": x, "y": y, "width": 280.0, "height": 120.0,
+            "rotation": 0.0, "visible": true, "locked": false,
+            "paragraphs": [{"runs": [{"text": ""}]}], "fontSize": 18.0, "fontWeight": "normal", "align": "left",
+        }),
+    }
+}
+
+fn note_text_plain(block: &Value) -> String {
+    block
+        .get("paragraphs")
+        .and_then(Value::as_array)
+        .map(|paragraphs| {
+            paragraphs
+                .iter()
+                .map(|paragraph| {
+                    paragraph
+                        .get("runs")
+                        .and_then(Value::as_array)
+                        .map(|runs| runs.iter().filter_map(|run| run.get("text").and_then(Value::as_str)).collect::<String>())
+                        .unwrap_or_default()
+                })
+                .collect::<Vec<_>>()
+                .join("\n")
+        })
+        .unwrap_or_default()
+}
+
+fn point_segment_distance(px: f64, py: f64, x1: f64, y1: f64, x2: f64, y2: f64) -> f64 {
+    let dx = x2 - x1;
+    let dy = y2 - y1;
+    if dx == 0.0 && dy == 0.0 {
+        return ((px - x1).powi(2) + (py - y1).powi(2)).sqrt();
+    }
+    let t = (((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)).clamp(0.0, 1.0);
+    ((px - (x1 + t * dx)).powi(2) + (py - (y1 + t * dy)).powi(2)).sqrt()
+}
+
+fn ink_points(block: &Value) -> Vec<(f64, f64)> {
+    let bx = note_block_num(block, "x");
+    let by = note_block_num(block, "y");
+    block
+        .get("points")
+        .and_then(Value::as_array)
+        .map(|points| {
+            points
+                .iter()
+                .map(|p| {
+                    let px = p.get(0).and_then(Value::as_f64).unwrap_or(0.0);
+                    let py = p.get(1).and_then(Value::as_f64).unwrap_or(0.0);
+                    (bx + px, by + py)
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn ink_hits_point(block: &Value, x: f64, y: f64, threshold: f64) -> bool {
+    let points = ink_points(block);
+    let stroke_width = note_block_num(block, "strokeWidth");
+    if points.len() < 2 {
+        return points.first().map(|p| ((x - p.0).powi(2) + (y - p.1).powi(2)).sqrt() <= threshold).unwrap_or(false);
+    }
+    points
+        .windows(2)
+        .any(|w| point_segment_distance(x, y, w[0].0, w[0].1, w[1].0, w[1].1) <= threshold + stroke_width / 2.0)
+}
+
+fn note_erase_ink_stroke_events(blocks: &[Value], x: f64, y: f64, threshold: f64) -> Vec<Value> {
+    flatten_note_blocks(blocks)
+        .into_iter()
+        .filter(|block| note_block_kind(block) == "ink" && ink_hits_point(block, x, y, threshold))
+        .map(|block| json!({ "op": "removeBlock", "blockId": note_block_id(block) }))
+        .collect()
+}
+
+fn note_erase_ink_points_in_block(block: &Value, x: f64, y: f64, radius: f64) -> Vec<Value> {
+    let bx = note_block_num(block, "x");
+    let by = note_block_num(block, "y");
+    let points = block.get("points").and_then(Value::as_array).cloned().unwrap_or_default();
+    let mut kept_indices = Vec::new();
+    for (index, point) in points.iter().enumerate() {
+        let px = bx + point.get(0).and_then(Value::as_f64).unwrap_or(0.0);
+        let py = by + point.get(1).and_then(Value::as_f64).unwrap_or(0.0);
+        if ((px - x).powi(2) + (py - y).powi(2)).sqrt() > radius {
+            kept_indices.push(index);
+        }
+    }
+    if kept_indices.len() == points.len() {
+        return vec![block.clone()];
+    }
+    if kept_indices.is_empty() {
+        return Vec::new();
+    }
+    let mut runs: Vec<Vec<Value>> = Vec::new();
+    let mut current: Vec<Value> = vec![points[kept_indices[0]].clone()];
+    for window in kept_indices.windows(2) {
+        if window[1] - window[0] > 1 {
+            if current.len() >= 2 {
+                runs.push(current);
+            }
+            current = vec![points[window[1]].clone()];
+        } else {
+            current.push(points[window[1]].clone());
+        }
+    }
+    if current.len() >= 2 {
+        runs.push(current);
+    }
+    let name = note_block_str(block, "name").to_string();
+    runs.into_iter()
+        .enumerate()
+        .map(|(index, pts)| {
+            let mut cloned = block.clone();
+            if let Some(obj) = cloned.as_object_mut() {
+                if index > 0 {
+                    obj.insert("id".into(), json!(create_note_host_id("ink")));
+                    obj.insert("name".into(), json!(format!("{name} fragment")));
+                }
+                obj.insert("points".into(), Value::Array(pts));
+            }
+            cloned
+        })
+        .collect()
+}
+
+fn note_erase_ink_points_events(blocks: &[Value], x: f64, y: f64, radius: f64) -> Vec<Value> {
+    let mut events = Vec::new();
+    for block in flatten_note_blocks(blocks) {
+        if note_block_kind(block) != "ink" {
+            continue;
+        }
+        let fragments = note_erase_ink_points_in_block(block, x, y, radius);
+        if fragments.len() == 1 && fragments[0] == *block {
+            continue;
+        }
+        events.push(json!({ "op": "removeBlock", "blockId": note_block_id(block) }));
+        for fragment in fragments {
+            events.push(json!({ "op": "addBlock", "block": fragment }));
+        }
+    }
+    events
+}
+
+fn note_screen_to_world(camera: NoteCameraF, inner: Rect, sx: f32, sy: f32) -> (f64, f64) {
+    let lx = (sx - inner.x) as f64;
+    let ly = (sy - inner.y) as f64;
+    ((lx - camera.x) / camera.zoom, (ly - camera.y) / camera.zoom)
+}
+
+fn note_world_to_screen(camera: NoteCameraF, inner: Rect, wx: f64, wy: f64) -> (f32, f32) {
+    (inner.x + (wx * camera.zoom + camera.x) as f32, inner.y + (wy * camera.zoom + camera.y) as f32)
+}
+
+fn positive_mod_f32(v: f32, m: f32) -> f32 {
+    if m <= 0.0 {
+        0.0
+    } else {
+        ((v % m) + m) % m
+    }
+}
+//#endregion NoteCanvasModel
+
+//#region NoteCanvasState
+fn note_current_camera(scene: &UiComponentSceneNode) -> NoteCameraF {
+    let state = scene_state(&scene.surface_id);
+    if let Some((x, y, zoom)) = state.note_camera {
+        return NoteCameraF { x, y, zoom };
+    }
+    scene
+        .note_canvas
+        .as_ref()
+        .and_then(|note| serde_json::from_str::<NoteDocumentJson>(&note.document_json).ok())
+        .map(|doc| NoteCameraF::from(doc.camera))
+        .unwrap_or_default()
+}
+
+fn note_events_json(events: &[Value]) -> String {
+    Value::Array(events.to_vec()).to_string()
+}
+
+fn note_apply_events_cmd(scene: &UiComponentSceneNode, events: &[Value], phase: &str, select_ids: Option<&[String]>) -> CommandDescriptor {
+    let mut args = json!({
+        "surfaceId": scene.surface_id,
+        "eventsJson": note_events_json(events),
+        "phase": phase,
+    });
+    if let Some(ids) = select_ids {
+        args["selectIds"] = json!(ids);
+    }
+    scene_cmd(scene, "applyNoteEvents", args)
+}
+
+fn note_set_selection_cmd(scene: &UiComponentSceneNode, ids: &[String]) -> CommandDescriptor {
+    scene_cmd(scene, "setSelection", json!({ "surfaceId": scene.surface_id, "ids": ids }))
+}
+
+fn note_set_hover_cmd(scene: &UiComponentSceneNode, id: Option<&str>) -> CommandDescriptor {
+    scene_cmd(scene, "setHover", json!({ "surfaceId": scene.surface_id, "id": id }))
+}
+
+fn note_set_camera_cmd(scene: &UiComponentSceneNode, camera: NoteCameraF) -> CommandDescriptor {
+    scene_cmd(
+        scene,
+        "setCamera",
+        json!({ "surfaceId": scene.surface_id, "camera": { "x": camera.x, "y": camera.y, "zoom": camera.zoom } }),
+    )
+}
+
+const NOTE_RESIZE_HANDLES: [&str; 8] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
+
+fn note_resize_handle_screen_pos(handle: &str, sx: f32, sy: f32, w: f32, h: f32, size: f32) -> (f32, f32) {
+    let half = size * 0.5;
+    let x = if handle.contains('w') {
+        sx - half
+    } else if handle.contains('e') {
+        sx + w - half
+    } else {
+        sx + w * 0.5 - half
+    };
+    let y = if handle.contains('n') {
+        sy - half
+    } else if handle.contains('s') {
+        sy + h - half
+    } else {
+        sy + h * 0.5 - half
+    };
+    (x, y)
+}
+
+fn note_resize_handle_at(bounds: NoteBoundsF, camera: NoteCameraF, inner: Rect, sx: f32, sy: f32, hit_radius: f32) -> Option<&'static str> {
+    let (bx, by) = note_world_to_screen(camera, inner, bounds.x, bounds.y);
+    let w = (bounds.w * camera.zoom) as f32;
+    let h = (bounds.h * camera.zoom) as f32;
+    for handle in NOTE_RESIZE_HANDLES {
+        let (hx, hy) = note_resize_handle_screen_pos(handle, bx, by, w, h, 8.0);
+        let cx = hx + 4.0;
+        let cy = hy + 4.0;
+        if ((sx - cx).powi(2) + (sy - cy).powi(2)).sqrt() <= hit_radius {
+            return Some(handle);
+        }
+    }
+    None
+}
+
+/** @emoji 📝 Pointer-down entry point for note-canvas: mirrors handlePointerDown in note-canvas-host.tsx. */
+fn note_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16, shift: bool) -> Vec<CommandDescriptor> {
+    let Some(note) = &scene.note_canvas else {
+        return Vec::new();
+    };
+    if note.view_mode == "navigator" || !note.interactive {
+        return Vec::new();
+    }
+    let doc: NoteDocumentJson = serde_json::from_str(&note.document_json).unwrap_or_default();
+    let selected_ids: Vec<String> = serde_json::from_str(&note.selection_json).unwrap_or_default();
+    let state = scene_state(&scene.surface_id);
+    let camera = state
+        .note_camera
+        .map(|(cx, cy, cz)| NoteCameraF { x: cx, y: cy, zoom: cz })
+        .unwrap_or_else(|| NoteCameraF::from(doc.camera.clone()));
+    let tool = doc.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
+    let mut commands = Vec::new();
+
+    let selection_bounds = note_selection_bounds(&doc.blocks, &state.note_overrides, &selected_ids);
+    let show_handles = (tool == "selectDirect" || tool == "selectMarquee") && selection_bounds.is_some() && !selected_ids.is_empty();
+    if button == 0 && show_handles {
+        if let Some(bounds) = selection_bounds {
+            if let Some(handle) = note_resize_handle_at(bounds, camera, inner, x, y, 8.0) {
+                mutate_scene_state(&scene.surface_id, |s| {
+                    s.drag = Some(SceneDrag {
+                        mode: SceneDragMode::NoteResize {
+                            handle: handle.to_string(),
+                            from: bounds,
+                            start_x: x,
+                            start_y: y,
+                            selected_ids: selected_ids.clone(),
+                        },
+                        button,
+                    });
+                });
+                return commands;
+            }
+        }
+    }
+
+    if tool == "pan" || button == 1 {
+        mutate_scene_state(&scene.surface_id, |s| {
+            s.drag = Some(SceneDrag {
+                mode: SceneDragMode::NotePan { start_x: x, start_y: y, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom },
+                button,
+            });
+        });
+        return commands;
+    }
+
+    if button != 0 {
+        return commands;
+    }
+
+    let (world_x, world_y) = note_screen_to_world(camera, inner, x, y);
+
+    if tool == "eraserStroke" || tool == "eraserPoint" {
+        let events = if tool == "eraserStroke" {
+            note_erase_ink_stroke_events(&doc.blocks, world_x, world_y, 8.0)
+        } else {
+            note_erase_ink_points_events(&doc.blocks, world_x, world_y, doc.eraser_radius.unwrap_or(12.0))
+        };
+        mutate_scene_state(&scene.surface_id, |s| {
+            s.drag = Some(SceneDrag { mode: SceneDragMode::NoteEraser { mode: tool.clone() }, button });
+        });
+        if !events.is_empty() {
+            commands.push(note_apply_events_cmd(scene, &events, "begin", None));
+        }
+        return commands;
+    }
+
+    if tool == "selectMarquee" {
+        mutate_scene_state(&scene.surface_id, |s| {
+            s.drag = Some(SceneDrag { mode: SceneDragMode::NoteMarqueeDrag { start_x: x, start_y: y }, button });
+            s.note_marquee_points = vec![(x, y)];
+        });
+        return commands;
+    }
+
+    if tool == "pencil" {
+        let block = note_create_block("ink", world_x, world_y);
+        let block_id = note_block_id(&block).to_string();
+        mutate_scene_state(&scene.surface_id, |s| {
+            s.note_overrides.insert(block_id.clone(), block.clone());
+            s.drag = Some(SceneDrag { mode: SceneDragMode::NoteInk { block_id: block_id.clone() }, button });
+        });
+        commands.push(note_apply_events_cmd(scene, &[json!({ "op": "addBlock", "block": block })], "begin", Some(&[block_id])));
+        return commands;
+    }
+
+    if tool == "text" || tool == "image" || tool == "table" || tool == "math" {
+        let (px, py) = note_maybe_snap(&doc, world_x, world_y);
+        let block = note_create_block(&tool, px, py);
+        let block_id = note_block_id(&block).to_string();
+        commands.push(note_apply_events_cmd(scene, &[json!({ "op": "addBlock", "block": block })], "atomic", Some(&[block_id])));
+        return commands;
+    }
+
+    let hits = note_blocks_at_point(&doc.blocks, &state.note_overrides, world_x, world_y);
+    let top = hits.first().copied();
+    match top {
+        Some(top_block) if !note_block_locked(top_block) => {
+            if tool == "selectDirect" {
+                let top_id = note_block_id(top_block).to_string();
+                let next_selection = if shift {
+                    let mut ids: Vec<String> = selected_ids.clone();
+                    if !ids.contains(&top_id) {
+                        ids.push(top_id.clone());
+                    }
+                    ids
+                } else {
+                    vec![top_id.clone()]
+                };
+                commands.push(note_set_selection_cmd(scene, &next_selection));
+                let move_ids: Vec<String> = if selected_ids.contains(&top_id) { selected_ids.clone() } else { vec![top_id.clone()] };
+                let mut origins = HashMap::new();
+                for id in &move_ids {
+                    if let Some(b) = find_note_block(&doc.blocks, id) {
+                        let eff = state.note_overrides.get(id).unwrap_or(b);
+                        origins.insert(id.clone(), (note_block_num(eff, "x"), note_block_num(eff, "y")));
+                    }
+                }
+                mutate_scene_state(&scene.surface_id, |s| {
+                    s.drag = Some(SceneDrag { mode: SceneDragMode::NoteMove { origins, start_x: x, start_y: y }, button });
+                });
+            }
+        }
+        _ => {
+            if tool == "selectDirect" {
+                commands.push(note_set_selection_cmd(scene, &[]));
+            }
+        }
+    }
+    commands
+}
+
+/** @emoji 📝 Pointer-up entry point for note-canvas: commits the active gesture and finalizes marquee selection. */
+fn note_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<CommandDescriptor> {
+    let mut commands = Vec::new();
+    let state = scene_state(&scene.surface_id);
+    let Some(drag) = state.drag.clone() else {
+        return commands;
+    };
+    let doc: NoteDocumentJson = scene
+        .note_canvas
+        .as_ref()
+        .map(|n| serde_json::from_str(&n.document_json).unwrap_or_default())
+        .unwrap_or_default();
+    match &drag.mode {
+        SceneDragMode::NoteMove { origins, .. } => {
+            let mut events = Vec::new();
+            for id in origins.keys() {
+                if let Some(block) = state.note_overrides.get(id).cloned().or_else(|| find_note_block(&doc.blocks, id).cloned()) {
+                    let updated = if doc.snap_enabled.unwrap_or(false) {
+                        let spacing = doc.snap_grid_spacing.unwrap_or(8.0);
+                        let (sx, sy) = note_snap_point(note_block_num(&block, "x"), note_block_num(&block, "y"), spacing);
+                        note_block_with_position(&block, sx, sy)
+                    } else {
+                        block
+                    };
+                    events.push(json!({ "op": "updateBlock", "blockId": id, "block": updated }));
+                }
+            }
+            commands.push(note_apply_events_cmd(scene, &events, "commit", None));
+        }
+        SceneDragMode::NoteResize { selected_ids, .. } => {
+            let mut events = Vec::new();
+            for id in selected_ids {
+                if let Some(block) = state.note_overrides.get(id).cloned() {
+                    events.push(json!({ "op": "updateBlock", "blockId": id, "block": block }));
+                }
+            }
+            commands.push(note_apply_events_cmd(scene, &events, "commit", None));
+        }
+        SceneDragMode::NoteInk { block_id } => {
+            if let Some(block) = state.note_overrides.get(block_id).cloned() {
+                commands.push(note_apply_events_cmd(scene, &[json!({ "op": "updateBlock", "blockId": block_id, "block": block })], "commit", None));
+            } else {
+                commands.push(note_apply_events_cmd(scene, &[], "commit", None));
+            }
+        }
+        SceneDragMode::NoteEraser { .. } => {
+            commands.push(note_apply_events_cmd(scene, &[], "commit", None));
+        }
+        SceneDragMode::NoteMarqueeDrag { start_x, start_y } => {
+            let x0 = start_x.min(x);
+            let y0 = start_y.min(y);
+            let w = (x - start_x).abs();
+            let h = (y - start_y).abs();
+            if w >= 4.0 || h >= 4.0 {
+                let camera = note_current_camera(scene);
+                let (wx0, wy0) = note_screen_to_world(camera, inner, x0, y0);
+                let (wx1, wy1) = note_screen_to_world(camera, inner, x0 + w, y0 + h);
+                let world_rect = NoteBoundsF { x: wx0.min(wx1), y: wy0.min(wy1), w: (wx1 - wx0).abs(), h: (wy1 - wy0).abs() };
+                let ids = note_blocks_intersecting_rect(&doc.blocks, &state.note_overrides, world_rect);
+                commands.push(note_set_selection_cmd(scene, &ids));
+            }
+        }
+        _ => {}
+    }
+    mutate_scene_state(&scene.surface_id, |s| {
+        s.drag = None;
+        s.note_marquee_points.clear();
+    });
+    commands
+}
+
+/** @emoji 📝 Pointer-move hover entry point for note-canvas: mirrors the `!dragState` hover branch of handlePointerMove. */
+fn note_hover_move(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<CommandDescriptor> {
+    let Some(note) = &scene.note_canvas else {
+        return Vec::new();
+    };
+    if note.view_mode == "navigator" || !note.interactive {
+        return Vec::new();
+    }
+    let doc: NoteDocumentJson = serde_json::from_str(&note.document_json).unwrap_or_default();
+    let camera = note_current_camera(scene);
+    let (wx, wy) = note_screen_to_world(camera, inner, x, y);
+    let state = scene_state(&scene.surface_id);
+    let hits = note_blocks_at_point(&doc.blocks, &state.note_overrides, wx, wy);
+    let top_id = hits.first().map(|block| note_block_id(block).to_string());
+    if note.hovered_id.as_deref() == top_id.as_deref() {
+        return Vec::new();
+    }
+    vec![note_set_hover_cmd(scene, top_id.as_deref())]
+}
+
+/** @emoji 📝 Wheel entry point for note-canvas: zoom-at-cursor, mirrors handleWheel in note-canvas-host.tsx. */
+fn note_wheel(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<CommandDescriptor> {
+    let Some(note) = &scene.note_canvas else {
+        return Vec::new();
+    };
+    if note.view_mode == "navigator" {
+        return Vec::new();
+    }
+    let camera = note_current_camera(scene);
+    let zoom_factor: f64 = if delta < 0.0 { 1.08 } else { 0.92 };
+    let next_zoom = (camera.zoom * zoom_factor).clamp(0.1, 8.0);
+    let (wx, wy) = note_screen_to_world(camera, inner, x, y);
+    let next = NoteCameraF {
+        x: (x - inner.x) as f64 - wx * next_zoom,
+        y: (y - inner.y) as f64 - wy * next_zoom,
+        zoom: next_zoom,
+    };
+    mutate_scene_state(&scene.surface_id, |s| {
+        s.note_camera = Some((next.x, next.y, next.zoom));
+    });
+    vec![note_set_camera_cmd(scene, next)]
+}
+//#endregion NoteCanvasState
+
+//#region NoteCanvasRender
+fn note_draw_rect_outline(draw: &mut ui_wgpu::DrawList, x: f32, y: f32, w: f32, h: f32, color: Rgba, width: f32) {
+    draw.push_line(x, y, x + w, y, color, width);
+    draw.push_line(x + w, y, x + w, y + h, color, width);
+    draw.push_line(x + w, y + h, x, y + h, color, width);
+    draw.push_line(x, y + h, x, y, color, width);
+}
+
+fn note_draw_grid(draw: &mut ui_wgpu::DrawList, camera: NoteCameraF, inner: Rect, theme: &Theme, spacing: f64, subdivisions: u32, opacity: f64) {
+    let major_px = (spacing * camera.zoom) as f32;
+    if major_px < 2.0 {
+        return;
+    }
+    let minor_px = major_px / subdivisions.max(1) as f32;
+    let offset_x = positive_mod_f32(camera.x as f32, major_px);
+    let offset_y = positive_mod_f32(camera.y as f32, major_px);
+    let color = theme.separator.with_alpha((theme.separator.a * opacity as f32).max(0.05));
+    let minor_color = color.with_alpha(color.a * 0.55);
+
+    let mut wx = inner.x + positive_mod_f32(offset_x, major_px) - major_px;
+    while wx < inner.x + inner.w {
+        if subdivisions > 1 {
+            for s in 1..subdivisions {
+                let mx = wx + s as f32 * minor_px;
+                if mx >= inner.x && mx <= inner.x + inner.w {
+                    draw.push_line(mx, inner.y, mx, inner.y + inner.h, minor_color, 0.5);
+                }
+            }
+        }
+        if wx >= inner.x && wx <= inner.x + inner.w {
+            draw.push_line(wx, inner.y, wx, inner.y + inner.h, color, 1.0);
+        }
+        wx += major_px;
+    }
+    let mut wy = inner.y + positive_mod_f32(offset_y, major_px) - major_px;
+    while wy < inner.y + inner.h {
+        if subdivisions > 1 {
+            for s in 1..subdivisions {
+                let my = wy + s as f32 * minor_px;
+                if my >= inner.y && my <= inner.y + inner.h {
+                    draw.push_line(inner.x, my, inner.x + inner.w, my, minor_color, 0.5);
+                }
+            }
+        }
+        if wy >= inner.y && wy <= inner.y + inner.h {
+            draw.push_line(inner.x, wy, inner.x + inner.w, wy, color, 1.0);
+        }
+        wy += major_px;
+    }
+}
+
+fn note_draw_table(ctx: &mut FrameworkWidgetContext<'_>, block: &Value, sx: f32, sy: f32, w: f32, h: f32, theme: &Theme) {
+    let columns: Vec<String> = block
+        .get("columns")
+        .and_then(Value::as_array)
+        .map(|c| c.iter().filter_map(|v| v.as_str().map(str::to_string)).collect())
+        .unwrap_or_default();
+    let rows: Vec<Vec<String>> = block
+        .get("rows")
+        .and_then(Value::as_array)
+        .map(|rows| {
+            rows.iter()
+                .map(|row| {
+                    row.as_array()
+                        .map(|cells| cells.iter().map(|cell| cell.get("content").and_then(Value::as_str).unwrap_or("").to_string()).collect())
+                        .unwrap_or_default()
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    let col_count = columns.len().max(1);
+    let row_count = rows.len() + 1;
+    let col_w = w / col_count as f32;
+    let row_h = h / row_count as f32;
+    let font = theme.font_size_small.min(row_h * 0.6).max(6.0);
+    for (index, label) in columns.iter().enumerate() {
+        draw_text(ctx, label, sx + index as f32 * col_w + 3.0, sy + row_h * 0.7, font, theme.text_muted);
+    }
+    for (row_index, row) in rows.iter().enumerate() {
+        let ry = sy + (row_index + 1) as f32 * row_h;
+        for (col_index, cell) in row.iter().enumerate() {
+            draw_text(ctx, cell, sx + col_index as f32 * col_w + 3.0, ry + row_h * 0.7, font, theme.text);
+        }
+    }
+    for index in 0..=col_count {
+        let x = sx + index as f32 * col_w;
+        ctx.draw.push_line(x, sy, x, sy + h, theme.separator, 0.5);
+    }
+    for index in 0..=row_count {
+        let y = sy + index as f32 * row_h;
+        ctx.draw.push_line(sx, y, sx + w, y, theme.separator, 0.5);
+    }
+}
+
+fn note_draw_image(ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, block: &Value, doc: &NoteDocumentJson, sx: f32, sy: f32, w: f32, h: f32) {
+    let theme = ctx.theme;
+    let image_key = note_block_str(block, "imageKey");
+    if let Some(asset) = doc.assets.get(image_key) {
+        let mime = asset.get("mime").and_then(Value::as_str).unwrap_or("image/png");
+        let data = asset.get("data").and_then(Value::as_str).unwrap_or("");
+        let data_url = if data.starts_with("data:") { data.to_string() } else { format!("data:{mime};base64,{data}") };
+        if let Some(key) = queue_canvas_image_upload(&scene.surface_id, note_block_id(block), &data_url) {
+            ctx.draw.push_raster_quad(&key, [sx, sy, w.max(1.0), h.max(1.0)], [0.0, 0.0, 1.0, 1.0], 1.0);
+            return;
+        }
+    }
+    draw_text(ctx, image_key, sx + 6.0, sy + h * 0.5, theme.font_size_small, theme.text_muted);
+}
+
+fn note_draw_block(
+    ctx: &mut FrameworkWidgetContext<'_>,
+    scene: &UiComponentSceneNode,
+    block: &Value,
+    camera: NoteCameraF,
+    inner: Rect,
+    doc: &NoteDocumentJson,
+    selected: bool,
+    hovered: bool,
+) {
+    let theme = ctx.theme;
+    let kind = note_block_kind(block);
+    let bounds = note_block_bounds(block);
+    let (sx, sy) = note_world_to_screen(camera, inner, bounds.x, bounds.y);
+    let w = (bounds.w * camera.zoom) as f32;
+    let h = (bounds.h * camera.zoom) as f32;
+
+    if kind == "ink" {
+        let points = ink_points(block);
+        if points.len() >= 2 {
+            let color = block
+                .get("color")
+                .and_then(Value::as_array)
+                .map(|c| {
+                    let get = |i: usize| c.get(i).and_then(Value::as_f64).unwrap_or(0.0) as f32;
+                    Rgba::new(get(0), get(1), get(2), get(3))
+                })
+                .unwrap_or(Rgba::new(0.0, 0.0, 0.0, 1.0));
+            let stroke_width = (note_block_num(block, "strokeWidth") as f32 * camera.zoom as f32).max(1.0);
+            let screen_points: Vec<(f32, f32)> = points.iter().map(|p| note_world_to_screen(camera, inner, p.0, p.1)).collect();
+            for pair in screen_points.windows(2) {
+                ctx.draw.push_line(pair[0].0, pair[0].1, pair[1].0, pair[1].1, color, stroke_width);
+            }
+        }
+        return;
+    }
+
+    let bg = theme.panel;
+    ctx.draw.push_rounded([sx, sy, w.max(4.0), h.max(4.0)], bg.with_alpha(0.92), theme.border_radius.min(6.0));
+
+    match kind {
+        "text" => {
+            let text = note_text_plain(block);
+            let font_size = (note_block_num(block, "fontSize").max(8.0) as f32 * camera.zoom as f32).max(6.0);
+            draw_text_wrapped(ctx, &text, sx + 6.0, sy + 4.0, (w - 12.0).max(1.0), font_size, theme.text);
+        }
+        "math" => {
+            let tex = note_block_str(block, "tex");
+            draw_text(ctx, tex, sx + 8.0, sy + h * 0.5 + 4.0, theme.font_size_body.max(8.0), theme.text);
+        }
+        "table" => note_draw_table(ctx, block, sx, sy, w.max(4.0), h.max(4.0), theme),
+        "image" => note_draw_image(ctx, scene, block, doc, sx, sy, w.max(4.0), h.max(4.0)),
+        "group" => {
+            let children_len = block.get("children").and_then(Value::as_array).map(Vec::len).unwrap_or(0);
+            draw_text(ctx, &format!("Group · {children_len} children"), sx + 6.0, sy + 16.0, theme.font_size_small, theme.text_muted);
+        }
+        _ => {}
+    }
+
+    let border = if selected {
+        theme.accent
+    } else if hovered {
+        theme.accent.with_alpha(theme.accent.a * 0.6)
+    } else {
+        theme.panel_border
+    };
+    let border_w = if selected { 2.0 } else { 1.0 };
+    note_draw_rect_outline(ctx.draw, sx, sy, w.max(4.0), h.max(4.0), border, border_w);
+}
+
+fn note_draw_selection_chrome(draw: &mut ui_wgpu::DrawList, theme: &Theme, camera: NoteCameraF, inner: Rect, bounds: NoteBoundsF, show_handles: bool) {
+    let (sx, sy) = note_world_to_screen(camera, inner, bounds.x, bounds.y);
+    let w = (bounds.w * camera.zoom) as f32;
+    let h = (bounds.h * camera.zoom) as f32;
+    note_draw_rect_outline(draw, sx, sy, w, h, theme.accent, 1.5);
+    if !show_handles {
+        return;
+    }
+    let handle_size = 8.0;
+    for handle in NOTE_RESIZE_HANDLES {
+        let (hx, hy) = note_resize_handle_screen_pos(handle, sx, sy, w, h, handle_size);
+        draw.push_rounded([hx, hy, handle_size, handle_size], theme.background, 1.0);
+        note_draw_rect_outline(draw, hx, hy, handle_size, handle_size, theme.accent, 1.0);
+    }
+}
+
+fn render_note_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::GpuContext) {
+    let _ = gpu;
+    let theme = ctx.theme;
+    let Some(note) = &scene.note_canvas else {
+        return render_placeholder("note-canvas", bounds, ctx);
+    };
+    let doc: NoteDocumentJson = serde_json::from_str(&note.document_json).unwrap_or_default();
+    let selected_ids: Vec<String> = serde_json::from_str(&note.selection_json).unwrap_or_default();
+    let selected_set: HashSet<&str> = selected_ids.iter().map(String::as_str).collect();
+    let hovered_id = note.hovered_id.clone();
+    let is_navigator = note.view_mode == "navigator";
+    let inner = bounds;
+
+    let state = scene_state(&scene.surface_id);
+    let camera = state.note_camera.map(|(x, y, zoom)| NoteCameraF { x, y, zoom }).unwrap_or_else(|| NoteCameraF::from(doc.camera.clone()));
+
+    ctx.draw.push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
+    ctx.draw.push_scissor(inner);
+
+    if doc.grid_visible.unwrap_or(true) && !is_navigator {
+        note_draw_grid(ctx.draw, camera, inner, theme, doc.grid_spacing.unwrap_or(32.0), doc.grid_subdivisions.unwrap_or(4.0).max(1.0) as u32, doc.grid_opacity.unwrap_or(0.35));
+    }
+
+    let overrides = state.note_overrides.clone();
+    let blocks = flatten_note_blocks(&doc.blocks);
+    for block in blocks.iter().copied() {
+        let effective = overrides.get(note_block_id(block)).unwrap_or(block);
+        if !note_block_visible(effective) {
+            continue;
+        }
+        let id = note_block_id(block);
+        let selected = selected_set.contains(id);
+        let hovered = hovered_id.as_deref() == Some(id);
+        note_draw_block(ctx, scene, effective, camera, inner, &doc, selected, hovered);
+    }
+
+    let selection_bounds = note_selection_bounds(&doc.blocks, &overrides, &selected_ids);
+    let tool = doc.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
+    let show_handles = !is_navigator && (tool == "selectDirect" || tool == "selectMarquee") && selection_bounds.is_some() && !selected_ids.is_empty();
+    if let Some(sel) = selection_bounds {
+        note_draw_selection_chrome(ctx.draw, theme, camera, inner, sel, show_handles);
+    }
+
+    if state.note_marquee_points.len() >= 2 {
+        let points: Vec<[f32; 2]> = state.note_marquee_points.iter().map(|p| [p.0, p.1]).collect();
+        ui_wgpu::paint_selection_marquee(ctx.draw, theme, false, false, &points, false);
+    }
+
+    ctx.draw.pop_scissor();
+
+    ctx.input.register_hit(HitTarget {
+        rect: inner,
+        event: None,
+        control_id: Some(scene.surface_id.clone()),
+        kind: HitKind::Generic,
+        drag_axis: None,
+        drag_data: None,
+    });
+}
+//#endregion NoteCanvasRender
+
+//#region NoteCanvasTests
+#[cfg(test)]
+mod note_canvas_tests {
+    use super::*;
+
+    fn sample_block(id: &str, x: f64, y: f64, w: f64, h: f64) -> Value {
+        json!({
+            "id": id, "name": "Text", "kind": "text", "x": x, "y": y, "width": w, "height": h,
+            "rotation": 0.0, "visible": true, "locked": false,
+            "paragraphs": [], "fontSize": 18.0, "fontWeight": "normal", "align": "left",
+        })
+    }
+
+    #[test]
+    fn hit_test_prefers_topmost_block() {
+        let blocks = vec![sample_block("a", 0.0, 0.0, 100.0, 100.0), sample_block("b", 20.0, 20.0, 100.0, 100.0)];
+        let overrides = HashMap::new();
+        let hits = note_blocks_at_point(&blocks, &overrides, 50.0, 50.0);
+        assert_eq!(note_block_id(hits[0]), "b");
+    }
+
+    #[test]
+    fn hit_test_misses_outside_bounds() {
+        let blocks = vec![sample_block("a", 0.0, 0.0, 10.0, 10.0)];
+        let overrides = HashMap::new();
+        assert!(note_blocks_at_point(&blocks, &overrides, 50.0, 50.0).is_empty());
+    }
+
+    #[test]
+    fn resize_bounds_east_handle_grows_width_only() {
+        let from = NoteBoundsF { x: 0.0, y: 0.0, w: 100.0, h: 50.0 };
+        let to = note_resize_bounds(from, "e", 20.0, 0.0, 8.0);
+        assert_eq!(to, NoteBoundsF { x: 0.0, y: 0.0, w: 120.0, h: 50.0 });
+    }
+
+    #[test]
+    fn resize_bounds_northwest_handle_moves_origin() {
+        let from = NoteBoundsF { x: 10.0, y: 10.0, w: 100.0, h: 100.0 };
+        let to = note_resize_bounds(from, "nw", -10.0, -10.0, 8.0);
+        assert_eq!(to, NoteBoundsF { x: 0.0, y: 0.0, w: 110.0, h: 110.0 });
+    }
+
+    #[test]
+    fn resize_bounds_respects_minimum_size() {
+        let from = NoteBoundsF { x: 0.0, y: 0.0, w: 20.0, h: 20.0 };
+        let to = note_resize_bounds(from, "e", -100.0, 0.0, 8.0);
+        assert_eq!(to.w, 8.0);
+    }
+
+    #[test]
+    fn screen_world_roundtrip() {
+        let camera = NoteCameraF { x: 12.0, y: -8.0, zoom: 1.5 };
+        let inner = Rect::new(100.0, 40.0, 400.0, 300.0);
+        let (wx, wy) = note_screen_to_world(camera, inner, 250.0, 150.0);
+        let (sx, sy) = note_world_to_screen(camera, inner, wx, wy);
+        assert!((sx - 250.0).abs() < 0.01);
+        assert!((sy - 150.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn snap_rounds_to_nearest_grid_cell() {
+        assert_eq!(note_snap_coordinate(13.0, 8.0), 16.0);
+        assert_eq!(note_snap_coordinate(3.0, 8.0), 0.0);
+    }
+
+    #[test]
+    fn ink_block_bounds_from_points() {
+        let block = json!({
+            "id": "i1", "kind": "ink", "x": 10.0, "y": 10.0, "width": 1.0, "height": 1.0,
+            "points": [[0.0, 0.0], [5.0, 10.0], [-5.0, 2.0]], "strokeWidth": 3.0, "color": [0, 0, 0, 1],
+        });
+        let bounds = note_block_bounds(&block);
+        assert_eq!(bounds.x, 5.0);
+        assert_eq!(bounds.y, 10.0);
+        assert_eq!(bounds.w, 10.0);
+        assert_eq!(bounds.h, 10.0);
+    }
+}
+//#endregion NoteCanvasTests
+//#endregion NoteCanvas
 
 //#region NodeGraph
 #[derive(Clone, Debug)]
@@ -7103,6 +8884,397 @@ fn render_gis_map(
 }
 //#endregion GisMap
 
+//#region IconRender
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct IconRenderCameraFields {
+    position: [f64; 3],
+    target: [f64; 3],
+    #[serde(default = "icon_render_default_zoom")]
+    zoom: f64,
+    #[serde(default)]
+    fov: Option<f64>,
+    #[serde(default)]
+    up: Option<[f64; 3]>,
+}
+
+fn icon_render_default_zoom() -> f64 {
+    1.0
+}
+
+#[derive(Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+struct IconRenderLightsFields {
+    #[serde(default)]
+    ambient_intensity: f64,
+    #[serde(default)]
+    ambient_color: Option<String>,
+    #[serde(default)]
+    sun_azimuth: f64,
+    #[serde(default)]
+    sun_elevation: f64,
+    #[serde(default)]
+    sun_intensity: f64,
+    #[serde(default)]
+    sun_color: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct IconRenderMaterialFields {
+    #[serde(default)]
+    color: Option<String>,
+    #[serde(default)]
+    metalness: Option<f64>,
+    #[serde(default)]
+    roughness: Option<f64>,
+    #[serde(default)]
+    emissive: Option<String>,
+    #[serde(default)]
+    emissive_intensity: Option<f64>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct IconRenderRequestFields {
+    asset_url: String,
+    camera: IconRenderCameraFields,
+    #[serde(default)]
+    lights: Option<IconRenderLightsFields>,
+    width: f64,
+    height: f64,
+    #[serde(default)]
+    shape: Option<String>,
+    #[serde(default)]
+    background: Option<String>,
+    #[serde(default)]
+    shadow_enabled: Option<bool>,
+    #[serde(default)]
+    material: Option<IconRenderMaterialFields>,
+}
+
+/** @emoji 🎥 Folds the request's three.js `zoom` into an equivalent vertical FOV, since the native orbit camera has no independent zoom factor, see https://threejs.org/docs/#api/en/cameras/PerspectiveCamera.zoom. */
+fn icon_render_camera_json(camera: &IconRenderCameraFields) -> String {
+    let fov = camera.fov.unwrap_or(50.0).max(1.0);
+    let zoom = if camera.zoom.abs() > 1e-6 { camera.zoom } else { 1.0 };
+    let effective_fov = if (zoom - 1.0).abs() > 1e-6 {
+        let half = (fov * 0.5).to_radians();
+        (2.0 * (half.tan() / zoom).atan()).to_degrees()
+    } else {
+        fov
+    };
+    let up = camera.up.unwrap_or([0.0, 0.0, 1.0]);
+    json!({
+        "position": camera.position,
+        "target": camera.target,
+        "up": up,
+        "fov": effective_fov,
+    })
+    .to_string()
+}
+
+fn icon_render_environment_json(request: &IconRenderRequestFields) -> String {
+    let lights = request.lights.clone().unwrap_or_default();
+    let mut value = json!({
+        "ambient": { "intensity": lights.ambient_intensity, "color": lights.ambient_color },
+        "sun": {
+            "azimuth": lights.sun_azimuth,
+            "elevation": lights.sun_elevation,
+            "intensity": lights.sun_intensity,
+            "color": lights.sun_color,
+        },
+        "shadow": { "enabled": request.shadow_enabled.unwrap_or(false) },
+    });
+    if let Some(object) = value.as_object_mut() {
+        if let Some(material) = &request.material {
+            object.insert(
+                "material".into(),
+                json!({
+                    "color": material.color,
+                    "metalness": material.metalness,
+                    "roughness": material.roughness,
+                    "emissive": material.emissive,
+                    "emissiveIntensity": material.emissive_intensity,
+                }),
+            );
+        }
+        if let Some(background) = &request.background {
+            object.insert("background".into(), json!(background));
+        }
+    }
+    value.to_string()
+}
+
+fn render_icon_render_empty(bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, message: &str) {
+    let theme = ctx.theme;
+    let size = theme.font_size_body;
+    let width = ctx.atlas.measure_text(message, size).0;
+    draw_text(
+        ctx,
+        message,
+        bounds.x + (bounds.w - width) * 0.5,
+        bounds.y + bounds.h * 0.5,
+        size,
+        theme.text_muted,
+    );
+}
+
+/** @emoji 🖼️ Native counterpart of framework/renderer/react/components/icon-render-host.tsx: reframes the request into a synthetic World3dScene and delegates the actual GLB draw to infinite_world::render_world_3d, then paints the aspect-fit frame/badge/footer chrome on top. */
+fn render_icon_render(
+    scene: &UiComponentSceneNode,
+    bounds: Rect,
+    ctx: &mut FrameworkWidgetContext<'_>,
+    gpu: &mut ui_wgpu::GpuContext,
+    icon_render_states: &mut HashMap<String, World3dState>,
+) {
+    let Some(icon_render) = &scene.icon_render else {
+        return render_icon_render_empty(bounds, ctx, "No shot");
+    };
+    let Ok(request) = serde_json::from_str::<IconRenderRequestFields>(&icon_render.request_json) else {
+        return render_icon_render_empty(bounds, ctx, "No shot");
+    };
+
+    let theme = ctx.theme;
+    let shape = request.shape.clone().unwrap_or_else(|| "rectangle".into());
+    let width = request.width.max(1.0) as f32;
+    let height = request.height.max(1.0) as f32;
+    let fit_scale = (bounds.w / width).min(bounds.h / height).max(0.01);
+    let frame_w = width * fit_scale;
+    let frame_h = height * fit_scale;
+    let frame = Rect::new(
+        bounds.x + (bounds.w - frame_w) * 0.5,
+        bounds.y + (bounds.h - frame_h) * 0.5,
+        frame_w,
+        frame_h,
+    );
+
+    let mesh_id = semio_framework_plugin::world3d_mesh_id_from_url(&request.asset_url);
+    let instances_json = json!([{
+        "id": "icon-render-subject",
+        "meshId": mesh_id,
+        "position": [0.0, 0.0, 0.0],
+        "rotation": [0.0, 0.0, 0.0, 1.0],
+        "scale": [1.0, 1.0, 1.0],
+    }])
+    .to_string();
+    let mut synthetic_world = semio_framework_plugin::world3d_scene(
+        icon_render_camera_json(&request.camera),
+        semio_framework_plugin::world3d_meshes_json_from_urls(std::slice::from_ref(&request.asset_url)),
+        instances_json,
+        semio_framework_core::world3d_default_selection_json(),
+    );
+    synthetic_world.environment_json = Some(icon_render_environment_json(&request));
+
+    let synthetic_scene = UiComponentSceneNode {
+        surface_id: scene.surface_id.clone(),
+        controller_id: scene.controller_id.clone(),
+        component_kind: SurfaceKind::World3d,
+        pane_id: None,
+        binding_id: None,
+        canvas_2d: None,
+        world_3d: Some(synthetic_world),
+        node_graph: None,
+        text_editor: None,
+        table: None,
+        raster: None,
+        virtual_file_system: None,
+        gis_map: None,
+        puzzle2d_board: None,
+        icon_render: None,
+        note_canvas: None,
+    };
+
+    let state = icon_render_states
+        .entry(scene.surface_id.clone())
+        .or_insert_with(|| World3dState::new(scene.surface_id.clone(), scene.controller_id.clone()));
+    render_world_3d(&synthetic_scene, frame, ctx, state, gpu);
+
+    let hair = theme.stroke_hairline.max(1.0);
+    ctx.draw.push_solid([frame.x, frame.y, frame.w, hair], theme.accent);
+    ctx.draw
+        .push_solid([frame.x, frame.y + frame.h - hair, frame.w, hair], theme.accent);
+    ctx.draw.push_solid([frame.x, frame.y, hair, frame.h], theme.accent);
+    ctx.draw
+        .push_solid([frame.x + frame.w - hair, frame.y, hair, frame.h], theme.accent);
+
+    let badge = format!("{}×{} · {}", request.width.round() as i64, request.height.round() as i64, shape);
+    let badge_size = theme.font_size_small;
+    let (badge_text_w, badge_text_h) = ctx.atlas.measure_text(&badge, badge_size);
+    let pad = 4.0;
+    let badge_w = badge_text_w + pad * 2.0;
+    let badge_h = badge_text_h + pad * 2.0;
+    let badge_x = frame.x + frame.w - badge_w - 4.0;
+    let badge_y = frame.y + frame.h - badge_h - 4.0;
+    ctx.draw
+        .push_rounded([badge_x, badge_y, badge_w, badge_h], theme.panel.with_alpha(0.8), 2.0);
+    draw_text(ctx, &badge, badge_x + pad, badge_y + pad + badge_text_h * 0.8, badge_size, theme.text_muted);
+
+    if let Some(footer) = &icon_render.footer {
+        let footer_size = theme.font_size_small;
+        let footer_w = ctx.atlas.measure_text(footer, footer_size).0;
+        draw_text(
+            ctx,
+            footer,
+            bounds.x + (bounds.w - footer_w) * 0.5,
+            bounds.y + bounds.h - 8.0,
+            footer_size,
+            theme.text_muted,
+        );
+    }
+}
+//#endregion IconRender
+
+//#region Puzzle2dBoard
+pub struct Puzzle2dBoardSurface {
+    pub bounds: Rect,
+    pub controller_id: String,
+    pub fixture_json: String,
+}
+
+fn render_puzzle_board(
+    scene: &UiComponentSceneNode,
+    bounds: Rect,
+    ctx: &mut FrameworkWidgetContext<'_>,
+    gpu: &mut ui_wgpu::GpuContext,
+    puzzle2d_board_states: &mut HashMap<String, Puzzle2dBoardSurface>,
+) {
+    let Some(board_scene) = &scene.puzzle2d_board else {
+        return render_placeholder("puzzle2d-board", bounds, ctx);
+    };
+    let inner = bounds;
+    puzzle2d_board_states.insert(
+        scene.surface_id.clone(),
+        Puzzle2dBoardSurface {
+            bounds: inner,
+            controller_id: scene.controller_id.clone(),
+            fixture_json: board_scene.fixture_json.clone(),
+        },
+    );
+    engine_canvas::paint_puzzle_board(gpu, ctx, scene, inner);
+}
+
+pub fn puzzle_board_pointer_down(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool) {
+    engine_canvas::puzzle_board_pointer_down(surface_id, inner, x, y, button, shift, ctrl_or_meta);
+}
+
+pub fn puzzle_board_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<CommandDescriptor> {
+    engine_canvas::puzzle_board_pointer_move(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt)
+}
+
+pub fn puzzle_board_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<CommandDescriptor> {
+    engine_canvas::puzzle_board_pointer_up(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt)
+}
+
+pub fn puzzle_board_pointer_leave(surface_id: &str, controller_id: &str, alt: bool) -> Vec<CommandDescriptor> {
+    engine_canvas::puzzle_board_pointer_leave(surface_id, controller_id, alt)
+}
+
+pub fn puzzle_board_drag_active(surface_id: &str) -> bool {
+    engine_canvas::board_drag_active(surface_id)
+}
+
+pub fn puzzle_board_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<CommandDescriptor> {
+    engine_canvas::puzzle_board_wheel(surface_id, controller_id, inner, x, y, delta)
+}
+
+//#region Puzzle2dSelectionMenu
+pub struct Puzzle2dSelectionMenuItem {
+    pub id: String,
+    pub label: String,
+    pub command: String,
+    pub args: Option<Value>,
+    pub disabled: bool,
+}
+
+fn puzzle2d_entity_flag(entity: &Value, key: &str) -> bool {
+    entity.get(key).and_then(Value::as_bool).unwrap_or(false)
+}
+
+/// @emoji 🖱️ Right-click menu for the current selection: Hide/Show, Lock/Unlock, Duplicate, Select same kind, Zoom to selection, Delete — mirrors `buildPuzzle2dSelectionMenuItems` in the React host.
+pub fn build_puzzle2d_selection_menu_items(fixture_json: &str, selection_ids: &[String]) -> Vec<Puzzle2dSelectionMenuItem> {
+    let fixture: Value = serde_json::from_str(fixture_json).unwrap_or(Value::Null);
+    if selection_ids.is_empty() {
+        return vec![Puzzle2dSelectionMenuItem { id: "selectAll".into(), label: "Select all".into(), command: "selectAll".into(), args: None, disabled: false }];
+    }
+    let selected: HashSet<&str> = selection_ids.iter().map(String::as_str).collect();
+    let nodes = fixture.get("nodes").and_then(Value::as_array).cloned().unwrap_or_default();
+    let edges = fixture.get("edges").and_then(Value::as_array).cloned().unwrap_or_default();
+    let mut selected_entities: Vec<Value> = Vec::new();
+    let mut has_selected_node = false;
+    for node in &nodes {
+        if let Some(id) = node.get("id").and_then(Value::as_str) {
+            if selected.contains(id) {
+                selected_entities.push(node.clone());
+                has_selected_node = true;
+            }
+        }
+        if let Some(handles) = node.get("handles").and_then(Value::as_array) {
+            for handle in handles {
+                if let Some(id) = handle.get("id").and_then(Value::as_str) {
+                    if selected.contains(id) {
+                        selected_entities.push(handle.clone());
+                    }
+                }
+            }
+        }
+    }
+    for edge in &edges {
+        if let Some(id) = edge.get("id").and_then(Value::as_str) {
+            if selected.contains(id) {
+                selected_entities.push(edge.clone());
+            }
+        }
+    }
+    let any_visible = selected_entities.iter().any(|entity| !puzzle2d_entity_flag(entity, "hidden"));
+    let any_unlocked = selected_entities.iter().any(|entity| !puzzle2d_entity_flag(entity, "locked"));
+    vec![
+        Puzzle2dSelectionMenuItem {
+            id: "toggleHidden".into(),
+            label: (if any_visible { "Hide" } else { "Show" }).into(),
+            command: "setSelectionFlag".into(),
+            args: Some(json!({ "flag": "hidden", "value": any_visible })),
+            disabled: false,
+        },
+        Puzzle2dSelectionMenuItem {
+            id: "toggleLocked".into(),
+            label: (if any_unlocked { "Lock" } else { "Unlock" }).into(),
+            command: "setSelectionFlag".into(),
+            args: Some(json!({ "flag": "locked", "value": any_unlocked })),
+            disabled: false,
+        },
+        Puzzle2dSelectionMenuItem { id: "duplicate".into(), label: "Duplicate".into(), command: "duplicateSelection".into(), args: None, disabled: !has_selected_node },
+        Puzzle2dSelectionMenuItem { id: "selectSameKind".into(), label: "Select all of same kind".into(), command: "selectSameKind".into(), args: None, disabled: false },
+        Puzzle2dSelectionMenuItem { id: "focusSelection".into(), label: "Zoom to selection".into(), command: "focusSelection".into(), args: None, disabled: false },
+        Puzzle2dSelectionMenuItem { id: "deleteSelection".into(), label: "Delete".into(), command: "deleteSelection".into(), args: None, disabled: false },
+    ]
+}
+//#endregion Puzzle2dSelectionMenu
+
+/// @emoji 🧩 Pushes puzzle2d-board context-menu items for a screen-space hit, eagerly selecting the clicked target if it isn't already selected (mirrors the React host's `onContextMenu`).
+pub async fn open_puzzle2d_board_context_menu(shell: &mut ShellState, surface_id: &str, controller_id: &str, fixture_json: &str, inner: Rect, x: f32, y: f32) {
+    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    let best = engine_canvas::board_pick_best_target_id(surface_id, sx, sy);
+    let current: Vec<String> = engine_canvas::with_board_host(surface_id, |host| host.selection.iter().cloned().collect()).unwrap_or_default();
+    let mut effective = current.clone();
+    if let Some(id) = &best {
+        if !effective.contains(id) {
+            effective = vec![id.clone()];
+            engine_canvas::with_board_host_mut(surface_id, |host| host.set_selection_ids_silent(std::slice::from_ref(id)));
+            let _ = shell
+                .dispatch_command(engine_canvas::board_cmd(controller_id, "setSelection", json!({ "ids": effective })))
+                .await;
+        }
+    }
+    for item in build_puzzle2d_selection_menu_items(fixture_json, &effective) {
+        push_context_menu_item(ContextMenuItem {
+            id: format!("{surface_id}.context.{}", item.id),
+            label: item.label,
+            command: if item.disabled { None } else { Some(engine_canvas::board_cmd(controller_id, &item.command, item.args.unwrap_or(Value::Null))) },
+        });
+    }
+}
+//#endregion Puzzle2dBoard
+
 //#region VirtualFileSystem
 #[derive(Deserialize)]
 struct VfsDescriptorKind {
@@ -7599,7 +9771,7 @@ fn line_col_at(text: &str, cursor: usize) -> (usize, usize) {
     (line_count.saturating_sub(1), 0)
 }
 //#endregion TextEditor
-// #endregion scenes
+//#endregion scenes
 }
 
 pub mod shell {
@@ -7611,7 +9783,10 @@ use crate::dock::{
     DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState,
 };
 use crate::interpreter::{framework_widget_context, render_ui_node, validate_window_body_surface};
-use crate::scenes::{clear_graph_node_context, push_gis_map_context_menu, resolve_graph_context_command, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, GisMapSurface, NodeGraphSurface};
+use crate::scenes::{
+    clear_graph_node_context, open_puzzle2d_board_context_menu, push_gis_map_context_menu, puzzle_board_pointer_down, puzzle_board_pointer_leave, puzzle_board_pointer_move, puzzle_board_pointer_up, puzzle_board_wheel,
+    resolve_graph_context_command, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, GisMapSurface, NodeGraphSurface, Puzzle2dBoardSurface,
+};
 use infinite_world::{
     fetch_pending_glb_meshes, fetch_pending_reference_images, handle_world3d_paint_commands,
     handle_world3d_pointer_button,
@@ -7808,6 +9983,8 @@ pub struct ShellState {
     pub world3d_states: HashMap<String, World3dState>,
     pub node_graph_states: HashMap<String, NodeGraphSurface>,
     pub gis_map_states: HashMap<String, GisMapSurface>,
+    pub icon_render_states: HashMap<String, World3dState>,
+    pub puzzle2d_board_states: HashMap<String, Puzzle2dBoardSurface>,
     pub dock: DockState,
     pub active_left_kind: LeftPanelKind,
     pub active_right_kind: RightPanelKind,
@@ -7975,6 +10152,8 @@ impl ShellState {
             world3d_states: HashMap::new(),
             node_graph_states: HashMap::new(),
             gis_map_states: HashMap::new(),
+            icon_render_states: HashMap::new(),
+            puzzle2d_board_states: HashMap::new(),
             dock: DockState::default(),
             active_left_kind: LeftPanelKind::Workbench,
             active_right_kind: RightPanelKind::Details,
@@ -9364,6 +11543,14 @@ impl ShellState {
                     );
                     break;
                 }
+            }
+            let puzzle_board_hit = self
+                .puzzle2d_board_states
+                .iter()
+                .find(|(_, surface)| surface.bounds.contains(x, y))
+                .map(|(surface_id, surface)| (surface_id.clone(), surface.controller_id.clone(), surface.fixture_json.clone(), surface.bounds));
+            if let Some((surface_id, controller_id, fixture_json, bounds)) = puzzle_board_hit {
+                open_puzzle2d_board_context_menu(self, &surface_id, &controller_id, &fixture_json, bounds, x, y).await;
             }
             let hit = input.hit_at(x, y).cloned();
             self.open_context_menu(x, y, hit);
@@ -11606,6 +13793,7 @@ impl ShellState {
         clear_graph_node_context();
         self.node_graph_states.clear();
         self.gis_map_states.clear();
+        self.puzzle2d_board_states.clear();
         self.widget_maps.clear_frame();
         let mut overlay_slot = Some(overlay);
         self.render_main_window(draw, &mut overlay_slot, atlas, icons, input, theme, body, gpu);
@@ -12200,7 +14388,7 @@ impl ShellState {
             Some(widget_maps),
         );
         ctx.pick_clip = Some(content);
-        render_ui_node(&ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.gis_map_states);
+        render_ui_node(&ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.gis_map_states, &mut self.icon_render_states, &mut self.puzzle2d_board_states);
         }
         panel_draw.pop_scissor();
         panel_draw.end_glass_content();
@@ -12580,7 +14768,7 @@ impl ShellState {
             Some(widget_maps),
         );
         ctx.pick_clip = Some(content);
-        render_ui_node(ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.gis_map_states);
+        render_ui_node(ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.gis_map_states, &mut self.icon_render_states, &mut self.puzzle2d_board_states);
         draw.pop_scissor();
     }
 
@@ -14303,6 +16491,22 @@ impl AppRuntime {
                         }
                     });
                 }
+                let mut board_commands = Vec::new();
+                for (surface_id, surface) in &self.shell.puzzle2d_board_states {
+                    if surface.bounds.contains(x, y) {
+                        board_commands.extend(scenes::puzzle_board_wheel(surface_id, &surface.controller_id, surface.bounds, x, y, wheel_delta));
+                    }
+                }
+                if !board_commands.is_empty() {
+                    let runtime = self.self_weak.clone();
+                    spawn_app_task(async move {
+                        if let Some(runtime) = runtime.upgrade() {
+                            if let Ok(mut app) = runtime.try_borrow_mut() {
+                                app.dispatch_commands(board_commands).await;
+                            }
+                        }
+                    });
+                }
             }
         }
         for upload in scenes::drain_pending_raster_uploads() {
@@ -14339,7 +16543,8 @@ impl AppRuntime {
     }
 
     fn poll_pending_assets(&mut self) {
-        let glb = collect_pending_glb_fetches(&self.shell.world3d_states);
+        let mut glb = collect_pending_glb_fetches(&self.shell.world3d_states);
+        glb.extend(collect_pending_glb_fetches(&self.shell.icon_render_states));
         let map = engine_canvas::collect_pending_map_tile_fetches();
         if glb.is_empty() && map.is_empty() {
             return;
@@ -14355,6 +16560,8 @@ impl AppRuntime {
             for item in glb {
                 if let Some(bytes) = pollster::block_on(fetch_url_bytes(&item.url)) {
                     if let Some(state) = self.shell.world3d_states.get_mut(&item.surface_id) {
+                        apply_glb_bytes(state, &item.url, &bytes);
+                    } else if let Some(state) = self.shell.icon_render_states.get_mut(&item.surface_id) {
                         apply_glb_bytes(state, &item.url, &bytes);
                     }
                 }
@@ -14395,6 +16602,8 @@ impl AppRuntime {
                 if let Ok(mut app) = runtime.try_borrow_mut() {
                     for (surface_id, url, bytes) in fetched_glb {
                         if let Some(state) = app.shell.world3d_states.get_mut(&surface_id) {
+                            apply_glb_bytes(state, &url, &bytes);
+                        } else if let Some(state) = app.shell.icon_render_states.get_mut(&surface_id) {
                             apply_glb_bytes(state, &url, &bytes);
                         }
                     }
@@ -14495,13 +16704,39 @@ impl AppRuntime {
             if !map_commands.is_empty() {
                 self.dispatch_commands(map_commands).await;
             }
+            let mut board_commands = Vec::new();
+            let board_had_active_drag = self.shell.puzzle2d_board_states.keys().any(|surface_id| scenes::puzzle_board_drag_active(surface_id));
+            for (surface_id, surface) in &self.shell.puzzle2d_board_states {
+                if !surface.bounds.contains(x, y) && !scenes::puzzle_board_drag_active(surface_id) {
+                    continue;
+                }
+                board_commands.extend(scenes::puzzle_board_pointer_up(
+                    surface_id,
+                    &surface.controller_id,
+                    surface.bounds,
+                    x,
+                    y,
+                    modifiers.shift,
+                    modifiers.ctrl_or_meta(),
+                    modifiers.alt,
+                ));
+            }
+            if !board_commands.is_empty() {
+                self.dispatch_commands(board_commands).await;
+            }
+            let board_consumed = self
+                .shell
+                .puzzle2d_board_states
+                .values()
+                .any(|surface| surface.bounds.contains(x, y))
+                || board_had_active_drag;
             let map_consumed = self
                 .shell
                 .gis_map_states
                 .values()
                 .any(|surface| surface.bounds.contains(x, y))
                 || map_had_active_drag;
-            if map_consumed {
+            if map_consumed || board_consumed {
                 return;
             }
             if let Err(err) = self
@@ -14651,6 +16886,19 @@ impl AppRuntime {
         if map_pointer_on_surface && (button == 0 || button == 1) {
             return;
         }
+        let mut board_pointer_on_surface = false;
+        for (surface_id, surface) in &self.shell.puzzle2d_board_states {
+            if !surface.bounds.contains(x, y) {
+                continue;
+            }
+            board_pointer_on_surface = true;
+            if down {
+                scenes::puzzle_board_pointer_down(surface_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta());
+            }
+        }
+        if board_pointer_on_surface && (button == 0 || button == 1) {
+            return;
+        }
         if let Err(err) = self
             .shell
             .handle_pointer_button(x, y, down, button, &mut self.input, &self.theme)
@@ -14743,6 +16991,27 @@ impl AppRuntime {
         }
         if !map_commands.is_empty() {
             self.dispatch_commands(map_commands).await;
+        }
+        let mut board_commands = Vec::new();
+        for (surface_id, surface) in &self.shell.puzzle2d_board_states {
+            let inside = surface.bounds.contains(x, y);
+            if inside {
+                board_commands.extend(scenes::puzzle_board_pointer_move(
+                    surface_id,
+                    &surface.controller_id,
+                    surface.bounds,
+                    x,
+                    y,
+                    modifiers.shift,
+                    modifiers.ctrl_or_meta(),
+                    modifiers.alt,
+                ));
+            } else {
+                board_commands.extend(scenes::puzzle_board_pointer_leave(surface_id, &surface.controller_id, modifiers.alt));
+            }
+        }
+        if !board_commands.is_empty() {
+            self.dispatch_commands(board_commands).await;
         }
         if !world_commands.is_empty() {
             self.dispatch_commands(world_commands).await;
@@ -15123,3 +17392,4 @@ pub fn upload_icon_atlas(width: u32, height: u32, pixels: &[u8], entries_json: &
 thread_local! {
     static ICON_ATLAS_RUNTIME: RefCell<Option<IconAtlas>> = RefCell::new(None);
 }
+

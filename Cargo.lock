@@ -7404,6 +7404,7 @@ dependencies = [
  "infinite_world",
  "js-sys",
  "pollster",
+ "puzzle_2d",
  "resvg",
  "rfd",
  "semio-framework-core",

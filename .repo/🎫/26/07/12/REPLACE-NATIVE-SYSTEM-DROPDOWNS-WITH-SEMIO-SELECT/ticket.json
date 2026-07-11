@@ -1,0 +1,13 @@
+{
+  "title": "Replace Native System Dropdowns With Semio Select",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Some dropdowns in the product show native OS/browser dropdowns instead of semio's own Select UI component. This shouldn't happen — all dropdowns must always render semio UI.\n\nScope (confirmed via codebase search):\n- framework/renderer/react/os-shell.tsx: 6 native `\u003cselect\u003e` elements in the Settings panel (appearance, layout, expertise, language, terminology, theme) at lines ~4367, 4380, 4395, 4406, 4416, 4586.\n- cad/renderer/js/index.tsx: 4 native `\u003cselect\u003e` elements (model definition picker, transfer-from picker, transfer-to picker, enum attribute-definition field editor) at lines ~5986, 6018, 6041, 6293.\n\nReplace each with semio's own `Select`/`SelectTrigger`/`SelectValue`/`SelectContent`/`SelectItem` component (defined in ui/js/react/index.tsx:7125-7321, Radix-based), preserving current option lists, dynamic options, ids, and onChange/value wiring.\n\nNative `\u003cinput type=\"color\"\u003e` usages are out of scope (expected native color picker). Storybook-only demo files are out of scope for this ticket.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1935"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪944ca3401227409396f5f8991a99d0c2"
+  ]
+}

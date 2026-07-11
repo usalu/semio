@@ -11468,18 +11468,24 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                   {resolvedLabel as React.ReactNode}
                 </span>
               </div>
+              {!isExpandable && (
+                <div data-slot="tree-item-control" className="ml-auto flex min-w-0 shrink-0 items-center justify-end gap-double">
+                  {children}
+                </div>
+              )}
               {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
             </div>
           </TreeAlignedRow>
-          {open ? (
-            <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier }}>
-              <TreeBranchContent slot="tree-property-content" ownerRowKind={isExpandable ? "group" : "property"} ownerExpanded={open && hasChildren} className="min-w-0" topPaddingPx={treeItemContentPaddingTopPx}>
-                {children}
-              </TreeBranchContent>
-            </TreeContext.Provider>
-          ) : (
-            <div data-slot="tree-property-content" className="min-w-0" />
-          )}
+          {isExpandable &&
+            (open ? (
+              <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier }}>
+                <TreeBranchContent slot="tree-property-content" ownerRowKind="group" ownerExpanded={open && hasChildren} className="min-w-0" topPaddingPx={treeItemContentPaddingTopPx}>
+                  {children}
+                </TreeBranchContent>
+              </TreeContext.Provider>
+            ) : (
+              <div data-slot="tree-property-content" className="min-w-0" />
+            ))}
         </div>
       </TreeItemRowContextMenu>
     );
@@ -12129,7 +12135,8 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       activeBranchIndex={clampedBranchIndex}
       onBranchChange={setActiveBranchIndex}
     >
-      {hasControl ? (
+      {hasControl && !hasNestedTreeItems ? item.control : null}
+      {hasControl && hasNestedTreeItems ? (
         <Label id={item.id} label="">
           <div data-slot="tree-item-control" className="min-w-0 w-full">
             {item.control}
@@ -23798,7 +23805,7 @@ if (treeVitest) {
       expect(markup).toContain('data-tree-row-kind="content"');
     });
 
-    it("renders Tree data rows with inline controls in the property column", () => {
+    it("renders Tree data rows with inline controls in the same row as the label", () => {
       const markup = renderToStaticMarkup(
         <TreeStateProvider>
           <Tree
@@ -23820,8 +23827,8 @@ if (treeVitest) {
         </TreeStateProvider>,
       );
 
-      expect(markup).toContain('data-slot="tree-property-content"');
-      expect(markup).toContain('data-slot="property-control"');
+      expect(markup).toContain('data-slot="tree-item-control"');
+      expect(markup).not.toContain('data-slot="tree-property-content"');
       expect(markup).toContain('id="inspector.object.id.input"');
       expect(markup).toContain("seed-left-001");
     });
