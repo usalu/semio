@@ -4504,7 +4504,7 @@ pub fn framework_widget_context<'a>(
 #[cfg(test)]
 mod render_plan_validator_tests {
     use super::*;
-    use semio_framework_core::{build_table_scene, TableScene};
+    use semio_framework_core::{build_table_scene, build_world_3d_scene, TableScene, UiStackNode, World3dScene};
 
     #[test]
     fn validate_ui_node_rejects_oversized_json_payload() {
@@ -4523,6 +4523,79 @@ mod render_plan_validator_tests {
         let error = validate_ui_node(&node, &limits).expect_err("oversized payload should be rejected");
         assert!(error.contains("table.rows"));
         assert!(error.contains("32 bytes"));
+    }
+
+    fn empty_stack(children: Vec<UiNode>) -> UiNode {
+        UiNode::Stack(UiStackNode {
+            direction: "column".into(),
+            gap: None,
+            padding: None,
+            id: None,
+            selected: None,
+            activate: None,
+            drop_command: None,
+            children,
+        })
+    }
+
+    #[test]
+    fn validate_component_scene_rejects_oversized_mesh_count() {
+        let limits = RenderPlanLimits {
+            max_mesh_count: 2,
+            ..RenderPlanLimits::default()
+        };
+        let meshes_json = serde_json::to_string(&vec![serde_json::json!({"id": "m"}); 3]).unwrap();
+        let node = build_world_3d_scene(
+            "world",
+            "controller",
+            World3dScene {
+                camera_json: "{}".into(),
+                meshes_json,
+                instances_json: "[]".into(),
+                selection_json: "{}".into(),
+                vortices_json: None,
+                attractions_json: None,
+                target_volumes_json: None,
+                references_json: None,
+                brush_preview_json: None,
+                interaction_json: None,
+                engagement_preview_json: None,
+                lod_json: None,
+                chunking_json: None,
+                context_menu_json: None,
+                environment_json: None,
+                frame_json: None,
+                fit_json: None,
+            },
+        );
+        let error = validate_ui_node(&node, &limits).expect_err("oversized mesh count should be rejected");
+        assert!(error.contains("mesh count 3 exceeds max 2"));
+    }
+
+    #[test]
+    fn validate_ui_node_rejects_oversized_node_count() {
+        let limits = RenderPlanLimits {
+            max_node_count: 3,
+            ..RenderPlanLimits::default()
+        };
+        let tree = empty_stack(vec![empty_stack(vec![]), empty_stack(vec![]), empty_stack(vec![])]);
+        let error = validate_ui_node(&tree, &limits).expect_err("oversized node count should be rejected");
+        assert!(error.contains("node count 4 exceeds max 3"));
+    }
+
+    #[test]
+    fn validate_ui_node_rejects_oversized_tree_depth() {
+        let limits = RenderPlanLimits {
+            max_tree_depth: 2,
+            ..RenderPlanLimits::default()
+        };
+        let mut tree = empty_stack(vec![]);
+        for _ in 0..4 {
+            tree = empty_stack(vec![tree]);
+        }
+        let error = validate_ui_node(&tree, &limits).expect_err("oversized tree depth should be rejected");
+        assert!(error.contains("tree depth"));
+        assert!(error.contains("exceeds max 2"));
     }
 }
 //#endregion RenderPlanValidatorTests
@@ -12985,7 +13058,7 @@ impl ShellState {
         }
         let folded = self.measures_folded.get(window_id).copied().unwrap_or(true);
         let expanded = self.measures_expanded.get(window_id).copied().unwrap_or(false);
-        with_chrome_sink(draw, overlay, |chrome, select_overlay| {
+        (|chrome: &mut DrawList, select_overlay: &mut Option<&mut DrawList>| {
             if folded {
                 let item = ChromeGroupItem {
                     control_id: "",
@@ -13139,7 +13212,7 @@ impl ShellState {
                 chip_hit: None,
                 reserve_width: if expanded { width } else { width + inset },
             }
-        })
+        })(draw, overlay)
     }
 
     fn render_window_measure(
@@ -13330,7 +13403,7 @@ impl ShellState {
             .get(window_id)
             .copied()
             .unwrap_or(false);
-        with_chrome_sink(draw, overlay, |chrome, select_overlay| {
+        (|chrome: &mut DrawList, select_overlay: &mut Option<&mut DrawList>| {
             if !activated {
                 let item = ChromeGroupItem {
                     control_id: "",
@@ -13473,7 +13546,7 @@ impl ShellState {
             }
             chrome.end_glass_content();
             None
-        })
+        })(draw, overlay)
     }
 
     fn render_engagement_input(

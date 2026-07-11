@@ -294,6 +294,8 @@ struct Puzzle3dRuntime {
     voxel_dims: [u32; 3],
     #[serde(default = "default_jack_query")]
     jack_query: String,
+    #[serde(default = "default_view_preset")]
+    view_preset: String,
 }
 
 impl Default for Puzzle3dRuntime {
@@ -328,8 +330,13 @@ impl Default for Puzzle3dRuntime {
             fill_edit_target_volumes: false,
             voxel_dims: default_voxel_dims(),
             jack_query: default_jack_query(),
+            view_preset: default_view_preset(),
         }
     }
+}
+
+fn default_view_preset() -> String {
+    "perspective".into()
 }
 
 fn default_transform_tool() -> String {
@@ -1730,7 +1737,23 @@ fn puzzle3d_fill_count_control(envelope: &Puzzle3dEnvelope) -> WindowEngagementC
     }
 }
 
-fn puzzle3d_voxel_controls(runtime: &Puzzle3dRuntime) -> Vec<WindowEngagementControl> {
+/// 🧊 Always visible while the Fill tool is active — the only path to flip `fill_edit_target_volumes`, so it must render
+/// regardless of which mode is currently selected (the voxel dim steppers, by contrast, only make sense once in edit mode).
+fn puzzle3d_voxel_mode_toggle(runtime: &Puzzle3dRuntime) -> WindowEngagementControl {
+    WindowEngagementControl::ToggleGroup {
+        id: Some("puzzle3d-voxel-edit-mode".into()),
+        label: Some("Mode".into()),
+        value: Some(if runtime.fill_edit_target_volumes { "edit-volumes".into() } else { "fill".into() }),
+        options: vec![
+            WindowEngagementToggleGroupOption { id: "fill".into(), label: "Fill".into(), disabled: None },
+            WindowEngagementToggleGroupOption { id: "edit-volumes".into(), label: "Edit Volumes".into(), disabled: None },
+        ],
+        disabled: None,
+        on_select: Some(puzzle3d_cmd("setFillEditTargetVolumes", None)),
+    }
+}
+
+fn puzzle3d_voxel_dim_steppers(runtime: &Puzzle3dRuntime) -> Vec<WindowEngagementControl> {
     let [w, d, h] = runtime.voxel_dims;
     let axis_stepper = |axis: &str, label: &str, value: u32| WindowEngagementControl::Stepper {
         id: Some(format!("puzzle3d-voxel-{axis}")),
@@ -1744,22 +1767,7 @@ fn puzzle3d_voxel_controls(runtime: &Puzzle3dRuntime) -> Vec<WindowEngagementCon
         on_change: Some(puzzle3d_cmd("setVoxelDims", Some(json!({ "axis": axis })))),
         on_commit: None,
     };
-    vec![
-        axis_stepper("w", "Width", w),
-        axis_stepper("d", "Depth", d),
-        axis_stepper("h", "Height", h),
-        WindowEngagementControl::ToggleGroup {
-            id: Some("puzzle3d-voxel-edit-mode".into()),
-            label: Some("Mode".into()),
-            value: Some(if runtime.fill_edit_target_volumes { "edit-volumes".into() } else { "fill".into() }),
-            options: vec![
-                WindowEngagementToggleGroupOption { id: "fill".into(), label: "Fill".into(), disabled: None },
-                WindowEngagementToggleGroupOption { id: "edit-volumes".into(), label: "Edit Volumes".into(), disabled: None },
-            ],
-            disabled: None,
-            on_select: Some(puzzle3d_cmd("setFillEditTargetVolumes", None)),
-        },
-    ]
+    vec![axis_stepper("w", "Width", w), axis_stepper("d", "Depth", d), axis_stepper("h", "Height", h)]
 }
 
 fn puzzle3d_engagement(envelope: &Puzzle3dEnvelope, precompute: &Puzzle3dPrecomputeSession) -> WindowEngagement {
@@ -1771,7 +1779,15 @@ fn puzzle3d_engagement(envelope: &Puzzle3dEnvelope, precompute: &Puzzle3dPrecomp
         "brush" => puzzle3d_brush_placement_control(envelope, precompute),
         _ => None,
     };
-    let controls = if voxel_edit_active { Some(puzzle3d_voxel_controls(&envelope.runtime)) } else { None };
+    let controls = if envelope.runtime.active_tool == "fill" {
+        let mut rows = vec![puzzle3d_voxel_mode_toggle(&envelope.runtime)];
+        if voxel_edit_active {
+            rows.extend(puzzle3d_voxel_dim_steppers(&envelope.runtime));
+        }
+        Some(rows)
+    } else {
+        None
+    };
     WindowEngagement {
         session_active: Some(envelope.runtime.active_tool != "select"),
         options: Some(vec![
@@ -1963,11 +1979,11 @@ fn puzzle3d_brush_measures_group(envelope: &Puzzle3dEnvelope, labels: &Puzzle3dL
     }
 }
 
-fn puzzle3d_view_measure() -> WindowMeasure {
+fn puzzle3d_view_measure(runtime: &Puzzle3dRuntime) -> WindowMeasure {
     WindowMeasure::Select {
         id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-view"),
         label: Some("View".into()),
-        value: "perspective".into(),
+        value: runtime.view_preset.clone(),
         items: vec![
             MeasureSelectItem { id: "perspective".into(), value: "perspective".into(), label: "Perspective".into() },
             MeasureSelectItem { id: "top".into(), value: "top".into(), label: "Top".into() },
@@ -1979,7 +1995,7 @@ fn puzzle3d_view_measure() -> WindowMeasure {
 }
 
 fn puzzle3d_window_measures(envelope: &Puzzle3dEnvelope, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
-    vec![puzzle3d_view_measure(), puzzle3d_lod_measures_group(&envelope.runtime), puzzle3d_select_measures_group(&envelope.runtime, labels), puzzle3d_brush_measures_group(envelope, labels)]
+    vec![puzzle3d_view_measure(&envelope.runtime), puzzle3d_lod_measures_group(&envelope.runtime), puzzle3d_select_measures_group(&envelope.runtime, labels), puzzle3d_brush_measures_group(envelope, labels)]
 }
 //#endregion 🔖Measures
 
@@ -2150,6 +2166,7 @@ impl PluginApp for Puzzle3dPlayApp {
             "setCameraViewPreset" => {
                 if let Some(preset) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
                     envelope.fixture.camera = puzzle3d_camera_view_preset(preset);
+                    envelope.runtime.view_preset = preset.into();
                     return vec![set_document_op(&envelope)];
                 }
             }
@@ -3605,6 +3622,7 @@ mod tests {
         assert_eq!(envelope.fixture.camera.projection.as_deref(), Some("orthographic"));
         assert_eq!(envelope.fixture.camera.up, Some([0.0, 1.0, 0.0]), "top view needs a non-Z up vector to avoid gimbal lock in a Z-up world");
         assert_eq!(envelope.fixture.camera.target, [0.0, 0.0, 0.0]);
+        assert_eq!(envelope.runtime.view_preset, "top");
     }
 
     #[test]
@@ -3616,6 +3634,7 @@ mod tests {
         let ops = app.handle_command_patch_ops("setCameraViewPreset", Some(&json!({ "value": "perspective" })), &front_document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&front_document), &ops);
         assert_eq!(envelope.fixture.camera.projection.as_deref(), Some("perspective"));
+        assert_eq!(envelope.runtime.view_preset, "perspective");
     }
 
     #[test]
@@ -3624,8 +3643,20 @@ mod tests {
         let document = app.initial_document_json();
         let measures = app.window_measures(&document, &ViewState::default());
         let groups = measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main measures");
-        let has_view_select = groups.iter().any(|measure| matches!(measure, WindowMeasure::Select { label: Some(label), .. } if label == "View"));
-        assert!(has_view_select);
+        let view_select = groups.iter().find(|measure| matches!(measure, WindowMeasure::Select { label: Some(label), .. } if label == "View")).expect("view select");
+        assert!(matches!(view_select, WindowMeasure::Select { value, .. } if value == "perspective"));
+    }
+
+    #[test]
+    fn view_preset_select_value_follows_set_camera_view_preset() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setCameraViewPreset", Some(&json!({ "value": "top" })), &document, &ViewState::default());
+        let top_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let measures = app.window_measures(&top_document, &ViewState::default());
+        let groups = measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main measures");
+        let view_select = groups.iter().find(|measure| matches!(measure, WindowMeasure::Select { label: Some(label), .. } if label == "View")).expect("view select");
+        assert!(matches!(view_select, WindowMeasure::Select { value, .. } if value == "top"));
     }
 
     #[test]
@@ -3638,6 +3669,21 @@ mod tests {
         let engagements = app.window_engagements(&document, &ViewState::default());
         let engagement = engagements.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main engagement");
         assert!(matches!(engagement.control, Some(WindowEngagementControl::Slider { .. })));
+    }
+
+    #[test]
+    fn fill_tool_always_shows_the_edit_volumes_mode_toggle() {
+        // The mode ToggleGroup is the only way to flip into edit-volumes mode, so it must render
+        // even when fill_edit_target_volumes is still false — otherwise the mode is unreachable.
+        let app = Puzzle3dPlayApp::default();
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        envelope.runtime.active_tool = "fill".into();
+        let document = serde_json::to_string(&envelope).unwrap();
+        let engagements = app.window_engagements(&document, &ViewState::default());
+        let engagement = engagements.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main engagement");
+        let controls = engagement.controls.as_ref().expect("mode toggle should render outside edit mode too");
+        assert_eq!(controls.len(), 1);
+        assert!(matches!(&controls[0], WindowEngagementControl::ToggleGroup { id: Some(id), .. } if id == "puzzle3d-voxel-edit-mode"));
     }
 
     #[test]

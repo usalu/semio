@@ -538,7 +538,10 @@ export const PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT = `(function(){var d=documen
 /** @emoji 👁️ Reveals the play shell after the linked globals stylesheet finishes loading. */
 export const PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT = `(function(){function reveal(){document.documentElement.dataset.semioStyled="ready"}var link=document.getElementById("semio-play-styles");if(link){if(link.sheet)reveal();else link.addEventListener("load",reveal,{once:true})}else{reveal()}setTimeout(reveal,8000)})();`;
 
-/** @emoji 🎬 Vite: inject early appearance + stylesheet link into play `index.html` to avoid unstyled flashes. */
+/** @emoji 🎨 Synchronous active-theme bootstrap for play `index.html` heads: reapplies the persisted `UiTheme` snapshot's colors before first paint so non-semio themes don't flash the semio defaults. Runs after {@link PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT} so its resolved light/dark class wins the appearance choice; this script only overrides colors. */
+export const PLAYGROUND_PLAY_BOOT_THEME_SCRIPT = `(function(){try{var raw=localStorage.getItem("ui.chrome.theme.snapshot");if(!raw)return;var t=JSON.parse(raw);if(!t||!t.colors)return;var d=document.documentElement;var dark=d.classList.contains("dark");for(var k in t.colors){d.style.setProperty("--color-"+k.replace(/_/g,"-"),t.colors[k])}if(t.spacing)for(var s in t.spacing){d.style.setProperty("--spacing-"+s.replace(/_/g,"-"),t.spacing[s])}d.dataset.uiTheme=t.id;var appearance=t.appearances&&t.appearances[dark?"dark":"light"];var chrome=appearance&&appearance.chrome;function resolveSimple(ref){return ref&&ref.token&&t.colors[ref.token]?t.colors[ref.token]:undefined}var base=chrome&&resolveSimple(chrome.base);var fg=chrome&&resolveSimple(chrome.foreground);if(document.body){if(base)document.body.style.backgroundColor=base;if(fg)document.body.style.color=fg}}catch(e){}})();`;
+
+/** @emoji 🎬 Vite: inject early appearance + theme + stylesheet link into play `index.html` to avoid unstyled flashes. */
 export function playgroundPlayBootHtmlPlugin(): Plugin {
   return {
     name: "playground-play-boot-html",
@@ -549,6 +552,7 @@ export function playgroundPlayBootHtmlPlugin(): Plugin {
           tags: [
             { tag: "style", children: PLAYGROUND_PLAY_BOOT_INLINE_STYLE, injectTo: "head-prepend" },
             { tag: "script", children: PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, injectTo: "head-prepend" },
+            { tag: "script", children: PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, injectTo: "head-prepend" },
             { tag: "link", attrs: { rel: "stylesheet", href: "./globals.css", id: "semio-play-styles" }, injectTo: "head" },
             { tag: "script", children: PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, injectTo: "head" },
           ],
@@ -1516,6 +1520,19 @@ if (import.meta.vitest) {
       expect(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT).toContain("prefers-color-scheme");
       expect(PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT).toContain("semio-play-styles");
       expect(PLAYGROUND_PLAY_BOOT_INLINE_STYLE).toContain("data-semio-styled");
+    });
+
+    it("exposes an inline theme bootstrap script reading the persisted theme snapshot", () => {
+      expect(PLAYGROUND_PLAY_BOOT_THEME_SCRIPT).toContain("ui.chrome.theme.snapshot");
+      expect(PLAYGROUND_PLAY_BOOT_THEME_SCRIPT).toContain("--color-");
+      expect(PLAYGROUND_PLAY_BOOT_THEME_SCRIPT).toContain("dataset.uiTheme");
+    });
+
+    it("injects the theme script after the appearance script and before the stylesheet link", () => {
+      const tags = playgroundPlayBootHtmlPlugin().transformIndexHtml!.handler!({} as never).tags;
+      const kinds = tags.map((tag) => (tag.children === PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT ? "appearance" : tag.children === PLAYGROUND_PLAY_BOOT_THEME_SCRIPT ? "theme" : tag.attrs && "href" in tag.attrs ? "stylesheet" : "other"));
+      expect(kinds.indexOf("appearance")).toBeLessThan(kinds.indexOf("theme"));
+      expect(kinds.indexOf("theme")).toBeLessThan(kinds.indexOf("stylesheet"));
     });
   });
 

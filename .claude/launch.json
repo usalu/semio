@@ -71,6 +71,38 @@
       "port": 6070
     },
     {
+      "name": "s-wgpu-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["nx", "run", "@semio-tech/framework-os-dev:dev"],
+      "env": {
+        "S_OS_PORT": "6066",
+        "SEMIO_PLUGIN": "s",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "port": 6066
+    },
+    {
+      "name": "flow-wgpu-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:flow"],
+      "env": {
+        "FLOW_PLAY_PORT": "6116",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "port": 6116
+    },
+    {
+      "name": "lowpoly-wgpu-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:lowpoly"],
+      "env": {
+        "LOWPOLY_PLAY_PORT": "6178",
+        "SEMIO_PLUGIN": "lowpoly",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "port": 6178
+    },
+    {
       "name": "writer-react-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:writer"],

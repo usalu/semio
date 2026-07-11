@@ -177,10 +177,27 @@ class PluginWorkerClient {
   }
 }
 
+function validatePluginManifest(pluginId: string, manifest: unknown): void {
+  const apps = (manifest as { apps?: unknown }).apps;
+  if (!Array.isArray(apps) || apps.length === 0) {
+    throw new Error(`[DEBUG] plugin ${pluginId} manifest has no apps`);
+  }
+  for (const app of apps as { windowKinds?: unknown }[]) {
+    const windowKinds = app.windowKinds;
+    if (!Array.isArray(windowKinds) || windowKinds.length === 0) continue;
+    for (const kind of windowKinds as { surfaceKind?: unknown }[]) {
+      if (!kind.surfaceKind) {
+        throw new Error(`[DEBUG] plugin ${pluginId} manifest window kind missing surfaceKind`);
+      }
+    }
+  }
+}
+
 async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): Promise<PluginModuleHandle> {
   const client = new PluginWorkerClient(pluginId, moduleUrl);
   await client.start();
   const manifest = JSON.parse(await client.manifest());
+  validatePluginManifest(pluginId, manifest);
   return {
     pluginId,
     manifest,
@@ -225,47 +242,62 @@ async function pluginModuleAvailable(moduleUrl: string): Promise<boolean> {
   }
 }
 
-const availableTargets: (typeof PLUGIN_TARGETS)[number][] = [];
-for (const entry of pluginTargets) {
-  if (await pluginModuleAvailable(entry.moduleUrl)) {
-    availableTargets.push(entry);
+function renderBootErrorBanner(message: string): void {
+  console.error(`[DEBUG] wgpu boot failed: ${message}`);
+  const root = document.getElementById("root");
+  if (!root) return;
+  const banner = document.createElement("div");
+  banner.style.cssText = "position:fixed;inset:0;padding:24px;background:#2a0a0a;color:#ffb4b4;font-family:monospace;font-size:14px;white-space:pre-wrap;overflow:auto;z-index:9999;";
+  banner.textContent = `wgpu renderer boot failed:\n\n${message}`;
+  root.appendChild(banner);
+}
+
+try {
+  const availableTargets: (typeof PLUGIN_TARGETS)[number][] = [];
+  for (const entry of pluginTargets) {
+    if (await pluginModuleAvailable(entry.moduleUrl)) {
+      availableTargets.push(entry);
+    }
   }
-}
-if (availableTargets.length === 0) {
-  throw new Error(`[DEBUG] no wasm plugin modules found for filter ${pluginFilter}`);
-}
+  if (availableTargets.length === 0) {
+    throw new Error(`[DEBUG] no wasm plugin modules found for filter ${pluginFilter}`);
+  }
 
-const handles = await Promise.all(
-  availableTargets.map(async (entry) => ({
-    pluginId: entry.pluginId,
-    handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl)),
-  })),
-);
+  const handles = await Promise.all(
+    availableTargets.map(async (entry) => ({
+      pluginId: entry.pluginId,
+      handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl)),
+    })),
+  );
 
-const bindings = await new Promise<Record<string, unknown>>((resolve, reject) => {
-  const host = window as { wasmBindings?: Record<string, unknown> };
-  const finish = () => {
-    if (!host.wasmBindings) {
-      reject(new Error("[DEBUG] trunk wasm bindings missing"));
+  const bindings = await new Promise<Record<string, unknown>>((resolve, reject) => {
+    const host = window as { wasmBindings?: Record<string, unknown> };
+    const finish = () => {
+      if (!host.wasmBindings) {
+        reject(new Error("[DEBUG] trunk wasm bindings missing"));
+        return;
+      }
+      resolve(host.wasmBindings);
+    };
+    if (host.wasmBindings) {
+      finish();
       return;
     }
-    resolve(host.wasmBindings);
-  };
-  if (host.wasmBindings) {
-    finish();
-    return;
-  }
-  const timeout = window.setTimeout(() => reject(new Error("[DEBUG] trunk wasm bindings timeout")), 30000);
-  const done = () => {
-    window.clearTimeout(timeout);
-    window.clearInterval(poll);
-    finish();
-  };
-  window.addEventListener("TrunkApplicationStarted", done, { once: true });
-  const poll = window.setInterval(() => {
-    if (host.wasmBindings) done();
-  }, 50);
-});
+    const timeout = window.setTimeout(() => reject(new Error("[DEBUG] trunk wasm bindings timeout")), 30000);
+    const done = () => {
+      window.clearTimeout(timeout);
+      window.clearInterval(poll);
+      finish();
+    };
+    window.addEventListener("TrunkApplicationStarted", done, { once: true });
+    const poll = window.setInterval(() => {
+      if (host.wasmBindings) done();
+    }, 50);
+  });
 
-if (!bindings.semioRendererBoot) throw new Error("[DEBUG] missing semioRendererBoot");
-await (bindings.semioRendererBoot as (handles: typeof handles, pluginFilter: string) => Promise<void>)(handles, pluginFilter);
+  if (!bindings.semioRendererBoot) throw new Error("[DEBUG] missing semioRendererBoot");
+  await (bindings.semioRendererBoot as (handles: typeof handles, pluginFilter: string) => Promise<void>)(handles, pluginFilter);
+} catch (error) {
+  renderBootErrorBanner(error instanceof Error ? error.message : String(error));
+  throw error;
+}

@@ -39,7 +39,28 @@ var pluginModuleHandleCache = new Map;
 
 // ../../plugin/registry/generated/plugins.ts
 var PLUGIN_BUILD_TARGETS = [
-  { pluginId: "lowpoly", cratePath: "lowpoly/plugin/rs", wasmOut: "lowpoly_plugin.wasm" }
+  { pluginId: "cad", cratePath: "cad/plugin/rs", wasmOut: "cad_plugin.wasm" },
+  { pluginId: "dag", cratePath: "mathematical/graph/port/directed/dag/plugin/rs", wasmOut: "dag_plugin.wasm" },
+  { pluginId: "draw", cratePath: "draw/plugin/rs", wasmOut: "draw_plugin.wasm" },
+  { pluginId: "flow", cratePath: "flow/plugin/rs", wasmOut: "flow_plugin.wasm" },
+  { pluginId: "forms", cratePath: "forms/plugin/rs", wasmOut: "forms_plugin.wasm" },
+  { pluginId: "forms-module-procedural", cratePath: "forms/module/procedural/rs", wasmOut: "forms_module_procedural.wasm" },
+  { pluginId: "gis", cratePath: "gis/plugin/rs", wasmOut: "gis_plugin.wasm" },
+  { pluginId: "imperative", cratePath: "imperative/plugin/rs", wasmOut: "imperative_plugin.wasm" },
+  { pluginId: "layout", cratePath: "layout/plugin/rs", wasmOut: "layout_plugin.wasm" },
+  { pluginId: "lowpoly", cratePath: "lowpoly/plugin/rs", wasmOut: "lowpoly_plugin.wasm" },
+  { pluginId: "note", cratePath: "note/plugin/rs", wasmOut: "note_plugin.wasm" },
+  { pluginId: "presentation", cratePath: "framework/product/presentation/plugin/rs", wasmOut: "presentation_plugin.wasm" },
+  { pluginId: "procedural", cratePath: "procedural/plugin/rs", wasmOut: "procedural_plugin.wasm" },
+  { pluginId: "puzzle", cratePath: "puzzle/plugin/rs", wasmOut: "puzzle_plugin.wasm" },
+  { pluginId: "raster", cratePath: "raster/plugin/rs", wasmOut: "raster_plugin.wasm" },
+  { pluginId: "reasoning-mindmap", cratePath: "reasoning/mindmap/plugin/rs", wasmOut: "reasoning_mindmap_plugin.wasm" },
+  { pluginId: "s", cratePath: "s/plugin/rs", wasmOut: "s_plugin.wasm" },
+  { pluginId: "sequence", cratePath: "sequence/plugin/rs", wasmOut: "sequence_plugin.wasm" },
+  { pluginId: "shooting", cratePath: "shooting/plugin/rs", wasmOut: "shooting_plugin.wasm" },
+  { pluginId: "trinity", cratePath: "trinity/plugin/rs", wasmOut: "trinity_plugin.wasm" },
+  { pluginId: "vcs", cratePath: "vcs/plugin/rs", wasmOut: "vcs_plugin.wasm" },
+  { pluginId: "writer", cratePath: "writer/plugin/rs", wasmOut: "writer_plugin.wasm" }
 ];
 var PLUGIN_TARGETS = PLUGIN_BUILD_TARGETS.map((target) => ({
   pluginId: target.pluginId,
@@ -177,10 +198,27 @@ class PluginWorkerClient {
     this.terminateWorker();
   }
 }
+function validatePluginManifest(pluginId, manifest) {
+  const apps = manifest.apps;
+  if (!Array.isArray(apps) || apps.length === 0) {
+    throw new Error(`[DEBUG] plugin ${pluginId} manifest has no apps`);
+  }
+  for (const app of apps) {
+    const windowKinds = app.windowKinds;
+    if (!Array.isArray(windowKinds) || windowKinds.length === 0)
+      continue;
+    for (const kind of windowKinds) {
+      if (!kind.surfaceKind) {
+        throw new Error(`[DEBUG] plugin ${pluginId} manifest window kind missing surfaceKind`);
+      }
+    }
+  }
+}
 async function loadPluginModuleViaWorker(pluginId, moduleUrl) {
   const client = new PluginWorkerClient(pluginId, moduleUrl);
   await client.start();
   const manifest = JSON.parse(await client.manifest());
+  validatePluginManifest(pluginId, manifest);
   return {
     pluginId,
     manifest,
@@ -219,44 +257,61 @@ async function pluginModuleAvailable(moduleUrl) {
     return false;
   }
 }
-var availableTargets = [];
-for (const entry of pluginTargets) {
-  if (await pluginModuleAvailable(entry.moduleUrl)) {
-    availableTargets.push(entry);
+function renderBootErrorBanner(message) {
+  console.error(`[DEBUG] wgpu boot failed: ${message}`);
+  const root = document.getElementById("root");
+  if (!root)
+    return;
+  const banner = document.createElement("div");
+  banner.style.cssText = "position:fixed;inset:0;padding:24px;background:#2a0a0a;color:#ffb4b4;font-family:monospace;font-size:14px;white-space:pre-wrap;overflow:auto;z-index:9999;";
+  banner.textContent = `wgpu renderer boot failed:
+
+${message}`;
+  root.appendChild(banner);
+}
+try {
+  const availableTargets = [];
+  for (const entry of pluginTargets) {
+    if (await pluginModuleAvailable(entry.moduleUrl)) {
+      availableTargets.push(entry);
+    }
   }
-}
-if (availableTargets.length === 0) {
-  throw new Error(`[DEBUG] no wasm plugin modules found for filter ${pluginFilter}`);
-}
-var handles = await Promise.all(availableTargets.map(async (entry) => ({
-  pluginId: entry.pluginId,
-  handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl))
-})));
-var bindings = await new Promise((resolve, reject) => {
-  const host = window;
-  const finish = () => {
-    if (!host.wasmBindings) {
-      reject(new Error("[DEBUG] trunk wasm bindings missing"));
+  if (availableTargets.length === 0) {
+    throw new Error(`[DEBUG] no wasm plugin modules found for filter ${pluginFilter}`);
+  }
+  const handles = await Promise.all(availableTargets.map(async (entry) => ({
+    pluginId: entry.pluginId,
+    handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl))
+  })));
+  const bindings = await new Promise((resolve, reject) => {
+    const host = window;
+    const finish = () => {
+      if (!host.wasmBindings) {
+        reject(new Error("[DEBUG] trunk wasm bindings missing"));
+        return;
+      }
+      resolve(host.wasmBindings);
+    };
+    if (host.wasmBindings) {
+      finish();
       return;
     }
-    resolve(host.wasmBindings);
-  };
-  if (host.wasmBindings) {
-    finish();
-    return;
-  }
-  const timeout = window.setTimeout(() => reject(new Error("[DEBUG] trunk wasm bindings timeout")), 30000);
-  const done = () => {
-    window.clearTimeout(timeout);
-    window.clearInterval(poll);
-    finish();
-  };
-  window.addEventListener("TrunkApplicationStarted", done, { once: true });
-  const poll = window.setInterval(() => {
-    if (host.wasmBindings)
-      done();
-  }, 50);
-});
-if (!bindings.semioRendererBoot)
-  throw new Error("[DEBUG] missing semioRendererBoot");
-await bindings.semioRendererBoot(handles, pluginFilter);
+    const timeout = window.setTimeout(() => reject(new Error("[DEBUG] trunk wasm bindings timeout")), 30000);
+    const done = () => {
+      window.clearTimeout(timeout);
+      window.clearInterval(poll);
+      finish();
+    };
+    window.addEventListener("TrunkApplicationStarted", done, { once: true });
+    const poll = window.setInterval(() => {
+      if (host.wasmBindings)
+        done();
+    }, 50);
+  });
+  if (!bindings.semioRendererBoot)
+    throw new Error("[DEBUG] missing semioRendererBoot");
+  await bindings.semioRendererBoot(handles, pluginFilter);
+} catch (error) {
+  renderBootErrorBanner(error instanceof Error ? error.message : String(error));
+  throw error;
+}

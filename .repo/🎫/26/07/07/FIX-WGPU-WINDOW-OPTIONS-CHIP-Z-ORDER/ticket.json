@@ -1,9 +1,9 @@
 {
   "title": "Fix Wgpu Window Options Chip Z-Order",
   "emoji": "🪟",
-  "status": "open",
+  "status": "closed",
   "description": "Fix folded Window Options and Command chip buttons in the wgpu renderer so they render below glassy side panels. Root cause: folded chips are drawn to the overlay draw list backdrop tier, which composites on top of side panel glass. Fix: render chips to the main draw list instead, matching unfolded rails.",
-  "summary": "Fixed folded Window Options and Command chips rendering above glassy side panels in the wgpu renderer.\n\nRoot cause: folded chips were drawn to the overlay draw list's backdrop tier. In `composite_to_swapchain`, overlay backdrop always composites after overlay glass, so chips painted on top of side panels.\n\nFix: render both folded chips unconditionally to the main `draw` list (matching unfolded rails that already use `draw.push_glass(..., GlassTier::WindowOptions)`). Side panels remain on `overlay` and composite after `draw`.\n\n`cargo check -p semio-framework-renderer-wgpu` blocked by pre-existing `semio-framework-plugin` compile errors (unrelated `world3d_scene_extended` signature). Change is a two-line draw-list target swap with no new API.",
+  "summary": "The prior fix (routing folded chip/rail glass to the main draw list) had been undone by a later `with_chrome_sink` refactor: `render_window_measures_rail` and `render_window_engagement_rail` (framework/renderer/wgpu/rs/lib.rs) wrapped their entire bodies — both the folded chip AND the unfolded rail — in `with_chrome_sink(draw, overlay, ...)`, which redirects painting to the `overlay` draw list whenever an overlay is present (i.e. whenever side panels are open). Since `composite_to_swapchain` (ui/wgpu/rs/lib.rs) composites the `overlay` list's glass/content entirely after the main `draw` list, and side panels also paint to `overlay`, both the folded chip and the open rail ended up compositing above glassy side panels regardless of push order.\n\nFix: both functions now paint unconditionally to the main `draw` list (bypassing `with_chrome_sink`), while still threading the real `overlay` slot through to nested content (e.g. dropdown selects inside the measures rail) so those still layer correctly. This matches how side panels stay on `overlay` and composite after `draw`.\n\nVerified: `cargo check`/`cargo test -p semio-framework-renderer-wgpu --lib` clean, no regressions (same pre-existing 4 dock-layout test failures unrelated to this change, tracked separately). Live pixel verification was attempted in the `flow` playground under wgpu (isolated dev server, plugin loaded correctly, `navigator.gpu.requestAdapter()` succeeded, canvas + WebGPU context created, boot completed with zero console errors) but the canvas never presented visible pixels in this headless Browser pane — a non-DOM screenshot sanity check (example.com) confirmed the screenshot pipeline itself works, so this is the environment's headless-WebGPU rendering gap documented in `.repo/🎫/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/parity-gap-update.md`, not a code issue. Closing on the strength of the structural fix (traced against composite_to_swapchain's actual compositing order) plus clean compile/tests; pixel-level confirmation needs a real (non-headless) browser.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1848"
   },
@@ -13,5 +13,8 @@
     "id": "8b566cb0",
     "local": "fix_wgpu_window_options_chip_z-order_8b566cb0.plan.md"
   },
-  "sessions": ["⚪4b2650bacd3e4b0bb9d30226201704be", "⚪79d52d499ea846cc8a4150b6234539ab"]
+  "sessions": [
+    "⚪4b2650bacd3e4b0bb9d30226201704be",
+    "⚪79d52d499ea846cc8a4150b6234539ab"
+  ]
 }
