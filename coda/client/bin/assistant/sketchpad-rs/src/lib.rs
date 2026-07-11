@@ -1120,6 +1120,14 @@ pub struct Parameters {
     #[serde(default)]
     pub mech_hours: f64,
     
+    // New parameters for DHW (DIN V 18599-8)
+    #[serde(default)]
+    pub dhw_base_volume_liters_per_day: f64,
+    #[serde(default)]
+    pub dhw_wastewater_heat_recovery: f64,
+    #[serde(default)]
+    pub dhw_generator_type: String,
+
     // Explicit physics parameters fetched from Neo4j (DIN V 18599 & TABULA)
     // (Removed graph parameters)
 }
@@ -1154,7 +1162,9 @@ impl Default for Parameters {
             material_transport: "None".to_string(),
             custom_occupants: 0.0,
             custom_equipment: 0.0,
-            // (Removed graph parameters)
+            dhw_base_volume_liters_per_day: 0.0,
+            dhw_wastewater_heat_recovery: 0.0,
+            dhw_generator_type: "HeatPumpAirWater".to_string(),
         }
     }
 }
@@ -1854,6 +1864,8 @@ pub struct EnergyAnalysisResult {
     pub solar_gains_kwh: f64,
     pub internal_gains_kwh: f64,
     pub final_heating_demand_kwh: f64,
+    pub final_dhw_fuel_demand_kwh: f64,
+    pub final_dhw_electricity_demand_kwh: f64,
     pub q_h_nd_kwh: f64,
     pub h_t_wb: f64,
     pub f_x: f64,
@@ -2271,10 +2283,47 @@ fn map_state_to_graph(state: &State, u_wall: f64, u_roof: f64, u_floor: f64, u_w
     graph
 }
 
-    // Q_del_h = Q_g_h_out * e_g_h
-    let q_final = q_g_h_out * e_g_h;
+    // DHW Engine Evaluation
+    let dhw_generator = match state.params.dhw_generator_type.as_str() {
+        "ElectricInstantaneous" => dhw_system::GeneratorTypeDHW::ElectricInstantaneous,
+        "ElectricSmallStorage" => dhw_system::GeneratorTypeDHW::ElectricSmallStorage,
+        "ElectricStandardStorage" => dhw_system::GeneratorTypeDHW::ElectricStandardStorage,
+        "GasInstantaneousNew" => dhw_system::GeneratorTypeDHW::GasInstantaneousNew,
+        "GasStorageNew" => dhw_system::GeneratorTypeDHW::GasStorageNew,
+        "CombinedGasBoilerCondensing" => dhw_system::GeneratorTypeDHW::CombinedGasBoilerCondensing,
+        "DistrictHeating" => dhw_system::GeneratorTypeDHW::DistrictHeating,
+        _ => dhw_system::GeneratorTypeDHW::HeatPumpAirWater,
+    };
+    
+    let dhw_engine = dhw_system::DHWEngine {
+        a_ngf: a_floor_total,
+        profile: match state.params.usage_profile.as_str() {
+            "Residential" => dhw_system::BuildingProfileDHW::Residential1_2Family,
+            "Office" => dhw_system::BuildingProfileDHW::OfficesCommercial,
+            "Hospital" => dhw_system::BuildingProfileDHW::HospitalsHotels,
+            _ => dhw_system::BuildingProfileDHW::ResidentialMultiFamily,
+        },
+        system_type: dhw_system::DHWSystemType::Centralized,
+        distribution_insulation: dhw_system::PipeInsulationDHW::Insulated100Percent,
+        has_circulation: true,
+        tank_volume_liters: 200.0,
+        tank_insulation: dhw_system::TankInsulationDHW::StandardClassC,
+        generator: dhw_generator,
+        phi_w_max_kw: 15.0,
+        is_summer_mode: false,
+        t_mth: 8760.0,
+        wastewater_heat_recovery: state.params.dhw_wastewater_heat_recovery,
+        solar_thermal_kwh: 0.0,
+    };
+    
+    let q_w_b_annual = state.params.dhw_base_volume_liters_per_day * 365.0 * 0.058;
+    let dhw_res = dhw_engine.calculate_final_energy(q_w_b_annual);
 
-    let energy_class = balance_engine.determine_energy_class(q_final * 1000.0, a_floor_total);
+    // Q_del_h = Q_g_h_out * e_g_h
+    let q_final_heating = q_g_h_out * e_g_h;
+    let q_final_total = q_final_heating + dhw_res.fuel_demand_kwh + dhw_res.total_electricity_kwh;
+
+    let energy_class = balance_engine.determine_energy_class(q_final_total * 1000.0, a_floor_total);
 
     // region Overheating
     let mut overheating_windows = Vec::new();
@@ -2381,7 +2430,9 @@ fn map_state_to_graph(state: &State, u_wall: f64, u_roof: f64, u_floor: f64, u_w
         ventilation_loss_kwh: q_ht_ve,
         solar_gains_kwh: q_sol,
         internal_gains_kwh: q_int,
-        final_heating_demand_kwh: q_final,
+        final_heating_demand_kwh: q_final_heating,
+        final_dhw_fuel_demand_kwh: dhw_res.fuel_demand_kwh,
+        final_dhw_electricity_demand_kwh: dhw_res.total_electricity_kwh,
         q_h_nd_kwh: q_h_nd,
         h_t_wb,
         f_x: f_x_ground,
@@ -2446,9 +2497,12 @@ fn map_state_to_graph(state: &State, u_wall: f64, u_roof: f64, u_floor: f64, u_w
             "specific_Q_H_nd_kWh_m2a": q_h_nd / a_floor_total
         },
         "final_energy": {
-            "Q_final_kWh_a": q_final,
-            "specific_Q_final_kWh_m2a": q_final / a_floor_total,
-            "energy_class": energy_class.as_str()
+            "Q_final_kWh_a": q_final_total,
+            "specific_Q_final_kWh_m2a": q_final_total / a_floor_total,
+            "energy_class": energy_class.as_str(),
+            "heating_fuel_kWh_a": q_final_heating,
+            "dhw_fuel_kWh_a": dhw_res.fuel_demand_kwh,
+            "dhw_electricity_kWh_a": dhw_res.total_electricity_kwh
         },
         "wall_insulation_breakdown": {
             "u_wall_base": u_wall_existing,
@@ -3219,6 +3273,9 @@ mod tests {
             material_transport: "None".to_string(),
             custom_occupants: 0.0,
             custom_equipment: 0.0,
+            dhw_base_volume_liters_per_day: 0.0,
+            dhw_wastewater_heat_recovery: 0.0,
+            dhw_generator_type: "HeatPumpAirWater".to_string(),
         };
 
         let state = State {
@@ -4347,6 +4404,248 @@ pub mod lighting {
             );
 
             q_lf_wh / 1000.0 // Return kWh
+        }
+    }
+}
+
+pub mod dhw_system {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum BuildingProfileDHW {
+        Residential1_2Family,
+        ResidentialMultiFamily,
+        HospitalsHotels,
+        OfficesCommercial,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum DHWSystemType {
+        Centralized,
+        Decentralized,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum PipeInsulationDHW {
+        Uninsulated,
+        Insulated50Percent,
+        Insulated100Percent,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum TankInsulationDHW {
+        VeryGoodClassA,
+        StandardClassC,
+        PoorOld,
+        None,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum GeneratorTypeDHW {
+        ElectricInstantaneous,
+        ElectricSmallStorage,
+        ElectricStandardStorage,
+        GasInstantaneousNew,
+        GasStorageNew,
+        CombinedGasBoilerCondensing,
+        HeatPumpAirWater,
+        DistrictHeating,
+    }
+
+    pub struct DHWEngine {
+        pub a_ngf: f64,
+        pub profile: BuildingProfileDHW,
+        pub system_type: DHWSystemType,
+        pub distribution_insulation: PipeInsulationDHW,
+        pub has_circulation: bool,
+        pub tank_volume_liters: f64,
+        pub tank_insulation: TankInsulationDHW,
+        pub generator: GeneratorTypeDHW,
+        pub phi_w_max_kw: f64,
+        pub is_summer_mode: bool,
+        pub t_mth: f64,
+        pub wastewater_heat_recovery: f64,
+        pub solar_thermal_kwh: f64,
+    }
+
+    pub struct DHWFinalEnergyResult {
+        pub fuel_demand_kwh: f64,
+        pub auxiliary_electricity_kwh: f64,
+        pub total_electricity_kwh: f64,
+    }
+
+    impl DHWEngine {
+        pub fn u_l_tap(&self) -> f64 {
+            match self.distribution_insulation {
+                PipeInsulationDHW::Uninsulated => 1.80,
+                PipeInsulationDHW::Insulated50Percent => 0.35,
+                PipeInsulationDHW::Insulated100Percent => 0.22,
+            }
+        }
+
+        pub fn u_l_c(&self) -> f64 {
+            match self.distribution_insulation {
+                PipeInsulationDHW::Uninsulated => 2.20,
+                PipeInsulationDHW::Insulated50Percent => 0.40,
+                PipeInsulationDHW::Insulated100Percent => 0.25,
+            }
+        }
+
+        pub fn h_w_st(&self) -> f64 {
+            if self.tank_volume_liters <= 0.0 { return 0.0; }
+            let vol = self.tank_volume_liters;
+            match self.tank_insulation {
+                TankInsulationDHW::VeryGoodClassA => 1.10 + (vol - 100.0) * 0.001,
+                TankInsulationDHW::StandardClassC => 1.60 + (vol - 100.0) * 0.003,
+                TankInsulationDHW::PoorOld => 2.50 + (vol - 100.0) * 0.005,
+                TankInsulationDHW::None => 0.0,
+            }
+        }
+
+        pub fn t_circ(&self) -> f64 {
+            if !self.has_circulation { return 0.0; }
+            match self.profile {
+                BuildingProfileDHW::Residential1_2Family => 420.0,
+                BuildingProfileDHW::ResidentialMultiFamily => 744.0,
+                BuildingProfileDHW::HospitalsHotels => 744.0,
+                BuildingProfileDHW::OfficesCommercial => 420.0,
+            }
+        }
+
+        pub fn e_g_w(&self, _beta_w: f64) -> f64 {
+            match self.generator {
+                GeneratorTypeDHW::ElectricInstantaneous => 1.00,
+                GeneratorTypeDHW::ElectricSmallStorage => 1.02,
+                GeneratorTypeDHW::ElectricStandardStorage => 1.05,
+                GeneratorTypeDHW::GasInstantaneousNew => 1.15,
+                GeneratorTypeDHW::GasStorageNew => 1.25,
+                GeneratorTypeDHW::DistrictHeating => 1.02,
+                GeneratorTypeDHW::CombinedGasBoilerCondensing => {
+                    if self.is_summer_mode { 2.50 } else { 1.10 }
+                },
+                GeneratorTypeDHW::HeatPumpAirWater => {
+                    let eta_carnot = 0.38;
+                    let theta_source = 5.0;
+                    let theta_sink = 55.0;
+                    let cop = eta_carnot * (theta_sink + 273.15) / ((theta_sink + 273.15) - (theta_source + 273.15));
+                    1.0 / f64::max(1.0, cop)
+                }
+            }
+        }
+
+        pub fn calculate_final_energy(&self, q_w_b: f64) -> DHWFinalEnergyResult {
+            let q_w_shower = q_w_b * 0.60;
+            let q_w_wrg = q_w_shower * self.wastewater_heat_recovery;
+            let q_w_b_reduced = f64::max(0.0, q_w_b - q_w_wrg);
+
+            let l_w_tap = match self.system_type {
+                DHWSystemType::Centralized => 0.05 * self.a_ngf,
+                DHWSystemType::Decentralized => 0.015 * self.a_ngf,
+            };
+            let l_w_c = if self.has_circulation { 0.06 * self.a_ngf } else { 0.0 };
+
+            let theta_w_t = 60.0;
+            let theta_w_c_av = 57.5;
+            let theta_amb = 20.0;
+            let t_tap = 30.0;
+
+            let q_w_d_tap = (1.0 / 1000.0) * self.u_l_tap() * l_w_tap * (theta_w_t - theta_amb) * t_tap;
+            let q_w_d_c = (1.0 / 1000.0) * self.u_l_c() * l_w_c * (theta_w_c_av - theta_amb) * self.t_circ();
+            let q_w_d = q_w_d_tap + q_w_d_c;
+
+            let theta_w_s_av = 60.0;
+            let q_w_s = (1.0 / 1000.0) * self.h_w_st() * (theta_w_s_av - theta_amb) * self.t_mth;
+
+            let q_w_outg = q_w_b_reduced + q_w_d + q_w_s;
+            let q_w_outg_req = f64::max(0.0, q_w_outg - self.solar_thermal_kwh);
+
+            let mut beta_w = 0.0;
+            if self.phi_w_max_kw > 0.0 {
+                beta_w = q_w_outg_req / (self.phi_w_max_kw * self.t_mth);
+            }
+
+            let q_w_f = q_w_outg_req * self.e_g_w(beta_w);
+
+            let p_pu_c = if self.has_circulation { 35.0 } else { 0.0 };
+            let w_w_d_c = (p_pu_c * self.t_circ()) / 1000.0;
+
+            let p_pu_load = if self.tank_volume_liters > 0.0 { 45.0 } else { 0.0 };
+            let t_load = beta_w * self.t_mth;
+            let w_w_s = (p_pu_load * t_load) / 1000.0;
+
+            let w_w_gen = (60.0 * t_load + 10.0 * (self.t_mth - t_load)) / 1000.0;
+            let w_w = w_w_d_c + w_w_s + w_w_gen;
+
+            let is_electric_gen = matches!(self.generator, 
+                GeneratorTypeDHW::ElectricInstantaneous | 
+                GeneratorTypeDHW::ElectricSmallStorage | 
+                GeneratorTypeDHW::ElectricStandardStorage | 
+                GeneratorTypeDHW::HeatPumpAirWater);
+
+            let total_electricity_kwh = if is_electric_gen { q_w_f + w_w } else { w_w };
+
+            DHWFinalEnergyResult {
+                fuel_demand_kwh: if is_electric_gen { 0.0 } else { q_w_f },
+                auxiliary_electricity_kwh: w_w,
+                total_electricity_kwh,
+            }
+        }
+    }
+
+    #[cfg(test)]
+    pub mod tests {
+        use super::*;
+
+        #[test]
+        fn test_dhw_engine_electric_decentralized() {
+            let engine = DHWEngine {
+                a_ngf: 100.0,
+                profile: BuildingProfileDHW::Residential1_2Family,
+                system_type: DHWSystemType::Decentralized,
+                distribution_insulation: PipeInsulationDHW::Uninsulated,
+                has_circulation: false,
+                tank_volume_liters: 0.0,
+                tank_insulation: TankInsulationDHW::None,
+                generator: GeneratorTypeDHW::ElectricInstantaneous,
+                phi_w_max_kw: 21.0,
+                is_summer_mode: true,
+                t_mth: 744.0, // January
+                wastewater_heat_recovery: 0.0,
+                solar_thermal_kwh: 0.0,
+            };
+
+            let q_w_b = 200.0; // kWh
+            let res = engine.calculate_final_energy(q_w_b);
+
+            assert_eq!(res.fuel_demand_kwh, 0.0);
+            assert!(res.total_electricity_kwh > q_w_b);
+            assert!(res.total_electricity_kwh < q_w_b * 1.5);
+        }
+
+        #[test]
+        fn test_dhw_engine_heat_pump_centralized() {
+            let engine = DHWEngine {
+                a_ngf: 1000.0,
+                profile: BuildingProfileDHW::ResidentialMultiFamily,
+                system_type: DHWSystemType::Centralized,
+                distribution_insulation: PipeInsulationDHW::Insulated100Percent,
+                has_circulation: true,
+                tank_volume_liters: 500.0,
+                tank_insulation: TankInsulationDHW::VeryGoodClassA,
+                generator: GeneratorTypeDHW::HeatPumpAirWater,
+                phi_w_max_kw: 15.0,
+                is_summer_mode: false,
+                t_mth: 744.0,
+                wastewater_heat_recovery: 0.30,
+                solar_thermal_kwh: 0.0,
+            };
+
+            let q_w_b = 3000.0;
+            let res = engine.calculate_final_energy(q_w_b);
+
+            assert_eq!(res.fuel_demand_kwh, 0.0);
+            assert!(res.total_electricity_kwh > 0.0);
+            assert!(res.total_electricity_kwh < q_w_b);
         }
     }
 }

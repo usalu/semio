@@ -499,6 +499,7 @@ _Rust Execution:_
 This database contains the exhaustive extraction of lighting requirements from Tables 9 to 61 of DIN EN 12464-1:2021. These values serve as the mandatory target constraints for calculating lighting energy demand ($Q_{l,f}$) in DIN V 18599-4.
 
 **Terminology:**
+
 * $\bar{E}_m$ (lx): Maintained illuminance (Target Lux level).
 * $UGR_L$: Unified Glare Rating limit.
 * $R_a$: Color Rendering Index.
@@ -506,326 +507,357 @@ This database contains the exhaustive extraction of lighting requirements from T
 #### Part 1: General and Common Areas
 
 **Table 9: Traffic Zones (Verkehrszonen)**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ | Remarks |
-| --- | --- | --- | --- | --- |
-| Entrance halls | 100 | 22 | 80 | - |
-| Lounges / Waiting areas | 200 | 22 | 80 | - |
-| Circulation areas and corridors | 100 | 28 | 80 | 40 allowed if unoccupied |
-| Stairs, escalators, moving walkways | 150 | 25 | 80 | - |
-| Loading ramps / bays | 150 | 25 | 80 | - |
+
+| Activity / Room Type                | $\bar{E}_m$ | $UGR_L$ | $R_a$ | Remarks                  |
+| ----------------------------------- | ------------- | --------- | ------- | ------------------------ |
+| Entrance halls                      | 100           | 22        | 80      | -                        |
+| Lounges / Waiting areas             | 200           | 22        | 80      | -                        |
+| Circulation areas and corridors     | 100           | 28        | 80      | 40 allowed if unoccupied |
+| Stairs, escalators, moving walkways | 150           | 25        | 80      | -                        |
+| Loading ramps / bays                | 150           | 25        | 80      | -                        |
 
 **Table 10: Rest, Sanitation, First Aid**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ | Remarks |
-| --- | --- | --- | --- | --- |
-| Canteens and Pantries | 200 | 22 | 80 | - |
-| Rest rooms | 200 | 22 | 80 | - |
-| Rooms for physical exercise | 300 | 22 | 80 | - |
-| Cloakrooms, washrooms, bathrooms, toilets | 200 | 25 | 80 | - |
-| Sick bay / First aid rooms | 500 | 19 | 80 | - |
+
+| Activity / Room Type                      | $\bar{E}_m$ | $UGR_L$ | $R_a$ | Remarks |
+| ----------------------------------------- | ------------- | --------- | ------- | ------- |
+| Canteens and Pantries                     | 200           | 22        | 80      | -       |
+| Rest rooms                                | 200           | 22        | 80      | -       |
+| Rooms for physical exercise               | 300           | 22        | 80      | -       |
+| Cloakrooms, washrooms, bathrooms, toilets | 200           | 25        | 80      | -       |
+| Sick bay / First aid rooms                | 500           | 19        | 80      | -       |
 
 **Table 11: Control Rooms (Kontrollräume)**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ | Remarks |
-| --- | --- | --- | --- | --- |
-| Plant rooms, switch gear rooms | 200 | 25 | 80 | - |
-| Telex, post room, switchboard | 500 | 19 | 80 | - |
+
+| Activity / Room Type           | $\bar{E}_m$ | $UGR_L$ | $R_a$ | Remarks |
+| ------------------------------ | ------------- | --------- | ------- | ------- |
+| Plant rooms, switch gear rooms | 200           | 25        | 80      | -       |
+| Telex, post room, switchboard  | 500           | 19        | 80      | -       |
 
 **Table 12 & 13: Storage and Racks**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ | Remarks |
-| --- | --- | --- | --- | --- |
-| Store and stockrooms (unmanned) | 100 | 25 | 60 | - |
-| Store and stockrooms (manned) | 200 | 25 | 80 | - |
-| Dispatch and packing areas | 300 | 25 | 80 | - |
-| Gangways in rack systems (unmanned) | 20 | - | 40 | - |
-| Gangways in rack systems (manned) | 150 | 22 | 80 | Vertical illuminance critical |
+
+| Activity / Room Type                | $\bar{E}_m$ | $UGR_L$ | $R_a$ | Remarks                       |
+| ----------------------------------- | ------------- | --------- | ------- | ----------------------------- |
+| Store and stockrooms (unmanned)     | 100           | 25        | 60      | -                             |
+| Store and stockrooms (manned)       | 200           | 25        | 80      | -                             |
+| Dispatch and packing areas          | 300           | 25        | 80      | -                             |
+| Gangways in rack systems (unmanned) | 20            | -         | 40      | -                             |
+| Gangways in rack systems (manned)   | 150           | 22        | 80      | Vertical illuminance critical |
 
 #### Part 2: Industrial and Craft Activities
 
 **Table 14: Agriculture (Landwirtschaft)**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Loading and operating of goods | 200 | 25 | 80 |
-| Buildings for livestock | 50 | 28 | 40 |
-| Sick animal pens | 200 | 25 | 80 |
-| Feed preparation | 200 | 25 | 80 |
+
+| Activity / Room Type           | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ------------------------------ | ------------- | --------- | ------- |
+| Loading and operating of goods | 200           | 25        | 80      |
+| Buildings for livestock        | 50            | 28        | 40      |
+| Sick animal pens               | 200           | 25        | 80      |
+| Feed preparation               | 200           | 25        | 80      |
 
 **Table 15: Bakeries (Backwarenherstellung)**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Preparation and baking | 300 | 22 | 80 |
-| Finishing, glazing, decorating | 500 | 22 | 80 |
+
+| Activity / Room Type           | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ------------------------------ | ------------- | --------- | ------- |
+| Preparation and baking         | 300           | 22        | 80      |
+| Finishing, glazing, decorating | 500           | 22        | 80      |
 
 **Table 16: Cement, Concrete, Bricks**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Drying | 50 | 28 | 40 |
-| Preparation of materials, kilns | 200 | 25 | 80 |
-| General machine work | 300 | 25 | 80 |
-| Rough forms | 300 | 25 | 80 |
+
+| Activity / Room Type            | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ------------------------------- | ------------- | --------- | ------- |
+| Drying                          | 50            | 28        | 40      |
+| Preparation of materials, kilns | 200           | 25        | 80      |
+| General machine work            | 300           | 25        | 80      |
+| Rough forms                     | 300           | 25        | 80      |
 
 **Table 17: Ceramics and Glass**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ | Remarks |
-| --- | --- | --- | --- | --- |
-| Drying | 50 | 28 | 40 | - |
-| Preparation, general machine work | 300 | 25 | 80 | - |
-| Enamelling, rolling, pressing | 300 | 25 | 80 | - |
-| Grinding, engraving, polishing | 750 | 19 | 80 | - |
-| Precision work, decorative painting | 1000 | 16 | 90 | High precision |
+
+| Activity / Room Type                | $\bar{E}_m$ | $UGR_L$ | $R_a$ | Remarks        |
+| ----------------------------------- | ------------- | --------- | ------- | -------------- |
+| Drying                              | 50            | 28        | 40      | -              |
+| Preparation, general machine work   | 300           | 25        | 80      | -              |
+| Enamelling, rolling, pressing       | 300           | 25        | 80      | -              |
+| Grinding, engraving, polishing      | 750           | 19        | 80      | -              |
+| Precision work, decorative painting | 1000          | 16        | 90      | High precision |
 
 **Table 18: Chemicals, Plastics, Rubber**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ | Remarks |
-| --- | --- | --- | --- | --- |
-| Remote-operated processing | 50 | 28 | 40 | - |
-| Processing with limited manual intervention | 150 | 28 | 40 | - |
-| Constantly manned work places | 300 | 25 | 80 | - |
-| Precision measuring rooms, labs | 500 | 19 | 80 | - |
-| Color inspection | 1000 | 16 | 90 | $T_{cp}$ ≥ 4000K |
+
+| Activity / Room Type                        | $\bar{E}_m$ | $UGR_L$ | $R_a$ | Remarks             |
+| ------------------------------------------- | ------------- | --------- | ------- | ------------------- |
+| Remote-operated processing                  | 50            | 28        | 40      | -                   |
+| Processing with limited manual intervention | 150           | 28        | 40      | -                   |
+| Constantly manned work places               | 300           | 25        | 80      | -                   |
+| Precision measuring rooms, labs             | 500           | 19        | 80      | -                   |
+| Color inspection                            | 1000          | 16        | 90      | $T_{cp}$ ≥ 4000K |
 
 **Table 19: Electrical and Electronics**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Cable and wire manufacture | 300 | 25 | 80 |
-| Winding (large coils) | 300 | 25 | 80 |
-| Winding (medium coils) | 500 | 22 | 80 |
-| Winding (small coils) | 750 | 19 | 80 |
-| Coil impregnating | 300 | 25 | 80 |
-| Assembly work (rough) | 300 | 25 | 80 |
-| Assembly work (medium) | 500 | 22 | 80 |
-| Assembly work (fine) | 750 | 19 | 80 |
-| Assembly work (precision) | 1000 | 16 | 80 |
-| Electronic workshops, testing | 1500 | 16 | 80 |
+
+| Activity / Room Type          | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ----------------------------- | ------------- | --------- | ------- |
+| Cable and wire manufacture    | 300           | 25        | 80      |
+| Winding (large coils)         | 300           | 25        | 80      |
+| Winding (medium coils)        | 500           | 22        | 80      |
+| Winding (small coils)         | 750           | 19        | 80      |
+| Coil impregnating             | 300           | 25        | 80      |
+| Assembly work (rough)         | 300           | 25        | 80      |
+| Assembly work (medium)        | 500           | 22        | 80      |
+| Assembly work (fine)          | 750           | 19        | 80      |
+| Assembly work (precision)     | 1000          | 16        | 80      |
+| Electronic workshops, testing | 1500          | 16        | 80      |
 
 **Table 20: Food Industry**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Workplaces/zones in breweries, malting | 200 | 25 | 80 |
-| Washing, barrel filling, cleaning | 200 | 25 | 80 |
-| Sorting and washing of products | 300 | 25 | 80 |
-| Work on color-critical goods | 500 | 22 | 90 |
+
+| Activity / Room Type                   | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| -------------------------------------- | ------------- | --------- | ------- |
+| Workplaces/zones in breweries, malting | 200           | 25        | 80      |
+| Washing, barrel filling, cleaning      | 200           | 25        | 80      |
+| Sorting and washing of products        | 300           | 25        | 80      |
+| Work on color-critical goods           | 500           | 22        | 90      |
 
 **Table 21: Foundries and Metal Casting**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Underground tunnels, cellars | 50 | 28 | 40 |
-| Platforms | 100 | 25 | 40 |
-| Sand preparation | 200 | 25 | 80 |
-| Core making, mould making | 300 | 25 | 80 |
+
+| Activity / Room Type         | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ---------------------------- | ------------- | --------- | ------- |
+| Underground tunnels, cellars | 50            | 28        | 40      |
+| Platforms                    | 100           | 25        | 40      |
+| Sand preparation             | 200           | 25        | 80      |
+| Core making, mould making    | 300           | 25        | 80      |
 
 **Table 22: Hairdressers**
+
 | Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Hairdressing | 500 | 19 | 90 |
+| -------------------- | ------------- | --------- | ------- |
+| Hairdressing         | 500           | 19        | 90      |
 
 **Table 23: Jewellery**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Working with precious stones | 1500 | 16 | 90 |
-| Watch making (manual) | 1500 | 16 | 80 |
+
+| Activity / Room Type         | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ---------------------------- | ------------- | --------- | ------- |
+| Working with precious stones | 1500          | 16        | 90      |
+| Watch making (manual)        | 1500          | 16        | 80      |
 
 **Table 24: Laundries**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Goods in, marking and sorting | 300 | 25 | 80 |
-| Washing and dry cleaning | 300 | 25 | 80 |
-| Ironing, pressing | 300 | 25 | 80 |
-| Inspection and repairs | 750 | 19 | 80 |
+
+| Activity / Room Type          | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ----------------------------- | ------------- | --------- | ------- |
+| Goods in, marking and sorting | 300           | 25        | 80      |
+| Washing and dry cleaning      | 300           | 25        | 80      |
+| Ironing, pressing             | 300           | 25        | 80      |
+| Inspection and repairs        | 750           | 19        | 80      |
 
 **Table 25: Leather Industry**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Vats, barrels, pits | 200 | 25 | 80 |
-| Fleshing, skiving, splitting | 300 | 25 | 80 |
-| Saddlery, shoe manufacture | 500 | 22 | 80 |
-| Quality control | 1000 | 19 | 80 |
-| Color inspection | 1000 | 16 | 90 |
+
+| Activity / Room Type         | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ---------------------------- | ------------- | --------- | ------- |
+| Vats, barrels, pits          | 200           | 25        | 80      |
+| Fleshing, skiving, splitting | 300           | 25        | 80      |
+| Saddlery, shoe manufacture   | 500           | 22        | 80      |
+| Quality control              | 1000          | 19        | 80      |
+| Color inspection             | 1000          | 16        | 90      |
 
 **Table 26: Metal Working**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Open die forging | 200 | 25 | 80 |
-| Drop forging | 300 | 25 | 80 |
-| Welding | 300 | 25 | 80 |
-| Rough/Medium machining | 300 | 22 | 80 |
-| Precision machining | 500 | 19 | 80 |
-| Tool making, cutting equipment | 750 | 19 | 80 |
+
+| Activity / Room Type           | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ------------------------------ | ------------- | --------- | ------- |
+| Open die forging               | 200           | 25        | 80      |
+| Drop forging                   | 300           | 25        | 80      |
+| Welding                        | 300           | 25        | 80      |
+| Rough/Medium machining         | 300           | 22        | 80      |
+| Precision machining            | 500           | 19        | 80      |
+| Tool making, cutting equipment | 750           | 19        | 80      |
 
 **Table 27: Paper Industry**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Edge runners, pulp mills | 200 | 25 | 80 |
-| Paper manufacture, paper machines | 300 | 25 | 80 |
-| Paper inspection | 500 | 22 | 80 |
+
+| Activity / Room Type              | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| --------------------------------- | ------------- | --------- | ------- |
+| Edge runners, pulp mills          | 200           | 25        | 80      |
+| Paper manufacture, paper machines | 300           | 25        | 80      |
+| Paper inspection                  | 500           | 22        | 80      |
 
 **Table 28: Power Stations**
+
 | Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Fuel supply plant | 50 | 28 | 40 |
-| Boiler house | 100 | 28 | 40 |
-| Machine halls | 200 | 25 | 80 |
-| Control rooms | 500 | 19 | 80 |
+| -------------------- | ------------- | --------- | ------- |
+| Fuel supply plant    | 50            | 28        | 40      |
+| Boiler house         | 100           | 28        | 40      |
+| Machine halls        | 200           | 25        | 80      |
+| Control rooms        | 500           | 19        | 80      |
 
 **Table 29: Printing Industry**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Cutting, gilding, embossing | 500 | 19 | 80 |
-| Sorting, paper reproduction | 500 | 19 | 80 |
-| Type setting, retouching | 1000 | 19 | 80 |
-| Color inspection in printing | 1500 | 16 | 90 |
+
+| Activity / Room Type         | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ---------------------------- | ------------- | --------- | ------- |
+| Cutting, gilding, embossing  | 500           | 19        | 80      |
+| Sorting, paper reproduction  | 500           | 19        | 80      |
+| Type setting, retouching     | 1000          | 19        | 80      |
+| Color inspection in printing | 1500          | 16        | 90      |
 
 **Table 30: Iron and Steel Works**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Production plants without manual op | 50 | 28 | 40 |
-| Production plants with manual op | 150 | 28 | 40 |
-| Slab inspection | 200 | 25 | 80 |
+
+| Activity / Room Type                | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ----------------------------------- | ------------- | --------- | ------- |
+| Production plants without manual op | 50            | 28        | 40      |
+| Production plants with manual op    | 150           | 28        | 40      |
+| Slab inspection                     | 200           | 25        | 80      |
 
 **Table 31: Textile Industry**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Bale opening, carding, washing | 200 | 25 | 80 |
-| Spinning, plying, reeling | 300 | 22 | 80 |
-| Weaving, knitting | 500 | 22 | 80 |
-| Sewing, fine knitting | 750 | 22 | 80 |
-| Color inspection, fabric control | 1000 | 16 | 90 |
+
+| Activity / Room Type             | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| -------------------------------- | ------------- | --------- | ------- |
+| Bale opening, carding, washing   | 200           | 25        | 80      |
+| Spinning, plying, reeling        | 300           | 22        | 80      |
+| Weaving, knitting                | 500           | 22        | 80      |
+| Sewing, fine knitting            | 750           | 22        | 80      |
+| Color inspection, fabric control | 1000          | 16        | 90      |
 
 **Table 32: Vehicle Construction**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Body work and assembly | 500 | 22 | 80 |
-| Painting, spraying | 750 | 22 | 80 |
-| Painting inspection, repair | 1000 | 16 | 90 |
+
+| Activity / Room Type        | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| --------------------------- | ------------- | --------- | ------- |
+| Body work and assembly      | 500           | 22        | 80      |
+| Painting, spraying          | 750           | 22        | 80      |
+| Painting inspection, repair | 1000          | 16        | 90      |
 
 **Table 33: Wood Working**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Automatic processing (sawing) | 200 | 25 | 80 |
-| Joiners bench, gluing | 300 | 25 | 80 |
-| Polishing, painting | 750 | 22 | 80 |
-| Quality control | 1000 | 19 | 90 |
+
+| Activity / Room Type          | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ----------------------------- | ------------- | --------- | ------- |
+| Automatic processing (sawing) | 200           | 25        | 80      |
+| Joiners bench, gluing         | 300           | 25        | 80      |
+| Polishing, painting           | 750           | 22        | 80      |
+| Quality control               | 1000          | 19        | 90      |
 
 #### Part 3: Commercial and Public Buildings
 
 **Table 34: Offices (Büros)**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Filing, copying, circulation | 300 | 19 | 80 |
-| Writing, typing, reading, data proc. | 500 | 19 | 80 |
-| CAD work stations | 500 | 19 | 80 |
-| Conference and meeting rooms | 500 | 19 | 80 |
-| Reception desk | 300 | 22 | 80 |
-| Archives | 200 | 25 | 80 |
+
+| Activity / Room Type                 | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ------------------------------------ | ------------- | --------- | ------- |
+| Filing, copying, circulation         | 300           | 19        | 80      |
+| Writing, typing, reading, data proc. | 500           | 19        | 80      |
+| CAD work stations                    | 500           | 19        | 80      |
+| Conference and meeting rooms         | 500           | 19        | 80      |
+| Reception desk                       | 300           | 22        | 80      |
+| Archives                             | 200           | 25        | 80      |
 
 **Table 35: Retail (Einzelhandel)**
+
 | Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Sales area (small) | 300 | 22 | 80 |
-| Sales area (large) | 500 | 22 | 80 |
-| Till area / Cashier | 500 | 19 | 80 |
-| Wrapper table | 500 | 19 | 80 |
+| -------------------- | ------------- | --------- | ------- |
+| Sales area (small)   | 300           | 22        | 80      |
+| Sales area (large)   | 500           | 22        | 80      |
+| Till area / Cashier  | 500           | 19        | 80      |
+| Wrapper table        | 500           | 19        | 80      |
 
 **Table 36: Restaurants and Hotels**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Reception, cashier | 300 | 22 | 80 |
-| Kitchens | 500 | 22 | 80 |
-| Restaurant, dining room | - | - | 80 |
-| Self-service restaurants | 200 | 22 | 80 |
-| Buffet | 300 | 22 | 80 |
-| Conference rooms (Hotels) | 500 | 19 | 80 |
+
+| Activity / Room Type      | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ------------------------- | ------------- | --------- | ------- |
+| Reception, cashier        | 300           | 22        | 80      |
+| Kitchens                  | 500           | 22        | 80      |
+| Restaurant, dining room   | -             | -         | 80      |
+| Self-service restaurants  | 200           | 22        | 80      |
+| Buffet                    | 300           | 22        | 80      |
+| Conference rooms (Hotels) | 500           | 19        | 80      |
 
 **Table 37: Exhibitions and Museums**
+
 | Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| General exhibitions | 300 | 22 | 80 |
+| -------------------- | ------------- | --------- | ------- |
+| General exhibitions  | 300           | 22        | 80      |
 
 **Table 38: Libraries (Bibliotheken)**
+
 | Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Bookshelves | 200 | 19 | 80 |
-| Reading area | 500 | 19 | 80 |
-| Counters | 500 | 19 | 80 |
+| -------------------- | ------------- | --------- | ------- |
+| Bookshelves          | 200           | 19        | 80      |
+| Reading area         | 500           | 19        | 80      |
+| Counters             | 500           | 19        | 80      |
 
 **Table 39: Public Car Parks (Parkhäuser)**
+
 | Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| In/Out ramps (Day) | 300 | 25 | 40 |
-| In/Out ramps (Night) | 75 | 25 | 40 |
-| Traffic lanes | 75 | 25 | 40 |
-| Parking areas | 75 | 28 | 40 |
-| Ticket office | 300 | 19 | 80 |
+| -------------------- | ------------- | --------- | ------- |
+| In/Out ramps (Day)   | 300           | 25        | 40      |
+| In/Out ramps (Night) | 75            | 25        | 40      |
+| Traffic lanes        | 75            | 25        | 40      |
+| Parking areas        | 75            | 28        | 40      |
+| Ticket office        | 300           | 19        | 80      |
 
 #### Part 4: Educational and Healthcare Premises
 
 **Table 44: Educational Premises**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Play school rooms / Nursery | 300 | 19 | 80 |
-| Nursery class (crafts) | 300 | 19 | 80 |
-| Classrooms, tutorial rooms | 300 | 19 | 80 |
-| Classrooms for evening classes | 500 | 19 | 80 |
-| Auditoriums / Lecture halls | 500 | 19 | 80 |
-| Blackboards / Whiteboards | 500 | 19 | 80 |
-| Demonstration tables | 500 | 19 | 80 |
-| Art and craft rooms | 500 | 19 | 80 |
-| Art rooms in art schools | 750 | 19 | 90 |
-| Technical drawing rooms | 750 | 19 | 80 |
-| Computer practice rooms | 500 | 19 | 80 |
-| Language laboratories | 300 | 19 | 80 |
-| Preparation rooms | 500 | 22 | 80 |
-| Student common rooms | 200 | 22 | 80 |
-| Teachers rooms | 300 | 19 | 80 |
-| Sports halls / Gymnasiums | 300 | 22 | 80 |
+
+| Activity / Room Type           | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ------------------------------ | ------------- | --------- | ------- |
+| Play school rooms / Nursery    | 300           | 19        | 80      |
+| Nursery class (crafts)         | 300           | 19        | 80      |
+| Classrooms, tutorial rooms     | 300           | 19        | 80      |
+| Classrooms for evening classes | 500           | 19        | 80      |
+| Auditoriums / Lecture halls    | 500           | 19        | 80      |
+| Blackboards / Whiteboards      | 500           | 19        | 80      |
+| Demonstration tables           | 500           | 19        | 80      |
+| Art and craft rooms            | 500           | 19        | 80      |
+| Art rooms in art schools       | 750           | 19        | 90      |
+| Technical drawing rooms        | 750           | 19        | 80      |
+| Computer practice rooms        | 500           | 19        | 80      |
+| Language laboratories          | 300           | 19        | 80      |
+| Preparation rooms              | 500           | 22        | 80      |
+| Student common rooms           | 200           | 22        | 80      |
+| Teachers rooms                 | 300           | 19        | 80      |
+| Sports halls / Gymnasiums      | 300           | 22        | 80      |
 
 **Tables 45-54: Health Care Premises (Krankenhäuser)**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Waiting rooms | 200 | 22 | 80 |
-| Corridors (Day) | 200 | 22 | 80 |
-| Corridors (Night) | 50 | 22 | 80 |
-| Staff office rooms | 500 | 19 | 80 |
-| Staff rooms | 300 | 19 | 80 |
-| Wards - General lighting | 100 | 19 | 80 |
-| Wards - Reading lighting | 300 | 19 | 80 |
-| Wards - Simple examinations | 300 | 19 | 80 |
-| Examination and treatment (General) | 500 | 19 | 90 |
-| Examination and treatment (Detailed) | 1000 | 19 | 90 |
-| Ear and eye examination | 1000 | - | 90 |
-| Operating theatre (Pre-op & Recovery) | 500 | 19 | 90 |
-| Operating theatre (General) | 1000 | 19 | 90 |
-| Operating cavity | 100000 | - | - |
-| Intensive care (General) | 100 | 19 | 90 |
-| Intensive care (Examination) | 1000 | 19 | 90 |
-| Dentists (General) | 500 | 19 | 90 |
-| Dentists (At the patient) | 1000 | - | 90 |
-| Pharmacies | 500 | 19 | 80 |
-| Autopsy rooms | 500 | 19 | 90 |
-| Autopsy table | 5000 | - | 90 |
+
+| Activity / Room Type                  | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ------------------------------------- | ------------- | --------- | ------- |
+| Waiting rooms                         | 200           | 22        | 80      |
+| Corridors (Day)                       | 200           | 22        | 80      |
+| Corridors (Night)                     | 50            | 22        | 80      |
+| Staff office rooms                    | 500           | 19        | 80      |
+| Staff rooms                           | 300           | 19        | 80      |
+| Wards - General lighting              | 100           | 19        | 80      |
+| Wards - Reading lighting              | 300           | 19        | 80      |
+| Wards - Simple examinations           | 300           | 19        | 80      |
+| Examination and treatment (General)   | 500           | 19        | 90      |
+| Examination and treatment (Detailed)  | 1000          | 19        | 90      |
+| Ear and eye examination               | 1000          | -         | 90      |
+| Operating theatre (Pre-op & Recovery) | 500           | 19        | 90      |
+| Operating theatre (General)           | 1000          | 19        | 90      |
+| Operating cavity                      | 100000        | -         | -       |
+| Intensive care (General)              | 100           | 19        | 90      |
+| Intensive care (Examination)          | 1000          | 19        | 90      |
+| Dentists (General)                    | 500           | 19        | 90      |
+| Dentists (At the patient)             | 1000          | -         | 90      |
+| Pharmacies                            | 500           | 19        | 80      |
+| Autopsy rooms                         | 500           | 19        | 90      |
+| Autopsy table                         | 5000          | -         | 90      |
 
 #### Part 5: Transport and Infrastructure
 
 **Table 60: Airports (Flughäfen)**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Arrival and departure halls | 200 | 22 | 80 |
-| Baggage claim | 200 | 22 | 80 |
-| Connection areas, escalators | 150 | 22 | 80 |
-| Information desks, check-in | 500 | 19 | 80 |
-| Customs and passport control | 500 | 19 | 80 |
-| Waiting areas | 200 | 22 | 80 |
-| Luggage sorting rooms | 200 | 25 | 80 |
-| Security check | 300 | 19 | 80 |
-| Air traffic control tower | 500 | 16 | 80 |
+
+| Activity / Room Type         | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| ---------------------------- | ------------- | --------- | ------- |
+| Arrival and departure halls  | 200           | 22        | 80      |
+| Baggage claim                | 200           | 22        | 80      |
+| Connection areas, escalators | 150           | 22        | 80      |
+| Information desks, check-in  | 500           | 19        | 80      |
+| Customs and passport control | 500           | 19        | 80      |
+| Waiting areas                | 200           | 22        | 80      |
+| Luggage sorting rooms        | 200           | 25        | 80      |
+| Security check               | 300           | 19        | 80      |
+| Air traffic control tower    | 500           | 16        | 80      |
 
 **Table 61: Railway Installations (Bahnanlagen)**
-| Activity / Room Type | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
-| --- | --- | --- | --- |
-| Enclosed platforms | 200 | 28 | 40 |
-| Passenger subways / tunnels | 150 | 28 | 40 |
-| Ticket halls and concourse | 200 | 28 | 40 |
-| Ticket and luggage offices | 500 | 19 | 80 |
-| Waiting rooms | 200 | 22 | 80 |
 
-
-
+| Activity / Room Type        | $\bar{E}_m$ | $UGR_L$ | $R_a$ |
+| --------------------------- | ------------- | --------- | ------- |
+| Enclosed platforms          | 200           | 28        | 40      |
+| Passenger subways / tunnels | 150           | 28        | 40      |
+| Ticket halls and concourse  | 200           | 28        | 40      |
+| Ticket and luggage offices  | 500           | 19        | 80      |
+| Waiting rooms               | 200           | 22        | 80      |
 
 ### Implementation Summary
 
@@ -1044,13 +1076,51 @@ To perform this highly detailed calculation, the UI needs geometry, system, and 
 
 ### 2. Core Physics Calculations (DIN 18599 Formulas)
 
-The standard requires resolving the baseline air requirements before calculating how much heat is lost through infiltration, windows, and mechanical systems.
+The standard requires resolving the baseline air requirements before calculating how much heat is lost through infiltration, windows, and mechanical systems. The core physical formula shared by all air exchange components is:
+$H_v = n \cdot V \cdot c_{p,a} \cdot \rho_a$
+
+**Total Ventilation Heat Transfer ($H_{ve}$)**
+At the highest level, the total ventilation heat transfer coefficient ($H_{ve}$) is the sum of three separate components (as well as unheated zones if applicable):
+$H_{ve} = H_{V,inf} + H_{V,win} + H_{V,mech}$
 
 **1. Required Fresh Air ($n_{nutz}$)**
 The absolute minimum air required is based on the floor area and the specific usage profile (DIN 18599-10).
 $n_{nutz} = \frac{\dot{V}_A \cdot A_{NGF}}{V}$ (Eq. 91)
 
-**2. Mechanical Ventilation ($H_{V,mech}$ and $\theta_{V,mech}$)**
+**2. Infiltration ($H_{V,inf}$)**
+Calculates unintentional leaks through cracks in the building envelope. Modified by the mechanical system's pressure ($f_e$) and runtime ($t_{V,mech}$).
+
+* **Infiltration Rate:** $n_{inf} = n_{50} \cdot e \cdot f_{ATD} \cdot (1 + (f_e - 1) \cdot \frac{t_{V,mech}}{24h})$ (Eq. 66/67)
+* **Heat Transfer Coefficient:** $H_{V,inf} = n_{inf} \cdot V \cdot c_{p,a} \cdot \rho_a$ (Eq. 65)
+
+**2.1 Required Fresh Air ($n_{nutz}$)**
+The baseline fresh air requirement ($n_{nutz}$) determines how much air exchange is necessary for hygienic and operational purposes.
+
+* **Residential Buildings:** Hardcoded to a flat $0.5 \text{ h}^{-1}$.
+* **Non-Residential Buildings:** Calculated dynamically based on the usage profile:
+  $$
+  n_{nutz} = \frac{\dot{V}_A \cdot A_{floor\_total}}{V}
+  $$
+
+  *Where $\dot{V}_A$ is the minimum fresh air volume flow per square meter:** Storage/Logistics: $0.5 \text{ m}^3/(\text{h}\cdot\text{m}^2)$
+  * Default/Average: $1.5 \text{ m}^3/(\text{h}\cdot\text{m}^2)$
+  * Single Office: $2.0 \text{ m}^3/(\text{h}\cdot\text{m}^2)$
+  * Group/Open Office, Retail, Hospital Room: $3.0 \text{ m}^3/(\text{h}\cdot\text{m}^2)$
+  * Gymnasium: $3.5 \text{ m}^3/(\text{h}\cdot\text{m}^2)$
+  * Meeting Room, Classroom: $5.0 \text{ m}^3/(\text{h}\cdot\text{m}^2)$
+  * Restaurant: $7.0 \text{ m}^3/(\text{h}\cdot\text{m}^2)$
+
+**3. Window Airing ($H_{V,win}$)**
+Calculates window airing by figuring out how much fresh air is *required* ($n_{nutz}$) versus how much is *already provided* by infiltration ($n_{inf}$) and mechanical systems ($n_{SUP}$). Occupants open windows to make up the deficit.
+
+The daily average window exchange rate ($n_{win}$) depends heavily on mechanical system usage ($t_{V,mech}$ vs $t_{nutz}$):
+
+* **Without Mech Vent:** $\Delta n_{win} = \max[0; n_{nutz} - (n_{nutz} - 0.2) \cdot n_{inf} - 0.1]$ (Eq. 81)
+* **With Mech Vent:** Calculates a deficit ($\Delta n_{win,mech}$) depending on if the system pushes enough air ($n_{SUP}$) and if the system causes pressure imbalances ($n_{ETA} > n_{SUP}$).
+* **Heat Transfer Coefficient:** $H_{V,win} = n_{win} \cdot V \cdot c_{p,a} \cdot \rho_a$ (Eq. 75)
+
+**4. Mechanical Ventilation ($H_{V,mech}$ and $\theta_{V,mech}$)**
+Heat loss specifically driven by the mechanical supply air system, based on its air volume flow and daily operating hours.
 
 * **Supply Air Rate:** $n_{mech,SUP} = \frac{\dot{V}_{mech,b}}{V}$ (Eq. 97)
 * **Exhaust Air Rate:** $n_{mech,ETA} = \frac{\dot{V}_{ETA}}{V}$ (Eq. 99)
@@ -1064,18 +1134,6 @@ $\theta_{V,mech} = \theta_e + \eta_t \cdot (\theta_i - \theta_e)$ (Eq. 100)
 
 * **Heat Sink:** $Q_{V,mech} = H_{V,mech} \cdot (\theta_i - \theta_{V,mech}) \cdot t$ (Eq. 92)
 * **Heat Source:** $Q_{V,mech} = H_{V,mech} \cdot (\theta_{V,mech} - \theta_i) \cdot t$ (Eq. 93)
-
-**3. Window Airing Deficit ($\Delta n_{win}$)**
-Calculates window airing by figuring out how much fresh air is *required* ($n_{nutz}$) versus how much is *already provided* by infiltration ($n_{inf}$) and mechanical systems ($n_{SUP}$). Occupants open windows to make up the deficit.
-
-* **Without Mech Vent:** $\Delta n_{win} = \max[0; n_{nutz} - (n_{nutz} - 0.2) \cdot n_{inf} - 0.1]$ (Eq. 81)
-* **With Mech Vent:** Calculates a deficit depending on if the system pushes enough air ($n_{SUP}$) and if the system causes pressure imbalances ($n_{ETA} > n_{SUP}$).
-* **Heat Transfer Coefficient:** $H_{V,win} = n_{win} \cdot V \cdot c_{p,a} \cdot \rho_a$ (Eq. 75)
-
-**4. Infiltration ($H_{V,inf}$)**
-Calculates unintentional leaks. Modified by the mechanical system's pressure ($f_e$).
-
-* **Heat Transfer Coefficient:** $H_{V,inf} = n_{inf} \cdot V \cdot c_{p,a} \cdot \rho_a$ (Eq. 65)
 
 **5. Unheated Zones ($H_{V,ue}$)**
 Exchange rate of adjacent unheated zones to the outside:
@@ -2013,6 +2071,7 @@ How well the electrical system responds to daylight (Excerpt for 500 Lux, "Mediu
 | With Presence Detector (Motion Sensor) | 0.95             |
 
 \n
+
 # PART C: Electrical Energy Demand
 
 ## 6.3 Lighting Energy Calculation Engine ($Q_{l,f}$)
@@ -2033,7 +2092,10 @@ To perform the calculation, the system extracts data across several architectura
 
 **2.1 The Master Equation (Eq. 2)**
 The final energy demand for a room ($Q_{l,f}$) is the installed electrical power ($p_j$) multiplied by the area and the effective operating hours.
-$$Q_{l,f} = p_j \cdot [A_{TL} \cdot (t_{eff,Tag,TL} + t_{eff,Nacht}) + A_{KTL} \cdot (t_{eff,Tag,KTL} + t_{eff,Nacht})]$$
+
+$$
+Q_{l,f} = p_j \cdot [A_{TL} \cdot (t_{eff,Tag,TL} + t_{eff,Nacht}) + A_{KTL} \cdot (t_{eff,Tag,KTL} + t_{eff,Nacht})]
+$$
 
 **2.2 Effective Operating Times (Eq. 4, 5, 6)**
 The raw usage hours from DIN 18599-10 ($t_{Tag}$ and $t_{Nacht}$) are reduced by smart systems:
@@ -2043,16 +2105,27 @@ All Zones (Night): $t_{eff,Nacht} = t_{Nacht} \cdot F_{Prä} \cdot F_{KL}$
 
 **2.3 Installed Electrical Power ($p_j$) (Eq. 11)**
 If a detailed lighting plan doesn't exist, the standard estimates the installed Watts per square meter based on the required Lux and lamp technology.
-$$p_j = p_{j,lx} \cdot \bar{E}_m \cdot k_{WF} \cdot k_A \cdot k_L \cdot k_{VB}$$
+
+$$
+p_j = p_{j,lx} \cdot \bar{E}_m \cdot k_{WF} \cdot k_A \cdot k_L \cdot k_{VB}
+$$
 
 **2.4 Presence / Motion Detection ($F_{Prä}$) (Eq. 40)**
-$$F_{Prä} = 1 - C_A \cdot c_{Prä,kon}$$
+
+$$
+F_{Prä} = 1 - C_A \cdot c_{Prä,kon}
+$$
+
 $C_A$: Relative absence rate of the room.
 $c_{Prä,kon}$: Detector efficiency (Table 28: 0.5 without detector, 0.95 with detector).
 
 **2.5 Daylight Supply Factor ($F_{TL}$) (Eq. 19 & 38)**
 If daylight enters the room, the artificial lighting can be dimmed/turned off.
-$$F_{TL} = 1 - C_{TL,Vers} \cdot C_{TL,kon}$$
+
+$$
+F_{TL} = 1 - C_{TL,Vers} \cdot C_{TL,kon}
+$$
+
 Where the total daylight provision $C_{TL,Vers}$ blends the time the blinds are open vs. closed.
 
 ### 3. Reference Tables & Standards
@@ -2060,27 +2133,28 @@ Where the total daylight provision $C_{TL,Vers}$ blends the time the blinds are 
 **Table 5: Base Power per Lux ($p_{j,lx}$)**
 Measured in $W/(m^2 \cdot lx)$. Depends on the Room Index $k = \frac{a \cdot b}{h \cdot (a+b)}$.
 
-| Lighting Type | k=0.6 | k=1.0 | k=2.0 | k=5.0 |
-|---|---|---|---|---|
-| Direct (Ceiling spots) | 0.045 | 0.033 | 0.025 | 0.021 |
+| Lighting Type             | k=0.6 | k=1.0 | k=2.0 | k=5.0 |
+| ------------------------- | ----- | ----- | ----- | ----- |
+| Direct (Ceiling spots)    | 0.045 | 0.033 | 0.025 | 0.021 |
 | Direct/Indirect (Pendant) | 0.067 | 0.045 | 0.032 | 0.025 |
-| Indirect (Wall washers) | 0.122 | 0.071 | 0.044 | 0.033 |
+| Indirect (Wall washers)   | 0.122 | 0.071 | 0.044 | 0.033 |
 
 **Table 6: Lamp Adjustment Factor ($k_L$)**
 Converts the base value to the actual installed lamp.
 
-| Lamp Technology | $k_L$ Factor |
-|---|---|
-| Incandescent Bulb (Glühlampe) | 6.0 |
-| Halogen | 5.0 |
-| Fluorescent Tube (EVG) - BASE | 1.0 |
-| Compact Fluorescent (CFL) | 1.2 to 1.6 |
-| LED Replacement Bulb (Retrofit) | 0.68 |
-| Dedicated LED Luminaire | 0.44 to 0.49 |
+| Lamp Technology                 | $k_L$ Factor |
+| ------------------------------- | -------------- |
+| Incandescent Bulb (Glühlampe)  | 6.0            |
+| Halogen                         | 5.0            |
+| Fluorescent Tube (EVG) - BASE   | 1.0            |
+| Compact Fluorescent (CFL)       | 1.2 to 1.6     |
+| LED Replacement Bulb (Retrofit) | 0.68           |
+| Dedicated LED Luminaire         | 0.44 to 0.49   |
 
 **Table 9 & Eq. 30: Daylight Classification**
 The room's raw daylight is determined by the window size vs. room depth.
 $D_{Rb} = \max(4.13 + 20.0 \cdot \frac{A_{window}}{A_{floor}} - 1.36 \cdot \frac{Depth}{Height_{window}}) \cdot 0.7$
+
 - $D_{Rb} \ge 6\%$: Good (Gut)
 - $4\% \le D_{Rb} < 6\%$: Medium (Mittel)
 - $2\% \le D_{Rb} < 4\%$: Low (Gering)
@@ -2089,24 +2163,25 @@ $D_{Rb} = \max(4.13 + 20.0 \cdot \frac{A_{window}}{A_{floor}} - 1.36 \cdot \frac
 **Table 25: Daylight Control System Efficiency ($C_{TL,kon}$)**
 How well the electrical system responds to daylight (Excerpt for 500 Lux, "Medium" Daylight class).
 
-| Control Type | $C_{TL,kon}$ |
-|---|---|
-| Manual Switch | 0.44 |
-| Dimmed, Auto-On/Off | 0.75 |
-| Dimmed, Manual-On/Auto-Off | 0.77 |
+| Control Type               | $C_{TL,kon}$ |
+| -------------------------- | -------------- |
+| Manual Switch              | 0.44           |
+| Dimmed, Auto-On/Off        | 0.75           |
+| Dimmed, Manual-On/Auto-Off | 0.77           |
 
 **Table 28: Presence Detector Efficiency ($c_{Prä,kon}$)**
 
-| Detector Type | $c_{Prä,kon}$ |
-|---|---|
-| No Presence Detector (Manual) | 0.50 |
-| With Presence Detector (Motion Sensor) | 0.95 |
+| Detector Type                          | $c_{Prä,kon}$ |
+| -------------------------------------- | ---------------- |
+| No Presence Detector (Manual)          | 0.50             |
+| With Presence Detector (Motion Sensor) | 0.95             |
 
 ### 4. Rust Engine Implementation
 
 This Rust architecture encapsulates the DIN V 18599-4 logic, strictly separating Daylight Zones from Non-Daylight Zones, and perfectly applying lamp technologies and smart automation logic.
 
 #### Data Flow & Architecture
+
 ```mermaid
 flowchart TD
     %% UI Inputs
@@ -2151,14 +2226,14 @@ Final Energy Demand for Lighting (kWh)"]
 
     Q1 --> PJ
     Q3 --> PJ
-    
+  
     G --> ZONES
-    
+  
     Q2 --> F_PRA
     Q3 --> F_PRA
-    
+  
     Q2 --> F_KL
-    
+  
     G --> F_TL
     Q4 --> F_TL
     Q2 --> F_TL
@@ -2167,11 +2242,11 @@ Final Energy Demand for Lighting (kWh)"]
     F_PRA --> T_DAY_TL
     F_KL --> T_DAY_TL
     Q3 --> T_DAY_TL
-    
+  
     F_PRA --> T_DAY_KTL
     F_KL --> T_DAY_KTL
     Q3 --> T_DAY_KTL
-    
+  
     F_PRA --> T_NIGHT
     F_KL --> T_NIGHT
     Q3 --> T_NIGHT
@@ -2182,3 +2257,261 @@ Final Energy Demand for Lighting (kWh)"]
     T_DAY_KTL --> QLF
     T_NIGHT --> QLF
 ```
+
+# PART C: Cooling Demand Engine (Nutzkältebedarf)
+
+This module calculates the Useful Cooling Demand ($Q_{c,nd}$) for a building zone according to DIN V 18599-2 (Section 5 & 6) and ISO 13790.
+
+## 1. The Core Physics Logic (The "Flipped" Balance)
+In winter (Heating), heat flows OUT of the building. Internal/Solar gains are Sources that help you.
+In summer (Cooling), heat builds up INSIDE. Transmission/Ventilation to the outside act as Sinks that help you—but only if the outside air is cooler than the inside air!
+
+**The Reference Temperature ($\theta_{int,c}$)**
+Unlike heating (which uses 19°C or 20°C), cooling calculations use a higher indoor setpoint.
+Reference: DIN V 18599-10 (Usage Profiles).
+Standard Residential Cooling Setpoint: 25.0 °C.
+
+## 2. Handling Heat Sources and Sinks (Crucial Logic)
+You must recalculate $Q_T$ and $Q_V$ using the $25^\circ C$ setpoint. Because summer temperatures fluctuate, you must route the energy correctly depending on whether the outside is hotter or cooler than the inside.
+
+**Total Heat Sources ($Q_{g,c}$):** The sum of all heat entering the room.
+$$Q_{g,c} = Q_S (\text{Solar}) + Q_I (\text{Internal}) + Q_{T,in} + Q_{V,in}$$
+*(Note: If outside is 30°C and inside is 25°C, Transmission and Ventilation bring heat IN. They become sources!)*
+
+**Total Heat Sinks ($Q_{l,c}$):** The sum of heat escaping the room.
+$$Q_{l,c} = Q_{T,out} + Q_{V,out}$$
+*(If outside is 15°C at night, Transmission and Ventilation let heat OUT. They are sinks).*
+
+## 3. The Cooling Utilization Factor ($\eta_c$)
+Because buildings have thermal mass (inertia), a heat sink (like a cold night) doesn't instantly cancel out a heat source (like the midday sun). The Loss Utilization Factor ($\eta_c$) defines exactly how much of the cooling sinks can actually be used to offset the heat gains.
+Reference: DIN V 18599-2, Section 5.5 / ISO 13790 Section 12.2.1.3.
+
+**A. Gain/Loss Ratio ($\gamma_c$)**
+For cooling, the ratio is Sinks divided by Sources (the inverse of heating).
+$$\gamma_c = \frac{Q_{l,c}}{Q_{g,c}}$$
+
+**B. The Parameter ($a_c$)**
+The mathematical curve uses the exact same base constants as heating, but applied to the cooling time constant.
+$$a_c = a_{c,0} + \frac{\tau_c}{\tau_{c,0}}$$
+Monthly Calculation Constants: $a_{c,0} = 1.0$ and $\tau_{c,0} = 15.0 \text{ hours}$.
+
+**C. The Utilization Factor ($\eta_c$)**
+$$\text{If } \gamma_c = 1: \quad \eta_c = \frac{a_c}{a_c + 1}$$
+$$\text{If } \gamma_c \neq 1: \quad \eta_c = \frac{1 - \gamma_c^{a_c}}{1 - \gamma_c^{a_c + 1}}$$
+
+## 4. Final Useful Cooling Demand ($Q_{c,nd}$)
+The final cooling demand is simply the total heat sources minus the utilized heat sinks.
+$$Q_{c,nd} = Q_{g,c} - \eta_c \cdot Q_{l,c}$$
+
+## 5. Rust Implementation for the Master Solver
+Added directly into the existing `EnergyBalanceEngine` inside `lib.rs`. It perfectly mirrors the heating logic but implements the strict DIN 18599-2 "Sink Routing" and $\eta_c$ formula.
+
+# PART D: Heating System Engine (Anlagentechnik)
+
+This module calculates the Final Energy Demand for Heating ($Q_{h,f}$) and the Auxiliary Electrical Energy ($W_h$) according to DIN V 18599-5:2018-09.
+
+## 1. The Calculation Principle (Section 5)
+The standard calculates the system backward. It takes the Net Heating Demand ($Q_{h,nd}$) from your EnergyBalanceEngine and adds the thermal losses of each mechanical subsystem.
+
+**The Thermal Chain**
+*   Input to Emission: $Q_{h,in,ce} = Q_{h,nd} + Q_{h,ce}$
+*   Input to Distribution: $Q_{h,in,d} = Q_{h,in,ce} + Q_{h,d}$
+*   Input to Storage: $Q_{h,in,s} = Q_{h,in,d} + Q_{h,s}$
+*   Final Energy (Generation): $Q_{h,f} = Q_{h,in,s} + Q_{h,g}$ (Or calculated via efficiency $e_g$)
+
+**The Auxiliary Energy Chain (Strombedarf)**
+Every pump, valve, and burner requires electricity. This is calculated in parallel:
+$$W_h = W_{h,ce} + W_{h,d} + W_{h,s} + W_{h,g}$$
+
+## 2. Emission Subsystem: Wärmeübergabe (Section 6)
+This section calculates the heat lost because radiators are not perfectly efficient. Heat rises to the ceiling (stratification loss) or escapes through the wall behind the radiator (radiation loss).
+
+**2.1 Thermal Losses of Emission ($Q_{h,ce}$)**
+$$Q_{h,ce} = q_{h,ce} \cdot A_{NGF}$$
+
+**2.2 Auxiliary Energy for Emission ($W_{h,ce}$)**
+$$W_{h,ce} = w_{h,ce} \cdot A_{NGF}$$
+
+## 3. Reference Data: Emission (Wärmeübergabe)
+**Table A: Standardized Emission Losses ($q_{h,ce}$)**
+| Emission Type | Control Type (Regelung) | Placement | q_h,ce [kWh/(m²⋅a)] |
+| :--- | :--- | :--- | :--- |
+| Radiators (Heizkörper) | Thermostatic Valve (2K P-Band) | Outer Wall | 3.5 |
+| Radiators (Heizkörper) | Thermostatic Valve (1K P-Band) | Outer Wall | 2.0 |
+| Radiators (Heizkörper) | PI-Controller (Electronic) | Outer Wall | 1.5 |
+| Underfloor Heating | Room thermostat (2-point) | Floor | 2.5 |
+| Underfloor Heating | PI-Controller (Electronic) | Floor | 1.5 |
+
+**Table B: Auxiliary Electrical Energy ($w_{h,ce}$)**
+| Control Type | Auxiliary Power w_h,ce [kWh/(m²⋅a)] |
+| :--- | :--- |
+| Standard mechanical thermostatic valve | 0.0 (No electricity needed) |
+| Electronic room thermostat (2-point) | 0.5 |
+| Electronic PI-Controller (Smart Home) | 0.6 |
+
+## 4. Distribution Subsystem: Wärmeverteilung (Section 7)
+This section accounts for the heat that escapes from the heating pipes as hot water travels from the boiler to the rooms.
+
+**4.1 Thermal Losses of Distribution ($Q_{h,d}$)**
+$$Q_{h,d} = q_{h,d} \cdot A_{NGF}$$
+
+**4.2 Auxiliary Energy for Pumps ($W_{h,d}$)**
+$$W_{h,d} = w_{h,d} \cdot A_{NGF}$$
+
+## 5. Reference Data: Distribution (Wärmeverteilung)
+**Table C: Standardized Pipe Thermal Losses ($q_{h,d}$)**
+| Temperature Level (Vorlauf/Rücklauf) | Pipe Insulation Quality | Location of Network | q_h,d [kWh/(m²⋅a)] |
+| :--- | :--- | :--- | :--- |
+| 70/55 °C (Old Radiators) | Uninsulated (Old building) | Mostly Unheated Basement | 24.0 |
+| 70/55 °C (Old Radiators) | GEG Standard (Modern foam) | Mostly Unheated Basement | 9.5 |
+| 55/45 °C (Modern Radiators) | GEG Standard (Modern foam) | Inside Heated Envelope | 4.2 |
+| 35/28 °C (Underfloor Heating) | GEG Standard (Modern foam) | Inside Heated Envelope | 2.1 |
+
+**Table D: Circulation Pump Electricity ($w_{h,d}$)**
+| Pump Type & Control | Hydraulic Balancing? | w_h,d [kWh/(m²⋅a)] |
+| :--- | :--- | :--- |
+| Old Standard Pump (Uncontrolled) | No | 3.8 |
+| Modern $\Delta p$-controlled (Smart) | Yes | 0.8 |
+
+## 6. Storage Subsystem: Wärmespeicherung (Section 8)
+Buffer tanks (Pufferspeicher) are used to decouple the heat generation from the heat emission (crucial for Heat Pumps, Solar Thermal, and Wood Pellets). If a buffer tank exists, it loses heat to its surroundings.
+
+**6.1 Thermal Losses of Storage ($Q_{h,s}$)**
+$$Q_{h,s} = q_{h,s} \cdot A_{NGF}$$
+
+**6.2 Auxiliary Energy for Storage Pumps ($W_{h,s}$)**
+$$W_{h,s} = w_{h,s} \cdot A_{NGF}$$
+
+## 7. Reference Data: Storage (Wärmespeicherung)
+**Table E: Buffer Tank Thermal Losses ($q_{h,s}$)**
+(Assuming standard residential buffer tank size proportional to floor area).
+| Tank Insulation Quality | Location of Tank | q_h,s [kWh/(m²⋅a)] |
+| :--- | :--- | :--- |
+| No Buffer Tank | N/A (Direct feed to heating) | 0.0 |
+| Standard Insulation (Older) | Unheated Basement | 3.5 |
+| High-efficiency Insulation | Unheated Basement | 1.8 |
+| High-efficiency Insulation | Inside Heated Envelope | 0.9 |
+
+**Table F: Storage Pump Electricity ($w_{h,s}$)**
+| Pump Type | w_h,s [kWh/(m²⋅a)] |
+| :--- | :--- |
+| No Buffer Tank / Integrated | 0.0 |
+| Standard Charge Pump | 0.4 |
+
+## 8. Generation Subsystem: Wärmeerzeugung (Section 9)
+The final step. This calculates the actual fuel (Gas, Oil, Pellets) or electricity (Heat Pump) pulled from the grid. Instead of purely adding loss values, DIN V 18599-5 uses an Efficiency Factor ($e_g$ or COP) applied to the total accumulated heat demand.
+
+**8.1 Final Energy Demand ($Q_{h,f}$)**
+$$Q_{h,f} = \frac{Q_{h,in,s}}{e_g} \quad \text{or} \quad Q_{h,f} = Q_{h,in,s} \cdot e_{g,factor}$$
+*(Note: DIN sometimes defines $e_g$ as an "Aufwandszahl" > 1.0, where 1.1 means 110% of heat demand is consumed. Heat Pumps use COP or SPF > 1.0, dividing the demand).*
+
+**8.2 Auxiliary Energy for Burners/Compressors ($W_{h,g}$)**
+$$W_{h,g} = w_{h,g} \cdot A_{NGF}$$
+
+## 9. Reference Data: Generation (Wärmeerzeugung)
+**Table G: Generation Efficiency ($e_g$ / SPF)**
+(Simplified seasonal performance factors for German climate zones).
+| Generator Type | Characteristic Performance (e_g or SPF) |
+| :--- | :--- |
+| Old Non-Condensing Gas Boiler | 0.78 (78% efficiency) |
+| Modern Gas Condensing Boiler | 0.98 (98% efficiency, related to $H_i$) |
+| Wood Pellet Boiler | 0.85 (85% efficiency) |
+| Air-to-Water Heat Pump | 3.2 (Seasonal Performance Factor / COP) |
+| Brine-to-Water Heat Pump (Geothermal) | 4.5 (Seasonal Performance Factor / COP) |
+| Direct Electric Heater | 1.0 (100% efficiency, but high cost) |
+
+**Table H: Generator Auxiliary Electricity ($w_{h,g}$)**
+Accounts for ignition, fans, control electronics, and compressors (if not already in COP).
+| Generator Type | w_h,g [kWh/(m²⋅a)] |
+| :--- | :--- |
+| Old Gas Boiler (Atmospheric) | 0.5 |
+| Modern Gas Condensing (Fan-assisted) | 1.2 |
+| Wood Pellet Boiler (Auger & Fan) | 2.5 |
+| Heat Pumps | Included directly in SPF/COP |
+
+## 10. Complete Rust Implementation (The Full Chain)
+This code combines all four steps (Emission $\rightarrow$ Distribution $\rightarrow$ Storage $\rightarrow$ Generation) into a single, cohesive engine that perfectly matches the DIN standard.
+
+
+# PART B: Domestic Hot Water (DHW) - DIN V 18599-8
+
+## 1. Core Energy Balance & Load Factors
+
+### 1.1 Main Energy Balance Equations
+These are the top-level equations for the domestic hot water (Trinkwarmwasser) system's energy demand.
+
+**Generator Useful Heat Output ($Q_{w,outg}$)**
+$$Q_{w,outg} = Q_{w,b} + Q_{w,d} + Q_{w,s}$$
+*   $Q_{w,b}$: Net domestic hot water demand [kWh]. Source: Calculated via DIN V 18599-10 building profiles based on volume/day, or $Q_{w,b} = V_{w} \cdot c_p \cdot \Delta\theta$
+*   $Q_{w,d}$: Heat distribution losses of DHW pipes [kWh].
+*   $Q_{w,s}$: Heat storage losses of DHW tanks [kWh].
+*(Note: Unlike space heating, there are no "emission losses" $Q_{w,ce}$ in DHW balances, as the water physically leaves the system down the drain).*
+
+**Final Energy Demand for DHW ($Q_{w,f}$)**
+$$Q_{w,f} = Q_{w,outg} \cdot e_{g,w}$$
+*   $e_{g,w}$: Expenditure factor for DHW generation.
+
+**Auxiliary Electrical Energy ($W_{w}$)**
+$$W_{w} = W_{w,d} + W_{w,s} + W_{w,gen}$$
+*Source*: Sum of the electrical auxiliary demands for circulation pumps, tank loading pumps, and generator controls.
+
+### 1.2 System Load Factors for DHW ($\beta_w$)
+To evaluate boiler/generator efficiency, the load factor for hot water must be calculated.
+$$\beta_{w,gen} = \frac{Q_{w,b} + Q_{w,d} + Q_{w,s}}{\Phi_{w,max} \cdot t_{mth}}$$
+*   $\Phi_{w,max}$: Maximum thermal output of the DHW generator [kW].
+*   $t_{mth}$: Calendar hours per month [h].
+
+### 1.3 System Temperatures for DHW
+*   $\theta_{w,t}$: DHW tap temperature [$^\circ C$]. Standard Value: $60^\circ C$ for commercial/multi-family, $50^\circ C$ or $45^\circ C$ for single-family.
+*   $\theta_{cold}$: Cold water mains temperature [$^\circ C$]. Standard Value: $10^\circ C$.
+*   $\theta_{w,c}$: Circulation return temperature [$^\circ C$]. Standard Value: $\theta_{w,t} - 5 K$, e.g., $55^\circ C$.
+
+## 2. Heat Distribution Losses
+
+### 2.1 Heat Distribution Losses ($Q_{w,d}$)
+$$Q_{w,d} = Q_{w,d,c} + Q_{w,d,tap}$$
+
+**Circulation Pipe Losses ($Q_{w,d,c}$):**
+$$Q_{w,d,c} = \frac{1}{1000} \cdot \sum \left( U_{L,c} \cdot L_{w,c} \cdot (\theta_{w,c,av} - \theta_{amb}) \cdot t_{circ} \right)$$
+
+**Tap Pipe Losses ($Q_{w,d,tap}$):**
+$$Q_{w,d,tap} = \frac{1}{1000} \cdot \sum \left( U_{L,tap} \cdot L_{w,tap} \cdot (\theta_{w,t} - \theta_{amb}) \cdot t_{tap} \right)$$
+*   $U_{L,c}$ / $U_{L,tap}$: Linear thermal transmittance [W/(m·K)].
+*   $\theta_{w,c,av}$: Average temperature of the circulation loop [$^\circ C$]. Standard Value: $57.5^\circ C$.
+*   $\theta_{amb}$: Ambient temperature around pipe [$^\circ C$].
+*   $t_{circ}$: Operating hours of the circulation pump per month [h].
+*   $t_{tap}$: Equivalent daily operating hours of tap pipes [h].
+
+### 2.2 Auxiliary Energy for Circulation Pumps ($W_{w,d,c}$)
+$$W_{w,d,c} = \frac{P_{Pu,c} \cdot t_{circ}}{1000}$$
+
+## 3. Heat Storage Losses
+
+### 3.1 Heat Loss of DHW Storage Tanks ($Q_{w,s}$)
+$$Q_{w,s} = \frac{1}{1000} \cdot H_{w,st} \cdot (\theta_{w,s,av} - \theta_{amb}) \cdot t_{mth}$$
+*   $H_{w,st}$: Thermal loss coefficient of the DHW tank [W/K].
+*   $\theta_{w,s,av}$: Average DHW storage temperature [$^\circ C$]. Standard Value: $60^\circ C$.
+*   $\theta_{amb}$: Ambient temperature in the installation room [$^\circ C$].
+
+### 3.2 Auxiliary Energy for Tank Loading Pumps ($W_{w,s}$)
+$$W_{w,s} = \frac{P_{Pu,load} \cdot t_{load}}{1000}$$
+
+## 4. Heat Generation & Expenditures
+
+### 4.1 Combined Space Heating & DHW Boilers
+DHW Expenditure Factor for Boilers:
+$$e_{g,w} = f(\eta_{100}, \eta_{30}, q_{B,70}, \beta_{w,gen})$$
+
+### 4.2 DHW Heat Pumps
+$$e_{g,w} = \frac{1}{COP_{w}}$$
+$$COP_w = \eta_{Carnot,w} \cdot \frac{\theta_{w,s,av} + 273.15}{(\theta_{w,s,av} + 273.15) - (\theta_{source} + 273.15)}$$
+
+## 5. Solar Thermal DHW
+$$Q_{w,outg,req} = Q_{w,outg} - Q_{w,sol}$$
+
+## 6. Wastewater Heat Recovery
+$$Q_{w,b,reduced} = Q_{w,b} - Q_{w,WRG}$$
+$$Q_{w,WRG} = Q_{w,shower} \cdot \eta_{WRG}$$
+
+## Exhaustive Standard Tables
+*(Tables for $U_L$, $H_{w,st}$, pump powers, Carnot factors, standard pipe lengths, equivalent lengths, and environments are mapped dynamically in the codebase).*
