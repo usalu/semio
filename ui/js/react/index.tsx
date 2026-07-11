@@ -2076,6 +2076,24 @@ export function writeStoredUiChromeLocale(locale: UiLocale): void {
   localStorage.setItem(UI_CHROME_LOCALE_STORAGE_KEY, locale);
 }
 
+/** @emoji 🗣️ Id of the always-available default terminology (no term substitutions). */
+export const UI_TERMINOLOGY_NATIVE = "native";
+
+/** @emoji 🗣️ localStorage key for the active app terminology id. */
+export const UI_CHROME_TERMINOLOGY_STORAGE_KEY = "ui.chrome.terminology";
+
+/** @emoji 🗣️ Reads the persisted terminology id from localStorage, defaulting to native. */
+export function readStoredUiChromeTerminology(): string {
+  if (typeof localStorage === "undefined") return UI_TERMINOLOGY_NATIVE;
+  return localStorage.getItem(UI_CHROME_TERMINOLOGY_STORAGE_KEY) || UI_TERMINOLOGY_NATIVE;
+}
+
+/** @emoji 🗣️ Persists the active terminology id to localStorage. */
+export function writeStoredUiChromeTerminology(id: string): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(UI_CHROME_TERMINOLOGY_STORAGE_KEY, id);
+}
+
 /** @emoji 🧵 localStorage key for WASM compute worker thread count. */
 export const UI_COMPUTE_WORKER_COUNT_STORAGE_KEY = "ui.compute.workerCount";
 
@@ -2368,6 +2386,7 @@ export type UiTranslationSchema = {
         readonly app: UiLabelValue;
         readonly appearance: UiLabelValue;
         readonly language: UiLabelValue;
+        readonly terminology: UiLabelValue;
       };
       readonly appearance: {
         readonly light: UiLabelValue;
@@ -2377,6 +2396,10 @@ export type UiTranslationSchema = {
       readonly language: {
         readonly en: UiLabelValue;
         readonly de: UiLabelValue;
+      };
+      readonly terminology: {
+        readonly native: UiLabelValue;
+        readonly reuse: UiLabelValue;
       };
       readonly app: {
         readonly name: UiLabelValue;
@@ -2460,6 +2483,16 @@ export type AssertUiSettingsLanguageKeysCovered<Locales extends string> = {
   ? true
   : false;
 
+/** @emoji 🗣️ Chrome-known terminology ids; app-declared ids beyond this set fall back to their raw id in the dropdown. */
+export type UiChromeTerminologyId = "native" | "reuse";
+
+/** @emoji 🗣️ Compile-time check that every {@link UiChromeTerminologyId} has a settings-dropdown label key. */
+export type AssertUiSettingsTerminologyKeysCovered<Ids extends string> = {
+  readonly [I in Ids]: `ui.settings.terminology.${I}` extends UiTranslationKey ? true : false;
+}[Ids] extends true
+  ? true
+  : false;
+
 /** @emoji 🪁 Typed translate function for domain-neutral chrome keys. */
 export type UiTranslateFn = <K extends UiTranslationKey>(key: K, options?: Record<string, unknown>) => unknown;
 
@@ -2515,6 +2548,8 @@ const uiToolbarParentEn: UiToolbarParentEntries = {
 const _assertUiToolbarParentKeys: AssertUiToolbarParentKeysCovered<UiToolbarParentCategory> = true;
 
 const _assertUiSettingsLanguageKeys: AssertUiSettingsLanguageKeysCovered<UiLocale> = true;
+
+const _assertUiSettingsTerminologyKeys: AssertUiSettingsTerminologyKeysCovered<UiChromeTerminologyId> = true;
 
 export const uiChromeTranslationBundles = {
   de: {
@@ -2683,6 +2718,7 @@ export const uiChromeTranslationBundles = {
             app: { label: { normal: "App", beginner: "App" } },
             appearance: { label: { normal: "Design", beginner: "Design" } },
             language: { label: { normal: "Sprache", beginner: "Sprache" } },
+            terminology: { label: { normal: "Terminologie", beginner: "Terminologie" } },
           },
           appearance: {
             light: { label: { normal: "Hell", beginner: "Hell" } },
@@ -2692,6 +2728,10 @@ export const uiChromeTranslationBundles = {
           language: {
             en: { label: { normal: "English", beginner: "English" } },
             de: { label: { normal: "Deutsch", beginner: "Deutsch" } },
+          },
+          terminology: {
+            native: { label: { normal: "Nativ", beginner: "Nativ" } },
+            reuse: { label: { normal: "Wiederverwendung", beginner: "Wiederverwendung" } },
           },
           app: {
             name: { label: { normal: "Name", beginner: "Name" } },
@@ -3049,6 +3089,7 @@ export const uiChromeTranslationBundles = {
             app: { label: { normal: "App", beginner: "App" } },
             appearance: { label: { normal: "Appearance", beginner: "Appearance" } },
             language: { label: { normal: "Language", beginner: "Language" } },
+            terminology: { label: { normal: "Terminology", beginner: "Terminology" } },
           },
           appearance: {
             light: { label: { normal: "Light", beginner: "Light" } },
@@ -3058,6 +3099,10 @@ export const uiChromeTranslationBundles = {
           language: {
             en: { label: { normal: "English", beginner: "English" } },
             de: { label: { normal: "Deutsch", beginner: "Deutsch" } },
+          },
+          terminology: {
+            native: { label: { normal: "Native", beginner: "Native" } },
+            reuse: { label: { normal: "Reuse", beginner: "Reuse" } },
           },
           app: {
             name: { label: { normal: "Name", beginner: "Name" } },

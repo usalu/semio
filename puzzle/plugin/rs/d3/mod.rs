@@ -4,7 +4,7 @@ use puzzle_3d::{BrushPlacePayload, Puzzle3dPrecomputeSession};
 use semio_framework_plugin::{
     build_world_3d_scene, create_default_layout, layout::{MeasureSelectItem, WindowEngagementToggleGroupOption}, merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, App, CommandDescriptor, PanelGroup, PluginApp,
-    SurfaceKind, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    SurfaceKind, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
@@ -21,6 +21,7 @@ const PUZZLE3D_PLAY_BODY_COMPOSITE: &str = "puzzle3d.play.composite";
 const PUZZLE3D_PLAY_BODY_DOCUMENT: &str = "puzzle.3d.play.document";
 const PUZZLE3D_PLAY_BODY_KINDS: &str = "puzzle.3d.play.kinds";
 const PUZZLE3D_PLAY_BODY_INSPECTOR: &str = "puzzle.3d.play.inspector";
+const PUZZLE3D_PLAY_BODY_SETTINGS: &str = "puzzle.3d.play.settings";
 const PUZZLE3D_PLAY_WINDOW_MAIN: &str = "puzzle3d-main";
 const PUZZLE3D_FIXTURE_SCHEMA: &str = "puzzle.3d.fixture";
 const PUZZLE3D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
@@ -30,6 +31,24 @@ const PUZZLE3D_ENGAGEMENT_TOOL_BRUSH: &str = "puzzle3d.tool.brush";
 const PUZZLE3D_ENGAGEMENT_TOOL_SELECT: &str = "puzzle3d.tool.select";
 const PUZZLE3D_ENGAGEMENT_TOOL_FILL: &str = "puzzle3d.tool.fill";
 const PUZZLE3D_FILL_COUNT_MAX: u32 = 1000;
+
+/// ⏪ Commands that mutate the shared `envelope` in place and should be undoable — excludes `setDocument`/`setActiveExample`,
+/// which replace the whole envelope wholesale (any pre-match snapshot on it would be discarded), and view-only state
+/// (selection/hover/camera/tool) so undo only ever touches document content.
+const PUZZLE3D_UNDOABLE_COMMANDS: &[&str] = &[
+    "setFixtureJson",
+    "addObjectKind",
+    "deleteSelection",
+    "duplicateSelection",
+    "worldRelocate",
+    "setSelectionFlag",
+    "patchInspector",
+    "addBrushObject",
+    "setFillCount",
+    "createAttraction",
+    "deleteAttraction",
+];
+const PUZZLE3D_UNDO_STACK_MAX: usize = 50;
 
 const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../../3d/example/concrete-forest.3d.json");
 const NAKAGIN_EXAMPLE_JSON: &str = include_str!("../../../3d/example/nakagin-capsule-tower.3d.json");
@@ -186,6 +205,8 @@ struct Puzzle3dSelection {
     attraction_ids: Vec<String>,
     #[serde(default)]
     target_volume_ids: Vec<String>,
+    #[serde(default)]
+    reference_ids: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -248,6 +269,18 @@ struct Puzzle3dRuntime {
     selectable_kinds: Puzzle3dSelectableKinds,
     #[serde(default)]
     hovered_kind_id: Option<String>,
+    #[serde(default)]
+    engagement_input: String,
+    #[serde(default)]
+    undo_stack: Vec<Puzzle3dFixture>,
+    #[serde(default)]
+    redo_stack: Vec<Puzzle3dFixture>,
+    #[serde(default = "default_selection_mode")]
+    selection_mode_default: String,
+    #[serde(default = "default_proximity_radius")]
+    proximity_radius: f64,
+    #[serde(default = "default_chunk_size")]
+    chunk_size: f64,
 }
 
 impl Default for Puzzle3dRuntime {
@@ -273,6 +306,12 @@ impl Default for Puzzle3dRuntime {
             grid_factor: default_grid_factor(),
             selectable_kinds: Puzzle3dSelectableKinds::default(),
             hovered_kind_id: None,
+            engagement_input: String::new(),
+            undo_stack: Vec::new(),
+            redo_stack: Vec::new(),
+            selection_mode_default: default_selection_mode(),
+            proximity_radius: default_proximity_radius(),
+            chunk_size: default_chunk_size(),
         }
     }
 }
@@ -291,6 +330,18 @@ fn default_manual_lod() -> f64 {
 
 fn default_grid_factor() -> f64 {
     10.0
+}
+
+fn default_selection_mode() -> String {
+    "default".into()
+}
+
+fn default_proximity_radius() -> f64 {
+    0.75
+}
+
+fn default_chunk_size() -> f64 {
+    256.0
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -535,6 +586,26 @@ fn resolve_vortex_world_position(fixture: &Puzzle3dFixture, full_id: &str) -> Op
     None
 }
 
+fn resolve_vortex_kind(fixture: &Puzzle3dFixture, full_id: &str) -> Option<String> {
+    fixture.objects.iter().find_map(|object| object.vortices.iter().find(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id) == full_id).and_then(|vortex| vortex.vortex_kind.clone()))
+}
+
+/// 🧲 Permissive when the fixture declares no `kindCompatibility` rules at all — otherwise requires an explicit (or bidirectional) entry.
+fn puzzle3d_kinds_compatible(fixture: &Puzzle3dFixture, source_kind: &str, target_kind: &str) -> bool {
+    let Some(entries) = fixture.meta.kind_compatibility.as_ref().and_then(|value| value.as_array()) else {
+        return true;
+    };
+    if entries.is_empty() {
+        return true;
+    }
+    entries.iter().any(|entry| {
+        let source = entry.get("source").and_then(|value| value.as_str()).unwrap_or("");
+        let target = entry.get("target").and_then(|value| value.as_str()).unwrap_or("");
+        let bidirectional = entry.get("bidirectional").and_then(|value| value.as_bool()).unwrap_or(false);
+        (source == source_kind && target == target_kind) || (bidirectional && source == target_kind && target == source_kind)
+    })
+}
+
 fn world_vortices_json(fixture: &Puzzle3dFixture) -> String {
     let mut records = Vec::new();
     for object in &fixture.objects {
@@ -748,6 +819,48 @@ fn fixture_from_engine_json(envelope: &Puzzle3dEnvelope, fixture_json: &str) -> 
     Some(next)
 }
 
+fn apply_puzzle3d_fill_count(precompute: &mut Puzzle3dPrecomputeSession, mut envelope: Puzzle3dEnvelope, count: u32) -> Puzzle3dEnvelope {
+    envelope.runtime.fill_count = count;
+    if count > 0 {
+        envelope.runtime.active_tool = "fill".into();
+        if let Ok(fixture_json) = precompute.apply_fill_count_rust(count) {
+            if let Some(next) = fixture_from_engine_json(&envelope, &fixture_json) {
+                envelope = next;
+            }
+        }
+    }
+    envelope
+}
+
+/// 🎯 Mirrors the host's client-side `handleZoomToSelection` framing math so a keybinding/engagement-token
+/// driven focus (which bypasses that host interception) still produces a sensible camera.
+fn apply_puzzle3d_focus_selection(envelope: &mut Puzzle3dEnvelope) {
+    let selected_origins: Vec<[f64; 3]> = envelope.fixture.objects.iter().filter(|object| envelope.runtime.selection.object_ids.contains(&object.id)).map(|object| object.origin).collect();
+    if selected_origins.is_empty() {
+        return;
+    }
+    let count = selected_origins.len() as f64;
+    let mut center = [0.0, 0.0, 0.0];
+    for origin in &selected_origins {
+        center[0] += origin[0];
+        center[1] += origin[1];
+        center[2] += origin[2];
+    }
+    center = [center[0] / count, center[1] / count, center[2] / count];
+    let max_distance = selected_origins
+        .iter()
+        .map(|origin| {
+            let dx = origin[0] - center[0];
+            let dy = origin[1] - center[1];
+            let dz = origin[2] - center[2];
+            (dx * dx + dy * dy + dz * dz).sqrt()
+        })
+        .fold(1.0_f64, f64::max);
+    let distance = max_distance * 3.0 + 2.0;
+    envelope.fixture.camera.position = [center[0] + distance * 0.6, center[1] - distance * 0.6, center[2] + distance * 0.5];
+    envelope.fixture.camera.target = center;
+}
+
 fn next_object_id() -> String {
     let next = PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
     format!("object-{next}")
@@ -807,7 +920,131 @@ fn apply_puzzle3d_selection_flag(fixture: &mut Puzzle3dFixture, entity: &str, id
         _ => {}
     }
 }
+
+fn value_as_vec3(value: &Value) -> Option<[f64; 3]> {
+    let array = value.as_array()?;
+    Some([array.first()?.as_f64()?, array.get(1)?.as_f64()?, array.get(2)?.as_f64()?])
+}
+
+/// 🔎 Generic inspector edit dispatcher — `entity`/`field` select the target, `ids` scope it (full ids for vortices, `objectId:vortexId`).
+fn apply_puzzle3d_inspector_patch(fixture: &mut Puzzle3dFixture, entity: &str, ids: &[String], field: &str, value: &Value) {
+    if ids.is_empty() {
+        return;
+    }
+    let id_set: HashSet<&str> = ids.iter().map(String::as_str).collect();
+    match entity {
+        "object" => {
+            for object in fixture.objects.iter_mut().filter(|object| id_set.contains(object.id.as_str())) {
+                match field {
+                    "label" => object.label = value.as_str().map(str::to_string),
+                    "origin" => {
+                        if let Some(origin) = value_as_vec3(value) {
+                            object.origin = origin;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        "vortex" => {
+            for object in fixture.objects.iter_mut() {
+                for vortex in object.vortices.iter_mut() {
+                    if !id_set.contains(puzzle3d_vortex_full_id(&object.id, &vortex.id).as_str()) {
+                        continue;
+                    }
+                    match field {
+                        "vortexKind" => vortex.vortex_kind = value.as_str().map(str::to_string),
+                        "position" => {
+                            if let Some(position) = value_as_vec3(value) {
+                                vortex.position = position;
+                            }
+                        }
+                        "direction" => vortex.direction = value_as_vec3(value),
+                        "radius" => vortex.radius = value.as_f64(),
+                        _ => {}
+                    }
+                }
+            }
+        }
+        "attraction" => {
+            for attraction in fixture.attractions.iter_mut().filter(|attraction| id_set.contains(attraction.id.as_str())) {
+                match field {
+                    "attracting" => {
+                        if let Some(text) = value.as_str() {
+                            attraction.attracting = text.into();
+                        }
+                    }
+                    "attracted" => {
+                        if let Some(text) = value.as_str() {
+                            attraction.attracted = text.into();
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        "reference" => {
+            for reference in fixture.references.iter_mut().filter(|reference| id_set.contains(reference.id.as_str())) {
+                match field {
+                    "sourceUrl" => {
+                        if let Some(text) = value.as_str() {
+                            reference.source.url = text.into();
+                        }
+                    }
+                    "origin" => {
+                        if let Some(origin) = value_as_vec3(value) {
+                            reference.origin = origin;
+                        }
+                    }
+                    "widthWorld" => {
+                        if let Some(width) = value.as_f64() {
+                            reference.width_world = width;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        "targetVolume" => {
+            for volume in fixture.target_volumes.iter_mut().filter(|volume| id_set.contains(volume.id.as_str())) {
+                if field == "origin" {
+                    if let Some(origin) = value_as_vec3(value) {
+                        volume.origin = origin;
+                    }
+                }
+            }
+        }
+        _ => {}
+    }
+}
 //#endregion 🔖Document
+
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the 3d app; one field per label makes every terminology×locale combination compile-checked.
+struct Puzzle3dLabels {
+    objects: &'static str,
+    object: &'static str,
+    vortices: &'static str,
+    vortex: &'static str,
+}
+
+const PUZZLE3D_LABELS_NATIVE_EN: Puzzle3dLabels = Puzzle3dLabels { objects: "Objects", object: "Object", vortices: "Vortices", vortex: "Vortex" };
+const PUZZLE3D_LABELS_NATIVE_DE: Puzzle3dLabels = Puzzle3dLabels { objects: "Objekte", object: "Objekt", vortices: "Vortices", vortex: "Vortex" };
+const PUZZLE3D_LABELS_REUSE_EN: Puzzle3dLabels = Puzzle3dLabels { objects: "Building components", object: "Building component", vortices: "Connection points", vortex: "Connection point" };
+const PUZZLE3D_LABELS_REUSE_DE: Puzzle3dLabels = Puzzle3dLabels { objects: "Baukomponenten", object: "Baukomponente", vortices: "Verbindungspunkte", vortex: "Verbindungspunkt" };
+
+/// 🗣️ Resolves the active label set from the shell-provided locale/terminology; unknown terminology ids fall back to native.
+fn puzzle3d_labels(view_state: &ViewState) -> &'static Puzzle3dLabels {
+    let terminology = view_state.terminology.as_deref().unwrap_or("native");
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    match (terminology, is_de) {
+        ("reuse", true) => &PUZZLE3D_LABELS_REUSE_DE,
+        ("reuse", false) => &PUZZLE3D_LABELS_REUSE_EN,
+        (_, true) => &PUZZLE3D_LABELS_NATIVE_DE,
+        (_, false) => &PUZZLE3D_LABELS_NATIVE_EN,
+    }
+}
+//#endregion 🔖Terminology
 
 //#region 🔖Panels
 fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, command: CommandDescriptor) -> UiTreeItemNode {
@@ -837,7 +1074,7 @@ fn puzzle3d_hide_lock_actions(hidden: bool, locked: bool, flag_args: impl Fn(&st
     ]
 }
 
-fn build_document_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
+fn build_document_tree(envelope: &Puzzle3dEnvelope, labels: &Puzzle3dLabels) -> UiNode {
     let object_items: Vec<UiTreeItemNode> = envelope
         .fixture
         .objects
@@ -893,9 +1130,9 @@ fn build_document_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
                 label: reference.id.clone(),
                 description: Some(reference.source.url.clone()),
                 icon_id: Some("globe".into()),
-                selected: None,
+                selected: Some(envelope.runtime.selection.reference_ids.contains(&reference.id)),
                 default_open: None,
-                command: None,
+                command: Some(puzzle3d_cmd("setSelection", Some(json!({ "selection": { "objectIds": [], "vortexIds": [], "attractionIds": [], "referenceIds": [reference.id] } })))),
                 hover_command: None,
                 unhover_command: None,
                 actions: Some(puzzle3d_hide_lock_actions(reference.hidden, reference.locked, flag_args)),
@@ -950,7 +1187,7 @@ fn build_document_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![
-            UiTreeSectionNode { id: "puzzle3d-play-document.objects".into(), label: Some("Objects".into()), default_open: Some(true), items: object_items },
+            UiTreeSectionNode { id: "puzzle3d-play-document.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), items: object_items },
             UiTreeSectionNode { id: "puzzle3d-play-document.references".into(), label: Some("References".into()), default_open: Some(false), items: reference_items },
             UiTreeSectionNode { id: "puzzle3d-play-document.target-volumes".into(), label: Some("Target Volumes".into()), default_open: Some(false), items: target_volume_items },
             UiTreeSectionNode { id: "puzzle3d-play-document.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), items: attraction_items },
@@ -1050,15 +1287,15 @@ fn puzzle3d_catalog_kind_item(entry: &Value, icon_id: &str) -> UiTreeItemNode {
     }
 }
 
-fn build_kinds_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
+fn build_kinds_tree(envelope: &Puzzle3dEnvelope, labels: &Puzzle3dLabels) -> UiNode {
     let object_entries = puzzle3d_catalog_entries(&envelope.fixture, "objects");
     let vortex_entries = puzzle3d_catalog_entries(&envelope.fixture, "vortices");
     let cable_entries = puzzle3d_catalog_entries(&envelope.fixture, "cables");
     let attraction_entries = puzzle3d_catalog_entries(&envelope.fixture, "attractions");
     UiNode::Tree(UiTreeNode {
         sections: vec![
-            UiTreeSectionNode { id: "puzzle3d-play-kinds.objects".into(), label: Some("Objects".into()), default_open: Some(true), items: object_entries.iter().map(puzzle3d_object_kind_item).collect() },
-            UiTreeSectionNode { id: "puzzle3d-play-kinds.vortices".into(), label: Some("Vortices".into()), default_open: Some(false), items: vortex_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "circle-dot")).collect() },
+            UiTreeSectionNode { id: "puzzle3d-play-kinds.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), items: object_entries.iter().map(puzzle3d_object_kind_item).collect() },
+            UiTreeSectionNode { id: "puzzle3d-play-kinds.vortices".into(), label: Some(labels.vortices.into()), default_open: Some(false), items: vortex_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "circle-dot")).collect() },
             UiTreeSectionNode { id: "puzzle3d-play-kinds.cables".into(), label: Some("Cables".into()), default_open: Some(false), items: cable_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "plug")).collect() },
             UiTreeSectionNode { id: "puzzle3d-play-kinds.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), items: attraction_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "link")).collect() },
         ],
@@ -1069,40 +1306,202 @@ fn build_kinds_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
     })
 }
 
-fn build_inspector_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
-    if let Some(object_id) = envelope.runtime.selection.object_ids.first() {
-        if let Some(object) = envelope.fixture.objects.iter().find(|entry| &entry.id == object_id) {
-            return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-                id: "puzzle3d-play-inspector.object".into(),
-                label: "Object".into(),
-                default_open: None,
-                fields: vec![
-                    ui_inspector_readonly_field("puzzle3d-play-inspector.object.id", "Id", &object.id),
-                    ui_inspector_readonly_field("puzzle3d-play-inspector.object.kind", "Kind", object.object_kind.as_deref().unwrap_or("")),
-                    UiNode::Field(UiFieldNode {
-                        id: "puzzle3d-play-inspector.object.origin".into(),
-                        label: "Origin".into(),
-                        child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
-                            id: "puzzle3d-play-inspector.object.origin.input".into(),
-                            input_kind: "text".into(),
-                            value: format!("{:.2}, {:.2}, {:.2}", object.origin.first().copied().unwrap_or(0.0), object.origin.get(1).copied().unwrap_or(0.0), object.origin.get(2).copied().unwrap_or(0.0),),
-                            placeholder: None,
-                            commit: None,
-                            on_change: puzzle3d_cmd("setSelection", None),
-                            min: None,
-                            max: None,
-                            step: None,
-                            accept: None,
-                        })),
-                        description: None,
-                        required: None,
-                        error: None,
-                    }),
-                ],
-            }]);
+fn inspector_text_field(id: impl Into<String>, label: impl Into<String>, mixed_text: semio_framework_plugin::UiInspectorMixedText, command: CommandDescriptor) -> UiNode {
+    let id = id.into();
+    UiNode::Field(UiFieldNode {
+        id: id.clone(),
+        label: label.into(),
+        child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+            id: format!("{id}.input"),
+            input_kind: "text".into(),
+            value: mixed_text.value,
+            placeholder: mixed_text.placeholder,
+            commit: None,
+            on_change: command,
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
+        })),
+        description: None,
+        required: None,
+        error: None,
+    })
+}
+
+fn inspector_number_field(id: impl Into<String>, label: impl Into<String>, mixed_number: semio_framework_plugin::UiInspectorMixedNumber, command: CommandDescriptor) -> UiNode {
+    let id = id.into();
+    UiNode::Field(UiFieldNode {
+        id: id.clone(),
+        label: label.into(),
+        child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+            id: format!("{id}.input"),
+            input_kind: "number".into(),
+            value: if mixed_number.uniform { mixed_number.value.to_string() } else { String::new() },
+            placeholder: if mixed_number.uniform { None } else { Some(semio_framework_plugin::UI_INSPECTOR_MIXED_PLACEHOLDER.into()) },
+            commit: None,
+            on_change: command,
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
+        })),
+        description: None,
+        required: None,
+        error: None,
+    })
+}
+
+fn inspector_vec3_field(id: impl Into<String>, label: impl Into<String>, mixed_vec3: semio_framework_plugin::UiInspectorMixedVec3, command: CommandDescriptor) -> UiNode {
+    let id = id.into();
+    UiNode::Field(UiFieldNode {
+        id: id.clone(),
+        label: label.into(),
+        child: Box::new(UiNode::Vec3(semio_framework_plugin::UiVec3Node { id: format!("{id}.input"), value: mixed_vec3.value, on_change: command })),
+        description: None,
+        required: None,
+        error: None,
+    })
+}
+
+fn inspector_header_and_delete(count: usize, noun: &str) -> Vec<UiNode> {
+    vec![
+        ui_text(format!("{count} {noun} selected")),
+        UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some("puzzle3d-play-inspector.delete".into()), icon_id: "trash".into(), label: "Delete".into(), command: puzzle3d_cmd("deleteSelection", None), style: None, disabled: None }),
+    ]
+}
+
+fn build_inspector_tree(envelope: &Puzzle3dEnvelope, term_labels: &Puzzle3dLabels) -> UiNode {
+    let selection = &envelope.runtime.selection;
+    if !selection.object_ids.is_empty() {
+        let objects: Vec<&Puzzle3dObject> = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).collect();
+        if !objects.is_empty() {
+            let ids_json = json!(selection.object_ids);
+            let patch_cmd = |field: &str| puzzle3d_cmd("patchInspector", Some(json!({ "entity": "object", "ids": ids_json, "field": field })));
+            let mut fields = inspector_header_and_delete(objects.len(), term_labels.object);
+            if let [object] = objects.as_slice() {
+                fields.push(ui_inspector_readonly_field("puzzle3d-play-inspector.object.id", "Id", &object.id));
+            }
+            let labels: Vec<String> = objects.iter().map(|object| object.label.clone().unwrap_or_default()).collect();
+            let kinds: Vec<String> = objects.iter().map(|object| object.object_kind.clone().unwrap_or_default()).collect();
+            let origins: Vec<[f64; 3]> = objects.iter().map(|object| object.origin).collect();
+            fields.push(inspector_text_field("puzzle3d-play-inspector.object.label", "Label", semio_framework_plugin::ui_inspector_mixed_text(&labels), patch_cmd("label")));
+            fields.push(ui_inspector_readonly_field("puzzle3d-play-inspector.object.kind", "Kind", &semio_framework_plugin::ui_inspector_mixed_text(&kinds).value));
+            fields.push(inspector_vec3_field("puzzle3d-play-inspector.object.origin", "Origin", semio_framework_plugin::ui_inspector_mixed_vec3(&origins), patch_cmd("origin")));
+            return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.object".into(), label: term_labels.object.into(), default_open: None, fields }]);
+        }
+    }
+    if !selection.vortex_ids.is_empty() {
+        let vortices: Vec<(&Puzzle3dObject, &Puzzle3dVortex)> = envelope
+            .fixture
+            .objects
+            .iter()
+            .flat_map(|object| object.vortices.iter().map(move |vortex| (object, vortex)))
+            .filter(|(object, vortex)| selection.vortex_ids.contains(&puzzle3d_vortex_full_id(&object.id, &vortex.id)))
+            .collect();
+        if !vortices.is_empty() {
+            let full_ids: Vec<String> = vortices.iter().map(|(object, vortex)| puzzle3d_vortex_full_id(&object.id, &vortex.id)).collect();
+            let ids_json = json!(full_ids);
+            let patch_cmd = |field: &str| puzzle3d_cmd("patchInspector", Some(json!({ "entity": "vortex", "ids": ids_json, "field": field })));
+            let mut fields = inspector_header_and_delete(vortices.len(), term_labels.vortex);
+            if let [(_, vortex)] = vortices.as_slice() {
+                fields.push(ui_inspector_readonly_field("puzzle3d-play-inspector.vortex.id", "Full Id", &full_ids[0]));
+                let _ = vortex;
+            }
+            let kinds: Vec<String> = vortices.iter().map(|(_, vortex)| vortex.vortex_kind.clone().unwrap_or_default()).collect();
+            let positions: Vec<[f64; 3]> = vortices.iter().map(|(_, vortex)| vortex.position).collect();
+            let radii: Vec<f64> = vortices.iter().map(|(_, vortex)| vortex.radius.unwrap_or(0.35)).collect();
+            fields.push(inspector_text_field("puzzle3d-play-inspector.vortex.kind", "Vortex Kind", semio_framework_plugin::ui_inspector_mixed_text(&kinds), patch_cmd("vortexKind")));
+            fields.push(inspector_vec3_field("puzzle3d-play-inspector.vortex.position", "Position", semio_framework_plugin::ui_inspector_mixed_vec3(&positions), patch_cmd("position")));
+            fields.push(inspector_number_field("puzzle3d-play-inspector.vortex.radius", "Radius", semio_framework_plugin::ui_inspector_mixed_number(&radii), patch_cmd("radius")));
+            return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.vortex".into(), label: term_labels.vortex.into(), default_open: None, fields }]);
+        }
+    }
+    if !selection.attraction_ids.is_empty() {
+        let attractions: Vec<&Puzzle3dAttraction> = envelope.fixture.attractions.iter().filter(|attraction| selection.attraction_ids.contains(&attraction.id)).collect();
+        if !attractions.is_empty() {
+            let ids_json = json!(selection.attraction_ids);
+            let patch_cmd = |field: &str| puzzle3d_cmd("patchInspector", Some(json!({ "entity": "attraction", "ids": ids_json, "field": field })));
+            let mut fields = inspector_header_and_delete(attractions.len(), "attraction");
+            let attracting: Vec<String> = attractions.iter().map(|attraction| attraction.attracting.clone()).collect();
+            let attracted: Vec<String> = attractions.iter().map(|attraction| attraction.attracted.clone()).collect();
+            fields.push(inspector_text_field("puzzle3d-play-inspector.attraction.attracting", "Attracting", semio_framework_plugin::ui_inspector_mixed_text(&attracting), patch_cmd("attracting")));
+            fields.push(inspector_text_field("puzzle3d-play-inspector.attraction.attracted", "Attracted", semio_framework_plugin::ui_inspector_mixed_text(&attracted), patch_cmd("attracted")));
+            return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.attraction".into(), label: "Attraction".into(), default_open: None, fields }]);
+        }
+    }
+    if !selection.reference_ids.is_empty() {
+        let references: Vec<&Puzzle3dReference> = envelope.fixture.references.iter().filter(|reference| selection.reference_ids.contains(&reference.id)).collect();
+        if !references.is_empty() {
+            let ids_json = json!(selection.reference_ids);
+            let patch_cmd = |field: &str| puzzle3d_cmd("patchInspector", Some(json!({ "entity": "reference", "ids": ids_json, "field": field })));
+            let mut fields = inspector_header_and_delete(references.len(), "reference");
+            let urls: Vec<String> = references.iter().map(|reference| reference.source.url.clone()).collect();
+            let origins: Vec<[f64; 3]> = references.iter().map(|reference| reference.origin).collect();
+            let widths: Vec<f64> = references.iter().map(|reference| reference.width_world).collect();
+            fields.push(inspector_text_field("puzzle3d-play-inspector.reference.url", "Source Url", semio_framework_plugin::ui_inspector_mixed_text(&urls), patch_cmd("sourceUrl")));
+            fields.push(inspector_vec3_field("puzzle3d-play-inspector.reference.origin", "Position", semio_framework_plugin::ui_inspector_mixed_vec3(&origins), patch_cmd("origin")));
+            fields.push(inspector_number_field("puzzle3d-play-inspector.reference.width", "Width", semio_framework_plugin::ui_inspector_mixed_number(&widths), patch_cmd("widthWorld")));
+            return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.reference".into(), label: "Reference".into(), default_open: None, fields }]);
+        }
+    }
+    if !selection.target_volume_ids.is_empty() {
+        let volumes: Vec<&Puzzle3dTargetVolume> = envelope.fixture.target_volumes.iter().filter(|volume| selection.target_volume_ids.contains(&volume.id)).collect();
+        if !volumes.is_empty() {
+            let ids_json = json!(selection.target_volume_ids);
+            let patch_cmd = |field: &str| puzzle3d_cmd("patchInspector", Some(json!({ "entity": "targetVolume", "ids": ids_json, "field": field })));
+            let mut fields = inspector_header_and_delete(volumes.len(), "target volume");
+            let origins: Vec<[f64; 3]> = volumes.iter().map(|volume| volume.origin).collect();
+            fields.push(inspector_vec3_field("puzzle3d-play-inspector.target-volume.origin", "Origin", semio_framework_plugin::ui_inspector_mixed_vec3(&origins), patch_cmd("origin")));
+            return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.target-volume".into(), label: "Target Volume".into(), default_open: None, fields }]);
         }
     }
     ui_stack_vertical(vec![ui_text(format!("Schema: {}", envelope.fixture.schema)), ui_text(format!("Domain: {}", envelope.fixture.domain)), ui_text(format!("Objects: {}", envelope.fixture.objects.len()))])
+}
+
+fn build_settings_body(envelope: &Puzzle3dEnvelope) -> UiNode {
+    let runtime = &envelope.runtime;
+    let selection_mode_field = UiNode::Field(UiFieldNode {
+        id: "puzzle3d-play-settings.selection-mode".into(),
+        label: "Selection Mode".into(),
+        child: Box::new(UiNode::Select(semio_framework_plugin::UiSelectNode {
+            id: "puzzle3d-play-settings.selection-mode.input".into(),
+            value: runtime.selection_mode_default.clone(),
+            items: vec![
+                semio_framework_plugin::UiSelectItem { value: "default".into(), label: "Default".into() },
+                semio_framework_plugin::UiSelectItem { value: "additive".into(), label: "Additive".into() },
+                semio_framework_plugin::UiSelectItem { value: "subtractive".into(), label: "Subtractive".into() },
+                semio_framework_plugin::UiSelectItem { value: "invertive".into(), label: "Invertive".into() },
+            ],
+            placeholder: None,
+            on_change: puzzle3d_cmd("setSelectionModeDefault", None),
+        })),
+        description: None,
+        required: None,
+        error: None,
+    });
+    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
+        id: "puzzle3d-play-settings".into(),
+        label: "Settings".into(),
+        default_open: Some(true),
+        fields: vec![
+            selection_mode_field,
+            inspector_number_field(
+                "puzzle3d-play-settings.overlap-budget",
+                "Brush Overlap Budget (m³)",
+                semio_framework_plugin::UiInspectorMixedNumber { value: runtime.overlap_budget, uniform: true },
+                puzzle3d_cmd("setBrushPlacementOverlapBudget", None),
+            ),
+            inspector_number_field(
+                "puzzle3d-play-settings.proximity-radius",
+                "Proximity Radius",
+                semio_framework_plugin::UiInspectorMixedNumber { value: runtime.proximity_radius, uniform: true },
+                puzzle3d_cmd("setProximityRadius", None),
+            ),
+            inspector_number_field("puzzle3d-play-settings.chunk-size", "Chunk Size", semio_framework_plugin::UiInspectorMixedNumber { value: runtime.chunk_size, uniform: true }, puzzle3d_cmd("setChunkSize", None)),
+            inspector_number_field("puzzle3d-play-settings.grid-factor", "Grid Factor", semio_framework_plugin::UiInspectorMixedNumber { value: runtime.grid_factor, uniform: true }, puzzle3d_cmd("setGridFactor", None)),
+        ],
+    }])
 }
 //#endregion 🔖Panels
 
@@ -1202,7 +1601,16 @@ fn puzzle3d_engagement(envelope: &Puzzle3dEnvelope, precompute: &Puzzle3dPrecomp
                 command: Some(puzzle3d_cmd("engagementPossibleSelect", Some(json!({ "possibleId": PUZZLE3D_ENGAGEMENT_TOOL_FILL })))),
             },
         ]),
-        input: None,
+        input: Some(WindowEngagementInput {
+            id: Some("puzzle3d-engagement".into()),
+            value: Some(envelope.runtime.engagement_input.clone()),
+            placeholder: Some("select, brush, fill <n>, zoom, clear, rectangle, lasso".into()),
+            disabled: None,
+            on_change: Some(puzzle3d_cmd("engagementInput", None)),
+            on_submit: Some(puzzle3d_cmd("engagementSubmit", None)),
+            on_repeat_last: Some(puzzle3d_cmd("engagementRepeatLast", None)),
+            on_abort: Some(puzzle3d_cmd("engagementAbort", None)),
+        }),
         control,
         controls: None,
         status: Some(vec![semio_framework_plugin::layout::WindowEngagementStatus { id: "puzzle3d-world-status".into(), text: format!("{object_count} objects · {attraction_count} attractions") }]),
@@ -1283,7 +1691,7 @@ fn puzzle3d_lod_measures_group(runtime: &Puzzle3dRuntime) -> WindowMeasure {
     }
 }
 
-fn puzzle3d_select_measures_group(runtime: &Puzzle3dRuntime) -> WindowMeasure {
+fn puzzle3d_select_measures_group(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select"),
         label: "Select".into(),
@@ -1291,8 +1699,8 @@ fn puzzle3d_select_measures_group(runtime: &Puzzle3dRuntime) -> WindowMeasure {
         children: vec![
             WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-rectangle"), icon_id: "square".into(), label: Some("Rectangle".into()), pressed: runtime.selection_method == "rectangle", text: None, on_change: puzzle3d_cmd("setSelectionMethod", Some(json!({ "method": "rectangle" }))) },
             WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-lasso"), icon_id: "lasso".into(), label: Some("Lasso".into()), pressed: runtime.selection_method == "lasso", text: None, on_change: puzzle3d_cmd("setSelectionMethod", Some(json!({ "method": "lasso" }))) },
-            WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-objects"), icon_id: "box".into(), label: Some("Objects".into()), pressed: runtime.selectable_kinds.objects, text: None, on_change: puzzle3d_cmd("setSelectableKind", Some(json!({ "kind": "objects" }))) },
-            WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-vortices"), icon_id: "circle-dot".into(), label: Some("Vortices".into()), pressed: runtime.selectable_kinds.vortices, text: None, on_change: puzzle3d_cmd("setSelectableKind", Some(json!({ "kind": "vortices" }))) },
+            WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-objects"), icon_id: "box".into(), label: Some(labels.objects.into()), pressed: runtime.selectable_kinds.objects, text: None, on_change: puzzle3d_cmd("setSelectableKind", Some(json!({ "kind": "objects" }))) },
+            WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-vortices"), icon_id: "circle-dot".into(), label: Some(labels.vortices.into()), pressed: runtime.selectable_kinds.vortices, text: None, on_change: puzzle3d_cmd("setSelectableKind", Some(json!({ "kind": "vortices" }))) },
             WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-attractions"), icon_id: "link".into(), label: Some("Attractions".into()), pressed: runtime.selectable_kinds.attractions, text: None, on_change: puzzle3d_cmd("setSelectableKind", Some(json!({ "kind": "attractions" }))) },
         ],
     }
@@ -1316,7 +1724,7 @@ fn puzzle3d_kind_weight_measures(prefix: &str, kind_ids: &[String], weights: &Ha
         .collect()
 }
 
-fn puzzle3d_brush_measures_group(envelope: &Puzzle3dEnvelope) -> WindowMeasure {
+fn puzzle3d_brush_measures_group(envelope: &Puzzle3dEnvelope, labels: &Puzzle3dLabels) -> WindowMeasure {
     let object_ids = puzzle3d_kind_ids(&envelope.fixture, "objects");
     let vortex_ids = puzzle3d_kind_ids(&envelope.fixture, "vortices");
     WindowMeasure::Group {
@@ -1340,13 +1748,13 @@ fn puzzle3d_brush_measures_group(envelope: &Puzzle3dEnvelope) -> WindowMeasure {
                 children: vec![
                     WindowMeasure::Group {
                         id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-distribution-objects"),
-                        label: "Objects".into(),
+                        label: labels.objects.into(),
                         default_open: Some(false),
                         children: puzzle3d_kind_weight_measures("object-kind", &object_ids, &envelope.runtime.object_kind_weights, "setObjectKindWeight"),
                     },
                     WindowMeasure::Group {
                         id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-distribution-vortices"),
-                        label: "Vortices".into(),
+                        label: labels.vortices.into(),
                         default_open: Some(false),
                         children: puzzle3d_kind_weight_measures("vortex-kind", &vortex_ids, &envelope.runtime.vortex_kind_weights, "setVortexKindWeight"),
                     },
@@ -1356,8 +1764,8 @@ fn puzzle3d_brush_measures_group(envelope: &Puzzle3dEnvelope) -> WindowMeasure {
     }
 }
 
-fn puzzle3d_window_measures(envelope: &Puzzle3dEnvelope) -> Vec<WindowMeasure> {
-    vec![puzzle3d_lod_measures_group(&envelope.runtime), puzzle3d_select_measures_group(&envelope.runtime), puzzle3d_brush_measures_group(envelope)]
+fn puzzle3d_window_measures(envelope: &Puzzle3dEnvelope, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
+    vec![puzzle3d_lod_measures_group(&envelope.runtime), puzzle3d_select_measures_group(&envelope.runtime, labels), puzzle3d_brush_measures_group(envelope, labels)]
 }
 //#endregion 🔖Measures
 
@@ -1384,6 +1792,13 @@ impl PluginApp for Puzzle3dPlayApp {
     fn handle_command_patch_ops(&mut self, command: &str, args: Option<&Value>, document_json: &str, _view_state: &ViewState) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
         sync_precompute_session(&mut self.precompute, &envelope);
+        if PUZZLE3D_UNDOABLE_COMMANDS.contains(&command) {
+            envelope.runtime.undo_stack.push(envelope.fixture.clone());
+            if envelope.runtime.undo_stack.len() > PUZZLE3D_UNDO_STACK_MAX {
+                envelope.runtime.undo_stack.remove(0);
+            }
+            envelope.runtime.redo_stack.clear();
+        }
         match command {
             "setDocument" => {
                 if let Some(document) = args.and_then(|value| value.get("document")) {
@@ -1457,9 +1872,21 @@ impl PluginApp for Puzzle3dPlayApp {
                 return vec![set_document_op(&envelope)];
             }
             "deleteSelection" => {
-                let ids: Vec<String> = envelope.runtime.selection.object_ids.clone();
-                envelope.fixture.objects.retain(|object| !ids.contains(&object.id));
-                envelope.runtime.selection.object_ids.clear();
+                let object_ids: Vec<String> = envelope.runtime.selection.object_ids.clone();
+                let vortex_ids: HashSet<String> = envelope.runtime.selection.vortex_ids.iter().cloned().collect();
+                let attraction_ids: Vec<String> = envelope.runtime.selection.attraction_ids.clone();
+                let target_volume_ids: Vec<String> = envelope.runtime.selection.target_volume_ids.clone();
+                envelope.fixture.objects.retain(|object| !object_ids.contains(&object.id));
+                if !vortex_ids.is_empty() {
+                    for object in envelope.fixture.objects.iter_mut() {
+                        object.vortices.retain(|vortex| !vortex_ids.contains(&puzzle3d_vortex_full_id(&object.id, &vortex.id)));
+                    }
+                }
+                envelope.fixture.attractions.retain(|attraction| !attraction_ids.contains(&attraction.id) && !object_ids.iter().any(|id| attraction.attracting.starts_with(&format!("{id}:")) || attraction.attracted.starts_with(&format!("{id}:"))));
+                envelope.fixture.target_volumes.retain(|volume| !target_volume_ids.contains(&volume.id));
+                let reference_ids: Vec<String> = envelope.runtime.selection.reference_ids.clone();
+                envelope.fixture.references.retain(|reference| !reference_ids.contains(&reference.id));
+                envelope.runtime.selection = Puzzle3dSelection::default();
                 return vec![set_document_op(&envelope)];
             }
             "duplicateSelection" => {
@@ -1624,9 +2051,9 @@ impl PluginApp for Puzzle3dPlayApp {
                     .and_then(|value| value.get("position"))
                     .and_then(|value| value.as_array())
                     .map(|values| [values.first().and_then(|v| v.as_f64()).unwrap_or(0.0), values.get(1).and_then(|v| v.as_f64()).unwrap_or(0.0), values.get(2).and_then(|v| v.as_f64()).unwrap_or(0.0)]);
+                let proximity_radius = envelope.runtime.proximity_radius;
                 if let (Some(object), Some(position)) = (envelope.fixture.objects.iter_mut().find(|object| object.id == object_id && !object.locked && !object.hidden), position) {
                     object.origin = position;
-                    let proximity_radius = 0.75;
                     let mut source_vortex: Option<(String, [f64; 3])> = None;
                     for vortex in &object.vortices {
                         let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
@@ -1694,6 +2121,24 @@ impl PluginApp for Puzzle3dPlayApp {
                     return vec![set_document_op(&envelope)];
                 }
             }
+            "setSelectionModeDefault" => {
+                if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+                    envelope.runtime.selection_mode_default = mode.into();
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setProximityRadius" => {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
+                    envelope.runtime.proximity_radius = value.max(0.0);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setChunkSize" => {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
+                    envelope.runtime.chunk_size = value.max(1.0);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
             "setSelectableKind" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("");
                 let pressed = args.and_then(|value| value.get("pressed")).and_then(|value| value.as_bool());
@@ -1723,6 +2168,116 @@ impl PluginApp for Puzzle3dPlayApp {
                     }
                 }
                 return vec![set_document_op(&envelope)];
+            }
+            "patchInspector" => {
+                let entity = args.and_then(|value| value.get("entity")).and_then(|value| value.as_str()).unwrap_or("");
+                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
+                let ids: Vec<String> = args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
+                let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
+                apply_puzzle3d_inspector_patch(&mut envelope.fixture, entity, &ids, field, &value);
+                return vec![set_document_op(&envelope)];
+            }
+            "selectAll" => {
+                envelope.runtime.selection.object_ids = if envelope.runtime.selectable_kinds.objects {
+                    envelope.fixture.objects.iter().filter(|object| !object.hidden && !object.locked).map(|object| object.id.clone()).collect()
+                } else {
+                    Vec::new()
+                };
+                envelope.runtime.selection.vortex_ids.clear();
+                envelope.runtime.selection.attraction_ids.clear();
+                envelope.runtime.selection.target_volume_ids.clear();
+                envelope.runtime.selection.reference_ids.clear();
+                return vec![set_document_op(&envelope)];
+            }
+            "clearSelection" => {
+                envelope.runtime.selection = Puzzle3dSelection::default();
+                return vec![set_document_op(&envelope)];
+            }
+            "focusSelection" => {
+                apply_puzzle3d_focus_selection(&mut envelope);
+                return vec![set_document_op(&envelope)];
+            }
+            "engagementInput" => {
+                envelope.runtime.engagement_input = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("").to_string();
+                return vec![set_document_op(&envelope)];
+            }
+            "engagementSubmit" => {
+                let raw = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("").trim().to_lowercase();
+                let mut tokens = raw.split_whitespace();
+                match tokens.next() {
+                    Some("select") => envelope.runtime.active_tool = "select".into(),
+                    Some("brush") => {
+                        envelope.runtime.active_tool = "brush".into();
+                        drive_precompute(&mut self.precompute, &envelope);
+                    }
+                    Some("fill") => {
+                        drive_precompute(&mut self.precompute, &envelope);
+                        let count = tokens.next().and_then(|value| value.parse::<u32>().ok()).unwrap_or(envelope.runtime.fill_count).min(PUZZLE3D_FILL_COUNT_MAX);
+                        envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
+                    }
+                    Some("zoom") => apply_puzzle3d_focus_selection(&mut envelope),
+                    Some("clear") => envelope.runtime.selection = Puzzle3dSelection::default(),
+                    Some("rectangle") => envelope.runtime.selection_method = "rectangle".into(),
+                    Some("lasso") => envelope.runtime.selection_method = "lasso".into(),
+                    _ => {}
+                }
+                envelope.runtime.engagement_input = String::new();
+                return vec![set_document_op(&envelope)];
+            }
+            "engagementRepeatLast" => {
+                if envelope.runtime.active_tool == "fill" {
+                    let count = (envelope.runtime.fill_count + 1).min(PUZZLE3D_FILL_COUNT_MAX);
+                    envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
+                }
+                return vec![set_document_op(&envelope)];
+            }
+            "engagementAbort" => {
+                envelope.runtime.engagement_input = String::new();
+                envelope.runtime.brush_candidate_index = 0;
+                if envelope.runtime.active_tool != "select" {
+                    envelope.runtime.active_tool = "select".into();
+                }
+                return vec![set_document_op(&envelope)];
+            }
+            "undo" => {
+                if let Some(previous) = envelope.runtime.undo_stack.pop() {
+                    envelope.runtime.redo_stack.push(envelope.fixture.clone());
+                    envelope.fixture = previous;
+                    envelope.runtime.selection = Puzzle3dSelection::default();
+                    sync_precompute_session(&mut self.precompute, &envelope);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "redo" => {
+                if let Some(next) = envelope.runtime.redo_stack.pop() {
+                    envelope.runtime.undo_stack.push(envelope.fixture.clone());
+                    envelope.fixture = next;
+                    envelope.runtime.selection = Puzzle3dSelection::default();
+                    sync_precompute_session(&mut self.precompute, &envelope);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "createAttraction" => {
+                let attracting = args.and_then(|value| value.get("attracting")).and_then(|value| value.as_str()).unwrap_or("");
+                let attracted = args.and_then(|value| value.get("attracted")).and_then(|value| value.as_str()).unwrap_or("");
+                if !attracting.is_empty() && !attracted.is_empty() && attracting != attracted {
+                    let already_connected = envelope.fixture.attractions.iter().any(|attraction| (attraction.attracting == attracting && attraction.attracted == attracted) || (attraction.attracting == attracted && attraction.attracted == attracting));
+                    let compatible = match (resolve_vortex_kind(&envelope.fixture, attracting), resolve_vortex_kind(&envelope.fixture, attracted)) {
+                        (Some(source_kind), Some(target_kind)) => puzzle3d_kinds_compatible(&envelope.fixture, &source_kind, &target_kind),
+                        _ => false,
+                    };
+                    if !already_connected && compatible {
+                        let id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
+                        envelope.fixture.attractions.push(Puzzle3dAttraction { id, attracting: attracting.into(), attracted: attracted.into() });
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "deleteAttraction" => {
+                if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
+                    envelope.fixture.attractions.retain(|attraction| attraction.id != id);
+                    return vec![set_document_op(&envelope)];
+                }
             }
             "engagementPossibleSelect" => {
                 let possible_id = args.and_then(|value| value.get("possibleId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -1760,15 +2315,7 @@ impl PluginApp for Puzzle3dPlayApp {
             "setFillCount" => {
                 drive_precompute(&mut self.precompute, &envelope);
                 let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_u64()).unwrap_or(0).min(u64::from(PUZZLE3D_FILL_COUNT_MAX)) as u32;
-                envelope.runtime.fill_count = count;
-                if count > 0 {
-                    envelope.runtime.active_tool = "fill".into();
-                    if let Ok(fixture_json) = self.precompute.apply_fill_count_rust(count) {
-                        if let Some(next) = fixture_from_engine_json(&envelope, &fixture_json) {
-                            envelope = next;
-                        }
-                    }
-                }
+                envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
                 return vec![set_document_op(&envelope)];
             }
             "setBrushPlacementOverlapBudget" => {
@@ -1818,8 +2365,9 @@ impl PluginApp for Puzzle3dPlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
+        let labels = puzzle3d_labels(view_state);
         match body_key {
             PUZZLE3D_PLAY_BODY_COMPOSITE => {
                 let brush_preview = world_brush_preview_json(&self.precompute, &envelope);
@@ -1839,14 +2387,15 @@ impl PluginApp for Puzzle3dPlayApp {
                         Some(world_interaction_json(&envelope.runtime)),
                         None,
                         Some(world3d_lod_json(&envelope.runtime)),
-                        Some(world3d_chunking_json(256.0, 8000.0)),
+                        Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0)),
                         puzzle3d_context_menu_json(&envelope),
                     ),
                 )
             }
-            PUZZLE3D_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
-            PUZZLE3D_PLAY_BODY_KINDS => build_kinds_tree(&envelope),
-            PUZZLE3D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope),
+            PUZZLE3D_PLAY_BODY_DOCUMENT => build_document_tree(&envelope, labels),
+            PUZZLE3D_PLAY_BODY_KINDS => build_kinds_tree(&envelope, labels),
+            PUZZLE3D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope, labels),
+            PUZZLE3D_PLAY_BODY_SETTINGS => build_settings_body(&envelope),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -1856,9 +2405,10 @@ impl PluginApp for Puzzle3dPlayApp {
         HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.into(), puzzle3d_engagement(&envelope, &self.precompute))])
     }
 
-    fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let envelope = parse_envelope(document_json);
-        HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.into(), puzzle3d_window_measures(&envelope))])
+        let labels = puzzle3d_labels(view_state);
+        HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.into(), puzzle3d_window_measures(&envelope, labels))])
     }
 }
 //#endregion 🔖Puzzle3dPlayApp
@@ -1870,13 +2420,22 @@ pub fn create_puzzle3d_app() -> App {
         App::builder(PUZZLE3D_PLAY_APP_ID, "Puzzle 3D")
             .document(["semio", "puzzle", "3d"])
             .icon_id("puzzle")
+            .terminology("reuse")
             .mode("edit", "Edit")
             .default_mode_id("edit")
             .window_kind_with_engagement(PUZZLE3D_PLAY_WINDOW_MAIN, "Puzzle 3D", PUZZLE3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d, puzzle3d_engagement(&envelope, &Puzzle3dPrecomputeSession::new()))
             .default_layout(create_default_layout(&[PUZZLE3D_PLAY_WINDOW_MAIN.into()], "row", Some(&[100.0]), Some(&["Puzzle 3D".into()])))
             .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE3D_PLAY_BODY_DOCUMENT)
             .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE3D_PLAY_BODY_KINDS)
-            .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE3D_PLAY_BODY_INSPECTOR),
+            .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE3D_PLAY_BODY_INSPECTOR)
+            .panel_tab("puzzle3d.panel.settings", "Settings", PanelGroup::Settings, PUZZLE3D_PLAY_BODY_SETTINGS)
+            .keybinding("mod+a", "selectAll")
+            .keybinding("escape", "engagementAbort")
+            .keybinding("delete", "deleteSelection")
+            .keybinding("backspace", "deleteSelection")
+            .keybinding("mod+d", "duplicateSelection")
+            .keybinding("tab", "cycleBrushCandidate")
+            .keybinding("f", "focusSelection"),
     )
     .example("empty", "Empty", &serde_json::to_string(&Puzzle3dEnvelope { fixture: empty_fixture(), runtime: Puzzle3dRuntime::default() }).unwrap())
     .example(PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON)
@@ -1994,7 +2553,7 @@ mod tests {
     #[test]
     fn build_kinds_tree_lists_all_catalog_sections() {
         let envelope = default_envelope();
-        let node = build_kinds_tree(&envelope);
+        let node = build_kinds_tree(&envelope, puzzle3d_labels(&ViewState::default()));
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Objects"));
         assert!(json.contains("Vortices"));
@@ -2002,6 +2561,46 @@ mod tests {
         assert!(json.contains("Attractions"));
         assert!(json.contains("Hexagonal Cut Concrete Forest Left"));
         assert!(json.contains("\"draggable\":true"));
+    }
+
+    #[test]
+    fn puzzle3d_labels_resolve_native_by_default() {
+        let envelope = default_envelope();
+        let node = build_kinds_tree(&envelope, puzzle3d_labels(&ViewState::default()));
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Objects"));
+        assert!(json.contains("Vortices"));
+        assert!(!json.contains("Building components"));
+    }
+
+    #[test]
+    fn puzzle3d_labels_resolve_reuse_terminology_in_english() {
+        let envelope = default_envelope();
+        let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("en".into()), ..ViewState::default() };
+        let node = build_kinds_tree(&envelope, puzzle3d_labels(&view_state));
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Building components"));
+        assert!(json.contains("Connection points"));
+        assert!(!json.contains("\"Objects\""));
+    }
+
+    #[test]
+    fn puzzle3d_labels_resolve_reuse_terminology_in_german() {
+        let envelope = default_envelope();
+        let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("de".into()), ..ViewState::default() };
+        let node = build_kinds_tree(&envelope, puzzle3d_labels(&view_state));
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Baukomponenten"));
+        assert!(json.contains("Verbindungspunkte"));
+    }
+
+    #[test]
+    fn puzzle3d_labels_resolve_native_terminology_in_german() {
+        let envelope = default_envelope();
+        let view_state = ViewState { terminology: Some("native".into()), locale: Some("de".into()), ..ViewState::default() };
+        let node = build_kinds_tree(&envelope, puzzle3d_labels(&view_state));
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Objekte"));
     }
 
     #[test]
@@ -2014,6 +2613,347 @@ mod tests {
         let instances: Value = serde_json::from_str(&world_instances_json(&envelope.fixture, &envelope.runtime)).unwrap();
         let first = instances.as_array().unwrap().first().expect("at least one instance");
         assert_eq!(first.get("hovered").and_then(|v| v.as_bool()), Some(true));
+    }
+
+    #[test]
+    fn document_tree_lists_references_and_target_volumes_sections() {
+        let envelope = default_envelope();
+        let node = build_document_tree(&envelope, puzzle3d_labels(&ViewState::default()));
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("References"));
+        assert!(json.contains("Target Volumes"));
+        assert!(json.contains("Attractions"));
+    }
+
+    #[test]
+    fn set_selection_flag_hides_selected_object_and_zeroes_its_scale() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let object_id = envelope.fixture.objects.first().expect("seed object").id.clone();
+        let ops = app.handle_command_patch_ops("setSelectionFlag", Some(&json!({ "flag": "hidden", "value": true, "entity": "object", "ids": [object_id.clone()] })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        let object = envelope.fixture.objects.iter().find(|object| object.id == object_id).expect("object");
+        assert!(object.hidden);
+        let instances: Value = serde_json::from_str(&world_instances_json(&envelope.fixture, &envelope.runtime)).unwrap();
+        let first = instances.as_array().unwrap().first().expect("instance preserved at same index");
+        assert_eq!(first.get("scale").and_then(|v| v.as_array()).cloned(), Some(vec![json!(0.0), json!(0.0), json!(0.0)]));
+    }
+
+    #[test]
+    fn set_selection_flag_locked_object_cannot_be_picked() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let object_id = envelope.fixture.objects.first().expect("seed object").id.clone();
+        let ops = app.handle_command_patch_ops("setSelectionFlag", Some(&json!({ "flag": "locked", "value": true, "entity": "object", "ids": [object_id] })), &document, &ViewState::default());
+        let locked_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let ops = app.handle_command_patch_ops("worldPick", Some(&json!({ "granularity": "mesh", "id": 0, "merge": "replace" })), &locked_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&locked_document), &ops);
+        assert!(envelope.runtime.selection.object_ids.is_empty(), "locked objects must not become selectable");
+    }
+
+    #[test]
+    fn set_selection_flag_defaults_to_current_selection_when_ids_omitted() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let object_id = envelope.fixture.objects.first().expect("seed object").id.clone();
+        let ops = app.handle_command_patch_ops("setSelection", Some(&json!({ "selection": { "objectIds": [object_id.clone()], "vortexIds": [], "attractionIds": [] } })), &document, &ViewState::default());
+        let selected_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let ops = app.handle_command_patch_ops("setSelectionFlag", Some(&json!({ "flag": "hidden", "value": true })), &selected_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&selected_document), &ops);
+        let object = envelope.fixture.objects.iter().find(|object| object.id == object_id).expect("object");
+        assert!(object.hidden);
+    }
+
+    #[test]
+    fn patch_inspector_renames_object_and_moves_origin() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let object_id = envelope.fixture.objects.first().expect("seed object").id.clone();
+        let ops = app.handle_command_patch_ops("patchInspector", Some(&json!({ "entity": "object", "ids": [object_id.clone()], "field": "label", "value": "Renamed" })), &document, &ViewState::default());
+        let document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let ops = app.handle_command_patch_ops("patchInspector", Some(&json!({ "entity": "object", "ids": [object_id.clone()], "field": "origin", "value": [9.0, 8.0, 7.0] })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        let object = envelope.fixture.objects.iter().find(|object| object.id == object_id).expect("object");
+        assert_eq!(object.label.as_deref(), Some("Renamed"));
+        assert_eq!(object.origin, [9.0, 8.0, 7.0]);
+    }
+
+    #[test]
+    fn patch_inspector_updates_vortex_radius() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let object = envelope.fixture.objects.first().expect("seed object");
+        let full_id = puzzle3d_vortex_full_id(&object.id, &object.vortices.first().expect("seed vortex").id);
+        let ops = app.handle_command_patch_ops("patchInspector", Some(&json!({ "entity": "vortex", "ids": [full_id.clone()], "field": "radius", "value": 0.75 })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        let object = envelope.fixture.objects.first().unwrap();
+        let vortex = object.vortices.iter().find(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id) == full_id).expect("vortex");
+        assert_eq!(vortex.radius, Some(0.75));
+    }
+
+    #[test]
+    fn select_all_selects_every_unlocked_object() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let total = envelope.fixture.objects.len();
+        let ops = app.handle_command_patch_ops("selectAll", None, &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.runtime.selection.object_ids.len(), total);
+    }
+
+    #[test]
+    fn select_all_excludes_locked_objects() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let object_id = envelope.fixture.objects.first().expect("seed object").id.clone();
+        let total = envelope.fixture.objects.len();
+        let ops = app.handle_command_patch_ops("setSelectionFlag", Some(&json!({ "flag": "locked", "value": true, "entity": "object", "ids": [object_id.clone()] })), &document, &ViewState::default());
+        let locked_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let ops = app.handle_command_patch_ops("selectAll", None, &locked_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&locked_document), &ops);
+        assert_eq!(envelope.runtime.selection.object_ids.len(), total - 1);
+        assert!(!envelope.runtime.selection.object_ids.contains(&object_id));
+    }
+
+    #[test]
+    fn clear_selection_empties_all_selection_kinds() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("selectAll", None, &document, &ViewState::default());
+        let selected_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let ops = app.handle_command_patch_ops("clearSelection", None, &selected_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&selected_document), &ops);
+        assert!(envelope.runtime.selection.object_ids.is_empty());
+    }
+
+    #[test]
+    fn focus_selection_points_camera_at_selection_center() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let object_id = envelope.fixture.objects.first().expect("seed object").id.clone();
+        let ops = app.handle_command_patch_ops("setSelection", Some(&json!({ "selection": { "objectIds": [object_id], "vortexIds": [], "attractionIds": [] } })), &document, &ViewState::default());
+        let selected_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let before = parse_envelope(&selected_document).fixture.camera.clone();
+        let ops = app.handle_command_patch_ops("focusSelection", None, &selected_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&selected_document), &ops);
+        assert_ne!(envelope.fixture.camera.position, before.position);
+    }
+
+    #[test]
+    fn engagement_submit_fill_token_sets_fill_count() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("engagementSubmit", Some(&json!({ "value": "fill 42" })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.runtime.fill_count, 42);
+        assert_eq!(envelope.runtime.active_tool, "fill");
+        assert_eq!(envelope.runtime.engagement_input, "");
+    }
+
+    #[test]
+    fn engagement_submit_select_token_switches_tool_back() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("engagementSubmit", Some(&json!({ "value": "brush" })), &document, &ViewState::default());
+        let brush_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let ops = app.handle_command_patch_ops("engagementSubmit", Some(&json!({ "value": "select" })), &brush_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&brush_document), &ops);
+        assert_eq!(envelope.runtime.active_tool, "select");
+    }
+
+    #[test]
+    fn engagement_abort_resets_tool_and_input() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setActiveTool", Some(&json!({ "tool": "brush" })), &document, &ViewState::default());
+        let brush_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let ops = app.handle_command_patch_ops("engagementInput", Some(&json!({ "value": "some text" })), &brush_document, &ViewState::default());
+        let typed_document = serde_json::to_string(&apply_ops(&parse_envelope(&brush_document), &ops)).unwrap();
+        let ops = app.handle_command_patch_ops("engagementAbort", None, &typed_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&typed_document), &ops);
+        assert_eq!(envelope.runtime.active_tool, "select");
+        assert_eq!(envelope.runtime.engagement_input, "");
+    }
+
+    #[test]
+    fn undo_restores_fixture_before_add_object_kind() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let before_count = parse_envelope(&document).fixture.objects.len();
+        let ops = app.handle_command_patch_ops("addObjectKind", Some(&json!({ "objectKind": "Test Kind" })), &document, &ViewState::default());
+        let added_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        assert_eq!(parse_envelope(&added_document).fixture.objects.len(), before_count + 1);
+        let ops = app.handle_command_patch_ops("undo", None, &added_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&added_document), &ops);
+        assert_eq!(envelope.fixture.objects.len(), before_count);
+    }
+
+    #[test]
+    fn redo_reapplies_the_undone_edit() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let before_count = parse_envelope(&document).fixture.objects.len();
+        let ops = app.handle_command_patch_ops("addObjectKind", Some(&json!({ "objectKind": "Test Kind" })), &document, &ViewState::default());
+        let added_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let ops = app.handle_command_patch_ops("undo", None, &added_document, &ViewState::default());
+        let undone_document = serde_json::to_string(&apply_ops(&parse_envelope(&added_document), &ops)).unwrap();
+        let ops = app.handle_command_patch_ops("redo", None, &undone_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&undone_document), &ops);
+        assert_eq!(envelope.fixture.objects.len(), before_count + 1);
+    }
+
+    #[test]
+    fn undo_is_a_no_op_when_stack_is_empty() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("undo", None, &document, &ViewState::default());
+        assert!(ops.is_empty());
+    }
+
+    #[test]
+    fn new_edit_after_undo_clears_the_redo_stack() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("addObjectKind", Some(&json!({ "objectKind": "First" })), &document, &ViewState::default());
+        let first_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let ops = app.handle_command_patch_ops("undo", None, &first_document, &ViewState::default());
+        let undone_document = serde_json::to_string(&apply_ops(&parse_envelope(&first_document), &ops)).unwrap();
+        assert!(!parse_envelope(&undone_document).runtime.redo_stack.is_empty());
+        let ops = app.handle_command_patch_ops("addObjectKind", Some(&json!({ "objectKind": "Second" })), &undone_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&undone_document), &ops);
+        assert!(envelope.runtime.redo_stack.is_empty());
+    }
+
+    #[test]
+    fn selection_and_camera_changes_do_not_push_undo_snapshots() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let object_id = envelope.fixture.objects.first().expect("seed object").id.clone();
+        let ops = app.handle_command_patch_ops("setSelection", Some(&json!({ "selection": { "objectIds": [object_id], "vortexIds": [], "attractionIds": [] } })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert!(envelope.runtime.undo_stack.is_empty());
+    }
+
+    #[test]
+    fn settings_body_renders_all_fields() {
+        let app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let node = app.render(PUZZLE3D_PLAY_BODY_SETTINGS, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Selection Mode"));
+        assert!(json.contains("Proximity Radius"));
+        assert!(json.contains("Chunk Size"));
+        assert!(json.contains("Grid Factor"));
+    }
+
+    #[test]
+    fn set_proximity_radius_feeds_world_relocate_attraction_distance() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setProximityRadius", Some(&json!({ "value": 50.0 })), &document, &ViewState::default());
+        let wide_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let envelope = parse_envelope(&wide_document);
+        assert_eq!(envelope.runtime.proximity_radius, 50.0);
+        let object_a = envelope.fixture.objects[0].id.clone();
+        let object_b = envelope.fixture.objects.get(1).map(|object| object.id.clone());
+        let Some(object_b) = object_b else { return };
+        let ops = app.handle_command_patch_ops("worldRelocate", Some(&json!({ "objectId": object_a, "position": [0.0, 0.0, 0.0] })), &wide_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&wide_document), &ops);
+        let has_attraction = envelope.fixture.attractions.iter().any(|attraction| attraction.attracting.starts_with(&format!("{object_a}:")) || attraction.attracted.starts_with(&format!("{object_a}:")) || attraction.attracting.starts_with(&format!("{object_b}:")) || attraction.attracted.starts_with(&format!("{object_b}:")));
+        assert!(has_attraction, "a 50-unit proximity radius should connect any two objects in the fixture");
+    }
+
+    #[test]
+    fn set_selection_mode_default_persists_value() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setSelectionModeDefault", Some(&json!({ "value": "additive" })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.runtime.selection_mode_default, "additive");
+    }
+
+    #[test]
+    fn create_attraction_connects_compatible_vortices() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let object = &envelope.fixture.objects[0];
+        let source = puzzle3d_vortex_full_id(&object.id, &object.vortices[0].id);
+        let target = puzzle3d_vortex_full_id(&object.id, &object.vortices[2].id);
+        assert_eq!(object.vortices[0].vortex_kind, object.vortices[2].vortex_kind, "test fixture assumption: same vortex kind is bidirectionally compatible with itself");
+        let ops = app.handle_command_patch_ops("createAttraction", Some(&json!({ "attracting": source, "attracted": target })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert!(envelope.fixture.attractions.iter().any(|attraction| attraction.attracting == source && attraction.attracted == target));
+    }
+
+    #[test]
+    fn create_attraction_rejects_incompatible_kinds() {
+        let mut fixture = empty_fixture();
+        fixture.meta.kind_compatibility = Some(json!([{ "source": "a", "target": "b", "bidirectional": false }]));
+        fixture.objects = vec![
+            Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: vec![Puzzle3dVortex { id: "v0".into(), vortex_kind: Some("a".into()), position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }], hidden: false, locked: false },
+            Puzzle3dObject { id: "o2".into(), label: None, object_kind: None, origin: [1.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: vec![Puzzle3dVortex { id: "v0".into(), vortex_kind: Some("c".into()), position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }], hidden: false, locked: false },
+        ];
+        let mut app = Puzzle3dPlayApp::default();
+        let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
+        let ops = app.handle_command_patch_ops("createAttraction", Some(&json!({ "attracting": "o1:v0", "attracted": "o2:v0" })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert!(envelope.fixture.attractions.is_empty(), "kind \"a\" is not declared compatible with kind \"c\"");
+    }
+
+    #[test]
+    fn create_attraction_does_not_duplicate_an_existing_connection() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let object = &envelope.fixture.objects[0];
+        let source = puzzle3d_vortex_full_id(&object.id, &object.vortices[0].id);
+        let target = puzzle3d_vortex_full_id(&object.id, &object.vortices[2].id);
+        let ops = app.handle_command_patch_ops("createAttraction", Some(&json!({ "attracting": source, "attracted": target })), &document, &ViewState::default());
+        let first_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let ops = app.handle_command_patch_ops("createAttraction", Some(&json!({ "attracting": target, "attracted": source })), &first_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&first_document), &ops);
+        assert_eq!(envelope.fixture.attractions.len(), 1);
+    }
+
+    #[test]
+    fn delete_attraction_removes_it_by_id() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let object = &envelope.fixture.objects[0];
+        let source = puzzle3d_vortex_full_id(&object.id, &object.vortices[0].id);
+        let target = puzzle3d_vortex_full_id(&object.id, &object.vortices[2].id);
+        let ops = app.handle_command_patch_ops("createAttraction", Some(&json!({ "attracting": source, "attracted": target })), &document, &ViewState::default());
+        let connected_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let attraction_id = parse_envelope(&connected_document).fixture.attractions[0].id.clone();
+        let ops = app.handle_command_patch_ops("deleteAttraction", Some(&json!({ "id": attraction_id })), &connected_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&connected_document), &ops);
+        assert!(envelope.fixture.attractions.is_empty());
+    }
+
+    #[test]
+    fn build_inspector_tree_shows_mixed_placeholder_for_differing_labels() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("addObjectKind", Some(&json!({ "objectKind": "Test Kind" })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        let first_id = envelope.fixture.objects[0].id.clone();
+        let second_id = envelope.fixture.objects.last().unwrap().id.clone();
+        let mut envelope = envelope;
+        envelope.runtime.selection.object_ids = vec![first_id, second_id];
+        let node = build_inspector_tree(&envelope, puzzle3d_labels(&ViewState::default()));
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains(semio_framework_plugin::UI_INSPECTOR_MIXED_PLACEHOLDER));
     }
 
     fn apply_ops(envelope: &Puzzle3dEnvelope, ops: &[String]) -> Puzzle3dEnvelope {

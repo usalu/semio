@@ -2925,6 +2925,7 @@ mod tests {
             commands: vec![],
             named_layouts: Vec::new(),
             default_layout: None,
+            terminologies: Vec::new(),
         });
         assert_eq!(platform.active_app_id, "draw-play");
     }
@@ -5083,6 +5084,9 @@ pub struct AppDefinition {
     pub named_layouts: Vec<NamedLayout>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_layout: Option<WindowLayout>,
+    /// 🗣️ Terminology ids this app declares beyond the implicit "native" default.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub terminologies: Vec<String>,
 }
 
 /// 🧭 Resolves the dock layout a mode should present.
@@ -5177,6 +5181,12 @@ pub struct ViewState {
     pub panel_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub contributions_json: Option<String>,
+    /// 🗣️ Active UI locale (e.g. "en", "de"); plugins resolve their own label set from this.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub locale: Option<String>,
+    /// 🗣️ Active terminology id ("native" default, or an app-declared alternative term set).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub terminology: Option<String>,
 }
 
 //#region 🔖Kernel

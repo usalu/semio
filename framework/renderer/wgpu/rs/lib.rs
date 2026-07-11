@@ -1710,6 +1710,7 @@ mod tests {
             commands: vec![],
             named_layouts: vec![],
             default_layout: layout,
+            terminologies: vec![],
         }
     }
 

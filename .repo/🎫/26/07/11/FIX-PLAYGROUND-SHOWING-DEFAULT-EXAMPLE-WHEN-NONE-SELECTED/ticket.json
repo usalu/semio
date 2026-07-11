@@ -1,0 +1,13 @@
+{
+  "title": "Fix Playground Showing Default Example When None Selected",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "The playground/example dropdown in the React OS shell (framework/renderer/react/os-shell.tsx) always forces the first registered example as the active example, even when no example was ever explicitly selected. The reconciliation useEffect at os-shell.tsx around activeExampleId cannot distinguish \"no selection yet\" (empty string) from \"stale/removed selection\", so it always falls back to exampleOptions[0]. Fix so that when no example is selected, the playground shows an empty/blank state (leveraging the existing NAVBAR_NO_EXAMPLE_ID sentinel in ui/js/react/index.tsx) instead of silently loading the default example, and remove the unused/duplicate NAVBAR_NO_EXAMPLE_ID constant in os-shell.tsx.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1929"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪c6614732ff954b36b4f47366c3065e68"
+  ]
+}

@@ -1347,6 +1347,14 @@ export function FlowGraphCanvasHost({
   const [containerSize, setContainerSize] = useState({ w: 800, h: 600 });
   const [sessionReady, setSessionReady] = useState(false);
   const sceneSignature = useMemo(() => JSON.stringify(scene), [scene]);
+  // Always holds the latest `scene` without forcing effects to depend on (and re-run per) it.
+  const sceneRef = useRef(scene);
+  sceneRef.current = scene;
+
+  useEffect(() => {
+    console.log("[DEBUG] FlowGraphCanvasHost mounted", { surfaceId, controllerId });
+    return () => console.log("[DEBUG] FlowGraphCanvasHost UNMOUNTED", { surfaceId, controllerId });
+  }, [surfaceId, controllerId]);
 
   const dispatch = useCallback(
     (command: string, args?: Record<string, unknown>) => {
@@ -1360,6 +1368,7 @@ export function FlowGraphCanvasHost({
     if (!session) return;
     try {
       const fixtureJson = session.fixtureJson();
+      console.log("[DEBUG] commitFixture: dispatching setFixture, isGestureActive=", isGestureActiveRef.current, "len=", fixtureJson.length);
       dispatch(nodeGraphCommands.edit, { ops: [{ op: "setFixture", fixtureJson }] });
       session.evaluateSync();
     } catch {
@@ -1396,10 +1405,12 @@ export function FlowGraphCanvasHost({
   }, [commitFixture]);
 
   const handleGesturePointerDown = useCallback(() => {
+    console.log("[DEBUG] gesture pointerDown: isGestureActiveRef -> true");
     isGestureActiveRef.current = true;
   }, []);
 
   const handleGesturePointerUp = useCallback(() => {
+    console.log("[DEBUG] gesture pointerUp: isGestureActiveRef -> false, firing final commitFixture");
     isGestureActiveRef.current = false;
     if (pendingCommitTimeoutRef.current != null) {
       clearTimeout(pendingCommitTimeoutRef.current);
@@ -1477,6 +1488,12 @@ export function FlowGraphCanvasHost({
     };
   }, []);
 
+  // Attaches the GPU canvas exactly once per session (NOT per document edit — `scene` must stay out
+  // of this effect's deps). It used to depend on `scene`, so it re-ran `attachCanvas` on every single
+  // commit (including every slider tick): the wasm session rejects a second attach ("canvas surface
+  // already attached"), and because the cleanup below was returned from inside the `.then()` instead
+  // of from the effect itself, React never saw it — every re-run leaked its ResizeObserver/rAF loop
+  // and could disrupt the live GPU surface, which is what read as the whole view "resetting".
   useEffect(() => {
     const session = sessionRef.current;
     const canvas = gpuCanvasRef.current;
@@ -1485,36 +1502,56 @@ export function FlowGraphCanvasHost({
     const rect = container.getBoundingClientRect();
     const dpr = globalThis.devicePixelRatio || 1;
     let raf = 0;
-    void session.attachCanvas(canvas, Math.round(rect.width), Math.round(rect.height), dpr).then(() => {
-      syncFlowSessionFromScene(session, scene, true);
-      const resize = () => {
-        const next = container.getBoundingClientRect();
-        const nextDpr = globalThis.devicePixelRatio || 1;
-        session.setSize(Math.round(next.width), Math.round(next.height), nextDpr);
-        session.renderFrame();
-        paintOverlays();
-      };
-      resize();
-      const ro = new ResizeObserver(resize);
-      ro.observe(container);
-      const tick = () => {
-        session.renderFrame();
+    let cancelled = false;
+    let cleanupAttached: (() => void) | undefined;
+    console.log("[DEBUG] attachCanvas effect: attaching (should log ONCE per session)");
+    session
+      .attachCanvas(canvas, Math.round(rect.width), Math.round(rect.height), dpr)
+      .then(() => {
+        if (cancelled) return;
+        console.log("[DEBUG] attachCanvas effect: attached OK, applying initial camera");
+        syncFlowSessionFromScene(session, sceneRef.current, true);
+        const resize = () => {
+          const next = container.getBoundingClientRect();
+          const nextDpr = globalThis.devicePixelRatio || 1;
+          session.setSize(Math.round(next.width), Math.round(next.height), nextDpr);
+          session.renderFrame();
+          paintOverlays();
+        };
+        resize();
+        const ro = new ResizeObserver(resize);
+        ro.observe(container);
+        const tick = () => {
+          session.renderFrame();
+          raf = requestAnimationFrame(tick);
+        };
         raf = requestAnimationFrame(tick);
-      };
-      raf = requestAnimationFrame(tick);
-      return () => {
-        ro.disconnect();
-        if (raf) cancelAnimationFrame(raf);
-      };
-    });
-  }, [sessionReady, paintOverlays, scene]);
+        cleanupAttached = () => {
+          ro.disconnect();
+          if (raf) cancelAnimationFrame(raf);
+        };
+      })
+      .catch((err) => {
+        /* already attached (e.g. a stale re-run) or transient failure; nothing to clean up */
+        console.log("[DEBUG] attachCanvas effect: attach FAILED/REJECTED", err);
+      });
+    return () => {
+      console.log("[DEBUG] attachCanvas effect: cleanup running (effect re-run or unmount)");
+      cancelled = true;
+      cleanupAttached?.();
+    };
+  }, [sessionReady, paintOverlays]);
 
   useEffect(() => {
     const session = sessionRef.current;
     if (!session || !sessionReady) return;
     // Skip while a gesture (e.g. slider drag) is active: an in-flight commit's response landing
     // mid-gesture would otherwise reload the fixture and visibly revert the live local edit.
-    if (isGestureActiveRef.current) return;
+    if (isGestureActiveRef.current) {
+      console.log("[DEBUG] resync effect: SKIPPED (gesture active), sceneSignature len=", sceneSignature.length);
+      return;
+    }
+    console.log("[DEBUG] resync effect: APPLYING syncFlowSessionFromScene, sceneSignature len=", sceneSignature.length, "fixtureJson len=", scene.fixtureJson?.length);
     syncFlowSessionFromScene(session, scene, false);
     session.renderFrame();
     paintOverlays();
@@ -1700,6 +1737,7 @@ export function FlowGraphCanvasHost({
         logicalH={containerSize.h}
         editable={editable}
         onSliderChange={(widgetId, value) => {
+          console.log("[DEBUG] onSliderChange (TS handler fired)", widgetId, value, "isGestureActive=", isGestureActiveRef.current);
           sessionRef.current?.setSliderValue(widgetId, value);
           commitFixtureThrottled();
           paintOverlays();

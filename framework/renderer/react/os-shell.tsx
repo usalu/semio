@@ -61,15 +61,18 @@ import {
   readStoredUiChromeExpertise,
   readStoredUiChromeLocale,
   readStoredUiChromeAppearance,
+  readStoredUiChromeTerminology,
   writeStoredUiChromeCompact,
   writeStoredUiChromeExpertise,
   writeStoredUiChromeLocale,
   writeStoredUiChromeAppearance,
+  writeStoredUiChromeTerminology,
   windowTemplatePaletteTreeDragController,
   Expertise,
   resolveTranslationLabel,
   setUiLocale,
   uiI18n,
+  UI_TERMINOLOGY_NATIVE,
   type ElementsSurfaceAppearance,
   type EngagementControl,
   type EngagementSpec,
@@ -180,7 +183,6 @@ const S_HOME_CONTROLLER_ID = "s-home";
 const S_PLAY_APP_ID = "studio";
 const S_PLAY_CONTROLLER_ID = "s-play";
 const S_PLAY_CATALOGUE_TAB_ID = "s-play-catalogue";
-const NAVBAR_NO_EXAMPLE_ID = "__no_example__";
 const FRAMEWORK_SHELL_CHROME_APPEARANCE = "system" as const;
 const DEFAULT_LEFT_PANEL_SIZE = 280;
 const DEFAULT_RIGHT_PANEL_SIZE = 320;
@@ -761,6 +763,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const spawnedRefreshGenerationRef = useRef(0);
   const contributorInstancesRef = useRef<Map<string, number>>(new Map());
   const layoutSeedKeyRef = useRef<string | null>(null);
+  const noExampleResetInstanceIdRef = useRef<string | null>(null);
   const [mobileActiveTabId, setMobileActiveTabId] = useState<string | undefined>(undefined);
   const [leftPanelTabId, setLeftPanelTabId] = useState<string | undefined>(undefined);
   const [rightPanelTabId, setRightPanelTabId] = useState<string | undefined>(undefined);
@@ -1779,8 +1782,15 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
 
   useEffect(() => {
     if (exampleOptions.length === 0) return;
-    setActiveExampleId((current) => (exampleOptions.some((option) => option.id === current) ? current : exampleOptions[0]!.id));
+    setActiveExampleId((current) => (!current || exampleOptions.some((option) => option.id === current) ? current : ""));
   }, [exampleOptions, session?.app.id, session?.pluginId]);
+
+  useEffect(() => {
+    if (exampleOptions.length === 0 || activeExampleId || !session) return;
+    if (noExampleResetInstanceIdRef.current === session.instanceId) return;
+    noExampleResetInstanceIdRef.current = session.instanceId;
+    onCommand({ controllerId: session.app.controllerId, command: "setActiveExample", args: { exampleId: "" } });
+  }, [activeExampleId, exampleOptions, onCommand, session]);
 
   const activeModeId = session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "";
 
@@ -2769,6 +2779,8 @@ export type ViewState = {
   readonly selectionJson?: string;
   readonly panelJson?: string;
   readonly contributionsJson?: string;
+  readonly locale?: string;
+  readonly terminology?: string;
 };
 
 export type AppDefinition = {
@@ -2792,6 +2804,7 @@ export type AppDefinition = {
   readonly commands?: readonly CommandDefinition[];
   readonly namedLayouts?: readonly NamedLayout[];
   readonly defaultLayout?: WindowLayout;
+  readonly terminologies?: readonly string[];
 };
 
 export type PluginManifest = {

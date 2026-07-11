@@ -2110,13 +2110,6 @@
             }
           },
           {
-            "id": "object-hexagonal-cut-concrete-forest-left-bim-12",
-            "typology": "building.building.column",
-            "primitives": {
-              "solid": "hexagonal-cut-concrete-forest-left-bim-12-solid-313"
-            }
-          },
-          {
             "id": "object-hexagonal-cut-concrete-forest-left-bim-2",
             "typology": "building.building.beam",
             "primitives": {

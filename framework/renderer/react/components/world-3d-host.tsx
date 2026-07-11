@@ -1116,22 +1116,29 @@ function WorldInstancesLayer({
 function WorldVortexMarkers({
   vortices,
   brushMode,
+  connectSourceFullId,
   onHover,
-  onSelect,
   onBrushPlace,
+  onConnectDragStart,
+  onConnectDragHover,
+  onConnectDragDrop,
 }: {
   readonly vortices: readonly WorldVortexRecord[];
   readonly brushMode: boolean;
+  readonly connectSourceFullId?: string;
   readonly onHover: (fullId: string | null) => void;
-  readonly onSelect: (fullId: string) => void;
   readonly onBrushPlace: () => void;
+  readonly onConnectDragStart: (fullId: string, position: readonly [number, number, number]) => void;
+  readonly onConnectDragHover: (position: readonly [number, number, number]) => void;
+  readonly onConnectDragDrop: (fullId: string) => void;
 }) {
   if (!vortices.length) return null;
   return (
     <group>
       {vortices.map((vortex) => {
         const radius = vortex.radius ?? 0.36;
-        const color = vortex.color ?? "#38bdf8";
+        const isConnectSource = connectSourceFullId === vortex.fullId;
+        const color = isConnectSource ? "#f59e0b" : (vortex.color ?? "#38bdf8");
         return (
           <mesh
             key={vortex.fullId}
@@ -1139,18 +1146,25 @@ function WorldVortexMarkers({
             onPointerOver={(event) => {
               event.stopPropagation();
               onHover(vortex.fullId);
+              if (connectSourceFullId) onConnectDragHover(vortex.position);
             }}
             onPointerOut={(event) => {
               event.stopPropagation();
               onHover(null);
             }}
+            onPointerDown={(event) => {
+              if (brushMode) return;
+              event.stopPropagation();
+              onConnectDragStart(vortex.fullId, vortex.position);
+            }}
+            onPointerUp={(event) => {
+              if (brushMode || !connectSourceFullId) return;
+              event.stopPropagation();
+              onConnectDragDrop(vortex.fullId);
+            }}
             onClick={(event) => {
               event.stopPropagation();
-              if (brushMode) {
-                onBrushPlace();
-                return;
-              }
-              onSelect(vortex.fullId);
+              if (brushMode) onBrushPlace();
             }}
           >
             <sphereGeometry args={[radius, 16, 16]} />
@@ -1159,6 +1173,21 @@ function WorldVortexMarkers({
         );
       })}
     </group>
+  );
+}
+
+/** @emoji 🧲 Rubber-band line drawn from the drag-connect source vortex to the currently hovered vortex (or itself, if hovering nothing). */
+function WorldConnectRubberBand({ from, to }: { readonly from: readonly [number, number, number]; readonly to: readonly [number, number, number] }) {
+  const geometry = useMemo(() => {
+    const positions = new Float32Array([from[0], from[1], from[2], to[0], to[1], to[2]]);
+    const geom = new BufferGeometry();
+    geom.setAttribute("position", new BufferAttribute(positions, 3));
+    return geom;
+  }, [from, to]);
+  return (
+    <lineSegments geometry={geometry} raycast={() => null}>
+      <lineBasicMaterial color="#f59e0b" linewidth={2} />
+    </lineSegments>
   );
 }
 
@@ -1537,10 +1566,13 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
   const [marqueePath, setMarqueePath] = useState<readonly SelectionMarqueePoint[]>([]);
   const [marqueeModifiers, setMarqueeModifiers] = useState<{ readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean }>({ shiftKey: false, ctrlKey: false, metaKey: false });
   const [gumballDragActive, setGumballDragActive] = useState(false);
+  const [connectDragSource, setConnectDragSource] = useState<{ readonly fullId: string; readonly position: readonly [number, number, number] } | null>(null);
+  const [connectDragHoverPosition, setConnectDragHoverPosition] = useState<readonly [number, number, number] | null>(null);
   const [paintStrokeActive, setPaintStrokeActive] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number } | null>(null);
   const cameraRef = useRef<import("three").Camera | null>(null);
   const wasMarqueeDragRef = useRef(false);
+  const connectDropConsumedRef = useRef(false);
   const engagementPointerMoveInFlightRef = useRef(false);
   const engagementPointerMoveLastPointRef = useRef<readonly [number, number, number] | null>(null);
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
@@ -1719,6 +1751,38 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
     },
     [dispatch],
   );
+
+  const handleConnectDragStart = useCallback((fullId: string, position: readonly [number, number, number]) => {
+    setConnectDragSource({ fullId, position });
+    setConnectDragHoverPosition(position);
+  }, []);
+
+  const handleConnectDragHover = useCallback((position: readonly [number, number, number]) => {
+    setConnectDragHoverPosition(position);
+  }, []);
+
+  const handleConnectDragDrop = useCallback(
+    (targetFullId: string) => {
+      connectDropConsumedRef.current = true;
+      setConnectDragSource((source) => {
+        if (source) {
+          if (source.fullId === targetFullId) {
+            handleVortexSelect(targetFullId);
+          } else {
+            dispatch("createAttraction", { attracting: source.fullId, attracted: targetFullId });
+          }
+        }
+        return null;
+      });
+      setConnectDragHoverPosition(null);
+    },
+    [dispatch, handleVortexSelect],
+  );
+
+  const handleConnectDragCancel = useCallback(() => {
+    setConnectDragSource(null);
+    setConnectDragHoverPosition(null);
+  }, []);
 
   const handleBrushPlace = useCallback(() => {
     if (!brushPreview) return;
@@ -1903,7 +1967,12 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
       setPaintStrokeActive(false);
     }
     setMarqueePath([]);
-  }, [dispatch, marqueeDragActive, marqueePreview, paintStrokeActive, selectionMode]);
+    if (connectDropConsumedRef.current) {
+      connectDropConsumedRef.current = false;
+    } else {
+      handleConnectDragCancel();
+    }
+  }, [dispatch, handleConnectDragCancel, marqueeDragActive, marqueePreview, paintStrokeActive, selectionMode]);
 
   const handleEmptyClick = useCallback(
     (event: MouseEvent) => {
@@ -1949,7 +2018,7 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
       >
         <WorldOrbitViewSnapGateProvider>
           <WorldOrbitCameraViewRig state={cameraState} seedKey={scene?.cameraJson ?? "default"} perspectiveFov={cameraState.fov} />
-          <WorldOrbitGated controlsGate={marqueeDown || gumballDragActive} onCamera={handleCameraChange} zoom={cameraState.zoom} projection={cameraState.explicitProjection ? cameraState.projection : undefined} />
+          <WorldOrbitGated controlsGate={marqueeDown || gumballDragActive || connectDragSource !== null} onCamera={handleCameraChange} zoom={cameraState.zoom} projection={cameraState.explicitProjection ? cameraState.projection : undefined} />
           <WorldLodBridge
             lodRef={lodRef}
             distanceReference={100}
@@ -2005,7 +2074,17 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
                 environment={environment}
               />
             </group>
-            <WorldVortexMarkers vortices={vortices} brushMode={brushMode} onHover={handleVortexHover} onSelect={handleVortexSelect} onBrushPlace={handleBrushPlace} />
+            <WorldVortexMarkers
+              vortices={vortices}
+              brushMode={brushMode}
+              connectSourceFullId={connectDragSource?.fullId}
+              onHover={handleVortexHover}
+              onBrushPlace={handleBrushPlace}
+              onConnectDragStart={handleConnectDragStart}
+              onConnectDragHover={handleConnectDragHover}
+              onConnectDragDrop={handleConnectDragDrop}
+            />
+            {connectDragSource && connectDragHoverPosition ? <WorldConnectRubberBand from={connectDragSource.position} to={connectDragHoverPosition} /> : null}
             <WorldAttractionLines attractions={attractions} />
             {brushPreview ? <BrushPreviewGhost preview={brushPreview} meshes={meshes} /> : null}
             {engagementPreview.length > 0 ? <EngagementPreviewLayer items={engagementPreview} color={colors.hover} /> : null}

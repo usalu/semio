@@ -68,6 +68,7 @@ pub struct AppBuilder {
     commands: Vec<CommandDefinition>,
     named_layouts: Vec<NamedLayout>,
     default_layout: Option<WindowLayout>,
+    terminologies: Vec<String>,
 }
 
 impl AppBuilder {
@@ -87,7 +88,14 @@ impl AppBuilder {
             commands: Vec::new(),
             named_layouts: Vec::new(),
             default_layout: None,
+            terminologies: Vec::new(),
         }
+    }
+
+    /// 🗣️ Declares an alternative terminology id this app supports beyond the implicit "native" default.
+    pub fn terminology(mut self, id: impl Into<String>) -> Self {
+        self.terminologies.push(id.into());
+        self
     }
 
     pub fn icon_id(mut self, icon_id: impl Into<String>) -> Self {
@@ -390,6 +398,7 @@ impl AppBuilder {
             commands,
             named_layouts: self.named_layouts,
             default_layout: self.default_layout,
+            terminologies: self.terminologies,
         }
     }
 }

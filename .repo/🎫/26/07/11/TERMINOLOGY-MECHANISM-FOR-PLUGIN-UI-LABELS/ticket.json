@@ -1,0 +1,13 @@
+{
+  "title": "Terminology Mechanism For Plugin UI Labels",
+  "emoji": "🗣️",
+  "status": "open",
+  "description": "Introduce a \"terminology\" mechanism: every UI has a native terminology by default, and languages can define alternative complete term sets. Ship a \"reuse\"/\"Wiederverwendung\" terminology for puzzle 3d where \"Objects\"/\"Vortices\" become \"Building components\"/\"Connection points\" (en) and \"Baukomponenten\"/\"Verbindungspunkte\" (de). Add a Terminology dropdown to the OS Settings panel next to the existing Language dropdown. Implementation: ViewState gains locale/terminology fields passed from the OS shell into the plugin WASM boundary; AppDefinition gains a terminologies list; puzzle 3d resolves a compile-time-complete label struct per (terminology, locale) and remaps its emitted UiNode labels.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1928"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪70bfab4e9616417bbc7101686c7f31c7"
+  ]
+}
