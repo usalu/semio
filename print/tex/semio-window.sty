@@ -20,8 +20,7 @@
 \providecommand{\semio@window@imagefit}{contain}
 \providecommand{\semio@chrome@navbar@height}{1.8em}
 \providecommand{\semio@chrome@footer@height}{1.8em}
-\providecommand{\semio@chrome@font@title}{0.7em}
-\providecommand{\semio@chrome@font@number}{0.6em}
+\providecommand{\semio@chrome@font@chip}{0.6em}
 \providecommand{\semio@chrome@font@body}{0.8em}
 \providecommand{\semio@chrome@icon@scale}{1}
 \providecommand{\semio@chrome@icon@scale@footer}{1}
@@ -1678,7 +1677,7 @@
 }
 
 \newcommand{\semio@panel@font}{%
-  \SemioSans\fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont
+    \SemioSans\fontsize{\semio@chrome@font@chip}{\semio@chrome@font@chip}\selectfont
 }
 
 \newcommand{\semio@panel@shipout@glass}[4]{%
@@ -1718,7 +1717,7 @@
         \begin{minipage}[c][#4][c]{\dimexpr#2-2\fboxsep-2\fboxrule\relax}%
           \centering
           \color{semio-chrome-text-normal}%
-          {\SemioSans\fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont\expandafter\usebox\csname semio@panel@box@#3\endcsname}%
+          {\SemioSans\fontsize{\semio@chrome@font@chip}{\semio@chrome@font@chip}\selectfont\expandafter\usebox\csname semio@panel@box@#3\endcsname}%
         \end{minipage}%
       }%
     }%
@@ -1843,19 +1842,19 @@
 
 \newcommand{\semio@window@tab}[2]{%
   \semio@window@cap{#1}{#2}{%
-    \SemioSans\fontsize{\semio@chrome@font@title}{\semio@chrome@font@title}\selectfont\color{semio-chrome-canvas}%
+    \SemioSans\fontsize{\semio@chrome@font@chip}{\semio@chrome@font@chip}\selectfont\color{semio-chrome-canvas}%
   }%
 }
 
 \newcommand{\semio@window@ctrl}[2]{%
   \semio@window@cap{#1}{#2}{%
-    \SemioSans\fontsize{\semio@chrome@font@number}{\semio@chrome@font@number}\selectfont\color{semio-chrome-canvas}%
+    \SemioSans\fontsize{\semio@chrome@font@chip}{\semio@chrome@font@chip}\selectfont\color{semio-chrome-canvas}%
   }%
 }
 
 %region Headings
 \newcommand{\semio@heading@chip@font}{%
-  \SemioSans\fontsize{\semio@chrome@font@title}{\semio@chrome@font@title}\selectfont
+  \SemioSans\fontsize{\semio@chrome@font@chip}{\semio@chrome@font@chip}\selectfont
 }
 
 \newcommand{\semio@paragraph@cap@muted@vbox}[1]{%
@@ -2081,6 +2080,11 @@
   \def\semio@heading@color@section{semio-tertiary}%
   \def\semio@heading@color@subsection{semio-secondary}%
   \def\semio@heading@color@subsubsection{semio-primary}%
+  \setkomafont{chapter}{\semio@heading@chip@font}%
+  \setkomafont{section}{\semio@heading@chip@font}%
+  \setkomafont{subsection}{\semio@heading@chip@font}%
+  \setkomafont{subsubsection}{\semio@heading@chip@font}%
+  \setkomafont{paragraph}{\semio@heading@chip@font}%
   \let\semio@orig@sectionlinesformat\sectionlinesformat
   \RenewDocumentCommand\sectionlinesformat{mmmm}{%
     \semio@heading@lines@dispatch{##1}{##2}{##3}{##4}%
@@ -2386,11 +2390,11 @@
 \newcommand{\semio@chrome@dims@compute}{%
   \begingroup
   \normalfont
-  \xdef\semio@chrome@tmp@row{\the\dimexpr\semio@chrome@font@body\relax}%
-  \xdef\semio@chrome@tmp@row@footer{\the\dimexpr\semio@chrome@font@number\relax}%
+  \xdef\semio@chrome@tmp@row{\the\dimexpr\semio@chrome@font@chip\relax}%
+  \xdef\semio@chrome@tmp@row@footer{\the\dimexpr\semio@chrome@font@chip\relax}%
   \xdef\semio@chrome@tmp@titlebar{%
     \the\dimexpr
-      \semio@chrome@font@body
+      \semio@chrome@font@chip
       +\semio@chrome@padding+\semio@chrome@padding
       +\semio@stroke@hairline+\semio@stroke@hairline
     \relax
@@ -2416,7 +2420,7 @@
 \cs_new:Npn \semio_footer_author_chip:n #1 {
   \semio@chrome@chip {
     \semio@chrome@vcenter{\semio@chrome@row@height@footer}{%
-      {\SemioSans\fontsize{\semio@chrome@font@number}{\semio@chrome@font@number}\selectfont
+      {\SemioSans\fontsize{\semio@chrome@font@chip}{\semio@chrome@font@chip}\selectfont
        \semio_author_name_shorten:n {#1}}%
     }%
   }
@@ -2447,12 +2451,12 @@
 \cs_new_protected:Npn \semio_chrome_navbar_project_chip: {
   \tl_if_empty:NF \l_semio_navbar_project_tl {
     \hspace{\semio@chrome@padding}
-    \semio@chrome@navbar@chip@text{\semio@chrome@font@body}{\tl_use:N \l_semio_navbar_project_tl}
+    \semio@chrome@navbar@chip@text{\semio@chrome@font@chip}{\tl_use:N \l_semio_navbar_project_tl}
   }
 }
 \cs_new_protected:Npn \semio_chrome_navbar_center_chip: {
   \tl_if_empty:NF \l_semio_navbar_center_tl {
-    \semio@chrome@navbar@chip@text{\semio@chrome@font@body}{\tl_use:N \l_semio_navbar_center_tl}
+    \semio@chrome@navbar@chip@text{\semio@chrome@font@chip}{\tl_use:N \l_semio_navbar_center_tl}
   }
 }
 \cs_new_eq:NN \SemioChromeNavbarProjectChip \semio_chrome_navbar_project_chip:
@@ -2572,7 +2576,7 @@
     }{%
       \if\relax\detokenize{\semio@chrome@heading}\relax
       \else
-        \semio@chrome@navbar@chip@text{\semio@chrome@font@title}{\semio@chrome@heading}%
+        \semio@chrome@navbar@chip@text{\semio@chrome@font@chip}{\semio@chrome@heading}%
       \fi
     }%
   }%
@@ -2587,7 +2591,7 @@
     }{%
       \semio@chrome@chip{%
         \semio@chrome@vcenter{\semio@chrome@row@height@footer}{%
-          {\SemioMono\fontsize{\semio@chrome@font@number}{\semio@chrome@font@number}\selectfont\thepage}%
+          {\SemioMono\fontsize{\semio@chrome@font@chip}{\semio@chrome@font@chip}\selectfont\thepage}%
         }%
       }%
     }%

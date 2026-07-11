@@ -197,7 +197,7 @@ fn default_true() -> bool {
     true
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Puzzle3dRuntime {
     #[serde(default)]
@@ -234,6 +234,35 @@ struct Puzzle3dRuntime {
     grid_factor: f64,
     #[serde(default)]
     selectable_kinds: Puzzle3dSelectableKinds,
+    #[serde(default)]
+    hovered_kind_id: Option<String>,
+}
+
+impl Default for Puzzle3dRuntime {
+    /// 🎛️ Mirrors every `#[serde(default = "...")]` above — `#[derive(Default)]` would silently ignore
+    /// them and zero out fields like `overlap_budget`/`selection_method`/`lod_automatic` in Rust-constructed runtimes.
+    fn default() -> Self {
+        Self {
+            selection: Puzzle3dSelection::default(),
+            active_tool: String::new(),
+            selection_method: default_selection_method(),
+            hovered_object_id: None,
+            overlap_budget: default_overlap_budget(),
+            fill_count: 0,
+            brush_candidate_index: 0,
+            object_kind_weights: HashMap::new(),
+            vortex_kind_weights: HashMap::new(),
+            transform_tool: default_transform_tool(),
+            lod_automatic: default_true(),
+            lod_depth_variable: false,
+            lod_show_grid: default_true(),
+            lod_manual: default_manual_lod(),
+            grid_snap_enabled: false,
+            grid_factor: default_grid_factor(),
+            selectable_kinds: Puzzle3dSelectableKinds::default(),
+            hovered_kind_id: None,
+        }
+    }
 }
 
 fn default_transform_tool() -> String {
@@ -393,6 +422,7 @@ fn world_instances_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) ->
         .map(|object| {
             let selected = selection.object_ids.contains(&object.id);
             let hovered = runtime.hovered_object_id.as_deref() == Some(object.id.as_str());
+            let kind_highlighted = runtime.hovered_kind_id.is_some() && runtime.hovered_kind_id.as_deref() == object.object_kind.as_deref();
             let mesh_id = resolve_object_mesh_url(object, &fixture.meta).map(|url| world3d_mesh_id_from_url(&url)).unwrap_or_else(|| PUZZLE3D_FALLBACK_MESH_KIND.into());
             json!({
                 "id": object.id,
@@ -405,9 +435,9 @@ fn world_instances_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) ->
                 "rotation": object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
                 "scale": object_scale_json(object),
                 "label": object.label.clone().or_else(|| object.object_kind.clone()).unwrap_or_else(|| object.id.clone()),
-                "color": if selected { "#f59e0b" } else if hovered { "#fbbf24" } else { "#94a3b8" },
+                "color": if selected { "#f59e0b" } else if hovered || kind_highlighted { "#fbbf24" } else { "#94a3b8" },
                 "selected": selected,
-                "hovered": hovered,
+                "hovered": hovered || kind_highlighted,
             })
         })
         .collect();
@@ -708,6 +738,26 @@ fn next_object_id() -> String {
     let next = PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
     format!("object-{next}")
 }
+
+/// 🧊 Seeds real vortices for a freshly placed object from its kind catalog's `vortices` templates, so it is immediately brushable instead of connector-less.
+fn puzzle3d_vortices_from_kind_template(catalog_entry: &Value) -> Vec<Puzzle3dVortex> {
+    catalog_entry
+        .get("vortices")
+        .and_then(|value| value.as_array())
+        .map(|templates| {
+            templates
+                .iter()
+                .enumerate()
+                .map(|(index, template)| {
+                    let position = template.get("position").and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok()).unwrap_or([0.0, 0.0, 0.0]);
+                    let direction = template.get("direction").and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok());
+                    let radius = template.get("radius").and_then(|value| value.as_f64());
+                    Puzzle3dVortex { id: format!("v{index}"), vortex_kind: template.get("vortexKind").and_then(|value| value.as_str()).map(str::to_string), position, direction, radius }
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
 //#endregion 🔖Document
 
 //#region 🔖Panels
@@ -770,23 +820,111 @@ fn build_document_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
     })
 }
 
-fn build_kinds_tree() -> UiNode {
+/// 🖱️ MIME key `DeclarativeTreePanel` (framework/renderer/react/ui-interpreter.tsx) reads to auto-wire catalogue drag sources.
+const PUZZLE3D_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
+
+fn puzzle3d_catalog_entries<'a>(fixture: &'a Puzzle3dFixture, section: &str) -> &'a [Value] {
+    fixture.meta.kind_catalogs.as_ref().and_then(|catalogs| catalogs.get(section)).and_then(|entries| entries.as_array()).map(Vec::as_slice).unwrap_or(&[])
+}
+
+fn puzzle3d_catalog_entry_label(entry: &Value) -> String {
+    entry.get("label").and_then(|value| value.as_str()).or_else(|| entry.get("name").and_then(|value| value.as_str())).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
+}
+
+fn puzzle3d_object_kind_vortex_items(entry: &Value) -> Vec<UiTreeItemNode> {
+    entry
+        .get("vortices")
+        .and_then(|value| value.as_array())
+        .map(|templates| {
+            templates
+                .iter()
+                .enumerate()
+                .map(|(index, template)| {
+                    let vortex_kind = template.get("vortexKind").and_then(|value| value.as_str()).unwrap_or("vortex");
+                    let position = template.get("position").cloned().unwrap_or(json!([0.0, 0.0, 0.0]));
+                    UiTreeItemNode {
+                        id: format!("puzzle3d-kind-vortex.{index}.{vortex_kind}"),
+                        label: vortex_kind.into(),
+                        description: Some(position.to_string()),
+                        icon_id: Some("circle-dot".into()),
+                        selected: None,
+                        default_open: None,
+                        command: None,
+                        hover_command: None,
+                        unhover_command: None,
+                        actions: None,
+                        draggable: None,
+                        drag_data: None,
+                        items: None,
+                        control: None,
+                        is_hidden: None,
+                    }
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn puzzle3d_object_kind_item(entry: &Value) -> UiTreeItemNode {
+    let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
+    let draggable = entry.get("meshUrl").and_then(|value| value.as_str()).map(|url| !url.is_empty()).unwrap_or(false);
+    UiTreeItemNode {
+        id: format!("puzzle3d-kind:{kind_id}"),
+        label: puzzle3d_catalog_entry_label(entry),
+        description: Some(kind_id.clone()),
+        icon_id: Some("box".into()),
+        selected: None,
+        default_open: Some(false),
+        command: Some(puzzle3d_cmd("addObjectKind", Some(json!({ "objectKind": kind_id.clone() })))),
+        hover_command: Some(puzzle3d_cmd("setKindHover", Some(json!({ "kindId": kind_id.clone() })))),
+        unhover_command: Some(puzzle3d_cmd("setKindHover", Some(json!({ "kindId": Value::Null })))),
+        actions: None,
+        draggable: draggable.then_some(true),
+        drag_data: draggable.then(|| HashMap::from([(PUZZLE3D_CATALOGUE_DRAG_MIME.to_string(), json!({ "objectKind": kind_id }).to_string())])),
+        items: Some(puzzle3d_object_kind_vortex_items(entry)),
+        control: None,
+        is_hidden: None,
+    }
+}
+
+fn puzzle3d_catalog_kind_item(entry: &Value, icon_id: &str) -> UiTreeItemNode {
+    let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
+    UiTreeItemNode {
+        id: format!("puzzle3d-kind-entry:{kind_id}"),
+        label: puzzle3d_catalog_entry_label(entry),
+        description: Some(kind_id),
+        icon_id: Some(icon_id.into()),
+        selected: None,
+        default_open: None,
+        command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
+        draggable: None,
+        drag_data: None,
+        items: None,
+        control: None,
+        is_hidden: None,
+    }
+}
+
+fn build_kinds_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
+    let object_entries = puzzle3d_catalog_entries(&envelope.fixture, "objects");
+    let vortex_entries = puzzle3d_catalog_entries(&envelope.fixture, "vortices");
+    let cable_entries = puzzle3d_catalog_entries(&envelope.fixture, "cables");
+    let attraction_entries = puzzle3d_catalog_entries(&envelope.fixture, "attractions");
     UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode {
-            id: "puzzle3d-play-kinds.objects".into(),
-            label: Some("Object Kinds".into()),
-            default_open: Some(true),
-            items: vec![kind_item("Hexagonal Cut Concrete Forest Left"), kind_item("Hexagonal Cut Concrete Forest Right")],
-        }],
+        sections: vec![
+            UiTreeSectionNode { id: "puzzle3d-play-kinds.objects".into(), label: Some("Objects".into()), default_open: Some(true), items: object_entries.iter().map(puzzle3d_object_kind_item).collect() },
+            UiTreeSectionNode { id: "puzzle3d-play-kinds.vortices".into(), label: Some("Vortices".into()), default_open: Some(false), items: vortex_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "circle-dot")).collect() },
+            UiTreeSectionNode { id: "puzzle3d-play-kinds.cables".into(), label: Some("Cables".into()), default_open: Some(false), items: cable_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "plug")).collect() },
+            UiTreeSectionNode { id: "puzzle3d-play-kinds.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), items: attraction_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "link")).collect() },
+        ],
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
         drop_command: None,
     })
-}
-
-fn kind_item(kind: &str) -> UiTreeItemNode {
-    tree_item_with_command(format!("puzzle3d-kind:{kind}"), kind, Some("box"), puzzle3d_cmd("addObjectKind", Some(json!({ "objectKind": kind }))))
 }
 
 fn build_inspector_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
@@ -1139,18 +1277,23 @@ impl PluginApp for Puzzle3dPlayApp {
             "addObjectKind" => {
                 let object_kind = args.and_then(|value| value.get("objectKind")).and_then(|value| value.as_str()).unwrap_or("Object");
                 let id = next_object_id();
-                let mesh_url = envelope.fixture.meta.kind_catalogs.as_ref().and_then(|catalogs| {
-                    catalogs.get("objects")?.as_array()?.iter().find_map(|entry| if entry.get("id").and_then(|v| v.as_str()) == Some(object_kind) { entry.get("meshUrl").and_then(|v| v.as_str()).map(str::to_string) } else { None })
-                });
+                let catalog_entry = envelope.fixture.meta.kind_catalogs.as_ref().and_then(|catalogs| catalogs.get("objects")?.as_array()?.iter().find(|entry| entry.get("id").and_then(|v| v.as_str()) == Some(object_kind)).cloned());
+                let mesh_url = catalog_entry.as_ref().and_then(|entry| entry.get("meshUrl").and_then(|v| v.as_str()).map(str::to_string));
+                let vortices = catalog_entry.as_ref().map(|entry| puzzle3d_vortices_from_kind_template(entry)).unwrap_or_default();
+                let origin = args
+                    .and_then(|value| value.get("origin"))
+                    .and_then(|value| value.as_array())
+                    .map(|values| [values.first().and_then(|v| v.as_f64()).unwrap_or(0.0), values.get(1).and_then(|v| v.as_f64()).unwrap_or(0.0), values.get(2).and_then(|v| v.as_f64()).unwrap_or(0.0)])
+                    .unwrap_or([0.0, 0.0, 0.0]);
                 envelope.fixture.objects.push(Puzzle3dObject {
                     id: id.clone(),
                     label: Some(object_kind.into()),
                     object_kind: Some(object_kind.into()),
-                    origin: [0.0, 0.0, 0.0],
+                    origin,
                     orientation: Some([0.0, 0.0, 0.0, 1.0]),
                     scale: None,
                     mesh_url,
-                    vortices: Vec::new(),
+                    vortices,
                 });
                 envelope.runtime.selection.object_ids = vec![id];
                 return vec![set_document_op(&envelope)];
@@ -1404,6 +1547,10 @@ impl PluginApp for Puzzle3dPlayApp {
                 }
                 return vec![set_document_op(&envelope)];
             }
+            "setKindHover" => {
+                envelope.runtime.hovered_kind_id = args.and_then(|value| value.get("kindId")).and_then(|value| value.as_str()).map(str::to_string);
+                return vec![set_document_op(&envelope)];
+            }
             "engagementPossibleSelect" => {
                 let possible_id = args.and_then(|value| value.get("possibleId")).and_then(|value| value.as_str()).unwrap_or("");
                 envelope.runtime.active_tool = match possible_id {
@@ -1525,7 +1672,7 @@ impl PluginApp for Puzzle3dPlayApp {
                 )
             }
             PUZZLE3D_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
-            PUZZLE3D_PLAY_BODY_KINDS => build_kinds_tree(),
+            PUZZLE3D_PLAY_BODY_KINDS => build_kinds_tree(&envelope),
             PUZZLE3D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
@@ -1722,6 +1869,68 @@ mod tests {
         assert!(ids.contains(&PUZZLE3D_ENGAGEMENT_TOOL_SELECT));
         assert!(ids.contains(&PUZZLE3D_ENGAGEMENT_TOOL_BRUSH));
         assert!(ids.contains(&PUZZLE3D_ENGAGEMENT_TOOL_FILL));
+    }
+
+    fn measure_group_labels(measures: &[WindowMeasure]) -> Vec<&str> {
+        measures
+            .iter()
+            .filter_map(|measure| match measure {
+                WindowMeasure::Group { label, .. } => Some(label.as_str()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn window_measures_cover_lod_select_and_brush_groups() {
+        let app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let measures = app.window_measures(&document, &ViewState::default());
+        let groups = measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main measures");
+        let labels = measure_group_labels(groups);
+        assert!(labels.contains(&"LOD"));
+        assert!(labels.contains(&"Select"));
+        assert!(labels.contains(&"Brush"));
+    }
+
+    #[test]
+    fn set_lod_automatic_toggles_runtime_flag() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setLodAutomatic", Some(&json!({ "pressed": false })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert!(!envelope.runtime.lod_automatic);
+    }
+
+    #[test]
+    fn set_lod_manual_clamps_to_slider_range() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setLodManual", Some(&json!({ "value": 5000.0 })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.runtime.lod_manual, PUZZLE3D_LOD_SLIDER_MAX);
+    }
+
+    #[test]
+    fn set_selectable_kind_updates_selected_kind_only() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setSelectableKind", Some(&json!({ "kind": "vortices", "pressed": false })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert!(!envelope.runtime.selectable_kinds.vortices);
+        assert!(envelope.runtime.selectable_kinds.objects);
+        assert!(envelope.runtime.selectable_kinds.attractions);
+    }
+
+    #[test]
+    fn lod_json_reflects_runtime_state() {
+        let mut envelope = default_envelope();
+        envelope.runtime.grid_factor = 5.0;
+        envelope.runtime.lod_manual = 250.0;
+        let lod: Value = serde_json::from_str(&world3d_lod_json(&envelope.runtime)).unwrap();
+        assert_eq!(lod.get("gridFactor").and_then(|v| v.as_f64()), Some(5.0));
+        assert_eq!(lod.get("manualLod").and_then(|v| v.as_f64()), Some(250.0));
+        assert_eq!(lod.get("automaticLod").and_then(|v| v.as_bool()), Some(true));
     }
 
     #[test]

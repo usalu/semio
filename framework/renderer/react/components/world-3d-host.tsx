@@ -123,6 +123,15 @@ type WorldInteractionRecord = {
   readonly hoveredVortexFullId?: string;
 };
 
+type WorldLodRecord = {
+  readonly gridFactor?: number;
+  readonly gridSnapEnabled?: boolean;
+  readonly showLodGrid?: boolean;
+  readonly automaticLod?: boolean;
+  readonly depthVariableLod?: boolean;
+  readonly manualLod?: number;
+};
+
 type WorldVortexRecord = {
   readonly fullId: string;
   readonly objectId?: string;
@@ -431,6 +440,15 @@ function parseInteraction(interactionJson: string | undefined): WorldInteraction
   if (!interactionJson) return {};
   try {
     return JSON.parse(interactionJson) as WorldInteractionRecord;
+  } catch {
+    return {};
+  }
+}
+
+function parseLod(lodJson: string | undefined): WorldLodRecord {
+  if (!lodJson) return {};
+  try {
+    return JSON.parse(lodJson) as WorldLodRecord;
   } catch {
     return {};
   }
@@ -1503,6 +1521,7 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
   const targetVolumes = useMemo(() => parseJsonArray<WorldTargetVolumeRecord>(scene?.targetVolumesJson), [scene?.targetVolumesJson]);
   const references = useMemo(() => parseJsonArray<WorldReferenceRecord>(scene?.referencesJson), [scene?.referencesJson]);
   const interaction = useMemo(() => parseInteraction(scene?.interactionJson), [scene?.interactionJson]);
+  const lod = useMemo(() => parseLod(scene?.lodJson), [scene?.lodJson]);
   const engagementPreview = useMemo(() => parseEngagementPreview(scene?.engagementPreviewJson), [scene?.engagementPreviewJson]);
   const brushPreview = useMemo(() => parseBrushPreview(scene?.brushPreviewJson), [scene?.brushPreviewJson]);
   const contextMenuItems = useMemo(() => parseJsonArray<WorldContextMenuItem>(scene?.contextMenuJson), [scene?.contextMenuJson]);
@@ -1931,7 +1950,17 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
         <WorldOrbitViewSnapGateProvider>
           <WorldOrbitCameraViewRig state={cameraState} seedKey={scene?.cameraJson ?? "default"} perspectiveFov={cameraState.fov} />
           <WorldOrbitGated controlsGate={marqueeDown || gumballDragActive} onCamera={handleCameraChange} zoom={cameraState.zoom} projection={cameraState.explicitProjection ? cameraState.projection : undefined} />
-          <WorldLodBridge lodRef={lodRef} distanceReference={100} gridFactor={DEFAULT_LOD_GRID_FACTOR} gridSnapEnabled={false} showLodGrid automaticLod depthVariableLod={false} manualLod={DEFAULT_MANUAL_LOD} gridDatum={[0, 0, 0]}>
+          <WorldLodBridge
+            lodRef={lodRef}
+            distanceReference={100}
+            gridFactor={lod.gridFactor ?? DEFAULT_LOD_GRID_FACTOR}
+            gridSnapEnabled={lod.gridSnapEnabled ?? false}
+            showLodGrid={lod.showLodGrid ?? true}
+            automaticLod={lod.automaticLod ?? true}
+            depthVariableLod={lod.depthVariableLod ?? false}
+            manualLod={lod.manualLod ?? DEFAULT_MANUAL_LOD}
+            gridDatum={[0, 0, 0]}
+          >
             {environment ? (
               <>
                 <ambientLight color={environment.ambient?.color ?? "#ffffff"} intensity={environment.ambient?.intensity ?? 0.65} />

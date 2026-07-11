@@ -1186,12 +1186,16 @@ export function GraphSliderOverlays({
   logicalH,
   editable,
   onSliderChange,
+  onSliderPointerDown,
+  onSliderPointerUp,
 }: {
   readonly stateJson: string;
   readonly logicalW: number;
   readonly logicalH: number;
   readonly editable: boolean;
   readonly onSliderChange: (widgetId: string, value: number) => void;
+  readonly onSliderPointerDown?: () => void;
+  readonly onSliderPointerUp?: () => void;
 }) {
   const camera = parseDagOverlayCamera(stateJson);
   const sliders = parseDagSliderOverlays(stateJson);
@@ -1204,7 +1208,18 @@ export function GraphSliderOverlays({
         const h = Math.max(slider.h * camera.zoom, 16);
         return (
           <div key={slider.widgetId} className="pointer-events-auto absolute flex items-center px-1" style={{ left: screen.x - w / 2, top: screen.y - h / 2, width: w, height: h }} onPointerDown={(event) => event.stopPropagation()}>
-            <Slider className="w-full min-w-0" max={slider.max} min={slider.min} step={slider.step} value={[slider.value]} disabled={!editable} onValueChange={(values) => onSliderChange(slider.widgetId, values[0] ?? slider.value)} />
+            <Slider
+              className="w-full min-w-0"
+              max={slider.max}
+              min={slider.min}
+              step={slider.step}
+              value={[slider.value]}
+              disabled={!editable}
+              onValueChange={(values) => onSliderChange(slider.widgetId, values[0] ?? slider.value)}
+              onPointerDown={onSliderPointerDown}
+              onPointerUp={onSliderPointerUp}
+              onPointerCancel={onSliderPointerUp}
+            />
           </div>
         );
       })}
@@ -1251,7 +1266,11 @@ export function SelectionAlignChrome({ bounds, onAlign }: { readonly bounds: Dag
 //#region 🔖flow-graph-canvas-host
 
 //#region Sync
-function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScene): void {
+// @emoji 🎥 `applyCamera` must stay false for every resync after the first: FlowWasmSession never
+// reports its live camera back into the document (`cameraJson` is unimplemented, see the wheel
+// handler below), so `scene.viewportJson` is frozen at its initial value for the whole session —
+// applying it on every edit-triggered resync would snap the user's camera back on every commit.
+function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScene, applyCamera: boolean): void {
   if (scene.operatorsJson) session.setNeuronKindInfosJson(scene.operatorsJson);
   if (scene.fixtureJson) session.loadFixtureJson(scene.fixtureJson);
   if (scene.selectionJson) session.setSelection(scene.selectionJson);
@@ -1267,6 +1286,7 @@ function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScen
       /* ignore */
     }
   }
+  if (!applyCamera) return;
   try {
     const viewport = JSON.parse(scene.viewportJson) as { readonly x?: number; readonly y?: number; readonly zoom?: number };
     session.setCamera(viewport.x ?? 0, viewport.y ?? 0, viewport.zoom ?? 1);
@@ -1347,6 +1367,54 @@ export function FlowGraphCanvasHost({
     }
   }, [dispatch]);
 
+  // A continuous gesture (e.g. dragging a slider) fires many onValueChange ticks per second, each
+  // committing the whole document through an async plugin round-trip; concurrent in-flight commits
+  // can resolve out of order, and the scene-resync effect below would apply whichever one lands
+  // last — visibly reverting the drag mid-gesture. isGestureActiveRef suppresses that resync while
+  // a gesture is active, and commitFixtureThrottled caps how many concurrent commits are in flight.
+  const isGestureActiveRef = useRef(false);
+  const lastCommitAtRef = useRef(0);
+  const pendingCommitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const GESTURE_COMMIT_THROTTLE_MS = 80;
+
+  const commitFixtureThrottled = useCallback(() => {
+    if (pendingCommitTimeoutRef.current != null) {
+      clearTimeout(pendingCommitTimeoutRef.current);
+      pendingCommitTimeoutRef.current = null;
+    }
+    const elapsed = Date.now() - lastCommitAtRef.current;
+    if (elapsed >= GESTURE_COMMIT_THROTTLE_MS) {
+      lastCommitAtRef.current = Date.now();
+      commitFixture();
+    } else {
+      pendingCommitTimeoutRef.current = setTimeout(() => {
+        pendingCommitTimeoutRef.current = null;
+        lastCommitAtRef.current = Date.now();
+        commitFixture();
+      }, GESTURE_COMMIT_THROTTLE_MS - elapsed);
+    }
+  }, [commitFixture]);
+
+  const handleGesturePointerDown = useCallback(() => {
+    isGestureActiveRef.current = true;
+  }, []);
+
+  const handleGesturePointerUp = useCallback(() => {
+    isGestureActiveRef.current = false;
+    if (pendingCommitTimeoutRef.current != null) {
+      clearTimeout(pendingCommitTimeoutRef.current);
+      pendingCommitTimeoutRef.current = null;
+    }
+    lastCommitAtRef.current = Date.now();
+    commitFixture();
+  }, [commitFixture]);
+
+  useEffect(() => {
+    return () => {
+      if (pendingCommitTimeoutRef.current != null) clearTimeout(pendingCommitTimeoutRef.current);
+    };
+  }, []);
+
   const paintOverlays = useCallback(() => {
     const session = sessionRef.current;
     const labelCanvas = labelCanvasRef.current;
@@ -1418,7 +1486,7 @@ export function FlowGraphCanvasHost({
     const dpr = globalThis.devicePixelRatio || 1;
     let raf = 0;
     void session.attachCanvas(canvas, Math.round(rect.width), Math.round(rect.height), dpr).then(() => {
-      syncFlowSessionFromScene(session, scene);
+      syncFlowSessionFromScene(session, scene, true);
       const resize = () => {
         const next = container.getBoundingClientRect();
         const nextDpr = globalThis.devicePixelRatio || 1;
@@ -1444,7 +1512,10 @@ export function FlowGraphCanvasHost({
   useEffect(() => {
     const session = sessionRef.current;
     if (!session || !sessionReady) return;
-    syncFlowSessionFromScene(session, scene);
+    // Skip while a gesture (e.g. slider drag) is active: an in-flight commit's response landing
+    // mid-gesture would otherwise reload the fixture and visibly revert the live local edit.
+    if (isGestureActiveRef.current) return;
+    syncFlowSessionFromScene(session, scene, false);
     session.renderFrame();
     paintOverlays();
   }, [sceneSignature, paintOverlays, scene, sessionReady]);
@@ -1630,9 +1701,11 @@ export function FlowGraphCanvasHost({
         editable={editable}
         onSliderChange={(widgetId, value) => {
           sessionRef.current?.setSliderValue(widgetId, value);
-          commitFixture();
+          commitFixtureThrottled();
           paintOverlays();
         }}
+        onSliderPointerDown={handleGesturePointerDown}
+        onSliderPointerUp={handleGesturePointerUp}
       />
       {selectionBounds ? (
         <>

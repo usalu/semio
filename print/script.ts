@@ -358,11 +358,9 @@ export function emitSemioTokensSty(): void {
   }
   const typography = tokens.metrics?.typography;
   if (typography) {
-    const titleFont = (typography.textXsPx ?? 11.2) / 16;
-    const numberFont = (typography.text2xsPx ?? 9.6) / 16;
+    const chipFont = (typography.text2xsPx ?? 9.6) / 16;
     const bodyFont = (typography.textSmPx ?? 12.8) / 16;
-    lines.push(`\\newcommand{\\semio@chrome@font@title}{${+titleFont.toFixed(3)}em}`);
-    lines.push(`\\newcommand{\\semio@chrome@font@number}{${+numberFont.toFixed(3)}em}`);
+    lines.push(`\\newcommand{\\semio@chrome@font@chip}{${+chipFont.toFixed(3)}em}`);
     lines.push(`\\newcommand{\\semio@chrome@font@body}{${+bodyFont.toFixed(3)}em}`);
   }
   lines.push("");

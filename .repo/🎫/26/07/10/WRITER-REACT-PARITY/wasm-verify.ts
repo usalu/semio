@@ -20,6 +20,19 @@ async function main() {
 
   const instanceId = await handle.createApp("writer-play");
 
+  // Reproduces the reported bug: the host's example dropdown dispatches "setActiveExample", not "setDocumentJson".
+  const emptyScene = (await handle.render(instanceId, "writer.play.main", {})) as Json;
+  if (((emptyScene.textEditor as Json).buffer as string) !== "") throw new Error("expected a fresh instance to start empty");
+  await handle.handleCommand(instanceId, cmd("setActiveExample", { exampleId: "jack" }), {});
+  const afterExampleSelect = (await handle.render(instanceId, "writer.play.main", {})) as Json;
+  const bufferAfterSelect = (afterExampleSelect.textEditor as Json).buffer as string;
+  if (!bufferAfterSelect.includes("MATCH")) throw new Error(`setActiveExample("jack") did not load the fixture; buffer: ${JSON.stringify(bufferAfterSelect)}`);
+  console.log("[DEBUG] setActiveExample(jack) loaded buffer:", bufferAfterSelect);
+  await handle.handleCommand(instanceId, cmd("setActiveExample", { exampleId: "empty" }), {});
+  const afterEmptySelect = (await handle.render(instanceId, "writer.play.main", {})) as Json;
+  if (((afterEmptySelect.textEditor as Json).buffer as string) !== "") throw new Error("setActiveExample(empty) did not clear the buffer");
+  console.log("[DEBUG] setActiveExample(empty) round-trip OK");
+
   await handle.handleCommand(instanceId, cmd("setDocumentJson", { json: jackExample.documentJson }), {});
   const scene1 = (await handle.render(instanceId, "writer.play.main", {})) as Json;
   const textEditor1 = scene1.textEditor as Json;

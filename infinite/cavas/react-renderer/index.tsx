@@ -102,6 +102,9 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
+    let torndown = false;
+    let localRaf: number | null = null;
+    let localRo: ResizeObserver | null = null;
     const session = sessionFactory();
     sessionRef.current = session;
     onSessionReady?.(session);
@@ -113,7 +116,40 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
     canvas.height = Math.round(initH * dpr);
     canvas.style.width = `${initW}px`;
     canvas.style.height = `${initH}px`;
+    const modifiersOf = (ev: PointerEvent | MouseEvent): CanvasInputModifiers => ({
+      shift: ev.shiftKey,
+      ctrl: ev.ctrlKey,
+      meta: ev.metaKey,
+      alt: ev.altKey,
+    });
+    const onPointerDown = (ev: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      session.pointerDown?.(ev.clientX - rect.left, ev.clientY - rect.top, ev.button, ev.shiftKey, modifiersOf(ev));
+      renderFrame();
+    };
+    const onPointerMove = (ev: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      session.pointerMove?.(ev.clientX - rect.left, ev.clientY - rect.top);
+      renderFrame();
+    };
+    const onPointerUp = (ev: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      session.pointerUp?.(ev.clientX - rect.left, ev.clientY - rect.top, modifiersOf(ev));
+      renderFrame();
+    };
+    const onDoubleClick = (ev: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      session.doubleClick?.(ev.clientX - rect.left, ev.clientY - rect.top);
+      renderFrame();
+    };
+    const onWheel = (ev: WheelEvent) => {
+      ev.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      session.wheel?.(ev.clientX - rect.left, ev.clientY - rect.top, ev.deltaY);
+      renderFrame();
+    };
     void session.attachCanvas(canvas, initW, initH, dpr).then(() => {
+      if (torndown) return;
       const resize = () => {
         const rect = container.getBoundingClientRect();
         const dpr = globalThis.devicePixelRatio || 1;
@@ -127,45 +163,13 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
         renderFrame();
       };
       resize();
-      const ro = new ResizeObserver(resize);
-      ro.observe(container);
+      localRo = new ResizeObserver(resize);
+      localRo.observe(container);
       const tick = () => {
         renderFrame();
-        rafRef.current = requestAnimationFrame(tick);
+        localRaf = requestAnimationFrame(tick);
       };
-      rafRef.current = requestAnimationFrame(tick);
-      const modifiersOf = (ev: PointerEvent | MouseEvent): CanvasInputModifiers => ({
-        shift: ev.shiftKey,
-        ctrl: ev.ctrlKey,
-        meta: ev.metaKey,
-        alt: ev.altKey,
-      });
-      const onPointerDown = (ev: PointerEvent) => {
-        const rect = canvas.getBoundingClientRect();
-        session.pointerDown?.(ev.clientX - rect.left, ev.clientY - rect.top, ev.button, ev.shiftKey, modifiersOf(ev));
-        renderFrame();
-      };
-      const onPointerMove = (ev: PointerEvent) => {
-        const rect = canvas.getBoundingClientRect();
-        session.pointerMove?.(ev.clientX - rect.left, ev.clientY - rect.top);
-        renderFrame();
-      };
-      const onPointerUp = (ev: PointerEvent) => {
-        const rect = canvas.getBoundingClientRect();
-        session.pointerUp?.(ev.clientX - rect.left, ev.clientY - rect.top, modifiersOf(ev));
-        renderFrame();
-      };
-      const onDoubleClick = (ev: MouseEvent) => {
-        const rect = canvas.getBoundingClientRect();
-        session.doubleClick?.(ev.clientX - rect.left, ev.clientY - rect.top);
-        renderFrame();
-      };
-      const onWheel = (ev: WheelEvent) => {
-        ev.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        session.wheel?.(ev.clientX - rect.left, ev.clientY - rect.top, ev.deltaY);
-        renderFrame();
-      };
+      localRaf = requestAnimationFrame(tick);
       if (enablePointer) {
         canvas.addEventListener("pointerdown", onPointerDown);
         canvas.addEventListener("pointermove", onPointerMove);
@@ -174,21 +178,19 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
         canvas.addEventListener("dblclick", onDoubleClick);
         canvas.addEventListener("wheel", onWheel, { passive: false });
       }
-      return () => {
-        ro.disconnect();
-        if (enablePointer) {
-          canvas.removeEventListener("pointerdown", onPointerDown);
-          canvas.removeEventListener("pointermove", onPointerMove);
-          canvas.removeEventListener("pointerup", onPointerUp);
-          canvas.removeEventListener("pointerleave", onPointerUp);
-          canvas.removeEventListener("dblclick", onDoubleClick);
-          canvas.removeEventListener("wheel", onWheel);
-        }
-        if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
-      };
     });
     return () => {
-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      torndown = true;
+      localRo?.disconnect();
+      if (enablePointer) {
+        canvas.removeEventListener("pointerdown", onPointerDown);
+        canvas.removeEventListener("pointermove", onPointerMove);
+        canvas.removeEventListener("pointerup", onPointerUp);
+        canvas.removeEventListener("pointerleave", onPointerUp);
+        canvas.removeEventListener("dblclick", onDoubleClick);
+        canvas.removeEventListener("wheel", onWheel);
+      }
+      if (localRaf != null) cancelAnimationFrame(localRaf);
       sessionRef.current = null;
     };
   }, [enablePointer, onSessionReady, renderFrame, sessionFactory]);

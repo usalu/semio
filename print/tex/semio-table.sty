@@ -66,9 +66,9 @@
 
 \newcommand{\SemioTableRegisterRow}[3]{%
   \SemioTableRow{%
-    #1 &
-    {\semio@table@register@indent{#1}#2} &
-    \semio@table@register@page{#3}
+    \cellcolor{semio-chrome-canvas}#1 &
+    \cellcolor{semio-chrome-canvas}{\semio@table@register@indent{#1}#2} &
+    \cellcolor{semio-chrome-canvas}\semio@table@register@page{#3}
   }%
 }
 
@@ -139,7 +139,7 @@
 }
 
 \newcommand{\semio@table@header@cell}[1]{%
-  \cellcolor{semio-chrome-window}%
+  \cellcolor{semio-chrome-canvas}%
   \semio@text@emphasized{\bfseries #1}%
 }
 
@@ -290,7 +290,7 @@
 }
 
 \newcommand{\SemioTableReferenceRow}[3]{%
-  \SemioTableRow{#1 & #2 & #3}%
+  \SemioTableRow{\cellcolor{semio-chrome-canvas}#1 & \cellcolor{semio-chrome-canvas}#2 & \cellcolor{semio-chrome-canvas}#3}%
 }
 
 \newcommand{\SemioTableReference}[1]{%
@@ -298,15 +298,15 @@
 }
 
 \newcommand{\SemioGlossaryTableRow}[3]{%
-  \SemioTableRow{#1 & #2 & \SemioTableGlossaryPages{#3}}%
+  \SemioTableRow{\cellcolor{semio-chrome-canvas}#1 & \cellcolor{semio-chrome-canvas}#2 & \cellcolor{semio-chrome-canvas}\SemioTableGlossaryPages{#3}}%
 }
 
 \newcommand{\SemioGlossaryTableRowText}[3]{%
-  \SemioTableRow{#1 & #2 & #3}%
+  \SemioTableRow{\cellcolor{semio-chrome-canvas}#1 & \cellcolor{semio-chrome-canvas}#2 & \cellcolor{semio-chrome-canvas}#3}%
 }
 
 \newcommand{\SemioTableGlossaryRow}[3]{%
-  \SemioTableRow{#1 & #2 & #3}%
+  \SemioTableRow{\cellcolor{semio-chrome-canvas}#1 & \cellcolor{semio-chrome-canvas}#2 & \cellcolor{semio-chrome-canvas}#3}%
 }
 
 \ExplSyntaxOn
