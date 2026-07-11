@@ -108,7 +108,7 @@
       "runtimeArgs": ["nx", "run", "@semio-tech/framework-os-dev:dev"],
       "env": {
         "S_OS_PORT": "6112",
-        "SEMIO_PLUGIN": "puzzle2d",
+        "SEMIO_PLUGIN": "puzzle",
         "SEMIO_RENDERER": "wgpu"
       },
       "port": 6112

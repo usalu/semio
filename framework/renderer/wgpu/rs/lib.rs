@@ -9784,8 +9784,8 @@ use crate::dock::{
 };
 use crate::interpreter::{framework_widget_context, render_ui_node, validate_window_body_surface};
 use crate::scenes::{
-    clear_graph_node_context, open_puzzle2d_board_context_menu, push_gis_map_context_menu, puzzle_board_pointer_down, puzzle_board_pointer_leave, puzzle_board_pointer_move, puzzle_board_pointer_up, puzzle_board_wheel,
-    resolve_graph_context_command, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, GisMapSurface, NodeGraphSurface, Puzzle2dBoardSurface,
+    clear_graph_node_context, open_puzzle2d_board_context_menu, push_gis_map_context_menu, resolve_graph_context_command, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, GisMapSurface, NodeGraphSurface,
+    Puzzle2dBoardSurface,
 };
 use infinite_world::{
     fetch_pending_glb_meshes, fetch_pending_reference_images, handle_world3d_paint_commands,
