@@ -1,0 +1,11 @@
+{
+  "title": "Remove VCS Panel From Procedural 3D Flow",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "procedural 3d: there is a vcs panel on top top right of the flow which shouldnt be there",
+  "summary": "Removed empty window measures overlay panel from top-right corner of flow windows when measures array is empty.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪173b0ec0239741d69be56d55fa4a3045"
+  ]
+}

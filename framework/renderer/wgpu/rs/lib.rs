@@ -7667,8 +7667,13 @@ fn note_resize_handle_at(bounds: NoteBoundsF, camera: NoteCameraF, inner: Rect, 
 /** @emoji 📝 Pointer-down entry point for note-canvas: mirrors handlePointerDown in note-canvas-host.tsx. */
 fn note_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16, shift: bool) -> Vec<CommandDescriptor> {
     let Some(note) = &scene.note_canvas else {
+        crate::log_debug("[DEBUG] note_pointer_down: no note_canvas scene");
         return Vec::new();
     };
+    crate::log_debug(&format!(
+        "[DEBUG] note_pointer_down entry view_mode={} interactive={} x={x} y={y} button={button}",
+        note.view_mode, note.interactive
+    ));
     if note.view_mode == "navigator" || !note.interactive {
         return Vec::new();
     }
@@ -7680,6 +7685,7 @@ fn note_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, 
         .map(|(cx, cy, cz)| NoteCameraF { x: cx, y: cy, zoom: cz })
         .unwrap_or_else(|| NoteCameraF::from(doc.camera.clone()));
     let tool = doc.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
+    crate::log_debug(&format!("[DEBUG] note_pointer_down tool={tool}"));
     let mut commands = Vec::new();
 
     let selection_bounds = note_selection_bounds(&doc.blocks, &state.note_overrides, &selected_ids);
@@ -7758,7 +7764,9 @@ fn note_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, 
         let (px, py) = note_maybe_snap(&doc, world_x, world_y);
         let block = note_create_block(&tool, px, py);
         let block_id = note_block_id(&block).to_string();
-        commands.push(note_apply_events_cmd(scene, &[json!({ "op": "addBlock", "block": block })], "atomic", Some(&[block_id])));
+        let cmd = note_apply_events_cmd(scene, &[json!({ "op": "addBlock", "block": block })], "atomic", Some(&[block_id]));
+        crate::log_debug(&format!("[DEBUG] note_pointer_down dispatching addBlock cmd={cmd:?}"));
+        commands.push(cmd);
         return commands;
     }
 

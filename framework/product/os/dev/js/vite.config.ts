@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { cadFixtureVitePlugin, gisMapTilesVitePlugins, resolveGisMapTileServeMode, uiAssetsVitePlugin, puzzle3dMeshesVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { cadFixtureVitePlugin, gisMapTilesVitePlugins, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, uiAssetsVitePlugin, puzzle3dMeshesVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 import { semioBackboneVitePlugin } from "../script.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
@@ -20,19 +20,20 @@ export default defineConfig({
   publicDir: path.join(playDir, "public"),
   assetsInclude: ["**/*.wasm"],
   resolve: {
-    alias: {
-      "@semio-tech/ui-react": path.resolve(repoRoot, "ui/js/react/index.tsx"),
-      "@semio-tech/ui-asset": path.resolve(repoRoot, "ui/asset"),
-      "@semio-tech/ui-styling": path.resolve(repoRoot, "ui/styling/js"),
-      "@semio-tech/infinite-cavas-react-renderer": path.resolve(repoRoot, "infinite/cavas/react-renderer/index.tsx"),
-      "@semio-tech/infinite-world-r3f": path.resolve(repoRoot, "infinite/world/r3f/index.tsx"),
-      "@semio-tech/framework-renderer-react": path.resolve(repoRoot, "framework/renderer/react/index.tsx"),
-      "@semio-tech/framework-renderer-wgpu": path.resolve(repoRoot, "framework/renderer/wgpu/index.ts"),
-      "@semio-tech/framework-core": path.resolve(repoRoot, "framework/core/js/index.ts"),
-      "@semio-tech/framework-os-core": path.resolve(repoRoot, "framework/product/os/core/js/index.ts"),
-      "/plugin-modules": pluginModulesDir,
-      "/renderer-modules": rendererModulesDir,
-    },
+    alias: [
+      ...playgroundSceneHostResolveAliases(repoRoot),
+      { find: "@semio-tech/ui-react", replacement: path.resolve(repoRoot, "ui/js/react/index.tsx") },
+      { find: "@semio-tech/ui-asset", replacement: path.resolve(repoRoot, "ui/asset") },
+      { find: "@semio-tech/ui-styling", replacement: path.resolve(repoRoot, "ui/styling/js") },
+      { find: "@semio-tech/infinite-cavas-react-renderer", replacement: path.resolve(repoRoot, "infinite/cavas/react-renderer/index.tsx") },
+      { find: "@semio-tech/infinite-world-r3f", replacement: path.resolve(repoRoot, "infinite/world/r3f/index.tsx") },
+      { find: "@semio-tech/framework-renderer-react", replacement: path.resolve(repoRoot, "framework/renderer/react/index.tsx") },
+      { find: "@semio-tech/framework-renderer-wgpu", replacement: path.resolve(repoRoot, "framework/renderer/wgpu/index.ts") },
+      { find: "@semio-tech/framework-core", replacement: path.resolve(repoRoot, "framework/core/js/index.ts") },
+      { find: "@semio-tech/framework-os-core", replacement: path.resolve(repoRoot, "framework/product/os/core/js/index.ts") },
+      { find: "/plugin-modules", replacement: pluginModulesDir },
+      { find: "/renderer-modules", replacement: rendererModulesDir },
+    ],
     dedupe: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei"],
   },
   server: {

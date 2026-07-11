@@ -1,7 +1,7 @@
 {
   "title": "Reuse Terminology For CAD",
   "emoji": "🗣️",
-  "status": "closed",
+  "status": "open",
   "description": "Extend the terminology mechanism (already shipped for puzzle 3d) to the CAD app: add a \"reuse\"/\"Wiederverwendung\" terminology that remaps CAD's primary entity noun \"Object\"/\"Objects\" to \"Building component\"/\"Building components\" (en) and \"Baukomponente\"/\"Baukomponenten\" (de), consistent with puzzle 3d's wording. Also investigate a user report that the puzzle 3d terminology dropdown wasn't visible (root-caused to a transient WASM-boot timeout under heavy concurrent build load on the machine, not a code defect).",
   "summary": "Investigated the report that puzzle 3d's reuse/Wiederverwendung terminology wasn't visible: root-caused to a transient client-side 30s plugin-boot timeout under extreme concurrent build load on the machine (load average ~100-155 from many other concurrent Claude Code sessions running cargo/wasm builds), not a code defect — all terminology source code and the built WASM artifact were confirmed intact and correctly ordered. Rebuilt the puzzle plugin wasm (the shared dev server's watcher hadn't rebuilt since the last edit) and re-verified live: all four native/reuse × en/de combinations still work correctly in the puzzle-3d playground.\n\nExtended the terminology mechanism to CAD: added a `CadLabels` struct (compile-time-complete, one field per term) with native/reuse × en/de consts in cad/plugin/rs/lib.rs, remapping CAD's primary entity noun \"Object\"/\"Objects\" to \"Building component\"/\"Building components\" (en) and \"Baukomponente\"/\"Baukomponenten\" (de) — consistent wording with puzzle 3d's reuse terminology. Threaded the resolver through render() → build_properties_panel() → object_inspector_group()/primitive_inspector_group() (the only CAD UI paths that are re-rendered per ViewState; static builder-time labels like window/pane titles and command palette entries are out of scope, matching how puzzle 3d also left its own static/builder-time labels untouched). Added `.terminology(\"reuse\")` to create_cad_app()'s builder chain and 4 new tests mirroring puzzle 3d's test pattern (native default, reuse-en, reuse-de, native-de).\n\nVerified: cargo check -p cad-plugin clean (0 errors), cargo test -p cad-plugin 52/52 pass (48 pre-existing + 4 new terminology tests), and live in the CAD playground (port 6020, after rebuilding the stale wasm) — selecting the seeded \"Box\" object and switching Settings → Terminology/Language shows all four combinations correctly: \"OBJECT\" (native/en), \"BUILDING COMPONENT\" (reuse/en), \"BAUKOMPONENTE\" (reuse/de), \"OBJEKT\" (native/de), confirmed via screenshots. Restored Settings to English/Native before leaving the shared dev session.\n\nNote: a concurrent session refactored the OS shell's settings controls from native `\u003cselect\u003e` elements to a custom combobox component during this work — unrelated to this ticket, just affected how the dropdown had to be driven in the browser during verification (click-to-open + click-option instead of native select value-setting).",
   "github": {
@@ -9,6 +9,7 @@
   },
   "goal": "🎯r2602",
   "sessions": [
-    "⚪db29766d32984c49800c33bdce5afa66"
+    "⚪db29766d32984c49800c33bdce5afa66",
+    "⚪cebdcc4f10f444eda8c6970d97632db7"
   ]
 }

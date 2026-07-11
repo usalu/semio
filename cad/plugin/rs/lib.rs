@@ -1113,14 +1113,117 @@ fn sync_cad_history(envelope: &mut CadPlayEnvelope, store: &CadStore) {
 //#region 🔖Terminology
 /// 🗣️ Complete UI label set for the CAD app; one field per label makes every terminology×locale combination compile-checked.
 struct CadLabels {
+    // entity nouns — remapped under the "reuse" terminology
     object: &'static str,
     objects: &'static str,
+    primitive: &'static str,
+    // model-definition pane / document-tree section names
+    pane_shape: &'static str,
+    pane_building: &'static str,
+    pane_energy: &'static str,
+    pane_structure_classic: &'static str,
+    references: &'static str,
+    nodes: &'static str,
+    // catalogue
+    typologies: &'static str,
+    typology_box: &'static str,
+    typology_slab: &'static str,
+    typology_column: &'static str,
+    typology_beam: &'static str,
+    typology_wall: &'static str,
+    typology_external_wall: &'static str,
+    // inspector group titles
+    reference: &'static str,
+    node: &'static str,
+    // tree item actions
+    hide: &'static str,
+    show: &'static str,
+    lock: &'static str,
+    unlock: &'static str,
+    duplicate: &'static str,
+    delete: &'static str,
+    // toolbar group names
+    group_view: &'static str,
+    group_save: &'static str,
+    group_transfer: &'static str,
+    group_construct: &'static str,
 }
 
-const CAD_LABELS_NATIVE_EN: CadLabels = CadLabels { object: "Object", objects: "Objects" };
-const CAD_LABELS_NATIVE_DE: CadLabels = CadLabels { object: "Objekt", objects: "Objekte" };
-const CAD_LABELS_REUSE_EN: CadLabels = CadLabels { object: "Building component", objects: "Building components" };
-const CAD_LABELS_REUSE_DE: CadLabels = CadLabels { object: "Baukomponente", objects: "Baukomponenten" };
+const CAD_LABELS_NATIVE_EN: CadLabels = CadLabels {
+    object: "Object",
+    objects: "Objects",
+    primitive: "Primitive",
+    pane_shape: "Shape",
+    pane_building: "Building",
+    pane_energy: "Energy",
+    pane_structure_classic: "Structure Classic",
+    references: "References",
+    nodes: "Nodes",
+    typologies: "Typologies",
+    typology_box: "Box",
+    typology_slab: "Slab",
+    typology_column: "Column",
+    typology_beam: "Beam",
+    typology_wall: "Wall",
+    typology_external_wall: "External Wall",
+    reference: "Reference",
+    node: "Node",
+    hide: "Hide",
+    show: "Show",
+    lock: "Lock",
+    unlock: "Unlock",
+    duplicate: "Duplicate",
+    delete: "Delete",
+    group_view: "View",
+    group_save: "Save",
+    group_transfer: "Transfer",
+    group_construct: "Construct",
+};
+
+const CAD_LABELS_NATIVE_DE: CadLabels = CadLabels {
+    object: "Objekt",
+    objects: "Objekte",
+    primitive: "Primitiv",
+    pane_shape: "Form",
+    pane_building: "Gebäude",
+    pane_energy: "Energie",
+    pane_structure_classic: "Struktur Klassisch",
+    references: "Referenzen",
+    nodes: "Knoten",
+    typologies: "Typologien",
+    typology_box: "Box",
+    typology_slab: "Platte",
+    typology_column: "Stütze",
+    typology_beam: "Balken",
+    typology_wall: "Wand",
+    typology_external_wall: "Außenwand",
+    reference: "Referenz",
+    node: "Knoten",
+    hide: "Ausblenden",
+    show: "Anzeigen",
+    lock: "Sperren",
+    unlock: "Entsperren",
+    duplicate: "Duplizieren",
+    delete: "Löschen",
+    group_view: "Ansicht",
+    group_save: "Speichern",
+    group_transfer: "Transfer",
+    group_construct: "Konstruieren",
+};
+
+const CAD_LABELS_REUSE_EN: CadLabels = CadLabels {
+    object: "Building component",
+    objects: "Building components",
+    primitive: "Component part",
+    ..CAD_LABELS_NATIVE_EN
+};
+
+const CAD_LABELS_REUSE_DE: CadLabels = CadLabels {
+    object: "Baukomponente",
+    objects: "Baukomponenten",
+    primitive: "Bauteil",
+    ..CAD_LABELS_NATIVE_DE
+};
 
 /// 🗣️ Resolves the active label set from the shell-provided locale/terminology; unknown terminology ids fall back to native.
 fn cad_labels(view_state: &ViewState) -> &'static CadLabels {
@@ -1136,7 +1239,7 @@ fn cad_labels(view_state: &ViewState) -> &'static CadLabels {
 //#endregion 🔖Terminology
 
 //#region 🔖Panels
-fn object_tree_item(id_suffix: &str, object: &CadObject) -> UiTreeItemNode {
+fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> UiTreeItemNode {
     let primitive_items: Vec<UiTreeItemNode> = object
         .primitives
         .iter()

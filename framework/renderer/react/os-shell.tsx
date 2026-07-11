@@ -719,8 +719,9 @@ function renderWindowMeasure(measure: WindowMeasure, onCommand: (command: Comman
   return null;
 }
 
-function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, onCommand: (command: CommandDescriptor) => void): ReactNode {
-  return <WindowMeasuresTree>{(measures ?? []).map((measure) => renderWindowMeasure(measure, onCommand))}</WindowMeasuresTree>;
+function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, onCommand: (command: CommandDescriptor) => void): ReactNode | undefined {
+  if (!measures || measures.length === 0) return undefined;
+  return <WindowMeasuresTree>{measures.map((measure) => renderWindowMeasure(measure, onCommand))}</WindowMeasuresTree>;
 }
 
 function windowToolbarNode(tools: readonly ToolNode[] | undefined, windowId: string, onCommand: (command: CommandDescriptor) => void): ReactNode {
