@@ -19,9 +19,7 @@ if (typeof document !== "undefined" && document.getElementById("root") != null &
     moduleUrl: pluginModuleUrl(target.pluginId, target.wasmOut),
   }));
   if (renderer !== "wgpu") {
-    const { bootstrapElementsSurfaceChromeDocument } = await import("@semio-tech/ui-react");
     const { bootFrameworkOs } = await import("@semio-tech/framework-renderer-react");
-    bootstrapElementsSurfaceChromeDocument("system");
     void bootFrameworkOs({ plugin: pluginFilter, plugins }).catch((error) => {
       console.error("[DEBUG] os-dev react boot failed", error);
     });

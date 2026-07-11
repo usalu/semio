@@ -3482,6 +3482,9 @@ mod tests {
                 lod_json: None,
                 chunking_json: None,
                 context_menu_json: None,
+                environment_json: None,
+                frame_json: None,
+                fit_json: None,
             }),
             node_graph: None,
             text_editor: None,
@@ -3490,6 +3493,8 @@ mod tests {
             virtual_file_system: None,
             gis_map: None,
             puzzle2d_board: None,
+            icon_render: None,
+            note_canvas: None,
         }
     }
 

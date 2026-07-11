@@ -634,6 +634,10 @@
   min-height: var(--layout-touch-min);
 }
 
+.touch :is([data-slot="button-group-item"], [data-slot="toggle-group-item"], [data-slot="action-group-item"], [data-slot="select-trigger"], [data-slot="footer-nav-item"], [data-slot="mode-dock-tab"]) {
+  min-height: var(--layout-touch-min);
+}
+
 @layer base {
   .prose {
     --tw-prose-body: var(--foreground);

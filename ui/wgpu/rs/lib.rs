@@ -5812,6 +5812,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "engine")]
     fn chrome_item_default_is_transparent() {
         use crate::chrome::chrome_item_bg;
         let theme = Theme::light();

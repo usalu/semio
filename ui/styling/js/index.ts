@@ -532,7 +532,7 @@ function setCssVar(root: HTMLElement, name: string, value: string): void {
   _appliedThemeCssProps.add(name);
 }
 
-/** @emoji 🎨 Applies a theme's colors/spacing/fonts/strokes/glass metrics as inline `documentElement` CSS var overrides, clearing any previous overrides first. For semio, overrides are cleared entirely so the generated stylesheet stays authoritative. */
+/** @emoji 🎨 Applies a theme's colors/spacing/fonts/strokes/glass metrics as inline `documentElement` CSS var overrides, clearing any previous overrides first. Applied unconditionally (even for a pristine semio theme, whose values equal the generated CSS defaults) so a semio-based *draft* with edits — which still carries `id: "semio"` until saved — is never mistaken for the untouched default. */
 export function applyUiThemeToDocument(theme: UiTheme): void {
   if (typeof document === "undefined") {
     return;
@@ -543,32 +543,30 @@ export function applyUiThemeToDocument(theme: UiTheme): void {
   }
   _appliedThemeCssProps.clear();
   root.dataset.uiTheme = theme.id;
-  if (theme.id !== "semio") {
-    for (const [key, hex] of Object.entries(theme.colors)) {
-      setCssVar(root, `--color-${key.replaceAll("_", "-")}`, hex);
-    }
-    for (const [key, value] of Object.entries(theme.spacing)) {
-      setCssVar(root, `--spacing-${key.replaceAll("_", "-")}`, value);
-    }
-    if (theme.fontStacks.sans) setCssVar(root, "--font-sans", theme.fontStacks.sans);
-    if (theme.fontStacks.serif) setCssVar(root, "--font-serif", theme.fontStacks.serif);
-    if (theme.fontStacks.mono) setCssVar(root, "--font-mono", theme.fontStacks.mono);
-    const hairline = theme.strokes.chromeBorderHairline;
-    if (typeof hairline === "number") setCssVar(root, "--stroke-hairline", `${hairline}px`);
-    const chrome = theme.metrics.chrome;
-    if (chrome) {
-      if (typeof chrome.glassBlurPx === "number") setCssVar(root, "--glass-blur", `${chrome.glassBlurPx / 16}rem`);
-      if (typeof chrome.glassPanelBlurPx === "number") setCssVar(root, "--glass-panel-blur", `${chrome.glassPanelBlurPx / 16}rem`);
-      if (typeof chrome.glassWindowOptionsBlurPx === "number") setCssVar(root, "--glass-window-options-blur", `${chrome.glassWindowOptionsBlurPx / 16}rem`);
-      if (typeof chrome.glassSaturate === "number") setCssVar(root, "--glass-saturate", `${chrome.glassSaturate}`);
-    }
-    const glassPanelAlpha = theme.opacities.glassPanelAlpha;
-    if (typeof glassPanelAlpha === "number") setCssVar(root, "--glass-panel-alpha", `${glassPanelAlpha}`);
-    const glassMenuAlpha = theme.opacities.glassMenuAlpha;
-    if (typeof glassMenuAlpha === "number") setCssVar(root, "--glass-menu-alpha", `${glassMenuAlpha}`);
-    const glassWindowOptionsAlpha = theme.opacities.glassWindowOptionsAlpha;
-    if (typeof glassWindowOptionsAlpha === "number") setCssVar(root, "--glass-window-options-alpha", `${glassWindowOptionsAlpha}`);
+  for (const [key, hex] of Object.entries(theme.colors)) {
+    setCssVar(root, `--color-${key.replaceAll("_", "-")}`, hex);
   }
+  for (const [key, value] of Object.entries(theme.spacing)) {
+    setCssVar(root, `--spacing-${key.replaceAll("_", "-")}`, value);
+  }
+  if (theme.fontStacks.sans) setCssVar(root, "--font-sans", theme.fontStacks.sans);
+  if (theme.fontStacks.serif) setCssVar(root, "--font-serif", theme.fontStacks.serif);
+  if (theme.fontStacks.mono) setCssVar(root, "--font-mono", theme.fontStacks.mono);
+  const hairline = theme.strokes.chromeBorderHairline;
+  if (typeof hairline === "number") setCssVar(root, "--stroke-hairline", `${hairline}px`);
+  const chrome = theme.metrics.chrome;
+  if (chrome) {
+    if (typeof chrome.glassBlurPx === "number") setCssVar(root, "--glass-blur", `${chrome.glassBlurPx / 16}rem`);
+    if (typeof chrome.glassPanelBlurPx === "number") setCssVar(root, "--glass-panel-blur", `${chrome.glassPanelBlurPx / 16}rem`);
+    if (typeof chrome.glassWindowOptionsBlurPx === "number") setCssVar(root, "--glass-window-options-blur", `${chrome.glassWindowOptionsBlurPx / 16}rem`);
+    if (typeof chrome.glassSaturate === "number") setCssVar(root, "--glass-saturate", `${chrome.glassSaturate}`);
+  }
+  const glassPanelAlpha = theme.opacities.glassPanelAlpha;
+  if (typeof glassPanelAlpha === "number") setCssVar(root, "--glass-panel-alpha", `${glassPanelAlpha}`);
+  const glassMenuAlpha = theme.opacities.glassMenuAlpha;
+  if (typeof glassMenuAlpha === "number") setCssVar(root, "--glass-menu-alpha", `${glassMenuAlpha}`);
+  const glassWindowOptionsAlpha = theme.opacities.glassWindowOptionsAlpha;
+  if (typeof glassWindowOptionsAlpha === "number") setCssVar(root, "--glass-window-options-alpha", `${glassWindowOptionsAlpha}`);
   clearColorResolveCache();
 }
 

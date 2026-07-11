@@ -16,11 +16,13 @@ import {
   CommandItem,
   CommandList,
   Footer,
+  FooterNav,
   Icon,
   Input,
   Layout,
   LevelProvider,
   Mode,
+  modeCollectWindowIds,
   Navbar,
   NavbarExampleSelect,
   PanelToggleGroup,
@@ -54,19 +56,39 @@ import {
   shellChromeTitleClassName,
   staticTreePanelDefinition,
   UiChromeLabelPolicyProvider,
+  UI_MOBILE_MEDIA_QUERY,
+  useElementsSurfaceChrome,
   useMediaQuery,
   useSidePanelChromeHotkeys,
   useCommandHotkey,
   readStoredUiChromeCompact,
   readStoredUiChromeExpertise,
+  readStoredUiChromeLayout,
   readStoredUiChromeLocale,
   readStoredUiChromeAppearance,
   readStoredUiChromeTerminology,
+  readStoredUiChromeThemeId,
+  readStoredUiChromeThemeSnapshot,
+  readStoredUiCustomThemes,
   writeStoredUiChromeCompact,
   writeStoredUiChromeExpertise,
+  writeStoredUiChromeLayout,
   writeStoredUiChromeLocale,
   writeStoredUiChromeAppearance,
   writeStoredUiChromeTerminology,
+  writeStoredUiChromeThemeId,
+  writeStoredUiChromeThemeSnapshot,
+  writeStoredUiCustomThemes,
+  activeUiTheme,
+  builtinUiThemes,
+  parseUiTheme,
+  resolveThemeAppearancePalettes,
+  semioTheme,
+  serializeUiTheme,
+  setActiveUiTheme,
+  type ThemeAppearanceName,
+  type ThemePaletteGroup,
+  type UiTheme,
   windowTemplatePaletteTreeDragController,
   Expertise,
   resolveTranslationLabel,
@@ -74,15 +96,18 @@ import {
   uiI18n,
   UI_TERMINOLOGY_NATIVE,
   type ElementsSurfaceAppearance,
+  type ElementsSurfaceDevice,
   type EngagementControl,
   type EngagementSpec,
   type FooterItem,
+  type FooterNavItem,
   type ModeWindowDescriptor,
   type NavbarItem,
   type PanelToggleItem,
   type SidePanelTabConfig,
   type TreeDataItem,
   type TreePanelConfig,
+  type UiChromeLayout,
   type UiChromeTerminologyId,
   type UiLocale,
   type UiTranslationKey,
@@ -184,7 +209,6 @@ const S_HOME_CONTROLLER_ID = "s-home";
 const S_PLAY_APP_ID = "studio";
 const S_PLAY_CONTROLLER_ID = "s-play";
 const S_PLAY_CATALOGUE_TAB_ID = "s-play-catalogue";
-const FRAMEWORK_SHELL_CHROME_APPEARANCE = "system" as const;
 const DEFAULT_LEFT_PANEL_SIZE = 280;
 const DEFAULT_RIGHT_PANEL_SIZE = 320;
 const APP_DOCUMENT_SEPARATOR = " · ";
@@ -703,13 +727,22 @@ function windowToolbarNode(tools: readonly ToolNode[] | undefined, windowId: str
   if (!tools?.length) return undefined;
   return <ToolTree id={`ui.toolbar.${windowId}`} tools={tools} onCommand={onCommand} />;
 }
+
+/** @emoji 📱 Orders mobile footer window tabs by their position in the layout tree, appending layout-absent windows. */
+export function orderModeWindowTabs(layout: WindowLayoutNode, windows: readonly { readonly id: string; readonly title: string }[]): readonly { readonly id: string; readonly title: string }[] {
+  const byId = new Map(windows.map((window) => [window.id, window]));
+  const orderedIds = modeCollectWindowIds(layout).filter((id) => byId.has(id));
+  const seen = new Set(orderedIds);
+  const trailingIds = windows.filter((window) => !seen.has(window.id)).map((window) => window.id);
+  return [...orderedIds, ...trailingIds].map((id) => byId.get(id)!);
+}
 //#endregion ShellHelpers
 
 //#region Boot
 export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Promise<void> {
   const root = document.getElementById(options.rootId ?? "root");
   if (!root) throw new Error("missing #root");
-  bootstrapElementsSurfaceChromeDocument(FRAMEWORK_SHELL_CHROME_APPEARANCE);
+  bootstrapElementsSurfaceChromeDocument(readStoredUiChromeAppearance());
   createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? DEFAULT_PLUGIN_REGISTRY} />);
 }
 //#endregion Boot
@@ -741,7 +774,7 @@ class ShellRenderErrorBoundary extends Component<{ readonly children: ReactNode 
 //#region FrameworkOsShell
 export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFilter?: string; readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[] }) {
   const studioMode = isStudioMode(pluginFilter);
-  const mobile = useMediaQuery("(max-width: 767px)");
+  const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const [loadedPlugins, setLoadedPlugins] = useState<readonly LoadedPluginState[]>([]);
   const [session, setSession] = useState<ActiveSession | null>(null);
   const [windowUiByKind, setWindowUiByKind] = useState<Readonly<Record<string, UiNode>>>({});
@@ -774,15 +807,26 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const [mobileActiveTabId, setMobileActiveTabId] = useState<string | undefined>(undefined);
   const [leftPanelTabId, setLeftPanelTabId] = useState<string | undefined>(undefined);
   const [rightPanelTabId, setRightPanelTabId] = useState<string | undefined>(undefined);
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [extraWindowInstances, setExtraWindowInstances] = useState<readonly { readonly id: string; readonly windowKindId: string; readonly title: string }[]>([]);
   const extraWindowCounterRef = useRef(0);
   const openStudioIdRef = useRef<string | null>(null);
   const sessionRef = useRef<ActiveSession | null>(null);
   const [uiAppearance, setUiAppearance] = useState<ElementsSurfaceAppearance>(() => readStoredUiChromeAppearance());
+  const [uiLayout, setUiLayout] = useState<UiChromeLayout>(() => readStoredUiChromeLayout());
+  const uiDevice: ElementsSurfaceDevice = mobile ? "mobile" : uiLayout;
   const [uiCompact, setUiCompact] = useState(() => readStoredUiChromeCompact());
   const [uiExpertise, setUiExpertise] = useState(() => readStoredUiChromeExpertise());
   const [uiLocale, setUiLocaleState] = useState<UiLocale>(() => readStoredUiChromeLocale() ?? (uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en"));
   const [uiTerminology, setUiTerminologyState] = useState<string>(() => readStoredUiChromeTerminology());
+  const [uiThemeId, setUiThemeIdState] = useState<string>(() => readStoredUiChromeThemeId() ?? "semio");
+  const [uiCustomThemes, setUiCustomThemesState] = useState<Record<string, UiTheme>>(() => readStoredUiCustomThemes());
+  const [uiThemeDraft, setUiThemeDraft] = useState<UiTheme | null>(null);
+  const uiTheme: UiTheme = useMemo(() => {
+    if (uiThemeDraft) return uiThemeDraft;
+    const found = builtinUiThemes().find((t) => t.id === uiThemeId) ?? uiCustomThemes[uiThemeId];
+    return found ?? readStoredUiChromeThemeSnapshot() ?? semioTheme();
+  }, [uiThemeId, uiCustomThemes, uiThemeDraft]);
   const [syncBackboneUri, setSyncBackboneUri] = useState<string | null>(null);
   const [syncCardKind, setSyncCardKind] = useState<SyncCardKind | null>(null);
   const [syncDraftPath, setSyncDraftPath] = useState("");
@@ -1453,14 +1497,19 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     onToggleRight: () => setRightPanelVisible((visible) => !visible),
   });
 
+  // eslint-disable-next-line no-console
+  console.log("[DEBUG] TEMP: skipping useElementsSurfaceChrome for isolation test");
+
   useEffect(() => {
-    bootstrapElementsSurfaceChromeDocument(uiAppearance);
     writeStoredUiChromeAppearance(uiAppearance);
   }, [uiAppearance]);
 
   useEffect(() => {
+    writeStoredUiChromeLayout(uiLayout);
+  }, [uiLayout]);
+
+  useEffect(() => {
     writeStoredUiChromeCompact(uiCompact);
-    document.documentElement.toggleAttribute("data-ui-compact", uiCompact);
   }, [uiCompact]);
 
   useEffect(() => {
@@ -1475,6 +1524,19 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   useEffect(() => {
     writeStoredUiChromeTerminology(uiTerminology);
   }, [uiTerminology]);
+
+  useEffect(() => {
+    setActiveUiTheme(uiTheme);
+    writeStoredUiChromeThemeSnapshot(uiTheme);
+  }, [uiTheme]);
+
+  useEffect(() => {
+    writeStoredUiChromeThemeId(uiThemeId);
+  }, [uiThemeId]);
+
+  useEffect(() => {
+    writeStoredUiCustomThemes(uiCustomThemes);
+  }, [uiCustomThemes]);
 
   useCommandHotkey(
     "mod+[",
@@ -1569,6 +1631,95 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   });
   displayHostRef.current = displayHost;
 
+  //#region 🔖ThemeMutators
+  const uiThemeBase = uiThemeDraft ?? uiTheme;
+  const uiThemeDirty = uiThemeDraft !== null;
+  const uiThemeList = useMemo((): readonly UiTheme[] => [...builtinUiThemes(), ...Object.values(uiCustomThemes)], [uiCustomThemes]);
+
+  const draftThemePatch = useCallback(
+    (patch: (next: UiTheme) => void) => {
+      const next = structuredClone(uiThemeBase);
+      patch(next);
+      setUiThemeDraft(next);
+    },
+    [uiThemeBase],
+  );
+
+  const setThemeId = useCallback((id: string) => {
+    setUiThemeDraft(null);
+    setUiThemeIdState(id);
+  }, []);
+
+  const setThemeColor = useCallback((key: string, hex: string) => draftThemePatch((next) => { next.colors[key] = hex; }), [draftThemePatch]);
+  const setThemeSpacing = useCallback((key: string, value: string) => draftThemePatch((next) => { next.spacing[key] = value; }), [draftThemePatch]);
+  const setThemeFontStack = useCallback((key: string, value: string) => draftThemePatch((next) => { next.fontStacks[key] = value; }), [draftThemePatch]);
+  const setThemeStroke = useCallback((key: string, value: number | number[]) => draftThemePatch((next) => { next.strokes[key] = value; }), [draftThemePatch]);
+  const setThemeRadius = useCallback((key: string, value: number) => draftThemePatch((next) => { next.radii[key] = value; }), [draftThemePatch]);
+  const setThemeOpacity = useCallback((key: string, value: number) => draftThemePatch((next) => { next.opacities[key] = value; }), [draftThemePatch]);
+  const setThemeMetric = useCallback(
+    (section: string, key: string, value: number | number[]) =>
+      draftThemePatch((next) => {
+        next.metrics[section] = { ...(next.metrics[section] ?? {}), [key]: value };
+      }),
+    [draftThemePatch],
+  );
+  const setThemeAppearancePaint = useCallback(
+    (appearance: ThemeAppearanceName, group: ThemePaletteGroup, key: string, hex: string, alpha?: number) =>
+      draftThemePatch((next) => {
+        next.appearances[appearance][group][key] = alpha === undefined ? { hex } : { hex, alpha };
+      }),
+    [draftThemePatch],
+  );
+
+  const resetTheme = useCallback(() => setUiThemeDraft(null), []);
+
+  const saveTheme = useCallback(
+    (label: string) => {
+      const trimmed = label.trim();
+      if (!trimmed) return;
+      const slug = trimmed
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-+|-+$)/g, "");
+      if (!slug) return;
+      const id = `custom.${slug}`;
+      const saved: UiTheme = { ...uiThemeBase, id, label: trimmed };
+      setUiCustomThemesState((current) => ({ ...current, [id]: saved }));
+      setUiThemeDraft(null);
+      setUiThemeIdState(id);
+    },
+    [uiThemeBase],
+  );
+
+  const deleteTheme = useCallback(
+    (id: string) => {
+      if (!id.startsWith("custom.")) return;
+      setUiCustomThemesState((current) => {
+        const { [id]: _removed, ...rest } = current;
+        return rest;
+      });
+      setUiThemeIdState((current) => (current === id ? "semio" : current));
+      setUiThemeDraft(null);
+    },
+    [],
+  );
+
+  const exportTheme = useCallback(() => {
+    downloadMediaExport(`${uiThemeBase.id}.theme.json`, "application/json", serializeUiTheme(uiThemeBase));
+  }, [uiThemeBase]);
+
+  const importTheme = useCallback(async () => {
+    const opened = await requestFileOpen(".theme.json,application/json");
+    if (!opened) return;
+    try {
+      const parsed = parseUiTheme(JSON.parse(opened.contents));
+      saveTheme(parsed.label || parsed.id);
+    } catch {
+      /* invalid theme file, ignore */
+    }
+  }, [saveTheme]);
+  //#endregion 🔖ThemeMutators
+
   const settingsHostRef = useRef<SettingsHostApi | null>(null);
   const settingsHost: SettingsHostApi = useMemo(
     () => ({
@@ -1582,18 +1733,66 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       setExpertise: setUiExpertise,
       appearance: uiAppearance,
       setAppearance: setUiAppearance,
+      layout: uiLayout,
+      setLayout: setUiLayout,
+      mobileActive: mobile,
       locale: uiLocale,
       setLocale: setUiLocaleState,
       terminology: uiTerminology,
       setTerminology: setUiTerminologyState,
       terminologies: [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])],
+      theme: uiThemeBase,
+      themeId: uiThemeId,
+      themeDirty: uiThemeDirty,
+      themes: uiThemeList,
+      setThemeId,
+      setThemeColor,
+      setThemeSpacing,
+      setThemeFontStack,
+      setThemeStroke,
+      setThemeRadius,
+      setThemeOpacity,
+      setThemeMetric,
+      setThemeAppearancePaint,
+      saveTheme,
+      deleteTheme,
+      resetTheme,
+      exportTheme,
+      importTheme,
     }),
-    [session, uiCompact, uiExpertise, uiAppearance, uiLocale, uiTerminology],
+    [
+      session,
+      uiCompact,
+      uiExpertise,
+      uiAppearance,
+      uiLayout,
+      mobile,
+      uiLocale,
+      uiTerminology,
+      uiThemeBase,
+      uiThemeId,
+      uiThemeDirty,
+      uiThemeList,
+      setThemeId,
+      setThemeColor,
+      setThemeSpacing,
+      setThemeFontStack,
+      setThemeStroke,
+      setThemeRadius,
+      setThemeOpacity,
+      setThemeMetric,
+      setThemeAppearancePaint,
+      saveTheme,
+      deleteTheme,
+      resetTheme,
+      exportTheme,
+      importTheme,
+    ],
   );
   settingsHostRef.current = settingsHost;
 
   const frameworkDisplayTabs = useMemo(() => createFrameworkDisplayPanelTabs(() => displayHostRef.current), [displayHost, uiLocale]);
-  const frameworkSettingsTab = useMemo(() => createFrameworkSettingsPanelTab(() => settingsHostRef.current), [settingsHost]);
+  const frameworkSettingsTabs = useMemo(() => createFrameworkSettingsPanelTabs(() => settingsHostRef.current), [settingsHost]);
 
   useEffect(() => {
     if (!session?.app.keybindings.length) return;
@@ -1677,7 +1876,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       }));
   }, [onCommand, panelUiByKey, session]);
 
-  const settingsRightTabs = useMemo((): SidePanelTabConfig[] => [frameworkSettingsTab], [frameworkSettingsTab]);
+  const settingsRightTabs = useMemo((): SidePanelTabConfig[] => frameworkSettingsTabs, [frameworkSettingsTabs]);
 
   const leftPanelTabs = useMemo((): SidePanelTabConfig[] => (activeLeftPanelKind === "display" ? frameworkDisplayTabs : workbenchLeftTabs), [activeLeftPanelKind, frameworkDisplayTabs, workbenchLeftTabs]);
 
@@ -1708,7 +1907,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const mobilePanel = useMemo(() => {
     if (mobilePanelTabs.length === 0) return undefined;
     return {
-      visible: leftPanelVisible || rightPanelVisible,
+      visible: mobilePanelOpen,
       tabs: mobilePanelTabs,
       activeTabId: mobileActiveTabId ?? mobilePanelTabs[0]?.id,
       onActiveTabChange: (tabId: string) => {
@@ -1718,7 +1917,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         }
       },
     };
-  }, [leftPanelVisible, mobileActiveTabId, mobilePanelTabs, onCommand, rightPanelVisible, session, studioMode]);
+  }, [mobileActiveTabId, mobilePanelOpen, mobilePanelTabs, onCommand, session, studioMode]);
 
   const workbenchIcon = useMemo(() => {
     const TabIcon = workbenchLeftTabs[0]?.icon;
@@ -1870,6 +2069,62 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     }
     return items;
   }, [activeExampleId, activeModeId, applyModeChange, exampleOptions, onCommand, panelToggles, session]);
+
+  const mobileNavbarItems = useMemo((): NavbarItem[] => {
+    if (!session) return [];
+    const items: NavbarItem[] = [
+      {
+        key: "logoAndTitle",
+        className: "min-w-0 flex-1 flex items-center gap-single",
+        content: (
+          <div className="flex min-w-0 items-center gap-single">
+            <SemioLogo className="size-workbench shrink-0" />
+            <span data-slot="app-name" className={cn("min-w-0 truncate px-single", shellChromeTitleClassName)}>
+              {appDocumentLabel(session.app.document)}
+            </span>
+          </div>
+        ),
+      },
+    ];
+    if (exampleOptions.length > 0 && (!studioMode || session.app.id !== S_HOME_APP_ID)) {
+      items.push({
+        key: "fixture",
+        content: (
+          <NavbarExampleSelect
+            id="playground.navbar.fixture.mobile"
+            value={activeExampleId}
+            options={exampleOptions}
+            onValueChange={(exampleId) => {
+              setActiveExampleId(exampleId);
+              onCommand({ controllerId: session.app.controllerId, command: "setActiveExample", args: { exampleId } });
+            }}
+          />
+        ),
+      });
+    } else {
+      items.push(navbarFillItem());
+    }
+    if (session.app.modes.length > 1) {
+      items.push({
+        key: "modes",
+        content: (
+          <Select value={activeModeId} onValueChange={(modeId) => applyModeChange(modeId)}>
+            <SelectTrigger className="h-medium w-auto min-w-[6rem]" id="playground.navbar.modes.mobile" size="sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {session.app.modes.map((mode) => (
+                <SelectItem key={mode.id} value={mode.id}>
+                  {mode.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ),
+      });
+    }
+    return items;
+  }, [activeExampleId, activeModeId, applyModeChange, exampleOptions, onCommand, session, studioMode]);
 
   const searchItems = useMemo(() => {
     if (!session) return [];
@@ -2039,6 +2294,33 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     return [...baseWindows, ...extraWindows];
   }, [extraWindowInstances, loadedPlugins, onCommand, panel, session, spawnedToolNodes, spawnedWindowEngagements, spawnedWindowMeasures, spawnedWindowUi, studioMode, toolNodesByKind, windowEngagementsByKind, windowMeasuresByKind, windowUiByKind]);
 
+  const effectiveModeLayout = useMemo(
+    () => shellLayout ?? (session ? convertFrameworkLayoutToModeLayout(session.app.defaultLayout, modeWindows.map((window) => window.id)) : { kind: "stack" as const, children: [] }),
+    [modeWindows, session, shellLayout],
+  );
+
+  const mobileWindowTabs = useMemo(() => orderModeWindowTabs(effectiveModeLayout, modeWindows), [effectiveModeLayout, modeWindows]);
+
+  const mobileFooterNav = useMemo((): FooterNavItem[] => {
+    const items: FooterNavItem[] = mobileWindowTabs.map((window) => ({
+      id: window.id,
+      icon: "square",
+      label: window.title,
+      active: activeWindowId === window.id,
+      onSelect: () => setActiveWindowId(window.id),
+    }));
+    if (mobilePanel) {
+      items.push({
+        id: "mobile.panels",
+        icon: "panel-left",
+        label: shellLabel("ui.panelToggle.workbench"),
+        active: mobilePanelOpen,
+        onSelect: () => setMobilePanelOpen((open) => !open),
+      });
+    }
+    return items;
+  }, [activeWindowId, mobilePanel, mobilePanelOpen, mobileWindowTabs]);
+
   const canvas = useMemo(() => {
     if (!session) return <p className="p-4 text-sm text-muted-foreground">Loading plugins…</p>;
     if (error)
@@ -2086,18 +2368,13 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           <App modes={modes.map((mode) => ({ id: mode.id, label: mode.label, children: null }))} activeModeId={session.viewState.activeModeId ?? modes[0]?.id ?? session.app.id} onActiveModeChange={applyModeChange} chrome={false}>
             <Mode
               className="h-full w-full"
+              mobile={mobile}
               windows={modeWindows}
-              layout={
-                shellLayout ??
-                convertFrameworkLayoutToModeLayout(
-                  session.app.defaultLayout,
-                  modeWindows.map((window) => window.id),
-                )
-              }
+              layout={effectiveModeLayout}
               activeWindowId={activeWindowId}
               onActiveWindowChange={setActiveWindowId}
               onLayoutChange={setShellLayout}
-              onTemplateDrop={handleTemplateDrop}
+              onTemplateDrop={mobile ? undefined : handleTemplateDrop}
               onWindowClose={(windowId) => {
                 if (studioMode && panel?.spawnedApps.some((entry) => entry.id === windowId)) {
                   const nextSpawned = panel.spawnedApps.filter((entry) => entry.id !== windowId);
@@ -2118,7 +2395,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         </div>
       </div>
     );
-  }, [activeWindowId, error, handleTemplateDrop, modeWindows, onCommand, panel, session, shellLayout, studioMode, updateStudioPanel]);
+  }, [activeWindowId, effectiveModeLayout, error, handleTemplateDrop, mobile, modeWindows, onCommand, panel, session, studioMode, updateStudioPanel]);
 
   return (
     <UIFindProvider>
@@ -2127,8 +2404,8 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           <Layout
             mobile={mobile}
             mobilePanel={mobilePanel}
-            navbar={<Navbar items={navbarItems} showFullscreenToggle />}
-            footer={<Footer items={footerItems} toolbar={footerToolbar} />}
+            navbar={<Navbar items={mobile ? mobileNavbarItems : navbarItems} showFullscreenToggle={!mobile} />}
+            footer={mobile ? <FooterNav items={mobileFooterNav} /> : <Footer items={footerItems} toolbar={footerToolbar} />}
             leftSidePanel={
               leftPanelTabs.length > 0
                 ? {
@@ -3853,6 +4130,7 @@ export type DisplayHostApi = {
 const FRAMEWORK_DISPLAY_WINDOWS_TAB_ID = "framework.display.windows";
 const FRAMEWORK_DISPLAY_LAYOUT_TAB_ID = "framework.display.layout";
 const FRAMEWORK_SETTINGS_GENERAL_TAB_ID = "framework.settings.general";
+const FRAMEWORK_SETTINGS_THEME_TAB_ID = "framework.settings.theme";
 
 let displayLayoutSaveLabel = "";
 
@@ -4032,11 +4310,32 @@ export type SettingsHostApi = {
   readonly setExpertise: (expertise: string) => void;
   readonly appearance: string;
   readonly setAppearance: (appearance: string) => void;
+  readonly layout: UiChromeLayout;
+  readonly setLayout: (layout: UiChromeLayout) => void;
+  readonly mobileActive: boolean;
   readonly locale: UiLocale;
   readonly setLocale: (locale: UiLocale) => void;
   readonly terminology: string;
   readonly setTerminology: (id: string) => void;
   readonly terminologies: readonly string[];
+  readonly theme: UiTheme;
+  readonly themeId: string;
+  readonly themeDirty: boolean;
+  readonly themes: readonly UiTheme[];
+  readonly setThemeId: (id: string) => void;
+  readonly setThemeColor: (key: string, hex: string) => void;
+  readonly setThemeSpacing: (key: string, value: string) => void;
+  readonly setThemeFontStack: (key: string, value: string) => void;
+  readonly setThemeStroke: (key: string, value: number | number[]) => void;
+  readonly setThemeRadius: (key: string, value: number) => void;
+  readonly setThemeOpacity: (key: string, value: number) => void;
+  readonly setThemeMetric: (section: string, key: string, value: number | number[]) => void;
+  readonly setThemeAppearancePaint: (appearance: ThemeAppearanceName, group: ThemePaletteGroup, key: string, hex: string, alpha?: number) => void;
+  readonly saveTheme: (label: string) => void;
+  readonly deleteTheme: (id: string) => void;
+  readonly resetTheme: () => void;
+  readonly exportTheme: () => void;
+  readonly importTheme: () => void;
 };
 
 function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
@@ -4070,6 +4369,18 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
                 <option value="system">{shellLabel("ui.settings.appearance.system")}</option>
                 <option value="light">{shellLabel("ui.settings.appearance.light")}</option>
                 <option value="dark">{shellLabel("ui.settings.appearance.dark")}</option>
+              </select>
+            ),
+          },
+          {
+            id: "framework.settings.layout",
+            label: shellLabel("ui.settings.tab.layout"),
+            control: host.mobileActive ? (
+              <span className="text-sm text-muted-foreground">{shellLabel("settings.layout.mobile")}</span>
+            ) : (
+              <select id="framework.settings.layout" className="h-small w-full rounded border border-border bg-background px-2 text-sm" value={host.layout} onChange={(event) => host.setLayout(event.target.value === "tablet" ? "tablet" : "desktop")}>
+                <option value="desktop">{shellLabel("settings.layout.desktop")}</option>
+                <option value="tablet">{shellLabel("settings.layout.tablet")}</option>
               </select>
             ),
           },
@@ -4118,19 +4429,258 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
   };
 }
 
-export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi | null): SidePanelTabConfig {
+let themeSaveLabel = "";
+
+function rgba8ToHex(rgba: readonly [number, number, number, number]): string {
+  const [r, g, b] = rgba;
+  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+}
+
+function themeColorInputRow(id: string, label: string, hex: string, onChange: (hex: string) => void): TreeDataItem {
   return {
-    id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID,
-    icon: shellTabIcon("framework.settings.general"),
-    name: shellLabel("ui.panelToggle.settings"),
-    order: -98,
-    tree: {
-      resolveTree: () => {
-        const host = getHost();
-        return host ? buildSettingsGeneralTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
+    id,
+    label,
+    control: <input id={id} type="color" className="h-small w-full rounded border border-border bg-background" value={hex} onChange={(event) => onChange(event.target.value)} />,
+  };
+}
+
+function themeTextInputRow(id: string, label: string, value: string, onCommit: (value: string) => void): TreeDataItem {
+  return {
+    id,
+    label,
+    control: <Input id={id} defaultValue={value} onBlur={(event) => onCommit(event.target.value)} className="h-small w-full" />,
+  };
+}
+
+function themeNumberInputRow(id: string, label: string, value: number | number[], onCommit: (value: number | number[]) => void): TreeDataItem {
+  const text = Array.isArray(value) ? value.join(", ") : String(value);
+  return {
+    id,
+    label,
+    control: (
+      <Input
+        id={id}
+        defaultValue={text}
+        onBlur={(event) => {
+          const raw = event.target.value.trim();
+          if (raw.includes(",")) {
+            const parts = raw
+              .split(",")
+              .map((part) => Number.parseFloat(part.trim()))
+              .filter((n) => !Number.isNaN(n));
+            if (parts.length) onCommit(parts);
+            return;
+          }
+          const n = Number.parseFloat(raw);
+          if (!Number.isNaN(n)) onCommit(n);
+        }}
+        className="h-small w-full"
+      />
+    ),
+  };
+}
+
+const THEME_PALETTE_GROUP_LABEL_KEYS = {
+  board: "ui.settings.theme.group.board",
+  map: "ui.settings.theme.group.map",
+  canvas: "ui.settings.theme.group.canvas",
+  chrome: "ui.settings.theme.group.chrome",
+} as const satisfies Record<ThemePaletteGroup, UiTranslationKey>;
+
+function buildThemeAppearanceGroupItems(host: SettingsHostApi, appearance: ThemeAppearanceName, group: ThemePaletteGroup): TreeDataItem[] {
+  const refs = host.theme.appearances[appearance][group];
+  const resolved = resolveThemeAppearancePalettes(host.theme, appearance)[group];
+  return Object.keys(refs)
+    .sort()
+    .map((paintKey) => {
+      const rgba = resolved[paintKey] ?? [0, 0, 0, 255];
+      const hex = rgba8ToHex(rgba);
+      const alpha = rgba[3] / 255;
+      return {
+        id: `framework.settings.theme.appearances.${appearance}.${group}.${paintKey}`,
+        label: paintKey,
+        control: (
+          <div className="flex w-full items-center gap-1">
+            <input
+              type="color"
+              className="h-small w-10 shrink-0 rounded border border-border bg-background"
+              value={hex}
+              onChange={(event) => host.setThemeAppearancePaint(appearance, group, paintKey, event.target.value, alpha)}
+            />
+            <Input
+              id={`framework.settings.theme.appearances.${appearance}.${group}.${paintKey}.alpha`}
+              defaultValue={alpha.toFixed(2)}
+              onBlur={(event) => {
+                const nextAlpha = Number.parseFloat(event.target.value);
+                if (!Number.isNaN(nextAlpha)) host.setThemeAppearancePaint(appearance, group, paintKey, hex, Math.min(1, Math.max(0, nextAlpha)));
+              }}
+              className="h-small w-14 shrink-0"
+            />
+          </div>
+        ),
+      } satisfies TreeDataItem;
+    });
+}
+
+function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
+  const colorItems = Object.keys(host.theme.colors)
+    .sort()
+    .map((key) => themeColorInputRow(`framework.settings.theme.colors.${key}`, key, host.theme.colors[key]!, (hex) => host.setThemeColor(key, hex)));
+
+  const spacingItems = Object.keys(host.theme.spacing)
+    .sort()
+    .map((key) => themeTextInputRow(`framework.settings.theme.spacing.${key}`, key, host.theme.spacing[key]!, (value) => host.setThemeSpacing(key, value)));
+
+  const fontItems = Object.keys(host.theme.fontStacks)
+    .sort()
+    .map((key) => themeTextInputRow(`framework.settings.theme.fonts.${key}`, key, host.theme.fontStacks[key]!, (value) => host.setThemeFontStack(key, value)));
+
+  const strokeItems = Object.keys(host.theme.strokes)
+    .sort()
+    .map((key) => themeNumberInputRow(`framework.settings.theme.strokes.${key}`, key, host.theme.strokes[key]!, (value) => host.setThemeStroke(key, value)));
+
+  const radiusItems = Object.keys(host.theme.radii)
+    .sort()
+    .map((key) => themeNumberInputRow(`framework.settings.theme.radii.${key}`, key, host.theme.radii[key]!, (value) => host.setThemeRadius(key, typeof value === "number" ? value : value[0]!)));
+
+  const opacityItems = Object.keys(host.theme.opacities)
+    .sort()
+    .map((key) => themeNumberInputRow(`framework.settings.theme.opacities.${key}`, key, host.theme.opacities[key]!, (value) => host.setThemeOpacity(key, typeof value === "number" ? value : value[0]!)));
+
+  const metricSections = Object.keys(host.theme.metrics)
+    .sort()
+    .map(
+      (section): TreeDataItem => ({
+        id: `framework.settings.theme.metrics.${section}`,
+        label: section,
+        defaultOpen: false,
+        items: Object.keys(host.theme.metrics[section]!)
+          .sort()
+          .map((key) => themeNumberInputRow(`framework.settings.theme.metrics.${section}.${key}`, key, host.theme.metrics[section]![key]!, (value) => host.setThemeMetric(section, key, value))),
+      }),
+    );
+
+  const appearanceGroups: readonly ThemePaletteGroup[] = ["board", "map", "canvas", "chrome"];
+  const appearanceItems: TreeDataItem[] = (["light", "dark"] as const).map((appearance) => ({
+    id: `framework.settings.theme.appearances.${appearance}`,
+    label: shellLabel(appearance === "light" ? "ui.settings.theme.appearance.light" : "ui.settings.theme.appearance.dark"),
+    defaultOpen: false,
+    items: appearanceGroups.map((group) => ({
+      id: `framework.settings.theme.appearances.${appearance}.${group}`,
+      label: shellLabel(THEME_PALETTE_GROUP_LABEL_KEYS[group]),
+      defaultOpen: false,
+      items: buildThemeAppearanceGroupItems(host, appearance, group),
+    })),
+  }));
+
+  return {
+    sections: [
+      {
+        id: "framework.settings.theme.select",
+        label: `${shellLabel("ui.settings.theme.select")}${host.themeDirty ? ` (${shellLabel("ui.settings.theme.dirty")})` : ""}`,
+        defaultOpen: true,
+        items: [
+          {
+            id: "framework.settings.theme.select.picker",
+            label: shellLabel("ui.settings.theme.select"),
+            control: (
+              <select id="framework.settings.theme.select" className="h-small w-full rounded border border-border bg-background px-2 text-sm" value={host.themeId} onChange={(event) => host.setThemeId(event.target.value)}>
+                {host.themes.map((theme) => (
+                  <option key={theme.id} value={theme.id}>
+                    {theme.label}
+                  </option>
+                ))}
+              </select>
+            ),
+          },
+          {
+            id: "framework.settings.theme.save.label",
+            label: shellLabel("ui.common.name"),
+            control: <Input id="framework.settings.theme.save-label" defaultValue={themeSaveLabel} onChange={(event) => (themeSaveLabel = event.target.value)} placeholder={shellLabel("ui.settings.theme.savePlaceholder")} className="h-small w-full" />,
+          },
+          {
+            id: "framework.settings.theme.save.action",
+            label: shellLabel("ui.settings.theme.save"),
+            control: (
+              <Button
+                id="framework.settings.theme.save"
+                size="sm"
+                text={shellLabel("ui.settings.theme.save")}
+                disabled={!themeSaveLabel.trim()}
+                onClick={() => {
+                  const label = themeSaveLabel.trim();
+                  if (!label) return;
+                  host.saveTheme(label);
+                  themeSaveLabel = "";
+                }}
+              />
+            ),
+          },
+          {
+            id: "framework.settings.theme.reset.action",
+            label: shellLabel("ui.settings.theme.reset"),
+            control: <Button id="framework.settings.theme.reset" size="sm" text={shellLabel("ui.settings.theme.reset")} disabled={!host.themeDirty} onClick={() => host.resetTheme()} />,
+          },
+          {
+            id: "framework.settings.theme.export.action",
+            label: shellLabel("ui.settings.theme.export"),
+            control: <Button id="framework.settings.theme.export" size="sm" text={shellLabel("ui.settings.theme.export")} onClick={() => host.exportTheme()} />,
+          },
+          {
+            id: "framework.settings.theme.import.action",
+            label: shellLabel("ui.settings.theme.import"),
+            control: <Button id="framework.settings.theme.import" size="sm" text={shellLabel("ui.settings.theme.import")} onClick={() => host.importTheme()} />,
+          },
+          ...(host.themeId.startsWith("custom.")
+            ? [
+                {
+                  id: "framework.settings.theme.delete.action",
+                  label: shellLabel("ui.settings.theme.delete"),
+                  control: <Button id="framework.settings.theme.delete" size="sm" text={shellLabel("ui.settings.theme.delete")} onClick={() => host.deleteTheme(host.themeId)} />,
+                },
+              ]
+            : []),
+        ],
+      },
+      { id: "framework.settings.theme.colors", label: shellLabel("ui.settings.theme.colors"), defaultOpen: false, items: colorItems },
+      { id: "framework.settings.theme.spacing", label: shellLabel("ui.settings.theme.spacing"), defaultOpen: false, items: spacingItems },
+      { id: "framework.settings.theme.fonts", label: shellLabel("ui.settings.theme.fonts"), defaultOpen: false, items: fontItems },
+      { id: "framework.settings.theme.strokes", label: shellLabel("ui.settings.theme.strokes"), defaultOpen: false, items: strokeItems },
+      { id: "framework.settings.theme.radii", label: shellLabel("ui.settings.theme.radii"), defaultOpen: false, items: radiusItems },
+      { id: "framework.settings.theme.opacities", label: shellLabel("ui.settings.theme.opacities"), defaultOpen: false, items: opacityItems },
+      { id: "framework.settings.theme.metrics", label: shellLabel("ui.settings.theme.metrics"), defaultOpen: false, items: metricSections },
+      { id: "framework.settings.theme.appearances", label: shellLabel("ui.settings.theme.appearances"), defaultOpen: false, items: appearanceItems },
+    ],
+  };
+}
+
+export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi | null): SidePanelTabConfig[] {
+  return [
+    {
+      id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID,
+      icon: shellTabIcon("framework.settings.general"),
+      name: shellLabel("ui.panelToggle.settings"),
+      order: -98,
+      tree: {
+        resolveTree: () => {
+          const host = getHost();
+          return host ? buildSettingsGeneralTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
+        },
       },
     },
-  };
+    {
+      id: FRAMEWORK_SETTINGS_THEME_TAB_ID,
+      icon: shellTabIcon("paintbrush"),
+      name: shellLabel("ui.settings.tab.theme"),
+      order: -97,
+      tree: {
+        resolveTree: () => {
+          const host = getHost();
+          return host ? buildSettingsThemeTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
+        },
+      },
+    },
+  ];
 }
 
 export function useNamedLayoutHost(options: {

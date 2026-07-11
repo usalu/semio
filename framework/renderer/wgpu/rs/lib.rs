@@ -1667,7 +1667,8 @@ fn dock_text(
 mod tests {
     use super::*;
     use semio_framework_core::layout::create_default_layout;
-    use semio_framework_core::{AppDefinition, ModeDefinition, PanelTabDefinition, WindowKindDefinition};
+    use crate::shell::ShellState;
+    use semio_framework_core::{AppDefinition, ModeDefinition, PanelGroup, PanelTabDefinition, WindowKindDefinition};
 
     fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinition {
         AppDefinition {
@@ -1728,11 +1729,11 @@ mod tests {
             (stack_with("c"), 0.5),
         ]);
         let canvas = Rect::new(0.0, 0.0, 1000.0, 800.0);
-        let row_extent = dock.split_axis_extent(&[], canvas).unwrap();
+        let row_extent = dock.split_axis_extent(&vec![], canvas).unwrap();
         assert!((row_extent - 1000.0).abs() < 0.1);
-        let col_extent = dock.split_axis_extent(&[], canvas);
+        let col_extent = dock.split_axis_extent(&vec![], canvas);
         assert!((col_extent.unwrap() - 800.0).abs() < 0.1);
-        let nested_extent = dock.split_axis_extent(&[0], canvas).unwrap();
+        let nested_extent = dock.split_axis_extent(&vec![0], canvas).unwrap();
         assert!((nested_extent - 1000.0).abs() < 0.1);
     }
 
@@ -1779,7 +1780,7 @@ mod tests {
         let dock = DockState::from_app(&app, Some("flow"));
         let canvas = Rect::new(0.0, 0.0, 1200.0, 800.0);
         let theme = Theme::default();
-        let mut atlas = FontAtlas::default();
+        let mut atlas = FontAtlas::builtin();
         let labels = HashMap::from([
             ("flow".into(), "Flow".into()),
             ("preview".into(), "Preview".into()),
@@ -1797,25 +1798,17 @@ mod tests {
 
     #[test]
     fn resize_hits_win_over_later_scroll_region() {
-        let dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
+        let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
         dock.root = even_layout(&["a".into(), "b".into()]);
         let canvas = Rect::new(0.0, 0.0, 400.0, 300.0);
         let theme = Theme::default();
-        let mut atlas = FontAtlas::default();
-        let mut input = InputState::<()>::default();
+        let mut atlas = FontAtlas::builtin();
+        let mut input = InputState::<CommandDescriptor>::default();
         let mut draw = DrawList::default();
         let labels = HashMap::from([
             ("a".into(), "A".into()),
             ("b".into(), "B".into()),
         ]);
-        let mut ctx = DockRenderContext {
-            draw: &mut draw,
-            atlas: &mut atlas,
-            icons: None,
-            input: &mut input,
-            theme: &theme,
-            window_labels: &labels,
-        };
         input.register_hit(HitTarget {
             rect: canvas,
             event: None,
@@ -1824,6 +1817,14 @@ mod tests {
             drag_axis: None,
             drag_data: None,
         });
+        let mut ctx = DockRenderContext {
+            draw: &mut draw,
+            atlas: &mut atlas,
+            icons: &IconAtlas::default(),
+            input: &mut input,
+            theme: &theme,
+            window_labels: &labels,
+        };
         dock.register_resize_hits(&mut ctx, canvas);
         let hit = input.hit_at(200.0, 150.0).expect("split hit");
         assert_eq!(hit.kind, HitKind::DockSplit);
@@ -1894,7 +1895,7 @@ mod tests {
             windows: vec!["a".into(), "b".into(), "c".into()],
             active: "a".into(),
         };
-        assert!(dock.reorder_tab(&[], 0, 2));
+        assert!(dock.reorder_tab(&vec![], 0, 2));
         if let DockNode::Stack { windows, .. } = &dock.root {
             assert_eq!(windows, &vec!["b".to_string(), "c".to_string(), "a".to_string()]);
         } else {
@@ -1906,10 +1907,10 @@ mod tests {
     fn maximized_stack_uses_full_canvas_bounds() {
         let mut dock = DockState::from_app(&sample_app(&["a", "b", "c"], None), Some("a"));
         dock.root = even_layout(&["a".into(), "b".into(), "c".into()]);
-        dock.toggle_maximize(&[1]);
+        dock.toggle_maximize(&vec![1]);
         let canvas = Rect::new(0.0, 0.0, 900.0, 600.0);
         let theme = Theme::default();
-        let mut atlas = FontAtlas::default();
+        let mut atlas = FontAtlas::builtin();
         let bodies = dock.stack_body_rects(canvas, &theme, &HashMap::new(), &mut atlas);
         assert_eq!(bodies.len(), 1);
         let (_, body, _) = &bodies[0];
@@ -3720,13 +3721,13 @@ pub mod interpreter {
 // #region interpreter
 //! 🧩 Maps framework UiNode trees to ui_wgpu widget nodes.
 
-use crate::scenes::{render_component_scene, GisMapSurface, NodeGraphSurface};
+use crate::scenes::{queue_canvas_image_upload, render_component_scene, GisMapSurface, NodeGraphSurface};
 use semio_framework_core::{CommandDescriptor, UiComponentSceneNode, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
 use serde_json::Value;
 use ui_wgpu::{
-    gap_for_token, layout_horizontal, layout_vertical, padding_for_token, ControlNode, KeyValueEntry, Rect, SelectItem,
-    Theme, TreeItem, TreeItemAction, TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode, measure_widget,
-    render_widget,
+    draw_text, gap_for_token, layout_horizontal, layout_vertical, padding_for_token, ControlNode, KeyValueEntry, Rect,
+    SelectItem, Theme, TreeItem, TreeItemAction, TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode,
+    measure_widget, render_widget,
 };
 
 pub type FrameworkWidgetContext<'a> = WidgetContext<'a, CommandDescriptor>;
@@ -4053,6 +4054,7 @@ fn render_plan_error_widget(message: &str, bounds: Rect, ctx: &mut FrameworkWidg
 pub fn measure_ui_node(atlas: &mut ui_wgpu::FontAtlas, theme: &Theme, node: &UiNode) -> (f32, f32) {
     match node {
         UiNode::ComponentScene(_) => (320.0, 240.0),
+        UiNode::Image(_) => (128.0, 128.0),
         UiNode::Stack(stack) => {
             let gap = gap_for_token(theme, stack.gap.as_deref());
             let padding = padding_for_token(theme, stack.padding.as_deref()) * 2.0;
@@ -4147,8 +4149,20 @@ fn render_ui_node_inner(
                 render_ui_node_inner(child, *rect, ctx, gpu, world3d_states, node_graph_states, gis_map_states);
             }
         }
+        UiNode::Image(image) => render_ui_image(image, bounds, ctx),
         other => render_widget(&ui_node_to_widget(other), bounds, ctx),
     }
+}
+
+fn render_ui_image(image: &semio_framework_core::UiImageNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    let Some(key) = queue_canvas_image_upload("ui-image", &image.id, &image.src) else {
+        if let Some(alt) = &image.alt {
+            draw_text(ctx, alt, bounds.x + 4.0, bounds.y + 16.0, ctx.theme.font_size_small, ctx.theme.text_muted);
+        }
+        return;
+    };
+    ctx.draw
+        .push_raster_quad(&key, [bounds.x, bounds.y, bounds.w, bounds.h], [0.0, 0.0, 1.0, 1.0], 1.0);
 }
 
 pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<CommandDescriptor> {
@@ -4260,6 +4274,10 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<CommandDescriptor> {
         },
         UiNode::ExternalSlot(slot) => WidgetNode::Text {
             value: format!("Extension: {} / {}", slot.plugin_id, slot.body_key),
+            emphasize: false,
+        },
+        UiNode::Image(_) => WidgetNode::Text {
+            value: String::new(),
             emphasize: false,
         },
     }
@@ -5370,6 +5388,23 @@ pub fn handle_scene_wheel(
             });
             Vec::new()
         }
+        SurfaceKind::Raster => {
+            if let Some(raster) = &scene.raster {
+                let doc: RasterDocSyncJson = serde_json::from_str(&raster.document_sync_json).unwrap_or_default();
+                mutate_scene_state(&scene.surface_id, |state| {
+                    if state.viewport.zoom <= 0.0 {
+                        state.viewport = Viewport {
+                            x: doc.camera.x as f32,
+                            y: doc.camera.y as f32,
+                            zoom: doc.camera.zoom as f32,
+                        };
+                    }
+                    let factor = (1.0 - delta * 0.001).clamp(0.5, 2.0);
+                    state.viewport.zoom = (state.viewport.zoom * factor).clamp(0.05, 32.0);
+                });
+            }
+            Vec::new()
+        }
         SurfaceKind::NodeGraph => engine_canvas::node_graph_wheel(
             &scene.surface_id,
             &scene.controller_id,
@@ -5544,6 +5579,26 @@ pub fn handle_scene_pointer_button(
                             button,
                         });
                     });
+                }
+            }
+            SurfaceKind::Raster => {
+                if button == 1 || button == 2 {
+                    if let Some(raster) = &scene.raster {
+                        let doc: RasterDocSyncJson = serde_json::from_str(&raster.document_sync_json).unwrap_or_default();
+                        mutate_scene_state(&scene.surface_id, |state| {
+                            if state.viewport.zoom <= 0.0 {
+                                state.viewport = Viewport {
+                                    x: doc.camera.x as f32,
+                                    y: doc.camera.y as f32,
+                                    zoom: doc.camera.zoom as f32,
+                                };
+                            }
+                            state.drag = Some(SceneDrag {
+                                mode: SceneDragMode::PanViewport,
+                                button,
+                            });
+                        });
+                    }
                 }
             }
             SurfaceKind::NodeGraph => {
@@ -5770,6 +5825,161 @@ fn render_placeholder(kind: &str, bounds: Rect, ctx: &mut FrameworkWidgetContext
 }
 
 //#region Raster
+#[derive(Deserialize, Clone, Copy)]
+struct RasterCameraFields {
+    #[serde(default)]
+    x: f64,
+    #[serde(default)]
+    y: f64,
+    #[serde(default = "raster_default_one")]
+    zoom: f64,
+}
+
+impl Default for RasterCameraFields {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, zoom: 1.0 }
+    }
+}
+
+#[derive(Deserialize, Clone, Copy)]
+#[serde(rename_all = "camelCase")]
+struct RasterTransformFields {
+    #[serde(default)]
+    x: f64,
+    #[serde(default)]
+    y: f64,
+    #[serde(default = "raster_default_one")]
+    scale_x: f64,
+    #[serde(default = "raster_default_one")]
+    scale_y: f64,
+}
+
+impl Default for RasterTransformFields {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0 }
+    }
+}
+
+fn raster_default_one() -> f64 {
+    1.0
+}
+
+fn raster_default_true() -> bool {
+    true
+}
+
+fn raster_default_opacity() -> f32 {
+    1.0
+}
+
+#[derive(Deserialize, Clone)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+enum RasterLayerJson {
+    #[serde(rename = "pixel", rename_all = "camelCase")]
+    Pixel {
+        id: String,
+        #[serde(default = "raster_default_true")]
+        visible: bool,
+        #[serde(default = "raster_default_opacity")]
+        opacity: f32,
+        #[serde(default)]
+        transform: RasterTransformFields,
+        width: Option<u32>,
+        height: Option<u32>,
+        image_key: Option<String>,
+    },
+    #[serde(rename = "group", rename_all = "camelCase")]
+    Group {
+        #[serde(default = "raster_default_true")]
+        visible: bool,
+        #[serde(default = "raster_default_opacity")]
+        opacity: f32,
+        #[serde(default)]
+        transform: RasterTransformFields,
+        #[serde(default)]
+        children: Vec<RasterLayerJson>,
+    },
+    #[serde(rename = "adjustment", rename_all = "camelCase")]
+    Adjustment {},
+}
+
+#[derive(Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct RasterDocSyncJson {
+    #[serde(default)]
+    camera: RasterCameraFields,
+    #[serde(default)]
+    layers: Vec<RasterLayerJson>,
+}
+
+#[derive(Deserialize)]
+struct RasterAssetJson {
+    mime: String,
+    data: String,
+}
+
+struct RasterFlatLayer {
+    id: String,
+    image_key: String,
+    x: f64,
+    y: f64,
+    scale_x: f64,
+    scale_y: f64,
+    opacity: f32,
+    width: u32,
+    height: u32,
+}
+
+fn collect_raster_pixel_layers(
+    layers: &[RasterLayerJson],
+    parent_x: f64,
+    parent_y: f64,
+    parent_sx: f64,
+    parent_sy: f64,
+    parent_opacity: f32,
+    out: &mut Vec<RasterFlatLayer>,
+) {
+    for layer in layers {
+        match layer {
+            RasterLayerJson::Pixel { id, visible, opacity, transform, width, height, image_key } => {
+                if !*visible {
+                    continue;
+                }
+                let Some(image_key) = image_key else {
+                    continue;
+                };
+                out.push(RasterFlatLayer {
+                    id: id.clone(),
+                    image_key: image_key.clone(),
+                    x: parent_x + transform.x * parent_sx,
+                    y: parent_y + transform.y * parent_sy,
+                    scale_x: parent_sx * transform.scale_x,
+                    scale_y: parent_sy * transform.scale_y,
+                    opacity: opacity * parent_opacity,
+                    width: width.unwrap_or(0),
+                    height: height.unwrap_or(0),
+                });
+            }
+            RasterLayerJson::Group { visible, opacity, transform, children } => {
+                if !*visible {
+                    continue;
+                }
+                collect_raster_pixel_layers(
+                    children,
+                    parent_x + transform.x * parent_sx,
+                    parent_y + transform.y * parent_sy,
+                    parent_sx * transform.scale_x,
+                    parent_sy * transform.scale_y,
+                    opacity * parent_opacity,
+                    out,
+                );
+            }
+            RasterLayerJson::Adjustment { .. } => {}
+        }
+    }
+}
+
+/** 🖼️ Composites raster document layers as textured quads; blend modes, masks and adjustment layers are not yet applied (see FIX-LOWPOLY-DEV-BOOT sibling ticket 26/07/11/WGPU-RENDERER-FULL-PARITY for follow-up scope). */
 fn render_raster(
     scene: &UiComponentSceneNode,
     bounds: Rect,
@@ -5780,59 +5990,48 @@ fn render_raster(
     let Some(raster) = &scene.raster else {
         return render_placeholder("raster", bounds, ctx);
     };
+    let _ = gpu;
     let inner = bounds;
     ctx.draw
         .push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
-    let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(&raster.pixels_base64) else {
-        draw_text(
-            ctx,
-            &format!("{}×{} raster", raster.width, raster.height),
-            inner.x + 8.0,
-            inner.y + 20.0,
-            theme.font_size_small,
-            theme.text_muted,
-        );
-        return;
+    let doc: RasterDocSyncJson = serde_json::from_str(&raster.document_sync_json).unwrap_or_default();
+    let assets: HashMap<String, RasterAssetJson> = serde_json::from_str(&raster.assets_json).unwrap_or_default();
+    let mut viewport = Viewport {
+        x: doc.camera.x as f32,
+        y: doc.camera.y as f32,
+        zoom: doc.camera.zoom as f32,
     };
-    let expected = (raster.width as usize).saturating_mul(raster.height as usize).saturating_mul(4);
-    if bytes.len() < expected {
-        draw_text(ctx, "Invalid raster payload", inner.x + 8.0, inner.y + 20.0, theme.font_size_small, theme.text_muted);
-        return;
+    let local = scene_state(&scene.surface_id);
+    if local.viewport.zoom > 0.0 {
+        viewport = local.viewport;
     }
-    let digest = digest_pixels(&bytes[..expected]);
-    let key = format!("raster:{}", scene.surface_id);
-    mutate_scene_state(&scene.surface_id, |state| {
-        if state.raster_digest != Some(digest) {
-            state.raster_digest = Some(digest);
-            state.pending_raster = Some(PendingRasterUpload {
-                key: key.clone(),
-                pixels: bytes[..expected].to_vec(),
-                width: raster.width,
-                height: raster.height,
-            });
-        }
-    });
-    let _ = gpu;
-    let aspect = raster.width as f32 / raster.height.max(1) as f32;
-    let (quad_w, quad_h) = if inner.w / inner.h > aspect {
-        let h = inner.h;
-        (h * aspect, h)
-    } else {
-        let w = inner.w;
-        (w, w / aspect)
-    };
-    let qx = inner.x + (inner.w - quad_w) * 0.5;
-    let qy = inner.y + (inner.h - quad_h) * 0.5;
-    ctx.draw
-        .push_raster_quad(&key, [qx, qy, quad_w, quad_h], [0.0, 0.0, 1.0, 1.0], 1.0);
-    let quad = Rect::new(qx, qy, quad_w, quad_h);
+    draw_checkerboard(ctx.draw, &viewport, inner, theme, 4096.0);
+    let mut flat = Vec::new();
+    collect_raster_pixel_layers(&doc.layers, 0.0, 0.0, 1.0, 1.0, 1.0, &mut flat);
+    if flat.is_empty() {
+        draw_text(ctx, "Empty raster document", inner.x + 8.0, inner.y + 20.0, theme.font_size_small, theme.text_muted);
+    }
+    for layer in &flat {
+        let Some(asset) = assets.get(&layer.image_key) else {
+            continue;
+        };
+        let data_url = format!("data:{};base64,{}", asset.mime, asset.data);
+        let Some(key) = queue_canvas_image_upload(&scene.surface_id, &layer.id, &data_url) else {
+            continue;
+        };
+        let (sx, sy) = viewport.world_to_screen(layer.x as f32, layer.y as f32, inner);
+        let w = layer.width as f32 * layer.scale_x as f32 * viewport.zoom;
+        let h = layer.height as f32 * layer.scale_y as f32 * viewport.zoom;
+        ctx.draw
+            .push_raster_quad(&key, [sx, sy, w.max(1.0), h.max(1.0)], [0.0, 0.0, 1.0, 1.0], layer.opacity);
+    }
     ctx.input.register_hit(HitTarget {
-        rect: quad,
+        rect: inner,
         event: Some(scene_cmd(scene, "rasterClick", surface_args(scene))),
         control_id: Some(scene.surface_id.clone()),
         kind: HitKind::Generic,
         drag_axis: None,
-    drag_data: None,
+        drag_data: None,
     });
 }
 //#endregion Raster
@@ -6006,7 +6205,7 @@ fn decode_canvas_image(data_url: &str) -> Option<(Vec<u8>, u32, u32)> {
     Some((rgba.into_raw(), width, height))
 }
 
-fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_url: &str) -> Option<String> {
+pub(crate) fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_url: &str) -> Option<String> {
     let (pixels, width, height) = decode_canvas_image(data_url)?;
     let expected = (width as usize).saturating_mul(height as usize).saturating_mul(4);
     if pixels.len() < expected {

@@ -32,9 +32,10 @@ import {
   type NoteDocument,
   type NoteInkBlock,
 } from "./components/note-canvas-host.tsx";
-import { appDocumentLabel, appWindowDocumentLabel, buildToolbarRibbonSegments, isFlowGraphScene, selectSpawnedToolNodes, sortToolNodes, spawnedWindowChromeForKind, ToolTree } from "./os-shell.tsx";
+import { appDocumentLabel, appWindowDocumentLabel, buildToolbarRibbonSegments, isFlowGraphScene, orderModeWindowTabs, selectSpawnedToolNodes, sortToolNodes, spawnedWindowChromeForKind, ToolTree } from "./os-shell.tsx";
 import { interpretUiNode } from "./ui-interpreter.tsx";
 import type { UiNode } from "./os-shell.tsx";
+import type { WindowLayoutNode } from "@semio-tech/ui-react";
 
 const noopCommand = () => {};
 
@@ -1345,5 +1346,32 @@ describe("s media graph flow routing", () => {
     );
     expect(markup).toContain("Ada");
     expect(markup).toContain("2 selected");
+  });
+});
+
+describe("mobile window tabs", () => {
+  it("orders tabs by their position in the layout tree, not the windows array order", () => {
+    const layout: WindowLayoutNode = {
+      kind: "row",
+      children: [
+        { kind: "stack", children: [{ kind: "window", id: "b" }], activeId: "b" },
+        { kind: "stack", children: [{ kind: "window", id: "a" }], activeId: "a" },
+      ],
+    };
+    const windows = [
+      { id: "a", title: "A" },
+      { id: "b", title: "B" },
+    ];
+    expect(orderModeWindowTabs(layout, windows).map((tab) => tab.id)).toEqual(["b", "a"]);
+  });
+
+  it("appends windows absent from the layout tree, in their original order", () => {
+    const layout: WindowLayoutNode = { kind: "stack", children: [{ kind: "window", id: "a" }], activeId: "a" };
+    const windows = [
+      { id: "a", title: "A" },
+      { id: "b", title: "B" },
+      { id: "c", title: "C" },
+    ];
+    expect(orderModeWindowTabs(layout, windows).map((tab) => tab.id)).toEqual(["a", "b", "c"]);
   });
 });

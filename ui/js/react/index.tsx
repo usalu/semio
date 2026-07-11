@@ -28,7 +28,27 @@ import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { domSizePx, readSizeVarPx, resolveColorHex, resolveSemanticColorHex, semanticVar, sizeVar, STYLING_COMPACT_ROOT_PX, STYLING_DOM, themeColorVar, tokenVar, uiSpacingPx } from "@semio-tech/ui-styling";
+import {
+  activeUiTheme,
+  builtinUiThemes,
+  domSizePx,
+  parseUiTheme,
+  readSizeVarPx,
+  resolveColorHex,
+  resolveSemanticColorHex,
+  semanticVar,
+  semioTheme,
+  serializeUiTheme,
+  setActiveUiTheme,
+  sizeVar,
+  STYLING_COMPACT_ROOT_PX,
+  STYLING_DOM,
+  subscribeActiveUiTheme,
+  themeColorVar,
+  tokenVar,
+  uiSpacingPx,
+  type UiTheme,
+} from "@semio-tech/ui-styling";
 import {
   CANVAS_HOVER_SOURCE_CANVAS,
   CANVAS_HOVER_SOURCE_PICK_MENU,
@@ -209,7 +229,8 @@ export let sceneHostPort: SceneHostPort = {
 // #endregion 🔌PortWiring
 
 // #region 🔖IconRenderPort
-export type { IconRenderCamera, IconRenderFormat, IconRenderShape, IconRenderLights, IconRenderMaterial, IconRenderPort, IconRenderRequest, IconRenderResult } from "@semio-tech/ui-styling";
+export type { IconRenderCamera, IconRenderFormat, IconRenderShape, IconRenderLights, IconRenderMaterial, IconRenderPort, IconRenderRequest, IconRenderResult, ThemeAppearanceName, ThemePaletteGroup, UiTheme } from "@semio-tech/ui-styling";
+export { activeUiTheme, builtinUiThemes, parseUiTheme, resolveThemeAppearancePalettes, semioTheme, serializeUiTheme, setActiveUiTheme, subscribeActiveUiTheme } from "@semio-tech/ui-styling";
 
 import type { IconRenderPort, IconRenderRequest, IconRenderResult, IconRenderShape } from "@semio-tech/ui-styling";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -1793,6 +1814,9 @@ export function setExpertiseProvider(fn: () => Expertise) {
 export type ElementsSurfaceAppearance = "system" | "light" | "dark";
 export type ElementsSurfaceDevice = "desktop" | "tablet" | "mobile";
 
+/** @emoji 📱 Shared viewport breakpoint below which shells switch to the automatic mobile device. */
+export const UI_MOBILE_MEDIA_QUERY = "(max-width: 767px)";
+
 export interface ElementsSurfaceChromeInput {
   appearance: ElementsSurfaceAppearance;
   device: ElementsSurfaceDevice;
@@ -1908,7 +1932,7 @@ function applyElementsSurfaceChromeDom(input: ElementsSurfaceChromeInput): void 
   applyElementsSurfaceChromeAppearanceDom(input.appearance);
   const root = document.documentElement;
   root.dataset.uiDevice = input.device;
-  root.classList.toggle("touch", input.device === "tablet");
+  root.classList.toggle("touch", input.device !== "desktop");
   root.dataset.uiCompact = (input.compact ?? false) ? "true" : "false";
 }
 
@@ -1947,7 +1971,7 @@ function ensureElementsSurfaceChromeSystemListeners(): void {
       applyDocumentBodyBaseColors();
     }
     root.dataset.uiDevice = input.device;
-    root.classList.toggle("touch", input.device === "tablet");
+    root.classList.toggle("touch", input.device !== "desktop");
     root.dataset.uiCompact = (input.compact ?? false) ? "true" : "false";
   };
   bindings.listen(mq, "change", onSystemAppearanceChange);
@@ -1997,7 +2021,7 @@ export function useCanvasAppearanceSync(sync: () => void, enabled = true): void 
     sync();
     const root = document.documentElement;
     const observer = new MutationObserver(() => sync());
-    observer.observe(root, { attributes: true, attributeFilter: ["class", "style", "data-ui-appearance"] });
+    observer.observe(root, { attributes: true, attributeFilter: ["class", "style", "data-ui-appearance", "data-ui-theme"] });
     return () => observer.disconnect();
   }, [enabled, sync]);
 }
@@ -2060,6 +2084,24 @@ export function writeStoredUiChromeAppearance(appearance: ElementsSurfaceAppeara
   localStorage.setItem(UI_CHROME_APPEARANCE_STORAGE_KEY, appearance);
 }
 
+/** @emoji 📐 User-selectable layout device; mobile is automatic and excluded here. */
+export type UiChromeLayout = "desktop" | "tablet";
+
+/** @emoji 📐 localStorage key for the user-selected desktop/tablet layout. */
+export const UI_CHROME_LAYOUT_STORAGE_KEY = "ui.chrome.layout";
+
+/** @emoji 📐 Reads the persisted layout preference from localStorage, defaulting to desktop. */
+export function readStoredUiChromeLayout(): UiChromeLayout {
+  if (typeof localStorage === "undefined") return "desktop";
+  return localStorage.getItem(UI_CHROME_LAYOUT_STORAGE_KEY) === "tablet" ? "tablet" : "desktop";
+}
+
+/** @emoji 📐 Persists the layout preference to localStorage. */
+export function writeStoredUiChromeLayout(layout: UiChromeLayout): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(UI_CHROME_LAYOUT_STORAGE_KEY, layout);
+}
+
 /** @emoji 🌐 localStorage key for the active UI locale. */
 export const UI_CHROME_LOCALE_STORAGE_KEY = "ui.chrome.locale";
 
@@ -2092,6 +2134,72 @@ export function readStoredUiChromeTerminology(): string {
 export function writeStoredUiChromeTerminology(id: string): void {
   if (typeof localStorage === "undefined") return;
   localStorage.setItem(UI_CHROME_TERMINOLOGY_STORAGE_KEY, id);
+}
+
+/** @emoji 🎨 localStorage key for the active theme id (builtin or `custom.<slug>`). */
+export const UI_CHROME_THEME_ID_STORAGE_KEY = "ui.chrome.theme";
+
+/** @emoji 🎨 Reads the persisted active theme id from localStorage, if any. */
+export function readStoredUiChromeThemeId(): string | null {
+  if (typeof localStorage === "undefined") return null;
+  return localStorage.getItem(UI_CHROME_THEME_ID_STORAGE_KEY);
+}
+
+/** @emoji 🎨 Persists the active theme id to localStorage. */
+export function writeStoredUiChromeThemeId(id: string): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(UI_CHROME_THEME_ID_STORAGE_KEY, id);
+}
+
+/** @emoji 🎨 localStorage key for a full snapshot of the active theme (boot-time fallback before builtin/custom lookup resolves). */
+export const UI_CHROME_THEME_SNAPSHOT_STORAGE_KEY = "ui.chrome.theme.snapshot";
+
+/** @emoji 🎨 Reads the persisted active theme snapshot from localStorage; discards it silently if invalid. */
+export function readStoredUiChromeThemeSnapshot(): UiTheme | null {
+  if (typeof localStorage === "undefined") return null;
+  const raw = localStorage.getItem(UI_CHROME_THEME_SNAPSHOT_STORAGE_KEY);
+  if (!raw) return null;
+  try {
+    return parseUiTheme(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+/** @emoji 🎨 Persists a full snapshot of the active theme to localStorage. */
+export function writeStoredUiChromeThemeSnapshot(theme: UiTheme): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(UI_CHROME_THEME_SNAPSHOT_STORAGE_KEY, serializeUiTheme(theme));
+}
+
+/** @emoji 🎨 localStorage key for the user's saved custom themes, keyed by theme id. */
+export const UI_CUSTOM_THEMES_STORAGE_KEY = "ui.themes.custom";
+
+/** @emoji 🎨 Reads the user's saved custom themes from localStorage; discards any entry that fails to parse. */
+export function readStoredUiCustomThemes(): Record<string, UiTheme> {
+  if (typeof localStorage === "undefined") return {};
+  const raw = localStorage.getItem(UI_CUSTOM_THEMES_STORAGE_KEY);
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const out: Record<string, UiTheme> = {};
+    for (const [id, value] of Object.entries(parsed)) {
+      try {
+        out[id] = parseUiTheme(value);
+      } catch {
+        /* drop invalid saved theme */
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+/** @emoji 🎨 Persists the user's saved custom themes to localStorage. */
+export function writeStoredUiCustomThemes(themes: Record<string, UiTheme>): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(UI_CUSTOM_THEMES_STORAGE_KEY, JSON.stringify(themes));
 }
 
 /** @emoji 🧵 localStorage key for WASM compute worker thread count. */
@@ -2385,8 +2493,10 @@ export type UiTranslationSchema = {
         readonly expertise: UiLabelValue;
         readonly app: UiLabelValue;
         readonly appearance: UiLabelValue;
+        readonly layout: UiLabelValue;
         readonly language: UiLabelValue;
         readonly terminology: UiLabelValue;
+        readonly theme: UiLabelValue;
       };
       readonly appearance: {
         readonly light: UiLabelValue;
@@ -2406,6 +2516,34 @@ export type UiTranslationSchema = {
         readonly id: UiLabelValue;
         readonly controller: UiLabelValue;
         readonly plugin: UiLabelValue;
+      };
+      readonly theme: {
+        readonly select: UiLabelValue;
+        readonly save: UiLabelValue;
+        readonly savePlaceholder: UiLabelValue;
+        readonly reset: UiLabelValue;
+        readonly export: UiLabelValue;
+        readonly import: UiLabelValue;
+        readonly delete: UiLabelValue;
+        readonly colors: UiLabelValue;
+        readonly spacing: UiLabelValue;
+        readonly fonts: UiLabelValue;
+        readonly strokes: UiLabelValue;
+        readonly radii: UiLabelValue;
+        readonly opacities: UiLabelValue;
+        readonly metrics: UiLabelValue;
+        readonly appearances: UiLabelValue;
+        readonly dirty: UiLabelValue;
+        readonly appearance: {
+          readonly light: UiLabelValue;
+          readonly dark: UiLabelValue;
+        };
+        readonly group: {
+          readonly board: UiLabelValue;
+          readonly map: UiLabelValue;
+          readonly canvas: UiLabelValue;
+          readonly chrome: UiLabelValue;
+        };
       };
       readonly unavailable: UiLabelValue;
     };
@@ -2442,7 +2580,6 @@ export type UiTranslationSchema = {
   };
   readonly settings: {
     readonly layout: {
-      readonly normal: UiLabelValue;
       readonly desktop: UiLabelValue;
       readonly tablet: UiLabelValue;
       readonly mobile: UiLabelValue;
@@ -2717,8 +2854,10 @@ export const uiChromeTranslationBundles = {
             expertise: { label: { normal: "Expertise", beginner: "Expertise" } },
             app: { label: { normal: "App", beginner: "App" } },
             appearance: { label: { normal: "Design", beginner: "Design" } },
+            layout: { label: { normal: "Layout", beginner: "Layout" } },
             language: { label: { normal: "Sprache", beginner: "Sprache" } },
             terminology: { label: { normal: "Terminologie", beginner: "Terminologie" } },
+            theme: { label: { normal: "Thema", beginner: "Thema" } },
           },
           appearance: {
             light: { label: { normal: "Hell", beginner: "Hell" } },
@@ -2738,6 +2877,34 @@ export const uiChromeTranslationBundles = {
             id: { label: { normal: "App-ID", beginner: "App-ID" } },
             controller: { label: { normal: "Controller", beginner: "Controller" } },
             plugin: { label: { normal: "Plugin", beginner: "Plugin" } },
+          },
+          theme: {
+            select: { label: { normal: "Thema", beginner: "Thema" } },
+            save: { label: { normal: "Speichern unter", beginner: "Speichern unter" } },
+            savePlaceholder: { label: { normal: "Themenname", beginner: "Themenname" } },
+            reset: { label: { normal: "Zuruecksetzen", beginner: "Zuruecksetzen" } },
+            export: { label: { normal: "Exportieren", beginner: "Exportieren" } },
+            import: { label: { normal: "Importieren", beginner: "Importieren" } },
+            delete: { label: { normal: "Loeschen", beginner: "Loeschen" } },
+            colors: { label: { normal: "Farben", beginner: "Farben" } },
+            spacing: { label: { normal: "Abstand", beginner: "Abstand" } },
+            fonts: { label: { normal: "Schriftarten", beginner: "Schriftarten" } },
+            strokes: { label: { normal: "Strichstaerken", beginner: "Strichstaerken" } },
+            radii: { label: { normal: "Rundungen", beginner: "Rundungen" } },
+            opacities: { label: { normal: "Deckkraft", beginner: "Deckkraft" } },
+            metrics: { label: { normal: "Masse", beginner: "Masse" } },
+            appearances: { label: { normal: "Erscheinungsbilder", beginner: "Erscheinungsbilder" } },
+            dirty: { label: { normal: "Nicht gespeichert", beginner: "Nicht gespeichert" } },
+            appearance: {
+              light: { label: { normal: "Hell", beginner: "Hell" } },
+              dark: { label: { normal: "Dunkel", beginner: "Dunkel" } },
+            },
+            group: {
+              board: { label: { normal: "Board", beginner: "Board" } },
+              map: { label: { normal: "Karte", beginner: "Karte" } },
+              canvas: { label: { normal: "Leinwand", beginner: "Leinwand" } },
+              chrome: { label: { normal: "Oberflaeche", beginner: "Oberflaeche" } },
+            },
           },
           unavailable: { label: { normal: "Einstellungen nicht verfuegbar", beginner: "Einstellungen nicht verfuegbar" } },
         },
@@ -2829,28 +2996,22 @@ export const uiChromeTranslationBundles = {
       },
       settings: {
         layout: {
-          normal: {
-            label: {
-              normal: "Normal layout",
-              beginner: "Use the standard layout optimized for mouse and keyboard.",
-            },
-          },
           desktop: {
             label: {
-              normal: "Desktop layout",
-              beginner: "Use the desktop layout optimized for large screens.",
+              normal: "Desktop-Layout",
+              beginner: "Verwendet das Standard-Layout, optimiert fuer Maus und Tastatur.",
             },
           },
           tablet: {
             label: {
-              normal: "Tablet layout",
-              beginner: "Use the tablet layout optimized for medium screens.",
+              normal: "Tablet-Layout",
+              beginner: "Verwendet das Tablet-Layout mit groesseren, touch-freundlichen Bedienelementen.",
             },
           },
           mobile: {
             label: {
-              normal: "Mobile layout",
-              beginner: "Use the mobile layout optimized for small screens.",
+              normal: "Mobil-Layout",
+              beginner: "Verwendet das Mobil-Layout, automatisch aktiv auf kleinen Bildschirmen.",
             },
           },
         },
@@ -3088,8 +3249,10 @@ export const uiChromeTranslationBundles = {
             expertise: { label: { normal: "Expertise", beginner: "Expertise" } },
             app: { label: { normal: "App", beginner: "App" } },
             appearance: { label: { normal: "Appearance", beginner: "Appearance" } },
+            layout: { label: { normal: "Layout", beginner: "Layout" } },
             language: { label: { normal: "Language", beginner: "Language" } },
             terminology: { label: { normal: "Terminology", beginner: "Terminology" } },
+            theme: { label: { normal: "Theme", beginner: "Theme" } },
           },
           appearance: {
             light: { label: { normal: "Light", beginner: "Light" } },
@@ -3109,6 +3272,34 @@ export const uiChromeTranslationBundles = {
             id: { label: { normal: "App id", beginner: "App id" } },
             controller: { label: { normal: "Controller", beginner: "Controller" } },
             plugin: { label: { normal: "Plugin", beginner: "Plugin" } },
+          },
+          theme: {
+            select: { label: { normal: "Theme", beginner: "Theme" } },
+            save: { label: { normal: "Save as", beginner: "Save as" } },
+            savePlaceholder: { label: { normal: "Theme name", beginner: "Theme name" } },
+            reset: { label: { normal: "Reset", beginner: "Reset" } },
+            export: { label: { normal: "Export", beginner: "Export" } },
+            import: { label: { normal: "Import", beginner: "Import" } },
+            delete: { label: { normal: "Delete", beginner: "Delete" } },
+            colors: { label: { normal: "Colors", beginner: "Colors" } },
+            spacing: { label: { normal: "Spacing", beginner: "Spacing" } },
+            fonts: { label: { normal: "Fonts", beginner: "Fonts" } },
+            strokes: { label: { normal: "Strokes", beginner: "Strokes" } },
+            radii: { label: { normal: "Radii", beginner: "Radii" } },
+            opacities: { label: { normal: "Opacities", beginner: "Opacities" } },
+            metrics: { label: { normal: "Metrics", beginner: "Metrics" } },
+            appearances: { label: { normal: "Appearances", beginner: "Appearances" } },
+            dirty: { label: { normal: "Unsaved", beginner: "Unsaved" } },
+            appearance: {
+              light: { label: { normal: "Light", beginner: "Light" } },
+              dark: { label: { normal: "Dark", beginner: "Dark" } },
+            },
+            group: {
+              board: { label: { normal: "Board", beginner: "Board" } },
+              map: { label: { normal: "Map", beginner: "Map" } },
+              canvas: { label: { normal: "Canvas", beginner: "Canvas" } },
+              chrome: { label: { normal: "Chrome", beginner: "Chrome" } },
+            },
           },
           unavailable: { label: { normal: "Settings unavailable", beginner: "Settings unavailable" } },
         },
@@ -3200,28 +3391,22 @@ export const uiChromeTranslationBundles = {
       },
       settings: {
         layout: {
-          normal: {
-            label: {
-              normal: "Normal layout",
-              beginner: "Use the standard layout optimized for mouse and keyboard.",
-            },
-          },
           desktop: {
             label: {
               normal: "Desktop layout",
-              beginner: "Use the desktop layout optimized for large screens.",
+              beginner: "Use the standard layout optimized for mouse and keyboard.",
             },
           },
           tablet: {
             label: {
               normal: "Tablet layout",
-              beginner: "Use the tablet layout optimized for medium screens.",
+              beginner: "Use the tablet layout with larger, touch-friendly controls.",
             },
           },
           mobile: {
             label: {
               normal: "Mobile layout",
-              beginner: "Use the mobile layout optimized for small screens.",
+              beginner: "Uses the mobile layout automatically on small screens.",
             },
           },
         },
@@ -4703,6 +4888,48 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible =
 
 export { Footer };
 
+/** @emoji 📱 One window/panel tab in the mobile bottom navigation. */
+export interface FooterNavItem {
+  id: string;
+  icon: ControlIcon;
+  label?: string;
+  active?: boolean;
+  onSelect: () => void;
+}
+
+/**
+ * Props interface for the FooterNav component.
+ **/
+export interface FooterNavProps {
+  items: FooterNavItem[];
+  className?: string;
+}
+
+/** @emoji 📱 Phone-optimized bottom navigation replacing {@link Footer} on mobile; equal-width icon-over-label tabs. */
+const FooterNav: React.FC<FooterNavProps> = ({ items, className = "" }) => {
+  const level = useLevel();
+  const bgClass = getLevelBgClass(level);
+  return (
+    <nav id="ui.footer" data-slot="footer-nav" className={cn(borderNormalTopClass, "relative flex h-large w-full items-stretch min-w-0", bgClass, className)}>
+      {items.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          data-slot="footer-nav-item"
+          data-active={item.active ? "true" : undefined}
+          className={cn("flex min-w-0 flex-1 flex-col items-center justify-center gap-half px-single text-xs", item.active && interactiveActiveFillClass)}
+          onClick={item.onSelect}
+        >
+          {renderControlIcon(item.icon, "small")}
+          {item.label ? <span className="w-full truncate text-center">{item.label}</span> : null}
+        </button>
+      ))}
+    </nav>
+  );
+};
+
+export { FooterNav };
+
 // #endregion 🎮Footer
 
 // #region 🪨Layout
@@ -4726,7 +4953,7 @@ export interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePanel, rightSidePanel, mobilePanel, canvas, mobile = false, className = "" }) => (
   <GhostProvider>
-    <div className={cn("flex flex-col overflow-hidden", mobile ? "touch h-full w-full" : "h-screen w-screen", className)}>
+    <div className={cn("flex flex-col overflow-hidden", mobile ? "h-full w-full" : "h-screen w-screen", className)}>
       {navbar && <div className="flex-shrink-0">{navbar}</div>}
       {mobile ? (
         <div className="flex flex-col flex-1 min-h-0">
@@ -19315,6 +19542,8 @@ export interface ModeProps {
   onTemplateDrop?: (payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => void;
   children?: React.ReactNode;
   className?: string;
+  /** @emoji 📱 Renders only the active window full-bleed with no tab bar, drag, dock, or maximize chrome. */
+  mobile?: boolean;
 }
 
 //#region 🧭ModeCanvasSpacing
@@ -20232,7 +20461,7 @@ function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: M
 //#endregion 🧭ModeRender
 
 /** @emoji 🪟 Golden-Layout-style docking mode shell with tab stacks, drag-dock, resize, maximize, and close. */
-const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, onWindowClose, layout, onLayoutChange, onTemplateDrop, children, className = "" }) => {
+const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, onWindowClose, layout, onLayoutChange, onTemplateDrop, children, className = "", mobile = false }) => {
   const windowsById = reactHostPort.useMemo(() => new Map(windows.map((window) => [window.id, window])), [windows]);
   const windowsKey = reactHostPort.useMemo(() => windows.map((window) => window.id).join("|"), [windows]);
   const layoutKey = reactHostPort.useMemo(() => JSON.stringify(layout ?? null), [layout]);
@@ -20679,28 +20908,45 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
         })()
       : null;
 
-  const hasWindows = modeCollectWindowIds(dockOutLayout).length > 0;
+  const orderedWindowIds = modeCollectWindowIds(dockOutLayout);
+  const hasWindows = orderedWindowIds.length > 0;
   const emptyShellNotice = resolveTranslationLabel(uiI18n.t("ui.display.emptyShell"));
+
+  const mobileWindowId = mobile ? ((activeWindowId && windowsById.has(activeWindowId) ? activeWindowId : orderedWindowIds[0]) ?? null) : null;
+  const mobileWindowDescriptor = mobileWindowId ? windowsById.get(mobileWindowId) : undefined;
 
   const body =
     children ??
-    (maximizedStack ? (
-      <ModeDockContext.Provider value={dockContext}>
-        <ModeDockStack stackPath={maximizedStackPath!} node={maximizedStack} windowsById={windowsById} activeWindowId={activeWindowId} />
-      </ModeDockContext.Provider>
-    ) : (
-      <ModeDockContext.Provider value={dockContext}>{renderModeDockNode(dockOutLayout, "", renderContext)}</ModeDockContext.Provider>
-    ));
+    (mobile
+      ? mobileWindowDescriptor
+        ? (() => {
+            const { children: windowChildren, engagement, ...windowProps } = mobileWindowDescriptor;
+            return (
+              <div data-slot="mode-mobile-window" className={cn("relative z-0 flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", windowBodyFrameActiveClass)}>
+                <Window {...windowProps} fill={mobileWindowDescriptor.fill ?? true} engagement={engagement} active onActivate={() => {}}>
+                  {windowChildren}
+                </Window>
+              </div>
+            );
+          })()
+        : null
+      : maximizedStack ? (
+          <ModeDockContext.Provider value={dockContext}>
+            <ModeDockStack stackPath={maximizedStackPath!} node={maximizedStack} windowsById={windowsById} activeWindowId={activeWindowId} />
+          </ModeDockContext.Provider>
+        ) : (
+          <ModeDockContext.Provider value={dockContext}>{renderModeDockNode(dockOutLayout, "", renderContext)}</ModeDockContext.Provider>
+        ));
 
   return (
-    <div data-slot="mode" data-dragging={previewDragState ? "true" : undefined} data-maximized-path={maximizedStackPath ?? undefined} className={cn("relative flex h-full min-h-0 w-full flex-col", className)}>
+    <div data-slot="mode" data-mobile={mobile ? "true" : undefined} data-dragging={previewDragState ? "true" : undefined} data-maximized-path={maximizedStackPath ?? undefined} className={cn("relative flex h-full min-h-0 w-full flex-col", className)}>
       <LevelProvider level="canvas">
         <div
           ref={modeBodyRef}
           data-slot="mode-body"
           className={cn("relative box-border flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-canvas", MODE_CANVAS_INSET_CLASS)}
-          onDragOver={onTemplateDrop ? handleExternalTemplateDragOver : undefined}
-          onDrop={onTemplateDrop ? handleExternalTemplateDrop : undefined}
+          onDragOver={!mobile && onTemplateDrop ? handleExternalTemplateDragOver : undefined}
+          onDrop={!mobile && onTemplateDrop ? handleExternalTemplateDrop : undefined}
         >
           {!hasWindows ? (
             <div data-slot="mode-empty" className="flex flex-1 items-center justify-center p-large text-center text-sm text-muted-foreground">
@@ -20709,7 +20955,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
           ) : (
             body
           )}
-          {previewDragState ? (
+          {!mobile && previewDragState ? (
             <>
               {dropZone?.kind !== "tab" ? (
                 <ModeDockDragPreview
@@ -20780,6 +21026,7 @@ export {
   modeDockDragInsertTabs,
   mergeStackTabsIntoStack,
   resolveModeTabInsertPreview,
+  modeCollectWindowIds,
 };
 
 // #endregion 🧭Mode
@@ -24449,6 +24696,73 @@ if (treeVitest) {
       expect(document.documentElement.classList.contains("dark")).toBe(true);
       expect(document.documentElement.dataset.uiAppearance).toBe("dark");
       resetElementsSurfaceChromeForTests();
+    });
+
+    it("applies touch chrome and the mobile device attribute for the mobile device", () => {
+      resetElementsSurfaceChromeForTests();
+      const release = applyElementsSurfaceChrome({ appearance: "light", device: "mobile", expertise: Expertise.NORMAL });
+      expect(document.documentElement.classList.contains("touch")).toBe(true);
+      expect(document.documentElement.dataset.uiDevice).toBe("mobile");
+      release();
+      resetElementsSurfaceChromeForTests();
+    });
+
+    it("clears touch chrome for the desktop device", () => {
+      resetElementsSurfaceChromeForTests();
+      const release = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", expertise: Expertise.NORMAL });
+      expect(document.documentElement.classList.contains("touch")).toBe(false);
+      expect(document.documentElement.dataset.uiDevice).toBe("desktop");
+      release();
+      resetElementsSurfaceChromeForTests();
+    });
+  });
+
+  describe("UiChromeLayout storage", () => {
+    it("defaults to desktop when nothing is stored", () => {
+      localStorage.removeItem(UI_CHROME_LAYOUT_STORAGE_KEY);
+      expect(readStoredUiChromeLayout()).toBe("desktop");
+    });
+
+    it("round-trips a written tablet preference", () => {
+      writeStoredUiChromeLayout("tablet");
+      expect(readStoredUiChromeLayout()).toBe("tablet");
+      writeStoredUiChromeLayout("desktop");
+      expect(readStoredUiChromeLayout()).toBe("desktop");
+    });
+
+    it("falls back to desktop for a garbage stored value", () => {
+      localStorage.setItem(UI_CHROME_LAYOUT_STORAGE_KEY, "giant-monitor");
+      expect(readStoredUiChromeLayout()).toBe("desktop");
+      localStorage.removeItem(UI_CHROME_LAYOUT_STORAGE_KEY);
+    });
+  });
+
+  describe("Mode mobile", () => {
+    const windows: ModeWindowDescriptor[] = [
+      { id: "a", title: "A", children: <div>A body</div> },
+      { id: "b", title: "B", children: <div>B body</div> },
+    ];
+    const layout: WindowLayoutNode = {
+      kind: "stack",
+      children: [
+        { kind: "window", id: "a" },
+        { kind: "window", id: "b" },
+      ],
+      activeId: "a",
+    };
+
+    it("renders only the active window with no tab bar or dock chrome", () => {
+      const markup = renderToStaticMarkup(<Mode mobile windows={windows} activeWindowId="b" layout={layout} />);
+      expect(markup).not.toContain('data-slot="mode-dock-tabbar"');
+      expect(markup.match(/data-slot="mode-mobile-window"/g)?.length).toBe(1);
+      expect(markup).toContain("B body");
+      expect(markup).not.toContain("A body");
+    });
+
+    it("falls back to the first ordered window when activeWindowId is stale", () => {
+      const markup = renderToStaticMarkup(<Mode mobile windows={windows} activeWindowId="missing" layout={layout} />);
+      expect(markup).toContain("A body");
+      expect(markup).not.toContain("B body");
     });
   });
 
