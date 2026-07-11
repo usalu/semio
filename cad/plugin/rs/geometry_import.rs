@@ -293,6 +293,74 @@ fn curve_mesh_from_wire(kernel: &mut BrepkitKernel, wire: &GeometryHandle) -> Op
     Some(mesh_from_indexed(&mesh.position, &mesh.normal, &mesh.index))
 }
 
+//#region 🔖MeshImport
+/// 📦 Serializes triangle mesh data to a minimal `v`/`f` OBJ payload the kernel's OBJ reader
+/// (which only needs vertex positions and triangle faces) can round-trip into a solid.
+fn mesh_to_obj_text(mesh: &MeshData) -> String {
+    let mut text = String::new();
+    for vertex in mesh.positions.chunks_exact(3) {
+        text.push_str(&format!("v {} {} {}\n", vertex[0], vertex[1], vertex[2]));
+    }
+    for triangle in mesh.indices.chunks_exact(3) {
+        text.push_str(&format!("f {} {} {}\n", triangle[0] + 1, triangle[1] + 1, triangle[2] + 1));
+    }
+    text
+}
+
+fn mesh_extent(mesh: &MeshData) -> Option<[f64; 3]> {
+    if mesh.positions.is_empty() {
+        return None;
+    }
+    let mut min = [f32::MAX; 3];
+    let mut max = [f32::MIN; 3];
+    for vertex in mesh.positions.chunks_exact(3) {
+        for axis in 0..3 {
+            min[axis] = min[axis].min(vertex[axis]);
+            max[axis] = max[axis].max(vertex[axis]);
+        }
+    }
+    Some([(max[0] - min[0]) as f64, (max[1] - min[1]) as f64, (max[2] - min[2]) as f64])
+}
+
+/// 🧱 Builds a `CadObject` from an arbitrary triangle mesh (e.g. a tessellated DWG layer) by
+/// importing it into the brep kernel as a solid via the OBJ reader, so it plays through the same
+/// `solidHandle`/`primitives` path fixture geometry uses. Falls back to an extent-only object
+/// with no primitives (rendered via the typology bounding-box mesh fallback) when the mesh has
+/// no triangles or the kernel is unable to import it.
+pub fn cad_object_from_mesh(
+    kernel: &mut BrepkitKernel,
+    id: impl Into<String>,
+    label: impl Into<String>,
+    typology: impl Into<String>,
+    mesh: &MeshData,
+) -> CadObject {
+    let extent = mesh_extent(mesh);
+    let solid_handle = if mesh.indices.len() >= 3 {
+        kernel.import_obj_sync(&mesh_to_obj_text(mesh), 0.01).ok().map(|handle| handle.0)
+    } else {
+        None
+    };
+    let primitives = solid_handle
+        .clone()
+        .map(|primitive_id| vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id, kind: "solid".into() }])
+        .unwrap_or_default();
+    CadObject {
+        id: id.into(),
+        label: label.into(),
+        typology: typology.into(),
+        visible: true,
+        locked: false,
+        origin: [0.0, 0.0, 0.0],
+        orientation: Some([0.0, 0.0, 0.0, 1.0]),
+        scale: None,
+        mesh_url: None,
+        extent,
+        solid_handle,
+        primitives,
+    }
+}
+//#endregion 🔖MeshImport
+
 pub fn object_label_from_id(object_id: &str) -> String {
     object_id
         .split('-')

@@ -4447,6 +4447,7 @@ dependencies = [
  "brepkit-operations",
  "brepkit-topology",
  "kernel_3d_engine",
+ "semio-framework-core",
 ]
 
 [[package]]
@@ -6197,6 +6198,7 @@ name = "presentation-plugin"
 version = "0.1.0"
 dependencies = [
  "presentation_deck",
+ "semio-framework-core",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",
@@ -7686,6 +7688,7 @@ dependencies = [
 name = "shooting-plugin"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",

@@ -294,6 +294,8 @@ pub trait BrepKernel {
     async fn import_step(&mut self, data: &str) -> Result<Vec<GeometryHandle>, BrepError>;
     async fn import_stl(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError>;
     async fn import_obj(&mut self, data: &str, tolerance: f64) -> Result<GeometryHandle, BrepError>;
+    async fn export_dwg(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError>;
+    async fn import_dwg(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError>;
     // #endregion IO
 
     // #region Core

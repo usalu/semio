@@ -1758,8 +1758,20 @@ fn puzzle2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), St
     semio_framework_os::title_card_svg(value, "Puzzle 2D", 1024, 768)
 }
 
+/// 📥 Tier C DWG import — the puzzle-2d fixture only supports circle/rectangle nodes (no polygonal outlines), so this
+/// always returns an empty board whose camera is framed to the DWG's extents; never errors on a structurally valid DWG.
+fn puzzle2d_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -> Result<Value, String> {
+    let mut fixture = default_empty_fixture();
+    let center_x = (drawing.extmin[0] + drawing.extmax[0]) / 2.0;
+    let center_y = (drawing.extmin[1] + drawing.extmax[1]) / 2.0;
+    fixture["camera"] = json!({ "x": center_x, "y": center_y, "zoom": 1.0 });
+    let envelope = Puzzle2dPlayEnvelope { fixture, runtime: Puzzle2dPlayRuntime::default() };
+    serde_json::to_value(envelope).map_err(|error| error.to_string())
+}
+
 pub fn register_puzzle2d_exports() {
-    semio_framework_os::register_2d_svg_png_export_handlers("2d.puzzle", "puzzle2d", puzzle2d_document_json_to_svg);
+    semio_framework_os::register_2d_export_handlers("2d.puzzle", "puzzle2d", puzzle2d_document_json_to_svg);
+    semio_framework_os::register_dwg_import_handler("2d.puzzle", puzzle2d_document_json_from_dwg);
 }
 //#endregion 🔖AppFactory
 
@@ -1776,6 +1788,24 @@ mod tests {
         let node = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("puzzle2d-board"));
+    }
+
+    #[test]
+    fn puzzle2d_document_json_from_dwg_returns_empty_board_framed_to_extents() {
+        let mut drawing = semio_framework_os::DwgDrawing::default();
+        drawing.extmin = [0.0, 0.0, 0.0];
+        drawing.extmax = [100.0, 200.0, 0.0];
+        let layer = drawing.ensure_layer("0");
+        drawing.entities.push(semio_framework_os::DwgEntity {
+            layer,
+            color: semio_framework_os::DwgColor::ByLayer,
+            geometry: semio_framework_os::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [100.0, 0.0], [100.0, 200.0], [0.0, 200.0]], bulges: vec![0.0, 0.0, 0.0, 0.0] },
+        });
+        let document = puzzle2d_document_json_from_dwg(&drawing).unwrap();
+        let envelope: Puzzle2dPlayEnvelope = serde_json::from_value(document).unwrap();
+        assert_eq!(envelope.fixture.get("schema").and_then(|value| value.as_str()), Some(PUZZLE2D_FIXTURE_SCHEMA));
+        assert!(fixture_nodes(&envelope.fixture).is_empty());
+        assert_eq!(fixture_camera(&envelope.fixture), (50.0, 100.0, 1.0));
     }
 
     #[test]

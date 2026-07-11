@@ -12,10 +12,10 @@ use cad_document::{
     CadStore, CAD_DOCUMENT_SCHEMA, CAD_PLAY_DOCUMENT_SCHEMA,
 };
 use geometry_import::{
-    objects_from_fixture_model, parse_geometry, tessellate_geometry_handle,
+    cad_object_from_mesh, objects_from_fixture_model, parse_geometry, tessellate_geometry_handle,
 };
-use semio_framework_plugin::{PanelGroup, 
-    build_world_3d_scene, export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_from_kind,
+use semio_framework_plugin::{PanelGroup,
+    build_world_3d_scene, merge_world_selection_ids, mesh_from_kind,
     tool_button, tool_collection, tool_separator, tool_toggle, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_mixed_vec3, ui_inspector_all_equal, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, App,
@@ -28,8 +28,6 @@ use semio_framework_plugin::{PanelGroup,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use semio_framework_plugin::layout::{WindowEngagementPossible, WindowEngagementStatus};
-use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult};
-use base64::Engine;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
@@ -3235,27 +3233,13 @@ fn bundle() -> PluginBundle {
     PluginBundle::new("cad", "CAD", "0.1.0").register_app(create_cad_app(), || Box::new(CadApp))
 }
 
+fn cad_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
+    let envelope: CadPlayEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+    Ok(export_mesh_from_envelope(&envelope))
+}
+
 fn register_cad_exports() {
-    register_os_media_export_handler("3d.cad", OsMediaExportFormat::Obj, |doc| {
-        let envelope: CadPlayEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
-        let mesh = export_mesh_from_envelope(&envelope);
-        let (data, mime_type) = export_mesh_obj(&mesh, "cad");
-        Ok(OsMediaExportResult {
-            data,
-            mime_type,
-            file_name: "cad.obj".into(),
-        })
-    });
-    register_os_media_export_handler("3d.cad", OsMediaExportFormat::Glb, |doc| {
-        let envelope: CadPlayEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
-        let mesh = export_mesh_from_envelope(&envelope);
-        let (bytes, mime_type) = export_mesh_glb_bytes(&mesh);
-        Ok(OsMediaExportResult {
-            data: base64::engine::general_purpose::STANDARD.encode(bytes),
-            mime_type,
-            file_name: "cad.glb".into(),
-        })
-    });
+    semio_framework_os::register_mesh_export_handlers("3d.cad", "cad", cad_mesh_from_document);
 }
 
 semio_framework_plugin::plugin_exports!(bundle);

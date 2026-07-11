@@ -1808,8 +1808,81 @@ fn layout_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), Stri
     semio_framework_os::pages_rects_svg(value, "Layout")
 }
 
+/// 📥 Extracts axis-aligned rectangular boundaries from closed 4-vertex `LwPolyline`s and frames one page per rectangle, falling back to a single page framed to the drawing extents.
+fn dwg_rect_pages(drawing: &semio_framework_os::DwgDrawing) -> Vec<(f64, f64, f64, f64)> {
+    let mut rects = Vec::new();
+    for entity in &drawing.entities {
+        let semio_framework_os::DwgGeometry::LwPolyline { closed: true, vertices, .. } = &entity.geometry else { continue };
+        if vertices.len() != 4 {
+            continue;
+        }
+        let (min_x, max_x) = vertices.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), v| (min.min(v[0]), max.max(v[0])));
+        let (min_y, max_y) = vertices.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), v| (min.min(v[1]), max.max(v[1])));
+        let is_axis_aligned = vertices
+            .iter()
+            .all(|v| ((v[0] - min_x).abs() < 1e-6 || (v[0] - max_x).abs() < 1e-6) && ((v[1] - min_y).abs() < 1e-6 || (v[1] - max_y).abs() < 1e-6));
+        if is_axis_aligned && max_x > min_x && max_y > min_y {
+            rects.push((min_x, min_y, max_x - min_x, max_y - min_y));
+        }
+    }
+    if rects.is_empty() {
+        rects.push((
+            drawing.extmin[0],
+            drawing.extmin[1],
+            (drawing.extmax[0] - drawing.extmin[0]).max(1.0),
+            (drawing.extmax[1] - drawing.extmin[1]).max(1.0),
+        ));
+    }
+    rects
+}
+
+/// 📥 Builds a schema-valid layout document from a parsed DWG drawing, framing one page per rectangular boundary found.
+fn layout_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -> Result<Value, String> {
+    let pages: Vec<Page> = dwg_rect_pages(drawing)
+        .into_iter()
+        .enumerate()
+        .map(|(index, (_x, _y, width, height))| {
+            let id = format!("page-{}", index + 1);
+            let layer_id = format!("layer-{id}");
+            Page {
+                id: id.clone(),
+                name: format!("Page {}", index + 1),
+                spread_id: "spread-1".into(),
+                parent_page_id: None,
+                width,
+                height,
+                margins: PageMargins { top: 0.0, right: 0.0, bottom: 0.0, left: 0.0 },
+                columns: PageColumns { count: 1, gutter: 0.0 },
+                guides: Vec::new(),
+                layer_ids: vec![layer_id.clone()],
+                layers: vec![layout_rs::Layer { id: layer_id, name: "Content".into(), visible: true, locked: false, object_ids: Vec::new() }],
+                frames: Vec::new(),
+                overrides: Vec::new(),
+            }
+        })
+        .collect();
+    let page_ids = pages.iter().map(|page| page.id.clone()).collect();
+    let document = LayoutDocument {
+        schema: LAYOUT_FIXTURE_SCHEMA.into(),
+        name: "Imported DWG".into(),
+        camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 1.0 },
+        preview_camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 1.0 },
+        grid: layout_rs::GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
+        paragraph_styles: Vec::new(),
+        character_styles: Vec::new(),
+        stories: Vec::new(),
+        links: Vec::new(),
+        parent_pages: Vec::new(),
+        spreads: vec![layout_rs::Spread { id: "spread-1".into(), name: "Spread 1".into(), page_ids }],
+        pages,
+        print_target: None,
+    };
+    serde_json::to_value(document).map_err(|e| e.to_string())
+}
+
 fn register_layout_exports() {
-    semio_framework_os::register_2d_svg_png_export_handlers("2d.layout", "layout", layout_document_json_to_svg);
+    semio_framework_os::register_2d_export_handlers("2d.layout", "layout", layout_document_json_to_svg);
+    semio_framework_os::register_dwg_import_handler("2d.layout", layout_document_json_from_dwg);
 }
 
 fn bundle() -> PluginBundle {
@@ -2362,6 +2435,43 @@ mod tests {
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         assert_eq!(payload["op"], "downloadMediaExport");
         assert_eq!(payload["mimeType"], "image/png");
+    }
+
+    #[test]
+    fn dwg_import_frames_page_to_rectangular_polyline() {
+        let mut drawing = semio_framework_os::DwgDrawing::default();
+        drawing.entities.push(semio_framework_os::DwgEntity {
+            layer: 0,
+            color: semio_framework_os::DwgColor::ByLayer,
+            geometry: semio_framework_os::DwgGeometry::LwPolyline {
+                closed: true,
+                elevation: 0.0,
+                vertices: vec![[10.0, 20.0], [110.0, 20.0], [110.0, 70.0], [10.0, 70.0]],
+                bulges: vec![0.0; 4],
+            },
+        });
+        let value = layout_document_json_from_dwg(&drawing).expect("import dwg");
+        let document: LayoutDocument = serde_json::from_value(value).expect("valid layout document");
+        assert_eq!(document.pages.len(), 1);
+        assert_eq!(document.pages[0].width, 100.0);
+        assert_eq!(document.pages[0].height, 50.0);
+    }
+
+    #[test]
+    fn dwg_import_without_rectangles_falls_back_to_extents() {
+        let mut drawing = semio_framework_os::DwgDrawing::default();
+        drawing.entities.push(semio_framework_os::DwgEntity {
+            layer: 0,
+            color: semio_framework_os::DwgColor::ByLayer,
+            geometry: semio_framework_os::DwgGeometry::Line { start: [0.0, 0.0, 0.0], end: [200.0, 150.0, 0.0] },
+        });
+        drawing.extmin = [0.0, 0.0, 0.0];
+        drawing.extmax = [200.0, 150.0, 0.0];
+        let value = layout_document_json_from_dwg(&drawing).expect("import dwg");
+        let document: LayoutDocument = serde_json::from_value(value).expect("valid layout document");
+        assert_eq!(document.pages.len(), 1);
+        assert_eq!(document.pages[0].width, 200.0);
+        assert_eq!(document.pages[0].height, 150.0);
     }
 }
 //#endregion 🧪Tests

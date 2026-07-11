@@ -1,7 +1,7 @@
 //! 👯 Puzzle 5D plugin — paired 2D board + 3D world puzzle play app bundled as a hot-swappable WASM component.
 
 use puzzle_5d::{BrushPlacePayload, Puzzle5dPrecomputeSession};
-use semio_framework_os::register_mesh_obj_glb_export_handlers;
+use semio_framework_os::register_mesh_export_handlers;
 use semio_framework_plugin::{
     build_puzzle2d_board_scene, build_world_3d_scene, create_default_layout,
     layout::{MeasureSelectItem, WindowEngagementStatus, WindowEngagementToggleGroupOption},
@@ -2329,8 +2329,14 @@ pub fn create_puzzle5d_app() -> App {
         .program("puzzle5d", "Puzzle 5D", "model")
 }
 
+/// 📥 Tier C DWG mesh import — always returns the empty puzzle-5d document; never errors on a structurally valid mesh.
+fn puzzle5d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
+    serde_json::to_value(Puzzle5dEnvelope { document: empty_document(), runtime: Puzzle5dRuntime::default() }).map_err(|error| error.to_string())
+}
+
 pub fn register_puzzle5d_exports() {
-    register_mesh_obj_glb_export_handlers("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
+    register_mesh_export_handlers("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
+    semio_framework_os::register_mesh_dwg_import_handler("5d.puzzle", puzzle5d_document_from_mesh);
 }
 //#endregion 🔖Manifest
 
@@ -2382,6 +2388,15 @@ mod tests {
         let envelope = default_envelope();
         assert_eq!(envelope.document.schema, PUZZLE5D_SCHEMA);
         assert!(!envelope.document.parts.is_empty());
+    }
+
+    #[test]
+    fn puzzle5d_document_from_mesh_returns_valid_empty_document() {
+        let mesh = semio_framework_plugin::mesh_from_kind("box");
+        let document = puzzle5d_document_from_mesh(&mesh).unwrap();
+        let envelope: Puzzle5dEnvelope = serde_json::from_value(document).unwrap();
+        assert_eq!(envelope.document.schema, PUZZLE5D_SCHEMA);
+        assert!(envelope.document.parts.is_empty());
     }
 
     #[test]

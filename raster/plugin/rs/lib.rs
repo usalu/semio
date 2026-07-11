@@ -1215,8 +1215,34 @@ fn raster_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), Stri
     semio_framework_os::title_card_svg(value, "Raster", 1024, 1024)
 }
 
+/// 📥 Rasterizes a DWG drawing's flat SVG projection into a single-layer raster document.
+fn raster_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -> Result<Value, String> {
+    let (svg, width, height) = semio_framework_os::dwg_drawing_to_svg(drawing)?;
+    let data = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height)?;
+    let asset_key = create_raster_id("dwg-asset");
+    let mut layer = create_pixel_layer("DWG Import", width, height);
+    if let RasterLayerNode::Pixel { image_key, .. } = &mut layer {
+        *image_key = Some(asset_key.clone());
+    }
+    let mut assets = HashMap::new();
+    assets.insert(asset_key, RasterImageAsset { mime: "image/png".into(), data });
+    let document = RasterDocument {
+        schema: RASTER_DOCUMENT_SCHEMA.into(),
+        id: create_raster_id("dwg-import"),
+        title: Some("DWG Import".into()),
+        camera: default_camera(),
+        layers: vec![layer],
+        assets,
+        active_tool: Some("selectMarquee".into()),
+        brush_size: Some(24.0),
+        brush_opacity: Some(1.0),
+    };
+    serde_json::to_value(&document).map_err(|error| error.to_string())
+}
+
 fn register_raster_exports() {
-    semio_framework_os::register_2d_svg_png_export_handlers("2d.raster", "raster", raster_document_json_to_svg);
+    semio_framework_os::register_2d_export_handlers("2d.raster", "raster", raster_document_json_to_svg);
+    semio_framework_os::register_dwg_import_handler("2d.raster", raster_document_json_from_dwg);
 }
 
 fn raster_bundle() -> PluginBundle {
@@ -1255,6 +1281,50 @@ mod tests {
     fn parses_semio_example_document() {
         let document: RasterDocument = serde_json::from_str(SEMIO_EXAMPLE_JSON).expect("semio raster json");
         assert!(!document.layers.is_empty());
+    }
+
+    #[test]
+    fn imports_dwg_polyline_into_raster_document() {
+        let mut drawing = semio_framework_os::DwgDrawing::default();
+        let layer = drawing.ensure_layer("0");
+        drawing.entities.push(semio_framework_os::DwgEntity {
+            layer,
+            color: semio_framework_os::DwgColor::ByLayer,
+            geometry: semio_framework_os::DwgGeometry::LwPolyline {
+                closed: true,
+                elevation: 0.0,
+                vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]],
+                bulges: vec![0.0, 0.0, 0.0, 0.0],
+            },
+        });
+        drawing.extmin = [0.0, 0.0, 0.0];
+        drawing.extmax = [10.0, 10.0, 0.0];
+        let value = raster_document_json_from_dwg(&drawing).expect("dwg import");
+        let document: RasterDocument = serde_json::from_value(value).expect("valid raster document");
+        assert_eq!(document.layers.len(), 1);
+        let RasterLayerNode::Pixel { image_key, .. } = &document.layers[0] else {
+            panic!("expected pixel layer");
+        };
+        let asset_key = image_key.as_ref().expect("image key set");
+        let asset = document.assets.get(asset_key).expect("asset present");
+        assert_eq!(asset.mime, "image/png");
+        assert!(!asset.data.is_empty());
+    }
+
+    #[test]
+    fn imports_empty_dwg_into_blank_raster_document() {
+        let drawing = semio_framework_os::DwgDrawing::default();
+        let value = raster_document_json_from_dwg(&drawing).expect("empty dwg import");
+        let document: RasterDocument = serde_json::from_value(value).expect("valid raster document");
+        assert_eq!(document.layers.len(), 1);
+        let RasterLayerNode::Pixel { image_key, width, height, .. } = &document.layers[0] else {
+            panic!("expected pixel layer");
+        };
+        assert_eq!(*width, Some(1));
+        assert_eq!(*height, Some(1));
+        let asset_key = image_key.as_ref().expect("image key set");
+        let asset = document.assets.get(asset_key).expect("asset present");
+        assert!(!asset.data.is_empty());
     }
 
     #[test]

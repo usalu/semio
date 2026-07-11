@@ -2068,8 +2068,8 @@ impl SStudioApp {
                         .iter()
                         .find(|row| row.id == instance_id)
                     {
-                        let export_format = semio_framework_os::OsMediaExportFormat::parse(format)
-                            .unwrap_or(semio_framework_os::OsMediaExportFormat::Svg);
+                        let export_format = semio_framework_os::OsMediaFormat::parse(format)
+                            .unwrap_or(semio_framework_os::OsMediaFormat::Svg);
                         if let Ok(result) = semio_framework_os::export_os_app_instance_media(
                             instance,
                             &json!({}),

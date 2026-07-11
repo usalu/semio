@@ -12,6 +12,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use semio_framework_plugin::layout::{MeasureSelectItem, WindowEngagementPossible, WindowEngagementStatus};
+use semio_framework_core::DwgDrawing;
 use std::collections::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -1948,8 +1949,39 @@ fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), St
     Ok(shooting_scene_svg(&fixture))
 }
 
+/// 🎯 Frames a `ShootingCamera` around a DWG extent, reusing the default studio angle but
+/// scaling distance to the drawing's bounding box; degenerates gracefully for an empty drawing.
+fn shooting_camera_from_dwg_bounds(extmin: [f64; 3], extmax: [f64; 3]) -> ShootingCamera {
+    let center = [
+        (extmin[0] + extmax[0]) * 0.5,
+        (extmin[1] + extmax[1]) * 0.5,
+        (extmin[2] + extmax[2]) * 0.5,
+    ];
+    let span = [(extmax[0] - extmin[0]).abs(), (extmax[1] - extmin[1]).abs(), (extmax[2] - extmin[2]).abs()];
+    let radius = span[0].max(span[1]).max(span[2]) * 0.5;
+    let distance = if radius > 1e-6 { radius * 2.6 } else { 600.0 };
+    let direction = default_camera_position();
+    let direction_len = (direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2]).sqrt().max(1e-6);
+    let position = [
+        center[0] + direction[0] / direction_len * distance,
+        center[1] + direction[1] / direction_len * distance,
+        center[2] + direction[2] / direction_len * distance,
+    ];
+    ShootingCamera { position, target: center, zoom: 1.0, fov: default_fov(), up: None, projection: None }
+}
+
+/// 📥 Tier C DWG import for `2d.shooting`: the format has no wall/obstacle concept, so this
+/// always returns the default studio fixture with the camera reframed to the drawing extent —
+/// never errors, including for a structurally empty `DwgDrawing`.
+fn shooting_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
+    let mut envelope = default_envelope();
+    envelope.fixture.camera = shooting_camera_from_dwg_bounds(drawing.extmin, drawing.extmax);
+    serde_json::to_value(&envelope).map_err(|error| error.to_string())
+}
+
 fn register_shooting_exports() {
-    semio_framework_os::register_2d_svg_png_export_handlers("2d.shooting", "shooting", shooting_document_json_to_svg);
+    semio_framework_os::register_2d_export_handlers("2d.shooting", "shooting", shooting_document_json_to_svg);
+    semio_framework_os::register_dwg_import_handler("2d.shooting", shooting_document_json_from_dwg);
 }
 
 fn bundle() -> PluginBundle {
@@ -2201,6 +2233,28 @@ mod tests {
         let asset = active_asset(&envelope.fixture).expect("default fixture asset");
         assert!(svg.contains(&asset.name));
         assert!(!svg.contains("Shooting"), "export renders the real scene, not the generic title card");
+    }
+
+    #[test]
+    fn dwg_import_frames_camera_to_extent_and_stays_schema_valid() {
+        let mut drawing = DwgDrawing::default();
+        drawing.extmin = [0.0, 0.0, 0.0];
+        drawing.extmax = [100.0, 200.0, 0.0];
+        let document = shooting_document_json_from_dwg(&drawing).expect("dwg import never errors");
+        let envelope: ShootingPlayEnvelope = serde_json::from_value(document).expect("schema-valid envelope");
+        assert_eq!(envelope.fixture.schema, SHOOTING_FIXTURE_SCHEMA);
+        assert!(!envelope.fixture.shots.is_empty());
+        assert_eq!(envelope.fixture.camera.target, [50.0, 100.0, 0.0]);
+        assert_ne!(envelope.fixture.camera.position, ShootingCamera::default().position);
+    }
+
+    #[test]
+    fn dwg_import_never_errors_on_empty_drawing() {
+        let drawing = DwgDrawing::default();
+        let document = shooting_document_json_from_dwg(&drawing).expect("dwg import never errors on empty drawing");
+        let envelope: ShootingPlayEnvelope = serde_json::from_value(document).expect("schema-valid envelope");
+        assert_eq!(envelope.fixture.schema, SHOOTING_FIXTURE_SCHEMA);
+        assert_eq!(envelope.fixture.camera.target, [0.0, 0.0, 0.0]);
     }
 
     #[test]

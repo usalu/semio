@@ -3,7 +3,7 @@
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_note_canvas_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical, ui_text, App,
-    NoteCanvasScene, CommandDescriptor, PluginApp, PluginBundle, UiFieldNode, UiInputNode,
+    NoteCanvasScene, CommandDescriptor, DwgDrawing, DwgGeometry, PluginApp, PluginBundle, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiSectionNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -2112,9 +2112,93 @@ fn note_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String
 }
 
 fn register_note_exports() {
-    semio_framework_os::register_2d_svg_png_export_handlers("2d.note", "note", note_document_json_to_svg);
+    semio_framework_os::register_2d_export_handlers("2d.note", "note", note_document_json_to_svg);
+    semio_framework_os::register_dwg_import_handler("2d.note", note_document_json_from_dwg);
 }
 //#endregion 🔖MediaExport
+
+//#region 🔖MediaImport
+fn ink_block_from_points(points: &[[f64; 2]]) -> NoteBlockNode {
+    let mut min_x = f64::INFINITY;
+    let mut min_y = f64::INFINITY;
+    let mut max_x = f64::NEG_INFINITY;
+    let mut max_y = f64::NEG_INFINITY;
+    for point in points {
+        min_x = min_x.min(point[0]);
+        min_y = min_y.min(point[1]);
+        max_x = max_x.max(point[0]);
+        max_y = max_y.max(point[1]);
+    }
+    let local_points = points.iter().map(|point| [point[0] - min_x, point[1] - min_y]).collect();
+    NoteBlockNode::Ink {
+        id: create_note_id("dwg-ink"),
+        name: "Imported Stroke".into(),
+        x: min_x,
+        y: min_y,
+        width: (max_x - min_x).max(1.0),
+        height: (max_y - min_y).max(1.0),
+        rotation: 0.0,
+        visible: true,
+        locked: false,
+        points: local_points,
+        stroke_width: 1.0,
+        color: [0.0, 0.0, 0.0, 1.0],
+    }
+}
+
+fn text_block_from_dwg(at: &[f64; 3], height: f64, rotation: f64, content: &str) -> NoteBlockNode {
+    let font_size = if height > 0.0 { height } else { 12.0 };
+    NoteBlockNode::Text {
+        id: create_note_id("dwg-text"),
+        name: "Imported Text".into(),
+        x: at[0],
+        y: at[1],
+        width: (content.chars().count() as f64 * font_size * 0.6).max(font_size),
+        height: font_size * 1.4,
+        rotation,
+        visible: true,
+        locked: false,
+        paragraphs: vec![NoteTextParagraph {
+            runs: vec![NoteTextRun { text: content.to_string(), bold: None, italic: None, underline: None, link: None }],
+        }],
+        font_size,
+        font_weight: "normal".into(),
+        align: "left".into(),
+    }
+}
+
+fn note_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
+    let mut document = empty_note_document();
+    document.id = create_note_id("dwg-import");
+    document.title = Some("Imported Drawing".into());
+    document.camera = NoteCamera {
+        x: (drawing.extmin[0] + drawing.extmax[0]) / 2.0,
+        y: (drawing.extmin[1] + drawing.extmax[1]) / 2.0,
+        zoom: 1.0,
+    };
+    for entity in &drawing.entities {
+        match &entity.geometry {
+            DwgGeometry::Line { start, end } => {
+                document.blocks.push(ink_block_from_points(&[[start[0], start[1]], [end[0], end[1]]]));
+            }
+            DwgGeometry::LwPolyline { closed, vertices, .. } => {
+                if vertices.len() >= 2 {
+                    let mut points = vertices.clone();
+                    if *closed {
+                        points.push(vertices[0]);
+                    }
+                    document.blocks.push(ink_block_from_points(&points));
+                }
+            }
+            DwgGeometry::Text { at, height, rotation, content } => {
+                document.blocks.push(text_block_from_dwg(at, *height, *rotation, content));
+            }
+            _ => {}
+        }
+    }
+    serde_json::to_value(&document).map_err(|error| error.to_string())
+}
+//#endregion 🔖MediaImport
 
 //#region 🔖Manifest
 fn create_note_app() -> App {
@@ -2199,6 +2283,7 @@ semio_framework_plugin::plugin_exports!(note_bundle);
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework_plugin::{DwgColor, DwgEntity, DwgLayer};
 
     fn document_json_from_op(op: &str) -> String {
         serde_json::from_str::<Value>(op).unwrap()["document"].to_string()
@@ -2581,6 +2666,61 @@ mod tests {
         } else {
             panic!("expected group block");
         }
+    }
+
+    #[test]
+    fn imports_dwg_polyline_and_text_into_note_blocks() {
+        let drawing = DwgDrawing {
+            layers: vec![DwgLayer::default()],
+            entities: vec![
+                DwgEntity {
+                    layer: 0,
+                    color: DwgColor::ByLayer,
+                    geometry: DwgGeometry::LwPolyline {
+                        closed: true,
+                        elevation: 0.0,
+                        vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0]],
+                        bulges: vec![0.0, 0.5, 0.0],
+                    },
+                },
+                DwgEntity {
+                    layer: 0,
+                    color: DwgColor::ByLayer,
+                    geometry: DwgGeometry::Text { at: [1.0, 2.0, 0.0], height: 2.5, rotation: 0.0, content: "semio".into() },
+                },
+            ],
+            extmin: [0.0, 0.0, 0.0],
+            extmax: [10.0, 10.0, 0.0],
+        };
+        let value = note_document_json_from_dwg(&drawing).unwrap();
+        let document: NoteDocument = serde_json::from_value(value).unwrap();
+        assert_eq!(document.schema, NOTE_DOCUMENT_SCHEMA);
+        assert_eq!(document.blocks.len(), 2);
+        assert_eq!(document.camera.x, 5.0);
+        assert_eq!(document.camera.y, 5.0);
+        let ink_count = document.blocks.iter().filter(|block| matches!(block, NoteBlockNode::Ink { .. })).count();
+        let text_count = document.blocks.iter().filter(|block| matches!(block, NoteBlockNode::Text { .. })).count();
+        assert_eq!(ink_count, 1);
+        assert_eq!(text_count, 1);
+        if let Some(NoteBlockNode::Ink { points, .. }) = document.blocks.iter().find(|block| matches!(block, NoteBlockNode::Ink { .. })) {
+            assert_eq!(points.len(), 4);
+        } else {
+            panic!("expected ink block");
+        }
+        if let Some(NoteBlockNode::Text { paragraphs, .. }) = document.blocks.iter().find(|block| matches!(block, NoteBlockNode::Text { .. })) {
+            assert_eq!(paragraphs[0].runs[0].text, "semio");
+        } else {
+            panic!("expected text block");
+        }
+    }
+
+    #[test]
+    fn imports_empty_dwg_drawing_as_valid_empty_note_document() {
+        let drawing = DwgDrawing::default();
+        let value = note_document_json_from_dwg(&drawing).unwrap();
+        let document: NoteDocument = serde_json::from_value(value).unwrap();
+        assert_eq!(document.schema, NOTE_DOCUMENT_SCHEMA);
+        assert!(document.blocks.is_empty());
     }
 }
 //#endregion 🧪Tests

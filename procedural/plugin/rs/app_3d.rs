@@ -7,9 +7,9 @@ use flow_core::{
     FlowFixture, FlowHost, Widget,
 };
 use flow_module_brep::tessellate_geometry_json;
-use semio_framework_plugin::{PanelGroup, 
+use semio_framework_plugin::{PanelGroup,
     build_node_graph_scene, build_world_3d_scene, create_default_layout, create_named_layout,
-    export_mesh_glb_bytes, export_mesh_obj, handle_generation_command, merge_world_selection_ids,
+    handle_generation_command, merge_world_selection_ids,
     mesh_from_kind, render_generation_form_body, render_generation_preview_text, render_generations_tree,
     selected_generation, tool_button, tool_collection, tool_toggle, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, App, world3d_scene, world3d_selection_json,
@@ -23,8 +23,6 @@ use semio_framework_core::mesh_from_indexed;
 use semio_framework_core::SurfaceKind;
 use std::collections::{hash_map::DefaultHasher, HashSet};
 use std::hash::{Hash, Hasher};
-use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult};
-use base64::Engine;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::LazyLock;
@@ -1498,27 +1496,18 @@ pub fn create_procedural3d_app() -> App {
     .program("procedural3d", "Procedural 3D", "brep")
 }
 
+fn procedural3d_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
+    let envelope: Procedural3dEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+    Ok(export_mesh_from_envelope(&envelope))
+}
+
+fn procedural3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
+    serde_json::to_value(default_envelope()).map_err(|err| err.to_string())
+}
+
 pub fn register_procedural3d_exports() {
-    register_os_media_export_handler("3d.procedural", OsMediaExportFormat::Obj, |doc| {
-        let envelope: Procedural3dEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
-        let mesh = export_mesh_from_envelope(&envelope);
-        let (data, mime_type) = export_mesh_obj(&mesh, "procedural");
-        Ok(OsMediaExportResult {
-            data,
-            mime_type,
-            file_name: "procedural.obj".into(),
-        })
-    });
-    register_os_media_export_handler("3d.procedural", OsMediaExportFormat::Glb, |doc| {
-        let envelope: Procedural3dEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
-        let mesh = export_mesh_from_envelope(&envelope);
-        let (bytes, mime_type) = export_mesh_glb_bytes(&mesh);
-        Ok(OsMediaExportResult {
-            data: base64::engine::general_purpose::STANDARD.encode(bytes),
-            mime_type,
-            file_name: "procedural.glb".into(),
-        })
-    });
+    semio_framework_os::register_mesh_export_handlers("3d.procedural", "procedural", procedural3d_mesh_from_document);
+    semio_framework_os::register_mesh_dwg_import_handler("3d.procedural", procedural3d_document_from_mesh);
 }
 
 //#region 🧪Tests
@@ -1858,6 +1847,14 @@ mod tests {
         let undo_ops = app.handle_command_patch_ops("undo", None, &document_after, &ViewState::default());
         let restored = apply_ops(&after, &undo_ops);
         assert!(restored.fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
+    }
+
+    #[test]
+    fn document_from_mesh_returns_valid_default_envelope() {
+        let mesh = semio_framework_plugin::MeshData::default();
+        let document = procedural3d_document_from_mesh(&mesh).expect("dwg mesh import document");
+        let envelope: Procedural3dEnvelope = serde_json::from_value(document).expect("parseable envelope");
+        assert_eq!(envelope.fixture.schema, "flow.fixture");
     }
 
     fn apply_ops(envelope: &Procedural3dEnvelope, ops: &[String]) -> Procedural3dEnvelope {

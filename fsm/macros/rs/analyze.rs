@@ -316,7 +316,7 @@ fn compute_fingerprint(nodes: &[NodeIr], transitions: &[TransitionIr], events: &
     state
 }
 
-fn build_manifest_json(name: &Ident, nodes: &[NodeIr], transitions: &[TransitionIr]) -> String {
+fn build_manifest_json(name: &Ident, nodes: &[NodeIr], transitions: &[TransitionIr], events: &[EventVariantAst]) -> String {
     let mut json = format!("{{\"id\":\"{name}\",\"states\":[");
     for (i, node) in nodes.iter().enumerate() {
         if i > 0 {
@@ -324,6 +324,13 @@ fn build_manifest_json(name: &Ident, nodes: &[NodeIr], transitions: &[Transition
         }
         let parent = node.parent.map(|p| p.to_string()).unwrap_or_else(|| "null".to_string());
         json.push_str(&format!("{{\"id\":\"{}\",\"parent\":{}}}", node.name, parent));
+    }
+    json.push_str("],\"events\":[");
+    for (i, event) in events.iter().enumerate() {
+        if i > 0 {
+            json.push(',');
+        }
+        json.push_str(&format!("\"{}\"", event.name()));
     }
     json.push_str("],\"transitionCount\":");
     json.push_str(&transitions.len().to_string());
@@ -427,7 +434,7 @@ pub fn analyze(ast: MachineAst) -> syn::Result<Ir> {
     };
 
     let fingerprint = compute_fingerprint(&az.nodes, &transitions, &ast.event_variants);
-    let manifest_json = build_manifest_json(&ast.name, &az.nodes, &transitions);
+    let manifest_json = build_manifest_json(&ast.name, &az.nodes, &transitions, &ast.event_variants);
 
     Ok(Ir {
         machine_name: ast.name,

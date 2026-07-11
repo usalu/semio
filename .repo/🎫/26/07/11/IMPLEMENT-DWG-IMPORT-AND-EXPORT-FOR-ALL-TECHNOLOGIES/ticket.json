@@ -1,0 +1,15 @@
+{
+  "title": "Implement Dwg Import and Export for All Technologies",
+  "emoji": "📐",
+  "status": "open",
+  "description": "Implement a self-contained, hand-rolled, pure-Rust DWG R2000 (AC1015) codec (reader + writer, WASM-compatible, no external crates/FFI) in framework/core/rs/lib.rs, then wire DWG import and export through the OS media layer for every 2D/3D technology (kernel 2d, kernel 3d brep, draw, procedural 2d/3d, cad, puzzle 2d/3d/5d, lowpoly, layout, gis, raster, note, shooting, presentation). Mirrors the existing SVG/PNG/OBJ/GLB export infrastructure and adds a net-new import registry (the OS media layer is currently export-only). Plan approved and stored at /Users/ueli/.claude/plans/implement-dwg-import-and-shimmering-salamander.md.",
+  "summary": "Wired 2d.raster DWG import onto the existing OS media-registry infrastructure (import only; export was already wired and untouched). Added raster_document_json_from_dwg in raster/plugin/rs/lib.rs, which calls semio_framework_os::dwg_drawing_to_svg then rasterize_svg_to_png_base64 to produce a base64 PNG, wraps it in a single Pixel layer + image asset inside a fresh schema-valid RasterDocument, and registered it via semio_framework_os::register_dwg_import_handler(\"2d.raster\", raster_document_json_from_dwg) inside register_raster_exports(). Never errors on an empty DWG (dwg_drawing_to_svg clamps to a minimum 1x1 canvas). Extended the existing #[cfg(test)] mod tests with imports_dwg_polyline_into_raster_document (closed LwPolyline round-trips into a valid RasterDocument with a non-empty PNG asset) and imports_empty_dwg_into_blank_raster_document (empty DwgDrawing produces a valid 1x1 blank raster document). Verified: cargo build -p raster-plugin succeeds (only pre-existing unused-import warnings, none from new code); cargo test -p raster-plugin passes all 11 tests (9 pre-existing + 2 new). Note: this ticket covers DWG import/export for ALL technologies per its original scope — only the 2d.raster import slice was completed in this session; other technologies (kernel 2d/3d, draw, cad, puzzle, lowpoly, layout, gis, note, shooting, presentation) still need their import handlers wired.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1922"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪01fb7faf5f7646289ec08e09cab4c3fd",
+    "⚪2b4adb205015453094d33458f8fe5444"
+  ]
+}

@@ -11,6 +11,7 @@ use crate::{Configuration, Machine, NodeId};
 /// 💾 A machine's logical state, addressed by stable string ids so adding/renumbering
 /// states never invalidates a previously persisted snapshot.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PersistedSnapshot {
     pub version: u32,
     pub fingerprint: u64,

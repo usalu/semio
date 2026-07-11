@@ -7,10 +7,9 @@ use lowpoly_core::{
     LowpolySelectionTargets, LOWPOLY_PAINT_TEXTURE_SIZE,
 };
 use png::{BitDepth, ColorType, Encoder};
-use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult};
-use semio_framework_plugin::{SurfaceKind, 
+use semio_framework_plugin::{SurfaceKind,
     build_canvas_2d_scene, build_world_3d_scene, create_default_layout, create_named_layout,
-    export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree,
+    merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree,
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, PanelGroup,
     world3d_selection_json, App, Canvas2dScene, CommandDescriptor, MeshData, PluginApp, PluginBundle,
     tool_button, tool_collection, tool_toggle, ToolCategory, ToolNode, UiControlNode, UiFieldNode,
@@ -2288,40 +2287,49 @@ fn bundle() -> PluginBundle {
     PluginBundle::new("lowpoly", "Lowpoly", "0.1.0").register_app(create_lowpoly_app(), || Box::new(LowpolyPlayApp::default()))
 }
 
+fn lowpoly_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
+    let envelope: LowpolyPlayEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+    let loaded = LowpolyDocument::new(envelope.fixture).map_err(|err| err.to_string())?;
+    Ok(loaded
+        .active_mesh()
+        .ok()
+        .and_then(|mesh| LowpolyDocument::tessellate_transfer_json(mesh).ok())
+        .map(|transfer| mesh_data_from_transfer(&transfer, None))
+        .unwrap_or_default())
+}
+
+/// 🔺 Rebuilds a fresh single-object lowpoly document from a DWG-imported mesh.
+fn lowpoly_document_from_mesh(mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
+    let halfedge = kernel_3d_mesh::HalfedgeMesh::from_indexed_triangles(&mesh.positions, &mesh.indices)
+        .map_err(|err| format!("{err:?}"))?;
+    let mesh_json = halfedge.to_json().map_err(|err| format!("{err:?}"))?;
+    let fixture = lowpoly_core::fixture_from_mesh_json(&mesh_json, "obj-1", "Imported Mesh");
+    let envelope = LowpolyPlayEnvelope {
+        fixture,
+        runtime: LowpolyPlayRuntime::default(),
+    };
+    serde_json::to_value(envelope).map_err(|err| err.to_string())
+}
+
+/// 🧊 Minimal document wrapper for `3d.mesh` resources — no dedicated schema exists yet.
+fn mesh_document_from_mesh(mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
+    let mesh_value = serde_json::to_value(mesh).map_err(|err| err.to_string())?;
+    Ok(json!({ "schema": "mesh.document", "mesh": mesh_value }))
+}
+
+fn mesh_from_mesh_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
+    doc.get("mesh")
+        .and_then(|value| serde_json::from_value(value.clone()).ok())
+        .filter(|mesh: &MeshData| !mesh.positions.is_empty() && !mesh.indices.is_empty())
+        .map(Ok)
+        .unwrap_or_else(|| Ok(mesh_from_kind("box")))
+}
+
 fn register_lowpoly_exports() {
-    register_os_media_export_handler("3d.lowpoly", OsMediaExportFormat::Obj, |doc| {
-        let envelope: LowpolyPlayEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
-        let loaded = LowpolyDocument::new(envelope.fixture).map_err(|err| err.to_string())?;
-        let mesh = loaded
-            .active_mesh()
-            .ok()
-            .and_then(|mesh| LowpolyDocument::tessellate_transfer_json(mesh).ok())
-            .map(|transfer| mesh_data_from_transfer(&transfer, None))
-            .unwrap_or_default();
-        let (data, mime_type) = export_mesh_obj(&mesh, "lowpoly");
-        Ok(OsMediaExportResult {
-            data,
-            mime_type,
-            file_name: "lowpoly.obj".into(),
-        })
-    });
-    register_os_media_export_handler("3d.lowpoly", OsMediaExportFormat::Glb, |doc| {
-        let envelope: LowpolyPlayEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
-        let loaded = LowpolyDocument::new(envelope.fixture).map_err(|err| err.to_string())?;
-        let mesh = loaded
-            .active_mesh()
-            .ok()
-            .and_then(|mesh| LowpolyDocument::tessellate_transfer_json(mesh).ok())
-            .map(|transfer| mesh_data_from_transfer(&transfer, None))
-            .unwrap_or_default();
-        let (bytes, mime_type) = export_mesh_glb_bytes(&mesh);
-        Ok(OsMediaExportResult {
-            data: base64::engine::general_purpose::STANDARD.encode(bytes),
-            mime_type,
-            file_name: "lowpoly.glb".into(),
-        })
-    });
-    semio_framework_os::register_mesh_obj_glb_export_handlers("3d.mesh", "mesh", |_| Ok(mesh_from_kind("box")));
+    semio_framework_os::register_mesh_export_handlers("3d.lowpoly", "lowpoly", lowpoly_mesh_from_document);
+    semio_framework_os::register_mesh_dwg_import_handler("3d.lowpoly", lowpoly_document_from_mesh);
+    semio_framework_os::register_mesh_export_handlers("3d.mesh", "mesh", mesh_from_mesh_document);
+    semio_framework_os::register_mesh_dwg_import_handler("3d.mesh", mesh_document_from_mesh);
 }
 
 semio_framework_plugin::plugin_exports!(bundle);
@@ -2766,6 +2774,32 @@ mod tests {
         let next = apply_ops(&envelope, &ops);
         assert!(next.fixture.selection.targets.vertex);
         assert_eq!(next.fixture.selection.mode, "vertex");
+    }
+
+    #[test]
+    fn mesh_document_round_trips_through_dwg_export_import() {
+        let mesh = mesh_from_kind("box");
+        let doc = mesh_document_from_mesh(&mesh).unwrap();
+        assert_eq!(doc["schema"], json!("mesh.document"));
+        let reimported = mesh_from_mesh_document(&doc).unwrap();
+        assert_eq!(reimported.vertex_count(), mesh.vertex_count());
+        assert_eq!(reimported.triangle_count(), mesh.triangle_count());
+    }
+
+    #[test]
+    fn mesh_document_from_empty_document_falls_back_to_box() {
+        let mesh = mesh_from_mesh_document(&json!({})).unwrap();
+        assert!(mesh.vertex_count() > 0);
+        assert!(mesh.triangle_count() > 0);
+    }
+
+    #[test]
+    fn lowpoly_document_from_mesh_reimports_active_object() {
+        let mesh = mesh_from_kind("box");
+        let doc = lowpoly_document_from_mesh(&mesh).unwrap();
+        let reexported = lowpoly_mesh_from_document(&doc).unwrap();
+        assert!(!reexported.positions.is_empty());
+        assert!(!reexported.indices.is_empty());
     }
 
     fn apply_ops(envelope: &LowpolyPlayEnvelope, ops: &[String]) -> LowpolyPlayEnvelope {

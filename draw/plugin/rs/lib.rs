@@ -1887,7 +1887,7 @@ fn create_draw_app() -> App {
 }
 
 fn register_draw_exports() {
-    semio_framework_os::register_2d_svg_png_export_handlers("2d.drawing", "draw", draw::draw_document_json_to_svg);
+    semio_framework_os::register_2d_export_handlers("2d.drawing", "draw", draw::draw_document_json_to_svg);
 }
 
 fn draw_bundle() -> semio_framework_plugin::PluginBundle {

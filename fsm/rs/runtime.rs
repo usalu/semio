@@ -116,24 +116,54 @@ impl<M: Machine, H: Host<M>> ActorSystem<M, H> {
     }
 
     fn route_commands(&mut self, actor: ActorId, commands: Vec<Command<M>>) {
-        for command in commands {
-            match command {
-                Command::Effect(effect) => self.host.execute_effect(actor, effect),
-                Command::Raise(_) => {
-                    // The kernel's run-to-completion loop already re-processed this
-                    // internally; forwarded here only for host-side observability.
+        let mut sends = Vec::new();
+        if let Some(idx) = self.actors.iter().position(|a| a.id == actor) {
+            for command in commands {
+                if let Some(pair) = route_command(&mut self.host, &mut self.actors[idx].snapshot, actor, command) {
+                    sends.push(pair);
                 }
-                Command::Send { to, event } => self.send(to, event),
-                Command::Emit(output) => {
-                    if let Some(a) = self.actors.iter_mut().find(|a| a.id == actor) {
-                        a.snapshot.status = Status::Done(output);
-                    }
-                }
-                Command::StartInvoke(invoke) => self.host.start_task(actor, invoke),
-                Command::StopInvoke(invoke) => self.host.cancel_task(actor, invoke),
-                Command::Schedule { timer, delay_ms } => self.host.schedule(actor, timer, delay_ms),
-                Command::CancelTimer(timer) => self.host.cancel_timer(actor, timer),
             }
+        }
+        for (to, event) in sends {
+            self.send(to, event);
+        }
+    }
+}
+
+/// 🎬 Applies one [`Command`] to `host`/`snapshot`; returns a `Send` command's
+/// `(to, event)` pair for the caller to route on, since a lone [`Host`]+[`Snapshot`]
+/// pair (e.g. a single `export_wasm_machine!` instance) has no other actor to deliver it to.
+pub fn route_command<M: Machine>(host: &mut impl Host<M>, snapshot: &mut Snapshot<M>, actor: ActorId, command: Command<M>) -> Option<(ActorId, M::Event)> {
+    match command {
+        Command::Effect(effect) => {
+            host.execute_effect(actor, effect);
+            None
+        }
+        Command::Raise(_) => {
+            // The kernel's run-to-completion loop already re-processed this
+            // internally; forwarded here only for host-side observability.
+            None
+        }
+        Command::Send { to, event } => Some((to, event)),
+        Command::Emit(output) => {
+            snapshot.status = Status::Done(output);
+            None
+        }
+        Command::StartInvoke(invoke) => {
+            host.start_task(actor, invoke);
+            None
+        }
+        Command::StopInvoke(invoke) => {
+            host.cancel_task(actor, invoke);
+            None
+        }
+        Command::Schedule { timer, delay_ms } => {
+            host.schedule(actor, timer, delay_ms);
+            None
+        }
+        Command::CancelTimer(timer) => {
+            host.cancel_timer(actor, timer);
+            None
         }
     }
 }

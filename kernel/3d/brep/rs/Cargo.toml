@@ -10,6 +10,7 @@ path = "lib.rs"
 [dependencies]
 async-trait = "0.1.88"
 kernel_3d_engine = { path = "../engine/rs" }
+semio-framework-core = { path = "../../../../framework/core/rs" }
 brepkit-topology = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }
 brepkit-operations = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }
 brepkit-io = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }

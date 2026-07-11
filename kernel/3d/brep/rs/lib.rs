@@ -1309,6 +1309,32 @@ impl BrepkitKernel {
         Ok(self.register_solid(solid))
     }
 
+    pub fn export_dwg_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
+        let mut mesh = semio_framework_core::MeshData::default();
+        for h in shapes {
+            for solid in self.solid_ids_from_handle(h)? {
+                let tri = tessellate_solid_with_tolerance(&self.topo, solid, deflection.max(1e-4), 0.2).map_err(Self::map_err)?;
+                let base = (mesh.positions.len() / 3) as u32;
+                for p in &tri.positions {
+                    mesh.positions.extend_from_slice(&[p.x() as f32, p.y() as f32, p.z() as f32]);
+                }
+                mesh.indices.extend(tri.indices.iter().map(|i| i + base));
+            }
+        }
+        let drawing = semio_framework_core::mesh_to_dwg_drawing(&mesh);
+        semio_framework_core::dwg_to_bytes(&drawing).map_err(BrepError::Operation)
+    }
+
+    pub fn import_dwg_sync(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
+        let drawing = semio_framework_core::dwg_from_bytes(data).map_err(BrepError::Operation)?;
+        let mesh = semio_framework_core::dwg_drawing_to_mesh(&drawing);
+        let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.chunks_exact(3).map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+        let normals: Vec<brepkit_math::vec::Vec3> = mesh.normals.chunks_exact(3).map(|c| brepkit_math::vec::Vec3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+        let triangle_mesh = brepkit_operations::tessellate::TriangleMesh { positions, normals, indices: mesh.indices.clone() };
+        let solid = import_mesh(&mut self.topo, &triangle_mesh, tolerance).map_err(Self::map_io_err)?;
+        Ok(self.register_solid(solid))
+    }
+
     pub fn kind_sync(&self, handle: &GeometryHandle) -> Result<GeometryKind, BrepError> {
         Ok(self.entry(handle)?.kind)
     }
@@ -1684,6 +1710,12 @@ impl BrepKernel for BrepkitKernel {
     async fn import_obj(&mut self, data: &str, tolerance: f64) -> Result<GeometryHandle, BrepError> {
         self.import_obj_sync(data, tolerance)
     }
+    async fn export_dwg(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
+        self.export_dwg_sync(shapes, deflection)
+    }
+    async fn import_dwg(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
+        self.import_dwg_sync(data, tolerance)
+    }
     async fn kind(&self, handle: &GeometryHandle) -> Result<GeometryKind, BrepError> {
         self.kind_sync(handle)
     }
@@ -1709,6 +1741,18 @@ mod tests {
         assert!(!mesh.position.is_empty());
         assert!(!mesh.index.is_empty());
         assert_eq!(kernel.volume_sync(&solid).unwrap(), 24.0);
+    }
+
+    #[test]
+    fn dwg_export_import_round_trips_a_box() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
+        let bytes = kernel.export_dwg_sync(&[solid], 0.1).unwrap();
+        assert!(!bytes.is_empty());
+        let imported = kernel.import_dwg_sync(&bytes, 0.1).unwrap();
+        let mesh = kernel.tessellate_sync(&imported, 0.1).unwrap();
+        assert!(!mesh.position.is_empty());
+        assert!(!mesh.index.is_empty());
     }
 
     #[test]

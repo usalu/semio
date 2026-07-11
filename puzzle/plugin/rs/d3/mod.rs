@@ -1,10 +1,8 @@
 //! 🧊 Puzzle 3D plugin — 3D puzzle assembly play app bundled as a hot-swappable WASM component.
 
-use base64::Engine;
 use puzzle_3d::{BrushPlacePayload, Puzzle3dPrecomputeSession};
-use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult};
 use semio_framework_plugin::{
-    build_world_3d_scene, create_default_layout, export_mesh_glb_bytes, export_mesh_obj, layout::WindowEngagementToggleGroupOption, merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
+    build_world_3d_scene, create_default_layout, layout::WindowEngagementToggleGroupOption, merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, App, CommandDescriptor, PanelGroup, PluginApp,
     SurfaceKind, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementOption, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -1337,17 +1335,18 @@ pub fn create_puzzle3d_app() -> App {
     .program("puzzle3d", "Puzzle 3D", "model")
 }
 
+fn puzzle3d_mesh_from_document(_doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
+    Ok(mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND))
+}
+
+/// 📥 Tier C DWG mesh import — always returns the empty puzzle-3d fixture; never errors on a structurally valid mesh.
+fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
+    serde_json::to_value(Puzzle3dEnvelope { fixture: empty_fixture(), runtime: Puzzle3dRuntime::default() }).map_err(|error| error.to_string())
+}
+
 pub fn register_puzzle3d_exports() {
-    register_os_media_export_handler("3d.puzzle", OsMediaExportFormat::Obj, |_doc| {
-        let mesh = mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
-        let (data, mime_type) = export_mesh_obj(&mesh, "puzzle");
-        Ok(OsMediaExportResult { data, mime_type, file_name: "puzzle.obj".into() })
-    });
-    register_os_media_export_handler("3d.puzzle", OsMediaExportFormat::Glb, |_doc| {
-        let mesh = mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
-        let (bytes, mime_type) = export_mesh_glb_bytes(&mesh);
-        Ok(OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type, file_name: "puzzle.glb".into() })
-    });
+    semio_framework_os::register_mesh_export_handlers("3d.puzzle", "puzzle", puzzle3d_mesh_from_document);
+    semio_framework_os::register_mesh_dwg_import_handler("3d.puzzle", puzzle3d_document_from_mesh);
 }
 //#endregion 🔖Manifest
 
@@ -1371,6 +1370,15 @@ mod tests {
         let envelope = default_envelope();
         assert_eq!(envelope.fixture.schema, PUZZLE3D_FIXTURE_SCHEMA);
         assert!(!envelope.fixture.objects.is_empty());
+    }
+
+    #[test]
+    fn puzzle3d_document_from_mesh_returns_valid_empty_fixture() {
+        let mesh = semio_framework_plugin::mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
+        let document = puzzle3d_document_from_mesh(&mesh).unwrap();
+        let envelope: Puzzle3dEnvelope = serde_json::from_value(document).unwrap();
+        assert_eq!(envelope.fixture.schema, PUZZLE3D_FIXTURE_SCHEMA);
+        assert!(envelope.fixture.objects.is_empty());
     }
 
     #[test]

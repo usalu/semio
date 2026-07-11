@@ -203,7 +203,7 @@ pub use kernel::{
     MICROSTEP_LIMIT, ROOT,
 };
 pub use persist::{persist, restore, Migration, PersistedSnapshot, RestoreError};
-pub use runtime::{ActorLogic, ActorSystem, MachineLogic};
+pub use runtime::{route_command, ActorLogic, ActorSystem, MachineLogic};
 
 #[cfg(any(test, feature = "testing"))]
 pub use testing::{check_invariants, explore, run_conformance, ConformanceStep, Coverage, Invariant, Model};
@@ -214,14 +214,139 @@ pub use testing::{check_invariants, explore, run_conformance, ConformanceStep, C
 #[cfg(feature = "macros")]
 pub use fsm_macros::{statechart, StatechartEvent, StatechartSchema};
 
+#[cfg(all(feature = "macros", target_arch = "wasm32"))]
+pub use fsm_macros::export_wasm_machine;
+
 //#endregion 🔖Reexports
 
 //#region 🔖WasmBridge
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
-    // Populated once a concrete consumer machine needs `export_wasm_machine!` support;
-    // machine-agnostic manifest/persistence JSON helpers live here.
+    use crate::{ActorId, Host, InvokeId, Machine, TimerId};
+
+    /// 🌐 A [`Host`] backed by browser timers and a JS effect callback. Timers are
+    /// polled by the caller via [`WasmHost::due_timers`] (driven by the generated
+    /// `export_wasm_machine!` wrapper's `tick()`), matching [`crate::NativeHost`] and
+    /// [`crate::TestHost`]'s caller-driven clock — no `async fn` anywhere in the host.
+    pub struct WasmHost<M: Machine> {
+        effect_callback: Option<js_sys::Function>,
+        pending_timers: Vec<(ActorId, TimerId, f64)>,
+        started_tasks: Vec<(ActorId, InvokeId)>,
+        _marker: core::marker::PhantomData<M>,
+    }
+
+    impl<M: Machine> WasmHost<M> {
+        /// 🌐 A fresh host with no effect callback registered yet.
+        pub fn new() -> Self {
+            Self {
+                effect_callback: None,
+                pending_timers: Vec::new(),
+                started_tasks: Vec::new(),
+                _marker: core::marker::PhantomData,
+            }
+        }
+
+        /// 🌐 Registers the JS function invoked as `(actorId: number, effectJson: string) => void`.
+        pub fn set_effect_callback(&mut self, callback: js_sys::Function) {
+            self.effect_callback = Some(callback);
+        }
+
+        /// 🚀 Tasks started via `invoke`, still pending cancellation.
+        pub fn started_tasks(&self) -> &[(ActorId, InvokeId)] {
+            &self.started_tasks
+        }
+
+        /// ⏱️ Removes and returns every timer whose deadline has passed, per `js_sys::Date::now()`.
+        pub fn due_timers(&mut self) -> Vec<(ActorId, TimerId)> {
+            let now = js_sys::Date::now();
+            let mut due = Vec::new();
+            self.pending_timers.retain(|(actor, timer, at)| {
+                if *at <= now {
+                    due.push((*actor, *timer));
+                    false
+                } else {
+                    true
+                }
+            });
+            due
+        }
+    }
+
+    impl<M: Machine> Default for WasmHost<M> {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
+    impl<M: Machine> Host<M> for WasmHost<M>
+    where
+        M::Effect: serde::Serialize,
+    {
+        fn execute_effect(&mut self, actor: ActorId, effect: M::Effect) {
+            if let Some(callback) = &self.effect_callback {
+                if let Ok(json) = serde_json::to_string(&effect) {
+                    let _ = callback.call2(&wasm_bindgen::JsValue::NULL, &wasm_bindgen::JsValue::from_f64(actor.0 as f64), &wasm_bindgen::JsValue::from_str(&json));
+                }
+            }
+        }
+
+        fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64) {
+            self.pending_timers.push((actor, timer, js_sys::Date::now() + delay_ms as f64));
+        }
+
+        fn cancel_timer(&mut self, actor: ActorId, timer: TimerId) {
+            self.pending_timers.retain(|(a, t, _)| !(*a == actor && *t == timer));
+        }
+
+        fn start_task(&mut self, actor: ActorId, invoke: InvokeId) {
+            self.started_tasks.push((actor, invoke));
+        }
+
+        fn cancel_task(&mut self, actor: ActorId, invoke: InvokeId) {
+            self.started_tasks.retain(|(a, i)| !(*a == actor && *i == invoke));
+        }
+
+        fn now_ms(&self) -> u64 {
+            js_sys::Date::now() as u64
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+pub use wasm_bridge::WasmHost;
+
+/// 🎫 A minimal always-compiled `export_wasm_machine!` consumer — proves the wasm
+/// target and the whole DSL → kernel → `WasmHost` → JSON-boundary path continuously,
+/// independent of any downstream consumer crate.
+#[cfg(target_arch = "wasm32")]
+mod wasm_smoke {
+    #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+    pub struct ToggleContext;
+
+    fn build_context(_input: ()) -> ToggleContext {
+        ToggleContext
+    }
+
+    crate::statechart! {
+        machine toggle {
+            context: ToggleContext;
+            event Event { Flip }
+            input: ();
+            output: ();
+            effect: ();
+            context_from_input: build_context;
+            initial: off;
+            state off {
+                on Flip => on;
+            }
+            state on {
+                on Flip => off;
+            }
+        }
+    }
+
+    crate::export_wasm_machine!(toggle::Toggle, "ToggleMachine");
 }
 
 //#endregion 🔖WasmBridge
@@ -269,7 +394,7 @@ mod tests {
 #[cfg(feature = "macros")]
 #[cfg(test)]
 mod checkout_integration {
-    use crate::{ActorId, ActorSystem, CommandSink, InvokeId, Machine, TestHost, TimerId, TraceInspector};
+    use crate::{ActorSystem, CommandSink, InvokeId, Machine, TestHost, TimerId, TraceInspector};
 
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CheckoutContext {
@@ -440,11 +565,6 @@ mod checkout_integration {
             assert!(coverage.reached_stable_ids.contains(&expected), "expected model exploration to reach `{expected}`, got {:?}", coverage.reached_stable_ids);
         }
     }
-
-    // Silences an unused-import warning for `ActorId` kept for readability of the
-    // `started_tasks`/`cancelled_tasks` assertions above.
-    #[allow(dead_code)]
-    fn _use_actor_id(_id: ActorId) {}
 }
 
 //#endregion 🧪Tests

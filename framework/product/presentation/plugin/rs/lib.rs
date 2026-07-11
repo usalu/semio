@@ -781,8 +781,33 @@ fn presentation_document_json_to_svg(value: &Value) -> Result<(String, u32, u32)
     semio_framework_os::title_card_svg(value.get("deck").unwrap_or(value), "Presentation", 1280, 720)
 }
 
+/// 📥 Builds a degenerate-but-valid one-slide deck from a rasterized DWG drawing, for the DWG import path.
+fn presentation_document_json_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Result<Value, String> {
+    let (svg, width, height) = semio_framework_os::dwg_drawing_to_svg(drawing)?;
+    let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height)?;
+    let frame = FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
+    let deck = PresentationDeck {
+        schema: PRESENTATION_DOCUMENT_SCHEMA.into(),
+        source: FigureTileSource {
+            src: format!("data:image/png;base64,{png_base64}"),
+            kind: "image".into(),
+            frame: frame.clone(),
+            source_aspect: Some(width as f64 / height.max(1) as f64),
+            pdf_page: None,
+        },
+        tiles: vec![FigureTileDraft {
+            id: "imported-drawing".into(),
+            name: "Imported Drawing".into(),
+            crop: frame,
+        }],
+    };
+    let envelope = PresentationPlayEnvelope { deck, runtime: PresentationPlayRuntime::default() };
+    serde_json::to_value(&envelope).map_err(|error| error.to_string())
+}
+
 fn register_presentation_exports() {
-    semio_framework_os::register_2d_svg_png_export_handlers("presentation.deck", "presentation", presentation_document_json_to_svg);
+    semio_framework_os::register_2d_export_handlers("presentation.deck", "presentation", presentation_document_json_to_svg);
+    semio_framework_os::register_dwg_import_handler("presentation.deck", presentation_document_json_from_dwg);
 }
 
 fn bundle() -> PluginBundle {
@@ -869,6 +894,39 @@ mod tests {
         let node = app.render(PRESENTATION_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("tile-r0-c0"));
+    }
+
+    #[test]
+    fn from_dwg_builds_single_slide_deck_from_entity() {
+        let drawing = semio_framework_core::DwgDrawing {
+            layers: vec![semio_framework_core::DwgLayer::default()],
+            entities: vec![semio_framework_core::DwgEntity {
+                layer: 0,
+                color: semio_framework_core::DwgColor::ByLayer,
+                geometry: semio_framework_core::DwgGeometry::LwPolyline {
+                    closed: true,
+                    elevation: 0.0,
+                    vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]],
+                    bulges: vec![0.0, 0.0, 0.0, 0.0],
+                },
+            }],
+            extmin: [0.0, 0.0, 0.0],
+            extmax: [10.0, 10.0, 0.0],
+        };
+        let document = presentation_document_json_from_dwg(&drawing).expect("from_dwg");
+        let envelope: PresentationPlayEnvelope = serde_json::from_value(document).expect("envelope");
+        assert_eq!(envelope.deck.schema, PRESENTATION_DOCUMENT_SCHEMA);
+        assert_eq!(envelope.deck.tiles.len(), 1);
+        assert_eq!(envelope.deck.tiles[0].name, "Imported Drawing");
+        assert!(envelope.deck.source.src.starts_with("data:image/png;base64,"));
+    }
+
+    #[test]
+    fn from_dwg_never_errors_on_empty_drawing() {
+        let drawing = semio_framework_core::DwgDrawing::default();
+        let document = presentation_document_json_from_dwg(&drawing).expect("from_dwg on empty drawing");
+        let envelope: PresentationPlayEnvelope = serde_json::from_value(document).expect("envelope");
+        assert_eq!(envelope.deck.tiles.len(), 1);
     }
 }
 //#endregion 🧪Tests

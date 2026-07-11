@@ -5,9 +5,9 @@ use gis_2d::{
     open_url, GisMapDocument, GisMapEnvelope, GisMapOp, GisMapStore, MapHost, GIS_MAP_LOD_MODE_AUTOMATIC,
     GIS_MAP_SCHEMA,
 };
-use semio_framework_plugin::{SurfaceKind, PanelGroup, 
+use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_gis_map_scene, create_default_layout, layout::MeasureSelectItem, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
-    ui_inspector_readonly_field, ui_text, App, CommandDescriptor, GisMapScene, PluginApp, PluginBundle,
+    ui_inspector_readonly_field, ui_text, App, CommandDescriptor, DwgDrawing, DwgGeometry, GisMapScene, PluginApp, PluginBundle,
     UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiSliderNode,
     UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -1094,7 +1094,7 @@ fn gis2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), Strin
 }
 
 pub fn register_gis2d_exports() {
-    semio_framework_os::register_2d_svg_png_export_handlers("2d.map", "gis2d", gis2d_document_json_to_svg);
+    semio_framework_os::register_2d_export_handlers("2d.map", "gis2d", gis2d_document_json_to_svg);
 }
 //#endregion 🔖AppFactory
 

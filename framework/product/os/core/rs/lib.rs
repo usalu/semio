@@ -2891,13 +2891,14 @@ mod tests {
 
 pub mod media_export_raster {
 // #region media_export_raster
-//! 🖼️ SVG rasterization and 2D media-export registration helpers.
+//! 🖼️ SVG rasterization, DWG flattening, and media-export registration helpers.
 
 use crate::media_graph::{
-    register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult,
+    register_os_media_export_handler, register_os_media_import_handler, OsMediaFormat, OsMediaExportResult,
 };
 use base64::Engine;
 use png::{BitDepth, ColorType, Encoder};
+use semio_framework_core::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
 use serde_json::Value;
 
 /// @emoji 🖼️ Rasterizes SVG markup to a base64-encoded PNG payload.
@@ -2938,55 +2939,222 @@ fn encode_rgba_png(pixels: &[u8], width: u32, height: u32) -> Result<Vec<u8>, St
     Ok(bytes)
 }
 
-/// @emoji 💾 Registers SVG and PNG export handlers for one 2D resource kind.
-pub fn register_2d_svg_png_export_handlers(
+/// @emoji 📐 Flattens SVG markup into a DWG drawing by walking usvg path geometry into layered polylines.
+pub fn svg_to_dwg_bytes(svg: &str) -> Result<Vec<u8>, String> {
+    let tree = usvg::Tree::from_str(svg, &usvg::Options::default()).map_err(|error| error.to_string())?;
+    let mut drawing = DwgDrawing::default();
+    let layer = drawing.ensure_layer("0");
+    let height = tree.size().height() as f64;
+    collect_svg_children(tree.root().children(), &mut drawing, layer, height);
+    semio_framework_core::dwg_to_bytes(&drawing)
+}
+
+fn collect_svg_children(nodes: &[usvg::Node], drawing: &mut DwgDrawing, layer: usize, height: f64) {
+    for node in nodes {
+        match node {
+            usvg::Node::Group(group) => {
+                let id = node.id();
+                let group_layer = if id.is_empty() { layer } else { drawing.ensure_layer(id) };
+                collect_svg_children(group.children(), drawing, group_layer, height);
+            }
+            usvg::Node::Path(path) => collect_svg_path(path, drawing, layer, height),
+            _ => {}
+        }
+    }
+}
+
+fn collect_svg_path(path: &usvg::Path, drawing: &mut DwgDrawing, layer: usize, height: f64) {
+    let transform = path.abs_transform();
+    let mut vertices: Vec<[f64; 2]> = Vec::new();
+    let mut closed = false;
+    for segment in path.data().segments() {
+        match segment {
+            usvg::tiny_skia_path::PathSegment::MoveTo(p) => {
+                flush_svg_polyline(drawing, layer, &mut vertices, &mut closed);
+                vertices.push(transformed_svg_point(transform, p, height));
+            }
+            usvg::tiny_skia_path::PathSegment::LineTo(p) => {
+                vertices.push(transformed_svg_point(transform, p, height));
+            }
+            usvg::tiny_skia_path::PathSegment::QuadTo(c, p) => {
+                flatten_quad_into(&mut vertices, transform, c, p, height);
+            }
+            usvg::tiny_skia_path::PathSegment::CubicTo(c1, c2, p) => {
+                flatten_cubic_into(&mut vertices, transform, c1, c2, p, height);
+            }
+            usvg::tiny_skia_path::PathSegment::Close => {
+                closed = true;
+            }
+        }
+    }
+    flush_svg_polyline(drawing, layer, &mut vertices, &mut closed);
+}
+
+fn transformed_svg_point(transform: usvg::Transform, point: usvg::tiny_skia_path::Point, height: f64) -> [f64; 2] {
+    let mut p = point;
+    transform.map_point(&mut p);
+    [p.x as f64, height - p.y as f64]
+}
+
+fn flatten_quad_into(vertices: &mut Vec<[f64; 2]>, transform: usvg::Transform, ctrl: usvg::tiny_skia_path::Point, to: usvg::tiny_skia_path::Point, height: f64) {
+    let from = vertices.last().copied().unwrap_or([0.0, 0.0]);
+    let ctrl_p = transformed_svg_point(transform, ctrl, height);
+    let to_p = transformed_svg_point(transform, to, height);
+    const STEPS: usize = 12;
+    for step in 1..=STEPS {
+        let t = step as f64 / STEPS as f64;
+        let mt = 1.0 - t;
+        vertices.push([
+            mt * mt * from[0] + 2.0 * mt * t * ctrl_p[0] + t * t * to_p[0],
+            mt * mt * from[1] + 2.0 * mt * t * ctrl_p[1] + t * t * to_p[1],
+        ]);
+    }
+}
+
+fn flatten_cubic_into(vertices: &mut Vec<[f64; 2]>, transform: usvg::Transform, c1: usvg::tiny_skia_path::Point, c2: usvg::tiny_skia_path::Point, to: usvg::tiny_skia_path::Point, height: f64) {
+    let from = vertices.last().copied().unwrap_or([0.0, 0.0]);
+    let c1p = transformed_svg_point(transform, c1, height);
+    let c2p = transformed_svg_point(transform, c2, height);
+    let to_p = transformed_svg_point(transform, to, height);
+    const STEPS: usize = 16;
+    for step in 1..=STEPS {
+        let t = step as f64 / STEPS as f64;
+        let mt = 1.0 - t;
+        vertices.push([
+            mt * mt * mt * from[0] + 3.0 * mt * mt * t * c1p[0] + 3.0 * mt * t * t * c2p[0] + t * t * t * to_p[0],
+            mt * mt * mt * from[1] + 3.0 * mt * mt * t * c1p[1] + 3.0 * mt * t * t * c2p[1] + t * t * t * to_p[1],
+        ]);
+    }
+}
+
+fn flush_svg_polyline(drawing: &mut DwgDrawing, layer: usize, vertices: &mut Vec<[f64; 2]>, closed: &mut bool) {
+    if vertices.len() > 1 {
+        let count = vertices.len();
+        drawing.entities.push(DwgEntity {
+            layer,
+            color: DwgColor::ByLayer,
+            geometry: DwgGeometry::LwPolyline { closed: *closed, elevation: 0.0, vertices: std::mem::take(vertices), bulges: vec![0.0; count] },
+        });
+    } else {
+        vertices.clear();
+    }
+    *closed = false;
+}
+
+/// @emoji 📐 Renders a DWG drawing back to flat SVG markup (lines and closed polygons), for the raster import path.
+pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+    let width = (drawing.extmax[0] - drawing.extmin[0]).max(1.0).ceil() as u32;
+    let height = (drawing.extmax[1] - drawing.extmin[1]).max(1.0).ceil() as u32;
+    let mut paths = String::new();
+    for entity in &drawing.entities {
+        if let DwgGeometry::LwPolyline { vertices, closed, .. } = &entity.geometry {
+            if vertices.is_empty() {
+                continue;
+            }
+            let mut d = format!("M {} {}", vertices[0][0] - drawing.extmin[0], drawing.extmax[1] - vertices[0][1]);
+            for v in &vertices[1..] {
+                d.push_str(&format!(" L {} {}", v[0] - drawing.extmin[0], drawing.extmax[1] - v[1]));
+            }
+            if *closed {
+                d.push_str(" Z");
+            }
+            paths.push_str(&format!("<path d=\"{d}\" fill=\"none\" stroke=\"black\" stroke-width=\"1\"/>"));
+        }
+    }
+    let svg = format!("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\">{paths}</svg>");
+    Ok((svg, width, height))
+}
+
+/// @emoji 💾 Registers SVG, PNG, and DWG export handlers for one 2D resource kind.
+pub fn register_2d_export_handlers(
     resource_kind: &'static str,
     file_stem: &'static str,
     document_to_svg: fn(&Value) -> Result<(String, u32, u32), String>,
 ) {
-    register_os_media_export_handler(resource_kind, OsMediaExportFormat::Svg, move |doc| {
+    register_os_media_export_handler(resource_kind, OsMediaFormat::Svg, move |doc| {
         let (svg, _width, _height) = document_to_svg(doc)?;
         Ok(OsMediaExportResult {
             data: svg,
-            mime_type: "image/svg+xml".into(),
+            mime_type: OsMediaFormat::Svg.mime_type().into(),
             file_name: format!("{file_stem}.svg"),
+            encoding: None,
         })
     });
-    register_os_media_export_handler(resource_kind, OsMediaExportFormat::Png, move |doc| {
+    register_os_media_export_handler(resource_kind, OsMediaFormat::Png, move |doc| {
         let (svg, width, height) = document_to_svg(doc)?;
         let data = rasterize_svg_to_png_base64(&svg, width, height)?;
         Ok(OsMediaExportResult {
             data,
-            mime_type: "image/png".into(),
+            mime_type: OsMediaFormat::Png.mime_type().into(),
             file_name: format!("{file_stem}.png"),
+            encoding: Some("base64".into()),
+        })
+    });
+    register_os_media_export_handler(resource_kind, OsMediaFormat::Dwg, move |doc| {
+        let (svg, _width, _height) = document_to_svg(doc)?;
+        let bytes = svg_to_dwg_bytes(&svg)?;
+        Ok(OsMediaExportResult {
+            data: base64::engine::general_purpose::STANDARD.encode(bytes),
+            mime_type: OsMediaFormat::Dwg.mime_type().into(),
+            file_name: format!("{file_stem}.dwg"),
+            encoding: Some("base64".into()),
         })
     });
 }
 
-/// @emoji 💾 Registers OBJ/GLB export handlers for one mesh resource kind.
-pub fn register_mesh_obj_glb_export_handlers(
+/// @emoji 📥 Registers a DWG import handler for one 2D resource kind, rasterizing DWG geometry into flat SVG first.
+pub fn register_dwg_import_handler(resource_kind: &'static str, from_dwg: fn(&DwgDrawing) -> Result<Value, String>) {
+    register_os_media_import_handler(resource_kind, OsMediaFormat::Dwg, move |bytes| {
+        let drawing = semio_framework_core::dwg_from_bytes(bytes)?;
+        from_dwg(&drawing)
+    });
+}
+
+/// @emoji 💾 Registers OBJ, GLB, and DWG export handlers for one mesh resource kind.
+pub fn register_mesh_export_handlers(
     resource_kind: &'static str,
     file_stem: &'static str,
     mesh_from_document: fn(&Value) -> Result<semio_framework_plugin::MeshData, String>,
 ) {
-    use base64::Engine;
-    register_os_media_export_handler(resource_kind, OsMediaExportFormat::Obj, move |doc| {
+    register_os_media_export_handler(resource_kind, OsMediaFormat::Obj, move |doc| {
         let mesh = mesh_from_document(doc)?;
         let (data, mime_type) = semio_framework_plugin::export_mesh_obj(&mesh, file_stem);
         Ok(OsMediaExportResult {
             data,
             mime_type,
             file_name: format!("{file_stem}.obj"),
+            encoding: None,
         })
     });
-    register_os_media_export_handler(resource_kind, OsMediaExportFormat::Glb, move |doc| {
+    register_os_media_export_handler(resource_kind, OsMediaFormat::Glb, move |doc| {
         let mesh = mesh_from_document(doc)?;
         let (bytes, mime_type) = semio_framework_plugin::export_mesh_glb_bytes(&mesh);
         Ok(OsMediaExportResult {
             data: base64::engine::general_purpose::STANDARD.encode(bytes),
             mime_type,
             file_name: format!("{file_stem}.glb"),
+            encoding: Some("base64".into()),
         })
+    });
+    register_os_media_export_handler(resource_kind, OsMediaFormat::Dwg, move |doc| {
+        let mesh = mesh_from_document(doc)?;
+        let drawing = semio_framework_core::mesh_to_dwg_drawing(&mesh);
+        let bytes = semio_framework_core::dwg_to_bytes(&drawing)?;
+        Ok(OsMediaExportResult {
+            data: base64::engine::general_purpose::STANDARD.encode(bytes),
+            mime_type: OsMediaFormat::Dwg.mime_type().into(),
+            file_name: format!("{file_stem}.dwg"),
+            encoding: Some("base64".into()),
+        })
+    });
+}
+
+/// @emoji 📥 Registers a DWG import handler for one mesh resource kind.
+pub fn register_mesh_dwg_import_handler(resource_kind: &'static str, document_from_mesh: fn(&semio_framework_plugin::MeshData) -> Result<Value, String>) {
+    register_os_media_import_handler(resource_kind, OsMediaFormat::Dwg, move |bytes| {
+        let drawing = semio_framework_core::dwg_from_bytes(bytes)?;
+        let mesh = semio_framework_core::dwg_drawing_to_mesh(&drawing);
+        document_from_mesh(&mesh)
     });
 }
 // #endregion media_export_raster
@@ -3693,21 +3861,38 @@ impl ProgramRegistry {
 
 //#region 🔖MediaExport
 #[derive(Clone, Debug, PartialEq)]
-pub enum OsMediaExportFormat {
+pub enum OsMediaFormat {
     Svg,
     Png,
     Obj,
     Glb,
+    Dwg,
 }
 
-impl OsMediaExportFormat {
+impl OsMediaFormat {
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Svg => "svg",
             Self::Png => "png",
             Self::Obj => "obj",
             Self::Glb => "glb",
+            Self::Dwg => "dwg",
         }
+    }
+
+    pub fn mime_type(&self) -> &'static str {
+        match self {
+            Self::Svg => "image/svg+xml",
+            Self::Png => "image/png",
+            Self::Obj => "model/obj",
+            Self::Glb => "model/gltf-binary",
+            Self::Dwg => "image/vnd.dwg",
+        }
+    }
+
+    /// @emoji 🔢 Whether this format's payload is base64-encoded binary rather than plain text.
+    pub fn is_binary(&self) -> bool {
+        matches!(self, Self::Png | Self::Glb | Self::Dwg)
     }
 
     pub fn parse(value: &str) -> Option<Self> {
@@ -3716,6 +3901,7 @@ impl OsMediaExportFormat {
             "png" => Some(Self::Png),
             "obj" => Some(Self::Obj),
             "glb" => Some(Self::Glb),
+            "dwg" => Some(Self::Dwg),
             _ => None,
         }
     }
@@ -3726,6 +3912,7 @@ pub struct OsMediaExportResult {
     pub data: String,
     pub mime_type: String,
     pub file_name: String,
+    pub encoding: Option<String>,
 }
 
 type OsMediaExportHandler = Box<dyn Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync>;
@@ -3735,14 +3922,14 @@ fn export_handlers() -> &'static Mutex<HashMap<String, OsMediaExportHandler>> {
     HANDLERS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-fn os_media_export_key(resource_kind: &str, format: &OsMediaExportFormat) -> String {
+fn os_media_export_key(resource_kind: &str, format: &OsMediaFormat) -> String {
     format!("{}:{}", resource_kind, format.as_str())
 }
 
 /// @emoji 💾 Registers an export handler for a media resource kind and format.
 pub fn register_os_media_export_handler(
     resource_kind: &str,
-    format: OsMediaExportFormat,
+    format: OsMediaFormat,
     handler: impl Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync + 'static,
 ) {
     export_handlers()
@@ -3751,10 +3938,10 @@ pub fn register_os_media_export_handler(
         .insert(os_media_export_key(resource_kind, &format), Box::new(handler));
 }
 
-pub fn required_os_media_export_formats(dimension: &str) -> Vec<OsMediaExportFormat> {
+pub fn required_os_media_export_formats(dimension: &str) -> Vec<OsMediaFormat> {
     match dimension {
-        "2d" => vec![OsMediaExportFormat::Svg, OsMediaExportFormat::Png],
-        "3d" | "5d" => vec![OsMediaExportFormat::Glb, OsMediaExportFormat::Obj],
+        "2d" => vec![OsMediaFormat::Svg, OsMediaFormat::Png, OsMediaFormat::Dwg],
+        "3d" | "5d" => vec![OsMediaFormat::Glb, OsMediaFormat::Obj, OsMediaFormat::Dwg],
         _ => Vec::new(),
     }
 }
@@ -3780,7 +3967,7 @@ pub fn assert_os_media_export_coverage() -> Result<(), String> {
 pub fn export_os_app_instance_media(
     instance: &OsAppInstance,
     source_document: &Value,
-    format: OsMediaExportFormat,
+    format: OsMediaFormat,
 ) -> Result<OsMediaExportResult, String> {
     let handlers = export_handlers().lock().expect("lock");
     let handler = handlers
@@ -3789,8 +3976,62 @@ pub fn export_os_app_instance_media(
     handler(source_document)
 }
 
-pub fn os_media_export_extension_for_format(format: &OsMediaExportFormat) -> &'static str {
+pub fn os_media_export_extension_for_format(format: &OsMediaFormat) -> &'static str {
     format.as_str()
+}
+
+type OsMediaImportHandler = Box<dyn Fn(&[u8]) -> Result<Value, String> + Send + Sync>;
+
+fn import_handlers() -> &'static Mutex<HashMap<String, OsMediaImportHandler>> {
+    static HANDLERS: OnceLock<Mutex<HashMap<String, OsMediaImportHandler>>> = OnceLock::new();
+    HANDLERS.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// @emoji 📥 Registers an import handler for a media resource kind and format; the handler turns raw bytes into a complete source document.
+pub fn register_os_media_import_handler(
+    resource_kind: &str,
+    format: OsMediaFormat,
+    handler: impl Fn(&[u8]) -> Result<Value, String> + Send + Sync + 'static,
+) {
+    import_handlers()
+        .lock()
+        .expect("lock")
+        .insert(os_media_export_key(resource_kind, &format), Box::new(handler));
+}
+
+/// @emoji 📥 Formats every resource kind of the given dimension must accept for import (mirrors export coverage, DWG-only for now).
+pub fn required_os_media_import_formats(dimension: &str) -> Vec<OsMediaFormat> {
+    match dimension {
+        "2d" | "3d" | "5d" => vec![OsMediaFormat::Dwg],
+        _ => Vec::new(),
+    }
+}
+
+/// @emoji ✅ Ensures every known resource kind has required import handlers.
+pub fn assert_os_media_import_coverage() -> Result<(), String> {
+    let handlers = import_handlers().lock().expect("lock");
+    let mut missing = Vec::new();
+    for descriptor in crate::registry::list_os_resource_descriptors() {
+        for format in required_os_media_import_formats(&descriptor.dimension) {
+            if !handlers.contains_key(&os_media_export_key(&descriptor.kind, &format)) {
+                missing.push(format!("{}:{}", descriptor.kind, format.as_str()));
+            }
+        }
+    }
+    if missing.is_empty() {
+        Ok(())
+    } else {
+        Err(format!("missing os media import handlers: {}", missing.join(", ")))
+    }
+}
+
+/// @emoji 📥 Imports raw bytes for an app instance's resource kind, returning the new inline source document.
+pub fn import_os_app_instance_media(instance: &OsAppInstance, data: &[u8], format: OsMediaFormat) -> Result<Value, String> {
+    let handlers = import_handlers().lock().expect("lock");
+    let handler = handlers
+        .get(&os_media_export_key(&instance.yields, &format))
+        .ok_or_else(|| format!("no import handler for {}:{}", instance.yields, format.as_str()))?;
+    handler(data)
 }
 //#endregion 🔖MediaExport
 
@@ -3921,7 +4162,7 @@ pub fn os_media_graph_vfs_input_port_id(instance_id: &str, port_spec_id: &str) -
 pub fn os_media_graph_vfs_export_id(
     instance_id: &str,
     port_spec_id: &str,
-    format: &OsMediaExportFormat,
+    format: &OsMediaFormat,
 ) -> String {
     format!("inst:{instance_id}:export:{port_spec_id}:{}", format.as_str())
 }
@@ -4144,11 +4385,45 @@ mod tests {
                         data: "export".into(),
                         mime_type: "application/octet-stream".into(),
                         file_name: "export.bin".into(),
+                        encoding: None,
                     })
                 });
             }
         }
         assert!(assert_os_media_export_coverage().is_ok());
+    }
+
+    #[test]
+    fn import_coverage_accepts_registered_handlers() {
+        for descriptor in crate::registry::list_os_resource_descriptors() {
+            for format in required_os_media_import_formats(&descriptor.dimension) {
+                register_os_media_import_handler(&descriptor.kind, format, |_| Ok(serde_json::json!({})));
+            }
+        }
+        assert!(assert_os_media_import_coverage().is_ok());
+    }
+
+    #[test]
+    fn svg_to_dwg_round_trip_produces_a_polyline() {
+        let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect x="1" y="1" width="4" height="4"/></svg>"#;
+        let bytes = crate::media_export_raster::svg_to_dwg_bytes(svg).expect("svg to dwg");
+        let drawing = semio_framework_core::dwg_from_bytes(&bytes).expect("dwg from bytes");
+        assert!(!drawing.entities.is_empty());
+    }
+
+    #[test]
+    fn mesh_dwg_registrar_round_trips_a_box() {
+        use base64::Engine;
+        crate::media_export_raster::register_mesh_export_handlers("3d.__dwg_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
+        let result = export_handlers()
+            .lock()
+            .expect("lock")
+            .get(&os_media_export_key("3d.__dwg_test", &OsMediaFormat::Dwg))
+            .expect("dwg handler registered")(&serde_json::json!({}))
+        .expect("export dwg");
+        let bytes = base64::engine::general_purpose::STANDARD.decode(result.data).expect("decode base64");
+        let drawing = semio_framework_core::dwg_from_bytes(&bytes).expect("dwg from bytes");
+        assert!(!drawing.entities.is_empty());
     }
 
     #[test]
@@ -4370,13 +4645,32 @@ fn descriptor_presentation(kind: &str) -> OsResourceDescriptor {
             component_kind: "writer".into(),
             dimension: "text".into(),
         },
+        "presentation.deck" => OsResourceDescriptor {
+            kind: kind.into(),
+            name: kind.into(),
+            source_format: kind.into(),
+            component_kind: "panel".into(),
+            dimension: "2d".into(),
+        },
         _ => OsResourceDescriptor {
             kind: kind.into(),
             name: kind.into(),
             source_format: kind.into(),
             component_kind: "panel".into(),
-            dimension: "unknown".into(),
+            dimension: descriptor_dimension_from_kind_prefix(kind).into(),
         },
+    }
+}
+
+fn descriptor_dimension_from_kind_prefix(kind: &str) -> &'static str {
+    if kind.starts_with("2d.") {
+        "2d"
+    } else if kind.starts_with("3d.") {
+        "3d"
+    } else if kind.starts_with("5d.") {
+        "5d"
+    } else {
+        "unknown"
     }
 }
 
@@ -4816,17 +5110,22 @@ pub use instance::{
     OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType, OsSourceDocument,
     OS_PARAMETER_PORT_PREFIX,
 };
-pub use media_export_raster::{rasterize_svg_to_png_base64, register_2d_svg_png_export_handlers, register_mesh_obj_glb_export_handlers};
+pub use media_export_raster::{
+    dwg_drawing_to_svg, rasterize_svg_to_png_base64, register_2d_export_handlers, register_dwg_import_handler,
+    register_mesh_dwg_import_handler, register_mesh_export_handlers, svg_to_dwg_bytes,
+};
 pub use media_export_simple::{map_points_svg, pages_rects_svg, title_card_svg, wrap_svg};
 pub use media_graph::{
-    apply_flow_fixture_to_os_media_graph, assert_os_media_export_coverage, empty_media_graph, export_os_app_instance_media,
+    apply_flow_fixture_to_os_media_graph, assert_os_media_export_coverage, assert_os_media_import_coverage,
+    empty_media_graph, export_os_app_instance_media, import_os_app_instance_media,
     list_os_media_graph_vfs_children, media_graph_node_for_instance, os_media_export_extension_for_format,
     os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload, os_media_graph_vfs_export_id, os_media_graph_vfs_instance_folder_id,
     build_os_media_flow_operator_infos, OsMediaFlowOperatorInfo, OsMediaGraphCamera, OsMediaNodeGraphPayload,
     os_media_graph_vfs_instance_id, os_media_graph_vfs_schema, os_media_graph_vfs_source_id,
-    os_media_neuron_kind_for_node, register_os_media_export_handler, required_os_media_export_formats,
+    os_media_neuron_kind_for_node, register_os_media_export_handler, register_os_media_import_handler,
+    required_os_media_export_formats, required_os_media_import_formats,
     sync_media_graph_parameter_ports, validate_media_graph, MediaGraphPosition, MediaGraphValidation,
-    OsMediaExportFormat, OsMediaExportResult, OsMediaGraph, OsMediaGraphEdge, OsMediaGraphNode,
+    OsMediaFormat, OsMediaExportResult, OsMediaGraph, OsMediaGraphEdge, OsMediaGraphNode,
     OsMediaGraphVfsNodeRecord, OsMediaGraphVfsSchema, OsMediaPort, ProgramRegistry,
     OS_MEDIA_FLOW_MODULE_ID, OS_MEDIA_GRAPH_SCHEMA, OS_MEDIA_GRAPH_VFS_ROOT_ID, OS_STUDIO_SCHEMA,
 };

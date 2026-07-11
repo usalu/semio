@@ -958,8 +958,13 @@ fn procedural2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32)
     semio_framework_os::title_card_svg(value, "Procedural 2D", 1024, 768)
 }
 
+fn procedural2d_document_from_dwg(_drawing: &semio_framework_core::DwgDrawing) -> Result<Value, String> {
+    serde_json::to_value(default_envelope()).map_err(|err| err.to_string())
+}
+
 pub fn register_procedural2d_exports() {
-    semio_framework_os::register_2d_svg_png_export_handlers("2d.procedural", "procedural2d", procedural2d_document_json_to_svg);
+    semio_framework_os::register_2d_export_handlers("2d.procedural", "procedural2d", procedural2d_document_json_to_svg);
+    semio_framework_os::register_dwg_import_handler("2d.procedural", procedural2d_document_from_dwg);
 }
 //#endregion 🔖AppFactory
 
@@ -1055,6 +1060,14 @@ mod tests {
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
         assert_eq!(updated.generation.generations.len(), 1);
         assert!(updated.generation.preview_text.as_deref().unwrap_or("").len() > 2);
+    }
+
+    #[test]
+    fn document_from_dwg_returns_valid_default_envelope() {
+        let drawing = semio_framework_core::DwgDrawing::default();
+        let document = procedural2d_document_from_dwg(&drawing).expect("dwg import document");
+        let envelope: Procedural2dPlayEnvelope = serde_json::from_value(document).expect("parseable envelope");
+        assert_eq!(envelope.fixture.schema, "flow.fixture");
     }
 }
 //#endregion 🧪Tests
