@@ -22,6 +22,7 @@ const PUZZLE3D_PLAY_BODY_DOCUMENT: &str = "puzzle.3d.play.document";
 const PUZZLE3D_PLAY_BODY_KINDS: &str = "puzzle.3d.play.kinds";
 const PUZZLE3D_PLAY_BODY_INSPECTOR: &str = "puzzle.3d.play.inspector";
 const PUZZLE3D_PLAY_BODY_SETTINGS: &str = "puzzle.3d.play.settings";
+const PUZZLE3D_PLAY_BODY_JACK: &str = "puzzle.3d.play.jack";
 const PUZZLE3D_PLAY_WINDOW_MAIN: &str = "puzzle3d-main";
 const PUZZLE3D_FIXTURE_SCHEMA: &str = "puzzle.3d.fixture";
 const PUZZLE3D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
@@ -291,6 +292,8 @@ struct Puzzle3dRuntime {
     fill_edit_target_volumes: bool,
     #[serde(default = "default_voxel_dims")]
     voxel_dims: [u32; 3],
+    #[serde(default = "default_jack_query")]
+    jack_query: String,
 }
 
 impl Default for Puzzle3dRuntime {
@@ -324,6 +327,7 @@ impl Default for Puzzle3dRuntime {
             chunk_size: default_chunk_size(),
             fill_edit_target_volumes: false,
             voxel_dims: default_voxel_dims(),
+            jack_query: default_jack_query(),
         }
     }
 }
@@ -358,6 +362,10 @@ fn default_chunk_size() -> f64 {
 
 fn default_voxel_dims() -> [u32; 3] {
     [1, 1, 1]
+}
+
+fn default_jack_query() -> String {
+    "MATCH (n:Object) RETURN n.name".into()
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1543,6 +1551,125 @@ fn build_settings_body(envelope: &Puzzle3dEnvelope) -> UiNode {
 }
 //#endregion 🔖Panels
 
+//#region 🔖Jack
+/// 🕸️ A row produced by [`puzzle3d_run_jack_query`] — `entity`/`id` let a click reselect the exact match in the scene.
+struct Puzzle3dJackRow {
+    entity: &'static str,
+    id: String,
+    value: String,
+}
+
+/// 🕸️ Parses the one supported shape — `MATCH (n:Label) RETURN n.field` — this is a deliberately minimal, self-contained
+/// stand-in for premigration's full Jack graph-query language (ported here without a cross-technology dependency on
+/// `trinity-jack`/`trinity-ram`, which CLAUDE.md's "do not mix technologies" rule rules out for a puzzle-3d ticket).
+fn puzzle3d_parse_jack_query(query: &str) -> Option<(String, String)> {
+    let query = query.trim();
+    let match_marker = "MATCH (n:";
+    let match_start = query.find(match_marker)? + match_marker.len();
+    let match_end = match_start + query[match_start..].find(')')?;
+    let label = query[match_start..match_end].trim().to_string();
+    let return_marker = "RETURN n.";
+    let return_start = query.find(return_marker)? + return_marker.len();
+    let field = query[return_start..].trim().to_string();
+    if label.is_empty() || field.is_empty() {
+        return None;
+    }
+    Some((label, field))
+}
+
+fn puzzle3d_run_jack_query(fixture: &Puzzle3dFixture, query: &str) -> Result<Vec<Puzzle3dJackRow>, String> {
+    let (label, field) = puzzle3d_parse_jack_query(query).ok_or_else(|| "expected \"MATCH (n:Label) RETURN n.field\"".to_string())?;
+    match label.as_str() {
+        "Object" => Ok(fixture
+            .objects
+            .iter()
+            .map(|object| {
+                let value = match field.as_str() {
+                    "id" => object.id.clone(),
+                    "label" => object.label.clone().unwrap_or_default(),
+                    "kind" => object.object_kind.clone().unwrap_or_default(),
+                    _ => object.label.clone().or_else(|| object.object_kind.clone()).unwrap_or_else(|| object.id.clone()),
+                };
+                Puzzle3dJackRow { entity: "object", id: object.id.clone(), value }
+            })
+            .collect()),
+        "Vortex" => Ok(fixture
+            .objects
+            .iter()
+            .flat_map(|object| {
+                let field = field.as_str();
+                object.vortices.iter().map(move |vortex| {
+                    let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
+                    let value = match field {
+                        "id" => full_id.clone(),
+                        "kind" => vortex.vortex_kind.clone().unwrap_or_default(),
+                        _ => vortex.vortex_kind.clone().unwrap_or_else(|| full_id.clone()),
+                    };
+                    Puzzle3dJackRow { entity: "vortex", id: full_id, value }
+                })
+            })
+            .collect()),
+        "Attraction" => Ok(fixture
+            .attractions
+            .iter()
+            .map(|attraction| {
+                let value = match field.as_str() {
+                    "id" => attraction.id.clone(),
+                    _ => format!("{} → {}", attraction.attracting, attraction.attracted),
+                };
+                Puzzle3dJackRow { entity: "attraction", id: attraction.id.clone(), value }
+            })
+            .collect()),
+        other => Err(format!("unknown label \"{other}\" — supported: Object, Vortex, Attraction")),
+    }
+}
+
+fn jack_row_selection_args(row: &Puzzle3dJackRow) -> Value {
+    match row.entity {
+        "object" => json!({ "selection": { "objectIds": [row.id], "vortexIds": [], "attractionIds": [] } }),
+        "vortex" => json!({ "selection": { "objectIds": [], "vortexIds": [row.id], "attractionIds": [] } }),
+        "attraction" => json!({ "selection": { "objectIds": [], "vortexIds": [], "attractionIds": [row.id] } }),
+        _ => json!({ "selection": {} }),
+    }
+}
+
+fn build_jack_body(envelope: &Puzzle3dEnvelope) -> UiNode {
+    let query_field = UiNode::Field(UiFieldNode {
+        id: "puzzle3d-play-jack.query".into(),
+        label: "Query".into(),
+        child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+            id: "puzzle3d-play-jack.query.input".into(),
+            input_kind: "text".into(),
+            value: envelope.runtime.jack_query.clone(),
+            placeholder: Some("MATCH (n:Object) RETURN n.name".into()),
+            commit: None,
+            on_change: puzzle3d_cmd("setJackQuery", None),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
+        })),
+        description: None,
+        required: None,
+        error: None,
+    });
+    match puzzle3d_run_jack_query(&envelope.fixture, &envelope.runtime.jack_query) {
+        Ok(rows) => {
+            let items: Vec<UiTreeItemNode> = rows.iter().map(|row| tree_item_with_command(format!("puzzle3d-jack-row:{}:{}", row.entity, row.id), row.value.clone(), None, puzzle3d_cmd("setSelection", Some(jack_row_selection_args(row))))).collect();
+            let results = UiNode::Tree(UiTreeNode {
+                sections: vec![UiTreeSectionNode { id: "puzzle3d-play-jack.results".into(), label: Some(format!("{} results", items.len())), default_open: Some(true), items }],
+                selected_ids: None,
+                highlighted_ids: None,
+                selection_change: None,
+                drop_command: None,
+            });
+            ui_stack_vertical(vec![query_field, results])
+        }
+        Err(message) => ui_stack_vertical(vec![query_field, ui_text(format!("Error: {message}"))]),
+    }
+}
+//#endregion 🔖Jack
+
 //#region 🔖Engagement
 fn parse_brush_candidates_free(raw: &str) -> Vec<Value> {
     let parsed: Value = serde_json::from_str(raw).unwrap_or(Value::Null);
@@ -2023,6 +2150,12 @@ impl PluginApp for Puzzle3dPlayApp {
             "setCameraViewPreset" => {
                 if let Some(preset) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
                     envelope.fixture.camera = puzzle3d_camera_view_preset(preset);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setJackQuery" => {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+                    envelope.runtime.jack_query = value.into();
                     return vec![set_document_op(&envelope)];
                 }
             }
@@ -2537,6 +2670,7 @@ impl PluginApp for Puzzle3dPlayApp {
             PUZZLE3D_PLAY_BODY_KINDS => build_kinds_tree(&envelope, labels),
             PUZZLE3D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope, labels),
             PUZZLE3D_PLAY_BODY_SETTINGS => build_settings_body(&envelope),
+            PUZZLE3D_PLAY_BODY_JACK => build_jack_body(&envelope),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -2570,6 +2704,7 @@ pub fn create_puzzle3d_app() -> App {
             .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE3D_PLAY_BODY_KINDS)
             .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE3D_PLAY_BODY_INSPECTOR)
             .panel_tab("puzzle3d.panel.settings", "Settings", PanelGroup::Settings, PUZZLE3D_PLAY_BODY_SETTINGS)
+            .panel_tab("puzzle3d.panel.jack", "Jack", PanelGroup::Workbench, PUZZLE3D_PLAY_BODY_JACK)
             .keybinding("mod+a", "selectAll")
             .keybinding("escape", "engagementAbort")
             .keybinding("delete", "deleteSelection")
@@ -2704,6 +2839,106 @@ mod tests {
         let envelope: Puzzle3dEnvelope = serde_json::from_value(document).unwrap();
         assert_eq!(envelope.fixture.schema, PUZZLE3D_FIXTURE_SCHEMA);
         assert!(envelope.fixture.objects.is_empty());
+    }
+
+    #[test]
+    fn mesh_from_document_falls_back_to_box_when_no_mesh_registered() {
+        let envelope = default_envelope();
+        let mesh = puzzle3d_mesh_from_document(&serde_json::to_value(&envelope).unwrap()).unwrap();
+        assert!(!mesh.positions.is_empty());
+        assert!(!mesh.indices.is_empty());
+    }
+
+    #[test]
+    fn mesh_from_document_uses_registered_geometry_and_bakes_object_transform() {
+        let url = "puzzle3d-test://mesh-from-document-uses-registered-geometry.glb";
+        let positions: Vec<f32> = vec![0.0, 10.0, 0.0, 1.0, 10.0, 0.0, 0.0, 10.0, 1.0];
+        let indices: Vec<u32> = vec![0, 1, 2];
+        PUZZLE3D_MESH_REGISTRY.lock().unwrap().insert(url.to_string(), (positions, indices.clone()));
+        let mut fixture = empty_fixture();
+        fixture.objects = vec![Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, origin: [5.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: Some(url.into()), vortices: vec![], hidden: false, locked: false }];
+        let envelope = Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() };
+        let mesh = puzzle3d_mesh_from_document(&serde_json::to_value(&envelope).unwrap()).unwrap();
+        assert_eq!(mesh.indices, indices);
+        assert_eq!(mesh.positions.len(), 9);
+        // 🌀 raw (0,10,0) → glb_frame_correct [x,-z,y] → (0,0,10) → identity scale/orientation → + origin (5,0,0) = (5,0,10)
+        assert_eq!(&mesh.positions[0..3], &[5.0, 0.0, 10.0]);
+    }
+
+    #[test]
+    fn mesh_from_document_skips_hidden_objects() {
+        let url = "puzzle3d-test://mesh-from-document-skips-hidden.glb";
+        let positions: Vec<f32> = vec![0.0, 10.0, 0.0, 1.0, 10.0, 0.0, 0.0, 10.0, 1.0];
+        PUZZLE3D_MESH_REGISTRY.lock().unwrap().insert(url.to_string(), (positions, vec![0, 1, 2]));
+        let mut fixture = empty_fixture();
+        fixture.objects = vec![Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: Some(url.into()), vortices: vec![], hidden: true, locked: false }];
+        let envelope = Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() };
+        let mesh = puzzle3d_mesh_from_document(&serde_json::to_value(&envelope).unwrap()).unwrap();
+        assert!(!mesh.positions.is_empty(), "an all-hidden fixture still exports the box fallback so downstream tooling gets a valid mesh");
+    }
+
+    #[test]
+    fn jack_query_default_lists_object_names() {
+        let envelope = default_envelope();
+        let rows = puzzle3d_run_jack_query(&envelope.fixture, &envelope.runtime.jack_query).unwrap();
+        assert_eq!(rows.len(), envelope.fixture.objects.len());
+        assert!(rows.iter().all(|row| row.entity == "object"));
+    }
+
+    #[test]
+    fn jack_query_supports_vortex_and_attraction_labels() {
+        let envelope = default_envelope();
+        let vortex_rows = puzzle3d_run_jack_query(&envelope.fixture, "MATCH (n:Vortex) RETURN n.kind").unwrap();
+        assert!(!vortex_rows.is_empty());
+        assert!(vortex_rows.iter().all(|row| row.entity == "vortex"));
+        let attraction_rows = puzzle3d_run_jack_query(&envelope.fixture, "MATCH (n:Attraction) RETURN n.id").unwrap();
+        assert!(attraction_rows.iter().all(|row| row.entity == "attraction"));
+    }
+
+    #[test]
+    fn jack_query_rejects_unknown_label() {
+        let envelope = default_envelope();
+        let result = puzzle3d_run_jack_query(&envelope.fixture, "MATCH (n:Cable) RETURN n.name");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn jack_query_rejects_malformed_query() {
+        let envelope = default_envelope();
+        let result = puzzle3d_run_jack_query(&envelope.fixture, "not a query");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn set_jack_query_persists_the_new_query_text() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command_patch_ops("setJackQuery", Some(&json!({ "value": "MATCH (n:Vortex) RETURN n.kind" })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.runtime.jack_query, "MATCH (n:Vortex) RETURN n.kind");
+    }
+
+    #[test]
+    fn jack_body_renders_query_field_and_result_rows() {
+        let app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let node = app.render(PUZZLE3D_PLAY_BODY_JACK, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("MATCH (n:Object) RETURN n.name"));
+        assert!(json.contains("results"));
+    }
+
+    #[test]
+    fn jack_result_row_click_selects_the_matching_object() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let object_id = envelope.fixture.objects.first().expect("seed object").id.clone();
+        let row = Puzzle3dJackRow { entity: "object", id: object_id.clone(), value: "irrelevant".into() };
+        let args = jack_row_selection_args(&row);
+        let ops = app.handle_command_patch_ops("setSelection", Some(&args), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.runtime.selection.object_ids, vec![object_id]);
     }
 
     #[test]

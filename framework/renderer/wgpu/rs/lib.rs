@@ -3911,15 +3911,15 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         check_json_payload(&format!("{scene_label} table.rows"), &table.rows_json, limits)?;
     }
     if let Some(raster) = &scene.raster {
-        if raster.width > limits.max_texture_dimension || raster.height > limits.max_texture_dimension {
-            return Err(format!(
-                "render plan limit exceeded: {scene_label} raster dimensions {}x{} exceed max {}",
-                raster.width,
-                raster.height,
-                limits.max_texture_dimension
-            ));
-        }
-        check_json_payload(&format!("{scene_label} raster.pixels"), &raster.pixels_base64, limits)?;
+        check_json_payload(&format!("{scene_label} raster.documentSync"), &raster.document_sync_json, limits)?;
+        check_json_payload(&format!("{scene_label} raster.assets"), &raster.assets_json, limits)?;
+        check_json_payload(&format!("{scene_label} raster.camera"), &raster.camera_json, limits)?;
+        check_json_payload(&format!("{scene_label} raster.selection"), &raster.selection_json, limits)?;
+        check_optional_json_payload(
+            &format!("{scene_label} raster.compositeViewport"),
+            &raster.composite_viewport_json,
+            limits,
+        )?;
     }
     if let Some(vfs) = &scene.virtual_file_system {
         check_json_payload(&format!("{scene_label} vfs.schema"), &vfs.schema_json, limits)?;
@@ -7523,6 +7523,8 @@ pub struct ShellState {
     pub search_open: bool,
     pub find_open: bool,
     pub appearance_id: String,
+    pub locale_id: String,
+    pub terminology_id: String,
     pub right_click: RightClickState,
     pub uri_history: Vec<String>,
     pub uri_index: usize,
@@ -7688,6 +7690,8 @@ impl ShellState {
             search_open: false,
             find_open: false,
             appearance_id: "system".into(),
+            locale_id: "en".into(),
+            terminology_id: "native".into(),
             right_click: RightClickState::default(),
             uri_history: vec!["/".into()],
             uri_index: 0,
@@ -7825,6 +7829,8 @@ impl ShellState {
                 selection_json: None,
                 panel_json: Some(Self::panel_json(&panel_state)),
                 contributions_json: None,
+                locale: Some(self.locale_id.clone()),
+                terminology: Some(self.terminology_id.clone()),
             };
             self.active_window_id = s_app.window_kinds.first().map(|w| w.id.clone());
             self.session = Some(ActiveSession {
@@ -7852,6 +7858,8 @@ impl ShellState {
                     selection_json: None,
                     panel_json: None,
                     contributions_json: None,
+                    locale: Some(self.locale_id.clone()),
+                    terminology: Some(self.terminology_id.clone()),
                 },
             });
         }
@@ -8106,6 +8114,8 @@ impl ShellState {
                                 selection_json: None,
                                 panel_json: None,
                                 contributions_json: None,
+                                locale: Some(self.locale_id.clone()),
+                                terminology: Some(self.terminology_id.clone()),
                             };
                             self.spawned_ui = Some(
                                 spawn_plugin
@@ -8211,8 +8221,6 @@ impl ShellState {
             gap: None,
             padding: None,
             id: None,
-            selected: None,
-            activate: None,
             children: vec![
                 UiNode::Text(UiTextNode {
                     value: "General".into(),
@@ -8263,11 +8271,61 @@ impl ShellState {
                         args: None,
                     },
                 }),
+                UiNode::Select(UiSelectNode {
+                    id: "framework.settings.language".into(),
+                    value: self.locale_id.clone(),
+                    items: vec![
+                        UiSelectItem {
+                            value: "en".into(),
+                            label: "English".into(),
+                        },
+                        UiSelectItem {
+                            value: "de".into(),
+                            label: "Deutsch".into(),
+                        },
+                    ],
+                    placeholder: None,
+                    on_change: CommandDescriptor {
+                        controller_id: "framework".into(),
+                        command: "setLocale".into(),
+                        args: None,
+                    },
+                }),
+                UiNode::Select(UiSelectNode {
+                    id: "framework.settings.terminology".into(),
+                    value: self.terminology_id.clone(),
+                    items: self
+                        .active_terminologies()
+                        .into_iter()
+                        .map(|id| UiSelectItem {
+                            label: if id == "native" { "Native".into() } else { id.clone() },
+                            value: id,
+                        })
+                        .collect(),
+                    placeholder: None,
+                    on_change: CommandDescriptor {
+                        controller_id: "framework".into(),
+                        command: "setTerminology".into(),
+                        args: None,
+                    },
+                }),
             ],
             selected: None,
             activate: None,
             drop_command: None,
         })
+    }
+
+    fn active_terminologies(&self) -> Vec<String> {
+        let mut ids = vec!["native".to_string()];
+        if let Some(session) = self.session.as_ref() {
+            for id in &session.app.terminologies {
+                if !ids.contains(id) {
+                    ids.push(id.clone());
+                }
+            }
+        }
+        ids
     }
 }
 //#endregion ShellLifecycle
@@ -8589,6 +8647,28 @@ impl ShellState {
                     }
                     return Ok(());
                 }
+                "setLocale" => {
+                    if let Some(value) = command
+                        .args
+                        .as_ref()
+                        .and_then(|args| args.get("value"))
+                        .and_then(|v| v.as_str())
+                    {
+                        self.locale_id = value.to_string();
+                    }
+                    return Ok(());
+                }
+                "setTerminology" => {
+                    if let Some(value) = command
+                        .args
+                        .as_ref()
+                        .and_then(|args| args.get("value"))
+                        .and_then(|v| v.as_str())
+                    {
+                        self.terminology_id = value.to_string();
+                    }
+                    return Ok(());
+                }
                 _ => {}
             }
         }
@@ -8846,6 +8926,8 @@ impl ShellState {
             selection_json: None,
             panel_json: Some(Self::panel_json(&panel_state)),
             contributions_json: None,
+            locale: Some(self.locale_id.clone()),
+            terminology: Some(self.terminology_id.clone()),
         });
         self.active_window_id = app.window_kinds.first().map(|window| window.id.clone());
         if app_id == S_HOME_APP_ID {

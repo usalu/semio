@@ -75,60 +75,11 @@ function loadTokens(): Tokens {
 
 /** @emoji 📏 Derives dag component width as twice the IO channel column width. */
 function resolveMetrics(metrics: Tokens["metrics"]): NonNullable<Tokens["metrics"]> {
-  const out = structuredClone(metrics ?? {}) as NonNullable<Tokens["metrics"]>;
-  const dag = out.dag;
-  if (dag && typeof dag.ioColumnWidth === "number") {
-    dag.componentWidth = dag.ioColumnWidth * 2;
-  }
-  return out;
-}
-
-function parseHex6(hex: string): [number, number, number] {
-  const s = hex.trim().replace(/^#/, "");
-  if (s.length === 3) {
-    return [Number.parseInt(s[0]! + s[0], 16), Number.parseInt(s[1]! + s[1], 16), Number.parseInt(s[2]! + s[2], 16)];
-  }
-  const v = Number.parseInt(s, 16);
-  return [(v >> 16) & 0xff, (v >> 8) & 0xff, v & 0xff];
-}
-
-function tokenHex(colors: Record<string, string>, key: string): string {
-  const v = colors[key];
-  if (!v) {
-    throw new Error(`tokens.colors[${key}] missing`);
-  }
-  return v;
-}
-
-function blendHex(a: string, b: string, ratioA: number): string {
-  const [ar, ag, ab] = parseHex6(a);
-  const [br, bg, bb] = parseHex6(b);
-  const t = Math.min(1, Math.max(0, ratioA));
-  const r = Math.round(ar * t + br * (1 - t));
-  const g = Math.round(ag * t + bg * (1 - t));
-  const bl = Math.round(ab * t + bb * (1 - t));
-  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${bl.toString(16).padStart(2, "0")}`;
+  return resolveThemeMetrics(metrics ?? {}) as NonNullable<Tokens["metrics"]>;
 }
 
 function resolvePaint(colors: Record<string, string>, ref: PaintRef): Rgba8 {
-  let hex: string;
-  let alpha = ref.alpha ?? 1;
-  if (ref.mix) {
-    const [a, b, ratio] = ref.mix;
-    const bHex = b === "transparent" ? "#000000" : tokenHex(colors, b);
-    hex = blendHex(tokenHex(colors, a), bHex, ratio);
-    if (b === "transparent" && ref.alpha === undefined) {
-      alpha = 1 - ratio;
-    }
-  } else if (ref.hex) {
-    hex = ref.hex;
-  } else if (ref.token) {
-    hex = tokenHex(colors, ref.token);
-  } else {
-    throw new Error("paint ref needs token, hex, or mix");
-  }
-  const [r, g, b] = parseHex6(hex);
-  return [r, g, b, Math.round(alpha * 255)];
+  return resolveThemePaint(colors, ref);
 }
 
 function srgbByteToLinear(c: number): number {
@@ -205,6 +156,23 @@ function emitJsonConst(name: string, value: unknown, indent = ""): string {
   return `${indent}export const ${name} = ${JSON.stringify(value, null, 2).replaceAll("\n", `\n${indent}`)} as const;\n`;
 }
 
+/** @emoji 🎨 Builds the default "semio" `UiTheme` verbatim from tokens.json (the paint refs stay unresolved). */
+function buildSemioUiTheme(tokens: Tokens): UiTheme {
+  return {
+    id: "semio",
+    label: "semio",
+    colors: tokens.colors,
+    spacing: tokens.spacing,
+    fontStacks: tokens.fontStacks,
+    canvasFonts: tokens.canvasFonts ?? {},
+    strokes: tokens.strokes ?? {},
+    radii: tokens.radii ?? {},
+    opacities: tokens.opacities ?? {},
+    metrics: resolveMetrics(tokens.metrics),
+    appearances: (tokens.appearances ?? {}) as UiTheme["appearances"],
+  };
+}
+
 function emitTypeScriptTokens(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolveAppearances>): string {
   const lines: string[] = ["/* Generated from ui/styling/tokens.json — run `bun ./script.ts generate`. */", ""];
   lines.push("export const STYLING_TOKENS = {");
@@ -238,6 +206,7 @@ function emitTypeScriptTokens(tokens: Tokens, resolvedAppearances: ReturnType<ty
     }
     lines.push("");
   }
+  lines.push(emitJsonConst("STYLING_SEMIO_THEME", buildSemioUiTheme(tokens)));
   return lines.join("\n");
 }
 
@@ -501,6 +470,28 @@ export function generateStylingArtifacts(): void {
   writeFileSync(join(composeNetPaletteDir, "Palette.g.cs"), cs, "utf8");
   writeFileSync(join(rustGeneratedDir, "generated.rs"), emitRust(tokens, resolvedAppearances), "utf8");
   writeFileSync(join(pyGeneratedDir, "generated.py"), emitPython(tokens, resolvedAppearances), "utf8");
+  validatePremadeThemes();
+}
+
+const premadeThemeDir = join(stylingRoot, "theme");
+
+/** @emoji 🔎 Parses and resolves every premade `*.theme.json` so a broken preset fails `generate` instead of shipping. */
+function validatePremadeThemes(): void {
+  if (!existsSync(premadeThemeDir)) {
+    return;
+  }
+  for (const entry of readdirSync(premadeThemeDir, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith(".theme.json")) {
+      continue;
+    }
+    const path = join(premadeThemeDir, entry.name);
+    const raw = readFileSync(path, "utf8");
+    try {
+      parseUiTheme(JSON.parse(raw));
+    } catch (err) {
+      throw new Error(`ui/styling/theme/${entry.name} is invalid: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
 }
 
 class GenerateScript extends BundleScript {

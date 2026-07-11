@@ -11,12 +11,15 @@ export {
   STYLING_METRICS,
   STYLING_OPACITIES,
   STYLING_RADII,
+  STYLING_SEMIO_THEME,
   STYLING_STROKES,
   STYLING_TOKENS,
   type StylingAppearanceName,
   type StylingTokenKey,
 } from "./tokens.generated.ts";
-import { STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_TOKENS, type StylingTokenKey } from "./tokens.generated.ts";
+import { STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_SEMIO_THEME, STYLING_TOKENS, type StylingAppearanceName, type StylingTokenKey } from "./tokens.generated.ts";
+export { parseUiTheme, resolveThemeAppearancePalettes, resolveThemeMetrics, resolveThemePaint, serializeUiTheme, type Rgba8, type ThemeAppearanceName, type ThemePaintRef, type ThemePaletteGroup, type UiTheme } from "./theme.ts";
+import { parseUiTheme, resolveThemeAppearancePalettes, type UiTheme } from "./theme.ts";
 
 //#region 🔖sizing
 //#region 🔑SizeVars
@@ -364,8 +367,11 @@ export function currentStylingAppearanceName(): StylingAppearanceName {
   return "light";
 }
 
-/** @emoji 🎨 Serializes board palette paints for DAG/flow canvas WASM (`CanvasPalette` JSON). */
+/** @emoji 🎨 Serializes the active theme's board palette paints for DAG/flow canvas WASM (`CanvasPalette` JSON). Falls back to the baked semio palette before a theme is set. */
 export function serializeCanvasThemeJson(appearanceName: StylingAppearanceName = currentStylingAppearanceName()): string {
+  if (_activeUiTheme) {
+    return JSON.stringify(resolveThemeAppearancePalettes(_activeUiTheme, appearanceName).board);
+  }
   return JSON.stringify(STYLING_BOARD_PALETTES[appearanceName]);
 }
 
@@ -478,6 +484,149 @@ if (import.meta.vitest) {
 }
 //#endregion 🧪Tests
 //#endregion 🔖resolve
+
+//#region 🔖theme
+//#region 🔑Premades
+/** @emoji 🎨 The default "semio" theme, built from tokens.json at generate time. */
+export function semioTheme(): UiTheme {
+  return STYLING_SEMIO_THEME as unknown as UiTheme;
+}
+
+let _builtinThemesCache: UiTheme[] | undefined;
+
+/** @emoji 🎨 Premade themes bundled with the app: semio plus any `ui/styling/theme/*.theme.json` presets. */
+export function builtinUiThemes(): readonly UiTheme[] {
+  if (_builtinThemesCache) {
+    return _builtinThemesCache;
+  }
+  const themes: UiTheme[] = [semioTheme()];
+  if (typeof import.meta.glob === "function") {
+    const modules = import.meta.glob("../theme/*.theme.json", { eager: true, import: "default" }) as Record<string, unknown>;
+    for (const raw of Object.values(modules)) {
+      themes.push(parseUiTheme(raw));
+    }
+  }
+  _builtinThemesCache = themes;
+  return themes;
+}
+//#endregion 🔑Premades
+
+//#region 🔑ActiveTheme
+let _activeUiTheme: UiTheme | undefined;
+const _activeUiThemeSubscribers = new Set<(theme: UiTheme) => void>();
+const _appliedThemeCssProps = new Set<string>();
+
+/** @emoji 🎨 The currently active theme (defaults to semio before any theme is set). */
+export function activeUiTheme(): UiTheme {
+  return _activeUiTheme ?? semioTheme();
+}
+
+/** @emoji 🎨 Registers a callback invoked whenever the active theme changes. Returns an unsubscribe function. */
+export function subscribeActiveUiTheme(callback: (theme: UiTheme) => void): () => void {
+  _activeUiThemeSubscribers.add(callback);
+  return () => _activeUiThemeSubscribers.delete(callback);
+}
+
+function setCssVar(root: HTMLElement, name: string, value: string): void {
+  root.style.setProperty(name, value);
+  _appliedThemeCssProps.add(name);
+}
+
+/** @emoji 🎨 Applies a theme's colors/spacing/fonts/strokes/glass metrics as inline `documentElement` CSS var overrides, clearing any previous overrides first. For semio, overrides are cleared entirely so the generated stylesheet stays authoritative. */
+export function applyUiThemeToDocument(theme: UiTheme): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+  const root = document.documentElement;
+  for (const name of _appliedThemeCssProps) {
+    root.style.removeProperty(name);
+  }
+  _appliedThemeCssProps.clear();
+  root.dataset.uiTheme = theme.id;
+  if (theme.id !== "semio") {
+    for (const [key, hex] of Object.entries(theme.colors)) {
+      setCssVar(root, `--color-${key.replaceAll("_", "-")}`, hex);
+    }
+    for (const [key, value] of Object.entries(theme.spacing)) {
+      setCssVar(root, `--spacing-${key.replaceAll("_", "-")}`, value);
+    }
+    if (theme.fontStacks.sans) setCssVar(root, "--font-sans", theme.fontStacks.sans);
+    if (theme.fontStacks.serif) setCssVar(root, "--font-serif", theme.fontStacks.serif);
+    if (theme.fontStacks.mono) setCssVar(root, "--font-mono", theme.fontStacks.mono);
+    const hairline = theme.strokes.chromeBorderHairline;
+    if (typeof hairline === "number") setCssVar(root, "--stroke-hairline", `${hairline}px`);
+    const chrome = theme.metrics.chrome;
+    if (chrome) {
+      if (typeof chrome.glassBlurPx === "number") setCssVar(root, "--glass-blur", `${chrome.glassBlurPx / 16}rem`);
+      if (typeof chrome.glassPanelBlurPx === "number") setCssVar(root, "--glass-panel-blur", `${chrome.glassPanelBlurPx / 16}rem`);
+      if (typeof chrome.glassWindowOptionsBlurPx === "number") setCssVar(root, "--glass-window-options-blur", `${chrome.glassWindowOptionsBlurPx / 16}rem`);
+      if (typeof chrome.glassSaturate === "number") setCssVar(root, "--glass-saturate", `${chrome.glassSaturate}`);
+    }
+    const glassPanelAlpha = theme.opacities.glassPanelAlpha;
+    if (typeof glassPanelAlpha === "number") setCssVar(root, "--glass-panel-alpha", `${glassPanelAlpha}`);
+    const glassMenuAlpha = theme.opacities.glassMenuAlpha;
+    if (typeof glassMenuAlpha === "number") setCssVar(root, "--glass-menu-alpha", `${glassMenuAlpha}`);
+    const glassWindowOptionsAlpha = theme.opacities.glassWindowOptionsAlpha;
+    if (typeof glassWindowOptionsAlpha === "number") setCssVar(root, "--glass-window-options-alpha", `${glassWindowOptionsAlpha}`);
+  }
+  clearColorResolveCache();
+}
+
+/** @emoji 🎨 Sets the active theme, applies it to the document, and notifies subscribers. */
+export function setActiveUiTheme(theme: UiTheme): void {
+  _activeUiTheme = theme;
+  applyUiThemeToDocument(theme);
+  for (const subscriber of _activeUiThemeSubscribers) {
+    subscriber(theme);
+  }
+}
+//#endregion 🔑ActiveTheme
+
+//#region 🧪ThemeTests
+if (import.meta.vitest) {
+  const { afterEach, describe, expect, it } = import.meta.vitest;
+
+  afterEach(() => {
+    _activeUiTheme = undefined;
+    if (typeof document !== "undefined") {
+      for (const name of [..._appliedThemeCssProps]) {
+        document.documentElement.style.removeProperty(name);
+      }
+      delete document.documentElement.dataset.uiTheme;
+    }
+    _appliedThemeCssProps.clear();
+  });
+
+  describe("theme registry", () => {
+    it("builtinUiThemes always includes semio first", () => {
+      const themes = builtinUiThemes();
+      expect(themes[0]!.id).toBe("semio");
+    });
+
+    it("activeUiTheme defaults to semio", () => {
+      expect(activeUiTheme().id).toBe("semio");
+    });
+
+    it("serializeCanvasThemeJson matches the baked palette before any theme is set", () => {
+      const parsed = JSON.parse(serializeCanvasThemeJson("light")) as { rasterClear: number[] };
+      expect(parsed.rasterClear).toEqual(STYLING_BOARD_PALETTES.light.rasterClear);
+    });
+
+    it("setActiveUiTheme changes serializeCanvasThemeJson output and notifies subscribers", () => {
+      const mono = builtinUiThemes().find((t) => t.id === "mono");
+      if (!mono) return; // premade glob unavailable in this test runtime
+      const seen: string[] = [];
+      const unsubscribe = subscribeActiveUiTheme((t) => seen.push(t.id));
+      setActiveUiTheme(mono);
+      expect(seen).toEqual(["mono"]);
+      const parsed = JSON.parse(serializeCanvasThemeJson("light")) as { rasterClear: number[] };
+      expect(parsed.rasterClear).not.toEqual(STYLING_BOARD_PALETTES.light.rasterClear);
+      unsubscribe();
+    });
+  });
+}
+//#endregion 🧪ThemeTests
+//#endregion 🔖theme
 
 //#region 🔖icon-render-port
 //#region 🔖IconRenderPort

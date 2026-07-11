@@ -155,7 +155,15 @@ function parsePaintRef(value: unknown, path: string): ThemePaintRef {
   }
   if (obj.mix !== undefined) {
     if (!Array.isArray(obj.mix) || obj.mix.length !== 3) throw new Error(`theme.${path}.mix must be [tokenA, tokenB, ratio]`);
-    ref.mix = [requireString(obj.mix[0], `${path}.mix[0]`), requireString(obj.mix[1], `${path}.mix[1]`), typeof obj.mix[2] === "number" ? obj.mix[2] : (() => { throw new Error(`theme.${path}.mix[2] must be a number`); })()];
+    ref.mix = [
+      requireString(obj.mix[0], `${path}.mix[0]`),
+      requireString(obj.mix[1], `${path}.mix[1]`),
+      typeof obj.mix[2] === "number"
+        ? obj.mix[2]
+        : (() => {
+            throw new Error(`theme.${path}.mix[2] must be a number`);
+          })(),
+    ];
   }
   if (!ref.token && !ref.hex && !ref.mix) {
     throw new Error(`theme.${path} needs token, hex, or mix`);
