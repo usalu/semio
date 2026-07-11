@@ -217,6 +217,8 @@ export function Puzzle2dBoardHost({ node, onCommand }: { readonly node: UiCompon
   const pendingFixtureSceneRef = useRef<Puzzle2dBoardScene | null>(null);
   const pendingEventRowsRef = useRef<BoardEventRow[]>([]);
   const hoverActiveRef = useRef(false);
+  const cameraInteractionActiveRef = useRef(false);
+  const cameraSettleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [sessionEpoch, setSessionEpoch] = useState(0);
   const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly Puzzle2dSelectionMenuItem[] } | null>(null);
 
@@ -273,10 +275,29 @@ export function Puzzle2dBoardHost({ node, onCommand }: { readonly node: UiCompon
   const applyPendingFixtureIfReady = useCallback((session: Puzzle2dBoardWasmSession): void => {
     const pendingScene = pendingFixtureSceneRef.current;
     if (!pendingScene) return;
-    if (session.defersDescriptorSyncFromJs?.()) return;
+    if (session.defersDescriptorSyncFromJs?.() || cameraInteractionActiveRef.current) return;
     pendingFixtureSceneRef.current = null;
     applyToSession(session, (s) => applyFixtureToSession(s, pendingScene));
   }, []);
+
+  /** @emoji 🐁 Marks a wheel-zoom gesture in flight so scene-driven camera echoes (which lag several ticks behind during a fast scroll) don't fight the live local zoom — mirrors `defersDescriptorSyncFromJs` for pan/drag, which the engine doesn't track for wheel. */
+  const beginCameraInteraction = useCallback((): void => {
+    cameraInteractionActiveRef.current = true;
+    if (cameraSettleTimeoutRef.current) clearTimeout(cameraSettleTimeoutRef.current);
+    cameraSettleTimeoutRef.current = setTimeout(() => {
+      cameraInteractionActiveRef.current = false;
+      cameraSettleTimeoutRef.current = null;
+      const session = sessionRef.current;
+      if (session) applyPendingFixtureIfReady(session);
+    }, 350);
+  }, [applyPendingFixtureIfReady]);
+
+  useEffect(
+    () => () => {
+      if (cameraSettleTimeoutRef.current) clearTimeout(cameraSettleTimeoutRef.current);
+    },
+    [],
+  );
   //#endregion BoardEventFlush
 
   //#region SessionLifecycle
@@ -357,7 +378,7 @@ export function Puzzle2dBoardHost({ node, onCommand }: { readonly node: UiCompon
     if (!scene) return;
     const session = sessionRef.current;
     if (!session) return;
-    if (session.defersDescriptorSyncFromJs?.()) {
+    if (session.defersDescriptorSyncFromJs?.() || cameraInteractionActiveRef.current) {
       pendingFixtureSceneRef.current = scene;
       return;
     }

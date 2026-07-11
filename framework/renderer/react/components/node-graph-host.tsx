@@ -418,10 +418,15 @@ function WasmGraphSurface({
       <canvas ref={labelCanvasRef} className="pointer-events-none absolute inset-0 z-40" />
       {selectionBounds ? <div className="pointer-events-none absolute z-20 border-2 border-accent" style={{ left: selectionBounds.x, top: selectionBounds.y, width: selectionBounds.width, height: selectionBounds.height }} /> : null}
       {marquee ? (
-        <SelectionMarquee
-          coverage={marquee.coverage ?? "full"}
-          shape={marquee.kind === "lasso" ? { shape: "polygon", points: marquee.points ?? [] } : { shape: "rect", rect: { x: marquee.x ?? 0, y: marquee.y ?? 0, width: marquee.width ?? 0, height: marquee.height ?? 0 } }}
-        />
+        marquee.kind === "lasso" ? (
+          <SelectionMarquee coverage={marquee.coverage ?? "full"} shape="polygon" points={marquee.points ?? []} />
+        ) : (
+          <SelectionMarquee
+            coverage={marquee.coverage ?? "full"}
+            shape="rect"
+            rect={{ x: marquee.x ?? 0, y: marquee.y ?? 0, width: marquee.width ?? 0, height: marquee.height ?? 0 }}
+          />
+        )
       ) : null}
       <div
         className="absolute inset-0 z-30"
@@ -1645,10 +1650,15 @@ export function FlowGraphCanvasHost({
         </>
       ) : null}
       {marquee ? (
-        <SelectionMarquee
-          coverage={marquee.coverage ?? "full"}
-          shape={marquee.kind === "lasso" ? { shape: "polygon", points: marquee.points ?? [] } : { shape: "rect", rect: { x: marquee.x ?? 0, y: marquee.y ?? 0, width: marquee.width ?? 0, height: marquee.height ?? 0 } }}
-        />
+        marquee.kind === "lasso" ? (
+          <SelectionMarquee coverage={marquee.coverage ?? "full"} shape="polygon" points={marquee.points ?? []} />
+        ) : (
+          <SelectionMarquee
+            coverage={marquee.coverage ?? "full"}
+            shape="rect"
+            rect={{ x: marquee.x ?? 0, y: marquee.y ?? 0, width: marquee.width ?? 0, height: marquee.height ?? 0 }}
+          />
+        )
       ) : null}
       <div
         className="absolute inset-0 z-30"
@@ -1694,7 +1704,8 @@ export function FlowGraphCanvasHost({
           const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaMode === 2 ? event.deltaY * 400 : event.deltaY;
           session.wheelScreen(event.clientX - rect.left, event.clientY - rect.top, 0, delta, true);
           session.renderFrame();
-          dispatch(nodeGraphCommands.viewport, nodeGraphViewportCommandArgs(session.cameraJson()));
+          const cameraJson = session.cameraJson?.();
+          if (cameraJson) dispatch(nodeGraphCommands.viewport, nodeGraphViewportCommandArgs(cameraJson));
           paintOverlays();
         }}
       />

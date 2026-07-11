@@ -11,7 +11,8 @@ import {
   puzzle2dFixtureDropPreviewJson,
   puzzle2dScreenToWorld,
 } from "./components/puzzle-2d-board-host.tsx";
-import { NodeGraphHost, nodeGraphViewportCommandArgs, parseDagSliderOverlays } from "./components/node-graph-host.tsx";
+import { NodeGraphHost, computeDagMarqueeOverlay, nodeGraphViewportCommandArgs, parseDagSliderOverlays } from "./components/node-graph-host.tsx";
+import { SelectionMarquee } from "@semio-tech/ui-react";
 import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
 import { TextEditorHost, buildTextEditorContextMenuItems, lineRangeAt, multiSpanReplace } from "./components/text-editor-host.tsx";
@@ -942,6 +943,50 @@ describe("framework renderer hosts", () => {
       ) as ReactElement,
     );
     expect(markup).toContain("Draw");
+  });
+});
+
+describe("dag marquee overlay", () => {
+  it("computes a rect overlay with numeric bounds for the rectangle method", () => {
+    const pointsJson = JSON.stringify([{ x: 10, y: 20 }, { x: 30, y: 50 }]);
+    const overlay = computeDagMarqueeOverlay(pointsJson, false, "rectangle");
+    expect(overlay).toEqual({ kind: "rect", x: 10, y: 20, width: 20, height: 30, coverage: "full" });
+  });
+
+  it("computes a lasso overlay carrying the raw points for the lasso method", () => {
+    const points = [{ x: 10, y: 20 }, { x: 30, y: 50 }, { x: 15, y: 40 }];
+    const overlay = computeDagMarqueeOverlay(JSON.stringify(points), true, "lasso");
+    expect(overlay).toEqual({ kind: "lasso", points, coverage: "partial" });
+  });
+
+  it("returns null for fewer than two points", () => {
+    expect(computeDagMarqueeOverlay(JSON.stringify([{ x: 0, y: 0 }]), false, "rectangle")).toBeNull();
+  });
+
+  // Regression: node-graph-host.tsx used to pass `shape={{ shape: "polygon", points }}` (a single
+  // nested-object prop) instead of separate `shape`/`points` props, so `props.shape === "rect"` was
+  // always false and the polygon branch read `props.points` as undefined — crashing on every marquee
+  // drag and tripping the shell's render error boundary (visible as an interaction "reset").
+  it("renders a rect overlay from a computeDagMarqueeOverlay rect result without crashing", () => {
+    const overlay = computeDagMarqueeOverlay(JSON.stringify([{ x: 0, y: 0 }, { x: 40, y: 25 }]), false, "rectangle");
+    if (!overlay || overlay.kind !== "rect") throw new Error("expected rect overlay");
+    const markup = renderToStaticMarkup(
+      createElement(SelectionMarquee, {
+        coverage: overlay.coverage ?? "full",
+        shape: "rect",
+        rect: { x: overlay.x ?? 0, y: overlay.y ?? 0, width: overlay.width ?? 0, height: overlay.height ?? 0 },
+      }),
+    );
+    expect(markup).toContain("<rect");
+  });
+
+  it("renders a polygon overlay from a computeDagMarqueeOverlay lasso result without crashing", () => {
+    const overlay = computeDagMarqueeOverlay(JSON.stringify([{ x: 0, y: 0 }, { x: 40, y: 25 }, { x: 5, y: 30 }]), false, "lasso");
+    if (!overlay || overlay.kind !== "lasso") throw new Error("expected lasso overlay");
+    const markup = renderToStaticMarkup(
+      createElement(SelectionMarquee, { coverage: overlay.coverage ?? "full", shape: "polygon", points: overlay.points ?? [] }),
+    );
+    expect(markup).toContain("<polygon");
   });
 });
 

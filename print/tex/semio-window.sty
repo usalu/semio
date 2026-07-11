@@ -1562,6 +1562,7 @@
 \newcommand{\semio@register@table@body}{}
 
 \newcommand{\semio@register@table@header}{%
+  \hline
   \semio@table@long@header@repeat@three
     {\semio@register@header@number}
     {\semio@register@header@title}
@@ -2168,11 +2169,11 @@
       \vbox to \semio@chrome@titlebar@height{%
         \nointerlineskip
         \hbox to \dimexpr\semio@window@gap@w\relax{%
-          \semio@window@stroke@h{#2}{\semio@window@gap@w}%
+          \semio@window@cap@paint{\semio@window@gap@w}{#1}{\semio@window@cap@body@h}%
         }%
         \nointerlineskip
         \hbox to \dimexpr\semio@window@gap@w\relax{%
-          \semio@window@cap@paint{\semio@window@gap@w}{#1}{\semio@window@cap@body@h}%
+          \semio@window@stroke@h{#2}{\semio@window@gap@w}%
         }%
       }%
     }%
