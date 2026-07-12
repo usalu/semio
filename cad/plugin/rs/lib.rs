@@ -4044,7 +4044,7 @@ mod tests {
     fn import_spatial_json_action_accepts_file_text_string_payload() {
         // The React shell's requestFileOpen host op reads the picked file as text and dispatches
         // importSpatialJson with `args: { payload: <file text> }` — a JSON *string*, not a parsed
-        // value (framework/renderer/react/os-shell.tsx handleRequestFileOpen). The command must
+        // value (framework/renderer/react/os-shell.tsx handleRequestFileOpen). The action must
         // string-parse it before unwrapping/deserializing.
         let mut app = CadApp;
         let envelope = default_envelope();

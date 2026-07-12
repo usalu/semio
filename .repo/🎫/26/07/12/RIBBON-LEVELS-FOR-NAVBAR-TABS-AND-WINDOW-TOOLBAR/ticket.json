@@ -1,0 +1,13 @@
+{
+  "title": "Ribbon Levels for Navbar Tabs and Window Toolbar",
+  "emoji": "🎀",
+  "status": "open",
+  "description": "Expand the design language with ribbon levels: a ribbon strip that grows by stacked lines, one per tree level. Navbar shrinks to two toggles (left/right side panel visibility); the former panel-kind categories (workbench/display, details/settings) become the top tab row of each side panel, with plugin tabs as a row below — tabs are now a tree, arbitrarily nestable (plugin schema becomes recursive too). Window toolbar tool-group nodes expand the ribbon upward (one stacked line per pressed group, sibling press replaces rows above). Footer keeps its inline horizontal drill-down (no vertical room to grow). See plan at /Users/ueli/.claude/plans/ui-the-design-language-quirky-sifakis.md and detailed design at /Users/ueli/.claude/plans/ui-the-design-language-quirky-sifakis-agent-a74768b944cee9bef.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1939"
+  },
+  "goal": "🎯ui🎯react",
+  "sessions": [
+    "⚪99d843825681485b9cdacdf27eedf908"
+  ]
+}

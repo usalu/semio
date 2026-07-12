@@ -347,6 +347,18 @@ function isStudioMode(pluginFilter?: string): boolean {
   return pluginFilter === "s";
 }
 
+export interface StudioShellPath {
+  readonly studioId: string;
+  readonly instanceId?: string;
+}
+
+/** @emoji 🧭 Parses `/studios/:id` and `/studios/:id/instances/:iid` shell paths; null for any other route (e.g. home). */
+export function parseStudioShellPath(path: string): StudioShellPath | null {
+  const match = /^\/studios\/([^/]+)(?:\/instances\/([^/]+))?$/.exec(path);
+  if (!match) return null;
+  return { studioId: match[1]!, instanceId: match[2] };
+}
+
 function buildStudioPrograms(loaded: readonly LoadedPluginState[]): readonly StudioProgramEntry[] {
   return loaded.flatMap((entry) =>
     entry.manifest.programs.map((program) => ({
@@ -618,7 +630,7 @@ function isTreeNode(node: UiNode): node is UiTreeNode {
   return node.type === "tree";
 }
 
-function uiNodeToTreePanelConfig(node: UiNode, onAction: (action: ActionDescriptor) => void): TreePanelConfig {
+export function uiNodeToTreePanelConfig(node: UiNode, onAction: (action: ActionDescriptor) => void): TreePanelConfig {
   if (isTreeNode(node)) return { ...uiTreeNodeToTreePanelConfig(node, onAction), dragAndDropController: declarativeTreeDragController(node, onAction) };
   return {
     sections: [
@@ -799,6 +811,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const [extraWindowInstances, setExtraWindowInstances] = useState<readonly { readonly id: string; readonly windowKindId: string; readonly title: string }[]>([]);
   const extraWindowCounterRef = useRef(0);
   const openStudioIdRef = useRef<string | null>(null);
+  const openInstanceIdRef = useRef<string | null>(null);
   const sessionRef = useRef<ActiveSession | null>(null);
   const [uiAppearance, setUiAppearance] = useState<ElementsSurfaceAppearance>(() => readStoredUiChromeAppearance());
   const [uiLayout, setUiLayout] = useState<UiChromeLayout>(() => readStoredUiChromeLayout());
@@ -993,7 +1006,8 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       const plugin = pluginEntry?.handle;
       const app = pluginEntry?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
       if (!plugin || !app) {
-        setSpawnedWindowUi(null);
+        console.warn("[os-shell] refreshSpawnedUi: plugin/app unavailable", { pluginId: spawned.pluginId, appId: spawned.appId });
+        setSpawnedWindowUi({ type: "text", value: `Plugin unavailable: ${spawned.pluginId}/${spawned.appId}` } as UiNode);
         setSpawnedWindowEngagements({});
         setSpawnedWindowMeasures({});
         setSpawnedToolNodes([]);
@@ -1082,43 +1096,15 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         ),
       );
       setActiveWindowId(findDefaultActiveWindowKindId(app.defaultLayout, app.windowKinds) ?? app.windowKinds[0]?.id ?? null);
-      if (appId === S_HOME_APP_ID) openStudioIdRef.current = null;
+      if (appId === S_HOME_APP_ID) {
+        openStudioIdRef.current = null;
+        openInstanceIdRef.current = null;
+      }
       await refreshUi(nextSession);
       return nextSession;
     },
     [loadedPlugins, refreshUi, session],
   );
-
-  const applyShellUri = useCallback(
-    async (uri: string, preservedViewState?: ViewState) => {
-      const currentSession = sessionRef.current;
-      if (!studioMode || !currentSession || loadedPlugins.length === 0) return;
-      const path = uri.split("?")[0] ?? "/";
-      const studioMatch = /^\/studios\/([^/]+)$/.exec(path);
-      const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === "s")?.handle;
-      if (!sPlugin) return;
-      if (!studioMatch) {
-        openStudioIdRef.current = null;
-        if (currentSession.app.id !== S_HOME_APP_ID) await switchToSApp(S_HOME_APP_ID, preservedViewState);
-        return;
-      }
-      const studioId = studioMatch[1]!;
-      const studioSession = currentSession.app.id === S_PLAY_APP_ID ? currentSession : await switchToSApp(S_PLAY_APP_ID, preservedViewState);
-      if (!studioSession) return;
-      if (openStudioIdRef.current === studioId) return;
-      openStudioIdRef.current = studioId;
-      await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, action: "openStudio", args: { studioId } }), studioSession.viewState);
-      await refreshUi(studioSession);
-    },
-    [loadedPlugins, refreshUi, studioMode, switchToSApp],
-  );
-
-  useEffect(() => {
-    if (!studioMode || loadedPlugins.length === 0) return;
-    void applyShellUri(shellUri).catch((uriError) => {
-      console.error("[DEBUG] shell uri apply failed", uriError);
-    });
-  }, [applyShellUri, loadedPlugins.length, shellUri, studioMode]);
 
   const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, documentJson: string, viewState: ViewState) => {
     try {
@@ -1237,8 +1223,21 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         }
         if (op.op === "openPluginInstance" && op.programId && op.appId) {
           const currentPanel = parsePanelState(nextViewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
-          const program = currentPanel.programs.find((entry) => entry.programId === op.programId && entry.appId === op.appId);
-          if (program) await ensureSpawnedPlugin(program, op.label, op.osInstanceId, op.documentJson);
+          const program = currentPanel.programs.find((entry) => entry.programId === op.programId && entry.appId === op.appId) ?? currentPanel.programs.find((entry) => entry.programId === op.programId);
+          if (program) {
+            await ensureSpawnedPlugin(program, op.label, op.osInstanceId, op.documentJson);
+            if (op.osInstanceId && openStudioIdRef.current) {
+              openInstanceIdRef.current = op.osInstanceId;
+              navigateHistory(`/studios/${openStudioIdRef.current}/instances/${op.osInstanceId}`);
+            }
+          } else {
+            console.warn(
+              "[os-shell] openPluginInstance: no program matches",
+              { programId: op.programId, appId: op.appId },
+              "available:",
+              currentPanel.programs.map((entry) => `${entry.programId}/${entry.appId}`),
+            );
+          }
         }
       }
       const nextSession = { ...baseSession, viewState: nextViewState };
@@ -1270,6 +1269,51 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     },
     [ensureSpawnedPlugin, loadedPlugins, navigateHistory, panel, refreshSpawnedUi, refreshUi, session, studioMode, syncBackboneUri],
   );
+
+  const applyShellUri = useCallback(
+    async (uri: string, preservedViewState?: ViewState) => {
+      const currentSession = sessionRef.current;
+      if (!studioMode || !currentSession || loadedPlugins.length === 0) return;
+      const path = uri.split("?")[0] ?? "/";
+      const studioPath = parseStudioShellPath(path);
+      const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === "s")?.handle;
+      if (!sPlugin) return;
+      if (!studioPath) {
+        openStudioIdRef.current = null;
+        openInstanceIdRef.current = null;
+        if (currentSession.app.id !== S_HOME_APP_ID) await switchToSApp(S_HOME_APP_ID, preservedViewState);
+        return;
+      }
+      const { studioId, instanceId } = studioPath;
+      const studioSession = currentSession.app.id === S_PLAY_APP_ID ? currentSession : await switchToSApp(S_PLAY_APP_ID, preservedViewState);
+      if (!studioSession) return;
+      if (openStudioIdRef.current !== studioId) {
+        openStudioIdRef.current = studioId;
+        openInstanceIdRef.current = null;
+        await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, action: "openStudio", args: { studioId } }), studioSession.viewState);
+        await refreshUi(studioSession);
+      }
+      if (openInstanceIdRef.current === (instanceId ?? null)) return;
+      openInstanceIdRef.current = instanceId ?? null;
+      if (instanceId) {
+        const ops = await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, action: "openInstance", args: { instanceId } }), studioSession.viewState);
+        await processPluginOps(ops, studioSession);
+      } else {
+        const ops = await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, action: "closeFocusedInstance" }), studioSession.viewState);
+        const currentPanel = parsePanelState(studioSession.viewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
+        updateStudioPanel(buildStudioPanelState(currentPanel.programs, currentPanel.spawnedApps, currentPanel.activePanelTab, undefined));
+        await processPluginOps(ops, studioSession);
+      }
+    },
+    [loadedPlugins, processPluginOps, refreshUi, studioMode, switchToSApp, updateStudioPanel],
+  );
+
+  useEffect(() => {
+    if (!studioMode || loadedPlugins.length === 0) return;
+    void applyShellUri(shellUri).catch((uriError) => {
+      console.error("[DEBUG] shell uri apply failed", uriError);
+    });
+  }, [applyShellUri, loadedPlugins.length, shellUri, studioMode]);
 
   const resolveSyncTargetSession = useCallback((): ActiveSession | null => {
     if (!session) return null;
@@ -2251,7 +2295,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     const focusedSpawned = panel?.activeSpawnedId ? panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId) : undefined;
     const focusedBar = focusedSpawned ? (
       <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2 text-sm text-muted-foreground">
-        <button type="button" className="hover:text-foreground" onClick={() => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "closeFocusedInstance" })}>
+        <button type="button" className="hover:text-foreground" onClick={() => (openStudioIdRef.current ? navigateHistory(`/studios/${openStudioIdRef.current}`) : onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "closeFocusedInstance" }))}>
           ← Back to Media Graph
         </button>
         <span>·</span>
@@ -2307,7 +2351,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         </div>
       </div>
     );
-  }, [activeWindowId, effectiveModeLayout, error, handleTemplateDrop, mobile, modeWindows, onAction, panel, session, studioMode, updateStudioPanel]);
+  }, [activeWindowId, effectiveModeLayout, error, handleTemplateDrop, mobile, modeWindows, navigateHistory, onAction, panel, session, studioMode, updateStudioPanel]);
 
   return (
     <UIFindProvider>

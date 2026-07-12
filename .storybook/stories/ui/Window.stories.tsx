@@ -102,7 +102,7 @@ export const WithEngagement: Story = {
     children: <WindowContent title="Window with Engagement" />,
     engagement: {
       options: [{ id: "opt-grid", label: "Grid", onPress: () => {} }],
-      input: { placeholder: "Command…" },
+      input: { placeholder: "Action…" },
       status: [{ id: "status", content: "Ready" }],
     },
   },
@@ -145,7 +145,7 @@ export const WithControlsMeasuresEngagementAndToolbar: Story = {
     measures: <div className="p-tiny text-sm">LOD 2</div>,
     engagement: {
       options: [{ id: "opt-grid", label: "Grid", onPress: () => {} }],
-      input: { placeholder: "Command…" },
+      input: { placeholder: "Action…" },
       status: [{ id: "status", content: "Ready" }],
     },
     toolbar: (

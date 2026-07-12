@@ -4495,6 +4495,9 @@ mod tests {
         let fixture = os_media_graph_to_flow_fixture(&graph, &[instance.clone()], &OsMediaGraphCamera::default());
         assert_eq!(fixture["schema"], "flow.fixture");
         assert_eq!(fixture["widgets"][0]["preview"], true);
+        assert_eq!(fixture["widgets"][0]["params"]["instanceId"], "app-1");
+        assert_eq!(fixture["widgets"][0]["params"]["programId"], "draw");
+        assert_eq!(fixture["widgets"][0]["params"]["appId"], "draw");
         let operators = build_os_media_flow_operator_infos(&graph, &[instance], &[]);
         assert_eq!(operators.len(), 1);
         assert_eq!(operators[0].id, "os.media.node.node-1");

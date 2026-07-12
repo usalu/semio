@@ -486,7 +486,7 @@ mod app_builder_tests {
     #[test]
     fn build_definition_rejects_duplicate_action_ids() {
         let result = std::panic::catch_unwind(|| {
-            minimal_app("dupe-command-app")
+            minimal_app("dupe-action-app")
                 .operation("addLayer", "Add Layer")
                 .operation("addLayer", "Add Layer Again")
                 .build_definition()

@@ -121,6 +121,28 @@ function parseJsonArray<T>(json: string | undefined): readonly T[] {
   }
 }
 
+export interface CatalogueAppDragPayload {
+  readonly programId: string;
+  readonly appId: string;
+  readonly label?: string;
+}
+
+/** @emoji 🎯 Parses a catalogue drag payload; returns null for non-catalogue-app payloads (garbage/legacy descriptors). */
+export function parseCatalogueAppDragPayload(raw: string): CatalogueAppDragPayload | null {
+  try {
+    const parsed = JSON.parse(raw) as { readonly programId?: string; readonly appId?: string; readonly label?: string };
+    if (!parsed.programId || !parsed.appId) return null;
+    return { programId: parsed.programId, appId: parsed.appId, label: parsed.label };
+  } catch {
+    return null;
+  }
+}
+
+/** @emoji 👻 Builds the ghost widget descriptor shown while a catalogue app is dragged over the media graph. */
+export function catalogueGhostDescriptorJson(payload: CatalogueAppDragPayload): string {
+  return JSON.stringify({ kind: "neuron", neuronKind: payload.label ?? payload.appId });
+}
+
 function portLabel(port: MediaGraphPort): string {
   if (port.label) return port.label;
   const segments = port.id.split(":");
@@ -1651,26 +1673,22 @@ export function FlowGraphCanvasHost({
       if (!session || !container) return;
       const encoded = getActiveCatalogueDragPayload();
       if (!encoded) return;
+      const catalogueApp = parseCatalogueAppDragPayload(encoded);
+      if (!catalogueApp) return;
+      const rect = container.getBoundingClientRect();
+      const sx = event.clientX - rect.left;
+      const sy = event.clientY - rect.top;
+      let world = { x: sx, y: sy };
       try {
-        const catalogueApp = JSON.parse(encoded) as { readonly programId?: string; readonly appId?: string; readonly label?: string };
-        if (!catalogueApp.programId || !catalogueApp.appId) return;
-        const rect = container.getBoundingClientRect();
-        const sx = event.clientX - rect.left;
-        const sy = event.clientY - rect.top;
-        let world = { x: sx, y: sy };
-        try {
-          const parsed = JSON.parse(session.worldFromScreen(sx, sy)) as { readonly x?: number; readonly y?: number };
-          world = { x: parsed.x ?? sx, y: parsed.y ?? sy };
-        } catch {
-          const camera = parseDagOverlayCamera(labelStateJson);
-          world = screenToWorld(camera, rect.width, rect.height, sx, sy);
-        }
-        session.setGhostWidget(JSON.stringify({ kind: "neuron", neuronKind: catalogueApp.label ?? catalogueApp.appId }), world.x, world.y);
-        session.renderFrame();
-        paintOverlays();
+        const parsed = JSON.parse(session.worldFromScreen(sx, sy)) as { readonly x?: number; readonly y?: number };
+        world = { x: parsed.x ?? sx, y: parsed.y ?? sy };
       } catch {
-        /* not a catalogue app payload */
+        const camera = parseDagOverlayCamera(labelStateJson);
+        world = screenToWorld(camera, rect.width, rect.height, sx, sy);
       }
+      session.setGhostWidget(catalogueGhostDescriptorJson(catalogueApp), world.x, world.y);
+      session.renderFrame();
+      paintOverlays();
     },
     [editable, labelStateJson, paintOverlays],
   );
@@ -1696,14 +1714,10 @@ export function FlowGraphCanvasHost({
         const camera = parseDagOverlayCamera(labelStateJson);
         world = screenToWorld(camera, rect.width, rect.height, sx, sy);
       }
-      try {
-        const catalogueApp = JSON.parse(raw) as { readonly programId?: string; readonly appId?: string };
-        if (catalogueApp.programId && catalogueApp.appId) {
-          dispatch("spawnApp", { programId: catalogueApp.programId, appId: catalogueApp.appId, position: { x: world.x, y: world.y } });
-          return;
-        }
-      } catch {
-        /* not a catalogue app payload */
+      const catalogueApp = parseCatalogueAppDragPayload(raw);
+      if (catalogueApp) {
+        dispatch("spawnApp", { programId: catalogueApp.programId, appId: catalogueApp.appId, position: { x: world.x, y: world.y } });
+        return;
       }
       try {
         const descriptor = raw.startsWith("{") ? raw : JSON.stringify({ kind: raw });

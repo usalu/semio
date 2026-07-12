@@ -25,7 +25,7 @@ export const Standalone: Story = {
         { id: "snap", label: "Snap", pressed: true, onPress: () => {} },
         { id: "grid", label: "Grid", onPress: () => {} },
       ]}
-      input={{ placeholder: "Ask or command…", onSubmit: () => {} }}
+      input={{ placeholder: "Ask or action…", onSubmit: () => {} }}
       status={[
         { id: "ready", content: "Ready" },
         { id: "selection", content: "3 selected" },
@@ -34,7 +34,7 @@ export const Standalone: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    expect(canvas.getByPlaceholderText("Ask or command…")).toBeTruthy();
+    expect(canvas.getByPlaceholderText("Ask or action…")).toBeTruthy();
     expect(canvas.getByText("Ready")).toBeTruthy();
   },
 };
@@ -72,7 +72,7 @@ export const InWindow: Story = {
         active
         engagement={{
           options: [{ id: "tool-a", label: "Tool A", onPress: () => {} }],
-          input: { placeholder: "Type a command" },
+          input: { placeholder: "Type an action" },
           status: [{ id: "status", content: "Idle" }],
         }}
       >

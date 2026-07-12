@@ -11,7 +11,14 @@ import {
   puzzle2dFixtureDropPreviewJson,
   puzzle2dScreenToWorld,
 } from "./components/puzzle-2d-board-host.tsx";
-import { NodeGraphHost, computeDagMarqueeOverlay, nodeGraphViewportActionArgs, parseDagSliderOverlays } from "./components/node-graph-host.tsx";
+import {
+  NodeGraphHost,
+  catalogueGhostDescriptorJson,
+  computeDagMarqueeOverlay,
+  nodeGraphViewportActionArgs,
+  parseCatalogueAppDragPayload,
+  parseDagSliderOverlays,
+} from "./components/node-graph-host.tsx";
 import { SelectionMarquee } from "@semio-tech/ui-react";
 import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
@@ -32,7 +39,18 @@ import {
   type NoteDocument,
   type NoteInkBlock,
 } from "./components/note-canvas-host.tsx";
-import { appDocumentLabel, appWindowDocumentLabel, buildToolbarRibbonSegments, isFlowGraphScene, selectSpawnedToolNodes, sortToolNodes, spawnedWindowChromeForKind, ToolTree } from "./os-shell.tsx";
+import {
+  appDocumentLabel,
+  appWindowDocumentLabel,
+  buildToolbarRibbonSegments,
+  isFlowGraphScene,
+  parseStudioShellPath,
+  selectSpawnedToolNodes,
+  sortToolNodes,
+  spawnedWindowChromeForKind,
+  ToolTree,
+  uiNodeToTreePanelConfig,
+} from "./os-shell.tsx";
 import { interpretUiNode } from "./ui-interpreter.tsx";
 import type { UiNode } from "./os-shell.tsx";
 
@@ -1345,5 +1363,56 @@ describe("s media graph flow routing", () => {
     );
     expect(markup).toContain("Ada");
     expect(markup).toContain("2 selected");
+  });
+
+  it("parses a catalogue app drag payload, ignoring extra keys", () => {
+    expect(parseCatalogueAppDragPayload(JSON.stringify({ programId: "s.system", appId: "draw", label: "Draw", extra: "x" }))).toEqual({
+      programId: "s.system",
+      appId: "draw",
+      label: "Draw",
+    });
+  });
+
+  it("rejects catalogue app drag payloads missing programId/appId, and garbage", () => {
+    expect(parseCatalogueAppDragPayload(JSON.stringify({ appId: "draw" }))).toBeNull();
+    expect(parseCatalogueAppDragPayload(JSON.stringify({ kind: "neuron" }))).toBeNull();
+    expect(parseCatalogueAppDragPayload("not json")).toBeNull();
+  });
+
+  it("builds a ghost neuron descriptor, preferring label over appId", () => {
+    expect(JSON.parse(catalogueGhostDescriptorJson({ programId: "s.system", appId: "draw", label: "Draw" }))).toEqual({ kind: "neuron", neuronKind: "Draw" });
+    expect(JSON.parse(catalogueGhostDescriptorJson({ programId: "s.system", appId: "draw" }))).toEqual({ kind: "neuron", neuronKind: "draw" });
+  });
+
+  it("attaches a drag-and-drop controller to tree panels whose items carry drag data", () => {
+    const config = uiNodeToTreePanelConfig(
+      {
+        type: "tree",
+        sections: [
+          {
+            id: "catalogue",
+            label: "Catalogue",
+            items: [{ id: "s-play-catalogue.document.draw", label: "Draw", draggable: true, dragData: { "application/x-semio-catalogue-item": '{"programId":"s.system","appId":"draw"}' } }],
+          },
+        ],
+      },
+      noopAction,
+    );
+    expect(config.dragAndDropController).toBeDefined();
+  });
+
+  it("omits the drag-and-drop controller for tree panels without drag data", () => {
+    const config = uiNodeToTreePanelConfig(
+      { type: "tree", sections: [{ id: "catalogue", label: "Catalogue", items: [{ id: "s-play-catalogue.document.draw", label: "Draw" }] }] },
+      noopAction,
+    );
+    expect(config.dragAndDropController).toBeUndefined();
+  });
+
+  it("parses studio and studio+instance shell paths, and rejects non-studio routes", () => {
+    expect(parseStudioShellPath("/studios/my-studio")).toEqual({ studioId: "my-studio", instanceId: undefined });
+    expect(parseStudioShellPath("/studios/my-studio/instances/inst-1")).toEqual({ studioId: "my-studio", instanceId: "inst-1" });
+    expect(parseStudioShellPath("/")).toBeNull();
+    expect(parseStudioShellPath("/studios/my-studio/instances/inst-1/extra")).toBeNull();
   });
 });

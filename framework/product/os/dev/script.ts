@@ -423,8 +423,8 @@ export function openWindow(kind, paramsJson) {
   throw \`open-window unsupported: \${kind}\`;
 }
 
-export function invokeCommand(target, invocationJson) {
-  throw \`invoke-command unsupported: \${target}\`;
+export function invokeAction(target, invocationJson) {
+  throw \`invoke-action unsupported: \${target}\`;
 }
 
 export function readAsset(handle) {

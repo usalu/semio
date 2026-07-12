@@ -3032,6 +3032,74 @@ mod tests {
     }
 
     #[test]
+    fn spawns_draw_app_instance_at_drop_position() {
+        seed_draw_program();
+        let mut envelope = initial_studio_envelope();
+        let existing_ids: std::collections::HashSet<String> = projection_from_document(&envelope.document)
+            .app_instances
+            .iter()
+            .map(|instance| instance.id.clone())
+            .collect();
+        SStudioApp::handle_studio_action(
+            &mut envelope,
+            "spawnApp",
+            Some(&json!({ "programId": "draw", "appId": "draw", "position": { "x": 321.0, "y": 654.0 } })),
+        );
+        let projection = projection_from_document(&envelope.document);
+        let instance_id = projection
+            .app_instances
+            .iter()
+            .find(|instance| instance.program_id == "draw" && !existing_ids.contains(&instance.id))
+            .expect("newly spawned draw instance")
+            .id
+            .clone();
+        let node = projection
+            .media_graph
+            .nodes
+            .iter()
+            .find(|row| row.instance_id == instance_id)
+            .expect("media node for spawned instance");
+        assert!((node.x - 321.0).abs() < 0.01);
+        assert!((node.y - 654.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn open_instance_emits_open_plugin_instance_op_matching_spawned_program() {
+        seed_draw_program();
+        let mut envelope = initial_studio_envelope();
+        let existing_ids: std::collections::HashSet<String> = projection_from_document(&envelope.document)
+            .app_instances
+            .iter()
+            .map(|instance| instance.id.clone())
+            .collect();
+        SStudioApp::handle_studio_action(
+            &mut envelope,
+            "spawnApp",
+            Some(&json!({ "programId": "draw", "appId": "draw" })),
+        );
+        let instance_id = projection_from_document(&envelope.document)
+            .app_instances
+            .iter()
+            .find(|instance| instance.program_id == "draw" && !existing_ids.contains(&instance.id))
+            .expect("newly spawned draw instance")
+            .id
+            .clone();
+        let ops = SStudioApp::handle_studio_action(
+            &mut envelope,
+            "openInstance",
+            Some(&json!({ "instanceId": instance_id })),
+        );
+        let open_op = ops
+            .iter()
+            .map(|op_json| serde_json::from_str::<Value>(op_json).expect("op json"))
+            .find(|op| op.get("op").and_then(Value::as_str) == Some("openPluginInstance"))
+            .expect("openPluginInstance op");
+        assert_eq!(open_op.get("programId").and_then(Value::as_str), Some("draw"));
+        assert_eq!(open_op.get("appId").and_then(Value::as_str), Some("draw"));
+        assert_eq!(open_op.get("osInstanceId").and_then(Value::as_str), Some(instance_id.as_str()));
+    }
+
+    #[test]
     fn export_then_import_dwg_media_round_trips_app_source() {
         use base64::Engine;
         seed_draw_program();

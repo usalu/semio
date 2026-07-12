@@ -9,7 +9,7 @@ use semio_framework_core::{
         WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
         WindowLayoutWindowNode,
     },
-    AppDefinition, CommandDescriptor,
+    AppDefinition, ActionDescriptor,
 };
 use std::collections::HashMap;
 use ui_wgpu::{
@@ -60,7 +60,7 @@ pub struct DockRenderContext<'a> {
     pub draw: &'a mut DrawList,
     pub atlas: &'a mut FontAtlas,
     pub icons: &'a IconAtlas,
-    pub input: &'a mut InputState<CommandDescriptor>,
+    pub input: &'a mut InputState<ActionDescriptor>,
     pub theme: &'a Theme,
     pub window_labels: &'a std::collections::HashMap<String, String>,
 }
@@ -1707,7 +1707,7 @@ mod tests {
                 body_key: "tab.body".into(),
             }],
             keybindings: vec![],
-            commands: vec![],
+            actions: vec![],
             named_layouts: vec![],
             default_layout: layout,
             terminologies: vec![],
@@ -1802,7 +1802,7 @@ mod tests {
         let canvas = Rect::new(0.0, 0.0, 400.0, 300.0);
         let theme = Theme::default();
         let mut atlas = FontAtlas::builtin();
-        let mut input = InputState::<CommandDescriptor>::default();
+        let mut input = InputState::<ActionDescriptor>::default();
         let mut draw = DrawList::default();
         let labels = HashMap::from([
             ("a".into(), "A".into()),
@@ -1951,7 +1951,7 @@ use flow_core::{dag::dag_screen_to_world, FlowFixture, FlowHost};
 use framework_editor::EditorHost;
 use framework_graph::GraphHost;
 use infinite_cavas as cavas;
-use semio_framework_core::{CommandDescriptor, SurfaceKind, UiComponentSceneNode};
+use semio_framework_core::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -2120,18 +2120,18 @@ fn is_flow_graph(graph: &semio_framework_core::NodeGraphScene) -> bool {
         .unwrap_or(false)
 }
 
-fn scene_cmd(scene: &UiComponentSceneNode, command: &str, args: Value) -> CommandDescriptor {
-    CommandDescriptor {
+fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: scene.controller_id.clone(),
-        command: command.to_string(),
+        action: action.to_string(),
         args: Some(args),
     }
 }
 
-fn graph_cmd(controller_id: &str, surface_id: &str, command: &str, args: Value) -> CommandDescriptor {
-    CommandDescriptor {
+fn graph_action(controller_id: &str, surface_id: &str, action: &str, args: Value) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: controller_id.to_string(),
-        command: command.to_string(),
+        action: action.to_string(),
         args: Some(args),
     }
 }
@@ -2571,12 +2571,12 @@ pub fn node_graph_sync_flow_widget_ghost(
     }
 }
 
-pub fn node_graph_flow_widget_drop_command(
+pub fn node_graph_flow_widget_drop_action(
     x: f32,
     y: f32,
     drag_data: &HashMap<String, String>,
     surfaces: &[(&str, Rect, &str)],
-) -> Option<CommandDescriptor> {
+) -> Option<ActionDescriptor> {
     let raw = drag_data.get(FLOW_WIDGET_DRAG_MIME)?;
     let descriptor: Value = serde_json::from_str(raw).ok()?;
     for (surface_id, bounds, controller_id) in surfaces {
@@ -2593,9 +2593,9 @@ pub fn node_graph_flow_widget_drop_command(
                 Some(dag_screen_to_world(&host.dag, sx, sy))
             })
         })?;
-        return Some(CommandDescriptor {
+        return Some(ActionDescriptor {
             controller_id: (*controller_id).to_string(),
-            command: "addWidget".into(),
+            action: "addWidget".into(),
             args: Some(json!({
                 "kind": descriptor.get("kind").and_then(|value| value.as_str()).unwrap_or("inputSlider"),
                 "neuronKind": descriptor.get("neuronKind").and_then(|value| value.as_str()),
@@ -2615,7 +2615,7 @@ pub fn node_graph_wheel(
     y: f32,
     delta: f32,
     _ctrl: bool,
-) -> Vec<CommandDescriptor> {
+) -> Vec<ActionDescriptor> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     ENGINE_SURFACES.with(|cell| {
@@ -2634,7 +2634,7 @@ pub fn node_graph_wheel(
             }
             None => return Vec::new(),
         }
-        graph_interaction_commands(surface_id, controller_id, entry)
+        graph_interaction_actions(surface_id, controller_id, entry)
     })
 }
 
@@ -2649,7 +2649,7 @@ pub fn node_graph_pointer_down(
     ctrl: bool,
     alt: bool,
     space_pressed: bool,
-) -> Vec<CommandDescriptor> {
+) -> Vec<ActionDescriptor> {
     let pan = node_graph_pan_gesture(button, alt, space_pressed);
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
@@ -2666,7 +2666,7 @@ pub fn node_graph_pointer_down(
                         if last_id == widget_id && now - last_ms < 400.0 {
                             host.begin_note_edit(&widget_id, world_x, world_y);
                             entry.last_note_click = None;
-                            return graph_interaction_commands(surface_id, controller_id, entry);
+                            return graph_interaction_actions(surface_id, controller_id, entry);
                         }
                     }
                     entry.last_note_click = Some((widget_id, now));
@@ -2684,7 +2684,7 @@ pub fn node_graph_pointer_down(
             }
             None => return Vec::new(),
         }
-        graph_interaction_commands(surface_id, controller_id, entry)
+        graph_interaction_actions(surface_id, controller_id, entry)
     })
 }
 
@@ -2697,7 +2697,7 @@ pub fn node_graph_pointer_move(
     shift: bool,
     ctrl: bool,
     alt: bool,
-) -> Vec<CommandDescriptor> {
+) -> Vec<ActionDescriptor> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     ENGINE_SURFACES.with(|cell| {
@@ -2714,7 +2714,7 @@ pub fn node_graph_pointer_move(
             }
             None => return Vec::new(),
         }
-        graph_interaction_commands(surface_id, controller_id, entry)
+        graph_interaction_actions(surface_id, controller_id, entry)
     })
 }
 
@@ -2727,7 +2727,7 @@ pub fn node_graph_pointer_up(
     shift: bool,
     ctrl: bool,
     alt: bool,
-) -> Vec<CommandDescriptor> {
+) -> Vec<ActionDescriptor> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     ENGINE_SURFACES.with(|cell| {
@@ -2744,15 +2744,15 @@ pub fn node_graph_pointer_up(
             }
             None => return Vec::new(),
         }
-        graph_interaction_commands(surface_id, controller_id, entry)
+        graph_interaction_actions(surface_id, controller_id, entry)
     })
 }
 
-fn graph_interaction_commands(
+fn graph_interaction_actions(
     surface_id: &str,
     controller_id: &str,
     entry: &EngineSurface,
-) -> Vec<CommandDescriptor> {
+) -> Vec<ActionDescriptor> {
     let (node_ids, hover_json, viewport_json) = match entry.node_graph.as_ref() {
         Some(NodeGraphEngine::Flow(host)) => {
             let ids: Vec<String> =
@@ -2779,19 +2779,19 @@ fn graph_interaction_commands(
         None => return Vec::new(),
     };
     vec![
-        graph_cmd(
+        graph_action(
             controller_id,
             surface_id,
             "nodeGraphSelect",
             json!({ "surfaceId": surface_id, "nodeIds": node_ids }),
         ),
-        graph_cmd(
+        graph_action(
             controller_id,
             surface_id,
             "nodeGraphHover",
             json!({ "surfaceId": surface_id, "hoverJson": hover_json }),
         ),
-        graph_cmd(
+        graph_action(
             controller_id,
             surface_id,
             "nodeGraphViewport",
@@ -3407,10 +3407,10 @@ pub fn with_map_host<R>(surface_id: &str, f: impl FnOnce(&gis_2d::MapHost) -> R)
     })
 }
 
-pub fn map_cmd(controller_id: &str, command: &str, args: Value) -> CommandDescriptor {
-    CommandDescriptor {
+pub fn map_action(controller_id: &str, action: &str, args: Value) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: controller_id.to_string(),
-        command: command.to_string(),
+        action: action.to_string(),
         args: Some(args),
     }
 }
@@ -3512,11 +3512,11 @@ pub fn parse_map_hover(hit_json: &str) -> Value {
     serde_json::from_str(hit_json).unwrap_or(Value::Null)
 }
 
-pub fn map_interaction_commands(
+pub fn map_interaction_actions(
     surface_id: &str,
     controller_id: &str,
     host: &gis_2d::MapHost,
-) -> Vec<CommandDescriptor> {
+) -> Vec<ActionDescriptor> {
   let selection = json!({
       "positions": host.selected_positions_json(),
       "routes": host.selected_routes_json(),
@@ -3527,19 +3527,19 @@ pub fn map_interaction_commands(
       Value::Null
   };
   vec![
-      map_cmd(
+      map_action(
           controller_id,
-          semio_framework_core::gis_map_commands::SET_CAMERA,
+          semio_framework_core::gis_map_actions::SET_CAMERA,
           json!({ "surfaceId": surface_id, "camera": serde_json::from_str::<Value>(&host.camera_json()).unwrap_or(json!({})) }),
       ),
-      map_cmd(
+      map_action(
           controller_id,
-          semio_framework_core::gis_map_commands::SET_FEATURE_SELECTION,
+          semio_framework_core::gis_map_actions::SET_FEATURE_SELECTION,
           json!({ "surfaceId": surface_id, "positions": selection["positions"], "routes": selection["routes"] }),
       ),
-      map_cmd(
+      map_action(
           controller_id,
-          semio_framework_core::gis_map_commands::SET_HOVER,
+          semio_framework_core::gis_map_actions::SET_HOVER,
           json!({ "surfaceId": surface_id, "hover": hover }),
       ),
   ]
@@ -3553,7 +3553,7 @@ pub fn gis_map_wheel(
     y: f32,
     delta: f32,
     ctrl: bool,
-) -> Vec<CommandDescriptor> {
+) -> Vec<ActionDescriptor> {
     let (sx, sy) = map_local_pointer(inner, x, y);
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -3568,7 +3568,7 @@ pub fn gis_map_wheel(
             delta_y *= 2.5;
         }
         host.wheel_screen(sx, sy, delta_y);
-        map_interaction_commands(surface_id, controller_id, host)
+        map_interaction_actions(surface_id, controller_id, host)
     })
 }
 //#endregion GisMap
@@ -3781,10 +3781,10 @@ pub fn with_board_host<R>(surface_id: &str, f: impl FnOnce(&puzzle_2d::BoardHost
     })
 }
 
-pub fn board_cmd(controller_id: &str, command: &str, args: Value) -> CommandDescriptor {
-    CommandDescriptor {
+pub fn board_action(controller_id: &str, action: &str, args: Value) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: controller_id.to_string(),
-        command: command.to_string(),
+        action: action.to_string(),
         args: Some(args),
     }
 }
@@ -3835,14 +3835,14 @@ fn board_take_buffer_coalesced(surface_id: &str) -> Option<String> {
 }
 
 /// @emoji 📤 Unconditional drain + coalesce + dispatch, mirroring `flushBoardEvents` (used after pointer-up, pointer-leave, and wheel).
-fn board_flush_events_command(surface_id: &str, controller_id: &str) -> Option<CommandDescriptor> {
+fn board_flush_events_action(surface_id: &str, controller_id: &str) -> Option<ActionDescriptor> {
     board_drain_into_buffer(surface_id);
     let events_json = board_take_buffer_coalesced(surface_id)?;
-    Some(board_cmd(controller_id, "applyBoardEvents", json!({ "eventsJson": events_json })))
+    Some(board_action(controller_id, "applyBoardEvents", json!({ "eventsJson": events_json })))
 }
 
 /// @emoji 📤 Drains into the buffer and only dispatches if a flush-now event (select, brushPlace, edgeCreate, ...) is pending, mirroring `drainAndMaybeFlush` (used on pointer-move).
-fn board_drain_and_maybe_flush(surface_id: &str, controller_id: &str) -> Vec<CommandDescriptor> {
+fn board_drain_and_maybe_flush(surface_id: &str, controller_id: &str) -> Vec<ActionDescriptor> {
     board_drain_into_buffer(surface_id);
     let flush_now = ENGINE_SURFACES.with(|cell| {
         cell.borrow()
@@ -3854,14 +3854,14 @@ fn board_drain_and_maybe_flush(surface_id: &str, controller_id: &str) -> Vec<Com
         return Vec::new();
     }
     match board_take_buffer_coalesced(surface_id) {
-        Some(events_json) => vec![board_cmd(controller_id, "applyBoardEvents", json!({ "eventsJson": events_json }))],
+        Some(events_json) => vec![board_action(controller_id, "applyBoardEvents", json!({ "eventsJson": events_json }))],
         None => Vec::new(),
     }
 }
 
-fn board_camera_command(surface_id: &str, controller_id: &str) -> Option<CommandDescriptor> {
+fn board_camera_action(surface_id: &str, controller_id: &str) -> Option<ActionDescriptor> {
     with_board_host(surface_id, |host| {
-        board_cmd(controller_id, "setCamera", json!({ "camera": { "x": host.camera.x, "y": host.camera.y, "zoom": host.camera.zoom } }))
+        board_action(controller_id, "setCamera", json!({ "camera": { "x": host.camera.x, "y": host.camera.y, "zoom": host.camera.zoom } }))
     })
 }
 
@@ -3879,20 +3879,20 @@ pub fn puzzle_board_pointer_down(surface_id: &str, inner: Rect, x: f32, y: f32, 
     board_set_pointer_inside(surface_id, true);
 }
 
-pub fn puzzle_board_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<CommandDescriptor> {
+pub fn puzzle_board_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<ActionDescriptor> {
     let (sx, sy) = map_local_pointer(inner, x, y);
     with_board_host_mut(surface_id, |host| host.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt));
     board_set_pointer_inside(surface_id, true);
     board_drain_and_maybe_flush(surface_id, controller_id)
 }
 
-pub fn puzzle_board_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<CommandDescriptor> {
+pub fn puzzle_board_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<ActionDescriptor> {
     let (sx, sy) = map_local_pointer(inner, x, y);
     with_board_host_mut(surface_id, |host| host.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt));
-    board_flush_events_command(surface_id, controller_id).into_iter().collect()
+    board_flush_events_action(surface_id, controller_id).into_iter().collect()
 }
 
-pub fn puzzle_board_pointer_leave(surface_id: &str, controller_id: &str, alt: bool) -> Vec<CommandDescriptor> {
+pub fn puzzle_board_pointer_leave(surface_id: &str, controller_id: &str, alt: bool) -> Vec<ActionDescriptor> {
     let was_inside = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let Some(entry) = map.get_mut(surface_id) else {
@@ -3906,7 +3906,7 @@ pub fn puzzle_board_pointer_leave(surface_id: &str, controller_id: &str, alt: bo
         return Vec::new();
     }
     with_board_host_mut(surface_id, |host| host.pointer_leave_screen(alt));
-    board_flush_events_command(surface_id, controller_id).into_iter().collect()
+    board_flush_events_action(surface_id, controller_id).into_iter().collect()
 }
 
 /// @emoji 🖐️ True while a node drag or area-select gesture is in flight, so pointer-up outside the surface bounds still reaches the host (mirrors `gis_map_drag_active`).
@@ -3914,17 +3914,17 @@ pub fn board_drag_active(surface_id: &str) -> bool {
     with_board_host(surface_id, |host| host.defers_descriptor_sync_from_js() || host.is_dragging_area_select()).unwrap_or(false)
 }
 
-pub fn puzzle_board_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<CommandDescriptor> {
+pub fn puzzle_board_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<ActionDescriptor> {
     let (sx, sy) = map_local_pointer(inner, x, y);
     with_board_host_mut(surface_id, |host| host.wheel_screen(sx, sy, delta as f64));
-    let mut commands = Vec::new();
-    if let Some(camera_command) = board_camera_command(surface_id, controller_id) {
-        commands.push(camera_command);
+    let mut actions = Vec::new();
+    if let Some(camera_action) = board_camera_action(surface_id, controller_id) {
+        actions.push(camera_action);
     }
-    if let Some(events_command) = board_flush_events_command(surface_id, controller_id) {
-        commands.push(events_command);
+    if let Some(events_action) = board_flush_events_action(surface_id, controller_id) {
+        actions.push(events_action);
     }
-    commands
+    actions
 }
 //#endregion Puzzle2dBoard
 
@@ -4001,7 +4001,7 @@ pub fn text_editor_apply_key(
     scene: &UiComponentSceneNode,
     key: ui_wgpu::KeyAction,
     modifiers: &ui_wgpu::PointerModifiers,
-) -> Vec<CommandDescriptor> {
+) -> Vec<ActionDescriptor> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let Some(entry) = map.get_mut(&scene.surface_id) else {
@@ -4021,7 +4021,7 @@ pub fn text_editor_apply_key(
             }
             _ => return Vec::new(),
         }
-        text_editor_interaction_commands(scene, host)
+        text_editor_interaction_actions(scene, host)
     })
 }
 
@@ -4073,7 +4073,7 @@ pub fn paint_text_editor(
     });
 }
 
-pub fn text_editor_wheel(scene: &UiComponentSceneNode, delta: f32) -> Vec<CommandDescriptor> {
+pub fn text_editor_wheel(scene: &UiComponentSceneNode, delta: f32) -> Vec<ActionDescriptor> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let Some(entry) = map.get_mut(&scene.surface_id) else {
@@ -4093,7 +4093,7 @@ pub fn text_editor_pointer_down(
     x: f32,
     y: f32,
     button: i16,
-) -> Vec<CommandDescriptor> {
+) -> Vec<ActionDescriptor> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     ENGINE_SURFACES.with(|cell| {
@@ -4105,11 +4105,11 @@ pub fn text_editor_pointer_down(
             return Vec::new();
         };
         host.pointer_down_screen(sx, sy, button as i32);
-        text_editor_interaction_commands(scene, host)
+        text_editor_interaction_actions(scene, host)
     })
 }
 
-pub fn text_editor_pointer_move(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<CommandDescriptor> {
+pub fn text_editor_pointer_move(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     ENGINE_SURFACES.with(|cell| {
@@ -4121,11 +4121,11 @@ pub fn text_editor_pointer_move(scene: &UiComponentSceneNode, inner: Rect, x: f3
             return Vec::new();
         };
         host.pointer_move_screen(sx, sy, 0);
-        text_editor_interaction_commands(scene, host)
+        text_editor_interaction_actions(scene, host)
     })
 }
 
-pub fn text_editor_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<CommandDescriptor> {
+pub fn text_editor_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     ENGINE_SURFACES.with(|cell| {
@@ -4137,16 +4137,16 @@ pub fn text_editor_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32,
             return Vec::new();
         };
         host.pointer_up_screen(sx, sy, 0);
-        text_editor_interaction_commands(scene, host)
+        text_editor_interaction_actions(scene, host)
     })
 }
 
-fn text_editor_interaction_commands(
+fn text_editor_interaction_actions(
     scene: &UiComponentSceneNode,
     host: &EditorHost,
-) -> Vec<CommandDescriptor> {
+) -> Vec<ActionDescriptor> {
     vec![
-        scene_cmd(
+        scene_action(
             scene,
             "textSelect",
             json!({
@@ -4154,7 +4154,7 @@ fn text_editor_interaction_commands(
                 "selectionJson": json!({ "start": host.anchor(), "end": host.caret() }).to_string(),
             }),
         ),
-        scene_cmd(
+        scene_action(
             scene,
             "textEdit",
             json!({ "surfaceId": scene.surface_id, "document": host.text() }),
@@ -4170,7 +4170,7 @@ pub mod interpreter {
 //! 🧩 Maps framework UiNode trees to ui_wgpu widget nodes.
 
 use crate::scenes::{queue_canvas_image_upload, render_component_scene, GisMapSurface, NodeGraphSurface, Puzzle2dBoardSurface};
-use semio_framework_core::{CommandDescriptor, UiComponentSceneNode, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
+use semio_framework_core::{ActionDescriptor, UiComponentSceneNode, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
 use serde_json::Value;
 use ui_wgpu::{
     draw_text, gap_for_token, layout_horizontal, layout_vertical, padding_for_token, ControlNode, KeyValueEntry, Rect,
@@ -4178,7 +4178,7 @@ use ui_wgpu::{
     measure_widget, render_widget,
 };
 
-pub type FrameworkWidgetContext<'a> = WidgetContext<'a, CommandDescriptor>;
+pub type FrameworkWidgetContext<'a> = WidgetContext<'a, ActionDescriptor>;
 
 //#region RenderPlanValidator
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -4625,7 +4625,7 @@ fn render_ui_image(image: &semio_framework_core::UiImageNode, bounds: Rect, ctx:
         .push_raster_quad(&key, [bounds.x, bounds.y, bounds.w, bounds.h], [0.0, 0.0, 1.0, 1.0], 1.0);
 }
 
-pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<CommandDescriptor> {
+pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<ActionDescriptor> {
     match node {
         UiNode::Stack(stack) => WidgetNode::Stack {
             direction: stack.direction.clone(),
@@ -4642,7 +4642,7 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<CommandDescriptor> {
             id: button.id.clone(),
             icon_id: Some(button.icon_id.clone()),
             label: button.label.clone(),
-            event: Some(button.command.clone()),
+            event: Some(button.action.clone()),
         },
         UiNode::Input(input) => WidgetNode::Input {
             id: input.id.clone(),
@@ -4743,13 +4743,13 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<CommandDescriptor> {
     }
 }
 
-fn control_to_widget(control: &UiControlNode) -> ControlNode<CommandDescriptor> {
+fn control_to_widget(control: &UiControlNode) -> ControlNode<ActionDescriptor> {
     match control {
         UiControlNode::Button(n) => ControlNode::Button {
             id: n.id.clone(),
             icon_id: Some(n.icon_id.clone()),
             label: n.label.clone(),
-            event: Some(n.command.clone()),
+            event: Some(n.action.clone()),
         },
         UiControlNode::Input(n) => ControlNode::Input {
             id: n.id.clone(),
@@ -4813,16 +4813,16 @@ fn control_to_widget(control: &UiControlNode) -> ControlNode<CommandDescriptor> 
     }
 }
 
-fn tree_action_to_widget(action: &UiTreeItemAction) -> TreeItemAction<CommandDescriptor> {
+fn tree_action_to_widget(action: &UiTreeItemAction) -> TreeItemAction<ActionDescriptor> {
     TreeItemAction {
         icon_id: action.icon_id.clone(),
         label: action.label.clone(),
-        event: action.command.clone(),
+        event: action.action.clone(),
         reveal_on_hover: action.reveal_on_hover.unwrap_or(false),
     }
 }
 
-fn tree_section_to_widget(section: &UiTreeSectionNode) -> TreeSection<CommandDescriptor> {
+fn tree_section_to_widget(section: &UiTreeSectionNode) -> TreeSection<ActionDescriptor> {
     TreeSection {
         id: section.id.clone(),
         label: section.label.clone(),
@@ -4831,7 +4831,7 @@ fn tree_section_to_widget(section: &UiTreeSectionNode) -> TreeSection<CommandDes
     }
 }
 
-fn tree_item_to_widget(item: &UiTreeItemNode) -> TreeItem<CommandDescriptor> {
+fn tree_item_to_widget(item: &UiTreeItemNode) -> TreeItem<ActionDescriptor> {
     TreeItem {
         id: item.id.clone(),
         label: item.label.clone(),
@@ -4841,9 +4841,9 @@ fn tree_item_to_widget(item: &UiTreeItemNode) -> TreeItem<CommandDescriptor> {
         highlighted: false,
         default_open: item.default_open.unwrap_or(false),
         is_hidden: item.is_hidden.unwrap_or(false),
-        event: item.command.clone(),
-        hover_event: item.hover_command.clone(),
-        unhover_event: item.unhover_command.clone(),
+        event: item.action.clone(),
+        hover_event: item.hover_action.clone(),
+        unhover_event: item.unhover_action.clone(),
         actions: item
             .actions
             .as_ref()
@@ -4863,13 +4863,13 @@ fn tree_item_to_widget(item: &UiTreeItemNode) -> TreeItem<CommandDescriptor> {
     }
 }
 
-fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<CommandDescriptor> {
+fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<ActionDescriptor> {
     match control {
         UiControlNode::Button(n) => WidgetNode::Button {
             id: n.id.clone(),
             icon_id: Some(n.icon_id.clone()),
             label: n.label.clone(),
-            event: Some(n.command.clone()),
+            event: Some(n.action.clone()),
         },
         UiControlNode::Input(n) => WidgetNode::Input {
             id: n.id.clone(),
@@ -4938,12 +4938,12 @@ pub fn framework_widget_context<'a>(
     overlay: Option<&'a mut ui_wgpu::DrawList>,
     atlas: &'a mut ui_wgpu::FontAtlas,
     icons: Option<&'a ui_wgpu::IconAtlas>,
-    input: &'a mut ui_wgpu::InputState<CommandDescriptor>,
+    input: &'a mut ui_wgpu::InputState<ActionDescriptor>,
     theme: &'a Theme,
     scroll_offsets: &'a mut std::collections::HashMap<String, f32>,
     collapsed_sections: &'a mut std::collections::HashMap<String, bool>,
     open_selects: &'a mut std::collections::HashMap<String, bool>,
-    interaction_maps: Option<&'a mut WidgetInteractionMaps<CommandDescriptor>>,
+    interaction_maps: Option<&'a mut WidgetInteractionMaps<ActionDescriptor>>,
 ) -> FrameworkWidgetContext<'a> {
     WidgetContext {
         draw,
@@ -4993,7 +4993,7 @@ mod render_plan_validator_tests {
             id: None,
             selected: None,
             activate: None,
-            drop_command: None,
+            drop_action: None,
             children,
         })
     }
@@ -5176,17 +5176,17 @@ impl PluginBridgeEntry {
         }
     }
 
-    pub async fn handle_command(
+    pub async fn handle_action(
         &self,
         instance_id: u32,
-        command_json: &str,
+        action_json: &str,
         view_state: &ViewState,
-    ) -> Result<semio_framework_core::kernel::CommandResult, String> {
+    ) -> Result<semio_framework_core::kernel::ActionResult, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
-            PluginBridgeBackend::Js(handle) => handle_command_js(handle, instance_id, command_json, view_state).await,
+            PluginBridgeBackend::Js(handle) => handle_action_js(handle, instance_id, action_json, view_state).await,
             #[cfg(not(target_arch = "wasm32"))]
-            PluginBridgeBackend::Wasm(runtime) => runtime.handle_command(instance_id, command_json, view_state),
+            PluginBridgeBackend::Wasm(runtime) => runtime.handle_action(instance_id, action_json, view_state),
         }
     }
 
@@ -5281,21 +5281,21 @@ fn destroy_app_js(handle: &Rc<JsValue>, instance_id: u32) {
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn handle_command_js(
+async fn handle_action_js(
     handle: &Rc<JsValue>,
     instance_id: u32,
-    command_json: &str,
+    action_json: &str,
     view_state: &ViewState,
-) -> Result<semio_framework_core::kernel::CommandResult, String> {
-    let command = Reflect::get(handle.as_ref(), &JsValue::from_str("handleCommand"))
+) -> Result<semio_framework_core::kernel::ActionResult, String> {
+    let action = Reflect::get(handle.as_ref(), &JsValue::from_str("handleAction"))
         .ok()
         .and_then(|v| v.dyn_into::<Function>().ok());
-    let Some(command) = command else {
-        return Ok(semio_framework_core::kernel::CommandResult {
+    let Some(action) = action else {
+        return Ok(semio_framework_core::kernel::ActionResult {
             output: serde_json::Value::Null,
             operations: vec![],
             inverse_group: semio_framework_core::kernel::UndoGroup {
-                command_id: semio_framework_core::kernel::CommandInvocationId(String::new()),
+                action_id: semio_framework_core::kernel::ActionInvocationId(String::new()),
                 operations: vec![],
                 inverse_operations: vec![],
             },
@@ -5309,42 +5309,42 @@ async fn handle_command_js(
         "actor": "local",
     })
     .to_string();
-    let result = command
+    let result = action
         .call3(
             &JsValue::NULL,
             &JsValue::from_f64(instance_id as f64),
-            &JsValue::from_str(command_json),
+            &JsValue::from_str(action_json),
             &JsValue::from_str(&context_json),
         )
-        .map_err(|_| "handle_command failed")?;
+        .map_err(|_| "handle_action failed")?;
     let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
         JsFuture::from(promise.clone())
             .await
-            .map_err(|_| "handle_command promise failed")?
+            .map_err(|_| "handle_action promise failed")?
     } else {
         result
     };
     if let Some(text) = resolved.as_string() {
-        if let Ok(parsed) = serde_json::from_str::<semio_framework_core::kernel::CommandResult>(&text) {
+        if let Ok(parsed) = serde_json::from_str::<semio_framework_core::kernel::ActionResult>(&text) {
             return Ok(parsed);
         }
         if let Ok(ops) = serde_json::from_str::<Vec<String>>(&text) {
-            let descriptor: semio_framework_core::CommandDescriptor =
-                serde_json::from_str(command_json).unwrap_or(semio_framework_core::CommandDescriptor {
+            let descriptor: semio_framework_core::ActionDescriptor =
+                serde_json::from_str(action_json).unwrap_or(semio_framework_core::ActionDescriptor {
                     controller_id: String::new(),
-                    command: String::new(),
+                    action: String::new(),
                     args: None,
                 });
-            return Ok(semio_framework_plugin::command_result_from_patch_ops(
+            return Ok(semio_framework_plugin::action_result_from_patch_ops(
                 ops,
-                &descriptor.command,
+                &descriptor.action,
                 instance_id,
                 0,
                 "local",
             ));
         }
     }
-    Ok(semio_framework_plugin::command_result_from_patch_ops(
+    Ok(semio_framework_plugin::action_result_from_patch_ops(
         Vec::new(),
         "",
         instance_id,
@@ -5585,7 +5585,7 @@ use crate::interpreter::{validate_component_scene, FrameworkWidgetContext, RENDE
 use crate::shell::{push_context_menu_item, push_find_item, ContextMenuItem, ShellFindItem, ShellState};
 use infinite_world::{render_world_3d, World3dState};
 use base64::Engine;
-use semio_framework_core::{CommandDescriptor, SurfaceKind, UiComponentSceneNode};
+use semio_framework_core::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::cell::RefCell;
@@ -5721,7 +5721,7 @@ pub fn register_graph_node(node_id: &str, instance_id: Option<&str>) {
     });
 }
 
-/** @emoji 🕸️ Resolves a graph node instance id for context-menu commands. */
+/** @emoji 🕸️ Resolves a graph node instance id for context-menu actions. */
 pub fn graph_node_instance(node_id: &str) -> Option<String> {
     GRAPH_NODE_CTX.with(|cell| cell.borrow().get(node_id).cloned().flatten())
 }
@@ -5806,10 +5806,10 @@ fn mutate_scene_state(surface_id: &str, f: impl FnOnce(&mut SceneSurfaceState)) 
     });
 }
 
-fn scene_cmd(scene: &UiComponentSceneNode, command: &str, args: Value) -> CommandDescriptor {
-    CommandDescriptor {
+fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: scene.controller_id.clone(),
-        command: command.into(),
+        action: action.into(),
         args: Some(args),
     }
 }
@@ -5903,7 +5903,7 @@ pub fn handle_scene_wheel(
     y: f32,
     delta: f32,
     ctrl: bool,
-) -> Vec<CommandDescriptor> {
+) -> Vec<ActionDescriptor> {
     if !bounds.contains(x, y) {
         return Vec::new();
     }
@@ -5979,12 +5979,12 @@ pub fn handle_scene_pointer_move(
     _button: i16,
     drag_dx: f32,
     drag_dy: f32,
-) -> Vec<CommandDescriptor> {
+) -> Vec<ActionDescriptor> {
     let inner = bounds;
     if !inner.contains(x, y) {
         return Vec::new();
     }
-    let mut commands = Vec::new();
+    let mut actions = Vec::new();
     let state = scene_state(&scene.surface_id);
     if down {
         if let Some(drag) = &state.drag {
@@ -6031,7 +6031,7 @@ pub fn handle_scene_pointer_move(
                     mutate_scene_state(&scene.surface_id, |state| {
                         state.note_camera = Some((next.x, next.y, next.zoom));
                     });
-                    commands.push(note_set_camera_cmd(scene, next));
+                    actions.push(note_set_camera_action(scene, next));
                 }
                 SceneDragMode::NoteMove { origins, start_x, start_y } => {
                     let camera = note_current_camera(scene);
@@ -6057,7 +6057,7 @@ pub fn handle_scene_pointer_move(
                                 state.note_overrides.insert(id, block);
                             }
                         });
-                        commands.push(note_apply_events_cmd(scene, &events, "live", None));
+                        actions.push(note_apply_events_action(scene, &events, "live", None));
                     }
                 }
                 SceneDragMode::NoteResize { handle, from, start_x, start_y, selected_ids } => {
@@ -6085,7 +6085,7 @@ pub fn handle_scene_pointer_move(
                                 state.note_overrides.insert(id, block);
                             }
                         });
-                        commands.push(note_apply_events_cmd(scene, &events, "live", None));
+                        actions.push(note_apply_events_action(scene, &events, "live", None));
                     }
                 }
                 SceneDragMode::NoteInk { block_id } => {
@@ -6114,7 +6114,7 @@ pub fn handle_scene_pointer_move(
                         mutate_scene_state(&scene.surface_id, |state| {
                             state.note_overrides.insert(block_id.clone(), block.clone());
                         });
-                        commands.push(note_apply_events_cmd(
+                        actions.push(note_apply_events_action(
                             scene,
                             &[json!({ "op": "updateBlock", "blockId": block_id, "block": block })],
                             "live",
@@ -6136,7 +6136,7 @@ pub fn handle_scene_pointer_move(
                         note_erase_ink_points_events(&doc.blocks, world_x, world_y, doc.eraser_radius.unwrap_or(12.0))
                     };
                     if !events.is_empty() {
-                        commands.push(note_apply_events_cmd(scene, &events, "live", None));
+                        actions.push(note_apply_events_action(scene, &events, "live", None));
                     }
                 }
                 SceneDragMode::NoteMarqueeDrag { start_x, start_y } => {
@@ -6149,17 +6149,17 @@ pub fn handle_scene_pointer_move(
     }
     match scene.component_kind {
         SurfaceKind::NoteCanvas if !down => {
-            commands.extend(note_hover_move(scene, inner, x, y));
+            actions.extend(note_hover_move(scene, inner, x, y));
         }
         SurfaceKind::Canvas2d if down => {
-            commands.push(scene_cmd(
+            actions.push(scene_action(
                 scene,
                 "canvasPointerMove",
                 canvas_world_pointer_json(scene, inner, x, y, json!({})),
             ));
         }
         SurfaceKind::NodeGraph if down => {
-            commands.extend(engine_canvas::node_graph_pointer_move(
+            actions.extend(engine_canvas::node_graph_pointer_move(
                 &scene.surface_id,
                 &scene.controller_id,
                 inner,
@@ -6171,10 +6171,10 @@ pub fn handle_scene_pointer_move(
             ));
         }
         SurfaceKind::TextEditor if down => {
-            commands.extend(engine_canvas::text_editor_pointer_move(scene, inner, x, y));
+            actions.extend(engine_canvas::text_editor_pointer_move(scene, inner, x, y));
         }
         SurfaceKind::NodeGraph | SurfaceKind::TextEditor if !down => {
-            commands.extend(match scene.component_kind {
+            actions.extend(match scene.component_kind {
                 SurfaceKind::NodeGraph => engine_canvas::node_graph_pointer_move(
                     &scene.surface_id,
                     &scene.controller_id,
@@ -6190,7 +6190,7 @@ pub fn handle_scene_pointer_move(
         }
         _ => {}
     }
-    commands
+    actions
 }
 
 pub fn handle_scene_pointer_button(
@@ -6201,7 +6201,7 @@ pub fn handle_scene_pointer_button(
     down: bool,
     button: i16,
     shift: bool,
-) -> Vec<CommandDescriptor> {
+) -> Vec<ActionDescriptor> {
     let inner = bounds;
     if !inner.contains(x, y) {
         if !down {
@@ -6212,7 +6212,7 @@ pub fn handle_scene_pointer_button(
         }
         return Vec::new();
     }
-    let mut commands = Vec::new();
+    let mut actions = Vec::new();
     if down {
         mutate_scene_state(&scene.surface_id, |state| {
             state.pointer_was_down = true;
@@ -6225,9 +6225,9 @@ pub fn handle_scene_pointer_button(
                             state.paint_stroke_active = true;
                         }
                     });
-                    commands.push(scene_cmd(scene, "paintStrokeBegin", json!({ "surfaceId": scene.surface_id })));
+                    actions.push(scene_action(scene, "paintStrokeBegin", json!({ "surfaceId": scene.surface_id })));
                 }
-                commands.push(scene_cmd(
+                actions.push(scene_action(
                     scene,
                     "canvasPointerDown",
                     canvas_world_pointer_json(
@@ -6268,7 +6268,7 @@ pub fn handle_scene_pointer_button(
                 }
             }
             SurfaceKind::NodeGraph => {
-                commands.extend(engine_canvas::node_graph_pointer_down(
+                actions.extend(engine_canvas::node_graph_pointer_down(
                     &scene.surface_id,
                     &scene.controller_id,
                     inner,
@@ -6282,20 +6282,20 @@ pub fn handle_scene_pointer_button(
                 ));
             }
             SurfaceKind::TextEditor => {
-                commands.extend(engine_canvas::text_editor_pointer_down(scene, inner, x, y, button));
+                actions.extend(engine_canvas::text_editor_pointer_down(scene, inner, x, y, button));
             }
             SurfaceKind::NoteCanvas => {
-                commands.extend(note_pointer_down(scene, inner, x, y, button, shift));
+                actions.extend(note_pointer_down(scene, inner, x, y, button, shift));
             }
             _ => {}
         }
     } else {
         match scene.component_kind {
             SurfaceKind::NoteCanvas => {
-                commands.extend(note_pointer_up(scene, inner, x, y));
+                actions.extend(note_pointer_up(scene, inner, x, y));
             }
             SurfaceKind::Canvas2d => {
-                commands.push(scene_cmd(
+                actions.push(scene_action(
                     scene,
                     "canvasPointerUp",
                     canvas_world_pointer_json(scene, inner, x, y, json!({})),
@@ -6305,10 +6305,10 @@ pub fn handle_scene_pointer_button(
                         state.paint_stroke_active = false;
                     }
                 });
-                commands.push(scene_cmd(scene, "paintStrokeEnd", json!({ "surfaceId": scene.surface_id })));
+                actions.push(scene_action(scene, "paintStrokeEnd", json!({ "surfaceId": scene.surface_id })));
             }
             SurfaceKind::NodeGraph => {
-                commands.extend(engine_canvas::node_graph_pointer_up(
+                actions.extend(engine_canvas::node_graph_pointer_up(
                     &scene.surface_id,
                     &scene.controller_id,
                     inner,
@@ -6320,7 +6320,7 @@ pub fn handle_scene_pointer_button(
                 ));
             }
             SurfaceKind::TextEditor => {
-                commands.extend(engine_canvas::text_editor_pointer_up(scene, inner, x, y));
+                actions.extend(engine_canvas::text_editor_pointer_up(scene, inner, x, y));
             }
             _ => {}
         }
@@ -6330,8 +6330,8 @@ pub fn handle_scene_pointer_button(
             if prior.last_click_target.as_deref() == Some(target.as_str())
                 && now - prior.last_click_ms < 400.0
             {
-                if let Some(command) = double_click_command(scene, &target, inner, x, y) {
-                    commands.push(command);
+                if let Some(action) = double_click_action(scene, &target, inner, x, y) {
+                    actions.push(action);
                 }
             }
             mutate_scene_state(&scene.surface_id, |state| {
@@ -6346,7 +6346,7 @@ pub fn handle_scene_pointer_button(
             }) = state.drag.as_ref()
             {
                 if let Some((nx, ny)) = state.node_positions.get(node_id).copied() {
-                    commands.push(scene_cmd(
+                    actions.push(scene_action(
                         scene,
                         "moveMediaNode",
                         json!({ "surfaceId": scene.surface_id, "nodeId": node_id, "x": nx, "y": ny }),
@@ -6357,7 +6357,7 @@ pub fn handle_scene_pointer_button(
             state.pointer_was_down = false;
         });
     }
-    commands
+    actions
 }
 
 fn hit_double_click_target(
@@ -6383,13 +6383,13 @@ fn hit_double_click_target(
     }
 }
 
-fn double_click_command(
+fn double_click_action(
     scene: &UiComponentSceneNode,
     target: &str,
     inner: Rect,
     x: f32,
     y: f32,
-) -> Option<CommandDescriptor> {
+) -> Option<ActionDescriptor> {
     match scene.component_kind {
         SurfaceKind::VirtualFileSystem => {
             let vfs = scene.virtual_file_system.as_ref()?;
@@ -6398,13 +6398,13 @@ fn double_click_command(
             let scroll = scroll_offset(&scene.surface_id, "vfs");
             let index = ((y - inner.y - 24.0 + scroll) / row_h).floor() as usize;
             rows.get(index)
-                .and_then(|row| vfs_double_click_command(scene, row))
+                .and_then(|row| vfs_double_click_action(scene, row))
         }
         SurfaceKind::NodeGraph => {
             let node_id = target.strip_prefix(&format!("{}.node.", scene.surface_id))?;
             let record = find_graph_node(scene, node_id)?;
             let instance_id = record.instance_id.as_deref()?;
-            Some(scene_cmd(
+            Some(scene_action(
                 scene,
                 "openInstance",
                 json!({ "surfaceId": scene.surface_id, "instanceId": instance_id }),
@@ -6704,7 +6704,7 @@ fn render_raster(
     }
     ctx.input.register_hit(HitTarget {
         rect: inner,
-        event: Some(scene_cmd(scene, "rasterClick", surface_args(scene))),
+        event: Some(scene_action(scene, "rasterClick", surface_args(scene))),
         control_id: Some(scene.surface_id.clone()),
         kind: HitKind::Generic,
         drag_axis: None,
@@ -6818,7 +6818,7 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
         }
         ctx.input.register_hit(HitTarget {
             rect: row_rect,
-            event: Some(scene_cmd(
+            event: Some(scene_action(
                 scene,
                 "selectRow",
                 json!({ "surfaceId": scene.surface_id, "row": row }),
@@ -7600,7 +7600,7 @@ fn note_events_json(events: &[Value]) -> String {
     Value::Array(events.to_vec()).to_string()
 }
 
-fn note_apply_events_cmd(scene: &UiComponentSceneNode, events: &[Value], phase: &str, select_ids: Option<&[String]>) -> CommandDescriptor {
+fn note_apply_events_action(scene: &UiComponentSceneNode, events: &[Value], phase: &str, select_ids: Option<&[String]>) -> ActionDescriptor {
     let mut args = json!({
         "surfaceId": scene.surface_id,
         "eventsJson": note_events_json(events),
@@ -7609,19 +7609,19 @@ fn note_apply_events_cmd(scene: &UiComponentSceneNode, events: &[Value], phase: 
     if let Some(ids) = select_ids {
         args["selectIds"] = json!(ids);
     }
-    scene_cmd(scene, "applyNoteEvents", args)
+    scene_action(scene, "applyNoteEvents", args)
 }
 
-fn note_set_selection_cmd(scene: &UiComponentSceneNode, ids: &[String]) -> CommandDescriptor {
-    scene_cmd(scene, "setSelection", json!({ "surfaceId": scene.surface_id, "ids": ids }))
+fn note_set_selection_action(scene: &UiComponentSceneNode, ids: &[String]) -> ActionDescriptor {
+    scene_action(scene, "setSelection", json!({ "surfaceId": scene.surface_id, "ids": ids }))
 }
 
-fn note_set_hover_cmd(scene: &UiComponentSceneNode, id: Option<&str>) -> CommandDescriptor {
-    scene_cmd(scene, "setHover", json!({ "surfaceId": scene.surface_id, "id": id }))
+fn note_set_hover_action(scene: &UiComponentSceneNode, id: Option<&str>) -> ActionDescriptor {
+    scene_action(scene, "setHover", json!({ "surfaceId": scene.surface_id, "id": id }))
 }
 
-fn note_set_camera_cmd(scene: &UiComponentSceneNode, camera: NoteCameraF) -> CommandDescriptor {
-    scene_cmd(
+fn note_set_camera_action(scene: &UiComponentSceneNode, camera: NoteCameraF) -> ActionDescriptor {
+    scene_action(
         scene,
         "setCamera",
         json!({ "surfaceId": scene.surface_id, "camera": { "x": camera.x, "y": camera.y, "zoom": camera.zoom } }),
@@ -7665,7 +7665,7 @@ fn note_resize_handle_at(bounds: NoteBoundsF, camera: NoteCameraF, inner: Rect, 
 }
 
 /** @emoji 📝 Pointer-down entry point for note-canvas: mirrors handlePointerDown in note-canvas-host.tsx. */
-fn note_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16, shift: bool) -> Vec<CommandDescriptor> {
+fn note_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16, shift: bool) -> Vec<ActionDescriptor> {
     let Some(note) = &scene.note_canvas else {
         return Vec::new();
     };
@@ -7680,7 +7680,7 @@ fn note_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, 
         .map(|(cx, cy, cz)| NoteCameraF { x: cx, y: cy, zoom: cz })
         .unwrap_or_else(|| NoteCameraF::from(doc.camera.clone()));
     let tool = doc.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
-    let mut commands = Vec::new();
+    let mut actions = Vec::new();
 
     let selection_bounds = note_selection_bounds(&doc.blocks, &state.note_overrides, &selected_ids);
     let show_handles = (tool == "selectDirect" || tool == "selectMarquee") && selection_bounds.is_some() && !selected_ids.is_empty();
@@ -7699,7 +7699,7 @@ fn note_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, 
                         button,
                     });
                 });
-                return commands;
+                return actions;
             }
         }
     }
@@ -7711,11 +7711,11 @@ fn note_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, 
                 button,
             });
         });
-        return commands;
+        return actions;
     }
 
     if button != 0 {
-        return commands;
+        return actions;
     }
 
     let (world_x, world_y) = note_screen_to_world(camera, inner, x, y);
@@ -7730,9 +7730,9 @@ fn note_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, 
             s.drag = Some(SceneDrag { mode: SceneDragMode::NoteEraser { mode: tool.clone() }, button });
         });
         if !events.is_empty() {
-            commands.push(note_apply_events_cmd(scene, &events, "begin", None));
+            actions.push(note_apply_events_action(scene, &events, "begin", None));
         }
-        return commands;
+        return actions;
     }
 
     if tool == "selectMarquee" {
@@ -7740,7 +7740,7 @@ fn note_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, 
             s.drag = Some(SceneDrag { mode: SceneDragMode::NoteMarqueeDrag { start_x: x, start_y: y }, button });
             s.note_marquee_points = vec![(x, y)];
         });
-        return commands;
+        return actions;
     }
 
     if tool == "pencil" {
@@ -7750,16 +7750,16 @@ fn note_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, 
             s.note_overrides.insert(block_id.clone(), block.clone());
             s.drag = Some(SceneDrag { mode: SceneDragMode::NoteInk { block_id: block_id.clone() }, button });
         });
-        commands.push(note_apply_events_cmd(scene, &[json!({ "op": "addBlock", "block": block })], "begin", Some(&[block_id])));
-        return commands;
+        actions.push(note_apply_events_action(scene, &[json!({ "op": "addBlock", "block": block })], "begin", Some(&[block_id])));
+        return actions;
     }
 
     if tool == "text" || tool == "image" || tool == "table" || tool == "math" {
         let (px, py) = note_maybe_snap(&doc, world_x, world_y);
         let block = note_create_block(&tool, px, py);
         let block_id = note_block_id(&block).to_string();
-        commands.push(note_apply_events_cmd(scene, &[json!({ "op": "addBlock", "block": block })], "atomic", Some(&[block_id])));
-        return commands;
+        actions.push(note_apply_events_action(scene, &[json!({ "op": "addBlock", "block": block })], "atomic", Some(&[block_id])));
+        return actions;
     }
 
     let hits = note_blocks_at_point(&doc.blocks, &state.note_overrides, world_x, world_y);
@@ -7777,7 +7777,7 @@ fn note_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, 
                 } else {
                     vec![top_id.clone()]
                 };
-                commands.push(note_set_selection_cmd(scene, &next_selection));
+                actions.push(note_set_selection_action(scene, &next_selection));
                 let move_ids: Vec<String> = if selected_ids.contains(&top_id) { selected_ids.clone() } else { vec![top_id.clone()] };
                 let mut origins = HashMap::new();
                 for id in &move_ids {
@@ -7793,19 +7793,19 @@ fn note_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, 
         }
         _ => {
             if tool == "selectDirect" {
-                commands.push(note_set_selection_cmd(scene, &[]));
+                actions.push(note_set_selection_action(scene, &[]));
             }
         }
     }
-    commands
+    actions
 }
 
 /** @emoji 📝 Pointer-up entry point for note-canvas: commits the active gesture and finalizes marquee selection. */
-fn note_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<CommandDescriptor> {
-    let mut commands = Vec::new();
+fn note_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
+    let mut actions = Vec::new();
     let state = scene_state(&scene.surface_id);
     let Some(drag) = state.drag.clone() else {
-        return commands;
+        return actions;
     };
     let doc: NoteDocumentJson = scene
         .note_canvas
@@ -7827,7 +7827,7 @@ fn note_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) ->
                     events.push(json!({ "op": "updateBlock", "blockId": id, "block": updated }));
                 }
             }
-            commands.push(note_apply_events_cmd(scene, &events, "commit", None));
+            actions.push(note_apply_events_action(scene, &events, "commit", None));
         }
         SceneDragMode::NoteResize { selected_ids, .. } => {
             let mut events = Vec::new();
@@ -7836,17 +7836,17 @@ fn note_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) ->
                     events.push(json!({ "op": "updateBlock", "blockId": id, "block": block }));
                 }
             }
-            commands.push(note_apply_events_cmd(scene, &events, "commit", None));
+            actions.push(note_apply_events_action(scene, &events, "commit", None));
         }
         SceneDragMode::NoteInk { block_id } => {
             if let Some(block) = state.note_overrides.get(block_id).cloned() {
-                commands.push(note_apply_events_cmd(scene, &[json!({ "op": "updateBlock", "blockId": block_id, "block": block })], "commit", None));
+                actions.push(note_apply_events_action(scene, &[json!({ "op": "updateBlock", "blockId": block_id, "block": block })], "commit", None));
             } else {
-                commands.push(note_apply_events_cmd(scene, &[], "commit", None));
+                actions.push(note_apply_events_action(scene, &[], "commit", None));
             }
         }
         SceneDragMode::NoteEraser { .. } => {
-            commands.push(note_apply_events_cmd(scene, &[], "commit", None));
+            actions.push(note_apply_events_action(scene, &[], "commit", None));
         }
         SceneDragMode::NoteMarqueeDrag { start_x, start_y } => {
             let x0 = start_x.min(x);
@@ -7859,7 +7859,7 @@ fn note_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) ->
                 let (wx1, wy1) = note_screen_to_world(camera, inner, x0 + w, y0 + h);
                 let world_rect = NoteBoundsF { x: wx0.min(wx1), y: wy0.min(wy1), w: (wx1 - wx0).abs(), h: (wy1 - wy0).abs() };
                 let ids = note_blocks_intersecting_rect(&doc.blocks, &state.note_overrides, world_rect);
-                commands.push(note_set_selection_cmd(scene, &ids));
+                actions.push(note_set_selection_action(scene, &ids));
             }
         }
         _ => {}
@@ -7868,11 +7868,11 @@ fn note_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) ->
         s.drag = None;
         s.note_marquee_points.clear();
     });
-    commands
+    actions
 }
 
 /** @emoji 📝 Pointer-move hover entry point for note-canvas: mirrors the `!dragState` hover branch of handlePointerMove. */
-fn note_hover_move(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<CommandDescriptor> {
+fn note_hover_move(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
     let Some(note) = &scene.note_canvas else {
         return Vec::new();
     };
@@ -7888,11 +7888,11 @@ fn note_hover_move(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) ->
     if note.hovered_id.as_deref() == top_id.as_deref() {
         return Vec::new();
     }
-    vec![note_set_hover_cmd(scene, top_id.as_deref())]
+    vec![note_set_hover_action(scene, top_id.as_deref())]
 }
 
 /** @emoji 📝 Wheel entry point for note-canvas: zoom-at-cursor, mirrors handleWheel in note-canvas-host.tsx. */
-fn note_wheel(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<CommandDescriptor> {
+fn note_wheel(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<ActionDescriptor> {
     let Some(note) = &scene.note_canvas else {
         return Vec::new();
     };
@@ -7911,7 +7911,7 @@ fn note_wheel(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: 
     mutate_scene_state(&scene.surface_id, |s| {
         s.note_camera = Some((next.x, next.y, next.zoom));
     });
-    vec![note_set_camera_cmd(scene, next)]
+    vec![note_set_camera_action(scene, next)]
 }
 //#endregion NoteCanvasState
 
@@ -8263,7 +8263,7 @@ pub struct NodeGraphSurface {
 struct GraphContextMenuItem {
     id: String,
     label: String,
-    command: String,
+    action: String,
     #[serde(default)]
     args: Option<Value>,
 }
@@ -8277,25 +8277,25 @@ fn push_graph_context_menu(scene: &UiComponentSceneNode, graph: &semio_framework
         push_context_menu_item(ContextMenuItem {
             id: format!("{}.context.{}", scene.surface_id, item.id),
             label: item.label,
-            command: Some(CommandDescriptor {
+            action: Some(ActionDescriptor {
                 controller_id: scene.controller_id.clone(),
-                command: item.command,
+                action: item.action,
                 args: item.args,
             }),
         });
     }
 }
 
-/** @emoji 🕸️ Applies node-hit context to a scene context-menu command. */
-pub fn resolve_graph_context_command(
-    command: &CommandDescriptor,
+/** @emoji 🕸️ Applies node-hit context to a scene context-menu action. */
+pub fn resolve_graph_context_action(
+    action: &ActionDescriptor,
     node_id: Option<&str>,
-) -> CommandDescriptor {
+) -> ActionDescriptor {
     let Some(node_id) = node_id else {
-        return command.clone();
+        return action.clone();
     };
-    let mut resolved = command.clone();
-    match command.command.as_str() {
+    let mut resolved = action.clone();
+    match action.action.as_str() {
         "setMediaNodeSelection" => {
             resolved.args = Some(json!({ "nodeIds": [node_id] }));
         }
@@ -8559,9 +8559,9 @@ pub fn push_gis_map_context_menu(
         push_context_menu_item(ContextMenuItem {
             id: format!("{surface_id}.context.select"),
             label: "Select".into(),
-            command: Some(engine_canvas::map_cmd(
+            action: Some(engine_canvas::map_action(
                 controller_id,
-                semio_framework_core::gis_map_commands::SET_FEATURE_SELECTION,
+                semio_framework_core::gis_map_actions::SET_FEATURE_SELECTION,
                 json!({
                     "surfaceId": surface_id,
                     "positions": if kind == "position" { vec![id] } else { Vec::<&str>::new() },
@@ -8574,9 +8574,9 @@ pub fn push_gis_map_context_menu(
             push_context_menu_item(ContextMenuItem {
                 id: format!("{surface_id}.context.deselect"),
                 label: "Deselect".into(),
-                command: Some(engine_canvas::map_cmd(
+                action: Some(engine_canvas::map_action(
                     controller_id,
-                    semio_framework_core::gis_map_commands::DESELECT,
+                    semio_framework_core::gis_map_actions::DESELECT,
                     json!({ "surfaceId": surface_id, "featureId": id, "featureKind": kind }),
                 )),
             });
@@ -8584,9 +8584,9 @@ pub fn push_gis_map_context_menu(
         push_context_menu_item(ContextMenuItem {
             id: format!("{surface_id}.context.focus"),
             label: "Focus / zoom to".into(),
-            command: Some(engine_canvas::map_cmd(
+            action: Some(engine_canvas::map_action(
                 controller_id,
-                semio_framework_core::gis_map_commands::FOCUS_FEATURE,
+                semio_framework_core::gis_map_actions::FOCUS_FEATURE,
                 json!({ "surfaceId": surface_id, "featureId": id, "featureKind": kind }),
             )),
         });
@@ -8603,9 +8603,9 @@ pub fn push_gis_map_context_menu(
                 push_context_menu_item(ContextMenuItem {
                     id: format!("{surface_id}.context.source"),
                     label: "Open source".into(),
-                    command: Some(engine_canvas::map_cmd(
+                    action: Some(engine_canvas::map_action(
                         controller_id,
-                        semio_framework_core::gis_map_commands::OPEN_SOURCE,
+                        semio_framework_core::gis_map_actions::OPEN_SOURCE,
                         json!({ "surfaceId": surface_id, "featureId": id }),
                     )),
                 });
@@ -8616,9 +8616,9 @@ pub fn push_gis_map_context_menu(
     push_context_menu_item(ContextMenuItem {
         id: format!("{surface_id}.context.select-all"),
         label: "Select all".into(),
-        command: Some(engine_canvas::map_cmd(
+        action: Some(engine_canvas::map_action(
             controller_id,
-            semio_framework_core::gis_map_commands::SELECT_ALL,
+            semio_framework_core::gis_map_actions::SELECT_ALL,
             json!({ "surfaceId": surface_id }),
         )),
     });
@@ -8629,10 +8629,10 @@ pub fn push_gis_map_context_menu(
     push_context_menu_item(ContextMenuItem {
         id: format!("{surface_id}.context.clear"),
         label: "Clear selection".into(),
-        command: if has_selection {
-            Some(engine_canvas::map_cmd(
+        action: if has_selection {
+            Some(engine_canvas::map_action(
                 controller_id,
-                semio_framework_core::gis_map_commands::CLEAR_SELECTION,
+                semio_framework_core::gis_map_actions::CLEAR_SELECTION,
                 json!({ "surfaceId": surface_id }),
             ))
         } else {
@@ -8642,9 +8642,9 @@ pub fn push_gis_map_context_menu(
     push_context_menu_item(ContextMenuItem {
         id: format!("{surface_id}.context.fit-world"),
         label: "Fit world".into(),
-        command: Some(engine_canvas::map_cmd(
+        action: Some(engine_canvas::map_action(
             controller_id,
-            semio_framework_core::gis_map_commands::FIT_WORLD,
+            semio_framework_core::gis_map_actions::FIT_WORLD,
             json!({ "surfaceId": surface_id }),
         )),
     });
@@ -8660,7 +8660,7 @@ pub fn gis_map_pointer_down(
     shift: bool,
     ctrl_or_meta: bool,
     selection_method: &str,
-) -> Vec<CommandDescriptor> {
+) -> Vec<ActionDescriptor> {
     let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
     if button == 0 {
         mutate_scene_state(surface_id, |state| {
@@ -8687,7 +8687,7 @@ pub fn gis_map_pointer_down(
             });
         });
         return engine_canvas::with_map_host_mut(surface_id, |host| {
-            engine_canvas::map_interaction_commands(surface_id, controller_id, host)
+            engine_canvas::map_interaction_actions(surface_id, controller_id, host)
         })
         .unwrap_or_default();
     }
@@ -8702,7 +8702,7 @@ pub fn gis_map_pointer_move(
     x: f32,
     y: f32,
     down: bool,
-) -> Vec<CommandDescriptor> {
+) -> Vec<ActionDescriptor> {
     let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
     if down {
         let state = scene_state(surface_id);
@@ -8711,7 +8711,7 @@ pub fn gis_map_pointer_move(
                 SceneDragMode::MapPan => {
                     engine_canvas::with_map_host_mut(surface_id, |host| host.pointer_move_screen(sx, sy));
                     return engine_canvas::with_map_host_mut(surface_id, |host| {
-                        engine_canvas::map_interaction_commands(surface_id, controller_id, host)
+                        engine_canvas::map_interaction_actions(surface_id, controller_id, host)
                     })
                     .unwrap_or_default();
                 }
@@ -8759,9 +8759,9 @@ pub fn gis_map_pointer_move(
     mutate_scene_state(surface_id, |state| {
         state.map_last_hover_json = Some(hover_json.clone());
     });
-    vec![engine_canvas::map_cmd(
+    vec![engine_canvas::map_action(
         controller_id,
-        semio_framework_core::gis_map_commands::SET_HOVER,
+        semio_framework_core::gis_map_actions::SET_HOVER,
         json!({ "surfaceId": surface_id, "hover": hover }),
     )]
 }
@@ -8772,19 +8772,19 @@ pub fn gis_map_pointer_up(
     inner: Rect,
     x: f32,
     y: f32,
-) -> Vec<CommandDescriptor> {
+) -> Vec<ActionDescriptor> {
     let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
     let state = scene_state(surface_id);
     let Some(drag) = state.drag.clone() else {
         return Vec::new();
     };
-    let mut commands = Vec::new();
+    let mut actions = Vec::new();
     match drag.mode {
         SceneDragMode::MapPan => {
             engine_canvas::with_map_host_mut(surface_id, |host| host.pointer_up_screen(sx, sy));
-            commands.extend(
+            actions.extend(
                 engine_canvas::with_map_host_mut(surface_id, |host| {
-                    engine_canvas::map_interaction_commands(surface_id, controller_id, host)
+                    engine_canvas::map_interaction_actions(surface_id, controller_id, host)
                 })
                 .unwrap_or_default(),
             );
@@ -8809,9 +8809,9 @@ pub fn gis_map_pointer_up(
                     query_map_feature_hits(host, &method, &points, crossing)
                 })
                 .unwrap_or_default();
-                commands.push(engine_canvas::map_cmd(
+                actions.push(engine_canvas::map_action(
                     controller_id,
-                    semio_framework_core::gis_map_commands::SET_FEATURE_SELECTION,
+                    semio_framework_core::gis_map_actions::SET_FEATURE_SELECTION,
                     json!({
                         "surfaceId": surface_id,
                         "positions": positions,
@@ -8830,9 +8830,9 @@ pub fn gis_map_pointer_up(
                     hit.get("id").and_then(|value| value.as_str()),
                 );
                 if let (Some(kind), Some(id)) = (kind, id) {
-                    commands.push(engine_canvas::map_cmd(
+                    actions.push(engine_canvas::map_action(
                         controller_id,
-                        semio_framework_core::gis_map_commands::SET_FEATURE_SELECTION,
+                        semio_framework_core::gis_map_actions::SET_FEATURE_SELECTION,
                         json!({
                             "surfaceId": surface_id,
                             "positions": if kind == "position" { vec![id] } else { Vec::<&str>::new() },
@@ -8850,7 +8850,7 @@ pub fn gis_map_pointer_up(
         state.map_marquee_points.clear();
         state.map_marquee_active = false;
     });
-    commands
+    actions
 }
 
 pub fn gis_map_drag_active(surface_id: &str) -> bool {
@@ -9157,15 +9157,15 @@ pub fn puzzle_board_pointer_down(surface_id: &str, inner: Rect, x: f32, y: f32, 
     engine_canvas::puzzle_board_pointer_down(surface_id, inner, x, y, button, shift, ctrl_or_meta);
 }
 
-pub fn puzzle_board_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<CommandDescriptor> {
+pub fn puzzle_board_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<ActionDescriptor> {
     engine_canvas::puzzle_board_pointer_move(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt)
 }
 
-pub fn puzzle_board_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<CommandDescriptor> {
+pub fn puzzle_board_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<ActionDescriptor> {
     engine_canvas::puzzle_board_pointer_up(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt)
 }
 
-pub fn puzzle_board_pointer_leave(surface_id: &str, controller_id: &str, alt: bool) -> Vec<CommandDescriptor> {
+pub fn puzzle_board_pointer_leave(surface_id: &str, controller_id: &str, alt: bool) -> Vec<ActionDescriptor> {
     engine_canvas::puzzle_board_pointer_leave(surface_id, controller_id, alt)
 }
 
@@ -9173,7 +9173,7 @@ pub fn puzzle_board_drag_active(surface_id: &str) -> bool {
     engine_canvas::board_drag_active(surface_id)
 }
 
-pub fn puzzle_board_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<CommandDescriptor> {
+pub fn puzzle_board_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<ActionDescriptor> {
     engine_canvas::puzzle_board_wheel(surface_id, controller_id, inner, x, y, delta)
 }
 
@@ -9181,7 +9181,7 @@ pub fn puzzle_board_wheel(surface_id: &str, controller_id: &str, inner: Rect, x:
 pub struct Puzzle2dSelectionMenuItem {
     pub id: String,
     pub label: String,
-    pub command: String,
+    pub action: String,
     pub args: Option<Value>,
     pub disabled: bool,
 }
@@ -9194,7 +9194,7 @@ fn puzzle2d_entity_flag(entity: &Value, key: &str) -> bool {
 pub fn build_puzzle2d_selection_menu_items(fixture_json: &str, selection_ids: &[String]) -> Vec<Puzzle2dSelectionMenuItem> {
     let fixture: Value = serde_json::from_str(fixture_json).unwrap_or(Value::Null);
     if selection_ids.is_empty() {
-        return vec![Puzzle2dSelectionMenuItem { id: "selectAll".into(), label: "Select all".into(), command: "selectAll".into(), args: None, disabled: false }];
+        return vec![Puzzle2dSelectionMenuItem { id: "selectAll".into(), label: "Select all".into(), action: "selectAll".into(), args: None, disabled: false }];
     }
     let selected: HashSet<&str> = selection_ids.iter().map(String::as_str).collect();
     let nodes = fixture.get("nodes").and_then(Value::as_array).cloned().unwrap_or_default();
@@ -9231,21 +9231,21 @@ pub fn build_puzzle2d_selection_menu_items(fixture_json: &str, selection_ids: &[
         Puzzle2dSelectionMenuItem {
             id: "toggleHidden".into(),
             label: (if any_visible { "Hide" } else { "Show" }).into(),
-            command: "setSelectionFlag".into(),
+            action: "setSelectionFlag".into(),
             args: Some(json!({ "flag": "hidden", "value": any_visible })),
             disabled: false,
         },
         Puzzle2dSelectionMenuItem {
             id: "toggleLocked".into(),
             label: (if any_unlocked { "Lock" } else { "Unlock" }).into(),
-            command: "setSelectionFlag".into(),
+            action: "setSelectionFlag".into(),
             args: Some(json!({ "flag": "locked", "value": any_unlocked })),
             disabled: false,
         },
-        Puzzle2dSelectionMenuItem { id: "duplicate".into(), label: "Duplicate".into(), command: "duplicateSelection".into(), args: None, disabled: !has_selected_node },
-        Puzzle2dSelectionMenuItem { id: "selectSameKind".into(), label: "Select all of same kind".into(), command: "selectSameKind".into(), args: None, disabled: false },
-        Puzzle2dSelectionMenuItem { id: "focusSelection".into(), label: "Zoom to selection".into(), command: "focusSelection".into(), args: None, disabled: false },
-        Puzzle2dSelectionMenuItem { id: "deleteSelection".into(), label: "Delete".into(), command: "deleteSelection".into(), args: None, disabled: false },
+        Puzzle2dSelectionMenuItem { id: "duplicate".into(), label: "Duplicate".into(), action: "duplicateSelection".into(), args: None, disabled: !has_selected_node },
+        Puzzle2dSelectionMenuItem { id: "selectSameKind".into(), label: "Select all of same kind".into(), action: "selectSameKind".into(), args: None, disabled: false },
+        Puzzle2dSelectionMenuItem { id: "focusSelection".into(), label: "Zoom to selection".into(), action: "focusSelection".into(), args: None, disabled: false },
+        Puzzle2dSelectionMenuItem { id: "deleteSelection".into(), label: "Delete".into(), action: "deleteSelection".into(), args: None, disabled: false },
     ]
 }
 //#endregion Puzzle2dSelectionMenu
@@ -9261,7 +9261,7 @@ pub async fn open_puzzle2d_board_context_menu(shell: &mut ShellState, surface_id
             effective = vec![id.clone()];
             engine_canvas::with_board_host_mut(surface_id, |host| host.set_selection_ids_silent(std::slice::from_ref(id)));
             let _ = shell
-                .dispatch_command(engine_canvas::board_cmd(controller_id, "setSelection", json!({ "ids": effective })))
+                .dispatch_action(engine_canvas::board_action(controller_id, "setSelection", json!({ "ids": effective })))
                 .await;
         }
     }
@@ -9269,7 +9269,7 @@ pub async fn open_puzzle2d_board_context_menu(shell: &mut ShellState, surface_id
         push_context_menu_item(ContextMenuItem {
             id: format!("{surface_id}.context.{}", item.id),
             label: item.label,
-            command: if item.disabled { None } else { Some(engine_canvas::board_cmd(controller_id, &item.command, item.args.unwrap_or(Value::Null))) },
+            action: if item.disabled { None } else { Some(engine_canvas::board_action(controller_id, &item.action, item.args.unwrap_or(Value::Null))) },
         });
     }
 }
@@ -9622,10 +9622,10 @@ fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWid
     ctx.draw.pop_scissor();
 }
 
-fn vfs_double_click_command(scene: &UiComponentSceneNode, row: &Value) -> Option<CommandDescriptor> {
+fn vfs_double_click_action(scene: &UiComponentSceneNode, row: &Value) -> Option<ActionDescriptor> {
     let uri = row.get("navigateUri").and_then(|v| v.as_str())?;
     if uri.starts_with("os://instance/") {
-        return Some(scene_cmd(
+        return Some(scene_action(
             scene,
             "openInstance",
             json!({
@@ -9637,7 +9637,7 @@ fn vfs_double_click_command(scene: &UiComponentSceneNode, row: &Value) -> Option
     if uri.starts_with("os://export/") {
         let parts: Vec<&str> = uri.split('/').collect();
         if parts.len() >= 5 {
-            return Some(scene_cmd(
+            return Some(scene_action(
                 scene,
                 "exportMedia",
                 json!({
@@ -9650,14 +9650,14 @@ fn vfs_double_click_command(scene: &UiComponentSceneNode, row: &Value) -> Option
     }
     if uri.starts_with("/studios/") {
         let studio_id = uri.split('/').nth(2)?;
-        return Some(scene_cmd(
+        return Some(scene_action(
             scene,
             "navigateVirtualFileSystemNode",
             json!({ "surfaceId": scene.surface_id, "studioId": studio_id }),
         ));
     }
     if let Some(studio_id) = uri.strip_prefix("studio:") {
-        return Some(scene_cmd(
+        return Some(scene_action(
             scene,
             "navigateVirtualFileSystemNode",
             json!({ "surfaceId": scene.surface_id, "studioId": studio_id }),
@@ -9718,21 +9718,21 @@ fn render_text_editor(
         for key in ctx.input.drain_keys() {
             match key {
                 KeyAction::Enter if modifiers.meta || modifiers.ctrl => {
-                    ctx.input.queue_event(scene_cmd(
+                    ctx.input.queue_event(scene_action(
                         scene,
                         "submit",
                         json!({ "surfaceId": scene.surface_id, "document": editor.buffer }),
                     ));
                 }
                 KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("s") => {
-                    ctx.input.queue_event(scene_cmd(
+                    ctx.input.queue_event(scene_action(
                         scene,
                         "formatDocument",
                         json!({ "surfaceId": scene.surface_id }),
                     ));
                 }
                 KeyAction::Enter | KeyAction::Escape => {
-                    ctx.input.queue_event(scene_cmd(
+                    ctx.input.queue_event(scene_action(
                         scene,
                         "textEdit",
                         json!({ "surfaceId": scene.surface_id, "document": editor.buffer }),
@@ -9742,8 +9742,8 @@ fn render_text_editor(
                     }
                 }
                 KeyAction::Char(_) | KeyAction::Backspace | KeyAction::Delete => {
-                    for command in engine_canvas::text_editor_apply_key(scene, key, &modifiers) {
-                        ctx.input.queue_event(command);
+                    for action in engine_canvas::text_editor_apply_key(scene, key, &modifiers) {
+                        ctx.input.queue_event(action);
                     }
                 }
                 _ => {}
@@ -9784,17 +9784,17 @@ use crate::dock::{
 };
 use crate::interpreter::{framework_widget_context, render_ui_node, validate_window_body_surface};
 use crate::scenes::{
-    clear_graph_node_context, open_puzzle2d_board_context_menu, push_gis_map_context_menu, resolve_graph_context_command, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, GisMapSurface, NodeGraphSurface,
+    clear_graph_node_context, open_puzzle2d_board_context_menu, push_gis_map_context_menu, resolve_graph_context_action, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, GisMapSurface, NodeGraphSurface,
     Puzzle2dBoardSurface,
 };
 use infinite_world::{
-    fetch_pending_glb_meshes, fetch_pending_reference_images, handle_world3d_paint_commands,
+    fetch_pending_glb_meshes, fetch_pending_reference_images, handle_world3d_paint_actions,
     handle_world3d_pointer_button,
     handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel, World3dState,
 };
 use crate::plugin_bridge::{is_studio_mode, PluginBridgeEntry};
 use semio_framework_core::{
-    app_document_label, app_window_document_label, AppDefinition, CommandDescriptor, ExampleDefinition,
+    app_document_label, app_window_document_label, AppDefinition, ActionDescriptor, ExampleDefinition,
     ModeDefinition, PanelGroup, PanelTabDefinition, ToolCategory, ToolNode, UiButtonNode, UiNode, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, ViewState, WindowEngagement,
     WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure,
 };
@@ -9840,7 +9840,7 @@ pub struct SearchPaletteItem {
     pub id: String,
     pub label: String,
     pub group: String,
-    pub command: Option<CommandDescriptor>,
+    pub dispatch_action: Option<ActionDescriptor>,
     pub action: Option<String>,
 }
 
@@ -9912,7 +9912,7 @@ pub struct StudioPanelState {
 pub struct ContextMenuItem {
     pub id: String,
     pub label: String,
-    pub command: Option<CommandDescriptor>,
+    pub action: Option<ActionDescriptor>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -10009,7 +10009,7 @@ pub struct ShellState {
     pub expertise: String,
     pub tree_drag: Option<TreeDragState>,
     pub tree_hovered_id: Option<String>,
-    pub widget_maps: WidgetInteractionMaps<CommandDescriptor>,
+    pub widget_maps: WidgetInteractionMaps<ActionDescriptor>,
     pub pending_tree_drag: Option<(String, HashMap<String, String>)>,
     pub tree_drag_origin: (f32, f32),
     pub dock_drag: Option<DockDragState>,
@@ -10025,7 +10025,7 @@ pub struct ShellState {
     pub split_resize_secondary_axis_total: f32,
     pub split_resize_secondary_origin: Vec<f32>,
     pub measures_resize_window_id: Option<String>,
-    pub deferred_commands: Vec<CommandDescriptor>,
+    pub deferred_actions: Vec<ActionDescriptor>,
     pub active_tools: Vec<ToolNode>,
     pub active_tool_id: Option<String>,
     pub sync_backbone_uri: Option<String>,
@@ -10194,7 +10194,7 @@ impl ShellState {
             split_resize_secondary_axis_total: 1.0,
             split_resize_secondary_origin: Vec::new(),
             measures_resize_window_id: None,
-            deferred_commands: Vec::new(),
+            deferred_actions: Vec::new(),
             active_tools: Vec::new(),
             active_tool_id: None,
             sync_backbone_uri: None,
@@ -10622,7 +10622,7 @@ impl ShellState {
             id: None,
             selected: None,
             activate: None,
-            drop_command: None,
+            drop_action: None,
         })
     }
 
@@ -10636,9 +10636,9 @@ impl ShellState {
                     id: Some(format!("shell.layout.{}", layout.id)),
                     icon_id: layout.icon_id.clone().unwrap_or_else(|| "layout-grid".into()),
                     label: format!("{} ({})", layout.label, layout.origin),
-                    command: CommandDescriptor {
+                    action: ActionDescriptor {
                         controller_id: session.app.controller_id.clone(),
-                        command: "noop".into(),
+                        action: "noop".into(),
                         args: None,
                     },
                     style: None,
@@ -10661,7 +10661,7 @@ impl ShellState {
             id: None,
             selected: None,
             activate: None,
-            drop_command: None,
+            drop_action: None,
         })
     }
 
@@ -10695,9 +10695,9 @@ impl ShellState {
                         },
                     ],
                     placeholder: None,
-                    on_change: CommandDescriptor {
+                    on_change: ActionDescriptor {
                         controller_id: "framework".into(),
-                        command: "setAppearance".into(),
+                        action: "setAppearance".into(),
                         args: None,
                     },
                 }),
@@ -10715,9 +10715,9 @@ impl ShellState {
                         },
                     ],
                     placeholder: None,
-                    on_change: CommandDescriptor {
+                    on_change: ActionDescriptor {
                         controller_id: "framework".into(),
-                        command: "setExpertise".into(),
+                        action: "setExpertise".into(),
                         args: None,
                     },
                 }),
@@ -10735,9 +10735,9 @@ impl ShellState {
                         },
                     ],
                     placeholder: None,
-                    on_change: CommandDescriptor {
+                    on_change: ActionDescriptor {
                         controller_id: "framework".into(),
-                        command: "setLocale".into(),
+                        action: "setLocale".into(),
                         args: None,
                     },
                 }),
@@ -10753,16 +10753,16 @@ impl ShellState {
                         })
                         .collect(),
                     placeholder: None,
-                    on_change: CommandDescriptor {
+                    on_change: ActionDescriptor {
                         controller_id: "framework".into(),
-                        command: "setTerminology".into(),
+                        action: "setTerminology".into(),
                         args: None,
                     },
                 }),
             ],
             selected: None,
             activate: None,
-            drop_command: None,
+            drop_action: None,
         })
     }
 
@@ -10780,8 +10780,8 @@ impl ShellState {
 }
 //#endregion ShellLifecycle
 
-//#region ShellCommands
-fn patch_ops_from_command_result(result: &semio_framework_core::kernel::CommandResult) -> Vec<String> {
+//#region ShellActions
+fn patch_ops_from_action_result(result: &semio_framework_core::kernel::ActionResult) -> Vec<String> {
     result
         .operations
         .iter()
@@ -10976,16 +10976,16 @@ impl ShellState {
             .cloned()
             .or_else(|| envelope.get("document").cloned())
             .unwrap_or(envelope);
-        let command = CommandDescriptor {
+        let action = ActionDescriptor {
             controller_id: session.app.controller_id.clone(),
-            command: "setDocument".into(),
+            action: "setDocument".into(),
             args: Some(serde_json::json!({ "document": document })),
         };
-        let command_json = serde_json::to_string(&command).map_err(|err| err.to_string())?;
+        let action_json = serde_json::to_string(&action).map_err(|err| err.to_string())?;
         let result = plugin
-            .handle_command(session.instance_id, &command_json, &session.view_state)
+            .handle_action(session.instance_id, &action_json, &session.view_state)
             .await?;
-        let ops = patch_ops_from_command_result(&result);
+        let ops = patch_ops_from_action_result(&result);
         self.sync_backbone_uri = Some(uri);
         self.sync_card_kind = None;
         self.apply_ops(&ops).await?;
@@ -10994,8 +10994,8 @@ impl ShellState {
         Ok(())
     }
 
-    async fn handle_sync_command(&mut self, command: CommandDescriptor) -> Result<(), String> {
-        match command.command.as_str() {
+    async fn handle_sync_action(&mut self, action: ActionDescriptor) -> Result<(), String> {
+        match action.action.as_str() {
             "selectTemporary" => {
                 let document_id = self.sync_document_id().ok_or("session missing")?;
                 self.attach_sync_backbone(format!("temp://{document_id}")).await
@@ -11031,7 +11031,7 @@ impl ShellState {
                 Ok(())
             }
             "attach" => {
-                let path = command
+                let path = action
                     .args
                     .as_ref()
                     .and_then(|args| args.get("path"))
@@ -11040,7 +11040,7 @@ impl ShellState {
                 if path.trim().is_empty() {
                     return Ok(());
                 }
-                let kind = command
+                let kind = action
                     .args
                     .as_ref()
                     .and_then(|args| args.get("kind"))
@@ -11061,11 +11061,11 @@ impl ShellState {
         }
     }
 
-    pub async fn dispatch_command(&mut self, command: CommandDescriptor) -> Result<(), String> {
-        if command.controller_id == "framework" {
-            match command.command.as_str() {
+    pub async fn dispatch_action(&mut self, action: ActionDescriptor) -> Result<(), String> {
+        if action.controller_id == "framework" {
+            match action.action.as_str() {
                 "setAppearance" => {
-                    if let Some(value) = command
+                    if let Some(value) = action
                         .args
                         .as_ref()
                         .and_then(|args| args.get("value"))
@@ -11076,7 +11076,7 @@ impl ShellState {
                     return Ok(());
                 }
                 "setExpertise" => {
-                    if let Some(value) = command
+                    if let Some(value) = action
                         .args
                         .as_ref()
                         .and_then(|args| args.get("value"))
@@ -11087,7 +11087,7 @@ impl ShellState {
                     return Ok(());
                 }
                 "setCompact" => {
-                    if let Some(value) = command
+                    if let Some(value) = action
                         .args
                         .as_ref()
                         .and_then(|args| args.get("value"))
@@ -11098,7 +11098,7 @@ impl ShellState {
                     return Ok(());
                 }
                 "setLocale" => {
-                    if let Some(value) = command
+                    if let Some(value) = action
                         .args
                         .as_ref()
                         .and_then(|args| args.get("value"))
@@ -11109,7 +11109,7 @@ impl ShellState {
                     return Ok(());
                 }
                 "setTerminology" => {
-                    if let Some(value) = command
+                    if let Some(value) = action
                         .args
                         .as_ref()
                         .and_then(|args| args.get("value"))
@@ -11122,8 +11122,8 @@ impl ShellState {
                 _ => {}
             }
         }
-        if command.controller_id == "framework.sync" {
-            return self.handle_sync_command(command).await;
+        if action.controller_id == "framework.sync" {
+            return self.handle_sync_action(action).await;
         }
         let Some(session) = self.session.clone() else {
             return Ok(());
@@ -11135,13 +11135,13 @@ impl ShellState {
                 p.manifest
                     .apps
                     .iter()
-                    .any(|app| app.controller_id == command.controller_id)
+                    .any(|app| app.controller_id == action.controller_id)
             })
             .or_else(|| self.plugins.iter().find(|p| p.plugin_id == session.plugin_id))
-            .ok_or("command plugin missing")?;
-        let command_json = serde_json::to_string(&command).map_err(|err| err.to_string())?;
+            .ok_or("action plugin missing")?;
+        let action_json = serde_json::to_string(&action).map_err(|err| err.to_string())?;
         let result = plugin
-            .handle_command(session.instance_id, &command_json, &session.view_state)
+            .handle_action(session.instance_id, &action_json, &session.view_state)
             .await?;
         let ops: Vec<String> = result
             .operations
@@ -11200,7 +11200,7 @@ impl ShellState {
                 }
             }
             if op.get("op").and_then(|v| v.as_str()) == Some("requestFileOpen") {
-                if let Some(import_command) = op.get("importCommand").and_then(|v| v.as_str()) {
+                if let Some(import_action) = op.get("importAction").and_then(|v| v.as_str()) {
                     let accept = op
                         .get("accept")
                         .and_then(|v| v.as_str())
@@ -11214,18 +11214,18 @@ impl ShellState {
                             obj.insert("json".into(), serde_json::Value::String(contents));
                             obj.insert("payload".into(), payload);
                         }
-                        let command = CommandDescriptor {
+                        let action = ActionDescriptor {
                             controller_id: session.app.controller_id.clone(),
-                            command: import_command.to_string(),
+                            action: import_action.to_string(),
                             args: Some(args),
                         };
                         if let Some(plugin) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
-                            if let Ok(command_json) = serde_json::to_string(&command) {
+                            if let Ok(action_json) = serde_json::to_string(&action) {
                                 if let Ok(import_result) = plugin
-                                    .handle_command(session.instance_id, &command_json, &session.view_state)
+                                    .handle_action(session.instance_id, &action_json, &session.view_state)
                                     .await
                                 {
-                                    follow_up_ops.extend(patch_ops_from_command_result(&import_result));
+                                    follow_up_ops.extend(patch_ops_from_action_result(&import_result));
                                 }
                             }
                         }
@@ -11242,21 +11242,21 @@ impl ShellState {
                     if let Some(path) = request_file_save(filename) {
                         let _ = std::fs::write(&path, data.as_bytes());
                         if let Some(session) = self.session.clone() {
-                            let command = CommandDescriptor {
+                            let action = ActionDescriptor {
                                 controller_id: session.app.controller_id.clone(),
-                                command: "bindStudioFile".into(),
+                                action: "bindStudioFile".into(),
                                 args: Some(serde_json::json!({
                                     "studioId": studio_id,
                                     "filePath": path.display().to_string(),
                                 })),
                             };
                             if let Some(plugin) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
-                                if let Ok(command_json) = serde_json::to_string(&command) {
+                                if let Ok(action_json) = serde_json::to_string(&action) {
                                     if let Ok(bind_result) = plugin
-                                        .handle_command(session.instance_id, &command_json, &session.view_state)
+                                        .handle_action(session.instance_id, &action_json, &session.view_state)
                                         .await
                                     {
-                                        follow_up_ops.extend(patch_ops_from_command_result(&bind_result));
+                                        follow_up_ops.extend(patch_ops_from_action_result(&bind_result));
                                     }
                                 }
                             }
@@ -11266,25 +11266,25 @@ impl ShellState {
             }
             if op.get("op").and_then(|v| v.as_str()) == Some("requestFolderPick") {
                 #[cfg(not(target_arch = "wasm32"))]
-                if let Some(import_command) = op.get("importCommand").and_then(|v| v.as_str()) {
+                if let Some(import_action) = op.get("importAction").and_then(|v| v.as_str()) {
                     if let Some(folder_path) = pick_folder() {
                         let mut args = op.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
                         if let Some(obj) = args.as_object_mut() {
                             obj.insert("folderPath".into(), serde_json::json!(folder_path));
                         }
                         if let Some(session) = self.session.clone() {
-                            let command = CommandDescriptor {
+                            let action = ActionDescriptor {
                                 controller_id: session.app.controller_id.clone(),
-                                command: import_command.to_string(),
+                                action: import_action.to_string(),
                                 args: Some(args),
                             };
                             if let Some(plugin) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
-                                if let Ok(command_json) = serde_json::to_string(&command) {
+                                if let Ok(action_json) = serde_json::to_string(&action) {
                                     if let Ok(folder_result) = plugin
-                                        .handle_command(session.instance_id, &command_json, &session.view_state)
+                                        .handle_action(session.instance_id, &action_json, &session.view_state)
                                         .await
                                     {
-                                        follow_up_ops.extend(patch_ops_from_command_result(&folder_result));
+                                        follow_up_ops.extend(patch_ops_from_action_result(&folder_result));
                                     }
                                 }
                             }
@@ -11420,14 +11420,14 @@ impl ShellState {
             .iter()
             .find(|entry| entry.plugin_id == session.plugin_id)
             .ok_or("studio plugin missing")?;
-        let command = CommandDescriptor {
+        let action = ActionDescriptor {
             controller_id: S_PLAY_CONTROLLER_ID.into(),
-            command: "openStudio".into(),
+            action: "openStudio".into(),
             args: Some(serde_json::json!({ "studioId": studio_id })),
         };
-        let command_json = serde_json::to_string(&command).map_err(|err| err.to_string())?;
+        let action_json = serde_json::to_string(&action).map_err(|err| err.to_string())?;
         let _ops = plugin
-            .handle_command(session.instance_id, &command_json, &session.view_state)
+            .handle_action(session.instance_id, &action_json, &session.view_state)
             .await?;
         self.sync_session_chrome();
         self.refresh_ui().await
@@ -11472,7 +11472,7 @@ impl ShellState {
         Ok(())
     }
 }
-//#endregion ShellCommands
+//#endregion ShellActions
 
 //#region ShellInput
 impl ShellState {
@@ -11482,7 +11482,7 @@ impl ShellState {
         y: f32,
         down: bool,
         button: i16,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
     ) -> Result<(), String> {
         input.pointer_x = x;
@@ -11512,8 +11512,8 @@ impl ShellState {
                 if let Some(hit) = input.hit_at(x, y) {
                     if hit.control_id.as_deref() == Some(&format!("tree.label.{item_id}")) {
                         self.dispatch_tree_selection(&item_id).await?;
-                        if let Some(command) = hit.event.clone() {
-                            self.dispatch_command(command).await?;
+                        if let Some(action) = hit.event.clone() {
+                            self.dispatch_action(action).await?;
                         }
                     }
                 }
@@ -11747,13 +11747,13 @@ impl ShellState {
                         let shift = input.modifiers.shift;
                         let ordered = vec![row_id.to_string()];
                         let ids = vfs_selection_for_click(surface_id, row_id, &ordered, shift, additive);
-                        self.dispatch_command(CommandDescriptor {
+                        self.dispatch_action(ActionDescriptor {
                             controller_id: self
                                 .session
                                 .as_ref()
                                 .map(|s| s.app.controller_id.clone())
                                 .unwrap_or_default(),
-                            command: "selectRows".into(),
+                            action: "selectRows".into(),
                             args: Some(serde_json::json!({ "surfaceId": surface_id, "ids": ids })),
                         })
                         .await?;
@@ -11770,8 +11770,8 @@ impl ShellState {
                     }
                 }
             }
-            if let Some(command) = hit.event.clone() {
-                self.dispatch_command(command).await?;
+            if let Some(action) = hit.event.clone() {
+                self.dispatch_action(action).await?;
             } else if hit.kind == HitKind::Input {
                 if let Some(id) = &hit.control_id {
                     let seed = self
@@ -11784,7 +11784,7 @@ impl ShellState {
                 }
             }
         }
-        self.flush_deferred_commands().await?;
+        self.flush_deferred_actions().await?;
         Ok(())
     }
 
@@ -11793,7 +11793,7 @@ impl ShellState {
         x: f32,
         y: f32,
         down: bool,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
     ) {
         input.pointer_x = x;
@@ -11948,7 +11948,7 @@ impl ShellState {
         &mut self,
         x: f32,
         y: f32,
-        input: &InputState<CommandDescriptor>,
+        input: &InputState<ActionDescriptor>,
     ) -> Result<(), String> {
         let Some(mut drag) = self.dock_drag.take() else {
             return Ok(());
@@ -11984,7 +11984,7 @@ impl ShellState {
         control_id.ends_with(".pane") || control_id.ends_with(".map")
     }
 
-    pub fn wheel_propagates_to_scene_surface(hit: Option<&HitTarget<CommandDescriptor>>) -> bool {
+    pub fn wheel_propagates_to_scene_surface(hit: Option<&HitTarget<ActionDescriptor>>) -> bool {
         let Some(hit) = hit else {
             return true;
         };
@@ -12003,7 +12003,7 @@ impl ShellState {
         x: f32,
         y: f32,
         delta: f32,
-        input: &InputState<CommandDescriptor>,
+        input: &InputState<ActionDescriptor>,
     ) -> bool {
         let Some(hit) = input.hit_at(x, y) else {
             return false;
@@ -12051,22 +12051,22 @@ impl ShellState {
                 }
             }
         }
-        let mut commands = Vec::new();
+        let mut actions = Vec::new();
         let modifiers = PointerModifiers { shift, ctrl, alt, meta };
         for state in self.world3d_states.values_mut() {
             if !state.bounds.contains(x, y) {
                 continue;
             }
-            if let Some(command) = handle_world3d_pointer_button(state, x, y, down, button, &modifiers) {
-                commands.push(command);
+            if let Some(action) = handle_world3d_pointer_button(state, x, y, down, button, &modifiers) {
+                actions.push(action);
             }
-            commands.extend(handle_world3d_paint_commands(state, x, y, down, button));
-            if let Some(command) = handle_world3d_pointer_move(state, x, y, down, button) {
-                commands.push(command);
+            actions.extend(handle_world3d_paint_actions(state, x, y, down, button));
+            if let Some(action) = handle_world3d_pointer_move(state, x, y, down, button) {
+                actions.push(action);
             }
         }
-        for command in commands {
-            self.dispatch_command(command).await?;
+        for action in actions {
+            self.dispatch_action(action).await?;
         }
         Ok(())
     }
@@ -12076,7 +12076,7 @@ impl ShellState {
         fetch_pending_reference_images(&mut self.world3d_states).await;
     }
 
-    async fn handle_shell_hit(&mut self, hit: &HitTarget<CommandDescriptor>) -> Result<bool, String> {
+    async fn handle_shell_hit(&mut self, hit: &HitTarget<ActionDescriptor>) -> Result<bool, String> {
         let Some(id) = hit.control_id.as_deref() else {
             return Ok(false);
         };
@@ -12138,9 +12138,9 @@ impl ShellState {
                 self.active_example_id = Some(example_id.to_string());
                 self.overlay_state = OverlayState::None;
                 if let Some(session) = &self.session {
-                    self.dispatch_command(CommandDescriptor {
+                    self.dispatch_action(ActionDescriptor {
                         controller_id: session.app.controller_id.clone(),
-                        command: "setActiveExample".into(),
+                        action: "setActiveExample".into(),
                         args: Some(serde_json::json!({ "exampleId": example_id })),
                     })
                     .await?;
@@ -12247,9 +12247,9 @@ impl ShellState {
                 return Ok(true);
             }
             "studio.canvas.home" => {
-                self.dispatch_command(CommandDescriptor {
+                self.dispatch_action(ActionDescriptor {
                     controller_id: S_PLAY_CONTROLLER_ID.into(),
-                    command: "goHome".into(),
+                    action: "goHome".into(),
                     args: None,
                 })
                 .await?;
@@ -12259,9 +12259,9 @@ impl ShellState {
                 if let Some(session) = &self.session {
                     if let Some(panel) = Self::panel_state_from_view(&session.view_state) {
                         if panel.active_spawned_id.is_some() {
-                            self.dispatch_command(CommandDescriptor {
+                            self.dispatch_action(ActionDescriptor {
                                 controller_id: S_PLAY_CONTROLLER_ID.into(),
-                                command: "closeFocusedInstance".into(),
+                                action: "closeFocusedInstance".into(),
                                 args: None,
                             })
                             .await?;
@@ -12297,13 +12297,13 @@ impl ShellState {
             }
             id if id.starts_with("shell.mode.") => {
                 let mode_id = id.trim_start_matches("shell.mode.");
-                self.dispatch_command(CommandDescriptor {
+                self.dispatch_action(ActionDescriptor {
                     controller_id: self
                         .session
                         .as_ref()
                         .map(|s| s.app.controller_id.clone())
                         .unwrap_or_default(),
-                    command: "setMode".into(),
+                    action: "setMode".into(),
                     args: Some(serde_json::json!({ "modeId": mode_id })),
                 })
                 .await?;
@@ -12322,9 +12322,9 @@ impl ShellState {
                 let tab_id = id.trim_start_matches("shell.panel.tab.right.");
                 self.active_right_tab = Some(tab_id.to_string());
                 if self.studio_mode {
-                    self.dispatch_command(CommandDescriptor {
+                    self.dispatch_action(ActionDescriptor {
                         controller_id: S_PLAY_CONTROLLER_ID.into(),
-                        command: "setActivePanelTab".into(),
+                        action: "setActivePanelTab".into(),
                         args: Some(serde_json::json!({ "tabId": tab_id })),
                     })
                     .await?;
@@ -12334,8 +12334,8 @@ impl ShellState {
             id if self.context_menu.as_ref().is_some_and(|menu| menu.items.iter().any(|item| item.id == id)) => {
                 if let Some(menu) = &self.context_menu {
                     if let Some(item) = menu.items.iter().find(|item| item.id == id) {
-                        if let Some(command) = item.command.clone() {
-                            self.dispatch_command(command).await?;
+                        if let Some(action) = item.action.clone() {
+                            self.dispatch_action(action).await?;
                         }
                     }
                 }
@@ -12377,11 +12377,11 @@ impl ShellState {
             }
             id if id.contains(".item.") => {
                 if let Some((select_id, value)) = id.rsplit_once(".item.") {
-                    if let Some(cmd) = self.widget_maps.select_metas.get(select_id).cloned() {
+                    if let Some(action) = self.widget_maps.select_metas.get(select_id).cloned() {
                         self.open_selects.insert(select_id.to_string(), false);
-                        self.dispatch_command(CommandDescriptor {
-                            controller_id: cmd.controller_id,
-                            command: cmd.command,
+                        self.dispatch_action(ActionDescriptor {
+                            controller_id: action.controller_id,
+                            action: action.action,
                             args: Some(serde_json::json!({ "value": value })),
                         })
                         .await?;
@@ -12390,10 +12390,10 @@ impl ShellState {
                 }
             }
             id if self.widget_maps.toggle_metas.contains_key(id) => {
-                if let Some((pressed, cmd)) = self.widget_maps.toggle_metas.get(id).cloned() {
-                    self.dispatch_command(CommandDescriptor {
-                        controller_id: cmd.controller_id,
-                        command: cmd.command,
+                if let Some((pressed, action)) = self.widget_maps.toggle_metas.get(id).cloned() {
+                    self.dispatch_action(ActionDescriptor {
+                        controller_id: action.controller_id,
+                        action: action.action,
                         args: Some(serde_json::json!({ "pressed": !pressed })),
                     })
                     .await?;
@@ -12403,9 +12403,9 @@ impl ShellState {
             id if id.ends_with(".minus") => {
                 let base = id.trim_end_matches(".minus");
                 if let Some(meta) = self.widget_maps.stepper_metas.get(base).cloned() {
-                    self.dispatch_command(CommandDescriptor {
+                    self.dispatch_action(ActionDescriptor {
                         controller_id: meta.on_delta.controller_id,
-                        command: meta.on_delta.command,
+                        action: meta.on_delta.action,
                         args: Some(serde_json::json!({ "delta": -meta.step })),
                     })
                     .await?;
@@ -12415,9 +12415,9 @@ impl ShellState {
             id if id.ends_with(".plus") => {
                 let base = id.trim_end_matches(".plus");
                 if let Some(meta) = self.widget_maps.stepper_metas.get(base).cloned() {
-                    self.dispatch_command(CommandDescriptor {
+                    self.dispatch_action(ActionDescriptor {
                         controller_id: meta.on_delta.controller_id,
-                        command: meta.on_delta.command,
+                        action: meta.on_delta.action,
                         args: Some(serde_json::json!({ "delta": meta.step })),
                     })
                     .await?;
@@ -12449,7 +12449,7 @@ impl ShellState {
         Ok(())
     }
 
-    fn update_tree_hover(&mut self, input: &InputState<CommandDescriptor>) {
+    fn update_tree_hover(&mut self, input: &InputState<ActionDescriptor>) {
         let hovered = input
             .hovered_id
             .as_deref()
@@ -12458,38 +12458,38 @@ impl ShellState {
             return;
         }
         if let Some(prev) = self.tree_hovered_id.take() {
-            if let Some(cmd) = self.widget_maps.tree_unhover_commands.get(&prev) {
-                self.deferred_commands.push(cmd.clone());
+            if let Some(action) = self.widget_maps.tree_unhover_commands.get(&prev) {
+                self.deferred_actions.push(action.clone());
             }
         }
         if let Some(id) = hovered {
-            if let Some(cmd) = self.widget_maps.tree_hover_commands.get(id) {
-                self.deferred_commands.push(cmd.clone());
+            if let Some(action) = self.widget_maps.tree_hover_commands.get(id) {
+                self.deferred_actions.push(action.clone());
             }
             self.tree_hovered_id = Some(id.to_string());
         }
     }
 
     fn queue_tree_selection(&mut self, item_id: &str) {
-        let Some(cmd) = self.widget_maps.tree_selection_change.clone() else {
+        let Some(action) = self.widget_maps.tree_selection_change.clone() else {
             return;
         };
-        self.deferred_commands.push(CommandDescriptor {
-            controller_id: cmd.controller_id,
-            command: cmd.command,
+        self.deferred_actions.push(ActionDescriptor {
+            controller_id: action.controller_id,
+            action: action.action,
             args: Some(serde_json::json!({ "ids": [item_id] })),
         });
     }
 
     async fn dispatch_tree_selection(&mut self, item_id: &str) -> Result<(), String> {
         self.queue_tree_selection(item_id);
-        self.flush_deferred_commands().await
+        self.flush_deferred_actions().await
     }
 
-    pub async fn flush_deferred_commands(&mut self) -> Result<(), String> {
-        let commands = std::mem::take(&mut self.deferred_commands);
-        for command in commands {
-            self.dispatch_command(command).await?;
+    pub async fn flush_deferred_actions(&mut self) -> Result<(), String> {
+        let actions = std::mem::take(&mut self.deferred_actions);
+        for action in actions {
+            self.dispatch_action(action).await?;
         }
         if self.pending_shell_uri_apply {
             self.pending_shell_uri_apply = false;
@@ -12498,24 +12498,24 @@ impl ShellState {
         Ok(())
     }
 
-    async fn dispatch_widget_drag_values(&mut self, input: &InputState<CommandDescriptor>) -> Result<(), String> {
+    async fn dispatch_widget_drag_values(&mut self, input: &InputState<ActionDescriptor>) -> Result<(), String> {
         let Some(id) = input.drag.target_id.as_deref() else {
             return Ok(());
         };
         if let Some(value) = self.widget_maps.slider_live_values.get(id).copied() {
             if let Some(meta) = self.widget_maps.slider_metas.get(id).cloned() {
-                self.dispatch_command(CommandDescriptor {
+                self.dispatch_action(ActionDescriptor {
                     controller_id: meta.on_change.controller_id,
-                    command: meta.on_change.command,
+                    action: meta.on_change.action,
                     args: Some(serde_json::json!({ "value": value })),
                 })
                 .await?;
             }
         } else if let Some(value) = self.widget_maps.ring_live_values.get(id).copied() {
             if let Some(meta) = self.widget_maps.ring_metas.get(id).cloned() {
-                self.dispatch_command(CommandDescriptor {
+                self.dispatch_action(ActionDescriptor {
                     controller_id: meta.on_change.controller_id,
-                    command: meta.on_change.command,
+                    action: meta.on_change.action,
                     args: Some(serde_json::json!({ "value": value })),
                 })
                 .await?;
@@ -12524,7 +12524,7 @@ impl ShellState {
         Ok(())
     }
 
-    async fn commit_focused_input(&mut self, input: &mut InputState<CommandDescriptor>) -> Result<(), String> {
+    async fn commit_focused_input(&mut self, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
         let Some(id) = input.focused_id.clone() else {
             return Ok(());
         };
@@ -12535,9 +12535,9 @@ impl ShellState {
                         let parsed = input.text_buffer.parse::<f64>().unwrap_or(0.0);
                         let mut value = meta.value;
                         value[axis_index] = parsed;
-                        self.dispatch_command(CommandDescriptor {
+                        self.dispatch_action(ActionDescriptor {
                             controller_id: meta.on_change.controller_id,
-                            command: meta.on_change.command,
+                            action: meta.on_change.action,
                             args: Some(serde_json::json!({ "value": value })),
                         })
                         .await?;
@@ -12551,9 +12551,9 @@ impl ShellState {
             let base = id.trim_end_matches(".input");
             if let Some(meta) = self.widget_maps.stepper_metas.get(base).cloned() {
                 let parsed = input.text_buffer.parse::<f64>().unwrap_or(meta.value);
-                self.dispatch_command(CommandDescriptor {
+                self.dispatch_action(ActionDescriptor {
                     controller_id: meta.on_absolute.controller_id,
-                    command: meta.on_absolute.command,
+                    action: meta.on_absolute.action,
                     args: Some(serde_json::json!({ "value": parsed })),
                 })
                 .await?;
@@ -12562,9 +12562,9 @@ impl ShellState {
             }
         }
         if let Some(meta) = self.widget_maps.input_metas.get(&id).cloned() {
-            self.dispatch_command(CommandDescriptor {
+            self.dispatch_action(ActionDescriptor {
                 controller_id: meta.on_change.controller_id,
-                command: meta.on_change.command,
+                action: meta.on_change.action,
                 args: Some(serde_json::json!({ "value": input.text_buffer })),
             })
             .await?;
@@ -12577,12 +12577,12 @@ impl ShellState {
         &mut self,
         x: f32,
         y: f32,
-        input: &InputState<CommandDescriptor>,
+        input: &InputState<ActionDescriptor>,
     ) -> Result<(), String> {
         let Some(drag) = self.tree_drag.take() else {
             return Ok(());
         };
-        if let Some(command) = crate::engine_canvas::node_graph_flow_widget_drop_command(
+        if let Some(action) = crate::engine_canvas::node_graph_flow_widget_drop_action(
             x,
             y,
             &drag.drag_data,
@@ -12593,7 +12593,7 @@ impl ShellState {
                 .collect::<Vec<_>>(),
         ) {
             crate::engine_canvas::node_graph_clear_all_ghost_widgets();
-            self.dispatch_command(command).await?;
+            self.dispatch_action(action).await?;
             return Ok(());
         }
         crate::engine_canvas::node_graph_clear_all_ghost_widgets();
@@ -12604,9 +12604,9 @@ impl ShellState {
                         let program_id = payload.get("programId").and_then(|v| v.as_str());
                         let app_id = payload.get("appId").and_then(|v| v.as_str());
                         if let (Some(program_id), Some(app_id)) = (program_id, app_id) {
-                            self.dispatch_command(CommandDescriptor {
+                            self.dispatch_action(ActionDescriptor {
                                 controller_id: S_PLAY_CONTROLLER_ID.into(),
-                                command: "spawnApp".into(),
+                                action: "spawnApp".into(),
                                 args: Some(serde_json::json!({
                                     "programId": program_id,
                                     "appId": app_id,
@@ -12622,7 +12622,7 @@ impl ShellState {
         Ok(())
     }
 
-    fn render_tree_drag_overlay(&self, overlay: &mut DrawList, input: &InputState<CommandDescriptor>, theme: &Theme) {
+    fn render_tree_drag_overlay(&self, overlay: &mut DrawList, input: &InputState<ActionDescriptor>, theme: &Theme) {
         let Some(drag) = &self.tree_drag else {
             return;
         };
@@ -12657,9 +12657,9 @@ impl ShellState {
         if self.studio_mode {
             if let Some(session) = &self.session {
                 if session.app.id == S_PLAY_APP_ID {
-                    self.dispatch_command(CommandDescriptor {
+                    self.dispatch_action(ActionDescriptor {
                         controller_id: S_PLAY_CONTROLLER_ID.into(),
-                        command: "setActivePanelTab".into(),
+                        action: "setActivePanelTab".into(),
                         args: Some(serde_json::json!({ "tabId": tab_id })),
                     })
                     .await?;
@@ -12669,7 +12669,7 @@ impl ShellState {
         Ok(())
     }
 
-    fn dismiss_overlays(&mut self, x: f32, y: f32, input: &InputState<CommandDescriptor>) -> bool {
+    fn dismiss_overlays(&mut self, x: f32, y: f32, input: &InputState<ActionDescriptor>) -> bool {
         let hit = input.hit_at(x, y);
         let on_overlay = hit.is_some_and(|h| {
             matches!(
@@ -12696,7 +12696,7 @@ impl ShellState {
         false
     }
 
-    fn open_context_menu(&mut self, x: f32, y: f32, hit: Option<HitTarget<CommandDescriptor>>) {
+    fn open_context_menu(&mut self, x: f32, y: f32, hit: Option<HitTarget<ActionDescriptor>>) {
         let node_id = hit.as_ref().and_then(|hit| {
             hit.control_id.as_deref().and_then(|id| {
                 id.rsplit_once(".node.").map(|(_, node_id)| node_id.to_string())
@@ -12705,8 +12705,8 @@ impl ShellState {
         let mut items = take_context_menu_items()
             .into_iter()
             .map(|mut item| {
-                if let Some(command) = item.command.take() {
-                    item.command = Some(resolve_graph_context_command(&command, node_id.as_deref()));
+                if let Some(action) = item.action.take() {
+                    item.action = Some(resolve_graph_context_action(&action, node_id.as_deref()));
                 }
                 item
             })
@@ -12716,9 +12716,9 @@ impl ShellState {
                 items.push(ContextMenuItem {
                     id: format!("shell.context.node.select.{node_id}"),
                     label: "Select node".into(),
-                    command: Some(CommandDescriptor {
+                    action: Some(ActionDescriptor {
                         controller_id: session.app.controller_id.clone(),
-                        command: "setMediaNodeSelection".into(),
+                        action: "setMediaNodeSelection".into(),
                         args: Some(serde_json::json!({ "nodeIds": [node_id] })),
                     }),
                 });
@@ -12729,12 +12729,12 @@ impl ShellState {
                 ContextMenuItem {
                     id: "shell.context.copy".into(),
                     label: "Copy".into(),
-                    command: None,
+                    action: None,
                 },
                 ContextMenuItem {
                     id: "shell.context.paste".into(),
                     label: "Paste".into(),
-                    command: None,
+                    action: None,
                 },
             ];
         }
@@ -12742,9 +12742,9 @@ impl ShellState {
             items.push(ContextMenuItem {
                 id: "shell.context.home".into(),
                 label: "Go Home".into(),
-                command: Some(CommandDescriptor {
+                action: Some(ActionDescriptor {
                     controller_id: S_PLAY_CONTROLLER_ID.into(),
-                    command: "goHome".into(),
+                    action: "goHome".into(),
                     args: None,
                 }),
             });
@@ -12763,9 +12763,9 @@ impl ShellState {
                 id: format!("panel.{}", tab.id),
                 label: tab.label.clone(),
                 group: "Panels".into(),
-                command: Some(CommandDescriptor {
+                dispatch_action: Some(ActionDescriptor {
                     controller_id: session.app.controller_id.clone(),
-                    command: "setActivePanelTab".into(),
+                    action: "setActivePanelTab".into(),
                     args: Some(serde_json::json!({ "tabId": tab.id })),
                 }),
                 action: None,
@@ -12776,28 +12776,28 @@ impl ShellState {
                 id: format!("window.{}", kind.id),
                 label: kind.label.clone(),
                 group: "Windows".into(),
-                command: None,
+                dispatch_action: None,
                 action: Some(format!("window:{}", kind.id)),
             });
         }
         for binding in &session.app.keybindings {
             items.push(SearchPaletteItem {
                 id: format!("keybinding.{}", binding.keys),
-                label: binding.command.command.clone(),
-                group: "Commands".into(),
-                command: Some(binding.command.clone()),
+                label: binding.action.action.clone(),
+                group: "Actions".into(),
+                dispatch_action: Some(binding.action.clone()),
                 action: None,
             });
         }
         if self.studio_mode {
-            for cmd in ["undo", "redo", "commitCheckpoint"] {
+            for action in ["undo", "redo", "commitCheckpoint"] {
                 items.push(SearchPaletteItem {
-                    id: format!("studio.{cmd}"),
-                    label: cmd.into(),
+                    id: format!("studio.{action}"),
+                    label: action.into(),
                     group: "Studio".into(),
-                    command: Some(CommandDescriptor {
+                    dispatch_action: Some(ActionDescriptor {
                         controller_id: S_PLAY_CONTROLLER_ID.into(),
-                        command: cmd.into(),
+                        action: action.into(),
                         args: None,
                     }),
                     action: None,
@@ -12847,8 +12847,8 @@ impl ShellState {
         let Some(item) = items.get(index) else {
             return Ok(());
         };
-        if let Some(command) = item.command.clone() {
-            self.dispatch_command(command).await?;
+        if let Some(action) = item.dispatch_action.clone() {
+            self.dispatch_action(action).await?;
         } else if let Some(action) = &item.action {
             if let Some(window_id) = action.strip_prefix("window:") {
                 self.active_window_id = Some(window_id.to_string());
@@ -12867,9 +12867,9 @@ impl ShellState {
             return Ok(());
         };
         if let Some(session) = &self.session {
-            self.dispatch_command(CommandDescriptor {
+            self.dispatch_action(ActionDescriptor {
                 controller_id: session.app.controller_id.clone(),
-                command: "setMediaNodeSelection".into(),
+                action: "setMediaNodeSelection".into(),
                 args: Some(serde_json::json!({
                     "surfaceId": item.surface_id,
                     "nodeIds": [item.node_id],
@@ -12888,7 +12888,7 @@ impl ShellState {
         &mut self,
         action: ui_wgpu::KeyAction,
         modifiers: &ui_wgpu::PointerModifiers,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
     ) {
         if action == ui_wgpu::KeyAction::Escape {
             if self.dock_drag.take().is_some() || self.pending_dock_drag.take().is_some() {
@@ -12967,9 +12967,9 @@ impl ShellState {
                     return;
                 }
                 ui_wgpu::KeyAction::Enter => {
-                    self.deferred_commands.push(CommandDescriptor {
+                    self.deferred_actions.push(ActionDescriptor {
                         controller_id: "framework.sync".into(),
-                        command: "attach".into(),
+                        action: "attach".into(),
                         args: Some(serde_json::json!({
                             "path": self.sync_card_draft,
                             "kind": self.sync_card_kind,
@@ -13056,7 +13056,7 @@ impl ShellState {
         &mut self,
         action: ui_wgpu::KeyAction,
         modifiers: &ui_wgpu::PointerModifiers,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
     ) -> Result<(), String> {
         if matches!(self.overlay_state, OverlayState::Search) && action == ui_wgpu::KeyAction::Enter {
             self.activate_search_item(self.search_selected).await?;
@@ -13090,7 +13090,7 @@ impl ShellState {
 fn chrome_text(
     target: &mut DrawList,
     atlas: &mut FontAtlas,
-    input: &mut InputState<CommandDescriptor>,
+    input: &mut InputState<ActionDescriptor>,
     theme: &Theme,
     text: &str,
     x: f32,
@@ -13127,7 +13127,7 @@ fn render_panel_tab_bar(
     panel_draw: &mut DrawList,
     atlas: &mut FontAtlas,
     icons: &IconAtlas,
-    input: &mut InputState<CommandDescriptor>,
+    input: &mut InputState<ActionDescriptor>,
     theme: &Theme,
     panel: Rect,
     tabs: &[PanelTabDefinition],
@@ -13320,7 +13320,7 @@ fn render_chrome_group(
     draw: &mut DrawList,
     atlas: &mut FontAtlas,
     icons: &IconAtlas,
-    input: &mut InputState<CommandDescriptor>,
+    input: &mut InputState<ActionDescriptor>,
     theme: &Theme,
     rect: Rect,
     items: &[ChromeGroupItem<'_>],
@@ -13402,19 +13402,19 @@ fn footer_tool_label<'a>(label: &'a Option<String>, text: &'a Option<String>, ti
         .unwrap_or(id)
 }
 
-const TOOL_ID_PREFIXES_ALLOWING_COMMANDS_WHILE_ACTIVE: &[&str] = &["cad.play.view."];
+const TOOL_ID_PREFIXES_ALLOWING_ACTIONS_WHILE_ACTIVE: &[&str] = &["cad.play.view."];
 
-fn tool_allows_commands_while_active(tool_id: &str) -> bool {
-    TOOL_ID_PREFIXES_ALLOWING_COMMANDS_WHILE_ACTIVE
+fn tool_allows_actions_while_active(tool_id: &str) -> bool {
+    TOOL_ID_PREFIXES_ALLOWING_ACTIONS_WHILE_ACTIVE
         .iter()
         .any(|prefix| tool_id.starts_with(prefix))
 }
 
-fn footer_command_gated(section: ToolCategory, active_tool_id: &Option<String>) -> bool {
-    section == ToolCategory::Commands
+fn footer_action_gated(section: ToolCategory, active_tool_id: &Option<String>) -> bool {
+    section == ToolCategory::Actions
         && active_tool_id
             .as_ref()
-            .is_some_and(|id| !tool_allows_commands_while_active(id))
+            .is_some_and(|id| !tool_allows_actions_while_active(id))
 }
 
 fn find_active_tool_id(tools: &[ToolNode]) -> Option<String> {
@@ -13460,9 +13460,9 @@ fn framework_sync_tools(active_uri: Option<&str>) -> Vec<ToolNode> {
             pressed: Some(pressed("temporary")),
             disabled: None,
             category: Some(ToolCategory::Sync),
-            on_change: CommandDescriptor {
+            on_change: ActionDescriptor {
                 controller_id: "framework.sync".into(),
-                command: "selectTemporary".into(),
+                action: "selectTemporary".into(),
                 args: None,
             },
         },
@@ -13476,9 +13476,9 @@ fn framework_sync_tools(active_uri: Option<&str>) -> Vec<ToolNode> {
             pressed: Some(pressed("file")),
             disabled: None,
             category: Some(ToolCategory::Sync),
-            on_change: CommandDescriptor {
+            on_change: ActionDescriptor {
                 controller_id: "framework.sync".into(),
-                command: "selectFile".into(),
+                action: "selectFile".into(),
                 args: None,
             },
         },
@@ -13492,9 +13492,9 @@ fn framework_sync_tools(active_uri: Option<&str>) -> Vec<ToolNode> {
             pressed: Some(pressed("folder")),
             disabled: None,
             category: Some(ToolCategory::Sync),
-            on_change: CommandDescriptor {
+            on_change: ActionDescriptor {
                 controller_id: "framework.sync".into(),
-                command: "selectFolder".into(),
+                action: "selectFolder".into(),
                 args: None,
             },
         },
@@ -13508,9 +13508,9 @@ fn framework_sync_tools(active_uri: Option<&str>) -> Vec<ToolNode> {
             pressed: Some(pressed("remote")),
             disabled: None,
             category: Some(ToolCategory::Sync),
-            on_change: CommandDescriptor {
+            on_change: ActionDescriptor {
                 controller_id: "framework.sync".into(),
-                command: "selectRemote".into(),
+                action: "selectRemote".into(),
                 args: None,
             },
         },
@@ -13523,7 +13523,7 @@ fn partition_tools_by_category(tools: &[ToolNode]) -> [Vec<ToolNode>; 5] {
         let idx = match tool.category() {
             ToolCategory::Selection => 0,
             ToolCategory::Tools => 1,
-            ToolCategory::Commands => 2,
+            ToolCategory::Actions => 2,
             ToolCategory::History => 3,
             ToolCategory::Sync => 4,
         };
@@ -13544,7 +13544,7 @@ fn render_footer_tool_nodes(
     draw: &mut DrawList,
     atlas: &mut FontAtlas,
     icons: &IconAtlas,
-    input: &mut InputState<CommandDescriptor>,
+    input: &mut InputState<ActionDescriptor>,
     theme: &Theme,
     mut x: f32,
     btn_y: f32,
@@ -13572,20 +13572,20 @@ fn render_footer_tool_nodes(
                 if disabled.unwrap_or(false) {
                     continue;
                 }
-                let command_gated = footer_command_gated(section, active_tool_id);
+                let action_gated = footer_action_gated(section, active_tool_id);
                 let label_text = footer_tool_label(label, text, title, id);
                 let item = ChromeGroupItem {
                     control_id: "framework.tool.button",
                     icon_id: Some(icon_id.as_str()),
                     label: Some(label_text),
                     active: false,
-                    disabled: command_gated,
+                    disabled: action_gated,
                     kind: HitKind::Button,
                 };
                 let item_w = measure_chrome_group_item(atlas, theme, &item);
                 let rect = Rect::new(x, btn_y, item_w, btn_h);
-                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], !command_gated);
-                if !command_gated {
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], !action_gated);
+                if !action_gated {
                     input.register_hit(HitTarget {
                         rect,
                         event: Some(on_press.clone()),
@@ -13646,7 +13646,7 @@ fn render_footer_tool_nodes(
                 if disabled.unwrap_or(false) {
                     continue;
                 }
-                let command_gated = footer_command_gated(section, active_tool_id);
+                let action_gated = footer_action_gated(section, active_tool_id);
                 let expanded = collection_expanded.get(id).copied().unwrap_or(false);
                 let label_text = footer_tool_label(label, text, title, id);
                 let item = ChromeGroupItem {
@@ -13654,13 +13654,13 @@ fn render_footer_tool_nodes(
                     icon_id: Some(icon_id.as_str()),
                     label: Some(label_text),
                     active: expanded,
-                    disabled: command_gated,
+                    disabled: action_gated,
                     kind: HitKind::Button,
                 };
                 let item_w = measure_chrome_group_item(atlas, theme, &item);
                 let rect = Rect::new(x, btn_y, item_w, btn_h);
-                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], !command_gated);
-                if !command_gated {
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], !action_gated);
+                if !action_gated {
                     input.register_hit(HitTarget {
                         rect,
                         event: None,
@@ -13671,7 +13671,7 @@ fn render_footer_tool_nodes(
                     });
                 }
                 x += item_w + theme.gap_standard * 0.5;
-                if expanded && !command_gated {
+                if expanded && !action_gated {
                     let leaves: Vec<ToolNode> = children
                         .iter()
                         .filter(|child| !matches!(child, ToolNode::Collection { .. }))
@@ -13777,7 +13777,7 @@ impl ShellState {
         overlay: &mut DrawList,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         gpu: &mut ui_wgpu::GpuContext,
     ) {
@@ -14007,7 +14007,7 @@ impl ShellState {
         draw: &mut DrawList,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         width: f32,
     ) {
@@ -14213,7 +14213,7 @@ impl ShellState {
         draw: &mut DrawList,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         width: f32,
         height: f32,
@@ -14237,7 +14237,7 @@ impl ShellState {
         let sections = [
             (ToolCategory::Selection, partitions[0].as_slice()),
             (ToolCategory::Tools, partitions[1].as_slice()),
-            (ToolCategory::Commands, partitions[2].as_slice()),
+            (ToolCategory::Actions, partitions[2].as_slice()),
             (ToolCategory::History, partitions[3].as_slice()),
             (ToolCategory::Sync, partitions[4].as_slice()),
         ];
@@ -14275,7 +14275,7 @@ impl ShellState {
         overlay: Option<&mut DrawList>,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         panel: Rect,
         tabs: &[PanelTabDefinition],
@@ -14408,7 +14408,7 @@ impl ShellState {
         mut overlay: Option<&mut DrawList>,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         body: Rect,
         gpu: &mut ui_wgpu::GpuContext,
@@ -14444,7 +14444,7 @@ impl ShellState {
         mut overlay: Option<&mut DrawList>,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         body: Rect,
         gpu: &mut ui_wgpu::GpuContext,
@@ -14480,7 +14480,7 @@ impl ShellState {
         overlay: &mut Option<&mut DrawList>,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         bounds: Rect,
         gpu: &mut ui_wgpu::GpuContext,
@@ -14673,7 +14673,7 @@ impl ShellState {
         draw: &mut DrawList,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         mut canvas: Rect,
         session: &ActiveSession,
@@ -14732,7 +14732,7 @@ impl ShellState {
         overlay: Option<&mut DrawList>,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         content: Rect,
         ui: &UiNode,
@@ -14776,7 +14776,7 @@ impl ShellState {
         &self,
         overlay: &mut DrawList,
         atlas: &mut FontAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         width: f32,
         height: f32,
@@ -14789,7 +14789,7 @@ impl ShellState {
                     .enumerate()
                     .map(|(index, item)| (item.group, item.label, index))
                     .collect();
-                self.render_command_list(
+                self.render_action_list(
                     overlay,
                     atlas,
                     input,
@@ -14819,7 +14819,7 @@ impl ShellState {
                         )
                     })
                     .collect();
-                self.render_command_list(
+                self.render_action_list(
                     overlay,
                     atlas,
                     input,
@@ -14942,9 +14942,9 @@ impl ShellState {
             );
             input.register_hit(HitTarget {
                 rect: attach_rect,
-                event: Some(CommandDescriptor {
+                event: Some(ActionDescriptor {
                     controller_id: "framework.sync".into(),
-                    command: "attach".into(),
+                    action: "attach".into(),
                     args: Some(serde_json::json!({
                         "path": self.sync_card_draft,
                         "kind": kind,
@@ -14980,9 +14980,9 @@ impl ShellState {
                 );
                 input.register_hit(HitTarget {
                     rect: detach_rect,
-                    event: Some(CommandDescriptor {
+                    event: Some(ActionDescriptor {
                         controller_id: "framework.sync".into(),
-                        command: "detach".into(),
+                        action: "detach".into(),
                         args: None,
                     }),
                     control_id: Some("framework.sync.detach".into()),
@@ -15002,7 +15002,7 @@ impl ShellState {
         &self,
         overlay: &mut DrawList,
         atlas: &mut FontAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         x: f32,
         y: f32,
@@ -15060,11 +15060,11 @@ impl ShellState {
         }
     }
 
-    fn render_command_list(
+    fn render_action_list(
         &self,
         overlay: &mut DrawList,
         atlas: &mut FontAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         x: f32,
         y: f32,
@@ -15228,7 +15228,7 @@ impl ShellState {
         overlay: &mut Option<&mut DrawList>,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         content: &Rect,
         window_id: &str,
@@ -15408,7 +15408,7 @@ impl ShellState {
         overlay: &mut Option<&mut DrawList>,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         bounds: Rect,
         measure: &WindowMeasure,
@@ -15560,7 +15560,7 @@ impl ShellState {
         overlay: &mut Option<&mut DrawList>,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         content: &Rect,
         window_id: &str,
@@ -15595,7 +15595,7 @@ impl ShellState {
                 let item = ChromeGroupItem {
                     control_id: "",
                     icon_id: Some("chevron-right"),
-                    label: Some("Command"),
+                    label: Some("Action"),
                     active: false,
                     disabled: false,
                     kind: HitKind::Button,
@@ -15630,7 +15630,7 @@ impl ShellState {
             let toggle_item = ChromeGroupItem {
                 control_id: "shell.engagement.toggle",
                 icon_id: Some("chevron-left"),
-                label: Some("Command"),
+                label: Some("Action"),
                 active: false,
                 disabled: false,
                 kind: HitKind::Button,
@@ -15671,10 +15671,10 @@ impl ShellState {
                     let item_w = measure_chrome_group_item(atlas, theme, &item);
                     let rect = Rect::new(rail.x + 8.0, y, item_w, theme.control_height);
                     render_chrome_group(chrome, atlas, icons, input, theme, rect, &[item], true);
-                    if let Some(command) = &option.command {
+                    if let Some(action) = &option.action {
                         input.register_hit(HitTarget {
                             rect,
-                            event: Some(command.clone()),
+                            event: Some(action.clone()),
                             control_id: Some(format!("shell.engagement.option.{}.{}", window_id, option.id)),
                             kind: HitKind::Button,
                             drag_axis: None,
@@ -15719,10 +15719,10 @@ impl ShellState {
                         rect.x + 8.0, rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0,
                         theme.font_size_small, theme.text,
                     );
-                    if let Some(command) = &possible.command {
+                    if let Some(action) = &possible.action {
                         input.register_hit(HitTarget {
                             rect,
-                            event: Some(command.clone()),
+                            event: Some(action.clone()),
                             control_id: Some(format!("shell.engagement.possible.{}.{}", window_id, possible.id)),
                             kind: HitKind::Button,
                             drag_axis: None,
@@ -15742,7 +15742,7 @@ impl ShellState {
         overlay: &mut Option<&mut DrawList>,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         bounds: Rect,
         window_id: &str,
@@ -15784,7 +15784,7 @@ impl ShellState {
         overlay: &mut Option<&mut DrawList>,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         bounds: Rect,
         control: &WindowEngagementControl,
@@ -15867,7 +15867,7 @@ impl ShellState {
         &self,
         overlay: &mut DrawList,
         atlas: &mut FontAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         menu: &ContextMenuState,
     ) {
@@ -15886,7 +15886,7 @@ impl ShellState {
                 theme.text);
             input.register_hit(HitTarget {
                 rect: row,
-                event: item.command.clone(),
+                event: item.action.clone(),
                 control_id: Some(item.id.clone()),
                 kind: HitKind::ContextMenu,
                 drag_axis: None,
@@ -15899,7 +15899,7 @@ impl ShellState {
         &self,
         overlay: &mut DrawList,
         atlas: &mut FontAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         x: f32,
         y: f32,
@@ -15946,7 +15946,7 @@ impl ShellState {
         &self,
         overlay: &mut DrawList,
         atlas: &mut FontAtlas,
-        input: &mut InputState<CommandDescriptor>,
+        input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         x: f32,
         y: f32,
@@ -16190,11 +16190,11 @@ use plugin_bridge::parse_plugin_entries;
 #[cfg(not(target_arch = "wasm32"))]
 use plugin_bridge::load_wasm_plugins;
 use infinite_world::{
-    apply_glb_bytes, apply_world_command_preview, collect_pending_glb_fetches, fetch_url_bytes,
-    handle_world3d_paint_commands, handle_world3d_pointer_button, handle_world3d_pointer_drag,
+    apply_glb_bytes, apply_world_action_preview, collect_pending_glb_fetches, fetch_url_bytes,
+    handle_world3d_paint_actions, handle_world3d_pointer_button, handle_world3d_pointer_drag,
     handle_world3d_pointer_move, handle_world3d_wheel,
 };
-use semio_framework_core::CommandDescriptor;
+use semio_framework_core::ActionDescriptor;
 use shell::ShellState;
 use std::cell::RefCell;
 use std::io::Read;
@@ -16286,7 +16286,7 @@ struct AppRuntime {
     shell: ShellState,
     draw: DrawList,
     overlay: DrawList,
-    input: InputState<CommandDescriptor>,
+    input: InputState<ActionDescriptor>,
     theme: Theme,
     window: Arc<Window>,
     theme_dark: bool,
@@ -16442,10 +16442,10 @@ impl AppRuntime {
                         handle_world3d_wheel(state, wheel_delta);
                     }
                 }
-                let mut graph_commands = Vec::new();
+                let mut graph_actions = Vec::new();
                 for (surface_id, surface) in &self.shell.node_graph_states {
                     if surface.bounds.contains(x, y) {
-                        graph_commands.extend(engine_canvas::node_graph_wheel(
+                        graph_actions.extend(engine_canvas::node_graph_wheel(
                             surface_id,
                             &surface.controller_id,
                             surface.bounds,
@@ -16456,21 +16456,21 @@ impl AppRuntime {
                         ));
                     }
                 }
-                if !graph_commands.is_empty() {
+                if !graph_actions.is_empty() {
                     self.wheel_zoom_deadline_ms = app_now_ms() + 120.0;
                     let runtime = self.self_weak.clone();
                     spawn_app_task(async move {
                         if let Some(runtime) = runtime.upgrade() {
                             if let Ok(mut app) = runtime.try_borrow_mut() {
-                                app.dispatch_commands(graph_commands).await;
+                                app.dispatch_actions(graph_actions).await;
                             }
                         }
                     });
                 }
-                let mut map_commands = Vec::new();
+                let mut map_actions = Vec::new();
                 for (surface_id, surface) in &self.shell.gis_map_states {
                     if surface.bounds.contains(x, y) {
-                        map_commands.extend(engine_canvas::gis_map_wheel(
+                        map_actions.extend(engine_canvas::gis_map_wheel(
                             surface_id,
                             &surface.controller_id,
                             surface.bounds,
@@ -16481,28 +16481,28 @@ impl AppRuntime {
                         ));
                     }
                 }
-                if !map_commands.is_empty() {
+                if !map_actions.is_empty() {
                     let runtime = self.self_weak.clone();
                     spawn_app_task(async move {
                         if let Some(runtime) = runtime.upgrade() {
                             if let Ok(mut app) = runtime.try_borrow_mut() {
-                                app.dispatch_commands(map_commands).await;
+                                app.dispatch_actions(map_actions).await;
                             }
                         }
                     });
                 }
-                let mut board_commands = Vec::new();
+                let mut board_actions = Vec::new();
                 for (surface_id, surface) in &self.shell.puzzle2d_board_states {
                     if surface.bounds.contains(x, y) {
-                        board_commands.extend(scenes::puzzle_board_wheel(surface_id, &surface.controller_id, surface.bounds, x, y, wheel_delta));
+                        board_actions.extend(scenes::puzzle_board_wheel(surface_id, &surface.controller_id, surface.bounds, x, y, wheel_delta));
                     }
                 }
-                if !board_commands.is_empty() {
+                if !board_actions.is_empty() {
                     let runtime = self.self_weak.clone();
                     spawn_app_task(async move {
                         if let Some(runtime) = runtime.upgrade() {
                             if let Ok(mut app) = runtime.try_borrow_mut() {
-                                app.dispatch_commands(board_commands).await;
+                                app.dispatch_actions(board_actions).await;
                             }
                         }
                     });
@@ -16658,15 +16658,15 @@ impl AppRuntime {
         }
     }
 
-    async fn dispatch_commands(&mut self, commands: Vec<CommandDescriptor>) {
-        for command in commands {
+    async fn dispatch_actions(&mut self, actions: Vec<ActionDescriptor>) {
+        for action in actions {
             for state in self.shell.world3d_states.values_mut() {
-                if state.controller_id == command.controller_id {
-                    apply_world_command_preview(state, &command);
+                if state.controller_id == action.controller_id {
+                    apply_world_action_preview(state, &action);
                 }
             }
-            if let Err(err) = self.shell.dispatch_command(command).await {
-                log_debug(&format!("[DEBUG] command failed: {err}"));
+            if let Err(err) = self.shell.dispatch_action(action).await {
+                log_debug(&format!("[DEBUG] action failed: {err}"));
             }
         }
     }
@@ -16685,7 +16685,7 @@ impl AppRuntime {
         self.pointer_button = button;
         self.modifiers = modifiers.clone();
         if !down {
-            let mut map_commands = Vec::new();
+            let mut map_actions = Vec::new();
             let map_had_active_drag = self.shell.gis_map_states.keys().any(|surface_id| {
                 scenes::gis_map_drag_active(surface_id)
             });
@@ -16693,7 +16693,7 @@ impl AppRuntime {
                 if !surface.bounds.contains(x, y) && !scenes::gis_map_drag_active(surface_id) {
                     continue;
                 }
-                map_commands.extend(scenes::gis_map_pointer_up(
+                map_actions.extend(scenes::gis_map_pointer_up(
                     surface_id,
                     &surface.controller_id,
                     surface.bounds,
@@ -16701,16 +16701,16 @@ impl AppRuntime {
                     y,
                 ));
             }
-            if !map_commands.is_empty() {
-                self.dispatch_commands(map_commands).await;
+            if !map_actions.is_empty() {
+                self.dispatch_actions(map_actions).await;
             }
-            let mut board_commands = Vec::new();
+            let mut board_actions = Vec::new();
             let board_had_active_drag = self.shell.puzzle2d_board_states.keys().any(|surface_id| scenes::puzzle_board_drag_active(surface_id));
             for (surface_id, surface) in &self.shell.puzzle2d_board_states {
                 if !surface.bounds.contains(x, y) && !scenes::puzzle_board_drag_active(surface_id) {
                     continue;
                 }
-                board_commands.extend(scenes::puzzle_board_pointer_up(
+                board_actions.extend(scenes::puzzle_board_pointer_up(
                     surface_id,
                     &surface.controller_id,
                     surface.bounds,
@@ -16721,8 +16721,8 @@ impl AppRuntime {
                     modifiers.alt,
                 ));
             }
-            if !board_commands.is_empty() {
-                self.dispatch_commands(board_commands).await;
+            if !board_actions.is_empty() {
+                self.dispatch_actions(board_actions).await;
             }
             let board_consumed = self
                 .shell
@@ -16746,12 +16746,12 @@ impl AppRuntime {
             {
                 log_debug(&format!("[DEBUG] pointer failed: {err}"));
             }
-            let mut world_commands = Vec::new();
+            let mut world_actions = Vec::new();
             for state in self.shell.world3d_states.values_mut() {
                 if !state.bounds.contains(x, y) {
                     continue;
                 }
-                if let Some(command) = handle_world3d_pointer_button(
+                if let Some(action) = handle_world3d_pointer_button(
                     state,
                     x,
                     y,
@@ -16759,27 +16759,27 @@ impl AppRuntime {
                     button,
                     &modifiers,
                 ) {
-                    apply_world_command_preview(state, &command);
-                    world_commands.push(command);
+                    apply_world_action_preview(state, &action);
+                    world_actions.push(action);
                 }
-                for command in handle_world3d_paint_commands(state, x, y, down, button) {
-                    apply_world_command_preview(state, &command);
-                    world_commands.push(command);
+                for action in handle_world3d_paint_actions(state, x, y, down, button) {
+                    apply_world_action_preview(state, &action);
+                    world_actions.push(action);
                 }
-                if let Some(command) = handle_world3d_pointer_move(state, x, y, down, button) {
-                    apply_world_command_preview(state, &command);
-                    world_commands.push(command);
+                if let Some(action) = handle_world3d_pointer_move(state, x, y, down, button) {
+                    apply_world_action_preview(state, &action);
+                    world_actions.push(action);
                 }
             }
-            if !world_commands.is_empty() {
-                self.dispatch_commands(world_commands).await;
+            if !world_actions.is_empty() {
+                self.dispatch_actions(world_actions).await;
             }
-            let mut graph_commands = Vec::new();
+            let mut graph_actions = Vec::new();
             for (surface_id, surface) in &self.shell.node_graph_states {
                 if !surface.bounds.contains(x, y) {
                     continue;
                 }
-                graph_commands.extend(engine_canvas::node_graph_pointer_up(
+                graph_actions.extend(engine_canvas::node_graph_pointer_up(
                     surface_id,
                     &surface.controller_id,
                     surface.bounds,
@@ -16790,17 +16790,17 @@ impl AppRuntime {
                     modifiers.alt,
                 ));
             }
-            if !graph_commands.is_empty() {
-                self.dispatch_commands(graph_commands).await;
+            if !graph_actions.is_empty() {
+                self.dispatch_actions(graph_actions).await;
             }
             return;
         }
-        let mut world_commands = Vec::new();
+        let mut world_actions = Vec::new();
         for state in self.shell.world3d_states.values_mut() {
             if !state.bounds.contains(x, y) {
                 continue;
             }
-            if let Some(command) = handle_world3d_pointer_button(
+            if let Some(action) = handle_world3d_pointer_button(
                 state,
                 x,
                 y,
@@ -16808,29 +16808,29 @@ impl AppRuntime {
                 button,
                 &modifiers,
             ) {
-                apply_world_command_preview(state, &command);
-                world_commands.push(command);
+                apply_world_action_preview(state, &action);
+                world_actions.push(action);
             }
-            for command in handle_world3d_paint_commands(state, x, y, down, button) {
-                apply_world_command_preview(state, &command);
-                world_commands.push(command);
+            for action in handle_world3d_paint_actions(state, x, y, down, button) {
+                apply_world_action_preview(state, &action);
+                world_actions.push(action);
             }
-            if let Some(command) = handle_world3d_pointer_move(state, x, y, down, button) {
-                apply_world_command_preview(state, &command);
-                world_commands.push(command);
+            if let Some(action) = handle_world3d_pointer_move(state, x, y, down, button) {
+                apply_world_action_preview(state, &action);
+                world_actions.push(action);
             }
         }
-        if !world_commands.is_empty() {
-            self.dispatch_commands(world_commands).await;
+        if !world_actions.is_empty() {
+            self.dispatch_actions(world_actions).await;
             return;
         }
-        let mut graph_commands = Vec::new();
+        let mut graph_actions = Vec::new();
         for (surface_id, surface) in &self.shell.node_graph_states {
             if !surface.bounds.contains(x, y) {
                 continue;
             }
             if down {
-                graph_commands.extend(engine_canvas::node_graph_pointer_down(
+                graph_actions.extend(engine_canvas::node_graph_pointer_down(
                     surface_id,
                     &surface.controller_id,
                     surface.bounds,
@@ -16843,7 +16843,7 @@ impl AppRuntime {
                     self.space_pressed,
                 ));
             } else {
-                graph_commands.extend(engine_canvas::node_graph_pointer_up(
+                graph_actions.extend(engine_canvas::node_graph_pointer_up(
                     surface_id,
                     &surface.controller_id,
                     surface.bounds,
@@ -16855,10 +16855,10 @@ impl AppRuntime {
                 ));
             }
         }
-        if !graph_commands.is_empty() {
-            self.dispatch_commands(graph_commands).await;
+        if !graph_actions.is_empty() {
+            self.dispatch_actions(graph_actions).await;
         }
-        let mut map_commands = Vec::new();
+        let mut map_actions = Vec::new();
         let mut map_pointer_on_surface = false;
         for (surface_id, surface) in &self.shell.gis_map_states {
             if !surface.bounds.contains(x, y) {
@@ -16866,7 +16866,7 @@ impl AppRuntime {
             }
             map_pointer_on_surface = true;
             if down {
-                map_commands.extend(scenes::gis_map_pointer_down(
+                map_actions.extend(scenes::gis_map_pointer_down(
                     surface_id,
                     &surface.controller_id,
                     surface.bounds,
@@ -16879,8 +16879,8 @@ impl AppRuntime {
                 ));
             }
         }
-        if !map_commands.is_empty() {
-            self.dispatch_commands(map_commands).await;
+        if !map_actions.is_empty() {
+            self.dispatch_actions(map_actions).await;
             return;
         }
         if map_pointer_on_surface && (button == 0 || button == 1) {
@@ -16925,8 +16925,8 @@ impl AppRuntime {
         self.modifiers = modifiers.clone();
         self.shell
             .handle_pointer_move(x, y, down, &mut self.input, &self.theme);
-        if let Err(err) = self.shell.flush_deferred_commands().await {
-            log_debug(&format!("[DEBUG] deferred commands: {err}"));
+        if let Err(err) = self.shell.flush_deferred_actions().await {
+            log_debug(&format!("[DEBUG] deferred actions: {err}"));
         }
         if down && (button == 0 || button == 2 || button == 1) {
             for state in self.shell.world3d_states.values_mut() {
@@ -16943,24 +16943,24 @@ impl AppRuntime {
                 }
             }
         }
-        let mut world_commands = Vec::new();
+        let mut world_actions = Vec::new();
         for state in self.shell.world3d_states.values_mut() {
             if !state.bounds.contains(x, y) {
                 continue;
             }
-            if let Some(command) = handle_world3d_pointer_move(state, x, y, down, button) {
-                apply_world_command_preview(state, &command);
-                world_commands.push(command);
+            if let Some(action) = handle_world3d_pointer_move(state, x, y, down, button) {
+                apply_world_action_preview(state, &action);
+                world_actions.push(action);
             }
-            for command in handle_world3d_paint_commands(state, x, y, down, button) {
-                apply_world_command_preview(state, &command);
-                world_commands.push(command);
+            for action in handle_world3d_paint_actions(state, x, y, down, button) {
+                apply_world_action_preview(state, &action);
+                world_actions.push(action);
             }
         }
-        let mut graph_commands = Vec::new();
+        let mut graph_actions = Vec::new();
         for (surface_id, surface) in &self.shell.node_graph_states {
             if surface.bounds.contains(x, y) {
-                graph_commands.extend(engine_canvas::node_graph_pointer_move(
+                graph_actions.extend(engine_canvas::node_graph_pointer_move(
                     surface_id,
                     &surface.controller_id,
                     surface.bounds,
@@ -16972,15 +16972,15 @@ impl AppRuntime {
                 ));
             }
         }
-        if !graph_commands.is_empty() {
-            self.dispatch_commands(graph_commands).await;
+        if !graph_actions.is_empty() {
+            self.dispatch_actions(graph_actions).await;
         }
-        let mut map_commands = Vec::new();
+        let mut map_actions = Vec::new();
         for (surface_id, surface) in &self.shell.gis_map_states {
             if !surface.bounds.contains(x, y) && !scenes::gis_map_drag_active(surface_id) {
                 continue;
             }
-            map_commands.extend(scenes::gis_map_pointer_move(
+            map_actions.extend(scenes::gis_map_pointer_move(
                 surface_id,
                 &surface.controller_id,
                 surface.bounds,
@@ -16989,14 +16989,14 @@ impl AppRuntime {
                 down,
             ));
         }
-        if !map_commands.is_empty() {
-            self.dispatch_commands(map_commands).await;
+        if !map_actions.is_empty() {
+            self.dispatch_actions(map_actions).await;
         }
-        let mut board_commands = Vec::new();
+        let mut board_actions = Vec::new();
         for (surface_id, surface) in &self.shell.puzzle2d_board_states {
             let inside = surface.bounds.contains(x, y);
             if inside {
-                board_commands.extend(scenes::puzzle_board_pointer_move(
+                board_actions.extend(scenes::puzzle_board_pointer_move(
                     surface_id,
                     &surface.controller_id,
                     surface.bounds,
@@ -17007,14 +17007,14 @@ impl AppRuntime {
                     modifiers.alt,
                 ));
             } else {
-                board_commands.extend(scenes::puzzle_board_pointer_leave(surface_id, &surface.controller_id, modifiers.alt));
+                board_actions.extend(scenes::puzzle_board_pointer_leave(surface_id, &surface.controller_id, modifiers.alt));
             }
         }
-        if !board_commands.is_empty() {
-            self.dispatch_commands(board_commands).await;
+        if !board_actions.is_empty() {
+            self.dispatch_actions(board_actions).await;
         }
-        if !world_commands.is_empty() {
-            self.dispatch_commands(world_commands).await;
+        if !world_actions.is_empty() {
+            self.dispatch_actions(world_actions).await;
         }
     }
 

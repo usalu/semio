@@ -20291,7 +20291,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
 
   return (
     <div ref={ref} data-slot="mode-dock-tabbar" className="relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent">
-      <div data-slot="mode-dock-tab-cap" className={cn("relative flex min-h-medium min-w-0 max-w-[calc(100%-var(--size-medium))] shrink-0 items-stretch", capFrameClass)}>
+      <div data-slot="mode-dock-tab-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", capFrameClass)}>
         <div data-slot="mode-dock-tabs" className="flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden">
           {displayTabs.map((tab) =>
             tab.preview === "ghost" ? (
@@ -20320,9 +20320,11 @@ interface ModeDockStackProps {
   node: WindowLayoutStackNode;
   windowsById: ReadonlyMap<string, ModeWindowDescriptor>;
   activeWindowId: string | null;
+  /** @emoji 📱 Skips the per-tab active-chrome grid (which sizes tab columns to their content and doesn't scroll) in favor of the plain scrollable tab strip, so the Focus/Close controls stay reachable when many windows collapse into one mobile tab stack. */
+  mobile?: boolean;
 }
 
-const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsById, activeWindowId }) => {
+const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsById, activeWindowId, mobile = false }) => {
   const dock = reactHostPort.useContext(ModeDockContext);
   const tabBarRef = reactHostPort.useRef<HTMLDivElement>(null);
   const bodyRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -20339,7 +20341,7 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
 
   const activeDescriptor = activeId ? windowsById.get(activeId) : undefined;
   const stackGloballyActive = Boolean(activeId && activeWindowId === activeId);
-  const chromeGrid = tabs.length > 1 ? modeDockChromeGridPlacement(tabs, activeId) : undefined;
+  const chromeGrid = !mobile && tabs.length > 1 ? modeDockChromeGridPlacement(tabs, activeId) : undefined;
 
   const stackBody = (
     <div ref={bodyRef} data-slot="mode-dock-stack-body" className={cn("relative z-0 flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", stackGloballyActive ? windowBodyFrameActiveClass : windowBodyFrameClass)}>
@@ -20894,7 +20896,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       ? mobileFlatStack && mobileFlatStack.children.length > 0
         ? (
             <ModeDockContext.Provider value={dockContext}>
-              <ModeDockStack stackPath="" node={mobileFlatStack} windowsById={windowsById} activeWindowId={activeWindowId} />
+              <ModeDockStack stackPath="" node={mobileFlatStack} windowsById={windowsById} activeWindowId={activeWindowId} mobile />
             </ModeDockContext.Provider>
           )
         : null
@@ -24717,10 +24719,12 @@ if (treeVitest) {
       ],
     };
 
-    it("collapses split panes into one tab stack with the regular window chrome", () => {
+    it("collapses split panes into one tab stack with the regular window chrome, including the Focus/Close controls", () => {
       const markup = renderToStaticMarkup(<Mode mobile windows={windows} activeWindowId="b" layout={splitLayout} />);
       expect(markup).toContain('data-slot="mode-dock-tabbar"');
       expect(markup).toContain('data-slot="mode-dock-tab"');
+      expect(markup).toContain('data-slot="mode-dock-maximize"');
+      expect(markup).toContain('data-slot="mode-dock-close"');
       expect(markup).toContain("A");
       expect(markup).toContain("B body");
       expect(markup).not.toContain("A body");
@@ -24730,6 +24734,19 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(<Mode mobile windows={windows} activeWindowId="missing" layout={splitLayout} />);
       expect(markup).toContain("A body");
       expect(markup).not.toContain("B body");
+    });
+
+    it("keeps the Focus control out of the unshrinkable per-tab chrome grid even with many windows", () => {
+      const manyWindows: ModeWindowDescriptor[] = ["a", "b", "c", "d"].map((id) => ({ id, title: `semio · cad · ${id}`, children: <div>{id} body</div> }));
+      const manyLayout: WindowLayoutNode = {
+        kind: "row",
+        children: manyWindows.map((window) => ({ kind: "stack", children: [{ kind: "window", id: window.id }], activeId: window.id })),
+      };
+      const markup = renderToStaticMarkup(<Mode mobile windows={manyWindows} activeWindowId="a" layout={manyLayout} />);
+      expect(markup).not.toContain('data-slot="mode-dock-chrome-column"');
+      expect(markup).toContain('data-slot="mode-dock-tab-cap"');
+      expect(markup).toContain('data-slot="mode-dock-maximize"');
+      expect(markup.match(/data-slot="mode-dock-tab"/g)?.length).toBe(4);
     });
   });
 
