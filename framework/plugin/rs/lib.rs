@@ -41,11 +41,54 @@ pub struct WindowKindSpec {
     pub engagement: Option<WindowEngagement>,
 }
 
+/// 🌳 A leaf carries `body_key` (its rendered panel); a branch carries `children` (the tab row shown below it) — exactly one of the two.
 pub struct PanelTabSpec {
     pub id: String,
     pub label: String,
     pub group: PanelGroup,
-    pub body_key: String,
+    pub body_key: Option<String>,
+    pub children: Vec<PanelTabSpec>,
+}
+
+impl PanelTabSpec {
+    /// 🍃 A leaf tab; `group` is only meaningful on the root entry passed to `.panel_tab_tree`.
+    pub fn leaf(id: impl Into<String>, label: impl Into<String>, group: PanelGroup, body_key: impl Into<String>) -> Self {
+        Self { id: id.into(), label: label.into(), group, body_key: Some(body_key.into()), children: Vec::new() }
+    }
+
+    /// 🌳 A branch tab; its `children` render as the tab row below it when active.
+    pub fn group(id: impl Into<String>, label: impl Into<String>, group: PanelGroup, children: Vec<PanelTabSpec>) -> Self {
+        Self { id: id.into(), label: label.into(), group, body_key: None, children }
+    }
+}
+
+/// 🌳 Asserts every tab in the tree has a non-empty, unique id and sets exactly one of `body_key`/`children`.
+fn validate_panel_tab_spec(app_id: &str, tab: &PanelTabSpec, seen_ids: &mut HashSet<String>) {
+    assert!(!tab.id.trim().is_empty(), "app {} panel tab id must be non-empty", app_id);
+    assert!(seen_ids.insert(tab.id.clone()), "app {} duplicate panel tab id {}", app_id, tab.id);
+    assert!(
+        tab.body_key.is_some() != !tab.children.is_empty(),
+        "app {} panel tab {} must set exactly one of body_key or children",
+        app_id,
+        tab.id
+    );
+    if let Some(body_key) = &tab.body_key {
+        assert!(!body_key.trim().is_empty(), "app {} panel tab {} body_key must be non-empty", app_id, tab.id);
+    }
+    for child in &tab.children {
+        validate_panel_tab_spec(app_id, child, seen_ids);
+    }
+}
+
+/// 🌳 Converts one plugin-declared `PanelTabSpec` (recursively) into a `PanelTabDefinition`.
+fn panel_tab_spec_to_definition(tab: PanelTabSpec) -> PanelTabDefinition {
+    PanelTabDefinition {
+        id: tab.id,
+        label: tab.label,
+        group: tab.group,
+        body_key: tab.body_key,
+        children: tab.children.into_iter().map(panel_tab_spec_to_definition).collect(),
+    }
 }
 
 pub struct KeybindingSpec {
@@ -199,12 +242,13 @@ impl AppBuilder {
         group: PanelGroup,
         body_key: impl Into<String>,
     ) -> Self {
-        self.panel_tabs.push(PanelTabSpec {
-            id: id.into(),
-            label: label.into(),
-            group,
-            body_key: body_key.into(),
-        });
+        self.panel_tabs.push(PanelTabSpec::leaf(id, label, group, body_key));
+        self
+    }
+
+    /// 🌳 Declares a root panel tab that may itself be a nested tree — build `tab` via `PanelTabSpec::leaf`/`PanelTabSpec::group`.
+    pub fn panel_tab_tree(mut self, tab: PanelTabSpec) -> Self {
+        self.panel_tabs.push(tab);
         self
     }
 
@@ -265,14 +309,9 @@ impl AppBuilder {
                 window.id
             );
         }
+        let mut panel_tab_ids = HashSet::new();
         for tab in &self.panel_tabs {
-            assert!(!tab.id.trim().is_empty(), "app {} panel tab id must be non-empty", self.id);
-            assert!(
-                !tab.body_key.trim().is_empty(),
-                "app {} panel tab {} body_key must be non-empty",
-                self.id,
-                tab.id
-            );
+            validate_panel_tab_spec(&self.id, tab, &mut panel_tab_ids);
         }
         let mut layout_window_ids = Vec::new();
         if let Some(layout) = &self.default_layout {
@@ -384,16 +423,7 @@ impl AppBuilder {
                     capabilities: vec![],
                 })
                 .collect(),
-            panel_tabs: self
-                .panel_tabs
-                .into_iter()
-                .map(|tab| PanelTabDefinition {
-                    id: tab.id,
-                    label: tab.label,
-                    group: tab.group,
-                    body_key: tab.body_key,
-                })
-                .collect(),
+            panel_tabs: self.panel_tabs.into_iter().map(panel_tab_spec_to_definition).collect(),
             keybindings,
             actions,
             named_layouts: self.named_layouts,

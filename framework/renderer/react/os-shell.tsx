@@ -27,6 +27,7 @@ import {
   Popover,
   PopoverAnchor,
   PopoverContent,
+  Ribbon,
   SemioLogo,
   Slider,
   Select,
@@ -40,6 +41,10 @@ import {
   ToolbarGroup,
   ToolbarItem,
   ToolbarZone,
+  findPanelTabNode,
+  findPanelTabPath,
+  panelTabChildren,
+  reconcileActivePath,
   WindowMeasureTreeGroup,
   WindowMeasureTreeLeaf,
   WindowMeasuresTree,
@@ -97,11 +102,12 @@ import {
   type ElementsSurfaceDevice,
   type EngagementControl,
   type EngagementSpec,
-  type FooterItem,
   type ModeWindowDescriptor,
   type NavbarItem,
   type PanelToggleItem,
-  type SidePanelTabConfig,
+  type PanelTabNode,
+  type RibbonDirection,
+  type RibbonRow,
   type TreeDataItem,
   type TreePanelConfig,
   type UiChromeLayout,
@@ -208,6 +214,12 @@ const S_PLAY_CONTROLLER_ID = "s-play";
 const S_PLAY_CATALOGUE_TAB_ID = "s-play-catalogue";
 const DEFAULT_LEFT_PANEL_SIZE = 280;
 const DEFAULT_RIGHT_PANEL_SIZE = 320;
+
+/** @emoji 🌳 Root category ids for the nested side-panel tab tree — the top row of {@link leftPanelTabs}/{@link rightPanelTabs}. */
+const FRAMEWORK_CATEGORY_WORKBENCH_ID = "framework.category.workbench";
+const FRAMEWORK_CATEGORY_DISPLAY_ID = "framework.category.display";
+const FRAMEWORK_CATEGORY_DETAILS_ID = "framework.category.details";
+const FRAMEWORK_CATEGORY_SETTINGS_ID = "framework.category.settings";
 const APP_DOCUMENT_SEPARATOR = " · ";
 
 const PRESENCE_CLIENT_STORAGE_KEY = "semio.presence.client";
@@ -377,13 +389,7 @@ export function appDocumentLabel(document: readonly string[]): string {
 }
 
 export function appWindowDocumentLabel(app: AppDefinition, windowLabel: string): string {
-  const normalizedWindow = windowLabel.trim().toLowerCase();
-  const normalizedApp = app.label.trim().toLowerCase();
-  const document = [...app.document];
-  if (normalizedWindow && normalizedWindow !== normalizedApp && document.at(-1)?.toLowerCase() !== normalizedWindow) {
-    document.push(normalizedWindow);
-  }
-  return appDocumentLabel(document);
+  return windowLabel.trim() || app.label.trim();
 }
 
 function buildStudioPanelState(programs: readonly StudioProgramEntry[], spawnedApps: readonly SpawnedAppEntry[], activePanelTab = "s-play-catalogue", activeSpawnedId?: string): StudioPanelState {
@@ -596,6 +602,47 @@ function panelTabIcon(tabId: string, group: string): React.FC<{ size?: number }>
   return shellTabIcon(tabId);
 }
 
+/** @emoji 🌳 Category-row icon: the first child's icon, or `fallback` when the category has no tabs yet. */
+function categoryTabIcon(tabs: readonly PanelTabNode[], fallback: IconName): React.FC<{ size?: number }> {
+  const FirstIcon = tabs[0]?.icon;
+  return function CategoryTabIcon({ size = 16 }: { size?: number }) {
+    return FirstIcon ? <FirstIcon size={size} /> : <Icon icon={fallback} size="small" />;
+  };
+}
+
+/** @emoji 🌳 Depth-first leaves of a recursive panel-tab tree — the nodes that actually carry a `bodyKey` to render. */
+function flattenPanelTabLeaves<T extends { readonly children?: readonly T[] }>(tabs: readonly T[]): T[] {
+  return tabs.flatMap((tab) => (tab.children && tab.children.length > 0 ? flattenPanelTabLeaves(tab.children) : [tab]));
+}
+
+/** @emoji 🌳 Converts one plugin-declared {@link AppPanelTabDefinition} (recursively) into a {@link PanelTabNode}. */
+function panelTabDefinitionToNode(
+  tab: AppPanelTabDefinition,
+  group: string,
+  panelUiByKey: Readonly<Record<string, UiNode>>,
+  onAction: (action: ActionDescriptor) => void,
+  order: number,
+): PanelTabNode {
+  if (tab.children && tab.children.length > 0) {
+    return {
+      kind: "branch",
+      id: tab.id,
+      icon: panelTabIcon(tab.id, group),
+      name: tab.label,
+      order,
+      children: tab.children.map((child, childOrder) => panelTabDefinitionToNode(child, group, panelUiByKey, onAction, childOrder)),
+    };
+  }
+  return {
+    kind: "leaf",
+    id: tab.id,
+    icon: panelTabIcon(tab.id, group),
+    name: tab.label,
+    order,
+    tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: "Loading…" }, onAction)),
+  };
+}
+
 function resolveCanvasBodyKey(app: AppDefinition): string {
   const windowKind = app.windowKinds[0];
   if (!windowKind) return "main";
@@ -735,7 +782,7 @@ function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, o
 
 function windowToolbarNode(tools: readonly ToolNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void): ReactNode {
   if (!tools?.length) return undefined;
-  return <ToolTree id={`ui.toolbar.${windowId}`} tools={tools} onAction={onAction} />;
+  return <ToolTree id={`ui.toolbar.${windowId}`} tools={tools} onAction={onAction} direction="up" />;
 }
 //#endregion ShellHelpers
 
@@ -790,8 +837,6 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const [error, setError] = useState<string | null>(null);
   const [leftPanelVisible, setLeftPanelVisible] = useState(false);
   const [rightPanelVisible, setRightPanelVisible] = useState(false);
-  const [activeLeftPanelKind, setActiveLeftPanelKind] = useState<"workbench" | "display">("workbench");
-  const [activeRightPanelKind, setActiveRightPanelKind] = useState<"details" | "settings">("details");
   const [leftPanelSize, setLeftPanelSize] = useState(DEFAULT_LEFT_PANEL_SIZE);
   const [rightPanelSize, setRightPanelSize] = useState(DEFAULT_RIGHT_PANEL_SIZE);
   const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
@@ -805,9 +850,9 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const contributorInstancesRef = useRef<Map<string, number>>(new Map());
   const layoutSeedKeyRef = useRef<string | null>(null);
   const noExampleResetInstanceIdRef = useRef<number | null>(null);
-  const [mobileActiveTabId, setMobileActiveTabId] = useState<string | undefined>(undefined);
-  const [leftPanelTabId, setLeftPanelTabId] = useState<string | undefined>(undefined);
-  const [rightPanelTabId, setRightPanelTabId] = useState<string | undefined>(undefined);
+  const [mobilePanelPath, setMobilePanelPath] = useState<readonly string[]>([]);
+  const [leftPanelPath, setLeftPanelPath] = useState<readonly string[]>([]);
+  const [rightPanelPath, setRightPanelPath] = useState<readonly string[]>([]);
   const [extraWindowInstances, setExtraWindowInstances] = useState<readonly { readonly id: string; readonly windowKindId: string; readonly title: string }[]>([]);
   const extraWindowCounterRef = useRef(0);
   const openStudioIdRef = useRef<string | null>(null);
@@ -951,12 +996,13 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         viewState,
       };
       const windowCount = nextSession.app.windowKinds.length;
+      const panelTabLeaves = flattenPanelTabLeaves(nextSession.app.panelTabs);
       const rendered: unknown[] = [];
       for (const kind of nextSession.app.windowKinds) {
         rendered.push(await plugin.render(nextSession.instanceId, kind.bodyKey, viewState));
       }
-      for (const tab of nextSession.app.panelTabs) {
-        rendered.push(await plugin.render(nextSession.instanceId, tab.bodyKey, viewState));
+      for (const tab of panelTabLeaves) {
+        rendered.push(await plugin.render(nextSession.instanceId, tab.bodyKey!, viewState));
       }
       for (const kind of nextSession.app.windowKinds) {
         rendered.push(await plugin.tools(nextSession.instanceId, { ...viewState, activeWindowKindId: kind.id }));
@@ -965,15 +1011,15 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       rendered.push(await plugin.windowMeasures(nextSession.instanceId, viewState));
       if (generation !== refreshGenerationRef.current) return;
       const windowNodes = await Promise.all(rendered.slice(0, windowCount).map((node) => resolveExternalSlots(node as UiNode, slotContext)));
-      const panelNodes = await Promise.all(rendered.slice(windowCount, windowCount + nextSession.app.panelTabs.length).map((node) => resolveExternalSlots(node as UiNode, slotContext)));
-      const toolsStart = windowCount + nextSession.app.panelTabs.length;
+      const panelNodes = await Promise.all(rendered.slice(windowCount, windowCount + panelTabLeaves.length).map((node) => resolveExternalSlots(node as UiNode, slotContext)));
+      const toolsStart = windowCount + panelTabLeaves.length;
       const dynamicToolsByKind = rendered.slice(toolsStart, toolsStart + windowCount) as (readonly ToolNode[])[];
       const dynamicEngagements = rendered[rendered.length - 2] as Readonly<Record<string, WindowEngagement>>;
       const dynamicMeasures = rendered[rendered.length - 1] as Readonly<Record<string, readonly WindowMeasure[]>>;
       setWindowUiByKind(Object.fromEntries(nextSession.app.windowKinds.map((kind, index) => [kind.id, windowNodes[index]! as UiNode])));
       setWindowEngagementsByKind(dynamicEngagements);
       setWindowMeasuresByKind(dynamicMeasures);
-      setPanelUiByKey(Object.fromEntries(nextSession.app.panelTabs.map((tab, index) => [tab.id, panelNodes[index]! as UiNode])));
+      setPanelUiByKey(Object.fromEntries(panelTabLeaves.map((tab, index) => [tab.id, panelNodes[index]! as UiNode])));
       const activeModeId = viewState.activeModeId ?? nextSession.app.defaultModeId ?? nextSession.app.modes[0]?.id;
       const staticTools = nextSession.app.modes.find((mode) => mode.id === activeModeId)?.tools ?? [];
       setToolNodesByKind(
@@ -1871,21 +1917,16 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
 
   const activePanelTabId = panel?.activePanelTab ?? session?.app.panelTabs.find((tab) => panelSideForGroup(tab.group) === "right")?.id ?? session?.app.panelTabs[0]?.id;
 
-  const workbenchLeftTabs = useMemo((): SidePanelTabConfig[] => {
+  const workbenchLeftTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
     const pluginLeftTabs = session.app.panelTabs
       .filter((tab) => panelSideForGroup(tab.group) === "left")
-      .map((tab, order) => ({
-        id: tab.id,
-        icon: panelTabIcon(tab.id, tab.group),
-        name: tab.label,
-        order,
-        tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: "Loading…" }, onAction)),
-      }));
+      .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order));
     if (studioMode && session.app.id === S_PLAY_APP_ID && pluginLeftTabs.length > 0) return pluginLeftTabs;
     const hasPluginDocumentTab = pluginLeftTabs.some((tab) => tab.id === FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
     if (hasPluginDocumentTab) return pluginLeftTabs;
-    const documentTab: SidePanelTabConfig = {
+    const documentTab: PanelTabNode = {
+      kind: "leaf",
       id: FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
       icon: shellTabIcon(FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID),
       name: FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -1897,44 +1938,48 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     return [documentTab, ...pluginLeftTabs];
   }, [onAction, panel?.spawnedApps.length, panelUiByKey, session, studioMode]);
 
-  const detailsRightTabs = useMemo((): SidePanelTabConfig[] => {
+  const detailsRightTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
     return session.app.panelTabs
       .filter((tab) => panelSideForGroup(tab.group) === "right")
-      .map((tab, order) => ({
-        id: tab.id,
-        icon: panelTabIcon(tab.id, tab.group),
-        name: tab.label,
-        order,
-        tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: "Loading…" }, onAction)),
-      }));
+      .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order));
   }, [onAction, panelUiByKey, session]);
 
-  const settingsRightTabs = useMemo((): SidePanelTabConfig[] => frameworkSettingsTabs, [frameworkSettingsTabs]);
+  const settingsRightTabs = useMemo((): PanelTabNode[] => frameworkSettingsTabs, [frameworkSettingsTabs]);
 
-  const leftPanelTabs = useMemo((): SidePanelTabConfig[] => (activeLeftPanelKind === "display" ? frameworkDisplayTabs : workbenchLeftTabs), [activeLeftPanelKind, frameworkDisplayTabs, workbenchLeftTabs]);
+  const leftPanelTabs = useMemo((): PanelTabNode[] => {
+    const categories: PanelTabNode[] = [
+      { kind: "branch", id: FRAMEWORK_CATEGORY_WORKBENCH_ID, icon: categoryTabIcon(workbenchLeftTabs, "folder"), name: shellLabel("ui.panelToggle.workbench"), order: 0, children: workbenchLeftTabs },
+    ];
+    if (frameworkDisplayTabs.length > 0) {
+      categories.push({ kind: "branch", id: FRAMEWORK_CATEGORY_DISPLAY_ID, icon: categoryTabIcon(frameworkDisplayTabs, "layout-grid"), name: shellLabel("ui.panelToggle.display"), order: 1, children: frameworkDisplayTabs });
+    }
+    return categories;
+  }, [frameworkDisplayTabs, uiLocale, workbenchLeftTabs]);
 
-  const rightPanelTabs = useMemo((): SidePanelTabConfig[] => (activeRightPanelKind === "settings" ? settingsRightTabs : detailsRightTabs), [activeRightPanelKind, detailsRightTabs, settingsRightTabs]);
+  const rightPanelTabs = useMemo(
+    (): PanelTabNode[] => [
+      { kind: "branch", id: FRAMEWORK_CATEGORY_DETAILS_ID, icon: categoryTabIcon(detailsRightTabs, "info"), name: shellLabel("ui.panelToggle.details"), order: 0, children: detailsRightTabs },
+      { kind: "branch", id: FRAMEWORK_CATEGORY_SETTINGS_ID, icon: categoryTabIcon(settingsRightTabs, "settings-2"), name: shellLabel("ui.panelToggle.settings"), order: 1, children: settingsRightTabs },
+    ],
+    [detailsRightTabs, settingsRightTabs, uiLocale],
+  );
 
-  const activeLeftPanelTabId = useMemo(() => {
-    if (activeLeftPanelKind === "display") return frameworkDisplayTabs[0]?.id ?? FRAMEWORK_PANEL_TAB_DOCUMENT_ID;
-    if (studioMode && session?.app.id === S_PLAY_APP_ID) return panel?.activePanelTab ?? S_PLAY_CATALOGUE_TAB_ID;
-    return workbenchLeftTabs[0]?.id ?? FRAMEWORK_PANEL_TAB_DOCUMENT_ID;
-  }, [activeLeftPanelKind, frameworkDisplayTabs, panel?.activePanelTab, session?.app.id, studioMode, workbenchLeftTabs]);
+  const leftPanelActivePath = useMemo((): readonly string[] => {
+    if (studioMode && session?.app.id === S_PLAY_APP_ID && leftPanelPath[0] !== FRAMEWORK_CATEGORY_DISPLAY_ID) {
+      const path = findPanelTabPath(leftPanelTabs, panel?.activePanelTab ?? S_PLAY_CATALOGUE_TAB_ID);
+      if (path) return path;
+    }
+    return reconcileActivePath(leftPanelTabs, leftPanelPath, panelTabChildren);
+  }, [leftPanelPath, leftPanelTabs, panel?.activePanelTab, session?.app.id, studioMode]);
 
-  const activeRightPanelTabId = useMemo(() => {
-    if (activeRightPanelKind === "settings") return settingsRightTabs[0]?.id;
-    if (panel?.activePanelTab && detailsRightTabs.some((tab) => tab.id === panel.activePanelTab)) return panel.activePanelTab;
-    return detailsRightTabs[0]?.id ?? activePanelTabId;
-  }, [activePanelTabId, activeRightPanelKind, detailsRightTabs, panel?.activePanelTab, settingsRightTabs]);
-
-  useEffect(() => {
-    setLeftPanelTabId(undefined);
-  }, [activeLeftPanelKind]);
-
-  useEffect(() => {
-    setRightPanelTabId(undefined);
-  }, [activeRightPanelKind]);
+  const rightPanelActivePath = useMemo((): readonly string[] => {
+    if (rightPanelPath[0] !== FRAMEWORK_CATEGORY_SETTINGS_ID && panel?.activePanelTab) {
+      const path = findPanelTabPath(rightPanelTabs, panel.activePanelTab);
+      if (path) return path;
+    }
+    return reconcileActivePath(rightPanelTabs, rightPanelPath, panelTabChildren);
+  }, [panel?.activePanelTab, rightPanelPath, rightPanelTabs]);
 
   const mobilePanelTabs = useMemo(() => [...leftPanelTabs, ...rightPanelTabs], [leftPanelTabs, rightPanelTabs]);
 
@@ -1943,75 +1988,24 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     return {
       visible: leftPanelVisible || rightPanelVisible,
       tabs: mobilePanelTabs,
-      activeTabId: mobileActiveTabId ?? mobilePanelTabs[0]?.id,
-      onActiveTabChange: (tabId: string) => {
-        setMobileActiveTabId(tabId);
-        if (studioMode && session?.app.id === S_PLAY_APP_ID) {
+      activeTabPath: mobilePanelPath,
+      onActiveTabPathChange: (path: readonly string[]) => {
+        setMobilePanelPath(path);
+        const tabId = path[path.length - 1];
+        if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID) {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
         }
       },
     };
-  }, [leftPanelVisible, mobileActiveTabId, mobilePanelTabs, onAction, rightPanelVisible, session, studioMode]);
+  }, [leftPanelVisible, mobilePanelPath, mobilePanelTabs, onAction, rightPanelVisible, session, studioMode]);
 
-  const workbenchIcon = useMemo(() => {
-    const TabIcon = workbenchLeftTabs[0]?.icon;
-    return TabIcon ? <TabIcon size={16} /> : <Icon icon="folder" size="small" />;
-  }, [workbenchLeftTabs]);
-
-  const detailsIcon = useMemo(() => {
-    const TabIcon = detailsRightTabs[0]?.icon;
-    return TabIcon ? <TabIcon size={16} /> : <Icon icon="info" size="small" />;
-  }, [detailsRightTabs]);
-
-  const displayIcon = useMemo(() => {
-    const TabIcon = frameworkDisplayTabs[0]?.icon;
-    return TabIcon ? <TabIcon size={16} /> : <Icon icon="layout-grid" size="small" />;
-  }, [frameworkDisplayTabs]);
-
-  const settingsIcon = useMemo(() => <Icon icon="settings-2" size="small" />, []);
-
-  const panelToggles = useMemo((): PanelToggleItem[] => {
-    const items: PanelToggleItem[] = [];
-    if (frameworkDisplayTabs.length > 0) {
-      items.push({
-        id: "ui.panelToggle.display",
-        icon: displayIcon,
-        pressed: leftPanelVisible && activeLeftPanelKind === "display",
-        onPressedChange: (pressed) => {
-          if (pressed) setActiveLeftPanelKind("display");
-          setLeftPanelVisible((visible) => pressed || (activeLeftPanelKind === "workbench" && visible));
-        },
-      });
-    }
-    items.push({
-      id: "ui.panelToggle.workbench",
-      icon: workbenchIcon,
-      pressed: leftPanelVisible && activeLeftPanelKind === "workbench",
-      onPressedChange: (pressed) => {
-        if (pressed) setActiveLeftPanelKind("workbench");
-        setLeftPanelVisible((visible) => pressed || (activeLeftPanelKind === "display" && visible));
-      },
-    });
-    items.push({
-      id: "ui.panelToggle.details",
-      icon: detailsIcon,
-      pressed: rightPanelVisible && activeRightPanelKind === "details",
-      onPressedChange: (pressed) => {
-        if (pressed) setActiveRightPanelKind("details");
-        setRightPanelVisible((visible) => pressed || (activeRightPanelKind === "settings" && visible));
-      },
-    });
-    items.push({
-      id: "ui.panelToggle.settings",
-      icon: settingsIcon,
-      pressed: rightPanelVisible && activeRightPanelKind === "settings",
-      onPressedChange: (pressed) => {
-        if (pressed) setActiveRightPanelKind("settings");
-        setRightPanelVisible((visible) => pressed || (activeRightPanelKind === "details" && visible));
-      },
-    });
-    return items;
-  }, [activeLeftPanelKind, activeRightPanelKind, detailsIcon, displayIcon, frameworkDisplayTabs.length, leftPanelVisible, rightPanelVisible, settingsIcon, workbenchIcon]);
+  const panelToggles = useMemo(
+    (): PanelToggleItem[] => [
+      { id: "ui.panelToggle.left", icon: <Icon icon="panel-left" size="small" />, pressed: leftPanelVisible, onPressedChange: setLeftPanelVisible },
+      { id: "ui.panelToggle.right", icon: <Icon icon="panel-right" size="small" />, pressed: rightPanelVisible, onPressedChange: setRightPanelVisible },
+    ],
+    [leftPanelVisible, rightPanelVisible],
+  );
 
   const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
   const exampleOptions = useMemo(() => {
@@ -2107,7 +2101,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const searchItems = useMemo(() => {
     if (!session) return [];
     const items: UISearchItem[] = [];
-    for (const tab of session.app.panelTabs) {
+    for (const tab of flattenPanelTabLeaves(session.app.panelTabs)) {
       items.push({
         id: `panel.${tab.id}`,
         label: tab.label,
@@ -2183,16 +2177,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     return items;
   }, [onAction, panel, session, studioMode]);
 
-  const footerItems = useMemo((): FooterItem[] => {
-    if (!session) return [];
-    return [
-      {
-        id: "framework.footer.app",
-        text: appDocumentLabel(session.app.document),
-        icon: <Icon icon={session.app.iconId && session.app.iconId in ICONS ? (session.app.iconId as IconName) : "app-window"} size="small" />,
-      },
-    ];
-  }, [session]);
+  const footerItems = [];
 
   const footerToolbar = useMemo(() => {
     const syncTools = buildFrameworkSyncTools(syncBackboneUri) as readonly ToolNode[];
@@ -2363,17 +2348,18 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
             navbar={<Navbar items={navbarItems} showFullscreenToggle />}
             footer={<Footer items={footerItems} toolbar={footerToolbar} />}
             leftSidePanel={
-              leftPanelTabs.length > 0
+              workbenchLeftTabs.length > 0 || frameworkDisplayTabs.length > 0
                 ? {
                     position: "left",
                     visible: leftPanelVisible,
                     size: leftPanelSize,
                     onSizeChange: setLeftPanelSize,
                     tabs: leftPanelTabs,
-                    activeTabId: leftPanelTabId ?? activeLeftPanelTabId,
-                    onActiveTabChange: (tabId) => {
-                      setLeftPanelTabId(tabId);
-                      if (studioMode && session?.app.id === S_PLAY_APP_ID) {
+                    activeTabPath: leftPanelActivePath,
+                    onActiveTabPathChange: (path) => {
+                      setLeftPanelPath(path);
+                      const tabId = path[path.length - 1];
+                      if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID) {
                         onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
                       }
                     },
@@ -2381,17 +2367,18 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
                 : undefined
             }
             rightSidePanel={
-              rightPanelTabs.length > 0
+              detailsRightTabs.length > 0 || settingsRightTabs.length > 0
                 ? {
                     position: "right",
                     visible: rightPanelVisible,
                     size: rightPanelSize,
                     onSizeChange: setRightPanelSize,
                     tabs: rightPanelTabs,
-                    activeTabId: rightPanelTabId ?? activeRightPanelTabId,
-                    onActiveTabChange: (tabId) => {
-                      setRightPanelTabId(tabId);
-                      if (studioMode && session?.app.id === S_PLAY_APP_ID) {
+                    activeTabPath: rightPanelActivePath,
+                    onActiveTabPathChange: (path) => {
+                      setRightPanelPath(path);
+                      const tabId = path[path.length - 1];
+                      if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID) {
                         onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
                       }
                     },
@@ -3031,6 +3018,15 @@ export type ViewState = {
   readonly terminology?: string;
 };
 
+/** @emoji 🌳 Mirrors Rust `PanelTabDefinition` — a leaf carries `bodyKey`, a branch carries `children`; `group` is only meaningful on root entries. */
+export type AppPanelTabDefinition = {
+  readonly id: string;
+  readonly label: string;
+  readonly group: string;
+  readonly bodyKey?: string;
+  readonly children?: readonly AppPanelTabDefinition[];
+};
+
 export type AppDefinition = {
   readonly id: string;
   readonly label: string;
@@ -3047,7 +3043,7 @@ export type AppDefinition = {
     readonly measures?: readonly WindowMeasure[];
     readonly engagement?: WindowEngagement;
   }[];
-  readonly panelTabs: readonly { readonly id: string; readonly label: string; readonly group: string; readonly bodyKey: string }[];
+  readonly panelTabs: readonly AppPanelTabDefinition[];
   readonly keybindings: readonly { readonly keys: string; readonly action: ActionDescriptor }[];
   readonly actions?: readonly ActionDefinition[];
   readonly namedLayouts?: readonly NamedLayout[];
@@ -3827,6 +3823,8 @@ type ToolTreeProps = {
   readonly tools: readonly ToolNode[];
   readonly onAction: (action: ActionDescriptor) => void;
   readonly id?: string;
+  /** @emoji 🎀 `up` stacks a new ribbon line above the base row per pressed collection (window toolbar); `inline` keeps the horizontal drill-down (footer). */
+  readonly direction?: RibbonDirection;
 };
 
 function resolveLeafAction(node: ToolLeaf | Extract<ToolNode, { readonly kind: "button" | "toggle" }>): ActionDescriptor | null {
@@ -3873,9 +3871,11 @@ function toolLeaves(nodes: readonly ToolNode[]): ToolLeaf[] {
 
 type ToolCollectionNode = Extract<ToolNode, { readonly kind: "collection" }>;
 
-export type ToolbarRibbonSegment = { readonly kind: "picker"; readonly collections: readonly ToolCollectionNode[]; readonly depth: number } | { readonly kind: "tools"; readonly items: readonly ToolLeaf[] };
+export type ToolbarRibbonSegment =
+  | { readonly kind: "picker"; readonly collections: readonly ToolCollectionNode[]; readonly depth: number }
+  | { readonly kind: "tools"; readonly items: readonly ToolLeaf[]; readonly depth: number };
 
-/** @emoji 🎀 Builds drill-down ribbon segments from a toolbar tree and active collection path. */
+/** @emoji 🎀 Builds drill-down ribbon segments from a toolbar tree and active collection path; `depth` marks how many collections were drilled into to reach a segment. */
 export function buildToolbarRibbonSegments(nodes: readonly ToolNode[], path: readonly string[], depth = 0): ToolbarRibbonSegment[] {
   const sorted = sortToolNodes(nodes);
   const collections = sorted.filter((node): node is ToolCollectionNode => node.kind === "collection" && !node.disabled);
@@ -3883,12 +3883,12 @@ export function buildToolbarRibbonSegments(nodes: readonly ToolNode[], path: rea
   const segments: ToolbarRibbonSegment[] = [];
 
   if (collections.length === 0) {
-    if (hasInteractiveToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves });
+    if (hasInteractiveToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves, depth });
     return segments;
   }
 
   if (collections.length === 1) {
-    if (hasInteractiveToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves });
+    if (hasInteractiveToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves, depth });
     segments.push(...buildToolbarRibbonSegments(collections[0].children, path, depth));
     return segments;
   }
@@ -3896,9 +3896,9 @@ export function buildToolbarRibbonSegments(nodes: readonly ToolNode[], path: rea
   if (collections.every(isLeafOnlyToolCollection)) {
     for (const collection of collections) {
       const leaves = toolLeaves(collection.children);
-      if (hasInteractiveToolLeaves(leaves)) segments.push({ kind: "tools", items: leaves });
+      if (hasInteractiveToolLeaves(leaves)) segments.push({ kind: "tools", items: leaves, depth });
     }
-    if (hasInteractiveToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves });
+    if (hasInteractiveToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves, depth });
     return segments;
   }
 
@@ -4028,7 +4028,11 @@ function ToolToolbarItems({ items, onAction }: { readonly items: readonly ToolLe
   return <ToolbarGroup>{nodes}</ToolbarGroup>;
 }
 
-export function ToolTree({ tools, onAction, id = "ui.toolbar" }: ToolTreeProps): ReactElement | null {
+function toolbarRibbonSegmentKey(segment: ToolbarRibbonSegment, index: number): string {
+  return segment.kind === "picker" ? `picker-${segment.depth}-${segment.collections.map((entry) => entry.id).join("-")}` : `tools-${index}-${segment.items.map((entry) => entry.id).join("-")}`;
+}
+
+export function ToolTree({ tools, onAction, id = "ui.toolbar", direction = "inline" }: ToolTreeProps): ReactElement | null {
   const [activePath, setActivePath] = useState<readonly string[]>([]);
 
   useEffect(() => {
@@ -4039,33 +4043,44 @@ export function ToolTree({ tools, onAction, id = "ui.toolbar" }: ToolTreeProps):
 
   if (!hasInteractiveToolNodes(tools)) return null;
 
+  const renderSegment = (segment: ToolbarRibbonSegment): ReactNode =>
+    segment.kind === "picker" ? (
+      <ToolbarItem>
+        <ToggleGroup
+          kind="single"
+          value={activePath[segment.depth] ?? ""}
+          onValueChange={(value) => {
+            if (value) setActivePath(reconcileToolPath(tools, [...activePath.slice(0, segment.depth), value]));
+          }}
+          items={segment.collections.map((entry) => ({
+            value: entry.id,
+            id: `${id}.group.${entry.id}`,
+            icon: <Icon icon={toolIcon(entry.iconId)} size="small" />,
+            text: entry.text ?? entry.label,
+          }))}
+        />
+      </ToolbarItem>
+    ) : (
+      <ToolToolbarItems items={segment.items} onAction={onAction} />
+    );
+
+  const rows: RibbonRow[] =
+    direction === "inline"
+      ? segments.map((segment, index) => ({ key: toolbarRibbonSegmentKey(segment, index), content: renderSegment(segment) }))
+      : Array.from(
+          segments.reduce((byDepth, segment, index) => {
+            const zones = byDepth.get(segment.depth) ?? [];
+            zones.push(<ToolbarZone key={toolbarRibbonSegmentKey(segment, index)}>{renderSegment(segment)}</ToolbarZone>);
+            byDepth.set(segment.depth, zones);
+            return byDepth;
+          }, new Map<number, ReactElement[]>()),
+        )
+          .sort(([left], [right]) => left - right)
+          .map(([depth, content]) => ({ key: `row-${depth}`, content }));
+
   return (
     <UiChromeLabelPolicyProvider policy="always">
-      <div role="toolbar" id={id} className="pointer-events-auto flex w-fit max-w-full shrink-0 items-center justify-start gap-single">
-        {segments.map((segment, index) => (
-          <ToolbarZone key={segment.kind === "picker" ? `picker-${segment.depth}-${segment.collections.map((entry) => entry.id).join("-")}` : `tools-${index}-${segment.items.map((entry) => entry.id).join("-")}`}>
-            {segment.kind === "picker" ? (
-              <ToolbarItem>
-                <ToggleGroup
-                  kind="single"
-                  value={activePath[segment.depth] ?? ""}
-                  onValueChange={(value) => {
-                    if (value) setActivePath(reconcileToolPath(tools, [...activePath.slice(0, segment.depth), value]));
-                  }}
-                  items={segment.collections.map((entry) => ({
-                    value: entry.id,
-                    id: `${id}.group.${entry.id}`,
-                    icon: <Icon icon={toolIcon(entry.iconId)} size="small" />,
-                    text: entry.text ?? entry.label,
-                  }))}
-                />
-              </ToolbarItem>
-            ) : (
-              <ToolToolbarItems items={segment.items} onAction={onAction} />
-            )}
-          </ToolbarZone>
-        ))}
-      </div>
+      <Ribbon id={id} direction={direction} rows={rows} />
     </UiChromeLabelPolicyProvider>
   );
 }
@@ -4224,9 +4239,10 @@ function buildDisplayLayoutTree(host: DisplayHostApi): TreePanelConfig {
   };
 }
 
-export function createFrameworkDisplayPanelTabs(getHost: () => DisplayHostApi | null): SidePanelTabConfig[] {
+export function createFrameworkDisplayPanelTabs(getHost: () => DisplayHostApi | null): PanelTabNode[] {
   return [
     {
+      kind: "leaf",
       id: FRAMEWORK_DISPLAY_WINDOWS_TAB_ID,
       icon: shellTabIcon("framework.display.windows"),
       name: shellLabel("ui.display.tab.windows"),
@@ -4239,6 +4255,7 @@ export function createFrameworkDisplayPanelTabs(getHost: () => DisplayHostApi | 
       },
     },
     {
+      kind: "leaf",
       id: FRAMEWORK_DISPLAY_LAYOUT_TAB_ID,
       icon: shellTabIcon("framework.display.layout"),
       name: shellLabel("ui.display.tab.layout"),
@@ -4640,9 +4657,10 @@ function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
   };
 }
 
-export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi | null): SidePanelTabConfig[] {
+export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi | null): PanelTabNode[] {
   return [
     {
+      kind: "leaf",
       id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID,
       icon: shellTabIcon("framework.settings.general"),
       name: shellLabel("ui.panelToggle.settings"),
@@ -4655,6 +4673,7 @@ export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi 
       },
     },
     {
+      kind: "leaf",
       id: FRAMEWORK_SETTINGS_THEME_TAB_ID,
       icon: shellTabIcon("paintbrush"),
       name: shellLabel("ui.settings.tab.theme"),

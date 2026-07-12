@@ -142,9 +142,24 @@ struct FixtureObject {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct AttractionProps {
+    #[serde(default)]
+    id: String,
     attracting: String,
     attracted: String,
+    #[serde(default)]
+    gap: f64,
+    #[serde(default)]
+    shift: f64,
+    #[serde(default)]
+    rise: f64,
+    #[serde(default)]
+    rotation: f64,
+    #[serde(default)]
+    turn: f64,
+    #[serde(default)]
+    tilt: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1379,13 +1394,17 @@ pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlaceP
     };
     let object_id = format!("puzzle3d.brush.{}", uuid_simple());
     let vortices: Vec<VortexProps> = kind.vortices.iter().enumerate().map(|(index, entry)| VortexProps { id: format!("{object_id}:v{index}"), vortex_kind: entry.vortex_kind.clone(), position: entry.position, direction: entry.direction }).collect();
-    let attracting = puzzle3d_vortex_full_id(&object_id, &vortices[payload.source_vortex_index].id);
-    let _attraction_id = format!("attraction-{attracting}-{}", payload.target_vortex_full_id);
+    // 🌲 The new object attaches as `attracted`: the pre-existing target vortex it's docking onto stays the
+    // resolution root. Params start at zero (a bare port-to-port docking); `puzzle3d_rederive_all_attractions`
+    // (puzzle/plugin/rs/d3/mod.rs) rederives them from this placement's actual pose right after merge, so the
+    // object never visibly jumps when the directed-attraction resolver runs.
+    let attracted = puzzle3d_vortex_full_id(&object_id, &vortices[payload.source_vortex_index].id);
+    let attraction_id = format!("attraction-{}-{attracted}", payload.target_vortex_full_id);
     let mut next = fixture.clone();
-    if next.attractions.iter().any(|a| a.attracting == attracting || a.attracted == payload.target_vortex_full_id) {
+    if next.attractions.iter().any(|a| a.attracting == payload.target_vortex_full_id || a.attracted == attracted) {
         return fixture.clone();
     }
-    next.attractions.push(AttractionProps { attracting, attracted: payload.target_vortex_full_id.clone() });
+    next.attractions.push(AttractionProps { id: attraction_id, attracting: payload.target_vortex_full_id.clone(), attracted, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 });
     next.objects.push(FixtureObject { id: object_id, object_kind: Some(kind.id.clone()), mesh_url: Some(mesh_url), origin: payload.origin, orientation: Some(payload.orientation), scale: payload.scale.clone().or(kind.scale.clone()), vortices });
     let _ = template;
     next

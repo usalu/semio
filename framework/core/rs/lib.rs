@@ -5054,13 +5054,17 @@ impl PanelGroup {
     }
 }
 
+/// 🌳 A leaf carries `body_key` (its rendered panel); a branch carries `children` (the tab row shown below it). Exactly one of the two is set; `group` is only meaningful on root (non-nested) entries.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PanelTabDefinition {
     pub id: String,
     pub label: String,
     pub group: PanelGroup,
-    pub body_key: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub body_key: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub children: Vec<PanelTabDefinition>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -5501,6 +5505,178 @@ pub struct OpEnvelope {
     pub diff: DocumentDiff,
     pub inverse: InverseOperation,
 }
+
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+pub enum OpDagError {
+    #[error("duplicate operation id: {0}")]
+    Duplicate(String),
+}
+
+/// @emoji 🕸️ Causal DAG of exchanged {@link OpEnvelope}s: buffers envelopes until their deps are applied.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct OpDag {
+    envelopes: std::collections::HashMap<String, OpEnvelope>,
+    applied: std::collections::HashSet<String>,
+    applied_order: Vec<String>,
+    drained: usize,
+    pending: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum InsertResult {
+    Applied,
+    Pending,
+    AlreadyApplied,
+}
+
+impl OpDag {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn insert(&mut self, envelope: OpEnvelope) -> Result<InsertResult, OpDagError> {
+        let id = envelope.id.0.clone();
+        if self.applied.contains(&id) {
+            return Ok(InsertResult::AlreadyApplied);
+        }
+        if self.envelopes.contains_key(&id) {
+            return Err(OpDagError::Duplicate(id));
+        }
+        for dependency in &envelope.deps {
+            if !self.applied.contains(&dependency.0) && !self.envelopes.contains_key(&dependency.0) {
+                self.envelopes.insert(id.clone(), envelope);
+                if !self.pending.contains(&id) {
+                    self.pending.push(id);
+                }
+                return Ok(InsertResult::Pending);
+            }
+        }
+        self.envelopes.insert(id.clone(), envelope);
+        self.mark_applied(&id);
+        self.drain_ready();
+        Ok(InsertResult::Applied)
+    }
+
+    pub fn ready(&self) -> Vec<&OpEnvelope> {
+        self.pending
+            .iter()
+            .filter_map(|id| self.envelopes.get(id))
+            .filter(|envelope| {
+                envelope
+                    .deps
+                    .iter()
+                    .all(|dependency| self.applied.contains(&dependency.0))
+            })
+            .collect()
+    }
+
+    pub fn applied_ids(&self) -> Vec<String> {
+        self.applied.iter().cloned().collect()
+    }
+
+    /// @emoji 🧺 Drains envelopes applied since the last drain, in causal application order.
+    pub fn drain_applied_envelopes(&mut self) -> Vec<OpEnvelope> {
+        let fresh: Vec<String> = self.applied_order[self.drained..].to_vec();
+        self.drained = self.applied_order.len();
+        fresh
+            .iter()
+            .filter_map(|id| self.envelopes.get(id).cloned())
+            .collect()
+    }
+
+    fn mark_applied(&mut self, id: &str) {
+        self.applied.insert(id.to_string());
+        self.applied_order.push(id.to_string());
+        self.pending.retain(|pending| pending != id);
+    }
+
+    fn drain_ready(&mut self) {
+        loop {
+            let ready: Vec<String> = self
+                .pending
+                .iter()
+                .filter(|id| {
+                    self.envelopes
+                        .get(*id)
+                        .is_some_and(|envelope| {
+                            envelope
+                                .deps
+                                .iter()
+                                .all(|dependency| self.applied.contains(&dependency.0))
+                        })
+                })
+                .cloned()
+                .collect();
+            if ready.is_empty() {
+                break;
+            }
+            for id in ready {
+                self.mark_applied(&id);
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod op_dag_tests {
+    use super::*;
+
+    fn sample_envelope(id: &str, deps: Vec<&str>) -> OpEnvelope {
+        OpEnvelope {
+            id: OperationId(id.into()),
+            actor: ActorId("actor-1".into()),
+            document: DocumentId("document-1".into()),
+            schema_version: SchemaVersion("test.v1".into()),
+            deps: deps.into_iter().map(|dep| OperationId(dep.into())).collect(),
+            payload_hash: PayloadHash("hash".into()),
+            diff: DocumentDiff {
+                schema_id: SchemaId("diff.v1".into()),
+                payload: serde_json::json!({"value": id}),
+            },
+            inverse: InverseOperation {
+                target_operation: OperationId(id.into()),
+                inverse_diff: DocumentDiff {
+                    schema_id: SchemaId("diff.v1".into()),
+                    payload: serde_json::json!({}),
+                },
+                base_version: DocumentVersion(0),
+                dependencies: Vec::new(),
+                undo_policy: UndoPolicy::ExactBaseOnly,
+            },
+        }
+    }
+
+    #[test]
+    fn inserts_pending_until_dependencies_arrive() {
+        let mut dag = OpDag::new();
+        assert!(matches!(
+            dag.insert(sample_envelope("op-2", vec!["op-1"])),
+            Ok(InsertResult::Pending)
+        ));
+        assert!(matches!(
+            dag.insert(sample_envelope("op-1", vec![])),
+            Ok(InsertResult::Applied)
+        ));
+        assert_eq!(dag.applied_ids().len(), 2);
+    }
+
+    #[test]
+    fn drains_applied_envelopes_in_causal_order() {
+        let mut dag = OpDag::new();
+        dag.insert(sample_envelope("op-2", vec!["op-1"])).unwrap();
+        dag.insert(sample_envelope("op-1", vec![])).unwrap();
+        let drained = dag.drain_applied_envelopes();
+        assert_eq!(
+            drained.iter().map(|envelope| envelope.id.0.clone()).collect::<Vec<_>>(),
+            vec!["op-1".to_string(), "op-2".to_string()]
+        );
+        assert!(dag.drain_applied_envelopes().is_empty(), "second drain yields nothing new");
+        dag.insert(sample_envelope("op-3", vec![])).unwrap();
+        let drained = dag.drain_applied_envelopes();
+        assert_eq!(drained.len(), 1);
+        assert_eq!(drained[0].id.0, "op-3");
+    }
+}
 //#endregion 🔖Sync
 
 //#region 🔖Window
@@ -5907,8 +6083,8 @@ pub use ui::kernel::{
     ActorId, AppEvent, AppInstanceId, AssetHandle, Capability, CapabilityGrant, CapabilityRequirement,
     CapabilityToken, ActionContext, ActionDef, ActionId, ActionInvocation, ActionInvocationId,
     ActionRequest, ActionResult, Diagnostic, HostEffect, HybridLogicalTimestamp, InverseOperation,
-    KernelOperation, MergeStrategyKind, DocumentDiff, DocumentHandle, DocumentId, DocumentKind, DocumentVersion,
-    OpEnvelope, OperationId, PayloadHash, PhysicalSize, PluginInstanceId, ResourceId, ResourceKind,
-    Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy, WindowEvent, WindowHandle,
-    WindowInput, WindowKindDef, WindowKindId, WindowOutput,
+    InsertResult, KernelOperation, MergeStrategyKind, DocumentDiff, DocumentHandle, DocumentId, DocumentKind,
+    DocumentVersion, OpDag, OpDagError, OpEnvelope, OperationId, PayloadHash, PhysicalSize, PluginInstanceId,
+    ResourceId, ResourceKind, Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy,
+    WindowEvent, WindowHandle, WindowInput, WindowKindDef, WindowKindId, WindowOutput,
 };

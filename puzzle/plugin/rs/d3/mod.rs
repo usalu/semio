@@ -176,9 +176,22 @@ struct Puzzle3dTargetVolume {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 struct Puzzle3dAttraction {
+    #[serde(default)]
     id: String,
     attracting: String,
     attracted: String,
+    #[serde(default)]
+    gap: f64,
+    #[serde(default)]
+    shift: f64,
+    #[serde(default)]
+    rise: f64,
+    #[serde(default)]
+    rotation: f64,
+    #[serde(default)]
+    turn: f64,
+    #[serde(default)]
+    tilt: f64,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -879,6 +892,8 @@ fn apply_puzzle3d_fill_count(precompute: &mut Puzzle3dPrecomputeSession, mut env
         if let Ok(fixture_json) = precompute.apply_fill_count_rust(count) {
             if let Some(next) = fixture_from_engine_json(&envelope, &fixture_json) {
                 envelope = next;
+                puzzle3d_rederive_all_attractions(&mut envelope.fixture);
+                resolve_puzzle3d_attractions(&mut envelope.fixture);
             }
         }
     }
@@ -1032,6 +1047,36 @@ fn apply_puzzle3d_inspector_patch(fixture: &mut Puzzle3dFixture, entity: &str, i
                             attraction.attracted = text.into();
                         }
                     }
+                    "gap" => {
+                        if let Some(v) = value.as_f64() {
+                            attraction.gap = v;
+                        }
+                    }
+                    "shift" => {
+                        if let Some(v) = value.as_f64() {
+                            attraction.shift = v;
+                        }
+                    }
+                    "rise" => {
+                        if let Some(v) = value.as_f64() {
+                            attraction.rise = v;
+                        }
+                    }
+                    "rotation" => {
+                        if let Some(v) = value.as_f64() {
+                            attraction.rotation = v;
+                        }
+                    }
+                    "turn" => {
+                        if let Some(v) = value.as_f64() {
+                            attraction.turn = v;
+                        }
+                    }
+                    "tilt" => {
+                        if let Some(v) = value.as_f64() {
+                            attraction.tilt = v;
+                        }
+                    }
                     _ => {}
                 }
             }
@@ -1071,6 +1116,346 @@ fn apply_puzzle3d_inspector_patch(fixture: &mut Puzzle3dFixture, entity: &str, i
     }
 }
 //#endregion 🔖Document
+
+//#region 🔖AttractionResolve
+/// 📐 Attraction placement math — a quaternion-only port of compose's `compute_child_plane`
+/// (compose/client/lib/rs/lib.rs:1328) so it composes directly with `Puzzle3dObject.orientation`. Every attraction
+/// is directed (`attracting` → `attracted`); an attracted object's world pose is derived from the attracting
+/// vortex's world pose plus the 6 connection-style parameters (gap/shift/rise/rotation/turn/tilt, angles in
+/// degrees, same semantics as compose connections).
+const PUZZLE3D_ATTRACTION_ALIGN_TOLERANCE: f64 = 0.01;
+
+fn vec3_sub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+}
+
+fn vec3_add(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
+}
+
+fn vec3_scale(a: [f64; 3], s: f64) -> [f64; 3] {
+    [a[0] * s, a[1] * s, a[2] * s]
+}
+
+fn vec3_cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+}
+
+fn vec3_dot(a: [f64; 3], b: [f64; 3]) -> f64 {
+    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+}
+
+fn vec3_len(a: [f64; 3]) -> f64 {
+    vec3_dot(a, a).sqrt()
+}
+
+fn vec3_normalize(a: [f64; 3]) -> [f64; 3] {
+    let len = vec3_len(a);
+    if len < 1e-12 {
+        a
+    } else {
+        vec3_scale(a, 1.0 / len)
+    }
+}
+
+fn deg_to_rad(deg: f64) -> f64 {
+    deg * std::f64::consts::PI / 180.0
+}
+
+fn rad_to_deg(rad: f64) -> f64 {
+    rad * 180.0 / std::f64::consts::PI
+}
+
+fn quat_conjugate(q: [f64; 4]) -> [f64; 4] {
+    [-q[0], -q[1], -q[2], q[3]]
+}
+
+fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
+    let len = (q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]).sqrt();
+    if len < 1e-12 {
+        [0.0, 0.0, 0.0, 1.0]
+    } else {
+        [q[0] / len, q[1] / len, q[2] / len, q[3] / len]
+    }
+}
+
+/// 🧭 Ports compose's `quaternion_from_unit_vectors` (compose/client/lib/rs/lib.rs:1276) — the quaternion rotating
+/// unit vector `from` onto unit vector `to`.
+fn puzzle3d_quaternion_from_unit_vectors(from: [f64; 3], to: [f64; 3]) -> [f64; 4] {
+    let r = vec3_dot(from, to) + 1.0;
+    let quat = if r < 0.000_001 {
+        if from[0].abs() > from[2].abs() {
+            [-from[1], from[0], 0.0, 0.0]
+        } else {
+            [0.0, -from[2], from[1], 0.0]
+        }
+    } else {
+        let c = vec3_cross(from, to);
+        [c[0], c[1], c[2], r]
+    };
+    quat_normalize(quat)
+}
+
+/// 🧲 Ports compose's align-quaternion special-case branch (compose/client/lib/rs/lib.rs:1345-1356) for when the
+/// attracted vortex is already (anti)parallel to the attracting vortex. Falls back to an alternate cross axis when
+/// the attracting direction is exactly ±Z — a double-degenerate corner compose's own branch doesn't otherwise guard.
+fn puzzle3d_attraction_align_quat(parent_dir: [f64; 3], child_dir: [f64; 3]) -> [f64; 4] {
+    let reverse_child = vec3_scale(child_dir, -1.0);
+    let cross_vec = vec3_cross(parent_dir, reverse_child);
+    if vec3_len(cross_vec) < PUZZLE3D_ATTRACTION_ALIGN_TOLERANCE {
+        if parent_dir[2].abs() < PUZZLE3D_ATTRACTION_ALIGN_TOLERANCE {
+            puzzle3d_quaternion_from_unit_vectors([0.0, 1.0, 0.0], [0.0, 0.0, -1.0])
+        } else {
+            let mut axis = vec3_cross([0.0, 0.0, 1.0], parent_dir);
+            if vec3_len(axis) < 1e-9 {
+                axis = vec3_cross([1.0, 0.0, 0.0], parent_dir);
+            }
+            let axis = vec3_normalize(axis);
+            let half = std::f64::consts::FRAC_PI_2;
+            quat_normalize([axis[0] * half.sin(), axis[1] * half.sin(), axis[2] * half.sin(), half.cos()])
+        }
+    } else {
+        puzzle3d_quaternion_from_unit_vectors(reverse_child, parent_dir)
+    }
+}
+
+/// 📌 Resolves an attraction endpoint (`objectId:vortexId`) to its owning object id and its vortex's LOCAL
+/// (object-frame) position/direction — the frame compose's connector math expects, before the object's own world
+/// transform is applied.
+fn puzzle3d_local_vortex_geom(fixture: &Puzzle3dFixture, full_id: &str) -> Option<(String, [f64; 3], [f64; 3])> {
+    for object in &fixture.objects {
+        for vortex in &object.vortices {
+            if puzzle3d_vortex_full_id(&object.id, &vortex.id) == full_id {
+                return Some((object.id.clone(), vortex.position, vortex.direction.unwrap_or([0.0, 0.0, -1.0])));
+            }
+        }
+    }
+    None
+}
+
+/// 🔗 Resolves an attraction's `attracting`/`attracted` vortex full-ids to their owning object ids. Returns `None`
+/// for dangling references or same-object attractions (legal today but not a resolvable directed edge).
+fn puzzle3d_attraction_object_ids(fixture: &Puzzle3dFixture, attraction: &Puzzle3dAttraction) -> Option<(String, String)> {
+    let attracting_object = puzzle3d_local_vortex_geom(fixture, &attraction.attracting)?.0;
+    let attracted_object = puzzle3d_local_vortex_geom(fixture, &attraction.attracted)?.0;
+    if attracting_object == attracted_object {
+        return None;
+    }
+    Some((attracting_object, attracted_object))
+}
+
+/// 📐 Forward attraction placement — given the attracting object's world pose (`t_a`/`q_a`), both vortices' LOCAL
+/// position/direction, and the 6 connection-style parameters (angles in degrees), returns the attracted object's
+/// world pose. Exact quaternion port of compose's `compute_child_plane`.
+#[allow(clippy::too_many_arguments)]
+fn puzzle3d_attraction_child_pose(t_a: [f64; 3], q_a: [f64; 4], p_a: [f64; 3], d_a: [f64; 3], p_b: [f64; 3], d_b: [f64; 3], gap: f64, shift: f64, rise: f64, rotation_deg: f64, turn_deg: f64, tilt_deg: f64) -> ([f64; 3], [f64; 4]) {
+    let parent_dir = vec3_normalize(d_a);
+    let child_dir = vec3_normalize(d_b);
+    let align_q = puzzle3d_attraction_align_quat(parent_dir, child_dir);
+
+    let pq = puzzle3d_quaternion_from_unit_vectors([0.0, 1.0, 0.0], parent_dir);
+    let gap_dir = quat_rotate_vector(pq, [0.0, 1.0, 0.0]);
+    let shift_dir = quat_rotate_vector(pq, [1.0, 0.0, 0.0]);
+    let raise_dir = quat_rotate_vector(pq, [0.0, 0.0, 1.0]);
+
+    let rotate_q = quat_from_axis_angle(parent_dir[0], parent_dir[1], parent_dir[2], -deg_to_rad(rotation_deg));
+    let turn_axis = quat_rotate_vector(rotate_q, raise_dir);
+    let tilt_axis = quat_rotate_vector(rotate_q, shift_dir);
+    let turn_q = quat_from_axis_angle(turn_axis[0], turn_axis[1], turn_axis[2], deg_to_rad(turn_deg));
+    let tilt_q = quat_from_axis_angle(tilt_axis[0], tilt_axis[1], tilt_axis[2], deg_to_rad(tilt_deg));
+
+    let mut orientation_local = quat_conjugate(align_q);
+    orientation_local = quat_mul(orientation_local, quat_conjugate(rotate_q));
+    orientation_local = quat_mul(orientation_local, quat_conjugate(turn_q));
+    orientation_local = quat_mul(orientation_local, quat_conjugate(tilt_q));
+    let orientation_local = quat_normalize(orientation_local);
+
+    let offset = vec3_add(vec3_add(t_a, p_a), vec3_add(vec3_add(vec3_scale(gap_dir, gap), vec3_scale(shift_dir, shift)), vec3_scale(raise_dir, rise)));
+    let t_b = vec3_sub(quat_rotate_vector(orientation_local, offset), p_b);
+    let q_b = quat_normalize(quat_mul(orientation_local, q_a));
+    (t_b, q_b)
+}
+
+/// 🔁 Inverse of `puzzle3d_attraction_child_pose` — given the attracted object's CURRENT world pose, derives the 6
+/// parameters that reproduce it exactly, so moving/rotating an attracted object never causes a resolve-triggered
+/// snap-back and creating an attraction never moves either endpoint.
+#[allow(clippy::too_many_arguments)]
+fn derive_attraction_params(t_a: [f64; 3], q_a: [f64; 4], p_a: [f64; 3], d_a: [f64; 3], p_b: [f64; 3], d_b: [f64; 3], t_b: [f64; 3], q_b: [f64; 4]) -> (f64, f64, f64, f64, f64, f64) {
+    let parent_dir = vec3_normalize(d_a);
+    let child_dir = vec3_normalize(d_b);
+    let align_q = puzzle3d_attraction_align_quat(parent_dir, child_dir);
+    let pq = puzzle3d_quaternion_from_unit_vectors([0.0, 1.0, 0.0], parent_dir);
+    let gap_dir = quat_rotate_vector(pq, [0.0, 1.0, 0.0]);
+    let shift_dir = quat_rotate_vector(pq, [1.0, 0.0, 0.0]);
+    let raise_dir = quat_rotate_vector(pq, [0.0, 0.0, 1.0]);
+
+    let orientation_local = quat_normalize(quat_mul(q_b, quat_conjugate(q_a)));
+
+    let offset = quat_rotate_vector(quat_conjugate(orientation_local), vec3_add(t_b, p_b));
+    let diff = vec3_sub(vec3_sub(offset, t_a), p_a);
+    let gap = vec3_dot(diff, gap_dir);
+    let shift = vec3_dot(diff, shift_dir);
+    let rise = vec3_dot(diff, raise_dir);
+
+    let residual = quat_mul(align_q, orientation_local);
+    let m = quat_mul(quat_mul(quat_conjugate(pq), residual), pq);
+    let col_x = quat_rotate_vector(m, [1.0, 0.0, 0.0]);
+    let col_y = quat_rotate_vector(m, [0.0, 1.0, 0.0]);
+
+    let clamp = |v: f64| v.clamp(-1.0, 1.0);
+    let tilt_rad = -(clamp(col_y[2])).asin();
+    let (rotation_rad, turn_rad) = if (col_y[2].abs() - 1.0).abs() < 1e-6 {
+        (col_x[1].atan2(col_x[0]), 0.0)
+    } else {
+        let col_z = quat_rotate_vector(m, [0.0, 0.0, 1.0]);
+        ((-col_x[2]).atan2(col_z[2]), col_y[0].atan2(col_y[1]))
+    };
+
+    (gap, shift, rise, rad_to_deg(rotation_rad), rad_to_deg(turn_rad), rad_to_deg(tilt_rad))
+}
+
+/// 🌲 Resolves every attracted object's world pose from its attracting root, over a directed BFS per
+/// weakly-connected component. Roots are in-degree-zero objects; a component that is a pure cycle (the "donut"
+/// case) picks the lexicographically smallest object id in that component as a deterministic root. Multiple
+/// incoming attractions to the same object are resolved first-visit-wins (mirrors compose's
+/// `flatten_design_positions` cycle handling). Idempotent: re-running against already-resolved poses reproduces
+/// them exactly. Returns, for every non-root object touched, the attraction index that positioned it — callers
+/// (e.g. `translateSelection`) use this to rederive params before a direct move so resolving never snaps it back.
+fn resolve_puzzle3d_attractions(fixture: &mut Puzzle3dFixture) -> HashMap<String, usize> {
+    let mut edges: HashMap<String, Vec<(String, usize)>> = HashMap::new();
+    let mut in_degree: HashMap<String, usize> = HashMap::new();
+    let mut all_object_ids: Vec<String> = fixture.objects.iter().map(|object| object.id.clone()).collect();
+    all_object_ids.sort();
+    for id in &all_object_ids {
+        in_degree.entry(id.clone()).or_insert(0);
+    }
+    for (index, attraction) in fixture.attractions.iter().enumerate() {
+        if let Some((attracting_id, attracted_id)) = puzzle3d_attraction_object_ids(fixture, attraction) {
+            edges.entry(attracting_id).or_default().push((attracted_id.clone(), index));
+            *in_degree.entry(attracted_id).or_insert(0) += 1;
+        }
+    }
+
+    fn find(parent_of: &mut HashMap<String, String>, id: &str) -> String {
+        let mut current = id.to_string();
+        while parent_of[&current] != current {
+            let grandparent = parent_of[&parent_of[&current]].clone();
+            parent_of.insert(current.clone(), grandparent.clone());
+            current = grandparent;
+        }
+        current
+    }
+    fn union(parent_of: &mut HashMap<String, String>, a: &str, b: &str) {
+        let root_a = find(parent_of, a);
+        let root_b = find(parent_of, b);
+        if root_a != root_b {
+            parent_of.insert(root_a, root_b);
+        }
+    }
+    let mut parent_of: HashMap<String, String> = all_object_ids.iter().map(|id| (id.clone(), id.clone())).collect();
+    for (attracting_id, targets) in &edges {
+        for (attracted_id, _) in targets {
+            union(&mut parent_of, attracting_id, attracted_id);
+        }
+    }
+
+    let mut components: HashMap<String, Vec<String>> = HashMap::new();
+    for id in &all_object_ids {
+        let root = find(&mut parent_of, id);
+        components.entry(root).or_default().push(id.clone());
+    }
+    let mut component_keys: Vec<String> = components.keys().cloned().collect();
+    component_keys.sort();
+
+    let mut incoming: HashMap<String, usize> = HashMap::new();
+    let mut visited: HashSet<String> = HashSet::new();
+
+    for component_key in component_keys {
+        let mut members = components.remove(&component_key).unwrap_or_default();
+        members.sort();
+        let roots: Vec<String> = members.iter().filter(|id| in_degree.get(id.as_str()).copied().unwrap_or(0) == 0).cloned().collect();
+        let seed_roots: Vec<String> = if roots.is_empty() { vec![members[0].clone()] } else { roots };
+
+        let mut queue: std::collections::VecDeque<String> = std::collections::VecDeque::new();
+        for root in &seed_roots {
+            if visited.insert(root.clone()) {
+                queue.push_back(root.clone());
+            }
+        }
+        while let Some(current_id) = queue.pop_front() {
+            let Some(targets) = edges.get(&current_id) else { continue };
+            for (attracted_id, attraction_index) in targets.clone() {
+                if visited.contains(&attracted_id) {
+                    continue;
+                }
+                let attraction = fixture.attractions[attraction_index].clone();
+                let (Some((_, p_a, d_a)), Some((_, p_b, d_b))) = (puzzle3d_local_vortex_geom(fixture, &attraction.attracting), puzzle3d_local_vortex_geom(fixture, &attraction.attracted)) else { continue };
+                let Some(attracting_object) = fixture.objects.iter().find(|object| object.id == current_id) else { continue };
+                let t_a = attracting_object.origin;
+                let q_a = attracting_object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                let (t_b, q_b) = puzzle3d_attraction_child_pose(t_a, q_a, p_a, d_a, p_b, d_b, attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt);
+                if let Some(attracted_object) = fixture.objects.iter_mut().find(|object| object.id == attracted_id) {
+                    attracted_object.origin = t_b;
+                    attracted_object.orientation = Some(q_b);
+                }
+                incoming.insert(attracted_id.clone(), attraction_index);
+                visited.insert(attracted_id.clone());
+                queue.push_back(attracted_id);
+            }
+        }
+    }
+    incoming
+}
+
+/// 🧰 Rederives every attraction's 6 params from its endpoints' CURRENT poses. Used after merging externally
+/// computed poses (brush/fill placement via the collision-aware `puzzle_3d` engine, which knows nothing about
+/// gap/shift/rise/rotation/turn/tilt) so the follow-up resolve reproduces those poses exactly instead of
+/// re-deriving a bare port-to-port docking that could visibly jump the just-placed object.
+fn puzzle3d_rederive_all_attractions(fixture: &mut Puzzle3dFixture) {
+    let ids: Vec<String> = fixture.attractions.iter().map(|attraction| attraction.id.clone()).collect();
+    for id in ids {
+        let Some(attraction) = fixture.attractions.iter().find(|attraction| attraction.id == id).cloned() else { continue };
+        let (Some((attracting_id, p_a, d_a)), Some((attracted_id, p_b, d_b))) = (puzzle3d_local_vortex_geom(fixture, &attraction.attracting), puzzle3d_local_vortex_geom(fixture, &attraction.attracted)) else { continue };
+        let pose = |object_id: &str| fixture.objects.iter().find(|object| object.id == object_id).map(|object| (object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])));
+        let (Some((t_a, q_a)), Some((t_b, q_b))) = (pose(&attracting_id), pose(&attracted_id)) else { continue };
+        let (gap, shift, rise, rotation, turn, tilt) = derive_attraction_params(t_a, q_a, p_a, d_a, p_b, d_b, t_b, q_b);
+        if let Some(attraction) = fixture.attractions.iter_mut().find(|attraction| attraction.id == id) {
+            attraction.gap = gap;
+            attraction.shift = shift;
+            attraction.rise = rise;
+            attraction.rotation = rotation;
+            attraction.turn = turn;
+            attraction.tilt = tilt;
+        }
+    }
+}
+
+/// ✋ After a direct move/rotate on selected objects, rederives the 6 params of every moved object's incoming
+/// attraction (per the `incoming` map from a prior `resolve_puzzle3d_attractions` call) from its NEW pose, so the
+/// follow-up resolve reproduces that pose exactly instead of snapping the object back to its old one. Harmless for
+/// objects whose attracting object was moved by the same delta (relative pose is unchanged, so derived params come
+/// out unchanged too).
+fn puzzle3d_rederive_moved_attractions(fixture: &mut Puzzle3dFixture, moved_ids: &[String], incoming: &HashMap<String, usize>) {
+    for object_id in moved_ids {
+        let Some(&attraction_index) = incoming.get(object_id) else { continue };
+        let Some(attraction) = fixture.attractions.get(attraction_index).cloned() else { continue };
+        let (Some((attracting_id, p_a, d_a)), Some((_, p_b, d_b))) = (puzzle3d_local_vortex_geom(fixture, &attraction.attracting), puzzle3d_local_vortex_geom(fixture, &attraction.attracted)) else { continue };
+        let Some(t_a_q_a) = fixture.objects.iter().find(|object| object.id == attracting_id).map(|object| (object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]))) else { continue };
+        let Some(t_b_q_b) = fixture.objects.iter().find(|object| &object.id == object_id).map(|object| (object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]))) else { continue };
+        let (t_a, q_a) = t_a_q_a;
+        let (t_b, q_b) = t_b_q_b;
+        let (gap, shift, rise, rotation, turn, tilt) = derive_attraction_params(t_a, q_a, p_a, d_a, p_b, d_b, t_b, q_b);
+        if let Some(attraction) = fixture.attractions.get_mut(attraction_index) {
+            attraction.gap = gap;
+            attraction.shift = shift;
+            attraction.rise = rise;
+            attraction.rotation = rotation;
+            attraction.turn = turn;
+            attraction.tilt = tilt;
+        }
+    }
+}
+//#endregion 🔖AttractionResolve
 
 //#region 🔖Terminology
 /// 🗣️ Complete UI label set for the 3d app; one field per label makes every terminology×locale combination compile-checked.
@@ -1480,6 +1865,18 @@ fn build_inspector_tree(envelope: &Puzzle3dEnvelope, term_labels: &Puzzle3dLabel
             let attracted: Vec<String> = attractions.iter().map(|attraction| attraction.attracted.clone()).collect();
             fields.push(inspector_text_field("puzzle3d-play-inspector.attraction.attracting", "Attracting", semio_framework_plugin::ui_inspector_mixed_text(&attracting), patch_cmd("attracting")));
             fields.push(inspector_text_field("puzzle3d-play-inspector.attraction.attracted", "Attracted", semio_framework_plugin::ui_inspector_mixed_text(&attracted), patch_cmd("attracted")));
+            let gaps: Vec<f64> = attractions.iter().map(|attraction| attraction.gap).collect();
+            let shifts: Vec<f64> = attractions.iter().map(|attraction| attraction.shift).collect();
+            let rises: Vec<f64> = attractions.iter().map(|attraction| attraction.rise).collect();
+            let rotations: Vec<f64> = attractions.iter().map(|attraction| attraction.rotation).collect();
+            let turns: Vec<f64> = attractions.iter().map(|attraction| attraction.turn).collect();
+            let tilts: Vec<f64> = attractions.iter().map(|attraction| attraction.tilt).collect();
+            fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.gap", "Gap", semio_framework_plugin::ui_inspector_mixed_number(&gaps), patch_cmd("gap")));
+            fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.shift", "Shift", semio_framework_plugin::ui_inspector_mixed_number(&shifts), patch_cmd("shift")));
+            fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.rise", "Rise", semio_framework_plugin::ui_inspector_mixed_number(&rises), patch_cmd("rise")));
+            fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.rotation", "Rotation (°)", semio_framework_plugin::ui_inspector_mixed_number(&rotations), patch_cmd("rotation")));
+            fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.turn", "Turn (°)", semio_framework_plugin::ui_inspector_mixed_number(&turns), patch_cmd("turn")));
+            fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.tilt", "Tilt (°)", semio_framework_plugin::ui_inspector_mixed_number(&tilts), patch_cmd("tilt")));
             return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.attraction".into(), label: "Attraction".into(), default_open: None, fields }]);
         }
     }
@@ -2032,7 +2429,8 @@ impl PluginApp for Puzzle3dPlayApp {
         match action {
             "setDocument" => {
                 if let Some(document) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value(document.clone()) {
+                    if let Ok(mut parsed) = serde_json::from_value::<Puzzle3dEnvelope>(document.clone()) {
+                        resolve_puzzle3d_attractions(&mut parsed.fixture);
                         return vec![set_document_op(&parsed)];
                     }
                 }
@@ -2041,6 +2439,7 @@ impl PluginApp for Puzzle3dPlayApp {
                 if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
                     if let Ok(fixture) = serde_json::from_str::<Puzzle3dFixture>(json_text) {
                         envelope.fixture = fixture;
+                        resolve_puzzle3d_attractions(&mut envelope.fixture);
                         return vec![set_document_op(&envelope)];
                     }
                 }
@@ -2056,6 +2455,7 @@ impl PluginApp for Puzzle3dPlayApp {
                 } else {
                     envelope
                 };
+                resolve_puzzle3d_attractions(&mut envelope.fixture);
                 drive_precompute(&mut self.precompute, &envelope);
                 return vec![set_document_op(&envelope)];
             }
@@ -2099,6 +2499,7 @@ impl PluginApp for Puzzle3dPlayApp {
                     locked: false,
                 });
                 envelope.runtime.selection.object_ids = vec![id];
+                resolve_puzzle3d_attractions(&mut envelope.fixture);
                 return vec![set_document_op(&envelope)];
             }
             "deleteSelection" => {
@@ -2137,6 +2538,7 @@ impl PluginApp for Puzzle3dPlayApp {
                 let new_ids: Vec<String> = clones.iter().map(|object| object.id.clone()).collect();
                 envelope.fixture.objects.extend(clones);
                 envelope.runtime.selection.object_ids = new_ids;
+                resolve_puzzle3d_attractions(&mut envelope.fixture);
                 return vec![set_document_op(&envelope)];
             }
             "selectSameKindSelection" => {
@@ -2181,6 +2583,7 @@ impl PluginApp for Puzzle3dPlayApp {
                 let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let dz = args.and_then(|value| value.get("dz")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let incoming = resolve_puzzle3d_attractions(&mut envelope.fixture);
                 for object in &mut envelope.fixture.objects {
                     if ids.contains(&object.id) {
                         object.origin[0] += dx;
@@ -2188,6 +2591,8 @@ impl PluginApp for Puzzle3dPlayApp {
                         object.origin[2] += dz;
                     }
                 }
+                puzzle3d_rederive_moved_attractions(&mut envelope.fixture, &ids, &incoming);
+                resolve_puzzle3d_attractions(&mut envelope.fixture);
                 if !ids.is_empty() {
                     return vec![set_document_op(&envelope)];
                 }
@@ -2199,12 +2604,15 @@ impl PluginApp for Puzzle3dPlayApp {
                 let az = args.and_then(|value| value.get("az")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let angle = args.and_then(|value| value.get("angle")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let delta = quat_from_axis_angle(ax, ay, az, angle);
+                let incoming = resolve_puzzle3d_attractions(&mut envelope.fixture);
                 for object in &mut envelope.fixture.objects {
                     if ids.contains(&object.id) {
                         let current = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
                         object.orientation = Some(quat_mul(delta, current));
                     }
                 }
+                puzzle3d_rederive_moved_attractions(&mut envelope.fixture, &ids, &incoming);
+                resolve_puzzle3d_attractions(&mut envelope.fixture);
                 if !ids.is_empty() {
                     return vec![set_document_op(&envelope)];
                 }
@@ -2303,13 +2711,17 @@ impl PluginApp for Puzzle3dPlayApp {
                 let proximity_radius = envelope.runtime.proximity_radius;
                 if let (Some(object), Some(position)) = (envelope.fixture.objects.iter_mut().find(|object| object.id == object_id && !object.locked && !object.hidden), position) {
                     object.origin = position;
-                    let mut source_vortex: Option<(String, [f64; 3])> = None;
+                    let object_orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                    let mut source_vortex: Option<(String, [f64; 3], [f64; 3], [f64; 3])> = None;
                     for vortex in &object.vortices {
                         let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
-                        source_vortex = Some((full_id, world_vortex_position(object, vortex)));
+                        source_vortex = Some((full_id, world_vortex_position(object, vortex), vortex.position, vortex.direction.unwrap_or([0.0, 0.0, -1.0])));
                         break;
                     }
-                    if let Some((source_id, source_pos)) = source_vortex {
+                    // 🌲 New attractions attach the MOVED object as `attracted`: the pre-existing, stationary
+                    // structure it snapped onto stays the resolution root. Params are derived from the current
+                    // (already-relocated) poses so nothing jumps when the resolver next runs.
+                    if let Some((source_id, source_pos, source_local_pos, source_local_dir)) = source_vortex {
                         for other in &envelope.fixture.objects {
                             if other.id == object_id {
                                 continue;
@@ -2325,14 +2737,17 @@ impl PluginApp for Puzzle3dPlayApp {
                                 let dz = source_pos[2] - target_pos[2];
                                 let distance = (dx * dx + dy * dy + dz * dz).sqrt();
                                 if distance <= proximity_radius {
-                                    let attraction_id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
-                                    if !envelope.fixture.attractions.iter().any(|entry| entry.attracting == source_id && entry.attracted == target_id || entry.attracting == target_id && entry.attracted == source_id) {
-                                        envelope.fixture.attractions.push(Puzzle3dAttraction { id: attraction_id, attracting: source_id.clone(), attracted: target_id });
+                                    let already_connected = envelope.fixture.attractions.iter().any(|entry| entry.attracting == source_id && entry.attracted == target_id || entry.attracting == target_id && entry.attracted == source_id);
+                                    if !already_connected {
+                                        let attraction_id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
+                                        let (gap, shift, rise, rotation, turn, tilt) = derive_attraction_params(other.origin, other.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), vortex.position, vortex.direction.unwrap_or([0.0, 0.0, -1.0]), source_local_pos, source_local_dir, position, object_orientation);
+                                        envelope.fixture.attractions.push(Puzzle3dAttraction { id: attraction_id, attracting: target_id, attracted: source_id.clone(), gap, shift, rise, rotation, turn, tilt });
                                     }
                                 }
                             }
                         }
                     }
+                    resolve_puzzle3d_attractions(&mut envelope.fixture);
                     sync_precompute_session(&mut self.precompute, &envelope);
                     return vec![set_document_op(&envelope)];
                 }
@@ -2424,6 +2839,7 @@ impl PluginApp for Puzzle3dPlayApp {
                 let ids: Vec<String> = args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                 let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
                 apply_puzzle3d_inspector_patch(&mut envelope.fixture, entity, &ids, field, &value);
+                resolve_puzzle3d_attractions(&mut envelope.fixture);
                 return vec![set_document_op(&envelope)];
             }
             "selectAll" => {
@@ -2493,6 +2909,7 @@ impl PluginApp for Puzzle3dPlayApp {
                     envelope.runtime.redo_stack.push(envelope.fixture.clone());
                     envelope.fixture = previous;
                     envelope.runtime.selection = Puzzle3dSelection::default();
+                    resolve_puzzle3d_attractions(&mut envelope.fixture);
                     sync_precompute_session(&mut self.precompute, &envelope);
                     return vec![set_document_op(&envelope)];
                 }
@@ -2502,6 +2919,7 @@ impl PluginApp for Puzzle3dPlayApp {
                     envelope.runtime.undo_stack.push(envelope.fixture.clone());
                     envelope.fixture = next;
                     envelope.runtime.selection = Puzzle3dSelection::default();
+                    resolve_puzzle3d_attractions(&mut envelope.fixture);
                     sync_precompute_session(&mut self.precompute, &envelope);
                     return vec![set_document_op(&envelope)];
                 }
@@ -2517,7 +2935,20 @@ impl PluginApp for Puzzle3dPlayApp {
                     };
                     if !already_connected && compatible {
                         let id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
-                        envelope.fixture.attractions.push(Puzzle3dAttraction { id, attracting: attracting.into(), attracted: attracted.into() });
+                        // 🌲 Keep the drag gesture's direction (source = attracting) but derive params from the
+                        // CURRENT poses of both objects, so creating an attraction never moves either endpoint.
+                        let (gap, shift, rise, rotation, turn, tilt) = match (puzzle3d_local_vortex_geom(&envelope.fixture, attracting), puzzle3d_local_vortex_geom(&envelope.fixture, attracted)) {
+                            (Some((attracting_object_id, p_a, d_a)), Some((attracted_object_id, p_b, d_b))) => {
+                                let pose = |object_id: &str| envelope.fixture.objects.iter().find(|object| object.id == object_id).map(|object| (object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])));
+                                match (pose(&attracting_object_id), pose(&attracted_object_id)) {
+                                    (Some((t_a, q_a)), Some((t_b, q_b))) => derive_attraction_params(t_a, q_a, p_a, d_a, p_b, d_b, t_b, q_b),
+                                    _ => (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+                                }
+                            }
+                            _ => (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+                        };
+                        envelope.fixture.attractions.push(Puzzle3dAttraction { id, attracting: attracting.into(), attracted: attracted.into(), gap, shift, rise, rotation, turn, tilt });
+                        resolve_puzzle3d_attractions(&mut envelope.fixture);
                         return vec![set_document_op(&envelope)];
                     }
                 }
@@ -2594,6 +3025,8 @@ impl PluginApp for Puzzle3dPlayApp {
                         if let Ok(fixture_json) = self.precompute.apply_brush_placement_rust(&serde_json::to_string(&payload).unwrap_or_default()) {
                             if let Some(next) = fixture_from_engine_json(&envelope, &fixture_json) {
                                 envelope = next;
+                                puzzle3d_rederive_all_attractions(&mut envelope.fixture);
+                                resolve_puzzle3d_attractions(&mut envelope.fixture);
                                 return vec![set_document_op(&envelope)];
                             }
                         }
@@ -3773,5 +4206,385 @@ mod tests {
         assert!(json.contains("contextMenuJson"));
         assert!(json.contains("duplicateSelection"));
     }
+
+    //#region 🧲 Attraction 6-parameter resolution tests
+    fn attraction_test_object(id: &str, origin: [f64; 3], orientation: Option<[f64; 4]>, vortex_position: [f64; 3], vortex_direction: [f64; 3]) -> Puzzle3dObject {
+        Puzzle3dObject {
+            id: id.into(),
+            label: None,
+            object_kind: None,
+            origin,
+            orientation,
+            scale: None,
+            mesh_url: None,
+            vortices: vec![Puzzle3dVortex { id: "v0".into(), vortex_kind: Some("k".into()), position: vortex_position, direction: Some(vortex_direction), radius: None, hidden: false, locked: false }],
+            hidden: false,
+            locked: false,
+        }
+    }
+
+    fn attraction_test_attraction(id: &str, attracting: &str, attracted: &str, gap: f64, shift: f64, rise: f64, rotation: f64, turn: f64, tilt: f64) -> Puzzle3dAttraction {
+        Puzzle3dAttraction { id: id.into(), attracting: attracting.into(), attracted: attracted.into(), gap, shift, rise, rotation, turn, tilt }
+    }
+
+    fn assert_vec3_approx(actual: [f64; 3], expected: [f64; 3], tolerance: f64, message: &str) {
+        for axis in 0..3 {
+            assert!((actual[axis] - expected[axis]).abs() < tolerance, "{message}: axis {axis} expected {expected:?}, got {actual:?}");
+        }
+    }
+
+    #[test]
+    fn attraction_schema_roundtrips_transform_params() {
+        let minimal: Puzzle3dAttraction = serde_json::from_str(r#"{"attracting":"o1:v0","attracted":"o2:v0"}"#).unwrap();
+        assert_eq!(minimal.gap, 0.0);
+        assert_eq!(minimal.shift, 0.0);
+        assert_eq!(minimal.rise, 0.0);
+        assert_eq!(minimal.rotation, 0.0);
+        assert_eq!(minimal.turn, 0.0);
+        assert_eq!(minimal.tilt, 0.0);
+        assert_eq!(minimal.id, "");
+
+        let explicit = attraction_test_attraction("a1", "o1:v0", "o2:v0", 1.5, -2.5, 0.25, 30.0, -45.0, 10.0);
+        let json = serde_json::to_string(&explicit).unwrap();
+        let roundtripped: Puzzle3dAttraction = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, explicit);
+    }
+
+    #[test]
+    fn resolve_attractions_positions_attracted_object_along_gap() {
+        let mut fixture = empty_fixture();
+        fixture.objects = vec![
+            attraction_test_object("a", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+            attraction_test_object("b", [5.0, 5.0, 5.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
+        ];
+        fixture.attractions = vec![attraction_test_attraction("attr", "a:v0", "b:v0", 3.0, 0.0, 0.0, 0.0, 0.0, 0.0)];
+        // Ground truth via the (separately invertibility-tested) forward pose function — the resolver's job is
+        // purely to feed it the right endpoint geometry over the directed graph, not to redefine the math.
+        let (expected_origin, expected_orientation) = puzzle3d_attraction_child_pose([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], [1.0, 0.0, 0.0], 3.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        resolve_puzzle3d_attractions(&mut fixture);
+        let b = fixture.objects.iter().find(|object| object.id == "b").unwrap();
+        assert_vec3_approx(b.origin, expected_origin, 1e-9, "resolver should position the attracted object exactly per the forward pose formula");
+        assert_vec3_approx(quat_rotate_vector(b.orientation.unwrap(), [1.0, 0.0, 0.0]), quat_rotate_vector(expected_orientation, [1.0, 0.0, 0.0]), 1e-9, "resolver should orient the attracted object exactly per the forward pose formula");
+        assert_ne!(b.origin, [5.0, 5.0, 5.0], "resolve should actually reposition the attracted object away from its placeholder origin");
+    }
+
+    #[test]
+    fn resolve_attractions_applies_rotation_turn_tilt_and_is_invertible() {
+        let t_a = [1.0, 2.0, 3.0];
+        let q_a = quat_normalize(quat_from_axis_angle(0.3, 0.6, 0.2, 0.9));
+        let p_a = [0.1, -0.2, 0.05];
+        let d_a = [0.2, 0.9, -0.1];
+        let p_b = [-0.3, 0.15, 0.4];
+        let d_b = [0.6, -0.3, 0.5];
+        let (gap, shift, rise, rotation, turn, tilt) = (1.2, -0.7, 0.4, 37.0, -52.0, 21.0);
+        let (t_b, q_b) = puzzle3d_attraction_child_pose(t_a, q_a, p_a, d_a, p_b, d_b, gap, shift, rise, rotation, turn, tilt);
+        let derived = derive_attraction_params(t_a, q_a, p_a, d_a, p_b, d_b, t_b, q_b);
+        let (t_b2, q_b2) = puzzle3d_attraction_child_pose(t_a, q_a, p_a, d_a, p_b, d_b, derived.0, derived.1, derived.2, derived.3, derived.4, derived.5);
+        assert_vec3_approx(t_b2, t_b, 1e-6, "re-applying derived params should reproduce the same world position");
+        let v1 = quat_rotate_vector(q_b, [1.0, 0.0, 0.0]);
+        let v2 = quat_rotate_vector(q_b2, [1.0, 0.0, 0.0]);
+        assert_vec3_approx(v1, v2, 1e-6, "re-applying derived params should reproduce the same world orientation");
+    }
+
+    #[test]
+    fn resolve_attractions_is_idempotent() {
+        let mut fixture = empty_fixture();
+        fixture.objects = vec![
+            attraction_test_object("a", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+            attraction_test_object("b", [9.0, 9.0, 9.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
+            attraction_test_object("c", [-4.0, -4.0, -4.0], None, [0.0, 0.0, 0.0], [0.0, 0.0, 1.0]),
+        ];
+        fixture.attractions = vec![
+            attraction_test_attraction("attr-ab", "a:v0", "b:v0", 1.0, 0.5, -0.5, 15.0, -20.0, 5.0),
+            attraction_test_attraction("attr-bc", "b:v0", "c:v0", 0.75, -0.25, 0.1, -30.0, 10.0, -15.0),
+        ];
+        resolve_puzzle3d_attractions(&mut fixture);
+        let once = fixture.clone();
+        resolve_puzzle3d_attractions(&mut fixture);
+        for (before, after) in once.objects.iter().zip(fixture.objects.iter()) {
+            let before_orientation = before.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+            let after_orientation = after.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+            assert_vec3_approx(before.origin, after.origin, 1e-9, "re-resolving should not move an already-resolved object");
+            assert_vec3_approx(quat_rotate_vector(before_orientation, [1.0, 0.0, 0.0]), quat_rotate_vector(after_orientation, [1.0, 0.0, 0.0]), 1e-9, "re-resolving should not re-orient an already-resolved object");
+        }
+    }
+
+    #[test]
+    fn resolve_attractions_donut_cycle_picks_deterministic_root_and_terminates() {
+        let mut fixture = empty_fixture();
+        fixture.objects = vec![
+            attraction_test_object("z-third", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+            attraction_test_object("a-first", [1.0, 1.0, 1.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
+            attraction_test_object("m-second", [2.0, 2.0, 2.0], None, [0.0, 0.0, 0.0], [0.0, 0.0, 1.0]),
+        ];
+        fixture.attractions = vec![
+            attraction_test_attraction("attr-1", "a-first:v0", "m-second:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+            attraction_test_attraction("attr-2", "m-second:v0", "z-third:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+            attraction_test_attraction("attr-3", "z-third:v0", "a-first:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        ];
+        let original_root_origin = fixture.objects.iter().find(|object| object.id == "a-first").unwrap().origin;
+        resolve_puzzle3d_attractions(&mut fixture);
+        let root = fixture.objects.iter().find(|object| object.id == "a-first").unwrap();
+        assert_vec3_approx(root.origin, original_root_origin, 1e-9, "the lexicographically smallest object id in a pure cycle should be the deterministic root and keep its stored pose");
+        let once = fixture.clone();
+        resolve_puzzle3d_attractions(&mut fixture);
+        for (before, after) in once.objects.iter().zip(fixture.objects.iter()) {
+            assert_vec3_approx(before.origin, after.origin, 1e-9, "a donut cycle must resolve identically on re-resolve (idempotent, no infinite loop)");
+        }
+    }
+
+    #[test]
+    fn resolve_attractions_skips_same_object_and_dangling_attractions() {
+        let mut fixture = empty_fixture();
+        fixture.objects = vec![Puzzle3dObject {
+            id: "solo".into(),
+            label: None,
+            object_kind: None,
+            origin: [3.0, 4.0, 5.0],
+            orientation: None,
+            scale: None,
+            mesh_url: None,
+            vortices: vec![
+                Puzzle3dVortex { id: "v0".into(), vortex_kind: None, position: [0.0, 0.0, 0.0], direction: Some([0.0, 1.0, 0.0]), radius: None, hidden: false, locked: false },
+                Puzzle3dVortex { id: "v1".into(), vortex_kind: None, position: [1.0, 0.0, 0.0], direction: Some([1.0, 0.0, 0.0]), radius: None, hidden: false, locked: false },
+            ],
+            hidden: false,
+            locked: false,
+        }];
+        fixture.attractions = vec![
+            attraction_test_attraction("same-object", "solo:v0", "solo:v1", 2.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+            attraction_test_attraction("dangling", "solo:v0", "ghost:v0", 2.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        ];
+        let original_origin = fixture.objects[0].origin;
+        resolve_puzzle3d_attractions(&mut fixture);
+        assert_eq!(fixture.objects[0].origin, original_origin, "same-object and dangling attractions must not be resolved or panic");
+    }
+
+    #[test]
+    fn attraction_roots_are_in_degree_zero_objects() {
+        let mut fixture = empty_fixture();
+        fixture.objects = vec![
+            attraction_test_object("root", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+            attraction_test_object("child", [9.0, 9.0, 9.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
+            attraction_test_object("grandchild", [-9.0, -9.0, -9.0], None, [0.0, 0.0, 0.0], [0.0, 0.0, 1.0]),
+        ];
+        fixture.attractions = vec![
+            attraction_test_attraction("attr-1", "root:v0", "child:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+            attraction_test_attraction("attr-2", "child:v0", "grandchild:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        ];
+        let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
+        let mut app = Puzzle3dPlayApp::default();
+        let before = parse_envelope(&document);
+        let child_before = before.fixture.objects.iter().find(|object| object.id == "child").unwrap().origin;
+        let grandchild_before = before.fixture.objects.iter().find(|object| object.id == "grandchild").unwrap().origin;
+        let ops = app.handle_action_patch_ops("translateSelection", Some(&json!({ "ids": ["root"], "dx": 10.0, "dy": 0.0, "dz": 0.0 })), &document, &ViewState::default());
+        let after = apply_ops(&parse_envelope(&document), &ops);
+        let child_after = after.fixture.objects.iter().find(|object| object.id == "child").unwrap().origin;
+        let grandchild_after = after.fixture.objects.iter().find(|object| object.id == "grandchild").unwrap().origin;
+        assert_ne!(child_after, child_before, "moving the root should carry its directly attracted child — this is the move-fix regression test");
+        assert_ne!(grandchild_after, grandchild_before, "moving the root should transitively carry the grandchild too");
+        // Consistency check (not a "same delta" assumption — compose's connection math can rotate the
+        // propagated offset): resolving fresh from the root's NEW pose must reproduce the exact same
+        // descendant positions the in-place translate+resolve produced.
+        let mut fresh = after.fixture.clone();
+        for object in fresh.objects.iter_mut() {
+            if object.id != "root" {
+                object.origin = [999.0, 999.0, 999.0];
+            }
+        }
+        resolve_puzzle3d_attractions(&mut fresh);
+        let child_fresh = fresh.objects.iter().find(|object| object.id == "child").unwrap().origin;
+        let grandchild_fresh = fresh.objects.iter().find(|object| object.id == "grandchild").unwrap().origin;
+        assert_vec3_approx(child_after, child_fresh, 1e-9, "descendant positions after a root move must match a from-scratch resolve of the root's new pose");
+        assert_vec3_approx(grandchild_after, grandchild_fresh, 1e-9, "transitive descendant positions after a root move must match a from-scratch resolve too");
+    }
+
+    #[test]
+    fn patch_inspector_updates_each_attraction_param() {
+        let mut fixture = empty_fixture();
+        fixture.objects = vec![
+            attraction_test_object("a", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+            attraction_test_object("b", [8.0, 8.0, 8.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
+        ];
+        fixture.attractions = vec![attraction_test_attraction("attr", "a:v0", "b:v0", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)];
+        let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
+        let mut app = Puzzle3dPlayApp::default();
+        let mut current_document = document;
+        for (field, value) in [("gap", 2.0), ("shift", -1.5), ("rise", 0.5), ("rotation", 45.0), ("turn", -30.0), ("tilt", 15.0)] {
+            let ops = app.handle_action_patch_ops("patchInspector", Some(&json!({ "entity": "attraction", "ids": ["attr"], "field": field, "value": value })), &current_document, &ViewState::default());
+            current_document = serde_json::to_string(&apply_ops(&parse_envelope(&current_document), &ops)).unwrap();
+        }
+        let envelope = parse_envelope(&current_document);
+        let attraction = envelope.fixture.attractions.iter().find(|attraction| attraction.id == "attr").unwrap();
+        assert_eq!(attraction.gap, 2.0);
+        assert_eq!(attraction.shift, -1.5);
+        assert_eq!(attraction.rise, 0.5);
+        assert_eq!(attraction.rotation, 45.0);
+        assert_eq!(attraction.turn, -30.0);
+        assert_eq!(attraction.tilt, 15.0);
+    }
+
+    #[test]
+    fn patch_inspector_attraction_gap_repositions_attracted_object() {
+        let mut fixture = empty_fixture();
+        fixture.objects = vec![
+            attraction_test_object("a", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+            attraction_test_object("b", [0.0, 1.0, 0.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
+        ];
+        fixture.attractions = vec![attraction_test_attraction("attr", "a:v0", "b:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)];
+        resolve_puzzle3d_attractions(&mut fixture);
+        let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
+        let mut app = Puzzle3dPlayApp::default();
+        let before = parse_envelope(&document).fixture.objects.iter().find(|object| object.id == "b").unwrap().origin;
+        let ops = app.handle_action_patch_ops("patchInspector", Some(&json!({ "entity": "attraction", "ids": ["attr"], "field": "gap", "value": 4.0 })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        let after = envelope.fixture.objects.iter().find(|object| object.id == "b").unwrap().origin;
+        assert_ne!(before, after, "increasing gap on a selected attraction should immediately reposition the attracted object");
+    }
+
+    #[test]
+    fn translate_selection_on_root_propagates_to_attracted_objects() {
+        let mut fixture = empty_fixture();
+        fixture.objects = vec![
+            attraction_test_object("root", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+            attraction_test_object("child", [0.0, 1.0, 0.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
+        ];
+        fixture.attractions = vec![attraction_test_attraction("attr", "root:v0", "child:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)];
+        resolve_puzzle3d_attractions(&mut fixture);
+        let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
+        let mut app = Puzzle3dPlayApp::default();
+        let child_before = parse_envelope(&document).fixture.objects.iter().find(|object| object.id == "child").unwrap().origin;
+        let ops = app.handle_action_patch_ops("translateSelection", Some(&json!({ "ids": ["root"], "dx": 5.0, "dy": 2.0, "dz": -1.0 })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        let child_after = envelope.fixture.objects.iter().find(|object| object.id == "child").unwrap().origin;
+        assert_ne!(child_after, child_before, "translating the root must move objects with attractions too — this is the move-fix regression test");
+        let expected_root_origin = [5.0, 2.0, -1.0];
+        let (expected_child_origin, _) = puzzle3d_attraction_child_pose(expected_root_origin, [0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], [1.0, 0.0, 0.0], 1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        assert_vec3_approx(child_after, expected_child_origin, 1e-9, "the child's position after the root moves must match the forward pose formula evaluated at the root's new pose");
+    }
+
+    #[test]
+    fn translate_selection_on_attracted_object_rederives_params_without_snap_back() {
+        let mut fixture = empty_fixture();
+        fixture.objects = vec![
+            attraction_test_object("root", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+            attraction_test_object("child", [0.0, 1.0, 0.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
+        ];
+        fixture.attractions = vec![attraction_test_attraction("attr", "root:v0", "child:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)];
+        resolve_puzzle3d_attractions(&mut fixture);
+        let resolved_child_origin = fixture.objects.iter().find(|object| object.id == "child").unwrap().origin;
+        let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
+        let mut app = Puzzle3dPlayApp::default();
+        let ops = app.handle_action_patch_ops("translateSelection", Some(&json!({ "ids": ["child"], "dx": 3.0, "dy": -4.0, "dz": 2.0 })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        let child = envelope.fixture.objects.iter().find(|object| object.id == "child").unwrap();
+        let expected = vec3_add(resolved_child_origin, [3.0, -4.0, 2.0]);
+        assert_vec3_approx(child.origin, expected, 1e-6, "moving an attracted object directly must not snap back to its old resolved position");
+        let attraction = envelope.fixture.attractions.iter().find(|attraction| attraction.id == "attr").unwrap();
+        assert_ne!(attraction.gap, 1.0, "the incoming attraction's params should be rederived from the object's new pose");
+        // and the resolver must be a no-op on top of the rederived params (idempotent, no snap-back)
+        let mut resolved_again = envelope.fixture.clone();
+        resolve_puzzle3d_attractions(&mut resolved_again);
+        let child_again = resolved_again.objects.iter().find(|object| object.id == "child").unwrap();
+        assert_vec3_approx(child_again.origin, child.origin, 1e-9, "re-resolving after a direct move on the attracted object must reproduce the moved-to position exactly");
+    }
+
+    #[test]
+    fn rotate_selection_on_attracted_object_rederives_angle_params() {
+        let mut fixture = empty_fixture();
+        fixture.objects = vec![
+            attraction_test_object("root", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+            attraction_test_object("child", [0.0, 1.0, 0.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
+        ];
+        fixture.attractions = vec![attraction_test_attraction("attr", "root:v0", "child:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)];
+        resolve_puzzle3d_attractions(&mut fixture);
+        let resolved_child_orientation = fixture.objects.iter().find(|object| object.id == "child").unwrap().orientation.unwrap();
+        let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
+        let mut app = Puzzle3dPlayApp::default();
+        let ops = app.handle_action_patch_ops("rotateSelection", Some(&json!({ "ids": ["child"], "ax": 0.0, "ay": 0.0, "az": 1.0, "angle": 0.4 })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        let child = envelope.fixture.objects.iter().find(|object| object.id == "child").unwrap();
+        let expected_orientation = quat_normalize(quat_mul(quat_from_axis_angle(0.0, 0.0, 1.0, 0.4), resolved_child_orientation));
+        let v1 = quat_rotate_vector(child.orientation.unwrap(), [1.0, 0.0, 0.0]);
+        let v2 = quat_rotate_vector(expected_orientation, [1.0, 0.0, 0.0]);
+        assert_vec3_approx(v1, v2, 1e-6, "rotating an attracted object directly must not snap back to its old resolved orientation");
+        let mut resolved_again = envelope.fixture.clone();
+        resolve_puzzle3d_attractions(&mut resolved_again);
+        let child_again = resolved_again.objects.iter().find(|object| object.id == "child").unwrap();
+        assert_vec3_approx(child_again.origin, child.origin, 1e-6, "rederived params must make a follow-up resolve a no-op");
+    }
+
+    #[test]
+    fn world_relocate_attaches_moved_object_as_attracted_with_derived_params() {
+        let mut fixture = empty_fixture();
+        fixture.objects = vec![
+            attraction_test_object("stationary", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+            attraction_test_object("moved", [5.0, 5.0, 5.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
+        ];
+        let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
+        let mut app = Puzzle3dPlayApp::default();
+        let ops = app.handle_action_patch_ops("setProximityRadius", Some(&json!({ "value": 10.0 })), &document, &ViewState::default());
+        let document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
+        let requested_position = [0.5, 0.5, 0.5];
+        let ops = app.handle_action_patch_ops("worldRelocate", Some(&json!({ "objectId": "moved", "position": requested_position })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.fixture.attractions.len(), 1);
+        let attraction = &envelope.fixture.attractions[0];
+        assert!(attraction.attracting.starts_with("stationary:"), "the pre-existing stationary structure should stay the resolution root");
+        assert!(attraction.attracted.starts_with("moved:"), "the moved object should attach as the attracted (non-root) side");
+        let moved = envelope.fixture.objects.iter().find(|object| object.id == "moved").unwrap();
+        assert_vec3_approx(moved.origin, requested_position, 1e-6, "the relocated object must land exactly where it was dropped, not jump to a canonical docking pose");
+    }
+
+    #[test]
+    fn create_attraction_derives_params_so_nothing_moves() {
+        let mut fixture = empty_fixture();
+        fixture.objects = vec![
+            attraction_test_object("a", [1.0, 2.0, 3.0], Some(quat_normalize(quat_from_axis_angle(0.1, 0.7, 0.3, 0.5))), [0.0, 0.0, 0.0], [0.2, 0.9, -0.1]),
+            attraction_test_object("b", [-2.0, 4.0, 1.0], Some(quat_normalize(quat_from_axis_angle(0.4, -0.2, 0.6, 1.1))), [0.0, 0.0, 0.0], [0.6, -0.3, 0.5]),
+        ];
+        let a_origin_before = fixture.objects[0].origin;
+        let b_origin_before = fixture.objects[1].origin;
+        let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
+        let mut app = Puzzle3dPlayApp::default();
+        let ops = app.handle_action_patch_ops("createAttraction", Some(&json!({ "attracting": "a:v0", "attracted": "b:v0" })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.fixture.attractions.len(), 1);
+        let a_after = envelope.fixture.objects.iter().find(|object| object.id == "a").unwrap().origin;
+        let b_after = envelope.fixture.objects.iter().find(|object| object.id == "b").unwrap().origin;
+        assert_vec3_approx(a_after, a_origin_before, 1e-6, "creating an attraction must never move the attracting object");
+        assert_vec3_approx(b_after, b_origin_before, 1e-6, "creating an attraction must never move the attracted object");
+    }
+
+    #[test]
+    fn brush_placement_roundtrip_preserves_attractions() {
+        let envelope = Puzzle3dEnvelope { fixture: empty_fixture(), runtime: Puzzle3dRuntime::default() };
+        let engine_json = json!({
+            "objects": [attraction_test_object("a", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0])],
+            "attractions": [{ "id": "attr-1", "attracting": "target:v0", "attracted": "a:v0", "gap": 0.0, "shift": 0.0, "rise": 0.0, "rotation": 0.0, "turn": 0.0, "tilt": 0.0 }],
+        })
+        .to_string();
+        let next = fixture_from_engine_json(&envelope, &engine_json).expect("engine json with ids should parse");
+        assert_eq!(next.fixture.attractions.len(), 1, "an id-bearing engine attraction must survive fixture_from_engine_json (regression for the silent-wipe bug)");
+        assert_eq!(next.fixture.attractions[0].attracting, "target:v0");
+    }
+
+    #[test]
+    fn build_inspector_tree_shows_attraction_transform_fields() {
+        let mut fixture = empty_fixture();
+        fixture.objects = vec![
+            attraction_test_object("a", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+            attraction_test_object("b", [0.0, 1.0, 0.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
+        ];
+        fixture.attractions = vec![attraction_test_attraction("attr", "a:v0", "b:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)];
+        let mut envelope = Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() };
+        envelope.runtime.selection.attraction_ids = vec!["attr".into()];
+        let node = build_inspector_tree(&envelope, puzzle3d_labels(&ViewState::default()));
+        let json = serde_json::to_string(&node).unwrap();
+        for field_id in ["attraction.gap", "attraction.shift", "attraction.rise", "attraction.rotation", "attraction.turn", "attraction.tilt"] {
+            assert!(json.contains(field_id), "inspector tree should include the {field_id} field for a selected attraction");
+        }
+    }
+    //#endregion 🧲 Attraction 6-parameter resolution tests
 }
 //#endregion 🧪Tests

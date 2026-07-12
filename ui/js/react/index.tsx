@@ -2465,6 +2465,8 @@ export type UiTranslationSchema = {
       readonly toggle: UiLabelValue;
     };
     readonly panelToggle: {
+      readonly left: UiLabelValue;
+      readonly right: UiLabelValue;
       readonly display: UiLabelValue;
       readonly overview: UiLabelValue;
       readonly workbench: UiLabelValue;
@@ -2791,6 +2793,18 @@ export const uiChromeTranslationBundles = {
           },
         },
         panelToggle: {
+          left: {
+            label: {
+              normal: "Linkes Panel",
+              beginner: "Linkes Panel",
+            },
+          },
+          right: {
+            label: {
+              normal: "Rechtes Panel",
+              beginner: "Rechtes Panel",
+            },
+          },
           display: {
             label: {
               normal: "Anzeige",
@@ -3186,6 +3200,18 @@ export const uiChromeTranslationBundles = {
           },
         },
         panelToggle: {
+          left: {
+            label: {
+              normal: "Left Panel",
+              beginner: "Left Panel",
+            },
+          },
+          right: {
+            label: {
+              normal: "Right Panel",
+              beginner: "Right Panel",
+            },
+          },
           display: {
             label: {
               normal: "Display",
@@ -4252,21 +4278,93 @@ export const sidePanelTabButtonClass = cn(panelTabButtonClass, "px-tiny");
 /** @emoji 📑 Shared side/mobile panel tab bar variant. */
 export type PanelTabBarVariant = "side" | "mobile";
 
-/** @emoji 📑 Props for {@link PanelTabBar}. */
-export interface PanelTabBarProps {
-  readonly variant: PanelTabBarVariant;
-  readonly tabs: readonly SidePanelTabConfig[];
-  readonly activeTabId?: string;
-  readonly onTabChange: (tabId: string) => void;
+/** @emoji 🧭 Keeps matching path segments against a node tree; falls back to the first sibling and auto-descends while children exist. */
+export function reconcileActivePath<T extends { readonly id: string }>(nodes: readonly T[], path: readonly string[], childrenOf: (node: T) => readonly T[] | undefined): string[] {
+  let current = nodes;
+  const reconciled: string[] = [];
+  let index = 0;
+  while (current.length > 0) {
+    let id = path[index];
+    if (!id || !current.some((node) => node.id === id)) id = current[0]?.id;
+    if (!id) break;
+    reconciled.push(id);
+    const active = current.find((node) => node.id === id);
+    const children = active ? childrenOf(active) : undefined;
+    if (!children || children.length === 0) break;
+    current = children;
+    index++;
+  }
+  return reconciled;
 }
 
-/** @emoji 📑 Panel tab strip shared by {@link SidePanel} and {@link MobilePanel}. */
-export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, tabs, activeTabId, onTabChange }) => {
+/** @emoji 🍃 Leaf tab — its `tree` is the panel body shown when active. */
+export interface PanelTabLeaf {
+  readonly kind: "leaf";
+  readonly id: string;
+  readonly icon: React.ComponentType<{ size?: number }>;
+  /** @emoji 🏷️ Mandatory tab label shown after the icon. */
+  readonly name: string;
+  readonly order?: number;
+  /** @emoji 🌲 Tree sections and items for this tab. */
+  readonly tree: TreePanelSource;
+}
+
+/** @emoji 🌳 Branch tab — its `children` render as the row below this one when active. */
+export interface PanelTabBranch {
+  readonly kind: "branch";
+  readonly id: string;
+  readonly icon: React.ComponentType<{ size?: number }>;
+  readonly name: string;
+  readonly order?: number;
+  readonly children: readonly PanelTabNode[];
+}
+
+/** @emoji 🌲 One node in the arbitrarily nestable panel tab tree. */
+export type PanelTabNode = PanelTabLeaf | PanelTabBranch;
+
+/** @emoji 🌳 `childrenOf` for {@link reconcileActivePath} over a {@link PanelTabNode} tree. */
+export function panelTabChildren(node: PanelTabNode): readonly PanelTabNode[] | undefined {
+  return node.kind === "branch" ? node.children : undefined;
+}
+
+/** @emoji 🔍 Walks a path from the root, returning the node at its end (or undefined if the path doesn't resolve). */
+export function findPanelTabNode(tabs: readonly PanelTabNode[], path: readonly string[]): PanelTabNode | undefined {
+  let nodes = tabs;
+  let found: PanelTabNode | undefined;
+  for (const id of path) {
+    found = nodes.find((node) => node.id === id);
+    if (!found) return undefined;
+    nodes = panelTabChildren(found) ?? [];
+  }
+  return found;
+}
+
+/** @emoji 🔍 Depth-first path from the root to the tab with `id`, or undefined if absent. */
+export function findPanelTabPath(tabs: readonly PanelTabNode[], id: string): string[] | undefined {
+  for (const node of tabs) {
+    if (node.id === id) return [node.id];
+    if (node.kind === "branch") {
+      const childPath = findPanelTabPath(node.children, id);
+      if (childPath) return [node.id, ...childPath];
+    }
+  }
+  return undefined;
+}
+
+/** @emoji 📑 Props for {@link PanelTabRow}. */
+interface PanelTabRowProps {
+  readonly variant: PanelTabBarVariant;
+  readonly tabs: readonly PanelTabNode[];
+  readonly activeId?: string;
+  readonly onSelect: (tabId: string) => void;
+}
+
+/** @emoji 📑 One row of sibling tabs; stacked by {@link PanelTabBar} into a {@link Ribbon}. */
+const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, tabs, activeId, onSelect }) => {
   const barRef = reactHostPort.useRef<HTMLDivElement>(null);
   const tabSlot = variant === "side" ? "side-panel" : "mobile-panel";
   const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
-  const resolvedActiveTabId = activeTabId ?? sortedTabs[0]?.id;
-  const activeTab = reactHostPort.useMemo(() => sortedTabs.find((tab) => tab.id === resolvedActiveTabId) ?? sortedTabs[0], [resolvedActiveTabId, sortedTabs]);
+  const resolvedActiveId = activeId ?? sortedTabs[0]?.id;
 
   reactHostPort.useLayoutEffect(() => {
     const bar = barRef.current;
@@ -4274,7 +4372,7 @@ export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, tabs, activeT
     bar.scrollLeft = 0;
     const activeButton = bar.querySelector<HTMLElement>(`[data-slot="${tabSlot}-tab-button"][data-active="true"]`);
     activeButton?.scrollIntoView({ block: "nearest", inline: "nearest" });
-  }, [resolvedActiveTabId, sortedTabs, tabSlot]);
+  }, [resolvedActiveId, sortedTabs, tabSlot]);
 
   if (sortedTabs.length === 0) return null;
 
@@ -4285,10 +4383,10 @@ export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, tabs, activeT
     <div ref={barRef} data-dim data-slot={`${tabSlot}-tabs`} className={barClass}>
       {sortedTabs.map((tab) => {
         const Icon = tab.icon;
-        const isActive = tab.id === activeTab?.id;
+        const isActive = tab.id === resolvedActiveId;
         return (
           <ChromeControlHint key={tab.id} id={tab.id}>
-            <button data-slot={`${tabSlot}-tab-button`} id={tab.id} data-active={isActive ? "true" : undefined} onClick={() => onTabChange(tab.id)} className={cn(buttonClass, isActive && panelTabActiveClass)}>
+            <button data-slot={`${tabSlot}-tab-button`} id={tab.id} data-active={isActive ? "true" : undefined} onClick={() => onSelect(tab.id)} className={cn(buttonClass, isActive && panelTabActiveClass)}>
               <span className={panelTabIconSlotClass}>
                 <Icon size={12} />
               </span>
@@ -4299,6 +4397,42 @@ export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, tabs, activeT
       })}
     </div>
   );
+};
+
+/** @emoji 📑 Props for {@link PanelTabBar}. */
+export interface PanelTabBarProps {
+  readonly variant: PanelTabBarVariant;
+  readonly tabs: readonly PanelTabNode[];
+  readonly activePath: readonly string[];
+  readonly onActivePathChange: (path: readonly string[]) => void;
+}
+
+/** @emoji 📑 Panel tab strip shared by {@link SidePanel} and {@link MobilePanel} — one {@link PanelTabRow} per tree level, stacked in a {@link Ribbon}. */
+export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, tabs, activePath, onActivePathChange }) => {
+  const rows: RibbonRow[] = [];
+  let level = tabs;
+  let depth = 0;
+  while (level.length > 0) {
+    const sorted = [...level].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const activeId = activePath[depth] && sorted.some((tab) => tab.id === activePath[depth]) ? activePath[depth] : sorted[0]?.id;
+    const rowDepth = depth;
+    rows.push({
+      key: `${variant}-row-${rowDepth}`,
+      content: (
+        <PanelTabRow
+          variant={variant}
+          tabs={sorted}
+          activeId={activeId}
+          onSelect={(tabId) => onActivePathChange(reconcileActivePath(tabs, [...activePath.slice(0, rowDepth), tabId], panelTabChildren))}
+        />
+      ),
+    });
+    const active = sorted.find((tab) => tab.id === activeId);
+    level = (active && panelTabChildren(active)) ?? [];
+    depth++;
+  }
+  if (rows.length === 0) return null;
+  return <Ribbon direction="down" rows={rows} />;
 };
 
 /** @emoji 📑 Mobile panel tab strip height. */
@@ -4457,7 +4591,7 @@ export const windowEngagementBodyClass = "flex min-h-medium min-w-0 flex-auto fl
 export const windowToolbarOverlayClass = "pointer-events-none absolute bottom-0 left-0 z-panel flex max-h-full flex-col items-start p-single";
 
 /** @emoji 📐 Horizontal tool row beside the toolbar chrome toggle: fixed to the chrome's height, never taller. */
-export const windowToolbarBodyClass = "flex h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto px-single";
+export const windowToolbarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto px-single";
 
 /** @emoji 📐 CSS variable for invisible top clearance below floating window chrome. */
 export const windowChromeScrollClearanceVar = "--window-chrome-scroll-clearance";
@@ -13936,20 +14070,7 @@ export { BottomPanel };
 
 // #region 📌SidePanel
 // Collapsible side panel with tabbed content.
-// Consumers MUST provide SidePanelTabConfig entries.
-
-/**
- * Configuration interface for a side panel tab.
- **/
-export interface SidePanelTabConfig {
-  id: string;
-  icon: React.ComponentType<{ size?: number }>;
-  /** @emoji 🏷️ Mandatory tab label shown after the icon. */
-  name: string;
-  order?: number;
-  /** @emoji 🌲 Tree sections and items for this tab (required). */
-  tree: TreePanelSource;
-}
+// Consumers MUST provide PanelTabNode entries (see {@link PanelTabNode} in #region 🩻Toolbar Components).
 
 export interface TreePanelConfig {
   sections: TreeDataSection[];
@@ -13970,38 +14091,16 @@ export interface TreePanelDefinition {
 
 export type TreePanelSource = TreePanelConfig | TreePanelDefinition;
 
-export interface SidePanelTabDefinition {
-  resolveTab(): SidePanelTabConfig;
-}
-
 /** @emoji 🌲 Factory for a static {@link TreePanelDefinition}. */
 export function staticTreePanelDefinition(config: TreePanelConfig): TreePanelDefinition {
   return { resolveTree: () => config };
 }
-
-/** @emoji 📑 Factory for a static {@link SidePanelTabDefinition}. */
-export function staticSidePanelTabDefinition(config: SidePanelTabConfig): SidePanelTabDefinition {
-  return { resolveTab: () => config };
-}
-
-export type SidePanelTabSource = SidePanelTabConfig | SidePanelTabDefinition;
 
 function resolveTreePanelSource(tree: TreePanelSource): TreePanelConfig {
   if (typeof (tree as TreePanelDefinition).resolveTree === "function") {
     return (tree as TreePanelDefinition).resolveTree();
   }
   return tree;
-}
-
-function resolveSidePanelTabSource(tab: SidePanelTabSource): SidePanelTabConfig {
-  if (typeof (tab as SidePanelTabDefinition).resolveTab === "function") {
-    return (tab as SidePanelTabDefinition).resolveTab();
-  }
-  return tab;
-}
-
-function resolveSidePanelTabs(tabs: readonly SidePanelTabSource[] | undefined): SidePanelTabConfig[] | undefined {
-  return tabs?.map(resolveSidePanelTabSource);
 }
 
 /** @emoji 🖱️ Pointer-drag props for a host element (replaces imperative drag controllers). */
@@ -14074,9 +14173,9 @@ export interface SidePanelProps {
   visible?: boolean;
   size?: number;
   onSizeChange?: (size: number) => void;
-  tabs: SidePanelTabConfig[];
-  activeTabId?: string;
-  onActiveTabChange?: (tabId: string) => void;
+  tabs: readonly PanelTabNode[];
+  activeTabPath?: readonly string[];
+  onActiveTabPathChange?: (path: readonly string[]) => void;
   minSize?: number;
   maxSize?: number;
   zIndex?: 10 | 20 | 30 | 40;
@@ -14157,27 +14256,26 @@ function SidePanelResizeHandle({
   return <div className={resizeHandleClass} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} {...resizePointerProps} />;
 }
 
-const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 300, onSizeChange, tabs, activeTabId, onActiveTabChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
+const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 300, onSizeChange, tabs, activeTabPath, onActiveTabPathChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
   const [isResizeHovered, setIsResizeHovered] = reactHostPort.useState(false);
   const [isResizing, setIsResizing] = reactHostPort.useState(false);
-  const [internalActiveTab, setInternalActiveTab] = reactHostPort.useState<string | undefined>(tabs[0]?.id);
+  const [internalActivePath, setInternalActivePath] = reactHostPort.useState<readonly string[]>(() => reconcileActivePath(tabs, [], panelTabChildren));
   const sizeRef = reactHostPort.useRef(size);
 
   reactHostPort.useEffect(() => {
     sizeRef.current = size;
   }, [size]);
 
-  const currentActiveTab = activeTabId ?? internalActiveTab;
-  const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
-  const showTabBar = sortedTabs.length > 0;
-  const activeTab = reactHostPort.useMemo(() => sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0], [currentActiveTab, sortedTabs]);
-  const activeTabTree = activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null;
+  const showTabBar = tabs.length > 0;
+  const resolvedPath = reactHostPort.useMemo(() => reconcileActivePath(tabs, activeTabPath ?? internalActivePath, panelTabChildren), [tabs, activeTabPath, internalActivePath]);
+  const activeNode = reactHostPort.useMemo(() => findPanelTabNode(tabs, resolvedPath), [tabs, resolvedPath]);
+  const activeTabTree = activeNode?.kind === "leaf" ? resolveTreePanelSource(activeNode.tree) : null;
 
-  const handleTabChange = (tabId: string) => {
-    if (onActiveTabChange) {
-      onActiveTabChange(tabId);
+  const handlePathChange = (path: readonly string[]) => {
+    if (onActiveTabPathChange) {
+      onActiveTabPathChange(path);
     } else {
-      setInternalActiveTab(tabId);
+      setInternalActivePath(path);
     }
   };
   const resizeSide = position === "left" ? "right" : "left";
@@ -14204,7 +14302,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
             <div data-dim data-slot="panel-chrome-frame" aria-hidden className={cn(panelChromeFrameLayerClass, panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered))} />
           </>
         ) : null}
-        {showTabBar ? <PanelTabBar activeTabId={currentActiveTab} onTabChange={handleTabChange} tabs={sortedTabs} variant="side" /> : null}
+        {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="side" /> : null}
         <Scrollable className="relative z-10 flex-1 min-h-0">
           <div data-slot="side-panel-content" className="flex min-h-0 flex-1 flex-col">
             {activeTabTree ? <SidePanelTreePane config={activeTabTree} /> : null}
@@ -14239,9 +14337,9 @@ export { SidePanel };
  **/
 export interface MobilePanelProps {
   visible?: boolean;
-  tabs: SidePanelTabConfig[];
-  activeTabId?: string;
-  onActiveTabChange?: (tabId: string) => void;
+  tabs: readonly PanelTabNode[];
+  activeTabPath?: readonly string[];
+  onActiveTabPathChange?: (path: readonly string[]) => void;
   className?: string;
   height?: number;
 }
@@ -14250,22 +14348,21 @@ export interface MobilePanelProps {
  * MobilePanel is a full-width tabbed panel for mobile layouts.
  * It merges all tabs into a single non-resizable panel.
  **/
-const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeTabId, onActiveTabChange, className = "", height = 260 }) => {
-  const [internalActiveTab, setInternalActiveTab] = reactHostPort.useState<string | undefined>(tabs[0]?.id);
+const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeTabPath, onActiveTabPathChange, className = "", height = 260 }) => {
+  const [internalActivePath, setInternalActivePath] = reactHostPort.useState<readonly string[]>(() => reconcileActivePath(tabs, [], panelTabChildren));
 
   if (!visible || tabs.length === 0) return null;
 
-  const currentActiveTab = activeTabId ?? internalActiveTab;
-  const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  const showTabBar = sortedTabs.length > 0;
-  const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
-  const activeTabTree = activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null;
+  const showTabBar = tabs.length > 0;
+  const resolvedPath = reconcileActivePath(tabs, activeTabPath ?? internalActivePath, panelTabChildren);
+  const activeNode = findPanelTabNode(tabs, resolvedPath);
+  const activeTabTree = activeNode?.kind === "leaf" ? resolveTreePanelSource(activeNode.tree) : null;
 
-  const handleTabChange = (tabId: string) => {
-    if (onActiveTabChange) {
-      onActiveTabChange(tabId);
+  const handlePathChange = (path: readonly string[]) => {
+    if (onActiveTabPathChange) {
+      onActiveTabPathChange(path);
     } else {
-      setInternalActiveTab(tabId);
+      setInternalActivePath(path);
     }
   };
 
@@ -14274,7 +14371,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
       <PanelGhostRoot data-panel="mobilePanel" className={cn("relative w-full text-foreground flex flex-col box-border overflow-hidden", className)} style={{ height: `${height}px` }}>
         <div data-dim aria-hidden className={panelChromeFillLayerClass} />
         <div data-dim data-slot="panel-chrome-frame" aria-hidden className={panelChromeFrameLayerClass} />
-        {showTabBar ? <PanelTabBar activeTabId={currentActiveTab} onTabChange={handleTabChange} tabs={sortedTabs} variant="mobile" /> : null}
+        {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="mobile" /> : null}
         <Scrollable className="relative z-10 flex-1 min-h-0">
           <div data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
             {activeTabTree ? (
@@ -14347,6 +14444,52 @@ function ToolbarItem({ className, children, ...props }: ToolbarItemProps) {
 }
 
 export { ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone };
+
+// #region 🎀Ribbon
+// A ribbon is a chrome strip that grows by stacked rows — one per tree level — instead of staying a single line.
+
+/** @emoji 🎀 `inline` keeps every row on one horizontal line (footer drill-down); `up`/`down` stack rows vertically, growing away from the base row. */
+export type RibbonDirection = "inline" | "up" | "down";
+
+/** @emoji 🎀 One row of a {@link Ribbon}, ordered base-first (index 0 = root/base level). */
+export interface RibbonRow {
+  readonly key: React.Key;
+  readonly content: React.ReactNode;
+}
+
+/** @emoji 🎀 Props for {@link Ribbon}. */
+export interface RibbonProps {
+  readonly id?: string;
+  readonly direction: RibbonDirection;
+  readonly rows: readonly RibbonRow[];
+  readonly className?: string;
+}
+
+/** @emoji 🎀 Chrome strip that grows by stacked rows — one per tree level. `up` stacks rows above the base (window toolbar); `down` stacks rows below the base (nested panel tabs); `inline` keeps the current horizontal drill-down (footer). */
+function Ribbon({ id, direction, rows, className }: RibbonProps) {
+  if (direction === "inline") {
+    return (
+      <div role="toolbar" id={id} data-slot="ribbon" data-direction={direction} className={cn("pointer-events-auto flex w-fit max-w-full shrink-0 items-center justify-start gap-single", className)}>
+        {rows.map((row) => (
+          <ToolbarZone key={row.key}>{row.content}</ToolbarZone>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div id={id} data-slot="ribbon" data-direction={direction} className={cn("flex w-fit max-w-full shrink-0 gap-single", direction === "up" ? "flex-col-reverse items-start" : "w-full flex-col items-stretch", className)}>
+      {rows.map((row, depth) => (
+        <div key={row.key} data-slot="ribbon-row" data-depth={depth} className={cn("flex min-w-0 gap-single", direction === "up" ? "shrink-0 items-center" : "w-full items-stretch")}>
+          {row.content}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export { Ribbon };
+
+// #endregion 🎀Ribbon
 
 // #endregion 🩻Toolbar Components
 
@@ -15535,7 +15678,7 @@ const Window: React.FC<WindowProps> = ({
           {toolbar && !measuresExpanded ? (
             <GlassTierProvider tier="windowOptions">
               <div data-slot="window-toolbar-overlay" data-folded={toolbarFolded ? "true" : undefined} className={windowToolbarOverlayClass}>
-                <div data-dim data-slot="window-toolbar" data-folded={toolbarFolded ? "true" : undefined} className={cn(windowMeasuresStackClass, "flex-row items-start w-fit")}>
+                <div data-dim data-slot="window-toolbar" data-folded={toolbarFolded ? "true" : undefined} className={cn(windowMeasuresStackClass, "flex-row items-end w-fit")}>
                   <WindowToolbarChrome windowId={id} folded={toolbarFolded} onFold={() => setToolbarFolded(true)} onUnfold={() => setToolbarFolded(false)} />
                   {!toolbarFolded ? (
                     <div data-slot="window-toolbar-body" className={windowToolbarBodyClass}>
@@ -21431,11 +21574,11 @@ if (import.meta.vitest) {
         <PanelTabBar
           variant="side"
           tabs={[
-            { id: "framework.panel.document", icon: StubIcon, name: "Document", tree: { sections: [] } },
-            { id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } },
+            { kind: "leaf", id: "framework.panel.document", icon: StubIcon, name: "Document", tree: { sections: [] } },
+            { kind: "leaf", id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } },
           ]}
-          activeTabId="framework.panel.document"
-          onTabChange={() => {}}
+          activePath={["framework.panel.document"]}
+          onActivePathChange={() => {}}
         />,
       );
       expect(screen.getByText("Document")).toBeTruthy();
@@ -21447,11 +21590,11 @@ if (import.meta.vitest) {
 
     it("SidePanel marks the active tab with hover fill and emphasized icon above the emphasized frame", () => {
       const StubIcon = (): null => null;
-      const tabs: SidePanelTabConfig[] = [
-        { id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } },
-        { id: "tab-b", icon: StubIcon, name: "Tab B", tree: { sections: [] } },
+      const tabs: PanelTabNode[] = [
+        { kind: "leaf", id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } },
+        { kind: "leaf", id: "tab-b", icon: StubIcon, name: "Tab B", tree: { sections: [] } },
       ];
-      const { container } = render(<SidePanel position="left" visible tabs={tabs} activeTabId="tab-b" />);
+      const { container } = render(<SidePanel position="left" visible tabs={tabs} activeTabPath={["tab-b"]} />);
       expect(screen.getByText("Tab A")).toBeTruthy();
       expect(screen.getByText("Tab B")).toBeTruthy();
       const activeButton = container.querySelector('[data-slot="side-panel-tab-button"][data-active="true"]');
@@ -21465,8 +21608,9 @@ if (import.meta.vitest) {
 
     it("SidePanel stays mounted when visible is false", () => {
       const StubIcon = (): null => null;
-      const tabs: SidePanelTabConfig[] = [
+      const tabs: PanelTabNode[] = [
         {
+          kind: "leaf",
           id: "tab-a",
           icon: StubIcon,
           name: "Tab A",
@@ -25048,7 +25192,7 @@ if (treeVitest) {
       expect(toolbarMarkup).toMatch(/\bborder\b/);
       expect(toolbarMarkup).toContain(borderNormalClass);
       expect(toolbarMarkup).not.toContain("border-emphasized");
-      const panelMarkup = renderToStaticMarkup(<SidePanel position="left" visible tabs={[{ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }]} />);
+      const panelMarkup = renderToStaticMarkup(<SidePanel position="left" visible tabs={[{ kind: "leaf", id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }]} />);
       expect(panelMarkup).toContain('data-slot="panel-chrome-frame"');
       expect(panelMarkup).toContain("border-normal");
       expect(panelMarkup).not.toContain("border-emphasized");

@@ -1704,7 +1704,8 @@ mod tests {
                 id: "tab".into(),
                 label: "Tab".into(),
                 group: PanelGroup::Workbench,
-                body_key: "tab.body".into(),
+                body_key: Some("tab.body".into()),
+                children: vec![],
             }],
             keybindings: vec![],
             actions: vec![],
@@ -10359,12 +10360,25 @@ impl ShellState {
             .unwrap_or_default()
     }
 
+    fn flatten_panel_tab_leaves(tabs: &[PanelTabDefinition]) -> Vec<&PanelTabDefinition> {
+        tabs.iter()
+            .flat_map(|tab| {
+                if tab.children.is_empty() {
+                    vec![tab]
+                } else {
+                    Self::flatten_panel_tab_leaves(&tab.children)
+                }
+            })
+            .collect()
+    }
+
     fn synthetic_panel_tab(id: &str, label: &str, group: PanelGroup) -> PanelTabDefinition {
         PanelTabDefinition {
             id: id.into(),
             label: label.into(),
             group,
-            body_key: String::new(),
+            body_key: Some(String::new()),
+            children: Vec::new(),
         }
     }
 
@@ -10499,9 +10513,10 @@ impl ShellState {
             .find(|p| p.plugin_id == session.plugin_id)
             .cloned()
             .ok_or("session plugin missing")?;
-        for tab in &session.app.panel_tabs {
+        for tab in Self::flatten_panel_tab_leaves(&session.app.panel_tabs) {
+            let body_key = tab.body_key.as_deref().unwrap_or_default();
             let node = plugin
-                .render(session.instance_id, &tab.body_key, &view_state)
+                .render(session.instance_id, body_key, &view_state)
                 .await?;
             let resolved = self.resolve_external_slots(node, &view_state).await?;
             self.panel_ui.insert(tab.id.clone(), resolved);
@@ -13882,13 +13897,15 @@ impl ShellState {
                     id: FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.into(),
                     label: "Windows".into(),
                     group: PanelGroup::Display,
-                    body_key: String::new(),
+                    body_key: Some(String::new()),
+                    children: Vec::new(),
                 },
                 PanelTabDefinition {
                     id: FRAMEWORK_DISPLAY_LAYOUT_TAB_ID.into(),
                     label: "Layout".into(),
                     group: PanelGroup::Display,
-                    body_key: String::new(),
+                    body_key: Some(String::new()),
+                    children: Vec::new(),
                 },
             ],
             LeftPanelKind::Workbench => {
@@ -13907,7 +13924,8 @@ impl ShellState {
                             id: FRAMEWORK_PANEL_TAB_DOCUMENT_ID.into(),
                             label: "Document".into(),
                             group: PanelGroup::Workbench,
-                            body_key: String::new(),
+                            body_key: Some(String::new()),
+                            children: Vec::new(),
                         },
                     );
                 }
@@ -13922,7 +13940,8 @@ impl ShellState {
                 id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID.into(),
                 label: "General".into(),
                 group: PanelGroup::Settings,
-                body_key: String::new(),
+                body_key: Some(String::new()),
+                children: Vec::new(),
             }],
             RightPanelKind::Details => session
                 .app

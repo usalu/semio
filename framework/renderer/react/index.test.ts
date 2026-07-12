@@ -120,7 +120,7 @@ describe("framework plugin runtime", () => {
 });
 
 describe("framework renderer types", () => {
-  it("formats canonical app document for chrome and window tabs", () => {
+  it("keeps window tabs concise while retaining the app fallback", () => {
     const app = {
       id: "puzzle3d-play",
       label: "Puzzle 3D",
@@ -132,8 +132,9 @@ describe("framework renderer types", () => {
       keybindings: [],
     };
     expect(appDocumentLabel(app.document)).toBe("semio · puzzle · 3d");
-    expect(appWindowDocumentLabel(app, "Puzzle 3D")).toBe("semio · puzzle · 3d");
-    expect(appWindowDocumentLabel(app, "Perspective")).toBe("semio · puzzle · 3d · perspective");
+    expect(appWindowDocumentLabel(app, "Flow")).toBe("Flow");
+    expect(appWindowDocumentLabel(app, "Preview")).toBe("Preview");
+    expect(appWindowDocumentLabel(app, "")).toBe("Puzzle 3D");
   });
 
   it("accepts component scene nodes", () => {

@@ -1,11 +1,14 @@
 //! 🗄️ Generic document VCS engine — Operation/Edit/Change/Checkpoint/Alternative, materialize-by-replay, backbone.
 
-use semio_framework_core::{HybridLogicalTimestamp, MergeStrategyKind, UndoPolicy};
+use semio_framework_core::{
+    ActorId, DocumentDiff, DocumentId, DocumentVersion, HybridLogicalTimestamp, InverseOperation,
+    MergeStrategyKind, OpEnvelope, OperationId, PayloadHash, SchemaId, SchemaVersion, UndoPolicy,
+};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::{Arc, Mutex};
 use thiserror::Error;
 
 static ID_COUNTER: AtomicU64 = AtomicU64::new(0);
@@ -17,47 +20,16 @@ pub fn create_document_vcs_id(prefix: &str) -> String {
 }
 
 //#region 🔖Schemas
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum BackboneKind {
-    Temporary,
-    File,
-    Folder,
-    Remote,
-}
-
+/// @emoji 🔗 Identifies the channel a document synchronizes through, when one is attached.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DocumentBackboneRef {
-    pub kind: BackboneKind,
     pub uri: String,
 }
 
-/// @emoji 🧭 Maps a backbone URI scheme to its canonical kind.
-pub fn backbone_kind_from_uri(uri: &str) -> BackboneKind {
-    match uri.split("://").next().unwrap_or("") {
-        "temp" => BackboneKind::Temporary,
-        "file" => BackboneKind::File,
-        "folder" => BackboneKind::Folder,
-        "remote" => BackboneKind::Remote,
-        _ => BackboneKind::Temporary,
-    }
-}
-
-/// @emoji 🔗 Builds a typed backbone reference from a URI.
+/// @emoji 🔗 Builds a backbone reference from a channel URI.
 pub fn document_backbone_ref(uri: &str) -> DocumentBackboneRef {
-    DocumentBackboneRef {
-        kind: backbone_kind_from_uri(uri),
-        uri: uri.to_string(),
-    }
-}
-
-/// @emoji 🧠 Default in-memory backbone for a document id.
-pub fn default_temporary_backbone_ref(document_id: &str) -> DocumentBackboneRef {
-    DocumentBackboneRef {
-        kind: BackboneKind::Temporary,
-        uri: format!("temp://{document_id}"),
-    }
+    DocumentBackboneRef { uri: uri.to_string() }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -476,7 +448,6 @@ pub fn create_document_vcs_envelope<P, Op>(
 where
     P: Clone,
 {
-    let backbone = backbone.or_else(|| Some(default_temporary_backbone_ref(id)));
     DocumentVcsEnvelope {
         schema: schema.into(),
         id: id.into(),
@@ -583,6 +554,7 @@ where
 {
     envelope: DocumentVcsEnvelope<P, Op>,
     backbone: Option<Box<dyn Backbone>>,
+    dag: semio_framework_core::OpDag,
     applied_edit_ids: Vec<String>,
     redo_edit_ids: Vec<String>,
     edit_sequence: i32,
@@ -602,6 +574,7 @@ where
         Self {
             envelope,
             backbone,
+            dag: semio_framework_core::OpDag::new(),
             applied_edit_ids: Vec::new(),
             redo_edit_ids: Vec::new(),
             edit_sequence: 0,
@@ -660,8 +633,10 @@ where
     }
 
     pub fn dispatch(&mut self, command: DocumentVcsCommand<Op>) -> Result<(), VcsError> {
+        self.pump()?;
+        let is_apply = matches!(command, DocumentVcsCommand::Apply { .. });
         self.dispatch_inner(command)?;
-        self.maybe_sync_backbone()
+        self.flush_outbound(is_apply)
     }
 
     fn dispatch_inner(&mut self, command: DocumentVcsCommand<Op>) -> Result<(), VcsError> {
@@ -950,56 +925,221 @@ where
         serde_json::to_string(&projection).map_err(|e| VcsError::Serialize(e.to_string()))
     }
 
-    pub fn sync_backbone(&self) -> Result<(), VcsError> {
-        let backbone = self
-            .backbone
-            .as_ref()
-            .ok_or_else(|| VcsError::Backbone("no backbone attached".into()))?;
-        let json = self.envelope_json()?;
-        backbone.sync(&json)
-    }
-
-    pub fn load_backbone(&mut self) -> Result<(), VcsError> {
-        let backbone = self
-            .backbone
-            .as_ref()
-            .ok_or_else(|| VcsError::Backbone("no backbone attached".into()))?;
-        let json = backbone.load()?;
-        let loaded: DocumentVcsEnvelope<P, Op> =
-            serde_json::from_str(&json).map_err(|e| VcsError::Deserialize(e.to_string()))?;
-        self.set_envelope(loaded, Vec::new());
-        Ok(())
-    }
-
-    pub fn attach_backbone(&mut self, uri: &str) -> Result<(), VcsError> {
-        self.envelope.backbone = Some(document_backbone_ref(uri));
-        self.backbone = Some(resolve_backbone(uri)?);
+    /// @emoji 🔗 Attaches a backbone channel, reconciling any already-persisted state before
+    /// seeding it with this store's current snapshot.
+    pub fn attach_backbone(&mut self, backbone: Box<dyn Backbone>) -> Result<(), VcsError> {
+        self.envelope.backbone = Some(backbone.descriptor());
+        self.backbone = Some(backbone);
+        self.pump()?;
+        self.flush_outbound(false)?;
         self.bump();
         Ok(())
     }
 
-    pub fn detach_backbone(&mut self) {
-        let id = self.envelope.id.clone();
-        let uri = format!("temp://{id}");
-        self.envelope.backbone = Some(document_backbone_ref(&uri));
-        self.backbone = resolve_backbone(&uri).ok();
+    pub fn attach_backbone_uri(&mut self, uri: &str) -> Result<(), VcsError> {
+        self.attach_backbone(resolve_backbone(uri)?)
+    }
+
+    /// @emoji ✂️ Detaches the backbone; the WIP graph stays in memory, simply unsynchronized.
+    pub fn detach_backbone(&mut self) -> Option<Box<dyn Backbone>> {
+        self.envelope.backbone = None;
         self.bump();
+        self.backbone.take()
     }
 
     pub fn backbone_ref(&self) -> Option<&DocumentBackboneRef> {
         self.envelope.backbone.as_ref()
     }
 
-    fn maybe_sync_backbone(&self) -> Result<(), VcsError> {
-        if self.backbone.is_some() {
-            self.sync_backbone()?;
+    /// @emoji 📡 Drains inbound backbone messages into the edit timeline. Safe to call anytime;
+    /// `dispatch` already calls this before every command.
+    pub fn tick(&mut self) -> Result<bool, VcsError> {
+        self.pump()
+    }
+
+    /// @emoji 🕸️ Feeds a remote {@link OpEnvelope} through the causal DAG, applying it (and any
+    /// now-unblocked dependents) into the edit timeline. Closes the sync gap between
+    /// `framework/sync`'s `OpDag` and the vcs edit history.
+    pub fn ingest_remote(&mut self, envelope: OpEnvelope) -> Result<(), VcsError> {
+        self.dag
+            .insert(envelope)
+            .map_err(|error| VcsError::Backbone(error.to_string()))?;
+        for envelope in self.dag.drain_applied_envelopes() {
+            self.ingest_envelope(envelope)?;
         }
         Ok(())
+    }
+
+    fn ingest_envelope(&mut self, envelope: OpEnvelope) -> Result<(), VcsError> {
+        let edit: Edit<Op> = edit_from_op_envelope(&envelope)?;
+        if self.envelope.vcs.edits.iter().any(|existing| existing.id == edit.id) {
+            return Ok(());
+        }
+        self.edit_sequence = self.edit_sequence.max(edit.sequence_number);
+        let edit_id = edit.id.clone();
+        self.envelope.vcs.edits.push(edit);
+        self.applied_edit_ids.push(edit_id);
+        self.bump();
+        Ok(())
+    }
+
+    fn merge_remote_snapshot(&mut self, envelope_json: &str) -> Result<(), VcsError> {
+        let remote: DocumentVcsEnvelope<P, Op> =
+            serde_json::from_str(envelope_json).map_err(|e| VcsError::Deserialize(e.to_string()))?;
+        if self.envelope.vcs.edits.is_empty() {
+            let applied: Vec<String> = remote.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
+            self.edit_sequence = remote
+                .vcs
+                .edits
+                .iter()
+                .map(|edit| edit.sequence_number)
+                .max()
+                .unwrap_or(0);
+            let backbone_ref = self.envelope.backbone.clone();
+            self.envelope = remote;
+            self.envelope.backbone = backbone_ref;
+            self.applied_edit_ids = applied;
+            self.redo_edit_ids.clear();
+            self.bump();
+            return Ok(());
+        }
+        let existing_edit_ids: HashSet<String> = self.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
+        for edit in remote.vcs.edits {
+            if existing_edit_ids.contains(&edit.id) {
+                continue;
+            }
+            self.edit_sequence = self.edit_sequence.max(edit.sequence_number);
+            self.applied_edit_ids.push(edit.id.clone());
+            self.envelope.vcs.edits.push(edit);
+        }
+        merge_by_id(&mut self.envelope.vcs.changes, remote.vcs.changes, |change| &change.id);
+        merge_by_id(&mut self.envelope.vcs.checkpoints, remote.vcs.checkpoints, |checkpoint| &checkpoint.id);
+        merge_by_id(&mut self.envelope.vcs.alternatives, remote.vcs.alternatives, |alternative| &alternative.id);
+        self.bump();
+        Ok(())
+    }
+
+    fn previous_edit_dependency(&self) -> Vec<OperationId> {
+        let len = self.applied_edit_ids.len();
+        if len >= 2 {
+            vec![OperationId(self.applied_edit_ids[len - 2].clone())]
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// @emoji 📥 Pumps every queued inbound message from the attached backbone into the timeline.
+    fn pump(&mut self) -> Result<bool, VcsError> {
+        let Some(mut backbone) = self.backbone.take() else {
+            return Ok(false);
+        };
+        let received = backbone.receive();
+        self.backbone = Some(backbone);
+        let messages = received?;
+        if messages.is_empty() {
+            return Ok(false);
+        }
+        for message in messages {
+            match message {
+                BackboneMessage::Snapshot { envelope_json } => self.merge_remote_snapshot(&envelope_json)?,
+                BackboneMessage::Ops { envelopes } => {
+                    for envelope in envelopes {
+                        self.ingest_remote(envelope)?;
+                    }
+                }
+            }
+        }
+        Ok(true)
+    }
+
+    /// @emoji 📤 Sends the just-applied change outward: a single {@link OpEnvelope} for `Apply`,
+    /// or a full snapshot for every structural command (undo/redo/checkpoint/alternative/amend).
+    fn flush_outbound(&mut self, is_apply: bool) -> Result<(), VcsError> {
+        let Some(mut backbone) = self.backbone.take() else {
+            return Ok(());
+        };
+        let result = if is_apply {
+            match self.envelope.vcs.edits.last() {
+                Some(edit) => {
+                    let deps = self.previous_edit_dependency();
+                    op_envelope_from_edit(&self.envelope, edit, deps)
+                        .and_then(|envelope| backbone.send(BackboneMessage::Ops { envelopes: vec![envelope] }))
+                }
+                None => Ok(()),
+            }
+        } else {
+            self.envelope_json()
+                .and_then(|json| backbone.send(BackboneMessage::Snapshot { envelope_json: json }))
+        };
+        self.backbone = Some(backbone);
+        result
     }
 
     fn bump(&mut self) {
         self.generation += 1;
     }
+}
+
+fn merge_by_id<T: Clone>(local: &mut Vec<T>, remote: Vec<T>, id_of: impl Fn(&T) -> &String) {
+    let mut existing: HashSet<String> = local.iter().map(|item| id_of(item).clone()).collect();
+    for item in remote {
+        if existing.insert(id_of(&item).clone()) {
+            local.push(item);
+        }
+    }
+}
+
+/// @emoji 📦 Serializes an `Edit` into the causal wire envelope exchanged over a backbone channel.
+pub fn op_envelope_from_edit<P, Op>(
+    envelope: &DocumentVcsEnvelope<P, Op>,
+    edit: &Edit<Op>,
+    deps: Vec<OperationId>,
+) -> Result<OpEnvelope, VcsError>
+where
+    Op: Serialize,
+{
+    let payload = serde_json::to_value(edit).map_err(|e| VcsError::Serialize(e.to_string()))?;
+    let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+    let author_id = edit
+        .operation_meta
+        .last()
+        .map(|meta| meta.author_id.clone())
+        .unwrap_or_else(|| "local".into());
+    let undo_policy = edit
+        .operation_meta
+        .last()
+        .map(|meta| meta.undo_policy)
+        .unwrap_or(UndoPolicy::ExactBaseOnly);
+    Ok(OpEnvelope {
+        id: OperationId(edit.id.clone()),
+        actor: ActorId(author_id),
+        document: DocumentId(envelope.id.clone()),
+        schema_version: SchemaVersion(envelope.schema.clone()),
+        deps: deps.clone(),
+        payload_hash: PayloadHash(payload_hash),
+        diff: DocumentDiff {
+            schema_id: SchemaId(envelope.schema.clone()),
+            payload,
+        },
+        inverse: InverseOperation {
+            target_operation: OperationId(edit.id.clone()),
+            inverse_diff: DocumentDiff {
+                schema_id: SchemaId(envelope.schema.clone()),
+                payload: serde_json::json!({ "backwards": edit.backwards }),
+            },
+            base_version: DocumentVersion(edit.sequence_number as u64),
+            dependencies: deps,
+            undo_policy,
+        },
+    })
+}
+
+/// @emoji 📦 Recovers an `Edit` from the causal wire envelope produced by `op_envelope_from_edit`.
+pub fn edit_from_op_envelope<Op>(envelope: &OpEnvelope) -> Result<Edit<Op>, VcsError>
+where
+    Op: DeserializeOwned,
+{
+    serde_json::from_value(envelope.diff.payload.clone()).map_err(|e| VcsError::Deserialize(e.to_string()))
 }
 //#endregion 🔖DocumentVcsStore
 
@@ -1012,10 +1152,20 @@ pub struct StudioConflict {
     pub message: String,
 }
 
-/// @emoji 🗄️ Opaque envelope persistence — callers only pass a URI.
+/// @emoji 📨 Wire message exchanged over an attached backbone channel.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum BackboneMessage {
+    Snapshot { envelope_json: String },
+    Ops { envelopes: Vec<OpEnvelope> },
+}
+
+/// @emoji 🧵 Duplex message channel to another process; the WIP graph never leaves memory —
+/// a backbone only ever exists to synchronize it with a peer across a process boundary.
 pub trait Backbone: Send + Sync {
-    fn load(&self) -> Result<String, VcsError>;
-    fn sync(&self, envelope_json: &str) -> Result<(), VcsError>;
+    fn descriptor(&self) -> DocumentBackboneRef;
+    fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError>;
+    fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError>;
 }
 
 pub trait BackbonePort: Send + Sync {
@@ -1023,7 +1173,6 @@ pub trait BackbonePort: Send + Sync {
     fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError>;
 }
 
-static TEMPORARY_STORE: LazyLock<MemoryBackbonePort> = LazyLock::new(MemoryBackbonePort::new);
 static HOST_BACKBONE_PORT: Mutex<Option<Arc<dyn BackbonePort>>> = Mutex::new(None);
 
 /// @emoji 🔌 Injects the browser or dev-server backbone port for wasm file/folder IO.
@@ -1128,104 +1277,235 @@ impl BackbonePort for LocalStorageBackbonePort {
     }
 }
 
-pub struct TemporaryBackbone {
+/// @emoji 🕸️ Injectable duplex transport across the wasm sandbox boundary (plugin ↔ host process).
+pub trait BackboneChannelPort: Send + Sync {
+    fn send(&self, uri: &str, message_json: &str) -> Result<(), VcsError>;
+    fn poll(&self, uri: &str) -> Result<Vec<String>, VcsError>;
+}
+
+static HOST_BACKBONE_CHANNEL: Mutex<Option<Arc<dyn BackboneChannelPort>>> = Mutex::new(None);
+
+/// @emoji 🔌 Injects the plugin host's duplex backbone channel for wasm-sandboxed document stores.
+pub fn set_host_backbone_channel(channel: Arc<dyn BackboneChannelPort>) {
+    if let Ok(mut guard) = HOST_BACKBONE_CHANNEL.lock() {
+        *guard = Some(channel);
+    }
+}
+
+fn host_backbone_channel() -> Option<Arc<dyn BackboneChannelPort>> {
+    HOST_BACKBONE_CHANNEL.lock().ok().and_then(|guard| guard.clone())
+}
+
+/// @emoji 🧵 Backbone that forwards messages across the wasm sandbox boundary to the host process,
+/// which resolves the real `file://`/`folder://`/`remote://` backbone on its own (native) side.
+pub struct PortBackbone {
     uri: String,
 }
 
-impl TemporaryBackbone {
-    pub fn new(uri: &str) -> Result<Self, VcsError> {
-        if !uri.starts_with("temp://") {
-            return Err(VcsError::Backbone(format!("expected temp:// uri, got {uri}")));
-        }
-        Ok(Self { uri: uri.to_string() })
+impl PortBackbone {
+    pub fn new(uri: &str) -> Self {
+        Self { uri: uri.to_string() }
     }
 }
 
-impl Backbone for TemporaryBackbone {
-    fn load(&self) -> Result<String, VcsError> {
-        TEMPORARY_STORE.read(&self.uri)
+impl Backbone for PortBackbone {
+    fn descriptor(&self) -> DocumentBackboneRef {
+        document_backbone_ref(&self.uri)
     }
 
-    fn sync(&self, envelope_json: &str) -> Result<(), VcsError> {
-        TEMPORARY_STORE.write(&self.uri, envelope_json)
+    fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
+        let channel = host_backbone_channel()
+            .ok_or_else(|| VcsError::Backbone("backbone channel requires host port".into()))?;
+        let json = serde_json::to_string(&message).map_err(|e| VcsError::Serialize(e.to_string()))?;
+        channel.send(&self.uri, &json)
+    }
+
+    fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
+        let channel = host_backbone_channel()
+            .ok_or_else(|| VcsError::Backbone("backbone channel requires host port".into()))?;
+        channel
+            .poll(&self.uri)?
+            .into_iter()
+            .map(|json| serde_json::from_str(&json).map_err(|e| VcsError::Deserialize(e.to_string())))
+            .collect()
     }
 }
 
-pub struct FileJsonBackbone {
+/// @emoji 🔗 Two crossed in-memory channel ends: whatever `a` sends, `b` receives, and vice versa.
+pub struct MemoryBackbone {
     uri: String,
+    inbox: Arc<Mutex<VecDeque<BackboneMessage>>>,
+    outbox: Arc<Mutex<VecDeque<BackboneMessage>>>,
 }
 
-impl FileJsonBackbone {
-    pub fn new(uri: &str) -> Result<Self, VcsError> {
-        if !uri.starts_with("file://") {
-            return Err(VcsError::Backbone(format!("expected file:// uri, got {uri}")));
-        }
-        Ok(Self { uri: uri.to_string() })
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    fn file_path(&self) -> Result<std::path::PathBuf, VcsError> {
-        let path = self
-            .uri
-            .strip_prefix("file://")
-            .ok_or_else(|| VcsError::Backbone(format!("invalid file uri: {}", self.uri)))?;
-        Ok(std::path::PathBuf::from(path))
+impl MemoryBackbone {
+    pub fn pair(uri_a: &str, uri_b: &str) -> (Self, Self) {
+        let a_to_b = Arc::new(Mutex::new(VecDeque::new()));
+        let b_to_a = Arc::new(Mutex::new(VecDeque::new()));
+        (
+            Self {
+                uri: uri_a.to_string(),
+                inbox: b_to_a.clone(),
+                outbox: a_to_b.clone(),
+            },
+            Self {
+                uri: uri_b.to_string(),
+                inbox: a_to_b,
+                outbox: b_to_a,
+            },
+        )
     }
 }
 
-impl Backbone for FileJsonBackbone {
-    fn load(&self) -> Result<String, VcsError> {
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            if let Some(port) = host_backbone_port() {
-                return port.read(&self.uri);
-            }
-            let path = self.file_path()?;
-            std::fs::read_to_string(&path).map_err(|e| VcsError::Backbone(e.to_string()))
-        }
-        #[cfg(target_arch = "wasm32")]
-        {
-            host_backbone_port()
-                .ok_or_else(|| VcsError::Backbone("file backbone requires host port".into()))?
-                .read(&self.uri)
-        }
+impl Backbone for MemoryBackbone {
+    fn descriptor(&self) -> DocumentBackboneRef {
+        document_backbone_ref(&self.uri)
     }
 
-    fn sync(&self, envelope_json: &str) -> Result<(), VcsError> {
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            if let Some(port) = host_backbone_port() {
-                return port.write(&self.uri, envelope_json);
-            }
-            let path = self.file_path()?;
-            if let Some(parent) = path.parent() {
-                std::fs::create_dir_all(parent).map_err(|e| VcsError::Backbone(e.to_string()))?;
-            }
-            std::fs::write(&path, envelope_json).map_err(|e| VcsError::Backbone(e.to_string()))
+    fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
+        self.outbox
+            .lock()
+            .map_err(|_| VcsError::Backbone("lock poisoned".into()))?
+            .push_back(message);
+        Ok(())
+    }
+
+    fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
+        let mut inbox = self.inbox.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?;
+        Ok(inbox.drain(..).collect())
+    }
+}
+
+/// @emoji 🗃️ Raw single-document persistence primitive consumed by a host-side `Backbone` endpoint.
+pub trait BackboneStorage: Send + Sync {
+    fn read(&self) -> Result<Option<String>, VcsError>;
+    fn write(&self, envelope_json: &str) -> Result<(), VcsError>;
+}
+
+fn storage_receive(bootstrapped: &mut bool, storage: &dyn BackboneStorage) -> Result<Vec<BackboneMessage>, VcsError> {
+    if *bootstrapped {
+        return Ok(Vec::new());
+    }
+    *bootstrapped = true;
+    match storage.read()? {
+        Some(envelope_json) => Ok(vec![BackboneMessage::Snapshot { envelope_json }]),
+        None => Ok(Vec::new()),
+    }
+}
+
+fn storage_send(storage: &dyn BackboneStorage, message: BackboneMessage) -> Result<(), VcsError> {
+    match message {
+        BackboneMessage::Snapshot { envelope_json } => storage.write(&envelope_json),
+        BackboneMessage::Ops { envelopes } => {
+            let existing = storage
+                .read()?
+                .ok_or_else(|| VcsError::Backbone("cannot append ops before a snapshot exists".into()))?;
+            let mut stored: serde_json::Value =
+                serde_json::from_str(&existing).map_err(|e| VcsError::Deserialize(e.to_string()))?;
+            append_ops_into_stored_envelope(&mut stored, envelopes)?;
+            let json = serde_json::to_string(&stored).map_err(|e| VcsError::Serialize(e.to_string()))?;
+            storage.write(&json)
         }
-        #[cfg(target_arch = "wasm32")]
-        {
-            host_backbone_port()
-                .ok_or_else(|| VcsError::Backbone("file backbone requires host port".into()))?
-                .write(&self.uri, envelope_json)
+    }
+}
+
+fn append_ops_into_stored_envelope(stored: &mut serde_json::Value, envelopes: Vec<OpEnvelope>) -> Result<(), VcsError> {
+    let edits = stored
+        .get_mut("vcs")
+        .and_then(|vcs| vcs.get_mut("edits"))
+        .and_then(|edits| edits.as_array_mut())
+        .ok_or_else(|| VcsError::Backbone("stored envelope missing vcs.edits".into()))?;
+    let mut seen: HashSet<String> = edits
+        .iter()
+        .filter_map(|edit| edit.get("id").and_then(|id| id.as_str()).map(str::to_string))
+        .collect();
+    for envelope in envelopes {
+        let edit_json = envelope.diff.payload;
+        if let Some(id) = edit_json.get("id").and_then(|id| id.as_str()) {
+            if !seen.insert(id.to_string()) {
+                continue;
+            }
         }
+        edits.push(edit_json);
+    }
+    Ok(())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub struct FileJsonStorage {
+    path: std::path::PathBuf,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FileJsonStorage {
+    pub fn new(path: std::path::PathBuf) -> Self {
+        Self { path }
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub struct FolderSqliteBackbone {
+impl BackboneStorage for FileJsonStorage {
+    fn read(&self) -> Result<Option<String>, VcsError> {
+        match std::fs::read_to_string(&self.path) {
+            Ok(json) => Ok(Some(json)),
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(None),
+            Err(err) => Err(VcsError::Backbone(err.to_string())),
+        }
+    }
+
+    fn write(&self, envelope_json: &str) -> Result<(), VcsError> {
+        if let Some(parent) = self.path.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| VcsError::Backbone(e.to_string()))?;
+        }
+        std::fs::write(&self.path, envelope_json).map_err(|e| VcsError::Backbone(e.to_string()))
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub struct FileJsonBackbone {
+    uri: String,
+    storage: FileJsonStorage,
+    bootstrapped: bool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FileJsonBackbone {
+    pub fn new(uri: &str) -> Result<Self, VcsError> {
+        let path = uri
+            .strip_prefix("file://")
+            .ok_or_else(|| VcsError::Backbone(format!("expected file:// uri, got {uri}")))?;
+        Ok(Self {
+            uri: uri.to_string(),
+            storage: FileJsonStorage::new(std::path::PathBuf::from(path)),
+            bootstrapped: false,
+        })
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Backbone for FileJsonBackbone {
+    fn descriptor(&self) -> DocumentBackboneRef {
+        document_backbone_ref(&self.uri)
+    }
+
+    fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
+        storage_send(&self.storage, message)
+    }
+
+    fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
+        storage_receive(&mut self.bootstrapped, &self.storage)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub struct FolderSqliteStorage {
     folder: std::path::PathBuf,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl FolderSqliteBackbone {
-    pub fn new(uri: &str) -> Result<Self, VcsError> {
-        let folder = uri
-            .strip_prefix("folder://")
-            .ok_or_else(|| VcsError::Backbone(format!("expected folder:// uri, got {uri}")))?;
-        Ok(Self {
-            folder: std::path::PathBuf::from(folder),
-        })
+impl FolderSqliteStorage {
+    pub fn new(folder: std::path::PathBuf) -> Self {
+        Self { folder }
     }
 
     fn db_path(&self) -> std::path::PathBuf {
@@ -1247,23 +1527,17 @@ impl FolderSqliteBackbone {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl Backbone for FolderSqliteBackbone {
-    fn load(&self) -> Result<String, VcsError> {
-        if let Some(port) = host_backbone_port() {
-            return port.read(&format!("folder://{}", self.folder.display()));
-        }
+impl BackboneStorage for FolderSqliteStorage {
+    fn read(&self) -> Result<Option<String>, VcsError> {
+        use rusqlite::OptionalExtension;
         let conn = self.connection()?;
         Self::ensure_schema(&conn)?;
-        let json: String = conn
-            .query_row("SELECT json FROM document WHERE id = 1", [], |row| row.get(0))
-            .map_err(|e| VcsError::Backbone(e.to_string()))?;
-        Ok(json)
+        conn.query_row("SELECT json FROM document WHERE id = 1", [], |row| row.get(0))
+            .optional()
+            .map_err(|e| VcsError::Backbone(e.to_string()))
     }
 
-    fn sync(&self, envelope_json: &str) -> Result<(), VcsError> {
-        if let Some(port) = host_backbone_port() {
-            return port.write(&format!("folder://{}", self.folder.display()), envelope_json);
-        }
+    fn write(&self, envelope_json: &str) -> Result<(), VcsError> {
         let conn = self.connection()?;
         Self::ensure_schema(&conn)?;
         conn.execute(
@@ -1275,38 +1549,58 @@ impl Backbone for FolderSqliteBackbone {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(not(target_arch = "wasm32"))]
 pub struct FolderSqliteBackbone {
     uri: String,
+    storage: FolderSqliteStorage,
+    bootstrapped: bool,
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(not(target_arch = "wasm32"))]
 impl FolderSqliteBackbone {
     pub fn new(uri: &str) -> Result<Self, VcsError> {
-        if !uri.starts_with("folder://") {
-            return Err(VcsError::Backbone(format!("expected folder:// uri, got {uri}")));
-        }
-        Ok(Self { uri: uri.to_string() })
+        let folder = uri
+            .strip_prefix("folder://")
+            .ok_or_else(|| VcsError::Backbone(format!("expected folder:// uri, got {uri}")))?;
+        Ok(Self {
+            uri: uri.to_string(),
+            storage: FolderSqliteStorage::new(std::path::PathBuf::from(folder)),
+            bootstrapped: false,
+        })
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(not(target_arch = "wasm32"))]
 impl Backbone for FolderSqliteBackbone {
-    fn load(&self) -> Result<String, VcsError> {
-        host_backbone_port()
-            .ok_or_else(|| VcsError::Backbone("folder backbone requires host port".into()))?
-            .read(&self.uri)
+    fn descriptor(&self) -> DocumentBackboneRef {
+        document_backbone_ref(&self.uri)
     }
 
-    fn sync(&self, envelope_json: &str) -> Result<(), VcsError> {
-        host_backbone_port()
-            .ok_or_else(|| VcsError::Backbone("folder backbone requires host port".into()))?
-            .write(&self.uri, envelope_json)
+    fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
+        storage_send(&self.storage, message)
     }
+
+    fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
+        storage_receive(&mut self.bootstrapped, &self.storage)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Deserialize)]
+struct RemoteOpRow {
+    version: i64,
+    envelope: OpEnvelope,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Deserialize)]
+struct RemoteVersionResponse {
+    version: i64,
 }
 
 pub struct RemoteBackbone {
     uri: String,
+    last_version: Mutex<i64>,
     last_conflict: Mutex<Option<StudioConflict>>,
 }
 
@@ -1317,6 +1611,7 @@ impl RemoteBackbone {
         }
         Ok(Self {
             uri: uri.to_string(),
+            last_version: Mutex::new(0),
             last_conflict: Mutex::new(None),
         })
     }
@@ -1325,6 +1620,7 @@ impl RemoteBackbone {
         self.last_conflict.lock().ok().and_then(|g| g.clone())
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     fn endpoint(&self) -> Result<(String, String), VcsError> {
         let rest = self
             .uri
@@ -1352,78 +1648,112 @@ impl RemoteBackbone {
             *guard = Some(conflict);
         }
     }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn current_version(&self) -> i64 {
+        self.last_version.lock().map(|guard| *guard).unwrap_or(0)
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn set_version(&self, version: i64) {
+        if let Ok(mut guard) = self.last_version.lock() {
+            *guard = version;
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn apply_version_response(&self, response: ureq::Response) -> Result<(), VcsError> {
+        if response.status() != 200 {
+            let message = format!("remote sync failed with status {}", response.status());
+            self.record_conflict(message.clone());
+            return Err(VcsError::Backbone(message));
+        }
+        let parsed: RemoteVersionResponse = response
+            .into_json()
+            .map_err(|err| VcsError::Backbone(err.to_string()))?;
+        self.set_version(parsed.version);
+        Ok(())
+    }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl Backbone for RemoteBackbone {
-    fn load(&self) -> Result<String, VcsError> {
-        #[cfg(target_arch = "wasm32")]
-        {
-            return host_backbone_port()
-                .ok_or_else(|| VcsError::Backbone("remote backbone requires host port".into()))?
-                .read(&self.uri);
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let (base, document_id) = self.endpoint()?;
-            let url = format!("{base}/documents/{document_id}/envelope");
-            let response = ureq::get(&url)
-                .call()
-                .map_err(|err| {
-                    self.record_conflict(err.to_string());
-                    VcsError::Backbone(err.to_string())
-                })?;
-            if response.status() != 200 {
-                self.record_conflict(format!("remote load failed with status {}", response.status()));
-                return Err(VcsError::Backbone(format!(
-                    "remote load failed with status {}",
-                    response.status()
-                )));
+    fn descriptor(&self) -> DocumentBackboneRef {
+        document_backbone_ref(&self.uri)
+    }
+
+    fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
+        let (base, document_id) = self.endpoint()?;
+        match message {
+            BackboneMessage::Snapshot { envelope_json } => {
+                let envelope: serde_json::Value =
+                    serde_json::from_str(&envelope_json).map_err(|e| VcsError::Deserialize(e.to_string()))?;
+                let url = format!("{base}/documents/{document_id}/envelope");
+                let body = serde_json::json!({"version": self.current_version(), "envelope": envelope});
+                let response = ureq::put(&url)
+                    .set("Content-Type", "application/json")
+                    .send_string(&body.to_string())
+                    .map_err(|err| {
+                        self.record_conflict(err.to_string());
+                        VcsError::Backbone(err.to_string())
+                    })?;
+                self.apply_version_response(response)
             }
-            response
-                .into_string()
-                .map_err(|err| VcsError::Backbone(err.to_string()))
+            BackboneMessage::Ops { envelopes } => {
+                for envelope in envelopes {
+                    let url = format!("{base}/documents/{document_id}/ops");
+                    let body = serde_json::json!({"version": self.current_version(), "envelope": envelope});
+                    let response = ureq::post(&url)
+                        .set("Content-Type", "application/json")
+                        .send_string(&body.to_string())
+                        .map_err(|err| {
+                            self.record_conflict(err.to_string());
+                            VcsError::Backbone(err.to_string())
+                        })?;
+                    self.apply_version_response(response)?;
+                }
+                Ok(())
+            }
         }
     }
 
-    fn sync(&self, envelope_json: &str) -> Result<(), VcsError> {
-        #[cfg(target_arch = "wasm32")]
-        {
-            return host_backbone_port()
-                .ok_or_else(|| VcsError::Backbone("remote backbone requires host port".into()))?
-                .write(&self.uri, envelope_json);
+    fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
+        let (base, document_id) = self.endpoint()?;
+        let since = self.current_version();
+        let url = format!("{base}/documents/{document_id}/ops?since={since}");
+        let response = ureq::get(&url).call().map_err(|err| {
+            self.record_conflict(err.to_string());
+            VcsError::Backbone(err.to_string())
+        })?;
+        let rows: Vec<RemoteOpRow> = response
+            .into_json()
+            .map_err(|err| VcsError::Backbone(err.to_string()))?;
+        if rows.is_empty() {
+            return Ok(Vec::new());
         }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let (base, document_id) = self.endpoint()?;
-            let url = format!("{base}/documents/{document_id}/envelope");
-            let response = ureq::put(&url)
-                .set("Content-Type", "application/json")
-                .send_string(envelope_json)
-                .map_err(|err| {
-                    self.record_conflict(err.to_string());
-                    VcsError::Backbone(err.to_string())
-                })?;
-            if response.status() != 200 {
-                self.record_conflict(format!("remote sync failed with status {}", response.status()));
-                return Err(VcsError::Backbone(format!(
-                    "remote sync failed with status {}",
-                    response.status()
-                )));
-            }
-            Ok(())
+        if let Some(latest) = rows.iter().map(|row| row.version).max() {
+            self.set_version(latest);
         }
+        Ok(vec![BackboneMessage::Ops {
+            envelopes: rows.into_iter().map(|row| row.envelope).collect(),
+        }])
     }
 }
 
-/// @emoji 🔌 Resolves a backbone URI to a concrete storage implementation.
+/// @emoji 🔌 Resolves a backbone URI to a concrete channel implementation. Inside a wasm sandbox,
+/// every scheme forwards to the host process over the injected `BackboneChannelPort`.
+#[cfg(target_arch = "wasm32")]
 pub fn resolve_backbone(uri: &str) -> Result<Box<dyn Backbone>, VcsError> {
-    let scheme = uri.split("://").next().unwrap_or("");
-    match scheme {
-        "temp" => Ok(Box::new(TemporaryBackbone::new(uri)?)),
+    Ok(Box::new(PortBackbone::new(uri)))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn resolve_backbone(uri: &str) -> Result<Box<dyn Backbone>, VcsError> {
+    match uri.split("://").next().unwrap_or("") {
         "file" => Ok(Box::new(FileJsonBackbone::new(uri)?)),
         "folder" => Ok(Box::new(FolderSqliteBackbone::new(uri)?)),
         "remote" => Ok(Box::new(RemoteBackbone::new(uri)?)),
-        _ => Err(VcsError::Backbone(format!("unsupported backbone uri: {uri}"))),
+        scheme => Err(VcsError::Backbone(format!("unsupported backbone uri scheme: {scheme}"))),
     }
 }
 //#endregion 🔖Backbone

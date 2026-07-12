@@ -1,0 +1,13 @@
+{
+  "title": "Backbone as Duplex Process Channel",
+  "emoji": "🧵",
+  "status": "open",
+  "description": "Replace the vcs crate's Backbone abstraction (currently one-shot load()/sync(json) pull-push with temp:// as a fake \"temporary\" backbone) with a duplex message-channel model: there is always exactly one WIP graph in memory (initial projection + edit/change/checkpoint/alternative history), and a Backbone, when attached, is always a bidirectional channel to another process (WASM plugin \u003c-\u003e host, host \u003c-\u003e remote) used only to synchronize. Delete temp:// / BackboneKind::Temporary / TemporaryBackbone entirely; \"detached\" (no backbone) becomes the default and replaces it. Move persistence (file/folder/localStorage) host-side behind the channel via a BackboneStorage trait consumed by a StorageBackbone endpoint. Close the framework/sync sync-gap where OpEnvelopes were ingested but never re-materialized into the vcs edit timeline. Update wit contract (backbone-read/write -\u003e backbone-send/backbone-poll), plugin host, os core, hub, s crates, wgpu renderer, and TS surfaces accordingly. Full design plan at /Users/ueli/.claude/plans/vcs-there-is-always-encapsulated-wombat.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1940"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪46c5c0c52aa043ffa61977342249797c"
+  ]
+}
