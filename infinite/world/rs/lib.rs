@@ -10,15 +10,15 @@ use kernel_3d_scene::{
     Instance3d, LineDraw3d, LineVertex3d, Mat4, Mesh3d, OrbitController, SceneDraw3d, ScenePass3d,
     TexturedDraw3d, TexturedInstance3d, Vec3,
 };
-use semio_framework_core::{mesh_from_glb, mesh_from_kind, ActionDescriptor, MeshData, SurfaceKind, UiComponentSceneNode};
+use semio_framework_core::{mesh_from_glb, mesh_from_kind, MeshData};
 use base64::Engine;
 use serde::de::Error as DeError;
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
 use ui_wgpu::{
-    draw_text, mesh_content_version, paint_selection_marquee, GpuContext, HitKind, HitTarget,
-    PointerModifiers, Rect, Rgba, WidgetContext,
+    draw_text, mesh_content_version, paint_selection_marquee, ActionDescriptor, GpuContext, HitKind, HitTarget,
+    PointerModifiers, Rect, Rgba, SurfaceKind, UiComponentSceneNode, WidgetContext,
 };
 
 //#region SceneRecords
@@ -3440,7 +3440,7 @@ pub async fn fetch_pending_reference_images(_states: &mut HashMap<String, World3
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_core::{UiComponentSceneNode, World3dScene};
+    use ui_wgpu::{UiComponentSceneNode, World3dScene};
 
     fn topology_mesh() -> Mesh3d {
         let mut mesh = Mesh3d::from_buffers(

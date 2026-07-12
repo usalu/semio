@@ -525,8 +525,19 @@ impl StudioStore {
         self.inner.tick()
     }
 
+    /// @emoji 🔗 Resolves and attaches a backbone by uri inside the wasm sandbox (every scheme
+    /// forwards to the host over the injected `BackboneChannelPort`, a pure queue).
+    #[cfg(target_arch = "wasm32")]
     pub fn attach_backbone(&mut self, uri: &str) -> Result<(), VcsError> {
         self.inner.attach_backbone_uri(uri)
+    }
+
+    /// @emoji 🚧 Native attach is a documented no-op: `s` only runs as a WASM plugin in the browser
+    /// today (no native caller exists), and wiring its native path onto `framework/sync`'s
+    /// `DocumentHost` is `s`'s own `DocumentApp` migration (WS-F's last wave), not this compile fix.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn attach_backbone(&mut self, _uri: &str) -> Result<(), VcsError> {
+        Ok(())
     }
 
     pub fn detach_backbone(&mut self) {

@@ -9,6 +9,7 @@ path = "lib.rs"
 
 [dependencies]
 semio-framework-core = { path = "../../../core/rs" }
+ui_wgpu = { path = "../../../../ui/wgpu/rs" }
 vcs = { path = "../../../../vcs/rs" }
 wasmtime = { version = "22.0.1", features = ["cranelift", "component-model"] }
 wasmtime-wasi = "22.0.1"

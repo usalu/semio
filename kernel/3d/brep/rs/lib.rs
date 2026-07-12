@@ -1999,12 +1999,36 @@ mod tests {
     fn glb_export_import_round_trips_a_box_through_the_mesh_codec() {
         let mut kernel = BrepkitKernel::new();
         let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
+        let original_volume = kernel.volume_sync(&solid).unwrap();
         let bytes = kernel.export_glb_sync(&[solid], 0.1).unwrap();
         assert!(!bytes.is_empty());
         let imported = kernel.import_glb_sync(&bytes, 0.1).unwrap();
+        let imported_volume = kernel.volume_sync(&imported).unwrap();
+        assert!((imported_volume - original_volume).abs() < original_volume * 0.05, "volume should survive the GLB round trip: original={original_volume} imported={imported_volume}");
         let mesh = kernel.tessellate_sync(&imported, 0.1).unwrap();
         assert!(!mesh.position.is_empty());
         assert!(!mesh.index.is_empty());
+        let triangle_count = mesh.index.len() / 3;
+        assert!((6..=5000).contains(&triangle_count), "a re-tessellated box should stay in a sane triangle-count range, got {triangle_count}");
+    }
+
+    #[test]
+    fn glb_tessellation_bridge_produces_reasonable_mesh_data() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
+        let mesh_data = kernel.tessellate_to_mesh_data_sync(&solid, 0.1).unwrap();
+        assert!(!mesh_data.positions.is_empty(), "tessellation bridge must produce vertex positions");
+        assert!(!mesh_data.indices.is_empty(), "tessellation bridge must produce triangle indices");
+        assert_eq!(mesh_data.indices.len() % 3, 0, "indices must form complete triangles");
+        let triangle_count = mesh_data.triangle_count();
+        assert!((6..=5000).contains(&triangle_count), "a box tessellated through the GLB bridge should stay in a sane triangle-count range, got {triangle_count}");
+
+        let bytes = semio_framework_core::GlbExporter.export(&mesh_data).unwrap();
+        assert!(!bytes.is_empty());
+        let reimported = semio_framework_core::GlbImporter.import(&bytes).unwrap();
+        let reimported_triangles = reimported.indices.len() / 3;
+        assert_eq!(reimported_triangles, triangle_count, "GLB codec must preserve triangle count through export/import");
+        assert_eq!(reimported.positions.len(), mesh_data.positions.len(), "GLB codec must preserve vertex position count through export/import");
     }
 
     #[test]
@@ -2019,18 +2043,35 @@ mod tests {
     fn solid_exporters_and_importers_round_trip_a_box_per_format() {
         let mut kernel = BrepkitKernel::new();
         let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
-        let codecs: Vec<(Box<dyn SolidExporter>, Box<dyn SolidImporter>)> = vec![
-            (Box::new(StepSolidExporter), Box::new(StepSolidImporter)),
-            (Box::new(StlSolidExporter), Box::new(StlSolidImporter)),
-            (Box::new(ObjSolidExporter), Box::new(ObjSolidImporter)),
-            (Box::new(GlbSolidExporter), Box::new(GlbSolidImporter)),
+        let original_volume = kernel.volume_sync(&solid).unwrap();
+        // 🔩 STEP is exact NURBS round-trip; STL/OBJ/GLB reimport a re-tessellated mesh, so allow a
+        // small deflection-driven volume error instead of an exact match.
+        let codecs: Vec<(Box<dyn SolidExporter>, Box<dyn SolidImporter>, f64)> = vec![
+            (Box::new(StepSolidExporter), Box::new(StepSolidImporter), 1e-6),
+            (Box::new(StlSolidExporter), Box::new(StlSolidImporter), 0.05),
+            (Box::new(ObjSolidExporter), Box::new(ObjSolidImporter), 0.05),
+            (Box::new(GlbSolidExporter), Box::new(GlbSolidImporter), 0.05),
         ];
-        for (exporter, importer) in codecs {
-            assert_eq!(exporter.format(), importer.format());
+        for (exporter, importer, tolerance) in codecs {
+            let format = exporter.format();
+            assert_eq!(format, importer.format());
             let bytes = exporter.export(&kernel, &[solid.clone()], 0.1).expect("export");
-            assert!(!bytes.is_empty());
+            assert!(!bytes.is_empty(), "{format:?} export must not be empty");
             let imported = importer.import(&mut kernel, &bytes, 0.1).expect("import");
-            assert!(!imported.is_empty());
+            assert!(!imported.is_empty(), "{format:?} import must yield at least one solid");
+            let mut imported_volume = 0.0;
+            for handle in &imported {
+                imported_volume += kernel.volume_sync(handle).unwrap();
+            }
+            assert!(
+                (imported_volume - original_volume).abs() < original_volume * tolerance,
+                "{format:?} round trip should preserve volume: original={original_volume} imported={imported_volume}"
+            );
+            for handle in &imported {
+                let mesh = kernel.tessellate_sync(handle, 0.1).unwrap();
+                assert!(!mesh.position.is_empty(), "{format:?} round-tripped solid must still tessellate to a non-empty mesh");
+                assert!(!mesh.index.is_empty(), "{format:?} round-tripped solid must still tessellate to non-empty indices");
+            }
         }
     }
 

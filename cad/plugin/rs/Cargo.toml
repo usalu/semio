@@ -22,6 +22,7 @@ cad_document = { path = "../../rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
 semio-framework-os = { path = "../../../framework/product/os/core/rs" }
 semio-framework-core = { path = "../../../framework/core/rs" }
+ui_wgpu = { path = "../../../ui/wgpu/rs" }
 kernel_3d_brepkit = { path = "../../../kernel/3d/brep/rs" }
 kernel_3d_engine = { path = "../../../kernel/3d/brep/engine/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

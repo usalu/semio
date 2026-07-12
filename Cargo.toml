@@ -27,6 +27,9 @@ members = [
     "mathematical/graph/dsl/rs",
     "mathematical/graph/manifest/rs",
     "mathematical/geometry/rs",
+    "mathematical/algebra/rs",
+    "kernel/3d/scene/rs",
+    "kernel/3d/mesh/rs",
     "neural/engine/rs",
     "ui/styling/rs",
     "ui/wgpu/rs",
@@ -52,6 +55,9 @@ members = [
     "framework/sync/rs",
     "framework/plugin/host/rs",
     "framework/renderer/wgpu/rs",
+    "shooting/rs",
+    "shooting/plugin/rs",
+    "vcs/plugin/rs",
 ]
 
 resolver = "2"

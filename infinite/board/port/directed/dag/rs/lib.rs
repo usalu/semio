@@ -1,6 +1,7 @@
 //! 🌳 Directed acyclic port graph: rectangle IO nodes on infinite canvas.
 
 use std::cell::Cell;
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 
@@ -1157,38 +1158,9 @@ fn io_node_rect_port_angle_for_node(node: &DagNodeSpec, port_index: usize, left:
 // #endregion 🔖IoNode
 
 // #region 🔖Acyclicity
-use std::collections::{BTreeSet, HashMap, HashSet};
-
 /// 🚫 Returns true when adding `source -> target` would create a cycle.
 pub fn would_create_cycle(existing: &[(String, String)], source: &str, target: &str) -> bool {
-    if source == target {
-        return true;
-    }
-    let mut adj: HashMap<String, Vec<String>> = HashMap::new();
-    for (u, v) in existing {
-        adj.entry(u.clone()).or_default().push(v.clone());
-    }
-    adj.entry(source.to_string()).or_default().push(target.to_string());
-    has_path(&adj, target, source)
-}
-
-fn has_path(adj: &HashMap<String, Vec<String>>, from: &str, to: &str) -> bool {
-    let mut seen = HashSet::new();
-    let mut stack = vec![from.to_string()];
-    while let Some(n) = stack.pop() {
-        if n == to {
-            return true;
-        }
-        if !seen.insert(n.clone()) {
-            continue;
-        }
-        if let Some(next) = adj.get(&n) {
-            for m in next {
-                stack.push(m.clone());
-            }
-        }
-    }
-    false
+    mathematical_graph::algorithms::would_create_cycle_ids(existing, source, target)
 }
 // #endregion 🔖Acyclicity
 

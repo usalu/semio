@@ -17,15 +17,15 @@ use semio_framework_os::{
 use semio_framework_plugin::{PanelGroup,
     build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene,
     create_default_layout, create_tab_stack_layout, host_now_ms,
-    layout::MeasureSelectItem,
-    layout::WindowEngagementStatus, tool_button, tool_collection, ui_declarative_sections_to_tree,
+    component::layout::MeasureSelectItem,
+    component::layout::WindowEngagementStatus, tool_button, tool_collection, ui_declarative_sections_to_tree,
     ui_inspector_all_equal, ui_text,
     App, ActionDescriptor, ModeDefinition, NodeGraphScene, PluginApp, PluginBundle, SurfaceKind, TextEditorScene,
     ToolCategory,
     UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiSectionNode,
     UiSelectItem, UiSelectNode, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, VirtualFileSystemScene,
-    WindowEngagement, WindowEngagementInput, WindowLayout, WindowMeasure,
+    WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowLayout, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
 };
@@ -3001,7 +3001,7 @@ fn create_studio_app() -> App {
         .find(|window| window.id == S_PLAY_WINDOW_MEDIA_GRAPH)
     {
         window.options.measures = measures;
-        window.options.engagement = semio_framework_core::WindowEngagementSlot::Some(engagement);
+        window.options.engagement = WindowEngagementSlot::Some(engagement);
     }
     let compiled_engagement = compiled_dag_engagement(&demo_os_document());
     if let Some(window) = definition
@@ -3009,7 +3009,7 @@ fn create_studio_app() -> App {
         .iter_mut()
         .find(|window| window.id == S_PLAY_WINDOW_COMPILED_DAG)
     {
-        window.options.engagement = semio_framework_core::WindowEngagementSlot::Some(compiled_engagement);
+        window.options.engagement = WindowEngagementSlot::Some(compiled_engagement);
     }
     let mut app = App {
         definition,

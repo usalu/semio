@@ -2,8 +2,9 @@
 
 use semio_framework_core::{
     kernel::{CapabilityRequirement, ResourceKind, Rights, Scope},
-    ActionResult, PluginManifest, ToolNode, UiNode, ViewState, WindowEngagement, WindowMeasure,
+    ActionResult, PluginManifest, ViewState,
 };
+use ui_wgpu::{ToolNode, UiNode, WindowEngagement, WindowMeasure};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;

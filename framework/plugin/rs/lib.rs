@@ -169,15 +169,18 @@ pub mod app {
 //! 🧩 Declarative app builder and plugin trait.
 
 use semio_framework_core::{
-    collect_window_kind_ids_from_layout, history_action_definitions, kernel::{
+    history_action_definitions, kernel::{
         ActorId, AppEvent, CapabilityRequirement, ActionInvocationId, ActionResult, HostEffect, HybridLogicalTimestamp,
         InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OpEnvelope, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
-    ActionRef, AppDefinition, AppLabelsOverlay, ActionDefinition, ActionDescriptor, ActionKind, Contribution, ExampleDefinition, Keybinding,
-    ModeDefinition, Modes, NamedLayout, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, ToolNode,
-    UiNode, ViewState, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowKinds, WindowLayout, WindowMeasure,
-    WindowOptions, SurfaceKind,
+    ActionRef, AppDefinition, AppLabelsOverlay, ActionDefinition, ActionKind, Contribution, ExampleDefinition, Keybinding,
+    ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition,
+    ViewState, WindowKindDefinition, WindowKinds,
+};
+use ui_wgpu::{
+    collect_window_kind_ids_from_layout, ActionDescriptor, NamedLayout, ToolNode, UiNode, WindowEngagement,
+    WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions, SurfaceKind,
 };
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -666,7 +669,7 @@ impl AppBuilder {
 #[cfg(test)]
 mod app_builder_tests {
     use super::*;
-    use semio_framework_core::create_default_layout;
+    use ui_wgpu::create_default_layout;
 
     #[test]
     fn build_definition_rejects_layout_with_unknown_window_kind() {
@@ -1398,7 +1401,7 @@ pub mod generate_mode {
 //! 🧬 Shared Generate mode state, CRUD, and declarative UI helpers.
 
 use protocol::{default_value_for_block, flatten_protocol_blocks, is_block_visible, ProtocolBlock, ProtocolSpec};
-use semio_framework_core::{
+use ui_wgpu::{
     build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, TextEditorScene, UiControlNode,
     UiFieldNode, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemAction,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
@@ -1925,7 +1928,7 @@ fn render_question_field(
     Some(UiNode::Field(UiFieldNode {
         id: field_id,
         label: question.label.clone(),
-        child: Box::new(semio_framework_core::ui_control_to_node(child)),
+        child: Box::new(ui_wgpu::ui_control_to_node(child)),
         description: None,
         required: None,
         error: None,
@@ -2041,7 +2044,7 @@ pub mod protocol_mode {
 //! (embedded Blueprint mode). Block-kind-specific property editing stays with the host app.
 
 use protocol::{ProtocolBlock, ProtocolOp, ProtocolSpec, ProtocolStep};
-use semio_framework_core::{
+use ui_wgpu::{
     ActionDescriptor, ProtocolListScene, ProtocolPaletteEntry, SurfaceKind, UiComponentSceneNode, UiNode,
 };
 use serde_json::Value;
@@ -2245,9 +2248,8 @@ pub mod plugin_runtime {
 //! 📤 WASM component export glue for plugin bundles.
 
 use crate::app::{ActionMeta, AppInstance, Plugin, PluginBundle};
-use semio_framework_core::{
-    kernel::ActionResult, framework_panel_tab_label, AppLabelsOverlay, PluginManifest, UiNode, ViewState,
-};
+use semio_framework_core::{kernel::ActionResult, AppLabelsOverlay, PluginManifest, ViewState};
+use ui_wgpu::{framework_panel_tab_label, UiNode};
 use serde::Deserialize;
 use std::cell::{Cell, RefCell};
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -2474,7 +2476,7 @@ pub fn plugin_render_with_document(
     })
 }
 
-pub fn plugin_tools(instance_id: u32, view_state_json: &str) -> Result<Vec<semio_framework_core::ToolNode>, String> {
+pub fn plugin_tools(instance_id: u32, view_state_json: &str) -> Result<Vec<ui_wgpu::ToolNode>, String> {
     let view_state: ViewState =
         serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
     with_instances_mut(|list| {
@@ -2486,7 +2488,7 @@ pub fn plugin_tools(instance_id: u32, view_state_json: &str) -> Result<Vec<semio
 pub fn plugin_window_engagements(
     instance_id: u32,
     view_state_json: &str,
-) -> Result<std::collections::HashMap<String, semio_framework_core::layout::WindowEngagement>, String> {
+) -> Result<std::collections::HashMap<String, ui_wgpu::WindowEngagement>, String> {
     let view_state: ViewState =
         serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
     with_instances_mut(|list| {
@@ -2498,7 +2500,7 @@ pub fn plugin_window_engagements(
 pub fn plugin_window_measures(
     instance_id: u32,
     view_state_json: &str,
-) -> Result<std::collections::HashMap<String, Vec<semio_framework_core::WindowMeasure>>, String> {
+) -> Result<std::collections::HashMap<String, Vec<ui_wgpu::WindowMeasure>>, String> {
     let view_state: ViewState =
         serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
     with_instances_mut(|list| {
@@ -2881,10 +2883,8 @@ pub mod world3d_host {
 // #region world3d_host
 //! 🌐 Shared world-3d scene payload builders for plugin apps.
 
-use semio_framework_core::{
-    mesh_from_kind, mesh_to_glb, mesh_to_obj, ActionDescriptor, MeshData, WindowMeasure,
-    World3dScene, world3d_camera_json, world3d_default_selection_json,
-};
+use semio_framework_core::{mesh_from_kind, mesh_to_glb, mesh_to_obj, MeshData};
+use ui_wgpu::{ActionDescriptor, WindowMeasure, World3dScene, world3d_camera_json, world3d_default_selection_json};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -3409,6 +3409,9 @@ pub use world3d_host::{
     world3d_scene_extended, world3d_selection_json, world3d_sun_measures, WorldSunConfig,
 };
 pub use semio_framework_core::*;
+// 🧩 Declarative component model (UiNode, layouts, tools) — moved into ui_wgpu; re-exported here so
+// apps keep the flat `semio_framework_plugin::*` import surface with zero Cargo.toml churn.
+pub use ui_wgpu::*;
 
 #[macro_export]
 macro_rules! register_plugin {

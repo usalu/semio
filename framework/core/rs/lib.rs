@@ -2333,6 +2333,64 @@ mod tests {
         }
     }
 
+    /// 🔺 Small shared-vertex tetrahedron fixture (4 verts, 4 triangles) used by the format round-trip tests below — small enough to assert exact positions/indices, but with enough shared vertices to exercise indexed (not per-face-duplicated) geometry.
+    fn tetra_mesh_fixture() -> MeshData {
+        let mut mesh = MeshData {
+            positions: vec![
+                0.0, 0.0, 0.0, // v0
+                1.0, 0.0, 0.0, // v1
+                0.0, 1.0, 0.0, // v2
+                0.0, 0.0, 1.0, // v3
+            ],
+            indices: vec![0, 1, 2, 0, 1, 3, 0, 2, 3, 1, 2, 3],
+            ..MeshData::default()
+        };
+        mesh.compute_normals();
+        mesh
+    }
+
+    fn assert_positions_close(a: &[f32], b: &[f32]) {
+        assert_eq!(a.len(), b.len(), "position array length mismatch");
+        for (x, y) in a.iter().zip(b.iter()) {
+            assert!((x - y).abs() < 1e-4, "position mismatch: {x} vs {y}");
+        }
+    }
+
+    #[test]
+    fn obj_round_trip_preserves_positions_and_indices() {
+        let mesh = tetra_mesh_fixture();
+        let bytes = ObjExporter.export(&mesh).expect("export obj");
+        let decoded = ObjImporter.import(&bytes).expect("import obj");
+        assert_positions_close(&decoded.positions, &mesh.positions);
+        assert_eq!(decoded.indices, mesh.indices);
+    }
+
+    #[test]
+    fn glb_round_trip_preserves_positions_and_indices() {
+        let mesh = tetra_mesh_fixture();
+        let bytes = GlbExporter.export(&mesh).expect("export glb");
+        let decoded = GlbImporter.import(&bytes).expect("import glb");
+        assert_positions_close(&decoded.positions, &mesh.positions);
+        assert_eq!(decoded.indices, mesh.indices);
+    }
+
+    #[test]
+    fn stl_round_trip_preserves_triangle_geometry() {
+        let mesh = tetra_mesh_fixture();
+        let bytes = StlExporter.export(&mesh).expect("export stl");
+        let decoded = StlImporter.import(&bytes).expect("import stl");
+        assert_eq!(decoded.triangle_count(), mesh.triangle_count());
+        // STL has no vertex sharing, so indices are trivially [0, 1, 2, 3, ...]; compare
+        // per-triangle corner positions against the original indexed mesh instead.
+        for (triangle, decoded_tri) in mesh.indices.chunks_exact(3).zip(decoded.indices.chunks_exact(3)) {
+            for (&original_index, &decoded_index) in triangle.iter().zip(decoded_tri.iter()) {
+                let original = &mesh.positions[original_index as usize * 3..original_index as usize * 3 + 3];
+                let decoded_position = &decoded.positions[decoded_index as usize * 3..decoded_index as usize * 3 + 3];
+                assert_positions_close(decoded_position, original);
+            }
+        }
+    }
+
     #[test]
     fn mesh_from_indexed_with_face_groups_stamps_per_triangle_face_ids() {
         let positions: Vec<f32> = (0..6 * 3 * 3).map(|i| i as f32).collect();

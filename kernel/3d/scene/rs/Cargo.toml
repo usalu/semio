@@ -6,3 +6,6 @@ rust-version = "1.88"
 
 [lib]
 path = "lib.rs"
+
+[dependencies]
+mathematical_algebra = { path = "../../../../mathematical/algebra/rs" }

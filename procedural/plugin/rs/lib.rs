@@ -1242,7 +1242,7 @@ pub mod app_3d {
         FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     };
     use semio_framework_core::mesh_from_indexed;
-    use semio_framework_core::SurfaceKind;
+    use ui_wgpu::SurfaceKind;
     use std::collections::{hash_map::DefaultHasher, HashSet};
     use std::hash::{Hash, Hasher};
     use serde::{Deserialize, Serialize};
@@ -1632,7 +1632,7 @@ pub mod app_3d {
     }
 
     fn preview_camera_json(runtime: &Procedural3dRuntime) -> String {
-        semio_framework_core::world3d_camera_json(
+        ui_wgpu::world3d_camera_json(
             runtime.preview_camera.position,
             runtime.preview_camera.target,
             runtime.preview_camera.fov,
@@ -2971,9 +2971,9 @@ pub mod app_3d {
             refresh_preview_cache(&mut envelope.runtime, &envelope.fixture);
             let document = serde_json::to_string(&envelope).expect("envelope json");
             let node = app.render(PROCEDURAL_3D_PLAY_BODY_PREVIEW, &document, &ViewState::default());
-            let parsed: semio_framework_core::UiNode = serde_json::from_str(&serde_json::to_string(&node).unwrap()).expect("preview ui json");
+            let parsed: ui_wgpu::UiNode = serde_json::from_str(&serde_json::to_string(&node).unwrap()).expect("preview ui json");
             match parsed {
-                semio_framework_core::UiNode::ComponentScene(scene) => {
+                ui_wgpu::UiNode::ComponentScene(scene) => {
                     let world = scene.world_3d.expect("world_3d payload");
                     assert_ne!(world.meshes_json, "[]");
                     assert_ne!(world.instances_json, "[]");
@@ -3100,9 +3100,9 @@ pub mod app_3d {
             let node = app.render(PROCEDURAL_3D_PLAY_BODY_PREVIEW, &document, &ViewState::default());
             let json = serde_json::to_string(&node).unwrap();
             assert!(json.contains("world-3d"));
-            let parsed: semio_framework_core::UiNode = serde_json::from_str(&json).expect("preview ui json");
+            let parsed: ui_wgpu::UiNode = serde_json::from_str(&json).expect("preview ui json");
             match parsed {
-                semio_framework_core::UiNode::ComponentScene(scene) => {
+                ui_wgpu::UiNode::ComponentScene(scene) => {
                     assert_eq!(scene.component_kind, SurfaceKind::World3d);
                     let world = scene.world_3d.expect("world_3d payload");
                     assert_ne!(world.meshes_json, "[]");

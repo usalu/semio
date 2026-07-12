@@ -34,6 +34,7 @@ flow_module_brep = { path = "../../../flow/module/brep/rs", default-features = f
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
 semio-framework-core = { path = "../../../framework/core/rs" }
 semio-framework-os = { path = "../../../framework/product/os/core/rs" }
+ui_wgpu = { path = "../../../ui/wgpu/rs" }
 kernel_3d_engine = { path = "../../../kernel/3d/brep/engine/rs", features = ["parallel"] }
 kernel_3d_scene = { path = "../../../kernel/3d/scene/rs" }
 vcs = { path = "../../../vcs/rs" }

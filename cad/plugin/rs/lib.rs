@@ -2289,7 +2289,8 @@ const CAD_TRANSFORMATION_SPECS: &[CadTransformationSpec] = &[
 use kernel_3d_brepkit::BrepkitKernel;
 use kernel_3d_engine::{block_on, BrepKernel, GeometryHandle, MeshTransfer};
 use base64::Engine;
-use semio_framework_core::{SurfaceKind, mesh_from_indexed};
+use semio_framework_core::mesh_from_indexed;
+use ui_wgpu::SurfaceKind;
 use std::sync::{Mutex, OnceLock};
 
 static CAD_BREP_KERNEL: OnceLock<Mutex<Box<dyn BrepKernel + Send + Sync>>> = OnceLock::new();
@@ -2648,7 +2649,7 @@ fn cad_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 }
 
 fn camera_json(camera: &CadCamera) -> String {
-    semio_framework_core::world3d_camera_json(camera.position, camera.target, camera.fov)
+    ui_wgpu::world3d_camera_json(camera.position, camera.target, camera.fov)
 }
 
 fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {

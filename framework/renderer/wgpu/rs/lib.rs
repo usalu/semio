@@ -11,18 +11,13 @@ pub mod dock {
 // #region dock
 //! 🪟 Mode dock — multi-window layout tree with stack chrome and split resize.
 
-use semio_framework_core::{
-    layout::{
-        even_window_layout, WindowLayout, WindowLayoutChild, WindowLayoutRoot,
-        WindowLayoutStackNode, WindowLayoutWindowNode,
-    },
-    AppDefinition, ActionDescriptor,
-};
+use semio_framework_core::AppDefinition;
 use std::collections::HashMap;
 use ui_wgpu::{
     chrome_item_bg, chrome_item_text, draw_text, push_chrome_border, push_chrome_group_border,
-    push_window_cap_border, DrawList, DragAxis, FontAtlas, GlassTier, HitKind, HitTarget,
-    IconAtlas, InputState, Rect, Rgba, Theme,
+    push_window_cap_border, even_window_layout, ActionDescriptor, DrawList, DragAxis, FontAtlas, GlassTier,
+    HitKind, HitTarget, IconAtlas, InputState, Rect, Rgba, Theme, WindowLayout, WindowLayoutChild,
+    WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
 };
 
 pub type DockPath = Vec<usize>;
@@ -566,7 +561,7 @@ pub fn dock_node_to_layout_root(node: &DockNode) -> WindowLayoutRoot {
                     .collect(),
             })
         }
-        DockNode::Row(children) => WindowLayoutRoot::Axis(semio_framework_core::layout::WindowLayoutAxisNode {
+        DockNode::Row(children) => WindowLayoutRoot::Axis(ui_wgpu::WindowLayoutAxisNode {
             kind: "row".into(),
             size: None,
             children: children
@@ -574,7 +569,7 @@ pub fn dock_node_to_layout_root(node: &DockNode) -> WindowLayoutRoot {
                 .map(|(child, size)| dock_child_from_node(child, *size))
                 .collect(),
         }),
-        DockNode::Column(children) => WindowLayoutRoot::Axis(semio_framework_core::layout::WindowLayoutAxisNode {
+        DockNode::Column(children) => WindowLayoutRoot::Axis(ui_wgpu::WindowLayoutAxisNode {
             kind: "column".into(),
             size: None,
             children: children
@@ -602,7 +597,7 @@ fn dock_child_from_node(node: &DockNode, size: f32) -> WindowLayoutChild {
                 })
                 .collect(),
         }),
-        DockNode::Row(children) => WindowLayoutChild::Axis(semio_framework_core::layout::WindowLayoutAxisNode {
+        DockNode::Row(children) => WindowLayoutChild::Axis(ui_wgpu::WindowLayoutAxisNode {
             kind: "row".into(),
             size: Some(size as f64),
             children: children
@@ -610,7 +605,7 @@ fn dock_child_from_node(node: &DockNode, size: f32) -> WindowLayoutChild {
                 .map(|(child, child_size)| dock_child_from_node(child, *child_size))
                 .collect(),
         }),
-        DockNode::Column(children) => WindowLayoutChild::Axis(semio_framework_core::layout::WindowLayoutAxisNode {
+        DockNode::Column(children) => WindowLayoutChild::Axis(ui_wgpu::WindowLayoutAxisNode {
             kind: "column".into(),
             size: Some(size as f64),
             children: children
@@ -826,7 +821,7 @@ fn collect_stack_tab_bars(
 }
 
 /// 🪟 Wgpu-local adapter: builds the balanced fallback layout via
-/// `semio_framework_core::layout::even_window_layout` and converts it to a runtime `DockNode`.
+/// `ui_wgpu::even_window_layout` and converts it to a runtime `DockNode`.
 fn even_layout(window_ids: &[String]) -> DockNode {
     dock_from_window_layout(&even_window_layout(window_ids).root)
 }
@@ -1648,11 +1643,10 @@ fn dock_text(
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
     use super::*;
-    use semio_framework_core::layout::create_default_layout;
+    use ui_wgpu::{create_default_layout, WindowOptions};
     use crate::shell::ShellState;
     use semio_framework_core::{
         AppDefinition, ModeDefinition, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition,
-        WindowOptions,
     };
 
     fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinition {
@@ -1677,7 +1671,7 @@ mod tests {
                         id: (*id).into(),
                         label: (*id).into(),
                         body_key: format!("{id}.body"),
-                        surface_kind: semio_framework_core::SurfaceKind::Canvas2d,
+                        surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
                         icon_id: None,
                         options: WindowOptions::default(),
                         actions: vec![],
@@ -1942,7 +1936,7 @@ use flow_core::{dag::dag_screen_to_world, FlowFixture, FlowHost};
 use framework_editor::EditorHost;
 use framework_graph::GraphHost;
 use infinite_cavas as cavas;
-use semio_framework_core::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
+use ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -2095,7 +2089,7 @@ fn raster_key(surface_id: &str) -> String {
     format!("engine:{surface_id}")
 }
 
-fn is_flow_graph(graph: &semio_framework_core::NodeGraphScene) -> bool {
+fn is_flow_graph(graph: &ui_wgpu::NodeGraphScene) -> bool {
     if graph
         .fixture_json
         .as_ref()
@@ -2127,15 +2121,15 @@ fn graph_action(controller_id: &str, surface_id: &str, action: &str, args: Value
     }
 }
 
-fn graph_scene_json(graph: &semio_framework_core::NodeGraphScene) -> String {
+fn graph_scene_json(graph: &ui_wgpu::NodeGraphScene) -> String {
     serde_json::to_string(graph).unwrap_or_else(|_| "{}".into())
 }
 
-fn editor_scene_json(editor: &semio_framework_core::TextEditorScene) -> String {
+fn editor_scene_json(editor: &ui_wgpu::TextEditorScene) -> String {
     serde_json::to_string(editor).unwrap_or_else(|_| "{}".into())
 }
 
-fn sync_flow_host(host: &mut FlowHost, graph: &semio_framework_core::NodeGraphScene, cache: &mut NodeGraphSyncCache) {
+fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::NodeGraphScene, cache: &mut NodeGraphSyncCache) {
     if let Some(json) = &graph.operators_json {
         if sync_field(&mut cache.operators_json, json) {
             host.set_neuron_kind_infos_json(json);
@@ -3175,7 +3169,7 @@ fn map_theme_json_from_ui_theme(theme: &Theme) -> String {
 
 fn sync_map_host(
     host: &mut gis_2d::MapHost,
-    scene: &semio_framework_core::GisMapScene,
+    scene: &ui_wgpu::GisMapScene,
     cache: &mut MapSyncCache,
     pw: u32,
     ph: u32,
@@ -3223,7 +3217,7 @@ fn sync_map_host(
     }
 }
 
-fn queue_map_tile_fetches(surface_id: &str, scene: &semio_framework_core::GisMapScene, host: &mut gis_2d::MapHost) {
+fn queue_map_tile_fetches(surface_id: &str, scene: &ui_wgpu::GisMapScene, host: &mut gis_2d::MapHost) {
     host.prepare_visible_tiles();
     let needs_raster = scene.render_mode == "image" || scene.render_mode == "combined";
     let needs_vector = scene.render_mode == "vector" || scene.render_mode == "combined";
@@ -3520,17 +3514,17 @@ pub fn map_interaction_actions(
   vec![
       map_action(
           controller_id,
-          semio_framework_core::gis_map_actions::SET_CAMERA,
+          ui_wgpu::gis_map_actions::SET_CAMERA,
           json!({ "surfaceId": surface_id, "camera": serde_json::from_str::<Value>(&host.camera_json()).unwrap_or(json!({})) }),
       ),
       map_action(
           controller_id,
-          semio_framework_core::gis_map_actions::SET_FEATURE_SELECTION,
+          ui_wgpu::gis_map_actions::SET_FEATURE_SELECTION,
           json!({ "surfaceId": surface_id, "positions": selection["positions"], "routes": selection["routes"] }),
       ),
       map_action(
           controller_id,
-          semio_framework_core::gis_map_actions::SET_HOVER,
+          ui_wgpu::gis_map_actions::SET_HOVER,
           json!({ "surfaceId": surface_id, "hover": hover }),
       ),
   ]
@@ -3642,7 +3636,7 @@ fn parse_board_selection_ids(json: &str) -> Vec<String> {
 }
 
 /// @emoji 🔁 Applies scene fields onto `host`, diffing against `cache` so only changed fields re-sync. Mirrors `applyFixtureToSession` plus the independent per-field effects in the React host: reparsing the fixture resets selection/camera, so both are silently re-applied right after. Skips fixture/selection/camera sync entirely while `host` defers descriptor sync (mid-gesture), matching `pendingFixtureSceneRef`.
-fn sync_board_host(host: &mut puzzle_2d::BoardHost, scene: &semio_framework_core::Puzzle2dBoardScene, cache: &mut BoardSyncCache, pw: u32, ph: u32, dpr: f64) {
+fn sync_board_host(host: &mut puzzle_2d::BoardHost, scene: &ui_wgpu::Puzzle2dBoardScene, cache: &mut BoardSyncCache, pw: u32, ph: u32, dpr: f64) {
     let size_key = format!("{pw}x{ph}@{dpr}");
     if sync_field(&mut cache.size_key, &size_key) {
         host.set_size(pw, ph, dpr);
@@ -4161,7 +4155,7 @@ pub mod interpreter {
 //! 🧩 Maps framework UiNode trees to ui_wgpu widget nodes.
 
 use crate::scenes::{queue_canvas_image_upload, render_component_scene, GisMapSurface, NodeGraphSurface, Puzzle2dBoardSurface};
-use semio_framework_core::{ActionDescriptor, UiComponentSceneNode, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
+use ui_wgpu::{ActionDescriptor, UiComponentSceneNode, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
 use serde_json::Value;
 use ui_wgpu::{
     draw_text, gap_for_token, layout_horizontal, layout_vertical, padding_for_token, ControlNode, KeyValueEntry, Rect,
@@ -4607,7 +4601,7 @@ fn render_ui_node_inner(
     }
 }
 
-fn render_ui_image(image: &semio_framework_core::UiImageNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+fn render_ui_image(image: &ui_wgpu::UiImageNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let Some(key) = queue_canvas_image_upload("ui-image", &image.id, &image.src) else {
         if let Some(alt) = &image.alt {
             draw_text(ctx, alt, bounds.x + 4.0, bounds.y + 16.0, ctx.theme.font_size_small, ctx.theme.text_muted);
@@ -4696,7 +4690,7 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<ActionDescriptor> {
             classifier_kind: icon.classifier_kind.clone(),
             on_change: Some(icon.on_change.clone()),
         },
-        UiNode::Field(field) => match semio_framework_core::ui_node_to_control(&field.child) {
+        UiNode::Field(field) => match ui_wgpu::ui_node_to_control(&field.child) {
             Some(control) => WidgetNode::Field {
                 id: field.id.clone(),
                 label: field.label.clone(),
@@ -4957,7 +4951,7 @@ pub fn framework_widget_context<'a>(
 #[cfg(test)]
 mod render_plan_validator_tests {
     use super::*;
-    use semio_framework_core::{build_table_scene, build_world_3d_scene, TableScene, UiStackNode, World3dScene};
+    use ui_wgpu::{build_table_scene, build_world_3d_scene, TableScene, UiStackNode, World3dScene};
 
     #[test]
     fn validate_ui_node_rejects_oversized_json_payload() {
@@ -5057,7 +5051,8 @@ pub mod plugin_bridge {
 // #region plugin_bridge
 //! 🔌 Plugin bridge for wasm C-ABI modules (browser JS loader + wasmtime host).
 
-use semio_framework_core::{PluginManifest, ToolNode, UiNode, ViewState, WindowEngagement, WindowMeasure};
+use semio_framework_core::{PluginManifest, ViewState};
+use ui_wgpu::{ToolNode, UiNode, WindowEngagement, WindowMeasure};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -5320,8 +5315,8 @@ async fn handle_action_js(
             return Ok(parsed);
         }
         if let Ok(ops) = serde_json::from_str::<Vec<String>>(&text) {
-            let descriptor: semio_framework_core::ActionDescriptor =
-                serde_json::from_str(action_json).unwrap_or(semio_framework_core::ActionDescriptor {
+            let descriptor: ui_wgpu::ActionDescriptor =
+                serde_json::from_str(action_json).unwrap_or(ui_wgpu::ActionDescriptor {
                     controller_id: String::new(),
                     action: String::new(),
                     args: None,
@@ -5576,7 +5571,7 @@ use crate::interpreter::{validate_component_scene, FrameworkWidgetContext, RENDE
 use crate::shell::{push_context_menu_item, push_find_item, ContextMenuItem, ShellFindItem, ShellState};
 use infinite_world::{render_world_3d, World3dState};
 use base64::Engine;
-use semio_framework_core::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
+use ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::cell::RefCell;
@@ -6718,7 +6713,7 @@ struct TableColumn {
     label: String,
 }
 
-/// 🧾 Mirrors `semio_framework_core::TableCell` — a typed table cell value parsed out of a row's raw JSON.
+/// 🧾 Mirrors `ui_wgpu::TableCell` — a typed table cell value parsed out of a row's raw JSON.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 enum TableCellPayload {
@@ -8756,7 +8751,7 @@ struct GraphContextMenuItem {
     args: Option<Value>,
 }
 
-fn push_graph_context_menu(scene: &UiComponentSceneNode, graph: &semio_framework_core::NodeGraphScene) {
+fn push_graph_context_menu(scene: &UiComponentSceneNode, graph: &ui_wgpu::NodeGraphScene) {
     let Some(raw) = graph.context_menu_json.as_deref() else {
         return;
     };
@@ -9049,7 +9044,7 @@ pub fn push_gis_map_context_menu(
             label: "Select".into(),
             action: Some(engine_canvas::map_action(
                 controller_id,
-                semio_framework_core::gis_map_actions::SET_FEATURE_SELECTION,
+                ui_wgpu::gis_map_actions::SET_FEATURE_SELECTION,
                 json!({
                     "surfaceId": surface_id,
                     "positions": if kind == "position" { vec![id] } else { Vec::<&str>::new() },
@@ -9064,7 +9059,7 @@ pub fn push_gis_map_context_menu(
                 label: "Deselect".into(),
                 action: Some(engine_canvas::map_action(
                     controller_id,
-                    semio_framework_core::gis_map_actions::DESELECT,
+                    ui_wgpu::gis_map_actions::DESELECT,
                     json!({ "surfaceId": surface_id, "featureId": id, "featureKind": kind }),
                 )),
             });
@@ -9074,7 +9069,7 @@ pub fn push_gis_map_context_menu(
             label: "Focus / zoom to".into(),
             action: Some(engine_canvas::map_action(
                 controller_id,
-                semio_framework_core::gis_map_actions::FOCUS_FEATURE,
+                ui_wgpu::gis_map_actions::FOCUS_FEATURE,
                 json!({ "surfaceId": surface_id, "featureId": id, "featureKind": kind }),
             )),
         });
@@ -9093,7 +9088,7 @@ pub fn push_gis_map_context_menu(
                     label: "Open source".into(),
                     action: Some(engine_canvas::map_action(
                         controller_id,
-                        semio_framework_core::gis_map_actions::OPEN_SOURCE,
+                        ui_wgpu::gis_map_actions::OPEN_SOURCE,
                         json!({ "surfaceId": surface_id, "featureId": id }),
                     )),
                 });
@@ -9106,7 +9101,7 @@ pub fn push_gis_map_context_menu(
         label: "Select all".into(),
         action: Some(engine_canvas::map_action(
             controller_id,
-            semio_framework_core::gis_map_actions::SELECT_ALL,
+            ui_wgpu::gis_map_actions::SELECT_ALL,
             json!({ "surfaceId": surface_id }),
         )),
     });
@@ -9120,7 +9115,7 @@ pub fn push_gis_map_context_menu(
         action: if has_selection {
             Some(engine_canvas::map_action(
                 controller_id,
-                semio_framework_core::gis_map_actions::CLEAR_SELECTION,
+                ui_wgpu::gis_map_actions::CLEAR_SELECTION,
                 json!({ "surfaceId": surface_id }),
             ))
         } else {
@@ -9132,7 +9127,7 @@ pub fn push_gis_map_context_menu(
         label: "Fit world".into(),
         action: Some(engine_canvas::map_action(
             controller_id,
-            semio_framework_core::gis_map_actions::FIT_WORLD,
+            ui_wgpu::gis_map_actions::FIT_WORLD,
             json!({ "surfaceId": surface_id }),
         )),
     });
@@ -9249,7 +9244,7 @@ pub fn gis_map_pointer_move(
     });
     vec![engine_canvas::map_action(
         controller_id,
-        semio_framework_core::gis_map_actions::SET_HOVER,
+        ui_wgpu::gis_map_actions::SET_HOVER,
         json!({ "surfaceId": surface_id, "hover": hover }),
     )]
 }
@@ -9299,7 +9294,7 @@ pub fn gis_map_pointer_up(
                 .unwrap_or_default();
                 actions.push(engine_canvas::map_action(
                     controller_id,
-                    semio_framework_core::gis_map_actions::SET_FEATURE_SELECTION,
+                    ui_wgpu::gis_map_actions::SET_FEATURE_SELECTION,
                     json!({
                         "surfaceId": surface_id,
                         "positions": positions,
@@ -9320,7 +9315,7 @@ pub fn gis_map_pointer_up(
                 if let (Some(kind), Some(id)) = (kind, id) {
                     actions.push(engine_canvas::map_action(
                         controller_id,
-                        semio_framework_core::gis_map_actions::SET_FEATURE_SELECTION,
+                        ui_wgpu::gis_map_actions::SET_FEATURE_SELECTION,
                         json!({
                             "surfaceId": surface_id,
                             "positions": if kind == "position" { vec![id] } else { Vec::<&str>::new() },
@@ -9549,7 +9544,7 @@ fn render_icon_render(
         icon_render_camera_json(&request.camera),
         semio_framework_plugin::world3d_meshes_json_from_urls(std::slice::from_ref(&request.asset_url)),
         instances_json,
-        semio_framework_core::world3d_default_selection_json(),
+        ui_wgpu::world3d_default_selection_json(),
         &semio_framework_plugin::WorldSunConfig::default(),
     );
     synthetic_world.environment_json = Some(icon_render_environment_json(&request));
@@ -10284,12 +10279,14 @@ use infinite_world::{
 };
 use crate::plugin_bridge::{is_studio_mode, PluginBridgeEntry};
 use semio_framework_core::{
-    app_document_label, app_window_document_label, AppDefinition, ActionDescriptor, ExampleDefinition,
-    ModeDefinition, PanelGroup, PanelTabDefinition, ToolCategory, ToolNode, UiButtonNode, UiNode, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, ViewState, WindowEngagement,
-    WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure,
+    app_document_label, app_window_document_label, AppDefinition, ExampleDefinition,
+    ModeDefinition, PanelGroup, PanelTabDefinition, ViewState,
 };
-use semio_framework_core::layout::{
-    WindowEngagementPossible, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+use ui_wgpu::component::layout::WindowEngagementPossible;
+use ui_wgpu::{
+    ActionDescriptor, ToolCategory, ToolNode, UiButtonNode, UiNode, UiSelectItem, UiSelectNode, UiStackNode,
+    UiTextNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption,
+    WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID,
 };
 use serde::{Deserialize, Serialize};
@@ -10503,11 +10500,11 @@ pub struct ShellState {
     pub tree_drag_origin: (f32, f32),
     pub dock_drag: Option<DockDragState>,
     pub pending_dock_drag: Option<(DockDragPayload, (f32, f32))>,
-    pub dock_drag_snapshot: Option<semio_framework_core::layout::WindowLayout>,
+    pub dock_drag_snapshot: Option<ui_wgpu::WindowLayout>,
     pub dock_canvas_bounds: Rect,
     pub dock_drop_tab_bars: Vec<(Vec<usize>, Rect, Vec<f32>)>,
     pub dock_drop_bodies: Vec<(Vec<usize>, Rect, String)>,
-    pub layout_override: Option<semio_framework_core::layout::WindowLayout>,
+    pub layout_override: Option<ui_wgpu::WindowLayout>,
     pub split_resize_origin: Vec<f32>,
     pub split_resize_secondary_path: Option<Vec<usize>>,
     pub split_resize_secondary_index: usize,
@@ -15630,7 +15627,7 @@ impl ShellState {
     }
 
     fn window_engagement_chrome_visible(
-        engagement: &semio_framework_core::layout::WindowEngagement,
+        engagement: &ui_wgpu::WindowEngagement,
         window_id: &str,
         engagement_inputs: &HashMap<String, String>,
         activated: bool,
@@ -15664,7 +15661,7 @@ impl ShellState {
             .or_else(|| kind.options.engagement.as_option().cloned())
             .or_else(|| {
                 if kind.surface_kind.is_viewport() {
-                    Some(semio_framework_core::default_viewport_engagement())
+                    Some(ui_wgpu::default_viewport_engagement())
                 } else {
                     None
                 }
@@ -15863,7 +15860,7 @@ impl ShellState {
         measure: &WindowMeasure,
         gpu: &mut ui_wgpu::GpuContext,
     ) -> f32 {
-        use semio_framework_core::layout::MeasureSelectItem;
+        use ui_wgpu::component::layout::MeasureSelectItem;
         use ui_wgpu::widgets::{render_widget, ControlNode, WidgetNode};
         let height = measure_window_measure_height(theme, &self.collapsed_sections, measure);
         let mut y = bounds.y;
@@ -16596,7 +16593,7 @@ use infinite_world::{
     handle_world3d_paint_actions, handle_world3d_pointer_button, handle_world3d_pointer_drag,
     handle_world3d_pointer_move, handle_world3d_wheel,
 };
-use semio_framework_core::ActionDescriptor;
+use ui_wgpu::ActionDescriptor;
 use shell::ShellState;
 use std::cell::RefCell;
 use std::io::Read;

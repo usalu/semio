@@ -5,8 +5,8 @@ pub mod host {
 //! 🔌 Plugin host, studio document VCS store, backbone, and catalog.
 
 use crate::instance::{
-    create_default_os_parameter, create_os_id, patch_os_parameter, OsAppInstance,
-    OsInstanceState, OsParameter, OsParameterFieldBinding, OsParameterType, OsSourceDocument,
+    create_default_os_parameter, create_os_document_id, create_os_id, patch_os_parameter, OsAppInstance,
+    OsDocumentRef, OsInstanceState, OsParameter, OsParameterFieldBinding, OsParameterType,
 };
 use crate::media_graph::{
     empty_media_graph, media_graph_node_for_instance, sync_media_graph_parameter_ports,
@@ -17,11 +17,11 @@ use crate::registry::{
     os_app_primary_output_kind, os_app_registration, PluginRegistry,
 };
 use semio_framework_core::{
-    AppDefinition, ActionContext, ActionDescriptor, ActionInvocation, ActionResult,
+    AppDefinition, ActionContext, ActionInvocation, ActionResult,
     Contribution, HybridLogicalTimestamp, InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion,
-    OperationId, PluginManifest, SchemaId, UiButtonNode, UiNode, UndoGroup, UndoPolicy, ViewState,
-    ui_stack_vertical, ui_text,
+    OperationId, PluginManifest, SchemaId, UndoGroup, UndoPolicy, ViewState,
 };
+use ui_wgpu::{ActionDescriptor, UiButtonNode, UiNode, ui_stack_vertical, ui_text};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -689,10 +689,6 @@ pub enum OsOp {
         #[serde(skip_serializing_if = "Option::is_none")]
         alternative_id: Option<String>,
     },
-    ApplyAppOperation {
-        instance_id: String,
-        next_source: OsSourceDocument,
-    },
     SpawnAppInstance {
         instance: OsAppInstance,
         position: MediaGraphPosition,
@@ -710,10 +706,6 @@ pub enum OsOp {
         node_id: String,
         x: f64,
         y: f64,
-    },
-    PatchAppSource {
-        instance_id: String,
-        inline: String,
     },
     PatchAppInstance {
         instance_id: String,
@@ -799,16 +791,6 @@ pub fn apply_os_operation(projection: &OsProjection, operation: &OsOp) -> OsProj
         OsOp::SetActiveAlternative { alternative_id } => {
             next.active_alternative_id = alternative_id.clone();
         }
-        OsOp::ApplyAppOperation {
-            instance_id,
-            next_source,
-        } => {
-            for instance in &mut next.app_instances {
-                if instance.id == *instance_id {
-                    instance.source_document = next_source.clone();
-                }
-            }
-        }
         OsOp::SpawnAppInstance { instance, position } => {
             if !next.programs.contains(&instance.program_id) {
                 next.programs.push(instance.program_id.clone());
@@ -856,13 +838,6 @@ pub fn apply_os_operation(projection: &OsProjection, operation: &OsOp) -> OsProj
                 if node.id == *node_id {
                     node.x = *x;
                     node.y = *y;
-                }
-            }
-        }
-        OsOp::PatchAppSource { instance_id, inline } => {
-            for instance in &mut next.app_instances {
-                if instance.id == *instance_id {
-                    instance.source_document.inline = Some(inline.clone());
                 }
             }
         }
@@ -959,10 +934,6 @@ pub enum OsDiff {
         #[serde(skip_serializing_if = "Option::is_none")]
         alternative_id: Option<String>,
     },
-    ApplyAppOperation {
-        instance_id: String,
-        next_source: OsSourceDocument,
-    },
     SpawnAppInstance {
         instance: OsAppInstance,
         position: MediaGraphPosition,
@@ -980,10 +951,6 @@ pub enum OsDiff {
         node_id: String,
         x: f64,
         y: f64,
-    },
-    PatchAppSource {
-        instance_id: String,
-        inline: String,
     },
     PatchAppInstance {
         instance_id: String,
@@ -1020,13 +987,6 @@ impl OperationDiff<OsProjection> for OsDiff {
             OsDiff::SetActiveAlternative { alternative_id } => OsOp::SetActiveAlternative {
                 alternative_id: alternative_id.clone(),
             },
-            OsDiff::ApplyAppOperation {
-                instance_id,
-                next_source,
-            } => OsOp::ApplyAppOperation {
-                instance_id: instance_id.clone(),
-                next_source: next_source.clone(),
-            },
             OsDiff::SpawnAppInstance { instance, position } => OsOp::SpawnAppInstance {
                 instance: instance.clone(),
                 position: position.clone(),
@@ -1042,10 +1002,6 @@ impl OperationDiff<OsProjection> for OsDiff {
                 node_id: node_id.clone(),
                 x: *x,
                 y: *y,
-            },
-            OsDiff::PatchAppSource { instance_id, inline } => OsOp::PatchAppSource {
-                instance_id: instance_id.clone(),
-                inline: inline.clone(),
             },
             OsDiff::PatchAppInstance { instance_id, label } => OsOp::PatchAppInstance {
                 instance_id: instance_id.clone(),
@@ -1097,13 +1053,6 @@ impl Operation<OsProjection> for OsOp {
             OsOp::SetActiveAlternative { alternative_id } => OsDiff::SetActiveAlternative {
                 alternative_id: alternative_id.clone(),
             },
-            OsOp::ApplyAppOperation {
-                instance_id,
-                next_source,
-            } => OsDiff::ApplyAppOperation {
-                instance_id: instance_id.clone(),
-                next_source: next_source.clone(),
-            },
             OsOp::SpawnAppInstance { instance, position } => OsDiff::SpawnAppInstance {
                 instance: instance.clone(),
                 position: position.clone(),
@@ -1119,10 +1068,6 @@ impl Operation<OsProjection> for OsOp {
                 node_id: node_id.clone(),
                 x: *x,
                 y: *y,
-            },
-            OsOp::PatchAppSource { instance_id, inline } => OsDiff::PatchAppSource {
-                instance_id: instance_id.clone(),
-                inline: inline.clone(),
             },
             OsOp::PatchAppInstance { instance_id, label } => OsDiff::PatchAppInstance {
                 instance_id: instance_id.clone(),
@@ -1163,17 +1108,6 @@ impl Operation<OsProjection> for OsOp {
             OsOp::SetActiveAlternative { .. } => vec![OsOp::SetActiveAlternative {
                 alternative_id: projection.active_alternative_id.clone(),
             }],
-            OsOp::ApplyAppOperation { instance_id, .. } => projection
-                .app_instances
-                .iter()
-                .find(|instance| instance.id == *instance_id)
-                .map(|instance| {
-                    vec![OsOp::ApplyAppOperation {
-                        instance_id: instance_id.clone(),
-                        next_source: instance.source_document.clone(),
-                    }]
-                })
-                .unwrap_or_default(),
             OsOp::SpawnAppInstance { instance, .. } => vec![OsOp::RemoveAppInstance {
                 instance_id: instance.id.clone(),
             }],
@@ -1216,17 +1150,6 @@ impl Operation<OsProjection> for OsOp {
                         node_id: node_id.clone(),
                         x: node.x,
                         y: node.y,
-                    }]
-                })
-                .unwrap_or_default(),
-            OsOp::PatchAppSource { instance_id, .. } => projection
-                .app_instances
-                .iter()
-                .find(|instance| instance.id == *instance_id)
-                .map(|instance| {
-                    vec![OsOp::PatchAppSource {
-                        instance_id: instance_id.clone(),
-                        inline: instance.source_document.inline.clone().unwrap_or_default(),
                     }]
                 })
                 .unwrap_or_default(),
@@ -1396,6 +1319,10 @@ impl OsStore {
         let registration = os_app_registration(program_id, app_id)
             .ok_or_else(|| VcsError::Deserialize(format!("unknown app {program_id}/{app_id}")))?;
         let instance_id = create_os_id("app");
+        // 🆔 Minted once, here, at dispatch time; the id is embedded in the stored `OsOp` itself so
+        // replay is deterministic (it never re-mints) — same idempotency property `create_os_id`
+        // already relies on for `instance_id`.
+        let document_id = create_os_document_id();
         let instance = OsAppInstance {
             id: instance_id.clone(),
             program_id: program_id.into(),
@@ -1404,11 +1331,9 @@ impl OsStore {
                 .map(str::to_string)
                 .unwrap_or_else(|| registration.label.clone()),
             yields: os_app_primary_output_kind(&registration),
-            source_document: OsSourceDocument {
-                format: registration.source_format.clone(),
-                vcs_json: None,
-                inline: Some("{}".into()),
-                payload_ref: None,
+            document: OsDocumentRef {
+                document_id,
+                schema: registration.source_format.clone(),
             },
         };
         self.dispatch_apply(vec![OsOp::SpawnAppInstance {
@@ -1449,8 +1374,21 @@ impl OsStore {
         self.inner.tick()
     }
 
+    /// @emoji 🔗 Resolves and attaches a backbone by uri. Only available inside the wasm sandbox
+    /// (every scheme forwards to the host over the injected `BackboneChannelPort`, a pure queue) —
+    /// see {@link attach_backbone} for the native counterpart, which takes an explicit
+    /// `Box<dyn vcs::Backbone>` since native has no URI→IO auto-resolution anymore (`framework/sync`'s
+    /// `host_runtime` module owns constructing the real endpoint via `DocumentHost`).
+    #[cfg(target_arch = "wasm32")]
     pub fn attach_backbone(&mut self, uri: &str) -> Result<(), VcsError> {
         self.inner.attach_backbone_uri(uri)
+    }
+
+    /// @emoji 🔗 Attaches an explicit native backbone channel (typically a `channel_backbone` handed
+    /// out by `framework/sync`'s `DocumentHost::open`, per `host_runtime`'s canonical sequence).
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn attach_backbone(&mut self, backbone: Box<dyn vcs::Backbone>) -> Result<(), VcsError> {
+        self.inner.attach_backbone(backbone)
     }
 
     pub fn detach_backbone(&mut self) {
@@ -1490,56 +1428,12 @@ fn sync_os_studio_document(
 }
 //#endregion 🔖Backbone
 
-//#region 🔖Presence
-pub const OS_PRESENCE_URI_PREFIX: &str = "presence:";
-pub const OS_PRESENCE_STALE_MS: f64 = 15_000.0;
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct OsPresencePeer {
-    pub client_id: String,
-    pub name: String,
-    #[serde(default)]
-    pub selection: Vec<String>,
-    pub updated_at_ms: f64,
-}
-
-pub fn os_presence_uri(studio_id: &str) -> String {
-    format!("{OS_PRESENCE_URI_PREFIX}{studio_id}")
-}
-
-fn read_os_presence_map(port: &Arc<dyn OsBackbonePort>, studio_id: &str) -> HashMap<String, OsPresencePeer> {
-    port.read(&os_presence_uri(studio_id))
-        .ok()
-        .and_then(|payload| serde_json::from_str(&payload).ok())
-        .unwrap_or_default()
-}
-
-/** @emoji 🫀 Upserts one peer heartbeat and prunes stale peers on the studio presence channel. */
-pub fn write_os_presence(port: &Arc<dyn OsBackbonePort>, studio_id: &str, peer: OsPresencePeer) -> Result<(), VcsError> {
-    let now_ms = peer.updated_at_ms;
-    let mut peers = read_os_presence_map(port, studio_id);
-    peers.retain(|_, entry| now_ms - entry.updated_at_ms <= OS_PRESENCE_STALE_MS);
-    peers.insert(peer.client_id.clone(), peer);
-    let payload = serde_json::to_string(&peers).map_err(|error| VcsError::Serialize(error.to_string()))?;
-    port.write(&os_presence_uri(studio_id), &payload)
-}
-
-/** @emoji 👥 Reads the live peers on a studio presence channel, excluding self and stale entries. */
-pub fn read_os_presence_peers(
-    port: &Arc<dyn OsBackbonePort>,
-    studio_id: &str,
-    self_client_id: &str,
-    now_ms: f64,
-) -> Vec<OsPresencePeer> {
-    let mut peers: Vec<_> = read_os_presence_map(port, studio_id)
-        .into_values()
-        .filter(|peer| peer.client_id != self_client_id && now_ms - peer.updated_at_ms <= OS_PRESENCE_STALE_MS)
-        .collect();
-    peers.sort_by(|a, b| a.name.cmp(&b.name).then_with(|| a.client_id.cmp(&b.client_id)));
-    peers
-}
-//#endregion 🔖Presence
+// 🫀 Presence used to be a `presence:` backbone-URI polling hack (`OS_PRESENCE_URI_PREFIX` /
+// `write_os_presence` / `read_os_presence_peers`) — deleted. Presence now flows through the hub's
+// duplex `PresencePeer`/`HubServerFrame::Presence` frames (`framework/core/rs`'s 🔖HubProtocol
+// region) via `framework/sync`'s `DocumentHost::subscribe` yielding `DocumentEvent::Presence`; the
+// `host_runtime` module below is where a native host translates that event into
+// `ViewState.presence_peers_json` — the plugin read-side contract is unchanged.
 
 //#region 🔖StudioCatalog
 pub const OS_HOME_VFS_ROOT_ID: &str = "os-home-root";
@@ -1725,8 +1619,8 @@ mod tests {
     use semio_framework_core::{
         ActorId, AppInstanceId, ActionId, ActionInvocationId, ModeDefinition, PluginManifest,
         WindowKindDefinition,
-        SurfaceKind,
     };
+    use ui_wgpu::SurfaceKind;
     use std::sync::Arc;
     use vcs::MemoryBackbonePort;
 
@@ -1757,7 +1651,7 @@ mod tests {
                     body_key: "composite".into(),
                     surface_kind: SurfaceKind::Canvas2d,
                     icon_id: None,
-                    options: semio_framework_core::WindowOptions::default(),
+                    options: ui_wgpu::WindowOptions::default(),
                     actions: Vec::new(),
                     params_schema: None,
                     document_projection_schema: None,
@@ -1808,7 +1702,7 @@ mod tests {
                 body_key: "composite".into(),
                 surface_kind: SurfaceKind::Canvas2d,
                 icon_id: None,
-                options: semio_framework_core::WindowOptions::default(),
+                options: ui_wgpu::WindowOptions::default(),
                 actions: Vec::new(),
                 params_schema: None,
                 document_projection_schema: None,
@@ -1843,7 +1737,7 @@ mod tests {
                 body_key: "composite".into(),
                 surface_kind: SurfaceKind::Canvas2d,
                 icon_id: None,
-                options: semio_framework_core::WindowOptions::default(),
+                options: ui_wgpu::WindowOptions::default(),
                 actions: Vec::new(),
                 params_schema: None,
                 document_projection_schema: None,
@@ -1922,7 +1816,7 @@ mod tests {
                 body_key: "composite".into(),
                 surface_kind: SurfaceKind::Canvas2d,
                 icon_id: None,
-                options: semio_framework_core::WindowOptions::default(),
+                options: ui_wgpu::WindowOptions::default(),
                 actions: Vec::new(),
                 params_schema: None,
                 document_projection_schema: None,
@@ -2053,7 +1947,7 @@ mod tests {
                     body_key: "composite".into(),
                     surface_kind: SurfaceKind::Canvas2d,
                     icon_id: None,
-                    options: semio_framework_core::WindowOptions::default(),
+                    options: ui_wgpu::WindowOptions::default(),
                     actions: Vec::new(),
                     params_schema: None,
                     document_projection_schema: None,
@@ -2198,28 +2092,11 @@ mod tests {
         assert!(validate_media_graph(&empty_media_graph()).ok);
     }
 
-    #[test]
-    fn presence_upserts_prunes_and_excludes_self() {
-        let port: Arc<dyn OsBackbonePort> = Arc::new(MemoryBackbonePort::new());
-        let peer = |client_id: &str, name: &str, updated_at_ms: f64| OsPresencePeer {
-            client_id: client_id.into(),
-            name: name.into(),
-            selection: vec!["node-1".into()],
-            updated_at_ms,
-        };
-        write_os_presence(&port, "studio-1", peer("client-a", "Ada", 1_000.0)).expect("write a");
-        write_os_presence(&port, "studio-1", peer("client-b", "Bo", 2_000.0)).expect("write b");
-        let peers = read_os_presence_peers(&port, "studio-1", "client-a", 2_500.0);
-        assert_eq!(peers.len(), 1);
-        assert_eq!(peers[0].client_id, "client-b");
-        assert_eq!(peers[0].selection, vec!["node-1".to_string()]);
-        let stale = read_os_presence_peers(&port, "studio-1", "client-a", 2_000.0 + OS_PRESENCE_STALE_MS + 1.0);
-        assert!(stale.is_empty());
-        write_os_presence(&port, "studio-1", peer("client-c", "Cy", 60_000.0)).expect("write c");
-        let pruned = read_os_presence_peers(&port, "studio-1", "", 60_000.0);
-        assert_eq!(pruned.len(), 1);
-        assert_eq!(pruned[0].client_id, "client-c");
-    }
+    // 🫀 The old `presence_upserts_prunes_and_excludes_self` test exercised the deleted `presence:`
+    // backbone-URI hack (`write_os_presence`/`read_os_presence_peers`). Presence now flows through
+    // the hub's `PresencePeer`/`HubServerFrame::Presence` frames and `framework/sync`'s
+    // `DocumentEvent::Presence` — see `framework/product/os/hub/rs/bin.rs` and
+    // `framework/sync/rs/lib.rs` for that layer's own coverage.
 }
 // #endregion host
 }
@@ -2230,8 +2107,14 @@ pub mod backbone {
 //! json directly, bypassing the duplex `Backbone` channel since there is no other process here.
 
 use crate::host::OsBackbonePort;
+use crate::media_graph::OS_STUDIO_SCHEMA;
 use std::sync::Arc;
-use vcs::{BackboneStorage, MemoryBackbonePort, VcsError};
+use vcs::{MemoryBackbonePort, VcsError};
+
+/// @emoji 🗂️ Conventional single-document id used inside a folder-backed studio backbone — a studio
+/// folder holds exactly one os document at its root (app documents get their own document ids once
+/// {@link OsDocumentRef} routes them through `framework/sync`'s multi-document `DocumentHost`).
+const STUDIO_FOLDER_DOCUMENT_ID: &str = "studio";
 
 enum StudioPortKind {
     #[cfg(not(target_arch = "wasm32"))]
@@ -2284,7 +2167,7 @@ impl OsBackbonePort for StudioBackbonePort {
                 #[cfg(not(target_arch = "wasm32"))]
                 StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {
                     return storage
-                        .read()?
+                        .read(STUDIO_FOLDER_DOCUMENT_ID)?
                         .ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")));
                 }
                 _ => {}
@@ -2302,7 +2185,7 @@ impl OsBackbonePort for StudioBackbonePort {
                 }
                 #[cfg(not(target_arch = "wasm32"))]
                 StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {
-                    return storage.write(payload);
+                    return storage.write(STUDIO_FOLDER_DOCUMENT_ID, OS_STUDIO_SCHEMA, payload);
                 }
                 _ => {}
             }
@@ -2323,28 +2206,184 @@ pub fn open_file_studio_backbone(file_path: &str) -> Result<Arc<dyn OsBackbonePo
 // #endregion backbone
 }
 
+/// @emoji 🧵 Canonical native document-open sequencing shared by every native host that links this
+/// crate (currently the wgpu shell). Native-only: it depends on `framework/sync`'s `DocumentHost`,
+/// whose actor is a native-thread (or wasm `spawn_local`) concern — WASI-P2 plugins never see it, and
+/// the browser React shell talks to its own TS twin (`framework/product/os/core/js/backbone-worker.ts`)
+/// through a different FFI boundary (the WIT plugin sandbox), not through this Rust module. Keeping
+/// this doc-comment as the single canonical description of the sequence — referenced from both
+/// `os-shell.tsx`'s `openDocument` and `framework/renderer/wgpu/rs/lib.rs` — is how the two stay in
+/// lockstep without a literal shared code path across the Rust/TS boundary.
+#[cfg(not(target_arch = "wasm32"))]
+pub mod host_runtime {
+// #region host_runtime
+//! 🧵 Native `DocumentHost` sequencing shared by every native caller (wgpu shell today).
+//!
+//! ## Canonical open/spawn/effect sequence (mirrored in TS by `os-shell.tsx`'s `openDocument`):
+//! 1. Build a `DocumentActorConfig{document_id, schema, bindings, watch_external, actor}` for the
+//!    document being opened — either the os/studio document itself, or one app instance's
+//!    {@link crate::instance::OsDocumentRef}.
+//! 2. `DocumentHost::open(config)` → `DocumentChannels{cmd_tx, channel_backbone}`.
+//! 3. Attach `channel_backbone` to the document's own store: `store.attach_backbone(Box::new(...))`.
+//!    For a native WASM plugin instance this ALSO means calling `framework/plugin/host`'s
+//!    `WasmPluginRuntime::register_host_backbone(uri, Box::new(channel_backbone))` so the sandboxed
+//!    plugin's `backbone-send`/`backbone-poll` host imports reach the same channel — this crate does
+//!    not link `framework/plugin/host` directly (no existing dependency edge), so the wgpu shell,
+//!    which links both, is the one that actually performs that registration call using the
+//!    {@link OpenedDocument} this module hands back.
+//! 4. `DocumentHost::subscribe(&document_id)` → `broadcast::Receiver<DocumentEvent>`; on each event:
+//!    - `RemoteOps`/`SnapshotReplaced` are already pushed into the store's inbound queue by the actor
+//!      — the caller just needs to call `store.tick()` (step 5) to materialize them.
+//!    - `Presence{peers}` translates into `ViewState.presence_peers_json` via
+//!      {@link presence_peers_json} — the ONLY place presence now flows through; the old `presence:`
+//!      backbone-URI hack is gone entirely.
+//!    - `Status`/`Conflict` surface on the shell's sync-status badge / conflict card.
+//! 5. Every tick/frame: `store.tick()` drains the attached backbone's inbound queue into the store.
+//! 6. On `HostEffect::SpawnPluginInstance`/`OpenPluginInstance` from an action result: mint (if
+//!    needed) a fresh `OsDocumentRef` (see {@link crate::instance::create_os_document_id}), then repeat
+//!    steps 1-5 for that app's own document.
+//! 7. On close: send `DocumentActorMsg::Detach` (flushes pending ops) via `host.send(id, Detach)`, then
+//!    `DocumentHost::close(&id)`, then `store.detach_backbone()` /
+//!    `WasmPluginRuntime::deregister_host_backbone(uri)`.
+
+use crate::instance::OsDocumentRef;
+use semio_framework_sync::{
+    DocumentActorConfig, DocumentActorMsg, DocumentChannels, DocumentEvent, DocumentHost, PersistenceBinding,
+};
+
+/// @emoji 📌 The local persistence binding for a folder-backed document (one row per `document_id`
+/// in the folder's `.semio` sqlite store — see `vcs::FolderSqliteStorage`).
+pub fn folder_binding(folder_path: std::path::PathBuf) -> PersistenceBinding {
+    PersistenceBinding::Folder { path: folder_path }
+}
+
+/// @emoji ☁️ The hub persistence binding for a document.
+pub fn hub_binding(base_url: impl Into<String>, token: Option<String>) -> PersistenceBinding {
+    PersistenceBinding::Hub { base_url: base_url.into(), token }
+}
+
+/// @emoji 🔗 Builds the `DocumentActorConfig` to open an app instance's own document, from its
+/// `OsDocumentRef` — step 1 of the canonical sequence.
+pub fn app_document_config(
+    document: &OsDocumentRef,
+    bindings: Vec<PersistenceBinding>,
+    actor: &str,
+) -> DocumentActorConfig {
+    DocumentActorConfig {
+        document_id: document.document_id.clone(),
+        schema: document.schema.clone(),
+        bindings,
+        watch_external: true,
+        actor: actor.to_string(),
+    }
+}
+
+/// @emoji 🧵 Channels + a fresh event receiver for one opened document — steps 2 and 4 of the
+/// canonical sequence.
+pub struct OpenedDocument {
+    pub channels: DocumentChannels,
+    pub events: tokio::sync::broadcast::Receiver<DocumentEvent>,
+}
+
+/// @emoji 🚀 Opens a document on `host` and subscribes to its events in one call (steps 1-2 & 4).
+pub fn open_document(
+    host: &DocumentHost,
+    document_id: &str,
+    schema: &str,
+    bindings: Vec<PersistenceBinding>,
+    actor: &str,
+) -> OpenedDocument {
+    let channels = host.open(DocumentActorConfig {
+        document_id: document_id.to_string(),
+        schema: schema.to_string(),
+        bindings,
+        watch_external: true,
+        actor: actor.to_string(),
+    });
+    let events = host.subscribe(document_id);
+    OpenedDocument { channels, events }
+}
+
+/// @emoji ✂️ Detaches and closes a document's actor (step 7's `DocumentHost` half).
+pub fn close_document(host: &DocumentHost, document_id: &str) {
+    host.send(document_id, DocumentActorMsg::Detach);
+    host.close(document_id);
+}
+
+/// @emoji 👥 Translates a `DocumentEvent::Presence` into the `ViewState.presence_peers_json` contract
+/// plugins already read (`semio_framework_core::PresencePeer` → JSON array) — the new (only) source
+/// of presence data; the deleted `presence:` backbone hack used to be it.
+pub fn presence_peers_json(event: &DocumentEvent) -> Option<String> {
+    match event {
+        DocumentEvent::Presence { peers } => serde_json::to_string(peers).ok(),
+        _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn opens_a_document_and_subscribes_to_its_events() {
+        let host = DocumentHost::new();
+        let opened = open_document(&host, "doc-1", "test.schema", vec![], "actor-1");
+        drop(opened.events);
+        close_document(&host, "doc-1");
+    }
+
+    #[test]
+    fn app_document_config_carries_the_document_ref_through() {
+        let document = OsDocumentRef { document_id: "doc-2".into(), schema: "draw.document".into() };
+        let config = app_document_config(&document, vec![], "actor-1");
+        assert_eq!(config.document_id, "doc-2");
+        assert_eq!(config.schema, "draw.document");
+    }
+
+    #[test]
+    fn presence_peers_json_only_matches_presence_events() {
+        use semio_framework_core::PresencePeer;
+        let peers = vec![PresencePeer {
+            actor: "a".into(),
+            label: Some("Ada".into()),
+            selection_json: None,
+            connected_at_ms: 0,
+            user_id: None,
+            role: None,
+        }];
+        let json = presence_peers_json(&DocumentEvent::Presence { peers: peers.clone() }).expect("json");
+        assert!(json.contains("\"actor\":\"a\""));
+        assert!(presence_peers_json(&DocumentEvent::Status(Default::default())).is_none());
+    }
+}
+// #endregion host_runtime
+}
+
 pub mod instance {
 // #region instance
 //! 📦 App instance schemas, parameters, and studio bindings.
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 pub const OS_PARAMETER_PORT_PREFIX: &str = "param.";
 
 //#region 🔖Schemas
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// @emoji 🔗 Handle to an app's own `framework/sync`-hosted vcs document — the os document never
+/// embeds app content, only this reference (mirrors `framework/sync`'s `DocumentActorConfig`).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct OsSourceDocument {
-    pub format: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub vcs_json: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub inline: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub payload_ref: Option<String>,
+pub struct OsDocumentRef {
+    pub document_id: String,
+    pub schema: String,
+}
+
+/// @emoji 🆔 Mints a fresh app document id — uuid-v7 (time-ordered), matching the id shape hub already
+/// uses for its own entities (`framework/product/os/hub/rs/bin.rs`'s `Uuid::now_v7()`).
+pub fn create_os_document_id() -> String {
+    uuid::Uuid::now_v7().to_string()
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2355,7 +2394,7 @@ pub struct OsAppInstance {
     pub app_id: String,
     pub label: String,
     pub yields: String,
-    pub source_document: OsSourceDocument,
+    pub document: OsDocumentRef,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2807,45 +2846,61 @@ pub fn register_os_fixture_json(slug: &str, json: &str) {
         .insert(slug.into(), json.into());
 }
 
-/// @emoji 📎 Resolves `fixture:` and `upstream:` payload references on a source document.
-pub fn resolve_os_source_document(
-    source: &OsSourceDocument,
-    upstream_instances: &[OsAppInstance],
-) -> OsSourceDocument {
-    if let Some(payload_ref) = source.payload_ref.as_deref() {
-        if let Some(slug) = payload_ref.strip_prefix("fixture:") {
-            if let Some(json) = os_fixture_json_registry().lock().ok().and_then(|registry| registry.get(slug).cloned()) {
-                return OsSourceDocument {
-                    inline: Some(json),
-                    payload_ref: None,
-                    ..source.clone()
-                };
-            }
-        }
-        if let Some(upstream_id) = payload_ref.strip_prefix("upstream:") {
-            if let Some(upstream) = upstream_instances.iter().find(|entry| entry.id == upstream_id) {
-                return upstream.source_document.clone();
-            }
-        }
-    }
-    source.clone()
+/// @emoji 📎 Looks up bundled fixture JSON by slug — the seed content for a freshly spawned app
+/// document. Replaces the old `OsSourceDocument.payloadRef = "fixture:…"` resolution: since app
+/// content no longer embeds in the os document, seeding now happens once, host-side, at
+/// {@link OsDocumentRef} creation time (see `host_runtime`), not on every materialize/read.
+pub fn os_fixture_json(slug: &str) -> Option<String> {
+    os_fixture_json_registry().lock().ok().and_then(|registry| registry.get(slug).cloned())
 }
 
-/// @emoji 🧩 Materializes a plugin document JSON from a studio app instance projection.
+/// @emoji 🧩 Overlays bound parameter values onto an app instance's current document projection.
+/// Content itself lives in the app's own `framework/sync`-hosted document (referenced by
+/// {@link OsDocumentRef}, read host-side and passed in as `current_document_json`) — this function
+/// no longer resolves embedded/upstream source documents; that concept was deleted with
+/// `OsSourceDocument`. Cross-instance ("upstream") dataflow through media-graph edges is deferred
+/// (see `host_runtime` doc-comment) to a follow-up that reads the upstream app's live document.
 pub fn materialize_os_app_instance_document_json(
-    instance: &OsAppInstance,
+    current_document_json: &str,
+    instance_id: &str,
     bindings: &[OsParameterFieldBinding],
     parameters: &[OsParameter],
-    upstream_instances: &[OsAppInstance],
 ) -> String {
-    let resolved = resolve_os_source_document(&instance.source_document, upstream_instances);
-    let projection = if let Some(inline) = resolved.inline {
-        serde_json::from_str::<Value>(&inline).unwrap_or_else(|_| json!({ "schema": resolved.format }))
-    } else {
-        json!({ "schema": resolved.format })
-    };
-    let with_params = apply_parameter_values_to_projection(projection, bindings, parameters, &instance.id);
+    let projection: Value = serde_json::from_str(current_document_json).unwrap_or_else(|_| json!({}));
+    let with_params = apply_parameter_values_to_projection(projection, bindings, parameters, instance_id);
     serde_json::to_string(&with_params).unwrap_or_else(|_| "{}".into())
+}
+
+/// @emoji 🔀 Host-side hook for the common case: when a bound parameter's value changes, computes the
+/// patched document JSON for every app instance with a field bound to it, keyed by document id — the
+/// host dispatches each as a snapshot replace into that app's own document store (e.g. via the plugin
+/// WIT boundary's `load-app-document`, or `framework/sync`'s document actor once the app is wired onto
+/// `DocumentHost`). This covers the "common/simple case" per the JSON-pointer overlay convention
+/// {@link apply_parameter_values_to_projection} already established — a true typed op into the bound
+/// app's own `Op` vocabulary requires that app's real (non-opaque) Op type and is left to each app's
+/// own `DocumentApp` migration (WS-F); until then this snapshot-replace path is the host's only lever.
+pub fn app_instance_document_patches_for_binding(
+    parameter_id: &str,
+    instances: &[OsAppInstance],
+    bindings: &[OsParameterFieldBinding],
+    parameters: &[OsParameter],
+    current_document_json: impl Fn(&str) -> Option<String>,
+) -> Vec<(String, String)> {
+    let bound_instance_ids: HashSet<String> = bindings
+        .iter()
+        .filter(|binding| binding.parameter_id == parameter_id)
+        .map(|binding| binding.instance_id.clone())
+        .collect();
+    instances
+        .iter()
+        .filter(|instance| bound_instance_ids.contains(&instance.id))
+        .filter_map(|instance| {
+            let current_json = current_document_json(&instance.document.document_id)?;
+            let patched =
+                materialize_os_app_instance_document_json(&current_json, &instance.id, bindings, parameters);
+            Some((instance.document.document_id.clone(), patched))
+        })
+        .collect()
 }
 //#endregion 🔖Materialize
 
@@ -2891,22 +2946,22 @@ mod tests {
     }
 
     #[test]
-    fn materializes_fixture_backed_instance_documents() {
+    fn resolves_fixture_json_by_slug() {
         register_os_fixture_json("semio.draw.json", r#"{"schema":"draw.document","id":"semio"}"#);
-        let instance = OsAppInstance {
-            id: "app-draw-1".into(),
-            program_id: "draw".into(),
-            app_id: "draw".into(),
-            label: "Draw".into(),
-            yields: "2d.drawing".into(),
-            source_document: OsSourceDocument {
-                format: "draw.document".into(),
-                vcs_json: None,
-                inline: None,
-                payload_ref: Some("fixture:semio.draw.json".into()),
-            },
-        };
-        let json = materialize_os_app_instance_document_json(&instance, &[], &[], &[]);
+        let json = os_fixture_json("semio.draw.json").expect("registered fixture");
+        let parsed: Value = serde_json::from_str(&json).expect("json");
+        assert_eq!(parsed["schema"], "draw.document");
+        assert_eq!(parsed["id"], "semio");
+    }
+
+    #[test]
+    fn materializes_instance_documents_with_parameter_overrides() {
+        let json = materialize_os_app_instance_document_json(
+            r#"{"schema":"draw.document","id":"semio"}"#,
+            "app-draw-1",
+            &[],
+            &[],
+        );
         let parsed: Value = serde_json::from_str(&json).expect("json");
         assert_eq!(parsed["schema"], "draw.document");
         assert_eq!(parsed["id"], "semio");
@@ -4484,7 +4539,7 @@ pub fn list_os_media_graph_vfs_children(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::instance::OsSourceDocument;
+    use crate::instance::OsDocumentRef;
     use crate::registry::{merge_os_program_definition, os_baseline_resource, OsPlatformAppInput, OsPlatformInput};
 
     #[test]
@@ -4619,12 +4674,7 @@ mod tests {
             app_id: "draw".into(),
             label: "Draw".into(),
             yields: os_app_primary_output_kind(&registration),
-            source_document: OsSourceDocument {
-                format: "draw.document".into(),
-                vcs_json: None,
-                inline: Some("{}".into()),
-                payload_ref: None,
-            },
+            document: OsDocumentRef { document_id: "doc-app-1".into(), schema: "draw.document".into() },
         };
         let mut graph = empty_media_graph();
         graph.nodes.push(media_graph_node_for_instance(
@@ -4664,7 +4714,7 @@ mod tests {
             app_id: "draw".into(),
             label: "Draw".into(),
             yields: os_app_primary_output_kind(&registration),
-            source_document: OsSourceDocument { format: "draw.document".into(), vcs_json: None, inline: Some("{}".into()), payload_ref: None },
+            document: OsDocumentRef { document_id: "doc-app-vfs-1".into(), schema: "draw.document".into() },
         };
         let graph = empty_media_graph();
         let inputs_folder = os_media_graph_vfs_inputs_folder_id(&instance.id);
@@ -4750,7 +4800,8 @@ pub mod registry {
 //! 🗂️ Plugin manifest registry and OS program/resource catalog.
 
 use crate::instance::{media_port_id_for_spec, OsParameterFieldSpec};
-use semio_framework_core::{AppDefinition, ModeDefinition, ProgramDefinition, SurfaceKind, WindowKindDefinition};
+use semio_framework_core::{AppDefinition, ModeDefinition, ProgramDefinition, WindowKindDefinition};
+use ui_wgpu::SurfaceKind;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
@@ -5178,7 +5229,7 @@ pub fn resolve_os_app_definition(
         body_key: registration.component_kind.clone(),
         surface_kind: SurfaceKind::Canvas2d,
         icon_id: None,
-        options: semio_framework_core::WindowOptions::default(),
+        options: ui_wgpu::WindowOptions::default(),
         actions: Vec::new(),
         params_schema: None,
         document_projection_schema: None,
@@ -5306,18 +5357,18 @@ pub use host::{
     apply_os_operation, create_empty_os_document, create_os_studio, default_os_projection,
     delete_os_studio, import_os_studio_from_json, list_os_studio_catalog_entries,
     load_os_studio_document, materialize_os_projection, os_document_from_json, os_document_to_json,
-    os_presence_uri, read_os_presence_peers, seed_os_studio_catalog_if_empty, write_os_presence,
+    seed_os_studio_catalog_if_empty,
     LoadedPlugin, OsBackbonePort, OsDiff, OsDocument, OsEnvelope,
-    OsOp, OsPresencePeer, OsProjection, OsStore, OsStudioCatalogEntry, OsVcs, PluginHost, PluginHotSwapEvent,
-    PluginSupervisorState, OS_HOME_VFS_ROOT_ID, OS_PRESENCE_STALE_MS, OS_STUDIO_BACKBONE_URI_PREFIX,
+    OsOp, OsProjection, OsStore, OsStudioCatalogEntry, OsVcs, PluginHost, PluginHotSwapEvent,
+    PluginSupervisorState, OS_HOME_VFS_ROOT_ID, OS_STUDIO_BACKBONE_URI_PREFIX,
 };
 pub use instance::{
-    apply_parameter_values_to_projection, create_default_os_parameter, create_os_id,
+    apply_parameter_values_to_projection, create_default_os_parameter, create_os_document_id, create_os_id,
     is_parameter_port_id, media_port_id_for_spec, media_port_spec_id, os_parameter_types_compatible,
     os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter,
     resolve_parameter_values_for_instance, set_json_pointer_value, materialize_os_app_instance_document_json,
-    register_os_fixture_json, resolve_os_source_document, OsAppInstance, OsInstanceState,
-    OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType, OsSourceDocument,
+    os_fixture_json, register_os_fixture_json, OsAppInstance, OsDocumentRef, OsInstanceState,
+    OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType,
     OS_PARAMETER_PORT_PREFIX,
 };
 pub use media_export_raster::{
@@ -5351,6 +5402,7 @@ pub use registry::{
     OS_RESOURCE_KIND_IDS,
 };
 pub use semio_framework_core::*;
+pub use ui_wgpu::*;
 pub use vcs::{
     document_backbone_ref, set_host_backbone_port, Author, Checkpoint, DocumentBackboneRef, DocumentVcsCommand,
     LocalStorageBackbonePort, MemoryBackbonePort, VcsError,
