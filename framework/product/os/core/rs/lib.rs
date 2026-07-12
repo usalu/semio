@@ -27,9 +27,8 @@ use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
 use vcs::{
-    create_document_vcs_envelope, default_temporary_backbone_ref, document_backbone_ref,
-    materialize_document_projection, BackboneKind, DocumentBackboneRef, DocumentVcs,
-    DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff, VcsError,
+    create_document_vcs_envelope, document_backbone_ref, materialize_document_projection, DocumentBackboneRef,
+    DocumentVcs, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff, VcsError,
 };
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -781,7 +780,7 @@ pub fn create_empty_os_document(id: &str, name: &str) -> OsDocument {
         )
         .vcs,
         applied_edit_ids: Vec::new(),
-        backbone: Some(default_temporary_backbone_ref(id)),
+        backbone: None,
     }
 }
 
@@ -1296,10 +1295,7 @@ pub fn materialize_os_projection(
         schema: document.schema.clone(),
         id: document.id.clone(),
         vcs: document.vcs.clone(),
-        backbone: document
-            .backbone
-            .clone()
-            .or_else(|| Some(default_temporary_backbone_ref(&document.id))),
+        backbone: document.backbone.clone(),
         active_alternative_id: document.vcs.initial_projection.active_alternative_id.clone(),
     };
     materialize_document_projection(&envelope, applied_edit_ids)
@@ -1442,20 +1438,17 @@ impl OsStore {
         }])
     }
 
-    pub fn sync_backbone(&self) -> Result<(), VcsError> {
-        self.inner.sync_backbone()
-    }
-
-    pub fn load_backbone(&mut self) -> Result<(), VcsError> {
-        self.inner.load_backbone()
+    /// @emoji 📡 Pumps any queued inbound backbone messages into the edit timeline.
+    pub fn tick(&mut self) -> Result<bool, VcsError> {
+        self.inner.tick()
     }
 
     pub fn attach_backbone(&mut self, uri: &str) -> Result<(), VcsError> {
-        self.inner.attach_backbone(uri)
+        self.inner.attach_backbone_uri(uri)
     }
 
     pub fn detach_backbone(&mut self) {
-        self.inner.detach_backbone()
+        self.inner.detach_backbone();
     }
 
     pub fn backbone_ref(&self) -> Option<&DocumentBackboneRef> {
@@ -1544,7 +1537,7 @@ pub fn read_os_presence_peers(
 
 //#region 🔖StudioCatalog
 pub const OS_HOME_VFS_ROOT_ID: &str = "os-home-root";
-pub const OS_STUDIO_BACKBONE_URI_PREFIX: &str = "temp://studio/";
+pub const OS_STUDIO_BACKBONE_URI_PREFIX: &str = "studio://";
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -2221,15 +2214,18 @@ mod tests {
 
 pub mod backbone {
 // #region backbone
-//! 🗄️ Trusted host-side backbone ports for local studio storage.
+//! 🗄️ Trusted host-side backbone ports for local studio storage — reads/writes the raw persisted
+//! json directly, bypassing the duplex `Backbone` channel since there is no other process here.
 
 use crate::host::OsBackbonePort;
 use std::sync::Arc;
-use vcs::{resolve_backbone, MemoryBackbonePort, VcsError};
+use vcs::{BackboneStorage, MemoryBackbonePort, VcsError};
 
 enum StudioPortKind {
-    File(String),
-    Folder(String),
+    #[cfg(not(target_arch = "wasm32"))]
+    File(String, vcs::FileJsonStorage),
+    #[cfg(not(target_arch = "wasm32"))]
+    Folder(String, vcs::FolderSqliteStorage),
 }
 
 pub struct StudioBackbonePort {
@@ -2238,20 +2234,26 @@ pub struct StudioBackbonePort {
 }
 
 impl StudioBackbonePort {
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn file(file_path: &str) -> Result<Self, VcsError> {
         let uri = format!("file://{file_path}");
-        resolve_backbone(&uri)?;
         Ok(Self {
-            kind: Some(StudioPortKind::File(uri)),
+            kind: Some(StudioPortKind::File(
+                uri,
+                vcs::FileJsonStorage::new(std::path::PathBuf::from(file_path)),
+            )),
             memory: MemoryBackbonePort::new(),
         })
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn folder(folder_path: &str) -> Result<Self, VcsError> {
         let uri = format!("folder://{folder_path}");
-        resolve_backbone(&uri)?;
         Ok(Self {
-            kind: Some(StudioPortKind::Folder(uri)),
+            kind: Some(StudioPortKind::Folder(
+                uri,
+                vcs::FolderSqliteStorage::new(std::path::PathBuf::from(folder_path)),
+            )),
             memory: MemoryBackbonePort::new(),
         })
     }
@@ -2261,12 +2263,19 @@ impl OsBackbonePort for StudioBackbonePort {
     fn read(&self, uri: &str) -> Result<String, VcsError> {
         if let Some(kind) = &self.kind {
             match kind {
-                StudioPortKind::File(file_uri) if uri == file_uri => {
-                    return resolve_backbone(file_uri)?.load();
+                #[cfg(not(target_arch = "wasm32"))]
+                StudioPortKind::File(file_uri, storage) if uri == file_uri => {
+                    return storage
+                        .read()?
+                        .ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")));
                 }
-                StudioPortKind::Folder(folder_uri) if uri == folder_uri => {
-                    return resolve_backbone(folder_uri)?.load();
+                #[cfg(not(target_arch = "wasm32"))]
+                StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {
+                    return storage
+                        .read()?
+                        .ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")));
                 }
+                #[cfg(not(target_arch = "wasm32"))]
                 _ => {}
             }
         }
@@ -2276,12 +2285,15 @@ impl OsBackbonePort for StudioBackbonePort {
     fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError> {
         if let Some(kind) = &self.kind {
             match kind {
-                StudioPortKind::File(file_uri) if uri == file_uri => {
-                    return resolve_backbone(file_uri)?.sync(payload);
+                #[cfg(not(target_arch = "wasm32"))]
+                StudioPortKind::File(file_uri, storage) if uri == file_uri => {
+                    return storage.write(payload);
                 }
-                StudioPortKind::Folder(folder_uri) if uri == folder_uri => {
-                    return resolve_backbone(folder_uri)?.sync(payload);
+                #[cfg(not(target_arch = "wasm32"))]
+                StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {
+                    return storage.write(payload);
                 }
+                #[cfg(not(target_arch = "wasm32"))]
                 _ => {}
             }
         }
@@ -5196,7 +5208,6 @@ pub use registry::{
 };
 pub use semio_framework_core::*;
 pub use vcs::{
-    Author, BackboneKind, Checkpoint, DocumentBackboneRef, DocumentVcsCommand, LocalStorageBackbonePort,
-    MemoryBackbonePort, VcsError, backbone_kind_from_uri, default_temporary_backbone_ref, document_backbone_ref,
-    set_host_backbone_port,
+    document_backbone_ref, set_host_backbone_port, Author, Checkpoint, DocumentBackboneRef, DocumentVcsCommand,
+    LocalStorageBackbonePort, MemoryBackbonePort, VcsError,
 };

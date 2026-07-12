@@ -22,6 +22,7 @@ import {
 import { SelectionMarquee } from "@semio-tech/ui-react";
 import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
+import { VcsHistoryHost } from "./components/vcs-history-host.tsx";
 import { TextEditorHost, buildTextEditorContextMenuItems, lineRangeAt, multiSpanReplace } from "./components/text-editor-host.tsx";
 import { World3dHost } from "./components/world-3d-host.tsx";
 import {
@@ -170,6 +171,19 @@ describe("framework renderer types", () => {
       },
     };
     expect(node.componentKind).toBe("canvas-2d");
+  });
+
+  it("accepts vcs-history component scene nodes", () => {
+    const node: UiNode = {
+      type: "componentScene",
+      surfaceId: "vcs.play.history",
+      controllerId: "vcs-play",
+      componentKind: "vcs-history",
+      vcsHistory: {
+        columnsJson: "[]",
+      },
+    };
+    expect(node.componentKind).toBe("vcs-history");
   });
 });
 
@@ -879,6 +893,60 @@ describe("framework renderer hosts", () => {
     );
     expect(markup).toContain("semio-table-host");
     expect(markup).toContain("Draw");
+  });
+
+  it("renders vcs history host with an ancestor graph fork", () => {
+    const columns = [
+      {
+        checkpointId: "c3",
+        timestamp: "3",
+        labels: ["feature-b"],
+        authors: [],
+        parentCheckpointId: "c2",
+        description: "branch b",
+        lane: 2,
+        alternativeIds: ["b"],
+      },
+      {
+        checkpointId: "c2",
+        timestamp: "2",
+        labels: ["feature-a"],
+        authors: [],
+        parentCheckpointId: "c1",
+        description: "branch a",
+        lane: 1,
+        alternativeIds: ["a"],
+      },
+      {
+        checkpointId: "c1",
+        timestamp: "1",
+        labels: ["main"],
+        authors: [],
+        description: "root",
+        lane: 0,
+        alternativeIds: [],
+      },
+    ];
+    const markup = renderToStaticMarkup(
+      createElement(VcsHistoryHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "vcs.play.history",
+          controllerId: "vcs-play",
+          componentKind: "vcs-history",
+          vcsHistory: {
+            columnsJson: JSON.stringify(columns),
+          },
+        },
+        onAction: noopAction,
+      }),
+    );
+    expect(markup).toContain("semio-vcs-history-host");
+    expect(markup).toContain("vcs-history-table");
+    expect(markup).toContain('d="M ');
+    expect(markup.match(/<circle /g)?.length).toBe(3);
+    expect(markup).toContain("branch b");
+    expect(markup).toContain("feature-b");
   });
 
   it("renders raster host canvas surface from document sync scene", () => {

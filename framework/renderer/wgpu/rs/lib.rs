@@ -10542,10 +10542,6 @@ impl ShellState {
                 .unwrap_or_default();
         }
         self.active_tool_id = find_active_tool_id(&self.active_tools);
-        let document_id = format!("{}-{}", session.plugin_id, session.instance_id);
-        if self.sync_backbone_uri.is_none() {
-            self.sync_backbone_uri = Some(format!("temp://{document_id}"));
-        }
         self.active_tools.extend(framework_sync_tools(self.sync_backbone_uri.as_deref()));
         self.window_engagements = plugin
             .window_engagements(session.instance_id, &view_state)

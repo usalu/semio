@@ -25,6 +25,7 @@ struct HostState {
     table: ResourceTable,
     granted_capabilities: Vec<CapabilityRequirement>,
     plugin_id: String,
+    backbones: HashMap<String, Box<dyn vcs::Backbone>>,
 }
 
 impl WasiView for HostState {
@@ -44,6 +45,16 @@ impl HostState {
                 && cap.rights == rights
                 && matches!(cap.scope, Scope::Plugin | Scope::Global)
         })
+    }
+
+    /// @emoji 🔌 Resolves (and caches) the real, native-side backbone for a plugin-attached uri —
+    /// the plugin only ever sees an opaque channel; this host process owns the actual sync endpoint.
+    fn backbone_for(&mut self, uri: &str) -> Result<&mut Box<dyn vcs::Backbone>, String> {
+        if !self.backbones.contains_key(uri) {
+            let backbone = vcs::resolve_backbone(uri).map_err(|error| error.to_string())?;
+            self.backbones.insert(uri.to_string(), backbone);
+        }
+        Ok(self.backbones.get_mut(uri).expect("just inserted"))
     }
 }
 
@@ -83,20 +94,24 @@ impl semio::framework::host::Host for HostState {
         Err("network-fetch not implemented".into())
     }
 
-    fn backbone_read(&mut self, uri: String) -> Result<String, String> {
-        if !self.has_backbone_access(Rights::Read) {
-            return Err("backbone read capability missing".into());
-        }
-        let _ = uri;
-        Ok(String::new())
-    }
-
-    fn backbone_write(&mut self, uri: String, payload: String) -> Result<(), String> {
+    fn backbone_send(&mut self, uri: String, message_json: String) -> Result<(), String> {
         if !self.has_backbone_access(Rights::Write) {
             return Err("backbone write capability missing".into());
         }
-        let _ = (uri, payload);
-        Ok(())
+        let message: vcs::BackboneMessage =
+            serde_json::from_str(&message_json).map_err(|error| error.to_string())?;
+        self.backbone_for(&uri)?.send(message).map_err(|error| error.to_string())
+    }
+
+    fn backbone_poll(&mut self, uri: String) -> Result<Vec<String>, String> {
+        if !self.has_backbone_access(Rights::Read) {
+            return Err("backbone read capability missing".into());
+        }
+        let messages = self.backbone_for(&uri)?.receive().map_err(|error| error.to_string())?;
+        messages
+            .into_iter()
+            .map(|message| serde_json::to_string(&message).map_err(|error| error.to_string()))
+            .collect()
     }
 }
 //#endregion 🔖HostState
@@ -147,6 +162,7 @@ impl WasmPluginRuntime {
             table: ResourceTable::new(),
             granted_capabilities: manifest.capabilities.clone(),
             plugin_id: plugin_id.to_string(),
+            backbones: HashMap::new(),
         }
     }
 

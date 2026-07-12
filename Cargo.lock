@@ -7386,6 +7386,7 @@ dependencies = [
  "semio-framework-core",
  "serde",
  "serde_json",
+ "vcs",
  "wasmtime",
  "wasmtime-wasi",
 ]

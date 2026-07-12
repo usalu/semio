@@ -1,10 +1,10 @@
 //! 🗂️ VCS plugin — declarative version-control play app bundled as a hot-swappable WASM component.
 
-use semio_framework_plugin::{SurfaceKind, 
-    build_table_scene, build_text_editor_scene, create_default_layout, ui_inspector_readonly_field,
-    ui_stack_vertical, ui_text, App, ActionDescriptor, PanelGroup, PluginApp, PluginBundle, TableScene, TextEditorScene,
-    UiControlNode, UiFieldNode, UiInputNode, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
-    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+use semio_framework_plugin::{SurfaceKind,
+    build_vcs_history_scene, create_default_layout, ui_inspector_readonly_field,
+    ui_stack_vertical, ui_text, App, ActionDescriptor, PanelGroup, PluginApp, PluginBundle,
+    UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+    VcsHistoryScene, ViewState, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -20,7 +20,6 @@ const VCS_PLAY_BODY_EDITOR: &str = "vcs.play.editor";
 const VCS_PLAY_BODY_HISTORY: &str = "vcs.play.history";
 const VCS_PLAY_BODY_DOCUMENT: &str = "vcs.play.document";
 const VCS_PLAY_BODY_INSPECTION: &str = "vcs.play.inspection";
-const VCS_PLAY_SURFACE_EDITOR: &str = "vcs.play.editor";
 const VCS_PLAY_SURFACE_HISTORY: &str = "vcs.play.history";
 const VCS_PLAY_WINDOW_EDITOR: &str = "vcs-editor";
 const VCS_PLAY_WINDOW_HISTORY: &str = "vcs-history";
@@ -179,6 +178,10 @@ struct VcsPlayEnvelope {
     applied_edit_ids: Vec<String>,
     #[serde(default)]
     selected_checkpoint_ids: Vec<String>,
+    /// @emoji 🧭 Checkout position, since the store is reconstructed fresh from this JSON document
+    /// on every action call and would otherwise reset to the latest checkpoint on every dispatch.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    current_checkpoint_id: Option<String>,
 }
 
 fn default_envelope() -> VcsPlayEnvelope {
@@ -193,6 +196,7 @@ fn default_envelope() -> VcsPlayEnvelope {
         envelope: store.envelope().clone(),
         applied_edit_ids: store.applied_edit_ids().to_vec(),
         selected_checkpoint_ids: Vec::new(),
+        current_checkpoint_id: store.current_checkpoint_id().map(str::to_string),
     }
 }
 
@@ -215,6 +219,7 @@ fn vcs_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 fn store_from_envelope(envelope: &VcsPlayEnvelope) -> VcsDemoStore {
     let mut store = VcsDemoStore::new(envelope.envelope.clone());
     store.set_envelope(envelope.envelope.clone(), envelope.applied_edit_ids.clone());
+    store.set_current_checkpoint_id(envelope.current_checkpoint_id.clone());
     store
 }
 
@@ -223,6 +228,7 @@ fn sync_store_to_envelope(store: &VcsDemoStore, selected: &[String]) -> VcsPlayE
         envelope: store.envelope().clone(),
         applied_edit_ids: store.applied_edit_ids().to_vec(),
         selected_checkpoint_ids: selected.to_vec(),
+        current_checkpoint_id: store.current_checkpoint_id().map(str::to_string),
     }
 }
 
@@ -263,36 +269,28 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
     let alice = authors[0].clone();
     let bob = authors[1].clone();
     let carol = authors[2].clone();
+    let last_checkpoint_id =
+        |store: &VcsDemoStore| -> String { store.envelope().vcs.checkpoints.last().expect("checkpoint just committed").id.clone() };
 
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![
-            VcsDemoOp::SetCounter { counter: 1 },
-            VcsDemoOp::SetTitle {
-                title: "VCS Demo".into(),
-            },
-        ],
+        operations: vec![VcsDemoOp::SetCounter { counter: 1 }, VcsDemoOp::SetTitle { title: "VCS Demo".into() }],
         description: Some("bootstrap".into()),
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
         message: Some("Bootstrap".into()),
         authors: vec![alice.clone()],
     });
+    let c1 = last_checkpoint_id(store);
 
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![
-            VcsDemoOp::SetNotes {
-                notes: "main line".into(),
-            },
-            VcsDemoOp::SetStatus {
-                status: "draft".into(),
-            },
-        ],
+        operations: vec![VcsDemoOp::SetNotes { notes: "main line".into() }, VcsDemoOp::SetStatus { status: "draft".into() }],
         description: None,
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
         message: Some("Annotate main draft".into()),
         authors: vec![alice.clone(), bob.clone()],
     });
+    let c2 = last_checkpoint_id(store);
 
     let _ = store.dispatch(DocumentVcsCommand::Apply {
         operations: vec![VcsDemoOp::SetCounter { counter: 2 }],
@@ -302,88 +300,139 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
         message: Some("Main milestone".into()),
         authors: vec![alice.clone(), bob.clone(), carol.clone()],
     });
+    let c3 = last_checkpoint_id(store);
 
-    let _ = store.dispatch(DocumentVcsCommand::CreateAlternative {
-        name: "feature-a".into(),
-    });
+    let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c3.clone() });
+    let _ = store.dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-a".into() });
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![
-            VcsDemoOp::SetTitle {
-                title: "Feature A".into(),
-            },
-            VcsDemoOp::AddTag {
-                tag: "feature-a".into(),
-            },
-        ],
+        operations: vec![VcsDemoOp::SetTitle { title: "Feature A".into() }, VcsDemoOp::AddTag { tag: "feature-a".into() }],
         description: None,
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
         message: Some("Start feature A".into()),
         authors: vec![alice.clone()],
     });
+    let c4 = last_checkpoint_id(store);
+    let feature_a_id = store.envelope().active_alternative_id.clone().expect("feature-a alternative id");
 
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![VcsDemoOp::SetCounter { counter: 3 }],
+        operations: vec![VcsDemoOp::SetCounter { counter: 10 }],
+        description: None,
+    });
+    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+        message: Some("Feature A progress".into()),
+        authors: vec![alice.clone(), bob.clone()],
+    });
+
+    let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c3.clone() });
+    let _ = store.dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-b".into() });
+    let _ = store.dispatch(DocumentVcsCommand::Apply {
+        operations: vec![VcsDemoOp::SetTitle { title: "Feature B".into() }, VcsDemoOp::SetNotes { notes: "branch b".into() }],
+        description: None,
+    });
+    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+        message: Some("Start feature B".into()),
+        authors: vec![bob.clone()],
+    });
+    let feature_b_id = store.envelope().active_alternative_id.clone().expect("feature-b alternative id");
+
+    let _ = store.dispatch(DocumentVcsCommand::Apply {
+        operations: vec![VcsDemoOp::SetCounter { counter: 20 }],
+        description: None,
+    });
+    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+        message: Some("Feature B try".into()),
+        authors: vec![bob.clone(), carol.clone()],
+    });
+
+    let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c3.clone() });
+    let _ = store.dispatch(DocumentVcsCommand::Apply {
+        operations: vec![VcsDemoOp::SetStatus { status: "active".into() }],
+        description: None,
+    });
+    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+        message: Some("Resume main".into()),
+        authors: vec![carol.clone()],
+    });
+    let c8 = last_checkpoint_id(store);
+
+    let _ = store.dispatch(DocumentVcsCommand::SwitchAlternative { alternative_id: feature_a_id.clone() });
+    let _ = store.dispatch(DocumentVcsCommand::Apply {
+        operations: vec![VcsDemoOp::SetCounter { counter: 11 }, VcsDemoOp::AddTag { tag: "wip".into() }],
+        description: None,
+    });
+    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+        message: Some("Feature A sprint".into()),
+        authors: vec![alice.clone(), carol.clone()],
+    });
+
+    let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c4 });
+    let _ = store.dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-a-hotfix".into() });
+    let _ = store.dispatch(DocumentVcsCommand::Apply {
+        operations: vec![VcsDemoOp::SetStatus { status: "hotfix".into() }],
+        description: None,
+    });
+    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+        message: Some("Hotfix off feature A".into()),
+        authors: vec![bob.clone()],
+    });
+
+    let _ = store.dispatch(DocumentVcsCommand::SwitchAlternative { alternative_id: feature_b_id });
+    let _ = store.dispatch(DocumentVcsCommand::Apply {
+        operations: vec![VcsDemoOp::AddTag { tag: "review".into() }],
+        description: None,
+    });
+    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+        message: Some("Feature B review".into()),
+        authors: vec![bob.clone()],
+    });
+
+    let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c8 });
+    let _ = store.dispatch(DocumentVcsCommand::Apply {
+        operations: vec![
+            VcsDemoOp::SetCounter { counter: 3 },
+            VcsDemoOp::SetNotes { notes: "main polish".into() },
+            VcsDemoOp::AddTag { tag: "release".into() },
+        ],
+        description: None,
+    });
+    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+        message: Some("Main batch polish".into()),
+        authors: vec![alice.clone(), bob.clone(), carol.clone()],
+    });
+
+    let _ = store.dispatch(DocumentVcsCommand::Apply {
+        operations: vec![VcsDemoOp::SetStatus { status: "done".into() }],
         description: None,
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
         message: Some("Main release".into()),
-        authors: vec![alice],
+        authors: vec![alice.clone()],
+    });
+
+    let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c2 });
+    let _ = store.dispatch(DocumentVcsCommand::CreateAlternative { name: "docs".into() });
+    let _ = store.dispatch(DocumentVcsCommand::Apply {
+        operations: vec![VcsDemoOp::SetNotes { notes: "documentation pass".into() }],
+        description: None,
+    });
+    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+        message: Some("Docs branch".into()),
+        authors: vec![carol.clone()],
+    });
+
+    let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c1 });
+    let _ = store.dispatch(DocumentVcsCommand::CreateAlternative { name: "spike".into() });
+    let _ = store.dispatch(DocumentVcsCommand::Apply {
+        operations: vec![VcsDemoOp::SetTitle { title: "Spike prototype".into() }],
+        description: None,
+    });
+    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+        message: Some("Spike experiment".into()),
+        authors: vec![bob, carol],
     });
 }
 //#endregion 🔖Envelope
-
-//#region 🔖History
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct HistoryRow {
-    checkpoint_id: String,
-    timestamp: String,
-    labels: Vec<String>,
-    authors: Vec<vcs::Author>,
-    parent_checkpoint_id: Option<String>,
-    description: Option<String>,
-    lane: usize,
-}
-
-fn history_rows(envelope: &VcsDemoEnvelope) -> Vec<HistoryRow> {
-    envelope
-        .vcs
-        .checkpoints
-        .iter()
-        .enumerate()
-        .rev()
-        .map(|(index, checkpoint)| {
-            let alternative_ids: Vec<String> = envelope
-                .vcs
-                .alternatives
-                .iter()
-                .filter(|alt| alt.checkpoint_ids.contains(&checkpoint.id))
-                .map(|alt| alt.id.clone())
-                .collect();
-            let mut labels: Vec<String> = envelope
-                .vcs
-                .alternatives
-                .iter()
-                .filter(|alt| alternative_ids.contains(&alt.id))
-                .map(|alt| alt.name.clone())
-                .collect();
-            if labels.is_empty() && index == 0 {
-                labels.push("main".into());
-            }
-            HistoryRow {
-                checkpoint_id: checkpoint.id.clone(),
-                timestamp: checkpoint.timestamp.clone(),
-                labels,
-                authors: checkpoint.authors.clone(),
-                parent_checkpoint_id: checkpoint.parent_id.clone(),
-                description: checkpoint.message.clone(),
-                lane: alternative_ids.len(),
-            }
-        })
-        .collect()
-}
-//#endregion 🔖History
 
 //#region 🔖Panels
 fn build_document_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNode {
@@ -566,32 +615,52 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
 //#endregion 🔖Panels
 
 //#region 🔖Render
+fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
+    UiNode::Stack(UiStackNode {
+        direction: "horizontal".into(),
+        gap: Some("tight".into()),
+        padding: Some("none".into()),
+        id: None,
+        selected: None,
+        activate: None,
+        children,
+        drop_action: None,
+    })
+}
+
+fn editor_button(id: &str, icon_id: &str, label: &str, action: &str) -> UiNode {
+    UiNode::Button(UiButtonNode {
+        id: Some(format!("vcs-play-editor.{id}")),
+        icon_id: icon_id.into(),
+        label: label.into(),
+        action: vcs_action(action, None),
+        style: None,
+        disabled: None,
+    })
+}
+
 fn render_editor(projection: &VcsDemoProjection) -> UiNode {
-    build_text_editor_scene(
-        VCS_PLAY_SURFACE_EDITOR,
-        VCS_PLAY_APP_ID,
-        TextEditorScene::base(
-            serde_json::to_string_pretty(projection).unwrap_or_else(|_| "{}".into()),
-            Some("json".into()),
-            None,
-        ),
-    )
+    let buttons = ui_stack_horizontal(vec![
+        editor_button("increment", "plus", &format!("+ Counter ({})", projection.counter), "incrementCounter"),
+        editor_button("commit", "git-commit", "Commit checkpoint", "commitCheckpoint"),
+        editor_button("undo", "undo", "Undo", "undo"),
+        editor_button("redo", "redo", "Redo", "redo"),
+        editor_button("new-alternative", "git-branch", "New alternative", "createAlternative"),
+    ]);
+    let summary = ui_stack_vertical(vec![
+        ui_text(format!("{} · counter {}", projection.title, projection.counter)),
+        ui_text(if projection.notes.is_empty() { "—".to_string() } else { projection.notes.clone() }),
+    ]);
+    ui_stack_vertical(vec![buttons, summary])
 }
 
 fn render_history(envelope: &VcsDemoEnvelope) -> UiNode {
-    let rows = history_rows(envelope);
-    build_table_scene(
+    let columns = vcs::build_history_columns(envelope);
+    build_vcs_history_scene(
         VCS_PLAY_SURFACE_HISTORY,
         VCS_PLAY_APP_ID,
-        TableScene {
-            columns_json: json!([
-                {"id":"checkpointId","label":"Checkpoint"},
-                {"id":"timestamp","label":"When"},
-                {"id":"labels","label":"Labels"},
-                {"id":"description","label":"Message"}
-            ])
-            .to_string(),
-            rows_json: serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into()),
+        VcsHistoryScene {
+            columns_json: serde_json::to_string(&columns).unwrap_or_else(|_| "[]".into()),
         },
     )
 }
@@ -753,11 +822,15 @@ fn create_vcs_app() -> App {
             .icon_id("git-branch")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(VCS_PLAY_WINDOW_EDITOR, "Editor", VCS_PLAY_BODY_EDITOR, SurfaceKind::TextEditor)
-            .window_kind(VCS_PLAY_WINDOW_HISTORY, "History", VCS_PLAY_BODY_HISTORY, SurfaceKind::Canvas2d)
+            .window_kind(VCS_PLAY_WINDOW_EDITOR, "Editor", VCS_PLAY_BODY_EDITOR, SurfaceKind::Canvas2d)
+            .window_kind(VCS_PLAY_WINDOW_HISTORY, "History", VCS_PLAY_BODY_HISTORY, SurfaceKind::VcsHistory)
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, VCS_PLAY_BODY_DOCUMENT)
             .panel_tab("framework.panel.inspection", "Inspection", PanelGroup::Details, VCS_PLAY_BODY_INSPECTION)
             .operation("incrementCounter", "Increment Counter")
+            .operation("commitCheckpoint", "Commit Checkpoint")
+            .operation("createAlternative", "Create Alternative")
+            .operation("switchAlternative", "Switch Alternative")
+            .operation("checkoutCheckpoint", "Checkout Checkpoint")
             .operation("patchProjection", "Patch Projection")
             .operation("textEdit", "Edit Text")
             .operation("edit", "Edit")
@@ -798,23 +871,91 @@ mod tests {
         let document = app.initial_document_json();
         let node = app.render(VCS_PLAY_BODY_EDITOR, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("text-editor"));
+        assert!(!json.contains("text-editor"), "editor must no longer be a raw JSON editor: {json}");
+        for action in ["incrementCounter", "commitCheckpoint", "undo", "redo", "createAlternative"] {
+            assert!(json.contains(action), "missing editor button for {action}: {json}");
+        }
+        assert!(json.contains(" · counter "), "missing title/counter summary: {json}");
     }
 
     #[test]
-    fn renders_history_table() {
+    fn renders_history_scene() {
         let app = VcsPlayApp;
         let document = app.initial_document_json();
         let node = app.render(VCS_PLAY_BODY_HISTORY, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("table"));
+        assert!(json.contains("vcs-history"), "missing vcs-history surface kind: {json}");
+        assert!(json.contains("lane"), "missing lane field in history columns: {json}");
+        assert!(!json.contains("\"table\""), "history must not fall back to a generic table: {json}");
     }
 
     #[test]
     fn seeded_history_has_checkpoints() {
         let envelope = default_envelope();
-        assert!(!envelope.envelope.vcs.checkpoints.is_empty());
-        assert!(!envelope.envelope.vcs.alternatives.is_empty());
+        assert!(envelope.envelope.vcs.alternatives.len() >= 5, "expected >=5 alternatives, got {}", envelope.envelope.vcs.alternatives.len());
+        assert!(envelope.envelope.vcs.checkpoints.len() >= 14, "expected >=14 checkpoints, got {}", envelope.envelope.vcs.checkpoints.len());
+        let mut children_by_parent: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+        for checkpoint in &envelope.envelope.vcs.checkpoints {
+            if let Some(parent_id) = &checkpoint.parent_id {
+                *children_by_parent.entry(parent_id.clone()).or_insert(0) += 1;
+            }
+        }
+        assert!(children_by_parent.values().any(|count| *count >= 2), "seed must contain a real fork (a checkpoint with >=2 children)");
+        let lanes: std::collections::HashSet<usize> =
+            vcs::build_history_columns(&envelope.envelope).into_iter().map(|column| column.lane).collect();
+        assert!(lanes.len() >= 3, "expected >=3 distinct swimlanes, got {lanes:?}");
+    }
+
+    #[test]
+    fn checkout_then_commit_forks_across_actions() {
+        let mut app = VcsPlayApp;
+        let document = app.initial_document_json();
+        let play = parse_envelope(&document);
+        let root_checkpoint_id = play.envelope.vcs.checkpoints[0].id.clone();
+        let children_of_root_before = play
+            .envelope
+            .vcs
+            .checkpoints
+            .iter()
+            .filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(root_checkpoint_id.as_str()))
+            .count();
+
+        let checkout_ops = app.handle_action_patch_ops(
+            "checkoutCheckpoint",
+            Some(&json!({ "checkpointId": root_checkpoint_id })),
+            &document,
+            &ViewState::default(),
+        );
+        assert_eq!(checkout_ops.len(), 1);
+        let payload: Value = serde_json::from_str(&checkout_ops[0]).unwrap();
+        let after_checkout = serde_json::to_string(&payload["document"]).unwrap();
+
+        let increment_ops = app.handle_action_patch_ops("incrementCounter", None, &after_checkout, &ViewState::default());
+        assert_eq!(increment_ops.len(), 1);
+        let payload: Value = serde_json::from_str(&increment_ops[0]).unwrap();
+        let after_increment = serde_json::to_string(&payload["document"]).unwrap();
+
+        let commit_ops = app.handle_action_patch_ops(
+            "commitCheckpoint",
+            Some(&json!({ "message": "forked from root" })),
+            &after_increment,
+            &ViewState::default(),
+        );
+        assert_eq!(commit_ops.len(), 1);
+        let payload: Value = serde_json::from_str(&commit_ops[0]).unwrap();
+        let next: VcsPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        let children_of_root_after = next
+            .envelope
+            .vcs
+            .checkpoints
+            .iter()
+            .filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(root_checkpoint_id.as_str()))
+            .count();
+        assert_eq!(
+            children_of_root_after,
+            children_of_root_before + 1,
+            "checking out the root then committing through actions must add a new fork of the root, not extend the trunk"
+        );
     }
 
     #[test]

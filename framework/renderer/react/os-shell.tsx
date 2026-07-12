@@ -2774,6 +2774,11 @@ export type NoteCanvasScene = {
   readonly interactive: boolean;
 };
 
+/** @emoji 🗄️ A checkpoint ancestor-graph history view. `columnsJson` is a `HistoryColumn[]` array, newest checkpoint first. */
+export type VcsHistoryScene = {
+  readonly columnsJson: string;
+};
+
 export type UiExternalSlotNode = {
   readonly type: "externalSlot";
   readonly pluginId: string;
@@ -2800,6 +2805,7 @@ export type UiComponentSceneNode = {
   readonly puzzle2dBoard?: Puzzle2dBoardScene;
   readonly iconRender?: IconRenderScene;
   readonly noteCanvas?: NoteCanvasScene;
+  readonly vcsHistory?: VcsHistoryScene;
 };
 
 export type UiNode =

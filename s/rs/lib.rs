@@ -1,9 +1,8 @@
 //! 🖥️ S studio CQRS — programs, app instances, media graph on `vcs`.
 
 use vcs::{
-    create_document_vcs_envelope, default_temporary_backbone_ref, materialize_document_projection,
-    DocumentBackboneRef, DocumentVcs, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore,
-    Operation, OperationDiff, VcsError,
+    create_document_vcs_envelope, materialize_document_projection, DocumentBackboneRef, DocumentVcs,
+    DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff, VcsError,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -176,7 +175,7 @@ pub fn create_empty_studio_document(id: &str, name: &str) -> SStudioDocument {
         id: id.into(),
         name: name.into(),
         vcs: create_document_vcs_envelope(S_STUDIO_SCHEMA, id, default_studio_projection(), None).vcs,
-        backbone: Some(default_temporary_backbone_ref(id)),
+        backbone: None,
     }
 }
 
@@ -521,12 +520,17 @@ impl StudioStore {
         })
     }
 
-    pub fn sync_backbone(&self) -> Result<(), VcsError> {
-        self.inner.sync_backbone()
+    /// @emoji 📡 Pumps any queued inbound backbone messages into the edit timeline.
+    pub fn tick(&mut self) -> Result<bool, VcsError> {
+        self.inner.tick()
     }
 
-    pub fn load_backbone(&mut self) -> Result<(), VcsError> {
-        self.inner.load_backbone()
+    pub fn attach_backbone(&mut self, uri: &str) -> Result<(), VcsError> {
+        self.inner.attach_backbone_uri(uri)
+    }
+
+    pub fn detach_backbone(&mut self) {
+        self.inner.detach_backbone();
     }
 }
 //#endregion 🔖StudioStore

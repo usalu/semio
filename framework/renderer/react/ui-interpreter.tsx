@@ -41,6 +41,7 @@ const GisMapHost = lazy(() => import("./components/gis-map-host.tsx").then((modu
 const Puzzle2dBoardHost = lazy(() => import("./components/puzzle-2d-board-host.tsx").then((module) => ({ default: module.Puzzle2dBoardHost })));
 const IconRenderHost = lazy(() => import("./components/icon-render-host.tsx").then((module) => ({ default: module.IconRenderHost })));
 const NoteCanvasHost = lazy(() => import("./components/note-canvas-host.tsx").then((module) => ({ default: module.NoteCanvasHost })));
+const VcsHistoryHost = lazy(() => import("./components/vcs-history-host.tsx").then((module) => ({ default: module.VcsHistoryHost })));
 
 function ComponentSceneFallback() {
   return <p className="text-muted-foreground p-2 text-xs">Loading surface…</p>;
@@ -69,6 +70,8 @@ function renderComponentSceneHost(node: Extract<UiNode, { type: "componentScene"
         return <IconRenderHost node={node} onAction={onAction} />;
       case "note-canvas":
         return <NoteCanvasHost node={node} onAction={onAction} />;
+      case "vcs-history":
+        return <VcsHistoryHost node={node} onAction={onAction} />;
       case "virtualFileSystem":
         return <VirtualFileSystemHost node={node} onAction={onAction} />;
       default:
