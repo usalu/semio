@@ -1,0 +1,13 @@
+{
+  "title": "VCS React Parity",
+  "emoji": "🗄️",
+  "status": "open",
+  "description": "Restore the VCS technology's premigration UI (git tag `premigration`, f8376e84) to the current Rust-plugin → UiNode → React-renderer architecture: the SVG ancestor graph (swimlanes, elbow connectors, commit nodes, author avatars, label chips) in the History window, and the action-button editor surface (+Counter, Commit checkpoint, Undo, Redo, New alternative). Prerequisite: port fork semantics (current_checkpoint_id tracking) into vcs/rs DocumentVcsStore, since HEAD's store cannot branch. Add SurfaceKind::VcsHistory + VcsHistoryScene + VcsHistoryHost, port the premigration lane-assignment algorithm into vcs/rs, restore HistoryTable into ui/js/react/index.tsx, richer seed history with real forks, and a vcs-react-dev launch.json entry.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1941"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪97deb994e6d7447a9c09af3d3a53a5b4"
+  ]
+}

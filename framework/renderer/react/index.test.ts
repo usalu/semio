@@ -43,6 +43,7 @@ import {
   appDocumentLabel,
   appWindowDocumentLabel,
   buildToolbarRibbonSegments,
+  flattenPanelTabLeaves,
   isFlowGraphScene,
   parseStudioShellPath,
   selectSpawnedToolNodes,
@@ -135,6 +136,24 @@ describe("framework renderer types", () => {
     expect(appWindowDocumentLabel(app, "Flow")).toBe("Flow");
     expect(appWindowDocumentLabel(app, "Preview")).toBe("Preview");
     expect(appWindowDocumentLabel(app, "")).toBe("Puzzle 3D");
+  });
+
+  it("flattens a recursive panelTabs tree to its leaves, depth-first", () => {
+    const tabs = [
+      { id: "framework.panel.document", label: "Document", group: "workbench", bodyKey: "doc" },
+      {
+        id: "framework.panel.catalogue",
+        label: "Catalogue",
+        group: "workbench",
+        children: [
+          { id: "framework.panel.catalogue.words", label: "Words", group: "workbench", bodyKey: "words" },
+          { id: "framework.panel.catalogue.headings", label: "Headings", group: "workbench", bodyKey: "headings" },
+        ],
+      },
+    ];
+    const leaves = flattenPanelTabLeaves(tabs);
+    expect(leaves.map((tab) => tab.id)).toEqual(["framework.panel.document", "framework.panel.catalogue.words", "framework.panel.catalogue.headings"]);
+    expect(leaves.every((tab) => Boolean(tab.bodyKey))).toBe(true);
   });
 
   it("accepts component scene nodes", () => {
@@ -1256,7 +1275,9 @@ describe("toolbar ribbon", () => {
       ["construct"],
     );
     expect(segments[0]).toMatchObject({ kind: "picker", depth: 0 });
-    expect(segments.some((segment) => segment.kind === "tools" && segment.items.some((item) => item.id === "box"))).toBe(true);
+    const toolsSegment = segments.find((segment) => segment.kind === "tools" && segment.items.some((item) => item.id === "box"));
+    expect(toolsSegment).toBeTruthy();
+    expect(toolsSegment).toMatchObject({ depth: 1 });
   });
 
   it("flattens leaf-only sibling collections into separate tool zones", () => {
@@ -1320,6 +1341,45 @@ describe("toolbar ribbon", () => {
     );
     expect(markup).toContain('id="ui.toolbar"');
     expect(markup).toContain('data-slot="toggle-group"');
+  });
+
+  it("stacks the window toolbar ribbon upward: base picker row first in the DOM, drilled-down tools row above it", () => {
+    const markup = renderToStaticMarkup(
+      createElement(ToolTree, {
+        direction: "up",
+        tools: [
+          {
+            id: "view",
+            kind: "collection",
+            iconId: "eye",
+            children: [{ id: "zoom-in", kind: "button", iconId: "zoom-in", controllerId: "x", action: "zoomIn" }],
+          },
+          {
+            id: "construct",
+            kind: "collection",
+            iconId: "box",
+            children: [
+              {
+                id: "construct-tools",
+                kind: "collection",
+                iconId: "box",
+                children: [{ id: "box", kind: "button", iconId: "box", controllerId: "x", action: "box" }],
+              },
+            ],
+          },
+        ],
+        onAction: noopAction,
+      }),
+    );
+    expect(markup).toContain('data-slot="ribbon"');
+    expect(markup).toContain('data-direction="up"');
+    expect(markup).toContain("flex-col-reverse");
+    expect(markup.match(/data-slot="ribbon-row"/g)?.length).toBe(2);
+    // No active path given, so the picker defaults to its first collection ("view") and drills into its leaf ("zoom-in").
+    const baseRowIndex = markup.indexOf('data-slot="toggle-group"');
+    const drilledRowIndex = markup.indexOf('id="zoom-in"');
+    expect(baseRowIndex).toBeGreaterThanOrEqual(0);
+    expect(drilledRowIndex).toBeGreaterThan(baseRowIndex);
   });
 
   it("renders ToolTree with a custom id for per-window namespacing", () => {

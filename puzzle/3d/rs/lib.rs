@@ -1607,6 +1607,37 @@ mod tests {
         assert_eq!(target_ordered.len(), 1);
         assert_eq!(target_ordered[0].vortex_kind.as_deref(), Some("b-s"));
     }
+
+    #[test]
+    fn brush_placement_emits_attraction_with_id_and_directed_root() {
+        let fixture = Fixture { attractions: vec![], objects: vec![], target_volumes: vec![] };
+        let catalogs = KindCatalogBundle {
+            objects: vec![ObjectKind {
+                id: "Placed".to_string(),
+                mesh_url: Some("/test/placed.glb".to_string()),
+                scale: None,
+                vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
+            }],
+            vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None }, VortexKindCatalog { id: "port-b".to_string(), default_cable_kind: None }],
+            cables: vec![],
+        };
+        let payload = BrushPlacePayload {
+            target_vortex_full_id: "host:v0".to_string(),
+            object_kind_id: "Placed".to_string(),
+            source_vortex_index: 0,
+            origin: [1.0, 2.0, 3.0],
+            orientation: [0.0, 0.0, 0.0, 1.0],
+            scale: None,
+        };
+        let next = apply_brush_placement_to_fixture(&fixture, &payload, &catalogs);
+        assert_eq!(next.attractions.len(), 1, "brush placement should append exactly one attraction");
+        let attraction = &next.attractions[0];
+        assert!(!attraction.id.is_empty(), "brush-placed attraction must carry a non-empty id (regression: engine attractions with no id were silently dropped by fixture_from_engine_json)");
+        assert_eq!(attraction.attracting, "host:v0", "the pre-existing target vortex must stay the resolution root");
+        assert!(attraction.attracted.starts_with(&format!("{}:", next.objects[0].id)), "the newly placed object's vortex must be the attracted (non-root) side");
+        assert_eq!(attraction.gap, 0.0);
+        assert_eq!(attraction.rotation, 0.0);
+    }
 }
 
 #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]

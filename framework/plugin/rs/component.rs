@@ -102,12 +102,12 @@ export!(ComponentGuest);
 
 pub fn component_export_anchor() {}
 
-pub fn host_backbone_read(uri: &str) -> Result<String, String> {
-    semio::framework::host::backbone_read(uri)
+pub fn host_backbone_send(uri: &str, message_json: &str) -> Result<(), String> {
+    semio::framework::host::backbone_send(uri, message_json)
 }
 
-pub fn host_backbone_write(uri: &str, payload: &str) -> Result<(), String> {
-    semio::framework::host::backbone_write(uri, payload)
+pub fn host_backbone_poll(uri: &str) -> Result<Vec<String>, String> {
+    semio::framework::host::backbone_poll(uri)
 }
 
 pub fn host_now_ms() -> i64 {

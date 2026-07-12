@@ -8,15 +8,18 @@
 
 // #endregion 🧲Header
 
-import { Button, LevelProvider, Navbar, Toggle, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone } from "@semio-tech/ui-react";
+import { Button, LevelProvider, Navbar, PanelToggleGroup, Toggle, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone, type PanelToggleItem } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
+import { useState } from "react";
 
 // 🔷#region 🩺Navbar
 const Bell = createIconComponent("bell");
 const ChevronDown = createIconComponent("chevron-down");
 const Home = createIconComponent("home");
 const Menu = createIconComponent("list");
+const PanelLeft = createIconComponent("panel-left");
+const PanelRight = createIconComponent("panel-right");
 const Redo = createIconComponent("rotate-cw");
 const Search = createIconComponent("search");
 const Settings = createIconComponent("settings");
@@ -70,6 +73,31 @@ export const Default: Story = {
 };
 
 // #endregion 🩺Navbar
+
+// 🔷#region 🎛TwoToggleNavbar
+export const TwoToggleNavbar: Story = {
+  name: "Two-Toggle Navbar",
+  args: { items: [] },
+  render: () => {
+    const [leftVisible, setLeftVisible] = useState(true);
+    const [rightVisible, setRightVisible] = useState(false);
+    const panelToggles: PanelToggleItem[] = [
+      { id: "ui.panelToggle.left", icon: <PanelLeft size={16} />, pressed: leftVisible, onPressedChange: setLeftVisible },
+      { id: "ui.panelToggle.right", icon: <PanelRight size={16} />, pressed: rightVisible, onPressedChange: setRightVisible },
+    ];
+    return (
+      <Navbar
+        items={[
+          { key: "home", content: <Home size={20} /> },
+          { key: "title", content: <span className="font-bold ml-2">Application</span> },
+          { key: "fill", className: "flex-1 min-w-0", content: null },
+          { key: "panelToggles", content: <PanelToggleGroup items={panelToggles} /> },
+        ]}
+      />
+    );
+  },
+};
+// #endregion 🎛TwoToggleNavbar
 
 // 🔷#region 🌙Toolbar
 export const ToolbarDefault: Story = {

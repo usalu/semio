@@ -4,7 +4,7 @@ mod header {
 }
 
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{get, post, put};
@@ -16,8 +16,7 @@ use serde_json::Value;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::broadcast;
-use semio_framework_core::OpEnvelope;
-use semio_framework_sync::OpDag;
+use semio_framework_core::{OpDag, OpEnvelope};
 use uuid::Uuid;
 
 #[derive(Clone)]
@@ -300,6 +299,42 @@ async fn append_op(
     }))
 }
 
+#[derive(Serialize)]
+struct OpSinceRow {
+    version: i64,
+    envelope: OpEnvelope,
+}
+
+#[derive(Deserialize)]
+struct SinceQuery {
+    since: Option<i64>,
+}
+
+async fn get_ops_since(
+    Path(document_id): Path<String>,
+    Query(query): Query<SinceQuery>,
+    State(state): State<HubState>,
+) -> Json<Vec<OpSinceRow>> {
+    seed_state(&state);
+    let since = query.since.unwrap_or(0);
+    let rows = state
+        .ops
+        .get(&document_id)
+        .map(|entry| {
+            entry
+                .value()
+                .iter()
+                .filter(|row| row.version > since)
+                .map(|row| OpSinceRow {
+                    version: row.version,
+                    envelope: row.envelope.clone(),
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    Json(rows)
+}
+
 async fn document_ws(
     ws: WebSocketUpgrade,
     Path(document_id): Path<String>,
@@ -372,7 +407,7 @@ async fn main() {
         .route("/nodes", get(list_nodes))
         .route("/documents/{id}", get(get_document))
         .route("/documents/{id}/envelope", get(get_envelope).put(put_envelope))
-        .route("/documents/{id}/ops", post(append_op))
+        .route("/documents/{id}/ops", post(append_op).get(get_ops_since))
         .route("/documents/{id}/ws", get(document_ws))
         .with_state(state);
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
@@ -437,6 +472,46 @@ mod tests {
         .await
         .expect("append");
         assert_eq!(response.0.version, 1);
+    }
+
+    #[tokio::test]
+    async fn get_ops_since_returns_only_newer_rows() {
+        let (bus, _) = broadcast::channel(8);
+        let state = HubState {
+            nodes: Arc::new(DashMap::new()),
+            documents: Arc::new(DashMap::new()),
+            ops: Arc::new(DashMap::new()),
+            dags: Arc::new(DashMap::new()),
+            bus,
+        };
+        seed_state(&state);
+        for id in ["op-1", "op-2"] {
+            append_op(
+                Path("default".into()),
+                State(state.clone()),
+                Json(AppendOpRequest {
+                    version: state.documents.get("default").unwrap().version,
+                    envelope: sample_envelope(id),
+                }),
+            )
+            .await
+            .expect("append");
+        }
+        let all = get_ops_since(
+            Path("default".into()),
+            Query(SinceQuery { since: None }),
+            State(state.clone()),
+        )
+        .await;
+        assert_eq!(all.0.len(), 2);
+        let newer = get_ops_since(
+            Path("default".into()),
+            Query(SinceQuery { since: Some(1) }),
+            State(state.clone()),
+        )
+        .await;
+        assert_eq!(newer.0.len(), 1);
+        assert_eq!(newer.0[0].envelope.id.0, "op-2");
     }
 
     #[tokio::test]

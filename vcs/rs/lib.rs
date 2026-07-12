@@ -537,14 +537,134 @@ where
         .collect()
 }
 
-fn latest_checkpoint<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>) -> Option<&Checkpoint>
-where
-    Op: Clone,
-    P: Clone,
-{
-    envelope.vcs.checkpoints.last()
-}
 //#endregion 🔖Materialize
+
+//#region 🔖History
+/// @emoji 📜 One row of a checkpoint history/ancestor graph. Mirrors premigration `HistoryColumn`
+/// (`vcs/core/js/internal.ts`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryColumn {
+    pub checkpoint_id: String,
+    pub timestamp: String,
+    pub labels: Vec<String>,
+    pub authors: Vec<Author>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent_checkpoint_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    pub lane: usize,
+    pub alternative_ids: Vec<String>,
+}
+
+fn checkpoint_alternatives<'a, P, Op>(
+    envelope: &'a DocumentVcsEnvelope<P, Op>,
+    checkpoint_id: &str,
+) -> Vec<&'a Alternative> {
+    envelope
+        .vcs
+        .alternatives
+        .iter()
+        .filter(|alternative| alternative.checkpoint_ids.iter().any(|id| id == checkpoint_id))
+        .collect()
+}
+
+fn is_checkpoint_main_only<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>, checkpoint_id: &str) -> bool {
+    checkpoint_alternatives(envelope, checkpoint_id).is_empty()
+}
+
+fn has_main_only_descendant<P, Op>(
+    envelope: &DocumentVcsEnvelope<P, Op>,
+    children_of: &HashMap<String, Vec<String>>,
+    checkpoint_id: &str,
+    seen: &mut HashSet<String>,
+) -> bool {
+    if !seen.insert(checkpoint_id.to_string()) {
+        return false;
+    }
+    for child_id in children_of.get(checkpoint_id).into_iter().flatten() {
+        if is_checkpoint_main_only(envelope, child_id) || has_main_only_descendant(envelope, children_of, child_id, seen) {
+            return true;
+        }
+    }
+    false
+}
+
+/// @emoji 🛤️ Assigns each checkpoint a swimlane: alternatives get lanes `1..n` in array order, lane
+/// `0` is the main trunk. A checkpoint sits on lane 0 if it belongs to no alternative or has any
+/// main-only descendant (cycle-guarded DFS); otherwise it takes its single alternative's lane, or
+/// the minimum lane among several. Mirrors premigration `assignHistoryCheckpointLanes`.
+fn assign_history_checkpoint_lanes<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>) -> HashMap<String, usize> {
+    let mut lane_by_alternative: HashMap<String, usize> = HashMap::new();
+    for (index, alternative) in envelope.vcs.alternatives.iter().enumerate() {
+        lane_by_alternative.insert(alternative.id.clone(), index + 1);
+    }
+    let mut children_of: HashMap<String, Vec<String>> = HashMap::new();
+    for checkpoint in &envelope.vcs.checkpoints {
+        if let Some(parent_id) = &checkpoint.parent_id {
+            children_of.entry(parent_id.clone()).or_default().push(checkpoint.id.clone());
+        }
+    }
+    let mut lane_by_checkpoint_id: HashMap<String, usize> = HashMap::new();
+    for checkpoint in &envelope.vcs.checkpoints {
+        if checkpoint.parent_id.is_none() {
+            lane_by_checkpoint_id.insert(checkpoint.id.clone(), 0);
+            continue;
+        }
+        let mut seen = HashSet::new();
+        if is_checkpoint_main_only(envelope, &checkpoint.id)
+            || has_main_only_descendant(envelope, &children_of, &checkpoint.id, &mut seen)
+        {
+            lane_by_checkpoint_id.insert(checkpoint.id.clone(), 0);
+            continue;
+        }
+        let alternatives = checkpoint_alternatives(envelope, &checkpoint.id);
+        let lanes: Vec<usize> = alternatives
+            .iter()
+            .map(|alternative| *lane_by_alternative.get(&alternative.id).unwrap_or(&0))
+            .collect();
+        let lane = if lanes.len() == 1 {
+            lanes[0]
+        } else {
+            lanes.into_iter().min().unwrap_or(0)
+        };
+        lane_by_checkpoint_id.insert(checkpoint.id.clone(), lane);
+    }
+    lane_by_checkpoint_id
+}
+
+/// @emoji 📜 Builds the ancestor-graph rows for a checkpoint history view: newest checkpoint first,
+/// each carrying its swimlane, labels (alternative names, `"main"` fallback on the newest unlabeled
+/// row), and authors. Mirrors premigration `buildHistoryColumns`.
+pub fn build_history_columns<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>) -> Vec<HistoryColumn> {
+    let lane_by_checkpoint_id = assign_history_checkpoint_lanes(envelope);
+    envelope
+        .vcs
+        .checkpoints
+        .iter()
+        .rev()
+        .enumerate()
+        .map(|(index, checkpoint)| {
+            let alternatives = checkpoint_alternatives(envelope, &checkpoint.id);
+            let alternative_ids: Vec<String> = alternatives.iter().map(|alternative| alternative.id.clone()).collect();
+            let mut labels: Vec<String> = alternatives.iter().map(|alternative| alternative.name.clone()).collect();
+            if labels.is_empty() && index == 0 {
+                labels.push("main".into());
+            }
+            HistoryColumn {
+                checkpoint_id: checkpoint.id.clone(),
+                timestamp: checkpoint.timestamp.clone(),
+                labels,
+                authors: checkpoint.authors.clone(),
+                parent_checkpoint_id: checkpoint.parent_id.clone(),
+                description: checkpoint.message.clone(),
+                lane: *lane_by_checkpoint_id.get(&checkpoint.id).unwrap_or(&0),
+                alternative_ids,
+            }
+        })
+        .collect()
+}
+//#endregion 🔖History
 
 //#region 🔖DocumentVcsStore
 pub struct DocumentVcsStore<P, Op>
@@ -559,6 +679,10 @@ where
     redo_edit_ids: Vec<String>,
     edit_sequence: i32,
     generation: u64,
+    /// @emoji 🧭 The checkpoint new commits parent onto; advances on commit/checkout/switch. Not
+    /// part of the wire envelope — callers that reconstruct the store per call (e.g. a WASM plugin)
+    /// must save/restore it themselves via {@link current_checkpoint_id}/{@link set_current_checkpoint_id}.
+    current_checkpoint_id: Option<String>,
 }
 
 impl<P, Op> DocumentVcsStore<P, Op>
@@ -571,6 +695,7 @@ where
             .backbone
             .as_ref()
             .and_then(|entry| resolve_backbone(&entry.uri).ok());
+        let current_checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
         Self {
             envelope,
             backbone,
@@ -579,6 +704,7 @@ where
             redo_edit_ids: Vec::new(),
             edit_sequence: 0,
             generation: 0,
+            current_checkpoint_id,
         }
     }
 
@@ -597,6 +723,24 @@ where
     /// @emoji ↪️ Pending redo stack (edit ids undone since the last fresh `Apply`).
     pub fn redo_edit_ids(&self) -> &[String] {
         &self.redo_edit_ids
+    }
+
+    /// @emoji 🧭 The checkpoint new commits currently parent onto (defaults to the latest checkpoint
+    /// on construction/`set_state`; advances on commit/checkout/switch).
+    pub fn current_checkpoint_id(&self) -> Option<&str> {
+        self.current_checkpoint_id.as_deref()
+    }
+
+    /// @emoji 🧭 Restores the checkout position after reconstructing the store from a serialized
+    /// envelope (`set_state` resets it to the latest checkpoint, which is wrong once a caller has
+    /// checked out an older one).
+    pub fn set_current_checkpoint_id(&mut self, checkpoint_id: Option<String>) {
+        self.current_checkpoint_id = checkpoint_id;
+    }
+
+    /// @emoji 📜 Ancestor-graph rows for this store's checkpoint history. See {@link build_history_columns}.
+    pub fn history_columns(&self) -> Vec<HistoryColumn> {
+        build_history_columns(&self.envelope)
     }
 
     pub fn set_envelope(&mut self, envelope: DocumentVcsEnvelope<P, Op>, applied_edit_ids: Vec<String>) {
@@ -622,10 +766,28 @@ where
             .map(|edit| edit.sequence_number)
             .max()
             .unwrap_or(0);
+        self.current_checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
         self.envelope = envelope;
         self.applied_edit_ids = applied_edit_ids;
         self.redo_edit_ids = redo_edit_ids;
         self.bump();
+    }
+
+    /// @emoji 🧭 Restores applied edits + checkout position for `checkpoint_id`, clearing redo.
+    /// Shared by `createAlternative`/`switchAlternative`/`checkoutCheckpoint`. Mirrors premigration
+    /// `checkoutCheckpointInternal`.
+    fn checkout_checkpoint_internal(&mut self, checkpoint_id: String) {
+        let applied = self
+            .envelope
+            .vcs
+            .checkpoints
+            .iter()
+            .find(|checkpoint| checkpoint.id == checkpoint_id)
+            .map(|checkpoint| edit_ids_for_changes(&self.envelope, &checkpoint.change_ids))
+            .unwrap_or_default();
+        self.applied_edit_ids = applied;
+        self.redo_edit_ids.clear();
+        self.current_checkpoint_id = Some(checkpoint_id);
     }
 
     pub fn projection(&self) -> Result<P, VcsError> {
@@ -697,19 +859,36 @@ where
                     description: message.clone(),
                     saved_at: now_iso(),
                 };
-                let parent = latest_checkpoint(&self.envelope);
+                let parent = self
+                    .current_checkpoint_id
+                    .as_ref()
+                    .and_then(|id| self.envelope.vcs.checkpoints.iter().find(|cp| cp.id == *id));
                 let mut change_ids = parent.map(|cp| cp.change_ids.clone()).unwrap_or_default();
+                let parent_id = parent.map(|cp| cp.id.clone());
                 change_ids.push(change.id.clone());
                 let checkpoint = Checkpoint {
                     id: create_document_vcs_id("checkpoint"),
                     change_ids,
-                    parent_id: parent.map(|cp| cp.id.clone()),
+                    parent_id,
                     authors,
                     message,
                     timestamp: now_iso(),
                 };
+                let checkpoint_id = checkpoint.id.clone();
                 self.envelope.vcs.changes.push(change);
                 self.envelope.vcs.checkpoints.push(checkpoint);
+                if let Some(alternative_id) = self.envelope.active_alternative_id.clone() {
+                    if let Some(alternative) = self
+                        .envelope
+                        .vcs
+                        .alternatives
+                        .iter_mut()
+                        .find(|alt| alt.id == alternative_id)
+                    {
+                        alternative.checkpoint_ids.push(checkpoint_id.clone());
+                    }
+                }
+                self.current_checkpoint_id = Some(checkpoint_id);
                 self.bump();
                 Ok(())
             }
@@ -721,22 +900,18 @@ where
                     })?;
                 }
                 let checkpoint_id = self
-                    .envelope
-                    .vcs
-                    .checkpoints
-                    .last()
-                    .map(|cp| cp.id.clone())
+                    .current_checkpoint_id
+                    .clone()
+                    .or_else(|| self.envelope.vcs.checkpoints.last().map(|cp| cp.id.clone()))
                     .ok_or(VcsError::NoCheckpoint)?;
                 let alt_id = create_document_vcs_id("alternative");
                 self.envelope.vcs.alternatives.push(Alternative {
                     id: alt_id.clone(),
                     name,
-                    checkpoint_ids: vec![checkpoint_id],
+                    checkpoint_ids: vec![checkpoint_id.clone()],
                 });
                 self.envelope.active_alternative_id = Some(alt_id);
-                let checkpoint = self.envelope.vcs.checkpoints.last().ok_or(VcsError::NoCheckpoint)?;
-                self.applied_edit_ids = edit_ids_for_changes(&self.envelope, &checkpoint.change_ids);
-                self.redo_edit_ids.clear();
+                self.checkout_checkpoint_internal(checkpoint_id);
                 self.bump();
                 Ok(())
             }
@@ -754,29 +929,26 @@ where
                     .last()
                     .ok_or(VcsError::NoCheckpoint)?
                     .clone();
-                let checkpoint = self
-                    .envelope
-                    .vcs
-                    .checkpoints
-                    .iter()
-                    .find(|cp| cp.id == checkpoint_id)
-                    .ok_or(VcsError::NoCheckpoint)?;
-                self.applied_edit_ids = edit_ids_for_changes(&self.envelope, &checkpoint.change_ids);
-                self.redo_edit_ids.clear();
+                if !self.envelope.vcs.checkpoints.iter().any(|cp| cp.id == checkpoint_id) {
+                    return Err(VcsError::NoCheckpoint);
+                }
+                self.checkout_checkpoint_internal(checkpoint_id);
                 self.envelope.active_alternative_id = Some(alternative_id);
                 self.bump();
                 Ok(())
             }
             DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id } => {
-                let checkpoint = self
+                if !self.envelope.vcs.checkpoints.iter().any(|cp| cp.id == checkpoint_id) {
+                    return Err(VcsError::UnknownChange(checkpoint_id.clone()));
+                }
+                self.checkout_checkpoint_internal(checkpoint_id.clone());
+                self.envelope.active_alternative_id = self
                     .envelope
                     .vcs
-                    .checkpoints
+                    .alternatives
                     .iter()
-                    .find(|cp| cp.id == checkpoint_id)
-                    .ok_or_else(|| VcsError::UnknownChange(checkpoint_id.clone()))?;
-                self.applied_edit_ids = edit_ids_for_changes(&self.envelope, &checkpoint.change_ids);
-                self.redo_edit_ids.clear();
+                    .find(|alt| alt.checkpoint_ids.last() == Some(&checkpoint_id))
+                    .map(|alt| alt.id.clone());
                 self.bump();
                 Ok(())
             }
@@ -1062,8 +1234,15 @@ where
             match self.envelope.vcs.edits.last() {
                 Some(edit) => {
                     let deps = self.previous_edit_dependency();
-                    op_envelope_from_edit(&self.envelope, edit, deps)
-                        .and_then(|envelope| backbone.send(BackboneMessage::Ops { envelopes: vec![envelope] }))
+                    match op_envelope_from_edit(&self.envelope, edit, deps) {
+                        Ok(op_envelope) => {
+                            // Registers this locally-authored edit as already-applied in our own
+                            // DAG, so a later remote envelope that depends on it doesn't stall as pending.
+                            let _ = self.dag.insert(op_envelope.clone());
+                            backbone.send(BackboneMessage::Ops { envelopes: vec![op_envelope] })
+                        }
+                        Err(error) => Err(error),
+                    }
                 }
                 None => Ok(()),
             }
@@ -1993,16 +2172,284 @@ mod tests {
     }
 
     #[test]
-    fn temporary_backbone_round_trip() {
-        let uri = "temp://demo".to_string();
-        let backbone = TemporaryBackbone::new(&uri).expect("backbone");
+    fn checkout_old_checkpoint_then_commit_creates_a_fork() {
+        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                description: None,
+            })
+            .expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message: Some("c1".into()),
+                authors: Vec::new(),
+            })
+            .expect("commit c1");
+        let c1 = store.envelope().vcs.checkpoints[0].id.clone();
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 2 }],
+                description: None,
+            })
+            .expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message: Some("c2".into()),
+                authors: Vec::new(),
+            })
+            .expect("commit c2");
+        store
+            .dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c1.clone() })
+            .expect("checkout c1");
+        assert_eq!(store.current_checkpoint_id(), Some(c1.as_str()));
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 9 }],
+                description: None,
+            })
+            .expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message: Some("fork".into()),
+                authors: Vec::new(),
+            })
+            .expect("commit fork");
+        let children: Vec<&Checkpoint> = store
+            .envelope()
+            .vcs
+            .checkpoints
+            .iter()
+            .filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(c1.as_str()))
+            .collect();
+        assert_eq!(children.len(), 2, "checking out an old checkpoint before committing must fork, not extend the trunk");
+    }
+
+    #[test]
+    fn create_alternative_appends_commits_to_its_own_checkpoint_chain() {
+        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                description: None,
+            })
+            .expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message: Some("root".into()),
+                authors: Vec::new(),
+            })
+            .expect("commit root");
+        store
+            .dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-a".into() })
+            .expect("create alternative");
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 2 }],
+                description: None,
+            })
+            .expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message: Some("branch commit".into()),
+                authors: Vec::new(),
+            })
+            .expect("commit on branch");
+        assert_eq!(store.envelope().vcs.alternatives[0].checkpoint_ids.len(), 2);
+        assert_eq!(store.envelope().vcs.checkpoints.len(), 2);
+    }
+
+    #[test]
+    fn history_columns_orders_newest_first_and_labels_trunk_root() {
+        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                description: None,
+            })
+            .expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message: Some("c1".into()),
+                authors: Vec::new(),
+            })
+            .expect("commit c1");
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 2 }],
+                description: None,
+            })
+            .expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message: Some("c2".into()),
+                authors: Vec::new(),
+            })
+            .expect("commit c2");
+        let columns = store.history_columns();
+        assert_eq!(columns.len(), 2);
+        assert_eq!(columns[0].description, Some("c2".into()), "newest checkpoint must be first");
+        assert_eq!(columns[0].lane, 0);
+        assert_eq!(columns[0].labels, vec!["main".to_string()], "newest unlabeled row falls back to main");
+        assert!(columns[1].labels.is_empty(), "only the newest row gets the main fallback");
+        let json = serde_json::to_string(&columns[0]).expect("serialize");
+        assert!(json.contains("checkpointId"), "wire format must be camelCase: {json}");
+    }
+
+    #[test]
+    fn history_columns_assigns_distinct_lanes_and_pulls_main_only_descendants_to_trunk() {
+        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                description: None,
+            })
+            .expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message: Some("root".into()),
+                authors: Vec::new(),
+            })
+            .expect("commit root");
+        let root = store.envelope().vcs.checkpoints[0].id.clone();
+
+        store
+            .dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-a".into() })
+            .expect("create feature-a");
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 2 }],
+                description: None,
+            })
+            .expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message: Some("a1".into()),
+                authors: Vec::new(),
+            })
+            .expect("commit a1");
+
+        store
+            .dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: root.clone() })
+            .expect("checkout root");
+        store
+            .dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-b".into() })
+            .expect("create feature-b");
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 3 }],
+                description: None,
+            })
+            .expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message: Some("b1".into()),
+                authors: Vec::new(),
+            })
+            .expect("commit b1");
+
+        store
+            .dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: root.clone() })
+            .expect("checkout root again");
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 4 }],
+                description: None,
+            })
+            .expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message: Some("main resumed".into()),
+                authors: Vec::new(),
+            })
+            .expect("commit main resumed");
+
+        let columns = store.history_columns();
+        assert_eq!(columns.len(), 4, "root + a1 + b1 + main-resumed");
+        let by_message: HashMap<String, &HistoryColumn> = columns
+            .iter()
+            .filter_map(|column| column.description.clone().map(|description| (description, column)))
+            .collect();
+        assert_eq!(by_message["root"].lane, 0, "root has no parent, lane 0");
+        assert_eq!(by_message["main resumed"].lane, 0, "commit with no alternative stays on the trunk");
+        let a_lane = by_message["a1"].lane;
+        let b_lane = by_message["b1"].lane;
+        assert_ne!(a_lane, 0, "a1 belongs to an alternative, not the trunk");
+        assert_ne!(b_lane, 0, "b1 belongs to an alternative, not the trunk");
+        assert_ne!(a_lane, b_lane, "distinct alternatives must get distinct swimlanes");
+
+        let root_children: Vec<&HistoryColumn> = columns
+            .iter()
+            .filter(|column| column.parent_checkpoint_id.as_deref() == Some(root.as_str()))
+            .collect();
+        assert_eq!(root_children.len(), 3, "root forked three ways: a1, b1, main-resumed");
+    }
+
+    #[test]
+    fn no_backbone_by_default() {
         let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 1 }, None);
-        let json = serde_json::to_string(&envelope).expect("json");
-        backbone.sync(&json).expect("sync");
-        let loaded: DocumentVcsEnvelope<DemoProjection, DemoOp> =
-            serde_json::from_str(&backbone.load().expect("load")).expect("parse");
-        assert_eq!(loaded.id, "demo");
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        assert!(envelope.backbone.is_none(), "a fresh document has no attached backbone");
+        let store = DocumentVcsStore::new(envelope);
+        assert!(store.backbone_ref().is_none());
+    }
+
+    #[test]
+    fn memory_backbone_pair_propagates_edits_bidirectionally() {
+        let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b");
+        let envelope_a: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope_b: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store_a = DocumentVcsStore::new(envelope_a);
+        let mut store_b = DocumentVcsStore::new(envelope_b);
+        store_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+        store_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+
+        store_a
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                description: None,
+            })
+            .expect("apply on a");
+        store_b.tick().expect("tick b");
+        assert_eq!(store_b.projection().expect("projection b").n, 1, "b receives a's edit");
+
+        store_b
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 2 }],
+                description: None,
+            })
+            .expect("apply on b");
+        store_a.tick().expect("tick a");
+        assert_eq!(store_a.projection().expect("projection a").n, 2, "a receives b's edit");
+    }
+
+    #[test]
+    fn detach_backbone_stops_synchronizing_but_keeps_the_wip_graph() {
+        let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b");
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store_a = DocumentVcsStore::new(envelope.clone());
+        let mut store_b = DocumentVcsStore::new(envelope);
+        store_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+        store_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+        store_a.detach_backbone();
+        assert!(store_a.backbone_ref().is_none());
+
+        store_a
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 9 }],
+                description: None,
+            })
+            .expect("apply after detach still works on the in-memory graph");
+        assert_eq!(store_a.projection().expect("projection a").n, 9);
+        store_b.tick().expect("tick b");
+        assert_eq!(store_b.projection().expect("projection b").n, 0, "detached edits never reach the peer");
     }
 
     #[test]
@@ -2010,13 +2457,20 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let path = dir.path().join("demo.json");
         let uri = format!("file://{}", path.display());
-        let backbone = FileJsonBackbone::new(&uri).expect("backbone");
+        let mut backbone = FileJsonBackbone::new(&uri).expect("backbone");
         let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 1 }, None);
         let json = serde_json::to_string(&envelope).expect("json");
-        backbone.sync(&json).expect("sync");
+        backbone
+            .send(BackboneMessage::Snapshot { envelope_json: json })
+            .expect("send");
+        let mut reader = FileJsonBackbone::new(&uri).expect("backbone");
+        let messages = reader.receive().expect("receive");
+        let BackboneMessage::Snapshot { envelope_json } = messages.into_iter().next().expect("snapshot") else {
+            panic!("expected a snapshot message");
+        };
         let loaded: DocumentVcsEnvelope<DemoProjection, DemoOp> =
-            serde_json::from_str(&backbone.load().expect("load")).expect("parse");
+            serde_json::from_str(&envelope_json).expect("parse");
         assert_eq!(loaded.id, "demo");
     }
 
@@ -2024,34 +2478,46 @@ mod tests {
     fn folder_sqlite_backbone_round_trip() {
         let dir = tempfile::tempdir().expect("tempdir");
         let uri = format!("folder://{}", dir.path().display());
-        let backbone = FolderSqliteBackbone::new(&uri).expect("backbone");
+        let mut backbone = FolderSqliteBackbone::new(&uri).expect("backbone");
         let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 3 }, None);
         let json = serde_json::to_string(&envelope).expect("json");
-        backbone.sync(&json).expect("sync");
+        backbone
+            .send(BackboneMessage::Snapshot { envelope_json: json })
+            .expect("send");
+        let mut reader = FolderSqliteBackbone::new(&uri).expect("backbone");
+        let messages = reader.receive().expect("receive");
+        let BackboneMessage::Snapshot { envelope_json } = messages.into_iter().next().expect("snapshot") else {
+            panic!("expected a snapshot message");
+        };
         let loaded: DocumentVcsEnvelope<DemoProjection, DemoOp> =
-            serde_json::from_str(&backbone.load().expect("load")).expect("parse");
+            serde_json::from_str(&envelope_json).expect("parse");
         assert_eq!(loaded.vcs.initial_projection.n, 3);
     }
 
     #[test]
-    fn store_attaches_and_auto_syncs_temporary_backbone() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+    fn attach_reconciles_a_persisted_snapshot() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("demo.json");
+        let uri = format!("file://{}", path.display());
+        let seeded: DocumentVcsEnvelope<DemoProjection, DemoOp> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
-        store
+        let mut seed_store = DocumentVcsStore::new(seeded);
+        seed_store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 2 }],
+                operations: vec![DemoOp::SetN { n: 5 }],
                 description: None,
             })
             .expect("apply");
-        let loaded = TemporaryBackbone::new("temp://demo")
-            .expect("backbone")
-            .load()
-            .expect("load");
-        let parsed: DocumentVcsEnvelope<DemoProjection, DemoOp> =
-            serde_json::from_str(&loaded).expect("parse");
-        assert_eq!(parsed.vcs.edits.len(), 1);
+        seed_store
+            .attach_backbone_uri(&uri)
+            .expect("seed store persists its snapshot on attach");
+
+        let fresh: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(fresh);
+        store.attach_backbone_uri(&uri).expect("attach reconciles persisted state");
+        assert_eq!(store.projection().expect("projection").n, 5, "adopted the persisted edit");
     }
 
     #[test]

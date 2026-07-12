@@ -611,7 +611,7 @@ function categoryTabIcon(tabs: readonly PanelTabNode[], fallback: IconName): Rea
 }
 
 /** @emoji 🌳 Depth-first leaves of a recursive panel-tab tree — the nodes that actually carry a `bodyKey` to render. */
-function flattenPanelTabLeaves<T extends { readonly children?: readonly T[] }>(tabs: readonly T[]): T[] {
+export function flattenPanelTabLeaves<T extends { readonly children?: readonly T[] }>(tabs: readonly T[]): T[] {
   return tabs.flatMap((tab) => (tab.children && tab.children.length > 0 ? flattenPanelTabLeaves(tab.children) : [tab]));
 }
 

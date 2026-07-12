@@ -11,7 +11,7 @@
 import { Canvas, Footer, HorizontalWindows, Layout, Navbar, Page, SidePanel, Window } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 
 // 🔷#region 🪨Layout
 const Home = createIconComponent("home");
@@ -149,6 +149,15 @@ export const PageDefault: Story = {
 // #endregion 🌈Page
 
 // 💻#region 📌SidePanel
+const layoutSidePanelLeafTab = (id: string, icon: ComponentType<{ size?: number }>, name: string, order: number, content: string) => ({
+  kind: "leaf" as const,
+  id,
+  icon,
+  name,
+  order,
+  tree: { sections: [{ id: `${id}.section`, label: "", items: [{ id: `${id}.item`, label: "", control: <div className="p-2">{content}</div> }] }] },
+});
+
 export const SidePanelDefault: Story = {
   args: { canvas: null },
   render: () => {
@@ -160,9 +169,9 @@ export const SidePanelDefault: Story = {
           size={size}
           onSizeChange={setSize}
           tabs={[
-            { id: "types", icon: Layers, order: 0, content: <div className="p-2">Types panel content</div> },
-            { id: "settings", icon: Settings, order: 1, content: <div className="p-2">Settings panel content</div> },
-            { id: "info", icon: Info, order: 2, content: <div className="p-2">Info panel content</div> },
+            layoutSidePanelLeafTab("types", Layers, "Types", 0, "Types panel content"),
+            layoutSidePanelLeafTab("settings", Settings, "Settings", 1, "Settings panel content"),
+            layoutSidePanelLeafTab("info", Info, "Info", 2, "Info panel content"),
           ]}
         />
       </div>

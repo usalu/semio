@@ -9083,6 +9083,7 @@ fn render_icon_render(
         puzzle2d_board: None,
         icon_render: None,
         note_canvas: None,
+        vcs_history: None,
     };
 
     let state = icon_render_states

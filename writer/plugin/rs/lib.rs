@@ -105,7 +105,7 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
 
 use grammar::{tokenize_language, GrammarToken};
 use trinity_jack::{complete, example_graph, format as jack_format, lint, semantic_tokens, Diagnostic};
-use semio_framework_plugin::{SurfaceKind, PanelGroup,
+use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
     build_text_editor_scene, tool_button, tool_collection, ui_declarative_sections_to_tree, ui_text, App,
     ActionDescriptor, PluginApp, PluginBundle, TextEditorScene, ToolNode, UiNode, UiSectionNode,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
@@ -129,6 +129,9 @@ const WRITER_PLAY_BODY_MAIN: &str = "writer.play.main";
 const WRITER_PLAY_BODY_DOCUMENT: &str = "writer.play.document";
 const WRITER_PLAY_BODY_CATALOGUE: &str = "writer.play.catalogue";
 const WRITER_PLAY_BODY_INSPECTION: &str = "writer.play.inspection";
+/// 🌳 Nested children of the document tab — demonstrates the recursive panel-tab tree (stacked tab rows).
+const WRITER_PANEL_TAB_DOCUMENT_CONTENT_ID: &str = "framework.panel.document.content";
+const WRITER_PANEL_TAB_DOCUMENT_OUTLINE_ID: &str = "framework.panel.document.outline";
 const WRITER_PLAY_WINDOW_KIND: &str = "writer-main";
 const WRITER_DOCUMENT_SCHEMA: &str = "writer.document";
 
@@ -1874,12 +1877,15 @@ fn create_writer_app() -> App {
                 Some(&[100.0]),
                 Some(&["Jack".into()]),
             ))
-            .panel_tab(
+            .panel_tab_tree(PanelTabSpec::group(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
                 FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 PanelGroup::Workbench,
-                WRITER_PLAY_BODY_DOCUMENT,
-            )
+                vec![
+                    PanelTabSpec::leaf(WRITER_PANEL_TAB_DOCUMENT_CONTENT_ID, "Content", PanelGroup::Workbench, WRITER_PLAY_BODY_DOCUMENT),
+                    PanelTabSpec::leaf(WRITER_PANEL_TAB_DOCUMENT_OUTLINE_ID, "Outline", PanelGroup::Workbench, WRITER_PLAY_BODY_DOCUMENT),
+                ],
+            ))
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
                 FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,

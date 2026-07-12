@@ -12,6 +12,11 @@ class ResizeObserverMock {
 
 globalThis.ResizeObserver = ResizeObserverMock as typeof ResizeObserver;
 
+// jsdom does not implement scrollIntoView; tab strips call it on mount to reveal the active tab.
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {};
+}
+
 afterEach(() => {
   cleanup();
 });

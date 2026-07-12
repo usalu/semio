@@ -1431,7 +1431,7 @@ extern "C" {
 pub fn ensure_plugin_initialized() {
     PLUGIN_INIT_ONCE.call_once(|| {
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-        crate::host_port::register_host_backbone_port();
+        crate::host_port::register_host_backbone_channel();
         unsafe {
             semio_plugin_install_bundle();
         }
@@ -2369,29 +2369,29 @@ mod tests {
 
 pub mod host_port {
 // #region host_port
-//! 🗄️ Host-capability access for WASI component builds — backbone IO and wall-clock time.
+//! 🗄️ Host-capability access for WASI component builds — the backbone duplex channel and wall-clock time.
 
-/** @emoji 📥 Reads a backbone payload through the component host; errs when no host is linked. */
-pub fn host_backbone_read(uri: &str) -> Result<String, String> {
+/** @emoji 📤 Sends a backbone message through the component host; errs when no host is linked. */
+pub fn host_backbone_send(uri: &str, message_json: &str) -> Result<(), String> {
     #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     {
-        return crate::component::host_backbone_read(uri);
+        return crate::component::host_backbone_send(uri, message_json);
+    }
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    {
+        let _ = message_json;
+        Err(format!("host backbone unavailable: {uri}"))
+    }
+}
+
+/** @emoji 📥 Polls queued backbone messages through the component host; errs when no host is linked. */
+pub fn host_backbone_poll(uri: &str) -> Result<Vec<String>, String> {
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    {
+        return crate::component::host_backbone_poll(uri);
     }
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     Err(format!("host backbone unavailable: {uri}"))
-}
-
-/** @emoji 📤 Writes a backbone payload through the component host; errs when no host is linked. */
-pub fn host_backbone_write(uri: &str, payload: &str) -> Result<(), String> {
-    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-    {
-        return crate::component::host_backbone_write(uri, payload);
-    }
-    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    {
-        let _ = payload;
-        Err(format!("host backbone unavailable: {uri}"))
-    }
 }
 
 /** @emoji ⏱️ Wall-clock milliseconds from the component host, falling back to system time. */
@@ -2407,22 +2407,23 @@ pub fn host_now_ms() -> f64 {
         .unwrap_or(0.0)
 }
 
-/** @emoji 🔌 vcs backbone port backed by the component host capabilities. */
-pub struct HostBackbonePort;
+/** @emoji 🔌 vcs backbone channel backed by the component host's duplex capability. */
+pub struct HostBackboneChannel;
 
-impl vcs::BackbonePort for HostBackbonePort {
-    fn read(&self, uri: &str) -> Result<String, vcs::VcsError> {
-        host_backbone_read(uri).map_err(vcs::VcsError::Backbone)
+impl vcs::BackboneChannelPort for HostBackboneChannel {
+    fn send(&self, uri: &str, message_json: &str) -> Result<(), vcs::VcsError> {
+        host_backbone_send(uri, message_json).map_err(vcs::VcsError::Backbone)
     }
 
-    fn write(&self, uri: &str, payload: &str) -> Result<(), vcs::VcsError> {
-        host_backbone_write(uri, payload).map_err(vcs::VcsError::Backbone)
+    fn poll(&self, uri: &str) -> Result<Vec<String>, vcs::VcsError> {
+        host_backbone_poll(uri).map_err(vcs::VcsError::Backbone)
     }
 }
 
-/** @emoji 🧷 Installs the component host as the vcs backbone port so browser storage and file/remote IO reach the shell. */
-pub fn register_host_backbone_port() {
-    vcs::set_host_backbone_port(std::sync::Arc::new(HostBackbonePort));
+/** @emoji 🧷 Installs the component host as the vcs backbone channel so the plugin's document store
+    can synchronize across the wasm sandbox boundary. */
+pub fn register_host_backbone_channel() {
+    vcs::set_host_backbone_channel(std::sync::Arc::new(HostBackboneChannel));
 }
 // #endregion host_port
 }
@@ -2437,7 +2438,9 @@ pub use generate_mode::{
     render_generations_tree, select_generation, selected_generation, selected_generation_mut,
     update_generation_values, FormGeneration, GenerationPlayState,
 };
-pub use host_port::{host_backbone_read, host_backbone_write, host_now_ms, register_host_backbone_port, HostBackbonePort};
+pub use host_port::{
+    host_backbone_poll, host_backbone_send, host_now_ms, register_host_backbone_channel, HostBackboneChannel,
+};
 pub use plugin_runtime::{action_result_from_patch_ops, install_plugin_bundle};
 pub use scaffold::{
     assert_standard_app_renders, register_standard_app, standard_app,

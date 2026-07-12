@@ -3495,6 +3495,7 @@ mod tests {
             puzzle2d_board: None,
             icon_render: None,
             note_canvas: None,
+            vcs_history: None,
         }
     }
 

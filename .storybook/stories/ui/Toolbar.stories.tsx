@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { ButtonGroup, ButtonGroupItem, ToggleGroup, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone } from "@semio-tech/ui-react";
+import { ButtonGroup, ButtonGroupItem, Ribbon, ToggleGroup, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone, type RibbonRow } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
@@ -148,6 +148,57 @@ export const MultipleZones: Story = {
       </ToolbarZone>
     </div>
   ),
+};
+
+export const RibbonLevels: Story = {
+  name: "Ribbon Levels (inline vs. up)",
+  args: { children: null },
+  render: () => {
+    const rows: RibbonRow[] = [
+      {
+        key: "base",
+        content: (
+          <ToolbarZone>
+            <ToolbarGroup>
+              <ToolbarItem>
+                <ButtonGroup>
+                  <ButtonGroupItem icon={<MousePointer className="size-tiny" aria-hidden />} />
+                  <ButtonGroupItem icon={<Hand className="size-tiny" aria-hidden />} />
+                </ButtonGroup>
+              </ToolbarItem>
+            </ToolbarGroup>
+          </ToolbarZone>
+        ),
+      },
+      {
+        key: "nested",
+        content: (
+          <ToolbarZone>
+            <ToolbarGroup>
+              <ToolbarItem>
+                <ButtonGroup>
+                  <ButtonGroupItem icon={<ZoomIn className="size-tiny" aria-hidden />} />
+                  <ButtonGroupItem icon={<ZoomOut className="size-tiny" aria-hidden />} />
+                </ButtonGroup>
+              </ToolbarItem>
+            </ToolbarGroup>
+          </ToolbarZone>
+        ),
+      },
+    ];
+    return (
+      <div className="flex items-end gap-double">
+        <div className="flex flex-col items-center gap-single">
+          <span className="text-xs text-muted-foreground">inline (footer)</span>
+          <Ribbon direction="inline" rows={rows} />
+        </div>
+        <div className="flex flex-col items-center gap-single">
+          <span className="text-xs text-muted-foreground">up (window toolbar)</span>
+          <Ribbon direction="up" rows={rows} />
+        </div>
+      </div>
+    );
+  },
 };
 
 // #endregion 🌙Toolbar

@@ -21588,6 +21588,43 @@ if (import.meta.vitest) {
       expect(tabBar?.className).toContain("z-40");
     });
 
+    it("PanelTabBar stacks a second row for a nested branch's children, and clicking a sibling category swaps that row", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [
+        {
+          kind: "branch",
+          id: "framework.category.workbench",
+          icon: StubIcon,
+          name: "Workbench",
+          children: [
+            { kind: "leaf", id: "framework.panel.document", icon: StubIcon, name: "Document", tree: { sections: [] } },
+            { kind: "leaf", id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } },
+          ],
+        },
+        {
+          kind: "branch",
+          id: "framework.category.display",
+          icon: StubIcon,
+          name: "Display",
+          children: [{ kind: "leaf", id: "framework.display.windows", icon: StubIcon, name: "Windows", tree: { sections: [] } }],
+        },
+      ];
+      let path: readonly string[] = ["framework.category.workbench", "framework.panel.catalogue"];
+      const { container, rerender } = render(<PanelTabBar variant="side" tabs={tabs} activePath={path} onActivePathChange={(next) => (path = next)} />);
+      expect(container.querySelectorAll('[data-slot="ribbon-row"]').length).toBe(2);
+      expect(screen.getByText("Workbench")).toBeTruthy();
+      expect(screen.getByText("Display")).toBeTruthy();
+      expect(screen.getByText("Document")).toBeTruthy();
+      expect(screen.getByText("Catalogue")).toBeTruthy();
+      expect(screen.queryByText("Windows")).toBeNull();
+
+      fireEvent.click(screen.getByText("Display"));
+      expect(path).toEqual(["framework.category.display", "framework.display.windows"]);
+      rerender(<PanelTabBar variant="side" tabs={tabs} activePath={path} onActivePathChange={(next) => (path = next)} />);
+      expect(screen.getByText("Windows")).toBeTruthy();
+      expect(screen.queryByText("Document")).toBeNull();
+    });
+
     it("SidePanel marks the active tab with hover fill and emphasized icon above the emphasized frame", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [
@@ -25226,6 +25263,52 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="toggle-group-item"');
       expect(markup.match(/data-slot="toggle-group-item"/g)?.length).toBe(3);
       expect(markup).toContain('data-state="on"');
+    });
+
+    it("Ribbon stacks rows upward for direction=up and downward for direction=down, inline keeps one line", () => {
+      const rows: RibbonRow[] = [
+        { key: "base", content: <span>Base</span> },
+        { key: "nested", content: <span>Nested</span> },
+      ];
+      const upMarkup = renderToStaticMarkup(<Ribbon direction="up" rows={rows} />);
+      expect(upMarkup).toContain('data-direction="up"');
+      expect(upMarkup).toContain("flex-col-reverse");
+      expect(upMarkup.match(/data-slot="ribbon-row"/g)?.length).toBe(2);
+      expect(upMarkup.indexOf("Base")).toBeLessThan(upMarkup.indexOf("Nested"));
+
+      const downMarkup = renderToStaticMarkup(<Ribbon direction="down" rows={rows} />);
+      expect(downMarkup).toContain('data-direction="down"');
+      expect(downMarkup).not.toContain("flex-col-reverse");
+
+      const inlineMarkup = renderToStaticMarkup(<Ribbon id="ui.toolbar" direction="inline" rows={rows} />);
+      expect(inlineMarkup).toContain('role="toolbar"');
+      expect(inlineMarkup).toContain('data-slot="toolbar-zone"');
+      expect(inlineMarkup).not.toContain('data-slot="ribbon-row"');
+    });
+
+    it("reconcileActivePath keeps matching segments, falls back to the first sibling, and auto-descends to a leaf", () => {
+      type Node = { readonly id: string; readonly children?: readonly Node[] };
+      const tree: Node[] = [
+        { id: "workbench", children: [{ id: "document" }, { id: "catalogue" }] },
+        { id: "display", children: [{ id: "windows" }] },
+      ];
+      const childrenOf = (node: Node) => node.children;
+      expect(reconcileActivePath(tree, [], childrenOf)).toEqual(["workbench", "document"]);
+      expect(reconcileActivePath(tree, ["display"], childrenOf)).toEqual(["display", "windows"]);
+      expect(reconcileActivePath(tree, ["workbench", "catalogue"], childrenOf)).toEqual(["workbench", "catalogue"]);
+      expect(reconcileActivePath(tree, ["unknown"], childrenOf)).toEqual(["workbench", "document"]);
+    });
+
+    it("resolves the new left/right panel toggle keys in en and de", () => {
+      for (const locale of ["en", "de"] as const) {
+        void uiI18n.changeLanguage(locale);
+        for (const key of ["ui.panelToggle.left", "ui.panelToggle.right"] as const) {
+          const label = resolveTranslationLabel(uiI18n.t(key));
+          expect(label, `${locale}:${key}`).toBeTruthy();
+          expect(label).not.toBe(key);
+        }
+      }
+      void uiI18n.changeLanguage("en");
     });
 
     it("navbar keeps inline labels when compact chrome is enabled", () => {

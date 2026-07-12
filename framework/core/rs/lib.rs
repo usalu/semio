@@ -3823,6 +3823,8 @@ pub enum SurfaceKind {
     IconRender,
     #[serde(rename = "note-canvas")]
     NoteCanvas,
+    #[serde(rename = "vcs-history")]
+    VcsHistory,
 }
 
 impl SurfaceKind {
@@ -3839,6 +3841,7 @@ impl SurfaceKind {
             Self::Puzzle2dBoard => "puzzle2d-board",
             Self::IconRender => "icon-render",
             Self::NoteCanvas => "note-canvas",
+            Self::VcsHistory => "vcs-history",
         }
     }
 
@@ -4322,6 +4325,14 @@ impl NoteCanvasScene {
     }
 }
 
+/** @emoji 🗄️ A checkpoint ancestor-graph history view. `columns_json` is a `HistoryColumn[]` array
+ * (see `vcs::HistoryColumn`), newest checkpoint first. */
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VcsHistoryScene {
+    pub columns_json: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UiExternalSlotNode {
@@ -4363,6 +4374,8 @@ pub struct UiComponentSceneNode {
     pub icon_render: Option<IconRenderScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub note_canvas: Option<NoteCanvasScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vcs_history: Option<VcsHistoryScene>,
 }
 //#endregion 🔖ComponentScenes
 
@@ -4604,6 +4617,7 @@ fn component_scene(
         puzzle2d_board,
         icon_render: None,
         note_canvas: None,
+        vcs_history: None,
     })
 }
 
@@ -4912,6 +4926,35 @@ pub fn build_note_canvas_scene(
     };
     UiNode::ComponentScene(UiComponentSceneNode {
         note_canvas: Some(scene),
+        ..node
+    })
+}
+
+pub fn build_vcs_history_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: VcsHistoryScene,
+) -> UiNode {
+    let UiNode::ComponentScene(node) = component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::VcsHistory,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    ) else {
+        unreachable!()
+    };
+    UiNode::ComponentScene(UiComponentSceneNode {
+        vcs_history: Some(scene),
         ..node
     })
 }
@@ -5967,6 +6010,7 @@ mod ui_node_wire_format_tests {
                     puzzle2d_board: None,
                     icon_render: None,
                     note_canvas: None,
+                    vcs_history: None,
                 }),
                 UiNode::ExternalSlot(UiExternalSlotNode {
                     plugin_id: "plugin1".into(),
@@ -5992,7 +6036,7 @@ mod ui_node_wire_format_tests {
         assert_eq!(roundtripped, node);
     }
 
-    const GOLDEN_SURFACE_KIND_JSON: &str = "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"raster\",\"virtualFileSystem\",\"gis2d-map\",\"puzzle2d-board\",\"icon-render\",\"note-canvas\"]";
+    const GOLDEN_SURFACE_KIND_JSON: &str = "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"raster\",\"virtualFileSystem\",\"gis2d-map\",\"puzzle2d-board\",\"icon-render\",\"note-canvas\",\"vcs-history\"]";
 
     #[test]
     fn surface_kind_serializes_to_golden_json() {
@@ -6008,6 +6052,7 @@ mod ui_node_wire_format_tests {
             SurfaceKind::Puzzle2dBoard,
             SurfaceKind::IconRender,
             SurfaceKind::NoteCanvas,
+            SurfaceKind::VcsHistory,
         ];
         let json = serde_json::to_string(&kinds).unwrap();
         assert_eq!(json, GOLDEN_SURFACE_KIND_JSON);
@@ -6015,7 +6060,7 @@ mod ui_node_wire_format_tests {
         assert_eq!(roundtripped, kinds);
     }
 
-    const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeTool\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{\\\"raster\\\":true,\\\"water\\\":true,\\\"land\\\":true,\\\"roads\\\":true,\\\"buildings\\\":true,\\\"borders\\\":true,\\\"labels\\\":true,\\\"positions\\\":true,\\\"positionLabels\\\":true,\\\"routes\\\":true,\\\"regions\\\":true}\",\"layerStrokeScaleJson\":\"{\\\"raster\\\":1,\\\"water\\\":1,\\\"land\\\":1,\\\"roads\\\":1,\\\"buildings\\\":1,\\\"borders\\\":1,\\\"labels\\\":1,\\\"positions\\\":1,\\\"positionLabels\\\":1,\\\"routes\\\":1,\\\"regions\\\":1}\",\"selectionJson\":\"{\\\"positions\\\":[],\\\"routes\\\":[]}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"kindCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"suggestionOffset\":0.0,\"brushKindWeightsJson\":\"{}\",\"kindCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeTool\":\"select\",\"viewMode\":\"edit\",\"interactive\":true}]";
+    const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeTool\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{\\\"raster\\\":true,\\\"water\\\":true,\\\"land\\\":true,\\\"roads\\\":true,\\\"buildings\\\":true,\\\"borders\\\":true,\\\"labels\\\":true,\\\"positions\\\":true,\\\"positionLabels\\\":true,\\\"routes\\\":true,\\\"regions\\\":true}\",\"layerStrokeScaleJson\":\"{\\\"raster\\\":1,\\\"water\\\":1,\\\"land\\\":1,\\\"roads\\\":1,\\\"buildings\\\":1,\\\"borders\\\":1,\\\"labels\\\":1,\\\"positions\\\":1,\\\"positionLabels\\\":1,\\\"routes\\\":1,\\\"regions\\\":1}\",\"selectionJson\":\"{\\\"positions\\\":[],\\\"routes\\\":[]}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"kindCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"suggestionOffset\":0.0,\"brushKindWeightsJson\":\"{}\",\"kindCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeTool\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"}]";
 
     #[test]
     fn scene_records_serialize_to_golden_json() {
@@ -6046,6 +6091,7 @@ mod ui_node_wire_format_tests {
             GisMapScene::base("{}".into(), "{}".into()),
             Puzzle2dBoardScene::base("{}".into(), "{}".into(), true),
             NoteCanvasScene::base("{}".into(), "select".into(), "edit".into(), true),
+            VcsHistoryScene { columns_json: "[]".into() },
         );
         let json = serde_json::to_string(&scenes).unwrap();
         assert_eq!(json, GOLDEN_SCENES_JSON);
