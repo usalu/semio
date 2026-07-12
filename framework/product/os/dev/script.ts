@@ -671,6 +671,11 @@ async function buildEngineWasm(pluginId: string, renderer: string): Promise<void
     const gis2dBuild = spawnSync("bun", [gis2dScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
     if (gis2dBuild.status !== 0) throw new Error("gis-2d-rs wasm build failed");
   }
+  if (pluginId === "gis3d") {
+    const gis3dScript = join(repoRoot, "gis/3d/rs/script.ts");
+    const gis3dBuild = spawnSync("bun", [gis3dScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
+    if (gis3dBuild.status !== 0) throw new Error("gis-3d-rs wasm build failed");
+  }
   if (pluginId === "puzzle" || pluginId === "puzzle2d") {
     const puzzle2dScript = join(repoRoot, "puzzle/2d/rs/script.ts");
     const puzzle2dBuild = spawnSync("bun", [puzzle2dScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });

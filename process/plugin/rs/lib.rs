@@ -3,12 +3,16 @@
 pub mod app_3d {
     //! 🪚 Process 3D plugin — subtractive/additive processing simulation bundled as a hot-swappable WASM component.
 
-    use kernel_3d_brepkit::BrepkitKernel;
+    use base64::Engine;
+    use kernel_3d_brepkit::{
+        BrepkitKernel, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter,
+        StlSolidImporter,
+    };
     use kernel_3d_engine::{BrepKernel, GeometryHandle};
     use process_3d::{Pose, ProcessMeasure, ProcessStep, SolidSpec, Stock, StepOrigin};
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_world_3d_scene, create_default_layout, mesh_from_indexed_with_face_groups, mesh_from_kind, tool_button,
-        tool_toggle, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, world3d_camera_json, world3d_scene,
+        tool_toggle, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_scene,
         world3d_sun_measures, world3d_selection_json, ActionDescriptor, App, MeshData, PanelGroup, PluginApp, SurfaceKind, ToolCategory, ToolNode,
         UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
         ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure, WorldSunConfig,
@@ -76,6 +80,7 @@ pub mod app_3d {
         remove: &'static str,
         provenance: &'static str,
         validation_warning: &'static str,
+        source: &'static str,
     }
 
     const PROCESS3D_LABELS_NATIVE_EN: Process3dLabels = Process3dLabels {
@@ -94,6 +99,7 @@ pub mod app_3d {
         remove: "Remove",
         provenance: "Made By",
         validation_warning: "Warning",
+        source: "Source",
     };
 
     const PROCESS3D_LABELS_NATIVE_DE: Process3dLabels = Process3dLabels {
@@ -112,6 +118,7 @@ pub mod app_3d {
         remove: "Entfernen",
         provenance: "Erstellt von",
         validation_warning: "Warnung",
+        source: "Quelle",
     };
 
     /// 🗣️ Resolves the active label set from the shell-provided locale; falls back to native English.
@@ -207,6 +214,16 @@ pub mod app_3d {
         preview_cache: Option<Process3dPreviewCache>,
         #[serde(default)]
         sun: WorldSunConfig,
+        /// 💾 Pending native-geometry export payload, flushed by `export_download_ops` into a
+        /// `downloadMediaExport` op; mirrors `cad`'s `pending_export*` runtime fields.
+        #[serde(default)]
+        pending_export: Option<Value>,
+        #[serde(default)]
+        pending_export_filename: Option<String>,
+        #[serde(default)]
+        pending_export_mime: Option<String>,
+        #[serde(default)]
+        pending_export_encoding: Option<String>,
     }
 
     impl Default for Process3dRuntime {
@@ -223,6 +240,10 @@ pub mod app_3d {
                 redo_stack: Vec::new(),
                 preview_cache: None,
                 sun: WorldSunConfig::default(),
+                pending_export: None,
+                pending_export_filename: None,
+                pending_export_mime: None,
+                pending_export_encoding: None,
             }
         }
     }
@@ -532,11 +553,14 @@ pub mod app_3d {
             .join("; ")
     }
 
+    /// 📐 Imported specs carry no persisted bounding box, so validation falls back to a 1m³ approximation
+    /// until the kernel is consulted (matches `cad`'s extent-less fallback for handle-only objects).
     fn stock_extent(solid: &SolidSpec) -> [f64; 3] {
         match solid {
             SolidSpec::Box { width, depth, height } => [*width, *depth, *height],
             SolidSpec::Cylinder { radius, height } => [*radius * 2.0, *radius * 2.0, *height],
             SolidSpec::Sphere { radius } => [*radius * 2.0, *radius * 2.0, *radius * 2.0],
+            SolidSpec::ImportedMesh { .. } | SolidSpec::ImportedSolid { .. } => [1.0, 1.0, 1.0],
         }
     }
 
@@ -597,6 +621,7 @@ pub mod app_3d {
                 "radius" => *radius = clamped,
                 _ => return false,
             },
+            SolidSpec::ImportedMesh { .. } | SolidSpec::ImportedSolid { .. } => return false,
         }
         true
     }
@@ -687,15 +712,18 @@ pub mod app_3d {
     //#region 🔖KernelReplay
     /// 🧠 Kernel + prefix memo: `hash(stock, enabled steps[0..i])` → solid handle, so cursor scrubbing and
     /// step edits only recompute the suffix that actually changed.
+    /// 🧊 Concrete (not boxed-trait) so `SolidExporter`/`SolidImporter` (STEP/OBJ/STL/GLB import+export)
+    /// can borrow `&BrepkitKernel`/`&mut BrepkitKernel` directly; `&mut BrepkitKernel` still coerces to
+    /// `&mut dyn BrepKernel` at every existing call site below, so the CSG replay path is unaffected.
     struct ProcessKernelSession {
-        kernel: Box<dyn BrepKernel + Send + Sync>,
+        kernel: BrepkitKernel,
         memo: HashMap<u64, GeometryHandle>,
         stock_signature: u64,
     }
 
     impl ProcessKernelSession {
         fn new() -> Self {
-            Self { kernel: Box::new(BrepkitKernel::new()), memo: HashMap::new(), stock_signature: 0 }
+            Self { kernel: BrepkitKernel::new(), memo: HashMap::new(), stock_signature: 0 }
         }
     }
 
@@ -720,6 +748,14 @@ pub mod app_3d {
             SolidSpec::Box { width, depth, height } => kernel_3d_engine::block_on(kernel.box_prim(*width, *depth, *height)).ok()?,
             SolidSpec::Cylinder { radius, height } => kernel_3d_engine::block_on(kernel.cylinder_prim(*radius, *height)).ok()?,
             SolidSpec::Sphere { radius } => kernel_3d_engine::block_on(kernel.sphere_prim(*radius)).ok()?,
+            SolidSpec::ImportedSolid { solid_handle } => {
+                let handle = GeometryHandle(solid_handle.clone());
+                kernel_3d_engine::block_on(kernel.kind(&handle)).ok()?;
+                handle
+            }
+            // 🖼️ A GLB-imported reference mesh has no real B-Rep topology in the kernel, so it cannot
+            // serve as a CSG operand (stock or tool); the stock-level fallback handles display instead.
+            SolidSpec::ImportedMesh { .. } => return None,
         };
         let rotated = if pose.angle != 0.0 { kernel_3d_engine::block_on(kernel.rotate(&base, pose.axis, pose.angle)).ok()? } else { base };
         if pose.position != [0.0, 0.0, 0.0] {
@@ -836,7 +872,25 @@ pub mod app_3d {
         kernel_3d_engine::block_on(session.kernel.volume(&handle)).ok()
     }
 
+    /// 🖼️ A GLB-imported reference mesh (`SolidSpec::ImportedMesh`) has no kernel-side geometry to
+    /// tessellate; it renders by pointing the world3d scene straight at `mesh_url`, mirroring `cad`'s
+    /// `resolve_object_mesh_url` → `world3d_mesh_id_from_url` bridge.
     fn evaluated_preview_payload(fixture: &process_3d::Process3dDocument) -> (String, String) {
+        if let SolidSpec::ImportedMesh { mesh_url } = &fixture.stock.solid {
+            let mesh_id = world3d_mesh_id_from_url(mesh_url);
+            let meshes = json!([{ "id": mesh_id, "url": mesh_url }]);
+            let instances = json!([{
+                "id": "processed",
+                "meshId": mesh_id,
+                "position": [0.0, 0.0, 0.0],
+                "rotation": [0.0, 0.0, 0.0, 1.0],
+                "scale": [1.0, 1.0, 1.0],
+                "label": fixture.stock.label,
+                "selected": false,
+                "hovered": false,
+            }]);
+            return (meshes.to_string(), instances.to_string());
+        }
         let mesh = processed_mesh(fixture).unwrap_or_else(|| mesh_from_kind(PROCESS3D_FALLBACK_MESH_KIND));
         let meshes = json!([{ "id": "processed", "data": mesh }]);
         let instances = json!([{
@@ -876,6 +930,116 @@ pub mod app_3d {
         set_document_op(envelope)
     }
     //#endregion 🔖KernelReplay
+
+    //#region 🔖MediaImportExport
+    /// 📤 A pending native-geometry export ready for `pending_export`/`export_download_ops`.
+    struct Process3dModelExport {
+        filename: String,
+        data: Value,
+        mime_type: String,
+        encoding: Option<String>,
+    }
+
+    /// 📤 Encodes the replayed stock through `format`'s codec. STEP/OBJ/STL go through the
+    /// `SolidExporter` trait objects (real B-Rep, exact where the format allows it); GLB goes through
+    /// the mesh tessellation bridge (`processed_mesh` → `GlbExporter`), matching how it is already
+    /// rendered/exported elsewhere in this app.
+    fn export_process3d_model(fixture: &process_3d::Process3dDocument, format: &str) -> Option<Process3dModelExport> {
+        if format == "glb" {
+            let mesh = processed_mesh(fixture)?;
+            let bytes = semio_framework_plugin::GlbExporter.export(&mesh).ok()?;
+            let media_format = semio_framework_plugin::OsMediaFormat::Glb;
+            return Some(Process3dModelExport {
+                filename: format!("process3d.{}", media_format.as_str()),
+                data: Value::String(base64::engine::general_purpose::STANDARD.encode(bytes)),
+                mime_type: media_format.mime_type().into(),
+                encoding: Some("base64".into()),
+            });
+        }
+        let exporter: Box<dyn SolidExporter> = match format {
+            "obj" => Box::new(ObjSolidExporter),
+            "stl" => Box::new(StlSolidExporter),
+            _ => Box::new(StepSolidExporter),
+        };
+        let mut session = process_kernel_session().lock().ok()?;
+        let handle = replay_process(&mut session, fixture)?;
+        let bytes = exporter.export(&session.kernel, &[handle], PROCESS3D_TESSELLATION_TOLERANCE).ok()?;
+        let media_format = exporter.format();
+        let binary = media_format.is_binary();
+        let data = if binary {
+            Value::String(base64::engine::general_purpose::STANDARD.encode(&bytes))
+        } else {
+            Value::String(String::from_utf8(bytes).ok()?)
+        };
+        Some(Process3dModelExport {
+            filename: format!("process3d.{}", media_format.as_str()),
+            data,
+            mime_type: media_format.mime_type().into(),
+            encoding: if binary { Some("base64".into()) } else { None },
+        })
+    }
+
+    /// 📦 Decodes a `requestFileOpen(readAs: "dataUrl")` payload into raw bytes.
+    fn process3d_bytes_from_data_url(data_url: &str) -> Option<Vec<u8>> {
+        if let Some((header, encoded)) = data_url.split_once(',') {
+            if header.starts_with("data:") {
+                return base64::engine::general_purpose::STANDARD.decode(encoded).ok();
+            }
+        }
+        Some(data_url.as_bytes().to_vec())
+    }
+
+    /// 📥 Imports a picked file into a brand-new stock-only fixture (steps cleared): STEP/OBJ/STL go
+    /// through the `SolidImporter` trait objects and land as `SolidSpec::ImportedSolid` (real B-Rep,
+    /// reusable as a Cut/Drill/Attach operand); GLB is decoded once (via the mesh tessellation bridge,
+    /// `GlbImporter`) purely to validate it, then kept as `SolidSpec::ImportedMesh` referencing the
+    /// original data url directly — it carries no exact B-Rep, so it is never re-imported into the kernel.
+    fn import_process3d_model(name: &str, data_url: &str) -> Option<process_3d::Process3dDocument> {
+        let bytes = process3d_bytes_from_data_url(data_url)?;
+        let mut fixture = process_3d::Process3dDocument::default();
+        if name.ends_with(".glb") {
+            semio_framework_plugin::GlbImporter.import(&bytes).ok()?;
+            fixture.stock = Stock { id: "stock".into(), label: "Imported GLB".into(), solid: SolidSpec::ImportedMesh { mesh_url: data_url.into() }, pose: Pose::default() };
+            return Some(fixture);
+        }
+        let (importer, label): (Box<dyn SolidImporter>, &str) = if name.ends_with(".stp") || name.ends_with(".step") {
+            (Box::new(StepSolidImporter), "Imported STEP")
+        } else if name.ends_with(".obj") {
+            (Box::new(ObjSolidImporter), "Imported OBJ")
+        } else if name.ends_with(".stl") {
+            (Box::new(StlSolidImporter), "Imported STL")
+        } else {
+            return None;
+        };
+        let mut session = process_kernel_session().lock().ok()?;
+        let handle = importer.import(&mut session.kernel, &bytes, PROCESS3D_TESSELLATION_TOLERANCE).ok()?.into_iter().next()?;
+        session.memo.clear();
+        session.stock_signature = 0;
+        fixture.stock = Stock { id: "stock".into(), label: label.into(), solid: SolidSpec::ImportedSolid { solid_handle: handle.0 }, pose: Pose::default() };
+        Some(fixture)
+    }
+
+    fn export_download_ops(envelope: &Process3dEnvelope) -> Vec<String> {
+        let Some(data) = envelope.runtime.pending_export.clone() else {
+            return Vec::new();
+        };
+        let filename = envelope.runtime.pending_export_filename.clone().unwrap_or_else(|| "process3d.step".into());
+        let mime_type = envelope.runtime.pending_export_mime.clone().unwrap_or_else(|| "application/step".into());
+        let payload = match data {
+            Value::String(text) => text,
+            other => serde_json::to_string(&other).unwrap_or_default(),
+        };
+        let encoding = envelope.runtime.pending_export_encoding.clone();
+        vec![json!({
+            "op": "downloadMediaExport",
+            "filename": filename,
+            "mimeType": mime_type,
+            "data": payload,
+            "encoding": encoding,
+        })
+        .to_string()]
+    }
+    //#endregion 🔖MediaImportExport
 
     //#region 🔖Panels
     fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
@@ -1063,6 +1227,7 @@ pub mod app_3d {
             tree_item_with_action("process3d-catalogue.stock-box", "Box", Some("box"), process3d_action("setStock", Some(json!({ "kind": "box" })))),
             tree_item_with_action("process3d-catalogue.stock-cylinder", "Cylinder", Some("cylinder"), process3d_action("setStock", Some(json!({ "kind": "cylinder" })))),
             tree_item_with_action("process3d-catalogue.stock-sphere", "Sphere", Some("circle"), process3d_action("setStock", Some(json!({ "kind": "sphere" })))),
+            tree_item_with_action("process3d-catalogue.stock-import", "Import Model…", Some("folder-open"), process3d_action("loadModelRequest", None)),
         ];
         sections.push(UiTreeSectionNode { id: "process3d-play-catalogue.stock".into(), label: Some(labels.stock.into()), default_open: Some(false), items: stock_items });
         UiNode::Tree(UiTreeNode { sections, selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None })
@@ -1082,6 +1247,12 @@ pub mod app_3d {
             }
             SolidSpec::Sphere { radius } => {
                 fields.push(number_field("process3d-inspector.radius", "Radius", *radius, &stock.id, "radius"));
+            }
+            SolidSpec::ImportedMesh { mesh_url } => {
+                fields.push(ui_inspector_readonly_field("process3d-inspector.source", labels.source, mesh_url.clone()));
+            }
+            SolidSpec::ImportedSolid { solid_handle } => {
+                fields.push(ui_inspector_readonly_field("process3d-inspector.source", labels.source, format!("solid #{solid_handle}")));
             }
         }
         fields.push(number_field("process3d-inspector.posX", "X", stock.pose.position[0], &stock.id, "posX"));
@@ -1501,6 +1672,43 @@ pub mod app_3d {
                         return vec![finalize_document_op(&mut envelope)];
                     }
                 }
+                "exportModel" => {
+                    let format = args.and_then(|value| value.get("format")).and_then(|value| value.as_str()).unwrap_or("step");
+                    if let Some(export) = export_process3d_model(&envelope.fixture, format) {
+                        envelope.runtime.pending_export = Some(export.data);
+                        envelope.runtime.pending_export_filename = Some(export.filename);
+                        envelope.runtime.pending_export_mime = Some(export.mime_type);
+                        envelope.runtime.pending_export_encoding = export.encoding;
+                    }
+                    let mut ops = vec![set_document_op(&envelope)];
+                    ops.extend(export_download_ops(&envelope));
+                    return ops;
+                }
+                "loadModelRequest" => {
+                    envelope.runtime.pending_export = None;
+                    envelope.runtime.pending_export_filename = None;
+                    envelope.runtime.pending_export_mime = None;
+                    envelope.runtime.pending_export_encoding = None;
+                    return vec![json!({
+                        "op": "requestFileOpen",
+                        "accept": ".stp,.step,.obj,.stl,.glb",
+                        "importAction": "importModelFile",
+                        "readAs": "dataUrl",
+                    })
+                    .to_string()];
+                }
+                "importModelFile" => {
+                    let name = args.and_then(|value| value.get("name")).and_then(|value| value.as_str()).unwrap_or("").to_ascii_lowercase();
+                    let payload = args.and_then(|value| value.get("payload")).cloned().or_else(|| args.cloned());
+                    let Some(data_url) = payload.as_ref().and_then(Value::as_str) else {
+                        return Vec::new();
+                    };
+                    if let Some(next) = import_process3d_model(&name, data_url) {
+                        envelope.fixture = next;
+                        envelope.runtime.selected_id = None;
+                        return vec![finalize_document_op(&mut envelope)];
+                    }
+                }
                 _ => {}
             }
             Vec::new()
@@ -1547,6 +1755,11 @@ pub mod app_3d {
                 tool_button("process3d.tool.stepBack", "chevron-left", "Step Back", process3d_action("stepCursorBack", None)).with_category(ToolCategory::History),
                 tool_button("process3d.tool.stepForward", "chevron-right", "Step Forward", process3d_action("stepCursorForward", None)).with_category(ToolCategory::History),
                 tool_button("process3d.tool.applyAll", "fast-forward", "Apply All", process3d_action("setCursor", Some(json!({ "value": null })))).with_category(ToolCategory::History),
+                tool_button("process3d.tool.exportStep", "save", "STEP", process3d_action("exportModel", Some(json!({ "format": "step" })))).with_category(ToolCategory::Actions),
+                tool_button("process3d.tool.exportObj", "save", "OBJ", process3d_action("exportModel", Some(json!({ "format": "obj" })))).with_category(ToolCategory::Actions),
+                tool_button("process3d.tool.exportStl", "save", "STL", process3d_action("exportModel", Some(json!({ "format": "stl" })))).with_category(ToolCategory::Actions),
+                tool_button("process3d.tool.exportGlb", "save", "GLB", process3d_action("exportModel", Some(json!({ "format": "glb" })))).with_category(ToolCategory::Actions),
+                tool_button("process3d.tool.load", "folder-open", "Load", process3d_action("loadModelRequest", None)).with_category(ToolCategory::Actions),
             ]
         }
 
@@ -1600,6 +1813,7 @@ pub mod app_3d {
     pub fn register_process3d_exports() {
         semio_framework_os::register_mesh_exporter("3d.process", "process", process3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
         semio_framework_os::register_mesh_exporter("3d.process", "process", process3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
+        semio_framework_os::register_mesh_exporter("3d.process", "process", process3d_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
         semio_framework_os::register_mesh_dwg_export_handler("3d.process", "process", process3d_mesh_from_document);
         semio_framework_os::register_mesh_dwg_import_handler("3d.process", process3d_document_from_mesh);
     }

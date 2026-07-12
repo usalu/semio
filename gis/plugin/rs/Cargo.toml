@@ -12,7 +12,14 @@ package = "semio:gis"
 [[package.metadata.semio.playground]]
 variant = "gis2d"
 aliases = ["gis 2d"]
+app = "gis2d"
 ports = { react = 6040, wgpu = 6140 }
+
+[[package.metadata.semio.playground]]
+variant = "gis3d"
+aliases = ["gis 3d"]
+app = "gis3d"
+ports = { react = 6083, wgpu = 6183 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -22,6 +29,7 @@ path = "lib.rs"
 semio-framework-os = { path = "../../../framework/product/os/core/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
 gis_2d = { path = "../../2d/rs" }
+gis_3d = { path = "../../3d/rs" }
 vcs = { path = "../../../vcs/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

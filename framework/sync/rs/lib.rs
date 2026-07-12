@@ -13,11 +13,7 @@
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
-use semio_framework_core::{
-    ActorId, DocumentDiff, DocumentId, DocumentVersion, HubClientFrame, HubServerFrame,
-    InverseOperation, OpEnvelope, OperationId, PayloadHash, PresencePeer, SchemaId, SchemaVersion,
-    UndoPolicy,
-};
+use semio_framework_core::{HubClientFrame, HubServerFrame, OpEnvelope, PresencePeer};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::sync::{broadcast, mpsc};
@@ -132,7 +128,16 @@ pub enum DocumentEvent {
 //#endregion 🔖Protocol
 
 //#region 🔖Endpoints
+/// @emoji 🧱 Core wire types used only when reconstructing an {@link OpEnvelope} from a stored edit,
+/// which happens exclusively on the native folder path.
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_core::{
+    ActorId, DocumentDiff, DocumentId, DocumentVersion, InverseOperation, OperationId, PayloadHash,
+    SchemaId, SchemaVersion, UndoPolicy,
+};
+
 /// @emoji 📇 Edit ids present in an envelope's `vcs.edits` array (schema-agnostic JSON read).
+#[cfg(not(target_arch = "wasm32"))]
 fn envelope_edit_ids(value: Option<&Value>) -> Vec<String> {
     value
         .and_then(|v| v.get("vcs"))
@@ -148,6 +153,7 @@ fn envelope_edit_ids(value: Option<&Value>) -> Vec<String> {
 }
 
 /// @emoji 📜 The `vcs.edits` entries of an envelope, as raw JSON values.
+#[cfg(not(target_arch = "wasm32"))]
 fn envelope_edits(value: &Value) -> Vec<Value> {
     value
         .get("vcs")
@@ -160,6 +166,7 @@ fn envelope_edits(value: &Value) -> Vec<Value> {
 /// @emoji 📦 Rebuilds an {@link OpEnvelope} from a stored `Edit` JSON so an appended external edit can
 /// flow through the store's causal DAG (`ingest_remote` → `edit_from_op_envelope`). Mirrors vcs's
 /// `op_envelope_from_edit` field-for-field.
+#[cfg(not(target_arch = "wasm32"))]
 fn op_envelope_from_stored_edit(schema: &str, document_id: &str, edit: Value) -> OpEnvelope {
     let id = edit.get("id").and_then(|v| v.as_str()).unwrap_or_default().to_string();
     let actor = edit.get("actor").and_then(|v| v.as_str()).unwrap_or("external").to_string();
@@ -1423,6 +1430,7 @@ mod tests {
         );
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn op_envelope_from_stored_edit_round_trips_through_ingest() {
         let edit_json = serde_json::json!({

@@ -2,7 +2,7 @@
 
 pub use infinite_cavas as cavas;
 pub use mathematical_graph::{
-    self as graph, orient_endpoints, CoreEdge, Directed, Directedness, EdgeId, ElementSemantics, GraphEdge, Handle, HandleId, HandleRole, Node, NodeId, NodeShape, Normal, PortModel, Ported, Undirected,
+    self as graph, orient_endpoints, property_bag_from_json, property_bag_to_json, CoreEdge, Directed, Directedness, EdgeId, ElementSemantics, GraphEdge, Handle, HandleId, HandleRole, Node, NodeId, NodeShape, Normal, PortModel, Ported, Undirected,
 };
 pub use mathematical_graph_manifest::{PropertyBag, PropertyValue};
 pub use mathematical_graph_drawing::routing::{
@@ -11,6 +11,8 @@ pub use mathematical_graph_drawing::routing::{
     handle_position_on_rectangle, rectangle_handle_angle_toward,
 };
 pub use mathematical_geometry::{clamp_f64, distance_between, distance_point_to_cubic_bezier, normalize_or_zero};
+
+pub use scene_json::{board_json_locked_option, board_json_visible_option, board_json_visible_or_true, CameraJson, NodeDescJson};
 
 pub mod scene_json {
     // #region scene_json

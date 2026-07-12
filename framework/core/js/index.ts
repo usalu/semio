@@ -1072,7 +1072,12 @@ export type PluginWasmHandle = {
   readonly manifest: PluginManifest;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
-  readonly handleAction: (instanceId: number, actionJson: string, viewState: PluginViewState) => Promise<string[]>;
+  readonly handleAction: (instanceId: number, actionJson: string, viewState: PluginViewState) => Promise<ActionResponse>;
+  readonly applyOperations?: (instanceId: number, operationsJson: string) => Promise<void>;
+  readonly readAppDocument?: (instanceId: number) => Promise<string>;
+  readonly loadAppDocument?: (instanceId: number, documentJson: string) => Promise<void>;
+  readonly attachBackbone?: (instanceId: number, uri: string) => Promise<void>;
+  readonly detachBackbone?: (instanceId: number) => Promise<void>;
   readonly render: (instanceId: number, bodyKey: string, viewState: PluginViewState) => Promise<PluginUiNode>;
   readonly renderWithDocument?: (instanceId: number, bodyKey: string, viewState: PluginViewState, documentJson: string) => Promise<PluginUiNode>;
   readonly tools: (instanceId: number, viewState: PluginViewState) => Promise<readonly Record<string, unknown>[]>;
@@ -1169,38 +1174,102 @@ export type PluginRegistryEntry = {
   readonly consumes?: readonly string[];
 };
 
-type KernelOperationPayload = {
-  readonly diff?: {
-    readonly payload?: unknown;
-  };
+//#region ActionResponse
+/** @emoji 🕰️ Hybrid logical clock stamp carried by every kernel operation. */
+export type HybridLogicalTimestamp = { readonly wall: number; readonly counter: number };
+
+/** @emoji 🩹 A schema-tagged document mutation payload (forward diff or inverse diff). */
+export type DocumentDiff = { readonly schemaId: string; readonly payload: unknown };
+
+/** @emoji ↩️ Undo semantics for a single kernel operation. */
+export type UndoPolicy = "exactBaseOnly" | "transformAgainstConcurrent" | "semanticUndo" | "compensatingAction";
+
+/** @emoji ↩️ The true inverse of a kernel operation, recorded from the store's `Edit.backwards`. */
+export type InverseOperation = {
+  readonly targetOperation: string;
+  readonly inverseDiff: DocumentDiff;
+  readonly baseVersion: number;
+  readonly dependencies?: readonly string[];
+  readonly undoPolicy: UndoPolicy;
 };
 
-type ActionResultPayload = {
-  readonly operations?: readonly KernelOperationPayload[];
+/** @emoji 🔁 One typed document operation with its true inverse — the CQRS wire unit. */
+export type KernelOperation = {
+  readonly id: string;
+  readonly document: number;
+  readonly baseVersion: number;
+  readonly actionId: string;
+  readonly diff: DocumentDiff;
+  readonly inverse: InverseOperation;
+  readonly dependencies?: readonly string[];
+  readonly author: string;
+  readonly timestamp: HybridLogicalTimestamp;
 };
 
-/** @emoji 🔧 Normalizes plugin action responses into legacy JSON patch op strings. */
-export function patchOpsFromActionResponse(raw: string): string[] {
-  let parsed: unknown;
+/** @emoji 🎁 The undo group binding an action invocation to its operations + inverses. */
+export type UndoGroup = {
+  readonly actionId: string;
+  readonly operations: readonly string[];
+  readonly inverseOperations: readonly InverseOperation[];
+};
+
+/** @emoji 📣 An out-of-band app event surfaced to the shell (e.g. history changed). */
+export type AppEvent = { readonly kind: string; readonly payload: unknown };
+
+/** @emoji 🩺 A diagnostic emitted alongside an action result. */
+export type Diagnostic = { readonly level: string; readonly message: string };
+
+/**
+ * @emoji 🐚 A typed side effect the shell performs on the app's behalf. Mirrors the Rust
+ * `HostEffect` enum (externally tagged: unit variants are the plain tag string, struct variants are
+ * a single-key object keyed by the camelCase variant name).
+ */
+export type HostEffect =
+  | "requestSync"
+  | { readonly openWindow: { readonly kind: string; readonly params: unknown } }
+  | { readonly closeWindow: { readonly window: number } }
+  | { readonly notify: { readonly message: string } }
+  | { readonly navigate: { readonly uri: string } }
+  | { readonly setPanel: { readonly panelJson: string } }
+  | { readonly downloadMediaExport: { readonly filename: string; readonly mimeType: string; readonly data: string; readonly encoding?: string } }
+  | { readonly iconRenderExport: { readonly items: readonly { readonly filename: string; readonly request: unknown }[] } }
+  | { readonly requestFileOpen: { readonly accept: string; readonly readAs?: string; readonly importAction: string } }
+  | { readonly spawnPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string; readonly label?: string; readonly documentJson?: string } }
+  | { readonly openPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string } };
+
+/**
+ * @emoji 📤 Typed result of a plugin `handle-action` call — mirrors the Rust `ActionResult`. Replaces
+ * the legacy `string[]` JSON-patch shape: operations are now typed `KernelOperation`s with true
+ * inverses, and the shell applies `requestedEffects` through `applyHostEffects` (WS-E).
+ */
+export type ActionResponse = {
+  readonly output: unknown;
+  readonly operations: readonly KernelOperation[];
+  readonly inverseGroup: UndoGroup;
+  readonly diagnostics?: readonly Diagnostic[];
+  readonly requestedEffects?: readonly HostEffect[];
+  readonly events?: readonly AppEvent[];
+};
+
+const EMPTY_ACTION_RESPONSE: ActionResponse = {
+  output: null,
+  operations: [],
+  inverseGroup: { actionId: "", operations: [], inverseOperations: [] },
+};
+
+/** @emoji 📥 Parses a raw plugin `handle-action` response string into a typed {@link ActionResponse}. */
+export function parseActionResponse(raw: string): ActionResponse {
   try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return [];
-  }
-  if (Array.isArray(parsed)) {
-    return parsed.map((entry) => (typeof entry === "string" ? entry : JSON.stringify(entry)));
-  }
-  if (parsed && typeof parsed === "object") {
-    const result = parsed as ActionResultPayload;
-    if (Array.isArray(result.operations)) {
-      return result.operations
-        .map((operation) => operation?.diff?.payload)
-        .filter((payload): payload is Record<string, unknown> => payload != null && typeof payload === "object")
-        .map((payload) => JSON.stringify(payload));
+    const parsed = JSON.parse(raw) as Partial<ActionResponse> | null;
+    if (parsed && typeof parsed === "object" && Array.isArray(parsed.operations)) {
+      return parsed as ActionResponse;
     }
+  } catch {
+    // fall through to the empty response
   }
-  return [];
+  return EMPTY_ACTION_RESPONSE;
 }
+//#endregion ActionResponse
 
 export const DEFAULT_PLUGIN_REGISTRY: readonly PluginRegistryEntry[] = [{ pluginId: "draw", moduleUrl: "/plugin-modules/draw/draw_plugin.js" }];
 
@@ -1239,6 +1308,11 @@ export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): Plugin
     windowEngagements: (instanceId, viewState) => runSerialized(() => handle.windowEngagements(instanceId, viewState)),
     windowMeasures: (instanceId, viewState) => runSerialized(() => handle.windowMeasures(instanceId, viewState)),
     appLabels: (instanceId, viewState) => runSerialized(() => handle.appLabels(instanceId, viewState)),
+    applyOperations: handle.applyOperations ? (instanceId, operationsJson) => runSerialized(() => handle.applyOperations!(instanceId, operationsJson)) : undefined,
+    readAppDocument: handle.readAppDocument ? (instanceId) => runSerialized(() => handle.readAppDocument!(instanceId)) : undefined,
+    loadAppDocument: handle.loadAppDocument ? (instanceId, documentJson) => runSerialized(() => handle.loadAppDocument!(instanceId, documentJson)) : undefined,
+    attachBackbone: handle.attachBackbone ? (instanceId, uri) => runSerialized(() => handle.attachBackbone!(instanceId, uri)) : undefined,
+    detachBackbone: handle.detachBackbone ? (instanceId) => runSerialized(() => handle.detachBackbone!(instanceId)) : undefined,
     dispose: handle.dispose,
   };
 }
@@ -1273,6 +1347,11 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       windowEngagements?: (instanceId: number, viewStateJson: string) => Promise<string>;
       windowMeasures?: (instanceId: number, viewStateJson: string) => Promise<string>;
       appLabels?: (instanceId: number, viewStateJson: string) => Promise<string>;
+      applyOperations?: (instanceId: number, operationsJson: string) => Promise<void>;
+      readAppDocument?: (instanceId: number) => Promise<string>;
+      loadAppDocument?: (instanceId: number, documentJson: string) => Promise<void>;
+      attachBackbone?: (instanceId: number, uri: string) => Promise<void>;
+      detachBackbone?: (instanceId: number) => Promise<void>;
     }>;
     semio_plugin_manifest?: () => string;
     semio_plugin_create_app?: (appId: string) => number;
@@ -1283,6 +1362,11 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
     semio_plugin_window_engagements?: (instanceId: number, viewStateJson: string) => string;
     semio_plugin_window_measures?: (instanceId: number, viewStateJson: string) => string;
     semio_plugin_app_labels?: (instanceId: number, viewStateJson: string) => string;
+    semio_plugin_apply_operations?: (instanceId: number, operationsJson: string) => void;
+    semio_plugin_read_app_document?: (instanceId: number) => string;
+    semio_plugin_load_app_document?: (instanceId: number, documentJson: string) => void;
+    semio_plugin_attach_backbone?: (instanceId: number, uri: string) => void;
+    semio_plugin_detach_backbone?: (instanceId: number) => void;
   };
   if (module.default) await module.default();
   if (module.createPluginApi) {
@@ -1297,7 +1381,7 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       },
       handleAction: async (instanceId, actionJson, viewState) => {
         const raw = await api.handleAction(instanceId, actionJson, JSON.stringify(viewState));
-        return patchOpsFromActionResponse(raw);
+        return parseActionResponse(raw);
       },
       render: async (instanceId, bodyKey, viewState) => JSON.parse(await api.render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode,
       renderWithDocument: api.renderWithDocument ? async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await api.renderWithDocument!(instanceId, bodyKey, JSON.stringify(viewState), documentJson)) as PluginUiNode : undefined,
@@ -1317,6 +1401,11 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
         if (!api.appLabels) return EMPTY_APP_LABELS_OVERLAY;
         return normalizeAppLabelsOverlay(JSON.parse(await api.appLabels(instanceId, JSON.stringify(viewState))));
       },
+      applyOperations: api.applyOperations ? (instanceId, operationsJson) => api.applyOperations!(instanceId, operationsJson) : undefined,
+      readAppDocument: api.readAppDocument ? (instanceId) => api.readAppDocument!(instanceId) : undefined,
+      loadAppDocument: api.loadAppDocument ? (instanceId, documentJson) => api.loadAppDocument!(instanceId, documentJson) : undefined,
+      attachBackbone: api.attachBackbone ? (instanceId, uri) => api.attachBackbone!(instanceId, uri) : undefined,
+      detachBackbone: api.detachBackbone ? (instanceId) => api.detachBackbone!(instanceId) : undefined,
       dispose() {},
     });
   }
@@ -1337,9 +1426,9 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
     },
     async handleAction(instanceId: number, actionJson: string, viewState: PluginViewState) {
       const handle = module.semio_plugin_handle_action;
-      if (!handle) return [];
+      if (!handle) return EMPTY_ACTION_RESPONSE;
       const raw = handle(instanceId, actionJson, JSON.stringify(viewState));
-      return patchOpsFromActionResponse(raw);
+      return parseActionResponse(raw);
     },
     async render(instanceId: number, bodyKey: string, viewState: PluginViewState) {
       const render = module.semio_plugin_render;
@@ -1366,6 +1455,11 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       if (!labels) return EMPTY_APP_LABELS_OVERLAY;
       return normalizeAppLabelsOverlay(JSON.parse(labels(instanceId, JSON.stringify(viewState))));
     },
+    applyOperations: module.semio_plugin_apply_operations ? async (instanceId, operationsJson) => { module.semio_plugin_apply_operations!(instanceId, operationsJson); } : undefined,
+    readAppDocument: module.semio_plugin_read_app_document ? async (instanceId) => module.semio_plugin_read_app_document!(instanceId) : undefined,
+    loadAppDocument: module.semio_plugin_load_app_document ? async (instanceId, documentJson) => { module.semio_plugin_load_app_document!(instanceId, documentJson); } : undefined,
+    attachBackbone: module.semio_plugin_attach_backbone ? async (instanceId, uri) => { module.semio_plugin_attach_backbone!(instanceId, uri); } : undefined,
+    detachBackbone: module.semio_plugin_detach_backbone ? async (instanceId) => { module.semio_plugin_detach_backbone!(instanceId); } : undefined,
     dispose() {},
   });
 }

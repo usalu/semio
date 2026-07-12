@@ -29,13 +29,20 @@ pub struct Pose {
     pub angle: f64,
 }
 
-/// 📦 Primitive solid spec resolvable via `BrepkitKernel::*_prim_sync`.
+/// 📦 Primitive solid spec resolvable via `BrepkitKernel::*_prim_sync`, or a non-parametric imported
+/// reference (mesh or real B-Rep solid) resolved by the app's own kernel session instead of a primitive.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum SolidSpec {
     Box { width: f64, depth: f64, height: f64 },
     Cylinder { radius: f64, height: f64 },
     Sphere { radius: f64 },
+    /// 🖼️ Non-parametric GLB-imported reference mesh — tessellation-only, no real B-Rep topology
+    /// (mirrors `cad`'s `meshUrl` pattern); cannot serve as a Cut/Drill/Attach tool.
+    ImportedMesh { mesh_url: String },
+    /// 🧊 STEP/OBJ/STL-imported solid with real B-Rep topology, resolved through the app's kernel
+    /// session by handle id (mirrors `cad`'s `solidHandle` pattern); ephemeral to that session.
+    ImportedSolid { solid_handle: String },
 }
 
 /// 🪵 The raw workpiece the process starts from.
@@ -436,6 +443,45 @@ mod tests {
             .dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOp::SetStock { stock: new_stock.clone() }], description: None })
             .expect("set stock");
         assert_eq!(store.projection().expect("projection").stock, new_stock);
+
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        assert_eq!(store.projection().expect("projection").stock, original_stock);
+    }
+
+    #[test]
+    fn imported_mesh_solid_spec_round_trips_json() {
+        let solid = SolidSpec::ImportedMesh { mesh_url: "data:model/gltf-binary;base64,AAAA".into() };
+        let json = serde_json::to_value(&solid).expect("serialize");
+        assert_eq!(json["kind"], "importedMesh");
+        assert_eq!(json["meshUrl"], "data:model/gltf-binary;base64,AAAA");
+        let parsed: SolidSpec = serde_json::from_value(json).expect("deserialize");
+        assert_eq!(parsed, solid);
+    }
+
+    #[test]
+    fn imported_solid_solid_spec_round_trips_json() {
+        let solid = SolidSpec::ImportedSolid { solid_handle: "solid-42".into() };
+        let json = serde_json::to_value(&solid).expect("serialize");
+        assert_eq!(json["kind"], "importedSolid");
+        assert_eq!(json["solidHandle"], "solid-42");
+        let parsed: SolidSpec = serde_json::from_value(json).expect("deserialize");
+        assert_eq!(parsed, solid);
+    }
+
+    #[test]
+    fn sets_stock_to_imported_solid_and_backwards_restores() {
+        let mut store = new_store();
+        let original_stock = store.projection().expect("projection").stock;
+        let imported_stock = Stock {
+            id: "stock".into(),
+            label: "Imported STEP".into(),
+            solid: SolidSpec::ImportedSolid { solid_handle: "solid-7".into() },
+            pose: Pose::default(),
+        };
+        store
+            .dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOp::SetStock { stock: imported_stock.clone() }], description: None })
+            .expect("set imported stock");
+        assert_eq!(store.projection().expect("projection").stock, imported_stock);
 
         store.dispatch(DocumentVcsCommand::Undo).expect("undo");
         assert_eq!(store.projection().expect("projection").stock, original_stock);

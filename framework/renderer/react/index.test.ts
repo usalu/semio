@@ -26,6 +26,7 @@ import { TableHost } from "./components/table-host.tsx";
 import { VcsHistoryHost } from "./components/vcs-history-host.tsx";
 import { TextEditorHost, buildTextEditorContextMenuItems, lineRangeAt, multiSpanReplace } from "./components/text-editor-host.tsx";
 import { World3dHost, brushObjectPlacementArgs, resolveVortexPointerDownIntent, resolveWorldContextMenuTarget, worldInstancePickBlocked } from "./components/world-3d-host.tsx";
+import { parseWorldTerrainStyle } from "./components/world-terrain-layer.tsx";
 import {
   NoteCanvasHost,
   noteBlockBounds,
@@ -881,6 +882,7 @@ describe("framework renderer hosts", () => {
         interactionJson: '{"activeTool":"select"}',
         engagementPreviewJson: '[{"kind":"point","role":"origin","position":[0,0,0]},{"kind":"box-preview","role":"preview","cornerA":[0,0,0],"cornerB":[2,2,0]}]',
         contextMenuJson: "[]",
+        terrainJson: '{"tileUrlTemplate":"/dem/{z}/{x}/{y}.png","projectOriginLon":9.7382,"projectOriginLat":52.3759,"exaggeration":1.5,"colorRamp":"hypsometric","minZoom":6,"maxZoom":14}',
       },
     };
     expect(node.world3d?.meshesJson).toBe("[]");
@@ -888,6 +890,23 @@ describe("framework renderer hosts", () => {
     expect(node.world3d?.interactionJson).toContain("select");
     expect(node.world3d?.engagementPreviewJson).toContain("box-preview");
     expect(node.world3d?.contextMenuJson).toBe("[]");
+    expect(node.world3d?.terrainJson).toContain("hypsometric");
+  });
+
+  it("parses GIS 3D terrain style JSON, defaulting missing fields, and rejects a missing tileUrlTemplate", () => {
+    expect(parseWorldTerrainStyle(undefined)).toBeNull();
+    expect(parseWorldTerrainStyle("not json")).toBeNull();
+    expect(parseWorldTerrainStyle('{"projectOriginLon":1}')).toBeNull();
+    const style = parseWorldTerrainStyle('{"tileUrlTemplate":"/dem/{z}/{x}/{y}.png","projectOriginLon":9.7382,"projectOriginLat":52.3759,"exaggeration":2}');
+    expect(style).toMatchObject({
+      tileUrlTemplate: "/dem/{z}/{x}/{y}.png",
+      projectOriginLon: 9.7382,
+      projectOriginLat: 52.3759,
+      exaggeration: 2,
+      colorRamp: "hypsometric",
+      minZoom: 6,
+      maxZoom: 14,
+    });
   });
 
   it("blocks instance picking for fill and brush engagements but not select", () => {

@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { cadFixtureVitePlugin, gisMapTilesVitePlugins, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, uiAssetsVitePlugin, puzzle3dMeshesVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { cadFixtureVitePlugin, gisMapTilesVitePlugins, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, terrainTilesVitePlugins, uiAssetsVitePlugin, puzzle3dMeshesVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 import { semioBackboneVitePlugin } from "../script.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
@@ -47,11 +47,12 @@ export default defineConfig({
     ...cadFixtureVitePlugin(repoRoot),
     ...puzzle3dMeshesVitePlugin(repoRoot),
     ...(plugin === "gis2d" ? gisMapTilesVitePlugins(repoRoot, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE)) : []),
+    ...(plugin === "gis3d" ? terrainTilesVitePlugins(repoRoot, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE)) : []),
     ...(renderer === "wgpu" ? [tailwindcss()] : [react(), tailwindcss()]),
   ],
   optimizeDeps: {
     include: ["react-reconciler", "react-reconciler/constants", "three", "@react-three/fiber", "fuse.js"],
-    exclude: [...(renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : []), "@semio-tech/gis-2d-rs", "@semio-tech/framework-graph-rs", "@semio-tech/framework-editor-rs", "@semio-tech/raster-rs"],
+    exclude: [...(renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : []), "@semio-tech/gis-2d-rs", "@semio-tech/gis-3d-rs", "@semio-tech/framework-graph-rs", "@semio-tech/framework-editor-rs", "@semio-tech/raster-rs"],
   },
   define: {
     "import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(process.env.SEMIO_PLUGIN ?? "s"),

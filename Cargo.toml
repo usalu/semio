@@ -29,10 +29,15 @@ members = [
     "mathematical/geometry/rs",
     "neural/engine/rs",
     "ui/styling/rs",
+    "ui/wgpu/rs",
     "reasoning/mindmap/rs",
     "gis/2d/rs",
+    "gis/3d/rs",
+    "gis/plugin/rs",
     "kernel/3d/brep/rs",
     "kernel/3d/brep/engine/rs",
+    "process/3d/rs",
+    "process/plugin/rs",
 ]
 
 resolver = "2"

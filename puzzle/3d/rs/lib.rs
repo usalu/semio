@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 //#region 🔒GeometryAdapter
-//! 🔒 Thin wrappers over `nalgebra`/`parry3d` — the one interface boundary this crate depends on.
+/// 🔒 Thin wrappers over `nalgebra`/`parry3d` — the one interface boundary this crate depends on.
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct Vec3d(nalgebra::Vector3<f32>);

@@ -2735,6 +2735,7 @@ mod semio_plugin_macro_tests {
         App::from_builder(
             App::builder("synthetic-play", "Synthetic")
                 .document(["state"])
+                .mode("edit", "Edit")
                 .window_kind("main", "Main", "synthetic.main", SurfaceKind::Canvas2d),
         )
     }

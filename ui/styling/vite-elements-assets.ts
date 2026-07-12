@@ -804,6 +804,11 @@ export function mapTileCacheRoots(repoRoot: string): { readonly osm: string; rea
   };
 }
 
+/** @emoji ⛰️ Cache root for GIS 3D elevation (Terrarium DEM) tiles — the 3D analog of {@link mapTileCacheRoots}. */
+export function terrainTileCacheRoot(repoRoot: string): string {
+  return resolve(repoRoot, ".repo-cache", "terrarium-dem");
+}
+
 /** @emoji 🧭 Web Mercator tile index for a lon/lat at zoom `z`. */
 export function lonLatToTileXY(lon: number, lat: number, z: number): { x: number; y: number } {
   const n = 2 ** z;
@@ -873,6 +878,26 @@ async function fetchOsmTileToCache(cacheRoot: string, z: number, x: number, y: n
   }
   await mkdir(resolve(filePath, ".."), { recursive: true });
   const upstream = await fetch(`https://tile.openstreetmap.org/${z}/${x}/${y}.png`, {
+    headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT },
+  });
+  if (!upstream.ok) {
+    return false;
+  }
+  await writeFile(filePath, Buffer.from(await upstream.arrayBuffer()));
+  return true;
+}
+
+const GIS_3D_TERRARIUM_TILE_BASE_URL = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium";
+
+async function fetchElevationTileToCache(cacheRoot: string, z: number, x: number, y: number): Promise<boolean> {
+  const rel = `${z}/${x}/${y}.png`;
+  const filePath = resolve(cacheRoot, rel);
+  const relToRoot = relative(cacheRoot, filePath);
+  if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
+    return false;
+  }
+  await mkdir(resolve(filePath, ".."), { recursive: true });
+  const upstream = await fetch(`${GIS_3D_TERRARIUM_TILE_BASE_URL}/${z}/${x}/${y}.png`, {
     headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT },
   });
   if (!upstream.ok) {
@@ -1079,6 +1104,85 @@ function createVtTileMiddleware(cacheRoot: string, mode: GisMapTileServeMode): C
       res.end();
     }
   };
+}
+
+/** @emoji ⛰️ Serves `/dem/{z}/{x}/{y}.png` Terrarium elevation tiles — the 3D analog of {@link createOsmTileMiddleware}. */
+function createElevationTileMiddleware(cacheRoot: string, mode: GisMapTileServeMode): Connect.NextHandleFunction {
+  return async (req, res, next) => {
+    const match = req.url?.match(/^\/dem\/(\d+)\/(\d+)\/(\d+)\.png(?:\?.*)?$/);
+    if (!match) {
+      next();
+      return;
+    }
+    const [, z, x, y] = match;
+    const rel = `${z}/${x}/${y}.png`;
+    const filePath = resolve(cacheRoot, rel);
+    const relToRoot = relative(cacheRoot, filePath);
+    if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
+      next();
+      return;
+    }
+    if (existsSync(filePath)) {
+      res.setHeader("Content-Type", "image/png");
+      createReadStream(filePath).pipe(res);
+      return;
+    }
+    if (mode === "bundle") {
+      res.statusCode = 404;
+      res.end();
+      return;
+    }
+    try {
+      const ok = await fetchElevationTileToCache(cacheRoot, Number(z), Number(x), Number(y));
+      if (!ok) {
+        res.statusCode = 404;
+        res.end();
+        return;
+      }
+      res.setHeader("Content-Type", "image/png");
+      createReadStream(filePath).pipe(res);
+    } catch {
+      res.statusCode = 502;
+      res.end();
+    }
+  };
+}
+
+/** @emoji ⛰️ Vite plugins serving GIS 3D elevation tiles (`fetch` or offline `bundle`) — the 3D analog of {@link gisMapTilesVitePlugins}. */
+export function terrainTilesVitePlugins(repoRoot: string, mode: GisMapTileServeMode = "fetch"): Plugin[] {
+  const dem = terrainTileCacheRoot(repoRoot);
+  const serveDem = createElevationTileMiddleware(dem, mode);
+  let viteRoot = process.cwd();
+  const plugins: Plugin[] = [
+    {
+      name: "gis-3d-dem-tiles",
+      enforce: "pre",
+      configureServer(server) {
+        server.middlewares.use(serveDem);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(serveDem);
+      },
+    },
+  ];
+  if (mode === "bundle") {
+    plugins.push({
+      name: "gis-3d-tiles-build",
+      apply: "build",
+      enforce: "pre",
+      configResolved(config) {
+        viteRoot = config.root;
+      },
+      closeBundle() {
+        const dist = resolve(viteRoot, "dist");
+        mkdirSync(dist, { recursive: true });
+        if (existsSync(dem)) {
+          cpSync(dem, resolve(dist, "dem"), { recursive: true });
+        }
+      },
+    });
+  }
+  return plugins;
 }
 
 /** @emoji 🗺 Standalone HTTP server for GIS map raster/vector tiles (wgpu Trunk / native-bin dev). */

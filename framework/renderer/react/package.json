@@ -19,6 +19,7 @@
     "@semio-tech/framework-graph-rs": "workspace:*",
     "@semio-tech/flow-core": "workspace:*",
     "@semio-tech/gis-2d-rs": "workspace:*",
+    "@semio-tech/gis-3d-rs": "workspace:*",
     "@semio-tech/puzzle-2d-rs": "workspace:*",
     "@semio-tech/raster-rs": "workspace:*",
     "@semio-tech/infinite-cavas-react-renderer": "workspace:*",

@@ -424,6 +424,7 @@ pub enum WindowMeasure {
         label: Option<String>,
         value: String,
         items: Vec<MeasureSelectItem>,
+        #[cfg_attr(feature = "typegen", ts(rename = "onChange"))]
         on_change: ActionDescriptor,
     },
     Slider {
@@ -435,22 +436,25 @@ pub enum WindowMeasure {
         max: f64,
         #[cfg_attr(feature = "typegen", ts(optional))]
         step: Option<f64>,
+        #[cfg_attr(feature = "typegen", ts(rename = "onChange"))]
         on_change: ActionDescriptor,
     },
     Toggle {
         id: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "iconId"))]
         icon_id: String,
         #[cfg_attr(feature = "typegen", ts(optional))]
         label: Option<String>,
         pressed: bool,
         #[cfg_attr(feature = "typegen", ts(optional))]
         text: Option<String>,
+        #[cfg_attr(feature = "typegen", ts(rename = "onChange"))]
         on_change: ActionDescriptor,
     },
     Group {
         id: String,
         label: String,
-        #[cfg_attr(feature = "typegen", ts(optional))]
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "defaultOpen"))]
         default_open: Option<bool>,
         children: Vec<WindowMeasure>,
     },
@@ -581,9 +585,9 @@ pub enum WindowEngagementControl {
         unit: Option<String>,
         #[cfg_attr(feature = "typegen", ts(optional))]
         disabled: Option<bool>,
-        #[cfg_attr(feature = "typegen", ts(optional))]
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
         on_change: Option<ActionDescriptor>,
-        #[cfg_attr(feature = "typegen", ts(optional))]
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "onCommit"))]
         on_commit: Option<ActionDescriptor>,
     },
     Stepper {
@@ -602,9 +606,9 @@ pub enum WindowEngagementControl {
         unit: Option<String>,
         #[cfg_attr(feature = "typegen", ts(optional))]
         disabled: Option<bool>,
-        #[cfg_attr(feature = "typegen", ts(optional))]
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
         on_change: Option<ActionDescriptor>,
-        #[cfg_attr(feature = "typegen", ts(optional))]
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "onCommit"))]
         on_commit: Option<ActionDescriptor>,
     },
     Ring {
@@ -617,7 +621,7 @@ pub enum WindowEngagementControl {
         options: Vec<WindowEngagementRingOption>,
         #[cfg_attr(feature = "typegen", ts(optional))]
         disabled: Option<bool>,
-        #[cfg_attr(feature = "typegen", ts(optional))]
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "onSelect"))]
         on_select: Option<ActionDescriptor>,
     },
     ToggleGroup {
@@ -630,7 +634,7 @@ pub enum WindowEngagementControl {
         options: Vec<WindowEngagementToggleGroupOption>,
         #[cfg_attr(feature = "typegen", ts(optional))]
         disabled: Option<bool>,
-        #[cfg_attr(feature = "typegen", ts(optional))]
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "onSelect"))]
         on_select: Option<ActionDescriptor>,
     },
     Select {
@@ -645,7 +649,7 @@ pub enum WindowEngagementControl {
         items: Vec<WindowEngagementSelectItem>,
         #[cfg_attr(feature = "typegen", ts(optional))]
         disabled: Option<bool>,
-        #[cfg_attr(feature = "typegen", ts(optional))]
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
         on_change: Option<ActionDescriptor>,
     },
 }
@@ -3485,7 +3489,7 @@ mod tests {
                 body_key: "composite".into(),
                 surface_kind: crate::SurfaceKind::Canvas2d,
                 icon_id: None,
-                options: crate::ui::WindowOptions::default(),
+                options: crate::WindowOptions::default(),
                 actions: Vec::new(),
                 params_schema: None,
                 document_projection_schema: None,
@@ -6064,22 +6068,33 @@ pub struct ExampleDefinition {
 pub enum Contribution {
     /// 🧩 A module contributing an extension block kind to a protocol-list (Blockly-like) builder host app.
     ProtocolBlockKind {
+        #[cfg_attr(feature = "typegen", ts(rename = "appId"))]
         app_id: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "blockKind"))]
         block_kind: String,
         label: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "iconId"))]
         icon_id: String,
         #[serde(default, skip_serializing_if = "String::is_empty")]
+        #[cfg_attr(feature = "typegen", ts(rename = "defaultValueJson"))]
         default_value_json: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "paramsBodyKey"))]
         params_body_key: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "previewBodyKey"))]
         preview_body_key: String,
     },
     /// 🧩 A sourcing module contributing a typology tree and catalogue object kinds to a sourcing host app.
     SourcingModule {
+        #[cfg_attr(feature = "typegen", ts(rename = "appId"))]
         app_id: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "moduleId"))]
         module_id: String,
         label: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "iconId"))]
         icon_id: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "typologyJson"))]
         typology_json: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "kindsJson"))]
         kinds_json: String,
     },
 }

@@ -1626,6 +1626,268 @@ pub mod app_2d {
     //#endregion 🧪Tests
 }
 
+pub mod app_3d {
+    //! ⛰️ GIS 3D plugin — terrain viewer app bundled as a hot-swappable WASM component. Reuses the
+    //! existing `World3d` viewport/renderer rather than a bespoke one (see `gis/3d/rs` for why);
+    //! deliberately read-mostly for this first pass — the only editable/undoable property is
+    //! vertical exaggeration.
+
+    use gis_3d::{
+        build_terrain_scene_json, projection, Gis3dTerrainDocument, Gis3dTerrainEnvelope, Gis3dTerrainOp, Gis3dTerrainStore,
+        TerrainDescriptorJson, TerrainProjectOrigin, GIS_3D_TERRAIN_SCHEMA,
+    };
+    use semio_framework_plugin::{
+        build_world_3d_scene, create_default_layout, ui_text, world3d_default_camera, world3d_scene_extended, world3d_selection_json,
+        App, PluginApp, SurfaceKind, UiNode, ViewState, WindowMeasure,
+    };
+    use serde::{Deserialize, Serialize};
+    use serde_json::{json, Value};
+    use std::collections::HashMap;
+    use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
+
+    //#region 🔖Constants
+    const GIS3D_PLAY_APP_ID: &str = "gis3d-play";
+    const GIS3D_PLAY_SURFACE: &str = "gis3d.play.composite";
+    const GIS3D_PLAY_BODY_COMPOSITE: &str = "gis3d.play.composite";
+    const GIS3D_PLAY_WINDOW_MAIN: &str = "gis3d-main";
+
+    const REUSE_TERRAIN_EXAMPLE_JSON: &str = include_str!("../../3d/example/reuse.terrain.gis.json");
+    //#endregion 🔖Constants
+
+    //#region 🔖Types
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Gis3dPlayRuntime {
+        #[serde(default)]
+        terrain_fixture_json: String,
+        #[serde(default = "world3d_default_camera")]
+        camera_json: String,
+        #[serde(default)]
+        selected_ids: Vec<String>,
+    }
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Gis3dPlayEnvelope {
+        envelope: Gis3dTerrainEnvelope,
+        #[serde(default)]
+        applied_edit_ids: Vec<String>,
+        #[serde(default)]
+        redo_edit_ids: Vec<String>,
+        #[serde(default)]
+        runtime: Gis3dPlayRuntime,
+    }
+    //#endregion 🔖Types
+
+    //#region 🔖Document
+    fn empty_terrain_descriptor() -> TerrainDescriptorJson {
+        TerrainDescriptorJson {
+            schema: GIS_3D_TERRAIN_SCHEMA.into(),
+            project_origin: TerrainProjectOrigin { lon: 0.0, lat: 0.0 },
+            positions: Vec::new(),
+            exaggeration: 1.0,
+        }
+    }
+
+    fn parse_descriptor(runtime: &Gis3dPlayRuntime) -> TerrainDescriptorJson {
+        serde_json::from_str(&runtime.terrain_fixture_json).unwrap_or_else(|_| empty_terrain_descriptor())
+    }
+
+    /// 🎥 A default overview camera scaled for a real-world DEM tile patch (hundreds of meters to a
+    /// few kilometers wide) — the generic `world3d_default_camera()` (position `[4,-4,3]`) assumes
+    /// an object-scale scene and would sit inside the ground here.
+    fn initial_camera_json() -> String {
+        json!({ "position": [800.0, -800.0, 600.0], "target": [0.0, 0.0, 0.0], "up": [0.0, 0.0, 1.0], "fov": 45.0 }).to_string()
+    }
+
+    fn default_envelope() -> Gis3dPlayEnvelope {
+        let runtime = Gis3dPlayRuntime {
+            terrain_fixture_json: REUSE_TERRAIN_EXAMPLE_JSON.into(),
+            camera_json: initial_camera_json(),
+            selected_ids: Vec::new(),
+        };
+        let descriptor = parse_descriptor(&runtime);
+        Gis3dPlayEnvelope {
+            envelope: create_document_vcs_envelope(
+                GIS_3D_TERRAIN_SCHEMA,
+                "gis3d",
+                Gis3dTerrainDocument { exaggeration: descriptor.exaggeration },
+                None,
+            ),
+            applied_edit_ids: Vec::new(),
+            redo_edit_ids: Vec::new(),
+            runtime,
+        }
+    }
+
+    fn parse_envelope(document_json: &str) -> Gis3dPlayEnvelope {
+        serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
+    }
+
+    fn set_document_op(envelope: &Gis3dPlayEnvelope) -> String {
+        json!({ "op": "setDocument", "document": envelope }).to_string()
+    }
+
+    fn store_from_envelope(play: &Gis3dPlayEnvelope) -> Gis3dTerrainStore {
+        let mut store = Gis3dTerrainStore::new(play.envelope.clone());
+        store.set_envelope(play.envelope.clone(), play.applied_edit_ids.clone());
+        store
+    }
+
+    fn sync_store_to_envelope(store: &Gis3dTerrainStore, runtime: &Gis3dPlayRuntime, redo_edit_ids: &[String]) -> Gis3dPlayEnvelope {
+        Gis3dPlayEnvelope {
+            envelope: store.envelope().clone(),
+            applied_edit_ids: store.applied_edit_ids().to_vec(),
+            redo_edit_ids: redo_edit_ids.to_vec(),
+            runtime: runtime.clone(),
+        }
+    }
+    //#endregion 🔖Document
+
+    //#region 🔖Render
+    /// 📍 GIS pins are emitted as plain `World3d` instances with no matching `meshesJson` entry —
+    /// `WorldInstancesLayer`'s existing missing-mesh fallback renders a small colored box, so
+    /// selection/hover/context-menu all work for free without any new scene-schema surface.
+    fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
+        let instances: Vec<Value> = descriptor
+            .positions
+            .iter()
+            .map(|position| {
+                let (x, y) = projection::lonlat_to_local_meters(position.lon, position.lat, descriptor.project_origin.lon, descriptor.project_origin.lat);
+                json!({
+                    "id": position.id,
+                    "meshId": "pin",
+                    "position": [x, y, 50.0],
+                    "color": "#ff3355",
+                    "label": position.label,
+                })
+            })
+            .collect();
+        serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+    }
+
+    fn render_canvas(play: &Gis3dPlayEnvelope) -> UiNode {
+        let descriptor = parse_descriptor(&play.runtime);
+        let mut scene = world3d_scene_extended(
+            play.runtime.camera_json.clone(),
+            "[]".into(),
+            instances_json(&descriptor),
+            world3d_selection_json("rectangle", &play.runtime.selected_ids, None),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        scene.terrain_json = Some(build_terrain_scene_json(&descriptor));
+        build_world_3d_scene(GIS3D_PLAY_SURFACE, GIS3D_PLAY_APP_ID, scene)
+    }
+    //#endregion 🔖Render
+
+    //#region 🔖Gis3dPlayApp
+    #[derive(Default)]
+    pub struct Gis3dPlayApp;
+
+    impl PluginApp for Gis3dPlayApp {
+        fn app_id(&self) -> &str {
+            GIS3D_PLAY_APP_ID
+        }
+
+        fn initial_document_json(&self) -> String {
+            serde_json::to_string(&default_envelope()).expect("gis3d envelope json")
+        }
+
+        fn handle_action_patch_ops(&mut self, action: &str, args: Option<&Value>, document_json: &str, _view_state: &ViewState) -> Vec<String> {
+            let mut play = parse_envelope(document_json);
+            let mut store = store_from_envelope(&play);
+            match action {
+                "setDocument" => {
+                    if let Some(document) = args.and_then(|value| value.get("document")) {
+                        if let Ok(parsed) = serde_json::from_value::<Gis3dPlayEnvelope>(document.clone()) {
+                            return vec![set_document_op(&parsed)];
+                        }
+                    }
+                }
+                "setCamera" => {
+                    let camera = args.and_then(|value| value.get("camera")).or_else(|| args.and_then(|value| value.get("cameraJson")));
+                    if let Some(camera) = camera {
+                        play.runtime.camera_json = camera.to_string();
+                        return vec![set_document_op(&play)];
+                    }
+                }
+                "setSelection" | "worldSelect" => {
+                    if let Some(ids) = args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok()) {
+                        play.runtime.selected_ids = ids;
+                        return vec![set_document_op(&play)];
+                    }
+                }
+                "setExaggeration" => {
+                    if let Some(exaggeration) = args.and_then(|value| value.get("exaggeration")).and_then(|value| value.as_f64()) {
+                        let _ = store.dispatch(DocumentVcsCommand::Apply {
+                            operations: vec![Gis3dTerrainOp::SetExaggeration { exaggeration }],
+                            description: None,
+                        });
+                        play.redo_edit_ids.clear();
+                        return vec![set_document_op(&sync_store_to_envelope(&store, &play.runtime, &play.redo_edit_ids))];
+                    }
+                }
+                "undo" => {
+                    let _ = store.dispatch(DocumentVcsCommand::Undo);
+                    return vec![set_document_op(&sync_store_to_envelope(&store, &play.runtime, &play.redo_edit_ids))];
+                }
+                "redo" => {
+                    let _ = store.dispatch(DocumentVcsCommand::Redo);
+                    return vec![set_document_op(&sync_store_to_envelope(&store, &play.runtime, &play.redo_edit_ids))];
+                }
+                _ => {}
+            }
+            Vec::new()
+        }
+
+        fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+            let play = parse_envelope(document_json);
+            match body_key {
+                GIS3D_PLAY_BODY_COMPOSITE => render_canvas(&play),
+                _ => ui_text(format!("Unknown body: {body_key}")),
+            }
+        }
+
+        fn window_measures(&self, _document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+            HashMap::new()
+        }
+    }
+    //#endregion 🔖Gis3dPlayApp
+
+    //#region 🔖AppFactory
+    pub fn create_gis3d_app() -> App {
+        App::from_builder(
+            App::builder(GIS3D_PLAY_APP_ID, "GIS 3D")
+                .document(["semio", "gis", "3d"])
+                .icon_id("gis3d")
+                .mode("view", "View")
+                .default_mode_id("view")
+                .window_kind(GIS3D_PLAY_WINDOW_MAIN, "Terrain", GIS3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d)
+                .default_layout(create_default_layout(&[GIS3D_PLAY_WINDOW_MAIN.into()], "row", Some(&[100.0]), Some(&["Terrain".into()])))
+                .view_action("setCamera", "Set Camera")
+                .view_action("setSelection", "Set Selection")
+                .view_action("worldSelect", "Select")
+                .view_action("setExaggeration", "Set Exaggeration")
+                .shell_action("setDocument", "Set Document")
+                .keybinding("mod+z", "undo")
+                .keybinding("mod+shift+z", "redo"),
+        )
+        .example("reuse-terrain", "Reuse Terrain", serde_json::to_string(&default_envelope()).unwrap())
+        .program("gis3d", "GIS 3D", "terrain")
+    }
+    //#endregion 🔖AppFactory
+}
+
 use std::sync::LazyLock;
 
 //#region 🔖Bundle
@@ -1634,6 +1896,9 @@ semio_framework_plugin::semio_plugin! {
     label: "GIS",
     version: "0.1.0",
     setup: app_2d::register_gis2d_exports,
-    apps: [ app_2d::create_gis2d_app => app_2d::Gis2dPlayApp ],
+    apps: [
+        app_2d::create_gis2d_app => app_2d::Gis2dPlayApp,
+        app_3d::create_gis3d_app => app_3d::Gis3dPlayApp,
+    ],
 }
 //#endregion 🔖Bundle

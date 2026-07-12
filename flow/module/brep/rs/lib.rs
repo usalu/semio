@@ -1955,6 +1955,92 @@ mod tests {
         assert!(imported.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).is_some());
     }
 
+    fn box_handle(reg: &mut Registry) -> String {
+        let solid = channel_payload(
+            &reg.dispatch("brep.prim3d.box", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("depth", Value::Dictionary(number_dictionary(3.0))).insert("height", Value::Dictionary(number_dictionary(4.0)))).unwrap(),
+            "solid",
+        );
+        solid.get("handle").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).expect("box handle").to_string()
+    }
+
+    #[test]
+    fn step_export_import_round_trips_a_box() {
+        let _serial = test_serial();
+        reset_test_kernel();
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let handle = box_handle(&mut reg);
+        let exported: serde_json::Value = serde_json::from_str(&export_solid_json(&[handle], "step", 0.1)).unwrap();
+        assert!(exported.get("error").is_none(), "{exported:?}");
+        assert_eq!(exported.get("binary").and_then(|value| value.as_bool()), Some(false));
+        let data = exported.get("data").and_then(|value| value.as_str()).expect("step text").to_string();
+        assert!(!data.is_empty());
+        let imported: serde_json::Value = serde_json::from_str(&import_solid_json("step", &data, 0.1)).unwrap();
+        assert!(imported.get("error").is_none(), "{imported:?}");
+        assert_eq!(imported.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
+    }
+
+    #[test]
+    fn obj_export_import_round_trips_a_box() {
+        let _serial = test_serial();
+        reset_test_kernel();
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let handle = box_handle(&mut reg);
+        let exported: serde_json::Value = serde_json::from_str(&export_solid_json(&[handle], "obj", 0.1)).unwrap();
+        assert!(exported.get("error").is_none(), "{exported:?}");
+        let data = exported.get("data").and_then(|value| value.as_str()).expect("obj text").to_string();
+        assert!(data.contains('v'));
+        let imported: serde_json::Value = serde_json::from_str(&import_solid_json("obj", &data, 0.1)).unwrap();
+        assert!(imported.get("error").is_none(), "{imported:?}");
+        assert_eq!(imported.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
+    }
+
+    #[test]
+    fn stl_export_import_round_trips_a_box() {
+        let _serial = test_serial();
+        reset_test_kernel();
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let handle = box_handle(&mut reg);
+        let exported: serde_json::Value = serde_json::from_str(&export_solid_json(&[handle], "stl", 0.1)).unwrap();
+        assert!(exported.get("error").is_none(), "{exported:?}");
+        assert_eq!(exported.get("binary").and_then(|value| value.as_bool()), Some(true));
+        let data = exported.get("data").and_then(|value| value.as_str()).expect("stl base64").to_string();
+        assert!(!data.is_empty());
+        let imported: serde_json::Value = serde_json::from_str(&import_solid_json("stl", &data, 0.1)).unwrap();
+        assert!(imported.get("error").is_none(), "{imported:?}");
+        assert_eq!(imported.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
+    }
+
+    #[test]
+    fn glb_export_import_round_trips_a_box_through_the_mesh_bridge() {
+        let _serial = test_serial();
+        reset_test_kernel();
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let handle = box_handle(&mut reg);
+        let exported: serde_json::Value = serde_json::from_str(&export_solid_json(&[handle], "glb", 0.1)).unwrap();
+        assert!(exported.get("error").is_none(), "{exported:?}");
+        assert_eq!(exported.get("binary").and_then(|value| value.as_bool()), Some(true));
+        let data = exported.get("data").and_then(|value| value.as_str()).expect("glb base64").to_string();
+        assert!(!data.is_empty());
+        let imported: serde_json::Value = serde_json::from_str(&import_solid_json("glb", &data, 0.1)).unwrap();
+        assert!(imported.get("error").is_none(), "{imported:?}");
+        assert_eq!(imported.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
+    }
+
+    #[test]
+    fn export_solid_json_rejects_unsupported_format() {
+        let _serial = test_serial();
+        reset_test_kernel();
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let handle = box_handle(&mut reg);
+        let exported: serde_json::Value = serde_json::from_str(&export_solid_json(&[handle], "fbx", 0.1)).unwrap();
+        assert!(exported.get("error").is_some());
+    }
+
     #[test]
     fn extrude_and_area() {
         let _serial = test_serial();

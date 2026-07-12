@@ -30,6 +30,7 @@
     "kernel/2d/js",
     "draw/rs",
     "gis/2d/rs",
+    "gis/3d/rs",
     "raster/rs",
     "puzzle/2d/rs",
     "puzzle/3d/rs",
