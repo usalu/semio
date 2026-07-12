@@ -5,7 +5,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_stack_vertical,
     ui_text, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
     world3d_selection_json, App, ActionDescriptor, IconRenderScene, PluginApp, PluginBundle,
-    ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode,
+    ToolCategory, ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowMeasure,
     World3dScene,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -1353,7 +1353,7 @@ fn shooting_tools(envelope: &ShootingPlayEnvelope, labels: &ShootingLabels) -> V
             title: Some(labels.import_title.into()),
             order: Some(1),
             disabled: None,
-            category: None,
+            category: Some(ToolCategory::Actions),
             children: vec![
                 ToolNode::Button {
                     id: "shooting.tools.open.fixture".into(),
@@ -1387,7 +1387,7 @@ fn shooting_tools(envelope: &ShootingPlayEnvelope, labels: &ShootingLabels) -> V
             title: Some(labels.export_title.into()),
             order: Some(2),
             disabled: None,
-            category: None,
+            category: Some(ToolCategory::Actions),
             children: vec![
                 ToolNode::Button {
                     id: "shooting.tools.save.fixture".into(),
@@ -1443,7 +1443,7 @@ fn shooting_tools(envelope: &ShootingPlayEnvelope, labels: &ShootingLabels) -> V
             title: None,
             order: Some(3),
             disabled: None,
-            category: None,
+            category: Some(ToolCategory::Actions),
             on_press: shooting_action("saveCamera", None),
         },
     ]

@@ -5,7 +5,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     text_identifier_occurrences_json, tool_button, tool_collection,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
     ui_inspector_readonly_field, ui_text, App, ActionDescriptor, NodeGraphScene, PluginApp,
-    TableScene, TextEditorScene, ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
+    TableScene, TextEditorScene, ToolCategory, ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
     WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -1185,7 +1185,8 @@ impl PluginApp for TrinityJackPlayApp {
                     tool_button("trinity-jack-redo", "redo-2", "Redo", jack_action("redo", None)),
                     tool_button("trinity-jack-checkpoint", "git-commit", "Checkpoint", jack_action("commitCheckpoint", None)),
                 ],
-            ),
+            )
+            .with_category(ToolCategory::History),
             tool_collection(
                 "trinity-jack-query",
                 "code",
@@ -1194,7 +1195,8 @@ impl PluginApp for TrinityJackPlayApp {
                     tool_button("trinity-jack-run", "play", "Run", jack_action("runJackQuery", None)),
                     tool_button("trinity-jack-reorganize", "rotate-cw", "Reorganize", jack_action("reorganize", None)),
                 ],
-            ),
+            )
+            .with_category(ToolCategory::Actions),
         ]
     }
 

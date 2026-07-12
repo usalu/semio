@@ -5,7 +5,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     tool_button, tool_collection,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, App, ActionDescriptor, NodeGraphScene, PluginApp,
-    TextEditorScene, ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
+    TextEditorScene, ToolCategory, ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
     WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -1541,13 +1541,15 @@ impl PluginApp for TrinityRewritePlayApp {
                     tool_button("trinity-rewrite-redo", "redo-2", "Redo", rewrite_action("redo", None)),
                     tool_button("trinity-rewrite-checkpoint", "git-commit", "Checkpoint", rewrite_action("commitCheckpoint", None)),
                 ],
-            ),
+            )
+            .with_category(ToolCategory::History),
             tool_collection(
                 "trinity-rewrite-rule",
                 "code",
                 labels.rule,
                 vec![tool_button("trinity-rewrite-reorganize", "rotate-cw", "Reorganize", rewrite_action("reorganize", None))],
-            ),
+            )
+            .with_category(ToolCategory::Actions),
         ]
     }
 

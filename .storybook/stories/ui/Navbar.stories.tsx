@@ -11,15 +11,12 @@
 import { Button, LevelProvider, Navbar, Toggle, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
 
 // 🔷#region 🩺Navbar
 const Bell = createIconComponent("bell");
 const ChevronDown = createIconComponent("chevron-down");
 const Home = createIconComponent("home");
 const Menu = createIconComponent("list");
-const PanelLeft = createIconComponent("panel-left");
-const PanelRight = createIconComponent("panel-right");
 const Redo = createIconComponent("rotate-cw");
 const Search = createIconComponent("search");
 const Settings = createIconComponent("settings");
@@ -73,38 +70,6 @@ export const Default: Story = {
 };
 
 // #endregion 🩺Navbar
-
-// 🔷#region 🎛TwoToggleNavbar
-// Each panel toggle sits at its own navbar edge — left toggle leading, right toggle trailing (past the
-// fullscreen toggle) — and stays put while its panel folds out flush beneath it, mirroring a window's
-// options-rail chrome (toggle stays, body unfolds).
-export const TwoToggleNavbar: Story = {
-  name: "Two-Toggle Navbar",
-  args: { items: [] },
-  render: () => {
-    const [leftVisible, setLeftVisible] = useState(true);
-    const [rightVisible, setRightVisible] = useState(false);
-    return (
-      <div>
-        <Navbar
-          items={[
-            { key: "leftPanelToggle", className: "shrink-0", content: <Toggle id="ui.panelToggle.left" icon={<PanelLeft size={16} />} pressed={leftVisible} onPressedChange={setLeftVisible} /> },
-            { key: "home", content: <Home size={20} /> },
-            { key: "title", content: <span className="font-bold ml-2">Application</span> },
-            { key: "fill", className: "flex-1 min-w-0", content: null },
-          ]}
-          showFullscreenToggle={false}
-          trailingContent={<Toggle id="ui.panelToggle.right" icon={<PanelRight size={16} />} pressed={rightVisible} onPressedChange={setRightVisible} />}
-        />
-        <div className="relative h-64 bg-canvas">
-          {leftVisible ? <div className="absolute left-single top-0 bottom-single w-56 border !border-normal bg-panel" /> : null}
-          {rightVisible ? <div className="absolute right-single top-0 bottom-single w-56 border !border-normal bg-panel" /> : null}
-        </div>
-      </div>
-    );
-  },
-};
-// #endregion 🎛TwoToggleNavbar
 
 // 🔷#region 🌙Toolbar
 export const ToolbarDefault: Story = {

@@ -463,6 +463,29 @@ function parseBrushPreview(brushPreviewJson: string | undefined): WorldBrushPrev
   }
 }
 
+/** @emoji 🚫 Instance-mesh picking must be disabled for fill/brush engagements — otherwise a click meant for a vortex marker or a fill/voxel gesture falls through and selects/gumballs the underlying object instead. */
+export function worldInstancePickBlocked(activeTool: string | undefined): boolean {
+  return activeTool === "fill" || activeTool === "brush";
+}
+
+/** @emoji 🖱️ In brush mode, pointer-down on a vortex persists it as the brush target (`worldVortexSelect`) so the placement preview survives a subsequent hover-out before the click completes; outside brush mode it starts a drag-to-connect gesture instead. */
+export function resolveVortexPointerDownIntent(brushMode: boolean): "select" | "connect-drag" {
+  return brushMode ? "select" : "connect-drag";
+}
+
+/** @emoji 🧱 Builds the `addBrushObject` action args from a parsed brush preview, or `null` if there is nothing to place yet. */
+export function brushObjectPlacementArgs(preview: WorldBrushPreviewRecord | null): Record<string, unknown> | null {
+  if (!preview) return null;
+  return {
+    targetVortexFullId: preview.targetVortexFullId,
+    objectKindId: preview.objectKindId,
+    sourceVortexIndex: preview.sourceVortexIndex ?? 0,
+    origin: preview.origin,
+    orientation: preview.orientation,
+    scale: preview.scale,
+  };
+}
+
 function parseEngagementPreview(engagementPreviewJson: string | undefined): readonly WorldEngagementPreviewItem[] {
   return parseJsonArray<WorldEngagementPreviewItem>(engagementPreviewJson);
 }
@@ -1157,7 +1180,7 @@ function WorldVortexMarkers({
             }}
             onPointerDown={(event) => {
               event.stopPropagation();
-              if (brushMode) {
+              if (resolveVortexPointerDownIntent(brushMode) === "select") {
                 onVortexSelect(vortex.fullId);
                 return;
               }
@@ -1842,15 +1865,9 @@ export function World3dHost({ node, onAction }: { readonly node: UiComponentScen
   );
 
   const handleBrushPlace = useCallback(() => {
-    if (!brushPreview) return;
-    dispatch("addBrushObject", {
-      targetVortexFullId: brushPreview.targetVortexFullId,
-      objectKindId: brushPreview.objectKindId,
-      sourceVortexIndex: brushPreview.sourceVortexIndex ?? 0,
-      origin: brushPreview.origin,
-      orientation: brushPreview.orientation,
-      scale: brushPreview.scale,
-    });
+    const args = brushObjectPlacementArgs(brushPreview);
+    if (!args) return;
+    dispatch("addBrushObject", args);
   }, [brushPreview, dispatch]);
 
   const handleWorldPick = useCallback(
@@ -2127,7 +2144,7 @@ export function World3dHost({ node, onAction }: { readonly node: UiComponentScen
                 onGumballDragEnd={handleGumballDragEnd}
                 mergedComponentIds={marqueePreview.mergedComponentIds}
                 mergedInstanceIds={marqueePreview.mergedInstanceIds}
-                blockPick={fillMode || brushMode}
+                blockPick={worldInstancePickBlocked(activeTool)}
                 environment={environment}
               />
             </group>

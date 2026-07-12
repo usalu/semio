@@ -82,6 +82,8 @@ const leafTab = (id: string, icon: ComponentType<{ size?: number }>, name: strin
   tree: { sections: [{ id: `${id}.section`, label: "", items: [{ id: `${id}.item`, label: "", control: <div className="p-2">{content}</div> }] }] },
 });
 
+// The toggle is the panel's own chrome (its first row) — same fold/unfold pattern as a window's options
+// rail: the toggle always renders and stays put, while the tab bar and content only mount when open.
 export const SidePanelStory: Story = {
   name: "Side Panel",
   args: {
@@ -91,10 +93,13 @@ export const SidePanelStory: Story = {
   },
   render: () => {
     const [size, setSize] = useState(300);
+    const [visible, setVisible] = useState(true);
     return (
       <div className="relative h-[400px] w-[600px] border bg-base">
         <SidePanel
           position="left"
+          visible={visible}
+          onVisibleChange={setVisible}
           size={size}
           onSizeChange={setSize}
           tabs={[leafTab("types", Layers, "Types", 0, "Types panel content"), leafTab("settings", Settings, "Settings", 1, "Settings panel content"), leafTab("info", Info, "Info", 2, "Info panel content")]}
@@ -113,9 +118,34 @@ export const SidePanelRight: Story = {
   },
   render: () => {
     const [size, setSize] = useState(300);
+    const [visible, setVisible] = useState(true);
     return (
       <div className="relative h-[400px] w-[600px] border bg-base">
-        <SidePanel position="right" size={size} onSizeChange={setSize} tabs={[leafTab("properties", Info, "Properties", 0, "Properties content"), leafTab("layers", Layers, "Layers", 1, "Layers content")]} />
+        <SidePanel
+          position="right"
+          visible={visible}
+          onVisibleChange={setVisible}
+          size={size}
+          onSizeChange={setSize}
+          tabs={[leafTab("properties", Info, "Properties", 0, "Properties content"), leafTab("layers", Layers, "Layers", 1, "Layers content")]}
+        />
+      </div>
+    );
+  },
+};
+
+export const SidePanelFolded: Story = {
+  name: "Side Panel — Folded (toggle only)",
+  args: {
+    visible: false,
+    sections: sampleSections,
+    size: 250,
+  },
+  render: () => {
+    const [visible, setVisible] = useState(false);
+    return (
+      <div className="relative h-[400px] w-[600px] border bg-base">
+        <SidePanel position="left" visible={visible} onVisibleChange={setVisible} tabs={[leafTab("types", Layers, "Types", 0, "Types panel content")]} />
       </div>
     );
   },
@@ -130,11 +160,14 @@ export const SidePanelNestedTabs: Story = {
   },
   render: () => {
     const [size, setSize] = useState(320);
+    const [visible, setVisible] = useState(true);
     const [activeTabPath, setActiveTabPath] = useState<readonly string[]>([]);
     return (
       <div className="relative h-[400px] w-[600px] border bg-base">
         <SidePanel
           position="left"
+          visible={visible}
+          onVisibleChange={setVisible}
           size={size}
           onSizeChange={setSize}
           activeTabPath={activeTabPath}

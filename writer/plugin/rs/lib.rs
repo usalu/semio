@@ -106,8 +106,8 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
 use grammar::{tokenize_language, GrammarToken};
 use trinity_jack::{complete, example_graph, format as jack_format, lint, semantic_tokens, Diagnostic};
 use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
-    build_text_editor_scene, engagement_token_matches, strip_engagement_prefix, tool_button, tool_collection, ui_declarative_sections_to_tree, ui_text, App,
-    ActionDescriptor, PluginApp, PluginBundle, TextEditorScene, ToolNode, UiNode, UiSectionNode,
+    build_text_editor_scene, engagement_token_matches, strip_engagement_prefix, tool_button, ui_declarative_sections_to_tree, ui_text, App,
+    ActionDescriptor, PluginApp, PluginBundle, TextEditorScene, ToolCategory, ToolNode, UiNode, UiSectionNode,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -119,7 +119,6 @@ use semio_framework_plugin::layout::{WindowEngagementPossible, WindowEngagementS
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use std::sync::LazyLock;
 
 //#region 🔖Constants
 const WRITER_PLAY_APP_ID: &str = "writer-play";
@@ -1254,7 +1253,6 @@ struct WriterLabels {
     jack_description: &'static str,
     camera: &'static str,
     diagnostics: &'static str,
-    actions: &'static str,
     format: &'static str,
     lint: &'static str,
     line_numbers: &'static str,
@@ -1272,7 +1270,6 @@ const WRITER_LABELS_NATIVE_EN: WriterLabels = WriterLabels {
     jack_description: "jack — Cypher-inspired trinity query language",
     camera: "Camera",
     diagnostics: "Diagnostics",
-    actions: "Actions",
     format: "Format",
     lint: "Lint",
     line_numbers: "Line numbers",
@@ -1290,7 +1287,6 @@ const WRITER_LABELS_NATIVE_DE: WriterLabels = WriterLabels {
     jack_description: "jack — von Cypher inspirierte Trinity-Abfragesprache",
     camera: "Kamera",
     diagnostics: "Diagnosen",
-    actions: "Aktionen",
     format: "Formatieren",
     lint: "Prüfen",
     line_numbers: "Zeilennummern",
@@ -1836,15 +1832,10 @@ impl PluginApp for WriterApp {
 
     fn tools(&self, _document_json: &str, view_state: &ViewState) -> Vec<ToolNode> {
         let labels = writer_labels(view_state);
-        vec![tool_collection(
-            "writer-tools-actions",
-            "wand-2",
-            labels.actions,
-            vec![
-                tool_button("writer-format", "align-left", labels.format, play_action(WRITER_PLAY_CONTROLLER_ID, "formatDocument", None)),
-                tool_button("writer-lint", "alert-circle", labels.lint, play_action(WRITER_PLAY_CONTROLLER_ID, "lintDocument", None)),
-            ],
-        )]
+        vec![
+            tool_button("writer-format", "align-left", labels.format, play_action(WRITER_PLAY_CONTROLLER_ID, "formatDocument", None)).with_category(ToolCategory::Actions),
+            tool_button("writer-lint", "alert-circle", labels.lint, play_action(WRITER_PLAY_CONTROLLER_ID, "lintDocument", None)).with_category(ToolCategory::Actions),
+        ]
     }
 
     fn window_engagements(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
@@ -2182,6 +2173,28 @@ mod tests {
         let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
         assert_eq!(envelope.runtime.editor_settings.font_px, 16);
         assert_eq!(envelope.runtime.engagement_input, "");
+    }
+
+    #[test]
+    fn engagement_submit_parses_normalized_shell_drafts() {
+        // The React shell PascalCases and strips separators from every draft before submitting it
+        // (`normalizeEngagementActionText`), so "font 16" arrives as "Font16", "tab 4" as "Tab4",
+        // and "line numbers" as "LineNumbers".
+        let mut app = WriterApp;
+        let document = serde_json::to_string(&empty_writer_document()).unwrap();
+
+        let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "Font16" })), &document, &ViewState::default());
+        let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
+        assert_eq!(envelope.runtime.editor_settings.font_px, 16);
+
+        let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "Tab4" })), &document, &ViewState::default());
+        let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
+        assert_eq!(envelope.runtime.editor_settings.tab_size, 4);
+
+        let before_toggle: WriterPlayEnvelope = serde_json::from_str(&document).unwrap();
+        let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "LineNumbers" })), &document, &ViewState::default());
+        let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
+        assert_eq!(envelope.runtime.editor_settings.show_line_numbers, !before_toggle.runtime.editor_settings.show_line_numbers);
     }
 
     #[test]

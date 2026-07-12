@@ -2310,6 +2310,9 @@ export function resolveControlLabelId(id: string): string {
   if (id.startsWith("ui.toolbar.group.")) {
     return _controlLabelIdResolver(`ui.toolbar.parent.${id.slice("ui.toolbar.group.".length)}`);
   }
+  if (id.startsWith("ui.toolbar.") && id.includes(".group.")) {
+    return _controlLabelIdResolver(`ui.toolbar.parent.${id.slice(id.lastIndexOf(".group.") + ".group.".length)}`);
+  }
   if (id === "engagement-possibles-toggle" || id === "ui.engagement.suggestions") {
     return _controlLabelIdResolver("ui.engagement.suggestions");
   }
@@ -2415,7 +2418,7 @@ export type UiLabelValue = {
 };
 
 /** @emoji 🪁 Toolbar collection ids for ribbon collection toggles. */
-export type UiToolbarParentCategory = "history" | "hand" | "selection" | "lasso" | "filter" | "open" | "save" | "transfer" | "transform" | "create" | "view" | "actions" | "settings" | "methods" | "mode" | "targets" | "export";
+export type UiToolbarParentCategory = "history" | "hand" | "selection" | "lasso" | "filter" | "open" | "save" | "transfer" | "transform" | "create" | "view" | "actions" | "settings" | "methods" | "mode" | "targets" | "export" | "tools" | "sync";
 
 /** @emoji 🪁 i18n key for a toolbar collection toggle. */
 export type UiToolbarParentKey = `ui.toolbar.parent.${string}`;
@@ -2662,6 +2665,8 @@ const uiToolbarParentDe: UiToolbarParentEntries = {
   mode: { label: { normal: "Modus", beginner: "Modus" } },
   targets: { label: { normal: "Ziele", beginner: "Ziele" } },
   export: { label: { normal: "Export", beginner: "Export" } },
+  tools: { label: { normal: "Werkzeuge", beginner: "Werkzeuge" } },
+  sync: { label: { normal: "Sync", beginner: "Sync" } },
 };
 
 const uiToolbarParentEn: UiToolbarParentEntries = {
@@ -2682,6 +2687,8 @@ const uiToolbarParentEn: UiToolbarParentEntries = {
   mode: { label: { normal: "Mode", beginner: "Mode" } },
   targets: { label: { normal: "Targets", beginner: "Targets" } },
   export: { label: { normal: "Export", beginner: "Export" } },
+  tools: { label: { normal: "Tools", beginner: "Tools" } },
+  sync: { label: { normal: "Sync", beginner: "Sync" } },
 };
 
 const _assertUiToolbarParentKeys: AssertUiToolbarParentKeysCovered<UiToolbarParentCategory> = true;
@@ -9330,14 +9337,12 @@ export interface NavbarProps {
   items: NavbarItem[];
   className?: string;
   showFullscreenToggle?: boolean;
-  /** @emoji 🎯 Chrome anchored to the trailing (far right) edge, after the fullscreen toggle — e.g. a right side-panel toggle that stays put while its panel folds out below it, mirroring window-options chrome. */
-  trailingContent?: React.ReactNode;
 }
 
 /**
  * Navbar holds the data fields for a Navbar record.
  **/
-function Navbar({ items, className, showFullscreenToggle = true, trailingContent }: NavbarProps) {
+function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
   const normalItems = items.filter((item) => !item.centered);
@@ -9351,10 +9356,9 @@ function Navbar({ items, className, showFullscreenToggle = true, trailingContent
               {item.content}
             </div>
           ))}
-          {showFullscreenToggle || trailingContent ? (
-            <div key="trailing" data-slot="navbar-trailing" className="h-medium flex shrink-0 items-center gap-single min-w-0 ml-auto">
-              {showFullscreenToggle ? <NavbarFullscreenToggle /> : null}
-              {trailingContent}
+          {showFullscreenToggle ? (
+            <div key="fullscreenToggle" data-slot="navbar-fullscreen-toggle" className="h-medium flex shrink-0 items-center min-w-0 ml-auto">
+              <NavbarFullscreenToggle />
             </div>
           ) : null}
         </div>
@@ -13441,16 +13445,17 @@ const WindowEngagementChrome: React.FC<WindowEngagementChromeProps> = ({ windowI
 interface WindowToolbarChromeProps {
   windowId: string;
   folded: boolean;
+  disabled?: boolean;
   onFold: () => void;
   onUnfold: () => void;
 }
 
-/** @emoji 🧰 Title bar for the window toolbar strip: single fold/unfold toggle, same height and surface as {@link WindowMeasuresChrome}. */
-const WindowToolbarChrome: React.FC<WindowToolbarChromeProps> = ({ windowId, folded, onFold, onUnfold }) => {
+/** @emoji 🧰 Title bar for the window toolbar strip: single fold/unfold toggle, same height and surface as {@link WindowMeasuresChrome}. Always rendered, even with no tools, so every window carries the bottom-left panel. */
+const WindowToolbarChrome: React.FC<WindowToolbarChromeProps> = ({ windowId, folded, disabled, onFold, onUnfold }) => {
   if (folded) {
     return (
       <div data-slot="window-toolbar-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <ActionGroupItem id={`${windowId}-window-toolbar-unfold`} icon="chevron-right" text="Tools" className={windowRailChromeLabelActionClass} onClick={onUnfold} />
+        <ActionGroupItem id={`${windowId}-window-toolbar-unfold`} icon="chevron-right" text="Tools" className={windowRailChromeLabelActionClass} disabled={disabled} onClick={onUnfold} />
       </div>
     );
   }
@@ -14175,6 +14180,8 @@ export function useNativeDragAndDrop<TElement extends HTMLElement = HTMLDivEleme
 export interface SidePanelProps {
   position: "left" | "right";
   visible?: boolean;
+  /** @emoji 🎛 Drives the panel's own fold/unfold toggle (its chrome, always rendered — see {@link SidePanelChrome}). */
+  onVisibleChange?: (visible: boolean) => void;
   size?: number;
   onSizeChange?: (size: number) => void;
   tabs: readonly PanelTabNode[];
@@ -14185,6 +14192,23 @@ export interface SidePanelProps {
   zIndex?: 10 | 20 | 30 | 40;
   className?: string;
 }
+
+/** @emoji 🎛 The panel's own fold/unfold toggle — always rendered as the panel's first row, same as a window's options-rail chrome, so it stays visually anchored at the panel's corner (in the navbar's old spot) whether the panel is folded or open. */
+interface SidePanelChromeProps {
+  readonly position: "left" | "right";
+  readonly visible: boolean;
+  readonly onToggle: (visible: boolean) => void;
+}
+
+const SidePanelChrome: React.FC<SidePanelChromeProps> = ({ position, visible, onToggle }) => (
+  <div
+    data-slot="side-panel-chrome"
+    data-expanded={visible ? "true" : undefined}
+    className={cn("relative z-10 flex h-medium shrink-0 items-center p-single", position === "left" ? "justify-start" : "justify-end", visible && borderNormalBottomClass)}
+  >
+    <Toggle id={position === "left" ? "ui.panelToggle.left" : "ui.panelToggle.right"} icon={<Icon icon={position === "left" ? "panel-left" : "panel-right"} size="small" />} pressed={visible} onPressedChange={onToggle} />
+  </div>
+);
 
 /** @emoji 🌲 Side-panel tree body; skipped when only panel visibility toggles. */
 const SidePanelTreePane = reactHostPort.memo(function SidePanelTreePane({ config }: { readonly config: TreePanelConfig }) {
@@ -14260,7 +14284,7 @@ function SidePanelResizeHandle({
   return <div className={resizeHandleClass} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} {...resizePointerProps} />;
 }
 
-const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 300, onSizeChange, tabs, activeTabPath, onActiveTabPathChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
+const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, onVisibleChange, size = 300, onSizeChange, tabs, activeTabPath, onActiveTabPathChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
   const [isResizeHovered, setIsResizeHovered] = reactHostPort.useState(false);
   const [isResizing, setIsResizing] = reactHostPort.useState(false);
   const [internalActivePath, setInternalActivePath] = reactHostPort.useState<readonly string[]>(() => reconcileActivePath(tabs, [], panelTabChildren));
@@ -14285,10 +14309,11 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
   const resizeSide = position === "left" ? "right" : "left";
 
   // Positioned against the whole display (Layout's root), not the row between navbar and footer, so it floats over both — spacing is relative to the screen edges only, like a window's options rail over its canvas.
+  // Folded (visible=false) drops the bottom/width constraints so the box hugs just its chrome row, the same way a folded window-options rail collapses to its toggle.
   const positionStyle =
     position === "left"
-      ? { left: "var(--spacing-single)", top: "var(--spacing-single)", bottom: "var(--spacing-single)", width: `${size}px`, zIndex }
-      : { right: "var(--spacing-single)", top: "var(--spacing-single)", bottom: "var(--spacing-single)", width: `${size}px`, zIndex };
+      ? { left: "var(--spacing-single)", top: "var(--spacing-single)", bottom: visible ? "var(--spacing-single)" : undefined, width: visible ? `${size}px` : undefined, zIndex }
+      : { right: "var(--spacing-single)", top: "var(--spacing-single)", bottom: visible ? "var(--spacing-single)" : undefined, width: visible ? `${size}px` : undefined, zIndex };
 
   const resizeHandleClass = `absolute top-0 bottom-0 z-20 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize`;
 
@@ -14297,34 +14322,36 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
       <PanelGhostRoot
         data-panel={position === "left" ? "leftSidePanel" : "rightSidePanel"}
         data-panel-visible={visible ? "true" : "false"}
-        className={cn("absolute min-w-0 overflow-hidden flex flex-col box-border", visible ? "text-foreground" : "hidden pointer-events-none", className)}
+        className={cn("absolute min-w-0 overflow-hidden flex flex-col box-border text-foreground", !visible && "w-fit max-h-full", className)}
         style={positionStyle}
-        aria-hidden={visible ? undefined : true}
       >
+        <div data-dim aria-hidden className={panelChromeFillLayerClass} />
+        <div data-dim data-slot="panel-chrome-frame" aria-hidden className={cn(panelChromeFrameLayerClass, visible && panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered))} />
+        <UiChromeLabelPolicyProvider policy="always">
+          <SidePanelChrome position={position} visible={visible} onToggle={(next) => onVisibleChange?.(next)} />
+        </UiChromeLabelPolicyProvider>
         {visible ? (
           <>
-            <div data-dim aria-hidden className={panelChromeFillLayerClass} />
-            <div data-dim data-slot="panel-chrome-frame" aria-hidden className={cn(panelChromeFrameLayerClass, panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered))} />
+            {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="side" /> : null}
+            <Scrollable className="relative z-10 flex-1 min-h-0">
+              <div data-slot="side-panel-content" className="flex min-h-0 flex-1 flex-col">
+                {activeTabTree ? <SidePanelTreePane config={activeTabTree} /> : null}
+              </div>
+            </Scrollable>
+            {onSizeChange ? (
+              <SidePanelResizeHandle
+                isResizing={isResizing}
+                maxSize={maxSize}
+                minSize={minSize}
+                onSizeChange={onSizeChange}
+                position={position}
+                resizeHandleClass={resizeHandleClass}
+                setIsResizing={setIsResizing}
+                setIsResizeHovered={setIsResizeHovered}
+                sizeRef={sizeRef}
+              />
+            ) : null}
           </>
-        ) : null}
-        {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="side" /> : null}
-        <Scrollable className="relative z-10 flex-1 min-h-0">
-          <div data-slot="side-panel-content" className="flex min-h-0 flex-1 flex-col">
-            {activeTabTree ? <SidePanelTreePane config={activeTabTree} /> : null}
-          </div>
-        </Scrollable>
-        {visible && onSizeChange ? (
-          <SidePanelResizeHandle
-            isResizing={isResizing}
-            maxSize={maxSize}
-            minSize={minSize}
-            onSizeChange={onSizeChange}
-            position={position}
-            resizeHandleClass={resizeHandleClass}
-            setIsResizing={setIsResizing}
-            setIsResizeHovered={setIsResizeHovered}
-            sizeRef={sizeRef}
-          />
         ) : null}
       </PanelGhostRoot>
     </LevelProvider>
@@ -15680,12 +15707,12 @@ const Window: React.FC<WindowProps> = ({
               </div>
             </GlassTierProvider>
           ) : null}
-          {toolbar && !measuresExpanded ? (
+          {!measuresExpanded ? (
             <GlassTierProvider tier="windowOptions">
               <div data-slot="window-toolbar-overlay" data-folded={toolbarFolded ? "true" : undefined} className={windowToolbarOverlayClass}>
                 <div data-dim data-slot="window-toolbar" data-folded={toolbarFolded ? "true" : undefined} className={cn(windowMeasuresStackClass, "flex-row items-end w-fit")}>
-                  <WindowToolbarChrome windowId={id} folded={toolbarFolded} onFold={() => setToolbarFolded(true)} onUnfold={() => setToolbarFolded(false)} />
-                  {!toolbarFolded ? (
+                  <WindowToolbarChrome windowId={id} folded={toolbarFolded} disabled={!toolbar} onFold={() => setToolbarFolded(true)} onUnfold={() => setToolbarFolded(false)} />
+                  {!toolbarFolded && toolbar ? (
                     <div data-slot="window-toolbar-body" className={windowToolbarBodyClass}>
                       {toolbar}
                     </div>
@@ -21906,7 +21933,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="panel-chrome-frame"]')?.className).toContain("z-30");
     });
 
-    it("SidePanel stays mounted when visible is false", () => {
+    it("SidePanel keeps its toggle chrome mounted when folded, but drops tab bar and content — same as a window's options rail", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [
         {
@@ -21922,8 +21949,19 @@ if (import.meta.vitest) {
       const { rerender } = render(<SidePanel position="left" visible tabs={tabs} />);
       expect(screen.getByText("Leaf row")).toBeTruthy();
       rerender(<SidePanel position="left" visible={false} tabs={tabs} />);
-      expect(screen.getByText("Leaf row")).toBeTruthy();
+      expect(screen.queryByText("Leaf row")).toBeNull();
       expect(document.querySelector('[data-panel-visible="false"]')).toBeTruthy();
+      expect(document.querySelector('[data-slot="side-panel-chrome"]')).toBeTruthy();
+      expect(document.getElementById("ui.panelToggle.left")).toBeTruthy();
+    });
+
+    it("SidePanel's chrome toggle calls onVisibleChange with the flipped visibility", () => {
+      const onVisibleChange = vi.fn();
+      const { container } = render(<SidePanel position="right" visible={false} onVisibleChange={onVisibleChange} tabs={[]} />);
+      const toggle = container.querySelector('button[id="ui.panelToggle.right"]') as HTMLElement;
+      expect(toggle).toBeTruthy();
+      fireEvent.click(toggle);
+      expect(onVisibleChange).toHaveBeenCalledWith(true);
     });
 
     it("modeDockChromeGridPlacement keeps tabs left and controls right", () => {
@@ -23720,7 +23758,8 @@ if (import.meta.vitest) {
           <div>Body</div>
         </Window>,
       );
-      expect(container.querySelector('[data-slot="window-toolbar"]')).toBeNull();
+      expect(container.querySelector('[data-slot="window-toolbar"]')).toBeTruthy();
+      expect((container.querySelector('[id="toolbar-window-window-toolbar-unfold"]') as HTMLButtonElement).disabled).toBe(true);
     });
 
     it("Window toolbar anchors bottom-left and hides when measures span the window", () => {
@@ -25300,14 +25339,8 @@ if (treeVitest) {
 
     it("renders fullscreen toggle on the trailing navbar edge by default", () => {
       const markup = renderToStaticMarkup(<Navbar items={[{ key: "title", content: <span>App</span> }]} />);
-      expect(markup).toContain('data-slot="navbar-trailing"');
+      expect(markup).toContain('data-slot="navbar-fullscreen-toggle"');
       expect(markup).toContain('id="ui.fullscreen.toggle"');
-    });
-
-    it("renders trailingContent alongside the fullscreen toggle at the outer trailing edge", () => {
-      const markup = renderToStaticMarkup(<Navbar items={[{ key: "title", content: <span>App</span> }]} trailingContent={<span id="right-panel-toggle">Right</span>} />);
-      expect(markup).toContain('data-slot="navbar-trailing"');
-      expect(markup.indexOf('id="ui.fullscreen.toggle"')).toBeLessThan(markup.indexOf('id="right-panel-toggle"'));
     });
 
     it("maps fullscreen toggle id to ui i18n key", () => {
@@ -25346,7 +25379,7 @@ if (treeVitest) {
     });
 
     it("resolves toolbar collection ids in en and de", () => {
-      const categories: readonly UiToolbarParentCategory[] = ["history", "hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform", "create", "view", "actions", "settings", "methods", "mode", "targets", "export"];
+      const categories: readonly UiToolbarParentCategory[] = ["history", "hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform", "create", "view", "actions", "settings", "methods", "mode", "targets", "export", "tools", "sync"];
       for (const locale of ["en", "de"] as const) {
         void uiI18n.changeLanguage(locale);
         for (const category of categories) {
@@ -25356,6 +25389,7 @@ if (treeVitest) {
           expect(label).not.toBe(key);
         }
         expect(resolveControlLabelId(`ui.toolbar.group.${categories[0]}`)).toBe(`ui.toolbar.parent.${categories[0]}`);
+        expect(resolveControlLabelId(`ui.toolbar.example-window.group.${categories[0]}`)).toBe(`ui.toolbar.parent.${categories[0]}`);
       }
       void uiI18n.changeLanguage("en");
     });
@@ -25502,7 +25536,7 @@ if (treeVitest) {
       expect(panelMarkup).toContain('data-slot="panel-chrome-frame"');
       expect(panelMarkup).toContain("border-normal");
       expect(panelMarkup).not.toContain("border-emphasized");
-      expect(panelMarkup).not.toContain("divide-x");
+      expect(panelMarkup).not.toMatch(/panel-chrome-frame[^>]*divide-x/);
       expect(panelMarkup).toContain(borderNormalClass);
       expect(panelMarkup).not.toContain("border-b-current");
       expect(panelMarkup).not.toMatch(/side-panel-tabs[^>]*border-emphasized/);

@@ -8,7 +8,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER, create_default_layout,
-    ToolNode, WindowEngagement, WindowEngagementInput, WindowMeasure,
+    ToolCategory, ToolNode, WindowEngagement, WindowEngagementInput, WindowMeasure,
     layout::WindowEngagementStatus,
     tool_button, tool_separator, tool_toggle,
 };
@@ -1475,12 +1475,10 @@ fn note_toolbar(document: &NoteDocument) -> Vec<ToolNode> {
     let tool = document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
     let set_tool = |id: &str| note_action("setActiveTool", Some(json!({ "tool": id })));
     vec![
-        tool_button("note.play.tools.open", "folder-open", "Import", note_action("loadRequest", None)),
-        tool_button("note.play.tools.save", "save", "Export", note_action("saveDownload", None)),
-        tool_separator("note.play.tools.separator.io"),
-        tool_toggle("note.play.tools.selectDirect", "cursor", "Direct", tool == "selectDirect", set_tool("selectDirect")),
-        tool_toggle("note.play.tools.selectMarquee", "selection", "Marquee", tool == "selectMarquee", set_tool("selectMarquee")),
-        tool_separator("note.play.tools.separator.select"),
+        tool_button("note.play.tools.open", "folder-open", "Import", note_action("loadRequest", None)).with_category(ToolCategory::Actions),
+        tool_button("note.play.tools.save", "save", "Export", note_action("saveDownload", None)).with_category(ToolCategory::Actions),
+        tool_toggle("note.play.tools.selectDirect", "cursor", "Direct", tool == "selectDirect", set_tool("selectDirect")).with_category(ToolCategory::Selection),
+        tool_toggle("note.play.tools.selectMarquee", "selection", "Marquee", tool == "selectMarquee", set_tool("selectMarquee")).with_category(ToolCategory::Selection),
         tool_toggle("note.play.tools.text", "type", "Text", tool == "text", set_tool("text")),
         tool_toggle("note.play.tools.image", "image", "Image", tool == "image", set_tool("image")),
         tool_toggle("note.play.tools.table", "table", "Table", tool == "table", set_tool("table")),

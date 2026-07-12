@@ -9,7 +9,7 @@ use layout_rs::{
 use semio_framework_plugin::{SurfaceKind,
     build_canvas_2d_scene, create_default_layout, engagement_token_matches, tool_button, tool_collection, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
-    Canvas2dScene, ActionDescriptor, PanelGroup, PluginApp, PluginBundle, ToolNode, UiFieldNode,
+    Canvas2dScene, ActionDescriptor, PanelGroup, PluginApp, PluginBundle, ToolCategory, ToolNode, UiFieldNode,
     UiInputNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -1332,7 +1332,8 @@ fn layout_toolbar_tools(labels: &LayoutLabels) -> Vec<ToolNode> {
                 tool_button("layout-tools-undo", "rotate-ccw", labels.undo, layout_action("undo", None)),
                 tool_button("layout-tools-redo", "rotate-cw", labels.redo, layout_action("redo", None)),
             ],
-        ),
+        )
+        .with_category(ToolCategory::History),
         tool_collection(
             "layout-tools-export",
             "download",
@@ -1343,7 +1344,8 @@ fn layout_toolbar_tools(labels: &LayoutLabels) -> Vec<ToolNode> {
                 tool_button("layout-tools-export-pdf", "file-text", "PDF", layout_action("exportPdf", None)),
                 tool_button("layout-tools-export-package", "archive", labels.export_package, layout_action("exportPackage", None)),
             ],
-        ),
+        )
+        .with_category(ToolCategory::Actions),
     ]
 }
 //#endregion 🔖Panels
@@ -2639,6 +2641,19 @@ mod tests {
         let mut app = LayoutPlayApp;
         let document = app.initial_document_json();
         let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "export png" })), &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        assert_eq!(payload["op"], "downloadMediaExport");
+        assert_eq!(payload["mimeType"], "image/png");
+    }
+
+    #[test]
+    fn engagement_submit_triggers_export_from_normalized_shell_draft() {
+        // The React shell PascalCases and strips separators from every draft before submitting it
+        // (`normalizeEngagementActionText`), so "export png" arrives as "ExportPng".
+        let mut app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "ExportPng" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         assert_eq!(payload["op"], "downloadMediaExport");

@@ -2440,6 +2440,27 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
+    fn engagement_submit_resolves_normalized_camel_case_commands() {
+        // The React shell PascalCases and strips separators from every draft before submitting it
+        // (`normalizeEngagementActionText`), so "loop cut" arrives as "LoopCut" — lowercasing the
+        // whole draft (as this used to do) can never match a camelCase action id like "loopCut".
+        let mut submitted = LowpolyPlayApp::default();
+        let mut direct = LowpolyPlayApp::default();
+        let document = submitted.initial_document_json();
+        let submitted_ops = submitted.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "LoopCut" })), &document, &ViewState::default());
+        let direct_ops = direct.handle_action_patch_ops("loopCut", None, &document, &ViewState::default());
+        assert_eq!(submitted_ops, direct_ops);
+    }
+
+    #[test]
+    fn engagement_submit_ignores_unrecognized_commands() {
+        let mut app = LowpolyPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "NotACommand" })), &document, &ViewState::default());
+        assert!(ops.is_empty());
+    }
+
+    #[test]
     fn default_fixture_has_concrete_forest_left_object() {
         let app = LowpolyPlayApp::default();
         let envelope: LowpolyPlayEnvelope = serde_json::from_str(&app.initial_document_json()).unwrap();

@@ -25,7 +25,7 @@ import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
 import { VcsHistoryHost } from "./components/vcs-history-host.tsx";
 import { TextEditorHost, buildTextEditorContextMenuItems, lineRangeAt, multiSpanReplace } from "./components/text-editor-host.tsx";
-import { World3dHost } from "./components/world-3d-host.tsx";
+import { World3dHost, brushObjectPlacementArgs, resolveVortexPointerDownIntent, worldInstancePickBlocked } from "./components/world-3d-host.tsx";
 import {
   NoteCanvasHost,
   noteBlockBounds,
@@ -46,8 +46,10 @@ import {
   appWindowDocumentLabel,
   buildToolbarRibbonSegments,
   flattenPanelTabLeaves,
+  groupToolNodesByCategory,
   isFlowGraphScene,
   parseStudioShellPath,
+  reconcileToolPath,
   selectSpawnedToolNodes,
   sortToolNodes,
   spawnedWindowChromeForKind,
@@ -771,6 +773,43 @@ describe("framework renderer hosts", () => {
     expect(node.world3d?.contextMenuJson).toBe("[]");
   });
 
+  it("blocks instance picking for fill and brush engagements but not select", () => {
+    expect(worldInstancePickBlocked("brush")).toBe(true);
+    expect(worldInstancePickBlocked("fill")).toBe(true);
+    expect(worldInstancePickBlocked("select")).toBe(false);
+    expect(worldInstancePickBlocked(undefined)).toBe(false);
+  });
+
+  it("resolves vortex pointer-down to select in brush mode and connect-drag otherwise", () => {
+    expect(resolveVortexPointerDownIntent(true)).toBe("select");
+    expect(resolveVortexPointerDownIntent(false)).toBe("connect-drag");
+  });
+
+  it("builds addBrushObject args from a parsed brush preview, or null when there is nothing to place", () => {
+    expect(brushObjectPlacementArgs(null)).toBeNull();
+    const args = brushObjectPlacementArgs({
+      targetVortexFullId: "seed-left-001:v0",
+      objectKindId: "hex-concrete",
+      sourceVortexIndex: 2,
+      origin: [1, 2, 3],
+      orientation: [0, 0, 0, 1],
+      scale: 1,
+    });
+    expect(args).toMatchObject({
+      targetVortexFullId: "seed-left-001:v0",
+      objectKindId: "hex-concrete",
+      sourceVortexIndex: 2,
+      origin: [1, 2, 3],
+      orientation: [0, 0, 0, 1],
+      scale: 1,
+    });
+  });
+
+  it("defaults sourceVortexIndex to 0 when the brush preview omits it", () => {
+    const args = brushObjectPlacementArgs({ targetVortexFullId: "seed-left-001:v0", objectKindId: "hex-concrete" });
+    expect(args).toMatchObject({ sourceVortexIndex: 0 });
+  });
+
   it("renders text editor host", () => {
     const markup = renderToStaticMarkup(
       createElement(TextEditorHost, {
@@ -1316,64 +1355,118 @@ describe("toolbar ribbon", () => {
     expect(sorted.map((node) => node.id)).toEqual(["a", "b"]);
   });
 
-  it("builds picker segments for sibling nested collections", () => {
-    const segments = buildToolbarRibbonSegments(
-      [
-        {
-          id: "view",
-          kind: "collection",
-          iconId: "eye",
-          children: [
-            {
-              id: "view-tools",
-              kind: "collection",
-              iconId: "zoom-in",
-              children: [{ id: "zoom-in", kind: "button", iconId: "zoom-in", controllerId: "x", action: "zoomIn" }],
-            },
-          ],
-        },
-        {
-          id: "construct",
-          kind: "collection",
-          iconId: "box",
-          children: [
-            {
-              id: "construct-tools",
-              kind: "collection",
-              iconId: "box",
-              children: [{ id: "box", kind: "button", iconId: "box", controllerId: "x", action: "box" }],
-            },
-          ],
-        },
-      ],
-      ["construct"],
-    );
-    expect(segments[0]).toMatchObject({ kind: "picker", depth: 0 });
-    const toolsSegment = segments.find((segment) => segment.kind === "tools" && segment.items.some((item) => item.id === "box"));
-    expect(toolsSegment).toBeTruthy();
-    expect(toolsSegment).toMatchObject({ depth: 1 });
+  it("recurses into a collection level only when the path names one of its collections", () => {
+    const tree = [
+      {
+        id: "view",
+        kind: "collection",
+        iconId: "eye",
+        children: [
+          {
+            id: "view-tools",
+            kind: "collection",
+            iconId: "zoom-in",
+            children: [{ id: "zoom-in", kind: "button", iconId: "zoom-in", controllerId: "x", action: "zoomIn" }],
+          },
+        ],
+      },
+      {
+        id: "construct",
+        kind: "collection",
+        iconId: "box",
+        children: [
+          {
+            id: "construct-tools",
+            kind: "collection",
+            iconId: "box",
+            children: [{ id: "box", kind: "button", iconId: "box", controllerId: "x", action: "box" }],
+          },
+        ],
+      },
+    ];
+
+    const noActive = buildToolbarRibbonSegments(tree, []);
+    expect(noActive).toEqual([{ kind: "picker", collections: tree, depth: 0 }]);
+
+    const oneActive = buildToolbarRibbonSegments(tree, ["construct"]);
+    expect(oneActive[0]).toMatchObject({ kind: "picker", depth: 0 });
+    expect(oneActive[1]).toMatchObject({ kind: "picker", depth: 1, collections: tree[1].children });
+    expect(oneActive).toHaveLength(2);
+
+    const twoActive = buildToolbarRibbonSegments(tree, ["construct", "construct-tools"]);
+    const toolsSegment = twoActive.find((segment) => segment.kind === "tools" && segment.items.some((item) => item.id === "box"));
+    expect(toolsSegment).toMatchObject({ depth: 2 });
   });
 
-  it("flattens leaf-only sibling collections into separate tool zones", () => {
+  it("ignores a path entry that no longer names an enabled collection at that level", () => {
+    const tree = [
+      {
+        id: "view",
+        kind: "collection",
+        iconId: "eye",
+        children: [{ id: "zoom-in", kind: "button", iconId: "zoom-in", controllerId: "x", action: "zoomIn" }],
+      },
+    ];
+    expect(buildToolbarRibbonSegments(tree, ["nonexistent"])).toEqual([{ kind: "picker", collections: tree, depth: 0 }]);
+  });
+
+  it("emits a picker segment alongside loose leaves at the same depth", () => {
     const segments = buildToolbarRibbonSegments(
       [
+        { id: "undo", kind: "button", iconId: "undo", controllerId: "x", action: "undo" },
         {
           id: "view",
           kind: "collection",
           iconId: "eye",
           children: [{ id: "zoom-in", kind: "button", iconId: "zoom-in", controllerId: "x", action: "zoomIn" }],
         },
-        {
-          id: "save",
-          kind: "collection",
-          iconId: "save",
-          children: [{ id: "export", kind: "button", iconId: "download", controllerId: "x", action: "export" }],
-        },
       ],
       [],
     );
-    expect(segments.every((segment) => segment.kind === "tools")).toBe(true);
-    expect(segments).toHaveLength(2);
+    expect(segments).toEqual([
+      { kind: "picker", collections: [expect.objectContaining({ id: "view" })], depth: 0 },
+      { kind: "tools", items: [expect.objectContaining({ id: "undo" })], depth: 0 },
+    ]);
+  });
+
+  it("reconciles an active path by truncating at the first stale entry instead of substituting a default", () => {
+    const tree = [
+      {
+        id: "a",
+        kind: "collection",
+        iconId: "box",
+        children: [
+          { id: "x", kind: "collection", iconId: "box", children: [{ id: "leaf", kind: "button", iconId: "box", controllerId: "c", action: "act" }] },
+          { id: "y", kind: "collection", iconId: "box", children: [] },
+        ],
+      },
+      { id: "b", kind: "collection", iconId: "box", children: [] },
+    ];
+    expect(reconcileToolPath(tree, ["a", "x"])).toEqual(["a", "x"]);
+    expect(reconcileToolPath(tree, ["a", "gone"])).toEqual(["a"]);
+    expect(reconcileToolPath(tree, ["gone"])).toEqual([]);
+    expect(reconcileToolPath(tree, [])).toEqual([]);
+  });
+
+  it("buckets top-level tool nodes into ordered category collections", () => {
+    const grouped = groupToolNodesByCategory([
+      { id: "sel", kind: "toggle", iconId: "cursor", controllerId: "x", action: "sel", category: "selection" },
+      { id: "hist", kind: "button", iconId: "undo", controllerId: "x", action: "undo", category: "history" },
+      { id: "act", kind: "button", iconId: "wand", controllerId: "x", action: "run" },
+      { id: "tool", kind: "toggle", iconId: "pen", controllerId: "x", action: "pen" },
+      { id: "sync", kind: "toggle", iconId: "cloud", controllerId: "x", action: "sync", category: "sync" },
+    ]);
+    expect(grouped.map((node) => node.id)).toEqual(["selection", "tools", "actions", "history", "sync"]);
+    expect(grouped.every((node) => node.kind === "collection")).toBe(true);
+  });
+
+  it("drops separator-only category buckets so an empty group never appears as a picker option", () => {
+    const grouped = groupToolNodesByCategory([
+      { id: "a", kind: "button", iconId: "box", controllerId: "x", action: "a", category: "actions" },
+      { id: "sep", kind: "separator" },
+    ]);
+    expect(grouped).toHaveLength(1);
+    expect(grouped[0].id).toBe("actions");
   });
 
   it("renders ribbon toolbar with picker and batched toggles", () => {
@@ -1417,7 +1510,7 @@ describe("toolbar ribbon", () => {
     expect(markup).toContain('data-slot="toggle-group"');
   });
 
-  it("stacks the window toolbar ribbon upward: base picker row first in the DOM, drilled-down tools row above it", () => {
+  it("stacks the window toolbar ribbon upward, showing only the base picker row until a group is activated", () => {
     const markup = renderToStaticMarkup(
       createElement(ToolTree, {
         direction: "up",
@@ -1448,12 +1541,10 @@ describe("toolbar ribbon", () => {
     expect(markup).toContain('data-slot="ribbon"');
     expect(markup).toContain('data-direction="up"');
     expect(markup).toContain("flex-col-reverse");
-    expect(markup.match(/data-slot="ribbon-row"/g)?.length).toBe(2);
-    // No active path given, so the picker defaults to its first collection ("view") and drills into its leaf ("zoom-in").
-    const baseRowIndex = markup.indexOf('data-slot="toggle-group"');
-    const drilledRowIndex = markup.indexOf('id="zoom-in"');
-    expect(baseRowIndex).toBeGreaterThanOrEqual(0);
-    expect(drilledRowIndex).toBeGreaterThan(baseRowIndex);
+    // No active path given, so neither group is expanded: exactly one ribbon row (the base picker).
+    expect(markup.match(/data-slot="ribbon-row"/g)?.length).toBe(1);
+    expect(markup).toContain('data-slot="toggle-group"');
+    expect(markup).not.toContain('id="zoom-in"');
   });
 
   it("renders ToolTree with a custom id for per-window namespacing", () => {

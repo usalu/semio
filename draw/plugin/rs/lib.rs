@@ -12,7 +12,7 @@ use semio_framework_plugin::{SurfaceKind,
     build_canvas_2d_scene, create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_select, ui_inspector_mixed_slider, ui_inspector_mixed_text, ui_inspector_mixed_toggle,
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, tool_collection, tool_toggle, App, Canvas2dScene,
-    ActionDescriptor, PanelGroup, ToolNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSelectItem,
+    ActionDescriptor, PanelGroup, ToolCategory, ToolNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSelectItem,
     UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
     WindowEngagementInput,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -1137,7 +1137,8 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                     toggle("selectLasso", "lasso", labels.tool_lasso_select),
                     toggle("selectDirect", "mouse-pointer-2", labels.tool_direct_select),
                 ],
-            ),
+            )
+            .with_category(ToolCategory::Selection),
             tool_collection(
                 "draw-play-tools-draw",
                 "pen-tool",
@@ -1149,14 +1150,16 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                     toggle("shapeLine", "minus", labels.kind_line),
                     toggle("shapePolygon", "pentagon", labels.kind_polygon),
                 ],
-            ),
+            )
+            .with_category(ToolCategory::Tools),
             tool_collection(
                 "draw-play-tools-combine",
                 "combine",
                 labels.tool_group_combine,
                 vec![toggle("booleanCombine", "combine", labels.kind_boolean), toggle("trace", "scan-line", labels.kind_trace)],
-            ),
-            tool_collection("draw-play-tools-view", "move", labels.tool_group_view, vec![toggle("transformMove", "move", labels.tool_pan)]),
+            )
+            .with_category(ToolCategory::Tools),
+            tool_collection("draw-play-tools-view", "move", labels.tool_group_view, vec![toggle("transformMove", "move", labels.tool_pan)]).with_category(ToolCategory::Tools),
         ]
     }
 }

@@ -3641,6 +3641,29 @@ mod tests {
     }
 
     #[test]
+    fn engagement_submit_normalized_fill_token_sets_fill_count() {
+        // The React shell PascalCases and strips separators from every draft before submitting it
+        // (`normalizeEngagementActionText`), so "fill 20" arrives as "Fill20", not "fill 20".
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "Fill20" })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.runtime.fill_count, 20);
+        assert_eq!(envelope.runtime.active_tool, "fill");
+        assert_eq!(envelope.runtime.engagement_input, "");
+    }
+
+    #[test]
+    fn engagement_submit_bare_fill_token_activates_tool_without_changing_count() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "Fill" })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.runtime.fill_count, 0);
+        assert_eq!(envelope.runtime.active_tool, "fill");
+    }
+
+    #[test]
     fn engagement_submit_select_token_switches_tool_back() {
         let mut app = Puzzle3dPlayApp::default();
         let document = app.initial_document_json();
@@ -4175,6 +4198,44 @@ mod tests {
         let ops = app.handle_action_patch_ops("setFillCount", Some(&json!({ "value": 3 })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.runtime.fill_count, 3);
+    }
+
+    #[test]
+    fn set_fill_count_accepts_float_value() {
+        // The wasm bridge round-trips control values as JSON numbers, which may serialize as
+        // floats (e.g. 20.0) rather than integers; as_u64() would silently return None for those.
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_action_patch_ops("setFillCount", Some(&json!({ "value": 20.0 })), &document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.runtime.fill_count, 20);
+    }
+
+    #[test]
+    fn world_vortex_hover_out_does_not_clear_a_persisted_vortex_selection() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let vortex = envelope.fixture.objects.first().and_then(|object| object.vortices.first()).map(|vortex| puzzle3d_vortex_full_id(&envelope.fixture.objects[0].id, &vortex.id)).expect("seed vortex");
+        let ops = app.handle_action_patch_ops("worldVortexSelect", Some(&json!({ "fullId": vortex })), &document, &ViewState::default());
+        let selected_document = serde_json::to_string(&apply_ops(&envelope, &ops)).unwrap();
+        let ops = app.handle_action_patch_ops("worldVortexHover", Some(&json!({})), &selected_document, &ViewState::default());
+        let envelope = apply_ops(&parse_envelope(&selected_document), &ops);
+        assert_eq!(envelope.runtime.selection.vortex_ids, vec![vortex.clone()]);
+        assert_eq!(puzzle3d_brush_target_vortex(&envelope), Some(vortex));
+    }
+
+    #[test]
+    fn world_vortex_hover_does_not_mutate_the_selection() {
+        let mut app = Puzzle3dPlayApp::default();
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let vortex = envelope.fixture.objects.first().and_then(|object| object.vortices.first()).map(|vortex| puzzle3d_vortex_full_id(&envelope.fixture.objects[0].id, &vortex.id)).expect("seed vortex");
+        let ops = app.handle_action_patch_ops("worldVortexHover", Some(&json!({ "fullId": vortex })), &document, &ViewState::default());
+        let envelope = apply_ops(&envelope, &ops);
+        assert!(envelope.runtime.selection.vortex_ids.is_empty());
+        assert_eq!(envelope.runtime.hovered_vortex_full_id, Some(vortex.clone()));
+        assert_eq!(puzzle3d_brush_target_vortex(&envelope), Some(vortex));
     }
 
     #[test]

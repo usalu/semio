@@ -1,0 +1,13 @@
+{
+  "title": "Window Tool Panel with Recursive Category Groups",
+  "emoji": "🧰",
+  "status": "open",
+  "description": "All windows must have a tool panel on the bottom left. Tool node groups (e.g. selection) act as categories. When a group tool node is activated, the panel expands with another line. This works recursively. There can only be one active group per level (at most one active per level; zero active collapses that line).\n\nImplementation per approved plan at /Users/ueli/.claude/plans/ui-all-windows-must-cheerful-llama.md:\n1. Render the bottom-left toolbar overlay + WindowToolbarChrome unconditionally on every Window (ui/js/react/index.tsx), with a disabled unfold toggle when there are no tools.\n2. Add groupToolNodesByCategory in framework/renderer/react/os-shell.tsx to synthesize category collections (selection/tools/actions/history/sync) from a window's top-level tool nodes, matching wgpu's partition_tools_by_category ordering; wire into windowToolbarNode.\n3. Rewrite buildToolbarRibbonSegments/reconcileToolPath so collections never auto-activate: at most one active group per level, zero active collapses the line, no leaf-only-sibling flattening, no single-collection auto-drill. Update ToolTree's picker onValueChange so re-clicking the active toggle collapses that line and deeper lines.\n4. Add \"tools\"/\"sync\" to UiToolbarParentCategory i18n plus De/En entries; extend resolveControlLabelId to resolve window-scoped ui.toolbar.\u003cwindowId\u003e.group.\u003cslug\u003e ids.\n5. Sweep plugin tools()/mode_tools Rust implementations (writer, cad, s, sequence, procedural, draw, note, trinity, layout, shooting, process, lowpoly) to tag top-level tool nodes with explicit .with_category(...).\n6. Extend existing tests (framework/renderer/react/index.test.ts toolbar-ribbon describe, ui/js/react index.tsx i18n test) and existing stories (.storybook/stories/ui/Toolbar.stories.tsx, Window.stories.tsx) — no new files.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1945"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪e50d94694cc7435c9e4aa2d6a450ae87"
+  ]
+}

@@ -54,7 +54,6 @@ import {
   getLevelBgClass,
   insertWindowAtDropZone,
   interactiveActiveFillClass,
-  navbarFillItem,
   shellChromeTitleClassName,
   staticTreePanelDefinition,
   UiChromeLabelPolicyProvider,
@@ -779,7 +778,9 @@ function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, o
 
 function windowToolbarNode(tools: readonly ToolNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void): ReactNode {
   if (!tools?.length) return undefined;
-  return <ToolTree id={`ui.toolbar.${windowId}`} tools={tools} onAction={onAction} direction="up" />;
+  const grouped = groupToolNodesByCategory(tools);
+  if (!grouped.length) return undefined;
+  return <ToolTree id={`ui.toolbar.${windowId}`} tools={grouped} onAction={onAction} direction="up" />;
 }
 //#endregion ShellHelpers
 
@@ -1985,16 +1986,6 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     };
   }, [leftPanelVisible, mobilePanelPath, mobilePanelTabs, onAction, rightPanelVisible, session, studioMode]);
 
-  // Each toggle is anchored to its own navbar edge (left toggle leading, right toggle trailing) rather than grouped together, so it stays put directly above its panel while that panel folds out below it — the same chrome-stays/body-unfolds effect as a window's options rail.
-  const leftPanelToggle = useMemo(
-    () => <Toggle id="ui.panelToggle.left" icon={<Icon icon="panel-left" size="small" />} pressed={leftPanelVisible} onPressedChange={setLeftPanelVisible} />,
-    [leftPanelVisible],
-  );
-  const rightPanelToggle = useMemo(
-    () => <Toggle id="ui.panelToggle.right" icon={<Icon icon="panel-right" size="small" />} pressed={rightPanelVisible} onPressedChange={setRightPanelVisible} />,
-    [rightPanelVisible],
-  );
-
   const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
   const exampleOptions = useMemo(() => {
     const appId = session?.app.id ?? "";
@@ -2026,69 +2017,52 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
 
   const navbarItems = useMemo((): NavbarItem[] => {
     if (!session) return [];
-    const items: NavbarItem[] = [
-      {
-        key: "leftPanelToggle",
-        className: "shrink-0 flex items-center",
-        content: leftPanelToggle,
-      },
-      {
-        key: "logoAndTitle",
-        className: "min-w-0 shrink-0 flex items-center gap-single",
-        content: (
-          <div className="flex items-center gap-single">
-            <SemioLogo className="size-workbench shrink-0" />
-            <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
-              {appDocumentLabel(session.app.document)}
-            </span>
-          </div>
-        ),
-      },
+    // Logo/title, example selector, and mode switcher render as one cluster, centered as a group in the navbar
+    // (via `centered`) rather than left-anchored with fill spacers pushing the rest toward the trailing edge.
+    const centerContent: ReactNode[] = [
+      <div key="logoAndTitle" className="flex min-w-0 shrink-0 items-center gap-single">
+        <SemioLogo className="size-workbench shrink-0" />
+        <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
+          {appDocumentLabel(session.app.document)}
+        </span>
+      </div>,
     ];
     if (exampleOptions.length > 0 && (!studioMode || session.app.id !== S_HOME_APP_ID)) {
-      items.push({
-        key: "fixture",
-        content: (
-          <NavbarExampleSelect
-            id="playground.navbar.fixture"
-            value={activeExampleId}
-            options={exampleOptions}
-            onValueChange={(exampleId) => {
-              setActiveExampleId(exampleId);
-              onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId } });
-            }}
-          />
-        ),
-      });
-      items.push(navbarFillItem());
-    } else {
-      items.push(navbarFillItem());
+      centerContent.push(
+        <NavbarExampleSelect
+          key="fixture"
+          id="playground.navbar.fixture"
+          value={activeExampleId}
+          options={exampleOptions}
+          onValueChange={(exampleId) => {
+            setActiveExampleId(exampleId);
+            onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId } });
+          }}
+        />,
+      );
     }
     if (session.app.modes.length > 1) {
-      items.push({
-        key: "modes",
-        content: (
-          <ButtonGroup id="playground.navbar.modes">
-            {session.app.modes.map((mode) => {
-              const isActive = activeModeId === mode.id;
-              return (
-                <ButtonGroupItem
-                  key={mode.id}
-                  id={`playground.navbar.modes.${mode.id}`}
-                  className={cn(isActive && interactiveActiveFillClass)}
-                  data-state={isActive ? "on" : undefined}
-                  onClick={() => applyModeChange(mode.id)}
-                  icon={<span className="hidden" />}
-                  text={mode.label}
-                />
-              );
-            })}
-          </ButtonGroup>
-        ),
-      });
+      centerContent.push(
+        <ButtonGroup key="modes" id="playground.navbar.modes">
+          {session.app.modes.map((mode) => {
+            const isActive = activeModeId === mode.id;
+            return (
+              <ButtonGroupItem
+                key={mode.id}
+                id={`playground.navbar.modes.${mode.id}`}
+                className={cn(isActive && interactiveActiveFillClass)}
+                data-state={isActive ? "on" : undefined}
+                onClick={() => applyModeChange(mode.id)}
+                icon={<span className="hidden" />}
+                text={mode.label}
+              />
+            );
+          })}
+        </ButtonGroup>,
+      );
     }
-    return items;
-  }, [activeExampleId, activeModeId, applyModeChange, exampleOptions, leftPanelToggle, onAction, session]);
+    return [{ key: "center", centered: true, content: <div className="flex min-w-0 items-center gap-double">{centerContent}</div> }];
+  }, [activeExampleId, activeModeId, applyModeChange, exampleOptions, onAction, session]);
 
   const searchItems = useMemo(() => {
     if (!session) return [];
@@ -2337,13 +2311,14 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           <Layout
             mobile={mobile}
             mobilePanel={mobilePanel}
-            navbar={<Navbar items={navbarItems} showFullscreenToggle trailingContent={rightPanelToggle} />}
+            navbar={<Navbar items={navbarItems} showFullscreenToggle />}
             footer={<Footer items={footerItems} toolbar={footerToolbar} />}
             leftSidePanel={
               workbenchLeftTabs.length > 0 || frameworkDisplayTabs.length > 0
                 ? {
                     position: "left",
                     visible: leftPanelVisible,
+                    onVisibleChange: setLeftPanelVisible,
                     size: leftPanelSize,
                     onSizeChange: setLeftPanelSize,
                     tabs: leftPanelTabs,
@@ -2363,6 +2338,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
                 ? {
                     position: "right",
                     visible: rightPanelVisible,
+                    onVisibleChange: setRightPanelVisible,
                     size: rightPanelSize,
                     onSizeChange: setRightPanelSize,
                     tabs: rightPanelTabs,
@@ -3081,6 +3057,8 @@ export enum Expertise {
   EXPERT = "expert",
 }
 
+export type ToolCategory = "selection" | "tools" | "actions" | "history" | "sync";
+
 export type ToolLeaf =
   | { readonly id: string; readonly kind: "separator"; readonly order?: number; readonly disabled?: boolean }
   | {
@@ -3092,7 +3070,7 @@ export type ToolLeaf =
       readonly title?: string;
       readonly order?: number;
       readonly disabled?: boolean;
-      readonly category?: "selection" | "tools" | "actions" | "history" | "sync";
+      readonly category?: ToolCategory;
       readonly controllerId?: string;
       readonly action?: string;
       readonly args?: unknown;
@@ -3107,7 +3085,7 @@ export type ToolLeaf =
       readonly order?: number;
       readonly pressed?: boolean;
       readonly disabled?: boolean;
-      readonly category?: "selection" | "tools" | "actions" | "history" | "sync";
+      readonly category?: ToolCategory;
       readonly controllerId?: string;
       readonly action?: string;
       readonly args?: unknown;
@@ -3124,6 +3102,7 @@ export type ToolNode =
       readonly title?: string;
       readonly order?: number;
       readonly disabled?: boolean;
+      readonly category?: ToolCategory;
       readonly children: readonly ToolNode[];
     }
   | {
@@ -3135,6 +3114,7 @@ export type ToolNode =
       readonly title?: string;
       readonly order?: number;
       readonly disabled?: boolean;
+      readonly category?: ToolCategory;
       readonly onPress: ActionDescriptor;
     }
   | {
@@ -3147,6 +3127,7 @@ export type ToolNode =
       readonly order?: number;
       readonly pressed?: boolean;
       readonly disabled?: boolean;
+      readonly category?: ToolCategory;
       readonly onChange: ActionDescriptor;
     };
 
@@ -3844,6 +3825,46 @@ export function sortToolNodes(nodes: readonly ToolNode[]): ToolNode[] {
   return [...nodes].sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
 }
 
+//#region 🗂️ToolCategoryGrouping
+
+const TOOL_CATEGORY_ORDER: readonly ToolCategory[] = ["selection", "tools", "actions", "history", "sync"];
+
+const TOOL_CATEGORY_ICON_ID: Readonly<Record<ToolCategory, string>> = {
+  selection: "mouse-pointer",
+  tools: "wrench",
+  actions: "sparkles",
+  history: "undo",
+  sync: "cloud",
+};
+
+function toolNodeCategory(node: ToolNode): ToolCategory {
+  if (node.kind === "separator") return "tools";
+  if (node.category) return node.category;
+  return node.kind === "button" ? "actions" : "tools";
+}
+
+/** @emoji 🗂️ Buckets a window's top-level tool nodes into synthetic category collections (selection/tools/actions/history/sync) so activating a category expands the panel with another line, matching {@link buildToolbarRibbonSegments}'s one-active-group-per-level picker. Separators default to `tools` (mirrors Rust `ToolNode::category()`), so dividers between same-category runs survive; dividers that only separated different categories become redundant once those categories are separate picker lines. */
+export function groupToolNodesByCategory(nodes: readonly ToolNode[]): ToolNode[] {
+  const buckets = new Map<ToolCategory, ToolNode[]>();
+  for (const node of nodes) {
+    const category = toolNodeCategory(node);
+    const bucket = buckets.get(category) ?? [];
+    bucket.push(node);
+    buckets.set(category, bucket);
+  }
+  return TOOL_CATEGORY_ORDER.filter((category) => hasInteractiveToolNodes(buckets.get(category))).map((category, order) => ({
+    id: category,
+    kind: "collection" as const,
+    iconId: TOOL_CATEGORY_ICON_ID[category],
+    text: category,
+    order,
+    category,
+    children: buckets.get(category)!,
+  }));
+}
+
+//#endregion 🗂️ToolCategoryGrouping
+
 function isInteractiveToolNode(node: ToolNode): boolean {
   if (node.kind === "separator") return false;
   if (node.kind === "collection") return hasInteractiveToolNodes(node.children);
@@ -3854,17 +3875,8 @@ function hasInteractiveToolNodes(nodes?: readonly ToolNode[]): boolean {
   return Boolean(nodes?.some((node) => isInteractiveToolNode(node)));
 }
 
-function isLeafOnlyToolCollection(node: ToolNode): boolean {
-  if (node.kind !== "collection") return false;
-  return node.children.every((child) => child.kind !== "collection");
-}
-
 function hasInteractiveToolLeaves(items: readonly ToolLeaf[]): boolean {
   return items.some((node) => node.kind !== "separator");
-}
-
-function toolLeaves(nodes: readonly ToolNode[]): ToolLeaf[] {
-  return sortToolNodes(nodes).filter((node): node is ToolLeaf => node.kind !== "collection");
 }
 
 type ToolCollectionNode = Extract<ToolNode, { readonly kind: "collection" }>;
@@ -3873,65 +3885,34 @@ export type ToolbarRibbonSegment =
   | { readonly kind: "picker"; readonly collections: readonly ToolCollectionNode[]; readonly depth: number }
   | { readonly kind: "tools"; readonly items: readonly ToolLeaf[]; readonly depth: number };
 
-/** @emoji 🎀 Builds drill-down ribbon segments from a toolbar tree and active collection path; `depth` marks how many collections were drilled into to reach a segment. */
+/** @emoji 🎀 Builds drill-down ribbon segments from a toolbar tree and active collection path; `depth` marks how many collections were drilled into to reach a segment. Collections never auto-activate: a level only recurses when `path[depth]` names one of its enabled collections, so at most one group per level is active and an unresolved level simply shows its picker. */
 export function buildToolbarRibbonSegments(nodes: readonly ToolNode[], path: readonly string[], depth = 0): ToolbarRibbonSegment[] {
   const sorted = sortToolNodes(nodes);
   const collections = sorted.filter((node): node is ToolCollectionNode => node.kind === "collection" && !node.disabled);
   const looseLeaves = sorted.filter((node): node is ToolLeaf => node.kind !== "collection");
   const segments: ToolbarRibbonSegment[] = [];
 
-  if (collections.length === 0) {
-    if (hasInteractiveToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves, depth });
-    return segments;
-  }
+  if (collections.length > 0) segments.push({ kind: "picker", collections, depth });
+  if (hasInteractiveToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves, depth });
+  if (collections.length === 0) return segments;
 
-  if (collections.length === 1) {
-    if (hasInteractiveToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves, depth });
-    segments.push(...buildToolbarRibbonSegments(collections[0].children, path, depth));
-    return segments;
-  }
-
-  if (collections.every(isLeafOnlyToolCollection)) {
-    for (const collection of collections) {
-      const leaves = toolLeaves(collection.children);
-      if (hasInteractiveToolLeaves(leaves)) segments.push({ kind: "tools", items: leaves, depth });
-    }
-    if (hasInteractiveToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves, depth });
-    return segments;
-  }
-
-  segments.push({ kind: "picker", collections, depth });
-  const activeId = path[depth] ?? collections[0]?.id;
-  const active = collections.find((node) => node.id === activeId) ?? collections[0];
+  const activeId = path[depth];
+  const active = activeId ? collections.find((node) => node.id === activeId) : undefined;
   if (!active) return segments;
-  segments.push(...buildToolbarRibbonSegments(active.children, path, depth + 1));
-  return segments;
+  return [...segments, ...buildToolbarRibbonSegments(active.children, path, depth + 1)];
 }
 
-function reconcileToolPath(nodes: readonly ToolNode[], path: readonly string[]): readonly string[] {
+/** @emoji 🎀 Validates an active-group path against the current tool tree: keeps each entry only while it still names an enabled collection at that level, truncating at the first miss rather than substituting a default. */
+export function reconcileToolPath(nodes: readonly ToolNode[], path: readonly string[]): readonly string[] {
   let current = nodes;
   const reconciled: string[] = [];
-  let pathIndex = 0;
 
-  while (true) {
+  for (const collectionId of path) {
     const collections = sortToolNodes(current).filter((node): node is ToolCollectionNode => node.kind === "collection" && !node.disabled);
-    if (collections.length === 0) break;
-    if (collections.length > 1 && collections.every(isLeafOnlyToolCollection)) break;
-    if (collections.length === 1) {
-      current = collections[0].children;
-      continue;
-    }
-
-    let collectionId = path[pathIndex];
-    if (!collectionId || !collections.some((node) => node.id === collectionId)) {
-      collectionId = collections[0]?.id;
-    }
-    if (!collectionId) break;
-    reconciled.push(collectionId);
     const active = collections.find((node) => node.id === collectionId);
-    if (!active || active.kind !== "collection") break;
+    if (!active) break;
+    reconciled.push(collectionId);
     current = active.children;
-    pathIndex++;
   }
 
   return reconciled;
@@ -4048,7 +4029,7 @@ export function ToolTree({ tools, onAction, id = "ui.toolbar", direction = "inli
           kind="single"
           value={activePath[segment.depth] ?? ""}
           onValueChange={(value) => {
-            if (value) setActivePath(reconcileToolPath(tools, [...activePath.slice(0, segment.depth), value]));
+            setActivePath(value ? reconcileToolPath(tools, [...activePath.slice(0, segment.depth), value]) : activePath.slice(0, segment.depth));
           }}
           items={segment.collections.map((entry) => ({
             value: entry.id,
