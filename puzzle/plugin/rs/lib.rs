@@ -1901,7 +1901,7 @@ pub mod d2 {
         );
         for pane in PUZZLE2D_PANES {
             if let Some(window) = app.definition.window_kinds.iter_mut().find(|window| window.id == pane) {
-                window.measures = puzzle2d_window_measures(pane, &envelope, labels);
+                window.options.measures = puzzle2d_window_measures(pane, &envelope, labels);
             }
         }
         app.example("empty", "Empty", serde_json::to_string(&default_envelope()).unwrap())
@@ -1988,8 +1988,8 @@ pub mod d2 {
             let ids: Vec<&str> = app.definition.window_kinds.iter().map(|window| window.id.as_str()).collect();
             assert_eq!(ids, vec![PUZZLE2D_PANE_OVERVIEW, PUZZLE2D_PANE_DETAIL, PUZZLE2D_PANE_SELECTION]);
             for window in &app.definition.window_kinds {
-                assert!(window.engagement.is_some(), "pane {} must have engagement", window.id);
-                assert!(!window.measures.is_empty(), "pane {} must have LOD/suggestion measures", window.id);
+                assert!(window.options.engagement.as_option().is_some(), "pane {} must have engagement", window.id);
+                assert!(!window.options.measures.is_empty(), "pane {} must have LOD/suggestion measures", window.id);
             }
         }
 
@@ -9623,7 +9623,7 @@ pub mod d5 {
         );
         for window in PUZZLE5D_PLAY_WINDOWS {
             if let Some(window_kind) = app.definition.window_kinds.iter_mut().find(|window_kind| window_kind.id == window) {
-                window_kind.measures = puzzle5d_window_measures(window, &envelope, manifest_labels);
+                window_kind.options.measures = puzzle5d_window_measures(window, &envelope, manifest_labels);
             }
         }
         app.example("empty", "Empty", serde_json::to_string(&empty_document()).unwrap())

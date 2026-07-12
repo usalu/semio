@@ -1823,6 +1823,11 @@ export interface WorldOrbitRightMouseBindingsOptions {
   readonly dragThresholdPx?: number;
 }
 
+/** @emoji 🖱️ False from `onRightPointerDown` fully suppresses orbit's own button assignment for that gesture (e.g. Alt+right-click over a vortex opens a suggestion popup instead of orbiting). */
+export function shouldAssignWorldOrbitRightMouse(event: PointerEvent, onRightPointerDown?: (event: PointerEvent) => boolean): boolean {
+  return onRightPointerDown?.(event) !== false;
+}
+
 /** @emoji 🖱️ Binds projection-aware Alt+right and Shift+right actions while leaving plain right click for context menus. */
 export function useWorldOrbitRightMouseBindings(controls: WorldOrbitControlsBinding | null, domElement: HTMLElement | undefined, options?: WorldOrbitRightMouseBindingsOptions): void {
   const projection = options?.projection ?? "perspective";
@@ -1854,7 +1859,7 @@ export function useWorldOrbitRightMouseBindings(controls: WorldOrbitControlsBind
       if (event.button !== 2) {
         return;
       }
-      if (optionsRef.current?.onRightPointerDown?.(event) === false) {
+      if (!shouldAssignWorldOrbitRightMouse(event, optionsRef.current?.onRightPointerDown)) {
         return;
       }
       rightPointer = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
@@ -2722,6 +2727,15 @@ if (import.meta.vitest) {
       expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: false, shiftKey: true })).toBe(MOUSE.PAN);
       expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: true, shiftKey: true })).toBe(MOUSE.PAN);
       expect(resolveWorldOrbitRightMouseAction({ button: 0, altKey: true, shiftKey: false })).toBeNull();
+    });
+  });
+
+  describe("shouldAssignWorldOrbitRightMouse", () => {
+    it("suppresses orbit's own button assignment when onRightPointerDown returns false", () => {
+      const event = { clientX: 10, clientY: 20 } as PointerEvent;
+      expect(shouldAssignWorldOrbitRightMouse(event, () => false)).toBe(false);
+      expect(shouldAssignWorldOrbitRightMouse(event, () => true)).toBe(true);
+      expect(shouldAssignWorldOrbitRightMouse(event, undefined)).toBe(true);
     });
   });
 

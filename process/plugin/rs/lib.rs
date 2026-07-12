@@ -508,8 +508,8 @@ pub mod app_3d {
                     TargetQuantity::StockDepth => ctx.stock_depth,
                     TargetQuantity::StockHeight => ctx.stock_height,
                 };
-                let capability_value = capability_value(machine, capability)?;
-                let required = if is_min { capability_value + margin } else { capability_value - margin };
+                let value = capability_value(machine, capability)?;
+                let required = if is_min { value + margin } else { value - margin };
                 let ok = if is_min { actual >= required } else { actual <= required };
                 if ok { None } else { Some(ValidationFailure { quantity, actual, required, is_min }) }
             })

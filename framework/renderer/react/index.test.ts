@@ -25,7 +25,7 @@ import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
 import { VcsHistoryHost } from "./components/vcs-history-host.tsx";
 import { TextEditorHost, buildTextEditorContextMenuItems, lineRangeAt, multiSpanReplace } from "./components/text-editor-host.tsx";
-import { World3dHost, brushObjectPlacementArgs, resolveVortexPointerDownIntent, worldInstancePickBlocked } from "./components/world-3d-host.tsx";
+import { World3dHost, brushObjectPlacementArgs, resolveVortexPointerDownIntent, resolveWorldContextMenuTarget, worldInstancePickBlocked } from "./components/world-3d-host.tsx";
 import {
   NoteCanvasHost,
   noteBlockBounds,
@@ -877,6 +877,16 @@ describe("framework renderer hosts", () => {
   it("defaults sourceVortexIndex to 0 when the brush preview omits it", () => {
     const args = brushObjectPlacementArgs({ targetVortexFullId: "seed-left-001:v0", objectKindId: "hex-concrete" });
     expect(args).toMatchObject({ sourceVortexIndex: 0 });
+  });
+
+  it("resolves the right-click context menu target by priority: vortex, then object, then reference", () => {
+    expect(resolveWorldContextMenuTarget({ hoveredVortexFullId: "seed-left-001:v0" }, { hoveredComponent: { objectId: "obj-1" }, hoveredId: "reference:ref-1" })).toEqual({
+      kind: "vortex",
+      id: "seed-left-001:v0",
+    });
+    expect(resolveWorldContextMenuTarget({}, { hoveredComponent: { objectId: "obj-1" }, hoveredId: "reference:ref-1" })).toEqual({ kind: "object", id: "obj-1" });
+    expect(resolveWorldContextMenuTarget({}, { hoveredId: "reference:ref-1" })).toEqual({ kind: "reference", id: "ref-1" });
+    expect(resolveWorldContextMenuTarget({}, {})).toBeNull();
   });
 
   it("renders text editor host", () => {

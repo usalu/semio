@@ -8,6 +8,13 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+/** 📈 Runs the criterion benchmark suite (`benches/kernel.rs`). */
+class BenchScript extends BundleScript {
+  run(): void {
+    Bun.spawnSync(["cargo", "bench", "-p", "kernel_3d_brepkit"], { cwd: this.root, stdio: "inherit" });
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("bench", BenchScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

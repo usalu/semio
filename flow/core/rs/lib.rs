@@ -1767,7 +1767,7 @@ pub struct FlowHost {
     eval_bridge: Option<EvalBridge>,
     host_catalogue_json: String,
     kind_infos: HashMap<String, OperatorInfo>,
-    neural_cache: NeuralCache,
+    neural_cache: std::sync::Arc<NeuralCache>,
     last_tree_signature: Option<u64>,
     next_widget_serial: u64,
     next_synapse_serial: u64,
@@ -1786,7 +1786,14 @@ impl Default for FlowHost {
 }
 
 impl FlowHost {
-    pub fn from_fixture(mut fixture: FlowFixture) -> Self {
+    pub fn from_fixture(fixture: FlowFixture) -> Self {
+        Self::from_fixture_with_cache(fixture, std::sync::Arc::new(NeuralCache::new()))
+    }
+
+    /// 🧠 Builds a host sharing an existing [`NeuralCache`] — lets a long-lived caller (e.g. a
+    /// stateless request/response plugin boundary that reconstructs `FlowHost` on every call)
+    /// keep per-node memoization alive across those reconstructions instead of discarding it.
+    pub fn from_fixture_with_cache(mut fixture: FlowFixture, neural_cache: std::sync::Arc<NeuralCache>) -> Self {
         dedupe_fixture_widgets(&mut fixture);
         let mut host = Self {
             fixture,
@@ -1797,7 +1804,7 @@ impl FlowHost {
             eval_bridge: None,
             host_catalogue_json: String::new(),
             kind_infos: HashMap::new(),
-            neural_cache: NeuralCache::new(),
+            neural_cache,
             last_tree_signature: None,
             next_widget_serial: 1,
             next_synapse_serial: 100,

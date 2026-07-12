@@ -3000,8 +3000,8 @@ fn create_studio_app() -> App {
         .iter_mut()
         .find(|window| window.id == S_PLAY_WINDOW_MEDIA_GRAPH)
     {
-        window.measures = measures;
-        window.engagement = Some(engagement);
+        window.options.measures = measures;
+        window.options.engagement = semio_framework_core::WindowEngagementSlot::Some(engagement);
     }
     let compiled_engagement = compiled_dag_engagement(&demo_os_document());
     if let Some(window) = definition
@@ -3009,7 +3009,7 @@ fn create_studio_app() -> App {
         .iter_mut()
         .find(|window| window.id == S_PLAY_WINDOW_COMPILED_DAG)
     {
-        window.engagement = Some(compiled_engagement);
+        window.options.engagement = semio_framework_core::WindowEngagementSlot::Some(compiled_engagement);
     }
     let mut app = App {
         definition,
@@ -3065,7 +3065,8 @@ mod tests {
                         id: "edit".into(),
                         label: "Edit".into(),
                         tools: vec![],
-                layout_id: None,
+                        layout_id: None,
+                        actions: vec![],
                     }],
                     default_mode_id: None,
                 }],
@@ -3520,7 +3521,8 @@ mod tests {
                     id: "edit".into(),
                     label: "Edit".into(),
                     tools: vec![],
-                layout_id: None,
+                    layout_id: None,
+                    actions: vec![],
                 }],
                 default_mode_id: None,
                 parameter_fields: Vec::new(),
@@ -3541,7 +3543,8 @@ mod tests {
                         id: "edit".into(),
                         label: "Edit".into(),
                         tools: vec![],
-                layout_id: None,
+                        layout_id: None,
+                        actions: vec![],
                     }],
                     default_mode_id: None,
                 }],
@@ -3562,7 +3565,8 @@ mod tests {
                     id: "edit".into(),
                     label: "Edit".into(),
                     tools: vec![],
-                layout_id: None,
+                    layout_id: None,
+                    actions: vec![],
                 }],
                 default_mode_id: None,
                 parameter_fields: Vec::new(),
@@ -3583,7 +3587,8 @@ mod tests {
                         id: "edit".into(),
                         label: "Edit".into(),
                         tools: vec![],
-                layout_id: None,
+                        layout_id: None,
+                        actions: vec![],
                     }],
                     default_mode_id: None,
                 }],

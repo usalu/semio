@@ -2344,9 +2344,9 @@ fn create_note_app() -> App {
     );
     for window in app.definition.window_kinds.iter_mut() {
         if window.id == NOTE_PLAY_WINDOW_COMPOSITE {
-            window.measures = note_canvas_measures(&envelope.document);
+            window.options.measures = note_canvas_measures(&envelope.document);
         } else if window.id == NOTE_PLAY_WINDOW_NAVIGATOR {
-            window.measures = note_navigator_measures(&envelope.document);
+            window.options.measures = note_navigator_measures(&envelope.document);
         }
     }
     app.example("empty", "Empty", serde_json::to_string(&empty_note_document()).unwrap())

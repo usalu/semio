@@ -3287,6 +3287,7 @@ use crate::layout::NamedLayout;
 use crate::layout::WindowEngagement;
 use crate::layout::WindowLayout;
 use crate::layout::WindowMeasure;
+use crate::layout::WindowOptions;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -4845,6 +4846,7 @@ fn component_scene(
         icon_render: None,
         note_canvas: None,
         vcs_history: None,
+        protocol_list: None,
     })
 }
 
@@ -5262,12 +5264,13 @@ pub fn history_action_definitions() -> Vec<ActionDefinition> {
 }
 
 /// 📇 A validated reference into an app's `AppDefinition.actions` registry — prevents windows/modes
-/// from silently inheriting "every app action" by making the scoping explicit and typed.
+/// from silently inheriting "every app action" by making the scoping explicit and typed. Distinct
+/// from `kernel::ActionId` (a dispatched-invocation identifier); this one names a *declaration*.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct ActionId(String);
+pub struct ActionRef(String);
 
-impl ActionId {
+impl ActionRef {
     pub fn new(id: impl Into<String>) -> Self {
         Self(id.into())
     }
@@ -5277,13 +5280,13 @@ impl ActionId {
     }
 }
 
-impl From<&str> for ActionId {
+impl From<&str> for ActionRef {
     fn from(value: &str) -> Self {
         Self(value.to_string())
     }
 }
 
-impl From<String> for ActionId {
+impl From<String> for ActionRef {
     fn from(value: String) -> Self {
         Self(value)
     }
@@ -5300,7 +5303,7 @@ pub struct ModeDefinition {
     pub layout_id: Option<String>,
     /// 📇 Actions available while this mode is active — references `AppDefinition.actions` ids.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actions: Vec<ActionId>,
+    pub actions: Vec<ActionRef>,
 }
 
 /// 🚫 A non-empty, order-preserving list — construction-time enforcement replaces what used to be a
@@ -5336,6 +5339,25 @@ impl<T> NonEmptyVec<T> {
 
     pub fn iter(&self) -> impl Iterator<Item = &T> {
         std::iter::once(&self.first).chain(self.rest.iter())
+    }
+
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
+        std::iter::once(&mut self.first).chain(self.rest.iter_mut())
+    }
+
+    pub fn first_mut(&mut self) -> &mut T {
+        &mut self.first
+    }
+}
+
+impl<T> std::ops::Index<usize> for NonEmptyVec<T> {
+    type Output = T;
+    fn index(&self, index: usize) -> &T {
+        if index == 0 {
+            &self.first
+        } else {
+            &self.rest[index - 1]
+        }
     }
 }
 
@@ -5389,7 +5411,7 @@ pub struct WindowKindDefinition {
     /// may be empty, never absent; replaces the previous implicit "every app action applies to
     /// every window" behavior.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actions: Vec<ActionId>,
+    pub actions: Vec<ActionRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub params_schema: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -6496,6 +6518,7 @@ mod ui_node_wire_format_tests {
                     icon_render: None,
                     note_canvas: None,
                     vcs_history: None,
+                    protocol_list: None,
                 }),
                 UiNode::ExternalSlot(UiExternalSlotNode {
                     plugin_id: "plugin1".into(),

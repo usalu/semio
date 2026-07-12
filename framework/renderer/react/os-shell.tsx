@@ -233,6 +233,341 @@ import {
 /** 🔁 Re-exported so `node-graph-host.tsx`/`text-editor-host.tsx` can import action-name maps from this shell module rather than reaching into `@semio-tech/framework-core` directly. */
 export { nodeGraphActions, textEditorActions };
 
+//#region 🔖types
+/** 🌐 Locale-resolved mixed-value placeholder for this renderer layer; framework/core/js/index.ts keeps its own non-reactive low-level default. */
+export const UI_INSPECTOR_MIXED_PLACEHOLDER = shellLabel("ui.common.mixedValues");
+
+/** 🎭 Renderer-side view state passed to plugin wasm calls — structurally mirrors `@semio-tech/framework-core`'s {@link PluginViewState}, kept as a distinct local alias since `ViewState` is the established name used throughout this file. */
+export type ViewState = PluginViewState;
+
+/** ⚠️ Not folded into `@semio-tech/framework-core`'s `PluginManifest`: this shell-local shape types `apps`/`programs` richly (`AppDefinition[]`, `document` on programs) where core intentionally keeps the wasm-boundary shape loose (`Record<string, unknown>[]`) for other consumers (e.g. compose, coda). Left for a human to decide whether to widen core's `PluginManifest` itself. */
+export type PluginManifest = {
+  readonly pluginId: string;
+  readonly label: string;
+  readonly version: string;
+  readonly apps: readonly AppDefinition[];
+  readonly programs: readonly { readonly programId: string; readonly appId: string; readonly label: string; readonly document: readonly string[]; readonly yields: string }[];
+  readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string }[];
+  readonly contributions?: readonly {
+    readonly kind: "formsQuestionKind";
+    readonly appId: string;
+    readonly questionKind: string;
+    readonly label: string;
+    readonly iconId: string;
+    readonly defaultValueJson?: string;
+    readonly paramsBodyKey: string;
+    readonly previewBodyKey: string;
+  }[];
+};
+
+type LoadedPluginState = {
+  readonly handle: PluginWasmHandle;
+  readonly manifest: PluginManifest;
+};
+
+type ActiveSession = {
+  readonly pluginId: string;
+  readonly instanceId: number;
+  readonly app: AppDefinition;
+  readonly viewState: ViewState;
+};
+
+type StudioProgramEntry = {
+  readonly pluginId: string;
+  readonly programId: string;
+  readonly appId: string;
+  readonly label: string;
+  readonly document: readonly string[];
+  readonly yields: string;
+};
+
+type SpawnedAppEntry = {
+  readonly id: string;
+  readonly pluginId: string;
+  readonly instanceId: number;
+  readonly appId: string;
+  readonly label: string;
+  readonly document: readonly string[];
+};
+
+type StudioPanelState = {
+  readonly activePanelTab: string;
+  readonly programs: readonly StudioProgramEntry[];
+  readonly spawnedApps: readonly SpawnedAppEntry[];
+  readonly activeSpawnedId?: string;
+};
+
+export type FrameworkOsBootOptions = {
+  readonly rootId?: string;
+  readonly plugin?: string;
+  readonly plugins?: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
+  readonly appId?: string;
+};
+
+type SyncCardKind = "file" | "folder" | "remote";
+
+type UIHistoryEntry = { readonly uri: string };
+type UIHistory = { readonly entries: readonly UIHistoryEntry[]; readonly index: number };
+//#endregion 🔖types
+
+//#region 🧮ShellStore
+/** 🧮 Single consolidated `useReducer` state tree for `FrameworkOsShell`, replacing what used to be ~38 independent `useState` calls with one dispatch-driven store, grouped by concern. */
+
+//#region slice shapes
+type PluginRuntimeState = {
+  readonly loadedPlugins: readonly LoadedPluginState[];
+  readonly session: ActiveSession | null;
+  readonly error: string | null;
+};
+
+type WindowUiState = {
+  readonly windowUiByKind: Readonly<Record<string, UiNode>>;
+  readonly windowEngagementsByKind: Readonly<Record<string, WindowEngagement>>;
+  readonly windowMeasuresByKind: Readonly<Record<string, readonly WindowMeasure[]>>;
+  readonly panelUiByKey: Readonly<Record<string, UiNode>>;
+  readonly toolNodesByKind: Readonly<Record<string, readonly ToolNode[]>>;
+  readonly appLabelsOverlay: PluginAppLabelsOverlay;
+};
+
+type SpawnedWindowState = {
+  readonly spawnedWindowUi: UiNode | null;
+  readonly spawnedWindowEngagements: Readonly<Record<string, WindowEngagement>>;
+  readonly spawnedWindowMeasures: Readonly<Record<string, readonly WindowMeasure[]>>;
+  readonly spawnedToolNodes: readonly ToolNode[];
+};
+
+type ExtraWindowInstance = { readonly id: string; readonly windowKindId: string; readonly title: string };
+
+type ShellLayoutState = {
+  readonly leftPanelVisible: boolean;
+  readonly rightPanelVisible: boolean;
+  readonly leftPanelSize: number;
+  readonly rightPanelSize: number;
+  readonly activeWindowId: string | null;
+  readonly shellLayout: WindowLayoutNode | null;
+  readonly activeExampleId: string;
+  readonly mobilePanelPath: readonly string[];
+  readonly leftPanelPath: readonly string[];
+  readonly rightPanelPath: readonly string[];
+  readonly extraWindowInstances: readonly ExtraWindowInstance[];
+};
+
+type OverlayState = {
+  readonly searchOpen: boolean;
+  readonly findOpen: boolean;
+};
+
+type UiPrefsState = {
+  readonly uiAppearance: ElementsSurfaceAppearance;
+  readonly uiLayout: UiChromeLayout;
+  readonly uiCompact: boolean;
+  readonly uiExpertise: Expertise;
+  readonly uiLocale: UiLocale;
+  readonly uiTerminology: string;
+  readonly uiThemeId: string;
+  readonly uiCustomThemes: Record<string, UiTheme>;
+  readonly uiThemeDraft: UiTheme | null;
+};
+
+type SyncState = {
+  readonly syncBackboneUri: string | null;
+  readonly syncCardKind: SyncCardKind | null;
+  readonly syncDraftPath: string;
+};
+
+export type ShellState = {
+  readonly pluginRuntime: PluginRuntimeState;
+  readonly windowUi: WindowUiState;
+  readonly spawnedWindow: SpawnedWindowState;
+  readonly layout: ShellLayoutState;
+  readonly overlays: OverlayState;
+  readonly uiPrefs: UiPrefsState;
+  readonly sync: SyncState;
+};
+//#endregion slice shapes
+
+//#region actions
+/** 🌀 A `useState`-style value-or-updater payload, kept so every migrated `setXxx` call-site can dispatch its existing `value` or `(prev) => next` argument unchanged. */
+type Updatable<T> = T | ((prev: T) => T);
+
+const resolveUpdatable = <T,>(next: Updatable<T>, prev: T): T => (typeof next === "function" ? (next as (prev: T) => T)(prev) : next);
+
+export type ShellAction =
+  | { readonly type: "SET_LOADED_PLUGINS"; readonly value: Updatable<readonly LoadedPluginState[]> }
+  | { readonly type: "SET_SESSION"; readonly value: Updatable<ActiveSession | null> }
+  | { readonly type: "SET_ERROR"; readonly value: Updatable<string | null> }
+  | { readonly type: "SET_WINDOW_UI_BY_KIND"; readonly value: Updatable<Readonly<Record<string, UiNode>>> }
+  | { readonly type: "SET_WINDOW_ENGAGEMENTS_BY_KIND"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
+  | { readonly type: "SET_WINDOW_MEASURES_BY_KIND"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
+  | { readonly type: "SET_PANEL_UI_BY_KEY"; readonly value: Updatable<Readonly<Record<string, UiNode>>> }
+  | { readonly type: "SET_TOOL_NODES_BY_KIND"; readonly value: Updatable<Readonly<Record<string, readonly ToolNode[]>>> }
+  | { readonly type: "SET_APP_LABELS_OVERLAY"; readonly value: Updatable<PluginAppLabelsOverlay> }
+  | { readonly type: "SET_SPAWNED_WINDOW_UI"; readonly value: Updatable<UiNode | null> }
+  | { readonly type: "SET_SPAWNED_WINDOW_ENGAGEMENTS"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
+  | { readonly type: "SET_SPAWNED_WINDOW_MEASURES"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
+  | { readonly type: "SET_SPAWNED_TOOL_NODES"; readonly value: Updatable<readonly ToolNode[]> }
+  | { readonly type: "SET_LEFT_PANEL_VISIBLE"; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_RIGHT_PANEL_VISIBLE"; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_LEFT_PANEL_SIZE"; readonly value: Updatable<number> }
+  | { readonly type: "SET_RIGHT_PANEL_SIZE"; readonly value: Updatable<number> }
+  | { readonly type: "SET_ACTIVE_WINDOW_ID"; readonly value: Updatable<string | null> }
+  | { readonly type: "SET_SHELL_LAYOUT"; readonly value: Updatable<WindowLayoutNode | null> }
+  | { readonly type: "SET_ACTIVE_EXAMPLE_ID"; readonly value: Updatable<string> }
+  | { readonly type: "SET_MOBILE_PANEL_PATH"; readonly value: Updatable<readonly string[]> }
+  | { readonly type: "SET_LEFT_PANEL_PATH"; readonly value: Updatable<readonly string[]> }
+  | { readonly type: "SET_RIGHT_PANEL_PATH"; readonly value: Updatable<readonly string[]> }
+  | { readonly type: "SET_EXTRA_WINDOW_INSTANCES"; readonly value: Updatable<readonly ExtraWindowInstance[]> }
+  | { readonly type: "SET_SEARCH_OPEN"; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_FIND_OPEN"; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_UI_APPEARANCE"; readonly value: Updatable<ElementsSurfaceAppearance> }
+  | { readonly type: "SET_UI_LAYOUT"; readonly value: Updatable<UiChromeLayout> }
+  | { readonly type: "SET_UI_COMPACT"; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_UI_EXPERTISE"; readonly value: Updatable<Expertise> }
+  | { readonly type: "SET_UI_LOCALE"; readonly value: Updatable<UiLocale> }
+  | { readonly type: "SET_UI_TERMINOLOGY"; readonly value: Updatable<string> }
+  | { readonly type: "SET_UI_THEME_ID"; readonly value: Updatable<string> }
+  | { readonly type: "SET_UI_CUSTOM_THEMES"; readonly value: Updatable<Record<string, UiTheme>> }
+  | { readonly type: "SET_UI_THEME_DRAFT"; readonly value: Updatable<UiTheme | null> }
+  | { readonly type: "SET_SYNC_BACKBONE_URI"; readonly value: Updatable<string | null> }
+  | { readonly type: "SET_SYNC_CARD_KIND"; readonly value: Updatable<SyncCardKind | null> }
+  | { readonly type: "SET_SYNC_DRAFT_PATH"; readonly value: Updatable<string> };
+//#endregion actions
+
+//#region slice reducers
+function pluginRuntimeReducer(state: PluginRuntimeState, action: ShellAction): PluginRuntimeState {
+  switch (action.type) {
+    case "SET_LOADED_PLUGINS": return { ...state, loadedPlugins: resolveUpdatable(action.value, state.loadedPlugins) };
+    case "SET_SESSION": return { ...state, session: resolveUpdatable(action.value, state.session) };
+    case "SET_ERROR": return { ...state, error: resolveUpdatable(action.value, state.error) };
+    default: return state;
+  }
+}
+
+function windowUiReducer(state: WindowUiState, action: ShellAction): WindowUiState {
+  switch (action.type) {
+    case "SET_WINDOW_UI_BY_KIND": return { ...state, windowUiByKind: resolveUpdatable(action.value, state.windowUiByKind) };
+    case "SET_WINDOW_ENGAGEMENTS_BY_KIND": return { ...state, windowEngagementsByKind: resolveUpdatable(action.value, state.windowEngagementsByKind) };
+    case "SET_WINDOW_MEASURES_BY_KIND": return { ...state, windowMeasuresByKind: resolveUpdatable(action.value, state.windowMeasuresByKind) };
+    case "SET_PANEL_UI_BY_KEY": return { ...state, panelUiByKey: resolveUpdatable(action.value, state.panelUiByKey) };
+    case "SET_TOOL_NODES_BY_KIND": return { ...state, toolNodesByKind: resolveUpdatable(action.value, state.toolNodesByKind) };
+    case "SET_APP_LABELS_OVERLAY": return { ...state, appLabelsOverlay: resolveUpdatable(action.value, state.appLabelsOverlay) };
+    default: return state;
+  }
+}
+
+function spawnedWindowReducer(state: SpawnedWindowState, action: ShellAction): SpawnedWindowState {
+  switch (action.type) {
+    case "SET_SPAWNED_WINDOW_UI": return { ...state, spawnedWindowUi: resolveUpdatable(action.value, state.spawnedWindowUi) };
+    case "SET_SPAWNED_WINDOW_ENGAGEMENTS": return { ...state, spawnedWindowEngagements: resolveUpdatable(action.value, state.spawnedWindowEngagements) };
+    case "SET_SPAWNED_WINDOW_MEASURES": return { ...state, spawnedWindowMeasures: resolveUpdatable(action.value, state.spawnedWindowMeasures) };
+    case "SET_SPAWNED_TOOL_NODES": return { ...state, spawnedToolNodes: resolveUpdatable(action.value, state.spawnedToolNodes) };
+    default: return state;
+  }
+}
+
+function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): ShellLayoutState {
+  switch (action.type) {
+    case "SET_LEFT_PANEL_VISIBLE": return { ...state, leftPanelVisible: resolveUpdatable(action.value, state.leftPanelVisible) };
+    case "SET_RIGHT_PANEL_VISIBLE": return { ...state, rightPanelVisible: resolveUpdatable(action.value, state.rightPanelVisible) };
+    case "SET_LEFT_PANEL_SIZE": return { ...state, leftPanelSize: resolveUpdatable(action.value, state.leftPanelSize) };
+    case "SET_RIGHT_PANEL_SIZE": return { ...state, rightPanelSize: resolveUpdatable(action.value, state.rightPanelSize) };
+    case "SET_ACTIVE_WINDOW_ID": return { ...state, activeWindowId: resolveUpdatable(action.value, state.activeWindowId) };
+    case "SET_SHELL_LAYOUT": return { ...state, shellLayout: resolveUpdatable(action.value, state.shellLayout) };
+    case "SET_ACTIVE_EXAMPLE_ID": return { ...state, activeExampleId: resolveUpdatable(action.value, state.activeExampleId) };
+    case "SET_MOBILE_PANEL_PATH": return { ...state, mobilePanelPath: resolveUpdatable(action.value, state.mobilePanelPath) };
+    case "SET_LEFT_PANEL_PATH": return { ...state, leftPanelPath: resolveUpdatable(action.value, state.leftPanelPath) };
+    case "SET_RIGHT_PANEL_PATH": return { ...state, rightPanelPath: resolveUpdatable(action.value, state.rightPanelPath) };
+    case "SET_EXTRA_WINDOW_INSTANCES": return { ...state, extraWindowInstances: resolveUpdatable(action.value, state.extraWindowInstances) };
+    default: return state;
+  }
+}
+
+function overlayReducer(state: OverlayState, action: ShellAction): OverlayState {
+  switch (action.type) {
+    case "SET_SEARCH_OPEN": return { ...state, searchOpen: resolveUpdatable(action.value, state.searchOpen) };
+    case "SET_FIND_OPEN": return { ...state, findOpen: resolveUpdatable(action.value, state.findOpen) };
+    default: return state;
+  }
+}
+
+function uiPrefsReducer(state: UiPrefsState, action: ShellAction): UiPrefsState {
+  switch (action.type) {
+    case "SET_UI_APPEARANCE": return { ...state, uiAppearance: resolveUpdatable(action.value, state.uiAppearance) };
+    case "SET_UI_LAYOUT": return { ...state, uiLayout: resolveUpdatable(action.value, state.uiLayout) };
+    case "SET_UI_COMPACT": return { ...state, uiCompact: resolveUpdatable(action.value, state.uiCompact) };
+    case "SET_UI_EXPERTISE": return { ...state, uiExpertise: resolveUpdatable(action.value, state.uiExpertise) };
+    case "SET_UI_LOCALE": return { ...state, uiLocale: resolveUpdatable(action.value, state.uiLocale) };
+    case "SET_UI_TERMINOLOGY": return { ...state, uiTerminology: resolveUpdatable(action.value, state.uiTerminology) };
+    case "SET_UI_THEME_ID": return { ...state, uiThemeId: resolveUpdatable(action.value, state.uiThemeId) };
+    case "SET_UI_CUSTOM_THEMES": return { ...state, uiCustomThemes: resolveUpdatable(action.value, state.uiCustomThemes) };
+    case "SET_UI_THEME_DRAFT": return { ...state, uiThemeDraft: resolveUpdatable(action.value, state.uiThemeDraft) };
+    default: return state;
+  }
+}
+
+function syncReducer(state: SyncState, action: ShellAction): SyncState {
+  switch (action.type) {
+    case "SET_SYNC_BACKBONE_URI": return { ...state, syncBackboneUri: resolveUpdatable(action.value, state.syncBackboneUri) };
+    case "SET_SYNC_CARD_KIND": return { ...state, syncCardKind: resolveUpdatable(action.value, state.syncCardKind) };
+    case "SET_SYNC_DRAFT_PATH": return { ...state, syncDraftPath: resolveUpdatable(action.value, state.syncDraftPath) };
+    default: return state;
+  }
+}
+//#endregion slice reducers
+
+/** 🧵 Root reducer for `FrameworkOsShell` — fans every action out to its owning slice reducer; slices that ignore an action's type return their input unchanged, so unrelated slices keep referential identity. */
+export function shellReducer(state: ShellState, action: ShellAction): ShellState {
+  return {
+    pluginRuntime: pluginRuntimeReducer(state.pluginRuntime, action),
+    windowUi: windowUiReducer(state.windowUi, action),
+    spawnedWindow: spawnedWindowReducer(state.spawnedWindow, action),
+    layout: shellLayoutReducer(state.layout, action),
+    overlays: overlayReducer(state.overlays, action),
+    uiPrefs: uiPrefsReducer(state.uiPrefs, action),
+    sync: syncReducer(state.sync, action),
+  };
+}
+
+//#region selectors
+export const selectUiDevice = (state: ShellState, mobile: boolean): ElementsSurfaceDevice => (mobile ? "mobile" : state.uiPrefs.uiLayout);
+//#endregion selectors
+
+/** 🌱 Builds the starting `ShellState` for `FrameworkOsShell`, mirroring exactly what each migrated `useState` used to initialize to (including reads from local storage for UI prefs). */
+export function initialShellState(_props: { readonly pluginFilter?: string; readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[] }): ShellState {
+  return {
+    pluginRuntime: { loadedPlugins: [], session: null, error: null },
+    windowUi: { windowUiByKind: {}, windowEngagementsByKind: {}, windowMeasuresByKind: {}, panelUiByKey: {}, toolNodesByKind: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
+    spawnedWindow: { spawnedWindowUi: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {}, spawnedToolNodes: [] },
+    layout: {
+      leftPanelVisible: false,
+      rightPanelVisible: false,
+      leftPanelSize: DEFAULT_LEFT_PANEL_SIZE,
+      rightPanelSize: DEFAULT_RIGHT_PANEL_SIZE,
+      activeWindowId: null,
+      shellLayout: null,
+      activeExampleId: "",
+      mobilePanelPath: [],
+      leftPanelPath: [],
+      rightPanelPath: [],
+      extraWindowInstances: [],
+    },
+    overlays: { searchOpen: false, findOpen: false },
+    uiPrefs: {
+      uiAppearance: readStoredUiChromeAppearance(),
+      uiLayout: readStoredUiChromeLayout(),
+      uiCompact: readStoredUiChromeCompact(),
+      uiExpertise: readStoredUiChromeExpertise(),
+      uiLocale: readStoredUiChromeLocale() ?? (uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en"),
+      uiTerminology: readStoredUiChromeTerminology(),
+      uiThemeId: readStoredUiChromeThemeId() ?? "semio",
+      uiCustomThemes: readStoredUiCustomThemes(),
+      uiThemeDraft: null,
+    },
+    sync: { syncBackboneUri: null, syncCardKind: null, syncDraftPath: "" },
+  };
+}
+//#endregion 🧮ShellStore
+
 //#region ShellHelpers
 function syncDocumentId(session: ActiveSession, panel: StudioPanelState | null, studioMode: boolean): string {
   if (studioMode && panel?.activeSpawnedId) {
@@ -849,7 +1184,7 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Pro
   const root = document.getElementById(options.rootId ?? "root");
   if (!root) throw new Error("missing #root");
   bootstrapElementsSurfaceChromeDocument(readStoredUiChromeAppearance());
-  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? DEFAULT_PLUGIN_REGISTRY} />);
+  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? DEFAULT_PLUGIN_REGISTRY} appId={options.appId} />);
 }
 //#endregion Boot
 
@@ -878,7 +1213,7 @@ class ShellRenderErrorBoundary extends Component<{ readonly children: ReactNode 
 //#endregion ErrorBoundary
 
 //#region FrameworkOsShell
-export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFilter?: string; readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[] }) {
+export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pluginFilter?: string; readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[]; readonly appId?: string }) {
   const studioMode = isStudioMode(pluginFilter);
   const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins }));
@@ -969,8 +1304,16 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
 
         const registryPluginId = pluginFilter ? resolvePluginRegistryId(pluginFilter) : undefined;
         const primary = (registryPluginId ? loaded.find((entry) => entry.pluginId === registryPluginId) : undefined) ?? loaded[0];
-        const defaultAppId = pluginFilter ? resolvePlaygroundDefaultAppId(pluginFilter) : undefined;
-        const primaryApp = (defaultAppId ? primary?.manifest.apps.find((app) => app.id === defaultAppId) : undefined) ?? primary?.manifest.apps[0];
+        const primaryApp = appId
+          ? (() => {
+              const found = primary?.manifest.apps.find((app) => app.id === appId);
+              if (!found) throw new Error(`appId "${appId}" does not resolve to any app in the loaded plugin manifest`);
+              return found;
+            })()
+          : (() => {
+              const defaultAppId = pluginFilter ? resolvePlaygroundDefaultAppId(pluginFilter) : undefined;
+              return (defaultAppId ? primary?.manifest.apps.find((app) => app.id === defaultAppId) : undefined) ?? primary?.manifest.apps[0];
+            })();
         if (primary && primaryApp) {
           const instanceId = await primary.createApp(primaryApp.id);
           dispatch({
@@ -997,7 +1340,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     return () => {
       cancelled = true;
     };
-  }, [registry, studioMode]);
+  }, [registry, studioMode, appId]);
 
   const findPluginForAction = useCallback(
     (action: ActionDescriptor) => {
@@ -1725,7 +2068,6 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     [appLabelsOverlay, session],
   );
 
-  const [displayLayoutSaveLabel, setDisplayLayoutSaveLabel] = useState("");
   const displayHostRef = useRef<DisplayHostApi | null>(null);
   const displayHost = useNamedLayoutHost({
     appId: session?.app.id ?? "framework-os",
@@ -1735,7 +2077,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     onApplyLayout: applyNamedLayout,
     namedLayoutStore,
   });
-  displayHostRef.current = { ...displayHost, layoutSaveLabel: displayLayoutSaveLabel, setLayoutSaveLabel: setDisplayLayoutSaveLabel };
+  displayHostRef.current = displayHost;
 
   //#region 🔖ThemeMutators
   const uiThemeBase = uiThemeDraft ?? uiTheme;
@@ -2436,340 +2778,6 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   );
 }
 //#endregion FrameworkOsShell
-
-//#region 🔖types
-/** 🌐 Locale-resolved mixed-value placeholder for this renderer layer; framework/core/js/index.ts keeps its own non-reactive low-level default. */
-export const UI_INSPECTOR_MIXED_PLACEHOLDER = shellLabel("ui.common.mixedValues");
-
-/** 🎭 Renderer-side view state passed to plugin wasm calls — structurally mirrors `@semio-tech/framework-core`'s {@link PluginViewState}, kept as a distinct local alias since `ViewState` is the established name used throughout this file. */
-export type ViewState = PluginViewState;
-
-/** ⚠️ Not folded into `@semio-tech/framework-core`'s `PluginManifest`: this shell-local shape types `apps`/`programs` richly (`AppDefinition[]`, `document` on programs) where core intentionally keeps the wasm-boundary shape loose (`Record<string, unknown>[]`) for other consumers (e.g. compose, coda). Left for a human to decide whether to widen core's `PluginManifest` itself. */
-export type PluginManifest = {
-  readonly pluginId: string;
-  readonly label: string;
-  readonly version: string;
-  readonly apps: readonly AppDefinition[];
-  readonly programs: readonly { readonly programId: string; readonly appId: string; readonly label: string; readonly document: readonly string[]; readonly yields: string }[];
-  readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string }[];
-  readonly contributions?: readonly {
-    readonly kind: "formsQuestionKind";
-    readonly appId: string;
-    readonly questionKind: string;
-    readonly label: string;
-    readonly iconId: string;
-    readonly defaultValueJson?: string;
-    readonly paramsBodyKey: string;
-    readonly previewBodyKey: string;
-  }[];
-};
-
-type LoadedPluginState = {
-  readonly handle: PluginWasmHandle;
-  readonly manifest: PluginManifest;
-};
-
-type ActiveSession = {
-  readonly pluginId: string;
-  readonly instanceId: number;
-  readonly app: AppDefinition;
-  readonly viewState: ViewState;
-};
-
-type StudioProgramEntry = {
-  readonly pluginId: string;
-  readonly programId: string;
-  readonly appId: string;
-  readonly label: string;
-  readonly document: readonly string[];
-  readonly yields: string;
-};
-
-type SpawnedAppEntry = {
-  readonly id: string;
-  readonly pluginId: string;
-  readonly instanceId: number;
-  readonly appId: string;
-  readonly label: string;
-  readonly document: readonly string[];
-};
-
-type StudioPanelState = {
-  readonly activePanelTab: string;
-  readonly programs: readonly StudioProgramEntry[];
-  readonly spawnedApps: readonly SpawnedAppEntry[];
-  readonly activeSpawnedId?: string;
-};
-
-export type FrameworkOsBootOptions = {
-  readonly rootId?: string;
-  readonly plugin?: string;
-  readonly plugins?: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
-};
-
-type SyncCardKind = "file" | "folder" | "remote";
-
-type UIHistoryEntry = { readonly uri: string };
-type UIHistory = { readonly entries: readonly UIHistoryEntry[]; readonly index: number };
-//#endregion 🔖types
-
-//#region 🧮ShellStore
-/** 🧮 Single consolidated `useReducer` state tree for `FrameworkOsShell`, replacing what used to be ~38 independent `useState` calls with one dispatch-driven store, grouped by concern. */
-
-//#region slice shapes
-type PluginRuntimeState = {
-  readonly loadedPlugins: readonly LoadedPluginState[];
-  readonly session: ActiveSession | null;
-  readonly error: string | null;
-};
-
-type WindowUiState = {
-  readonly windowUiByKind: Readonly<Record<string, UiNode>>;
-  readonly windowEngagementsByKind: Readonly<Record<string, WindowEngagement>>;
-  readonly windowMeasuresByKind: Readonly<Record<string, readonly WindowMeasure[]>>;
-  readonly panelUiByKey: Readonly<Record<string, UiNode>>;
-  readonly toolNodesByKind: Readonly<Record<string, readonly ToolNode[]>>;
-  readonly appLabelsOverlay: PluginAppLabelsOverlay;
-};
-
-type SpawnedWindowState = {
-  readonly spawnedWindowUi: UiNode | null;
-  readonly spawnedWindowEngagements: Readonly<Record<string, WindowEngagement>>;
-  readonly spawnedWindowMeasures: Readonly<Record<string, readonly WindowMeasure[]>>;
-  readonly spawnedToolNodes: readonly ToolNode[];
-};
-
-type ExtraWindowInstance = { readonly id: string; readonly windowKindId: string; readonly title: string };
-
-type ShellLayoutState = {
-  readonly leftPanelVisible: boolean;
-  readonly rightPanelVisible: boolean;
-  readonly leftPanelSize: number;
-  readonly rightPanelSize: number;
-  readonly activeWindowId: string | null;
-  readonly shellLayout: WindowLayoutNode | null;
-  readonly activeExampleId: string;
-  readonly mobilePanelPath: readonly string[];
-  readonly leftPanelPath: readonly string[];
-  readonly rightPanelPath: readonly string[];
-  readonly extraWindowInstances: readonly ExtraWindowInstance[];
-};
-
-type OverlayState = {
-  readonly searchOpen: boolean;
-  readonly findOpen: boolean;
-};
-
-type UiPrefsState = {
-  readonly uiAppearance: ElementsSurfaceAppearance;
-  readonly uiLayout: UiChromeLayout;
-  readonly uiCompact: boolean;
-  readonly uiExpertise: Expertise;
-  readonly uiLocale: UiLocale;
-  readonly uiTerminology: string;
-  readonly uiThemeId: string;
-  readonly uiCustomThemes: Record<string, UiTheme>;
-  readonly uiThemeDraft: UiTheme | null;
-};
-
-type SyncState = {
-  readonly syncBackboneUri: string | null;
-  readonly syncCardKind: SyncCardKind | null;
-  readonly syncDraftPath: string;
-};
-
-export type ShellState = {
-  readonly pluginRuntime: PluginRuntimeState;
-  readonly windowUi: WindowUiState;
-  readonly spawnedWindow: SpawnedWindowState;
-  readonly layout: ShellLayoutState;
-  readonly overlays: OverlayState;
-  readonly uiPrefs: UiPrefsState;
-  readonly sync: SyncState;
-};
-//#endregion slice shapes
-
-//#region actions
-/** 🌀 A `useState`-style value-or-updater payload, kept so every migrated `setXxx` call-site can dispatch its existing `value` or `(prev) => next` argument unchanged. */
-type Updatable<T> = T | ((prev: T) => T);
-
-const resolveUpdatable = <T,>(next: Updatable<T>, prev: T): T => (typeof next === "function" ? (next as (prev: T) => T)(prev) : next);
-
-export type ShellAction =
-  | { readonly type: "SET_LOADED_PLUGINS"; readonly value: Updatable<readonly LoadedPluginState[]> }
-  | { readonly type: "SET_SESSION"; readonly value: Updatable<ActiveSession | null> }
-  | { readonly type: "SET_ERROR"; readonly value: Updatable<string | null> }
-  | { readonly type: "SET_WINDOW_UI_BY_KIND"; readonly value: Updatable<Readonly<Record<string, UiNode>>> }
-  | { readonly type: "SET_WINDOW_ENGAGEMENTS_BY_KIND"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
-  | { readonly type: "SET_WINDOW_MEASURES_BY_KIND"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
-  | { readonly type: "SET_PANEL_UI_BY_KEY"; readonly value: Updatable<Readonly<Record<string, UiNode>>> }
-  | { readonly type: "SET_TOOL_NODES_BY_KIND"; readonly value: Updatable<Readonly<Record<string, readonly ToolNode[]>>> }
-  | { readonly type: "SET_APP_LABELS_OVERLAY"; readonly value: Updatable<PluginAppLabelsOverlay> }
-  | { readonly type: "SET_SPAWNED_WINDOW_UI"; readonly value: Updatable<UiNode | null> }
-  | { readonly type: "SET_SPAWNED_WINDOW_ENGAGEMENTS"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
-  | { readonly type: "SET_SPAWNED_WINDOW_MEASURES"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
-  | { readonly type: "SET_SPAWNED_TOOL_NODES"; readonly value: Updatable<readonly ToolNode[]> }
-  | { readonly type: "SET_LEFT_PANEL_VISIBLE"; readonly value: Updatable<boolean> }
-  | { readonly type: "SET_RIGHT_PANEL_VISIBLE"; readonly value: Updatable<boolean> }
-  | { readonly type: "SET_LEFT_PANEL_SIZE"; readonly value: Updatable<number> }
-  | { readonly type: "SET_RIGHT_PANEL_SIZE"; readonly value: Updatable<number> }
-  | { readonly type: "SET_ACTIVE_WINDOW_ID"; readonly value: Updatable<string | null> }
-  | { readonly type: "SET_SHELL_LAYOUT"; readonly value: Updatable<WindowLayoutNode | null> }
-  | { readonly type: "SET_ACTIVE_EXAMPLE_ID"; readonly value: Updatable<string> }
-  | { readonly type: "SET_MOBILE_PANEL_PATH"; readonly value: Updatable<readonly string[]> }
-  | { readonly type: "SET_LEFT_PANEL_PATH"; readonly value: Updatable<readonly string[]> }
-  | { readonly type: "SET_RIGHT_PANEL_PATH"; readonly value: Updatable<readonly string[]> }
-  | { readonly type: "SET_EXTRA_WINDOW_INSTANCES"; readonly value: Updatable<readonly ExtraWindowInstance[]> }
-  | { readonly type: "SET_SEARCH_OPEN"; readonly value: Updatable<boolean> }
-  | { readonly type: "SET_FIND_OPEN"; readonly value: Updatable<boolean> }
-  | { readonly type: "SET_UI_APPEARANCE"; readonly value: Updatable<ElementsSurfaceAppearance> }
-  | { readonly type: "SET_UI_LAYOUT"; readonly value: Updatable<UiChromeLayout> }
-  | { readonly type: "SET_UI_COMPACT"; readonly value: Updatable<boolean> }
-  | { readonly type: "SET_UI_EXPERTISE"; readonly value: Updatable<Expertise> }
-  | { readonly type: "SET_UI_LOCALE"; readonly value: Updatable<UiLocale> }
-  | { readonly type: "SET_UI_TERMINOLOGY"; readonly value: Updatable<string> }
-  | { readonly type: "SET_UI_THEME_ID"; readonly value: Updatable<string> }
-  | { readonly type: "SET_UI_CUSTOM_THEMES"; readonly value: Updatable<Record<string, UiTheme>> }
-  | { readonly type: "SET_UI_THEME_DRAFT"; readonly value: Updatable<UiTheme | null> }
-  | { readonly type: "SET_SYNC_BACKBONE_URI"; readonly value: Updatable<string | null> }
-  | { readonly type: "SET_SYNC_CARD_KIND"; readonly value: Updatable<SyncCardKind | null> }
-  | { readonly type: "SET_SYNC_DRAFT_PATH"; readonly value: Updatable<string> };
-//#endregion actions
-
-//#region slice reducers
-function pluginRuntimeReducer(state: PluginRuntimeState, action: ShellAction): PluginRuntimeState {
-  switch (action.type) {
-    case "SET_LOADED_PLUGINS": return { ...state, loadedPlugins: resolveUpdatable(action.value, state.loadedPlugins) };
-    case "SET_SESSION": return { ...state, session: resolveUpdatable(action.value, state.session) };
-    case "SET_ERROR": return { ...state, error: resolveUpdatable(action.value, state.error) };
-    default: return state;
-  }
-}
-
-function windowUiReducer(state: WindowUiState, action: ShellAction): WindowUiState {
-  switch (action.type) {
-    case "SET_WINDOW_UI_BY_KIND": return { ...state, windowUiByKind: resolveUpdatable(action.value, state.windowUiByKind) };
-    case "SET_WINDOW_ENGAGEMENTS_BY_KIND": return { ...state, windowEngagementsByKind: resolveUpdatable(action.value, state.windowEngagementsByKind) };
-    case "SET_WINDOW_MEASURES_BY_KIND": return { ...state, windowMeasuresByKind: resolveUpdatable(action.value, state.windowMeasuresByKind) };
-    case "SET_PANEL_UI_BY_KEY": return { ...state, panelUiByKey: resolveUpdatable(action.value, state.panelUiByKey) };
-    case "SET_TOOL_NODES_BY_KIND": return { ...state, toolNodesByKind: resolveUpdatable(action.value, state.toolNodesByKind) };
-    case "SET_APP_LABELS_OVERLAY": return { ...state, appLabelsOverlay: resolveUpdatable(action.value, state.appLabelsOverlay) };
-    default: return state;
-  }
-}
-
-function spawnedWindowReducer(state: SpawnedWindowState, action: ShellAction): SpawnedWindowState {
-  switch (action.type) {
-    case "SET_SPAWNED_WINDOW_UI": return { ...state, spawnedWindowUi: resolveUpdatable(action.value, state.spawnedWindowUi) };
-    case "SET_SPAWNED_WINDOW_ENGAGEMENTS": return { ...state, spawnedWindowEngagements: resolveUpdatable(action.value, state.spawnedWindowEngagements) };
-    case "SET_SPAWNED_WINDOW_MEASURES": return { ...state, spawnedWindowMeasures: resolveUpdatable(action.value, state.spawnedWindowMeasures) };
-    case "SET_SPAWNED_TOOL_NODES": return { ...state, spawnedToolNodes: resolveUpdatable(action.value, state.spawnedToolNodes) };
-    default: return state;
-  }
-}
-
-function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): ShellLayoutState {
-  switch (action.type) {
-    case "SET_LEFT_PANEL_VISIBLE": return { ...state, leftPanelVisible: resolveUpdatable(action.value, state.leftPanelVisible) };
-    case "SET_RIGHT_PANEL_VISIBLE": return { ...state, rightPanelVisible: resolveUpdatable(action.value, state.rightPanelVisible) };
-    case "SET_LEFT_PANEL_SIZE": return { ...state, leftPanelSize: resolveUpdatable(action.value, state.leftPanelSize) };
-    case "SET_RIGHT_PANEL_SIZE": return { ...state, rightPanelSize: resolveUpdatable(action.value, state.rightPanelSize) };
-    case "SET_ACTIVE_WINDOW_ID": return { ...state, activeWindowId: resolveUpdatable(action.value, state.activeWindowId) };
-    case "SET_SHELL_LAYOUT": return { ...state, shellLayout: resolveUpdatable(action.value, state.shellLayout) };
-    case "SET_ACTIVE_EXAMPLE_ID": return { ...state, activeExampleId: resolveUpdatable(action.value, state.activeExampleId) };
-    case "SET_MOBILE_PANEL_PATH": return { ...state, mobilePanelPath: resolveUpdatable(action.value, state.mobilePanelPath) };
-    case "SET_LEFT_PANEL_PATH": return { ...state, leftPanelPath: resolveUpdatable(action.value, state.leftPanelPath) };
-    case "SET_RIGHT_PANEL_PATH": return { ...state, rightPanelPath: resolveUpdatable(action.value, state.rightPanelPath) };
-    case "SET_EXTRA_WINDOW_INSTANCES": return { ...state, extraWindowInstances: resolveUpdatable(action.value, state.extraWindowInstances) };
-    default: return state;
-  }
-}
-
-function overlayReducer(state: OverlayState, action: ShellAction): OverlayState {
-  switch (action.type) {
-    case "SET_SEARCH_OPEN": return { ...state, searchOpen: resolveUpdatable(action.value, state.searchOpen) };
-    case "SET_FIND_OPEN": return { ...state, findOpen: resolveUpdatable(action.value, state.findOpen) };
-    default: return state;
-  }
-}
-
-function uiPrefsReducer(state: UiPrefsState, action: ShellAction): UiPrefsState {
-  switch (action.type) {
-    case "SET_UI_APPEARANCE": return { ...state, uiAppearance: resolveUpdatable(action.value, state.uiAppearance) };
-    case "SET_UI_LAYOUT": return { ...state, uiLayout: resolveUpdatable(action.value, state.uiLayout) };
-    case "SET_UI_COMPACT": return { ...state, uiCompact: resolveUpdatable(action.value, state.uiCompact) };
-    case "SET_UI_EXPERTISE": return { ...state, uiExpertise: resolveUpdatable(action.value, state.uiExpertise) };
-    case "SET_UI_LOCALE": return { ...state, uiLocale: resolveUpdatable(action.value, state.uiLocale) };
-    case "SET_UI_TERMINOLOGY": return { ...state, uiTerminology: resolveUpdatable(action.value, state.uiTerminology) };
-    case "SET_UI_THEME_ID": return { ...state, uiThemeId: resolveUpdatable(action.value, state.uiThemeId) };
-    case "SET_UI_CUSTOM_THEMES": return { ...state, uiCustomThemes: resolveUpdatable(action.value, state.uiCustomThemes) };
-    case "SET_UI_THEME_DRAFT": return { ...state, uiThemeDraft: resolveUpdatable(action.value, state.uiThemeDraft) };
-    default: return state;
-  }
-}
-
-function syncReducer(state: SyncState, action: ShellAction): SyncState {
-  switch (action.type) {
-    case "SET_SYNC_BACKBONE_URI": return { ...state, syncBackboneUri: resolveUpdatable(action.value, state.syncBackboneUri) };
-    case "SET_SYNC_CARD_KIND": return { ...state, syncCardKind: resolveUpdatable(action.value, state.syncCardKind) };
-    case "SET_SYNC_DRAFT_PATH": return { ...state, syncDraftPath: resolveUpdatable(action.value, state.syncDraftPath) };
-    default: return state;
-  }
-}
-//#endregion slice reducers
-
-/** 🧵 Root reducer for `FrameworkOsShell` — fans every action out to its owning slice reducer; slices that ignore an action's type return their input unchanged, so unrelated slices keep referential identity. */
-export function shellReducer(state: ShellState, action: ShellAction): ShellState {
-  return {
-    pluginRuntime: pluginRuntimeReducer(state.pluginRuntime, action),
-    windowUi: windowUiReducer(state.windowUi, action),
-    spawnedWindow: spawnedWindowReducer(state.spawnedWindow, action),
-    layout: shellLayoutReducer(state.layout, action),
-    overlays: overlayReducer(state.overlays, action),
-    uiPrefs: uiPrefsReducer(state.uiPrefs, action),
-    sync: syncReducer(state.sync, action),
-  };
-}
-
-//#region selectors
-export const selectUiDevice = (state: ShellState, mobile: boolean): ElementsSurfaceDevice => (mobile ? "mobile" : state.uiPrefs.uiLayout);
-//#endregion selectors
-
-/** 🌱 Builds the starting `ShellState` for `FrameworkOsShell`, mirroring exactly what each migrated `useState` used to initialize to (including reads from local storage for UI prefs). */
-export function initialShellState(_props: { readonly pluginFilter?: string; readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[] }): ShellState {
-  return {
-    pluginRuntime: { loadedPlugins: [], session: null, error: null },
-    windowUi: { windowUiByKind: {}, windowEngagementsByKind: {}, windowMeasuresByKind: {}, panelUiByKey: {}, toolNodesByKind: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
-    spawnedWindow: { spawnedWindowUi: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {}, spawnedToolNodes: [] },
-    layout: {
-      leftPanelVisible: false,
-      rightPanelVisible: false,
-      leftPanelSize: DEFAULT_LEFT_PANEL_SIZE,
-      rightPanelSize: DEFAULT_RIGHT_PANEL_SIZE,
-      activeWindowId: null,
-      shellLayout: null,
-      activeExampleId: "",
-      mobilePanelPath: [],
-      leftPanelPath: [],
-      rightPanelPath: [],
-      extraWindowInstances: [],
-    },
-    overlays: { searchOpen: false, findOpen: false },
-    uiPrefs: {
-      uiAppearance: readStoredUiChromeAppearance(),
-      uiLayout: readStoredUiChromeLayout(),
-      uiCompact: readStoredUiChromeCompact(),
-      uiExpertise: readStoredUiChromeExpertise(),
-      uiLocale: readStoredUiChromeLocale() ?? (uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en"),
-      uiTerminology: readStoredUiChromeTerminology(),
-      uiThemeId: readStoredUiChromeThemeId() ?? "semio",
-      uiCustomThemes: readStoredUiCustomThemes(),
-      uiThemeDraft: null,
-    },
-    sync: { syncBackboneUri: null, syncCardKind: null, syncDraftPath: "" },
-  };
-}
-//#endregion 🧮ShellStore
 
 //#region 🔖plugin-runtime
 
@@ -3718,14 +3726,14 @@ export type DisplayHostApi = {
   readonly saveCurrentLayout: (label: string) => void;
   readonly applyNamedLayout: (layoutId: string) => void;
   readonly deleteUserLayout: (layoutId: string) => void;
+  readonly layoutSaveLabel: string;
+  readonly setLayoutSaveLabel: (value: string) => void;
 };
 
 const FRAMEWORK_DISPLAY_WINDOWS_TAB_ID = "framework.display.windows";
 const FRAMEWORK_DISPLAY_LAYOUT_TAB_ID = "framework.display.layout";
 const FRAMEWORK_SETTINGS_GENERAL_TAB_ID = "framework.settings.general";
 const FRAMEWORK_SETTINGS_THEME_TAB_ID = "framework.settings.theme";
-
-let displayLayoutSaveLabel = "";
 
 function groupNamedLayoutsToTreeItems(layouts: readonly NamedLayout[], onApply: (layoutId: string) => void, onDeleteUser?: (layoutId: string) => void): TreeDataItem[] {
   const root: TreeDataItem[] = [];
@@ -3823,10 +3831,8 @@ function buildDisplayLayoutTree(host: DisplayHostApi): TreePanelConfig {
             control: (
               <Input
                 id="framework.display.save-label"
-                defaultValue={displayLayoutSaveLabel}
-                onChange={(event) => {
-                  displayLayoutSaveLabel = event.target.value;
-                }}
+                value={host.layoutSaveLabel}
+                onChange={(event) => host.setLayoutSaveLabel(event.target.value)}
                 placeholder={shellLabel("ui.display.saveLayoutPlaceholder")}
               />
             ),
@@ -3839,12 +3845,12 @@ function buildDisplayLayoutTree(host: DisplayHostApi): TreePanelConfig {
                 id="framework.display.save"
                 size="sm"
                 text={shellLabel("ui.display.saveCurrentLayout")}
-                disabled={!displayLayoutSaveLabel.trim()}
+                disabled={!host.layoutSaveLabel.trim()}
                 onClick={() => {
-                  const label = displayLayoutSaveLabel.trim();
+                  const label = host.layoutSaveLabel.trim();
                   if (!label) return;
                   host.saveCurrentLayout(label);
-                  displayLayoutSaveLabel = "";
+                  host.setLayoutSaveLabel("");
                 }}
               />
             ),
@@ -3931,6 +3937,8 @@ export type SettingsHostApi = {
   readonly resetTheme: () => void;
   readonly exportTheme: () => void;
   readonly importTheme: () => void;
+  readonly themeSaveLabel: string;
+  readonly setThemeSaveLabel: (value: string) => void;
 };
 
 function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
@@ -4048,8 +4056,6 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
     ],
   };
 }
-
-let themeSaveLabel = "";
 
 function rgba8ToHex(rgba: readonly [number, number, number, number]): string {
   const [r, g, b] = rgba;
@@ -4221,7 +4227,7 @@ function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
           {
             id: "framework.settings.theme.save.label",
             label: shellLabel("ui.common.name"),
-            control: <Input id="framework.settings.theme.save-label" defaultValue={themeSaveLabel} onChange={(event) => (themeSaveLabel = event.target.value)} placeholder={shellLabel("ui.settings.theme.savePlaceholder")} className="h-small w-32" />,
+            control: <Input id="framework.settings.theme.save-label" value={host.themeSaveLabel} onChange={(event) => host.setThemeSaveLabel(event.target.value)} placeholder={shellLabel("ui.settings.theme.savePlaceholder")} className="h-small w-32" />,
           },
           {
             id: "framework.settings.theme.save.action",
@@ -4231,12 +4237,12 @@ function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
                 id="framework.settings.theme.save"
                 size="sm"
                 text={shellLabel("ui.settings.theme.save")}
-                disabled={!themeSaveLabel.trim()}
+                disabled={!host.themeSaveLabel.trim()}
                 onClick={() => {
-                  const label = themeSaveLabel.trim();
+                  const label = host.themeSaveLabel.trim();
                   if (!label) return;
                   host.saveTheme(label);
-                  themeSaveLabel = "";
+                  host.setThemeSaveLabel("");
                 }}
               />
             ),
@@ -4323,6 +4329,7 @@ export function useNamedLayoutHost(options: {
     () => options.namedLayoutStore.getSnapshot(),
     () => options.namedLayoutStore.getSnapshot(),
   );
+  const [layoutSaveLabel, setLayoutSaveLabel] = useState("");
   return useMemo(
     (): DisplayHostApi => ({
       windowKinds: options.windowKinds,
@@ -4338,8 +4345,10 @@ export function useNamedLayoutHost(options: {
         if (layout) options.onApplyLayout(layout.layout);
       },
       deleteUserLayout: (layoutId) => options.namedLayoutStore.remove(layoutId),
+      layoutSaveLabel,
+      setLayoutSaveLabel,
     }),
-    [options, userLayouts],
+    [options, userLayouts, layoutSaveLabel],
   );
 }
 //#endregion SettingsPanel

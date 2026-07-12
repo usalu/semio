@@ -10,7 +10,7 @@ const root = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   root,
   resolve: {
-    alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "../../../ui/react/index.tsx") }],
+    alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "../../../ui/js/react/index.tsx") }],
   },
   test: {
     mode: "test",

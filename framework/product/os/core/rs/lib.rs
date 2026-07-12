@@ -1737,27 +1737,28 @@ mod tests {
                 document: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
-                modes: vec![ModeDefinition {
+                modes: semio_framework_core::Modes::one(ModeDefinition {
                     id: "edit".into(),
                     label: "Edit".into(),
                     tools: Vec::new(),
                     layout_id: None,
-                }],
-                default_mode_id: Some("edit".into()),
-                window_kinds: vec![WindowKindDefinition {
+                    actions: Vec::new(),
+                }),
+                default_mode_id: "edit".into(),
+                window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
                     id: "composite".into(),
                     label: "Canvas".into(),
                     body_key: "composite".into(),
                     surface_kind: SurfaceKind::Canvas2d,
                     icon_id: None,
-                    measures: Vec::new(),
-                    engagement: None,
+                    options: semio_framework_core::WindowOptions::default(),
+                    actions: Vec::new(),
                     params_schema: None,
                     document_projection_schema: None,
                     input_event_schema: None,
                     output_schema: None,
                     capabilities: vec![],
-                }],
+                }),
                 panel_tabs: vec![],
                 keybindings: vec![],
                 actions: vec![],
@@ -1787,27 +1788,28 @@ mod tests {
             document: vec!["semio".into(), "draw".into()],
             icon_id: None,
             controller_id: "draw-play".into(),
-            modes: vec![ModeDefinition {
+            modes: semio_framework_core::Modes::one(ModeDefinition {
                 id: "edit".into(),
                 label: "Edit".into(),
                 tools: Vec::new(),
                 layout_id: None,
-            }],
-            default_mode_id: Some("edit".into()),
-            window_kinds: vec![WindowKindDefinition {
+                actions: Vec::new(),
+            }),
+            default_mode_id: "edit".into(),
+            window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
                 id: "composite".into(),
                 label: "Canvas".into(),
                 body_key: "composite".into(),
                 surface_kind: SurfaceKind::Canvas2d,
                 icon_id: None,
-                measures: Vec::new(),
-                engagement: None,
+                options: semio_framework_core::WindowOptions::default(),
+                actions: Vec::new(),
                 params_schema: None,
                 document_projection_schema: None,
                 input_event_schema: None,
                 output_schema: None,
                 capabilities: vec![],
-            }],
+            }),
             panel_tabs: vec![],
             keybindings: vec![],
             actions: vec![],
@@ -1821,27 +1823,28 @@ mod tests {
             document: vec!["semio".into(), "note".into()],
             icon_id: None,
             controller_id: "note-play".into(),
-            modes: vec![ModeDefinition {
+            modes: semio_framework_core::Modes::one(ModeDefinition {
                 id: "edit".into(),
                 label: "Edit".into(),
                 tools: Vec::new(),
                 layout_id: None,
-            }],
-            default_mode_id: Some("edit".into()),
-            window_kinds: vec![WindowKindDefinition {
+                actions: Vec::new(),
+            }),
+            default_mode_id: "edit".into(),
+            window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
                 id: "composite".into(),
                 label: "Canvas".into(),
                 body_key: "composite".into(),
                 surface_kind: SurfaceKind::Canvas2d,
                 icon_id: None,
-                measures: Vec::new(),
-                engagement: None,
+                options: semio_framework_core::WindowOptions::default(),
+                actions: Vec::new(),
                 params_schema: None,
                 document_projection_schema: None,
                 input_event_schema: None,
                 output_schema: None,
                 capabilities: vec![],
-            }],
+            }),
             panel_tabs: vec![],
             keybindings: vec![],
             actions: vec![],
@@ -1899,27 +1902,28 @@ mod tests {
             document: vec!["semio".into(), "draw".into()],
             icon_id: None,
             controller_id: "draw-play".into(),
-            modes: vec![ModeDefinition {
+            modes: semio_framework_core::Modes::one(ModeDefinition {
                 id: "edit".into(),
                 label: "Edit".into(),
                 tools: Vec::new(),
                 layout_id: None,
-            }],
-            default_mode_id: Some("edit".into()),
-            window_kinds: vec![WindowKindDefinition {
+                actions: Vec::new(),
+            }),
+            default_mode_id: "edit".into(),
+            window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
                 id: "composite".into(),
                 label: "Canvas".into(),
                 body_key: "composite".into(),
                 surface_kind: SurfaceKind::Canvas2d,
                 icon_id: None,
-                measures: Vec::new(),
-                engagement: None,
+                options: semio_framework_core::WindowOptions::default(),
+                actions: Vec::new(),
                 params_schema: None,
                 document_projection_schema: None,
                 input_event_schema: None,
                 output_schema: None,
                 capabilities: vec![],
-            }],
+            }),
             panel_tabs: vec![],
             keybindings: vec![],
             actions: vec![],
@@ -2029,27 +2033,28 @@ mod tests {
                 document: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
-                modes: vec![ModeDefinition {
+                modes: semio_framework_core::Modes::one(ModeDefinition {
                     id: "edit".into(),
                     label: "Edit".into(),
                     tools: Vec::new(),
                     layout_id: None,
-                }],
-                default_mode_id: Some("edit".into()),
-                window_kinds: vec![WindowKindDefinition {
+                    actions: Vec::new(),
+                }),
+                default_mode_id: "edit".into(),
+                window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
                     id: "composite".into(),
                     label: "Canvas".into(),
                     body_key: "composite".into(),
                     surface_kind: SurfaceKind::Canvas2d,
                     icon_id: None,
-                    measures: Vec::new(),
-                    engagement: None,
+                    options: semio_framework_core::WindowOptions::default(),
+                    actions: Vec::new(),
                     params_schema: None,
                     document_projection_schema: None,
                     input_event_schema: None,
                     output_schema: None,
                     capabilities: vec![],
-                }],
+                }),
                 panel_tabs: vec![],
                 keybindings: vec![],
                 actions: vec![],
@@ -2124,7 +2129,8 @@ mod tests {
                         id: "edit".into(),
                         label: "Edit".into(),
                         tools: Vec::new(),
-                    layout_id: None,
+                        layout_id: None,
+                        actions: Vec::new(),
                     }],
                     default_mode_id: None,
                 }],
@@ -4619,7 +4625,7 @@ pub mod registry {
 //! 🗂️ Plugin manifest registry and OS program/resource catalog.
 
 use crate::instance::{media_port_id_for_spec, OsParameterFieldSpec};
-use semio_framework_core::{AppDefinition, ModeDefinition, ProgramDefinition};
+use semio_framework_core::{AppDefinition, ModeDefinition, ProgramDefinition, SurfaceKind, WindowKindDefinition};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
@@ -4877,6 +4883,7 @@ pub fn os_baseline_resource(
             label: "Edit".into(),
             tools: Vec::new(),
             layout_id: None,
+            actions: Vec::new(),
         }],
         default_mode_id: None,
         parameter_fields: Vec::new(),
@@ -5022,7 +5029,9 @@ pub fn os_app_registration(program_id: &str, app_id: &str) -> Option<OsAppRegist
     os_program_by_id(program_id)?.apps.into_iter().find(|app| app.id == app_id)
 }
 
-/// @emoji 🧩 Resolves the AppDefinition backing an embedded os app instance.
+/// @emoji 🧩 Resolves the AppDefinition backing an embedded os app instance. Returns `None` if the
+/// registration declares zero modes — every app must declare at least one, so an ad hoc "inject a
+/// fake edit mode" fallback would just hide a mis-registered app instead of surfacing it.
 pub fn resolve_os_app_definition(
     program_id: &str,
     app_id: &str,
@@ -5030,27 +5039,37 @@ pub fn resolve_os_app_definition(
     let registration = os_app_registration(program_id, app_id)?;
     let program = os_program_by_id(program_id)?;
     let app = program.apps.iter().find(|entry| entry.id == app_id)?;
+    let modes = semio_framework_core::Modes::try_from(app.modes.clone()).ok()?;
+    let default_mode_id = app
+        .default_mode_id
+        .clone()
+        .or_else(|| registration.default_mode_id.clone())
+        .unwrap_or_else(|| modes.first().id.clone());
+    // 🪟 An embedded os app instance renders through exactly one component surface — synthesize the
+    // single window kind that represents it rather than leaving `window_kinds` empty (now impossible).
+    let window_kinds = semio_framework_core::WindowKinds::one(WindowKindDefinition {
+        id: registration.component_kind.clone(),
+        label: registration.label.clone(),
+        body_key: registration.component_kind.clone(),
+        surface_kind: SurfaceKind::Canvas2d,
+        icon_id: None,
+        options: semio_framework_core::WindowOptions::default(),
+        actions: Vec::new(),
+        params_schema: None,
+        document_projection_schema: None,
+        input_event_schema: None,
+        output_schema: None,
+        capabilities: Vec::new(),
+    });
     Some(AppDefinition {
         id: registration.id,
         label: registration.label,
         document: registration.document,
         icon_id: None,
         controller_id: registration.controller_id,
-        modes: if app.modes.is_empty() {
-            vec![ModeDefinition {
-                id: "edit".into(),
-                label: "Edit".into(),
-                tools: Vec::new(),
-                layout_id: None,
-            }]
-        } else {
-            app.modes.clone()
-        },
-        default_mode_id: app
-            .default_mode_id
-            .clone()
-            .or(registration.default_mode_id),
-        window_kinds: Vec::new(),
+        modes,
+        default_mode_id,
+        window_kinds,
         panel_tabs: Vec::new(),
         keybindings: Vec::new(),
         actions: Vec::new(),

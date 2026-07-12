@@ -1789,6 +1789,57 @@
       }
     },
     {
+      "name": "🛠️dev🧩protocol⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:protocol",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PROTOCOL_PLAY_PORT": "6078",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 385.3
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6078)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧩protocol🧊wgpu🌐wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:protocol",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PROTOCOL_PLAY_PORT": "6178",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 385.4
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6178)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧩protocol🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native protocol",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 385.5
+      }
+    },
+    {
       "name": "🛠️dev🖼️raster⚛️react",
       "type": "node-terminal",
       "request": "launch",

@@ -8,6 +8,13 @@
         "cwd": "kernel/3d/brep/rs",
         "command": "bun ./script.ts test"
       }
+    },
+    "bench": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "kernel/3d/brep/rs",
+        "command": "bun ./script.ts bench"
+      }
     }
   }
 }

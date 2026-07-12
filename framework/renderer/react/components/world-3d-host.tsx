@@ -1464,6 +1464,70 @@ function EngagementPreviewLayer({ items, color }: { readonly items: readonly Wor
   );
 }
 
+/** @emoji 🧭 Floating per-vortex brush-candidate popup opened by Alt+right-click or the context menu's "Suggest objects" — hovering a row previews it as the brush ghost, clicking places it. */
+function WorldSuggestionMenu({
+  menu,
+  onHoverCandidate,
+  onAcceptCandidate,
+  onClose,
+}: {
+  readonly menu: WorldSuggestionMenuRecord;
+  readonly onHoverCandidate: (index: number) => void;
+  readonly onAcceptCandidate: (index: number) => void;
+  readonly onClose: () => void;
+}) {
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) onClose();
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("pointerdown", handlePointerDown, true);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown, true);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+  return (
+    <div
+      ref={rootRef}
+      className="semio-world-suggestion-menu"
+      style={{
+        position: "absolute",
+        left: menu.x,
+        top: menu.y,
+        zIndex: 50,
+        minWidth: "12rem",
+        borderRadius: "0.375rem",
+        border: "1px solid var(--border-normal-color)",
+        background: "var(--panel)",
+        padding: "0.25rem 0",
+        boxShadow: "0 4px 16px rgba(0, 0, 0, 0.24)",
+      }}
+    >
+      {menu.pending ? (
+        <div style={{ padding: "0.375rem 0.75rem", fontSize: "0.8125rem", opacity: 0.7 }}>Checking collision-free placements…</div>
+      ) : menu.candidates.length === 0 ? (
+        <div style={{ padding: "0.375rem 0.75rem", fontSize: "0.8125rem", opacity: 0.7 }}>No collision-free placement at this connector</div>
+      ) : (
+        menu.candidates.map((candidate) => (
+          <div
+            key={candidate.index}
+            style={{ padding: "0.375rem 0.75rem", fontSize: "0.8125rem", cursor: "pointer" }}
+            onMouseEnter={() => onHoverCandidate(candidate.index)}
+            onClick={() => onAcceptCandidate(candidate.index)}
+          >
+            {candidate.objectLabel} · {candidate.vortexLabel}
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
 const MARQUEE_DRAG_THRESHOLD_PX = 4;
 
 /** @emoji 🎯 Generic add/remove/toggle/replace merge, mirrors `selectionMergeIds` from `@semio-tech/ui-react` for non-string id sets. */
@@ -1879,10 +1943,48 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         handleZoomToSelection();
         return;
       }
+      if (item.action === "openVortexSuggestions") {
+        dispatch(item.action, { ...item.args, x: contextMenu?.x ?? 0, y: contextMenu?.y ?? 0 });
+        return;
+      }
       dispatch(item.action, item.args);
     },
-    [dispatch, handleZoomToSelection],
+    [contextMenu, dispatch, handleZoomToSelection],
   );
+
+  const hoveredVortexFullIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    hoveredVortexFullIdRef.current = interaction.hoveredVortexFullId ?? null;
+  }, [interaction.hoveredVortexFullId]);
+
+  const handleWorldOrbitRightPointerDown = useCallback(
+    (event: PointerEvent) => {
+      if (event.altKey && hoveredVortexFullIdRef.current) {
+        dispatch("openVortexSuggestions", { fullId: hoveredVortexFullIdRef.current, x: event.clientX, y: event.clientY });
+        return false;
+      }
+      return true;
+    },
+    [dispatch],
+  );
+
+  const handleSuggestionHover = useCallback((index: number) => dispatch("hoverSuggestion", { index }), [dispatch]);
+  const handleSuggestionAccept = useCallback((index: number) => dispatch("acceptSuggestion", { index }), [dispatch]);
+  const handleSuggestionClose = useCallback(() => dispatch("closeVortexSuggestions"), [dispatch]);
+
+  useEffect(() => {
+    if (interaction.suggestionMenu?.open && interaction.suggestionMenu.pending) {
+      const timer = window.setInterval(() => dispatch("suggestionsTick"), 120);
+      return () => window.clearInterval(timer);
+    }
+  }, [dispatch, interaction.suggestionMenu?.open, interaction.suggestionMenu?.pending]);
+
+  useEffect(() => {
+    if (activeTool === "fill" && interaction.fillBuild && !interaction.fillBuild.done) {
+      const timer = window.setInterval(() => dispatch("fillBuildTick"), 120);
+      return () => window.clearInterval(timer);
+    }
+  }, [activeTool, dispatch, interaction.fillBuild]);
 
   const selectionArgs = useCallback(
     () => ({
@@ -2217,8 +2319,11 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
       className="semio-world-3d-host relative h-full min-h-[24rem] w-full"
       data-surface-id={node.surfaceId}
       onContextMenu={(event) => {
-        if (contextMenuItems.length === 0) return;
+        if (event.altKey) return;
+        const target = resolveWorldContextMenuTarget(interaction, selection);
+        if (!target) return;
         event.preventDefault();
+        dispatch("contextMenuAt", { kind: target.kind, id: target.id });
         setContextMenu({ x: event.clientX, y: event.clientY });
       }}
       onPointerDown={handlePointerDown}
@@ -2244,7 +2349,13 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
       >
         <WorldOrbitViewSnapGateProvider>
           <WorldOrbitCameraViewRig state={cameraState} seedKey={scene?.cameraJson ?? "default"} perspectiveFov={cameraState.fov} />
-          <WorldOrbitGated controlsGate={marqueeDown || gumballDragActive || connectDragSource !== null || faceDragSession !== null} onCamera={handleCameraChange} zoom={cameraState.zoom} projection={cameraState.explicitProjection ? cameraState.projection : undefined} />
+          <WorldOrbitGated
+            controlsGate={marqueeDown || gumballDragActive || connectDragSource !== null || faceDragSession !== null}
+            onCamera={handleCameraChange}
+            zoom={cameraState.zoom}
+            projection={cameraState.explicitProjection ? cameraState.projection : undefined}
+            onRightPointerDown={handleWorldOrbitRightPointerDown}
+          />
           <WorldLodBridge
             lodRef={lodRef}
             distanceReference={100}
@@ -2367,7 +2478,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         )
       ) : null}
       <ContextMenuController
-        open={contextMenu != null}
+        open={contextMenu != null && contextMenuItems.length > 0}
         position={contextMenu ?? { x: 0, y: 0 }}
         items={contextMenuItems.map((item) => ({
           id: item.id,
@@ -2378,6 +2489,9 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
           if (!open) setContextMenu(null);
         }}
       />
+      {interaction.suggestionMenu?.open ? (
+        <WorldSuggestionMenu menu={interaction.suggestionMenu} onHoverCandidate={handleSuggestionHover} onAcceptCandidate={handleSuggestionAccept} onClose={handleSuggestionClose} />
+      ) : null}
     </div>
   );
 }

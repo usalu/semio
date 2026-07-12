@@ -143,7 +143,7 @@ use semio_framework_core::{
         InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
-    ActionId, AppDefinition, AppLabelsOverlay, ActionDefinition, ActionDescriptor, ActionKind, Contribution, ExampleDefinition, Keybinding,
+    ActionRef, AppDefinition, AppLabelsOverlay, ActionDefinition, ActionDescriptor, ActionKind, Contribution, ExampleDefinition, Keybinding,
     ModeDefinition, Modes, NamedLayout, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, ToolNode,
     UiNode, ViewState, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowKinds, WindowLayout, WindowMeasure,
     WindowOptions, SurfaceKind,
@@ -156,7 +156,7 @@ pub struct ModeSpec {
     pub label: String,
     pub tools: Vec<ToolNode>,
     pub layout_id: Option<String>,
-    pub actions: Vec<ActionId>,
+    pub actions: Vec<ActionRef>,
 }
 
 pub struct WindowKindSpec {
@@ -167,7 +167,7 @@ pub struct WindowKindSpec {
     pub icon_id: Option<String>,
     pub measures: Vec<WindowMeasure>,
     pub engagement: Option<WindowEngagement>,
-    pub actions: Vec<ActionId>,
+    pub actions: Vec<ActionRef>,
 }
 
 /// 🌳 A leaf carries `body_key` (its rendered panel); a branch carries `children` (the tab row shown below it) — exactly one of the two.
@@ -303,7 +303,7 @@ impl AppBuilder {
     }
 
     /// 📇 Scopes actions to a mode — references ids declared via `.operation()/.view_action()/.shell_action()`.
-    pub fn mode_actions(mut self, mode_id: impl AsRef<str>, action_ids: Vec<ActionId>) -> Self {
+    pub fn mode_actions(mut self, mode_id: impl AsRef<str>, action_ids: Vec<ActionRef>) -> Self {
         let mode_id = mode_id.as_ref();
         if let Some(mode) = self.modes.iter_mut().find(|entry| entry.id == mode_id) {
             mode.actions = action_ids;
@@ -383,7 +383,7 @@ impl AppBuilder {
     }
 
     /// 📇 Scopes actions to a window kind — references ids declared via `.operation()/.view_action()/.shell_action()`.
-    pub fn window_kind_actions(mut self, window_kind_id: impl AsRef<str>, action_ids: Vec<ActionId>) -> Self {
+    pub fn window_kind_actions(mut self, window_kind_id: impl AsRef<str>, action_ids: Vec<ActionRef>) -> Self {
         let window_kind_id = window_kind_id.as_ref();
         if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
             window.actions = action_ids;
