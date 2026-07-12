@@ -20,7 +20,7 @@ describe("framework renderer wgpu", () => {
       },
       createApp: async () => 1,
       destroyApp: async () => {},
-      handleCommand: async () => [],
+      handleAction: async () => [],
       render: async () => ({ type: "text", value: "hello" }),
       dispose: () => {},
     });

@@ -17,7 +17,7 @@ class Store {
     this.listeners.clear();
   }
 }
-function patchOpsFromCommandResponse(raw) {
+function patchOpsFromActionResponse(raw) {
   let parsed;
   try {
     parsed = JSON.parse(raw);
@@ -172,9 +172,9 @@ class PluginWorkerClient {
   async destroyApp(instanceId) {
     await this.request("destroy", { instanceId });
   }
-  async handleCommand(instanceId, commandJson, viewState) {
+  async handleAction(instanceId, actionJson, viewState) {
     const contextJson = JSON.stringify({ viewState, actor: "local" });
-    const response = await this.request("handleCommand", { instanceId, commandJson, contextJson });
+    const response = await this.request("handleAction", { instanceId, actionJson, contextJson });
     return String(response.value ?? "{}");
   }
   async render(instanceId, bodyKey, viewStateJson, documentJson) {
@@ -224,7 +224,7 @@ async function loadPluginModuleViaWorker(pluginId, moduleUrl) {
     manifest,
     createApp: (appId) => client.createApp(appId),
     destroyApp: (instanceId) => client.destroyApp(instanceId),
-    handleCommand: async (instanceId, commandJson, viewState) => patchOpsFromCommandResponse(await client.handleCommand(instanceId, commandJson, viewState)),
+    handleAction: async (instanceId, actionJson, viewState) => patchOpsFromActionResponse(await client.handleAction(instanceId, actionJson, viewState)),
     render: async (instanceId, bodyKey, viewState) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState))),
     renderWithDocument: async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState), documentJson)),
     tools: async (instanceId, viewState) => JSON.parse(await client.tools(instanceId, JSON.stringify(viewState))),
@@ -237,7 +237,7 @@ function pluginHandleForBridge(handle) {
     manifest: () => JSON.stringify(handle.manifest),
     createApp: (appId) => handle.createApp(appId),
     destroyApp: (instanceId) => handle.destroyApp(instanceId),
-    handleCommand: (instanceId, commandJson, viewStateJson) => handle.handleCommand(instanceId, commandJson, JSON.parse(viewStateJson)).then((result) => JSON.stringify(result)),
+    handleAction: (instanceId, actionJson, viewStateJson) => handle.handleAction(instanceId, actionJson, JSON.parse(viewStateJson)).then((result) => JSON.stringify(result)),
     render: (instanceId, bodyKey, viewStateJson) => handle.render(instanceId, bodyKey, JSON.parse(viewStateJson)).then((node) => JSON.stringify(node)),
     renderWithDocument: handle.renderWithDocument ? (instanceId, bodyKey, viewStateJson, documentJson) => handle.renderWithDocument(instanceId, bodyKey, JSON.parse(viewStateJson), documentJson).then((node) => JSON.stringify(node)) : undefined,
     tools: (instanceId, viewStateJson) => handle.tools(instanceId, JSON.parse(viewStateJson)).then((nodes) => JSON.stringify(nodes)),
@@ -246,7 +246,7 @@ function pluginHandleForBridge(handle) {
   };
 }
 var pluginFromUrl = new URLSearchParams(location.search).get("plugin");
-var pluginFilter = pluginFromUrl ?? "note";
+var pluginFilter = pluginFromUrl ?? "s";
 var studioMode = pluginFilter === "s";
 var pluginTargets = studioMode ? PLUGIN_TARGETS : PLUGIN_TARGETS.filter((entry) => entry.pluginId === pluginFilter || entry.pluginId === `${pluginFilter}-module-procedural`);
 async function pluginModuleAvailable(moduleUrl) {

@@ -1,0 +1,13 @@
+{
+  "title": "Puzzle 3D Attraction 6-Parameter Resolution",
+  "emoji": "🧲",
+  "status": "open",
+  "description": "Every puzzle 3d attraction must support the 6 parameters gap, shift, rise, rotation, turn, tilt (same semantics as compose connections). Selected attractions must show and allow editing of all 6 params in the inspector. Attractions are directed (attracting -\u003e attracted); introduce root objects (in-degree-0 per weakly-connected component, deterministic root for pure cycles) and resolve attracted object poses via BFS from the roots, idempotently and cycle-safe. Fix move (translate/rotate) on objects that participate in attractions: moving a root propagates to attracted descendants; moving/rotating an attracted object re-derives its incoming attraction's 6 params from the new pose instead of snapping back. Also fix two found bugs: (1) fixture_from_engine_json silently wipes all attractions after brush placement/fill because Puzzle3dAttraction.id has no serde default while the engine's AttractionProps emits no id; (2) worldRelocate and the engine brush placement make the moved/new object the attracting (root) side, which is backwards under the directed BFS model - swap so existing/stationary structure stays the root. Introduce and test everything end to end (Rust tests in puzzle/plugin/rs/d3/mod.rs and puzzle/3d/rs/lib.rs, extending existing test mods only).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1938"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪69b1b113a5ba48119d89f89cbc4d9da7"
+  ]
+}

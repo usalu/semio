@@ -706,7 +706,7 @@ fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode) -> U
     if let Some(app) = &app {
         drag_data.insert(
             S_PLAY_CATALOGUE_DRAG_MIME.into(),
-            json!({ "programId": app.program_id, "appId": app.app_id }).to_string(),
+            json!({ "programId": app.program_id, "appId": app.app_id, "label": app.label }).to_string(),
         );
     }
     UiTreeItemNode {

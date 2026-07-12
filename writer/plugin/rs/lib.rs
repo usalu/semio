@@ -1791,7 +1791,7 @@ impl PluginApp for WriterApp {
                 icon_id: Some("list-ordered".into()),
                 pressed: Some(settings.show_line_numbers),
                 disabled: None,
-                command: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "toggleLineNumbers", None)),
+                action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "toggleLineNumbers", None)),
             }]),
             input: Some(WindowEngagementInput {
                 id: Some("writer-engagement-input".into()),
@@ -1807,9 +1807,9 @@ impl PluginApp for WriterApp {
             controls: None,
             status: Some(vec![WindowEngagementStatus { id: "writer-editor-mode".into(), text: "Text editor".into() }]),
             possible_engagements: Some(vec![
-                WindowEngagementPossible { id: "writer-format".into(), label: "Format".into(), detail: None, command: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "formatDocument", None)) },
-                WindowEngagementPossible { id: "writer-lint".into(), label: "Lint".into(), detail: None, command: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "lintDocument", None)) },
-                WindowEngagementPossible { id: "writer-line-numbers".into(), label: "Line numbers".into(), detail: None, command: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "toggleLineNumbers", None)) },
+                WindowEngagementPossible { id: "writer-format".into(), label: "Format".into(), detail: None, action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "formatDocument", None)) },
+                WindowEngagementPossible { id: "writer-lint".into(), label: "Lint".into(), detail: None, action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "lintDocument", None)) },
+                WindowEngagementPossible { id: "writer-line-numbers".into(), label: "Line numbers".into(), detail: None, action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "toggleLineNumbers", None)) },
             ]),
         };
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), engagement)])
@@ -1975,7 +1975,7 @@ mod tests {
     }
 
     #[test]
-    fn set_text_command_updates_document() {
+    fn set_text_action_updates_document() {
         let mut app = WriterApp;
         let document = serde_json::to_string(&empty_writer_document()).unwrap();
         let ops = app.handle_action_patch_ops(

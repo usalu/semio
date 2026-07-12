@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/story/puzzle/2d/Board.stories.tsx
 // Specs: Host the framework renderer's `Puzzle2dBoardHost` for Storybook + Playwright selection/camera/tool checks.
-// Summary: Mounts the host directly against a `UiComponentSceneNode`; a story-local reducer emulates the `puzzle2d-play` Rust plugin's `applyBoardEvents`/selection/tool commands so the controlled scene ⇄ session loop round-trips without a running dev server.
+// Summary: Mounts the host directly against a `UiComponentSceneNode`; a story-local reducer emulates the `puzzle2d-play` Rust plugin's `applyBoardEvents`/selection/tool actions so the controlled scene ⇄ session loop round-trips without a running dev server.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -9,7 +9,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 
 import { Puzzle2dBoardHost } from "../../../../framework/renderer/react/components/puzzle-2d-board-host.tsx";
-import type { CommandDescriptor, UiComponentSceneNode } from "../../../../framework/renderer/react/os-shell.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/renderer/react/os-shell.tsx";
 
 //#region StoryTypes
 type StoryPuzzle2dEntity = Record<string, unknown> & { readonly id: string };
@@ -112,10 +112,10 @@ function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): S
   return { fixture, runtime };
 }
 
-/** @emoji 🧩 Story-local mirror of a subset of `Puzzle2dPlayApp::handle_command_patch_ops` — enough for the interaction stories to round-trip. */
-function reduceStoryPuzzle2dCommand(state: StoryPuzzle2dState, command: string, args: Record<string, unknown> | undefined): StoryPuzzle2dState {
+/** @emoji 🧩 Story-local mirror of a subset of `Puzzle2dPlayApp::handle_action_patch_ops` — enough for the interaction stories to round-trip. */
+function reduceStoryPuzzle2dAction(state: StoryPuzzle2dState, action: string, args: Record<string, unknown> | undefined): StoryPuzzle2dState {
   const { fixture, runtime } = state;
-  switch (command) {
+  switch (action) {
     case "applyBoardEvents":
       return applyStoryBoardEvents(state, typeof args?.eventsJson === "string" ? args.eventsJson : "[]");
     case "setCamera": {
@@ -224,8 +224,8 @@ const STORY_BRUSH_FIXTURE: StoryPuzzle2dFixture = {
 function Puzzle2dBoardStoryHost({ initialFixture, initialRuntime, interactive }: { readonly initialFixture: StoryPuzzle2dFixture; readonly initialRuntime: Partial<StoryPuzzle2dRuntime>; readonly interactive: boolean }): ReactElement {
   const [state, setState] = useState<StoryPuzzle2dState>(() => ({ fixture: initialFixture, runtime: { ...STORY_DEFAULT_RUNTIME, ...initialRuntime } }));
 
-  const onCommand = useCallback((descriptor: CommandDescriptor): void => {
-    setState((current) => reduceStoryPuzzle2dCommand(current, descriptor.command, descriptor.args));
+  const onAction = useCallback((descriptor: ActionDescriptor): void => {
+    setState((current) => reduceStoryPuzzle2dAction(current, descriptor.action, descriptor.args));
   }, []);
 
   const node = useMemo(() => buildStorySceneNode(state, interactive), [state, interactive]);
@@ -237,7 +237,7 @@ function Puzzle2dBoardStoryHost({ initialFixture, initialRuntime, interactive }:
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
       <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
-        <Puzzle2dBoardHost node={node} onCommand={onCommand} />
+        <Puzzle2dBoardHost node={node} onAction={onAction} />
       </div>
       <pre data-testid="puzzle2d-board-debug" style={{ margin: 0, padding: 4, fontSize: 11 }}>
         {debug}

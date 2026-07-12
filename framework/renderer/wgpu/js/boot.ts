@@ -2,7 +2,7 @@
 /** @emoji 🧊 Trunk boot glue — loads wasm plugins and starts the wgpu renderer. */
 // #endregion 🧲Header
 
-import { patchOpsFromCommandResponse } from "@semio-tech/framework-core";
+import { patchOpsFromActionResponse } from "@semio-tech/framework-core";
 import { PLUGIN_TARGETS } from "../../../plugin/registry/generated/plugins.ts";
 
 declare const DEFAULT_PLUGIN_FILTER: string;
@@ -21,7 +21,7 @@ type PluginModuleHandle = {
   manifest: unknown;
   createApp: (appId: string) => Promise<number>;
   destroyApp: (instanceId: number) => Promise<void>;
-  handleCommand: (instanceId: number, commandJson: string, viewState: unknown) => Promise<unknown>;
+  handleAction: (instanceId: number, actionJson: string, viewState: unknown) => Promise<unknown>;
   render: (instanceId: number, bodyKey: string, viewState: unknown) => Promise<unknown>;
   renderWithDocument?: (instanceId: number, bodyKey: string, viewState: unknown, documentJson: string) => Promise<unknown>;
   tools: (instanceId: number, viewState: unknown) => Promise<unknown>;
@@ -29,7 +29,7 @@ type PluginModuleHandle = {
   windowMeasures: (instanceId: number, viewState: unknown) => Promise<unknown>;
 };
 
-type PluginWorkerMessageType = "init" | "manifest" | "createApp" | "handleCommand" | "render" | "destroy" | "tools" | "windowEngagements" | "windowMeasures" | "error";
+type PluginWorkerMessageType = "init" | "manifest" | "createApp" | "handleAction" | "render" | "destroy" | "tools" | "windowEngagements" | "windowMeasures" | "error";
 
 const PLUGIN_WORKER_TIMEOUT_MS = 5000;
 //#endregion PluginTypes
@@ -145,9 +145,9 @@ class PluginWorkerClient {
     await this.request("destroy", { instanceId });
   }
 
-  async handleCommand(instanceId: number, commandJson: string, viewState: unknown): Promise<string> {
+  async handleAction(instanceId: number, actionJson: string, viewState: unknown): Promise<string> {
     const contextJson = JSON.stringify({ viewState, actor: "local" });
-    const response = await this.request("handleCommand", { instanceId, commandJson, contextJson });
+    const response = await this.request("handleAction", { instanceId, actionJson, contextJson });
     return String(response.value ?? "{}");
   }
 
@@ -203,7 +203,7 @@ async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): P
     manifest,
     createApp: (appId: string) => client.createApp(appId),
     destroyApp: (instanceId: number) => client.destroyApp(instanceId),
-    handleCommand: async (instanceId: number, commandJson: string, viewState: unknown) => patchOpsFromCommandResponse(await client.handleCommand(instanceId, commandJson, viewState)),
+    handleAction: async (instanceId: number, actionJson: string, viewState: unknown) => patchOpsFromActionResponse(await client.handleAction(instanceId, actionJson, viewState)),
     render: async (instanceId: number, bodyKey: string, viewState: unknown) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState))),
     renderWithDocument: async (instanceId: number, bodyKey: string, viewState: unknown, documentJson: string) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState), documentJson)),
     tools: async (instanceId: number, viewState: unknown) => JSON.parse(await client.tools(instanceId, JSON.stringify(viewState))),
@@ -217,7 +217,7 @@ function pluginHandleForBridge(handle: PluginModuleHandle) {
     manifest: () => JSON.stringify(handle.manifest),
     createApp: (appId: string) => handle.createApp(appId),
     destroyApp: (instanceId: number) => handle.destroyApp(instanceId),
-    handleCommand: (instanceId: number, commandJson: string, viewStateJson: string) => handle.handleCommand(instanceId, commandJson, JSON.parse(viewStateJson)).then((result) => JSON.stringify(result)),
+    handleAction: (instanceId: number, actionJson: string, viewStateJson: string) => handle.handleAction(instanceId, actionJson, JSON.parse(viewStateJson)).then((result) => JSON.stringify(result)),
     render: (instanceId: number, bodyKey: string, viewStateJson: string) => handle.render(instanceId, bodyKey, JSON.parse(viewStateJson)).then((node) => JSON.stringify(node)),
     renderWithDocument: handle.renderWithDocument
       ? (instanceId: number, bodyKey: string, viewStateJson: string, documentJson: string) => handle.renderWithDocument!(instanceId, bodyKey, JSON.parse(viewStateJson), documentJson).then((node) => JSON.stringify(node))

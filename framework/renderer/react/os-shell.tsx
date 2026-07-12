@@ -113,7 +113,7 @@ import {
   type WindowTemplateDropPayload,
 } from "@semio-tech/ui-react";
 import { ICONS, type IconName } from "@semio-tech/ui-asset";
-import { interpretUiNode, uiTreeNodeToTreePanelConfig } from "./ui-interpreter.tsx";
+import { declarativeTreeDragController, interpretUiNode, uiTreeNodeToTreePanelConfig } from "./ui-interpreter.tsx";
 import {
   DEFAULT_PLUGIN_REGISTRY,
   NamedLayoutStore,
@@ -619,7 +619,7 @@ function isTreeNode(node: UiNode): node is UiTreeNode {
 }
 
 function uiNodeToTreePanelConfig(node: UiNode, onAction: (action: ActionDescriptor) => void): TreePanelConfig {
-  if (isTreeNode(node)) return uiTreeNodeToTreePanelConfig(node, onAction);
+  if (isTreeNode(node)) return { ...uiTreeNodeToTreePanelConfig(node, onAction), dragAndDropController: declarativeTreeDragController(node, onAction) };
   return {
     sections: [
       {

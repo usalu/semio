@@ -4,6 +4,7 @@ import {
   CanvasPickMenu,
   ContextMenuController,
   Diagram,
+  getActiveCatalogueDragPayload,
   Handle,
   Position,
   SelectionMarquee,
@@ -1633,10 +1634,52 @@ export function FlowGraphCanvasHost({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [commitFixture, editable, emitInteractionState]);
 
+  const clearGhostPreview = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session) return;
+    session.clearGhostWidget();
+    session.renderFrame();
+    paintOverlays();
+  }, [paintOverlays]);
+
+  const onDragOverCanvas = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (!editable) return;
+      event.preventDefault();
+      const session = sessionRef.current;
+      const container = containerRef.current;
+      if (!session || !container) return;
+      const encoded = getActiveCatalogueDragPayload();
+      if (!encoded) return;
+      try {
+        const catalogueApp = JSON.parse(encoded) as { readonly programId?: string; readonly appId?: string; readonly label?: string };
+        if (!catalogueApp.programId || !catalogueApp.appId) return;
+        const rect = container.getBoundingClientRect();
+        const sx = event.clientX - rect.left;
+        const sy = event.clientY - rect.top;
+        let world = { x: sx, y: sy };
+        try {
+          const parsed = JSON.parse(session.worldFromScreen(sx, sy)) as { readonly x?: number; readonly y?: number };
+          world = { x: parsed.x ?? sx, y: parsed.y ?? sy };
+        } catch {
+          const camera = parseDagOverlayCamera(labelStateJson);
+          world = screenToWorld(camera, rect.width, rect.height, sx, sy);
+        }
+        session.setGhostWidget(JSON.stringify({ kind: "neuron", neuronKind: catalogueApp.label ?? catalogueApp.appId }), world.x, world.y);
+        session.renderFrame();
+        paintOverlays();
+      } catch {
+        /* not a catalogue app payload */
+      }
+    },
+    [editable, labelStateJson, paintOverlays],
+  );
+
   const onDrop = useCallback(
     (event: DragEvent<HTMLDivElement>) => {
       if (!editable) return;
-      const raw = event.dataTransfer.getData(CATALOGUE_DRAG_MIME) || event.dataTransfer.getData("text/plain");
+      clearGhostPreview();
+      const raw = event.dataTransfer.getData(CATALOGUE_DRAG_MIME) || event.dataTransfer.getData("text/plain") || getActiveCatalogueDragPayload() || "";
       if (!raw) return;
       event.preventDefault();
       const session = sessionRef.current;
@@ -1671,7 +1714,7 @@ export function FlowGraphCanvasHost({
         /* invalid descriptor */
       }
     },
-    [commitFixture, dispatch, editable, emitInteractionState, labelStateJson],
+    [clearGhostPreview, commitFixture, dispatch, editable, emitInteractionState, labelStateJson],
   );
 
   const openHoveredInstance = useCallback(() => {
@@ -1690,13 +1733,16 @@ export function FlowGraphCanvasHost({
     }
   }, [dispatch, scene.fixtureJson]);
 
+  useEffect(() => clearGhostPreview, [clearGhostPreview]);
+
   return (
     <div
       ref={containerRef}
       className="relative h-full w-full"
-      onDragOver={(event) => {
+      onDragOver={onDragOverCanvas}
+      onDragLeave={() => {
         if (!editable) return;
-        event.preventDefault();
+        clearGhostPreview();
       }}
       onDrop={onDrop}
       onContextMenu={(event) => {

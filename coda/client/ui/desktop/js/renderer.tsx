@@ -17,7 +17,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import {
-  CommandBus,
+  ActionBus,
   Controller,
   Platform,
   AppRuntime,
@@ -45,10 +45,10 @@ import {
   FRAMEWORK_PANEL_TAB_INSPECTION_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
   PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
-  type CommandDescriptor,
+  type ActionDescriptor,
 } from "@semio-tech/framework-core";
 import { PlatformView, registerUiPanelSurfaceHost } from "@semio-tech/framework-platform-renderer-react";
-import { reactHostPort, setUiLocale, Tree, TreeItem, useCommandHotkey } from "@semio-tech/ui-react";
+import { reactHostPort, setUiLocale, Tree, TreeItem, useActionHotkey } from "@semio-tech/ui-react";
 // #endregion 🔌Adapters
 
 import "../globals.css";
@@ -2466,8 +2466,8 @@ const codaMainHostBridge = {
   onRefresh: () => {},
 };
 
-function codaShellCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
-  return { controllerId: CODA_CONTROLLER_ID, command, args: args as never };
+function codaShellAct(action: string, args?: Record<string, unknown>): ActionDescriptor {
+  return { controllerId: CODA_CONTROLLER_ID, action, args: args as never };
 }
 
 function getCodaShellController(): CodaShellController | null {
@@ -2478,7 +2478,7 @@ function codaValidationTreeItems(nodes: readonly ValidationTreeNode[], prefix: s
   return nodes.map((node) => ({
     id: `${prefix}:${node.id}`,
     label: `${truthEmoji(node.truth)} ${node.label}`,
-    command: codaShellCmd("setSelection", {
+    action: codaShellAct("setSelection", {
       id: `${prefix}:${node.id}`,
       label: node.label,
       kind: node.kind,
@@ -2517,7 +2517,7 @@ function buildCodaDocumentPanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
     {
       id: `coda.document.validation.${index}`,
       label: validation.instance,
-      command: codaShellCmd("setSelection", {
+      action: codaShellAct("setSelection", {
         id: `coda.document.validation.${index}`,
         label: validation.instance,
         kind: "validation",
@@ -2529,7 +2529,7 @@ function buildCodaDocumentPanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
     type: "section",
     id: "coda.document.validations",
     label: "Validations",
-    children: validationItems.length ? validationItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command })) : [{ type: "text", value: "No validation report loaded" }],
+    children: validationItems.length ? validationItems.map((item) => ({ type: "button", id: item.id, label: item.label, action: item.action })) : [{ type: "text", value: "No validation report loaded" }],
   });
   const tree = uiDeclarativeSectionsToTree(sections);
   return { ...tree, selectedIds: snap.selection ? [snap.selection.id] : [] };
@@ -2540,12 +2540,12 @@ function buildCodaCataloguePanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
   const frameworkItems: UiTreeItemNode[] = (snap.frameworks ?? []).map((framework) => ({
     id: `coda.catalogue.framework.${framework.id}`,
     label: formatId(framework.id),
-    command: codaShellCmd("setSelection", { id: `coda.catalogue.framework.${framework.id}`, label: formatId(framework.id), kind: "framework" }),
+    action: codaShellAct("setSelection", { id: `coda.catalogue.framework.${framework.id}`, label: formatId(framework.id), kind: "framework" }),
   }));
   const propertyItems: UiTreeItemNode[] = (snap.properties ?? []).map((property) => ({
     id: `coda.catalogue.property.${property.id}`,
     label: property.name ?? formatId(property.id),
-    command: codaShellCmd("setSelection", {
+    action: codaShellAct("setSelection", {
       id: `coda.catalogue.property.${property.id}`,
       label: property.name ?? formatId(property.id),
       kind: "property",
@@ -2557,13 +2557,13 @@ function buildCodaCataloguePanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
       type: "section",
       id: "coda.catalogue.frameworks",
       label: `Frameworks (${frameworkItems.length})`,
-      children: frameworkItems.length ? frameworkItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command })) : [{ type: "text", value: "(none)" }],
+      children: frameworkItems.length ? frameworkItems.map((item) => ({ type: "button", id: item.id, label: item.label, action: item.action })) : [{ type: "text", value: "(none)" }],
     },
     {
       type: "section",
       id: "coda.catalogue.properties",
       label: `Properties (${propertyItems.length})`,
-      children: propertyItems.length ? propertyItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command })) : [{ type: "text", value: "(none)" }],
+      children: propertyItems.length ? propertyItems.map((item) => ({ type: "button", id: item.id, label: item.label, action: item.action })) : [{ type: "text", value: "(none)" }],
     },
   ]);
 }
@@ -2598,7 +2598,7 @@ function buildCodaInspectionPanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
           id: "coda.inspection.validation.value.input",
           inputKind: "text",
           value: String(selection.validationNode.value),
-          onChange: codaShellCmd("invokeTool", { tool: "fix", args: { nodeId: selection.id, field: "value" } }),
+          onChange: codaShellAct("invokeTool", { tool: "fix", args: { nodeId: selection.id, field: "value" } }),
         },
       });
     }
@@ -2616,7 +2616,7 @@ function buildCodaInspectionPanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
         inputKind: "text",
         value: "",
         placeholder: "Describe a measure or fix attempt",
-        onChange: codaShellCmd("invokeTool", { tool: "fix", args: { propertyId: selection.propertyId } }),
+        onChange: codaShellAct("invokeTool", { tool: "fix", args: { propertyId: selection.propertyId } }),
       },
     });
   }
@@ -2627,16 +2627,16 @@ function buildCodaInspectionPanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
 class CodaShellController extends Controller {
   private snapshot: CodaShellSnapshot = CODA_EMPTY_SHELL_SNAPSHOT;
 
-  constructor(commandBus: CommandBus, hostNotify: () => void) {
-    super(CODA_CONTROLLER_ID, commandBus, hostNotify);
+  constructor(actionBus: ActionBus, hostNotify: () => void) {
+    super(CODA_CONTROLLER_ID, actionBus, hostNotify);
   }
 
   getSnapshot(): CodaShellSnapshot {
     return this.snapshot;
   }
 
-  override run(command: string, args?: unknown): void {
-    switch (command) {
+  override run(action: string, args?: unknown): void {
+    switch (action) {
       case "setShellData": {
         this.snapshot = { ...this.snapshot, ...(args as Partial<CodaShellSnapshot>) };
         break;
@@ -2694,7 +2694,7 @@ function ensureCodaPlatform(): Platform {
   if (codaPlatformSingleton) return codaPlatformSingleton;
   registerCodaShellBodies();
   const platform = new Platform({ initialPanelVisibility: { leftSidePanel: false, rightSidePanel: false } });
-  const controller = new CodaShellController(platform.commandBus, () => platform.notify());
+  const controller = new CodaShellController(platform.actionBus, () => platform.notify());
   codaShellControllerSingleton = controller;
   platform.addApp(buildCodaAppRuntime(controller));
   platform.activeAppId = CODA_APP_ID;
@@ -2747,7 +2747,7 @@ function CodaShellDataSync({ refreshKey, currentPage }: { readonly refreshKey: n
 
   reactHostPort.useEffect(() => {
     const platform = ensureCodaPlatform();
-    platform.commandBus.dispatch(CODA_CONTROLLER_ID, "setShellData", {
+    platform.actionBus.dispatch(CODA_CONTROLLER_ID, "setShellData", {
       currentPage,
       refreshKey,
       project: project ?? null,
@@ -2836,10 +2836,10 @@ function App() {
   }, [refreshKey, events, handleClearEvents, handleRefresh, platform]);
 
   reactHostPort.useEffect(() => {
-    platform.commandBus.dispatch(CODA_CONTROLLER_ID, "setPage", { page: currentPage });
+    platform.actionBus.dispatch(CODA_CONTROLLER_ID, "setPage", { page: currentPage });
   }, [currentPage, platform]);
 
-  useCommandHotkey("ctrl+r,meta+r", handleRefresh, { preventDefault: true }, [handleRefresh]);
+  useActionHotkey("ctrl+r,meta+r", handleRefresh, { preventDefault: true }, [handleRefresh]);
 
   if (projectPath === undefined) {
     return (

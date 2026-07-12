@@ -185,9 +185,9 @@ self.addEventListener("message", async (event) => {
         await api.destroyApp?.(msg.instanceId);
         reply(requestId, "destroy", { ok: true });
         break;
-      case "handleCommand":
-        reply(requestId, "handleCommand", {
-          value: await api.handleCommand(msg.instanceId, msg.commandJson, msg.contextJson ?? msg.viewStateJson),
+      case "handleAction":
+        reply(requestId, "handleAction", {
+          value: await api.handleAction(msg.instanceId, msg.actionJson, msg.contextJson ?? msg.viewStateJson),
         });
         break;
       case "render":
@@ -267,13 +267,13 @@ async function createPluginApiInner() {
     async destroyApp(instanceId) {
       apps.delete(instanceId);
     },
-    async handleCommand(instanceId, commandJson, contextJson) {
+    async handleAction(instanceId, actionJson, contextJson) {
       if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
       const context =
         contextJson && contextJson.trim().startsWith("{")
           ? contextJson
           : JSON.stringify({ viewState: JSON.parse(contextJson), actor: "local" });
-      const response = await plugin.handleCommand(instanceId, { json: commandJson }, { json: context });
+      const response = await plugin.handleAction(instanceId, { json: actionJson }, { json: context });
       return response.json;
     },
     async render(instanceId, bodyKey, viewStateJson) {
@@ -322,8 +322,8 @@ async function createPluginApiInner() {
     manifest: () => runSerialized(() => core.manifest()),
     createApp: (appId) => runSerialized(() => core.createApp(appId)),
     destroyApp: (instanceId) => runSerialized(() => core.destroyApp(instanceId)),
-    handleCommand: (instanceId, commandJson, contextJson) =>
-      runSerialized(() => core.handleCommand(instanceId, commandJson, contextJson)),
+    handleAction: (instanceId, actionJson, contextJson) =>
+      runSerialized(() => core.handleAction(instanceId, actionJson, contextJson)),
     render: (instanceId, bodyKey, viewStateJson) =>
       runSerialized(() => core.render(instanceId, bodyKey, viewStateJson)),
     renderWithDocument: (instanceId, bodyKey, viewStateJson, documentJson) =>

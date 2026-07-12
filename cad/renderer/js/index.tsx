@@ -25,7 +25,7 @@ import {
   Input,
   isUiTypingTarget,
   marqueeCoverageFromGesture,
-  normalizeEngagementCommandText,
+  normalizeEngagementActionText,
   queryWindowEngagementInput,
   reactHostPort,
   sceneHostPort,
@@ -3635,7 +3635,7 @@ export type InteractionSpatialViewHostCallbacks = Pick<
   "onGroundPick" | "onScenePointerMove" | "onInteractionEvent" | "onSelectionRequest" | "onCameraNavigate" | "onCommittedFacePointerDown" | "onCommittedFacePointerMove" | "onSnapshotStateChange" | "onSnapshotRevisionChange" | "onPickEnabledChange"
 >;
 
-/** @emoji 🖱️ Ground-plane picking is command input and must stay independent from host geometry selection. */
+/** @emoji 🖱️ Ground-plane picking is action input and must stay independent from host geometry selection. */
 export function interactionSpatialGroundPickPlaneEnabled(snapshot: Pick<InteractionSnapshot, "spatialInteraction" | "state">, pickEnabled: boolean): boolean {
   const si = snapshot.spatialInteraction;
   return pickEnabled !== false && si.spatialGroundPick && !si.pickDisabledStates.includes(snapshot.state);
@@ -3909,13 +3909,13 @@ function resolveScopedSpatialInteractionKey(token: string, modelDefinitionId: st
   return resolveSpatialInteractionKeyForModelDefinition(modelDefinitionId, token);
 }
 
-function replCommandTextWithoutSpaces(text: string): string {
+function replActionTextWithoutSpaces(text: string): string {
   return text.replace(/\s+/g, "");
 }
 
-/** @emoji ⌨️ Normalizes REPL command text: engagement uses PascalCase; aside REPL strips whitespace only. */
-export function replNormalizeCommandText(text: string, engagementMode?: boolean): string {
-  return engagementMode ? normalizeEngagementCommandText(text) : replCommandTextWithoutSpaces(text);
+/** @emoji ⌨️ Normalizes REPL action text: engagement uses PascalCase; aside REPL strips whitespace only. */
+export function replNormalizeActionText(text: string, engagementMode?: boolean): string {
+  return engagementMode ? normalizeEngagementActionText(text) : replActionTextWithoutSpaces(text);
 }
 
 function replFirstWireId(model: Model): string | null {
@@ -4317,7 +4317,7 @@ export interface InteractionReplHostCallbacks {
   readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
   readonly onHoverTarget?: (target: SpatialPickTarget | null) => void;
   readonly onCameraNavigate?: (active: boolean) => void;
-  readonly onCommandSubmit?: (line: string) => boolean | void;
+  readonly onActionSubmit?: (line: string) => boolean | void;
   readonly onTransitionRun?: (row: InteractionKeybindRow) => void;
   readonly onCancel?: () => void;
   readonly onUndo?: () => void;
@@ -4532,7 +4532,7 @@ export interface InteractionReplEngagementInputs {
   readonly onAbort?: () => void;
 }
 
-/** @emoji 🏷 Omits machine ids from command suggestion sublines (keeps short shortcut keys). */
+/** @emoji 🏷 Omits machine ids from action suggestion sublines (keeps short shortcut keys). */
 export function replUserFacingSuggestionDetail(detail: string): string | undefined {
   const trimmed = detail.trim();
   if (!trimmed) return undefined;
@@ -4542,13 +4542,13 @@ export function replUserFacingSuggestionDetail(detail: string): string | undefin
   return undefined;
 }
 
-/** @emoji 💬 Builds the compact window {@link EngagementSpec}: an active session lists its transitions as options, idle exposes a command input to start one, plus state/selection/response status. */
+/** @emoji 💬 Builds the compact window {@link EngagementSpec}: an active session lists its transitions as options, idle exposes an action input to start one, plus state/selection/response status. */
 export function buildInteractionReplEngagement(inputs: InteractionReplEngagementInputs): EngagementSpec | null {
   if (!inputs.showEngagement) return null;
   const options = inputs.boundInteractionSession
     ? inputs.transitions.map((row) => ({
         id: `engagement-transition-${row.eventKind}-${row.key}`,
-        label: normalizeEngagementCommandText(`${row.key} ${row.label}`),
+        label: normalizeEngagementActionText(`${row.key} ${row.label}`),
         onPress: () => inputs.onTransition(row),
       }))
     : [];
@@ -4571,7 +4571,7 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
       ? {
           id: "engagement-input",
           value: inputs.cmdLine,
-          placeholder: inputs.boundInteractionSession ? ENGAGEMENT_USER.commandPlaceholderActive : ENGAGEMENT_USER.commandPlaceholder,
+          placeholder: inputs.boundInteractionSession ? ENGAGEMENT_USER.actionPlaceholderActive : ENGAGEMENT_USER.actionPlaceholder,
           onChange: inputs.onInputChange,
           onSubmit: inputs.onInputSubmit,
           onRepeatLast: inputs.onRepeatLast,
@@ -4581,12 +4581,12 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
   const possibleEngagements = inputs.boundInteractionSession
     ? inputs.transitions.map((row) => ({
         id: `engagement-possible-transition-${row.eventKind}-${row.key}`,
-        label: normalizeEngagementCommandText(`${row.key} ${row.label}`),
+        label: normalizeEngagementActionText(`${row.key} ${row.label}`),
         onSelect: () => inputs.onTransition(row),
       }))
     : inputs.interactions.map((interaction) => ({
         id: interaction.id,
-        label: normalizeEngagementCommandText(interaction.label),
+        label: normalizeEngagementActionText(interaction.label),
         detail: replUserFacingSuggestionDetail(interaction.key),
         onSelect: () => inputs.onStartInteraction(interaction.id),
       }));
@@ -4662,7 +4662,7 @@ export function InteractionRepl({
   onSelectionRequest: onSelectionRequestProp,
   onHoverTarget: onHoverTargetProp,
   onCameraNavigate: onCameraNavigateProp,
-  onCommandSubmit,
+  onActionSubmit,
   onTransitionRun,
   onCancel,
   onUndo,
@@ -4693,7 +4693,7 @@ export function InteractionRepl({
   onReferenceHover,
   onReferenceRelocate,
 }: InteractionReplProps): ReactNode {
-  const engagementCommandMode = !showAside && showEngagement;
+  const engagementActionMode = !showAside && showEngagement;
   const snapshot = useInteractionSnapshot(rt);
   const rtRef = reactHostPort.useRef(rt);
   rtRef.current = rt;
@@ -5397,7 +5397,7 @@ export function InteractionRepl({
   const trySubmitLine = reactHostPort.useCallback((): boolean => {
     const raw = cmdLine.trim();
     if (!raw) return false;
-    if (onCommandSubmit?.(raw)) {
+    if (onActionSubmit?.(raw)) {
       setCmdLine("");
       return true;
     }
@@ -5423,7 +5423,7 @@ export function InteractionRepl({
       }
     }
     return false;
-  }, [cmdLine, spec, rt, dispatchTransition, onInteractionId, onCommandSubmit, setCmdLine, activeModelDefinitionId]);
+  }, [cmdLine, spec, rt, dispatchTransition, onInteractionId, onActionSubmit, setCmdLine, activeModelDefinitionId]);
 
   const runTransitionRow = reactHostPort.useCallback(
     (row: InteractionKeybindRow) => {
@@ -5474,7 +5474,7 @@ export function InteractionRepl({
         e.preventDefault();
         const suffix = replActiveCompletionSuffix(cmdLine, filtered, activeIndex);
         if (suffix) {
-          setCmdLine(replCommandTextWithoutSpaces(cmdLine + suffix));
+          setCmdLine(replActionTextWithoutSpaces(cmdLine + suffix));
           return;
         }
         runSuggestion(filtered[activeIndex] ?? filtered[0]!);
@@ -5588,14 +5588,14 @@ export function InteractionRepl({
         interactions: scopedInteractions,
         onTransition: runTransitionRow,
         onStartInteraction: (id: string) => onInteractionId(id),
-        onInputChange: (value: string) => setCmdLine(replNormalizeCommandText(value, engagementCommandMode)),
+        onInputChange: (value: string) => setCmdLine(replNormalizeActionText(value, engagementActionMode)),
         onInputSubmit: () => submitEngagementLine(),
         onRepeatLast: lastFinalizedInteractionId ? repeatLastFinalizedInteraction : undefined,
         onAbort: handleEscapeKey,
       }),
     [
       showEngagement,
-      engagementCommandMode,
+      engagementActionMode,
       boundInteractionSession,
       engagementControl,
       transitionRows,
@@ -5636,12 +5636,12 @@ export function InteractionRepl({
     if (applyEv) void rt.send(applyEv);
   }, [cmdLine, snapshot.state, spec, rt, setCmdLine]);
 
-  const focusReplCommandInput = reactHostPort.useCallback(() => {
+  const focusReplActionInput = reactHostPort.useCallback(() => {
     if (!showAside && showEngagement && focusActiveEngagementInput()) return;
     cmdRef.current?.focus({ preventScroll: true });
   }, [showAside, showEngagement]);
 
-  const replCommandInputElement = reactHostPort.useCallback((): HTMLInputElement | null => {
+  const replActionInputElement = reactHostPort.useCallback((): HTMLInputElement | null => {
     if (!showAside && showEngagement) {
       return queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
     }
@@ -5680,14 +5680,14 @@ export function InteractionRepl({
         return;
       }
       if (e.key === " " && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        if (engagementCommandMode) {
+        if (engagementActionMode) {
           e.preventDefault();
           e.stopPropagation();
           if (!cmdLine.trim() && !boundInteractionSession && lastFinalizedInteractionId) {
             repeatLastFinalizedInteraction();
             return;
           }
-          focusReplCommandInput();
+          focusReplActionInput();
           submitEngagementLine();
           return;
         }
@@ -5711,27 +5711,27 @@ export function InteractionRepl({
         else if (replShouldRepeatInteractionOnSpace(e, { interactionId, interactionActive, cmdTarget: cmdRef.current })) repeatLastFinalizedInteraction();
         return;
       }
-      const commandInput = replCommandInputElement();
-      if (commandInput && t !== commandInput && e.key === "Backspace") {
+      const actionInput = replActionInputElement();
+      if (actionInput && t !== actionInput && e.key === "Backspace") {
         e.preventDefault();
         e.stopPropagation();
-        focusReplCommandInput();
+        focusReplActionInput();
         setCmdLineRef.current((prev) => prev.slice(0, -1));
         return;
       }
-      if (e.key === "Escape" && commandInput) {
-        if (t !== commandInput) {
+      if (e.key === "Escape" && actionInput) {
+        if (t !== actionInput) {
           e.preventDefault();
           e.stopPropagation();
-          focusReplCommandInput();
+          focusReplActionInput();
         }
         handleEscapeKey();
         return;
       }
-      if (commandInput && t !== commandInput && e.key === "Enter") {
+      if (actionInput && t !== actionInput && e.key === "Enter") {
         e.preventDefault();
         e.stopPropagation();
-        focusReplCommandInput();
+        focusReplActionInput();
         const snap = rt.getSnapshot();
         if (!cmdLine.trim()) {
           void (async () => {
@@ -5753,17 +5753,17 @@ export function InteractionRepl({
         if (field && t !== field) {
           e.preventDefault();
           e.stopPropagation();
-          focusReplCommandInput();
+          focusReplActionInput();
           field.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true }));
           return;
         }
       }
       if (!one || e.ctrlKey || e.metaKey || e.altKey) return;
-      if (t === commandInput) return;
+      if (t === actionInput) return;
       e.preventDefault();
       e.stopPropagation();
-      focusReplCommandInput();
-      setCmdLineRef.current((prev) => replNormalizeCommandText(`${prev}${one}`, engagementCommandMode));
+      focusReplActionInput();
+      setCmdLineRef.current((prev) => replNormalizeActionText(`${prev}${one}`, engagementActionMode));
     };
     window.addEventListener("keydown", onWinCapture, true);
     return () => window.removeEventListener("keydown", onWinCapture, true);
@@ -5788,11 +5788,11 @@ export function InteractionRepl({
     onUndo,
     onRedo,
     onDeleteSelection,
-    focusReplCommandInput,
-    replCommandInputElement,
+    focusReplActionInput,
+    replActionInputElement,
     showAside,
     showEngagement,
-    engagementCommandMode,
+    engagementActionMode,
     submitEngagementLine,
   ]);
 
@@ -5928,12 +5928,12 @@ export function InteractionRepl({
               spellCheck={false}
               value={cmdLine}
               onChange={(e) => {
-                setCmdLine(replNormalizeCommandText(e.target.value, engagementCommandMode));
+                setCmdLine(replNormalizeActionText(e.target.value, engagementActionMode));
                 if (interactionMenuOpen) setInteractionMenuOpen(true);
               }}
               onKeyDown={onInputKeyDown}
-              placeholder={ENGAGEMENT_USER.commandPlaceholder}
-              aria-label={ENGAGEMENT_USER.commandPlaceholder}
+              placeholder={ENGAGEMENT_USER.actionPlaceholder}
+              aria-label={ENGAGEMENT_USER.actionPlaceholder}
               className="col-start-1 row-start-1 border-0 bg-transparent pr-large shadow-none focus-visible:ring-0"
             />
             <Button
@@ -6529,12 +6529,12 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("replNormalizeCommandText", () => {
-    it("PascalCases engagement command text and strips whitespace in aside REPL mode", () => {
-      expect(replNormalizeCommandText("set height 5", true)).toBe("SetHeight5");
-      expect(replNormalizeCommandText("box", true)).toBe("Box");
-      expect(replNormalizeCommandText("Apply Number", false)).toBe("ApplyNumber");
-      expect(replNormalizeCommandText("b ", false)).toBe("b");
+  describe("replNormalizeActionText", () => {
+    it("PascalCases engagement action text and strips whitespace in aside REPL mode", () => {
+      expect(replNormalizeActionText("set height 5", true)).toBe("SetHeight5");
+      expect(replNormalizeActionText("box", true)).toBe("Box");
+      expect(replNormalizeActionText("Apply Number", false)).toBe("ApplyNumber");
+      expect(replNormalizeActionText("b ", false)).toBe("b");
     });
   });
 
@@ -6623,7 +6623,7 @@ if (import.meta.vitest) {
       expect(buildInteractionReplEngagement({ ...baseInputs, showEngagement: false })).toBeNull();
     });
 
-    it("lists active session transitions, command input, and status", () => {
+    it("lists active session transitions, action input, and status", () => {
       const transitionRuns: string[] = [];
       const spec = buildInteractionReplEngagement({
         ...baseInputs,
@@ -6633,14 +6633,14 @@ if (import.meta.vitest) {
       });
       expect(spec?.sessionActive).toBe(true);
       expect(spec?.options?.[0]?.label).toBe("CConfirm");
-      expect(spec?.input?.placeholder).toBe(ENGAGEMENT_USER.commandPlaceholderActive);
+      expect(spec?.input?.placeholder).toBe(ENGAGEMENT_USER.actionPlaceholderActive);
       expect(spec?.status?.map((row) => row.content)).toEqual(["Step: First Corner", "2 selected", "OK"]);
       spec?.options?.[0]?.onPress?.();
       expect(transitionRuns).toEqual(["c"]);
       expect(spec?.possibleEngagements?.[0]?.label).toBe("CConfirm");
     });
 
-    it("exposes only a command input while idle so a window can start an interaction", () => {
+    it("exposes only an action input while idle so a window can start an interaction", () => {
       const submitted: string[] = [];
       const started: string[] = [];
       const spec = buildInteractionReplEngagement({
@@ -6651,7 +6651,7 @@ if (import.meta.vitest) {
         onStartInteraction: (id) => started.push(id),
       });
       expect(spec?.options).toBeUndefined();
-      expect(spec?.input?.placeholder).toBe(ENGAGEMENT_USER.commandPlaceholder);
+      expect(spec?.input?.placeholder).toBe(ENGAGEMENT_USER.actionPlaceholder);
       expect(spec?.possibleEngagements?.map((row) => row.label)).toEqual(["Box"]);
       spec?.input?.onSubmit?.("box");
       expect(submitted).toEqual(["box"]);
@@ -6684,7 +6684,7 @@ if (import.meta.vitest) {
       expect(spec?.status?.map((row) => row.content)).toEqual(["3 selected"]);
     });
 
-    it("keeps command input with onRepeatLast when idle without startable interactions", () => {
+    it("keeps action input with onRepeatLast when idle without startable interactions", () => {
       const repeated: string[] = [];
       const spec = buildInteractionReplEngagement({
         ...baseInputs,
