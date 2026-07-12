@@ -2515,3 +2515,102 @@ $$Q_{w,WRG} = Q_{w,shower} \cdot \eta_{WRG}$$
 
 ## Exhaustive Standard Tables
 *(Tables for $U_L$, $H_{w,st}$, pump powers, Carnot factors, standard pipe lengths, equivalent lengths, and environments are mapped dynamically in the codebase).*
+
+# PART C: Primary Energy & Consumption Balancing (DIN V 18599-1 & Beiblatt 1)
+
+## 1. Core Primary Energy Equation (DIN V 18599-1)
+
+### 1.1 Total Building Primary Energy ($Q_p$)
+The total primary energy demand of a building is the sum of the primary energy required for all building services, minus any credited exported energy.
+$$Q_p = Q_{p,h} + Q_{p,w} + Q_{p,c} + Q_{p,v} + Q_{p,l} - Q_{p,exp}$$
+
+### 1.2 Converting Final Energy to Primary Energy
+For every energy carrier $i$, the primary energy is calculated by multiplying the Final Energy Demand ($Q_{f,i}$ and auxiliary electrical energy $W_{f,i}$) by its specific Primary Energy Factor ($f_{p,i}$).
+$$Q_{p} = \sum_{i} \left( (Q_{f,i} + W_{f,i}) \cdot f_{p,i} \right)$$
+*(Note: In Germany, building regulations (GEG) strictly evaluate the non-renewable primary energy demand, $Q_{p,nren}$, to assess legal compliance, though total primary energy $Q_{p,tot}$ can also be calculated).*
+
+## 2. Primary Energy Factors ($f_p$)
+
+### 2.1 Standard Primary Energy Factors ($f_{p,nren}$)
+| Energy Carrier / Fuel Type | Non-Renewable Factor (fp,nren) | Total Factor (fp,tot) |
+| :--- | :--- | :--- |
+| Grid Electricity (Strom-Mix) | 1.80 | 2.80 |
+| Natural Gas (Erdgas) | 1.10 | 1.10 |
+| Fuel Oil (Heizöl) | 1.10 | 1.10 |
+| Liquefied Petroleum Gas (LPG) | 1.10 | 1.10 |
+| Hard Coal (Steinkohle) | 1.10 | 1.10 |
+| Lignite (Braunkohle) | 1.20 | 1.20 |
+| Wood / Biomass | 0.20 | 1.20 |
+| Biogas (upgraded to grid) | 0.50 | 1.50 |
+| District Heating | Certified (Default 0.70) | Certified |
+| Environmental Energy | 0.00 | 1.00 |
+
+## 3. Exported Energy Credits ($Q_{p,exp}$)
+
+### 3.1 Photovoltaics (PV)
+PV energy exported to the grid generates a primary energy credit.
+$$Q_{p,exp,PV} = W_{exp,PV} \cdot f_{p,grid}$$
+
+## 4. Balancing Demand vs. Consumption (DIN/TS 18599 Beiblatt 1)
+
+### 4.1 Weather Adjustment Factor (Klimafaktor - $KF$)
+$$KF = \frac{GTZ_{standard}}{GTZ_{measured}}$$
+
+### 4.2 Normalizing Measured Consumption ($E_{V,norm}$)
+$$E_{V,norm} = \left( E_{V,measured} - E_{V,ww} \right) \cdot KF + E_{V,ww}$$
+*If no meter exists, flat rates are assumed, e.g., $18 \text{ kWh/m}^2\text{a}$ for residential.*
+
+### 4.3 Calculating Measured Primary Energy
+$$Q_{p,measured} = \sum \left( E_{V,norm,i} \cdot f_{p,i} \right)$$
+
+### 4.4 Discrepancy Analysis (Bedarfs-/Verbrauchsabgleich)
+Systematic review of input parameters:
+*   User Behavior Profiles
+*   Operating Hours
+*   Distribution Temperatures
+*   Hydraulic Balancing
+
+## 5. Exhaustive Standard Tables (DIN V 18599-1)
+
+### 5.1 Exhaustive Primary Energy & $CO_2$ Emission Factors
+| Energy Carrier | fp,nren | fp,tot | fCO2 (g/kWh) |
+| :--- | :--- | :--- | :--- |
+| Grid Electricity | 1.80 | 2.80 | 560 |
+| Natural Gas | 1.10 | 1.10 | 240 |
+| Biogas | 0.50 | 1.50 | 138 |
+| Liquid Gas (LPG) | 1.10 | 1.10 | 260 |
+| Fuel Oil, extra light | 1.10 | 1.10 | 320 |
+| Bio-Oil | 0.50 | 1.50 | 185 |
+| Hard Coal | 1.10 | 1.10 | 400 |
+| Lignite | 1.20 | 1.20 | 410 |
+| Wood Pellets / Briquettes | 0.20 | 1.20 | 20 |
+| Log Wood / Wood Chips | 0.20 | 1.20 | 20 |
+| District Heating (Fossil CHP) | 0.70 | 0.70 | 180 |
+| District Heating (Renewable CHP) | 0.00 | 1.00 | 0 |
+| Environmental Energy | 0.00 | 1.00 | 0 |
+
+## 6. Standard Reference Values for Balancing
+
+### 6.1 Flat-Rate Domestic Hot Water (DHW) Subtractions
+| Building Type / Profile | Flat Rate DHW Subtraction (EV,ww) |
+| :--- | :--- |
+| Residential (Standard) | $18.0 \text{ kWh / (m}^2 \cdot \text{a)}$ |
+| Residential (Solar DHW) | $7.0 \text{ kWh / (m}^2 \cdot \text{a)}$ |
+| Offices (Standard) | $2.0 \text{ kWh / (m}^2 \cdot \text{a)}$ |
+| Hospitals / Nursing Homes | $30.0 \text{ kWh / (m}^2 \cdot \text{a)}$ |
+| Hotels (internal bathroom) | $25.0 \text{ kWh / (m}^2 \cdot \text{a)}$ |
+
+### 6.2 Flat-Rate Unmetered Electrical Equipment (Plug Loads)
+| Equipment Profile | Typical Load Addition (EV,el,plug) |
+| :--- | :--- |
+| Standard Office Workplace | $\approx 200 \text{ to } 300 \text{ kWh/a}$ per workplace |
+| Server Rooms / IT Racks | $\approx 1500 \text{ kWh/a}$ per standard rack |
+| Industrial: Hubgeräte | $\approx 2000 \text{ kWh/a}$ per vehicle charging port |
+| Kitchenettes | $\approx 400 \text{ kWh/a}$ per standard kitchenette |
+
+### 6.3 Guideline Allowances for User Behavior Adjustments
+| Parameter | Standard DIN Assumption | Permitted Adjustment Range |
+| :--- | :--- | :--- |
+| Indoor Heating Temp ($\theta_{i,h}$) | $20^\circ C$ (Residential) | $18^\circ C \text{ to } 22^\circ C$ |
+| Air Exchange Rate ($n$) | $0.5 \text{ h}^{-1}$ | $0.3 \text{ h}^{-1} \text{ to } 0.8 \text{ h}^{-1}$ |
+| Internal Heat Gains ($q_i$) | Profile dependent | $\pm 30\%$ |

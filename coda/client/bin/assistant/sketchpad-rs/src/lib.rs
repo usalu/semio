@@ -2323,6 +2323,43 @@ fn map_state_to_graph(state: &State, u_wall: f64, u_roof: f64, u_floor: f64, u_w
     let q_final_heating = q_g_h_out * e_g_h;
     let q_final_total = q_final_heating + dhw_res.fuel_demand_kwh + dhw_res.total_electricity_kwh;
 
+    // --- Primary Energy Calculation ---
+    let heating_carrier = match state.params.heating_system.as_str() {
+        "OldGasBoiler" | "CondensingGasBoiler" => primary_energy::EnergyCarrier::NaturalGas,
+        "PelletBoiler" => primary_energy::EnergyCarrier::WoodPellets,
+        "DirectElectric" => primary_energy::EnergyCarrier::GridElectricity,
+        "HeatPumpAirWater" | "GroundSourceHeatPump" => primary_energy::EnergyCarrier::GridElectricity,
+        "DistrictHeating" => primary_energy::EnergyCarrier::DistrictHeatingFossil,
+        _ => primary_energy::EnergyCarrier::GridElectricity,
+    };
+
+    let dhw_carrier = match dhw_generator {
+        dhw_system::GeneratorTypeDHW::ElectricInstantaneous |
+        dhw_system::GeneratorTypeDHW::ElectricSmallStorage |
+        dhw_system::GeneratorTypeDHW::ElectricStandardStorage |
+        dhw_system::GeneratorTypeDHW::HeatPumpAirWater => primary_energy::EnergyCarrier::GridElectricity,
+        dhw_system::GeneratorTypeDHW::GasInstantaneousNew |
+        dhw_system::GeneratorTypeDHW::GasStorageNew |
+        dhw_system::GeneratorTypeDHW::CombinedGasBoilerCondensing => primary_energy::EnergyCarrier::NaturalGas,
+        dhw_system::GeneratorTypeDHW::DistrictHeating => primary_energy::EnergyCarrier::DistrictHeatingFossil,
+    };
+
+    let energy_demands = vec![
+        primary_energy::EnergyDemand {
+            q_f: q_final_heating,
+            w_f: 0.0, // Auxiliary electricity for heating to be added
+            carrier: heating_carrier,
+        },
+        primary_energy::EnergyDemand {
+            q_f: dhw_res.fuel_demand_kwh,
+            w_f: dhw_res.total_electricity_kwh,
+            carrier: dhw_carrier,
+        },
+    ];
+
+    let q_p_nren = primary_energy::PrimaryEnergyEngine::calculate_primary_energy(&energy_demands, true);
+    let q_p_tot = primary_energy::PrimaryEnergyEngine::calculate_primary_energy(&energy_demands, false);
+
     let energy_class = balance_engine.determine_energy_class(q_final_total * 1000.0, a_floor_total);
 
     // region Overheating
@@ -2503,6 +2540,11 @@ fn map_state_to_graph(state: &State, u_wall: f64, u_roof: f64, u_floor: f64, u_w
             "heating_fuel_kWh_a": q_final_heating,
             "dhw_fuel_kWh_a": dhw_res.fuel_demand_kwh,
             "dhw_electricity_kWh_a": dhw_res.total_electricity_kwh
+        },
+        "primary_energy": {
+            "Q_p_nren_kWh_a": q_p_nren,
+            "specific_Q_p_nren_kWh_m2a": q_p_nren / a_floor_total,
+            "Q_p_tot_kWh_a": q_p_tot
         },
         "wall_insulation_breakdown": {
             "u_wall_base": u_wall_existing,
@@ -4671,5 +4713,106 @@ mod lighting_tests {
         assert_eq!(req.e_m, None);
         assert_eq!(req.ugr_l, None);
         assert_eq!(req.r_a, Some(80.0));
+    }
+}
+
+pub mod primary_energy {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum EnergyCarrier {
+        GridElectricity,
+        NaturalGas,
+        Biogas,
+        LiquidGas,
+        FuelOil,
+        BioOil,
+        HardCoal,
+        Lignite,
+        WoodPellets,
+        LogWood,
+        DistrictHeatingFossil,
+        DistrictHeatingRenewable,
+        DistrictHeating(f64), // Certified per network
+        EnvironmentalEnergy,
+    }
+
+    impl EnergyCarrier {
+        /// Returns the Non-Renewable Primary Energy Factor (f_p,nren)
+        pub fn f_p_nren(&self) -> f64 {
+            match self {
+                Self::GridElectricity => 1.80,
+                Self::NaturalGas => 1.10,
+                Self::Biogas => 0.50,
+                Self::LiquidGas => 1.10,
+                Self::FuelOil => 1.10,
+                Self::BioOil => 0.50,
+                Self::HardCoal => 1.10,
+                Self::Lignite => 1.20,
+                Self::WoodPellets => 0.20,
+                Self::LogWood => 0.20,
+                Self::DistrictHeatingFossil => 0.70,
+                Self::DistrictHeatingRenewable => 0.00,
+                Self::DistrictHeating(factor) => *factor,
+                Self::EnvironmentalEnergy => 0.00,
+            }
+        }
+
+        /// Returns the Total Primary Energy Factor (f_p,tot)
+        pub fn f_p_tot(&self) -> f64 {
+            match self {
+                Self::GridElectricity => 2.80,
+                Self::NaturalGas => 1.10,
+                Self::Biogas => 1.50,
+                Self::LiquidGas => 1.10,
+                Self::FuelOil => 1.10,
+                Self::BioOil => 1.50,
+                Self::HardCoal => 1.10,
+                Self::Lignite => 1.20,
+                Self::WoodPellets => 1.20,
+                Self::LogWood => 1.20,
+                Self::DistrictHeatingFossil => 0.70,
+                Self::DistrictHeatingRenewable => 1.00,
+                Self::DistrictHeating(_) => 0.70, // Or certified per network
+                Self::EnvironmentalEnergy => 1.00,
+            }
+        }
+    }
+
+    pub struct EnergyDemand {
+        pub q_f: f64, // Final thermal energy demand (kWh)
+        pub w_f: f64, // Final electrical auxiliary energy demand (kWh)
+        pub carrier: EnergyCarrier,
+    }
+
+    pub struct PrimaryEnergyEngine {}
+
+    impl PrimaryEnergyEngine {
+        /// 1.2 Converting Final Energy to Primary Energy
+        pub fn calculate_primary_energy(demands: &[EnergyDemand], non_renewable: bool) -> f64 {
+            demands.iter().map(|d| {
+                let factor = if non_renewable { d.carrier.f_p_nren() } else { d.carrier.f_p_tot() };
+                (d.q_f + d.w_f) * factor
+            }).sum()
+        }
+
+        /// 3.1 Exported Energy Credits (e.g., PV)
+        pub fn calculate_exported_energy_credit(w_exp_pv: f64) -> f64 {
+            // Usually offsets grid electricity
+            w_exp_pv * EnergyCarrier::GridElectricity.f_p_nren()
+        }
+
+        /// 4.1 Weather Adjustment Factor
+        pub fn weather_adjustment_factor(gtz_standard: f64, gtz_measured: f64) -> f64 {
+            if gtz_measured == 0.0 {
+                return 1.0; // Prevent division by zero
+            }
+            gtz_standard / gtz_measured
+        }
+
+        /// 4.2 Normalizing Measured Consumption
+        pub fn normalize_measured_consumption(e_v_measured: f64, e_v_ww: f64, kf: f64) -> f64 {
+            (e_v_measured - e_v_ww) * kf + e_v_ww
+        }
     }
 }

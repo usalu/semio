@@ -63,6 +63,7 @@ Opaque components (walls, roofs, floors) are modeled as a series of material lay
 * **Struct `Material`:** Defines `lambda` ($\lambda$, thermal conductivity in $W/(m\cdot K)$).
 * **Struct `Layer`:** Defines `thickness` ($d$ in meters) and its `Material`.
 * **Thermal Resistance ($R_T$):**
+
   $$
   R_T = R_{si} + \sum \left( \frac{d_i}{\lambda_i} \right) + R_{se}
   $$
@@ -72,6 +73,7 @@ Opaque components (walls, roofs, floors) are modeled as a series of material lay
   * $R_{si}$ (Inner surface resistance): Standard $0.13 \text{ m}^2K/W$.
   * $R_{se}$ (Outer surface resistance): Standard $0.04 \text{ m}^2K/W$ (or $0.13$ if internal).
 * **U-Value Calculation (`calculate_u_value`):**
+
   $$
   U = \frac{1}{R_T}
   $$
@@ -262,8 +264,7 @@ The total sensible heat lost over the heating period. The formulas use a convers
   $$
   Q_{ht,tr} = 0.024 \cdot H_{tr} \cdot (\theta_{int} - \theta_e) \cdot d_{hs,loss}
   $$
-* 
-  **Ventilation Loss ($Q_{ht,ve}$):**
+* **Ventilation Loss ($Q_{ht,ve}$):**
 
   $$
   Q_{ht,ve} = 0.024 \cdot H_{ve} \cdot (\theta_{int} - \theta_e) \cdot d_{hs,loss}
@@ -286,54 +287,100 @@ $$
 
 ### 7.1 Internal Gains ($Q_{int}$)
 
-Heat introduced into the building by occupants and equipment via the `internal_gains` engine.
+Heat introduced into the building by occupants, equipment, lighting, and processes. The calculation is managed by the `internal_gains::InternalGainsEngine`.
 
 $$
 Q_{int} = \frac{\text{net\_daily\_gain\_wh} \cdot d_{hs,gain}}{1000}
 $$
 
-*(Where $d_{hs,gain} = d_{nutz} \cdot \frac{185.0}{365.0}$)*
+*(Where $d_{hs,gain} = d_{nutz} \cdot \frac{185.0}{365.0}$ is the active heating duration)*
 
-The `internal_gains` engine computes `net_daily_gain_wh` using `StandardGainProfile` values ($q_{i,combined}, q_{i,p}, q_{i,app}, q_{i,sink,app}$):
+The engine computes `net_daily_gain_wh` by balancing sources and sinks based on two main calculation methods: `Standard` and `Custom`.
 
-* **Residential Calculation (Combined):**
-
+**1. Standard Profile Calculation:**
+Uses `StandardGainProfile` values derived from DIN V 18599-10 ($q_{i,combined}, q_{i,p}, q_{i,app}, q_{i,sink,app}$):
+* **Residential:** Uses a flat combined heat rate ($q_{i,combined} = 3.75 \text{ W/m}^2$).
   $$
   \text{gain}_{res} = (q_{i,combined} \cdot A_{ngf}) \cdot t_{nutz}
   $$
-* **Non-Residential Calculation (Split):**
-
+* **Non-Residential (Split):** Separates humans and appliances.
   $$
   \text{gain}_{non\_res} = (q_{i,p} \cdot A_{ngf} \cdot t_{nutz}) + (q_{i,app} \cdot A_{ngf} \cdot t_{nutz})
   $$
-
   $$
   \text{sink}_{app} = q_{i,sink,app} \cdot A_{ngf} \cdot t_{nutz}
   $$
 
-**Additional Gain Sinks:**
+**2. Custom Profile Calculation:**
+Calculates precise sensible heat output from a specific `CustomInventoryProfile`.
+$$
+\text{gain}_{custom} = \Big( (\text{num\_people} \cdot \text{metabolic\_rate}) + \text{equipment\_watts\_active} \Big) \cdot t_{nutz}
+$$
 
-* **Lighting:** $\text{gain}_{light} = \mu_L \cdot q_{l,f,daily}$
-* **Material Transport:**
+**Additional Sources and Sinks:**
+* **Lighting Heat Gain:** Based on the room load factor ($\mu_L$), which is determined by the `LightingExhaustType`:
+  * `Standard` $\implies \mu_L = 1.0$
+  * `CeilingCavity` $\implies \mu_L = 0.75$
+  * `AirDucts` $\implies \mu_L = 0.65$
   $$
-  \text{gain}_{mat} = c_p \cdot \dot{m} \cdot (\theta_{in} - \theta_{out}) \cdot t
+  \text{gain}_{light} = \mu_L \cdot q_{l,f,daily}
   $$
-
-  * `ColdGoodsSmall`/`Large`: Acts as a net heat sink (cools room).
-  * `HotMetalSmall`/`Large`: Acts as a net heat source (heats room).
+* **Material Transport (`MaterialTransport`):** Heat dumped or absorbed by goods entering/leaving. Uses 24h as the daily standard time $t$.
+  $$
+  \text{gain/sink}_{mat} = c_p \cdot \dot{m} \cdot |\theta_{in} - \theta_{out}| \cdot t
+  $$
+  * If $\theta_{in} > \theta_{out}$ it acts as a heat source.
+  * If $\theta_{in} < \theta_{out}$ it acts as a heat sink.
 
 ### 7.2 Solar Gains & Sky Loss
 
-Computed via the solar engine.
+Computed via the `solar_gains::SolarGainsEngine`. This module splits the calculations into Transparent (windows) and Opaque (walls/roofs) components.
 
-* **Solar Gains ($Q_{sol}$):** Positive heat entering through windows.
+* **Solar Gains ($Q_{sol}$):** Positive heat entering through transparent and opaque surfaces.
   $$
   Q_{sol} = \frac{Q_{sol\_sources\_wh}}{1000}
   $$
-* **Sky Loss ($Q_{sky\_loss}$):** Heat lost by thermal radiation to the sky. It is added to $Q_{ht,tr}$ rather than subtracted from gains.
+* **Sky Loss ($Q_{sky\_loss}$):** Heat lost by thermal radiation from opaque surfaces to the cold night sky. It is added to transmission losses ($Q_{ht,tr}$) rather than subtracted from gains.
   $$
   Q_{sky\_loss} = \frac{Q_{sol\_sinks\_wh}}{1000}
   $$
+
+#### 7.2.1 Transparent Components (Windows)
+Windows act purely as solar gain sources.
+1. **Effective Collecting Area ($A_{eff}$):**
+   $$
+   A_{eff} = A_w \cdot (1 - F_F) \cdot F_w \cdot g \cdot f_c \cdot f_s
+   $$
+   * **$F_F$ (Frame Fraction):** `Standard` = 0.30, `VeryLarge` = 0.20, `SmallDivided` = 0.40
+   * **$F_w$ (Non-perpendicular Radiation):** Standard $0.90$
+   * **$g$ (Glazing Transmittance):** `Single` = 0.85, `DoubleStandard` = 0.75, `TripleLowE` = 0.50, `SolarControl` = 0.35
+   * **$f_c$ (Shading Reduction):** `None` = 1.0, `InteriorLight` = 0.80, `ExteriorBlinds` = 0.25, `ExteriorAwnings` = 0.40
+   * **$f_s$ (Surroundings Shading):** Usually ~0.90
+2. **Gain Calculation:**
+   $$
+   Q_{gain,transparent} = I_s \cdot A_{eff}
+   $$
+   *(where $I_s$ is the seasonal irradiation in Wh/m²)*
+
+#### 7.2.2 Opaque Components (Walls & Roofs)
+Opaque surfaces absorb solar radiation but also constantly radiate heat to the cold sky ($\Delta\theta_{ER} = 11.0 \text{ K}$).
+1. **Absorbed Solar Radiation:**
+   $$
+   Q_{abs} = \alpha \cdot I_s
+   $$
+   * **$\alpha$ (Solar Absorptance):** `Light` = 0.30, `Medium` = 0.60, `Dark` = 0.90
+2. **Sky Radiation Loss:**
+   $$
+   Q_{sky} = f_{sky} \cdot h_{r} \cdot \Delta\theta_{ER} \cdot t_{hours}
+   $$
+   * **$f_{sky}$ (Sky View Factor):** $1.0$ for Roofs, $0.5$ for Walls
+   * **$h_{r}$ (Radiative Transfer):** Standard $5.0 \text{ W/m}^2\text{K}$
+3. **Net Heat Transfer into Building:**
+   $$
+   Q_{net,opaque} = A_{op} \cdot U_{value} \cdot R_{se} \cdot (Q_{abs} - Q_{sky})
+   $$
+   * **$R_{se}$ (External Resistance):** Standard $0.04 \text{ m}^2\text{K/W}$
+   * If $Q_{net} > 0$, it acts as a solar source ($Q_{sol\_sources\_wh}$). If $Q_{net} < 0$, it acts as a sky sink ($Q_{sol\_sinks\_wh}$).
 
 ### 6.1 Code Variable Walkthrough (Aggregation)
 
@@ -638,6 +685,49 @@ $$
     \text{Total Electricity} = W_{h,total}
     $$
 
+## 10. Primary Calculation: Final Heating Demand (`q_final_heating`)
+
+**Concept & Formula:**
+In the primary energy calculation flow within `lib.rs` (around the `calculate_energy` function), the final delivered energy for heating (`q_final_heating`) is computed using a simplified approach based on the TABULA Equation 20. This calculates the actual energy billed by the utility, factoring in the specific heating system's efficiency and distribution/storage losses.
+
+**Formulas (`lib.rs`):**
+
+1. **Total Absolute Losses:**
+
+   $$
+   Q_{d,h,total} = q_{d,h,spec} \cdot A_{floor\_total}
+   $$
+
+   $$
+   Q_{s,h,total} = q_{s,h,spec} \cdot A_{floor\_total}
+   $$
+2. **Heat Output of Generator ($Q_{g,h,out}$):**
+
+   $$
+   Q_{g,h,out} = Q_{H,nd} + Q_{d,h,total} + Q_{s,h,total}
+   $$
+3. **Delivered Energy ($Q_{del,h}$ or `q_final_heating`):**
+
+   $$
+   q_{final\_heating} = Q_{g,h,out} \cdot e_{g,h}
+   $$
+
+**Source Mappings (`lib.rs` variables):**
+
+* **`q_final_heating`**: The total final energy demand for space heating in kWh/a.
+* **`q_h_nd` ($Q_{H,nd}$)**: The Net Heating Demand calculated previously (converted from Wh to kWh).
+* **`a_floor_total` ($A_{floor\_total}$)**: The total net floor area of the building, calculated by aggregating the floor areas of all zones or taking `geometry.total_floor_area`.
+* **System Properties (`e_g_h`, `q_d_h_spec`, `q_s_h_spec`)**: These values are determined entirely by the `state.params.heating_system` string matched in `lib.rs`:
+  * `"Gas Condensing Boiler"` $\implies e_{g,h} = 1.05, q_{d,h,spec} = 15.0, q_{s,h,spec} = 0.0$
+  * `"Gas Non-Condensing Boiler"` $\implies e_{g,h} = 1.18, q_{d,h,spec} = 15.0, q_{s,h,spec} = 5.0$
+  * `"Air Source Heat Pump"` $\implies e_{g,h} = 0.35, q_{d,h,spec} = 10.0, q_{s,h,spec} = 5.0$
+  * `"Biomass Pellet Boiler"` $\implies e_{g,h} = 1.25, q_{d,h,spec} = 15.0, q_{s,h,spec} = 10.0$
+  * `"Direct Electric Heating"` $\implies e_{g,h} = 1.00, q_{d,h,spec} = 0.0, q_{s,h,spec} = 0.0$
+  * *Default Fallback* $\implies e_{g,h} = 1.10, q_{d,h,spec} = 15.0, q_{s,h,spec} = 0.0$
+* **`q_d_h_total` ($Q_{d,h,total}$)**: The total heat loss from the distribution system (pipes), calculated by multiplying the specific loss (`q_d_h_spec`) by the total floor area.
+* **`q_s_h_total` ($Q_{s,h,total}$)**: The total heat loss from the storage system (buffer tanks), calculated by multiplying the specific loss (`q_s_h_spec`) by the total floor area.
+* **`q_g_h_out` ($Q_{g,h,out}$)**: The total thermal energy the generator must produce to satisfy the net heating demand plus all distribution and storage losses.
+
 ## 12. Lighting Energy ($Q_{l,f}$)
 
 **Concept & Formula:**
@@ -653,6 +743,7 @@ The `RoomGeometry` struct evaluates the physical space.
 
 * **Daylight Quotient ($D_{Rb}$):** Estimated using window area ($A_{window}$), lintel height ($h_{sturz}$), and working plane height ($h_{nutz}$).
 * **Daylight Zone Split:** The engine calculates the maximum depth of daylight penetration:
+
   $$
   A_{TL,max} = 2.5 \cdot (h_{sturz} - h_{nutz}) \cdot \text{width}
   $$
@@ -695,98 +786,379 @@ $$
 This module calculates the Final Energy Demand for Domestic Hot Water ($Q_{w,f}$) and the Auxiliary Electrical Energy ($W_w$) according to DIN V 18599-8. It follows the thermal chain from base demand through distribution, storage, and generation.
 
 ### 13.1 Base Demand & Heat Recovery
-The required hot water demand ($q_{w,b}$) is determined by the specific building profile and usage. 
+
+The required hot water demand ($q_{w,b}$) is determined by the specific building profile and usage.
 
 **Source Mapping (`DHWEngine::calculate_final_energy`):**
-*   **Base Thermal Demand:** Passed in as $q_{w,b\_annual}$. For standard systems, it is derived from liters per day.
-*   **Shower Demand:** Estimated as $60\%$ of total demand.
-    $$
-    q_{w,shower} = q_{w,b} \cdot 0.60
-    $$
-*   **Wastewater Heat Recovery (WRG):**
-    $$
-    q_{w,wrg} = q_{w,shower} \cdot \text{wastewater\_heat\_recovery}
-    $$
-*   **Reduced Demand:**
-    $$
-    q_{w,b,reduced} = \max(0.0,\; q_{w,b} - q_{w,wrg})
-    $$
+
+* **Base Thermal Demand:** Passed in as $q_{w,b\_annual}$. For standard systems, it is derived from liters per day.
+* **Shower Demand:** Estimated as $60\%$ of total demand.
+  $$
+  q_{w,shower} = q_{w,b} \cdot 0.60
+  $$
+* **Wastewater Heat Recovery (WRG):**
+  $$
+  q_{w,wrg} = q_{w,shower} \cdot \text{wastewater\_heat\_recovery}
+  $$
+* **Reduced Demand:**
+  $$
+  q_{w,b,reduced} = \max(0.0,\; q_{w,b} - q_{w,wrg})
+  $$
 
 ### 13.2 Subsystem 1: Distribution (Verteilung)
+
 Calculates pipe losses for tapping lines and circulation loops.
 
 **Formulas (`DHWEngine::calculate_final_energy`):**
+
 $$
 Q_{w,d} = Q_{w,d,tap} + Q_{w,d,c}
 $$
+
 $$
 Q_{w,d,tap} = \frac{1}{1000} \cdot U_{l,tap} \cdot L_{w,tap} \cdot (\theta_{w,t} - \theta_{amb}) \cdot t_{tap}
 $$
+
 $$
 Q_{w,d,c} = \frac{1}{1000} \cdot U_{l,c} \cdot L_{w,c} \cdot (\theta_{w,c,av} - \theta_{amb}) \cdot t_{circ}
 $$
 
 **Source Mappings:**
-*   **Temperatures:** $\theta_{w,t} = 60.0^\circ\text{C}$, $\theta_{w,c,av} = 57.5^\circ\text{C}$, $\theta_{amb} = 20.0^\circ\text{C}$, $t_{tap} = 30.0\text{ h/a}$.
-*   **Lengths ($L_{w,tap}$, $L_{w,c}$):**
-    *   `DHWSystemType::Centralized` $\implies L_{w,tap} = 0.05 \cdot A_{NGF}$
-    *   `DHWSystemType::Decentralized` $\implies L_{w,tap} = 0.015 \cdot A_{NGF}$
-    *   `has_circulation == true` $\implies L_{w,c} = 0.06 \cdot A_{NGF}$ (otherwise 0).
-*   **Linear Transmittances ($U_{l,tap}$, $U_{l,c}$):**
-    *   `PipeInsulationDHW::Uninsulated` $\implies U_{l,tap} = 1.80$, $U_{l,c} = 2.20$
-    *   `PipeInsulationDHW::Insulated50Percent` $\implies U_{l,tap} = 0.35$, $U_{l,c} = 0.40$
-    *   `PipeInsulationDHW::Insulated100Percent` $\implies U_{l,tap} = 0.22$, $U_{l,c} = 0.25$
-*   **Circulation Hours ($t_{circ}$):**
-    *   `Residential1_2Family` / `OfficesCommercial` $\implies 420.0\text{ h/month}$
-    *   `ResidentialMultiFamily` / `HospitalsHotels` $\implies 744.0\text{ h/month}$
+
+* **Temperatures:** $\theta_{w,t} = 60.0^\circ\text{C}$, $\theta_{w,c,av} = 57.5^\circ\text{C}$, $\theta_{amb} = 20.0^\circ\text{C}$, $t_{tap} = 30.0\text{ h/a}$.
+* **Lengths ($L_{w,tap}$, $L_{w,c}$):**
+  * `DHWSystemType::Centralized` $\implies L_{w,tap} = 0.05 \cdot A_{NGF}$
+  * `DHWSystemType::Decentralized` $\implies L_{w,tap} = 0.015 \cdot A_{NGF}$
+  * `has_circulation == true` $\implies L_{w,c} = 0.06 \cdot A_{NGF}$ (otherwise 0).
+* **Linear Transmittances ($U_{l,tap}$, $U_{l,c}$):**
+  * `PipeInsulationDHW::Uninsulated` $\implies U_{l,tap} = 1.80$, $U_{l,c} = 2.20$
+  * `PipeInsulationDHW::Insulated50Percent` $\implies U_{l,tap} = 0.35$, $U_{l,c} = 0.40$
+  * `PipeInsulationDHW::Insulated100Percent` $\implies U_{l,tap} = 0.22$, $U_{l,c} = 0.25$
+* **Circulation Hours ($t_{circ}$):**
+  * `Residential1_2Family` / `OfficesCommercial` $\implies 420.0\text{ h/month}$
+  * `ResidentialMultiFamily` / `HospitalsHotels` $\implies 744.0\text{ h/month}$
 
 ### 13.3 Subsystem 2: Storage (Speicherung)
+
 Accounts for hot water tank heat loss based on insulation quality.
 
 **Formulas:**
+
 $$
 Q_{w,s} = \frac{1}{1000} \cdot H_{w,st} \cdot (\theta_{w,s,av} - \theta_{amb}) \cdot t_{mth}
 $$
 
 **Source Mappings:**
-*   **Loss Coefficient ($H_{w,st}$):**
-    *   `TankInsulationDHW::VeryGoodClassA` $\implies 1.10 + (V_s - 100.0) \cdot 0.001$
-    *   `TankInsulationDHW::StandardClassC` $\implies 1.60 + (V_s - 100.0) \cdot 0.003$
-    *   `TankInsulationDHW::PoorOld` $\implies 2.50 + (V_s - 100.0) \cdot 0.005$
-    *   `TankInsulationDHW::None` $\implies 0.0$
-*   **Temperatures:** $\theta_{w,s,av} = 60.0^\circ\text{C}$, $\theta_{amb} = 20.0^\circ\text{C}$.
+
+* **Loss Coefficient ($H_{w,st}$):**
+  * `TankInsulationDHW::VeryGoodClassA` $\implies 1.10 + (V_s - 100.0) \cdot 0.001$
+  * `TankInsulationDHW::StandardClassC` $\implies 1.60 + (V_s - 100.0) \cdot 0.003$
+  * `TankInsulationDHW::PoorOld` $\implies 2.50 + (V_s - 100.0) \cdot 0.005$
+  * `TankInsulationDHW::None` $\implies 0.0$
+* **Temperatures:** $\theta_{w,s,av} = 60.0^\circ\text{C}$, $\theta_{amb} = 20.0^\circ\text{C}$.
 
 ### 13.4 Subsystem 3: Generation (Wärmeerzeugung)
+
 Calculates the final energy demand by applying the expenditure factor ($e_{g,w}$) to the total required heat output.
 
 **Formulas:**
+
 $$
 Q_{w,outg} = q_{w,b,reduced} + Q_{w,d} + Q_{w,s}
 $$
+
 $$
 Q_{w,outg,req} = \max(0.0,\; Q_{w,outg} - Q_{solar\_thermal})
 $$
+
 $$
 Q_{w,f} = Q_{w,outg,req} \cdot e_{g,w}
 $$
 
 **Source Mappings ($e_{g,w}$):**
-*   `ElectricInstantaneous` $\implies 1.00$
-*   `ElectricSmallStorage` $\implies 1.02$
-*   `ElectricStandardStorage` $\implies 1.05$
-*   `GasInstantaneousNew` $\implies 1.15$
-*   `GasStorageNew` $\implies 1.25$
-*   `CombinedGasBoilerCondensing` $\implies$ Summer: $2.50$, Winter: $1.10$
-*   `DistrictHeating` $\implies 1.02$
-*   `HeatPumpAirWater` $\implies$ Calculates COP using $\eta_{carnot} = 0.38$, $\theta_{source} = 5.0^\circ\text{C}$, $\theta_{sink} = 55.0^\circ\text{C}$. $e_{g,w} = 1 / \text{COP}$.
+
+* `ElectricInstantaneous` $\implies 1.00$
+* `ElectricSmallStorage` $\implies 1.02$
+* `ElectricStandardStorage` $\implies 1.05$
+* `GasInstantaneousNew` $\implies 1.15$
+* `GasStorageNew` $\implies 1.25$
+* `CombinedGasBoilerCondensing` $\implies$ Summer: $2.50$, Winter: $1.10$
+* `DistrictHeating` $\implies 1.02$
+* `HeatPumpAirWater` $\implies$ Calculates COP using $\eta_{carnot} = 0.38$, $\theta_{source} = 5.0^\circ\text{C}$, $\theta_{sink} = 55.0^\circ\text{C}$. $e_{g,w} = 1 / \text{COP}$.
 
 ### 13.5 Auxiliary Electricity ($W_w$)
+
 Sum of electricity required for pumps and generation controls.
+
 $$
 W_w = W_{w,d,c} + W_{w,s} + W_{w,gen}
 $$
-*   **Circulation Pump:** $W_{w,d,c} = (35.0 \text{ W} \cdot t_{circ}) / 1000.0$
-*   **Storage Pump:** $W_{w,s} = (45.0 \text{ W} \cdot t_{load}) / 1000.0$
-*   **Generator Standby/Active:** $W_{w,gen} = (60.0 \cdot t_{load} + 10.0 \cdot (t_{mth} - t_{load})) / 1000.0$
+
+* **Circulation Pump:** $W_{w,d,c} = (35.0 \text{ W} \cdot t_{circ}) / 1000.0$
+* **Storage Pump:** $W_{w,s} = (45.0 \text{ W} \cdot t_{load}) / 1000.0$
+* **Generator Standby/Active:** $W_{w,gen} = (60.0 \cdot t_{load} + 10.0 \cdot (t_{mth} - t_{load})) / 1000.0$
 
 If the generator is electrically driven (e.g. Heat Pump, Electric Instantaneous), the Final Electricity Demand is $Q_{w,f} + W_w$. Otherwise, Fuel Demand is $Q_{w,f}$ and Electricity Demand is just $W_w$.
+
+## 14. Primary Energy & Consumption Balancing (DIN V 18599-1)
+
+**Concept & Formula:**
+This module calculates the Total Primary Energy Demand ($Q_p$) of the building by aggregating final energy demands across all systems (Heating, Cooling, DHW, Ventilation, Lighting) and multiplying them by specific Primary Energy Factors ($f_{p,i}$) for each energy carrier. It also includes methods for consumption balancing against measured utility bills (Beiblatt 1).
+
+**Source Mapping (`primary_energy::PrimaryEnergyEngine`):**
+The `EnergyCarrier` enum models all fuel sources (e.g., `GridElectricity`, `NaturalGas`, `DistrictHeating`).
+
+### 14.1 Primary Energy Calculation
+
+* **Formula (`calculate_primary_energy`):**
+
+  $$
+  Q_p = \sum \left( (Q_{f,i} + W_{f,i}) \cdot f_{p,i} \right)
+  $$
+
+  * **$Q_p$**: Total Primary Energy Demand of the building (kWh).
+  * **$Q_{f,i}$**: Final thermal energy demand for system $i$ (e.g., Space Heating, DHW, Cooling) (kWh). This is the actual fuel or electricity delivered to the building to produce heat.
+  * **$W_{f,i}$**: Final electrical auxiliary energy demand for system $i$ (kWh). This is the electricity consumed by supporting mechanical equipment.
+  * **$f_{p,i}$**: Primary Energy Factor (non-renewable or total) corresponding to the specific energy carrier of system $i$.
+  * The engine evaluates either the Non-Renewable factor ($f_{p,nren}$) or the Total factor ($f_{p,tot}$) based on the `non_renewable` flag.
+
+**Actual Implementation in `lib.rs`:**
+In the main `calculate_energy` function, the total primary energy is computed by constructing a vector of `primary_energy::EnergyDemand` structs and passing it to `PrimaryEnergyEngine::calculate_primary_energy`. Currently, two primary systems are aggregated:
+
+1. **Space Heating Demand:**
+
+   * **`q_f`**: Mapped directly from `q_final_heating` (the delivered energy calculated via TABULA Equation 20).
+   * **`w_f`**: Currently hardcoded to `0.0` in the top-level aggregation (`// Auxiliary electricity for heating to be added`).
+   * **`carrier`**: Derived from `state.params.heating_system` (e.g., `"OldGasBoiler"` maps to `NaturalGas`, `"AirSourceHeatPump"` maps to `GridElectricity`).
+2. **Domestic Hot Water (DHW) Demand:**
+
+   * **`q_f`**: Mapped from `dhw_res.fuel_demand_kwh` returned by the `DHWEngine`.
+   * **`w_f`**: Mapped from `dhw_res.total_electricity_kwh` returned by the `DHWEngine`.
+   * **`carrier`**: Derived from the selected `dhw_generator` (e.g., `ElectricInstantaneous` maps to `GridElectricity`, `GasStorageNew` maps to `NaturalGas`).
+
+*Note: While the theoretical modules for Lighting and complex Auxiliary Electricity exist in the codebase, they are not yet fully aggregated into the `energy_demands` vector in the top-level `lib.rs` function.*
+
+* **Exact Values Implemented in `EnergyCarrier`:**| Energy Carrier               | Non-Renewable Factor ($f_{p,nren}$) | Total Factor ($f_{p,tot}$) |
+  | :--------------------------- | :------------------------------------ | :--------------------------- |
+  | `GridElectricity`          | 1.80                                  | 2.80                         |
+  | `NaturalGas`               | 1.10                                  | 1.10                         |
+  | `Biogas`                   | 0.50                                  | 1.50                         |
+  | `LiquidGas`                | 1.10                                  | 1.10                         |
+  | `FuelOil`                  | 1.10                                  | 1.10                         |
+  | `BioOil`                   | 0.50                                  | 1.50                         |
+  | `HardCoal`                 | 1.10                                  | 1.10                         |
+  | `Lignite`                  | 1.20                                  | 1.20                         |
+  | `WoodPellets`              | 0.20                                  | 1.20                         |
+  | `LogWood`                  | 0.20                                  | 1.20                         |
+  | `DistrictHeatingFossil`    | 0.70                                  | 0.70                         |
+  | `DistrictHeatingRenewable` | 0.00                                  | 1.00                         |
+  | `EnvironmentalEnergy`      | 0.00                                  | 1.00                         |
+
+## 15. Input-to-Output Data Flow Summary (`lib.rs`)
+
+Based strictly on the data structures handled in `lib.rs`, the following diagrams detail the exact mathematical transformations from raw user inputs to physical outputs for each building module according to the DIN V 18599 standard.
+
+### 15.1 Geometry & Envelope (Transmission)
+
+```mermaid
+%%{init: {"theme": "neutral", "flowchart": {"curve": "monotoneX"}}}%%
+flowchart LR
+    classDef param fill:#f9f9f9,stroke:#333,stroke-width:1px;
+    classDef engine fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef result fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+
+    A(["Area Parameters: A_j"]):::param
+    B(["Material Props: d_i, λ_i"]):::param
+    C(["Topology: F_x, ΔU_WB"]):::param
+  
+    E1[["DIN 4108-2 Layer Engine"]]:::engine
+    E2[["Transmission Heat Transfer Engine"]]:::engine
+  
+    R1(["H_tr (W/K)"]):::result
+    R2(["Q_{ht,tr} (kWh/a)"]):::result
+
+    B -->|"d_i / λ_i"| E1
+    E1 -->|"U_j (W/m²K)"| E2
+    A -->|"A_j (m²)"| E2
+    C -->|"Factors"| E2
+  
+    E2 --> R1
+    E2 --> R2
+```
+
+**Required `state.params` Fields & Allowed Values:**
+
+* **`building_type`**: `"SFH"`, `"MFH"`, `"TH"`, `"AB"`
+* **`year_class`**: `"...1859"`, `"1860-1918"`, `"1919-1948"`, `"1949-1957"`, `"1958-1968"`, `"1969-1978"`, `"1979-1983"`, `"1984-1994"`, `"1995-2001"`, `"2002-2009"`, `"2010-2015"`, `"2016-..."`, `"2016+"`
+* **`scenario`**: `"Existing State"`, `"Usual Refurbishment"`, `"Advanced Refurbishment"`
+* **`thermal_bridge_category`**: `"Standard Default"`, `"Internal Insulation Issues"`, `"Good Planning"`, `"Excellent Planning"`
+* **`ground_contact_type`**: `"Unheated Basement"`, `"Floor Slab On Ground"`, `"Heated Basement"`, `"Ventilated Crawl Space"`, `"Groundwater Contact"`
+* **`shutter_control`**: `"Manual"`, `"Automated"`, `"None"`
+
+### 15.2 Ventilation System
+
+```mermaid
+%%{init: {"theme": "neutral", "flowchart": {"curve": "monotoneX"}}}%%
+flowchart LR
+    classDef param fill:#f9f9f9,stroke:#333,stroke-width:1px;
+    classDef engine fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef result fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+
+    A(["Blower Door: n_50"]):::param
+    B(["Mech Flows: V̇_sup, V̇_exh"]):::param
+    C(["Efficiencies: η_HR, t_mech"]):::param
+  
+    E1[["Infiltration Model"]]:::engine
+    E2[["Ventilation Heat Loss Engine"]]:::engine
+  
+    R1(["Air Change Rates: n_inf, n_mech"]):::result
+    R2(["Q_{ht,ve} (kWh/a)"]):::result
+
+    A --> E1
+    B --> E1
+    E1 -->|"Rates (h⁻¹)"| E2
+    C -->|"η_HR"| E2
+  
+    E2 --> R1
+    E2 --> R2
+```
+
+**Required `state.params` Fields & Allowed Values:**
+
+* **`air_tightness`**: `"CategoryI"`, `"CategoryII"` (Default), `"CategoryIII"`, `"CategoryIV"`
+* **`has_atd`**: `true`, `false` (Presence of Air Tightness Devices)
+* **`mech_supply`** / **`mech_exhaust`**: *Float* (Flow rates in m³/h)
+* **`heat_recovery`**: *Float* (Efficiency factor, e.g., 0.80 for 80%)
+* **`mech_hours`**: *Float* (Daily mechanical operation hours)
+
+### 15.3 Internal Gains
+
+```mermaid
+%%{init: {"theme": "neutral", "flowchart": {"curve": "monotoneX"}}}%%
+flowchart LR
+    classDef param fill:#f9f9f9,stroke:#333,stroke-width:1px;
+    classDef engine fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef result fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+
+    A(["Usage Profile: q_i, t_nutz"]):::param
+    B(["Automation: Δθ_shift"]):::param
+    C(["Custom Overrides: q_occ, q_equip"]):::param
+  
+    E1[["Heat Emission Aggregator"]]:::engine
+  
+    R1(["Utilized Gains: Q_int (kWh/a)"]):::result
+
+    A --> E1
+    B --> E1
+    C --> E1
+  
+    E1 --> R1
+```
+
+**Required `state.params` Fields & Allowed Values:**
+
+* **`usage_profile`**: `"Residential"` (Default), `"SingleOffice"`, `"GroupOffice"`, `"OpenPlanOffice"`, `"RetailStore"`, `"RetailFood"`, `"MedicalPractice"`, `"ExaminationRoom"`, `"HospitalRoom"`, `"Restaurant"`, `"Gymnasium"`, `"MeetingRoom"`, `"Classroom"`, `"StorageArchive"`, `"LogisticsHall"`, `"IndustrialHeavy"`
+* **`automation_class`**: `"A"`, `"B"`, `"C"`, `"D"`
+* **`lighting_exhaust`**: `"Standard"`, `"CeilingCavity"`, `"AirDucts"`
+* **`material_transport`**: `"None"`, `"ColdGoodsSmall"`, `"ColdGoodsLarge"`, `"HotMetalSmall"`, `"HotMetalLarge"`
+* **`custom_occupants`**: *Float* (Manual power overrides for people in W/m²)
+* **`custom_equipment`**: *Float* (Manual power overrides for appliances in W/m²)
+
+### 15.4 Solar Gains
+
+```mermaid
+%%{init: {"theme": "neutral", "flowchart": {"curve": "monotoneX"}}}%%
+flowchart LR
+    classDef param fill:#f9f9f9,stroke:#333,stroke-width:1px;
+    classDef engine fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef result fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+
+    A(["Window/Wall Geometry"]):::param
+    B(["Climate Region: I_s"]):::param
+    C(["Shading: f_c"]):::param
+  
+    E1[["Solar Gains Engine"]]:::engine
+  
+    R1(["Solar Gains: Q_sol (kWh/a)"]):::result
+    R2(["Sky Loss: Q_sky_loss (kWh/a)"]):::result
+
+    A --> E1
+    B --> E1
+    C --> E1
+  
+    E1 --> R1
+    E1 --> R2
+```
+
+**Required `state.params` Fields & Allowed Values:**
+
+* **`shutter_control`**: `"Manual"`, `"Automated"`, `"None"`
+* **`window_to_wall_ratio`**: *Float* (e.g., 0.15 for 15%)
+* **`building_rotation_deg`**: *Float* (e.g., 45.0 for 45 degrees)
+* **`climate_region`**: `"Potsdam"`, `"Hamburg"`, `"Bremerhaven"`, `"Rostock"`, `"Essen"`, `"Kassel"`, `"Chemnitz"`, `"Mannheim"`, `"Passau"`, etc.
+
+### 15.5 Domestic Hot Water (DHW)
+
+```mermaid
+%%{init: {"theme": "neutral", "flowchart": {"curve": "monotoneX"}}}%%
+flowchart LR
+    classDef param fill:#f9f9f9,stroke:#333,stroke-width:1px;
+    classDef engine fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef result fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+
+    A(["Volume Demand: V_w (L/d)"]):::param
+    B(["Wastewater Heat Recovery: η_wrg"]):::param
+    C(["Generator Typology: e_g,w"]):::param
+  
+    E1[["DIN 18599-8 DHW Engine"]]:::engine
+  
+    R1(["Thermal Fuel: Q_{w,f} (kWh/a)"]):::result
+    R2(["Aux. Electricity: W_w (kWh/a)"]):::result
+
+    A --> E1
+    B --> E1
+    C --> E1
+  
+    E1 --> R1
+    E1 --> R2
+```
+
+**Required `state.params` Fields & Allowed Values:**
+
+* **`dhw_base_volume_liters_per_day`**: *Float* (Required volume of water per day)
+* **`dhw_wastewater_heat_recovery`**: *Float* (Efficiency of shower drain recovery)
+* **`dhw_generator_type`**: `"HeatPumpAirWater"` (Default), `"ElectricInstantaneous"`, `"ElectricSmallStorage"`, `"ElectricStandardStorage"`, `"GasInstantaneousNew"`, `"GasStorageNew"`, `"CombinedGasBoilerCondensing"`, `"DistrictHeating"`
+
+### 15.6 Final Heating Engine & Primary Energy
+
+```mermaid
+%%{init: {"theme": "neutral", "flowchart": {"curve": "monotoneX"}}}%%
+flowchart LR
+    classDef param fill:#f9f9f9,stroke:#333,stroke-width:1px;
+    classDef engine fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef result fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+
+    A(["Sinks & Sources: Q_l, Q_g"]):::param
+    B(["Generator Specifics: e_g,h, q_d,h"]):::param
+    C(["Energy Carrier Factor: f_p,i"]):::param
+  
+    E1[["DIN V 18599-2 Energy Balance"]]:::engine
+    E2[["DIN V 18599-1 Primary Total"]]:::engine
+  
+    R1(["Net Heating: Q_{h,nd} (kWh/a)"]):::result
+    R2(["Final Energy: Q_del,h (kWh/a)"]):::result
+    R3(["Primary Energy: Q_p (kWh/a)"]):::result
+
+    A --> E1
+    E1 -->|"Q_h,nd"| E2
+    B --> E2
+    C --> E2
+  
+    E1 --> R1
+    E2 --> R2
+    E2 --> R3
+```
+
+**Required `state.params` Fields & Allowed Values:**
+
+* **`heating_system`**: `"CondensingGasBoiler"`, `"OldGasBoiler"`, `"PelletBoiler"`, `"DirectElectric"`, `"HeatPumpAirWater"`, `"GroundSourceHeatPump"`, `"DistrictHeating"`
