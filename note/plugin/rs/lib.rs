@@ -840,6 +840,70 @@ fn selection_from_envelope(play: &NotePlayEnvelope, view_state: &ViewState) -> V
 }
 //#endregion 🔖Document
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the note app; one field per label makes every locale combination compile-checked.
+struct NoteLabels {
+    catalogue_title: &'static str,
+    catalogue_text: &'static str,
+    catalogue_image: &'static str,
+    catalogue_table: &'static str,
+    catalogue_math: &'static str,
+    catalogue_ink: &'static str,
+    catalogue_group: &'static str,
+    inspector_block: &'static str,
+    document_empty: &'static str,
+    add_text: &'static str,
+    add_table: &'static str,
+    add_math: &'static str,
+    add_image: &'static str,
+    add_group: &'static str,
+}
+
+const NOTE_LABELS_NATIVE_EN: NoteLabels = NoteLabels {
+    catalogue_title: "Block kinds",
+    catalogue_text: "text — rich text block",
+    catalogue_image: "image — embedded image",
+    catalogue_table: "table — grid block",
+    catalogue_math: "math — TeX equation",
+    catalogue_ink: "ink — pencil strokes",
+    catalogue_group: "group — nested blocks",
+    inspector_block: "Block",
+    document_empty: "Drop blocks here",
+    add_text: "Add Text",
+    add_table: "Add Table",
+    add_math: "Add Math",
+    add_image: "Add Image",
+    add_group: "Add Group",
+};
+
+const NOTE_LABELS_NATIVE_DE: NoteLabels = NoteLabels {
+    catalogue_title: "Blockarten",
+    catalogue_text: "Text — reicher Textblock",
+    catalogue_image: "Bild — eingebettetes Bild",
+    catalogue_table: "Tabelle — Rasterblock",
+    catalogue_math: "Mathe — TeX-Formel",
+    catalogue_ink: "Tinte — Stiftstriche",
+    catalogue_group: "Gruppe — verschachtelte Blöcke",
+    inspector_block: "Block",
+    document_empty: "Blöcke hier ablegen",
+    add_text: "Text hinzufügen",
+    add_table: "Tabelle hinzufügen",
+    add_math: "Mathe hinzufügen",
+    add_image: "Bild hinzufügen",
+    add_group: "Gruppe hinzufügen",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; note has no terminology axis, only language.
+fn note_labels(view_state: &ViewState) -> &'static NoteLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de {
+        &NOTE_LABELS_NATIVE_DE
+    } else {
+        &NOTE_LABELS_NATIVE_EN
+    }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Panels
 fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor {
@@ -906,13 +970,13 @@ fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
     }
 }
 
-fn render_document_panel(document: &NoteDocument, play: &NotePlayEnvelope, view_state: &ViewState) -> UiNode {
+fn render_document_panel(document: &NoteDocument, play: &NotePlayEnvelope, view_state: &ViewState, labels: &NoteLabels) -> UiNode {
     let toolbar = vec![
-        ("text", "Add Text", "type"),
-        ("table", "Add Table", "table"),
-        ("math", "Add Math", "sigma"),
-        ("image", "Add Image", "image"),
-        ("group", "Add Group", "folder-plus"),
+        ("text", labels.add_text, "type"),
+        ("table", labels.add_table, "table"),
+        ("math", labels.add_math, "sigma"),
+        ("image", labels.add_image, "image"),
+        ("group", labels.add_group, "folder-plus"),
     ]
     .into_iter()
     .map(|(kind, label, icon)| UiTreeItemNode {
@@ -940,7 +1004,7 @@ fn render_document_panel(document: &NoteDocument, play: &NotePlayEnvelope, view_
     let block_items: Vec<UiTreeItemNode> = if document.blocks.is_empty() {
         vec![UiTreeItemNode {
             id: "note-play-blocks.empty".into(),
-            label: "Drop blocks here".into(),
+            label: labels.document_empty.into(),
             description: None,
             icon_id: Some("sticky-note".into()),
             selected: None,
@@ -980,18 +1044,18 @@ fn render_document_panel(document: &NoteDocument, play: &NotePlayEnvelope, view_
     })
 }
 
-fn render_catalogue_panel() -> UiNode {
+fn render_catalogue_panel(labels: &NoteLabels) -> UiNode {
     ui_declarative_sections_to_tree(&[UiSectionNode {
         id: "note-catalogue".into(),
-        label: Some("Block kinds".into()),
+        label: Some(labels.catalogue_title.into()),
         default_open: Some(true),
         children: vec![
-            ui_text("text — rich text block"),
-            ui_text("image — embedded image"),
-            ui_text("table — grid block"),
-            ui_text("math — TeX equation"),
-            ui_text("ink — pencil strokes"),
-            ui_text("group — nested blocks"),
+            ui_text(labels.catalogue_text),
+            ui_text(labels.catalogue_image),
+            ui_text(labels.catalogue_table),
+            ui_text(labels.catalogue_math),
+            ui_text(labels.catalogue_ink),
+            ui_text(labels.catalogue_group),
         ],
     }])
 }
@@ -1058,7 +1122,7 @@ fn inspector_number_field(block_ids: &[String], field_id: &str, label: &str, val
     })
 }
 
-fn render_properties_panel(document: &NoteDocument, play: &NotePlayEnvelope, view_state: &ViewState) -> UiNode {
+fn render_properties_panel(document: &NoteDocument, play: &NotePlayEnvelope, view_state: &ViewState, labels: &NoteLabels) -> UiNode {
     let selected = selection_from_envelope(play, view_state);
     let blocks: Vec<&NoteBlockNode> = selected
         .iter()
@@ -1101,7 +1165,7 @@ fn render_properties_panel(document: &NoteDocument, play: &NotePlayEnvelope, vie
     let locked_mixed = ui_inspector_mixed_toggle(&locked);
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "note-properties.block".into(),
-        label: "Block".into(),
+        label: labels.inspector_block.into(),
         default_open: Some(true),
         fields: vec![
             inspector_text_field(&block_ids, "note-properties.name", "Name", &names, "name"),
@@ -1964,12 +2028,13 @@ impl PluginApp for NoteApp {
 
     fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let play = parse_envelope(document_json);
+        let labels = note_labels(view_state);
         match body_key {
             NOTE_PLAY_BODY_COMPOSITE => render_canvas_scene(&play, NOTE_PLAY_SURFACE_COMPOSITE, "composite"),
             NOTE_PLAY_BODY_NAVIGATOR => render_canvas_scene(&play, NOTE_PLAY_SURFACE_NAVIGATOR, "navigator"),
-            NOTE_PLAY_BODY_DOCUMENT => render_document_panel(&play.document, &play, view_state),
-            NOTE_PLAY_BODY_CATALOGUE => render_catalogue_panel(),
-            NOTE_PLAY_BODY_PROPERTIES => render_properties_panel(&play.document, &play, view_state),
+            NOTE_PLAY_BODY_DOCUMENT => render_document_panel(&play.document, &play, view_state, labels),
+            NOTE_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),
+            NOTE_PLAY_BODY_PROPERTIES => render_properties_panel(&play.document, &play, view_state, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -2323,6 +2388,53 @@ mod tests {
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("\"type\":\"tree\""));
         assert!(json.contains("Welcome"));
+    }
+
+    #[test]
+    fn note_labels_resolve_native_by_default() {
+        let app = NoteApp;
+        let document = SEMIO_EXAMPLE_JSON.to_string();
+        let document_node = app.render(NOTE_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
+        let document_json = serde_json::to_string(&document_node).unwrap();
+        assert!(document_json.contains("Add Text"));
+        assert!(document_json.contains("Add Table"));
+        assert!(document_json.contains("Add Math"));
+        assert!(document_json.contains("Add Image"));
+        assert!(document_json.contains("Add Group"));
+
+        let catalogue_node = app.render(NOTE_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();
+        assert!(catalogue_json.contains("Block kinds"));
+        assert!(catalogue_json.contains("text — rich text block"));
+
+        let empty_document = serde_json::to_string(&empty_note_document()).unwrap();
+        let empty_node = app.render(NOTE_PLAY_BODY_DOCUMENT, &empty_document, &ViewState::default());
+        let empty_json = serde_json::to_string(&empty_node).unwrap();
+        assert!(empty_json.contains("Drop blocks here"));
+    }
+
+    #[test]
+    fn note_labels_resolve_german_locale() {
+        let app = NoteApp;
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let document = SEMIO_EXAMPLE_JSON.to_string();
+        let document_node = app.render(NOTE_PLAY_BODY_DOCUMENT, &document, &view_state);
+        let document_json = serde_json::to_string(&document_node).unwrap();
+        assert!(document_json.contains("Text hinzufügen"));
+        assert!(document_json.contains("Tabelle hinzufügen"));
+        assert!(document_json.contains("Mathe hinzufügen"));
+        assert!(document_json.contains("Bild hinzufügen"));
+        assert!(document_json.contains("Gruppe hinzufügen"));
+
+        let catalogue_node = app.render(NOTE_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();
+        assert!(catalogue_json.contains("Blockarten"));
+        assert!(catalogue_json.contains("Text — reicher Textblock"));
+
+        let empty_document = serde_json::to_string(&empty_note_document()).unwrap();
+        let empty_node = app.render(NOTE_PLAY_BODY_DOCUMENT, &empty_document, &view_state);
+        let empty_json = serde_json::to_string(&empty_node).unwrap();
+        assert!(empty_json.contains("Blöcke hier ablegen"));
     }
 
     #[test]

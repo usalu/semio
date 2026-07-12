@@ -37,6 +37,87 @@ const PROCEDURAL2D_PLAY_SURFACE_GENERATE_PREVIEW: &str = "procedural2d.play.gene
 const DEFAULT_PROCEDURAL2D_FIXTURE_JSON: &str = include_str!("../../2d/example/default.procedural2d.json");
 //#endregion 🔖Constants
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the 2D flow app; one field per label makes every locale combination compile-checked.
+struct Procedural2dLabels {
+    sources: &'static str,
+    components: &'static str,
+    sinks: &'static str,
+    show_mode_section: &'static str,
+    show_prefix: &'static str,
+    none: &'static str,
+    selection: &'static str,
+    ids: &'static str,
+    schema_prefix: &'static str,
+    widgets_prefix: &'static str,
+    show_mode_prefix: &'static str,
+    generate_hint: &'static str,
+    preview_hint: &'static str,
+    source_slider: &'static str,
+    source_stepper: &'static str,
+    source_note: &'static str,
+    component_add: &'static str,
+    component_and: &'static str,
+    component_concat: &'static str,
+    sink_preview: &'static str,
+    sink_export: &'static str,
+}
+
+const PROCEDURAL2D_LABELS_NATIVE_EN: Procedural2dLabels = Procedural2dLabels {
+    sources: "Sources",
+    components: "Components",
+    sinks: "Sinks",
+    show_mode_section: "Show mode",
+    show_prefix: "Show",
+    none: "(none)",
+    selection: "Selection",
+    ids: "Ids",
+    schema_prefix: "Schema:",
+    widgets_prefix: "Widgets:",
+    show_mode_prefix: "Show mode:",
+    generate_hint: "Add a generation to edit input values.",
+    preview_hint: "(evaluate a generation to preview output)",
+    source_slider: "Slider",
+    source_stepper: "Stepper",
+    source_note: "Note",
+    component_add: "Add",
+    component_and: "And",
+    component_concat: "Concat",
+    sink_preview: "Preview",
+    sink_export: "Export",
+};
+
+const PROCEDURAL2D_LABELS_NATIVE_DE: Procedural2dLabels = Procedural2dLabels {
+    sources: "Quellen",
+    components: "Komponenten",
+    sinks: "Senken",
+    show_mode_section: "Anzeigemodus",
+    show_prefix: "Anzeigen",
+    none: "(keine)",
+    selection: "Auswahl",
+    ids: "Kennungen",
+    schema_prefix: "Schema:",
+    widgets_prefix: "Elemente:",
+    show_mode_prefix: "Anzeigemodus:",
+    generate_hint: "Erstelle eine Generation, um Eingabewerte zu bearbeiten.",
+    preview_hint: "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)",
+    source_slider: "Schieberegler",
+    source_stepper: "Schrittzähler",
+    source_note: "Notiz",
+    component_add: "Addieren",
+    component_and: "Und",
+    component_concat: "Verketten",
+    sink_preview: "Vorschau",
+    sink_export: "Export",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; falls back to native English.
+fn procedural2d_labels(view_state: &ViewState) -> &'static Procedural2dLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de { &PROCEDURAL2D_LABELS_NATIVE_DE } else { &PROCEDURAL2D_LABELS_NATIVE_EN }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Types
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -408,7 +489,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>, action: Option<Act
     }
 }
 
-fn build_document_tree(play: &Procedural2dPlayEnvelope) -> UiNode {
+fn build_document_tree(play: &Procedural2dPlayEnvelope, labels: &Procedural2dLabels) -> UiNode {
     let widget_items: Vec<UiTreeItemNode> = play
         .fixture
         .widgets
@@ -428,7 +509,7 @@ fn build_document_tree(play: &Procedural2dPlayEnvelope) -> UiNode {
             label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
             default_open: Some(true),
             items: if widget_items.is_empty() {
-                vec![tree_item("procedural2d-play-document.empty", "(none)", None)]
+                vec![tree_item("procedural2d-play-document.empty", labels.none, None)]
             } else {
                 widget_items
             },
@@ -446,15 +527,15 @@ fn build_document_tree(play: &Procedural2dPlayEnvelope) -> UiNode {
     })
 }
 
-fn build_catalogue_tree() -> UiNode {
-    let sources = [("inputSlider", "Slider"), ("inputStepper", "Stepper"), ("inputNote", "Note")];
-    let components = [("math.add", "Add"), ("logic.and", "And"), ("text.concat", "Concat")];
-    let sinks = [("outputPreview", "Preview"), ("outputExport", "Export")];
+fn build_catalogue_tree(labels: &Procedural2dLabels) -> UiNode {
+    let sources = [("inputSlider", labels.source_slider), ("inputStepper", labels.source_stepper), ("inputNote", labels.source_note)];
+    let components = [("math.add", labels.component_add), ("logic.and", labels.component_and), ("text.concat", labels.component_concat)];
+    let sinks = [("outputPreview", labels.sink_preview), ("outputExport", labels.sink_export)];
     UiNode::Tree(UiTreeNode {
         sections: vec![
             UiTreeSectionNode {
                 id: "procedural2d-play-catalogue.sources".into(),
-                label: Some("Sources".into()),
+                label: Some(labels.sources.into()),
                 default_open: Some(true),
                 items: sources
                     .iter()
@@ -469,7 +550,7 @@ fn build_catalogue_tree() -> UiNode {
             },
             UiTreeSectionNode {
                 id: "procedural2d-play-catalogue.components".into(),
-                label: Some("Components".into()),
+                label: Some(labels.components.into()),
                 default_open: Some(true),
                 items: components
                     .iter()
@@ -487,7 +568,7 @@ fn build_catalogue_tree() -> UiNode {
             },
             UiTreeSectionNode {
                 id: "procedural2d-play-catalogue.sinks".into(),
-                label: Some("Sinks".into()),
+                label: Some(labels.sinks.into()),
                 default_open: Some(true),
                 items: sinks
                     .iter()
@@ -502,14 +583,14 @@ fn build_catalogue_tree() -> UiNode {
             },
             UiTreeSectionNode {
                 id: "procedural2d-play-catalogue.modes".into(),
-                label: Some("Show mode".into()),
+                label: Some(labels.show_mode_section.into()),
                 default_open: Some(false),
                 items: ["preview", "generate", "wire"]
                     .iter()
                     .map(|mode| {
                         tree_item(
                             format!("procedural2d-play-catalogue.mode.{mode}"),
-                            format!("Show {mode}"),
+                            format!("{} {mode}", labels.show_prefix),
                             Some(procedural2d_action("setShowMode", Some(json!({ "value": mode })))),
                         )
                     })
@@ -523,21 +604,21 @@ fn build_catalogue_tree() -> UiNode {
     })
 }
 
-fn build_inspector_tree(play: &Procedural2dPlayEnvelope) -> UiNode {
+fn build_inspector_tree(play: &Procedural2dPlayEnvelope, labels: &Procedural2dLabels) -> UiNode {
     if play.runtime.selected_ids.is_empty() {
         return ui_stack_vertical(vec![
-            ui_text("Schema: flow.fixture"),
-            ui_text(format!("Widgets: {}", play.fixture.widgets.len())),
-            ui_text(format!("Show mode: {}", play.runtime.show_mode)),
+            ui_text(format!("{} flow.fixture", labels.schema_prefix)),
+            ui_text(format!("{} {}", labels.widgets_prefix, play.fixture.widgets.len())),
+            ui_text(format!("{} {}", labels.show_mode_prefix, play.runtime.show_mode)),
         ]);
     }
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "procedural2d-play-inspector.selection".into(),
-        label: "Selection".into(),
+        label: labels.selection.into(),
         default_open: Some(true),
         fields: vec![ui_inspector_readonly_field(
             "procedural2d-play-inspector.ids",
-            "Ids",
+            labels.ids,
             play.runtime.selected_ids.join(", "),
         )],
     }])
@@ -608,10 +689,10 @@ fn render_generate_generations(play: &Procedural2dPlayEnvelope) -> UiNode {
     )
 }
 
-fn render_generate_form(play: &Procedural2dPlayEnvelope) -> UiNode {
+fn render_generate_form(play: &Procedural2dPlayEnvelope, labels: &Procedural2dLabels) -> UiNode {
     let spec = flow_fixture_to_form_spec(&play.fixture);
     let Some(generation) = selected_generation(&play.generation) else {
-        return ui_text("Add a generation to edit input values.");
+        return ui_text(labels.generate_hint);
     };
     render_generation_form_body(
         &spec,
@@ -622,7 +703,7 @@ fn render_generate_form(play: &Procedural2dPlayEnvelope) -> UiNode {
     )
 }
 
-fn render_generate_preview(play: &Procedural2dPlayEnvelope) -> UiNode {
+fn render_generate_preview(play: &Procedural2dPlayEnvelope, labels: &Procedural2dLabels) -> UiNode {
     let eval_json = play
         .generation
         .preview_text
@@ -630,7 +711,7 @@ fn render_generate_preview(play: &Procedural2dPlayEnvelope) -> UiNode {
         .filter(|value| !value.is_empty())
         .unwrap_or("");
     if eval_json.is_empty() {
-        return ui_text("(evaluate a generation to preview output)");
+        return ui_text(labels.preview_hint);
     }
     let layers = generation_preview_layers(play, eval_json);
     if layers == "[]" {
@@ -866,17 +947,18 @@ impl PluginApp for Procedural2dPlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let play = parse_envelope(document_json);
+        let labels = procedural2d_labels(view_state);
         match body_key {
             PROCEDURAL2D_PLAY_BODY_MAIN => render_main_graph(&play),
             PROCEDURAL2D_PLAY_BODY_PREVIEW => render_preview_canvas(&play),
             PROCEDURAL2D_PLAY_BODY_GENERATIONS => render_generate_generations(&play),
-            PROCEDURAL2D_PLAY_BODY_GENERATE_FORM => render_generate_form(&play),
-            PROCEDURAL2D_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&play),
-            PROCEDURAL2D_PLAY_BODY_DOCUMENT => build_document_tree(&play),
-            PROCEDURAL2D_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
-            PROCEDURAL2D_PLAY_BODY_INSPECTION => build_inspector_tree(&play),
+            PROCEDURAL2D_PLAY_BODY_GENERATE_FORM => render_generate_form(&play, labels),
+            PROCEDURAL2D_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&play, labels),
+            PROCEDURAL2D_PLAY_BODY_DOCUMENT => build_document_tree(&play, labels),
+            PROCEDURAL2D_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
+            PROCEDURAL2D_PLAY_BODY_INSPECTION => build_inspector_tree(&play, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -1068,6 +1150,36 @@ mod tests {
         let document = procedural2d_document_from_dwg(&drawing).expect("dwg import document");
         let envelope: Procedural2dPlayEnvelope = serde_json::from_value(document).expect("parseable envelope");
         assert_eq!(envelope.fixture.schema, "flow.fixture");
+    }
+
+    #[test]
+    fn procedural2d_labels_resolve_native_english_by_default() {
+        let app = Procedural2dPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(PROCEDURAL2D_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("\"Sources\""));
+        assert!(json.contains("\"Components\""));
+        assert!(json.contains("\"Sinks\""));
+        assert!(json.contains("\"Show mode\""));
+        assert!(!json.contains("Quellen"));
+    }
+
+    #[test]
+    fn procedural2d_labels_translate_catalogue_and_inspector_in_german() {
+        let app = Procedural2dPlayApp;
+        let document = app.initial_document_json();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let catalogue = app.render(PROCEDURAL2D_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("Quellen"));
+        assert!(catalogue_json.contains("Komponenten"));
+        assert!(catalogue_json.contains("Senken"));
+        assert!(catalogue_json.contains("Anzeigemodus"));
+        assert!(!catalogue_json.contains("\"Sources\""));
+        let inspector = app.render(PROCEDURAL2D_PLAY_BODY_INSPECTION, &document, &view_state);
+        let inspector_json = serde_json::to_string(&inspector).unwrap();
+        assert!(inspector_json.contains("Elemente:"));
     }
 }
 //#endregion 🧪Tests

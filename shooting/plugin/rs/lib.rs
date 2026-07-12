@@ -662,6 +662,108 @@ fn shooting_icon_render_request_json(fixture: &ShootingFixture, shot: &ShootingS
 }
 //#endregion 🔖FixtureOps
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the shooting app; one field per label makes every locale combination compile-checked.
+struct ShootingLabels {
+    shots: &'static str,
+    assets: &'static str,
+    add_shot: &'static str,
+    add_asset: &'static str,
+    svg_rectangle: &'static str,
+    png_rectangle: &'static str,
+    svg_ellipse: &'static str,
+    png_ellipse: &'static str,
+    glb_asset: &'static str,
+    shot: &'static str,
+    asset: &'static str,
+    open: &'static str,
+    import_title: &'static str,
+    save: &'static str,
+    export_title: &'static str,
+    move_tool: &'static str,
+    rotate_tool: &'static str,
+    scale_tool: &'static str,
+    camera_label_placeholder: &'static str,
+    load_camera: &'static str,
+    shot_label_placeholder: &'static str,
+    no_shot: &'static str,
+    format_select_label: &'static str,
+    shape_select_label: &'static str,
+    format_svg: &'static str,
+    format_png: &'static str,
+    shape_rectangle: &'static str,
+    shape_ellipse: &'static str,
+}
+
+const SHOOTING_LABELS_NATIVE_EN: ShootingLabels = ShootingLabels {
+    shots: "Shots",
+    assets: "Assets",
+    add_shot: "Add Shot",
+    add_asset: "Add Asset",
+    svg_rectangle: "SVG Rectangle",
+    png_rectangle: "PNG Rectangle",
+    svg_ellipse: "SVG Ellipse",
+    png_ellipse: "PNG Ellipse",
+    glb_asset: "GLB Asset",
+    shot: "Shot",
+    asset: "Asset",
+    open: "Open",
+    import_title: "Import",
+    save: "Save",
+    export_title: "Export",
+    move_tool: "Move",
+    rotate_tool: "Rotate",
+    scale_tool: "Scale",
+    camera_label_placeholder: "Camera label",
+    load_camera: "Load camera",
+    shot_label_placeholder: "Shot label",
+    no_shot: "No shot",
+    format_select_label: "Format",
+    shape_select_label: "Shape",
+    format_svg: "SVG",
+    format_png: "PNG",
+    shape_rectangle: "Rectangle",
+    shape_ellipse: "Ellipse",
+};
+
+const SHOOTING_LABELS_NATIVE_DE: ShootingLabels = ShootingLabels {
+    shots: "Aufnahmen",
+    assets: "Objekte",
+    add_shot: "Aufnahme hinzufügen",
+    add_asset: "Objekt hinzufügen",
+    svg_rectangle: "SVG Rechteck",
+    png_rectangle: "PNG Rechteck",
+    svg_ellipse: "SVG Ellipse",
+    png_ellipse: "PNG Ellipse",
+    glb_asset: "GLB-Objekt",
+    shot: "Aufnahme",
+    asset: "Objekt",
+    open: "Öffnen",
+    import_title: "Importieren",
+    save: "Speichern",
+    export_title: "Exportieren",
+    move_tool: "Verschieben",
+    rotate_tool: "Drehen",
+    scale_tool: "Skalieren",
+    camera_label_placeholder: "Kamera-Bezeichnung",
+    load_camera: "Kamera laden",
+    shot_label_placeholder: "Aufnahme-Bezeichnung",
+    no_shot: "Keine Aufnahme",
+    format_select_label: "Format",
+    shape_select_label: "Form",
+    format_svg: "SVG",
+    format_png: "PNG",
+    shape_rectangle: "Rechteck",
+    shape_ellipse: "Ellipse",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; no terminology variant exists for this app.
+fn shooting_labels(view_state: &ViewState) -> &'static ShootingLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de { &SHOOTING_LABELS_NATIVE_DE } else { &SHOOTING_LABELS_NATIVE_EN }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Panels
 fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
     UiTreeItemNode {
@@ -708,7 +810,7 @@ fn tree_item_with_action(
     }
 }
 
-fn build_document_tree(envelope: &ShootingPlayEnvelope) -> UiNode {
+fn build_document_tree(envelope: &ShootingPlayEnvelope, labels: &ShootingLabels) -> UiNode {
     let fixture = &envelope.fixture;
     let shot_items: Vec<UiTreeItemNode> = fixture
         .shots
@@ -738,13 +840,13 @@ fn build_document_tree(envelope: &ShootingPlayEnvelope) -> UiNode {
         sections: vec![
             UiTreeSectionNode {
                 id: "shooting-play-document.shots".into(),
-                label: Some("Shots".into()),
+                label: Some(labels.shots.into()),
                 default_open: Some(true),
                 items: shot_items,
             },
             UiTreeSectionNode {
                 id: "shooting-play-document.assets".into(),
-                label: Some("Assets".into()),
+                label: Some(labels.assets.into()),
                 default_open: Some(true),
                 items: asset_items,
             },
@@ -756,27 +858,27 @@ fn build_document_tree(envelope: &ShootingPlayEnvelope) -> UiNode {
     })
 }
 
-fn build_catalogue_tree() -> UiNode {
+fn build_catalogue_tree(labels: &ShootingLabels) -> UiNode {
     UiNode::Tree(UiTreeNode {
         sections: vec![
             UiTreeSectionNode {
                 id: "shooting-play-catalogue.shots".into(),
-                label: Some("Add Shot".into()),
+                label: Some(labels.add_shot.into()),
                 default_open: Some(true),
                 items: vec![
-                    catalog_shot_item("svg-rect", "SVG Rectangle", "svg", "rectangle"),
-                    catalog_shot_item("png-rect", "PNG Rectangle", "png", "rectangle"),
-                    catalog_shot_item("svg-ellipse", "SVG Ellipse", "svg", "ellipse"),
-                    catalog_shot_item("png-ellipse", "PNG Ellipse", "png", "ellipse"),
+                    catalog_shot_item("svg-rect", labels.svg_rectangle, "svg", "rectangle"),
+                    catalog_shot_item("png-rect", labels.png_rectangle, "png", "rectangle"),
+                    catalog_shot_item("svg-ellipse", labels.svg_ellipse, "svg", "ellipse"),
+                    catalog_shot_item("png-ellipse", labels.png_ellipse, "png", "ellipse"),
                 ],
             },
             UiTreeSectionNode {
                 id: "shooting-play-catalogue.assets".into(),
-                label: Some("Add Asset".into()),
+                label: Some(labels.add_asset.into()),
                 default_open: Some(true),
                 items: vec![tree_item_with_action(
                     "shooting-play-catalogue.asset.glb",
-                    "GLB Asset",
+                    labels.glb_asset,
                     Some("box"),
                     shooting_action("addAsset", Some(json!({ "format": "glb" }))),
                 )],
@@ -798,22 +900,22 @@ fn catalog_shot_item(id: &str, label: &str, format: &str, shape: &str) -> UiTree
     )
 }
 
-fn build_inspector_tree(envelope: &ShootingPlayEnvelope) -> UiNode {
+fn build_inspector_tree(envelope: &ShootingPlayEnvelope, labels: &ShootingLabels) -> UiNode {
     let fixture = &envelope.fixture;
     if !envelope.runtime.selected_shot_ids.is_empty() {
         let shot_id = &envelope.runtime.selected_shot_ids[0];
         if let Some(shot) = fixture.shots.iter().find(|entry| &entry.id == shot_id) {
-            return ui_inspector_groups_to_tree(&[shot_inspector_group(shot)]);
+            return ui_inspector_groups_to_tree(&[shot_inspector_group(shot, labels)]);
         }
     }
     if !envelope.runtime.selected_asset_ids.is_empty() {
         let asset_id = &envelope.runtime.selected_asset_ids[0];
         if let Some(asset) = fixture.assets.iter().find(|entry| &entry.id == asset_id) {
-            return ui_inspector_groups_to_tree(&[asset_inspector_group(asset)]);
+            return ui_inspector_groups_to_tree(&[asset_inspector_group(asset, labels)]);
         }
     }
     if let Some(shot) = active_shot(fixture) {
-        return ui_inspector_groups_to_tree(&[shot_inspector_group(shot)]);
+        return ui_inspector_groups_to_tree(&[shot_inspector_group(shot, labels)]);
     }
     ui_stack_vertical(vec![
         ui_text(format!("Schema: {SHOOTING_FIXTURE_SCHEMA}")),
@@ -822,12 +924,12 @@ fn build_inspector_tree(envelope: &ShootingPlayEnvelope) -> UiNode {
     ])
 }
 
-fn shot_inspector_group(shot: &ShootingShot) -> UiInspectorFieldGroup {
+fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspectorFieldGroup {
     let width_mixed = ui_inspector_mixed_number(&[shot.width as f64]);
     let height_mixed = ui_inspector_mixed_number(&[shot.height as f64]);
     UiInspectorFieldGroup {
         id: "shooting-play-inspector.shot".into(),
-        label: "Shot".into(),
+        label: labels.shot.into(),
         default_open: None,
         fields: vec![
             UiNode::Field(UiFieldNode {
@@ -902,10 +1004,10 @@ fn shot_inspector_group(shot: &ShootingShot) -> UiInspectorFieldGroup {
     }
 }
 
-fn asset_inspector_group(asset: &ShootingAsset) -> UiInspectorFieldGroup {
+fn asset_inspector_group(asset: &ShootingAsset, labels: &ShootingLabels) -> UiInspectorFieldGroup {
     UiInspectorFieldGroup {
         id: "shooting-play-inspector.asset".into(),
-        label: "Asset".into(),
+        label: labels.asset.into(),
         default_open: None,
         fields: vec![
             UiNode::Field(UiFieldNode {
@@ -1109,13 +1211,13 @@ fn shooting_model_measures(envelope: &ShootingPlayEnvelope) -> Vec<WindowMeasure
     ]
 }
 
-fn shooting_icon_measures(envelope: &ShootingPlayEnvelope) -> Vec<WindowMeasure> {
+fn shooting_icon_measures(envelope: &ShootingPlayEnvelope, labels: &ShootingLabels) -> Vec<WindowMeasure> {
     let fixture = &envelope.fixture;
     let shot = active_shot(fixture);
     vec![
         WindowMeasure::Select {
             id: "shooting.measure.shot".into(),
-            label: Some("Shot".into()),
+            label: Some(labels.shot.into()),
             value: shot.map(|entry| entry.id.clone()).unwrap_or_default(),
             items: fixture
                 .shots
@@ -1130,35 +1232,35 @@ fn shooting_icon_measures(envelope: &ShootingPlayEnvelope) -> Vec<WindowMeasure>
         },
         WindowMeasure::Select {
             id: "shooting.measure.format".into(),
-            label: Some("Format".into()),
+            label: Some(labels.format_select_label.into()),
             value: shot.map(|entry| entry.format.clone()).unwrap_or_else(|| "svg".into()),
             items: vec![
-                MeasureSelectItem { id: "shooting.measure.format.svg".into(), value: "svg".into(), label: "SVG".into() },
-                MeasureSelectItem { id: "shooting.measure.format.png".into(), value: "png".into(), label: "PNG".into() },
+                MeasureSelectItem { id: "shooting.measure.format.svg".into(), value: "svg".into(), label: labels.format_svg.into() },
+                MeasureSelectItem { id: "shooting.measure.format.png".into(), value: "png".into(), label: labels.format_png.into() },
             ],
             on_change: shooting_action("setActiveShotFormat", None),
         },
         WindowMeasure::Select {
             id: "shooting.measure.shape".into(),
-            label: Some("Shape".into()),
+            label: Some(labels.shape_select_label.into()),
             value: shot.map(|entry| entry.shape.clone()).unwrap_or_else(|| "rectangle".into()),
             items: vec![
-                MeasureSelectItem { id: "shooting.measure.shape.rectangle".into(), value: "rectangle".into(), label: "Rectangle".into() },
-                MeasureSelectItem { id: "shooting.measure.shape.ellipse".into(), value: "ellipse".into(), label: "Ellipse".into() },
+                MeasureSelectItem { id: "shooting.measure.shape.rectangle".into(), value: "rectangle".into(), label: labels.shape_rectangle.into() },
+                MeasureSelectItem { id: "shooting.measure.shape.ellipse".into(), value: "ellipse".into(), label: labels.shape_ellipse.into() },
             ],
             on_change: shooting_action("setActiveShotShape", None),
         },
     ]
 }
 
-fn shooting_model_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagement {
+fn shooting_model_engagement(envelope: &ShootingPlayEnvelope, labels: &ShootingLabels) -> WindowEngagement {
     let transform = envelope.runtime.transform_tool.clone();
     WindowEngagement {
         session_active: Some(true),
         options: Some(vec![
             WindowEngagementOption {
                 id: "shooting.opt.move".into(),
-                label: Some("Move".into()),
+                label: Some(labels.move_tool.into()),
                 icon_id: Some("move".into()),
                 pressed: Some(transform == "move"),
                 disabled: None,
@@ -1166,7 +1268,7 @@ fn shooting_model_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagemen
             },
             WindowEngagementOption {
                 id: "shooting.opt.rotate".into(),
-                label: Some("Rotate".into()),
+                label: Some(labels.rotate_tool.into()),
                 icon_id: Some("rotate-cw".into()),
                 pressed: Some(transform == "rotate"),
                 disabled: None,
@@ -1174,7 +1276,7 @@ fn shooting_model_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagemen
             },
             WindowEngagementOption {
                 id: "shooting.opt.scale".into(),
-                label: Some("Scale".into()),
+                label: Some(labels.scale_tool.into()),
                 icon_id: Some("maximize-2".into()),
                 pressed: Some(transform == "scale"),
                 disabled: None,
@@ -1184,7 +1286,7 @@ fn shooting_model_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagemen
         input: Some(WindowEngagementInput {
             id: Some("shooting.camera-draft".into()),
             value: Some(envelope.runtime.camera_draft_label.clone()),
-            placeholder: Some("Camera label".into()),
+            placeholder: Some(labels.camera_label_placeholder.into()),
             disabled: None,
             on_change: Some(shooting_action("setCameraDraftLabel", None)),
             on_submit: Some(shooting_action("saveCamera", None)),
@@ -1205,7 +1307,7 @@ fn shooting_model_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagemen
                 .map(|saved| WindowEngagementPossible {
                     id: format!("shooting.camera.{}", saved.id),
                     label: saved.label.clone(),
-                    detail: Some("Load camera".into()),
+                    detail: Some(labels.load_camera.into()),
                     action: Some(shooting_action("loadSavedCamera", Some(json!({ "id": saved.id })))),
                 })
                 .collect(),
@@ -1213,7 +1315,7 @@ fn shooting_model_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagemen
     }
 }
 
-fn shooting_icon_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagement {
+fn shooting_icon_engagement(envelope: &ShootingPlayEnvelope, labels: &ShootingLabels) -> WindowEngagement {
     let shot = active_shot(&envelope.fixture);
     WindowEngagement {
         session_active: Some(true),
@@ -1221,7 +1323,7 @@ fn shooting_icon_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagement
         input: Some(WindowEngagementInput {
             id: Some("shooting.shot-label".into()),
             value: shot.map(|entry| entry.label.clone()),
-            placeholder: Some("Shot label".into()),
+            placeholder: Some(labels.shot_label_placeholder.into()),
             disabled: Some(shot.is_none()),
             on_change: Some(shooting_action("setActiveShotLabel", None)),
             on_submit: None,
@@ -1234,21 +1336,21 @@ fn shooting_icon_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagement
             id: "shooting.status.icon".into(),
             text: shot
                 .map(|entry| format!("{}×{} {}", entry.width, entry.height, entry.format.to_uppercase()))
-                .unwrap_or_else(|| "No shot".into()),
+                .unwrap_or_else(|| labels.no_shot.into()),
         }]),
         possible_engagements: None,
     }
 }
 
-fn shooting_tools(envelope: &ShootingPlayEnvelope) -> Vec<ToolNode> {
+fn shooting_tools(envelope: &ShootingPlayEnvelope, labels: &ShootingLabels) -> Vec<ToolNode> {
     let has_shot = active_shot(&envelope.fixture).is_some() && active_asset(&envelope.fixture).is_some();
     vec![
         ToolNode::Collection {
             id: "shooting.tools.open".into(),
             icon_id: "folder-open".into(),
-            label: Some("Open".into()),
+            label: Some(labels.open.into()),
             text: None,
-            title: Some("Import".into()),
+            title: Some(labels.import_title.into()),
             order: Some(1),
             disabled: None,
             category: None,
@@ -1280,9 +1382,9 @@ fn shooting_tools(envelope: &ShootingPlayEnvelope) -> Vec<ToolNode> {
         ToolNode::Collection {
             id: "shooting.tools.save".into(),
             icon_id: "save".into(),
-            label: Some("Save".into()),
+            label: Some(labels.save.into()),
             text: None,
-            title: Some("Export".into()),
+            title: Some(labels.export_title.into()),
             order: Some(2),
             disabled: None,
             category: None,
@@ -1865,35 +1967,38 @@ impl PluginApp for ShootingPlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
+        let labels = shooting_labels(view_state);
         match body_key {
             SHOOTING_PLAY_BODY_SCENE => render_model_scene(&envelope.fixture, &envelope.runtime),
             SHOOTING_PLAY_BODY_ICON => render_icon_scene(&envelope.fixture),
-            SHOOTING_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
-            SHOOTING_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
-            SHOOTING_PLAY_BODY_INSPECTION => build_inspector_tree(&envelope),
+            SHOOTING_PLAY_BODY_DOCUMENT => build_document_tree(&envelope, labels),
+            SHOOTING_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
+            SHOOTING_PLAY_BODY_INSPECTION => build_inspector_tree(&envelope, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn tools(&self, document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
-        shooting_tools(&parse_envelope(document_json))
+    fn tools(&self, document_json: &str, view_state: &ViewState) -> Vec<ToolNode> {
+        shooting_tools(&parse_envelope(document_json), shooting_labels(view_state))
     }
 
-    fn window_engagements(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let envelope = parse_envelope(document_json);
+        let labels = shooting_labels(view_state);
         HashMap::from([
-            (SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_engagement(&envelope)),
-            (SHOOTING_PLAY_WINDOW_ICON.into(), shooting_icon_engagement(&envelope)),
+            (SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_engagement(&envelope, labels)),
+            (SHOOTING_PLAY_WINDOW_ICON.into(), shooting_icon_engagement(&envelope, labels)),
         ])
     }
 
-    fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let envelope = parse_envelope(document_json);
+        let labels = shooting_labels(view_state);
         HashMap::from([
             (SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_measures(&envelope)),
-            (SHOOTING_PLAY_WINDOW_ICON.into(), shooting_icon_measures(&envelope)),
+            (SHOOTING_PLAY_WINDOW_ICON.into(), shooting_icon_measures(&envelope, labels)),
         ])
     }
 }
@@ -2192,6 +2297,74 @@ mod tests {
         assert!(model.status.as_ref().unwrap()[0].text.contains("assets"));
         let icon = &engagements[SHOOTING_PLAY_WINDOW_ICON];
         assert!(icon.status.as_ref().unwrap()[0].text.contains("256×256"));
+    }
+
+    #[test]
+    fn shooting_labels_resolve_native_english_by_default() {
+        let app = ShootingPlayApp;
+        let document = app.initial_document_json();
+        let document_tree = app.render(SHOOTING_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
+        let document_json = serde_json::to_string(&document_tree).unwrap();
+        assert!(document_json.contains("Shots"));
+        assert!(document_json.contains("Assets"));
+        let catalogue = app.render(SHOOTING_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("Add Shot"));
+        assert!(catalogue_json.contains("Add Asset"));
+        assert!(catalogue_json.contains("SVG Rectangle"));
+        assert!(catalogue_json.contains("GLB Asset"));
+        let inspector = app.render(SHOOTING_PLAY_BODY_INSPECTION, &document, &ViewState::default());
+        assert!(serde_json::to_string(&inspector).unwrap().contains("Shot"));
+        let tools = app.tools(&document, &ViewState::default());
+        let tools_json = serde_json::to_string(&tools).unwrap();
+        assert!(tools_json.contains("\"label\":\"Open\""));
+        assert!(tools_json.contains("\"title\":\"Import\""));
+        assert!(tools_json.contains("\"label\":\"Save\""));
+        assert!(tools_json.contains("\"title\":\"Export\""));
+        let engagements = app.window_engagements(&document, &ViewState::default());
+        let model = &engagements[SHOOTING_PLAY_WINDOW_SCENE];
+        assert!(model.options.as_ref().unwrap().iter().any(|option| option.label.as_deref() == Some("Move")));
+        assert_eq!(model.input.as_ref().unwrap().placeholder.as_deref(), Some("Camera label"));
+        let icon = &engagements[SHOOTING_PLAY_WINDOW_ICON];
+        assert_eq!(icon.input.as_ref().unwrap().placeholder.as_deref(), Some("Shot label"));
+        let measures = app.window_measures(&document, &ViewState::default());
+        let icon_measures_json = serde_json::to_string(&measures[SHOOTING_PLAY_WINDOW_ICON]).unwrap();
+        assert!(icon_measures_json.contains("Rectangle"));
+        assert!(icon_measures_json.contains("SVG"));
+    }
+
+    #[test]
+    fn shooting_labels_resolve_native_german() {
+        let app = ShootingPlayApp;
+        let document = app.initial_document_json();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let document_tree = app.render(SHOOTING_PLAY_BODY_DOCUMENT, &document, &view_state);
+        let document_json = serde_json::to_string(&document_tree).unwrap();
+        assert!(document_json.contains("Aufnahmen"));
+        assert!(document_json.contains("Objekte"));
+        let catalogue = app.render(SHOOTING_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("Aufnahme hinzufügen"));
+        assert!(catalogue_json.contains("Objekt hinzufügen"));
+        assert!(catalogue_json.contains("SVG Rechteck"));
+        assert!(catalogue_json.contains("GLB-Objekt"));
+        let inspector = app.render(SHOOTING_PLAY_BODY_INSPECTION, &document, &view_state);
+        assert!(serde_json::to_string(&inspector).unwrap().contains("Aufnahme"));
+        let tools = app.tools(&document, &view_state);
+        let tools_json = serde_json::to_string(&tools).unwrap();
+        assert!(tools_json.contains("\"label\":\"Öffnen\""));
+        assert!(tools_json.contains("\"title\":\"Importieren\""));
+        assert!(tools_json.contains("\"label\":\"Speichern\""));
+        assert!(tools_json.contains("\"title\":\"Exportieren\""));
+        let engagements = app.window_engagements(&document, &view_state);
+        let model = &engagements[SHOOTING_PLAY_WINDOW_SCENE];
+        assert!(model.options.as_ref().unwrap().iter().any(|option| option.label.as_deref() == Some("Verschieben")));
+        assert_eq!(model.input.as_ref().unwrap().placeholder.as_deref(), Some("Kamera-Bezeichnung"));
+        let icon = &engagements[SHOOTING_PLAY_WINDOW_ICON];
+        assert_eq!(icon.input.as_ref().unwrap().placeholder.as_deref(), Some("Aufnahme-Bezeichnung"));
+        let measures = app.window_measures(&document, &view_state);
+        let icon_measures_json = serde_json::to_string(&measures[SHOOTING_PLAY_WINDOW_ICON]).unwrap();
+        assert!(icon_measures_json.contains("Rechteck"));
     }
 
     #[test]

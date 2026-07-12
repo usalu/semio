@@ -474,6 +474,60 @@ fn result_to_table(result_json: &str) -> (String, String) {
 }
 //#endregion 🔖MediaGraph
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the Jack query app; one field per label makes every locale combination compile-checked.
+struct TrinityJackLabels {
+    pieces: &'static str,
+    connections: &'static str,
+    fixtures: &'static str,
+    example_queries: &'static str,
+    manifest_kinds: &'static str,
+    piece: &'static str,
+    connection: &'static str,
+    connector: &'static str,
+    geometry: &'static str,
+    identity: &'static str,
+    history: &'static str,
+    query: &'static str,
+}
+
+const TRINITY_JACK_LABELS_NATIVE_EN: TrinityJackLabels = TrinityJackLabels {
+    pieces: "Pieces",
+    connections: "Connections",
+    fixtures: "Fixtures",
+    example_queries: "Example queries",
+    manifest_kinds: "Manifest kinds",
+    piece: "Piece",
+    connection: "Connection",
+    connector: "Connector",
+    geometry: "Geometry",
+    identity: "Identity",
+    history: "History",
+    query: "Query",
+};
+
+const TRINITY_JACK_LABELS_NATIVE_DE: TrinityJackLabels = TrinityJackLabels {
+    pieces: "Stücke",
+    connections: "Verbindungen",
+    fixtures: "Fixturen",
+    example_queries: "Beispielabfragen",
+    manifest_kinds: "Manifestarten",
+    piece: "Stück",
+    connection: "Verbindung",
+    connector: "Verbinder",
+    geometry: "Geometrie",
+    identity: "Identität",
+    history: "Verlauf",
+    query: "Abfrage",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
+fn trinity_jack_labels(view_state: &ViewState) -> &'static TrinityJackLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de { &TRINITY_JACK_LABELS_NATIVE_DE } else { &TRINITY_JACK_LABELS_NATIVE_EN }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Panels
 fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
     UiTreeItemNode {
@@ -528,7 +582,7 @@ fn flat_position_uv(node: &Node) -> (String, String) {
     (format_axis("u"), format_axis("v"))
 }
 
-fn build_document_tree(envelope: &TrinityJackEnvelope) -> UiNode {
+fn build_document_tree(envelope: &TrinityJackEnvelope, labels: &TrinityJackLabels) -> UiNode {
     let Some(fixture) = parse_fixture_json(&envelope.fixture_json) else {
         return ui_text("Invalid trinity fixture");
     };
@@ -556,13 +610,13 @@ fn build_document_tree(envelope: &TrinityJackEnvelope) -> UiNode {
         sections: vec![
             UiTreeSectionNode {
                 id: "trinity-document.nodes".into(),
-                label: Some("Pieces".into()),
+                label: Some(labels.pieces.into()),
                 default_open: Some(true),
                 items: node_items,
             },
             UiTreeSectionNode {
                 id: "trinity-document.edges".into(),
-                label: Some("Connections".into()),
+                label: Some(labels.connections.into()),
                 default_open: Some(false),
                 items: edge_items,
             },
@@ -581,7 +635,7 @@ fn build_document_tree(envelope: &TrinityJackEnvelope) -> UiNode {
     })
 }
 
-fn build_catalogue_tree(envelope: &TrinityJackEnvelope) -> UiNode {
+fn build_catalogue_tree(envelope: &TrinityJackEnvelope, labels: &TrinityJackLabels) -> UiNode {
     let fixtures = [("nakagin", "Nakagin — Table"), ("branch-chain", "Branch — Graph")];
     let examples = [
         ("where-or", "Where Or", "MATCH (a:Piece) WHERE a.name = 't_f0_b_c0' OR a.name = 't_f0_b_c1' RETURN a.name"),
@@ -597,7 +651,7 @@ fn build_catalogue_tree(envelope: &TrinityJackEnvelope) -> UiNode {
         sections: vec![
             UiTreeSectionNode {
                 id: "trinity-jack-catalogue.fixtures".into(),
-                label: Some("Fixtures".into()),
+                label: Some(labels.fixtures.into()),
                 default_open: Some(true),
                 items: fixtures
                     .iter()
@@ -613,7 +667,7 @@ fn build_catalogue_tree(envelope: &TrinityJackEnvelope) -> UiNode {
             },
             UiTreeSectionNode {
                 id: "trinity-jack-catalogue.examples".into(),
-                label: Some("Example queries".into()),
+                label: Some(labels.example_queries.into()),
                 default_open: Some(true),
                 items: examples
                     .iter()
@@ -629,12 +683,12 @@ fn build_catalogue_tree(envelope: &TrinityJackEnvelope) -> UiNode {
             },
             UiTreeSectionNode {
                 id: "trinity-jack-catalogue.kinds".into(),
-                label: Some("Manifest kinds".into()),
+                label: Some(labels.manifest_kinds.into()),
                 default_open: Some(false),
                 items: vec![
-                    tree_item("trinity-jack-catalogue.piece", "Piece"),
-                    tree_item("trinity-jack-catalogue.connection", "Connection"),
-                    tree_item("trinity-jack-catalogue.connector", "Connector"),
+                    tree_item("trinity-jack-catalogue.piece", labels.piece),
+                    tree_item("trinity-jack-catalogue.connection", labels.connection),
+                    tree_item("trinity-jack-catalogue.connector", labels.connector),
                 ],
             },
         ],
@@ -652,7 +706,7 @@ fn build_catalogue_tree(envelope: &TrinityJackEnvelope) -> UiNode {
     })
 }
 
-fn build_inspector_tree(envelope: &TrinityJackEnvelope) -> UiNode {
+fn build_inspector_tree(envelope: &TrinityJackEnvelope, term_labels: &TrinityJackLabels) -> UiNode {
     let Some(fixture) = parse_fixture_json(&envelope.fixture_json) else {
         return ui_text("Invalid trinity fixture");
     };
@@ -698,7 +752,7 @@ fn build_inspector_tree(envelope: &TrinityJackEnvelope) -> UiNode {
     ui_inspector_groups_to_tree(&[
         UiInspectorFieldGroup {
             id: "trinity-inspector.geometry".into(),
-            label: "Geometry".into(),
+            label: term_labels.geometry.into(),
             default_open: None,
             fields: vec![
                 ui_inspector_readonly_field(
@@ -732,7 +786,7 @@ fn build_inspector_tree(envelope: &TrinityJackEnvelope) -> UiNode {
         },
         UiInspectorFieldGroup {
             id: "trinity-inspector.identity".into(),
-            label: "Identity".into(),
+            label: term_labels.identity.into(),
             default_open: None,
             fields: vec![
                 semio_framework_plugin::UiNode::Field(UiFieldNode {
@@ -1105,25 +1159,27 @@ impl PluginApp for TrinityJackPlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
+        let labels = trinity_jack_labels(view_state);
         match body_key {
             TRINITY_JACK_PLAY_BODY_GRAPH => render_graph(&envelope),
             TRINITY_JACK_PLAY_BODY_EDITOR => render_editor(&envelope),
             TRINITY_JACK_PLAY_BODY_RESULTS => render_results(&envelope),
-            TRINITY_JACK_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
-            TRINITY_JACK_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope),
-            TRINITY_JACK_PLAY_BODY_INSPECTION => build_inspector_tree(&envelope),
+            TRINITY_JACK_PLAY_BODY_DOCUMENT => build_document_tree(&envelope, labels),
+            TRINITY_JACK_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope, labels),
+            TRINITY_JACK_PLAY_BODY_INSPECTION => build_inspector_tree(&envelope, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn tools(&self, _document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
+    fn tools(&self, _document_json: &str, view_state: &ViewState) -> Vec<ToolNode> {
+        let labels = trinity_jack_labels(view_state);
         vec![
             tool_collection(
                 "trinity-jack-history",
                 "clock",
-                "History",
+                labels.history,
                 vec![
                     tool_button("trinity-jack-undo", "undo-2", "Undo", jack_action("undo", None)),
                     tool_button("trinity-jack-redo", "redo-2", "Redo", jack_action("redo", None)),
@@ -1133,7 +1189,7 @@ impl PluginApp for TrinityJackPlayApp {
             tool_collection(
                 "trinity-jack-query",
                 "code",
-                "Query",
+                labels.query,
                 vec![
                     tool_button("trinity-jack-run", "play", "Run", jack_action("runJackQuery", None)),
                     tool_button("trinity-jack-reorganize", "rotate-cw", "Reorganize", jack_action("reorganize", None)),
@@ -1434,6 +1490,38 @@ mod tests {
         let json = serde_json::to_string(&tools).unwrap();
         assert!(json.contains("runJackQuery"));
         assert!(json.contains("undo"));
+    }
+
+    #[test]
+    fn trinity_jack_labels_resolve_native_by_default() {
+        let app = TrinityJackPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("\"Pieces\""));
+        assert!(json.contains("\"Connections\""));
+        assert!(!json.contains("Stücke"));
+    }
+
+    #[test]
+    fn trinity_jack_labels_translate_panels_in_german() {
+        let app = TrinityJackPlayApp;
+        let document = app.initial_document_json();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let document_tree = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, &document, &view_state);
+        let document_json = serde_json::to_string(&document_tree).unwrap();
+        assert!(document_json.contains("Stücke"));
+        assert!(document_json.contains("Verbindungen"));
+        assert!(!document_json.contains("\"Pieces\""));
+        let catalogue_tree = app.render(TRINITY_JACK_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_json = serde_json::to_string(&catalogue_tree).unwrap();
+        assert!(catalogue_json.contains("Fixturen"));
+        assert!(catalogue_json.contains("Beispielabfragen"));
+        assert!(catalogue_json.contains("Manifestarten"));
+        let tools = app.tools(&document, &view_state);
+        let tools_json = serde_json::to_string(&tools).unwrap();
+        assert!(tools_json.contains("Verlauf"));
+        assert!(tools_json.contains("Abfrage"));
     }
 
     #[test]

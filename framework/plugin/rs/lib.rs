@@ -2428,6 +2428,89 @@ pub fn register_host_backbone_channel() {
 // #endregion host_port
 }
 
+pub mod engagement {
+// #region engagement
+//! 🎛️ Parses engagement command-line drafts submitted by the React shell, which PascalCases every
+//! draft and strips separators (`ui/js/react/index.tsx` `normalizeEngagementActionText`) before
+//! dispatching — so `"fill 20"` arrives as `"Fill20"`, not `"fill 20"`.
+
+/** @emoji ✂️ Strips a leading `command` token from `raw`, ignoring case and separators on both
+    sides, and returns the trimmed remainder (e.g. `strip_engagement_prefix("Fill20", "fill")`
+    and `strip_engagement_prefix("fill 20", "fill")` both yield `Some("20")`). Decimal points
+    inside numeric remainders are preserved. Returns `None` when `raw` doesn't start with `command`. */
+pub fn strip_engagement_prefix<'a>(raw: &'a str, command: &str) -> Option<&'a str> {
+    let raw_bytes = raw.as_bytes();
+    let mut raw_index = 0usize;
+    let mut command_chars = command.chars().filter(|ch| ch.is_alphanumeric());
+    while let Some(expected) = command_chars.next() {
+        while raw_index < raw_bytes.len() {
+            let ch = raw[raw_index..].chars().next().unwrap();
+            if ch.is_alphanumeric() {
+                break;
+            }
+            raw_index += ch.len_utf8();
+        }
+        let Some(actual) = raw[raw_index..].chars().next() else {
+            return None;
+        };
+        if !actual.eq_ignore_ascii_case(&expected) {
+            return None;
+        }
+        raw_index += actual.len_utf8();
+    }
+    let mut remainder_start = raw_index;
+    while remainder_start < raw_bytes.len() {
+        let ch = raw[remainder_start..].chars().next().unwrap();
+        if ch.is_alphanumeric() || ch == '.' {
+            break;
+        }
+        remainder_start += ch.len_utf8();
+    }
+    Some(raw[remainder_start..].trim())
+}
+
+/** @emoji 🔤 True when `raw` matches `command` in full, ignoring case and separators (e.g.
+    `engagement_token_matches("LineNumbers", "line numbers")` is `true`). */
+pub fn engagement_token_matches(raw: &str, command: &str) -> bool {
+    strip_engagement_prefix(raw, command).is_some_and(str::is_empty)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn strip_engagement_prefix_accepts_normalized_and_raw_forms() {
+        assert_eq!(strip_engagement_prefix("Fill20", "fill"), Some("20"));
+        assert_eq!(strip_engagement_prefix("fill 20", "fill"), Some("20"));
+        assert_eq!(strip_engagement_prefix("fill  20", "fill"), Some("20"));
+        assert_eq!(strip_engagement_prefix("Fill", "fill"), Some(""));
+        assert_eq!(strip_engagement_prefix("FILL20", "fill"), Some("20"));
+    }
+
+    #[test]
+    fn strip_engagement_prefix_preserves_decimal_points() {
+        assert_eq!(strip_engagement_prefix("SetHeight3.5", "set height"), Some("3.5"));
+        assert_eq!(strip_engagement_prefix("set height 3.5", "set height"), Some("3.5"));
+    }
+
+    #[test]
+    fn strip_engagement_prefix_rejects_non_matching_commands() {
+        assert_eq!(strip_engagement_prefix("Brush", "fill"), None);
+        assert_eq!(strip_engagement_prefix("Filled", "fill"), Some("ed"));
+    }
+
+    #[test]
+    fn engagement_token_matches_full_token_only() {
+        assert!(engagement_token_matches("LineNumbers", "line numbers"));
+        assert!(engagement_token_matches("linenumbers", "line numbers"));
+        assert!(!engagement_token_matches("LineNumbers2", "line numbers"));
+        assert!(!engagement_token_matches("Line", "line numbers"));
+    }
+}
+// #endregion engagement
+}
+
 pub use app::{
     App, AppBuilder, AppInstance, KeybindingSpec, ModeSpec, PanelTabSpec, Plugin, PluginApp, PluginBundle,
     WindowKindSpec,
@@ -2438,6 +2521,7 @@ pub use generate_mode::{
     render_generations_tree, select_generation, selected_generation, selected_generation_mut,
     update_generation_values, FormGeneration, GenerationPlayState,
 };
+pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 pub use host_port::{
     host_backbone_poll, host_backbone_send, host_now_ms, register_host_backbone_channel, HostBackboneChannel,
 };

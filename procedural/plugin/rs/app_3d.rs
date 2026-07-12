@@ -57,13 +57,84 @@ const HEX_COLUMN_EXAMPLE_JSON: &str = include_str!("../../3d/example/hexagonal-m
 const RECT_EXTRUDE_EXAMPLE_JSON: &str = include_str!("../../3d/example/rectangle-extrude-volume.procedural.json");
 const SPHERE_TORUS_EXAMPLE_JSON: &str = include_str!("../../3d/example/sphere-cut-with-torus.procedural.json");
 
-const WIDGET_CATALOG: &[(&str, &str, &str)] = &[
-    ("neuron", "Neuron", "cpu"),
-    ("inputSlider", "Slider", "sliders-horizontal"),
-    ("inputNote", "Note", "file-text"),
-    ("outputPreview", "Preview", "eye"),
+const WIDGET_CATALOG: &[(&str, &str)] = &[
+    ("neuron", "cpu"),
+    ("inputSlider", "sliders-horizontal"),
+    ("inputNote", "file-text"),
+    ("outputPreview", "eye"),
 ];
 //#endregion 🔖Constants
+
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the 3D flow app; one field per label makes every locale combination compile-checked.
+struct Procedural3dLabels {
+    widgets: &'static str,
+    schema_prefix: &'static str,
+    widgets_prefix: &'static str,
+    no_selection: &'static str,
+    id_field: &'static str,
+    value_field: &'static str,
+    range_field: &'static str,
+    widget_group: &'static str,
+    generate_hint: &'static str,
+    preview_hint: &'static str,
+    catalog_neuron: &'static str,
+    catalog_slider: &'static str,
+    catalog_note: &'static str,
+    catalog_preview: &'static str,
+}
+
+const PROCEDURAL3D_LABELS_NATIVE_EN: Procedural3dLabels = Procedural3dLabels {
+    widgets: "Widgets",
+    schema_prefix: "Schema:",
+    widgets_prefix: "Widgets:",
+    no_selection: "No selection",
+    id_field: "Id",
+    value_field: "Value",
+    range_field: "Range",
+    widget_group: "Widget",
+    generate_hint: "Add a generation to edit input values.",
+    preview_hint: "(evaluate a generation to preview output)",
+    catalog_neuron: "Neuron",
+    catalog_slider: "Slider",
+    catalog_note: "Note",
+    catalog_preview: "Preview",
+};
+
+const PROCEDURAL3D_LABELS_NATIVE_DE: Procedural3dLabels = Procedural3dLabels {
+    widgets: "Elemente",
+    schema_prefix: "Schema:",
+    widgets_prefix: "Elemente:",
+    no_selection: "Keine Auswahl",
+    id_field: "ID",
+    value_field: "Wert",
+    range_field: "Bereich",
+    widget_group: "Element",
+    generate_hint: "Erstelle eine Generation, um Eingabewerte zu bearbeiten.",
+    preview_hint: "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)",
+    catalog_neuron: "Neuron",
+    catalog_slider: "Schieberegler",
+    catalog_note: "Notiz",
+    catalog_preview: "Vorschau",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; falls back to native English.
+fn procedural3d_labels(view_state: &ViewState) -> &'static Procedural3dLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de { &PROCEDURAL3D_LABELS_NATIVE_DE } else { &PROCEDURAL3D_LABELS_NATIVE_EN }
+}
+
+/// 🗣️ Resolves a catalogue widget kind's display label from its stable id; unknown kinds fall back to the id itself.
+fn procedural3d_catalog_label(kind: &'static str, labels: &Procedural3dLabels) -> &'static str {
+    match kind {
+        "neuron" => labels.catalog_neuron,
+        "inputSlider" => labels.catalog_slider,
+        "inputNote" => labels.catalog_note,
+        "outputPreview" => labels.catalog_preview,
+        _ => kind,
+    }
+}
+//#endregion 🔖Terminology
 
 //#region 🔖Document
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -734,7 +805,7 @@ fn tree_item_with_action(
     }
 }
 
-fn build_document_tree(fixture: &FlowFixture, selected_node_ids: &[String]) -> UiNode {
+fn build_document_tree(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Procedural3dLabels) -> UiNode {
     let items: Vec<UiTreeItemNode> = fixture
         .widgets
         .iter()
@@ -751,7 +822,7 @@ fn build_document_tree(fixture: &FlowFixture, selected_node_ids: &[String]) -> U
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "procedural-play-document.widgets".into(),
-            label: Some("Widgets".into()),
+            label: Some(labels.widgets.into()),
             default_open: Some(true),
             items,
         }],
@@ -762,13 +833,13 @@ fn build_document_tree(fixture: &FlowFixture, selected_node_ids: &[String]) -> U
     })
 }
 
-fn build_catalogue_tree() -> UiNode {
+fn build_catalogue_tree(labels: &Procedural3dLabels) -> UiNode {
     let items: Vec<UiTreeItemNode> = WIDGET_CATALOG
         .iter()
-        .map(|(kind, label, icon)| {
+        .map(|(kind, icon)| {
             tree_item_with_action(
                 format!("procedural-play-catalogue.{kind}"),
-                *label,
+                procedural3d_catalog_label(*kind, labels),
                 Some(icon),
                 procedural_action("addWidget", Some(json!({ "kind": kind }))),
             )
@@ -777,7 +848,7 @@ fn build_catalogue_tree() -> UiNode {
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "procedural-play-catalogue.widgets".into(),
-            label: Some("Widgets".into()),
+            label: Some(labels.widgets.into()),
             default_open: Some(true),
             items,
         }],
@@ -788,26 +859,26 @@ fn build_catalogue_tree() -> UiNode {
     })
 }
 
-fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String]) -> UiNode {
+fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Procedural3dLabels) -> UiNode {
     let Some(selected_id) = selected_node_ids.first() else {
         return ui_stack_vertical(vec![
-            ui_text(format!("Schema: {}", fixture.schema)),
-            ui_text(format!("Widgets: {}", fixture.widgets.len())),
+            ui_text(format!("{} {}", labels.schema_prefix, fixture.schema)),
+            ui_text(format!("{} {}", labels.widgets_prefix, fixture.widgets.len())),
         ]);
     };
     let Some(widget) = fixture.widgets.iter().find(|entry| widget_id(entry) == selected_id) else {
-        return ui_text("No selection".to_string());
+        return ui_text(labels.no_selection.to_string());
     };
     let mut fields = vec![ui_inspector_readonly_field(
         "procedural-play-inspector.id",
-        "Id",
+        labels.id_field,
         widget_id(widget),
     )];
     if let Widget::InputSlider { value, min, max, .. } = widget {
         let mixed = ui_inspector_mixed_number(&[*value]);
         fields.push(UiNode::Field(UiFieldNode {
             id: "procedural-play-inspector.value".into(),
-            label: "Value".into(),
+            label: labels.value_field.into(),
             child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
                 id: "procedural-play-inspector.value.input".into(),
                 input_kind: "number".into(),
@@ -829,13 +900,13 @@ fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String]) -> 
         }));
         fields.push(ui_inspector_readonly_field(
             "procedural-play-inspector.range",
-            "Range",
+            labels.range_field,
             &format!("{min}..{max}"),
         ));
     }
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "procedural-play-inspector.widget".into(),
-        label: "Widget".into(),
+        label: labels.widget_group.into(),
         default_open: None,
         fields,
     }])
@@ -852,10 +923,10 @@ fn render_generate_generations(envelope: &Procedural3dEnvelope) -> UiNode {
     )
 }
 
-fn render_generate_form(envelope: &Procedural3dEnvelope) -> UiNode {
+fn render_generate_form(envelope: &Procedural3dEnvelope, labels: &Procedural3dLabels) -> UiNode {
     let spec = flow_fixture_to_form_spec(&envelope.fixture);
     let Some(generation) = selected_generation(&envelope.generation) else {
-        return ui_text("Add a generation to edit input values.");
+        return ui_text(labels.generate_hint);
     };
     render_generation_form_body(
         &spec,
@@ -866,7 +937,7 @@ fn render_generate_form(envelope: &Procedural3dEnvelope) -> UiNode {
     )
 }
 
-fn render_generate_preview(envelope: &Procedural3dEnvelope) -> UiNode {
+fn render_generate_preview(envelope: &Procedural3dEnvelope, labels: &Procedural3dLabels) -> UiNode {
     let (meshes_json, instances_json) = generation_preview_payload(envelope);
     if meshes_json == "[]" && instances_json == "[]" {
         let text = envelope
@@ -874,7 +945,7 @@ fn render_generate_preview(envelope: &Procedural3dEnvelope) -> UiNode {
             .preview_text
             .as_deref()
             .filter(|value| !value.is_empty())
-            .unwrap_or("(evaluate a generation to preview output)");
+            .unwrap_or(labels.preview_hint);
         return render_generation_preview_text(
             PROCEDURAL_3D_PLAY_SURFACE_GENERATE_PREVIEW,
             PROCEDURAL_3D_PLAY_APP_ID,
@@ -1279,9 +1350,10 @@ impl PluginApp for Procedural3dPlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
         let host = host_from_envelope(&envelope);
+        let labels = procedural3d_labels(view_state);
         match body_key {
             PROCEDURAL_3D_PLAY_BODY_MAIN => {
                 let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
@@ -1324,14 +1396,14 @@ impl PluginApp for Procedural3dPlayApp {
                 )
             }
             PROCEDURAL_3D_PLAY_BODY_GENERATIONS => render_generate_generations(&envelope),
-            PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM => render_generate_form(&envelope),
-            PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&envelope),
+            PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM => render_generate_form(&envelope, labels),
+            PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&envelope, labels),
             PROCEDURAL_3D_PLAY_BODY_DOCUMENT => {
-                build_document_tree(&envelope.fixture, &envelope.runtime.selected_node_ids)
+                build_document_tree(&envelope.fixture, &envelope.runtime.selected_node_ids, labels)
             }
-            PROCEDURAL_3D_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
+            PROCEDURAL_3D_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
             PROCEDURAL_3D_PLAY_BODY_INSPECTION => {
-                build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_node_ids)
+                build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_node_ids, labels)
             }
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
@@ -1869,6 +1941,32 @@ mod tests {
             }
         }
         next
+    }
+
+    #[test]
+    fn procedural3d_labels_resolve_native_english_by_default() {
+        let app = Procedural3dPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(PROCEDURAL_3D_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("\"Widgets\""));
+        assert!(json.contains("\"Slider\""));
+        assert!(!json.contains("Elemente"));
+    }
+
+    #[test]
+    fn procedural3d_labels_translate_catalogue_and_inspector_in_german() {
+        let app = Procedural3dPlayApp;
+        let document = app.initial_document_json();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let catalogue = app.render(PROCEDURAL_3D_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("\"Elemente\""));
+        assert!(catalogue_json.contains("Schieberegler"));
+        assert!(!catalogue_json.contains("\"Widgets\""));
+        let inspector = app.render(PROCEDURAL_3D_PLAY_BODY_INSPECTION, &document, &view_state);
+        let inspector_json = serde_json::to_string(&inspector).unwrap();
+        assert!(inspector_json.contains("Elemente:"));
     }
 }
 //#endregion 🧪Tests

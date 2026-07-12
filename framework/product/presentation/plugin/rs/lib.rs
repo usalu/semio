@@ -152,6 +152,103 @@ fn deck_to_canvas_layers(deck: &PresentationDeck, selected: &[String]) -> String
 }
 //#endregion 🔖CanvasLayers
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the presentation tile-play app; one field per label makes every locale compile-checked.
+struct PresentationLabels {
+    tiles_section: &'static str,
+    no_tiles: &'static str,
+    details_select_tile: &'static str,
+    details_tile_not_found: &'static str,
+    field_name: &'static str,
+    field_id: &'static str,
+    selected_suffix: &'static str,
+    delete_tile: &'static str,
+    delete_selection: &'static str,
+    group_crop: &'static str,
+    field_x: &'static str,
+    field_y: &'static str,
+    field_width: &'static str,
+    field_height: &'static str,
+    group_identity: &'static str,
+    catalogue_tile_templates: &'static str,
+    catalogue_seed_desc: &'static str,
+    catalogue_seed_2x2: &'static str,
+    catalogue_seed_3x5: &'static str,
+    catalogue_add_tile: &'static str,
+    catalogue_clear_tiles: &'static str,
+    catalogue_figure_templates: &'static str,
+    catalogue_use_figure: &'static str,
+    catalogue_active_source: &'static str,
+    catalogue_media_kind: &'static str,
+}
+
+const PRESENTATION_LABELS_NATIVE_EN: PresentationLabels = PresentationLabels {
+    tiles_section: "Tiles",
+    no_tiles: "(no tiles — seed a grid)",
+    details_select_tile: "Select a tile in the canvas or workbench document.",
+    details_tile_not_found: "Selected tile not found.",
+    field_name: "Name",
+    field_id: "Id",
+    selected_suffix: "selected",
+    delete_tile: "Delete tile",
+    delete_selection: "Delete selection",
+    group_crop: "Crop",
+    field_x: "X",
+    field_y: "Y",
+    field_width: "Width",
+    field_height: "Height",
+    group_identity: "Identity",
+    catalogue_tile_templates: "Tile templates",
+    catalogue_seed_desc: "Seed morph tiles from figure templates.",
+    catalogue_seed_2x2: "Split 2×2 grid",
+    catalogue_seed_3x5: "Split 3×5 catalogue grid",
+    catalogue_add_tile: "Add single tile",
+    catalogue_clear_tiles: "Clear tiles",
+    catalogue_figure_templates: "Figure templates",
+    catalogue_use_figure: "Use catalogue figure",
+    catalogue_active_source: "Active source",
+    catalogue_media_kind: "Media kind",
+};
+
+const PRESENTATION_LABELS_NATIVE_DE: PresentationLabels = PresentationLabels {
+    tiles_section: "Kacheln",
+    no_tiles: "(keine Kacheln — Raster erzeugen)",
+    details_select_tile: "Wählen Sie eine Kachel in der Leinwand oder im Werkbankdokument aus.",
+    details_tile_not_found: "Ausgewählte Kachel nicht gefunden.",
+    field_name: "Name",
+    field_id: "ID",
+    selected_suffix: "ausgewählt",
+    delete_tile: "Kachel löschen",
+    delete_selection: "Auswahl löschen",
+    group_crop: "Zuschnitt",
+    field_x: "X",
+    field_y: "Y",
+    field_width: "Breite",
+    field_height: "Höhe",
+    group_identity: "Identität",
+    catalogue_tile_templates: "Kachelvorlagen",
+    catalogue_seed_desc: "Morph-Kacheln aus Abbildungsvorlagen erzeugen.",
+    catalogue_seed_2x2: "2×2-Raster teilen",
+    catalogue_seed_3x5: "3×5-Katalograster teilen",
+    catalogue_add_tile: "Einzelne Kachel hinzufügen",
+    catalogue_clear_tiles: "Kacheln leeren",
+    catalogue_figure_templates: "Abbildungsvorlagen",
+    catalogue_use_figure: "Katalogabbildung verwenden",
+    catalogue_active_source: "Aktive Quelle",
+    catalogue_media_kind: "Medientyp",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; unknown/absent locales fall back to native English.
+fn presentation_labels(view_state: &ViewState) -> &'static PresentationLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de {
+        &PRESENTATION_LABELS_NATIVE_DE
+    } else {
+        &PRESENTATION_LABELS_NATIVE_EN
+    }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Panels
 fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
     UiTreeItemNode {
@@ -173,7 +270,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
     }
 }
 
-fn build_document_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
+fn build_document_tree(envelope: &PresentationPlayEnvelope, labels: &PresentationLabels) -> UiNode {
     let items: Vec<UiTreeItemNode> = envelope
         .deck
         .tiles
@@ -202,10 +299,10 @@ fn build_document_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "presentation-tile-play.tiles".into(),
-            label: Some("Tiles".into()),
+            label: Some(labels.tiles_section.into()),
             default_open: Some(true),
             items: if items.is_empty() {
-                vec![tree_item("empty", "(no tiles — seed a grid)")]
+                vec![tree_item("empty", labels.no_tiles)]
             } else {
                 items
             },
@@ -251,13 +348,13 @@ fn inspector_crop_field(tile_ids: &[String], field: &str, label: &str, values: &
     })
 }
 
-fn build_details_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
+fn build_details_tree(envelope: &PresentationPlayEnvelope, labels: &PresentationLabels) -> UiNode {
     if envelope.runtime.selected_ids.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "presentation.play.details.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            children: vec![ui_text("Select a tile in the canvas or workbench document.")],
+            children: vec![ui_text(labels.details_select_tile)],
         }]);
     }
     let tiles: Vec<&FigureTileDraft> = envelope
@@ -271,14 +368,14 @@ fn build_details_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
             id: "presentation.play.details.not-found".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            children: vec![ui_text("Selected tile not found.")],
+            children: vec![ui_text(labels.details_tile_not_found)],
         }]);
     }
     let tile_ids: Vec<String> = tiles.iter().map(|tile| tile.id.clone()).collect();
     let name_mixed = ui_inspector_mixed_text(&tiles.iter().map(|tile| tile.name.clone()).collect::<Vec<_>>());
     let mut identity_fields: Vec<UiNode> = vec![UiNode::Field(UiFieldNode {
         id: "presentation.play.tile.name".into(),
-        label: "Name".into(),
+        label: labels.field_name.into(),
         child: Box::new(UiNode::Input(UiInputNode {
             id: "presentation.play.tile.name.input".into(),
             input_kind: "text".into(),
@@ -297,18 +394,18 @@ fn build_details_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
     })];
     identity_fields.push(ui_inspector_readonly_field(
         "presentation.play.tile.id",
-        "Id",
+        labels.field_id,
         if tile_ids.len() == 1 {
             tile_ids.first().cloned().unwrap_or_default()
         } else {
-            format!("{} selected", tile_ids.len())
+            format!("{} {}", tile_ids.len(), labels.selected_suffix)
         },
     ));
     if tile_ids.len() == 1 {
         identity_fields.push(UiNode::Button(semio_framework_plugin::UiButtonNode {
             id: Some(format!("presentation.play.tile.{}.delete", tile_ids[0])),
             icon_id: "trash-2".into(),
-            label: "Delete tile".into(),
+            label: labels.delete_tile.into(),
             action: presentation_action("deleteTile", Some(json!({ "id": tile_ids[0] }))),
             style: None,
             disabled: None,
@@ -317,7 +414,7 @@ fn build_details_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
     identity_fields.push(UiNode::Button(semio_framework_plugin::UiButtonNode {
         id: Some("presentation.play.details.delete-selection".into()),
         icon_id: "trash-2".into(),
-        label: "Delete selection".into(),
+        label: labels.delete_selection.into(),
         action: presentation_action("deleteSelection", None),
         style: None,
         disabled: None,
@@ -325,23 +422,23 @@ fn build_details_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
     let groups = vec![
         UiInspectorFieldGroup {
             id: "presentation.play.details.crop".into(),
-            label: "Crop".into(),
+            label: labels.group_crop.into(),
             default_open: None,
             fields: vec![
-                inspector_crop_field(&tile_ids, "x", "X", &tiles.iter().map(|tile| tile.crop.x).collect::<Vec<_>>()),
-                inspector_crop_field(&tile_ids, "y", "Y", &tiles.iter().map(|tile| tile.crop.y).collect::<Vec<_>>()),
-                inspector_crop_field(&tile_ids, "width", "Width", &tiles.iter().map(|tile| tile.crop.width).collect::<Vec<_>>()),
+                inspector_crop_field(&tile_ids, "x", labels.field_x, &tiles.iter().map(|tile| tile.crop.x).collect::<Vec<_>>()),
+                inspector_crop_field(&tile_ids, "y", labels.field_y, &tiles.iter().map(|tile| tile.crop.y).collect::<Vec<_>>()),
+                inspector_crop_field(&tile_ids, "width", labels.field_width, &tiles.iter().map(|tile| tile.crop.width).collect::<Vec<_>>()),
                 inspector_crop_field(
                     &tile_ids,
                     "height",
-                    "Height",
+                    labels.field_height,
                     &tiles.iter().map(|tile| tile.crop.height).collect::<Vec<_>>(),
                 ),
             ],
         },
         UiInspectorFieldGroup {
             id: "presentation.play.details.identity".into(),
-            label: "Identity".into(),
+            label: labels.group_identity.into(),
             default_open: None,
             fields: identity_fields,
         },
@@ -360,44 +457,44 @@ fn catalogue_button(id: &str, label: &str, action: &str, args: Option<Value>) ->
     })
 }
 
-fn build_catalogue_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
+fn build_catalogue_tree(envelope: &PresentationPlayEnvelope, labels: &PresentationLabels) -> UiNode {
     ui_declarative_sections_to_tree(&[
         UiSectionNode {
             id: "presentation.play.catalogue.templates".into(),
-            label: Some("Tile templates".into()),
+            label: Some(labels.catalogue_tile_templates.into()),
             default_open: Some(true),
             children: vec![
-                ui_text("Seed morph tiles from figure templates."),
+                ui_text(labels.catalogue_seed_desc),
                 catalogue_button(
                     "presentation.play.catalogue.seed-2x2",
-                    "Split 2×2 grid",
+                    labels.catalogue_seed_2x2,
                     "seedGrid",
                     Some(json!({ "rows": 2, "columns": 2 })),
                 ),
                 catalogue_button(
                     "presentation.play.catalogue.seed-3x5",
-                    "Split 3×5 catalogue grid",
+                    labels.catalogue_seed_3x5,
                     "seedGrid",
                     Some(json!({ "rows": 3, "columns": 5 })),
                 ),
-                catalogue_button("presentation.play.catalogue.add-tile", "Add single tile", "addTile", None),
-                catalogue_button("presentation.play.catalogue.clear", "Clear tiles", "clearTiles", None),
+                catalogue_button("presentation.play.catalogue.add-tile", labels.catalogue_add_tile, "addTile", None),
+                catalogue_button("presentation.play.catalogue.clear", labels.catalogue_clear_tiles, "clearTiles", None),
             ],
         },
         UiSectionNode {
             id: "presentation.play.catalogue.figure".into(),
-            label: Some("Figure templates".into()),
+            label: Some(labels.catalogue_figure_templates.into()),
             default_open: Some(true),
             children: vec![
                 catalogue_button(
                     "presentation.play.catalogue.figure.catalogue",
-                    "Use catalogue figure",
+                    labels.catalogue_use_figure,
                     "setSource",
                     Some(json!(default_presentation_deck().source)),
                 ),
                 UiNode::Field(UiFieldNode {
                     id: "presentation.play.catalogue.figure.src".into(),
-                    label: "Active source".into(),
+                    label: labels.catalogue_active_source.into(),
                     child: Box::new(UiNode::Input(UiInputNode {
                         id: "presentation.play.catalogue.figure.src.readonly".into(),
                         input_kind: "text".into(),
@@ -414,7 +511,7 @@ fn build_catalogue_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
                     required: None,
                     error: None,
                 }),
-                ui_text(format!("Media kind: {}", envelope.deck.source.kind)),
+                ui_text(format!("{}: {}", labels.catalogue_media_kind, envelope.deck.source.kind)),
             ],
         },
     ])
@@ -727,13 +824,14 @@ impl PluginApp for PresentationPlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
+        let labels = presentation_labels(view_state);
         match body_key {
             PRESENTATION_PLAY_BODY_MAIN => render_main_canvas(&envelope),
-            PRESENTATION_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
-            PRESENTATION_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope),
-            PRESENTATION_PLAY_BODY_DETAILS => build_details_tree(&envelope),
+            PRESENTATION_PLAY_BODY_DOCUMENT => build_document_tree(&envelope, labels),
+            PRESENTATION_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope, labels),
+            PRESENTATION_PLAY_BODY_DETAILS => build_details_tree(&envelope, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -927,6 +1025,35 @@ mod tests {
         let document = presentation_document_json_from_dwg(&drawing).expect("from_dwg on empty drawing");
         let envelope: PresentationPlayEnvelope = serde_json::from_value(document).expect("envelope");
         assert_eq!(envelope.deck.tiles.len(), 1);
+    }
+
+    #[test]
+    fn presentation_labels_resolve_native_by_default() {
+        let app = PresentationPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(PRESENTATION_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Tile templates"));
+        assert!(json.contains("Split 2×2 grid"));
+        assert!(json.contains("Active source"));
+        assert!(!json.contains("Kachelvorlagen"));
+    }
+
+    #[test]
+    fn presentation_labels_translate_panels_in_german() {
+        let app = PresentationPlayApp;
+        let document = app.initial_document_json();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let catalogue_node = app.render(PRESENTATION_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();
+        assert!(catalogue_json.contains("Kachelvorlagen"));
+        assert!(catalogue_json.contains("2×2-Raster teilen"));
+        assert!(catalogue_json.contains("Aktive Quelle"));
+        assert!(!catalogue_json.contains("Tile templates"));
+
+        let document_node = app.render(PRESENTATION_PLAY_BODY_DOCUMENT, &document, &view_state);
+        let document_json = serde_json::to_string(&document_node).unwrap();
+        assert!(document_json.contains("Kacheln"));
     }
 }
 //#endregion 🧪Tests

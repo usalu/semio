@@ -292,8 +292,86 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture) -> UiTre
 }
 //#endregion 🔖TreeHelpers
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the sequence app; one field per label makes every locale combination compile-checked.
+struct SequenceLabels {
+    steps: &'static str,
+    flow_edges: &'static str,
+    select_prompt: &'static str,
+    step_not_found: &'static str,
+    kind: &'static str,
+    params: &'static str,
+    id: &'static str,
+    step: &'static str,
+    action_set_state: &'static str,
+    action_log_print: &'static str,
+    action_if: &'static str,
+    action_while: &'static str,
+    action_add: &'static str,
+    add_to: &'static str,
+    run: &'static str,
+    stop: &'static str,
+    reorganize: &'static str,
+    layout: &'static str,
+    left_to_right: &'static str,
+    top_to_bottom: &'static str,
+}
+
+const SEQUENCE_LABELS_NATIVE_EN: SequenceLabels = SequenceLabels {
+    steps: "Steps",
+    flow_edges: "Flow edges",
+    select_prompt: "Select a step in the canvas or document.",
+    step_not_found: "Step not found",
+    kind: "Kind",
+    params: "Params",
+    id: "Id",
+    step: "Step",
+    action_set_state: "Set state",
+    action_log_print: "Print log",
+    action_if: "If",
+    action_while: "While",
+    action_add: "Add",
+    add_to: "Add to",
+    run: "Run",
+    stop: "Stop",
+    reorganize: "Reorganize",
+    layout: "Layout",
+    left_to_right: "Left to right",
+    top_to_bottom: "Top to bottom",
+};
+
+const SEQUENCE_LABELS_NATIVE_DE: SequenceLabels = SequenceLabels {
+    steps: "Schritte",
+    flow_edges: "Ablaufkanten",
+    select_prompt: "Wähle einen Schritt in der Zeichenfläche oder im Dokument aus.",
+    step_not_found: "Schritt nicht gefunden",
+    kind: "Art",
+    params: "Parameter",
+    id: "ID",
+    step: "Schritt",
+    action_set_state: "Zustand setzen",
+    action_log_print: "Log ausgeben",
+    action_if: "Wenn",
+    action_while: "Solange",
+    action_add: "Addieren",
+    add_to: "Hinzufügen zu",
+    run: "Ausführen",
+    stop: "Stopp",
+    reorganize: "Neu anordnen",
+    layout: "Layout",
+    left_to_right: "Links nach rechts",
+    top_to_bottom: "Oben nach unten",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; this app has no terminology variants.
+fn sequence_labels(view_state: &ViewState) -> &'static SequenceLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de { &SEQUENCE_LABELS_NATIVE_DE } else { &SEQUENCE_LABELS_NATIVE_EN }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Panels
-fn build_document_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNode {
+fn build_document_tree(fixture: &SequenceFixture, selected: &[String], labels: &SequenceLabels) -> UiNode {
     let step_items: Vec<UiTreeItemNode> = fixture
         .steps
         .iter()
@@ -327,7 +405,7 @@ fn build_document_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNode
         sections: vec![
             UiTreeSectionNode {
                 id: "sequence-play-document.steps".into(),
-                label: Some("Steps".into()),
+                label: Some(labels.steps.into()),
                 default_open: Some(true),
                 items: if step_items.is_empty() {
                     vec![tree_item("sequence-play-document.steps.empty", "(none)")]
@@ -337,7 +415,7 @@ fn build_document_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNode
             },
             UiTreeSectionNode {
                 id: "sequence-play-document.edges".into(),
-                label: Some("Flow edges".into()),
+                label: Some(labels.flow_edges.into()),
                 default_open: Some(false),
                 items: if edge_items.is_empty() {
                     vec![tree_item("sequence-play-document.edges.empty", "(none)")]
@@ -353,13 +431,13 @@ fn build_document_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNode
     })
 }
 
-fn build_catalogue_tree(fixture: &SequenceFixture) -> UiNode {
+fn build_catalogue_tree(fixture: &SequenceFixture, labels: &SequenceLabels) -> UiNode {
     let actions = [
-        ("state.set", "Set state"),
-        ("log.print", "Print log"),
-        ("control.if", "If"),
-        ("control.while", "While"),
-        ("math.add", "Add"),
+        ("state.set", labels.action_set_state),
+        ("log.print", labels.action_log_print),
+        ("control.if", labels.action_if),
+        ("control.while", labels.action_while),
+        ("math.add", labels.action_add),
     ];
     let mut items: Vec<UiTreeItemNode> = actions
         .iter()
@@ -376,7 +454,7 @@ fn build_catalogue_tree(fixture: &SequenceFixture) -> UiNode {
         for slot_name in control_slots(&owner.kind) {
             items.push(tree_item_with_action(
                 format!("sequence-play-catalogue.slot.{}.{}", owner.id, slot_name),
-                format!("Add to {} → {slot_name}", owner.id),
+                format!("{} {} → {slot_name}", labels.add_to, owner.id),
                 Some(format!("{slot_name} @ {}", owner.id)),
                 sequence_action(
                     "addStepToSlot",
@@ -403,13 +481,13 @@ fn build_catalogue_tree(fixture: &SequenceFixture) -> UiNode {
     })
 }
 
-fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNode {
+fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: &SequenceLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "sequence-play-inspector.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            children: vec![ui_text("Select a step in the canvas or document.")],
+            children: vec![ui_text(labels.select_prompt)],
         }]);
     }
     let steps: Vec<&SequenceStep> = selected
@@ -421,27 +499,27 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNod
             id: "sequence-play-inspector.missing".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            children: vec![ui_text("Step not found")],
+            children: vec![ui_text(labels.step_not_found)],
         }]);
     }
     let step_ids: Vec<String> = steps.iter().map(|step| step.id.clone()).collect();
     let mut fields = vec![
-        ui_inspector_readonly_field("sequence-play-inspector.kind", "Kind", steps[0].kind.clone()),
+        ui_inspector_readonly_field("sequence-play-inspector.kind", labels.kind, steps[0].kind.clone()),
         ui_inspector_readonly_field(
             "sequence-play-inspector.params",
-            "Params",
+            labels.params,
             serde_json::to_string(&steps[0].params).unwrap_or_else(|_| "{}".into()),
         ),
     ];
     if step_ids.len() == 1 {
         fields.insert(
             0,
-            ui_inspector_readonly_field("sequence-play-inspector.id", "Id", step_ids[0].clone()),
+            ui_inspector_readonly_field("sequence-play-inspector.id", labels.id, step_ids[0].clone()),
         );
     }
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "sequence-play-inspector.step".into(),
-        label: "Step".into(),
+        label: labels.step.into(),
         default_open: None,
         fields,
     }])
@@ -505,42 +583,42 @@ fn orientation_arg(orientation: DagLayoutOrientation) -> Value {
     }
 }
 
-fn edit_tools(envelope: &SequencePlayEnvelope) -> Vec<ToolNode> {
+fn edit_tools(envelope: &SequencePlayEnvelope, labels: &SequenceLabels) -> Vec<ToolNode> {
     let orientation = envelope.runtime.orientation;
     vec![
         tool_collection(
             "sequence-tools-execution",
             "play",
-            "Run",
+            labels.run,
             vec![
-                tool_button("sequence-tools-run", "play", "Run", sequence_action("run", None)),
-                tool_button("sequence-tools-stop", "square", "Stop", sequence_action("stop", None)),
+                tool_button("sequence-tools-run", "play", labels.run, sequence_action("run", None)),
+                tool_button("sequence-tools-stop", "square", labels.stop, sequence_action("stop", None)),
             ],
         )
         .with_category(ToolCategory::Actions),
         tool_button(
             "sequence-tools-reorganize",
             "refresh-cw",
-            "Reorganize",
+            labels.reorganize,
             sequence_action("reorganize", None),
         )
         .with_category(ToolCategory::Actions),
         tool_collection(
             "sequence-tools-orientation",
             "layout-grid",
-            "Layout",
+            labels.layout,
             vec![
                 tool_toggle(
                     "sequence-tools-orientation-lr",
                     "arrow-right",
-                    "Left to right",
+                    labels.left_to_right,
                     orientation == DagLayoutOrientation::LeftRight,
                     sequence_action("setOrientation", Some(orientation_arg(DagLayoutOrientation::LeftRight))),
                 ),
                 tool_toggle(
                     "sequence-tools-orientation-tb",
                     "arrow-down",
-                    "Top to bottom",
+                    labels.top_to_bottom,
                     orientation == DagLayoutOrientation::TopBottom,
                     sequence_action("setOrientation", Some(orientation_arg(DagLayoutOrientation::TopBottom))),
                 ),
@@ -829,19 +907,20 @@ impl PluginApp for SequencePlayApp {
         Vec::new()
     }
 
-    fn tools(&self, document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
-        edit_tools(&parse_envelope(document_json))
+    fn tools(&self, document_json: &str, view_state: &ViewState) -> Vec<ToolNode> {
+        edit_tools(&parse_envelope(document_json), sequence_labels(view_state))
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
+        let labels = sequence_labels(view_state);
         match body_key {
             SEQUENCE_PLAY_BODY_MAIN => render_main_graph(&envelope),
             SEQUENCE_PLAY_BODY_SCRIPT => render_script(&envelope),
             SEQUENCE_PLAY_BODY_COMPILED => render_compiled_dag(&envelope),
-            SEQUENCE_PLAY_BODY_DOCUMENT => build_document_tree(&envelope.fixture, &envelope.runtime.selected_step_ids),
-            SEQUENCE_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope.fixture),
-            SEQUENCE_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_step_ids),
+            SEQUENCE_PLAY_BODY_DOCUMENT => build_document_tree(&envelope.fixture, &envelope.runtime.selected_step_ids, labels),
+            SEQUENCE_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope.fixture, labels),
+            SEQUENCE_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_step_ids, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -903,7 +982,7 @@ fn create_sequence_app() -> App {
                 PanelGroup::Details,
                 SEQUENCE_PLAY_BODY_INSPECTOR,
             )
-            .mode_tools("edit", edit_tools(&default_envelope()))
+            .mode_tools("edit", edit_tools(&default_envelope(), &SEQUENCE_LABELS_NATIVE_EN))
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
@@ -1050,5 +1129,41 @@ mod tests {
         let updated: SequencePlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
         assert!(updated.runtime.last_run_json.is_empty());
+    }
+
+    #[test]
+    fn sequence_labels_render_native_english_by_default() {
+        let app = SequencePlayApp;
+        let document = app.initial_document_json();
+        let document_node = app.render(SEQUENCE_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
+        let document_json = serde_json::to_string(&document_node).unwrap();
+        assert!(document_json.contains("\"Steps\""));
+        assert!(document_json.contains("\"Flow edges\""));
+        let tools = app.tools(&document, &ViewState::default());
+        let tools_json = serde_json::to_string(&tools).unwrap();
+        assert!(tools_json.contains("\"Run\""));
+        assert!(tools_json.contains("\"Stop\""));
+        assert!(tools_json.contains("\"Reorganize\""));
+        assert!(tools_json.contains("\"Left to right\""));
+        assert!(tools_json.contains("\"Top to bottom\""));
+    }
+
+    #[test]
+    fn sequence_labels_render_german_locale() {
+        let app = SequencePlayApp;
+        let document = app.initial_document_json();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let document_node = app.render(SEQUENCE_PLAY_BODY_DOCUMENT, &document, &view_state);
+        let document_json = serde_json::to_string(&document_node).unwrap();
+        assert!(document_json.contains("Schritte"));
+        assert!(document_json.contains("Ablaufkanten"));
+        assert!(!document_json.contains("\"Steps\""));
+        let tools = app.tools(&document, &view_state);
+        let tools_json = serde_json::to_string(&tools).unwrap();
+        assert!(tools_json.contains("Ausführen"));
+        assert!(tools_json.contains("Stopp"));
+        assert!(tools_json.contains("Neu anordnen"));
+        assert!(tools_json.contains("Links nach rechts"));
+        assert!(tools_json.contains("Oben nach unten"));
     }
 }

@@ -2,7 +2,7 @@
 
 use puzzle_3d::{BrushPlacePayload, Puzzle3dPrecomputeSession};
 use semio_framework_plugin::{
-    build_world_3d_scene, create_default_layout, layout::{MeasureSelectItem, WindowEngagementToggleGroupOption}, merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
+    build_world_3d_scene, create_default_layout, layout::{MeasureSelectItem, WindowEngagementToggleGroupOption}, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, App, ActionDescriptor, PanelGroup, PluginApp,
     SurfaceKind, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -261,6 +261,8 @@ struct Puzzle3dRuntime {
     selection_method: String,
     #[serde(default)]
     hovered_object_id: Option<String>,
+    #[serde(default)]
+    hovered_vortex_full_id: Option<String>,
     #[serde(default = "default_overlap_budget")]
     overlap_budget: f64,
     #[serde(default)]
@@ -320,6 +322,7 @@ impl Default for Puzzle3dRuntime {
             active_tool: String::new(),
             selection_method: default_selection_method(),
             hovered_object_id: None,
+            hovered_vortex_full_id: None,
             overlap_budget: default_overlap_budget(),
             fill_count: 0,
             brush_candidate_index: 0,
@@ -753,7 +756,7 @@ fn world_interaction_json(runtime: &Puzzle3dRuntime) -> String {
     json!({
         "activeTool": runtime.active_tool,
         "brushCandidateIndex": runtime.brush_candidate_index,
-        "hoveredVortexFullId": runtime.selection.vortex_ids.first().cloned(),
+        "hoveredVortexFullId": runtime.hovered_vortex_full_id.clone(),
         "fillEditTargetVolumes": runtime.fill_edit_target_volumes,
         "voxelDims": runtime.voxel_dims,
         "gridFactor": runtime.grid_factor,
@@ -2085,12 +2088,19 @@ fn parse_brush_candidates_free_count(raw: &str) -> usize {
 }
 
 fn puzzle3d_brush_target_vortex(envelope: &Puzzle3dEnvelope) -> Option<String> {
-    envelope.runtime.selection.vortex_ids.first().cloned().or_else(|| {
-        let object_id = envelope.runtime.hovered_object_id.as_deref()?;
-        let object = envelope.fixture.objects.iter().find(|entry| entry.id == object_id)?;
-        let vortex = object.vortices.first()?;
-        Some(puzzle3d_vortex_full_id(&object.id, &vortex.id))
-    })
+    envelope
+        .runtime
+        .selection
+        .vortex_ids
+        .first()
+        .cloned()
+        .or_else(|| envelope.runtime.hovered_vortex_full_id.clone())
+        .or_else(|| {
+            let object_id = envelope.runtime.hovered_object_id.as_deref()?;
+            let object = envelope.fixture.objects.iter().find(|entry| entry.id == object_id)?;
+            let vortex = object.vortices.first()?;
+            Some(puzzle3d_vortex_full_id(&object.id, &vortex.id))
+        })
 }
 
 fn puzzle3d_brush_placement_control(envelope: &Puzzle3dEnvelope, precompute: &Puzzle3dPrecomputeSession) -> Option<WindowEngagementControl> {
@@ -2688,8 +2698,8 @@ impl PluginApp for Puzzle3dPlayApp {
                 }
             }
             "worldVortexHover" => {
-                envelope.runtime.selection.vortex_ids = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()).map(|full_id| vec![full_id.to_string()]).unwrap_or_default();
-                if envelope.runtime.active_tool == "brush" && !envelope.runtime.selection.vortex_ids.is_empty() {
+                envelope.runtime.hovered_vortex_full_id = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()).map(str::to_string);
+                if envelope.runtime.active_tool == "brush" && envelope.runtime.hovered_vortex_full_id.is_some() {
                     drive_precompute(&mut self.precompute, &envelope);
                 }
                 return vec![set_document_op(&envelope)];
@@ -2867,24 +2877,25 @@ impl PluginApp for Puzzle3dPlayApp {
                 return vec![set_document_op(&envelope)];
             }
             "engagementSubmit" => {
-                let raw = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("").trim().to_lowercase();
-                let mut tokens = raw.split_whitespace();
-                match tokens.next() {
-                    Some("select") => envelope.runtime.active_tool = "select".into(),
-                    Some("brush") => {
-                        envelope.runtime.active_tool = "brush".into();
-                        drive_precompute(&mut self.precompute, &envelope);
+                let raw = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("").trim().to_string();
+                if let Some(rest) = strip_engagement_prefix(&raw, "fill") {
+                    envelope.runtime.active_tool = "fill".into();
+                    drive_precompute(&mut self.precompute, &envelope);
+                    let count = rest.parse::<u32>().ok().unwrap_or(envelope.runtime.fill_count).min(PUZZLE3D_FILL_COUNT_MAX);
+                    envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
+                } else {
+                    match raw.to_lowercase().as_str() {
+                        "select" => envelope.runtime.active_tool = "select".into(),
+                        "brush" => {
+                            envelope.runtime.active_tool = "brush".into();
+                            drive_precompute(&mut self.precompute, &envelope);
+                        }
+                        "zoom" => apply_puzzle3d_focus_selection(&mut envelope),
+                        "clear" => envelope.runtime.selection = Puzzle3dSelection::default(),
+                        "rectangle" => envelope.runtime.selection_method = "rectangle".into(),
+                        "lasso" => envelope.runtime.selection_method = "lasso".into(),
+                        _ => {}
                     }
-                    Some("fill") => {
-                        drive_precompute(&mut self.precompute, &envelope);
-                        let count = tokens.next().and_then(|value| value.parse::<u32>().ok()).unwrap_or(envelope.runtime.fill_count).min(PUZZLE3D_FILL_COUNT_MAX);
-                        envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
-                    }
-                    Some("zoom") => apply_puzzle3d_focus_selection(&mut envelope),
-                    Some("clear") => envelope.runtime.selection = Puzzle3dSelection::default(),
-                    Some("rectangle") => envelope.runtime.selection_method = "rectangle".into(),
-                    Some("lasso") => envelope.runtime.selection_method = "lasso".into(),
-                    _ => {}
                 }
                 envelope.runtime.engagement_input = String::new();
                 return vec![set_document_op(&envelope)];

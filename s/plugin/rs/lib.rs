@@ -156,6 +156,110 @@ struct SHomeDocument {
 }
 //#endregion 🔖Types
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the Home launcher; one field per label makes every locale combination compile-checked.
+struct SHomeLabels {
+    vfs_empty_message: &'static str,
+}
+
+const S_HOME_LABELS_NATIVE_EN: SHomeLabels = SHomeLabels { vfs_empty_message: "No studios yet. Create one from the toolbar." };
+const S_HOME_LABELS_NATIVE_DE: SHomeLabels = SHomeLabels { vfs_empty_message: "Noch keine Studios vorhanden. Erstelle eines über die Werkzeugleiste." };
+
+/// 🗣️ Resolves the active Home label set from the shell-provided locale.
+fn s_home_labels(view_state: &ViewState) -> &'static SHomeLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de { &S_HOME_LABELS_NATIVE_DE } else { &S_HOME_LABELS_NATIVE_EN }
+}
+
+/// 🗣️ Complete UI label set for the Studio app; one field per label makes every locale combination compile-checked.
+struct SStudioLabels {
+    apps_section: &'static str,
+    media_vfs_empty_message: &'static str,
+    add_parameter: &'static str,
+    name: &'static str,
+    value: &'static str,
+    min: &'static str,
+    max: &'static str,
+    step: &'static str,
+    add_option: &'static str,
+    new_option_placeholder: &'static str,
+    remove: &'static str,
+    node_id: &'static str,
+    label: &'static str,
+    direct_value: &'static str,
+    media_graph_node: &'static str,
+    media_graph_nodes: &'static str,
+    app_instance: &'static str,
+    app_instances: &'static str,
+    select_hint: &'static str,
+    program_prefix: &'static str,
+    app_prefix: &'static str,
+    instance_id_prefix: &'static str,
+    bound_value_prefix: &'static str,
+    active_app: &'static str,
+}
+
+const S_STUDIO_LABELS_NATIVE_EN: SStudioLabels = SStudioLabels {
+    apps_section: "Apps",
+    media_vfs_empty_message: "No app instances in the media graph.",
+    add_parameter: "Add Parameter",
+    name: "Name",
+    value: "Value",
+    min: "Min",
+    max: "Max",
+    step: "Step",
+    add_option: "Add option",
+    new_option_placeholder: "New option",
+    remove: "Remove",
+    node_id: "Node id",
+    label: "Label",
+    direct_value: "Direct value",
+    media_graph_node: "Media graph node",
+    media_graph_nodes: "Media graph nodes",
+    app_instance: "App instance",
+    app_instances: "App instances",
+    select_hint: "Select media graph nodes or app instances in the canvas.",
+    program_prefix: "Program",
+    app_prefix: "App",
+    instance_id_prefix: "Instance id",
+    bound_value_prefix: "Bound value",
+    active_app: "Active app",
+};
+
+const S_STUDIO_LABELS_NATIVE_DE: SStudioLabels = SStudioLabels {
+    apps_section: "Apps",
+    media_vfs_empty_message: "Keine App-Instanzen im Mediengraphen.",
+    add_parameter: "Parameter hinzufügen",
+    name: "Name",
+    value: "Wert",
+    min: "Min",
+    max: "Max",
+    step: "Schritt",
+    add_option: "Option hinzufügen",
+    new_option_placeholder: "Neue Option",
+    remove: "Entfernen",
+    node_id: "Knoten-ID",
+    label: "Beschriftung",
+    direct_value: "Direkter Wert",
+    media_graph_node: "Mediengraph-Knoten",
+    media_graph_nodes: "Mediengraph-Knoten",
+    app_instance: "App-Instanz",
+    app_instances: "App-Instanzen",
+    select_hint: "Wähle Mediengraph-Knoten oder App-Instanzen im Arbeitsbereich aus.",
+    program_prefix: "Programm",
+    app_prefix: "App",
+    instance_id_prefix: "Instanz-ID",
+    bound_value_prefix: "Gebundener Wert",
+    active_app: "Aktive App",
+};
+
+/// 🗣️ Resolves the active Studio label set from the shell-provided locale.
+fn s_studio_labels(view_state: &ViewState) -> &'static SStudioLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de { &S_STUDIO_LABELS_NATIVE_DE } else { &S_STUDIO_LABELS_NATIVE_EN }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖CatalogBackbone
 fn ensure_studio_fixtures_registered() {
     static FIXTURES: LazyLock<()> = LazyLock::new(|| {
@@ -597,7 +701,7 @@ fn home_vfs_rows() -> Vec<Value> {
     rows
 }
 
-fn render_home_vfs() -> UiNode {
+fn render_home_vfs(labels: &SHomeLabels) -> UiNode {
     build_virtual_file_system_scene(
         S_HOME_SURFACE,
         S_HOME_CONTROLLER_ID,
@@ -606,7 +710,7 @@ fn render_home_vfs() -> UiNode {
             rows_json: serde_json::to_string(&home_vfs_rows()).unwrap_or_else(|_| "[]".into()),
             selected_row_ids_json: None,
             hovered_row_id: None,
-            empty_message: Some("No studios yet. Create one from the toolbar.".into()),
+            empty_message: Some(labels.vfs_empty_message.into()),
             drag_drop_enabled: None,
         },
         Some(S_HOME_WINDOW.into()),
@@ -646,7 +750,7 @@ fn vfs_node_to_row(node: &OsMediaGraphVfsNodeRecord) -> Value {
     })
 }
 
-fn render_media_vfs(document: &OsDocument) -> UiNode {
+fn render_media_vfs(document: &OsDocument, labels: &SStudioLabels) -> UiNode {
     let projection = projection_from_document(document);
     let mut rows = vec![json!({
         "id": OS_MEDIA_GRAPH_VFS_ROOT_ID,
@@ -674,7 +778,7 @@ fn render_media_vfs(document: &OsDocument) -> UiNode {
             rows_json: serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into()),
             selected_row_ids_json: None,
             hovered_row_id: None,
-            empty_message: Some("No app instances in the media graph.".into()),
+            empty_message: Some(labels.media_vfs_empty_message.into()),
             drag_drop_enabled: Some(true),
         },
         Some(S_PLAY_WINDOW_MEDIA_VFS.into()),
@@ -728,7 +832,7 @@ fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode) -> U
     }
 }
 
-fn build_catalogue_tree(panel: &StudioPanelState) -> UiNode {
+fn build_catalogue_tree(panel: &StudioPanelState, labels: &SStudioLabels) -> UiNode {
     let programs: Vec<StudioProgramEntry> = if panel.programs.is_empty() {
         let mut entries = Vec::new();
         for program in list_os_programs() {
@@ -764,7 +868,7 @@ fn build_catalogue_tree(panel: &StudioPanelState) -> UiNode {
     }
     let sections = vec![UiTreeSectionNode {
         id: S_PLAY_CATALOGUE_TAB_ID.into(),
-        label: Some("Apps".into()),
+        label: Some(labels.apps_section.into()),
         default_open: Some(true),
         items: document
             .children
@@ -841,7 +945,7 @@ fn parameter_value_control(parameter: &OsParameter) -> UiNode {
     }
 }
 
-fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
+fn parameter_constraint_fields(parameter: &OsParameter, labels: &SStudioLabels) -> Vec<UiNode> {
     match parameter {
         OsParameter::Numeric {
             id,
@@ -852,7 +956,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
         } => vec![
             UiNode::Field(UiFieldNode {
                 id: format!("s-play-parameters.{id}.min"),
-                label: "Min".into(),
+                label: labels.min.into(),
                 child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
                     id: format!("s-play-parameters.{id}.min.stepper"),
                     value: min.unwrap_or(0.0),
@@ -873,7 +977,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
             }),
             UiNode::Field(UiFieldNode {
                 id: format!("s-play-parameters.{id}.max"),
-                label: "Max".into(),
+                label: labels.max.into(),
                 child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
                     id: format!("s-play-parameters.{id}.max.stepper"),
                     value: max.unwrap_or(0.0),
@@ -894,7 +998,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
             }),
             UiNode::Field(UiFieldNode {
                 id: format!("s-play-parameters.{id}.step"),
-                label: "Step".into(),
+                label: labels.step.into(),
                 child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
                     id: format!("s-play-parameters.{id}.step.stepper"),
                     value: step.unwrap_or(0.0),
@@ -924,7 +1028,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                         child: Box::new(UiNode::Button(UiButtonNode {
                             id: Some(format!("s-play-parameters.{id}.option.{option}.remove")),
                             icon_id: "trash-2".into(),
-                            label: "Remove".into(),
+                            label: labels.remove.into(),
                             action: s_play_action(
                                 "patchParameter",
                                 Some(json!({ "parameterId": id, "field": "removeOption", "value": option })),
@@ -940,12 +1044,12 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                 .collect();
             fields.push(UiNode::Field(UiFieldNode {
                 id: format!("s-play-parameters.{id}.add-option"),
-                label: "Add option".into(),
+                label: labels.add_option.into(),
                 child: Box::new(UiNode::Input(UiInputNode {
                     id: format!("s-play-parameters.{id}.add-option.input"),
                     input_kind: "text".into(),
                     value: String::new(),
-                    placeholder: Some("New option".into()),
+                    placeholder: Some(labels.new_option_placeholder.into()),
                     commit: None,
                     on_change: s_play_action(
                         "patchParameter",
@@ -966,7 +1070,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
     }
 }
 
-fn build_parameters_tree(document: &OsDocument) -> UiNode {
+fn build_parameters_tree(document: &OsDocument, labels: &SStudioLabels) -> UiNode {
     let projection = projection_from_document(document);
     let mut children = vec![UiSectionNode {
         id: "s-play-parameters.header".into(),
@@ -976,7 +1080,7 @@ fn build_parameters_tree(document: &OsDocument) -> UiNode {
             UiNode::Button(UiButtonNode {
                 id: Some("s-play-parameters.add".into()),
                 icon_id: "plus".into(),
-                label: "Add Parameter".into(),
+                label: labels.add_parameter.into(),
                 action: s_play_action("addParameter", Some(json!({ "type": "numeric" }))),
                 style: None,
                 disabled: None,
@@ -989,7 +1093,7 @@ fn build_parameters_tree(document: &OsDocument) -> UiNode {
         let mut parameter_children = vec![
             UiNode::Field(UiFieldNode {
                 id: format!("s-play-parameters.{parameter_id}.name"),
-                label: "Name".into(),
+                label: labels.name.into(),
                 child: Box::new(UiNode::Input(UiInputNode {
                     id: format!("s-play-parameters.{parameter_id}.name.input"),
                     input_kind: "text".into(),
@@ -1016,18 +1120,18 @@ fn build_parameters_tree(document: &OsDocument) -> UiNode {
             }),
             UiNode::Field(UiFieldNode {
                 id: format!("s-play-parameters.{parameter_id}.value-field"),
-                label: "Value".into(),
+                label: labels.value.into(),
                 child: Box::new(parameter_value_control(parameter)),
                 description: None,
                 required: None,
                 error: None,
             }),
         ];
-        parameter_children.extend(parameter_constraint_fields(parameter));
+        parameter_children.extend(parameter_constraint_fields(parameter, labels));
         parameter_children.push(UiNode::Button(UiButtonNode {
             id: Some(format!("s-play-parameters.{parameter_id}.remove")),
             icon_id: "trash-2".into(),
-            label: "Remove".into(),
+            label: labels.remove.into(),
             action: s_play_action(
                 "removeParameter",
                 Some(json!({ "parameterId": parameter_id })),
@@ -1050,7 +1154,7 @@ fn build_parameters_tree(document: &OsDocument) -> UiNode {
     ui_declarative_sections_to_tree(&children)
 }
 
-fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> UiNode {
+fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState, term_labels: &SStudioLabels) -> UiNode {
     let projection = projection_from_document(document);
     let media_node_ids = &runtime.selected_media_node_ids;
     let instance_ids = &runtime.selected_app_instance_ids;
@@ -1077,7 +1181,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
         if media_node_ids.len() == 1 {
             node_fields.push(UiNode::Field(UiFieldNode {
                 id: "s-play-inspector.media-node.id".into(),
-                label: "Node id".into(),
+                label: term_labels.node_id.into(),
                 child: Box::new(UiNode::Input(UiInputNode {
                     id: "s-play-inspector.media-node.id.input".into(),
                     input_kind: "text".into(),
@@ -1150,9 +1254,9 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
         children.push(UiSectionNode {
             id: "s-play-inspector.media-nodes".into(),
             label: Some(if media_node_ids.len() == 1 {
-                "Media graph node".into()
+                term_labels.media_graph_node.into()
             } else {
-                format!("Media graph nodes ({})", media_node_ids.len())
+                format!("{} ({})", term_labels.media_graph_nodes, media_node_ids.len())
             }),
             default_open: Some(true),
             children: node_fields,
@@ -1171,7 +1275,8 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
         let app_uniform = ui_inspector_all_equal(&apps);
         let mut instance_fields = vec![
             ui_text(format!(
-                "Program: {}",
+                "{}: {}",
+                term_labels.program_prefix,
                 if program_uniform {
                     programs.first().cloned().unwrap_or_default()
                 } else {
@@ -1179,7 +1284,8 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                 }
             )),
             ui_text(format!(
-                "App: {}",
+                "{}: {}",
+                term_labels.app_prefix,
                 if app_uniform {
                     apps.first().cloned().unwrap_or_default()
                 } else {
@@ -1188,7 +1294,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
             )),
             UiNode::Field(UiFieldNode {
                 id: "s-play-inspector.app-instance.label".into(),
-                label: "Label".into(),
+                label: term_labels.label.into(),
                 child: Box::new(UiNode::Input(UiInputNode {
                     id: "s-play-inspector.app-instance.label.input".into(),
                     input_kind: "text".into(),
@@ -1214,7 +1320,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
             }),
         ];
         if instance_ids.len() == 1 {
-            instance_fields.insert(2, ui_text(format!("Instance id: {}", instance_ids[0])));
+            instance_fields.insert(2, ui_text(format!("{}: {}", term_labels.instance_id_prefix, instance_ids[0])));
         }
         if instance_ids.len() == 1 {
             if let Some(instance) = instances.first() {
@@ -1240,7 +1346,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                             .collect();
                         let mut items = vec![UiSelectItem {
                             value: "__direct__".into(),
-                            label: "Direct value".into(),
+                            label: term_labels.direct_value.into(),
                         }];
                         for parameter in compatible {
                             items.push(UiSelectItem {
@@ -1285,7 +1391,8 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                                 .find(|entry| entry.id() == binding.parameter_id)
                             {
                                 instance_fields.push(ui_text(format!(
-                                    "Bound value: {}",
+                                    "{}: {}",
+                                    term_labels.bound_value_prefix,
                                     os_parameter_value(parameter)
                                 )));
                             }
@@ -1297,18 +1404,16 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
         children.push(UiSectionNode {
             id: "s-play-inspector.app-instances".into(),
             label: Some(if instance_ids.len() == 1 {
-                "App instance".into()
+                term_labels.app_instance.into()
             } else {
-                format!("App instances ({})", instance_ids.len())
+                format!("{} ({})", term_labels.app_instances, instance_ids.len())
             }),
             default_open: Some(true),
             children: instance_fields,
         });
     }
     if media_node_ids.is_empty() && instance_ids.is_empty() {
-        children[0].children.push(ui_text(
-            "Select media graph nodes or app instances in the canvas.",
-        ));
+        children[0].children.push(ui_text(term_labels.select_hint));
     }
     ui_declarative_sections_to_tree(&children)
 }
@@ -1707,9 +1812,10 @@ impl PluginApp for SHomeApp {
         vec![set_home_document_op(&document)]
     }
 
-    fn render(&self, body_key: &str, _document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, _document_json: &str, view_state: &ViewState) -> UiNode {
+        let labels = s_home_labels(view_state);
         match body_key {
-            S_HOME_BODY => render_home_vfs(),
+            S_HOME_BODY => render_home_vfs(labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -2618,23 +2724,25 @@ impl PluginApp for SStudioApp {
     fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let envelope = parse_studio_envelope(document_json);
         let panel = parse_panel_state(view_state);
+        let labels = s_studio_labels(view_state);
         match body_key {
             S_PLAY_BODY_MEDIA_GRAPH => render_media_graph(&envelope.document, &envelope.runtime),
-            S_PLAY_BODY_MEDIA_VFS => render_media_vfs(&envelope.document),
+            S_PLAY_BODY_MEDIA_VFS => render_media_vfs(&envelope.document, labels),
             S_PLAY_BODY_COMPILED_DAG => render_compiled_dag(&envelope.document),
-            S_PLAY_CATALOGUE_BODY_KEY => build_catalogue_tree(&panel),
-            S_PLAY_PARAMETERS_BODY_KEY => build_parameters_tree(&envelope.document),
-            S_PLAY_INSPECTOR_BODY_KEY => build_inspector_tree(&envelope.document, &envelope.runtime),
+            S_PLAY_CATALOGUE_BODY_KEY => build_catalogue_tree(&panel, labels),
+            S_PLAY_PARAMETERS_BODY_KEY => build_parameters_tree(&envelope.document, labels),
+            S_PLAY_INSPECTOR_BODY_KEY => build_inspector_tree(&envelope.document, &envelope.runtime, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let envelope = parse_studio_envelope(document_json);
         let projection = projection_from_document(&envelope.document);
+        let labels = s_studio_labels(view_state);
         HashMap::from([(
             S_PLAY_WINDOW_MEDIA_GRAPH.into(),
-            media_graph_measures(&envelope.runtime, &projection.app_instances),
+            media_graph_measures(&envelope.runtime, &projection.app_instances, labels),
         )])
     }
 }
@@ -2682,10 +2790,10 @@ fn media_graph_engagement(runtime: &StudioRuntimeState, node_count: usize, app_c
     }
 }
 
-fn media_graph_measures(runtime: &StudioRuntimeState, instances: &[OsAppInstance]) -> Vec<WindowMeasure> {
+fn media_graph_measures(runtime: &StudioRuntimeState, instances: &[OsAppInstance], labels: &SStudioLabels) -> Vec<WindowMeasure> {
     vec![WindowMeasure::Select {
         id: "s-media-active-instance".into(),
-        label: Some("Active app".into()),
+        label: Some(labels.active_app.into()),
         value: runtime.active_instance_id.clone().unwrap_or_default(),
         items: instances
             .iter()
@@ -2771,7 +2879,7 @@ fn create_studio_app() -> App {
         projection.media_graph.nodes.len(),
         projection.app_instances.len(),
     );
-    let measures = media_graph_measures(&runtime, &projection.app_instances);
+    let measures = media_graph_measures(&runtime, &projection.app_instances, s_studio_labels(&ViewState::default()));
     let mut builder = App::builder(S_PLAY_APP_ID, "Studio").document(["semio", "s", "studio"])
         .icon_id("s")
         .mode("main", "Studio")
@@ -3214,7 +3322,7 @@ mod tests {
             ],
             ..Default::default()
         };
-        let tree = build_catalogue_tree(&panel);
+        let tree = build_catalogue_tree(&panel, s_studio_labels(&ViewState::default()));
         let json = serde_json::to_string(&tree).unwrap();
         assert!(json.contains("s-play-catalogue.document.semio.puzzle.2d"));
         assert!(json.contains("s-play-catalogue.document.semio.puzzle.3d"));
@@ -3352,7 +3460,7 @@ mod tests {
             .map(|instance| instance.id.clone())
             .collect();
         envelope.runtime.selected_app_instance_ids = ids;
-        let tree = build_inspector_tree(&envelope.document, &envelope.runtime);
+        let tree = build_inspector_tree(&envelope.document, &envelope.runtime, s_studio_labels(&ViewState::default()));
         let UiNode::Tree(tree_node) = tree else {
             panic!("expected tree");
         };
@@ -3670,6 +3778,48 @@ mod tests {
         assert!(peers.contains(r#""selectionCount":1"#));
         let self_view = presence_peers_json(&envelope.runtime);
         assert!(!self_view.contains("client-test-a"));
+    }
+
+    #[test]
+    fn s_labels_resolve_native_english_by_default() {
+        let home = SHomeApp;
+        let home_node = home.render(S_HOME_BODY, &home.initial_document_json(), &ViewState::default());
+        let home_json = serde_json::to_string(&home_node).unwrap();
+        assert!(home_json.contains("No studios yet. Create one from the toolbar."));
+
+        let app = SStudioApp;
+        let document = initial_studio_document_json();
+        let catalogue_node = app.render(S_PLAY_CATALOGUE_BODY_KEY, &document, &ViewState::default());
+        let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();
+        assert!(catalogue_json.contains("\"Apps\""));
+
+        let parameters_node = app.render(S_PLAY_PARAMETERS_BODY_KEY, &document, &ViewState::default());
+        let parameters_json = serde_json::to_string(&parameters_node).unwrap();
+        assert!(parameters_json.contains("Add Parameter"));
+        assert!(parameters_json.contains("\"Name\""));
+        assert!(parameters_json.contains("\"Remove\""));
+        assert!(!parameters_json.contains("Parameter hinzufügen"));
+    }
+
+    #[test]
+    fn s_labels_resolve_native_german_locale() {
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let home = SHomeApp;
+        let home_node = home.render(S_HOME_BODY, &home.initial_document_json(), &view_state);
+        let home_json = serde_json::to_string(&home_node).unwrap();
+        assert!(home_json.contains("Noch keine Studios vorhanden"));
+
+        let app = SStudioApp;
+        let document = initial_studio_document_json();
+        let parameters_node = app.render(S_PLAY_PARAMETERS_BODY_KEY, &document, &view_state);
+        let parameters_json = serde_json::to_string(&parameters_node).unwrap();
+        assert!(parameters_json.contains("Parameter hinzufügen"));
+        assert!(parameters_json.contains("\"Entfernen\""));
+        assert!(!parameters_json.contains("Add Parameter"));
+
+        let inspector_node = app.render(S_PLAY_INSPECTOR_BODY_KEY, &document, &view_state);
+        let inspector_json = serde_json::to_string(&inspector_node).unwrap();
+        assert!(inspector_json.contains("Wähle Mediengraph-Knoten oder App-Instanzen im Arbeitsbereich aus."));
     }
 }
 //#endregion 🧪Tests

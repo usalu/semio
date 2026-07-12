@@ -532,6 +532,54 @@ fn patch_layer_field(document: &mut RasterDocument, layer_id: &str, field: &str,
 }
 //#endregion 🔖Document
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the raster app; one field per label makes every locale combination compile-checked.
+struct RasterLabels {
+    masks: &'static str,
+    no_masks: &'static str,
+    mask_suffix: &'static str,
+    add_pixel: &'static str,
+    add_group: &'static str,
+    layer_kinds: &'static str,
+    layer: &'static str,
+    catalogue_pixel: &'static str,
+    catalogue_group: &'static str,
+    catalogue_adjustment: &'static str,
+}
+
+const RASTER_LABELS_NATIVE_EN: RasterLabels = RasterLabels {
+    masks: "Masks",
+    no_masks: "No masks",
+    mask_suffix: "mask",
+    add_pixel: "Add Pixel",
+    add_group: "Add Group",
+    layer_kinds: "Layer kinds",
+    layer: "Layer",
+    catalogue_pixel: "pixel — paintable bitmap layer",
+    catalogue_group: "group — nested layer stack",
+    catalogue_adjustment: "adjustment — non-destructive filter",
+};
+
+const RASTER_LABELS_NATIVE_DE: RasterLabels = RasterLabels {
+    masks: "Masken",
+    no_masks: "Keine Masken",
+    mask_suffix: "Maske",
+    add_pixel: "Pixel hinzufügen",
+    add_group: "Gruppe hinzufügen",
+    layer_kinds: "Ebenenarten",
+    layer: "Ebene",
+    catalogue_pixel: "pixel — bearbeitbare Bitmap-Ebene",
+    catalogue_group: "group — verschachtelter Ebenenstapel",
+    catalogue_adjustment: "adjustment — zerstörungsfreier Filter",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
+fn raster_labels(view_state: &ViewState) -> &'static RasterLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de { &RASTER_LABELS_NATIVE_DE } else { &RASTER_LABELS_NATIVE_EN }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Panels
 fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor {
@@ -606,11 +654,11 @@ fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
     }
 }
 
-fn render_layers_panel(document: &RasterDocument, play: &RasterPlayEnvelope, view_state: &ViewState) -> UiNode {
+fn render_layers_panel(document: &RasterDocument, play: &RasterPlayEnvelope, view_state: &ViewState, labels: &RasterLabels) -> UiNode {
     let toolbar = vec![
         UiTreeItemNode {
             id: "raster-play-layers.add.pixel".into(),
-            label: "Add Pixel".into(),
+            label: labels.add_pixel.into(),
             description: None,
             icon_id: Some("image".into()),
             selected: None,
@@ -631,7 +679,7 @@ fn render_layers_panel(document: &RasterDocument, play: &RasterPlayEnvelope, vie
         },
         UiTreeItemNode {
             id: "raster-play-layers.add.group".into(),
-            label: "Add Group".into(),
+            label: labels.add_group.into(),
             description: None,
             icon_id: Some("folder-plus".into()),
             selected: None,
@@ -680,16 +728,16 @@ fn render_layers_panel(document: &RasterDocument, play: &RasterPlayEnvelope, vie
     })
 }
 
-fn render_masks_panel(document: &RasterDocument, play: &RasterPlayEnvelope, view_state: &ViewState) -> UiNode {
+fn render_masks_panel(document: &RasterDocument, play: &RasterPlayEnvelope, view_state: &ViewState, labels: &RasterLabels) -> UiNode {
     let mut items = Vec::new();
-    fn collect_masks(layer: &RasterLayerNode, items: &mut Vec<UiTreeItemNode>) {
+    fn collect_masks(layer: &RasterLayerNode, items: &mut Vec<UiTreeItemNode>, labels: &RasterLabels) {
         if let RasterLayerNode::Pixel { id, name, mask, .. }
         | RasterLayerNode::Group { id, name, mask, .. } = layer
         {
             if mask.as_ref().is_some_and(|mask| mask.enabled) {
                 items.push(UiTreeItemNode {
                     id: mask_row_id(id),
-                    label: format!("{name} mask"),
+                    label: format!("{name} {}", labels.mask_suffix),
                     description: Some("mask".into()),
                     icon_id: Some("scan".into()),
                     selected: None,
@@ -712,17 +760,17 @@ fn render_masks_panel(document: &RasterDocument, play: &RasterPlayEnvelope, view
         }
         if let RasterLayerNode::Group { children, .. } = layer {
             for child in children {
-                collect_masks(child, items);
+                collect_masks(child, items, labels);
             }
         }
     }
     for layer in &document.layers {
-        collect_masks(layer, &mut items);
+        collect_masks(layer, &mut items, labels);
     }
     if items.is_empty() {
         items.push(UiTreeItemNode {
             id: "raster-play-masks.empty".into(),
-            label: "No masks".into(),
+            label: labels.no_masks.into(),
             description: None,
             icon_id: Some("scan".into()),
             selected: None,
@@ -741,7 +789,7 @@ fn render_masks_panel(document: &RasterDocument, play: &RasterPlayEnvelope, view
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "raster-play-masks".into(),
-            label: Some("Masks".into()),
+            label: Some(labels.masks.into()),
             default_open: Some(true),
             items,
         }],
@@ -757,20 +805,20 @@ fn render_masks_panel(document: &RasterDocument, play: &RasterPlayEnvelope, view
     })
 }
 
-fn render_catalogue_panel() -> UiNode {
+fn render_catalogue_panel(labels: &RasterLabels) -> UiNode {
     ui_declarative_sections_to_tree(&[UiSectionNode {
         id: "raster-catalogue".into(),
-        label: Some("Layer kinds".into()),
+        label: Some(labels.layer_kinds.into()),
         default_open: Some(true),
         children: vec![
-            ui_text("pixel — paintable bitmap layer"),
-            ui_text("group — nested layer stack"),
-            ui_text("adjustment — non-destructive filter"),
+            ui_text(labels.catalogue_pixel),
+            ui_text(labels.catalogue_group),
+            ui_text(labels.catalogue_adjustment),
         ],
     }])
 }
 
-fn render_properties_panel(document: &RasterDocument, view_state: &ViewState) -> UiNode {
+fn render_properties_panel(document: &RasterDocument, view_state: &ViewState, labels: &RasterLabels) -> UiNode {
     let selected = selection_from_view(view_state);
     let layers: Vec<&RasterLayerNode> = selected
         .iter()
@@ -799,7 +847,7 @@ fn render_properties_panel(document: &RasterDocument, view_state: &ViewState) ->
     let mixed_opacity = ui_inspector_mixed_number(&opacities);
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "raster-properties.layer".into(),
-        label: "Layer".into(),
+        label: labels.layer.into(),
         default_open: Some(true),
         fields: vec![
             ui_inspector_readonly_field(
@@ -1156,13 +1204,14 @@ impl PluginApp for RasterApp {
 
     fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let play = parse_envelope(document_json);
+        let labels = raster_labels(view_state);
         match body_key {
             RASTER_PLAY_BODY_COMPOSITE => render_composite_scene(&play),
             RASTER_PLAY_BODY_NAVIGATOR => render_navigator_scene(&play),
-            RASTER_PLAY_BODY_LAYERS => render_layers_panel(&play.document, &play, view_state),
-            RASTER_PLAY_BODY_MASKS => render_masks_panel(&play.document, &play, view_state),
-            RASTER_PLAY_BODY_CATALOGUE => render_catalogue_panel(),
-            RASTER_PLAY_BODY_PROPERTIES => render_properties_panel(&play.document, view_state),
+            RASTER_PLAY_BODY_LAYERS => render_layers_panel(&play.document, &play, view_state, labels),
+            RASTER_PLAY_BODY_MASKS => render_masks_panel(&play.document, &play, view_state, labels),
+            RASTER_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),
+            RASTER_PLAY_BODY_PROPERTIES => render_properties_panel(&play.document, view_state, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -1344,6 +1393,44 @@ mod tests {
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("\"type\":\"tree\""));
         assert!(json.contains("Backdrop"));
+    }
+
+    #[test]
+    fn raster_labels_resolve_native_english_by_default() {
+        let app = RasterApp;
+        let document = serde_json::to_string(&empty_raster_document()).unwrap();
+        let layers_node = app.render(RASTER_PLAY_BODY_LAYERS, &document, &ViewState::default());
+        let layers_json = serde_json::to_string(&layers_node).unwrap();
+        assert!(layers_json.contains("Add Pixel"));
+        assert!(layers_json.contains("Add Group"));
+        let masks_node = app.render(RASTER_PLAY_BODY_MASKS, &document, &ViewState::default());
+        let masks_json = serde_json::to_string(&masks_node).unwrap();
+        assert!(masks_json.contains("Masks"));
+        assert!(masks_json.contains("No masks"));
+        let catalogue_node = app.render(RASTER_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();
+        assert!(catalogue_json.contains("Layer kinds"));
+        let properties_node = app.render(RASTER_PLAY_BODY_PROPERTIES, &document, &ViewState::default());
+        let properties_json = serde_json::to_string(&properties_node).unwrap();
+        assert!(properties_json.contains("Schema:"));
+    }
+
+    #[test]
+    fn raster_labels_resolve_german_locale() {
+        let app = RasterApp;
+        let document = serde_json::to_string(&empty_raster_document()).unwrap();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let layers_node = app.render(RASTER_PLAY_BODY_LAYERS, &document, &view_state);
+        let layers_json = serde_json::to_string(&layers_node).unwrap();
+        assert!(layers_json.contains("Pixel hinzufügen"));
+        assert!(layers_json.contains("Gruppe hinzufügen"));
+        let masks_node = app.render(RASTER_PLAY_BODY_MASKS, &document, &view_state);
+        let masks_json = serde_json::to_string(&masks_node).unwrap();
+        assert!(masks_json.contains("Masken"));
+        assert!(masks_json.contains("Keine Masken"));
+        let catalogue_node = app.render(RASTER_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();
+        assert!(catalogue_json.contains("Ebenenarten"));
     }
 
     #[test]

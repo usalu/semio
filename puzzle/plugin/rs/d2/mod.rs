@@ -617,7 +617,7 @@ fn apply_brush_place_payload(fixture: &mut Value, payload: &Value) {
 }
 
 /// 🖌️ Brush candidate rows (`{nodeKind, targetHandleIndex}`) drained from the host into a placement toggle-group control.
-fn puzzle2d_brush_placement_control(envelope: &Puzzle2dPlayEnvelope) -> Option<WindowEngagementControl> {
+fn puzzle2d_brush_placement_control(envelope: &Puzzle2dPlayEnvelope, labels: &Puzzle2dLabels) -> Option<WindowEngagementControl> {
     if envelope.runtime.brush_candidates.is_empty() {
         return None;
     }
@@ -634,7 +634,7 @@ fn puzzle2d_brush_placement_control(envelope: &Puzzle2dPlayEnvelope) -> Option<W
     let selected_index = envelope.runtime.brush_candidate_index.min(options.len().saturating_sub(1));
     Some(WindowEngagementControl::ToggleGroup {
         id: Some("puzzle2d-brush-placement".into()),
-        label: Some("Placement".into()),
+        label: Some(labels.placement.into()),
         value: Some(format!("puzzle2d.brush.candidate.{selected_index}")),
         options,
         disabled: None,
@@ -643,10 +643,10 @@ fn puzzle2d_brush_placement_control(envelope: &Puzzle2dPlayEnvelope) -> Option<W
 }
 
 /// 🪣 Fill-count slider control shown while the fill tool builds a brush-fill session.
-fn puzzle2d_fill_count_control(envelope: &Puzzle2dPlayEnvelope) -> WindowEngagementControl {
+fn puzzle2d_fill_count_control(envelope: &Puzzle2dPlayEnvelope, labels: &Puzzle2dLabels) -> WindowEngagementControl {
     WindowEngagementControl::Slider {
         id: Some("puzzle2d-fill-count".into()),
-        label: Some(format!("Fill {}", envelope.runtime.fill_count)),
+        label: Some(format!("{} {}", labels.fill, envelope.runtime.fill_count)),
         value: envelope.runtime.fill_count as f64,
         min: 0.0,
         max: PUZZLE2D_FILL_COUNT_MAX as f64,
@@ -658,15 +658,15 @@ fn puzzle2d_fill_count_control(envelope: &Puzzle2dPlayEnvelope) -> WindowEngagem
     }
 }
 
-fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost, pane: &str) -> WindowEngagement {
+fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost, pane: &str, labels: &Puzzle2dLabels) -> WindowEngagement {
     let overlay: Value = serde_json::from_str(&host.overlay_paint_state_json()).unwrap_or(Value::Null);
     let pane_lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).map(String::as_str).unwrap_or(PUZZLE2D_LOD_MODE_AUTOMATIC);
     let lod = overlay.get("lod").and_then(|value| value.as_str()).unwrap_or(if pane_lod_mode == PUZZLE2D_LOD_MODE_AUTOMATIC { "auto" } else { pane_lod_mode });
     let node_count = fixture_nodes(&envelope.fixture).len();
     let edge_count = fixture_edges(&envelope.fixture).len();
     let control = match envelope.runtime.active_tool.as_str() {
-        "fill" => Some(puzzle2d_fill_count_control(envelope)),
-        "brush" => puzzle2d_brush_placement_control(envelope),
+        "fill" => Some(puzzle2d_fill_count_control(envelope, labels)),
+        "brush" => puzzle2d_brush_placement_control(envelope, labels),
         _ => None,
     };
     let input_value = envelope.runtime.engagement_input_by_pane.get(pane).cloned().unwrap_or_default();
@@ -693,7 +693,7 @@ fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost, pane: 
         options: Some(vec![
             WindowEngagementOption {
                 id: PUZZLE2D_ENGAGEMENT_TOOL_SELECT.into(),
-                label: Some("Select".into()),
+                label: Some(labels.select.into()),
                 icon_id: Some("cursor".into()),
                 pressed: Some(envelope.runtime.active_tool == "select"),
                 disabled: None,
@@ -701,7 +701,7 @@ fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost, pane: 
             },
             WindowEngagementOption {
                 id: PUZZLE2D_ENGAGEMENT_TOOL_BRUSH.into(),
-                label: Some("Brush".into()),
+                label: Some(labels.brush.into()),
                 icon_id: Some("brush".into()),
                 pressed: Some(envelope.runtime.active_tool == "brush"),
                 disabled: None,
@@ -709,7 +709,7 @@ fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost, pane: 
             },
             WindowEngagementOption {
                 id: PUZZLE2D_ENGAGEMENT_TOOL_FILL.into(),
-                label: Some("Fill".into()),
+                label: Some(labels.fill.into()),
                 icon_id: Some("fill".into()),
                 pressed: Some(envelope.runtime.fill_count > 0 || envelope.runtime.active_tool == "fill"),
                 disabled: None,
@@ -895,6 +895,99 @@ fn patch_inspector_nodes(fixture: &mut Value, ids: &[String], field: &str, value
 }
 //#endregion 🔖Canvas
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the 2d app; one field per label makes every terminology×locale combination compile-checked.
+struct Puzzle2dLabels {
+    // entity nouns — remapped under the "reuse" terminology
+    nodes: &'static str,
+    handles: &'static str,
+    // document tree / catalogue section labels
+    edges: &'static str,
+    none: &'static str,
+    // properties panel summary labels
+    schema: &'static str,
+    extension: &'static str,
+    // inspector field labels
+    id: &'static str,
+    node_kind: &'static str,
+    x: &'static str,
+    y: &'static str,
+    // measures
+    automatic: &'static str,
+    lod: &'static str,
+    suggestion: &'static str,
+    offset: &'static str,
+    node_weights: &'static str,
+    handle_weights: &'static str,
+    // engagement
+    select: &'static str,
+    brush: &'static str,
+    fill: &'static str,
+    placement: &'static str,
+}
+
+const PUZZLE2D_LABELS_NATIVE_EN: Puzzle2dLabels = Puzzle2dLabels {
+    nodes: "Nodes",
+    handles: "Handles",
+    edges: "Edges",
+    none: "(none)",
+    schema: "Schema",
+    extension: "Extension",
+    id: "Id",
+    node_kind: "Node Kind",
+    x: "X",
+    y: "Y",
+    automatic: "Automatic",
+    lod: "LOD",
+    suggestion: "Suggestion",
+    offset: "Offset",
+    node_weights: "Node Weights",
+    handle_weights: "Handle Weights",
+    select: "Select",
+    brush: "Brush",
+    fill: "Fill",
+    placement: "Placement",
+};
+
+const PUZZLE2D_LABELS_NATIVE_DE: Puzzle2dLabels = Puzzle2dLabels {
+    nodes: "Knoten",
+    handles: "Anschlüsse",
+    edges: "Kanten",
+    none: "(keine)",
+    schema: "Schema",
+    extension: "Erweiterung",
+    id: "Id",
+    node_kind: "Knotenart",
+    x: "X",
+    y: "Y",
+    automatic: "Automatisch",
+    lod: "LOD",
+    suggestion: "Vorschlag",
+    offset: "Versatz",
+    node_weights: "Knotengewichte",
+    handle_weights: "Anschlussgewichte",
+    select: "Auswählen",
+    brush: "Pinsel",
+    fill: "Füllen",
+    placement: "Platzierung",
+};
+
+const PUZZLE2D_LABELS_REUSE_EN: Puzzle2dLabels = Puzzle2dLabels { nodes: "Building components", handles: "Connection points", ..PUZZLE2D_LABELS_NATIVE_EN };
+const PUZZLE2D_LABELS_REUSE_DE: Puzzle2dLabels = Puzzle2dLabels { nodes: "Baukomponenten", handles: "Verbindungspunkte", ..PUZZLE2D_LABELS_NATIVE_DE };
+
+/// 🗣️ Resolves the active label set from the shell-provided locale/terminology; unknown terminology ids fall back to native.
+fn puzzle2d_labels(view_state: &ViewState) -> &'static Puzzle2dLabels {
+    let terminology = view_state.terminology.as_deref().unwrap_or("native");
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    match (terminology, is_de) {
+        ("reuse", true) => &PUZZLE2D_LABELS_REUSE_DE,
+        ("reuse", false) => &PUZZLE2D_LABELS_REUSE_EN,
+        (_, true) => &PUZZLE2D_LABELS_NATIVE_DE,
+        (_, false) => &PUZZLE2D_LABELS_NATIVE_EN,
+    }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖DocumentPanel
 fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode {
@@ -943,7 +1036,7 @@ fn document_tree_selected_ids(fixture: &Value, selected: &[String]) -> Vec<Strin
         .collect()
 }
 
-fn render_document_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
+fn render_document_panel(envelope: &Puzzle2dPlayEnvelope, labels: &Puzzle2dLabels) -> UiNode {
     let fixture = &envelope.fixture;
     let node_items: Vec<UiTreeItemNode> = fixture_nodes(fixture)
         .iter()
@@ -963,12 +1056,12 @@ fn render_document_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
         sections: vec![
             UiTreeSectionNode {
                 id: "puzzle2d-play-document.nodes".into(),
-                label: Some("Nodes".into()),
+                label: Some(labels.nodes.into()),
                 default_open: Some(true),
                 items: if node_items.is_empty() {
                     vec![UiTreeItemNode {
                         id: "puzzle2d-play-document.nodes.empty".into(),
-                        label: "(none)".into(),
+                        label: labels.none.into(),
                         description: None,
                         icon_id: None,
                         selected: None,
@@ -989,12 +1082,12 @@ fn render_document_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
             },
             UiTreeSectionNode {
                 id: "puzzle2d-play-document.edges".into(),
-                label: Some("Edges".into()),
+                label: Some(labels.edges.into()),
                 default_open: Some(false),
                 items: if edge_items.is_empty() {
                     vec![UiTreeItemNode {
                         id: "puzzle2d-play-document.edges.empty".into(),
-                        label: "(none)".into(),
+                        label: labels.none.into(),
                         description: None,
                         icon_id: None,
                         selected: None,
@@ -1085,7 +1178,7 @@ fn puzzle2d_catalog_item_drag_data(slice: &str, kind_id: &str, entry: &Value) ->
     HashMap::from([(PUZZLE2D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())])
 }
 
-fn kind_catalog_section(section_id: &str, slice: &str, label: &str, entries: &[Value]) -> UiTreeSectionNode {
+fn kind_catalog_section(section_id: &str, slice: &str, label: &str, entries: &[Value], labels: &Puzzle2dLabels) -> UiTreeSectionNode {
     let items: Vec<UiTreeItemNode> = entries
         .iter()
         .enumerate()
@@ -1118,7 +1211,7 @@ fn kind_catalog_section(section_id: &str, slice: &str, label: &str, entries: &[V
         items: if items.is_empty() {
             vec![UiTreeItemNode {
                 id: format!("{section_id}.empty"),
-                label: "(none)".into(),
+                label: labels.none.into(),
                 description: None,
                 icon_id: None,
                 selected: None,
@@ -1139,7 +1232,7 @@ fn kind_catalog_section(section_id: &str, slice: &str, label: &str, entries: &[V
     }
 }
 
-fn render_catalogue_panel(fixture: &Value) -> UiNode {
+fn render_catalogue_panel(fixture: &Value, labels: &Puzzle2dLabels) -> UiNode {
     let inferred_nodes = inferred_kind_entries(fixture, "nodes");
     let inferred_handles = inferred_kind_entries(fixture, "handles");
     let inferred_edges = inferred_kind_entries(fixture, "edges");
@@ -1148,9 +1241,9 @@ fn render_catalogue_panel(fixture: &Value) -> UiNode {
     let edge_entries = kind_catalog_entries(fixture, "edges").unwrap_or(inferred_edges.as_slice());
     UiNode::Tree(UiTreeNode {
         sections: vec![
-            kind_catalog_section("puzzle2d-play-kinds.nodes", "nodes", "Nodes", &node_entries),
-            kind_catalog_section("puzzle2d-play-kinds.handles", "handles", "Handles", &handle_entries),
-            kind_catalog_section("puzzle2d-play-kinds.edges", "edges", "Edges", &edge_entries),
+            kind_catalog_section("puzzle2d-play-kinds.nodes", "nodes", labels.nodes, &node_entries, labels),
+            kind_catalog_section("puzzle2d-play-kinds.handles", "handles", labels.handles, &handle_entries, labels),
+            kind_catalog_section("puzzle2d-play-kinds.edges", "edges", labels.edges, &edge_entries, labels),
         ],
         selected_ids: None,
         highlighted_ids: None,
@@ -1161,22 +1254,22 @@ fn render_catalogue_panel(fixture: &Value) -> UiNode {
 //#endregion 🔖CataloguePanel
 
 //#region 🔖InspectorPanel
-fn render_properties_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
+fn render_properties_panel(envelope: &Puzzle2dPlayEnvelope, labels: &Puzzle2dLabels) -> UiNode {
     let selected_nodes: Vec<&Value> = envelope.runtime.selected_ids.iter().filter_map(|id| fixture_nodes(&envelope.fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))).collect();
     if selected_nodes.is_empty() {
         return ui_stack_vertical(vec![
-            ui_text(format!("Schema: {PUZZLE2D_FIXTURE_SCHEMA}")),
-            ui_text(format!("Extension: {}", puzzle_extension_id())),
-            ui_text(format!("Nodes: {}", fixture_nodes(&envelope.fixture).len())),
-            ui_text(format!("Edges: {}", fixture_edges(&envelope.fixture).len())),
+            ui_text(format!("{}: {PUZZLE2D_FIXTURE_SCHEMA}", labels.schema)),
+            ui_text(format!("{}: {}", labels.extension, puzzle_extension_id())),
+            ui_text(format!("{}: {}", labels.nodes, fixture_nodes(&envelope.fixture).len())),
+            ui_text(format!("{}: {}", labels.edges, fixture_edges(&envelope.fixture).len())),
         ]);
     }
     let node = selected_nodes[0];
     ui_stack_vertical(vec![
-        ui_inspector_readonly_field("puzzle2d-play-inspector.id", "Id", node.get("id").and_then(|value| value.as_str()).unwrap_or("").to_string()),
-        ui_inspector_readonly_field("puzzle2d-play-inspector.node-kind", "Node Kind", node.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("—").to_string()),
-        ui_inspector_readonly_field("puzzle2d-play-inspector.x", "X", node.get("x").and_then(|value| value.as_f64()).map(|value| value.to_string()).unwrap_or_else(|| "—".into())),
-        ui_inspector_readonly_field("puzzle2d-play-inspector.y", "Y", node.get("y").and_then(|value| value.as_f64()).map(|value| value.to_string()).unwrap_or_else(|| "—".into())),
+        ui_inspector_readonly_field("puzzle2d-play-inspector.id", labels.id, node.get("id").and_then(|value| value.as_str()).unwrap_or("").to_string()),
+        ui_inspector_readonly_field("puzzle2d-play-inspector.node-kind", labels.node_kind, node.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("—").to_string()),
+        ui_inspector_readonly_field("puzzle2d-play-inspector.x", labels.x, node.get("x").and_then(|value| value.as_f64()).map(|value| value.to_string()).unwrap_or_else(|| "—".into())),
+        ui_inspector_readonly_field("puzzle2d-play-inspector.y", labels.y, node.get("y").and_then(|value| value.as_f64()).map(|value| value.to_string()).unwrap_or_else(|| "—".into())),
     ])
 }
 //#endregion 🔖InspectorPanel
@@ -1193,10 +1286,10 @@ fn puzzle2d_kind_ids(fixture: &Value, field: &str) -> Vec<String> {
 }
 
 /// 📶 Per-pane LOD select measure: "Automatic" plus every scale tier (minimap…micro), persisted via `setLodModeForPane`.
-fn puzzle2d_lod_measure(pane: &str, current_mode: &str) -> WindowMeasure {
-    let mut items = vec![MeasureSelectItem { id: PUZZLE2D_LOD_MODE_AUTOMATIC.into(), value: PUZZLE2D_LOD_MODE_AUTOMATIC.into(), label: "Automatic".into() }];
+fn puzzle2d_lod_measure(pane: &str, current_mode: &str, labels: &Puzzle2dLabels) -> WindowMeasure {
+    let mut items = vec![MeasureSelectItem { id: PUZZLE2D_LOD_MODE_AUTOMATIC.into(), value: PUZZLE2D_LOD_MODE_AUTOMATIC.into(), label: labels.automatic.into() }];
     items.extend(puzzle2d_lod_tier_ids().into_iter().map(|tier| MeasureSelectItem { id: tier.clone(), value: tier.clone(), label: tier }));
-    WindowMeasure::Select { id: format!("{pane}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: puzzle2d_action("setLodModeForPane", Some(json!({ "pane": pane }))) }
+    WindowMeasure::Select { id: format!("{pane}-lod"), label: Some(labels.lod.into()), value: current_mode.into(), items, on_change: puzzle2d_action("setLodModeForPane", Some(json!({ "pane": pane }))) }
 }
 
 fn puzzle2d_kind_weight_measures(prefix: &str, ids: &[String], weights: &BTreeMap<String, f64>, catalog_slice: &str) -> Vec<WindowMeasure> {
@@ -1217,17 +1310,17 @@ fn puzzle2d_kind_weight_measures(prefix: &str, ids: &[String], weights: &BTreeMa
 }
 
 /// 🎚️ Suggestion offset slider plus node/handle kind-weight sliders, calling `setSuggestionOffset`/`setBrushKindWeights`.
-fn puzzle2d_suggestion_measures_group(envelope: &Puzzle2dPlayEnvelope) -> WindowMeasure {
+fn puzzle2d_suggestion_measures_group(envelope: &Puzzle2dPlayEnvelope, labels: &Puzzle2dLabels) -> WindowMeasure {
     let node_ids = puzzle2d_kind_ids(&envelope.fixture, "nodes");
     let handle_ids = puzzle2d_kind_ids(&envelope.fixture, "handles");
     WindowMeasure::Group {
         id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion"),
-        label: "Suggestion".into(),
+        label: labels.suggestion.into(),
         default_open: Some(false),
         children: vec![
             WindowMeasure::Slider {
                 id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-offset"),
-                label: Some("Offset".into()),
+                label: Some(labels.offset.into()),
                 value: envelope.runtime.suggestion_offset,
                 min: PUZZLE2D_SUGGESTION_OFFSET_MIN,
                 max: PUZZLE2D_SUGGESTION_OFFSET_MAX,
@@ -1236,13 +1329,13 @@ fn puzzle2d_suggestion_measures_group(envelope: &Puzzle2dPlayEnvelope) -> Window
             },
             WindowMeasure::Group {
                 id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-distribution-nodes"),
-                label: "Node Weights".into(),
+                label: labels.node_weights.into(),
                 default_open: Some(false),
                 children: puzzle2d_kind_weight_measures("node-kind", &node_ids, &envelope.runtime.node_kind_weights, "nodes"),
             },
             WindowMeasure::Group {
                 id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-distribution-handles"),
-                label: "Handle Weights".into(),
+                label: labels.handle_weights.into(),
                 default_open: Some(false),
                 children: puzzle2d_kind_weight_measures("handle-kind", &handle_ids, &envelope.runtime.handle_kind_weights, "handles"),
             },
@@ -1250,9 +1343,9 @@ fn puzzle2d_suggestion_measures_group(envelope: &Puzzle2dPlayEnvelope) -> Window
     }
 }
 
-fn puzzle2d_window_measures(pane: &str, envelope: &Puzzle2dPlayEnvelope) -> Vec<WindowMeasure> {
+fn puzzle2d_window_measures(pane: &str, envelope: &Puzzle2dPlayEnvelope, labels: &Puzzle2dLabels) -> Vec<WindowMeasure> {
     let mode = envelope.runtime.lod_mode_by_pane.get(pane).map(String::as_str).unwrap_or(PUZZLE2D_LOD_MODE_AUTOMATIC);
-    vec![puzzle2d_lod_measure(pane, mode), puzzle2d_suggestion_measures_group(envelope)]
+    vec![puzzle2d_lod_measure(pane, mode, labels), puzzle2d_suggestion_measures_group(envelope, labels)]
 }
 //#endregion 🔖Measures
 
@@ -1691,27 +1784,30 @@ impl PluginApp for Puzzle2dPlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
+        let labels = puzzle2d_labels(view_state);
         match body_key {
             PUZZLE2D_PLAY_BODY_OVERVIEW => render_canvas(&envelope, PUZZLE2D_PANE_OVERVIEW),
             PUZZLE2D_PLAY_BODY_DETAIL => render_canvas(&envelope, PUZZLE2D_PANE_DETAIL),
             PUZZLE2D_PLAY_BODY_SELECTION => render_canvas(&envelope, PUZZLE2D_PANE_SELECTION),
-            PUZZLE2D_PLAY_BODY_LAYERS => render_document_panel(&envelope),
-            PUZZLE2D_PLAY_BODY_CATALOGUE => render_catalogue_panel(&envelope.fixture),
-            PUZZLE2D_PLAY_BODY_PROPERTIES => render_properties_panel(&envelope),
+            PUZZLE2D_PLAY_BODY_LAYERS => render_document_panel(&envelope, labels),
+            PUZZLE2D_PLAY_BODY_CATALOGUE => render_catalogue_panel(&envelope.fixture, labels),
+            PUZZLE2D_PLAY_BODY_PROPERTIES => render_properties_panel(&envelope, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn window_engagements(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let envelope = parse_envelope(document_json);
-        PUZZLE2D_PANES.iter().map(|pane| (pane.to_string(), puzzle2d_engagement(&envelope, &self.host, pane))).collect()
+        let labels = puzzle2d_labels(view_state);
+        PUZZLE2D_PANES.iter().map(|pane| (pane.to_string(), puzzle2d_engagement(&envelope, &self.host, pane, labels))).collect()
     }
 
-    fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let envelope = parse_envelope(document_json);
-        PUZZLE2D_PANES.iter().map(|pane| (pane.to_string(), puzzle2d_window_measures(pane, &envelope))).collect()
+        let labels = puzzle2d_labels(view_state);
+        PUZZLE2D_PANES.iter().map(|pane| (pane.to_string(), puzzle2d_window_measures(pane, &envelope, labels))).collect()
     }
 }
 //#endregion 🔖Puzzle2dPlayApp
@@ -1721,15 +1817,17 @@ pub fn create_puzzle2d_app() -> App {
     let mut host = puzzle_board_host();
     let envelope = default_envelope();
     sync_host_from_envelope(&mut host, &envelope);
+    let labels = puzzle2d_labels(&ViewState::default());
     let mut app = App::from_builder(
         App::builder(PUZZLE2D_PLAY_APP_ID, "Puzzle 2D")
             .document(["semio", "puzzle", "2d"])
             .icon_id("puzzle2d")
+            .terminology("reuse")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind_with_engagement(PUZZLE2D_PANE_OVERVIEW, "Overview", PUZZLE2D_PLAY_BODY_OVERVIEW, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_OVERVIEW))
-            .window_kind_with_engagement(PUZZLE2D_PANE_DETAIL, "Detail", PUZZLE2D_PLAY_BODY_DETAIL, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_DETAIL))
-            .window_kind_with_engagement(PUZZLE2D_PANE_SELECTION, "Selection", PUZZLE2D_PLAY_BODY_SELECTION, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_SELECTION))
+            .window_kind_with_engagement(PUZZLE2D_PANE_OVERVIEW, "Overview", PUZZLE2D_PLAY_BODY_OVERVIEW, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_OVERVIEW, labels))
+            .window_kind_with_engagement(PUZZLE2D_PANE_DETAIL, "Detail", PUZZLE2D_PLAY_BODY_DETAIL, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_DETAIL, labels))
+            .window_kind_with_engagement(PUZZLE2D_PANE_SELECTION, "Selection", PUZZLE2D_PLAY_BODY_SELECTION, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_SELECTION, labels))
             .panel_tab("framework.panel.document", FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE2D_PLAY_BODY_LAYERS)
             .panel_tab("framework.panel.catalogue", FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE2D_PLAY_BODY_CATALOGUE)
             .panel_tab("framework.panel.inspection", FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE2D_PLAY_BODY_PROPERTIES)
@@ -1737,7 +1835,7 @@ pub fn create_puzzle2d_app() -> App {
     );
     for pane in PUZZLE2D_PANES {
         if let Some(window) = app.definition.window_kinds.iter_mut().find(|window| window.id == pane) {
-            window.measures = puzzle2d_window_measures(pane, &envelope);
+            window.measures = puzzle2d_window_measures(pane, &envelope, labels);
         }
     }
     app.example("empty", "Empty", serde_json::to_string(&default_envelope()).unwrap())
@@ -2065,6 +2163,75 @@ mod tests {
         let mut ids = envelope.runtime.selected_ids.clone();
         ids.sort();
         assert_eq!(ids, vec!["n1".to_string(), "n2".to_string()]);
+    }
+
+    #[test]
+    fn puzzle2d_labels_resolve_native_by_default() {
+        let app = Puzzle2dPlayApp::default();
+        let envelope = Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(), runtime: Puzzle2dPlayRuntime::default() };
+        let document = serde_json::to_string(&envelope).unwrap();
+        let node = app.render(PUZZLE2D_PLAY_BODY_LAYERS, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("\"Nodes\""));
+        assert!(json.contains("\"Edges\""));
+        assert!(!json.contains("Building components"));
+        assert!(!json.contains("Knoten"));
+
+        let engagements = app.window_engagements(&document, &ViewState::default());
+        let overview = engagements.get(PUZZLE2D_PANE_OVERVIEW).expect("overview engagement");
+        let options_json = serde_json::to_string(&overview.options).unwrap();
+        assert!(options_json.contains("\"Select\""));
+        assert!(options_json.contains("\"Brush\""));
+        assert!(options_json.contains("\"Fill\""));
+    }
+
+    #[test]
+    fn puzzle2d_labels_resolve_native_in_german() {
+        let app = Puzzle2dPlayApp::default();
+        let envelope = Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(), runtime: Puzzle2dPlayRuntime::default() };
+        let document = serde_json::to_string(&envelope).unwrap();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let node = app.render(PUZZLE2D_PLAY_BODY_LAYERS, &document, &view_state);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("\"Knoten\""));
+        assert!(json.contains("\"Kanten\""));
+        assert!(!json.contains("\"Nodes\""));
+
+        let measures = app.window_measures(&document, &view_state);
+        let overview_measures_json = serde_json::to_string(&measures.get(PUZZLE2D_PANE_OVERVIEW).unwrap()).unwrap();
+        assert!(overview_measures_json.contains("Automatisch"));
+        assert!(overview_measures_json.contains("Vorschlag"));
+    }
+
+    #[test]
+    fn puzzle2d_labels_resolve_reuse_terminology_in_english() {
+        let app = Puzzle2dPlayApp::default();
+        let envelope = Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(), runtime: Puzzle2dPlayRuntime::default() };
+        let document = serde_json::to_string(&envelope).unwrap();
+        let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("en".into()), ..ViewState::default() };
+        let node = app.render(PUZZLE2D_PLAY_BODY_LAYERS, &document, &view_state);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Building components"));
+        assert!(!json.contains("\"Nodes\""));
+
+        let catalogue = app.render(PUZZLE2D_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("Connection points"));
+    }
+
+    #[test]
+    fn puzzle2d_labels_resolve_reuse_terminology_in_german() {
+        let app = Puzzle2dPlayApp::default();
+        let envelope = Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(), runtime: Puzzle2dPlayRuntime::default() };
+        let document = serde_json::to_string(&envelope).unwrap();
+        let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("de".into()), ..ViewState::default() };
+        let node = app.render(PUZZLE2D_PLAY_BODY_LAYERS, &document, &view_state);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Baukomponenten"));
+
+        let catalogue = app.render(PUZZLE2D_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("Verbindungspunkte"));
     }
 }
 //#endregion 🧪Tests

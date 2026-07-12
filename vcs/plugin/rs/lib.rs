@@ -434,8 +434,65 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
 }
 //#endregion 🔖Envelope
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the VCS app; one field per label makes every locale combination compile-checked.
+struct VcsLabels {
+    actions: &'static str,
+    counter: &'static str,
+    commit: &'static str,
+    branch: &'static str,
+    undo: &'static str,
+    redo: &'static str,
+    title: &'static str,
+    status: &'static str,
+    notes: &'static str,
+    tags: &'static str,
+    alternatives: &'static str,
+    no_checkpoints: &'static str,
+    checkpoints: &'static str,
+}
+
+const VCS_LABELS_NATIVE_EN: VcsLabels = VcsLabels {
+    actions: "Actions",
+    counter: "Counter",
+    commit: "Commit",
+    branch: "Branch",
+    undo: "Undo",
+    redo: "Redo",
+    title: "Title",
+    status: "Status",
+    notes: "Notes",
+    tags: "Tags",
+    alternatives: "Alternatives",
+    no_checkpoints: "(no checkpoints)",
+    checkpoints: "checkpoints",
+};
+
+const VCS_LABELS_NATIVE_DE: VcsLabels = VcsLabels {
+    actions: "Aktionen",
+    counter: "Zähler",
+    commit: "Commit",
+    branch: "Branch",
+    undo: "Rückgängig",
+    redo: "Wiederholen",
+    title: "Titel",
+    status: "Status",
+    notes: "Notizen",
+    tags: "Schlagwörter",
+    alternatives: "Alternativen",
+    no_checkpoints: "(keine Checkpoints)",
+    checkpoints: "Checkpoints",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; no terminology variant exists for this app.
+fn vcs_labels(view_state: &ViewState) -> &'static VcsLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de { &VCS_LABELS_NATIVE_DE } else { &VCS_LABELS_NATIVE_EN }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Panels
-fn build_document_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNode {
+fn build_document_tree(envelope: &VcsDemoEnvelope, selected: &[String], labels: &VcsLabels) -> UiNode {
     let checkpoint_items: Vec<UiTreeItemNode> = envelope
         .vcs
         .checkpoints
@@ -466,7 +523,7 @@ fn build_document_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNod
         .map(|alt| UiTreeItemNode {
             id: format!("vcs-play-document.alternative.{}", alt.id),
             label: alt.name.clone(),
-            description: Some(format!("{} checkpoints", alt.checkpoint_ids.len())),
+            description: Some(format!("{} {}", alt.checkpoint_ids.len(), labels.checkpoints)),
             icon_id: Some("git-branch".into()),
             selected: None,
             default_open: None,
@@ -493,7 +550,7 @@ fn build_document_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNod
                 items: if checkpoint_items.is_empty() {
                     vec![UiTreeItemNode {
                         id: "vcs-play-document.empty".into(),
-                        label: "(no checkpoints)".into(),
+                        label: labels.no_checkpoints.into(),
                         description: None,
                         icon_id: None,
                         selected: None,
@@ -514,7 +571,7 @@ fn build_document_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNod
             },
             UiTreeSectionNode {
                 id: "vcs-play-document.alternatives".into(),
-                label: Some("Alternatives".into()),
+                label: Some(labels.alternatives.into()),
                 default_open: Some(true),
                 items: alternative_items,
             },
@@ -531,11 +588,11 @@ fn build_document_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNod
     })
 }
 
-fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
+fn build_inspection_tree(projection: &VcsDemoProjection, labels: &VcsLabels) -> UiNode {
     ui_stack_vertical(vec![
         UiNode::Field(UiFieldNode {
             id: "vcs-play-inspector.title".into(),
-            label: "Title".into(),
+            label: labels.title.into(),
             child: Box::new(UiNode::Input(UiInputNode {
                 id: "vcs-play-inspector.title.input".into(),
                 input_kind: "text".into(),
@@ -554,7 +611,7 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
         }),
         UiNode::Field(UiFieldNode {
             id: "vcs-play-inspector.counter".into(),
-            label: "Counter".into(),
+            label: labels.counter.into(),
             child: Box::new(UiNode::Input(UiInputNode {
                 id: "vcs-play-inspector.counter.input".into(),
                 input_kind: "number".into(),
@@ -573,7 +630,7 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
         }),
         UiNode::Field(UiFieldNode {
             id: "vcs-play-inspector.status".into(),
-            label: "Status".into(),
+            label: labels.status.into(),
             child: Box::new(UiNode::Input(UiInputNode {
                 id: "vcs-play-inspector.status.input".into(),
                 input_kind: "text".into(),
@@ -592,7 +649,7 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
         }),
         UiNode::Field(UiFieldNode {
             id: "vcs-play-inspector.notes".into(),
-            label: "Notes".into(),
+            label: labels.notes.into(),
             child: Box::new(UiNode::Input(UiInputNode {
                 id: "vcs-play-inspector.notes.input".into(),
                 input_kind: "text".into(),
@@ -609,7 +666,7 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
             required: None,
             error: None,
         }),
-        ui_inspector_readonly_field("vcs-play-inspector.tags", "Tags", projection.tags.join(", ")),
+        ui_inspector_readonly_field("vcs-play-inspector.tags", labels.tags, projection.tags.join(", ")),
     ])
 }
 //#endregion 🔖Panels
@@ -639,19 +696,32 @@ fn editor_button(id: &str, icon_id: &str, label: &str, action: &str) -> UiNode {
     })
 }
 
-fn render_editor(projection: &VcsDemoProjection) -> UiNode {
-    let buttons = ui_stack_horizontal(vec![
-        editor_button("increment", "plus", &format!("+ Counter ({})", projection.counter), "incrementCounter"),
-        editor_button("commit", "git-commit", "Commit checkpoint", "commitCheckpoint"),
-        editor_button("undo", "undo", "Undo", "undo"),
-        editor_button("redo", "redo", "Redo", "redo"),
-        editor_button("new-alternative", "git-branch", "New alternative", "createAlternative"),
+fn render_editor(projection: &VcsDemoProjection, labels: &VcsLabels) -> UiNode {
+    // One button per row where the label is dynamic-width (counter), two per row otherwise: the
+    // framework's horizontal stack gives every child an equal flex-1 share and buttons don't shrink
+    // below their label width, so a wide/growing label overflows and overlaps its neighbor in the
+    // (narrower) Editor panel of the default layout. A leading heading clears the window's
+    // Action/Viewport tab chrome, which otherwise overlaps content placed flush at the panel top.
+    let heading = ui_text(labels.actions);
+    let increment_row = ui_stack_horizontal(vec![editor_button(
+        "increment",
+        "plus",
+        &format!("+ {} ({})", labels.counter, projection.counter),
+        "incrementCounter",
+    )]);
+    let commit_row = ui_stack_horizontal(vec![
+        editor_button("commit", "git-commit", labels.commit, "commitCheckpoint"),
+        editor_button("new-alternative", "git-branch", labels.branch, "createAlternative"),
+    ]);
+    let history_row = ui_stack_horizontal(vec![
+        editor_button("undo", "undo", labels.undo, "undo"),
+        editor_button("redo", "redo", labels.redo, "redo"),
     ]);
     let summary = ui_stack_vertical(vec![
-        ui_text(format!("{} · counter {}", projection.title, projection.counter)),
+        ui_text(format!("{} · {} {}", projection.title, labels.counter, projection.counter)),
         ui_text(if projection.notes.is_empty() { "—".to_string() } else { projection.notes.clone() }),
     ]);
-    ui_stack_vertical(vec![buttons, summary])
+    ui_stack_vertical(vec![heading, increment_row, commit_row, history_row, summary])
 }
 
 fn render_history(envelope: &VcsDemoEnvelope) -> UiNode {
@@ -801,14 +871,15 @@ impl PluginApp for VcsPlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let play = parse_envelope(document_json);
         let materialized = materialized_projection(&play);
+        let labels = vcs_labels(view_state);
         match body_key {
-            VCS_PLAY_BODY_EDITOR => render_editor(&materialized),
+            VCS_PLAY_BODY_EDITOR => render_editor(&materialized, labels),
             VCS_PLAY_BODY_HISTORY => render_history(&play.envelope),
-            VCS_PLAY_BODY_DOCUMENT => build_document_tree(&play.envelope, &play.selected_checkpoint_ids),
-            VCS_PLAY_BODY_INSPECTION => build_inspection_tree(&materialized),
+            VCS_PLAY_BODY_DOCUMENT => build_document_tree(&play.envelope, &play.selected_checkpoint_ids, labels),
+            VCS_PLAY_BODY_INSPECTION => build_inspection_tree(&materialized, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -875,7 +946,7 @@ mod tests {
         for action in ["incrementCounter", "commitCheckpoint", "undo", "redo", "createAlternative"] {
             assert!(json.contains(action), "missing editor button for {action}: {json}");
         }
-        assert!(json.contains(" · counter "), "missing title/counter summary: {json}");
+        assert!(json.contains(" · Counter "), "missing title/counter summary: {json}");
     }
 
     #[test]
@@ -997,6 +1068,58 @@ mod tests {
         assert_eq!(after.title, "Edited via JSON");
         assert_eq!(after.counter, before.counter + 41);
         assert!(after.tags.contains(&"edited-in-place".to_string()));
+    }
+
+    #[test]
+    fn vcs_labels_resolve_native_english_by_default() {
+        let app = VcsPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(VCS_PLAY_BODY_EDITOR, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Actions"));
+        assert!(json.contains("Commit"));
+        assert!(json.contains("Branch"));
+        assert!(json.contains("Undo"));
+        assert!(json.contains("Redo"));
+        assert!(json.contains("Counter"));
+
+        let inspection = app.render(VCS_PLAY_BODY_INSPECTION, &document, &ViewState::default());
+        let inspection_json = serde_json::to_string(&inspection).unwrap();
+        assert!(inspection_json.contains("Title"));
+        assert!(inspection_json.contains("Status"));
+        assert!(inspection_json.contains("Notes"));
+        assert!(inspection_json.contains("Tags"));
+
+        let document_tree = app.render(VCS_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
+        let document_json = serde_json::to_string(&document_tree).unwrap();
+        assert!(document_json.contains("Alternatives"));
+        assert!(document_json.contains("checkpoints"));
+    }
+
+    #[test]
+    fn vcs_labels_resolve_german_locale() {
+        let app = VcsPlayApp;
+        let document = app.initial_document_json();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+
+        let node = app.render(VCS_PLAY_BODY_EDITOR, &document, &view_state);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Aktionen"));
+        assert!(json.contains("Rückgängig"));
+        assert!(json.contains("Wiederholen"));
+        assert!(json.contains("Zähler"));
+
+        let inspection = app.render(VCS_PLAY_BODY_INSPECTION, &document, &view_state);
+        let inspection_json = serde_json::to_string(&inspection).unwrap();
+        assert!(inspection_json.contains("Titel"));
+        assert!(inspection_json.contains("Notizen"));
+        assert!(inspection_json.contains("Schlagwörter"));
+
+        let document_tree = app.render(VCS_PLAY_BODY_DOCUMENT, &document, &view_state);
+        let document_json = serde_json::to_string(&document_tree).unwrap();
+        assert!(document_json.contains("Alternativen"));
+        assert!(document_json.contains("Checkpoints"));
+        assert!(!document_json.contains("\"Alternatives\""));
     }
 
     #[test]

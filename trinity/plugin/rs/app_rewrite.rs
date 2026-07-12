@@ -774,6 +774,60 @@ fn node_to_media_record(node: &Node) -> MediaGraphNodeRecord {
 }
 //#endregion 🔖MediaGraph
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the Rewrite rule app; one field per label makes every locale combination compile-checked.
+struct TrinityRewriteLabels {
+    pieces: &'static str,
+    piece: &'static str,
+    connection: &'static str,
+    connector: &'static str,
+    catalogue: &'static str,
+    add_to_lhs: &'static str,
+    add_to_rhs: &'static str,
+    parameters: &'static str,
+    geometry: &'static str,
+    identity: &'static str,
+    history: &'static str,
+    rule: &'static str,
+}
+
+const TRINITY_REWRITE_LABELS_NATIVE_EN: TrinityRewriteLabels = TrinityRewriteLabels {
+    pieces: "Pieces",
+    piece: "Piece",
+    connection: "Connection",
+    connector: "Connector",
+    catalogue: "Catalogue",
+    add_to_lhs: "Add to LHS",
+    add_to_rhs: "Add to RHS",
+    parameters: "Parameters",
+    geometry: "Geometry",
+    identity: "Identity",
+    history: "History",
+    rule: "Rule",
+};
+
+const TRINITY_REWRITE_LABELS_NATIVE_DE: TrinityRewriteLabels = TrinityRewriteLabels {
+    pieces: "Stücke",
+    piece: "Stück",
+    connection: "Verbindung",
+    connector: "Verbinder",
+    catalogue: "Katalog",
+    add_to_lhs: "Zu LHS hinzufügen",
+    add_to_rhs: "Zu RHS hinzufügen",
+    parameters: "Parameter",
+    geometry: "Geometrie",
+    identity: "Identität",
+    history: "Verlauf",
+    rule: "Regel",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
+fn trinity_rewrite_labels(view_state: &ViewState) -> &'static TrinityRewriteLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de { &TRINITY_REWRITE_LABELS_NATIVE_DE } else { &TRINITY_REWRITE_LABELS_NATIVE_EN }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Panels
 fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
     UiTreeItemNode {
@@ -815,7 +869,7 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, descri
     }
 }
 
-fn build_document_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
+fn build_document_tree(envelope: &TrinityRewriteEnvelope, labels: &TrinityRewriteLabels) -> UiNode {
     let state = rule_state(envelope);
     let Some(fixture) = parse_fixture_json(&state.before_fixture_json) else {
         return ui_text("Invalid trinity fixture");
@@ -844,7 +898,7 @@ fn build_document_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "trinity-document.nodes".into(),
-            label: Some("Pieces".into()),
+            label: Some(labels.pieces.into()),
             default_open: Some(true),
             items: node_items,
         }],
@@ -866,28 +920,28 @@ fn catalogue_add_item(id: &str, label: &str, clause_kind: &str) -> UiTreeItemNod
     tree_item_with_action(id, label, None, rewrite_action("addRuleClause", Some(json!({ "kind": clause_kind }))))
 }
 
-fn build_catalogue_tree() -> UiNode {
+fn build_catalogue_tree(labels: &TrinityRewriteLabels) -> UiNode {
     UiNode::Tree(UiTreeNode {
         sections: vec![
             UiTreeSectionNode {
                 id: "trinity-catalogue.kinds".into(),
-                label: Some("Catalogue".into()),
+                label: Some(labels.catalogue.into()),
                 default_open: Some(true),
                 items: vec![
-                    tree_item("trinity-catalogue.piece", "Piece"),
-                    tree_item("trinity-catalogue.connection", "Connection"),
-                    tree_item("trinity-catalogue.connector", "Connector"),
+                    tree_item("trinity-catalogue.piece", labels.piece),
+                    tree_item("trinity-catalogue.connection", labels.connection),
+                    tree_item("trinity-catalogue.connector", labels.connector),
                 ],
             },
             UiTreeSectionNode {
                 id: "trinity-catalogue.lhs".into(),
-                label: Some("Add to LHS".into()),
+                label: Some(labels.add_to_lhs.into()),
                 default_open: Some(true),
                 items: vec![catalogue_add_item("trinity-catalogue.add-where", "Where clause", "where")],
             },
             UiTreeSectionNode {
                 id: "trinity-catalogue.rhs".into(),
-                label: Some("Add to RHS".into()),
+                label: Some(labels.add_to_rhs.into()),
                 default_open: Some(true),
                 items: vec![
                     catalogue_add_item("trinity-catalogue.add-create", "Create pattern", "create"),
@@ -919,7 +973,7 @@ fn fixture_with_derived(fixture_json: &str) -> Option<GraphFixture> {
     Some(graph.to_fixture())
 }
 
-fn build_inspector_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
+fn build_inspector_tree(envelope: &TrinityRewriteEnvelope, term_labels: &TrinityRewriteLabels) -> UiNode {
     let state = rule_state(envelope);
     let Some(fixture) = parse_fixture_json(&state.before_fixture_json) else {
         return ui_text("Invalid trinity fixture");
@@ -959,7 +1013,7 @@ fn build_inspector_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
     ui_inspector_groups_to_tree(&[
         UiInspectorFieldGroup {
             id: "trinity-inspector.geometry".into(),
-            label: "Geometry".into(),
+            label: term_labels.geometry.into(),
             default_open: None,
             fields: vec![
                 ui_inspector_readonly_field(
@@ -976,7 +1030,7 @@ fn build_inspector_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
         },
         UiInspectorFieldGroup {
             id: "trinity-inspector.identity".into(),
-            label: "Identity".into(),
+            label: term_labels.identity.into(),
             default_open: None,
             fields: vec![
                 semio_framework_plugin::UiNode::Field(UiFieldNode {
@@ -1012,7 +1066,7 @@ fn build_inspector_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
     ])
 }
 
-fn build_parameters_panel(envelope: &TrinityRewriteEnvelope) -> UiNode {
+fn build_parameters_panel(envelope: &TrinityRewriteEnvelope, labels: &TrinityRewriteLabels) -> UiNode {
     let state = rule_state(envelope);
     let Ok(rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
         return ui_text("Invalid RHS");
@@ -1060,7 +1114,7 @@ fn build_parameters_panel(envelope: &TrinityRewriteEnvelope) -> UiNode {
     }
     ui_declarative_sections_to_tree(&[UiSectionNode {
         id: "trinity-rewrite.parameters".into(),
-        label: Some("Parameters".into()),
+        label: Some(labels.parameters.into()),
         default_open: Some(true),
         children,
     }])
@@ -1433,9 +1487,10 @@ impl PluginApp for TrinityRewritePlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
         let state = rule_state(&envelope);
+        let labels = trinity_rewrite_labels(view_state);
         match body_key {
             TRINITY_REWRITE_PLAY_BODY_BEFORE => render_fixture_graph(
                 TRINITY_REWRITE_PLAY_SURFACE_BEFORE,
@@ -1466,20 +1521,21 @@ impl PluginApp for TrinityRewritePlayApp {
                 true,
             ),
             TRINITY_REWRITE_PLAY_BODY_JACK => render_jack_editor(&envelope),
-            TRINITY_REWRITE_PLAY_BODY_PARAMETERS => build_parameters_panel(&envelope),
-            TRINITY_REWRITE_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
-            TRINITY_REWRITE_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
-            TRINITY_REWRITE_PLAY_BODY_INSPECTION => build_inspector_tree(&envelope),
+            TRINITY_REWRITE_PLAY_BODY_PARAMETERS => build_parameters_panel(&envelope, labels),
+            TRINITY_REWRITE_PLAY_BODY_DOCUMENT => build_document_tree(&envelope, labels),
+            TRINITY_REWRITE_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
+            TRINITY_REWRITE_PLAY_BODY_INSPECTION => build_inspector_tree(&envelope, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn tools(&self, _document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
+    fn tools(&self, _document_json: &str, view_state: &ViewState) -> Vec<ToolNode> {
+        let labels = trinity_rewrite_labels(view_state);
         vec![
             tool_collection(
                 "trinity-rewrite-history",
                 "clock",
-                "History",
+                labels.history,
                 vec![
                     tool_button("trinity-rewrite-undo", "undo-2", "Undo", rewrite_action("undo", None)),
                     tool_button("trinity-rewrite-redo", "redo-2", "Redo", rewrite_action("redo", None)),
@@ -1489,7 +1545,7 @@ impl PluginApp for TrinityRewritePlayApp {
             tool_collection(
                 "trinity-rewrite-rule",
                 "code",
-                "Rule",
+                labels.rule,
                 vec![tool_button("trinity-rewrite-reorganize", "rotate-cw", "Reorganize", rewrite_action("reorganize", None))],
             ),
         ]
@@ -1724,6 +1780,39 @@ mod tests {
         let json = serde_json::to_string(&tools).unwrap();
         assert!(json.contains("undo"));
         assert!(json.contains("reorganize"));
+    }
+
+    #[test]
+    fn trinity_rewrite_labels_resolve_native_by_default() {
+        let app = TrinityRewritePlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(TRINITY_REWRITE_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("\"Pieces\""));
+        assert!(!json.contains("Stücke"));
+    }
+
+    #[test]
+    fn trinity_rewrite_labels_translate_panels_in_german() {
+        let app = TrinityRewritePlayApp;
+        let document = app.initial_document_json();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let document_tree = app.render(TRINITY_REWRITE_PLAY_BODY_DOCUMENT, &document, &view_state);
+        let document_json = serde_json::to_string(&document_tree).unwrap();
+        assert!(document_json.contains("Stücke"));
+        assert!(!document_json.contains("\"Pieces\""));
+        let catalogue_tree = app.render(TRINITY_REWRITE_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_json = serde_json::to_string(&catalogue_tree).unwrap();
+        assert!(catalogue_json.contains("Katalog"));
+        assert!(catalogue_json.contains("Zu LHS hinzufügen"));
+        assert!(catalogue_json.contains("Zu RHS hinzufügen"));
+        let parameters_panel = app.render(TRINITY_REWRITE_PLAY_BODY_PARAMETERS, &document, &view_state);
+        let parameters_json = serde_json::to_string(&parameters_panel).unwrap();
+        assert!(parameters_json.contains("\"Parameter\""));
+        let tools = app.tools(&document, &view_state);
+        let tools_json = serde_json::to_string(&tools).unwrap();
+        assert!(tools_json.contains("Verlauf"));
+        assert!(tools_json.contains("Regel"));
     }
 }
 //#endregion 🧪Tests

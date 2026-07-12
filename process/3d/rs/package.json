@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/process-3d-rs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./pkg/process_3d.js"
+  }
+}

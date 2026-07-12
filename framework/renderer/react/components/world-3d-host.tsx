@@ -1014,6 +1014,7 @@ function WorldInstancesLayer({
   readonly mergedComponentIds?: readonly number[] | null;
   /** Live drag-preview merged whole-instance id set (null when no marquee drag is in progress). */
   readonly mergedInstanceIds?: readonly string[] | null;
+  /** Disables instance picking; passed for fill and brush engagements so a click meant for a vortex marker can't fall through and select/gumball the underlying object instead. */
   readonly blockPick?: boolean;
   readonly environment?: WorldEnvironmentRecord | null;
 }) {
@@ -1118,6 +1119,7 @@ function WorldVortexMarkers({
   brushMode,
   connectSourceFullId,
   onHover,
+  onVortexSelect,
   onBrushPlace,
   onConnectDragStart,
   onConnectDragHover,
@@ -1127,6 +1129,7 @@ function WorldVortexMarkers({
   readonly brushMode: boolean;
   readonly connectSourceFullId?: string;
   readonly onHover: (fullId: string | null) => void;
+  readonly onVortexSelect: (fullId: string) => void;
   readonly onBrushPlace: () => void;
   readonly onConnectDragStart: (fullId: string, position: readonly [number, number, number]) => void;
   readonly onConnectDragHover: (position: readonly [number, number, number]) => void;
@@ -1153,8 +1156,11 @@ function WorldVortexMarkers({
               onHover(null);
             }}
             onPointerDown={(event) => {
-              if (brushMode) return;
               event.stopPropagation();
+              if (brushMode) {
+                onVortexSelect(vortex.fullId);
+                return;
+              }
               onConnectDragStart(vortex.fullId, vortex.position);
             }}
             onPointerUp={(event) => {
@@ -2121,7 +2127,7 @@ export function World3dHost({ node, onAction }: { readonly node: UiComponentScen
                 onGumballDragEnd={handleGumballDragEnd}
                 mergedComponentIds={marqueePreview.mergedComponentIds}
                 mergedInstanceIds={marqueePreview.mergedInstanceIds}
-                blockPick={fillMode}
+                blockPick={fillMode || brushMode}
                 environment={environment}
               />
             </group>
@@ -2130,6 +2136,7 @@ export function World3dHost({ node, onAction }: { readonly node: UiComponentScen
               brushMode={brushMode}
               connectSourceFullId={connectDragSource?.fullId}
               onHover={handleVortexHover}
+              onVortexSelect={handleVortexSelect}
               onBrushPlace={handleBrushPlace}
               onConnectDragStart={handleConnectDragStart}
               onConnectDragHover={handleConnectDragHover}

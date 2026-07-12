@@ -29,6 +29,52 @@ const WIRES_DOCUMENT_IDENTITY_PREFIX: &str = "wires-play-document.identity.";
 const WIRES_DOCUMENT_RELATIONSHIP_PREFIX: &str = "wires-play-document.relationship.";
 //#endregion 🔖Constants
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the mindmap wires app; one field per label makes every locale combination compile-checked.
+struct WiresLabels {
+    identities: &'static str,
+    relationships: &'static str,
+    identity_kinds: &'static str,
+    relationship_kinds: &'static str,
+    relationship_kind_owns: &'static str,
+    relationship_kind_is: &'static str,
+    relationship_kind_references: &'static str,
+    relationship_kind_has: &'static str,
+}
+
+const WIRES_LABELS_NATIVE_EN: WiresLabels = WiresLabels {
+    identities: "Identities",
+    relationships: "Relationships",
+    identity_kinds: "Identity kinds",
+    relationship_kinds: "Relationship kinds",
+    relationship_kind_owns: "Owns",
+    relationship_kind_is: "Is",
+    relationship_kind_references: "References",
+    relationship_kind_has: "Has",
+};
+
+const WIRES_LABELS_NATIVE_DE: WiresLabels = WiresLabels {
+    identities: "Identitäten",
+    relationships: "Beziehungen",
+    identity_kinds: "Identitätsarten",
+    relationship_kinds: "Beziehungsarten",
+    relationship_kind_owns: "Besitzt",
+    relationship_kind_is: "Ist",
+    relationship_kind_references: "Referenziert",
+    relationship_kind_has: "Hat",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
+fn wires_labels(view_state: &ViewState) -> &'static WiresLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de {
+        &WIRES_LABELS_NATIVE_DE
+    } else {
+        &WIRES_LABELS_NATIVE_EN
+    }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Envelope
 /// 🖱️ In-flight pointer drag of one board node, tracked by screen delta so no viewport size is needed.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -183,17 +229,17 @@ fn identity_label(wires: &Value, identity_id: u64) -> Option<String> {
         .map(str::to_string)
 }
 
-fn relationship_kind_display_name(kind: &str) -> &str {
+fn relationship_kind_display_name<'a>(kind: &'a str, labels: &WiresLabels) -> &'a str {
     match kind {
-        "owns" => "Owns",
-        "is" => "Is",
-        "references" => "References",
-        "has" => "Has",
+        "owns" => labels.relationship_kind_owns,
+        "is" => labels.relationship_kind_is,
+        "references" => labels.relationship_kind_references,
+        "has" => labels.relationship_kind_has,
         _ => kind,
     }
 }
 
-fn wires_relationship_document_label(wires: &Value, edge_id: &str) -> Option<String> {
+fn wires_relationship_document_label(wires: &Value, edge_id: &str, labels: &WiresLabels) -> Option<String> {
     let relationship = wires_relationships(wires).iter().find(|row| {
         row.get("edgeId").and_then(|value| value.as_str()) == Some(edge_id)
     })?;
@@ -204,7 +250,7 @@ fn wires_relationship_document_label(wires: &Value, edge_id: &str) -> Option<Str
     let target = identity_label(wires, target_id)?;
     Some(format!(
         "{}: {source} → {target}",
-        relationship_kind_display_name(kind)
+        relationship_kind_display_name(kind, labels)
     ))
 }
 
@@ -361,7 +407,7 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, descri
     }
 }
 
-fn render_document_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
+fn render_document_panel(envelope: &ReasoningWiresPlayEnvelope, labels: &WiresLabels) -> UiNode {
     let wires = &envelope.wires_fixture;
     let board = &envelope.board_fixture;
     let identity_items: Vec<UiTreeItemNode> = wires_identities(wires)
@@ -387,7 +433,7 @@ fn render_document_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
             let edge_id = edge.get("id")?.as_str()?;
             Some(tree_item_with_action(
                 format!("{WIRES_DOCUMENT_RELATIONSHIP_PREFIX}{edge_id}"),
-                wires_relationship_document_label(wires, edge_id).unwrap_or_else(|| edge_id.into()),
+                wires_relationship_document_label(wires, edge_id, labels).unwrap_or_else(|| edge_id.into()),
                 None,
                 wires_action("setSelection", Some(json!({ "ids": [edge_id] }))),
             ))
@@ -397,7 +443,7 @@ fn render_document_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
         sections: vec![
             UiTreeSectionNode {
                 id: "wires-play-document.identities".into(),
-                label: Some("Identities".into()),
+                label: Some(labels.identities.into()),
                 default_open: Some(true),
                 items: if identity_items.is_empty() {
                     vec![UiTreeItemNode {
@@ -423,7 +469,7 @@ fn render_document_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
             },
             UiTreeSectionNode {
                 id: "wires-play-document.relationships".into(),
-                label: Some("Relationships".into()),
+                label: Some(labels.relationships.into()),
                 default_open: Some(false),
                 items: if relationship_items.is_empty() {
                     vec![UiTreeItemNode {
@@ -527,13 +573,13 @@ fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value]) -> UiT
     }
 }
 
-fn render_catalogue_panel(wires: &Value) -> UiNode {
+fn render_catalogue_panel(wires: &Value, labels: &WiresLabels) -> UiNode {
     let identity_entries = wires_kind_catalog_entries(wires, "identityKinds");
     let relationship_entries = wires_kind_catalog_entries(wires, "relationshipKinds");
     UiNode::Tree(UiTreeNode {
         sections: vec![
-            kind_catalog_section("wires-play-kinds.identity-kinds", "Identity kinds", &identity_entries),
-            kind_catalog_section("wires-play-kinds.relationship-kinds", "Relationship kinds", &relationship_entries),
+            kind_catalog_section("wires-play-kinds.identity-kinds", labels.identity_kinds, &identity_entries),
+            kind_catalog_section("wires-play-kinds.relationship-kinds", labels.relationship_kinds, &relationship_entries),
         ],
         selected_ids: None,
         highlighted_ids: None,
@@ -760,12 +806,13 @@ impl PluginApp for WiresPlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
+        let labels = wires_labels(view_state);
         match body_key {
             WIRES_PLAY_BODY_COMPOSITE => render_canvas(&envelope.board_fixture, &envelope.wires_fixture),
-            WIRES_PLAY_BODY_DOCUMENT => render_document_panel(&envelope),
-            WIRES_PLAY_BODY_CATALOGUE => render_catalogue_panel(&envelope.wires_fixture),
+            WIRES_PLAY_BODY_DOCUMENT => render_document_panel(&envelope, labels),
+            WIRES_PLAY_BODY_CATALOGUE => render_catalogue_panel(&envelope.wires_fixture, labels),
             WIRES_PLAY_BODY_PROPERTIES => render_properties_panel(&envelope),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
@@ -820,6 +867,41 @@ mod tests {
     }
 
     #[test]
+    fn wires_labels_resolve_native_by_default() {
+        let app = WiresPlayApp;
+        let envelope = envelope_from_wires_fixture(
+            serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).expect("metabolism fixture"),
+        );
+        let document = serde_json::to_string(&envelope).unwrap();
+        let node = app.render(WIRES_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Identities"));
+        assert!(json.contains("Relationships"));
+        let catalogue = app.render(WIRES_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("Identity kinds"));
+        assert!(catalogue_json.contains("Relationship kinds"));
+    }
+
+    #[test]
+    fn wires_labels_resolve_native_in_german() {
+        let app = WiresPlayApp;
+        let envelope = envelope_from_wires_fixture(
+            serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).expect("metabolism fixture"),
+        );
+        let document = serde_json::to_string(&envelope).unwrap();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let node = app.render(WIRES_PLAY_BODY_DOCUMENT, &document, &view_state);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Identitäten"));
+        assert!(json.contains("Beziehungen"));
+        let catalogue = app.render(WIRES_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("Identitätsarten"));
+        assert!(catalogue_json.contains("Beziehungsarten"));
+    }
+
+    #[test]
     fn document_has_identities_section() {
         let app = WiresPlayApp;
         let envelope = envelope_from_wires_fixture(
@@ -842,7 +924,7 @@ mod tests {
     #[test]
     fn relationship_kind_labels_match_fixture() {
         assert_eq!(RelationshipKind::Owns.label(), "owns");
-        assert_eq!(relationship_kind_display_name("is"), "Is");
+        assert_eq!(relationship_kind_display_name("is", &WIRES_LABELS_NATIVE_EN), "Is");
     }
 
     fn apply_ops(document: &str, ops: &[String]) -> ReasoningWiresPlayEnvelope {

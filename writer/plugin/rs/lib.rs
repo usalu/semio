@@ -1245,6 +1245,69 @@ fn format_writer_text(text: &str, language_id: &str) -> String {
 }
 //#endregion 🔖JackEditor
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the writer app; one field per label makes every locale combination compile-checked.
+struct WriterLabels {
+    document: &'static str,
+    empty_query: &'static str,
+    language: &'static str,
+    jack_description: &'static str,
+    camera: &'static str,
+    diagnostics: &'static str,
+    actions: &'static str,
+    format: &'static str,
+    lint: &'static str,
+    line_numbers: &'static str,
+    font_size: &'static str,
+    line_height: &'static str,
+    tab_size: &'static str,
+    engagement_placeholder: &'static str,
+    editor_mode_status: &'static str,
+}
+
+const WRITER_LABELS_NATIVE_EN: WriterLabels = WriterLabels {
+    document: "Document",
+    empty_query: "(empty query)",
+    language: "Language",
+    jack_description: "jack — Cypher-inspired trinity query language",
+    camera: "Camera",
+    diagnostics: "Diagnostics",
+    actions: "Actions",
+    format: "Format",
+    lint: "Lint",
+    line_numbers: "Line numbers",
+    font_size: "Font size",
+    line_height: "Line height",
+    tab_size: "Tab size",
+    engagement_placeholder: "Format, lint, line numbers",
+    editor_mode_status: "Text editor",
+};
+
+const WRITER_LABELS_NATIVE_DE: WriterLabels = WriterLabels {
+    document: "Dokument",
+    empty_query: "(leere Abfrage)",
+    language: "Sprache",
+    jack_description: "jack — von Cypher inspirierte Trinity-Abfragesprache",
+    camera: "Kamera",
+    diagnostics: "Diagnosen",
+    actions: "Aktionen",
+    format: "Formatieren",
+    lint: "Prüfen",
+    line_numbers: "Zeilennummern",
+    font_size: "Schriftgröße",
+    line_height: "Zeilenhöhe",
+    tab_size: "Tabulatorgröße",
+    engagement_placeholder: "Format, prüfen, Zeilennummern",
+    editor_mode_status: "Texteditor",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
+fn writer_labels(view_state: &ViewState) -> &'static WriterLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de { &WRITER_LABELS_NATIVE_DE } else { &WRITER_LABELS_NATIVE_EN }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Panels
 fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor {
@@ -1274,11 +1337,11 @@ fn empty_tree_item(id: &str, label: &str) -> UiTreeItemNode {
     }
 }
 
-fn render_document_panel(document: &WriterDocument, runtime: &WriterPlayRuntime) -> UiNode {
+fn render_document_panel(document: &WriterDocument, runtime: &WriterPlayRuntime, labels: &WriterLabels) -> UiNode {
     if document.language_id != "jack" {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "writer-document".into(),
-            label: Some("Document".into()),
+            label: Some(labels.document.into()),
             default_open: Some(true),
             children: vec![ui_text(document.id.clone()), ui_text(document.language_id.clone())],
         }]);
@@ -1299,7 +1362,7 @@ fn render_document_panel(document: &WriterDocument, runtime: &WriterPlayRuntime)
             id: "writer-play-document.ast".into(),
             label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
             default_open: Some(true),
-            items: if items.is_empty() { vec![empty_tree_item("writer-play-document.empty", "(empty query)")] } else { items },
+            items: if items.is_empty() { vec![empty_tree_item("writer-play-document.empty", labels.empty_query)] } else { items },
         }],
         selected_ids: Some(runtime.selected_ast_ids.clone()),
         highlighted_ids: highlighted_ast_id.map(|id| vec![id]),
@@ -1308,20 +1371,20 @@ fn render_document_panel(document: &WriterDocument, runtime: &WriterPlayRuntime)
     })
 }
 
-fn render_catalogue_panel() -> UiNode {
+fn render_catalogue_panel(labels: &WriterLabels) -> UiNode {
     ui_declarative_sections_to_tree(&[UiSectionNode {
         id: "writer-catalogue".into(),
-        label: Some("Language".into()),
+        label: Some(labels.language.into()),
         default_open: Some(true),
-        children: vec![ui_text("jack — Cypher-inspired trinity query language")],
+        children: vec![ui_text(labels.jack_description)],
     }])
 }
 
-fn render_inspection_panel(document: &WriterDocument) -> UiNode {
+fn render_inspection_panel(document: &WriterDocument, labels: &WriterLabels) -> UiNode {
     let mut sections = vec![
         UiSectionNode {
             id: "writer-inspector.document".into(),
-            label: Some("Document".into()),
+            label: Some(labels.document.into()),
             default_open: Some(true),
             children: vec![
                 ui_text(format!("Schema: {}", document.schema)),
@@ -1333,7 +1396,7 @@ fn render_inspection_panel(document: &WriterDocument) -> UiNode {
         },
         UiSectionNode {
             id: "writer-inspector.camera".into(),
-            label: Some("Camera".into()),
+            label: Some(labels.camera.into()),
             default_open: Some(false),
             children: vec![
                 ui_text(format!("x: {}", document.camera.x)),
@@ -1348,7 +1411,7 @@ fn render_inspection_panel(document: &WriterDocument) -> UiNode {
         if !messages.is_empty() {
             sections.push(UiSectionNode {
                 id: "writer-inspector.diagnostics".into(),
-                label: Some("Diagnostics".into()),
+                label: Some(labels.diagnostics.into()),
                 default_open: Some(true),
                 children: messages.into_iter().map(ui_text).collect(),
             });
@@ -1760,37 +1823,40 @@ impl PluginApp for WriterApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let play = parse_envelope(document_json);
+        let labels = writer_labels(view_state);
         match body_key {
             WRITER_PLAY_BODY_MAIN => render_main_scene(&play.document, &play.runtime),
-            WRITER_PLAY_BODY_DOCUMENT => render_document_panel(&play.document, &play.runtime),
-            WRITER_PLAY_BODY_CATALOGUE => render_catalogue_panel(),
-            WRITER_PLAY_BODY_INSPECTION => render_inspection_panel(&play.document),
+            WRITER_PLAY_BODY_DOCUMENT => render_document_panel(&play.document, &play.runtime, labels),
+            WRITER_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),
+            WRITER_PLAY_BODY_INSPECTION => render_inspection_panel(&play.document, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn tools(&self, _document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
+    fn tools(&self, _document_json: &str, view_state: &ViewState) -> Vec<ToolNode> {
+        let labels = writer_labels(view_state);
         vec![tool_collection(
             "writer-tools-actions",
             "wand-2",
-            "Actions",
+            labels.actions,
             vec![
-                tool_button("writer-format", "align-left", "Format", play_action(WRITER_PLAY_CONTROLLER_ID, "formatDocument", None)),
-                tool_button("writer-lint", "alert-circle", "Lint", play_action(WRITER_PLAY_CONTROLLER_ID, "lintDocument", None)),
+                tool_button("writer-format", "align-left", labels.format, play_action(WRITER_PLAY_CONTROLLER_ID, "formatDocument", None)),
+                tool_button("writer-lint", "alert-circle", labels.lint, play_action(WRITER_PLAY_CONTROLLER_ID, "lintDocument", None)),
             ],
         )]
     }
 
-    fn window_engagements(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let play = parse_envelope(document_json);
         let settings = &play.runtime.editor_settings;
+        let labels = writer_labels(view_state);
         let engagement = WindowEngagement {
             session_active: Some(false),
             options: Some(vec![WindowEngagementOption {
                 id: "writer-line-numbers".into(),
-                label: Some("Line numbers".into()),
+                label: Some(labels.line_numbers.into()),
                 icon_id: Some("list-ordered".into()),
                 pressed: Some(settings.show_line_numbers),
                 disabled: None,
@@ -1799,7 +1865,7 @@ impl PluginApp for WriterApp {
             input: Some(WindowEngagementInput {
                 id: Some("writer-engagement-input".into()),
                 value: Some(play.runtime.engagement_input.clone()),
-                placeholder: Some("Format, lint, line numbers".into()),
+                placeholder: Some(labels.engagement_placeholder.into()),
                 disabled: None,
                 on_change: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "engagementInput", None)),
                 on_submit: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "engagementSubmit", None)),
@@ -1808,23 +1874,24 @@ impl PluginApp for WriterApp {
             }),
             control: None,
             controls: None,
-            status: Some(vec![WindowEngagementStatus { id: "writer-editor-mode".into(), text: "Text editor".into() }]),
+            status: Some(vec![WindowEngagementStatus { id: "writer-editor-mode".into(), text: labels.editor_mode_status.into() }]),
             possible_engagements: Some(vec![
-                WindowEngagementPossible { id: "writer-format".into(), label: "Format".into(), detail: None, action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "formatDocument", None)) },
-                WindowEngagementPossible { id: "writer-lint".into(), label: "Lint".into(), detail: None, action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "lintDocument", None)) },
-                WindowEngagementPossible { id: "writer-line-numbers".into(), label: "Line numbers".into(), detail: None, action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "toggleLineNumbers", None)) },
+                WindowEngagementPossible { id: "writer-format".into(), label: labels.format.into(), detail: None, action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "formatDocument", None)) },
+                WindowEngagementPossible { id: "writer-lint".into(), label: labels.lint.into(), detail: None, action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "lintDocument", None)) },
+                WindowEngagementPossible { id: "writer-line-numbers".into(), label: labels.line_numbers.into(), detail: None, action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "toggleLineNumbers", None)) },
             ]),
         };
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), engagement)])
     }
 
-    fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let play = parse_envelope(document_json);
         let settings = &play.runtime.editor_settings;
+        let labels = writer_labels(view_state);
         let measures = vec![
             WindowMeasure::Slider {
                 id: "writer-font-size-measure".into(),
-                label: Some("Font size".into()),
+                label: Some(labels.font_size.into()),
                 value: settings.font_px as f64,
                 min: 10.0,
                 max: 24.0,
@@ -1833,7 +1900,7 @@ impl PluginApp for WriterApp {
             },
             WindowMeasure::Slider {
                 id: "writer-line-height-measure".into(),
-                label: Some("Line height".into()),
+                label: Some(labels.line_height.into()),
                 value: settings.line_height as f64,
                 min: 16.0,
                 max: 40.0,
@@ -1842,7 +1909,7 @@ impl PluginApp for WriterApp {
             },
             WindowMeasure::Slider {
                 id: "writer-tab-size-measure".into(),
-                label: Some("Tab size".into()),
+                label: Some(labels.tab_size.into()),
                 value: settings.tab_size as f64,
                 min: 1.0,
                 max: 8.0,
@@ -1852,7 +1919,7 @@ impl PluginApp for WriterApp {
             WindowMeasure::Toggle {
                 id: "writer-line-numbers-measure".into(),
                 icon_id: "list-ordered".into(),
-                label: Some("Line numbers".into()),
+                label: Some(labels.line_numbers.into()),
                 pressed: settings.show_line_numbers,
                 text: None,
                 on_change: play_action(WRITER_PLAY_CONTROLLER_ID, "toggleLineNumbers", None),
@@ -2217,6 +2284,56 @@ mod tests {
         let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
         assert_eq!(envelope.document.id, "empty");
         assert_eq!(envelope.document.text, "");
+    }
+
+    #[test]
+    fn writer_labels_resolve_native_by_default() {
+        let app = WriterApp;
+        let document = serde_json::to_string(&empty_writer_document()).unwrap();
+        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, &document, &ViewState::default());
+        let inspection_json = serde_json::to_string(&inspection).unwrap();
+        assert!(inspection_json.contains("\"Document\""));
+        assert!(inspection_json.contains("\"Camera\""));
+        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("\"Language\""));
+        assert!(catalogue_json.contains("Cypher-inspired"));
+        let tools = app.tools(&document, &ViewState::default());
+        let tools_json = serde_json::to_string(&tools).unwrap();
+        assert!(tools_json.contains("\"Actions\""));
+        assert!(tools_json.contains("\"Format\""));
+        assert!(tools_json.contains("\"Lint\""));
+        let measures = app.window_measures(&document, &ViewState::default());
+        let measures_json = serde_json::to_string(&measures).unwrap();
+        assert!(measures_json.contains("Font size"));
+        assert!(measures_json.contains("Line numbers"));
+        assert!(!measures_json.contains("Schriftgröße"));
+    }
+
+    #[test]
+    fn writer_labels_resolve_german_locale() {
+        let app = WriterApp;
+        let document = serde_json::to_string(&empty_writer_document()).unwrap();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, &document, &view_state);
+        let inspection_json = serde_json::to_string(&inspection).unwrap();
+        assert!(inspection_json.contains("Dokument"));
+        assert!(inspection_json.contains("Kamera"));
+        assert!(!inspection_json.contains("\"Camera\""));
+        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("Sprache"));
+        let tools = app.tools(&document, &view_state);
+        let tools_json = serde_json::to_string(&tools).unwrap();
+        assert!(tools_json.contains("Formatieren"));
+        assert!(tools_json.contains("Prüfen"));
+        let measures = app.window_measures(&document, &view_state);
+        let measures_json = serde_json::to_string(&measures).unwrap();
+        assert!(measures_json.contains("Schriftgröße"));
+        assert!(measures_json.contains("Zeilennummern"));
+        let engagements = app.window_engagements(&document, &view_state);
+        let engagements_json = serde_json::to_string(&engagements).unwrap();
+        assert!(engagements_json.contains("Texteditor"));
     }
 }
 //#endregion 🧪Tests

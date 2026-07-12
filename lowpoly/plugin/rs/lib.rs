@@ -605,6 +605,100 @@ fn uv_canvas_layers_json(doc: &LowpolyDocument, envelope: &LowpolyPlayEnvelope, 
 }
 //#endregion 🔖Scene
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the lowpoly mesh editor; one field per label makes every locale combination compile-checked.
+struct LowpolyLabels {
+    meshes: &'static str,
+    primitives: &'static str,
+    paint_layers: &'static str,
+    vertices: &'static str,
+    edges: &'static str,
+    faces: &'static str,
+    flip_normal: &'static str,
+    primitive_box: &'static str,
+    primitive_plane: &'static str,
+    primitive_cylinder: &'static str,
+    primitive_cone: &'static str,
+    primitive_ico_sphere: &'static str,
+    object: &'static str,
+    transform: &'static str,
+    tool_params: &'static str,
+    selection: &'static str,
+    edit: &'static str,
+    history: &'static str,
+    paint: &'static str,
+    uv: &'static str,
+}
+
+const LOWPOLY_LABELS_NATIVE_EN: LowpolyLabels = LowpolyLabels {
+    meshes: "Meshes",
+    primitives: "Primitives",
+    paint_layers: "Paint Layers",
+    vertices: "Vertices",
+    edges: "Edges",
+    faces: "Faces",
+    flip_normal: "Flip normal",
+    primitive_box: "Cube",
+    primitive_plane: "Plane",
+    primitive_cylinder: "Cylinder",
+    primitive_cone: "Cone",
+    primitive_ico_sphere: "Ico Sphere",
+    object: "Object",
+    transform: "Transform",
+    tool_params: "Tool Params",
+    selection: "Selection",
+    edit: "Edit",
+    history: "History",
+    paint: "Paint",
+    uv: "UV",
+};
+
+const LOWPOLY_LABELS_NATIVE_DE: LowpolyLabels = LowpolyLabels {
+    meshes: "Netze",
+    primitives: "Primitive",
+    paint_layers: "Malebenen",
+    vertices: "Eckpunkte",
+    edges: "Kanten",
+    faces: "Flächen",
+    flip_normal: "Normale umkehren",
+    primitive_box: "Würfel",
+    primitive_plane: "Ebene",
+    primitive_cylinder: "Zylinder",
+    primitive_cone: "Kegel",
+    primitive_ico_sphere: "Ikokugel",
+    object: "Objekt",
+    transform: "Transformation",
+    tool_params: "Werkzeugparameter",
+    selection: "Auswahl",
+    edit: "Bearbeiten",
+    history: "Verlauf",
+    paint: "Malen",
+    uv: "UV",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; unsupported locales fall back to native English.
+fn lowpoly_labels(view_state: &ViewState) -> &'static LowpolyLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de {
+        &LOWPOLY_LABELS_NATIVE_DE
+    } else {
+        &LOWPOLY_LABELS_NATIVE_EN
+    }
+}
+
+/// 🗣️ Resolves a primitive catalogue entry's display label from its stable kind; unknown kinds fall back to the catalog's native English text.
+fn primitive_catalog_label(kind: &str, fallback_label: &'static str, labels: &LowpolyLabels) -> &'static str {
+    match kind {
+        "box" => labels.primitive_box,
+        "plane" => labels.primitive_plane,
+        "cylinder" => labels.primitive_cylinder,
+        "cone" => labels.primitive_cone,
+        "ico_sphere" => labels.primitive_ico_sphere,
+        _ => fallback_label,
+    }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Panels
 fn tree_item_with_action(
     id: impl Into<String>,
@@ -657,7 +751,7 @@ fn tree_item(
     }
 }
 
-fn build_document_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) -> UiNode {
+fn build_document_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument, labels: &LowpolyLabels) -> UiNode {
     let active_id = envelope.fixture.active_object_id.clone();
     let selected_ids = selected_document_ids(&envelope.fixture);
     let highlighted_ids = highlighted_document_ids(&envelope.runtime, &envelope.fixture);
@@ -685,7 +779,7 @@ fn build_document_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) ->
                         if mode == "face" {
                             actions = Some(vec![semio_framework_plugin::UiTreeItemAction {
                                 icon_id: "flip-vertical".into(),
-                                label: Some("Flip normal".into()),
+                                label: Some(labels.flip_normal.into()),
                                 action: lowpoly_action(
                                     "flipFaces",
                                     Some(json!({ "faceIds": [id] })),
@@ -745,9 +839,9 @@ fn build_document_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) ->
                 None,
                 None,
                 Some(vec![
-                    component_group("vertex", "Vertices", "circle", vertex_count),
-                    component_group("edge", "Edges", "minus", edge_count),
-                    component_group("face", "Faces", "square", face_count),
+                    component_group("vertex", labels.vertices, "circle", vertex_count),
+                    component_group("edge", labels.edges, "minus", edge_count),
+                    component_group("face", labels.faces, "square", face_count),
                 ]),
                 Some(object.id == active_id),
                 Some(object.id.clone()),
@@ -757,7 +851,7 @@ fn build_document_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) ->
     UiNode::Tree(semio_framework_plugin::UiTreeNode {
         sections: vec![semio_framework_plugin::UiTreeSectionNode {
             id: "lowpoly-play-document.meshes".into(),
-            label: Some("Meshes".into()),
+            label: Some(labels.meshes.into()),
             default_open: Some(true),
             items,
         }],
@@ -772,13 +866,13 @@ fn build_document_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) ->
     })
 }
 
-fn build_catalogue_tree() -> UiNode {
+fn build_catalogue_tree(labels: &LowpolyLabels) -> UiNode {
     let items: Vec<semio_framework_plugin::UiTreeItemNode> = PRIMITIVE_CATALOG
         .iter()
         .map(|(kind, label, icon)| {
             tree_item(
                 format!("lowpoly-play-catalogue.{kind}"),
-                *label,
+                primitive_catalog_label(kind, label, labels),
                 Some(icon),
                 Some(lowpoly_action("addPrimitive", Some(json!({ "kind": kind })))),
                 None,
@@ -793,7 +887,7 @@ fn build_catalogue_tree() -> UiNode {
     UiNode::Tree(semio_framework_plugin::UiTreeNode {
         sections: vec![semio_framework_plugin::UiTreeSectionNode {
             id: "lowpoly-play-catalogue.primitives".into(),
-            label: Some("Primitives".into()),
+            label: Some(labels.primitives.into()),
             default_open: Some(true),
             items,
         }],
@@ -804,7 +898,7 @@ fn build_catalogue_tree() -> UiNode {
     })
 }
 
-fn build_layers_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
+fn build_layers_tree(envelope: &LowpolyPlayEnvelope, labels: &LowpolyLabels) -> UiNode {
     let object = active_object(&envelope.fixture);
     let layers = object.map(|entry| entry.paint_layers.as_slice()).unwrap_or(&[]);
     let active_layer = envelope.runtime.active_paint_layer;
@@ -829,7 +923,7 @@ fn build_layers_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
     UiNode::Tree(semio_framework_plugin::UiTreeNode {
         sections: vec![semio_framework_plugin::UiTreeSectionNode {
             id: "lowpoly-play-layers.paint".into(),
-            label: Some("Paint Layers".into()),
+            label: Some(labels.paint_layers.into()),
             default_open: Some(true),
             items,
         }],
@@ -865,7 +959,7 @@ fn inspector_tool_param_field(id: &str, label: &str, key: &str, value: &Value) -
     })
 }
 
-fn build_inspector_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
+fn build_inspector_tree(envelope: &LowpolyPlayEnvelope, labels: &LowpolyLabels) -> UiNode {
     let Some(object) = active_object(&envelope.fixture) else {
         return ui_stack_vertical(vec![
             ui_text(format!("Schema: {LOWPOLY_FIXTURE_SCHEMA}")),
@@ -876,7 +970,7 @@ fn build_inspector_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
     ui_inspector_groups_to_tree(&[
         UiInspectorFieldGroup {
             id: "lowpoly-play-inspector.object".into(),
-            label: "Object".into(),
+            label: labels.object.into(),
             default_open: None,
             fields: vec![
                 UiNode::Field(UiFieldNode {
@@ -936,7 +1030,7 @@ fn build_inspector_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
         },
         UiInspectorFieldGroup {
             id: "lowpoly-play-inspector.transform".into(),
-            label: "Transform".into(),
+            label: labels.transform.into(),
             default_open: None,
             fields: vec![ui_inspector_readonly_field(
                 "lowpoly-play-inspector.transform.tool",
@@ -946,7 +1040,7 @@ fn build_inspector_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
         },
         UiInspectorFieldGroup {
             id: "lowpoly-play-inspector.tool-params".into(),
-            label: "Tool Params".into(),
+            label: labels.tool_params.into(),
             default_open: Some(true),
             fields: vec![
                 inspector_tool_param_field("extrude", "Extrude Distance", "extrudeDistance", params),
@@ -1147,14 +1241,14 @@ fn lowpoly_window_measures(envelope: &LowpolyPlayEnvelope) -> Vec<WindowMeasure>
     ]
 }
 
-fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
+fn edit_tools(envelope: &LowpolyPlayEnvelope, labels: &LowpolyLabels) -> Vec<ToolNode> {
     let targets = &envelope.fixture.selection.targets;
     let transform = &envelope.runtime.transform_tool;
     vec![
         tool_collection(
             "lowpoly-tools-selection",
             "mouse-pointer",
-            "Selection",
+            labels.selection,
             vec![
                 tool_toggle(
                     "lowpoly-tools-selection-mesh",
@@ -1190,7 +1284,7 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
         tool_collection(
             "lowpoly-tools-transform",
             "move",
-            "Transform",
+            labels.transform,
             vec![
                 tool_toggle(
                     "lowpoly-tools-transform-move",
@@ -1219,7 +1313,7 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
         tool_collection(
             "lowpoly-tools-edit",
             "pen-tool",
-            "Edit",
+            labels.edit,
             vec![
                 tool_button("lowpoly-tools-extrude", "box", "Extrude", lowpoly_action("extrude", None)),
                 tool_button("lowpoly-tools-inset", "square", "Inset", lowpoly_action("inset", None)),
@@ -1253,7 +1347,7 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
         tool_collection(
             "lowpoly-tools-history",
             "undo",
-            "History",
+            labels.history,
             vec![
                 tool_button("lowpoly-tools-undo", "undo", "Undo", lowpoly_action("editUndo", None)),
                 tool_button("lowpoly-tools-redo", "redo", "Redo", lowpoly_action("editRedo", None)),
@@ -1263,13 +1357,13 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
     ]
 }
 
-fn paint_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
+fn paint_tools(envelope: &LowpolyPlayEnvelope, labels: &LowpolyLabels) -> Vec<ToolNode> {
     let paint_tool = &envelope.runtime.paint_tool;
     vec![
         tool_collection(
             "lowpoly-paint-tools",
             "paintbrush",
-            "Paint",
+            labels.paint,
             vec![
                 tool_toggle(
                     "lowpoly-paint-brush",
@@ -1305,7 +1399,7 @@ fn paint_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
         tool_collection(
             "lowpoly-paint-uv",
             "grid-3x3",
-            "UV",
+            labels.uv,
             vec![
                 tool_button("lowpoly-paint-unwrap", "grid-3x3", "Unwrap", lowpoly_action("unwrapActive", None)),
                 tool_button(
@@ -1326,7 +1420,7 @@ fn paint_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
         tool_collection(
             "lowpoly-paint-history",
             "undo",
-            "History",
+            labels.history,
             vec![
                 tool_button("lowpoly-paint-undo", "undo", "Undo", lowpoly_action("paintUndo", None)),
                 tool_button("lowpoly-paint-redo", "redo", "Redo", lowpoly_action("paintRedo", None)),
@@ -1608,11 +1702,12 @@ impl PluginApp for LowpolyPlayApp {
         serde_json::to_string(&default_envelope()).expect("lowpoly envelope json")
     }
 
-    fn tools(&self, document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
+    fn tools(&self, document_json: &str, view_state: &ViewState) -> Vec<ToolNode> {
         let envelope = parse_envelope(document_json);
-        match _view_state.active_mode_id.as_deref() {
-            Some("paint") => paint_tools(&envelope),
-            _ => edit_tools(&envelope),
+        let labels = lowpoly_labels(view_state);
+        match view_state.active_mode_id.as_deref() {
+            Some("paint") => paint_tools(&envelope, labels),
+            _ => edit_tools(&envelope, labels),
         }
     }
 
@@ -2165,8 +2260,9 @@ impl PluginApp for LowpolyPlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
+        let labels = lowpoly_labels(view_state);
         let doc = load_doc(&envelope, &self.paint_pixels).ok();
         let texture_cache = self.paint_texture_cache.borrow().clone();
         if doc.is_some() && texture_cache.is_empty() {
@@ -2185,7 +2281,7 @@ impl PluginApp for LowpolyPlayApp {
                             lowpoly_world_camera_json(&envelope.runtime),
                             world_meshes_json(loaded, &texture_cache),
                             world_instances_json(&envelope.fixture, &envelope.runtime),
-                            world_selection_json_for(&envelope, _view_state.active_mode_id.as_deref(), Some(loaded)),
+                            world_selection_json_for(&envelope, view_state.active_mode_id.as_deref(), Some(loaded)),
                         ),
                     )
                 } else {
@@ -2210,14 +2306,14 @@ impl PluginApp for LowpolyPlayApp {
             }
             LOWPOLY_PLAY_BODY_DOCUMENT => {
                 if let Some(ref loaded) = doc {
-                    build_document_tree(&envelope, loaded)
+                    build_document_tree(&envelope, loaded, labels)
                 } else {
                     ui_text("Failed to load lowpoly document")
                 }
             }
-            LOWPOLY_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
-            LOWPOLY_PLAY_BODY_INSPECTION => build_inspector_tree(&envelope),
-            LOWPOLY_PLAY_BODY_LAYERS => build_layers_tree(&envelope),
+            LOWPOLY_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
+            LOWPOLY_PLAY_BODY_INSPECTION => build_inspector_tree(&envelope, labels),
+            LOWPOLY_PLAY_BODY_LAYERS => build_layers_tree(&envelope, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -2275,8 +2371,8 @@ fn create_lowpoly_app() -> App {
                 LOWPOLY_PLAY_BODY_INSPECTION,
             )
             .panel_tab("framework.panel.layers", "Layers", PanelGroup::Workbench, LOWPOLY_PLAY_BODY_LAYERS)
-            .mode_tools("edit", edit_tools(&default_envelope()))
-            .mode_tools("paint", paint_tools(&default_envelope())),
+            .mode_tools("edit", edit_tools(&default_envelope(), lowpoly_labels(&ViewState::default())))
+            .mode_tools("paint", paint_tools(&default_envelope(), lowpoly_labels(&ViewState::default()))),
     )
     .example("default", "Default", &default_example)
     .program("lowpoly", "Lowpoly", "mesh")
@@ -2447,7 +2543,7 @@ mod tests {
 
     #[test]
     fn edit_tools_serialize_icon_ids_and_collections() {
-        let tools = edit_tools(&default_envelope());
+        let tools = edit_tools(&default_envelope(), lowpoly_labels(&ViewState::default()));
         let json = serde_json::to_string(&tools).unwrap();
         assert!(json.contains("\"iconId\":\"mouse-pointer\""));
         assert!(json.contains("\"iconId\":\"pen-tool\""));
@@ -2800,6 +2896,40 @@ mod tests {
         let reexported = lowpoly_mesh_from_document(&doc).unwrap();
         assert!(!reexported.positions.is_empty());
         assert!(!reexported.indices.is_empty());
+    }
+
+    #[test]
+    fn lowpoly_labels_resolve_native_by_default() {
+        let app = LowpolyPlayApp::default();
+        let document = app.initial_document_json();
+        let catalogue = app.render(LOWPOLY_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("Primitives"));
+        assert!(catalogue_json.contains("Cube"));
+        let inspector = app.render(LOWPOLY_PLAY_BODY_INSPECTION, &document, &ViewState::default());
+        let inspector_json = serde_json::to_string(&inspector).unwrap();
+        assert!(inspector_json.contains("Tool Params"));
+        let tools = app.tools(&document, &ViewState::default());
+        let tools_json = serde_json::to_string(&tools).unwrap();
+        assert!(tools_json.contains("Selection"));
+        assert!(tools_json.contains("Edit"));
+    }
+
+    #[test]
+    fn lowpoly_labels_resolve_german_locale() {
+        let app = LowpolyPlayApp::default();
+        let document = app.initial_document_json();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let catalogue = app.render(LOWPOLY_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("Würfel"));
+        let inspector = app.render(LOWPOLY_PLAY_BODY_INSPECTION, &document, &view_state);
+        let inspector_json = serde_json::to_string(&inspector).unwrap();
+        assert!(inspector_json.contains("Werkzeugparameter"));
+        let tools = app.tools(&document, &view_state);
+        let tools_json = serde_json::to_string(&tools).unwrap();
+        assert!(tools_json.contains("Auswahl"));
+        assert!(tools_json.contains("Bearbeiten"));
     }
 
     fn apply_ops(envelope: &LowpolyPlayEnvelope, ops: &[String]) -> LowpolyPlayEnvelope {

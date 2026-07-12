@@ -1,0 +1,44 @@
+{
+  "stock": {
+    "id": "beam",
+    "label": "Timber Beam",
+    "solid": { "kind": "box", "width": 2.4, "depth": 0.12, "height": 0.24 },
+    "pose": { "position": [0, 0, 0.12], "axis": [0, 0, 1], "angle": 0 }
+  },
+  "steps": [
+    {
+      "id": "miter-left",
+      "label": "Miter Cut Left",
+      "enabled": true,
+      "measure": "cut",
+      "tool": { "kind": "box", "width": 0.02, "depth": 0.3, "height": 0.5 },
+      "pose": { "position": [-1.05, 0, 0.12], "axis": [0, 1, 0], "angle": 0.5235987755982988 }
+    },
+    {
+      "id": "miter-right",
+      "label": "Miter Cut Right",
+      "enabled": true,
+      "measure": "cut",
+      "tool": { "kind": "box", "width": 0.02, "depth": 0.3, "height": 0.5 },
+      "pose": { "position": [1.05, 0, 0.12], "axis": [0, 1, 0], "angle": -0.5235987755982988 }
+    },
+    {
+      "id": "dowel-hole",
+      "label": "Dowel Hole",
+      "enabled": true,
+      "measure": "drill",
+      "radius": 0.015,
+      "depth": 0.3,
+      "pose": { "position": [0, 0, 0.12], "axis": [1, 0, 0], "angle": 1.5707963267948966 }
+    },
+    {
+      "id": "dowel",
+      "label": "Dowel",
+      "enabled": true,
+      "measure": "attach",
+      "component": { "kind": "cylinder", "radius": 0.014, "height": 0.28 },
+      "pose": { "position": [0, 0, 0.12], "axis": [1, 0, 0], "angle": 1.5707963267948966 }
+    }
+  ],
+  "resolvedUpTo": null
+}

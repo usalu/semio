@@ -5045,7 +5045,7 @@ export interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePanel, rightSidePanel, mobilePanel, canvas, mobile = false, className = "" }) => (
   <GhostProvider>
-    <div className={cn("flex flex-col overflow-hidden", mobile ? "h-full w-full" : "h-screen w-screen", className)}>
+    <div className={cn("relative flex flex-col overflow-hidden", mobile ? "h-full w-full" : "h-screen w-screen", className)}>
       {navbar && <div className="flex-shrink-0">{navbar}</div>}
       {mobile ? (
         <div className="flex flex-col flex-1 min-h-0">
@@ -5054,17 +5054,18 @@ const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePa
         </div>
       ) : (
         <div className="flex flex-1 min-h-0 relative">
-          {leftSidePanel ? <SidePanel {...leftSidePanel} position="left" /> : null}
           <div className="flex flex-col flex-1 min-w-0 relative z-0">
             <div className="flex flex-1 min-h-0 relative">
               <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
-              {rightSidePanel ? <SidePanel {...rightSidePanel} position="right" /> : null}
             </div>
             {bottomPanel && bottomPanel.visible && <BottomPanel {...bottomPanel} />}
           </div>
         </div>
       )}
       {footer && <div className="flex-shrink-0">{footer}</div>}
+      {/* Positioned against the full screen (this root), so left/right panels float over the navbar and footer instead of stopping at them — same overlay relationship as a window's options rail over its canvas. */}
+      {!mobile && leftSidePanel ? <SidePanel {...leftSidePanel} position="left" /> : null}
+      {!mobile && rightSidePanel ? <SidePanel {...rightSidePanel} position="right" /> : null}
     </div>
   </GhostProvider>
 );

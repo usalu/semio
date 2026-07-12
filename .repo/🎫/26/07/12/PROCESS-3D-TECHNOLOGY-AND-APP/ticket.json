@@ -1,0 +1,13 @@
+{
+  "title": "Process 3D Technology And App",
+  "emoji": "🪚",
+  "status": "open",
+  "description": "Create a new technology `process` with part `3d` for simulating processing of components through subtractive and additive measures (cutting, drilling, attachments), built on the repo's brep kernel (kernel_3d_brepkit). Add a vcs-backed document crate process/3d/rs, a plugin app process/plugin/rs (app id process3d-play, World3d viewport), example fixtures, AGENTS.md seeds, and register the new technology across Cargo.toml, package.json, repo/lib/js/index.ts, framework/core/js/index.ts, .claude/launch.json, and s/manifest/resources.manifest.json.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1944"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪f89b0f052a9841059cd79198dc8194bf"
+  ]
+}

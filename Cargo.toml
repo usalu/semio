@@ -79,6 +79,8 @@ members = [
     "procedural/2d/rs",
     "procedural/3d/rs",
     "procedural/plugin/rs",
+    "process/3d/rs",
+    "process/plugin/rs",
     "compose/client/lib/rs",
     "compose/client/lib/query/rs",
     "compose/client/bin/store/rs",

@@ -1255,10 +1255,10 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope, labels: &LayoutLabels) -> UiN
     }])
 }
 
-fn build_preflight_tree(play: &LayoutPlayEnvelope) -> UiNode {
+fn build_preflight_tree(play: &LayoutPlayEnvelope, labels: &LayoutLabels) -> UiNode {
     let issues = run_layout_preflight(&play.document);
     let items: Vec<UiTreeItemNode> = if issues.is_empty() {
-        vec![tree_item("layout-preflight.empty", "No issues", None, Some("check-circle".into()), None)]
+        vec![tree_item("layout-preflight.empty", labels.no_issues, None, Some("check-circle".into()), None)]
     } else {
         issues
             .iter()
@@ -1284,7 +1284,7 @@ fn build_preflight_tree(play: &LayoutPlayEnvelope) -> UiNode {
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "layout-preflight.issues".into(),
-            label: Some("Preflight".into()),
+            label: Some(labels.preflight.into()),
             default_open: Some(true),
             items,
         }],
@@ -1322,26 +1322,26 @@ fn layout_window_engagement(play: &LayoutPlayEnvelope, label: &str) -> WindowEng
     }
 }
 
-fn layout_toolbar_tools() -> Vec<ToolNode> {
+fn layout_toolbar_tools(labels: &LayoutLabels) -> Vec<ToolNode> {
     vec![
         tool_collection(
             "layout-tools-document",
             "file-text",
-            "Document",
+            labels.group_document,
             vec![
-                tool_button("layout-tools-undo", "rotate-ccw", "Undo", layout_action("undo", None)),
-                tool_button("layout-tools-redo", "rotate-cw", "Redo", layout_action("redo", None)),
+                tool_button("layout-tools-undo", "rotate-ccw", labels.undo, layout_action("undo", None)),
+                tool_button("layout-tools-redo", "rotate-cw", labels.redo, layout_action("redo", None)),
             ],
         ),
         tool_collection(
             "layout-tools-export",
             "download",
-            "Export",
+            labels.group_export,
             vec![
                 tool_button("layout-tools-export-png", "image", "PNG", layout_action("exportPng", None)),
                 tool_button("layout-tools-export-svg", "file-code", "SVG", layout_action("exportSvg", None)),
                 tool_button("layout-tools-export-pdf", "file-text", "PDF", layout_action("exportPdf", None)),
-                tool_button("layout-tools-export-package", "archive", "Package", layout_action("exportPackage", None)),
+                tool_button("layout-tools-export-package", "archive", labels.export_package, layout_action("exportPackage", None)),
             ],
         ),
     ]
@@ -1908,8 +1908,8 @@ impl PluginApp for LayoutPlayApp {
         Vec::new()
     }
 
-    fn tools(&self, _document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
-        layout_toolbar_tools()
+    fn tools(&self, _document_json: &str, view_state: &ViewState) -> Vec<ToolNode> {
+        layout_toolbar_tools(layout_labels(view_state))
     }
 
     fn window_engagements(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
@@ -1920,15 +1920,16 @@ impl PluginApp for LayoutPlayApp {
         ])
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let play = parse_envelope(document_json);
+        let labels = layout_labels(view_state);
         match body_key {
             LAYOUT_PLAY_BODY_BLUEPRINT => render_blueprint(&play),
             LAYOUT_PLAY_BODY_PREVIEW => render_preview(&play),
-            LAYOUT_PLAY_BODY_DOCUMENT => build_document_tree(&play),
-            LAYOUT_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
-            LAYOUT_PLAY_BODY_INSPECTION => build_inspector_tree(&play),
-            LAYOUT_PLAY_BODY_PREFLIGHT => build_preflight_tree(&play),
+            LAYOUT_PLAY_BODY_DOCUMENT => build_document_tree(&play, labels),
+            LAYOUT_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
+            LAYOUT_PLAY_BODY_INSPECTION => build_inspector_tree(&play, labels),
+            LAYOUT_PLAY_BODY_PREFLIGHT => build_preflight_tree(&play, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -2107,6 +2108,35 @@ mod tests {
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("layout-catalogue.rect"));
         assert!(json.contains("Text Frame"));
+    }
+
+    #[test]
+    fn layout_labels_resolve_native_english_by_default() {
+        let app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(LAYOUT_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("\"Frames\""));
+        assert!(json.contains("\"Layers\""));
+        let catalogue = app.render(LAYOUT_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("Rectangle"));
+        assert!(!json.contains("Rahmen"));
+    }
+
+    #[test]
+    fn layout_labels_translate_document_tree_in_german() {
+        let app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let node = app.render(LAYOUT_PLAY_BODY_DOCUMENT, &document, &view_state);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("\"Rahmen\""));
+        assert!(json.contains("\"Ebenen\""));
+        let catalogue = app.render(LAYOUT_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("Rechteck"));
+        assert!(!json.contains("\"Frames\""));
     }
 
     #[test]

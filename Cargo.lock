@@ -6311,6 +6311,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "process-plugin"
+version = "0.1.0"
+dependencies = [
+ "kernel_3d_brepkit",
+ "kernel_3d_engine",
+ "process_3d",
+ "semio-framework-core",
+ "semio-framework-os",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "vcs",
+]
+
+[[package]]
+name = "process_3d"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "vcs",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "profiling"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
