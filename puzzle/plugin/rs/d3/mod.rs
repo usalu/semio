@@ -3046,7 +3046,7 @@ impl PluginApp for Puzzle3dPlayApp {
             }
             "setFillCount" => {
                 drive_precompute(&mut self.precompute, &envelope);
-                let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_u64()).unwrap_or(0).min(u64::from(PUZZLE3D_FILL_COUNT_MAX)) as u32;
+                let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_f64()).map(|value| value.round().max(0.0) as u32).unwrap_or(0).min(PUZZLE3D_FILL_COUNT_MAX);
                 envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
                 return vec![set_document_op(&envelope)];
             }

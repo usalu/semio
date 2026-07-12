@@ -1652,7 +1652,7 @@ impl PluginApp for Puzzle2dPlayApp {
                 Vec::new()
             }
             "setFillCount" => {
-                let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_u64()).unwrap_or(0).min(u64::from(PUZZLE2D_FILL_COUNT_MAX)) as u32;
+                let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_f64()).map(|value| value.round().max(0.0) as u32).unwrap_or(0).min(PUZZLE2D_FILL_COUNT_MAX);
                 envelope.runtime.fill_count = count;
                 envelope.runtime.active_tool = "fill".into();
                 self.host.set_active_tool("brush");

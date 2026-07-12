@@ -106,7 +106,7 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
 use grammar::{tokenize_language, GrammarToken};
 use trinity_jack::{complete, example_graph, format as jack_format, lint, semantic_tokens, Diagnostic};
 use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
-    build_text_editor_scene, tool_button, tool_collection, ui_declarative_sections_to_tree, ui_text, App,
+    build_text_editor_scene, engagement_token_matches, strip_engagement_prefix, tool_button, tool_collection, ui_declarative_sections_to_tree, ui_text, App,
     ActionDescriptor, PluginApp, PluginBundle, TextEditorScene, ToolNode, UiNode, UiSectionNode,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure,
@@ -1509,18 +1509,17 @@ fn render_main_scene(document: &WriterDocument, runtime: &WriterPlayRuntime) -> 
 //#endregion 🔖Scene
 
 //#region 🔖Engagement
-static FONT_SIZE_RE: LazyLock<regex::Regex> = LazyLock::new(|| regex::Regex::new(r"^font(?:\s+size)?\s+(\d{2})$").expect("font size pattern"));
-static TAB_SIZE_RE: LazyLock<regex::Regex> = LazyLock::new(|| regex::Regex::new(r"^tab(?:\s+size)?\s+(\d)$").expect("tab size pattern"));
-
-/// 💬 Natural-language engagement parsing (premigration `applyEngagement`).
+/// 💬 Natural-language engagement parsing (premigration `applyEngagement`). Accepts both the
+/// spaced form (wgpu REPL) and the React shell's PascalCased, separator-stripped drafts (e.g.
+/// `"Font16"`, `"LineNumbers"` — see `strip_engagement_prefix`).
 fn apply_engagement(play: &mut WriterPlayEnvelope, value: &str) {
-    let trimmed = value.trim().to_lowercase();
+    let trimmed = value.trim();
     play.runtime.engagement_input.clear();
     play.runtime.revision += 1;
     if trimmed.is_empty() {
         return;
     }
-    if trimmed == "format" {
+    if engagement_token_matches(trimmed, "format") {
         let formatted = format_writer_text(&play.document.text, &play.document.language_id);
         if formatted != play.document.text {
             push_undo_writer(play);
@@ -1529,22 +1528,22 @@ fn apply_engagement(play: &mut WriterPlayEnvelope, value: &str) {
         play.runtime.format_signal += 1;
         return;
     }
-    if trimmed == "lint" {
+    if engagement_token_matches(trimmed, "lint") {
         play.runtime.lint_signal += 1;
         return;
     }
-    if trimmed == "line numbers" || trimmed == "numbers" || trimmed == "gutter" {
+    if engagement_token_matches(trimmed, "line numbers") || engagement_token_matches(trimmed, "numbers") || engagement_token_matches(trimmed, "gutter") {
         play.runtime.editor_settings.show_line_numbers = !play.runtime.editor_settings.show_line_numbers;
         return;
     }
-    if let Some(captures) = FONT_SIZE_RE.captures(&trimmed) {
-        if let Ok(px) = captures[1].parse::<u32>() {
+    if let Some(rest) = strip_engagement_prefix(trimmed, "font size").or_else(|| strip_engagement_prefix(trimmed, "font")) {
+        if let Ok(px) = rest.parse::<u32>() {
             play.runtime.editor_settings.font_px = px;
         }
         return;
     }
-    if let Some(captures) = TAB_SIZE_RE.captures(&trimmed) {
-        if let Ok(size) = captures[1].parse::<u32>() {
+    if let Some(rest) = strip_engagement_prefix(trimmed, "tab size").or_else(|| strip_engagement_prefix(trimmed, "tab")) {
+        if let Ok(size) = rest.parse::<u32>() {
             play.runtime.editor_settings.tab_size = size.max(1);
         }
     }

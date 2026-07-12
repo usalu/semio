@@ -666,6 +666,7 @@ export function buildContributionsJson(loaded: ReadonlyArray<{ readonly pluginId
 export const PLAYGROUND_PLUGIN_REGISTRY_IDS: Readonly<Record<string, string>> = {
   procedural3d: "procedural",
   procedural2d: "procedural",
+  process3d: "process",
   puzzle2d: "puzzle",
   puzzle3d: "puzzle",
   puzzle5d: "puzzle",
@@ -677,6 +678,7 @@ export const PLAYGROUND_PLUGIN_REGISTRY_IDS: Readonly<Record<string, string>> = 
 export const PLAYGROUND_DEFAULT_APP_IDS: Readonly<Record<string, string>> = {
   procedural3d: "procedural3d-play",
   procedural2d: "procedural2d-play",
+  process3d: "process3d-play",
   puzzle2d: "puzzle2d-play",
   puzzle3d: "puzzle3d-play",
   puzzle5d: "puzzle5d-play",

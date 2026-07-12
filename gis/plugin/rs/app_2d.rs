@@ -139,6 +139,148 @@ struct Gis2dPlayEnvelope {
 }
 //#endregion 🔖Types
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the GIS 2D app; one field per label makes every locale combination compile-checked.
+struct Gis2dPlayLabels {
+    layer_raster: &'static str,
+    layer_water: &'static str,
+    layer_land: &'static str,
+    layer_roads: &'static str,
+    layer_buildings: &'static str,
+    layer_borders: &'static str,
+    layer_map_labels: &'static str,
+    layer_positions: &'static str,
+    layer_position_labels: &'static str,
+    layer_routes: &'static str,
+    layer_regions: &'static str,
+    map_view: &'static str,
+    render_mode: &'static str,
+    render_mode_image: &'static str,
+    render_mode_vector: &'static str,
+    render_mode_combined: &'static str,
+    vector_style: &'static str,
+    vector_style_colored: &'static str,
+    vector_style_figure_ground: &'static str,
+    vector_style_inverted_figure: &'static str,
+    lod_mode: &'static str,
+    lod_automatic: &'static str,
+    selection_method: &'static str,
+    selection_method_rectangle: &'static str,
+    selection_method_lasso: &'static str,
+    layers_group: &'static str,
+    layer_weights_group: &'static str,
+    weight_suffix: &'static str,
+    selected_features: &'static str,
+    map_layer: &'static str,
+    schema: &'static str,
+    layers_visible: &'static str,
+    field_id: &'static str,
+    field_label: &'static str,
+    field_visible: &'static str,
+}
+
+const GIS2D_LABELS_NATIVE_EN: Gis2dPlayLabels = Gis2dPlayLabels {
+    layer_raster: "Raster",
+    layer_water: "Water",
+    layer_land: "Land",
+    layer_roads: "Roads",
+    layer_buildings: "Buildings",
+    layer_borders: "Borders",
+    layer_map_labels: "Labels",
+    layer_positions: "Positions",
+    layer_position_labels: "Position Labels",
+    layer_routes: "Routes",
+    layer_regions: "Regions",
+    map_view: "Map View",
+    render_mode: "Render Mode",
+    render_mode_image: "Image",
+    render_mode_vector: "Vector",
+    render_mode_combined: "Combined",
+    vector_style: "Vector Style",
+    vector_style_colored: "Colored",
+    vector_style_figure_ground: "Figure Ground",
+    vector_style_inverted_figure: "Inverted Figure",
+    lod_mode: "LOD Mode",
+    lod_automatic: "Automatic",
+    selection_method: "Selection Method",
+    selection_method_rectangle: "Rectangle",
+    selection_method_lasso: "Lasso",
+    layers_group: "Layers",
+    layer_weights_group: "Layer Weights",
+    weight_suffix: "weight",
+    selected_features: "Selected Features",
+    map_layer: "Map Layer",
+    schema: "Schema",
+    layers_visible: "Layers visible",
+    field_id: "Id",
+    field_label: "Label",
+    field_visible: "Visible",
+};
+
+const GIS2D_LABELS_NATIVE_DE: Gis2dPlayLabels = Gis2dPlayLabels {
+    layer_raster: "Raster",
+    layer_water: "Wasser",
+    layer_land: "Land",
+    layer_roads: "Straßen",
+    layer_buildings: "Gebäude",
+    layer_borders: "Grenzen",
+    layer_map_labels: "Beschriftungen",
+    layer_positions: "Positionen",
+    layer_position_labels: "Positionsbeschriftungen",
+    layer_routes: "Routen",
+    layer_regions: "Regionen",
+    map_view: "Kartenansicht",
+    render_mode: "Darstellungsmodus",
+    render_mode_image: "Bild",
+    render_mode_vector: "Vektor",
+    render_mode_combined: "Kombiniert",
+    vector_style: "Vektorstil",
+    vector_style_colored: "Farbig",
+    vector_style_figure_ground: "Figur-Grund",
+    vector_style_inverted_figure: "Invertierte Figur",
+    lod_mode: "LOD-Modus",
+    lod_automatic: "Automatisch",
+    selection_method: "Auswahlmethode",
+    selection_method_rectangle: "Rechteck",
+    selection_method_lasso: "Lasso",
+    layers_group: "Ebenen",
+    layer_weights_group: "Ebenengewichte",
+    weight_suffix: "Gewicht",
+    selected_features: "Ausgewählte Objekte",
+    map_layer: "Kartenebene",
+    schema: "Schema",
+    layers_visible: "Sichtbare Ebenen",
+    field_id: "Id",
+    field_label: "Bezeichnung",
+    field_visible: "Sichtbar",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
+fn gis2d_labels(view_state: &ViewState) -> &'static Gis2dPlayLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de { &GIS2D_LABELS_NATIVE_DE } else { &GIS2D_LABELS_NATIVE_EN }
+}
+
+/// 🗣️ Resolves a standard map layer's display label from its stable id; unknown ids fall back to the catalog's native English text.
+fn gis2d_layer_label(layer_id: &str, labels: &Gis2dPlayLabels) -> &'static str {
+    match layer_id {
+        "raster" => labels.layer_raster,
+        "water" => labels.layer_water,
+        "land" => labels.layer_land,
+        "roads" => labels.layer_roads,
+        "buildings" => labels.layer_buildings,
+        "borders" => labels.layer_borders,
+        "labels" => labels.layer_map_labels,
+        "positions" => labels.layer_positions,
+        "positionLabels" => labels.layer_position_labels,
+        "routes" => labels.layer_routes,
+        "regions" => labels.layer_regions,
+        // 🗣️ unreachable in practice — the arms above already cover every id in GIS_MAP_LAYER_IDS.
+        _ => "",
+    }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖DocumentHelpers
 fn default_layer_visibility() -> HashMap<String, bool> {
     GIS_MAP_LAYER_IDS.iter().map(|(id, _, _)| ((*id).into(), true)).collect()
@@ -294,13 +436,13 @@ fn layer_visible(runtime: &Gis2dPlayRuntime, layer_id: &str) -> bool {
     runtime.layer_visibility.get(layer_id).copied().unwrap_or(true)
 }
 
-fn layer_weight_slider_fields(play: &Gis2dPlayEnvelope) -> Vec<UiNode> {
-    layer_weight_entries(play)
+fn layer_weight_slider_fields(play: &Gis2dPlayEnvelope, labels: &Gis2dPlayLabels) -> Vec<UiNode> {
+    layer_weight_entries(play, labels)
         .into_iter()
         .map(|(layer_id, label, value)| {
             UiNode::Field(UiFieldNode {
                 id: format!("gis2d-play-inspector.weight.{layer_id}"),
-                label: format!("{label} weight"),
+                label: format!("{label} {}", labels.weight_suffix),
                 child: Box::new(UiNode::Slider(UiSliderNode {
                     id: format!("gis2d-play-inspector.weight.{layer_id}.slider"),
                     value,
@@ -321,8 +463,8 @@ fn layer_weight_slider_fields(play: &Gis2dPlayEnvelope) -> Vec<UiNode> {
         .collect()
 }
 
-fn lod_select_entries() -> Vec<(String, String)> {
-    std::iter::once((GIS_MAP_LOD_MODE_AUTOMATIC.into(), "Automatic".into()))
+fn lod_select_entries(labels: &Gis2dPlayLabels) -> Vec<(String, String)> {
+    std::iter::once((GIS_MAP_LOD_MODE_AUTOMATIC.into(), labels.lod_automatic.into()))
         .chain(
             serde_json::from_str::<Vec<Value>>(&gis_map_lod_scale_json())
                 .unwrap_or_default()
@@ -336,7 +478,7 @@ fn lod_select_entries() -> Vec<(String, String)> {
         .collect()
 }
 
-fn layer_weight_entries(play: &Gis2dPlayEnvelope) -> Vec<(String, String, f64)> {
+fn layer_weight_entries(play: &Gis2dPlayEnvelope, labels: &Gis2dPlayLabels) -> Vec<(String, String, f64)> {
     let ids: Vec<String> = serde_json::from_str(&gis_map_layer_weight_slider_ids_json(
         &play.runtime.lod_mode,
         &play.runtime.render_mode,
@@ -351,34 +493,29 @@ fn layer_weight_entries(play: &Gis2dPlayEnvelope) -> Vec<(String, String, f64)> 
                 .copied()
                 .map(clamp_map_layer_weight)
                 .unwrap_or(1.0);
-            let label = GIS_MAP_LAYER_IDS
-                .iter()
-                .find(|(id, _, _)| *id == layer_id.as_str())
-                .map(|(_, label, _)| *label)
-                .unwrap_or(layer_id.as_str())
-                .to_string();
+            let label = gis2d_layer_label(&layer_id, labels).to_string();
             (layer_id, label, value)
         })
         .collect()
 }
 
-fn gis2d_window_measures(play: &Gis2dPlayEnvelope) -> Vec<WindowMeasure> {
+fn gis2d_window_measures(play: &Gis2dPlayEnvelope, labels: &Gis2dPlayLabels) -> Vec<WindowMeasure> {
     let layer_toggles: Vec<WindowMeasure> = GIS_MAP_LAYER_IDS
         .iter()
-        .map(|(id, label, icon)| WindowMeasure::Toggle {
+        .map(|(id, _, icon)| WindowMeasure::Toggle {
             id: format!("gis2d-play-window.layer.{id}"),
             icon_id: (*icon).into(),
-            label: Some((*label).into()),
+            label: Some(gis2d_layer_label(id, labels).into()),
             pressed: layer_visible(&play.runtime, id),
             text: None,
             on_change: gis2d_action("toggleLayerVisibility", Some(json!({ "layerId": id }))),
         })
         .collect();
-    let layer_weight_sliders: Vec<WindowMeasure> = layer_weight_entries(play)
+    let layer_weight_sliders: Vec<WindowMeasure> = layer_weight_entries(play, labels)
         .into_iter()
         .map(|(layer_id, label, value)| WindowMeasure::Slider {
             id: format!("gis2d-play-window.weight.{layer_id}"),
-            label: Some(format!("{label} weight")),
+            label: Some(format!("{label} {}", labels.weight_suffix)),
             value,
             min: 0.25,
             max: 3.0,
@@ -389,31 +526,31 @@ fn gis2d_window_measures(play: &Gis2dPlayEnvelope) -> Vec<WindowMeasure> {
     vec![
         WindowMeasure::Select {
             id: "gis2d-play-window.render-mode".into(),
-            label: Some("Render Mode".into()),
+            label: Some(labels.render_mode.into()),
             value: play.runtime.render_mode.clone(),
             items: vec![
-                MeasureSelectItem { id: "image".into(), value: "image".into(), label: "Image".into() },
-                MeasureSelectItem { id: "vector".into(), value: "vector".into(), label: "Vector".into() },
-                MeasureSelectItem { id: "combined".into(), value: "combined".into(), label: "Combined".into() },
+                MeasureSelectItem { id: "image".into(), value: "image".into(), label: labels.render_mode_image.into() },
+                MeasureSelectItem { id: "vector".into(), value: "vector".into(), label: labels.render_mode_vector.into() },
+                MeasureSelectItem { id: "combined".into(), value: "combined".into(), label: labels.render_mode_combined.into() },
             ],
             on_change: gis2d_action("setRenderMode", None),
         },
         WindowMeasure::Select {
             id: "gis2d-play-window.vector-style".into(),
-            label: Some("Vector Style".into()),
+            label: Some(labels.vector_style.into()),
             value: play.runtime.vector_style.clone(),
             items: vec![
-                MeasureSelectItem { id: "colored".into(), value: "colored".into(), label: "Colored".into() },
-                MeasureSelectItem { id: "figureGround".into(), value: "figureGround".into(), label: "Figure Ground".into() },
-                MeasureSelectItem { id: "invertedFigure".into(), value: "invertedFigure".into(), label: "Inverted Figure".into() },
+                MeasureSelectItem { id: "colored".into(), value: "colored".into(), label: labels.vector_style_colored.into() },
+                MeasureSelectItem { id: "figureGround".into(), value: "figureGround".into(), label: labels.vector_style_figure_ground.into() },
+                MeasureSelectItem { id: "invertedFigure".into(), value: "invertedFigure".into(), label: labels.vector_style_inverted_figure.into() },
             ],
             on_change: gis2d_action("setVectorStyle", None),
         },
         WindowMeasure::Select {
             id: "gis2d-play-window.lod-mode".into(),
-            label: Some("LOD Mode".into()),
+            label: Some(labels.lod_mode.into()),
             value: play.runtime.lod_mode.clone(),
-            items: lod_select_entries()
+            items: lod_select_entries(labels)
                 .into_iter()
                 .map(|(value, label)| MeasureSelectItem { id: value.clone(), value, label })
                 .collect(),
@@ -421,23 +558,23 @@ fn gis2d_window_measures(play: &Gis2dPlayEnvelope) -> Vec<WindowMeasure> {
         },
         WindowMeasure::Select {
             id: "gis2d-play-window.selection-method".into(),
-            label: Some("Selection Method".into()),
+            label: Some(labels.selection_method.into()),
             value: play.runtime.selection_method.clone(),
             items: vec![
-                MeasureSelectItem { id: "rectangle".into(), value: "rectangle".into(), label: "Rectangle".into() },
-                MeasureSelectItem { id: "lasso".into(), value: "lasso".into(), label: "Lasso".into() },
+                MeasureSelectItem { id: "rectangle".into(), value: "rectangle".into(), label: labels.selection_method_rectangle.into() },
+                MeasureSelectItem { id: "lasso".into(), value: "lasso".into(), label: labels.selection_method_lasso.into() },
             ],
             on_change: gis2d_action("setSelectionMethod", None),
         },
         WindowMeasure::Group {
             id: "gis2d-play-window.layers".into(),
-            label: "Layers".into(),
+            label: labels.layers_group.into(),
             default_open: Some(true),
             children: layer_toggles,
         },
         WindowMeasure::Group {
             id: "gis2d-play-window.layer-weights".into(),
-            label: "Layer Weights".into(),
+            label: labels.layer_weights_group.into(),
             default_open: Some(false),
             children: layer_weight_sliders,
         },
@@ -472,15 +609,15 @@ fn tree_item(
     }
 }
 
-fn build_document_tree(play: &Gis2dPlayEnvelope) -> UiNode {
+fn build_document_tree(play: &Gis2dPlayEnvelope, labels: &Gis2dPlayLabels) -> UiNode {
     let projection = materialized_projection(play);
     let layer_items: Vec<UiTreeItemNode> = if projection.layers.is_empty() {
         GIS_MAP_LAYER_IDS
             .iter()
-            .map(|(id, label, icon)| {
+            .map(|(id, _, icon)| {
                 tree_item(
                     format!("gis2d-play-document.layer.{id}"),
-                    *label,
+                    gis2d_layer_label(id, labels),
                     Some((*id).into()),
                     Some((*icon).into()),
                     Some(gis2d_action("setSelection", Some(json!({ "ids": [id] })))),
@@ -524,13 +661,13 @@ fn build_document_tree(play: &Gis2dPlayEnvelope) -> UiNode {
     })
 }
 
-fn build_catalogue_tree(play: &Gis2dPlayEnvelope) -> UiNode {
+fn build_catalogue_tree(play: &Gis2dPlayEnvelope, labels: &Gis2dPlayLabels) -> UiNode {
     let items: Vec<UiTreeItemNode> = GIS_MAP_LAYER_IDS
         .iter()
-        .map(|(id, label, icon)| {
+        .map(|(id, _, icon)| {
             tree_item(
                 format!("gis2d-play-catalogue.layer.{id}"),
-                *label,
+                gis2d_layer_label(id, labels),
                 None,
                 Some((*icon).into()),
                 Some(gis2d_action("toggleLayerVisibility", Some(json!({ "layerId": id })))),
@@ -552,8 +689,8 @@ fn build_catalogue_tree(play: &Gis2dPlayEnvelope) -> UiNode {
     })
 }
 
-fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
-    let lod_items: Vec<UiSelectItem> = lod_select_entries()
+fn map_view_field_group(play: &Gis2dPlayEnvelope, labels: &Gis2dPlayLabels) -> UiInspectorFieldGroup {
+    let lod_items: Vec<UiSelectItem> = lod_select_entries(labels)
         .into_iter()
         .map(|(value, label)| UiSelectItem { value, label })
         .collect();
@@ -563,14 +700,14 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
     let mut fields = vec![
             UiNode::Field(UiFieldNode {
                 id: "gis2d-play-inspector.render-mode".into(),
-                label: "Render Mode".into(),
+                label: labels.render_mode.into(),
                 child: Box::new(UiNode::Select(UiSelectNode {
                     id: "gis2d-play-inspector.render-mode.select".into(),
                     value: play.runtime.render_mode.clone(),
                     items: vec![
-                        UiSelectItem { value: "image".into(), label: "Image".into() },
-                        UiSelectItem { value: "vector".into(), label: "Vector".into() },
-                        UiSelectItem { value: "combined".into(), label: "Combined".into() },
+                        UiSelectItem { value: "image".into(), label: labels.render_mode_image.into() },
+                        UiSelectItem { value: "vector".into(), label: labels.render_mode_vector.into() },
+                        UiSelectItem { value: "combined".into(), label: labels.render_mode_combined.into() },
                     ],
                     placeholder: None,
                     on_change: gis2d_action("setRenderMode", None),
@@ -581,14 +718,14 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
             }),
             UiNode::Field(UiFieldNode {
                 id: "gis2d-play-inspector.vector-style".into(),
-                label: "Vector Style".into(),
+                label: labels.vector_style.into(),
                 child: Box::new(UiNode::Select(UiSelectNode {
                     id: "gis2d-play-inspector.vector-style.select".into(),
                     value: play.runtime.vector_style.clone(),
                     items: vec![
-                        UiSelectItem { value: "colored".into(), label: "Colored".into() },
-                        UiSelectItem { value: "figureGround".into(), label: "Figure Ground".into() },
-                        UiSelectItem { value: "invertedFigure".into(), label: "Inverted Figure".into() },
+                        UiSelectItem { value: "colored".into(), label: labels.vector_style_colored.into() },
+                        UiSelectItem { value: "figureGround".into(), label: labels.vector_style_figure_ground.into() },
+                        UiSelectItem { value: "invertedFigure".into(), label: labels.vector_style_inverted_figure.into() },
                     ],
                     placeholder: None,
                     on_change: gis2d_action("setVectorStyle", None),
@@ -599,7 +736,7 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
             }),
             UiNode::Field(UiFieldNode {
                 id: "gis2d-play-inspector.lod-mode".into(),
-                label: "LOD Mode".into(),
+                label: labels.lod_mode.into(),
                 child: Box::new(UiNode::Select(UiSelectNode {
                     id: "gis2d-play-inspector.lod-mode.select".into(),
                     value: play.runtime.lod_mode.clone(),
@@ -613,13 +750,13 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
             }),
             UiNode::Field(UiFieldNode {
                 id: "gis2d-play-inspector.selection-method".into(),
-                label: "Selection Method".into(),
+                label: labels.selection_method.into(),
                 child: Box::new(UiNode::Select(UiSelectNode {
                     id: "gis2d-play-inspector.selection-method.select".into(),
                     value: play.runtime.selection_method.clone(),
                     items: vec![
-                        UiSelectItem { value: "rectangle".into(), label: "Rectangle".into() },
-                        UiSelectItem { value: "lasso".into(), label: "Lasso".into() },
+                        UiSelectItem { value: "rectangle".into(), label: labels.selection_method_rectangle.into() },
+                        UiSelectItem { value: "lasso".into(), label: labels.selection_method_lasso.into() },
                     ],
                     placeholder: None,
                     on_change: gis2d_action("setSelectionMethod", None),
@@ -628,19 +765,19 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
                 required: None,
                 error: None,
             }),
-            ui_inspector_readonly_field("gis2d-play-inspector.feature-selection", "Selected Features", selected_count.to_string()),
+            ui_inspector_readonly_field("gis2d-play-inspector.feature-selection", labels.selected_features, selected_count.to_string()),
     ];
-    fields.extend(layer_weight_slider_fields(play));
+    fields.extend(layer_weight_slider_fields(play, labels));
     UiInspectorFieldGroup {
         id: "gis2d-play-inspector.map-view".into(),
-        label: "Map View".into(),
+        label: labels.map_view.into(),
         default_open: Some(true),
         fields,
     }
 }
 
-fn build_inspector_tree(play: &Gis2dPlayEnvelope) -> UiNode {
-    let map_view_group = map_view_field_group(play);
+fn build_inspector_tree(play: &Gis2dPlayEnvelope, labels: &Gis2dPlayLabels) -> UiNode {
+    let map_view_group = map_view_field_group(play, labels);
     if play.runtime.selected_ids.is_empty() {
         let visible_count = GIS_MAP_LAYER_IDS
             .iter()
@@ -650,13 +787,13 @@ fn build_inspector_tree(play: &Gis2dPlayEnvelope) -> UiNode {
             map_view_group,
             UiInspectorFieldGroup {
                 id: "gis2d-play-inspector.summary".into(),
-                label: "Map Layer".into(),
+                label: labels.map_layer.into(),
                 default_open: Some(true),
                 fields: vec![
-                    ui_inspector_readonly_field("gis2d-play-inspector.schema", "Schema", GIS_MAP_SCHEMA.to_string()),
+                    ui_inspector_readonly_field("gis2d-play-inspector.schema", labels.schema, GIS_MAP_SCHEMA.to_string()),
                     ui_inspector_readonly_field(
                         "gis2d-play-inspector.visible-count",
-                        "Layers visible",
+                        labels.layers_visible,
                         format!("{visible_count}/{}", GIS_MAP_LAYER_IDS.len()),
                     ),
                 ],
@@ -664,25 +801,21 @@ fn build_inspector_tree(play: &Gis2dPlayEnvelope) -> UiNode {
         ]);
     }
     let layer_id = &play.runtime.selected_ids[0];
-    let label = GIS_MAP_LAYER_IDS
-        .iter()
-        .find(|(id, _, _)| *id == layer_id.as_str())
-        .map(|(_, label, _)| *label)
-        .unwrap_or(layer_id.as_str());
+    let label = gis2d_layer_label(layer_id, labels);
     let visible = layer_visible(&play.runtime, layer_id);
     let mixed = ui_inspector_mixed_toggle(&[visible]);
     ui_inspector_groups_to_tree(&[
         map_view_group,
         UiInspectorFieldGroup {
             id: "gis2d-play-inspector.layer".into(),
-            label: "Map Layer".into(),
+            label: labels.map_layer.into(),
             default_open: Some(true),
             fields: vec![
-                ui_inspector_readonly_field("gis2d-play-inspector.id", "Id", layer_id.clone()),
-                ui_inspector_readonly_field("gis2d-play-inspector.label", "Label", label.to_string()),
+                ui_inspector_readonly_field("gis2d-play-inspector.id", labels.field_id, layer_id.clone()),
+                ui_inspector_readonly_field("gis2d-play-inspector.label", labels.field_label, label.to_string()),
                 UiNode::Field(UiFieldNode {
                     id: "gis2d-play-inspector.visible".into(),
-                    label: "Visible".into(),
+                    label: labels.field_visible.into(),
                     child: Box::new(UiNode::Toggle(UiToggleNode {
                         id: "gis2d-play-inspector.visible.toggle".into(),
                         icon_id: "eye".into(),
@@ -1005,13 +1138,14 @@ impl PluginApp for Gis2dPlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let play = parse_envelope(document_json);
+        let labels = gis2d_labels(view_state);
         match body_key {
             GIS2D_PLAY_BODY_COMPOSITE => render_canvas(&play),
-            GIS2D_PLAY_BODY_DOCUMENT => build_document_tree(&play),
-            GIS2D_PLAY_BODY_CATALOGUE => build_catalogue_tree(&play),
-            GIS2D_PLAY_BODY_INSPECTION => build_inspector_tree(&play),
+            GIS2D_PLAY_BODY_DOCUMENT => build_document_tree(&play, labels),
+            GIS2D_PLAY_BODY_CATALOGUE => build_catalogue_tree(&play, labels),
+            GIS2D_PLAY_BODY_INSPECTION => build_inspector_tree(&play, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -1019,10 +1153,11 @@ impl PluginApp for Gis2dPlayApp {
     fn window_measures(
         &self,
         document_json: &str,
-        _view_state: &ViewState,
+        view_state: &ViewState,
     ) -> HashMap<String, Vec<WindowMeasure>> {
         let play = parse_envelope(document_json);
-        HashMap::from([(GIS2D_PLAY_WINDOW_MAIN.into(), gis2d_window_measures(&play))])
+        let labels = gis2d_labels(view_state);
+        HashMap::from([(GIS2D_PLAY_WINDOW_MAIN.into(), gis2d_window_measures(&play, labels))])
     }
 }
 //#endregion 🔖Gis2dPlayApp
@@ -1188,6 +1323,43 @@ mod tests {
         let node = app.render(GIS2D_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("gis2d-play-catalogue.layer.water"));
+    }
+
+    #[test]
+    fn gis2d_labels_resolve_native_by_default() {
+        let app = Gis2dPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(GIS2D_PLAY_BODY_INSPECTION, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("\"Map View\""));
+        assert!(json.contains("\"Render Mode\""));
+        assert!(json.contains("\"Selected Features\""));
+        assert!(json.contains("\"Map Layer\""));
+        assert!(!json.contains("Kartenansicht"));
+    }
+
+    #[test]
+    fn gis2d_labels_translate_inspector_and_layers_in_german() {
+        let app = Gis2dPlayApp;
+        let document = app.initial_document_json();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let inspector = app.render(GIS2D_PLAY_BODY_INSPECTION, &document, &view_state);
+        let inspector_json = serde_json::to_string(&inspector).unwrap();
+        assert!(inspector_json.contains("Kartenansicht"));
+        assert!(inspector_json.contains("Darstellungsmodus"));
+        assert!(inspector_json.contains("Ausgewählte Objekte"));
+        assert!(inspector_json.contains("Kartenebene"));
+        assert!(!inspector_json.contains("\"Map View\""));
+
+        let document_tree = app.render(GIS2D_PLAY_BODY_DOCUMENT, &document, &view_state);
+        let document_json = serde_json::to_string(&document_tree).unwrap();
+        assert!(document_json.contains("Wasser"));
+        assert!(!document_json.contains("\"Water\""));
+
+        let window = app.window_measures(&document, &view_state);
+        let window_json = serde_json::to_string(window.get(GIS2D_PLAY_WINDOW_MAIN).unwrap()).unwrap();
+        assert!(window_json.contains("Ebenen"));
+        assert!(window_json.contains("Ebenengewichte"));
     }
 
     #[test]

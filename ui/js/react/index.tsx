@@ -14284,11 +14284,11 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
   };
   const resizeSide = position === "left" ? "right" : "left";
 
-  // Flush against the top (no gap) so the panel morphs directly out of its navbar toggle, like a window-options rail unfolding from its chrome.
+  // Positioned against the whole display (Layout's root), not the row between navbar and footer, so it floats over both — spacing is relative to the screen edges only, like a window's options rail over its canvas.
   const positionStyle =
     position === "left"
-      ? { left: "var(--spacing-single)", top: "0", bottom: "var(--spacing-single)", width: `${size}px`, zIndex }
-      : { right: "var(--spacing-single)", top: "0", bottom: "var(--spacing-single)", width: `${size}px`, zIndex };
+      ? { left: "var(--spacing-single)", top: "var(--spacing-single)", bottom: "var(--spacing-single)", width: `${size}px`, zIndex }
+      : { right: "var(--spacing-single)", top: "var(--spacing-single)", bottom: "var(--spacing-single)", width: `${size}px`, zIndex };
 
   const resizeHandleClass = `absolute top-0 bottom-0 z-20 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize`;
 

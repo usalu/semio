@@ -53,6 +53,87 @@ const NAKAGIN_EXAMPLE_JSON: &str = include_str!("../../../5d/example/nakagin-cap
 static PUZZLE5D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖Constants
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the 5D app; one field per label makes every locale combination compile-checked.
+struct Puzzle5dLabels {
+    parts: &'static str,
+    fasteners: &'static str,
+    grips: &'static str,
+    ropes: &'static str,
+    part: &'static str,
+    grip: &'static str,
+    select: &'static str,
+    brush: &'static str,
+    fill: &'static str,
+    placement: &'static str,
+    duplicate: &'static str,
+    select_same_kind: &'static str,
+    zoom_to_selection: &'static str,
+    delete: &'static str,
+    lod: &'static str,
+    automatic: &'static str,
+    suggestion: &'static str,
+    offset: &'static str,
+    part_weights: &'static str,
+    grip_weights: &'static str,
+    overlap: &'static str,
+}
+
+const PUZZLE5D_LABELS_NATIVE_EN: Puzzle5dLabels = Puzzle5dLabels {
+    parts: "Parts",
+    fasteners: "Fasteners",
+    grips: "Grips",
+    ropes: "Ropes",
+    part: "Part",
+    grip: "Grip",
+    select: "Select",
+    brush: "Brush",
+    fill: "Fill",
+    placement: "Placement",
+    duplicate: "Duplicate",
+    select_same_kind: "Select all of same kind",
+    zoom_to_selection: "Zoom to selection",
+    delete: "Delete",
+    lod: "LOD",
+    automatic: "Automatic",
+    suggestion: "Suggestion",
+    offset: "Offset",
+    part_weights: "Part Weights",
+    grip_weights: "Grip Weights",
+    overlap: "Overlap",
+};
+
+const PUZZLE5D_LABELS_NATIVE_DE: Puzzle5dLabels = Puzzle5dLabels {
+    parts: "Teile",
+    fasteners: "Verbinder",
+    grips: "Griffe",
+    ropes: "Seile",
+    part: "Teil",
+    grip: "Griff",
+    select: "Auswählen",
+    brush: "Pinsel",
+    fill: "Füllen",
+    placement: "Platzierung",
+    duplicate: "Duplizieren",
+    select_same_kind: "Alle gleicher Art auswählen",
+    zoom_to_selection: "Auf Auswahl zoomen",
+    delete: "Löschen",
+    lod: "LOD",
+    automatic: "Automatisch",
+    suggestion: "Vorschlag",
+    offset: "Versatz",
+    part_weights: "Teilgewichte",
+    grip_weights: "Griffgewichte",
+    overlap: "Überlappung",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; puzzle5d has no alternate terminology, only native language switching.
+fn puzzle5d_labels(view_state: &ViewState) -> &'static Puzzle5dLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de { &PUZZLE5D_LABELS_NATIVE_DE } else { &PUZZLE5D_LABELS_NATIVE_EN }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Document
 fn one_f64() -> f64 {
     1.0
@@ -1019,15 +1100,15 @@ fn world_interaction_json(runtime: &Puzzle5dRuntime) -> String {
     .to_string()
 }
 
-fn puzzle5d_context_menu_json(envelope: &Puzzle5dEnvelope) -> Option<String> {
+fn puzzle5d_context_menu_json(envelope: &Puzzle5dEnvelope, labels: &Puzzle5dLabels) -> Option<String> {
     if envelope.runtime.selection.part_ids.is_empty() {
         return None;
     }
     let items = vec![
-        json!({ "id": "duplicate", "label": "Duplicate", "action": "duplicateSelection" }),
-        json!({ "id": "select-same-kind", "label": "Select all of same kind", "action": "selectSameKindSelection" }),
-        json!({ "id": "zoom", "label": "Zoom to selection", "action": "zoomToSelection" }),
-        json!({ "id": "delete", "label": "Delete", "action": "deleteSelection" }),
+        json!({ "id": "duplicate", "label": labels.duplicate, "action": "duplicateSelection" }),
+        json!({ "id": "select-same-kind", "label": labels.select_same_kind, "action": "selectSameKindSelection" }),
+        json!({ "id": "zoom", "label": labels.zoom_to_selection, "action": "zoomToSelection" }),
+        json!({ "id": "delete", "label": labels.delete, "action": "deleteSelection" }),
     ];
     serde_json::to_string(&items).ok()
 }
@@ -1062,7 +1143,7 @@ fn world_brush_preview_json(session: &Puzzle5dPrecomputeSession, envelope: &Puzz
 //#endregion 🔖Brush
 
 //#region 🔖Engagement
-fn puzzle5d_brush_placement_control(envelope: &Puzzle5dEnvelope, precompute: &Puzzle5dPrecomputeSession) -> Option<WindowEngagementControl> {
+fn puzzle5d_brush_placement_control(envelope: &Puzzle5dEnvelope, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> Option<WindowEngagementControl> {
     let target = puzzle5d_brush_target_grip(envelope)?;
     let candidates = parse_brush_candidates_free(&precompute.brush_candidates(&target));
     if candidates.is_empty() {
@@ -1079,7 +1160,7 @@ fn puzzle5d_brush_placement_control(envelope: &Puzzle5dEnvelope, precompute: &Pu
     let selected_index = envelope.runtime.brush_candidate_index.min(options.len().saturating_sub(1));
     Some(WindowEngagementControl::ToggleGroup {
         id: Some("puzzle5d-brush-placement".into()),
-        label: Some("Placement".into()),
+        label: Some(labels.placement.into()),
         value: Some(format!("puzzle5d.brush.candidate.{selected_index}")),
         options,
         disabled: None,
@@ -1087,10 +1168,10 @@ fn puzzle5d_brush_placement_control(envelope: &Puzzle5dEnvelope, precompute: &Pu
     })
 }
 
-fn puzzle5d_fill_count_control(envelope: &Puzzle5dEnvelope) -> WindowEngagementControl {
+fn puzzle5d_fill_count_control(envelope: &Puzzle5dEnvelope, labels: &Puzzle5dLabels) -> WindowEngagementControl {
     WindowEngagementControl::Slider {
         id: Some("puzzle5d-fill-count".into()),
-        label: Some(format!("Fill {}", envelope.runtime.fill_count)),
+        label: Some(format!("{} {}", labels.fill, envelope.runtime.fill_count)),
         value: envelope.runtime.fill_count as f64,
         min: 0.0,
         max: PUZZLE5D_FILL_COUNT_MAX as f64,
@@ -1102,12 +1183,12 @@ fn puzzle5d_fill_count_control(envelope: &Puzzle5dEnvelope) -> WindowEngagementC
     }
 }
 
-fn puzzle5d_engagement(envelope: &Puzzle5dEnvelope, precompute: &Puzzle5dPrecomputeSession, window: &str) -> WindowEngagement {
+fn puzzle5d_engagement(envelope: &Puzzle5dEnvelope, precompute: &Puzzle5dPrecomputeSession, window: &str, labels: &Puzzle5dLabels) -> WindowEngagement {
     let part_count = envelope.document.parts.len();
     let fastener_count = envelope.document.fasteners.len();
     let control = match envelope.runtime.active_tool.as_str() {
-        "fill" => Some(puzzle5d_fill_count_control(envelope)),
-        "brush" => puzzle5d_brush_placement_control(envelope, precompute),
+        "fill" => Some(puzzle5d_fill_count_control(envelope, labels)),
+        "brush" => puzzle5d_brush_placement_control(envelope, precompute, labels),
         _ => None,
     };
     let input_value = envelope.runtime.engagement_input_by_window.get(window).cloned().unwrap_or_default();
@@ -1134,7 +1215,7 @@ fn puzzle5d_engagement(envelope: &Puzzle5dEnvelope, precompute: &Puzzle5dPrecomp
         options: Some(vec![
             WindowEngagementOption {
                 id: PUZZLE5D_ENGAGEMENT_TOOL_SELECT.into(),
-                label: Some("Select".into()),
+                label: Some(labels.select.into()),
                 icon_id: Some("cursor".into()),
                 pressed: Some(envelope.runtime.active_tool == "select"),
                 disabled: None,
@@ -1142,7 +1223,7 @@ fn puzzle5d_engagement(envelope: &Puzzle5dEnvelope, precompute: &Puzzle5dPrecomp
             },
             WindowEngagementOption {
                 id: PUZZLE5D_ENGAGEMENT_TOOL_BRUSH.into(),
-                label: Some("Brush".into()),
+                label: Some(labels.brush.into()),
                 icon_id: Some("brush".into()),
                 pressed: Some(envelope.runtime.active_tool == "brush"),
                 disabled: None,
@@ -1150,7 +1231,7 @@ fn puzzle5d_engagement(envelope: &Puzzle5dEnvelope, precompute: &Puzzle5dPrecomp
             },
             WindowEngagementOption {
                 id: PUZZLE5D_ENGAGEMENT_TOOL_FILL.into(),
-                label: Some("Fill".into()),
+                label: Some(labels.fill.into()),
                 icon_id: Some("fill".into()),
                 pressed: Some(envelope.runtime.fill_count > 0 || envelope.runtime.active_tool == "fill"),
                 disabled: None,
@@ -1190,10 +1271,10 @@ fn puzzle5d_kind_ids(document: &Puzzle5dDocument, slice: &str) -> Vec<String> {
     ids
 }
 
-fn puzzle5d_lod_measure(runtime: &Puzzle5dRuntime) -> WindowMeasure {
-    let mut items = vec![MeasureSelectItem { id: PUZZLE5D_LOD_MODE_AUTOMATIC.into(), value: PUZZLE5D_LOD_MODE_AUTOMATIC.into(), label: "Automatic".into() }];
+fn puzzle5d_lod_measure(runtime: &Puzzle5dRuntime, labels: &Puzzle5dLabels) -> WindowMeasure {
+    let mut items = vec![MeasureSelectItem { id: PUZZLE5D_LOD_MODE_AUTOMATIC.into(), value: PUZZLE5D_LOD_MODE_AUTOMATIC.into(), label: labels.automatic.into() }];
     items.extend(puzzle5d_lod_tier_ids().into_iter().map(|tier| MeasureSelectItem { id: tier.clone(), value: tier.clone(), label: tier }));
-    WindowMeasure::Select { id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-lod"), label: Some("LOD".into()), value: runtime.lod_mode.clone(), items, on_change: puzzle5d_action("setLodMode", None) }
+    WindowMeasure::Select { id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-lod"), label: Some(labels.lod.into()), value: runtime.lod_mode.clone(), items, on_change: puzzle5d_action("setLodMode", None) }
 }
 
 fn puzzle5d_kind_weight_measures(prefix: &str, action: &str, ids: &[String], weights: &HashMap<String, f64>) -> Vec<WindowMeasure> {
@@ -1213,17 +1294,17 @@ fn puzzle5d_kind_weight_measures(prefix: &str, action: &str, ids: &[String], wei
         .collect()
 }
 
-fn puzzle5d_suggestion_measures_group(envelope: &Puzzle5dEnvelope) -> WindowMeasure {
+fn puzzle5d_suggestion_measures_group(envelope: &Puzzle5dEnvelope, labels: &Puzzle5dLabels) -> WindowMeasure {
     let part_ids = puzzle5d_kind_ids(&envelope.document, "parts");
     let grip_ids = puzzle5d_kind_ids(&envelope.document, "grips");
     WindowMeasure::Group {
         id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion"),
-        label: "Suggestion".into(),
+        label: labels.suggestion.into(),
         default_open: Some(false),
         children: vec![
             WindowMeasure::Slider {
                 id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-offset"),
-                label: Some("Offset".into()),
+                label: Some(labels.offset.into()),
                 value: envelope.runtime.suggestion_offset,
                 min: PUZZLE5D_SUGGESTION_OFFSET_MIN,
                 max: PUZZLE5D_SUGGESTION_OFFSET_MAX,
@@ -1232,13 +1313,13 @@ fn puzzle5d_suggestion_measures_group(envelope: &Puzzle5dEnvelope) -> WindowMeas
             },
             WindowMeasure::Group {
                 id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-parts"),
-                label: "Part Weights".into(),
+                label: labels.part_weights.into(),
                 default_open: Some(false),
                 children: puzzle5d_kind_weight_measures("part-kind", "setObjectKindWeight", &part_ids, &envelope.runtime.object_kind_weights),
             },
             WindowMeasure::Group {
                 id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-grips"),
-                label: "Grip Weights".into(),
+                label: labels.grip_weights.into(),
                 default_open: Some(false),
                 children: puzzle5d_kind_weight_measures("grip-kind", "setVortexKindWeight", &grip_ids, &envelope.runtime.vortex_kind_weights),
             },
@@ -1246,14 +1327,14 @@ fn puzzle5d_suggestion_measures_group(envelope: &Puzzle5dEnvelope) -> WindowMeas
     }
 }
 
-fn puzzle5d_brush_measures_group(envelope: &Puzzle5dEnvelope) -> WindowMeasure {
+fn puzzle5d_brush_measures_group(envelope: &Puzzle5dEnvelope, labels: &Puzzle5dLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-brush"),
-        label: "Brush".into(),
+        label: labels.brush.into(),
         default_open: Some(false),
         children: vec![WindowMeasure::Slider {
             id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-brush-overlap"),
-            label: Some("Overlap".into()),
+            label: Some(labels.overlap.into()),
             value: envelope.runtime.overlap_budget,
             min: 0.0,
             max: 0.2,
@@ -1263,11 +1344,11 @@ fn puzzle5d_brush_measures_group(envelope: &Puzzle5dEnvelope) -> WindowMeasure {
     }
 }
 
-fn puzzle5d_window_measures(window: &str, envelope: &Puzzle5dEnvelope) -> Vec<WindowMeasure> {
+fn puzzle5d_window_measures(window: &str, envelope: &Puzzle5dEnvelope, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
     if window == PUZZLE5D_PLAY_WINDOW_2D {
-        vec![puzzle5d_lod_measure(&envelope.runtime), puzzle5d_suggestion_measures_group(envelope), puzzle5d_brush_measures_group(envelope)]
+        vec![puzzle5d_lod_measure(&envelope.runtime, labels), puzzle5d_suggestion_measures_group(envelope, labels), puzzle5d_brush_measures_group(envelope, labels)]
     } else {
-        vec![puzzle5d_suggestion_measures_group(envelope), puzzle5d_brush_measures_group(envelope)]
+        vec![puzzle5d_suggestion_measures_group(envelope, labels), puzzle5d_brush_measures_group(envelope, labels)]
     }
 }
 //#endregion 🔖Measures
@@ -1309,7 +1390,7 @@ fn document_tree_selected_ids(envelope: &Puzzle5dEnvelope) -> Vec<String> {
         .collect()
 }
 
-fn build_document_tree(envelope: &Puzzle5dEnvelope) -> UiNode {
+fn build_document_tree(envelope: &Puzzle5dEnvelope, labels: &Puzzle5dLabels) -> UiNode {
     let part_items: Vec<UiTreeItemNode> = envelope
         .document
         .parts
@@ -1341,13 +1422,13 @@ fn build_document_tree(envelope: &Puzzle5dEnvelope) -> UiNode {
         sections: vec![
             UiTreeSectionNode {
                 id: "puzzle5d-play-document.parts".into(),
-                label: Some("Parts".into()),
+                label: Some(labels.parts.into()),
                 default_open: Some(true),
                 items: if part_items.is_empty() { vec![tree_info_item("puzzle5d-play-document.parts.empty", "(none)", None)] } else { part_items },
             },
             UiTreeSectionNode {
                 id: "puzzle5d-play-document.fasteners".into(),
-                label: Some("Fasteners".into()),
+                label: Some(labels.fasteners.into()),
                 default_open: Some(false),
                 items: if fastener_items.is_empty() { vec![tree_info_item("puzzle5d-play-document.fasteners.empty", "(none)", None)] } else { fastener_items },
             },
@@ -1411,7 +1492,7 @@ fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value], add_ac
     }
 }
 
-fn build_kinds_tree(envelope: &Puzzle5dEnvelope) -> UiNode {
+fn build_kinds_tree(envelope: &Puzzle5dEnvelope, labels: &Puzzle5dLabels) -> UiNode {
     let catalogs = envelope.document.kind_catalogs.clone().unwrap_or(json!({}));
     let slice = |key: &str| catalogs.get(key).and_then(|value| value.as_array()).cloned().unwrap_or_default();
     let mut part_entries = slice("parts");
@@ -1423,10 +1504,10 @@ fn build_kinds_tree(envelope: &Puzzle5dEnvelope) -> UiNode {
     }
     UiNode::Tree(UiTreeNode {
         sections: vec![
-            kind_catalog_section("puzzle5d-play-kinds.parts", "Parts", &part_entries, Some("addPartKind")),
-            kind_catalog_section("puzzle5d-play-kinds.grips", "Grips", &slice("grips"), None),
-            kind_catalog_section("puzzle5d-play-kinds.fasteners", "Fasteners", &slice("fasteners"), None),
-            kind_catalog_section("puzzle5d-play-kinds.ropes", "Ropes", &slice("ropes"), None),
+            kind_catalog_section("puzzle5d-play-kinds.parts", labels.parts, &part_entries, Some("addPartKind")),
+            kind_catalog_section("puzzle5d-play-kinds.grips", labels.grips, &slice("grips"), None),
+            kind_catalog_section("puzzle5d-play-kinds.fasteners", labels.fasteners, &slice("fasteners"), None),
+            kind_catalog_section("puzzle5d-play-kinds.ropes", labels.ropes, &slice("ropes"), None),
         ],
         selected_ids: None,
         highlighted_ids: None,
@@ -1457,11 +1538,11 @@ fn inspector_text_field(id: &str, label: &str, value: String, action: ActionDesc
     })
 }
 
-fn build_part_inspector(part: &Puzzle5dPart) -> UiNode {
+fn build_part_inspector(part: &Puzzle5dPart, labels: &Puzzle5dLabels) -> UiNode {
     let origin = part.part_3d.origin;
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "puzzle5d-play-inspector.part".into(),
-        label: "Part".into(),
+        label: labels.part.into(),
         default_open: None,
         fields: vec![
             ui_inspector_readonly_field("puzzle5d-play-inspector.part.id", "Id", &part.id),
@@ -1475,13 +1556,13 @@ fn build_part_inspector(part: &Puzzle5dPart) -> UiNode {
     }])
 }
 
-fn build_grip_inspector(part: &Puzzle5dPart, grip: &Puzzle5dGrip) -> UiNode {
+fn build_grip_inspector(part: &Puzzle5dPart, grip: &Puzzle5dGrip, labels: &Puzzle5dLabels) -> UiNode {
     let full_id = puzzle5d_grip_full_id(&part.id, &grip.id);
     let position = grip.grip_3d.position;
     let direction = grip.grip_3d.direction.unwrap_or([0.0, 0.0, -1.0]);
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "puzzle5d-play-inspector.grip".into(),
-        label: "Grip".into(),
+        label: labels.grip.into(),
         default_open: None,
         fields: vec![
             ui_inspector_readonly_field("puzzle5d-play-inspector.grip.id", "Id", &full_id),
@@ -1494,15 +1575,15 @@ fn build_grip_inspector(part: &Puzzle5dPart, grip: &Puzzle5dGrip) -> UiNode {
     }])
 }
 
-fn build_inspector_tree(envelope: &Puzzle5dEnvelope) -> UiNode {
+fn build_inspector_tree(envelope: &Puzzle5dEnvelope, labels: &Puzzle5dLabels) -> UiNode {
     if let Some(grip_full_id) = envelope.runtime.selection.grip_ids.first() {
         if let Some((part, grip)) = find_part_by_grip_full_id(&envelope.document, grip_full_id) {
-            return build_grip_inspector(part, grip);
+            return build_grip_inspector(part, grip, labels);
         }
     }
     if let Some(part_id) = envelope.runtime.selection.part_ids.first() {
         if let Some(part) = envelope.document.parts.iter().find(|entry| &entry.id == part_id) {
-            return build_part_inspector(part);
+            return build_part_inspector(part, labels);
         }
     }
     if let Some(fastener_id) = envelope.runtime.selection.fastener_ids.first() {
@@ -1902,7 +1983,7 @@ impl PluginApp for Puzzle5dPlayApp {
             }
             "setFillCount" => {
                 self.drive_precompute(&envelope);
-                let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_u64()).unwrap_or(0).min(u64::from(PUZZLE5D_FILL_COUNT_MAX)) as u32;
+                let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_f64()).map(|value| value.round().max(0.0) as u32).unwrap_or(0).min(PUZZLE5D_FILL_COUNT_MAX);
                 envelope.runtime.fill_count = count;
                 if count > 0 {
                     envelope.runtime.active_tool = "fill".into();
@@ -2255,8 +2336,9 @@ impl PluginApp for Puzzle5dPlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
+        let labels = puzzle5d_labels(view_state);
         match body_key {
             PUZZLE5D_PLAY_BODY_2D => build_puzzle2d_board_scene(PUZZLE5D_PLAY_SURFACE_2D, PUZZLE5D_PLAY_CONTROLLER_ID, puzzle5d_board_scene(&envelope)),
             PUZZLE5D_PLAY_BODY_3D => {
@@ -2278,25 +2360,27 @@ impl PluginApp for Puzzle5dPlayApp {
                         None,
                         None,
                         Some(world3d_chunking_json(256.0, 8000.0)),
-                        puzzle5d_context_menu_json(&envelope),
+                        puzzle5d_context_menu_json(&envelope, labels),
                     ),
                 )
             }
-            PUZZLE5D_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
-            PUZZLE5D_PLAY_BODY_KINDS => build_kinds_tree(&envelope),
-            PUZZLE5D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope),
+            PUZZLE5D_PLAY_BODY_DOCUMENT => build_document_tree(&envelope, labels),
+            PUZZLE5D_PLAY_BODY_KINDS => build_kinds_tree(&envelope, labels),
+            PUZZLE5D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn window_engagements(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let envelope = parse_envelope(document_json);
-        PUZZLE5D_PLAY_WINDOWS.iter().map(|window| (window.to_string(), puzzle5d_engagement(&envelope, &self.precompute, window))).collect()
+        let labels = puzzle5d_labels(view_state);
+        PUZZLE5D_PLAY_WINDOWS.iter().map(|window| (window.to_string(), puzzle5d_engagement(&envelope, &self.precompute, window, labels))).collect()
     }
 
-    fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let envelope = parse_envelope(document_json);
-        PUZZLE5D_PLAY_WINDOWS.iter().map(|window| (window.to_string(), puzzle5d_window_measures(window, &envelope))).collect()
+        let labels = puzzle5d_labels(view_state);
+        PUZZLE5D_PLAY_WINDOWS.iter().map(|window| (window.to_string(), puzzle5d_window_measures(window, &envelope, labels))).collect()
     }
 }
 //#endregion 🔖Puzzle5dPlayApp
@@ -2305,14 +2389,15 @@ impl PluginApp for Puzzle5dPlayApp {
 pub fn create_puzzle5d_app() -> App {
     let envelope = default_envelope();
     let precompute = Puzzle5dPrecomputeSession::new();
+    let manifest_labels = puzzle5d_labels(&ViewState::default());
     let mut app = App::from_builder(
         App::builder(PUZZLE5D_PLAY_APP_ID, "Puzzle 5D")
             .document(["semio", "puzzle", "5d"])
             .icon_id("puzzle")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Puzzle2dBoard, puzzle5d_engagement(&envelope, &precompute, PUZZLE5D_PLAY_WINDOW_2D))
-            .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d, puzzle5d_engagement(&envelope, &precompute, PUZZLE5D_PLAY_WINDOW_3D))
+            .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Puzzle2dBoard, puzzle5d_engagement(&envelope, &precompute, PUZZLE5D_PLAY_WINDOW_2D, manifest_labels))
+            .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d, puzzle5d_engagement(&envelope, &precompute, PUZZLE5D_PLAY_WINDOW_3D, manifest_labels))
             .default_layout(create_default_layout(&[PUZZLE5D_PLAY_WINDOW_2D.into(), PUZZLE5D_PLAY_WINDOW_3D.into()], "row", Some(&[50.0, 50.0]), Some(&["Puzzle 2D".into(), "Puzzle 3D".into()])))
             .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_DOCUMENT)
             .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_KINDS)
@@ -2320,7 +2405,7 @@ pub fn create_puzzle5d_app() -> App {
     );
     for window in PUZZLE5D_PLAY_WINDOWS {
         if let Some(window_kind) = app.definition.window_kinds.iter_mut().find(|window_kind| window_kind.id == window) {
-            window_kind.measures = puzzle5d_window_measures(window, &envelope);
+            window_kind.measures = puzzle5d_window_measures(window, &envelope, manifest_labels);
         }
     }
     app.example("empty", "Empty", serde_json::to_string(&empty_document()).unwrap())
@@ -2505,9 +2590,10 @@ mod tests {
     #[test]
     fn context_menu_present_when_parts_selected() {
         let mut envelope = default_envelope();
-        assert!(puzzle5d_context_menu_json(&envelope).is_none());
+        let labels = puzzle5d_labels(&ViewState::default());
+        assert!(puzzle5d_context_menu_json(&envelope, labels).is_none());
         envelope.runtime.selection.part_ids = vec!["seed-left-001".into()];
-        let menu = puzzle5d_context_menu_json(&envelope).unwrap();
+        let menu = puzzle5d_context_menu_json(&envelope, labels).unwrap();
         assert!(menu.contains("duplicateSelection"));
         assert!(menu.contains("zoomToSelection"));
     }
@@ -2583,7 +2669,7 @@ mod tests {
     fn document_tree_reflects_selection_and_fasteners() {
         let mut envelope = envelope_from_document_json(NAKAGIN_EXAMPLE_JSON).expect("nakagin envelope");
         envelope.runtime.selection.part_ids = vec![envelope.document.parts[0].id.clone()];
-        let node = build_document_tree(&envelope);
+        let node = build_document_tree(&envelope, puzzle5d_labels(&ViewState::default()));
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("puzzle5d-play-document.fasteners"));
         assert!(json.contains(&format!("puzzle5d-play-document.part.{}", envelope.document.parts[0].id)));
@@ -2763,6 +2849,72 @@ mod tests {
         assert!(object.get("grips").is_none());
         assert!(object["vortices"].as_array().is_some_and(|vortices| !vortices.is_empty()));
         assert!(object["vortices"][0]["vortexKind"].is_string());
+    }
+
+    #[test]
+    fn puzzle5d_labels_resolve_native_english_by_default() {
+        let app = Puzzle5dPlayApp::default();
+        let document = app.initial_document_json();
+        let mut envelope = parse_envelope(&document);
+        envelope.runtime.selection.part_ids = vec![envelope.document.parts[0].id.clone()];
+        let selected_document = serde_json::to_string(&envelope).unwrap();
+
+        let document_json = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_DOCUMENT, &document, &ViewState::default())).unwrap();
+        assert!(document_json.contains("\"Parts\""));
+        assert!(document_json.contains("\"Fasteners\""));
+
+        let kinds_json = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_KINDS, &document, &ViewState::default())).unwrap();
+        assert!(kinds_json.contains("\"Grips\""));
+        assert!(kinds_json.contains("\"Ropes\""));
+
+        let inspector_json = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_INSPECTOR, &selected_document, &ViewState::default())).unwrap();
+        assert!(inspector_json.contains("\"Part\""));
+
+        let engagements = app.window_engagements(&document, &ViewState::default());
+        let engagement_json = serde_json::to_string(&engagements.get(PUZZLE5D_PLAY_WINDOW_2D).unwrap()).unwrap();
+        assert!(engagement_json.contains("\"Select\""));
+        assert!(engagement_json.contains("\"Brush\""));
+        assert!(engagement_json.contains("\"Fill\""));
+
+        let measures = app.window_measures(&document, &ViewState::default());
+        let measures_json = serde_json::to_string(&measures.get(PUZZLE5D_PLAY_WINDOW_2D).unwrap()).unwrap();
+        assert!(measures_json.contains("\"LOD\""));
+        assert!(measures_json.contains("\"Automatic\""));
+        assert!(measures_json.contains("Suggestion"));
+        assert!(measures_json.contains("Offset"));
+    }
+
+    #[test]
+    fn puzzle5d_labels_resolve_native_german_locale() {
+        let app = Puzzle5dPlayApp::default();
+        let document = app.initial_document_json();
+        let mut envelope = parse_envelope(&document);
+        envelope.runtime.selection.part_ids = vec![envelope.document.parts[0].id.clone()];
+        let selected_document = serde_json::to_string(&envelope).unwrap();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+
+        let document_json = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_DOCUMENT, &document, &view_state)).unwrap();
+        assert!(document_json.contains("\"Teile\""));
+        assert!(document_json.contains("\"Verbinder\""));
+
+        let kinds_json = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_KINDS, &document, &view_state)).unwrap();
+        assert!(kinds_json.contains("\"Griffe\""));
+        assert!(kinds_json.contains("\"Seile\""));
+
+        let inspector_json = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_INSPECTOR, &selected_document, &view_state)).unwrap();
+        assert!(inspector_json.contains("\"Teil\""));
+
+        let engagements = app.window_engagements(&document, &view_state);
+        let engagement_json = serde_json::to_string(&engagements.get(PUZZLE5D_PLAY_WINDOW_2D).unwrap()).unwrap();
+        assert!(engagement_json.contains("\"Auswählen\""));
+        assert!(engagement_json.contains("\"Pinsel\""));
+        assert!(engagement_json.contains("\"Füllen\""));
+
+        let measures = app.window_measures(&document, &view_state);
+        let measures_json = serde_json::to_string(&measures.get(PUZZLE5D_PLAY_WINDOW_2D).unwrap()).unwrap();
+        assert!(measures_json.contains("Automatisch"));
+        assert!(measures_json.contains("Vorschlag"));
+        assert!(measures_json.contains("Versatz"));
     }
 }
 //#endregion 🧪Tests

@@ -205,6 +205,16 @@
       "port": 6018
     },
     {
+      "name": "process3d-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:process:3d"],
+      "env": {
+        "PROCESS_3D_PLAY_PORT": "6022",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6022
+    },
+    {
       "name": "vcs-react-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:vcs"],

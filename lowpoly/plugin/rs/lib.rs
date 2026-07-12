@@ -8,7 +8,7 @@ use lowpoly_core::{
 };
 use png::{BitDepth, ColorType, Encoder};
 use semio_framework_plugin::{SurfaceKind,
-    build_canvas_2d_scene, build_world_3d_scene, create_default_layout, create_named_layout,
+    build_canvas_2d_scene, build_world_3d_scene, create_default_layout, create_named_layout, engagement_token_matches,
     merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree,
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, PanelGroup,
     world3d_selection_json, App, Canvas2dScene, ActionDescriptor, MeshData, PluginApp, PluginBundle,
@@ -1994,14 +1994,16 @@ impl PluginApp for LowpolyPlayApp {
                 }
             }
             "engagementSubmit" => {
-                let value = args
-                    .and_then(|value| value.get("value"))
-                    .and_then(|value| value.as_str())
-                    .map(str::trim)
-                    .filter(|value| !value.is_empty())
-                    .map(str::to_lowercase);
-                if let Some(action) = value {
-                    return self.handle_action_patch_ops(&action, None, document_json, _view_state);
+                // Typed action ids (see the engagement placeholder: "extrude, inset, mirror, decimate")
+                // arrive PascalCased and separator-stripped from the React shell (e.g. "LoopCut" for
+                // "loop cut"), so resolve case/separator-insensitively rather than exact-matching a
+                // lowercased draft against these camelCase ids.
+                const ENGAGEMENT_COMMANDS: &[&str] = &["extrude", "inset", "bevel", "loopCut", "subdivide", "triangulate", "mirror", "decimate", "flipFaces", "merge", "dissolve", "snap"];
+                let typed = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).map(str::trim).filter(|value| !value.is_empty());
+                if let Some(typed) = typed {
+                    if let Some(&action) = ENGAGEMENT_COMMANDS.iter().find(|candidate| engagement_token_matches(typed, candidate)) {
+                        return self.handle_action_patch_ops(action, None, document_json, _view_state);
+                    }
                 }
                 return Vec::new();
             }

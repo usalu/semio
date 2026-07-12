@@ -7,7 +7,7 @@ use layout_rs::{
     PageColumns, PageMargins,
 };
 use semio_framework_plugin::{SurfaceKind,
-    build_canvas_2d_scene, create_default_layout, tool_button, tool_collection, ui_declarative_sections_to_tree,
+    build_canvas_2d_scene, create_default_layout, engagement_token_matches, tool_button, tool_collection, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
     Canvas2dScene, ActionDescriptor, PanelGroup, PluginApp, PluginBundle, ToolNode, UiFieldNode,
     UiInputNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode,
@@ -1888,15 +1888,21 @@ impl PluginApp for LayoutPlayApp {
                 }
             }
             "engagementSubmit" => {
-                let typed = args.and_then(|value| value.get("value")).and_then(Value::as_str).map(str::trim).map(str::to_lowercase).unwrap_or_default();
-                let action = match typed.as_str() {
-                    "undo" => Some("undo"),
-                    "redo" => Some("redo"),
-                    "export png" | "png" => Some("exportPng"),
-                    "export svg" | "svg" => Some("exportSvg"),
-                    "export pdf" | "pdf" => Some("exportPdf"),
-                    "export package" | "package" => Some("exportPackage"),
-                    _ => None,
+                let typed = args.and_then(|value| value.get("value")).and_then(Value::as_str).map(str::trim).unwrap_or_default();
+                let action = if engagement_token_matches(typed, "undo") {
+                    Some("undo")
+                } else if engagement_token_matches(typed, "redo") {
+                    Some("redo")
+                } else if engagement_token_matches(typed, "export png") || engagement_token_matches(typed, "png") {
+                    Some("exportPng")
+                } else if engagement_token_matches(typed, "export svg") || engagement_token_matches(typed, "svg") {
+                    Some("exportSvg")
+                } else if engagement_token_matches(typed, "export pdf") || engagement_token_matches(typed, "pdf") {
+                    Some("exportPdf")
+                } else if engagement_token_matches(typed, "export package") || engagement_token_matches(typed, "package") {
+                    Some("exportPackage")
+                } else {
+                    None
                 };
                 if let Some(action) = action {
                     return self.handle_action_patch_ops(action, None, document_json, _view_state);
