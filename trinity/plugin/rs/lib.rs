@@ -909,7 +909,7 @@ pub mod app_jack {
         build_table_scene(
             TRINITY_JACK_PLAY_SURFACE_RESULTS,
             TRINITY_JACK_PLAY_CONTROLLER_ID,
-            TableScene { columns_json, rows_json },
+            TableScene::base(columns_json, rows_json),
         )
     }
     //#endregion 🔖Render

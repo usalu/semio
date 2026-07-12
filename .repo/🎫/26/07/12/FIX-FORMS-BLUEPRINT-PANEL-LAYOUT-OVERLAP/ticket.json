@@ -1,0 +1,13 @@
+{
+  "title": "Fix Forms Blueprint Panel Layout Overlap",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "The \"semio · forms\" app's Blueprint panel (left side of the forms editor, framework/renderer/react/ui-interpreter.tsx) renders question-list sections (Identity, Geometry, Text/Note/Number question editors) that visually overlap on top of each other instead of stacking. Root cause: interpretUiNode's \"stack\" case wraps every child in a div with flex-1 + min-h-0/min-w-0 with no flex-basis:auto fallback or overflow guard, so in a flex-col container all children are forced to equal flex-basis-0 regardless of actual content height, causing taller children (sections with headings + toggles) to overflow into siblings. Fix the layout so stack children size to content by default and only grow/shrink when explicitly needed, eliminating the overlap shown in the Blueprint panel.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1954"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪d05eb27e2d924207815112ca19b65846"
+  ]
+}

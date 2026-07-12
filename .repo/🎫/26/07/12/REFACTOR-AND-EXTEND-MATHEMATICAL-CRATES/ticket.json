@@ -1,0 +1,13 @@
+{
+  "title": "Refactor and Extend Mathematical Crates",
+  "emoji": "🧮",
+  "status": "open",
+  "description": "Refactor and extend mathematical crates. They are not properly abstracted and not extensive: mathematical_core mixes graph markers with layout algorithms and a duplicated Vec2; mathematical_graph is actually an interactive board engine leaking ui_styling/infinite_cavas into a \"mathematical\" crate; there are no classic graph algorithms (BFS/DFS/topo/SCC/shortest path) despite many crates hand-rolling them; only 1 of 12 mathematical crates has a UI counterpart.\n\nPlan: purify mathematical/* (zero ui_styling/infinite_cavas deps), extract the interactive engine to infinite/board/*, consolidate geometry into mathematical/geometry, linear algebra into mathematical/algebra, layout/drawing into mathematical/graph/drawing, extend mathematical/graph with real graph algorithms (traversal, topological sort, cycles, components, shortest paths), migrate hand-rolled consumer algorithms onto them, and add a single combined `mathematical` UI plugin with one window per framework (graph, layout, geometry, algebra, matrix).\n\nFull approved plan: /Users/ueli/.claude/plans/refactor-and-extend-mathematical-fluffy-bonbon.md",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1955"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪054a9f96546e41a19538b85415df88d4"
+  ]
+}

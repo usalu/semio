@@ -391,15 +391,15 @@ fn render_main_table(play: &ImperativePlayEnvelope, labels: &ImperativeLabels) -
     build_table_scene(
         IMPERATIVE_PLAY_SURFACE_MAIN,
         IMPERATIVE_PLAY_APP_ID,
-        TableScene {
-            columns_json: json!([
+        TableScene::base(
+            json!([
                 {"id":"index","label":labels.col_index},
                 {"id":"id","label":labels.col_id},
                 {"id":"kind","label":labels.col_kind},
             ])
             .to_string(),
             rows_json,
-        },
+        ),
     )
 }
 

@@ -523,7 +523,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
           }}
         >
           {node.children.map((child, index) => (
-            <div key={uiNodeKey(child, index)} className="min-h-0 min-w-0 flex-1">
+            <div key={uiNodeKey(child, index)} className="min-h-0 min-w-0 flex-auto">
               {interpretUiNode(child, context)}
             </div>
           ))}

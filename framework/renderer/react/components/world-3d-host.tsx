@@ -1183,6 +1183,8 @@ function WorldInstancesLayer({
               onWorldPick={onWorldPick}
               onComponentHover={onComponentHover}
               mergeMode={mergeMode}
+              faceDragActive={selection.faceDragActive === true}
+              onFaceDragStart={onFaceDragStart}
               environmentMaterial={environment?.material}
               environmentShadowEnabled={environment?.shadow?.enabled === true}
             />
@@ -1663,6 +1665,28 @@ function raycastGroundPoint(clientX: number, clientY: number, hostRect: DOMRect,
   return [hit.x, hit.y, hit.z];
 }
 
+/** 🖱️➡️ Signed distance along `axis` (unit vector) from `origin` to the point on that line closest to the
+ * camera ray through the current pointer position — the standard closest-point-between-two-lines
+ * construction, used so a face-normal drag tracks naturally instead of needing a ground/tangent-plane
+ * intersection (which is undefined for motion parallel to the plane, i.e. exactly along the normal). */
+function axisDragParam(clientX: number, clientY: number, hostRect: DOMRect, camera: import("three").Camera, origin: readonly [number, number, number], axis: readonly [number, number, number]): number | null {
+  const ndcX = ((clientX - hostRect.left) / hostRect.width) * 2 - 1;
+  const ndcY = -(((clientY - hostRect.top) / hostRect.height) * 2 - 1);
+  const rayOrigin = camera.position.clone();
+  const rayDirection = new Vector3(ndcX, ndcY, 0.5).unproject(camera).sub(rayOrigin).normalize();
+  const axisOrigin = new Vector3(origin[0], origin[1], origin[2]);
+  const axisDirection = new Vector3(axis[0], axis[1], axis[2]).normalize();
+  const originDelta = rayOrigin.clone().sub(axisOrigin);
+  const a = rayDirection.dot(rayDirection);
+  const b = rayDirection.dot(axisDirection);
+  const c = axisDirection.dot(axisDirection);
+  const d = rayDirection.dot(originDelta);
+  const e = axisDirection.dot(originDelta);
+  const denominator = a * c - b * b;
+  if (Math.abs(denominator) < 1e-9) return null;
+  return (a * e - b * d) / denominator;
+}
+
 //#region World3dHost
 export function World3dHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
   const scene = node.world3d;
@@ -1696,6 +1720,13 @@ export function World3dHost({ node, onAction }: { readonly node: UiComponentScen
   const [marqueePath, setMarqueePath] = useState<readonly SelectionMarqueePoint[]>([]);
   const [marqueeModifiers, setMarqueeModifiers] = useState<{ readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean }>({ shiftKey: false, ctrlKey: false, metaKey: false });
   const [gumballDragActive, setGumballDragActive] = useState(false);
+  const [faceDragSession, setFaceDragSession] = useState<{
+    readonly objectId: string;
+    readonly faceId: number;
+    readonly normal: readonly [number, number, number];
+    readonly startPoint: readonly [number, number, number];
+    readonly faceExtent?: readonly [number, number];
+  } | null>(null);
   const [connectDragSource, setConnectDragSource] = useState<{ readonly fullId: string; readonly position: readonly [number, number, number] } | null>(null);
   const [connectDragHoverPosition, setConnectDragHoverPosition] = useState<readonly [number, number, number] | null>(null);
   const [voxelHoverOrigin, setVoxelHoverOrigin] = useState<readonly [number, number, number] | null>(null);
@@ -2028,6 +2059,13 @@ export function World3dHost({ node, onAction }: { readonly node: UiComponentScen
     [dispatch, selection.transformTool, selectionArgs],
   );
 
+  const handleFaceDragStart = useCallback(
+    (args: { objectId: string; faceId: number; normal: readonly [number, number, number]; point: readonly [number, number, number]; faceExtent?: readonly [number, number] }) => {
+      setFaceDragSession({ objectId: args.objectId, faceId: args.faceId, normal: args.normal, startPoint: args.point, faceExtent: args.faceExtent });
+    },
+    [],
+  );
+
   const toLocalPoint = useCallback((event: React.PointerEvent<HTMLDivElement>): SelectionMarqueePoint => {
     const rect = hostRef.current?.getBoundingClientRect();
     if (!rect) return { x: event.clientX, y: event.clientY };
@@ -2085,26 +2123,49 @@ export function World3dHost({ node, onAction }: { readonly node: UiComponentScen
     [dispatch, marqueeDown, node.surfaceId, selection.engagementSessionActive, toLocalPoint],
   );
 
-  const handlePointerUp = useCallback(() => {
-    if (marqueeDragActive) {
-      if (marqueePreview.mergedInstanceIds) {
-        dispatch("worldSelect", { ids: marqueePreview.mergedInstanceIds, merge: "replace" });
-      } else if (marqueePreview.mergedComponentIds) {
-        dispatch("setSelection", { mode: selectionMode, ids: marqueePreview.mergedComponentIds });
+  const handlePointerUp = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (faceDragSession) {
+        const session = faceDragSession;
+        setFaceDragSession(null);
+        if (hostRef.current && cameraRef.current) {
+          const rect = hostRef.current.getBoundingClientRect();
+          const distance = axisDragParam(event.clientX, event.clientY, rect, cameraRef.current, session.startPoint, session.normal);
+          if (distance != null && Math.abs(distance) > 1e-4) {
+            dispatch("worldFaceDragEnd", {
+              pane: paneSuffixFromSurfaceId(node.surfaceId),
+              objectId: session.objectId,
+              faceId: session.faceId,
+              normal: session.normal,
+              startPoint: session.startPoint,
+              distance,
+              faceExtent: session.faceExtent,
+            });
+          }
+        }
+        return;
       }
-    }
-    wasMarqueeDragRef.current = marqueeDragActive;
-    if (paintStrokeActive) {
-      dispatch("paintStrokeEnd");
-      setPaintStrokeActive(false);
-    }
-    setMarqueePath([]);
-    if (connectDropConsumedRef.current) {
-      connectDropConsumedRef.current = false;
-    } else {
-      handleConnectDragCancel();
-    }
-  }, [dispatch, handleConnectDragCancel, marqueeDragActive, marqueePreview, paintStrokeActive, selectionMode]);
+      if (marqueeDragActive) {
+        if (marqueePreview.mergedInstanceIds) {
+          dispatch("worldSelect", { ids: marqueePreview.mergedInstanceIds, merge: "replace" });
+        } else if (marqueePreview.mergedComponentIds) {
+          dispatch("setSelection", { mode: selectionMode, ids: marqueePreview.mergedComponentIds });
+        }
+      }
+      wasMarqueeDragRef.current = marqueeDragActive;
+      if (paintStrokeActive) {
+        dispatch("paintStrokeEnd");
+        setPaintStrokeActive(false);
+      }
+      setMarqueePath([]);
+      if (connectDropConsumedRef.current) {
+        connectDropConsumedRef.current = false;
+      } else {
+        handleConnectDragCancel();
+      }
+    },
+    [dispatch, faceDragSession, handleConnectDragCancel, marqueeDragActive, marqueePreview, node.surfaceId, paintStrokeActive, selectionMode],
+  );
 
   const handleEmptyClick = useCallback(
     (event: MouseEvent) => {
@@ -2150,7 +2211,7 @@ export function World3dHost({ node, onAction }: { readonly node: UiComponentScen
       >
         <WorldOrbitViewSnapGateProvider>
           <WorldOrbitCameraViewRig state={cameraState} seedKey={scene?.cameraJson ?? "default"} perspectiveFov={cameraState.fov} />
-          <WorldOrbitGated controlsGate={marqueeDown || gumballDragActive || connectDragSource !== null} onCamera={handleCameraChange} zoom={cameraState.zoom} projection={cameraState.explicitProjection ? cameraState.projection : undefined} />
+          <WorldOrbitGated controlsGate={marqueeDown || gumballDragActive || connectDragSource !== null || faceDragSession !== null} onCamera={handleCameraChange} zoom={cameraState.zoom} projection={cameraState.explicitProjection ? cameraState.projection : undefined} />
           <WorldLodBridge
             lodRef={lodRef}
             distanceReference={100}
@@ -2199,6 +2260,7 @@ export function World3dHost({ node, onAction }: { readonly node: UiComponentScen
                 gumballDragActive={gumballDragActive}
                 onGumballDraggingChanged={setGumballDragActive}
                 onGumballDragEnd={handleGumballDragEnd}
+                onFaceDragStart={handleFaceDragStart}
                 mergedComponentIds={marqueePreview.mergedComponentIds}
                 mergedInstanceIds={marqueePreview.mergedInstanceIds}
                 blockPick={worldInstancePickBlocked(activeTool)}

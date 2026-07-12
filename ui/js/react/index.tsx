@@ -18759,6 +18759,8 @@ export interface TableProps<T = unknown> {
   onToggleRow?: (rowId: string) => void;
   renderDocumentControls?: (row: T & HierarchicalRowData) => React.ReactNode;
   dragDrop?: DragDropConfig;
+  /** @emoji 🖱️ Native (cross-window) HTML5 drag attributes for a row — for `declarativeTreeDragController`-style dataTransfer drags; independent of {@link TableProps.dragDrop}'s dnd-kit reordering. */
+  rowDragProps?: (row: T, index: number) => React.HTMLAttributes<HTMLTableRowElement>;
   wrapperComponent?: React.ComponentType<{ children: React.ReactNode }>;
 }
 
@@ -18865,6 +18867,7 @@ const Table = <T,>({
   onToggleRow,
   renderDocumentControls,
   dragDrop,
+  rowDragProps,
   wrapperComponent: WrapperComponent,
 }: TableProps<T>) => {
   const selectedSet = selectedRows instanceof Set ? selectedRows : new Set(selectedRows || []);
@@ -19041,6 +19044,7 @@ const Table = <T,>({
                     role={onRowClick ? "button" : undefined}
                     tabIndex={onRowClick ? 0 : undefined}
                     data-row-id={rowId}
+                    {...rowDragProps?.(row, index)}
                   >
                     {visibleColumns.map((column) => (
                       <td key={column.id} className={`${rowHeightClass} px-single py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>

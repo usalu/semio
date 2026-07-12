@@ -4123,7 +4123,71 @@ pub struct TextEditorScene {
 pub struct TableScene {
     pub columns_json: String,
     pub rows_json: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selection_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub row_drag_mime: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub drop_action: Option<ActionDescriptor>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sort_json: Option<String>,
 }
+
+impl TableScene {
+    /** @emoji 📋 Builds a table scene with optional extensions (selection/drag/sort) unset. */
+    pub fn base(columns_json: impl Into<String>, rows_json: impl Into<String>) -> Self {
+        Self {
+            columns_json: columns_json.into(),
+            rows_json: rows_json.into(),
+            selection_json: None,
+            row_drag_mime: None,
+            drop_action: None,
+            sort_json: None,
+        }
+    }
+}
+
+//#region 🔖TableCells
+/// 🧾 A typed table cell value: plain text/number, or an interactive stepper/button group.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum TableCell {
+    Text {
+        value: String,
+    },
+    Number {
+        value: f64,
+    },
+    Stepper {
+        value: f64,
+        min: f64,
+        max: f64,
+        step: f64,
+        action: ActionDescriptor,
+    },
+    Buttons {
+        buttons: Vec<UiTreeItemAction>,
+    },
+}
+
+/// 🧾 Builds one `rows_json` record: an id, an optional drag payload, and typed/plain cells keyed by column id.
+pub fn table_row_json(
+    id: impl Into<String>,
+    drag_payload: Option<&serde_json::Value>,
+    cells: &[(&str, TableCell)],
+) -> serde_json::Value {
+    let mut row = serde_json::Map::new();
+    row.insert("id".into(), serde_json::Value::String(id.into()));
+    if let Some(payload) = drag_payload {
+        row.insert("_drag".into(), payload.clone());
+    }
+    for (column_id, cell) in cells {
+        let value = serde_json::to_value(cell).unwrap_or(serde_json::Value::Null);
+        row.insert((*column_id).to_string(), value);
+    }
+    serde_json::Value::Object(row)
+}
+//#endregion 🔖TableCells
 
 /** @emoji 🖼️ Raster scene: WASM `RasterSession` sync channels for the composite/navigator windows, see raster/rs/lib.rs. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -6159,7 +6223,7 @@ mod ui_node_wire_format_tests {
     fn scene_records_serialize_to_golden_json() {
         let scenes = (
             Canvas2dScene { camera_x: 1.0, camera_y: 2.0, zoom: 1.5, layers_json: "[]".into() },
-            TableScene { columns_json: "[]".into(), rows_json: "[]".into() },
+            TableScene::base("[]", "[]"),
             RasterScene {
                 document_sync_json: "{}".into(),
                 assets_json: "[]".into(),

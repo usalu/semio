@@ -119,6 +119,18 @@ import { ICONS, type IconName } from "@semio-tech/ui-asset";
 import { declarativeTreeDragController, interpretUiNode, uiTreeNodeToTreePanelConfig } from "./ui-interpreter.tsx";
 import {
   DEFAULT_PLUGIN_REGISTRY,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+  FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
+  FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+  FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+  FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+  FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
+  FRAMEWORK_PANEL_TAB_PARAMETERS_ID,
+  FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
   NamedLayoutStore,
   createBrowserStoragePort,
   createNamedLayout,
@@ -126,16 +138,82 @@ import {
   loadPluginWasm as loadCorePluginWasm,
   buildContributionsJson,
   expandPluginRegistry,
+  nodeGraphActions,
   resolveExternalSlots,
   resolveLayoutForMode,
   resolvePlaygroundDefaultAppId,
   resolvePluginRegistryId,
+  textEditorActions,
   type ActionDefinition,
+  type ActionDescriptor,
+  type AppDefinition,
+  type AppPanelTabDefinition,
+  type Canvas2dScene,
+  type ComponentKind,
+  type ComponentSceneHostProps,
+  type GisMapScene,
+  type IconRenderScene,
   type NamedLayout,
+  type NodeGraphScene,
+  type NoteCanvasScene,
   type PluginAppLabelsOverlay,
+  type PluginHotSwapEvent,
   type PluginRegistryEntry,
+  type PluginViewState,
   type PluginWasmHandle as CorePluginWasmHandle,
+  type PresencePeer,
+  type Puzzle2dBoardScene,
+  type RasterScene,
+  type StyleSpec,
+  type TableScene,
+  type TextEditorScene,
+  type ToolCategory,
+  type ToolLeaf,
+  type ToolNode,
+  type UiButtonNode,
+  type UiComponentSceneNode,
+  type UiControlNode,
+  type UiExternalSlotNode,
+  type UiFieldNode,
+  type UiIconSelectNode,
+  type UiImageNode,
+  type UiInputNode,
+  type UiInspectorFieldGroup,
+  type UiKeyValueEntry,
+  type UiKeyValueNode,
+  type UiNode,
+  type UiNumberStepperNode,
+  type UiRingNode,
+  type UiSectionNode,
+  type UiSelectItem,
+  type UiSelectNode,
+  type UiSeparatorNode,
+  type UiSliderNode,
+  type UiStackNode,
+  type UiTextNode,
+  type UiToggleNode,
+  type UiTreeItemAction,
+  type UiTreeItemNode,
+  type UiTreeNode,
+  type UiTreeSectionNode,
+  type UiVec3Node,
+  type VcsHistoryScene,
+  type VirtualFileSystemScene,
+  type WindowEngagement,
+  type WindowEngagementControl,
+  type WindowEngagementInput,
+  type WindowEngagementOption,
+  type WindowEngagementPossible,
+  type WindowEngagementRingOption,
+  type WindowEngagementSelectItem,
+  type WindowEngagementStatus,
+  type WindowEngagementToggleGroupOption,
   type WindowLayout,
+  type WindowLayoutAxisNode,
+  type WindowLayoutStackNode,
+  type WindowLayoutWindowNode,
+  type WindowMeasure,
+  type World3dScene,
 } from "@semio-tech/framework-core";
 import {
   FRAMEWORK_SYNC_CONTROLLER_ID,
@@ -150,52 +228,7 @@ import {
   type FrameworkSyncToolLeaf,
 } from "@semio-tech/framework-os-core";
 
-//#region ShellTypes
-type LoadedPluginState = {
-  readonly handle: PluginWasmHandle;
-  readonly manifest: PluginManifest;
-};
-
-type ActiveSession = {
-  readonly pluginId: string;
-  readonly instanceId: number;
-  readonly app: AppDefinition;
-  readonly viewState: ViewState;
-};
-
-type StudioProgramEntry = {
-  readonly pluginId: string;
-  readonly programId: string;
-  readonly appId: string;
-  readonly label: string;
-  readonly document: readonly string[];
-  readonly yields: string;
-};
-
-type SpawnedAppEntry = {
-  readonly id: string;
-  readonly pluginId: string;
-  readonly instanceId: number;
-  readonly appId: string;
-  readonly label: string;
-  readonly document: readonly string[];
-};
-
-type StudioPanelState = {
-  readonly activePanelTab: string;
-  readonly programs: readonly StudioProgramEntry[];
-  readonly spawnedApps: readonly SpawnedAppEntry[];
-  readonly activeSpawnedId?: string;
-};
-
-export type FrameworkOsBootOptions = {
-  readonly rootId?: string;
-  readonly plugin?: string;
-  readonly plugins?: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
-};
-
-type SyncCardKind = "file" | "folder" | "remote";
-
+//#region ShellHelpers
 function syncDocumentId(session: ActiveSession, panel: StudioPanelState | null, studioMode: boolean): string {
   if (studioMode && panel?.activeSpawnedId) {
     const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
@@ -238,9 +271,6 @@ function presenceClientIdentity(): { readonly clientId: string; readonly name: s
   window.sessionStorage.setItem(PRESENCE_CLIENT_STORAGE_KEY, JSON.stringify(identity));
   return identity;
 }
-
-type UIHistoryEntry = { readonly uri: string };
-type UIHistory = { readonly entries: readonly UIHistoryEntry[]; readonly index: number };
 
 function readBrowserUri(): string {
   if (typeof window === "undefined") return "/";
@@ -349,9 +379,7 @@ function requestFileOpen(accept: string, readAs?: string): Promise<{ contents: s
     input.click();
   });
 }
-//#endregion ShellTypes
 
-//#region ShellHelpers
 function isStudioMode(pluginFilter?: string): boolean {
   return pluginFilter === "s";
 }
@@ -2428,666 +2456,13 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
 //#endregion FrameworkOsShell
 
 //#region 🔖types
-export type ActionDescriptor = {
-  readonly controllerId: string;
-  readonly action: string;
-  readonly args?: unknown;
-};
+/** 🌐 Locale-resolved mixed-value placeholder for this renderer layer; framework/core/js/index.ts keeps its own non-reactive low-level default. */
+export const UI_INSPECTOR_MIXED_PLACEHOLDER = shellLabel("ui.common.mixedValues");
 
-export type StyleSpec = {
-  readonly variant?: string;
-  readonly size?: string;
-  readonly density?: string;
-};
+/** 🎭 Renderer-side view state passed to plugin wasm calls — structurally mirrors `@semio-tech/framework-core`'s {@link PluginViewState}, kept as a distinct local alias since `ViewState` is the established name used throughout this file. */
+export type ViewState = PluginViewState;
 
-export type UiStackNode = {
-  readonly type: "stack";
-  readonly direction: string;
-  readonly gap?: string;
-  readonly padding?: string;
-  readonly id?: string;
-  readonly selected?: boolean;
-  readonly activate?: ActionDescriptor;
-  readonly dropAction?: ActionDescriptor;
-  readonly children: readonly UiNode[];
-};
-
-export type UiTextNode = {
-  readonly type: "text";
-  readonly value: string;
-  readonly emphasize?: boolean;
-  readonly dataAttributes?: Readonly<Record<string, string>>;
-};
-
-export type UiButtonNode = {
-  readonly type: "button";
-  readonly id?: string;
-  readonly iconId: string;
-  readonly label: string;
-  readonly action: ActionDescriptor;
-  readonly style?: StyleSpec;
-  readonly disabled?: boolean;
-};
-
-export type UiSeparatorNode = { readonly type: "separator" };
-
-export type UiImageNode = {
-  readonly type: "image";
-  readonly id: string;
-  readonly src: string;
-  readonly alt?: string;
-};
-
-export type UiInputNode = {
-  readonly type: "input";
-  readonly id: string;
-  readonly inputKind: string;
-  readonly value: string;
-  readonly placeholder?: string;
-  readonly commit?: string;
-  readonly min?: number;
-  readonly max?: number;
-  readonly step?: number;
-  readonly accept?: string;
-  readonly onChange: ActionDescriptor;
-};
-
-export type UiSelectItem = {
-  readonly value: string;
-  readonly label: string;
-};
-
-export type UiSelectNode = {
-  readonly type: "select";
-  readonly id: string;
-  readonly value: string;
-  readonly items: readonly UiSelectItem[];
-  readonly placeholder?: string;
-  readonly onChange: ActionDescriptor;
-};
-
-export type UiToggleNode = {
-  readonly type: "toggle";
-  readonly id: string;
-  readonly iconId: string;
-  readonly pressed: boolean;
-  readonly text?: string;
-  readonly onChange: ActionDescriptor;
-};
-
-export type UiVec3Node = {
-  readonly type: "vec3";
-  readonly id: string;
-  readonly value: readonly [number, number, number] | null;
-  readonly onChange: ActionDescriptor;
-};
-
-export type UiKeyValueEntry = {
-  readonly label: string;
-  readonly value: string;
-};
-
-export type UiKeyValueNode = {
-  readonly type: "keyValue";
-  readonly entries: readonly UiKeyValueEntry[];
-};
-
-export type UiSliderNode = {
-  readonly type: "slider";
-  readonly id: string;
-  readonly value: number;
-  readonly min: number;
-  readonly max: number;
-  readonly step: number;
-  readonly unit?: string;
-  readonly onChange: ActionDescriptor;
-};
-
-export type UiNumberStepperNode = {
-  readonly type: "numberStepper";
-  readonly id: string;
-  readonly value: number;
-  readonly step: number;
-  readonly uniform: boolean;
-  readonly onAbsolute: ActionDescriptor;
-  readonly onDelta: ActionDescriptor;
-};
-
-export type UiRingNode = {
-  readonly type: "ring";
-  readonly id: string;
-  readonly orbId: string;
-  readonly t: number;
-  readonly disabled?: boolean;
-  readonly onChange: ActionDescriptor;
-};
-
-export type UiIconSelectNode = {
-  readonly type: "iconSelect";
-  readonly id: string;
-  readonly value: string;
-  readonly uniform: boolean;
-  readonly classifierKind: string;
-  readonly onChange: ActionDescriptor;
-};
-
-export type UiControlNode = UiInputNode | UiSelectNode | UiToggleNode | UiVec3Node | UiButtonNode | UiKeyValueNode | UiSliderNode | UiNumberStepperNode | UiRingNode | UiIconSelectNode;
-
-export type UiFieldNode = {
-  readonly type: "field";
-  readonly id: string;
-  readonly label: string;
-  readonly description?: string;
-  readonly required?: boolean;
-  readonly error?: string;
-  readonly child: UiNode;
-};
-
-export type UiSectionNode = {
-  readonly type: "section";
-  readonly id: string;
-  readonly label?: string;
-  readonly defaultOpen?: boolean;
-  readonly children: readonly UiNode[];
-};
-
-export type UiTreeItemAction = {
-  readonly iconId: string;
-  readonly label?: string;
-  readonly action: ActionDescriptor;
-  readonly revealOnHover?: boolean;
-};
-
-export type UiTreeItemNode = {
-  readonly id: string;
-  readonly label: string;
-  readonly description?: string;
-  readonly iconId?: string;
-  readonly selected?: boolean;
-  readonly defaultOpen?: boolean;
-  readonly action?: ActionDescriptor;
-  readonly hoverAction?: ActionDescriptor;
-  readonly unhoverAction?: ActionDescriptor;
-  readonly actions?: readonly UiTreeItemAction[];
-  readonly draggable?: boolean;
-  readonly dragData?: Readonly<Record<string, string>>;
-  readonly items?: readonly UiTreeItemNode[];
-  readonly control?: UiControlNode;
-  readonly isHidden?: boolean;
-};
-
-export type UiTreeSectionNode = {
-  readonly id: string;
-  readonly label?: string;
-  readonly defaultOpen?: boolean;
-  readonly items: readonly UiTreeItemNode[];
-};
-
-export type UiTreeNode = {
-  readonly type: "tree";
-  readonly sections: readonly UiTreeSectionNode[];
-  readonly selectedIds?: readonly string[];
-  readonly highlightedIds?: readonly string[];
-  readonly selectionChange?: ActionDescriptor;
-  readonly dropAction?: ActionDescriptor;
-};
-
-export type UiInspectorFieldGroup = {
-  readonly id: string;
-  readonly label: string;
-  readonly defaultOpen?: boolean;
-  readonly fields: readonly UiNode[];
-};
-
-export type Canvas2dScene = {
-  readonly cameraX: number;
-  readonly cameraY: number;
-  readonly zoom: number;
-  readonly layersJson: string;
-};
-
-export type World3dScene = {
-  readonly cameraJson: string;
-  readonly meshesJson: string;
-  readonly instancesJson: string;
-  readonly selectionJson: string;
-  readonly vorticesJson?: string;
-  readonly attractionsJson?: string;
-  readonly targetVolumesJson?: string;
-  readonly referencesJson?: string;
-  readonly brushPreviewJson?: string;
-  readonly interactionJson?: string;
-  readonly engagementPreviewJson?: string;
-  readonly lodJson?: string;
-  readonly chunkingJson?: string;
-  readonly contextMenuJson?: string;
-  readonly environmentJson?: string;
-  readonly frameJson?: string;
-  readonly fitJson?: string;
-};
-
-export type NodeGraphScene = {
-  readonly nodesJson: string;
-  readonly edgesJson: string;
-  readonly viewportJson: string;
-  readonly editable?: boolean;
-  readonly operatorsJson?: string;
-  readonly contextMenuJson?: string;
-  readonly findItemsJson?: string;
-  readonly selectionJson?: string;
-  readonly hoverJson?: string;
-  readonly previewOffJson?: string;
-  readonly lodJson?: string;
-  readonly catalogueJson?: string;
-  readonly controlsJson?: string;
-  readonly clustersJson?: string;
-  readonly computingJson?: string;
-  readonly capabilitiesJson?: string;
-  readonly fixtureJson?: string;
-  readonly presencePeersJson?: string;
-};
-
-export type PresencePeer = {
-  readonly clientId: string;
-  readonly name: string;
-  readonly selectionCount: number;
-};
-
-export type TextEditorScene = {
-  readonly buffer: string;
-  readonly language?: string;
-  readonly selectionJson?: string;
-  readonly tokensJson?: string;
-  readonly diagnosticsJson?: string;
-  readonly completionsJson?: string;
-  readonly overlaysJson?: string;
-  readonly occurrencesJson?: string;
-  readonly placeholdersJson?: string;
-  readonly extraCaretsJson?: string;
-  readonly selectableSpansJson?: string;
-  readonly settingsJson?: string;
-  readonly cameraJson?: string;
-  readonly hoverJson?: string;
-  readonly newlineGatesJson?: string;
-  readonly renameJson?: string;
-};
-
-export const nodeGraphActions = {
-  select: "nodeGraphSelect",
-  hover: "nodeGraphHover",
-  edit: "nodeGraphEdit",
-  viewport: "nodeGraphViewport",
-  spotlightCommit: "spotlightCommit",
-} as const;
-
-export const textEditorActions = {
-  edit: "textEdit",
-  select: "textSelect",
-  hover: "textHover",
-  requestCompletions: "requestCompletions",
-  commitRename: "commitRename",
-  formatDocument: "formatDocument",
-} as const;
-
-export type TableScene = {
-  readonly columnsJson: string;
-  readonly rowsJson: string;
-};
-
-export type RasterScene = {
-  readonly documentSyncJson: string;
-  readonly assetsJson: string;
-  readonly cameraJson: string;
-  readonly selectionJson: string;
-  readonly hoveredId?: string;
-  readonly activeTool: string;
-  readonly brushSize: number;
-  readonly brushOpacity: number;
-  readonly viewMode: string;
-  readonly compositeViewportJson?: string;
-};
-
-export type IconRenderScene = {
-  readonly requestJson: string;
-  readonly footer?: string;
-  readonly frameJson?: string;
-};
-
-export type VirtualFileSystemScene = {
-  readonly schemaJson: string;
-  readonly rowsJson: string;
-  readonly selectedRowIdsJson?: string;
-  readonly hoveredRowId?: string;
-  readonly emptyMessage?: string;
-  readonly dragDropEnabled?: boolean;
-};
-
-export type GisMapScene = {
-  readonly mapFixtureJson: string;
-  readonly cameraJson: string;
-  readonly renderMode: string;
-  readonly vectorStyle: string;
-  readonly lodMode: string;
-  readonly tileUrlTemplate: string;
-  readonly vectorTileUrlTemplate: string;
-  readonly layerVisibilityJson: string;
-  readonly layerStrokeScaleJson: string;
-  readonly selectionJson: string;
-  readonly hoverJson: string;
-  readonly selectionMethod: string;
-  readonly selectionMode: string;
-  readonly contextMenuJson?: string;
-};
-
-export type Puzzle2dBoardScene = {
-  readonly fixtureJson: string;
-  readonly cameraJson: string;
-  readonly kindCatalogsJson: string;
-  readonly selectionJson: string;
-  readonly interactive: boolean;
-  readonly hoveredId?: string;
-  readonly activeTool?: string;
-  readonly selectionMethod: string;
-  readonly gridSnapEnabled: boolean;
-  readonly gridFactor: number;
-  readonly suggestionOffset: number;
-  readonly brushKindWeightsJson: string;
-  readonly kindCompatibilityJson: string;
-  readonly lodMode: string;
-};
-
-export type NoteCanvasScene = {
-  readonly documentJson: string;
-  readonly selectionJson: string;
-  readonly hoveredId?: string;
-  readonly activeTool: string;
-  readonly viewMode: string;
-  readonly interactive: boolean;
-};
-
-/** @emoji 🗄️ A checkpoint ancestor-graph history view. `columnsJson` is a `HistoryColumn[]` array, newest checkpoint first. */
-export type VcsHistoryScene = {
-  readonly columnsJson: string;
-};
-
-export type UiExternalSlotNode = {
-  readonly type: "externalSlot";
-  readonly pluginId: string;
-  readonly appId: string;
-  readonly bodyKey: string;
-  readonly paramsJson: string;
-};
-
-export type UiComponentSceneNode = {
-  readonly type: "componentScene";
-  readonly surfaceId: string;
-  readonly controllerId: string;
-  readonly componentKind: string;
-  readonly paneId?: string;
-  readonly bindingId?: string;
-  readonly canvas2d?: Canvas2dScene;
-  readonly world3d?: World3dScene;
-  readonly nodeGraph?: NodeGraphScene;
-  readonly textEditor?: TextEditorScene;
-  readonly table?: TableScene;
-  readonly raster?: RasterScene;
-  readonly virtualFileSystem?: VirtualFileSystemScene;
-  readonly gisMap?: GisMapScene;
-  readonly puzzle2dBoard?: Puzzle2dBoardScene;
-  readonly iconRender?: IconRenderScene;
-  readonly noteCanvas?: NoteCanvasScene;
-  readonly vcsHistory?: VcsHistoryScene;
-};
-
-export type UiNode =
-  | UiStackNode
-  | UiTextNode
-  | UiButtonNode
-  | UiSeparatorNode
-  | UiInputNode
-  | UiSelectNode
-  | UiToggleNode
-  | UiVec3Node
-  | UiKeyValueNode
-  | UiSliderNode
-  | UiNumberStepperNode
-  | UiRingNode
-  | UiIconSelectNode
-  | UiFieldNode
-  | UiSectionNode
-  | UiTreeNode
-  | UiImageNode
-  | UiComponentSceneNode
-  | UiExternalSlotNode;
-
-export type WindowLayoutWindowNode = {
-  readonly kind: "window";
-  readonly windowKindId: string;
-  readonly title?: string;
-  readonly instanceId?: string;
-  readonly templateId?: string;
-};
-
-export type WindowLayoutStackNode = {
-  readonly kind: "stack";
-  readonly size?: number;
-  readonly children: readonly WindowLayoutWindowNode[];
-};
-
-export type WindowLayoutAxisNode = {
-  readonly kind: "row" | "column";
-  readonly size?: number;
-  readonly children: readonly (WindowLayoutAxisNode | WindowLayoutStackNode)[];
-};
-
-export type WindowLayout = {
-  readonly root: WindowLayoutAxisNode | WindowLayoutStackNode;
-};
-
-export type NamedLayout = {
-  readonly id: string;
-  readonly label: string;
-  readonly iconId?: string;
-  readonly layout: WindowLayout;
-  readonly origin: "builtin" | "user";
-  readonly groupPath?: readonly string[];
-};
-
-export type WindowEngagementOption = {
-  readonly id: string;
-  readonly label?: string;
-  readonly iconId?: string;
-  readonly pressed?: boolean;
-  readonly disabled?: boolean;
-  readonly action?: ActionDescriptor;
-};
-
-export type WindowEngagementInput = {
-  readonly id?: string;
-  readonly value?: string;
-  readonly placeholder?: string;
-  readonly disabled?: boolean;
-  readonly onChange?: ActionDescriptor;
-  readonly onSubmit?: ActionDescriptor;
-  readonly onRepeatLast?: ActionDescriptor;
-  readonly onAbort?: ActionDescriptor;
-};
-
-export type WindowEngagementStatus = {
-  readonly id: string;
-  readonly text: string;
-};
-
-export type WindowEngagementPossible = {
-  readonly id: string;
-  readonly label: string;
-  readonly detail?: string;
-  readonly action?: ActionDescriptor;
-};
-
-export type WindowEngagementRingOption = {
-  readonly id: string;
-  readonly label: string;
-  readonly disabled?: boolean;
-};
-
-export type WindowEngagementToggleGroupOption = {
-  readonly id: string;
-  readonly label: string;
-  readonly disabled?: boolean;
-};
-
-export type WindowEngagementSelectItem = {
-  readonly id: string;
-  readonly value: string;
-  readonly label: string;
-};
-
-export type WindowEngagementControl =
-  | {
-      readonly kind: "slider";
-      readonly id?: string;
-      readonly label?: string;
-      readonly value: number;
-      readonly min: number;
-      readonly max: number;
-      readonly step?: number;
-      readonly unit?: string;
-      readonly disabled?: boolean;
-      readonly onChange?: ActionDescriptor;
-      readonly onCommit?: ActionDescriptor;
-    }
-  | {
-      readonly kind: "stepper";
-      readonly id?: string;
-      readonly label?: string;
-      readonly value: number;
-      readonly min?: number;
-      readonly max?: number;
-      readonly step?: number;
-      readonly unit?: string;
-      readonly disabled?: boolean;
-      readonly onChange?: ActionDescriptor;
-      readonly onCommit?: ActionDescriptor;
-    }
-  | {
-      readonly kind: "ring";
-      readonly id?: string;
-      readonly label?: string;
-      readonly value?: string;
-      readonly options: readonly WindowEngagementRingOption[];
-      readonly disabled?: boolean;
-      readonly onSelect?: ActionDescriptor;
-    }
-  | {
-      readonly kind: "toggleGroup";
-      readonly id?: string;
-      readonly label?: string;
-      readonly value?: string;
-      readonly options: readonly WindowEngagementToggleGroupOption[];
-      readonly disabled?: boolean;
-      readonly onSelect?: ActionDescriptor;
-    }
-  | {
-      readonly kind: "select";
-      readonly id?: string;
-      readonly label?: string;
-      readonly value?: string;
-      readonly placeholder?: string;
-      readonly items: readonly WindowEngagementSelectItem[];
-      readonly disabled?: boolean;
-      readonly onChange?: ActionDescriptor;
-    };
-
-export type WindowEngagement = {
-  readonly sessionActive?: boolean;
-  readonly options?: readonly WindowEngagementOption[];
-  readonly input?: WindowEngagementInput;
-  readonly control?: WindowEngagementControl;
-  readonly controls?: readonly WindowEngagementControl[];
-  readonly status?: readonly WindowEngagementStatus[];
-  readonly possibleEngagements?: readonly WindowEngagementPossible[];
-};
-
-export type WindowMeasure =
-  | {
-      readonly kind: "select";
-      readonly id: string;
-      readonly label?: string;
-      readonly value: string;
-      readonly items: readonly { readonly id: string; readonly value: string; readonly label: string }[];
-      readonly onChange: ActionDescriptor;
-    }
-  | {
-      readonly kind: "slider";
-      readonly id: string;
-      readonly label?: string;
-      readonly value: number;
-      readonly min: number;
-      readonly max: number;
-      readonly step?: number;
-      readonly onChange: ActionDescriptor;
-    }
-  | {
-      readonly kind: "toggle";
-      readonly id: string;
-      readonly iconId: string;
-      readonly label?: string;
-      readonly pressed: boolean;
-      readonly text?: string;
-      readonly onChange: ActionDescriptor;
-    }
-  | {
-      readonly kind: "group";
-      readonly id: string;
-      readonly label: string;
-      readonly defaultOpen?: boolean;
-      readonly children: readonly WindowMeasure[];
-    };
-
-export type ViewState = {
-  readonly activeModeId?: string;
-  readonly activeWindowKindId?: string;
-  readonly selectionJson?: string;
-  readonly panelJson?: string;
-  readonly contributionsJson?: string;
-  readonly locale?: string;
-  readonly terminology?: string;
-};
-
-/** @emoji 🌳 Mirrors Rust `PanelTabDefinition` — a leaf carries `bodyKey`, a branch carries `children`; `group` is only meaningful on root entries. */
-export type AppPanelTabDefinition = {
-  readonly id: string;
-  readonly label: string;
-  readonly group: string;
-  readonly bodyKey?: string;
-  readonly children?: readonly AppPanelTabDefinition[];
-};
-
-export type AppDefinition = {
-  readonly id: string;
-  readonly label: string;
-  readonly document: readonly string[];
-  readonly iconId?: string;
-  readonly controllerId: string;
-  readonly modes: readonly { readonly id: string; readonly label: string; readonly tools?: readonly ToolNode[] }[];
-  readonly defaultModeId?: string;
-  readonly windowKinds: readonly {
-    readonly id: string;
-    readonly label: string;
-    readonly bodyKey: string;
-    readonly iconId?: string;
-    readonly measures?: readonly WindowMeasure[];
-    readonly engagement?: WindowEngagement;
-  }[];
-  readonly panelTabs: readonly AppPanelTabDefinition[];
-  readonly keybindings: readonly { readonly keys: string; readonly action: ActionDescriptor }[];
-  readonly actions?: readonly ActionDefinition[];
-  readonly namedLayouts?: readonly NamedLayout[];
-  readonly defaultLayout?: WindowLayout;
-  readonly terminologies?: readonly string[];
-};
-
+/** ⚠️ Not folded into `@semio-tech/framework-core`'s `PluginManifest`: this shell-local shape types `apps`/`programs` richly (`AppDefinition[]`, `document` on programs) where core intentionally keeps the wasm-boundary shape loose (`Record<string, unknown>[]`) for other consumers (e.g. compose, coda). Left for a human to decide whether to widen core's `PluginManifest` itself. */
 export type PluginManifest = {
   readonly pluginId: string;
   readonly label: string;
@@ -3107,108 +2482,53 @@ export type PluginManifest = {
   }[];
 };
 
-export type PluginHotSwapEvent = {
-  readonly pluginId: string;
-  readonly version: string;
-  readonly addedApps: readonly string[];
-  readonly removedApps: readonly string[];
+type LoadedPluginState = {
+  readonly handle: PluginWasmHandle;
+  readonly manifest: PluginManifest;
 };
 
-export enum Expertise {
-  BEGINNER = "beginner",
-  NORMAL = "normal",
-  EXPERT = "expert",
-}
+type ActiveSession = {
+  readonly pluginId: string;
+  readonly instanceId: number;
+  readonly app: AppDefinition;
+  readonly viewState: ViewState;
+};
 
-export type ToolCategory = "selection" | "tools" | "actions" | "history" | "sync";
+type StudioProgramEntry = {
+  readonly pluginId: string;
+  readonly programId: string;
+  readonly appId: string;
+  readonly label: string;
+  readonly document: readonly string[];
+  readonly yields: string;
+};
 
-export type ToolLeaf =
-  | { readonly id: string; readonly kind: "separator"; readonly order?: number; readonly disabled?: boolean }
-  | {
-      readonly id: string;
-      readonly kind: "button";
-      readonly iconId: string;
-      readonly label?: string;
-      readonly text?: string;
-      readonly title?: string;
-      readonly order?: number;
-      readonly disabled?: boolean;
-      readonly category?: ToolCategory;
-      readonly controllerId?: string;
-      readonly action?: string;
-      readonly args?: unknown;
-    }
-  | {
-      readonly id: string;
-      readonly kind: "toggle";
-      readonly iconId: string;
-      readonly label?: string;
-      readonly text?: string;
-      readonly title?: string;
-      readonly order?: number;
-      readonly pressed?: boolean;
-      readonly disabled?: boolean;
-      readonly category?: ToolCategory;
-      readonly controllerId?: string;
-      readonly action?: string;
-      readonly args?: unknown;
-    };
+type SpawnedAppEntry = {
+  readonly id: string;
+  readonly pluginId: string;
+  readonly instanceId: number;
+  readonly appId: string;
+  readonly label: string;
+  readonly document: readonly string[];
+};
 
-export type ToolNode =
-  | ToolLeaf
-  | {
-      readonly id: string;
-      readonly kind: "collection";
-      readonly iconId: string;
-      readonly label?: string;
-      readonly text?: string;
-      readonly title?: string;
-      readonly order?: number;
-      readonly disabled?: boolean;
-      readonly category?: ToolCategory;
-      readonly children: readonly ToolNode[];
-    }
-  | {
-      readonly id: string;
-      readonly kind: "button";
-      readonly iconId: string;
-      readonly label?: string;
-      readonly text?: string;
-      readonly title?: string;
-      readonly order?: number;
-      readonly disabled?: boolean;
-      readonly category?: ToolCategory;
-      readonly onPress: ActionDescriptor;
-    }
-  | {
-      readonly id: string;
-      readonly kind: "toggle";
-      readonly iconId: string;
-      readonly label?: string;
-      readonly text?: string;
-      readonly title?: string;
-      readonly order?: number;
-      readonly pressed?: boolean;
-      readonly disabled?: boolean;
-      readonly category?: ToolCategory;
-      readonly onChange: ActionDescriptor;
-    };
+type StudioPanelState = {
+  readonly activePanelTab: string;
+  readonly programs: readonly StudioProgramEntry[];
+  readonly spawnedApps: readonly SpawnedAppEntry[];
+  readonly activeSpawnedId?: string;
+};
 
-/** @emoji 🌐 Locale-resolved mixed-value placeholder for this renderer layer; framework/core/js/index.ts keeps its own non-reactive low-level default. */
-export const UI_INSPECTOR_MIXED_PLACEHOLDER = shellLabel("ui.common.mixedValues");
+export type FrameworkOsBootOptions = {
+  readonly rootId?: string;
+  readonly plugin?: string;
+  readonly plugins?: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
+};
 
-export const FRAMEWORK_PANEL_TAB_DOCUMENT_ID = "framework.panel.document";
-export const FRAMEWORK_PANEL_TAB_CATALOGUE_ID = "framework.panel.catalogue";
-export const FRAMEWORK_PANEL_TAB_INSPECTION_ID = "framework.panel.inspection";
-export const FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL = "Document";
-export const FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL = "Catalogue";
-export const FRAMEWORK_PANEL_TAB_INSPECTION_LABEL = "Inspection";
-export const FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID = "framework.panel.document";
-export const FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID = "framework.panel.catalogue";
-export const FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID = "framework.panel.inspection";
-export const FRAMEWORK_PANEL_TAB_PARAMETERS_ID = "framework.panel.parameters";
-export const FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL = "Parameters";
-export const FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID = "framework.panel.parameters";
+type SyncCardKind = "file" | "folder" | "remote";
+
+type UIHistoryEntry = { readonly uri: string };
+type UIHistory = { readonly entries: readonly UIHistoryEntry[]; readonly index: number };
 //#endregion 🔖types
 
 //#region 🔖plugin-runtime

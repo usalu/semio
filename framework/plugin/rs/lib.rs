@@ -2101,10 +2101,7 @@ impl PluginApp for StandardPluginApp {
                 build_table_scene(
                     self.spec.surface_id,
                     self.spec.app_id,
-                    TableScene {
-                        columns_json,
-                        rows_json,
-                    },
+                    TableScene::base(columns_json, rows_json),
                 )
             }
             SurfaceKind::Raster => build_raster_scene(

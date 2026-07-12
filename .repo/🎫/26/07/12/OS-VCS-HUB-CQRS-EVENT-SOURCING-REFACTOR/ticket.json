@@ -1,0 +1,13 @@
+{
+  "title": "Os Vcs Hub Cqrs Event Sourcing Refactor",
+  "emoji": "🧬",
+  "status": "open",
+  "description": "Make os, vcs and hub work perfectly together, designed in conjunction, as one coherent local-first CQRS + event-sourcing system.\n\nApps must emit typed operations (not CRUD) that modify documents instead of snapshotting whole documents. An in-memory graph (per-document DocumentVcsStore) holds live state. A backbone actor per open document, running on another thread (native: std::thread/tokio; browser: dedicated worker), performs all IO (persistence, hub sync, file watching, presence) so the UI is never blocked. The actor proactively ingests external changes: another process editing the file on disk, another author editing the document via the hub server.\n\nFull plan (10 architecture decisions + 6 workstreams WS-A..WS-F + phasing + verification) is at /Users/ueli/.claude/plans/make-sure-that-os-gleaming-stonebraker.md. Summary of workstreams:\n- WS-A: vcs engine hardening (Backbone becomes non-blocking queue contract, Edit.actor, real UndoPolicy semantics, ChannelBackbone).\n- WS-B: framework/sync grows into the actor layer (DocumentHost actor, native thread + browser worker twin, file-watch + hub WS endpoints).\n- WS-C: hub v2 (SQLite persistence replacing unwired Postgres, per-document actor mailboxes, duplex WebSocket as primary transport, drop the broken version-precondition on op append, presence, auth-lite).\n- WS-D: plugin contract (DocumentApp/ActionEmit/VcsDocumentApp generic wrapper generalizing CAD's pattern into PluginApp; typed HostEffect; WIT changes).\n- WS-E: os document topology (app documents become separate vcs documents referenced by handle instead of embedded snapshots) + shell/host wiring (React + wgpu) + dev workflow.\n- WS-F: migrate all ~23 plugins from setDocument-snapshot CRUD to typed op emission, in waves (shooting proving pair first, then puzzle/writer/etc, then flow/gis/procedural/etc, then forms/cad/lowpoly/s last).\n\nThis is a large multi-week refactor touching ~30 Rust crates plus the React/wgpu renderers and dev tooling. This ticket tracks the whole effort across many implementation sessions.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1956"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪46d8f6cc4d2a4ce8852ea5ba2a8cc71e"
+  ]
+}

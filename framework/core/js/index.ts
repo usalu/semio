@@ -133,6 +133,31 @@ export type ToolNode =
       readonly disabled?: boolean;
       readonly category?: ToolCategory;
       readonly children: readonly ToolNode[];
+    }
+  | {
+      readonly id: string;
+      readonly kind: "button";
+      readonly iconId: string;
+      readonly label?: string;
+      readonly text?: string;
+      readonly title?: string;
+      readonly order?: number;
+      readonly disabled?: boolean;
+      readonly category?: ToolCategory;
+      readonly onPress: ActionDescriptor;
+    }
+  | {
+      readonly id: string;
+      readonly kind: "toggle";
+      readonly iconId: string;
+      readonly label?: string;
+      readonly text?: string;
+      readonly title?: string;
+      readonly order?: number;
+      readonly pressed?: boolean;
+      readonly disabled?: boolean;
+      readonly category?: ToolCategory;
+      readonly onChange: ActionDescriptor;
     };
 
 export type UiSectionNode = {
@@ -143,14 +168,26 @@ export type UiSectionNode = {
   readonly children: readonly UiNode[];
 };
 
+/** @emoji 🌳 One hover-revealed row action on a {@link UiTreeItemNode}; renderer-side addition on top of the base wasm tree-item shape. */
+export type UiTreeItemAction = {
+  readonly iconId: string;
+  readonly label?: string;
+  readonly action: ActionDescriptor;
+  readonly revealOnHover?: boolean;
+};
+
 export type UiTreeItemNode = {
   readonly id: string;
   readonly label: string;
   readonly description?: string;
   readonly icon?: string;
+  readonly iconId?: string;
   readonly selected?: boolean;
   readonly defaultOpen?: boolean;
   readonly action?: ActionDescriptor;
+  readonly hoverAction?: ActionDescriptor;
+  readonly unhoverAction?: ActionDescriptor;
+  readonly actions?: readonly UiTreeItemAction[];
   readonly draggable?: boolean;
   readonly dragData?: Readonly<Record<string, string>>;
   readonly items?: readonly UiTreeItemNode[];
@@ -171,6 +208,7 @@ export type UiTreeNode = {
   readonly selectedIds?: readonly string[];
   readonly highlightedIds?: readonly string[];
   readonly selectionChange?: ActionDescriptor;
+  readonly dropAction?: ActionDescriptor;
 };
 
 export type UiControlNode = UiInputNode | UiSelectNode | UiToggleNode | UiVec3Node | UiButtonNode | UiKeyValueNode | UiSliderNode | UiNumberStepperNode | UiRingNode | UiIconSelectNode;
@@ -178,18 +216,27 @@ export type UiControlNode = UiInputNode | UiSelectNode | UiToggleNode | UiVec3No
 export type UiInputNode = {
   readonly type: "input";
   readonly id: string;
-  readonly inputKind: "text" | "number";
+  readonly inputKind: string;
   readonly value: string;
   readonly placeholder?: string;
-  readonly commit?: "change" | "blur";
+  readonly commit?: string;
+  readonly min?: number;
+  readonly max?: number;
+  readonly step?: number;
+  readonly accept?: string;
   readonly onChange: ActionDescriptor;
+};
+
+export type UiSelectItem = {
+  readonly value: string;
+  readonly label: string;
 };
 
 export type UiSelectNode = {
   readonly type: "select";
   readonly id: string;
   readonly value: string;
-  readonly items: readonly { readonly value: string; readonly label: string }[];
+  readonly items: readonly UiSelectItem[];
   readonly placeholder?: string;
   readonly onChange: ActionDescriptor;
 };
@@ -210,9 +257,14 @@ export type UiVec3Node = {
   readonly onChange: ActionDescriptor;
 };
 
+export type UiKeyValueEntry = {
+  readonly label: string;
+  readonly value: string;
+};
+
 export type UiKeyValueNode = {
   readonly type: "keyValue";
-  readonly entries: readonly { readonly label: string; readonly value: string }[];
+  readonly entries: readonly UiKeyValueEntry[];
 };
 
 export type UiSliderNode = {
@@ -222,6 +274,7 @@ export type UiSliderNode = {
   readonly min: number;
   readonly max: number;
   readonly step: number;
+  readonly unit?: string;
   readonly onChange: ActionDescriptor;
 };
 
@@ -249,7 +302,7 @@ export type UiIconSelectNode = {
   readonly id: string;
   readonly value: string;
   readonly uniform: boolean;
-  readonly classifierKind: "puzzle2d";
+  readonly classifierKind: string;
   readonly onChange: ActionDescriptor;
 };
 
@@ -257,7 +310,17 @@ export type UiFieldNode = {
   readonly type: "field";
   readonly id: string;
   readonly label: string;
-  readonly child: UiControlNode;
+  readonly description?: string;
+  readonly required?: boolean;
+  readonly error?: string;
+  readonly child: UiNode;
+};
+
+/** 🎨 Renderer-side visual variant/size/density hints on a {@link UiButtonNode} — no wasm/plugin equivalent, purely a display hint. */
+export type StyleSpec = {
+  readonly variant?: string;
+  readonly size?: string;
+  readonly density?: string;
 };
 
 export type UiButtonNode = {
@@ -266,19 +329,43 @@ export type UiButtonNode = {
   readonly iconId: string;
   readonly label: string;
   readonly action: ActionDescriptor;
+  readonly style?: StyleSpec;
+  readonly disabled?: boolean;
 };
 
 export type UiTextNode = {
   readonly type: "text";
   readonly value: string;
   readonly emphasize?: boolean;
+  readonly dataAttributes?: Readonly<Record<string, string>>;
+};
+
+export type UiStackNode = {
+  readonly type: "stack";
+  readonly direction: string;
+  readonly gap?: string;
+  readonly padding?: string;
+  readonly id?: string;
+  readonly selected?: boolean;
+  readonly activate?: ActionDescriptor;
+  readonly dropAction?: ActionDescriptor;
+  readonly children: readonly UiNode[];
+};
+
+export type UiSeparatorNode = { readonly type: "separator" };
+
+export type UiImageNode = {
+  readonly type: "image";
+  readonly id: string;
+  readonly src: string;
+  readonly alt?: string;
 };
 
 export type UiNode =
-  | { readonly type: "stack"; readonly direction: string; readonly gap?: string; readonly padding?: string; readonly children: readonly UiNode[] }
+  | UiStackNode
   | UiTextNode
   | UiButtonNode
-  | { readonly type: "separator" }
+  | UiSeparatorNode
   | UiSectionNode
   | UiInputNode
   | UiSelectNode
@@ -290,7 +377,10 @@ export type UiNode =
   | UiRingNode
   | UiIconSelectNode
   | UiFieldNode
-  | UiTreeNode;
+  | UiTreeNode
+  | UiImageNode
+  | UiComponentSceneNode
+  | UiExternalSlotNode;
 
 export type UiInspectorFieldGroup = {
   readonly id: string;
@@ -298,6 +388,232 @@ export type UiInspectorFieldGroup = {
   readonly defaultOpen?: boolean;
   readonly fields: readonly UiNode[];
 };
+
+//#region ComponentSceneProtocol
+/** 🖼️ A 2D canvas surface scene payload — mirrors the wasm `componentScene` node's `canvas2d` field. */
+export type Canvas2dScene = {
+  readonly cameraX: number;
+  readonly cameraY: number;
+  readonly zoom: number;
+  readonly layersJson: string;
+};
+
+/** 🌐 A 3D world surface scene payload — mirrors the wasm `componentScene` node's `world3d` field. */
+export type World3dScene = {
+  readonly cameraJson: string;
+  readonly meshesJson: string;
+  readonly instancesJson: string;
+  readonly selectionJson: string;
+  readonly vorticesJson?: string;
+  readonly attractionsJson?: string;
+  readonly targetVolumesJson?: string;
+  readonly referencesJson?: string;
+  readonly brushPreviewJson?: string;
+  readonly interactionJson?: string;
+  readonly engagementPreviewJson?: string;
+  readonly lodJson?: string;
+  readonly chunkingJson?: string;
+  readonly contextMenuJson?: string;
+  readonly environmentJson?: string;
+  readonly frameJson?: string;
+  readonly fitJson?: string;
+};
+
+/** 🕸️ A node-graph surface scene payload — mirrors the wasm `componentScene` node's `nodeGraph` field. */
+export type NodeGraphScene = {
+  readonly nodesJson: string;
+  readonly edgesJson: string;
+  readonly viewportJson: string;
+  readonly editable?: boolean;
+  readonly operatorsJson?: string;
+  readonly contextMenuJson?: string;
+  readonly findItemsJson?: string;
+  readonly selectionJson?: string;
+  readonly hoverJson?: string;
+  readonly previewOffJson?: string;
+  readonly lodJson?: string;
+  readonly catalogueJson?: string;
+  readonly controlsJson?: string;
+  readonly clustersJson?: string;
+  readonly computingJson?: string;
+  readonly capabilitiesJson?: string;
+  readonly fixtureJson?: string;
+  readonly presencePeersJson?: string;
+};
+
+/** 👥 A live-collaboration cursor/selection peer shown on a shared surface. */
+export type PresencePeer = {
+  readonly clientId: string;
+  readonly name: string;
+  readonly selectionCount: number;
+};
+
+/** 📝 A text-editor surface scene payload — mirrors the wasm `componentScene` node's `textEditor` field. */
+export type TextEditorScene = {
+  readonly buffer: string;
+  readonly language?: string;
+  readonly selectionJson?: string;
+  readonly tokensJson?: string;
+  readonly diagnosticsJson?: string;
+  readonly completionsJson?: string;
+  readonly overlaysJson?: string;
+  readonly occurrencesJson?: string;
+  readonly placeholdersJson?: string;
+  readonly extraCaretsJson?: string;
+  readonly selectableSpansJson?: string;
+  readonly settingsJson?: string;
+  readonly cameraJson?: string;
+  readonly hoverJson?: string;
+  readonly newlineGatesJson?: string;
+  readonly renameJson?: string;
+};
+
+export const nodeGraphActions = {
+  select: "nodeGraphSelect",
+  hover: "nodeGraphHover",
+  edit: "nodeGraphEdit",
+  viewport: "nodeGraphViewport",
+  spotlightCommit: "spotlightCommit",
+} as const;
+
+export const textEditorActions = {
+  edit: "textEdit",
+  select: "textSelect",
+  hover: "textHover",
+  requestCompletions: "requestCompletions",
+  commitRename: "commitRename",
+  formatDocument: "formatDocument",
+} as const;
+
+/** 📋 A table surface scene payload — mirrors the wasm `componentScene` node's `table` field. */
+export type TableScene = {
+  readonly columnsJson: string;
+  readonly rowsJson: string;
+  readonly selectionJson?: string;
+  readonly rowDragMime?: string;
+  readonly dropAction?: ActionDescriptor;
+  readonly sortJson?: string;
+};
+
+/** 🖌️ A raster/paint surface scene payload — mirrors the wasm `componentScene` node's `raster` field. */
+export type RasterScene = {
+  readonly documentSyncJson: string;
+  readonly assetsJson: string;
+  readonly cameraJson: string;
+  readonly selectionJson: string;
+  readonly hoveredId?: string;
+  readonly activeTool: string;
+  readonly brushSize: number;
+  readonly brushOpacity: number;
+  readonly viewMode: string;
+  readonly compositeViewportJson?: string;
+};
+
+/** 🎨 An icon-render preview surface scene payload — mirrors the wasm `componentScene` node's `iconRender` field. */
+export type IconRenderScene = {
+  readonly requestJson: string;
+  readonly footer?: string;
+  readonly frameJson?: string;
+};
+
+/** 🗂️ A virtual-file-system browser surface scene payload — mirrors the wasm `componentScene` node's `virtualFileSystem` field. */
+export type VirtualFileSystemScene = {
+  readonly schemaJson: string;
+  readonly rowsJson: string;
+  readonly selectedRowIdsJson?: string;
+  readonly hoveredRowId?: string;
+  readonly emptyMessage?: string;
+  readonly dragDropEnabled?: boolean;
+};
+
+/** 🗺️ A GIS map surface scene payload — mirrors the wasm `componentScene` node's `gisMap` field. */
+export type GisMapScene = {
+  readonly mapFixtureJson: string;
+  readonly cameraJson: string;
+  readonly renderMode: string;
+  readonly vectorStyle: string;
+  readonly lodMode: string;
+  readonly tileUrlTemplate: string;
+  readonly vectorTileUrlTemplate: string;
+  readonly layerVisibilityJson: string;
+  readonly layerStrokeScaleJson: string;
+  readonly selectionJson: string;
+  readonly hoverJson: string;
+  readonly selectionMethod: string;
+  readonly selectionMode: string;
+  readonly contextMenuJson?: string;
+};
+
+/** 🧩 A puzzle-2d board surface scene payload — mirrors the wasm `componentScene` node's `puzzle2dBoard` field. */
+export type Puzzle2dBoardScene = {
+  readonly fixtureJson: string;
+  readonly cameraJson: string;
+  readonly kindCatalogsJson: string;
+  readonly selectionJson: string;
+  readonly interactive: boolean;
+  readonly hoveredId?: string;
+  readonly activeTool?: string;
+  readonly selectionMethod: string;
+  readonly gridSnapEnabled: boolean;
+  readonly gridFactor: number;
+  readonly suggestionOffset: number;
+  readonly brushKindWeightsJson: string;
+  readonly kindCompatibilityJson: string;
+  readonly lodMode: string;
+};
+
+/** 🗒️ A note-canvas surface scene payload — mirrors the wasm `componentScene` node's `noteCanvas` field. */
+export type NoteCanvasScene = {
+  readonly documentJson: string;
+  readonly selectionJson: string;
+  readonly hoveredId?: string;
+  readonly activeTool: string;
+  readonly viewMode: string;
+  readonly interactive: boolean;
+};
+
+/** 🗄️ A checkpoint ancestor-graph history view. `columnsJson` is a `HistoryColumn[]` array, newest checkpoint first. */
+export type VcsHistoryScene = {
+  readonly columnsJson: string;
+};
+
+/** 🔌 A plugin-contributed external body rendered inline — mirrors the wasm `externalSlot` node. */
+export type UiExternalSlotNode = {
+  readonly type: "externalSlot";
+  readonly pluginId: string;
+  readonly appId: string;
+  readonly bodyKey: string;
+  readonly paramsJson: string;
+};
+
+/** 🧭 The dispatch key on {@link UiComponentSceneNode} — matches the lazy-loaded host component per `framework/renderer/react/components/*-host.tsx`. */
+export type ComponentKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor" | "table" | "raster" | "gis2d-map" | "puzzle2d-board" | "icon-render" | "note-canvas" | "vcs-history";
+
+/** 🖥️ A native (non-declarative) rendering surface — mirrors the wasm `componentScene` node; the active `componentKind` selects which optional scene field is populated. */
+export type UiComponentSceneNode = {
+  readonly type: "componentScene";
+  readonly surfaceId: string;
+  readonly controllerId: string;
+  readonly componentKind: string;
+  readonly paneId?: string;
+  readonly bindingId?: string;
+  readonly canvas2d?: Canvas2dScene;
+  readonly world3d?: World3dScene;
+  readonly nodeGraph?: NodeGraphScene;
+  readonly textEditor?: TextEditorScene;
+  readonly table?: TableScene;
+  readonly raster?: RasterScene;
+  readonly virtualFileSystem?: VirtualFileSystemScene;
+  readonly gisMap?: GisMapScene;
+  readonly puzzle2dBoard?: Puzzle2dBoardScene;
+  readonly iconRender?: IconRenderScene;
+  readonly noteCanvas?: NoteCanvasScene;
+  readonly vcsHistory?: VcsHistoryScene;
+};
+
+/** 🧷 Shared prop shape for every `framework/renderer/react/components/*-host.tsx` component. */
+export type ComponentSceneHostProps = { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void };
+//#endregion ComponentSceneProtocol
 
 export function canvasPickTargetKey(target: CanvasPickTarget): string {
   return `${target.domain}:${target.id}`;
@@ -604,6 +920,8 @@ export type PluginViewState = {
   readonly selectionJson?: string;
   readonly panelJson?: string;
   readonly contributionsJson?: string;
+  readonly locale?: string;
+  readonly terminology?: string;
 };
 
 export type PluginUiNode = Record<string, unknown> & { readonly type: string };
@@ -628,16 +946,26 @@ function normalizeAppLabelsOverlay(raw: Partial<PluginAppLabelsOverlay> | null |
   };
 }
 
-export type PluginContribution = {
-  readonly kind: "formsQuestionKind";
-  readonly appId: string;
-  readonly questionKind: string;
-  readonly label: string;
-  readonly iconId: string;
-  readonly defaultValueJson?: string;
-  readonly paramsBodyKey: string;
-  readonly previewBodyKey: string;
-};
+export type PluginContribution =
+  | {
+      readonly kind: "formsQuestionKind";
+      readonly appId: string;
+      readonly questionKind: string;
+      readonly label: string;
+      readonly iconId: string;
+      readonly defaultValueJson?: string;
+      readonly paramsBodyKey: string;
+      readonly previewBodyKey: string;
+    }
+  | {
+      readonly kind: "sourcingModule";
+      readonly appId: string;
+      readonly moduleId: string;
+      readonly label: string;
+      readonly iconId: string;
+      readonly typologyJson: string;
+      readonly kindsJson: string;
+    };
 
 export type PluginContributionEntry = {
   readonly pluginId: string;
@@ -658,6 +986,201 @@ export type PluginManifest = {
   readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string }[];
   readonly contributions?: readonly PluginContribution[];
 };
+
+//#region AppManifestProtocol
+export type WindowMeasure =
+  | {
+      readonly kind: "select";
+      readonly id: string;
+      readonly label?: string;
+      readonly value: string;
+      readonly items: readonly { readonly id: string; readonly value: string; readonly label: string }[];
+      readonly onChange: ActionDescriptor;
+    }
+  | {
+      readonly kind: "slider";
+      readonly id: string;
+      readonly label?: string;
+      readonly value: number;
+      readonly min: number;
+      readonly max: number;
+      readonly step?: number;
+      readonly onChange: ActionDescriptor;
+    }
+  | {
+      readonly kind: "toggle";
+      readonly id: string;
+      readonly iconId: string;
+      readonly label?: string;
+      readonly pressed: boolean;
+      readonly text?: string;
+      readonly onChange: ActionDescriptor;
+    }
+  | {
+      readonly kind: "group";
+      readonly id: string;
+      readonly label: string;
+      readonly defaultOpen?: boolean;
+      readonly children: readonly WindowMeasure[];
+    };
+
+export type WindowEngagementOption = {
+  readonly id: string;
+  readonly label?: string;
+  readonly iconId?: string;
+  readonly pressed?: boolean;
+  readonly disabled?: boolean;
+  readonly action?: ActionDescriptor;
+};
+
+export type WindowEngagementInput = {
+  readonly id?: string;
+  readonly value?: string;
+  readonly placeholder?: string;
+  readonly disabled?: boolean;
+  readonly onChange?: ActionDescriptor;
+  readonly onSubmit?: ActionDescriptor;
+  readonly onRepeatLast?: ActionDescriptor;
+  readonly onAbort?: ActionDescriptor;
+};
+
+export type WindowEngagementStatus = {
+  readonly id: string;
+  readonly text: string;
+};
+
+export type WindowEngagementPossible = {
+  readonly id: string;
+  readonly label: string;
+  readonly detail?: string;
+  readonly action?: ActionDescriptor;
+};
+
+export type WindowEngagementRingOption = {
+  readonly id: string;
+  readonly label: string;
+  readonly disabled?: boolean;
+};
+
+export type WindowEngagementToggleGroupOption = {
+  readonly id: string;
+  readonly label: string;
+  readonly disabled?: boolean;
+};
+
+export type WindowEngagementSelectItem = {
+  readonly id: string;
+  readonly value: string;
+  readonly label: string;
+};
+
+export type WindowEngagementControl =
+  | {
+      readonly kind: "slider";
+      readonly id?: string;
+      readonly label?: string;
+      readonly value: number;
+      readonly min: number;
+      readonly max: number;
+      readonly step?: number;
+      readonly unit?: string;
+      readonly disabled?: boolean;
+      readonly onChange?: ActionDescriptor;
+      readonly onCommit?: ActionDescriptor;
+    }
+  | {
+      readonly kind: "stepper";
+      readonly id?: string;
+      readonly label?: string;
+      readonly value: number;
+      readonly min?: number;
+      readonly max?: number;
+      readonly step?: number;
+      readonly unit?: string;
+      readonly disabled?: boolean;
+      readonly onChange?: ActionDescriptor;
+      readonly onCommit?: ActionDescriptor;
+    }
+  | {
+      readonly kind: "ring";
+      readonly id?: string;
+      readonly label?: string;
+      readonly value?: string;
+      readonly options: readonly WindowEngagementRingOption[];
+      readonly disabled?: boolean;
+      readonly onSelect?: ActionDescriptor;
+    }
+  | {
+      readonly kind: "toggleGroup";
+      readonly id?: string;
+      readonly label?: string;
+      readonly value?: string;
+      readonly options: readonly WindowEngagementToggleGroupOption[];
+      readonly disabled?: boolean;
+      readonly onSelect?: ActionDescriptor;
+    }
+  | {
+      readonly kind: "select";
+      readonly id?: string;
+      readonly label?: string;
+      readonly value?: string;
+      readonly placeholder?: string;
+      readonly items: readonly WindowEngagementSelectItem[];
+      readonly disabled?: boolean;
+      readonly onChange?: ActionDescriptor;
+    };
+
+export type WindowEngagement = {
+  readonly sessionActive?: boolean;
+  readonly options?: readonly WindowEngagementOption[];
+  readonly input?: WindowEngagementInput;
+  readonly control?: WindowEngagementControl;
+  readonly controls?: readonly WindowEngagementControl[];
+  readonly status?: readonly WindowEngagementStatus[];
+  readonly possibleEngagements?: readonly WindowEngagementPossible[];
+};
+
+/** 🌳 Mirrors Rust `PanelTabDefinition` — a leaf carries `bodyKey`, a branch carries `children`; `group` is only meaningful on root entries. */
+export type AppPanelTabDefinition = {
+  readonly id: string;
+  readonly label: string;
+  readonly group: string;
+  readonly bodyKey?: string;
+  readonly children?: readonly AppPanelTabDefinition[];
+};
+
+/** 📦 The richly-typed shape of one {@link PluginManifest} `apps` entry — additive superset kept alongside the loosely-typed wire shape so renderers can opt into precise field access. */
+export type AppDefinition = {
+  readonly id: string;
+  readonly label: string;
+  readonly document: readonly string[];
+  readonly iconId?: string;
+  readonly controllerId: string;
+  readonly modes: readonly { readonly id: string; readonly label: string; readonly tools?: readonly ToolNode[] }[];
+  readonly defaultModeId?: string;
+  readonly windowKinds: readonly {
+    readonly id: string;
+    readonly label: string;
+    readonly bodyKey: string;
+    readonly iconId?: string;
+    readonly measures?: readonly WindowMeasure[];
+    readonly engagement?: WindowEngagement;
+  }[];
+  readonly panelTabs: readonly AppPanelTabDefinition[];
+  readonly keybindings: readonly { readonly keys: string; readonly action: ActionDescriptor }[];
+  readonly actions?: readonly ActionDefinition[];
+  readonly namedLayouts?: readonly NamedLayout[];
+  readonly defaultLayout?: WindowLayout;
+  readonly terminologies?: readonly string[];
+};
+
+export type PluginHotSwapEvent = {
+  readonly pluginId: string;
+  readonly version: string;
+  readonly addedApps: readonly string[];
+  readonly removedApps: readonly string[];
+};
+//#endregion AppManifestProtocol
 
 export type PluginWasmHandle = {
   readonly pluginId: string;

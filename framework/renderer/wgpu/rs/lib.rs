@@ -4976,10 +4976,7 @@ mod render_plan_validator_tests {
         let node = build_table_scene(
             "table",
             "controller",
-            TableScene {
-                columns_json: "[]".into(),
-                rows_json: "x".repeat(32),
-            },
+            TableScene::base("[]", "x".repeat(32)),
         );
         let error = validate_ui_node(&node, &limits).expect_err("oversized payload should be rejected");
         assert!(error.contains("table.rows"));
