@@ -558,7 +558,7 @@ fn resolve_question_insert_index(spec: &FormSpec, step_id: &str, target_id: &str
 
 fn update_question(store: &mut FormsStore, step_id: &str, question: FormQuestion) {
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![FormOp::UpdateBlock { step_id: step_id.into(), question }],
+        operations: vec![FormOp::UpdateBlock { step_id: step_id.into(), block: question }],
         description: None,
     });
 }
@@ -1261,7 +1261,7 @@ fn render_try_wizard(spec: &FormSpec, play: &FormsPlayEnvelope, contributions: &
     let advance = can_advance(step, &values);
     let errors_by_question: HashMap<&str, &str> = errors
         .iter()
-        .map(|error| (error.question_id.as_str(), error.message.as_str()))
+        .map(|error| (error.block_id.as_str(), error.message.as_str()))
         .collect();
     let mut children = vec![
         ui_text_emphasized(spec.title.clone().unwrap_or_else(|| labels.form_fallback_title.into())),
@@ -1995,7 +1995,7 @@ impl PluginApp for FormsPlayApp {
                 let _ = store.dispatch(DocumentVcsCommand::Apply {
                     operations: vec![FormOp::AddBlock {
                         step_id,
-                        question,
+                        block: question,
                         index: None,
                     }],
                     description: None,
@@ -2016,7 +2016,7 @@ impl PluginApp for FormsPlayApp {
                 let _ = store.dispatch(DocumentVcsCommand::Apply {
                     operations: vec![FormOp::RemoveBlock {
                         step_id: location.step_id,
-                        question_id: question_id.into(),
+                        block_id: question_id.into(),
                     }],
                     description: None,
                 });

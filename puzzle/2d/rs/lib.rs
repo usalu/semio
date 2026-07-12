@@ -757,6 +757,25 @@ mod host_tests {
         }
     }
 
+    /// 🔗 Keeps the runtime kind-catalog JSON shape in sync with the compile-time `puzzle2d-default` manifest.
+    #[test]
+    fn puzzle2d_default_manifest_satisfies_board_host_validation() {
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../manifest/default.manifest.json")).unwrap();
+        let handle_kinds: Vec<serde_json::Value> = manifest["portKinds"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|row| json!({ "id": row["id"], "name": row["name"], "color": row["presentation"]["color"], "defaultWireKind": row["presentation"]["defaultWireKind"] }))
+            .collect();
+        let wire_kinds: Vec<serde_json::Value> = manifest["wireKinds"].as_array().unwrap().iter().map(|row| json!({ "id": row["id"], "name": row["name"], "defaultEdgeKind": row["presentation"]["defaultEdgeKind"] })).collect();
+        let edge_kinds: Vec<serde_json::Value> = manifest["edgeKinds"].as_array().unwrap().iter().map(|row| json!({ "id": row["id"], "name": row["name"] })).collect();
+        let catalogs_json = json!({ "handleKinds": handle_kinds, "wireKinds": wire_kinds, "edgeKinds": edge_kinds }).to_string();
+
+        let mut host = BoardHost::new();
+        host.set_board_kind_catalogs_from_json(&catalogs_json).expect("catalog json derived from the manifest must be valid");
+        host.validate_against_manifest_id("puzzle2d-default").expect("runtime catalog must satisfy the compile-time puzzle2d-default manifest");
+    }
+
     #[test]
     fn board_host_defers_descriptor_sync_while_panning() {
         let mut h = BoardHost::new();

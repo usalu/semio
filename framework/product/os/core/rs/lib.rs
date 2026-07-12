@@ -2927,6 +2927,8 @@ use base64::Engine;
 use png::{BitDepth, ColorType, Encoder};
 use semio_framework_core::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
 use serde_json::Value;
+use std::collections::HashMap;
+use std::sync::{Mutex, OnceLock};
 
 /// @emoji 🖼️ Rasterizes SVG markup to a base64-encoded PNG payload.
 pub fn rasterize_svg_to_png_base64(svg: &str, width: u32, height: u32) -> Result<String, String> {
@@ -3137,42 +3139,44 @@ pub fn register_dwg_import_handler(resource_kind: &'static str, from_dwg: fn(&Dw
     });
 }
 
-/// @emoji 💾 Registers OBJ, GLB, and DWG export handlers for one mesh resource kind.
-pub fn register_mesh_export_handlers(
+/// @emoji 🧵 Registers one `MeshExporter` format (Obj/Glb/Stl/…) for a mesh resource kind; call once per format — `mesh_from_document` bridges the OS media-graph's per-document export pipeline down to the format-agnostic `MeshData` the exporter instance actually encodes. DWG stays on `register_mesh_dwg_import_handler`'s sibling below; it is not part of the `MeshExporter` mechanism.
+pub fn register_mesh_exporter(
     resource_kind: &'static str,
     file_stem: &'static str,
     mesh_from_document: fn(&Value) -> Result<semio_framework_plugin::MeshData, String>,
+    exporter: Box<dyn semio_framework_plugin::MeshExporter>,
 ) {
-    register_os_media_export_handler(resource_kind, OsMediaFormat::Obj, move |doc| {
+    let format = exporter.format();
+    let ext = format.as_str();
+    let mime_type = format.mime_type().to_string();
+    let binary = format.is_binary();
+    register_os_media_export_handler(resource_kind, format, move |doc| {
         let mesh = mesh_from_document(doc)?;
-        let (data, mime_type) = semio_framework_plugin::export_mesh_obj(&mesh, file_stem);
+        let bytes = exporter.export(&mesh)?;
+        let data = if binary {
+            base64::engine::general_purpose::STANDARD.encode(&bytes)
+        } else {
+            String::from_utf8(bytes).map_err(|error| error.to_string())?
+        };
         Ok(OsMediaExportResult {
             data,
-            mime_type,
-            file_name: format!("{file_stem}.obj"),
-            encoding: None,
+            mime_type: mime_type.clone(),
+            file_name: format!("{file_stem}.{ext}"),
+            encoding: if binary { Some("base64".into()) } else { None },
         })
     });
-    register_os_media_export_handler(resource_kind, OsMediaFormat::Glb, move |doc| {
-        let mesh = mesh_from_document(doc)?;
-        let (bytes, mime_type) = semio_framework_plugin::export_mesh_glb_bytes(&mesh);
-        Ok(OsMediaExportResult {
-            data: base64::engine::general_purpose::STANDARD.encode(bytes),
-            mime_type,
-            file_name: format!("{file_stem}.glb"),
-            encoding: Some("base64".into()),
-        })
-    });
-    register_os_media_export_handler(resource_kind, OsMediaFormat::Dwg, move |doc| {
-        let mesh = mesh_from_document(doc)?;
-        let drawing = semio_framework_core::mesh_to_dwg_drawing(&mesh);
-        let bytes = semio_framework_core::dwg_to_bytes(&drawing)?;
-        Ok(OsMediaExportResult {
-            data: base64::engine::general_purpose::STANDARD.encode(bytes),
-            mime_type: OsMediaFormat::Dwg.mime_type().into(),
-            file_name: format!("{file_stem}.dwg"),
-            encoding: Some("base64".into()),
-        })
+}
+
+/// @emoji 🧵 Registers one `MeshImporter` format (Obj/Glb/Stl/…) for a mesh resource kind; `document_from_mesh` bridges the decoded `MeshData` back into the app's own document shape.
+pub fn register_mesh_importer(
+    resource_kind: &'static str,
+    document_from_mesh: fn(&semio_framework_plugin::MeshData) -> Result<Value, String>,
+    importer: Box<dyn semio_framework_plugin::MeshImporter>,
+) {
+    let format = importer.format();
+    register_os_media_import_handler(resource_kind, format, move |bytes| {
+        let mesh = importer.import(bytes)?;
+        document_from_mesh(&mesh)
     });
 }
 
@@ -3184,6 +3188,71 @@ pub fn register_mesh_dwg_import_handler(resource_kind: &'static str, document_fr
         document_from_mesh(&mesh)
     });
 }
+
+//#region SolidMediaExport
+type SolidExporterRegistry = HashMap<String, Box<dyn kernel_3d_brepkit::SolidExporter>>;
+
+fn solid_exporters() -> &'static Mutex<SolidExporterRegistry> {
+    static HANDLERS: OnceLock<Mutex<SolidExporterRegistry>> = OnceLock::new();
+    HANDLERS.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+type SolidImporterRegistry = HashMap<String, Box<dyn kernel_3d_brepkit::SolidImporter>>;
+
+fn solid_importers() -> &'static Mutex<SolidImporterRegistry> {
+    static HANDLERS: OnceLock<Mutex<SolidImporterRegistry>> = OnceLock::new();
+    HANDLERS.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+fn solid_registry_key(resource_kind: &str, format: &OsMediaFormat) -> String {
+    format!("{}:{}", resource_kind, format.as_str())
+}
+
+/// @emoji 🧊 Registers a B-Rep solid exporter (STEP/STL/OBJ/GLB, operating on `GeometryHandle` via `kernel_3d_brepkit::BrepkitKernel` rather than a tessellated `MeshData`) for a resource kind; call once per format.
+pub fn register_solid_exporter(resource_kind: &str, exporter: Box<dyn kernel_3d_brepkit::SolidExporter>) {
+    let key = solid_registry_key(resource_kind, &exporter.format());
+    solid_exporters().lock().expect("lock").insert(key, exporter);
+}
+
+/// @emoji 🧊 Registers a B-Rep solid importer for a resource kind; see `register_solid_exporter`.
+pub fn register_solid_importer(resource_kind: &str, importer: Box<dyn kernel_3d_brepkit::SolidImporter>) {
+    let key = solid_registry_key(resource_kind, &importer.format());
+    solid_importers().lock().expect("lock").insert(key, importer);
+}
+
+/// @emoji 🧊 Looks up a previously registered solid exporter for a resource kind + format.
+pub fn solid_exporter_for(resource_kind: &str, format: &OsMediaFormat) -> bool {
+    solid_exporters().lock().expect("lock").contains_key(&solid_registry_key(resource_kind, format))
+}
+
+/// @emoji 🧊 Exports `shapes` from `kernel` through the solid exporter registered for `resource_kind` + `format`.
+pub fn export_registered_solid(
+    resource_kind: &str,
+    format: &OsMediaFormat,
+    kernel: &kernel_3d_brepkit::BrepkitKernel,
+    shapes: &[kernel_3d_engine::GeometryHandle],
+    deflection: f64,
+) -> Result<Vec<u8>, String> {
+    let key = solid_registry_key(resource_kind, format);
+    let handlers = solid_exporters().lock().expect("lock");
+    let exporter = handlers.get(&key).ok_or_else(|| format!("no solid export handler for {key}"))?;
+    exporter.export(kernel, shapes, deflection).map_err(|error| error.to_string())
+}
+
+/// @emoji 🧊 Imports bytes into `kernel` through the solid importer registered for `resource_kind` + `format`.
+pub fn import_registered_solid(
+    resource_kind: &str,
+    format: &OsMediaFormat,
+    kernel: &mut kernel_3d_brepkit::BrepkitKernel,
+    data: &[u8],
+    tolerance: f64,
+) -> Result<Vec<kernel_3d_engine::GeometryHandle>, String> {
+    let key = solid_registry_key(resource_kind, format);
+    let handlers = solid_importers().lock().expect("lock");
+    let importer = handlers.get(&key).ok_or_else(|| format!("no solid import handler for {key}"))?;
+    importer.import(kernel, data, tolerance).map_err(|error| error.to_string())
+}
+//#endregion SolidMediaExport
 // #endregion media_export_raster
 }
 
@@ -3887,52 +3956,24 @@ impl ProgramRegistry {
 //#endregion 🔖ProgramRegistry
 
 //#region 🔖MediaExport
-#[derive(Clone, Debug, PartialEq)]
-pub enum OsMediaFormat {
-    Svg,
-    Png,
-    Obj,
-    Glb,
-    Dwg,
+/// 🗂️ Defined in `semio_framework_core` (below this crate in the dependency graph) so `MeshExporter`/`MeshImporter` there can name it too; re-exported here verbatim.
+pub use semio_framework_core::OsMediaFormat;
+
+//#region 🔖MediaCapability
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum OsMediaCapability {
+    MeshOnly,
+    Brep,
 }
 
-impl OsMediaFormat {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Svg => "svg",
-            Self::Png => "png",
-            Self::Obj => "obj",
-            Self::Glb => "glb",
-            Self::Dwg => "dwg",
-        }
-    }
-
-    pub fn mime_type(&self) -> &'static str {
-        match self {
-            Self::Svg => "image/svg+xml",
-            Self::Png => "image/png",
-            Self::Obj => "model/obj",
-            Self::Glb => "model/gltf-binary",
-            Self::Dwg => "image/vnd.dwg",
-        }
-    }
-
-    /// @emoji 🔢 Whether this format's payload is base64-encoded binary rather than plain text.
-    pub fn is_binary(&self) -> bool {
-        matches!(self, Self::Png | Self::Glb | Self::Dwg)
-    }
-
-    pub fn parse(value: &str) -> Option<Self> {
-        match value {
-            "svg" => Some(Self::Svg),
-            "png" => Some(Self::Png),
-            "obj" => Some(Self::Obj),
-            "glb" => Some(Self::Glb),
-            "dwg" => Some(Self::Dwg),
-            _ => None,
-        }
+/// 🧬 Resolves which geometry backend a resource kind's exporters target: `cad`/`process`/`forms` sit on the real B-Rep kernel (`kernel_3d_brepkit`) and additionally require STEP; every other 3D/5D resource kind is backed by the lighter dependency-free `MeshData` representation and stops at OBJ/GLB/STL/DWG.
+pub fn os_resource_media_capability(kind: &str) -> OsMediaCapability {
+    match kind {
+        "3d.cad" | "3d.process" | "form.dictionary" => OsMediaCapability::Brep,
+        _ => OsMediaCapability::MeshOnly,
     }
 }
+//#endregion 🔖MediaCapability
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct OsMediaExportResult {
@@ -3965,10 +4006,14 @@ pub fn register_os_media_export_handler(
         .insert(os_media_export_key(resource_kind, &format), Box::new(handler));
 }
 
-pub fn required_os_media_export_formats(dimension: &str) -> Vec<OsMediaFormat> {
+/// 📐 Required export formats per dimension; 3D/5D mesh-only apps stop at OBJ/GLB/STL/DWG, B-Rep apps (`os_resource_media_capability`) additionally require STEP.
+pub fn required_os_media_export_formats(dimension: &str, capability: OsMediaCapability) -> Vec<OsMediaFormat> {
     match dimension {
         "2d" => vec![OsMediaFormat::Svg, OsMediaFormat::Png, OsMediaFormat::Dwg],
-        "3d" | "5d" => vec![OsMediaFormat::Glb, OsMediaFormat::Obj, OsMediaFormat::Dwg],
+        "3d" | "5d" => match capability {
+            OsMediaCapability::Brep => vec![OsMediaFormat::Obj, OsMediaFormat::Glb, OsMediaFormat::Stl, OsMediaFormat::Step, OsMediaFormat::Dwg],
+            OsMediaCapability::MeshOnly => vec![OsMediaFormat::Obj, OsMediaFormat::Glb, OsMediaFormat::Stl, OsMediaFormat::Dwg],
+        },
         _ => Vec::new(),
     }
 }
@@ -3978,7 +4023,8 @@ pub fn assert_os_media_export_coverage() -> Result<(), String> {
     let handlers = export_handlers().lock().expect("lock");
     let mut missing = Vec::new();
     for descriptor in crate::registry::list_os_resource_descriptors() {
-        for format in required_os_media_export_formats(&descriptor.dimension) {
+        let capability = os_resource_media_capability(&descriptor.kind);
+        for format in required_os_media_export_formats(&descriptor.dimension, capability) {
             if !handlers.contains_key(&os_media_export_key(&descriptor.kind, &format)) {
                 missing.push(format!("{}:{}", descriptor.kind, format.as_str()));
             }
@@ -4026,10 +4072,14 @@ pub fn register_os_media_import_handler(
         .insert(os_media_export_key(resource_kind, &format), Box::new(handler));
 }
 
-/// @emoji 📥 Formats every resource kind of the given dimension must accept for import (mirrors export coverage, DWG-only for now).
-pub fn required_os_media_import_formats(dimension: &str) -> Vec<OsMediaFormat> {
+/// @emoji 📥 Formats every resource kind of the given dimension must accept for import; 2D stays DWG-only, 3D/5D mirrors `required_os_media_export_formats`.
+pub fn required_os_media_import_formats(dimension: &str, capability: OsMediaCapability) -> Vec<OsMediaFormat> {
     match dimension {
-        "2d" | "3d" | "5d" => vec![OsMediaFormat::Dwg],
+        "2d" => vec![OsMediaFormat::Dwg],
+        "3d" | "5d" => match capability {
+            OsMediaCapability::Brep => vec![OsMediaFormat::Obj, OsMediaFormat::Glb, OsMediaFormat::Stl, OsMediaFormat::Step, OsMediaFormat::Dwg],
+            OsMediaCapability::MeshOnly => vec![OsMediaFormat::Obj, OsMediaFormat::Glb, OsMediaFormat::Stl, OsMediaFormat::Dwg],
+        },
         _ => Vec::new(),
     }
 }
@@ -4039,7 +4089,8 @@ pub fn assert_os_media_import_coverage() -> Result<(), String> {
     let handlers = import_handlers().lock().expect("lock");
     let mut missing = Vec::new();
     for descriptor in crate::registry::list_os_resource_descriptors() {
-        for format in required_os_media_import_formats(&descriptor.dimension) {
+        let capability = os_resource_media_capability(&descriptor.kind);
+        for format in required_os_media_import_formats(&descriptor.dimension, capability) {
             if !handlers.contains_key(&os_media_export_key(&descriptor.kind, &format)) {
                 missing.push(format!("{}:{}", descriptor.kind, format.as_str()));
             }
@@ -4354,7 +4405,7 @@ pub fn list_os_media_graph_vfs_children(
             });
         }
         let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
-        for format in required_os_media_import_formats(&descriptor.dimension) {
+        for format in required_os_media_import_formats(&descriptor.dimension, os_resource_media_capability(&descriptor.kind)) {
             let ext = format.as_str();
             rows.push(OsMediaGraphVfsNodeRecord {
                 id: os_media_graph_vfs_import_id(&instance_id, &format),
@@ -4372,7 +4423,7 @@ pub fn list_os_media_graph_vfs_children(
     }
     if parent_id == os_media_graph_vfs_outputs_folder_id(&instance_id) {
         let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
-        let formats = required_os_media_export_formats(&descriptor.dimension);
+        let formats = required_os_media_export_formats(&descriptor.dimension, os_resource_media_capability(&descriptor.kind));
         let mut rows = Vec::new();
         if let Some(registration) = registration.as_ref() {
             for spec in &registration.outputs {
@@ -4425,7 +4476,7 @@ mod tests {
     #[test]
     fn export_coverage_accepts_registered_handlers() {
         for descriptor in crate::registry::list_os_resource_descriptors() {
-            for format in required_os_media_export_formats(&descriptor.dimension) {
+            for format in required_os_media_export_formats(&descriptor.dimension, os_resource_media_capability(&descriptor.kind)) {
                 register_os_media_export_handler(&descriptor.kind, format, |_| {
                     Ok(OsMediaExportResult {
                         data: "export".into(),
@@ -4442,7 +4493,7 @@ mod tests {
     #[test]
     fn import_coverage_accepts_registered_handlers() {
         for descriptor in crate::registry::list_os_resource_descriptors() {
-            for format in required_os_media_import_formats(&descriptor.dimension) {
+            for format in required_os_media_import_formats(&descriptor.dimension, os_resource_media_capability(&descriptor.kind)) {
                 register_os_media_import_handler(&descriptor.kind, format, |_| Ok(serde_json::json!({})));
             }
         }

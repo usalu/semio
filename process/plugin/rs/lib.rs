@@ -688,7 +688,7 @@ pub mod app_3d {
     /// 🧠 Kernel + prefix memo: `hash(stock, enabled steps[0..i])` → solid handle, so cursor scrubbing and
     /// step edits only recompute the suffix that actually changed.
     struct ProcessKernelSession {
-        kernel: Box<dyn BrepKernel>,
+        kernel: Box<dyn BrepKernel + Send + Sync>,
         memo: HashMap<u64, GeometryHandle>,
         stock_signature: u64,
     }

@@ -55,6 +55,7 @@ use brepkit_topology::vertex::{Vertex, VertexId};
 use brepkit_topology::wire::{OrientedEdge, Wire, WireId};
 use brepkit_topology::{Topology, TopologyError};
 use kernel_3d_engine::{BrepError, BrepKernel, BrepTopology, ClosestPoint, FaceGroup, GeometryHandle, GeometryKind, MeshTransfer, ParamDomain, PointClassification, Vec3};
+use rayon::prelude::*;
 use semio_framework_core::{MeshExporter, MeshImporter};
 
 // #region Helpers
@@ -115,6 +116,11 @@ pub struct BrepkitKernel {
     topo: Topology,
     seq: u32,
     registry: std::collections::HashMap<String, Entry>,
+    /// 🐌➡️⚡ Coarse-tessellation cache for [`Self::boolean_mesh_sync`]'s torus fallback, keyed by
+    /// `(SolidId, deflection_bits)` — repeated booleans against the same static operand (the
+    /// slider-drag motivating case) skip re-tessellating that operand every call. Invalidated by
+    /// [`Self::invalidate_solid_derived_caches`] wherever a `SolidId` is mutated in place.
+    mesh_boolean_cache: std::collections::HashMap<(SolidId, u64), brepkit_operations::tessellate::TriangleMesh>,
 }
 
 impl Default for BrepkitKernel {
@@ -125,7 +131,25 @@ impl Default for BrepkitKernel {
 
 impl BrepkitKernel {
     pub fn new() -> Self {
-        Self { topo: Topology::new(), seq: 0, registry: std::collections::HashMap::new() }
+        Self { topo: Topology::new(), seq: 0, registry: std::collections::HashMap::new(), mesh_boolean_cache: std::collections::HashMap::new() }
+    }
+
+    /// 🧹 Evicts derived-data caches for a `SolidId` that's about to be mutated in place
+    /// (`translate`/`rotate`/`scale`/`heal_solid`/`convert_to_nurbs` reuse the same `SolidId`
+    /// rather than registering a fresh one, unlike every other mutating operation).
+    fn invalidate_solid_derived_caches(&mut self, solid: SolidId) {
+        self.mesh_boolean_cache.retain(|(id, _), _| *id != solid);
+    }
+
+    /// ⚡ Tessellates a solid at `deflection`, reusing a cached mesh when available.
+    fn cached_tessellate_solid(&mut self, solid: SolidId, deflection: f64) -> Result<brepkit_operations::tessellate::TriangleMesh, BrepError> {
+        let key = (solid, deflection.to_bits());
+        if let Some(mesh) = self.mesh_boolean_cache.get(&key) {
+            return Ok(mesh.clone());
+        }
+        let mesh = tessellate_solid_with_tolerance(&self.topo, solid, deflection, 0.2).map_err(Self::map_err)?;
+        self.mesh_boolean_cache.insert(key, mesh.clone());
+        Ok(mesh)
     }
 
     fn register_entity(&mut self, kind: GeometryKind, entity: Entity) -> GeometryHandle {
@@ -241,8 +265,8 @@ impl BrepkitKernel {
         // multi-second (wasm: ~20s) synchronous stall on the caller's thread.
         let deflection = 0.1;
         let tol = brepkit_math::tolerance::Tolerance::new();
-        let mesh_a = tessellate_solid_with_tolerance(&self.topo, a, deflection, 0.2).map_err(Self::map_err)?;
-        let mesh_b = tessellate_solid_with_tolerance(&self.topo, b, deflection, 0.2).map_err(Self::map_err)?;
+        let mesh_a = self.cached_tessellate_solid(a, deflection)?;
+        let mesh_b = self.cached_tessellate_solid(b, deflection)?;
         let mb = match mesh_boolean(&mesh_a, &mesh_b, op, tol.linear) {
             Ok(result) => result,
             Err(brepkit_operations::OperationsError::EmptyResult { .. }) if op == BooleanOp::Intersect => {
@@ -686,12 +710,14 @@ impl BrepkitKernel {
     pub fn translate_sync(&mut self, shape: &GeometryHandle, offset: Vec3) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         transform_solid(&mut self.topo, solid, &Mat4::translation(offset[0], offset[1], offset[2])).map_err(Self::map_err)?;
+        self.invalidate_solid_derived_caches(solid);
         Ok(shape.clone())
     }
 
     pub fn rotate_sync(&mut self, shape: &GeometryHandle, axis: Vec3, angle: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         transform_solid(&mut self.topo, solid, &Self::rotation_axis_matrix(axis, angle)?).map_err(Self::map_err)?;
+        self.invalidate_solid_derived_caches(solid);
         Ok(shape.clone())
     }
 
@@ -701,6 +727,7 @@ impl BrepkitKernel {
         let scale = Mat4::scale(factor, factor, factor);
         let back = Mat4::translation(center[0], center[1], center[2]);
         transform_solid(&mut self.topo, solid, &(back * scale * to_origin)).map_err(Self::map_err)?;
+        self.invalidate_solid_derived_caches(solid);
         Ok(shape.clone())
     }
 
@@ -1220,12 +1247,14 @@ impl BrepkitKernel {
     pub fn heal_solid_sync(&mut self, shape: &GeometryHandle, tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         brepkit_operations::heal::heal_solid(&mut self.topo, solid, tolerance).map_err(Self::map_err)?;
+        self.invalidate_solid_derived_caches(solid);
         Ok(shape.clone())
     }
 
     pub fn convert_to_nurbs_sync(&mut self, shape: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         brepkit_operations::heal::convert_to_bspline(&mut self.topo, solid).map_err(Self::map_err)?;
+        self.invalidate_solid_derived_caches(solid);
         Ok(shape.clone())
     }
 
@@ -1370,9 +1399,15 @@ impl BrepkitKernel {
         let entry = self.entry(handle)?;
         match &entry.entity {
             Entity::Solid(solid) => {
+                // 🧵 Tessellate each face in parallel (faces are independent); the triangle-index
+                // merge below stays sequential since index offsets depend on prior faces' output.
+                let faces = explorer::solid_faces(&self.topo, *solid).map_err(Self::map_topo_err)?;
+                let face_meshes: Result<Vec<_>, BrepError> = faces
+                    .par_iter()
+                    .map(|&face| tessellate_with_tolerance(&self.topo, face, tol, 0.2).map_err(Self::map_err).map(|mesh| (face, mesh)))
+                    .collect();
                 let mut transfer = MeshTransfer { position: Vec::new(), normal: Vec::new(), index: Vec::new(), edges: Vec::new(), points: Vec::new(), face_groups: Vec::new() };
-                for face in explorer::solid_faces(&self.topo, *solid).map_err(Self::map_topo_err)? {
-                    let mesh = tessellate_with_tolerance(&self.topo, face, tol, 0.2).map_err(Self::map_err)?;
+                for (face, mesh) in face_meshes? {
                     let base = transfer.position.len() / 3;
                     transfer.position.extend(mesh.positions.iter().flat_map(|p| [p.x() as f32, p.y() as f32, p.z() as f32]));
                     transfer.normal.extend(mesh.normals.iter().flat_map(|n| [n.x() as f32, n.y() as f32, n.z() as f32]));
@@ -1480,12 +1515,26 @@ impl BrepkitKernel {
     }
 
     pub fn dispose_sync(&mut self, handle: &GeometryHandle) {
-        self.registry.remove(handle.as_str());
+        if let Some(Entry { entity: Entity::Solid(solid), .. }) = self.registry.remove(handle.as_str()) {
+            self.invalidate_solid_derived_caches(solid);
+        }
     }
 
     /// 🧹 Drops registry entries whose handles are not in the live reference set.
     pub fn retain_sync(&mut self, live: &std::collections::HashSet<String>) {
+        let disposed_solids: Vec<SolidId> = self
+            .registry
+            .iter()
+            .filter(|(handle, _)| !live.contains(handle.as_str()))
+            .filter_map(|(_, entry)| match entry.entity {
+                Entity::Solid(solid) => Some(solid),
+                _ => None,
+            })
+            .collect();
         self.registry.retain(|handle, _| live.contains(handle));
+        for solid in disposed_solids {
+            self.invalidate_solid_derived_caches(solid);
+        }
     }
 
     pub fn registry_len(&self) -> usize {
@@ -1763,6 +1812,112 @@ impl BrepKernel for BrepkitKernel {
 }
 // #endregion 🔖Kernel
 
+// #region 🔖MeshInterop
+/// 🌉 Flattens a kernel `MeshTransfer` (position/normal/index/face_groups) into framework-core `MeshData`, reusing `mesh_from_indexed_with_face_groups` so picked triangles still resolve back to their B-Rep face id.
+pub fn mesh_data_from_mesh_transfer(transfer: &MeshTransfer) -> semio_framework_core::MeshData {
+    let face_groups: Vec<(u32, u32, u32)> = transfer
+        .face_groups
+        .iter()
+        .map(|group| (group.entity_id.parse().unwrap_or(0), group.start, group.count))
+        .collect();
+    semio_framework_core::mesh_from_indexed_with_face_groups(&transfer.position, &transfer.normal, &transfer.index, &face_groups)
+}
+
+/// 🔌 Format-keyed solid export codec operating on `GeometryHandle`s directly (not tessellated `MeshData`) — thin wrappers around `BrepkitKernel`'s own STEP/STL/OBJ/GLB writers; no codec logic lives here.
+pub trait SolidExporter: Send + Sync {
+    fn format(&self) -> semio_framework_core::OsMediaFormat;
+    fn export(&self, kernel: &BrepkitKernel, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError>;
+}
+
+/// 🔌 Format-keyed solid import codec; see `SolidExporter`. Returns every solid the payload contained (STEP files may hold more than one).
+pub trait SolidImporter: Send + Sync {
+    fn format(&self) -> semio_framework_core::OsMediaFormat;
+    fn import(&self, kernel: &mut BrepkitKernel, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError>;
+}
+
+pub struct StepSolidExporter;
+impl SolidExporter for StepSolidExporter {
+    fn format(&self) -> semio_framework_core::OsMediaFormat {
+        semio_framework_core::OsMediaFormat::Step
+    }
+    fn export(&self, kernel: &BrepkitKernel, shapes: &[GeometryHandle], _deflection: f64) -> Result<Vec<u8>, BrepError> {
+        kernel.export_step_sync(shapes).map(|text| text.into_bytes())
+    }
+}
+
+pub struct StepSolidImporter;
+impl SolidImporter for StepSolidImporter {
+    fn format(&self) -> semio_framework_core::OsMediaFormat {
+        semio_framework_core::OsMediaFormat::Step
+    }
+    fn import(&self, kernel: &mut BrepkitKernel, bytes: &[u8], _tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+        let text = std::str::from_utf8(bytes).map_err(|error| BrepError::InvalidInput(error.to_string()))?;
+        kernel.import_step_sync(text)
+    }
+}
+
+pub struct StlSolidExporter;
+impl SolidExporter for StlSolidExporter {
+    fn format(&self) -> semio_framework_core::OsMediaFormat {
+        semio_framework_core::OsMediaFormat::Stl
+    }
+    fn export(&self, kernel: &BrepkitKernel, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
+        kernel.export_stl_sync(shapes, deflection)
+    }
+}
+
+pub struct StlSolidImporter;
+impl SolidImporter for StlSolidImporter {
+    fn format(&self) -> semio_framework_core::OsMediaFormat {
+        semio_framework_core::OsMediaFormat::Stl
+    }
+    fn import(&self, kernel: &mut BrepkitKernel, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+        kernel.import_stl_sync(bytes, tolerance).map(|handle| vec![handle])
+    }
+}
+
+pub struct ObjSolidExporter;
+impl SolidExporter for ObjSolidExporter {
+    fn format(&self) -> semio_framework_core::OsMediaFormat {
+        semio_framework_core::OsMediaFormat::Obj
+    }
+    fn export(&self, kernel: &BrepkitKernel, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
+        kernel.export_obj_sync(shapes, deflection).map(|text| text.into_bytes())
+    }
+}
+
+pub struct ObjSolidImporter;
+impl SolidImporter for ObjSolidImporter {
+    fn format(&self) -> semio_framework_core::OsMediaFormat {
+        semio_framework_core::OsMediaFormat::Obj
+    }
+    fn import(&self, kernel: &mut BrepkitKernel, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+        let text = std::str::from_utf8(bytes).map_err(|error| BrepError::InvalidInput(error.to_string()))?;
+        kernel.import_obj_sync(text, tolerance).map(|handle| vec![handle])
+    }
+}
+
+pub struct GlbSolidExporter;
+impl SolidExporter for GlbSolidExporter {
+    fn format(&self) -> semio_framework_core::OsMediaFormat {
+        semio_framework_core::OsMediaFormat::Glb
+    }
+    fn export(&self, kernel: &BrepkitKernel, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
+        kernel.export_glb_sync(shapes, deflection)
+    }
+}
+
+pub struct GlbSolidImporter;
+impl SolidImporter for GlbSolidImporter {
+    fn format(&self) -> semio_framework_core::OsMediaFormat {
+        semio_framework_core::OsMediaFormat::Glb
+    }
+    fn import(&self, kernel: &mut BrepkitKernel, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+        kernel.import_glb_sync(bytes, tolerance).map(|handle| vec![handle])
+    }
+}
+// #endregion 🔖MeshInterop
+
 // #region 🔖Tests
 #[cfg(test)]
 mod tests {
@@ -1808,6 +1963,45 @@ mod tests {
         let mesh = kernel.tessellate_sync(&imported, 0.1).unwrap();
         assert!(!mesh.position.is_empty());
         assert!(!mesh.index.is_empty());
+    }
+
+    #[test]
+    fn glb_export_import_round_trips_a_box_through_the_mesh_codec() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
+        let bytes = kernel.export_glb_sync(&[solid], 0.1).unwrap();
+        assert!(!bytes.is_empty());
+        let imported = kernel.import_glb_sync(&bytes, 0.1).unwrap();
+        let mesh = kernel.tessellate_sync(&imported, 0.1).unwrap();
+        assert!(!mesh.position.is_empty());
+        assert!(!mesh.index.is_empty());
+    }
+
+    #[test]
+    fn tessellate_to_mesh_data_carries_face_ids() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
+        let mesh = kernel.tessellate_to_mesh_data_sync(&solid, 0.1).unwrap();
+        assert_eq!(mesh.face_ids.len(), mesh.triangle_count());
+    }
+
+    #[test]
+    fn solid_exporters_and_importers_round_trip_a_box_per_format() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
+        let codecs: Vec<(Box<dyn SolidExporter>, Box<dyn SolidImporter>)> = vec![
+            (Box::new(StepSolidExporter), Box::new(StepSolidImporter)),
+            (Box::new(StlSolidExporter), Box::new(StlSolidImporter)),
+            (Box::new(ObjSolidExporter), Box::new(ObjSolidImporter)),
+            (Box::new(GlbSolidExporter), Box::new(GlbSolidImporter)),
+        ];
+        for (exporter, importer) in codecs {
+            assert_eq!(exporter.format(), importer.format());
+            let bytes = exporter.export(&kernel, &[solid.clone()], 0.1).expect("export");
+            assert!(!bytes.is_empty());
+            let imported = importer.import(&mut kernel, &bytes, 0.1).expect("import");
+            assert!(!imported.is_empty());
+        }
     }
 
     #[test]

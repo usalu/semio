@@ -50,6 +50,24 @@ impl Puzzle5dPrecomputeSession {
 }
 //#endregion 🔖BrushEngine
 
+//#region 🔖KindCompatibility
+pub const PUZZLE5D_DEFAULT_MANIFEST_ID: &str = "puzzle5d-default";
+
+/// 🧲 Looks up whether two grip kinds are compatible per the `puzzle5d-default` manifest's `kindCompatibility` rows —
+/// the single shared table both the 2D board and 3D world honor so brush/fill suggestions agree across projections.
+pub fn puzzle5d_grip_kinds_compatible(source_kind: &str, target_kind: &str) -> bool {
+    let Some(manifest) = mathematical_graph_manifest::manifest_by_id(PUZZLE5D_DEFAULT_MANIFEST_ID) else {
+        return false;
+    };
+    manifest.kind_compatibility.iter().any(|row| {
+        let source = row.get("source").and_then(|value| value.as_str());
+        let target = row.get("target").and_then(|value| value.as_str());
+        let bidirectional = row.get("bidirectional").and_then(|value| value.as_bool()).unwrap_or(false);
+        (source == Some(source_kind) && target == Some(target_kind)) || (bidirectional && source == Some(target_kind) && target == Some(source_kind))
+    })
+}
+//#endregion 🔖KindCompatibility
+
 use vcs::{
     create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
 };
@@ -197,5 +215,13 @@ mod tests {
             })
             .expect("apply");
         assert_eq!(store.projection().expect("projection").revision, 5);
+    }
+
+    #[test]
+    fn puzzle5d_grip_kinds_compatible_reads_manifest_rows() {
+        assert!(puzzle5d_grip_kinds_compatible("port", "port"));
+        assert!(puzzle5d_grip_kinds_compatible("vortex", "vortex"));
+        assert!(!puzzle5d_grip_kinds_compatible("port", "vortex"));
+        assert!(!puzzle5d_grip_kinds_compatible("unknown-kind", "port"));
     }
 }

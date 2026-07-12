@@ -1,0 +1,26 @@
+# #region 🔖Header
+# 2026 Ueli Saluz
+# AGPL-3.0
+# HubStorage implementation over SQLite (async, via sqlx) — the zero-touch default for local dev
+# and single-user self-hosting; no external database service required.
+# #endregion 🔖Header
+
+[package]
+name = "os-hub-storage-sqlite"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+async-trait = "0.1"
+serde_json = "1.0"
+uuid = { version = "1.20", features = ["v7"] }
+sqlx_core = { package = "sqlx-core", version = "0.8" }
+sqlx_sqlite = { package = "sqlx-sqlite", version = "0.8" }
+semio-framework-core = { path = "../../../../../core/rs" }
+os-hub-storage = { path = "../../rs" }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full", "test-util"] }

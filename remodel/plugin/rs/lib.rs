@@ -231,18 +231,34 @@ mod tests {
     use super::*;
 
     #[test]
-    fn initial_document_renders_placeholder_mesh_in_main_window() {
+    fn initial_document_carries_placeholder_mesh_into_world3d_json() {
+        let app = RemodelPlayApp;
+        let document_json = app.initial_document_json();
+        let scene = parse_scene(&document_json);
+        assert!(scene.result.is_some());
+        let meshes_json = world_meshes_json(&scene);
+        assert!(meshes_json.contains(REMODEL_MESH_ID));
+        let instances_json = world_instances_json(&scene);
+        assert!(instances_json.contains(REMODEL_MESH_ID));
+    }
+
+    #[test]
+    fn render_does_not_panic_for_known_body_keys() {
+        let app = RemodelPlayApp;
+        let document_json = app.initial_document_json();
+        let view_state = ViewState::default();
+        let _ = app.render(REMODEL_PLAY_BODY_MAIN, &document_json, &view_state);
+        let _ = app.render(REMODEL_PLAY_BODY_DOCUMENT, &document_json, &view_state);
+    }
+
+    #[test]
+    fn reset_placeholder_mesh_action_returns_set_document_patch() {
         let mut app = RemodelPlayApp;
         let document_json = app.initial_document_json();
         let view_state = ViewState::default();
-        let node = app.render(REMODEL_PLAY_BODY_MAIN, &document_json, &view_state);
-        let scene_json = serde_json::to_value(&node).expect("ui node json");
-        let meshes_json = scene_json
-            .pointer("/component/world3d/meshesJson")
-            .and_then(|value| value.as_str())
-            .expect("meshes_json present");
-        assert!(meshes_json.contains(REMODEL_MESH_ID));
-        let _ = app.handle_action_patch_ops("resetPlaceholderMesh", None, &document_json, &view_state);
+        let ops = app.handle_action_patch_ops("resetPlaceholderMesh", None, &document_json, &view_state);
+        assert_eq!(ops.len(), 1);
+        assert!(ops[0].contains("\"op\":\"setDocument\""));
     }
 }
 //#endregion 🧪Tests

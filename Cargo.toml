@@ -96,6 +96,7 @@ members = [
     "kernel/3d/brep/rs",
     "kernel/3d/mesh/rs",
     "kernel/3d/scene/rs",
+    "kernel/3d/spatial/rs",
     "lowpoly/core/rs",
     "lowpoly/plugin/rs",
     "kernel/2d/engine/rs",

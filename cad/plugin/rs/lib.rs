@@ -510,6 +510,7 @@ mod interaction {
         ExprPathSegment, ExprPathTarget, InteractionSpec,
     };
     use kernel_3d_brepkit::BrepkitKernel;
+    use kernel_3d_engine::BrepKernel;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use std::collections::HashMap;
@@ -2261,13 +2262,13 @@ use kernel_3d_engine::{block_on, BrepKernel, MeshTransfer};
 use semio_framework_core::{SurfaceKind, mesh_from_indexed};
 use std::sync::{Mutex, OnceLock};
 
-static CAD_BREP_KERNEL: OnceLock<Mutex<BrepkitKernel>> = OnceLock::new();
+static CAD_BREP_KERNEL: OnceLock<Mutex<Box<dyn BrepKernel + Send + Sync>>> = OnceLock::new();
 
 /// @emoji 📦 Universal fallback extent for typologies with no authored geometry to measure.
 const CAD_DEFAULT_TYPOLOGY_EXTENT: [f64; 3] = [1.0, 1.0, 1.0];
 
-fn cad_brep_kernel() -> &'static Mutex<BrepkitKernel> {
-    CAD_BREP_KERNEL.get_or_init(|| Mutex::new(BrepkitKernel::new()))
+fn cad_brep_kernel() -> &'static Mutex<Box<dyn BrepKernel + Send + Sync>> {
+    CAD_BREP_KERNEL.get_or_init(|| Mutex::new(Box::new(BrepkitKernel::new())))
 }
 
 /// @emoji 📐 Tessellates a typology's primitive sized from authored geometry (or a universal

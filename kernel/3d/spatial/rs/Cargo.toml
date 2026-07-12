@@ -1,0 +1,11 @@
+[package]
+name = "kernel_3d_spatial"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+kernel_3d_engine = { path = "../../brep/engine/rs" }

@@ -4,7 +4,6 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/index.ts";
-import { contributorPluginIdsFor, resolvePluginRegistryId } from "../../core/js/index.ts";
 
 //#region 🔖PluginRegistryEntry
 export type PluginRegistryEntry = {
@@ -133,11 +132,27 @@ export function isStudioPluginFilter(pluginFilter?: string): boolean {
   return !pluginFilter || pluginFilter === "s";
 }
 
-/** @emoji 🎯 Resolves wasm component ids to catalog for one playground dev session. */
+/**
+ * 🎯 Resolves a raw playground filter (a variant id like "puzzle5d", or an already-bare crate
+ * pluginId like "note") to the set of crate pluginIds that must be built for one dev session: the
+ * target crate itself plus every crate whose declared `contributes` intersects the target crate
+ * `consumes` (per `[package.metadata.semio]` in each crate Cargo.toml — no more registry-id
+ * indirection through framework/core/js).
+ */
 export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string): readonly string[] {
-  const registryId = resolvePluginRegistryId(filterPlaygroundPlugin);
-  const ids = new Set<string>([registryId]);
-  for (const extra of contributorPluginIdsFor(registryId)) ids.add(extra);
+  const repoRoot = getWorkspaceRoot();
+  const allEntries = generatePluginRegistry(repoRoot);
+  const playgrounds = generatePlaygroundRegistry(repoRoot);
+  const variantRow = playgrounds.find((p) => p.variant === filterPlaygroundPlugin);
+  const targetPluginId = variantRow?.pluginId ?? filterPlaygroundPlugin;
+  const targetEntry = allEntries.find((e) => e.pluginId === targetPluginId);
+  const ids = new Set<string>([targetPluginId]);
+  if (targetEntry) {
+    for (const entry of allEntries) {
+      if (entry.pluginId === targetPluginId) continue;
+      if (entry.contributes.some((topic) => targetEntry.consumes.includes(topic))) ids.add(entry.pluginId);
+    }
+  }
   return [...ids];
 }
 

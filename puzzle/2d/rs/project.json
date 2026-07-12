@@ -1,0 +1,23 @@
+{
+  "name": "@semio-tech/puzzle-2d-rs",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "wasm": {
+      "executor": "nx:run-commands",
+      "inputs": ["{projectRoot}/Cargo.toml", "{projectRoot}/lib.rs", "{projectRoot}/script.ts", "{workspaceRoot}/Cargo.toml", "{workspaceRoot}/Cargo.lock"],
+      "outputs": ["{projectRoot}/pkg"],
+      "options": {
+        "cwd": "puzzle/2d/rs",
+        "command": "bun ./script.ts wasm"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "puzzle/2d/rs",
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

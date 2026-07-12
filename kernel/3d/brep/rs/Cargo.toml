@@ -18,6 +18,7 @@ brepkit-math = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6
 brepkit-geometry = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }
 brepkit-check = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }
 base64 = "0.22"
+rayon = "1.10.0"
 
 [dev-dependencies]
 criterion = { version = "0.5", default-features = false, features = ["html_reports"] }

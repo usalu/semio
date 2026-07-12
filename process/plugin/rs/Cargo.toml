@@ -12,7 +12,7 @@ package = "semio:process"
 [[package.metadata.semio.playground]]
 variant = "process3d"
 app = "process3d-play"
-aliases = ["3d"]
+aliases = ["process 3d"]
 ports = { react = 6022, wgpu = 6122 }
 
 [lib]

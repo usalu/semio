@@ -1509,6 +1509,26 @@ pub struct Puzzle3dPrecomputeSession {
 mod tests {
     use super::*;
 
+    /// 🔗 Keeps the example fixture's scene-authored kind catalog in sync with the compile-time `puzzle3d-default` manifest.
+    #[test]
+    fn concrete_forest_kind_catalog_matches_puzzle3d_default_manifest() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../example/concrete-forest.3d.json")).unwrap();
+        let catalogs: KindCatalogBundle = serde_json::from_value(fixture["meta"]["kindCatalogs"].clone()).unwrap();
+        let manifest = mathematical_graph_manifest::manifest_by_id("puzzle3d-default").expect("puzzle3d-default manifest must be registered");
+        let wire_kind_ids: std::collections::BTreeSet<_> = manifest.wire_kinds.iter().map(|row| row.id.as_str()).collect();
+        let edge_kind_ids: std::collections::BTreeSet<_> = manifest.edge_kinds.iter().map(|row| row.id.as_str()).collect();
+        for vortex in &catalogs.vortices {
+            if let Some(default_cable_kind) = &vortex.default_cable_kind {
+                assert!(wire_kind_ids.contains(default_cable_kind.as_str()), "vortex kind {:?} references unknown wire kind {default_cable_kind:?}", vortex.id);
+            }
+        }
+        for cable in &catalogs.cables {
+            if let Some(default_attraction_kind) = &cable.default_attraction_kind {
+                assert!(edge_kind_ids.contains(default_attraction_kind.as_str()), "cable kind {:?} references unknown edge kind {default_attraction_kind:?}", cable.id);
+            }
+        }
+    }
+
     #[test]
     fn world_volumes_contain_aabb_respects_oriented_box() {
         let volumes = vec![WorldVolumeProps { id: "v1".to_string(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(serde_json::json!([4.0, 4.0, 4.0])) }];

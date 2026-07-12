@@ -247,7 +247,11 @@ impl BoardQueryableGraph {
                 fixture["nodes"] = Value::Array(nodes);
             }
         }
-        Self::from_fixture_json(&serde_json::to_string(&fixture).map_err(|e| e.to_string())?, Some("nakagin"))
+        Self::from_fixture_json(&serde_json::to_string(&fixture).map_err(|e| e.to_string())?, Some("puzzle3d-default"))
+    }
+
+    pub fn from_puzzle5d_fixture_json(json: &str) -> Result<Self, String> {
+        Self::from_fixture_json(json, Some("puzzle5d-default"))
     }
 }
 

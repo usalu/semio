@@ -7,11 +7,11 @@ use neural_engine::{channel_output, Atom, Cardinality, ChannelSpec, Dictionary, 
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock, RwLock};
 
-static KERNEL: OnceLock<RwLock<BrepkitKernel>> = OnceLock::new();
+static KERNEL: OnceLock<RwLock<Box<dyn BrepKernel + Send + Sync>>> = OnceLock::new();
 static MESH_CACHE: OnceLock<Mutex<HashMap<(String, u64), String>>> = OnceLock::new();
 
-fn kernel() -> &'static RwLock<BrepkitKernel> {
-    KERNEL.get_or_init(|| RwLock::new(BrepkitKernel::new()))
+fn kernel() -> &'static RwLock<Box<dyn BrepKernel + Send + Sync>> {
+    KERNEL.get_or_init(|| RwLock::new(Box::new(BrepkitKernel::new())))
 }
 
 fn mesh_cache() -> &'static Mutex<HashMap<(String, u64), String>> {

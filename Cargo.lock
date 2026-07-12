@@ -4530,6 +4530,7 @@ dependencies = [
  "brepkit-topology",
  "criterion",
  "kernel_3d_engine",
+ "rayon",
  "semio-framework-core",
 ]
 
@@ -4555,6 +4556,13 @@ dependencies = [
 [[package]]
 name = "kernel_3d_scene"
 version = "0.1.0"
+
+[[package]]
+name = "kernel_3d_spatial"
+version = "0.1.0"
+dependencies = [
+ "kernel_3d_engine",
+]
 
 [[package]]
 name = "khronos-egl"
@@ -5867,6 +5875,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "os-hub-storage"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "semio-framework-core",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "outref"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6365,7 +6384,6 @@ dependencies = [
  "flow_core",
  "flow_module_brep",
  "flow_module_draw",
- "kernel_3d_brepkit",
  "kernel_3d_engine",
  "kernel_3d_scene",
  "procedural_2d",
@@ -6467,7 +6485,6 @@ version = "0.1.0"
 dependencies = [
  "flow_core",
  "flow_module_brep",
- "kernel_3d_brepkit",
  "kernel_3d_engine",
  "protocol",
  "semio-framework-core",
@@ -6532,6 +6549,7 @@ name = "puzzle_3d"
 version = "0.1.0"
 dependencies = [
  "js-sys",
+ "mathematical_graph_manifest",
  "nalgebra 0.33.3",
  "parry3d",
  "serde",
@@ -6545,6 +6563,7 @@ dependencies = [
 name = "puzzle_5d"
 version = "0.1.0"
 dependencies = [
+ "mathematical_graph_manifest",
  "puzzle_3d",
  "serde",
  "serde_json",
@@ -7514,6 +7533,7 @@ name = "semio-framework-os"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "kernel_3d_brepkit",
  "png 0.17.16",
  "pretty_assertions",
  "resvg",
@@ -8043,6 +8063,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-plugin",
+ "serde",
  "serde_json",
  "sourcing_curate",
  "wasm-bindgen",

@@ -36,7 +36,7 @@ function collectHostSignatureViolations(root: string): string[] {
   for (const entry of readdirSync(componentsDir, { withFileTypes: true })) {
     if (!entry.isFile() || !entry.name.endsWith(".tsx") || HOST_FILE_EXEMPT.has(entry.name)) continue;
     const text = readFileSync(join(componentsDir, entry.name), "utf8");
-    const hostExports = [...text.matchAll(/^export function ([A-Z][A-Za-z0-9]*Host)\(\{[^)]*readonly node: UiComponentSceneNode/gm)].map((m) => m[1]!);
+    const hostExports = [...text.matchAll(/^export function ([A-Z][A-Za-z0-9]*Host)\([^)]*: ComponentSceneHostProps\)/gm)].map((m) => m[1]!);
     if (hostExports.length === 0) {
       violations.push(`components/${entry.name}: no exported component matching XxxHost(...)`);
     } else if (hostExports.length > 1) {
