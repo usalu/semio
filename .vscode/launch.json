@@ -919,6 +919,57 @@
       }
     },
     {
+      "name": "🛠️dev🪚process🏙️3d⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:process:3d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PROCESS_3D_PLAY_PORT": "6022",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 195
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6022)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🪚process🏙️3d🧊wgpu🌐wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:process:3d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PROCESS_3D_PLAY_PORT": "6122",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 195.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6122)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🪚process🏙️3d🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native process3d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 195.2
+      }
+    },
+    {
       "name": "🛠️dev🔧procedural🏙️3d🧩hexagonal🧱column⚛️react",
       "type": "node-terminal",
       "request": "launch",

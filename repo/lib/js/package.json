@@ -9,7 +9,7 @@
   },
   "scripts": {
     "lint": "bun ./script.ts lint",
-    "test": "bun test ./index.test.ts"
+    "test": "bun ./script.ts test"
   },
   "devDependencies": {
     "@nx/devkit": "21.4.1",

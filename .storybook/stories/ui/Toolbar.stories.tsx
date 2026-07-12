@@ -14,6 +14,7 @@
 import { ButtonGroup, ButtonGroupItem, Ribbon, ToggleGroup, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone, type RibbonRow } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
+import { useState, type ComponentType } from "react";
 
 // #region 🌙Toolbar
 
@@ -200,5 +201,135 @@ export const RibbonLevels: Story = {
     );
   },
 };
+
+// #region 🗂️RecursiveCategoryGroups
+
+type DemoToolLeaf = { readonly id: string; readonly icon: ComponentType<{ size?: number; className?: string }> };
+type DemoToolNode =
+  | { readonly id: string; readonly label: string; readonly icon: DemoToolLeaf["icon"]; readonly kind: "leaves"; readonly leaves: readonly DemoToolLeaf[] }
+  | { readonly id: string; readonly label: string; readonly icon: DemoToolLeaf["icon"]; readonly kind: "group"; readonly children: readonly DemoToolNode[] };
+
+const RECURSIVE_CATEGORY_DEMO_TREE: readonly DemoToolNode[] = [
+  {
+    id: "selection",
+    label: "Selection",
+    icon: MousePointer,
+    kind: "leaves",
+    leaves: [
+      { id: "direct", icon: MousePointer },
+      { id: "marquee", icon: Hand },
+    ],
+  },
+  {
+    id: "tools",
+    label: "Tools",
+    icon: Move,
+    kind: "group",
+    children: [
+      {
+        id: "transform",
+        label: "Transform",
+        icon: Move,
+        kind: "leaves",
+        leaves: [
+          { id: "move", icon: Move },
+          { id: "rotate", icon: RotateCw },
+          { id: "zoom", icon: ZoomIn },
+        ],
+      },
+      {
+        id: "view",
+        label: "View",
+        icon: Eye,
+        kind: "leaves",
+        leaves: [
+          { id: "show", icon: Eye },
+          { id: "hide", icon: EyeOff },
+        ],
+      },
+    ],
+  },
+  {
+    id: "actions",
+    label: "Actions",
+    icon: RotateCcw,
+    kind: "leaves",
+    leaves: [
+      { id: "undo", icon: RotateCcw },
+      { id: "redo", icon: RotateCw },
+    ],
+  },
+];
+
+/** @emoji 🗂️ Builds `up`-stacked ribbon rows from a demo tool tree: at most one active group per level, activating a level appends its children as another line, recursing until a leaves group is reached or nothing is active. Mirrors {@link buildToolbarRibbonSegments} in `@semio-tech/framework-renderer-react` for storybook without pulling in the full renderer package. */
+function buildRecursiveCategoryRows(tree: readonly DemoToolNode[], activePath: readonly string[], onActivate: (depth: number, value: string) => void): RibbonRow[] {
+  const rows: RibbonRow[] = [];
+  let level = tree;
+  let depth = 0;
+  while (true) {
+    rows.push({
+      key: `picker-${depth}`,
+      content: (
+        <ToolbarZone>
+          <ToolbarGroup>
+            <ToolbarItem>
+              <ToggleGroup
+                kind="single"
+                value={activePath[depth] ?? ""}
+                onValueChange={(value) => onActivate(depth, value)}
+                items={level.map((node) => ({ value: node.id, id: `ui.toolbar.demo.group.${node.id}`, icon: <node.icon className="size-tiny" aria-hidden />, text: node.label }))}
+              />
+            </ToolbarItem>
+          </ToolbarGroup>
+        </ToolbarZone>
+      ),
+    });
+    const active = level.find((node) => node.id === activePath[depth]);
+    if (!active) break;
+    if (active.kind === "leaves") {
+      rows.push({
+        key: `leaves-${depth}`,
+        content: (
+          <ToolbarZone>
+            <ToolbarGroup>
+              <ToolbarItem>
+                <ButtonGroup>
+                  {active.leaves.map((leaf) => (
+                    <ButtonGroupItem key={leaf.id} icon={<leaf.icon className="size-tiny" aria-hidden />} />
+                  ))}
+                </ButtonGroup>
+              </ToolbarItem>
+            </ToolbarGroup>
+          </ToolbarZone>
+        ),
+      });
+      break;
+    }
+    level = active.children;
+    depth += 1;
+  }
+  return rows;
+}
+
+const RecursiveCategoryGroupsDemo = () => {
+  const [activePath, setActivePath] = useState<readonly string[]>([]);
+  const onActivate = (depth: number, value: string) => {
+    setActivePath((previous) => (value ? [...previous.slice(0, depth), value] : previous.slice(0, depth)));
+  };
+  return (
+    <div className="flex flex-col items-start gap-double">
+      <span className="text-xs text-muted-foreground">Click a category to expand a line above it; click the active one again to collapse it. Only one group is active per level, and "Tools" recurses into a second picker.</span>
+      <Ribbon id="ui.toolbar.demo" direction="up" rows={buildRecursiveCategoryRows(RECURSIVE_CATEGORY_DEMO_TREE, activePath, onActivate)} />
+    </div>
+  );
+};
+
+export const RecursiveCategoryGroups: Story = {
+  name: "Recursive Category Groups (selection / tools / actions)",
+  args: { children: null },
+  render: () => <RecursiveCategoryGroupsDemo />,
+};
+
+// #endregion 🗂️RecursiveCategoryGroups
 
 // #endregion 🌙Toolbar

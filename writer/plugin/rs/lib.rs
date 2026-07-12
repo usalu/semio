@@ -2312,7 +2312,7 @@ mod tests {
         assert!(catalogue_json.contains("Cypher-inspired"));
         let tools = app.tools(&document, &ViewState::default());
         let tools_json = serde_json::to_string(&tools).unwrap();
-        assert!(tools_json.contains("\"Actions\""));
+        assert!(tools_json.contains("\"category\":\"actions\""));
         assert!(tools_json.contains("\"Format\""));
         assert!(tools_json.contains("\"Lint\""));
         let measures = app.window_measures(&document, &ViewState::default());

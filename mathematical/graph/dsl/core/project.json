@@ -7,7 +7,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "mathematical/graph/dsl/core",
-        "command": "bun test"
+        "command": "bun ./script.ts test"
       }
     }
   }

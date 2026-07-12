@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "repo/client/vscode",
-        "command": "vite build --watch",
+        "command": "bun ./script.ts dev",
         "forwardAllArgs": true
       }
     },
@@ -14,7 +14,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "repo/client/vscode",
-        "command": "vscode-test",
+        "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -22,7 +22,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "repo/client/vscode",
-        "command": "vite build && vite build --config vite.test.config.ts",
+        "command": "bun ./script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -30,7 +30,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "repo/client/vscode",
-        "command": "bunx eslint --max-warnings 0 --config eslint.config.ts .",
+        "command": "bun ./script.ts lint",
         "forwardAllArgs": true
       }
     },
@@ -39,7 +39,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "repo/client/vscode",
-        "command": "bunx vsce package --no-dependencies --out repo.vsix",
+        "command": "bun ./script.ts build-vsix",
         "forwardAllArgs": true
       }
     }

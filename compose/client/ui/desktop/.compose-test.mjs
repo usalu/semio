@@ -4,9 +4,18 @@
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineDesktopTestConfig } from "./test/defineConfig.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/**
+ * @param {{ files: string; label?: string; workspaceFolder?: string }} config
+ */
+function defineDesktopTestConfig(config) {
+  if (!config?.files || typeof config.files !== "string") {
+    throw new Error("defineDesktopTestConfig: `files` (path to suite module exporting run(ctx)) is required");
+  }
+  return config;
+}
 
 export default defineDesktopTestConfig({
   label: "integration",

@@ -838,6 +838,7 @@ function WorldInstanceNode({
             textureBase64={paintTextureBase64}
             flatShading={flatShading}
             onClick={(event) => {
+              console.log("[DEBUG] instance mesh onClick", instance.id, "pickEnabled", pickEnabled, "onPaintAt", Boolean(onPaintAt));
               if (onPaintAt) {
                 paintFromHit(instance.id, meshData, event);
                 return;
@@ -2050,6 +2051,7 @@ export function World3dHost({ node, onAction }: { readonly node: UiComponentScen
 
   const handleEmptyClick = useCallback(
     (event: MouseEvent) => {
+      console.log("[DEBUG] handleEmptyClick (onPointerMissed)");
       if (wasMarqueeDragRef.current) return;
       if (selection.engagementSessionActive || paintMode) return;
       dispatch("worldPick", { granularity: selectionMode, id: null, merge: instanceMergeArg(marqueeModeFromModifiers(event)) });

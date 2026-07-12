@@ -11,8 +11,9 @@
 
 // #endregion 🧲Header
 
-import { Canvas, HorizontalWindows, ToolbarItem, ToolbarZone, VerticalWindows, Window } from "@semio-tech/ui-react";
+import { ButtonGroup, ButtonGroupItem, Canvas, createIconComponent, HorizontalWindows, Ribbon, ToggleGroup, ToolbarGroup, ToolbarItem, ToolbarZone, VerticalWindows, Window, type RibbonRow } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
+import { useState } from "react";
 
 // #region 🌊Window
 
@@ -131,6 +132,115 @@ export const WithToolbar: Story = {
       <Window {...args} fill />
     </div>
   ),
+};
+
+export const NoTools: Story = {
+  name: "No Tools (bottom-left chrome still present, disabled)",
+  args: {
+    id: "no-tools-window",
+    children: <WindowContent title="Window without Tools" />,
+    fill: true,
+  },
+  render: (args) => (
+    <div className="h-[400px] w-[600px]">
+      <Window {...args} fill />
+    </div>
+  ),
+};
+
+const MousePointer = createIconComponent("mouse-pointer");
+const Wrench = createIconComponent("wrench");
+const Sparkles = createIconComponent("sparkles");
+const Move = createIconComponent("move");
+const RotateCw = createIconComponent("rotate-cw");
+const Maximize2 = createIconComponent("maximize2");
+
+type CategoryDemoLeaf = { readonly id: string; readonly icon: typeof MousePointer };
+type CategoryDemoNode = { readonly id: string; readonly label: string; readonly icon: typeof MousePointer } & (
+  | { readonly kind: "leaves"; readonly leaves: readonly CategoryDemoLeaf[] }
+  | { readonly kind: "group"; readonly children: readonly CategoryDemoNode[] }
+);
+
+const WINDOW_CATEGORY_DEMO_TREE: readonly CategoryDemoNode[] = [
+  { id: "selection", label: "Selection", icon: MousePointer, kind: "leaves", leaves: [{ id: "direct", icon: MousePointer }] },
+  {
+    id: "tools",
+    label: "Tools",
+    icon: Wrench,
+    kind: "group",
+    children: [{ id: "transform", label: "Transform", icon: Move, kind: "leaves", leaves: [{ id: "move", icon: Move }, { id: "rotate", icon: RotateCw }, { id: "scale", icon: Maximize2 }] }],
+  },
+  { id: "actions", label: "Actions", icon: Sparkles, kind: "leaves", leaves: [{ id: "run", icon: Sparkles }] },
+];
+
+/** @emoji 🗂️ Same at-most-one-active-per-level recursion as the "Recursive Category Groups" Toolbar story, sized for a window's bottom-left toolbar slot. */
+function buildWindowCategoryRows(tree: readonly CategoryDemoNode[], activePath: readonly string[], onActivate: (depth: number, value: string) => void): RibbonRow[] {
+  const rows: RibbonRow[] = [];
+  let level = tree;
+  let depth = 0;
+  while (true) {
+    rows.push({
+      key: `picker-${depth}`,
+      content: (
+        <ToolbarZone>
+          <ToolbarGroup>
+            <ToolbarItem>
+              <ToggleGroup
+                kind="single"
+                value={activePath[depth] ?? ""}
+                onValueChange={(value) => onActivate(depth, value)}
+                items={level.map((node) => ({ value: node.id, id: `ui.toolbar.demo-window.group.${node.id}`, icon: <node.icon className="size-tiny" aria-hidden />, text: node.label }))}
+              />
+            </ToolbarItem>
+          </ToolbarGroup>
+        </ToolbarZone>
+      ),
+    });
+    const active = level.find((node) => node.id === activePath[depth]);
+    if (!active) break;
+    if (active.kind === "leaves") {
+      rows.push({
+        key: `leaves-${depth}`,
+        content: (
+          <ToolbarZone>
+            <ToolbarGroup>
+              <ToolbarItem>
+                <ButtonGroup>
+                  {active.leaves.map((leaf) => (
+                    <ButtonGroupItem key={leaf.id} icon={<leaf.icon className="size-tiny" aria-hidden />} />
+                  ))}
+                </ButtonGroup>
+              </ToolbarItem>
+            </ToolbarGroup>
+          </ToolbarZone>
+        ),
+      });
+      break;
+    }
+    level = active.children;
+    depth += 1;
+  }
+  return rows;
+}
+
+const WindowWithRecursiveCategoryToolbar = () => {
+  const [activePath, setActivePath] = useState<readonly string[]>([]);
+  const onActivate = (depth: number, value: string) => {
+    setActivePath((previous) => (value ? [...previous.slice(0, depth), value] : previous.slice(0, depth)));
+  };
+  return (
+    <div className="h-[400px] w-[600px]">
+      <Window id="category-toolbar-window" fill toolbar={<Ribbon id="ui.toolbar.demo-window" direction="up" rows={buildWindowCategoryRows(WINDOW_CATEGORY_DEMO_TREE, activePath, onActivate)} />}>
+        <WindowContent title="Window with Recursive Category Toolbar" />
+      </Window>
+    </div>
+  );
+};
+
+export const WithRecursiveCategoryToolbar: Story = {
+  name: "With Recursive Category Toolbar (selection / tools / actions)",
+  args: { id: "category-toolbar-window", children: null },
+  render: () => <WindowWithRecursiveCategoryToolbar />,
 };
 
 export const WithControlsMeasuresEngagementAndToolbar: Story = {
