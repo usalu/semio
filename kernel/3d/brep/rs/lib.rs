@@ -1344,13 +1344,22 @@ impl BrepkitKernel {
         let entry = self.entry(handle)?;
         match &entry.entity {
             Entity::Solid(solid) => {
-                let mesh = tessellate_solid_with_tolerance(&self.topo, *solid, tol, 0.2).map_err(Self::map_err)?;
+                let mut transfer = MeshTransfer { position: Vec::new(), normal: Vec::new(), index: Vec::new(), edges: Vec::new(), points: Vec::new(), face_groups: Vec::new() };
+                for face in explorer::solid_faces(&self.topo, *solid).map_err(Self::map_topo_err)? {
+                    let mesh = tessellate_with_tolerance(&self.topo, face, tol, 0.2).map_err(Self::map_err)?;
+                    let base = transfer.position.len() / 3;
+                    transfer.position.extend(mesh.positions.iter().flat_map(|p| [p.x() as f32, p.y() as f32, p.z() as f32]));
+                    transfer.normal.extend(mesh.normals.iter().flat_map(|n| [n.x() as f32, n.y() as f32, n.z() as f32]));
+                    let tri_start = transfer.index.len() as u32;
+                    let tri_count = mesh.indices.len() as u32;
+                    for idx in mesh.indices {
+                        transfer.index.push(idx + base as u32);
+                    }
+                    transfer.face_groups.push(FaceGroup { start: tri_start, count: tri_count, entity_id: face.index().to_string() });
+                }
                 let edges = sample_solid_edges(&self.topo, *solid, tol).map_err(Self::map_err)?;
-                let position: Vec<f32> = mesh.positions.iter().flat_map(|p| [p.x() as f32, p.y() as f32, p.z() as f32]).collect();
-                let normal: Vec<f32> = mesh.normals.iter().flat_map(|n| [n.x() as f32, n.y() as f32, n.z() as f32]).collect();
-                let index = mesh.indices;
-                let triangle_count = index.len() as u32;
-                Ok(MeshTransfer { position, normal, index, edges: Self::edge_lines_flat(&edges), points: Vec::new(), face_groups: vec![FaceGroup { start: 0, count: triangle_count, entity_id: handle.as_str().to_string() }] })
+                transfer.edges = Self::edge_lines_flat(&edges);
+                Ok(transfer)
             }
             Entity::Compound(c) => {
                 let mut transfer = MeshTransfer::default();
@@ -1741,6 +1750,26 @@ mod tests {
         assert!(!mesh.position.is_empty());
         assert!(!mesh.index.is_empty());
         assert_eq!(kernel.volume_sync(&solid).unwrap(), 24.0);
+    }
+
+    #[test]
+    fn box_tessellation_emits_one_face_group_per_topological_face() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
+        let mesh = kernel.tessellate_sync(&solid, 0.1).unwrap();
+        assert_eq!(mesh.face_groups.len(), 6, "a box has 6 planar faces");
+        let entity_ids: std::collections::HashSet<&str> = mesh.face_groups.iter().map(|g| g.entity_id.as_str()).collect();
+        assert_eq!(entity_ids.len(), 6, "face group entity ids must be distinct per face");
+        let triangle_count = (mesh.index.len() / 3) as u32;
+        let mut covered = vec![false; triangle_count as usize];
+        for group in &mesh.face_groups {
+            assert!(group.count > 0, "every face group must contain at least one triangle");
+            for tri in (group.start / 3)..(group.start / 3 + group.count / 3) {
+                assert!(!covered[tri as usize], "face groups must not overlap");
+                covered[tri as usize] = true;
+            }
+        }
+        assert!(covered.into_iter().all(|hit| hit), "face groups must partition every triangle");
     }
 
     #[test]

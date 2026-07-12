@@ -7560,7 +7560,12 @@ function Slider({
   const [hasBeenEdited, setHasBeenEdited] = reactHostPort.useState(false);
   const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
-  const _values = reactHostPort.useMemo(() => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]), [value, defaultValue, min, max]);
+  const externalValues = reactHostPort.useMemo(() => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]), [value, defaultValue, min, max]);
+  // 🖱️ While actively sliding, track the value locally instead of re-reading the (possibly-controlled)
+  // `value` prop on every render — a slow or stale round-trip back to `value` would otherwise fight the
+  // drag and snap the thumb back to its pre-drag position mid-gesture.
+  const [draftValues, setDraftValues] = reactHostPort.useState<number[] | null>(null);
+  const _values = draftValues ?? externalValues;
 
   const displayValue = _values[0] ?? min;
 
@@ -7583,12 +7588,10 @@ function Slider({
 
   const handleValueChange = reactHostPort.useCallback(
     (values: number[]) => {
-      if (snapValues && snapValues.length > 0) {
-        const snappedValues = values.map(findNearestSnapValue);
-        onValueChange?.(snappedValues);
-      } else {
-        onValueChange?.(values);
-      }
+      console.log("[DEBUG] Slider handleValueChange", values);
+      const nextValues = snapValues && snapValues.length > 0 ? values.map(findNearestSnapValue) : values;
+      setDraftValues(nextValues);
+      onValueChange?.(nextValues);
     },
     [snapValues, findNearestSnapValue, onValueChange],
   );
@@ -7624,6 +7627,7 @@ function Slider({
     if (!hasBeenEdited) setHasBeenEdited(true);
     if (interactionId && setActiveInteraction) setActiveInteraction(id, interactionId);
     if (!isSliding) {
+      setDraftValues(externalValues);
       setIsSliding(true);
       transaction?.start?.();
     }
@@ -7640,6 +7644,7 @@ function Slider({
     if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
     if (isSliding) {
       setIsSliding(false);
+      setDraftValues(null);
       transaction?.finalize?.();
     }
     onPointerUp?.();
@@ -7651,6 +7656,7 @@ function Slider({
     if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
     if (isSliding) {
       setIsSliding(false);
+      setDraftValues(null);
       transaction?.abort?.();
     }
     onPointerCancel?.();
@@ -7659,6 +7665,7 @@ function Slider({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown") {
       if (!isSliding) {
+        setDraftValues(externalValues);
         setIsSliding(true);
         transaction?.start?.();
       }
@@ -7669,11 +7676,13 @@ function Slider({
     if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown") {
       if (isSliding) {
         setIsSliding(false);
+        setDraftValues(null);
         transaction?.finalize?.();
       }
     } else if (e.key === "Escape") {
       if (isSliding) {
         setIsSliding(false);
+        setDraftValues(null);
         transaction?.abort?.();
       }
     }
@@ -7686,7 +7695,7 @@ function Slider({
       id={id}
       title={sliderTitle}
       defaultValue={defaultValue}
-      value={value}
+      value={_values}
       min={min}
       max={max}
       onValueChange={handleValueChange}
@@ -14989,6 +14998,8 @@ export function queryWindowEngagementInput(activeOnly = false): HTMLInputElement
 
 /** @emoji ⌨️ Focuses the action input in the active window engagement overlay, if present. */
 export function focusActiveEngagementInput(): boolean {
+  const active = document.activeElement;
+  if (active instanceof HTMLElement && active.closest('[data-slot="engagement-control"]')) return false;
   const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
   if (!field || field.disabled) return false;
   field.focus({ preventScroll: true });

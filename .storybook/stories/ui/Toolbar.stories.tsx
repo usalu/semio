@@ -18,8 +18,11 @@ import { useState, type ComponentType } from "react";
 
 // #region 🌙Toolbar
 
+const Cloud = createIconComponent("cloud");
 const Eye = createIconComponent("eye");
 const EyeOff = createIconComponent("eye-off");
+const FileJson = createIconComponent("file-json");
+const Folder = createIconComponent("folder");
 const Hand = createIconComponent("hand");
 const Maximize2 = createIconComponent("maximize2");
 const MousePointer = createIconComponent("mouse-pointer");
@@ -209,7 +212,7 @@ type DemoToolNode =
   | { readonly id: string; readonly label: string; readonly icon: DemoToolLeaf["icon"]; readonly kind: "leaves"; readonly leaves: readonly DemoToolLeaf[] }
   | { readonly id: string; readonly label: string; readonly icon: DemoToolLeaf["icon"]; readonly kind: "group"; readonly children: readonly DemoToolNode[] };
 
-/** @emoji 🪟 Window-scoped categories only (selection / tools) — what belongs in a window's own bottom-left panel. Mode-wide categories like actions/history don't: they're shared across every window in the mode, so they live once in the footer instead (see {@link ModeWideFooterCategories}). */
+/** @emoji 🪟 Window-scoped categories only (selection / tools) — what belongs in a window's own bottom-left panel. Mode-wide categories like actions/history/sync don't: they're shared across every window in the mode, so they live once in the footer instead (see {@link ModeWideFooterCategories}). */
 const WINDOW_CATEGORY_DEMO_TREE: readonly DemoToolNode[] = [
   {
     id: "selection",
@@ -271,6 +274,17 @@ const FOOTER_CATEGORY_DEMO_TREE: readonly DemoToolNode[] = [
     leaves: [
       { id: "undo", icon: RotateCcw },
       { id: "redo", icon: RotateCw },
+    ],
+  },
+  {
+    id: "sync",
+    label: "Sync",
+    icon: Cloud,
+    kind: "leaves",
+    leaves: [
+      { id: "file", icon: FileJson },
+      { id: "folder", icon: Folder },
+      { id: "remote", icon: Cloud },
     ],
   },
 ];
@@ -345,11 +359,11 @@ export const RecursiveCategoryGroups: Story = {
 };
 
 export const ModeWideFooterCategories: Story = {
-  name: "Footer: Mode-Wide Categories (actions / history)",
+  name: "Footer: Mode-Wide Categories (actions / history / sync)",
   args: { children: null },
   render: () => (
     <div className="flex flex-col items-start gap-double">
-      <span className="text-xs text-muted-foreground">Categories that apply regardless of which window has focus (actions, history) render once in the shared footer instead of being duplicated into every window's panel. Same recursive, one-active-per-level picker, laid out horizontally.</span>
+      <span className="text-xs text-muted-foreground">Categories that apply regardless of which window has focus (actions, history, sync — e.g. File/Folder/Remote grouped under "Sync") render once in the shared footer instead of being duplicated into every window's panel. Same recursive, one-active-per-level picker, laid out horizontally.</span>
       <CategoryGroupsDemo tree={FOOTER_CATEGORY_DEMO_TREE} direction="inline" />
     </div>
   ),

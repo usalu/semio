@@ -116,6 +116,8 @@ type WorldSelectionRecord = {
   readonly hoveredComponent?: WorldHoverComponent;
   readonly showEdges?: boolean;
   readonly engagementSessionActive?: boolean;
+  /** 🖱️➡️ When true and `targets.face` is set, dragging an already-selected face starts a push/pull gesture (`worldFaceDragEnd` on release) instead of the default marquee/orbit. */
+  readonly faceDragActive?: boolean;
 };
 
 type WorldInteractionRecord = {
@@ -270,7 +272,7 @@ type WorldEnvironmentMaterialRecord = {
 type WorldEnvironmentRecord = {
   readonly background?: string;
   readonly ambient?: { readonly intensity?: number; readonly color?: string };
-  readonly sun?: { readonly azimuth?: number; readonly elevation?: number; readonly intensity?: number; readonly color?: string };
+  readonly sun?: { readonly enabled?: boolean; readonly azimuth?: number; readonly elevation?: number; readonly intensity?: number; readonly color?: string };
   readonly shadow?: { readonly enabled?: boolean; readonly opacity?: number; readonly softness?: number };
   readonly material?: WorldEnvironmentMaterialRecord;
 };
@@ -557,6 +559,40 @@ function buildFaceOverlayGeometry(mesh: WorldMeshData, faceIds: ReadonlySet<numb
   return geometry;
 }
 
+/** 🖱️➡️ Approximates a picked face's in-plane size from its triangles' local bounding box, dropping the
+ * smallest axis (roughly the one aligned with the face normal for axis-aligned primitive faces) — good
+ * enough to size a push/pull tool's footprint without needing a true tangent-plane projection. */
+function faceExtentFromMesh(mesh: WorldMeshData, faceId: number): readonly [number, number] | undefined {
+  if (!mesh.faceIds?.length || !mesh.indices.length) return undefined;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  let minZ = Infinity;
+  let maxZ = -Infinity;
+  let found = false;
+  for (let faceIndex = 0; faceIndex < mesh.faceIds.length; faceIndex += 1) {
+    if (mesh.faceIds[faceIndex] !== faceId) continue;
+    found = true;
+    for (const corner of [0, 1, 2]) {
+      const vertexIndex = mesh.indices[faceIndex * 3 + corner];
+      if (vertexIndex == null) continue;
+      const x = mesh.positions[vertexIndex * 3] ?? 0;
+      const y = mesh.positions[vertexIndex * 3 + 1] ?? 0;
+      const z = mesh.positions[vertexIndex * 3 + 2] ?? 0;
+      minX = Math.min(minX, x);
+      maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y);
+      maxY = Math.max(maxY, y);
+      minZ = Math.min(minZ, z);
+      maxZ = Math.max(maxZ, z);
+    }
+  }
+  if (!found) return undefined;
+  const extents = [maxX - minX, maxY - minY, maxZ - minZ].sort((a, b) => b - a);
+  return [extents[0] ?? 0.2, extents[1] ?? 0.2];
+}
+
 function buildEdgeOverlayGeometry(mesh: WorldMeshData, edgeIds: ReadonlySet<number>): BufferGeometry | null {
   if (!mesh.edgeIds?.length || !mesh.edgePositions?.length || edgeIds.size === 0) return null;
   const positions: number[] = [];
@@ -770,6 +806,8 @@ function WorldInstanceNode({
   previewInstanceSelected,
   environmentMaterial,
   environmentShadowEnabled,
+  faceDragActive,
+  onFaceDragStart,
 }: {
   readonly instance: WorldInstanceRecord;
   readonly index: number;
@@ -799,6 +837,9 @@ function WorldInstanceNode({
   readonly onWorldPick: (args: { granularity: string; id: number; merge: string }) => void;
   readonly onComponentHover: (args: { objectId: string; mode: string; id: number } | null) => void;
   readonly mergeMode: (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => string;
+  /** 🖱️➡️ When true, pointer-down on an already-selected face starts a push/pull drag instead of falling through to selection/orbit. */
+  readonly faceDragActive?: boolean;
+  readonly onFaceDragStart?: (args: { objectId: string; faceId: number; normal: readonly [number, number, number]; point: readonly [number, number, number]; faceExtent?: readonly [number, number] }) => void;
   /** Live marquee-drag merged selection state for this instance; undefined when no drag is in progress. */
   readonly previewInstanceSelected?: boolean;
   readonly environmentMaterial?: WorldEnvironmentMaterialRecord;
@@ -837,6 +878,21 @@ function WorldInstanceNode({
             color={meshTint}
             textureBase64={paintTextureBase64}
             flatShading={flatShading}
+            onPointerDown={(event) => {
+              if (onPaintAt || !faceDragActive || !onFaceDragStart || !event.face) return;
+              if (!(targets.face && event.faceIndex != null && meshData.faceIds?.[event.faceIndex] != null)) return;
+              const faceId = meshData.faceIds[event.faceIndex]!;
+              if (!(isActiveObject && selectionMode === "face" && selectedComponentIds.has(faceId))) return;
+              event.stopPropagation();
+              const normal = event.face.normal.clone().transformDirection(event.object.matrixWorld).normalize();
+              onFaceDragStart({
+                objectId: instance.id,
+                faceId,
+                normal: [normal.x, normal.y, normal.z],
+                point: [event.point.x, event.point.y, event.point.z],
+                faceExtent: faceExtentFromMesh(meshData, faceId),
+              });
+            }}
             onClick={(event) => {
               if (onPaintAt) {
                 paintFromHit(instance.id, meshData, event);
@@ -876,7 +932,7 @@ function WorldInstanceNode({
               onComponentHover(null);
             }}
           />
-          {(targets.edge || showEdges || (selectionMode === "mesh" && selectedComponentIds.size > 0)) && edgeGeometry ? (
+          {(targets.edge || (showEdges ?? true) || (selectionMode === "mesh" && selectedComponentIds.size > 0)) && edgeGeometry ? (
             <lineSegments
               geometry={edgeGeometry}
               onClick={(event) => {
@@ -1016,6 +1072,7 @@ function WorldInstancesLayer({
   gumballDragActive,
   onGumballDraggingChanged,
   onGumballDragEnd,
+  onFaceDragStart,
   mergedComponentIds,
   mergedInstanceIds,
   blockPick,
@@ -1033,6 +1090,7 @@ function WorldInstancesLayer({
   readonly gumballDragActive: boolean;
   readonly onGumballDraggingChanged: (dragging: boolean) => void;
   readonly onGumballDragEnd: (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => void;
+  readonly onFaceDragStart?: (args: { objectId: string; faceId: number; normal: readonly [number, number, number]; point: readonly [number, number, number]; faceExtent?: readonly [number, number] }) => void;
   /** Live drag-preview merged component id set (null when no marquee drag is in progress). */
   readonly mergedComponentIds?: readonly number[] | null;
   /** Live drag-preview merged whole-instance id set (null when no marquee drag is in progress). */
@@ -2107,18 +2165,17 @@ export function World3dHost({ node, onAction }: { readonly node: UiComponentScen
             {environment ? (
               <>
                 <ambientLight color={environment.ambient?.color ?? "#ffffff"} intensity={environment.ambient?.intensity ?? 0.65} />
-                <directionalLight
-                  color={environment.sun?.color ?? "#ffffff"}
-                  intensity={environment.sun?.intensity ?? 0.85}
-                  position={sunPositionFromAzimuthElevation(environment.sun?.azimuth ?? 45, environment.sun?.elevation ?? 35)}
-                  castShadow={environment.shadow?.enabled === true}
-                />
+                {environment.sun?.enabled === true ? (
+                  <directionalLight
+                    color={environment.sun?.color ?? "#ffffff"}
+                    intensity={environment.sun?.intensity ?? 0.85}
+                    position={sunPositionFromAzimuthElevation(environment.sun?.azimuth ?? 45, environment.sun?.elevation ?? 35)}
+                    castShadow={environment.shadow?.enabled === true}
+                  />
+                ) : null}
               </>
             ) : (
-              <>
-                <ambientLight intensity={0.65} />
-                <directionalLight intensity={0.85} position={[4, 6, 8]} />
-              </>
+              <ambientLight intensity={0.65} />
             )}
             {fit?.enabled ? <WorldAutoFit groupRef={instancesGroupRef} fitKey={`${fit.revision ?? 0}:${meshes.map((mesh) => mesh.url ?? mesh.id).join(",")}`} padding={fit.padding ?? 1.25} camera={cameraState} onFitted={handleCameraChange} /> : null}
             <CameraRefBridge cameraRef={cameraRef} />

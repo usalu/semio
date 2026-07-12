@@ -2293,10 +2293,110 @@ pub mod world3d_host {
 //! 🌐 Shared world-3d scene payload builders for plugin apps.
 
 use semio_framework_core::{
-    mesh_from_kind, mesh_to_glb, mesh_to_obj, MeshData, World3dScene, world3d_camera_json,
-    world3d_default_selection_json,
+    mesh_from_kind, mesh_to_glb, mesh_to_obj, ActionDescriptor, MeshData, WindowMeasure,
+    World3dScene, world3d_camera_json, world3d_default_selection_json,
 };
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+
+//#region 🌞 WorldSunConfig
+/** 🌞 Plugin-owned directional-light state for a `world-3d` scene; off by default so meshes render flat until a dev opts in via the window-options Sun toggle. */
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct WorldSunConfig {
+    pub enabled: bool,
+    pub azimuth: f64,
+    pub elevation: f64,
+    pub intensity: f64,
+    pub color: String,
+}
+
+impl Default for WorldSunConfig {
+    fn default() -> Self {
+        Self { enabled: false, azimuth: 45.0, elevation: 35.0, intensity: 0.85, color: "#ffffff".into() }
+    }
+}
+
+/** 🌞 Builds the `environment_json` payload consumed by `world-3d-host.tsx`'s `WorldEnvironmentRecord.sun`. */
+pub fn world3d_environment_json(sun: &WorldSunConfig) -> String {
+    json!({ "sun": sun }).to_string()
+}
+
+/** 🌞 Shared "Sun" window-options group (enable toggle + azimuth/elevation/intensity sliders), see `lowpoly_window_measures`'s "Show Edges" toggle for the sibling pattern. */
+pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {
+    WindowMeasure::Group {
+        id: format!("{id_prefix}-measure-sun"),
+        label: "Sun".into(),
+        default_open: Some(false),
+        children: vec![
+            WindowMeasure::Toggle {
+                id: format!("{id_prefix}-measure-sun-enabled"),
+                icon_id: "sun".into(),
+                label: Some("Enabled".into()),
+                pressed: sun.enabled,
+                text: None,
+                on_change: action("toggleSun", None),
+            },
+            WindowMeasure::Slider {
+                id: format!("{id_prefix}-measure-sun-azimuth"),
+                label: Some("Azimuth".into()),
+                value: sun.azimuth,
+                min: 0.0,
+                max: 360.0,
+                step: Some(1.0),
+                on_change: action("setSunAzimuth", None),
+            },
+            WindowMeasure::Slider {
+                id: format!("{id_prefix}-measure-sun-elevation"),
+                label: Some("Elevation".into()),
+                value: sun.elevation,
+                min: 0.0,
+                max: 90.0,
+                step: Some(1.0),
+                on_change: action("setSunElevation", None),
+            },
+            WindowMeasure::Slider {
+                id: format!("{id_prefix}-measure-sun-intensity"),
+                label: Some("Intensity".into()),
+                value: sun.intensity,
+                min: 0.0,
+                max: 4.0,
+                step: Some(0.05),
+                on_change: action("setSunIntensity", None),
+            },
+        ],
+    }
+}
+
+/** 🌞 Applies a sun-related action id to `sun`, returning whether it was handled — mirrors `lowpoly`'s `"toggleShowEdges"` action-handler shape. */
+pub fn apply_world3d_sun_action(sun: &mut WorldSunConfig, action_id: &str, args: Option<&Value>) -> bool {
+    match action_id {
+        "toggleSun" => {
+            sun.enabled = !sun.enabled;
+            true
+        }
+        "setSunAzimuth" => {
+            if let Some(value) = args.and_then(|value| value.get("value")).and_then(Value::as_f64) {
+                sun.azimuth = value;
+            }
+            true
+        }
+        "setSunElevation" => {
+            if let Some(value) = args.and_then(|value| value.get("value")).and_then(Value::as_f64) {
+                sun.elevation = value;
+            }
+            true
+        }
+        "setSunIntensity" => {
+            if let Some(value) = args.and_then(|value| value.get("value")).and_then(Value::as_f64) {
+                sun.intensity = value;
+            }
+            true
+        }
+        _ => false,
+    }
+}
+//#endregion 🌞 WorldSunConfig
 
 pub fn mesh_kind_from_json(mesh_json: &str) -> String {
     serde_json::from_str::<Value>(mesh_json)
@@ -2387,6 +2487,7 @@ pub fn world3d_scene(
     meshes_json: String,
     instances_json: String,
     selection_json: String,
+    sun: &WorldSunConfig,
 ) -> World3dScene {
     world3d_scene_extended(
         camera_json,
@@ -2403,6 +2504,7 @@ pub fn world3d_scene(
         None,
         None,
         None,
+        Some(world3d_environment_json(sun)),
     )
 }
 
@@ -2421,6 +2523,7 @@ pub fn world3d_scene_extended(
     lod_json: Option<String>,
     chunking_json: Option<String>,
     context_menu_json: Option<String>,
+    environment_json: Option<String>,
 ) -> World3dScene {
     World3dScene {
         camera_json,
@@ -2437,7 +2540,7 @@ pub fn world3d_scene_extended(
         lod_json,
         chunking_json,
         context_menu_json,
-        environment_json: None,
+        environment_json,
         frame_json: None,
         fit_json: None,
     }
@@ -2692,11 +2795,11 @@ pub use scaffold::{
     standard_factory, StandardApp, StandardPluginApp,
 };
 pub use world3d_host::{
-    default_world3d_selection, export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids,
-    mesh_kind_from_json, world3d_default_camera, world3d_mesh_id_from_url,
-    world3d_meshes_json_from_kinds, world3d_meshes_json_from_kinds_and_urls,
-    world3d_meshes_json_from_urls, world3d_scene, world3d_scene_extended,
-    world3d_selection_json,
+    apply_world3d_sun_action, default_world3d_selection, export_mesh_glb_bytes, export_mesh_obj,
+    merge_world_selection_ids, mesh_kind_from_json, world3d_default_camera,
+    world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds,
+    world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene,
+    world3d_scene_extended, world3d_selection_json, world3d_sun_measures, WorldSunConfig,
 };
 pub use semio_framework_core::*;
 

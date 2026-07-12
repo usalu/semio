@@ -8,13 +8,13 @@ use lowpoly_core::{
 };
 use png::{BitDepth, ColorType, Encoder};
 use semio_framework_plugin::{SurfaceKind,
-    build_canvas_2d_scene, build_world_3d_scene, create_default_layout, create_named_layout, engagement_token_matches,
+    apply_world3d_sun_action, build_canvas_2d_scene, build_world_3d_scene, create_default_layout, create_named_layout, engagement_token_matches,
     merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, PanelGroup,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, world3d_sun_measures, PanelGroup,
     world3d_selection_json, App, Canvas2dScene, ActionDescriptor, MeshData, PluginApp, PluginBundle,
     tool_button, tool_collection, tool_toggle, ToolCategory, ToolNode, UiControlNode, UiFieldNode,
     UiInspectorFieldGroup, UiNode, UiToggleNode, ViewState, WindowEngagement, WindowEngagementInput,
-    WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -102,7 +102,7 @@ fn lowpoly_world_camera_json(runtime: &LowpolyPlayRuntime) -> String {
     )
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct LowpolyPlayRuntime {
     #[serde(default = "default_transform_tool")]
@@ -127,8 +127,30 @@ struct LowpolyPlayRuntime {
     world_camera: LowpolyWorldCamera,
     #[serde(default)]
     engagement_input: String,
-    #[serde(default)]
+    #[serde(default = "default_true")]
     show_edges: bool,
+    #[serde(default)]
+    sun: WorldSunConfig,
+}
+
+impl Default for LowpolyPlayRuntime {
+    fn default() -> Self {
+        Self {
+            transform_tool: default_transform_tool(),
+            paint_tool: default_paint_tool(),
+            active_paint_layer: 0,
+            selection_method: default_selection_method(),
+            selected_object_ids: Vec::new(),
+            hovered_object_id: None,
+            hovered_target: None,
+            tool_params: default_tool_params(),
+            paint_color: default_paint_color(),
+            world_camera: LowpolyWorldCamera::default(),
+            engagement_input: String::new(),
+            show_edges: default_true(),
+            sun: WorldSunConfig::default(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -144,6 +166,10 @@ struct LowpolyHoverTarget {
 
 fn default_transform_tool() -> String {
     "move".into()
+}
+
+fn default_true() -> bool {
+    true
 }
 
 fn default_paint_tool() -> String {
@@ -1216,6 +1242,7 @@ fn lowpoly_window_measures(envelope: &LowpolyPlayEnvelope) -> Vec<WindowMeasure>
             text: None,
             on_change: lowpoly_action("toggleShowEdges", None),
         },
+        world3d_sun_measures("lowpoly", &envelope.runtime.sun, lowpoly_action),
         WindowMeasure::Select {
             id: "lowpoly-measure-selection-method".into(),
             label: Some("Selection Method".into()),
@@ -2042,6 +2069,10 @@ impl PluginApp for LowpolyPlayApp {
                 envelope.runtime.show_edges = !envelope.runtime.show_edges;
                 return vec![set_document_op(&envelope)];
             }
+            "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
+                apply_world3d_sun_action(&mut envelope.runtime.sun, action, args);
+                return vec![set_document_op(&envelope)];
+            }
             "worldSelect" => {
                 let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
                 let ids: Vec<String> = args
@@ -2290,6 +2321,7 @@ impl PluginApp for LowpolyPlayApp {
                             world_meshes_json(loaded, &texture_cache),
                             world_instances_json(&envelope.fixture, &envelope.runtime),
                             world_selection_json_for(&envelope, view_state.active_mode_id.as_deref(), Some(loaded)),
+                            &envelope.runtime.sun,
                         ),
                     )
                 } else {
@@ -2889,13 +2921,25 @@ mod tests {
     fn toggle_show_edges_round_trips_through_runtime_and_selection_json() {
         let mut app = LowpolyPlayApp::default();
         let envelope = parse_envelope(&app.initial_document_json());
+        assert!(envelope.runtime.show_edges, "edges must be shown by default");
         let document = serde_json::to_string(&envelope).unwrap();
         let ops = app.handle_action_patch_ops("toggleShowEdges", None, &document, &ViewState::default());
         let next = apply_ops(&envelope, &ops);
-        assert!(next.runtime.show_edges);
+        assert!(!next.runtime.show_edges);
         let selection_json = world_selection_json_for(&next, None, None);
         let value: Value = serde_json::from_str(&selection_json).unwrap();
-        assert_eq!(value["showEdges"], json!(true));
+        assert_eq!(value["showEdges"], json!(false));
+    }
+
+    #[test]
+    fn toggle_sun_round_trips_through_runtime_and_defaults_off() {
+        let mut app = LowpolyPlayApp::default();
+        let envelope = parse_envelope(&app.initial_document_json());
+        assert!(!envelope.runtime.sun.enabled, "sun must be off by default");
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_action_patch_ops("toggleSun", None, &document, &ViewState::default());
+        let next = apply_ops(&envelope, &ops);
+        assert!(next.runtime.sun.enabled);
     }
 
     #[test]

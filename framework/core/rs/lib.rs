@@ -1086,6 +1086,26 @@ pub fn mesh_from_indexed(positions: &[f32], normals: &[f32], indices: &[u32]) ->
     }
     mesh
 }
+
+/** @emoji 🧩 Like `mesh_from_indexed`, but also stamps `face_ids` per triangle from `(face id, triangle start, triangle count)`
+ * groups — lets a picked triangle resolve back to the brep face it came from. Plain tuples (not the kernel's `FaceGroup`)
+ * so this crate doesn't need to depend on the kernel engine crate; callers convert their own group type. */
+pub fn mesh_from_indexed_with_face_groups(positions: &[f32], normals: &[f32], indices: &[u32], face_groups: &[(u32, u32, u32)]) -> MeshData {
+    let mut mesh = mesh_from_indexed(positions, normals, indices);
+    if !face_groups.is_empty() {
+        let triangle_count = indices.len() / 3;
+        let mut face_ids = vec![0u32; triangle_count];
+        for &(face_id, start, count) in face_groups {
+            let start_tri = (start / 3) as usize;
+            let count_tri = (count / 3) as usize;
+            for tri in start_tri..(start_tri + count_tri).min(triangle_count) {
+                face_ids[tri] = face_id;
+            }
+        }
+        mesh.face_ids = face_ids;
+    }
+    mesh
+}
 //#endregion Primitives
 
 //#region Obj
@@ -2609,6 +2629,25 @@ mod tests {
     fn primitive_kinds() {
         assert!(mesh_from_kind("sphere").vertex_count() > 0);
         assert!(mesh_from_kind("box").vertex_count() > 0);
+    }
+
+    #[test]
+    fn mesh_from_indexed_with_face_groups_stamps_per_triangle_face_ids() {
+        let positions: Vec<f32> = (0..6 * 3 * 3).map(|i| i as f32).collect();
+        let indices: Vec<u32> = (0..18).collect();
+        let face_groups = [(101u32, 0u32, 6u32), (202u32, 6u32, 12u32)];
+        let mesh = mesh_from_indexed_with_face_groups(&positions, &[], &indices, &face_groups);
+        assert_eq!(mesh.face_ids.len(), 6);
+        assert_eq!(&mesh.face_ids[0..2], &[101, 101]);
+        assert_eq!(&mesh.face_ids[2..6], &[202, 202, 202, 202]);
+    }
+
+    #[test]
+    fn mesh_from_indexed_with_face_groups_empty_groups_leaves_face_ids_empty() {
+        let positions: Vec<f32> = (0..9).map(|i| i as f32).collect();
+        let indices: Vec<u32> = vec![0, 1, 2];
+        let mesh = mesh_from_indexed_with_face_groups(&positions, &[], &indices, &[]);
+        assert!(mesh.face_ids.is_empty());
     }
 
     #[test]
@@ -5213,6 +5252,15 @@ pub enum Contribution {
         params_body_key: String,
         preview_body_key: String,
     },
+    /// 🧩 A sourcing module contributing a typology tree and catalogue object kinds to a sourcing host app.
+    SourcingModule {
+        app_id: String,
+        module_id: String,
+        label: String,
+        icon_id: String,
+        typology_json: String,
+        kinds_json: String,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -6163,7 +6211,7 @@ pub use layout::{
     framework_panel_tab_label,
 };
 pub use mesh::{
-    mesh_box, mesh_cone, mesh_cylinder, mesh_from_glb, mesh_from_indexed, mesh_from_kind, mesh_ico_sphere,
+    mesh_box, mesh_cone, mesh_cylinder, mesh_from_glb, mesh_from_indexed, mesh_from_indexed_with_face_groups, mesh_from_kind, mesh_ico_sphere,
     mesh_plane, mesh_to_glb, mesh_to_obj, mesh_torus, mesh_uv_sphere, MeshData,
     dwg_drawing_to_mesh, dwg_drawing_to_paths, dwg_from_bytes, dwg_to_bytes, mesh_to_dwg_drawing, paths_to_dwg_drawing,
     DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgLayer, DwgPathSegment,

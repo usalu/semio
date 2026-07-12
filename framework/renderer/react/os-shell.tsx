@@ -3836,7 +3836,7 @@ function SyncAttachCard({ activeUri, cardKind, draftPath, syncTools, onAction, o
     >
       <PopoverAnchor asChild>
         <div>
-          <ToolTree tools={syncTools as readonly ToolNode[]} onAction={onAction} />
+          <ToolTree tools={groupToolNodesByCategory(syncTools as readonly ToolNode[], ["sync"])} onAction={onAction} />
         </div>
       </PopoverAnchor>
       {open ? (

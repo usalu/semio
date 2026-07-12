@@ -1,0 +1,13 @@
+{
+  "title": "Sourcing App With Curate Document And Beams Windows Slabs Modules",
+  "emoji": "🛒",
+  "status": "open",
+  "description": "Create a new app technology `sourcing` for handpicking and curating 3D object kinds (not instances) out of a catalogue. Each object kind has an availability count and follows a typology (tree). Sourcing has modules (beams, windows, slabs) contributed as separate plugin crates via a new Contribution::SourcingModule variant. The curate document (stock, filters, curated set) is edited through a 3-column UI: left = filtered pool table, middle = curated table (top) + 3D preview of last selection (bottom), right = 3D grid of all filtered kinds scaled to fit. Tables need +/- availability steppers and cross-window drag-and-drop, requiring extending the framework's declarative TableScene/table-host (React + wgpu parity) with typed cells, selection, sort, and drag/drop support. Register the new technology across Cargo.toml, package.json, repo/lib/js/index.ts, framework/core/js/index.ts, launch.json files, and s/manifest/resources.manifest.json.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1953"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪5360f02b32df4600a928ab74a4c9b8ad"
+  ]
+}

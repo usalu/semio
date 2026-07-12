@@ -292,20 +292,16 @@ async function capturePlugin(browser: Browser, plugin: PluginId): Promise<{ png:
     const message = error instanceof Error ? error.message : String(error);
     return { skipped: message };
   } finally {
-    await page.close();
+    await withTimeout(page.close(), 15_000, "page.close").catch((error) => {
+      console.log(`[DEBUG] ${plugin}: page.close stalled (${error instanceof Error ? error.message : String(error)}) — abandoning page`);
+    });
   }
 }
 
-async function capturePluginWithRetry(browser: Browser, plugin: PluginId): Promise<{ png: Buffer } | { skipped: string }> {
-  const first = await capturePlugin(browser, plugin);
-  if ("png" in first) return first;
-  console.log(`[DEBUG] ${plugin}: first attempt failed (${first.skipped}) — retrying once`);
-  return capturePlugin(browser, plugin);
-}
-
-/** Races a promise against a hard deadline. `chromium.launch()`/`browser.close()` have no built-in
- * timeout — if the underlying process hangs (observed in this environment), the awaiting caller
- * blocks forever with zero CPU activity and no error, silently stalling the whole harness. */
+/** Races a promise against a hard deadline. `chromium.launch()`/`browser.close()`/`page.close()` have
+ * no built-in timeout — if the underlying process hangs (observed in this environment: the whole
+ * chrome-headless-shell process tree can vanish mid-run with zero CPU activity and no rejection),
+ * the awaiting caller blocks forever, silently stalling the whole harness. */
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
@@ -341,6 +337,39 @@ async function closeBrowserSafely(browser: Browser): Promise<void> {
   } catch (error) {
     console.log(`[DEBUG] browser.close stalled (${error instanceof Error ? error.message : String(error)}) — abandoning old browser process`);
   }
+}
+
+const CAPTURE_WATCHDOG_MS = bootTimeoutMs + 90_000;
+
+/** Watchdog around a single capture attempt: `capturePlugin` already passes `timeout` options to every
+ * individual Playwright call, but if the browser process itself dies mid-navigation those internal
+ * timeouts can fail to fire (observed in this environment). This outer race guarantees the harness
+ * always moves forward within a bounded time regardless of where internally it got stuck. */
+async function capturePluginWithWatchdog(browser: Browser, plugin: PluginId): Promise<{ png: Buffer } | { skipped: string }> {
+  try {
+    return await withTimeout(capturePlugin(browser, plugin), CAPTURE_WATCHDOG_MS, `capturePlugin(${plugin})`);
+  } catch (error) {
+    return { skipped: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+function isWatchdogTimeout(result: { png: Buffer } | { skipped: string }): boolean {
+  return "skipped" in result && result.skipped.startsWith("capturePlugin(") && result.skipped.includes("timed out after");
+}
+
+async function capturePluginWithRetry(
+  browser: Browser,
+  plugin: PluginId,
+): Promise<{ result: { png: Buffer } | { skipped: string }; browserMaybePoisoned: boolean }> {
+  const first = await capturePluginWithWatchdog(browser, plugin);
+  if ("png" in first) return { result: first, browserMaybePoisoned: false };
+  if (isWatchdogTimeout(first)) {
+    console.log(`[DEBUG] ${plugin}: capture watchdog fired (${first.skipped}) — browser likely dead, skipping retry and forcing relaunch`);
+    return { result: first, browserMaybePoisoned: true };
+  }
+  console.log(`[DEBUG] ${plugin}: first attempt failed (${first.skipped}) — retrying once`);
+  const second = await capturePluginWithWatchdog(browser, plugin);
+  return { result: second, browserMaybePoisoned: isWatchdogTimeout(second) };
 }
 //#endregion
 
@@ -424,7 +453,11 @@ async function main(): Promise<void> {
         }
         process.stdout.write(`PARITY ${plugin}... `);
         const refResult = await loadReferenceStatsAsync(plugin);
-        const capture = await capturePluginWithRetry(browser, plugin);
+        const { result: capture, browserMaybePoisoned } = await capturePluginWithRetry(browser, plugin);
+        if (browserMaybePoisoned) {
+          await closeBrowserSafely(browser);
+          browser = await launchBrowser();
+        }
         if ("skipped" in capture) {
           const reason = `wgpu capture failed: ${capture.skipped}`;
           console.log(`SKIPPED (${reason})`);

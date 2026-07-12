@@ -58,7 +58,7 @@ import {
   uiNodeToTreePanelConfig,
 } from "./os-shell.tsx";
 import { interpretUiNode } from "./ui-interpreter.tsx";
-import type { UiNode } from "./os-shell.tsx";
+import type { ToolNode, UiNode } from "./os-shell.tsx";
 
 const noopAction = () => {};
 
@@ -79,6 +79,15 @@ describe("framework sync tools", () => {
     const { buildFrameworkSyncTools } = await import("@semio-tech/framework-os-core");
     const tools = buildFrameworkSyncTools(null);
     expect(tools.every((tool) => !tool.pressed)).toBe(true);
+  });
+
+  it("groups File, Folder, and Remote under a single Sync category collection", async () => {
+    const { buildFrameworkSyncTools } = await import("@semio-tech/framework-os-core");
+    const tools = buildFrameworkSyncTools("file:///demo");
+    const grouped = groupToolNodesByCategory(tools as unknown as ToolNode[], ["sync"]);
+    expect(grouped).toHaveLength(1);
+    expect(grouped[0]).toMatchObject({ id: "sync", kind: "collection" });
+    expect(grouped[0].kind === "collection" ? grouped[0].children.map((child) => child.id) : []).toEqual(["framework.sync.file", "framework.sync.folder", "framework.sync.remote"]);
   });
 });
 

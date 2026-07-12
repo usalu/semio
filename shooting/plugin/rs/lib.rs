@@ -7,7 +7,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     world3d_selection_json, App, ActionDescriptor, IconRenderScene, PluginApp, PluginBundle,
     ToolCategory, ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowMeasure,
-    World3dScene,
+    World3dScene, WorldSunConfig,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
@@ -137,6 +137,7 @@ struct ShootingShot {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 struct ShootingSun {
+    enabled: bool,
     azimuth: f64,
     elevation: f64,
     intensity: f64,
@@ -145,7 +146,7 @@ struct ShootingSun {
 
 impl Default for ShootingSun {
     fn default() -> Self {
-        Self { azimuth: 45.0, elevation: 35.0, intensity: 2.4, color: "#ffffff".into() }
+        Self { enabled: false, azimuth: 45.0, elevation: 35.0, intensity: 2.4, color: "#ffffff".into() }
     }
 }
 
@@ -596,7 +597,7 @@ fn shooting_environment_json(fixture: &ShootingFixture) -> String {
     let scene = &fixture.scene;
     let mut value = json!({
         "ambient": { "intensity": scene.ambient.intensity, "color": scene.ambient.color },
-        "sun": { "azimuth": scene.sun.azimuth, "elevation": scene.sun.elevation, "intensity": scene.sun.intensity, "color": scene.sun.color },
+        "sun": { "enabled": scene.sun.enabled, "azimuth": scene.sun.azimuth, "elevation": scene.sun.elevation, "intensity": scene.sun.intensity, "color": scene.sun.color },
         "shadow": { "enabled": scene.shadow.enabled, "opacity": scene.shadow.opacity, "softness": scene.shadow.softness },
         "material": { "color": scene.material.color, "metalness": scene.material.metalness, "roughness": scene.material.roughness, "emissive": scene.material.emissive, "emissiveIntensity": scene.material.emissive_intensity },
     });
@@ -1080,6 +1081,7 @@ fn render_model_scene(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime) 
                 world_meshes_json(fixture),
                 world_instances_json(fixture, runtime),
                 world_selection_json(fixture, runtime),
+                &WorldSunConfig::default(),
             )
         },
     )
@@ -1160,6 +1162,14 @@ fn shooting_model_measures(envelope: &ShootingPlayEnvelope) -> Vec<WindowMeasure
             pressed: envelope.runtime.center_model,
             text: None,
             on_change: shooting_action("setCenterModel", None),
+        },
+        WindowMeasure::Toggle {
+            id: "shooting.measure.sun-enabled".into(),
+            icon_id: "sun".into(),
+            label: Some("Sun".into()),
+            pressed: scene.sun.enabled,
+            text: None,
+            on_change: shooting_action("toggleSun", None),
         },
         WindowMeasure::Slider {
             id: "shooting.measure.sun-azimuth".into(),
@@ -1644,6 +1654,14 @@ impl PluginApp for ShootingPlayApp {
                     .and_then(|value| value.as_bool())
                     .unwrap_or(!envelope.fixture.scene.shadow.enabled);
                 envelope.fixture.scene.shadow.enabled = next;
+                return vec![set_document_op(&envelope)];
+            }
+            "toggleSun" => {
+                let next = args
+                    .and_then(|value| value.get("value").or_else(|| value.get("pressed")))
+                    .and_then(|value| value.as_bool())
+                    .unwrap_or(!envelope.fixture.scene.sun.enabled);
+                envelope.fixture.scene.sun.enabled = next;
                 return vec![set_document_op(&envelope)];
             }
             "setActiveShotLabel" => {
@@ -2221,6 +2239,20 @@ mod tests {
         let model_measures = &measures[SHOOTING_PLAY_WINDOW_SCENE];
         assert!(model_measures.iter().any(|measure| matches!(measure, WindowMeasure::Slider { value, .. } if *value == 90.0)));
         assert!(measures[SHOOTING_PLAY_WINDOW_ICON].iter().any(|measure| matches!(measure, WindowMeasure::Select { .. })));
+    }
+
+    #[test]
+    fn toggle_sun_round_trips_through_runtime_and_defaults_off() {
+        let mut app = ShootingPlayApp;
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        assert!(!envelope.fixture.scene.sun.enabled, "sun must be off by default");
+        let ops = app.handle_action_patch_ops("toggleSun", None, &document, &ViewState::default());
+        let next = apply_ops(&envelope, &ops);
+        assert!(next.fixture.scene.sun.enabled);
+        let measures = app.window_measures(&document, &ViewState::default());
+        let model_measures = &measures[SHOOTING_PLAY_WINDOW_SCENE];
+        assert!(model_measures.iter().any(|measure| matches!(measure, WindowMeasure::Toggle { id, .. } if id == "shooting.measure.sun-enabled")));
     }
 
     #[test]

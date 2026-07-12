@@ -2282,9 +2282,9 @@ pub mod d3 {
 
     use puzzle_3d::{BrushPlacePayload, Puzzle3dPrecomputeSession};
     use semio_framework_plugin::{
-        build_world_3d_scene, create_default_layout, layout::{MeasureSelectItem, WindowEngagementToggleGroupOption}, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
-        ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, App, ActionDescriptor, PanelGroup, PluginApp,
-        SurfaceKind, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        apply_world3d_sun_action, build_world_3d_scene, create_default_layout, layout::{MeasureSelectItem, WindowEngagementToggleGroupOption}, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
+        ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, PanelGroup, PluginApp,
+        SurfaceKind, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     };
     use serde::{Deserialize, Serialize};
@@ -2591,6 +2591,8 @@ pub mod d3 {
         jack_query: String,
         #[serde(default = "default_view_preset")]
         view_preset: String,
+        #[serde(default)]
+        sun: WorldSunConfig,
     }
 
     impl Default for Puzzle3dRuntime {
@@ -2627,6 +2629,7 @@ pub mod d3 {
                 voxel_dims: default_voxel_dims(),
                 jack_query: default_jack_query(),
                 view_preset: default_view_preset(),
+                sun: WorldSunConfig::default(),
             }
         }
     }
@@ -4682,7 +4685,13 @@ pub mod d3 {
     }
 
     fn puzzle3d_window_measures(envelope: &Puzzle3dEnvelope, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
-        vec![puzzle3d_view_measure(&envelope.runtime), puzzle3d_lod_measures_group(&envelope.runtime), puzzle3d_select_measures_group(&envelope.runtime, labels), puzzle3d_brush_measures_group(envelope, labels)]
+        vec![
+            puzzle3d_view_measure(&envelope.runtime),
+            puzzle3d_lod_measures_group(&envelope.runtime),
+            puzzle3d_select_measures_group(&envelope.runtime, labels),
+            puzzle3d_brush_measures_group(envelope, labels),
+            world3d_sun_measures("puzzle3d", &envelope.runtime.sun, puzzle3d_action),
+        ]
     }
     //#endregion 🔖Measures
 
@@ -5047,6 +5056,10 @@ pub mod d3 {
                     envelope.runtime.selection_method = method.into();
                     return vec![set_document_op(&envelope)];
                 }
+                "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
+                    apply_world3d_sun_action(&mut envelope.runtime.sun, action, args);
+                    return vec![set_document_op(&envelope)];
+                }
                 "setLodAutomatic" => {
                     envelope.runtime.lod_automatic = args.and_then(|value| value.get("pressed")).and_then(|value| value.as_bool()).unwrap_or(!envelope.runtime.lod_automatic);
                     return vec![set_document_op(&envelope)];
@@ -5404,6 +5417,7 @@ pub mod d3 {
                             Some(world3d_lod_json(&envelope.runtime)),
                             Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0)),
                             puzzle3d_context_menu_json(&envelope),
+                            Some(world3d_environment_json(&envelope.runtime.sun)),
                         ),
                     )
                 }
@@ -6290,6 +6304,18 @@ pub mod d3 {
             assert!(labels.contains(&"LOD"));
             assert!(labels.contains(&"Select"));
             assert!(labels.contains(&"Brush"));
+            assert!(labels.contains(&"Sun"));
+        }
+
+        #[test]
+        fn toggle_sun_round_trips_through_runtime_and_defaults_off() {
+            let mut app = Puzzle3dPlayApp::default();
+            let document = app.initial_document_json();
+            let envelope = parse_envelope(&document);
+            assert!(!envelope.runtime.sun.enabled, "sun must be off by default");
+            let ops = app.handle_action_patch_ops("toggleSun", None, &document, &ViewState::default());
+            let next = apply_ops(&envelope, &ops);
+            assert!(next.runtime.sun.enabled);
         }
 
         #[test]
@@ -6947,11 +6973,11 @@ pub mod d5 {
     use puzzle_5d::{BrushPlacePayload, Puzzle5dPrecomputeSession};
     use semio_framework_os::register_mesh_export_handlers;
     use semio_framework_plugin::{
-        build_puzzle2d_board_scene, build_world_3d_scene, create_default_layout,
+        apply_world3d_sun_action, build_puzzle2d_board_scene, build_world_3d_scene, create_default_layout,
         layout::{MeasureSelectItem, WindowEngagementStatus, WindowEngagementToggleGroupOption},
-        merge_world_selection_ids, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, App,
+        merge_world_selection_ids, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
         ActionDescriptor, PanelGroup, PluginApp, Puzzle2dBoardScene, SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl,
-        WindowEngagementInput, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+        WindowEngagementInput, WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
         FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     };
     use serde::{Deserialize, Serialize};
@@ -7307,6 +7333,8 @@ pub mod d5 {
         object_kind_weights: HashMap<String, f64>,
         #[serde(default)]
         vortex_kind_weights: HashMap<String, f64>,
+        #[serde(default)]
+        sun: WorldSunConfig,
     }
 
     /// ⚠️ Explicit impl (not `#[derive(Default)]`) so Rust construction matches the serde field defaults above.
@@ -7328,6 +7356,7 @@ pub mod d5 {
                 engagement_input_by_window: BTreeMap::new(),
                 object_kind_weights: HashMap::new(),
                 vortex_kind_weights: HashMap::new(),
+                sun: WorldSunConfig::default(),
             }
         }
     }
@@ -8298,7 +8327,11 @@ pub mod d5 {
         if window == PUZZLE5D_PLAY_WINDOW_2D {
             vec![puzzle5d_lod_measure(&envelope.runtime, labels), puzzle5d_suggestion_measures_group(envelope, labels), puzzle5d_brush_measures_group(envelope, labels)]
         } else {
-            vec![puzzle5d_suggestion_measures_group(envelope, labels), puzzle5d_brush_measures_group(envelope, labels)]
+            vec![
+                puzzle5d_suggestion_measures_group(envelope, labels),
+                puzzle5d_brush_measures_group(envelope, labels),
+                world3d_sun_measures("puzzle5d", &envelope.runtime.sun, puzzle5d_action),
+            ]
         }
     }
     //#endregion 🔖Measures
@@ -8724,6 +8757,10 @@ pub mod d5 {
                             return vec![set_document_op(&envelope)];
                         }
                     }
+                }
+                "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
+                    apply_world3d_sun_action(&mut envelope.runtime.sun, action, args);
+                    return vec![set_document_op(&envelope)];
                 }
                 "setActiveExample" => {
                     let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -9311,6 +9348,7 @@ pub mod d5 {
                             None,
                             Some(world3d_chunking_json(256.0, 8000.0)),
                             puzzle5d_context_menu_json(&envelope, labels),
+                            Some(world3d_environment_json(&envelope.runtime.sun)),
                         ),
                     )
                 }
@@ -9605,6 +9643,17 @@ pub mod d5 {
             let measures = app.window_measures(&document, &ViewState::default());
             assert!(measures.get(PUZZLE5D_PLAY_WINDOW_2D).is_some_and(|entries| !entries.is_empty()));
             assert!(measures.get(PUZZLE5D_PLAY_WINDOW_3D).is_some_and(|entries| !entries.is_empty()));
+        }
+
+        #[test]
+        fn toggle_sun_round_trips_through_runtime_and_defaults_off() {
+            let mut app = Puzzle5dPlayApp::default();
+            let document = app.initial_document_json();
+            let envelope = parse_envelope(&document);
+            assert!(!envelope.runtime.sun.enabled, "sun must be off by default");
+            let ops = app.handle_action_patch_ops("toggleSun", None, &document, &ViewState::default());
+            let next = apply_ops(&envelope, &ops);
+            assert!(next.runtime.sun.enabled);
         }
 
         #[test]

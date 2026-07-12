@@ -1,0 +1,13 @@
+{
+  "title": "Consolidate Protocol Types Into Framework Core",
+  "emoji": "🧬",
+  "status": "open",
+  "description": "framework/core/js/index.ts must become the single source of truth for \"protocol\" types that mirror the Rust framework/core/rs/lib.rs manifest/UI-tree shape and cross the plugin/wasm boundary. framework/renderer/react/os-shell.tsx currently re-declares many of these (WindowLayout family, NamedLayout, ActionDescriptor, the Ui-prefixed node family, PluginManifest, ToolNode/ToolLeaf/ToolCategory, UiInspectorFieldGroup, FRAMEWORK_PANEL_TAB_* constants, UI_INSPECTOR_MIXED_PLACEHOLDER, AppDefinition-ish types, WindowEngagement family, WindowMeasure, UiSelectItem, UiKeyValueEntry, UiTreeItemAction) even though os-shell.tsx already imports WindowLayout/NamedLayout types from \"@semio-tech/framework-core\" — a real duplicate-declaration conflict. Fix: delete the os-shell.tsx local re-declarations of WindowLayout/NamedLayout/WindowLayoutWindowNode/StackNode/AxisNode entirely and keep only the existing import. Move every other protocol-only type/const from os-shell.tsx into core/js/index.ts (fold any Ui-node member types os-shell has that core's UiNode union lacks into core's union so core becomes the complete superset). Keep renderer-private view-model types (ActiveSession, LoadedPluginState, etc.) in os-shell, merged into a single renderer-private types region. Also add two new exported types to core/js/index.ts: ComponentKind (union of the actual componentKind string literals used across the 11 host files in framework/renderer/react/components, found by grep, not guessed) and ComponentSceneHostProps = { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) =\u003e void } (using whatever the actual scene-node/action type names in core/js/index.ts turn out to be). Do not run git commands or build/test commands. Do not touch unrelated lines other concurrent sessions are editing in os-shell.tsx or the Rust files.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1952"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪f93a27d5f448464cb5ebc4fc68d5f7d7"
+  ]
+}

@@ -2092,15 +2092,15 @@ use geometry_import::{
     cad_object_from_mesh, objects_from_fixture_model, parse_geometry, tessellate_geometry_handle,
 };
 use semio_framework_plugin::{PanelGroup,
-    build_world_3d_scene, merge_world_selection_ids, mesh_from_kind,
+    apply_world3d_sun_action, build_world_3d_scene, merge_world_selection_ids, mesh_from_kind,
     tool_button, tool_collection, tool_separator, tool_toggle, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_mixed_vec3, ui_inspector_all_equal, ui_inspector_readonly_field,
-    ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, App,
+    ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
     ActionDescriptor, MeshData, PluginApp, PluginBundle, ToolCategory, ToolNode, UiControlNode, UiFieldNode,
     UiInspectorFieldGroup, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiTreeItemAction, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementOption,
     WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
-    WindowLayoutWindowNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    WindowLayoutWindowNode, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
@@ -2393,6 +2393,8 @@ struct CadPlayRuntime {
     pending_export_filename: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pending_export_mime: Option<String>,
+    #[serde(default)]
+    sun: WorldSunConfig,
 }
 
 fn default_selection_method() -> String {
@@ -2424,6 +2426,7 @@ impl Default for CadPlayRuntime {
             pending_export: None,
             pending_export_filename: None,
             pending_export_mime: None,
+            sun: WorldSunConfig::default(),
         }
     }
 }
@@ -3152,6 +3155,7 @@ fn build_world_scene_for_pane(envelope: &CadPlayEnvelope, pane: CadPaneId, surfa
             None,
             Some(world3d_chunking_json(256.0, 8000.0)),
             None,
+            Some(world3d_environment_json(&envelope.runtime.sun)),
         ),
     )
 }
@@ -5272,6 +5276,10 @@ impl PluginApp for CadApp {
                     return vec![set_document_op(&envelope)];
                 }
             }
+            "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
+                apply_world3d_sun_action(&mut envelope.runtime.sun, action, args);
+                return vec![set_document_op(&envelope)];
+            }
             "noop" => return Vec::new(),
             _ => {}
         }
@@ -5322,6 +5330,17 @@ impl PluginApp for CadApp {
                 CAD_PLAY_WINDOW_STRUCTURE_CLASSIC.to_string(),
                 cad_window_engagement(&envelope, CadPaneId::StructureClassic),
             ),
+        ])
+    }
+
+    fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        let envelope = parse_envelope(document_json);
+        let measures = vec![world3d_sun_measures("cad", &envelope.runtime.sun, cad_action)];
+        HashMap::from([
+            (CAD_PLAY_WINDOW_SHAPE.to_string(), measures.clone()),
+            (CAD_PLAY_WINDOW_BUILDING.to_string(), measures.clone()),
+            (CAD_PLAY_WINDOW_ENERGY.to_string(), measures.clone()),
+            (CAD_PLAY_WINDOW_STRUCTURE_CLASSIC.to_string(), measures),
         ])
     }
 
@@ -5738,6 +5757,26 @@ mod tests {
         ] {
             assert!(engagements.contains_key(window_kind), "missing engagement for {window_kind}");
         }
+    }
+
+    #[test]
+    fn sun_measures_registered_for_all_four_panes_and_default_off() {
+        let mut app = CadApp;
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        assert!(!envelope.runtime.sun.enabled, "sun must be off by default");
+        let measures = app.window_measures(&document, &ViewState::default());
+        for window_kind in [
+            CAD_PLAY_WINDOW_SHAPE,
+            CAD_PLAY_WINDOW_BUILDING,
+            CAD_PLAY_WINDOW_ENERGY,
+            CAD_PLAY_WINDOW_STRUCTURE_CLASSIC,
+        ] {
+            assert!(measures.contains_key(window_kind), "missing sun measures for {window_kind}");
+        }
+        let ops = app.handle_action_patch_ops("toggleSun", None, &document, &ViewState::default());
+        let next = apply_ops(&envelope, &ops);
+        assert!(next.runtime.sun.enabled);
     }
 
     #[test]

@@ -383,7 +383,7 @@ impl World3dState {
             hovered_component_id: None,
             hovered_component_object_id: None,
             hovered_component_mode: None,
-            show_edges: false,
+            show_edges: true,
             selection_targets: WorldSelectionTargets::default(),
             active_object_id: None,
             press_object_id: None,
@@ -1820,7 +1820,7 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         ]
     });
     apply_hovered_component_from_selection(state, &world.selection_json);
-    state.show_edges = selection.show_edges.unwrap_or(false);
+    state.show_edges = selection.show_edges.unwrap_or(true);
     state.selection_targets = selection.targets.unwrap_or_default();
     state.active_object_id = selection.active_object_id;
     state.transform_tool = selection

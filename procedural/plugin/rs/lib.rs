@@ -1229,13 +1229,13 @@ pub mod app_3d {
     };
     use flow_module_brep::tessellate_geometry_json;
     use semio_framework_plugin::{PanelGroup,
-        build_node_graph_scene, build_world_3d_scene, create_default_layout, create_named_layout,
+        apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout, create_named_layout,
         handle_generation_action, merge_world_selection_ids,
         mesh_from_kind, render_generation_form_body, render_generation_preview_text, render_generations_tree,
         selected_generation, tool_button, tool_collection, tool_toggle, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
-        ui_stack_vertical, ui_text, App, world3d_scene, world3d_selection_json,
+        ui_stack_vertical, ui_text, App, world3d_scene, world3d_selection_json, world3d_sun_measures,
         ActionDescriptor, GenerationPlayState, NodeGraphScene, PluginApp, PluginBundle, ToolCategory, ToolNode, UiControlNode,
-        UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
+        UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowMeasure, WorldSunConfig,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
         FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
         FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -1431,6 +1431,8 @@ pub mod app_3d {
         preview_cache: Option<Procedural3dPreviewCache>,
         #[serde(default)]
         generation_preview_cache: Option<Procedural3dPreviewCache>,
+        #[serde(default)]
+        sun: WorldSunConfig,
     }
 
     impl Default for Procedural3dRuntime {
@@ -1446,6 +1448,7 @@ pub mod app_3d {
                 redo_fixtures: Vec::new(),
                 preview_cache: None,
                 generation_preview_cache: None,
+                sun: WorldSunConfig::default(),
             }
         }
     }
@@ -2196,6 +2199,7 @@ pub mod app_3d {
                 meshes_json,
                 instances_json,
                 preview_selection_json(&envelope.runtime),
+                &envelope.runtime.sun,
             ),
         )
     }
@@ -2360,6 +2364,10 @@ pub mod app_3d {
                         envelope.fixture = next;
                         return vec![finalize_document_op(&mut envelope)];
                     }
+                }
+                "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
+                    apply_world3d_sun_action(&mut envelope.runtime.sun, action, args);
+                    return vec![finalize_document_op(&mut envelope)];
                 }
                 "setLodMode" => {
                     if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
@@ -2628,6 +2636,7 @@ pub mod app_3d {
                             meshes_json,
                             instances_json,
                             preview_selection_json(&envelope.runtime),
+                            &envelope.runtime.sun,
                         ),
                     )
                 }
@@ -2643,6 +2652,15 @@ pub mod app_3d {
                 }
                 _ => ui_text(format!("Unknown body: {body_key}")),
             }
+        }
+
+        fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> std::collections::HashMap<String, Vec<WindowMeasure>> {
+            let envelope = parse_envelope(document_json);
+            let measures = vec![world3d_sun_measures("procedural3d", &envelope.runtime.sun, procedural3d_action)];
+            std::collections::HashMap::from([
+                (PROCEDURAL_3D_PLAY_WINDOW_PREVIEW.to_string(), measures.clone()),
+                (PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW.to_string(), measures),
+            ])
         }
 
         fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
@@ -2876,6 +2894,20 @@ pub mod app_3d {
             let ops = app.handle_action_patch_ops("setLodMode", Some(&json!({ "value": "wireframe" })), &document, &ViewState::default());
             let envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
             assert_eq!(envelope.runtime.lod_mode, "wireframe");
+        }
+
+        #[test]
+        fn toggle_sun_round_trips_through_runtime_and_defaults_off() {
+            let mut app = Procedural3dPlayApp;
+            let document = app.initial_document_json();
+            let envelope = parse_envelope(&document);
+            assert!(!envelope.runtime.sun.enabled, "sun must be off by default");
+            let measures = app.window_measures(&document, &ViewState::default());
+            assert!(measures.contains_key(PROCEDURAL_3D_PLAY_WINDOW_PREVIEW));
+            assert!(measures.contains_key(PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW));
+            let ops = app.handle_action_patch_ops("toggleSun", None, &document, &ViewState::default());
+            let next: Procedural3dEnvelope = apply_ops(&envelope, &ops);
+            assert!(next.runtime.sun.enabled);
         }
 
         #[test]

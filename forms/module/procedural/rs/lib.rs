@@ -8,7 +8,7 @@ use semio_framework_plugin::{
     build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, App,
     ActionDescriptor, Contribution, PluginApp, PluginBundle, SurfaceKind, UiControlNode,
     UiFieldNode, UiInputNode, UiNode, UiSliderNode, UiToggleNode, ViewState, world3d_default_camera,
-    world3d_scene, world3d_selection_json,
+    world3d_scene, world3d_selection_json, WorldSunConfig,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -288,6 +288,7 @@ fn render_preview_body(payload: &ModuleRenderPayload) -> UiNode {
             meshes_json,
             instances_json,
             world3d_selection_json("single", &[], None),
+            &WorldSunConfig::default(),
         ),
     )
 }

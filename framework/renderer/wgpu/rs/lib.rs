@@ -9442,6 +9442,7 @@ fn render_icon_render(
         semio_framework_plugin::world3d_meshes_json_from_urls(std::slice::from_ref(&request.asset_url)),
         instances_json,
         semio_framework_core::world3d_default_selection_json(),
+        &semio_framework_plugin::WorldSunConfig::default(),
     );
     synthetic_world.environment_json = Some(icon_render_environment_json(&request));
 
