@@ -1287,6 +1287,21 @@ pub mod app_3d {
     ];
     //#endregion 🔖Constants
 
+    //#region 🔖EvalCache
+    /// 🧠 Process-wide [`flow_core::neural::NeuralCache`] shared across `FlowHost` reconstructions.
+    ///
+    /// `Procedural3dEnvelope` is a stateless serde value rebuilt from `document_json` on every
+    /// plugin dispatch, so a fresh `FlowHost::from_fixture` would otherwise discard per-node
+    /// memoization (and the geometry handle stability that lets `flow_module_brep`'s mesh cache
+    /// hit) on every single edit. Mirrors `flow_module_brep`'s single-instance `KERNEL`/`MESH_CACHE`
+    /// `OnceLock` pattern — one shared cache per WASM instance, which matches one editor session.
+    static PROCEDURAL_NEURAL_CACHE: std::sync::OnceLock<std::sync::Arc<flow_core::neural::NeuralCache>> = std::sync::OnceLock::new();
+
+    fn procedural_neural_cache() -> std::sync::Arc<flow_core::neural::NeuralCache> {
+        PROCEDURAL_NEURAL_CACHE.get_or_init(|| std::sync::Arc::new(flow_core::neural::NeuralCache::new())).clone()
+    }
+    //#endregion 🔖EvalCache
+
     //#region 🔖Terminology
     /// 🗣️ Complete UI label set for the 3D flow app; one field per label makes every locale combination compile-checked.
     struct Procedural3dLabels {
@@ -1586,8 +1601,25 @@ pub mod app_3d {
 
     fn finalize_document_op(envelope: &mut Procedural3dEnvelope) -> String {
         refresh_preview_cache(&mut envelope.runtime, &envelope.fixture);
-        let generation_fixture = generation_fixture_for_envelope(envelope);
-        refresh_generation_preview_cache(&mut envelope.runtime, &generation_fixture, &envelope.generation);
+        if selected_generation(&envelope.generation).is_none() {
+            // 🪞 No active generation: `generation_fixture_for_envelope` would just return a clone
+            // of `envelope.fixture`, so the generation preview is identical to the base preview —
+            // reuse the result just computed above instead of evaluating the same fixture twice.
+            let signature = generation_preview_signature(&envelope.fixture, &envelope.generation);
+            let already_cached = envelope.runtime.generation_preview_cache.as_ref().is_some_and(|entry| entry.signature == signature);
+            if !already_cached {
+                if let Some(base) = envelope.runtime.preview_cache.clone() {
+                    envelope.runtime.generation_preview_cache = Some(Procedural3dPreviewCache {
+                        signature,
+                        meshes_json: base.meshes_json,
+                        instances_json: base.instances_json,
+                    });
+                }
+            }
+        } else {
+            let generation_fixture = generation_fixture_for_envelope(envelope);
+            refresh_generation_preview_cache(&mut envelope.runtime, &generation_fixture, &envelope.generation);
+        }
         set_document_op(envelope)
     }
 
@@ -1699,7 +1731,7 @@ pub mod app_3d {
     //#endregion 🔖GumballTransforms
 
     fn host_from_envelope(envelope: &Procedural3dEnvelope) -> FlowHost {
-        let mut host = FlowHost::from_fixture(envelope.fixture.clone());
+        let mut host = FlowHost::from_fixture_with_cache(envelope.fixture.clone(), procedural_neural_cache());
         host.set_neuron_kind_infos_json(&flow_core::flow_neuron_kind_infos_json());
         host
     }
@@ -1866,7 +1898,7 @@ pub mod app_3d {
     }
 
     fn evaluated_preview_payload(fixture: &FlowFixture, runtime: &Procedural3dRuntime) -> (String, String) {
-        let mut host = FlowHost::from_fixture(fixture.clone());
+        let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), procedural_neural_cache());
         let eval_json = host.evaluate().unwrap_or_default();
         let eval: Value = serde_json::from_str(&eval_json).unwrap_or(json!({}));
         let mut meshes: Vec<Value> = Vec::new();
@@ -1919,7 +1951,7 @@ pub mod app_3d {
         let fixture_json = serde_json::to_string(&envelope.fixture).unwrap_or_default();
         let patched = apply_generation_values_to_fixture(&fixture_json, values);
         let fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| envelope.fixture.clone());
-        let mut host = FlowHost::from_fixture(fixture.clone());
+        let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), procedural_neural_cache());
         host.evaluate().unwrap_or_default()
     }
 

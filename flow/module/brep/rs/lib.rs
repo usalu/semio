@@ -5,13 +5,13 @@ use kernel_3d_brepkit::BrepkitKernel;
 use kernel_3d_engine::{block_on, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
 use neural_engine::{channel_output, Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 use std::collections::{HashMap, HashSet};
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Mutex, OnceLock, RwLock};
 
-static KERNEL: OnceLock<Mutex<BrepkitKernel>> = OnceLock::new();
+static KERNEL: OnceLock<RwLock<BrepkitKernel>> = OnceLock::new();
 static MESH_CACHE: OnceLock<Mutex<HashMap<(String, u64), String>>> = OnceLock::new();
 
-fn kernel() -> &'static Mutex<BrepkitKernel> {
-    KERNEL.get_or_init(|| Mutex::new(BrepkitKernel::new()))
+fn kernel() -> &'static RwLock<BrepkitKernel> {
+    KERNEL.get_or_init(|| RwLock::new(BrepkitKernel::new()))
 }
 
 fn mesh_cache() -> &'static Mutex<HashMap<(String, u64), String>> {
@@ -39,8 +39,15 @@ fn evict_mesh_cache_for_handle(handle: &str) {
 
 // #region 🔖Helpers
 fn with_kernel<T>(f: impl FnOnce(&mut BrepkitKernel) -> Result<T, EvalError>) -> Result<T, EvalError> {
-    let mut guard = kernel().lock().map_err(|_| EvalError::InvalidInput("brep kernel lock poisoned".into()))?;
+    let mut guard = kernel().write().map_err(|_| EvalError::InvalidInput("brep kernel lock poisoned".into()))?;
     f(&mut guard)
+}
+
+/// 🔓 Read-only kernel access — lets concurrent queries (tessellate, volume, closest-point, …)
+/// proceed in parallel with each other while still serializing against mutating operations.
+fn with_kernel_read<T>(f: impl FnOnce(&BrepkitKernel) -> Result<T, EvalError>) -> Result<T, EvalError> {
+    let guard = kernel().read().map_err(|_| EvalError::InvalidInput("brep kernel lock poisoned".into()))?;
+    f(&guard)
 }
 
 fn kind_label(kind: GeometryKind) -> &'static str {
@@ -431,12 +438,15 @@ macro_rules! geo_op {
     };
 }
 
+// 🔓 `num_op!`/`point_op!`/`vec_op!`/`text_op!` back exclusively `&self` `BrepKernel` trait
+// methods (volume/area/length/center_of_mass/distance/curve_point/curve_tangent/curve_domain/
+// curve_curvature/surface_point/surface_normal/validate) — safe to route through the read lock.
 macro_rules! num_op {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
         struct $name;
         impl Operation for $name {
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-                with_kernel(|$k| {
+                with_kernel_read(|$k| {
                     let $i = input;
                     let value = block_on($expr).map_err(map_kernel_error)?;
                     Ok(channel_output($channel, number_dictionary(value)))
@@ -451,7 +461,7 @@ macro_rules! point_op {
         struct $name;
         impl Operation for $name {
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-                with_kernel(|$k| {
+                with_kernel_read(|$k| {
                     let $i = input;
                     let value = block_on($expr).map_err(map_kernel_error)?;
                     Ok(channel_output($channel, point_dictionary(value)))
@@ -466,7 +476,7 @@ macro_rules! vec_op {
         struct $name;
         impl Operation for $name {
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-                with_kernel(|$k| {
+                with_kernel_read(|$k| {
                     let $i = input;
                     let value = block_on($expr).map_err(map_kernel_error)?;
                     Ok(channel_output($channel, vector_dictionary(value)))
@@ -481,7 +491,7 @@ macro_rules! text_op {
         struct $name;
         impl Operation for $name {
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-                with_kernel(|$k| {
+                with_kernel_read(|$k| {
                     let $i = input;
                     let value = block_on($expr).map_err(map_kernel_error)?;
                     Ok(channel_output($channel, text_dictionary(value)))
@@ -812,7 +822,7 @@ vec_op!(CurveTangent, "tangent", |k, i| k.curve_tangent(&read_geometry(i, "curve
 struct CurveDomain;
 impl Operation for CurveDomain {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        with_kernel_read(|kernel| {
             let domain = block_on(kernel.curve_domain(&read_geometry(input, "curve")?)).map_err(map_kernel_error)?;
             Ok(channel_output("span", number_dictionary(domain_span(domain))))
         })
@@ -835,7 +845,7 @@ num_op!(Distance, "distance", |k, i| k.distance(&read_geometry(i, "a")?, &read_g
 struct ClosestPoint;
 impl Operation for ClosestPoint {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        with_kernel_read(|kernel| {
             let result = block_on(kernel.closest_point(&read_geometry(input, "geometry")?, read_xyz(input, "point")?)).map_err(map_kernel_error)?;
             Ok(channel_output("point", point_dictionary(result.point)))
         })
@@ -845,7 +855,7 @@ impl Operation for ClosestPoint {
 struct ClassifyPoint;
 impl Operation for ClassifyPoint {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        with_kernel_read(|kernel| {
             let classification = block_on(kernel.classify_point(&read_geometry(input, "solid")?, read_xyz(input, "point")?)).map_err(map_kernel_error)?;
             Ok(channel_output("classification", number_dictionary(classify_number(classification))))
         })
@@ -879,7 +889,7 @@ geo_op!(ConvertToNurbs, "geometry", |k, i| k.convert_to_nurbs(&read_geometry(i, 
 struct ExportStep;
 impl Operation for ExportStep {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let value = block_on(kernel.export_step(&[geometry])).map_err(map_kernel_error)?;
             Ok(channel_output("step", text_dictionary(value)))
@@ -890,7 +900,7 @@ impl Operation for ExportStep {
 struct ExportStl;
 impl Operation for ExportStl {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let deflection = read_channel_number(input, "deflection")?;
             let data = block_on(kernel.export_stl(&[geometry], deflection)).map_err(map_kernel_error)?;
@@ -902,7 +912,7 @@ impl Operation for ExportStl {
 struct ExportObj;
 impl Operation for ExportObj {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let deflection = read_channel_number(input, "deflection")?;
             let value = block_on(kernel.export_obj(&[geometry], deflection)).map_err(map_kernel_error)?;
@@ -950,7 +960,7 @@ impl Operation for ImportObj {
 struct ExportDwg;
 impl Operation for ExportDwg {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        with_kernel(|kernel| {
+        with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let deflection = read_channel_number(input, "deflection")?;
             let data = block_on(kernel.export_dwg(&[geometry], deflection)).map_err(map_kernel_error)?;
@@ -1833,7 +1843,7 @@ mod tests {
     }
 
     fn reset_test_kernel() {
-        if let Ok(mut guard) = kernel().lock() {
+        if let Ok(mut guard) = kernel().write() {
             *guard = BrepkitKernel::new();
         }
         if let Ok(mut cache) = mesh_cache().lock() {
@@ -2050,7 +2060,7 @@ mod tests {
 /// 🧹 Retains only geometry handles referenced by the current evaluation outputs.
 pub fn retain_geometry_handles(live: &[String]) {
     let live_set: HashSet<String> = live.iter().cloned().collect();
-    if let Ok(mut guard) = kernel().lock() {
+    if let Ok(mut guard) = kernel().write() {
         guard.retain_sync(&live_set);
     }
     evict_mesh_cache_for_handles(live);
@@ -2065,7 +2075,7 @@ pub fn tessellate_geometry_json(handle: &str, tolerance: f64) -> String {
         }
     }
     let json = kernel()
-        .lock()
+        .read()
         .ok()
         .and_then(|kernel| {
             let geometry = GeometryHandle(handle.to_string());
@@ -2086,7 +2096,7 @@ pub fn tessellate_geometry_json(handle: &str, tolerance: f64) -> String {
 /// 🗑️ Disposes a geometry handle owned by the in-process brep kernel.
 pub fn dispose_geometry(handle: &str) {
     evict_mesh_cache_for_handle(handle);
-    if let Ok(mut kernel) = kernel().lock() {
+    if let Ok(mut kernel) = kernel().write() {
         block_on(kernel.dispose(&GeometryHandle(handle.to_string())));
     }
 }

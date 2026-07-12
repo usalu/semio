@@ -113,8 +113,11 @@ members = [
     "s/plugin/rs",
     "framework/product/presentation/plugin/rs",
     "framework/product/os/hub/rs",
+    "framework/product/os/hub/storage/rs",
     "fsm/rs",
     "fsm/macros/rs",
+    "remodel/rs",
+    "remodel/plugin/rs",
 ]
 
 resolver = "2"

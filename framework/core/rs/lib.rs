@@ -1210,6 +1210,87 @@ pub fn mesh_to_obj(mesh: &MeshData, object_name: &str) -> String {
     }
     out
 }
+
+/// 🔤 Hand-parses OBJ text (`v`/`vn`/`f` lines) back into `MeshData`; fan-triangulates n-gon faces and falls back to computed normals when the file has no `vn` lines or a mismatched vertex/normal count. Round-trips `mesh_to_obj`'s own output losslessly; general third-party OBJ interop is unvalidated.
+pub fn mesh_from_obj(text: &str) -> Result<MeshData, String> {
+    let mut positions: Vec<f32> = Vec::new();
+    let mut normals: Vec<f32> = Vec::new();
+    let mut indices: Vec<u32> = Vec::new();
+    let mut vertex_count = 0usize;
+    let mut normal_count = 0usize;
+    for line in text.lines() {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+        let mut parts = line.split_whitespace();
+        let tag = match parts.next() {
+            Some(tag) => tag,
+            None => continue,
+        };
+        match tag {
+            "v" => {
+                let coords: Vec<f32> = parts.filter_map(|value| value.parse().ok()).collect();
+                if coords.len() < 3 {
+                    return Err("obj: malformed v line".into());
+                }
+                positions.extend_from_slice(&coords[..3]);
+                vertex_count += 1;
+            }
+            "vn" => {
+                let coords: Vec<f32> = parts.filter_map(|value| value.parse().ok()).collect();
+                if coords.len() < 3 {
+                    return Err("obj: malformed vn line".into());
+                }
+                normals.extend_from_slice(&coords[..3]);
+                normal_count += 1;
+            }
+            "f" => {
+                let mut face: Vec<usize> = Vec::new();
+                for token in parts {
+                    let raw_index = token.split('/').next().ok_or_else(|| "obj: malformed face token".to_string())?;
+                    let raw: i64 = raw_index.parse().map_err(|_| "obj: malformed face index".to_string())?;
+                    face.push(obj_resolve_index(raw, vertex_count)?);
+                }
+                if face.len() < 3 {
+                    continue;
+                }
+                for i in 1..face.len() - 1 {
+                    indices.push(face[0] as u32);
+                    indices.push(face[i] as u32);
+                    indices.push(face[i + 1] as u32);
+                }
+            }
+            _ => {}
+        }
+    }
+    let mut mesh = MeshData {
+        positions,
+        indices,
+        ..MeshData::default()
+    };
+    if normal_count == vertex_count && normal_count > 0 {
+        mesh.normals = normals;
+    } else {
+        mesh.compute_normals();
+    }
+    Ok(mesh)
+}
+
+fn obj_resolve_index(raw: i64, count: usize) -> Result<usize, String> {
+    if raw > 0 {
+        Ok((raw - 1) as usize)
+    } else if raw < 0 {
+        let index = count as i64 + raw;
+        if index < 0 {
+            Err("obj: negative vertex index out of range".into())
+        } else {
+            Ok(index as usize)
+        }
+    } else {
+        Err("obj: zero vertex index".into())
+    }
+}
 //#endregion Obj
 
 //#region Glb
@@ -1449,6 +1530,218 @@ fn json_vec3_max(positions: &[f32]) -> String {
     format!("[{}, {}, {}]", max[0], max[1], max[2])
 }
 //#endregion Glb
+
+//#region Stl
+/// 🧱 Hand-rolled binary STL: 80-byte header, `u32` little-endian triangle count, then per triangle a `f32x3` facet normal, three `f32x3` vertices, and a `u16` attribute-byte-count (written as 0). No vertex dedupe, matching the binary STL convention of one independent triangle per record.
+pub fn mesh_to_stl(mesh: &MeshData) -> Vec<u8> {
+    let triangle_count = mesh.triangle_count() as u32;
+    let mut out = Vec::with_capacity(80 + 4 + triangle_count as usize * 50);
+    out.extend_from_slice(&[0u8; 80]);
+    out.extend_from_slice(&triangle_count.to_le_bytes());
+    for tri in mesh.indices.chunks_exact(3) {
+        let p0 = stl_vertex(&mesh.positions, tri[0]);
+        let p1 = stl_vertex(&mesh.positions, tri[1]);
+        let p2 = stl_vertex(&mesh.positions, tri[2]);
+        let normal = stl_face_normal(p0, p1, p2);
+        for component in normal {
+            out.extend_from_slice(&component.to_le_bytes());
+        }
+        for vertex in [p0, p1, p2] {
+            for component in vertex {
+                out.extend_from_slice(&component.to_le_bytes());
+            }
+        }
+        out.extend_from_slice(&0u16.to_le_bytes());
+    }
+    out
+}
+
+pub fn mesh_from_stl(bytes: &[u8]) -> Result<MeshData, String> {
+    if bytes.len() < 84 {
+        return Err("stl: truncated header".into());
+    }
+    let triangle_count = u32::from_le_bytes(bytes[80..84].try_into().unwrap()) as usize;
+    let expected_len = 84 + triangle_count * 50;
+    if bytes.len() < expected_len {
+        return Err("stl: truncated triangle data".into());
+    }
+    let mut mesh = MeshData::default();
+    for triangle in 0..triangle_count {
+        let base = 84 + triangle * 50;
+        let mut normal = [0f32; 3];
+        for axis in 0..3 {
+            normal[axis] = f32::from_le_bytes(bytes[base + axis * 4..base + axis * 4 + 4].try_into().unwrap());
+        }
+        let vertex_base = base + 12;
+        for corner in 0..3 {
+            let corner_base = vertex_base + corner * 12;
+            let mut position = [0f32; 3];
+            for axis in 0..3 {
+                position[axis] = f32::from_le_bytes(bytes[corner_base + axis * 4..corner_base + axis * 4 + 4].try_into().unwrap());
+            }
+            let index = (mesh.positions.len() / 3) as u32;
+            mesh.positions.extend_from_slice(&position);
+            mesh.normals.extend_from_slice(&normal);
+            mesh.indices.push(index);
+        }
+    }
+    Ok(mesh)
+}
+
+fn stl_vertex(positions: &[f32], index: u32) -> [f32; 3] {
+    let base = index as usize * 3;
+    [positions[base], positions[base + 1], positions[base + 2]]
+}
+
+fn stl_face_normal(a: [f32; 3], b: [f32; 3], c: [f32; 3]) -> [f32; 3] {
+    let e0 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+    let e1 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+    let n = [
+        e0[1] * e1[2] - e0[2] * e1[1],
+        e0[2] * e1[0] - e0[0] * e1[2],
+        e0[0] * e1[1] - e0[1] * e1[0],
+    ];
+    let len = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
+    if len > 1e-8 {
+        [n[0] / len, n[1] / len, n[2] / len]
+    } else {
+        [0.0, 0.0, 0.0]
+    }
+}
+//#endregion Stl
+
+//#region MediaFormat
+/// 🗂️ OS-level media export/import format. Lives here (not in `framework/product/os/core`) because `framework/core` sits below `framework/product/os/core` in the dependency graph — `os/core` depends on `framework-core`, never the reverse — so the `MeshExporter`/`MeshImporter` traits below, and every OS registration site, share one definition; `framework/product/os/core` re-exports it verbatim.
+#[derive(Clone, Debug, PartialEq)]
+pub enum OsMediaFormat {
+    Svg,
+    Png,
+    Obj,
+    Glb,
+    Stl,
+    Step,
+    Dwg,
+}
+
+impl OsMediaFormat {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Svg => "svg",
+            Self::Png => "png",
+            Self::Obj => "obj",
+            Self::Glb => "glb",
+            Self::Stl => "stl",
+            Self::Step => "step",
+            Self::Dwg => "dwg",
+        }
+    }
+
+    pub fn mime_type(&self) -> &'static str {
+        match self {
+            Self::Svg => "image/svg+xml",
+            Self::Png => "image/png",
+            Self::Obj => "model/obj",
+            Self::Glb => "model/gltf-binary",
+            Self::Stl => "model/stl",
+            Self::Step => "model/step",
+            Self::Dwg => "image/vnd.dwg",
+        }
+    }
+
+    /// @emoji 🔢 Whether this format's payload is base64-encoded binary rather than plain text.
+    pub fn is_binary(&self) -> bool {
+        matches!(self, Self::Png | Self::Glb | Self::Stl | Self::Dwg)
+    }
+
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "svg" => Some(Self::Svg),
+            "png" => Some(Self::Png),
+            "obj" => Some(Self::Obj),
+            "glb" => Some(Self::Glb),
+            "stl" => Some(Self::Stl),
+            "step" => Some(Self::Step),
+            "dwg" => Some(Self::Dwg),
+            _ => None,
+        }
+    }
+}
+//#endregion MediaFormat
+
+//#region MeshCodec
+/// 🔌 Format-keyed mesh export codec; concrete implementations below are zero-dependency (hand-rolled OBJ/GLB/STL). B-Rep apps additionally get `SolidExporter` (kernel/3d/brep/rs) which wraps the real kernel's STEP/STL/OBJ writers, and reuse `GlbExporter`/`GlbImporter` here via a tessellation bridge so GLB is the same codec everywhere.
+pub trait MeshExporter: Send + Sync {
+    fn format(&self) -> OsMediaFormat;
+    fn export(&self, mesh: &MeshData) -> Result<Vec<u8>, String>;
+}
+
+/// 🔌 Format-keyed mesh import codec; see `MeshExporter`.
+pub trait MeshImporter: Send + Sync {
+    fn format(&self) -> OsMediaFormat;
+    fn import(&self, bytes: &[u8]) -> Result<MeshData, String>;
+}
+
+pub struct ObjExporter;
+impl MeshExporter for ObjExporter {
+    fn format(&self) -> OsMediaFormat {
+        OsMediaFormat::Obj
+    }
+    fn export(&self, mesh: &MeshData) -> Result<Vec<u8>, String> {
+        Ok(mesh_to_obj(mesh, "mesh").into_bytes())
+    }
+}
+
+pub struct ObjImporter;
+impl MeshImporter for ObjImporter {
+    fn format(&self) -> OsMediaFormat {
+        OsMediaFormat::Obj
+    }
+    fn import(&self, bytes: &[u8]) -> Result<MeshData, String> {
+        let text = std::str::from_utf8(bytes).map_err(|error| error.to_string())?;
+        mesh_from_obj(text)
+    }
+}
+
+pub struct GlbExporter;
+impl MeshExporter for GlbExporter {
+    fn format(&self) -> OsMediaFormat {
+        OsMediaFormat::Glb
+    }
+    fn export(&self, mesh: &MeshData) -> Result<Vec<u8>, String> {
+        Ok(mesh_to_glb(mesh))
+    }
+}
+
+pub struct GlbImporter;
+impl MeshImporter for GlbImporter {
+    fn format(&self) -> OsMediaFormat {
+        OsMediaFormat::Glb
+    }
+    fn import(&self, bytes: &[u8]) -> Result<MeshData, String> {
+        mesh_from_glb(bytes)
+    }
+}
+
+pub struct StlExporter;
+impl MeshExporter for StlExporter {
+    fn format(&self) -> OsMediaFormat {
+        OsMediaFormat::Stl
+    }
+    fn export(&self, mesh: &MeshData) -> Result<Vec<u8>, String> {
+        Ok(mesh_to_stl(mesh))
+    }
+}
+
+pub struct StlImporter;
+impl MeshImporter for StlImporter {
+    fn format(&self) -> OsMediaFormat {
+        OsMediaFormat::Stl
+    }
+    fn import(&self, bytes: &[u8]) -> Result<MeshData, String> {
+        mesh_from_stl(bytes)
+    }
+}
+//#endregion MeshCodec
 
 //#region Dwg
 /// 📐 Hand-rolled DWG codec: a self-contained, round-trippable binary interchange format using the AC1015 (R2000) file magic and an R2000-flavored section-locator/CRC/handle container (bit primitives BS/BL/BD/handle refs per https://www.opendesign.com/files/guestdownloads/OpenDesign_Specification_for_.dwg_files.pdf). Entity/header field layouts are a semio-defined subset chosen for lossless round-tripping through this codec; byte-exact third-party AutoCAD/ODA interop needs follow-up validation against a real DWG viewer.
@@ -2708,6 +3001,60 @@ mod tests {
     fn primitive_kinds() {
         assert!(mesh_from_kind("sphere").vertex_count() > 0);
         assert!(mesh_from_kind("box").vertex_count() > 0);
+    }
+
+    #[test]
+    fn obj_round_trip() {
+        let mesh = mesh_uv_sphere(1.0, 8, 6);
+        let obj = mesh_to_obj(&mesh, "sphere");
+        let decoded = mesh_from_obj(&obj).expect("decode obj");
+        assert_eq!(decoded.vertex_count(), mesh.vertex_count());
+        assert_eq!(decoded.indices.len(), mesh.indices.len());
+    }
+
+    #[test]
+    fn stl_round_trip() {
+        let mesh = mesh_box(1.0, 1.0, 1.0);
+        let stl = mesh_to_stl(&mesh);
+        assert_eq!(stl.len(), 80 + 4 + mesh.triangle_count() * 50);
+        let decoded = mesh_from_stl(&stl).expect("decode stl");
+        assert_eq!(decoded.triangle_count(), mesh.triangle_count());
+        assert_eq!(decoded.positions.len(), mesh.triangle_count() * 9);
+    }
+
+    #[test]
+    fn media_format_round_trips_str_and_binary_flags() {
+        for format in [
+            OsMediaFormat::Svg,
+            OsMediaFormat::Png,
+            OsMediaFormat::Obj,
+            OsMediaFormat::Glb,
+            OsMediaFormat::Stl,
+            OsMediaFormat::Step,
+            OsMediaFormat::Dwg,
+        ] {
+            assert_eq!(OsMediaFormat::parse(format.as_str()), Some(format.clone()));
+        }
+        assert!(OsMediaFormat::Glb.is_binary());
+        assert!(OsMediaFormat::Stl.is_binary());
+        assert!(!OsMediaFormat::Step.is_binary());
+        assert!(!OsMediaFormat::Obj.is_binary());
+    }
+
+    #[test]
+    fn mesh_exporters_and_importers_round_trip_through_the_trait_objects() {
+        let mesh = mesh_box(1.0, 1.0, 1.0);
+        let codecs: Vec<(Box<dyn MeshExporter>, Box<dyn MeshImporter>)> = vec![
+            (Box::new(ObjExporter), Box::new(ObjImporter)),
+            (Box::new(GlbExporter), Box::new(GlbImporter)),
+            (Box::new(StlExporter), Box::new(StlImporter)),
+        ];
+        for (exporter, importer) in codecs {
+            assert_eq!(exporter.format(), importer.format());
+            let bytes = exporter.export(&mesh).expect("export");
+            let decoded = importer.import(&bytes).expect("import");
+            assert_eq!(decoded.triangle_count(), mesh.triangle_count());
+        }
     }
 
     #[test]
@@ -5471,7 +5818,7 @@ pub enum PanelTabKind {
 }
 
 impl PanelTabKind {
-    /// 🔤 Flat string key for code that still needs one (e.g. React `key=` props, matching legacy ids).
+    /// 🔤 Flat string key for code that needs one, e.g. React `key=` props.
     pub fn id_str(&self) -> &str {
         match self {
             PanelTabKind::WorkbenchCategory => "framework.category.workbench",
@@ -6106,6 +6453,12 @@ pub struct PresencePeer {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub selection_json: Option<String>,
     pub connected_at_ms: i64,
+    /// @emoji 🪪 Authenticated hub user id, when this peer connected with an `AuthSession` rather than an anonymous share token.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub user_id: Option<String>,
+    /// @emoji 🎚️ The peer's resolved studio role (`"owner"`/`"member"`/`"viewer"`), present alongside `user_id`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub role: Option<String>,
 }
 
 /// @emoji 📨 Client→server hub wire frames; the counterpart is {@link HubServerFrame}.
@@ -6615,8 +6968,8 @@ pub use layout::{
     collect_window_kind_ids_from_layout, create_default_layout, create_named_layout, create_stack_layout,
     create_tab_stack_layout, create_window_layout, merge_named_layouts, ActionDescriptor, NamedLayout,
     StyleSpec, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption,
-    WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
-    WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, default_viewport_engagement,
+    WindowEngagementSlot, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
+    WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, WindowOptions, default_viewport_engagement,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -6627,9 +6980,11 @@ pub use layout::{
 };
 pub use mesh::{
     mesh_box, mesh_cone, mesh_cylinder, mesh_from_glb, mesh_from_indexed, mesh_from_indexed_with_face_groups, mesh_from_kind, mesh_ico_sphere,
-    mesh_plane, mesh_to_glb, mesh_to_obj, mesh_torus, mesh_uv_sphere, MeshData,
+    mesh_plane, mesh_to_glb, mesh_to_obj, mesh_from_obj, mesh_to_stl, mesh_from_stl, mesh_torus, mesh_uv_sphere, MeshData,
     dwg_drawing_to_mesh, dwg_drawing_to_paths, dwg_from_bytes, dwg_to_bytes, mesh_to_dwg_drawing, paths_to_dwg_drawing,
     DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgLayer, DwgPathSegment,
+    MeshExporter, MeshImporter, ObjExporter, ObjImporter, GlbExporter, GlbImporter, StlExporter, StlImporter,
+    OsMediaFormat,
 };
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
 pub use tools::{tool_button, tool_collection, tool_separator, tool_toggle, ToolCategory, ToolNode};

@@ -55,6 +55,7 @@ use brepkit_topology::vertex::{Vertex, VertexId};
 use brepkit_topology::wire::{OrientedEdge, Wire, WireId};
 use brepkit_topology::{Topology, TopologyError};
 use kernel_3d_engine::{BrepError, BrepKernel, BrepTopology, ClosestPoint, FaceGroup, GeometryHandle, GeometryKind, MeshTransfer, ParamDomain, PointClassification, Vec3};
+use semio_framework_core::{MeshExporter, MeshImporter};
 
 // #region Helpers
 const TOL: f64 = 1e-6;
@@ -1290,6 +1291,31 @@ impl BrepkitKernel {
             solids.extend(self.solid_ids_from_handle(h)?);
         }
         brepkit_io::gltf::write_glb(&self.topo, &solids, deflection).map_err(Self::map_io_err)
+    }
+
+    /// 🌉 Tessellates `handle` via `tessellate_sync`'s `MeshTransfer` path and converts it straight to framework-core `MeshData`; the bridge that lets `GlbExporter`/`GlbImporter` (hand-rolled, dependency-free) serve GLB for B-Rep solids instead of `brepkit_io::gltf::write_glb`.
+    pub fn tessellate_to_mesh_data_sync(&self, handle: &GeometryHandle, tolerance: f64) -> Result<semio_framework_core::MeshData, BrepError> {
+        let transfer = self.tessellate_sync(handle, tolerance)?;
+        Ok(mesh_data_from_mesh_transfer(&transfer))
+    }
+
+    /// 🌉 GLB export standardized on the hand-rolled `GlbExporter` codec (see `tessellate_to_mesh_data_sync`), not `brepkit_io::gltf`.
+    pub fn export_glb_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
+        let mut mesh = semio_framework_core::MeshData::default();
+        for handle in shapes {
+            mesh.merge(&self.tessellate_to_mesh_data_sync(handle, deflection.max(1e-4))?);
+        }
+        semio_framework_core::GlbExporter.export(&mesh).map_err(BrepError::Operation)
+    }
+
+    /// 🌉 GLB import standardized on the hand-rolled `GlbImporter` codec, converted into a solid the same way `import_dwg_sync`/`import_stl_sync` do.
+    pub fn import_glb_sync(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
+        let mesh = semio_framework_core::GlbImporter.import(data).map_err(BrepError::Operation)?;
+        let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.chunks_exact(3).map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+        let normals: Vec<brepkit_math::vec::Vec3> = mesh.normals.chunks_exact(3).map(|c| brepkit_math::vec::Vec3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+        let triangle_mesh = brepkit_operations::tessellate::TriangleMesh { positions, normals, indices: mesh.indices.clone() };
+        let solid = import_mesh(&mut self.topo, &triangle_mesh, tolerance).map_err(Self::map_io_err)?;
+        Ok(self.register_solid(solid))
     }
 
     pub fn import_step_sync(&mut self, data: &str) -> Result<Vec<GeometryHandle>, BrepError> {

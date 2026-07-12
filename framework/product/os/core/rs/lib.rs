@@ -168,7 +168,7 @@ impl PluginHost {
         if let Err(error) = self.validate_swap_instances(&plugin_id, &plugin) {
             return self.hot_swap_failed(plugin_id, error, rollback);
         }
-        if let Err(error) = self.validate_swap_document_migration(&plugin, rollback.previous_plugin.as_ref()) {
+        if let Err(error) = self.validate_swap_app_retention(&plugin, rollback.previous_plugin.as_ref()) {
             return self.hot_swap_failed(plugin_id, error, rollback);
         }
         if let Err(error) = self.validate_swap_window_kinds(&plugin) {
@@ -451,7 +451,9 @@ impl PluginHost {
         Ok(())
     }
 
-    fn validate_swap_document_migration(
+    /// @emoji 🔢 Same-version hot-swaps must not silently drop apps — a version bump is required to
+    /// shrink the app set, so a client relying on document/instance continuity can detect the change.
+    fn validate_swap_app_retention(
         &self,
         plugin: &LoadedPlugin,
         previous: Option<&LoadedPlugin>,
@@ -460,7 +462,7 @@ impl PluginHost {
             if previous.manifest.version == plugin.manifest.version
                 && previous.manifest.apps.len() > plugin.manifest.apps.len()
             {
-                return Err("cannot hot-swap to fewer apps without migration".into());
+                return Err("cannot hot-swap to fewer apps within the same version".into());
             }
         }
         Ok(())
@@ -739,6 +741,10 @@ pub enum OsOp {
 }
 
 pub type OsVcs = DocumentVcs<OsProjection, OsOp>;
+
+/// @emoji 🩹 Explicit reexport of `serde_json::Value` — the shape of a parameter patch, so callers
+/// don't reach across the crate boundary into `serde_json` directly.
+pub type OsParameterPatch = Value;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -1423,7 +1429,7 @@ impl OsStore {
         Ok(parameter_id_value)
     }
 
-    pub fn patch_parameter(&mut self, target_parameter_id: &str, patch: &serde_json::Value) -> Result<(), VcsError> {
+    pub fn patch_parameter(&mut self, target_parameter_id: &str, patch: &OsParameterPatch) -> Result<(), VcsError> {
         let projection = self.projection()?;
         let current = projection
             .parameters
@@ -5031,7 +5037,9 @@ pub fn os_app_registration(program_id: &str, app_id: &str) -> Option<OsAppRegist
 
 /// @emoji 🧩 Resolves the AppDefinition backing an embedded os app instance. Returns `None` if the
 /// registration declares zero modes — every app must declare at least one, so an ad hoc "inject a
-/// fake edit mode" fallback would just hide a mis-registered app instead of surfacing it.
+/// fake edit mode" fallback would just hide a mis-registered app instead of surfacing it. An embedded
+/// os app instance renders through exactly one component surface, so this synthesizes the single
+/// window kind that represents it rather than leaving `window_kinds` empty (now impossible).
 pub fn resolve_os_app_definition(
     program_id: &str,
     app_id: &str,
@@ -5045,8 +5053,6 @@ pub fn resolve_os_app_definition(
         .clone()
         .or_else(|| registration.default_mode_id.clone())
         .unwrap_or_else(|| modes.first().id.clone());
-    // 🪟 An embedded os app instance renders through exactly one component surface — synthesize the
-    // single window kind that represents it rather than leaving `window_kinds` empty (now impossible).
     let window_kinds = semio_framework_core::WindowKinds::one(WindowKindDefinition {
         id: registration.component_kind.clone(),
         label: registration.label.clone(),

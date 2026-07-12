@@ -93,7 +93,7 @@ pub mod geometry_import {
     }
 
     pub fn import_geometry_handles(
-        kernel: &mut BrepkitKernel,
+        kernel: &mut dyn BrepKernel,
         geometry: &CadGeometry,
     ) -> HashMap<String, String> {
         let vertices = vertex_map(geometry);
@@ -109,7 +109,7 @@ pub mod geometry_import {
             if points.len() < 2 {
                 continue;
             }
-            if let Ok(handle) = kernel.polyline_wire_sync(&points) {
+            if let Ok(handle) = kernel_3d_engine::block_on(kernel.polyline_wire(&points)) {
                 handles.insert(wire.id.clone(), handle.0.clone());
             }
         }
@@ -118,11 +118,11 @@ pub mod geometry_import {
             if let Some(wire_id) = face.wire_ids.first() {
                 if let Some(wire_handle) = handles.get(wire_id) {
                     let wire = GeometryHandle(wire_handle.clone());
-                    if let Ok(handle) = kernel.planar_face_from_wire_sync(&wire) {
+                    if let Ok(handle) = kernel_3d_engine::block_on(kernel.planar_face_from_wire(&wire)) {
                         handles.insert(face.id.clone(), handle.0.clone());
                         continue;
                     }
-                    if let Ok(handle) = kernel.face_from_wire_sync(&wire) {
+                    if let Ok(handle) = kernel_3d_engine::block_on(kernel.face_from_wire(&wire)) {
                         handles.insert(face.id.clone(), handle.0.clone());
                         continue;
                     }
@@ -132,7 +132,7 @@ pub mod geometry_import {
             if points.len() < 3 {
                 continue;
             }
-            if let Ok(handle) = kernel.planar_face_from_points_sync(&points) {
+            if let Ok(handle) = kernel_3d_engine::block_on(kernel.planar_face_from_points(&points)) {
                 handles.insert(face.id.clone(), handle.0.clone());
             }
         }
@@ -147,7 +147,7 @@ pub mod geometry_import {
             if face_handles.len() < 1 {
                 continue;
             }
-            if let Ok(solid) = kernel.sew_faces_sync(&face_handles, 0.01) {
+            if let Ok(solid) = kernel_3d_engine::block_on(kernel.sew_faces(&face_handles, 0.01)) {
                 handles.insert(shell.id.clone(), solid.0.clone());
             }
         }
@@ -172,7 +172,7 @@ pub mod geometry_import {
             if face_handles.is_empty() {
                 continue;
             }
-            if let Ok(built) = kernel.sew_faces_sync(&face_handles, 0.01) {
+            if let Ok(built) = kernel_3d_engine::block_on(kernel.sew_faces(&face_handles, 0.01)) {
                 handles.insert(solid.id.clone(), built.0.clone());
             }
         }
@@ -271,7 +271,7 @@ pub mod geometry_import {
     }
 
     pub fn tessellate_geometry_handle(
-        kernel: &mut BrepkitKernel,
+        kernel: &mut dyn BrepKernel,
         handle_id: &str,
         kind: &str,
     ) -> Option<MeshData> {
@@ -285,14 +285,14 @@ pub mod geometry_import {
         None
     }
 
-    fn curve_mesh_from_wire(kernel: &mut BrepkitKernel, wire: &GeometryHandle) -> Option<MeshData> {
-        let profile_wire = kernel.regular_polygon_wire_sync(0.08, 8).ok()?;
-        let profile_face = kernel.planar_face_from_wire_sync(&profile_wire).ok()?;
-        let solid = kernel.sweep_sync(&profile_face, wire).ok()?;
+    fn curve_mesh_from_wire(kernel: &mut dyn BrepKernel, wire: &GeometryHandle) -> Option<MeshData> {
+        let profile_wire = kernel_3d_engine::block_on(kernel.regular_polygon_wire(0.08, 8)).ok()?;
+        let profile_face = kernel_3d_engine::block_on(kernel.planar_face_from_wire(&profile_wire)).ok()?;
+        let solid = kernel_3d_engine::block_on(kernel.sweep(&profile_face, wire)).ok()?;
         let mesh = block_on(kernel.tessellate(&solid, 0.1)).ok()?;
-        let _ = kernel.dispose_sync(&solid);
-        let _ = kernel.dispose_sync(&profile_face);
-        let _ = kernel.dispose_sync(&profile_wire);
+        let _ = kernel_3d_engine::block_on(kernel.dispose(&solid));
+        let _ = kernel_3d_engine::block_on(kernel.dispose(&profile_face));
+        let _ = kernel_3d_engine::block_on(kernel.dispose(&profile_wire));
         Some(mesh_from_indexed(&mesh.position, &mesh.normal, &mesh.index))
     }
 
@@ -331,7 +331,7 @@ pub mod geometry_import {
     /// with no primitives (rendered via the typology bounding-box mesh fallback) when the mesh has
     /// no triangles or the kernel is unable to import it.
     pub fn cad_object_from_mesh(
-        kernel: &mut BrepkitKernel,
+        kernel: &mut dyn BrepKernel,
         id: impl Into<String>,
         label: impl Into<String>,
         typology: impl Into<String>,
@@ -339,7 +339,7 @@ pub mod geometry_import {
     ) -> CadObject {
         let extent = mesh_extent(mesh);
         let solid_handle = if mesh.indices.len() >= 3 {
-            kernel.import_obj_sync(&mesh_to_obj_text(mesh), 0.01).ok().map(|handle| handle.0)
+            kernel_3d_engine::block_on(kernel.import_obj(&mesh_to_obj_text(mesh), 0.01)).ok().map(|handle| handle.0)
         } else {
             None
         };
@@ -373,7 +373,7 @@ pub mod geometry_import {
     }
 
     pub fn objects_from_fixture_model(
-        kernel: &mut BrepkitKernel,
+        kernel: &mut dyn BrepKernel,
         objects_value: &[Value],
         geometry: &CadGeometry,
     ) -> Vec<CadObject> {
@@ -1076,7 +1076,7 @@ mod interaction {
 
     //#region 🔖CommitRunner
     fn commit_primitive_box(
-        kernel: &mut BrepkitKernel,
+        kernel: &mut dyn BrepKernel,
         params: &HashMap<String, Value>,
         label_count: usize,
         next_id: impl Fn(&str) -> String,
@@ -1086,7 +1086,7 @@ mod interaction {
         let height = params.get("height").and_then(|value| value.as_f64()).unwrap_or(1.0);
         let width = (corner_b[0] - corner_a[0]).abs().max(0.05);
         let depth = (corner_b[1] - corner_a[1]).abs().max(0.05);
-        let solid = kernel.box_prim_sync(width, depth, height.max(0.05)).ok()?;
+        let solid = kernel_3d_engine::block_on(kernel.box_prim(width, depth, height.max(0.05))).ok()?;
         Some(CadObject {
             id: next_id("object"),
             label: format!("Box {}", label_count + 1),
@@ -1108,7 +1108,7 @@ mod interaction {
     /// (`commit.operation.action` ending in `From2PointsAndHeight`/`FromSurface`) — differentiated only
     /// by the `typology` commit param.
     fn commit_from_2_points_and_height(
-        kernel: &mut BrepkitKernel,
+        kernel: &mut dyn BrepKernel,
         params: &HashMap<String, Value>,
         label: &str,
         label_count: usize,
@@ -1121,7 +1121,7 @@ mod interaction {
 
         if lower.contains("column") {
             let radius = 0.25;
-            let solid = kernel.cylinder_prim_sync(radius, height.max(0.05)).ok()?;
+            let solid = kernel_3d_engine::block_on(kernel.cylinder_prim(radius, height.max(0.05))).ok()?;
             return Some(CadObject {
                 id: next_id("object"),
                 label: format!("{label} {}", label_count + 1),
@@ -1150,7 +1150,7 @@ mod interaction {
             let d = (point_b[1] - point_a[1]).abs().max(0.5);
             (w, d, height.max(0.05))
         };
-        let solid = kernel.box_prim_sync(width, depth, solid_height).ok()?;
+        let solid = kernel_3d_engine::block_on(kernel.box_prim(width, depth, solid_height)).ok()?;
         Some(CadObject {
             id: next_id("object"),
             label: format!("{label} {}", label_count + 1),
@@ -1173,7 +1173,7 @@ mod interaction {
     /// documented follow-up — this returns `None` for them, matching the pre-engine fallback behavior
     /// for any not-yet-implemented interaction.
     fn commit_command_finish(
-        kernel: &mut BrepkitKernel,
+        kernel: &mut dyn BrepKernel,
         params: &HashMap<String, Value>,
         context: &HashMap<String, Value>,
         label_count: usize,
@@ -1194,7 +1194,7 @@ mod interaction {
                     .sqrt()
                 }
                 .max(0.05);
-                let solid = kernel.sphere_prim_sync(radius).ok()?;
+                let solid = kernel_3d_engine::block_on(kernel.sphere_prim(radius)).ok()?;
                 Some(CadObject {
                     id: next_id("object"),
                     label: format!("Sphere {}", label_count + 1),
@@ -1215,7 +1215,7 @@ mod interaction {
     }
 
     fn legacy_commit_object(
-        kernel: &mut BrepkitKernel,
+        kernel: &mut dyn BrepKernel,
         session: &CadEngagementSession,
         label_count: usize,
         next_id: impl Fn(&str) -> String,
@@ -1225,7 +1225,7 @@ mod interaction {
             let base = context_point(session, "base")?;
             let height = session.context.get("height").and_then(|value| value.as_f64()).unwrap_or(3.0);
             let radius = 0.25;
-            let solid = kernel.cylinder_prim_sync(radius, height.max(0.05)).ok()?;
+            let solid = kernel_3d_engine::block_on(kernel.cylinder_prim(radius, height.max(0.05))).ok()?;
             return Some(CadObject {
                 id: next_id("object"),
                 label: format!("{} {}", entry.label, label_count + 1),
@@ -1256,7 +1256,7 @@ mod interaction {
         } else {
             (width, depth, height.max(0.05))
         };
-        let solid = kernel.box_prim_sync(solid_width, solid_depth, solid_height).ok()?;
+        let solid = kernel_3d_engine::block_on(kernel.box_prim(solid_width, solid_depth, solid_height)).ok()?;
         Some(CadObject {
             id: next_id("object"),
             label: format!("{} {}", entry.label, label_count + 1),
@@ -1274,7 +1274,7 @@ mod interaction {
     }
 
     pub fn commit_object(
-        kernel: &mut BrepkitKernel,
+        kernel: &mut dyn BrepKernel,
         session: &CadEngagementSession,
         label_count: usize,
         next_id: impl Fn(&str) -> String,
@@ -1681,13 +1681,13 @@ mod transformation {
 
     //#region 🔖FaceAnalytics
     /// @emoji 📍 Face centroid via surface midpoint sampling (premigration `faceCentroid` equivalent).
-    pub fn face_centroid_sync(kernel: &BrepkitKernel, face: &GeometryHandle) -> Option<Vec3> {
-        kernel.surface_point_sync(face, 0.5, 0.5).ok()
+    pub fn face_centroid_sync(kernel: &dyn BrepKernel, face: &GeometryHandle) -> Option<Vec3> {
+        kernel_3d_engine::block_on(kernel.surface_point(face, 0.5, 0.5)).ok()
     }
 
     /// @emoji 🧭 Face outward normal at the surface midpoint.
-    pub fn face_normal_sync(kernel: &BrepkitKernel, face: &GeometryHandle) -> Option<Vec3> {
-        kernel.surface_normal_sync(face, 0.5, 0.5).ok()
+    pub fn face_normal_sync(kernel: &dyn BrepKernel, face: &GeometryHandle) -> Option<Vec3> {
+        kernel_3d_engine::block_on(kernel.surface_normal(face, 0.5, 0.5)).ok()
     }
 
     /// @emoji 🗂️ Groups coplanar faces by dominant axis, sign, and quantized centroid (premigration `facePlaneGroupKey`).
@@ -1778,9 +1778,9 @@ mod transformation {
 
     //#region 🔖SolidConstruction
     /// @emoji 📦 Builds or reuses a kernel solid for a CAD object.
-    pub fn solid_for_object(kernel: &mut BrepkitKernel, object: &CadObject) -> Option<GeometryHandle> {
+    pub fn solid_for_object(kernel: &mut dyn BrepKernel, object: &CadObject) -> Option<GeometryHandle> {
         if let Some(handle) = object.solid_handle.as_ref() {
-            if kernel.kind_sync(&GeometryHandle(handle.clone())).is_ok() {
+            if kernel_3d_engine::block_on(kernel.kind(&GeometryHandle(handle.clone()))).is_ok() {
                 return Some(GeometryHandle(handle.clone()));
             }
         }
@@ -1788,35 +1788,35 @@ mod transformation {
         let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
         let is_cylindrical = object.typology.contains("column");
         let handle = if is_cylindrical {
-            kernel.cylinder_prim_sync(width.max(depth) * 0.5, height).ok()
+            kernel_3d_engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok()
         } else {
-            kernel.box_prim_sync(width, depth, height).ok()
+            kernel_3d_engine::block_on(kernel.box_prim(width, depth, height)).ok()
         }?;
         Some(handle)
     }
 
     /// @emoji 📦 Builds a kernel solid sized from extent without mutating the object.
     pub fn build_solid_for_typology(
-        kernel: &mut BrepkitKernel,
+        kernel: &mut dyn BrepKernel,
         typology: &str,
         extent: [f64; 3],
     ) -> Option<GeometryHandle> {
         let [ex, ey, ez] = extent;
         let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
         if typology.contains("column") {
-            kernel.cylinder_prim_sync(width.max(depth) * 0.5, height).ok()
+            kernel_3d_engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok()
         } else {
-            kernel.box_prim_sync(width, depth, height).ok()
+            kernel_3d_engine::block_on(kernel.box_prim(width, depth, height)).ok()
         }
     }
 
-    fn fuse_solids(kernel: &mut BrepkitKernel, solids: &[GeometryHandle]) -> Option<GeometryHandle> {
+    fn fuse_solids(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle]) -> Option<GeometryHandle> {
         if solids.is_empty() {
             return None;
         }
         let mut current = solids[0].clone();
         for solid in solids.iter().skip(1) {
-            current = kernel.fuse_sync(&current, solid).ok()?;
+            current = kernel_3d_engine::block_on(kernel.fuse(&current, solid)).ok()?;
         }
         Some(current)
     }
@@ -1835,7 +1835,7 @@ mod transformation {
 
     /// @emoji 🔄 Derives energy objects from shape-pane solids via fuse + face classification.
     pub fn run_derive_from_geometry(
-        kernel: &mut BrepkitKernel,
+        kernel: &mut dyn BrepKernel,
         source_objects: &[CadObject],
         id_seed: &str,
     ) -> Vec<CadObject> {
@@ -1850,7 +1850,7 @@ mod transformation {
             Some(hull) => hull,
             None => return Vec::new(),
         };
-        let topology = match kernel.deconstruct_sync(&hull) {
+        let topology = match kernel_3d_engine::block_on(kernel.deconstruct(&hull)) {
             Ok(topology) => topology,
             Err(_) => return Vec::new(),
         };
@@ -2047,7 +2047,7 @@ mod transformation {
         #[test]
         fn derive_from_geometry_classifies_box() {
             let mut kernel = BrepkitKernel::new();
-            let solid = kernel.box_prim_sync(2.0, 2.0, 3.0).expect("box");
+            let solid = kernel_3d_engine::block_on(kernel.box_prim(2.0, 2.0, 3.0)).expect("box");
             let source = vec![CadObject {
                 id: "object-box".into(),
                 label: "Box".into(),
@@ -2694,7 +2694,7 @@ fn transfers_from_for_model_definition(active_model_definition_id: &str) -> Vec<
         .collect()
 }
 
-fn ensure_object_solid_handle(kernel: &mut BrepkitKernel, object: &mut CadObject) {
+fn ensure_object_solid_handle(kernel: &mut dyn BrepKernel, object: &mut CadObject) {
     if object.solid_handle.is_some() {
         return;
     }
@@ -2783,7 +2783,7 @@ fn export_step_for_pane(envelope: &CadPlayEnvelope, pane: CadPaneId) -> Option<(
     if solids.is_empty() {
         return None;
     }
-    let step = kernel.export_step_sync(&solids).ok()?;
+    let step = kernel_3d_engine::block_on(kernel.export_step(&solids)).ok()?;
     let stem = pane.model_definition_id().replace('.', "-");
     Some((format!("cad-{}.stp", stem), step))
 }
@@ -2805,7 +2805,7 @@ fn export_step_modelspace(envelope: &CadPlayEnvelope) -> Option<(String, String)
     if solids.is_empty() {
         return None;
     }
-    let step = kernel.export_step_sync(&solids).ok()?;
+    let step = kernel_3d_engine::block_on(kernel.export_step(&solids)).ok()?;
     Some(("cad.modelspace.stp".into(), step))
 }
 

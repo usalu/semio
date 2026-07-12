@@ -913,6 +913,8 @@ async fn handle_ws(socket: WebSocket, document_id: String, state: HubState) {
             label: None,
             selection_json: None,
             connected_at_ms: now_ms(),
+            user_id: None,
+            role: None,
         })
         .await;
 

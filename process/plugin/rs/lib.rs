@@ -4,7 +4,7 @@ pub mod app_3d {
     //! 🪚 Process 3D plugin — subtractive/additive processing simulation bundled as a hot-swappable WASM component.
 
     use kernel_3d_brepkit::BrepkitKernel;
-    use kernel_3d_engine::GeometryHandle;
+    use kernel_3d_engine::{BrepKernel, GeometryHandle};
     use process_3d::{Pose, ProcessMeasure, ProcessStep, SolidSpec, Stock, StepOrigin};
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_world_3d_scene, create_default_layout, mesh_from_indexed_with_face_groups, mesh_from_kind, tool_button,
@@ -478,8 +478,8 @@ pub mod app_3d {
         Some((module, machine, kind))
     }
 
-    /// 🔎 Finds the geometry module's machine offering a given legacy `measure` kind ("cut"/"drill"/"attach")
-    /// — the routing target for the toolbar, click/drag placement, and pre-module `addStep` callers.
+    /// 🔎 Finds the geometry module's machine offering a given `measure` kind ("cut"/"drill"/"attach")
+    /// — the routing target for the toolbar, click/drag placement, and module-less `addStep` callers.
     fn geometry_machine_for_measure(measure_kind: MeasureKind) -> (&'static Machine, &'static ModificationKind) {
         for machine in GEOMETRY_MODULE.machines {
             for kind in machine.modification_kinds {
@@ -688,14 +688,14 @@ pub mod app_3d {
     /// 🧠 Kernel + prefix memo: `hash(stock, enabled steps[0..i])` → solid handle, so cursor scrubbing and
     /// step edits only recompute the suffix that actually changed.
     struct ProcessKernelSession {
-        kernel: BrepkitKernel,
+        kernel: Box<dyn BrepKernel>,
         memo: HashMap<u64, GeometryHandle>,
         stock_signature: u64,
     }
 
     impl ProcessKernelSession {
         fn new() -> Self {
-            Self { kernel: BrepkitKernel::new(), memo: HashMap::new(), stock_signature: 0 }
+            Self { kernel: Box::new(BrepkitKernel::new()), memo: HashMap::new(), stock_signature: 0 }
         }
     }
 
@@ -715,15 +715,15 @@ pub mod app_3d {
     }
 
     /// 📦 Builds a posed kernel solid for a spec via `*_prim_sync` → `rotate_sync` → `translate_sync`.
-    fn solid_for_spec(kernel: &mut BrepkitKernel, spec: &SolidSpec, pose: &Pose) -> Option<GeometryHandle> {
+    fn solid_for_spec(kernel: &mut dyn BrepKernel, spec: &SolidSpec, pose: &Pose) -> Option<GeometryHandle> {
         let base = match spec {
-            SolidSpec::Box { width, depth, height } => kernel.box_prim_sync(*width, *depth, *height).ok()?,
-            SolidSpec::Cylinder { radius, height } => kernel.cylinder_prim_sync(*radius, *height).ok()?,
-            SolidSpec::Sphere { radius } => kernel.sphere_prim_sync(*radius).ok()?,
+            SolidSpec::Box { width, depth, height } => kernel_3d_engine::block_on(kernel.box_prim(*width, *depth, *height)).ok()?,
+            SolidSpec::Cylinder { radius, height } => kernel_3d_engine::block_on(kernel.cylinder_prim(*radius, *height)).ok()?,
+            SolidSpec::Sphere { radius } => kernel_3d_engine::block_on(kernel.sphere_prim(*radius)).ok()?,
         };
-        let rotated = if pose.angle != 0.0 { kernel.rotate_sync(&base, pose.axis, pose.angle).ok()? } else { base };
+        let rotated = if pose.angle != 0.0 { kernel_3d_engine::block_on(kernel.rotate(&base, pose.axis, pose.angle)).ok()? } else { base };
         if pose.position != [0.0, 0.0, 0.0] {
-            kernel.translate_sync(&rotated, pose.position).ok()
+            kernel_3d_engine::block_on(kernel.translate(&rotated, pose.position)).ok()
         } else {
             Some(rotated)
         }
@@ -770,7 +770,7 @@ pub mod app_3d {
         Some(ProcessStep { id: next_step_id(), label: label.to_string(), enabled: true, origin: Some(origin), measure })
     }
 
-    fn tool_solid_for_measure(kernel: &mut BrepkitKernel, measure: &ProcessMeasure) -> Option<GeometryHandle> {
+    fn tool_solid_for_measure(kernel: &mut dyn BrepKernel, measure: &ProcessMeasure) -> Option<GeometryHandle> {
         match measure {
             ProcessMeasure::Cut { tool, pose } => solid_for_spec(kernel, tool, pose),
             ProcessMeasure::Drill { radius, depth, pose } => solid_for_spec(kernel, &SolidSpec::Cylinder { radius: *radius, height: *depth }, pose),
@@ -809,8 +809,8 @@ pub mod app_3d {
         for (index, step) in enabled_steps.iter().enumerate().skip(start) {
             let tool = tool_solid_for_measure(&mut session.kernel, &step.measure)?;
             handle = match step.measure {
-                ProcessMeasure::Attach { .. } => session.kernel.fuse_sync(&handle, &tool).ok()?,
-                _ => session.kernel.cut_sync(&handle, &tool).ok()?,
+                ProcessMeasure::Attach { .. } => kernel_3d_engine::block_on(session.kernel.fuse(&handle, &tool)).ok()?,
+                _ => kernel_3d_engine::block_on(session.kernel.cut(&handle, &tool)).ok()?,
             };
             session.memo.insert(prefix_signature(stock_signature, &enabled_steps[..=index]), handle.clone());
         }
@@ -825,7 +825,7 @@ pub mod app_3d {
     fn processed_mesh(doc: &process_3d::Process3dDocument) -> Option<MeshData> {
         let mut session = process_kernel_session().lock().ok()?;
         let handle = replay_process(&mut session, doc)?;
-        let mesh = session.kernel.tessellate_sync(&handle, PROCESS3D_TESSELLATION_TOLERANCE).ok()?;
+        let mesh = kernel_3d_engine::block_on(session.kernel.tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE)).ok()?;
         let face_groups: Vec<(u32, u32, u32)> = mesh.face_groups.iter().map(|group| (group.entity_id.parse().unwrap_or(0), group.start, group.count)).collect();
         Some(mesh_from_indexed_with_face_groups(&mesh.position, &mesh.normal, &mesh.index, &face_groups))
     }
@@ -833,7 +833,7 @@ pub mod app_3d {
     fn processed_volume(doc: &process_3d::Process3dDocument) -> Option<f64> {
         let mut session = process_kernel_session().lock().ok()?;
         let handle = replay_process(&mut session, doc)?;
-        session.kernel.volume_sync(&handle).ok()
+        kernel_3d_engine::block_on(session.kernel.volume(&handle)).ok()
     }
 
     fn evaluated_preview_payload(fixture: &process_3d::Process3dDocument) -> (String, String) {
@@ -1291,8 +1291,8 @@ pub mod app_3d {
                     let resolved = if let (Some(module_id), Some(machine_id), Some(modification_kind_id)) = (module_id_arg, machine_id_arg, modification_kind_id_arg) {
                         find_modification(module_id, machine_id, modification_kind_id)
                     } else {
-                        let legacy_kind = args.and_then(|value| value.get("measure")).and_then(|value| value.as_str()).unwrap_or("cut");
-                        let measure_kind = match legacy_kind {
+                        let measure_arg = args.and_then(|value| value.get("measure")).and_then(|value| value.as_str()).unwrap_or("cut");
+                        let measure_kind = match measure_arg {
                             "drill" => MeasureKind::Drill,
                             "attach" => MeasureKind::Attach,
                             _ => MeasureKind::Cut,
@@ -1819,8 +1819,8 @@ pub mod app_3d {
         #[test]
         fn box_primitive_spans_from_local_origin_corner() {
             let mut kernel = BrepkitKernel::new();
-            let handle = kernel.box_prim_sync(2.0, 3.0, 4.0).expect("box prim");
-            let mesh = kernel.tessellate_sync(&handle, 0.1).expect("tessellate");
+            let handle = kernel_3d_engine::block_on(kernel.box_prim(2.0, 3.0, 4.0)).expect("box prim");
+            let mesh = kernel_3d_engine::block_on(kernel.tessellate(&handle, 0.1)).expect("tessellate");
             let axis_bounds = |offset: usize| -> (f32, f32) {
                 let values: Vec<f32> = mesh.position.iter().skip(offset).step_by(3).copied().collect();
                 (values.iter().cloned().fold(f32::INFINITY, f32::min), values.iter().cloned().fold(f32::NEG_INFINITY, f32::max))
@@ -1922,6 +1922,8 @@ pub mod app_3d {
             assert!(session.memo.len() >= 2, "expected stock + drilled prefixes memoized, got {}", session.memo.len());
         }
 
+        /// 🪵 The default timber beam (0.24m tall) fits the circular saw's 0.184m diameter but not the
+        /// table saw's 0.315m or the diamond saw's 0.35m — a real mix of valid and disabled items.
         #[test]
         fn catalogue_lists_wood_and_concrete_with_mixed_validity_on_default_stock() {
             let mut app = Process3dPlayApp::default();
@@ -1932,8 +1934,6 @@ pub mod app_3d {
             assert!(node_json.contains("Circular Saw"), "expected wood's circular saw in the catalogue: {node_json}");
             assert!(node_json.contains("Table Saw"), "expected wood's table saw in the catalogue: {node_json}");
             assert!(node_json.contains("Diamond Saw"), "expected concrete's diamond saw in the catalogue: {node_json}");
-            // The default timber beam (0.24m tall) fits the circular saw's 0.184m diameter but not the
-            // table saw's 0.315m or the diamond saw's 0.35m — a real mix of valid and disabled items.
             assert!(node_json.contains("needs stock"), "expected at least one disabled-item validation reason: {node_json}");
         }
 
@@ -1960,12 +1960,12 @@ pub mod app_3d {
             assert!((radius - 0.092).abs() < 1e-9, "circular saw diameter 0.184 should size the tool to radius 0.092, got {radius}");
         }
 
+        /// 🪵 Table saw needs >= 0.315m stock height; the default timber beam is only 0.24m tall.
         #[test]
         fn add_step_via_catalogue_rejected_when_validation_fails() {
             let mut app = Process3dPlayApp::default();
             let document_json = app.initial_document_json();
             let view_state = ViewState::default();
-            // Table saw needs >= 0.315m stock height; the default timber beam is only 0.24m tall.
             let ops = app.handle_action_patch_ops(
                 "addStep",
                 Some(&json!({ "moduleId": "wood", "machineId": "tableSaw", "modificationKindId": "crosscut" })),
@@ -1976,7 +1976,7 @@ pub mod app_3d {
         }
 
         #[test]
-        fn legacy_measure_arg_routes_to_geometry_module() {
+        fn measure_arg_routes_to_geometry_module() {
             let mut app = Process3dPlayApp::default();
             let document_json = app.initial_document_json();
             let view_state = ViewState::default();

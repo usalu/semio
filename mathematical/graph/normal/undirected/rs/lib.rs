@@ -227,7 +227,7 @@ pub mod fixture_layout {
             positions[i] = if let Some((x, y)) = optional_xy[i] { Vec2::new(x, y) } else { Vec2::ZERO };
         }
         let pin: Vec<Option<Vec2>> = (0..n).map(|i| if is_locked[i] { Some(positions[i]) } else { None }).collect();
-        force_layout::seed_positions(&mut positions, &pin, anchor, opts.random_seed);
+        force::seed_positions(&mut positions, &pin, anchor, opts.random_seed);
         let mut edge_pairs: Vec<(usize, usize)> = Vec::new();
         let mut seen: HashSet<(usize, usize)> = HashSet::new();
         for e in &edges {
@@ -271,7 +271,7 @@ pub mod fixture_layout {
         cy /= n as f64;
         let gx = opts.center_x.unwrap_or(cx);
         let gy = opts.center_y.unwrap_or(cy);
-        force_layout::run_force_layout(&mut positions, &radii, &edge_pairs, &pin, &core_opts(opts, gx, gy));
+        force::run_force_layout(&mut positions, &radii, &edge_pairs, &pin, &core_opts(opts, gx, gy));
         for (idx, raw_idx) in visible_node_indices.into_iter().enumerate() {
             let Some(node) = nodes.get_mut(raw_idx) else {
                 continue;

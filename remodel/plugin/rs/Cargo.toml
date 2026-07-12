@@ -1,0 +1,29 @@
+[package]
+name = "remodel-plugin"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[package.metadata.component]
+package = "semio:remodel"
+
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "remodel"
+ports = { react = 6082, wgpu = 6182 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "lib.rs"
+
+[dependencies]
+remodel_document = { path = "../../rs" }
+semio-framework-plugin = { path = "../../../framework/plugin/rs" }
+semio-framework-os = { path = "../../../framework/product/os/core/rs" }
+semio-framework-core = { path = "../../../framework/core/rs" }
+kernel_3d_mesh = { path = "../../../kernel/3d/mesh/rs" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+base64 = "0.22.1"
+vcs = { path = "../../../vcs/rs" }

@@ -146,6 +146,12 @@ fn bench_sweeps(c: &mut Criterion) {
 // #endregion 🔖Sweeps
 
 // #region 🔖Booleans
+
+/// 🍩 `fuse_box_torus_mesh_fallback` isolates the cost of `boolean_mesh_sync`'s coarse-tessellation
+/// fallback path (`kernel/3d/brep/rs/lib.rs:236-253`), which a torus operand forces.
+///
+/// 🔁 `repeated_cut_same_torus_x10` runs repeated cuts against the *same* static torus operand — the
+/// slider-drag motivating case for a coarse-mesh cache in `boolean_mesh_sync`.
 fn bench_booleans(c: &mut Criterion) {
     let mut group = c.benchmark_group("booleans");
     group.bench_function("fuse_box_box", |b| {
@@ -165,8 +171,6 @@ fn bench_booleans(c: &mut Criterion) {
             black_box(kernel.cut_sync(&a, &s).expect("cut_sync"));
         })
     });
-    // 🍩 Torus operand forces `boolean_mesh_sync`'s coarse-tessellation fallback path
-    // (`kernel/3d/brep/rs/lib.rs:236-253`) — isolates that fallback's cost directly.
     group.bench_function("fuse_box_torus_mesh_fallback", |b| {
         b.iter(|| {
             let mut kernel = BrepkitKernel::new();
@@ -175,8 +179,6 @@ fn bench_booleans(c: &mut Criterion) {
             black_box(kernel.fuse_sync(&a, &t).expect("fuse_sync"));
         })
     });
-    // 🔁 Repeated cuts against the *same* static torus operand — the slider-drag
-    // motivating case for a coarse-mesh cache in `boolean_mesh_sync`.
     group.bench_function("repeated_cut_same_torus_x10", |b| {
         b.iter(|| {
             let mut kernel = BrepkitKernel::new();

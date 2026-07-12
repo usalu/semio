@@ -455,6 +455,9 @@ impl AppBuilder {
         self
     }
 
+    /// @emoji 🧷 Keybinding-vs-action-registry consistency is only enforced for apps that declare
+    /// actions via `.operation()`/`.view_action()`/`.shell_action()` — apps with an empty action
+    /// registry keybind directly against controller actions instead, so there is nothing to check.
     pub fn build_definition(self) -> AppDefinition {
         assert!(
             !self.document.is_empty() && self.document.iter().all(|segment| !segment.trim().is_empty()),
@@ -559,9 +562,6 @@ impl AppBuilder {
                 }
             }
         }
-        // Apps that have adopted the declarative action registry must keep their keybindings
-        // in sync with it; apps not yet migrated (no `.operation()`/`.view_action()`/`.shell_action()`
-        // calls) are exempt until their migration wave lands their action declarations.
         if app_declared_actions {
             for binding in &keybindings {
                 assert!(
@@ -2071,7 +2071,7 @@ pub fn plugin_app_labels(instance_id: u32, view_state_json: &str) -> Result<AppL
             .apps
             .iter()
             .find(|app| app.id == app_id)
-            .map(|app| app.panel_tabs.iter().map(|tab| tab.id.clone()).collect())
+            .map(|app| app.panel_tabs.iter().map(|tab| tab.id().to_string()).collect())
             .unwrap_or_default();
         for id in panel_tab_ids {
             if let Some(label) = framework_panel_tab_label(&id, is_de) {

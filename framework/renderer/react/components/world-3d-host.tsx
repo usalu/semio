@@ -592,7 +592,7 @@ function buildFaceOverlayGeometry(mesh: WorldMeshData, faceIds: ReadonlySet<numb
   return geometry;
 }
 
-/** 🖱️➡️ Approximates a picked face's in-plane size from its triangles' local bounding box, dropping the
+/** @emoji 🖱️➡️ Approximates a picked face's in-plane size from its triangles' local bounding box, dropping the
  * smallest axis (roughly the one aligned with the face normal for axis-aligned primitive faces) — good
  * enough to size a push/pull tool's footprint without needing a true tangent-plane projection. */
 function faceExtentFromMesh(mesh: WorldMeshData, faceId: number): readonly [number, number] | undefined {
@@ -1558,7 +1558,7 @@ function instanceMergeArg(mode: ReturnType<typeof marqueeModeFromModifiers>): st
   return "replace";
 }
 
-/** @emoji 🖱️ Same as {@link instanceMergeArg} but a bare click (no modifiers) defaults to invertive, matching premigration component-pick behavior. */
+/** @emoji 🖱️ Same as {@link instanceMergeArg} but a bare click (no modifiers) defaults to invertive. */
 function componentMergeArg(mode: ReturnType<typeof marqueeModeFromModifiers>): string {
   if (mode === "additive") return "add";
   if (mode === "subtractive") return "remove";
@@ -1762,7 +1762,7 @@ function raycastGroundPoint(clientX: number, clientY: number, hostRect: DOMRect,
   return [hit.x, hit.y, hit.z];
 }
 
-/** 🖱️➡️ Signed distance along `axis` (unit vector) from `origin` to the point on that line closest to the
+/** @emoji 🖱️➡️ Signed distance along `axis` (unit vector) from `origin` to the point on that line closest to the
  * camera ray through the current pointer position — the standard closest-point-between-two-lines
  * construction, used so a face-normal drag tracks naturally instead of needing a ground/tangent-plane
  * intersection (which is undefined for motion parallel to the plane, i.e. exactly along the normal). */

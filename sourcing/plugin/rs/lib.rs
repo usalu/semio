@@ -9,7 +9,7 @@ use semio_framework_plugin::{
     WindowLayoutStackNode, WindowLayoutWindowNode, WorldSunConfig,
 };
 use semio_framework_core::mesh_from_indexed;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sourcing_curate::{
     grid_placement, grid_scale, mesh_spec_for, sourcing_modules, typology_flatten, CurateDocument,
@@ -71,7 +71,7 @@ fn selection_json_for(document: &CurateDocument) -> String {
 //#endregion 🔖Document
 
 //#region 🔖Contributions
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct PluginContributionEntry {
     #[allow(dead_code)]

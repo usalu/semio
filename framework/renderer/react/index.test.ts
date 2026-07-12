@@ -48,10 +48,12 @@ import {
   dedupeToolNodesById,
   flattenPanelTabLeaves,
   groupToolNodesByCategory,
+  initialShellState,
   isFlowGraphScene,
   parseStudioShellPath,
   reconcileToolPath,
   selectSpawnedToolNodes,
+  shellReducer,
   sortToolNodes,
   spawnedWindowChromeForKind,
   ToolTree,
@@ -88,6 +90,35 @@ describe("framework sync tools", () => {
     expect(grouped).toHaveLength(1);
     expect(grouped[0]).toMatchObject({ id: "sync", kind: "collection" });
     expect(grouped[0].kind === "collection" ? grouped[0].children.map((child) => child.id) : []).toEqual(["framework.sync.file", "framework.sync.folder", "framework.sync.remote"]);
+  });
+});
+
+describe("shell store reducer", () => {
+  const baseState = () => initialShellState({ plugins: [] });
+
+  it("toggles the overlays slice via a direct value without touching unrelated slices", () => {
+    const state = baseState();
+    const next = shellReducer(state, { type: "SET_SEARCH_OPEN", value: true });
+    expect(next.overlays.searchOpen).toBe(true);
+    expect(next.overlays.findOpen).toBe(false);
+    expect(next.pluginRuntime).toBe(state.pluginRuntime);
+    expect(next.uiPrefs).toBe(state.uiPrefs);
+  });
+
+  it("toggles the layout slice via an updater function", () => {
+    const state = baseState();
+    const opened = shellReducer(state, { type: "SET_LEFT_PANEL_VISIBLE", value: true });
+    const toggled = shellReducer(opened, { type: "SET_LEFT_PANEL_VISIBLE", value: (prev) => !prev });
+    expect(opened.layout.leftPanelVisible).toBe(true);
+    expect(toggled.layout.leftPanelVisible).toBe(false);
+    expect(toggled.overlays).toBe(opened.overlays);
+  });
+
+  it("updates the uiPrefs slice and leaves the sync slice referentially unchanged", () => {
+    const state = baseState();
+    const next = shellReducer(state, { type: "SET_UI_COMPACT", value: (prev) => !prev });
+    expect(next.uiPrefs.uiCompact).toBe(!state.uiPrefs.uiCompact);
+    expect(next.sync).toBe(state.sync);
   });
 });
 

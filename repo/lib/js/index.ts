@@ -12,7 +12,6 @@ import { createHash } from "node:crypto";
 //#endregion 🔌Adapters
 
 import type { PlaygroundVariant } from "../../../framework/plugin/registry/generated/playgrounds.ts";
-import { PLAYGROUND_VARIANTS } from "../../../framework/plugin/registry/generated/playgrounds.ts";
 
 export type PlaygroundHostKind = string;
 
@@ -1110,9 +1109,17 @@ export function playgroundEmbedUrl(kind: PlaygroundSiteKind, isDev: boolean): st
 //#endregion 🔌PlaygroundDevPorts
 
 //#region 🖥️FrameworkOsPlaygroundDev
-/** @emoji 📚 Loads the generated framework OS playground catalog (variant/plugin/aliases/ports rows). */
+/**
+ * 📚 Loads the generated framework OS playground catalog (variant/plugin/aliases/ports rows).
+ * Reads `framework/plugin/registry/generated/playgrounds.json` directly (rather than a static
+ * TS import of the gitignored generated module) so this shared kernel never fails to load on a
+ * fresh clone before `bun nx run @semio-tech/plugin-registry:generate` has ever run — callers get
+ * an empty catalog in that case instead of a hard module-resolution error.
+ */
 export function loadFrameworkOsPlaygroundCatalog(): readonly PlaygroundVariant[] {
-  return PLAYGROUND_VARIANTS;
+  const catalogPath = join(getWorkspaceRoot(), "framework", "plugin", "registry", "generated", "playgrounds.json");
+  if (!existsSync(catalogPath)) return [];
+  return JSON.parse(readFileSync(catalogPath, "utf8")) as readonly PlaygroundVariant[];
 }
 
 /** @emoji 🗺 Local tile proxy for wgpu gis2d dev (Trunk forwards `/osm` + `/vt` here). */

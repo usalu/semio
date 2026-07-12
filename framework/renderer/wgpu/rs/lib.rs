@@ -6764,7 +6764,7 @@ fn render_table_cell(cell: &Value, rect: Rect, ctx: &mut FrameworkWidgetContext<
         TableCellPayload::Text { value } => Some(value),
         TableCellPayload::Number { value } => Some(value.to_string()),
         TableCellPayload::Stepper { value, min, max, step, action } => {
-            let seg = (rect.w / 3.0).min(rect.h);
+            let seg = rect.w / 3.0;
             let minus = Rect::new(rect.x, rect.y, seg, rect.h);
             let center = Rect::new(rect.x + seg, rect.y, seg, rect.h);
             let plus = Rect::new(rect.x + seg * 2.0, rect.y, seg, rect.h);
@@ -10861,7 +10861,7 @@ impl ShellState {
 
     fn synthetic_panel_tab(id: &str, label: &str, group: PanelGroup) -> PanelTabDefinition {
         PanelTabDefinition {
-            id: id.into(),
+            kind: semio_framework_core::PanelTabKind::App(id.into()),
             label: label.into(),
             group,
             body_key: Some(String::new()),
@@ -11006,7 +11006,7 @@ impl ShellState {
                 .render(session.instance_id, body_key, &view_state)
                 .await?;
             let resolved = self.resolve_external_slots(node, &view_state).await?;
-            self.panel_ui.insert(tab.id.clone(), resolved);
+            self.panel_ui.insert(tab.id().clone(), resolved);
         }
         self.active_tools = plugin
             .tools(session.instance_id, &view_state)
@@ -13237,13 +13237,13 @@ impl ShellState {
         let mut items = Vec::new();
         for tab in &session.app.panel_tabs {
             items.push(SearchPaletteItem {
-                id: format!("panel.{}", tab.id),
+                id: format!("panel.{}", tab.id()),
                 label: tab.label.clone(),
                 group: "Panels".into(),
                 dispatch_action: Some(ActionDescriptor {
                     controller_id: session.app.controller_id.clone(),
                     action: "setActivePanelTab".into(),
-                    args: Some(serde_json::json!({ "tabId": tab.id })),
+                    args: Some(serde_json::json!({ "tabId": tab.id() })),
                 }),
                 action: None,
             });
@@ -13634,7 +13634,7 @@ fn render_panel_tab_bar(
         if index > 0 {
             panel_draw.push_solid([tab_x, tab_bar.y, hair, tab_bar_h], inner_stroke);
         }
-        let active = tab.id == active_tab_id;
+        let active = tab.id() == active_tab_id;
         let hovered = rect.contains(input.pointer_x, input.pointer_y);
         if active {
             panel_draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.selected);
@@ -13671,7 +13671,7 @@ fn render_panel_tab_bar(
         input.register_hit(HitTarget {
             rect,
             event: None,
-            control_id: Some(format!("{prefix}{}", tab.id)),
+            control_id: Some(format!("{prefix}{}", tab.id())),
             kind: HitKind::PanelTab,
             drag_axis: None,
             drag_data: None,
@@ -14160,28 +14160,28 @@ fn render_footer_tool_nodes(
 }
 
 fn panel_tab_icon_id(tab: &PanelTabDefinition) -> &'static str {
-    if tab.id == S_PLAY_CATALOGUE_TAB_ID || tab.group == PanelGroup::Workbench {
+    if tab.id() == S_PLAY_CATALOGUE_TAB_ID || tab.group == PanelGroup::Workbench {
         return "library";
     }
-    if tab.id.contains("parameters") {
+    if tab.id().contains("parameters") {
         return "settings";
     }
-    if tab.id.contains("inspector") || tab.id.contains("inspection") || tab.id == FRAMEWORK_PANEL_TAB_INSPECTION_ID {
+    if tab.id().contains("inspector") || tab.id().contains("inspection") || tab.id() == FRAMEWORK_PANEL_TAB_INSPECTION_ID {
         return "text-search";
     }
-    if tab.id == FRAMEWORK_PANEL_TAB_DOCUMENT_ID {
+    if tab.id() == FRAMEWORK_PANEL_TAB_DOCUMENT_ID {
         return "file-text";
     }
-    if tab.id == FRAMEWORK_DISPLAY_WINDOWS_TAB_ID {
+    if tab.id() == FRAMEWORK_DISPLAY_WINDOWS_TAB_ID {
         return "layout-grid";
     }
-    if tab.id == FRAMEWORK_DISPLAY_LAYOUT_TAB_ID {
+    if tab.id() == FRAMEWORK_DISPLAY_LAYOUT_TAB_ID {
         return "layout";
     }
-    if tab.id == FRAMEWORK_SETTINGS_GENERAL_TAB_ID {
+    if tab.id() == FRAMEWORK_SETTINGS_GENERAL_TAB_ID {
         return "settings-2";
     }
-    if tab.id == FRAMEWORK_PANEL_TAB_CATALOGUE_ID {
+    if tab.id() == FRAMEWORK_PANEL_TAB_CATALOGUE_ID {
         return "library";
     }
     "circle-dot"
@@ -14340,14 +14340,14 @@ impl ShellState {
         match self.active_left_kind {
             LeftPanelKind::Display => vec![
                 PanelTabDefinition {
-                    id: FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.into(),
+                    kind: semio_framework_core::PanelTabKind::DisplayWindows,
                     label: "Windows".into(),
                     group: PanelGroup::Display,
                     body_key: Some(String::new()),
                     children: Vec::new(),
                 },
                 PanelTabDefinition {
-                    id: FRAMEWORK_DISPLAY_LAYOUT_TAB_ID.into(),
+                    kind: semio_framework_core::PanelTabKind::DisplayLayout,
                     label: "Layout".into(),
                     group: PanelGroup::Display,
                     body_key: Some(String::new()),
@@ -14362,12 +14362,12 @@ impl ShellState {
                     .filter(|tab| tab.group.side() == "left")
                     .cloned()
                     .collect();
-                let has_document = tabs.iter().any(|t| t.id == FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
+                let has_document = tabs.iter().any(|t| t.id() == FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
                 if !has_document {
                     tabs.insert(
                         0,
                         PanelTabDefinition {
-                            id: FRAMEWORK_PANEL_TAB_DOCUMENT_ID.into(),
+                            kind: semio_framework_core::PanelTabKind::App(FRAMEWORK_PANEL_TAB_DOCUMENT_ID.into()),
                             label: "Document".into(),
                             group: PanelGroup::Workbench,
                             body_key: Some(String::new()),
@@ -14383,7 +14383,7 @@ impl ShellState {
     fn right_tabs(&self, session: &ActiveSession) -> Vec<PanelTabDefinition> {
         match self.active_right_kind {
             RightPanelKind::Settings => vec![PanelTabDefinition {
-                id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID.into(),
+                kind: semio_framework_core::PanelTabKind::SettingsGeneral,
                 label: "General".into(),
                 group: PanelGroup::Settings,
                 body_key: Some(String::new()),
@@ -14410,12 +14410,12 @@ impl ShellState {
                 } else {
                     let tabs = self.left_tabs(session);
                     if let Some(id) = &self.active_left_tab {
-                        if tabs.iter().any(|tab| tab.id == *id) {
+                        if tabs.iter().any(|tab| tab.id() == *id) {
                             return id.clone();
                         }
                     }
                     tabs.first()
-                        .map(|t| t.id.clone())
+                        .map(|t| t.id().to_string())
                         .unwrap_or_else(|| FRAMEWORK_PANEL_TAB_DOCUMENT_ID.into())
                 }
             }
@@ -14428,12 +14428,12 @@ impl ShellState {
         }
         let tabs = self.right_tabs(session);
         if let Some(id) = &self.active_right_tab {
-            if tabs.iter().any(|tab| tab.id == *id) {
+            if tabs.iter().any(|tab| tab.id() == *id) {
                 return id.clone();
             }
         }
         tabs.first()
-            .map(|t| t.id.clone())
+            .map(|t| t.id().to_string())
             .unwrap_or_default()
     }
 

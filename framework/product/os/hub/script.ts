@@ -5,25 +5,25 @@ import { join } from "node:path";
 
 class SetupScript extends BundleScript {
   run(): void {
-    runCargo(["fetch", "--manifest-path", "Cargo.toml"], this.root);
+    runCargo(["fetch", "--manifest-path", "rs/Cargo.toml"], this.root);
   }
 }
 
 class BuildScript extends BundleScript {
   run(): void {
-    runCargo(["build", "--release", "--manifest-path", "Cargo.toml"], this.root);
+    runCargo(["build", "--release", "--manifest-path", "rs/Cargo.toml"], this.root);
   }
 }
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCargo(["test", "--manifest-path", "Cargo.toml", ...segments], this.root);
+    runCargo(["test", "--manifest-path", "rs/Cargo.toml", ...segments], this.root);
   }
 }
 
 class DevScript extends BundleScript {
   run(): void {
-    runCargo(["run", "--manifest-path", "Cargo.toml"], this.root, {
+    runCargo(["run", "--manifest-path", "rs/Cargo.toml"], this.root, {
       [OS_HUB_PORT_ENV]: String(OS_HUB_PORT),
     });
   }

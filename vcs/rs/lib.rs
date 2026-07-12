@@ -2636,7 +2636,7 @@ mod tests {
             DemoItem { id: "a".into(), value: 1 },
             DemoItem { id: "b".into(), value: 2 },
         ];
-        let added = collection_diff_from_op(
+        let added = collection_diff_from_op::<String, DemoItem, DemoItemPatch>(
             &items,
             &CollectionOp::Add {
                 index: 0,

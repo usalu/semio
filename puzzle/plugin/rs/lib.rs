@@ -6802,6 +6802,139 @@ pub mod d3 {
             assert!(json.contains("duplicateSelection"));
         }
 
+        //#region 🧭 Suggestions, select-then-open context menu, fill build progress (Round 2)
+        #[test]
+        fn context_menu_at_selects_vortex_and_prepends_suggest_objects() {
+            let mut app = Puzzle3dPlayApp::default();
+            let document = app.initial_document_json();
+            let envelope = parse_envelope(&document);
+            let vortex = envelope.fixture.objects.first().and_then(|object| object.vortices.first()).map(|vortex| puzzle3d_vortex_full_id(&envelope.fixture.objects[0].id, &vortex.id)).expect("seed vortex");
+            let ops = app.handle_action_patch_ops("contextMenuAt", Some(&json!({ "kind": "vortex", "id": vortex })), &document, &ViewState::default());
+            let next = apply_ops(&envelope, &ops);
+            assert_eq!(next.runtime.selection.vortex_ids, vec![vortex]);
+            let menu = puzzle3d_context_menu_json(&next).expect("vortex menu");
+            assert!(menu.contains("Suggest objects"));
+            assert!(menu.contains("openVortexSuggestions"));
+        }
+
+        #[test]
+        fn context_menu_at_selects_object_and_clears_other_selection_kinds() {
+            let mut app = Puzzle3dPlayApp::default();
+            let document = app.initial_document_json();
+            let mut envelope = parse_envelope(&document);
+            let object_id = envelope.fixture.objects[0].id.clone();
+            envelope.runtime.selection.vortex_ids = vec!["stale:v0".into()];
+            let document = serde_json::to_string(&envelope).unwrap();
+            let ops = app.handle_action_patch_ops("contextMenuAt", Some(&json!({ "kind": "object", "id": object_id })), &document, &ViewState::default());
+            let next = apply_ops(&envelope, &ops);
+            assert_eq!(next.runtime.selection.object_ids, vec![object_id]);
+            assert!(next.runtime.selection.vortex_ids.is_empty());
+        }
+
+        #[test]
+        fn context_menu_at_selects_target_volume_and_set_target_volume_flag_toggles_hidden() {
+            let mut app = Puzzle3dPlayApp::default();
+            let document = app.initial_document_json();
+            let envelope = parse_envelope(&document);
+            let add_ops = app.handle_action_patch_ops("addTargetVolume", Some(&json!({ "origin": [1.0, 2.0, 3.0] })), &document, &ViewState::default());
+            let added = apply_ops(&envelope, &add_ops);
+            let volume_id = added.fixture.target_volumes[0].id.clone();
+            let added_document = serde_json::to_string(&added).unwrap();
+            let ops = app.handle_action_patch_ops("contextMenuAt", Some(&json!({ "kind": "targetVolume", "id": volume_id })), &added_document, &ViewState::default());
+            let selected = apply_ops(&added, &ops);
+            assert_eq!(selected.runtime.selection.target_volume_ids, vec![volume_id.clone()]);
+            let selected_document = serde_json::to_string(&selected).unwrap();
+            let flag_ops = app.handle_action_patch_ops("setTargetVolumeFlag", Some(&json!({ "id": volume_id, "flag": "hidden", "value": true })), &selected_document, &ViewState::default());
+            let flagged = apply_ops(&selected, &flag_ops);
+            assert!(flagged.fixture.target_volumes[0].hidden);
+        }
+
+        #[test]
+        fn open_vortex_suggestions_selects_vortex_switches_to_brush_and_opens_menu() {
+            let mut app = Puzzle3dPlayApp::default();
+            let document = app.initial_document_json();
+            let envelope = parse_envelope(&document);
+            let vortex = envelope.fixture.objects.first().and_then(|object| object.vortices.first()).map(|vortex| puzzle3d_vortex_full_id(&envelope.fixture.objects[0].id, &vortex.id)).expect("seed vortex");
+            let ops = app.handle_action_patch_ops("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 12.0, "y": 34.0 })), &document, &ViewState::default());
+            let next = apply_ops(&envelope, &ops);
+            assert_eq!(next.runtime.selection.vortex_ids, vec![vortex]);
+            assert_eq!(next.runtime.active_tool, "brush");
+            assert_eq!(next.runtime.brush_candidate_index, 0);
+            assert_eq!(next.runtime.suggestion_menu, Some([12.0, 34.0]));
+        }
+
+        #[test]
+        fn close_vortex_suggestions_clears_the_menu() {
+            let mut app = Puzzle3dPlayApp::default();
+            let document = app.initial_document_json();
+            let mut envelope = parse_envelope(&document);
+            envelope.runtime.suggestion_menu = Some([1.0, 2.0]);
+            let document = serde_json::to_string(&envelope).unwrap();
+            let ops = app.handle_action_patch_ops("closeVortexSuggestions", None, &document, &ViewState::default());
+            let next = apply_ops(&envelope, &ops);
+            assert!(next.runtime.suggestion_menu.is_none());
+        }
+
+        #[test]
+        fn accept_suggestion_appends_an_object_and_closes_the_menu() {
+            let mut app = Puzzle3dPlayApp::default();
+            let document = app.initial_document_json();
+            let envelope = parse_envelope(&document);
+            let object_count = envelope.fixture.objects.len();
+            let vortex = envelope.fixture.objects.first().and_then(|object| object.vortices.first()).map(|vortex| puzzle3d_vortex_full_id(&envelope.fixture.objects[0].id, &vortex.id)).expect("seed vortex");
+            let ops = app.handle_action_patch_ops("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), &document, &ViewState::default());
+            let opened = apply_ops(&envelope, &ops);
+            let opened_document = serde_json::to_string(&opened).unwrap();
+            let ops = app.handle_action_patch_ops("acceptSuggestion", None, &opened_document, &ViewState::default());
+            let next = apply_ops(&opened, &ops);
+            assert_eq!(next.fixture.objects.len(), object_count + 1);
+            assert!(next.runtime.suggestion_menu.is_none());
+        }
+
+        #[test]
+        fn cycle_brush_candidate_back_moves_index_backward_with_wraparound() {
+            let mut app = Puzzle3dPlayApp::default();
+            let mut envelope = default_envelope();
+            envelope.runtime.active_tool = "brush".into();
+            let vortex = envelope.fixture.objects.first().and_then(|object| object.vortices.first()).map(|vortex| puzzle3d_vortex_full_id(&envelope.fixture.objects[0].id, &vortex.id)).expect("seed vortex");
+            envelope.runtime.selection.vortex_ids = vec![vortex.clone()];
+            let document = serde_json::to_string(&envelope).unwrap();
+            let ops = app.handle_action_patch_ops("cycleBrushCandidateBack", None, &document, &ViewState::default());
+            let next = apply_ops(&envelope, &ops);
+            let raw = app.precompute.brush_candidates(&vortex);
+            let free_count = parse_brush_candidates_free_count(&raw);
+            if free_count > 0 {
+                assert_eq!(next.runtime.brush_candidate_index, free_count - 1);
+            }
+        }
+
+        #[test]
+        fn fill_count_control_shows_building_progress_while_precompute_incomplete() {
+            let mut session = Puzzle3dPrecomputeSession::new();
+            let envelope = nakagin_envelope();
+            sync_precompute_session(&mut session, &envelope);
+            session.precompute_step(1);
+            let control = puzzle3d_fill_count_control(&envelope, &session);
+            if let WindowEngagementControl::Slider { label: Some(label), .. } = control {
+                assert!(label.contains("building"), "expected building-progress label, got {label:?}");
+            } else {
+                panic!("expected a slider control");
+            }
+        }
+
+        #[test]
+        fn fill_build_tick_auto_starts_fill_when_active_and_done() {
+            let mut app = Puzzle3dPlayApp::default();
+            let mut envelope = default_envelope();
+            envelope.runtime.active_tool = "fill".into();
+            envelope.runtime.fill_count = 0;
+            let document = serde_json::to_string(&envelope).unwrap();
+            let ops = app.handle_action_patch_ops("fillBuildTick", None, &document, &ViewState::default());
+            let next = apply_ops(&envelope, &ops);
+            assert_eq!(next.runtime.fill_count, 1);
+        }
+        //#endregion 🧭 Suggestions, select-then-open context menu, fill build progress (Round 2)
+
         //#region 🧲 Attraction 6-parameter resolution tests
         fn attraction_test_object(id: &str, origin: [f64; 3], orientation: Option<[f64; 4]>, vortex_position: [f64; 3], vortex_direction: [f64; 3]) -> Puzzle3dObject {
             Puzzle3dObject {
