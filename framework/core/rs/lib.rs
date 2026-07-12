@@ -5817,6 +5817,78 @@ impl OpDag {
     }
 }
 
+//#region 🔖HubProtocol
+/// @emoji 📡 Presence roster entry broadcast to every peer connected to a document.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PresencePeer {
+    pub actor: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selection_json: Option<String>,
+    pub connected_at_ms: i64,
+}
+
+/// @emoji 📨 Client→server hub wire frames; the counterpart is {@link HubServerFrame}.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum HubClientFrame {
+    Hello {
+        actor: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        token: Option<String>,
+        since_version: i64,
+    },
+    Ops {
+        envelopes: Vec<OpEnvelope>,
+    },
+    PutEnvelope {
+        version: i64,
+        envelope: Value,
+    },
+    Presence {
+        peer: PresencePeer,
+    },
+    Bye,
+}
+
+/// @emoji 📬 Server→client hub wire frames; the counterpart is {@link HubClientFrame}.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum HubServerFrame {
+    Welcome {
+        version: i64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        envelope: Option<Value>,
+        presence: Vec<PresencePeer>,
+        backlog: Vec<OpEnvelope>,
+    },
+    Ops {
+        version: i64,
+        envelopes: Vec<OpEnvelope>,
+        origin: String,
+    },
+    SnapshotReplaced {
+        version: i64,
+        envelope: Value,
+    },
+    Presence {
+        peers: Vec<PresencePeer>,
+    },
+    Ack {
+        op_id: String,
+        version: i64,
+    },
+    Conflict {
+        message: String,
+    },
+    Error {
+        message: String,
+    },
+}
+//#endregion 🔖HubProtocol
+
 #[cfg(test)]
 mod op_dag_tests {
     use super::*;
@@ -6286,9 +6358,9 @@ pub use ui::*;
 pub use ui::kernel::{
     ActorId, AppEvent, AppInstanceId, AssetHandle, Capability, CapabilityGrant, CapabilityRequirement,
     CapabilityToken, ActionContext, ActionDef, ActionId, ActionInvocation, ActionInvocationId,
-    ActionRequest, ActionResult, Diagnostic, HostEffect, HybridLogicalTimestamp, InverseOperation,
+    ActionRequest, ActionResult, Diagnostic, HostEffect, HubClientFrame, HubServerFrame, HybridLogicalTimestamp, InverseOperation,
     InsertResult, KernelOperation, MergeStrategyKind, DocumentDiff, DocumentHandle, DocumentId, DocumentKind,
-    DocumentVersion, OpDag, OpDagError, OpEnvelope, OperationId, PayloadHash, PhysicalSize, PluginInstanceId,
+    DocumentVersion, OpDag, OpDagError, OpEnvelope, OperationId, PayloadHash, PhysicalSize, PluginInstanceId, PresencePeer,
     ResourceId, ResourceKind, Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy,
     WindowEvent, WindowHandle, WindowInput, WindowKindDef, WindowKindId, WindowOutput,
 };

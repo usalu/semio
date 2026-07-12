@@ -14,7 +14,8 @@ import {
   type SelectionMergeMode,
   type SelectionMarqueeMethod,
 } from "@semio-tech/ui-react";
-import type { ActionDescriptor, GisMapScene, MapWasmSession, UiComponentSceneNode } from "../os-shell.tsx";
+import type { ActionDescriptor, GisMapScene, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { MapWasmSession } from "../os-shell.tsx";
 import { createMapSession } from "../os-shell.tsx";
 
 //#region Types

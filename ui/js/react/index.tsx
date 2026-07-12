@@ -7588,7 +7588,6 @@ function Slider({
 
   const handleValueChange = reactHostPort.useCallback(
     (values: number[]) => {
-      console.log("[DEBUG] Slider handleValueChange", values);
       const nextValues = snapValues && snapValues.length > 0 ? values.map(findNearestSnapValue) : values;
       setDraftValues(nextValues);
       onValueChange?.(nextValues);
@@ -7780,7 +7779,11 @@ interface StepperProps extends ElementProps {
   min?: number;
   max?: number;
   step?: number;
+  /** 🔀 Mixed-selection state: shows a blank/placeholder value instead of {@link value}, mirroring {@link Input}'s `mixed` prop. */
+  mixed?: boolean;
   onChange?: (value: number) => void;
+  /** ➕➖ Relative-delta path for increment/decrement (click, drag, arrow keys); falls back to computing an absolute {@link onChange} when omitted. */
+  onDelta?: (delta: number) => void;
   onPointerDown?: () => void;
   onPointerUp?: () => void;
   onPointerCancel?: () => void;
@@ -7791,9 +7794,10 @@ interface StepperProps extends ElementProps {
 /**
  * Numeric stepper with increment, decrement, and drag-to-adjust.
  **/
-export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, interactionId, id, showLabel }) => {
+export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, mixed, onChange, onDelta, onPointerDown, onPointerUp, onPointerCancel, interactionId, id, showLabel }) => {
   const transaction = useTransaction();
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
+  const mixedLabel = useLabel("ui.common.mixedValues");
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
   const [internalValue, setInternalValue] = reactHostPort.useState(value ?? defaultValue);
@@ -7827,6 +7831,17 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
       onChange?.(clampedValue);
     },
     [clampValue, onChange],
+  );
+
+  /** ➕➖ Increment/decrement path: reports a relative delta via {@link onDelta} when provided (e.g. mixed-selection nudging), otherwise falls back to an absolute {@link onChange}. */
+  const applyDelta = reactHostPort.useCallback(
+    (increment: number) => {
+      const clampedValue = clampValue(internalValue + increment);
+      setInternalValue(clampedValue);
+      if (onDelta) onDelta(increment);
+      else onChange?.(clampedValue);
+    },
+    [internalValue, clampValue, onDelta, onChange],
   );
 
   const startContinuousChange = reactHostPort.useCallback(
@@ -7871,11 +7886,11 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
   };
 
   const handleStepUp = () => {
-    updateValue(internalValue + step);
+    applyDelta(step);
   };
 
   const handleStepDown = () => {
-    updateValue(internalValue - step);
+    applyDelta(-step);
   };
 
   const handleMouseDown = (increment: number) => {
@@ -7948,7 +7963,9 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         type="number"
         data-slot="input"
         data-stepper-input="true"
-        value={isEditing ? displayedValue : formatNumber(displayedValue)}
+        data-mixed={mixed ? "true" : undefined}
+        placeholder={mixed && !hasBeenEdited ? mixedLabel || "—" : undefined}
+        value={mixed && !hasBeenEdited ? "" : isEditing ? displayedValue : formatNumber(displayedValue)}
         onChange={handleInputChange}
         onFocus={() => {
           if (!hasBeenEdited) setHasBeenEdited(true);

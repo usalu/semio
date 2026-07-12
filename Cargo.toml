@@ -30,6 +30,7 @@ members = [
     "infinite/cavas/rs",
     "infinite/world/rs",
     "mathematical/core/rs",
+    "mathematical/geometry/rs",
     "mathematical/graph/rs",
     "mathematical/graph/dsl/rs",
     "mathematical/graph/manifest/rs",

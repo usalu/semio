@@ -1,0 +1,13 @@
+{
+  "title": "Fix UI Border and Spacing Inconsistencies Across Panels",
+  "emoji": "🎨",
+  "status": "open",
+  "description": "Refactor shared UI chrome to eliminate double borders and inconsistent spacing across the React shell (panels, tabs, trees, form controls) used by all sketchpad apps and playground/studio mode. Root causes: ButtonGroup/ButtonGroupItem double-draws borders on single-button usages (e.g. numberStepper +/- controls); ui-interpreter.tsx's renderUiControl mixes token spacing classes with raw untokenized Tailwind gap/padding across sibling control types; interpretUiNode's \"stack\" node uses a second, disconnected hardcoded-rem spacing scale via inline styles instead of the existing --ui-spacing token scale; several ad hoc bordered containers/dividers in ui-interpreter.tsx and os-shell.tsx use raw border-border instead of the existing borderNormalClass/borderElementClass/borderNormalBottomClass token classes; and nothing prevents adjacent containers from each independently drawing their own border-b divider (double dividers). Fix: correct the ButtonGroup primitive so a border is drawn exactly once; introduce a shared divide-based row-divider mechanism so dividers can't double by construction; tokenize all spacing/border usages in ui-interpreter.tsx and os-shell.tsx to use the existing ui/styling token scale; extend the existing regression test in ui/js/react/index.tsx (around line 25621) to guard against raw border-border and untokenized spacing regressions in these files going forward. Related to existing open ticket .repo/🎫/26/07/12/FIX-FORMS-BLUEPRINT-PANEL-LAYOUT-OVERLAP which touches the same stack-layout code in ui-interpreter.tsx.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1957"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯apps",
+  "sessions": [
+    "⚪ef2d411e88ec407eb361a8856ec32f7f"
+  ]
+}

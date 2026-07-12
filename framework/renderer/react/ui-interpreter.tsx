@@ -29,7 +29,7 @@ import {
   type TreePanelConfig,
 } from "@semio-tech/ui-react";
 import { ICONS, type IconName } from "@semio-tech/ui-asset";
-import type { ActionDescriptor, UiControlNode, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode } from "./os-shell.tsx";
+import type { ActionDescriptor, UiControlNode, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode } from "@semio-tech/framework-core";
 
 const Canvas2dHost = lazy(() => import("./components/canvas-2d-host.tsx").then((module) => ({ default: module.Canvas2dHost })));
 const NodeGraphHost = lazy(() => import("./components/node-graph-host.tsx").then((module) => ({ default: module.NodeGraphHost })));
@@ -182,7 +182,7 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
       const mixed = tuple == null || !Array.isArray(tuple) || tuple.length < 3;
       const axes = ["x", "y", "z"] as const;
       return (
-        <div className="grid grid-cols-3 gap-1">
+        <div className="grid grid-cols-3 gap-single">
           {axes.map((axis, index) => (
             <Input
               key={`${control.id}.${axis}`}
@@ -207,7 +207,7 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
     }
     case "keyValue":
       return (
-        <dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-xs">
+        <dl className="grid grid-cols-[auto_1fr] gap-x-single gap-y-single text-xs">
           {control.entries.map((entry) => (
             <div key={entry.label} className="contents">
               <dt className="text-muted-foreground">{entry.label}</dt>
@@ -240,27 +240,14 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
     }
     case "numberStepper":
       return (
-        <div className="flex min-w-0 w-full items-center gap-1">
-          <Button className="h-medium shrink-0 px-2" onClick={() => dispatchUiAction(onAction, control.onDelta, { delta: -control.step })} type="button" variant="outline">
-            −
-          </Button>
-          <Input
-            className="h-medium min-w-0 flex-1 font-mono text-xs"
-            id={control.id}
-            onChange={(event) => {
-              const parsed = Number(event.target.value);
-              if (Number.isFinite(parsed)) {
-                dispatchUiAction(onAction, control.onAbsolute, { value: parsed });
-              }
-            }}
-            placeholder={control.uniform ? undefined : "Mixed"}
-            type="number"
-            value={control.uniform && Number.isFinite(control.value) ? String(control.value) : ""}
-          />
-          <Button className="h-medium shrink-0 px-2" onClick={() => dispatchUiAction(onAction, control.onDelta, { delta: control.step })} type="button" variant="outline">
-            +
-          </Button>
-        </div>
+        <Stepper
+          id={control.id}
+          step={control.step}
+          value={control.uniform ? control.value : undefined}
+          mixed={!control.uniform}
+          onChange={(value) => dispatchUiAction(onAction, control.onAbsolute, { value })}
+          onDelta={(delta) => dispatchUiAction(onAction, control.onDelta, { delta })}
+        />
       );
     case "ring":
       return <Ring id={control.id} onOrbChange={(_orbId, _oldT, newT) => dispatchUiAction(onAction, control.onChange, { t: newT })} orbs={[{ disabled: control.disabled, id: control.orbId, selected: true, t: control.t }]} />;
@@ -475,8 +462,12 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
       return (
         <div
           className={cn(
+            "flex min-h-0 min-w-0 flex-1",
+            node.direction === "horizontal" ? "flex-row" : "flex-col",
+            node.gap === "none" ? "gap-0" : node.gap === "tight" ? "gap-single" : node.gap === "relaxed" ? "gap-small" : "gap-double",
+            node.padding === "none" ? "p-0" : "p-double",
             `semio-ui-stack semio-ui-stack--${node.direction}`,
-            activate && "border-border bg-panel cursor-pointer rounded-md border",
+            activate && cn(borderElementClass, "border bg-panel cursor-pointer rounded-md"),
             node.selected && "ring-primary border-primary ring-1",
           )}
           data-ui-stack={node.id}
@@ -523,7 +514,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
           }}
         >
           {node.children.map((child, index) => (
-            <div key={uiNodeKey(child, index)} className="min-h-0 min-w-0 flex-auto">
+            <div key={uiNodeKey(child, index)} className="flex-auto">
               {interpretUiNode(child, context)}
             </div>
           ))}

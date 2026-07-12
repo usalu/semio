@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { IconShotFrame, iconRenderPort, type IconRenderRequest } from "@semio-tech/ui-react";
-import type { ActionDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-core";
 
 //#region IconRenderHost
 /** @emoji 🖼️ Renders an icon-render scene: offscreen GLB shot preview inside a shot frame, see https://threejs.org/docs/#examples/en/renderers/SVGRenderer. */

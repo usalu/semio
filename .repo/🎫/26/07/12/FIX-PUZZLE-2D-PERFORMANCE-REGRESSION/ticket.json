@@ -1,0 +1,13 @@
+{
+  "title": "Fix Puzzle 2D Performance Regression",
+  "emoji": "🐢",
+  "status": "open",
+  "description": "Puzzle 2D board used to be very performant at the `premigration` git tag; after the migration from the bespoke `puzzle/2d/react/index.tsx` renderer to the generic framework shell + Rust/WASM BoardHost pipeline, zoom and selection now take multiple seconds. Root-cause refactor per plan at /Users/ueli/.claude/plans/puzzle-2d-used-to-piped-balloon.md: (1) restore rAF-coalesced rendering in framework/renderer/react/components/puzzle-2d-board-host.tsx (no more synchronous renderFrame()/dispatch per raw pointer/wheel event), (2) stop hover setters from bumping content_scene_generation in mathematical/graph/port/directed/normal/rs/lib.rs, (3) stop puzzle/plugin/rs/lib.rs from re-stringifying the whole fixture 3x per action, (4) parallelize framework/renderer/react/os-shell.tsx refreshUi()'s sequential awaits, (5) add spatial partitioning to hit-testing in the graph engine.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1958"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪025e91b8ed06440d8fc4d3bee6eed9b8"
+  ]
+}

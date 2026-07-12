@@ -17,404 +17,8 @@ mod renderer {
     // #endregion 🏷️VelloBackend
 
     use vello_backend as backend;
-    use std::ops::{Mul, Sub};
     use std::sync::Arc as SharedArc;
-
-    macro_rules! with_shape_ref {
-        ($shape:expr, |$s:ident| $body:expr) => {
-            match $shape {
-                ShapeRef::Rect($s) => $body,
-                ShapeRef::RoundedRect($s) => $body,
-                ShapeRef::Circle($s) => $body,
-                ShapeRef::Line($s) => $body,
-                ShapeRef::Arc($s) => $body,
-                ShapeRef::CubicBez($s) => $body,
-                ShapeRef::BezPath($s) => $body,
-            }
-        };
-    }
-
-    #[derive(Clone, Copy, Debug)]
-    pub enum ShapeRef<'a> {
-        Rect(&'a Rect),
-        RoundedRect(&'a RoundedRect),
-        Circle(&'a Circle),
-        Line(&'a Line),
-        Arc(&'a Arc),
-        CubicBez(&'a CubicBez),
-        BezPath(&'a BezPath),
-    }
-
-    impl<'a> From<&'a Rect> for ShapeRef<'a> {
-        fn from(value: &'a Rect) -> Self {
-            Self::Rect(value)
-        }
-    }
-
-    impl<'a> From<&'a RoundedRect> for ShapeRef<'a> {
-        fn from(value: &'a RoundedRect) -> Self {
-            Self::RoundedRect(value)
-        }
-    }
-
-    impl<'a> From<&'a Circle> for ShapeRef<'a> {
-        fn from(value: &'a Circle) -> Self {
-            Self::Circle(value)
-        }
-    }
-
-    impl<'a> From<&'a Line> for ShapeRef<'a> {
-        fn from(value: &'a Line) -> Self {
-            Self::Line(value)
-        }
-    }
-
-    impl<'a> From<&'a Arc> for ShapeRef<'a> {
-        fn from(value: &'a Arc) -> Self {
-            Self::Arc(value)
-        }
-    }
-
-    impl<'a> From<&'a CubicBez> for ShapeRef<'a> {
-        fn from(value: &'a CubicBez) -> Self {
-            Self::CubicBez(value)
-        }
-    }
-
-    impl<'a> From<&'a BezPath> for ShapeRef<'a> {
-        fn from(value: &'a BezPath) -> Self {
-            Self::BezPath(value)
-        }
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq)]
-    pub struct Point(pub(crate) backend::kurbo::Point);
-
-    impl Point {
-        pub const ZERO: Self = Self(backend::kurbo::Point::ZERO);
-        pub fn new(x: f64, y: f64) -> Self {
-            Self(backend::kurbo::Point::new(x, y))
-        }
-        pub fn distance(self, other: Self) -> f64 {
-            self.0.distance(other.0)
-        }
-        pub fn x(&self) -> f64 {
-            self.0.x
-        }
-        pub fn y(&self) -> f64 {
-            self.0.y
-        }
-    }
-
-    impl std::ops::Add<Vec2> for Point {
-        type Output = Self;
-        fn add(self, rhs: Vec2) -> Self {
-            Self(self.0 + rhs.0)
-        }
-    }
-
-    impl std::ops::Sub<Vec2> for Point {
-        type Output = Self;
-        fn sub(self, rhs: Vec2) -> Self {
-            Self(self.0 - rhs.0)
-        }
-    }
-
-    impl std::ops::Sub for Point {
-        type Output = Vec2;
-        fn sub(self, rhs: Self) -> Vec2 {
-            Vec2(self.0 - rhs.0)
-        }
-    }
-
-    impl std::ops::Deref for Point {
-        type Target = backend::kurbo::Point;
-        fn deref(&self) -> &Self::Target {
-            &self.0
-        }
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq)]
-    pub struct Vec2(pub(crate) backend::kurbo::Vec2);
-
-    impl std::ops::Deref for Vec2 {
-        type Target = backend::kurbo::Vec2;
-        fn deref(&self) -> &Self::Target {
-            &self.0
-        }
-    }
-
-    impl Vec2 {
-        pub fn new(x: f64, y: f64) -> Self {
-            Self(backend::kurbo::Vec2::new(x, y))
-        }
-        pub fn hypot(self) -> f64 {
-            self.0.hypot()
-        }
-        pub fn dot(self, other: Self) -> f64 {
-            self.0.dot(other.0)
-        }
-        pub fn x(&self) -> f64 {
-            self.0.x
-        }
-        pub fn y(&self) -> f64 {
-            self.0.y
-        }
-    }
-
-    impl From<(f64, f64)> for Vec2 {
-        fn from((x, y): (f64, f64)) -> Self {
-            Self::new(x, y)
-        }
-    }
-
-    impl std::ops::Div<f64> for Vec2 {
-        type Output = Self;
-        fn div(self, rhs: f64) -> Self {
-            Self(self.0 / rhs)
-        }
-    }
-
-    impl std::ops::Mul<f64> for Vec2 {
-        type Output = Self;
-        fn mul(self, rhs: f64) -> Self {
-            Self(self.0 * rhs)
-        }
-    }
-
-    impl std::ops::Neg for Vec2 {
-        type Output = Self;
-        fn neg(self) -> Self {
-            Self(-self.0)
-        }
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq)]
-    pub struct Affine(pub(crate) backend::kurbo::Affine);
-
-    impl Affine {
-        pub const IDENTITY: Self = Self(backend::kurbo::Affine::IDENTITY);
-        pub fn new(coeffs: [f64; 6]) -> Self {
-            Self(backend::kurbo::Affine::new(coeffs))
-        }
-        pub fn translate(self, offset: impl Into<Vec2>) -> Self {
-            let offset = offset.into();
-            Self(self.0 * backend::kurbo::Affine::translate(offset.0))
-        }
-        pub fn scale(self, s: f64) -> Self {
-            Self(self.0 * backend::kurbo::Affine::scale(s))
-        }
-        pub fn rotate(self, angle: f64) -> Self {
-            Self(self.0 * backend::kurbo::Affine::rotate(angle))
-        }
-    }
-
-    impl Mul for Affine {
-        type Output = Self;
-        fn mul(self, rhs: Self) -> Self {
-            Self(self.0 * rhs.0)
-        }
-    }
-
-    impl Mul<Point> for Affine {
-        type Output = Point;
-        fn mul(self, rhs: Point) -> Point {
-            Point(self.0 * rhs.0)
-        }
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq)]
-    pub struct Rect(pub(crate) backend::kurbo::Rect);
-
-    impl Rect {
-        pub fn new(x0: f64, y0: f64, x1: f64, y1: f64) -> Self {
-            Self(backend::kurbo::Rect::new(x0, y0, x1, y1))
-        }
-        pub fn from_points(p0: Point, p1: Point) -> Self {
-            Self(backend::kurbo::Rect::from_points(p0.0, p1.0))
-        }
-        pub fn inflate(self, dx: f64, dy: f64) -> Self {
-            Self(self.0.inflate(dx, dy))
-        }
-        pub fn x0(self) -> f64 {
-            self.0.x0
-        }
-        pub fn y0(self) -> f64 {
-            self.0.y0
-        }
-        pub fn x1(self) -> f64 {
-            self.0.x1
-        }
-        pub fn y1(self) -> f64 {
-            self.0.y1
-        }
-        pub fn width(self) -> f64 {
-            self.0.width()
-        }
-        pub fn height(self) -> f64 {
-            self.0.height()
-        }
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq)]
-    pub struct RoundedRectRadii(pub(crate) backend::kurbo::RoundedRectRadii);
-
-    impl RoundedRectRadii {
-        pub fn new(top_left: f64, top_right: f64, bottom_right: f64, bottom_left: f64) -> Self {
-            Self(backend::kurbo::RoundedRectRadii::new(top_left, top_right, bottom_right, bottom_left))
-        }
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq)]
-    pub struct RoundedRect(pub(crate) backend::kurbo::RoundedRect);
-
-    impl RoundedRect {
-        pub fn new(rect: Rect, radii: RoundedRectRadii) -> Self {
-            let r = rect.0;
-            Self(backend::kurbo::RoundedRect::new(r.x0, r.y0, r.x1, r.y1, radii.0))
-        }
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq)]
-    pub struct Circle(pub(crate) backend::kurbo::Circle);
-
-    impl Circle {
-        pub fn new(center: Point, radius: f64) -> Self {
-            Self(backend::kurbo::Circle::new(center.0, radius))
-        }
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq)]
-    pub struct Line(pub(crate) backend::kurbo::Line);
-
-    impl Line {
-        pub fn new(p0: Point, p1: Point) -> Self {
-            Self(backend::kurbo::Line::new(p0.0, p1.0))
-        }
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq)]
-    pub struct Arc(pub(crate) backend::kurbo::Arc);
-
-    impl Arc {
-        pub fn new(center: Point, radii: (f64, f64), start_angle: f64, sweep: f64, x_rotation: f64) -> Self {
-            Self(backend::kurbo::Arc::new(center.0, radii, start_angle, sweep, x_rotation))
-        }
-        pub fn eval(self, t: f64) -> Point {
-            Point(backend::kurbo::ParamCurve::eval(&self.0, t))
-        }
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq)]
-    pub struct CubicBez(pub(crate) backend::kurbo::CubicBez);
-
-    impl std::ops::Deref for CubicBez {
-        type Target = backend::kurbo::CubicBez;
-        fn deref(&self) -> &Self::Target {
-            &self.0
-        }
-    }
-
-    impl CubicBez {
-        pub fn new(p0: Point, p1: Point, p2: Point, p3: Point) -> Self {
-            Self(backend::kurbo::CubicBez::new(p0.0, p1.0, p2.0, p3.0))
-        }
-        pub fn eval(self, t: f64) -> Point {
-            Point(backend::kurbo::ParamCurve::eval(&self.0, t))
-        }
-        pub fn p0(self) -> Point {
-            Point(self.0.p0)
-        }
-        pub fn p1(self) -> Point {
-            Point(self.0.p1)
-        }
-        pub fn p2(self) -> Point {
-            Point(self.0.p2)
-        }
-        pub fn p3(self) -> Point {
-            Point(self.0.p3)
-        }
-    }
-
-    #[derive(Clone, Debug, PartialEq)]
-    pub enum PathEl {
-        MoveTo(Point),
-        LineTo(Point),
-        QuadTo(Point, Point),
-        CurveTo(Point, Point, Point),
-        ClosePath,
-    }
-
-    impl From<backend::kurbo::PathEl> for PathEl {
-        fn from(value: backend::kurbo::PathEl) -> Self {
-            match value {
-                backend::kurbo::PathEl::MoveTo(p) => Self::MoveTo(Point(p)),
-                backend::kurbo::PathEl::LineTo(p) => Self::LineTo(Point(p)),
-                backend::kurbo::PathEl::QuadTo(p0, p1) => Self::QuadTo(Point(p0), Point(p1)),
-                backend::kurbo::PathEl::CurveTo(p0, p1, p2) => Self::CurveTo(Point(p0), Point(p1), Point(p2)),
-                backend::kurbo::PathEl::ClosePath => Self::ClosePath,
-            }
-        }
-    }
-
-    impl From<PathEl> for backend::kurbo::PathEl {
-        fn from(value: PathEl) -> Self {
-            match value {
-                PathEl::MoveTo(p) => Self::MoveTo(p.0),
-                PathEl::LineTo(p) => Self::LineTo(p.0),
-                PathEl::QuadTo(p0, p1) => Self::QuadTo(p0.0, p1.0),
-                PathEl::CurveTo(p0, p1, p2) => Self::CurveTo(p0.0, p1.0, p2.0),
-                PathEl::ClosePath => Self::ClosePath,
-            }
-        }
-    }
-
-    #[derive(Clone, Debug, Default, PartialEq)]
-    pub struct BezPath(pub(crate) backend::kurbo::BezPath);
-
-    impl BezPath {
-        pub fn new() -> Self {
-            Self(backend::kurbo::BezPath::new())
-        }
-        pub fn move_to(&mut self, p: impl Into<(f64, f64)>) {
-            let (x, y) = p.into();
-            self.0.move_to((x, y));
-        }
-        pub fn line_to(&mut self, p: impl Into<(f64, f64)>) {
-            let (x, y) = p.into();
-            self.0.line_to((x, y));
-        }
-        pub fn quad_to(&mut self, p1: Point, p2: Point) {
-            self.0.quad_to(p1.0, p2.0);
-        }
-        pub fn curve_to(&mut self, p1: Point, p2: Point, p3: Point) {
-            self.0.curve_to(p1.0, p2.0, p3.0);
-        }
-        pub fn close_path(&mut self) {
-            self.0.close_path();
-        }
-        pub fn push(&mut self, el: PathEl) {
-            self.0.push(el.into());
-        }
-        pub fn elements(&self) -> Vec<PathEl> {
-            self.0.elements().iter().copied().map(Into::into).collect()
-        }
-        pub fn bounding_box(&self) -> Rect {
-            Rect(backend::kurbo::Shape::bounding_box(&self.0))
-        }
-    }
-
-    impl From<Point> for (f64, f64) {
-        fn from(value: Point) -> Self {
-            (value.0.x, value.0.y)
-        }
-    }
-
-    impl From<Vec2> for (f64, f64) {
-        fn from(value: Vec2) -> Self {
-            (value.0.x, value.0.y)
-        }
-    }
+    use mathematical_geometry::{Affine, ShapeRef};
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum Cap {
@@ -449,16 +53,6 @@ mod renderer {
         pub fn set_end_cap(&mut self, cap: Cap) {
             self.0.end_cap = cap.into();
         }
-    }
-
-    /// @emoji 📐 Appends flattened path elements from a shape into a path buffer.
-    pub fn append_shape_to_path<'a>(path: &mut BezPath, shape: impl Into<ShapeRef<'a>>, tolerance: f64) {
-        let shape = shape.into();
-        with_shape_ref!(shape, |s| {
-            for el in backend::kurbo::Shape::path_elements(&s.0, tolerance) {
-                path.push(el.into());
-            }
-        });
     }
 
     #[derive(Clone, Copy, Debug, PartialEq)]
@@ -602,41 +196,44 @@ mod renderer {
         }
         pub fn fill<'a>(&mut self, rule: FillRule, transform: Affine, paint: impl Into<Paint>, brush_transform: Option<Affine>, shape: impl Into<ShapeRef<'a>>) {
             let paint = paint.into();
-            let brush_transform = brush_transform.map(|a| a.0);
+            let brush_transform = brush_transform.map(|a| a.to_kurbo());
+            let transform = transform.to_kurbo();
             match (paint, shape.into()) {
-                (Paint::Solid(color), ShapeRef::Rect(s)) => self.0.fill(rule.into(), transform.0, color.0, brush_transform, &s.0),
-                (Paint::Solid(color), ShapeRef::RoundedRect(s)) => self.0.fill(rule.into(), transform.0, color.0, brush_transform, &s.0),
-                (Paint::Solid(color), ShapeRef::Circle(s)) => self.0.fill(rule.into(), transform.0, color.0, brush_transform, &s.0),
-                (Paint::Solid(color), ShapeRef::Line(s)) => self.0.fill(rule.into(), transform.0, color.0, brush_transform, &s.0),
-                (Paint::Solid(color), ShapeRef::Arc(s)) => self.0.fill(rule.into(), transform.0, color.0, brush_transform, &s.0),
-                (Paint::Solid(color), ShapeRef::CubicBez(s)) => self.0.fill(rule.into(), transform.0, color.0, brush_transform, &s.0),
-                (Paint::Solid(color), ShapeRef::BezPath(s)) => self.0.fill(rule.into(), transform.0, color.0, brush_transform, &s.0),
+                (Paint::Solid(color), ShapeRef::Rect(s)) => self.0.fill(rule.into(), transform, color.0, brush_transform, &s.to_kurbo()),
+                (Paint::Solid(color), ShapeRef::RoundedRect(s)) => self.0.fill(rule.into(), transform, color.0, brush_transform, &s.to_kurbo()),
+                (Paint::Solid(color), ShapeRef::Circle(s)) => self.0.fill(rule.into(), transform, color.0, brush_transform, &s.to_kurbo()),
+                (Paint::Solid(color), ShapeRef::Line(s)) => self.0.fill(rule.into(), transform, color.0, brush_transform, &s.to_kurbo()),
+                (Paint::Solid(color), ShapeRef::Arc(s)) => self.0.fill(rule.into(), transform, color.0, brush_transform, &s.to_kurbo()),
+                (Paint::Solid(color), ShapeRef::CubicBez(s)) => self.0.fill(rule.into(), transform, color.0, brush_transform, &s.to_kurbo()),
+                (Paint::Solid(color), ShapeRef::BezPath(s)) => self.0.fill(rule.into(), transform, color.0, brush_transform, &s.to_kurbo()),
             }
         }
         pub fn stroke<'a>(&mut self, stroke: &Stroke, transform: Affine, paint: impl Into<Paint>, brush_transform: Option<Affine>, shape: impl Into<ShapeRef<'a>>) {
             let paint = paint.into();
-            let brush_transform = brush_transform.map(|a| a.0);
+            let brush_transform = brush_transform.map(|a| a.to_kurbo());
+            let transform = transform.to_kurbo();
             match (paint, shape.into()) {
-                (Paint::Solid(color), ShapeRef::Rect(s)) => self.0.stroke(&stroke.0, transform.0, color.0, brush_transform, &s.0),
-                (Paint::Solid(color), ShapeRef::RoundedRect(s)) => self.0.stroke(&stroke.0, transform.0, color.0, brush_transform, &s.0),
-                (Paint::Solid(color), ShapeRef::Circle(s)) => self.0.stroke(&stroke.0, transform.0, color.0, brush_transform, &s.0),
-                (Paint::Solid(color), ShapeRef::Line(s)) => self.0.stroke(&stroke.0, transform.0, color.0, brush_transform, &s.0),
-                (Paint::Solid(color), ShapeRef::Arc(s)) => self.0.stroke(&stroke.0, transform.0, color.0, brush_transform, &s.0),
-                (Paint::Solid(color), ShapeRef::CubicBez(s)) => self.0.stroke(&stroke.0, transform.0, color.0, brush_transform, &s.0),
-                (Paint::Solid(color), ShapeRef::BezPath(s)) => self.0.stroke(&stroke.0, transform.0, color.0, brush_transform, &s.0),
+                (Paint::Solid(color), ShapeRef::Rect(s)) => self.0.stroke(&stroke.0, transform, color.0, brush_transform, &s.to_kurbo()),
+                (Paint::Solid(color), ShapeRef::RoundedRect(s)) => self.0.stroke(&stroke.0, transform, color.0, brush_transform, &s.to_kurbo()),
+                (Paint::Solid(color), ShapeRef::Circle(s)) => self.0.stroke(&stroke.0, transform, color.0, brush_transform, &s.to_kurbo()),
+                (Paint::Solid(color), ShapeRef::Line(s)) => self.0.stroke(&stroke.0, transform, color.0, brush_transform, &s.to_kurbo()),
+                (Paint::Solid(color), ShapeRef::Arc(s)) => self.0.stroke(&stroke.0, transform, color.0, brush_transform, &s.to_kurbo()),
+                (Paint::Solid(color), ShapeRef::CubicBez(s)) => self.0.stroke(&stroke.0, transform, color.0, brush_transform, &s.to_kurbo()),
+                (Paint::Solid(color), ShapeRef::BezPath(s)) => self.0.stroke(&stroke.0, transform, color.0, brush_transform, &s.to_kurbo()),
             }
         }
         pub fn draw_image(&mut self, image: &RasterImage, transform: Affine) {
-            self.0.draw_image(&backend::peniko::ImageBrush::new(image.0.clone()), transform.0);
+            self.0.draw_image(&backend::peniko::ImageBrush::new(image.0.clone()), transform.to_kurbo());
         }
         pub fn append(&mut self, other: &Scene, transform: Option<Affine>) {
-            self.0.append(&other.0, transform.map(|a| a.0));
+            self.0.append(&other.0, transform.map(|a| a.to_kurbo()));
         }
         pub fn push_layer<'a>(&mut self, rule: FillRule, blend: BlendMode, alpha: f32, transform: Affine, clip: impl Into<ShapeRef<'a>>) {
             let style: backend::peniko::Fill = rule.into();
             let blend: backend::peniko::Mix = blend.into();
-            with_shape_ref!(clip.into(), |s| {
-                self.0.push_layer(style, blend, alpha, transform.0, &s.0);
+            let transform = transform.to_kurbo();
+            mathematical_geometry::with_shape_ref!(clip.into(), |s| {
+                self.0.push_layer(style, blend, alpha, transform, &s.to_kurbo());
             });
         }
         pub fn pop_layer(&mut self) {
@@ -644,8 +241,9 @@ mod renderer {
         }
         pub fn push_clip_layer<'a>(&mut self, rule: FillRule, transform: Affine, clip: impl Into<ShapeRef<'a>>) {
             let style: backend::peniko::Fill = rule.into();
-            with_shape_ref!(clip.into(), |s| {
-                self.0.push_clip_layer(style, transform.0, &s.0);
+            let transform = transform.to_kurbo();
+            mathematical_geometry::with_shape_ref!(clip.into(), |s| {
+                self.0.push_clip_layer(style, transform, &s.to_kurbo());
             });
         }
         pub fn is_empty(&self) -> bool {
@@ -680,10 +278,8 @@ mod renderer {
     }
 }
 
-pub use renderer::{
-    append_shape_to_path, append_svg_document, Affine, Arc, BezPath, BlendMode, Cap, Circle, Color, CubicBez, FillRule, Line, Paint, PathEl,
-    Point, RasterImage, Rect, Rgba8, RoundedRect, RoundedRectRadii, Scene, ShapeRef, Stroke, SvgDocument, Vec2,
-};
+pub use renderer::{append_svg_document, BlendMode, Cap, Color, FillRule, Paint, RasterImage, Rgba8, Scene, Stroke, SvgDocument};
+pub use mathematical_geometry::{append_shape_to_path, geom_sel, Affine, Arc, BezPath, Circle, CubicBez, Line, PathEl, Point, Rect, RoundedRect, RoundedRectRadii, ShapeRef, Vec2};
 pub(crate) use renderer::vello_backend::usvg;
 // #endregion 🔖Renderer
 
@@ -766,162 +362,6 @@ pub mod icon_assets {
 
 // #endregion 🏷️IconAssets
 
-pub mod geom_sel {
-    use crate::{CubicBez, Point};
-
-    #[derive(Clone, Copy, Debug)]
-    pub struct WorldBox {
-        pub min_x: f64,
-        pub min_y: f64,
-        pub max_x: f64,
-        pub max_y: f64,
-    }
-
-    pub fn inflate_world_box(b: WorldBox, pad: f64) -> WorldBox {
-        WorldBox { min_x: b.min_x - pad, min_y: b.min_y - pad, max_x: b.max_x + pad, max_y: b.max_y + pad }
-    }
-
-    pub fn world_boxes_overlap(a: WorldBox, b: WorldBox) -> bool {
-        a.min_x <= b.max_x && a.max_x >= b.min_x && a.min_y <= b.max_y && a.max_y >= b.min_y
-    }
-
-    pub fn world_box_contains_point(b: WorldBox, p: Point) -> bool {
-        p.x >= b.min_x && p.x <= b.max_x && p.y >= b.min_y && p.y <= b.max_y
-    }
-
-    pub fn world_box_contains_box(outer: WorldBox, inner: WorldBox) -> bool {
-        inner.min_x >= outer.min_x && inner.max_x <= outer.max_x && inner.min_y >= outer.min_y && inner.max_y <= outer.max_y
-    }
-
-    fn world_box_corners(b: WorldBox) -> [Point; 4] {
-        [Point::new(b.min_x, b.min_y), Point::new(b.max_x, b.min_y), Point::new(b.max_x, b.max_y), Point::new(b.min_x, b.max_y)]
-    }
-
-    pub fn world_box_from_points(points: &[Point]) -> Option<WorldBox> {
-        if points.is_empty() {
-            return None;
-        }
-        let mut min_x = f64::INFINITY;
-        let mut min_y = f64::INFINITY;
-        let mut max_x = f64::NEG_INFINITY;
-        let mut max_y = f64::NEG_INFINITY;
-        for p in points {
-            min_x = min_x.min(p.x);
-            min_y = min_y.min(p.y);
-            max_x = max_x.max(p.x);
-            max_y = max_y.max(p.y);
-        }
-        Some(WorldBox { min_x, min_y, max_x, max_y })
-    }
-
-    pub fn point_in_polygon(point: Point, polygon: &[Point]) -> bool {
-        if polygon.len() < 3 {
-            return false;
-        }
-        let mut inside = false;
-        let mut j = polygon.len() - 1;
-        for i in 0..polygon.len() {
-            let a = polygon[i];
-            let b = polygon[j];
-            let crosses = (a.y > point.y) != (b.y > point.y);
-            if crosses && point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x {
-                inside = !inside;
-            }
-            j = i;
-        }
-        inside
-    }
-
-    fn point_on_segment(point: Point, start: Point, end: Point) -> bool {
-        const EPS: f64 = 1e-9;
-        point.x >= start.x.min(end.x) - EPS
-            && point.x <= start.x.max(end.x) + EPS
-            && point.y >= start.y.min(end.y) - EPS
-            && point.y <= start.y.max(end.y) + EPS
-            && ((end.x - start.x) * (point.y - start.y) - (end.y - start.y) * (point.x - start.x)).abs() <= EPS
-    }
-
-    fn orientation(a: Point, b: Point, c: Point) -> i8 {
-        let v = (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y);
-        if v > 1e-9 {
-            1
-        } else if v < -1e-9 {
-            -1
-        } else {
-            0
-        }
-    }
-
-    fn segments_intersect(a0: Point, a1: Point, b0: Point, b1: Point) -> bool {
-        let o1 = orientation(a0, a1, b0);
-        let o2 = orientation(a0, a1, b1);
-        let o3 = orientation(b0, b1, a0);
-        let o4 = orientation(b0, b1, a1);
-        if o1 != o2 && o3 != o4 {
-            return true;
-        }
-        point_on_segment(b0, a0, a1) || point_on_segment(b1, a0, a1) || point_on_segment(a0, b0, b1) || point_on_segment(a1, b0, b1)
-    }
-
-    fn world_box_edges(box_: WorldBox) -> [(Point, Point); 4] {
-        let [a, b, c, d] = world_box_corners(box_);
-        [(a, b), (b, c), (c, d), (d, a)]
-    }
-
-    pub fn segment_intersects_world_box(start: Point, end: Point, box_: WorldBox) -> bool {
-        if world_box_contains_point(box_, start) || world_box_contains_point(box_, end) {
-            return true;
-        }
-        world_box_edges(box_).iter().any(|&(a, b)| segments_intersect(start, end, a, b))
-    }
-
-    fn polygon_segments(polygon: &[Point]) -> Vec<(Point, Point)> {
-        if polygon.is_empty() {
-            return Vec::new();
-        }
-        let mut out = Vec::with_capacity(polygon.len());
-        for i in 0..polygon.len() {
-            out.push((polygon[i], polygon[(i + 1) % polygon.len()]));
-        }
-        out
-    }
-
-    pub fn polygon_contains_world_box(polygon: &[Point], box_: WorldBox) -> bool {
-        world_box_corners(box_).iter().all(|&p| point_in_polygon(p, polygon))
-    }
-
-    pub fn polygon_intersects_world_box(polygon: &[Point], box_: WorldBox) -> bool {
-        if world_box_corners(box_).iter().any(|&p| point_in_polygon(p, polygon)) {
-            return true;
-        }
-        if polygon.iter().any(|&p| world_box_contains_point(box_, p)) {
-            return true;
-        }
-        polygon_segments(polygon).iter().any(|&(s, e)| segment_intersects_world_box(s, e, box_))
-    }
-
-    pub fn segment_intersects_polygon(start: Point, end: Point, polygon: &[Point]) -> bool {
-        if point_in_polygon(start, polygon) || point_in_polygon(end, polygon) {
-            return true;
-        }
-        polygon_segments(polygon).iter().any(|&(a, b)| segments_intersect(start, end, a, b))
-    }
-
-    pub fn cubic_bezier_axis_bounds(c: CubicBez) -> WorldBox {
-        let xs = [c.p0.x, c.p1.x, c.p2.x, c.p3.x];
-        let ys = [c.p0.y, c.p1.y, c.p2.y, c.p3.y];
-        WorldBox {
-            min_x: xs.iter().copied().fold(f64::INFINITY, f64::min),
-            max_x: xs.iter().copied().fold(f64::NEG_INFINITY, f64::max),
-            min_y: ys.iter().copied().fold(f64::INFINITY, f64::min),
-            max_y: ys.iter().copied().fold(f64::NEG_INFINITY, f64::max),
-        }
-    }
-
-    pub fn cubic_bezier_point(c: CubicBez, t: f64) -> Point {
-        c.eval(t.clamp(0.0, 1.0))
-    }
-}
 
 pub mod svg_icon {
     use std::sync::{Arc, OnceLock};

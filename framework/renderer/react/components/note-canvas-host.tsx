@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn, SelectionMarquee, marqueeCoverageFromGesture, screenRectFromPoints, type SelectionMarqueePoint } from "@semio-tech/ui-react";
 import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
-import type { ActionDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-core";
 
 //#region Types
 export type Vec2 = readonly [number, number];

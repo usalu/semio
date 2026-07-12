@@ -35,7 +35,7 @@ import {
   useCanvasAppearanceSync,
 } from "@semio-tech/ui-react";
 import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
-import type { ActionDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-core";
 
 //#region WorldSceneParsing
 type WorldMeshData = {

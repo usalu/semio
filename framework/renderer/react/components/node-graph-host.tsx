@@ -19,7 +19,7 @@ import {
 } from "@semio-tech/ui-react";
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import type { ActionDescriptor, NodeGraphScene, PresencePeer, UiComponentSceneNode } from "../os-shell.tsx";
+import type { ActionDescriptor, NodeGraphScene, PresencePeer, UiComponentSceneNode } from "@semio-tech/framework-core";
 import { createFlowSession, createGraphSession, isFlowGraphScene, nodeGraphActions, useUIFindSafe, type FlowWasmSession } from "../os-shell.tsx";
 
 //#region Types

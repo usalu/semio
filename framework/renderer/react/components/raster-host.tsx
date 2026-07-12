@@ -13,7 +13,7 @@ import {
   type SelectionMergeMode,
 } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import type { ActionDescriptor, RasterScene, UiComponentSceneNode } from "../os-shell.tsx";
+import type { ActionDescriptor, RasterScene, UiComponentSceneNode } from "@semio-tech/framework-core";
 import { createRasterSession, type RasterWasmSession } from "../os-shell.tsx";
 import { wheelCameraAtScreen, type CanvasCamera } from "./canvas-2d-host.tsx";
 

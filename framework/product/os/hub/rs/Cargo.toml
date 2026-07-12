@@ -20,8 +20,7 @@ serde_json = "1.0"
 thiserror = "2.0"
 uuid = { version = "1.20", features = ["v7", "serde"] }
 tokio = { version = "1", features = ["full"] }
-sqlx-core = { version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "migrate", "json", "offline"] }
-sqlx-postgres = { version = "0.8", features = ["uuid", "time", "migrate", "json", "offline"] }
+rusqlite = { version = "0.38.0", features = ["bundled"] }
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 time = { version = "0.3", features = ["serde", "formatting", "parsing"] }
 tracing = "0.1"
@@ -29,7 +28,6 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 futures = "0.3"
 dashmap = "6"
 semio-framework-core = { path = "../../../../core/rs" }
-semio-framework-sync = { path = "../../../../sync/rs" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full", "test-util"] }

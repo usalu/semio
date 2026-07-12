@@ -59,6 +59,11 @@ pub struct OperationMeta {
 #[serde(rename_all = "camelCase")]
 pub struct Edit<Op> {
     pub id: String,
+    /// @emoji 🖋️ Authoring actor id. Local edits carry the dispatching actor; ingested edits carry
+    /// the incoming {@link OpEnvelope}'s actor. Drives {@link UndoPolicy} (foreign edits are never
+    /// undone locally). `None` means unauthored/legacy and is treated as local.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub actor: Option<String>,
     pub forwards: Vec<Op>,
     pub backwards: Vec<Op>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -181,6 +186,8 @@ pub enum VcsError {
     EmptyApply,
     #[error("nothing to undo")]
     NothingToUndo,
+    #[error("cannot undo edit authored by another actor: {0}")]
+    ForeignEdit(String),
     #[error("nothing to redo")]
     NothingToRedo,
     #[error("serialize error: {0}")]
@@ -318,6 +325,38 @@ where
             }
         }
     }
+}
+
+/// @emoji 🧮 Projects a `CollectionOp` onto a sparse {@link CollectionDiff}, so a plugin's
+/// `Operation::diff` can produce a diff in one call instead of hand-writing `removed`/`modified`/
+/// `added`. `Add` → `added`, `Remove` → `removed`, `Patch` → `modified`. `CollectionDiff` has no
+/// positional-move channel, so `Move` is encoded as `removed` + `added` (delete then re-add by
+/// identity); a plugin that keeps items keyed by id reconstructs order from item identity.
+pub fn collection_diff_from_op<TId, TItem, TPatch>(
+    items: &[TItem],
+    op: &CollectionOp<TId, TItem, TPatch>,
+) -> CollectionDiff<TId, TPatch, TItem>
+where
+    TId: PartialEq + Clone,
+    TItem: Identified<TId> + Clone,
+    TPatch: Clone,
+{
+    let mut diff = CollectionDiff::default();
+    match op {
+        CollectionOp::Add { item, .. } => diff.added.push(item.clone()),
+        CollectionOp::Remove { id } => diff.removed.push(id.clone()),
+        CollectionOp::Patch { id, patch } => diff.modified.push(ItemPatch {
+            id: id.clone(),
+            patch: patch.clone(),
+        }),
+        CollectionOp::Move { id, .. } => {
+            if let Some(item) = items.iter().find(|item| item.id() == id) {
+                diff.removed.push(id.clone());
+                diff.added.push(item.clone());
+            }
+        }
+    }
+    diff
 }
 //#endregion 🔖CollectionOp
 
@@ -683,6 +722,37 @@ where
     /// part of the wire envelope — callers that reconstruct the store per call (e.g. a WASM plugin)
     /// must save/restore it themselves via {@link current_checkpoint_id}/{@link set_current_checkpoint_id}.
     current_checkpoint_id: Option<String>,
+    /// @emoji 🖋️ Identity of the local actor driving this store. Set from each local `Apply`/
+    /// `AmendLast`'s operation author; compared against `Edit.actor` so undo never touches foreign
+    /// edits. Not part of the wire envelope — callers that reconstruct the store per call must
+    /// save/restore it via {@link local_actor_id}/{@link set_local_actor_id}.
+    local_actor_id: Option<String>,
+}
+
+/// @emoji 🖋️ Derives an edit's authoring actor from its per-operation metadata (the author of its
+/// first operation), so a local edit records who produced it for later `UndoPolicy` classification.
+fn edit_actor_from_meta(operation_meta: &[OperationMeta]) -> Option<String> {
+    operation_meta.first().map(|meta| meta.author_id.clone())
+}
+
+/// @emoji 🔌 Auto-attaches a backbone from a deserialized envelope. Inside the wasm sandbox this
+/// resolves the injected {@link PortBackbone} (a pure in-memory queue relayed to the host). On
+/// native targets it never resolves IO — backbone attachment is an explicit `attach_backbone`
+/// call made by the caller (the `framework/sync` actor layer), so deserializing an envelope never
+/// performs filesystem/HTTP work in this crate.
+fn auto_attach_backbone<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>) -> Option<Box<dyn Backbone>> {
+    #[cfg(target_arch = "wasm32")]
+    {
+        return envelope
+            .backbone
+            .as_ref()
+            .and_then(|entry| resolve_backbone(&entry.uri).ok());
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = envelope;
+        None
+    }
 }
 
 impl<P, Op> DocumentVcsStore<P, Op>
@@ -691,10 +761,7 @@ where
     Op: Clone + Serialize + DeserializeOwned + Operation<P>,
 {
     pub fn new(envelope: DocumentVcsEnvelope<P, Op>) -> Self {
-        let backbone = envelope
-            .backbone
-            .as_ref()
-            .and_then(|entry| resolve_backbone(&entry.uri).ok());
+        let backbone = auto_attach_backbone(&envelope);
         let current_checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
         Self {
             envelope,
@@ -705,6 +772,7 @@ where
             edit_sequence: 0,
             generation: 0,
             current_checkpoint_id,
+            local_actor_id: None,
         }
     }
 
@@ -738,6 +806,32 @@ where
         self.current_checkpoint_id = checkpoint_id;
     }
 
+    /// @emoji 🖋️ The local actor id used to distinguish this store's own edits from ingested ones.
+    /// Not part of the wire envelope — a caller reconstructing the store per call must save/restore
+    /// it via {@link set_local_actor_id} for `UndoPolicy` to keep classifying foreign edits.
+    pub fn local_actor_id(&self) -> Option<&str> {
+        self.local_actor_id.as_deref()
+    }
+
+    /// @emoji 🖋️ Sets the local actor id (see {@link local_actor_id}). Called automatically from each
+    /// local `Apply`/`AmendLast`; callers that reconstruct the store per dispatch restore it here.
+    pub fn set_local_actor_id(&mut self, actor_id: Option<String>) {
+        self.local_actor_id = actor_id;
+    }
+
+    /// @emoji 🔧 The most recently created/amended edit's `(forwards, backwards, per-operation meta)`.
+    /// Used right after `dispatch(Apply{..})`/`AmendLast` to build a `KernelOperation`/`ActionResult`
+    /// with a true inverse from the just-recorded `Edit.backwards`.
+    pub fn edit_operations(&self) -> Option<(&[Op], &[Op], &[OperationMeta])> {
+        self.envelope.vcs.edits.last().map(|edit| {
+            (
+                edit.forwards.as_slice(),
+                edit.backwards.as_slice(),
+                edit.operation_meta.as_slice(),
+            )
+        })
+    }
+
     /// @emoji 📜 Ancestor-graph rows for this store's checkpoint history. See {@link build_history_columns}.
     pub fn history_columns(&self) -> Vec<HistoryColumn> {
         build_history_columns(&self.envelope)
@@ -755,10 +849,7 @@ where
         applied_edit_ids: Vec<String>,
         redo_edit_ids: Vec<String>,
     ) {
-        self.backbone = envelope
-            .backbone
-            .as_ref()
-            .and_then(|entry| resolve_backbone(&entry.uri).ok());
+        self.backbone = auto_attach_backbone(&envelope);
         self.edit_sequence = envelope
             .vcs
             .edits
@@ -810,38 +901,48 @@ where
             DocumentVcsCommand::UndoWithPolicy {
                 policy,
                 semantic_command,
-            } => {
-                let last = self.applied_edit_ids.last().cloned().ok_or(VcsError::NothingToUndo)?;
-                let edit = self
-                    .envelope
-                    .vcs
-                    .edits
-                    .iter()
-                    .find(|edit| edit.id == last)
-                    .ok_or_else(|| VcsError::UnknownEdit(last.clone()))?;
-                match policy {
-                    UndoPolicy::ExactBaseOnly => {
-                        self.applied_edit_ids.pop().ok_or(VcsError::NothingToUndo)?;
-                        self.redo_edit_ids.push(last);
+            } => match policy {
+                UndoPolicy::ExactBaseOnly => {
+                    let last = self.applied_edit_ids.last().cloned().ok_or(VcsError::NothingToUndo)?;
+                    if !self.edit_is_local(&last) {
+                        return Err(VcsError::ForeignEdit(last));
                     }
-                    UndoPolicy::TransformAgainstConcurrent => {
-                        self.applied_edit_ids.pop().ok_or(VcsError::NothingToUndo)?;
-                        self.redo_edit_ids.push(last);
-                    }
-                    UndoPolicy::SemanticUndo | UndoPolicy::CompensatingAction => {
-                        if semantic_command.is_none() {
-                            return Err(VcsError::Backbone(
-                                "semantic undo requires compensating command".into(),
-                            ));
-                        }
-                        self.applied_edit_ids.pop().ok_or(VcsError::NothingToUndo)?;
-                        self.redo_edit_ids.push(last);
-                    }
+                    self.applied_edit_ids.pop();
+                    self.redo_edit_ids.push(last);
+                    self.bump();
+                    Ok(())
                 }
-                let _ = edit;
-                self.bump();
-                Ok(())
-            }
+                UndoPolicy::TransformAgainstConcurrent => {
+                    let position = self
+                        .applied_edit_ids
+                        .iter()
+                        .rposition(|id| self.edit_is_local(id))
+                        .ok_or(VcsError::NothingToUndo)?;
+                    let removed = self.applied_edit_ids.remove(position);
+                    self.redo_edit_ids.push(removed);
+                    self.bump();
+                    Ok(())
+                }
+                UndoPolicy::SemanticUndo | UndoPolicy::CompensatingAction => {
+                    // Requires a compensating command to invert non-mechanically; no such mechanism
+                    // exists in this crate yet, so this preserves the prior behavior of undoing the
+                    // local tail once a `semantic_command` is supplied. A real compensating-action
+                    // implementation is out of scope here (see WS-D plugin contract).
+                    if semantic_command.is_none() {
+                        return Err(VcsError::Backbone(
+                            "semantic undo requires compensating command".into(),
+                        ));
+                    }
+                    let last = self.applied_edit_ids.last().cloned().ok_or(VcsError::NothingToUndo)?;
+                    if !self.edit_is_local(&last) {
+                        return Err(VcsError::ForeignEdit(last));
+                    }
+                    self.applied_edit_ids.pop();
+                    self.redo_edit_ids.push(last);
+                    self.bump();
+                    Ok(())
+                }
+            },
             DocumentVcsCommand::Redo => {
                 let next = self.redo_edit_ids.pop().ok_or(VcsError::NothingToRedo)?;
                 self.applied_edit_ids.push(next);
@@ -963,9 +1064,12 @@ where
                 let pre_projection = self.projection()?;
                 let (forwards, backwards, operation_meta, _post) =
                     Self::replay_operations(&pre_projection, operations);
+                let actor = edit_actor_from_meta(&operation_meta);
+                self.local_actor_id = actor.clone();
                 self.edit_sequence += 1;
                 let edit = Edit {
                     id: create_document_vcs_id("edit"),
+                    actor,
                     forwards,
                     backwards,
                     operation_meta,
@@ -1028,9 +1132,12 @@ where
                     let pre_projection = self.projection()?;
                     let (forwards, backwards, operation_meta, _post) =
                         Self::replay_operations(&pre_projection, operations);
+                    let actor = edit_actor_from_meta(&operation_meta);
+                    self.local_actor_id = actor.clone();
                     self.edit_sequence += 1;
                     let edit = Edit {
                         id: create_document_vcs_id("edit"),
+                        actor,
                         forwards,
                         backwards,
                         operation_meta,
@@ -1108,6 +1215,11 @@ where
         Ok(())
     }
 
+    /// @emoji 🔗 Resolves a backbone URI and attaches it. Only available inside the wasm sandbox,
+    /// where every scheme forwards to the host over the injected {@link BackboneChannelPort} (a pure
+    /// queue). On native targets, callers attach an explicit `Box<dyn Backbone>` via
+    /// {@link attach_backbone} — the `framework/sync` actor layer owns all IO-performing endpoints.
+    #[cfg(target_arch = "wasm32")]
     pub fn attach_backbone_uri(&mut self, uri: &str) -> Result<(), VcsError> {
         self.attach_backbone(resolve_backbone(uri)?)
     }
@@ -1143,7 +1255,8 @@ where
     }
 
     fn ingest_envelope(&mut self, envelope: OpEnvelope) -> Result<(), VcsError> {
-        let edit: Edit<Op> = edit_from_op_envelope(&envelope)?;
+        let mut edit: Edit<Op> = edit_from_op_envelope(&envelope)?;
+        edit.actor = Some(envelope.actor.0.clone());
         if self.envelope.vcs.edits.iter().any(|existing| existing.id == edit.id) {
             return Ok(());
         }
@@ -1211,14 +1324,26 @@ where
         if messages.is_empty() {
             return Ok(false);
         }
+        let mut acked_op_ids: Vec<String> = Vec::new();
         for message in messages {
             match message {
                 BackboneMessage::Snapshot { envelope_json } => self.merge_remote_snapshot(&envelope_json)?,
                 BackboneMessage::Ops { envelopes } => {
+                    let op_ids: Vec<String> = envelopes.iter().map(|envelope| envelope.id.0.clone()).collect();
                     for envelope in envelopes {
                         self.ingest_remote(envelope)?;
                     }
+                    acked_op_ids.extend(op_ids);
                 }
+                // A store never consumes acks (they flow store→actor); drain and ignore any that echo back.
+                BackboneMessage::Ack { .. } => {}
+            }
+        }
+        if !acked_op_ids.is_empty() {
+            if let Some(mut backbone) = self.backbone.take() {
+                let result = backbone.send(BackboneMessage::Ack { op_ids: acked_op_ids });
+                self.backbone = Some(backbone);
+                result?;
             }
         }
         Ok(true)
@@ -1252,6 +1377,18 @@ where
         };
         self.backbone = Some(backbone);
         result
+    }
+
+    /// @emoji 🖋️ Whether `edit_id` was authored by the local actor. Unauthored (legacy) edits count
+    /// as local; every other actor is foreign and must not be undone by this store.
+    fn edit_is_local(&self, edit_id: &str) -> bool {
+        self.envelope
+            .vcs
+            .edits
+            .iter()
+            .find(|edit| edit.id == edit_id)
+            .map(|edit| edit.actor.is_none() || edit.actor.as_deref() == self.local_actor_id.as_deref())
+            .unwrap_or(false)
     }
 
     fn bump(&mut self) {
@@ -1337,6 +1474,9 @@ pub struct StudioConflict {
 pub enum BackboneMessage {
     Snapshot { envelope_json: String },
     Ops { envelopes: Vec<OpEnvelope> },
+    /// @emoji ✅ Acknowledges inbound ops the store has ingested (store→actor). Lets a future actor
+    /// implement at-least-once redelivery with id-based dedupe — safe across store crashes/reloads.
+    Ack { op_ids: Vec<String> },
 }
 
 /// @emoji 🧵 Duplex message channel to another process; the WIP graph never leaves memory —

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type DragEvent, type MouseEvent } from "react";
 import { CATALOGUE_DRAG_MIME, ContextMenuController, getActiveCatalogueDragPayload, pickMostSpecificCanvasTarget, useCanvasAppearanceSync, type CanvasPickTarget } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import type { ActionDescriptor, Puzzle2dBoardScene, Puzzle2dBoardWasmSession, UiComponentSceneNode } from "../os-shell.tsx";
+import type { ActionDescriptor, Puzzle2dBoardScene, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { Puzzle2dBoardWasmSession } from "../os-shell.tsx";
 import { createPuzzle2dBoardSession } from "../os-shell.tsx";
 
 //#region Types
@@ -219,6 +220,8 @@ export function Puzzle2dBoardHost({ node, onAction }: { readonly node: UiCompone
   const hoverActiveRef = useRef(false);
   const cameraInteractionActiveRef = useRef(false);
   const cameraSettleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const renderScheduledRef = useRef(false);
+  const pendingCameraDispatchRef = useRef<{ readonly camera: BoardCamera } | null>(null);
   const [sessionEpoch, setSessionEpoch] = useState(0);
   const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly Puzzle2dSelectionMenuItem[] } | null>(null);
 
@@ -228,6 +231,20 @@ export function Puzzle2dBoardHost({ node, onAction }: { readonly node: UiCompone
     },
     [node.controllerId, node.surfaceId, onAction],
   );
+
+  /** @emoji 🎞️ Coalesces renderFrame() to at most one per animation frame, no matter how many raw pointer/wheel events fire in between — mirrors the premigration `scheduleInputInvalidate()` pattern. */
+  const scheduleRender = useCallback((): void => {
+    if (renderScheduledRef.current) return;
+    renderScheduledRef.current = true;
+    requestAnimationFrame(() => {
+      renderScheduledRef.current = false;
+      try {
+        sessionRef.current?.renderFrame();
+      } catch {
+        /* gpu not ready */
+      }
+    });
+  }, []);
 
   const readContainerSize = useCallback((): { w: number; h: number } => {
     const container = containerRef.current;
@@ -289,8 +306,13 @@ export function Puzzle2dBoardHost({ node, onAction }: { readonly node: UiCompone
       cameraSettleTimeoutRef.current = null;
       const session = sessionRef.current;
       if (session) applyPendingFixtureIfReady(session);
+      const pendingCamera = pendingCameraDispatchRef.current;
+      if (pendingCamera) {
+        pendingCameraDispatchRef.current = null;
+        dispatch("setCamera", pendingCamera);
+      }
     }, 350);
-  }, [applyPendingFixtureIfReady]);
+  }, [applyPendingFixtureIfReady, dispatch]);
 
   useEffect(
     () => () => {
@@ -500,11 +522,7 @@ export function Puzzle2dBoardHost({ node, onAction }: { readonly node: UiCompone
         canvas.setPointerCapture?.(event.pointerId);
       }
       session.pointerDownScreen(point.x, point.y, event.button, event.shiftKey, event.metaKey || event.ctrlKey);
-      try {
-        session.renderFrame();
-      } catch {
-        /* gpu not ready */
-      }
+      scheduleRender();
     };
 
     const onPointerMove = (event: PointerEvent): void => {
@@ -512,11 +530,7 @@ export function Puzzle2dBoardHost({ node, onAction }: { readonly node: UiCompone
       if (!session) return;
       const point = clientToLocal(event.clientX, event.clientY);
       session.pointerMoveScreen(point.x, point.y, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
-      try {
-        session.renderFrame();
-      } catch {
-        /* gpu not ready */
-      }
+      scheduleRender();
       drainAndMaybeFlush();
     };
 
@@ -527,11 +541,7 @@ export function Puzzle2dBoardHost({ node, onAction }: { readonly node: UiCompone
       session.pointerUpScreen(point.x, point.y, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
       if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
       applyPendingFixtureIfReady(session);
-      try {
-        session.renderFrame();
-      } catch {
-        /* gpu not ready */
-      }
+      scheduleRender();
       flushBoardEvents();
     };
 
@@ -545,14 +555,11 @@ export function Puzzle2dBoardHost({ node, onAction }: { readonly node: UiCompone
       if (!session) return;
       session.pointerLeaveScreen?.(event.altKey);
       applyPendingFixtureIfReady(session);
-      try {
-        session.renderFrame();
-      } catch {
-        /* gpu not ready */
-      }
+      scheduleRender();
       flushBoardEvents();
     };
 
+    /** @emoji 🐁 Wheel-zoom stays instant locally (WASM renders every tick via `scheduleRender`); only the React-visible camera echo and event flush are deferred until the gesture settles via `beginCameraInteraction`'s timeout. */
     const onWheel = (event: WheelEvent): void => {
       event.preventDefault();
       event.stopPropagation();
@@ -562,14 +569,10 @@ export function Puzzle2dBoardHost({ node, onAction }: { readonly node: UiCompone
       const point = clientToLocal(event.clientX, event.clientY);
       const delta = event.deltaY * (event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? 400 : 1);
       session.wheelScreen(point.x, point.y, delta);
-      try {
-        session.renderFrame();
-      } catch {
-        /* gpu not ready */
-      }
+      scheduleRender();
       const cameraArgs = puzzle2dBoardCameraActionArgs(session.cameraJson());
-      if (cameraArgs) dispatch("setCamera", cameraArgs);
-      flushBoardEvents();
+      if (cameraArgs) pendingCameraDispatchRef.current = cameraArgs;
+      drainIntoBuffer();
     };
 
     canvas.addEventListener("pointerdown", onPointerDown);
@@ -586,7 +589,7 @@ export function Puzzle2dBoardHost({ node, onAction }: { readonly node: UiCompone
       window.removeEventListener("pointerup", onPointerUp);
       container.removeEventListener("wheel", onWheel);
     };
-  }, [applyPendingFixtureIfReady, beginCameraInteraction, dispatch, drainAndMaybeFlush, flushBoardEvents, scene?.interactive]);
+  }, [applyPendingFixtureIfReady, beginCameraInteraction, drainAndMaybeFlush, drainIntoBuffer, flushBoardEvents, scheduleRender, scene?.interactive]);
   //#endregion Pointer
 
   //#region Keyboard

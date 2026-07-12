@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Button, Icon, Input, Table, type TableColumn } from "@semio-tech/ui-react";
 import { ICONS, type IconName } from "@semio-tech/ui-asset";
-import type { ActionDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-core";
 
 //#region TableHost
 type TableColumnRecord = { readonly id: string; readonly label: string; readonly sortable?: boolean };

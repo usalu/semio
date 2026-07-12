@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, type DragEvent } from "react";
 import { GraphWasmCanvas, type CanvasInputModifiers, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
 import { CATALOGUE_DRAG_MIME } from "@semio-tech/ui-react";
-import type { ActionDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-core";
 
 //#region CanvasCameraMath
 export const CANVAS_CAMERA_ZOOM_MIN = 0.05;

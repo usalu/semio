@@ -228,6 +228,9 @@ import {
   type FrameworkSyncToolLeaf,
 } from "@semio-tech/framework-os-core";
 
+/** 🔁 Re-exported so `node-graph-host.tsx`/`text-editor-host.tsx` can import action-name maps from this shell module rather than reaching into `@semio-tech/framework-core` directly. */
+export { nodeGraphActions, textEditorActions };
+
 //#region ShellHelpers
 function syncDocumentId(session: ActiveSession, panel: StudioPanelState | null, studioMode: boolean): string {
   if (studioMode && panel?.activeSpawnedId) {

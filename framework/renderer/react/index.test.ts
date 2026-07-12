@@ -58,7 +58,7 @@ import {
   uiNodeToTreePanelConfig,
 } from "./os-shell.tsx";
 import { interpretUiNode } from "./ui-interpreter.tsx";
-import type { ToolNode, UiNode } from "./os-shell.tsx";
+import type { ToolNode, UiNode } from "@semio-tech/framework-core";
 
 const noopAction = () => {};
 

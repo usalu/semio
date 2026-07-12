@@ -4738,7 +4738,6 @@ impl BoardHost {
         if self.hovered_id == id && self.hovered_kind.is_none() {
             return;
         }
-        self.bump_content_scene_generation();
         self.hovered_id = id.clone();
         self.hovered_kind = None;
         self.push_event(
@@ -4756,7 +4755,6 @@ impl BoardHost {
         if self.hovered_id.is_none() && self.hovered_kind == next_kind {
             return;
         }
-        self.bump_content_scene_generation();
         self.hovered_id = None;
         self.hovered_kind = next_kind.clone();
         self.push_event(
@@ -4773,7 +4771,6 @@ impl BoardHost {
         if self.hovered_id == id && self.hovered_kind.is_none() {
             return;
         }
-        self.bump_content_scene_generation();
         self.hovered_id = id;
         self.hovered_kind = None;
     }
@@ -4784,7 +4781,6 @@ impl BoardHost {
         if self.highlighted_ids == next {
             return;
         }
-        self.bump_content_scene_generation();
         self.highlighted_ids = next;
     }
 

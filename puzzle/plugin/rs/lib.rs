@@ -832,7 +832,32 @@ pub mod d2 {
 
     //#endregion 🔖PaneCamera
 
-    fn puzzle2d_board_scene(envelope: &Puzzle2dPlayEnvelope, pane: &str) -> Puzzle2dBoardScene {
+    /// 🗄️ Caches the last serialized fixture keyed by an fnv1a hash of the raw `document_json` it came from, so the overview/detail/selection panes of the same `refreshUi` tick reuse one `String` instead of each re-serializing the whole fixture graph.
+    static PUZZLE2D_FIXTURE_JSON_CACHE: LazyLock<std::sync::Mutex<Option<(u64, String)>>> = LazyLock::new(|| std::sync::Mutex::new(None));
+
+    fn fnv1a_hash(bytes: &[u8]) -> u64 {
+        let mut hash: u64 = 0xcbf29ce484222325;
+        for byte in bytes {
+            hash ^= u64::from(*byte);
+            hash = hash.wrapping_mul(0x100000001b3);
+        }
+        hash
+    }
+
+    fn cached_fixture_json(document_json: &str, fixture: &Value) -> String {
+        let key = fnv1a_hash(document_json.as_bytes());
+        let mut cache = PUZZLE2D_FIXTURE_JSON_CACHE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if let Some((cached_key, cached_json)) = cache.as_ref() {
+            if *cached_key == key {
+                return cached_json.clone();
+            }
+        }
+        let json = fixture.to_string();
+        *cache = Some((key, json.clone()));
+        json
+    }
+
+    fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dPlayEnvelope, pane: &str) -> Puzzle2dBoardScene {
         let fixture = &envelope.fixture;
         let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(fixture, pane);
         let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
@@ -851,7 +876,7 @@ pub mod d2 {
             .unwrap_or_else(|| "[]".into());
         let lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).cloned().unwrap_or_else(|| PUZZLE2D_LOD_MODE_AUTOMATIC.to_string());
         Puzzle2dBoardScene {
-            fixture_json: fixture.to_string(),
+            fixture_json: cached_fixture_json(document_json, fixture),
             camera_json,
             kind_catalogs_json,
             selection_json,
@@ -868,8 +893,8 @@ pub mod d2 {
         }
     }
 
-    fn render_canvas(envelope: &Puzzle2dPlayEnvelope, pane: &str) -> UiNode {
-        build_puzzle2d_board_scene(format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}"), PUZZLE2D_PLAY_CONTROLLER_ID, puzzle2d_board_scene(envelope, pane))
+    fn render_canvas(document_json: &str, envelope: &Puzzle2dPlayEnvelope, pane: &str) -> UiNode {
+        build_puzzle2d_board_scene(format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}"), PUZZLE2D_PLAY_CONTROLLER_ID, puzzle2d_board_scene(document_json, envelope, pane))
     }
 
     fn force_layout_fixture(fixture: &mut Value) {
@@ -1815,9 +1840,9 @@ pub mod d2 {
             let envelope = parse_envelope(document_json);
             let labels = puzzle2d_labels(view_state);
             match body_key {
-                PUZZLE2D_PLAY_BODY_OVERVIEW => render_canvas(&envelope, PUZZLE2D_PANE_OVERVIEW),
-                PUZZLE2D_PLAY_BODY_DETAIL => render_canvas(&envelope, PUZZLE2D_PANE_DETAIL),
-                PUZZLE2D_PLAY_BODY_SELECTION => render_canvas(&envelope, PUZZLE2D_PANE_SELECTION),
+                PUZZLE2D_PLAY_BODY_OVERVIEW => render_canvas(document_json, &envelope, PUZZLE2D_PANE_OVERVIEW),
+                PUZZLE2D_PLAY_BODY_DETAIL => render_canvas(document_json, &envelope, PUZZLE2D_PANE_DETAIL),
+                PUZZLE2D_PLAY_BODY_SELECTION => render_canvas(document_json, &envelope, PUZZLE2D_PANE_SELECTION),
                 PUZZLE2D_PLAY_BODY_LAYERS => render_document_panel(&envelope, labels),
                 PUZZLE2D_PLAY_BODY_CATALOGUE => render_catalogue_panel(&envelope.fixture, labels),
                 PUZZLE2D_PLAY_BODY_PROPERTIES => render_properties_panel(&envelope, labels),

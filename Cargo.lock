@@ -4187,6 +4187,7 @@ dependencies = [
  "fontdb",
  "image",
  "js-sys",
+ "mathematical_geometry",
  "serde",
  "serde_json",
  "typst",
@@ -4775,6 +4776,13 @@ checksum = "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
 [[package]]
 name = "mathematical_core"
 version = "0.1.0"
+
+[[package]]
+name = "mathematical_geometry"
+version = "0.1.0"
+dependencies = [
+ "kurbo 0.13.1",
+]
 
 [[package]]
 name = "mathematical_graph"
@@ -5765,12 +5773,10 @@ dependencies = [
  "axum 0.8.9",
  "dashmap",
  "futures",
+ "rusqlite",
  "semio-framework-core",
- "semio-framework-sync",
  "serde",
  "serde_json",
- "sqlx-core",
- "sqlx-postgres",
  "thiserror 2.0.18",
  "time",
  "tokio",
@@ -9538,7 +9544,6 @@ dependencies = [
  "serde_json",
  "tempfile",
  "thiserror 2.0.18",
- "ureq",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
