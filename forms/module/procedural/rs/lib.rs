@@ -26,6 +26,29 @@ const HEX_COLUMN_FIXTURE_JSON: &str =
     include_str!("../../../../procedural/3d/example/hexagonal-mushroom-column.procedural.json");
 //#endregion 🔖Constants
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the procedural module; one field per label makes every locale combination compile-checked.
+struct ModuleLabels {
+    no_flow_inputs: &'static str,
+    no_procedural_parameters: &'static str,
+}
+
+const MODULE_LABELS_NATIVE_EN: ModuleLabels =
+    ModuleLabels { no_flow_inputs: "No flow inputs.", no_procedural_parameters: "No procedural parameters." };
+const MODULE_LABELS_NATIVE_DE: ModuleLabels =
+    ModuleLabels { no_flow_inputs: "Keine Flow-Eingaben.", no_procedural_parameters: "Keine prozeduralen Parameter." };
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; unknown/missing locale falls back to native English.
+fn module_labels(view_state: &ViewState) -> &'static ModuleLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de {
+        &MODULE_LABELS_NATIVE_DE
+    } else {
+        &MODULE_LABELS_NATIVE_EN
+    }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Payload
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -371,7 +394,7 @@ fn render_question_control(
     }
 }
 
-fn render_params_body(payload: &ModuleRenderPayload) -> UiNode {
+fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> UiNode {
     let slug = if payload.fixture_slug.is_empty() {
         "hexagonal-mushroom-column"
     } else {
@@ -389,7 +412,7 @@ fn render_params_body(payload: &ModuleRenderPayload) -> UiNode {
         .unwrap_or_default();
     let step = spec.steps.first();
     let Some(step) = step else {
-        return ui_text("No flow inputs.");
+        return ui_text(labels.no_flow_inputs.to_string());
     };
     let visible = visible_questions(step, &values);
     let mut children: Vec<UiNode> = visible
@@ -403,14 +426,14 @@ fn render_params_body(payload: &ModuleRenderPayload) -> UiNode {
         })
         .collect();
     if children.is_empty() {
-        children.push(ui_text("No procedural parameters."));
+        children.push(ui_text(labels.no_procedural_parameters.to_string()));
     }
     ui_stack_vertical(children)
 }
 
-fn render_flow3d_question(payload: &ModuleRenderPayload) -> UiNode {
+fn render_flow3d_question(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> UiNode {
     ui_stack_vertical(vec![
-        render_params_body(payload),
+        render_params_body(payload, labels),
         render_preview_body(payload),
     ])
 }
@@ -446,10 +469,11 @@ impl PluginApp for ModuleApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let payload = parse_payload(document_json);
+        let labels = module_labels(view_state);
         match body_key {
-            BODY_PARAMS => render_params_body(&payload),
+            BODY_PARAMS => render_params_body(&payload, labels),
             BODY_PREVIEW => render_preview_body(&payload),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
@@ -542,6 +566,28 @@ mod tests {
         let document = app.initial_document_json();
         let node = app.render(BODY_PARAMS, &document, &ViewState::default());
         assert!(matches!(node, UiNode::Stack(_)));
+    }
+
+    #[test]
+    fn module_labels_resolve_native_english_by_default() {
+        let labels = module_labels(&ViewState::default());
+        assert_eq!(labels.no_flow_inputs, "No flow inputs.");
+        assert_eq!(labels.no_procedural_parameters, "No procedural parameters.");
+        let node = ui_text(labels.no_procedural_parameters.to_string());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("No procedural parameters."));
+    }
+
+    #[test]
+    fn module_labels_resolve_german_locale() {
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let labels = module_labels(&view_state);
+        assert_eq!(labels.no_flow_inputs, "Keine Flow-Eingaben.");
+        assert_eq!(labels.no_procedural_parameters, "Keine prozeduralen Parameter.");
+        let node = ui_text(labels.no_procedural_parameters.to_string());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Keine prozeduralen Parameter."));
+        assert!(!json.contains("No procedural parameters."));
     }
 }
 //#endregion 🧪Tests

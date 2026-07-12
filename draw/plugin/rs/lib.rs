@@ -465,6 +465,180 @@ fn commit_trace_at(play: &mut DrawPlayEnvelope, world: [f64; 2]) -> Option<Strin
 }
 //#endregion 🔖ToolStateMachine
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the draw app; one field per label makes every locale combination compile-checked.
+struct DrawLabels {
+    add_path: &'static str,
+    add_rectangle: &'static str,
+    add_text: &'static str,
+    add_group: &'static str,
+    add_boolean: &'static str,
+    empty_state: &'static str,
+    kind_path: &'static str,
+    kind_rectangle: &'static str,
+    kind_ellipse: &'static str,
+    kind_line: &'static str,
+    kind_polygon: &'static str,
+    kind_text: &'static str,
+    kind_image: &'static str,
+    kind_group: &'static str,
+    kind_boolean: &'static str,
+    kind_trace: &'static str,
+    boolean_op: &'static str,
+    children: &'static str,
+    trace_threshold: &'static str,
+    simplify: &'static str,
+    source_key: &'static str,
+    width: &'static str,
+    height: &'static str,
+    content: &'static str,
+    size: &'static str,
+    segment_count: &'static str,
+    children_count: &'static str,
+    appearance: &'static str,
+    fill: &'static str,
+    fill_alpha: &'static str,
+    stroke_width: &'static str,
+    layer: &'static str,
+    name: &'static str,
+    opacity: &'static str,
+    blend_mode: &'static str,
+    visible: &'static str,
+    locked: &'static str,
+    orientation: &'static str,
+    position_x: &'static str,
+    position_y: &'static str,
+    scale_x: &'static str,
+    scale_y: &'static str,
+    rotation: &'static str,
+    tool_group_select: &'static str,
+    tool_group_draw: &'static str,
+    tool_group_combine: &'static str,
+    tool_group_view: &'static str,
+    tool_marquee_select: &'static str,
+    tool_lasso_select: &'static str,
+    tool_direct_select: &'static str,
+    tool_pen: &'static str,
+    tool_pan: &'static str,
+}
+
+const DRAW_LABELS_NATIVE_EN: DrawLabels = DrawLabels {
+    add_path: "Add Path",
+    add_rectangle: "Add Rectangle",
+    add_text: "Add Text",
+    add_group: "Add Group",
+    add_boolean: "Add Boolean",
+    empty_state: "Drop layers here",
+    kind_path: "Path",
+    kind_rectangle: "Rectangle",
+    kind_ellipse: "Ellipse",
+    kind_line: "Line",
+    kind_polygon: "Polygon",
+    kind_text: "Text",
+    kind_image: "Image",
+    kind_group: "Group",
+    kind_boolean: "Boolean",
+    kind_trace: "Trace",
+    boolean_op: "Boolean Op",
+    children: "Children",
+    trace_threshold: "Trace Threshold",
+    simplify: "Simplify",
+    source_key: "Source Key",
+    width: "Width",
+    height: "Height",
+    content: "Content",
+    size: "Size",
+    segment_count: "Segment Count",
+    children_count: "Children Count",
+    appearance: "Appearance",
+    fill: "Fill",
+    fill_alpha: "Fill Alpha",
+    stroke_width: "Stroke Width",
+    layer: "Layer",
+    name: "Name",
+    opacity: "Opacity",
+    blend_mode: "Blend Mode",
+    visible: "Visible",
+    locked: "Locked",
+    orientation: "Orientation",
+    position_x: "Position X",
+    position_y: "Position Y",
+    scale_x: "Scale X",
+    scale_y: "Scale Y",
+    rotation: "Rotation",
+    tool_group_select: "Select",
+    tool_group_draw: "Draw",
+    tool_group_combine: "Combine",
+    tool_group_view: "View",
+    tool_marquee_select: "Marquee Select",
+    tool_lasso_select: "Lasso Select",
+    tool_direct_select: "Direct Select",
+    tool_pen: "Pen",
+    tool_pan: "Pan",
+};
+
+const DRAW_LABELS_NATIVE_DE: DrawLabels = DrawLabels {
+    add_path: "Pfad hinzufügen",
+    add_rectangle: "Rechteck hinzufügen",
+    add_text: "Text hinzufügen",
+    add_group: "Gruppe hinzufügen",
+    add_boolean: "Boolean hinzufügen",
+    empty_state: "Ebenen hier ablegen",
+    kind_path: "Pfad",
+    kind_rectangle: "Rechteck",
+    kind_ellipse: "Ellipse",
+    kind_line: "Linie",
+    kind_polygon: "Polygon",
+    kind_text: "Text",
+    kind_image: "Bild",
+    kind_group: "Gruppe",
+    kind_boolean: "Boolean",
+    kind_trace: "Nachzeichnung",
+    boolean_op: "Boolean-Operation",
+    children: "Kinder",
+    trace_threshold: "Trace-Schwellenwert",
+    simplify: "Vereinfachen",
+    source_key: "Quellschlüssel",
+    width: "Breite",
+    height: "Höhe",
+    content: "Inhalt",
+    size: "Größe",
+    segment_count: "Segmentanzahl",
+    children_count: "Kinderanzahl",
+    appearance: "Erscheinungsbild",
+    fill: "Füllung",
+    fill_alpha: "Füllung Alpha",
+    stroke_width: "Strichstärke",
+    layer: "Ebene",
+    name: "Name",
+    opacity: "Deckkraft",
+    blend_mode: "Mischmodus",
+    visible: "Sichtbar",
+    locked: "Gesperrt",
+    orientation: "Ausrichtung",
+    position_x: "Position X",
+    position_y: "Position Y",
+    scale_x: "Skalierung X",
+    scale_y: "Skalierung Y",
+    rotation: "Rotation",
+    tool_group_select: "Auswahl",
+    tool_group_draw: "Zeichnen",
+    tool_group_combine: "Kombinieren",
+    tool_group_view: "Ansicht",
+    tool_marquee_select: "Rahmenauswahl",
+    tool_lasso_select: "Lasso-Auswahl",
+    tool_direct_select: "Direktauswahl",
+    tool_pen: "Stift",
+    tool_pan: "Verschieben",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
+fn draw_labels(view_state: &ViewState) -> &'static DrawLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de { &DRAW_LABELS_NATIVE_DE } else { &DRAW_LABELS_NATIVE_EN }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖DrawApp
 struct DrawApp;
 
@@ -930,18 +1104,20 @@ impl semio_framework_plugin::PluginApp for DrawApp {
     fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let play = parse_envelope(document_json);
         let interaction = interaction_state(&play, view_state);
+        let labels = draw_labels(view_state);
         match body_key {
             DRAW_PLAY_BODY_COMPOSITE => render_canvas(&play.document, &interaction),
-            DRAW_PLAY_BODY_LAYERS => render_layers_panel(&play.document, &interaction),
-            DRAW_PLAY_BODY_CATALOGUE => render_catalogue_panel(&play.document, &interaction),
-            DRAW_PLAY_BODY_PROPERTIES => render_properties_panel(&play.document, &interaction),
+            DRAW_PLAY_BODY_LAYERS => render_layers_panel(&play.document, &interaction, labels),
+            DRAW_PLAY_BODY_CATALOGUE => render_catalogue_panel(&play.document, &interaction, labels),
+            DRAW_PLAY_BODY_PROPERTIES => render_properties_panel(&play.document, &interaction, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn tools(&self, document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
+    fn tools(&self, document_json: &str, view_state: &ViewState) -> Vec<ToolNode> {
         let play = parse_envelope(document_json);
         let active = play.document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
+        let labels = draw_labels(view_state);
         let toggle = |id: &str, icon: &str, label: &str| {
             tool_toggle(
                 format!("draw-play-tools.{id}"),
@@ -955,32 +1131,32 @@ impl semio_framework_plugin::PluginApp for DrawApp {
             tool_collection(
                 "draw-play-tools-select",
                 "mouse-pointer-2",
-                "Select",
+                labels.tool_group_select,
                 vec![
-                    toggle("selectMarquee", "square-dashed", "Marquee Select"),
-                    toggle("selectLasso", "lasso", "Lasso Select"),
-                    toggle("selectDirect", "mouse-pointer-2", "Direct Select"),
+                    toggle("selectMarquee", "square-dashed", labels.tool_marquee_select),
+                    toggle("selectLasso", "lasso", labels.tool_lasso_select),
+                    toggle("selectDirect", "mouse-pointer-2", labels.tool_direct_select),
                 ],
             ),
             tool_collection(
                 "draw-play-tools-draw",
                 "pen-tool",
-                "Draw",
+                labels.tool_group_draw,
                 vec![
-                    toggle("pen", "pen-tool", "Pen"),
-                    toggle("shapeRect", "square", "Rectangle"),
-                    toggle("shapeEllipse", "circle", "Ellipse"),
-                    toggle("shapeLine", "minus", "Line"),
-                    toggle("shapePolygon", "pentagon", "Polygon"),
+                    toggle("pen", "pen-tool", labels.tool_pen),
+                    toggle("shapeRect", "square", labels.kind_rectangle),
+                    toggle("shapeEllipse", "circle", labels.kind_ellipse),
+                    toggle("shapeLine", "minus", labels.kind_line),
+                    toggle("shapePolygon", "pentagon", labels.kind_polygon),
                 ],
             ),
             tool_collection(
                 "draw-play-tools-combine",
                 "combine",
-                "Combine",
-                vec![toggle("booleanCombine", "combine", "Boolean"), toggle("trace", "scan-line", "Trace")],
+                labels.tool_group_combine,
+                vec![toggle("booleanCombine", "combine", labels.kind_boolean), toggle("trace", "scan-line", labels.kind_trace)],
             ),
-            tool_collection("draw-play-tools-view", "move", "View", vec![toggle("transformMove", "move", "Pan")]),
+            tool_collection("draw-play-tools-view", "move", labels.tool_group_view, vec![toggle("transformMove", "move", labels.tool_pan)]),
         ]
     }
 }
@@ -1207,18 +1383,18 @@ fn boolean_child_item(doc: &DrawDocument, boolean_id: &str, child_id: &str) -> U
     }
 }
 
-fn render_layers_panel(document: &DrawDocument, interaction: &DrawInteractionState) -> UiNode {
+fn render_layers_panel(document: &DrawDocument, interaction: &DrawInteractionState, labels: &DrawLabels) -> UiNode {
     let toolbar_items = vec![
-        tree_button("draw-play-layers.add.path", "Add Path", "pen-tool", "addLayer", json!({ "kind": "path" })),
-        tree_button("draw-play-layers.add.rect", "Add Rectangle", "square", "addLayer", json!({ "kind": "shape:rect" })),
-        tree_button("draw-play-layers.add.text", "Add Text", "type", "addLayer", json!({ "kind": "text" })),
-        tree_button("draw-play-layers.add.group", "Add Group", "folder-plus", "addLayer", json!({ "kind": "group" })),
-        tree_button("draw-play-layers.add.boolean", "Add Boolean", "combine", "addLayer", json!({ "kind": "boolean" })),
+        tree_button("draw-play-layers.add.path", labels.add_path, "pen-tool", "addLayer", json!({ "kind": "path" })),
+        tree_button("draw-play-layers.add.rect", labels.add_rectangle, "square", "addLayer", json!({ "kind": "shape:rect" })),
+        tree_button("draw-play-layers.add.text", labels.add_text, "type", "addLayer", json!({ "kind": "text" })),
+        tree_button("draw-play-layers.add.group", labels.add_group, "folder-plus", "addLayer", json!({ "kind": "group" })),
+        tree_button("draw-play-layers.add.boolean", labels.add_boolean, "combine", "addLayer", json!({ "kind": "boolean" })),
     ];
     let layer_items = if document.layers.is_empty() {
         vec![UiTreeItemNode {
             id: "draw-play-layers.empty".into(),
-            label: "Drop layers here".into(),
+            label: labels.empty_state.into(),
             description: None,
             icon_id: Some("pen-tool".into()),
             selected: None,
@@ -1283,18 +1459,18 @@ fn tree_button(id: &str, label: &str, icon: &str, action: &str, args: Value) -> 
 //#endregion 🔖LayersPanel
 
 //#region 🔖CataloguePanel
-fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawInteractionState) -> UiNode {
+fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawInteractionState, labels: &DrawLabels) -> UiNode {
     let catalogue_kinds = [
-        ("path", "Path", "pen-tool"),
-        ("shape:rect", "Rectangle", "square"),
-        ("shape:ellipse", "Ellipse", "circle"),
-        ("shape:line", "Line", "minus"),
-        ("shape:polygon", "Polygon", "pentagon"),
-        ("text", "Text", "type"),
-        ("image", "Image", "image"),
-        ("group", "Group", "folder"),
-        ("boolean", "Boolean", "combine"),
-        ("trace", "Trace", "scan-line"),
+        ("path", labels.kind_path, "pen-tool"),
+        ("shape:rect", labels.kind_rectangle, "square"),
+        ("shape:ellipse", labels.kind_ellipse, "circle"),
+        ("shape:line", labels.kind_line, "minus"),
+        ("shape:polygon", labels.kind_polygon, "pentagon"),
+        ("text", labels.kind_text, "type"),
+        ("image", labels.kind_image, "image"),
+        ("group", labels.kind_group, "folder"),
+        ("boolean", labels.kind_boolean, "combine"),
+        ("trace", labels.kind_trace, "scan-line"),
     ];
     let mut items: Vec<UiTreeItemNode> = catalogue_kinds
         .into_iter()
@@ -1323,7 +1499,7 @@ fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawInteractio
     for op in DRAW_BOOLEAN_OPS {
         items.push(UiTreeItemNode {
             id: format!("draw-play-catalogue.bool.{op}"),
-            label: format!("Boolean {op}"),
+            label: format!("{} {op}", labels.kind_boolean),
             description: None,
             icon_id: Some("combine".into()),
             selected: None,
@@ -1420,7 +1596,7 @@ fn uniform_layers<'a>(layers: &[&'a draw::DrawLayerNode]) -> Option<Vec<&'a draw
     }
 }
 
-fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> Option<UiInspectorFieldGroup> {
+fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], labels: &DrawLabels) -> Option<UiInspectorFieldGroup> {
     let uniform = uniform_layers(layers)?;
     let layer = uniform[0];
     let layer_ids: Vec<String> = uniform.iter().map(|entry| layer_id(entry).to_string()).collect();
@@ -1437,7 +1613,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
             let op_mixed = ui_inspector_mixed_select(&ops);
             fields.push(UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.boolean-op".into(),
-                label: "Boolean Op".into(),
+                label: labels.boolean_op.into(),
                 child: Box::new(UiNode::Select(UiSelectNode {
                     id: "draw-play-inspector.boolean-op.select".into(),
                     value: op_mixed.value,
@@ -1457,12 +1633,12 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
                 .join(", ");
             fields.push(ui_inspector_readonly_field(
                 "draw-play-inspector.boolean-children",
-                "Children",
+                labels.children,
                 if child_labels.is_empty() { "—".into() } else { child_labels },
             ));
             return Some(UiInspectorFieldGroup {
                 id: "draw-play-inspector.kind.boolean".into(),
-                label: "Boolean".into(),
+                label: labels.kind_boolean.into(),
                 default_open: None,
                 fields,
             });
@@ -1486,7 +1662,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
             let simplify_mixed = ui_inspector_mixed_slider(&simplifies);
             fields.push(UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.trace-threshold".into(),
-                label: "Trace Threshold".into(),
+                label: labels.trace_threshold.into(),
                 child: Box::new(UiNode::Slider(UiSliderNode {
                     id: "draw-play-inspector.trace-threshold.slider".into(),
                     value: if threshold_mixed.uniform { threshold_mixed.value } else { 0.0 },
@@ -1502,7 +1678,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
             }));
             fields.push(UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.trace-simplify".into(),
-                label: "Simplify".into(),
+                label: labels.simplify.into(),
                 child: Box::new(UiNode::Slider(UiSliderNode {
                     id: "draw-play-inspector.trace-simplify.slider".into(),
                     value: if simplify_mixed.uniform { simplify_mixed.value } else { 0.0 },
@@ -1518,12 +1694,12 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
             }));
             fields.push(ui_inspector_readonly_field(
                 "draw-play-inspector.trace-source",
-                "Source Key",
+                labels.source_key,
                 trace.source_key.clone(),
             ));
             return Some(UiInspectorFieldGroup {
                 id: "draw-play-inspector.kind.trace".into(),
-                label: "Trace".into(),
+                label: labels.kind_trace.into(),
                 default_open: None,
                 fields,
             });
@@ -1532,7 +1708,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
             fields.push(inspector_number_field(
                 &layer_ids,
                 "draw-play-inspector.rect-width",
-                "Width",
+                labels.width,
                 &uniform.iter().filter_map(|entry| match entry {
                     draw::DrawLayerNode::Shape(entry) => entry.rect.as_ref().map(|rect| rect.width),
                     _ => None,
@@ -1542,7 +1718,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
             fields.push(inspector_number_field(
                 &layer_ids,
                 "draw-play-inspector.rect-height",
-                "Height",
+                labels.height,
                 &uniform.iter().filter_map(|entry| match entry {
                     draw::DrawLayerNode::Shape(entry) => entry.rect.as_ref().map(|rect| rect.height),
                     _ => None,
@@ -1551,7 +1727,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
             ));
             return Some(UiInspectorFieldGroup {
                 id: "draw-play-inspector.kind.rect".into(),
-                label: "Rectangle".into(),
+                label: labels.kind_rectangle.into(),
                 default_open: None,
                 fields,
             });
@@ -1560,7 +1736,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
             fields.push(inspector_text_field(
                 &layer_ids,
                 "draw-play-inspector.text-content",
-                "Content",
+                labels.content,
                 &uniform
                     .iter()
                     .filter_map(|entry| match entry {
@@ -1573,7 +1749,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
             fields.push(inspector_number_field(
                 &layer_ids,
                 "draw-play-inspector.text-size",
-                "Size",
+                labels.size,
                 &uniform
                     .iter()
                     .filter_map(|entry| match entry {
@@ -1585,7 +1761,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
             ));
             return Some(UiInspectorFieldGroup {
                 id: "draw-play-inspector.kind.text".into(),
-                label: "Text".into(),
+                label: labels.kind_text.into(),
                 default_open: None,
                 fields,
             });
@@ -1593,12 +1769,12 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
         draw::DrawLayerNode::Path(path) => {
             fields.push(ui_inspector_readonly_field(
                 "draw-play-inspector.path-segments",
-                "Segment Count",
+                labels.segment_count,
                 path.segments.len().to_string(),
             ));
             return Some(UiInspectorFieldGroup {
                 id: "draw-play-inspector.kind.path".into(),
-                label: "Path".into(),
+                label: labels.kind_path.into(),
                 default_open: None,
                 fields,
             });
@@ -1606,12 +1782,12 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
         draw::DrawLayerNode::Group(group) => {
             fields.push(ui_inspector_readonly_field(
                 "draw-play-inspector.group-children",
-                "Children Count",
+                labels.children_count,
                 group.children.len().to_string(),
             ));
             return Some(UiInspectorFieldGroup {
                 id: "draw-play-inspector.kind.group".into(),
-                label: "Group".into(),
+                label: labels.kind_group.into(),
                 default_open: None,
                 fields,
             });
@@ -1621,7 +1797,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode]) -> 
     None
 }
 
-fn inspector_appearance_group(layers: &[&draw::DrawLayerNode]) -> UiInspectorFieldGroup {
+fn inspector_appearance_group(layers: &[&draw::DrawLayerNode], labels: &DrawLabels) -> UiInspectorFieldGroup {
     let layer_ids: Vec<String> = layers.iter().map(|entry| layer_id(entry).to_string()).collect();
     let fill_colors: Vec<String> = layers
         .iter()
@@ -1658,13 +1834,13 @@ fn inspector_appearance_group(layers: &[&draw::DrawLayerNode]) -> UiInspectorFie
     let fill_alpha_mixed = ui_inspector_mixed_slider(&fill_alphas);
     UiInspectorFieldGroup {
         id: "draw-play-inspector.appearance".into(),
-        label: "Appearance".into(),
+        label: labels.appearance.into(),
         default_open: None,
         fields: vec![
-            inspector_text_field(&layer_ids, "draw-play-inspector.fill", "Fill", &fill_colors, "fillColor"),
+            inspector_text_field(&layer_ids, "draw-play-inspector.fill", labels.fill, &fill_colors, "fillColor"),
             UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.fill-alpha".into(),
-                label: "Fill Alpha".into(),
+                label: labels.fill_alpha.into(),
                 child: Box::new(UiNode::Slider(UiSliderNode {
                     id: "draw-play-inspector.fill-alpha.slider".into(),
                     value: if fill_alpha_mixed.uniform { fill_alpha_mixed.value } else { 0.0 },
@@ -1678,12 +1854,12 @@ fn inspector_appearance_group(layers: &[&draw::DrawLayerNode]) -> UiInspectorFie
                 required: None,
                 error: None,
             }),
-            inspector_number_field(&layer_ids, "draw-play-inspector.stroke-width", "Stroke Width", &stroke_widths, "strokeWidth"),
+            inspector_number_field(&layer_ids, "draw-play-inspector.stroke-width", labels.stroke_width, &stroke_widths, "strokeWidth"),
         ],
     }
 }
 
-fn inspector_layer_group(layers: &[&draw::DrawLayerNode]) -> UiInspectorFieldGroup {
+fn inspector_layer_group(layers: &[&draw::DrawLayerNode], labels: &DrawLabels) -> UiInspectorFieldGroup {
     let layer_ids: Vec<String> = layers.iter().map(|entry| layer_id(entry).to_string()).collect();
     let names: Vec<String> = layers.iter().map(|entry| layer_base(entry).name.clone()).collect();
     let opacities: Vec<f64> = layers.iter().map(|entry| layer_base(entry).opacity).collect();
@@ -1695,14 +1871,14 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode]) -> UiInspectorFieldGro
     let locked_mixed = ui_inspector_mixed_toggle(&locked);
     UiInspectorFieldGroup {
         id: "draw-play-inspector.layer".into(),
-        label: "Layer".into(),
+        label: labels.layer.into(),
         default_open: None,
         fields: vec![
-            inspector_text_field(&layer_ids, "draw-play-inspector.name", "Name", &names, "name"),
-            inspector_number_field(&layer_ids, "draw-play-inspector.opacity", "Opacity", &opacities, "opacity"),
+            inspector_text_field(&layer_ids, "draw-play-inspector.name", labels.name, &names, "name"),
+            inspector_number_field(&layer_ids, "draw-play-inspector.opacity", labels.opacity, &opacities, "opacity"),
             UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.blend-mode".into(),
-                label: "Blend Mode".into(),
+                label: labels.blend_mode.into(),
                 child: Box::new(UiNode::Select(UiSelectNode {
                     id: "draw-play-inspector.blend-mode.select".into(),
                     value: blend_mixed.value,
@@ -1719,7 +1895,7 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode]) -> UiInspectorFieldGro
             }),
             UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.visible".into(),
-                label: "Visible".into(),
+                label: labels.visible.into(),
                 child: Box::new(UiNode::Toggle(UiToggleNode {
                     id: "draw-play-inspector.visible.toggle".into(),
                     icon_id: "eye".into(),
@@ -1733,7 +1909,7 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode]) -> UiInspectorFieldGro
             }),
             UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.locked".into(),
-                label: "Locked".into(),
+                label: labels.locked.into(),
                 child: Box::new(UiNode::Toggle(UiToggleNode {
                     id: "draw-play-inspector.locked.toggle".into(),
                     icon_id: "lock".into(),
@@ -1749,45 +1925,45 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode]) -> UiInspectorFieldGro
     }
 }
 
-fn inspector_orientation_group(layers: &[&draw::DrawLayerNode]) -> UiInspectorFieldGroup {
+fn inspector_orientation_group(layers: &[&draw::DrawLayerNode], labels: &DrawLabels) -> UiInspectorFieldGroup {
     let layer_ids: Vec<String> = layers.iter().map(|entry| layer_id(entry).to_string()).collect();
     UiInspectorFieldGroup {
         id: "draw-play-inspector.orientation".into(),
-        label: "Orientation".into(),
+        label: labels.orientation.into(),
         default_open: None,
         fields: vec![
             inspector_number_field(
                 &layer_ids,
                 "draw-play-inspector.transform-x",
-                "Position X",
+                labels.position_x,
                 &layers.iter().map(|entry| layer_base(entry).transform.x).collect::<Vec<_>>(),
                 "transformX",
             ),
             inspector_number_field(
                 &layer_ids,
                 "draw-play-inspector.transform-y",
-                "Position Y",
+                labels.position_y,
                 &layers.iter().map(|entry| layer_base(entry).transform.y).collect::<Vec<_>>(),
                 "transformY",
             ),
             inspector_number_field(
                 &layer_ids,
                 "draw-play-inspector.transform-scale-x",
-                "Scale X",
+                labels.scale_x,
                 &layers.iter().map(|entry| layer_base(entry).transform.scale_x).collect::<Vec<_>>(),
                 "transformScaleX",
             ),
             inspector_number_field(
                 &layer_ids,
                 "draw-play-inspector.transform-scale-y",
-                "Scale Y",
+                labels.scale_y,
                 &layers.iter().map(|entry| layer_base(entry).transform.scale_y).collect::<Vec<_>>(),
                 "transformScaleY",
             ),
             inspector_number_field(
                 &layer_ids,
                 "draw-play-inspector.transform-rotation",
-                "Rotation",
+                labels.rotation,
                 &layers.iter().map(|entry| layer_base(entry).transform.rotation).collect::<Vec<_>>(),
                 "transformRotation",
             ),
@@ -1795,7 +1971,7 @@ fn inspector_orientation_group(layers: &[&draw::DrawLayerNode]) -> UiInspectorFi
     }
 }
 
-fn render_properties_panel(document: &DrawDocument, interaction: &DrawInteractionState) -> UiNode {
+fn render_properties_panel(document: &DrawDocument, interaction: &DrawInteractionState, labels: &DrawLabels) -> UiNode {
     let selected_layers: Vec<&draw::DrawLayerNode> = interaction
         .selected_ids
         .iter()
@@ -1809,12 +1985,12 @@ fn render_properties_panel(document: &DrawDocument, interaction: &DrawInteractio
         ]);
     }
     let mut groups = Vec::new();
-    if let Some(kind_group) = inspector_kind_group(document, &selected_layers) {
+    if let Some(kind_group) = inspector_kind_group(document, &selected_layers, labels) {
         groups.push(kind_group);
     }
-    groups.push(inspector_orientation_group(&selected_layers));
-    groups.push(inspector_appearance_group(&selected_layers));
-    groups.push(inspector_layer_group(&selected_layers));
+    groups.push(inspector_orientation_group(&selected_layers, labels));
+    groups.push(inspector_appearance_group(&selected_layers, labels));
+    groups.push(inspector_layer_group(&selected_layers, labels));
     ui_inspector_groups_to_tree(&groups)
 }
 //#endregion 🔖InspectorPanel
@@ -2206,6 +2382,37 @@ mod tests {
         let node = app.render(DRAW_PLAY_BODY_COMPOSITE, &document_json, &view_with_selection(&[layer_id.as_str()]));
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("overlay:sel:"));
+    }
+
+    #[test]
+    fn draw_labels_resolve_native_by_default() {
+        let app = DrawApp;
+        let document = serde_json::to_string(&default_draw_document("test", None)).unwrap();
+        let node = app.render(DRAW_PLAY_BODY_LAYERS, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Add Path"));
+        assert!(json.contains("Add Rectangle"));
+        assert!(!json.contains("Pfad hinzufügen"));
+    }
+
+    #[test]
+    fn draw_labels_translate_panels_in_german() {
+        let app = DrawApp;
+        let document = serde_json::to_string(&default_draw_document("test", None)).unwrap();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let layers_node = app.render(DRAW_PLAY_BODY_LAYERS, &document, &view_state);
+        let layers_json = serde_json::to_string(&layers_node).unwrap();
+        assert!(layers_json.contains("Pfad hinzufügen"));
+        assert!(layers_json.contains("Rechteck hinzufügen"));
+        assert!(!layers_json.contains("Add Path"));
+        let catalogue_node = app.render(DRAW_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();
+        assert!(catalogue_json.contains("\"Ellipse\""));
+        assert!(catalogue_json.contains("Nachzeichnung"));
+        let tools = app.tools(&document, &view_state);
+        let tools_json = serde_json::to_string(&tools).unwrap();
+        assert!(tools_json.contains("Rahmenauswahl"));
+        assert!(tools_json.contains("Zeichnen"));
     }
 
     fn apply_ops(document: &DrawDocument, ops: &[String]) -> DrawDocument {

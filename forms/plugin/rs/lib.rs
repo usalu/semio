@@ -730,24 +730,24 @@ fn apply_store_action(play: &mut FormsPlayEnvelope, store: &mut FormsStore) -> V
     vec![set_document_op(play)]
 }
 
-fn catalogue_kinds(contributions: &[PluginContributionEntry]) -> Vec<(String, String, String)> {
+fn catalogue_kinds(contributions: &[PluginContributionEntry], labels: &FormsLabels) -> Vec<(String, String, String)> {
     let mut kinds: Vec<(String, String, String)> = FORM_BUILTIN_KINDS
         .iter()
         .map(|kind| {
-            let (label, icon) = match *kind {
-                "text" => ("Text", "type"),
-                "longText" => ("Long Text", "align-left"),
-                "number" => ("Number", "hash"),
-                "slider" => ("Slider", "sliders-horizontal"),
-                "boolean" => ("Boolean", "toggle-left"),
-                "single" => ("Single Select", "circle-dot"),
-                "multi" => ("Multi Select", "list-checks"),
-                "date" => ("Date", "calendar"),
-                "color" => ("Color", "palette"),
-                "image" => ("Image", "image"),
-                "file" => ("File", "file"),
-                "vector" => ("Vector", "move-3d"),
-                "note" => ("Note", "sticky-note"),
+            let (label, icon): (&str, &str) = match *kind {
+                "text" => (labels.kind_text, "type"),
+                "longText" => (labels.kind_long_text, "align-left"),
+                "number" => (labels.kind_number, "hash"),
+                "slider" => (labels.kind_slider, "sliders-horizontal"),
+                "boolean" => (labels.kind_boolean, "toggle-left"),
+                "single" => (labels.kind_single, "circle-dot"),
+                "multi" => (labels.kind_multi, "list-checks"),
+                "date" => (labels.kind_date, "calendar"),
+                "color" => (labels.kind_color, "palette"),
+                "image" => (labels.kind_image, "image"),
+                "file" => (labels.kind_file, "file"),
+                "vector" => (labels.kind_vector, "move-3d"),
+                "note" => (labels.kind_note, "sticky-note"),
                 other => (other, "help-circle"),
             };
             (kind.to_string(), label.into(), icon.into())
@@ -767,6 +767,202 @@ fn catalogue_kinds(contributions: &[PluginContributionEntry]) -> Vec<(String, St
     kinds
 }
 //#endregion 🔖Helpers
+
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the forms app; one field per label makes every locale combination compile-checked.
+struct FormsLabels {
+    label: &'static str,
+    kind: &'static str,
+    id: &'static str,
+    required: &'static str,
+    description: &'static str,
+    placeholder: &'static str,
+    default: &'static str,
+    min: &'static str,
+    max: &'static str,
+    step_field: &'static str,
+    unit: &'static str,
+    schema: &'static str,
+    text: &'static str,
+    src: &'static str,
+    accept: &'static str,
+    yes: &'static str,
+    no: &'static str,
+    option: &'static str,
+    remove: &'static str,
+    add_option: &'static str,
+    remove_option: &'static str,
+    add_vector_field: &'static str,
+    vector_field_label_suffix: &'static str,
+    vector_field_value_suffix: &'static str,
+    form_title: &'static str,
+    add_step: &'static str,
+    remove_step: &'static str,
+    title: &'static str,
+    add_question: &'static str,
+    remove_question: &'static str,
+    move_up: &'static str,
+    move_down: &'static str,
+    drop_question_kind_here: &'static str,
+    add_text_question: &'static str,
+    question: &'static str,
+    selected: &'static str,
+    no_steps_in_form: &'static str,
+    form_fallback_title: &'static str,
+    step_progress: &'static str,
+    back: &'static str,
+    next: &'static str,
+    submit: &'static str,
+    fixture_slug: &'static str,
+    no_steps_tree_item: &'static str,
+    actions: &'static str,
+    kind_text: &'static str,
+    kind_long_text: &'static str,
+    kind_number: &'static str,
+    kind_slider: &'static str,
+    kind_boolean: &'static str,
+    kind_single: &'static str,
+    kind_multi: &'static str,
+    kind_date: &'static str,
+    kind_color: &'static str,
+    kind_image: &'static str,
+    kind_file: &'static str,
+    kind_vector: &'static str,
+    kind_note: &'static str,
+}
+
+const FORMS_LABELS_NATIVE_EN: FormsLabels = FormsLabels {
+    label: "Label",
+    kind: "Kind",
+    id: "Id",
+    required: "Required",
+    description: "Description",
+    placeholder: "Placeholder",
+    default: "Default",
+    min: "Min",
+    max: "Max",
+    step_field: "Step",
+    unit: "Unit",
+    schema: "Schema",
+    text: "Text",
+    src: "Src",
+    accept: "Accept",
+    yes: "Yes",
+    no: "No",
+    option: "Option",
+    remove: "Remove",
+    add_option: "Add Option",
+    remove_option: "Remove Option",
+    add_vector_field: "Add Vector Field",
+    vector_field_label_suffix: "label",
+    vector_field_value_suffix: "value",
+    form_title: "Form Title",
+    add_step: "Add Step",
+    remove_step: "Remove Step",
+    title: "Title",
+    add_question: "Add Question",
+    remove_question: "Remove Question",
+    move_up: "Move Up",
+    move_down: "Move Down",
+    drop_question_kind_here: "Drop a question kind here",
+    add_text_question: "Add Text Question",
+    question: "Question",
+    selected: "selected",
+    no_steps_in_form: "No steps in this form.",
+    form_fallback_title: "Form",
+    step_progress: "Step",
+    back: "Back",
+    next: "Next",
+    submit: "Submit",
+    fixture_slug: "Fixture Slug",
+    no_steps_tree_item: "(no steps)",
+    actions: "Actions",
+    kind_text: "Text",
+    kind_long_text: "Long Text",
+    kind_number: "Number",
+    kind_slider: "Slider",
+    kind_boolean: "Boolean",
+    kind_single: "Single Select",
+    kind_multi: "Multi Select",
+    kind_date: "Date",
+    kind_color: "Color",
+    kind_image: "Image",
+    kind_file: "File",
+    kind_vector: "Vector",
+    kind_note: "Note",
+};
+
+const FORMS_LABELS_NATIVE_DE: FormsLabels = FormsLabels {
+    label: "Bezeichnung",
+    kind: "Art",
+    id: "Id",
+    required: "Erforderlich",
+    description: "Beschreibung",
+    placeholder: "Platzhalter",
+    default: "Standard",
+    min: "Min",
+    max: "Max",
+    step_field: "Schrittweite",
+    unit: "Einheit",
+    schema: "Schema",
+    text: "Text",
+    src: "Quelle",
+    accept: "Akzeptierte Dateien",
+    yes: "Ja",
+    no: "Nein",
+    option: "Option",
+    remove: "Entfernen",
+    add_option: "Option hinzufügen",
+    remove_option: "Option entfernen",
+    add_vector_field: "Vektorfeld hinzufügen",
+    vector_field_label_suffix: "Bezeichnung",
+    vector_field_value_suffix: "Wert",
+    form_title: "Formulartitel",
+    add_step: "Schritt hinzufügen",
+    remove_step: "Schritt entfernen",
+    title: "Titel",
+    add_question: "Frage hinzufügen",
+    remove_question: "Frage entfernen",
+    move_up: "Nach oben",
+    move_down: "Nach unten",
+    drop_question_kind_here: "Fragetyp hier ablegen",
+    add_text_question: "Textfrage hinzufügen",
+    question: "Frage",
+    selected: "ausgewählt",
+    no_steps_in_form: "Keine Schritte in diesem Formular.",
+    form_fallback_title: "Formular",
+    step_progress: "Schritt",
+    back: "Zurück",
+    next: "Weiter",
+    submit: "Absenden",
+    fixture_slug: "Fixture-Slug",
+    no_steps_tree_item: "(keine Schritte)",
+    actions: "Aktionen",
+    kind_text: "Text",
+    kind_long_text: "Langtext",
+    kind_number: "Zahl",
+    kind_slider: "Schieberegler",
+    kind_boolean: "Boolescher Wert",
+    kind_single: "Einzelauswahl",
+    kind_multi: "Mehrfachauswahl",
+    kind_date: "Datum",
+    kind_color: "Farbe",
+    kind_image: "Bild",
+    kind_file: "Datei",
+    kind_vector: "Vektor",
+    kind_note: "Notiz",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; forms has no domain-terminology variant to switch on.
+fn forms_labels(view_state: &ViewState) -> &'static FormsLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de {
+        &FORMS_LABELS_NATIVE_DE
+    } else {
+        &FORMS_LABELS_NATIVE_EN
+    }
+}
+//#endregion 🔖Terminology
 
 //#region 🔖Builder
 fn builder_text_editor(id: String, label: &str, value: String, on_change: ActionDescriptor) -> UiNode {
@@ -808,10 +1004,11 @@ fn builder_question_card(
     index: usize,
     selected_ids: &[String],
     contributions: &[PluginContributionEntry],
+    labels: &FormsLabels,
 ) -> UiNode {
     let question_ids = vec![question.id.clone()];
     let prefix = format!("forms-blueprint.{}", question.id);
-    let kind_label = catalogue_kinds(contributions)
+    let kind_label = catalogue_kinds(contributions, labels)
         .into_iter()
         .find(|(kind, _, _)| *kind == question.kind)
         .map(|(_, label, _)| label)
@@ -821,13 +1018,13 @@ fn builder_question_card(
         ui_text_emphasized(format!("{kind_label} · {}", question.id)),
         builder_text_editor(
             format!("{prefix}.label"),
-            "Label",
+            labels.label,
             question.label.clone(),
             forms_action("patchQuestions", Some(json!({ "questionIds": question_ids, "field": "label" }))),
         ),
         UiNode::Field(UiFieldNode {
             id: format!("{prefix}.required"),
-            label: "Required".into(),
+            label: labels.required.into(),
             description: None,
             required: None,
             error: None,
@@ -835,24 +1032,24 @@ fn builder_question_card(
                 id: format!("{prefix}.required.toggle"),
                 icon_id: "check".into(),
                 pressed: required,
-                text: Some(if required { "Yes".into() } else { "No".into() }),
+                text: Some(if required { labels.yes.into() } else { labels.no.into() }),
                 on_change: forms_action("patchQuestions", Some(json!({ "questionIds": question_ids, "field": "required" }))),
             })),
         }),
     ];
-    children.extend(question_kind_editor_fields(question, &question_ids, contributions, &prefix));
+    children.extend(question_kind_editor_fields(question, &question_ids, contributions, &prefix, labels));
     children.push(ui_stack_horizontal(vec![
         builder_button(
             format!("{prefix}.remove"),
             "trash-2",
-            "Remove Question",
+            labels.remove_question,
             forms_action("removeQuestion", Some(json!({ "questionId": question.id }))),
             false,
         ),
         builder_button(
             format!("{prefix}.move-up"),
             "arrow-up",
-            "Move Up",
+            labels.move_up,
             forms_action(
                 "moveQuestion",
                 Some(json!({ "questionId": question.id, "toStepId": step.id, "index": index.saturating_sub(1) })),
@@ -862,7 +1059,7 @@ fn builder_question_card(
         builder_button(
             format!("{prefix}.move-down"),
             "arrow-down",
-            "Move Down",
+            labels.move_down,
             forms_action(
                 "moveQuestion",
                 Some(json!({ "questionId": question.id, "toStepId": step.id, "index": index + 1 })),
@@ -891,24 +1088,25 @@ fn builder_step_section(
     step_index: usize,
     selected_ids: &[String],
     contributions: &[PluginContributionEntry],
+    labels: &FormsLabels,
 ) -> UiNode {
     let prefix = format!("forms-blueprint.step.{}", step.id);
     let mut children = vec![
         builder_text_editor(
             format!("{prefix}.title"),
-            "Title",
+            labels.title,
             step.title.clone(),
             forms_action("patchStep", Some(json!({ "stepId": step.id, "field": "title" }))),
         ),
         builder_text_editor(
             format!("{prefix}.description"),
-            "Description",
+            labels.description,
             step.description.clone().unwrap_or_default(),
             forms_action("patchStep", Some(json!({ "stepId": step.id, "field": "description" }))),
         ),
     ];
     for (index, question) in step.questions.iter().enumerate() {
-        children.push(builder_question_card(question, step, index, selected_ids, contributions));
+        children.push(builder_question_card(question, step, index, selected_ids, contributions, labels));
     }
     children.push(UiNode::Stack(UiStackNode {
         direction: "vertical".into(),
@@ -921,34 +1119,34 @@ fn builder_step_section(
             "dropQuestionKind",
             Some(json!({ "targetId": forms_play_step_tree_id(&step.id), "dropPosition": "inside" })),
         )),
-        children: vec![ui_text("Drop a question kind here")],
+        children: vec![ui_text(labels.drop_question_kind_here)],
     }));
     children.push(ui_stack_horizontal(vec![
         builder_button(
             format!("{prefix}.add-question"),
             "plus",
-            "Add Question",
+            labels.add_question,
             forms_action("addQuestion", Some(json!({ "stepId": step.id, "kind": "text" }))),
             false,
         ),
         builder_button(
             format!("{prefix}.remove"),
             "trash-2",
-            "Remove Step",
+            labels.remove_step,
             forms_action("removeStep", Some(json!({ "stepId": step.id }))),
             false,
         ),
         builder_button(
             format!("{prefix}.move-up"),
             "arrow-up",
-            "Move Up",
+            labels.move_up,
             forms_action("moveStep", Some(json!({ "stepId": step.id, "index": step_index.saturating_sub(1) }))),
             step_index == 0,
         ),
         builder_button(
             format!("{prefix}.move-down"),
             "arrow-down",
-            "Move Down",
+            labels.move_down,
             forms_action("moveStep", Some(json!({ "stepId": step.id, "index": step_index + 1 }))),
             step_index + 1 >= spec.steps.len(),
         ),
@@ -961,20 +1159,20 @@ fn builder_step_section(
     })
 }
 
-fn render_blueprint_builder(spec: &FormSpec, play: &FormsPlayEnvelope, contributions: &[PluginContributionEntry]) -> UiNode {
+fn render_blueprint_builder(spec: &FormSpec, play: &FormsPlayEnvelope, contributions: &[PluginContributionEntry], labels: &FormsLabels) -> UiNode {
     let mut children = vec![builder_text_editor(
         "forms-blueprint.title".into(),
-        "Form Title",
+        labels.form_title,
         spec.title.clone().unwrap_or_default(),
         forms_action("updateForm", Some(json!({ "field": "title" }))),
     )];
     for (step_index, step) in spec.steps.iter().enumerate() {
-        children.push(builder_step_section(spec, step, step_index, &play.selected_ids, contributions));
+        children.push(builder_step_section(spec, step, step_index, &play.selected_ids, contributions, labels));
     }
     children.push(builder_button(
         "forms-blueprint.add-step".into(),
         "plus",
-        "Add Step",
+        labels.add_step,
         forms_action("addStep", None),
         false,
     ));
@@ -1043,6 +1241,7 @@ fn render_try_question(
     values: &Map<String, Value>,
     contributions: &[PluginContributionEntry],
     error: Option<&str>,
+    labels: &FormsLabels,
 ) -> UiNode {
     let value = values.get(&question.id).cloned().unwrap_or_else(|| default_value_for_question(question));
     let key = question.id.clone();
@@ -1099,7 +1298,7 @@ fn render_try_question(
                 id: format!("forms-try.{key}.toggle"),
                 icon_id: "check".into(),
                 pressed: value.as_bool().unwrap_or(false),
-                text: Some(if value.as_bool().unwrap_or(false) { "Yes".into() } else { "No".into() }),
+                text: Some(if value.as_bool().unwrap_or(false) { labels.yes.into() } else { labels.no.into() }),
                 on_change: try_value_action(&key),
             }),
         ),

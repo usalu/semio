@@ -1,8 +1,9 @@
 {
   "title": "Fix VCS Crate Compile Errors",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "cargo check -p semio-framework-renderer-wgpu fails because its dependency vcs (vcs/rs/lib.rs) does not compile at the current committed HEAD (verified no local diff on vcs/rs/lib.rs — genuine baseline breakage). Errors: (1) lib.rs:1507,1564 — no method into_json for struct Response (ureq 2.12.1 per Cargo.toml/lock, should have this method — investigate if Response in scope is shadowed by another import or ureq API changed); (2) lib.rs:636 — no method pump for \u0026mut DocumentVcsStore\u003cP, Op\u003e, compiler suggests bump — likely rename/typo; (3) lib.rs:639 — no method flush_outbound for \u0026mut DocumentVcsStore\u003cP, Op\u003e; (4) lib.rs:934 — no method sync for \u0026Box\u003cdyn Backbone\u003e — likely Backbone trait out of scope, needs use import; (5) lib.rs:942 — same pattern for load on \u0026Box\u003cdyn Backbone\u003e. Fix vcs/rs/lib.rs so cargo check -p vcs and cargo check -p semio-framework-renderer-wgpu succeed. Do not touch panel-tab / ribbon-levels related code (separate ticket in flight: RIBBON-LEVELS-FOR-NAVBAR-TABS-AND-WINDOW-TOOLBAR).",
+  "summary": "Re-verified the reported vcs/rs/lib.rs compile break (into_json, pump/flush_outbound, Backbone::sync/load) and it no longer reproduces: `cargo check -p vcs` and `cargo check -p semio-framework-renderer-wgpu` both finish clean (exit 0, only pre-existing dead-code/unused-variable warnings). git diff confirms vcs/rs/lib.rs has zero local changes and matches committed HEAD, so a concurrent session already landed the fix (pump/bump/flush_outbound and the Backbone trait's sync/load are all present and in-scope in the current file). No code changes were made or needed; vcs/rs/lib.rs was read-only investigated.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1942"
   },

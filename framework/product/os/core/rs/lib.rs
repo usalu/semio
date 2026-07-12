@@ -2275,7 +2275,6 @@ impl OsBackbonePort for StudioBackbonePort {
                         .read()?
                         .ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")));
                 }
-                #[cfg(not(target_arch = "wasm32"))]
                 _ => {}
             }
         }
@@ -2293,7 +2292,6 @@ impl OsBackbonePort for StudioBackbonePort {
                 StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {
                     return storage.write(payload);
                 }
-                #[cfg(not(target_arch = "wasm32"))]
                 _ => {}
             }
         }

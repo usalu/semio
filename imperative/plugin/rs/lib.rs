@@ -193,8 +193,72 @@ fn imperative_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 }
 //#endregion 🔖DocumentHelpers
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the imperative app; one field per label makes every locale combination compile-checked.
+struct ImperativeLabels {
+    col_index: &'static str,
+    col_id: &'static str,
+    col_kind: &'static str,
+    action_state_set: &'static str,
+    action_log_print: &'static str,
+    action_control_if: &'static str,
+    action_control_while: &'static str,
+    action_math_add: &'static str,
+    document_empty: &'static str,
+    inspector_empty_hint: &'static str,
+    inspector_step_not_found: &'static str,
+    inspector_id: &'static str,
+    inspector_kind: &'static str,
+    inspector_params: &'static str,
+}
+
+const IMPERATIVE_LABELS_NATIVE_EN: ImperativeLabels = ImperativeLabels {
+    col_index: "#",
+    col_id: "Id",
+    col_kind: "Kind",
+    action_state_set: "Set state",
+    action_log_print: "Print log",
+    action_control_if: "If",
+    action_control_while: "While",
+    action_math_add: "Add",
+    document_empty: "(none)",
+    inspector_empty_hint: "Select a step in the document.",
+    inspector_step_not_found: "Step not found",
+    inspector_id: "Id",
+    inspector_kind: "Kind",
+    inspector_params: "Params",
+};
+
+const IMPERATIVE_LABELS_NATIVE_DE: ImperativeLabels = ImperativeLabels {
+    col_index: "#",
+    col_id: "ID",
+    col_kind: "Art",
+    action_state_set: "Zustand setzen",
+    action_log_print: "Log ausgeben",
+    action_control_if: "Wenn",
+    action_control_while: "Solange",
+    action_math_add: "Addieren",
+    document_empty: "(keine)",
+    inspector_empty_hint: "Wählen Sie einen Schritt im Dokument aus.",
+    inspector_step_not_found: "Schritt nicht gefunden",
+    inspector_id: "ID",
+    inspector_kind: "Art",
+    inspector_params: "Parameter",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
+fn imperative_labels(view_state: &ViewState) -> &'static ImperativeLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de {
+        &IMPERATIVE_LABELS_NATIVE_DE
+    } else {
+        &IMPERATIVE_LABELS_NATIVE_EN
+    }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Panels
-fn build_document_tree(document: &ImperativeDocument, selected: &[String]) -> UiNode {
+fn build_document_tree(document: &ImperativeDocument, selected: &[String], labels: &ImperativeLabels) -> UiNode {
     let step_items: Vec<UiTreeItemNode> = document
         .path
         .steps
@@ -215,7 +279,7 @@ fn build_document_tree(document: &ImperativeDocument, selected: &[String]) -> Ui
             label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
             default_open: Some(true),
             items: if step_items.is_empty() {
-                vec![tree_item("imperative-play-document.steps.empty", "(none)")]
+                vec![tree_item("imperative-play-document.steps.empty", labels.document_empty)]
             } else {
                 step_items
             },
@@ -227,13 +291,13 @@ fn build_document_tree(document: &ImperativeDocument, selected: &[String]) -> Ui
     })
 }
 
-fn build_catalogue_tree() -> UiNode {
+fn build_catalogue_tree(labels: &ImperativeLabels) -> UiNode {
     let actions = [
-        ("state.set", "Set state"),
-        ("log.print", "Print log"),
-        ("control.if", "If"),
-        ("control.while", "While"),
-        ("math.add", "Add"),
+        ("state.set", labels.action_state_set),
+        ("log.print", labels.action_log_print),
+        ("control.if", labels.action_control_if),
+        ("control.while", labels.action_control_while),
+        ("math.add", labels.action_math_add),
     ];
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
@@ -259,13 +323,13 @@ fn build_catalogue_tree() -> UiNode {
     })
 }
 
-fn build_inspector_tree(document: &ImperativeDocument, selected: &[String]) -> UiNode {
+fn build_inspector_tree(document: &ImperativeDocument, selected: &[String], labels: &ImperativeLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "imperative-play-inspector.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            children: vec![ui_text("Select a step in the document.")],
+            children: vec![ui_text(labels.inspector_empty_hint)],
         }]);
     }
     let steps: Vec<&Step> = selected
@@ -273,14 +337,14 @@ fn build_inspector_tree(document: &ImperativeDocument, selected: &[String]) -> U
         .filter_map(|id| document.path.steps.iter().find(|step| &step.id == id))
         .collect();
     if steps.is_empty() {
-        return ui_stack_vertical(vec![ui_text("Step not found")]);
+        return ui_stack_vertical(vec![ui_text(labels.inspector_step_not_found)]);
     }
     ui_stack_vertical(vec![
-        ui_inspector_readonly_field("imperative-play-inspector.id", "Id", steps[0].id.clone()),
-        ui_inspector_readonly_field("imperative-play-inspector.kind", "Kind", steps[0].kind.clone()),
+        ui_inspector_readonly_field("imperative-play-inspector.id", labels.inspector_id, steps[0].id.clone()),
+        ui_inspector_readonly_field("imperative-play-inspector.kind", labels.inspector_kind, steps[0].kind.clone()),
         ui_inspector_readonly_field(
             "imperative-play-inspector.params",
-            "Params",
+            labels.inspector_params,
             serde_json::to_string(&steps[0].params).unwrap_or_else(|_| "{}".into()),
         ),
     ])
@@ -309,7 +373,7 @@ fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> {
     }
 }
 
-fn render_main_table(play: &ImperativePlayEnvelope) -> UiNode {
+fn render_main_table(play: &ImperativePlayEnvelope, labels: &ImperativeLabels) -> UiNode {
     let document = document(play);
     let mut rows_json = table_rows(&document.path.steps);
     if !play.runtime.run_output_json.is_empty() {
@@ -322,7 +386,12 @@ fn render_main_table(play: &ImperativePlayEnvelope) -> UiNode {
         IMPERATIVE_PLAY_SURFACE_MAIN,
         IMPERATIVE_PLAY_APP_ID,
         TableScene {
-            columns_json: json!([{"id":"index","label":"#"},{"id":"id","label":"Id"},{"id":"kind","label":"Kind"}]).to_string(),
+            columns_json: json!([
+                {"id":"index","label":labels.col_index},
+                {"id":"id","label":labels.col_id},
+                {"id":"kind","label":labels.col_kind},
+            ])
+            .to_string(),
             rows_json,
         },
     )
@@ -460,14 +529,15 @@ impl PluginApp for ImperativePlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let play = parse_envelope(document_json);
+        let labels = imperative_labels(view_state);
         match body_key {
-            IMPERATIVE_PLAY_BODY_MAIN => render_main_table(&play),
+            IMPERATIVE_PLAY_BODY_MAIN => render_main_table(&play, labels),
             IMPERATIVE_PLAY_BODY_SCRIPT => render_script(&play),
-            IMPERATIVE_PLAY_BODY_DOCUMENT => build_document_tree(&document(&play), &play.runtime.selected_step_ids),
-            IMPERATIVE_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
-            IMPERATIVE_PLAY_BODY_INSPECTOR => build_inspector_tree(&document(&play), &play.runtime.selected_step_ids),
+            IMPERATIVE_PLAY_BODY_DOCUMENT => build_document_tree(&document(&play), &play.runtime.selected_step_ids, labels),
+            IMPERATIVE_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
+            IMPERATIVE_PLAY_BODY_INSPECTOR => build_inspector_tree(&document(&play), &play.runtime.selected_step_ids, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -548,6 +618,29 @@ mod tests {
         let node = app.render(IMPERATIVE_PLAY_BODY_MAIN, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("table"));
+    }
+
+    #[test]
+    fn imperative_labels_resolve_native_by_default() {
+        let app = ImperativePlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(IMPERATIVE_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Set state"));
+        assert!(json.contains("Print log"));
+        assert!(json.contains("While"));
+    }
+
+    #[test]
+    fn imperative_labels_resolve_native_in_german() {
+        let app = ImperativePlayApp;
+        let document = app.initial_document_json();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let node = app.render(IMPERATIVE_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Zustand setzen"));
+        assert!(json.contains("Log ausgeben"));
+        assert!(json.contains("Solange"));
     }
 
     #[test]

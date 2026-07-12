@@ -23,7 +23,6 @@ import {
   Mode,
   Navbar,
   NavbarExampleSelect,
-  PanelToggleGroup,
   Popover,
   PopoverAnchor,
   PopoverContent,
@@ -104,7 +103,6 @@ import {
   type EngagementSpec,
   type ModeWindowDescriptor,
   type NavbarItem,
-  type PanelToggleItem,
   type PanelTabNode,
   type RibbonDirection,
   type RibbonRow,
@@ -145,7 +143,6 @@ import {
   buildFolderBackboneUri,
   buildFrameworkSyncTools,
   buildRemoteBackboneUri,
-  buildTemporaryBackboneUri,
   documentFromEnvelopeJson,
   readBackboneEnvelope,
   wrapDocumentEnvelope,
@@ -895,14 +892,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   }, [session]);
 
   useEffect(() => {
-    if (!session) {
-      setSyncBackboneUri(null);
-      setSyncCardKind(null);
-      lastEnvelopeJsonRef.current = null;
-      return;
-    }
-    const docId = syncDocumentId(session, panel, studioMode);
-    setSyncBackboneUri(buildTemporaryBackboneUri(docId));
+    setSyncBackboneUri(null);
     setSyncCardKind(null);
     lastEnvelopeJsonRef.current = null;
   }, [panel?.activeSpawnedId, session, studioMode]);
@@ -1399,11 +1389,11 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     [loadedPlugins, panel, processPluginOps, resolveSyncTargetSession, studioMode],
   );
 
-  const detachSyncBackbone = useCallback(async () => {
-    if (!session) return;
-    const docId = syncDocumentId(session, panel, studioMode);
-    await attachSyncBackbone(buildTemporaryBackboneUri(docId));
-  }, [attachSyncBackbone, panel, session, studioMode]);
+  const detachSyncBackbone = useCallback(() => {
+    setSyncBackboneUri(null);
+    setSyncCardKind(null);
+    lastEnvelopeJsonRef.current = null;
+  }, []);
 
   const spawnProgram = useCallback(
     async (program: StudioProgramEntry) => {
@@ -1439,10 +1429,6 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       if (!session) return;
 
       if (action.controllerId === FRAMEWORK_SYNC_CONTROLLER_ID) {
-        if (action.action === "selectTemporary") {
-          void attachSyncBackbone(buildTemporaryBackboneUri(syncDocumentId(session, panel, studioMode)));
-          return;
-        }
         if (action.action === "selectFile") {
           setSyncCardKind("file");
           setSyncDraftPath(syncBackboneUri?.startsWith("file://") ? syncBackboneUri.slice("file://".length) : "");
@@ -1999,12 +1985,14 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     };
   }, [leftPanelVisible, mobilePanelPath, mobilePanelTabs, onAction, rightPanelVisible, session, studioMode]);
 
-  const panelToggles = useMemo(
-    (): PanelToggleItem[] => [
-      { id: "ui.panelToggle.left", icon: <Icon icon="panel-left" size="small" />, pressed: leftPanelVisible, onPressedChange: setLeftPanelVisible },
-      { id: "ui.panelToggle.right", icon: <Icon icon="panel-right" size="small" />, pressed: rightPanelVisible, onPressedChange: setRightPanelVisible },
-    ],
-    [leftPanelVisible, rightPanelVisible],
+  // Each toggle is anchored to its own navbar edge (left toggle leading, right toggle trailing) rather than grouped together, so it stays put directly above its panel while that panel folds out below it — the same chrome-stays/body-unfolds effect as a window's options rail.
+  const leftPanelToggle = useMemo(
+    () => <Toggle id="ui.panelToggle.left" icon={<Icon icon="panel-left" size="small" />} pressed={leftPanelVisible} onPressedChange={setLeftPanelVisible} />,
+    [leftPanelVisible],
+  );
+  const rightPanelToggle = useMemo(
+    () => <Toggle id="ui.panelToggle.right" icon={<Icon icon="panel-right" size="small" />} pressed={rightPanelVisible} onPressedChange={setRightPanelVisible} />,
+    [rightPanelVisible],
   );
 
   const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
@@ -2040,6 +2028,11 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     if (!session) return [];
     const items: NavbarItem[] = [
       {
+        key: "leftPanelToggle",
+        className: "shrink-0 flex items-center",
+        content: leftPanelToggle,
+      },
+      {
         key: "logoAndTitle",
         className: "min-w-0 shrink-0 flex items-center gap-single",
         content: (
@@ -2071,7 +2064,6 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     } else {
       items.push(navbarFillItem());
     }
-    items.push({ key: "panelToggles", content: <PanelToggleGroup items={panelToggles} /> });
     if (session.app.modes.length > 1) {
       items.push({
         key: "modes",
@@ -2096,7 +2088,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       });
     }
     return items;
-  }, [activeExampleId, activeModeId, applyModeChange, exampleOptions, onAction, panelToggles, session]);
+  }, [activeExampleId, activeModeId, applyModeChange, exampleOptions, leftPanelToggle, onAction, session]);
 
   const searchItems = useMemo(() => {
     if (!session) return [];
@@ -2345,7 +2337,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           <Layout
             mobile={mobile}
             mobilePanel={mobilePanel}
-            navbar={<Navbar items={navbarItems} showFullscreenToggle />}
+            navbar={<Navbar items={navbarItems} showFullscreenToggle trailingContent={rightPanelToggle} />}
             footer={<Footer items={footerItems} toolbar={footerToolbar} />}
             leftSidePanel={
               workbenchLeftTabs.length > 0 || frameworkDisplayTabs.length > 0
@@ -3810,7 +3802,7 @@ function SyncAttachCard({ activeUri, cardKind, draftPath, syncTools, onAction, o
             <Button type="button" onClick={attachFromDraft}>
               Attach
             </Button>
-            {activeUri && !activeUri.startsWith("temp://") ? (
+            {activeUri ? (
               <Button type="button" onClick={onDetach}>
                 Detach
               </Button>

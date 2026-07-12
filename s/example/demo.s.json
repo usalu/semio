@@ -158,9 +158,5 @@
     "operations": [],
     "checkpoints": [],
     "alternatives": []
-  },
-  "backbone": {
-    "kind": "temporary",
-    "uri": "temp://demo"
   }
 }

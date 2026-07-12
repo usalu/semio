@@ -18,6 +18,7 @@ import {
   nodeGraphViewportActionArgs,
   parseCatalogueAppDragPayload,
   parseDagSliderOverlays,
+  resolveFixtureWidgetInstanceId,
 } from "./components/node-graph-host.tsx";
 import { SelectionMarquee } from "@semio-tech/ui-react";
 import { RasterHost } from "./components/raster-host.tsx";
@@ -59,17 +60,22 @@ import type { UiNode } from "./os-shell.tsx";
 const noopAction = () => {};
 
 describe("framework sync tools", () => {
-  it("builds four sync backbone toggles", async () => {
+  it("builds three sync backbone toggles", async () => {
     const { buildFrameworkSyncTools } = await import("@semio-tech/framework-os-core");
-    const tools = buildFrameworkSyncTools("temp://demo");
-    expect(tools).toHaveLength(4);
+    const tools = buildFrameworkSyncTools("file:///demo");
+    expect(tools).toHaveLength(3);
     expect(tools.map((tool) => tool.id)).toEqual([
-      "framework.sync.temporary",
       "framework.sync.file",
       "framework.sync.folder",
       "framework.sync.remote",
     ]);
     expect(tools[0]?.pressed).toBe(true);
+  });
+
+  it("has no active toggle when detached", async () => {
+    const { buildFrameworkSyncTools } = await import("@semio-tech/framework-os-core");
+    const tools = buildFrameworkSyncTools(null);
+    expect(tools.every((tool) => !tool.pressed)).toBe(true);
   });
 });
 
@@ -1536,6 +1542,16 @@ describe("s media graph flow routing", () => {
       noopAction,
     );
     expect(config.dragAndDropController).toBeUndefined();
+  });
+
+  it("resolves a fixture widget id to its media-graph instance id, independent of selection state", () => {
+    const fixtureJson = JSON.stringify({ widgets: [{ id: "widget-1", params: { instanceId: "app-1" } }, { id: "widget-2", params: {} }] });
+    expect(resolveFixtureWidgetInstanceId(fixtureJson, "widget-1")).toBe("app-1");
+    expect(resolveFixtureWidgetInstanceId(fixtureJson, "widget-2")).toBeUndefined();
+    expect(resolveFixtureWidgetInstanceId(fixtureJson, "missing-widget")).toBeUndefined();
+    expect(resolveFixtureWidgetInstanceId(fixtureJson, undefined)).toBeUndefined();
+    expect(resolveFixtureWidgetInstanceId(undefined, "widget-1")).toBeUndefined();
+    expect(resolveFixtureWidgetInstanceId("not json", "widget-1")).toBeUndefined();
   });
 
   it("parses studio and studio+instance shell paths, and rejects non-studio routes", () => {

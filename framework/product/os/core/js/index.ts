@@ -30,28 +30,22 @@ export function osInPort(resourceKind: string, id: string, label: string, requir
 //#region 🔖Backbone
 export const FRAMEWORK_SYNC_CONTROLLER_ID = "framework.sync";
 
-export type BackboneKind = "temporary" | "file" | "folder" | "remote";
+export type BackboneKind = "file" | "folder" | "remote" | "unknown";
 
 export type DocumentBackboneRef = {
   readonly kind: BackboneKind;
   readonly uri: string;
 };
 
-const temporaryBackboneStore = new Map<string, string>();
-
 export function backboneKindFromUri(uri: string): BackboneKind {
   if (uri.startsWith("file://")) return "file";
   if (uri.startsWith("folder://")) return "folder";
   if (uri.startsWith("remote://")) return "remote";
-  return "temporary";
+  return "unknown";
 }
 
 export function documentBackboneRef(uri: string): DocumentBackboneRef {
   return { kind: backboneKindFromUri(uri), uri };
-}
-
-export function buildTemporaryBackboneUri(documentId: string): string {
-  return `temp://${documentId}`;
 }
 
 export function parseRemoteBackboneUri(uri: string): { readonly hostPort: string; readonly documentId: string } | null {
@@ -77,9 +71,6 @@ export function buildFolderBackboneUri(path: string): string {
 }
 
 export async function readBackboneEnvelope(uri: string): Promise<string | null> {
-  if (uri.startsWith("temp://")) {
-    return temporaryBackboneStore.get(uri) ?? null;
-  }
   if (uri.startsWith("remote://")) {
     const remote = parseRemoteBackboneUri(uri);
     if (!remote) return null;
@@ -96,11 +87,6 @@ export async function readBackboneEnvelope(uri: string): Promise<string | null> 
 }
 
 export async function writeBackboneEnvelope(uri: string, envelopeJson: string): Promise<void> {
-  if (uri.startsWith("temp://")) {
-    temporaryBackboneStore.set(uri, envelopeJson);
-    console.log("[DEBUG] temporary backbone synced", uri);
-    return;
-  }
   if (uri.startsWith("remote://")) {
     const remote = parseRemoteBackboneUri(uri);
     if (!remote) throw new Error(`invalid remote backbone uri: ${uri}`);
@@ -164,10 +150,9 @@ export function buildFrameworkSyncTools(activeUri: string | null): readonly Fram
   const activeKind = activeUri ? backboneKindFromUri(activeUri) : null;
   const pressed = (kind: BackboneKind) => activeKind === kind;
   return [
-    { id: "framework.sync.temporary", kind: "toggle", iconId: "hard-drive", label: "Temporary", category: "sync", pressed: pressed("temporary"), order: 0, controllerId: FRAMEWORK_SYNC_CONTROLLER_ID, action: "selectTemporary" },
-    { id: "framework.sync.file", kind: "toggle", iconId: "file-json", label: "File", category: "sync", pressed: pressed("file"), order: 1, controllerId: FRAMEWORK_SYNC_CONTROLLER_ID, action: "selectFile" },
-    { id: "framework.sync.folder", kind: "toggle", iconId: "folder", label: "Folder", category: "sync", pressed: pressed("folder"), order: 2, controllerId: FRAMEWORK_SYNC_CONTROLLER_ID, action: "selectFolder" },
-    { id: "framework.sync.remote", kind: "toggle", iconId: "cloud", label: "Remote", category: "sync", pressed: pressed("remote"), order: 3, controllerId: FRAMEWORK_SYNC_CONTROLLER_ID, action: "selectRemote" },
+    { id: "framework.sync.file", kind: "toggle", iconId: "file-json", label: "File", category: "sync", pressed: pressed("file"), order: 0, controllerId: FRAMEWORK_SYNC_CONTROLLER_ID, action: "selectFile" },
+    { id: "framework.sync.folder", kind: "toggle", iconId: "folder", label: "Folder", category: "sync", pressed: pressed("folder"), order: 1, controllerId: FRAMEWORK_SYNC_CONTROLLER_ID, action: "selectFolder" },
+    { id: "framework.sync.remote", kind: "toggle", iconId: "cloud", label: "Remote", category: "sync", pressed: pressed("remote"), order: 2, controllerId: FRAMEWORK_SYNC_CONTROLLER_ID, action: "selectRemote" },
   ];
 }
 //#endregion 🔖Backbone

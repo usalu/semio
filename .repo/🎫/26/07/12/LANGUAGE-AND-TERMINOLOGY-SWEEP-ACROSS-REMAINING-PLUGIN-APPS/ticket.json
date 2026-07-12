@@ -1,0 +1,13 @@
+{
+  "title": "Language And Terminology Sweep Across Remaining Plugin Apps",
+  "emoji": "🌐",
+  "status": "open",
+  "description": "Extend the language/terminology mechanism (ViewState.locale/terminology, AppDefinition.terminologies, already fully implemented for puzzle 3d and CAD) to the remaining ~22 plugin app crates: puzzle 2d, puzzle 5d, forms, forms-module-procedural, dag, draw, flow, gis, imperative, layout, lowpoly, note, presentation, procedural (2d+3d), raster, reasoning-mindmap, s (home+studio), sequence, shooting, trinity (jack+rewrite), vcs, writer. For each: add a per-app Labels struct (native English/German only, no invented terminology unless a genuine entity/sub-entity noun pair analogous to puzzle3d's Object/Vortex or CAD's Object/Primitive exists), a *_labels(view_state) resolver, thread it through render/tools/window_measures/window_engagements and their helper functions, add tests, and verify with cargo check/test per crate. Run via the Workflow tool (multi-agent, one agent per app/crate) since the pattern is now well-established from puzzle3d and CAD.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1943"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪0dbc7581f4114f8f9fffb91d6ce06d69"
+  ]
+}

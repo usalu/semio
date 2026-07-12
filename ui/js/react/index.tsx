@@ -9329,12 +9329,14 @@ export interface NavbarProps {
   items: NavbarItem[];
   className?: string;
   showFullscreenToggle?: boolean;
+  /** @emoji 🎯 Chrome anchored to the trailing (far right) edge, after the fullscreen toggle — e.g. a right side-panel toggle that stays put while its panel folds out below it, mirroring window-options chrome. */
+  trailingContent?: React.ReactNode;
 }
 
 /**
  * Navbar holds the data fields for a Navbar record.
  **/
-function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) {
+function Navbar({ items, className, showFullscreenToggle = true, trailingContent }: NavbarProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
   const normalItems = items.filter((item) => !item.centered);
@@ -9348,9 +9350,10 @@ function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) 
               {item.content}
             </div>
           ))}
-          {showFullscreenToggle ? (
-            <div key="fullscreenToggle" data-slot="navbar-fullscreen-toggle" className="h-medium flex shrink-0 items-center min-w-0 ml-auto">
-              <NavbarFullscreenToggle />
+          {showFullscreenToggle || trailingContent ? (
+            <div key="trailing" data-slot="navbar-trailing" className="h-medium flex shrink-0 items-center gap-single min-w-0 ml-auto">
+              {showFullscreenToggle ? <NavbarFullscreenToggle /> : null}
+              {trailingContent}
             </div>
           ) : null}
         </div>
@@ -14280,10 +14283,11 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
   };
   const resizeSide = position === "left" ? "right" : "left";
 
+  // Flush against the top (no gap) so the panel morphs directly out of its navbar toggle, like a window-options rail unfolding from its chrome.
   const positionStyle =
     position === "left"
-      ? { left: "var(--spacing-single)", top: "var(--spacing-single)", bottom: "var(--spacing-single)", width: `${size}px`, zIndex }
-      : { right: "var(--spacing-single)", top: "var(--spacing-single)", bottom: "var(--spacing-single)", width: `${size}px`, zIndex };
+      ? { left: "var(--spacing-single)", top: "0", bottom: "var(--spacing-single)", width: `${size}px`, zIndex }
+      : { right: "var(--spacing-single)", top: "0", bottom: "var(--spacing-single)", width: `${size}px`, zIndex };
 
   const resizeHandleClass = `absolute top-0 bottom-0 z-20 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize`;
 
@@ -25295,8 +25299,14 @@ if (treeVitest) {
 
     it("renders fullscreen toggle on the trailing navbar edge by default", () => {
       const markup = renderToStaticMarkup(<Navbar items={[{ key: "title", content: <span>App</span> }]} />);
-      expect(markup).toContain('data-slot="navbar-fullscreen-toggle"');
+      expect(markup).toContain('data-slot="navbar-trailing"');
       expect(markup).toContain('id="ui.fullscreen.toggle"');
+    });
+
+    it("renders trailingContent alongside the fullscreen toggle at the outer trailing edge", () => {
+      const markup = renderToStaticMarkup(<Navbar items={[{ key: "title", content: <span>App</span> }]} trailingContent={<span id="right-panel-toggle">Right</span>} />);
+      expect(markup).toContain('data-slot="navbar-trailing"');
+      expect(markup.indexOf('id="ui.fullscreen.toggle"')).toBeLessThan(markup.indexOf('id="right-panel-toggle"'));
     });
 
     it("maps fullscreen toggle id to ui i18n key", () => {

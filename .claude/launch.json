@@ -203,6 +203,16 @@
         "SEMIO_RENDERER": "react"
       },
       "port": 6018
+    },
+    {
+      "name": "vcs-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:vcs"],
+      "env": {
+        "VCS_PLAY_PORT": "6075",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6075
     }
   ]
 }

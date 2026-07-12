@@ -121,6 +121,19 @@ function parseJsonArray<T>(json: string | undefined): readonly T[] {
   }
 }
 
+/** @emoji 🔎 Resolves a flow fixture widget id to the media-graph instance id it previews, used to open an app instance without depending on plugin-side selection state. */
+export function resolveFixtureWidgetInstanceId(fixtureJson: string | undefined, widgetId: string | undefined | null): string | undefined {
+  if (!fixtureJson || !widgetId) return undefined;
+  try {
+    const fixture = JSON.parse(fixtureJson) as {
+      readonly widgets?: readonly { readonly id?: string; readonly params?: { readonly instanceId?: string } }[];
+    };
+    return fixture.widgets?.find((widget) => widget.id === widgetId)?.params?.instanceId;
+  } catch {
+    return undefined;
+  }
+}
+
 export interface CatalogueAppDragPayload {
   readonly programId: string;
   readonly appId: string;
@@ -1359,7 +1372,7 @@ export function FlowGraphCanvasHost({
   const gpuCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const labelCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly widgetId?: string } | null>(null);
   const [selectionBounds, setSelectionBounds] = useState<ReturnType<typeof parseDagSelectionUnionBoundsScreen>>(null);
   const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
   const [labelStateJson, setLabelStateJson] = useState("{}");
@@ -1733,18 +1746,9 @@ export function FlowGraphCanvasHost({
 
   const openHoveredInstance = useCallback(() => {
     const session = sessionRef.current;
-    if (!session || !scene.fixtureJson) return;
-    const widgetId = session.hoveredWidgetId();
-    if (!widgetId) return;
-    try {
-      const fixture = JSON.parse(scene.fixtureJson) as {
-        readonly widgets?: readonly { readonly id?: string; readonly params?: { readonly instanceId?: string } }[];
-      };
-      const instanceId = fixture.widgets?.find((widget) => widget.id === widgetId)?.params?.instanceId;
-      if (instanceId) dispatch("openInstance", { instanceId });
-    } catch {
-      /* fixture not parseable */
-    }
+    if (!session) return;
+    const instanceId = resolveFixtureWidgetInstanceId(scene.fixtureJson, session.hoveredWidgetId());
+    if (instanceId) dispatch("openInstance", { instanceId });
   }, [dispatch, scene.fixtureJson]);
 
   useEffect(() => clearGhostPreview, [clearGhostPreview]);
@@ -1762,7 +1766,7 @@ export function FlowGraphCanvasHost({
       onContextMenu={(event) => {
         if (!editable || contextMenuItems.length === 0) return;
         event.preventDefault();
-        setContextMenu({ x: event.clientX, y: event.clientY });
+        setContextMenu({ x: event.clientX, y: event.clientY, widgetId: sessionRef.current?.hoveredWidgetId() });
       }}
     >
       <canvas ref={gpuCanvasRef} className="absolute inset-0 block h-full w-full" />
@@ -1888,7 +1892,13 @@ export function FlowGraphCanvasHost({
         items={contextMenuItems.map((item) => ({
           id: item.id,
           label: item.label,
-          onSelect: () => dispatch(item.action, item.args),
+          onSelect: () =>
+            dispatch(
+              item.action,
+              item.action === "openInstance"
+                ? { ...item.args, instanceId: resolveFixtureWidgetInstanceId(scene.fixtureJson, contextMenu?.widgetId) }
+                : item.args,
+            ),
         }))}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);

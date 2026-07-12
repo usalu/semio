@@ -28,7 +28,7 @@ const pluginOutRoot = join(repoRoot, "framework/product/os/dev/plugin-modules");
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
 
 //#region BackboneVitePlugin
-const temporaryBackboneFiles = new Map<string, string>();
+const hostBackboneFiles = new Map<string, string>();
 
 /** Lazily imports `bun:sqlite` — a static top-level import breaks Vite's config bundler, which loads this module's exports under Node before the dev server (and its Bun runtime) exists. */
 let backboneDatabaseCtor: typeof import("bun:sqlite").Database | undefined;
@@ -38,7 +38,7 @@ async function backboneDatabaseCtorLazy(): Promise<typeof import("bun:sqlite").D
 }
 
 async function readBackbonePayload(uri: string): Promise<string | null> {
-  if (uri.startsWith("temp://") || uri.startsWith("presence:")) return temporaryBackboneFiles.get(uri) ?? null;
+  if (uri.startsWith("presence:")) return hostBackboneFiles.get(uri) ?? null;
   if (uri.startsWith("file://")) {
     const path = uri.slice("file://".length);
     if (!existsSync(path)) return null;
@@ -58,8 +58,8 @@ async function readBackbonePayload(uri: string): Promise<string | null> {
 }
 
 async function writeBackbonePayload(uri: string, payload: string): Promise<void> {
-  if (uri.startsWith("temp://") || uri.startsWith("presence:")) {
-    temporaryBackboneFiles.set(uri, payload);
+  if (uri.startsWith("presence:")) {
+    hostBackboneFiles.set(uri, payload);
     return;
   }
   if (uri.startsWith("file://")) {
@@ -442,24 +442,61 @@ function syncBackboneRequest(method, uri, body) {
   return request;
 }
 
-export function backboneRead(uri) {
+function readBackboneEntry(uri) {
   if (typeof localStorage !== "undefined") {
-    const value = localStorage.getItem(\`\${BACKBONE_STORAGE_PREFIX}\${uri}\`);
-    if (value == null) throw \`backbone entry missing: \${uri}\`;
-    return value;
+    return localStorage.getItem(\`\${BACKBONE_STORAGE_PREFIX}\${uri}\`);
   }
   const response = syncBackboneRequest("GET", uri, null);
-  if (response.status !== 200) throw \`backbone read failed: \${uri}\`;
-  return response.responseText;
+  return response.status === 200 ? response.responseText : null;
 }
 
-export function backboneWrite(uri, payload) {
+function writeBackboneEntry(uri, payload) {
   if (typeof localStorage !== "undefined") {
     localStorage.setItem(\`\${BACKBONE_STORAGE_PREFIX}\${uri}\`, payload);
     return;
   }
   const response = syncBackboneRequest("PUT", uri, payload);
   if (response.status !== 200) throw \`backbone write failed: \${uri}\`;
+}
+
+const backbonePolled = new Set();
+
+/** @emoji 📨 Mirrors vcs::storage_receive — first poll after attach yields the stored snapshot, then goes quiet until the next send. */
+export function backbonePoll(uri) {
+  if (backbonePolled.has(uri)) return [];
+  backbonePolled.add(uri);
+  const stored = readBackboneEntry(uri);
+  if (stored == null) return [];
+  return [JSON.stringify({ kind: "snapshot", envelopeJson: stored })];
+}
+
+/** @emoji 📨 Mirrors vcs::storage_send — a snapshot message overwrites, an ops message appends into vcs.edits deduped by id. */
+export function backboneSend(uri, messageJson) {
+  const message = JSON.parse(messageJson);
+  if (message.kind === "snapshot") {
+    writeBackboneEntry(uri, message.envelopeJson);
+    return;
+  }
+  if (message.kind === "ops") {
+    const stored = readBackboneEntry(uri);
+    if (stored == null) throw \`cannot append ops before a snapshot exists: \${uri}\`;
+    const envelope = JSON.parse(stored);
+    const edits = envelope?.vcs?.edits;
+    if (!Array.isArray(edits)) throw \`stored envelope missing vcs.edits: \${uri}\`;
+    const seen = new Set(edits.map((edit) => edit?.id).filter((id) => typeof id === "string"));
+    for (const opEnvelope of message.envelopes ?? []) {
+      const editJson = opEnvelope?.diff?.payload;
+      const id = editJson?.id;
+      if (typeof id === "string") {
+        if (seen.has(id)) continue;
+        seen.add(id);
+      }
+      edits.push(editJson);
+    }
+    writeBackboneEntry(uri, JSON.stringify(envelope));
+    return;
+  }
+  throw \`unsupported backbone message kind: \${message.kind}\`;
 }
 `;
 }

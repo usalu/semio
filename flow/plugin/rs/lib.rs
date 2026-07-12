@@ -357,8 +357,114 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, descri
 }
 //#endregion 🔖DocumentHelpers
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the flow app; one field per label makes every locale combination compile-checked.
+struct FlowPlayLabels {
+    widgets: &'static str,
+    synapses: &'static str,
+    extensions: &'static str,
+    extension_actions: &'static str,
+    sources: &'static str,
+    components: &'static str,
+    sinks: &'static str,
+    catalogue_slider: &'static str,
+    catalogue_stepper: &'static str,
+    catalogue_note: &'static str,
+    catalogue_add: &'static str,
+    catalogue_and: &'static str,
+    catalogue_concat: &'static str,
+    catalogue_preview: &'static str,
+    catalogue_export: &'static str,
+    extension_auto_layout: &'static str,
+    extension_auto_evaluate: &'static str,
+    extension_action_reorganize_canvas: &'static str,
+    extension_action_evaluate_fixture: &'static str,
+    canvas: &'static str,
+    widget: &'static str,
+    delete_selection: &'static str,
+}
+
+const FLOW_LABELS_NATIVE_EN: FlowPlayLabels = FlowPlayLabels {
+    widgets: "Widgets",
+    synapses: "Synapses",
+    extensions: "Extensions",
+    extension_actions: "Extension Actions",
+    sources: "Sources",
+    components: "Components",
+    sinks: "Sinks",
+    catalogue_slider: "Slider",
+    catalogue_stepper: "Stepper",
+    catalogue_note: "Note",
+    catalogue_add: "Add",
+    catalogue_and: "And",
+    catalogue_concat: "Concat",
+    catalogue_preview: "Preview",
+    catalogue_export: "Export",
+    extension_auto_layout: "Auto Layout",
+    extension_auto_evaluate: "Auto Evaluate",
+    extension_action_reorganize_canvas: "Reorganize Canvas",
+    extension_action_evaluate_fixture: "Evaluate Fixture",
+    canvas: "Canvas",
+    widget: "Widget",
+    delete_selection: "Delete selection",
+};
+
+const FLOW_LABELS_NATIVE_DE: FlowPlayLabels = FlowPlayLabels {
+    widgets: "Widgets",
+    synapses: "Synapsen",
+    extensions: "Erweiterungen",
+    extension_actions: "Erweiterungsaktionen",
+    sources: "Quellen",
+    components: "Komponenten",
+    sinks: "Senken",
+    catalogue_slider: "Schieberegler",
+    catalogue_stepper: "Schrittregler",
+    catalogue_note: "Notiz",
+    catalogue_add: "Addieren",
+    catalogue_and: "Und",
+    catalogue_concat: "Verketten",
+    catalogue_preview: "Vorschau",
+    catalogue_export: "Exportieren",
+    extension_auto_layout: "Automatisches Layout",
+    extension_auto_evaluate: "Automatisch Auswerten",
+    extension_action_reorganize_canvas: "Leinwand neu anordnen",
+    extension_action_evaluate_fixture: "Fixture auswerten",
+    canvas: "Leinwand",
+    widget: "Widget",
+    delete_selection: "Auswahl löschen",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
+fn flow_labels(view_state: &ViewState) -> &'static FlowPlayLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de {
+        &FLOW_LABELS_NATIVE_DE
+    } else {
+        &FLOW_LABELS_NATIVE_EN
+    }
+}
+
+/// 🗣️ Resolves a built-in extension's display name from its stable id; unknown ids fall back to the extension's native English name.
+fn flow_extension_label(id: &str, name: &'static str, labels: &FlowPlayLabels) -> &'static str {
+    match id {
+        "auto-layout" => labels.extension_auto_layout,
+        "auto-evaluate" => labels.extension_auto_evaluate,
+        _ => name,
+    }
+}
+
+/// 🗣️ Resolves a built-in extension action's display title from its stable action id; unknown ids fall back to the action's native English title.
+fn flow_extension_action_title_label(action_id: &str, title: &'static str, labels: &FlowPlayLabels) -> &'static str {
+    match action_id {
+        "flow.extension.reorganize" => labels.extension_action_reorganize_canvas,
+        "flow.extension.evaluate" => labels.extension_action_evaluate_fixture,
+        _ => title,
+    }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Panels
-fn build_document_tree(fixture: &FlowFixture, selected: &[String]) -> UiNode {
+fn build_document_tree(fixture: &FlowFixture, selected: &[String], labels: &FlowPlayLabels) -> UiNode {
     let widget_items: Vec<UiTreeItemNode> = fixture
         .widgets
         .iter()
@@ -398,7 +504,7 @@ fn build_document_tree(fixture: &FlowFixture, selected: &[String]) -> UiNode {
         sections: vec![
             UiTreeSectionNode {
                 id: "flow-play-document.widgets".into(),
-                label: Some("Widgets".into()),
+                label: Some(labels.widgets.into()),
                 default_open: Some(true),
                 items: if widget_items.is_empty() {
                     vec![tree_item("flow-play-document.widgets.empty", "(none)")]
@@ -408,7 +514,7 @@ fn build_document_tree(fixture: &FlowFixture, selected: &[String]) -> UiNode {
             },
             UiTreeSectionNode {
                 id: "flow-play-document.synapses".into(),
-                label: Some("Synapses".into()),
+                label: Some(labels.synapses.into()),
                 default_open: Some(false),
                 items: if synapse_items.is_empty() {
                     vec![tree_item("flow-play-document.synapses.empty", "(none)")]
@@ -424,7 +530,7 @@ fn build_document_tree(fixture: &FlowFixture, selected: &[String]) -> UiNode {
     })
 }
 
-fn build_catalogue_tree(envelope: &FlowPlayEnvelope) -> UiNode {
+fn build_catalogue_tree(envelope: &FlowPlayEnvelope, labels: &FlowPlayLabels) -> UiNode {
     let host = host_from_envelope(envelope);
     let sections: Vec<Value> = host
         .catalogue_json()
@@ -481,8 +587,8 @@ fn build_catalogue_tree(envelope: &FlowPlayEnvelope) -> UiNode {
             })
         })
         .collect();
-    let mut tree_sections = if tree_sections.is_empty() { catalogue_tree_sections_fallback() } else { tree_sections };
-    tree_sections.extend(flow_extensions_tree_sections(&envelope.runtime));
+    let mut tree_sections = if tree_sections.is_empty() { catalogue_tree_sections_fallback(labels) } else { tree_sections };
+    tree_sections.extend(flow_extensions_tree_sections(&envelope.runtime, labels));
     UiNode::Tree(UiTreeNode {
         sections: tree_sections,
         selected_ids: Some(vec![]),
@@ -493,14 +599,14 @@ fn build_catalogue_tree(envelope: &FlowPlayEnvelope) -> UiNode {
 }
 
 /// 🧩 Installed/enabled extension palette plus actions surfaced by active extensions.
-fn flow_extensions_tree_sections(runtime: &FlowPlayRuntime) -> Vec<UiTreeSectionNode> {
+fn flow_extensions_tree_sections(runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> Vec<UiTreeSectionNode> {
     let installed: Vec<UiTreeItemNode> = FLOW_EXTENSIONS
         .iter()
         .map(|(id, name, _, _, _)| {
             let enabled = runtime.extension_enabled.get(*id).copied().unwrap_or(false);
             tree_item_with_action(
                 format!("flow-play-extensions.{id}"),
-                *name,
+                flow_extension_label(id, name, labels),
                 Some(if enabled { "enabled".into() } else { "disabled".into() }),
                 flow_action("toggleExtension", Some(json!({ "id": id, "enabled": !enabled }))),
             )
@@ -512,7 +618,7 @@ fn flow_extensions_tree_sections(runtime: &FlowPlayRuntime) -> Vec<UiTreeSection
         .map(|(_, _, action_id, title, _)| {
             tree_item_with_action(
                 format!("flow-play-extensions.action.{action_id}"),
-                *title,
+                flow_extension_action_title_label(action_id, title, labels),
                 Some((*action_id).into()),
                 flow_action("runExtensionAction", Some(json!({ "actionId": action_id }))),
             )
@@ -520,14 +626,14 @@ fn flow_extensions_tree_sections(runtime: &FlowPlayRuntime) -> Vec<UiTreeSection
         .collect();
     let mut sections = vec![UiTreeSectionNode {
         id: "flow-play-extensions.installed".into(),
-        label: Some("Extensions".into()),
+        label: Some(labels.extensions.into()),
         default_open: Some(false),
         items: installed,
     }];
     if !actions.is_empty() {
         sections.push(UiTreeSectionNode {
             id: "flow-play-extensions.actions".into(),
-            label: Some("Extension Actions".into()),
+            label: Some(labels.extension_actions.into()),
             default_open: Some(false),
             items: actions,
         });
@@ -535,14 +641,14 @@ fn flow_extensions_tree_sections(runtime: &FlowPlayRuntime) -> Vec<UiTreeSection
     sections
 }
 
-fn catalogue_tree_sections_fallback() -> Vec<UiTreeSectionNode> {
-    let sources = [("inputSlider", "Slider"), ("inputStepper", "Stepper"), ("inputNote", "Note")];
-    let components = [("math.add", "Add"), ("logic.and", "And"), ("text.concat", "Concat")];
-    let sinks = [("outputPreview", "Preview"), ("outputExport", "Export")];
+fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectionNode> {
+    let sources = [("inputSlider", labels.catalogue_slider), ("inputStepper", labels.catalogue_stepper), ("inputNote", labels.catalogue_note)];
+    let components = [("math.add", labels.catalogue_add), ("logic.and", labels.catalogue_and), ("text.concat", labels.catalogue_concat)];
+    let sinks = [("outputPreview", labels.catalogue_preview), ("outputExport", labels.catalogue_export)];
     vec![
         UiTreeSectionNode {
             id: "flow-play-catalogue.sources".into(),
-            label: Some("Sources".into()),
+            label: Some(labels.sources.into()),
             default_open: Some(true),
             items: sources
                 .iter()
@@ -560,7 +666,7 @@ fn catalogue_tree_sections_fallback() -> Vec<UiTreeSectionNode> {
         },
         UiTreeSectionNode {
             id: "flow-play-catalogue.components".into(),
-            label: Some("Components".into()),
+            label: Some(labels.components.into()),
             default_open: Some(true),
             items: components
                 .iter()
@@ -578,7 +684,7 @@ fn catalogue_tree_sections_fallback() -> Vec<UiTreeSectionNode> {
         },
         UiTreeSectionNode {
             id: "flow-play-catalogue.sinks".into(),
-            label: Some("Sinks".into()),
+            label: Some(labels.sinks.into()),
             default_open: Some(false),
             items: sinks
                 .iter()
@@ -597,7 +703,7 @@ fn catalogue_tree_sections_fallback() -> Vec<UiTreeSectionNode> {
     ]
 }
 
-fn canvas_settings_field_group(runtime: &FlowPlayRuntime) -> UiInspectorFieldGroup {
+fn canvas_settings_field_group(runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> UiInspectorFieldGroup {
     let lod_items: Vec<UiSelectItem> = std::iter::once(UiSelectItem { value: FLOW_LOD_MODE_AUTOMATIC.into(), label: "Automatic".into() })
         .chain(
             serde_json::from_str::<Vec<Value>>(&dag_lod_scale_json())
@@ -612,7 +718,7 @@ fn canvas_settings_field_group(runtime: &FlowPlayRuntime) -> UiInspectorFieldGro
         .collect();
     UiInspectorFieldGroup {
         id: "flow-play-inspector.canvas".into(),
-        label: "Canvas".into(),
+        label: labels.canvas.into(),
         default_open: Some(true),
         fields: vec![
             UiNode::Field(UiFieldNode {
@@ -652,9 +758,9 @@ fn canvas_settings_field_group(runtime: &FlowPlayRuntime) -> UiInspectorFieldGro
     }
 }
 
-fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &FlowPlayRuntime) -> UiNode {
+fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> UiNode {
     if selected.is_empty() {
-        return ui_inspector_groups_to_tree(&[canvas_settings_field_group(runtime)]);
+        return ui_inspector_groups_to_tree(&[canvas_settings_field_group(runtime, labels)]);
     }
     let widgets: Vec<&Widget> = selected
         .iter()
@@ -756,7 +862,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
     }
     groups.push(UiInspectorFieldGroup {
         id: "flow-play-inspector.base".into(),
-        label: "Widget".into(),
+        label: labels.widget.into(),
         default_open: None,
         fields: base_fields,
     });
@@ -765,7 +871,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
 //#endregion 🔖Panels
 
 //#region 🔖Render
-fn render_main_graph(envelope: &FlowPlayEnvelope) -> UiNode {
+fn render_main_graph(envelope: &FlowPlayEnvelope, labels: &FlowPlayLabels) -> UiNode {
     let host = host_from_envelope(envelope);
     let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
     let viewport_json = serde_json::to_string(&envelope.fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
@@ -776,15 +882,20 @@ fn render_main_graph(envelope: &FlowPlayEnvelope) -> UiNode {
         serde_json::to_string(&envelope.runtime.selected_node_ids).ok()
     };
     let flow_extras = flow_backed_node_graph_extras(&envelope.fixture, &envelope.runtime.lod_mode, envelope.runtime.proximity_distance);
+    let context_menu_json = json!([{
+        "id": "delete-selection",
+        "label": labels.delete_selection,
+        "action": "nodeGraphEdit",
+        "args": { "ops": [{ "op": "deleteSelection" }] },
+    }])
+    .to_string();
     build_node_graph_scene(
         FLOW_PLAY_SURFACE_MAIN,
         FLOW_PLAY_APP_ID,
         NodeGraphScene {
             editable: Some(true),
             operators_json: flow_extras.operators_json,
-            context_menu_json: Some(
-                r#"[{"id":"delete-selection","label":"Delete selection","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
-            ),
+            context_menu_json: Some(context_menu_json),
             find_items_json: None,
             capabilities_json: flow_extras.capabilities_json,
             lod_json: flow_extras.lod_json,
@@ -1242,17 +1353,18 @@ impl PluginApp for FlowPlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
+        let labels = flow_labels(view_state);
         match body_key {
-            FLOW_PLAY_BODY_MAIN => render_main_graph(&envelope),
+            FLOW_PLAY_BODY_MAIN => render_main_graph(&envelope, labels),
             FLOW_PLAY_BODY_COMPILED => render_compiled_dag(&envelope),
             FLOW_PLAY_BODY_GENERATIONS => render_generate_generations(&envelope),
             FLOW_PLAY_BODY_GENERATE_FORM => render_generate_form(&envelope),
             FLOW_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&envelope),
-            FLOW_PLAY_BODY_DOCUMENT => build_document_tree(&envelope.fixture, &envelope.runtime.selected_node_ids),
-            FLOW_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope),
-            FLOW_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_node_ids, &envelope.runtime),
+            FLOW_PLAY_BODY_DOCUMENT => build_document_tree(&envelope.fixture, &envelope.runtime.selected_node_ids, labels),
+            FLOW_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope, labels),
+            FLOW_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_node_ids, &envelope.runtime, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -1516,5 +1628,33 @@ mod tests {
         let toggled_json = serde_json::to_string(&toggled).unwrap();
         let ran = document_after(&mut app, &toggled_json, "runExtensionAction", Some(json!({ "actionId": "flow.extension.reorganize" })));
         assert_eq!(ran.fixture.widgets.len(), toggled.fixture.widgets.len());
+    }
+
+    #[test]
+    fn flow_labels_resolve_native_english_by_default() {
+        let app = FlowPlayApp { host: None };
+        let document = app.initial_document_json();
+        let document_tree = app.render(FLOW_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
+        let document_json = serde_json::to_string(&document_tree).unwrap();
+        assert!(document_json.contains("Widgets"), "expected native English Widgets section: {document_json}");
+        assert!(document_json.contains("Synapses"), "expected native English Synapses section: {document_json}");
+        let catalogue = app.render(FLOW_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("Extensions"), "expected native English Extensions section: {catalogue_json}");
+        assert!(catalogue_json.contains("Auto Layout"), "expected native English extension name: {catalogue_json}");
+    }
+
+    #[test]
+    fn flow_labels_resolve_german_locale() {
+        let app = FlowPlayApp { host: None };
+        let document = app.initial_document_json();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let document_tree = app.render(FLOW_PLAY_BODY_DOCUMENT, &document, &view_state);
+        let document_json = serde_json::to_string(&document_tree).unwrap();
+        assert!(document_json.contains("Synapsen"), "expected German Synapsen section: {document_json}");
+        let catalogue = app.render(FLOW_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        assert!(catalogue_json.contains("Erweiterungen"), "expected German Erweiterungen section: {catalogue_json}");
+        assert!(catalogue_json.contains("Automatisches Layout"), "expected German extension name: {catalogue_json}");
     }
 }

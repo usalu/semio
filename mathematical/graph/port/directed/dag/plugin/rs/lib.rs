@@ -403,8 +403,102 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, descri
 }
 //#endregion 🔖DocumentHelpers
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the DAG app; one field per label makes every locale combination compile-checked.
+struct DagPlayLabels {
+    // document-tree section names
+    nodes: &'static str,
+    edges: &'static str,
+    empty: &'static str,
+    // catalogue node-kind names
+    kind_computation: &'static str,
+    kind_slider: &'static str,
+    kind_stepper: &'static str,
+    kind_select: &'static str,
+    kind_note: &'static str,
+    kind_preview: &'static str,
+    kind_screen: &'static str,
+    // inspector messages
+    select_a_node: &'static str,
+    node_not_found: &'static str,
+    // inspector group titles
+    slider_group: &'static str,
+    node_group: &'static str,
+    // inspector field labels
+    field_value: &'static str,
+    field_min: &'static str,
+    field_max: &'static str,
+    field_name: &'static str,
+    field_kind: &'static str,
+    field_id: &'static str,
+    selected_suffix: &'static str,
+    // node-graph context menu
+    delete_selection: &'static str,
+}
+
+const DAG_PLAY_LABELS_NATIVE_EN: DagPlayLabels = DagPlayLabels {
+    nodes: "Nodes",
+    edges: "Edges",
+    empty: "(none)",
+    kind_computation: "Computation",
+    kind_slider: "Slider",
+    kind_stepper: "Stepper",
+    kind_select: "Select",
+    kind_note: "Note",
+    kind_preview: "Preview",
+    kind_screen: "Screen",
+    select_a_node: "Select a node in the document.",
+    node_not_found: "Node not found",
+    slider_group: "slider",
+    node_group: "Node",
+    field_value: "Value",
+    field_min: "Min",
+    field_max: "Max",
+    field_name: "Name",
+    field_kind: "Kind",
+    field_id: "Id",
+    selected_suffix: "selected",
+    delete_selection: "Delete selection",
+};
+
+const DAG_PLAY_LABELS_NATIVE_DE: DagPlayLabels = DagPlayLabels {
+    nodes: "Knoten",
+    edges: "Kanten",
+    empty: "(keine)",
+    kind_computation: "Berechnung",
+    kind_slider: "Schieberegler",
+    kind_stepper: "Schrittregler",
+    kind_select: "Auswahl",
+    kind_note: "Notiz",
+    kind_preview: "Vorschau",
+    kind_screen: "Bildschirm",
+    select_a_node: "Wählen Sie einen Knoten im Dokument aus.",
+    node_not_found: "Knoten nicht gefunden",
+    slider_group: "schieberegler",
+    node_group: "Knoten",
+    field_value: "Wert",
+    field_min: "Min",
+    field_max: "Max",
+    field_name: "Name",
+    field_kind: "Typ",
+    field_id: "Id",
+    selected_suffix: "ausgewählt",
+    delete_selection: "Auswahl löschen",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; this app has no terminology variant.
+fn dag_play_labels(view_state: &ViewState) -> &'static DagPlayLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de {
+        &DAG_PLAY_LABELS_NATIVE_DE
+    } else {
+        &DAG_PLAY_LABELS_NATIVE_EN
+    }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Panels
-fn build_document_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
+fn build_document_tree(fixture: &DagFixture, selected: &[String], labels: &DagPlayLabels) -> UiNode {
     let node_items: Vec<UiTreeItemNode> = fixture
         .nodes
         .iter()
@@ -432,20 +526,20 @@ fn build_document_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
         sections: vec![
             UiTreeSectionNode {
                 id: "dag-play-document.nodes".into(),
-                label: Some("Nodes".into()),
+                label: Some(labels.nodes.into()),
                 default_open: Some(true),
                 items: if node_items.is_empty() {
-                    vec![tree_item("dag-play-document.nodes.empty", "(none)")]
+                    vec![tree_item("dag-play-document.nodes.empty", labels.empty)]
                 } else {
                     node_items
                 },
             },
             UiTreeSectionNode {
                 id: "dag-play-document.edges".into(),
-                label: Some("Edges".into()),
+                label: Some(labels.edges.into()),
                 default_open: Some(false),
                 items: if edge_items.is_empty() {
-                    vec![tree_item("dag-play-document.edges.empty", "(none)")]
+                    vec![tree_item("dag-play-document.edges.empty", labels.empty)]
                 } else {
                     edge_items
                 },
@@ -458,15 +552,15 @@ fn build_document_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
     })
 }
 
-fn build_catalogue_tree() -> UiNode {
+fn build_catalogue_tree(labels: &DagPlayLabels) -> UiNode {
     let kinds = [
-        ("computation", "Computation"),
-        ("slider", "Slider"),
-        ("stepper", "Stepper"),
-        ("select", "Select"),
-        ("note", "Note"),
-        ("preview", "Preview"),
-        ("screen", "Screen"),
+        ("computation", labels.kind_computation),
+        ("slider", labels.kind_slider),
+        ("stepper", labels.kind_stepper),
+        ("select", labels.kind_select),
+        ("note", labels.kind_note),
+        ("preview", labels.kind_preview),
+        ("screen", labels.kind_screen),
     ];
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
@@ -538,13 +632,13 @@ fn inspector_text_field(node_ids: &[String], field_id: &str, label: &str, values
     })
 }
 
-fn build_inspector_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
+fn build_inspector_tree(fixture: &DagFixture, selected: &[String], labels: &DagPlayLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "dag-play-inspector.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            children: vec![ui_text("Select a node in the document.")],
+            children: vec![ui_text(labels.select_a_node)],
         }]);
     }
     let nodes: Vec<&DagNodeSpec> = selected
@@ -556,7 +650,7 @@ fn build_inspector_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
             id: "dag-play-inspector.missing".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            children: vec![ui_text("Node not found")],
+            children: vec![ui_text(labels.node_not_found)],
         }]);
     }
     let node_ids: Vec<String> = nodes.iter().map(|node| node.id.clone()).collect();
@@ -564,20 +658,20 @@ fn build_inspector_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
     if nodes.iter().all(|node| matches!(node.kind, DagNodeKind::Slider { .. })) {
         groups.push(UiInspectorFieldGroup {
             id: "dag-play-inspector.kind.slider".into(),
-            label: "slider".into(),
+            label: labels.slider_group.into(),
             default_open: None,
             fields: vec![
-                inspector_number_field(&node_ids, "dag-play-inspector.slider-value", "Value", &nodes.iter().map(|node| match &node.kind { DagNodeKind::Slider { value, .. } => *value, _ => 0.0 }).collect::<Vec<_>>(), "value"),
-                inspector_number_field(&node_ids, "dag-play-inspector.slider-min", "Min", &nodes.iter().map(|node| match &node.kind { DagNodeKind::Slider { min, .. } => *min, _ => 0.0 }).collect::<Vec<_>>(), "min"),
-                inspector_number_field(&node_ids, "dag-play-inspector.slider-max", "Max", &nodes.iter().map(|node| match &node.kind { DagNodeKind::Slider { max, .. } => *max, _ => 0.0 }).collect::<Vec<_>>(), "max"),
+                inspector_number_field(&node_ids, "dag-play-inspector.slider-value", labels.field_value, &nodes.iter().map(|node| match &node.kind { DagNodeKind::Slider { value, .. } => *value, _ => 0.0 }).collect::<Vec<_>>(), "value"),
+                inspector_number_field(&node_ids, "dag-play-inspector.slider-min", labels.field_min, &nodes.iter().map(|node| match &node.kind { DagNodeKind::Slider { min, .. } => *min, _ => 0.0 }).collect::<Vec<_>>(), "min"),
+                inspector_number_field(&node_ids, "dag-play-inspector.slider-max", labels.field_max, &nodes.iter().map(|node| match &node.kind { DagNodeKind::Slider { max, .. } => *max, _ => 0.0 }).collect::<Vec<_>>(), "max"),
             ],
         });
     }
     let mut base_fields = vec![
-        inspector_text_field(&node_ids, "dag-play-inspector.name", "Name", &nodes.iter().map(|node| node.name.clone()).collect::<Vec<_>>(), "name"),
+        inspector_text_field(&node_ids, "dag-play-inspector.name", labels.field_name, &nodes.iter().map(|node| node.name.clone()).collect::<Vec<_>>(), "name"),
         ui_inspector_readonly_field(
             "dag-play-inspector.kind",
-            "Kind",
+            labels.field_kind,
             if nodes.iter().map(|node| dag_node_kind_tag(&node.kind)).collect::<std::collections::HashSet<_>>().len() == 1 {
                 dag_node_kind_tag(&nodes[0].kind).to_string()
             } else {
@@ -590,7 +684,7 @@ fn build_inspector_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
             0,
             UiNode::Field(UiFieldNode {
                 id: "dag-play-inspector.id".into(),
-                label: "Id".into(),
+                label: labels.field_id.into(),
                 child: Box::new(UiNode::Input(UiInputNode {
                     id: "dag-play-inspector.id.input".into(),
                     input_kind: "text".into(),
@@ -609,11 +703,11 @@ fn build_inspector_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
             }),
         );
     } else {
-        base_fields.insert(0, ui_inspector_readonly_field("dag-play-inspector.id", "Id", &format!("{} selected", node_ids.len())));
+        base_fields.insert(0, ui_inspector_readonly_field("dag-play-inspector.id", labels.field_id, &format!("{} {}", node_ids.len(), labels.selected_suffix)));
     }
     groups.push(UiInspectorFieldGroup {
         id: "dag-play-inspector.base".into(),
-        label: "Node".into(),
+        label: labels.node_group.into(),
         default_open: None,
         fields: base_fields,
     });
@@ -622,7 +716,7 @@ fn build_inspector_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
 //#endregion 🔖Panels
 
 //#region 🔖Render
-fn render_main_graph(envelope: &DagPlayEnvelope) -> UiNode {
+fn render_main_graph(envelope: &DagPlayEnvelope, labels: &DagPlayLabels) -> UiNode {
     let fixture = &envelope.fixture;
     let (nodes_json, edges_json) = fixture_to_media_graph(fixture);
     let viewport_json = serde_json::to_string(&fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
@@ -631,15 +725,20 @@ fn render_main_graph(envelope: &DagPlayEnvelope) -> UiNode {
     } else {
         serde_json::to_string(&envelope.runtime.selected_node_ids).ok()
     };
+    let context_menu_json = json!([{
+        "id": "delete-selection",
+        "label": labels.delete_selection,
+        "action": "nodeGraphEdit",
+        "args": { "ops": [{ "op": "deleteSelection" }] },
+    }])
+    .to_string();
     build_node_graph_scene(
         DAG_PLAY_SURFACE_MAIN,
         DAG_PLAY_APP_ID,
         NodeGraphScene {
             editable: Some(true),
             selection_json,
-            context_menu_json: Some(
-                r#"[{"id":"delete-selection","label":"Delete selection","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
-            ),
+            context_menu_json: Some(context_menu_json),
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
         },
     )
@@ -962,14 +1061,15 @@ impl PluginApp for DagPlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
+        let labels = dag_play_labels(view_state);
         match body_key {
-            DAG_PLAY_BODY_MAIN => render_main_graph(&envelope),
+            DAG_PLAY_BODY_MAIN => render_main_graph(&envelope, labels),
             DAG_PLAY_BODY_COMPILED => render_compiled_dag(&envelope.fixture),
-            DAG_PLAY_BODY_DOCUMENT => build_document_tree(&envelope.fixture, &envelope.runtime.selected_node_ids),
-            DAG_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
-            DAG_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_node_ids),
+            DAG_PLAY_BODY_DOCUMENT => build_document_tree(&envelope.fixture, &envelope.runtime.selected_node_ids, labels),
+            DAG_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
+            DAG_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_node_ids, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -1026,6 +1126,27 @@ semio_framework_plugin::plugin_exports!(bundle);
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn dag_play_labels_resolve_native_by_default() {
+        let app = DagPlayApp;
+        let document = serde_json::to_string(&default_envelope()).unwrap();
+        let node = app.render(DAG_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Nodes"));
+        assert!(json.contains("Edges"));
+    }
+
+    #[test]
+    fn dag_play_labels_resolve_native_in_german() {
+        let app = DagPlayApp;
+        let document = serde_json::to_string(&default_envelope()).unwrap();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let node = app.render(DAG_PLAY_BODY_DOCUMENT, &document, &view_state);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Knoten"));
+        assert!(json.contains("Kanten"));
+    }
 
     #[test]
     fn renders_node_graph_scene() {

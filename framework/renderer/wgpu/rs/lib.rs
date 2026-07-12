@@ -10808,9 +10808,6 @@ impl ShellState {
     }
 
     async fn shell_backbone_read(&self, uri: &str) -> Result<Option<String>, String> {
-        if uri.starts_with("temp://") {
-            return Ok(self.last_envelope_json.clone());
-        }
         #[cfg(target_arch = "wasm32")]
         {
             if uri.starts_with("remote://") {
@@ -10864,9 +10861,6 @@ impl ShellState {
     }
 
     async fn shell_backbone_write(&self, uri: &str, payload: &str) -> Result<(), String> {
-        if uri.starts_with("temp://") {
-            return Ok(());
-        }
         #[cfg(target_arch = "wasm32")]
         {
             if uri.starts_with("remote://") {
@@ -11008,10 +11002,6 @@ impl ShellState {
 
     async fn handle_sync_action(&mut self, action: ActionDescriptor) -> Result<(), String> {
         match action.action.as_str() {
-            "selectTemporary" => {
-                let document_id = self.sync_document_id().ok_or("session missing")?;
-                self.attach_sync_backbone(format!("temp://{document_id}")).await
-            }
             "selectFile" => {
                 self.sync_card_kind = Some("file".into());
                 self.sync_card_draft = self
@@ -11066,8 +11056,10 @@ impl ShellState {
                 self.attach_sync_backbone(uri).await
             }
             "detach" => {
-                let document_id = self.sync_document_id().ok_or("session missing")?;
-                self.attach_sync_backbone(format!("temp://{document_id}")).await
+                self.sync_backbone_uri = None;
+                self.sync_card_kind = None;
+                self.last_envelope_json = None;
+                Ok(())
             }
             _ => Ok(()),
         }
@@ -13454,7 +13446,7 @@ fn backbone_kind_from_uri(uri: &str) -> &'static str {
     } else if uri.starts_with("remote://") {
         "remote"
     } else {
-        "temporary"
+        "unknown"
     }
 }
 
@@ -13463,28 +13455,12 @@ fn framework_sync_tools(active_uri: Option<&str>) -> Vec<ToolNode> {
     let pressed = |kind: &str| active_kind == Some(kind);
     vec![
         ToolNode::Toggle {
-            id: "framework.sync.temporary".into(),
-            icon_id: "hard-drive".into(),
-            label: Some("Temporary".into()),
-            text: None,
-            title: None,
-            order: Some(0),
-            pressed: Some(pressed("temporary")),
-            disabled: None,
-            category: Some(ToolCategory::Sync),
-            on_change: ActionDescriptor {
-                controller_id: "framework.sync".into(),
-                action: "selectTemporary".into(),
-                args: None,
-            },
-        },
-        ToolNode::Toggle {
             id: "framework.sync.file".into(),
             icon_id: "file-json".into(),
             label: Some("File".into()),
             text: None,
             title: None,
-            order: Some(1),
+            order: Some(0),
             pressed: Some(pressed("file")),
             disabled: None,
             category: Some(ToolCategory::Sync),
@@ -13500,7 +13476,7 @@ fn framework_sync_tools(active_uri: Option<&str>) -> Vec<ToolNode> {
             label: Some("Folder".into()),
             text: None,
             title: None,
-            order: Some(2),
+            order: Some(1),
             pressed: Some(pressed("folder")),
             disabled: None,
             category: Some(ToolCategory::Sync),
@@ -13516,7 +13492,7 @@ fn framework_sync_tools(active_uri: Option<&str>) -> Vec<ToolNode> {
             label: Some("Remote".into()),
             text: None,
             title: None,
-            order: Some(3),
+            order: Some(2),
             pressed: Some(pressed("remote")),
             disabled: None,
             category: Some(ToolCategory::Sync),
@@ -14971,11 +14947,7 @@ impl ShellState {
                 drag_axis: None,
                 drag_data: None,
             });
-            if self
-                .sync_backbone_uri
-                .as_deref()
-                .is_some_and(|uri| !uri.starts_with("temp://"))
-            {
+            if self.sync_backbone_uri.is_some() {
                 let detach_rect = Rect::new(
                     attach_rect.x + attach_rect.w + theme.gap_standard,
                     attach_rect.y,

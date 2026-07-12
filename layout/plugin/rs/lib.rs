@@ -36,11 +36,7 @@ const LAYOUT_PLAY_PREFLIGHT_TAB_ID: &str = "layout.panel.preflight";
 
 const LAYOUT_SAMPLE_JSON: &str = include_str!("../../example/sample.layout.json");
 
-const LAYOUT_CATALOGUE_KINDS: &[(&str, &str, &str)] = &[
-    ("rect", "Rectangle", "square"),
-    ("text", "Text Frame", "type"),
-    ("image", "Image Frame", "image"),
-];
+const LAYOUT_CATALOGUE_KINDS: &[(&str, &str)] = &[("rect", "square"), ("text", "type"), ("image", "image")];
 
 const LAYOUT_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 const LAYOUT_CATALOGUE_KIND_MIME_PREFIX: &str = "application/x-semio-catalogue-kind.";
@@ -573,6 +569,182 @@ fn run_layout_preflight(doc: &LayoutDocument) -> Vec<PreflightIssue> {
 }
 //#endregion 🔖DocumentHelpers
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the layout app; one field per label makes every locale combination compile-checked.
+struct LayoutLabels {
+    document: &'static str,
+    spreads: &'static str,
+    frames: &'static str,
+    parent_pages: &'static str,
+    layers: &'static str,
+    stories: &'static str,
+    links: &'static str,
+    styles: &'static str,
+    drop_here: &'static str,
+    catalogue_page: &'static str,
+    kind_rect: &'static str,
+    kind_text: &'static str,
+    kind_image: &'static str,
+    schema: &'static str,
+    name: &'static str,
+    pages: &'static str,
+    active_page: &'static str,
+    id: &'static str,
+    width: &'static str,
+    height: &'static str,
+    margin_top: &'static str,
+    margin_right: &'static str,
+    margin_bottom: &'static str,
+    margin_left: &'static str,
+    gutter: &'static str,
+    columns: &'static str,
+    page: &'static str,
+    kind: &'static str,
+    x: &'static str,
+    y: &'static str,
+    fill: &'static str,
+    stroke: &'static str,
+    story: &'static str,
+    wrap_mode: &'static str,
+    wrap_none: &'static str,
+    wrap_box: &'static str,
+    wrap_contour: &'static str,
+    link_path: &'static str,
+    group_page: &'static str,
+    group_frame: &'static str,
+    selection_not_found: &'static str,
+    preflight: &'static str,
+    no_issues: &'static str,
+    group_document: &'static str,
+    undo: &'static str,
+    redo: &'static str,
+    group_export: &'static str,
+    export_package: &'static str,
+}
+
+const LAYOUT_LABELS_NATIVE_EN: LayoutLabels = LayoutLabels {
+    document: "Document",
+    spreads: "Spreads",
+    frames: "Frames",
+    parent_pages: "Parent Pages",
+    layers: "Layers",
+    stories: "Stories",
+    links: "Links",
+    styles: "Styles",
+    drop_here: "Drop catalogue items here",
+    catalogue_page: "Page",
+    kind_rect: "Rectangle",
+    kind_text: "Text Frame",
+    kind_image: "Image Frame",
+    schema: "Schema",
+    name: "Name",
+    pages: "Pages",
+    active_page: "Active page",
+    id: "Id",
+    width: "Width",
+    height: "Height",
+    margin_top: "Margin Top",
+    margin_right: "Margin Right",
+    margin_bottom: "Margin Bottom",
+    margin_left: "Margin Left",
+    gutter: "Gutter",
+    columns: "Columns",
+    page: "Page",
+    kind: "Kind",
+    x: "X",
+    y: "Y",
+    fill: "Fill",
+    stroke: "Stroke",
+    story: "Story",
+    wrap_mode: "Wrap Mode",
+    wrap_none: "None",
+    wrap_box: "Box",
+    wrap_contour: "Contour",
+    link_path: "Link Path",
+    group_page: "Page",
+    group_frame: "Frame",
+    selection_not_found: "Selection not found in document.",
+    preflight: "Preflight",
+    no_issues: "No issues",
+    group_document: "Document",
+    undo: "Undo",
+    redo: "Redo",
+    group_export: "Export",
+    export_package: "Package",
+};
+
+const LAYOUT_LABELS_NATIVE_DE: LayoutLabels = LayoutLabels {
+    document: "Dokument",
+    spreads: "Doppelseiten",
+    frames: "Rahmen",
+    parent_pages: "Übergeordnete Seiten",
+    layers: "Ebenen",
+    stories: "Textflüsse",
+    links: "Verknüpfungen",
+    styles: "Formate",
+    drop_here: "Katalogelemente hier ablegen",
+    catalogue_page: "Seite",
+    kind_rect: "Rechteck",
+    kind_text: "Textrahmen",
+    kind_image: "Bildrahmen",
+    schema: "Schema",
+    name: "Name",
+    pages: "Seiten",
+    active_page: "Aktive Seite",
+    id: "ID",
+    width: "Breite",
+    height: "Höhe",
+    margin_top: "Rand oben",
+    margin_right: "Rand rechts",
+    margin_bottom: "Rand unten",
+    margin_left: "Rand links",
+    gutter: "Spaltenabstand",
+    columns: "Spalten",
+    page: "Seite",
+    kind: "Art",
+    x: "X",
+    y: "Y",
+    fill: "Füllung",
+    stroke: "Kontur",
+    story: "Textfluss",
+    wrap_mode: "Textumfluss",
+    wrap_none: "Kein",
+    wrap_box: "Rechteck",
+    wrap_contour: "Kontur",
+    link_path: "Verknüpfungspfad",
+    group_page: "Seite",
+    group_frame: "Rahmen",
+    selection_not_found: "Auswahl im Dokument nicht gefunden.",
+    preflight: "Preflight",
+    no_issues: "Keine Probleme",
+    group_document: "Dokument",
+    undo: "Rückgängig",
+    redo: "Wiederholen",
+    group_export: "Export",
+    export_package: "Paket",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
+fn layout_labels(view_state: &ViewState) -> &'static LayoutLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de {
+        &LAYOUT_LABELS_NATIVE_DE
+    } else {
+        &LAYOUT_LABELS_NATIVE_EN
+    }
+}
+
+/// 🗣️ Resolves a catalogue frame kind's display label from its stable id; unknown kinds fall back to the kind id itself.
+fn catalogue_kind_label(kind: &'static str, labels: &LayoutLabels) -> &'static str {
+    match kind {
+        "rect" => labels.kind_rect,
+        "text" => labels.kind_text,
+        "image" => labels.kind_image,
+        _ => kind,
+    }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Panels
 fn tree_item(
     id: impl Into<String>,
@@ -614,7 +786,7 @@ fn tree_item_hoverable(
     item
 }
 
-fn build_document_tree(play: &LayoutPlayEnvelope) -> UiNode {
+fn build_document_tree(play: &LayoutPlayEnvelope, labels: &LayoutLabels) -> UiNode {
     let doc = &play.document;
 
     let spread_items: Vec<UiTreeItemNode> = doc
@@ -655,7 +827,7 @@ fn build_document_tree(play: &LayoutPlayEnvelope) -> UiNode {
         })
         .collect();
     let frame_items = if frame_items.is_empty() {
-        vec![tree_item("layout-document.frames.empty", "Drop catalogue items here", None, Some("inbox".into()), None)]
+        vec![tree_item("layout-document.frames.empty", labels.drop_here, None, Some("inbox".into()), None)]
     } else {
         frame_items
     };
@@ -753,7 +925,7 @@ fn build_document_tree(play: &LayoutPlayEnvelope) -> UiNode {
         sections: vec![
             UiTreeSectionNode {
                 id: "layout-document.document".into(),
-                label: Some("Document".into()),
+                label: Some(labels.document.into()),
                 default_open: Some(true),
                 items: vec![tree_item(
                     "layout-document.document.root",
@@ -763,19 +935,19 @@ fn build_document_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     None,
                 )],
             },
-            UiTreeSectionNode { id: "layout-document.spreads".into(), label: Some("Spreads".into()), default_open: Some(false), items: spread_items },
+            UiTreeSectionNode { id: "layout-document.spreads".into(), label: Some(labels.spreads.into()), default_open: Some(false), items: spread_items },
             UiTreeSectionNode {
                 id: "layout-document.pages".into(),
                 label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
                 default_open: Some(true),
                 items: page_items,
             },
-            UiTreeSectionNode { id: "layout-document.frames".into(), label: Some("Frames".into()), default_open: Some(true), items: frame_items },
-            UiTreeSectionNode { id: "layout-document.parentPages".into(), label: Some("Parent Pages".into()), default_open: Some(false), items: parent_page_items },
-            UiTreeSectionNode { id: "layout-document.layers".into(), label: Some("Layers".into()), default_open: Some(false), items: layer_items },
-            UiTreeSectionNode { id: "layout-document.stories".into(), label: Some("Stories".into()), default_open: Some(false), items: story_items },
-            UiTreeSectionNode { id: "layout-document.links".into(), label: Some("Links".into()), default_open: Some(false), items: link_items },
-            UiTreeSectionNode { id: "layout-document.styles".into(), label: Some("Styles".into()), default_open: Some(false), items: style_items },
+            UiTreeSectionNode { id: "layout-document.frames".into(), label: Some(labels.frames.into()), default_open: Some(true), items: frame_items },
+            UiTreeSectionNode { id: "layout-document.parentPages".into(), label: Some(labels.parent_pages.into()), default_open: Some(false), items: parent_page_items },
+            UiTreeSectionNode { id: "layout-document.layers".into(), label: Some(labels.layers.into()), default_open: Some(false), items: layer_items },
+            UiTreeSectionNode { id: "layout-document.stories".into(), label: Some(labels.stories.into()), default_open: Some(false), items: story_items },
+            UiTreeSectionNode { id: "layout-document.links".into(), label: Some(labels.links.into()), default_open: Some(false), items: link_items },
+            UiTreeSectionNode { id: "layout-document.styles".into(), label: Some(labels.styles.into()), default_open: Some(false), items: style_items },
         ],
         selected_ids: Some(
             play.runtime
@@ -801,9 +973,9 @@ fn catalogue_tree_item(kind: &str, label: &str, icon: &str) -> UiTreeItemNode {
     item
 }
 
-fn build_catalogue_tree() -> UiNode {
-    let mut items = vec![catalogue_tree_item("page", "Page", "file")];
-    items.extend(LAYOUT_CATALOGUE_KINDS.iter().map(|(kind, label, icon)| catalogue_tree_item(kind, label, icon)));
+fn build_catalogue_tree(labels: &LayoutLabels) -> UiNode {
+    let mut items = vec![catalogue_tree_item("page", labels.catalogue_page, "file")];
+    items.extend(LAYOUT_CATALOGUE_KINDS.iter().map(|(kind, icon)| catalogue_tree_item(kind, catalogue_kind_label(kind, labels), icon)));
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "layout-catalogue.kinds".into(),
@@ -818,23 +990,23 @@ fn build_catalogue_tree() -> UiNode {
     })
 }
 
-fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
+fn build_inspector_tree(play: &LayoutPlayEnvelope, labels: &LayoutLabels) -> UiNode {
     let doc = &play.document;
     if play.runtime.selected_ids.is_empty() {
         return ui_stack_vertical(vec![
-            ui_text(format!("Schema: {}", LAYOUT_FIXTURE_SCHEMA)),
-            ui_text(format!("Name: {}", doc.name)),
-            ui_text(format!("Pages: {}", doc.pages.len())),
-            ui_text(format!("Active page: {}", play.runtime.active_page_id)),
+            ui_text(format!("{}: {}", labels.schema, LAYOUT_FIXTURE_SCHEMA)),
+            ui_text(format!("{}: {}", labels.name, doc.name)),
+            ui_text(format!("{}: {}", labels.pages, doc.pages.len())),
+            ui_text(format!("{}: {}", labels.active_page, play.runtime.active_page_id)),
         ]);
     }
     let selected_id = &play.runtime.selected_ids[0];
     if let Some(page) = doc.pages.iter().find(|page| page.id == *selected_id) {
         let mut fields = vec![
-            ui_inspector_readonly_field("layout-play-inspector.page-id", "Id", page.id.clone()),
+            ui_inspector_readonly_field("layout-play-inspector.page-id", labels.id, page.id.clone()),
             UiNode::Field(UiFieldNode {
                 id: "layout-play-inspector.page-name".into(),
-                label: "Name".into(),
+                label: labels.name.into(),
                 child: Box::new(UiNode::Input(UiInputNode {
                     id: "layout-play-inspector.page-name.input".into(),
                     input_kind: "text".into(),
@@ -853,13 +1025,13 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
             }),
         ];
         for (field, label, value) in [
-            ("width", "Width", page.width),
-            ("height", "Height", page.height),
-            ("marginTop", "Margin Top", page.margins.top),
-            ("marginRight", "Margin Right", page.margins.right),
-            ("marginBottom", "Margin Bottom", page.margins.bottom),
-            ("marginLeft", "Margin Left", page.margins.left),
-            ("columnsGutter", "Gutter", page.columns.gutter),
+            ("width", labels.width, page.width),
+            ("height", labels.height, page.height),
+            ("marginTop", labels.margin_top, page.margins.top),
+            ("marginRight", labels.margin_right, page.margins.right),
+            ("marginBottom", labels.margin_bottom, page.margins.bottom),
+            ("marginLeft", labels.margin_left, page.margins.left),
+            ("columnsGutter", labels.gutter, page.columns.gutter),
         ] {
             fields.push(UiNode::Field(UiFieldNode {
                 id: format!("layout-play-inspector.page-{field}"),
@@ -883,7 +1055,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
         }
         fields.push(UiNode::Field(UiFieldNode {
             id: "layout-play-inspector.page-columnsCount".into(),
-            label: "Columns".into(),
+            label: labels.columns.into(),
             child: Box::new(UiNode::Input(UiInputNode {
                 id: "layout-play-inspector.page-columnsCount.input".into(),
                 input_kind: "number".into(),
@@ -902,7 +1074,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
         }));
         return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
             id: "layout-play-inspector.page".into(),
-            label: "Page".into(),
+            label: labels.group_page.into(),
             default_open: Some(true),
             fields,
         }]);
@@ -914,15 +1086,15 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
             let page_id = page.id.clone();
             let name_mixed = ui_inspector_mixed_text(&[frame.id().to_string()]);
             let mut fields = vec![
-                ui_inspector_readonly_field("layout-play-inspector.frame-id", "Id", frame_id.clone()),
-                ui_inspector_readonly_field("layout-play-inspector.frame-kind", "Kind", frame.kind_str().to_string()),
-                ui_inspector_readonly_field("layout-play-inspector.frame-page", "Page", page.name.clone()),
+                ui_inspector_readonly_field("layout-play-inspector.frame-id", labels.id, frame_id.clone()),
+                ui_inspector_readonly_field("layout-play-inspector.frame-kind", labels.kind, frame.kind_str().to_string()),
+                ui_inspector_readonly_field("layout-play-inspector.frame-page", labels.page, page.name.clone()),
             ];
             for (field, label, value) in [
-                ("x", "X", bounds.x),
-                ("y", "Y", bounds.y),
-                ("width", "Width", bounds.width),
-                ("height", "Height", bounds.height),
+                ("x", labels.x, bounds.x),
+                ("y", labels.y, bounds.y),
+                ("width", labels.width, bounds.width),
+                ("height", labels.height, bounds.height),
             ] {
                 fields.push(UiNode::Field(UiFieldNode {
                     id: format!("layout-play-inspector.frame-{field}"),
@@ -949,7 +1121,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
             }
             match frame {
                 Frame::Rect { fill, stroke, .. } => {
-                    for (field, label, value) in [("fill", "Fill", fill), ("stroke", "Stroke", stroke)] {
+                    for (field, label, value) in [("fill", labels.fill, fill), ("stroke", labels.stroke, stroke)] {
                         fields.push(UiNode::Field(UiFieldNode {
                             id: format!("layout-play-inspector.frame-{field}"),
                             label: label.into(),
@@ -977,7 +1149,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                 Frame::Text { story_id, wrap_mode, columns, .. } => {
                     fields.push(UiNode::Field(UiFieldNode {
                         id: "layout-play-inspector.frame-story".into(),
-                        label: "Story".into(),
+                        label: labels.story.into(),
                         child: Box::new(UiNode::Input(UiInputNode {
                             id: "layout-play-inspector.frame-story.input".into(),
                             input_kind: "text".into(),
@@ -999,14 +1171,14 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     }));
                     fields.push(UiNode::Field(UiFieldNode {
                         id: "layout-play-inspector.frame-wrapMode".into(),
-                        label: "Wrap Mode".into(),
+                        label: labels.wrap_mode.into(),
                         child: Box::new(UiNode::Select(UiSelectNode {
                             id: "layout-play-inspector.frame-wrapMode.select".into(),
                             value: wrap_mode.clone(),
                             items: vec![
-                                UiSelectItem { value: "none".into(), label: "None".into() },
-                                UiSelectItem { value: "box".into(), label: "Box".into() },
-                                UiSelectItem { value: "contour".into(), label: "Contour".into() },
+                                UiSelectItem { value: "none".into(), label: labels.wrap_none.into() },
+                                UiSelectItem { value: "box".into(), label: labels.wrap_box.into() },
+                                UiSelectItem { value: "contour".into(), label: labels.wrap_contour.into() },
                             ],
                             placeholder: None,
                             on_change: layout_action(
@@ -1020,7 +1192,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     }));
                     fields.push(UiNode::Field(UiFieldNode {
                         id: "layout-play-inspector.frame-columns".into(),
-                        label: "Columns".into(),
+                        label: labels.columns.into(),
                         child: Box::new(UiNode::Input(UiInputNode {
                             id: "layout-play-inspector.frame-columns.input".into(),
                             input_kind: "number".into(),
@@ -1044,7 +1216,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                 Frame::Image { link_id, .. } => {
                     fields.push(UiNode::Field(UiFieldNode {
                         id: "layout-play-inspector.frame-linkPath".into(),
-                        label: "Link Path".into(),
+                        label: labels.link_path.into(),
                         child: Box::new(UiNode::Input(UiInputNode {
                             id: "layout-play-inspector.frame-linkPath.input".into(),
                             input_kind: "text".into(),
@@ -1069,7 +1241,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
             let _ = name_mixed;
             return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
                 id: "layout-play-inspector.frame".into(),
-                label: "Frame".into(),
+                label: labels.group_frame.into(),
                 default_open: Some(true),
                 fields,
             }]);
@@ -1079,7 +1251,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
         id: "layout-play-inspector.missing".into(),
         label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
         default_open: Some(true),
-        children: vec![ui_text("Selection not found in document.")],
+        children: vec![ui_text(labels.selection_not_found)],
     }])
 }
 

@@ -486,7 +486,7 @@ mod tests {
         };
         seed_state(&state);
         for id in ["op-1", "op-2"] {
-            append_op(
+            let _ = append_op(
                 Path("default".into()),
                 State(state.clone()),
                 Json(AppendOpRequest {

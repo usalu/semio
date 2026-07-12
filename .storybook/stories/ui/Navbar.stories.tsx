@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Button, LevelProvider, Navbar, PanelToggleGroup, Toggle, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone, type PanelToggleItem } from "@semio-tech/ui-react";
+import { Button, LevelProvider, Navbar, Toggle, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
@@ -75,25 +75,32 @@ export const Default: Story = {
 // #endregion 🩺Navbar
 
 // 🔷#region 🎛TwoToggleNavbar
+// Each panel toggle sits at its own navbar edge — left toggle leading, right toggle trailing (past the
+// fullscreen toggle) — and stays put while its panel folds out flush beneath it, mirroring a window's
+// options-rail chrome (toggle stays, body unfolds).
 export const TwoToggleNavbar: Story = {
   name: "Two-Toggle Navbar",
   args: { items: [] },
   render: () => {
     const [leftVisible, setLeftVisible] = useState(true);
     const [rightVisible, setRightVisible] = useState(false);
-    const panelToggles: PanelToggleItem[] = [
-      { id: "ui.panelToggle.left", icon: <PanelLeft size={16} />, pressed: leftVisible, onPressedChange: setLeftVisible },
-      { id: "ui.panelToggle.right", icon: <PanelRight size={16} />, pressed: rightVisible, onPressedChange: setRightVisible },
-    ];
     return (
-      <Navbar
-        items={[
-          { key: "home", content: <Home size={20} /> },
-          { key: "title", content: <span className="font-bold ml-2">Application</span> },
-          { key: "fill", className: "flex-1 min-w-0", content: null },
-          { key: "panelToggles", content: <PanelToggleGroup items={panelToggles} /> },
-        ]}
-      />
+      <div>
+        <Navbar
+          items={[
+            { key: "leftPanelToggle", className: "shrink-0", content: <Toggle id="ui.panelToggle.left" icon={<PanelLeft size={16} />} pressed={leftVisible} onPressedChange={setLeftVisible} /> },
+            { key: "home", content: <Home size={20} /> },
+            { key: "title", content: <span className="font-bold ml-2">Application</span> },
+            { key: "fill", className: "flex-1 min-w-0", content: null },
+          ]}
+          showFullscreenToggle={false}
+          trailingContent={<Toggle id="ui.panelToggle.right" icon={<PanelRight size={16} />} pressed={rightVisible} onPressedChange={setRightVisible} />}
+        />
+        <div className="relative h-64 bg-canvas">
+          {leftVisible ? <div className="absolute left-single top-0 bottom-single w-56 border !border-normal bg-panel" /> : null}
+          {rightVisible ? <div className="absolute right-single top-0 bottom-single w-56 border !border-normal bg-panel" /> : null}
+        </div>
+      </div>
     );
   },
 };
