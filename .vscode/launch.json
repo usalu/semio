@@ -970,6 +970,57 @@
       }
     },
     {
+      "name": "🛠️dev🛒sourcing⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:sourcing",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SOURCING_PLAY_PORT": "6081",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 196
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6081)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🛒sourcing🧊wgpu🌐wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:sourcing",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SOURCING_PLAY_PORT": "6181",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 196.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6181)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🛒sourcing🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native sourcing",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 196.2
+      }
+    },
+    {
       "name": "🛠️dev🔧procedural🏙️3d🧩hexagonal🧱column⚛️react",
       "type": "node-terminal",
       "request": "launch",

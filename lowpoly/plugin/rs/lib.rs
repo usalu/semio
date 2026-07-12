@@ -2431,11 +2431,6 @@ fn create_lowpoly_app() -> App {
     .program("lowpoly", "Lowpoly", "mesh")
 }
 
-fn bundle() -> PluginBundle {
-    register_lowpoly_exports();
-    PluginBundle::new("lowpoly", "Lowpoly", "0.1.0").register_app(create_lowpoly_app(), || Box::new(LowpolyPlayApp::default()))
-}
-
 fn lowpoly_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
     let envelope: LowpolyPlayEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
     let loaded = LowpolyDocument::new(envelope.fixture).map_err(|err| err.to_string())?;
@@ -2481,7 +2476,11 @@ fn register_lowpoly_exports() {
     semio_framework_os::register_mesh_dwg_import_handler("3d.mesh", mesh_document_from_mesh);
 }
 
-semio_framework_plugin::plugin_exports!(bundle);
+semio_framework_plugin::semio_plugin! {
+    id: "lowpoly", label: "Lowpoly", version: "0.1.0",
+    setup: register_lowpoly_exports,
+    apps: [ create_lowpoly_app => LowpolyPlayApp ],
+}
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

@@ -72,6 +72,17 @@ pub enum ProcessMeasure {
     Attach { component: SolidSpec, pose: Pose },
 }
 
+/// 🏭 Provenance: which module/machine/modification-kind produced a step (display + future re-validation).
+/// Purely informational — kernel replay only ever reads `ProcessMeasure`, never resolves this back to a
+/// catalog entry, so an older/renamed catalog can never retroactively change already-authored geometry.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StepOrigin {
+    pub module_id: String,
+    pub machine_id: String,
+    pub modification_kind_id: String,
+}
+
 /// 🎞️ One ordered step of the process timeline.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -80,6 +91,8 @@ pub struct ProcessStep {
     pub label: String,
     #[serde(default = "default_true")]
     pub enabled: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin: Option<StepOrigin>,
     #[serde(flatten)]
     pub measure: ProcessMeasure,
 }
@@ -100,6 +113,9 @@ pub struct ProcessStepPatch {
     pub enabled: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub measure: Option<ProcessMeasure>,
+    /// 🏭 Outer `Option` = "this patch touches origin"; inner `Option` = the new value (`None` clears it).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin: Option<Option<StepOrigin>>,
 }
 
 impl Patchable<ProcessStepPatch> for ProcessStep {
@@ -108,6 +124,7 @@ impl Patchable<ProcessStepPatch> for ProcessStep {
             label: patch.label.as_ref().map(|_| self.label.clone()),
             enabled: patch.enabled.as_ref().map(|_| self.enabled),
             measure: patch.measure.as_ref().map(|_| self.measure.clone()),
+            origin: patch.origin.as_ref().map(|_| self.origin.clone()),
         };
         if let Some(label) = &patch.label {
             self.label = label.clone();
@@ -117,6 +134,9 @@ impl Patchable<ProcessStepPatch> for ProcessStep {
         }
         if let Some(measure) = &patch.measure {
             self.measure = measure.clone();
+        }
+        if let Some(origin) = &patch.origin {
+            self.origin = origin.clone();
         }
         inverse
     }
@@ -292,6 +312,7 @@ mod tests {
             id: id.into(),
             label: "Cut".into(),
             enabled: true,
+            origin: None,
             measure: ProcessMeasure::Cut {
                 tool: SolidSpec::Box { width: 0.1, depth: 0.1, height: 0.1 },
                 pose: Pose::default(),
@@ -346,6 +367,38 @@ mod tests {
 
         store.dispatch(DocumentVcsCommand::Undo).expect("undo");
         assert!(store.projection().expect("projection").steps[0].enabled);
+    }
+
+    #[test]
+    fn patches_origin_and_undo_restores_it() {
+        let mut store = new_store();
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![Process3dOp::Steps { collection: CollectionOp::Add { index: 0, item: cut_step("cut-1") } }],
+                description: None,
+            })
+            .expect("add step");
+        assert!(store.projection().expect("projection").steps[0].origin.is_none());
+
+        let origin = StepOrigin { module_id: "wood".into(), machine_id: "circularSaw".into(), modification_kind_id: "crosscut".into() };
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![Process3dOp::Steps { collection: CollectionOp::Patch { id: "cut-1".into(), patch: ProcessStepPatch { origin: Some(Some(origin.clone())), ..Default::default() } } }],
+                description: None,
+            })
+            .expect("patch origin");
+        assert_eq!(store.projection().expect("projection").steps[0].origin, Some(origin));
+
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        assert!(store.projection().expect("projection").steps[0].origin.is_none());
+    }
+
+    #[test]
+    fn legacy_step_json_without_origin_deserializes_with_none() {
+        let legacy_json = r#"{"id":"cut-1","label":"Cut","enabled":true,"measure":"cut","tool":{"kind":"box","width":0.1,"depth":0.1,"height":0.1},"pose":{"position":[0.0,0.0,0.0],"axis":[0.0,0.0,1.0],"angle":0.0}}"#;
+        let step: ProcessStep = serde_json::from_str(legacy_json).expect("legacy step json");
+        assert!(step.origin.is_none());
+        assert_eq!(step.id, "cut-1");
     }
 
     #[test]

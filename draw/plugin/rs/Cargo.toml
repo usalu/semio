@@ -7,6 +7,12 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:draw"
 
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "draw"
+ports = { react = 6064, wgpu = 6164 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

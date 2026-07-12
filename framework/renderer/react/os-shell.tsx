@@ -881,60 +881,30 @@ class ShellRenderErrorBoundary extends Component<{ readonly children: ReactNode 
 export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFilter?: string; readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[] }) {
   const studioMode = isStudioMode(pluginFilter);
   const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
-  const [loadedPlugins, setLoadedPlugins] = useState<readonly LoadedPluginState[]>([]);
-  const [session, setSession] = useState<ActiveSession | null>(null);
-  const [windowUiByKind, setWindowUiByKind] = useState<Readonly<Record<string, UiNode>>>({});
-  const [windowEngagementsByKind, setWindowEngagementsByKind] = useState<Readonly<Record<string, WindowEngagement>>>({});
-  const [windowMeasuresByKind, setWindowMeasuresByKind] = useState<Readonly<Record<string, readonly WindowMeasure[]>>>({});
-  const [panelUiByKey, setPanelUiByKey] = useState<Readonly<Record<string, UiNode>>>({});
-  const [toolNodesByKind, setToolNodesByKind] = useState<Readonly<Record<string, readonly ToolNode[]>>>({});
-  const [appLabelsOverlay, setAppLabelsOverlay] = useState<PluginAppLabelsOverlay>(EMPTY_APP_LABELS_OVERLAY);
-  const [spawnedWindowUi, setSpawnedWindowUi] = useState<UiNode | null>(null);
-  const [spawnedWindowEngagements, setSpawnedWindowEngagements] = useState<Readonly<Record<string, WindowEngagement>>>({});
-  const [spawnedWindowMeasures, setSpawnedWindowMeasures] = useState<Readonly<Record<string, readonly WindowMeasure[]>>>({});
-  const [spawnedToolNodes, setSpawnedToolNodes] = useState<readonly ToolNode[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [leftPanelVisible, setLeftPanelVisible] = useState(false);
-  const [rightPanelVisible, setRightPanelVisible] = useState(false);
-  const [leftPanelSize, setLeftPanelSize] = useState(DEFAULT_LEFT_PANEL_SIZE);
-  const [rightPanelSize, setRightPanelSize] = useState(DEFAULT_RIGHT_PANEL_SIZE);
-  const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
-  const [shellLayout, setShellLayout] = useState<WindowLayoutNode | null>(null);
-  const [activeExampleId, setActiveExampleId] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [findOpen, setFindOpen] = useState(false);
+  const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins }));
+  const { loadedPlugins, session, error } = shellState.pluginRuntime;
+  const { windowUiByKind, windowEngagementsByKind, windowMeasuresByKind, panelUiByKey, toolNodesByKind, appLabelsOverlay } = shellState.windowUi;
+  const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures, spawnedToolNodes } = shellState.spawnedWindow;
+  const { leftPanelVisible, rightPanelVisible, leftPanelSize, rightPanelSize, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, leftPanelPath, rightPanelPath, extraWindowInstances } = shellState.layout;
+  const { searchOpen, findOpen } = shellState.overlays;
+  const { uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
+  const { syncBackboneUri, syncCardKind, syncDraftPath } = shellState.sync;
   const importStudioInputRef = useRef<HTMLInputElement>(null);
   const refreshGenerationRef = useRef(0);
   const spawnedRefreshGenerationRef = useRef(0);
   const contributorInstancesRef = useRef<Map<string, number>>(new Map());
   const layoutSeedKeyRef = useRef<string | null>(null);
   const noExampleResetInstanceIdRef = useRef<number | null>(null);
-  const [mobilePanelPath, setMobilePanelPath] = useState<readonly string[]>([]);
-  const [leftPanelPath, setLeftPanelPath] = useState<readonly string[]>([]);
-  const [rightPanelPath, setRightPanelPath] = useState<readonly string[]>([]);
-  const [extraWindowInstances, setExtraWindowInstances] = useState<readonly { readonly id: string; readonly windowKindId: string; readonly title: string }[]>([]);
   const extraWindowCounterRef = useRef(0);
   const openStudioIdRef = useRef<string | null>(null);
   const openInstanceIdRef = useRef<string | null>(null);
   const sessionRef = useRef<ActiveSession | null>(null);
-  const [uiAppearance, setUiAppearance] = useState<ElementsSurfaceAppearance>(() => readStoredUiChromeAppearance());
-  const [uiLayout, setUiLayout] = useState<UiChromeLayout>(() => readStoredUiChromeLayout());
   const uiDevice: ElementsSurfaceDevice = mobile ? "mobile" : uiLayout;
-  const [uiCompact, setUiCompact] = useState(() => readStoredUiChromeCompact());
-  const [uiExpertise, setUiExpertise] = useState(() => readStoredUiChromeExpertise());
-  const [uiLocale, setUiLocaleState] = useState<UiLocale>(() => readStoredUiChromeLocale() ?? (uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en"));
-  const [uiTerminology, setUiTerminologyState] = useState<string>(() => readStoredUiChromeTerminology());
-  const [uiThemeId, setUiThemeIdState] = useState<string>(() => readStoredUiChromeThemeId() ?? "semio");
-  const [uiCustomThemes, setUiCustomThemesState] = useState<Record<string, UiTheme>>(() => readStoredUiCustomThemes());
-  const [uiThemeDraft, setUiThemeDraft] = useState<UiTheme | null>(null);
   const uiTheme: UiTheme = useMemo(() => {
     if (uiThemeDraft) return uiThemeDraft;
     const found = builtinUiThemes().find((t) => t.id === uiThemeId) ?? uiCustomThemes[uiThemeId];
     return found ?? readStoredUiChromeThemeSnapshot() ?? semioTheme();
   }, [uiThemeId, uiCustomThemes, uiThemeDraft]);
-  const [syncBackboneUri, setSyncBackboneUri] = useState<string | null>(null);
-  const [syncCardKind, setSyncCardKind] = useState<SyncCardKind | null>(null);
-  const [syncDraftPath, setSyncDraftPath] = useState("");
   const lastEnvelopeJsonRef = useRef<string | null>(null);
   const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/", studioMode);
 
@@ -954,8 +924,8 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   }, [session]);
 
   useEffect(() => {
-    setSyncBackboneUri(null);
-    setSyncCardKind(null);
+    dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
+    dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
     lastEnvelopeJsonRef.current = null;
   }, [panel?.activeSpawnedId, session, studioMode]);
 
@@ -978,7 +948,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         if (loaded.length === 0) throw new Error(shellLabel("ui.common.noPluginsLoaded"));
         if (cancelled) return;
         const loadedState = loaded.map((handle) => ({ handle, manifest: handle.manifest }));
-        setLoadedPlugins(loadedState);
+        dispatch({ type: "SET_LOADED_PLUGINS", value: loadedState });
 
         if (studioMode) {
           const sPlugin = loadedState.find((entry) => entry.handle.pluginId === "s");
@@ -992,8 +962,8 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
             activeWindowKindId: sApp.windowKinds[0]?.id,
             panelJson: panelJsonFromState(panelState),
           };
-          setSession({ pluginId: sPlugin.handle.pluginId, instanceId, app: sApp, viewState });
-          setActiveWindowId(sApp.windowKinds[0]?.id ?? null);
+          dispatch({ type: "SET_SESSION", value: { pluginId: sPlugin.handle.pluginId, instanceId, app: sApp, viewState } });
+          dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: sApp.windowKinds[0]?.id ?? null });
           return;
         }
 
@@ -1003,21 +973,24 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         const primaryApp = (defaultAppId ? primary?.manifest.apps.find((app) => app.id === defaultAppId) : undefined) ?? primary?.manifest.apps[0];
         if (primary && primaryApp) {
           const instanceId = await primary.createApp(primaryApp.id);
-          setSession({
-            pluginId: primary.pluginId,
-            instanceId,
-            app: primaryApp,
-            viewState: {
-              activeModeId: primaryApp.defaultModeId ?? primaryApp.modes[0]?.id,
-              activeWindowKindId: primaryApp.windowKinds[0]?.id,
+          dispatch({
+            type: "SET_SESSION",
+            value: {
+              pluginId: primary.pluginId,
+              instanceId,
+              app: primaryApp,
+              viewState: {
+                activeModeId: primaryApp.defaultModeId ?? primaryApp.modes[0]?.id,
+                activeWindowKindId: primaryApp.windowKinds[0]?.id,
+              },
             },
           });
-          setActiveWindowId(primaryApp.windowKinds[0]?.id ?? null);
+          dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: primaryApp.windowKinds[0]?.id ?? null });
         }
       } catch (bootError) {
         if (!cancelled) {
           console.error("[DEBUG] framework os boot failed", bootError);
-          setError(bootError instanceof Error ? bootError.message : String(bootError));
+          dispatch({ type: "SET_ERROR", value: bootError instanceof Error ? bootError.message : String(bootError) });
         }
       }
     })();
@@ -1066,31 +1039,32 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       const dynamicToolsByKind = rendered.slice(toolsStart, toolsStart + windowCount) as (readonly ToolNode[])[];
       const dynamicEngagements = rendered[rendered.length - 2] as Readonly<Record<string, WindowEngagement>>;
       const dynamicMeasures = rendered[rendered.length - 1] as Readonly<Record<string, readonly WindowMeasure[]>>;
-      setWindowUiByKind(Object.fromEntries(nextSession.app.windowKinds.map((kind, index) => [kind.id, windowNodes[index]! as UiNode])));
-      setWindowEngagementsByKind(dynamicEngagements);
-      setWindowMeasuresByKind(dynamicMeasures);
-      setAppLabelsOverlay(appLabelsOverlay);
-      setPanelUiByKey(Object.fromEntries(panelTabLeaves.map((tab, index) => [tab.id, panelNodes[index]! as UiNode])));
+      dispatch({ type: "SET_WINDOW_UI_BY_KIND", value: Object.fromEntries(nextSession.app.windowKinds.map((kind, index) => [kind.id, windowNodes[index]! as UiNode])) });
+      dispatch({ type: "SET_WINDOW_ENGAGEMENTS_BY_KIND", value: dynamicEngagements });
+      dispatch({ type: "SET_WINDOW_MEASURES_BY_KIND", value: dynamicMeasures });
+      dispatch({ type: "SET_APP_LABELS_OVERLAY", value: appLabelsOverlay });
+      dispatch({ type: "SET_PANEL_UI_BY_KEY", value: Object.fromEntries(panelTabLeaves.map((tab, index) => [tab.id, panelNodes[index]! as UiNode])) });
       const activeModeId = viewState.activeModeId ?? nextSession.app.defaultModeId ?? nextSession.app.modes[0]?.id;
       const staticTools = nextSession.app.modes.find((mode) => mode.id === activeModeId)?.tools ?? [];
-      setToolNodesByKind(
-        Object.fromEntries(
+      dispatch({
+        type: "SET_TOOL_NODES_BY_KIND",
+        value: Object.fromEntries(
           nextSession.app.windowKinds.map((kind, index) => {
             const dynamic = dynamicToolsByKind[index] ?? [];
             return [kind.id, dynamic.length > 0 ? dynamic : staticTools];
           }),
         ),
-      );
+      });
       const windowIds = nextSession.app.windowKinds.map((kind) => kind.id);
       const layoutSeedKey = `${nextSession.pluginId}:${nextSession.app.id}:${nextSession.instanceId}`;
       if (layoutSeedKeyRef.current !== layoutSeedKey) {
         layoutSeedKeyRef.current = layoutSeedKey;
-        setExtraWindowInstances([]);
+        dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: [] });
         extraWindowCounterRef.current = 0;
-        setShellLayout(convertFrameworkLayoutToModeLayout(nextSession.app.defaultLayout, windowIds, appLabelsOverlay));
+        dispatch({ type: "SET_SHELL_LAYOUT", value: convertFrameworkLayoutToModeLayout(nextSession.app.defaultLayout, windowIds, appLabelsOverlay) });
         const defaultWindowId = findDefaultActiveWindowKindId(nextSession.app.defaultLayout, nextSession.app.windowKinds);
-        if (defaultWindowId) setActiveWindowId(defaultWindowId);
-        else if (windowIds[0]) setActiveWindowId(windowIds[0]);
+        if (defaultWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: defaultWindowId });
+        else if (windowIds[0]) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: windowIds[0] });
       }
     },
     [loadedPlugins, uiLocale, uiTerminology],
@@ -1098,10 +1072,11 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
 
   /** @emoji 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync with the app-labels overlay on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale. */
   useEffect(() => {
-    setShellLayout((current) => (current ? retitleWindowLayoutNode(current, appLabelsOverlay) : current));
-    setExtraWindowInstances((current) =>
-      current.map((entry) => ({ ...entry, title: resolveAppLabel(appLabelsOverlay, "windowKind", entry.windowKindId, entry.title) })),
-    );
+    dispatch({ type: "SET_SHELL_LAYOUT", value: (current) => (current ? retitleWindowLayoutNode(current, appLabelsOverlay) : current) });
+    dispatch({
+      type: "SET_EXTRA_WINDOW_INSTANCES",
+      value: (current) => current.map((entry) => ({ ...entry, title: resolveAppLabel(appLabelsOverlay, "windowKind", entry.windowKindId, entry.title) })),
+    });
   }, [appLabelsOverlay]);
 
   const refreshSpawnedUi = useCallback(
@@ -1112,10 +1087,10 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       const app = pluginEntry?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
       if (!plugin || !app) {
         console.warn("[os-shell] refreshSpawnedUi: plugin/app unavailable", { pluginId: spawned.pluginId, appId: spawned.appId });
-        setSpawnedWindowUi({ type: "text", value: `Plugin unavailable: ${spawned.pluginId}/${spawned.appId}` } as UiNode);
-        setSpawnedWindowEngagements({});
-        setSpawnedWindowMeasures({});
-        setSpawnedToolNodes([]);
+        dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: { type: "text", value: `Plugin unavailable: ${spawned.pluginId}/${spawned.appId}` } as UiNode });
+        dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
+        dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
+        dispatch({ type: "SET_SPAWNED_TOOL_NODES", value: [] });
         return;
       }
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
@@ -1128,10 +1103,10 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         plugin.windowMeasures(spawned.instanceId, fullViewState),
       ]);
       if (generation !== spawnedRefreshGenerationRef.current) return;
-      setSpawnedWindowUi(ui as UiNode);
-      setSpawnedWindowEngagements(dynamicEngagements);
-      setSpawnedWindowMeasures(dynamicMeasures);
-      setSpawnedToolNodes(selectSpawnedToolNodes(dynamicTools, app, fullViewState.activeModeId ?? app.defaultModeId ?? app.modes[0]?.id));
+      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: ui as UiNode });
+      dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: dynamicEngagements });
+      dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: dynamicMeasures });
+      dispatch({ type: "SET_SPAWNED_TOOL_NODES", value: selectSpawnedToolNodes(dynamicTools, app, fullViewState.activeModeId ?? app.defaultModeId ?? app.modes[0]?.id) });
     },
     [loadedPlugins, uiLocale, uiTerminology],
   );
@@ -1140,36 +1115,39 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     if (!session) return;
     void refreshUi(session).catch((renderError) => {
       console.error("[DEBUG] render failed", renderError);
-      setError(renderError instanceof Error ? renderError.message : String(renderError));
+      dispatch({ type: "SET_ERROR", value: renderError instanceof Error ? renderError.message : String(renderError) });
     });
   }, [loadedPlugins, refreshUi, session]);
 
   useEffect(() => {
     if (!studioMode || !session) {
-      setSpawnedWindowUi(null);
-      setSpawnedWindowEngagements({});
-      setSpawnedWindowMeasures({});
-      setSpawnedToolNodes([]);
+      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: null });
+      dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
+      dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
+      dispatch({ type: "SET_SPAWNED_TOOL_NODES", value: [] });
       return;
     }
     const activeSpawned = panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
     if (!activeSpawned) {
-      setSpawnedWindowUi(null);
-      setSpawnedWindowEngagements({});
-      setSpawnedWindowMeasures({});
-      setSpawnedToolNodes([]);
+      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: null });
+      dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
+      dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
+      dispatch({ type: "SET_SPAWNED_TOOL_NODES", value: [] });
       return;
     }
     void refreshSpawnedUi(activeSpawned, session.viewState).catch((renderError) => {
       console.error("[DEBUG] spawned render failed", renderError);
-      setSpawnedWindowUi(null);
+      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: null });
     });
   }, [loadedPlugins, panel, refreshSpawnedUi, session, studioMode]);
 
   const updateStudioPanel = useCallback((panelState: StudioPanelState) => {
-    setSession((current) => {
-      if (!current) return current;
-      return { ...current, viewState: { ...current.viewState, panelJson: panelJsonFromState(panelState) } };
+    dispatch({
+      type: "SET_SESSION",
+      value: (current) => {
+        if (!current) return current;
+        return { ...current, viewState: { ...current.viewState, panelJson: panelJsonFromState(panelState) } };
+      },
     });
   }, []);
 
@@ -1181,7 +1159,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       if (session?.pluginId === sPlugin.handle.pluginId && session.app.id === appId) {
         if (!viewState) return session;
         const nextSession: ActiveSession = { ...session, viewState };
-        setSession(nextSession);
+        dispatch({ type: "SET_SESSION", value: nextSession });
         await refreshUi(nextSession);
         return nextSession;
       }
@@ -1193,15 +1171,16 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         panelJson: panelJsonFromState(buildStudioPanelState(programs, [])),
       };
       const nextSession: ActiveSession = { pluginId: sPlugin.handle.pluginId, instanceId, app, viewState: nextViewState };
-      setSession(nextSession);
-      setShellLayout(
-        convertFrameworkLayoutToModeLayout(
+      dispatch({ type: "SET_SESSION", value: nextSession });
+      dispatch({
+        type: "SET_SHELL_LAYOUT",
+        value: convertFrameworkLayoutToModeLayout(
           app.defaultLayout,
           app.windowKinds.map((kind) => kind.id),
           appLabelsOverlay,
         ),
-      );
-      setActiveWindowId(findDefaultActiveWindowKindId(app.defaultLayout, app.windowKinds) ?? app.windowKinds[0]?.id ?? null);
+      });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: findDefaultActiveWindowKindId(app.defaultLayout, app.windowKinds) ?? app.windowKinds[0]?.id ?? null });
       if (appId === S_HOME_APP_ID) {
         openStudioIdRef.current = null;
         openInstanceIdRef.current = null;
@@ -1348,11 +1327,14 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       }
       const nextSession = { ...baseSession, viewState: nextViewState };
       const isSpawnedPluginSession = studioMode && session && baseSession.pluginId !== session.pluginId;
-      setSession((current) => {
-        if (!current) return nextSession;
-        if (isSpawnedPluginSession) return { ...current, viewState: nextViewState };
-        if (current.instanceId !== nextSession.instanceId) return current;
-        return { ...current, viewState: nextViewState };
+      dispatch({
+        type: "SET_SESSION",
+        value: (current) => {
+          if (!current) return nextSession;
+          if (isSpawnedPluginSession) return { ...current, viewState: nextViewState };
+          if (current.instanceId !== nextSession.instanceId) return current;
+          return { ...current, viewState: nextViewState };
+        },
       });
       if (isSpawnedPluginSession) {
         const spawned = parsePanelState(nextViewState)?.spawnedApps.find((entry) => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId);
@@ -1452,16 +1434,16 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         JSON.stringify({ controllerId: targetSession.app.controllerId, action: "setDocument", args: { document } }),
         targetSession.viewState,
       );
-      setSyncBackboneUri(uri);
-      setSyncCardKind(null);
+      dispatch({ type: "SET_SYNC_BACKBONE_URI", value: uri });
+      dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
       await processPluginOps(ops, targetSession);
     },
     [loadedPlugins, panel, processPluginOps, resolveSyncTargetSession, studioMode],
   );
 
   const detachSyncBackbone = useCallback(() => {
-    setSyncBackboneUri(null);
-    setSyncCardKind(null);
+    dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
+    dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
     lastEnvelopeJsonRef.current = null;
   }, []);
 
@@ -1500,19 +1482,19 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
 
       if (action.controllerId === FRAMEWORK_SYNC_CONTROLLER_ID) {
         if (action.action === "selectFile") {
-          setSyncCardKind("file");
-          setSyncDraftPath(syncBackboneUri?.startsWith("file://") ? syncBackboneUri.slice("file://".length) : "");
+          dispatch({ type: "SET_SYNC_CARD_KIND", value: "file" });
+          dispatch({ type: "SET_SYNC_DRAFT_PATH", value: syncBackboneUri?.startsWith("file://") ? syncBackboneUri.slice("file://".length) : "" });
           return;
         }
         if (action.action === "selectFolder") {
-          setSyncCardKind("folder");
-          setSyncDraftPath(syncBackboneUri?.startsWith("folder://") ? syncBackboneUri.slice("folder://".length) : "");
+          dispatch({ type: "SET_SYNC_CARD_KIND", value: "folder" });
+          dispatch({ type: "SET_SYNC_DRAFT_PATH", value: syncBackboneUri?.startsWith("folder://") ? syncBackboneUri.slice("folder://".length) : "" });
           return;
         }
         if (action.action === "selectRemote") {
-          setSyncCardKind("remote");
+          dispatch({ type: "SET_SYNC_CARD_KIND", value: "remote" });
           const remote = syncBackboneUri?.startsWith("remote://") ? syncBackboneUri.slice("remote://".length) : "";
-          setSyncDraftPath(remote);
+          dispatch({ type: "SET_SYNC_DRAFT_PATH", value: remote });
           return;
         }
         if (action.action === "attach") {
@@ -1627,49 +1609,27 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   }, [studioSessionActive]);
 
   useSidePanelChromeHotkeys({
-    onToggleLeft: () => setLeftPanelVisible((visible) => !visible),
-    onToggleRight: () => setRightPanelVisible((visible) => !visible),
+    onToggleLeft: () => dispatch({ type: "SET_LEFT_PANEL_VISIBLE", value: (visible) => !visible }),
+    onToggleRight: () => dispatch({ type: "SET_RIGHT_PANEL_VISIBLE", value: (visible) => !visible }),
   });
 
   useElementsSurfaceChrome({ appearance: uiAppearance, device: uiDevice, expertise: uiExpertise, compact: uiCompact });
 
+  //#region 💾 uiPrefs persistence
   useEffect(() => {
     writeStoredUiChromeAppearance(uiAppearance);
-  }, [uiAppearance]);
-
-  useEffect(() => {
     writeStoredUiChromeLayout(uiLayout);
-  }, [uiLayout]);
-
-  useEffect(() => {
     writeStoredUiChromeCompact(uiCompact);
-  }, [uiCompact]);
-
-  useEffect(() => {
     writeStoredUiChromeExpertise(uiExpertise);
-  }, [uiExpertise]);
-
-  useEffect(() => {
     writeStoredUiChromeLocale(uiLocale);
     void setUiLocale(uiLocale);
-  }, [uiLocale]);
-
-  useEffect(() => {
     writeStoredUiChromeTerminology(uiTerminology);
-  }, [uiTerminology]);
-
-  useEffect(() => {
     setActiveUiTheme(uiTheme);
     writeStoredUiChromeThemeSnapshot(uiTheme);
-  }, [uiTheme]);
-
-  useEffect(() => {
     writeStoredUiChromeThemeId(uiThemeId);
-  }, [uiThemeId]);
-
-  useEffect(() => {
     writeStoredUiCustomThemes(uiCustomThemes);
-  }, [uiCustomThemes]);
+  }, [uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiTheme, uiThemeId, uiCustomThemes]);
+  //#endregion
 
   useActionHotkey(
     "mod+[",
@@ -1691,44 +1651,48 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   );
   useActionHotkey(
     "mod+p",
-    useCallback(() => setSearchOpen((open) => !open), []),
+    useCallback(() => dispatch({ type: "SET_SEARCH_OPEN", value: (open) => !open }), []),
   );
   useActionHotkey(
     "mod+f",
-    useCallback(() => setFindOpen((open) => !open), []),
+    useCallback(() => dispatch({ type: "SET_FIND_OPEN", value: (open) => !open }), []),
   );
 
   const applyNamedLayout = useCallback(
     (layout: WindowLayout) => {
       if (!session) return;
       const windowIds = session.app.windowKinds.map((kind) => kind.id);
-      setExtraWindowInstances([]);
+      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: [] });
       extraWindowCounterRef.current = 0;
-      setShellLayout(convertFrameworkLayoutToModeLayout(layout, windowIds, appLabelsOverlay));
+      dispatch({ type: "SET_SHELL_LAYOUT", value: convertFrameworkLayoutToModeLayout(layout, windowIds, appLabelsOverlay) });
       const defaultWindowId = findDefaultActiveWindowKindId(layout, session.app.windowKinds);
-      if (defaultWindowId) setActiveWindowId(defaultWindowId);
+      if (defaultWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: defaultWindowId });
     },
     [session, appLabelsOverlay],
   );
 
   const applyModeChange = useCallback((modeId: string) => {
-    setSession((current) => {
-      if (!current) return current;
-      const layout = resolveLayoutForMode(current.app, modeId);
-      if (layout) {
-        setExtraWindowInstances([]);
-        extraWindowCounterRef.current = 0;
-        setShellLayout(
-          convertFrameworkLayoutToModeLayout(
-            layout,
-            current.app.windowKinds.map((kind) => kind.id),
-            appLabelsOverlay,
-          ),
-        );
-        const defaultWindowId = findDefaultActiveWindowKindId(layout, current.app.windowKinds);
-        if (defaultWindowId) setActiveWindowId(defaultWindowId);
-      }
-      return { ...current, viewState: { ...current.viewState, activeModeId: modeId } };
+    dispatch({
+      type: "SET_SESSION",
+      value: (current) => {
+        if (!current) return current;
+        const layout = resolveLayoutForMode(current.app, modeId);
+        if (layout) {
+          dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: [] });
+          extraWindowCounterRef.current = 0;
+          dispatch({
+            type: "SET_SHELL_LAYOUT",
+            value: convertFrameworkLayoutToModeLayout(
+              layout,
+              current.app.windowKinds.map((kind) => kind.id),
+              appLabelsOverlay,
+            ),
+          });
+          const defaultWindowId = findDefaultActiveWindowKindId(layout, current.app.windowKinds);
+          if (defaultWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: defaultWindowId });
+        }
+        return { ...current, viewState: { ...current.viewState, activeModeId: modeId } };
+      },
     });
   }, [appLabelsOverlay]);
 
@@ -1739,23 +1703,30 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       if (!kind) return;
       extraWindowCounterRef.current += 1;
       const instanceId = `${payload.windowKindId}-${extraWindowCounterRef.current}`;
-      setExtraWindowInstances((current) => [...current, { id: instanceId, windowKindId: payload.windowKindId, title: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label) }]);
-      setShellLayout((current) => {
-        const base =
-          current ??
-          convertFrameworkLayoutToModeLayout(
-            session.app.defaultLayout,
-            session.app.windowKinds.map((entry) => entry.id),
-            appLabelsOverlay,
-          );
-        return insertWindowAtDropZone(base, instanceId, target);
+      dispatch({
+        type: "SET_EXTRA_WINDOW_INSTANCES",
+        value: (current) => [...current, { id: instanceId, windowKindId: payload.windowKindId, title: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label) }],
       });
-      setActiveWindowId(instanceId);
+      dispatch({
+        type: "SET_SHELL_LAYOUT",
+        value: (current) => {
+          const base =
+            current ??
+            convertFrameworkLayoutToModeLayout(
+              session.app.defaultLayout,
+              session.app.windowKinds.map((entry) => entry.id),
+              appLabelsOverlay,
+            );
+          return insertWindowAtDropZone(base, instanceId, target);
+        },
+      });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: instanceId });
     },
     [appLabelsOverlay, session],
   );
 
-  const displayHostRef = useRef<ReturnType<typeof useNamedLayoutHost> | null>(null);
+  const [displayLayoutSaveLabel, setDisplayLayoutSaveLabel] = useState("");
+  const displayHostRef = useRef<DisplayHostApi | null>(null);
   const displayHost = useNamedLayoutHost({
     appId: session?.app.id ?? "framework-os",
     windowKinds: session?.app.windowKinds.map((kind) => ({ ...kind, label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label) })) ?? [],
@@ -1764,7 +1735,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     onApplyLayout: applyNamedLayout,
     namedLayoutStore,
   });
-  displayHostRef.current = displayHost;
+  displayHostRef.current = { ...displayHost, layoutSaveLabel: displayLayoutSaveLabel, setLayoutSaveLabel: setDisplayLayoutSaveLabel };
 
   //#region 🔖ThemeMutators
   const uiThemeBase = uiThemeDraft ?? uiTheme;
@@ -1775,14 +1746,14 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     (patch: (next: UiTheme) => void) => {
       const next = structuredClone(uiThemeBase);
       patch(next);
-      setUiThemeDraft(next);
+      dispatch({ type: "SET_UI_THEME_DRAFT", value: next });
     },
     [uiThemeBase],
   );
 
   const setThemeId = useCallback((id: string) => {
-    setUiThemeDraft(null);
-    setUiThemeIdState(id);
+    dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
+    dispatch({ type: "SET_UI_THEME_ID", value: id });
   }, []);
 
   const setThemeColor = useCallback((key: string, hex: string) => draftThemePatch((next) => { next.colors[key] = hex; }), [draftThemePatch]);
@@ -1807,8 +1778,8 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   );
 
   const resetTheme = useCallback(() => {
-    setUiThemeDraft(null);
-    setUiThemeIdState("semio");
+    dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
+    dispatch({ type: "SET_UI_THEME_ID", value: "semio" });
   }, []);
 
   const saveTheme = useCallback(
@@ -1822,9 +1793,9 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       if (!slug) return;
       const id = `custom.${slug}`;
       const saved: UiTheme = { ...uiThemeBase, id, label: trimmed };
-      setUiCustomThemesState((current) => ({ ...current, [id]: saved }));
-      setUiThemeDraft(null);
-      setUiThemeIdState(id);
+      dispatch({ type: "SET_UI_CUSTOM_THEMES", value: (current) => ({ ...current, [id]: saved }) });
+      dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
+      dispatch({ type: "SET_UI_THEME_ID", value: id });
     },
     [uiThemeBase],
   );
@@ -1832,12 +1803,15 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const deleteTheme = useCallback(
     (id: string) => {
       if (!id.startsWith("custom.")) return;
-      setUiCustomThemesState((current) => {
-        const { [id]: _removed, ...rest } = current;
-        return rest;
+      dispatch({
+        type: "SET_UI_CUSTOM_THEMES",
+        value: (current) => {
+          const { [id]: _removed, ...rest } = current;
+          return rest;
+        },
       });
-      setUiThemeIdState((current) => (current === id ? "semio" : current));
-      setUiThemeDraft(null);
+      dispatch({ type: "SET_UI_THEME_ID", value: (current) => (current === id ? "semio" : current) });
+      dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
     },
     [],
   );
@@ -1858,6 +1832,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   }, [saveTheme]);
   //#endregion 🔖ThemeMutators
 
+  const [themeSaveLabel, setThemeSaveLabel] = useState("");
   const settingsHostRef = useRef<SettingsHostApi | null>(null);
   const settingsHost: SettingsHostApi = useMemo(
     () => ({
@@ -1866,18 +1841,18 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       controllerId: session?.app.controllerId,
       pluginId: session?.pluginId,
       compact: uiCompact,
-      setCompact: setUiCompact,
+      setCompact: (value: boolean) => dispatch({ type: "SET_UI_COMPACT", value }),
       expertise: uiExpertise,
-      setExpertise: setUiExpertise,
+      setExpertise: (value: string) => dispatch({ type: "SET_UI_EXPERTISE", value: value as Expertise }),
       appearance: uiAppearance,
-      setAppearance: setUiAppearance,
+      setAppearance: (value: string) => dispatch({ type: "SET_UI_APPEARANCE", value: value as ElementsSurfaceAppearance }),
       layout: uiLayout,
-      setLayout: setUiLayout,
+      setLayout: (value: UiChromeLayout) => dispatch({ type: "SET_UI_LAYOUT", value }),
       mobileActive: mobile,
       locale: uiLocale,
-      setLocale: setUiLocaleState,
+      setLocale: (value: UiLocale) => dispatch({ type: "SET_UI_LOCALE", value }),
       terminology: uiTerminology,
-      setTerminology: setUiTerminologyState,
+      setTerminology: (value: string) => dispatch({ type: "SET_UI_TERMINOLOGY", value }),
       terminologies: [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])],
       theme: uiThemeBase,
       themeId: uiThemeId,
@@ -1897,6 +1872,8 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       resetTheme,
       exportTheme,
       importTheme,
+      themeSaveLabel,
+      setThemeSaveLabel,
     }),
     [
       session,
@@ -1925,6 +1902,8 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       resetTheme,
       exportTheme,
       importTheme,
+      themeSaveLabel,
+      setThemeSaveLabel,
     ],
   );
   settingsHostRef.current = settingsHost;
@@ -2054,7 +2033,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       tabs: mobilePanelTabs,
       activeTabPath: mobilePanelPath,
       onActiveTabPathChange: (path: readonly string[]) => {
-        setMobilePanelPath(path);
+        dispatch({ type: "SET_MOBILE_PANEL_PATH", value: path });
         const tabId = path[path.length - 1];
         if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID) {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
@@ -2080,7 +2059,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
 
   useEffect(() => {
     if (exampleOptions.length === 0) return;
-    setActiveExampleId((current) => (!current || exampleOptions.some((option) => option.id === current) ? current : ""));
+    dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: (current) => (!current || exampleOptions.some((option) => option.id === current) ? current : "") });
   }, [exampleOptions, session?.app.id, session?.pluginId]);
 
   useEffect(() => {
@@ -2112,7 +2091,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           value={activeExampleId}
           options={exampleOptions}
           onValueChange={(exampleId) => {
-            setActiveExampleId(exampleId);
+            dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
             onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId } });
           }}
         />,
@@ -2159,7 +2138,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label),
         category: shellLabel("ui.search.category.windows"),
         icon: <Icon icon="app-window" size="small" />,
-        onSelect: () => setActiveWindowId(kind.id),
+        onSelect: () => dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: kind.id }),
       });
     }
     const keysByActionId = new Map(session.app.keybindings.map((binding) => [binding.action.action, binding.keys]));
@@ -2238,8 +2217,8 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         draftPath={syncDraftPath}
         syncTools={syncTools}
         onAction={onAction}
-        onDraftPathChange={setSyncDraftPath}
-        onClose={() => setSyncCardKind(null)}
+        onDraftPathChange={(value) => dispatch({ type: "SET_SYNC_DRAFT_PATH", value })}
+        onClose={() => dispatch({ type: "SET_SYNC_CARD_KIND", value: null })}
         onAttach={attachSyncBackbone}
         onDetach={detachSyncBackbone}
       />
@@ -2371,24 +2350,25 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
               windows={modeWindows}
               layout={effectiveModeLayout}
               activeWindowId={activeWindowId}
-              onActiveWindowChange={setActiveWindowId}
-              onLayoutChange={setShellLayout}
+              onActiveWindowChange={(value) => dispatch({ type: "SET_ACTIVE_WINDOW_ID", value })}
+              onLayoutChange={(value) => dispatch({ type: "SET_SHELL_LAYOUT", value })}
               onTemplateDrop={mobile ? undefined : handleTemplateDrop}
               onWindowClose={(windowId) => {
                 if (studioMode && panel?.spawnedApps.some((entry) => entry.id === windowId)) {
                   const nextSpawned = panel.spawnedApps.filter((entry) => entry.id !== windowId);
                   updateStudioPanel(buildStudioPanelState(panel.programs, nextSpawned, panel.activePanelTab, nextSpawned[0]?.id));
                 }
-                setExtraWindowInstances((current) => current.filter((entry) => entry.id !== windowId));
-                setShellLayout(
-                  (current) =>
+                dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: (current) => current.filter((entry) => entry.id !== windowId) });
+                dispatch({
+                  type: "SET_SHELL_LAYOUT",
+                  value: (current) =>
                     current ??
                     convertFrameworkLayoutToModeLayout(
                       session.app.defaultLayout,
                       modeWindows.map((window) => window.id),
                       appLabelsOverlay,
                     ),
-                );
+                });
               }}
             />
           </App>
@@ -2411,13 +2391,13 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
                 ? {
                     position: "left",
                     visible: leftPanelVisible,
-                    onVisibleChange: setLeftPanelVisible,
+                    onVisibleChange: (value) => dispatch({ type: "SET_LEFT_PANEL_VISIBLE", value }),
                     size: leftPanelSize,
-                    onSizeChange: setLeftPanelSize,
+                    onSizeChange: (value) => dispatch({ type: "SET_LEFT_PANEL_SIZE", value }),
                     tabs: leftPanelTabs,
                     activeTabPath: leftPanelActivePath,
                     onActiveTabPathChange: (path) => {
-                      setLeftPanelPath(path);
+                      dispatch({ type: "SET_LEFT_PANEL_PATH", value: path });
                       const tabId = path[path.length - 1];
                       if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID) {
                         onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
@@ -2431,13 +2411,13 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
                 ? {
                     position: "right",
                     visible: rightPanelVisible,
-                    onVisibleChange: setRightPanelVisible,
+                    onVisibleChange: (value) => dispatch({ type: "SET_RIGHT_PANEL_VISIBLE", value }),
                     size: rightPanelSize,
-                    onSizeChange: setRightPanelSize,
+                    onSizeChange: (value) => dispatch({ type: "SET_RIGHT_PANEL_SIZE", value }),
                     tabs: rightPanelTabs,
                     activeTabPath: rightPanelActivePath,
                     onActiveTabPathChange: (path) => {
-                      setRightPanelPath(path);
+                      dispatch({ type: "SET_RIGHT_PANEL_PATH", value: path });
                       const tabId = path[path.length - 1];
                       if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID) {
                         onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
@@ -2449,8 +2429,8 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
             canvas={<ShellRenderErrorBoundary>{canvas}</ShellRenderErrorBoundary>}
           />
         </div>
-        <UISearch items={searchItems} open={searchOpen} onOpenChange={setSearchOpen} />
-        <UIFind open={findOpen} onOpenChange={setFindOpen} />
+        <UISearch items={searchItems} open={searchOpen} onOpenChange={(value) => dispatch({ type: "SET_SEARCH_OPEN", value })} />
+        <UIFind open={findOpen} onOpenChange={(value) => dispatch({ type: "SET_FIND_OPEN", value })} />
       </LevelProvider>
     </UIFindProvider>
   );
@@ -2532,6 +2512,264 @@ type SyncCardKind = "file" | "folder" | "remote";
 type UIHistoryEntry = { readonly uri: string };
 type UIHistory = { readonly entries: readonly UIHistoryEntry[]; readonly index: number };
 //#endregion 🔖types
+
+//#region 🧮ShellStore
+/** 🧮 Single consolidated `useReducer` state tree for `FrameworkOsShell`, replacing what used to be ~38 independent `useState` calls with one dispatch-driven store, grouped by concern. */
+
+//#region slice shapes
+type PluginRuntimeState = {
+  readonly loadedPlugins: readonly LoadedPluginState[];
+  readonly session: ActiveSession | null;
+  readonly error: string | null;
+};
+
+type WindowUiState = {
+  readonly windowUiByKind: Readonly<Record<string, UiNode>>;
+  readonly windowEngagementsByKind: Readonly<Record<string, WindowEngagement>>;
+  readonly windowMeasuresByKind: Readonly<Record<string, readonly WindowMeasure[]>>;
+  readonly panelUiByKey: Readonly<Record<string, UiNode>>;
+  readonly toolNodesByKind: Readonly<Record<string, readonly ToolNode[]>>;
+  readonly appLabelsOverlay: PluginAppLabelsOverlay;
+};
+
+type SpawnedWindowState = {
+  readonly spawnedWindowUi: UiNode | null;
+  readonly spawnedWindowEngagements: Readonly<Record<string, WindowEngagement>>;
+  readonly spawnedWindowMeasures: Readonly<Record<string, readonly WindowMeasure[]>>;
+  readonly spawnedToolNodes: readonly ToolNode[];
+};
+
+type ExtraWindowInstance = { readonly id: string; readonly windowKindId: string; readonly title: string };
+
+type ShellLayoutState = {
+  readonly leftPanelVisible: boolean;
+  readonly rightPanelVisible: boolean;
+  readonly leftPanelSize: number;
+  readonly rightPanelSize: number;
+  readonly activeWindowId: string | null;
+  readonly shellLayout: WindowLayoutNode | null;
+  readonly activeExampleId: string;
+  readonly mobilePanelPath: readonly string[];
+  readonly leftPanelPath: readonly string[];
+  readonly rightPanelPath: readonly string[];
+  readonly extraWindowInstances: readonly ExtraWindowInstance[];
+};
+
+type OverlayState = {
+  readonly searchOpen: boolean;
+  readonly findOpen: boolean;
+};
+
+type UiPrefsState = {
+  readonly uiAppearance: ElementsSurfaceAppearance;
+  readonly uiLayout: UiChromeLayout;
+  readonly uiCompact: boolean;
+  readonly uiExpertise: Expertise;
+  readonly uiLocale: UiLocale;
+  readonly uiTerminology: string;
+  readonly uiThemeId: string;
+  readonly uiCustomThemes: Record<string, UiTheme>;
+  readonly uiThemeDraft: UiTheme | null;
+};
+
+type SyncState = {
+  readonly syncBackboneUri: string | null;
+  readonly syncCardKind: SyncCardKind | null;
+  readonly syncDraftPath: string;
+};
+
+export type ShellState = {
+  readonly pluginRuntime: PluginRuntimeState;
+  readonly windowUi: WindowUiState;
+  readonly spawnedWindow: SpawnedWindowState;
+  readonly layout: ShellLayoutState;
+  readonly overlays: OverlayState;
+  readonly uiPrefs: UiPrefsState;
+  readonly sync: SyncState;
+};
+//#endregion slice shapes
+
+//#region actions
+/** 🌀 A `useState`-style value-or-updater payload, kept so every migrated `setXxx` call-site can dispatch its existing `value` or `(prev) => next` argument unchanged. */
+type Updatable<T> = T | ((prev: T) => T);
+
+const resolveUpdatable = <T,>(next: Updatable<T>, prev: T): T => (typeof next === "function" ? (next as (prev: T) => T)(prev) : next);
+
+export type ShellAction =
+  | { readonly type: "SET_LOADED_PLUGINS"; readonly value: Updatable<readonly LoadedPluginState[]> }
+  | { readonly type: "SET_SESSION"; readonly value: Updatable<ActiveSession | null> }
+  | { readonly type: "SET_ERROR"; readonly value: Updatable<string | null> }
+  | { readonly type: "SET_WINDOW_UI_BY_KIND"; readonly value: Updatable<Readonly<Record<string, UiNode>>> }
+  | { readonly type: "SET_WINDOW_ENGAGEMENTS_BY_KIND"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
+  | { readonly type: "SET_WINDOW_MEASURES_BY_KIND"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
+  | { readonly type: "SET_PANEL_UI_BY_KEY"; readonly value: Updatable<Readonly<Record<string, UiNode>>> }
+  | { readonly type: "SET_TOOL_NODES_BY_KIND"; readonly value: Updatable<Readonly<Record<string, readonly ToolNode[]>>> }
+  | { readonly type: "SET_APP_LABELS_OVERLAY"; readonly value: Updatable<PluginAppLabelsOverlay> }
+  | { readonly type: "SET_SPAWNED_WINDOW_UI"; readonly value: Updatable<UiNode | null> }
+  | { readonly type: "SET_SPAWNED_WINDOW_ENGAGEMENTS"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
+  | { readonly type: "SET_SPAWNED_WINDOW_MEASURES"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
+  | { readonly type: "SET_SPAWNED_TOOL_NODES"; readonly value: Updatable<readonly ToolNode[]> }
+  | { readonly type: "SET_LEFT_PANEL_VISIBLE"; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_RIGHT_PANEL_VISIBLE"; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_LEFT_PANEL_SIZE"; readonly value: Updatable<number> }
+  | { readonly type: "SET_RIGHT_PANEL_SIZE"; readonly value: Updatable<number> }
+  | { readonly type: "SET_ACTIVE_WINDOW_ID"; readonly value: Updatable<string | null> }
+  | { readonly type: "SET_SHELL_LAYOUT"; readonly value: Updatable<WindowLayoutNode | null> }
+  | { readonly type: "SET_ACTIVE_EXAMPLE_ID"; readonly value: Updatable<string> }
+  | { readonly type: "SET_MOBILE_PANEL_PATH"; readonly value: Updatable<readonly string[]> }
+  | { readonly type: "SET_LEFT_PANEL_PATH"; readonly value: Updatable<readonly string[]> }
+  | { readonly type: "SET_RIGHT_PANEL_PATH"; readonly value: Updatable<readonly string[]> }
+  | { readonly type: "SET_EXTRA_WINDOW_INSTANCES"; readonly value: Updatable<readonly ExtraWindowInstance[]> }
+  | { readonly type: "SET_SEARCH_OPEN"; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_FIND_OPEN"; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_UI_APPEARANCE"; readonly value: Updatable<ElementsSurfaceAppearance> }
+  | { readonly type: "SET_UI_LAYOUT"; readonly value: Updatable<UiChromeLayout> }
+  | { readonly type: "SET_UI_COMPACT"; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_UI_EXPERTISE"; readonly value: Updatable<Expertise> }
+  | { readonly type: "SET_UI_LOCALE"; readonly value: Updatable<UiLocale> }
+  | { readonly type: "SET_UI_TERMINOLOGY"; readonly value: Updatable<string> }
+  | { readonly type: "SET_UI_THEME_ID"; readonly value: Updatable<string> }
+  | { readonly type: "SET_UI_CUSTOM_THEMES"; readonly value: Updatable<Record<string, UiTheme>> }
+  | { readonly type: "SET_UI_THEME_DRAFT"; readonly value: Updatable<UiTheme | null> }
+  | { readonly type: "SET_SYNC_BACKBONE_URI"; readonly value: Updatable<string | null> }
+  | { readonly type: "SET_SYNC_CARD_KIND"; readonly value: Updatable<SyncCardKind | null> }
+  | { readonly type: "SET_SYNC_DRAFT_PATH"; readonly value: Updatable<string> };
+//#endregion actions
+
+//#region slice reducers
+function pluginRuntimeReducer(state: PluginRuntimeState, action: ShellAction): PluginRuntimeState {
+  switch (action.type) {
+    case "SET_LOADED_PLUGINS": return { ...state, loadedPlugins: resolveUpdatable(action.value, state.loadedPlugins) };
+    case "SET_SESSION": return { ...state, session: resolveUpdatable(action.value, state.session) };
+    case "SET_ERROR": return { ...state, error: resolveUpdatable(action.value, state.error) };
+    default: return state;
+  }
+}
+
+function windowUiReducer(state: WindowUiState, action: ShellAction): WindowUiState {
+  switch (action.type) {
+    case "SET_WINDOW_UI_BY_KIND": return { ...state, windowUiByKind: resolveUpdatable(action.value, state.windowUiByKind) };
+    case "SET_WINDOW_ENGAGEMENTS_BY_KIND": return { ...state, windowEngagementsByKind: resolveUpdatable(action.value, state.windowEngagementsByKind) };
+    case "SET_WINDOW_MEASURES_BY_KIND": return { ...state, windowMeasuresByKind: resolveUpdatable(action.value, state.windowMeasuresByKind) };
+    case "SET_PANEL_UI_BY_KEY": return { ...state, panelUiByKey: resolveUpdatable(action.value, state.panelUiByKey) };
+    case "SET_TOOL_NODES_BY_KIND": return { ...state, toolNodesByKind: resolveUpdatable(action.value, state.toolNodesByKind) };
+    case "SET_APP_LABELS_OVERLAY": return { ...state, appLabelsOverlay: resolveUpdatable(action.value, state.appLabelsOverlay) };
+    default: return state;
+  }
+}
+
+function spawnedWindowReducer(state: SpawnedWindowState, action: ShellAction): SpawnedWindowState {
+  switch (action.type) {
+    case "SET_SPAWNED_WINDOW_UI": return { ...state, spawnedWindowUi: resolveUpdatable(action.value, state.spawnedWindowUi) };
+    case "SET_SPAWNED_WINDOW_ENGAGEMENTS": return { ...state, spawnedWindowEngagements: resolveUpdatable(action.value, state.spawnedWindowEngagements) };
+    case "SET_SPAWNED_WINDOW_MEASURES": return { ...state, spawnedWindowMeasures: resolveUpdatable(action.value, state.spawnedWindowMeasures) };
+    case "SET_SPAWNED_TOOL_NODES": return { ...state, spawnedToolNodes: resolveUpdatable(action.value, state.spawnedToolNodes) };
+    default: return state;
+  }
+}
+
+function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): ShellLayoutState {
+  switch (action.type) {
+    case "SET_LEFT_PANEL_VISIBLE": return { ...state, leftPanelVisible: resolveUpdatable(action.value, state.leftPanelVisible) };
+    case "SET_RIGHT_PANEL_VISIBLE": return { ...state, rightPanelVisible: resolveUpdatable(action.value, state.rightPanelVisible) };
+    case "SET_LEFT_PANEL_SIZE": return { ...state, leftPanelSize: resolveUpdatable(action.value, state.leftPanelSize) };
+    case "SET_RIGHT_PANEL_SIZE": return { ...state, rightPanelSize: resolveUpdatable(action.value, state.rightPanelSize) };
+    case "SET_ACTIVE_WINDOW_ID": return { ...state, activeWindowId: resolveUpdatable(action.value, state.activeWindowId) };
+    case "SET_SHELL_LAYOUT": return { ...state, shellLayout: resolveUpdatable(action.value, state.shellLayout) };
+    case "SET_ACTIVE_EXAMPLE_ID": return { ...state, activeExampleId: resolveUpdatable(action.value, state.activeExampleId) };
+    case "SET_MOBILE_PANEL_PATH": return { ...state, mobilePanelPath: resolveUpdatable(action.value, state.mobilePanelPath) };
+    case "SET_LEFT_PANEL_PATH": return { ...state, leftPanelPath: resolveUpdatable(action.value, state.leftPanelPath) };
+    case "SET_RIGHT_PANEL_PATH": return { ...state, rightPanelPath: resolveUpdatable(action.value, state.rightPanelPath) };
+    case "SET_EXTRA_WINDOW_INSTANCES": return { ...state, extraWindowInstances: resolveUpdatable(action.value, state.extraWindowInstances) };
+    default: return state;
+  }
+}
+
+function overlayReducer(state: OverlayState, action: ShellAction): OverlayState {
+  switch (action.type) {
+    case "SET_SEARCH_OPEN": return { ...state, searchOpen: resolveUpdatable(action.value, state.searchOpen) };
+    case "SET_FIND_OPEN": return { ...state, findOpen: resolveUpdatable(action.value, state.findOpen) };
+    default: return state;
+  }
+}
+
+function uiPrefsReducer(state: UiPrefsState, action: ShellAction): UiPrefsState {
+  switch (action.type) {
+    case "SET_UI_APPEARANCE": return { ...state, uiAppearance: resolveUpdatable(action.value, state.uiAppearance) };
+    case "SET_UI_LAYOUT": return { ...state, uiLayout: resolveUpdatable(action.value, state.uiLayout) };
+    case "SET_UI_COMPACT": return { ...state, uiCompact: resolveUpdatable(action.value, state.uiCompact) };
+    case "SET_UI_EXPERTISE": return { ...state, uiExpertise: resolveUpdatable(action.value, state.uiExpertise) };
+    case "SET_UI_LOCALE": return { ...state, uiLocale: resolveUpdatable(action.value, state.uiLocale) };
+    case "SET_UI_TERMINOLOGY": return { ...state, uiTerminology: resolveUpdatable(action.value, state.uiTerminology) };
+    case "SET_UI_THEME_ID": return { ...state, uiThemeId: resolveUpdatable(action.value, state.uiThemeId) };
+    case "SET_UI_CUSTOM_THEMES": return { ...state, uiCustomThemes: resolveUpdatable(action.value, state.uiCustomThemes) };
+    case "SET_UI_THEME_DRAFT": return { ...state, uiThemeDraft: resolveUpdatable(action.value, state.uiThemeDraft) };
+    default: return state;
+  }
+}
+
+function syncReducer(state: SyncState, action: ShellAction): SyncState {
+  switch (action.type) {
+    case "SET_SYNC_BACKBONE_URI": return { ...state, syncBackboneUri: resolveUpdatable(action.value, state.syncBackboneUri) };
+    case "SET_SYNC_CARD_KIND": return { ...state, syncCardKind: resolveUpdatable(action.value, state.syncCardKind) };
+    case "SET_SYNC_DRAFT_PATH": return { ...state, syncDraftPath: resolveUpdatable(action.value, state.syncDraftPath) };
+    default: return state;
+  }
+}
+//#endregion slice reducers
+
+/** 🧵 Root reducer for `FrameworkOsShell` — fans every action out to its owning slice reducer; slices that ignore an action's type return their input unchanged, so unrelated slices keep referential identity. */
+export function shellReducer(state: ShellState, action: ShellAction): ShellState {
+  return {
+    pluginRuntime: pluginRuntimeReducer(state.pluginRuntime, action),
+    windowUi: windowUiReducer(state.windowUi, action),
+    spawnedWindow: spawnedWindowReducer(state.spawnedWindow, action),
+    layout: shellLayoutReducer(state.layout, action),
+    overlays: overlayReducer(state.overlays, action),
+    uiPrefs: uiPrefsReducer(state.uiPrefs, action),
+    sync: syncReducer(state.sync, action),
+  };
+}
+
+//#region selectors
+export const selectUiDevice = (state: ShellState, mobile: boolean): ElementsSurfaceDevice => (mobile ? "mobile" : state.uiPrefs.uiLayout);
+//#endregion selectors
+
+/** 🌱 Builds the starting `ShellState` for `FrameworkOsShell`, mirroring exactly what each migrated `useState` used to initialize to (including reads from local storage for UI prefs). */
+export function initialShellState(_props: { readonly pluginFilter?: string; readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[] }): ShellState {
+  return {
+    pluginRuntime: { loadedPlugins: [], session: null, error: null },
+    windowUi: { windowUiByKind: {}, windowEngagementsByKind: {}, windowMeasuresByKind: {}, panelUiByKey: {}, toolNodesByKind: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
+    spawnedWindow: { spawnedWindowUi: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {}, spawnedToolNodes: [] },
+    layout: {
+      leftPanelVisible: false,
+      rightPanelVisible: false,
+      leftPanelSize: DEFAULT_LEFT_PANEL_SIZE,
+      rightPanelSize: DEFAULT_RIGHT_PANEL_SIZE,
+      activeWindowId: null,
+      shellLayout: null,
+      activeExampleId: "",
+      mobilePanelPath: [],
+      leftPanelPath: [],
+      rightPanelPath: [],
+      extraWindowInstances: [],
+    },
+    overlays: { searchOpen: false, findOpen: false },
+    uiPrefs: {
+      uiAppearance: readStoredUiChromeAppearance(),
+      uiLayout: readStoredUiChromeLayout(),
+      uiCompact: readStoredUiChromeCompact(),
+      uiExpertise: readStoredUiChromeExpertise(),
+      uiLocale: readStoredUiChromeLocale() ?? (uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en"),
+      uiTerminology: readStoredUiChromeTerminology(),
+      uiThemeId: readStoredUiChromeThemeId() ?? "semio",
+      uiCustomThemes: readStoredUiCustomThemes(),
+      uiThemeDraft: null,
+    },
+    sync: { syncBackboneUri: null, syncCardKind: null, syncDraftPath: "" },
+  };
+}
+//#endregion 🧮ShellStore
 
 //#region 🔖plugin-runtime
 

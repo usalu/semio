@@ -12,7 +12,6 @@ path = "lib.rs"
 ui_styling = { path = "../../../../../../ui/styling/rs" }
 mathematical_graph_port_directed = { path = "../../rs" }
 mathematical_graph_normal_undirected = { path = "../../../../normal/undirected/rs" }
-mathematical_core = { path = "../../../../../core/rs" }
 mathematical_graph_manifest = { path = "../../../../manifest/rs" }
 infinite_cavas = { path = "../../../../../../infinite/cavas/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

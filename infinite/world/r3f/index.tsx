@@ -1918,6 +1918,7 @@ export interface WorldOrbitGatedProps {
   readonly controlsGate?: boolean;
   readonly onCameraNavigate?: (active: boolean) => void;
   readonly controlsKey?: string | number;
+  readonly onRightPointerDown?: (event: PointerEvent) => boolean;
 }
 
 /** @emoji 🛰️ Orbit controls with injectable gate (specializations disable during drag/tools). */
@@ -1931,7 +1932,7 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
   const invalidate = useThree((s) => s.invalidate);
   const projection = props.projection ?? (camera instanceof ThreeOrthographicCamera ? "orthographic" : "perspective");
   const mouseButtonsIdle = reactHostPort.useMemo(() => resolveWorldOrbitMouseButtonsIdle(projection), [projection]);
-  useWorldOrbitRightMouseBindings(controls, gl.domElement, { projection });
+  useWorldOrbitRightMouseBindings(controls, gl.domElement, { projection, onRightPointerDown: props.onRightPointerDown });
   reactHostPort.useEffect(() => {
     invalidate();
   }, [gate, invalidate]);

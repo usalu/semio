@@ -1193,7 +1193,7 @@ fn has_path(adj: &HashMap<String, Vec<String>>, from: &str, to: &str) -> bool {
 // #endregion 🔖Acyclicity
 
 // #region 🔖Layout
-use mathematical_core::tree_layout::buchheim_positions;
+use mathematical_graph_drawing::tidy_tree::buchheim_positions;
 use serde_json::Value;
 
 /// 🧭 Tree layout flow direction for layered DAG positions.

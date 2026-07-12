@@ -120,6 +120,26 @@ type WorldSelectionRecord = {
   readonly faceDragActive?: boolean;
 };
 
+type WorldSuggestionCandidateRecord = {
+  readonly index: number;
+  readonly objectLabel: string;
+  readonly vortexLabel: string;
+};
+
+type WorldSuggestionMenuRecord = {
+  readonly open: boolean;
+  readonly x: number;
+  readonly y: number;
+  readonly pending: boolean;
+  readonly candidates: readonly WorldSuggestionCandidateRecord[];
+};
+
+type WorldFillBuildRecord = {
+  readonly count: number;
+  readonly maxCount: number;
+  readonly done: boolean;
+};
+
 type WorldInteractionRecord = {
   readonly activeTool?: string;
   readonly brushCandidateIndex?: number;
@@ -127,6 +147,8 @@ type WorldInteractionRecord = {
   readonly fillEditTargetVolumes?: boolean;
   readonly voxelDims?: readonly [number, number, number];
   readonly gridFactor?: number;
+  readonly suggestionMenu?: WorldSuggestionMenuRecord | null;
+  readonly fillBuild?: WorldFillBuildRecord;
 };
 
 type WorldLodRecord = {
@@ -463,6 +485,17 @@ function parseBrushPreview(brushPreviewJson: string | undefined): WorldBrushPrev
   } catch {
     return null;
   }
+}
+
+type WorldContextMenuTarget = { readonly kind: "vortex" | "object" | "reference"; readonly id: string };
+
+/** @emoji 🖱️ Resolves which entity a plain right-click should select-then-open a menu for, by priority: hovered vortex, then hovered object component, then hovered reference. */
+export function resolveWorldContextMenuTarget(interaction: WorldInteractionRecord, selection: WorldSelectionRecord): WorldContextMenuTarget | null {
+  if (interaction.hoveredVortexFullId) return { kind: "vortex", id: interaction.hoveredVortexFullId };
+  if (selection.hoveredComponent?.objectId) return { kind: "object", id: selection.hoveredComponent.objectId };
+  const hoveredId = selection.hoveredId;
+  if (hoveredId?.startsWith("reference:")) return { kind: "reference", id: hoveredId.slice("reference:".length) };
+  return null;
 }
 
 /** @emoji 🚫 Instance-mesh picking must be disabled for fill/brush engagements — otherwise a click meant for a vortex marker or a fill/voxel gesture falls through and selects/gumballs the underlying object instead. */
@@ -1341,7 +1374,7 @@ function WorldAttractionLines({ attractions }: { readonly attractions: readonly 
   );
 }
 
-function BrushPreviewGhost({ preview, meshes }: { readonly preview: WorldBrushPreviewRecord; readonly meshes: readonly WorldMeshRecord[] }) {
+function BrushPreviewGhost({ preview, meshes, colors }: { readonly preview: WorldBrushPreviewRecord; readonly meshes: readonly WorldMeshRecord[]; readonly colors: SemanticColors }) {
   if (!preview.origin) return null;
   const meshUrl = preview.meshUrl;
   const meshRecord = meshUrl ? meshes.find((mesh) => mesh.url === meshUrl) : undefined;
@@ -1353,12 +1386,12 @@ function BrushPreviewGhost({ preview, meshes }: { readonly preview: WorldBrushPr
     <group position={position} scale={scale} quaternion={quaternion}>
       {meshRecord?.url ? (
         <Suspense fallback={null}>
-          <GlbInstanceMesh url={meshRecord.url} color="#fbbf24" />
+          <GlbInstanceMesh url={meshRecord.url} color={colors.hover} material={{ emissive: colors.hover, emissiveIntensity: 0.6 }} />
         </Suspense>
       ) : (
         <mesh raycast={() => null}>
           <boxGeometry args={[1, 1, 1]} />
-          <meshBasicMaterial color="#fbbf24" transparent opacity={0.42} depthWrite={false} />
+          <meshBasicMaterial color={colors.hover} transparent opacity={0.42} depthWrite={false} />
         </mesh>
       )}
     </group>
@@ -2280,7 +2313,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
             />
             {connectDragSource && connectDragHoverPosition ? <WorldConnectRubberBand from={connectDragSource.position} to={connectDragHoverPosition} /> : null}
             <WorldAttractionLines attractions={attractions} />
-            {brushPreview ? <BrushPreviewGhost preview={brushPreview} meshes={meshes} /> : null}
+            {brushPreview ? <BrushPreviewGhost preview={brushPreview} meshes={meshes} colors={colors} /> : null}
             {engagementPreview.length > 0 ? <EngagementPreviewLayer items={engagementPreview} color={colors.hover} /> : null}
             <WorldVolumeLayer
               volumes={targetVolumes.map((volume) => ({

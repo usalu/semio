@@ -7,6 +7,12 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:writer"
 
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "writer"
+ports = { react = 6062, wgpu = 6162 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

@@ -4,7 +4,8 @@ pub mod fixture_layout {
     // #region fixture_layout
     //! ↔️ Normal undirected fixture layout: node-id edges, symmetric springs, no port handles.
 
-    use mathematical_core::force_layout::{self, ForceLayoutOptions as CoreForceLayoutOptions, Vec2};
+    use mathematical_graph_drawing::force::{self, ForceLayoutOptions as CoreForceLayoutOptions};
+    use mathematical_geometry::Vec2;
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
     use std::collections::{HashMap, HashSet};
@@ -349,7 +350,6 @@ pub mod fixture_layout {
 pub use fixture_layout::{
     apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, apply_force_graph_layout_to_fixture_v1_value_resolved, apply_redraw_layout_to_fixture_v1_json, resolve_node_id_endpoint, ForceGraphLayoutOptions,
 };
-pub use mathematical_core::{Directedness, Normal, Undirected};
 pub use mathematical_graph::*;
 
 /// ↔️ Node graph engine without ports; endpoints are unordered node pairs.

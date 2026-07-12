@@ -1375,6 +1375,22 @@ mod host_tests {
     }
 
     #[test]
+    fn board_host_hover_change_does_not_bump_content_scene_generation() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.sync_descriptor(&sample_scene()).unwrap();
+        let gen = h.test_content_scene_generation();
+        let neutral_hint = h.encoded_scene_hint();
+        h.set_hovered_id_silent(Some("a".into()));
+        assert_eq!(h.test_content_scene_generation(), gen, "hover must paint via dynamic overlay chrome without rebuilding cached icons");
+        let hovered_hint = h.encoded_scene_hint();
+        assert_ne!(hovered_hint, neutral_hint);
+        h.set_hovered_id_silent(None);
+        assert_eq!(h.test_content_scene_generation(), gen);
+        assert_eq!(h.encoded_scene_hint(), neutral_hint);
+    }
+
+    #[test]
     fn board_host_background_click_deselect_skips_preselect_events() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);

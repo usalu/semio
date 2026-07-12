@@ -11,6 +11,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 //#endregion 🔌Adapters
 
+import type { PlaygroundVariant } from "../../../framework/plugin/registry/generated/playgrounds.ts";
+import { PLAYGROUND_VARIANTS } from "../../../framework/plugin/registry/generated/playgrounds.ts";
+
 export type PlaygroundHostKind = string;
 
 //#region 🔖breach
@@ -1107,95 +1110,10 @@ export function playgroundEmbedUrl(kind: PlaygroundSiteKind, isDev: boolean): st
 //#endregion 🔌PlaygroundDevPorts
 
 //#region 🖥️FrameworkOsPlaygroundDev
-/** @emoji 🧊 CLI alias segments → `SEMIO_PLUGIN` id for framework OS dev playgrounds. */
-export const FRAMEWORK_OS_PLAYGROUND_PLUGIN_ALIASES: Readonly<Record<string, string>> = {
-  s: "s",
-  draw: "draw",
-  note: "note",
-  writer: "writer",
-  raster: "raster",
-  forms: "forms",
-  vcs: "vcs",
-  flow: "flow",
-  dag: "dag",
-  imperative: "imperative",
-  sequence: "sequence",
-  layout: "layout",
-  lowpoly: "lowpoly",
-  shooting: "shooting",
-  "2d": "puzzle2d",
-  "3d": "puzzle3d",
-  "5d": "puzzle5d",
-  "gis 2d": "gis2d",
-  wires: "reasoning-wires",
-  cad: "cad",
-  "procedural 2d": "procedural2d",
-  "procedural 3d": "procedural3d",
-  "process 3d": "process3d",
-  "trinity jack": "trinity",
-  "trinity rewrite": "trinity-rewrite",
-  presentation: "presentation",
-};
-
-/** @emoji 🔌 Legacy play-port env vars mapped to `S_OS_PORT` per plugin id. */
-export const FRAMEWORK_OS_PLAYGROUND_PORT_ENV: Readonly<Record<string, string>> = {
-  s: "S_OS_PORT",
-  draw: "S_OS_PORT",
-  note: "NOTE_PLAY_PORT",
-  writer: "WRITER_PLAY_PORT",
-  raster: "RASTER_PLAY_PORT",
-  forms: "FORMS_PLAY_PORT",
-  vcs: "VCS_PLAY_PORT",
-  flow: "FLOW_PLAY_PORT",
-  dag: "DAG_PLAY_PORT",
-  imperative: "IMPERATIVE_PLAY_PORT",
-  sequence: "SEQUENCE_PLAY_PORT",
-  layout: "LAYOUT_PLAY_PORT",
-  lowpoly: "LOWPOLY_PLAY_PORT",
-  puzzle2d: "PUZZLE_2D_PLAY_PORT",
-  puzzle3d: "PUZZLE_3D_PLAY_PORT",
-  puzzle5d: "PUZZLE_5D_PLAY_PORT",
-  gis2d: "GIS_2D_PLAY_PORT",
-  "reasoning-wires": "WIRES_PLAY_PORT",
-  cad: "CAD_JS_RENDERER_PLAY_PORT",
-  procedural2d: "PROCEDURAL_2D_PLAY_PORT",
-  procedural3d: "PROCEDURAL_3D_PLAY_PORT",
-  process3d: "PROCESS_3D_PLAY_PORT",
-  shooting: "SHOOTING_PLAY_PORT",
-  trinity: "TRINITY_JACK_PLAY_PORT",
-  "trinity-rewrite": "TRINITY_REWRITE_PLAY_PORT",
-  presentation: "PRESENTATION_PLAY_PORT",
-};
-
-/** @emoji 🔌 Default dev ports (React and Wgpu) mapped per plugin id. */
-export const FRAMEWORK_OS_PLAYGROUND_DEFAULT_PORTS: Readonly<Record<string, { readonly react: number; readonly wgpu: number }>> = {
-  puzzle2d: { react: 6012, wgpu: 6112 },
-  puzzle3d: { react: 6013, wgpu: 6113 },
-  puzzle5d: { react: 6014, wgpu: 6114 },
-  "reasoning-wires": { react: 6015, wgpu: 6115 },
-  flow: { react: 6016, wgpu: 6116 },
-  dag: { react: 6017, wgpu: 6117 },
-  procedural3d: { react: 6018, wgpu: 6118 },
-  shooting: { react: 6019, wgpu: 6119 },
-  cad: { react: 6020, wgpu: 6120 },
-  procedural2d: { react: 6021, wgpu: 6121 },
-  process3d: { react: 6022, wgpu: 6122 },
-  gis2d: { react: 6040, wgpu: 6140 },
-  presentation: { react: 6051, wgpu: 6151 },
-  trinity: { react: 6054, wgpu: 6154 },
-  "trinity-rewrite": { react: 6056, wgpu: 6156 },
-  forms: { react: 6058, wgpu: 6158 },
-  raster: { react: 6060, wgpu: 6160 },
-  writer: { react: 6062, wgpu: 6162 },
-  draw: { react: 6064, wgpu: 6164 },
-  s: { react: 6070, wgpu: 6066 },
-  vcs: { react: 6075, wgpu: 6175 },
-  imperative: { react: 6076, wgpu: 6176 },
-  sequence: { react: 6077, wgpu: 6177 },
-  lowpoly: { react: 6078, wgpu: 6178 },
-  layout: { react: 6079, wgpu: 6179 },
-  note: { react: 6080, wgpu: 6180 },
-};
+/** @emoji 📚 Loads the generated framework OS playground catalog (variant/plugin/aliases/ports rows). */
+export function loadFrameworkOsPlaygroundCatalog(): readonly PlaygroundVariant[] {
+  return PLAYGROUND_VARIANTS;
+}
 
 /** @emoji 🗺 Local tile proxy for wgpu gis2d dev (Trunk forwards `/osm` + `/vt` here). */
 export const GIS_MAP_WGPU_TILE_PROXY_PORT = 6141;
@@ -1203,32 +1121,31 @@ export const GIS_MAP_WGPU_TILE_PROXY_PORT = 6141;
 /** @emoji 🗺 Process env for absolute GIS map tile URL base (native-bin wgpu). */
 export const SEMIO_GIS_MAP_TILE_BASE_URL_ENV = "SEMIO_GIS_MAP_TILE_BASE_URL";
 
-/** @emoji 🔌 Resolves the default dev port for a given plugin and renderer. */
-export function frameworkOsPlaygroundDefaultPort(plugin: string, renderer: string): number {
-  const spec = FRAMEWORK_OS_PLAYGROUND_DEFAULT_PORTS[plugin];
-  if (!spec) return 6066;
-  return renderer === "wgpu" ? spec.wgpu : spec.react;
+/** @emoji 🔌 Resolves the default dev port for a given catalog variant and renderer. */
+export function frameworkOsPlaygroundDefaultPort(catalog: readonly PlaygroundVariant[], variant: string, renderer: string): number {
+  const row = catalog.find((r) => r.variant === variant);
+  if (!row) return 6066;
+  return renderer === "wgpu" ? row.ports.wgpu : row.ports.react;
 }
 
-/** @emoji 🎯 Resolves `bun ./script.ts dev …` segments to a framework OS plugin filter. */
-export function resolveFrameworkOsPlaygroundPlugin(segments: readonly string[]): { readonly plugin: string; readonly rest: readonly string[] } | null {
+/** @emoji 🎯 Resolves `bun ./script.ts dev …` segments to a framework OS plugin filter via the catalog. */
+export function resolveFrameworkOsPlaygroundPlugin(catalog: readonly PlaygroundVariant[], segments: readonly string[]): { readonly plugin: string; readonly rest: readonly string[] } | null {
   if (segments.length === 0) return null;
   for (let len = segments.length; len >= 1; len--) {
     const alias = segments.slice(0, len).join(" ");
-    const plugin = FRAMEWORK_OS_PLAYGROUND_PLUGIN_ALIASES[alias];
-    if (plugin) {
-      return { plugin, rest: segments.slice(len) };
+    const row = catalog.find((r) => r.variant === alias || r.aliases.includes(alias));
+    if (row) {
+      return { plugin: row.variant, rest: segments.slice(len) };
     }
   }
   return null;
 }
 
 /** @emoji 🧊 Env for `@semio-tech/framework-os-dev:dev` with wgpu renderer and plugin filter. */
-export function frameworkOsPlaygroundDevEnv(plugin: string, extra: NodeJS.ProcessEnv = {}, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+export function frameworkOsPlaygroundDevEnv(catalog: readonly PlaygroundVariant[], plugin: string, extra: NodeJS.ProcessEnv = {}, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
   const renderer = env.SEMIO_RENDERER ?? "react";
-  const portEnv = FRAMEWORK_OS_PLAYGROUND_PORT_ENV[plugin];
-  const defaultPort = frameworkOsPlaygroundDefaultPort(plugin, renderer);
-  const portVal = (portEnv && env[portEnv]) || String(defaultPort);
+  const defaultPort = frameworkOsPlaygroundDefaultPort(catalog, plugin, renderer);
+  const portVal = env.S_OS_PORT || String(defaultPort);
   return devToolingEnv({
     SEMIO_PLUGIN: plugin,
     SEMIO_RENDERER: renderer,

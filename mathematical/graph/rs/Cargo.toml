@@ -10,7 +10,6 @@ path = "lib.rs"
 
 [dependencies]
 ui_styling = { path = "../../../ui/styling/rs" }
-mathematical_core = { path = "../../core/rs" }
 mathematical_geometry = { path = "../../geometry/rs" }
 mathematical_graph_manifest = { path = "../manifest/rs" }
 infinite_cavas = { path = "../../../infinite/cavas/rs" }

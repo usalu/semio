@@ -2126,12 +2126,11 @@ fn register_shooting_exports() {
     semio_framework_os::register_dwg_import_handler("2d.shooting", shooting_document_json_from_dwg);
 }
 
-fn bundle() -> PluginBundle {
-    register_shooting_exports();
-    PluginBundle::new("shooting", "Shooting", "0.1.0").register_app(create_shooting_app(), || Box::new(ShootingPlayApp))
+semio_framework_plugin::semio_plugin! {
+    id: "shooting", label: "Shooting", version: "0.1.0",
+    setup: register_shooting_exports,
+    apps: [ create_shooting_app => ShootingPlayApp ],
 }
-
-semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

@@ -10,6 +10,10 @@ package = "semio:s"
 [package.metadata.semio]
 capabilities = ["localBackboneStorage"]
 
+[[package.metadata.semio.playground]]
+variant = "s"
+ports = { react = 6070, wgpu = 6066 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

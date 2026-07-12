@@ -7,6 +7,12 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:lowpoly"
 
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "lowpoly"
+ports = { react = 6078, wgpu = 6178 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

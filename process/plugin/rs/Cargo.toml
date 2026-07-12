@@ -7,6 +7,14 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:process"
 
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "process3d"
+app = "process3d-play"
+aliases = ["3d"]
+ports = { react = 6022, wgpu = 6122 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

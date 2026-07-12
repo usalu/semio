@@ -7,6 +7,26 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:puzzle"
 
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "puzzle2d"
+app = "puzzle2d-play"
+aliases = ["2d"]
+ports = { react = 6012, wgpu = 6112 }
+
+[[package.metadata.semio.playground]]
+variant = "puzzle3d"
+app = "puzzle3d-play"
+aliases = ["3d"]
+ports = { react = 6013, wgpu = 6113 }
+
+[[package.metadata.semio.playground]]
+variant = "puzzle5d"
+app = "puzzle5d-play"
+aliases = ["5d"]
+ports = { react = 6014, wgpu = 6114 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

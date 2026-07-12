@@ -7,6 +7,12 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:shooting"
 
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "shooting"
+ports = { react = 6019, wgpu = 6119 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

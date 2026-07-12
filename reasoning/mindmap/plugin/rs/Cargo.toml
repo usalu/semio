@@ -7,6 +7,13 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:reasoning-mindmap"
 
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "reasoning-wires"
+aliases = ["wires"]
+ports = { react = 6015, wgpu = 6115 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

@@ -1,8 +1,8 @@
-//! 🧩 Forms procedural question-kind module — flow-backed building component params + live 3D preview.
+//! 🧩 Protocol procedural block-kind module — flow-backed building component params + live 3D preview.
 
 use flow_core::{forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
 use flow_module_brep::tessellate_geometry_json;
-use forms::{visible_questions, FormQuestion};
+use protocol::{visible_blocks, ProtocolBlock};
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
     build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, App,
@@ -14,13 +14,13 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 
 //#region 🔖Constants
-const MODULE_PLUGIN_ID: &str = "forms-module-procedural";
-const MODULE_APP_ID: &str = "forms-module-procedural";
+const MODULE_PLUGIN_ID: &str = "protocol-module-procedural";
+const MODULE_APP_ID: &str = "protocol-module-procedural";
 const BODY_PARAMS: &str = "params";
 const BODY_PREVIEW: &str = "preview";
-const MODULE_WINDOW_PARAMS: &str = "forms-module-procedural-params";
-const MODULE_WINDOW_PREVIEW: &str = "forms-module-procedural-preview";
-const PREVIEW_SURFACE: &str = "forms.module.procedural.preview";
+const MODULE_WINDOW_PARAMS: &str = "protocol-module-procedural-params";
+const MODULE_WINDOW_PREVIEW: &str = "protocol-module-procedural-preview";
+const PREVIEW_SURFACE: &str = "protocol.module.procedural.preview";
 const PREVIEW_FALLBACK_MESH_KIND: &str = "box";
 const HEX_COLUMN_FIXTURE_JSON: &str =
     include_str!("../../../../procedural/3d/example/hexagonal-mushroom-column.procedural.json");
@@ -296,7 +296,7 @@ fn render_preview_body(payload: &ModuleRenderPayload) -> UiNode {
 
 //#region 🔖Params
 fn render_question_control(
-    question: &FormQuestion,
+    question: &ProtocolBlock,
     value: &Value,
     payload: &ModuleRenderPayload,
 ) -> UiNode {
@@ -324,10 +324,10 @@ fn render_question_control(
     };
     match question.kind.as_str() {
         "text" | "longText" => UiNode::Field(UiFieldNode {
-            id: format!("forms-module.{key}"),
+            id: format!("protocol-module.{key}"),
             label: question.label.clone(),
             child: Box::new(UiNode::Input(UiInputNode {
-                id: format!("forms-module.{key}.input"),
+                id: format!("protocol-module.{key}.input"),
                 input_kind: question.kind.clone(),
                 value: json_string_value(value),
                 placeholder: question.placeholder.clone(),
@@ -343,10 +343,10 @@ fn render_question_control(
             error: None,
         }),
         "number" => UiNode::Field(UiFieldNode {
-            id: format!("forms-module.{key}"),
+            id: format!("protocol-module.{key}"),
             label: question.label.clone(),
             child: Box::new(UiNode::Input(UiInputNode {
-                id: format!("forms-module.{key}.input"),
+                id: format!("protocol-module.{key}.input"),
                 input_kind: "number".into(),
                 value: json_string_value(value),
                 placeholder: question.placeholder.clone(),
@@ -362,10 +362,10 @@ fn render_question_control(
             error: None,
         }),
         "slider" => UiNode::Field(UiFieldNode {
-            id: format!("forms-module.{key}"),
+            id: format!("protocol-module.{key}"),
             label: question.label.clone(),
             child: Box::new(UiNode::Slider(UiSliderNode {
-                id: format!("forms-module.{key}.slider"),
+                id: format!("protocol-module.{key}.slider"),
                 value: json_f64_value(value),
                 min: question.min.unwrap_or(0.0),
                 max: question.max.unwrap_or(100.0),
@@ -378,10 +378,10 @@ fn render_question_control(
             error: None,
         }),
         "boolean" => UiNode::Field(UiFieldNode {
-            id: format!("forms-module.{key}"),
+            id: format!("protocol-module.{key}"),
             label: question.label.clone(),
             child: Box::new(UiNode::Toggle(UiToggleNode {
-                id: format!("forms-module.{key}.toggle"),
+                id: format!("protocol-module.{key}.toggle"),
                 icon_id: "check".into(),
                 pressed: value.as_bool().unwrap_or(false),
                 text: None,
@@ -415,7 +415,7 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> U
     let Some(step) = step else {
         return ui_text(labels.no_flow_inputs.to_string());
     };
-    let visible = visible_questions(step, &values);
+    let visible = visible_blocks(step, &values);
     let mut children: Vec<UiNode> = visible
         .iter()
         .map(|question| {
@@ -483,7 +483,7 @@ impl PluginApp for ModuleApp {
 
 fn create_module_app() -> App {
     App::from_builder(
-        App::builder(MODULE_APP_ID, "Forms Module Procedural")
+        App::builder(MODULE_APP_ID, "Protocol Module Procedural")
             .document(["semio", "forms"])
             .window_kind(MODULE_WINDOW_PARAMS, "Params", BODY_PARAMS, SurfaceKind::NodeGraph)
             .window_kind(MODULE_WINDOW_PREVIEW, "Preview", BODY_PREVIEW, SurfaceKind::World3d)
@@ -497,10 +497,10 @@ fn create_module_app() -> App {
 }
 
 fn module_bundle() -> PluginBundle {
-    PluginBundle::new(MODULE_PLUGIN_ID, "Forms Module Procedural", "0.1.0")
-        .contributes(Contribution::FormsQuestionKind {
+    PluginBundle::new(MODULE_PLUGIN_ID, "Protocol Module Procedural", "0.1.0")
+        .contributes(Contribution::ProtocolBlockKind {
             app_id: MODULE_APP_ID.into(),
-            question_kind: "buildingComponent".into(),
+            block_kind: "buildingComponent".into(),
             label: "Building Component".into(),
             icon_id: "building".into(),
             default_value_json: r#"{"height":6,"radius":0.5,"sides":6}"#.into(),
@@ -534,13 +534,13 @@ mod tests {
         let bundle = module_bundle();
         let manifest = bundle.manifest();
         assert_eq!(manifest.contributions.len(), 1);
-        let Contribution::FormsQuestionKind {
-            question_kind,
+        let Contribution::ProtocolBlockKind {
+            block_kind,
             params_body_key,
             preview_body_key,
             ..
         } = &manifest.contributions[0];
-        assert_eq!(question_kind, "buildingComponent");
+        assert_eq!(block_kind, "buildingComponent");
         assert_eq!(params_body_key, BODY_PARAMS);
         assert_eq!(preview_body_key, BODY_PREVIEW);
     }

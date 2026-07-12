@@ -1,0 +1,14 @@
+{
+  "stock": [],
+  "filters": {
+    "query": "",
+    "moduleIds": [],
+    "typologyPath": [],
+    "minAvailability": 0,
+    "sort": null
+  },
+  "curated": [],
+  "runtime": {
+    "selectedObjectId": null
+  }
+}

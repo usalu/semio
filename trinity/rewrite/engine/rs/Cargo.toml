@@ -14,7 +14,6 @@ trinity_jack = { path = "../../../jack/core/rs" }
 trinity_ram = { path = "../../../ram/rs" }
 mathematical_graph_port_directed = { path = "../../../../mathematical/graph/port/directed/rs" }
 mathematical_graph_port_directed_normal = { path = "../../../../mathematical/graph/port/directed/normal/rs" }
-mathematical_core = { path = "../../../../mathematical/core/rs" }
 infinite_cavas = { path = "../../../../infinite/cavas/rs" }
 ui_styling = { path = "../../../../ui/styling/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

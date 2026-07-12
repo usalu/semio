@@ -639,6 +639,7 @@ fn edit_tools(envelope: &SequencePlayEnvelope, labels: &SequenceLabels) -> Vec<T
 //#endregion 🔖Tools
 
 //#region 🔖SequencePlayApp
+#[derive(Default)]
 struct SequencePlayApp;
 
 impl PluginApp for SequencePlayApp {
@@ -1013,11 +1014,15 @@ fn create_sequence_app() -> App {
     .program("sequence", "Sequence", "graph")
 }
 
-fn bundle() -> PluginBundle {
-    PluginBundle::new("sequence", "Sequence", "0.1.0").register_app(create_sequence_app(), || Box::new(SequencePlayApp))
-}
+fn register_sequence_exports() {}
 
-semio_framework_plugin::plugin_exports!(bundle);
+semio_framework_plugin::semio_plugin! {
+    id: "sequence",
+    label: "Sequence",
+    version: "0.1.0",
+    setup: register_sequence_exports,
+    apps: [ create_sequence_app => SequencePlayApp ],
+}
 //#endregion 🔖Manifest
 
 #[cfg(test)]

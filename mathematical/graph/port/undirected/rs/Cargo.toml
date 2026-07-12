@@ -10,4 +10,3 @@ path = "lib.rs"
 
 [dependencies]
 mathematical_graph_port = { path = "../../rs" }
-mathematical_core = { path = "../../../../core/rs" }

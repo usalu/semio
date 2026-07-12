@@ -1387,6 +1387,7 @@ fn render_preview(play: &LayoutPlayEnvelope) -> UiNode {
 //#endregion 🔖Render
 
 //#region 🔖LayoutPlayApp
+#[derive(Default)]
 struct LayoutPlayApp;
 
 impl PluginApp for LayoutPlayApp {
@@ -2085,12 +2086,13 @@ fn register_layout_exports() {
     semio_framework_os::register_dwg_import_handler("2d.layout", layout_document_json_from_dwg);
 }
 
-fn bundle() -> PluginBundle {
-    register_layout_exports();
-    PluginBundle::new("layout", "Layout", "0.1.0").register_app(create_layout_app(), || Box::new(LayoutPlayApp))
+semio_framework_plugin::semio_plugin! {
+    id: "layout",
+    label: "Layout",
+    version: "0.1.0",
+    setup: register_layout_exports,
+    apps: [ create_layout_app => LayoutPlayApp ],
 }
-
-semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖AppFactory
 
 //#region 🧪Tests

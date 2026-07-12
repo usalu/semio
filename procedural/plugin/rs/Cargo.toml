@@ -7,6 +7,21 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:procedural"
 
+[package.metadata.semio]
+consumes = ["forms.questionKind"]
+
+[[package.metadata.semio.playground]]
+variant = "procedural2d"
+app = "procedural2d-play"
+aliases = ["procedural 2d"]
+ports = { react = 6021, wgpu = 6121 }
+
+[[package.metadata.semio.playground]]
+variant = "procedural3d"
+app = "procedural3d-play"
+aliases = ["procedural 3d"]
+ports = { react = 6018, wgpu = 6118 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

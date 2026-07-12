@@ -1547,6 +1547,7 @@ fn apply_engagement(play: &mut WriterPlayEnvelope, value: &str) {
 //#endregion 🔖Engagement
 
 //#region 🔖WriterApp
+#[derive(Default)]
 struct WriterApp;
 
 impl PluginApp for WriterApp {
@@ -1964,11 +1965,13 @@ fn create_writer_app() -> App {
     .program("writer", "Writer", "text.document")
 }
 
-fn writer_bundle() -> PluginBundle {
-    PluginBundle::new("writer", "Writer", "0.1.0").register_app(create_writer_app(), || Box::new(WriterApp))
-}
+fn register_writer_exports() {}
 
-semio_framework_plugin::plugin_exports!(writer_bundle);
+semio_framework_plugin::semio_plugin! {
+    id: "writer", label: "Writer", version: "0.1.0",
+    setup: register_writer_exports,
+    apps: [ create_writer_app => WriterApp ],
+}
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

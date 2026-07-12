@@ -4619,6 +4619,7 @@ fn start_interaction_session(envelope: &mut CadPlayEnvelope, pane: CadPaneId, in
 }
 
 //#region 🔖CadApp
+#[derive(Default)]
 struct CadApp;
 
 impl PluginApp for CadApp {
@@ -5489,11 +5490,6 @@ fn create_cad_app() -> App {
     .program("cad", "CAD", "model")
 }
 
-fn bundle() -> PluginBundle {
-    register_cad_exports();
-    PluginBundle::new("cad", "CAD", "0.1.0").register_app(create_cad_app(), || Box::new(CadApp))
-}
-
 fn cad_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
     let envelope: CadPlayEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
     Ok(export_mesh_from_envelope(&envelope))
@@ -5528,7 +5524,11 @@ fn register_cad_exports() {
     semio_framework_os::register_dwg_import_handler("3d.cad", cad_document_from_dwg);
 }
 
-semio_framework_plugin::plugin_exports!(bundle);
+semio_framework_plugin::semio_plugin! {
+    id: "cad", label: "CAD", version: "0.1.0",
+    setup: register_cad_exports,
+    apps: [ create_cad_app => CadApp ],
+}
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

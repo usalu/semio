@@ -11,6 +11,7 @@ import {
   devServerUrl,
   getWorkspaceRoot,
   isDevPortInUse,
+  loadFrameworkOsPlaygroundCatalog,
   probeWgpuDevPort,
   stopTrunkDevPort,
   wgpuDevPlayUrl,
@@ -19,13 +20,39 @@ import {
   runViteBunxDev,
   frameworkOsPlaygroundDefaultPort,
 } from "../../../../repo/lib/js/index.ts";
-import { contributorPluginIdsFor, resolvePluginRegistryId } from "../../../core/js/index.ts";
 import { generatePluginRegistry, isStudioPluginFilter, type PluginRegistryEntry } from "../../../plugin/registry/script.ts";
 
 const repoRoot = getWorkspaceRoot();
 const pluginOutRoot = join(repoRoot, "framework/product/os/dev/plugin-modules");
 
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
+
+//#region 🔖PlaygroundVariantResolution
+/** @emoji 📚 Generated playground catalog (variant -> crate pluginId + optional app id), loaded once for this process via `@semio-tech/repo-lib`'s `loadFrameworkOsPlaygroundCatalog` (backed by `framework/plugin/registry/generated/playgrounds.ts`). */
+const playgroundCatalog = loadFrameworkOsPlaygroundCatalog();
+
+/** @emoji 🧭 A resolved playground filter: the crate pluginId to build/load, plus the app id to inject when the filter matched a catalog variant row. */
+type ResolvedPlaygroundFilter = {
+  readonly pluginId: string;
+  readonly appId?: string;
+};
+
+/**
+ * 🧭 Resolves `filterPlugin` (a playground variant id like "puzzle5d", or already a bare crate
+ * pluginId like "note") against the generated playground catalog: a matching variant row yields
+ * its crate pluginId and app id, otherwise `filterPlugin` is treated as already being a bare
+ * pluginId (existing behavior for single-app crates where variant === pluginId).
+ */
+function resolvePlaygroundFilter(filterPlugin: string): ResolvedPlaygroundFilter {
+  const row = playgroundCatalog.find((entry) => entry.variant === filterPlugin);
+  return row ? { pluginId: row.pluginId, appId: row.app } : { pluginId: filterPlugin };
+}
+
+/** @emoji 🎯 Resolves a raw filter to the crate pluginId `generatePluginRegistry`'s `filterPlaygroundPlugin` option expects, or `undefined` for the unfiltered/studio case. */
+function resolveCatalogFilterPluginId(filterPlugin?: string): string | undefined {
+  return filterPlugin && !isStudioPluginFilter(filterPlugin) ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
+}
+//#endregion 🔖PlaygroundVariantResolution
 
 //#region BackboneVitePlugin
 const hostBackboneFiles = new Map<string, string>();
@@ -547,17 +574,17 @@ async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
 async function ensurePluginRegistry(filterPlugin?: string): Promise<void> {
   const registryScript = join(repoRoot, "framework/plugin/registry/script.ts");
   const args = ["generate"];
-  if (filterPlugin && !isStudioPluginFilter(filterPlugin)) args.push(filterPlugin);
+  const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
+  if (filterPluginId) args.push(filterPluginId);
   const generate = spawnSync("bun", [registryScript, ...args], { cwd: repoRoot, stdio: "inherit" });
   if (generate.status !== 0) throw new Error("plugin registry generation failed");
 }
 
 function resolvePluginBuildTargets(entries: readonly PluginRegistryEntry[], filterPlugin?: string): readonly PluginRegistryEntry[] {
-  const registryId = filterPlugin ? resolvePluginRegistryId(filterPlugin) : undefined;
-  const extraIds = registryId ? new Set(contributorPluginIdsFor(registryId)) : new Set<string>();
-  const targets = registryId ? entries.filter((target) => target.pluginId === registryId || extraIds.has(target.pluginId)) : entries;
+  const resolvedPluginId = filterPlugin ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
+  const targets = resolvedPluginId ? entries.filter((target) => target.pluginId === resolvedPluginId) : entries;
   if (filterPlugin && targets.length === 0) {
-    throw new Error(`no plugin build targets for filter ${JSON.stringify(filterPlugin)} (resolved registry id: ${registryId ?? "none"})`);
+    throw new Error(`no plugin build targets for filter ${JSON.stringify(filterPlugin)} (resolved plugin id: ${resolvedPluginId ?? "none"})`);
   }
   return targets;
 }
@@ -565,7 +592,8 @@ function resolvePluginBuildTargets(entries: readonly PluginRegistryEntry[], filt
 async function buildPlugins(filterPlugin?: string): Promise<void> {
   ensureWasmTarget();
   await ensurePluginRegistry(filterPlugin);
-  const catalogEntries = generatePluginRegistry(repoRoot, filterPlugin && !isStudioPluginFilter(filterPlugin) ? { filterPlaygroundPlugin: filterPlugin } : {});
+  const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
+  const catalogEntries = generatePluginRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {});
   mkdirSync(pluginOutRoot, { recursive: true });
   ensurePreview2ShimVendor();
   rewriteExistingPluginShimImports();
@@ -595,7 +623,8 @@ class PluginWatchScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND;
     await buildPlugins(filterPlugin || undefined);
-    const catalogEntries = generatePluginRegistry(repoRoot, filterPlugin && !isStudioPluginFilter(filterPlugin) ? { filterPlaygroundPlugin: filterPlugin } : {});
+    const filterPluginId = resolveCatalogFilterPluginId(filterPlugin || undefined);
+    const catalogEntries = generatePluginRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {});
     const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin || undefined);
     for (const target of targets) {
       const watchRoot = join(repoRoot, target.cratePath);
@@ -643,7 +672,7 @@ class DevScript extends BundleScript {
     const renderer = process.env.SEMIO_RENDERER ?? "react";
     const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
     await buildEngineWasm(plugin, renderer);
-    const defaultPort = String(frameworkOsPlaygroundDefaultPort(plugin, renderer));
+    const defaultPort = String(frameworkOsPlaygroundDefaultPort(playgroundCatalog, plugin, renderer));
     if (renderer === "wgpu") {
       const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
       const port = Number(process.env.S_OS_PORT ?? defaultPort);
@@ -686,6 +715,7 @@ class DevScript extends BundleScript {
       console.log(`[dev] wgpu trunk serving at ${playUrl}`);
       return;
     }
+    const resolvedFilter = resolvePlaygroundFilter(plugin);
     runViteBunxDev(this.root, segments, {
       portEnv: "S_OS_PORT",
       defaultPort,
@@ -694,7 +724,8 @@ class DevScript extends BundleScript {
         SEMIO_PLUGIN: plugin,
         SEMIO_RENDERER: renderer,
         VITE_SEMIO_RENDERER: renderer,
-        VITE_SEMIO_PLUGIN: plugin,
+        VITE_SEMIO_PLUGIN: resolvedFilter.pluginId,
+        ...(resolvedFilter.appId ? { VITE_SEMIO_APP_ID: resolvedFilter.appId } : {}),
       },
     });
   }

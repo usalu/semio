@@ -7,6 +7,13 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:forms"
 
+[package.metadata.semio]
+consumes = ["forms.questionKind"]
+
+[[package.metadata.semio.playground]]
+variant = "forms"
+ports = { react = 6058, wgpu = 6158 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

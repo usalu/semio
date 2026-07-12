@@ -753,6 +753,7 @@ pub mod app_2d {
     //#endregion 🔖Render
 
     //#region 🔖Procedural2dPlayApp
+    #[derive(Default)]
     pub struct Procedural2dPlayApp;
 
     impl PluginApp for Procedural2dPlayApp {
@@ -2206,6 +2207,7 @@ pub mod app_3d {
     //#endregion 🔖GenerateRender
 
     //#region 🔖Procedural3dPlayApp
+    #[derive(Default)]
     pub struct Procedural3dPlayApp;
 
     impl PluginApp for Procedural3dPlayApp {
@@ -3259,17 +3261,20 @@ pub mod app_3d {
     //#endregion 🧪Tests
 }
 
-use semio_framework_plugin::PluginBundle;
-
 //#region 🔖Bundle
-fn bundle() -> PluginBundle {
+fn register_procedural_exports() {
     app_2d::register_procedural2d_exports();
     app_3d::register_procedural3d_exports();
-    PluginBundle::new("procedural", "Procedural", "0.1.0")
-        .register_app(app_2d::create_procedural2d_app(), || Box::new(app_2d::Procedural2dPlayApp))
-        .register_app(app_3d::create_procedural3d_app(), || Box::new(app_3d::Procedural3dPlayApp))
 }
 
-#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-semio_framework_plugin::plugin_exports!(bundle);
+semio_framework_plugin::semio_plugin! {
+    id: "procedural",
+    label: "Procedural",
+    version: "0.1.0",
+    setup: register_procedural_exports,
+    apps: [
+        app_2d::create_procedural2d_app => app_2d::Procedural2dPlayApp,
+        app_3d::create_procedural3d_app => app_3d::Procedural3dPlayApp,
+    ]
+}
 //#endregion 🔖Bundle

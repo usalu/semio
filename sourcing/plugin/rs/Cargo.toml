@@ -7,6 +7,14 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:sourcing"
 
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "sourcing"
+app = "sourcing-curate"
+aliases = ["curate"]
+ports = { react = 6081, wgpu = 6181 }
+
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
 

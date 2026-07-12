@@ -743,6 +743,7 @@ fn render_history(envelope: &VcsDemoEnvelope) -> UiNode {
 //#endregion 🔖Render
 
 //#region 🔖VcsPlayApp
+#[derive(Default)]
 struct VcsPlayApp;
 
 impl PluginApp for VcsPlayApp {
@@ -942,11 +943,13 @@ fn create_vcs_app() -> App {
     )
 }
 
-fn vcs_bundle() -> PluginBundle {
-    PluginBundle::new("vcs", "VCS", "0.1.0").register_app(create_vcs_app(), || Box::new(VcsPlayApp))
-}
+fn register_vcs_exports() {}
 
-semio_framework_plugin::plugin_exports!(vcs_bundle);
+semio_framework_plugin::semio_plugin! {
+    id: "vcs", label: "VCS", version: "0.1.0",
+    setup: register_vcs_exports,
+    apps: [ create_vcs_app => VcsPlayApp ],
+}
 //#endregion 🔖AppFactory
 
 //#region 🧪Tests

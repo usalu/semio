@@ -7,6 +7,12 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:dag"
 
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "dag"
+ports = { react = 6017, wgpu = 6117 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

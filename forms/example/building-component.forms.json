@@ -8,7 +8,7 @@
       "id": "identity",
       "title": "Identity",
       "description": "Basic component metadata and material selection.",
-      "questions": [
+      "blocks": [
         {
           "id": "name",
           "kind": "text",
@@ -71,7 +71,7 @@
       "id": "geometry",
       "title": "Geometry",
       "description": "Parametric geometry and dimensional controls.",
-      "questions": [
+      "blocks": [
         {
           "id": "info-note",
           "kind": "note",

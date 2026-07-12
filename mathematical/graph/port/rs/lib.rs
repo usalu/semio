@@ -1,6 +1,5 @@
 //! 🔌 Port graph layer: handles and port descriptors on generic graph engine.
 
-pub use mathematical_core::{Directed, Ported};
 pub use mathematical_graph::*;
 
 use serde::{Deserialize, Serialize};

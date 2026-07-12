@@ -12,7 +12,7 @@ use semio_framework_plugin::{SurfaceKind,
     ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Contribution,
     PanelGroup, ActionDescriptor, PluginApp, PluginBundle, UiButtonNode,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
-    UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
+    UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -47,7 +47,7 @@ const DEFAULT_EXAMPLE_JSON: &str = r##"{
     {
       "id": "contact",
       "title": "Contact",
-      "questions": [
+      "blocks": [
         { "id": "name", "kind": "text", "label": "Name", "required": true, "placeholder": "Your name" },
         { "id": "email", "kind": "text", "label": "Email", "required": true, "placeholder": "you@example.com" },
         { "id": "message", "kind": "longText", "label": "Message", "placeholder": "How can we help?" }
@@ -65,7 +65,7 @@ const ONBOARDING_EXAMPLE_JSON: &str = r##"{
       "id": "profile",
       "title": "Profile",
       "description": "Tell us about yourself.",
-      "questions": [
+      "blocks": [
         { "id": "full-name", "kind": "text", "label": "Full name", "required": true, "default": "Alex Example" },
         { "id": "bio", "kind": "longText", "label": "Bio", "placeholder": "Short introduction" },
         { "id": "age", "kind": "number", "label": "Age", "min": 13, "max": 120, "default": 28 },
@@ -77,7 +77,7 @@ const ONBOARDING_EXAMPLE_JSON: &str = r##"{
       "id": "preferences",
       "title": "Preferences",
       "description": "Customize your experience.",
-      "questions": [
+      "blocks": [
         { "id": "theme-color", "kind": "color", "label": "Accent color", "default": "#336699" },
         { "id": "start-date", "kind": "date", "label": "Start date", "default": "2026-07-01" },
         { "id": "notifications", "kind": "boolean", "label": "Enable notifications", "default": true },
@@ -123,7 +123,7 @@ const ONBOARDING_EXAMPLE_JSON: &str = r##"{
     {
       "id": "advanced",
       "title": "Advanced",
-      "questions": [
+      "blocks": [
         { "id": "show-team-size", "kind": "boolean", "label": "Specify team size", "default": false },
         {
           "id": "team-size",
@@ -270,7 +270,7 @@ fn forms_play_step_tree_id(step_id: &str) -> String {
 
 fn find_question_location(spec: &FormSpec, question_id: &str) -> Option<QuestionLocation> {
     for step in &spec.steps {
-        if let Some(question) = step.questions.iter().find(|question| question.id == question_id) {
+        if let Some(question) = step.blocks.iter().find(|question| question.id == question_id) {
             return Some(QuestionLocation {
                 step_id: step.id.clone(),
                 question: question.clone(),
@@ -326,8 +326,8 @@ fn find_question_kind_contribution<'a>(
     kind: &str,
 ) -> Option<(&'a str, &'a Contribution)> {
     contributions.iter().find_map(|entry| {
-        if let Contribution::FormsQuestionKind { question_kind, .. } = &entry.contribution {
-            if question_kind == kind {
+        if let Contribution::ProtocolBlockKind { block_kind, .. } = &entry.contribution {
+            if block_kind == kind {
                 return Some((entry.plugin_id.as_str(), &entry.contribution));
             }
         }
@@ -370,7 +370,7 @@ fn render_extension_question(
     let Some((plugin_id, contribution)) = find_question_kind_contribution(contributions, &question.kind) else {
         return ui_text(format!("Extension unavailable: {}", question.kind));
     };
-    let Contribution::FormsQuestionKind {
+    let Contribution::ProtocolBlockKind {
         app_id,
         params_body_key,
         preview_body_key,
@@ -391,7 +391,7 @@ fn render_extension_question(
 fn flatten_questions(spec: &FormSpec) -> Vec<(String, FormQuestion)> {
     spec.steps
         .iter()
-        .flat_map(|step| step.questions.iter().map(|question| (step.title.clone(), question.clone())))
+        .flat_map(|step| step.blocks.iter().map(|question| (step.title.clone(), question.clone())))
         .collect()
 }
 
@@ -546,19 +546,19 @@ fn resolve_step_id_from_tree_target(spec: &FormSpec, target_id: &str) -> Option<
 fn resolve_question_insert_index(spec: &FormSpec, step_id: &str, target_id: &str, drop_position: &str) -> Option<usize> {
     let step = spec.steps.iter().find(|step| step.id == step_id)?;
     if target_id.starts_with("step:") {
-        return Some(if drop_position == "before" { 0 } else { step.questions.len() });
+        return Some(if drop_position == "before" { 0 } else { step.blocks.len() });
     }
-    let target_index = step.questions.iter().position(|question| question.id == target_id)?;
+    let target_index = step.blocks.iter().position(|question| question.id == target_id)?;
     Some(match drop_position {
         "before" => target_index,
         "after" => target_index + 1,
-        _ => step.questions.len(),
+        _ => step.blocks.len(),
     })
 }
 
 fn update_question(store: &mut FormsStore, step_id: &str, question: FormQuestion) {
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![FormOp::UpdateQuestion { step_id: step_id.into(), question }],
+        operations: vec![FormOp::UpdateBlock { step_id: step_id.into(), question }],
         description: None,
     });
 }
@@ -754,14 +754,14 @@ fn catalogue_kinds(contributions: &[PluginContributionEntry], labels: &FormsLabe
         })
         .collect();
     for entry in contributions {
-        if let Contribution::FormsQuestionKind {
-            question_kind,
+        if let Contribution::ProtocolBlockKind {
+            block_kind,
             label,
             icon_id,
             ..
         } = &entry.contribution
         {
-            kinds.push((question_kind.clone(), label.clone(), icon_id.clone()));
+            kinds.push((block_kind.clone(), label.clone(), icon_id.clone()));
         }
     }
     kinds
@@ -971,218 +971,31 @@ fn forms_labels(view_state: &ViewState) -> &'static FormsLabels {
 //#endregion 🔖Terminology
 
 //#region 🔖Builder
-fn builder_text_editor(id: String, label: &str, value: String, on_change: ActionDescriptor) -> UiNode {
-    UiNode::Field(UiFieldNode {
-        id: id.clone(),
-        label: label.into(),
-        description: None,
-        required: None,
-        error: None,
-        child: Box::new(UiNode::Input(UiInputNode {
-            id: format!("{id}.input"),
-            input_kind: "text".into(),
-            value,
-            placeholder: None,
-            commit: None,
-            on_change,
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-        })),
-    })
-}
-
-fn builder_button(id: String, icon_id: &str, label: &str, action: ActionDescriptor, disabled: bool) -> UiNode {
-    UiNode::Button(UiButtonNode {
-        id: Some(id),
-        icon_id: icon_id.into(),
-        label: label.into(),
-        action,
-        style: None,
-        disabled: Some(disabled).filter(|disabled| *disabled),
-    })
-}
-
-fn builder_question_card(
-    question: &FormQuestion,
-    step: &FormStep,
-    index: usize,
-    selected_ids: &[String],
-    contributions: &[PluginContributionEntry],
-    labels: &FormsLabels,
-) -> UiNode {
-    let question_ids = vec![question.id.clone()];
-    let prefix = format!("forms-blueprint.{}", question.id);
-    let kind_label = catalogue_kinds(contributions, labels)
-        .into_iter()
-        .find(|(kind, _, _)| *kind == question.kind)
-        .map(|(_, label, _)| label)
-        .unwrap_or_else(|| question.kind.clone());
-    let required = question.required.unwrap_or(false);
-    let mut children = vec![
-        ui_text_emphasized(format!("{kind_label} · {}", question.id)),
-        builder_text_editor(
-            format!("{prefix}.label"),
-            labels.label,
-            question.label.clone(),
-            forms_action("patchQuestions", Some(json!({ "questionIds": question_ids, "field": "label" }))),
-        ),
-        UiNode::Field(UiFieldNode {
-            id: format!("{prefix}.required"),
-            label: labels.required.into(),
-            description: None,
-            required: None,
-            error: None,
-            child: Box::new(UiNode::Toggle(UiToggleNode {
-                id: format!("{prefix}.required.toggle"),
-                icon_id: "check".into(),
-                pressed: required,
-                text: Some(if required { labels.yes.into() } else { labels.no.into() }),
-                on_change: forms_action("patchQuestions", Some(json!({ "questionIds": question_ids, "field": "required" }))),
-            })),
-        }),
-    ];
-    children.extend(question_kind_editor_fields(question, &question_ids, contributions, &prefix, labels));
-    children.push(ui_stack_horizontal(vec![
-        builder_button(
-            format!("{prefix}.remove"),
-            "trash-2",
-            labels.remove_question,
-            forms_action("removeQuestion", Some(json!({ "questionId": question.id }))),
-            false,
-        ),
-        builder_button(
-            format!("{prefix}.move-up"),
-            "arrow-up",
-            labels.move_up,
-            forms_action(
-                "moveQuestion",
-                Some(json!({ "questionId": question.id, "toStepId": step.id, "index": index.saturating_sub(1) })),
-            ),
-            index == 0,
-        ),
-        builder_button(
-            format!("{prefix}.move-down"),
-            "arrow-down",
-            labels.move_down,
-            forms_action(
-                "moveQuestion",
-                Some(json!({ "questionId": question.id, "toStepId": step.id, "index": index + 1 })),
-            ),
-            index + 1 >= step.questions.len(),
-        ),
-    ]));
-    UiNode::Stack(UiStackNode {
-        direction: "vertical".into(),
-        gap: Some("tight".into()),
-        padding: None,
-        id: Some(format!("forms-blueprint.card.{}", question.id)),
-        selected: Some(selected_ids.contains(&question.id)).filter(|selected| *selected),
-        activate: Some(forms_action("setSelection", Some(json!({ "ids": [question.id] })))),
-        drop_action: Some(forms_action(
-            "dropQuestionKind",
-            Some(json!({ "targetId": question.id, "dropPosition": "after" })),
-        )),
-        children,
-    })
-}
-
-fn builder_step_section(
-    spec: &FormSpec,
-    step: &FormStep,
-    step_index: usize,
-    selected_ids: &[String],
-    contributions: &[PluginContributionEntry],
-    labels: &FormsLabels,
-) -> UiNode {
-    let prefix = format!("forms-blueprint.step.{}", step.id);
-    let mut children = vec![
-        builder_text_editor(
-            format!("{prefix}.title"),
-            labels.title,
-            step.title.clone(),
-            forms_action("patchStep", Some(json!({ "stepId": step.id, "field": "title" }))),
-        ),
-        builder_text_editor(
-            format!("{prefix}.description"),
-            labels.description,
-            step.description.clone().unwrap_or_default(),
-            forms_action("patchStep", Some(json!({ "stepId": step.id, "field": "description" }))),
-        ),
-    ];
-    for (index, question) in step.questions.iter().enumerate() {
-        children.push(builder_question_card(question, step, index, selected_ids, contributions, labels));
+fn forms_protocol_builder_config() -> semio_framework_plugin::ProtocolBuilderConfig {
+    semio_framework_plugin::ProtocolBuilderConfig {
+        action_namespace: "forms-blueprint",
+        controller_id: FORMS_PLAY_CONTROLLER_ID,
+        labels: semio_framework_plugin::PROTOCOL_BUILDER_LABELS_EN,
     }
-    children.push(UiNode::Stack(UiStackNode {
-        direction: "vertical".into(),
-        gap: Some("tight".into()),
-        padding: None,
-        id: Some(format!("{prefix}.dropzone")),
-        selected: None,
-        activate: None,
-        drop_action: Some(forms_action(
-            "dropQuestionKind",
-            Some(json!({ "targetId": forms_play_step_tree_id(&step.id), "dropPosition": "inside" })),
-        )),
-        children: vec![ui_text(labels.drop_question_kind_here)],
-    }));
-    children.push(ui_stack_horizontal(vec![
-        builder_button(
-            format!("{prefix}.add-question"),
-            "plus",
-            labels.add_question,
-            forms_action("addQuestion", Some(json!({ "stepId": step.id, "kind": "text" }))),
-            false,
-        ),
-        builder_button(
-            format!("{prefix}.remove"),
-            "trash-2",
-            labels.remove_step,
-            forms_action("removeStep", Some(json!({ "stepId": step.id }))),
-            false,
-        ),
-        builder_button(
-            format!("{prefix}.move-up"),
-            "arrow-up",
-            labels.move_up,
-            forms_action("moveStep", Some(json!({ "stepId": step.id, "index": step_index.saturating_sub(1) }))),
-            step_index == 0,
-        ),
-        builder_button(
-            format!("{prefix}.move-down"),
-            "arrow-down",
-            labels.move_down,
-            forms_action("moveStep", Some(json!({ "stepId": step.id, "index": step_index + 1 }))),
-            step_index + 1 >= spec.steps.len(),
-        ),
-    ]));
-    UiNode::Section(UiSectionNode {
-        id: prefix,
-        label: Some(step.title.clone()),
-        default_open: Some(true),
-        children,
-    })
 }
 
 fn render_blueprint_builder(spec: &FormSpec, play: &FormsPlayEnvelope, contributions: &[PluginContributionEntry], labels: &FormsLabels) -> UiNode {
-    let mut children = vec![builder_text_editor(
-        "forms-blueprint.title".into(),
-        labels.form_title,
-        spec.title.clone().unwrap_or_default(),
-        forms_action("updateForm", Some(json!({ "field": "title" }))),
-    )];
-    for (step_index, step) in spec.steps.iter().enumerate() {
-        children.push(builder_step_section(spec, step, step_index, &play.selected_ids, contributions, labels));
-    }
-    children.push(builder_button(
-        "forms-blueprint.add-step".into(),
-        "plus",
-        labels.add_step,
-        forms_action("addStep", None),
-        false,
-    ));
-    ui_stack_vertical(children)
+    let palette: Vec<semio_framework_plugin::ProtocolPaletteEntry> = catalogue_kinds(contributions, labels)
+        .into_iter()
+        .map(|(kind, label, icon_id)| semio_framework_plugin::ProtocolPaletteEntry {
+            block_kind: kind,
+            label,
+            icon_id,
+        })
+        .collect();
+    let config = forms_protocol_builder_config();
+    semio_framework_plugin::render_protocol_builder(
+        FORMS_PLAY_SURFACE_BLUEPRINT,
+        spec,
+        &palette,
+        play.selected_ids.first().map(String::as_str),
+        &config,
+    )
 }
 //#endregion 🔖Builder
 
@@ -1509,7 +1322,7 @@ fn build_document_tree(spec: &FormSpec, selected_ids: &[String], labels: &FormsL
         .map(|step| UiTreeItemNode {
             id: forms_play_step_tree_id(&step.id),
             label: step.title.clone(),
-            description: Some(format!("{} questions", step.questions.len())),
+            description: Some(format!("{} questions", step.blocks.len())),
             icon_id: Some("list-tree".into()),
             selected: None,
             default_open: Some(true),
@@ -1520,7 +1333,7 @@ fn build_document_tree(spec: &FormSpec, selected_ids: &[String], labels: &FormsL
             draggable: Some(true),
             drag_data: None,
             items: Some(
-                step.questions
+                step.blocks
                     .iter()
                     .map(|question| UiTreeItemNode {
                         id: question.id.clone(),
@@ -2041,6 +1854,7 @@ fn build_inspector_tree(
 //#endregion 🔖Panels
 
 //#region 🔖FormsPlayApp
+#[derive(Default)]
 struct FormsPlayApp;
 
 impl PluginApp for FormsPlayApp {
@@ -2084,7 +1898,7 @@ impl PluginApp for FormsPlayApp {
                     id: create_form_id("step"),
                     title: format!("Step {}", projection.steps.len() + 1),
                     description: None,
-                    questions: Vec::new(),
+                    blocks: Vec::new(),
                 };
                 let _ = store.dispatch(DocumentVcsCommand::Apply {
                     operations: vec![FormOp::AddStep { step, index: None }],
@@ -2129,7 +1943,7 @@ impl PluginApp for FormsPlayApp {
                     .steps
                     .iter()
                     .filter(|step| step.id == step_id)
-                    .flat_map(|step| step.questions.iter().map(|question| question.id.clone()))
+                    .flat_map(|step| step.blocks.iter().map(|question| question.id.clone()))
                     .collect();
                 let _ = store.dispatch(DocumentVcsCommand::Apply {
                     operations: vec![FormOp::RemoveStep { step_id: step_id.into() }],
@@ -2155,17 +1969,17 @@ impl PluginApp for FormsPlayApp {
                 play.try_values.clear();
                 return apply_store_action(&mut play, &mut store);
             }
-            "updateForm" => {
+            "updateForm" | "updateProtocol" => {
                 let title = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
                 let _ = store.dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![FormOp::UpdateForm {
+                    operations: vec![FormOp::UpdateProtocol {
                         title: Some(title.to_string()).filter(|title| !title.is_empty()),
                     }],
                     description: None,
                 });
                 return apply_store_action(&mut play, &mut store);
             }
-            "addQuestion" => {
+            "addQuestion" | "addBlock" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("text");
                 let projection = store.projection().unwrap_or_else(|_| materialized_projection(&play));
                 let step_id = args
@@ -2179,7 +1993,7 @@ impl PluginApp for FormsPlayApp {
                 let question = default_question_for_kind(kind, create_form_id("q"));
                 let select_id = question.id.clone();
                 let _ = store.dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![FormOp::AddQuestion {
+                    operations: vec![FormOp::AddBlock {
                         step_id,
                         question,
                         index: None,
@@ -2190,7 +2004,7 @@ impl PluginApp for FormsPlayApp {
                 play.selected_ids = vec![select_id];
                 return apply_store_action(&mut play, &mut store);
             }
-            "removeQuestion" => {
+            "removeQuestion" | "removeBlock" => {
                 let question_id = args.and_then(|value| value.get("questionId")).and_then(|value| value.as_str()).unwrap_or("");
                 if question_id.is_empty() {
                     return Vec::new();
@@ -2200,7 +2014,7 @@ impl PluginApp for FormsPlayApp {
                     return Vec::new();
                 };
                 let _ = store.dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![FormOp::RemoveQuestion {
+                    operations: vec![FormOp::RemoveBlock {
                         step_id: location.step_id,
                         question_id: question_id.into(),
                     }],
@@ -2312,7 +2126,7 @@ impl PluginApp for FormsPlayApp {
                     return apply_store_action(&mut play, &mut store);
                 }
             }
-            "moveQuestion" => {
+            "moveQuestion" | "moveBlock" => {
                 let question_id = args.and_then(|value| value.get("questionId")).and_then(|value| value.as_str());
                 let to_step_id = args.and_then(|value| value.get("toStepId")).and_then(|value| value.as_str());
                 let target_id = args
@@ -2332,7 +2146,7 @@ impl PluginApp for FormsPlayApp {
                 let target_id = target_id.unwrap_or(question_id);
                 let index = resolve_question_insert_index(&projection, to_step_id, target_id, position).unwrap_or(0);
                 let _ = store.dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![FormOp::MoveQuestion {
+                    operations: vec![FormOp::MoveBlock {
                         question_id: question_id.into(),
                         from_step_id: source.step_id,
                         to_step_id: to_step_id.into(),
@@ -2361,7 +2175,7 @@ impl PluginApp for FormsPlayApp {
                 let question = default_question_for_kind(kind, create_form_id("q"));
                 let select_id = question.id.clone();
                 let _ = store.dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![FormOp::AddQuestion {
+                    operations: vec![FormOp::AddBlock {
                         step_id,
                         question,
                         index,
@@ -2583,11 +2397,15 @@ fn create_forms_app() -> App {
     .program("forms", "Forms", "data")
 }
 
-fn forms_bundle() -> PluginBundle {
-    PluginBundle::new("forms", "Forms", "0.1.0").register_app(create_forms_app(), || Box::new(FormsPlayApp))
-}
+fn register_forms_exports() {}
 
-semio_framework_plugin::plugin_exports!(forms_bundle);
+semio_framework_plugin::semio_plugin! {
+    id: "forms",
+    label: "Forms",
+    version: "0.1.0",
+    setup: register_forms_exports,
+    apps: [ create_forms_app => FormsPlayApp ],
+}
 //#endregion 🔖AppFactory
 
 //#region 🧪Tests
@@ -2633,7 +2451,7 @@ mod tests {
         let document = app.initial_document_json();
         let play = parse_envelope(&document);
         let spec = materialized_projection(&play);
-        let first_question_id = spec.steps[0].questions[0].id.clone();
+        let first_question_id = spec.steps[0].blocks[0].id.clone();
         let node = app.render(FORMS_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("forms-blueprint.title"));
@@ -2649,7 +2467,7 @@ mod tests {
         let document = app.initial_document_json();
         let mut play = parse_envelope(&document);
         let spec = materialized_projection(&play);
-        let first_question_id = spec.steps[0].questions[0].id.clone();
+        let first_question_id = spec.steps[0].blocks[0].id.clone();
         play.selected_ids = vec![first_question_id.clone()];
         let node = app.render(FORMS_PLAY_BODY_BLUEPRINT, &serde_json::to_string(&play).unwrap(), &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
@@ -2801,7 +2619,7 @@ mod tests {
         );
         let next = apply_ops(&document, &ops);
         let spec = materialized_projection(&next);
-        assert!(spec.steps[0].questions.iter().any(|question| question.kind == "slider"));
+        assert!(spec.steps[0].blocks.iter().any(|question| question.kind == "slider"));
         assert_eq!(next.selected_ids.len(), 1);
     }
 
@@ -2830,9 +2648,9 @@ mod tests {
         let app = FormsPlayApp;
         let contributions = vec![PluginContributionEntry {
             plugin_id: "forms-module-procedural".into(),
-            contribution: Contribution::FormsQuestionKind {
+            contribution: Contribution::ProtocolBlockKind {
                 app_id: "forms-module-procedural".into(),
-                question_kind: "buildingComponent".into(),
+                block_kind: "buildingComponent".into(),
                 label: "Building Component".into(),
                 icon_id: "building".into(),
                 default_value_json: "{}".into(),
@@ -2944,7 +2762,7 @@ mod tests {
             id: "step-test".into(),
             title: "Review".into(),
             description: None,
-            questions: Vec::new(),
+            blocks: Vec::new(),
         };
         let next = apply_form_edit_op(&spec, &FormOp::AddStep { step, index: None });
         assert_eq!(next.steps.len(), 2);
@@ -2997,7 +2815,7 @@ mod tests {
         );
         let play = apply_ops(&app.initial_document_json(), &document);
         let spec = materialized_projection(&play);
-        let name_id = spec.steps[0].questions[0].id.clone();
+        let name_id = spec.steps[0].blocks[0].id.clone();
         let ops = app.handle_action_patch_ops(
             "patchQuestions",
             Some(&json!({ "questionIds": [name_id.clone()], "field": "required", "pressed": false })),
@@ -3006,7 +2824,7 @@ mod tests {
         );
         let next = apply_ops(&serde_json::to_string(&play).unwrap(), &ops);
         let next_spec = materialized_projection(&next);
-        let question = &next_spec.steps[0].questions[0];
+        let question = &next_spec.steps[0].blocks[0];
         assert!(!question.required.unwrap_or(true));
     }
 

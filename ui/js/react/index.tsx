@@ -2403,6 +2403,9 @@ export function ChromeControlHint({ id, text, children }: { readonly id?: string
 // Domain-neutral UI translation bundles (settings, tooltip, generic shell `ui.*` ids).
 // Product-specific bundles (e.g. compose sketchpad) register via {@link registerUiTranslationBundles}.
 
+// #region 🔑Schema & Keys
+// Type/key-derivation machinery: locale codes, label shapes, the deep dot-path key type, and compile-time key-coverage checks.
+
 /** @emoji 🪁 Supported UI locale codes. */
 export type UiLocale = "en" | "de";
 
@@ -2676,6 +2679,18 @@ export interface UiI18nPort {
   readonly isInitialized: boolean;
 }
 
+const _assertUiToolbarParentKeys: AssertUiToolbarParentKeysCovered<UiToolbarParentCategory> = true;
+
+const _assertUiSettingsLanguageKeys: AssertUiSettingsLanguageKeysCovered<UiLocale> = true;
+
+const _assertUiSettingsTerminologyKeys: AssertUiSettingsTerminologyKeysCovered<UiChromeTerminologyId> = true;
+
+// #endregion 🔑Schema & Keys
+
+// #region 🇩🇪 German Bundle
+// German (`de`) translation bundle: toolbar-parent labels here, plus the nested `de` translation tree further below
+// inside {@link uiChromeTranslationBundles} (kept as one object so both locales satisfy the same schema).
+
 const uiToolbarParentDe: UiToolbarParentEntries = {
   history: { label: { normal: "Verlauf", beginner: "Verlauf" } },
   hand: { label: { normal: "Hand", beginner: "Hand" } },
@@ -2697,6 +2712,12 @@ const uiToolbarParentDe: UiToolbarParentEntries = {
   tools: { label: { normal: "Werkzeuge", beginner: "Werkzeuge" } },
   sync: { label: { normal: "Sync", beginner: "Sync" } },
 };
+
+// #endregion 🇩🇪 German Bundle
+
+// #region 🇬🇧 English Bundle
+// English (`en`) translation bundle: toolbar-parent labels here, plus the nested `en` translation tree further below
+// inside {@link uiChromeTranslationBundles} (kept as one object so both locales satisfy the same schema).
 
 const uiToolbarParentEn: UiToolbarParentEntries = {
   history: { label: { normal: "History", beginner: "History" } },
@@ -2720,13 +2741,10 @@ const uiToolbarParentEn: UiToolbarParentEntries = {
   sync: { label: { normal: "Sync", beginner: "Sync" } },
 };
 
-const _assertUiToolbarParentKeys: AssertUiToolbarParentKeysCovered<UiToolbarParentCategory> = true;
-
-const _assertUiSettingsLanguageKeys: AssertUiSettingsLanguageKeysCovered<UiLocale> = true;
-
-const _assertUiSettingsTerminologyKeys: AssertUiSettingsTerminologyKeysCovered<UiChromeTerminologyId> = true;
+// #endregion 🇬🇧 English Bundle
 
 export const uiChromeTranslationBundles = {
+  // #region 🇩🇪 German Bundle
   de: {
     translation: {
       ui: {
@@ -3168,6 +3186,9 @@ export const uiChromeTranslationBundles = {
       },
     } satisfies UiTranslationSchema,
   },
+  // #endregion 🇩🇪 German Bundle
+
+  // #region 🇬🇧 English Bundle
   en: {
     translation: {
       ui: {
@@ -3609,7 +3630,11 @@ export const uiChromeTranslationBundles = {
       },
     } satisfies UiTranslationSchema,
   },
+  // #endregion 🇬🇧 English Bundle
 } satisfies Record<UiLocale, { readonly translation: UiTranslationSchema }>;
+
+// #region 🔌I18n Port
+// i18n "port"/wiring glue: registration functions, locale resolvers, the i18next module augmentation, and the shared port instance.
 
 export type UiTranslationLocaleCode = UiLocale;
 
@@ -3720,6 +3745,8 @@ export function useUiTranslation(): { readonly t: UiTranslateFn; readonly i18n: 
   const { t, i18n } = useTranslation();
   return { t: t as UiTranslateFn, i18n };
 }
+
+// #endregion 🔌I18n Port
 
 // #endregion 🪁I18n Resources
 
@@ -5067,6 +5094,94 @@ function CommandShortcut({ className, ...props }: React.ComponentProps<"span">) 
 // #endregion 🪆Command
 
 export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut };
+
+// #region 🔎ShellSearchDialog
+// Pure, prop-driven command-palette-style search dialog built from the Command/Dialog primitives above.
+// A shell supplies the query/results and owns filtering/navigation; this component only renders and forwards callbacks.
+
+/**
+ * A single pickable result row shared by {@link ShellSearchDialog} and {@link ShellFindDialog}.
+ **/
+export interface ShellCommandResult {
+  readonly id: string;
+  readonly label: string;
+  readonly icon?: string;
+  readonly hotkey?: string;
+}
+
+/**
+ * Props interface for the ShellSearchDialog component.
+ **/
+export interface ShellSearchDialogProps {
+  readonly open: boolean;
+  readonly query: string;
+  readonly onQueryChange: (query: string) => void;
+  readonly results: readonly ShellCommandResult[];
+  readonly onPick: (id: string) => void;
+  readonly onClose: () => void;
+}
+
+/** @emoji 🔎 Prop-driven command-palette search dialog a shell renders over its own search results. */
+export const ShellSearchDialog: React.FC<ShellSearchDialogProps> = ({ open, query, onQueryChange, results, onPick, onClose }) => {
+  return (
+    <CommandDialog open={open} onOpenChange={(next) => !next && onClose()} shouldFilter={false} title="Search" description="Search for anything...">
+      <CommandInput value={query} onValueChange={onQueryChange} placeholder="Search..." />
+      <CommandList>
+        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandGroup>
+          {results.map((result) => (
+            <CommandItem key={result.id} value={result.id} onSelect={() => onPick(result.id)}>
+              {renderControlIcon(result.icon as ControlIcon | undefined, "tiny")}
+              <span>{result.label}</span>
+              {result.hotkey ? <CommandShortcut>{result.hotkey}</CommandShortcut> : null}
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
+    </CommandDialog>
+  );
+};
+
+// #endregion 🔎ShellSearchDialog
+
+// #region 🔎ShellFindDialog
+// Pure, prop-driven command-palette-style find-in-scene dialog built from the Command/Dialog primitives above.
+// A shell supplies the query/results and owns filtering/navigation; this component only renders and forwards callbacks.
+
+/**
+ * Props interface for the ShellFindDialog component.
+ **/
+export interface ShellFindDialogProps {
+  readonly open: boolean;
+  readonly query: string;
+  readonly onQueryChange: (query: string) => void;
+  readonly results: readonly ShellCommandResult[];
+  readonly onPick: (id: string) => void;
+  readonly onClose: () => void;
+}
+
+/** @emoji 🔎 Prop-driven command-palette find dialog a shell renders over its own find-in-scene results. */
+export const ShellFindDialog: React.FC<ShellFindDialogProps> = ({ open, query, onQueryChange, results, onPick, onClose }) => {
+  return (
+    <CommandDialog open={open} onOpenChange={(next) => !next && onClose()} shouldFilter={false} title="Find" description="Find something in the scene...">
+      <CommandInput value={query} onValueChange={onQueryChange} placeholder="Find..." />
+      <CommandList>
+        <CommandEmpty>No matches found.</CommandEmpty>
+        <CommandGroup>
+          {results.map((result) => (
+            <CommandItem key={result.id} value={result.id} onSelect={() => onPick(result.id)}>
+              {renderControlIcon(result.icon as ControlIcon | undefined, "tiny")}
+              <span>{result.label}</span>
+              {result.hotkey ? <CommandShortcut>{result.hotkey}</CommandShortcut> : null}
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
+    </CommandDialog>
+  );
+};
+
+// #endregion 🔎ShellFindDialog
 
 // #region 🎮Footer
 // Status bar component at the bottom of the layout.
@@ -14554,6 +14669,137 @@ export { MobilePanel };
 
 // #endregion 💧MobilePanel
 
+// #region 🧭ShellDisplayPanel
+// Pure, prop-driven display-settings panel: choose/save/apply a named layout, toggle compact mode.
+// A shell hosts this panel and owns persistence; this component only renders and forwards callbacks.
+
+/**
+ * Named layout option offered by {@link ShellDisplayPanel}.
+ **/
+export interface ShellDisplayPanelLayoutOption {
+  readonly id: string;
+  readonly label: string;
+}
+
+/**
+ * Props interface for the ShellDisplayPanel component (a DisplayHostApi-shaped surface).
+ **/
+export interface ShellDisplayPanelProps {
+  readonly layouts: readonly ShellDisplayPanelLayoutOption[];
+  readonly activeLayoutId?: string;
+  readonly onLayoutChange?: (layoutId: string) => void;
+  readonly onSaveLayout?: () => void;
+  readonly onApplyLayout?: () => void;
+  readonly compact?: boolean;
+  readonly onCompactChange?: (compact: boolean) => void;
+  readonly className?: string;
+}
+
+/** @emoji 🧭 Prop-driven panel a shell renders for choosing/saving/applying a layout and toggling compact mode. */
+export const ShellDisplayPanel: React.FC<ShellDisplayPanelProps> = ({ layouts, activeLayoutId, onLayoutChange, onSaveLayout, onApplyLayout, compact = false, onCompactChange, className }) => {
+  return (
+    <div data-slot="shell-display-panel" className={cn("flex flex-col gap-double p-double", className)}>
+      <Field id="shell-display-panel.layout" label="Layout">
+        <Select value={activeLayoutId} onValueChange={onLayoutChange}>
+          <SelectTrigger id="shell-display-panel.layout">
+            <SelectValue placeholder="Choose a layout" />
+          </SelectTrigger>
+          <SelectContent>
+            {layouts.map((layout) => (
+              <SelectItem key={layout.id} value={layout.id}>
+                {layout.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+      <div data-slot="shell-display-panel-actions" className="flex gap-single">
+        <Button id="shell-display-panel.save" icon="save" text="Save" onClick={onSaveLayout} />
+        <Button id="shell-display-panel.apply" icon="check" text="Apply" onClick={onApplyLayout} />
+      </div>
+      <Field id="shell-display-panel.compact" label="Compact Mode">
+        <Toggle id="shell-display-panel.compact" pressed={compact} onPressedChange={onCompactChange} icon={compact ? "check" : "x"} text={compact ? "On" : "Off"} />
+      </Field>
+    </div>
+  );
+};
+
+// #endregion 🧭ShellDisplayPanel
+
+// #region 🧭ShellSettingsPanel
+// Pure, prop-driven app-settings panel: locale, theme, and expertise level.
+// A shell hosts this panel and owns persistence; this component only renders and forwards callbacks.
+
+/**
+ * Locale option offered by {@link ShellSettingsPanel}.
+ **/
+export interface ShellSettingsPanelLocaleOption {
+  readonly id: UiLocale;
+  readonly label: string;
+}
+
+/**
+ * Props interface for the ShellSettingsPanel component (a SettingsHostApi-shaped surface).
+ **/
+export interface ShellSettingsPanelProps {
+  readonly locale: UiLocale;
+  readonly locales: readonly ShellSettingsPanelLocaleOption[];
+  readonly onLocaleChange?: (locale: UiLocale) => void;
+  readonly theme: ElementsSurfaceAppearance;
+  readonly onThemeChange?: (theme: ElementsSurfaceAppearance) => void;
+  readonly expertise: Expertise;
+  readonly onExpertiseChange?: (expertise: Expertise) => void;
+  readonly className?: string;
+}
+
+/** @emoji 🧭 Prop-driven panel a shell renders for changing locale, theme, and expertise level. */
+export const ShellSettingsPanel: React.FC<ShellSettingsPanelProps> = ({ locale, locales, onLocaleChange, theme, onThemeChange, expertise, onExpertiseChange, className }) => {
+  return (
+    <div data-slot="shell-settings-panel" className={cn("flex flex-col gap-double p-double", className)}>
+      <Field id="shell-settings-panel.locale" label="Language">
+        <Select value={locale} onValueChange={(value) => onLocaleChange?.(value as UiLocale)}>
+          <SelectTrigger id="shell-settings-panel.locale">
+            <SelectValue placeholder="Choose a language" />
+          </SelectTrigger>
+          <SelectContent>
+            {locales.map((option) => (
+              <SelectItem key={option.id} value={option.id}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+      <Field id="shell-settings-panel.theme" label="Theme">
+        <Select value={theme} onValueChange={(value) => onThemeChange?.(value as ElementsSurfaceAppearance)}>
+          <SelectTrigger id="shell-settings-panel.theme">
+            <SelectValue placeholder="Choose a theme" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="system">System</SelectItem>
+            <SelectItem value="light">Light</SelectItem>
+            <SelectItem value="dark">Dark</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
+      <Field id="shell-settings-panel.expertise" label="Expertise Level">
+        <Select value={expertise} onValueChange={(value) => onExpertiseChange?.(value as Expertise)}>
+          <SelectTrigger id="shell-settings-panel.expertise">
+            <SelectValue placeholder="Choose an expertise level" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={Expertise.BEGINNER}>Beginner</SelectItem>
+            <SelectItem value={Expertise.NORMAL}>Normal</SelectItem>
+            <SelectItem value={Expertise.EXPERT}>Expert</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
+    </div>
+  );
+};
+
+// #endregion 🧭ShellSettingsPanel
+
 // #endregion 📷Panel Components
 
 // #region 🩻Toolbar Components
@@ -23911,6 +24157,55 @@ if (import.meta.vitest) {
       if (layout.kind === "row") {
         expect(layout.children).toHaveLength(2);
       }
+    });
+  });
+
+  describe("ShellDisplayPanel", () => {
+    it("renders without crashing given minimal props", () => {
+      const markup = renderToStaticMarkup(<ShellDisplayPanel layouts={[{ id: "default", label: "Default" }]} activeLayoutId="default" />);
+      expect(markup).toContain('data-slot="shell-display-panel"');
+      expect(markup).toContain("Default");
+    });
+
+    it("forwards save/apply/compact callbacks", () => {
+      const onSaveLayout = vi.fn();
+      const onApplyLayout = vi.fn();
+      const onCompactChange = vi.fn();
+      const { container } = render(
+        <ShellDisplayPanel layouts={[{ id: "default", label: "Default" }]} activeLayoutId="default" compact={false} onSaveLayout={onSaveLayout} onApplyLayout={onApplyLayout} onCompactChange={onCompactChange} />,
+      );
+      fireEvent.click(container.querySelector("#shell-display-panel\\.save")!);
+      fireEvent.click(container.querySelector("#shell-display-panel\\.apply")!);
+      fireEvent.click(container.querySelector("#shell-display-panel\\.compact")!);
+      expect(onSaveLayout).toHaveBeenCalledTimes(1);
+      expect(onApplyLayout).toHaveBeenCalledTimes(1);
+      expect(onCompactChange).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("ShellSettingsPanel", () => {
+    it("renders without crashing given minimal props", () => {
+      const markup = renderToStaticMarkup(
+        <ShellSettingsPanel locale="en" locales={[{ id: "en", label: "English" }, { id: "de", label: "Deutsch" }]} theme="system" expertise={Expertise.NORMAL} />,
+      );
+      expect(markup).toContain('data-slot="shell-settings-panel"');
+      expect(markup).toContain("English");
+    });
+  });
+
+  describe("ShellSearchDialog", () => {
+    it("renders without crashing given minimal props", () => {
+      const { container } = render(<ShellSearchDialog open query="" onQueryChange={() => undefined} results={[{ id: "a", label: "Alpha" }]} onPick={() => undefined} onClose={() => undefined} />);
+      expect(container.querySelector('[data-slot="command-input"]')).not.toBeNull();
+      expect(container.textContent).toContain("Alpha");
+    });
+  });
+
+  describe("ShellFindDialog", () => {
+    it("renders without crashing given minimal props", () => {
+      const { container } = render(<ShellFindDialog open query="" onQueryChange={() => undefined} results={[{ id: "b", label: "Bravo" }]} onPick={() => undefined} onClose={() => undefined} />);
+      expect(container.querySelector('[data-slot="command-input"]')).not.toBeNull();
+      expect(container.textContent).toContain("Bravo");
     });
   });
 }

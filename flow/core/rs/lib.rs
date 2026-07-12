@@ -4165,8 +4165,8 @@ mod flow_vcs_wasm {
 // #region 🔖FormsBridge
 pub mod forms_bridge {
     use super::{effective_stepper_fields, FlowFixture, Widget};
-    use forms::{
-        FormQuestion, FormQuestionOption, FormSpec, FormStep, FormVectorField, FORMS_DOCUMENT_SCHEMA,
+    use protocol::{
+        ProtocolBlock, ProtocolBlockOption, ProtocolSpec, ProtocolStep, ProtocolVectorField, PROTOCOL_DOCUMENT_SCHEMA,
     };
 
     fn humanize_widget_label(id: &str) -> String {
@@ -4202,9 +4202,9 @@ pub mod forms_bridge {
         }
     }
 
-    fn widget_to_form_question(widget: &Widget) -> Option<FormQuestion> {
+    fn widget_to_protocol_block(widget: &Widget) -> Option<ProtocolBlock> {
         match widget {
-            Widget::InputSlider { id, value, min, max, step, .. } => Some(FormQuestion {
+            Widget::InputSlider { id, value, min, max, step, .. } => Some(ProtocolBlock {
                 id: id.clone(),
                 label: humanize_widget_label(id),
                 kind: "slider".into(),
@@ -4228,7 +4228,7 @@ pub mod forms_bridge {
             }),
             Widget::InputStepper { id, schema, fields, step, .. } => {
                 let effective = effective_stepper_fields(schema, fields);
-                Some(FormQuestion {
+                Some(ProtocolBlock {
                     id: id.clone(),
                     label: humanize_widget_label(id),
                     kind: "vector".into(),
@@ -4245,7 +4245,7 @@ pub mod forms_bridge {
                     fields: Some(
                         effective
                             .iter()
-                            .map(|field| FormVectorField {
+                            .map(|field| ProtocolVectorField {
                                 key: field.key.clone(),
                                 label: Some(humanize_widget_label(&field.key)),
                                 value: Some(field.value),
@@ -4260,7 +4260,7 @@ pub mod forms_bridge {
                     condition: None,
                 })
             }
-            Widget::InputNote { id, text, .. } => Some(FormQuestion {
+            Widget::InputNote { id, text, .. } => Some(ProtocolBlock {
                 id: id.clone(),
                 label: humanize_widget_label(id),
                 kind: "note".into(),
@@ -4282,7 +4282,7 @@ pub mod forms_bridge {
                 params: None,
                 condition: None,
             }),
-            Widget::InputImage { id, src, .. } => Some(FormQuestion {
+            Widget::InputImage { id, src, .. } => Some(ProtocolBlock {
                 id: id.clone(),
                 label: humanize_widget_label(id),
                 kind: "image".into(),
@@ -4307,14 +4307,14 @@ pub mod forms_bridge {
             Widget::Variable { id, name, schema, .. } => {
                 let kind = variable_question_kind(schema);
                 let options = if kind == "single" {
-                    Some(vec![FormQuestionOption {
+                    Some(vec![ProtocolBlockOption {
                         value: schema.clone(),
                         label: humanize_widget_label(schema),
                     }])
                 } else {
                     None
                 };
-                Some(FormQuestion {
+                Some(ProtocolBlock {
                     id: id.clone(),
                     label: humanize_widget_label(name),
                     kind: kind.into(),
@@ -4341,22 +4341,22 @@ pub mod forms_bridge {
         }
     }
 
-    pub fn flow_fixture_to_form_spec(fixture: &FlowFixture) -> FormSpec {
-        let questions: Vec<FormQuestion> = fixture
+    pub fn flow_fixture_to_form_spec(fixture: &FlowFixture) -> ProtocolSpec {
+        let blocks: Vec<ProtocolBlock> = fixture
             .widgets
             .iter()
-            .filter_map(widget_to_form_question)
+            .filter_map(widget_to_protocol_block)
             .collect();
-        FormSpec {
-            schema: FORMS_DOCUMENT_SCHEMA.into(),
+        ProtocolSpec {
+            schema: PROTOCOL_DOCUMENT_SCHEMA.into(),
             id: "flow-generate".into(),
             version: "1".into(),
             title: Some("Generate".into()),
-            steps: vec![FormStep {
+            steps: vec![ProtocolStep {
                 id: "inputs".into(),
                 title: "Inputs".into(),
                 description: None,
-                questions,
+                blocks,
             }],
         }
     }

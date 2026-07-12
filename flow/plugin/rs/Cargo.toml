@@ -7,6 +7,12 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:flow"
 
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "flow"
+ports = { react = 6016, wgpu = 6116 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

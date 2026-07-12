@@ -3,7 +3,7 @@
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_note_canvas_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical, ui_text, App,
-    NoteCanvasScene, ActionDescriptor, DwgDrawing, DwgGeometry, PluginApp, PluginBundle, UiFieldNode, UiInputNode,
+    NoteCanvasScene, ActionDescriptor, DwgDrawing, DwgGeometry, PluginApp, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiSectionNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -1500,6 +1500,7 @@ fn note_toolbar(document: &NoteDocument) -> Vec<ToolNode> {
 //#endregion 🔖Shell
 
 //#region 🔖NoteApp
+#[derive(Default)]
 struct NoteApp;
 
 impl PluginApp for NoteApp {
@@ -2353,12 +2354,11 @@ fn create_note_app() -> App {
         .program("note", "Note", "document")
 }
 
-fn note_bundle() -> PluginBundle {
-    register_note_exports();
-    PluginBundle::new("note", "Note", "0.1.0").register_app(create_note_app(), || Box::new(NoteApp))
+semio_framework_plugin::semio_plugin! {
+    id: "note", label: "Note", version: "0.1.0",
+    setup: register_note_exports,
+    apps: [ create_note_app => NoteApp ],
 }
-
-semio_framework_plugin::plugin_exports!(note_bundle);
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

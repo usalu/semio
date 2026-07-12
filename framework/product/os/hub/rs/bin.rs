@@ -906,7 +906,16 @@ async fn handle_ws(socket: WebSocket, document_id: String, state: HubState) {
         return;
     }
 
-    let mut presence_joined = false;
+    // Register this connection in the presence roster on connect; richer Presence frames update it later.
+    handle
+        .presence_update(PresencePeer {
+            actor: actor.clone(),
+            label: None,
+            selection_json: None,
+            connected_at_ms: now_ms(),
+        })
+        .await;
+
     loop {
         tokio::select! {
             incoming = receiver.next() => {
@@ -918,8 +927,7 @@ async fn handle_ws(socket: WebSocket, document_id: String, state: HubState) {
                                 for op in appended {
                                     if op.is_new {
                                         if sender.send(encode(&HubServerFrame::Ack { op_id: op.op_id, version: op.version })).await.is_err() {
-                                            handle.presence_leave(actor.clone()).await;
-                                            return;
+                                            break;
                                         }
                                     }
                                 }
@@ -927,13 +935,11 @@ async fn handle_ws(socket: WebSocket, document_id: String, state: HubState) {
                             Ok(HubClientFrame::PutEnvelope { version, envelope }) => {
                                 if let Err(current) = handle.put_envelope(version, envelope).await {
                                     if sender.send(encode(&HubServerFrame::Conflict { message: format!("stale version; current {current}") })).await.is_err() {
-                                        handle.presence_leave(actor.clone()).await;
-                                        return;
+                                        break;
                                     }
                                 }
                             }
                             Ok(HubClientFrame::Presence { peer }) => {
-                                presence_joined = true;
                                 handle.presence_update(peer).await;
                             }
                             Ok(HubClientFrame::Bye) => break,
@@ -963,9 +969,7 @@ async fn handle_ws(socket: WebSocket, document_id: String, state: HubState) {
             }
         }
     }
-    if presence_joined {
-        handle.presence_leave(actor).await;
-    }
+    handle.presence_leave(actor).await;
 }
 //#endregion 🔖WebSocket
 

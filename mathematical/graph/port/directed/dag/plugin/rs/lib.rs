@@ -1136,11 +1136,13 @@ fn create_dag_app() -> App {
     .program("dag", "DAG", "graph")
 }
 
-fn bundle() -> PluginBundle {
-    PluginBundle::new("dag", "DAG", "0.1.0").register_app(create_dag_app(), || Box::new(DagPlayApp))
-}
+fn register_dag_exports() {}
 
-semio_framework_plugin::plugin_exports!(bundle);
+semio_framework_plugin::semio_plugin! {
+    id: "dag", label: "DAG", version: "0.1.0",
+    setup: register_dag_exports,
+    apps: [ create_dag_app => DagPlayApp ],
+}
 //#endregion 🔖Manifest
 
 #[cfg(test)]

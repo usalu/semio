@@ -7,6 +7,20 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:trinity"
 
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "trinity-jack"
+app = "trinity-jack-play"
+aliases = ["trinity jack"]
+ports = { react = 6054, wgpu = 6154 }
+
+[[package.metadata.semio.playground]]
+variant = "trinity-rewrite"
+app = "trinity-rewrite-play"
+aliases = ["trinity rewrite"]
+ports = { react = 6056, wgpu = 6156 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
@@ -15,7 +29,8 @@ path = "lib.rs"
 trinity_jack = { path = "../../jack/core/rs" }
 trinity_rewrite = { path = "../../rewrite/engine/rs" }
 trinity_ram = { path = "../../ram/rs" }
-mathematical_core = { path = "../../../mathematical/core/rs" }
+mathematical_graph_drawing = { path = "../../../mathematical/graph/drawing/rs" }
+mathematical_geometry = { path = "../../../mathematical/geometry/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
 vcs = { path = "../../../vcs/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

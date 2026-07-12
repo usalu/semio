@@ -1,0 +1,13 @@
+{
+  "title": "Procedural 3D BREP Performance Overhaul",
+  "emoji": "⚡",
+  "status": "open",
+  "description": "Procedural 3D is terrible slow on BREP operations. Find bottlenecks, introduce clean mechanisms, refactor everything. Comprehensive perf overhaul across the kernel/DAG stack per the approved plan at /Users/ueli/.claude/plans/procedural-3d-is-terrible-deep-cherny.md: (0) land criterion benchmarks for kernel_3d_brepkit (none exist today), (1) fix procedural/plugin's FlowHost/NeuralCache being rebuilt from scratch on every document op (discards memoization, leaks KERNEL/MESH_CACHE globals, double-evaluates base+generation preview, no LOD during drag), (2) switch the global Mutex\u003cBrepkitKernel\u003e to RwLock and resolve dead run_blocking/rayon offload, (3) parallelize per-face tessellation and cache the boolean-with-torus mesh fallback, (4) add a spatial BVH (new kernel_3d_spatial crate) for closest_point/classify_point, (5) add selective-edge fillet/chamfer, (6) replace neural_engine's coarse whole-tree-signature + flat content-hash cache with real per-node dependency-dirty propagation (TreeSnapshot + compute_dirty_set) in neural/engine/rs and flow/core/rs, verified via an incremental-vs-full-recompute property test.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1961"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪a6f538d5df7f4accb6c3d72f7564a47d"
+  ]
+}

@@ -143,10 +143,10 @@ use semio_framework_core::{
         InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
-    AppDefinition, AppLabelsOverlay, ActionDefinition, ActionDescriptor, ActionKind, Contribution, ExampleDefinition, Keybinding,
-    ModeDefinition, NamedLayout, PanelGroup, PanelTabDefinition, PluginManifest, ProgramDefinition, ToolNode,
-    UiNode, ViewState, WindowEngagement, WindowKindDefinition, WindowLayout, WindowMeasure,
-    SurfaceKind,
+    ActionId, AppDefinition, AppLabelsOverlay, ActionDefinition, ActionDescriptor, ActionKind, Contribution, ExampleDefinition, Keybinding,
+    ModeDefinition, Modes, NamedLayout, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, ToolNode,
+    UiNode, ViewState, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowKinds, WindowLayout, WindowMeasure,
+    WindowOptions, SurfaceKind,
 };
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -156,6 +156,7 @@ pub struct ModeSpec {
     pub label: String,
     pub tools: Vec<ToolNode>,
     pub layout_id: Option<String>,
+    pub actions: Vec<ActionId>,
 }
 
 pub struct WindowKindSpec {
@@ -166,11 +167,12 @@ pub struct WindowKindSpec {
     pub icon_id: Option<String>,
     pub measures: Vec<WindowMeasure>,
     pub engagement: Option<WindowEngagement>,
+    pub actions: Vec<ActionId>,
 }
 
 /// 🌳 A leaf carries `body_key` (its rendered panel); a branch carries `children` (the tab row shown below it) — exactly one of the two.
 pub struct PanelTabSpec {
-    pub id: String,
+    pub kind: PanelTabKind,
     pub label: String,
     pub group: PanelGroup,
     pub body_key: Option<String>,
@@ -178,29 +180,36 @@ pub struct PanelTabSpec {
 }
 
 impl PanelTabSpec {
-    /// 🍃 A leaf tab; `group` is only meaningful on the root entry passed to `.panel_tab_tree`.
+    /// 🍃 An app-declared leaf tab; `group` is only meaningful on the root entry passed to `.panel_tab_tree`.
     pub fn leaf(id: impl Into<String>, label: impl Into<String>, group: PanelGroup, body_key: impl Into<String>) -> Self {
-        Self { id: id.into(), label: label.into(), group, body_key: Some(body_key.into()), children: Vec::new() }
+        Self { kind: PanelTabKind::App(id.into()), label: label.into(), group, body_key: Some(body_key.into()), children: Vec::new() }
     }
 
-    /// 🌳 A branch tab; its `children` render as the tab row below it when active.
+    /// 🌳 An app-declared branch tab; its `children` render as the tab row below it when active.
     pub fn group(id: impl Into<String>, label: impl Into<String>, group: PanelGroup, children: Vec<PanelTabSpec>) -> Self {
-        Self { id: id.into(), label: label.into(), group, body_key: None, children }
+        Self { kind: PanelTabKind::App(id.into()), label: label.into(), group, body_key: None, children }
+    }
+
+    /// 🏛️ A framework-predefined tab — only the framework shell itself should ever pass a
+    /// non-`App` `PanelTabKind` here; plugins must go through `leaf`/`group`.
+    pub fn framework(kind: PanelTabKind, label: impl Into<String>, group: PanelGroup, body_key: Option<String>, children: Vec<PanelTabSpec>) -> Self {
+        Self { kind, label: label.into(), group, body_key, children }
     }
 }
 
 /// 🌳 Asserts every tab in the tree has a non-empty, unique id and sets exactly one of `body_key`/`children`.
 fn validate_panel_tab_spec(app_id: &str, tab: &PanelTabSpec, seen_ids: &mut HashSet<String>) {
-    assert!(!tab.id.trim().is_empty(), "app {} panel tab id must be non-empty", app_id);
-    assert!(seen_ids.insert(tab.id.clone()), "app {} duplicate panel tab id {}", app_id, tab.id);
+    let id = tab.kind.id_str();
+    assert!(!id.trim().is_empty(), "app {} panel tab id must be non-empty", app_id);
+    assert!(seen_ids.insert(id.to_string()), "app {} duplicate panel tab id {}", app_id, id);
     assert!(
         tab.body_key.is_some() != !tab.children.is_empty(),
         "app {} panel tab {} must set exactly one of body_key or children",
         app_id,
-        tab.id
+        id
     );
     if let Some(body_key) = &tab.body_key {
-        assert!(!body_key.trim().is_empty(), "app {} panel tab {} body_key must be non-empty", app_id, tab.id);
+        assert!(!body_key.trim().is_empty(), "app {} panel tab {} body_key must be non-empty", app_id, id);
     }
     for child in &tab.children {
         validate_panel_tab_spec(app_id, child, seen_ids);
@@ -210,7 +219,7 @@ fn validate_panel_tab_spec(app_id: &str, tab: &PanelTabSpec, seen_ids: &mut Hash
 /// 🌳 Converts one plugin-declared `PanelTabSpec` (recursively) into a `PanelTabDefinition`.
 fn panel_tab_spec_to_definition(tab: PanelTabSpec) -> PanelTabDefinition {
     PanelTabDefinition {
-        id: tab.id,
+        kind: tab.kind,
         label: tab.label,
         group: tab.group,
         body_key: tab.body_key,
@@ -288,7 +297,17 @@ impl AppBuilder {
             label: label.into(),
             tools: Vec::new(),
             layout_id: None,
+            actions: Vec::new(),
         });
+        self
+    }
+
+    /// 📇 Scopes actions to a mode — references ids declared via `.operation()/.view_action()/.shell_action()`.
+    pub fn mode_actions(mut self, mode_id: impl AsRef<str>, action_ids: Vec<ActionId>) -> Self {
+        let mode_id = mode_id.as_ref();
+        if let Some(mode) = self.modes.iter_mut().find(|entry| entry.id == mode_id) {
+            mode.actions = action_ids;
+        }
         self
     }
 
@@ -328,6 +347,7 @@ impl AppBuilder {
             icon_id: None,
             measures: Vec::new(),
             engagement: None,
+            actions: Vec::new(),
         });
         self
     }
@@ -348,7 +368,26 @@ impl AppBuilder {
             icon_id: None,
             measures: Vec::new(),
             engagement: Some(engagement),
+            actions: Vec::new(),
         });
+        self
+    }
+
+    /// 🎛️ Attaches measure controls (sliders/selects/toggles/groups) to an already-declared window kind.
+    pub fn window_kind_measures(mut self, window_kind_id: impl AsRef<str>, measures: Vec<WindowMeasure>) -> Self {
+        let window_kind_id = window_kind_id.as_ref();
+        if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
+            window.measures = measures;
+        }
+        self
+    }
+
+    /// 📇 Scopes actions to a window kind — references ids declared via `.operation()/.view_action()/.shell_action()`.
+    pub fn window_kind_actions(mut self, window_kind_id: impl AsRef<str>, action_ids: Vec<ActionId>) -> Self {
+        let window_kind_id = window_kind_id.as_ref();
+        if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
+            window.actions = action_ids;
+        }
         self
     }
 
@@ -375,6 +414,13 @@ impl AppBuilder {
 
     /// 🌳 Declares a root panel tab that may itself be a nested tree — build `tab` via `PanelTabSpec::leaf`/`PanelTabSpec::group`.
     pub fn panel_tab_tree(mut self, tab: PanelTabSpec) -> Self {
+        self.panel_tabs.push(tab);
+        self
+    }
+
+    /// 🏛️ Declares a framework-predefined panel tab (workbench/display/details/settings category or
+    /// leaf) — only the framework shell itself should call this; plugins must use `.panel_tab()`/`.panel_tab_tree()`.
+    pub fn panel_tab_framework(mut self, tab: PanelTabSpec) -> Self {
         self.panel_tabs.push(tab);
         self
     }
@@ -420,6 +466,11 @@ impl AppBuilder {
             "app {} must declare at least one window kind",
             self.id
         );
+        assert!(
+            !self.modes.is_empty(),
+            "app {} must declare at least one mode",
+            self.id
+        );
         let mut window_kind_ids = HashSet::new();
         for window in &self.window_kinds {
             assert!(!window.id.trim().is_empty(), "app {} window kind id must be non-empty", self.id);
@@ -457,7 +508,14 @@ impl AppBuilder {
         }
         let default_mode_id = self
             .default_mode_id
-            .or_else(|| self.modes.first().map(|mode| mode.id.clone()));
+            .clone()
+            .unwrap_or_else(|| self.modes[0].id.clone());
+        assert!(
+            self.modes.iter().any(|mode| mode.id == default_mode_id),
+            "app {} default_mode_id {} does not reference a declared mode",
+            self.id,
+            default_mode_id
+        );
         let mut declared_action_ids = HashSet::new();
         for action in &self.actions {
             assert!(
@@ -521,35 +579,43 @@ impl AppBuilder {
             document: self.document,
             icon_id: self.icon_id,
             controller_id: self.controller_id,
-            modes: self
-                .modes
-                .into_iter()
-                .map(|mode| ModeDefinition {
-                    id: mode.id,
-                    label: mode.label,
-                    tools: mode.tools,
-                    layout_id: mode.layout_id,
-                })
-                .collect(),
+            modes: Modes::try_from(
+                self.modes
+                    .into_iter()
+                    .map(|mode| ModeDefinition {
+                        id: mode.id,
+                        label: mode.label,
+                        tools: mode.tools,
+                        layout_id: mode.layout_id,
+                        actions: mode.actions,
+                    })
+                    .collect::<Vec<_>>(),
+            )
+            .expect("app must declare at least one mode (checked above)"),
             default_mode_id,
-            window_kinds: self
-                .window_kinds
-                .into_iter()
-                .map(|window| WindowKindDefinition {
-                    id: window.id,
-                    label: window.label,
-                    body_key: window.body_key,
-                    surface_kind: window.surface_kind,
-                    icon_id: window.icon_id,
-                    measures: window.measures,
-                    engagement: window.engagement,
-                    params_schema: None,
-                    document_projection_schema: None,
-                    input_event_schema: None,
-                    output_schema: None,
-                    capabilities: vec![],
-                })
-                .collect(),
+            window_kinds: WindowKinds::try_from(
+                self.window_kinds
+                    .into_iter()
+                    .map(|window| WindowKindDefinition {
+                        id: window.id,
+                        label: window.label,
+                        body_key: window.body_key,
+                        surface_kind: window.surface_kind,
+                        icon_id: window.icon_id,
+                        options: WindowOptions {
+                            measures: window.measures,
+                            engagement: window.engagement.map_or(WindowEngagementSlot::None, WindowEngagementSlot::Some),
+                        },
+                        actions: window.actions,
+                        params_schema: None,
+                        document_projection_schema: None,
+                        input_event_schema: None,
+                        output_schema: None,
+                        capabilities: vec![],
+                    })
+                    .collect::<Vec<_>>(),
+            )
+            .expect("app must declare at least one window kind (checked above)"),
             panel_tabs: self.panel_tabs.into_iter().map(panel_tab_spec_to_definition).collect(),
             keybindings,
             actions,
@@ -839,7 +905,7 @@ pub mod generate_mode {
 // #region generate_mode
 //! 🧬 Shared Generate mode state, CRUD, and declarative UI helpers.
 
-use forms::{default_value_for_question, flatten_form_questions, is_question_visible, FormQuestion, FormSpec};
+use protocol::{default_value_for_block, flatten_protocol_blocks, is_block_visible, ProtocolBlock, ProtocolSpec};
 use semio_framework_core::{
     build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, TextEditorScene, UiControlNode,
     UiFieldNode, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemAction,
@@ -878,15 +944,15 @@ fn next_generation_name(generations: &[FormGeneration]) -> String {
     format!("Generation {}", generations.len() + 1)
 }
 
-pub fn initial_generation_values(spec: &FormSpec) -> Map<String, Value> {
+pub fn initial_generation_values(spec: &ProtocolSpec) -> Map<String, Value> {
     let mut values = Map::new();
-    for question in flatten_form_questions(spec) {
-        values.insert(question.id.clone(), default_value_for_question(question));
+    for question in flatten_protocol_blocks(spec) {
+        values.insert(question.id.clone(), default_value_for_block(question));
     }
     values
 }
 
-pub fn add_generation(state: &mut GenerationPlayState, spec: &FormSpec) -> String {
+pub fn add_generation(state: &mut GenerationPlayState, spec: &ProtocolSpec) -> String {
     let id = next_generation_id(&state.generations);
     let name = next_generation_name(&state.generations);
     state.generations.push(FormGeneration {
@@ -942,7 +1008,7 @@ pub fn handle_generation_action(
     action: &str,
     args: Option<&Value>,
     state: &mut GenerationPlayState,
-    spec: &FormSpec,
+    spec: &ProtocolSpec,
     controller_id: &str,
 ) -> bool {
     match action {
@@ -1111,19 +1177,19 @@ pub fn render_generations_tree(
 }
 
 fn render_question_field(
-    question: &FormQuestion,
+    question: &ProtocolBlock,
     values: &Map<String, Value>,
     controller_id: &str,
     patch_action: &str,
     generation_id: &str,
 ) -> Option<UiNode> {
-    if !is_question_visible(question, values) {
+    if !is_block_visible(question, values) {
         return None;
     }
     let value = values
         .get(&question.id)
         .cloned()
-        .unwrap_or_else(|| default_value_for_question(question));
+        .unwrap_or_else(|| default_value_for_block(question));
     let field_id = format!("generate.form.{}", question.id);
     let on_change = || {
         generation_action(
@@ -1281,7 +1347,7 @@ fn render_question_field(
 }
 
 pub fn render_generation_form_body(
-    form_spec: &FormSpec,
+    form_spec: &ProtocolSpec,
     values: &Map<String, Value>,
     controller_id: &str,
     patch_action: &str,
@@ -1289,10 +1355,10 @@ pub fn render_generation_form_body(
 ) -> UiNode {
     let mut children = Vec::new();
     for step in &form_spec.steps {
-        if !step.questions.is_empty() {
+        if !step.blocks.is_empty() {
             children.push(ui_text(step.title.clone()));
         }
-        for question in &step.questions {
+        for question in &step.blocks {
             if let Some(field) = render_question_field(question, values, controller_id, patch_action, generation_id) {
                 children.push(field);
             }
@@ -1316,19 +1382,19 @@ pub fn render_generation_preview_text(surface: &str, controller_id: &str, text: 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use forms::{FormQuestion, FormStep, FORMS_DOCUMENT_SCHEMA};
+    use protocol::{ProtocolBlock, ProtocolStep, PROTOCOL_DOCUMENT_SCHEMA};
 
-    fn sample_spec() -> FormSpec {
-        FormSpec {
-            schema: FORMS_DOCUMENT_SCHEMA.into(),
+    fn sample_spec() -> ProtocolSpec {
+        ProtocolSpec {
+            schema: PROTOCOL_DOCUMENT_SCHEMA.into(),
             id: "sample".into(),
             version: "1".into(),
             title: None,
-            steps: vec![FormStep {
+            steps: vec![ProtocolStep {
                 id: "s".into(),
                 title: "Inputs".into(),
                 description: None,
-                questions: vec![FormQuestion {
+                blocks: vec![ProtocolBlock {
                     id: "width".into(),
                     label: "Width".into(),
                     kind: "slider".into(),
@@ -1380,6 +1446,212 @@ mod tests {
     }
 }
 // #endregion generate_mode
+}
+
+pub mod protocol_mode {
+// #region protocol_mode
+//! 🧩 Shared strict-list, Blockly-like builder engine: generic step/block CRUD op-builders and
+//! [`ProtocolListScene`] rendering, reused by `protocol-plugin` (standalone) and `forms-plugin`
+//! (embedded Blueprint mode). Block-kind-specific property editing stays with the host app.
+
+use protocol::{ProtocolBlock, ProtocolOp, ProtocolSpec, ProtocolStep};
+use semio_framework_core::{
+    ActionDescriptor, ProtocolListScene, ProtocolPaletteEntry, SurfaceKind, UiComponentSceneNode, UiNode,
+};
+use serde_json::Value;
+
+//#region 🔖Config
+#[derive(Clone, Debug)]
+pub struct ProtocolBuilderLabels {
+    pub add_step: &'static str,
+    pub remove_step: &'static str,
+    pub move_up: &'static str,
+    pub move_down: &'static str,
+    pub add_block: &'static str,
+}
+
+pub const PROTOCOL_BUILDER_LABELS_EN: ProtocolBuilderLabels = ProtocolBuilderLabels {
+    add_step: "Add Step",
+    remove_step: "Remove Step",
+    move_up: "Move Up",
+    move_down: "Move Down",
+    add_block: "Add Block",
+};
+
+/// 🧩 Configures the generic strict-list builder for a host app: an action-namespace prefix
+/// (used for element/surface ids so multiple embeddings don't collide), and its labels.
+#[derive(Clone, Debug)]
+pub struct ProtocolBuilderConfig {
+    pub action_namespace: &'static str,
+    pub controller_id: &'static str,
+    pub labels: ProtocolBuilderLabels,
+}
+//#endregion 🔖Config
+
+//#region 🔖OpBuilders
+pub fn add_step_op(spec: &ProtocolSpec, step_id: String) -> ProtocolOp {
+    ProtocolOp::AddStep {
+        step: ProtocolStep {
+            id: step_id,
+            title: format!("Step {}", spec.steps.len() + 1),
+            description: None,
+            blocks: Vec::new(),
+        },
+        index: None,
+    }
+}
+
+pub fn remove_step_op(step_id: &str) -> ProtocolOp {
+    ProtocolOp::RemoveStep { step_id: step_id.into() }
+}
+
+pub fn move_step_op(step_id: &str, index: usize) -> ProtocolOp {
+    ProtocolOp::MoveStep {
+        step_id: step_id.into(),
+        index,
+    }
+}
+
+pub fn add_block_op(step_id: &str, block: ProtocolBlock, index: Option<usize>) -> ProtocolOp {
+    ProtocolOp::AddBlock {
+        step_id: step_id.into(),
+        block,
+        index,
+    }
+}
+
+pub fn remove_block_op(step_id: &str, block_id: &str) -> ProtocolOp {
+    ProtocolOp::RemoveBlock {
+        step_id: step_id.into(),
+        block_id: block_id.into(),
+    }
+}
+
+pub fn move_block_op(block_id: &str, from_step_id: &str, to_step_id: &str, index: usize) -> ProtocolOp {
+    ProtocolOp::MoveBlock {
+        block_id: block_id.into(),
+        from_step_id: from_step_id.into(),
+        to_step_id: to_step_id.into(),
+        index,
+    }
+}
+
+pub fn update_protocol_title_op(title: Option<String>) -> ProtocolOp {
+    ProtocolOp::UpdateProtocol { title }
+}
+//#endregion 🔖OpBuilders
+
+//#region 🔖Render
+pub fn protocol_builder_action(config: &ProtocolBuilderConfig, action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
+        controller_id: config.controller_id.into(),
+        action: action.into(),
+        args,
+    }
+}
+
+/// 🧩 Builds the palette of insertable block kinds from a host app's built-in kinds plus any
+/// `Contribution::ProtocolBlockKind` modules already resolved by the caller into label/icon pairs.
+pub fn build_palette(builtin: &[(&str, &str, &str)], extensions: &[(String, String, String)]) -> Vec<ProtocolPaletteEntry> {
+    let mut entries: Vec<ProtocolPaletteEntry> = builtin
+        .iter()
+        .map(|(kind, label, icon_id)| ProtocolPaletteEntry {
+            block_kind: (*kind).into(),
+            label: (*label).into(),
+            icon_id: (*icon_id).into(),
+        })
+        .collect();
+    entries.extend(extensions.iter().map(|(kind, label, icon_id)| ProtocolPaletteEntry {
+        block_kind: kind.clone(),
+        label: label.clone(),
+        icon_id: icon_id.clone(),
+    }));
+    entries
+}
+
+pub fn build_protocol_list_scene(spec: &ProtocolSpec, palette: &[ProtocolPaletteEntry], selected_id: Option<&str>) -> ProtocolListScene {
+    ProtocolListScene {
+        steps_json: serde_json::to_string(&spec.steps).unwrap_or_else(|_| "[]".into()),
+        palette_json: serde_json::to_string(palette).unwrap_or_else(|_| "[]".into()),
+        selected_id: selected_id.map(String::from),
+        dragging_id: None,
+    }
+}
+
+/// 🧩 Renders the strict-list Blockly-like builder as a [`SurfaceKind::ProtocolList`] component
+/// scene, handed off to the dedicated `protocol-list-host.tsx` React host for drag-and-drop.
+pub fn render_protocol_builder(
+    surface_id: &str,
+    spec: &ProtocolSpec,
+    palette: &[ProtocolPaletteEntry],
+    selected_id: Option<&str>,
+    config: &ProtocolBuilderConfig,
+) -> UiNode {
+    UiNode::ComponentScene(UiComponentSceneNode {
+        surface_id: surface_id.into(),
+        controller_id: config.controller_id.into(),
+        component_kind: SurfaceKind::ProtocolList,
+        pane_id: None,
+        binding_id: None,
+        canvas_2d: None,
+        world_3d: None,
+        node_graph: None,
+        text_editor: None,
+        table: None,
+        raster: None,
+        virtual_file_system: None,
+        gis_map: None,
+        puzzle2d_board: None,
+        icon_render: None,
+        note_canvas: None,
+        vcs_history: None,
+        protocol_list: Some(build_protocol_list_scene(spec, palette, selected_id)),
+    })
+}
+//#endregion 🔖Render
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use protocol::empty_protocol_projection;
+
+    fn sample_config() -> ProtocolBuilderConfig {
+        ProtocolBuilderConfig {
+            action_namespace: "protocol-play",
+            controller_id: "protocol-play",
+            labels: PROTOCOL_BUILDER_LABELS_EN,
+        }
+    }
+
+    #[test]
+    fn add_step_op_names_step_by_position() {
+        let spec = empty_protocol_projection();
+        let op = add_step_op(&spec, "step-2".into());
+        assert_eq!(
+            op,
+            ProtocolOp::AddStep {
+                step: ProtocolStep {
+                    id: "step-2".into(),
+                    title: "Step 2".into(),
+                    description: None,
+                    blocks: Vec::new(),
+                },
+                index: None,
+            }
+        );
+    }
+
+    #[test]
+    fn render_protocol_builder_emits_protocol_list_component_scene() {
+        let spec = empty_protocol_projection();
+        let config = sample_config();
+        let node = render_protocol_builder("surface", &spec, &[], None, &config);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("\"componentKind\":\"protocol-list\""));
+        assert!(json.contains("\"protocolList\""));
+    }
+}
+// #endregion protocol_mode
 }
 
 pub mod plugin_runtime {
@@ -1823,6 +2095,117 @@ macro_rules! plugin_exports {
         #[used]
         static _SEMIO_PLUGIN_COMPONENT_LINK: fn() = $crate::component_export_anchor;
     };
+}
+
+/// 🧵 Collapses a plugin crate's hand-written `bundle()` fn + `plugin_exports!` call into one
+/// declarative block: `semio_framework_plugin::semio_plugin! { id: "note", label: "Note", version:
+/// "0.1.0", setup: register_note_exports, apps: [ create_note_app => NoteApp ] }`. Each `apps` entry
+/// pairs an `App`-returning factory function with the `PluginApp` type instantiated for it — that
+/// type must implement `Default` (multi-app crates list one entry per app, e.g. puzzle's
+/// `d2::create_puzzle2d_app => d2::Puzzle2dPlayApp, d3::create_puzzle3d_app => d3::Puzzle3dPlayApp`).
+/// Expands to the equivalent `bundle()` fn plus a `plugin_exports!(bundle)` call, and a
+/// `#[cfg(test)]` regression check asserting every declared app id actually lands in the built
+/// `PluginBundle`'s manifest.
+#[macro_export]
+macro_rules! semio_plugin {
+    (
+        id: $id:literal,
+        label: $label:literal,
+        version: $version:literal,
+        setup: $setup:path,
+        apps: [ $( $app_fn:path => $app_ty:path ),+ $(,)? ] $(,)?
+    ) => {
+        fn __semio_plugin_bundle() -> $crate::PluginBundle {
+            ($setup)();
+            $crate::PluginBundle::new($id, $label, $version)
+                $( .register_app(($app_fn)(), || ::std::boxed::Box::new(<$app_ty as ::std::default::Default>::default())) )+
+        }
+
+        $crate::plugin_exports!(__semio_plugin_bundle);
+
+        #[cfg(test)]
+        #[test]
+        fn __semio_plugin_sanity_declared_apps_appear_in_bundle_manifest() {
+            let manifest = __semio_plugin_bundle().manifest;
+            $(
+                let expected_id = ($app_fn)().definition.id;
+                assert!(
+                    manifest.apps.iter().any(|app| app.id == expected_id),
+                    "semio_plugin({}): app `{}` (from `{}`) missing from bundle manifest",
+                    $id,
+                    expected_id,
+                    stringify!($app_fn),
+                );
+            )+
+        }
+    };
+}
+
+#[cfg(test)]
+mod semio_plugin_macro_tests {
+    use crate::app::{App, PluginApp};
+    use crate::SurfaceKind;
+    use serde_json::Value;
+
+    #[derive(Default)]
+    struct SyntheticPlayApp;
+
+    impl PluginApp for SyntheticPlayApp {
+        fn app_id(&self) -> &str {
+            "synthetic-play"
+        }
+
+        fn initial_document_json(&self) -> String {
+            "{}".to_string()
+        }
+
+        fn handle_action_patch_ops(
+            &mut self,
+            _action: &str,
+            _args: Option<&Value>,
+            _document_json: &str,
+            _view_state: &crate::ViewState,
+        ) -> Vec<String> {
+            Vec::new()
+        }
+
+        fn render(&self, _body_key: &str, _document_json: &str, _view_state: &crate::ViewState) -> crate::UiNode {
+            crate::ui_text("synthetic")
+        }
+    }
+
+    fn synthetic_play_app() -> App {
+        App::from_builder(
+            App::builder("synthetic-play", "Synthetic")
+                .document(["state"])
+                .window_kind("main", "Main", "synthetic.main", SurfaceKind::Canvas2d),
+        )
+    }
+
+    fn synthetic_setup() {}
+
+    crate::semio_plugin! {
+        id: "synthetic", label: "Synthetic", version: "0.0.1",
+        setup: synthetic_setup,
+        apps: [ synthetic_play_app => SyntheticPlayApp ],
+    }
+
+    #[test]
+    fn semio_plugin_macro_builds_bundle_from_declarative_spec() {
+        let bundle = __semio_plugin_bundle();
+        assert_eq!(bundle.manifest.plugin_id, "synthetic");
+        assert_eq!(bundle.manifest.label, "Synthetic");
+        assert_eq!(bundle.manifest.version, "0.0.1");
+        assert!(bundle.manifest.apps.iter().any(|app| app.id == "synthetic-play"));
+    }
+
+    #[test]
+    fn semio_plugin_macro_wires_app_factory_for_create_app() {
+        let bundle = __semio_plugin_bundle();
+        let app = bundle.create_app("synthetic-play").expect("registered app");
+        assert_eq!(app.app_id(), "synthetic-play");
+        assert!(bundle.create_app("unknown-app").is_none());
+    }
 }
 // #endregion plugin_runtime
 }
@@ -2781,6 +3164,11 @@ pub use generate_mode::{
     rename_generation, render_generation_form_body, render_generation_preview_text,
     render_generations_tree, select_generation, selected_generation, selected_generation_mut,
     update_generation_values, FormGeneration, GenerationPlayState,
+};
+pub use protocol_mode::{
+    add_block_op, add_step_op, build_palette, build_protocol_list_scene, move_block_op, move_step_op,
+    protocol_builder_action, remove_block_op, remove_step_op, render_protocol_builder, update_protocol_title_op,
+    ProtocolBuilderConfig, ProtocolBuilderLabels, PROTOCOL_BUILDER_LABELS_EN,
 };
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 pub use host_port::{

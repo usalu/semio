@@ -1974,9 +1974,9 @@ mod tests {
     #[test]
     fn contributions_track_plugin_load_and_hot_swap() {
         let mut host = PluginHost::new();
-        let contribution = Contribution::FormsQuestionKind {
-            app_id: "forms-module-procedural".into(),
-            question_kind: "buildingComponent".into(),
+        let contribution = Contribution::ProtocolBlockKind {
+            app_id: "protocol-module-procedural".into(),
+            block_kind: "buildingComponent".into(),
             label: "Building Component".into(),
             icon_id: "building".into(),
             default_value_json: "{}".into(),
@@ -1984,10 +1984,10 @@ mod tests {
             preview_body_key: "preview".into(),
         };
         host.load_plugin(LoadedPlugin {
-            plugin_id: "forms-module-procedural".into(),
+            plugin_id: "protocol-module-procedural".into(),
             manifest: PluginManifest {
-                plugin_id: "forms-module-procedural".into(),
-                label: "Forms Module Procedural".into(),
+                plugin_id: "protocol-module-procedural".into(),
+                label: "Protocol Module Procedural".into(),
                 version: "0.1.0".into(),
                 apps: vec![],
                 programs: vec![],
@@ -1995,15 +1995,15 @@ mod tests {
                 contributions: vec![contribution.clone()],
                 examples: vec![],
             },
-            artifact_uri: "plugin://forms-module-procedural".into(),
+            artifact_uri: "plugin://protocol-module-procedural".into(),
         });
         assert_eq!(host.contributions().len(), 1);
-        assert_eq!(host.contributions()[0].plugin_id, "forms-module-procedural");
+        assert_eq!(host.contributions()[0].plugin_id, "protocol-module-procedural");
         host.hot_swap_plugin(LoadedPlugin {
-            plugin_id: "forms-module-procedural".into(),
+            plugin_id: "protocol-module-procedural".into(),
             manifest: PluginManifest {
-                plugin_id: "forms-module-procedural".into(),
-                label: "Forms Module Procedural".into(),
+                plugin_id: "protocol-module-procedural".into(),
+                label: "Protocol Module Procedural".into(),
                 version: "0.2.0".into(),
                 apps: vec![],
                 programs: vec![],
@@ -2011,7 +2011,7 @@ mod tests {
                 contributions: vec![],
                 examples: vec![],
             },
-            artifact_uri: "plugin://forms-module-procedural".into(),
+            artifact_uri: "plugin://protocol-module-procedural".into(),
         });
         assert!(host.contributions().is_empty());
     }

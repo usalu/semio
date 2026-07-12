@@ -7,6 +7,12 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:vcs"
 
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "vcs"
+ports = { react = 6075, wgpu = 6175 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

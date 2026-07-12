@@ -917,6 +917,7 @@ fn render_navigator_scene(play: &RasterPlayEnvelope) -> UiNode {
 //#endregion 🔖Scenes
 
 //#region 🔖RasterApp
+#[derive(Default)]
 struct RasterApp;
 
 impl PluginApp for RasterApp {
@@ -1313,12 +1314,11 @@ fn register_raster_exports() {
     semio_framework_os::register_dwg_import_handler("2d.raster", raster_document_json_from_dwg);
 }
 
-fn raster_bundle() -> PluginBundle {
-    register_raster_exports();
-    PluginBundle::new("raster", "Raster", "0.1.0").register_app(create_raster_app(), || Box::new(RasterApp))
+semio_framework_plugin::semio_plugin! {
+    id: "raster", label: "Raster", version: "0.1.0",
+    setup: register_raster_exports,
+    apps: [ create_raster_app => RasterApp ],
 }
-
-semio_framework_plugin::plugin_exports!(raster_bundle);
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

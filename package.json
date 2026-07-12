@@ -116,6 +116,7 @@
     "dev:procedural:3d:hexagonal-column": "bun ./script.ts dev procedural 3d fixture hexagonal-column",
     "dev:procedural:2d": "bun ./script.ts dev procedural 2d",
     "dev:process:3d": "bun ./script.ts dev process 3d",
+    "dev:sourcing": "bun ./script.ts dev sourcing",
     "dev:shooting": "bun ./script.ts dev shooting",
     "dev:forms": "bun ./script.ts dev forms",
     "dev:raster": "bun ./script.ts dev raster",

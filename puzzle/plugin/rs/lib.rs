@@ -4483,13 +4483,23 @@ pub mod d3 {
         })
     }
 
-    fn puzzle3d_fill_count_control(envelope: &Puzzle3dEnvelope) -> WindowEngagementControl {
+    fn puzzle3d_fill_count_control(envelope: &Puzzle3dEnvelope, session: &Puzzle3dPrecomputeSession) -> WindowEngagementControl {
+        let progress: Value = serde_json::from_str(&session.fill_progress()).unwrap_or(Value::Null);
+        let done = progress.get("done").and_then(Value::as_bool).unwrap_or(true);
+        let built_count = progress.get("count").and_then(Value::as_u64).unwrap_or(0) as u32;
+        let label = if done {
+            format!("Fill {}", envelope.runtime.fill_count)
+        } else {
+            let max_count = progress.get("maxCount").and_then(Value::as_u64).unwrap_or(PUZZLE3D_FILL_COUNT_MAX as u64);
+            format!("Fill {} (building {built_count}/{max_count})", envelope.runtime.fill_count)
+        };
+        let max = if done { PUZZLE3D_FILL_COUNT_MAX as f64 } else { (built_count.max(envelope.runtime.fill_count)) as f64 };
         WindowEngagementControl::Slider {
             id: Some("puzzle3d-fill-count".into()),
-            label: Some(format!("Fill {}", envelope.runtime.fill_count)),
+            label: Some(label),
             value: envelope.runtime.fill_count as f64,
             min: 0.0,
-            max: PUZZLE3D_FILL_COUNT_MAX as f64,
+            max,
             step: Some(1.0),
             unit: None,
             disabled: None,
@@ -4536,7 +4546,7 @@ pub mod d3 {
         let attraction_count = envelope.fixture.attractions.len();
         let voxel_edit_active = envelope.runtime.active_tool == "fill" && envelope.runtime.fill_edit_target_volumes;
         let control = match envelope.runtime.active_tool.as_str() {
-            "fill" if !voxel_edit_active => Some(puzzle3d_fill_count_control(envelope)),
+            "fill" if !voxel_edit_active => Some(puzzle3d_fill_count_control(envelope, precompute)),
             "brush" => puzzle3d_brush_placement_control(envelope, precompute),
             _ => None,
         };
@@ -5280,6 +5290,22 @@ pub mod d3 {
                     envelope.runtime.selection = Puzzle3dSelection::default();
                     return vec![set_document_op(&envelope)];
                 }
+                "contextMenuAt" => {
+                    // 🖱️ Right-click on an unselected entity selects it and opens its menu in one round trip,
+                    // instead of requiring a separate pick action before the menu items become available.
+                    let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("");
+                    let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).unwrap_or("");
+                    envelope.runtime.selection = Puzzle3dSelection::default();
+                    match kind {
+                        "object" => envelope.runtime.selection.object_ids = vec![id.to_string()],
+                        "vortex" => envelope.runtime.selection.vortex_ids = vec![id.to_string()],
+                        "attraction" => envelope.runtime.selection.attraction_ids = vec![id.to_string()],
+                        "targetVolume" => envelope.runtime.selection.target_volume_ids = vec![id.to_string()],
+                        "reference" => envelope.runtime.selection.reference_ids = vec![id.to_string()],
+                        _ => {}
+                    }
+                    return vec![set_document_op(&envelope)];
+                }
                 "focusSelection" => {
                     apply_puzzle3d_focus_selection(&mut envelope);
                     return vec![set_document_op(&envelope)];
@@ -5493,9 +5519,10 @@ pub mod d3 {
                     sync_precompute_session(&mut self.precompute, &envelope);
                     return vec![set_document_op(&envelope)];
                 }
-                "cycleBrushCandidate" => {
+                "cycleBrushCandidate" | "cycleBrushCandidateBack" => {
                     drive_precompute(&mut self.precompute, &envelope);
-                    let delta = args.and_then(|value| value.get("delta")).and_then(|value| value.as_i64()).unwrap_or(1);
+                    let default_delta = if action == "cycleBrushCandidateBack" { -1 } else { 1 };
+                    let delta = args.and_then(|value| value.get("delta")).and_then(|value| value.as_i64()).unwrap_or(default_delta);
                     if let Some(vortex_id) = puzzle3d_brush_target_vortex(&envelope) {
                         let raw = self.precompute.brush_candidates(&vortex_id);
                         let free_count = parse_brush_candidates_free_count(&raw);
@@ -5654,6 +5681,7 @@ pub mod d3 {
                 .keybinding("backspace", "deleteSelection")
                 .keybinding("mod+d", "duplicateSelection")
                 .keybinding("tab", "cycleBrushCandidate")
+                .keybinding("shift+tab", "cycleBrushCandidateBack")
                 .keybinding("f", "focusSelection"),
         )
         .example("empty", "Empty", &serde_json::to_string(&Puzzle3dEnvelope { fixture: empty_fixture(), runtime: Puzzle3dRuntime::default() }).unwrap())
@@ -10132,13 +10160,15 @@ fn register_puzzle_exports() {
     d5::register_puzzle5d_exports();
 }
 
-fn bundle() -> PluginBundle {
-    register_puzzle_exports();
-    PluginBundle::new("puzzle", "Puzzle", "0.1.0")
-        .register_app(d2::create_puzzle2d_app(), || Box::new(d2::Puzzle2dPlayApp::default()))
-        .register_app(d3::create_puzzle3d_app(), || Box::new(d3::Puzzle3dPlayApp::default()))
-        .register_app(d5::create_puzzle5d_app(), || Box::new(d5::Puzzle5dPlayApp::default()))
+semio_framework_plugin::semio_plugin! {
+    id: "puzzle",
+    label: "Puzzle",
+    version: "0.1.0",
+    setup: register_puzzle_exports,
+    apps: [
+        d2::create_puzzle2d_app => d2::Puzzle2dPlayApp,
+        d3::create_puzzle3d_app => d3::Puzzle3dPlayApp,
+        d5::create_puzzle5d_app => d5::Puzzle5dPlayApp,
+    ]
 }
-
-semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Bundle

@@ -414,6 +414,7 @@ fn render_script(play: &ImperativePlayEnvelope) -> UiNode {
 //#endregion 🔖Render
 
 //#region 🔖ImperativePlayApp
+#[derive(Default)]
 struct ImperativePlayApp;
 
 impl PluginApp for ImperativePlayApp {
@@ -612,11 +613,15 @@ fn create_imperative_app() -> App {
     .program("imperative", "Imperative", "graph")
 }
 
-fn bundle() -> PluginBundle {
-    PluginBundle::new("imperative", "Imperative", "0.1.0").register_app(create_imperative_app(), || Box::new(ImperativePlayApp))
-}
+fn register_imperative_exports() {}
 
-semio_framework_plugin::plugin_exports!(bundle);
+semio_framework_plugin::semio_plugin! {
+    id: "imperative",
+    label: "Imperative",
+    version: "0.1.0",
+    setup: register_imperative_exports,
+    apps: [ create_imperative_app => ImperativePlayApp ],
+}
 //#endregion 🔖Manifest
 
 #[cfg(test)]

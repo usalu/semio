@@ -1,0 +1,13 @@
+{
+  "title": "Enforce Window, App, Panel And Plugin Contracts At Compile Time",
+  "emoji": "🧱",
+  "status": "open",
+  "description": "Make the OS/plugin framework's window/app/panel/plugin contracts clean and compile-time enforced instead of open/ad hoc: every window mandatorily carries actions/tools/options (empty allowed, absent not allowed) instead of the current optional-and-usually-absent measures/engagement; every app mandatorily carries a non-empty Modes type (single-variant enums fine) instead of the current 0-4 cardinality open string-id list; every side panel's predefined tabs become a closed enum, replacing the open string-id tab tree plus the informal FRAMEWORK_CATEGORY_*/*_TAB_ID string-constant convention layered on top of it in os-shell.tsx; and plugin construction of these types is only possible through validated builders (private struct fields) instead of bypassable pub-field struct literals, with per-plugin action dispatch converted from stringly-typed `match action: \u0026str` to a generated, exhaustively-checked enum. See the approved plan for full staging (core types in framework/core/rs/lib.rs, builder/host in framework/plugin/rs/lib.rs and framework/plugin/host/rs/lib.rs, per-plugin batches across the 23 plugin crates, then TS mirrors in framework/core/js/index.ts, ui/js/react/index.tsx, framework/renderer/react/os-shell.tsx and ui-interpreter.tsx).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1960"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪36dc7dc0b0cc47a396c9a10b011aae8a"
+  ]
+}

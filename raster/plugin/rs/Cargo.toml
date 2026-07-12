@@ -7,6 +7,12 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:raster"
 
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "raster"
+ports = { react = 6060, wgpu = 6160 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

@@ -215,6 +215,16 @@
       "port": 6022
     },
     {
+      "name": "sourcing-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:sourcing"],
+      "env": {
+        "SOURCING_PLAY_PORT": "6081",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6081
+    },
+    {
       "name": "vcs-react-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:vcs"],

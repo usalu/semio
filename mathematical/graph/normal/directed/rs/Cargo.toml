@@ -10,5 +10,4 @@ path = "lib.rs"
 
 [dependencies]
 mathematical_graph = { path = "../../../rs" }
-mathematical_core = { path = "../../../../core/rs" }
 infinite_cavas = { path = "../../../../../infinite/cavas/rs" }

@@ -7,6 +7,12 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:imperative"
 
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "imperative"
+ports = { react = 6076, wgpu = 6176 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

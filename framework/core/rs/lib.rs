@@ -587,6 +587,30 @@ pub struct WindowEngagement {
     pub possible_engagements: Option<Vec<WindowEngagementPossible>>,
 }
 
+/// 🤝 Closed replacement for `Option<WindowEngagement>` — makes "this window kind never engages" a
+/// named variant instead of `None`, so absence is an explicit, typed state rather than an implicit gap.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "kind", content = "value")]
+pub enum WindowEngagementSlot {
+    None,
+    Some(WindowEngagement),
+}
+
+impl Default for WindowEngagementSlot {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
+impl WindowEngagementSlot {
+    pub fn as_option(&self) -> Option<&WindowEngagement> {
+        match self {
+            WindowEngagementSlot::None => None,
+            WindowEngagementSlot::Some(engagement) => Some(engagement),
+        }
+    }
+}
+
 pub fn default_viewport_engagement() -> WindowEngagement {
     WindowEngagement {
         session_active: Some(true),
@@ -600,6 +624,18 @@ pub fn default_viewport_engagement() -> WindowEngagement {
         }]),
         possible_engagements: None,
     }
+}
+
+/// 🎛️ Everything a window kind can expose beyond its rendered body — always present as a shape,
+/// empty collections/`WindowEngagementSlot::None` for windows that don't use a given facet.
+/// Replaces the previously separately-optional `measures`/`engagement` pair on `WindowKindDefinition`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct WindowOptions {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub measures: Vec<WindowMeasure>,
+    #[serde(default)]
+    pub engagement: WindowEngagementSlot,
 }
 //#endregion 🔖WindowEngagement
 
@@ -2996,27 +3032,28 @@ mod tests {
             document: vec!["semio".into(), "draw".into()],
             icon_id: None,
             controller_id: "draw-play".into(),
-            modes: vec![ModeDefinition {
+            modes: crate::ui::Modes::one(ModeDefinition {
                 id: "edit".into(),
                 label: "Edit".into(),
                 tools: Vec::new(),
                 layout_id: None,
-            }],
-            default_mode_id: Some("edit".into()),
-            window_kinds: vec![WindowKindDefinition {
+                actions: Vec::new(),
+            }),
+            default_mode_id: "edit".into(),
+            window_kinds: crate::ui::WindowKinds::one(WindowKindDefinition {
                 id: "composite".into(),
                 label: "Canvas".into(),
                 body_key: "composite".into(),
                 surface_kind: crate::SurfaceKind::Canvas2d,
                 icon_id: None,
-                measures: Vec::new(),
-                engagement: None,
+                options: crate::ui::WindowOptions::default(),
+                actions: Vec::new(),
                 params_schema: None,
                 document_projection_schema: None,
                 input_event_schema: None,
                 output_schema: None,
                 capabilities: Vec::new(),
-            }],
+            }),
             panel_tabs: vec![],
             keybindings: vec![],
             actions: vec![],
@@ -5224,6 +5261,34 @@ pub fn history_action_definitions() -> Vec<ActionDefinition> {
     ]
 }
 
+/// 📇 A validated reference into an app's `AppDefinition.actions` registry — prevents windows/modes
+/// from silently inheriting "every app action" by making the scoping explicit and typed.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct ActionId(String);
+
+impl ActionId {
+    pub fn new(id: impl Into<String>) -> Self {
+        Self(id.into())
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<&str> for ActionId {
+    fn from(value: &str) -> Self {
+        Self(value.to_string())
+    }
+}
+
+impl From<String> for ActionId {
+    fn from(value: String) -> Self {
+        Self(value)
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ModeDefinition {
@@ -5233,7 +5298,80 @@ pub struct ModeDefinition {
     pub tools: Vec<crate::tools::ToolNode>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub layout_id: Option<String>,
+    /// 📇 Actions available while this mode is active — references `AppDefinition.actions` ids.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actions: Vec<ActionId>,
 }
+
+/// 🚫 A non-empty, order-preserving list — construction-time enforcement replaces what used to be a
+/// runtime `assert!` deep inside `AppBuilder::build_definition`. The first entry is the implicit
+/// fallback default when nothing else specifies one.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(try_from = "Vec<T>", into = "Vec<T>", bound = "T: Clone + Serialize + serde::de::DeserializeOwned")]
+pub struct NonEmptyVec<T> {
+    first: T,
+    rest: Vec<T>,
+}
+
+impl<T> NonEmptyVec<T> {
+    pub fn one(first: T) -> Self {
+        Self { first, rest: Vec::new() }
+    }
+
+    pub fn new(first: T, rest: Vec<T>) -> Self {
+        Self { first, rest }
+    }
+
+    pub fn first(&self) -> &T {
+        &self.first
+    }
+
+    pub fn len(&self) -> usize {
+        1 + self.rest.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        false
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
+        std::iter::once(&self.first).chain(self.rest.iter())
+    }
+}
+
+impl<'a, T> IntoIterator for &'a NonEmptyVec<T> {
+    type Item = &'a T;
+    type IntoIter = std::iter::Chain<std::iter::Once<&'a T>, std::slice::Iter<'a, T>>;
+    fn into_iter(self) -> Self::IntoIter {
+        std::iter::once(&self.first).chain(self.rest.iter())
+    }
+}
+
+impl<T> TryFrom<Vec<T>> for NonEmptyVec<T> {
+    type Error = String;
+    fn try_from(mut values: Vec<T>) -> Result<Self, Self::Error> {
+        if values.is_empty() {
+            return Err("expected a non-empty list, got zero entries".to_string());
+        }
+        let first = values.remove(0);
+        Ok(Self { first, rest: values })
+    }
+}
+
+impl<T: Clone> From<NonEmptyVec<T>> for Vec<T> {
+    fn from(value: NonEmptyVec<T>) -> Self {
+        std::iter::once(value.first).chain(value.rest).collect()
+    }
+}
+
+/// 🚫 Every app has at least one mode — `protocol/module/procedural` and any other single-purpose app
+/// must declare an explicit mode (e.g. `"default"`) instead of the zero-mode state the type system
+/// now makes unrepresentable.
+pub type Modes = NonEmptyVec<ModeDefinition>;
+
+/// 🚫 Every app has at least one window kind — mirrors `Modes`, formerly a runtime `assert!` in
+/// `AppBuilder::build_definition`.
+pub type WindowKinds = NonEmptyVec<WindowKindDefinition>;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -5244,10 +5382,14 @@ pub struct WindowKindDefinition {
     pub surface_kind: SurfaceKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon_id: Option<String>,
+    /// 🎛️ Always-present chrome facets (was: separately-optional `measures`/`engagement`).
+    #[serde(default)]
+    pub options: WindowOptions,
+    /// 📇 Actions this window kind accepts — references `AppDefinition.actions` ids. Mandatory,
+    /// may be empty, never absent; replaces the previous implicit "every app action applies to
+    /// every window" behavior.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub measures: Vec<WindowMeasure>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub engagement: Option<WindowEngagement>,
+    pub actions: Vec<ActionId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub params_schema: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -5287,17 +5429,59 @@ impl PanelGroup {
     }
 }
 
+/// 🌳 Closes the informal `FRAMEWORK_CATEGORY_*`/`*_TAB_ID` string-constant convention that used to
+/// live in the renderer: every panel tab is either a framework-predefined kind (compile-time
+/// exhaustive) or an app-declared custom tab (open id, still required to be unique/non-empty,
+/// validated at construction by `AppBuilder`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "kind", content = "id")]
+pub enum PanelTabKind {
+    WorkbenchCategory,
+    DisplayCategory,
+    DetailsCategory,
+    SettingsCategory,
+    DisplayWindows,
+    DisplayLayout,
+    SettingsGeneral,
+    SettingsTheme,
+    /// 🧩 App-declared tab — id is app-namespaced (e.g. `"puzzle.catalogue"`).
+    App(String),
+}
+
+impl PanelTabKind {
+    /// 🔤 Flat string key for code that still needs one (e.g. React `key=` props, matching legacy ids).
+    pub fn id_str(&self) -> &str {
+        match self {
+            PanelTabKind::WorkbenchCategory => "framework.category.workbench",
+            PanelTabKind::DisplayCategory => "framework.category.display",
+            PanelTabKind::DetailsCategory => "framework.category.details",
+            PanelTabKind::SettingsCategory => "framework.category.settings",
+            PanelTabKind::DisplayWindows => "framework.display.windows",
+            PanelTabKind::DisplayLayout => "framework.display.layout",
+            PanelTabKind::SettingsGeneral => "framework.settings.general",
+            PanelTabKind::SettingsTheme => "framework.settings.theme",
+            PanelTabKind::App(id) => id.as_str(),
+        }
+    }
+}
+
 /// 🌳 A leaf carries `body_key` (its rendered panel); a branch carries `children` (the tab row shown below it). Exactly one of the two is set; `group` is only meaningful on root (non-nested) entries.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PanelTabDefinition {
-    pub id: String,
+    pub kind: PanelTabKind,
     pub label: String,
     pub group: PanelGroup,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub body_key: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub children: Vec<PanelTabDefinition>,
+}
+
+impl PanelTabDefinition {
+    pub fn id(&self) -> &str {
+        self.kind.id_str()
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -5309,10 +5493,9 @@ pub struct AppDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon_id: Option<String>,
     pub controller_id: String,
-    pub modes: Vec<ModeDefinition>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub default_mode_id: Option<String>,
-    pub window_kinds: Vec<WindowKindDefinition>,
+    pub modes: Modes,
+    pub default_mode_id: String,
+    pub window_kinds: WindowKinds,
     pub panel_tabs: Vec<PanelTabDefinition>,
     pub keybindings: Vec<Keybinding>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -5378,9 +5561,10 @@ pub struct ExampleDefinition {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum Contribution {
-    FormsQuestionKind {
+    /// 🧩 A module contributing an extension block kind to a protocol-list (Blockly-like) builder host app.
+    ProtocolBlockKind {
         app_id: String,
-        question_kind: String,
+        block_kind: String,
         label: String,
         icon_id: String,
         #[serde(default, skip_serializing_if = "String::is_empty")]

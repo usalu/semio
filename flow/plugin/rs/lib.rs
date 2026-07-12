@@ -984,6 +984,7 @@ fn render_generate_preview(envelope: &FlowPlayEnvelope) -> UiNode {
 //#endregion 🔖Render
 
 //#region 🔖FlowPlayApp
+#[derive(Default)]
 struct FlowPlayApp {
     host: Option<FlowHost>,
 }
@@ -1479,11 +1480,13 @@ fn create_flow_app() -> App {
     .program("flow", "Flow", "graph")
 }
 
-fn bundle() -> PluginBundle {
-    PluginBundle::new("flow", "Flow", "0.1.0").register_app(create_flow_app(), || Box::new(FlowPlayApp { host: None }))
-}
+fn register_flow_exports() {}
 
-semio_framework_plugin::plugin_exports!(bundle);
+semio_framework_plugin::semio_plugin! {
+    id: "flow", label: "Flow", version: "0.1.0",
+    setup: register_flow_exports,
+    apps: [ create_flow_app => FlowPlayApp ],
+}
 //#endregion 🔖Manifest
 
 #[cfg(test)]

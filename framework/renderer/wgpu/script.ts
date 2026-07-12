@@ -3,7 +3,7 @@
 import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, GIS_MAP_WGPU_TILE_PROXY_PORT, SEMIO_GIS_MAP_TILE_BASE_URL_ENV, getWorkspaceRoot, runBundleScriptMain, runVitest, frameworkOsPlaygroundDefaultPort } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, GIS_MAP_WGPU_TILE_PROXY_PORT, SEMIO_GIS_MAP_TILE_BASE_URL_ENV, getWorkspaceRoot, runBundleScriptMain, runVitest, frameworkOsPlaygroundDefaultPort, loadFrameworkOsPlaygroundCatalog } from "../../../repo/lib/js/index.ts";
 import { startGisMapTileProxyServer } from "../../../ui/styling/vite-elements-assets.ts";
 
 const repoRoot = getWorkspaceRoot();
@@ -51,6 +51,12 @@ function ensureGisMapTileProxyServer(plugin: string): void {
   console.log(`[DEBUG] gis tile proxy serving at ${gisMapTileProxyBaseUrl()}`);
 }
 
+/** 🎯Resolves the `--app <appId>` args for `semio-wgpu-native` from the catalog row matching `filterPlugin`, or `[]` when the row has no `app`. */
+function resolveNativeAppArgs(catalog: ReturnType<typeof loadFrameworkOsPlaygroundCatalog>, filterPlugin: string): string[] {
+  const row = catalog.find((r) => r.variant === filterPlugin);
+  return row?.app ? ["--app", row.app] : [];
+}
+
 function buildBootScript(bundleRoot: string): void {
   const bootTs = join(bundleRoot, "js/boot.ts");
   const bootJs = join(bundleRoot, "js/boot.js");
@@ -82,7 +88,8 @@ class TrunkServeScript extends BundleScript {
     buildBootScript(this.root);
     const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
     ensureGisMapTileProxyServer(plugin);
-    const defaultPort = String(frameworkOsPlaygroundDefaultPort(plugin, "wgpu"));
+    const catalog = loadFrameworkOsPlaygroundCatalog();
+    const defaultPort = String(frameworkOsPlaygroundDefaultPort(catalog, plugin, "wgpu"));
     const port = process.env.S_OS_PORT ?? defaultPort;
     const extra = segments.filter((segment, index, all) => segment !== "--port" && all[index - 1] !== "--port");
     const args = ["serve", "--config", "Trunk.toml", "--port", port, ...extra];
@@ -119,7 +126,9 @@ class NativeRunScript extends BundleScript {
     if (filterPlugin === "gis") {
       nativeEnv[SEMIO_GIS_MAP_TILE_BASE_URL_ENV] = gisMapTileProxyBaseUrl();
     }
-    const run = spawnSync("cargo", ["run", "-p", crateName, "--bin", "semio-wgpu-native", "--release", "--features", "native-bin", "--", "--plugin", filterPlugin], {
+    const catalog = loadFrameworkOsPlaygroundCatalog();
+    const appArgs = resolveNativeAppArgs(catalog, filterPlugin);
+    const run = spawnSync("cargo", ["run", "-p", crateName, "--bin", "semio-wgpu-native", "--release", "--features", "native-bin", "--", "--plugin", filterPlugin, ...appArgs], {
       cwd: repoRoot,
       stdio: "inherit",
       env: nativeEnv,

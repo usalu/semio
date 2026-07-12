@@ -640,6 +640,7 @@ fn draw_labels(view_state: &ViewState) -> &'static DrawLabels {
 //#endregion 🔖Terminology
 
 //#region 🔖DrawApp
+#[derive(Default)]
 struct DrawApp;
 
 impl semio_framework_plugin::PluginApp for DrawApp {
@@ -2091,12 +2092,13 @@ fn register_draw_exports() {
     semio_framework_os::register_dwg_import_handler("2d.drawing", draw::draw_document_json_from_dwg);
 }
 
-fn draw_bundle() -> semio_framework_plugin::PluginBundle {
-    register_draw_exports();
-    semio_framework_plugin::PluginBundle::new("draw", "Draw", "0.1.0").register_app(create_draw_app(), || Box::new(DrawApp))
+semio_framework_plugin::semio_plugin! {
+    id: "draw",
+    label: "Draw",
+    version: "0.1.0",
+    setup: register_draw_exports,
+    apps: [ create_draw_app => DrawApp ],
 }
-
-semio_framework_plugin::plugin_exports!(draw_bundle);
 //#endregion 🔖AppFactory
 
 //#region 🧪Tests

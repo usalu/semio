@@ -5,7 +5,7 @@ pub mod app_3d {
 
     use kernel_3d_brepkit::BrepkitKernel;
     use kernel_3d_engine::GeometryHandle;
-    use process_3d::{Pose, ProcessMeasure, ProcessStep, SolidSpec, Stock};
+    use process_3d::{Pose, ProcessMeasure, ProcessStep, SolidSpec, Stock, StepOrigin};
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_world_3d_scene, create_default_layout, mesh_from_indexed_with_face_groups, mesh_from_kind, tool_button,
         tool_toggle, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, world3d_camera_json, world3d_scene,
@@ -74,6 +74,8 @@ pub mod app_3d {
         label_field: &'static str,
         no_selection: &'static str,
         remove: &'static str,
+        provenance: &'static str,
+        validation_warning: &'static str,
     }
 
     const PROCESS3D_LABELS_NATIVE_EN: Process3dLabels = Process3dLabels {
@@ -90,6 +92,8 @@ pub mod app_3d {
         label_field: "Label",
         no_selection: "No selection",
         remove: "Remove",
+        provenance: "Made By",
+        validation_warning: "Warning",
     };
 
     const PROCESS3D_LABELS_NATIVE_DE: Process3dLabels = Process3dLabels {
@@ -106,6 +110,8 @@ pub mod app_3d {
         label_field: "Bezeichnung",
         no_selection: "Keine Auswahl",
         remove: "Entfernen",
+        provenance: "Erstellt von",
+        validation_warning: "Warnung",
     };
 
     /// 🗣️ Resolves the active label set from the shell-provided locale; falls back to native English.
@@ -325,11 +331,231 @@ pub mod app_3d {
         ProcessMeasure::Attach { component: SolidSpec::Cylinder { radius: 0.03, height: 0.2 }, pose: Pose::default() }
     }
 
-    fn measure_for_kind(kind: &str, position: Option<[f64; 3]>) -> ProcessMeasure {
-        let mut measure = match kind {
-            "drill" => default_drill_measure(),
-            "attach" => default_attach_measure(),
-            _ => default_cut_measure(),
+    /// ✂️➕ Inserts a new step at the cursor, advances the cursor past it, and selects it.
+    fn insert_step_at_cursor(fixture: &mut process_3d::Process3dDocument, step: ProcessStep) {
+        let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len()).min(fixture.steps.len());
+        fixture.steps.insert(cursor, step);
+        fixture.resolved_up_to = Some((cursor + 1).min(fixture.steps.len()));
+    }
+
+    //#region 🔖Modules
+    /// 🔧 A named numeric machine parameter (e.g. blade diameter) — sizes the tool geometry a
+    /// modification kind builds and gates which modifications are legal against the current stock.
+    struct Capability {
+        id: &'static str,
+        label: &'static str,
+        value: f64,
+    }
+
+    /// 🪚 Which kernel-level geometry operation a modification kind produces — `ProcessMeasure`'s three
+    /// existing shapes are the fixed, small vocabulary every machine ultimately maps onto.
+    #[derive(Clone, Copy, PartialEq)]
+    enum MeasureKind {
+        Cut,
+        Drill,
+        Attach,
+    }
+
+    /// 📏 A stock dimension a validation rule checks against a capability value.
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    enum TargetQuantity {
+        StockWidth,
+        StockDepth,
+        StockHeight,
+    }
+
+    /// ✅ "quantity must be at least/at most the named capability's value (± margin)" — a modification
+    /// kind's rules are ANDed together, e.g. crosscut needs stock width AND height above the blade diameter.
+    enum ValidationRule {
+        MinAgainstCapability { quantity: TargetQuantity, capability: &'static str, margin: f64 },
+        MaxAgainstCapability { quantity: TargetQuantity, capability: &'static str, margin: f64 },
+    }
+
+    /// 📐 The stock dimensions a validation rule is checked against.
+    struct ValidationContext {
+        stock_width: f64,
+        stock_depth: f64,
+        stock_height: f64,
+    }
+
+    /// 🚫 One failed validation rule, with the actual vs. required value for a human-readable reason.
+    #[derive(Debug)]
+    struct ValidationFailure {
+        quantity: TargetQuantity,
+        actual: f64,
+        required: f64,
+        is_min: bool,
+    }
+
+    /// 🪚 One thing a machine can do (e.g. "crosscut"), producing `measure_kind` geometry sized from
+    /// the machine's capabilities, gated by `rules`.
+    struct ModificationKind {
+        id: &'static str,
+        label: &'static str,
+        icon_id: &'static str,
+        measure_kind: MeasureKind,
+        rules: &'static [ValidationRule],
+    }
+
+    /// 🛠️ A tool (e.g. a circular saw) with capabilities and the modification kinds it offers.
+    struct Machine {
+        id: &'static str,
+        label: &'static str,
+        icon_id: &'static str,
+        capabilities: &'static [Capability],
+        modification_kinds: &'static [ModificationKind],
+    }
+
+    /// 📦 A domain-specific bundle of machines (e.g. "wood", "concrete"); `geometry` is the generic default.
+    struct Module {
+        id: &'static str,
+        label: &'static str,
+        machines: &'static [Machine],
+    }
+
+    const GEOMETRY_SAW: Machine = Machine {
+        id: "saw",
+        label: "Generic Saw",
+        icon_id: "scissors",
+        capabilities: &[],
+        modification_kinds: &[ModificationKind { id: "cut", label: "Cut", icon_id: "scissors", measure_kind: MeasureKind::Cut, rules: &[] }],
+    };
+    const GEOMETRY_DRILL: Machine = Machine {
+        id: "drill",
+        label: "Generic Drill",
+        icon_id: "circle-dot",
+        capabilities: &[],
+        modification_kinds: &[ModificationKind { id: "drill", label: "Drill", icon_id: "circle-dot", measure_kind: MeasureKind::Drill, rules: &[] }],
+    };
+    const GEOMETRY_ATTACHER: Machine = Machine {
+        id: "attacher",
+        label: "Generic Attacher",
+        icon_id: "plus",
+        capabilities: &[],
+        modification_kinds: &[ModificationKind { id: "attach", label: "Attach", icon_id: "plus", measure_kind: MeasureKind::Attach, rules: &[] }],
+    };
+    const GEOMETRY_MODULE: Module = Module { id: "geometry", label: "Geometry", machines: &[GEOMETRY_SAW, GEOMETRY_DRILL, GEOMETRY_ATTACHER] };
+
+    const CROSSCUT_RULES: &[ValidationRule] = &[
+        ValidationRule::MinAgainstCapability { quantity: TargetQuantity::StockWidth, capability: "diameter", margin: 0.0 },
+        ValidationRule::MinAgainstCapability { quantity: TargetQuantity::StockHeight, capability: "diameter", margin: 0.0 },
+    ];
+
+    const WOOD_CIRCULAR_SAW: Machine = Machine {
+        id: "circularSaw",
+        label: "Circular Saw",
+        icon_id: "scissors",
+        capabilities: &[Capability { id: "diameter", label: "Diameter", value: 0.184 }],
+        modification_kinds: &[ModificationKind { id: "crosscut", label: "Crosscut", icon_id: "scissors", measure_kind: MeasureKind::Cut, rules: CROSSCUT_RULES }],
+    };
+    const WOOD_TABLE_SAW: Machine = Machine {
+        id: "tableSaw",
+        label: "Table Saw",
+        icon_id: "scissors",
+        capabilities: &[Capability { id: "diameter", label: "Diameter", value: 0.315 }],
+        modification_kinds: &[ModificationKind { id: "crosscut", label: "Crosscut", icon_id: "scissors", measure_kind: MeasureKind::Cut, rules: CROSSCUT_RULES }],
+    };
+    const WOOD_MODULE: Module = Module { id: "wood", label: "Wood", machines: &[WOOD_CIRCULAR_SAW, WOOD_TABLE_SAW] };
+
+    const CONCRETE_DIAMOND_SAW: Machine = Machine {
+        id: "diamondSaw",
+        label: "Diamond Saw",
+        icon_id: "scissors",
+        capabilities: &[Capability { id: "diameter", label: "Diameter", value: 0.35 }],
+        modification_kinds: &[ModificationKind { id: "crosscut", label: "Crosscut", icon_id: "scissors", measure_kind: MeasureKind::Cut, rules: CROSSCUT_RULES }],
+    };
+    const CONCRETE_MODULE: Module = Module { id: "concrete", label: "Concrete", machines: &[CONCRETE_DIAMOND_SAW] };
+
+    const ALL_MODULES: &[Module] = &[GEOMETRY_MODULE, WOOD_MODULE, CONCRETE_MODULE];
+
+    /// 🕳️ Kerf/thickness of a machine-built disc cut tool (crosscut etc.) — the tool's extent along its own normal.
+    const CROSSCUT_KERF: f64 = 0.05;
+
+    fn find_modification(module_id: &str, machine_id: &str, modification_kind_id: &str) -> Option<(&'static Module, &'static Machine, &'static ModificationKind)> {
+        let module = ALL_MODULES.iter().find(|module| module.id == module_id)?;
+        let machine = module.machines.iter().find(|machine| machine.id == machine_id)?;
+        let kind = machine.modification_kinds.iter().find(|kind| kind.id == modification_kind_id)?;
+        Some((module, machine, kind))
+    }
+
+    /// 🔎 Finds the geometry module's machine offering a given legacy `measure` kind ("cut"/"drill"/"attach")
+    /// — the routing target for the toolbar, click/drag placement, and pre-module `addStep` callers.
+    fn geometry_machine_for_measure(measure_kind: MeasureKind) -> (&'static Machine, &'static ModificationKind) {
+        for machine in GEOMETRY_MODULE.machines {
+            for kind in machine.modification_kinds {
+                if kind.measure_kind == measure_kind {
+                    return (machine, kind);
+                }
+            }
+        }
+        unreachable!("every MeasureKind has a generic geometry machine")
+    }
+
+    fn capability_value(machine: &Machine, capability_id: &str) -> Option<f64> {
+        machine.capabilities.iter().find(|capability| capability.id == capability_id).map(|capability| capability.value)
+    }
+
+    fn validate_modification(machine: &Machine, kind: &ModificationKind, ctx: &ValidationContext) -> Vec<ValidationFailure> {
+        kind.rules
+            .iter()
+            .filter_map(|rule| {
+                let (quantity, capability, margin, is_min) = match rule {
+                    ValidationRule::MinAgainstCapability { quantity, capability, margin } => (*quantity, *capability, *margin, true),
+                    ValidationRule::MaxAgainstCapability { quantity, capability, margin } => (*quantity, *capability, *margin, false),
+                };
+                let actual = match quantity {
+                    TargetQuantity::StockWidth => ctx.stock_width,
+                    TargetQuantity::StockDepth => ctx.stock_depth,
+                    TargetQuantity::StockHeight => ctx.stock_height,
+                };
+                let capability_value = capability_value(machine, capability)?;
+                let required = if is_min { capability_value + margin } else { capability_value - margin };
+                let ok = if is_min { actual >= required } else { actual <= required };
+                if ok { None } else { Some(ValidationFailure { quantity, actual, required, is_min }) }
+            })
+            .collect()
+    }
+
+    fn validation_reason(failures: &[ValidationFailure]) -> String {
+        failures
+            .iter()
+            .map(|failure| {
+                let axis = match failure.quantity {
+                    TargetQuantity::StockWidth => "width",
+                    TargetQuantity::StockDepth => "depth",
+                    TargetQuantity::StockHeight => "height",
+                };
+                let comparator = if failure.is_min { "≥" } else { "≤" };
+                format!("needs stock {axis} {comparator} {:.0}mm (have {:.0}mm)", failure.required * 1000.0, failure.actual * 1000.0)
+            })
+            .collect::<Vec<_>>()
+            .join("; ")
+    }
+
+    fn stock_extent(solid: &SolidSpec) -> [f64; 3] {
+        match solid {
+            SolidSpec::Box { width, depth, height } => [*width, *depth, *height],
+            SolidSpec::Cylinder { radius, height } => [*radius * 2.0, *radius * 2.0, *height],
+            SolidSpec::Sphere { radius } => [*radius * 2.0, *radius * 2.0, *radius * 2.0],
+        }
+    }
+
+    fn validation_context_for_stock(stock: &Stock) -> ValidationContext {
+        let [width, depth, height] = stock_extent(&stock.solid);
+        ValidationContext { stock_width: width, stock_depth: depth, stock_height: height }
+    }
+
+    /// 🪚 Builds the `ProcessMeasure` a machine's modification kind produces — capability-parameterized
+    /// where the machine has one (e.g. a saw's `diameter` capability sizes a disc cut tool), otherwise
+    /// falling back to the generic geometry-module defaults.
+    fn measure_for_modification(machine: &Machine, kind: &ModificationKind, position: Option<[f64; 3]>) -> ProcessMeasure {
+        let mut measure = match kind.measure_kind {
+            MeasureKind::Cut => match capability_value(machine, "diameter") {
+                Some(diameter) => ProcessMeasure::Cut { tool: SolidSpec::Cylinder { radius: diameter / 2.0, height: CROSSCUT_KERF }, pose: Pose::default() },
+                None => default_cut_measure(),
+            },
+            MeasureKind::Drill => default_drill_measure(),
+            MeasureKind::Attach => default_attach_measure(),
         };
         if let Some(position) = position {
             let pose = match &mut measure {
@@ -339,22 +565,7 @@ pub mod app_3d {
         }
         measure
     }
-
-    fn label_for_kind(kind: &str, labels: &Process3dLabels) -> String {
-        match kind {
-            "drill" => labels.drill,
-            "attach" => labels.attach,
-            _ => labels.cut,
-        }
-        .to_string()
-    }
-
-    /// ✂️➕ Inserts a new step at the cursor, advances the cursor past it, and selects it.
-    fn insert_step_at_cursor(fixture: &mut process_3d::Process3dDocument, step: ProcessStep) {
-        let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len()).min(fixture.steps.len());
-        fixture.steps.insert(cursor, step);
-        fixture.resolved_up_to = Some((cursor + 1).min(fixture.steps.len()));
-    }
+    //#endregion 🔖Modules
 
     //#region 🔖InspectorPatch
     fn apply_pose_patch(pose: &mut Pose, field: &str, value: f64) -> bool {
@@ -550,12 +761,13 @@ pub mod app_3d {
         let offset = distance.min(0.0);
         let position = [point[0] + normal[0] * offset, point[1] + normal[1] * offset, point[2] + normal[2] * offset];
         let pose = Pose { position, axis, angle };
-        let (measure, label) = if distance < 0.0 {
-            (ProcessMeasure::Cut { tool: SolidSpec::Box { width, depth, height }, pose }, labels.push_cut)
+        let (measure, label, machine_id, modification_kind_id) = if distance < 0.0 {
+            (ProcessMeasure::Cut { tool: SolidSpec::Box { width, depth, height }, pose }, labels.push_cut, GEOMETRY_SAW.id, "cut")
         } else {
-            (ProcessMeasure::Attach { component: SolidSpec::Box { width, depth, height }, pose }, labels.pull_attach)
+            (ProcessMeasure::Attach { component: SolidSpec::Box { width, depth, height }, pose }, labels.pull_attach, GEOMETRY_ATTACHER.id, "attach")
         };
-        Some(ProcessStep { id: next_step_id(), label: label.to_string(), enabled: true, measure })
+        let origin = StepOrigin { module_id: GEOMETRY_MODULE.id.to_string(), machine_id: machine_id.to_string(), modification_kind_id: modification_kind_id.to_string() };
+        Some(ProcessStep { id: next_step_id(), label: label.to_string(), enabled: true, origin: Some(origin), measure })
     }
 
     fn tool_solid_for_measure(kernel: &mut BrepkitKernel, measure: &ProcessMeasure) -> Option<GeometryHandle> {
@@ -800,27 +1012,60 @@ pub mod app_3d {
         })
     }
 
-    fn build_catalogue_tree(labels: &Process3dLabels) -> UiNode {
-        let step_items = vec![
-            tree_item_with_action("process3d-catalogue.cut", labels.cut, Some("scissors"), process3d_action("addStep", Some(json!({ "measure": "cut" })))),
-            tree_item_with_action("process3d-catalogue.drill", labels.drill, Some("circle-dot"), process3d_action("addStep", Some(json!({ "measure": "drill" })))),
-            tree_item_with_action("process3d-catalogue.attach", labels.attach, Some("plus"), process3d_action("addStep", Some(json!({ "measure": "attach" })))),
-        ];
+    /// 🏭 Builds one catalogue tree item per machine modification kind across all modules, disabling
+    /// (non-clickable, with a reason) any kind the current stock doesn't satisfy.
+    fn build_catalogue_tree(envelope: &Process3dEnvelope, labels: &Process3dLabels) -> UiNode {
+        let ctx = validation_context_for_stock(&envelope.fixture.stock);
+        let mut sections: Vec<UiTreeSectionNode> = ALL_MODULES
+            .iter()
+            .map(|module| {
+                let items: Vec<UiTreeItemNode> = module
+                    .machines
+                    .iter()
+                    .flat_map(|machine| {
+                        machine.modification_kinds.iter().map(move |kind| {
+                            let failures = validate_modification(machine, kind, &ctx);
+                            let id = format!("process3d-catalogue.{}.{}.{}", module.id, machine.id, kind.id);
+                            let label = format!("{} — {}", machine.label, kind.label);
+                            if failures.is_empty() {
+                                tree_item_with_action(
+                                    id,
+                                    label,
+                                    Some(kind.icon_id),
+                                    process3d_action("addStep", Some(json!({ "moduleId": module.id, "machineId": machine.id, "modificationKindId": kind.id }))),
+                                )
+                            } else {
+                                UiTreeItemNode {
+                                    id,
+                                    label,
+                                    description: Some(validation_reason(&failures)),
+                                    icon_id: Some(kind.icon_id.into()),
+                                    selected: None,
+                                    default_open: None,
+                                    action: None,
+                                    hover_action: None,
+                                    unhover_action: None,
+                                    actions: None,
+                                    draggable: None,
+                                    drag_data: None,
+                                    items: None,
+                                    control: None,
+                                    is_hidden: None,
+                                }
+                            }
+                        })
+                    })
+                    .collect();
+                UiTreeSectionNode { id: format!("process3d-play-catalogue.{}", module.id), label: Some(module.label.into()), default_open: Some(module.id == "geometry"), items }
+            })
+            .collect();
         let stock_items = vec![
             tree_item_with_action("process3d-catalogue.stock-box", "Box", Some("box"), process3d_action("setStock", Some(json!({ "kind": "box" })))),
             tree_item_with_action("process3d-catalogue.stock-cylinder", "Cylinder", Some("cylinder"), process3d_action("setStock", Some(json!({ "kind": "cylinder" })))),
             tree_item_with_action("process3d-catalogue.stock-sphere", "Sphere", Some("circle"), process3d_action("setStock", Some(json!({ "kind": "sphere" })))),
         ];
-        UiNode::Tree(UiTreeNode {
-            sections: vec![
-                UiTreeSectionNode { id: "process3d-play-catalogue.steps".into(), label: Some(labels.steps.into()), default_open: Some(true), items: step_items },
-                UiTreeSectionNode { id: "process3d-play-catalogue.stock".into(), label: Some(labels.stock.into()), default_open: Some(false), items: stock_items },
-            ],
-            selected_ids: None,
-            highlighted_ids: None,
-            selection_change: None,
-            drop_action: None,
-        })
+        sections.push(UiTreeSectionNode { id: "process3d-play-catalogue.stock".into(), label: Some(labels.stock.into()), default_open: Some(false), items: stock_items });
+        UiNode::Tree(UiTreeNode { sections, selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None })
     }
 
     fn build_stock_inspector(stock: &Stock, fixture: &process_3d::Process3dDocument, labels: &Process3dLabels) -> UiNode {
@@ -849,9 +1094,18 @@ pub mod app_3d {
         ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "process3d-inspector.stock".into(), label: labels.stock.into(), default_open: Some(true), fields }])
     }
 
-    fn build_step_inspector(step: &ProcessStep, labels: &Process3dLabels) -> UiNode {
+    fn build_step_inspector(step: &ProcessStep, stock: &Stock, labels: &Process3dLabels) -> UiNode {
         let target = format!("step:{}", step.id);
         let mut fields = vec![text_field("process3d-inspector.label", labels.label_field, &step.label, &target, "label")];
+        if let Some(origin) = &step.origin {
+            if let Some((module, machine, kind)) = find_modification(&origin.module_id, &origin.machine_id, &origin.modification_kind_id) {
+                fields.push(ui_inspector_readonly_field("process3d-inspector.origin", labels.provenance, format!("{} · {} · {}", module.label, machine.label, kind.label)));
+                let failures = validate_modification(machine, kind, &validation_context_for_stock(stock));
+                if !failures.is_empty() {
+                    fields.push(ui_inspector_readonly_field("process3d-inspector.validation", labels.validation_warning, validation_reason(&failures)));
+                }
+            }
+        }
         let pose = match &step.measure {
             ProcessMeasure::Cut { tool, pose } => {
                 if let SolidSpec::Box { width, depth, height } = tool {
@@ -894,7 +1148,7 @@ pub mod app_3d {
             return build_stock_inspector(&envelope.fixture.stock, &envelope.fixture, labels);
         }
         if let Some(step) = envelope.fixture.steps.iter().find(|step| step.id == selected_id) {
-            return build_step_inspector(step, labels);
+            return build_step_inspector(step, &envelope.fixture.stock, labels);
         }
         ui_text(labels.no_selection)
     }
@@ -1030,9 +1284,31 @@ pub mod app_3d {
                     }
                 }
                 "addStep" => {
-                    let kind = args.and_then(|value| value.get("measure")).and_then(|value| value.as_str()).unwrap_or("cut");
                     let position = args.and_then(|value| value.get("position")).and_then(value_as_vec3);
-                    let step = ProcessStep { id: next_step_id(), label: label_for_kind(kind, process3d_labels(_view_state)), enabled: true, measure: measure_for_kind(kind, position) };
+                    let module_id_arg = args.and_then(|value| value.get("moduleId")).and_then(|value| value.as_str());
+                    let machine_id_arg = args.and_then(|value| value.get("machineId")).and_then(|value| value.as_str());
+                    let modification_kind_id_arg = args.and_then(|value| value.get("modificationKindId")).and_then(|value| value.as_str());
+                    let resolved = if let (Some(module_id), Some(machine_id), Some(modification_kind_id)) = (module_id_arg, machine_id_arg, modification_kind_id_arg) {
+                        find_modification(module_id, machine_id, modification_kind_id)
+                    } else {
+                        let legacy_kind = args.and_then(|value| value.get("measure")).and_then(|value| value.as_str()).unwrap_or("cut");
+                        let measure_kind = match legacy_kind {
+                            "drill" => MeasureKind::Drill,
+                            "attach" => MeasureKind::Attach,
+                            _ => MeasureKind::Cut,
+                        };
+                        let (machine, kind) = geometry_machine_for_measure(measure_kind);
+                        Some((&GEOMETRY_MODULE, machine, kind))
+                    };
+                    let Some((module, machine, kind)) = resolved else {
+                        return Vec::new();
+                    };
+                    let failures = validate_modification(machine, kind, &validation_context_for_stock(&envelope.fixture.stock));
+                    if !failures.is_empty() {
+                        return Vec::new();
+                    }
+                    let origin = StepOrigin { module_id: module.id.to_string(), machine_id: machine.id.to_string(), modification_kind_id: kind.id.to_string() };
+                    let step = ProcessStep { id: next_step_id(), label: kind.label.to_string(), enabled: true, origin: Some(origin), measure: measure_for_modification(machine, kind, position) };
                     envelope.runtime.selected_id = Some(step.id.clone());
                     insert_step_at_cursor(&mut envelope.fixture, step);
                     return vec![finalize_document_op(&mut envelope)];
@@ -1171,7 +1447,14 @@ pub mod app_3d {
                         return Vec::new();
                     }
                     if let Some(point) = args.and_then(|value| value.get("position")).and_then(value_as_vec3) {
-                        let step = ProcessStep { id: next_step_id(), label: label_for_kind(&tool, process3d_labels(_view_state)), enabled: true, measure: measure_for_kind(&tool, Some(point)) };
+                        let measure_kind = match tool.as_str() {
+                            "drill" => MeasureKind::Drill,
+                            "attach" => MeasureKind::Attach,
+                            _ => MeasureKind::Cut,
+                        };
+                        let (machine, kind) = geometry_machine_for_measure(measure_kind);
+                        let origin = StepOrigin { module_id: GEOMETRY_MODULE.id.to_string(), machine_id: machine.id.to_string(), modification_kind_id: kind.id.to_string() };
+                        let step = ProcessStep { id: next_step_id(), label: kind.label.to_string(), enabled: true, origin: Some(origin), measure: measure_for_modification(machine, kind, Some(point)) };
                         envelope.runtime.selected_id = Some(step.id.clone());
                         insert_step_at_cursor(&mut envelope.fixture, step);
                         envelope.runtime.active_tool = "select".into();
@@ -1242,7 +1525,7 @@ pub mod app_3d {
                     )
                 }
                 PROCESS_3D_PLAY_BODY_DOCUMENT => build_document_tree(&envelope, labels),
-                PROCESS_3D_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
+                PROCESS_3D_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope, labels),
                 PROCESS_3D_PLAY_BODY_INSPECTION => build_inspector_tree(&envelope, labels),
                 _ => ui_text(format!("Unknown body: {body_key}")),
             }
@@ -1347,6 +1630,7 @@ pub mod app_3d {
                 id: "drill-1".into(),
                 label: "Drill".into(),
                 enabled: true,
+                origin: None,
                 measure: ProcessMeasure::Drill { radius: 0.2, depth: 1.0, pose: Pose { position: [0.0, 0.0, 0.5], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
             });
             let drilled_volume = processed_volume(&fixture).expect("drilled volume");
@@ -1362,6 +1646,7 @@ pub mod app_3d {
                 id: "attach-1".into(),
                 label: "Attach".into(),
                 enabled: true,
+                origin: None,
                 measure: ProcessMeasure::Attach { component: SolidSpec::Sphere { radius: 0.3 }, pose: Pose { position: [1.0, 0.0, 0.5], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
             });
             let attached_volume = processed_volume(&fixture).expect("attached volume");
@@ -1377,6 +1662,7 @@ pub mod app_3d {
                 id: "drill-1".into(),
                 label: "Drill".into(),
                 enabled: false,
+                origin: None,
                 measure: ProcessMeasure::Drill { radius: 0.2, depth: 1.0, pose: Pose::default() },
             });
             let volume_with_disabled_step = processed_volume(&fixture).expect("volume");
@@ -1392,6 +1678,7 @@ pub mod app_3d {
                 id: "drill-1".into(),
                 label: "Drill".into(),
                 enabled: true,
+                origin: None,
                 measure: ProcessMeasure::Drill { radius: 0.2, depth: 1.0, pose: Pose::default() },
             });
             fixture.resolved_up_to = Some(0);
@@ -1626,6 +1913,7 @@ pub mod app_3d {
                 id: "drill-1".into(),
                 label: "Drill".into(),
                 enabled: true,
+                origin: None,
                 measure: ProcessMeasure::Drill { radius: 0.1, depth: 1.0, pose: Pose::default() },
             });
             fixture.resolved_up_to = Some(1);
@@ -1633,18 +1921,110 @@ pub mod app_3d {
             let session = process_kernel_session().lock().expect("kernel session lock");
             assert!(session.memo.len() >= 2, "expected stock + drilled prefixes memoized, got {}", session.memo.len());
         }
+
+        #[test]
+        fn catalogue_lists_wood_and_concrete_with_mixed_validity_on_default_stock() {
+            let mut app = Process3dPlayApp::default();
+            let document_json = app.initial_document_json();
+            let view_state = ViewState::default();
+            let node = app.render(PROCESS_3D_PLAY_BODY_CATALOGUE, &document_json, &view_state);
+            let node_json = serde_json::to_string(&node).expect("catalogue json");
+            assert!(node_json.contains("Circular Saw"), "expected wood's circular saw in the catalogue: {node_json}");
+            assert!(node_json.contains("Table Saw"), "expected wood's table saw in the catalogue: {node_json}");
+            assert!(node_json.contains("Diamond Saw"), "expected concrete's diamond saw in the catalogue: {node_json}");
+            // The default timber beam (0.24m tall) fits the circular saw's 0.184m diameter but not the
+            // table saw's 0.315m or the diamond saw's 0.35m — a real mix of valid and disabled items.
+            assert!(node_json.contains("needs stock"), "expected at least one disabled-item validation reason: {node_json}");
+        }
+
+        #[test]
+        fn add_step_via_catalogue_sets_origin_and_builds_capability_sized_tool() {
+            let mut app = Process3dPlayApp::default();
+            let document_json = app.initial_document_json();
+            let view_state = ViewState::default();
+            let ops = app.handle_action_patch_ops(
+                "addStep",
+                Some(&json!({ "moduleId": "wood", "machineId": "circularSaw", "modificationKindId": "crosscut" })),
+                &document_json,
+                &view_state,
+            );
+            assert_eq!(ops.len(), 1, "circular saw crosscut should be valid against the default timber beam stock");
+            let patched: Value = serde_json::from_str(&ops[0]).expect("patch op json");
+            let steps = patched["document"]["fixture"]["steps"].as_array().expect("steps array");
+            let last = steps.last().expect("inserted step");
+            assert_eq!(last["origin"]["moduleId"], "wood");
+            assert_eq!(last["origin"]["machineId"], "circularSaw");
+            assert_eq!(last["origin"]["modificationKindId"], "crosscut");
+            assert_eq!(last["measure"], "cut");
+            let radius = last["tool"]["radius"].as_f64().expect("tool radius");
+            assert!((radius - 0.092).abs() < 1e-9, "circular saw diameter 0.184 should size the tool to radius 0.092, got {radius}");
+        }
+
+        #[test]
+        fn add_step_via_catalogue_rejected_when_validation_fails() {
+            let mut app = Process3dPlayApp::default();
+            let document_json = app.initial_document_json();
+            let view_state = ViewState::default();
+            // Table saw needs >= 0.315m stock height; the default timber beam is only 0.24m tall.
+            let ops = app.handle_action_patch_ops(
+                "addStep",
+                Some(&json!({ "moduleId": "wood", "machineId": "tableSaw", "modificationKindId": "crosscut" })),
+                &document_json,
+                &view_state,
+            );
+            assert!(ops.is_empty(), "table saw crosscut should be rejected server-side against undersized stock");
+        }
+
+        #[test]
+        fn legacy_measure_arg_routes_to_geometry_module() {
+            let mut app = Process3dPlayApp::default();
+            let document_json = app.initial_document_json();
+            let view_state = ViewState::default();
+            let ops = app.handle_action_patch_ops("addStep", Some(&json!({ "measure": "cut" })), &document_json, &view_state);
+            assert_eq!(ops.len(), 1);
+            let patched: Value = serde_json::from_str(&ops[0]).expect("patch op json");
+            let steps = patched["document"]["fixture"]["steps"].as_array().expect("steps array");
+            let last = steps.last().expect("inserted step");
+            assert_eq!(last["origin"]["moduleId"], "geometry");
+            assert_eq!(last["origin"]["machineId"], "saw");
+            assert_eq!(last["origin"]["modificationKindId"], "cut");
+            assert_eq!(last["measure"], "cut");
+        }
+
+        #[test]
+        fn inspector_shows_validation_warning_after_stock_shrinks_below_step_requirement() {
+            let mut app = Process3dPlayApp::default();
+            let document_json = app.initial_document_json();
+            let view_state = ViewState::default();
+            let ops = app.handle_action_patch_ops(
+                "addStep",
+                Some(&json!({ "moduleId": "wood", "machineId": "circularSaw", "modificationKindId": "crosscut" })),
+                &document_json,
+                &view_state,
+            );
+            let after_add: Value = serde_json::from_str(&ops[0]).expect("patch op json");
+            let step_id = after_add["document"]["runtime"]["selectedId"].as_str().expect("selected id").to_string();
+            let after_add_json = after_add["document"].to_string();
+
+            let ops = app.handle_action_patch_ops("patchInspector", Some(&json!({ "target": "beam", "field": "height", "value": 0.05 })), &after_add_json, &view_state);
+            let after_shrink: Value = serde_json::from_str(&ops[0]).expect("patch op json");
+            let shrunk_json = after_shrink["document"].to_string();
+
+            let ops = app.handle_action_patch_ops("setSelection", Some(&json!({ "id": step_id })), &shrunk_json, &view_state);
+            let after_select: Value = serde_json::from_str(&ops[0]).expect("patch op json");
+            let selected_json = after_select["document"].to_string();
+
+            let node = app.render(PROCESS_3D_PLAY_BODY_INSPECTION, &selected_json, &view_state);
+            let node_json = serde_json::to_string(&node).expect("inspector json");
+            assert!(node_json.contains("needs stock"), "expected a validation warning after shrinking stock below the step's requirement: {node_json}");
+        }
     }
 }
 
-use semio_framework_plugin::PluginBundle;
-
 //#region 🔖Bundle
-fn bundle() -> PluginBundle {
-    app_3d::register_process3d_exports();
-    PluginBundle::new("process", "Process", "0.1.0")
-        .register_app(app_3d::create_process3d_app(), || Box::new(app_3d::Process3dPlayApp::default()))
+semio_framework_plugin::semio_plugin! {
+    id: "process", label: "Process", version: "0.1.0",
+    setup: app_3d::register_process3d_exports,
+    apps: [ app_3d::create_process3d_app => app_3d::Process3dPlayApp ],
 }
-
-#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Bundle

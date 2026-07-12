@@ -5643,6 +5643,13 @@ pub struct Theme {
     pub border_emphasized: Rgba,
     pub text_element: Rgba,
     pub stroke_hairline: f32,
+    pub checker_light: Rgba,
+    pub checker_dark: Rgba,
+    pub diagram_stroke: Rgba,
+    pub diagram_seam: Rgba,
+    pub diagram_accent: Rgba,
+    pub diagram_accent_fill: Rgba,
+    pub error: Rgba,
 }
 
 impl Default for Theme {
@@ -5701,6 +5708,13 @@ fn from_chrome(chrome: &ChromePalette) -> Theme {
         border_emphasized: Rgba::from_chrome(&chrome.border_emphasized),
         text_element: Rgba::from_chrome(&chrome.border_element),
         stroke_hairline: strokes::CHROME_BORDER_HAIRLINE as f32,
+        checker_light: Rgba::new(0.85, 0.85, 0.85, 1.0),
+        checker_dark: Rgba::new(0.72, 0.72, 0.72, 1.0),
+        diagram_stroke: Rgba::new(0.2, 0.55, 0.95, 0.95),
+        diagram_seam: Rgba::new(0.95, 0.45, 0.2, 0.95),
+        diagram_accent: Rgba::new(0.25, 0.45, 0.65, 0.9),
+        diagram_accent_fill: Rgba::new(0.25, 0.35, 0.55, 0.8),
+        error: Rgba::new(0.95, 0.35, 0.35, 1.0),
     }
 }
 

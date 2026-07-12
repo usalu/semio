@@ -534,6 +534,7 @@ fn render_main_canvas(envelope: &PresentationPlayEnvelope) -> UiNode {
 //#endregion 🔖Render
 
 //#region 🔖PresentationPlayApp
+#[derive(Default)]
 struct PresentationPlayApp;
 
 impl PluginApp for PresentationPlayApp {
@@ -908,14 +909,13 @@ fn register_presentation_exports() {
     semio_framework_os::register_dwg_import_handler("presentation.deck", presentation_document_json_from_dwg);
 }
 
-fn bundle() -> PluginBundle {
-    register_presentation_exports();
-    PluginBundle::new("presentation", "Presentation", "0.1.0").register_app(create_presentation_app(), || {
-        Box::new(PresentationPlayApp)
-    })
+semio_framework_plugin::semio_plugin! {
+    id: "presentation",
+    label: "Presentation",
+    version: "0.1.0",
+    setup: register_presentation_exports,
+    apps: [ create_presentation_app => PresentationPlayApp ],
 }
-
-semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

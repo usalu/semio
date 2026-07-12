@@ -14,7 +14,7 @@ ui_styling = { path = "../../../../../../ui/styling/rs" }
 mathematical_graph_port_directed = { path = "../../rs" }
 mathematical_graph_manifest = { path = "../../../../manifest/rs" }
 mathematical_graph_dsl = { path = "../../../../dsl/rs" }
-mathematical_core = { path = "../../../../../core/rs" }
+mathematical_graph_drawing = { path = "../../../../drawing/rs" }
 infinite_cavas = { path = "../../../../../../infinite/cavas/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

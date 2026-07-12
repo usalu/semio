@@ -7,6 +7,12 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:cad"
 
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "cad"
+ports = { react = 6020, wgpu = 6120 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

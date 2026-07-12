@@ -1,4 +1,11 @@
 //! 🧊 Raw wgpu WASM renderer for declarative framework UiNode trees.
+//!
+//! 🧭 Rough correspondence with the React shell (`framework/renderer/react/os-shell.tsx`), as a
+//! discoverability breadcrumb rather than a rigorous mapping:
+//! - this crate's top-level shell/state struct ~ React's `#region 🔖types` + `FrameworkOsShell`.
+//! - the `dock` module below (window tree, stack chrome, split resize) ~ React's `Mode`
+//!   component and the `WindowLayoutNode` tree helpers in `#region ShellHelpers`.
+//! - `interpreter`/widget rendering ~ React's `UiNode` component tree rendering.
 
 pub mod dock {
 // #region dock
@@ -1643,7 +1650,10 @@ mod tests {
     use super::*;
     use semio_framework_core::layout::create_default_layout;
     use crate::shell::ShellState;
-    use semio_framework_core::{AppDefinition, ModeDefinition, PanelGroup, PanelTabDefinition, WindowKindDefinition};
+    use semio_framework_core::{
+        AppDefinition, ModeDefinition, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition,
+        WindowOptions,
+    };
 
     fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinition {
         AppDefinition {
@@ -1652,32 +1662,36 @@ mod tests {
             document: vec!["semio".into(), "test".into()],
             icon_id: None,
             controller_id: "test".into(),
-            modes: vec![ModeDefinition {
+            modes: semio_framework_core::Modes::one(ModeDefinition {
                 id: "default".into(),
                 label: "Default".into(),
                 tools: vec![],
-            layout_id: None,
-            }],
-            default_mode_id: Some("default".into()),
-            window_kinds: window_ids
-                .iter()
-                .map(|id| WindowKindDefinition {
-                    id: (*id).into(),
-                    label: (*id).into(),
-                    body_key: format!("{id}.body"),
-                    surface_kind: semio_framework_core::SurfaceKind::Canvas2d,
-                    icon_id: None,
-                    measures: vec![],
-                    engagement: None,
-                    params_schema: None,
-                    document_projection_schema: None,
-                    input_event_schema: None,
-                    output_schema: None,
-                    capabilities: vec![],
-                })
-                .collect(),
+                layout_id: None,
+                actions: vec![],
+            }),
+            default_mode_id: "default".into(),
+            window_kinds: semio_framework_core::WindowKinds::try_from(
+                window_ids
+                    .iter()
+                    .map(|id| WindowKindDefinition {
+                        id: (*id).into(),
+                        label: (*id).into(),
+                        body_key: format!("{id}.body"),
+                        surface_kind: semio_framework_core::SurfaceKind::Canvas2d,
+                        icon_id: None,
+                        options: WindowOptions::default(),
+                        actions: vec![],
+                        params_schema: None,
+                        document_projection_schema: None,
+                        input_event_schema: None,
+                        output_schema: None,
+                        capabilities: vec![],
+                    })
+                    .collect::<Vec<_>>(),
+            )
+            .expect("sample_app tests always pass at least one window id"),
             panel_tabs: vec![PanelTabDefinition {
-                id: "tab".into(),
+                kind: PanelTabKind::App("tab".into()),
                 label: "Tab".into(),
                 group: PanelGroup::Workbench,
                 body_key: Some("tab.body".into()),
@@ -7300,8 +7314,8 @@ fn draw_checkerboard(
 ) {
     let cell = 16.0;
     let half = extent * 0.5;
-    let light = Rgba::new(0.85, 0.85, 0.85, 1.0);
-    let dark = Rgba::new(0.72, 0.72, 0.72, 1.0);
+    let light = theme.checker_light;
+    let dark = theme.checker_dark;
     let (mut min_x, mut max_x, mut min_y, mut max_y) = (-half, half, -half, half);
     if viewport.zoom > 0.0 {
         let (wx0, wy0) = viewport.screen_to_world(inner.x, inner.y, inner);
@@ -7331,7 +7345,6 @@ fn draw_checkerboard(
         wy += cell;
         row += 1;
     }
-    let _ = theme;
 }
 
 fn draw_dashed_line(
@@ -7404,8 +7417,8 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         }
         if layer.kind == "polyline" {
             if let Some(points) = &layer.points {
-                let stroke = Rgba::new(0.2, 0.55, 0.95, 0.95);
-                let seam_stroke = Rgba::new(0.95, 0.45, 0.2, 0.95);
+                let stroke = theme.diagram_stroke;
+                let seam_stroke = theme.diagram_seam;
                 let width = (1.5 * viewport.zoom).max(1.0);
                 for (edge_index, chunk) in points.chunks(2).enumerate() {
                     if chunk.len() < 2 {
@@ -7430,7 +7443,12 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
             continue;
         }
         let hue = (index * 47 % 360) as f32;
-        let stroke = Rgba::new(0.25 + hue / 720.0, 0.45, 0.65, 0.9);
+        let stroke = Rgba::new(
+            theme.diagram_accent.r + hue / 720.0,
+            theme.diagram_accent.g,
+            theme.diagram_accent.b,
+            theme.diagram_accent.a,
+        );
         if layer.kind == "line" || layer.x0.is_some() {
             let x0 = layer.x0.unwrap_or(layer.x) as f32;
             let y0 = layer.y0.unwrap_or(layer.y) as f32;
@@ -7447,7 +7465,12 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         let h = layer.height as f32 * viewport.zoom;
         ctx.draw.push_rounded(
             [sx, sy, w.max(8.0), h.max(8.0)],
-            Rgba::new(0.25 + hue / 720.0, 0.35, 0.55, 0.8),
+            Rgba::new(
+                theme.diagram_accent_fill.r + hue / 720.0,
+                theme.diagram_accent_fill.g,
+                theme.diagram_accent_fill.b,
+                theme.diagram_accent_fill.a,
+            ),
             4.0,
         );
         let label = if layer.name.is_empty() {
@@ -8445,7 +8468,7 @@ fn note_draw_block(
                     let get = |i: usize| c.get(i).and_then(Value::as_f64).unwrap_or(0.0) as f32;
                     Rgba::new(get(0), get(1), get(2), get(3))
                 })
-                .unwrap_or(Rgba::new(0.0, 0.0, 0.0, 1.0));
+                .unwrap_or(theme.text);
             let stroke_width = (note_block_num(block, "strokeWidth") as f32 * camera.zoom as f32).max(1.0);
             let screen_points: Vec<(f32, f32)> = points.iter().map(|p| note_world_to_screen(camera, inner, p.0, p.1)).collect();
             for pair in screen_points.windows(2) {
@@ -10739,15 +10762,15 @@ impl ShellState {
             };
             let instance_id = s_plugin.create_app(&s_app.id).await?;
             let view_state = ViewState {
-                active_mode_id: s_app.default_mode_id.clone().or_else(|| s_app.modes.first().map(|m| m.id.clone())),
-                active_window_kind_id: s_app.window_kinds.first().map(|w| w.id.clone()),
+                active_mode_id: Some(s_app.default_mode_id.clone()),
+                active_window_kind_id: Some(s_app.window_kinds.first().id.clone()),
                 selection_json: None,
                 panel_json: Some(Self::panel_json(&panel_state)),
                 contributions_json: None,
                 locale: Some(self.locale_id.clone()),
                 terminology: Some(self.terminology_id.clone()),
             };
-            self.active_window_id = s_app.window_kinds.first().map(|w| w.id.clone());
+            self.active_window_id = Some(s_app.window_kinds.first().id.clone());
             self.session = Some(ActiveSession {
                 plugin_id: s_plugin.plugin_id.clone(),
                 instance_id,
@@ -10762,13 +10785,13 @@ impl ShellState {
                 .ok_or("plugin has no apps")?
                 .clone();
             let instance_id = plugin.create_app(&app.id).await?;
-            self.active_window_id = app.window_kinds.first().map(|w| w.id.clone());
+            self.active_window_id = Some(app.window_kinds.first().id.clone());
             self.session = Some(ActiveSession {
                 plugin_id: plugin.plugin_id.clone(),
                 instance_id,
                 app: app.clone(),
                 view_state: ViewState {
-                    active_mode_id: app.default_mode_id.clone().or_else(|| app.modes.first().map(|m| m.id.clone())),
+                    active_mode_id: Some(app.default_mode_id.clone()),
                     active_window_kind_id: self.active_window_id.clone(),
                     selection_json: None,
                     panel_json: None,
@@ -10994,8 +11017,7 @@ impl ShellState {
                 .view_state
                 .active_mode_id
                 .clone()
-                .or_else(|| session.app.default_mode_id.clone())
-                .or_else(|| session.app.modes.first().map(|mode| mode.id.clone()));
+                .or_else(|| Some(session.app.default_mode_id.clone()));
             self.active_tools = session
                 .app
                 .modes
@@ -11028,14 +11050,10 @@ impl ShellState {
                             .iter()
                             .find(|app| app.id == spawned.app_id);
                         if let Some(app) = spawned_app {
-                            let body_key = app
-                                .window_kinds
-                                .first()
-                                .map(|k| k.body_key.clone())
-                                .unwrap_or_default();
+                            let body_key = app.window_kinds.first().body_key.clone();
                             let view_state = ViewState {
-                                active_mode_id: app.default_mode_id.clone(),
-                                active_window_kind_id: app.window_kinds.first().map(|w| w.id.clone()),
+                                active_mode_id: Some(app.default_mode_id.clone()),
+                                active_window_kind_id: Some(app.window_kinds.first().id.clone()),
                                 selection_json: None,
                                 panel_json: None,
                                 contributions_json: None,
@@ -11835,18 +11853,15 @@ impl ShellState {
             active_spawned_id: None,
         };
         let next_view_state = view_state.unwrap_or_else(|| ViewState {
-            active_mode_id: app
-                .default_mode_id
-                .clone()
-                .or_else(|| app.modes.first().map(|mode| mode.id.clone())),
-            active_window_kind_id: app.window_kinds.first().map(|window| window.id.clone()),
+            active_mode_id: Some(app.default_mode_id.clone()),
+            active_window_kind_id: Some(app.window_kinds.first().id.clone()),
             selection_json: None,
             panel_json: Some(Self::panel_json(&panel_state)),
             contributions_json: None,
             locale: Some(self.locale_id.clone()),
             terminology: Some(self.terminology_id.clone()),
         });
-        self.active_window_id = app.window_kinds.first().map(|window| window.id.clone());
+        self.active_window_id = Some(app.window_kinds.first().id.clone());
         if app_id == S_HOME_APP_ID {
             self.open_studio_id = None;
         }
@@ -13800,7 +13815,7 @@ fn render_chrome_group(
         let item_rect = Rect::new(x, inner_y, item_w, inner_h);
         let hovered = !item.disabled && item_rect.contains(input.pointer_x, input.pointer_y);
         let bg = if item.disabled {
-            Rgba::new(0.0, 0.0, 0.0, 0.0)
+            theme.overlay_shadow
         } else {
             chrome_item_bg(theme, item.active, hovered)
         };
@@ -14288,7 +14303,7 @@ impl ShellState {
                 12.0,
                 h - theme.footer_height - 24.0,
                 theme.font_size_small,
-                Rgba::new(0.95, 0.35, 0.35, 1.0),
+                theme.error,
             );
         }
     }
@@ -14484,7 +14499,7 @@ impl ShellState {
                 x,
                 btn_y + (btn_h - logo_size) * 0.5,
                 logo_size,
-                Rgba::new(1.0, 1.0, 1.0, 1.0),
+                theme.text,
             );
         x += logo_size + theme.gap_standard;
         let title = self
@@ -14627,8 +14642,7 @@ impl ShellState {
                             .view_state
                             .active_mode_id
                             .as_deref()
-                            .or(session.app.default_mode_id.as_deref())
-                            .unwrap_or(&mode.id);
+                            .unwrap_or(session.app.default_mode_id.as_str());
                         ChromeGroupItem {
                             control_id: control_id.as_str(),
                             icon_id: None,
@@ -15639,14 +15653,14 @@ impl ShellState {
             .get(&kind.id)
             .filter(|measures| !measures.is_empty())
             .cloned()
-            .unwrap_or_else(|| kind.measures.clone())
+            .unwrap_or_else(|| kind.options.measures.clone())
     }
 
     fn engagement_for_kind(&self, kind: &semio_framework_core::WindowKindDefinition) -> Option<WindowEngagement> {
         self.window_engagements
             .get(&kind.id)
             .cloned()
-            .or_else(|| kind.engagement.clone())
+            .or_else(|| kind.options.engagement.as_option().cloned())
             .or_else(|| {
                 if kind.surface_kind.is_viewport() {
                     Some(semio_framework_core::default_viewport_engagement())

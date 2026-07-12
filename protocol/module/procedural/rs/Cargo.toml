@@ -1,18 +1,21 @@
 [package]
-name = "forms-module-procedural"
+name = "protocol-module-procedural"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
 
 [package.metadata.component]
-package = "semio:forms-module-procedural"
+package = "semio:protocol-module-procedural"
+
+[package.metadata.semio]
+contributes = ["protocol.blockKind"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
-forms = { path = "../../../rs" }
+protocol = { path = "../../../rs" }
 flow_core = { path = "../../../../flow/core/rs" }
 flow_module_brep = { path = "../../../../flow/module/brep/rs", default-features = false }
 kernel_3d_brepkit = { path = "../../../../kernel/3d/brep/rs" }

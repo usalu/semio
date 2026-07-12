@@ -220,7 +220,8 @@ pub mod app_jack {
         if fixture.nodes.is_empty() {
             return None;
         }
-        use mathematical_core::force_layout::{run_force_layout, ForceLayoutOptions, Vec2};
+        use mathematical_graph_drawing::force::{run_force_layout, ForceLayoutOptions};
+        use mathematical_geometry::Vec2;
         let mut positions: Vec<Vec2> = fixture.nodes.iter().map(|node| Vec2::new(node.x, node.y)).collect();
         let radii: Vec<f64> = fixture.nodes.iter().map(|node| (node.width.max(48.0) + node.height.max(24.0)) * 0.25).collect();
         let id_to_index: std::collections::HashMap<String, usize> = fixture
@@ -915,6 +916,7 @@ pub mod app_jack {
     //#endregion 🔖Render
 
     //#region 🔖TrinityJackPlayApp
+    #[derive(Default)]
     pub struct TrinityJackPlayApp;
 
     impl PluginApp for TrinityJackPlayApp {
@@ -2852,6 +2854,7 @@ pub mod app_rewrite {
     //#endregion 🔖Render
 
     //#region 🔖TrinityRewritePlayApp
+    #[derive(Default)]
     pub struct TrinityRewritePlayApp;
 
     impl PluginApp for TrinityRewritePlayApp {
@@ -3439,14 +3442,17 @@ pub mod app_rewrite {
     //#endregion 🧪Tests
 }
 
-use semio_framework_plugin::PluginBundle;
-
 //#region 🔖Bundle
-fn bundle() -> PluginBundle {
-    PluginBundle::new("trinity", "Trinity", "0.1.0")
-        .register_app(app_jack::create_trinity_jack_app(), || Box::new(app_jack::TrinityJackPlayApp))
-        .register_app(app_rewrite::create_rewrite_app(), || Box::new(app_rewrite::TrinityRewritePlayApp))
-}
+fn register_trinity_exports() {}
 
-semio_framework_plugin::plugin_exports!(bundle);
+semio_framework_plugin::semio_plugin! {
+    id: "trinity",
+    label: "Trinity",
+    version: "0.1.0",
+    setup: register_trinity_exports,
+    apps: [
+        app_jack::create_trinity_jack_app => app_jack::TrinityJackPlayApp,
+        app_rewrite::create_rewrite_app => app_rewrite::TrinityRewritePlayApp,
+    ]
+}
 //#endregion 🔖Bundle
