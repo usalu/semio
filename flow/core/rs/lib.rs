@@ -5,7 +5,6 @@ pub use mathematical_graph_port_directed_dag as dag;
 pub use neural_engine as neural;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
-use std::hash::{Hash, Hasher};
 use std::sync::OnceLock;
 
 use dag::{
@@ -13,7 +12,7 @@ use dag::{
     DagFixtureEdge, DagFixture, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, DagStepperField, EdgeRouteStyle, IoPortSpec,
 };
 use mathematical_graph_manifest::{PropertyBag, PropertyValue};
-use neural::{channel_output, cluster_operator_info, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
+use neural::{channel_output, cluster_operator_info, compute_dirty_set, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Document
@@ -513,41 +512,6 @@ fn set_node_layout(document: &mut FlowDocument, id: &str, layout: WidgetLayout) 
     }
 }
 // #endregion DocumentHelpers
-
-fn tree_signature(tree: &Tree, seeds: &HashMap<String, Dictionary>) -> u64 {
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    let mut neurons: Vec<_> = tree.neurons.iter().map(|neuron| (neuron.id.as_str(), neuron.kind.as_str(), &neuron.params, &neuron.tree)).collect();
-    neurons.sort_by(|left, right| left.0.cmp(right.0));
-    for (id, kind, params, subtree) in neurons {
-        id.hash(&mut hasher);
-        kind.hash(&mut hasher);
-        if let Ok(json) = serde_json::to_string(params) {
-            json.hash(&mut hasher);
-        }
-        if let Some(subtree) = subtree {
-            if let Ok(json) = serde_json::to_string(subtree) {
-                json.hash(&mut hasher);
-            }
-        }
-    }
-    let mut synapses: Vec<_> = tree.synapses.iter().map(|synapse| (synapse.from.as_str(), synapse.to.as_str(), synapse.from_port.as_str(), synapse.to_port.as_str())).collect();
-    synapses.sort_by(|left, right| (left.0, left.1, left.2, left.3).cmp(&(right.0, right.1, right.2, right.3)));
-    for (from, to, from_port, to_port) in synapses {
-        from.hash(&mut hasher);
-        to.hash(&mut hasher);
-        from_port.hash(&mut hasher);
-        to_port.hash(&mut hasher);
-    }
-    let mut seed_keys: Vec<_> = seeds.keys().collect();
-    seed_keys.sort();
-    for key in seed_keys {
-        key.hash(&mut hasher);
-        if let Ok(json) = serde_json::to_string(seeds.get(key).expect("key")) {
-            json.hash(&mut hasher);
-        }
-    }
-    hasher.finish()
-}
 
 fn widget_label(widget: &Widget) -> String {
     match widget {

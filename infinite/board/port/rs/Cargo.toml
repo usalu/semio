@@ -1,5 +1,5 @@
 [package]
-name = "mathematical_graph_port"
+name = "infinite_board_port"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
@@ -9,6 +9,7 @@ crate-type = ["rlib"]
 path = "lib.rs"
 
 [dependencies]
-mathematical_graph = { path = "../../rs" }
+infinite_board = { path = "../../rs" }
+mathematical_graph = { path = "../../../../mathematical/graph/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

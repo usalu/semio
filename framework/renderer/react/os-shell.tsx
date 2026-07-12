@@ -1,6 +1,5 @@
 import { Component, createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import Fuse, { type FuseResult } from "fuse.js";
 import type { GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
 import {
   App,
@@ -16,6 +15,7 @@ import {
   CommandItem,
   CommandList,
   Footer,
+  Fuse,
   Icon,
   Input,
   Layout,
@@ -102,6 +102,7 @@ import {
   type ElementsSurfaceDevice,
   type EngagementControl,
   type EngagementSpec,
+  type FuseResult,
   type ModeWindowDescriptor,
   type NavbarItem,
   type PanelTabNode,

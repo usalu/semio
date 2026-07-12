@@ -1,0 +1,9 @@
+{
+  "name": "@semio-tech/gis-3d-rs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./pkg/gis_3d.js",
+    "./pkg/gis_3d.js": "./pkg/gis_3d.js"
+  }
+}

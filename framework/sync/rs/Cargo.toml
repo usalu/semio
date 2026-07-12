@@ -17,7 +17,7 @@ thiserror = "2.0.12"
 vcs = { path = "../../../vcs/rs" }
 # 🧵 Channels/events used by the actor protocol on every target (sync primitives compile on wasm32).
 tokio = { version = "1", features = ["sync", "macros"], default-features = false }
-futures-util = { version = "0.3", default-features = false }
+futures-util = { version = "0.3", features = ["sink"] }
 
 # 🖥️ Native document-host actor: current-thread tokio runtime, hub WebSocket client, file watching.
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

@@ -20,6 +20,7 @@ import {
   runViteBunxDev,
   frameworkOsPlaygroundDefaultPort,
 } from "../../../../repo/lib/js/index.ts";
+import { applyBackboneMessage, BACKBONE_ENDPOINT_PATH, backboneKindFromUri } from "@semio-tech/framework-os-core";
 import { generatePluginRegistry, isStudioPluginFilter, type PluginRegistryEntry } from "../../../plugin/registry/script.ts";
 
 const repoRoot = getWorkspaceRoot();
@@ -66,12 +67,13 @@ async function backboneDatabaseCtorLazy(): Promise<typeof import("bun:sqlite").D
 
 async function readBackbonePayload(uri: string): Promise<string | null> {
   if (uri.startsWith("presence:")) return hostBackboneFiles.get(uri) ?? null;
-  if (uri.startsWith("file://")) {
+  const kind = backboneKindFromUri(uri);
+  if (kind === "file") {
     const path = uri.slice("file://".length);
     if (!existsSync(path)) return null;
     return readFileSync(path, "utf8");
   }
-  if (uri.startsWith("folder://")) {
+  if (kind === "folder") {
     const folder = uri.slice("folder://".length);
     const dbPath = join(folder, ".semio", "document.db");
     if (!existsSync(dbPath)) return null;
@@ -89,13 +91,14 @@ async function writeBackbonePayload(uri: string, payload: string): Promise<void>
     hostBackboneFiles.set(uri, payload);
     return;
   }
-  if (uri.startsWith("file://")) {
+  const kind = backboneKindFromUri(uri);
+  if (kind === "file") {
     const path = uri.slice("file://".length);
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, payload);
     return;
   }
-  if (uri.startsWith("folder://")) {
+  if (kind === "folder") {
     const folder = uri.slice("folder://".length);
     const dbPath = join(folder, ".semio", "document.db");
     mkdirSync(dirname(dbPath), { recursive: true });
@@ -114,7 +117,7 @@ export function semioBackboneVitePlugin() {
     name: "semio-backbone",
     configureServer(server: { middlewares: { use: (handler: (req: { method?: string; url?: string }, res: { statusCode: number; setHeader: (name: string, value: string) => void; end: (body?: string) => void }, next: () => void) => void) => void } }) {
       server.middlewares.use((req, res, next) => {
-        if (!req.url?.startsWith("/semio-backbone")) return next();
+        if (!req.url?.startsWith(BACKBONE_ENDPOINT_PATH)) return next();
         const requestUrl = new URL(req.url, "http://127.0.0.1");
         const uri = requestUrl.searchParams.get("uri");
         if (!uri) {
@@ -479,7 +482,7 @@ export function networkFetch(origin, path) {
 
 function syncBackboneRequest(method, uri, body) {
   const request = new XMLHttpRequest();
-  request.open(method, \`/semio-backbone?uri=\${encodeURIComponent(uri)}\`, false);
+  request.open(method, \`${BACKBONE_ENDPOINT_PATH}?uri=\${encodeURIComponent(uri)}\`, false);
   request.send(body);
   return request;
 }
@@ -512,19 +515,20 @@ export function backbonePoll(uri) {
   return [JSON.stringify({ kind: "snapshot", envelopeJson: stored })];
 }
 
-/** @emoji 📨 Mirrors vcs::storage_send — a snapshot message overwrites, an ops message appends into vcs.edits deduped by id. */
-export function backboneSend(uri, messageJson) {
+/**
+ * @emoji 🔀 Applies an incoming backbone message on top of a previously stored envelope: a
+ * snapshot message overwrites, an ops message appends into vcs.edits deduped by id. Hand-ported
+ * from (and must be kept in sync with) applyBackboneMessage in
+ * framework/product/os/core/js/index.ts until a build-time inlining step exists.
+ */
+function applyBackboneMessage(storedEnvelopeJson, messageJson) {
   const message = JSON.parse(messageJson);
-  if (message.kind === "snapshot") {
-    writeBackboneEntry(uri, message.envelopeJson);
-    return;
-  }
+  if (message.kind === "snapshot") return message.envelopeJson;
   if (message.kind === "ops") {
-    const stored = readBackboneEntry(uri);
-    if (stored == null) throw \`cannot append ops before a snapshot exists: \${uri}\`;
-    const envelope = JSON.parse(stored);
+    if (storedEnvelopeJson == null) throw \`cannot append ops before a snapshot exists\`;
+    const envelope = JSON.parse(storedEnvelopeJson);
     const edits = envelope?.vcs?.edits;
-    if (!Array.isArray(edits)) throw \`stored envelope missing vcs.edits: \${uri}\`;
+    if (!Array.isArray(edits)) throw \`stored envelope missing vcs.edits\`;
     const seen = new Set(edits.map((edit) => edit?.id).filter((id) => typeof id === "string"));
     for (const opEnvelope of message.envelopes ?? []) {
       const editJson = opEnvelope?.diff?.payload;
@@ -535,10 +539,21 @@ export function backboneSend(uri, messageJson) {
       }
       edits.push(editJson);
     }
-    writeBackboneEntry(uri, JSON.stringify(envelope));
-    return;
+    return JSON.stringify(envelope);
   }
   throw \`unsupported backbone message kind: \${message.kind}\`;
+}
+
+/** @emoji 📨 Mirrors vcs::storage_send — delegates the snapshot/ops merge to applyBackboneMessage. */
+export function backboneSend(uri, messageJson) {
+  const message = JSON.parse(messageJson);
+  if (message.kind === "ops") {
+    const stored = readBackboneEntry(uri);
+    if (stored == null) throw \`cannot append ops before a snapshot exists: \${uri}\`;
+    writeBackboneEntry(uri, applyBackboneMessage(stored, messageJson));
+    return;
+  }
+  writeBackboneEntry(uri, applyBackboneMessage(null, messageJson));
 }
 `;
 }

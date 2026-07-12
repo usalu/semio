@@ -139,8 +139,8 @@ pub mod app {
 
 use semio_framework_core::{
     collect_window_kind_ids_from_layout, history_action_definitions, kernel::{
-        ActorId, CapabilityRequirement, ActionInvocationId, ActionResult, HybridLogicalTimestamp,
-        InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationId, Rights,
+        ActorId, AppEvent, CapabilityRequirement, ActionInvocationId, ActionResult, HostEffect, HybridLogicalTimestamp,
+        InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OpEnvelope, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
     ActionRef, AppDefinition, AppLabelsOverlay, ActionDefinition, ActionDescriptor, ActionKind, Contribution, ExampleDefinition, Keybinding,
@@ -148,8 +148,14 @@ use semio_framework_core::{
     UiNode, ViewState, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowKinds, WindowLayout, WindowMeasure,
     WindowOptions, SurfaceKind,
 };
+use serde::Serialize;
+use serde::de::DeserializeOwned;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
+use vcs::{
+    build_history_columns, create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope,
+    DocumentVcsStore, HistoryColumn, Operation,
+};
 
 pub struct ModeSpec {
     pub id: String,
@@ -770,33 +776,111 @@ impl App {
     }
 }
 
-pub trait PluginApp: Send {
+//#region 🔖DocumentContract
+/// @emoji 🧾 Read-only view of an app's document handed to `DocumentApp::handle_action`/`render`:
+/// the materialized projection plus the history metadata (checkpoints/alternatives/undo state)
+/// derived from the owning {@link VcsDocumentApp}'s persistent {@link DocumentVcsStore}.
+pub struct DocumentView<'a, P> {
+    pub projection: &'a P,
+    pub history: &'a HistoryView,
+}
+
+/// @emoji 📜 Checkpoint/alternative history summary exposed to apps — the swimlane columns plus the
+/// undo/redo availability and the current checkout position. Built once per store generation.
+#[derive(Clone, Debug, PartialEq)]
+pub struct HistoryView {
+    pub columns: Vec<HistoryColumn>,
+    pub can_undo: bool,
+    pub can_redo: bool,
+    pub active_alternative_id: Option<String>,
+    pub current_checkpoint_id: Option<String>,
+}
+
+/// @emoji 📤 What a typed `DocumentApp::handle_action` emits: zero-or-more typed operations (applied
+/// through the store with a true inverse), an optional description/coalesce key for the resulting
+/// edit, host effects (navigate/export/spawn…), and app events. A view action returns an empty
+/// `ops` (no history entry); an operation action returns one or more `ops`.
+pub struct ActionEmit<Op> {
+    pub ops: Vec<Op>,
+    pub description: Option<String>,
+    pub coalesce_key: Option<String>,
+    pub effects: Vec<HostEffect>,
+    pub events: Vec<AppEvent>,
+}
+
+impl<Op> Default for ActionEmit<Op> {
+    fn default() -> Self {
+        Self {
+            ops: Vec::new(),
+            description: None,
+            coalesce_key: None,
+            effects: Vec::new(),
+            events: Vec::new(),
+        }
+    }
+}
+
+impl<Op> ActionEmit<Op> {
+    /// @emoji ✏️ An operation emission carrying `ops` and nothing else.
+    pub fn ops(ops: Vec<Op>) -> Self {
+        Self { ops, ..Default::default() }
+    }
+
+    /// @emoji 🐚 A single host effect and no operations (a shell action).
+    pub fn effect(effect: HostEffect) -> Self {
+        Self { effects: vec![effect], ..Default::default() }
+    }
+
+    /// @emoji 📣 A single app event and no operations.
+    pub fn event(event: AppEvent) -> Self {
+        Self { events: vec![event], ..Default::default() }
+    }
+}
+
+/// @emoji 🪪 Per-invocation runtime metadata handed to the object-safe {@link PluginApp} — the local
+/// actor id (author of resulting operations, drives `UndoPolicy` foreign-edit classification) and
+/// the instance id used to stamp operation/document handles.
+#[derive(Clone, Debug, Default)]
+pub struct ActionMeta {
+    pub actor: String,
+    pub instance_id: u32,
+}
+
+/// @emoji 🧩 Typed, per-app author surface. An app declares its `Projection` and `Op` (a
+/// `vcs::Operation<Projection>`), mutates nothing directly, and returns an {@link ActionEmit} whose
+/// operations flow through a persistent `DocumentVcsStore` owned by {@link VcsDocumentApp}. Ephemeral
+/// view state (selection/camera/active tool) lives in the app struct itself, not in the document.
+pub trait DocumentApp: Send + 'static {
+    type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send;
+    type Op: Operation<Self::Projection> + PartialEq + Send;
+
     fn app_id(&self) -> &str;
-    fn initial_document_json(&self) -> String;
-    fn handle_action_patch_ops(
+    fn document_schema(&self) -> &str;
+    fn initial_projection(&self) -> Self::Projection;
+    fn handle_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
-        document_json: &str,
+        doc: &DocumentView<'_, Self::Projection>,
         view_state: &ViewState,
-    ) -> Vec<String>;
-    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode;
-    fn tools(&self, _document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
+    ) -> ActionEmit<Self::Op>;
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, Self::Projection>, view_state: &ViewState) -> UiNode;
+    fn tools(&self, _doc: &DocumentView<'_, Self::Projection>, _view_state: &ViewState) -> Vec<ToolNode> {
         Vec::new()
     }
     fn window_engagements(
         &self,
-        _document_json: &str,
+        _doc: &DocumentView<'_, Self::Projection>,
         _view_state: &ViewState,
-    ) -> std::collections::HashMap<String, semio_framework_core::layout::WindowEngagement> {
-        std::collections::HashMap::new()
+    ) -> HashMap<String, WindowEngagement> {
+        HashMap::new()
     }
     fn window_measures(
         &self,
-        _document_json: &str,
+        _doc: &DocumentView<'_, Self::Projection>,
         _view_state: &ViewState,
-    ) -> std::collections::HashMap<String, Vec<semio_framework_core::WindowMeasure>> {
-        std::collections::HashMap::new()
+    ) -> HashMap<String, Vec<WindowMeasure>> {
+        HashMap::new()
     }
     /// 🗣️ Locale/terminology-aware overlay for this app's window-kind/mode labels, resolved fresh per `ViewState`
     /// (unlike the static `AppDefinition` labels baked in at manifest-build time). Framework panel-tab labels
@@ -807,11 +891,369 @@ pub trait PluginApp: Send {
     }
 }
 
+/// @emoji 🗄️ Object-safe runtime contract every hosted app satisfies. Owns persistent document state
+/// (via {@link VcsDocumentApp}'s store) across calls — no per-call document JSON is threaded in.
+/// History actions (undo/redo/checkpoint/alternative) are intercepted by the wrapper; typed
+/// operations are dispatched with real inverses; ops flow to/from the backbone as the wire format.
+pub trait PluginApp: Send {
+    fn app_id(&self) -> &str;
+    fn document_schema(&self) -> &str;
+    fn handle_action(
+        &mut self,
+        action: &str,
+        args: Option<&Value>,
+        view_state: &ViewState,
+        meta: &ActionMeta,
+    ) -> Result<ActionResult, String>;
+    fn ingest_operations(&mut self, operations_json: &str) -> Result<(), String>;
+    fn document_json(&self) -> Result<String, String>;
+    fn load_document(&mut self, document_json: &str) -> Result<(), String>;
+    fn attach_backbone(&mut self, backbone: Box<dyn vcs::Backbone>) -> Result<(), String>;
+    fn detach_backbone(&mut self);
+    fn render(
+        &mut self,
+        body_key: &str,
+        projection_override_json: Option<&str>,
+        view_state: &ViewState,
+    ) -> Result<UiNode, String>;
+    fn tools(&mut self, _view_state: &ViewState) -> Vec<ToolNode> {
+        Vec::new()
+    }
+    fn window_engagements(&mut self, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+        HashMap::new()
+    }
+    fn window_measures(&mut self, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        HashMap::new()
+    }
+    fn app_labels(&mut self, _view_state: &ViewState) -> AppLabelsOverlay {
+        AppLabelsOverlay::default()
+    }
+}
+
+/// @emoji 🧬 Generic wrapper turning any typed {@link DocumentApp} into the object-safe runtime
+/// {@link PluginApp}. Owns a persistent `DocumentVcsStore<Projection, Op>` — the single source of
+/// truth for the app's document across every call — intercepts the six injected history actions into
+/// `DocumentVcsCommand`s, dispatches `Apply`/`AmendLast` for typed operations, and builds an
+/// `ActionResult` whose inverses come from the just-recorded `Edit.backwards`. A projection cache
+/// keyed on the store's generation counter keeps renders O(1).
+pub struct VcsDocumentApp<A: DocumentApp> {
+    app: A,
+    store: DocumentVcsStore<A::Projection, A::Op>,
+    cache: Option<(u64, A::Projection, HistoryView)>,
+}
+
+const HISTORY_ACTION_IDS: [&str; 6] = [
+    "undo",
+    "redo",
+    "commitCheckpoint",
+    "createAlternative",
+    "switchAlternative",
+    "checkoutCheckpoint",
+];
+
+impl<A: DocumentApp> VcsDocumentApp<A> {
+    pub fn new(app: A) -> Self {
+        let envelope = create_document_vcs_envelope::<A::Projection, A::Op>(
+            app.document_schema(),
+            app.app_id(),
+            app.initial_projection(),
+            None,
+        );
+        Self {
+            app,
+            store: DocumentVcsStore::new(envelope),
+            cache: None,
+        }
+    }
+
+    fn build_history_view(&self) -> HistoryView {
+        HistoryView {
+            columns: build_history_columns(self.store.envelope()),
+            can_undo: !self.store.applied_edit_ids().is_empty(),
+            can_redo: !self.store.redo_edit_ids().is_empty(),
+            active_alternative_id: self.store.envelope().active_alternative_id.clone(),
+            current_checkpoint_id: self.store.current_checkpoint_id().map(str::to_string),
+        }
+    }
+
+    /// @emoji 🗂️ Refreshes the projection cache if the store advanced since the last materialization.
+    fn refresh_cache(&mut self) -> Result<(), String> {
+        let generation = self.store.generation();
+        if self.cache.as_ref().map(|(gen, _, _)| *gen) != Some(generation) {
+            let projection = self.store.projection().map_err(|error| error.to_string())?;
+            let history = self.build_history_view();
+            self.cache = Some((generation, projection, history));
+        }
+        Ok(())
+    }
+
+    /// @emoji 🕰️ Maps one of the six injected history action ids to its `DocumentVcsCommand`.
+    fn history_command(action: &str, args: Option<&Value>) -> Option<DocumentVcsCommand<A::Op>> {
+        let arg_str = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
+        match action {
+            "undo" => Some(DocumentVcsCommand::Undo),
+            "redo" => Some(DocumentVcsCommand::Redo),
+            "commitCheckpoint" => Some(DocumentVcsCommand::CommitCheckpoint {
+                message: arg_str("message"),
+                authors: Vec::new(),
+            }),
+            "createAlternative" => Some(DocumentVcsCommand::CreateAlternative {
+                name: arg_str("name").unwrap_or_else(|| "Alternative".into()),
+            }),
+            "switchAlternative" => arg_str("alternativeId")
+                .map(|alternative_id| DocumentVcsCommand::SwitchAlternative { alternative_id }),
+            "checkoutCheckpoint" => arg_str("checkpointId")
+                .map(|checkpoint_id| DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id }),
+            _ => None,
+        }
+    }
+
+    /// @emoji 📇 An empty `ActionResult` carrying only host effects/events (view/shell actions and
+    /// history notifications produce no `KernelOperation`s).
+    fn empty_result(action: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>) -> ActionResult {
+        let invocation_id = ActionInvocationId(format!("{action}:{}", meta.instance_id));
+        ActionResult {
+            output: Value::Null,
+            operations: Vec::new(),
+            inverse_group: UndoGroup {
+                action_id: invocation_id,
+                operations: Vec::new(),
+                inverse_operations: Vec::new(),
+            },
+            diagnostics: Vec::new(),
+            requested_effects: effects,
+            events,
+        }
+    }
+
+    /// @emoji 🧱 Builds the `ActionResult` for a just-dispatched edit: one `KernelOperation` per
+    /// forward operation, each carrying the edit's true `backwards` as its inverse diff.
+    fn result_from_last_edit(&self, action: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>) -> ActionResult {
+        let schema = self.app.document_schema().to_string();
+        let invocation_id = ActionInvocationId(format!("{action}:{}:{}", meta.instance_id, self.store.generation()));
+        let document = DocumentHandle(meta.instance_id as u128);
+        let mut operations: Vec<KernelOperation> = Vec::new();
+        if let Some((forwards, backwards, operation_meta)) = self.store.edit_operations() {
+            let inverse_payload = serde_json::json!({ "backwards": backwards });
+            for (index, forward) in forwards.iter().enumerate() {
+                let entry = operation_meta.get(index);
+                let operation_id = OperationId(
+                    entry
+                        .map(|meta| meta.operation_id.clone())
+                        .unwrap_or_else(|| format!("{}:{index}", invocation_id.0)),
+                );
+                let base_version = DocumentVersion(entry.map(|meta| meta.base_version).unwrap_or(0));
+                let undo_policy = entry.map(|meta| meta.undo_policy).unwrap_or(UndoPolicy::ExactBaseOnly);
+                let author = ActorId(entry.map(|meta| meta.author_id.clone()).unwrap_or_else(|| meta.actor.clone()));
+                let timestamp = entry
+                    .map(|meta| meta.timestamp.clone())
+                    .unwrap_or_else(|| HybridLogicalTimestamp::new(0, 0));
+                operations.push(KernelOperation {
+                    id: operation_id.clone(),
+                    document,
+                    base_version,
+                    action_id: invocation_id.clone(),
+                    diff: DocumentDiff {
+                        schema_id: SchemaId(format!("{schema}.op")),
+                        payload: serde_json::to_value(forward).unwrap_or(Value::Null),
+                    },
+                    inverse: InverseOperation {
+                        target_operation: operation_id,
+                        inverse_diff: DocumentDiff {
+                            schema_id: SchemaId(format!("{schema}.op.inverse")),
+                            payload: inverse_payload.clone(),
+                        },
+                        base_version,
+                        dependencies: Vec::new(),
+                        undo_policy,
+                    },
+                    dependencies: Vec::new(),
+                    author,
+                    timestamp,
+                });
+            }
+        }
+        let operation_ids: Vec<OperationId> = operations.iter().map(|op| op.id.clone()).collect();
+        let inverse_operations: Vec<InverseOperation> = operations.iter().map(|op| op.inverse.clone()).collect();
+        ActionResult {
+            output: Value::Null,
+            operations,
+            inverse_group: UndoGroup {
+                action_id: invocation_id,
+                operations: operation_ids,
+                inverse_operations,
+            },
+            diagnostics: Vec::new(),
+            requested_effects: effects,
+            events,
+        }
+    }
+}
+
+/// @emoji 📣 Signals the shell that the document's checkpoint/alternative history changed (after an
+/// undo/redo/checkpoint/alternative command) so it can re-render history-dependent surfaces.
+fn history_changed_event() -> AppEvent {
+    AppEvent {
+        kind: "history-changed".into(),
+        payload: Value::Null,
+    }
+}
+
+impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
+    fn app_id(&self) -> &str {
+        self.app.app_id()
+    }
+
+    fn document_schema(&self) -> &str {
+        self.app.document_schema()
+    }
+
+    fn handle_action(
+        &mut self,
+        action: &str,
+        args: Option<&Value>,
+        view_state: &ViewState,
+        meta: &ActionMeta,
+    ) -> Result<ActionResult, String> {
+        if HISTORY_ACTION_IDS.contains(&action) {
+            let command = Self::history_command(action, args)
+                .ok_or_else(|| format!("history action {action} missing required argument"))?;
+            match self.store.dispatch(command) {
+                Ok(()) => {
+                    self.cache = None;
+                    Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()]))
+                }
+                // Benign no-ops (nothing to undo/redo, foreign tail) collapse to an empty result.
+                Err(vcs::VcsError::NothingToUndo)
+                | Err(vcs::VcsError::NothingToRedo)
+                | Err(vcs::VcsError::ForeignEdit(_)) => {
+                    Ok(Self::empty_result(action, meta, Vec::new(), Vec::new()))
+                }
+                Err(error) => Err(error.to_string()),
+            }
+        } else {
+            self.refresh_cache()?;
+            let emit = {
+                let VcsDocumentApp { app, cache, .. } = self;
+                let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
+                let doc = DocumentView { projection, history };
+                app.handle_action(action, args, &doc, view_state)
+            };
+            let ActionEmit { ops, description, coalesce_key, effects, events } = emit;
+            if ops.is_empty() {
+                return Ok(Self::empty_result(action, meta, effects, events));
+            }
+            self.store.set_local_actor_id(Some(meta.actor.clone()));
+            let command = match coalesce_key {
+                Some(key) => DocumentVcsCommand::AmendLast {
+                    operations: ops,
+                    coalesce_key: Some(key),
+                },
+                None => DocumentVcsCommand::Apply {
+                    operations: ops,
+                    description,
+                },
+            };
+            self.store.dispatch(command).map_err(|error| error.to_string())?;
+            self.cache = None;
+            Ok(self.result_from_last_edit(action, meta, effects, events))
+        }
+    }
+
+    fn ingest_operations(&mut self, operations_json: &str) -> Result<(), String> {
+        let envelopes: Vec<OpEnvelope> =
+            serde_json::from_str(operations_json).map_err(|error| error.to_string())?;
+        for envelope in envelopes {
+            self.store.ingest_remote(envelope).map_err(|error| error.to_string())?;
+        }
+        self.cache = None;
+        Ok(())
+    }
+
+    fn document_json(&self) -> Result<String, String> {
+        self.store.envelope_json().map_err(|error| error.to_string())
+    }
+
+    fn load_document(&mut self, document_json: &str) -> Result<(), String> {
+        let envelope: DocumentVcsEnvelope<A::Projection, A::Op> =
+            serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+        let applied: Vec<String> = envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
+        self.store.set_envelope(envelope, applied);
+        self.cache = None;
+        Ok(())
+    }
+
+    fn attach_backbone(&mut self, backbone: Box<dyn vcs::Backbone>) -> Result<(), String> {
+        self.store.attach_backbone(backbone).map_err(|error| error.to_string())?;
+        self.cache = None;
+        Ok(())
+    }
+
+    fn detach_backbone(&mut self) {
+        self.store.detach_backbone();
+        self.cache = None;
+    }
+
+    fn render(
+        &mut self,
+        body_key: &str,
+        projection_override_json: Option<&str>,
+        view_state: &ViewState,
+    ) -> Result<UiNode, String> {
+        self.refresh_cache()?;
+        if let Some(json) = projection_override_json {
+            let projection: A::Projection =
+                serde_json::from_str(json).map_err(|error| error.to_string())?;
+            let history = self.build_history_view();
+            let doc = DocumentView { projection: &projection, history: &history };
+            return Ok(self.app.render(body_key, &doc, view_state));
+        }
+        let VcsDocumentApp { app, cache, .. } = self;
+        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
+        let doc = DocumentView { projection, history };
+        Ok(app.render(body_key, &doc, view_state))
+    }
+
+    fn tools(&mut self, view_state: &ViewState) -> Vec<ToolNode> {
+        if self.refresh_cache().is_err() {
+            return Vec::new();
+        }
+        let VcsDocumentApp { app, cache, .. } = self;
+        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
+        let doc = DocumentView { projection, history };
+        app.tools(&doc, view_state)
+    }
+
+    fn window_engagements(&mut self, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+        if self.refresh_cache().is_err() {
+            return HashMap::new();
+        }
+        let VcsDocumentApp { app, cache, .. } = self;
+        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
+        let doc = DocumentView { projection, history };
+        app.window_engagements(&doc, view_state)
+    }
+
+    fn window_measures(&mut self, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        if self.refresh_cache().is_err() {
+            return HashMap::new();
+        }
+        let VcsDocumentApp { app, cache, .. } = self;
+        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
+        let doc = DocumentView { projection, history };
+        app.window_measures(&doc, view_state)
+    }
+
+    fn app_labels(&mut self, view_state: &ViewState) -> AppLabelsOverlay {
+        self.app.app_labels(view_state)
+    }
+}
+
 pub struct AppInstance {
     pub id: u32,
     pub app: Box<dyn PluginApp>,
-    pub document_json: String,
 }
+//#endregion 🔖DocumentContract
 
 pub trait Plugin: Send {
     fn manifest(&self) -> PluginManifest;
@@ -882,6 +1324,20 @@ impl PluginBundle {
         self.apps
             .insert(self.manifest.apps.last().unwrap().id.clone(), Box::new(factory));
         self
+    }
+
+    /// @emoji 🧬 Registers a typed {@link DocumentApp}, wrapping each instance in a
+    /// {@link VcsDocumentApp} so it satisfies the object-safe runtime {@link PluginApp} contract with
+    /// a persistent op store. Sibling to {@link register_app}, which takes a pre-boxed `PluginApp`.
+    pub fn register_document_app<A>(
+        self,
+        app: App,
+        factory: impl Fn() -> A + Send + 'static,
+    ) -> Self
+    where
+        A: DocumentApp,
+    {
+        self.register_app(app, move || Box::new(VcsDocumentApp::new(factory())))
     }
 
     pub fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>> {
@@ -1054,6 +1510,100 @@ pub fn handle_generation_action(
     }
 }
 //#endregion 🔖Crud
+
+//#region 🔖Ops
+/// @emoji 🧬 Typed, invertible Generate-mode operation vocabulary. WS-F embeds this as a variant in
+/// `forms/module/procedural`'s own `Op` enum so generation edits flow through the document store with
+/// true inverses (replacing the in-place-mutating CRUD helpers as the document mutation surface).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum GenerationOp {
+    Add { generation: FormGeneration },
+    Remove { id: String },
+    Rename { id: String, name: String },
+    UpdateValues { id: String, question_id: String, value: Value },
+}
+
+/// @emoji 🎛️ Maps a Generate-mode action id to the document operations it produces, or `None` for
+/// non-document (view) actions like `selectGeneration`. Pure — reads `state`/`spec` but mutates
+/// nothing; the caller applies the returned ops through its store.
+pub fn generation_ops(
+    action: &str,
+    args: Option<&Value>,
+    state: &GenerationPlayState,
+    spec: &ProtocolSpec,
+) -> Option<Vec<GenerationOp>> {
+    let arg_str = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
+    match action {
+        "addGeneration" => Some(vec![GenerationOp::Add {
+            generation: FormGeneration {
+                id: next_generation_id(&state.generations),
+                name: next_generation_name(&state.generations),
+                values: initial_generation_values(spec),
+            },
+        }]),
+        "removeGeneration" => arg_str("id").map(|id| vec![GenerationOp::Remove { id }]),
+        "renameGeneration" => {
+            let id = arg_str("id")?;
+            let name = arg_str("name")?;
+            Some(vec![GenerationOp::Rename { id, name }])
+        }
+        "updateGenerationValues" => {
+            let id = arg_str("generationId").or_else(|| state.selected_generation_id.clone())?;
+            let question_id = arg_str("questionId")?;
+            let value = args.and_then(|value| value.get("value")).cloned()?;
+            Some(vec![GenerationOp::UpdateValues { id, question_id, value }])
+        }
+        _ => None,
+    }
+}
+
+/// @emoji ▶️ Applies a {@link GenerationOp} to `state` in place.
+pub fn apply_generation_op(state: &mut GenerationPlayState, op: &GenerationOp) {
+    match op {
+        GenerationOp::Add { generation } => {
+            state.generations.push(generation.clone());
+            state.selected_generation_id = Some(generation.id.clone());
+        }
+        GenerationOp::Remove { id } => remove_generation(state, id),
+        GenerationOp::Rename { id, name } => rename_generation(state, id, name),
+        GenerationOp::UpdateValues { id, question_id, value } => {
+            update_generation_values(state, id, question_id, value.clone())
+        }
+    }
+}
+
+/// @emoji ↩️ Computes the inverse of a {@link GenerationOp} from the pre-state `state`.
+pub fn invert_generation_op(state: &GenerationPlayState, op: &GenerationOp) -> Vec<GenerationOp> {
+    match op {
+        GenerationOp::Add { generation } => vec![GenerationOp::Remove { id: generation.id.clone() }],
+        GenerationOp::Remove { id } => state
+            .generations
+            .iter()
+            .find(|entry| entry.id == *id)
+            .map(|entry| vec![GenerationOp::Add { generation: entry.clone() }])
+            .unwrap_or_default(),
+        GenerationOp::Rename { id, .. } => state
+            .generations
+            .iter()
+            .find(|entry| entry.id == *id)
+            .map(|entry| vec![GenerationOp::Rename { id: id.clone(), name: entry.name.clone() }])
+            .unwrap_or_default(),
+        GenerationOp::UpdateValues { id, question_id, .. } => state
+            .generations
+            .iter()
+            .find(|entry| entry.id == *id)
+            .map(|entry| {
+                vec![GenerationOp::UpdateValues {
+                    id: id.clone(),
+                    question_id: question_id.clone(),
+                    value: entry.values.get(question_id).cloned().unwrap_or(Value::Null),
+                }]
+            })
+            .unwrap_or_default(),
+    }
+}
+//#endregion 🔖Ops
 
 //#region 🔖Render
 fn generation_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -2210,464 +2760,6 @@ mod semio_plugin_macro_tests {
 // #endregion plugin_runtime
 }
 
-pub mod scaffold {
-// #region scaffold
-//! 🧰 Helpers for scaffolding standard technology plugins.
-
-use crate::{
-    build_canvas_2d_scene, build_node_graph_scene, build_raster_scene, build_table_scene,
-    build_text_editor_scene, build_world_3d_scene, default_world3d_selection, ui_stack_vertical,
-    ui_text, world3d_default_meshes_json, App, Canvas2dScene, NodeGraphScene, PanelGroup, PluginApp,
-    RasterScene, SurfaceKind, TableScene, TextEditorScene, UiNode, ViewState, World3dScene,
-    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
-use serde_json::Value;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct StandardApp {
-    pub app_id: &'static str,
-    pub label: &'static str,
-    pub document: &'static [&'static str],
-    pub program_id: Option<&'static str>,
-    pub yields: Option<&'static str>,
-    pub surface_id: &'static str,
-    pub body_key: &'static str,
-    pub surface_kind: SurfaceKind,
-    pub initial_document_json: &'static str,
-}
-
-pub struct StandardPluginApp {
-    pub spec: StandardApp,
-}
-
-fn document_body_key(body_key: &str) -> String {
-    body_key.replace(".composite", ".document")
-}
-
-fn properties_body_key(body_key: &str) -> String {
-    body_key.replace(".composite", ".properties")
-}
-
-fn json_field(document: &Value, keys: &[&str]) -> Option<Value> {
-    keys.iter().find_map(|key| document.get(*key)).cloned()
-}
-
-fn canvas_layers_json(document: &Value, fallback: &str) -> String {
-    json_field(
-        document,
-        &["layers", "tiles", "blocks", "features", "cells", "nodes"],
-    )
-    .map(|value| value.to_string())
-    .unwrap_or_else(|| fallback.to_string())
-}
-
-fn world_instances_json(document: &Value, fallback: &str) -> String {
-    json_field(
-        document,
-        &["instances", "entities", "meshes", "tiles", "cells", "parts"],
-    )
-    .map(|value| value.to_string())
-    .unwrap_or_else(|| fallback.to_string())
-}
-
-fn node_graph_payload(document: &Value, fallback: &str) -> (String, String) {
-    if let Some(nodes) = document.get("nodes") {
-        let edges = document
-            .get("edges")
-            .cloned()
-            .unwrap_or(Value::Array(vec![]));
-        return (nodes.to_string(), edges.to_string());
-    }
-    if let Some(flow) = document.get("flow") {
-        let nodes = flow
-            .get("components")
-            .or_else(|| flow.get("nodes"))
-            .cloned()
-            .unwrap_or(Value::Array(vec![]));
-        let edges = flow
-            .get("edges")
-            .cloned()
-            .unwrap_or(Value::Array(vec![]));
-        return (nodes.to_string(), edges.to_string());
-    }
-    if let Some(steps) = document.get("steps") {
-        return (steps.to_string(), "[]".into());
-    }
-    (fallback.into(), "[]".into())
-}
-
-fn text_editor_payload(document: &Value, fallback: &str) -> (String, Option<String>) {
-    if let Some(text) = document
-        .get("text")
-        .or_else(|| document.get("source"))
-        .and_then(|value| value.as_str())
-    {
-        let language = document
-            .get("language")
-            .and_then(|value| value.as_str())
-            .map(str::to_string);
-        return (text.into(), language);
-    }
-    if document.is_string() {
-        return (
-            document.as_str().unwrap_or(fallback).into(),
-            Some("plain".into()),
-        );
-    }
-    (fallback.into(), Some("plain".into()))
-}
-
-fn table_payload(document: &Value, fallback: &str) -> (String, String) {
-    let rows = json_field(document, &["rows", "edits", "records"])
-        .map(|value| value.to_string())
-        .unwrap_or_else(|| fallback.to_string());
-    let columns = document
-        .get("columns")
-        .map(|value| value.to_string())
-        .unwrap_or_else(|| r#"[{"id":"id","label":"Id"}]"#.into());
-    (columns, rows)
-}
-
-fn raster_payload(document: &Value, fallback: &str) -> RasterScene {
-    if let Ok(scene) = serde_json::from_value::<RasterScene>(document.clone()) {
-        return scene;
-    }
-    let parsed: Value = serde_json::from_str(fallback).unwrap_or(Value::Null);
-    let document_sync_json = if document.is_null() { parsed } else { document.clone() }.to_string();
-    RasterScene {
-        document_sync_json,
-        assets_json: "[]".into(),
-        camera_json: "{}".into(),
-        selection_json: "{}".into(),
-        hovered_id: None,
-        active_tool: "brush".into(),
-        brush_size: 8.0,
-        brush_opacity: 1.0,
-        view_mode: "edit".into(),
-        composite_viewport_json: None,
-    }
-}
-
-pub fn assert_standard_app_renders(spec: StandardApp) {
-    let app = StandardPluginApp { spec };
-    let node = app.render(spec.body_key, spec.initial_document_json, &ViewState::default());
-    let json = serde_json::to_string(&node).expect("ui json");
-    let tag = spec.surface_kind.as_str();
-    assert!(json.contains(tag), "expected {tag} in {json}");
-}
-
-impl PluginApp for StandardPluginApp {
-    fn app_id(&self) -> &str {
-        self.spec.app_id
-    }
-
-    fn initial_document_json(&self) -> String {
-        self.spec.initial_document_json.to_string()
-    }
-
-    fn handle_action_patch_ops(
-        &mut self,
-        action: &str,
-        args: Option<&Value>,
-        document_json: &str,
-        _view_state: &ViewState,
-    ) -> Vec<String> {
-        if action == "setDocument" {
-            if let Some(document) = args.and_then(|value| value.get("document")) {
-                return vec![serde_json::json!({ "op": "setDocument", "document": document }).to_string()];
-            }
-        }
-        if action == "patch" {
-            if let Some(patch) = args.and_then(|value| value.get("patch")) {
-                return vec![serde_json::json!({ "op": "patch", "patch": patch }).to_string()];
-            }
-        }
-        let _ = document_json;
-        Vec::new()
-    }
-
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
-        let document_key = document_body_key(self.spec.body_key);
-        let properties_key = properties_body_key(self.spec.body_key);
-        if body_key == document_key {
-            return render_document_panel(self.spec.label, document_json);
-        }
-        if body_key == properties_key {
-            return render_properties_panel(self.spec.label, document_json);
-        }
-        if body_key != self.spec.body_key {
-            return ui_text(format!("Unknown body: {body_key}"));
-        }
-        let document: Value =
-            serde_json::from_str(document_json).unwrap_or(Value::String(document_json.into()));
-        match self.spec.surface_kind {
-            SurfaceKind::Canvas2d => build_canvas_2d_scene(
-                self.spec.surface_id,
-                self.spec.app_id,
-                Canvas2dScene {
-                    camera_x: document
-                        .get("camera")
-                        .and_then(|camera| camera.get("x"))
-                        .and_then(|value| value.as_f64())
-                        .unwrap_or(0.0),
-                    camera_y: document
-                        .get("camera")
-                        .and_then(|camera| camera.get("y"))
-                        .and_then(|value| value.as_f64())
-                        .unwrap_or(0.0),
-                    zoom: document
-                        .get("camera")
-                        .and_then(|camera| camera.get("zoom"))
-                        .and_then(|value| value.as_f64())
-                        .unwrap_or(1.0),
-                    layers_json: canvas_layers_json(&document, document_json),
-                },
-            ),
-            SurfaceKind::World3d => build_world_3d_scene(
-                self.spec.surface_id,
-                self.spec.app_id,
-                World3dScene {
-                    camera_json: document
-                        .get("camera")
-                        .map(|value| value.to_string())
-                        .unwrap_or_else(|| r#"{"x":0,"y":0,"z":5}"#.into()),
-                    meshes_json: document
-                        .get("meshes")
-                        .map(|value| value.to_string())
-                        .unwrap_or_else(world3d_default_meshes_json),
-                    instances_json: world_instances_json(&document, document_json),
-                    selection_json: document
-                        .get("selection")
-                        .map(|value| value.to_string())
-                        .unwrap_or_else(default_world3d_selection),
-                    vortices_json: None,
-                    attractions_json: None,
-                    target_volumes_json: None,
-                    references_json: None,
-                    brush_preview_json: None,
-                    interaction_json: None,
-                    engagement_preview_json: None,
-                    lod_json: None,
-                    chunking_json: None,
-                    context_menu_json: None,
-                    environment_json: None,
-                    frame_json: None,
-                    fit_json: None,
-                },
-            ),
-            SurfaceKind::NodeGraph => {
-                let (nodes_json, edges_json) = node_graph_payload(&document, document_json);
-                build_node_graph_scene(
-                    self.spec.surface_id,
-                    self.spec.app_id,
-                    NodeGraphScene::base(
-                        nodes_json,
-                        edges_json,
-                        document
-                            .get("viewport")
-                            .map(|value| value.to_string())
-                            .unwrap_or_else(|| r#"{"x":0,"y":0,"zoom":1}"#.into()),
-                    ),
-                )
-            }
-            SurfaceKind::TextEditor => {
-                let (buffer, language) = text_editor_payload(&document, document_json);
-                build_text_editor_scene(
-                    self.spec.surface_id,
-                    self.spec.app_id,
-                    TextEditorScene::base(buffer, language, None),
-                )
-            }
-            SurfaceKind::Table => {
-                let (columns_json, rows_json) = table_payload(&document, document_json);
-                build_table_scene(
-                    self.spec.surface_id,
-                    self.spec.app_id,
-                    TableScene::base(columns_json, rows_json),
-                )
-            }
-            SurfaceKind::Raster => build_raster_scene(
-                self.spec.surface_id,
-                self.spec.app_id,
-                raster_payload(&document, document_json),
-            ),
-            _ => ui_text(format!("Unsupported surface: {}", self.spec.surface_kind.as_str())),
-        }
-    }
-}
-
-fn render_document_panel(label: &str, document_json: &str) -> UiNode {
-    let document: Value =
-        serde_json::from_str(document_json).unwrap_or(Value::String(document_json.into()));
-    let schema = document
-        .get("schema")
-        .and_then(|value| value.as_str())
-        .unwrap_or(label);
-    let count = document
-        .get("layers")
-        .or_else(|| document.get("nodes"))
-        .or_else(|| document.get("rows"))
-        .or_else(|| document.get("entities"))
-        .and_then(|value| value.as_array())
-        .map(|rows| rows.len())
-        .unwrap_or(0);
-    ui_stack_vertical(vec![
-        ui_text(format!("Schema: {schema}")),
-        ui_text(format!("Items: {count}")),
-    ])
-}
-
-fn render_properties_panel(label: &str, document_json: &str) -> UiNode {
-    let document: Value =
-        serde_json::from_str(document_json).unwrap_or(Value::String(document_json.into()));
-    let id = document
-        .get("id")
-        .and_then(|value| value.as_str())
-        .unwrap_or(label);
-    ui_stack_vertical(vec![
-        ui_text(format!("App: {label}")),
-        ui_text(format!("Id: {id}")),
-    ])
-}
-
-pub fn standard_app(spec: StandardApp) -> App {
-    let document_key = document_body_key(spec.body_key);
-    let properties_key = properties_body_key(spec.body_key);
-    let app = App::from_builder(
-        App::builder(spec.app_id, spec.label)
-            .document(spec.document.iter().copied())
-            .icon_id(spec.app_id)
-            .mode("edit", "Edit")
-            .default_mode_id("edit")
-            .mode_tools("edit", vec![])
-            .window_kind("main", "Main", spec.body_key, spec.surface_kind)
-            .panel_tab(
-                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-                PanelGroup::Workbench,
-                &document_key,
-            )
-            .panel_tab(
-                FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-                PanelGroup::Details,
-                &properties_key,
-            ),
-    );
-    if let (Some(program_id), Some(yields)) = (spec.program_id, spec.yields) {
-        app.program(program_id, spec.label, yields)
-    } else {
-        app
-    }
-}
-
-pub fn standard_factory(spec: StandardApp) -> Box<dyn PluginApp> {
-    Box::new(StandardPluginApp { spec })
-}
-
-pub fn register_standard_app(bundle: crate::PluginBundle, spec: StandardApp) -> crate::PluginBundle {
-    let app = standard_app(spec);
-    bundle.register_app(app, move || standard_factory(spec))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn canvas_scene_renders() {
-        assert_standard_app_renders(StandardApp {
-            app_id: "test-canvas",
-            label: "Canvas",
-            document: &["semio", "test", "canvas"],
-            program_id: None,
-            yields: None,
-            surface_id: "test.canvas",
-            body_key: "test.canvas.composite",
-            surface_kind: SurfaceKind::Canvas2d,
-            initial_document_json: r#"{"schema":"test","id":"test","layers":[]}"#,
-        });
-    }
-
-    #[test]
-    fn node_graph_scene_renders() {
-        assert_standard_app_renders(StandardApp {
-            app_id: "test-graph",
-            label: "Graph",
-            document: &["semio", "test", "graph"],
-            program_id: None,
-            yields: None,
-            surface_id: "test.graph",
-            body_key: "test.graph.composite",
-            surface_kind: SurfaceKind::NodeGraph,
-            initial_document_json: r#"{"nodes":[],"edges":[]}"#,
-        });
-    }
-
-    #[test]
-    fn world_scene_renders() {
-        assert_standard_app_renders(StandardApp {
-            app_id: "test-world",
-            label: "World",
-            document: &["semio", "test", "world"],
-            program_id: None,
-            yields: None,
-            surface_id: "test.world",
-            body_key: "test.world.composite",
-            surface_kind: SurfaceKind::World3d,
-            initial_document_json: r#"{"schema":"test","id":"test","entities":[]}"#,
-        });
-    }
-
-    #[test]
-    fn text_editor_scene_renders() {
-        assert_standard_app_renders(StandardApp {
-            app_id: "test-text",
-            label: "Text",
-            document: &["semio", "test", "text"],
-            program_id: None,
-            yields: None,
-            surface_id: "test.text",
-            body_key: "test.text.composite",
-            surface_kind: SurfaceKind::TextEditor,
-            initial_document_json: r#"{"schema":"test","id":"test","source":""}"#,
-        });
-    }
-
-    #[test]
-    fn table_scene_renders() {
-        assert_standard_app_renders(StandardApp {
-            app_id: "test-table",
-            label: "Table",
-            document: &["semio", "test", "table"],
-            program_id: None,
-            yields: None,
-            surface_id: "test.table",
-            body_key: "test.table.composite",
-            surface_kind: SurfaceKind::Table,
-            initial_document_json: r#"{"schema":"test","id":"test","rows":[]}"#,
-        });
-    }
-
-    #[test]
-    fn raster_scene_renders() {
-        assert_standard_app_renders(StandardApp {
-            app_id: "test-raster",
-            label: "Raster",
-            document: &["semio", "test", "raster"],
-            program_id: None,
-            yields: None,
-            surface_id: "test.raster",
-            body_key: "test.raster.composite",
-            surface_kind: SurfaceKind::Raster,
-            initial_document_json: r#"{"schema":"raster.document","id":"raster","width":64,"height":64,"pixelsBase64":""}"#,
-        });
-    }
-}
-// #endregion scaffold
-}
-
 pub mod world3d_host {
 // #region world3d_host
 //! 🌐 Shared world-3d scene payload builders for plugin apps.
@@ -3155,15 +3247,17 @@ mod tests {
 }
 
 pub use app::{
-    App, AppBuilder, AppInstance, KeybindingSpec, ModeSpec, PanelTabSpec, Plugin, PluginApp, PluginBundle,
+    ActionEmit, ActionMeta, App, AppBuilder, AppInstance, DocumentApp, DocumentView, HistoryView,
+    KeybindingSpec, ModeSpec, PanelTabSpec, Plugin, PluginApp, PluginBundle, VcsDocumentApp,
     WindowKindSpec,
 };
 pub use semio_framework_core::AppLabelsOverlay;
 pub use generate_mode::{
-    add_generation, handle_generation_action, initial_generation_values, remove_generation,
-    rename_generation, render_generation_form_body, render_generation_preview_text,
-    render_generations_tree, select_generation, selected_generation, selected_generation_mut,
-    update_generation_values, FormGeneration, GenerationPlayState,
+    add_generation, apply_generation_op, generation_ops, handle_generation_action,
+    initial_generation_values, invert_generation_op, remove_generation, rename_generation,
+    render_generation_form_body, render_generation_preview_text, render_generations_tree,
+    select_generation, selected_generation, selected_generation_mut, update_generation_values,
+    FormGeneration, GenerationOp, GenerationPlayState,
 };
 pub use protocol_mode::{
     add_block_op, add_step_op, build_palette, build_protocol_list_scene, move_block_op, move_step_op,
@@ -3174,10 +3268,9 @@ pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 pub use host_port::{
     host_backbone_poll, host_backbone_send, host_now_ms, register_host_backbone_channel, HostBackboneChannel,
 };
-pub use plugin_runtime::{action_result_from_patch_ops, install_plugin_bundle};
-pub use scaffold::{
-    assert_standard_app_renders, register_standard_app, standard_app,
-    standard_factory, StandardApp, StandardPluginApp,
+pub use plugin_runtime::{
+    install_plugin_bundle, plugin_attach_backbone, plugin_detach_backbone, plugin_document,
+    plugin_ingest_operations, plugin_load_document,
 };
 pub use world3d_host::{
     apply_world3d_sun_action, default_world3d_selection, export_mesh_glb_bytes, export_mesh_obj,

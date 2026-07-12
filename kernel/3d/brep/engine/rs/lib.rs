@@ -220,8 +220,13 @@ pub trait BrepKernel {
     // #region Features
     async fn fillet(&mut self, shape: &GeometryHandle, radius: f64) -> Result<GeometryHandle, BrepError>;
     async fn fillet_variable(&mut self, shape: &GeometryHandle, radius_start: f64, radius_end: f64) -> Result<GeometryHandle, BrepError>;
+    /// 🎯 Fillets only the given edges instead of every edge of the solid — avoids paying the
+    /// cost of a full-solid fillet when only a handful of edges are actually selected.
+    async fn fillet_edges(&mut self, shape: &GeometryHandle, edges: &[GeometryHandle], radius: f64) -> Result<GeometryHandle, BrepError>;
     async fn chamfer(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError>;
     async fn chamfer_asymmetric(&mut self, shape: &GeometryHandle, d1: f64, d2: f64) -> Result<GeometryHandle, BrepError>;
+    /// 🎯 Chamfers only the given edges instead of every edge of the solid.
+    async fn chamfer_edges(&mut self, shape: &GeometryHandle, edges: &[GeometryHandle], distance: f64) -> Result<GeometryHandle, BrepError>;
     async fn shell(&mut self, shape: &GeometryHandle, thickness: f64, open_faces: &[GeometryHandle]) -> Result<GeometryHandle, BrepError>;
     async fn draft(&mut self, shape: &GeometryHandle, faces: &[GeometryHandle], pull_direction: Vec3, neutral_point: Vec3, angle: f64) -> Result<GeometryHandle, BrepError>;
     async fn offset_solid(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError>;
@@ -282,6 +287,10 @@ pub trait BrepKernel {
     async fn kind(&self, handle: &GeometryHandle) -> Result<GeometryKind, BrepError>;
     async fn tessellate(&self, handle: &GeometryHandle, tolerance: f64) -> Result<MeshTransfer, BrepError>;
     async fn dispose(&mut self, handle: &GeometryHandle);
+    /// 🧹 Drops every registry entry whose handle isn't in `live`.
+    async fn retain(&mut self, live: &std::collections::HashSet<String>);
+    /// 📊 Number of geometry handles currently held by the kernel's registry.
+    async fn registry_len(&self) -> usize;
     // #endregion Core
 }
 // #endregion 🔖Kernel

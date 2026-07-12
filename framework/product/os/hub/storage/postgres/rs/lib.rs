@@ -60,8 +60,20 @@ impl PostgresStorage {
         Ok(Self { pool })
     }
 
-    /// @emoji 🌱 Seeds a default studio, its default document, and a `Documents/default` node.
+    /// @emoji 🌱 Seeds a placeholder `seed` system user, a default studio it owns, an owner-less
+    /// default document, and a `Documents/default` node. The system user satisfies
+    /// `hub_studio.owner_user_id`'s foreign key until a real bootstrap admin claims ownership
+    /// through `/admin` (HP-6).
     pub async fn seed(&self) -> StorageResult<()> {
+        let user_exists: (i64,) =
+            sqlx_core::query_as::query_as("SELECT COUNT(*) FROM hub_user WHERE id = 'seed'").fetch_one(&self.pool).await.map_err(backend)?;
+        if user_exists.0 == 0 {
+            sqlx_core::query::query("INSERT INTO hub_user (id, email, display_name, created_at) VALUES ('seed', 'seed@localhost', 'System', $1)")
+                .bind(now_ms())
+                .execute(&self.pool)
+                .await
+                .map_err(backend)?;
+        }
         let exists: (i64,) = sqlx_core::query_as::query_as("SELECT COUNT(*) FROM hub_studio WHERE id = 'default'")
             .fetch_one(&self.pool)
             .await

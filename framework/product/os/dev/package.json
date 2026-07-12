@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@semio-tech/framework-core": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*",
     "@semio-tech/framework-renderer-react": "workspace:*",
     "@semio-tech/framework-renderer-wgpu": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",

@@ -1,6 +1,6 @@
 //! ↔️ Port undirected graph: handle-to-handle edges without direction.
 
-pub use mathematical_graph_port::*;
+pub use infinite_board_port::*;
 
 /// ↔️ Port graph engine; handle endpoints are unordered pairs.
 pub type UndirectedPortGraphEngine = GraphEngine<Ported, Undirected>;

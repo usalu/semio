@@ -10,7 +10,7 @@ pub mod fixture_layout {
     use serde_json::Value;
     use std::collections::{HashMap, HashSet};
 
-    use mathematical_graph::board_json_visible_or_true;
+    use infinite_board::board_json_visible_or_true;
 
     // #region 🕸️ForceGraphLayout
     /// ⚙️ Force-directed layout parameters for normal undirected node-id graphs.
@@ -350,7 +350,7 @@ pub mod fixture_layout {
 pub use fixture_layout::{
     apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, apply_force_graph_layout_to_fixture_v1_value_resolved, apply_redraw_layout_to_fixture_v1_json, resolve_node_id_endpoint, ForceGraphLayoutOptions,
 };
-pub use mathematical_graph::*;
+pub use infinite_board::*;
 
 /// ↔️ Node graph engine without ports; endpoints are unordered node pairs.
 pub type UndirectedGraphEngine = GraphEngine<Normal, Undirected>;

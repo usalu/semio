@@ -1,5 +1,5 @@
 [package]
-name = "mathematical_graph_port_undirected"
+name = "infinite_board_port_undirected"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
@@ -9,4 +9,4 @@ crate-type = ["rlib"]
 path = "lib.rs"
 
 [dependencies]
-mathematical_graph_port = { path = "../../rs" }
+infinite_board_port = { path = "../../rs" }

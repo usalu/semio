@@ -1979,7 +1979,10 @@ impl PluginApp for FormsPlayApp {
                 return apply_store_action(&mut play, &mut store);
             }
             "removeQuestion" | "removeBlock" => {
-                let question_id = args.and_then(|value| value.get("questionId")).and_then(|value| value.as_str()).unwrap_or("");
+                let question_id = args
+                    .and_then(|value| value.get("blockId").or_else(|| value.get("questionId")))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
                 if question_id.is_empty() {
                     return Vec::new();
                 }
@@ -2101,7 +2104,9 @@ impl PluginApp for FormsPlayApp {
                 }
             }
             "moveQuestion" | "moveBlock" => {
-                let question_id = args.and_then(|value| value.get("questionId")).and_then(|value| value.as_str());
+                let question_id = args
+                    .and_then(|value| value.get("blockId").or_else(|| value.get("questionId")))
+                    .and_then(|value| value.as_str());
                 let to_step_id = args.and_then(|value| value.get("toStepId")).and_then(|value| value.as_str());
                 let target_id = args
                     .and_then(|value| value.get("targetId"))
@@ -2110,6 +2115,7 @@ impl PluginApp for FormsPlayApp {
                     .and_then(|value| value.get("position"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("inside");
+                let explicit_index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map(|index| index as usize);
                 let (Some(question_id), Some(to_step_id)) = (question_id, to_step_id) else {
                     return Vec::new();
                 };
@@ -2118,7 +2124,8 @@ impl PluginApp for FormsPlayApp {
                     return Vec::new();
                 };
                 let target_id = target_id.unwrap_or(question_id);
-                let index = resolve_question_insert_index(&projection, to_step_id, target_id, position).unwrap_or(0);
+                let index = explicit_index
+                    .unwrap_or_else(|| resolve_question_insert_index(&projection, to_step_id, target_id, position).unwrap_or(0));
                 let _ = store.dispatch(DocumentVcsCommand::Apply {
                     operations: vec![FormOp::MoveBlock {
                         block_id: question_id.into(),

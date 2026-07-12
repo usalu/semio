@@ -783,6 +783,24 @@ impl BrepkitKernel {
         Ok(self.register_solid(solid))
     }
 
+    /// 🎯 Fillets only `edges` instead of every edge of the solid — brepkit's
+    /// `fillet_rolling_ball` already accepts an explicit edge list, `fillet_sync` just always
+    /// passes every edge; this exposes the selective-edge case directly.
+    pub fn fillet_edges_sync(&mut self, shape: &GeometryHandle, edges: &[GeometryHandle], radius: f64) -> Result<GeometryHandle, BrepError> {
+        let solid = self.solid_id(shape)?;
+        let edge_ids: Vec<EdgeId> = edges.iter().map(|handle| self.edge_id(handle)).collect::<Result<_, _>>()?;
+        let solid = fillet_rolling_ball(&mut self.topo, solid, &edge_ids, radius).map_err(Self::map_err)?;
+        Ok(self.register_solid(solid))
+    }
+
+    /// 🎯 Chamfers only `edges` instead of every edge of the solid.
+    pub fn chamfer_edges_sync(&mut self, shape: &GeometryHandle, edges: &[GeometryHandle], distance: f64) -> Result<GeometryHandle, BrepError> {
+        let solid = self.solid_id(shape)?;
+        let edge_ids: Vec<EdgeId> = edges.iter().map(|handle| self.edge_id(handle)).collect::<Result<_, _>>()?;
+        let solid = chamfer(&mut self.topo, solid, &edge_ids, distance).map_err(Self::map_err)?;
+        Ok(self.register_solid(solid))
+    }
+
     pub fn chamfer_asymmetric_sync(&mut self, shape: &GeometryHandle, d1: f64, d2: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let edges = explorer::solid_edges(&self.topo, solid).map_err(Self::map_topo_err)?;
@@ -1677,11 +1695,17 @@ impl BrepKernel for BrepkitKernel {
     async fn fillet_variable(&mut self, shape: &GeometryHandle, radius_start: f64, radius_end: f64) -> Result<GeometryHandle, BrepError> {
         self.fillet_variable_sync(shape, radius_start, radius_end)
     }
+    async fn fillet_edges(&mut self, shape: &GeometryHandle, edges: &[GeometryHandle], radius: f64) -> Result<GeometryHandle, BrepError> {
+        self.fillet_edges_sync(shape, edges, radius)
+    }
     async fn chamfer(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
         self.chamfer_sync(shape, distance)
     }
     async fn chamfer_asymmetric(&mut self, shape: &GeometryHandle, d1: f64, d2: f64) -> Result<GeometryHandle, BrepError> {
         self.chamfer_asymmetric_sync(shape, d1, d2)
+    }
+    async fn chamfer_edges(&mut self, shape: &GeometryHandle, edges: &[GeometryHandle], distance: f64) -> Result<GeometryHandle, BrepError> {
+        self.chamfer_edges_sync(shape, edges, distance)
     }
     async fn shell(&mut self, shape: &GeometryHandle, thickness: f64, open_faces: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
         self.shell_sync(shape, thickness, open_faces)
@@ -1808,6 +1832,12 @@ impl BrepKernel for BrepkitKernel {
     }
     async fn dispose(&mut self, handle: &GeometryHandle) {
         self.dispose_sync(handle);
+    }
+    async fn retain(&mut self, live: &std::collections::HashSet<String>) {
+        self.retain_sync(live);
+    }
+    async fn registry_len(&self) -> usize {
+        self.registry_len()
     }
 }
 // #endregion 🔖Kernel

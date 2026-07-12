@@ -1143,6 +1143,147 @@ where
 }
 // #endregion 🔖Cache
 
+// #region 🔖DirtyPropagation
+fn hash_neuron_key<H: Hasher>(hasher: &mut H, neuron: &Neuron) {
+    hash_str(hasher, &neuron.kind);
+    hash_dictionary(hasher, &neuron.params);
+    if let Some(sub_tree) = neuron.tree.as_deref() {
+        1u8.hash(hasher);
+        hash_subtree(hasher, sub_tree);
+    } else {
+        0u8.hash(hasher);
+    }
+}
+
+fn hash_subtree<H: Hasher>(hasher: &mut H, tree: &Tree) {
+    let mut ids: Vec<&str> = tree.neurons.iter().map(|n| n.id.as_str()).collect();
+    ids.sort_unstable();
+    for id in ids {
+        hash_str(hasher, id);
+        let neuron = tree.neurons.iter().find(|n| n.id == id).expect("id from neurons");
+        hash_neuron_key(hasher, neuron);
+    }
+    let mut synapses: Vec<&Synapse> = tree.synapses.iter().collect();
+    synapses.sort_by(|a, b| (&a.from, &a.from_port, &a.to, &a.to_port).cmp(&(&b.from, &b.from_port, &b.to, &b.to_port)));
+    for syn in synapses {
+        hash_str(hasher, &syn.from);
+        hash_str(hasher, &syn.from_port);
+        hash_str(hasher, &syn.to);
+        hash_str(hasher, &syn.to_port);
+    }
+}
+
+fn neuron_key_hash(neuron: &Neuron) -> u64 {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    hash_neuron_key(&mut hasher, neuron);
+    hasher.finish()
+}
+
+fn incoming_edges_signature(tree: &Tree, neuron_id: &str) -> u64 {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    let mut incoming: Vec<&Synapse> = tree.synapses.iter().filter(|syn| syn.to == neuron_id).collect();
+    incoming.sort_by(|a, b| (&a.from, &a.from_port, &a.to_port).cmp(&(&b.from, &b.from_port, &b.to_port)));
+    for syn in incoming {
+        hash_str(&mut hasher, &syn.from);
+        hash_str(&mut hasher, &syn.from_port);
+        hash_str(&mut hasher, &syn.to_port);
+    }
+    hasher.finish()
+}
+
+/// 📸 Structural fingerprint of a tree+seeds pair, used by [`compute_dirty_set`] to diff two
+/// evaluations without re-hashing or re-walking neurons that provably didn't change.
+#[derive(Default)]
+pub struct TreeSnapshot {
+    neuron_ids: HashSet<String>,
+    neuron_keys: HashMap<String, u64>,
+    incoming_keys: HashMap<String, u64>,
+    seed_keys: HashMap<String, u64>,
+    /// `from -> [to, ...]` — who reads this neuron's output, used for forward dirty propagation.
+    dependents: HashMap<String, Vec<String>>,
+}
+
+impl TreeSnapshot {
+    pub fn capture(tree: &Tree, seeds: &HashMap<String, Dictionary>) -> Self {
+        let neuron_ids: HashSet<String> = tree.neurons.iter().map(|n| n.id.clone()).collect();
+        let mut neuron_keys = HashMap::new();
+        let mut incoming_keys = HashMap::new();
+        for neuron in &tree.neurons {
+            neuron_keys.insert(neuron.id.clone(), neuron_key_hash(neuron));
+            incoming_keys.insert(neuron.id.clone(), incoming_edges_signature(tree, &neuron.id));
+        }
+        let mut seed_keys = HashMap::new();
+        for (id, dict) in seeds {
+            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            hash_dictionary(&mut hasher, dict);
+            seed_keys.insert(id.clone(), hasher.finish());
+        }
+        let mut dependents: HashMap<String, Vec<String>> = neuron_ids.iter().map(|id| (id.clone(), Vec::new())).collect();
+        for syn in &tree.synapses {
+            if !neuron_ids.contains(&syn.from) || !neuron_ids.contains(&syn.to) {
+                continue;
+            }
+            dependents.entry(syn.from.clone()).or_default().push(syn.to.clone());
+        }
+        Self { neuron_ids, neuron_keys, incoming_keys, seed_keys, dependents }
+    }
+}
+
+/// 🧭 Forward-propagates dirtiness from directly-changed neurons to all descendants.
+///
+/// `previous == None` means "first evaluation ever" — everything is dirty. Otherwise a neuron
+/// is directly dirty if it's new, its structural key (kind/params/subtree) changed, its incoming
+/// synapse set changed, or its seed value changed; a surviving dependent of a *removed* neuron
+/// (looked up via `previous`'s adjacency, since removed neurons vanish from `current`) is also
+/// directly dirty. Every neuron reachable from the directly-dirty set via `current`'s `from -> to`
+/// adjacency is dirty too — everything else is provably unaffected.
+pub fn compute_dirty_set(previous: Option<&TreeSnapshot>, current: &TreeSnapshot) -> HashSet<String> {
+    let Some(previous) = previous else {
+        return current.neuron_ids.clone();
+    };
+    let mut direct: HashSet<String> = HashSet::new();
+    for id in &current.neuron_ids {
+        let is_new = !previous.neuron_ids.contains(id);
+        let structurally_changed = previous.neuron_keys.get(id) != current.neuron_keys.get(id);
+        let rewired = previous.incoming_keys.get(id) != current.incoming_keys.get(id);
+        if is_new || structurally_changed || rewired {
+            direct.insert(id.clone());
+        }
+    }
+    let mut seed_ids: HashSet<&String> = previous.seed_keys.keys().collect();
+    seed_ids.extend(current.seed_keys.keys());
+    for id in seed_ids {
+        if current.neuron_ids.contains(id) && previous.seed_keys.get(id) != current.seed_keys.get(id) {
+            direct.insert(id.clone());
+        }
+    }
+    for removed_id in previous.neuron_ids.difference(&current.neuron_ids) {
+        if let Some(prev_dependents) = previous.dependents.get(removed_id) {
+            for dependent in prev_dependents {
+                if current.neuron_ids.contains(dependent) {
+                    direct.insert(dependent.clone());
+                }
+            }
+        }
+    }
+    let mut dirty: HashSet<String> = HashSet::new();
+    let mut queue: VecDeque<String> = direct.into_iter().collect();
+    while let Some(id) = queue.pop_front() {
+        if !dirty.insert(id.clone()) {
+            continue;
+        }
+        if let Some(deps) = current.dependents.get(&id) {
+            for dep in deps {
+                if !dirty.contains(dep) {
+                    queue.push_back(dep.clone());
+                }
+            }
+        }
+    }
+    dirty
+}
+// #endregion 🔖DirtyPropagation
+
 // #region 🔖Evaluator
 /// 📡 Resolved neuron inputs and outputs from one evaluation pass.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -1188,11 +1329,12 @@ impl<'a> Evaluator<'a> {
     ) -> Result<EvalChannels, EvalError> {
         let cache = NeuralCache::new();
         cache.begin_epoch();
-        let result = self.evaluate_channels_sequential_cached(tree, seeds, operator_infos, dispatch, &cache);
+        let result = self.evaluate_channels_sequential_cached(tree, seeds, operator_infos, dispatch, &cache, &HashSet::new(), None);
         cache.sweep();
         result
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn evaluate_channels_sequential_cached(
         &self,
         tree: &Tree,
@@ -1200,11 +1342,22 @@ impl<'a> Evaluator<'a> {
         operator_infos: &HashMap<String, OperatorInfo>,
         dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
         cache: &NeuralCache,
+        dirty: &HashSet<String>,
+        previous: Option<&EvalChannels>,
     ) -> Result<EvalChannels, EvalError> {
         let order = topo_order(tree)?;
         let mut outputs: HashMap<String, Dictionary> = seeds.clone();
         let mut inputs: HashMap<String, Dictionary> = HashMap::new();
         for neuron_id in order {
+            if !dirty.contains(&neuron_id) {
+                if let Some(prev) = previous {
+                    if let (Some(out), Some(inp)) = (prev.outputs.get(&neuron_id), prev.inputs.get(&neuron_id)) {
+                        outputs.insert(neuron_id.clone(), out.clone());
+                        inputs.insert(neuron_id, inp.clone());
+                        continue;
+                    }
+                }
+            }
             let neuron = tree.neurons.iter().find(|n| n.id == neuron_id).ok_or_else(|| EvalError::InvalidInput(format!("missing neuron {neuron_id}")))?;
             let operator_info = operator_info_for_neuron(neuron, operator_infos, self.registry.operator_info(&neuron.kind));
             let input = collect_neuron_input(tree, &outputs, &neuron_id, operator_info)?;
@@ -1238,11 +1391,12 @@ impl<'a> Evaluator<'a> {
     ) -> Result<EvalChannels, EvalError> {
         let cache = NeuralCache::new();
         cache.begin_epoch();
-        let result = self.evaluate_channels_cached(tree, seeds, operator_infos, dispatch, &cache);
+        let result = self.evaluate_channels_cached(tree, seeds, operator_infos, dispatch, &cache, &HashSet::new(), None);
         cache.sweep();
         result
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn evaluate_channels_cached(
         &self,
         tree: &Tree,
@@ -1250,6 +1404,8 @@ impl<'a> Evaluator<'a> {
         operator_infos: &HashMap<String, OperatorInfo>,
         dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
         cache: &NeuralCache,
+        dirty: &HashSet<String>,
+        previous: Option<&EvalChannels>,
     ) -> Result<EvalChannels, EvalError> {
         let levels = topo_levels(tree)?;
         let mut outputs: HashMap<String, Dictionary> = seeds.clone();
@@ -1261,6 +1417,15 @@ impl<'a> Evaluator<'a> {
             let mut compute_jobs: Vec<(String, String, Dictionary)> = Vec::new();
 
             for neuron_id in &level {
+                if !dirty.contains(neuron_id) {
+                    if let Some(prev) = previous {
+                        if let (Some(out), Some(inp)) = (prev.outputs.get(neuron_id), prev.inputs.get(neuron_id)) {
+                            level_outputs.insert(neuron_id.clone(), out.clone());
+                            level_inputs.insert(neuron_id.clone(), inp.clone());
+                            continue;
+                        }
+                    }
+                }
                 let neuron = tree.neurons.iter().find(|n| n.id == *neuron_id).ok_or_else(|| EvalError::InvalidInput(format!("missing neuron {neuron_id}")))?;
                 let operator_info = operator_info_for_neuron(neuron, operator_infos, self.registry.operator_info(&neuron.kind));
                 let input = collect_neuron_input(tree, &outputs, neuron_id, operator_info)?;
@@ -1341,7 +1506,7 @@ impl<'a> Evaluator<'a> {
         cache: &NeuralCache,
     ) -> Result<Dictionary, EvalError> {
         let seeds = seed_input_boundaries(tree, in_dict);
-        let channels = self.evaluate_channels_cached(tree, &seeds, operator_infos, dispatch, cache)?;
+        let channels = self.evaluate_channels_cached(tree, &seeds, operator_infos, dispatch, cache, &HashSet::new(), None)?;
         collect_output_boundaries(tree, &channels)
     }
 
@@ -1354,7 +1519,7 @@ impl<'a> Evaluator<'a> {
         cache: &NeuralCache,
     ) -> Result<Dictionary, EvalError> {
         let sub_seeds = seed_input_boundaries(sub_tree, parent_input);
-        let sub_channels = self.evaluate_channels_sequential_cached(sub_tree, &sub_seeds, operator_infos, dispatch, cache)?;
+        let sub_channels = self.evaluate_channels_sequential_cached(sub_tree, &sub_seeds, operator_infos, dispatch, cache, &HashSet::new(), None)?;
         collect_output_boundaries(sub_tree, &sub_channels)
     }
 
@@ -1367,7 +1532,10 @@ impl<'a> Evaluator<'a> {
         cache: &NeuralCache,
     ) -> Result<Dictionary, EvalError> {
         let sub_seeds = seed_input_boundaries(sub_tree, parent_input);
-        let sub_channels = self.evaluate_channels_cached(sub_tree, &sub_seeds, operator_infos, dispatch, cache)?;
+        // 🧩 Nested cluster subtrees are evaluated atomically (v1 limitation): any change inside
+        // re-evaluates the whole cluster rather than propagating dirtiness within it. Never stale,
+        // just not maximally incremental for nested clusters.
+        let sub_channels = self.evaluate_channels_cached(sub_tree, &sub_seeds, operator_infos, dispatch, cache, &HashSet::new(), None)?;
         collect_output_boundaries(sub_tree, &sub_channels)
     }
 }
@@ -2015,10 +2183,10 @@ mod tests {
             reg.dispatch(kind, input)
         };
         cache.begin_epoch();
-        evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache).unwrap();
+        evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap();
         assert_eq!(calls.load(Ordering::Relaxed), 2);
         cache.begin_epoch();
-        evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache).unwrap();
+        evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap();
         assert_eq!(calls.load(Ordering::Relaxed), 2);
     }
 
@@ -2057,12 +2225,12 @@ mod tests {
             reg.dispatch(kind, input)
         };
         cache.begin_epoch();
-        evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache).unwrap();
+        evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap();
         assert_eq!(calls.load(Ordering::Relaxed), 3);
         let mut tree_changed = tree.clone();
         tree_changed.neurons[0] = Neuron::with_kind("a", "echo", number_dictionary(3.0));
         cache.begin_epoch();
-        evaluator.evaluate_channels_cached(&tree_changed, &HashMap::new(), &HashMap::new(), &dispatch, &cache).unwrap();
+        evaluator.evaluate_channels_cached(&tree_changed, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap();
         assert_eq!(calls.load(Ordering::Relaxed), 5);
     }
 

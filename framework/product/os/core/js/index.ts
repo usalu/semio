@@ -30,6 +30,9 @@ export function osInPort(resourceKind: string, id: string, label: string, requir
 //#region 🔖Backbone
 export const FRAMEWORK_SYNC_CONTROLLER_ID = "framework.sync";
 
+/** 🛰️ Dev-server-proxied backbone endpoint path for `file://`/`folder://` uris; shared with the dev host shim (`framework/product/os/dev/script.ts`) so both stay in sync on the same literal. */
+export const BACKBONE_ENDPOINT_PATH = "/semio-backbone";
+
 export type BackboneKind = "file" | "folder" | "remote" | "unknown";
 
 export type DocumentBackboneRef = {
@@ -80,7 +83,7 @@ export async function readBackboneEnvelope(uri: string): Promise<string | null> 
     const body = (await response.json()) as { envelope?: unknown };
     return JSON.stringify(body.envelope ?? body);
   }
-  const response = await fetch(`/semio-backbone?uri=${encodeURIComponent(uri)}`);
+  const response = await fetch(`${BACKBONE_ENDPOINT_PATH}?uri=${encodeURIComponent(uri)}`);
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`backbone read failed (${response.status})`);
   return response.text();
@@ -101,7 +104,7 @@ export async function writeBackboneEnvelope(uri: string, envelopeJson: string): 
     console.log("[DEBUG] remote backbone synced", uri);
     return;
   }
-  const response = await fetch(`/semio-backbone?uri=${encodeURIComponent(uri)}`, {
+  const response = await fetch(`${BACKBONE_ENDPOINT_PATH}?uri=${encodeURIComponent(uri)}`, {
     method: "PUT",
     headers: { "content-type": "application/json" },
     body: envelopeJson,
@@ -130,6 +133,44 @@ export function wrapDocumentEnvelope(document: unknown, documentId: string, uri:
     backbone: documentBackboneRef(uri),
   });
 }
+
+//#region 🔀ApplyBackboneMessage
+export type BackboneOpEnvelope = { readonly diff?: { readonly payload?: { readonly id?: string } & Record<string, unknown> } };
+
+export type BackboneMessage =
+  | { readonly kind: "snapshot"; readonly envelopeJson: string }
+  | { readonly kind: "ops"; readonly envelopes?: readonly BackboneOpEnvelope[] };
+
+/**
+ * 🔀 Mirrors `vcs::storage_send` — applies an incoming backbone message on top of a previously
+ * stored envelope: a `snapshot` message overwrites, an `ops` message appends into `vcs.edits`
+ * deduped by id. This is the canonical implementation; the dev host shim's generated JS
+ * (`hostShimSource` in `framework/product/os/dev/script.ts`) hand-ports the same algorithm and
+ * must be kept in sync until a build-time inlining step exists.
+ */
+export function applyBackboneMessage(storedEnvelopeJson: string | null, messageJson: string): string {
+  const message = JSON.parse(messageJson) as BackboneMessage;
+  if (message.kind === "snapshot") return message.envelopeJson;
+  if (message.kind === "ops") {
+    if (storedEnvelopeJson == null) throw new Error("cannot append ops before a snapshot exists");
+    const envelope = JSON.parse(storedEnvelopeJson) as { vcs?: { edits?: unknown[] } };
+    const edits = envelope?.vcs?.edits;
+    if (!Array.isArray(edits)) throw new Error("stored envelope missing vcs.edits");
+    const seen = new Set(edits.map((edit) => (edit as { id?: unknown })?.id).filter((id): id is string => typeof id === "string"));
+    for (const opEnvelope of message.envelopes ?? []) {
+      const editJson = opEnvelope?.diff?.payload;
+      const id = editJson?.id;
+      if (typeof id === "string") {
+        if (seen.has(id)) continue;
+        seen.add(id);
+      }
+      edits.push(editJson);
+    }
+    return JSON.stringify(envelope);
+  }
+  throw new Error(`unsupported backbone message kind: ${(message as { kind: string }).kind}`);
+}
+//#endregion 🔀ApplyBackboneMessage
 
 export type FrameworkSyncToolLeaf = {
   readonly id: string;
@@ -211,6 +252,35 @@ if (import.meta.vitest) {
       const envelopeJson = wrapDocumentEnvelope(existing, "doc-1", "file:///tmp/a.json");
       const envelope = JSON.parse(envelopeJson) as { projection: unknown; vcs: unknown };
       expect(envelope.projection).toEqual({ a: 1 });
+    });
+
+    it("exposes the shared backbone endpoint path", () => {
+      expect(BACKBONE_ENDPOINT_PATH).toBe("/semio-backbone");
+    });
+
+    it("applies a snapshot message by overwriting the stored envelope", () => {
+      const messageJson = JSON.stringify({ kind: "snapshot", envelopeJson: '{"vcs":{"edits":[]}}' });
+      expect(applyBackboneMessage(null, messageJson)).toBe('{"vcs":{"edits":[]}}');
+    });
+
+    it("applies an ops message by appending deduped edits into vcs.edits", () => {
+      const stored = JSON.stringify({ vcs: { edits: [{ id: "e1" }] } });
+      const messageJson = JSON.stringify({
+        kind: "ops",
+        envelopes: [{ diff: { payload: { id: "e1" } } }, { diff: { payload: { id: "e2" } } }],
+      });
+      const result = JSON.parse(applyBackboneMessage(stored, messageJson)) as { vcs: { edits: Array<{ id: string }> } };
+      expect(result.vcs.edits.map((edit) => edit.id)).toEqual(["e1", "e2"]);
+    });
+
+    it("throws when applying an ops message before a snapshot exists", () => {
+      const messageJson = JSON.stringify({ kind: "ops", envelopes: [] });
+      expect(() => applyBackboneMessage(null, messageJson)).toThrow("cannot append ops before a snapshot exists");
+    });
+
+    it("throws on an unsupported backbone message kind", () => {
+      const messageJson = JSON.stringify({ kind: "bogus" });
+      expect(() => applyBackboneMessage(null, messageJson)).toThrow("unsupported backbone message kind: bogus");
     });
 
     it("builds sync tools reflecting the active backbone kind", () => {

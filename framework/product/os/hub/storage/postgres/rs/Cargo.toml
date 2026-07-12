@@ -5,6 +5,8 @@
 # compose/server/hub precedent) — the scale-out backend for multi-node self-hosted deployments.
 # #endregion 🔖Header
 
+[workspace]
+
 [package]
 name = "os-hub-storage-postgres"
 version = "0.1.0"

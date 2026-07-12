@@ -1,5 +1,5 @@
 [package]
-name = "mathematical_graph_normal_directed"
+name = "infinite_board_normal_directed"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
@@ -9,5 +9,4 @@ crate-type = ["rlib"]
 path = "lib.rs"
 
 [dependencies]
-mathematical_graph = { path = "../../../rs" }
-infinite_cavas = { path = "../../../../../infinite/cavas/rs" }
+infinite_board = { path = "../../../rs" }

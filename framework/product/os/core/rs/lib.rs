@@ -3189,6 +3189,25 @@ pub fn register_mesh_dwg_import_handler(resource_kind: &'static str, document_fr
     });
 }
 
+/// @emoji 💾 Registers a DWG export handler for one mesh resource kind; DWG is not part of the `MeshExporter` mechanism (it flattens a mesh into a DWG drawing, not a mesh codec), so it stays a dedicated registrar alongside `register_mesh_exporter`.
+pub fn register_mesh_dwg_export_handler(
+    resource_kind: &'static str,
+    file_stem: &'static str,
+    mesh_from_document: fn(&Value) -> Result<semio_framework_plugin::MeshData, String>,
+) {
+    register_os_media_export_handler(resource_kind, OsMediaFormat::Dwg, move |doc| {
+        let mesh = mesh_from_document(doc)?;
+        let drawing = semio_framework_core::mesh_to_dwg_drawing(&mesh);
+        let bytes = semio_framework_core::dwg_to_bytes(&drawing)?;
+        Ok(OsMediaExportResult {
+            data: base64::engine::general_purpose::STANDARD.encode(bytes),
+            mime_type: OsMediaFormat::Dwg.mime_type().into(),
+            file_name: format!("{file_stem}.dwg"),
+            encoding: Some("base64".into()),
+        })
+    });
+}
+
 //#region SolidMediaExport
 type SolidExporterRegistry = HashMap<String, Box<dyn kernel_3d_brepkit::SolidExporter>>;
 

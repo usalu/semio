@@ -1,6 +1,6 @@
 //! ➡️ Normal directed graph: node-to-node relationships (mindmaps).
 
-pub use mathematical_graph::*;
+pub use infinite_board::*;
 
 /// ➡️ Node graph engine without ports; relationships are directed node pairs.
 pub type DirectedGraphEngine = GraphEngine<Normal, Directed>;

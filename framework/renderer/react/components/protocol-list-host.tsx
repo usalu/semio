@@ -41,9 +41,7 @@ function ProtocolBlockCard({ block, stepId, controllerId, onAction }: { readonly
             <div className="truncate text-xs font-medium">{block.label}</div>
             <div className="truncate text-xs text-muted-foreground">{block.kind}</div>
           </div>
-          <Button className="h-medium shrink-0 px-2" type="button" variant="outline" onClick={() => dispatchProtocolAction(onAction, controllerId, "removeBlock", { stepId, blockId: block.id })}>
-            <Icon icon="trash-2" size="small" />
-          </Button>
+          <Button className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchProtocolAction(onAction, controllerId, "removeBlock", { stepId, blockId: block.id })} />
         </div>
       )}
     </SortableRow>
@@ -93,9 +91,7 @@ function ProtocolStepCard({
           <div className="flex items-center gap-2">
             <Icon icon="grip-vertical" size="small" />
             <div className="min-w-0 flex-1 truncate text-sm font-medium">{step.title}</div>
-            <Button className="h-medium shrink-0 px-2" type="button" variant="outline" onClick={() => dispatchProtocolAction(onAction, controllerId, "removeStep", { stepId: step.id })}>
-              <Icon icon="trash-2" size="small" />
-            </Button>
+            <Button className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchProtocolAction(onAction, controllerId, "removeStep", { stepId: step.id })} />
           </div>
           {step.description && <div className="text-xs text-muted-foreground">{step.description}</div>}
           <DndContext collisionDetection={closestCenter} onDragEnd={handleBlockDragEnd}>
@@ -174,9 +170,7 @@ export function ProtocolListHost({ node, onAction }: ComponentSceneHostProps) {
       <div className="flex min-w-0 flex-1 flex-col gap-2 overflow-auto p-single">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">Steps</span>
-          <Button className="h-medium shrink-0 px-2" type="button" variant="outline" onClick={() => dispatchProtocolAction(onAction, node.controllerId, "addStep", {})}>
-            Add Step
-          </Button>
+          <Button className="h-medium shrink-0 px-2" icon="plus" text="Add Step" type="button" variant="outline" onClick={() => dispatchProtocolAction(onAction, node.controllerId, "addStep", {})} />
         </div>
         <DndContext collisionDetection={closestCenter} onDragEnd={handleStepDragEnd}>
           <SortableContext items={stepIds} strategy={verticalListSortingStrategy}>

@@ -597,7 +597,8 @@ mod tests {
     fn curate_add_and_remove_round_trip_through_patch_ops() {
         let mut app = SourcingCurateApp;
         let document = default_document();
-        let object_id = document.stock[0].id.clone();
+        // stock[2] isn't part of the fixture's pre-curated set, so a single add lands on count 1.
+        let object_id = document.stock[2].id.clone();
         let document_json = serde_json::to_string(&document).unwrap();
         let ops = app.handle_action_patch_ops("curateAdd", Some(&json!({ "objectId": object_id })), &document_json, &view_state());
         assert_eq!(ops.len(), 1);
@@ -616,7 +617,8 @@ mod tests {
     fn drop_on_curated_and_drop_on_pool_mirror_add_and_remove() {
         let mut app = SourcingCurateApp;
         let document = default_document();
-        let object_id = document.stock[0].id.clone();
+        // stock[2] isn't part of the fixture's pre-curated set, so a single drop lands on count 1.
+        let object_id = document.stock[2].id.clone();
         let document_json = serde_json::to_string(&document).unwrap();
         let ops = app.handle_action_patch_ops("dropOnCurated", Some(&json!({ "objectId": object_id })), &document_json, &view_state());
         let patched: Value = serde_json::from_str(&ops[0]).unwrap();

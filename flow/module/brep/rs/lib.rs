@@ -38,14 +38,14 @@ fn evict_mesh_cache_for_handle(handle: &str) {
 }
 
 // #region 🔖Helpers
-fn with_kernel<T>(f: impl FnOnce(&mut BrepkitKernel) -> Result<T, EvalError>) -> Result<T, EvalError> {
+fn with_kernel<T>(f: impl FnOnce(&mut dyn BrepKernel) -> Result<T, EvalError>) -> Result<T, EvalError> {
     let mut guard = kernel().write().map_err(|_| EvalError::InvalidInput("brep kernel lock poisoned".into()))?;
     f(&mut guard)
 }
 
 /// 🔓 Read-only kernel access — lets concurrent queries (tessellate, volume, closest-point, …)
 /// proceed in parallel with each other while still serializing against mutating operations.
-fn with_kernel_read<T>(f: impl FnOnce(&BrepkitKernel) -> Result<T, EvalError>) -> Result<T, EvalError> {
+fn with_kernel_read<T>(f: impl FnOnce(&dyn BrepKernel) -> Result<T, EvalError>) -> Result<T, EvalError> {
     let guard = kernel().read().map_err(|_| EvalError::InvalidInput("brep kernel lock poisoned".into()))?;
     f(&guard)
 }
@@ -64,7 +64,7 @@ fn kind_label(kind: GeometryKind) -> &'static str {
     }
 }
 
-fn geometry_dict(kernel: &BrepkitKernel, handle: &GeometryHandle) -> Result<Dictionary, EvalError> {
+fn geometry_dict(kernel: &dyn BrepKernel, handle: &GeometryHandle) -> Result<Dictionary, EvalError> {
     let kind = block_on(kernel.kind(handle)).map_err(map_kernel_error)?;
     Ok(Dictionary::with_schema("geometry").insert("handle", Value::Atom(Atom::String(handle.as_str().to_string()))).insert("kind", Value::Atom(Atom::String(kind_label(kind).into()))))
 }
@@ -182,7 +182,7 @@ fn points_to_grid(points: &[Vec3], rows: usize) -> Result<Vec<Vec<Vec3>>, EvalEr
     Ok((0..rows).map(|row| (0..cols).map(|col| points[row * cols + col]).collect()).collect())
 }
 
-fn wire_from_points(kernel: &mut BrepkitKernel, points: &[Vec3]) -> Result<GeometryHandle, EvalError> {
+fn wire_from_points(kernel: &mut dyn BrepKernel, points: &[Vec3]) -> Result<GeometryHandle, EvalError> {
     if points.len() >= 2 {
         block_on(kernel.polyline_wire(points)).map_err(map_kernel_error)
     } else if let Some(point) = points.first() {
@@ -718,6 +718,34 @@ geo_op!(Fillet, "solid", |k, i| k.fillet(&read_geometry(i, "geometry")?, read_ch
 geo_op!(FilletVariable, "solid", |k, i| k.fillet_variable(&read_geometry(i, "geometry")?, read_channel_number(i, "radiusStart")?, read_channel_number(i, "radiusEnd")?,));
 geo_op!(Chamfer, "solid", |k, i| k.chamfer(&read_geometry(i, "geometry")?, read_channel_number(i, "distance")?));
 geo_op!(ChamferAsymmetric, "solid", |k, i| k.chamfer_asymmetric(&read_geometry(i, "geometry")?, read_channel_number(i, "d1")?, read_channel_number(i, "d2")?,));
+
+// 🎯 Selective-edge variants: fillet/chamfer only the given edges instead of the whole solid —
+// avoids the full-solid edge-count cost when a user selects just one or a few edges.
+struct FilletEdges;
+impl Operation for FilletEdges {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        with_kernel(|kernel| {
+            let geometry = read_geometry(input, "geometry")?;
+            let edges = read_geometry_list(input, "edges")?;
+            let radius = read_channel_number(input, "radius")?;
+            let handle = block_on(kernel.fillet_edges(&geometry, &edges, radius)).map_err(map_kernel_error)?;
+            Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
+        })
+    }
+}
+
+struct ChamferEdges;
+impl Operation for ChamferEdges {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        with_kernel(|kernel| {
+            let geometry = read_geometry(input, "geometry")?;
+            let edges = read_geometry_list(input, "edges")?;
+            let distance = read_channel_number(input, "distance")?;
+            let handle = block_on(kernel.chamfer_edges(&geometry, &edges, distance)).map_err(map_kernel_error)?;
+            Ok(channel_output("solid", geometry_dict(kernel, &handle)?))
+        })
+    }
+}
 
 struct ShellOp;
 impl Operation for ShellOp {
@@ -1468,6 +1496,30 @@ pub fn register(registry: &mut Registry) {
     );
     reg_geo(
         registry,
+        "brep.solid.filletEdges",
+        "Fillet Edges",
+        "FilE",
+        "emoji:🧱",
+        "Fillet only the given edges",
+        vec![geometry_channel("geometry", "brep.solid.filletEdges"), list_channel("edges", "brep.solid.filletEdges"), number_channel("radius", "brep.solid.filletEdges", 0.1)],
+        out_solid("FilletedEdgesSolid"),
+        &["Features"],
+        Box::new(FilletEdges),
+    );
+    reg_geo(
+        registry,
+        "brep.solid.chamferEdges",
+        "Chamfer Edges",
+        "ChmE",
+        "emoji:🧱",
+        "Chamfer only the given edges",
+        vec![geometry_channel("geometry", "brep.solid.chamferEdges"), list_channel("edges", "brep.solid.chamferEdges"), number_channel("distance", "brep.solid.chamferEdges", 0.1)],
+        out_solid("ChamferedEdgesSolid"),
+        &["Features"],
+        Box::new(ChamferEdges),
+    );
+    reg_geo(
+        registry,
         "brep.solid.shell",
         "Shell",
         "Shell",
@@ -1844,7 +1896,7 @@ mod tests {
 
     fn reset_test_kernel() {
         if let Ok(mut guard) = kernel().write() {
-            *guard = BrepkitKernel::new();
+            *guard = Box::new(BrepkitKernel::new());
         }
         if let Ok(mut cache) = mesh_cache().lock() {
             cache.clear();
@@ -2061,7 +2113,7 @@ mod tests {
 pub fn retain_geometry_handles(live: &[String]) {
     let live_set: HashSet<String> = live.iter().cloned().collect();
     if let Ok(mut guard) = kernel().write() {
-        guard.retain_sync(&live_set);
+        block_on(guard.retain(&live_set));
     }
     evict_mesh_cache_for_handles(live);
 }

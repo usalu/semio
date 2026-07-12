@@ -9,6 +9,7 @@ import {
   devToolingEnv,
   dispatchSubcommand,
   frameworkOsPlaygroundDevEnv,
+  loadFrameworkOsPlaygroundCatalog,
   resolveFrameworkOsPlaygroundPlugin,
   runCmd,
   installMicroCommitGitHooks,
@@ -30,7 +31,7 @@ const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "repo", "native", "bootstrap")
 export { Script };
 
 function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; readonly rest: string[] } | null {
-  const resolved = resolveFrameworkOsPlaygroundPlugin(segments);
+  const resolved = resolveFrameworkOsPlaygroundPlugin(loadFrameworkOsPlaygroundCatalog(), segments);
   if (!resolved) return null;
   return { app: resolved.plugin, rest: [...resolved.rest] };
 }
@@ -38,7 +39,7 @@ function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; re
 function runFrameworkOsPlaygroundDev(plugin: string, rest: string[] = []): void {
   runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", ...rest], {
     cwd: WORKSPACE_ROOT,
-    env: frameworkOsPlaygroundDevEnv(plugin),
+    env: frameworkOsPlaygroundDevEnv(loadFrameworkOsPlaygroundCatalog(), plugin),
   });
 }
 

@@ -1,6 +1,6 @@
 //! 🔌 Port graph layer: handles and port descriptors on generic graph engine.
 
-pub use mathematical_graph::*;
+pub use infinite_board::*;
 
 use serde::{Deserialize, Serialize};
 

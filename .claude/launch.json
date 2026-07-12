@@ -195,6 +195,16 @@
       "port": 6558
     },
     {
+      "name": "protocol-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:protocol"],
+      "env": {
+        "S_OS_PORT": "16078",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 16078
+    },
+    {
       "name": "procedural3d-react-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:procedural:3d"],

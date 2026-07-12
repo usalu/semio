@@ -57,10 +57,27 @@ import {
   sortToolNodes,
   spawnedWindowChromeForKind,
   ToolTree,
+  UIFind,
+  UIFindProvider,
   uiNodeToTreePanelConfig,
+  UISearch,
+  type UISearchItem,
+  useUIFind,
 } from "./os-shell.tsx";
 import { interpretUiNode } from "./ui-interpreter.tsx";
 import type { ToolNode, UiNode } from "@semio-tech/framework-core";
+
+//#region 🔌jsdom polyfills
+// cmdk (used by UISearch/UIFind's CommandDialog) calls ResizeObserver on mount; jsdom does not implement it.
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+if (!globalThis.ResizeObserver) globalThis.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
+// cmdk calls scrollIntoView on the active item; jsdom does not implement it.
+if (!Element.prototype.scrollIntoView) Element.prototype.scrollIntoView = () => {};
+//#endregion 🔌jsdom polyfills
 
 const noopAction = () => {};
 
@@ -1803,5 +1820,46 @@ describe("s media graph flow routing", () => {
     expect(parseStudioShellPath("/studios/my-studio/instances/inst-1")).toEqual({ studioId: "my-studio", instanceId: "inst-1" });
     expect(parseStudioShellPath("/")).toBeNull();
     expect(parseStudioShellPath("/studios/my-studio/instances/inst-1/extra")).toBeNull();
+  });
+});
+
+describe("ui search/find (fuse re-export from @semio-tech/ui-react)", () => {
+  it("UISearch renders all items and fuzzy-filters them via the shared Fuse re-export", async () => {
+    const { render, fireEvent } = await import("@testing-library/react");
+    const items: UISearchItem[] = [
+      { id: "a", label: "Alpha", category: "Test", onSelect: noopAction },
+      { id: "b", label: "Bravo", category: "Test", onSelect: noopAction },
+    ];
+    const { container } = render(createElement(UIFindProvider, null, createElement(UISearch, { items, open: true, onOpenChange: noopAction })));
+    expect(container.textContent).toContain("Alpha");
+    expect(container.textContent).toContain("Bravo");
+    const input = container.querySelector('[data-slot="command-input"]') as HTMLInputElement;
+    expect(input).not.toBeNull();
+    fireEvent.change(input, { target: { value: "alp" } });
+    expect(container.textContent).toContain("Alpha");
+    expect(container.textContent).not.toContain("Bravo");
+  });
+
+  it("UIFind renders and fuzzy-filters items registered on its context via the shared Fuse re-export", async () => {
+    const { render, fireEvent, act } = await import("@testing-library/react");
+    let contextValue: ReturnType<typeof useUIFind> | undefined;
+    const Harness = () => {
+      contextValue = useUIFind();
+      return createElement(UIFind, { open: true, onOpenChange: noopAction });
+    };
+    const { container } = render(createElement(UIFindProvider, null, createElement(Harness)));
+    act(() => {
+      contextValue!.setFindItems([
+        { id: "1", label: "Chair", category: "Test" },
+        { id: "2", label: "Table", category: "Test" },
+      ]);
+    });
+    expect(container.textContent).toContain("Chair");
+    expect(container.textContent).toContain("Table");
+    const input = container.querySelector('[data-slot="command-input"]') as HTMLInputElement;
+    expect(input).not.toBeNull();
+    fireEvent.change(input, { target: { value: "cha" } });
+    expect(container.textContent).toContain("Chair");
+    expect(container.textContent).not.toContain("Table");
   });
 });
